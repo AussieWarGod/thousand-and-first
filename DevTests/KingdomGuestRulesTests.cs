@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -231,12 +232,39 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ProductionLegendaryTraderUsesExactFineHouseHomeAndLiveShop()
 		{
-			string runtime = TestMain.ReadRepositoryText("Experience/KingdomGuestbook.cs");
+			string runtime = KingdomGuestbookLogicalSource.Read();
 			StringAssert.Contains("KingdomUpgrade.DesignKeyOf(item), \"finehouse\"", runtime);
 			StringAssert.Contains("KingdomLodging.ResidentsOf(Z, item).Count != 0", runtime);
 			StringAssert.Contains("KingdomLodging.HomePlotIdProperty", runtime);
 			StringAssert.Contains("system.HasShopkeeper ? system.ShopTier : 0", runtime);
 			StringAssert.Contains("Trader.SetIntProperty(\"VillageMerchant\", 1)", runtime);
+			StringAssert.Contains("prior.SetIntProperty(\"VillageMerchant\", 0)", runtime);
+			StringAssert.Contains("prior.SetIntProperty(\"Merchant\", 0)", runtime);
+			StringAssert.Contains("Restocker.Chance = 0", runtime);
+			StringAssert.Contains("Restocker.RestockFrequency = long.MaxValue", runtime);
+			StringAssert.Contains("ProtectFiniteTraderStock", runtime);
+			StringAssert.DoesNotContain("restocker.Chance = 100", runtime);
+			StringAssert.DoesNotContain("legendary trader restock", runtime);
+			string lodging = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z01.LodgingAndHousing.cs");
+			StringAssert.DoesNotContain("PerformRestock", lodging);
+			string handoff = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
+			StringAssert.Contains("merchants < 1 || merchants > 2", handoff);
+			StringAssert.Contains("TransferExactLocalMarketStock", handoff);
+			StringAssert.Contains("Trader.Inventory.AddObjectToInventory", handoff);
+			StringAssert.DoesNotContain("Trader.Inventory.AddObject(item", handoff);
+			StringAssert.Contains("Prior.Inventory.Objects.Contains(item)", handoff);
+			StringAssert.Contains("KingdomShopStockRules.ItemSourceProperty", handoff);
+			StringAssert.Contains("Item.IsImportant()", handoff);
+			StringAssert.Contains("MarketHandoffIntentProperty", handoff);
+			StringAssert.Contains("RollbackMarketTransfer", handoff);
+			StringAssert.Contains("Trader.SetIntProperty(\"VillageMerchant\", 1)", handoff);
+			StringAssert.Contains("prior.SetIntProperty(\"VillageMerchant\", 0)", handoff);
+			Assert.Less(handoff.IndexOf("TransferExactLocalMarketStock", StringComparison.Ordinal),
+				handoff.IndexOf("Trader.SetIntProperty(\"VillageMerchant\", 1)",
+					StringComparison.Ordinal),
+				"the prior merchant remains canonical until every exact stock move reads back");
 			StringAssert.Contains("op.PlunderRequested", runtime);
 			StringAssert.Contains("LodgeReceiptProperty", runtime);
 
@@ -246,6 +274,40 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Name=\"r_TAF_LegendaryTrader\"", blueprints);
 			string populations = TestMain.ReadRepositoryText("PopulationTables.xml");
 			StringAssert.Contains("Blueprint=\"r_KingdomNotableGuestTrader\"", populations);
+		}
+
+		[Test]
+		public void MarketHandoffPurposeFenceCoversTransferRollbackAndSuccessCredit()
+		{
+			string handoff = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
+			const string protectedEvidence =
+				"TryObjectGraphAvailableForOrdinaryTransfer(item, out _)";
+			string transfer = Slice(handoff, "private static bool TransferExactLocalMarketStock(",
+				"private static bool RollbackMarketTransfer(");
+			Assert.AreEqual(4, Count(transfer, protectedEvidence));
+			AssertOrdered(transfer, "foreach (GameObject item in Trader.Inventory.Objects)",
+				protectedEvidence,
+				"foreach (GameObject item in new List<GameObject>(Prior.Inventory.Objects))",
+				protectedEvidence,
+				"item.SetStringProperty(MarketTransferTargetProperty, Trader.IDIfAssigned)",
+				protectedEvidence,
+				"Trader.Inventory.AddObjectToInventory(item, null",
+				protectedEvidence, "RollbackMarketTransfer(Prior, Trader, moved)",
+				"TryObjectGraphAvailableForOrdinaryTransfer(moved[i], out _)", "return true;");
+
+			string rollback = Slice(handoff, "private static bool RollbackMarketTransfer(",
+				"private static bool ExactTransferableStock(");
+			Assert.AreEqual(2, Count(rollback, protectedEvidence));
+			AssertOrdered(rollback, protectedEvidence,
+				"Prior.Inventory.AddObjectToInventory(item, null", protectedEvidence,
+				"TryObjectGraphAvailableForOrdinaryTransfer(Moved[i], out _)",
+				"MarketTransferTargetProperty, null, RemoveIfNull: true");
+			string exact = Slice(handoff, "private static bool ExactTransferableStock(",
+				"private static void SealFiniteTrader(");
+			StringAssert.Contains("TryObjectGraphAvailableForOrdinaryTransfer(Item, out _)", exact);
+			StringAssert.DoesNotContain("CargoSchemaProperty", handoff);
+			StringAssert.DoesNotContain("PortfolioCargo", handoff);
 		}
 
 		// ---- Prose: names the guest and the settlement, distinct by outcome ----
@@ -531,6 +593,37 @@ namespace ThousandAndFirst.Tests
 			// days before you saw it".
 			Assert.IsFalse(KingdomGuestRules.DepartedLedgerNote("Aeru", 0).Contains("before you saw it"));
 			StringAssert.Contains("a day before you saw it", KingdomGuestRules.DepartedLedgerNote("Aeru", 1));
+		}
+		private static string Slice(string source, string start, string end)
+		{
+			int at = source.IndexOf(start, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(at, 0, start);
+			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
+			Assert.Greater(until, at, end);
+			return source.Substring(at, until - at);
+		}
+
+		private static int Count(string source, string value)
+		{
+			int count = 0;
+			for (int at = 0; ; )
+			{
+				at = source.IndexOf(value, at, StringComparison.Ordinal);
+				if (at < 0) return count;
+				count++;
+				at += value.Length;
+			}
+		}
+
+		private static void AssertOrdered(string source, params string[] values)
+		{
+			int cursor = -1;
+			for (int i = 0; i < values.Length; i++)
+			{
+				int at = source.IndexOf(values[i], cursor + 1, StringComparison.Ordinal);
+				Assert.Greater(at, cursor, values[i]);
+				cursor = at;
+			}
 		}
 	}
 }

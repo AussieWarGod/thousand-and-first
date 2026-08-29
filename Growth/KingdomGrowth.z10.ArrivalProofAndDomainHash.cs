@@ -86,6 +86,10 @@ namespace ThousandAndFirst
 
 		private static ArrivalResult CandidateResult(KingdomGrowthArrivalCandidate candidate)
 		{
+			if (candidate.Disposition == KingdomGrowthArrivalDisposition.Declined)
+				return ArrivalResult.Declined;
+			if (candidate.Disposition == KingdomGrowthArrivalDisposition.Departed)
+				return ArrivalResult.Departed;
 			return candidate.Disposition == KingdomGrowthArrivalDisposition.Joined
 				? ArrivalResult.Joined : ArrivalResult.Refused;
 		}
@@ -100,6 +104,8 @@ namespace ThousandAndFirst
 			case KingdomGrowthArrivalDisposition.NoGround: return ArrivalResult.NoGround;
 			case KingdomGrowthArrivalDisposition.PopulationCap: return ArrivalResult.PopulationCap;
 			case KingdomGrowthArrivalDisposition.SupportCap: return ArrivalResult.SupportCap;
+			case KingdomGrowthArrivalDisposition.Declined: return ArrivalResult.Declined;
+			case KingdomGrowthArrivalDisposition.Departed: return ArrivalResult.Departed;
 			default: return ArrivalResult.Failed;
 			}
 		}

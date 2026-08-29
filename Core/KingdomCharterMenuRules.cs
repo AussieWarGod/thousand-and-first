@@ -40,7 +40,22 @@ namespace ThousandAndFirst
 		CityBook = 32,
 		TechMap = 33,
 		CityAsks = 34,
-		SalvageExpedition = 35
+		SalvageExpedition = 35,
+		DesignateProperty = 36,
+		ManageNamedCook = 37,
+		ManageCivicOffice = 38,
+		DedicateRemembrance = 39,
+		FirstGuestCorrespondence = 40,
+		FirstFeastPractice = 41,
+		PracticeAndVocation = 42,
+		CivicKnowledge = 43,
+		BodyHistory = 44,
+		GuestFeastRecord = 45,
+		CivicCommitments = 46,
+
+		// Appended, never renumbered: these ordinals are written into saves.
+		RecognizeArtifact = 47,
+		FixedWitnessWorks = 48
 	}
 
 	public enum KingdomCharterChapter
@@ -107,7 +122,7 @@ namespace ThousandAndFirst
 	/// One bounded navigation table for the Charter. Entering a chapter or taking its Back row
 	/// is navigation only; only an Action route may open a governance scope.
 	/// </summary>
-	public static class KingdomCharterMenuRules
+	public static partial class KingdomCharterMenuRules
 	{
 		private static readonly KingdomCharterMenuRoute[] Root = new KingdomCharterMenuRoute[]
 		{
@@ -131,6 +146,16 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Share a meal from the larder", 'm', KingdomCharterAction.ShareMeal),
 				KingdomCharterMenuRoute.ForAction("Consecrate a shrine", 's', KingdomCharterAction.ConsecrateShrine),
 				KingdomCharterMenuRoute.ForAction("Share water with a settler", 'w', KingdomCharterAction.ShareWater),
+				KingdomCharterMenuRoute.ForAction("Appoint or release a named cook", 'k', KingdomCharterAction.ManageNamedCook),
+				KingdomCharterMenuRoute.ForAction("Appoint or release the civic office", 'o', KingdomCharterAction.ManageCivicOffice),
+				KingdomCharterMenuRoute.ForAction("Dedicate a remembrance cairn", 'e', KingdomCharterAction.DedicateRemembrance),
+				KingdomCharterMenuRoute.ForAction("Read the first guest's correspondence", 'g', KingdomCharterAction.FirstGuestCorrespondence),
+				KingdomCharterMenuRoute.ForAction("Review the First Feast practice", 'f', KingdomCharterAction.FirstFeastPractice),
+				KingdomCharterMenuRoute.ForAction("Read site practice & vocation", 'v', KingdomCharterAction.PracticeAndVocation),
+				KingdomCharterMenuRoute.ForAction("Read civic knowledge", 'u', KingdomCharterAction.CivicKnowledge),
+				KingdomCharterMenuRoute.ForAction("Review the Guest's Feast record", 'j', KingdomCharterAction.GuestFeastRecord),
+				KingdomCharterMenuRoute.ForAction("What this city remembers of your travels", 'a', KingdomCharterAction.RecognizeArtifact),
+				KingdomCharterMenuRoute.ForAction("Review fixed witness works", 'i', KingdomCharterAction.FixedWitnessWorks),
 				KingdomCharterMenuRoute.Back()
 			},
 			new KingdomCharterMenuRoute[]
@@ -154,6 +179,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Post a price at the heart", 'b', KingdomCharterAction.PostPrice),
 				KingdomCharterMenuRoute.ForAction("Change what stands on a lot", 'c', KingdomCharterAction.ConvertPlot),
 				KingdomCharterMenuRoute.ForAction("Give a building a new look", 'l', KingdomCharterAction.RedressBuilding),
+				KingdomCharterMenuRoute.ForAction("Designate or release realm property", 'o', KingdomCharterAction.DesignateProperty),
 				KingdomCharterMenuRoute.Back()
 			},
 			new KingdomCharterMenuRoute[]
@@ -177,6 +203,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("What happened while you were away", 'w', KingdomCharterAction.Homecoming),
 				KingdomCharterMenuRoute.ForAction("The Chronicle and dynasty", 'c', KingdomCharterAction.ChronicleAndDynasty),
 				KingdomCharterMenuRoute.ForAction("As others tell it", 'o', KingdomCharterAction.OutsiderChronicle),
+				KingdomCharterMenuRoute.ForAction("Read the founder's body history", 'b', KingdomCharterAction.BodyHistory),
 				KingdomCharterMenuRoute.Back()
 			},
 			new KingdomCharterMenuRoute[]
@@ -184,6 +211,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("The book of the city", 'b', KingdomCharterAction.CityBook),
 				KingdomCharterMenuRoute.ForAction("Where the keepers' craft could go", 'k', KingdomCharterAction.TechMap),
 				KingdomCharterMenuRoute.ForAction("What the city is asking for", 'a', KingdomCharterAction.CityAsks),
+				KingdomCharterMenuRoute.ForAction("Read civic commitments together", 'c', KingdomCharterAction.CivicCommitments),
 				KingdomCharterMenuRoute.Back()
 			}
 		};
@@ -238,55 +266,18 @@ namespace ThousandAndFirst
 			case KingdomCharterAction.CityBook:
 			case KingdomCharterAction.TechMap:
 			case KingdomCharterAction.CityAsks:
+			case KingdomCharterAction.FirstGuestCorrespondence:
+			case KingdomCharterAction.FirstFeastPractice:
+			case KingdomCharterAction.PracticeAndVocation:
+			case KingdomCharterAction.CivicKnowledge:
+			case KingdomCharterAction.BodyHistory:
+			case KingdomCharterAction.GuestFeastRecord:
+			case KingdomCharterAction.CivicCommitments:
 				return true;
 			default:
 				return false;
 			}
 		}
 
-		/// <summary>Player wording for a founding stamp, without exposing engine ticks.</summary>
-		public static string FoundedWhen(long Founded, long Now, long TicksPerDay)
-		{
-			if (Founded < 0L || Now < Founded || TicksPerDay <= 0L)
-			{
-				return "founding date needs inspection";
-			}
-			long days = (Now - Founded) / TicksPerDay;
-			if (days <= 0L) return "founded today";
-			if (days == 1L) return "founded yesterday";
-			return "founded " + days + " days ago";
-		}
-
-		/// <summary>Player wording for a due stamp, preserving whether it has passed.</summary>
-		public static string DueWhen(long Due, long Now, long TicksPerDay)
-		{
-			if (Due <= 0L) return "not yet scheduled";
-			if (Now < 0L || TicksPerDay <= 0L) return "date needs inspection";
-			if (Due == Now) return "due now";
-			if (Due < Now)
-			{
-				long late = Now - Due;
-				long lateDays = late / TicksPerDay;
-				long lateRemainder = late % TicksPerDay;
-				if (lateDays == 0L) return "overdue by less than a day";
-				if (lateRemainder == 0L)
-					return "overdue by " + lateDays + ((lateDays == 1L) ? " day" : " days");
-				return "overdue by more than " + lateDays
-					+ ((lateDays == 1L) ? " day" : " days");
-			}
-			long span = Due - Now;
-			long days = span / TicksPerDay;
-			long remainder = span % TicksPerDay;
-			if (days == 0L) return "due within a day";
-			if (remainder == 0L) return "due in " + days + ((days == 1L) ? " day" : " days");
-			return "due in less than " + (days + 1L) + " days";
-		}
-
-		private static KingdomCharterMenuRoute[] Copy(KingdomCharterMenuRoute[] Source)
-		{
-			KingdomCharterMenuRoute[] copy = new KingdomCharterMenuRoute[Source.Length];
-			Array.Copy(Source, copy, Source.Length);
-			return copy;
-		}
 	}
 }

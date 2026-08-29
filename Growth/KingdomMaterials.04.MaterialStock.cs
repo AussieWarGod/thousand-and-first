@@ -39,6 +39,11 @@ namespace ThousandAndFirst
 			/// <summary>Zone this stock was taken from. Null for an empty stock.</summary>
 			public Zone Zone;
 
+			/// <summary>Exact routed-input exclusions captured with this physical snapshot.</summary>
+			internal KingdomConstructionInputLeaseSnapshot InputLeases;
+			internal bool InputLeaseAuthorityExact;
+			internal string InputLeaseFailure;
+
 			/// <summary>True when the founder has dedicated no stockpile here at all, which is a
 			/// different thing from having dedicated an empty one.</summary>
 			public bool None => Stockpiles.Count == 0;
@@ -52,6 +57,10 @@ namespace ThousandAndFirst
 			/// <returns>Units actually taken, never more than were there.</returns>
 			public int Take(KingdomMaterial Material, int Units)
 			{
+				KingdomConstructionInputLeaseSnapshot leases;
+				string leaseFailure;
+				if (Units <= 0 || !KingdomConstructionInputLeaseAuthority.TryCapture(
+					out leases, out leaseFailure)) return 0;
 				int remaining = Units;
 				for (int i = 0; i < Stockpiles.Count && remaining > 0; i++)
 				{
@@ -67,7 +76,8 @@ namespace ThousandAndFirst
 					for (int j = 0; j < held.Count && remaining > 0; j++)
 					{
 						GameObject item = held[j];
-						if (!TryMaterialOf(item, out var kind) || kind != Material)
+						if (!KingdomConstructionInputLeaseAuthority.CanUseMaterial(leases, item)
+							|| !TryOrdinaryMaterialOf(item, out var kind) || kind != Material)
 						{
 							continue;
 						}
@@ -78,6 +88,10 @@ namespace ThousandAndFirst
 						// unit spent.
 						while (remaining > 0 && GameObject.Validate(item))
 						{
+							string mutationLeaseFailure;
+							if (!KingdomConstructionInputLeaseAuthority
+								.TryObjectAvailableForLocalDebit(item,
+									out mutationLeaseFailure)) break;
 							int before = item.Count;
 							try { item.Destroy(null, Silent: true); }
 							catch
@@ -211,7 +225,10 @@ namespace ThousandAndFirst
 					if (container != null)
 					{
 						GameObject accepted = null;
-						try { accepted = container.Inventory.AddObject(item); }
+						// A deposit must never merge into an exact stack another durable receipt
+						// owns. NoStack keeps both identities observable across engine callbacks.
+						try { accepted = container.Inventory.AddObject(item, null,
+							Silent: true, NoStack: true); }
 						catch
 						{
 							KingdomSurvey.ObserveCurrentTopologyInActive(Zone, container);

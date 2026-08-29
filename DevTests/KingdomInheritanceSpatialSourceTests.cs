@@ -85,7 +85,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KeyWorkSnapshot", record);
 			StringAssert.Contains("KeyStreetX", record);
 			string system = KingdomSystemLogicalSource.Read();
-			string settlement = TestMain.ReadRepositoryText("Core/KingdomSettlement.cs");
+			string settlement = KingdomSettlementLogicalSource.Read();
 			StringAssert.DoesNotContain("WorkSnapshots", system);
 			StringAssert.DoesNotContain("WorkSnapshots", settlement);
 			StringAssert.DoesNotContain("SpatialVersion", system);

@@ -17,8 +17,8 @@ namespace ThousandAndFirst
 			string Wall, out GrowthPlan Plan)
 		{
 			Plan = null;
-			if (Z == null || !BoundedGrowthIdentity(Predecessor?.ID)
-				|| !BoundedGrowthIdentity(Successor?.ID) || string.IsNullOrEmpty(SuccessorKey)
+			if (Z == null || !BoundedGrowthIdentity(Predecessor?.IDIfAssigned)
+				|| !BoundedGrowthIdentity(Successor?.IDIfAssigned) || string.IsNullOrEmpty(SuccessorKey)
 				|| !BoundedGrowthText(SuccessorKey, 256) || string.IsNullOrEmpty(PlotId)
 				|| !BoundedGrowthText(PlotId, 128) || !BoundedGrowthText(Wall, 256)
 				|| (KingdomPlotRules.RaisesWalls(Roof) && string.IsNullOrEmpty(Wall))) return false;
@@ -40,11 +40,11 @@ namespace ThousandAndFirst
 								|| item.GetIntProperty(KingdomYards.YardWorkProperty) == 1
 								|| !(item.IsWall() || item.IsDoor()
 									|| item.Blueprint == FrameBlueprint)) continue;
-							if (!BoundedGrowthIdentity(item.ID)
-								|| !BoundedGrowthText(item.Blueprint, 256) || !ids.Add(item.ID)
+							if (!BoundedGrowthIdentity(item.IDIfAssigned)
+								|| !BoundedGrowthText(item.Blueprint, 256) || !ids.Add(item.IDIfAssigned)
 								|| rows.Count >= MaxGrowthRows) return false;
 							rows.Add(new GrowthRow { Kind = 1, X = x, Y = y,
-								Blueprint = item.Blueprint, Id = item.ID, State = 0 });
+								Blueprint = item.Blueprint, Id = item.IDIfAssigned, State = 0 });
 						}
 					}
 			}
@@ -75,7 +75,7 @@ namespace ThousandAndFirst
 									existing = item;
 							}
 						if (sameBlueprint > 0 && (sameBlueprint != 1 || existing == null)) return false;
-						string outputId = existing?.ID;
+						string outputId = existing?.IDIfAssigned;
 						int state = existing == null ? 0 : 2;
 						if (existing == null)
 						{
@@ -94,8 +94,8 @@ namespace ThousandAndFirst
 			{
 				return CompareGrowthRows(A, B);
 			});
-			Plan = new GrowthPlan { PredecessorId = Predecessor.ID,
-				SuccessorId = Successor.ID, SuccessorKey = SuccessorKey, PlotId = PlotId,
+			Plan = new GrowthPlan { PredecessorId = Predecessor.IDIfAssigned,
+				SuccessorId = Successor.IDIfAssigned, SuccessorKey = SuccessorKey, PlotId = PlotId,
 				Old = Old, Grown = Grown, Roof = Roof, HeartX = HeartX, HeartY = HeartY,
 				KeepInner = KeepInner, Wall = Wall ?? "", Done = false, Rows = rows };
 			return true;
@@ -162,7 +162,7 @@ namespace ThousandAndFirst
 					Z.GetCell(Plan.Old.CenterX, Plan.Old.CenterY), Plan)
 					|| !ValidateGrowthWorld(Z, Predecessor, Successor, Plan, true)
 					|| !GameObject.Validate(placed) || placed.Blueprint != row.Blueprint) return false;
-				placed.ID = row.Id;
+				placed.IDIfAssigned = row.Id;
 				placed.SetIntProperty(PlotPartProperty, 1);
 				placed.SetStringProperty(PlotIdProperty, Plan.PlotId);
 				if (!RootGrowthOutput(Predecessor, row, placed)) return false;

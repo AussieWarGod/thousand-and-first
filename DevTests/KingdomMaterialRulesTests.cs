@@ -148,7 +148,7 @@ namespace ThousandAndFirst.Tests
 		public void ShippedUpgradeMaterialBillsAreTransitionSpecificPhysicalAdditions()
 		{
 			XmlDocument document = new XmlDocument();
-			document.Load(Path.Combine(TestMain.RepositoryRoot, "KingdomBuildings.xml"));
+			document.LoadXml(TestMain.ReadRepositoryText("KingdomBuildings.xml"));
 			Dictionary<string, XmlElement> buildings = new Dictionary<string, XmlElement>(
 				StringComparer.OrdinalIgnoreCase);
 			foreach (XmlElement building in document.GetElementsByTagName("building"))
@@ -185,7 +185,8 @@ namespace ThousandAndFirst.Tests
 						+ KingdomMaterialRules.MaterialKey(material));
 				}
 			}
-			Assert.AreEqual(18, transitions, "new upgrade chains need an authored addition bill");
+			Assert.AreEqual(19, transitions,
+				"new upgrade chains need an authored addition bill and an explicit census review");
 		}
 
 		[Test]

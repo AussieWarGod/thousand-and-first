@@ -34,7 +34,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			Simulation.City.KingdomCity.RecordLarder(System, Z, Survey.FoodStored, Survey.FoodCapacity, TimeTicks);
+			Simulation.City.KingdomCity.RecordLarder(System, Z, Survey.FoodStored,
+				Survey.FoodAvailable, Survey.FoodCapacity, TimeTicks);
 		}
 
 		/// <summary>

@@ -82,17 +82,17 @@ namespace ThousandAndFirst
 				.Append("  Population: ")
 				.Append(System.Population)
 				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "")
-				// What the settlement's own notable is worth to that number, named rather than
-				// left as an invisible modifier (the brief's tastes and leader traits, Addendum 4's
-				// Prefers, all through the one shade).
-				.Append(System.SupportedLevel > 0 ? KingdomCeremonyRules.ShadeClause(System.NotableShade) : "")
 				.Append((System.SupportedLevel > 0 && Z != null) ? Dated(KingdomSubsidence.SightingClause(System, Z, (The.Game != null) ? The.Game.TimeTicks : 0L)) : "");
 			// The realm is the faction; the cities are where its history happened. A founder
 			// standing in one should be told the other is still out there, keeping itself.
-			if (System.Away != null)
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				stringBuilder.Append("\n{{K|").Append(KingdomPresentation.Rich(System.KingdomDisplayName)).Append(" also holds ").Append(KingdomPresentation.Rich(System.Away.SettlementName))
-					.Append(KingdomSettlement.VocationSuffix(System.Away.Vocation)).Append(", which keeps itself until you stand in it.}}");
+				stringBuilder.Append("\n{{K|").Append(KingdomPresentation.Rich(
+					System.KingdomDisplayName)).Append(" also holds ").Append(
+					KingdomPresentation.Rich(nonSeat[i].SettlementName)).Append(
+					KingdomSettlement.VocationSuffix(nonSeat[i].Vocation)).Append(
+					", which keeps itself until you stand in it.}}");
 			}
 			if (System.OriginCounts.Count > 0)
 			{
@@ -123,6 +123,8 @@ namespace ThousandAndFirst
 				// What reaches this ground, named: the temple quarter is different ground from the
 				// workers', and the founder should be able to see which one they are standing in.
 				.Append(currentClaimed ? QuarterLine(System, currentZone) : "")
+				.Append(currentClaimed ? ("\n" +
+					KingdomExternalOwnershipBindingRuntime.Status(currentZone)) : "")
 				// What the settlement can build at, and what the next level costs, so the craft
 				// level is never a number the founder has to reverse-engineer from refusals.
 				.Append(KingdomZoning.Readout(System))

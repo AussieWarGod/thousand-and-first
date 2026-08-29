@@ -70,8 +70,10 @@ namespace ThousandAndFirst
 		/// causal pilgrims and expeditions; v6 predates the behaviour sidecar; v7 predates physical
 		/// happenings; v8 predates exact central logistics; v9 predates exact defensive
 		/// WorkId/resident reservations; v10 predates frozen semantic person plans; v11 predates
-		/// independent extension-happening cursors. Historical
-		/// readers retain exactly those surfaces
+		/// independent extension-happening cursors; v12 predates the expanded construction-delivery
+		/// authority and phase domain; v13 predates city-local cook and moot authority; v14 predates
+		/// first-guest correspondence authority; v15 predates physical first-guest evidence; v16
+		/// predates fixed-rate arrival cadence authority. Historical readers retain exactly those surfaces
 		/// rather than interpreting new default fields.</summary>
 		private static bool SchemaField(Type Type, string Name, int SchemaVersion)
 		{
@@ -123,6 +125,10 @@ namespace ThousandAndFirst
 			if (SchemaVersion < HappeningCursorVersion
 				&& Type == typeof(Simulation.City.KingdomCityBook)
 				&& string.Equals(Name, "ExtensionHappeningCursors", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < CivicAuthorityVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& (string.Equals(Name, "NamedCook", StringComparison.Ordinal)
+					|| string.Equals(Name, "AssentingMoot", StringComparison.Ordinal))) return false;
 			if (SchemaVersion < PhysicalHappeningVersion && Type == typeof(KingdomRaidLedger)
 				&& string.Equals(Name, "OpaqueFuturePayload", StringComparison.Ordinal)) return false;
 			if (SchemaVersion < PhysicalHappeningVersion && Type == typeof(KingdomRaidIncident)
@@ -156,6 +162,44 @@ namespace ThousandAndFirst
 					|| string.Equals(Name, "PlannedArrived", StringComparison.Ordinal)
 					|| string.Equals(Name, "ArrivalX", StringComparison.Ordinal)
 					|| string.Equals(Name, "ArrivalY", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < FirstGuestVersion
+				&& Type == typeof(KingdomGrowthArrivalCandidate)
+				&& (string.Equals(Name, "LegacyAutomaticRecovery", StringComparison.Ordinal)
+					|| string.Equals(Name, "FirstGuest", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < FirstGuestVersion
+				&& Type == typeof(KingdomGrowthBook)
+				&& string.Equals(Name, "FirstGuestTerminal", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < PhysicalFirstGuestVersion
+				&& Type == typeof(KingdomGrowthFirstGuestOpportunity)
+				&& (string.Equals(Name, "GuestPhase", StringComparison.Ordinal)
+					|| string.Equals(Name, "GuestTerminalState", StringComparison.Ordinal)
+					|| string.Equals(Name, "GuestActionTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "GuestActionReceiptId", StringComparison.Ordinal)
+					|| string.Equals(Name, "GuestTerminalTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "GuestTerminalReceiptId", StringComparison.Ordinal)))
+				return false;
+			if (SchemaVersion < ArrivalCadenceVersion && Type == typeof(KingdomGrowthBook)
+				&& (string.Equals(Name, "ArrivalEventStreamId", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalRulesVersion", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalRateEpoch", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalRateEpochStartedTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalProcessedThroughTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalCadenceNextDueTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalRateCohort", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOrdinalHighWater", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOrdinalRetiredThrough", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalCadenceMigrationPending", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalCadenceResumePending", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOpportunity", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalDebtRanges", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < ArrivalCadenceVersion
+				&& (Type == typeof(KingdomGrowthArrivalCandidate)
+					|| Type == typeof(KingdomGrowthOperation))
+				&& (string.Equals(Name, "ArrivalOpportunityOrdinal", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOpportunityDueTick", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOpportunityRateEpoch", StringComparison.Ordinal)
+					|| string.Equals(Name, "ArrivalOpportunityPayloadHash", StringComparison.Ordinal)))
+				return false;
 			if (SchemaVersion < SemanticSelectionVersion
 				&& Type == typeof(KingdomRaidDefenceReservation)
 				&& string.Equals(Name, "CrewSemanticIds", StringComparison.Ordinal)) return false;
@@ -188,6 +232,57 @@ namespace ThousandAndFirst
 					|| string.Equals(Name, "DeliveryTargetReceiptStates", StringComparison.Ordinal))) return false;
 			return true;
 		}
+
+		private static bool HistoricalPhysicalFirstGuestOpportunity(
+			KingdomGrowthFirstGuestOpportunity Value, int SchemaVersion)
+		{
+			return SchemaVersion >= PhysicalFirstGuestVersion || Value == null
+				|| Value.RulesVersion == 1
+					&& Value.GuestPhase == KingdomGrowthFirstGuestGuestPhase.None
+					&& Value.GuestTerminalState == KingdomGrowthFirstGuestTerminalState.None
+					&& Value.GuestActionTick == -1L && Value.GuestActionReceiptId == null
+					&& Value.GuestTerminalTick == -1L && Value.GuestTerminalReceiptId == null;
+		}
+
+		/// <summary>Versions v9-v12 carry these integer columns, but only v13 may interpret the
+		/// append-only construction authority and landed phase. Validate the paired column domain at
+		/// the reflected object boundary because their declared type is <c>List&lt;int&gt;</c>.</summary>
+		private static bool ValidDeliveryDomain(
+			Simulation.City.KingdomJobRegistry Value, int SchemaVersion)
+		{
+			if (Value == null || Value.JobIds == null || Value.DeliveryPhases == null
+				|| Value.DeliveryCargoAuthorityKinds == null
+				|| Value.DeliveryPhases.Count != Value.JobIds.Count
+				|| Value.DeliveryCargoAuthorityKinds.Count != Value.JobIds.Count) return false;
+			int maximumAuthority = SchemaVersion < DeliveryDomainVersion
+				? (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
+				: (int)Simulation.City.KingdomDeliveryCargoAuthority.ConstructionInput;
+			int maximumPhase = SchemaVersion < DeliveryDomainVersion
+				? (int)Simulation.City.KingdomDeliveryPhase.Quarantined
+				: (int)Simulation.City.KingdomDeliveryPhase.LandedAwaitingOwner;
+			for (int i = 0; i < Value.JobIds.Count; i++)
+				if (Value.DeliveryCargoAuthorityKinds[i] < 0
+					|| Value.DeliveryCargoAuthorityKinds[i] > maximumAuthority
+					|| Value.DeliveryPhases[i] < 0
+					|| Value.DeliveryPhases[i] > maximumPhase) return false;
+			return true;
+		}
+
+		private static bool ValidCivicAuthority(
+			Simulation.City.KingdomCityBook Value)
+		{
+			return Value != null && Value.NamedCook != null && Value.AssentingMoot != null
+				&& KingdomNamedCookRules.Validate(Value.NamedCook, out string _)
+				&& KingdomAssentingMootRules.Validate(Value.AssentingMoot, out string _);
+		}
+
+#if TAF_TESTS
+		internal static bool ValidDeliveryDomainForTests(
+			Simulation.City.KingdomJobRegistry Value, int SchemaVersion)
+		{
+			return ValidDeliveryDomain(Value, SchemaVersion);
+		}
+#endif
 
 	}
 }

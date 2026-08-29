@@ -26,6 +26,30 @@ namespace ThousandAndFirst
 
 		private static void OpenDynastyChapter(KingdomSystem System)
 		{
+			int chapter = Popup.PickOption(
+				Title: "The dynasty of " + KingdomPresentation.Rich(System.KingdomDisplayName),
+				Intro: "The Charter keeps the succession custom. Reading and cancellation change nothing.",
+				Options: new string[3]
+				{
+					!KingdomMaster.NewWorkAllowed(System)
+						? "Set succession custom {{K|[paused]}}" : "Set succession custom",
+					"Retire the current generation",
+					string.IsNullOrEmpty(System.RealmRetirementWire)
+						? "Prepare this save for mod removal"
+						: "Continue save preparation for mod removal"
+				},
+				Hotkeys: new char[3] { 's', 'r', 'p' }, AllowEscape: true);
+			if (chapter == 0)
+			{
+				OpenSuccessionCustom(System);
+				return;
+			}
+			if (chapter == 1) OpenRetirement(System);
+			else if (chapter == 2) OpenRealmRemoval(System, The.Player);
+		}
+
+		private static void OpenRetirement(KingdomSystem System)
+		{
 			KingdomSeal seal = The.Game?.GetSystem<KingdomSeal>();
 			if (seal == null)
 			{

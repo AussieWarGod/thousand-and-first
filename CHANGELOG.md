@@ -4,6 +4,10 @@ All notable changes to The Thousand and First. Versions are semantic: patch for 
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](docs/API.md).
 
+Historical entries preserve the claim made at that point. `[Unreleased]`, `VISION.md`, and
+`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
+below it.
+
 ## [Unreleased] — 0.2.0 work in progress
 
 Clean commit `19fb8ee` passed a narrow loader/founding/single-gallery/save/cold-load smoke against
@@ -14,7 +18,85 @@ native/human protocol and gallery, compatibility testing, structural release gat
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
-- **Hosted cross-platform source gates are green at checkpoint `1c2d619`.** Repository audit,
+- **A delayed arrival now changes its population-rate epoch at the durable disposition tick.**
+  The outstanding cohort is folded only through the operation's recorded terminal tick, then the
+  post-join/refusal cohort and interval become authoritative before either operation or opportunity
+  retirement. A later observation therefore records intervening debt at the new rate instead of
+  applying the stale outstanding-person rate until the founder next visits. Pause/resume, save-cut
+  replay, wire round-trip, and repeated retirement are exact and idempotent. Nested settlement
+  archive v17 now carries the epoch, bounded debt ranges, frozen opportunity, and exact candidate/
+  operation bindings. Frozen v1-v16 shapes omit that surface, reconstruct migration-pending cadence
+  from their own candidate frontier, and refuse any lossy v16 downgrade of active cadence.
+- **Civic relationships now preserve both directions and fractional personal-reputation spillover.**
+  Foreign-faction→realm regard and realm→foreign-faction policy are separate persisted ledgers;
+  only exact owned pair edges are projected, absent entries remain unspecified, and a clean new
+  realm begins with both directions, carry, and diagnostic observation empty instead of enumerating
+  or inheriting personal reputation. Signed
+  hundredth carry canonicalizes the complete scaled regard, making equally weighted permanent
+  histories partition- and order-invariant until an intermediate step clips; clipping deliberately
+  consumes outward debt and therefore is not reversible. Absolute civic sets clear carry, while
+  adjustments and batches publish canonical standing/carry roots copy-on-write. Saturating arithmetic cannot wrap. Transient and
+  master-disabled changes advance only persisted diagnostic observation
+  and never become catch-up; native eventless reputation sets remain outside this adapter.
+  Registered/published authority checks, reserved-polity refusal, post-load quarantine,
+  exile/archive/return v7 coverage, directional reports/wishes, and focused pure/source gates close
+  the prior direction/rounding gap. The v8→v9 migration admits only explicit, canonical owned
+  outbound feelings, rejects ambiguous or provenance-free state, and never authors symmetry,
+  carry, observation, or personal reputation. Durable source attribution and final native Pass 4
+  persistence, migration-fixture, transient-item, AI-attitude, and exile/return proof remain open.
+- **Compound civic effects now fail atomically around directional standing.** Shared rites and
+  creed declarations retain exact water/tick/dissent/creed/standing snapshots under compensated
+  governance publication; annexe enrolment restores its exact vessel, roster, body, license, and
+  standing roots on any core fault. Failed compensation quarantines instead of claiming success.
+  Village covenants now stage a transaction/authority/faction/display/site-bound exact before/after
+  standing receipt: preexisting high regard is not publication, while the save cut after root swap
+  and before the applied marker resumes from the exact receipt. Completed pre-receipt covenants use
+  only their archived row; the unsafe direct charter compatibility method is inert.
+- **Larger ordinary lots now keep readable, upgrade-stable exterior architecture.** Exact catalogue
+  `UpgradesTo` components, rather than tier BuildKey or palette, freeze each family's deterministic
+  court/field/service/muster/processional/quiet/memorial surface grammar. Installed Qud makes
+  `DirtPath` visually identical to `DirtFloor`, so 46 affected palettes now expose a natural
+  trodden-substrate slot through one stable vanilla-tile wrapper; connected spurs and edge bays prevent unrelated family-mask
+  repeats without inventing fixtures, anchors, or paid materials. Every successor and selector map
+  now reserves its family's union of exact egress cells, and unpaid successor families add no
+  tier-varying exterior boundary. Generator, checker, and Python gates reject concrete path/yard
+  equality, L/XL near-monoculture, unrelated fingerprints, and shared-exterior successor drift.
+- **The Heart can now keep its yielding promise without demolishing a city.** A blocked later rung
+  offers the founder one complete, re-proved source→destination plan, using the existing layout
+  scorer with lawful manual overrides. It spends zero water/material and advances one named-crew
+  receiving frame at a time. At handover the original whole plot objects move under bounded CAS
+  receipts, retaining the same LotId, frozen architecture/pose/hash, inventory, furnishings,
+  residents/home binding, staffing, holds/work, name/history/wear, and network declarations. The old
+  plot stands until the frame is complete; creatures and changed/protected ground are never
+  displaced. Save/load, thaw, destroyed frames, every partial row, duplicate IDs, secession, and
+  callback divergence recover, roll back, or quarantine without cloning, striking, or double cost.
+  Temporary frame/stake art reuses verified vanilla tiles. Native TESTING 136j.6–136j.10 remains open.
+- **Hosted-arcology implementation status is superseded; its accepted vision remains.** The earlier
+  code/content closure claim is withdrawn under active AMENDED 19+ review. Production, XML/fabric,
+  and tests are held; the proposed capital authority, persistent interiors, paid lots, water gate,
+  dark shell, and native Pass 37 protocol are design/review scope, not current runtime evidence.
+- **The assenting moot now owns the ward its authored floor promises.** Its hidden commission key
+  is derived only for the current seated city from assent research, the founder's Chavvah rite,
+  claimed surface ground cardinally beside the Moon Stair, and the shipped owner contract; it is
+  never permanent knowledge. One exact finished moot records up to six named assents and six
+  exemptions through explicit add/remove verbs. Current valid voices set one exactly owned native
+  ambient-stabilization field; exemptions weaken it and exact exempt bodies veto ambient
+  application. Damage, destruction, absence/death/departure, strike, secession, activation/thaw,
+  cold load, foreign fields, and receipt divergence fail closed and recover without NormCore or
+  faction mutation. Focused pure/source tests and staged compilation are green; live-Qud Pass
+  136t-136w remains open.
+- **The exact five-work reciprocal purpose portfolio now runs end to end.** Deep-Bore, Great
+  Foundry, Granary-Colossus, chimeric theatre, and becoming annexe form exactly the documented
+  five symmetric edges and ten directed recipes. One receipted bootstrap funds the second work;
+  one receipted return is consumed by a paid activation operation; later operations alternate
+  strictly and consume exact cargo plus frozen local water/material/food. Theatre and annexe
+  operations invoke their selected existing procedure/enrolment engines and their own quoted cost.
+  Ordered dual-object construction funding, lease-safe local debit, explicit pickup/landing
+  checkpoints, CAS retry/orphan handling, and twelve authored XL fallback/creed maps close the
+  former implementation gap. Its narrow physical-food landing transaction is code-complete;
+  integrated adversarial fan-in and native custody/UI/appearance proof remain open. Native Pass 37
+  remains the human behavior/appearance acceptance gate.
+- **Hosted cross-platform source gates are green at checkpoint `d285129`.** Repository audit,
   Ubuntu source suite, and Windows source suite pass for those exact bytes. The later working-tree
   decomposition remains local evidence until its own hosted run.
 - **Concurrent legacy publication now has one cross-process decision boundary.** Linux CI exposed
@@ -35,7 +117,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   transition wake precedence, then the first safe turn retires and attempts that exact slot once;
   save/reload, repeated wakes, and malformed legacy kinds cannot queue or duplicate it.
 - **Native architecture loading now agrees with the static gate.** The independent checker mirrors
-  the canonical a2 binary codec for every tier/variant and reports the measured maximum; all 516
+  the canonical a2 binary codec for every tier/variant and reports the measured maximum; all 530
   variants fit the bounded 8 KiB payload envelope, including the five dense XL designs previously
   rejected only after Qud loaded them. Defence is now an effect distinct from frontier siting:
   defensive plotted creed buildings retain and raise their complete authored lots, count once,
@@ -77,7 +159,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 1575-file census remains red: 252,982 physical lines; 27 files exceed
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. That checkpoint's 1575-file census remained red: 252,982 physical lines; 27 files exceed
   300, 0 are exactly 300, 3 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
   imports occur in 689 files, 25 of them over the line limit. Its
   exact inventory digest is
@@ -94,12 +176,15 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
   upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
   walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
-  cases pass; the final integrated pure/source suite passes 7,743 / 7,743 cases. Dense native scan
-  instrumentation remains a release gate.
+  cases pass; the retained integrated pure/source checkpoint's record says it passes 7,743 / 7,743
+  cases. The final working-tree integrated run remains pending. Dense native scan instrumentation
+  remains a release gate.
 - **The canonical vision now classifies every newly audited boundary and one hidden v1 gap.**
-  Claims preserve existing objects' native ownership/theft law; external food charters, bespoke
-  idle activities, public `sultanHistory` founder rendering, and groomed designees are explicitly
-  `AUTHOR-DEFERRED`, while a competing `TeachesDish` realm authority is `REJECTED`. Charter
+  This earlier pass preserved existing objects' native ownership/theft law and initially placed
+  external food charters, public `sultanHistory` founder rendering, and groomed designees outside
+  its then-current scope; the 2026-08-27 full positive-scope reopening below supersedes that status.
+  A competing `TeachesDish` realm authority is `REJECTED`. Attended posted residents now perform
+  bounded cosmetic station activities without gameplay output or RNG effects. Charter
   declaration/change of seniority and the bounded chosen-resident/seat-consequence path are an
   open `SHIP` gap. The purposeful-work target is now a two-city-compatible reciprocal-pair graph,
   avoiding the impossible three-city dependency chain implied by the earlier shorthand.
@@ -108,13 +193,19 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   ledgers, decision/question/session/coordination records, and research indexes agree on the latest
   static evidence and unsigned native/human gates. Historical audits retain dated findings but are
   explicitly non-current.
-- **The v1 polity/world-presence scope is now explicit without turning brainstorming into a
-  commitment.** Existing inherited ruins/history, grievance-first raids, bounded named/unnamed
-  bodies, caravans, and conserved two-city manifests remain `SHIP` at their actual runtime
-  boundary. Successor polities, one legacy rival, diplomats/emissaries, generalized visible
-  traffic, and polity clashes are positive `AUTHOR-DEFERRED` targets with reopening/evidence
-  owners. Exact old-actor continuation, automatic ideological war, persistent unloaded actors,
-  offscreen conquest/loss, and mass world simulation remain `REJECTED`.
+- **Historical polity-foundation checkpoint: all positive polity/world-presence scope was
+  activated behind one fail-closed semantic authority.** `KingdomSystem.PolityLedger` then persisted canonical bounded polity records,
+  directional relations, immutable fact-derived profiles, eight semantic routes, one active
+  front, caused grievances, finite profile-pinned cohorts, scarce named figures, witnessed
+  incident plans/conclusions, projection receipts, independent no-backlog options, and declared
+  compaction. Its strict v2 envelope has an independent v1 migration fixture, byte-exact inert
+  future preservation, hostile-input refusal, and whole-graph quarantine; ten focused pure cases
+  pass. Successor/rival/faction/body/Trade/diplomacy/conflict/hospitality adapters remain accepted
+  open work, not current runtime. Exact old-actor continuation, war from ideology alone,
+  persistent unloaded actors, unwitnessed conquest/casualties, and mass world simulation remain
+  `REJECTED`. All positive polity/world-presence scope is activated as v1 scope, but this
+  v2/adapter-boundary checkpoint is superseded by the current v5 code-scope closure and its
+  remaining integrated/native gates in `docs/STATUS.md`.
 - **The realm master option is now a reversible, backlog-free pause.** Automatic system wakes,
   independently ticking civic parts, and public trade/petition/growth/guest/research producers gate
   before scans, delegates, RNG, prompts, or mutation. Disable preserves state; resume consumes its
@@ -189,12 +280,14 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
   that would have caught the defect lands with the fix.
 - **Every offered plot size now has an exact authored realization.** The merged catalogue currently
-  contains 126 plotted plans over 499 inspectable authored maps; generated larger-lot data adds
-  337 concrete maps, 242 exact bindings, and 277 predecessor tiers. Larger stakes retain
-  the authored footprint and expose the remainder as yard. The picker filters against the exact
-  typed map index, the loader/checker census every reachable pair, and road-facing entrances now
-  reach exterior road evidence in all four poses. Civic-heart rungs remain rite-owned growth and
-  no longer leak into the commission list.
+  contains 131 plotted buildings over 514 inspectable maps (177 source / 337 generated);
+  larger-lot data adds 242 exact bindings and 277 predecessor tiers. Larger stakes preserve the
+  complete source block, then realize added space as category-appropriate courts, service aprons,
+  crop/tending ground, paths, sparse boundaries, or an explicitly reasoned opening using only the
+  frozen lawful palette. Every road-facing entrance carries its exact bounded unclaimed route to
+  exterior road evidence through all four poses. Civic-heart rungs remain rite-owned growth and no
+  longer leak into the commission list; three hosted-arcology maps remain held for their separate
+  authored-floor redesign.
 - **Architecture identity now uses identity facts, not faction-name proxies.** Hindren housing
   selects from live `GetCulture()`/`GetSpecies()` tallies rather than pretending Hindren is a
   creed; Kyakukya remains a creed. Existing architecture variants also accept bounded live
@@ -204,6 +297,9 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   architecture snapshot and never repaints standing work.
 
 ### Added
+The attendance rule in the following historical physical-ceremony entry does not govern disclosed
+abstract brinks; current absence and physical-witness boundaries are controlled by `VISION.md`.
+
 - **Weddings, funerals, feasts, and raisings now happen on the ground when they are attended.**
   One bounded per-city lifecycle freezes exact already-bound named bodies, an authored functional
   bench/shrine/campfire-or-oven/first-basin locus, reachable activity cells, former schedules,
@@ -263,11 +359,15 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   blockage defers the body, and a visit missed wholly during absence becomes one dated report
   instead of a late random spawn. Pilgrims are absent from the generic traveller table, and both
   caused and ordinary visitors use the heart approach rather than arbitrary empty cells.
-- **The nested settlement archive is version 8.** Salvage and causal-pilgrim fields remain the
-  version-6 boundary, and API-v3 behaviour remains the version-7 boundary. Frozen v6 and v7
-  writers/goldens prove each later sidecar absent from its bytes; the physical-happening lifecycle
-  defaults empty under the v8 reader and then survives current rewrite and a second cold read.
-  Every older frozen writer and golden remains unchanged.
+- **The nested settlement archive reader is now version 17, with frozen v1-v16 migration
+  evidence.** Salvage and causal-pilgrim fields remain the v6 boundary, API-v3 behaviour v7,
+  physical happenings v8, exact-logistics epoch marker v9, defensive reservations v10, semantic
+  selections v11, per-source happening cursors v12, construction delivery authority v13,
+  named-cook and assenting-moot receipts v14, and first-guest correspondence v15. Version 16 adds
+  the durable physical pre-citizen guest phase, player-action receipt, and observed-body terminal
+  evidence. Version 17 adds exact fixed-rate arrival epoch, debt, opportunity, and source-candidate
+  bindings; older shapes reconstruct migration-pending cadence without inventing elapsed debt.
+  Every historical writer remains independent and rewrites stably through the current reader.
 - **Legendary dromad traders now cash out the luxury lane.** One can appear through the mergeable
   notable table, receives Qud's own merchant title without HeroMaker's combat/mutation side
   effects, and settles only into an exact wholly vacant M-or-larger fine house when a staffed
@@ -292,7 +392,9 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   stacking capped at 50%, and no path to automatic completion. Rituals performed before founding
   or between realms remain usable; Kingdom succession clears the dead founder's personal rite
   ledger while preserving the cities' own research standing.
-- **The crown, the capital, and the arcology.** The crown is a building (never the seat — the
+- **The crown, the capital, and the arcology.** The accepted capital/arcology design in this
+  historical entry remains; its implementation claim is superseded by the active AMENDED 19+
+  review. The crown is a building (never the seat — the
   seat walks with the founder, the capital does not): raise the crown hall and set the crown
   down, and the city is the capital; moving it means raising another and walking there, so
   the record's own cost is the price of a move. The mirror-gate network re-keys onto the
@@ -300,8 +402,8 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   for politics: the cost of the move is that your crossings now land somewhere else, told
   before consent. Capital-specific works arrive on their own cardinality lane (`Capital=`,
   which never spends the city's purpose slot — the capital may still be the flesh-city or
-  the chrome-city): the arcology foundation and its first two surface-prototype records open
-  the set; hosted interior and zone-spanning ground remain deferred. And the
+  the chrome-city): the hosted arcology would close around the great court and own bounded
+  persistent interior lots rather than surface prototypes. And the
   great works project outward: the hall's surgery and the registry office are cheap
   one-per-city satellites carrying the lower rungs only — the top rungs and the once-ever
   ceremonies stay where the colossus stands.
@@ -416,6 +518,11 @@ Steam subscription/install pass remain gates before any release-candidate claim 
 - Extension registries — `KingdomBuildings.xml` and `KingdomDeals.xml` — loaded through the
   game's mergeable XML streams so any mod extends them without code.
 - Diagnostics: `[TAF]` log lines and the `kingdom:dump` state readout.
+
+> **Superseded topology and manifest behavior.** The current runtime holds one seat plus two
+> non-seat cities: the third founding succeeds, the fourth refuses, and a three-city water manifest
+> offers both non-seat destinations. The old lapsed-load write-off below is also superseded by
+> receipt-owned turnback/lapse conservation. This section remains chronological history.
 
 ### Added — a faction of more than one city
 - A realm can hold **two cities**. Pour the rite on unclaimed ground that does not border what you

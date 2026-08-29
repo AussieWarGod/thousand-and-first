@@ -18,6 +18,8 @@ namespace ThousandAndFirst
 		public string GameId = "";
 		public string RealmId = "";
 		public long RealmFoundedTick;
+		public int RulerSuccessionOrdinal = -1;
+		public string RulerLifeId = "";
 		public int ContractVersion;
 		public string ProcedureKey = "";
 		public string Grants = "";
@@ -39,6 +41,8 @@ namespace ThousandAndFirst
 				GameId = GameId ?? "",
 				RealmId = RealmId ?? "",
 				RealmFoundedTick = RealmFoundedTick,
+				RulerSuccessionOrdinal = RulerSuccessionOrdinal,
+				RulerLifeId = RulerLifeId ?? "",
 				ContractVersion = ContractVersion,
 				ProcedureKey = ProcedureKey ?? "",
 				Grants = Grants ?? "",

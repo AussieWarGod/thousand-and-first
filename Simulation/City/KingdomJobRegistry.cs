@@ -92,7 +92,11 @@ namespace ThousandAndFirst.Simulation.City
 		ReservationPrepared = 4,
 
 		/// <summary>Cross-authority mismatch. Retained for diagnosis; never rendered or moved.</summary>
-		Quarantined = 5
+		Quarantined = 5,
+
+		/// <summary>Construction cargo reached its frozen destination, but remains owned by the
+		/// construction-input receipt until that parent durably proves consumption.</summary>
+		LandedAwaitingOwner = 6
 	}
 
 	/// <summary>Who owns cargo identity and physical callback receipts for a central trip.</summary>
@@ -102,7 +106,11 @@ namespace ThousandAndFirst.Simulation.City
 		ScalarStock = 0,
 
 		/// <summary>CarryBook v6: ordered whole GameObject stacks remain exact references.</summary>
-		CarryBookManifest = 1
+		CarryBookManifest = 1,
+
+		/// <summary>One construction-input receipt owns liquid or exact-object cargo until the
+		/// parent construction transaction acknowledges it.</summary>
+		ConstructionInput = 2
 	}
 
 	/// <summary>Durable bracket around one scalar target callback. The physical target receives

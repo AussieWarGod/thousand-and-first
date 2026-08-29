@@ -14,11 +14,13 @@ namespace ThousandAndFirst
 			KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry,
 			KingdomPlotRules.PlotSpec Spec, GroundGrid Grid, string SkinKey, bool Carved,
 			KingdomArchitectureIntent Architecture, bool LegacyArchitecture,
-			ref KingdomConstructionJob Job)
+			ref KingdomConstructionJob Job, FoundingHeartPlacement Heart = null)
 		{
 			string intentFailure;
 			if (System == null || Z == null || Entry == null || Spec == null || Grid == null
 				|| (LegacyArchitecture && (Architecture != null || Job == null))
+				|| (Heart != null && (Job != null || LegacyArchitecture
+					|| Heart.Zone != Z || Heart.Context?.Architecture != Architecture))
 				|| (!LegacyArchitecture && (!KingdomArchitectureRuntime.TryValidate(
 					Architecture, out intentFailure) || Architecture.BuildKey != Entry.Key
 					|| !SameRect(Architecture.Rect, Rect))))
@@ -27,6 +29,8 @@ namespace ThousandAndFirst
 					"Plot staking lacks a valid frozen authored intent.");
 				return null;
 			}
+			KingdomFoundingHeartStakeTruth heartTruth = Heart?.Context?.Stake;
+			if (Heart != null && !KingdomFoundingHeartStakeRules.Valid(heartTruth)) return null;
 			Cell cell = LegacyArchitecture ? Z.GetCell(Rect.CenterX, Rect.CenterY)
 				: Z.GetCell(Architecture.MainWorldX, Architecture.MainWorldY);
 			if (cell == null)
@@ -70,34 +74,48 @@ namespace ThousandAndFirst
 				return null;
 			}
 			part.DesignKey = Entry.Key;
-			part.DisplayName = Entry.Name;
+			part.DisplayName = Heart == null ? Entry.Name : heartTruth.DisplayName;
 			part.X1 = Rect.X1;
 			part.Y1 = Rect.Y1;
 			part.X2 = Rect.X2;
 			part.Y2 = Rect.Y2;
-			HeartFor(Z, Rect, out var heartX, out var heartY);
-			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofOnGround(Spec.Roof, Carved);
+			int heartX;
+			int heartY;
+			if (Heart == null) HeartFor(Z, Rect, out heartX, out heartY);
+			else { heartX = Heart.Context.Plan.RiteX; heartY = Heart.Context.Plan.RiteY; }
+			KingdomPlotRules.RoofState roof = Heart == null
+				? KingdomPlotRules.RoofOnGround(Spec.Roof, Carved)
+				: (KingdomPlotRules.RoofState)heartTruth.Roof;
 			bool heartRung = KingdomPlotRules.HeartRungOf(Entry.Key) > 0;
-			KingdomPlotRules.PlotRect footprint = heartRung
+			KingdomPlotRules.PlotRect footprint = Heart != null
+				? new KingdomPlotRules.PlotRect(heartTruth.FootprintX1, heartTruth.FootprintY1,
+					heartTruth.FootprintX2, heartTruth.FootprintY2)
+				: heartRung
 				? HeartFootprintFor(Z, Rect, Spec)
 				: FootprintFor(Rect, Spec, heartX, heartY);
-			part.StartTick = Job == null ? The.Game.TimeTicks : Job.StartedTick;
+			part.StartTick = Heart != null ? Heart.Context.Plan.StartedTick
+				: Job == null ? The.Game.TimeTicks : Job.StartedTick;
 			// The whole PLOT is cleared and the FOOTPRINT is walled: staking wide is paid for in
 			// clearing, earned back in material and yard, and never in a longer wall than the
 			// building actually has.
-			long measuredTicks = KingdomPlotRules.RaiseTicks(
-				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-				Grid.CellsOf(Rect), footprint, roof, Carved);
+			long measuredTicks = Heart != null ? Heart.Context.Plan.TotalTicks
+				: KingdomPlotRules.RaiseTicks(
+					KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
+					Grid.CellsOf(Rect), footprint, roof, Carved);
 			part.TotalTicks = Job != null && Job.DueTick > Job.StartedTick
-				? Job.DueTick - Job.StartedTick : measuredTicks;
+					? Job.DueTick - Job.StartedTick : measuredTicks;
 			if (part.TotalTicks < 1L) part.TotalTicks = 1L;
 			part.StageApplied = (int)KingdomPlotRules.PlotStage.Staked;
-			part.Open = Spec.Open;
-			part.Carved = Carved;
-			part.WallBlueprint = KingdomPlotRules.RaisesWalls(roof) ? KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName) : null;
-			part.ContentsTable = Spec.Contents;
-			part.StaffNeeded = Entry.Staff;
-			part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
+			part.Open = Heart == null ? Spec.Open : heartTruth.Open;
+			part.Carved = Heart == null ? Carved : heartTruth.Carved;
+			part.WallBlueprint = Heart == null
+				? KingdomPlotRules.RaisesWalls(roof)
+					? KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName) : null
+				: heartTruth.WallBlueprint;
+			part.ContentsTable = Heart == null ? Spec.Contents : heartTruth.Contents;
+			part.StaffNeeded = Heart == null ? Entry.Staff : heartTruth.Staff;
+			part.ThresholdManning = Heart == null
+				? KingdomRules.IsThresholdManning(Entry.Manning) : heartTruth.ThresholdManning;
 			if (Job != null)
 			{
 				if (!KingdomConstructionRules.TryReadBuildTruth(Job,
@@ -111,6 +129,7 @@ namespace ThousandAndFirst
 				}
 				part.DefencePending = defence;
 			}
+			else if (Heart != null) part.DefencePending = heartTruth.Defence;
 			else if (Entry.Defence > 0)
 			{
 				bool hasTinkering = The.Player != null && The.Player.HasSkill("Tinkering");
@@ -119,11 +138,13 @@ namespace ThousandAndFirst
 					System.FoundingTerrainBlueprint, System.FoundingRegionName,
 					hasTinkering, hasAdvancedTinkering);
 			}
-			bool foundDoor = KingdomPlotRules.TryDoor(footprint, heartX, heartY, out var doorX, out var doorY);
-			part.HasDoor = foundDoor && KingdomPlotRules.Encloses(roof);
-			part.DoorX = doorX;
-			part.DoorY = doorY;
-			works.DisplayName = "plot: " + Entry.Name;
+			bool foundDoor = KingdomPlotRules.TryDoor(footprint, heartX, heartY,
+				out var doorX, out var doorY);
+			part.HasDoor = Heart == null
+				? foundDoor && KingdomPlotRules.Encloses(roof) : heartTruth.HasDoor;
+			part.DoorX = Heart == null ? doorX : heartTruth.DoorX;
+			part.DoorY = Heart == null ? doorY : heartTruth.DoorY;
+			works.DisplayName = "plot: " + (Heart == null ? Entry.Name : heartTruth.DisplayName);
 			// Consent before cost, at the moment the ground is spoken for: a plot the founder puts
 			// down inside the ground the heart was surveyed for is marked yielding here, says so in
 			// its own description from this moment on, and says so out loud in the sentence the
@@ -136,32 +157,40 @@ namespace ThousandAndFirst
 				works.SetIntProperty(YieldingProperty, 1);
 				works.RequirePart<r_KingdomYielding>();
 			}
-			string plotId = Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks;
+			string plotId = Heart == null
+				? Entry.Key + "@" + Rect.X1 + "." + Rect.Y1 + "." + The.Game.TimeTicks
+				: Heart.Context.Plan.PlotId;
 			works.SetStringProperty(PlotIdProperty, plotId);
-			// New work is elapsed-time × labour, never elapsed-time alone. Keep the state in
-			// named properties: r_KingdomPlotWorks' positional save layout ends at DoorY.
-			works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema);
-			SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks);
-			SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks);
-			SetPlotWorkLong(works, PlotWorkLastTickProperty, The.Game.TimeTicks);
-			if (works.GetIntProperty(PlotWorkSchemaProperty) != PlotWorkSchema
-				|| !TryGetPlotWorkLong(works, PlotWorkRequiredProperty, out long frozenRequired)
-				|| !TryGetPlotWorkLong(works, PlotWorkRemainingProperty, out long frozenRemaining)
-				|| !TryGetPlotWorkLong(works, PlotWorkLastTickProperty, out _)
-				|| frozenRequired != part.TotalTicks || frozenRemaining != part.TotalTicks)
+			if (heartRung) works.SetIntProperty(HeartPlotProperty, 1);
+			// Only an exact paid job enters attended schema two. Receiptless/direct stakes keep the
+			// shipped schema-zero calendar; named receipt fields must never silently upgrade them.
+			if (Job != null)
 			{
-				bool cleaned = RemoveCreatedWorks(works, Z);
-				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
-					? "Plot labour receipt could not be frozen before projection."
-					: "Plot labour receipt failed and exact cleanup was not possible.");
-				return null;
+				works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema);
+				SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks);
+				SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks);
+				SetPlotWorkLong(works, PlotWorkLastTickProperty, The.Game.TimeTicks);
+				if (works.GetIntProperty(PlotWorkSchemaProperty) != PlotWorkSchema
+					|| !TryGetPlotWorkLong(works, PlotWorkRequiredProperty, out long frozenRequired)
+					|| !TryGetPlotWorkLong(works, PlotWorkRemainingProperty, out long frozenRemaining)
+					|| !TryGetPlotWorkLong(works, PlotWorkLastTickProperty, out _)
+					|| frozenRequired != part.TotalTicks || frozenRemaining != part.TotalTicks)
+				{
+					bool cleaned = RemoveCreatedWorks(works, Z);
+					KingdomConstruction.Quarantine(ref Job, cleaned
+						? "Plot labour receipt could not be frozen before projection."
+						: "Plot labour receipt failed and exact cleanup was not possible.");
+					return null;
+				}
 			}
 			StampRect(works, Rect);
 			StampFootprint(works, footprint, roof);
 			works.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			KingdomDesign.StageSkin(works, Entry, SkinKey);
-			if (!KingdomPurpose.FreezeOnWork(works, Entry.Key,
-				Job == null ? null : Job.PhysicalReceipt))
+			if (!(Heart != null
+				? KingdomPurpose.FreezeFoundingHeartOnWork(works, heartTruth.PurposeLegacy)
+				: KingdomPurpose.FreezeOnWork(works, Entry.Key,
+					Job == null ? null : Job.PhysicalReceipt)))
 			{
 				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
@@ -203,20 +232,36 @@ namespace ThousandAndFirst
 				}
 				KingdomConstruction.Bind(works, Job);
 			}
-			GameObject accepted;
+			if (Heart != null && (!PreparedFoundingHeartWorksShape(works, Heart.Context)
+				|| !StageFoundingHeartIdentity(works,
+				Heart.Context.Plan, Heart.Slot)
+				|| !PrepareFoundingHeartWorksAdd(Heart, works))) return null;
+			GameObject accepted = null;
+			bool callbackThrew = false;
 			try
 			{
-				accepted = cell.AddObject(works);
-				KingdomSurvey.ObserveAddResultInActive(Z, works, accepted);
+				accepted = cell.AddObject(works, NoStack: Heart != null);
 			}
 			catch (System.Exception ex)
 			{
+				callbackThrew = true;
+				if (Heart != null)
+				{
+					KingdomLog.Log("founding heart: plot-works AddObject callback cut: " + ex.Message);
+				}
+				else
+				{
 				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null) KingdomConstruction.Quarantine(ref Job,
 					(cleaned ? "Plot-works AddObject threw after identity publication: "
 						: "Plot-works AddObject threw and exact cleanup failed: ") + ex.Message);
-				return null;
+				}
 			}
+			finally { KingdomSurvey.ObserveAddResultInActive(Z, works, accepted); }
+			if (Heart != null)
+				return SettleFoundingHeartWorksAdd(Heart, works, accepted, callbackThrew)
+					? works : null;
+			if (callbackThrew) return null;
 			GameObject exactWorks;
 			if (!ReferenceEquals(accepted, works)
 				|| KingdomConstruction.FindExactId(Z, works.ID, out exactWorks)
@@ -232,7 +277,7 @@ namespace ThousandAndFirst
 					|| !KingdomConstruction.HasReceipt(works, Job)
 					|| !KingdomConstruction.IsCurrent(Job))))
 			{
-				bool cleaned = RemoveCreatedWorks(works, Z);
+				bool cleaned = Heart == null && RemoveCreatedWorks(works, Z);
 				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
 					? "Plot works changed during AddObject; frozen identity was retired."
 					: "Plot works changed during AddObject and exact cleanup failed.");

@@ -48,8 +48,7 @@ namespace ThousandAndFirst.Tests
 				"public string SuccessorKey;", "public KingdomRules.BuildEntry Successor;",
 				"public int CostDrams;", "public int Reserve;", "public int Shortfall;",
 				"public int CrewNeeded;", "public GrowthStage StageNeeded;",
-				"public long BuildTicks;", "public int SupportPerDay;", "public int OutputLost;",
-				"public int Margin;", "public KingdomUpgradeRules.AbsorptionDemand Demand;",
+				"public long BuildTicks;", "public KingdomUpgradeRules.ImprovementDemand Demand;",
 				"public string Reason;", "public KingdomSocketTransition Transition;");
 			string prepared = Between(source, "public sealed class PreparedImprovement",
 				"public static Assessment Assess(");
@@ -94,13 +93,44 @@ namespace ThousandAndFirst.Tests
 				"public static bool ContentsWouldFit(", "public static void OnZoneActivated(",
 				"private static void Resolve(", "public static bool Begin(",
 				"public static bool TryPrepareImprovement(", "public static bool BeginPlanChange(",
-				"private static bool ProjectImprovement(", "public static bool Force(",
-				"public static bool OpenHeldOffer(", "public static void HandOver(",
+				"private static bool ProjectImprovement(", "public static void HandOver(",
 				"private static bool ExactHandoverEndpointsAfterCallback(",
 				"public static int CarryLiquid(", "public static int CarryInventory(",
 				"public static void CarryMarks(", "public static void ShowImprovements(",
 				"public static string EntryLine(", "private static bool TryCarryHandoverContents(",
 				"private static bool TryRemoveHandoverPredecessor(");
+		}
+
+		[Test]
+		public void FirstImprovementNoticeReturnsBeforeStartingOrDebiting()
+		{
+			string resolve = Between(Upgrade(), "private static void Resolve(",
+				"public static bool GiveFirstNotice(");
+			AssertOrdered(resolve, "if (readyWork != null && GiveFirstNotice(System)) return;",
+				"Begin(System, Z, readyWork, readyAssessment, Survey)");
+			StringAssert.DoesNotContain("anyImprovable", resolve);
+		}
+
+		[Test]
+		public void CraftRefusalCarriesExactZoningDetailIntoFounderProse()
+		{
+			string source = Upgrade();
+			string requirements = Between(source, "public static KingdomUpgradeRules.ImprovementDemand MeasureRequirements(",
+				"public static bool CraftReaches(KingdomSystem System, Zone Z, string Key)");
+			AssertOrdered(requirements, "out ZoningJudgement judgement",
+				"demand.CraftDetail = judgement.Detail",
+				"demand.KnowledgeMissing = judgement.Verdict == ZoningVerdict.RefusedUnlearned");
+			string assessment = Between(source, "public static Assessment Assess(",
+				"public static bool ContentsWouldFit(");
+			AssertOrdered(assessment, "assessment.Demand = MeasureRequirements(",
+				"assessment.Demand.CraftDetail", "assessment.Demand.KnowledgeMissing");
+			string reach = Between(source,
+				"public static bool CraftReaches(KingdomSystem System, Zone Z, string Key,",
+				"The settlement's improvement pass:");
+			StringAssert.Contains(
+				"KingdomUpgradeRules.CraftGateAdmits(Judgement.Verdict)", reach);
+			StringAssert.DoesNotContain(
+				"Judgement.Verdict != ZoningVerdict.RefusedUnlearned", reach);
 		}
 
 		[Test]

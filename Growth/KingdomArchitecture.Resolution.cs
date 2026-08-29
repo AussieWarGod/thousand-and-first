@@ -96,7 +96,7 @@ namespace ThousandAndFirst
 			ArchitectureSelectionContext Context, ArchitectureFacing Facing,
 			out ArchitectureLayoutSnapshot Snapshot, out string Failure)
 		{
-			return TryResolveSuccessor(null, SuccessorBuildKey, PlanKey, BindingKey, LotType,
+			return TryResolveSuccessor(null, null, SuccessorBuildKey, PlanKey, BindingKey, LotType,
 				ActualLotSize, Context, Facing, out Snapshot, out Failure);
 		}
 
@@ -110,6 +110,21 @@ namespace ThousandAndFirst
 			ArchitectureLotSize ActualLotSize, ArchitectureSelectionContext Context,
 			ArchitectureFacing Facing, out ArchitectureLayoutSnapshot Snapshot,
 			out string Failure)
+		{
+			return TryResolveSuccessor(PredecessorBuildKey, null, SuccessorBuildKey,
+				PlanKey, BindingKey, LotType, ActualLotSize, Context, Facing,
+				out Snapshot, out Failure);
+		}
+
+		/// <summary>
+		/// Standing-receipt successor resolver. The predecessor's frozen variant is identity:
+		/// current settlement facts cannot restyle an occupied building during tier growth.
+		/// </summary>
+		public static bool TryResolveSuccessor(string PredecessorBuildKey,
+			string PredecessorVariantKey, string SuccessorBuildKey, string PlanKey,
+			string BindingKey, string LotType, ArchitectureLotSize ActualLotSize,
+			ArchitectureSelectionContext Context, ArchitectureFacing Facing,
+			out ArchitectureLayoutSnapshot Snapshot, out string Failure)
 		{
 			Snapshot = null;
 			Failure = null;
@@ -129,10 +144,13 @@ namespace ThousandAndFirst
 			if (!ordinary)
 			{
 				ResolvedRecord predecessor;
-				ArchitectureLotSize successorSize = (ArchitectureLotSize)afterRung;
+				ArchitectureLotSize successorSize = (ArchitectureLotSize)
+					KingdomPlotRules.HeartSizeForRung(afterRung);
+				ArchitectureLotSize predecessorSize = (ArchitectureLotSize)
+					KingdomPlotRules.HeartSizeForRung(beforeRung);
 				if (beforeRung < 1 || afterRung != beforeRung + 1
 					|| PlanKey != "civic-heart" || type != "civic"
-					|| ActualLotSize != (ArchitectureLotSize)beforeRung
+					|| ActualLotSize != predecessorSize
 					|| !ValidKey(BindingKey)
 					|| !frozen.Records.TryGetValue(ExactRecordKey(PredecessorBuildKey,
 						type, ActualLotSize), out predecessor)
@@ -149,8 +167,13 @@ namespace ThousandAndFirst
 						out Failure);
 			}
 			ArchitectureVariantDraft variant;
-			if (!KingdomArchitectureRules.TrySelectVariant(record.Tier.Variants, Context,
-				out variant, out Failure)) return false;
+			if (PredecessorVariantKey == null)
+			{
+				if (!KingdomArchitectureRules.TrySelectVariant(record.Tier.Variants, Context,
+					out variant, out Failure)) return false;
+			}
+			else if (!KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(
+				record.Tier.Variants, PredecessorVariantKey, out variant, out Failure)) return false;
 			return CompileFrozen(frozen, record, variant, Facing, out Snapshot, out Failure);
 		}
 

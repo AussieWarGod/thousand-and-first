@@ -34,6 +34,20 @@ namespace ThousandAndFirst
 		public long LastHeartbeatTick;
 		public long NextArrivalTick;
 		public long ArrivalIntervalTicks;
+		public string ArrivalEventStreamId = KingdomLifecycleRules.GrowthArrivalEventStreamId;
+		public int ArrivalRulesVersion;
+		public long ArrivalRateEpoch;
+		public long ArrivalRateEpochStartedTick;
+		public long ArrivalProcessedThroughTick;
+		public long ArrivalCadenceNextDueTick;
+		public int ArrivalRateCohort;
+		public ulong ArrivalOrdinalHighWater;
+		public ulong ArrivalOrdinalRetiredThrough;
+		public bool ArrivalCadenceMigrationPending = true;
+		public bool ArrivalCadenceResumePending;
+		public KingdomGrowthArrivalOpportunity ArrivalOpportunity;
+		public List<KingdomGrowthArrivalDebtRange> ArrivalDebtRanges =
+			new List<KingdomGrowthArrivalDebtRange>();
 		public long LastFetchTick;
 		public long LastMillTick;
 		public long LastSubsidenceTick;
@@ -63,6 +77,7 @@ namespace ThousandAndFirst
 		public KingdomGrowthOperation FetchOp;
 		public KingdomGrowthOperation MillOp;
 		public KingdomGrowthArrivalCandidate ArrivalCandidate;
+		public KingdomGrowthFirstGuestTerminalReceipt FirstGuestTerminal;
 		public List<KingdomGrowthFieldSlot> FieldOps = new List<KingdomGrowthFieldSlot>();
 		public List<KingdomGrowthCropRow> CropRows = new List<KingdomGrowthCropRow>();
 		public List<KingdomLifecycleResourceRevision> Resources =

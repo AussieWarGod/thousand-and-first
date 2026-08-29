@@ -77,6 +77,17 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		/// <summary>Classifies spendable civic material while reserving every legacy or reciprocal
+		/// purpose-cargo marker for its exact receipted consumer.</summary>
+		internal static bool TryOrdinaryMaterialOf(GameObject Object,
+			out KingdomMaterial Material)
+		{
+			Material = KingdomMaterial.Mud;
+			return !KingdomPurpose.HasProtectedCargoEvidence(Object)
+				&& KingdomOrdinaryCustody.TryProveEmpty(Object, out _)
+				&& TryMaterialOf(Object, out Material);
+		}
+
 		/// <summary>
 		/// Which rare find an item counts as. Read the way <see cref="TryMaterialOf"/> reads a
 		/// material: a third party's own tag first, then the vanilla blueprints the base game

@@ -63,6 +63,9 @@ namespace ThousandAndFirst
 				Failure = "There is no cleared lot there to build on.";
 				return false;
 			}
+			if (!TryReadSocketLot(Marker, out string frozenType,
+				out ArchitectureLotSize frozenSize, out ArchitectureFacing frozenFacing,
+				out bool legacySocket, out Failure)) return false;
 			if (HasBlockingReceipt(Marker))
 			{
 				Failure = "That cleared lot already has construction work in hand.";
@@ -87,6 +90,16 @@ namespace ThousandAndFirst
 			if (!KingdomPlots.TryGetSpec(Key, out KingdomPlotRules.PlotSpec spec))
 			{
 				Failure = KingdomSocketRules.RefuseNotAPlot(entry.Name);
+				return false;
+			}
+			ArchitectureLotSize requestedSize = (ArchitectureLotSize)(int)spec.Size;
+			if (!legacySocket
+				&& (!KingdomArchitectureRules.TryClassifySetChange(frozenType, frozenSize,
+					entry.Category, requestedSize, out ArchitectureSetChange setChange)
+					|| setChange != ArchitectureSetChange.SameSet))
+			{
+				Failure = "That is " + SocketLotLabel(Marker)
+					+ ". Rebuild its exact type and size, or order a full re-type while a predecessor still stands.";
 				return false;
 			}
 			if (!KingdomRules.StyleAllows(entry.Styles, System.Style))
@@ -130,15 +143,17 @@ namespace ThousandAndFirst
 				Failure = zoningFailure;
 				return false;
 			}
-			if (!KingdomPlots.TryPreparePlotPayload(System, Z, rect, entry.Key, entry.Category,
+			string lotType = legacySocket ? entry.Category : frozenType;
+			if (!KingdomPlots.TryPreparePlotPayload(System, Z, rect, entry.Key, lotType,
 				SkinKey,
 				out KingdomArchitectureIntent architecture, out string payload, out Failure))
 				return false;
+			if (!SocketAcceptsArchitecture(Marker, architecture, out Failure)) return false;
 			if (!TrySocketBuildLabour(System, Z, rect, entry, spec,
 				out long labourTicks, out Failure)) return false;
 			Prepared = new PreparedSocketBuild
 			{
-				MarkerId = Marker.ID, SkinKey = SkinKey, Entry = entry, Rect = rect,
+				MarkerId = Marker.IDIfAssigned, SkinKey = SkinKey, Entry = entry, Rect = rect,
 				Architecture = architecture, Payload = payload, LabourTicks = labourTicks
 			};
 			return true;

@@ -10,6 +10,9 @@ git diff --check
 "$REPO/Tools/stage.sh" verify
 python3 Tools/check-doc-freshness.py
 python3 Tools/check-structure.py --report
+python3 Tools/generate-lot-realizations.py --check
+python3 Tools/check-architecture.py --repo-root .
+python3 Art/check_xml_refs.py --no-base
 
 python3 - <<'PY'
 import subprocess
@@ -24,6 +27,17 @@ project_paths = [Path("DevTests/PortableTests.csproj"), Path("DevTests/TafTests.
 lock_path = Path("DevTests/packages.lock.json")
 paths = Path("DevTests/Directory.Build.props").read_text(encoding="utf-8")
 workflow = Path(".github/workflows/portable.yml").read_text(encoding="utf-8")
+global_sdk = json.loads(Path("global.json").read_text(encoding="utf-8"))
+if global_sdk != {
+    "sdk": {
+        "version": "9.0.306",
+        "rollForward": "disable",
+        "allowPrerelease": False,
+    }
+}:
+    raise SystemExit("global.json must pin exact .NET SDK 9.0.306 with roll-forward disabled")
+if "dotnet-version: 9.0.306" not in workflow or "dotnet-version: 9.0.x" in workflow:
+    raise SystemExit("portable workflow must install exact .NET SDK 9.0.306")
 if "${{ runner.temp }}" in workflow:
     raise SystemExit("portable workflow uses runner.temp in a parse-time-unsafe context")
 if "NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages" not in workflow:
@@ -70,9 +84,11 @@ staged = subprocess.check_output(["Tools/stage.sh", "list"], text=True).splitlin
 if "LICENSE" not in staged or "NOTICE" not in staged:
     raise SystemExit("runtime package omits LICENSE or NOTICE")
 for relative in staged:
-    if relative.startswith(("DevTests/", "Tools/", "Art/", "docs/")):
+    if relative.startswith(("DevTests/", "Harness/", "Tools/", "Art/", "docs/")):
         raise SystemExit("development-only path entered runtime inventory: " + relative)
 PY
+
+python3 Tools/check-harness-registration.py
 
 python3 -m unittest discover -s Tools/tests -p '*_test.py'
 

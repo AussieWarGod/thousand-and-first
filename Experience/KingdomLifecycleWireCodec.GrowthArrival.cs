@@ -16,13 +16,18 @@ namespace ThousandAndFirst
 			w.Write((byte)x.Phase); w.Write((byte)x.EvidencePhase);
 			if (wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 				w.Write(x.LegacyGrowthV1UnboundZone);
-			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			if (wireVersion >= KingdomLifecycleRules.SemanticGrowthFormatVersion)
 			{
 				w.Write(x.LegacySemanticPlan); w.Write(x.SemanticPlanVersion);
 				S(w, x.SemanticStreamId, true); w.Write(x.SemanticEventKind);
 				S(w, x.PlannedOrigin, false); S(w, x.PlannedCreed, false);
 				S(w, x.PlannedName, false); S(w, x.PlannedArrived, false);
 				w.Write(x.ArrivalX); w.Write(x.ArrivalY);
+			}
+			if (wireVersion >= KingdomLifecycleRules.FirstGuestGrowthFormatVersion)
+			{
+				w.Write(x.LegacyAutomaticRecovery);
+				WriteGrowthFirstGuest(w, x.FirstGuest, wireVersion);
 			}
 			w.Write((byte)x.Disposition); w.Write((byte)x.RefusalReason); S(w, x.ObjectId, true);
 			S(w, x.Marker, true); S(w, x.Blueprint, false); S(w, x.EscrowKey, true);
@@ -36,6 +41,8 @@ namespace ThousandAndFirst
 			S(w, x.LodgingReceiptId, true); w.Write((byte)x.LodgingState);
 			S(w, x.ConsumingOperationId, true); w.Write(x.ConsumingOperationSequence);
 			S(w, x.Fault, false, true);
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+				WriteGrowthArrivalCandidateCadence(w, x);
 		}
 
 		private static KingdomGrowthArrivalCandidate ReadGrowthArrivalCandidate(BinaryReader r,
@@ -43,7 +50,9 @@ namespace ThousandAndFirst
 		{
 			if (!ReadExactBoolean(r)) return null;
 			bool currentSemantic = wireVersion >=
-				KingdomLifecycleRules.CurrentGrowthFormatVersion;
+				KingdomLifecycleRules.SemanticGrowthFormatVersion;
+			bool firstGuest = wireVersion >=
+				KingdomLifecycleRules.FirstGuestGrowthFormatVersion;
 			KingdomGrowthArrivalCandidate result = new KingdomGrowthArrivalCandidate
 			{
 				Sequence = r.ReadInt64(), Id = S(r, true), PlanHash = S(r, true),
@@ -62,6 +71,8 @@ namespace ThousandAndFirst
 				PlannedArrived = currentSemantic ? S(r, false) : null,
 				ArrivalX = currentSemantic ? r.ReadInt32() : -1,
 				ArrivalY = currentSemantic ? r.ReadInt32() : -1,
+				LegacyAutomaticRecovery = firstGuest && ReadExactBoolean(r),
+				FirstGuest = firstGuest ? ReadGrowthFirstGuest(r, wireVersion) : null,
 				Disposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
 				RefusalReason = (KingdomGrowthArrivalRefusalReason)r.ReadByte(),
 				ObjectId = S(r, true),
@@ -78,6 +89,8 @@ namespace ThousandAndFirst
 				ConsumingOperationId = S(r, true), ConsumingOperationSequence = r.ReadInt64(),
 				Fault = S(r, false, true)
 			};
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+				ReadGrowthArrivalCandidateCadence(r, result);
 			KingdomGrowthArrivalCandidatePhase phase = result.Phase ==
 				KingdomGrowthArrivalCandidatePhase.Quarantined
 					? result.EvidencePhase : result.Phase;

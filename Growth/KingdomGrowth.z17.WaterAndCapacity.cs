@@ -68,22 +68,8 @@ namespace ThousandAndFirst
 
 		public static int ConsumeStoredWater(Zone Z, int Drams)
 		{
-			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
-			if (active != null) return active.Consume(Drams);
-			int remaining = Drams;
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
-			{
-				if (remaining <= 0)
-				{
-					break;
-				}
-				LiquidVolume part = item.GetPart<LiquidVolume>();
-				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && KingdomLiquids.HasFreshWater(part))
-				{
-					remaining -= KingdomLiquids.Drain(part, remaining);
-				}
-			}
-			return Drams - remaining;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			return survey.Consume(Drams);
 		}
 
 		/// <summary>Counts vessels currently dedicated to the settlement's stores in a zone.</summary>

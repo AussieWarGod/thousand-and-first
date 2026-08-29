@@ -37,7 +37,22 @@ game's `CoQ_Data/StreamingAssets/Base` directory.
 | chimeric theatre | `Items/sw_table_cylinder.bmp` | central round table |
 | becoming annexe | `Items/sw_regen_tank.bmp` | transformation chamber |
 | crown hall | `Items/sw_chair_throne.bmp` | throne |
-| arcology | `Terrain/sw_historic_houses.bmp` | dense built skyline |
+| arcology | `Tiles/sw_arch.png` | monumental local atrium gate |
+| creed spindle-wheel | `Items/sw_waterwheel_1.bmp` | low-tech hand wheel silhouette |
+| creed dry contact | `Items/sw_induction_station.bmp` | inert charging alignment pad |
+| creed horn post | `Terrain/sw_monument1.bmp` | standing challenge marker |
+| creed scrap altar | `Terrain/sw_monument7.bmp` | wired chrome altar shape |
+| creed arms rack | `Items/sw_weapons_rack.bmp` | empty ordered weapon rests |
+| creed cold brazier | `Items/sw_firepan.bmp` | unlit ash pan |
+| creed vine trellis | `Tiles/sw_watervine2.bmp` | trained fruiting vine |
+| creed teaching trunk | `Terrain/sw_bigtree1.bmp` | central living trunk |
+| generated creed practice hamper | `Items/sw_basket.bmp` | stitched-shut handling marker; no storage |
+| generated creed practice board | `Items/sw_table_low.bmp` | bare work marker; no container |
+| generated creed cold hearth | `Items/sw_campfire_noflame.png` | stone spacing marker; no fire or light |
+| generated creed practice rack | `Items/sw_bookshelf1.bmp` | empty rack silhouette; no inventory |
+| generated creed practice slab/rail | `Items/sw_bench.bmp` | position marker; no chair behavior |
+| generated creed dry basin | `Items/sw_catchbasin.bmp` | pierced bowl; no liquid or collection |
+| generated creed rolled pallet | `Items/sw_bedroll.bmp` | weighted canvas marker; no bed behavior |
 
 Colour remains mod-owned metadata (`TileColor` and `DetailColor`), so the same vanilla silhouette
 can still carry a settlement's identity without bundling a derivative image.

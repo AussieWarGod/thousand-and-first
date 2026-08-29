@@ -145,7 +145,7 @@ namespace ThousandAndFirst
 					value.ProvisionCosts.Add(Reader.ReadInt32());
 					value.OutcomeCodes.Add(Reader.ReadInt32());
 				}
-				if (WireVersion >= CurrentVersion)
+				if (WireVersion >= ExactDeliveryJobVersion)
 				{
 					value.DeliverySourceEndpointIds.Add(Reader.ReadInt32());
 					value.DeliverySourceObjectIds.Add(ReadString(Reader, 512));
@@ -180,7 +180,15 @@ namespace ThousandAndFirst
 				value.LegExitY.Add(Reader.ReadInt32()); value.LegLengths.Add(Reader.ReadInt32());
 				value.LegDepartTicks.Add(Reader.ReadInt64()); value.LegArriveTicks.Add(Reader.ReadInt64());
 			}
-			if (WireVersion < CurrentVersion) value.Normalize();
+			if (WireVersion == ExactDeliveryJobVersion)
+				for (int i = 0; i < value.JobIds.Count; i++)
+					if (value.DeliveryCargoAuthorityKinds[i]
+							> (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
+						|| value.DeliveryPhases[i]
+							> (int)Simulation.City.KingdomDeliveryPhase.Quarantined)
+						throw new InvalidDataException(
+							"Realm archive v4 contains a future delivery enum value.");
+			if (WireVersion < ExactDeliveryJobVersion) value.Normalize();
 			if (!ValidJobs(value)) throw new InvalidDataException("Archived job columns are inconsistent.");
 			return value;
 		}

@@ -16,7 +16,7 @@ namespace ThousandAndFirst.Tests
 		public void TopLevelAndNestedSerializedIdentitiesRemainExact()
 		{
 			string source = Plot();
-			Assert.AreEqual(34, Count(source, "public static partial class KingdomPlots"));
+			Assert.AreEqual(53, Count(source, "public static partial class KingdomPlots"));
 			StringAssert.DoesNotContain("public static class KingdomPlots", source);
 			string yielding = Between(source, "[Serializable]\n\tpublic class r_KingdomYielding : IPart",
 				"[Serializable]\n\tpublic class r_KingdomPlotWorks : IPart");
@@ -178,7 +178,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomGovernanceScope.Commit(\"commission building\")");
 			AssertOrdered(Between(source, "private static bool ResumeClearPayout(",
 				"private static bool ExactClearOutput("), "KingdomConstruction.FindExactId(Z",
-				"ExactClearSource(Works, Z", "exact.Destroy", "KingdomSurvey.ObserveRemovedFromActive",
+				"ExactClearSource(Works, Z", "exact.Destroy",
+				"KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact)",
+				"SettleClearRemovalTopology(Works, Z",
 				"PrepareClearOutput(Works, Z", "PlaceOrProveClearOutput(Works, Z",
 				"SetClearTally(Works");
 			AssertOrdered(Between(source, "public static bool GrowInPlace(",
@@ -189,9 +191,10 @@ namespace ThousandAndFirst.Tests
 				"private static bool FinishPlotEffects("), "TryVerifyComplete(parent, Z",
 				"TryFinishOutput(Works, Z", "TryFinishRemoval(Z, cell, Footprint",
 				"TryFinishEffects(Z, cell",
-				"TryCopyFrozenOwner(parent, building", "UpdateFinalOutput(ref construction",
-				"PrepareFinalBuilding(building", "FreezePaidBuild(building, construction",
-				"cell.AddObject(building)", "ExactFinalBuilding(building, Z",
+				"TryCopyFrozenOwner(parent, building", "PrepareFinalBuilding(building",
+				"FreezePaidBuild(building, construction", "RootPlotFinalOutput(expectedOutput",
+				"UpdateFinalOutput(ref construction", "cell.AddObject(building)",
+				"ExactFinalBuilding(building, Z",
 				"FurnishDurable(Z", "FinalRemovalPending", "parent.Destroy",
 				"RemovalProofProperty", "KingdomDelveLink.TrySettle",
 				"KingdomConstruction.Complete(ref construction)", "FinishPlotEffects(system, Z");

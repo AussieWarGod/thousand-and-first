@@ -64,6 +64,30 @@ namespace ThousandAndFirst
 						&& Type == typeof(KingdomRaidIncidentState)
 						&& Convert.ToInt64(value) > (long)KingdomRaidIncidentState.Queued)
 						continue;
+					if (SchemaVersion < FirstGuestVersion
+						&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+						&& (Convert.ToInt64(value) <
+								(long)KingdomGrowthArrivalCandidatePhase.Prepared
+							|| Convert.ToInt64(value) >
+								(long)KingdomGrowthArrivalCandidatePhase.Quarantined))
+						continue;
+					if (SchemaVersion < FirstGuestVersion
+						&& Type == typeof(KingdomGrowthArrivalDisposition)
+						&& Convert.ToInt64(value) >
+							(long)KingdomGrowthArrivalDisposition.SupportCap)
+						continue;
+					if (SchemaVersion >= FirstGuestVersion
+						&& SchemaVersion < PhysicalFirstGuestVersion
+						&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+						&& Convert.ToInt64(value) >
+							(long)KingdomGrowthArrivalCandidatePhase.Declined)
+						continue;
+					if (SchemaVersion >= FirstGuestVersion
+						&& SchemaVersion < PhysicalFirstGuestVersion
+						&& Type == typeof(KingdomGrowthArrivalDisposition)
+						&& Convert.ToInt64(value) >
+							(long)KingdomGrowthArrivalDisposition.Declined)
+						continue;
 					Shape.Append(names[i]).Append('=');
 					if (unsigned)
 						Shape.Append(Convert.ToUInt64(value).ToString(CultureInfo.InvariantCulture));

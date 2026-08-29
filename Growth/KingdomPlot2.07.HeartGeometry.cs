@@ -186,45 +186,7 @@ namespace ThousandAndFirst
 		/// which case nothing is stamped and the settlement simply has no surveyed heart.</returns>
 		public static bool SurveyHeart(KingdomSystem System, Zone Z, int RiteX, int RiteY)
 		{
-			if (Z == null || !KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Z.Width, Z.Height, out var survey))
-			{
-				return false;
-			}
-			Z.SetZoneProperty(SurveyX1Property, survey.X1.ToString());
-			Z.SetZoneProperty(SurveyY1Property, survey.Y1.ToString());
-			Z.SetZoneProperty(SurveyX2Property, survey.X2.ToString());
-			Z.SetZoneProperty(SurveyY2Property, survey.Y2.ToString());
-			PlaceHeartMark(Z, RiteX, RiteY, HeartRelicBlueprint, HeartRelicProperty);
-			PlaceHeartMark(Z, survey.X1, survey.Y1, SurveyStakeBlueprint, HeartStakeProperty);
-			PlaceHeartMark(Z, survey.X2, survey.Y1, SurveyStakeBlueprint, HeartStakeProperty);
-			PlaceHeartMark(Z, survey.X1, survey.Y2, SurveyStakeBlueprint, HeartStakeProperty);
-			PlaceHeartMark(Z, survey.X2, survey.Y2, SurveyStakeBlueprint, HeartStakeProperty);
-			KingdomLog.Log("heart surveyed: " + survey.X1 + "," + survey.Y1 + " to " + survey.X2 + "," + survey.Y2
-				+ " around rite " + RiteX + "," + RiteY);
-			MessageQueue.AddPlayerMessage("{{W|" + KingdomPlotRules.SurveyLine(survey) + "}}");
-			StakeHeartRung(System, Z, 1, survey, RiteX, RiteY);
-			return true;
-		}
-
-		/// <summary>Sets one stake or the basin down on ground, marked so the plot machinery reads
-		/// it as bare. Silently does nothing where the engine will not take the object, which is
-		/// the honest answer for a mark nobody can see.</summary>
-		private static void PlaceHeartMark(Zone Z, int X, int Y, string Blueprint, string Mark)
-		{
-			Cell cell = Z?.GetCell(X, Y);
-			if (cell == null)
-			{
-				return;
-			}
-			GameObject placed = GameObject.Create(Blueprint);
-			if (placed == null)
-			{
-				return;
-			}
-			placed.SetIntProperty(Mark, 1);
-			GameObject accepted = null;
-			try { accepted = cell.AddObject(placed); }
-			finally { KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted); }
+			return EnsureFoundingHeartProjection(System, Z, RiteX, RiteY);
 		}
 
 	}

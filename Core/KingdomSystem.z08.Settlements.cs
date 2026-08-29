@@ -11,7 +11,7 @@ namespace ThousandAndFirst
 	public partial class KingdomSystem
 	{
 		/// <summary>How many cities the realm holds, seat included.</summary>
-		public int SettlementCount => (!Founded ? 0 : ((Away != null) ? 2 : 1));
+		public int SettlementCount => !Founded ? 0 : 1 + NonSeatSettlementCount;
 
 		/// <summary>
 		/// Copies the seated settlement out of the flat fields into a record. The flat fields are
@@ -45,23 +45,31 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Exchanges the seat with <see cref="Away"/> when the activated zone is the other city's
-		/// ground. Called before the claim guard in <see cref="HandleEvent(ZoneActivatedEvent)"/>,
-		/// because until the exchange has happened the second city's ground is not in
+		/// Exchanges the seat with the unique non-seat settlement which owns the activated zone.
+		/// Called before the claim guard in <see cref="HandleEvent(ZoneActivatedEvent)"/>,
+		/// because until the exchange has happened that city's ground is not in
 		/// <see cref="ClaimedZones"/> and reads as a stranger's zone.
 		/// </summary>
 		/// <param name="Z">The activated zone. Null is tolerated.</param>
 		/// <returns>True if the seat moved.</returns>
 		public bool TrySeat(Zone Z)
 		{
-			if (!Founded || Z == null || Away == null || ClaimedZones.Contains(Z.ZoneID) || !Away.ClaimedZones.Contains(Z.ZoneID))
+			if (!Founded || Z == null || ClaimedZones.Contains(Z.ZoneID))
 			{
 				return false;
 			}
+			KingdomSettlement target = FindNonSeatSettlementByZone(Z.ZoneID);
+			if (target == null) return false;
 			KingdomSettlement wasSeated = Capture();
-			Restore(Away);
-			Away = wasSeated;
-			if (KingdomLog.Enabled) KingdomLog.Log("seat moved to " + SeatName + " (" + Z.ZoneID + "); away is now " + Away.Describe());
+			Restore(target);
+			if (!TryReplaceNonSeatSettlement(target, wasSeated, out string failure))
+			{
+				Restore(wasSeated);
+				throw new KingdomSeatMismatchException("Seat topology changed during exchange: " +
+					failure);
+			}
+			if (KingdomLog.Enabled) KingdomLog.Log("seat moved to " + SeatName + " (" +
+				Z.ZoneID + "); " + NonSeatSettlementCount + " non-seat settlements remain");
 			return true;
 		}
 
@@ -90,14 +98,14 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			return (ExiledSeat != null && ExiledSeat.ClaimedZones.Contains(ZoneID))
-				|| (ExiledAway != null && ExiledAway.ClaimedZones.Contains(ZoneID));
+			if (ExiledSeat != null && ExiledSeat.ClaimedZones.Contains(ZoneID)) return true;
+			return ExiledSettlementTopology?.FindByZone(ZoneID) != null;
 		}
 
 		/// <summary>Whether the expelled-from realm kept ground the founder could walk back to.</summary>
 		public bool ExiledRealmKeptGround => Exiled
 			&& ((ExiledSeat != null && ExiledSeat.ClaimedZones.Count > 0)
-				|| (ExiledAway != null && ExiledAway.ClaimedZones.Count > 0));
+				|| ExiledSettlementTopology != null && ExiledSettlementTopology.Count > 0);
 
 		/// <summary>
 		/// Puts the founder out of the realm they founded.
@@ -125,6 +133,12 @@ namespace ThousandAndFirst
 		public bool Exile(string Deed, bool Forced, out string Refusal)
 		{
 			Refusal = "";
+			if (KingdomConstruction.HasNonterminalRoutedInputAuthority(this,
+				out string custodyFailure))
+			{
+				Refusal = custodyFailure;
+				return false;
+			}
 			if (ExiledRealmArchive != null &&
 				(ExiledRealmArchive.Phase == KingdomRealmArchivePhase.TradeClosed ||
 				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.MirrorsPublished ||
@@ -181,7 +195,8 @@ namespace ThousandAndFirst
 				Refusal = "The realm graph cannot be captured exactly: " + archiveFailure + ".";
 				return false;
 			}
-			if (!ExactArchivedSettlements(archive.RealmId, archive.Seat, archive.Away,
+			if (!ExactArchivedSettlements(archive.RealmId, archive.Seat,
+				archive.SettlementTopology,
 				archive.SettlementIds) || !archive.CurrentGraphMatches(this, out archiveFailure) ||
 				!TryExactSettlementIds(RequirePublishedClaims: true,
 					out List<string> preTradeSettlements, out archiveFailure) ||

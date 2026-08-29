@@ -53,6 +53,14 @@ namespace ThousandAndFirst
 				: (scaffoldState == KingdomPhysicalLookupState.Exact ? exactScaffold : null);
 			if (paidScaffold != null)
 			{
+				r_KingdomScaffold paidPart = paidScaffold.GetPart<r_KingdomScaffold>();
+				if (paidPart == null || !paidPart.TryValidateInitialDurableWork(
+					Updated, Job.UpdatedTick, out Failure))
+				{
+					Failure = Failure ?? "The interrupted improvement scaffold lost its initial labour proof.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
 				r_KingdomImprovement recovered = Work.RequirePart<r_KingdomImprovement>();
 				recovered.SuccessorKey = Successor.Key;
 				recovered.SuccessorBlueprint = Successor.Blueprint;
@@ -119,13 +127,6 @@ namespace ThousandAndFirst
 				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
 				return false;
 			}
-			if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
-			{
-				bool removed = RemoveCreatedProjection(scaffold);
-				Failure = "The improvement scaffold identity could not be published before AddObject.";
-				if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
-				return false;
-			}
 			r_KingdomScaffold part = scaffold.GetPart<r_KingdomScaffold>();
 			if (part == null)
 			{
@@ -146,9 +147,23 @@ namespace ThousandAndFirst
 			KingdomConstruction.Bind(scaffold, Updated);
 			part.TargetBlueprint = Successor.Blueprint;
 			part.TargetDisplayName = Successor.Name;
-			part.CompleteTick = Updated.DueTick;
 			part.StaffNeeded = Successor.Staff;
 			part.ThresholdManning = KingdomRules.IsThresholdManning(Successor.Manning);
+			long projectionTick = Updated.UpdatedTick;
+			if (!part.TryInitializeDurableWork(Updated, projectionTick, out Failure))
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
+			{
+				bool removed = RemoveCreatedProjection(scaffold);
+				Failure = "The improvement scaffold identity could not be published before AddObject.";
+				if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
 			GameObject accepted;
 			try
 			{
@@ -171,6 +186,9 @@ namespace ThousandAndFirst
 				|| !ReferenceEquals(globalScaffold, scaffold)
 				|| !ExpectedImprovementScaffold(scaffold, cell, Successor, Updated,
 					architecture, authored)
+				|| !ReferenceEquals(scaffold.GetPart<r_KingdomScaffold>(), part)
+				|| scaffold.GetIntProperty(r_KingdomScaffold.FinalPendingProperty) != 0
+				|| !part.MatchesInitialDurableWork(Updated, projectionTick)
 				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
 				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated)
 				|| !KingdomConstruction.IsCurrent(Updated))
@@ -191,6 +209,8 @@ namespace ThousandAndFirst
 			KingdomConstruction.Bind(Work, Updated);
 			KingdomSurvey.ObserveChangedInActive(zone, Work);
 			if (!improvement.Working || improvement.Scaffold != scaffold
+				|| !ReferenceEquals(scaffold.GetPart<r_KingdomScaffold>(), part)
+				|| !part.MatchesInitialDurableWork(Updated, projectionTick)
 				|| !EnsureExactImprovementPredecessor(System, zone, Work, Updated))
 			{
 				Failure = "The improvement intent could not be verified on its predecessor.";

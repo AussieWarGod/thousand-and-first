@@ -31,11 +31,34 @@ namespace ThousandAndFirst.Tests
 		public void ConstantsAndAuthorityDeclarationStayUnique()
 		{
 			string source = KingdomPortersLogicalSource.Read();
-			Assert.AreEqual(7, Count(source, "public static partial class KingdomPorters"));
+			Assert.AreEqual(11, Count(source, "public static partial class KingdomPorters"));
 			Assert.AreEqual(1, Count(source, "public const int LoadPerTrip = 12"));
 			Assert.AreEqual(1, Count(source, "public const string StockProperty"));
 			Assert.AreEqual(1, Count(source, "private static void Handoff("));
 			StringAssert.DoesNotContain("public static class KingdomPorters", source);
+		}
+
+		[Test]
+		public void PendingMintCountsEitherStampButAdoptsOnlyTheirExactAgreement()
+		{
+			string source = TestMain.ReadRepositoryText(
+				"Simulation/City/KingdomPorters.02.CarrierRendering.cs");
+			Ordered(source, "int propertyStamp", "int partStamp",
+				"propertyStamp != jobId && partStamp != jobId", "count++;",
+				"propertyStamp == jobId && partStamp == jobId",
+				"KingdomOrdinaryCustody.TryProveEmpty(body");
+		}
+
+		[Test]
+		public void CargoReceiptsFencePartialDepositsAndProtectedCarrierCustody()
+		{
+			string source = KingdomPortersLogicalSource.Read();
+			StringAssert.Contains("PorterReceiptProperty", source);
+			StringAssert.Contains("TryPorterReceipts(store, row.JobId", source);
+			StringAssert.Contains("system.Jobs.TryPublish(next, out fault)", source);
+			StringAssert.Contains("RemoveIntProperty(KingdomOrdinaryFoodAuthority.PorterReceiptProperty)", source);
+			StringAssert.Contains("TryCustodyAvailable(body,", source);
+			StringAssert.Contains("NoStack: true", source);
 		}
 
 		private static void Ordered(string source, params string[] markers)

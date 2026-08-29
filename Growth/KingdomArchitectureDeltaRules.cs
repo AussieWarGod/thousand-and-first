@@ -88,7 +88,10 @@ namespace ThousandAndFirst
 			int beforeRung = KingdomPlotRules.HeartRungOf(Before.BuildKey);
 			int afterRung = KingdomPlotRules.HeartRungOf(After.BuildKey);
 			return beforeRung > 0 && afterRung == beforeRung + 1
-				&& (int)After.LotSize == (int)Before.LotSize + 1;
+				&& After.LotSize == (ArchitectureLotSize)
+					KingdomPlotRules.HeartSizeForRung(afterRung)
+				&& Before.LotSize == (ArchitectureLotSize)
+					KingdomPlotRules.HeartSizeForRung(beforeRung);
 		}
 
 		private static bool TryBuildHeartAccretionDelta(ArchitectureLayoutSnapshot Before,

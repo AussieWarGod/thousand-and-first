@@ -26,7 +26,33 @@ namespace ThousandAndFirst
 		{
 			if (Value == null || Value.Count > 512) return false;
 			foreach (KeyValuePair<string, int> row in Value)
-				if (!BoundedUtf8(row.Key, 512, 2048)) return false;
+				if (string.IsNullOrEmpty(row.Key) || !BoundedUtf8(row.Key, 512, 2048)) return false;
+			return true;
+		}
+
+		private static bool BoundedRemainders(Dictionary<string, int> Value)
+		{
+			if (!BoundedStandings(Value)) return false;
+			foreach (KeyValuePair<string, int> row in Value)
+				if (!KingdomStandingRules.ValidRemainder(row.Value)) return false;
+			return true;
+		}
+
+		private static bool ValidDirectionalStandings(string RealmFaction,
+			Dictionary<string, int> Regard, Dictionary<string, int> Policy,
+			Dictionary<string, int> Remainders, Dictionary<string, int> Observed)
+		{
+			if (!BoundedStandings(Regard) || !BoundedStandings(Policy) ||
+				!BoundedRemainders(Remainders) || !BoundedStandings(Observed) ||
+				!KingdomStandingRules.CanonicalPairs(Regard, Remainders)) return false;
+			foreach (string key in Regard.Keys)
+				if (!KingdomStandingRules.EligibleForeignFaction(key, RealmFaction)) return false;
+			foreach (string key in Policy.Keys)
+				if (!KingdomStandingRules.EligibleForeignFaction(key, RealmFaction)) return false;
+			foreach (string key in Remainders.Keys)
+				if (!KingdomStandingRules.EligibleForeignFaction(key, RealmFaction)) return false;
+			foreach (string key in Observed.Keys)
+				if (!KingdomStandingRules.EligibleForeignFaction(key, RealmFaction)) return false;
 			return true;
 		}
 
@@ -51,50 +77,6 @@ namespace ThousandAndFirst
 					KingdomRealmCallbackReceipt.MaxEffectChars * 4) &&
 				BoundedUtf8(Value.ObservedEffect, KingdomRealmCallbackReceipt.MaxEffectChars,
 					KingdomRealmCallbackReceipt.MaxEffectChars * 4);
-		}
-
-		private static bool ExactArchivedSettlements(string RealmId,
-			KingdomSettlement Seat, KingdomSettlement Away, IList<string> ExpectedIds)
-		{
-			List<string> ids = new List<string>();
-			if (!ArchivedSettlementMatches(RealmId, Seat, out string seatId)) return false;
-			ids.Add(seatId);
-			if (Away != null)
-			{
-				if (!ArchivedSettlementMatches(RealmId, Away, out string awayId)) return false;
-				ids.Add(awayId);
-			}
-			KingdomIdentityFault fault;
-			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, ids, out fault)) return false;
-			ids.Sort(StringComparer.Ordinal);
-			if (ExpectedIds == null || ids.Count != ExpectedIds.Count) return false;
-			for (int i = 0; i < ids.Count; i++)
-				if (!string.Equals(ids[i], ExpectedIds[i], StringComparison.Ordinal)) return false;
-			return true;
-		}
-
-		private static bool TryArchivedRetainedIds(string RealmId,
-			KingdomSettlement Seat, KingdomSettlement Away, KingdomSettlement Seceded,
-			out List<string> Ids)
-		{
-			Ids = new List<string>();
-			if (!ArchivedSettlementMatches(RealmId, Seat, out string seatId)) return false;
-			Ids.Add(seatId);
-			if (Away != null)
-			{
-				if (!ArchivedSettlementMatches(RealmId, Away, out string awayId)) return false;
-				Ids.Add(awayId);
-			}
-			if (Seceded != null)
-			{
-				if (!ArchivedSettlementMatches(RealmId, Seceded, out string secededId))
-					return false;
-				Ids.Add(secededId);
-			}
-			KingdomIdentityFault fault;
-			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, Ids, out fault)) return false;
-			Ids.Sort(StringComparer.Ordinal);
-			return true;
 		}
 
 		private static bool ExactCarrySettlementIds(KingdomCarryBook Book,

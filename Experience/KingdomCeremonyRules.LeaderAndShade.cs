@@ -95,22 +95,21 @@ namespace ThousandAndFirst
 			return holder + ", " + title + " of " + SeatName + ", " + VirtueText(VirtueIndex) + " -- but " + FlawText(FlawIndex);
 		}
 
-		/// <summary>Net equilibrium points one notable's virtue and flaw carry together.</summary>
+		/// <summary>Historical narrative score for one notable's virtue and flaw. Retained for
+		/// chronicle/tool compatibility; live settlement equilibrium does not consume it.</summary>
 		public static int LeaderShade()
 		{
 			return VirtueShadeAmount - FlawShadeAmount;
 		}
 
 		// ==================================================================================
-		// The shade a named notable carries, and how the settlement reads it
+		// Retired notable scoring helpers, retained for narrative/tool compatibility
 		// ==================================================================================
 
 		/// <summary>
-		/// The whole shade one named notable carries into
-		/// <c>KingdomCatalogueRules.Equilibrium</c>: their met tastes, the net of their virtue and
-		/// their flaw, and whatever their own <c>Prefers</c> found in the quarters they were given
-		/// (<c>KingdomQolRules.PreferShade</c>, Addendum 4). One number, because the three halves
-		/// were always meant to be one balance rather than three roads to the level.
+		/// Historical score once used by the pre-v1 notable economy: met tastes, the net of virtue
+		/// and flaw, and whatever <c>Prefers</c> found in assigned quarters. Kept so old tooling and
+		/// narrative tests can decode their vocabulary; no live capacity/report path consumes it.
 		/// <para>
 		/// Never a penalty: a notable whose tastes are unmet and whose Prefers found nothing still
 		/// brings their virtue, and the floor at zero means a hypothetical flaw heavier than a
@@ -132,10 +131,7 @@ namespace ThousandAndFirst
 			return (shade > MaxNotableShade) ? MaxNotableShade : shade;
 		}
 
-		/// <summary>The most any one named notable can ever shade a settlement's equilibrium by:
-		/// two tastes met, a virtue net of a flaw, and two <c>Prefers</c> met. Texture, and small
-		/// enough to stay texture &mdash; the lift cap in
-		/// <c>KingdomCatalogueRules.Equilibrium</c> binds it again on top of this.</summary>
+		/// <summary>Historical ceiling for <see cref="NotableShade"/>. Not a live economy cap.</summary>
 		public static int MaxNotableShade
 		{
 			get
@@ -145,9 +141,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The status report's clause naming what the settlement's named notable is worth to the
-		/// level, so a shade is a thing the founder reads rather than an invisible modifier
-		/// (STANDARDS 7b's own posture, applied to a number that helps rather than blocks).
+		/// Historical display helper retained for old tooling. Current reports never call it because
+		/// a civic title has no mechanical value.
 		/// </summary>
 		/// <param name="Shade">From <see cref="NotableShade"/>.</param>
 		/// <returns>Empty for a settlement whose notable is worth nothing to it, which is a

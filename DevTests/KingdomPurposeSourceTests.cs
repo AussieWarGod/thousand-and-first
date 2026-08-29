@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("destinationState == KingdomPhysicalLookupState.Ambiguous", source);
 			Ordered(source, "out bool requiresInspection", "if (requiresInspection)",
 				"KingdomConstruction.Quarantine(ref live");
-			string gate = Source(Path.Combine("Growth", "KingdomMirrorGate.cs"));
+			string gate = KingdomMirrorGateLogicalSource.Read();
 			StringAssert.Contains("destinationAmbiguous", gate);
 		}
 
@@ -47,20 +47,28 @@ namespace ThousandAndFirst.Tests
 		public void PurposeCommitConsumesOnlyFrozenCargoAndQuarantinesInterruptedDebit()
 		{
 			string plot = KingdomPlot2LogicalSource.Read();
-			Ordered(plot, "KingdomPurpose.ResolveCommitCargo", "ReservePaymentWithRequiredItem",
-				"job.PhysicalReceipt = purposeReceipt", "KingdomConstruction.TryFundNew");
+			Ordered(plot, "KingdomPurpose.ResolveCommitCargo",
+				"KingdomPurpose.ResolveCommitReciprocalCargo",
+				"job.PhysicalReceipt = purposeReceipt",
+				"KingdomPurpose.TryRequiredFundingObjectIds",
+				"KingdomConstruction.TryFundNewRouted");
 			StringAssert.Contains("Retry remains bound to its exact cargo object", plot);
 
-			string debit = KingdomMaterialDebitLogicalSource.Read();
-			StringAssert.Contains("ReferenceEquals(item, RequiredItem)", debit);
-			StringAssert.Contains("RequiredSourceWasConsumed", debit);
-			StringAssert.Contains("RequiredItem.ID != RequiredItemId", debit);
+			string purposeFunding = Source(Path.Combine("Growth",
+				"KingdomPurposePortfolio.Funding.cs"));
+			StringAssert.Contains("RequiredObjectIds.Add(commitment.CargoItemId)", purposeFunding);
+			StringAssert.Contains("RequiredObjectIds.Add(commitment.ReciprocalCargoItemId)",
+				purposeFunding);
+			StringAssert.Contains("expected.Contains(Item.IDIfAssigned)", purposeFunding);
+			StringAssert.Contains("ExactPortfolioCargoIdentity", purposeFunding);
 
 			string construction = KingdomConstructionLogicalSource.Read();
 			Ordered(construction, "KingdomPurpose.RequiresExactFunding(job)",
-				"KingdomPurpose.TryRequiredFundingItem", "TryResumeFunding(job, Z, Survey,",
-				"required, out job, out fault)");
-			StringAssert.Contains("ReserveCompositeWithRequiredItem", construction);
+				"KingdomPurpose.TryRequiredFundingItems", "KingdomPurpose.TryRequiredFundingObjectIds",
+				"TryResumeRoutedFunding(job, requiredIds");
+			string routed = Source(Path.Combine("Growth",
+				"KingdomConstruction.InputDrive.Open.cs"));
+			StringAssert.Contains("TryPrepareRoutedInputReceiptWithRequiredObjects", routed);
 		}
 
 		[Test]
@@ -74,7 +82,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Exact cross-city input: 1 ", purpose);
 			StringAssert.Contains("delivered through the live mirror-gate", purpose);
 			StringAssert.Contains("Site: ", purpose);
-			StringAssert.Contains("never substitutes or charges it twice", purpose);
+			StringAssert.Contains("never substitutes or charges twice", purpose);
 			StringAssert.Contains("cannot be left as an unattended survey stake", purpose);
 		}
 
@@ -108,39 +116,79 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CatalogueDeclaresDifferentPhysicalSitesAndHonestArcologyFoundation()
+		public void CatalogueDeclaresDifferentPhysicalSitesAndHostedArcology()
 		{
 			string buildings = Source("KingdomBuildings.xml");
 			StringAssert.Contains("Purpose=\"flesh\" PurposeSite=\"living-surgery\"", buildings);
 			StringAssert.Contains("PurposeProducers=\"vathouse|graftinghall\"", buildings);
 			StringAssert.Contains("Purpose=\"chrome\" PurposeSite=\"ruin-enrollment\"", buildings);
 			StringAssert.Contains("PurposeProducers=\"smelter,chargingpost\"", buildings);
-			StringAssert.Contains("arcology foundation (a monumental shell awaiting hosted streets)",
+			StringAssert.Contains("the hosted arcology (the great court within a city-shell)",
 				buildings);
 
 			string objects = Source("ObjectBlueprints.xml");
-			StringAssert.Contains("DisplayName=\"arcology foundation\"", objects);
-			StringAssert.Contains("hosts no interior plots, separate zones, or city-scale population yet",
-				objects);
-			StringAssert.Contains("DisplayName=\"stacked surface ward\"", objects);
-			StringAssert.Contains("DisplayName=\"raised surface lamp-terrace\"", objects);
+			StringAssert.Contains("Name=\"r_KingdomRealmGranary\" Inherits=\"r_KingdomGranary\"", objects);
+			StringAssert.Contains("Name=\"r_KingdomLarderCapacity\" Value=\"384\"", objects);
+			StringAssert.Contains("DisplayName=\"hosted arcology\"", objects);
+			StringAssert.Contains("part Name=\"Interior\" Cell=\"TAFArcologyAtrium\"", objects);
+			StringAssert.Contains("DisplayName=\"vertical lodging ward works\"", objects);
+			StringAssert.Contains("DisplayName=\"hydroponic terrace works\"", objects);
 			Assert.IsFalse(objects.Contains("it has weather of its own"));
 			Assert.IsFalse(objects.Contains("nothing above this but more building"));
 
 			string testing = Source("TESTING.md");
 			string testingWords = string.Join(" ", testing.Split((char[])null,
 				StringSplitOptions.RemoveEmptyEntries));
-			StringAssert.Contains("Pass 37 — Purposeful cities, exact cargo, and the honest arcology foundation", testingWords);
+			StringAssert.Contains("Pass 37 — Purposeful cities and exact cargo; arcology review hold",
+				testingWords);
 			StringAssert.Contains("Returning the same object restores the exact preview", testingWords);
 			StringAssert.Contains("an ordinary worked-metal item cannot substitute", testingWords);
-			StringAssert.Contains("five-work Deep-Bore/Great Foundry/", testingWords);
-			StringAssert.Contains("reciprocal-pair portfolio is an open `SHIP` implementation gap", testingWords);
-			StringAssert.Contains("Hosted, zone-spanning arcology ground remains `AUTHOR-DEFERRED`", testingWords);
+			StringAssert.Contains("Deep-Bore, Great Foundry, Granary-Colossus", testingWords);
+			StringAssert.Contains("exact five-work reciprocal portfolio is implemented", testingWords);
 
 			string changelog = Source("CHANGELOG.md");
-			StringAssert.Contains("arcology foundation", changelog);
-			StringAssert.Contains("surface-prototype records", changelog);
-			StringAssert.Contains("hosted interior and zone-spanning ground remain deferred", changelog);
+			StringAssert.Contains("arcology is now a hosted gameplay system, not a surface prop", changelog);
+			StringAssert.Contains("persistent Interior", changelog);
+			StringAssert.Contains("bounded ward and terrace lifts", changelog);
+		}
+
+		[Test]
+		public void PortfolioRuntimeHasOneCanonicalCasRegisterAndNoAutomaticWorkLoop()
+		{
+			string source = KingdomPurposeLogicalSource.Read();
+			Assert.AreEqual(1, Occurrences(source,
+				"internal const string PortfolioStateKey = \"r_TAF_PurposePortfolioPair\""));
+			Ordered(source, "string current = The.Game.GetStringGameState(PortfolioStateKey",
+				"current != expected", "ValidTransition(Before, After",
+				"The.Game.SetStringGameState(PortfolioStateKey, next)",
+				"GetStringGameState(PortfolioStateKey, \"\") != next");
+			StringAssert.Contains("Each city needs two distinct dedicated material stockpiles", source);
+			StringAssert.Contains("FindLocalConnection(System, zone", source);
+			StringAssert.Contains("KingdomPurposePortfolioRules.Partners(First)", source);
+			StringAssert.Contains("Phase != KingdomPurposePairPhase.Frozen", source);
+			StringAssert.Contains("No operation runs in the background", source);
+			StringAssert.Contains("TryStartPortfolioOperation", source);
+			StringAssert.Contains("AcceptPortfolioCredit", source);
+			StringAssert.Contains("KingdomPurposeOperationPhase.PickupComplete", source);
+			StringAssert.Contains("KingdomPurposeOperationPhase.LandingPending", source);
+			StringAssert.Contains("KingdomPurposeBodyAuthorityRules.TryDecode", source);
+			StringAssert.Contains("if (Pair == null) return true;", source);
+			StringAssert.Contains("InitialBuildKey = pair == null && definition.PortfolioOnly", source);
+			StringAssert.Contains("TryExactSettlementIds(RequirePublishedClaims: true", source);
+			StringAssert.Contains("TryReconcilePortfolioTopology(ref Pair", source);
+			StringAssert.DoesNotContain("WantTurnTick", source);
+			StringAssert.DoesNotContain("TurnTick(", source);
+
+			string objects = Source("ObjectBlueprints.xml");
+			Assert.AreEqual(5, Occurrences(objects, "<part Name=\"r_KingdomPurposeWork\" />"));
+		}
+
+		private static int Occurrences(string source, string token)
+		{
+			int count = 0;
+			for (int at = 0; (at = source.IndexOf(token, at,
+				StringComparison.Ordinal)) >= 0; at += token.Length) count++;
+			return count;
 		}
 	}
 }

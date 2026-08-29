@@ -178,6 +178,16 @@ namespace ThousandAndFirst
 				return manifest != null
 					&& string.Equals(manifest.Id, Operation.ManifestId, StringComparison.Ordinal)
 					&& Book.RetainedEscrowDrams == Operation.RetainedAfter;
+			case KingdomTradeOperationKind.PolityConsignmentDelivery:
+				return Operation.Phase == KingdomTradePhase.Quarantined
+					? Operation.ProvedWater == 0 ? Operation.RetainedBefore == 0L &&
+						Operation.RetainedDelta == 0L && Operation.RetainedAfter == 0L &&
+						Operation.RetainedState == KingdomTradePhysicalState.None :
+						Operation.RetainedState == KingdomTradePhysicalState.Proved &&
+						Operation.RetainedDelta == Operation.ProvedWater &&
+						Book.RetainedEscrowDrams == Operation.RetainedAfter
+					: Operation.ProvedWater > 0 && Operation.ProvedWater <=
+						Operation.RequestedWater && Operation.RetainedDelta == 0L;
 			default:
 				return true;
 			}

@@ -101,14 +101,13 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// The blocker is a plot the founder was warned about at the moment they staked it. Said
 		/// differently from the general case on purpose: the mark promised this day, and the
-		/// founder is owed the promise being kept out loud &mdash; along with the honest truth
-		/// about what the settlement can do about it TODAY, which is strike it and rebuild. Moving
-		/// a plot whole is the ring call, and the ring call waits on the relocation verb.
+		/// founder is owed the promise being kept out loud and a route to the complete ring-call
+		/// plan before any labour begins.
 		/// </summary>
 		public static string RefuseHeartYielding(string SuccessorName, string What)
 		{
 			return "The {{C|" + What + "}} was marked to yield when it was staked, and the day it was marked for is here: the "
-				+ SuccessorName + " wants that ground. Nothing carries a building whole yet, so it comes down and goes up again, or the heart waits. Neither happens on its own.";
+				+ SuccessorName + " wants that ground. The heart's ring can carry the same whole lot to lawful ground, one at a time, for labour and no stores; nothing moves until the founder reviews and consents to the complete plan.";
 		}
 
 		/// <summary>The heart's next rung has no room inside the ground surveyed for it &mdash;

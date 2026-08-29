@@ -13,6 +13,12 @@ namespace ThousandAndFirst
 		private bool ContinueExileTransition(out string Refusal)
 		{
 			Refusal = "";
+			if (KingdomConstruction.HasNonterminalRoutedInputAuthority(this,
+				out string custodyFailure))
+			{
+				Refusal = custodyFailure;
+				return false;
+			}
 			KingdomRealmArchive archive = ExiledRealmArchive;
 			string failure = null;
 			if (archive == null || archive.Quarantined || !archive.Validate(out failure))
@@ -42,6 +48,7 @@ namespace ThousandAndFirst
 			}
 			if (!TryEnsureExileMirrors(archive,
 				AllowCanonicalMissing: archive.Phase == KingdomRealmArchivePhase.TradeClosed,
+				AllowDirectionalMissing: false,
 				out failure) || !ExactExileMirrors(archive))
 			{
 				archive.Quarantine(failure ?? "exile mirrors differ from archive intent");
@@ -81,6 +88,13 @@ namespace ThousandAndFirst
 			}
 			if (archive.Phase == KingdomRealmArchivePhase.Resetting)
 			{
+				if (!KingdomPolityRealmTransitionRuntime.TryAdvanceExile(this, archive,
+					out failure))
+				{
+					Refusal = "The realm's polity authority could not retire exactly: " +
+						(failure ?? "transition remains unsettled") + ".";
+					return false;
+				}
 				ResetCurrentRealmAfterExile();
 				archive.Phase = KingdomRealmArchivePhase.Closed;
 			}

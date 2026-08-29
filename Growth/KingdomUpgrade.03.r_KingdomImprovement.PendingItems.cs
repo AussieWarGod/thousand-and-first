@@ -165,7 +165,8 @@ namespace XRL.World.Parts
 			}
 			return BoundedIdentity(Receipt.HandoverSourceId)
 				&& BoundedIdentity(Receipt.HandoverTargetId)
-				&& Source.ID == Receipt.HandoverSourceId && Target.ID == Receipt.HandoverTargetId
+				&& Source.IDIfAssigned == Receipt.HandoverSourceId
+				&& Target.IDIfAssigned == Receipt.HandoverTargetId
 				&& ExactHandoverAuthority(Source, Target, Receipt);
 		}
 
@@ -217,16 +218,16 @@ namespace XRL.World.Parts
 				&& Target.Blueprint == Receipt.SuccessorBlueprint
 				&& Target.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
 					== Receipt.SuccessorKey
-				&& job.SubjectId == Source.ID && job.SourceId == Source.ID
-				&& job.OutputId == Target.ID && job.TargetKey == Receipt.SuccessorKey
+				&& job.SubjectId == Source.IDIfAssigned && job.SourceId == Source.IDIfAssigned
+				&& job.OutputId == Target.IDIfAssigned && job.TargetKey == Receipt.SuccessorKey
 				&& Source.CurrentCell == zone.GetCell(job.X, job.Y)
 				&& Target.CurrentCell == Source.CurrentCell
 				&& KingdomConstruction.Owns(system, zone, job)
 				&& KingdomConstruction.IsCurrent(job)
-				&& KingdomConstruction.FindExactId(zone, Source.ID, out exactSource)
+				&& KingdomConstruction.FindExactId(zone, Source.IDIfAssigned, out exactSource)
 					== KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(exactSource, Source)
-				&& KingdomConstruction.FindExactId(zone, Target.ID, out exactTarget)
+				&& KingdomConstruction.FindExactId(zone, Target.IDIfAssigned, out exactTarget)
 					== KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(exactTarget, Target);
 		}

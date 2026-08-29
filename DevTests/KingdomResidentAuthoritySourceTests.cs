@@ -20,7 +20,12 @@ namespace ThousandAndFirst.Tests
 			StringComparer.OrdinalIgnoreCase)
 		{
 			"Core/KingdomSystem.cs",
-			"Core/KingdomSettlement.cs"
+			"Core/KingdomSettlement.cs",
+			"Core/KingdomSettlement.Fields.cs",
+			"Core/KingdomSettlement.Normalize.cs",
+			"Core/KingdomSettlement.Transfer.cs",
+			"Core/KingdomSettlement.Vocations.cs",
+			"Core/KingdomSettlement.Reflection.cs"
 		};
 
 		[Test]
@@ -69,21 +74,27 @@ namespace ThousandAndFirst.Tests
 		public void EveryLiveMutationAndOfficePathUsesResidentRows()
 		{
 			string growth = KingdomGrowthLogicalSource.Read();
-			StringAssert.Contains("KingdomResidents.RollRows(System, true)", growth);
+			StringAssert.Contains("KingdomCrews.AvailableSettlers(System, Survey)", growth);
+			string crews = TestMain.ReadRepositoryText("Growth/KingdomCrews.Availability.cs");
+			StringAssert.Contains("KingdomResidents.RollRows(System, true)", crews);
 			StringAssert.Contains("KingdomResidents.TryEnsureRow(system, settler", growth);
 			StringAssert.Contains("KingdomResidents.TryDepart(System, leaver", growth);
 			StringAssert.DoesNotContain("System.Population - System.WaterCrew", growth);
 
-			string guests = TestMain.ReadRepositoryText("Experience/KingdomGuestbook.cs");
+			string guests = KingdomGuestbookLogicalSource.Read();
 			StringAssert.Contains("KingdomResidents.TryEnsureRow(system, guest", guests);
 			string lifecycle = KingdomGuestLifecycleLogicalSource.Read();
 			StringAssert.Contains("KingdomResidents.OnRollCount(system)", lifecycle);
 
 			string offices = TestMain.ReadRepositoryText("Experience/KingdomOffices.cs");
 			StringAssert.Contains("KingdomResidents.TryMarkDead(system, Citizen", offices);
-			StringAssert.Contains("KingdomResidents.TryHead(System, out headRow)", offices);
+			StringAssert.Contains("KingdomOfficeRuntime.ObserveHolderLoss(system, Citizen", offices);
+			StringAssert.DoesNotContain("KingdomResidents.TryHead", offices);
 			string reports = TestMain.ReadRepositoryText("Core/KingdomReportsPeople.cs");
 			StringAssert.Contains("KingdomResidents.TryRoll(System", reports);
+			string residents = KingdomResidentsLogicalSource.Read();
+			StringAssert.Contains("RollRows(KingdomCityBook Book", residents);
+			StringAssert.Contains("TryResident(KingdomCityBook Book", residents);
 			string archive = TestMain.ReadRepositoryText("Core/KingdomSealRules.Ground.cs");
 			StringAssert.Contains("KingdomResidentRules.TryProject(state, out roll)", archive);
 		}
@@ -92,7 +103,7 @@ namespace ThousandAndFirst.Tests
 		public void ReflectedCompatibilityFieldsAreExplicitlyObsolete()
 		{
 			string system = KingdomSystemLogicalSource.Read();
-			string settlement = TestMain.ReadRepositoryText("Core/KingdomSettlement.cs");
+			string settlement = KingdomSettlementLogicalSource.Read();
 			Assert.AreEqual(3, Count(system, "[Obsolete(\"Compatibility projection only;"));
 			Assert.AreEqual(3, Count(settlement, "[Obsolete(\"Compatibility projection only;"));
 			StringAssert.Contains("KingdomResidents.AdoptLegacyAuthority(this)", system);

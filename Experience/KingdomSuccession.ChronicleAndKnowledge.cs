@@ -216,10 +216,9 @@ namespace ThousandAndFirst
 			{
 				ground.UnionWith(System.ClaimedZones);
 			}
-			if (System.Away != null && System.Away.ClaimedZones != null)
-			{
-				ground.UnionWith(System.Away.ClaimedZones);
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				if (nonSeat[i].ClaimedZones != null) ground.UnionWith(nonSeat[i].ClaimedZones);
 			foreach (JournalMapNote note in JournalAPI.MapNotes)
 			{
 				if (note != null && ground.Contains(note.ZoneID) && !note.Revealed)

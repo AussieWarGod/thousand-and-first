@@ -22,7 +22,7 @@ namespace ThousandAndFirst
 				return KingdomConstruction.FindExactId(Zone, Id, out Exact);
 			GameObject candidate = GameObject.FindByID(Id);
 			if (!GameObject.Validate(candidate)) return KingdomPhysicalLookupState.Absent;
-			if (candidate.ID != Id || candidate.CurrentZone != Zone)
+			if (candidate.IDIfAssigned != Id || candidate.CurrentZone != Zone)
 				return KingdomPhysicalLookupState.Ambiguous;
 			Exact = candidate;
 			return KingdomPhysicalLookupState.Exact;
@@ -45,8 +45,8 @@ namespace ThousandAndFirst
 			if (ExactOwned(Cargo, Source))
 			{
 				KingdomConstruction.UpdatePhysical(ref Job,
-					KingdomPhysicalPhase.CargoOutputSettled, 0, 1, 0, Cargo.ID,
-					Destination.ID, Job.Payload, Failure);
+					KingdomPhysicalPhase.CargoOutputSettled, 0, 1, 0, Cargo.IDIfAssigned,
+					Destination.IDIfAssigned, Job.Payload, Failure);
 				return;
 			}
 			if (Cargo.InInventory == null && Cargo.CurrentCell == null && Source.Inventory != null)
@@ -60,8 +60,8 @@ namespace ThousandAndFirst
 					if (ReferenceEquals(restored, Cargo) && ExactOwned(Cargo, Source))
 					{
 						KingdomConstruction.UpdatePhysical(ref Job,
-							KingdomPhysicalPhase.CargoOutputSettled, 0, 1, 0, Cargo.ID,
-							Destination.ID, Job.Payload, Failure);
+							KingdomPhysicalPhase.CargoOutputSettled, 0, 1, 0, Cargo.IDIfAssigned,
+							Destination.IDIfAssigned, Job.Payload, Failure);
 						return;
 					}
 				}
@@ -87,8 +87,8 @@ namespace ThousandAndFirst
 			}
 			if (Job.PhysicalPhase != KingdomPhysicalPhase.CargoDelivered
 				&& !KingdomConstruction.UpdatePhysical(ref Job,
-					KingdomPhysicalPhase.CargoDelivered, 0, 1, 0, Cargo.ID,
-					Destination.ID, Job.Payload)) return;
+					KingdomPhysicalPhase.CargoDelivered, 0, 1, 0, Cargo.IDIfAssigned,
+					Destination.IDIfAssigned, Job.Payload)) return;
 			if (!RetireCargoRoot(Job, Cargo))
 			{
 				KingdomConstruction.Quarantine(ref Job,
@@ -191,7 +191,7 @@ namespace ThousandAndFirst
 						candidates.Add(item);
 				}
 			}
-			candidates.Sort((a, b) => string.CompareOrdinal(a.ID, b.ID));
+			candidates.Sort((a, b) => string.CompareOrdinal(a.IDIfAssigned, b.IDIfAssigned));
 			for (int i = 0; i < candidates.Count; i++)
 			{
 				GameObject item = candidates[i];
@@ -201,8 +201,8 @@ namespace ThousandAndFirst
 					|| !KingdomPurposeRules.TryDecodeManifest(encoded,
 						out KingdomPurposeManifest manifest)
 					|| job.Route != KingdomConstructionRoute.PurposeConsignment
-					|| !SettledConsignment(job, encoded, item.ID)
-					|| job.OutputId != item.ID || manifest.BuildKey != Definition.BuildKey
+					|| !SettledConsignment(job, encoded, item.IDIfAssigned)
+					|| job.OutputId != item.IDIfAssigned || manifest.BuildKey != Definition.BuildKey
 					|| !KingdomPurposeRules.ManifestMatchesDefinition(manifest, Definition)
 					|| manifest.DestinationSettlementId != DestinationSettlementId
 					|| manifest.DestinationGateKey != LocalGateKey

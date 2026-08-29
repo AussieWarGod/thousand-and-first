@@ -23,6 +23,8 @@ namespace ThousandAndFirst
 			internal string[] ItemIds;
 			internal int[] Counts;
 			internal bool[] Edible;
+			internal bool[] Spendable;
+			internal KingdomConstructionInputLeaseSnapshot Leases;
 			internal List<GameObject> LarderList;
 			internal GameObject[] LarderRows;
 			internal int FoodStored;
@@ -44,12 +46,15 @@ namespace ThousandAndFirst
 			int remaining = Amount;
 			for (int i = 0; i < frame.Items.Length && remaining > 0; i++)
 			{
-				if (!frame.Edible[i]) continue;
+				if (!frame.Spendable[i]) continue;
 				GameObject food = frame.Items[i];
 				while (remaining > 0 && expected[i] > 0)
 				{
 					if (!SpoilTopologyExact(frame, expected)) return false;
 					int before = expected[i];
+					string authorityFailure;
+					if (!KingdomOrdinaryFoodAuthority.TrySpendNow(food,
+						out authorityFailure)) return false;
 					try
 					{
 						food.Destroy(null, Silent: true);
@@ -109,17 +114,22 @@ namespace ThousandAndFirst
 			int[] counts = new int[items.Length];
 			string[] ids = new string[items.Length];
 			bool[] edible = new bool[items.Length];
+			bool[] spendable = new bool[items.Length];
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure)) return false;
 			int available = 0;
 			for (int i = 0; i < items.Length; i++)
 			{
 				GameObject item = items[i];
 				if (!GameObject.Validate(item) || item.Physics == null || item.InInventory != Container
-					|| item.CurrentCell != null || item.Count <= 0 || string.IsNullOrEmpty(item.ID)) return false;
+					|| item.CurrentCell != null || item.Count <= 0 || string.IsNullOrEmpty(item.IDIfAssigned)) return false;
 				for (int j = 0; j < i; j++) if (ReferenceEquals(items[j], item)) return false;
 				counts[i] = item.Count;
-				ids[i] = item.ID;
+				ids[i] = item.IDIfAssigned;
 				edible[i] = item.HasPart("Food") || item.HasPart("PreparedCookingIngredient");
-				if (edible[i])
+				spendable[i] = edible[i] && KingdomOrdinaryFoodAuthority.CanSpend(leases, item);
+				if (spendable[i])
 				{
 					long next = (long)available + item.Count;
 					available = (next > int.MaxValue) ? int.MaxValue : (int)next;
@@ -129,7 +139,7 @@ namespace ThousandAndFirst
 			Frame = new SpoilFrame
 			{
 				Container = Container,
-				ContainerId = Container.ID,
+				ContainerId = Container.IDIfAssigned,
 				Zone = Container.CurrentZone,
 				ZoneId = Container.CurrentZone.ZoneID,
 				Cell = Container.CurrentCell,
@@ -139,6 +149,8 @@ namespace ThousandAndFirst
 				ItemIds = ids,
 				Counts = counts,
 				Edible = edible,
+				Spendable = spendable,
+				Leases = leases,
 				LarderList = Larders,
 				LarderRows = Larders.ToArray(),
 				FoodStored = FoodStored,
@@ -151,7 +163,7 @@ namespace ThousandAndFirst
 		private bool SpoilTopologyExact(SpoilFrame Frame, int[] Expected)
 		{
 			if (Frame == null || Expected == null || Expected.Length != Frame.Items.Length
-				|| !GameObject.Validate(Frame.Container) || Frame.Container.ID != Frame.ContainerId
+				|| !GameObject.Validate(Frame.Container) || Frame.Container.IDIfAssigned != Frame.ContainerId
 				|| Frame.Container.CurrentZone != Frame.Zone || Frame.Zone.ZoneID != Frame.ZoneId
 				|| Frame.Container.CurrentCell != Frame.Cell
 				|| Frame.Cell == null || Frame.Cell.ParentZone != Frame.Zone
@@ -177,9 +189,11 @@ namespace ThousandAndFirst
 					continue;
 				}
 				if (!ReferenceEquals(Frame.List[row++], item) || !GameObject.Validate(item)
-					|| item.ID != Frame.ItemIds[i] || item.Count != Expected[i]
+					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Expected[i]
 					|| item.InInventory != Frame.Container || item.CurrentCell != null
-					|| (item.HasPart("Food") || item.HasPart("PreparedCookingIngredient")) != Frame.Edible[i])
+					|| (item.HasPart("Food") || item.HasPart("PreparedCookingIngredient")) != Frame.Edible[i]
+					|| KingdomOrdinaryFoodAuthority.CanSpend(Frame.Leases, item)
+						!= Frame.Spendable[i])
 					return false;
 			}
 			return true;

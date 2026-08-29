@@ -164,7 +164,7 @@ namespace ThousandAndFirst
 					return;
 				}
 				KingdomCeremony.CarryPlanQuote(planQuote, projected);
-				string markerId = Marker.ID;
+				string markerId = Marker.IDIfAssigned;
 				bool markerRemoved;
 				try { markerRemoved = Marker.Destroy(null, Silent: true); }
 				catch (System.Exception ex)
@@ -185,18 +185,14 @@ namespace ThousandAndFirst
 						"Plot plan-marker removal was vetoed, moved, replaced, or partially changed.");
 					return;
 				}
-				GameObject exactProjected;
-				if (!KingdomConstruction.Owns(System, zone, current)
-					|| !KingdomConstruction.IsCurrent(current)
-					|| KingdomConstruction.FindExactId(zone, projected.ID, out exactProjected)
-						!= KingdomPhysicalLookupState.Exact
-					|| !ReferenceEquals(exactProjected, projected))
+				if (!TryProvePlotPlanMarkerRemoval(System, zone, projected, false, markerId,
+					ref current, out string removalFailure))
 				{
 					KingdomConstruction.Quarantine(ref current,
-						"Plot plan endpoints changed during marker removal.");
+						removalFailure ?? "Plot plan endpoints changed during marker removal.");
 					return;
 				}
-				if (!KingdomConstruction.UpdateSubject(ref current, projected.ID)) return;
+				if (!KingdomConstruction.UpdateSubject(ref current, projected.IDIfAssigned)) return;
 				staked = true;
 				yielding = projected.GetIntProperty(YieldingProperty) == 1;
 			});

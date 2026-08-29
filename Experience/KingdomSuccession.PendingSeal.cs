@@ -83,21 +83,51 @@ namespace ThousandAndFirst
 
 		private void MigrateSavedState(int Version)
 		{
-			if (Version >= 2) return;
-			LegacyPhysicalRiteUnavailable = true;
-			ClearPendingRiteIdentity();
-			CompletedShrineToken = "";
-			CompletedShrineObjectId = "";
-			CompletedShrineZoneId = "";
-			if (!string.IsNullOrEmpty(PendingDeathToken)
-				&& PendingAccessionRepairResidentId == 0)
+			if (Version < 2)
 			{
-				// Version 1 could describe a clock jump but had no frozen body/locus/fixture
-				// proof. It cannot be upgraded by inventing those facts. Quarantine only this
-				// system so the enclosing save remains loadable.
-				SuccessionDisabled = true;
-				ClearDisabledSavedState();
+				LegacyPhysicalRiteUnavailable = true;
+				ClearPendingRiteIdentity();
+				CompletedShrineToken = "";
+				CompletedShrineObjectId = "";
+				CompletedShrineZoneId = "";
+				if (!string.IsNullOrEmpty(PendingDeathToken)
+					&& PendingAccessionRepairResidentId == 0)
+				{
+					// Version 1 had no frozen body/locus/fixture proof. Never invent it.
+					SuccessionDisabled = true;
+					ClearDisabledSavedState();
+				}
 			}
+			if (Version < 3)
+			{
+				SuccessionConfigurationWire = "";
+				PendingConfigurationChronicle = "";
+				PendingSelectionReceipt = "";
+				CompletedSeatConsequenceToken = "";
+				ActiveSeatClimbRealmId = "";
+				ActiveSeatClimbToken = "";
+				ActiveSeatKeeperResidentId = 0;
+				ActiveSeatKeeperName = "";
+				LegacySelectionReceiptUnavailable = true;
+				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				if (!string.IsNullOrEmpty(PendingDeathToken) && PendingHeirResidentId > 0
+					&& !string.IsNullOrEmpty(PendingHeirName) && system != null
+					&& !string.IsNullOrEmpty(system.RealmId))
+				{
+					KingdomSuccessionSelectionReceipt receipt;
+					if (KingdomSuccessionSelectionReceipt.TryCreate(system.RealmId,
+						PendingDeathToken, 0, PendingHeirResidentId, PendingHeirName,
+						PendingHeirResidentId, PendingHeirName, HeirChoice.Law, false,
+						SuccessionSelectionReason.Seniority, out receipt))
+					{
+						PendingSelectionReceipt =
+							KingdomSuccessionSelectionReceipt.Encode(receipt);
+						LegacySelectionReceiptUnavailable =
+							string.IsNullOrEmpty(PendingSelectionReceipt);
+					}
+				}
+			}
+			if (Version < 4) GroomingRecordWire = "";
 		}
 
 	}

@@ -60,8 +60,8 @@ namespace ThousandAndFirst
 				{
 					system.FoundedTick = The.Game.TimeTicks;
 				}
-			// The realm's simulation seed, minted here and never again. Deferred out of W0 because
-			// there was nothing to seed yet; the founding is the one moment that has a realm name,
+			// The realm's simulation seed, minted here and never again. W0 could not mint it before
+			// founding; this is the one moment that has a realm name,
 			// a founding tick and a world to domain-separate against all at once.
 				if ((system.SimulationSeedHigh == 0UL && system.SimulationSeedLow == 0UL &&
 					 !system.MintSimulationSeed(The.Game.GetWorldSeed(), system.RealmId,
@@ -107,9 +107,9 @@ namespace ThousandAndFirst
 			// means in practice, and STANDARDS/VISION on why nothing here is moved or destroyed.
 			if (step < 2)
 			{
-				if (!TryReadOrFreezeFoundingStandings(faction,
+				if (!TryReadOrFreezeFoundingStandings(system, faction,
 					out List<KeyValuePair<string, int>> frozenStandings) ||
-					!TryResolveFoundingStandings(faction, frozenStandings,
+					!TryResolveFoundingStandings(system, faction, frozenStandings,
 						out List<KeyValuePair<Faction, int>> resolvedStandings) ||
 					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
 						Authority, foundingZone))
@@ -125,18 +125,19 @@ namespace ThousandAndFirst
 				{
 					return null;
 				}
-				foreach (KeyValuePair<Faction, int> target in resolvedStandings)
-				{
-					system.SetStanding(target.Key.Name, target.Value);
-					faction.SetFactionFeeling(target.Key.Name,
-						Reputation.GetFeeling((float)target.Value));
-					if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID))
-					{
-						return null;
-					}
-				}
+				if (!TryPublishFoundingStandings(system, resolvedStandings) ||
+					!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID) ||
+					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
+						Authority, foundingZone)) return null;
 				faction.SetProperty(FoundingStepProperty, 2);
+				if (faction.GetIntProperty(FoundingStepProperty) != 2) return null;
 				step = 2;
+				// Derived faction feelings may be rebuilt after a cut; durable ledgers and the step
+				// marker are already exact before any external engine dictionary is touched.
+				system.ReassertFeelings();
+				if (!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID) ||
+					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
+						Authority, foundingZone)) return null;
 			}
 			// The realm's own favourite dish, in vanilla's own place for one: three plain fields
 			// on the Faction that vanilla's own serializer writes and reads
@@ -212,6 +213,14 @@ namespace ThousandAndFirst
 				});
 			}
 			The.Player?.RequirePart<KingdomCharterPart>().EnsureAbility();
+			// Observe policy at the deed boundary during normal publication. A delayed recovery
+			// observes at its current tick, so a newly enabled option cannot mint work from an old deed.
+			long experienceTick = Math.Max(system.SettlementIdentityFoundedTick,
+				The.Game == null ? 0L : The.Game.TimeTicks);
+			if (!KingdomExperienceRuntime.TryObserveConfiguredOptions(system, experienceTick,
+				out string experienceFailure))
+				KingdomLog.Log("experience: founding option observation refused ("
+					+ experienceFailure + ")");
 			// The first durable snapshot waits for the rite's ground claim. Before that claim the
 			// seal has no honest semantic ground id to carry.
 			KingdomSeal.MarkSemanticDirty("founding publication");

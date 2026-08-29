@@ -137,10 +137,9 @@ namespace ThousandAndFirst
 			{
 				return true;
 			}
-			if (System.Away != null && Keeps(System.Away.City, DesignKey, blueprint))
-			{
-				return true;
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				if (Keeps(nonSeat[i].City, DesignKey, blueprint)) return true;
 			return StandsIn(The.ZoneManager?.ActiveZone, DesignKey);
 		}
 
@@ -199,11 +198,11 @@ namespace ThousandAndFirst
 			{
 				return KingdomPresentation.Rich(System.SeatName);
 			}
-			KingdomSettlement away = System.Away;
-			if (away != null && Keeps(away.City, DesignKey, blueprint))
-			{
-				return KingdomPresentation.Rich(string.IsNullOrEmpty(away.SettlementName) ? System.KingdomDisplayName : away.SettlementName);
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				if (Keeps(nonSeat[i].City, DesignKey, blueprint))
+					return KingdomPresentation.Rich(string.IsNullOrEmpty(nonSeat[i].SettlementName)
+						? System.KingdomDisplayName : nonSeat[i].SettlementName);
 			return null;
 		}
 
@@ -217,8 +216,7 @@ namespace ThousandAndFirst
 			{
 				return System.City;
 			}
-			KingdomSettlement away = System.Away;
-			return (away != null && away.ClaimedZones != null && away.ClaimedZones.Contains(ZoneID)) ? away.City : null;
+			return System.FindNonSeatSettlementByZone(ZoneID)?.City;
 		}
 
 		private static bool Keeps(Simulation.City.KingdomCityBook Book, string DesignKey, string Blueprint)

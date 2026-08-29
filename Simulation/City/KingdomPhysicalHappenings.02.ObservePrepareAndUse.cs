@@ -70,6 +70,10 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomHappeningParticipant row = operation.Participants[i];
 				string standing = body.GetStringProperty(TokenProperty);
 				if (!string.IsNullOrEmpty(standing) && standing != operation.EventId) return false;
+				// Even a complete stage-and-restore span breaks continuous service. The monotone
+				// endpoint witness survives restoration of the same post and body.
+				if (operation.Kind != KingdomPhysicalHappeningKind.CommunalRite
+					&& !KingdomStations.TouchAvailability(body)) return false;
 				body.SetStringProperty(TokenProperty, operation.EventId);
 				body.SetStringProperty(PostReceiptProperty, PostReceipt(row));
 				body.SetStringProperty(AnchorReceiptProperty, row.Anchor);
@@ -135,6 +139,14 @@ namespace ThousandAndFirst.Simulation.City
 				Campfire fire = evidence.Fixture.GetPart<Campfire>();
 				return fire != null && fire.IsReady(UseCharge: true)
 					&& RadiatesHeatEvent.Check(evidence.Fixture);
+			case KingdomPhysicalHappeningKind.CommunalRite:
+				Chair riteSeat = evidence.Fixture.GetPart<Chair>();
+				if (riteSeat != null) return riteSeat.SitDown(actor)
+					&& actor.GetEffect<Sitting>()?.SittingOn == evidence.Fixture;
+				LiquidVolume riteBasin = evidence.Fixture.GetPart<LiquidVolume>();
+				return riteBasin != null && riteBasin.MaxVolume > 0
+					&& GetStorableDramsEvent.GetFor(evidence.Fixture, "water",
+						LiquidVolume: riteBasin) == riteBasin.MaxVolume - riteBasin.Volume;
 			case KingdomPhysicalHappeningKind.Raising:
 				LiquidVolume basin = evidence.Fixture.GetPart<LiquidVolume>();
 				return basin != null && basin.MaxVolume > 0
@@ -151,7 +163,9 @@ namespace ThousandAndFirst.Simulation.City
 			if (!evidence.FixtureExact
 				|| evidence.Fixture.GetStringProperty(FixtureUseProperty)
 					!= operation.EventId) return false;
-			if (operation.Kind != KingdomPhysicalHappeningKind.Wedding) return true;
+			if (operation.Kind != KingdomPhysicalHappeningKind.Wedding
+				&& (operation.Kind != KingdomPhysicalHappeningKind.CommunalRite
+					|| evidence.Fixture.GetPart<Chair>() == null)) return true;
 			return evidence.Bodies.Count > 0 && GameObject.Validate(evidence.Bodies[0])
 				&& evidence.Bodies[0].GetEffect<Sitting>()?.SittingOn == evidence.Fixture;
 		}

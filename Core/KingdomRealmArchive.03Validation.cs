@@ -27,10 +27,11 @@ namespace ThousandAndFirst
 				SeatWireVersion != KingdomArchivedSettlementCodec.CurrentVersion ||
 				AwayWireVersion != KingdomArchivedSettlementCodec.CurrentVersion ||
 				SecededWireVersion != KingdomArchivedSettlementCodec.CurrentVersion ||
-				Seat == null || Standings == null ||
-				!ExactArchivedSettlements(RealmId, Seat, Away, SettlementIds) ||
-				ReferenceEquals(Seat, Away) || ReferenceEquals(Seat, Seceded) ||
-				ReferenceEquals(Away, Seceded))
+				Seat == null || Standings == null || RealmPolicyToward == null ||
+				RegardSpilloverRemainders == null ||
+				RegardSpilloverObservedReputation == null || SettlementTopology == null ||
+				!CanonicalTopologyReferences(Seat, SettlementTopology, Away, Seceded) ||
+				!ExactArchivedSettlements(RealmId, Seat, SettlementTopology, SettlementIds))
 				return Refuse("archived settlement graph is opaque, aliased, or lacks exact topology",
 					out Failure);
 			List<KingdomChronicleReceipt> receipts;
@@ -40,10 +41,18 @@ namespace ThousandAndFirst
 				out receipts, out migrated, out registryFault) || migrated)
 				return Refuse("archive chronicle receipt graph is not canonical (" + registryFault + ")",
 					out Failure);
+			string directionalFailure = null;
+			if (DirectionalStandingSchemaVersion != 1 ||
+				(CallbackAuthoritySchemaVersion != 1 && CallbackAuthoritySchemaVersion != 2) ||
+				!DirectionalStandingDigestMatches(out directionalFailure) ||
+				!ValidDirectionalStandings(FactionName, Standings, RealmPolicyToward,
+				RegardSpilloverRemainders, RegardSpilloverObservedReputation))
+				return Refuse("archive directional standings are reserved or malformed" +
+					(directionalFailure == null ? "" : " (" + directionalFailure + ")"), out Failure);
 			if (CarryBook == null || CarryBook.LegacyIdentity ||
 				!string.Equals(CarryBook.RealmId, RealmId, StringComparison.Ordinal) ||
 				!KingdomLifecycleRules.CanOwnAuthority(CarryBook) ||
-				!TryArchivedRetainedIds(RealmId, Seat, Away, Seceded,
+				!TryArchivedRetainedIds(RealmId, Seat, SettlementTopology, Seceded,
 					out List<string> retainedIds) ||
 				!ExactCarrySettlementIds(CarryBook, retainedIds))
 				return Refuse("archive carry authority does not match exact realm identity", out Failure);
@@ -63,7 +72,9 @@ namespace ThousandAndFirst
 		internal bool ValidateEnvelope(out string Failure)
 		{
 			Failure = null;
-			if (Version != CurrentVersion ||
+			if (Version != CurrentVersion || DirectionalStandingSchemaVersion < 0 ||
+				DirectionalStandingSchemaVersion > 1 ||
+				(CallbackAuthoritySchemaVersion != 1 && CallbackAuthoritySchemaVersion != 2) ||
 				!Enum.IsDefined(typeof(KingdomRealmArchivePhase), Phase) ||
 				(Quarantined != (Phase == KingdomRealmArchivePhase.Quarantined)))
 				return Refuse("archive version, phase, or quarantine flag is noncanonical",
@@ -93,6 +104,11 @@ namespace ThousandAndFirst
 				!BoundedText(DishText) || !BoundedText(DishStaple) || !BoundedText(DishSource) ||
 				!BoundedOpaque(SeatOpaque) || !BoundedOpaque(AwayOpaque) ||
 				!BoundedOpaque(SecededOpaque) || !BoundedStandings(Standings) ||
+				!BoundedStandings(RealmPolicyToward) ||
+				!BoundedRemainders(RegardSpilloverRemainders) ||
+				!BoundedStandings(RegardSpilloverObservedReputation) ||
+				!BoundedUtf8(DirectionalStandingDigest, 64, 64) ||
+				SettlementTopology == null ||
 				CarryBook == null || CarryBook.WireRejected ||
 				!ValidBindings(Bindings) || !ValidJobs(Jobs) || !BoundedHaul(Haul) ||
 				!ValidCallbackEnvelope(ExileChronicle) || !ValidCallbackEnvelope(ExileAbility) ||

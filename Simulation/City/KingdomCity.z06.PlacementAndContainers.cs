@@ -89,6 +89,10 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				int waterCount = (survey == null) ? 0 : survey.Stores.Count;
 				int foodCount = (survey == null) ? 0 : survey.Larders.Count;
+				KingdomConstructionInputLeaseSnapshot leases;
+				string authorityFailure;
+				if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure))
+					leases = null;
 				ContainerGround ground = new ContainerGround();
 				ground.Rows = new KingdomContainerCatchUpRow[waterCount + foodCount];
 				ground.Water = new LiquidVolume[waterCount + foodCount];
@@ -102,7 +106,8 @@ namespace ThousandAndFirst.Simulation.City
 						? store.MaxVolume - store.Volume : 0;
 					int contents = KingdomLiquids.HasFreshWater(store) ? store.Volume : 0;
 					ground.Rows[i] = new KingdomContainerCatchUpRow(
-						KingdomCityRules.StableId(GameObject.Validate(owner) ? owner.ID : ""),
+						KingdomCityRules.StableId(GameObject.Validate(owner)
+							? owner.IDIfAssigned : ""),
 						OrdinalOf(owner), KingdomStockKind.Water,
 						GameObject.Validate(owner) && Visible(owner.CurrentCell), room, contents);
 					ground.Water[i] = store;
@@ -111,12 +116,14 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					int index = waterCount + i;
 					GameObject larder = survey.Larders[i];
-					int contents = GameObject.Validate(larder) ? KingdomSurvey.HeldIn(larder) : 0;
+					int physical = GameObject.Validate(larder) ? KingdomSurvey.HeldIn(larder) : 0;
+					int contents = KingdomOrdinaryFoodAuthority.AvailableIn(larder, leases);
 					int room = GameObject.Validate(larder)
-						? KingdomSurvey.CapacityOf(larder) - contents : 0;
+						? KingdomSurvey.CapacityOf(larder) - physical : 0;
 					if (room < 0) room = 0;
 					ground.Rows[index] = new KingdomContainerCatchUpRow(
-						KingdomCityRules.StableId(GameObject.Validate(larder) ? larder.ID : ""),
+						KingdomCityRules.StableId(GameObject.Validate(larder)
+							? larder.IDIfAssigned : ""),
 						OrdinalOf(larder), KingdomStockKind.Food,
 						GameObject.Validate(larder) && Visible(larder.CurrentCell), room, contents);
 					ground.Food[index] = larder;

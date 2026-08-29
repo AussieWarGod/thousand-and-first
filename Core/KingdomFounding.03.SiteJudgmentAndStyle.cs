@@ -72,7 +72,7 @@ namespace ThousandAndFirst
 				Name, Vocation, Site, Force, out failure);
 		}
 
-		/// <summary>Every zone the realm holds, across both cities. The seat's claims come first
+		/// <summary>Every zone the realm holds. The seat's claims come first
 		/// because most sites are judged against the ground the founder just walked off.</summary>
 		private static IEnumerable<string> RealmClaims(KingdomSystem System)
 		{
@@ -80,13 +80,9 @@ namespace ThousandAndFirst
 			{
 				yield return zoneID;
 			}
-			if (System.Away != null)
-			{
-				foreach (string zoneID in System.Away.ClaimedZones)
-				{
-					yield return zoneID;
-				}
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				foreach (string zoneID in nonSeat[i].ClaimedZones) yield return zoneID;
 		}
 
 		/// <summary>
@@ -169,7 +165,8 @@ namespace ThousandAndFirst
 				return KingdomZoningRules.ClaimVerdict.NothingFoundedYet;
 			}
 			bool ours = Site != null && System.ClaimedZones.Contains(Site.ZoneID);
-			bool otherCitys = Site != null && System.Away != null && System.Away.ClaimedZones.Contains(Site.ZoneID);
+			bool otherCitys = Site != null &&
+				System.FindNonSeatSettlementByZone(Site.ZoneID) != null;
 			bool otherRealms = Site != null && System.ExiledRealmHolds(Site.ZoneID);
 			bool foreign = Site != null && KingdomRules.GroundIsForeignFaction(Site.GetZoneProperty("faction"), System.KingdomFactionName);
 			bool adjacent = false;

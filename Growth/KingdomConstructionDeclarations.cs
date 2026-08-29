@@ -22,7 +22,9 @@ namespace ThousandAndFirst
 		WearRepair = 10,
 		Strike = 11,
 		/// <summary>Exact other-city purpose cargo carried through a live mirror pair.</summary>
-		PurposeConsignment = 12
+		PurposeConsignment = 12,
+		/// <summary>One paid lot raised inside an exact hosted arcology carrier.</summary>
+		HostedArcology = 13
 	}
 
 	/// <summary>The physical fact a route must prove before it may finish.</summary>
@@ -36,7 +38,8 @@ namespace ThousandAndFirst
 		Improvement = 5,
 		Paving = 6,
 		Repair = 7,
-		PurposeConsignment = 8
+		PurposeConsignment = 8,
+		HostedLot = 9
 	}
 
 	/// <summary>
@@ -157,6 +160,11 @@ namespace ThousandAndFirst
 		public int X2;
 		public int Y2;
 		public string PlotId;
+		/// <summary>True only when strike order froze an exact authored lot before removal.</summary>
+		public bool HasTypedLot;
+		public string LotType;
+		public ArchitectureLotSize LotSize;
+		public ArchitectureFacing Facing;
 		public int Effort;
 		public List<KingdomStrikeTarget> Targets;
 	}

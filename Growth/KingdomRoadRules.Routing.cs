@@ -209,5 +209,51 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// Proves and packs an authored route without searching for another one. Endpoints retain
+		/// <see cref="TryTrace"/> semantics: only intermediate ground must be passable. Every step
+		/// is cardinal, bounded, unique, and admitted whole or refused whole.
+		/// </summary>
+		public static bool TryExactTrace(CellFilter Passable, int Width, int Height,
+			int FromX, int FromY, int ToX, int ToY, int MaxCells,
+			IList<ArchitecturePoint> ExactRoute, IList<int> Cells)
+		{
+			if (Cells == null) return false;
+			Cells.Clear();
+			if (Passable == null || ExactRoute == null || Width <= 0 || Height <= 0
+				|| MaxCells < 0 || ExactRoute.Count > MaxCells
+				|| !InBounds(FromX, FromY, Width, Height)
+				|| !InBounds(ToX, ToY, Width, Height)
+				|| (FromX == ToX && FromY == ToY)) return false;
+			List<int> packed = new List<int>();
+			HashSet<int> seen = new HashSet<int>();
+			int previousX = FromX;
+			int previousY = FromY;
+			for (int i = 0; i < ExactRoute.Count; i++)
+			{
+				ArchitecturePoint point = ExactRoute[i];
+				if (!InBounds(point.X, point.Y, Width, Height)
+					|| !CardinalNeighbor(previousX, previousY, point.X, point.Y)
+					|| !Passable(point.X, point.Y)) return false;
+				int cell = Pack(point.X, point.Y, Width);
+				if (!seen.Add(cell)) return false;
+				packed.Add(cell);
+				previousX = point.X;
+				previousY = point.Y;
+			}
+			if (!CardinalNeighbor(previousX, previousY, ToX, ToY)) return false;
+			for (int i = 0; i < packed.Count; i++) Cells.Add(packed[i]);
+			return true;
+		}
+
+		private static bool CardinalNeighbor(int FromX, int FromY, int ToX, int ToY)
+		{
+			long dx = (long)ToX - FromX;
+			long dy = (long)ToY - FromY;
+			if (dx < 0L) dx = -dx;
+			if (dy < 0L) dy = -dy;
+			return dx + dy == 1L;
+		}
+
 	}
 }

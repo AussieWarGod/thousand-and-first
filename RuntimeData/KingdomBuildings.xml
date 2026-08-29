@@ -1,0 +1,1433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  THE CATALOGUE
+
+  What a settlement can be asked to raise, and what raising it is worth.
+
+  Every entry answers six questions, and the last one is the one that matters:
+
+    Plot       How much ground it stands on. S / M / L / XL, with Open="yes" for a plot with no
+               roof and Sky="yes" for one that needs weather and so refuses to go underground.
+               The settlement lays a small plot from its first night, a middling one once it is
+               a steading, a large one at town, and a grand one only as a city - so a design's
+               size is a gate in its own right, on top of MinStage. A design that declares NO
+               Plot is a boundary or network work rather than stakeable ground. Walls and towers
+               occupy one frontier cell. The gatehouse instead freezes its exact 3x3 road-and-wall
+               topology, while still remaining a network work that can never mint a cleared plot.
+    Cost       Drams of water out of the settlement's own casks. Water is what everything here
+               is ultimately paid in.
+    Materials  What clearing the ground gave back, spent again. mud / canvas / timber / stone /
+               marble / scrap. Materials are never minted: they come off a cleared plot, out of
+               a caravan, or off the back of something salvaged. The marble house needs marble,
+               and marble comes from a seam somebody found.
+    Refines    What a processing work makes: shapedtimber / shapedstone / workedmetal (or the
+               yard's own key: sawyer / mason / smelter). Declaring it is the whole of what makes
+               a building a yard.
+    Bits       What a high-craft design costs in the game's own tinkering bits, written in bit
+               tiers - Bits="0034" is two of the commonest and one each of tier three and four.
+               Drawn from the same dedicated stockpiles as everything else.
+    Exotics    Rare finds a great work is finished in: ingot / silver / gold / gem, as
+               exotic:units. Nobody here can make one; somebody has to carry it home.
+    Staff      Settlers who stand in it and work it. Buildings are people.
+    Contents   Population table the finished interior is furnished from, the way a vanilla hut
+               is populated. This is where the cask rack, the bunk, the torchpost, and the
+               hookah went: a founder orders a house and gets the bunk, rather than ordering
+               the bunk. An open plot has no interior and names none.
+    Carries    WHAT THIS ADDS TO THE SUSTAINABLE LEVEL, in settlers.
+
+  That last one is the whole denomination of this file. A building's number is not output per
+  day; it is how many more people this place honestly carries once nobody is hauling anything
+  in. water, food, and roof BIND - the level is the least of the three, because a town with
+  water for ninety and bread for nine is a town of nine. craft, spirit, learning, order, and
+  luxury LIFT - they are summed and then capped at half the binding level, so no quantity of
+  shrines ever outruns the air-well field. One point of water is one dram a day sustained, which
+  is one settler's thirst at camp rates - and it is also a dram that really arrives, because
+  KingdomGrowth banks a water work's Carries into the casks day by day. That double reading is
+  why only a design with a real producer part on its blueprint may declare water at all: see the
+  WATER lane below.
+
+  WHO READS THESE NUMBERS. KingdomSubsidence sums Carries over every finished (KingdomBuilt)
+  work in the settlement, scaling a crewed work by how well it is actually running, and hands
+  the total to KingdomCatalogueRules.Equilibrium through KingdomSubsidenceRules.SupportedLevel.
+  A settlement standing above that level settles back toward it as world time passes. So
+  raising a number here does not make a building better at its job - it makes the settlement
+  bigger, permanently, and a number set too high is a city that never has to earn itself.
+
+  "AT CAMP RATES" IS LOAD-BEARING. KingdomRules.UpkeepDrams bills 100/120/150/180/220 per
+  hundred by stage, so the water half is divided by that percentage before the level is taken:
+  an air-well court carrying fifteen settlers in a camp carries six in a city. That is why the ladder
+  below climbs so steeply on the water side and why every rung is exactly affordable - the
+  drams a rung's own population drinks are the drams that carry it. _notes/balance-sim.py Q6
+  is that cross-check, and it will say so out loud if a number here stops agreeing with it.
+
+  Improvements and explicitly declared same-set changes stay within one exact typed plot; sizes
+  compete across plots. Nothing here grows from a small plot into a middling one: to trade up in
+  size you strike what stands there, take the salvage, and build again on cleared ground. The
+  housing ladder remains four separate designs. Its declared S / M / L / XL routes may exchange
+  one same-size plan for another in place, but never restake or move the lot.
+
+  Not in this file and not by accident: the solar condenser, and any commission that hands a
+  founder water for no crew and no reason. Water that arrives out of nothing is the far end of
+  the autonomy axis, and the far end of that axis is always recovered and certified, never
+  commissioned. Vanilla draws the same line itself with TinkerItem CanBuild, and the water lane
+  keeps to it: everything a founder can ORDER is dew, brine, or a seep in the rock, and the one
+  city work above them is gated on a machine somebody dragged home from a ruin and had the
+  keepers pass fit for the grid. Dry ground's early answers are hauling, the salt-pan, patient
+  collection, and trade - and they are all in here.
+
+  STYLES ARE TAGS, AND FROM THIS WAVE THEY MEAN SOMETHING. A city's style is read off the ground
+  it was founded on - common, verdant, fungal, gyre, eater - and Styles is the tag list that says
+  which of the five a design is offered to. Three spellings: "all" is everywhere, a bare list is
+  here and nowhere else, and a leading ! is everywhere EXCEPT ("all,!eater"). The negation is
+  vanilla's own operator - Factions.xml ships RecipeGenotype="!True Kin" - and it is here because
+  the style set is OPEN: a design that belongs everywhere but one place cannot say so by
+  enumeration once somebody ships a sixth style. Every restriction below carries a STYLE comment
+  saying why the ground refuses it, and every style that is refused something is offered something
+  nobody else can raise, in the same pass - a style is a place, not a penalty.
+  _notes/balance-sim.py Q12 is the guardrail: every style must still hold every rung.
+
+  AND FOUR GATES BECAME SEVEN. Districts / MinZones / Knowledge / MinTech are joined by the creed
+  stack: Builders (who must be standing here), Creed (raised only by builders who hold that creed
+  OR HAVE PREVIOUSLY HELD IT), and CreedShare (how much of the city holds it). A design behind a
+  Creed a city has never held is not shown at all rather than shown and refused - the one gate in
+  the file with no key anywhere. Everything else refuses out loud and names the fix. See MODDING.md.
+
+  Extending this: ship your own KingdomBuildings.xml from your own mod. Re-using a Key
+  overrides that entry entirely, skins and all, so retheming the base catalogue is a supported
+  thing to do. See MODDING.md.
+-->
+<kingdombuildings Schema="1">
+  <style Name="common" GroundClause="common ground" Crop="Starapple"
+         Seed="r_KingdomSeedStarapple" CropRow="r_KingdomRowStarapple"
+         TimberWall="BrinestalkWall" />
+  <style Name="verdant" Terrain="Watervine,Saltmarsh,Flowerfields,BananaGrove,Jungle"
+         Region="Watervine,Saltmarsh,Flowerfields,BananaGrove,Jungle" Strata="surface"
+         Priority="100" GroundClause="ground green enough to root a verdant city"
+         Crop="Vinewafer" Seed="r_KingdomSeedVinewafer" CropRow="r_KingdomRowVinewafer"
+         WallMaterial="timber" TimberWall="PlantWall" />
+  <style Name="fungal" Terrain="Fungal" Region="Fungal" Strata="all" Priority="400"
+         GroundClause="air thick enough to bloom a fungal city" Crop="Plump Mushroom"
+         Seed="r_KingdomSeedMushroom" CropRow="r_KingdomRowMushroom"
+         WallMaterial="timber" TimberWall="MushroomWall-White" />
+  <style Name="gyre" Terrain="Brightsheol,MoonStair" Region="Brightsheol,MoonStair"
+         Strata="surface" Priority="200" GroundClause="skies restless enough to turn a gyre city"
+         Crop="Godshroom Cap" Seed="r_KingdomSeedGodshroom" CropRow="r_KingdomRowGodshroom"
+         WallMaterial="marble" />
+  <style Name="eater" Terrain="Ruins,BethesdaSusa,GritGate,TheSpindle"
+         Region="Ruins,BethesdaSusa,GritGate,TheSpindle" Strata="all" Priority="300"
+         GroundClause="stone old enough to answer an Eater city" Crop="Dreadroot Tuber"
+         Seed="r_KingdomSeedDreadroot" CropRow="r_KingdomRowDreadroot"
+         WallMaterial="scrap" />
+
+  <!-- ============================================================================ HOUSING ==
+    A roof is a binding support: no amount of water feeds somebody with nowhere to sleep.
+    The ladder is four designs, not four rungs of one. A tent goes up in an afternoon and
+    keeps nobody warm; a timber hut is a hut; a stone house is where a family stays; and
+    the fine house is a different good entirely - quality against quantity, and the only
+    thing a legendary trader will consent to live in.
+  -->
+  <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
+            Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S"
+            Footprint="3x2" Roof="Soft"
+            Materials="canvas:2" Carries="roof:2" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="tentrow" UpgradeMaterials="canvas:1,timber:1">
+    <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="w" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
+  </building>
+  <building Key="tentrow" DisplayName="staked tent-row (canvas, and a wall against the wind)" Blueprint="r_KingdomTentRow"
+            Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="S"
+            Footprint="5x2"
+            Materials="canvas:3,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- STYLE: Posts and wattle want trees. The salt flats grow brinestalk and the ruin field grows fulcrete, and neither is a post - the mud-brick hut and the block hut are what those two raise instead. -->
+
+  <building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut"
+            Cost="6" Ticks="1800" Styles="all,!common,!eater" Category="housing" Plot="S"
+            Footprint="4x3"
+            Materials="timber:6,mud:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="hutyard" UpgradeMaterials="timber:4,stone:2">
+    <!--
+      A skin only ever recolours or reglyphs art that already exists; it never names a tile this
+      mod ships, because a tile no check walks in both directions is a tile that renders nowhere
+      (STANDARDS 4). The four style skins are what a city of that kind is offered by default; the
+      fifth names no style, so it is offered everywhere and suggested nowhere.
+    -->
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" />
+    <skin Key="bleached" ColorString="&amp;Y" />
+  </building>
+  <!-- STYLE: Follows its own first rung out of the two styles with no timber to cut. -->
+  <building Key="hutyard" DisplayName="hut and yard (room to work outside the door)" Blueprint="r_KingdomHutYard"
+            Cost="10" Ticks="2400" Styles="all,!common,!eater" Category="housing" Plot="S"
+            Footprint="5x4"
+            Materials="timber:10,stone:2,canvas:2" Carries="roof:5" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <building Key="house" DisplayName="stone house" Blueprint="r_KingdomHouse"
+            Cost="16" Ticks="3600" Styles="all" Category="housing" Plot="M" MinStage="Steading"
+            Materials="stone:14,timber:6,canvas:3" Carries="roof:8" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="housecourt" UpgradeMaterials="stone:12,timber:4,canvas:1">
+    <skin Key="limestone" ColorString="&amp;W" DetailColor="w" />
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="W" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
+  </building>
+  <!--
+    The two Closeness overrides in this file, and the only two. Closeness is normally MEASURED -
+    beds against the ground the tier stands on - and the measurement is right for every other
+    design here. It is wrong for exactly one shape: a design that raises SEVERAL DWELLINGS AT
+    ONCE inside one plot. Three households around a square, or a whole terraced street, put a lot
+    of beds on a little ground and read as one packed room, when what is actually there is the
+    stone house's own walls repeated. So both declare the stone house's rung. Note that the XL
+    housing court needs no override: at seven cells a bed it already measures Roomed.
+  -->
+  <building Key="housecourt" DisplayName="house and court (three households around one well-swept square)" Blueprint="r_KingdomHouseCourt"
+            Cost="26" Ticks="4800" Styles="all" Category="housing" Plot="M" MinStage="Village"
+            Closeness="Roomed"
+            Materials="stone:26,timber:10,canvas:4" Carries="roof:18" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <building Key="terrace" DisplayName="housing terrace (a whole street, raised at once)" Blueprint="r_KingdomTerrace"
+            Cost="40" Ticks="7200" Styles="all" Category="housing" Plot="L" MinStage="Town" MinTech="workshop"
+            Closeness="Roomed"
+            Materials="stone:36,shapedtimber:8,timber:8" Carries="roof:26" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!--
+    The luxury lane. A fine house carries fewer people than a stone one of the same size and
+    is worth raising anyway: it is the only dwelling a notable will accept, so a vacant one
+    of sufficient tier is what a legendary trader, a keeper, or an office-holder is waiting
+    for. Small plots therefore never obsolete - a struck economy-hut is fine-house ground.
+  -->
+  <building Key="finehouse" DisplayName="fine house (marble-faced; somebody of consequence lives here)" Blueprint="r_KingdomFineHouse"
+            Cost="22" Ticks="4800" Styles="all" Category="housing" Plot="M" MinStage="Village"
+            Materials="marble:8,stone:12,timber:6,canvas:3" Carries="roof:4,luxury:4" Contents="r_KingdomFurnishings_Dwelling" Provides="taf:quiet">
+    <skin Key="marble" ColorString="&amp;Y" DetailColor="W" />
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="W" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="W" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="W" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="W" />
+  </building>
+  <!-- STYLE: A marble face wants a marble seam, and there is no seam under silt - the fine house is as far up the luxury lane as the green ground goes. -->
+  <building Key="manor" DisplayName="manor (a courtyard, a gate, and a name over it)" Blueprint="r_KingdomManor"
+            Cost="44" Ticks="7200" Styles="all,!verdant" Category="housing" Plot="L" MinStage="Town"
+            Materials="marble:20,stone:18,shapedstone:6,timber:10" Carries="roof:6,luxury:9" Contents="r_KingdomFurnishings_Dwelling">
+    <skin Key="marble" ColorString="&amp;Y" DetailColor="W" />
+    <skin Key="verdigris" ColorString="&amp;G" DetailColor="C" />
+  </building>
+
+  <building Key="court" DisplayName="housing court (a quarter of the city, roofed in one go)" Blueprint="r_KingdomCourt"
+            Cost="96" Ticks="12000" Styles="all" Category="housing" Plot="XL" MinStage="City" MinTech="workshop"
+            Materials="stone:78,shapedstone:12,timber:36,scrap:12" Carries="roof:40,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- ======================================================================== WATER ==
+    There are no wells, and there is no rain either. Qud has no precipitation system at any
+    level - Zone.CheckWeather rolls wind and nothing else - so nothing in this lane may say
+    that water falls. New water comes from dew condensed out of cold night air, from brine
+    evaporated down in a pan, from a seep tapped in the rock, from trade, or from a machine
+    hauled home and certified. It never comes from a hole in the ground and it never comes
+    from the sky, because in Qud water is money and nothing mints money quietly.
+
+    STORAGE STORES; PRODUCERS PRODUCE; THEY ARE NOT THE SAME BUILDING. A cistern, a reservoir
+    and the waterworks declare no `water` at all now. They used to, and it was the largest
+    unearned claim in this file: `Carries="water:N"` is read BOTH as N settlers carried and as
+    N drams a day arriving in the casks (KingdomGrowth banks Supports(survey).Water x days), so
+    a vessel declaring it was quietly conjuring the water it claimed to be holding. What a
+    store is paid in instead is capacity, and capacity is not a consolation prize:
+    KingdomRules.StageFor gates Steading / Village / Town / City on 16 / 64 / 256 / 1024 drams
+    of dedicated storage, and KingdomRules.FetchableDrams is clamped by the room left in those
+    same vessels. A settlement with nowhere to put water cannot haul any and cannot grow.
+
+    A store's SIZE is not free either, which is why the cistern court still holds 256 and not
+    twice that. A holed store leaks its own capacity to the ground over fifty days
+    (KingdomWearRules.LeakDaysToEmptyAtCeiling), so every vessel here is sized to keep that
+    daily loss under the drinking bill of the rung it opens at. Storage got cheaper in this
+    lane rather than bigger: what it stopped claiming, it stopped charging for.
+
+    PRODUCTION IS NOT IMMEDIATELY ACCESSIBLE, and that is the shape of the early game. NOTHING
+    in this lane opens at Camp. A camp drinks what the founder brought, what the water detail
+    hauls out of the site's own finite pools (fetch mints nothing - it moves water that was
+    already standing there), and what a charter pays in. The first producer opens at Steading,
+    which wants five settlers and sixteen drams of dedicated storage before it will open at
+    all, and it wants stone or timber off cleared ground on top of that. The camp costs water.
+    That is the point of the camp.
+
+    THE NUMBERS ARE DERIVED, NOT ASSERTED. Every producer blueprint carries vanilla's own
+    LiquidProducer, whose Rate is turns per dram; KingdomRules.TicksPerDay is 1200; and for
+    every design below, Carries="water:N" is exactly 1200 / mean(VariableRate). Stand next to
+    one and count. The full derivation, and the FillSelfOnly invariant that stops a producer
+    minting the same dram twice through an open puddle, is in ObjectBlueprints.xml.
+
+    Three lanes open and they are honestly different, which is the whole of the siting game.
+    The dew lane wants open sky and no crew and refuses to go underground. The salt-pan wants a
+    crew and a flat sunlit bed and goes anywhere. The weep-tap wants rock to cut into and a
+    crew to keep the cut open, and it is the answer for a settlement that lives under the
+    ground. Above all three sits one city work, and it is behind a machine somebody dragged
+    home from a ruin.
+  -->
+  <!-- STYLE: A pan wants a flat sunlit bed. Spore-light will not dry brine, and the Moon Stair has no flat to lay one on. -->
+  <building Key="saltpan" DisplayName="salt-pan (slow, salty work; a little fresh water and the salt it was hiding)" Blueprint="r_KingdomSaltPan"
+            Cost="5" Ticks="1800" Styles="all,!fungal,!gyre" Category="storage" Plot="S" Open="yes" MinStage="Steading"
+            Materials="stone:4" Staff="1" Manning="scaled" Carries="water:2"
+            UpgradesTo="saltterrace" UpgradeMaterials="stone:6" />
+  <!-- STYLE: Pans stepped down a slope are still pans, and still want the sun neither style has. -->
+  <building Key="saltterrace" DisplayName="salt-pan terrace (pans stepped down a slope, worked in shifts)" Blueprint="r_KingdomSaltTerrace"
+            Cost="10" Ticks="2400" Styles="all,!fungal,!gyre" Category="storage" Plot="S" Open="yes" MinStage="Steading"
+            Materials="stone:10" Staff="1" Manning="scaled" Carries="water:4"
+            Knowledge="origin:the salt marshes" />
+
+  <!--
+    The dew lane. Sky="yes" is a SITING rule and never a weather read - it says this work wants
+    the open night over it and so refuses to go underground. Vanilla's Air Well is the pattern
+    end to end: Tier 1, no power connection of any kind, and a description that says in as many
+    words that what it catches is dew condensing on cold stone.
+  -->
+  <!-- STYLE: Dew condenses out of a cold DRY night onto cold stone. A marsh has no dry night to give, and a gutter under that canopy catches rot. -->
+  <building Key="catchment" DisplayName="dew catchment (canvas, gutters, and a cold night)" Blueprint="r_KingdomCatchment"
+            Cost="8" Ticks="1800" Styles="all,!verdant" Category="storage" Plot="S" MinStage="Steading" MinTech="salvage"
+            Sky="yes" Materials="timber:6,scrap:2" Carries="water:3" Contents="r_KingdomFurnishings_Water"
+            UpgradesTo="catchmentbank" UpgradeMaterials="timber:4,stone:6,scrap:2">
+    <skin Key="tin" ColorString="&amp;w" DetailColor="W" />
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
+  </building>
+  <!-- STYLE: The same night, the same marsh, a whole roofline of it. -->
+  <building Key="catchmentbank" DisplayName="catchment bank (a whole roofline turned to the purpose)" Blueprint="r_KingdomCatchmentBank"
+            Cost="14" Ticks="2400" Styles="all,!verdant" Category="storage" Plot="S" MinStage="Steading" MinTech="salvage"
+            Sky="yes" Materials="timber:10,stone:6,scrap:4" Carries="water:5" Contents="r_KingdomFurnishings_Water" />
+
+  <!-- STYLE: The dew lane's middle rung, refused for the dew lane's own reason. -->
+
+  <building Key="airwellcourt" DisplayName="air-well court (domes of carved stone, and what the night gives back)" Blueprint="r_KingdomAirWellCourt"
+            Cost="32" Ticks="4800" Styles="all,!verdant" Category="storage" Plot="M" MinStage="Village" MinTech="workshop"
+            Sky="yes" Materials="stone:24,shapedstone:4,scrap:6" Carries="water:15" Contents="r_KingdomFurnishings_Water"
+            Provides="taf:damp">
+    <skin Key="tin" ColorString="&amp;w" DetailColor="W" />
+    <skin Key="fulcrete" ColorString="&amp;W" DetailColor="c" />
+  </building>
+  <!-- STYLE: And its grand rung: rank on rank of domes catching a dryness the green ground does not have. -->
+  <building Key="airwellfield" DisplayName="air-well field (rank on rank of them, and gutters running downhill)" Blueprint="r_KingdomAirWellField"
+            Cost="52" Ticks="7200" Styles="all,!verdant" Category="storage" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="agrarian,craft"
+            Sky="yes" Materials="stone:56,shapedstone:10,scrap:12" Carries="water:25" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <!--
+    The underground lane, and the only water production a settlement under the ground can raise
+    (the salt-pan goes down there too, but a pan wants sun it will never get). The vanilla
+    pattern is the water weep - a lichen carrying the LiquidFont mutation, which is exactly how
+    every indefinite underground water source in Qud works. These tap one and case it. Crewed,
+    both rungs: a weep left alone closes over.
+  -->
+  <!-- STYLE: A seep is a damp seam in LIVING rock, followed back and cased. A ruin field is rubble and fulcrete, and a cut into it finds the last people's drains. -->
+  <building Key="weeptap" DisplayName="weep-tap (a damp seam, followed back and cased in stone)" Blueprint="r_KingdomWeepTap"
+            Cost="10" Ticks="2400" Styles="all,!eater" Strata="deep,surface" Category="storage" Plot="S" MinStage="Steading"
+            Materials="stone:8,scrap:2" Staff="1" Manning="scaled" Carries="water:4"
+            Contents="r_KingdomFurnishings_Water" />
+  <!-- STYLE: The whole seam worked - and still a seam, and still not there under a fallen city. -->
+  <building Key="weepgallery" DisplayName="weep gallery (the whole seam worked, propped, and drained)" Blueprint="r_KingdomWeepGallery"
+            Cost="26" Ticks="4800" Styles="all,!eater" Strata="deep,surface" Category="storage" Plot="M" MinStage="Village"
+            Materials="stone:22,shapedstone:4,scrap:6" Staff="1" Manning="scaled" Carries="water:12"
+            Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <!--
+    Storage, from here down. None of these declares a dram of `water`, and the cistern court is
+    where a founder learns why: it is the building that lets the water detail keep what it
+    hauled, and the building that opens the next rung, and it has never made a drop.
+  -->
+  <building Key="cistern" DisplayName="cistern court (holds 256 drams, and everyone can hear when it rings hollow)" Blueprint="r_KingdomGreatCistern"
+            Cost="16" Ticks="3600" Styles="all" Category="storage" Plot="M" MinStage="Steading"
+            Materials="stone:20,scrap:6" Contents="r_KingdomFurnishings_Water" Provides="taf:damp"
+            UpgradesTo="cisternvault" UpgradeMaterials="stone:18,scrap:4">
+    <skin Key="tin" ColorString="&amp;B" DetailColor="C" />
+    <skin Key="fulcrete" ColorString="&amp;w" DetailColor="W" />
+    <skin Key="verdigris" ColorString="&amp;G" DetailColor="C" />
+  </building>
+  <building Key="cisternvault" DisplayName="vaulted cistern court (holds 768 drams under a stone lid)" Blueprint="r_KingdomCisternVault"
+            Cost="26" Ticks="4800" Styles="all" Category="storage" Plot="M" MinStage="Village"
+            Materials="stone:38,scrap:10" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <building Key="reservoir" DisplayName="reservoir (open water inside your own wall, and every dram of it carried there)" Blueprint="r_KingdomReservoir"
+            Cost="36" Ticks="7200" Styles="all" Category="storage" Plot="L" Open="yes" MinStage="Town"
+            Districts="agrarian,market" MinZones="3"
+            Materials="stone:60" Carries="luxury:2" Provides="taf:openwater,taf:damp" />
+
+  <building Key="waterworks" DisplayName="the waterworks (cistern, court, and channel, all one thing)" Blueprint="r_KingdomWaterworks"
+            Cost="72" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
+            Districts="market,craft" MinZones="4" MinTech="workshop"
+            Materials="stone:100,shapedstone:16,scrap:30,workedmetal:10,marble:8" Bits="0034" Carries="luxury:2" Contents="r_KingdomFurnishings_Water" />
+
+  <!--
+    The city rung, and the one water design in the catalogue that is not commissioned out of
+    what the ground gave back. Vanilla draws its own commissionable/recoverable line with
+    TinkerItem CanBuild: the Air Well is Tier 1 and buildable, the Solar Still is Tier 3 and
+    CanBuild="false" - the game saying "you do not make one of these". So the founder does not
+    make one. They drag a dead still home onto claimed ground, the keepers take it apart and
+    pass it fit for the grid (KingdomSalvage.Certify, which is also worth two craft points
+    toward the foundry level this design wants), and what the settlement builds afterwards out
+    of that knowledge is its own. Knowledge="machine:Solar Still" is that gate exactly.
+  -->
+  <building Key="condensery" DisplayName="the condensing hall (one cold face, and the whole roof turned to catching it)" Blueprint="r_KingdomCondensery"
+            Cost="100" Ticks="12000" Styles="all" Category="storage" Plot="XL" MinStage="City"
+            Districts="craft,market" MinZones="4" MinTech="foundry" Knowledge="machine:Solar Still,node:pressure"
+            Sky="yes" Materials="stone:80,shapedstone:16,scrap:30,workedmetal:12,marble:6" Bits="0034" Exotics="ingot:1"
+            Carries="water:50,luxury:1" Contents="r_KingdomFurnishings_Water" Provides="taf:damp" />
+
+  <!-- ========================================================================= FOOD ==
+    Food binds as hard as water and is quieter about it. The garden is one household's
+    patch; the field is the settlement deciding to eat on purpose; the granary is what
+    makes a good harvest last until the next one, which is why a store raises the
+    sustainable level and a bumper crop does not.
+
+    This is the one lane in the catalogue that never automates. Water and roof each end in
+    a grand design that runs itself - an air-well field condenses whether or not anybody is
+    standing in it, a court houses whoever walks in - and food does not, because nothing grows
+    itself. Every rung here
+    past the kitchen garden wants somebody standing in it, and the big ones want somebody
+    still. What scale buys is a better rate for the hands, never their discharge.
+  -->
+  <!--
+    Key "larder" and Key "plot" are historical spellings kept exactly as they are: a save in
+    progress may hold a staked plan or a half-raised scaffold that names one of them, and a
+    renamed key is a commission that quietly stops resolving. The display names moved; the
+    keys did not.
+  -->
+  <building Key="larder" DisplayName="larder shed (a slatted chest for the settlement's food)" Blueprint="r_KingdomLarder"
+            Cost="4" Ticks="1200" Styles="all" Category="storage" Plot="S"
+            Materials="timber:3" Carries="food:2" />
+  <building Key="plot" DisplayName="kitchen garden (grows food for the larders)" Blueprint="r_KingdomPlot"
+            Cost="3" Ticks="1200" Styles="all" Category="food" Plot="S" Open="yes"
+            Materials="mud:1" Carries="food:3"
+            UpgradesTo="plotrows" UpgradeMaterials="mud:1,timber:2" />
+  <building Key="plotrows" DisplayName="garden rows (staked, weeded, and watered on a rota)" Blueprint="r_KingdomPlotRows"
+            Cost="6" Ticks="1800" Styles="all" Category="food" Plot="S" Open="yes"
+            Materials="mud:2,timber:2" Carries="food:5" />
+
+  <building Key="field" DisplayName="field (needs hands at sowing and at harvest)" Blueprint="r_KingdomField"
+            Cost="14" Ticks="3600" Styles="all" Category="food" Plot="M" Open="yes" MinStage="Steading"
+            Districts="agrarian,none"
+            Materials="timber:6,stone:4" Staff="2" Manning="scaled" Carries="food:8"
+            UpgradesTo="fieldrows" UpgradeMaterials="timber:6,stone:4">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="M" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="C" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="R" />
+  </building>
+  <building Key="fieldrows" DisplayName="ploughed fields (rows to the edge of the claim)" Blueprint="r_KingdomFieldRows"
+            Cost="24" Ticks="4800" Styles="all" Category="food" Plot="M" Open="yes" MinStage="Village"
+            Districts="agrarian,none"
+            Materials="timber:12,stone:8" Staff="3" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:18" />
+
+  <!-- STYLE: Staddle stones and a lid keep vermin honest; they keep nothing at all out of a spore-fall. The cut cellar is what keeps a year on this ground. -->
+
+  <building Key="granary" DisplayName="granary (what makes a good year last into a bad one)" Blueprint="r_KingdomGranary"
+            Cost="22" Ticks="4200" Styles="all,!fungal" Category="food" Plot="M" MinStage="Village"
+            Districts="agrarian,market,none"
+            Materials="timber:16,stone:10" Staff="1" Manning="scaled" Carries="food:9" />
+
+  <!--
+    The big plots. The grange and the home farm climb exactly the rungs the ROOF lane
+    climbs - twenty-six on a large plot, forty on a grand one - because a dinner and a bed
+    are both counted in people, and neither is divided by the settlement's own thirst the
+    way a dram is. The water lane climbs twice as steeply for exactly that reason and ends
+    with nobody working it; this lane ends with four people and a mill.
+
+    What the climb actually buys, in hands: a field feeds four settlers to the hand,
+    ploughed fields six, a grange nearly nine, the home farm ten. (The granary is off that
+    ladder at nine on a single keeper, because it grows nothing - it only refuses to waste
+    what came in, which is a cheaper trade than growing and always was.) So a town that has
+    raised its air-well fields keeps nobody on the water detail and three people in its fields,
+    and a city keeps nobody on the water and eight. That is the handover the catalogue
+    promises, stated honestly: hands never leave food; they stop being all of it.
+
+    A bad season reaches every large binding work now. KingdomSubsidence scales every
+    work by what it is actually running at (Addendum 10(b)), so a slide that ruins an
+    air-well field costs the city water and one that ruins the home farm costs it dinners -
+    and a city short-handed for any other reason is still short of food first, because
+    only food keeps hands. Food is the good that notices staffing. It is meant to be.
+  -->
+  <building Key="grange" DisplayName="grange (fields, a threshing floor, and the barn at the end of them)" Blueprint="r_KingdomGrange"
+            Cost="40" Ticks="7200" Styles="all" Category="food" Plot="L" Open="yes" MinStage="Town" MinTech="workshop"
+			Districts="agrarian" MinZones="3"
+			Materials="timber:30,shapedtimber:8,stone:16" Staff="3" Manning="scaled"
+			CrewNeeds="skill.harvestry:1" Carries="food:26" />
+
+  <building Key="homefarm" DisplayName="the home farm (the quarter the rest of the city eats from)" Blueprint="r_KingdomHomeFarm"
+            Cost="92" Ticks="12000" Styles="all" Category="food" Plot="XL" Open="yes" MinStage="City" MinTech="foundry"
+			Districts="agrarian" MinZones="4"
+			Materials="timber:68,shapedtimber:16,stone:46,workedmetal:8,scrap:10" Staff="4" Manning="scaled"
+			CrewNeeds="skill.harvestry:1" Carries="food:40,craft:2" />
+
+  <!-- ===================================================================== INDUSTRY ==
+    Craft lifts rather than binds: a forge does not feed anybody, it makes the place worth
+    staying in and worth trading with. The tool shed is the camp's whole industry and it is
+    not nothing - somebody sharpens what everybody else swings.
+  -->
+  <building Key="toolshed" DisplayName="tool shed (whetstone, tar pot, and a bench somebody keeps tidy)" Blueprint="r_KingdomToolShed"
+            Cost="5" Ticks="1500" Styles="all" Category="craft" Plot="S"
+            Materials="timber:5" Carries="craft:1" />
+  <building Key="chargingpost" DisplayName="charging post (recharges your cells)" Blueprint="r_KingdomChargingPost"
+			Cost="12" Ticks="2400" Styles="all" Category="craft" Plot="S" MinStage="Steading"
+			Staff="2" Manning="scaled" CrewNeeds="skill.tinkering:1" MinTech="salvage" Provides="taf:charge"
+            Materials="scrap:8" Bits="00" Carries="craft:1" />
+  <building Key="smithy" DisplayName="smithy (a hearth, a hammer, and someone who came for the work)" Blueprint="r_KingdomSmithy"
+            Cost="20" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading"
+            Districts="craft,none"
+            Materials="stone:14,scrap:8" Staff="2" Manning="scaled" Carries="craft:3"
+            UpgradesTo="forge" UpgradeMaterials="stone:10,scrap:12" />
+  <building Key="forge" DisplayName="forge (heat kept overnight, and the confidence to do it)" Blueprint="r_KingdomForge"
+            Cost="34" Ticks="4800" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop"
+            Materials="stone:24,scrap:20" Staff="3" Manning="scaled" Carries="craft:6" />
+  <building Key="grindmill" DisplayName="grinding mill (turns the harvest into something that keeps)" Blueprint="r_KingdomGrindMill"
+            Cost="18" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading"
+            Districts="craft,agrarian,none"
+            Materials="timber:14,stone:8" Staff="2" Manning="scaled" Carries="food:4,craft:1" />
+  <building Key="workshop" DisplayName="workshop (benches, and people who know what to do at them)" Blueprint="r_KingdomWorkshop"
+            Cost="26" Ticks="4200" Styles="all" Category="craft" Plot="M" MinStage="Village"
+			Districts="craft,none" MinTech="salvage"
+			Materials="timber:16,stone:10,scrap:10" Staff="3" Manning="scaled"
+			CrewNeeds="skill.tinkering:1" Carries="craft:7,learning:1" />
+
+  <!-- ========================================================================= YARDS ==
+    The chain's middle link. Clearance and salvage give the settlement raw stock; a yard turns
+    two loads of it into one of something better, and nothing else in the game does. Refines is
+    the whole of what makes a building a yard, so a third party's own sawmill counts the moment
+    it declares one.
+
+    They are also what a big work is raised BEHIND: a large design wants the yard its material
+    implies standing and staffed, and a grand one wants it headed by a notable. That is why they
+    are Steading work and cheap - a town that has not built them is a town that cannot start its
+    temple, and it should never be a surprise.
+  -->
+  <!-- STYLE: A sawyer's yard on ground that yields no timber is a shed with a saw in it and nothing to put under the saw. -->
+  <building Key="sawyeryard" DisplayName="sawyer's yard (a pit, trestles, and timber stacked to season)" Blueprint="r_KingdomSawyerYard"
+            Cost="12" Ticks="2400" Styles="all,!common,!eater" Category="craft" Plot="M" Open="yes" MinStage="Steading"
+            Districts="craft,none"
+            Materials="timber:8,stone:4" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedtimber" />
+  <building Key="masonyard" DisplayName="mason's yard (bankers, chisels, and a spoil heap growing all summer)" Blueprint="r_KingdomMasonYard"
+            Cost="16" Ticks="3000" Styles="all" Strata="all,!deep" Category="craft" Plot="M" Open="yes" MinStage="Steading"
+            Districts="craft,none"
+            Materials="stone:14,timber:6" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedstone" />
+  <building Key="smelter" DisplayName="smelter (a furnace somebody has to understand)" Blueprint="r_KingdomSmelter"
+            Cost="22" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Village"
+			Districts="craft,none" MinTech="salvage" Knowledge="node:cruciblesteel"
+			Materials="stone:16,scrap:12" Staff="2" Manning="scaled"
+			CrewNeeds="skill.tinkering:1" Carries="craft:3"
+            Refines="workedmetal" />
+
+  <!-- ======================================================================== CIVIC ==
+    The fire is the first civic building anybody has ever raised anywhere, and it is two
+    drams. Everything above it is the same idea with a roof on: somewhere to argue, somewhere
+    to trade, and - at a town - somewhere to be clean, which turns out to be the thing people
+    tell caravans about.
+  -->
+  <!--
+    The fire has always been the best-grounded design in this file and nothing said so: its
+    Blueprint is vanilla's own Campfire, and Campfire IS the whole cooking system in Qud
+    (D/XRL/World/Parts/Campfire.cs - cook from a recipe, whip up a meal, choose ingredients,
+    preserve fresh food, treat a wound). A founder has been able to cook at the settlement's fire
+    since the day the design shipped. Now the settlement notices: KingdomSurvey counts anything
+    carrying Campfire as a KITCHEN, and a settlement with no kitchen cannot be said to have eaten
+    its own dish however full its larders are (KingdomRules.JudgeMeal).
+
+    The oven above it is where the dish becomes something the FOUNDER can eat too. Every named
+    settlement in Qud has its own oven with its own signature meal - nine of them ship
+    (B/ObjectBlueprints/Furniture.xml:4520-4585) - and r_KingdomOven is that, with PresetMeals
+    naming the realm's own derived dish instead of a fixed one.
+
+    It is a poor buy on lift alone: two spirit for fourteen drams where the gathering bench gives
+    the same for four. That is deliberate and it is honest - nobody builds an oven for the
+    argument space. They build it so there is something on the table with the settlement's name
+    on it, and that is what the Carries number is NOT measuring.
+  -->
+  <building Key="fire" DisplayName="communal fire (a real cooking site, and always was)" Blueprint="r_KingdomCivicCampfire"
+            Cost="2" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
+            Materials="timber:1" Carries="spirit:1"
+            UpgradesTo="oven" UpgradeMaterials="stone:10,timber:3" />
+  <building Key="oven" DisplayName="settlement oven (the dish this place is known for)" Blueprint="r_KingdomOven"
+            Cost="14" Ticks="2400" Styles="all" Category="civic" Plot="S" MinStage="Village"
+            Materials="stone:10,timber:4" Carries="spirit:2" />
+  <building Key="bench" DisplayName="gathering ground (benches, and the arguments held on them)" Blueprint="r_KingdomBench"
+            Cost="4" Ticks="1200" Styles="all" Category="civic" Plot="S" Open="yes"
+            Materials="timber:4" Staff="1" Manning="scaled" Carries="spirit:2">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" />
+  </building>
+  <building Key="hall" DisplayName="moot hall (where the charter is read out loud)" Blueprint="r_KingdomHall"
+            Cost="24" Ticks="4200" Styles="all" Category="civic" Plot="M" MinStage="Village"
+            Districts="market,none"
+            Materials="timber:18,stone:14" Staff="1" Manning="scaled" Carries="spirit:3,order:2"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
+    <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />
+  </building>
+  <!-- STYLE: Brightsheol keeps no market. What is carried up the stair is carried for the rite, and haggling over it is the one thing nobody up there does. -->
+  <building Key="bazaar" DisplayName="bazaar (awnings, argument, and somebody's cousin selling salt)" Blueprint="r_KingdomBazaar"
+            Cost="20" Ticks="3600" Styles="all,!gyre" Category="civic" Plot="M" Open="yes" MinStage="Village"
+            Districts="market,none" MinZones="2"
+            Materials="timber:12,stone:8" Staff="2" Manning="scaled" Carries="luxury:4,craft:2" />
+  <!-- STYLE: Hot stone and cold water for the extravagance of being clean. On the stair the same water is a sacrament: it is poured, not sat in, and the sacrament court is where. -->
+  <building Key="bathhouse" DisplayName="bathhouse (the extravagance that makes a town famous)" Blueprint="r_KingdomBathhouse"
+            Cost="46" Ticks="7200" Styles="all,!gyre" Category="civic" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="market" MinZones="3"
+            Materials="stone:42,shapedstone:6,marble:8,scrap:10" Staff="3" Manning="scaled" Carries="luxury:6,spirit:2"
+            Contents="r_KingdomFurnishings_Comfort" />
+
+  <!-- ======================================================================== HEART ==
+    THE HEART IS ONE PLOT, AND IT GROWS WITH ITS RUNG.
+
+    Four designs, one after another on one piece of ground: the basin on the earth the first
+    water was poured on, a kerb of stone laid AROUND it, a roof raised OVER the kerb, and a
+    colonnade closed AROUND the roof. Each rung is built over the last rather than in place of
+    it. Nothing is struck, the basin is never taken up, and the kerb ends up as the hall's floor
+    - so a founder can walk the middle of their own city and read its whole history off the
+    ground. Qud's own register: the Yd Freehold built over hundreds of years, Ezra grown as an
+    "archaeological and cultural outgrowth" of the Tomb of the Eaters.
+
+    THE PLOT ITSELF GROWS, which nothing else in this file does. Every other design climbs
+    inside the envelope the founder staked (see the note on the housing ladder above); the heart
+    was surveyed for its whole extent at the founding rite and takes the next ring of that
+    surveyed ground each time it rises. That is why these four keys are the one chain in the
+    catalogue whose Plot changes from link to link, and Art/check_xml_refs.py knows them by name
+    for exactly that reason.
+
+    THE GATES ARE THE ORDINARY GATES. No heart-only gate exists and none is wanted: the plot
+    tier's own stage gate (Camp lays S, Steading M, Town L, City XL) is the ladder, and
+    MinTech is derived craft - disks taught and machines certified - never a research screen.
+    A settlement that cannot lay a great plot cannot close the great court either, and is told
+    so in words it already knows.
+
+    CARRIES ARE HONEST. Not one of these makes anything. A moot yard is where the charter is
+    read out loud and the argument is held; what it adds is civic lift, and it is capped with
+    every other lift at half the binding level. In particular NOTHING HERE STORES WATER: the
+    cistern court is its own design, storage stores and producers produce (Addendum 11(a)), and
+    a rung that held drams could never grow into a hall without spilling them.
+
+    The arcology is the fifth and final heart rung. Its shell closes around the great court;
+    the first basin and moot remain visible, while hosted floors belong to the shell authority.
+  -->
+  <building Key="heartbasin" DisplayName="the rite ground (a ring of trodden earth, and the basin in the middle of it)" Blueprint="r_KingdomRiteGround"
+            Cost="0" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
+            Footprint="3x3" Roof="Open"
+            Carries="spirit:1"
+            UpgradesTo="heartwaterstone" UpgradeMaterials="stone:24" />
+  <building Key="heartwaterstone" DisplayName="the waterstone (a kerb laid around the rite ground, and the queue at dusk)" Blueprint="r_KingdomWaterstone"
+            Cost="18" Ticks="3000" Styles="all" Category="civic" Plot="M" Open="yes" MinStage="Steading"
+            Footprint="6x4" Roof="Open"
+            Materials="stone:24" Carries="spirit:2,order:1"
+            UpgradesTo="heartmoot" UpgradeMaterials="timber:20,stone:2,shapedtimber:6">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="M" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="C" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="R" />
+  </building>
+  <building Key="heartmoot" DisplayName="the moot yard (a roof over the waterstone; the kerb is its floor)" Blueprint="r_KingdomMootYard"
+            Cost="46" Ticks="6000" Styles="all" Category="civic" Plot="L" MinStage="Town" MinTech="workshop"
+            Footprint="8x6" Roof="Walled"
+            Materials="timber:20,stone:26,shapedtimber:6" Staff="2" Manning="scaled" Carries="spirit:4,order:3"
+            Contents="r_KingdomFurnishings_Civic"
+            UpgradesTo="heartcourt" UpgradeMaterials="stone:64,shapedstone:24,marble:18,workedmetal:8">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
+    <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />
+  </building>
+  <building Key="heartcourt" DisplayName="the great court (shaped stone closed around the moot hall, which stands inside it yet)" Blueprint="r_KingdomGreatCourt"
+            Cost="96" Ticks="12000" Styles="all" Category="civic" Plot="XL" MinStage="City" MinTech="foundry"
+            Footprint="16x11" Roof="Walled"
+            Materials="timber:20,stone:90,shapedtimber:6,shapedstone:24,marble:18,workedmetal:8" Bits="0034"
+            Staff="3" Manning="scaled" Carries="spirit:8,order:6,learning:2"
+            Contents="r_KingdomFurnishings_Civic"
+            UpgradesTo="arcology" UpgradeMaterials="stone:40,shapedstone:22,marble:8,workedmetal:30,scrap:32">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
+  <!-- ======================================================================== FAITH ==
+    Whatever is poured on the shrine stone is gone by morning and no one asks where. The
+    stone itself is offered to every city style, because a hollow worn into rock is not a
+    doctrine - the skin is what makes it theirs.
+  -->
+  <building Key="shrine" DisplayName="shrine stone" Blueprint="r_KingdomShrine"
+            Cost="8" Ticks="2400" Styles="all" Category="faith" Plot="S"
+            Materials="stone:6" Carries="spirit:2"
+            UpgradesTo="shrinegarth" UpgradeMaterials="stone:6,mud:3">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="M" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="C" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="R" />
+    <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />
+  </building>
+  <building Key="shrinegarth" DisplayName="shrine garth (a wall around the stone, and a gate left open)" Blueprint="r_KingdomShrineGarth"
+            Cost="14" Ticks="3000" Styles="all" Category="faith" Plot="S"
+            Materials="stone:12,mud:3" Carries="spirit:3" />
+  <building Key="temple" DisplayName="temple (built to be seen from the road)" Blueprint="r_KingdomTemple"
+            Cost="44" Ticks="7200" Styles="all" Category="faith" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="shrine" MinZones="3"
+            Materials="stone:36,shapedstone:8,marble:12" Staff="1" Manning="scaled" Carries="spirit:8,learning:1"
+            Contents="r_KingdomFurnishings_Learning">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
+  <!-- ==================================================================== KNOWLEDGE ==
+    Somebody starts writing it all down almost immediately, and they need a shelf for it.
+    The keeper's shelf is where the settlement's own chronicle lives, which is why it is
+    within a camp's reach and not gated behind a district that does not exist yet.
+  -->
+  <building Key="bookshelf" DisplayName="keeper's shelf (where the chronicle is kept)" Blueprint="r_KingdomCivicBookshelf"
+            Cost="10" Ticks="2400" Styles="all" Category="knowledge" Plot="S"
+            Materials="timber:8" Carries="learning:1" Contents="r_KingdomFurnishings_Learning" />
+  <building Key="scriptorium" DisplayName="scriptorium (two registers of the same year, kept side by side)" Blueprint="r_KingdomScriptorium"
+            Cost="26" Ticks="4200" Styles="all" Category="knowledge" Plot="M" MinStage="Village"
+			Districts="academy,none" MinZones="2" Reach="zone"
+			Materials="stone:16,timber:12" Staff="2" Manning="scaled"
+			CrewNeeds="skill.customs:1" Carries="learning:6"
+            Contents="r_KingdomFurnishings_Learning" />
+
+  <!-- ====================================================================== DEFENSE ==
+    A wall is not a plot. Most Defence works are sited on the frontier one cell at a time; the
+    gatehouse is the typed multi-cell network exception below. No entry here that defends declares
+    a Plot: a design that claimed both a defence rating and a plot would be sited on the wall and
+    its plot would never be laid.
+
+    The gatehouse is a placement rule rather than a size: it freezes a 3x3 guard topology astride
+    the worn HeartToGate route where the wall meets the road, and refuses rather than shifting if
+    that exact footprint or either approach is blocked. The barracks is the exception that proves
+    the rule - it houses the watch, so it stands on real ground inside the wall and offers no
+    Defence of its own. What defends is the people it holds.
+  -->
+  <!-- STYLE: Cut thornbrush lashed between stakes: the pan grows neither the thorn nor the stake, and in a ruin field the wall you want is the one already lying there (see rubblewall). -->
+  <building Key="palisade" DisplayName="thorn palisade" Blueprint="r_KingdomPalisade"
+            Cost="6" Ticks="1800" Styles="all,!common,!eater" Category="defense"
+            Materials="timber:6,canvas:2" Defence="3"
+            UpgradesTo="rampart" UpgradeMaterials="stone:16">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;c" DetailColor="w" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
+  </building>
+  <building Key="rampart" DisplayName="stone rampart" Blueprint="r_KingdomRampart"
+            Cost="14" Ticks="3600" Styles="all" Category="defense" MinStage="Village"
+            Materials="stone:16" Defence="6" />
+  <building Key="watchtower" DisplayName="watchtower (needs a watch)" Blueprint="r_KingdomWatchtower"
+            Cost="12" Ticks="2400" Styles="all" Category="defense" MinStage="Steading"
+            Materials="timber:10,stone:4" Staff="2" Manning="scaled" Defence="6" />
+  <building Key="gatehouse" DisplayName="gatehouse (the one place the wall gives way)" Blueprint="r_KingdomGatehouse"
+            Cost="30" Ticks="4800" Styles="all" Category="defense" MinStage="Town"
+            Materials="stone:34,timber:10,scrap:6" Staff="2" Manning="threshold" Defence="10" />
+  <building Key="barracks" DisplayName="barracks (the watch sleeps in shifts and eats together)" Blueprint="r_KingdomBarracks"
+            Cost="40" Ticks="7200" Styles="all" Category="defense" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="garrison"
+            Materials="stone:32,shapedtimber:6,timber:8" Staff="3" Manning="scaled" Carries="order:6"
+            Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- ===================================================================== MEMORIAL ==
+    Raised for somebody the settlement has not yet lost. It waits.
+  -->
+  <!-- STYLE: A cairn is fieldstone and the marsh has none. The grave-grove is what is raised there, and it is the same promise made out of what is to hand. -->
+  <building Key="cairn" DisplayName="settler's cairn" Blueprint="r_KingdomCairn"
+            Cost="5" Ticks="1500" Styles="all,!verdant" Strata="all,!deep" Category="memorial" Plot="S" Open="yes"
+            Materials="stone:5" Carries="spirit:1" />
+
+  <!-- ======================================================================== POWER ==
+    The works keep the plots they were always standing on; what changed is that they now
+    declare the ground they take, so the plan can budget for them. Power is civic labour
+    before it is anything else: the crank mill is three settlers and a handle, and it is
+    the first rung of the same ladder that ends in the ancients' own machinery.
+
+    The molten-salt store keeps the day's power for the night.
+  -->
+  <building Key="mill" DisplayName="crank mill (settlers turn it; makes power)" Blueprint="r_KingdomMill"
+            Cost="8" Ticks="2400" Styles="all" Category="power" Plot="S"
+            Materials="timber:8" Staff="3" Manning="scaled" Carries="craft:1" />
+  <!--
+    The wheel digs its own race and it is nearly useless in it, which is the whole of the siting
+    advice. It carries vanilla's SpawnWithLiquid the way vanilla's own Wooden Water Wheel does,
+    so it always turns rather than reporting HydrodynamicForceInsufficient on dry ground - but
+    the race is one 500-dram brackish puddle against KingdomPowerRules.HydraulicRatedDrams of
+    4000, which is two per cent of its rating. Raise it beside a real pool and the same wheel
+    runs at a hundred. Nobody drinks out of the race either: it is water-600,salt-400, which
+    KingdomLiquids.HasFreshWater refuses, so KingdomSurvey never counts a dram of it.
+  -->
+  <!-- STYLE: A wheel wants water that runs downhill and keeps running. A salt pan is flat by definition and the Moon Stair drains faster than a race can be dug. -->
+  <building Key="waterwheel" DisplayName="water wheel (it will turn anywhere; it is only worth it beside open water)" Blueprint="r_KingdomWaterWheel"
+            Cost="10" Ticks="2400" Styles="all,!common,!gyre" Category="power" Plot="S" Open="yes" MinStage="Steading" MinTech="salvage"
+            Materials="timber:10,scrap:4" Staff="1" Manning="scaled" Carries="craft:2" />
+  <!-- STYLE: Nothing moves under the canopy. A vane there is a mast in a cellar. -->
+  <building Key="sailvane" DisplayName="sailvane (makes power where the wind blows)" Blueprint="r_KingdomSailvane"
+            Cost="10" Ticks="2400" Styles="all,!fungal" Category="power" Plot="S" Open="yes" MinStage="Steading" MinTech="salvage"
+            Sky="yes" Materials="timber:8,scrap:6" Staff="1" Manning="scaled" Carries="craft:2" />
+  <building Key="saltstore" DisplayName="molten-salt store (keeps the day's power for the night)" Blueprint="r_KingdomSaltStore"
+            Cost="20" Ticks="3600" Styles="all" Category="power" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop"
+            Materials="stone:16,scrap:12" Carries="craft:2" />
+
+  <!-- ===================================================================== PLUMBING ==
+    The mains, the crossing, and the taps. A line moves water between the city's quarters
+    on world-time, which is the one thing vanilla's own hydraulics cannot do: their
+    flood-fill walks GetLocalCellFromDirection, so a vanilla network cannot cross a zone
+    boundary at all (D/XRL/World/Cell.cs:8051-8054). The model owns the whole of a line;
+    vanilla renders the part the founder is standing in.
+
+    Everything here is DECLARED. A main says what runs in it and which faces it offers; two
+    mains meet only when both offer toward each other AND agree on the liquid; a
+    cross-liquid join refuses by name and never merges. Lines that are only meant to pass
+    get a crossing piece, which pairs opposite faces and types nothing, so it cannot be the
+    place two liquids met. Mixtures are a future mixing work and the no-silent-merge rule
+    never bends.
+
+    Priced as what they are made of (Addendum 7): a bored log, a salvaged collar, and the
+    labour to trench them. Cheap per length, because a line is many lengths.
+  -->
+  <building Key="watermain" DisplayName="water main (a length of the fresh line)" Blueprint="r_KingdomWaterMain"
+            Cost="2" Ticks="300" Styles="all" Category="storage" MinStage="Steading"
+            Materials="timber:2,scrap:1" />
+  <building Key="brinemain" DisplayName="brine main (a length of the salt line; it will not join the fresh one)" Blueprint="r_KingdomBrineMain"
+            Cost="2" Ticks="300" Styles="all" Category="storage" MinStage="Village"
+            Materials="timber:2,scrap:1" />
+  <building Key="liquidcrossing" DisplayName="crossing piece (two lines through one tile, and they never meet)" Blueprint="r_KingdomLiquidCrossing"
+            Cost="3" Ticks="450" Styles="all" Category="storage" MinStage="Village"
+            Materials="timber:2,stone:2" />
+  <building Key="watertap" DisplayName="water tap (puts a vessel on the fresh line)" Blueprint="r_KingdomWaterTap"
+            Cost="4" Ticks="600" Styles="all" Category="storage" MinStage="Steading"
+            Materials="timber:2,scrap:2" />
+  <building Key="brinetap" DisplayName="brine tap (puts a vessel on the salt line)" Blueprint="r_KingdomBrineTap"
+            Cost="4" Ticks="600" Styles="all" Category="storage" MinStage="Village"
+            Materials="timber:2,scrap:2" />
+
+  <!-- ==================================================================== PATTERN-BOOK ==
+    Foreign designs reachable only through a chartered caravan's occasional pattern-book offer
+    (Experience/KingdomCeremony.cs -> KingdomCeremonyRules.ForeignDesigns). The
+    Knowledge="pattern:x" token is satisfied by no other roster kind - not a disk, not a
+    certified machine, not an origin - so these never gate the base catalogue and are purely
+    additive (see MODDING.md). Both reuse an already-shipped blueprint and only reskin it.
+  -->
+  <building Key="ydroofline" DisplayName="Yd Freehold roofline (a foreign pattern, steep-pitched against snow that never falls here)" Blueprint="r_KingdomHutYard"
+            Cost="10" Ticks="2400" Styles="all" Category="housing" Plot="S"
+            Knowledge="pattern:yd-freehold-roofline"
+            Materials="timber:10,stone:2" Carries="roof:5">
+    <skin Key="ydroofline" ColorString="&amp;B" DetailColor="W" />
+  </building>
+  <building Key="hindrenweavehall" DisplayName="hindren weave-hall (a foreign pattern; looms instead of an anvil)" Blueprint="r_KingdomSmithy"
+            Cost="20" Ticks="3600" Styles="all" Category="craft" Plot="M" MinStage="Steading" MinTech="salvage"
+            Knowledge="pattern:hindren-weave-hall"
+            Materials="stone:14,scrap:8" Staff="2" Manning="scaled" Carries="craft:3">
+    <skin Key="weavehall" ColorString="&amp;m" DetailColor="w" />
+  </building>
+
+  <!-- ============================================================ STYLE-EXCLUSIVE WORKS ==
+    The other half of the styles pass, and the half that keeps it from being a punishment. Every
+    restriction above takes something away from one or two styles; this section gives each style
+    something back that nobody else can raise, and in every case it answers the thing that style
+    lost on the same ground and out of the same materials.
+
+    They are declared by ENUMERATION (Styles="common") rather than by refusal, which is the other
+    half of the tag grammar: "all,!eater" says everywhere except, and a bare name says here and
+    nowhere else. Both are the same list read by KingdomZoningRules.TagAccepts, and the choice
+    between them is the choice between a rule about the world and a rule about one people.
+
+    Nothing here is a new mechanic. Every blueprint inherits one this mod already ships, so every
+    glyph and every part is one a check already walks in both directions (STANDARDS 4).
+  -->
+
+  <!-- COMMON, and the whole of its identity: canvas, brine, and cut stone, on ground with no
+       trees and no river. It is the one style that keeps all three water lanes - the plain has
+       every ordinary answer - and it pays for that by having no timber lane at all. So its
+       housing goes mud brick, not wattle, and it gets the one work the salt road makes sense of. -->
+  <building Key="mudhut" DisplayName="mud-brick hut (dug out of the pan and dried in the flat sun)" Blueprint="r_KingdomMudHut"
+            Cost="6" Ticks="1800" Styles="common" Category="housing" Plot="S"
+            Footprint="4x3"
+            Materials="mud:10,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="mudhutcourt" UpgradeMaterials="mud:6,stone:2" />
+  <building Key="mudhutcourt" DisplayName="mud-brick hut and court (a wall, and a strip of shade the street borrows)" Blueprint="r_KingdomMudHutCourt"
+            Cost="10" Ticks="2400" Styles="common" Category="housing" Plot="S"
+            Footprint="5x4"
+            Materials="mud:16,stone:2,canvas:2" Carries="roof:5" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="caravanserai" DisplayName="caravanserai (a blank wall to the wind and one gate wide enough for a laden dromad)" Blueprint="r_KingdomCaravanserai"
+            Cost="44" Ticks="7200" Styles="common" Category="civic" Plot="L" MinStage="Town"
+            Districts="market,none"
+            Materials="stone:34,timber:8,canvas:8" Staff="1" Manning="scaled" Carries="luxury:5,order:2" />
+
+  <!-- VERDANT: the green ground grows, rots, and is never dry. It loses the whole dew lane and
+       the marble face; it gets the two things silt is actually good for - a floor held up out of
+       standing water, and something living to plant for the dead. -->
+  <building Key="stiltrow" DisplayName="stilt row (posts in the silt, a plank walk, and a floor that stays dry)" Blueprint="r_KingdomStiltRow"
+            Cost="16" Ticks="3600" Styles="verdant" Category="housing" Plot="M" MinStage="Steading"
+            Materials="timber:18,canvas:4" Carries="roof:8" Contents="r_KingdomFurnishings_Dwelling" Provides="taf:damp" />
+  <building Key="gravegrove" DisplayName="grave-grove (a sapling for somebody the settlement has not yet lost)" Blueprint="r_KingdomGraveGrove"
+            Cost="5" Ticks="1500" Styles="verdant" Category="memorial" Plot="S" Open="yes"
+            Materials="timber:3,mud:2" Carries="spirit:1" />
+
+  <!-- FUNGAL: spore-light. It loses the salt-pan lane to the want of sun and the granary to the
+       spore-fall; it gets the cellar that keeps a year under this canopy, and the only DWELLING in
+       the catalogue that offers `taf:damp`. That last is the fungal city's real, unshared
+       advantage and it is not decorative: KingdomQolRules derives `taf:damp` as a NEED for a
+       fungal-bodied settler (`:371`), and every other work that offers it is a cistern or an
+       air-well. Dark is deliberately NOT declared here - a walled roof already provides it
+       (`ProvidedByRoof`), and declaring what the derivation already gives is a number that looks
+       like a decision. -->
+  <building Key="sporecellar" DisplayName="spore cellar (cut into cold earth and shut with a stone lid)" Blueprint="r_KingdomSporeCellar"
+            Cost="20" Ticks="3600" Styles="fungal" Category="food" Plot="M" MinStage="Village"
+            Districts="agrarian,market,none"
+            Materials="stone:16,timber:4" Carries="food:9" />
+  <building Key="caproof" DisplayName="cap-roof (grown under a living cap, and never a lamp in it)" Blueprint="r_KingdomCapRoof"
+            Cost="7" Ticks="1800" Styles="fungal" Category="housing" Plot="S" MinStage="Steading"
+            Footprint="4x3"
+            Materials="timber:4,mud:6,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" Provides="taf:damp" />
+
+  <!-- GYRE: the cold height, and marble is its taste (KingdomMaterialRules.TryStylePreference).
+       It loses the pan lane, the wheel, the market and the bathhouse - four works about commerce
+       and comfort, which is exactly the identity - and it gets a dwelling made of what is carried
+       up the stair, and the court where the water the bathhouse would have sat in is poured. -->
+  <building Key="bonefold" DisplayName="bone fold (chitin lashed over a marble sill; everything in it was carried up)" Blueprint="r_KingdomBoneFold"
+            Cost="8" Ticks="2400" Styles="gyre" Category="housing" Plot="S" MinStage="Steading"
+            Footprint="5x4"
+            Materials="stone:6,marble:2,canvas:4" Carries="roof:5" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="sacramentcourt" DisplayName="sacrament court (marble, cold water, and the long silence)" Blueprint="r_KingdomSacramentCourt"
+            Cost="40" Ticks="7200" Styles="gyre" Category="civic" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="shrine"
+            Materials="marble:20,stone:24" Carries="spirit:4,luxury:4" />
+
+  <!-- EATER: a fallen city, re-stood. It loses the seep lane (there is no living rock under a
+       ruin), the timber lane, and the thorn palisade; it gets the same three things back out of
+       what the ancients left lying about, which is the whole of what this style is for. -->
+  <building Key="blockhut" DisplayName="block hut (a fallen course squared off and roofed in salvaged plate)" Blueprint="r_KingdomBlockHut"
+            Cost="6" Ticks="1800" Styles="eater" Category="housing" Plot="S"
+            Footprint="4x3"
+            Materials="scrap:6,stone:4,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="blockyard" UpgradeMaterials="scrap:2,stone:2" />
+  <building Key="blockyard" DisplayName="block hut and yard (two courses re-stood at a right angle, and the corner swept)" Blueprint="r_KingdomBlockYard"
+            Cost="10" Ticks="2400" Styles="eater" Category="housing" Plot="S"
+            Footprint="5x4"
+            Materials="scrap:8,stone:6,canvas:2" Carries="roof:5" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="rubblewall" DisplayName="re-stood course (the wall that was already here, put back up)" Blueprint="r_KingdomRubbleWall"
+            Cost="6" Ticks="1800" Styles="eater" Category="defense"
+            Materials="stone:6,scrap:2" Defence="3"
+            UpgradesTo="rampart" UpgradeMaterials="stone:10" />
+
+  <!-- ======================================================================= THE DEEP ==
+    Addendum 15: the deep is a SET, not a filtered surface list. A fungal vault is not a
+    dimmed farm, and nothing below is a surface design with the sun taken off it.
+
+    Strata is the attribute that says so. The first name is where the design LIVES and the
+    rest are the strata it may also stand in; an entry that names none stands everywhere,
+    which is why every record above this comment is untouched and the weep-tap is still the
+    only water under the rock. See MODDING.md.
+
+    WHAT THE DEEP IS PAID AND WHAT IT PAYS, and neither number is written here because both
+    are the ground's: carving costs DOUBLE the clearing (KingdomPlotRules.UndergroundClear-
+    Percent) and gives the enclosure back for nothing (EnclosureTicks is zero when the roof
+    is Carved, because the rock the carving left IS the wall). So every record below carries
+    its surface precedent's Cost and Ticks exactly - discounting them here would spend the
+    same bargain twice - and what differs is the MATERIAL, which is stone, because stone is
+    what the cut gave back and there is no timber lane under a mountain.
+
+    NOTHING BELOW DECLARES A ROOF, and that is not an omission. RoofOnGround makes anything
+    not Open into Carved underground, and ProvidedByRoof already gives an enclosed tier
+    `taf:dark`. Declaring what the derivation already gives is a number that looks like a
+    decision - the same rule the fungal cap-roof keeps.
+
+    THE ASYMMETRY, stated so a founder can plan against it: the deep loses the whole sky
+    lane (no dew, no pan, no sailvane, no condensing hall - Sky="yes" already refuses it)
+    and it has NO grand food rung at all. It gains hands: one keeper in a vault feeds six
+    where a field wants two to feed eight, and two in the galleries feed eighteen. A deep
+    city is hand-cheap and ceilinged. That is the trade, and it is meant to be felt.
+
+    Six records. Addendum 15 rules that sets start SMALL and grow by want, never by
+    symmetry - fifteen of the forty base sets sit empty and there is no obligation to fill
+    this one either. The arcology set remains separate capital ground; its hosted carrier is
+    ACTIVE v1 work and never a filtered deep-room substitute.
+  -->
+  <building Key="carvedcell" DisplayName="carved cell (cut in an afternoon; the rock does the rest)" Blueprint="r_KingdomCarvedCell"
+            Cost="6" Ticks="1800" Styles="all" Strata="deep" Category="housing" Plot="S"
+            Footprint="4x3"
+            Materials="stone:6,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="carvedgallery" DisplayName="carved gallery (cells off one stair, and a door at the top of it)" Blueprint="r_KingdomCarvedGallery"
+            Cost="16" Ticks="3600" Styles="all" Strata="deep" Category="housing" Plot="M" MinStage="Steading"
+            Materials="stone:16,canvas:4" Carries="roof:8" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <!-- The vault is the record Addendum 15 named. It is not the field with the lamps turned
+       down: it is not Open, it wants no season, and it wants ONE keeper where the field wants
+       two - inoculating and scraping is not sowing, weeding and harvesting. What it offers
+       that no field does is `taf:damp`, which KingdomQolRules reads as a NEED for a
+       fungal-bodied settler, so the deep is where those people actually want to live. -->
+  <building Key="fungalvault" DisplayName="fungal vault (spawn run into cut rock, and never a lamp in it)" Blueprint="r_KingdomFungalVault"
+            Cost="14" Ticks="3600" Styles="all" Strata="deep" Category="food" Plot="M" MinStage="Steading"
+            Materials="stone:10" Staff="1" Manning="scaled" Carries="food:6" Provides="taf:damp" />
+  <building Key="vaultgalleries" DisplayName="vault galleries (the whole run worked, propped, and kept damp)" Blueprint="r_KingdomVaultGalleries"
+            Cost="40" Ticks="7200" Styles="all" Strata="deep" Category="food" Plot="L" MinStage="Town" MinTech="workshop"
+            Districts="agrarian,none" MinZones="3"
+            Materials="stone:34,shapedstone:8" Staff="2" Manning="scaled" Carries="food:18" Provides="taf:damp" />
+
+  <!-- STRATUM: A mason's yard is a spoil heap in the open, and the deep's whole difficulty is
+       that spoil has nowhere to go. The cut face is the yard it gets instead - same work, same
+       hands, and a face that never runs out. -->
+  <building Key="deepcut" DisplayName="deep cut (a working face, propped, with the spoil going back into the wall)" Blueprint="r_KingdomDeepCut"
+            Cost="16" Ticks="3000" Styles="all" Strata="deep" Category="craft" Plot="M" MinStage="Steading"
+            Districts="craft,none"
+            Materials="stone:14" Staff="2" Manning="scaled" Carries="craft:2"
+            Refines="shapedstone" />
+
+  <!-- STRATUM: A cairn is fieldstone STACKED, and there is no field. A niche is fieldstone CUT,
+       and the gallery wall is already there. Same promise, made out of what is to hand. -->
+  <building Key="nichetomb" DisplayName="niche tomb (cut in the gallery wall for somebody not yet lost)" Blueprint="r_KingdomNicheTomb"
+            Cost="5" Ticks="1500" Styles="all" Strata="deep" Category="memorial" Plot="S"
+            Materials="stone:5" Carries="spirit:1" />
+
+  <!-- STRATUM: the one design in the file that is not raised to do a job but to make a job
+       possible. Everything below the rock was owned and unreachable until this stands. It shares
+       into the deep because a shaft is a shaft: the rock does not care which side of it you
+       started the cut from, and the second stratum wants a second one. -->
+  <building Key="delve" DisplayName="delve (a shaft, a windlass, and the first bucket of the deep)" Blueprint="r_KingdomDelve"
+            Cost="30" Ticks="9600" Styles="all" Strata="surface,deep,!sky" Category="craft" Plot="M" MinStage="Village" MinTech="workshop"
+            Districts="craft,none" Knowledge="node:measuredwork"
+            Materials="stone:34,shapedstone:14" />
+
+  <!-- =============================================================== CREED-UNIQUE WORKS ==
+    Addendum 16: each creed gets works nobody else raises, and they are the only designs in this
+    file behind the whole gate stack. Four gates, and every one of them is a separate question:
+
+      Builders     WHO must be standing here. A comma list about the city's own people in the
+                   same kind:name language Knowledge uses - origin:, creed: (holds it now), kept:
+                   (holds it or once did) - and a count when one is not enough.
+      Creed        ALIGNMENT. Raised only by builders who hold the creed OR HAVE PREVIOUSLY HELD
+                   IT, which is why a settler's creed history is recorded from now on
+                   (KingdomCreed.CreedPastProperty, written at KingdomConversion.Convert).
+      CreedShare   The AMOUNT of it: what share of the city holds the creed, floored at
+                   KingdomCreedRules.MinBelievers however small the city. Omitting it asks for the
+                   same third a city's own creed is read at, which is what `reliquary` does.
+      Knowledge    and MinTech: what the keepers know and how far the craft has come. Addendum 16
+                   clause (5) - today's keys, re-pointed at the research tree when it lands.
+
+    The VISIBILITY LAW rides on Creed alone (Addendum 14): a city where nobody holds the creed and
+    nobody ever has does not see these designs in any menu, because there is nothing it could go
+    and do about it. One aligned person - arriving, converting, or having converted away years ago
+    - and the design appears, tagged with whatever is still in its way. Everything else in the
+    stack refuses out loud and names the fix (STANDARDS 7b).
+
+    The three creeds are ones the derivation actually produces (KingdomCreed.CanBeCreed admits all
+    three against the shipped Factions.xml: none is Old, none HatesPlayer, all are Visible).
+  -->
+  <building Key="underbench" DisplayName="under-bench (lamps strung low, and a rule that the ancients left no note)" Blueprint="r_KingdomUnderBench"
+            Cost="30" Ticks="4800" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop" Knowledge="machine:Solar Still"
+            Covenant="Barathrumites" MinStanding="250"
+            Builders="origin:the rust wells" Creed="Barathrumites" CreedShare="25"
+            Materials="stone:18,scrap:14,workedmetal:4" Bits="0023" Staff="2" Manning="scaled"
+            Carries="craft:6,learning:2" />
+  <building Key="reliquary" DisplayName="reliquary (one machine, cased and lit and not repaired)" Blueprint="r_KingdomReliquary"
+            Cost="50" Ticks="9600" Styles="all" Category="faith" Plot="L" MinStage="Town"
+            Districts="shrine" MinTech="workshop" Knowledge="origin:the rust wells"
+            Covenant="Mechanimists" MinStanding="250"
+            Builders="creed:Mechanimists:3" Creed="Mechanimists"
+            Materials="stone:40,shapedstone:8,scrap:16,workedmetal:6" Exotics="ingot:1"
+            Carries="spirit:9,learning:2" />
+  <building Key="factorhouse" DisplayName="factor's house (a counting room, a strongbox, and what every cask is worth today)" Blueprint="r_KingdomFactorHouse"
+            Cost="28" Ticks="4800" Styles="all" Category="civic" Plot="M" MinStage="Village"
+            Districts="market,none" MinZones="2" Knowledge="origin:the salt marshes"
+            Covenant="Consortium" MinStanding="400"
+            Builders="creed:Consortium:2" Creed="Consortium" CreedShare="50"
+            Materials="stone:22,timber:8,marble:4" Staff="1" Manning="scaled"
+            Carries="luxury:4,order:3" />
+
+  <!-- The remaining thirty factions admitted by CanBeCreed in Qud 2.0.211.51. These are
+       practices, not faction-coloured shells: every record has its own use, material bill, and
+       exact architecture below Architecture/KingdomArchitectures-Creeds.xml. A third party adds
+       another creed-work with the same ordinary Creed/Builders attributes; no faction list lives
+       in code. -->
+  <building Key="joppaseedhouse" DisplayName="Joppa seed-house (apple pips, watervine cuttings, and a cool bin for both)" Blueprint="r_KingdomJoppaSeedHouse"
+            Cost="6" Ticks="1800" Styles="all" Category="food" Plot="S" MinStage="Steading"
+            Builders="creed:Joppa" Creed="Joppa" Materials="mud:6,timber:8,stone:3" Staff="1" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:4" />
+  <building Key="kyakukyaspicehearth" DisplayName="Kyakukya spice-hearth (smoke, pickling jars, and the good leaf kept dry)" Blueprint="r_KingdomKyakukyaSpiceHearth"
+            Cost="7" Ticks="2100" Styles="all" Category="food" Plot="S" MinStage="Steading"
+            Builders="creed:Kyakukya" Creed="Kyakukya" Materials="mud:5,timber:7,stone:5" Staff="1" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:3,luxury:2" />
+  <building Key="ezrawheelshade" DisplayName="Ezra wheel-shade (a turning spindle, drying racks, and shade under the great tree's lesson)" Blueprint="r_KingdomEzraWheelShade"
+            Cost="7" Ticks="2100" Styles="all" Category="craft" Plot="S" MinStage="Steading"
+            Builders="creed:Ezra" Creed="Ezra" Materials="timber:10,canvas:3,stone:3" Staff="1" Manning="scaled"
+            Carries="craft:2,learning:1" />
+  <building Key="snapjawtrailden" DisplayName="snapjaw trail-den (low screens, spoor boards, and a way out on every side)" Blueprint="r_KingdomSnapjawTrailDen"
+            Cost="6" Ticks="1800" Styles="all" Category="defense" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Snapjaws" Creed="Snapjaws" Materials="timber:13,canvas:3" Staff="1" Manning="scaled"
+            CrewNeeds="skill.wayfaring:1" Defence="3" Carries="food:2" />
+  <building Key="cragmenschstonegarden" DisplayName="cragmensch stone-garden (warm slabs set where a slow body may hear the ground)" Blueprint="r_KingdomCragmenschStoneGarden"
+            Cost="7" Ticks="2400" Styles="all" Category="memorial" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Cragmensch" Creed="Cragmensch" Materials="stone:14" Carries="spirit:3" />
+  <building Key="robotchargebay" DisplayName="robot charge-bay (dry contacts, a grounded rail, and room to turn a metal body)" Blueprint="r_KingdomRobotChargeBay"
+            Cost="10" Ticks="3000" Styles="all" Category="power" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Robots" Creed="Robots" Materials="stone:5,scrap:14,workedmetal:2" Bits="00" Staff="1" Manning="scaled"
+            CrewNeeds="skill.tinkering:1" Carries="craft:2" Provides="taf:charge" />
+  <building Key="baetylofferingframe" DisplayName="baetyl offering-frame (a measured gantry where demands and answers are kept apart)" Blueprint="r_KingdomBaetylOfferingFrame"
+            Cost="9" Ticks="2700" Styles="all" Category="faith" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Baetyls" Creed="Baetyls" Materials="stone:8,scrap:10,timber:4" Staff="1" Manning="threshold"
+            CrewNeeds="intelligence:14" Carries="spirit:3,learning:2" />
+  <building Key="dromadcaravanshade" DisplayName="dromad caravan-shade (a broad awning, sample racks, and no locked road)" Blueprint="r_KingdomDromadCaravanShade"
+            Cost="8" Ticks="2100" Styles="all" Category="storage" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Dromad" Creed="Dromad" Materials="timber:10,canvas:6,stone:3" Staff="1" Manning="scaled"
+            CrewNeeds="skill.customs:1" Carries="luxury:3,order:1" />
+  <building Key="entropyblind" DisplayName="entropy blind (offset baffles around a warm-static witness plate)" Blueprint="r_KingdomEntropyBlind"
+            Cost="9" Ticks="2700" Styles="all" Category="knowledge" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Entropic" Creed="Entropic" Materials="stone:8,scrap:10,canvas:3" Staff="1" Manning="scaled"
+            CrewNeeds="intelligence:14" Carries="learning:3,spirit:2" />
+  <building Key="goatfolkhornmoot" DisplayName="goatfolk horn-moot (a ring of horn posts with the centre left for challenge)" Blueprint="r_KingdomGoatfolkHornMoot"
+            Cost="7" Ticks="2100" Styles="all" Category="civic" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Goatfolk" Creed="Goatfolk" Materials="stone:4,timber:16,canvas:2" Staff="1" Manning="scaled"
+            Defence="2" Carries="spirit:2,order:1" />
+  <building Key="svardymbrinenursery" DisplayName="svardym brine-nursery (shallow cool basins joined by a wet crawl)" Blueprint="r_KingdomSvardymBrineNursery"
+            Cost="8" Ticks="2400" Styles="all" Category="food" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Svardym" Creed="Svardym" MinTech="salvage" Materials="mud:8,stone:9,scrap:3,timber:4" Staff="1" Manning="scaled"
+            Carries="food:4" Provides="taf:damp,taf:openwater" />
+  <building Key="naphtaaliscrapaltar" DisplayName="Naphtaali scrap-altar (bright fragments wired round a guarded offering niche)" Blueprint="r_KingdomNaphtaaliScrapAltar"
+            Cost="8" Ticks="2400" Styles="all" Category="faith" Plot="S" MinStage="Steading" MinTech="salvage"
+            Builders="creed:Naphtaali" Creed="Naphtaali" Materials="stone:6,scrap:12,timber:3" Staff="1" Manning="scaled"
+            Defence="2" Carries="spirit:3,luxury:1" />
+  <building Key="trollbridgecourt" DisplayName="troll bridge-court (three heavy spans and a toll-stone between them)" Blueprint="r_KingdomTrollBridgeCourt"
+            Cost="9" Ticks="3000" Styles="all" Category="civic" Plot="S" MinStage="Village" Open="yes"
+            Builders="creed:Trolls" Creed="Trolls" Materials="stone:16,timber:6" Staff="1" Manning="scaled"
+            CrewNeeds="strength:18" Defence="3" Carries="order:2" />
+  <building Key="issacharirifleporch" DisplayName="Issachari rifle-porch (a shaded firing rest facing the road and nowhere else)" Blueprint="r_KingdomIssachariRiflePorch"
+            Cost="8" Ticks="2400" Styles="all" Category="defense" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Issachari" Creed="Issachari" Materials="stone:3,timber:10,canvas:4,scrap:5" Staff="1" Manning="threshold"
+            CrewNeeds="skill.wayfaring:1" Defence="5" Carries="order:1" />
+  <building Key="strangersguestscreen" DisplayName="strangers' guest-screen (two private alcoves and a door that never asks a name)" Blueprint="r_KingdomStrangersGuestScreen"
+            Cost="7" Ticks="2100" Styles="all" Category="housing" Plot="S" MinStage="Steading"
+            Builders="creed:Strangers" Creed="Strangers" Materials="timber:9,canvas:6,stone:3" Carries="roof:3,luxury:1" />
+  <building Key="hindrenmooncourt" DisplayName="hindren moon-court (pale stones around a clear place for dancing and judgment)" Blueprint="r_KingdomHindrenMoonCourt"
+            Cost="8" Ticks="2400" Styles="all" Category="civic" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Hindren" Creed="Hindren" Materials="stone:10,marble:5,timber:3" Staff="1" Manning="scaled"
+            Carries="spirit:3,luxury:2" />
+  <building Key="mopangorefugekitchen" DisplayName="mopango refuge-kitchen (two hearths behind a wall that breaks the wind)" Blueprint="r_KingdomMopangoRefugeKitchen"
+            Cost="7" Ticks="2100" Styles="all" Category="food" Plot="S" MinStage="Steading"
+            Builders="creed:Mopango" Creed="Mopango" Materials="mud:7,stone:7,timber:6" Staff="1" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:4,order:1" />
+  <building Key="girshrotchapel" DisplayName="Girsh rot-chapel (six drains descending toward one sealed vessel)" Blueprint="r_KingdomGirshRotChapel"
+            Cost="10" Ticks="3000" Styles="all" Category="faith" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Girsh" Creed="Girsh" Materials="stone:15,scrap:9" Staff="1" Manning="scaled"
+            Carries="spirit:4,learning:1" Provides="taf:damp,taf:offal" />
+  <building Key="templarpurityarsenal" DisplayName="Templar purity-arsenal (whitewashed racks behind one narrow inspection lane)" Blueprint="r_KingdomTemplarPurityArsenal"
+            Cost="10" Ticks="3000" Styles="all" Category="defense" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Templar" Creed="Templar" Materials="stone:10,timber:3,scrap:10,workedmetal:2" Staff="1" Manning="threshold"
+            CrewNeeds="strength:18" Defence="6" Carries="order:3" />
+  <building Key="gyrewightashcourt" DisplayName="Gyre-wight ash-court (a crooked procession around four cold braziers)" Blueprint="r_KingdomGyreWightAshCourt"
+            Cost="8" Ticks="2400" Styles="all" Category="faith" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Gyre Wights" Creed="Gyre Wights" Materials="stone:14,scrap:6" Staff="1" Manning="scaled"
+            Defence="2" Carries="spirit:4" />
+  <building Key="mamontithecistern" DisplayName="Mamon tithe-cistern (a red-sealed basin watched from the dry side)" Blueprint="r_KingdomMamonTitheCistern"
+            Cost="9" Ticks="2700" Styles="all" Category="faith" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Mamon" Creed="Mamon" Materials="stone:12,scrap:5,timber:3" Staff="1" Manning="scaled"
+            Carries="spirit:3,luxury:2" />
+  <building Key="seekersquietcell" DisplayName="Seekers' quiet cell (thick baffles around one unadorned listening seat)" Blueprint="r_KingdomSeekersQuietCell"
+            Cost="9" Ticks="2700" Styles="all" Category="knowledge" Plot="S" MinStage="Village"
+            Builders="creed:Seekers" Creed="Seekers" Materials="stone:12,canvas:6,timber:3" Staff="1" Manning="threshold"
+            CrewNeeds="intelligence:14" Carries="learning:4,spirit:1" Provides="taf:quiet" />
+  <building Key="wardenswatchlodge" DisplayName="Wardens' watch-lodge (a public bench inside, a clear sightline outside)" Blueprint="r_KingdomWardensWatchLodge"
+            Cost="9" Ticks="2700" Styles="all" Category="defense" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Wardens" Creed="Wardens" Materials="stone:8,timber:10,scrap:4" Staff="1" Manning="threshold"
+            CrewNeeds="skill.customs:1" Defence="5" Carries="order:3" />
+  <building Key="waterbaronsgaugehouse" DisplayName="water-baron gauge-house (sealed measures, witness marks, and a lock on the sluice)" Blueprint="r_KingdomWaterBaronsGaugeHouse"
+            Cost="10" Ticks="3000" Styles="all" Category="storage" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Water" Creed="Water" Materials="stone:11,scrap:8,timber:4" Staff="1" Manning="threshold"
+            CrewNeeds="skill.customs:1" Carries="order:2" Provides="taf:damp" />
+  <building Key="merchantweighinghouse" DisplayName="merchant weighing-house (two scales, three seals, and a public price board)" Blueprint="r_KingdomMerchantWeighingHouse"
+            Cost="9" Ticks="2700" Styles="all" Category="civic" Plot="S" MinStage="Village"
+            Builders="creed:Merchants" Creed="Merchants" Materials="stone:7,timber:9,scrap:6" Staff="1" Manning="threshold"
+            CrewNeeds="skill.customs:1" Carries="luxury:3,order:3" />
+  <building Key="farmersseedcommons" DisplayName="farmers' seed-commons (labelled bins around a threshing floor held in common)" Blueprint="r_KingdomFarmersSeedCommons"
+            Cost="8" Ticks="2400" Styles="all" Category="food" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:Farmers" Creed="Farmers" Materials="mud:6,timber:12,stone:3" Staff="1" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:5" />
+  <building Key="reshephhospice" DisplayName="Resheph's hospice (clean pallets around an open basin, with no door barred)" Blueprint="r_KingdomReshephHospice"
+            Cost="9" Ticks="2700" Styles="all" Category="housing" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Resheph" Creed="Resheph" Materials="stone:8,timber:9,canvas:5,scrap:3" Staff="1" Manning="scaled"
+            CrewNeeds="skill.physic:1" Carries="roof:4,spirit:2" Provides="taf:damp" />
+  <building Key="daughtersrepairlodge" DisplayName="Daughters' repair-lodge (broken tools entered at one bench and returned at the other)" Blueprint="r_KingdomDaughtersRepairLodge"
+            Cost="9" Ticks="2700" Styles="all" Category="craft" Plot="S" MinStage="Village" MinTech="salvage"
+            Builders="creed:Daughters" Creed="Daughters" Materials="stone:6,timber:8,scrap:10" Staff="1" Manning="scaled"
+            CrewNeeds="skill.tinkering:1" Carries="craft:3,learning:1" />
+  <building Key="ydvinebower" DisplayName="Yd vine-bower (fruiting trellises around a table left open to travellers)" Blueprint="r_KingdomYdVineBower"
+            Cost="8" Ticks="2400" Styles="all" Category="food" Plot="S" MinStage="Steading" Open="yes"
+            Builders="creed:YdFreehold" Creed="YdFreehold" Materials="timber:12,stone:4,canvas:2" Staff="1" Manning="scaled"
+            CrewNeeds="skill.harvestry:1" Carries="food:3,luxury:3" />
+  <building Key="chavvahboughschool" DisplayName="Chavvah bough-school (low desks in a living shade, every aisle turning round the trunk)" Blueprint="r_KingdomChavvahBoughSchool"
+            Cost="9" Ticks="2700" Styles="all" Category="knowledge" Plot="S" MinStage="Village" Open="yes"
+            Builders="creed:Chavvah" Creed="Chavvah" Materials="timber:14,canvas:4,stone:3" Staff="1" Manning="scaled"
+            CrewNeeds="intelligence:14" Carries="learning:4,spirit:2" />
+
+  <!-- ======================================================================== THE LAB ==
+    DIVERSITY §3's rung ladder, Addendum 22 cluster D. The slab reads bodies before it cuts
+    them; the vat-house keeps what was read; the hall grafts what was kept; the theatre
+    changes what a body IS - and the theatre is a MEGASTRUCTURE under Design B (Addendum 22
+    A1): a city that raises it has answered "what may a body be made of?" and that answer is
+    the city's purpose. The flesh-branch node gates land here per QB-22's provisional: new
+    records carry them, shipped records stay lightly gated. Procedure records live in
+    KingdomProcedures.xml; these are only the rooms they happen in. -->
+  <building Key="butcherslab" DisplayName="butcher's slab (a stone table, a gutter, and a hook)" Blueprint="r_KingdomButcherSlab"
+            Cost="4" Ticks="1200" Styles="all" Category="craft" Plot="S" MinStage="Steading"
+            Districts="craft,none" MinTech="salvage" Knowledge="node:butchery"
+            Materials="timber:6,stone:4" Staff="2" Manning="scaled" Carries="craft:1" />
+
+  <building Key="vathouse" DisplayName="vat-house (brine, tallow, and things kept longer than they should be)" Blueprint="r_KingdomVatHouse"
+            Cost="30" Ticks="4200" Styles="all" Category="craft" Plot="M" MinStage="Village"
+			Districts="craft,none" MinTech="workshop" Knowledge="node:vat"
+			Materials="stone:20,shapedstone:6,scrap:10" Bits="00" Staff="3" Manning="scaled"
+			CrewNeeds="skill.physic:1" Carries="craft:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="graftinghall" DisplayName="the grafting hall (a lamp, a table, and somebody who has done this before)" Blueprint="r_KingdomGraftingHall"
+            Cost="90" Ticks="9000" Styles="all" Category="craft" Plot="L" MinStage="City"
+            Districts="craft,none" MinTech="foundry" Knowledge="node:graft"
+            Materials="stone:60,shapedstone:20,workedmetal:8" Bits="0023"
+            Staff="5" Manning="scaled" CrewNeeds="intelligence:18"
+            Carries="craft:6,learning:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="chimerictheatre" DisplayName="the chimeric theatre (tiered seats around a table nobody sits at)" Blueprint="r_KingdomChimericTheatre"
+            Cost="140" Ticks="16800" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="arclight" Knowledge="node:chimerism"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Purpose="flesh" PurposeSite="living-surgery"
+            PurposeCargoKey="graft-stock-casket" PurposeCargoName="sealed graft-stock casket"
+            PurposeCargoMaterial="workedmetal" PurposeCargoWater="12"
+            PurposeCargoCost="brush:4,workedmetal:1" PurposeProducers="vathouse|graftinghall"
+            PurposeEffect="performs the existing authored chimeric procedures and mutation work"
+            Materials="stone:90,shapedstone:28,marble:12,workedmetal:20,scrap:24" Bits="00346" Exotics="ingot:2,gem:1"
+            Staff="6" Manning="scaled" Carries="craft:8,learning:3" Provides="taf:damp,taf:offal"
+            Contents="r_KingdomFurnishings_Civic" />
+
+  <!-- The theatre's opposite number at the same tier (Addendum 22 A1; END-STATE §2, §4.2,
+       §7.4). Cost and Ticks are deliberately theatre-identical so neither body-megastructure
+       is the cheap one; their physical site predicates are not symmetric: the theatre needs
+       living surgery ground, while the annexe needs ruin/arclight ground, a reached faction,
+       and an enrolled specialist. Carries order, not learning: a register is an instrument
+       of order. The rolls it keeps are enrolled: keys on the settlement container, so a city
+       that secedes walks out with its own book - which is the fiction's teeth. -->
+  <building Key="becomingannexe" DisplayName="the becoming annexe (a clean white room and a book nobody else may read)" Blueprint="r_KingdomBecomingAnnexe"
+            Cost="140" Ticks="16800" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="arclight" Knowledge="node:rolls"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Purpose="chrome" PurposeSite="ruin-enrollment"
+            PurposeCargoKey="arclight-roll-register" PurposeCargoName="sealed arclight roll-register"
+            PurposeCargoMaterial="workedmetal" PurposeCargoWater="16"
+            PurposeCargoCost="scrap:6,workedmetal:1" PurposeProducers="smelter,chargingpost"
+            PurposeEffect="performs the existing authored genotype enrollment and becoming authorization"
+            Materials="stone:64,shapedstone:24,marble:16,workedmetal:48,scrap:40" Bits="00346" Exotics="ingot:2,gem:1"
+            Staff="6" Manning="scaled" CrewNeeds="intelligence:18"
+            Carries="craft:8,order:3" Provides="taf:charge"
+            Contents="r_KingdomFurnishings_Civic" />
+
+  <!-- The three non-body purpose works complete the exact five-cycle. Their reciprocal cargo
+       comes only from KingdomPurposePortfolioRules' ten-row table; no legacy one-way cargo
+       metadata is declared here. Stone leads the bore and fire hall. Timber and shaped timber
+       lead the granary; its eight metal units are mill/fastener work, never a metal shell. -->
+  <building Key="deepbore" DisplayName="the Deep-Bore (a protected bore head, spoil lane, and stone service hall)" Blueprint="r_KingdomDeepBore"
+            Cost="150" Ticks="18000" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="foundry"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Purpose="deep" PurposeSite="deep-delve" PurposeProducers="deepcut|masonyard"
+            PurposeEffect="performs one bounded deep assay and extraction operation"
+            Materials="stone:100,shapedstone:40,timber:12,scrap:24,workedmetal:12"
+            Staff="6" Manning="scaled" CrewNeeds="strength:18"
+            Carries="craft:8,wealth:3" />
+
+  <building Key="greatfoundry" DisplayName="the Great Foundry (a stone fire hall, casting floor, and empty quench court)" Blueprint="r_KingdomGreatFoundry"
+            Cost="160" Ticks="18000" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft" MinZones="4" MinTech="foundry"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Purpose="forge" PurposeSite="forge-quench" PurposeProducers="masonyard,smelter,chargingpost"
+            PurposeEffect="performs one bounded casting and precision-forging operation"
+            Materials="stone:96,shapedstone:36,scrap:48,workedmetal:40"
+            Staff="6" Manning="scaled" CrewNeeds="intelligence:18"
+            Carries="craft:10,wealth:3" />
+
+  <building Key="realmgranary" DisplayName="the Granary-Colossus (raised dry stores, crop court, and mill floor)" Blueprint="r_KingdomRealmGranary"
+            Cost="140" Ticks="16800" Styles="all" Category="food" Plot="XL" MinStage="City"
+            Districts="agrarian,none" MinZones="4" MinTech="foundry"
+            Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Purpose="harvest" PurposeSite="harvest-water" PurposeProducers="granary,grange|homefarm"
+            PurposeEffect="performs one bounded seed, milling, and provision operation"
+            Materials="timber:80,shapedtimber:36,stone:40,shapedstone:16,workedmetal:8"
+            Staff="6" Manning="scaled" CrewNeeds="skill.harvestry:1"
+            Carries="food:12,wealth:2" />
+
+  <!-- ========================================================= REOPENED EXOTIC FLOORS ==
+    These declarations carry second node-shaped activation keys that no research record reveals,
+    grants, or stores. Runtime owners derive those keys city-by-city only while every current seam
+    named below is live and proved; losing proof removes the observation, not permanent knowledge.
+
+    assentingmoot-runtime-v1: node:assent held; Chavvah rite held; claimed city ground horizontally
+    adjacent to TerrainMoonStair; durable assent/exemption membership; ward strength and ambient-
+    stabilization veto authority; attack/damage, absence, secession, strike, and cold-load recovery.
+
+    stasisvault-runtime-v1: local standing lab proof; exact body/custody identity; enter/exit/swap
+    transaction; gear and effect custody; death/save/zone-unload recovery; proof that stasis cannot
+    be used as a grafting or cybernetics theatre. No key is a feature toggle or a debug promise. -->
+  <building Key="assentingmoot" DisplayName="the assenting moot (many minds shoulder one quiet door)" Blueprint="r_KingdomAssentingMoot"
+            Cost="120" Ticks="15000" Styles="all" Category="knowledge" Plot="XL" Open="yes" MinStage="City"
+            Districts="shrine,academy,none" MinZones="4" MinTech="arclight"
+            Knowledge="node:assent,node:assentingmoot-runtime-v1"
+            Footprint="20x14" Materials="stone:56,shapedstone:32,marble:32,workedmetal:8"
+            Bits="00346" Exotics="gem:1" />
+
+  <building Key="stasisvault" DisplayName="the stasis vault (four stilling bays and one exact custody)" Blueprint="r_KingdomStasisVault"
+            Cost="150" Ticks="18000" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft,none" MinZones="4" MinTech="arclight"
+            Knowledge="node:chimerism,node:stasisvault-runtime-v1"
+            Footprint="20x14" Roof="Walled"
+            Materials="stone:96,shapedstone:36,marble:8,scrap:28,workedmetal:36"
+            Bits="003466" Exotics="ingot:2,gem:1" />
+
+  <!-- =================================================================== THE MIRROR-GATE ==
+    An EXOTIC in Addendum 20's sense: independently gated, free to build or to skip until a
+    city commits an endgame body-purpose. A fresh, powered reciprocal pair is the hard route
+    prerequisite for that commitment. It is also the only design here that gives time back.
+    END-STATE-CITIES-RESEARCH §4.4 is the whole argument - a kingdom of specialised cities is
+    Fallout 4's settlement system until something deletes the commute, and this deletes it.
+
+    THE GATE VOCABULARY, and both halves are derived rather than invented.
+
+    MinTech="arclight" is the catalogue's top rung and this is the first design to ask for it.
+    Craft is derived, never authored (KingdomZoningRules.TechThresholds): fourteen points is
+    seven certified machines, or a mix of disks and machines the keepers actually took apart.
+    A realm that can key an arch has been hauling ruins home for a long time.
+
+    Knowledge="machine:Reprogrammable Recoiler" is the condensery's own pattern one tier up.
+    Vanilla draws the line for us: a recoiler is the machine in Qud that remembers a place and
+    returns to it, the reprogrammable one is Tier 6 and Rare (B/ObjectBlueprints/Items.xml:11400),
+    and it is takeable - so the founder finds one, sets it down on claimed ground, and the keepers
+    certify it (worth two craft points toward the arclight this design wants). What the settlement
+    builds out of that knowledge afterwards is its own, and it is not a recoiler.
+
+    THE COST IS THE POWER, and it is not in this record. Raising the arch costs what is written
+    here; KEEPING it open costs KingdomMirrorGateRules.OpenChargePerDay a day on the 12(g) lane,
+    at BOTH ends, and crossing costs nothing beyond that (Addendum 22 A2: the draw is the price,
+    and there is no second toll). Category="craft" puts it on the brownout ladder's first rung, so
+    a city short of charge gives up its crossing before it gives up its forge.
+
+    NO STAFF, deliberately. It is machinery, not a workplace - the same call the condensery and
+    the reservoir make, and the same sentence: a grand design that runs itself.
+  -->
+  <building Key="mirrorgate" DisplayName="the mirror-gate (two rings of marble, and the other city standing between them)" Blueprint="r_KingdomMirrorGate"
+            Cost="120" Ticks="14400" Styles="all" Category="craft" Plot="XL" MinStage="City"
+            Districts="craft,market" MinZones="4" MinTech="arclight" Knowledge="machine:Reprogrammable Recoiler"
+            Footprint="11x8" Roof="Walled"
+            Materials="stone:76,shapedstone:20,marble:18,workedmetal:16,scrap:22" Bits="00346" Exotics="ingot:2,gem:1"
+            Carries="craft:5,luxury:4"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
+  <!-- ==================================================================== THE CROWN ==
+    Addendum 22 A4: the crown is a BUILDING, movable at real cost - and never called the
+    seat. `Seat` is taken, with a different lifetime: the settlement the founder is standing
+    in, exchanged by TrySeat every time they walk (Core/KingdomSystem.cs:674). A capital that
+    moved when a founder walked would be a cursor, not a capital. This is
+    END-STATE-CITIES-RESEARCH §5.2's rule (b) - Civ's movable Palace, the only designation
+    rule in the comparables with praise attached to it.
+
+    THE HALL IS THE PROJECT; THE CROWN IS THE MOMENT. Raising this where the realm has no
+    capital crowns the city as soon as the founder sets the crown down in it. MOVING the
+    capital means raising a second one somewhere else and walking there - so this record's
+    Cost and Ticks ARE the price of a move. The old hall keeps its stone and loses its name.
+
+    NOT A MEGASTRUCTURE, and that is a ruling. The capital ruling gives the capital "its one
+    PLUS extras"; a crown that ate the purpose slot would be a capital that could never also
+    be the flesh-city. NOT Capital-gated either: it is what MAKES a capital, and a gate on
+    itself is a door locked from the inside.
+
+    NOT A HEART RUNG - the one place a shipped recommendation and a later ruling disagree.
+    §5.3 proposed the crown as the heart ladder's final rung; A4 then ruled it MOVABLE, and
+    the heart plot is the founding ground where UpgradesTo never un-upgrades. Recorded rather
+    than papered over; the author's eye is wanted.
+
+    THE GATES ARE THE ORDINARY GATES, exactly as the heart chain's comment says of its own.
+  -->
+  <building Key="crownhall" DisplayName="the crown hall (a room built to hold one thing, and the kingdom keeps it here)" Blueprint="r_KingdomCrownHall"
+            Cost="110" Ticks="13200" Styles="all" Category="civic" Plot="XL" MinStage="City"
+            MinZones="3" MinTech="foundry"
+            Footprint="14x10" Roof="Walled"
+            Materials="stone:84,shapedstone:26,marble:22,workedmetal:10" Bits="0034"
+            Staff="2" Manning="scaled" Carries="order:6,spirit:3"
+            Contents="r_KingdomFurnishings_Civic">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
+    <skin Key="gyre" Style="gyre" ColorString="&amp;C" DetailColor="c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;R" DetailColor="r" />
+  </building>
+
+  <!-- ================================================================= THE ARCOLOGY ==
+    The capital's own set (§4.3: capital-only, because a realm of six arcologies is not Qud,
+    and because it gives the capital something to BE rather than more to HAVE). Three
+    records - Addendum 15 rules that sets start SMALL and grow by want, never by symmetry.
+
+    The shell is the singular capital megastructure and the fifth, final heart rung. The two
+    associated records use only the private `arcology` stratum: they never spend a surface
+    plot or the city's one purpose. These two paid records are hosted lots. They are never
+    offered on surface ground: the
+    arcology authority commissions them into persistent vanilla Interior zones and folds their
+    frozen support receipts into the capital only while the shell is operational.
+  -->
+  <building Key="arcology" DisplayName="the hosted arcology (the great court within a city-shell)" Blueprint="r_KingdomArcology"
+            Cost="190" Ticks="22800" Styles="all" Category="civic" Plot="XL" MinStage="City"
+            MinZones="4" MinTech="arclight" Knowledge="node:arclight"
+            Capital="yes" Megastructure="yes" Footprint="20x14" Roof="Walled"
+            Materials="timber:20,stone:130,shapedtimber:6,shapedstone:46,marble:26,workedmetal:38,scrap:32" Bits="00346" Exotics="ingot:3,gem:2"
+            Staff="4" Manning="scaled" Carries="roof:60,order:4,luxury:4"
+            Contents="r_KingdomFurnishings_Dwelling" />
+
+  <building Key="arcologyward" DisplayName="sealed vertical lodging ward" Blueprint="r_KingdomArcologyWard"
+            Cost="70" Ticks="9600" Styles="all" Strata="arcology" Category="housing" Plot="L" MinStage="City"
+            MinTech="arclight" Capital="yes"
+            Materials="stone:48,shapedstone:16,workedmetal:14" Bits="0034"
+            Carries="roof:26,luxury:2" Contents="r_KingdomFurnishings_Dwelling" />
+
+  <building Key="arcologyterrace" DisplayName="sealed hydroponic terrace" Blueprint="r_KingdomArcologyTerrace"
+            Cost="46" Ticks="7200" Styles="all" Strata="arcology" Category="food" Plot="M" MinStage="City"
+            MinTech="arclight" Capital="yes"
+            HostedProducerBlueprint="r_KingdomArcologyGrowbed" HostedProducerCount="14"
+            Materials="mud:8,stone:26,shapedstone:10,workedmetal:6"
+            Staff="2" Manning="scaled" Carries="food:14" />
+
+  <!-- ================================================================ THE SATELLITES ==
+    Anno's Palace and its local departments, transferred (§5.5): each great work projects a
+    cheap one-per-city outpost carrying a SLICE of its function, so the realm's colossi are
+    felt everywhere rather than hoarded. Addendum 22 A2's clause exactly - lower rungs may
+    sit anywhere including the capital; top rungs and once-ever ceremonies stay sited.
+
+    `Satellite="<key>"` names the great work by KEY, so a third-party file ships an outpost
+    of ITS megastructure with no code of ours changing. The parent is asked for REALM-wide;
+    the outpost is counted CITY-wide (§5.6: a satellite city must stay low-attention).
+
+    THE REDUCTION IS NOT ENFORCED BY NEW CODE. The surgery carries the SHIPPED slab and vat
+    parts and nothing else, so KingdomLab.RungAt answers rung 1 without being told. The
+    office is not the annexe, so KingdomAnnexe's own enrolment gate refuses the ceremony
+    through the question it was already asking.
+  -->
+  <building Key="hallsurgery" DisplayName="the hall's surgery (a slab, a vat, and the great table a long way off)" Blueprint="r_KingdomHallSurgery"
+            Cost="34" Ticks="4800" Styles="all" Category="craft" Plot="M" MinStage="Village"
+            Districts="craft,none" MinTech="workshop" Knowledge="node:vat"
+            Satellite="chimerictheatre"
+            Materials="stone:22,shapedstone:6,scrap:12" Bits="00" Staff="3" Manning="scaled"
+            Carries="craft:2" Provides="taf:damp,taf:offal" />
+
+  <building Key="registryoffice" DisplayName="the registry office (a desk, a clerk, and a copy of a book kept somewhere else)" Blueprint="r_KingdomRegistryOffice"
+            Cost="24" Ticks="3600" Styles="all" Category="civic" Plot="M" MinStage="Village"
+            MinTech="workshop" Knowledge="node:rolls"
+            Satellite="becomingannexe"
+            Materials="stone:18,timber:6,workedmetal:4" Staff="1" Manning="scaled"
+            Carries="order:3" />
+
+</kingdombuildings>

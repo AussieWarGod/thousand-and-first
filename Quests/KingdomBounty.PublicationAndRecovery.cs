@@ -28,7 +28,7 @@ namespace ThousandAndFirst
 					Data.PostPileCellX, Data.PostPileCellY);
 				GameObject pile = (Z == null) ? null : Z.FindObjectByID(Data.PileId);
 				if (!PileBindingExact(pile, Z, pileCell)
-					|| pile.GetStringProperty(FetchMarkProperty) != Notice.ID)
+					|| pile.GetStringProperty(FetchMarkProperty) != Notice.IDIfAssigned)
 				{
 					Quarantine(Data, "The posted fetch notice no longer owns its exact pile mark.");
 					return;
@@ -90,7 +90,7 @@ namespace ThousandAndFirst
 				Data.WithdrawPileCellX, Data.WithdrawPileCellY);
 			GameObject pile = (Z == null) ? null : Z.FindObjectByID(PileId);
 			if (!PileBindingExact(pile, Z, pileCell)
-				|| pile.GetStringProperty(FetchMarkProperty) != Notice.ID) return false;
+				|| pile.GetStringProperty(FetchMarkProperty) != Notice.IDIfAssigned) return false;
 			pile.RemoveStringProperty(FetchMarkProperty);
 			if (!PileBindingExact(pile, Z, pileCell)
 				|| !string.IsNullOrEmpty(pile.GetStringProperty(FetchMarkProperty))
@@ -146,7 +146,7 @@ namespace ThousandAndFirst
 			out CleanupFrame Frame)
 		{
 			Frame = null;
-			if (!GameObject.Validate(Notice) || string.IsNullOrEmpty(Notice.ID) || Data == null
+			if (!GameObject.Validate(Notice) || string.IsNullOrEmpty(Notice.IDIfAssigned) || Data == null
 				|| Data.ParentObject != Notice
 				|| !ReferenceEquals(Notice.GetPart<r_KingdomNotice>(), Data)) return false;
 			Zone zone = Notice.CurrentZone;
@@ -156,7 +156,7 @@ namespace ThousandAndFirst
 			Frame = new CleanupFrame
 			{
 				Notice = Notice,
-				NoticeId = Notice.ID,
+				NoticeId = Notice.IDIfAssigned,
 				Data = Data,
 				Zone = zone,
 				Cell = cell

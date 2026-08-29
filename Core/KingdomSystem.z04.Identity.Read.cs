@@ -17,7 +17,8 @@ namespace ThousandAndFirst
 		public bool Exiled => !string.IsNullOrEmpty(ExiledFactionName);
 
 		/// <summary>How many cities the expelled-from realm holds, or 0 if there is none.</summary>
-		public int ExiledSettlementCount => (!Exiled ? 0 : ((ExiledAway != null) ? 2 : 1));
+		public int ExiledSettlementCount => !Exiled ? 0 :
+			1 + (ExiledSettlementTopology?.Count ?? 0);
 
 		/// <summary>
 		/// The seated settlement's name for prose. Falls back to the realm's display name for a
@@ -93,7 +94,8 @@ namespace ThousandAndFirst
 			try { seat = Capture(); }
 			catch (Exception ex) { Failure = ex.Message; return false; }
 			settlements.Sort(StringComparer.Ordinal);
-			if (!TryBuildSealSettlementProvenance(settlements, seat, Away,
+			if (!TryBuildSealSettlementProvenance(settlements, seat,
+				NonSeatSettlements(),
 				out List<string> provenance, out Failure)) return false;
 			KingdomSealIdentity candidate = new KingdomSealIdentity
 			{
@@ -126,12 +128,13 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryBuildSealSettlementProvenance(IList<string> SettlementIds,
-			KingdomSettlement Seat, KingdomSettlement Away, out List<string> Rows,
+			KingdomSettlement Seat, IList<KingdomSettlement> NonSeat,
+			out List<string> Rows,
 			out string Failure)
 		{
 			Rows = new List<string>();
 			Failure = null;
-			if (SettlementIds == null || Seat?.City == null)
+			if (SettlementIds == null || Seat?.City == null || NonSeat == null)
 			{
 				Failure = "seal settlement topology is absent";
 				return false;
@@ -140,14 +143,15 @@ namespace ThousandAndFirst
 			{
 				KingdomSettlement source = null;
 				if (Seat.City.SettlementId == SettlementIds[i]) source = Seat;
-				if (Away?.City?.SettlementId == SettlementIds[i])
+				for (int j = 0; j < NonSeat.Count; j++)
 				{
+					if (NonSeat[j]?.City?.SettlementId != SettlementIds[i]) continue;
 					if (source != null)
 					{
 						Failure = "seal settlement topology has duplicate city identity";
 						return false;
 					}
-					source = Away;
+					source = NonSeat[j];
 				}
 				if (source == null || !KingdomSealRules.TryBuildSettlementProvenance(
 					SettlementIds[i], source.SettlementIdentityVersion,

@@ -29,6 +29,7 @@ namespace ThousandAndFirst
 			KingdomConstructionJob compact = Job.Copy();
 			compact.Payload = null;
 			compact.PhysicalReceipt = null;
+			compact.InputReceipt = null;
 			compact.Failure = null;
 			compact.Outbox = null;
 			compact.Compacted = true;
@@ -40,8 +41,10 @@ namespace ThousandAndFirst
 		{
 			if (Job == null || Job.Claims == null) return null;
 			bool buildTruth = Job.BuildTruthSchema == BuildTruthSchema;
-			StringBuilder text = new StringBuilder(buildTruth
-				? "TAF-CONSTRUCTION-PROOF-2" : "TAF-CONSTRUCTION-PROOF-1");
+			bool routedInput = !string.IsNullOrEmpty(Job.InputReceiptHash);
+			StringBuilder text = new StringBuilder(routedInput
+				? "TAF-CONSTRUCTION-PROOF-3"
+				: (buildTruth ? "TAF-CONSTRUCTION-PROOF-2" : "TAF-CONSTRUCTION-PROOF-1"));
 			text.Append('|').Append(Job.Id)
 				.Append('|').Append(EncodeText(Job.OwnerKey)).Append('|').Append(EncodeText(Job.ZoneId))
 				.Append('|').Append((int)Job.Route).Append('|').Append((int)Job.Phase)
@@ -65,6 +68,7 @@ namespace ThousandAndFirst
 					.Append('|').Append(Job.BuildHasPlot ? '1' : '0')
 					.Append('|').Append(Job.BuildFrontier ? '1' : '0')
 					.Append('|').Append(Job.BuildDefence);
+			if (routedInput) text.Append('|').Append(Job.InputReceiptHash);
 			return Sha256(text.ToString());
 		}
 

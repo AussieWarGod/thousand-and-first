@@ -65,6 +65,8 @@ namespace ThousandAndFirst
 			{
 				return assessment;
 			}
+			if (!KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(Machine, out _)) return assessment;
 			assessment.Valid = true;
 			if (Machine.GetIntProperty(CertifiedProperty) == 1)
 			{
@@ -115,8 +117,12 @@ namespace ThousandAndFirst
 				Failure = "The keepers certify machines, not people.";
 				return false;
 			}
+			if (!KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(Machine, out Failure)) return false;
 			if (Machine.GetIntProperty(CertifiedProperty) == 1)
 			{
+				if (!KingdomConstructionInputLeaseAuthority
+					.TryObjectGraphAvailableForOrdinaryTransfer(Machine, out Failure)) return false;
 				Machine.SetIntProperty(CertifiedProperty, 0);
 				KingdomGovernanceScope.Commit("certify machine");
 				MessageQueue.AddPlayerMessage("{{K|" + Machine.ShortDisplayName + " is taken off the grid of " + KingdomPresentation.Rich(System.SeatName) + ".}} It stands exactly where it stood.");
@@ -134,7 +140,16 @@ namespace ThousandAndFirst
 			// Player-visible semantic content is chosen from the frozen resident roll before
 			// water, machine state, knowledge, chronicle, or deed mutation.
 			string settler = FrozenSignatory(System);
-			survey.Consume(waterCost);
+			KingdomWaterDebit water = survey.ReserveExactWater(waterCost);
+			if (water.State != KingdomWaterDebitState.Reserved || !water.Commit()
+				|| water.Spent != waterCost)
+			{
+				Failure = water.Failure
+					?? "The exact unleased water for certification is unavailable.";
+				return false;
+			}
+			if (!KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(Machine, out Failure)) return false;
 			Machine.SetIntProperty(CertifiedProperty, 1);
 			KingdomGovernanceScope.Commit("certify machine");
 			// Certifying teaches. Taking the machine back off the grid above does not unteach:

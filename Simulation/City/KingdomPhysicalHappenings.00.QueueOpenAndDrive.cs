@@ -227,6 +227,9 @@ namespace ThousandAndFirst.Simulation.City
 					bool wasAttended = operation.Attended;
 					if (!Clear(book, lifecycle, operation.EventId))
 						return KingdomPhysicalQueueResult.Refused;
+					// Clear is the close proof. O5 sees the frozen operation only afterwards;
+					// callback refusal never reopens or blocks the owning construction event.
+					if (wasAttended) CaptureClosedWitness(system, operation, nowTick);
 					return wasAttended ? KingdomPhysicalQueueResult.AttendedReady
 						: KingdomPhysicalQueueResult.Unattended;
 

@@ -17,6 +17,11 @@ namespace ThousandAndFirst
 			ref KingdomFoundingProjection Projection)
 		{
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (!CommitExternalBinding(Basin, Site, out string externalFailure))
+			{
+				throw new InvalidOperationException(
+					"External ownership changed before realm publication: " + externalFailure);
+			}
 			Faction faction = KingdomFounding.Found(Basin.PendingName, Site,
 				Site.GetCell(Basin.PendingRiteX, Basin.PendingRiteY),
 				Basin.PendingTransactionID, Basin.PendingAuthority);
@@ -61,12 +66,18 @@ namespace ThousandAndFirst
 					tradeIdentityFailure);
 			}
 			Projection = KingdomFoundingProjection.Claim;
-			if (system.Away != null || system.SettlementCount != 1 ||
+			if (system.NonSeatSettlementCount != 0 || system.SettlementCount != 1 ||
 				system.SettlementName != Basin.PendingName)
 			{
 				throw new InvalidOperationException("The first settlement is not the realm's exact seat.");
 			}
 			Projection = KingdomFoundingProjection.Seat;
+			if (!KingdomPolityRuntime.TryEnsureFoundation(system, faction,
+				The.Game.TimeTicks, out string polityFailure))
+			{
+				throw new InvalidOperationException(
+					"The realm's polity authority could not publish: " + polityFailure);
+			}
 
 			if (!EnsureAbility(Actor))
 			{

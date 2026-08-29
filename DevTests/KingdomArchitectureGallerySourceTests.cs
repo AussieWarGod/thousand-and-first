@@ -10,8 +10,21 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Read()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Debug",
-				"KingdomArchitectureGalleryWishes.cs"));
+			return string.Join("\n", new string[]
+			{
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.Staging.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.CanvasAndAuthority.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.ReceiptAndContents.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.Cleanup.cs")),
+				TestMain.ReadRepositoryText(Path.Combine("Debug",
+					"KingdomArchitectureGalleryWishes.VerdictAndHash.cs"))
+			});
 		}
 
 		[Test]
@@ -38,6 +51,27 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureStamper.TryCopyFrozenOwner(works, final",
 				"KingdomArchitectureStamper.TryVerifyComplete(final");
 			StringAssert.Contains("Case.Mapping.BuildingBlueprint", source);
+		}
+
+		[Test]
+		public void GalleryProvesPhysicalLandingInsteadOfTrustingAddObjectReturnIdentity()
+		{
+			string source = Read();
+			StringAssert.Contains("ReferenceEquals(works.CurrentCell, main)", source);
+			StringAssert.Contains("ReferenceEquals(final.CurrentCell, main)", source);
+			StringAssert.Contains("ReferenceEquals(Synthetic.CurrentCell, cell)", source);
+			StringAssert.Contains("works.InInventory != null", source);
+			StringAssert.Contains("final.InInventory != null", source);
+			StringAssert.Contains("Synthetic.InInventory == null", source);
+
+			string visual = TestMain.ReadRepositoryText(Path.Combine("Debug",
+				"KingdomArchitectureGalleryWishes.VisualStaging.cs"));
+			StringAssert.Contains("ReferenceEquals(item.CurrentCell, cell)", visual);
+			StringAssert.Contains("item.InInventory != null", visual);
+			string gatehouse = TestMain.ReadRepositoryText(Path.Combine("Debug",
+				"KingdomArchitectureGalleryWishes.VisualGatehouse.cs"));
+			StringAssert.Contains("ReferenceEquals(root.CurrentCell, gate)", gatehouse);
+			StringAssert.Contains("root.InInventory != null", gatehouse);
 		}
 
 		[Test]

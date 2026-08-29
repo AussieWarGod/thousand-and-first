@@ -56,7 +56,7 @@ namespace ThousandAndFirst
 			}
 			bool local = zone != null && zone.ZoneID == incident.TargetZoneId;
 			int demand = incident.DisclosedStake;
-			bool canTalk = System.GetStanding(incident.AttackerFactionId)
+			bool canTalk = System.GetRegardForRealm(incident.AttackerFactionId)
 				>= KingdomRules.DiplomacyStandingRequired;
 			Faction threatFaction = Factions.GetIfExists(incident.AttackerFactionId);
 			string threatName = threatFaction == null ? incident.AttackerFactionId

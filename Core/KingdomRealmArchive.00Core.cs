@@ -8,11 +8,11 @@ using XRL.World;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// The realm-scoped half of one exiled realm. Cities and standings remain in the product's
-	/// existing ExiledSeat/ExiledAway/ExiledStandings slots, but those are independent mirrors:
+	/// The realm-scoped half of one exiled realm. Cities and standings remain in independent
+	/// exile mirrors:
 	/// the authoritative archive owns deep settlement and standings copies. Its manual reader
 	/// bounds every archive-owned row, string, and nested settlement payload before allocation.
-	/// Version 8 is the first System writer; archive v1's unsafe reflected settlement wire was a
+	/// Version 7 is the first directional-standing writer; archive v1's unsafe reflected settlement wire was a
 	/// pre-release format and is deliberately refused rather than partly interpreted.
 	/// </summary>
 	[Serializable]
@@ -22,14 +22,17 @@ namespace ThousandAndFirst
 #endif
 	{
 		private const int Magic = 0x54415231; // TAR1
-		/// <summary>v4 appends explicit exact-delivery columns. v2 lacks mission and delivery
-		/// payloads; v3 carries missions but not delivery payloads. Both readers remain explicit and
-		/// pad only their absent envelopes with neutral values.</summary>
-		public const int CurrentVersion = 4;
+		/// <summary>v7 appends directional policy, signed spillover carry, and advisory observation; v6 appends bounded
+		/// non-seat topology; v5 widened delivery domains.</summary>
+		public const int CurrentVersion = 7;
 		internal const int LegacyJobVersion = 2;
 		internal const int MissionJobVersion = 3;
+		internal const int ExactDeliveryJobVersion = 4;
+		internal const int ExpandedDeliveryJobVersion = 5;
+		internal const int SettlementTopologyVersion = 6;
+		internal const int DirectionalStandingVersion = 7;
 		private const int MaxTextBytes = 8192;
-		private const int MaxBindings = 136;
+		private const int MaxBindings = 196;
 		private const int MaxJobs = 16;
 		private const int MaxLegs = 96;
 		private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
@@ -59,8 +62,24 @@ namespace ThousandAndFirst
 		public ulong SimulationSeedHigh;
 		public ulong SimulationSeedLow;
 		public KingdomSettlement Seat;
+		public KingdomSettlementTopology SettlementTopology = new KingdomSettlementTopology();
+		/// <summary>v2-v5 migration/projection only. Canonical v6+ authority is
+		/// <see cref="SettlementTopology"/>.</summary>
+		[Obsolete("Use SettlementTopology.")]
 		public KingdomSettlement Away;
 		public Dictionary<string, int> Standings;
+		public Dictionary<string, int> RealmPolicyToward;
+		public Dictionary<string, int> RegardSpilloverRemainders;
+		public Dictionary<string, int> RegardSpilloverObservedReputation;
+		/// <summary>One after explicit inbound/outbound separation completed.</summary>
+		public int DirectionalStandingSchemaVersion;
+		/// <summary>1 preserves pre-directional callback hashes; 2 binds directional maps.</summary>
+		public int CallbackAuthoritySchemaVersion = 2;
+		/// <summary>Canonical digest protecting migrated directional maps even when legacy callback
+		/// receipts necessarily retain their original hash schema.</summary>
+		public string DirectionalStandingDigest;
+		[NonSerialized]
+		internal bool RequiresDirectionalStandingMigration;
 		/// <summary>Opaque strictly-future nested settlement bytes. Any non-null value quarantines
 		/// the archive but remains byte-for-byte writable for inspection by a newer build.</summary>
 		public byte[] SeatOpaque;

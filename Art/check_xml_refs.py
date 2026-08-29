@@ -28,8 +28,9 @@ references the game resolves by name at load or roll time, where a wrong name is
                         completion nothing notices, because the gate it was written for was
                         already open
   knowledge gate        a Knowledge="node:..." on a <building> naming a key no <node> grants,
-                        which is a design gated on research that does not exist -- refused for
-                        ever, and refused for a reason the founder is never given
+                        which is a design gated on research that does not exist -- except an exact
+                        sealed-runtime activation contract, whose absence keeps unfinished exotic
+                        work out of the commissioning catalogue
 
 The population case is the one that motivated this. `DynamicObjectsTable:Books` looked like a
 vanilla table to merge into. It is not declared anywhere; it is *fabricated* on demand from
@@ -41,10 +42,11 @@ dead entry would have suppressed the real table.
 
 Usage, from the repository root:
 
-    python3 Art/check_xml_refs.py [--base <StreamingAssets/Base>]
+    python3 Art/check_xml_refs.py [--no-base | --base <StreamingAssets/Base>]
 
-Without --base, vanilla resolution is skipped and only TAF-internal references are checked, so the
-script still runs somewhere without the game installed.
+``--no-base`` always skips vanilla resolution and checks only TAF-internal references, even on a
+machine where the developer's default game path exists. With neither option, that default remains
+available for local licensed checks.
 """
 
 import glob
@@ -55,20 +57,33 @@ import sys
 import xml.etree.ElementTree as ET
 
 TAF_XML = [
-    "Books.xml",
-    "EmbarkModules.xml",
-    "KingdomBuildings.xml",
-    "KingdomDeals.xml",
-    "KingdomProcedures.xml",
-    "KingdomResearch.xml",
-    "KingdomYardWorks.xml",
-    "ObjectBlueprints.xml",
-    "Options.xml",
-    "PopulationTables.xml",
+    "RuntimeData/Books.xml",
+    "RuntimeData/EmbarkModules.xml",
+    "RuntimeData/KingdomBuildings.xml",
+    "RuntimeData/KingdomDeals.xml",
+    "RuntimeData/KingdomProcedures.xml",
+    "RuntimeData/KingdomResearch.xml",
+    "RuntimeData/KingdomYardWorks.xml",
+    "RuntimeData/ObjectBlueprints.xml",
+    "RuntimeData/Options.xml",
+    "RuntimeData/PopulationTables.xml",
 ]
 DEFAULT_BASE = (
     "/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
 )
+
+# Exact building-to-key pairs are visual/catalogue prerequisites sealed until their runtime owner
+# grants the city-local key.  This is deliberately not a global node allowlist: a typo, a copied
+# activation key, or use on any other building remains a hard cross-reference failure.
+SEALED_RUNTIME_ACTIVATION_KEYS = {
+    "assentingmoot": "assentingmoot-runtime-v1",
+    "stasisvault": "stasisvault-runtime-v1",
+}
+
+
+def is_sealed_runtime_activation(building, node):
+    """True only for one declared unfinished-runtime building/key pair."""
+    return SEALED_RUNTIME_ACTIVATION_KEYS.get(building) == node
 
 
 def read(path):
@@ -105,14 +120,14 @@ def xml_syntax_problems():
 
 def taf_blueprints():
     names = set()
-    for obj in ET.parse("ObjectBlueprints.xml").getroot().iter("object"):
+    for obj in ET.parse("RuntimeData/ObjectBlueprints.xml").getroot().iter("object"):
         name = obj.get("Name")
         if name:
             names.add(name)
     return names
 
 
-def blueprint_inheritance_problems(path="ObjectBlueprints.xml", vanilla=None):
+def blueprint_inheritance_problems(path="RuntimeData/ObjectBlueprints.xml", vanilla=None):
     """Reject unresolved or cyclic local inheritance before Qud reaches its loader.
 
     ``Blueprint=`` references are not the only names the game resolves.  ``Inherits=`` is
@@ -227,9 +242,9 @@ def rolled_by_our_code(table):
 def contents_tables():
     """Population tables the building catalogue furnishes finished plots from. Named in XML and
     rolled through the plot registry, so no .cs file ever holds the name as a literal."""
-    if not os.path.isfile("KingdomBuildings.xml"):
+    if not os.path.isfile("RuntimeData/KingdomBuildings.xml"):
         return set()
-    root = ET.parse("KingdomBuildings.xml").getroot()
+    root = ET.parse("RuntimeData/KingdomBuildings.xml").getroot()
     return {b.get("Contents") for b in root.iter("building") if b.get("Contents")}
 
 
@@ -258,9 +273,9 @@ def merged_buildings():
     """
     order = []
     merged = {}
-    if not os.path.isfile("KingdomBuildings.xml"):
+    if not os.path.isfile("RuntimeData/KingdomBuildings.xml"):
         return order, merged
-    for building in ET.parse("KingdomBuildings.xml").getroot().iter("building"):
+    for building in ET.parse("RuntimeData/KingdomBuildings.xml").getroot().iter("building"):
         key = building.get("Key")
         if not key:
             continue
@@ -280,12 +295,33 @@ def merged_buildings():
 # The one chain in the catalogue whose plot tier is MEANT to climb from link to link, mirrored
 # from KingdomPlotRules.HeartRungKeys. The heart is a single plot that grows with its rung: its
 # whole extent is surveyed at the founding rite and each rung takes the next ring of that surveyed
-# ground, so basin -> waterstone -> moot yard -> great court is S -> M -> L -> XL by design.
+# ground, so basin -> waterstone -> moot yard -> great court -> hosted arcology is
+# S -> M -> L -> XL -> XL by design.
 # Everything else in the file climbs inside the envelope the founder staked, and the check below
 # still holds it to that. Kept here by name rather than by an authored attribute because the
 # catalogue loader hands the plot registry a fixed set of attributes; if a `Heart="yes"` attribute
 # ever lands, this list reads it instead.
-HEART_RUNG_KEYS = ("heartbasin", "heartwaterstone", "heartmoot", "heartcourt")
+HEART_RUNG_KEYS = (
+    "heartbasin",
+    "heartwaterstone",
+    "heartmoot",
+    "heartcourt",
+    "arcology",
+)
+HEART_RUNG_PLOTS = ("Small", "Medium", "Large", "Huge", "Huge")
+
+
+def runtime_heart_rungs():
+    """Read the shipped runtime roster so this independent chain exception cannot drift."""
+    source = read(os.path.join("Growth", "KingdomPlotHeartRules.cs"))
+    match = re.search(
+        r"HeartRungKeys\s*=\s*new\s+string\s*\[\s*\d+\s*\]\s*\{(.*?)\};",
+        source,
+        re.DOTALL,
+    )
+    if not match:
+        return ()
+    return tuple(re.findall(r'"([A-Za-z0-9_.:+-]+)"', match.group(1)))
 
 # The tokens KingdomPlotRules.TryParseSize accepts, mapped to the tier they name.
 PLOT_TIERS = {
@@ -334,6 +370,12 @@ def building_reference_problems():
     if not merged:
         return []
     problems = []
+    runtime_rungs = runtime_heart_rungs()
+    if runtime_rungs != HEART_RUNG_KEYS:
+        problems.append(
+            "runtime heart roster %r differs from XML checker roster %r"
+            % (runtime_rungs, HEART_RUNG_KEYS)
+        )
     keys = set(order)
     chain = {}
     for key in order:
@@ -376,7 +418,14 @@ def building_reference_problems():
         if successor not in keys or plot_of(key) == plot_of(successor):
             continue
         if key in HEART_RUNG_KEYS and successor in HEART_RUNG_KEYS:
-            continue
+            rung = HEART_RUNG_KEYS.index(key)
+            if (
+                rung + 1 < len(HEART_RUNG_KEYS)
+                and HEART_RUNG_KEYS[rung + 1] == successor
+                and plot_of(key) == HEART_RUNG_PLOTS[rung]
+                and plot_of(successor) == HEART_RUNG_PLOTS[rung + 1]
+            ):
+                continue
         problems.append(
             "building %s stands on plot %s and improves into %s, which wants plot %s; an "
             "improvement climbs within its own plot%s%s"
@@ -473,7 +522,7 @@ def building_reference_problems():
     # author, as a restriction. That is a silent failure of exactly the shape this file exists for.
     declared_styles = set(
         name.strip().lower()
-        for name in re.findall(r'<style\s+Name="([^"]+)"', read("KingdomBuildings.xml"))
+        for name in re.findall(r'<style\s+Name="([^"]+)"', read("RuntimeData/KingdomBuildings.xml"))
     )
     if declared_styles:
         for key in order:
@@ -517,9 +566,9 @@ def building_reference_problems():
                 )
 
     declared_pops = set()
-    if os.path.isfile("PopulationTables.xml"):
+    if os.path.isfile("RuntimeData/PopulationTables.xml"):
         declared_pops = set(
-            re.findall(r'<population\s+Name="([^"]+)"', read("PopulationTables.xml"))
+            re.findall(r'<population\s+Name="([^"]+)"', read("RuntimeData/PopulationTables.xml"))
         )
     for key in order:
         table = merged[key]["attrs"].get("Contents")
@@ -626,10 +675,12 @@ def crop_chain_problems(vanilla):
       row named, row missing     `RowForCrop` names a blueprint that is not there
       crop named, crop unknown   a crop blueprint neither we nor the game defines
 
-    Plus the two structural facts the sim depends on: every design carrying `food` that is meant to
+    Plus the structural facts the sim depends on: every design carrying `food` that is meant to
     GROW declares `r_KingdomCropRows`, and every blueprint carrying that tag also carries the
     `r_KingdomPlot` part that reads it. A rows tag on an object with no field part is a number
-    nothing will ever look at.
+    nothing will ever look at. Hosted growbed fixtures use the separate static
+    `r_TAF_HostedCropRows` contract: they must not run `r_KingdomPlot`, and their exact catalogue
+    count must derive the hosted receipt's declared food rate.
     """
     problems = []
     rules_path = os.path.join("Growth", "KingdomCropRules.cs")
@@ -686,7 +737,10 @@ def crop_chain_problems(vanilla):
 
     named_seeds = {seed for _crop, seed in seed_map}
     named_rows = {row for _crop, row in row_map}
-    tree = ET.parse("ObjectBlueprints.xml")
+    seeded_crops = {crop for crop, _seed in seed_map}
+    rowed_crops = {crop for crop, _row in row_map}
+    tree = ET.parse("RuntimeData/ObjectBlueprints.xml")
+    hosted_row_blueprints = {}
     for obj in tree.getroot().iter("object"):
         name = obj.get("Name", "")
         parts = {part.get("Name") for part in obj.iter("part")}
@@ -705,21 +759,94 @@ def crop_chain_problems(vanilla):
                 "%s declares r_KingdomCropRows but carries no r_KingdomPlot part, so nothing "
                 "will ever read the rows it promises" % name
             )
+        if "r_KingdomCropBlueprint" in tags:
+            crop = (tags["r_KingdomCropBlueprint"] or "").strip()
+            if "r_KingdomPlot" not in inherited_parts(tree, name):
+                problems.append(
+                    "%s declares r_KingdomCropBlueprint but carries no r_KingdomPlot part, so "
+                    "nothing will enforce its crop identity" % name
+                )
+            if not crop or crop not in seeded_crops or crop not in rowed_crops:
+                problems.append(
+                    "%s declares crop %s, which does not resolve to both a shipped seed and row"
+                    % (name, crop or "<blank>")
+                )
+        if "r_TAF_HostedCropRows" in tags:
+            value = tags["r_TAF_HostedCropRows"]
+            if not value or not value.isdigit() or str(int(value)) != value or int(value) < 1:
+                problems.append("%s has a malformed r_TAF_HostedCropRows value" % name)
+            else:
+                hosted_row_blueprints[name] = int(value)
+            if "r_KingdomPlot" in inherited_parts(tree, name):
+                problems.append(
+                    "%s mixes hosted static rows with r_KingdomPlot runtime rows" % name
+                )
 
     # And the catalogue side: a design that grows must say how much it grows.
-    for building in ET.parse("KingdomBuildings.xml").getroot().iter("building"):
+    used_hosted_blueprints = set()
+    crop_days = re.search(r"public const int CropDays = (\d+);", rules)
+    yield_per_row = re.search(r"public const int YieldPerRow = (\d+);", rules)
+    if not crop_days or not yield_per_row:
+        problems.append("KingdomCropRules crop-rate constants are gone; hosted rates cannot be proved")
+    crop_days_value = int(crop_days.group(1)) if crop_days else 0
+    yield_value = int(yield_per_row.group(1)) if yield_per_row else 0
+    for building in ET.parse("RuntimeData/KingdomBuildings.xml").getroot().iter("building"):
         blueprint = building.get("Blueprint")
         if not blueprint:
             continue
         parts = inherited_parts(tree, blueprint)
-        if "r_KingdomPlot" not in parts:
-            continue
-        if not inherited_tag(tree, blueprint, "r_KingdomCropRows"):
+        if "r_KingdomPlot" in parts and not inherited_tag(tree, blueprint, "r_KingdomCropRows"):
             problems.append(
                 "%s is a growing design (%s carries r_KingdomPlot) and declares no "
                 "r_KingdomCropRows, so it would sow no rows and carry food it never grows"
                 % (building.get("Key", "<unkeyed>"), blueprint)
             )
+        producer = building.get("HostedProducerBlueprint")
+        count_text = building.get("HostedProducerCount")
+        if bool(producer) != bool(count_text):
+            problems.append(
+                "%s has a ragged hosted producer blueprint/count contract"
+                % building.get("Key", "<unkeyed>")
+            )
+            continue
+        if not producer:
+            continue
+        used_hosted_blueprints.add(producer)
+        rows = hosted_row_blueprints.get(producer, 0)
+        if (
+            not count_text.isdigit()
+            or str(int(count_text)) != count_text
+            or int(count_text) < 1
+            or rows < 1
+        ):
+            problems.append(
+                "%s has no exact positive hosted fixture count/row contract"
+                % building.get("Key", "<unkeyed>")
+            )
+            continue
+        food = None
+        for token in (building.get("Carries") or "").split(","):
+            pair = token.strip().split(":")
+            if len(pair) == 2 and pair[0].strip() == "food" and pair[1].strip().isdigit():
+                food = int(pair[1].strip())
+        product = int(count_text) * rows * yield_value
+        if (
+            crop_days_value < 1
+            or product % crop_days_value != 0
+            or food != product // crop_days_value
+        ):
+            problems.append(
+                "%s hosted fixtures derive food:%s, not its declared food:%s"
+                % (
+                    building.get("Key", "<unkeyed>"),
+                    product // crop_days_value if crop_days_value else "?",
+                    food,
+                )
+            )
+    for producer in sorted(set(hosted_row_blueprints) - used_hosted_blueprints):
+        problems.append(
+            "%s declares hosted crop rows but no building owns its exact producer count" % producer
+        )
     return problems
 
 
@@ -727,7 +854,7 @@ def crop_chain_problems(vanilla):
 # The tree: a node's sources, its grants, and the gates written against them.
 # --------------------------------------------------------------------------------------
 
-RESEARCH_XML = "KingdomResearch.xml"
+RESEARCH_XML = "RuntimeData/KingdomResearch.xml"
 
 # The three attributes a roster token may legally appear in on a <node>. Forbidden is deliberately
 # not among them: a token that makes a node invisible does not have to name anything that exists,
@@ -803,7 +930,7 @@ def blueprint_corpus(base):
     token would turn a reference check into a build step.
     """
     corpus = {}
-    paths = ["ObjectBlueprints.xml"]
+    paths = ["RuntimeData/ObjectBlueprints.xml"]
     folder = os.path.join(base, "ObjectBlueprints") if base else None
     if folder and os.path.isdir(folder):
         paths.extend(
@@ -979,6 +1106,8 @@ def research_reference_problems(base):
             kind, name = split_key(token)
             if kind != "node" or not name or "*" in name:
                 continue
+            if is_sealed_runtime_activation(key, name):
+                continue
             if name not in granted:
                 problems.append(
                     "building %s is gated on node:%s in KingdomBuildings.xml, which no <node> in "
@@ -1029,7 +1158,7 @@ def embark_module_problems():
     an EndElement for HandleNodes and emits a MODWARN.  The semantically identical self-closing
     form is the exact runtime contract.
     """
-    path = "EmbarkModules.xml"
+    path = "RuntimeData/EmbarkModules.xml"
     if not os.path.isfile(path):
         return []
     source = read(path)
@@ -1042,14 +1171,28 @@ def embark_module_problems():
     return problems
 
 
-def main():
-    base = None
-    if "--base" in sys.argv:
-        base = sys.argv[sys.argv.index("--base") + 1]
-    elif os.path.isdir(DEFAULT_BASE):
-        base = DEFAULT_BASE
+def selected_base(arguments=None, default_base=DEFAULT_BASE):
+    """Select licensed data explicitly; --no-base always wins over machine state."""
+    arguments = list(sys.argv[1:] if arguments is None else arguments)
+    if "--no-base" in arguments and "--base" in arguments:
+        raise ValueError("choose only one of --no-base or --base")
+    if "--no-base" in arguments:
+        return None
+    if "--base" in arguments:
+        index = arguments.index("--base")
+        if index + 1 >= len(arguments) or not arguments[index + 1]:
+            raise ValueError("--base requires a nonempty path")
+        return arguments[index + 1]
+    return default_base if os.path.isdir(default_base) else None
 
-    if not os.path.isfile("ObjectBlueprints.xml"):
+
+def main():
+    try:
+        base = selected_base()
+    except ValueError as error:
+        sys.exit(str(error))
+
+    if not os.path.isfile("RuntimeData/ObjectBlueprints.xml"):
         sys.exit("run from the repository root")
 
     problems = xml_syntax_problems()
@@ -1085,7 +1228,7 @@ def main():
     if base:
         known = vanilla_populations(base)
         ours_pop = set()
-        root = ET.parse("PopulationTables.xml").getroot()
+        root = ET.parse("RuntimeData/PopulationTables.xml").getroot()
         for pop in root.iter("population"):
             ours_pop.add(pop.get("Name"))
         for pop in root.iter("population"):
@@ -1128,12 +1271,12 @@ def main():
     problems.extend(crop_chain_problems(theirs if base else None))
 
     # 6. Book IDs referenced by blueprints exist, and books are reachable.
-    if os.path.isfile("Books.xml"):
-        book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("Books.xml")))
-        book_ids |= set(re.findall(r'ID="([^"]+)"', read("Books.xml")))
+    if os.path.isfile("RuntimeData/Books.xml"):
+        book_ids = set(re.findall(r'<book\s+ID="([^"]+)"', read("RuntimeData/Books.xml")))
+        book_ids |= set(re.findall(r'ID="([^"]+)"', read("RuntimeData/Books.xml")))
         pointed = set(
             re.findall(
-                r'part\s+Name="Book"\s+ID="([^"]+)"', read("ObjectBlueprints.xml")
+                r'part\s+Name="Book"\s+ID="([^"]+)"', read("RuntimeData/ObjectBlueprints.xml")
             )
         )
         for pointer in sorted(pointed - book_ids):

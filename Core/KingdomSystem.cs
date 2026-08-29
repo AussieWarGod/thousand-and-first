@@ -74,8 +74,11 @@ namespace ThousandAndFirst
 		/// named versions before 8 are refused instead of manufacturing live authority from names.
 		/// The separate reflected-v1 branch below is the only layout whose enclosing reader can
 		/// still supply complete migration evidence; that branch performs one bounded migration.
+		/// <para>Version 9 separates faction-to-realm regard from realm-to-faction policy and
+		/// preserves only provable explicit outbound edges from version 8. Missing or ambiguous
+		/// edges remain unspecified; signed spillover carry starts empty.</para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 8;
+		private const int CurrentSerializationVersion = 9;
 
 		private const int FirstNamedSerializationVersion = 8;
 
@@ -105,8 +108,8 @@ namespace ThousandAndFirst
 		public string InheritancePendingLoadSourceFailure;
 
 		/// <summary>
-		/// Set when <see cref="Read"/> could not interpret the saved state. Not serialized: it
-		/// describes this load, not the kingdom. Cleared once the founder has been told.
+		/// Set when the engine or <see cref="Read"/> could not interpret saved state. Not serialized:
+		/// it describes this load, not the kingdom, and remains latched for the whole session.
 		/// </summary>
 		[NonSerialized]
 		public bool LoadFailed;

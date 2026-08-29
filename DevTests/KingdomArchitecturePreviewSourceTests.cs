@@ -90,7 +90,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SocketAndForcedImprovementPreviewTheirPreparedProductionIntent()
+		public void SocketChangesPreviewTheirPreparedProductionIntent()
 		{
 			string socket = KingdomSocketLogicalSource.Read();
 			string menu = Between(socket, "public static void OpenConvert(",
@@ -104,14 +104,6 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitecturePreview.TryRenderTransition(conversion.Architecture",
 				"Popup.PickOption(Title: \"Preview exact change:",
 				"ExecutePreparedConvert(System, zone, target, conversion");
-
-			string upgrade = KingdomUpgradeLogicalSource.Read();
-			string held = Between(upgrade, "public static bool OpenHeldOffer(",
-				"/// <summary>\n\t\t/// Moves everything from the old work");
-			AssertOrdered(held, "TryPrepareImprovement(System, Z, Work, A",
-				"KingdomArchitecturePreview.TryRenderImprovement(prepared.Architecture",
-				"Popup.PickOption(", "ForcePrepared(System, Z, Work, A, Survey, prepared)");
-			StringAssert.Contains("Assessment.OutputLost", Read("Growth", "KingdomArchitecturePreview.cs"));
 			StringAssert.Contains("Exact map delta: retain", Read("Growth", "KingdomArchitecturePreview.cs"));
 		}
 
@@ -129,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(prepare, "Marker.HasIntProperty(PlanSchemaProperty)",
 				"TryFrozenPlanReady(System, Marker, Entry", "MainX = frozen.MainWorldX");
 
-			string marker = Read("Growth", "KingdomPlanMarker.cs");
+			string marker = KingdomPlanMarkerLogicalSource.Read();
 			string pass = Between(marker, "public static void OnSettlementPass(",
 				"private static int CountBuilt(");
 			AssertOrdered(pass, "KingdomPlots.TryPlanPrice(item, entry",

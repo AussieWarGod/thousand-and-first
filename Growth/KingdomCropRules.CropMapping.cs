@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 
 using ThousandAndFirst.Simulation.City;
@@ -7,6 +8,27 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomCropRules
 	{
+		/// <summary>Whether a field's optional exact crop declaration accepts the offered seed's
+		/// crop. Blank means an ordinary flexible field; a declaration is ordinal because both
+		/// names are blueprint identities from the same merged style registry.</summary>
+		public static bool DeclaredCropAllows(string DeclaredCropBlueprint,
+			string OfferedCropBlueprint)
+		{
+			return string.IsNullOrEmpty(DeclaredCropBlueprint)
+				|| string.Equals(DeclaredCropBlueprint, OfferedCropBlueprint,
+					StringComparison.Ordinal);
+		}
+
+		/// <summary>Names the exact crop a specialized field requires without implying a new
+		/// stratum-wide rule or spending anything.</summary>
+		public static string DeclaredCropRefusal(string RequiredCropName, string FieldName)
+		{
+			string field = string.IsNullOrEmpty(FieldName) ? "field" : FieldName;
+			string crop = string.IsNullOrEmpty(RequiredCropName) ? "its declared crop" : RequiredCropName;
+			return "The " + field + " is made for " + crop
+				+ ". Bring that crop's seed; this seed would not take in its beds.";
+		}
+
 		/// <summary>
 		/// Resolves the ground a settlement stands on to what it grows there. Mirrors
 		/// <see cref="KingdomRules.StyleForSite"/>'s total fallback: an unknown, renamed, or

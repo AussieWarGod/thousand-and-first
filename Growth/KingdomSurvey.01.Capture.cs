@@ -251,8 +251,11 @@ namespace ThousandAndFirst
 				}
 			}
 			row.Raider = Item.GetIntProperty("KingdomRaider") == 1;
-			row.Cairn = row.Built && string.Equals(Item.Blueprint, "r_KingdomCairn",
-				StringComparison.Ordinal);
+			row.Cairn = row.Built && (string.Equals(Item.Blueprint, "r_KingdomCairn",
+				StringComparison.Ordinal) || string.Equals(Item.Blueprint,
+					"r_KingdomGraveGrove", StringComparison.Ordinal)
+				|| string.Equals(Item.Blueprint, "r_KingdomNicheTomb",
+					StringComparison.Ordinal));
 			row.PlotWorks = Item.GetPart<r_KingdomPlotWorks>() != null;
 			row.Improvement = Item.GetPart<r_KingdomImprovement>() != null;
 			row.Notice = Item.GetPart<r_KingdomNotice>() != null;
@@ -262,7 +265,8 @@ namespace ThousandAndFirst
 			row.CausalPilgrim = Item.GetIntProperty(KingdomLocus.CausalPilgrimProperty) == 1;
 			row.Clearance = Item.GetPart<r_KingdomClearance>() != null;
 			row.ConstructionRoot = Item.GetPart<r_KingdomPlotWorks>() != null
-				|| Item.GetPart<r_KingdomScaffold>() != null;
+				|| Item.GetPart<r_KingdomScaffold>() != null
+				|| Item.GetPart<r_KingdomRelocationFrame>() != null;
 			row.PlotRoot = KingdomPlots.TryReadRect(Item, out _);
 			row.LayoutRoot = KingdomLayout.TryReadMark(Item, out _);
 			row.CropRow = Item.GetIntProperty(KingdomCrops.RowProperty) == 1

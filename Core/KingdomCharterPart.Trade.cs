@@ -35,10 +35,13 @@ namespace ThousandAndFirst
 			System.Collections.Generic.List<string> labels = new System.Collections.Generic.List<string>();
 			foreach (Faction faction in Factions.Loop())
 			{
-				if (faction.Visible && faction.Name != System.KingdomFactionName && faction.Name != "Player" && System.GetStanding(faction.Name) >= deals[dealPick].MinStanding)
+				if (faction.Visible && faction.Name != System.KingdomFactionName &&
+					faction.Name != "Player" &&
+					System.GetRegardForRealm(faction.Name) >= deals[dealPick].MinStanding)
 				{
 					eligible.Add(faction.Name);
-					labels.Add(faction.DisplayName + " (standing " + System.GetStanding(faction.Name) + ")");
+					labels.Add(faction.DisplayName + " (their regard " +
+						System.GetRegardForRealm(faction.Name) + ")");
 					if (eligible.Count >= 20)
 					{
 						break;
@@ -81,46 +84,59 @@ namespace ThousandAndFirst
 				}
 			}
 			KingdomTradeManifestState current = KingdomTrade.CurrentManifest(System);
-			bool hasSecondCity = System.Away != null;
 			int stored = onGround ? KingdomGrowth.CountStoredWater(zone) : 0;
+			int rawAmount = KingdomManifestRules.ManifestAmount(stored, System.Population);
+			if (current != null)
+			{
+				if (current.Status == KingdomTradeManifestStatus.Quarantined)
+					Popup.Show("The manifest receipt is held for inspection: " +
+						(current.Fault ?? "its physical state is uncertain") +
+						". No second load will be issued against it.");
+				else Popup.Show(KingdomManifestRules.ManifestInFlightStatus(current.OriginName,
+					current.DestinationName, current.EscrowDrams, The.Game.TimeTicks,
+					current.DeadlineTick));
+				return;
+			}
+			System.Collections.Generic.List<KingdomSettlement> destinations =
+				System.NonSeatSettlements();
+			KingdomSettlement destinationCity = null;
+			if (destinations.Count == 1) destinationCity = destinations[0];
+			else if (destinations.Count > 1)
+			{
+				string[] options = new string[destinations.Count];
+				for (int i = 0; i < destinations.Count; i++) options[i] =
+					KingdomPresentation.Rich(destinations[i].SettlementName) +
+					KingdomSettlement.VocationSuffix(destinations[i].Vocation);
+				int chosen = Popup.PickOption(Title: "Send water where?", Options: options,
+					AllowEscape: true);
+				if (chosen < 0) return;
+				destinationCity = destinations[chosen];
+			}
 			// Sized against what the realm BELIEVES the other city can take - the figure it had
 			// when the founder last stood there. Loading to that belief is what makes arriving
 			// with nowhere to put it a rare, specific event rather than routine spillage.
-			int believedRoom = System.Away?.LastKnownStorageSpace ?? 0;
-			int amount = KingdomManifestRules.CapToDestination(KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
-			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(onGround, hasSecondCity, current != null, KingdomManifestRules.ManifestAmount(stored, System.Population), believedRoom);
-			if (verdict == KingdomManifestRules.ManifestVerdict.AlreadyInFlight)
-			{
-				if (current.Status == KingdomTradeManifestStatus.Quarantined)
-				{
-					Popup.Show("The manifest receipt is held for inspection: " + (current.Fault ?? "its physical state is uncertain") + ". No second load will be issued against it.");
-				}
-				else
-				{
-					Popup.Show(KingdomManifestRules.ManifestInFlightStatus(current.OriginName,
-						current.DestinationName, current.EscrowDrams, The.Game.TimeTicks,
-						current.DeadlineTick));
-				}
-				return;
-			}
+			int believedRoom = destinationCity?.LastKnownStorageSpace ?? 0;
+			int amount = KingdomManifestRules.CapToDestination(rawAmount, believedRoom);
+			KingdomManifestRules.ManifestVerdict verdict = KingdomManifestRules.JudgeManifest(
+				onGround, destinationCity != null, false, rawAmount, believedRoom);
 			if (verdict != KingdomManifestRules.ManifestVerdict.Allowed)
 			{
 				Popup.Show(KingdomManifestRules.ManifestRefusal(verdict,
-					KingdomPresentation.Rich(System.Away?.SettlementName)));
+					KingdomPresentation.Rich(destinationCity?.SettlementName)));
 				return;
 			}
 			// The price is named before the water moves. Every other spending action in this
 			// menu tells the founder what it costs and lets them back out; a manifest sends the
 			// largest single amount of water in the mod, and must not be the exception.
-			if (Popup.ShowYesNo("Send {{C|" + amount + " drams}} from " + KingdomPresentation.Rich(System.SeatName) + " to " + KingdomPresentation.Rich(System.Away.SettlementName)
+			if (Popup.ShowYesNo("Send {{C|" + amount + " drams}} from " + KingdomPresentation.Rich(System.SeatName) + " to " + KingdomPresentation.Rich(destinationCity.SettlementName)
 				+ "?\n\nThe water leaves the stores here now. It arrives when you next stand in "
-				+ KingdomPresentation.Rich(System.Away.SettlementName) + ", and if you have not come within "
+				+ KingdomPresentation.Rich(destinationCity.SettlementName) + ", and if you have not come within "
 				+ KingdomManifestRules.ManifestWindowDays + " days the carters turn back and bring it home.") != DialogResult.Yes)
 			{
 				return;
 			}
 			string origin = System.SeatName;
-			string destination = System.Away.SettlementName;
+			string destination = destinationCity.SettlementName;
 			if (!KingdomTrade.TryLoadManifest(System, zone, amount, origin, destination,
 				out string failure))
 			{

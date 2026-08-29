@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		public void IntentConstantsAndNestedDerivationHaveOneOwner()
 		{
 			string source = KingdomDelveLinkLogicalSource.Read();
-			Assert.AreEqual(7, Count(source, "public static partial class KingdomDelveLink"));
+			Assert.AreEqual(8, Count(source, "public static partial class KingdomDelveLink"));
 			Assert.AreEqual(1, Count(source, "public sealed class KingdomDelveLinkIntent"));
 			Assert.AreEqual(1, Count(source, "private sealed class Derived"));
 			Assert.AreEqual(1, Count(source, "public const int LinkSchema = 1"));

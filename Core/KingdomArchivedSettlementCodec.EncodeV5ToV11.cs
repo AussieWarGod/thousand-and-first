@@ -143,7 +143,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodePhysicalHappeningV8ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV11ForTests(Value, PhysicalHappeningVersion,
+			return TryEncodeHistoricalV8ToV13ForTests(Value, PhysicalHappeningVersion,
 				"v8", out Payload, out Failure);
 		}
 
@@ -152,7 +152,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeExactLogisticsV9ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV11ForTests(Value, ExactLogisticsVersion,
+			return TryEncodeHistoricalV8ToV13ForTests(Value, ExactLogisticsVersion,
 				"v9", out Payload, out Failure);
 		}
 
@@ -161,7 +161,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeDefensiveReservationV10ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV11ForTests(Value, DefensiveReservationVersion,
+			return TryEncodeHistoricalV8ToV13ForTests(Value, DefensiveReservationVersion,
 				"v10", out Payload, out Failure);
 		}
 
@@ -169,18 +169,57 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeSemanticSelectionV11ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV11ForTests(Value, SemanticSelectionVersion,
+			return TryEncodeHistoricalV8ToV13ForTests(Value, SemanticSelectionVersion,
 				"v11", out Payload, out Failure);
 		}
 
-		private static bool TryEncodeHistoricalV8ToV11ForTests(KingdomSettlement Value,
+		/// <summary>Test-only producer for archive v12, before the delivery enum domain widened.</summary>
+		internal static bool TryEncodeHappeningCursorV12ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV13ForTests(Value, HappeningCursorVersion,
+				"v12", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v13, before city-local cook and moot receipts.</summary>
+		internal static bool TryEncodeDeliveryDomainV13ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV13ForTests(Value, DeliveryDomainVersion,
+				"v13", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v14, before Growth-owned first-guest
+		/// correspondence authority.</summary>
+		internal static bool TryEncodeCivicAuthorityV14ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV14ForTests(Value, CivicAuthorityVersion,
+				"v14", out Payload, out Failure);
+		}
+
+		private static bool TryEncodeHistoricalV8ToV13ForTests(KingdomSettlement Value,
+			int Version, string Label, out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV14ForTests(Value, Version, Label,
+				out Payload, out Failure);
+		}
+
+		private static bool TryEncodeHistoricalV8ToV14ForTests(KingdomSettlement Value,
+			int Version, string Label, out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV16ForTests(Value, Version, Label,
+				out Payload, out Failure);
+		}
+
+		private static bool TryEncodeHistoricalV8ToV16ForTests(KingdomSettlement Value,
 			int Version, string Label, out byte[] Payload, out string Failure)
 		{
 			Payload = null;
 			Failure = null;
 			try
 			{
-				if (Version < PhysicalHappeningVersion || Version > SemanticSelectionVersion)
+				if (Version < PhysicalHappeningVersion || Version > PhysicalFirstGuestVersion)
 					throw new ArgumentOutOfRangeException(nameof(Version));
 				if (Value != null && (Value.LifecycleBook == null
 					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion

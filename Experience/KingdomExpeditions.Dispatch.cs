@@ -79,11 +79,11 @@ namespace ThousandAndFirst.Simulation.City
 			TargetChoice target = targets[targetPick];
 			KingdomSurvey survey = KingdomSurvey.Take(Actor.CurrentZone, System);
 			if (survey == null || survey.StoredWater < target.Quote.WaterDrams
-				|| survey.FoodStored < target.Quote.Provisions)
+				|| survey.FoodAvailable < target.Quote.Provisions)
 			{
 				Popup.Show("The dedicated stores on this ground hold "
 					+ ((survey == null) ? 0 : survey.StoredWater) + " drams and "
-					+ ((survey == null) ? 0 : survey.FoodStored) + " provisions; this commission needs exactly "
+					+ ((survey == null) ? 0 : survey.FoodAvailable) + " available provisions; this commission needs exactly "
 					+ target.Quote.WaterDrams + " and " + target.Quote.Provisions + ".");
 				return;
 			}

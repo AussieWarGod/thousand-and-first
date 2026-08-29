@@ -1,5 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -15,17 +17,40 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, (byte)KingdomPurposeKind.None);
 			Assert.AreEqual(1, (byte)KingdomPurposeKind.Flesh);
 			Assert.AreEqual(2, (byte)KingdomPurposeKind.Chrome);
+			Assert.AreEqual(3, (byte)KingdomPurposeKind.Deep);
+			Assert.AreEqual(4, (byte)KingdomPurposeKind.Forge);
+			Assert.AreEqual(5, (byte)KingdomPurposeKind.Harvest);
 			Assert.AreEqual("ThousandAndFirst.KingdomPurposeSite", typeof(KingdomPurposeSite).FullName);
 			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeSite)));
 			Assert.AreEqual(0, (byte)KingdomPurposeSite.None);
 			Assert.AreEqual(1, (byte)KingdomPurposeSite.LivingSurgery);
 			Assert.AreEqual(2, (byte)KingdomPurposeSite.RuinEnrollment);
+			Assert.AreEqual(3, (byte)KingdomPurposeSite.DeepDelve);
+			Assert.AreEqual(4, (byte)KingdomPurposeSite.ForgeQuench);
+			Assert.AreEqual(5, (byte)KingdomPurposeSite.HarvestWater);
 			Assert.AreEqual("ThousandAndFirst.KingdomPurposeDefinition",
 				typeof(KingdomPurposeDefinition).FullName);
 			Assert.AreEqual("ThousandAndFirst.KingdomPurposeManifest",
 				typeof(KingdomPurposeManifest).FullName);
 			Assert.AreEqual("ThousandAndFirst.KingdomPurposeCommitment",
 				typeof(KingdomPurposeCommitment).FullName);
+		}
+
+		[Test]
+		public void PortfolioDeclarationsUseFrozenDirectedTableNotLegacyCargoMetadata()
+		{
+			Assert.IsTrue(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+				"deep-delve", null, null, null, null, null, "deepcut|masonyard",
+				"performs one bounded deep extraction", out var definition, out var error), error);
+			Assert.IsTrue(definition.PortfolioOnly);
+			Assert.AreEqual(KingdomPurposeKind.Deep, definition.Kind);
+			Assert.IsTrue(definition.CargoCost.IsEmpty());
+			Assert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+				"forge-quench", null, null, null, null, null, "deepcut|masonyard",
+				"extracts", out _, out _));
+			Assert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+				"deep-delve", "invented-row", "cargo", "scrap", "1", "scrap:1",
+				"deepcut|masonyard", "extracts", out _, out _));
 		}
 
 		private static KingdomPurposeManifest Manifest()
@@ -110,6 +135,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void InitialPortfolioShellHasBuildBoundCargoFreeAuthority()
+		{
+			KingdomPurposeCommitment commitment = new KingdomPurposeCommitment
+			{
+				InitialBuildKey = "deepbore", SiteProof = "exact deep-delve site",
+				SpecialistId = "specialist-identity", SpecialistName = "Ari"
+			};
+			string receipt = KingdomPurposeRules.EncodeCommitment(commitment);
+			Assert.IsNotNull(receipt);
+			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(receipt, out var decoded));
+			Assert.AreEqual("deepbore", decoded.InitialBuildKey);
+			Assert.AreEqual(receipt, KingdomPurposeRules.EncodeCommitment(decoded));
+			decoded.CargoItemId = "invented-cargo";
+			Assert.IsNull(KingdomPurposeRules.EncodeCommitment(decoded));
+		}
+
+		[Test]
+		public void PortfolioCommitmentV2MigratesThroughItsFrozenFieldEnvelope()
+		{
+			string manifest = KingdomPurposeRules.EncodeManifest(Manifest());
+			string prior = Frame(manifest, "consignment-identity", "cargo-object-identity",
+				"site proof", Frame("specialist-identity", "Ari"), "", "", "", "", "");
+			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(prior, out var decoded));
+			Assert.IsNull(decoded.InitialBuildKey);
+			string current = KingdomPurposeRules.EncodeCommitment(decoded);
+			Assert.IsNotNull(current);
+			Assert.AreNotEqual(prior, current);
+			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(current, out var rewritten));
+			Assert.AreEqual(current, KingdomPurposeRules.EncodeCommitment(rewritten));
+		}
+
+		[Test]
 		public void WrongPurposeOrRouteIdentityCannotReuseManifest()
 		{
 			KingdomPurposeManifest manifest = Manifest();
@@ -130,6 +187,18 @@ namespace ThousandAndFirst.Tests
 			Assert.AreNotEqual(original, changed);
 			manifest.DestinationGateKey = manifest.SourceGateKey;
 			Assert.IsNull(KingdomPurposeRules.EncodeManifest(manifest));
+		}
+
+		private static string Frame(params string[] fields)
+		{
+			StringBuilder text = new StringBuilder("v1");
+			for (int i = 0; i < fields.Length; i++)
+			{
+				string value = fields[i] ?? "";
+				text.Append(';').Append(value.Length.ToString(CultureInfo.InvariantCulture))
+					.Append(':').Append(value);
+			}
+			return text.ToString();
 		}
 	}
 }

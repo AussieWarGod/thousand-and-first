@@ -82,7 +82,8 @@ namespace ThousandAndFirst
 			return Block == BountyBlock.NothingStanding
 				|| Block == BountyBlock.PileEmpty
 				|| Block == BountyBlock.NoWorks
-				|| Block == BountyBlock.NoFrontier;
+				|| Block == BountyBlock.NoFrontier
+				|| Block == BountyBlock.ManningTargetLost;
 		}
 
 		/// <summary>
@@ -115,6 +116,12 @@ namespace ThousandAndFirst
 				return "There is no unclaimed ground left along the edge of " + seat + " for a scout to walk to. No one will ever claim it; take it down when you like.";
 			case BountyBlock.StoresCannotPay:
 				return "The notice at " + seat + " is claimed and the work is done, and the stores cannot cover the price. It stays owed until they can.";
+			case BountyBlock.ManningTargetLost:
+				return "The exact work named by the manning notice no longer stands at " + seat + ". The service clock is stopped; take the notice down when you like.";
+			case BountyBlock.ManningWorkerAbsent:
+				return "The resident who took the manning notice is not grounded at " + seat + ". The service clock is stopped until they return.";
+			case BountyBlock.NoFreeHands:
+				return "The manning notice has no hand left in " + seat + "'s ordinary work pool. The service clock is stopped; reduce other duties or add labour.";
 			default:
 				return null;
 			}

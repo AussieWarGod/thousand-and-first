@@ -10,7 +10,9 @@ namespace ThousandAndFirst
 	{
 		public const int MaxReceiptChars = 4096;
 		private const int ManifestFieldCount = 19;
-		private const int CommitmentFieldCount = 5;
+		private const int LegacyCommitmentFieldCount = 5;
+		private const int PortfolioCommitmentFieldCount = 10;
+		private const int CommitmentFieldCount = 11;
 
 		public static bool TryCreateDefinition(string BuildKey, string Purpose,
 			string Site, string CargoKey, string CargoName, string CargoMaterial,
@@ -32,6 +34,29 @@ namespace ThousandAndFirst
 				return Fail("building " + BuildKey + " names an unknown Purpose", out Error);
 			if (!TrySite(Site, out KingdomPurposeSite site))
 				return Fail("building " + BuildKey + " names an unknown PurposeSite", out Error);
+			bool portfolio = kind >= KingdomPurposeKind.Deep;
+			if (portfolio && !PortfolioSiteMatches(kind, site))
+				return Fail("building " + BuildKey + " mismatches its portfolio purpose and site", out Error);
+			if (portfolio)
+			{
+				if (!string.IsNullOrWhiteSpace(CargoKey) || !string.IsNullOrWhiteSpace(CargoName)
+					|| !string.IsNullOrWhiteSpace(CargoMaterial)
+					|| !string.IsNullOrWhiteSpace(CargoWater)
+					|| !string.IsNullOrWhiteSpace(CargoCost))
+					return Fail("building " + BuildKey
+						+ " must use the frozen reciprocal recipe table, not one legacy cargo row", out Error);
+				if (!TryProducerSpec(Producers, out string portfolioProducers))
+					return Fail("building " + BuildKey + " has an invalid purpose producer specification", out Error);
+				if (!Text(Effect, 1, 360))
+					return Fail("building " + BuildKey + " has no bounded purpose effect", out Error);
+				Definition = new KingdomPurposeDefinition
+				{
+					BuildKey = BuildKey, Kind = kind, Site = site,
+					CargoCost = new KingdomMaterialTally(), ProducerSpec = portfolioProducers,
+					Effect = Effect.Trim(), PortfolioOnly = true
+				};
+				return true;
+			}
 			if (!Token(CargoKey, 128) || !Text(CargoName, 1, 180))
 				return Fail("building " + BuildKey + " has no bounded purpose cargo", out Error);
 			if (!KingdomMaterialRules.TryParseMaterial(CargoMaterial,
@@ -63,7 +88,8 @@ namespace ThousandAndFirst
 				CargoWater = water,
 				CargoCost = cost,
 				ProducerSpec = producerSpec,
-				Effect = Effect.Trim()
+				Effect = Effect.Trim(),
+				PortfolioOnly = false
 			};
 			return true;
 		}
@@ -190,7 +216,7 @@ namespace ThousandAndFirst
 		public static bool ManifestMatchesDefinition(KingdomPurposeManifest Manifest,
 			KingdomPurposeDefinition Definition)
 		{
-			if (!ValidManifest(Manifest) || Definition == null
+			if (!ValidManifest(Manifest) || Definition == null || Definition.PortfolioOnly
 				|| !Token(Definition.BuildKey, 128)
 				|| Definition.Kind <= KingdomPurposeKind.None
 				|| Definition.Kind > KingdomPurposeKind.Chrome

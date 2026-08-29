@@ -277,7 +277,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("style = KingdomData.StyleForSite", founding);
 			StringAssert.Contains("KingdomData.TryGetStyle(style", founding);
 
-			string wishes = TestMain.ReadRepositoryText(Path.Combine("Debug", "KingdomWishes.cs"));
+			string wishes = TestMain.ReadRepositoryText(Path.Combine("Debug",
+				"KingdomWishes.StyleRegardAndExile.cs"));
 			StringAssert.Contains("KingdomData.TryGetStyle(style", wishes);
 			StringAssert.Contains("string.Join(\", \", KingdomData.Styles)", wishes);
 		}
@@ -285,7 +286,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ShippedStyleDefinitionsCarryFoundingSelectorsAndProse()
 		{
-			string catalogue = TestMain.ReadRepositoryText("KingdomBuildings.xml");
+			string catalogue = TestMain.ReadRepositoryText(Path.Combine("RuntimeData",
+				"KingdomBuildings.xml"));
 			StringAssert.Contains("<style Name=\"verdant\" Terrain=", catalogue);
 			StringAssert.Contains("<style Name=\"fungal\" Terrain=", catalogue);
 			StringAssert.Contains("<style Name=\"gyre\" Terrain=", catalogue);

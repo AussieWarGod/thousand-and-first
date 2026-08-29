@@ -12,6 +12,7 @@
 
   <!-- Production palettes. -->
   <palette Key="production-larder-timber">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="slat" Blueprint="r_KingdomStructureBrinestalkWall" Role="slatted-wall" Material="timber" MinTech="hands" Natural="no" />
@@ -20,12 +21,14 @@
   </palette>
 
   <palette Key="production-garden-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="soil" Blueprint="DirtFloor" Role="cultivated-soil" Material="mud" MinTech="hands" Natural="no" />
     <slot Key="path" Blueprint="DirtPath" Role="garden-path" Material="mud" MinTech="hands" Natural="no" />
     <slot Key="stake" Blueprint="r_KingdomStructureBrinestalkWall" Role="row-stake" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="production-field-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="soil" Blueprint="DirtFloor" Role="field-soil" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="field-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="fence" Blueprint="r_KingdomStructureBrinestalkWall" Role="field-fence" Material="timber" MinTech="hands" Natural="no" />
@@ -33,6 +36,7 @@
   </palette>
 
   <palette Key="production-granary-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="dry-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
@@ -42,6 +46,7 @@
   </palette>
 
   <palette Key="production-grange-workshop">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="soil" Blueprint="DirtFloor" Role="field-soil" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="field-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="WoodFloor" Role="threshing-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
@@ -65,6 +70,7 @@
   </palette>
 
   <palette Key="production-tools-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
@@ -73,12 +79,14 @@
   </palette>
 
   <palette Key="production-charging-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="service-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="frame" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-frame" Material="scrap" MinTech="salvage" Natural="no" />
   </palette>
 
   <palette Key="production-smith-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -89,6 +97,7 @@
   </palette>
 
   <palette Key="production-grind-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="mill-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
@@ -98,6 +107,7 @@
   </palette>
 
   <palette Key="production-workshop-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-wall" Material="timber" MinTech="hands" Natural="no" />
@@ -109,6 +119,7 @@
   </palette>
 
   <palette Key="production-yard-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="yard-ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="yard-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="timber" Blueprint="r_KingdomStructureWornWoodWall" Role="seasoning-rack" Material="timber" MinTech="hands" Natural="no" />
@@ -118,6 +129,7 @@
   </palette>
 
   <palette Key="production-smelter-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="work-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -127,12 +139,14 @@
   </palette>
 
   <palette Key="production-mill-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="walking-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="production-waterwheel-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="service-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="race" Blueprint="SaltPath" Role="dry-millrace-marker" Material="mud" MinTech="hands" Natural="yes" />
@@ -141,6 +155,7 @@
   </palette>
 
   <palette Key="production-sailvane-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="sweep-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="guy" Blueprint="r_KingdomStructureBrinestalkWall" Role="guy-stake" Material="timber" MinTech="hands" Natural="no" />
@@ -148,6 +163,7 @@
   </palette>
 
   <palette Key="production-saltstore-workshop">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="service-floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -157,6 +173,7 @@
   </palette>
 
   <palette Key="production-weavehall-hindren">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="treadle-lane" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -166,6 +183,7 @@
 
   <palette Key="production-sporecellar-fungal">
     <slot Key="floor" Blueprint="FungalTrailBrick" Role="damp-floor" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="dry-inspection-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="natural-rock" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="lid" Blueprint="r_KingdomStructureHalfStone" Role="cut-stone-lid" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
@@ -173,6 +191,7 @@
   </palette>
 
   <palette Key="production-butcher-salvage">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="washable-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="screen" Blueprint="r_KingdomStructureBrinestalkWall" Role="timber-screen" Material="timber" MinTech="hands" Natural="no" />
@@ -191,7 +210,7 @@
     <row Cells="WVWV." />
     <row Cells="V@PV." />
     <row Cells="WPPW." />
-    <row Cells="LEP.." />
+    <row Cells="LEW.." />
   </map>
 
   <map Key="production-plot-s0" Width="5" Height="4" DefaultCover="open">
@@ -262,13 +281,14 @@
     <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:grain-storage" Stateful="yes" />
     <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:incoming" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
-    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="E" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <row Cells=".SSSSS.." />
     <row Cells=".W@BPW.." />
     <row Cells=".WPPPW.." />
     <row Cells=".WPPPW.." />
-    <row Cells=".WWPWW.." />
+    <row Cells=".WWDWW.." />
     <row Cells="..LEL..." />
   </map>
 
@@ -287,10 +307,10 @@
     <glyph Char="B" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:grain" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <row Cells=".......WWWWW" />
-    <row Cells="arrrrrrW@BPW" />
+    <row Cells="arrrrrrW@BIW" />
     <row Cells="PPPPPPPWIIIW" />
     <row Cells="crrrrrrDIIWW" />
-    <row Cells="PPPPPPPPPPPL" />
+    <row Cells="PPPPPPPWWWWL" />
     <row Cells="errrrrrPPPPP" />
     <row Cells="PPPPPPPPPPPP" />
     <row Cells="grrrrrrPPPPP" />
@@ -308,7 +328,7 @@
     <glyph Char="j" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row6" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="L" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:road" />
-    <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:loading" />
+    <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
     <glyph Char="W" Ground="$soil" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="M" Ground="$floor" Structure="$metal" Claim="building" Pass="blocked" Cover="walled" />
@@ -319,19 +339,19 @@
     <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:grading" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <row Cells="FFFFFFFFFFFFPPWWWWWW" />
-    <row Cells="FarrrrrrrrrFPPW@BIPW" />
-    <row Cells="FPPPPPPPPPPFPPWIIIIW" />
-    <row Cells="FcrrrrrrrrrFPPDIIIIW" />
-    <row Cells="FPPPPPPPPPPFPPWIIIIW" />
-    <row Cells="FerrrrrrrrrFPPLLLLLQ" />
-    <row Cells="FPPPPPPPPPPFPPRRRRRR" />
-    <row Cells="FgrrrrrrrrrFPPWWWWWW" />
-    <row Cells="FPPPPPPPPPPFPPWTIIMW" />
-    <row Cells="FhrrrrrrrrrFPPWIBIIW" />
-    <row Cells="FPPPPPPPPPPFPPDIIIIW" />
-    <row Cells="FjrrrrrrrrrFPPWWWWWW" />
-    <row Cells="FPPPPPPPPPPFPPPPPPPP" />
-    <row Cells="......E.....PP......" />
+    <row Cells="FarrrrrrrrrFPLW@BIIW" />
+    <row Cells="FPPPPPPPPPPFPLWIIIIW" />
+    <row Cells="FcrrrrrrrrrFLQDIIIIW" />
+    <row Cells="FPPPPPPPPPPFPLWIIIIW" />
+    <row Cells="FerrrrrrrrrFPLWWWWWW" />
+    <row Cells="FPPPPPPPPPPFPLRRRRRR" />
+    <row Cells="FgrrrrrrrrrFPLWWWWWW" />
+    <row Cells="FPPPPPPPPPPFPLWTIIMW" />
+    <row Cells="FhrrrrrrrrrFPLWIBIIW" />
+    <row Cells="FPPPPPPPPPPFPLDIIIIW" />
+    <row Cells="FjrrrrrrrrrFPLWWWWWW" />
+    <row Cells="FPPPPPPPPPPFPLPPPPPP" />
+    <row Cells="......EEPPPPPL......" />
   </map>
 
   <!-- Craft maps. -->
@@ -386,12 +406,12 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <row Cells=".SSSSS.." />
+    <row Cells=".SSSSSS." />
     <row Cells=".SHCPS.." />
-    <row Cells=".SP@PA.." />
+    <row Cells=".SP@PAS." />
     <row Cells=".SPPPS.." />
-    <row Cells=".SSDPPPL" />
-    <row Cells="...E...." />
+    <row Cells=".SSDSSSL" />
+    <row Cells="...ELLLL" />
   </map>
 
   <map Key="production-forge-m1" Width="8" Height="6" DefaultCover="walled">
@@ -409,9 +429,9 @@
     <row Cells=".SSSSSS." />
     <row Cells=".SHCCHS." />
     <row Cells=".SP@PAS." />
-    <row Cells=".SPQPSP." />
-    <row Cells=".SSDPPPL" />
-    <row Cells="...E...." />
+    <row Cells=".SPQPSS." />
+    <row Cells=".SSDSSSL" />
+    <row Cells="...ELLLL" />
   </map>
 
   <map Key="production-grindmill-m0" Width="8" Height="6" DefaultCover="walled">
@@ -423,13 +443,14 @@
     <glyph Char="C" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:output" Stateful="yes" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
-    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <!-- D is the mill door. E is its road-facing tread, not a second door stacked outside it. -->
+    <glyph Char="E" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <row Cells="WWWWWW.." />
     <row Cells="WBP@QW.." />
     <row Cells="WPPPPW.." />
     <row Cells="WPPPCW.." />
     <row Cells="WWDPPDLL" />
-    <row Cells="..E....." />
+    <row Cells="..EWW..." />
   </map>
 
   <map Key="production-workshop-m0" Width="8" Height="6" DefaultCover="walled">
@@ -449,7 +470,7 @@
     <row Cells="WPPHPPPW" />
     <row Cells="WCPPPPPW" />
     <row Cells="WPPPPPPQ" />
-    <row Cells="WWWEWW.." />
+    <row Cells="WWWEWWW." />
   </map>
 
   <map Key="production-sawyeryard-m0" Width="8" Height="6" DefaultCover="open">
@@ -500,8 +521,8 @@
     <row Cells=".SHCPS.." />
     <row Cells=".SP@PPS." />
     <row Cells=".SPPPZS." />
-    <row Cells=".SDPPPPL" />
-    <row Cells="..E....L" />
+    <row Cells=".SDSSSSL" />
+    <row Cells="..ELLLLL" />
   </map>
 
   <!-- Power and specialist maps. -->
@@ -524,12 +545,14 @@
     <glyph Char="R" Ground="$race" Claim="yard" Pass="walk" Cover="open" Anchors="water:millrace" />
     <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:wheel-clearance" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="@" Ground="$race" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:water-power" Stateful="yes" />
+    <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:water-power" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <!-- One horizontal race passes immediately beneath the wheel deck. Timber support and
+         recovered bearing flank it; clear service cells and the road approach stay dry. -->
     <row Cells="....." />
-    <row Cells="S@B.." />
-    <row Cells="rCPR." />
-    <row Cells=".E.r." />
+    <row Cells=".S@B." />
+    <row Cells="rrRrr" />
+    <row Cells=".CEC." />
   </map>
 
   <map Key="production-sailvane-s0" Width="5" Height="4" DefaultCover="open">
@@ -560,8 +583,8 @@
     <row Cells=".SHRRS.." />
     <row Cells=".SC@TS.." />
     <row Cells=".SPCPS.." />
-    <row Cells=".SSDPPPL" />
-    <row Cells="...E...L" />
+    <row Cells=".SSDSSSL" />
+    <row Cells="...ELLLL" />
   </map>
 
   <map Key="production-weavehall-m0" Width="8" Height="6" DefaultCover="soft">

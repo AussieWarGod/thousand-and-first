@@ -23,11 +23,19 @@ namespace ThousandAndFirst
 				physical.Survey = Survey;
 				physical.StoreList = Survey.Stores;
 				physical.StoreRows = Survey.Stores.ToArray();
+				int provedWater = 0;
 				for (int i = 0; i < Operation.WaterLegs.Count; i++)
 				{
 					KingdomTradeWaterLeg leg = Operation.WaterLegs[i];
+					if (leg?.State == KingdomTradePhysicalState.Skipped)
+					{
+						if (!KingdomTradeRules.ValidSkippedPolityWaterLeg(Operation, leg)) return false;
+						continue;
+					}
 					if (leg == null || (leg.State != KingdomTradePhysicalState.Prepared
-							&& leg.State != KingdomTradePhysicalState.Proved)) return false;
+							&& leg.State != KingdomTradePhysicalState.Proved && (leg.State !=
+							KingdomTradePhysicalState.Intent || Operation.Kind !=
+							KingdomTradeOperationKind.PolityConsignmentDelivery))) return false;
 					GameObject owner;
 					LoadedTopologyWitness topology;
 					if (ResolveLoadedObject(leg.OwnerId, Z, out owner, out topology)
@@ -38,10 +46,35 @@ namespace ThousandAndFirst
 					WaterWitness witness = CaptureWaterWitness(leg, owner, vessel);
 					if (witness == null) return false;
 					witness.Topology = topology;
+					if (leg.State == KingdomTradePhysicalState.Intent)
+					{
+						KingdomTradeWaterIntentResolution resolution = KingdomTradeRules.
+							ClassifyPolityWaterIntent(leg, vessel.MaxVolume, vessel.Volume,
+								ComponentFingerprint(vessel));
+						bool exactBefore = resolution == KingdomTradeWaterIntentResolution.Before &&
+							ExactWaterWitness(witness, Z, false);
+						bool exactAfter = resolution == KingdomTradeWaterIntentResolution.After &&
+							ExactWaterWitness(witness, Z, true);
+						if (exactBefore) leg.State = KingdomTradePhysicalState.Prepared;
+						else if (exactAfter) leg.State = KingdomTradePhysicalState.Proved;
+						else
+						{
+							leg.State = KingdomTradePhysicalState.Lost;
+							Operation.AmbiguousWater = Math.Max(Operation.AmbiguousWater,
+								Math.Max(1, Operation.RequestedWater - provedWater));
+							Quarantine(Operation,
+								"A persisted consignment debit is neither its exact before nor after state.");
+							return false;
+						}
+					}
 					if (!ExactWaterWitness(witness, Z,
 						leg.State == KingdomTradePhysicalState.Proved)) return false;
+					if (leg.State == KingdomTradePhysicalState.Proved)
+						provedWater = KingdomTradeRules.SaturatingAdd(provedWater, leg.Delta);
 					physical.Water.Add(witness);
 				}
+				Operation.ProvedWater = provedWater;
+				Operation.AmbiguousWater = 0;
 			}
 			Frame.Physical = physical;
 			if (Operation.MaterialOutputs != null)
@@ -95,6 +128,8 @@ namespace ThousandAndFirst
 				WaterWitness witness = physical.Water[i];
 				KingdomTradeWaterLeg leg = witness.Leg;
 				if (leg.State == KingdomTradePhysicalState.Proved) continue;
+				if (!RequirePolityConsignmentRecipient(Frame.System, Operation, Z,
+					"resumed water debit leg")) return false;
 				if (leg.State != KingdomTradePhysicalState.Prepared
 					|| !ExactAuthority(Frame, KingdomTradePhase.ResourceIntent)
 					|| !ExactPhysicalFrame(Frame, Operation, Z))
@@ -136,6 +171,10 @@ namespace ThousandAndFirst
 					return false;
 				}
 				leg.State = KingdomTradePhysicalState.Proved;
+				Operation.ProvedWater = KingdomTradeRules.SaturatingAdd(
+					Operation.ProvedWater, witness.Delta);
+				if (!RequirePolityConsignmentRecipient(Frame.System, Operation, Z,
+					"resumed post-debit landing")) return false;
 			}
 			int proved = 0;
 			for (int i = 0; i < physical.Water.Count; i++)
@@ -213,46 +252,6 @@ namespace ThousandAndFirst
 			if (Operation != null && Operation.ProjectionState == KingdomTradePhysicalState.Proved
 				&& !ExactProjectionWitness(Frame, Operation, Z)) return false;
 			return true;
-		}
-
-		private static void ReconcilePhysicalFailure(TradeLiveFrame Frame,
-			KingdomTradeOperation Operation, Zone Z, string Fault)
-		{
-			if (Operation == null) return;
-			int water = 0;
-			TradePhysicalFrame physical = Frame?.Physical;
-			if (physical != null)
-			{
-				for (int i = 0; i < physical.Water.Count; i++)
-				{
-					WaterWitness witness = physical.Water[i];
-					if (ExactWaterWitness(witness, Z, true))
-					{
-						witness.Leg.State = KingdomTradePhysicalState.Proved;
-						water = KingdomTradeRules.SaturatingAdd(water, witness.Delta);
-					}
-					else witness.Leg.State = KingdomTradePhysicalState.Lost;
-				}
-				int material = 0;
-				for (int i = 0; i < physical.Materials.Count; i++)
-				{
-					MaterialWitness witness = physical.Materials[i];
-					if (ExactMaterialWitness(witness, Z)
-						&& CountMarker(Z, witness.Marker) == 1)
-					{
-						witness.Output.State = KingdomTradePhysicalState.Proved;
-						material = KingdomTradeRules.SaturatingAdd(material,
-							witness.Count);
-					}
-					else witness.Output.State = KingdomTradePhysicalState.Lost;
-				}
-				Operation.MaterialProved = material;
-				RefreshSurveyWater(physical);
-			}
-			Operation.ProvedWater = water;
-			Operation.AmbiguousWater = Math.Max(Operation.AmbiguousWater,
-				Math.Max(0, Operation.RequestedWater - water));
-			Quarantine(Operation, Fault);
 		}
 
 	}

@@ -23,7 +23,8 @@ namespace ThousandAndFirst
 			failure = null;
 			KingdomRaidIncident incident;
 			if (!CanAnswerHere(system, zone, out incident, out failure)) return false;
-			if (system.GetStanding(incident.AttackerFactionId) < KingdomRules.DiplomacyStandingRequired)
+			if (system.GetRegardForRealm(incident.AttackerFactionId) <
+				KingdomRules.DiplomacyStandingRequired)
 			{
 				failure = "They require {{C|" + KingdomRules.DiplomacyStandingRequired
 					+ " standing}} before they will hear an envoy.";

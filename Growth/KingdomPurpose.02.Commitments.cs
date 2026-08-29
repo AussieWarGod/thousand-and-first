@@ -29,9 +29,14 @@ namespace ThousandAndFirst
 				return Fail("The city's immutable settlement identity cannot be reproved; reseat and revisit it before committing its purpose.", out Failure);
 			if (!FindLocalConnection(System, Z, out KingdomPurposeConnection connection,
 				out Failure)) return false;
-			if (!FindDeliveredCargo(Z, definition, settlementId, connection.SourceKey,
-				connection.DestinationKey, out Cargo, out KingdomConstructionJob consignment,
-				out KingdomPurposeManifest manifest, out Failure)) return false;
+			KingdomConstructionJob consignment = null;
+			KingdomPurposeManifest manifest = null;
+			if (!definition.PortfolioOnly && !FindDeliveredCargo(Z, definition, settlementId,
+				connection.SourceKey, connection.DestinationKey, out Cargo, out consignment,
+				out manifest, out Failure)) return false;
+			if (!TryQuotePortfolioCargo(System, Z, definition, settlementId,
+				out KingdomPurposePairReceipt pair, out GameObject reciprocal,
+				out Failure)) return false;
 			if (!TrySiteProof(System, Z, definition, out string siteProof,
 				out GameObject specialist, out Failure))
 			{
@@ -40,13 +45,19 @@ namespace ThousandAndFirst
 			}
 			KingdomPurposeCommitment commitment = new KingdomPurposeCommitment
 			{
-				Manifest = KingdomPurposeRules.EncodeManifest(manifest),
-				ConsignmentId = consignment.Id, CargoItemId = Cargo.ID,
-				SiteProof = siteProof, SpecialistId = specialist.ID,
+				Manifest = manifest == null ? null : KingdomPurposeRules.EncodeManifest(manifest),
+				ConsignmentId = consignment?.Id, CargoItemId = Cargo?.IDIfAssigned,
+				SiteProof = siteProof, SpecialistId = specialist.IDIfAssigned,
 				SpecialistName = !string.IsNullOrEmpty(
 					specialist.GetStringProperty("KingdomName"))
 					? specialist.GetStringProperty("KingdomName")
-					: (specialist.BaseDisplayNameStripped ?? "the specialist")
+					: (specialist.BaseDisplayNameStripped ?? "the specialist"),
+				PortfolioPairId = pair?.PairId, PortfolioEpoch = pair?.Epoch ?? 0L,
+				PortfolioOperationId = pair?.Operation?.OperationId,
+				ReciprocalCargoItemId = reciprocal?.IDIfAssigned,
+				ReciprocalCargoReceipt = pair?.Operation?.OutputCargoReceipt,
+				InitialBuildKey = pair == null && definition.PortfolioOnly
+					? definition.BuildKey : null
 			};
 			Receipt = KingdomPurposeRules.EncodeCommitment(commitment);
 			if (Receipt == null)
@@ -64,10 +75,12 @@ namespace ThousandAndFirst
 			Failure = null;
 			if (!Definitions.ContainsKey(BuildKey ?? "")) return string.IsNullOrEmpty(Receipt);
 			if (!KingdomPurposeRules.TryDecodeCommitment(Receipt,
-				out KingdomPurposeCommitment commitment)
-				|| !KingdomPurposeRules.TryDecodeManifest(commitment.Manifest,
-					out KingdomPurposeManifest manifest) || manifest.BuildKey != BuildKey)
+				out KingdomPurposeCommitment commitment) || !CommitmentMatchesBuild(commitment, BuildKey))
 				return Fail("The frozen purpose commitment is absent or malformed.", out Failure);
+			if (string.IsNullOrEmpty(commitment.CargoItemId)) return true;
+			if (!KingdomPurposeRules.TryDecodeManifest(commitment.Manifest,
+				out KingdomPurposeManifest manifest) || manifest.BuildKey != BuildKey)
+				return Fail("The frozen legacy purpose commitment is malformed.", out Failure);
 			if (!KingdomConstruction.TryFind(commitment.ConsignmentId,
 				out KingdomConstructionJob job) || job.Route != KingdomConstructionRoute.PurposeConsignment
 				|| job.OutputId != commitment.CargoItemId
@@ -91,8 +104,7 @@ namespace ThousandAndFirst
 			return Job != null && Job.Route == KingdomConstructionRoute.PlotCommission
 				&& KingdomPurposeRules.TryDecodeCommitment(Job.PhysicalReceipt,
 					out KingdomPurposeCommitment commitment)
-				&& KingdomPurposeRules.TryDecodeManifest(commitment.Manifest,
-					out KingdomPurposeManifest manifest) && manifest.BuildKey == Job.TargetKey;
+				&& CommitmentMatchesBuild(commitment, Job.TargetKey);
 		}
 
 		internal static bool RequiresExactFunding(KingdomConstructionJob Job)
@@ -104,54 +116,37 @@ namespace ThousandAndFirst
 				|| !string.IsNullOrEmpty(Job.PhysicalReceipt);
 		}
 
-		/// <summary>
-		/// Rebinds an outstanding commission to the same delivered cargo. The outstanding claim must
-		/// still contain its typed unit; absence or prior consumption is ambiguous because material
-		/// tallies cannot prove which object a callback destroyed, so it quarantines rather than
-		/// accepting a fungible replacement.
-		/// </summary>
-		internal static bool TryRequiredFundingItem(Zone Z, KingdomConstructionJob Job,
-			out GameObject RequiredItem, out string Failure)
-		{
-			RequiredItem = null;
-			Failure = null;
-			if (!HasFrozenCommitment(Job)
-				|| !KingdomPurposeRules.TryDecodeCommitment(Job.PhysicalReceipt,
-					out KingdomPurposeCommitment commitment)
-				|| !KingdomPurposeRules.TryDecodeManifest(commitment.Manifest,
-					out KingdomPurposeManifest manifest)
-				|| Job.Claims == null || !KingdomMaterialDebitCost.TryParseClaim(
-					Job.Claims.MaterialOutstanding, out KingdomMaterialDebitCost outstanding))
-				return Fail("The frozen city-purpose funding receipt cannot be decoded for retry.",
-					out Failure);
-			if (outstanding.Materials.Get(manifest.CargoMaterial) < 1)
-				return Fail("The purpose cargo identity and outstanding typed claim disagree. Inspect the receipt; no same-kind object may stand in for it.", out Failure);
-			KingdomData.EnsureBuildings();
-			if (!ResolveCommitCargo(Z, Job.TargetKey, Job.PhysicalReceipt,
-				out RequiredItem, out Failure)) return false;
-			return GameObject.Validate(RequiredItem) && RequiredItem.ID == commitment.CargoItemId;
-		}
-
 		internal static string AppendPreview(string Existing, string PurposeReceipt)
 		{
 			if (string.IsNullOrEmpty(PurposeReceipt)) return Existing;
 			if (!KingdomPurposeRules.TryDecodeCommitment(PurposeReceipt,
-				out KingdomPurposeCommitment commitment)
-				|| !KingdomPurposeRules.TryDecodeManifest(commitment.Manifest,
-					out KingdomPurposeManifest manifest))
+				out KingdomPurposeCommitment commitment))
 				return (Existing ?? "") + "\nPURPOSE RECEIPT INVALID: nothing may be spent.";
+			KingdomPurposeManifest manifest = null;
+			KingdomPurposeRules.TryDecodeManifest(commitment.Manifest, out manifest);
+			KingdomPurposeCargoReceipt reciprocal = null;
+			KingdomPurposePortfolioRules.TryDecodeCargo(
+				commitment.ReciprocalCargoReceipt, out reciprocal);
+			KingdomPurposeKind kind = manifest?.Kind ?? reciprocal?.DestinationKind
+				?? KingdomPurposeKind.None;
+			string exact = "";
+			if (manifest != null)
+				exact += "Exact cross-city input: 1 " + manifest.CargoName + " (object "
+					+ commitment.CargoItemId + "), produced by "
+					+ KingdomPresentation.Rich(manifest.OriginCity) + " at "
+					+ manifest.ProducerProof.Replace('|', '/')
+					+ " and delivered through the live mirror-gate to "
+					+ KingdomPresentation.Rich(manifest.DestinationCity) + ".\n";
+			if (reciprocal != null)
+				exact += "Exact reciprocal input: 1 " + reciprocal.CargoKey + " (object "
+					+ commitment.ReciprocalCargoItemId + "), pair epoch "
+					+ commitment.PortfolioEpoch + ", delivered into its frozen purpose store.\n";
 			return (Existing ?? "") + "\nPurpose commitment: "
-				+ KingdomPurposeRules.PurposeName(manifest.Kind) + ".\n"
-				+ "Exact cross-city input: 1 " + manifest.CargoName + " (object "
-				+ commitment.CargoItemId + "), produced by "
-				+ KingdomPresentation.Rich(manifest.OriginCity) + " at "
-				+ manifest.ProducerProof.Replace('|', '/') + " and delivered through the live mirror-gate to "
-				+ KingdomPresentation.Rich(manifest.DestinationCity) + ".\n"
+				+ KingdomPurposeRules.PurposeName(kind) + ".\n" + exact
 				+ "Site: " + commitment.SiteProof + "; lodged specialist: "
 				+ KingdomPresentation.Rich(commitment.SpecialistName) + ".\n"
-				+ "Output: " + manifest.Effect + ".\n"
-				+ "Commit: the ordinary material debit consumes this exact object as its declared "
-				+ KingdomMaterialRules.MaterialName(manifest.CargoMaterial) + " unit. If an engine callback is interrupted, the durable receipt retries only the same identity; ambiguity requires inspection and never substitutes or charges it twice.\n";
+				+ (manifest == null ? "" : "Output: " + manifest.Effect + ".\n")
+				+ "Commit: the ordinary material debit consumes every named exact object as its declared typed unit. If an engine callback is interrupted, the durable receipt retries only those identities; ambiguity requires inspection and never substitutes or charges twice.\n";
 		}
 
 		internal static bool FreezeOnWork(GameObject Work, string BuildKey, string Receipt)
@@ -164,12 +159,30 @@ namespace ThousandAndFirst
 				return Work.GetIntProperty(CommitmentLegacyProperty) == 1;
 			}
 			if (!KingdomPurposeRules.TryDecodeCommitment(Receipt, out var commitment)
-				|| !KingdomPurposeRules.TryDecodeManifest(commitment.Manifest, out var manifest)
-				|| manifest.BuildKey != BuildKey) return false;
+				|| !CommitmentMatchesBuild(commitment, BuildKey)) return false;
 			Work.SetStringProperty(CommitmentProperty, Receipt);
 			Work.SetIntProperty(CommitmentLegacyProperty, 0);
 			return Work.GetStringProperty(CommitmentProperty) == Receipt
 				&& Work.GetIntProperty(CommitmentLegacyProperty) == 0;
+		}
+
+		internal static bool FoundingHeartPurposeIsLegacy(string BuildKey)
+		{
+			return Definitions.ContainsKey(BuildKey ?? "");
+		}
+
+		internal static bool FreezeFoundingHeartOnWork(GameObject Work, bool Legacy)
+		{
+			if (!GameObject.Validate(Work)
+				|| Work.HasStringProperty(CommitmentProperty)
+				|| Work.HasIntProperty(CommitmentProperty)
+				|| Work.HasStringProperty(CommitmentLegacyProperty)
+				|| Work.HasIntProperty(CommitmentLegacyProperty)) return false;
+			if (!Legacy) return true;
+			Work.SetIntProperty(CommitmentLegacyProperty, 1);
+			return Work.HasIntProperty(CommitmentLegacyProperty)
+				&& !Work.HasStringProperty(CommitmentLegacyProperty)
+				&& Work.GetIntProperty(CommitmentLegacyProperty) == 1;
 		}
 
 		internal static bool CopyCommit(GameObject Source, GameObject Destination)

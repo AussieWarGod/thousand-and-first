@@ -27,15 +27,15 @@ namespace ThousandAndFirst
 			GameObject exactSuccessor;
 			return GameObject.Validate(Predecessor) && GameObject.Validate(Successor)
 				&& Intent != null && Predecessor.GetPart<r_KingdomImprovement>() == Intent
-				&& Predecessor.ID == Intent.HandoverSourceId
-				&& Successor.ID == Intent.HandoverTargetId
+				&& Predecessor.IDIfAssigned == Intent.HandoverSourceId
+				&& Successor.IDIfAssigned == Intent.HandoverTargetId
 				&& Predecessor.CurrentCell == Cell && Successor.CurrentCell == Cell
 				&& Successor.GetIntProperty(BuiltProperty) == 1
 				&& Successor.GetStringProperty(BuildKeyProperty) == SuccessorKey
-				&& KingdomConstruction.FindExactId(zone, Predecessor.ID,
+				&& KingdomConstruction.FindExactId(zone, Predecessor.IDIfAssigned,
 					out exactPredecessor) == KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(exactPredecessor, Predecessor)
-				&& KingdomConstruction.FindExactId(zone, Successor.ID,
+				&& KingdomConstruction.FindExactId(zone, Successor.IDIfAssigned,
 					out exactSuccessor) == KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(exactSuccessor, Successor)
 				&& (Job == null || (KingdomConstruction.Owns(system, zone, Job)

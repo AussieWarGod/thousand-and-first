@@ -154,6 +154,19 @@ namespace XRL.World.Parts
 		public int TakeLedgerState;
 		public int TakeMessageState;
 
+		/// <summary>One exact work and resident, plus the serviced-time clock proven by the
+		/// ordinary crew allocator. Version one is the first exact contract.</summary>
+		public int ManningVersion;
+		public string ManningWorkId;
+		public string ManningWorkName;
+		public int WorkerResidentId;
+		public long ManningServedTicks;
+		public long ManningCheckpointTick;
+		public bool ManningAssigned;
+		public string ManningOptionRecord;
+		public int ManningResidentEpoch;
+		public int ManningWorkEpoch;
+
 		/// <summary>One exact fetch item, source, and destination.</summary>
 		public int TransferPhase;
 		public string TransferItemId;

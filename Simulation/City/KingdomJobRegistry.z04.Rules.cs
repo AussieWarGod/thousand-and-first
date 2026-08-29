@@ -114,7 +114,26 @@ namespace ThousandAndFirst.Simulation.City
 				|| stored == (int)KingdomDeliveryPhase.SourceDebitPrepared
 				|| stored == (int)KingdomDeliveryPhase.InFlight
 				|| stored == (int)KingdomDeliveryPhase.ReservationPrepared
-				|| stored == (int)KingdomDeliveryPhase.Quarantined;
+				|| stored == (int)KingdomDeliveryPhase.Quarantined
+				|| stored == (int)KingdomDeliveryPhase.LandedAwaitingOwner;
+		}
+
+		/// <summary>True when capacity and overlap are denominated in exact source-object
+		/// ordinals rather than scalar resource units.</summary>
+		internal static bool UsesExactObjectRange(KingdomDeliveryCargoAuthority authority,
+			KingdomStockKind cargo)
+		{
+			return authority == KingdomDeliveryCargoAuthority.CarryBookManifest
+				|| authority == KingdomDeliveryCargoAuthority.ConstructionInput;
+		}
+
+		/// <summary>One trip's conserved carrier load. Existing scalar and CarryBook meanings are
+		/// unchanged; every construction input is one exact-object manifest slice.</summary>
+		internal static long DeliveryCapacityLoad(KingdomDeliveryCargoAuthority authority,
+			KingdomStockKind cargo, int cargoAmount, int manifestSourceCount)
+		{
+			return UsesExactObjectRange(authority, cargo)
+				? manifestSourceCount : cargoAmount;
 		}
 
 		internal static bool IsCentralDelivery(KingdomJobRow row)

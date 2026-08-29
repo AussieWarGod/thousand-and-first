@@ -50,6 +50,17 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new System.Type[3] { typeof(string), typeof(int), typeof(int) },
 				new System.Type[3] { candidateFields[0].FieldType, candidateFields[1].FieldType, candidateFields[2].FieldType });
 			Assert.IsTrue(candidateFields[0].IsInitOnly && candidateFields[1].IsInitOnly && candidateFields[2].IsInitOnly);
+			System.Reflection.ConstructorInfo[] candidateConstructors =
+				typeof(Candidate).GetConstructors();
+			Assert.AreEqual(1, candidateConstructors.Length);
+			System.Reflection.ParameterInfo[] candidateParameters =
+				candidateConstructors[0].GetParameters();
+			CollectionAssert.AreEqual(new System.Type[3] { typeof(string), typeof(int), typeof(int) },
+				new System.Type[3]
+				{
+					candidateParameters[0].ParameterType, candidateParameters[1].ParameterType,
+					candidateParameters[2].ParameterType
+				});
 
 			Assert.AreEqual("ThousandAndFirst.KingdomLodgingRules+ArrivalHome", typeof(KingdomLodgingRules.ArrivalHome).FullName);
 			System.Reflection.FieldInfo[] homeFields = typeof(KingdomLodgingRules.ArrivalHome).GetFields();
@@ -239,6 +250,60 @@ namespace ThousandAndFirst.Tests
 			int first = KingdomLodgingRules.ChooseIndex(candidates);
 			int second = KingdomLodgingRules.ChooseIndex(candidates);
 			Assert.AreEqual(first, second);
+		}
+
+		[Test]
+		public void ChooseOrdinaryIndex_HoldsFineHouseBehindAnyOtherEligibleRoof()
+		{
+			List<Candidate> candidates = new List<Candidate>
+			{
+				new Candidate("fine@0.0", 1, 0),
+				new Candidate("house@1.0", 4, 0)
+			};
+			Assert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+				new List<bool> { true, false }),
+				"the fine house's smaller capacity must not make it ordinary lodging's first choice");
+		}
+
+		[Test]
+		public void ChooseOrdinaryIndex_UsesFineHouseWhenItIsOnlyEligibleShelter()
+		{
+			List<Candidate> candidates = new List<Candidate>
+			{
+				new Candidate("fine@1.0", 2, 0),
+				new Candidate("fine@0.0", 1, 0)
+			};
+			Assert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+				new List<bool> { true, true }));
+		}
+
+		[Test]
+		public void ChooseOrdinaryIndex_PreservesCompactionAndStableTieBreakAmongOrdinaryHomes()
+		{
+			List<Candidate> candidates = new List<Candidate>
+			{
+				new Candidate("fine@0.0", 1, 0),
+				new Candidate("house-z@2.0", 4, 3),
+				new Candidate("house-a@1.0", 4, 3),
+				new Candidate("terrace@3.0", 5, 3)
+			};
+			Assert.AreEqual(2, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+				new List<bool> { true, false, false, false }));
+		}
+
+		[Test]
+		public void ChooseOrdinaryIndex_IncompleteAdvisoryFlagsNeverManufactureHomelessness()
+		{
+			List<Candidate> candidates = new List<Candidate>
+			{
+				new Candidate("fine@0.0", 1, 0),
+				new Candidate("house@1.0", 4, 0)
+			};
+			Assert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
+				KingdomLodgingRules.ChooseOrdinaryIndex(candidates, null));
+			Assert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
+				KingdomLodgingRules.ChooseOrdinaryIndex(candidates, new List<bool> { true }));
+			Assert.AreEqual(-1, KingdomLodgingRules.ChooseOrdinaryIndex(null, null));
 		}
 
 		// --- Diagnose: the priority order a founder should hear reasons in ---------------------

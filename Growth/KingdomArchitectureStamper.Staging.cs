@@ -75,16 +75,30 @@ namespace ThousandAndFirst
 			if (state == 2)
 			{
 				GameObject settled;
-				return TryExactOutput(Owner, Z, Intent, Lot, Placement, out settled, out Failure);
+				return TryExactOutput(Owner, Z, Intent, Lot, Placement, out settled, out Failure)
+					&& (Placement.ExistingAuthority || RetireStagingRoot(settled));
 			}
 			if (state == 1)
 			{
 				GameObject pending;
 				KingdomPhysicalLookupState found = KingdomConstruction.FindExactId(Z,
 					Owner.GetStringProperty(idProperty), out pending);
+				if (!Placement.ExistingAuthority && found == KingdomPhysicalLookupState.Absent)
+				{
+					if (!TryLandStagingRoot(Z, Intent, Snapshot, Placement,
+						Owner.GetStringProperty(idProperty), out pending))
+						return Quarantine(Owner, "layout slot " + Placement.Slot
+							+ " lost its rooted output before settlement", out Failure);
+					found = KingdomPhysicalLookupState.Exact;
+				}
 				if (found != KingdomPhysicalLookupState.Exact)
 					return Quarantine(Owner, "layout slot " + Placement.Slot
 						+ " lost its published output before settlement", out Failure);
+				if (!Placement.ExistingAuthority
+					&& (!TryStagingRoot(Owner.GetStringProperty(idProperty), out GameObject rooted)
+						|| !object.ReferenceEquals(rooted, pending)))
+					return Quarantine(Owner, "layout slot " + Placement.Slot
+						+ " has foreign output custody", out Failure);
 				if (Placement.ExistingAuthority && IsExactExistingCore(pending, Placement, Intent))
 				{
 					StampComponent(pending, Lot, Intent.SnapshotHash, Placement);
@@ -94,7 +108,25 @@ namespace ThousandAndFirst
 					return Quarantine(Owner, "layout slot " + Placement.Slot
 						+ " changed after output publication", out Failure);
 				Owner.SetIntProperty(stateProperty, 2);
-				return true;
+				return Placement.ExistingAuthority || RetireStagingRoot(pending);
+			}
+			if (state == 0 && !Placement.ExistingAuthority)
+			{
+				KingdomPhysicalLookupState rootedState = FindStagingRootForPlacement(Lot,
+					Intent.SnapshotHash, Placement, out GameObject rooted);
+				if (rootedState == KingdomPhysicalLookupState.Ambiguous)
+					return Quarantine(Owner, "layout slot " + Placement.Slot
+						+ " has ambiguous pre-publication custody", out Failure);
+				if (rootedState == KingdomPhysicalLookupState.Exact)
+				{
+					string priorId = Owner.GetStringProperty(idProperty);
+					if (!string.IsNullOrEmpty(priorId) && priorId != rooted.IDIfAssigned)
+						return Quarantine(Owner, "layout slot " + Placement.Slot
+							+ " disagrees with its rooted output", out Failure);
+					Owner.SetStringProperty(idProperty, rooted.IDIfAssigned);
+					Owner.SetIntProperty(stateProperty, 1);
+					return TrySettlePlacement(Owner, Z, Intent, Snapshot, Lot, Placement, out Failure);
+				}
 			}
 			if (state != 0 || !string.IsNullOrEmpty(Owner.GetStringProperty(idProperty)))
 				return Quarantine(Owner, "layout slot " + Placement.Slot
@@ -106,6 +138,8 @@ namespace ThousandAndFirst
 				out x, out y, out Failure)) return false;
 			Cell cell = Z.GetCell(x, y);
 			GameObject placed;
+			GameObject accepted = null;
+			bool callbackReturned = false;
 			if (Placement.ExistingAuthority)
 			{
 				if (!TryFindExistingAt(Z, Placement, cell, out placed, out Failure)) return false;
@@ -126,30 +160,27 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(placed))
 					return Fail("layout slot " + Placement.Slot + " created no exact object", out Failure);
 				StampComponent(placed, Lot, Intent.SnapshotHash, Placement);
+				if (!RootStagingOutput(placed))
+					return Quarantine(Owner, "layout slot " + Placement.Slot
+						+ " could not root its published output", out Failure);
 				Owner.SetStringProperty(idProperty, placed.ID);
 				Owner.SetIntProperty(stateProperty, 1);
-				try
-				{
-					GameObject accepted = cell.AddObject(placed, NoStack: true, Silent: true);
-					KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);
-					if (!ReferenceEquals(accepted, placed))
-						return Quarantine(Owner, "layout slot " + Placement.Slot
-							+ " AddObject replaced its exact output", out Failure);
-				}
-				catch (Exception exception)
-				{
-					KingdomSurvey.ObserveCurrentTopologyInActive(Z, placed);
-					return Quarantine(Owner, "layout slot " + Placement.Slot
-						+ " AddObject threw after output publication: " + exception.Message, out Failure);
-				}
+				try { accepted = cell.AddObject(placed, NoStack: true, Silent: true); callbackReturned = true; }
+				catch { }
+				finally { KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted); }
 			}
 			KingdomSurvey.ObserveChangedInActive(Z, placed);
-			if (!ExactComponent(placed, Z, Intent, Lot, Placement,
-				Owner.GetStringProperty(idProperty)))
+			bool exactEndpoint = ExactComponent(placed, Z, Intent, Lot, Placement,
+				Owner.GetStringProperty(idProperty));
+			bool exactCustody = Placement.ExistingAuthority
+				|| TryStagingRoot(placed.IDIfAssigned, out GameObject rootedOutput)
+					&& object.ReferenceEquals(rootedOutput, placed);
+			if (!KingdomFoundingHeartTerminalRules.ExactAddCut(callbackReturned,
+				object.ReferenceEquals(accepted, placed), exactEndpoint, exactCustody))
 				return Quarantine(Owner, "layout slot " + Placement.Slot
 					+ " failed exact settlement proof", out Failure);
 			Owner.SetIntProperty(stateProperty, 2);
-			return true;
+			return Placement.ExistingAuthority || RetireStagingRoot(placed);
 		}
 
 	}

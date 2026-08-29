@@ -57,10 +57,10 @@ namespace ThousandAndFirst
 							predecessorId, out exactPredecessor) != KingdomPhysicalLookupState.Exact
 						|| !ReferenceEquals(exactPredecessor, Predecessor)
 						|| KingdomConstruction.FindExactId(Predecessor.CurrentZone,
-							Successor.ID, out exactSuccessor) != KingdomPhysicalLookupState.Exact
+							Successor.IDIfAssigned, out exactSuccessor) != KingdomPhysicalLookupState.Exact
 						|| !ReferenceEquals(exactSuccessor, Successor)
 						|| Successor.GetStringProperty(r_KingdomScaffold.RemovalProofProperty)
-						!= intent.Scaffold.ID
+						!= intent.Scaffold.IDIfAssigned
 					|| !KingdomConstruction.IsCurrent(job))))
 			{
 				r_KingdomImprovement.FailHandover(intent,
@@ -70,7 +70,7 @@ namespace ThousandAndFirst
 			}
 			if (job != null && !KingdomConstruction.UpdatePhysical(ref job,
 				KingdomPhysicalPhase.FinalRemovalPending, carriedItems, carriedLiquid, 0,
-				predecessorId, Successor.ID, "improvement-handover:v1"))
+				predecessorId, Successor.IDIfAssigned, "improvement-handover:v1"))
 			{
 				r_KingdomImprovement.FailHandover(intent,
 					"The final predecessor-removal intent could not be published exactly.");
@@ -113,7 +113,7 @@ namespace ThousandAndFirst
 					GameObject exactAfter;
 					if (!KingdomConstruction.Owns(ownerSystem, Successor.CurrentZone, job)
 						|| KingdomConstruction.FindExactId(Successor.CurrentZone,
-							Successor.ID, out exactAfter) != KingdomPhysicalLookupState.Exact
+							Successor.IDIfAssigned, out exactAfter) != KingdomPhysicalLookupState.Exact
 						|| !ReferenceEquals(exactAfter, Successor)
 						|| !r_KingdomScaffold.IsExactSuccessor(Successor, Successor.CurrentZone,
 						cell, job, intent.SuccessorBlueprint)
@@ -136,7 +136,7 @@ namespace ThousandAndFirst
 				}
 				if (!KingdomConstruction.UpdatePhysical(ref job,
 					KingdomPhysicalPhase.FinalRemoved, carriedItems, carriedLiquid, 0,
-					predecessorId, Successor.ID, "improvement-handover:v1"))
+					predecessorId, Successor.IDIfAssigned, "improvement-handover:v1"))
 				{
 					r_KingdomImprovement.FailHandover(intent,
 						"Exact predecessor absence could not be committed to its receipt.");

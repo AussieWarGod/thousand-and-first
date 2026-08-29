@@ -22,6 +22,9 @@ namespace ThousandAndFirst
 			Failure = null;
 			HashSet<string> standing = StandingKeys(Z);
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+			if (Definition.Site >= KingdomPurposeSite.DeepDelve)
+				return TryPortfolioSiteProof(System, Z, Definition, standing, survey,
+					out Proof, out Specialist, out Failure);
 			if (Definition.Site == KingdomPurposeSite.LivingSurgery)
 			{
 				if (!LivingGround(System.FoundingTerrainBlueprint,
@@ -36,7 +39,7 @@ namespace ThousandAndFirst
 					return Fail("The chimeric theatre wants a lodged savant with Intelligence 18 or better. House one on this ground before committing it.", out Failure);
 				Proof = "living-biome=" + Safe(System.FoundingRegionName,
 					System.FoundingTerrainBlueprint) + ";damp-offal=" + provider
-					+ ";savant=" + Specialist.ID;
+					+ ";savant=" + Specialist.IDIfAssigned;
 				return true;
 			}
 			if (Definition.Site == KingdomPurposeSite.RuinEnrollment)
@@ -55,7 +58,7 @@ namespace ThousandAndFirst
 				Proof = "ruin=" + Safe(System.FoundingRegionName,
 					System.FoundingTerrainBlueprint) + ";arclight=smelter+chargingpost;creed="
 					+ (CreedReach(System, "Mechanimists") ? "Mechanimists" : "Templar")
-					+ ";psyberneticist=" + Specialist.ID;
+					+ ";psyberneticist=" + Specialist.IDIfAssigned;
 				return true;
 			}
 			return Fail("The purpose names no implemented physical site predicate.", out Failure);
@@ -69,9 +72,9 @@ namespace ThousandAndFirst
 			{
 				GameObject resident = Settlers[i];
 				if (!IsLodgedSpecialist(Z, resident, Psyberneticist)) continue;
-				candidates.Add(resident);
+				if (!string.IsNullOrEmpty(resident.IDIfAssigned)) candidates.Add(resident);
 			}
-			candidates.Sort((a, b) => string.CompareOrdinal(a.ID, b.ID));
+			candidates.Sort((a, b) => string.CompareOrdinal(a.IDIfAssigned, b.IDIfAssigned));
 			return candidates.Count == 0 ? null : candidates[0];
 		}
 
@@ -127,10 +130,7 @@ namespace ThousandAndFirst
 			SettlementId = null;
 			if (System == null || string.IsNullOrEmpty(ZoneId)
 				|| !System.TryExactSettlementIds(true, out List<string> ids, out _)) return false;
-			if (System.ClaimedZones != null && System.ClaimedZones.Contains(ZoneId))
-				SettlementId = System.City?.SettlementId;
-			else if (System.Away?.ClaimedZones != null && System.Away.ClaimedZones.Contains(ZoneId))
-				SettlementId = System.Away.City?.SettlementId;
+			SettlementId = System.SettlementIdForOwnedZone(ZoneId);
 			return !string.IsNullOrEmpty(SettlementId) && ids.Contains(SettlementId);
 		}
 

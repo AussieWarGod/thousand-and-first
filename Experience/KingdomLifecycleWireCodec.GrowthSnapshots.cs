@@ -111,7 +111,7 @@ namespace ThousandAndFirst
 				ChronicleBeforeHash = S(r, true), ChronicleDeclaredAfterHash = S(r, true),
 				ChronicleObservedHash = S(r, true)
 			};
-			if (wireVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+			if (wireVersion >= KingdomLifecycleRules.PreviousGrowthFormatVersion)
 			{
 				result.LegacySingleRegisterChronicle = ReadExactBoolean(r);
 				result.OutsiderBeforeCount = r.ReadInt32();

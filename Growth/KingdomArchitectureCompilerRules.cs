@@ -149,6 +149,7 @@ namespace ThousandAndFirst
 				return Fail("compiled placements or anchors exceed the bound", out Failure);
 			SortSnapshot(snapshot);
 			if (!TryValidateTopology(snapshot, tier.Requirements, out Failure)) return false;
+			if (!TryValidateEnclosure(snapshot, out Failure)) return false;
 			if (!TryEncodeSnapshot(snapshot, out _, out Failure)) return false;
 			Snapshot = snapshot;
 			return true;
@@ -184,6 +185,13 @@ namespace ThousandAndFirst
 				if (!cell.Claim || cell.Passability != ArchitecturePassability.Walkable
 					|| !ClaimBoundary(cells, Snapshot.Width, Snapshot.Height, entrance.X, entrance.Y))
 					return Fail("public entrance is not a walkable claimed boundary cell", out Failure);
+				// New receipts must name a real way through unclaimed authored ground to the lot
+				// exterior. Legacy a1 receipts retain their older geometric road compatibility path.
+				if (!AllowLegacyPlacementTruth
+					&& !KingdomRoadRules.TryCanonicalEntranceEgress(Snapshot, entrance,
+						new List<ArchitecturePoint>(), out _, out _))
+					return Fail("public entrance has no bounded unclaimed walk to the lot exterior",
+						out Failure);
 				int key = CellKey(entrance.X, entrance.Y, Snapshot.Width);
 				if (reached.Add(key)) frontier.Enqueue(new ArchitecturePoint(entrance.X, entrance.Y));
 			}

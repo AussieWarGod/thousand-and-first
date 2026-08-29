@@ -67,12 +67,19 @@ write_evidence() {
 	mkdir -p "$repo/docs"
 	python3 - "$repo" "$candidate" <<'PY'
 import hashlib
+import importlib.util
 import json
 import sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
 candidate = sys.argv[2]
+spec = importlib.util.spec_from_file_location(
+    "workshop_metadata_evidence", root / "Tools/workshop_metadata.py"
+)
+module = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(module)
 private_receipt = root / "docs/PRIVATE_PACKAGE_RECEIPT.sha256"
 artifact_root = root / "docs/release-evidence"
 artifact_root.mkdir(parents=True, exist_ok=True)
@@ -94,19 +101,29 @@ def binding(pass_id: str, filename: str, payload=None) -> dict:
         "artifactSha256": digest,
     }
 
+pass_ids = list(module.testing_pass_ids(root / "TESTING.md"))
 protocol_ref, protocol_digest = retain(
-    "numbered-protocols.txt", b"0a passed\n55f3 passed\n124i passed\n"
+    "numbered-protocols.txt",
+    "".join(pass_id + " passed\n" for pass_id in pass_ids).encode("utf-8"),
+)
+preview_sha = hashlib.sha256((root / "preview.png").read_bytes()).hexdigest()
+preview_review_ref, preview_review_digest = retain(
+    "final-native-preview-review.txt",
+    (
+        "Final native preview reviewed against the candidate package.\n"
+        "Preview SHA-256: " + preview_sha + "\n"
+    ).encode("utf-8"),
 )
 
 evidence = {
-    "schemaVersion": 3,
+    "schemaVersion": 4,
     "releaseVersion": "0.2.0",
     "candidateCommit": candidate,
     "gameMarketingVersion": "1.0.5",
     "gameCoreBuild": "2.0.211.51",
     "gameAssemblySha256": "a" * 64,
     "workshopId": 123456789,
-    "previewSha256": hashlib.sha256((root / "preview.png").read_bytes()).hexdigest(),
+    "previewSha256": preview_sha,
     "privatePackageReceiptSha256": hashlib.sha256(private_receipt.read_bytes()).hexdigest(),
     "verification": {
         "nativeCompileLoad": binding(
@@ -127,10 +144,25 @@ evidence = {
             "one-survey-receipt", "one-survey-receipt.txt"),
         "compatibilityMatrix": binding(
             "compatibility-matrix", "compatibility-matrix.csv"),
+        "previewReview": {
+            "passId": "final-native-preview-review",
+            "artifactRef": preview_review_ref,
+            "artifactSha256": preview_review_digest,
+            "source": "native-game-screenshot",
+            "generativeAssistance": False,
+            "previewSha256": preview_sha,
+            "capturedBy": "Release Screenshot Capturer",
+            "captureUtc": "2026-08-24T00:00:00Z",
+            "sourceSave": "Dedicated clean release gallery save",
+            "editSummary": "Cropped to a square and resized without generated content.",
+            "reviewedBy": "Release Preview Reviewer",
+            "completedUtc": "2026-08-24T00:00:00Z",
+        },
         "numberedProtocols": {
             "artifactRef": protocol_ref,
             "artifactSha256": protocol_digest,
-            "passIds": ["0a", "55f3", "124i"],
+            "passIds": pass_ids,
+            "waivers": [],
         },
     },
     "privateSubscription": {
@@ -257,9 +289,9 @@ cp -- "$SOURCE_REPO/TESTING.md" "$BASE/TESTING.md"
 chmod +x "$BASE/Tools/stage.sh" "$BASE/Tools/workshop-package.sh" "$BASE/Tools/workshop_metadata.py"
 printf '%s\n' '// fixture runtime' > "$BASE/Core/Test.cs"
 printf '%s\n' '<objects />' > "$BASE/ObjectBlueprints.xml"
-printf '%s\n' '# Fixture' > "$BASE/README.md"
+printf '%s\n' '# Fixture' '' '**Status: 0.2.0 public playtest release.**' > "$BASE/README.md"
 printf '%s\n' 'fixture license' > "$BASE/LICENSE"
-printf '%s\n' '# Changes' > "$BASE/CHANGELOG.md"
+printf '%s\n' '# Changes' '' '## [0.2.0] — 2026-08-24' > "$BASE/CHANGELOG.md"
 printf '%s\n' 'Ignored.cs' > "$BASE/.gitignore"
 printf '%s\n' '*.json text eol=lf' 'workshop.json -text' '*.sh text eol=lf' '*.py text eol=lf' > "$BASE/.gitattributes"
 python3 - "$BASE" <<'PY'
@@ -945,7 +977,7 @@ write_evidence "$pending_evidence" "$pending_candidate"
 printf '%s\n' '# Fixture' 'Status: not once run in the live game.' > "$pending_evidence/README.md"
 printf '%s\n' '# Changes' '## [Unreleased] — 0.2.0 in progress' > "$pending_evidence/CHANGELOG.md"
 commit_all "$pending_evidence" "leave release evidence pending"
-expect_fail "pending release evidence" "in-progress unreleased version" \
+expect_fail "pending release evidence" "version-bound release status" \
 	"$pending_evidence/Tools/workshop-package.sh" --release "$FIXTURE_ROOT/pending-evidence-package"
 
 missing_evidence="$(clone_case missing-release-evidence)"
@@ -954,6 +986,69 @@ write_workshop "$missing_evidence" 2
 commit_all "$missing_evidence" "public metadata without evidence"
 expect_fail "missing structured release evidence" "RELEASE_EVIDENCE.json" \
 	"$missing_evidence/Tools/workshop-package.sh" --release "$FIXTURE_ROOT/missing-evidence-package"
+
+# Ignored proof files are clean to `git status`, but they are not release evidence. The package
+# must enumerate refs from the committed record and require every referenced byte as a HEAD blob.
+ignored_evidence_artifacts="$(clone_case ignored-release-evidence-artifacts)"
+ignored_evidence_candidate="$(freeze_private_candidate "$ignored_evidence_artifacts")"
+write_workshop "$ignored_evidence_artifacts" 2
+printf '%s\n' 'docs/release-evidence/' >> "$ignored_evidence_artifacts/.gitignore"
+write_evidence "$ignored_evidence_artifacts" "$ignored_evidence_candidate"
+commit_all "$ignored_evidence_artifacts" "public metadata with ignored evidence artifacts"
+git -C "$ignored_evidence_artifacts" tag -a v0.2.0 -m "fixture release"
+[ -z "$(git -C "$ignored_evidence_artifacts" ls-tree -r --name-only HEAD -- \
+	'docs/release-evidence')" ]
+[ -z "$(git -C "$ignored_evidence_artifacts" status --porcelain=v1 --untracked-files=all)" ]
+expect_fail "ignored release evidence artifacts" \
+	"release evidence artifact is absent from HEAD" \
+	"$ignored_evidence_artifacts/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/ignored-evidence-artifacts-package"
+
+# The semantic ledger is equally load-bearing. A retained-but-ignored worktree copy cannot sign a
+# release after its index entry is removed.
+ignored_structure="$(clone_case ignored-structure-review)"
+ignored_structure_candidate="$(freeze_private_candidate "$ignored_structure")"
+write_workshop "$ignored_structure" 2
+write_evidence "$ignored_structure" "$ignored_structure_candidate"
+printf '%s\n' 'docs/STRUCTURE_REVIEW.json' >> "$ignored_structure/.gitignore"
+git -C "$ignored_structure" rm -q --cached docs/STRUCTURE_REVIEW.json
+commit_all "$ignored_structure" "public metadata with ignored structural review"
+git -C "$ignored_structure" tag -a v0.2.0 -m "fixture release"
+[ -z "$(git -C "$ignored_structure" ls-tree -r --name-only HEAD -- \
+	'docs/STRUCTURE_REVIEW.json')" ]
+[ -z "$(git -C "$ignored_structure" status --porcelain=v1 --untracked-files=all)" ]
+expect_fail "ignored structural review" \
+	"release package requires exact-inventory semantic review in HEAD" \
+	"$ignored_structure/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/ignored-structure-package"
+
+# Numbered protocols belong to the exact subscribed candidate, not a later shortened definition.
+testing_drift="$(clone_case candidate-testing-drift)"
+testing_drift_candidate="$(freeze_private_candidate "$testing_drift")"
+python3 - "$testing_drift/TESTING.md" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8-sig").splitlines()
+for index in range(len(lines) - 1, -1, -1):
+    fields = lines[index].lstrip().split("|", 2)
+    if len(fields) >= 3 and re.fullmatch(r"[0-9]+[a-z0-9]*(?:\.[0-9]+)?", fields[1].strip()):
+        del lines[index]
+        break
+else:
+    raise SystemExit("candidate TESTING drift fixture found no numbered row")
+path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+PY
+write_workshop "$testing_drift" 2
+write_evidence "$testing_drift" "$testing_drift_candidate"
+commit_all "$testing_drift" "shorten protocols after private subscription"
+git -C "$testing_drift" tag -a v0.2.0 -m "fixture release"
+expect_fail "candidate TESTING drift" \
+	"release TESTING.md differs from subscribed private candidate" \
+	"$testing_drift/Tools/workshop-package.sh" --release \
+	"$FIXTURE_ROOT/testing-drift-package"
 
 wrong_evidence="$(clone_case wrong-release-evidence)"
 wrong_candidate="$(freeze_private_candidate "$wrong_evidence")"
@@ -983,11 +1078,11 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 data = json.loads(path.read_text(encoding="utf-8"))
-data["schemaVersion"] = 3.0
+data["schemaVersion"] = 4.0
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$numeric_evidence" "numeric evidence types"
-expect_fail "floating-point release evidence" "schemaVersion must be 3" \
+expect_fail "floating-point release evidence" "schemaVersion must be 4" \
 	"$numeric_evidence/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/numeric-evidence-package"
 
@@ -1067,7 +1162,7 @@ path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$missing_verification" "missing verification lane"
 expect_fail "missing verification lane" \
-	"verification fields must exactly match schema version 3" \
+	"verification fields must exactly match schema version 4" \
 	"$missing_verification/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/missing-verification-package"
 
@@ -1163,6 +1258,137 @@ expect_fail "unknown protocol evidence" \
 	"$unknown_protocol/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/unknown-protocol-package"
 
+missing_protocol="$(clone_case missing-protocol-evidence)"
+missing_protocol_candidate="$(freeze_private_candidate "$missing_protocol")"
+write_workshop "$missing_protocol" 2
+write_evidence "$missing_protocol" "$missing_protocol_candidate"
+python3 - "$missing_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["numberedProtocols"]["passIds"].pop()
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+expect_fail "unwaived protocol omission" \
+	"missing TESTING.md IDs without a human-reviewed waiver" \
+	python3 "$missing_protocol/Tools/workshop_metadata.py" evidence \
+	"$missing_protocol/manifest.json" "$missing_protocol/preview.png" \
+	"$missing_protocol/workshop.json" "$missing_protocol/docs/RELEASE_EVIDENCE.json" \
+	"$missing_protocol/README.md" "$missing_protocol/CHANGELOG.md"
+
+duplicate_protocol="$(clone_case duplicate-protocol-evidence)"
+duplicate_protocol_candidate="$(freeze_private_candidate "$duplicate_protocol")"
+write_workshop "$duplicate_protocol" 2
+write_evidence "$duplicate_protocol" "$duplicate_protocol_candidate"
+python3 - "$duplicate_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+passes = data["verification"]["numberedProtocols"]["passIds"]
+passes.append(passes[0])
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+expect_fail "duplicate protocol evidence" "passIds must not contain duplicates" \
+	python3 "$duplicate_protocol/Tools/workshop_metadata.py" evidence \
+	"$duplicate_protocol/manifest.json" "$duplicate_protocol/preview.png" \
+	"$duplicate_protocol/workshop.json" "$duplicate_protocol/docs/RELEASE_EVIDENCE.json" \
+	"$duplicate_protocol/README.md" "$duplicate_protocol/CHANGELOG.md"
+
+waived_protocol="$(clone_case bounded-protocol-waiver)"
+waived_protocol_candidate="$(freeze_private_candidate "$waived_protocol")"
+write_workshop "$waived_protocol" 2
+write_evidence "$waived_protocol" "$waived_protocol_candidate"
+python3 - "$waived_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+protocols = data["verification"]["numberedProtocols"]
+pass_id = protocols["passIds"].pop()
+protocols["waivers"] = [{
+    "passId": pass_id,
+    "reason": "Native platform access was unavailable during the bounded release window.",
+    "reviewedBy": "Release Evidence Reviewer",
+    "completedUtc": "2026-08-24T00:00:00Z",
+}]
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+python3 "$waived_protocol/Tools/workshop_metadata.py" evidence \
+	"$waived_protocol/manifest.json" "$waived_protocol/preview.png" \
+	"$waived_protocol/workshop.json" "$waived_protocol/docs/RELEASE_EVIDENCE.json" \
+	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md" >/dev/null
+python3 - "$waived_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["numberedProtocols"]["waivers"][0]["reason"] = \
+    "TODO: decide whether this pass is needed."
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+expect_fail "placeholder protocol waiver" "bounded human-reviewed reason" \
+	python3 "$waived_protocol/Tools/workshop_metadata.py" evidence \
+	"$waived_protocol/manifest.json" "$waived_protocol/preview.png" \
+	"$waived_protocol/workshop.json" "$waived_protocol/docs/RELEASE_EVIDENCE.json" \
+	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md"
+
+placeholder_human="$(clone_case placeholder-human-evidence)"
+placeholder_human_candidate="$(freeze_private_candidate "$placeholder_human")"
+write_workshop "$placeholder_human" 2
+write_evidence "$placeholder_human" "$placeholder_human_candidate"
+python3 - "$placeholder_human/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["privateSubscription"]["testedBy"] = "HUMAN_TESTER_NAME_OR_ALIAS"
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+expect_fail "placeholder human tester" "testedBy must name the human tester" \
+	python3 "$placeholder_human/Tools/workshop_metadata.py" evidence \
+	"$placeholder_human/manifest.json" "$placeholder_human/preview.png" \
+	"$placeholder_human/workshop.json" "$placeholder_human/docs/RELEASE_EVIDENCE.json" \
+	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md"
+write_evidence "$placeholder_human" "$placeholder_human_candidate"
+python3 - "$placeholder_human/docs/RELEASE_EVIDENCE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["verification"]["previewReview"]["reviewedBy"] = "Example Reviewer"
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+expect_fail "placeholder preview reviewer" "reviewedBy must name the human reviewer" \
+	python3 "$placeholder_human/Tools/workshop_metadata.py" evidence \
+	"$placeholder_human/manifest.json" "$placeholder_human/preview.png" \
+	"$placeholder_human/workshop.json" "$placeholder_human/docs/RELEASE_EVIDENCE.json" \
+	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md"
+
+interim_preview="$(clone_case interim-preview-evidence)"
+cp -- "$SOURCE_REPO/preview.png" "$interim_preview/preview.png"
+interim_preview_candidate="$(freeze_private_candidate "$interim_preview")"
+write_workshop "$interim_preview" 2
+write_evidence "$interim_preview" "$interim_preview_candidate"
+expect_fail "known interim preview" "refuses the known interim preview" \
+	python3 "$interim_preview/Tools/workshop_metadata.py" evidence \
+	"$interim_preview/manifest.json" "$interim_preview/preview.png" \
+	"$interim_preview/workshop.json" "$interim_preview/docs/RELEASE_EVIDENCE.json" \
+	"$interim_preview/README.md" "$interim_preview/CHANGELOG.md"
+
 missing_structure="$(clone_case missing-structure-review)"
 missing_structure_candidate="$(freeze_private_candidate "$missing_structure")"
 write_workshop "$missing_structure" 2
@@ -1170,7 +1396,8 @@ write_evidence "$missing_structure" "$missing_structure_candidate"
 rm -- "$missing_structure/docs/STRUCTURE_REVIEW.json"
 commit_all "$missing_structure" "remove structural review"
 git -C "$missing_structure" tag -a v0.2.0 -m "fixture release"
-expect_fail "missing structural review" "exact-inventory semantic review is missing" \
+expect_fail "missing structural review" \
+	"release package requires exact-inventory semantic review in HEAD" \
 	"$missing_structure/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/missing-structure-package"
 

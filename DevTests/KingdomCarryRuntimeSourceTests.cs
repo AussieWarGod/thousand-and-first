@@ -45,7 +45,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ScanAcceptsMixedWholeObjectsButRefusesUnsafeOrAmbiguousCargo()
 		{
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			string scan = Slice(runtime, "private static bool TryScanDesignation(",
 				"private static bool EligibleSource(");
 			string eligibility = Slice(runtime, "private static bool EligibleSource(",
@@ -54,7 +54,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomLifecycleTopology.Cell", scan);
 			StringAssert.Contains("KingdomLifecycleRules.MaxCarrySources", scan);
 			StringAssert.Contains("HashSet<string>", scan);
-			StringAssert.Contains("sources.Sort", scan);
+			StringAssert.Contains("IDIfAssigned", scan);
+			StringAssert.DoesNotContain("sources.Sort", scan);
+			StringAssert.DoesNotContain(".ID;", scan);
 			StringAssert.Contains("item.Count", eligibility);
 			StringAssert.Contains("item.IsImportant()", eligibility);
 			StringAssert.Contains("item.Equipped != null", eligibility);
@@ -69,7 +71,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ConsentPrecedesReservationAndPublicationPrecedesEveryPhysicalCallback()
 		{
-			string guestbook = Source(Path.Combine("Experience", "KingdomGuestbook.cs"));
+			string guestbook = KingdomGuestbookLogicalSource.Read();
 			string action = Slice(guestbook, "public static void AttemptPlantCarrySign(",
 				"/// <summary>Compatibility resolver for v5 saves only.");
 			int consent = action.IndexOf("Popup.ShowYesNo", StringComparison.Ordinal);
@@ -77,7 +79,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(consent, 0);
 			Assert.Greater(publish, consent);
 
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			string prepare = Slice(runtime, "internal static bool TryPreparePlant(",
 				"/// <summary>After consent");
 			Assert.IsFalse(prepare.Contains("TryPrepareManifestReservation"));
@@ -94,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactAdapterMovesSameReferencesWithoutCargoDestroyMintOrStackMerge()
 		{
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			string move = Slice(runtime, "public object InvokeCarryMove(",
 				"public object InvokeLifecycleProjection(");
 			StringAssert.Contains("ReferenceEquals(accepted, item)", move);
@@ -117,9 +119,48 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ProtectedPurposeEvidenceBlocksDesignationMovementAndReloadCredit()
+		{
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
+			const string protectedEvidence =
+				"TryObjectGraphAvailableForOrdinaryTransfer(item, out _)";
+			string eligibility = Slice(runtime, "private static bool EligibleSource(",
+				"private static bool CargoShaped(");
+			StringAssert.Contains(
+				"TryObjectGraphAvailableForOrdinaryTransfer(item, out failure)", eligibility);
+			string sign = Slice(runtime, "private static bool ExactSign(",
+				"private static int ReferenceCount(");
+			StringAssert.Contains("TryObjectAvailableForLocalDebit(sign, out _)", sign);
+
+			string move = Slice(runtime, "public object InvokeCarryMove(",
+				"public object InvokeLifecycleProjection(");
+			string inventory = Slice(move,
+				"if (targetTopology == KingdomLifecycleTopology.Inventory)",
+				"else if (targetTopology == KingdomLifecycleTopology.Cell)");
+			string cell = Slice(move,
+				"else if (targetTopology == KingdomLifecycleTopology.Cell)",
+				"else return null;");
+			Assert.AreEqual(2, Count(inventory, protectedEvidence));
+			Assert.AreEqual(2, Count(cell, protectedEvidence));
+			AssertOrdered(inventory, protectedEvidence,
+				"owner.Inventory.AddObject(item, null, Silent: true, NoStack: true)",
+				protectedEvidence);
+			AssertOrdered(cell, protectedEvidence,
+				"cell.AddObject(item, NoStack: true, Silent: true)", protectedEvidence);
+
+			string observation = Slice(runtime, "private void AddAt(",
+				"private Observation ObjectObservation(");
+			Assert.AreEqual(2, Count(observation, protectedEvidence));
+			StringAssert.DoesNotContain(".SetIntProperty(",
+				eligibility + sign + move + observation);
+			StringAssert.DoesNotContain(".SetStringProperty(",
+				eligibility + sign + move + observation);
+		}
+
+		[Test]
 		public void CentralTripsUseTwelveObjectCapacityAndSameManifestAcknowledgements()
 		{
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			StringAssert.Contains("TryAcknowledgeManifestPickup(system, op.Id", runtime);
 			StringAssert.Contains("TryAcknowledgeManifestDelivered(system, op.Id", runtime);
 			StringAssert.Contains("op.ManifestRevision", runtime);
@@ -137,7 +178,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ThreatWaitNeverConvertsExactCargoIntoRoadLoss()
 		{
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			string projection = Slice(runtime,
 				"case KingdomLifecyclePhase.ProjectionIntent:",
 				"case KingdomLifecyclePhase.Projected:");
@@ -153,7 +194,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ScalarDestroyMintPathIsExplicitlyLegacyOnly()
 		{
-			string guestbook = Source(Path.Combine("Experience", "KingdomGuestbook.cs"));
+			string guestbook = KingdomGuestbookLogicalSource.Read();
 			string action = Slice(guestbook, "public static void AttemptPlantCarrySign(",
 				"/// <summary>Compatibility resolver for v5 saves only.");
 			Assert.IsFalse(action.Contains("KingdomMaterials.Deliver"));
@@ -166,7 +207,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CargoAndDestinationNamesAreEscapedOnlyInRenderedSnapshots()
 		{
-			string runtime = Source(Path.Combine("Experience", "KingdomCarryRuntime.cs"));
+			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			StringAssert.Contains(
 				"KingdomPresentation.Rich(item.BaseDisplayNameStripped)", runtime);
 			StringAssert.Contains(
@@ -176,6 +217,18 @@ namespace ThousandAndFirst.Tests
 				"DestinationSettlementName = system.SeatName;", runtime);
 			StringAssert.DoesNotContain(
 				"DestinationSettlementName = KingdomPresentation.Rich", runtime);
+		}
+
+		private static int Count(string source, string value)
+		{
+			int count = 0;
+			for (int at = 0; ; )
+			{
+				at = source.IndexOf(value, at, StringComparison.Ordinal);
+				if (at < 0) return count;
+				count++;
+				at += value.Length;
+			}
 		}
 
 		private static void AssertOrdered(string source, params string[] values)

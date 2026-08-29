@@ -5,17 +5,21 @@ using XRL;
 using XRL.UI;
 using XRL.World;
 using XRL.World.Parts;
-
 namespace ThousandAndFirst
 {
 	public partial class KingdomSystem
 	{
 		private bool AttendSeatedSemantics(Zone Z)
 		{
-			if (!Founded || Z == null || !ClaimedZones.Contains(Z.ZoneID))
+			if (!Founded || Z == null)
 			{
 				return false;
 			}
+			if (!ClaimedZones.Contains(Z.ZoneID))
+				return AttendFormerClaimCustody(Z);
+			KingdomExternalOwnershipBindingRuntime.FinishPublishedClaimStage(Z);
+			if (!KingdomExternalOwnershipBindingRuntime.CanOperate(Z,
+				out string externalFailure)) return false;
 			if (!PrepareSemanticPass(Z, The.Game.TimeTicks))
 			{
 				return false;
@@ -216,6 +220,7 @@ namespace ThousandAndFirst
 						+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");
 				}
 			})) return false;
+			ReconcileStationaryPolity();
 			return (SemanticPassCompletedMask & SemanticRequiredMask) == SemanticRequiredMask;
 			}
 		}
@@ -269,26 +274,6 @@ namespace ThousandAndFirst
 					+ " failed; the pass remains recoverable", ex);
 				KingdomLog.Log("SEMANTIC caught in " + Step + ": " + ex.Message);
 				return false;
-			}
-		}
-
-		/// <summary>
-		/// Runs an action inside the engine's event dispatch without letting it escape.
-		/// A failure is logged and the step is skipped; the host game and other systems
-		/// are never affected. All engine-invoked entry points must route through this.
-		/// </summary>
-		/// <param name="Step">Short label identifying the step, used in the error log.</param>
-		/// <param name="Action">The work to perform.</param>
-		public static void Guard(string Step, System.Action Action)
-		{
-			try
-			{
-				Action();
-			}
-			catch (System.Exception ex)
-			{
-				MetricsManager.LogError("ThousandAndFirst: " + Step + " failed and was skipped", ex);
-				KingdomLog.Log("GUARD caught in " + Step + ": " + ex.Message);
 			}
 		}
 

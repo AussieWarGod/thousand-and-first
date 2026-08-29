@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace ThousandAndFirst.Tests
 {
@@ -40,6 +41,11 @@ namespace ThousandAndFirst.Tests
 			if (!path.StartsWith(RepositoryRoot + Path.DirectorySeparatorChar,
 				StringComparison.Ordinal) && !string.Equals(path, RepositoryRoot, StringComparison.Ordinal))
 				throw new InvalidOperationException("Repository-relative path escapes checkout: " + relative);
+			if (!File.Exists(path) && relative.IndexOf('/') < 0 &&
+				relative.IndexOf(Path.DirectorySeparatorChar) < 0)
+			{
+				path = Path.Combine(RepositoryRoot, "RuntimeData", relative);
+			}
 			if (!File.Exists(path))
 				throw new InvalidOperationException("Cannot locate repository source: " + relative);
 			return File.ReadAllText(path);
@@ -62,6 +68,18 @@ namespace ThousandAndFirst.Tests
 				&& Directory.Exists(Path.Combine(path, "DevTests"))
 				&& Directory.Exists(Path.Combine(path, "Tools"))
 				&& File.Exists(Path.Combine(path, "manifest.json"));
+		}
+
+		private static void InvokeIsolated(MethodInfo method, object instance, object[] arguments)
+		{
+			// This runner invokes tests directly instead of through NUnit's engine. Give each
+			// case its own result context so Assert.Multiple failures cannot poison later cases.
+			using (new TestExecutionContext.IsolatedContext())
+			{
+				object result = method.Invoke(method.IsStatic ? null : instance, arguments);
+				Task task = result as Task;
+				if (task != null) task.GetAwaiter().GetResult();
+			}
 		}
 
 		public static int Main()
@@ -120,10 +138,8 @@ namespace ThousandAndFirst.Tests
 						selected++;
 						try
 						{
-							object result = method.Invoke(method.IsStatic ? null
+							InvokeIsolated(method, method.IsStatic ? null
 								: (instance ?? (instance = Activator.CreateInstance(type, true))), null);
-							Task task = result as Task;
-							if (task != null) task.GetAwaiter().GetResult();
 							passed++;
 						}
 						catch (Exception ex)
@@ -174,11 +190,9 @@ namespace ThousandAndFirst.Tests
 						selected++;
 						try
 						{
-							object result = method.Invoke(method.IsStatic ? null
+							InvokeIsolated(method, method.IsStatic ? null
 								: (instance ?? (instance = Activator.CreateInstance(type, true))),
 								testCase.Arguments);
-							Task task = result as Task;
-							if (task != null) task.GetAwaiter().GetResult();
 							passed++;
 						}
 						catch (Exception ex)

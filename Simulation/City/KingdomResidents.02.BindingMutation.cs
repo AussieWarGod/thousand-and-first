@@ -18,6 +18,15 @@ namespace ThousandAndFirst.Simulation.City
 			string objectId = GameObject.Validate(Body) ? Body.ID : null;
 			KingdomBinding standing;
 			bool held = table.TryGet(bindingKey, kind, out standing);
+			if (!held && kind == KingdomBindingKind.Transient
+				&& !KingdomExperienceRuntime.FoundationOwnsCarrierClaim(System, bindingKey)
+				&& !KingdomExperienceRuntime.TryAdmitFoundationTransientClaim(System,
+					bindingKey, out KingdomExperienceCapacityFault _, out string capacityFailure))
+			{
+				KingdomLog.Log("binding: shared body capacity refused transient " + bindingKey
+					+ " (" + (capacityFailure ?? "invalid authority") + ")");
+				return false;
+			}
 			// A settler who has not moved since the last pass costs nothing. Without this, every
 			// check-in would republish the whole registry once per person on the ground, to write
 			// down where each of them already was.

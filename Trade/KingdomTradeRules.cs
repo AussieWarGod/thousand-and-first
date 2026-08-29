@@ -29,7 +29,7 @@ namespace ThousandAndFirst
 			}
 		}
 
-		public const int CurrentFormatVersion = 5;
+		public const int CurrentFormatVersion = 6;
 		private const string IdentityNamespace = "taf.trade.identity.v2";
 		public const int MaxCharters = 8;
 		public const int MaxWaterLegs = 24;

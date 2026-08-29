@@ -133,7 +133,7 @@ namespace ThousandAndFirst
 				{
 					if (!GameObject.Validate(item) || item.CurrentCell == null) continue;
 					LiquidVolume liquid = item.GetPart<LiquidVolume>();
-					rows.Add(new Observation(item, item.ID,
+					rows.Add(new Observation(item, item.IDIfAssigned,
 						item.GetStringProperty(MarkerProperty), item.Blueprint, Book.SettlementId,
 						null, Zone.ZoneID, KingdomLifecycleTopology.Cell,
 						item.CurrentCell.X, item.CurrentCell.Y, 1,

@@ -13,7 +13,8 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomConstruction.Funding.cs",
 			"Growth/KingdomConstruction.Transitions.cs",
 			"Growth/KingdomConstruction.Physical.cs",
-			"Growth/KingdomConstruction.Settlement.cs"
+			"Growth/KingdomConstruction.Settlement.cs",
+			"Growth/KingdomConstruction.PlotLabour.cs"
 		};
 
 		internal static string Read()

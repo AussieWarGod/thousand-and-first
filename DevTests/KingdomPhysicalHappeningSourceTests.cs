@@ -67,7 +67,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AllFourProductionOwnersDogfoodLifecycleAndAbsenceIsReportOnly()
 		{
-			string happenings = Source(Path.Combine("Simulation", "City", "KingdomHappenings.cs"));
+			string happenings = KingdomHappeningsLogicalSource.Read();
 			StringAssert.Contains("KingdomPhysicalHappeningKind.Wedding", happenings);
 			StringAssert.Contains("KingdomPhysicalHappeningKind.Funeral", happenings);
 			StringAssert.Contains("KingdomPhysicalHappeningKind.Feast", happenings);
@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Drawn(book.SettlementId", happenings);
 			StringAssert.Contains("System.DeadNames.Contains(row.Name)", happenings);
 
-			string ceremony = Source(Path.Combine("Experience", "KingdomCeremony.cs"));
+			string ceremony = KingdomCeremonyLogicalSource.Read();
 			StringAssert.Contains("KingdomPhysicalHappenings.QueueRaising", ceremony);
 			StringAssert.Contains("KingdomPhysicalHappenings.TryReadyRaising", ceremony);
 			StringAssert.Contains("KingdomPhysicalHappenings.AcknowledgeRaising", ceremony);
@@ -109,7 +109,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LifecycleRunsWithoutPushBudgetAndOtherSchedulersRespectItsLease()
 		{
-			string heartbeat = Source(Path.Combine("Simulation", "City", "KingdomHeartbeat.cs"));
+			string heartbeat = KingdomHeartbeatLogicalSource.Read();
 			StringAssert.Contains("budget > 0 ? budget : 0", heartbeat);
 			StringAssert.Contains("KingdomHappenings.Reckon", heartbeat);
 
@@ -144,14 +144,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ArchiveV12RetainsBoundedV8HappeningAuthorityAndOlderWritersStayExplicit()
+		public void ArchiveV15RetainsV14CivicAuthorityAndOlderWritersStayExplicit()
 		{
 			string codec = KingdomArchivedSettlementCodecLogicalSource.Read();
 			StringAssert.Contains("public const int BehaviourVersion = 7;", codec);
 			StringAssert.Contains("public const int PhysicalHappeningVersion = 8;", codec);
 			StringAssert.Contains("public const int HappeningCursorVersion = 12;", codec);
-			StringAssert.Contains("public const int CurrentVersion = HappeningCursorVersion;", codec);
+			StringAssert.Contains("public const int DeliveryDomainVersion = 13;", codec);
+			StringAssert.Contains("public const int CivicAuthorityVersion = 14;", codec);
+			StringAssert.Contains("public const int FirstGuestVersion = 15;", codec);
+			StringAssert.Contains("public const int PhysicalFirstGuestVersion = 16;", codec);
+			StringAssert.Contains("public const int ArrivalCadenceVersion = 17;", codec);
+			StringAssert.Contains(
+				"public const int CurrentVersion = ArrivalCadenceVersion;", codec);
 			StringAssert.Contains("TryEncodeBehaviourV7ForTests", codec);
+			StringAssert.Contains("TryEncodeHappeningCursorV12ForTests", codec);
+			StringAssert.Contains("TryEncodeDeliveryDomainV13ForTests", codec);
+			StringAssert.Contains("TryEncodeCivicAuthorityV14ForTests", codec);
 			StringAssert.Contains("HappeningModel", codec);
 			string book = KingdomCityBookLogicalSource.Read();
 			StringAssert.Contains("MaxHappeningModelChars", book);
@@ -161,7 +170,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("binding.AssemblyName, binding.TypeName", extensionHost);
 			StringAssert.Contains("KingdomHappeningCursorRules.TrySeedLegacy(", extensionHost);
 			StringAssert.Contains("notice.Tick > nowTick || notice.Tick <= sinceTick", extensionHost);
-			string happenings = Source(Path.Combine("Simulation", "City", "KingdomHappenings.cs"));
+			string happenings = KingdomHappeningsLogicalSource.Read();
 			int legacyCapture = happenings.IndexOf("long legacySinceTick = book.LastExtensionTick;",
 				System.StringComparison.Ordinal);
 			Assert.GreaterOrEqual(legacyCapture, 0);

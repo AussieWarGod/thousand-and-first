@@ -158,10 +158,12 @@ namespace ThousandAndFirst
 			for (int i = 0; i < plan.Length; i++)
 			{
 				if (plan[i] <= 0) continue;
-				if (!GameObject.Validate(owners[i]) || owners[i].ID.IndexOf('|') >= 0
-					|| owners[i].ID.Length > KingdomBountyRules.MaxObjectIdChars
+				string ownerId = owners[i]?.IDIfAssigned;
+				if (!GameObject.Validate(owners[i]) || string.IsNullOrEmpty(ownerId)
+					|| ownerId.IndexOf('|') >= 0
+					|| ownerId.Length > KingdomBountyRules.MaxObjectIdChars
 					|| ids.Count >= KingdomBountyRules.MaxPaymentRows) return false;
-				ids.Add(owners[i].ID);
+				ids.Add(ownerId);
 				original.Add(volumes[i]);
 				capacity.Add(Survey.Stores[i].MaxVolume);
 				allocated.Add(plan[i]);

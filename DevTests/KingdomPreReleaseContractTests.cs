@@ -77,9 +77,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("MaxWorksConsidered", source);
 			StringAssert.DoesNotContain("MaxPlotsConsidered", source);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryRead(root", source);
-			StringAssert.Contains("KingdomArchitectureRuntime.TryWorldAnchor(snapshot, rect, anchor",
+			StringAssert.Contains("KingdomRoadRules.TryAuthoredLane(Snapshot, Rect, Entrance",
 				source);
 			StringAssert.Contains("anchor.Key == \"entrance:public\"", source);
+			StringAssert.Contains("anchor.Key.StartsWith(\"entrance:public@\"", source);
 			StringAssert.Contains("KingdomRoadRules.MaxRoutesPerPass", source);
 		}
 

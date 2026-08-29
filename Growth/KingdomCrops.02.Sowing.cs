@@ -51,6 +51,13 @@ namespace ThousandAndFirst
 				Popup.Show(KingdomCropRules.SowRefusal(verdict));
 				return;
 			}
+			string declaredCrop = DeclaredCrop(work);
+			if (!KingdomCropRules.DeclaredCropAllows(declaredCrop, crop))
+			{
+				Popup.Show(KingdomCropRules.DeclaredCropRefusal(
+					CropName(declaredCrop), work.ShortDisplayName));
+				return;
+			}
 			int rows = DeclaredRows(work);
 			if (rows <= 0)
 			{
@@ -87,16 +94,30 @@ namespace ThousandAndFirst
 			bool hadSaid = work.HasIntProperty(SaidProperty);
 			int oldSaid = work.GetIntProperty(SaidProperty);
 			List<GameObject> rowsBefore = RowsOf(zone, work);
+			GameObject seedInventory = Seed.InInventory;
+			Cell seedCell = Seed.CurrentCell;
+			string seedId = Seed.IDIfAssigned;
+			string seedBlueprint = Seed.Blueprint;
+			int seedCount = Seed.Count;
 			// Snapshot first, then cross the exact physical debit boundary. Nothing below may
 			// discover that it did not know how to compensate only after water has moved.
-			if (!debit.Commit())
+			string seedFailure;
+			if (!SeedAtSnapshot(Seed, seedInventory, seedCell, seedId, seedBlueprint, seedCount)
+				|| !KingdomOrdinaryFoodAuthority.TryObjectNow(Seed, out seedFailure)
+				|| !debit.Commit())
 			{
 				Popup.Show(KingdomCropRules.SowRefusal(KingdomCropRules.SowVerdict.NoWater));
 				return;
 			}
+			if (!SeedAtSnapshot(Seed, seedInventory, seedCell, seedId, seedBlueprint, seedCount)
+				|| !KingdomOrdinaryFoodAuthority.TryObjectNow(Seed, out seedFailure))
+			{
+				debit.Rollback();
+				Popup.Show("The seed's custody changed while the water was reserved. Nothing was sown.");
+				return;
+			}
 			long now = The.Game.TimeTicks;
 			int laid = 0;
-			int seedCount = Seed.Count;
 			try
 			{
 				field.CropBlueprint = crop;
@@ -113,9 +134,15 @@ namespace ThousandAndFirst
 				{
 					throw new InvalidOperationException("No crop row could be laid in the field footprint.");
 				}
+				if (!SeedAtSnapshot(Seed, seedInventory, seedCell, seedId, seedBlueprint, seedCount)
+					|| !KingdomOrdinaryFoodAuthority.TryObjectNow(Seed, out seedFailure))
+					throw new InvalidOperationException("The seed's exact custody is no longer ordinary.");
 				bool destroyed = Seed.Destroy(null, Silent: true);
 				bool seedSpent = (seedCount > 1 && GameObject.Validate(Seed) && Seed.Count == seedCount - 1)
 					|| (seedCount == 1 && destroyed && !GameObject.Validate(Seed));
+				if (seedCount > 1) seedSpent = seedSpent
+					&& SeedAtSnapshot(Seed, seedInventory, seedCell, seedId, seedBlueprint, seedCount - 1)
+					&& KingdomOrdinaryFoodAuthority.TryObjectNow(Seed, out seedFailure);
 				if (!seedSpent)
 				{
 					throw new InvalidOperationException("The seed refused to leave its stack.");
@@ -158,6 +185,12 @@ namespace ThousandAndFirst
 					for (int i = 0; i < rowsAfter.Count; i++)
 					{
 						if (rowsBefore.Contains(rowsAfter[i])) continue;
+						string rowFailure;
+						if (!KingdomOrdinaryFoodAuthority.TryObjectNow(rowsAfter[i], out rowFailure))
+						{
+							fieldRestored = false;
+							continue;
+						}
 						bool removed = false;
 						try { removed = rowsAfter[i].Obliterate(null, Silent: true); }
 						finally
@@ -177,9 +210,13 @@ namespace ThousandAndFirst
 				}
 				try
 				{
-					if (GameObject.Validate(Seed) && Seed.Count != seedCount)
+					if (!GameObject.Validate(Seed)) fieldRestored = false;
+					else if (Seed.Count != seedCount)
 					{
-						Seed.Count = seedCount;
+						if (SeedAtSnapshot(Seed, seedInventory, seedCell, seedId, seedBlueprint, Seed.Count)
+							&& KingdomOrdinaryFoodAuthority.TryObjectNow(Seed, out seedFailure))
+							Seed.Count = seedCount;
+						else fieldRestored = false;
 					}
 				}
 				catch (Exception restoreError)
@@ -212,6 +249,14 @@ namespace ThousandAndFirst
 					+ " rows the " + fieldName + " wants. Clear what is standing in it, and sow again for the rest.}}");
 			}
 			if (KingdomLog.Enabled) KingdomLog.Log("crop: sown " + fieldName + " crop=" + crop + " rows=" + laid + "/" + rows);
+		}
+
+		private static bool SeedAtSnapshot(GameObject seed, GameObject inventory, Cell cell,
+			string id, string blueprint, int count)
+		{
+			return GameObject.Validate(seed) && seed.InInventory == inventory
+				&& seed.CurrentCell == cell && seed.IDIfAssigned == id
+				&& seed.Blueprint == blueprint && seed.Count == count;
 		}
 
 		private static void RestoreInt(GameObject Object, string Property, bool Had, int Value)

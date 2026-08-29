@@ -198,15 +198,20 @@ namespace ThousandAndFirst
 			string lodgingActive = lodgingRow.ActiveOperationId;
 			string escrowActive = escrowRow.ActiveOperationId;
 			long retiredBefore = Book.ArrivalCandidateRetiredThrough;
+			ulong ordinalRetiredBefore = Book.ArrivalOrdinalRetiredThrough;
 			long arrivalBefore = Book.NextArrivalTick;
 			candidateRow.ActiveOperationId = null; lodgingRow.ActiveOperationId = null;
 			escrowRow.ActiveOperationId = null;
 			Book.ArrivalCandidateRetiredThrough = Candidate.Sequence;
+			if (Book.ArrivalCadenceMigrationPending)
+				Book.ArrivalOrdinalRetiredThrough = (ulong)Candidate.Sequence;
 			Book.ArrivalCandidate = null;
-			if (Book.WorkPaused) Book.NextArrivalTick = 0L;
+			if (Book.WorkPaused && Book.ArrivalCadenceMigrationPending)
+				Book.NextArrivalTick = 0L;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
 			Book.ArrivalCandidate = Candidate;
 			Book.ArrivalCandidateRetiredThrough = retiredBefore;
+			Book.ArrivalOrdinalRetiredThrough = ordinalRetiredBefore;
 			Book.NextArrivalTick = arrivalBefore;
 			candidateRow.ActiveOperationId = candidateActive;
 			lodgingRow.ActiveOperationId = lodgingActive;

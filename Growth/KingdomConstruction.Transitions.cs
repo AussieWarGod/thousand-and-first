@@ -134,6 +134,27 @@ namespace ThousandAndFirst
 
 		public static bool Cancel(ref KingdomConstructionJob Job, string Failure = null)
 		{
+			KingdomConstructionInputReceipt receipt;
+			if (KingdomConstructionRules.TryGetInputReceipt(Job, out receipt))
+			{
+				if (receipt.TxPhase == KingdomConstructionInputTxPhase.CancellationPending)
+					return true;
+				if (KingdomConstructionInputRules.IsTerminal(receipt))
+					return receipt.TxPhase == KingdomConstructionInputTxPhase.Cancelled
+						&& Job.Phase == KingdomConstructionPhase.Cancelled;
+				KingdomConstructionInputReceipt pending;
+				KingdomConstructionInputFault fault;
+				if (!KingdomConstructionInputRules.TryTransitionTransaction(receipt,
+					receipt.Revision, receipt.TxPhase,
+					KingdomConstructionInputTxPhase.CancellationPending,
+					out pending, out fault)) return false;
+				KingdomConstructionJob published;
+				string publishFailure;
+				if (!PublishInputReceipt(Job, pending, out published, out publishFailure))
+					return false;
+				Job = published;
+				return true;
+			}
 			string ignored;
 			return TransitionAndPublish(ref Job, KingdomConstructionPhase.Cancelled, Failure,
 				out ignored);

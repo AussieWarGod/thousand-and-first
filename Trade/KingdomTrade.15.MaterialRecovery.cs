@@ -46,10 +46,10 @@ namespace ThousandAndFirst
 			return GameObject.Validate(item) && GameObject.Validate(destination) && Z != null
 				&& destination.CurrentZone == Z && destination.Inventory != null
 				&& destination.GetIntProperty(KingdomMaterials.StockpileProperty) == 1
-				&& string.Equals(destination.ID, Witness.DestinationOwnerId,
+				&& string.Equals(destination.IDIfAssigned, Witness.DestinationOwnerId,
 					StringComparison.Ordinal)
 				&& string.Equals(Z.ZoneID, Witness.ZoneId, StringComparison.Ordinal)
-				&& string.Equals(item.ID, Witness.OutputId, StringComparison.Ordinal)
+				&& string.Equals(item.IDIfAssigned, Witness.OutputId, StringComparison.Ordinal)
 				&& string.Equals(item.Blueprint, Witness.Blueprint, StringComparison.Ordinal)
 				&& item.Count == Witness.Count && item.InInventory == destination
 				&& destination.Inventory.Objects.Contains(item)
@@ -62,7 +62,7 @@ namespace ThousandAndFirst
 			if (!ExactMaterialReceipt(Witness)) return false;
 			GameObject item = Witness.Item;
 			return GameObject.Validate(item) && item.InInventory == null
-				&& item.CurrentCell == null && string.Equals(item.ID, Witness.OutputId,
+				&& item.CurrentCell == null && string.Equals(item.IDIfAssigned, Witness.OutputId,
 					StringComparison.Ordinal)
 				&& string.Equals(item.Blueprint, Witness.Blueprint, StringComparison.Ordinal)
 				&& item.Count == Witness.Count && string.Equals(item.GetStringProperty(

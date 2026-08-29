@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -8,6 +9,14 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomSuccessionRulesTests
 	{
+		[Test]
+		public void EverySuccessionProductionShardStaysBelowThreeHundredLines()
+		{
+			string root = Path.Combine(TestMain.RepositoryRoot, "Experience");
+			foreach (string file in Directory.GetFiles(root, "KingdomSuccession*.cs"))
+				Assert.Less(File.ReadAllLines(file).Length, 300, Path.GetFileName(file));
+		}
+
 		[Test]
 		public void SaveCarriedSuccessionEnumsKeepIntLayoutAndExactValues()
 		{
@@ -387,9 +396,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomHeir[] candidates = new KingdomHeir[]
 			{
-				new KingdomHeir("Bela", 50, null, null, true, false, null, 2),
-				new KingdomHeir("Ari", 50, null, null, true, false, null, 1),
-				new KingdomHeir("Zen", 10, null, null, false, false, null, 3)
+				new KingdomHeir("Bela", 50, null, null, true, null, 2),
+				new KingdomHeir("Ari", 50, null, null, true, null, 1),
+				new KingdomHeir("Zen", 10, null, null, false, null, 3)
 			};
 
 			int index;
@@ -405,8 +414,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomHeir[] candidates = new KingdomHeir[]
 			{
-				new KingdomHeir("Senior", 1L, null, null, true, false, null, 7),
-				new KingdomHeir("Junior", 2L, null, null, true, false, "JoppaWorld.1.1.1.1.10", 8)
+				new KingdomHeir("Senior", 1L, null, null, true, null, 7),
+				new KingdomHeir("Junior", 2L, null, null, true,
+					"JoppaWorld.1.1.1.1.10", 8)
 			};
 
 			int index;
@@ -438,8 +448,7 @@ namespace ThousandAndFirst.Tests
 				ArrivedTick: 1,
 				NowTick: now,
 				CreedMatchesRealm: true,
-				OnceLeftRealmCreed: false,
-				HoldsOffice: true);
+				OnceLeftRealmCreed: false);
 
 			Assert.LessOrEqual(regard, KingdomSuccessionRules.AccessionRegardCeiling);
 			Assert.GreaterOrEqual(regard, KingdomSuccessionRules.AccessionRegardFloor);
@@ -556,6 +565,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, true));
 			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Law, true));
 			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, false));
+			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Groomed, true));
 		}
 
 		[Test]
@@ -664,8 +674,8 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(shrine, procession);
 			Assert.Greater(body, shrine);
 			StringAssert.Contains("InjectedCheckpoint?.Invoke(Stage)", succession);
-			StringAssert.Contains("System.Away?.ClaimedZones", succession,
-				"either owned city's ground must be immediate local news");
+			StringAssert.Contains("bool onOwnedGround = System.OwnedZone(deathZoneId)", succession,
+				"any held city's ground must be immediate local news");
 			Assert.IsFalse(succession.Contains("MessageQueue.AddPlayerMessage"),
 				"the rite popup is the one successful semantic message");
 			StringAssert.Contains("Brain.PushGoal(new MoveTo", rite);
@@ -687,7 +697,7 @@ namespace ThousandAndFirst.Tests
 		public void SuccessionLogicalSourceKeepsSerializedShapeAndDeathMutationOrder()
 		{
 			string source = KingdomSuccessionLogicalSource.Read();
-			Assert.AreEqual(12, Count(source, "public sealed partial class KingdomSuccession"));
+			Assert.AreEqual(19, Count(source, "public sealed partial class KingdomSuccession"));
 			Assert.AreEqual(1, Count(source,
 				"public sealed partial class KingdomSuccession : IPlayerSystem"));
 			Assert.AreEqual(1, Count(source, "[Serializable]"));

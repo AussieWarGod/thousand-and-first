@@ -54,6 +54,10 @@ namespace ThousandAndFirst
 		public long DepartureAfter;
 		public KingdomGrowthArrivalDisposition ArrivalDisposition;
 		public string ArrivalCandidateId;
+		public ulong ArrivalOpportunityOrdinal;
+		public long ArrivalOpportunityDueTick;
+		public long ArrivalOpportunityRateEpoch;
+		public string ArrivalOpportunityPayloadHash;
 		public KingdomGrowthDeliveryMode DeliveryMode;
 		public KingdomGrowthDepartureCauseKind DepartureCauseKind;
 		public string DepartureCause;

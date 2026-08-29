@@ -24,6 +24,8 @@ git cat-file -e "${BASE_REF}^{commit}" 2>/dev/null || {
 #   F|Type|Type Field      serialized public instance field, declaration order
 #   W|Type                 direct custom Write override exists
 #   R|Type                 direct custom Read override exists
+#   N|Type                 direct WriteNamedFields call exists
+#   D|Type                 direct ReadNamedFields call exists
 extract_parts() {
 	local known="${1:-}"
 	awk -v known="$known" '
@@ -77,6 +79,10 @@ extract_parts() {
 				skip=0
 			}
 		}
+		if (inpart && raw ~ /Writer\.WriteNamedFields\(this,[[:space:]]*typeof\(/)
+			print "N|" cname
+		if (inpart && raw ~ /Reader\.ReadNamedFields\(this,[[:space:]]*typeof\(/)
+			print "D|" cname
 		depth += opens-closes
 		if (inpart && depth<cdepth) {
 			inpart=0
@@ -112,13 +118,17 @@ scan_worktree() {
 		done
 }
 
-declare -A old_class=() old_fields=()
-declare -A new_class=() new_fields=() new_write=() new_read=()
+declare -A old_class=() old_fields=() old_write=() old_read=() old_named_write=() old_named_read=()
+declare -A new_class=() new_fields=() new_write=() new_read=() new_named_write=() new_named_read=()
 
 while IFS='|' read -r kind class value; do
 	case "$kind" in
 		C) old_class["$class"]=1 ;;
 		F) old_fields["$class"]+="${old_fields[$class]:+$'\n'}$value" ;;
+		W) old_write["$class"]=1 ;;
+		R) old_read["$class"]=1 ;;
+		N) old_named_write["$class"]=1 ;;
+		D) old_named_read["$class"]=1 ;;
 	esac
 done < <(scan_baseline)
 
@@ -128,19 +138,26 @@ while IFS='|' read -r kind class value; do
 		F) new_fields["$class"]+="${new_fields[$class]:+$'\n'}$value" ;;
 		W) new_write["$class"]=1 ;;
 		R) new_read["$class"]=1 ;;
+		N) new_named_write["$class"]=1 ;;
+		D) new_named_read["$class"]=1 ;;
 	esac
 done < <(scan_worktree)
 
-# These parts have literal old-wire fixtures/source contracts in DevTests and a
-# reviewed custom reader which accepts the deployed positional layout before
-# writing its versioned replacement.  Adding a name here is a review event, not
-# an escape hatch.
+# These parts have literal old-wire fixtures/source contracts in DevTests and reviewed custom
+# compatibility readers. r_KingdomEnrolled is the named-wire case: both deployed and current
+# source must directly retain WriteNamedFields/ReadNamedFields. Its frozen V1 source fixture proves
+# the five deployed names; Qud's named reader consumes unknown names and leaves missing names at
+# their initializers. Adding a name here is a review event, not an escape hatch.
 custom_compat() {
 	case "$1" in
-		r_KingdomWear|r_KingdomNotice|r_KingdomLabJob|r_KingdomLabRemovalJob|r_KingdomLabEffectLedger|r_KingdomLabRecord)
+		r_KingdomWear|r_KingdomNotice|r_KingdomLabJob|r_KingdomLabRemovalJob|r_KingdomLabEffectLedger|r_KingdomLabRecord|r_KingdomEnrolled)
 			return 0 ;;
 		*) return 1 ;;
 	esac
+}
+
+deployed_named_compat() {
+	[ "$1" = r_KingdomEnrolled ]
 }
 
 failed=0
@@ -157,6 +174,13 @@ while IFS= read -r class; do
 		custom=$((custom + 1))
 		if [[ -z "${new_write[$class]:-}" || -z "${new_read[$class]:-}" ]]; then
 			echo "IPART ABI CUSTOM CONTRACT LOST: $class needs direct Write and Read overrides" >&2
+			failed=1
+		fi
+		if deployed_named_compat "$class" &&
+			[[ -z "${old_write[$class]:-}" || -z "${old_read[$class]:-}"
+				|| -z "${old_named_write[$class]:-}" || -z "${old_named_read[$class]:-}"
+				|| -z "${new_named_write[$class]:-}" || -z "${new_named_read[$class]:-}" ]]; then
+			echo "IPART ABI DEPLOYED NAMED CONTRACT LOST: $class" >&2
 			failed=1
 		fi
 		continue

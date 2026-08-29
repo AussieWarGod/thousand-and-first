@@ -54,7 +54,11 @@ namespace ThousandAndFirst.Simulation.City
 				== KingdomDeliveryCargoAuthority.ScalarStock;
 			bool manifest = row.DeliveryCargoAuthority
 				== KingdomDeliveryCargoAuthority.CarryBookManifest;
-			if (!scalar && !manifest) return false;
+			bool construction = row.DeliveryCargoAuthority
+				== KingdomDeliveryCargoAuthority.ConstructionInput;
+			if (!scalar && !manifest && !construction) return false;
+			if (row.DeliveryPhase == KingdomDeliveryPhase.LandedAwaitingOwner
+				&& !construction) return false;
 			if (scalar && ((row.Cargo != KingdomStockKind.Water
 					&& row.Cargo != KingdomStockKind.Food)
 				|| string.IsNullOrEmpty(row.DeliverySourceObjectId)
@@ -84,6 +88,29 @@ namespace ThousandAndFirst.Simulation.City
 				|| (!reservation && (row.DeliveryOwnerManifestVersion <= 0
 					|| string.IsNullOrEmpty(row.DeliveryOwnerManifestDigest)
 					|| row.DeliveryOwnerManifestRevision < 0L)))) return false;
+			bool constructionNeutral = row.DeliveryOwnerManifestVersion == 0
+				&& string.IsNullOrEmpty(row.DeliveryOwnerManifestDigest)
+				&& row.DeliveryOwnerManifestRevision == 0L;
+			bool constructionBound = row.DeliveryOwnerManifestVersion > 0
+				&& !string.IsNullOrEmpty(row.DeliveryOwnerManifestDigest)
+				&& row.DeliveryOwnerManifestRevision >= 0L;
+			bool constructionReservation = row.DeliveryPhase
+				== KingdomDeliveryPhase.ReservationPrepared;
+			bool constructionQuarantine = row.DeliveryPhase == KingdomDeliveryPhase.Quarantined;
+			if (construction && (row.Cargo != KingdomStockKind.OpaqueManifest
+				|| string.IsNullOrEmpty(row.DeliveryOwnerOperationId)
+				|| row.DeliveryTargetBeforeAmount != 0L
+				|| row.DeliveryTargetReceiptState != KingdomDeliveryTargetReceiptState.None
+				|| row.DeliveryPhase == KingdomDeliveryPhase.Planned
+				|| row.DeliveryManifestSourceStart < 0
+				|| row.DeliveryManifestSourceCount <= 0
+				|| row.DeliveryManifestSourceCount > KingdomLogisticsRules.CarrierCapacity
+				|| row.CargoAmount != row.DeliveryManifestSourceCount
+				|| row.DeliverySourceBeforeAmount != 0L
+				|| (constructionReservation && !constructionNeutral)
+				|| (!constructionReservation && !constructionQuarantine && !constructionBound)
+				|| (constructionQuarantine && !constructionNeutral
+					&& !constructionBound))) return false;
 			if (row.DeliveryPhase == KingdomDeliveryPhase.Planned)
 				return scalar && row.CargoAmount > 0 && row.DeliverySourceBeforeAmount == 0L
 					&& row.DeliveryTripId == 0 && row.DeliveryStopOrdinal == 0
@@ -95,7 +122,7 @@ namespace ThousandAndFirst.Simulation.City
 			if (scalar && row.CargoAmount == 0
 				&& row.DeliveryTargetReceiptState != KingdomDeliveryTargetReceiptState.Prepared)
 				return false;
-			return (manifest || row.DeliverySourceBeforeAmount > 0L)
+			return (manifest || construction || row.DeliverySourceBeforeAmount > 0L)
 				&& row.DeliveryTripId > 0
 				&& row.DeliveryStopOrdinal > 0
 				&& row.DeliveryStopOrdinal <= KingdomLogisticsRules.MaxStopsPerTrip
@@ -146,9 +173,8 @@ namespace ThousandAndFirst.Simulation.City
 							row.SourceZoneId, StringComparison.Ordinal))
 						|| (ordinal > 1 && (!string.Equals(first.ZoneId, priorDestination,
 							StringComparison.Ordinal) || first.DepartTick < priorArrival))) return false;
-					load += row.DeliveryCargoAuthority
-						== KingdomDeliveryCargoAuthority.CarryBookManifest
-						? row.DeliveryManifestSourceCount : row.CargoAmount;
+					load += KingdomJobRules.DeliveryCapacityLoad(row.DeliveryCargoAuthority,
+						row.Cargo, row.CargoAmount, row.DeliveryManifestSourceCount);
 					if (load > KingdomLogisticsRules.CarrierCapacity) return false;
 					priorDestination = row.DestZoneId;
 					priorArrival = last.ArriveTick;
@@ -178,16 +204,17 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < source.Length; i++)
 			{
 				KingdomJobRow left = source[i];
-				if (left.DeliveryCargoAuthority
-					!= KingdomDeliveryCargoAuthority.CarryBookManifest) continue;
+				if (!KingdomJobRules.UsesExactObjectRange(left.DeliveryCargoAuthority,
+					left.Cargo)) continue;
 				long leftEnd = (long)left.DeliveryManifestSourceStart
 					+ left.DeliveryManifestSourceCount;
 				if (leftEnd > int.MaxValue) return false;
 				for (int j = i + 1; j < source.Length; j++)
 				{
 					KingdomJobRow right = source[j];
-					if (right.DeliveryCargoAuthority
-						!= KingdomDeliveryCargoAuthority.CarryBookManifest
+					if (!KingdomJobRules.UsesExactObjectRange(right.DeliveryCargoAuthority,
+							right.Cargo)
+						|| right.DeliveryCargoAuthority != left.DeliveryCargoAuthority
 						|| !string.Equals(left.DeliveryOwnerOperationId,
 							right.DeliveryOwnerOperationId, StringComparison.Ordinal)) continue;
 					if (left.DeliveryOwnerManifestVersion != right.DeliveryOwnerManifestVersion
@@ -198,6 +225,25 @@ namespace ThousandAndFirst.Simulation.City
 					if (rightEnd > int.MaxValue
 						|| (left.DeliveryManifestSourceStart < rightEnd
 							&& right.DeliveryManifestSourceStart < leftEnd)) return false;
+				}
+			}
+			// Every construction child with one owner id binds the same immutable parent manifest.
+			// Revisions may differ across crash cuts; version and digest may not.
+			for (int i = 0; i < source.Length; i++)
+			{
+				KingdomJobRow left = source[i];
+				if (left.DeliveryCargoAuthority
+					!= KingdomDeliveryCargoAuthority.ConstructionInput) continue;
+				for (int j = i + 1; j < source.Length; j++)
+				{
+					KingdomJobRow right = source[j];
+					if (right.DeliveryCargoAuthority
+							!= KingdomDeliveryCargoAuthority.ConstructionInput
+						|| !string.Equals(left.DeliveryOwnerOperationId,
+							right.DeliveryOwnerOperationId, StringComparison.Ordinal)) continue;
+					if (left.DeliveryOwnerManifestVersion != right.DeliveryOwnerManifestVersion
+						|| !string.Equals(left.DeliveryOwnerManifestDigest,
+							right.DeliveryOwnerManifestDigest, StringComparison.Ordinal)) return false;
 				}
 			}
 			return true;

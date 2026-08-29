@@ -19,7 +19,9 @@ namespace ThousandAndFirst
 		/// <see cref="Shortfall(int, int, int)"/>.</param>
 		/// <returns>A player-facing line, or null when the verdict is not the blocked kind.
 		/// </returns>
-		public static string ReasonLine(UpgradeVerdict Verdict, string PredecessorName, string SuccessorName, GrowthStage StageNeeded, int CrewNeeded, int Shortfall)
+		public static string ReasonLine(UpgradeVerdict Verdict, string PredecessorName,
+			string SuccessorName, GrowthStage StageNeeded, int CrewNeeded, int Shortfall,
+			string CraftDetail = null, bool KnowledgeMissing = false)
 		{
 			string predecessor = string.IsNullOrEmpty(PredecessorName) ? "work" : PredecessorName;
 			string successor = string.IsNullOrEmpty(SuccessorName) ? "something better" : SuccessorName;
@@ -44,15 +46,14 @@ namespace ThousandAndFirst
 			case UpgradeVerdict.WorksElsewhere:
 				return "The " + predecessor + " could be raised into " + Article(successor) + " once the settlement is done with the work it has in hand.";
 			case UpgradeVerdict.CraftNotMet:
-				return "The " + predecessor + " could be raised into " + Article(successor) + " once this settlement's own craft reaches it.";
+				if (string.IsNullOrEmpty(CraftDetail))
+					return "The " + predecessor + " could be raised into " + Article(successor)
+						+ " once this settlement's own craft reaches it.";
+				return "The " + predecessor + " could be raised into " + Article(successor)
+					+ (KnowledgeMissing ? " once its keepers know {{C|" : " once its craft reaches {{C|")
+					+ CraftDetail + "}}.";
 			case UpgradeVerdict.NotEnoughMaterial:
 				return "The " + predecessor + " could be raised into " + Article(successor) + ", but the stockpiles are short of what it is built of.";
-			case UpgradeVerdict.NoTolerableLodging:
-				return "The " + predecessor + " could be raised into " + Article(successor) + ", but the people living in it have nowhere they would sleep while it was rebuilt.";
-			case UpgradeVerdict.HeldOffer:
-				// The author's own wording for this one. It is an offer, not a stall, and it names
-				// where the founder goes to overrule it.
-				return "The " + predecessor + " is ready to improve, and held -- the city leans on it. (Charter: your works, and what they become.)";
 			case UpgradeVerdict.NoGroundToGrow:
 				// The general line. It is true of both causes -- a tier that wants more of the plot
 				// than was staked, and a yard trade standing where the larger building must go --

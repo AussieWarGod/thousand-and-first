@@ -1,10 +1,10 @@
 # Cross-save inheritance — engine seam and safety contract
 
 > **Historical engine-seam research, not current product scope.** The source findings remain
-> pinned to Qud 2.0.211.51. `VISION.md` now supersedes the descendant/autonomous-polity proposals:
-> v1 reconstructs bounded site identity, layout, condition, founder cairn, and apocryphal history
-> only. Living successors, claimants, diplomats, rivals, and cross-save wars are
-> `AUTHOR-DEFERRED`; exact old actors remain `REJECTED`.
+> pinned to Qud 2.0.211.51. `VISION.md` and `../docs/V1-UNDEFERRAL.md` supersede every positive
+> `AUTHOR-DEFERRED` ruling below: bounded fresh successors, claimants, diplomats, rivals, and
+> caused attended conflict are active v1 work. Exact old actors/objects, remote simulation, and
+> unseen loss remain `REJECTED`.
 
 Checked against installed Caves of Qud `2.0.211.51`, Steam build `24626113`, DLL SHA-256
 `8c3b0fc371eaffc85e3dc971e8ffcb21dfc6b05fb25b92398fbd474260598000` on
@@ -242,8 +242,9 @@ Forbidden:
 - loose or contained items, trade goods, bits, cybernetics, relics, water quantities, stored
   charge, temporary effects, player stats/skills/mutations, quests, reputation values, faction
   registry keys, object IDs, `GameObjectReference`, raw zones, or arbitrary mod objects;
-- exact replay of old creatures. The old named roll remains history. The descendant/successor
-  construction explored below is future `AUTHOR-DEFERRED` research, not the current v1 contract.
+- exact replay of old creatures. The old named roll remains history. **Historical ruling only:**
+  the former descendant/successor `AUTHOR-DEFERRED` label is superseded; bounded fresh successors
+  are active v1 scope under `../docs/V1-UNDEFERRAL.md`, while exact old-actor replay stays rejected.
 
 Open design decision: inherited works are a real benefit. Their restored condition, service
 readiness, and any starting civic supplies must be normalized/capped so “no items” cannot be
@@ -259,8 +260,10 @@ circumvented by banking water or stocked machines.
 - Preserve recognizable streets at all states. `Abandoned` is intact/derelict, not explosive.
   `Ruins` uses a purpose-built deterministic transform on the new empty reconstruction canvas,
   never `Ruiner` against a live/frozen authored zone.
-- **AUTHOR-DEFERRED research:** a future Held site might become an autonomous polity, and future
-  Faded/Abandoned/Ruins relationship loops might differ. Current v1 reconstructs no living polity.
+- **Historical ruling only — superseded:** the former `AUTHOR-DEFERRED` Held-polity and relationship
+  note is not current scope. Bounded fresh polity/relationship projections are active v1 work under
+  `../docs/V1-UNDEFERRAL.md`; this frozen seam still forbids treating an inherited reconstruction
+  as authority to resurrect old actors or objects.
 - Use a new namespaced faction/settlement identity in the target history. Never import the old
   registry key or mutate vanilla `PlayerCult`.
 - Add a stable hidden map note and location finder through public APIs. Whether it is revealed

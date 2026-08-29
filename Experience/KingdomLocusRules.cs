@@ -273,11 +273,8 @@ namespace ThousandAndFirst
 		/// occupied.</summary>
 		public static string BenchDescription(bool Staffed, string KeeperName)
 		{
-			if (!Staffed)
-			{
-				return "Split logs worn smooth by sitting, empty for now. No one is minding it; whoever settles here first will make it theirs.";
-			}
-			return "Split logs worn smooth by sitting. " + KeeperName + " keeps this bench, and most of what is worth knowing about the settlement passes across it sooner or later.";
+			return BenchDescription(Staffed ? KeeperServiceState.Ready
+				: KeeperServiceState.Unstaffed, KeeperName);
 		}
 	}
 }

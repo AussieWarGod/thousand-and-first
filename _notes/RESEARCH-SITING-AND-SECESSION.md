@@ -64,7 +64,7 @@
 |---|---|---|---|
 | `disk:` | teaching a data disk (`T/Growth/KingdomZoning.cs:643-652`) | `r_TAF_KeepersRoster` game-state string (`:39,664-669`) | **game-global** |
 | `machine:` | certifying a hauled machine — `RecordCertification` → `Learn` (`T/Growth/KingdomZoning.cs:187-196`, called from `T/Growth/KingdomSalvage.cs:137`) | same string | **game-global** (the certified *machine* also carries a per-object property flag, `T/Growth/KingdomSalvage.cs:17` — the physical half stays with the machine) |
-| `pattern:` | ceremonies (`T/Experience/KingdomCeremony.cs:354`, kind at `T/Experience/KingdomCeremonyRules.cs:566`) | same string | **game-global** |
+| `pattern:` | ceremonies (logical `T/Experience/KingdomCeremony*.cs`, symbol `FreezePatternBook`; kind in `T/Experience/KingdomCeremonyRules*.cs`, symbol `PatternKnowledgeKind`) | same string | **game-global** |
 | `origin:` | read **live** off `System.OriginCounts`, never stored (`T/Growth/KingdomZoning.cs:118-138`) | `KingdomSettlement` container (`T/Core/KingdomSettlement.cs:240`) | **per-city** (the seat's), leaves with the people — by design: *"a trade the settlement holds only because somebody from that country lives here should leave with them"* (`:113-115`) |
 | `creed:` / `kept:` | read live off `CreedCounts`/`CreedPastCounts` via `BuilderRollOf` (`T/Growth/KingdomZoning.cs:240-247`) | settlement container (`T/Core/KingdomSettlement.cs:246,255`) | **per-city** |
 | planned `node:` (held) | `KingdomZoning.Learn` on node completion | *"appended to the existing roster string. No new key, no new format"* (`RESEARCH-SYSTEM-DESIGN.md` §10.4) | **game-global as designed** |
@@ -77,7 +77,7 @@ The gate machinery itself is siting-agnostic: `Knows(IEnumerable<string> Roster,
 Requirement)` takes whatever roster it is handed (`T/Growth/KingdomZoningRules.cs:748-773`), and
 every caller funnels through `KingdomZoning.Roster(System)` — stored string **plus** the seat's
 live `origin:` keys (`T/Growth/KingdomZoning.cs:118-138`; callers at `:203,218,495,556,643`,
-`T/Core/KingdomTechMap.cs:53`, `T/Experience/KingdomCeremony.cs:316`,
+`T/Core/KingdomTechMap.cs:53`, logical `T/Experience/KingdomCeremony*.cs` (`FreezePatternBook`),
 `T/Experience/KingdomCeremonyRules.cs:614`). **Re-siting the store is a change to two private
 functions (`Stored`/`Store`, `:663-670`) and to nothing in the gate vocabulary.**
 
@@ -519,7 +519,7 @@ game-global store is this rejection violated by accident; the ruling should end 
 **This mod:** `Growth/KingdomZoning.cs`, `Growth/KingdomZoningRules.cs`,
 `Growth/KingdomSalvage.cs`, `Core/KingdomCreed.cs`, `Core/KingdomExileRules.cs`,
 `Core/KingdomSystem.cs`, `Core/KingdomSettlement.cs`, `Core/KingdomTechMap.cs`,
-`Core/KingdomTechMapRules.cs`, `Experience/KingdomCeremony.cs` (grep),
+`Core/KingdomTechMapRules.cs`, logical `Experience/KingdomCeremony*.cs` (grep),
 `Experience/KingdomCeremonyRules.cs` (grep), `MODDING.md:174-344`;
 `_notes/RESEARCH-SYSTEM-DESIGN.md` (whole), `_notes/BUILDING-CATALOGUE-BRIEF.md` (Addenda 11-20,
 capital ruling), `_notes/END-STATE-CITIES-RESEARCH.md` §§1.7, 3, 4.5-4.7, 5.1, 6-7.

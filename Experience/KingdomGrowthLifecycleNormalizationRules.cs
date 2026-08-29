@@ -4,9 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-
 using ThousandAndFirst.Simulation.City;
-
 namespace ThousandAndFirst
 {
 	public static partial class KingdomLifecycleRules
@@ -28,6 +26,13 @@ namespace ThousandAndFirst
 			Book.WorkPausedTicks = 0L; Book.EffectiveWorkTick = 0L;
 			Book.LastHeartbeatTick = 0L; Book.NextArrivalTick = 0L;
 			Book.ArrivalIntervalTicks = 0L; Book.LastFetchTick = 0L;
+			Book.ArrivalEventStreamId = GrowthArrivalEventStreamId;
+			Book.ArrivalRulesVersion = 0; Book.ArrivalRateEpoch = 0L;
+			Book.ArrivalRateEpochStartedTick = 0L; Book.ArrivalProcessedThroughTick = 0L;
+			Book.ArrivalCadenceNextDueTick = 0L; Book.ArrivalRateCohort = 0;
+			Book.ArrivalOrdinalHighWater = 0UL; Book.ArrivalOrdinalRetiredThrough = 0UL;
+			Book.ArrivalCadenceMigrationPending = true; Book.ArrivalCadenceResumePending = false;
+			Book.ArrivalOpportunity = null; Book.ArrivalDebtRanges = new List<KingdomGrowthArrivalDebtRange>();
 			Book.LastMillTick = 0L; Book.LastSubsidenceTick = 0L;
 			Book.LastDeliveryTick = 0L; Book.LastDepartureTick = 0L;
 			Book.PendingCrop = 0; Book.PendingCropBlueprint = null; Book.PendingCropZoneId = null;
@@ -41,12 +46,12 @@ namespace ThousandAndFirst
 			Book.ArrivalCandidateRetiredThrough = 0L;
 			Book.HeartbeatOp = Book.ArrivalOp = Book.DepartureOp = Book.DeliveryOp = null;
 			Book.FetchOp = Book.MillOp = null; Book.ArrivalCandidate = null;
+			Book.FirstGuestTerminal = null;
 			Book.FieldOps = new List<KingdomGrowthFieldSlot>();
 			Book.CropRows = new List<KingdomGrowthCropRow>();
 			Book.Resources = new List<KingdomLifecycleResourceRevision>();
 			Book.RecentProofs = new List<KingdomGrowthProof>();
 		}
-
 		private static KingdomGrowthBook NewStagedGrowth()
 		{
 			return new KingdomGrowthBook
@@ -126,6 +131,16 @@ namespace ThousandAndFirst
 				&& book.WorkPausedTicks == 0L && book.EffectiveWorkTick == 0L
 				&& book.LastHeartbeatTick == 0L && book.NextArrivalTick == 0L
 				&& book.ArrivalIntervalTicks == 0L && book.LastFetchTick == 0L
+				&& book.ArrivalEventStreamId == GrowthArrivalEventStreamId
+				&& book.ArrivalRulesVersion == 0 && book.ArrivalRateEpoch == 0L
+				&& book.ArrivalRateEpochStartedTick == 0L
+				&& book.ArrivalProcessedThroughTick == 0L
+				&& book.ArrivalCadenceNextDueTick == 0L && book.ArrivalRateCohort == 0
+				&& book.ArrivalOrdinalHighWater == 0UL
+				&& book.ArrivalOrdinalRetiredThrough == 0UL
+				&& book.ArrivalCadenceMigrationPending && !book.ArrivalCadenceResumePending
+				&& book.ArrivalOpportunity == null
+				&& book.ArrivalDebtRanges != null && book.ArrivalDebtRanges.Count == 0
 				&& book.LastMillTick == 0L && book.LastSubsidenceTick == 0L
 				&& book.LastDeliveryTick == 0L && book.LastDepartureTick == 0L
 				&& book.PendingCrop == 0 && book.PendingCropBlueprint == null
@@ -141,6 +156,7 @@ namespace ThousandAndFirst
 				&& book.HeartbeatOp == null && book.ArrivalOp == null
 				&& book.DepartureOp == null && book.DeliveryOp == null
 				&& book.FetchOp == null && book.MillOp == null && book.ArrivalCandidate == null
+				&& book.FirstGuestTerminal == null
 				&& GrowthCollectionsBounded(book) && book.FieldOps.Count == 0
 				&& book.CropRows.Count == 0 && book.Resources.Count == 0
 				&& book.RecentProofs.Count == 0;
@@ -210,7 +226,8 @@ namespace ThousandAndFirst
 			if (book == null || book.FormatVersion != CurrentGrowthFormatVersion || book.Quarantined
 				|| book.OpaquePayload != null || book.OpaqueWireVersion != 0 || book.MigrationPending
 				|| TooLong(book.Fault, MaxTextChars) || book.Fault != null
-				|| !GrowthCollectionsBounded(book) || !KnownOption(book.OptionState)
+				|| !GrowthCollectionsBounded(book) || !GrowthArrivalCadenceShape(book)
+				|| !KnownOption(book.OptionState)
 				|| !KnownOption(book.ScarcityOptionState)
 				|| !KnownGrowthHealth(book.HealthState) || book.OptionTick < 0L || book.HealthTick < 0L
 				|| book.ScarcityOptionTick < 0L
@@ -235,7 +252,8 @@ namespace ThousandAndFirst
 					StringComparison.Ordinal)) return false;
 			if (book.WorkPaused)
 			{
-				if (book.WorkPauseStartedTick > Math.Max(book.OptionTick, book.HealthTick)
+				if (book.ArrivalCadenceResumePending
+					|| book.WorkPauseStartedTick > Math.Max(book.OptionTick, book.HealthTick)
 					|| !PausedArrivalClockAllowed(book)) return false;
 			}
 			else if ((book.OptionState == KingdomLifecycleOptionState.Disabled
@@ -248,6 +266,7 @@ namespace ThousandAndFirst
 				return false;
 			if (!GrowthFieldRowsValid(book) || !GrowthCropRowsValid(book)
 				|| !GrowthResourceRowsValid(book) || !GrowthProofRowsValid(book)
+				|| !ValidGrowthFirstGuestTerminal(book, book.FirstGuestTerminal)
 				|| !GrowthArrivalCandidateShape(book, book.ArrivalCandidate, false)
 				|| !GrowthActiveResourcesValid(book)
 				|| !GrowthActiveIdentityClaimsValid(book, null)) return false;
@@ -259,7 +278,11 @@ namespace ThousandAndFirst
 			if (book == null || !book.WorkPaused) return false;
 			KingdomGrowthOperation operation = book.ArrivalOp;
 			if (operation == null) return book.ArrivalCandidate == null
-				? book.NextArrivalTick == 0L : book.NextArrivalTick > 0L;
+				&& !HasGrowthArrivalSemanticDebt(book)
+				? book.ArrivalCadenceMigrationPending
+					? book.NextArrivalTick == 0L
+					: book.NextArrivalTick == ArrivalClockFrontier(book)
+				: book.NextArrivalTick > 0L;
 			if (operation.Action != KingdomGrowthAction.Arrival || operation.ClockLease == null)
 				return false;
 			bool proved = operation.ClockState == KingdomLifecyclePhysicalState.Proved

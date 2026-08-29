@@ -12,62 +12,23 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomMaterials
 	{
-		private static void RemoveStrikePlotPart(Zone Z, KingdomStrikeIntent Intent,
-			GameObject Part, ref KingdomConstructionJob Job)
-		{
-			KingdomStrikeTarget frozen = Intent != null && Intent.Targets != null
-				&& Job.PhysicalIndex >= 0 && Job.PhysicalIndex < Intent.Targets.Count
-				? Intent.Targets[Job.PhysicalIndex] : null;
-			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
-				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2,
-				Intent.PlotId, Intent.Targets.Count);
-			bool owned = networkStrike
-				? KingdomGatehouse.IsOwnedSatellite(Part, Intent.PlotId)
-				: GameObject.Validate(Part)
-					&& Part.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
-					&& Part.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
-			if (frozen == null || !GameObject.Validate(Part) || Part.ID != frozen.Id
-				|| Part.Blueprint != frozen.Blueprint
-				|| Part.CurrentCell != Z.GetCell(frozen.X, frozen.Y)
-				|| Part.CurrentZone != Z || Part.ID == Job.SourceId
-				|| !owned
-				|| !ReferenceEquals(ExactObject(Part.ID), Part))
-			{
-				QuarantineStrike(Job, "A plot part changed before exact removal intent published.");
-				return;
-			}
-			string id = Part.ID;
-			if (!KingdomConstruction.UpdatePhysical(ref Job,
-				KingdomPhysicalPhase.PlotPartRemovalPending, Job.PhysicalIndex, 0,
-				Job.PhysicalSpilled, id, null, Job.PhysicalReceipt)) return;
-			bool removed;
-			try { removed = Part.Obliterate(null, Silent: true); }
-			catch (Exception ex)
-			{
-				KingdomSurvey.ObserveCurrentTopologyInActive(Z, Part);
-				QuarantineStrike(Job, "Plot-part removal threw: " + ex.Message);
-				return;
-			}
-			if (removed || !GameObject.Validate(Part))
-				KingdomSurvey.ObserveRemovedFromActive(Z, Part);
-			if (!removed || GameObject.Validate(Part) || ExactObject(id) != null)
-			{
-				QuarantineStrike(Job, "Plot-part removal was vetoed, moved, or replaced.");
-				return;
-			}
-			KingdomConstruction.UpdatePhysical(ref Job, KingdomPhysicalPhase.StrikeWorkComplete,
-				Job.PhysicalIndex + 1, 0, Job.PhysicalSpilled, null, null, Job.PhysicalReceipt);
-		}
-
 		private static void RemoveStrikePredecessor(Zone Z, GameObject Building,
-			ref KingdomConstructionJob Job)
+			KingdomStrikeIntent Intent, ref KingdomConstructionJob Job)
 		{
 			GameObject source = GameObject.Validate(Building) ? Building : ExactObject(Job.SourceId);
 			Cell expected = Z.GetCell(Job.X, Job.Y);
-			if (!GameObject.Validate(source) || source.ID != Job.SourceId
-				|| !ReferenceEquals(ExactObject(Job.SourceId), source)
-				|| source.CurrentZone != Z || source.CurrentCell != expected
-				|| source.GetIntProperty("KingdomBuilt") != 1)
+			bool networkStrike = Intent != null && KingdomGatehouseRules.IsNetworkStrike(
+				Intent.BuildKey, Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2,
+				Intent.PlotId, Intent.Targets == null ? 0 : Intent.Targets.Count);
+			GameObject networkRoot = null;
+			if (!GameObject.Validate(source) || source.IDIfAssigned != Job.SourceId
+					|| (networkStrike
+						? !KingdomGatehouse.TryStrikeReceipt(Z, Intent, out networkRoot)
+							|| !ReferenceEquals(networkRoot, source)
+						: !ReferenceEquals(ExactObject(Job.SourceId), source))
+					|| source.CurrentZone != Z || source.CurrentCell != expected
+					|| source.GetIntProperty("KingdomBuilt") != 1
+					|| !StrikeObjectUnencumbered(source, out _))
 			{
 				QuarantineStrike(Job, "The exact strike predecessor changed before removal.");
 				return;
@@ -75,6 +36,17 @@ namespace ThousandAndFirst
 			if (!KingdomConstruction.UpdatePhysical(ref Job,
 				KingdomPhysicalPhase.PredecessorRemovalPending, 0, 0, 0, null, null,
 				Job.PhysicalReceipt)) return;
+			if (!StrikeObjectUnencumbered(source, out string obstruction))
+			{
+				QuarantineStrike(Job, obstruction);
+				return;
+			}
+			if (networkStrike && (!KingdomGatehouse.TryStrikeReceipt(Z, Intent,
+				out networkRoot) || !ReferenceEquals(networkRoot, source)))
+			{
+				QuarantineStrike(Job, "The gatehouse strike receipt changed at root removal.");
+				return;
+			}
 			bool removed;
 			try { removed = source.Obliterate(null, Silent: true); }
 			catch (Exception ex)
@@ -85,7 +57,10 @@ namespace ThousandAndFirst
 			}
 			if (removed || !GameObject.Validate(source))
 				KingdomSurvey.ObserveRemovedFromActive(Z, source);
-			if (!removed || GameObject.Validate(source) || ExactObject(Job.SourceId) != null)
+			bool exactAbsent = networkStrike
+				? KingdomGatehouse.LoadedIdentityAbsent(Z, Job.SourceId)
+				: ExactObject(Job.SourceId) == null;
+			if (!removed || GameObject.Validate(source) || !exactAbsent)
 			{
 				QuarantineStrike(Job, "Strike predecessor removal was vetoed, moved, or replaced.");
 				return;
@@ -148,7 +123,7 @@ namespace ThousandAndFirst
 					break;
 				}
 			}
-			string destinationId = destination == null ? null : destination.ID;
+			string destinationId = destination?.IDIfAssigned;
 			if (!KingdomConstruction.UpdatePhysical(ref Job,
 				KingdomPhysicalPhase.SalvageAddPending, Job.PhysicalIndex, amount,
 				Job.PhysicalSpilled, item.ID, destinationId, Job.PhysicalReceipt))
@@ -215,7 +190,7 @@ namespace ThousandAndFirst
 		private static bool ExactSalvageDestination(Zone Z, GameObject Item,
 			KingdomConstructionJob Job)
 		{
-			if (!GameObject.Validate(Item) || Item.ID != Job.PhysicalItemId
+			if (!GameObject.Validate(Item) || Item.IDIfAssigned != Job.PhysicalItemId
 				|| Item.Count != Job.PhysicalAmount
 				|| Item.GetStringProperty(StrikeSalvageReceiptProperty) != Job.Id) return false;
 			if (Job.PhysicalDestinationId == null)

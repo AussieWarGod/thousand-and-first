@@ -1,11 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-
-using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst
 {
@@ -27,8 +20,9 @@ namespace ThousandAndFirst
 				|| !Enum.IsDefined(typeof(KingdomGrowthArrivalCandidatePhase), candidate.Phase)
 				|| !Enum.IsDefined(typeof(KingdomGrowthArrivalDisposition), candidate.Disposition)
 				|| !ValidRootId(candidate.Marker) || !ValidName(candidate.Blueprint)
-				|| !ValidRootId(candidate.EscrowKey)
-				|| !GrowthArrivalSemanticPlanShape(candidate)
+					|| !ValidRootId(candidate.EscrowKey)
+					|| !GrowthArrivalCandidateOpportunityShape(book, candidate)
+					|| !GrowthArrivalSemanticPlanShape(candidate)
 				|| candidate.CandidateLease == null || candidate.LodgingLease == null
 				|| candidate.EscrowLease == null
 				|| !GrowthLeaseShape(candidate.CandidateLease, candidate.Id, publication)
@@ -58,7 +52,11 @@ namespace ThousandAndFirst
 				: candidate.Fault != null || (byte)candidate.EvidencePhase != 0) return false;
 			KingdomGrowthArrivalCandidatePhase phase = quarantined
 				? candidate.EvidencePhase : candidate.Phase;
-			if (publication && phase != KingdomGrowthArrivalCandidatePhase.Prepared) return false;
+			if (!GrowthFirstGuestShape(candidate, phase)
+				|| publication && (candidate.FirstGuest == null
+					? phase != KingdomGrowthArrivalCandidatePhase.Prepared
+					: candidate.LegacyAutomaticRecovery
+						|| phase != KingdomGrowthArrivalCandidatePhase.AwaitingChoice)) return false;
 			string hash;
 			bool legacyUnbound = candidate.LegacyGrowthV1UnboundZone;
 			if (legacyUnbound)
@@ -73,17 +71,37 @@ namespace ThousandAndFirst
 			else if (!TryGrowthArrivalCandidatePlanHash(candidate, out hash)
 				|| (publication ? candidate.PlanHash != null
 					: !string.Equals(candidate.PlanHash, hash, StringComparison.Ordinal))) return false;
-			if (!GrowthArrivalCandidateLeaseStates(candidate, phase)
+			if (!GrowthFirstGuestBodyLeasePhaseShape(book, candidate, phase)
+				|| !GrowthArrivalCandidateLeaseStates(candidate, phase)
 				|| !GrowthArrivalCreateStepShape(candidate, phase, legacyUnbound)) return false;
-			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+			if (phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice
+				|| phase == KingdomGrowthArrivalCandidatePhase.Declined
+				|| phase == KingdomGrowthArrivalCandidatePhase.Prepared
 				|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent)
 				return candidate.ObjectId == null && candidate.DispositionStep == null
 					&& GrowthArrivalLodgingEmpty(candidate, legacyUnbound)
 					&& GrowthArrivalDispositionReasonShape(candidate)
 					&& candidate.ConsumingOperationId == null
 					&& candidate.ConsumingOperationSequence == 0L;
+			if (GrowthFirstGuestDeclinedSettled(candidate, phase))
+				return candidate.ObjectId == null && candidate.DispositionStep == null
+					&& GrowthArrivalLodgingEmpty(candidate)
+					&& candidate.RefusalReason == KingdomGrowthArrivalRefusalReason.None
+					&& candidate.ConsumingOperationSequence > 0L
+					&& string.Equals(candidate.ConsumingOperationId,
+						GrowthOperationId(candidate.SettlementId, KingdomGrowthSlotKind.Arrival,
+							null, candidate.ConsumingOperationSequence), StringComparison.Ordinal);
+			if (GrowthFirstGuestPhysicalTerminalSettled(candidate, phase))
+				return candidate.DispositionStep == null && GrowthArrivalLodgingEmpty(candidate)
+					&& candidate.RefusalReason == KingdomGrowthArrivalRefusalReason.None
+					&& candidate.ConsumingOperationSequence > 0L
+					&& string.Equals(candidate.ConsumingOperationId,
+						GrowthOperationId(candidate.SettlementId, KingdomGrowthSlotKind.Arrival,
+							null, candidate.ConsumingOperationSequence), StringComparison.Ordinal);
 			if (!ValidRootId(candidate.ObjectId)) return false;
-			if (phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+			if (phase == KingdomGrowthArrivalCandidatePhase.Escrowed
+				|| phase == KingdomGrowthArrivalCandidatePhase.GuestHosted
+				|| phase == KingdomGrowthArrivalCandidatePhase.GuestTerminal)
 				return candidate.DispositionStep == null
 					&& GrowthArrivalLodgingEmpty(candidate, legacyUnbound)
 					&& GrowthArrivalDispositionReasonShape(candidate)
@@ -140,13 +158,19 @@ namespace ThousandAndFirst
 		private static bool GrowthArrivalCandidateLeaseStates(
 			KingdomGrowthArrivalCandidate candidate, KingdomGrowthArrivalCandidatePhase phase)
 		{
-			KingdomLifecycleLeaseState create = phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
+			bool declinedSettled = GrowthFirstGuestDeclinedSettled(candidate, phase);
+			bool physicalSettled = GrowthFirstGuestPhysicalTerminalSettled(candidate, phase);
+			KingdomLifecycleLeaseState create = declinedSettled
+				? KingdomLifecycleLeaseState.Proved
+				: phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
 				? KingdomLifecycleLeaseState.Intent
-				: phase >= KingdomGrowthArrivalCandidatePhase.Escrowed
+				: GrowthArrivalCreateProvedPhase(phase)
 					? KingdomLifecycleLeaseState.Proved : KingdomLifecycleLeaseState.Prepared;
-			KingdomLifecycleLeaseState lodging = phase == KingdomGrowthArrivalCandidatePhase.LodgingIntent
+			KingdomLifecycleLeaseState lodging = declinedSettled || physicalSettled
+				? KingdomLifecycleLeaseState.Proved
+				: phase == KingdomGrowthArrivalCandidatePhase.LodgingIntent
 				? KingdomLifecycleLeaseState.Intent
-				: phase >= KingdomGrowthArrivalCandidatePhase.Observed
+				: GrowthArrivalLodgingProvedPhase(phase)
 					? KingdomLifecycleLeaseState.Proved : KingdomLifecycleLeaseState.Prepared;
 			KingdomLifecycleLeaseState escrow = phase == KingdomGrowthArrivalCandidatePhase.ConsumeIntent
 				|| phase == KingdomGrowthArrivalCandidatePhase.RefusalIntent
@@ -178,7 +202,8 @@ namespace ThousandAndFirst
 				|| !string.Equals(step.ReceiptId,
 					ChildId(candidate.Id, "object-callback-receipt", 0), StringComparison.Ordinal))
 				return false;
-			bool proved = phase >= KingdomGrowthArrivalCandidatePhase.Escrowed;
+			bool declinedSettled = GrowthFirstGuestDeclinedSettled(candidate, phase);
+			bool proved = GrowthArrivalCreateProvedPhase(phase) && !declinedSettled;
 			if (proved) return GrowthObjectCallbackStepShape(step, candidate.Id,
 				candidate.ObjectId, candidate.Marker, 0)
 				&& step.State == KingdomLifecyclePhysicalState.Proved
@@ -187,7 +212,9 @@ namespace ThousandAndFirst
 					StringComparison.Ordinal);
 			if (step.AfterOwnerGraphHash != null || step.AfterObjectGraphHash != null
 				|| step.AfterTopologyHash != null) return false;
-			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared)
+			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+				|| phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice
+				|| phase == KingdomGrowthArrivalCandidatePhase.Declined || declinedSettled)
 				return step.State == KingdomLifecyclePhysicalState.Prepared
 					&& step.ReceiptState == KingdomLifecyclePhysicalState.Prepared
 					&& step.ReceiptBeforeMatches == -1 && step.ReceiptAfterMatches == -1

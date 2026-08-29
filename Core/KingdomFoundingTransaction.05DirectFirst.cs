@@ -36,9 +36,13 @@ namespace ThousandAndFirst
 			Faction = null;
 			Failure = "";
 			if (!KingdomPresentationRules.TryNormalizeName(Name, out Name,
-					out string presentationFailure) || Site == null)
+					out string presentationFailure) || Site == null ||
+				The.ZoneManager?.ActiveZone != Site)
 			{
-				Failure = Site == null ? "The first city needs a site." : presentationFailure;
+				Failure = Site == null ? "The first city needs a site."
+					: The.ZoneManager?.ActiveZone != Site
+						? "Direct founding can inspect only the exact active ground."
+						: presentationFailure;
 				return false;
 			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
@@ -46,6 +50,7 @@ namespace ThousandAndFirst
 			int riteX = rite != null && rite.ParentZone == Site ? rite.X : Site.Width / 2;
 			int riteY = rite != null && rite.ParentZone == Site ? rite.Y : Site.Height / 2;
 			KingdomFoundingAuthority authority;
+			string externalBinding = null;
 			bool hasSite = HasSiteReservation(Site);
 			Faction reservedFaction = null;
 			if (hasSite)
@@ -58,8 +63,7 @@ namespace ThousandAndFirst
 					!string.IsNullOrEmpty(storedDisplay) ||
 					!KingdomIdentityRules.FirstFactionKeyMatches(authority.RealmFaction,
 						authority.TransactionID, Name, AllowLegacy: true) ||
-					authority.ZoneID != Site.ZoneID || authority.PayloadDigest !=
-						DirectPayloadDigest(authority.Kind, storedName, null, null, null))
+					authority.ZoneID != Site.ZoneID)
 				{
 					Failure = "This ground carries a quarantined or foreign founding reservation.";
 					return false;
@@ -67,6 +71,8 @@ namespace ThousandAndFirst
 				reservedFaction = Factions.GetIfExists(authority.RealmFaction);
 				riteX = authority.RiteX;
 				riteY = authority.RiteY;
+				if (!TryResolveDirectExternalBinding(Site, authority, Name, null,
+					out externalBinding, out Failure)) return false;
 			}
 			else if (TryFindDirectPendingFirstFaction(Name, Site, out reservedFaction,
 				out authority))
@@ -76,6 +82,8 @@ namespace ThousandAndFirst
 				// recreate only the missing direct reservation and resume the same name/site.
 				riteX = authority.RiteX;
 				riteY = authority.RiteY;
+				if (!TryResolveDirectExternalBinding(Site, authority, Name, null,
+					out externalBinding, out Failure)) return false;
 			}
 			else
 			{
@@ -84,6 +92,8 @@ namespace ThousandAndFirst
 					Failure = "A realm already stands; only its exact pending first transaction may resume.";
 					return false;
 				}
+				if (!TryChooseExternalBinding(Site, KingdomFoundingKind.FirstCity,
+					out externalBinding, out Failure)) return false;
 				string transaction = Guid.NewGuid().ToString("N");
 				if (!KingdomIdentityRules.TryMintRealm(transaction, out string factionId,
 						out KingdomIdentityFault identityFault) ||
@@ -96,7 +106,8 @@ namespace ThousandAndFirst
 				authority = NewAuthority(KingdomFoundingKind.FirstCity,
 					KingdomFoundingOwnerKind.Direct, transaction,
 					Guid.NewGuid().ToString("N"), factionId, Site.ZoneID, riteX, riteY,
-					DirectPayloadDigest(KingdomFoundingKind.FirstCity, Name, null, null, null));
+					DirectPayloadDigest(KingdomFoundingKind.FirstCity, Name,
+						null, null, null, externalBinding));
 			}
 			string realmFaction = authority.RealmFaction;
 			if (system.Founded && (system.KingdomFactionName != realmFaction ||
@@ -119,17 +130,23 @@ namespace ThousandAndFirst
 				Failure = "Another founding already holds this realm or site reservation.";
 				return false;
 			}
-			if (!StageSiteReservation(Site, encoded, Name, null, null, null))
+			if (!StageSiteReservation(Site, encoded, Name, null, null, null) ||
+				(!string.IsNullOrEmpty(externalBinding) &&
+				 !TryStageExternalBinding(Site, KingdomFoundingKind.FirstCity,
+					encoded, externalBinding, out Failure)))
 			{
 				if (hasSite)
 				{
 					Failure = "The exact direct first-founding reservation is malformed and remains quarantined.";
 					return false;
 				}
+				bool cleanedExternal = string.IsNullOrEmpty(externalBinding) ||
+					RollbackExternalBinding(Site, encoded, externalBinding,
+						PublicationObserved: false);
 				bool cleanedSite = ClearStagedSiteSubset(Site, encoded, Name,
 					null, null, null);
 				bool cleanedGlobal = ReleaseGlobalReservation(encoded, realmFaction, null);
-				Failure = cleanedSite && cleanedGlobal
+				Failure = cleanedExternal && cleanedSite && cleanedGlobal
 					? "Another founding already holds this realm or site reservation."
 					: "The direct first-founding reservation remains staged for exact cleanup.";
 				return false;
@@ -152,20 +169,24 @@ namespace ThousandAndFirst
 					authority.Kind, authority.TransactionID, "chronicle"),
 				PendingChronicleDisposition = KingdomChronicleDisposition.None
 			};
-				if (!Lease.Bind(encoded, carrier))
-				{
-					bool cleared = ClearExactReservationSet(Site, encoded, realmFaction, null);
-					Failure = "The exact direct founding authority left its synchronous guard." +
-						(cleared ? "" : " Its exact reservation remains pending cleanup.");
-					return false;
+			carrier.PendingExternalBinding = externalBinding;
+			if (!Lease.Bind(encoded, carrier))
+			{
+				bool cleared = ClearExactReservationSet(Site, encoded, realmFaction,
+					null, externalBinding);
+				Failure = "The exact direct founding authority left its synchronous guard." +
+					(cleared ? "" : " Its exact reservation remains pending cleanup.");
+				return false;
 			}
 			try
 			{
+				if (!RevalidateExternalBinding(carrier, Site, out Failure))
+					throw new InvalidOperationException(Failure);
 				KingdomFoundingProjection projection = KingdomFoundingProjection.Water;
 				PublishFirst(carrier, The.Player, Site, ref projection);
 				carrier.PendingPhase = KingdomFoundingPhase.Complete;
 				Faction = Factions.GetIfExists(realmFaction);
-				if (!ClearExactReservationSet(Site, encoded, realmFaction, null))
+				if (!FinishDirectReservations(Site, encoded, realmFaction, externalBinding))
 				{
 					throw new InvalidOperationException(
 						"The completed first founding could not clear its exact reservation.");
@@ -177,7 +198,8 @@ namespace ThousandAndFirst
 				Failure = Describe(ex);
 				if (!DetectPublication(carrier, Site))
 				{
-					if (!ClearExactReservationSet(Site, encoded, realmFaction, null))
+					if (!ClearExactReservationSet(Site, encoded, realmFaction,
+						null, externalBinding))
 					{
 						Failure += " Exact direct reservation cleanup remains pending.";
 					}
@@ -212,8 +234,6 @@ namespace ThousandAndFirst
 						parsed.TransactionID, DisplayName, AllowLegacy: true) ||
 					parsed.TransactionID != candidate.GetStringProperty(
 						PendingFactionTransactionProperty, null) ||
-					parsed.PayloadDigest != DirectPayloadDigest(
-						KingdomFoundingKind.FirstCity, DisplayName, null, null, null) ||
 					candidate.GetStringProperty(RealmReservationProperty, null) !=
 						KingdomFoundingTransactionRules.FormatAuthority(parsed) ||
 					!FactionRegistryCoherent(candidate.Name, candidate)) continue;
@@ -222,62 +242,6 @@ namespace ThousandAndFirst
 				Authority = parsed;
 			}
 			return Found != null;
-		}
-
-		private static void ClearDirectRecovery(Zone Site, string ExpectedTransaction = null)
-		{
-			if (Site == null)
-			{
-				return;
-			}
-			if (!string.IsNullOrEmpty(ExpectedTransaction) &&
-				Site.GetZoneProperty(DirectRecoveryTransactionProperty, null) !=
-					ExpectedTransaction)
-			{
-				return;
-			}
-			Site.RemoveZoneProperty(DirectRecoveryNameProperty);
-			Site.RemoveZoneProperty(DirectRecoveryVocationProperty);
-			Site.RemoveZoneProperty(DirectRecoveryRiteXProperty);
-			Site.RemoveZoneProperty(DirectRecoveryRiteYProperty);
-			Site.RemoveZoneProperty(DirectRecoveryTickProperty);
-			Site.RemoveZoneProperty(DirectRecoveryRealmProperty);
-			Site.RemoveZoneProperty(DirectRecoveryTransactionProperty);
-		}
-
-		private static bool HasDirectRecovery(Zone Site)
-		{
-			return HasSiteReservation(Site);
-		}
-
-		private static bool DirectRecoveryMatches(Zone Site, string Name, string Realm,
-			string Transaction)
-		{
-			if (!TryReadSiteReservation(Site, out var authority, out var storedName,
-				out var vocation, out var village, out var display, out var tick))
-			{
-				return false;
-			}
-			return storedName == Name && authority.RealmFaction == Realm &&
-				authority.TransactionID == Transaction;
-		}
-
-		private static bool StageDirectRecovery(Zone Site, string Name, string Vocation,
-			int RiteX, int RiteY, string Realm, string Transaction)
-		{
-			if (Site == null || HasDirectRecovery(Site) || string.IsNullOrEmpty(Transaction))
-			{
-				return false;
-			}
-			string digest = DirectPayloadDigest(KingdomFoundingKind.SecondCity, Name,
-				Vocation, null, null);
-			KingdomFoundingAuthority authority = NewAuthority(
-				KingdomFoundingKind.SecondCity, KingdomFoundingOwnerKind.Direct,
-				Transaction, Guid.NewGuid().ToString("N"), Realm, Site.ZoneID,
-				RiteX, RiteY, digest);
-			string encoded = KingdomFoundingTransactionRules.FormatAuthority(authority);
-			return encoded != null && StageSiteReservation(Site, encoded, Name,
-				Vocation, null, null);
 		}
 
 	}

@@ -18,9 +18,13 @@ namespace ThousandAndFirst
 		{
 			Failure = "";
 			if (!KingdomPresentationRules.TryNormalizeName(Name, out Name,
-					out string presentationFailure) || Site == null)
+					out string presentationFailure) || Site == null ||
+				The.ZoneManager?.ActiveZone != Site)
 			{
-				Failure = Site == null ? "The second city needs a site." : presentationFailure;
+				Failure = Site == null ? "The second city needs a site."
+					: The.ZoneManager?.ActiveZone != Site
+						? "Direct founding can inspect only the exact active ground."
+						: presentationFailure;
 				return false;
 			}
 			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
@@ -39,6 +43,7 @@ namespace ThousandAndFirst
 			int riteX = riteIsHere ? rite.X : (Site.Width / 2);
 			int riteY = riteIsHere ? rite.Y : (Site.Height / 2);
 			KingdomFoundingAuthority authority;
+			string externalBinding = null;
 			bool hasSite = HasSiteReservation(Site);
 			string publishedAuthority = Site.GetZoneProperty(
 				SecondPublicationAuthorityProperty, null);
@@ -55,23 +60,25 @@ namespace ThousandAndFirst
 					authority.Kind != KingdomFoundingKind.SecondCity || storedName != Name ||
 					storedVocation != vocation || !string.IsNullOrEmpty(storedVillage) ||
 					!string.IsNullOrEmpty(storedDisplay) || authority.RealmFaction !=
-						system.KingdomFactionName || authority.ZoneID != Site.ZoneID ||
-					authority.PayloadDigest != DirectPayloadDigest(authority.Kind, storedName,
-						storedVocation, null, null))
+						system.KingdomFactionName || authority.ZoneID != Site.ZoneID)
 				{
 					Failure = "This ground carries a quarantined or foreign founding reservation.";
 					return false;
 				}
 				riteX = authority.RiteX;
 				riteY = authority.RiteY;
+				if (!TryResolveDirectExternalBinding(Site, authority, Name, vocation,
+					out externalBinding, out Failure)) return false;
 			}
 			else
 			{
+				if (!TryChooseExternalBinding(Site, KingdomFoundingKind.SecondCity,
+					out externalBinding, out Failure)) return false;
 				authority = NewAuthority(KingdomFoundingKind.SecondCity,
 					KingdomFoundingOwnerKind.Direct, Guid.NewGuid().ToString("N"),
 					Guid.NewGuid().ToString("N"), system.KingdomFactionName, Site.ZoneID,
 					riteX, riteY, DirectPayloadDigest(KingdomFoundingKind.SecondCity,
-						Name, vocation, null, null));
+						Name, vocation, null, null, externalBinding));
 			}
 			string encodedAuthority = KingdomFoundingTransactionRules.FormatAuthority(authority);
 			if (!string.IsNullOrEmpty(publishedAuthority) &&
@@ -88,16 +95,22 @@ namespace ThousandAndFirst
 			// Site is durable recovery authority for direct founding. Publish it before broad
 			// realm/global locks; an interrupted cleanup that already released those locks can
 			// therefore reacquire the same exact authority instead of minting a replacement.
-			if (!StageSiteReservation(Site, encodedAuthority, Name, vocation, null, null))
+			if (!StageSiteReservation(Site, encodedAuthority, Name, vocation, null, null) ||
+				(!string.IsNullOrEmpty(externalBinding) &&
+				 !TryStageExternalBinding(Site, KingdomFoundingKind.SecondCity,
+					encodedAuthority, externalBinding, out Failure)))
 			{
 				if (hasSite)
 				{
 					Failure = "The exact direct second-founding reservation is malformed and remains quarantined.";
 					return false;
 				}
+				bool cleanedExternal = string.IsNullOrEmpty(externalBinding) ||
+					RollbackExternalBinding(Site, encodedAuthority, externalBinding,
+						PublicationObserved: false);
 				bool cleanedSite = ClearStagedSiteSubset(Site, encodedAuthority, Name,
 					vocation, null, null);
-				Failure = cleanedSite
+				Failure = cleanedExternal && cleanedSite
 					? "Another founding already holds this realm or site reservation."
 					: "The direct second-founding reservation remains staged for exact cleanup.";
 				return false;
@@ -116,18 +129,19 @@ namespace ThousandAndFirst
 				SiteReservationMatches(Site, encodedAuthority);
 			bool targetIsExactSeat = SecondIsExactSeat(system, Name, Site.ZoneID,
 				authority.TransactionID);
-			bool targetIsExactAway = SecondIsExactAway(system, Name, Site.ZoneID,
+			bool targetIsExactNonSeat = SecondIsExactNonSeat(system, Name, Site.ZoneID,
 				authority.TransactionID);
 			if (!KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				system.SettlementCount, KingdomSettlement.MaxSettlements,
-				system.Away == null, targetIsExactSeat, targetIsExactAway, published))
+				system.NonSeatSettlementCount < KingdomSettlementTopologyRules.MaxNonSeatSettlements,
+				targetIsExactSeat, targetIsExactNonSeat, published))
 			{
 				bool forwardRedo = DirectSecondHasForwardRedo(system, Site, authority,
 					encodedAuthority);
 				if (!forwardRedo)
 				{
 					if (!ClearExactReservationSet(Site, encodedAuthority,
-						system.KingdomFactionName, null))
+						system.KingdomFactionName, null, externalBinding))
 					{
 						Failure = "The invalid direct second-founding reservation remains staged for exact cleanup.";
 						return false;
@@ -162,21 +176,24 @@ namespace ThousandAndFirst
 					authority.Kind, authority.TransactionID, "chronicle"),
 				PendingChronicleDisposition = KingdomChronicleDisposition.None
 			};
-				if (!Lease.Bind(encodedAuthority, carrier))
-				{
-					bool cleared = ClearExactReservationSet(Site, encodedAuthority,
-						system.KingdomFactionName, null);
-					Failure = "The exact direct founding authority left its synchronous guard." +
-						(cleared ? "" : " Its exact reservation remains pending cleanup.");
-					return false;
+			carrier.PendingExternalBinding = externalBinding;
+			if (!Lease.Bind(encodedAuthority, carrier))
+			{
+				bool cleared = ClearExactReservationSet(Site, encodedAuthority,
+					system.KingdomFactionName, null, externalBinding);
+				Failure = "The exact direct founding authority left its synchronous guard." +
+					(cleared ? "" : " Its exact reservation remains pending cleanup.");
+				return false;
 			}
 			try
 			{
+				if (!RevalidateExternalBinding(carrier, Site, out Failure))
+					throw new InvalidOperationException(Failure);
 				KingdomFoundingProjection projection = KingdomFoundingProjection.Water;
 				PublishSecond(carrier, The.Player, Site, ref projection, Force);
 				carrier.PendingPhase = KingdomFoundingPhase.Complete;
-				if (!ClearExactReservationSet(Site, encodedAuthority,
-					system.KingdomFactionName, null))
+				if (!FinishDirectReservations(Site, encodedAuthority,
+					system.KingdomFactionName, externalBinding))
 				{
 					throw new InvalidOperationException(
 						"The completed second founding could not clear its exact reservation.");
@@ -190,7 +207,7 @@ namespace ThousandAndFirst
 					carrier.PendingPhase != KingdomFoundingPhase.PublicationCommitted)
 				{
 					if (!ClearExactReservationSet(Site, encodedAuthority,
-						system.KingdomFactionName, null))
+						system.KingdomFactionName, null, externalBinding))
 					{
 						Failure += " Exact direct reservation cleanup remains pending.";
 					}

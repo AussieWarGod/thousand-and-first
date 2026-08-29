@@ -38,14 +38,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RealmArchiveV4RetainsTheV3MissionEnvelopeAndReadsV2()
+		public void RealmArchiveV6RetainsV4DeliveryColumnsAndReadsV2()
 		{
 			string source = RealmArchiveSource();
-			StringAssert.Contains("public const int CurrentVersion = 4", source);
+			StringAssert.Contains("public const int CurrentVersion = 7", source);
+			StringAssert.Contains("internal const int SettlementTopologyVersion = 6", source);
+			StringAssert.Contains("internal const int DirectionalStandingVersion = 7", source);
 			StringAssert.Contains("internal const int LegacyJobVersion = 2", source);
 			StringAssert.Contains("internal const int MissionJobVersion = 3", source);
+			StringAssert.Contains("internal const int ExactDeliveryJobVersion = 4", source);
 			StringAssert.Contains("Jobs = ReadJobs(Reader, wireVersion)", source);
-			StringAssert.Contains("if (WireVersion < CurrentVersion) value.Normalize()", source);
+			StringAssert.Contains("if (WireVersion >= ExactDeliveryJobVersion)", source);
+			StringAssert.Contains("if (WireVersion == ExactDeliveryJobVersion)", source);
+			StringAssert.Contains("Realm archive v4 contains a future delivery enum value.", source);
+			StringAssert.Contains("if (WireVersion < ExactDeliveryJobVersion) value.Normalize()", source);
 			string[] fields = { "SubjectIds", "SubjectNames", "TargetNames", "DueTicks",
 				"WaterCosts", "ProvisionCosts", "OutcomeCodes" };
 			foreach (string field in fields)
@@ -308,6 +314,16 @@ namespace ThousandAndFirst.Tests
 				"string who = SafeName(Row.SubjectName", source);
 			StringAssert.DoesNotContain(
 				"string where = SafeName(Row.TargetName", source);
+		}
+
+		[Test]
+		public void ProvisionReceiptsExcludeProtectedFoodAndFenceEveryDestroy()
+		{
+			string source = KingdomExpeditionsLogicalSource.Read();
+			StringAssert.Contains("Survey.FoodAvailable < ProvisionCost", source);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.CanSpend(leases, item)", source);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TrySpendNow(item,", source);
+			StringAssert.Contains("ProvisionJobProperty, JobId, out Failure", source);
 		}
 
 		private static int Occurrences(string text, string value)

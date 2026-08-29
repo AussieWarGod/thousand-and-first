@@ -16,6 +16,7 @@ namespace ThousandAndFirst
 			bool created, bool currentAuthored, string contents, string id,
 			string receipt, ref KingdomConstructionJob construction)
 		{
+			bool foundingHeart = FoundingHeartWorkIdentityEvidence(parent);
 			if (construction != null)
 			{
 				if (currentAuthored)
@@ -45,41 +46,43 @@ namespace ThousandAndFirst
 				contents, id, entry.Key)) return false;
 			// Final projection proved before predecessor removal. Keep DesignKey intact until the
 			// vetoable callback has actually invalidated the exact predecessor, so a retry remains live.
-			string predecessorId = parent.ID;
+			string predecessorId = parent.IDIfAssigned;
+			string expectedFinalId = construction == null
+				? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId;
+			bool freshRemovalAttempt = construction == null;
 			if (construction != null)
 			{
 				if (construction.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
 				{
-					KingdomConstruction.Quarantine(ref construction,
-						"Plot predecessor removal was interrupted before callback-success proof.");
-					return false;
+					KingdomSystem recoverySystem = The.Game == null
+						? null : The.Game.RequireSystem<KingdomSystem>();
+					RecoverPendingPlotRemoval(recoverySystem, Z, building, ref construction);
+					return construction.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved
+						|| construction.PhysicalPhase == KingdomPhysicalPhase.EffectsPending
+						|| construction.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled;
 				}
-				if (construction.PhysicalPhase != KingdomPhysicalPhase.FurnishingSettled
+				else if (construction.PhysicalPhase != KingdomPhysicalPhase.FurnishingSettled
 					|| !KingdomConstruction.UpdatePhysical(ref construction,
 						KingdomPhysicalPhase.FinalRemovalPending, construction.PhysicalIndex,
 						construction.PhysicalAmount,
-						construction.PhysicalSpilled, predecessorId, building.ID,
+						construction.PhysicalSpilled, predecessorId, building.IDIfAssigned,
 						construction.PhysicalReceipt)) return false;
+				else freshRemovalAttempt = true;
 			}
-			bool removed;
-			try { removed = parent.Destroy(null, Silent: true); }
-			catch (System.Exception ex)
-			{
-				KingdomSurvey.ObserveCurrentTopologyInActive(Z, parent);
-				if (construction != null) KingdomConstruction.Quarantine(ref construction,
-					"Plot predecessor removal threw: " + ex.Message);
-				return false;
-			}
-			if (removed && !GameObject.Validate(parent))
-				KingdomSurvey.ObserveRemovedFromActive(Z, parent);
-			KingdomPhysicalLookupState predecessorState = construction == null
-				? (GameObject.Validate(parent) ? KingdomPhysicalLookupState.Exact
-					: KingdomPhysicalLookupState.Absent)
-				: KingdomConstruction.FindExactId(Z, predecessorId, out _);
+			if (!freshRemovalAttempt) return false;
+			bool returned = false;
+			bool removed = false;
+			try { removed = parent.Destroy(null, Silent: true); returned = true; }
+			catch { }
+			finally { KingdomSurvey.ObserveCurrentTopologyInActive(Z, parent); }
+			KingdomPhysicalLookupState predecessorState = KingdomConstruction.FindExactId(
+				Z, predecessorId, out _);
 			KingdomSystem ownerSystem = construction == null || The.Game == null
 				? null : The.Game.RequireSystem<KingdomSystem>();
-			if (!removed || GameObject.Validate(parent)
-				|| predecessorState != KingdomPhysicalLookupState.Absent
+			if (!ExactPlotFinalRootCustody(expectedFinalId, building)
+				|| !KingdomFoundingHeartTerminalRules.ExactRemovalTombstone(returned, removed,
+				GameObject.Validate(parent), predecessorState == KingdomPhysicalLookupState.Absent,
+				ExactPlotRemovalTombstone(predecessorId, parent, construction))
 				|| (construction != null && !KingdomConstruction.Owns(ownerSystem, Z, construction)))
 			{
 				if (construction != null)
@@ -87,8 +90,11 @@ namespace ThousandAndFirst
 						"Plot predecessor removal was vetoed, moved, or partially changed.");
 				return false;
 			}
-			if (building.CurrentCell != cell || building.ID != (construction == null
-					? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId)
+			KingdomSurvey.ObserveRemovedFromActive(Z, parent);
+			if (foundingHeart && (!ExactFoundingHeartRetiredAuthority(Z, predecessorId,
+				out FoundingHeartContext foundingAfter)
+				|| !ExactFoundingHeartFinalTruth(building, foundingAfter.Stake))) return false;
+			if (building.CurrentCell != cell || building.IDIfAssigned != expectedFinalId
 				|| building.GetIntProperty("KingdomBuilt") != 1
 				|| building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != entry.Key
 				|| (!string.IsNullOrEmpty(receipt)
@@ -101,11 +107,6 @@ namespace ThousandAndFirst
 						"The completed plot changed during predecessor removal.");
 				return false;
 			}
-			if (construction != null && !KingdomConstruction.UpdatePhysical(ref construction,
-				KingdomPhysicalPhase.FinalRemoved, construction.PhysicalIndex,
-				construction.PhysicalAmount,
-				construction.PhysicalSpilled, predecessorId, building.ID,
-				construction.PhysicalReceipt)) return false;
 			building.SetStringProperty(r_KingdomScaffold.RemovalProofProperty, predecessorId);
 			if (!r_KingdomScaffold.HasRemovalProof(building, predecessorId))
 			{
@@ -113,6 +114,10 @@ namespace ThousandAndFirst
 					"The completed plot did not retain exact works-removal proof.");
 				return false;
 			}
+			if (construction != null && !KingdomConstruction.UpdatePhysical(ref construction,
+				KingdomPhysicalPhase.FinalRemoved, construction.PhysicalIndex,
+				construction.PhysicalAmount, construction.PhysicalSpilled, predecessorId,
+				building.IDIfAssigned, construction.PhysicalReceipt)) return false;
 			return true;
 		}
 	}

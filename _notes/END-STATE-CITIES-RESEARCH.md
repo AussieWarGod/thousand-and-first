@@ -4,11 +4,13 @@
 (`BUILDING-CATALOGUE-BRIEF.md`, tail). Research-first, no code. Options + recommendation for the
 author's final ruling.
 
-> **Current v1 supersession, 2026-08-27.** The live realm cap is two cities. Any larger-purpose
-> mesh below is research, not current scope. The controlling v1 model is the reciprocal compatible
-> pair graph in `BUILDING-CATALOGUE-BRIEF.md` and `../VISION.md`: Deep-Bore, Great Foundry,
-> Granary-Colossus, theatre, and becoming annexe; first-work ordinary bootstrap, second-work exact
-> input, and exact return cargo before first-work activation.
+> **Current v1 supersession, 2026-08-27.** The live realm cap is three cities. The controlling v1
+> model is the reciprocal compatible pair graph in `BUILDING-CATALOGUE-BRIEF.md` and
+> `../VISION.md`: Deep-Bore, Great Foundry, Granary-Colossus, theatre, and becoming annexe;
+> first-work ordinary bootstrap, second-work exact input, and exact return cargo before first-work
+> activation. The capital arcology is now hosted, and the Great Archive is implemented as its
+> read-only research view. Positive “deferred” rulings in this historical body are superseded by
+> `../docs/V1-UNDEFERRAL.md`; rejected boundaries remain evidence.
 
 **Method:** praise-first, evidence-cited. Every load-bearing claim carries a `file:line`, an exact
 blueprint/attribute name, or a URL. Anything not read directly is marked **INFERRED** or

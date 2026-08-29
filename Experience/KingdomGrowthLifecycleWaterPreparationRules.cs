@@ -37,7 +37,11 @@ namespace ThousandAndFirst
 			SetGrowthRetired(Book, slot, field, Operation.Sequence);
 			AppendGrowthProof(Book, proof);
 			SetGrowthOperation(Book, slot, field, null);
+			if (slot == KingdomGrowthSlotKind.Arrival
+				&& !Book.ArrivalCadenceMigrationPending && Book.ArrivalOpportunity != null)
+				Book.NextArrivalTick = Book.ArrivalOpportunity.DueTick;
 			if (slot == KingdomGrowthSlotKind.Arrival && Book.WorkPaused
+				&& Book.ArrivalCadenceMigrationPending
 				&& Book.ArrivalCandidate == null)
 				Book.NextArrivalTick = 0L;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;

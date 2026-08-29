@@ -23,6 +23,9 @@ namespace ThousandAndFirst
 				return stock;
 			}
 			stock.Zone = Z;
+			stock.InputLeaseAuthorityExact =
+				KingdomConstructionInputLeaseAuthority.TryCapture(
+					out stock.InputLeases, out stock.InputLeaseFailure);
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			List<GameObject> candidates = survey.MaterialStockpiles;
 			for (int i = 0; i < candidates.Count; i++)
@@ -34,28 +37,60 @@ namespace ThousandAndFirst
 				}
 				stock.Stockpiles.Add(item);
 				foreach (GameObject held in item.Inventory.Objects)
-				{
-					// The material vocabulary claims a thing first and exclusively. Vanilla's own
-					// Scrap Metal is how this settlement STORES scrap, and it is also a tinkering
-					// bit; counted as both, a wall's worth of it could be spent twice - once on the
-					// wall and once on a machine - which is minting. So the shelf's scrap answers
-					// for the walls, and the settlement's bits come from the other things a founder
-					// donates: fried processing cores, cracked robotics housings, and whatever else
-					// came home from a ruin.
-					if (TryMaterialOf(held, out var material))
-					{
-						stock.Tally.Add(material, held.Count);
-						continue;
-					}
-					if (TryExoticOf(held, out var exotic))
-					{
-						stock.Exotics.Add(exotic, held.Count);
-						continue;
-					}
-					TryBitsOf(held, stock.Bits);
-				}
+					TallyAvailableHeld(stock, held);
 			}
 			return stock;
+		}
+
+		/// <summary>Canonical debit-only stock view restricted to one exact dedicated
+		/// container. It shares the same routed-input authority snapshot as <see cref="Stock"/>
+		/// and never broadens a purpose-local debit to another stockpile.</summary>
+		internal static MaterialStock StockForExactContainer(Zone Z, GameObject Container)
+		{
+			MaterialStock all = Stock(Z);
+			MaterialStock exact = new MaterialStock
+			{
+				Zone = all.Zone,
+				InputLeases = all.InputLeases,
+				InputLeaseAuthorityExact = all.InputLeaseAuthorityExact,
+				InputLeaseFailure = all.InputLeaseFailure
+			};
+			if (!GameObject.Validate(Container) || Container.Inventory == null
+				|| Container.CurrentZone != Z) return exact;
+			bool canonical = false;
+			for (int i = 0; i < all.Stockpiles.Count; i++)
+				if (ReferenceEquals(all.Stockpiles[i], Container))
+				{
+					canonical = true;
+					break;
+				}
+			if (!canonical) return exact;
+			exact.Stockpiles.Add(Container);
+			foreach (GameObject held in Container.Inventory.Objects)
+				TallyAvailableHeld(exact, held);
+			return exact;
+		}
+
+		private static void TallyAvailableHeld(MaterialStock stock, GameObject held)
+		{
+			if (stock == null || !stock.InputLeaseAuthorityExact
+				|| !KingdomConstructionInputLeaseAuthority.CanUseMaterial(
+					stock.InputLeases, held)) return;
+			// The material vocabulary claims a thing first and exclusively. Vanilla's own
+			// Scrap Metal is how this settlement STORES scrap, and it is also a tinkering bit;
+			// counted as both, a wall's worth could be spent twice. The shelf's scrap answers
+			// for walls; the settlement's bits come from other donated ruin-stock.
+			if (TryOrdinaryMaterialOf(held, out var material))
+			{
+				stock.Tally.Add(material, held.Count);
+				return;
+			}
+			if (TryExoticOf(held, out var exotic))
+			{
+				stock.Exotics.Add(exotic, held.Count);
+				return;
+			}
+			TryBitsOf(held, stock.Bits);
 		}
 
 		/// <summary>The item blueprint a material is stored as, or null for a value outside the
@@ -102,6 +137,8 @@ namespace ThousandAndFirst
 			}
 			if (IsStockpile(Container))
 			{
+				if (!KingdomDesignationReleaseAuthority.TryCanRelease(
+					System, Z, Container, out Failure)) return false;
 				Container.SetIntProperty(StockpileProperty, 0);
 				MessageQueue.AddPlayerMessage("The " + Container.ShortDisplayName + " is yours alone again. Nothing in it will be counted.");
 				return true;
@@ -140,149 +177,6 @@ namespace ThousandAndFirst
 				+ ((bits == null) ? "" : (", and stock enough for bits: {{C|" + bits + "}}"))
 				+ ((exotics == null) ? "" : (", and {{C|" + exotics + "}} laid aside"))
 				+ ".";
-		}
-
-		// --- Paying for a building in material ------------------------------------------------
-
-		/// <summary>
-		/// Reserves an arbitrary composite claim against the exact physical contents of this
-		/// ground's dedicated stockpiles. Reservation is read-only. The returned receipt is non-null
-		/// even on refusal; inspect <c>Reservation.Outcome</c> before creating or funding a job.
-		/// </summary>
-		public static KingdomMaterialDebit ReserveComposite(Zone Z, KingdomMaterialDebitCost Cost)
-		{
-			return KingdomMaterialDebit.Reserve(Stock(Z), Cost);
-		}
-
-		/// <summary>Reserves an arbitrary outstanding claim while requiring the same exact object
-		/// named by its durable operation receipt. Used only where the route already froze identity;
-		/// it never chooses a same-kind replacement.</summary>
-		public static KingdomMaterialDebit ReserveCompositeWithRequiredItem(Zone Z,
-			KingdomMaterialDebitCost Cost, GameObject RequiredItem)
-		{
-			return KingdomMaterialDebit.Reserve(Stock(Z), Cost, RequiredItem);
-		}
-
-		/// <summary>Read-only exact reservation of a catalogue design's full composite price.</summary>
-		public static KingdomMaterialDebit ReservePayment(Zone Z, string Key)
-		{
-			return ReserveComposite(Z, new KingdomMaterialDebitCost(
-				CostFor(Key), BitCostFor(Key), ExoticCostFor(Key)));
-		}
-
-		/// <summary>
-		/// Read-only exact reservation that requires one particular delivered consignment object to
-		/// answer the design's ordinary material price. The item is not an extra token cost: it is
-		/// one physically produced unit already present in that price.
-		/// </summary>
-		public static KingdomMaterialDebit ReservePaymentWithRequiredItem(Zone Z, string Key,
-			GameObject RequiredItem)
-		{
-			return KingdomMaterialDebit.Reserve(Stock(Z), new KingdomMaterialDebitCost(
-				CostFor(Key), BitCostFor(Key), ExoticCostFor(Key)), RequiredItem);
-		}
-
-		/// <summary>
-		/// Read-only exact reservation of an improvement's registered price. The present catalogue
-		/// authors upgrade material separately and declares no upgrade-only bit or exotic attributes,
-		/// so those two lanes are empty until that data contract is extended explicitly.
-		/// </summary>
-		public static KingdomMaterialDebit ReserveUpgradePayment(Zone Z, string PredecessorKey)
-		{
-			return ReserveComposite(Z, new KingdomMaterialDebitCost(
-				UpgradeCostFor(PredecessorKey), null, null));
-		}
-
-		/// <summary>Read-only exact reservation of one authored same-set transition price.</summary>
-		public static KingdomMaterialDebit ReserveTransitionPayment(Zone Z,
-			KingdomMaterialTally Materials)
-		{
-			return ReserveComposite(Z, new KingdomMaterialDebitCost(Materials, null, null));
-		}
-
-		/// <summary>Whether dedicated stockpiles cover one authored same-set transition.</summary>
-		public static bool CanPayTransition(Zone Z, KingdomMaterialTally Cost,
-			out string Failure)
-		{
-			Failure = null;
-			KingdomMaterialTally cost = Cost ?? new KingdomMaterialTally();
-			if (cost.IsEmpty()) return true;
-			MaterialStock stock = Stock(Z);
-			if (KingdomMaterialRules.Covers(stock.Tally, cost)) return true;
-			string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
-			Failure = "The change wants {{C|" + cost.Describe()
-				+ "}}, and the stockpiles are short "
-				+ (missing == null ? "of it" : "{{C|" + missing + "}}") + ".";
-			return false;
-		}
-
-		/// <summary>Read-only exact reservation of an arbitrary bit price, including a lab record.</summary>
-		public static KingdomMaterialDebit ReserveBits(Zone Z, KingdomBitTally Bits)
-		{
-			return ReserveComposite(Z, new KingdomMaterialDebitCost(null, Bits, null));
-		}
-
-		/// <summary>
-		/// Whether the dedicated stockpiles on this ground cover a design's material cost. A
-		/// design with no material cost is always affordable, which is every design the catalogue
-		/// carried before materials existed.
-		/// </summary>
-		/// <param name="Z">Ground the commission would be issued on.</param>
-		/// <param name="Key">The design's registry key.</param>
-		/// <param name="Failure">A founder-facing reason when this returns false, naming the
-		/// shortfall rather than restating the whole price.</param>
-		public static bool CanPay(Zone Z, string Key, out string Failure)
-		{
-			Failure = null;
-			// The yards first, and before a single unit is counted. A founder standing at a design
-			// the settlement has no mason for should be told THAT, not handed a shopping list they
-			// could fill and still be refused (STANDARDS 7b).
-			if (!AllowsInfrastructure(Z, Key, out Failure))
-			{
-				return false;
-			}
-			KingdomMaterialTally cost = CostFor(Key);
-			MaterialStock stock = null;
-			if (!cost.IsEmpty())
-			{
-				stock = Stock(Z);
-				if (!KingdomMaterialRules.Covers(stock.Tally, cost))
-				{
-					string missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
-					Failure = "The work wants {{C|" + cost.Describe() + "}}, and the stockpiles are short "
-						+ ((missing == null) ? "of it" : ("{{C|" + missing + "}}"))
-						+ ". Clear ground for it, trade for it, or strike something that was built of it."
-						+ (stock.None ? " Nothing here is dedicated as a stockpile yet." : "");
-					return false;
-				}
-			}
-			KingdomBitTally bits = BitCostFor(Key);
-			KingdomExoticTally exotics = ExoticCostFor(Key);
-			if (bits.IsEmpty() && exotics.IsEmpty())
-			{
-				return true;
-			}
-			if (stock == null)
-			{
-				stock = Stock(Z);
-			}
-			if (!KingdomMaterialRules.CoversBits(stock.Bits, bits))
-			{
-				string missing = KingdomMaterialRules.MissingBits(stock.Bits, bits).Describe();
-				Failure = "This is high-craft work. It wants {{C|" + bits.Describe()
-					+ "}} out of the stockpiles, and the keepers are short " + ((missing == null) ? "of it" : ("{{C|" + missing + "}}"))
-					+ ". Bring scrap home and put it in a stockpile; whatever comes apart into the right stock will do.";
-				return false;
-			}
-			if (!KingdomMaterialRules.CoversExotics(stock.Exotics, exotics))
-			{
-				string missing = KingdomMaterialRules.MissingExotics(stock.Exotics, exotics).Describe();
-				Failure = "A work like this is finished in something rarer than stone. It wants {{C|" + exotics.Describe()
-					+ "}}, and the stockpiles hold no " + ((missing == null) ? "such thing" : ("{{C|" + missing + "}}"))
-					+ ". Nobody here can make one. Somebody has to find one and carry it home.";
-				return false;
-			}
-			return true;
 		}
 
 	}

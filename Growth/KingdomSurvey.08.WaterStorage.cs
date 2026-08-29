@@ -15,11 +15,17 @@ namespace ThousandAndFirst
 		/// <returns>Amount actually stored; the remainder had nowhere to go.</returns>
 		public int Store(int Drams)
 		{
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (Drams <= 0 || !KingdomConstructionInputLeaseAuthority.TryCapture(
+				out leases, out failure)) return 0;
 			int remaining = Drams;
 			for (int i = 0; i < Stores.Count && remaining > 0; i++)
 			{
 				LiquidVolume store = Stores[i];
-				if (store.Volume >= store.MaxVolume || !KingdomLiquids.CanReceiveFreshWater(store))
+				if (store == null || KingdomConstructionInputLeaseAuthority.IsLeased(
+					leases, store.ParentObject) || store.Volume >= store.MaxVolume
+					|| !KingdomLiquids.CanReceiveFreshWater(store))
 				{
 					continue;
 				}
@@ -46,8 +52,13 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int StoreIn(LiquidVolume Store, int Drams)
 		{
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
 			if (Store == null || Drams <= 0 || !Stores.Contains(Store)
 				|| Store.MaxVolume < 0 || Store.Volume < 0 || Store.Volume >= Store.MaxVolume
+				|| !KingdomConstructionInputLeaseAuthority.TryCapture(
+					out leases, out failure)
+				|| KingdomConstructionInputLeaseAuthority.IsLeased(leases, Store.ParentObject)
 				|| !KingdomLiquids.CanReceiveFreshWater(Store)) return 0;
 			int before = Store.Volume;
 			int wanted = Store.MaxVolume - before;

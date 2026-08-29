@@ -3,18 +3,11 @@ using System.Collections.Generic;
 using XRL;
 using XRL.Messages;
 using XRL.World;
-using ThousandAndFirst;
-using ThousandAndFirst.Simulation.City;
-
 namespace ThousandAndFirst
 {
 	using XRL.World.Parts;
-
 	public static partial class KingdomMaterials
 	{
-
-		// --- Striking -------------------------------------------------------------------------
-
 		/// <summary>
 		/// Orders a building the settlement raised taken down, or calls off an order already
 		/// standing. Founder-ordered and nothing else: no system anywhere condemns a building on
@@ -34,7 +27,6 @@ namespace ThousandAndFirst
 			return OrderStrikeDurable(System, Z, Building, null, true, true,
 				GovernanceVerb, out ignored, out Failure);
 		}
-
 		/// <summary>Conversion entry: extends the already-funded exact job instead of creating one.</summary>
 		internal static bool OrderStrikeForConstruction(KingdomSystem System, Zone Z,
 			GameObject Building, KingdomConstructionJob Job,
@@ -43,7 +35,6 @@ namespace ThousandAndFirst
 			return OrderStrikeDurable(System, Z, Building, Job, false, false, null,
 				out Updated, out Failure);
 		}
-
 		private static bool OrderStrikeDurable(KingdomSystem System, Zone Z,
 			GameObject Building, KingdomConstructionJob Supplied, bool AllowCancellation,
 			bool Announce, string GovernanceVerb, out KingdomConstructionJob Updated,
@@ -71,6 +62,11 @@ namespace ThousandAndFirst
 				Failure = "The settlement strikes what it raised. That is not one of its buildings.";
 				return false;
 			}
+			if (Building.GetPart<r_KingdomArcology>() != null)
+			{
+				Failure = "The hosted arcology is the capital's inherited heart and cannot be struck. Move the crown to leave its shell dark.";
+				return false;
+			}
 			KingdomConstructionJob carried = Supplied;
 			if (carried == null)
 			{
@@ -88,7 +84,7 @@ namespace ThousandAndFirst
 				&& !KingdomConstructionRules.IsTerminal(carried.Phase)
 				&& (carried.Route == KingdomConstructionRoute.Strike
 					|| carried.Route == KingdomConstructionRoute.SocketConvert)
-				&& carried.SourceId == Building.ID;
+				&& carried.SourceId == Building.IDIfAssigned;
 			if (carried != null && !activeStrike)
 			{
 				Failure = "That building carries another construction receipt.";
@@ -132,12 +128,13 @@ namespace ThousandAndFirst
 				Updated = carried;
 				return true;
 			}
+			if (!KingdomMirrorGate.TryPreflightRemoval(Building, Z, out Failure)) return false;
 			bool architectureMarker = Building.HasIntProperty(
 				KingdomArchitectureRuntime.SchemaProperty)
 				|| Building.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty);
+			KingdomArchitectureIntent authored = null;
 			if (architectureMarker)
 			{
-				KingdomArchitectureIntent authored;
 				if (!KingdomArchitectureRuntime.TryRead(Building, out authored, out Failure))
 					return false;
 				if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(authored.EncodedSnapshot)
@@ -202,7 +199,7 @@ namespace ThousandAndFirst
 				intent.Y1 = gatePlan.Y1;
 				intent.X2 = gatePlan.X2;
 				intent.Y2 = gatePlan.Y2;
-				intent.PlotId = Building.ID; // bounded v2 field is the typed network owner ID
+				intent.PlotId = Building.IDIfAssigned; // bounded strike field is typed network owner ID
 				intent.Targets = gateTargets;
 			}
 			else if (KingdomPlots.TryReadRect(Building, out KingdomPlotRules.PlotRect plotRect))
@@ -213,6 +210,20 @@ namespace ThousandAndFirst
 				intent.X2 = plotRect.X2;
 				intent.Y2 = plotRect.Y2;
 				intent.PlotId = Building.GetStringProperty(KingdomPlots.PlotIdProperty);
+				if (authored != null)
+				{
+					if (authored.BuildKey != key || authored.Rect.X1 != plotRect.X1
+						|| authored.Rect.Y1 != plotRect.Y1 || authored.Rect.X2 != plotRect.X2
+						|| authored.Rect.Y2 != plotRect.Y2)
+					{
+						Failure = "The building's frozen typed lot disagrees with its standing plot rectangle.";
+						return false;
+					}
+					intent.HasTypedLot = true;
+					intent.LotType = authored.LotType;
+					intent.LotSize = authored.LotSize;
+					intent.Facing = authored.Facing;
+				}
 				HashSet<string> frozenIds = new HashSet<string>(StringComparer.Ordinal);
 				for (int y = plotRect.Y1; y <= plotRect.Y2; y++)
 				{
@@ -222,22 +233,23 @@ namespace ThousandAndFirst
 						if (plotCell == null) continue;
 						foreach (GameObject part in plotCell.GetObjects())
 						{
-							if (!GameObject.Validate(part) || part.ID == Building.ID
+							if (!GameObject.Validate(part) || part.IDIfAssigned == Building.IDIfAssigned
 								|| part.GetIntProperty(KingdomPlots.PlotPartProperty) != 1
 								|| part.GetStringProperty(KingdomPlots.PlotIdProperty) != intent.PlotId)
 								continue;
-							if (!frozenIds.Add(part.ID)
+							if (!frozenIds.Add(part.IDIfAssigned)
 								|| intent.Targets.Count >= KingdomConstructionRules.MaxStrikeTargets)
 							{
 								Failure = "The strike footprint exceeds or duplicates its exact target receipt.";
 								return false;
 							}
 							intent.Targets.Add(new KingdomStrikeTarget
-								{ Id = part.ID, Blueprint = part.Blueprint, X = x, Y = y });
+								{ Id = part.IDIfAssigned, Blueprint = part.Blueprint, X = x, Y = y });
 						}
 					}
 				}
 			}
+			if (!StrikeTargetsUnencumbered(Building, Z, intent, out Failure)) return false;
 			if (!KingdomConstructionRules.TryEncodeStrikeIntent(intent, out string physicalReceipt))
 			{
 				Failure = "The strike's exact physical receipt could not be frozen.";

@@ -76,6 +76,21 @@ namespace ThousandAndFirst
 			return string.Equals(A, B, StringComparison.Ordinal);
 		}
 
+		/// <summary>
+		/// Preserves a rite's independently-derived eligibility across the civic office's
+		/// title-only projection. The title grants no service, capability, ritual authority, or
+		/// obligation, so holding it cannot open or close the basin.
+		/// </summary>
+		/// <param name="Baseline">Eligibility derived from creed, consent, road, cadence, and
+		/// stores.</param>
+		/// <param name="HoldsTitleOnlyOffice">Whether this resident carries the civic title. This
+		/// fact is deliberately observational only.</param>
+		public static WaterRiteBar PreserveEligibilityAcrossCivicTitle(WaterRiteBar Baseline,
+			bool HoldsTitleOnlyOffice)
+		{
+			return Baseline;
+		}
+
 		// ==================================================================================
 		// Shared living with the settlement, counted in the days somebody has actually lived
 		// here. Deliberately not a date: the roll records the day somebody arrived, and that day

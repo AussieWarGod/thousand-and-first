@@ -51,6 +51,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string presence = Source("Growth/KingdomConstructionPresence.cs");
 			StringAssert.Contains("KingdomConstructionPresenceRules.Plan(readings", presence);
+			StringAssert.Contains("KingdomCrews.AvailableSettlers(System, Survey)", presence);
+			StringAssert.Contains("KingdomCrews.WorkHandCount(System, available)", presence);
+			StringAssert.DoesNotContain("System.Population - System.WaterCrew", presence);
 			StringAssert.Contains("KingdomCrews.AssignRaising(selected.Root", presence);
 			StringAssert.Contains("selected.Root.SetIntProperty(HandsProperty, assigned)", presence);
 			StringAssert.Contains("KingdomStations.Post(free[at], workId, KingdomWorkKind.Construction)",
@@ -58,11 +61,11 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(presence.Contains("GameObject.Create"));
 			Assert.IsFalse(presence.Contains("AddObject("));
 
-			string scaffold = Source("Growth/KingdomScaffold.cs");
+			string scaffold = KingdomScaffoldLogicalSource.Read();
 			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(ParentObject, System",
 				scaffold);
-			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(parent, System", plot);
+			StringAssert.Contains("KingdomConstructionPresence.EffectivenessOf(Root, System", plot);
 
 			string crews = Source("Growth/KingdomCrews.Assignments.cs");
 			int raising = crews.IndexOf("internal static KingdomCrewRules.CrewOutcome AssignRaising",
@@ -110,7 +113,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("r_TAF_ConstructionCrewSchema", presence);
 			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("public int DoorY;", plot);
-			string scaffold = Source("Growth/KingdomScaffold.cs");
+			string scaffold = KingdomScaffoldLogicalSource.Read();
 			Assert.IsFalse(scaffold.Contains("public int ConstructionCrew"));
 		}
 	}

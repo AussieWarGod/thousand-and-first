@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		public void WireAuthorityAndKeyDeclarationsHaveOneOwner()
 		{
 			string source = KingdomTradeStateLogicalSource.Read();
-			Assert.AreEqual(5, Count(source, "public static partial class KingdomTradeCodec"));
+			Assert.AreEqual(8, Count(source, "public static partial class KingdomTradeCodec"));
 			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeBook"));
 			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeManifestState"));
 			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeOperation"));

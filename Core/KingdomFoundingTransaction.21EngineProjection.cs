@@ -26,70 +26,11 @@ namespace ThousandAndFirst
 
 		private static bool EnsurePlacement(KingdomSystem System, Zone Site, int RiteX, int RiteY)
 		{
-			Cell rite = Site?.GetCell(RiteX, RiteY);
-			if (System == null || Site == null || rite == null)
+			if (System == null || Site?.GetCell(RiteX, RiteY) == null)
 			{
 				return false;
 			}
-			Site.SetZoneProperty(KingdomPlots.RiteXProperty, RiteX.ToString());
-			Site.SetZoneProperty(KingdomPlots.RiteYProperty, RiteY.ToString());
-			if (!KingdomPlots.TryRiteGround(Site, out var readX, out var readY) ||
-				readX != RiteX || readY != RiteY)
-			{
-				return false;
-			}
-			if (!KingdomPlots.TrySurveyedHeart(Site, out var survey))
-			{
-				if (!KingdomPlots.SurveyHeart(System, Site, RiteX, RiteY) ||
-					!KingdomPlots.TrySurveyedHeart(Site, out survey))
-				{
-					return false;
-				}
-			}
-			return EnsureMark(rite, KingdomPlots.HeartRelicBlueprint,
-					KingdomPlots.HeartRelicProperty) &&
-				EnsureMark(Site.GetCell(survey.X1, survey.Y1), KingdomPlots.SurveyStakeBlueprint,
-					KingdomPlots.HeartStakeProperty) &&
-				EnsureMark(Site.GetCell(survey.X2, survey.Y1), KingdomPlots.SurveyStakeBlueprint,
-					KingdomPlots.HeartStakeProperty) &&
-				EnsureMark(Site.GetCell(survey.X1, survey.Y2), KingdomPlots.SurveyStakeBlueprint,
-					KingdomPlots.HeartStakeProperty) &&
-				EnsureMark(Site.GetCell(survey.X2, survey.Y2), KingdomPlots.SurveyStakeBlueprint,
-					KingdomPlots.HeartStakeProperty);
-		}
-
-		private static bool EnsureMark(Cell Cell, string Blueprint, string Property)
-		{
-			if (Cell == null)
-			{
-				return false;
-			}
-			foreach (GameObject item in Cell.Objects)
-			{
-				if (item.GetIntProperty(Property) == 1 && item.CurrentCell == Cell)
-				{
-					return true;
-				}
-			}
-			GameObject placed = GameObject.Create(Blueprint);
-			if (placed == null)
-			{
-				return false;
-			}
-			placed.SetIntProperty(Property, 1);
-			Cell.AddObject(placed);
-			if (placed.CurrentCell == Cell && Cell.Objects.Contains(placed))
-			{
-				return true;
-			}
-			try
-			{
-				placed.Obliterate();
-			}
-			catch
-			{
-			}
-			return false;
+			return KingdomPlots.EnsureFoundingHeartProjection(System, Site, RiteX, RiteY);
 		}
 
 		internal static string FoundingEventID(KingdomFoundingKind Kind,

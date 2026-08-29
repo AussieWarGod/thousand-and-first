@@ -55,9 +55,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>The real crop, minted onto a real back and marked as the simulation's own
 		/// (&sect;3.2(a)). Refuses a blueprint that is not food for the same reason
 		/// <c>KingdomSurvey.StoreFood</c> does: an unbounded spawn of a thing nothing counts.</summary>
-		private static int Load(GameObject Body, string Blueprint, int Amount)
+		private static int Load(GameObject Body, string Blueprint, int Amount, int JobId)
 		{
-			if (!GameObject.Validate(Body) || Body.Inventory == null || string.IsNullOrEmpty(Blueprint) || Amount <= 0)
+			if (!GameObject.Validate(Body) || Body.Inventory == null || string.IsNullOrEmpty(Blueprint)
+				|| Amount <= 0 || JobId <= 0)
 			{
 				return 0;
 			}
@@ -65,20 +66,50 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < Amount; i++)
 			{
 				GameObject food = GameObject.Create(Blueprint);
-				if (food == null)
+				if (!GameObject.Validate(food))
 				{
 					break;
 				}
-				if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+				string failure;
+				if (food.Count != 1 || !KingdomOrdinaryFoodAuthority.IsEdible(food)
+					|| !KingdomOrdinaryFoodAuthority.TryObjectNow(food, out failure))
 				{
-					food.Obliterate();
+					if (KingdomOrdinaryFoodAuthority.TryObjectNow(food, out failure))
+						food.Obliterate();
 					break;
 				}
+				string foodId = food.ID;
 				food.SetIntProperty(StockProperty, 1);
-				Body.Inventory.AddObject(food, Silent: true);
+				food.SetIntProperty(KingdomOrdinaryFoodAuthority.PorterReceiptProperty, JobId);
+				Body.Inventory.AddObject(food, Silent: true, NoStack: true);
+				if (!GameObject.Validate(food) || food.InInventory != Body || food.CurrentCell != null
+					|| food.IDIfAssigned != foodId || food.Blueprint != Blueprint || food.Count != 1
+					|| food.GetIntProperty(StockProperty) != 1
+					|| !KingdomOrdinaryFoodAuthority.TrySpendNow(food,
+						KingdomOrdinaryFoodAuthority.PorterReceiptProperty, JobId, out failure)) break;
 				carried++;
 			}
 			return carried;
+		}
+
+		private static void RollbackPorterLoad(GameObject body, int jobId,
+			List<GameObject> before)
+		{
+			List<GameObject> held = body?.Inventory == null ? null
+				: new List<GameObject>(body.Inventory.GetObjects());
+			for (int i = 0; held != null && i < held.Count; i++)
+			{
+				GameObject item = held[i];
+				if (before != null && before.Contains(item)) continue;
+				string failure;
+				if (!GameObject.Validate(item) || item.InInventory != body || item.Count != 1
+					|| item.GetIntProperty(StockProperty) != 1
+					|| !KingdomOrdinaryFoodAuthority.TrySpendNow(item,
+						KingdomOrdinaryFoodAuthority.PorterReceiptProperty, jobId, out failure)) continue;
+				try { item.Destroy(null, Silent: true); }
+				catch { }
+			}
+			KingdomSurvey.ObserveCurrentTopologyInActive(body?.CurrentZone, body);
 		}
 
 		/// <summary>The anchor discipline &sect;3.2(b) rides: a carrier that wanders is a carrier

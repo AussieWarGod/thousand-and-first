@@ -123,15 +123,17 @@ namespace ThousandAndFirst
 		/// the teaching act sets down. Nothing here is a holding when it arrives &mdash; it is a
 		/// seed, and the receiving city still walks the rest (Addendum 22 B4).
 		/// </summary>
-		public static List<ResearchNode> CarriedFromAway(KingdomSystem System)
+		public static List<ResearchNode> CarriedFrom(KingdomSystem System,
+			KingdomSettlement Source)
 		{
 			List<ResearchNode> carried = new List<ResearchNode>();
-			if (!Enabled || System == null || !System.Founded || System.Away == null)
+			if (!Enabled || System == null || !System.Founded || Source == null ||
+				System.FindNonSeatSettlementById(Source.City?.SettlementId) != Source)
 			{
 				return carried;
 			}
 			EnsureLoaded();
-			List<string> theirs = KingdomZoning.RosterOf(System.Away);
+			List<string> theirs = KingdomZoning.RosterOf(Source);
 			List<string> ours = KingdomZoning.Roster(System);
 			for (int i = 0; i < _nodes.Count; i++)
 			{

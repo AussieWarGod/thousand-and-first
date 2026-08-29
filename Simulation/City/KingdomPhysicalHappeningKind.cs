@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Simulation.City
 		Wedding = 1,
 		Funeral = 2,
 		Feast = 3,
-		Raising = 4
+		Raising = 4,
+		CommunalRite = 5
 	}
 }

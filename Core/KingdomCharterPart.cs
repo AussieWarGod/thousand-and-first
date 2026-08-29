@@ -167,6 +167,16 @@ namespace ThousandAndFirst
 							: "{{K|No one is waiting to speak}}");
 				}
 				else if (route.Kind == KingdomCharterRouteKind.Action
+					&& route.Action == KingdomCharterAction.FirstGuestCorrespondence)
+				{
+					labels[i] = KingdomFirstGuestRuntime.CharterLabel(System);
+				}
+				else if (route.Kind == KingdomCharterRouteKind.Action
+					&& route.Action == KingdomCharterAction.GuestFeastRecord)
+				{
+					labels[i] = KingdomGuestFeastRuntime.CharterLabel(System);
+				}
+				else if (route.Kind == KingdomCharterRouteKind.Action
 					&& route.Action == KingdomCharterAction.ManageCreed
 					&& System.SettlementCount < 2 && System.Seceded == null)
 				{
@@ -189,6 +199,12 @@ namespace ThousandAndFirst
 		/// <summary>Runs one old Charter verb inside exactly one governance scope.</summary>
 		private bool RunAction(KingdomSystem System, KingdomCharterAction Action)
 		{
+			if (!ExternalOwnershipActionAllowed(System, Action,
+				out string externalFailure))
+			{
+				Popup.Show("Civic work is paused on this ground: " + externalFailure);
+				return false;
+			}
 			if (!KingdomMaster.NewWorkAllowed(System)
 				&& !KingdomCharterMenuRules.AvailableWhileSimulationPaused(Action))
 			{
@@ -236,6 +252,19 @@ namespace ThousandAndFirst
 				case KingdomCharterAction.TechMap: Popup.Show(KingdomTechMap.Draw(System)); break;
 				case KingdomCharterAction.CityAsks: Popup.Show(KingdomAsks.Board(System)); break;
 				case KingdomCharterAction.SalvageExpedition: Simulation.City.KingdomExpeditions.Open(System, ParentObject); break;
+				case KingdomCharterAction.DesignateProperty: KingdomProperty.Open(System, ParentObject); break;
+				case KingdomCharterAction.ManageNamedCook: KingdomNamedCook.Open(System, ParentObject); break;
+				case KingdomCharterAction.ManageCivicOffice: KingdomOfficeRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.DedicateRemembrance: KingdomRemembranceRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.FirstGuestCorrespondence: KingdomFirstGuestRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.FirstFeastPractice: KingdomFirstFeastRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.PracticeAndVocation: KingdomCivicPracticeRuntime.OpenPracticeAndVocation(System, ParentObject); break;
+				case KingdomCharterAction.CivicKnowledge: KingdomCivicKnowledgeRuntime.OpenCurrent(System, ParentObject); break;
+				case KingdomCharterAction.BodyHistory: KingdomBodyHistoryRuntime.OpenCurrent(ParentObject, System); break;
+				case KingdomCharterAction.GuestFeastRecord: KingdomGuestFeastRuntime.OpenRecord(System, ParentObject); break;
+				case KingdomCharterAction.CivicCommitments: OpenCivicCommitments(System); break;
+				case KingdomCharterAction.RecognizeArtifact: KingdomArtifactRecognitionCharterRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.FixedWitnessWorks: KingdomWitnessWorkCharterRuntime.Open(System, ParentObject); break;
 				}
 			}
 			finally

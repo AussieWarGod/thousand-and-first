@@ -54,6 +54,10 @@ namespace ThousandAndFirst
 				Sequence = sequence, Id = id, SettlementId = Book.SettlementId,
 				CreatedTick = Tick, UpdatedTick = Tick,
 				Phase = KingdomGrowthArrivalCandidatePhase.Prepared,
+				ArrivalOpportunityOrdinal = Book.ArrivalOpportunity?.Ordinal ?? 0UL,
+				ArrivalOpportunityDueTick = Book.ArrivalOpportunity?.DueTick ?? 0L,
+				ArrivalOpportunityRateEpoch = Book.ArrivalOpportunity?.RateEpoch ?? 0L,
+				ArrivalOpportunityPayloadHash = Book.ArrivalOpportunity?.PayloadHash,
 				Marker = Marker, Blueprint = Blueprint, EscrowKey = EscrowKey,
 				LodgingZoneId = ZoneId,
 				LegacySemanticPlan = LegacySemanticPlan,
@@ -121,6 +125,9 @@ namespace ThousandAndFirst
 				|| Book.HealthState != KingdomGrowthHealthState.Healthy || Book.WorkPaused
 				|| Candidate.CreatedTick < Book.OptionTick
 				|| Candidate.CreatedTick < Book.HealthTick
+				|| !Book.ArrivalCadenceMigrationPending
+					&& (Book.ArrivalOpportunity == null
+						|| Book.ArrivalOpportunity.FirstGuest != (Candidate.FirstGuest != null))
 				|| !GrowthArrivalCandidateShape(Book, Candidate, true)
 				|| !ClaimGrowthArrivalCandidateAgainstBook(Book, Candidate)) return false;
 			string hash;
@@ -147,6 +154,7 @@ namespace ThousandAndFirst
 				+ (created[2] ? 1 : 0);
 			if (Book.Resources.Count + additions > MaxResourceRows) return false;
 			string oldHash = Candidate.PlanHash;
+			ulong oldOrdinalHighWater = Book.ArrivalOrdinalHighWater;
 			Candidate.PlanHash = hash;
 			for (int i = 0; i < rows.Length; i++)
 			{
@@ -155,8 +163,11 @@ namespace ThousandAndFirst
 			}
 			Book.ArrivalCandidate = Candidate;
 			Book.ArrivalCandidateNextSequence = Candidate.Sequence + 1L;
+			if (Book.ArrivalCadenceMigrationPending)
+				Book.ArrivalOrdinalHighWater = (ulong)Candidate.Sequence;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
 			Book.ArrivalCandidate = null; Book.ArrivalCandidateNextSequence = Candidate.Sequence;
+			Book.ArrivalOrdinalHighWater = oldOrdinalHighWater;
 			for (int i = rows.Length - 1; i >= 0; i--)
 			{
 				if (created[i]) Book.Resources.Remove(rows[i]);

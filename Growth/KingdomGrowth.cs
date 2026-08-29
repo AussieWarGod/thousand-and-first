@@ -50,7 +50,9 @@ namespace ThousandAndFirst
 			WaterUnavailable,
 			NoGround,
 			PopulationCap,
-			SupportCap
+			SupportCap,
+			Declined,
+			Departed
 		}
 
 		public static bool Enabled => Options.GetOption("r_TAF_OptionGrowth") != "No";
@@ -74,8 +76,14 @@ namespace ThousandAndFirst
 
 		public static long Interval(KingdomSystem System, Zone Z)
 		{
+			return Interval(System, Z, System.Population);
+		}
+
+		private static long Interval(KingdomSystem System, Zone Z, int cohort)
+		{
 			System.ZoneDistricts.TryGetValue(Z.ZoneID, out var district);
-			return KingdomRules.PolicyInterval(KingdomRules.ArrivalIntervalTicks(System.Population, district), System.Gate, System.Stores);
+			return KingdomRules.PolicyInterval(KingdomRules.ArrivalIntervalTicks(cohort, district),
+				System.Gate, System.Stores);
 		}
 	}
 }

@@ -16,6 +16,8 @@ namespace ThousandAndFirst
 			GameObject requiredContainer = GameObject.Validate(RequiredItem)
 				? RequiredItem.InInventory : null;
 			if (RequiredItem != null && (!GameObject.Validate(RequiredItem)
+				|| !KingdomConstructionInputLeaseAuthority.CanUseMaterial(
+					Stock.InputLeases, RequiredItem)
 				|| RequiredItem.Count != 1 || string.IsNullOrEmpty(RequiredItemId)
 				|| RequiredItem.ID != RequiredItemId || !GameObject.Validate(requiredContainer)
 				|| requiredContainer.Inventory == null
@@ -74,7 +76,9 @@ namespace ThousandAndFirst
 		private void AddSource(GameObject Container, ContainerWitness Witness, GameObject Item,
 			List<GameObject> SeenItems, List<KingdomMaterialDebitSource> Sources, bool Required)
 		{
-			if (!ValidHeld(Container, Item) || ContainsReference(SeenItems, Item)) return;
+			if (!ValidHeld(Container, Item) || ContainsReference(SeenItems, Item)
+				|| !KingdomConstructionInputLeaseAuthority.CanUseMaterial(
+					Stock.InputLeases, Item)) return;
 			if (!ClassifySource(Item, out KingdomMaterialDebitSourceKind kind,
 				out int kindIndex, out KingdomBitTally unitBits)) return;
 			SeenItems.Add(Item);

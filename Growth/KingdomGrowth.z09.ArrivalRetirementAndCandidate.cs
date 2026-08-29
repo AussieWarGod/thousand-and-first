@@ -25,7 +25,11 @@ namespace ThousandAndFirst
 				|| growth.ArrivalOp != null) return false;
 			GameObject settler;
 			TryArrivalObject(candidate, zone, out settler);
-			bool physical = candidate.Disposition == KingdomGrowthArrivalDisposition.Joined
+			bool declined = candidate.Disposition == KingdomGrowthArrivalDisposition.Declined;
+			bool physical = declined ? ExactDeclinedFirstGuest(candidate, settler, zone)
+				: candidate.Disposition == KingdomGrowthArrivalDisposition.Departed
+					? ExactDepartedFirstGuest(candidate, settler, zone)
+				: candidate.Disposition == KingdomGrowthArrivalDisposition.Joined
 				? ExactPlacedCandidate(candidate, settler, zone)
 				: ExactRefusedCandidate(candidate, settler, zone);
 			if (!physical)
@@ -45,6 +49,32 @@ namespace ThousandAndFirst
 				return false;
 			system.NextArrivalTick = growth.NextArrivalTick;
 			return true;
+		}
+
+		private static bool ExactDepartedFirstGuest(KingdomGrowthArrivalCandidate candidate,
+			GameObject body, Zone zone)
+		{
+			KingdomGrowthFirstGuestTerminalState terminal = candidate?.FirstGuest == null
+				? KingdomGrowthFirstGuestTerminalState.None
+				: candidate.FirstGuest.GuestTerminalState;
+			return candidate?.Disposition == KingdomGrowthArrivalDisposition.Departed
+				&& (terminal == KingdomGrowthFirstGuestTerminalState.Departed
+					|| terminal == KingdomGrowthFirstGuestTerminalState.Died)
+				&& (body == null || !GameObject.Validate(body))
+				&& zone?.FindObjectByID(candidate.ObjectId) == null
+				&& !The.Game.ObjectGameState.ContainsKey(candidate.EscrowKey)
+				&& CountArrivalMarker(zone, candidate.Marker) == 0;
+		}
+
+		private static bool ExactDeclinedFirstGuest(KingdomGrowthArrivalCandidate candidate,
+			GameObject settler, Zone zone)
+		{
+			return candidate?.FirstGuest?.ChoiceState ==
+				KingdomGrowthFirstGuestChoiceState.Declined
+				&& (settler == null || !GameObject.Validate(settler))
+				&& candidate.ObjectId == null
+				&& !The.Game.ObjectGameState.ContainsKey(candidate.EscrowKey)
+				&& CountArrivalMarker(zone, candidate.Marker) == 0;
 		}
 
 		private static bool AppendArrivalOutbox(KingdomSystem system,

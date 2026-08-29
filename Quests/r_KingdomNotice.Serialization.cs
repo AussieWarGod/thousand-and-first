@@ -72,6 +72,10 @@ namespace XRL.World.Parts
 				|| !SavedTextWithin(LifecycleId, 180)
 				|| !SavedTextWithin(QuarantineReason, ThousandAndFirst.KingdomBountyRules.MaxSavedTextChars)
 				|| !SavedTextWithin(PendingWorkerName, ThousandAndFirst.KingdomBountyRules.MaxSavedTextChars)
+				|| !SavedTextWithin(ManningWorkId, ThousandAndFirst.KingdomBountyRules.MaxObjectIdChars)
+				|| !SavedTextWithin(ManningWorkName, ThousandAndFirst.KingdomBountyRules.MaxSavedTextChars)
+				|| !SavedTextWithin(ManningOptionRecord,
+					ThousandAndFirst.KingdomElapsedOptionRules.MaxEncodedChars)
 				|| !SavedTextWithin(TransferItemId, ThousandAndFirst.KingdomBountyRules.MaxObjectIdChars)
 				|| !SavedTextWithin(TransferSourceId, ThousandAndFirst.KingdomBountyRules.MaxObjectIdChars)
 				|| !SavedTextWithin(TransferDestinationId, ThousandAndFirst.KingdomBountyRules.MaxObjectIdChars)
@@ -114,12 +118,15 @@ namespace XRL.World.Parts
 				Passes = (Passes < 0) ? 0 : ThousandAndFirst.KingdomBountyRules.MaxPasses;
 				malformed = true;
 			}
-			if (PostedTick < 0L || TakenTick < 0L || DueTick < 0L || NextAttemptTick < 0L)
+			if (PostedTick < 0L || TakenTick < 0L || DueTick < 0L || NextAttemptTick < 0L
+				|| ManningServedTicks < 0L || ManningCheckpointTick < 0L)
 			{
 				PostedTick = (PostedTick < 0L) ? 0L : PostedTick;
 				TakenTick = (TakenTick < 0L) ? 0L : TakenTick;
 				DueTick = (DueTick < 0L) ? 0L : DueTick;
 				NextAttemptTick = (NextAttemptTick < 0L) ? 0L : NextAttemptTick;
+				ManningServedTicks = (ManningServedTicks < 0L) ? 0L : ManningServedTicks;
+				ManningCheckpointTick = (ManningCheckpointTick < 0L) ? 0L : ManningCheckpointTick;
 				malformed = true;
 			}
 			if (Magnitude < 0 || TransferredUnits < 0 || PaymentAmount < 0
@@ -134,6 +141,37 @@ namespace XRL.World.Parts
 				malformed = true;
 			}
 			if (Done && string.IsNullOrEmpty(WorkerName)) malformed = true;
+			if (ManningServedTicks > ThousandAndFirst.KingdomBountyManningRules.RequiredTicks)
+			{
+				ManningServedTicks = ThousandAndFirst.KingdomBountyManningRules.RequiredTicks;
+				malformed = true;
+			}
+			if (TaskCode == (int)ThousandAndFirst.BountyTask.Manning
+				&& (ManningVersion != 1 || string.IsNullOrEmpty(ManningWorkId)
+					|| string.IsNullOrWhiteSpace(ManningWorkName)
+					|| !ThousandAndFirst.KingdomElapsedOptionRules.TryDecode(
+						ManningOptionRecord, out ThousandAndFirst.KingdomElapsedOptionRecord _)
+					|| ManningResidentEpoch < 0 || ManningWorkEpoch < 0
+					|| (!string.IsNullOrEmpty(WorkerName) && WorkerResidentId <= 0))) malformed = true;
+			if (TaskCode == (int)ThousandAndFirst.BountyTask.Manning
+				&& string.IsNullOrEmpty(WorkerName)
+				&& (WorkerResidentId != 0 || ManningServedTicks != 0L
+					|| ManningCheckpointTick != 0L || ManningAssigned
+					|| ManningResidentEpoch != 0 || ManningWorkEpoch != 0)) malformed = true;
+			if (TaskCode == (int)ThousandAndFirst.BountyTask.Manning && ManningAssigned
+				&& (string.IsNullOrEmpty(WorkerName) || WorkerResidentId <= 0
+					|| ManningCheckpointTick <= 0L
+					|| ManningServedTicks >= ThousandAndFirst.KingdomBountyManningRules.RequiredTicks))
+				malformed = true;
+			if (TaskCode == (int)ThousandAndFirst.BountyTask.Manning && Done
+				&& ManningServedTicks != ThousandAndFirst.KingdomBountyManningRules.RequiredTicks)
+				malformed = true;
+			if (TaskCode != (int)ThousandAndFirst.BountyTask.Manning && (ManningVersion != 0
+				|| !string.IsNullOrEmpty(ManningWorkId) || !string.IsNullOrEmpty(ManningWorkName)
+				|| WorkerResidentId != 0 || ManningServedTicks != 0L
+				|| ManningCheckpointTick != 0L || ManningAssigned
+				|| !string.IsNullOrEmpty(ManningOptionRecord) || ManningResidentEpoch != 0
+				|| ManningWorkEpoch != 0)) malformed = true;
 			if (ScheduleVersion != 0 && ScheduleVersion != 2) malformed = true;
 			if (ScheduleVersion == 2
 				&& (!ThousandAndFirst.KingdomBountyRules.IsNoticeEventStream(EventStreamId)
@@ -204,7 +242,7 @@ namespace XRL.World.Parts
 			if (string.IsNullOrEmpty(LifecycleId))
 			{
 				LifecycleId = ThousandAndFirst.KingdomBountyRules.NoticeEventId(
-					(Basis != null) ? Basis.ID : null);
+					Basis?.IDIfAssigned);
 			}
 			else if (!ThousandAndFirst.KingdomBountyRules.IsNoticeEventId(LifecycleId))
 			{

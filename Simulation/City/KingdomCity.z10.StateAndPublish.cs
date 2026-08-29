@@ -150,9 +150,11 @@ namespace ThousandAndFirst.Simulation.City
 
 		private static KingdomStocks Ground(KingdomSurvey Survey, KingdomZoneRow row)
 		{
+			int foodAvailable = Survey.FoodAvailable;
 			return new KingdomStocks(
 				Measured(Survey.StoredWater, Survey.StorageCapacity),
-				Measured(Survey.FoodStored, Survey.FoodCapacity),
+				Measured(foodAvailable, KingdomOrdinaryFoodAuthority.EffectiveCapacity(
+					Survey.FoodStored, foodAvailable, Survey.FoodCapacity)),
 				row.Stocks.Materials);
 		}
 

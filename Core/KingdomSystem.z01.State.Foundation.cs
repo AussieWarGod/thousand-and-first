@@ -85,38 +85,26 @@ namespace ThousandAndFirst
 		/// </summary>
 		public string SubsidenceBinding;
 
-		/// <summary>
-		/// What this settlement's named notable is worth to the level
-		/// (<c>KingdomCeremonyRules.NotableShade</c>): their met tastes, the net of their virtue
-		/// and their flaw, and the <c>Prefers</c> their quarters happen to meet (Addendum 4).
-		/// Written when the office is first filled or passes to somebody else, so it is exactly as
-		/// stale as the last time it changed hands &mdash; knowledge, like
-		/// <see cref="SupportedLevel"/>, rather than a meter. Zero for a settlement that has named
-		/// nobody, which is every settlement until it has people enough to.
-		/// </summary>
+		/// <summary>Read-compatible legacy field. Earlier saves priced a named notable into the
+		/// settlement level. Civic offices are title-only in v1, so normalization always retires
+		/// this value to zero and no live formula reads it. Keep the field for save/seat ABI.</summary>
 		public int NotableShade;
 
-		/// <summary>
-		/// Everything this settlement is shaded by, which is what the level actually reads: the
-		/// named notable's standing worth plus whatever the last day's eating left behind. Summed
-		/// here rather than at the four call sites in <c>KingdomSubsidence</c> so the two can
-		/// never disagree about which shades count, and floored per half so neither can eat the
-		/// other. <c>KingdomCatalogueRules.Equilibrium</c> caps the total again.
-		/// </summary>
+		/// <summary>The settlement's live subsistence lift. Only its last attended meal contributes;
+		/// an optional civic title never grants population, service, capability, or economy.</summary>
 		public int Shade
 		{
 			get
 			{
-				return ((NotableShade < 0) ? 0 : NotableShade) + ((MealShade < 0) ? 0 : MealShade);
+				return (MealShade < 0) ? 0 : MealShade;
 			}
 		}
 
 		/// <summary>
 		/// What this settlement's last day's eating was worth to the level, for exactly the day
 		/// it was earned (<c>KingdomRules.MealShadeFor</c>). Re-drawn every heartbeat: a
-		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. Rides
-		/// the same lift term as <see cref="NotableShade"/> and is capped again with it by
-		/// <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats their way past their own
+		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. It is
+		/// capped by <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats past their own
 		/// water. Carried, so a city left mid-feast is still well fed when the founder walks back
 		/// into it.
 		/// </summary>

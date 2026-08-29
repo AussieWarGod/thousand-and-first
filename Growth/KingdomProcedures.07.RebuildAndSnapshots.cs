@@ -123,7 +123,7 @@ namespace ThousandAndFirst
 			{
 				return KingdomLabOwnedTargetState.Uncertain;
 			}
-			if (!record.ContractAt(at, out Snapshot, Who.ID))
+			if (!record.ContractAt(at, out Snapshot, Who.IDIfAssigned))
 			{
 				// Legacy type/manager/ordinal rows remain visible to the slate, but are
 				// read-only quarantine. They cannot mint mutation authority by inference.
@@ -165,17 +165,17 @@ namespace ThousandAndFirst
 				(int)Procedure.Source, (int)Procedure.Attach, manager, detail);
 			string job = string.IsNullOrEmpty(Record.JobIds[At])
 				? Guid.NewGuid().ToString("N") : Record.JobIds[At];
-			if (!Record.UpgradeLegacyLimbAt(At, exact.ID, Who.ID, job, Procedure.Named,
+			if (!Record.UpgradeLegacyLimbAt(At, exact.ID, Who.IDIfAssigned, job, Procedure.Named,
 				Procedure.Grants, (int)Procedure.Attach, manager, detail, fingerprint)) return false;
-			if (!Record.ContractAt(At, out Snapshot, Who.ID)) return false;
+			if (!Record.ContractAt(At, out Snapshot, Who.IDIfAssigned)) return false;
 			return EnsureLimbLedger(Who, Snapshot);
 		}
 
 		private static bool EnsureLimbLedger(GameObject Who, KingdomLabOwnershipSnapshot Snapshot)
 		{
 			if (Who == null || Snapshot.Source != (int)LabSource.Limb
-				|| !string.Equals(Who.ID, Snapshot.PatientId, StringComparison.Ordinal)
-				|| !string.Equals(Who.ID, Snapshot.BearerId, StringComparison.Ordinal)) return false;
+				|| !string.Equals(Who.IDIfAssigned, Snapshot.PatientId, StringComparison.Ordinal)
+				|| !string.Equals(Who.IDIfAssigned, Snapshot.BearerId, StringComparison.Ordinal)) return false;
 			BodyPart limb = ExactBodyPart(Who, Snapshot.BodyPartId);
 			if (limb == null || !BodyOwnsPart(Who, limb)
 				|| !string.Equals(limb.Manager, Snapshot.Manager, StringComparison.Ordinal)) return false;
@@ -186,16 +186,16 @@ namespace ThousandAndFirst
 				int at = ledger.IndexOf(Snapshot.ProcedureKey, Snapshot.JobId);
 				if (at < 0)
 				{
-					ledger.TrackIntent(Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+					ledger.TrackIntent(Snapshot.ProcedureKey, Snapshot.JobId, Who.IDIfAssigned,
 						Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
 						Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint, -1, null,
 						Snapshot.EffectNonce);
 				}
-				else if (!ledger.EntryMatches(at, Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+				else if (!ledger.EntryMatches(at, Snapshot.ProcedureKey, Snapshot.JobId, Who.IDIfAssigned,
 					Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
 					Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint, -1))
 				{
-					if (!ledger.UpgradeLegacyLimb(Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+					if (!ledger.UpgradeLegacyLimb(Snapshot.ProcedureKey, Snapshot.JobId, Who.IDIfAssigned,
 						Snapshot.BodyPartId, Snapshot.Attach, Snapshot.Grants, Snapshot.Manager,
 						Snapshot.Detail, Snapshot.Fingerprint)) return false;
 				}

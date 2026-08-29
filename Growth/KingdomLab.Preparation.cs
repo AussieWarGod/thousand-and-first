@@ -31,9 +31,13 @@ namespace ThousandAndFirst
 			}
 			List<GameObject> carcasses = new List<GameObject>();
 			List<string> names = new List<string>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure)) return;
 			foreach (GameObject item in Actor.GetInventoryAndEquipment())
 			{
-				if (item != null && item.HasPart("Butcherable"))
+				if (item != null && item.HasPart("Butcherable")
+					&& KingdomOrdinaryFoodAuthority.CanMutate(leases, item))
 				{
 					carcasses.Add(item);
 					names.Add(item.DisplayName);
@@ -52,6 +56,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			GameObject carcass = carcasses[picked];
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(carcass, out authorityFailure))
+			{
+				Popup.Show("That carcass now belongs to protected work and the slab will not alter it.");
+				return;
+			}
 			string stamp = KingdomProcedures.Stamp(carcass);
 			string source = carcass.DisplayNameOnly;
 			// Carried on the carcass, so that whatever vanilla's own butchery makes of it inherits
@@ -103,10 +112,14 @@ namespace ThousandAndFirst
 			}
 			List<GameObject> raw = new List<GameObject>();
 			List<string> names = new List<string>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure)) return;
 			foreach (GameObject item in Actor.GetInventoryAndEquipment())
 			{
 				if (item == null || item.GetIntProperty(KeptProperty) == 1
-					|| item.GetIntProperty(VatPendingProperty) == 1)
+					|| item.GetIntProperty(VatPendingProperty) == 1
+					|| !KingdomOrdinaryFoodAuthority.CanMutate(leases, item))
 				{
 					continue;
 				}
@@ -150,6 +163,17 @@ namespace ThousandAndFirst
 				return;
 			}
 			string job = string.IsNullOrEmpty(part.ID) ? Guid.NewGuid().ToString("N") : part.ID;
+			GameObject partOwner = part.InInventory;
+			Cell partCell = part.CurrentCell;
+			string partId = part.IDIfAssigned;
+			string partBlueprint = part.Blueprint;
+			int partCount = part.Count;
+			if (!LabObjectAt(part, partOwner, partCell, partId, partBlueprint, partCount)
+				|| !KingdomOrdinaryFoodAuthority.TryObjectNow(part, out authorityFailure))
+			{
+				Popup.Show("That part's custody changed before the vats could bind it. Nothing was spent.");
+				return;
+			}
 			part.SetIntProperty(VatPendingProperty, 1);
 			part.SetIntProperty(VatRemainingProperty,
 				KingdomProcedureRules.StaffDayTicks(KingdomProcedureRules.PreserveDays));
@@ -166,13 +190,19 @@ namespace ThousandAndFirst
 			part.SetStringProperty(VatRawFingerprintProperty,
 				KingdomLabRules.VatRawFingerprint(job, part.ID, part.Blueprint, part.Count,
 					stamp2, source));
-			part.SetStringProperty(VatOwnerIdProperty, Vat.ParentObject.ID ?? "");
+			part.SetStringProperty(VatOwnerIdProperty, Vat.ParentObject.IDIfAssigned ?? "");
 			Inventory inventory = Vat.ParentObject.RequirePart<Inventory>();
 			inventory.AddObjectToInventory(part, Actor, Silent: true, NoStack: true);
 			if (!VatRawReceiptMatches(part, Vat.ParentObject))
 			{
-				Actor.RequirePart<Inventory>().AddObjectToInventory(part, Actor, Silent: true, NoStack: true);
-				ClearPending(part);
+				if (KingdomOrdinaryFoodAuthority.TryObjectNow(part, out authorityFailure))
+				{
+					Actor.RequirePart<Inventory>().AddObjectToInventory(part, Actor,
+						Silent: true, NoStack: true);
+					if (LabObjectAt(part, Actor, null, partId, partBlueprint, partCount)
+						&& KingdomOrdinaryFoodAuthority.TryObjectNow(part, out authorityFailure))
+						ClearPending(part);
+				}
 				Popup.Show((part.Physics != null && part.Physics.InInventory == Actor)
 					? "The vats could not take hold of that part. It is back in your hands; nothing was spent."
 					: "The vats could not take hold of that part. Check the ground and your inventory; the raw part was not consumed.");
@@ -181,6 +211,13 @@ namespace ThousandAndFirst
 			Vat.LastWorkedTick = The.Game?.TimeTicks ?? 0L;
 			MessageQueue.AddPlayerMessage("{{G|" + KingdomLabRules.StakedLine("keeping " + source,
 				KingdomProcedureRules.PreserveDays) + "}}");
+		}
+
+		private static bool LabObjectAt(GameObject item, GameObject owner, Cell cell,
+			string id, string blueprint, int count)
+		{
+			return GameObject.Validate(item) && item.InInventory == owner && item.CurrentCell == cell
+				&& item.IDIfAssigned == id && item.Blueprint == blueprint && item.Count == count;
 		}
 
 		internal static bool HasPending(r_KingdomVatHouse Vat)

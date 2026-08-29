@@ -88,7 +88,7 @@ namespace ThousandAndFirst
 					|| Value.DeliverySourceBeforeAmounts[i] < 0L
 					|| Value.DeliveryTripIds[i] < 0 || Value.DeliveryStopOrdinals[i] < 0
 					|| Value.DeliveryCargoAuthorityKinds[i] < 0
-					|| Value.DeliveryCargoAuthorityKinds[i] > 1
+					|| Value.DeliveryCargoAuthorityKinds[i] > 2
 					|| Value.DeliveryOwnerManifestVersions[i] < 0
 					|| Value.DeliveryOwnerManifestRevisions[i] < 0L
 					|| Value.DeliveryManifestSourceStarts[i] < 0
@@ -153,6 +153,11 @@ namespace ThousandAndFirst
 					== (int)Simulation.City.KingdomDeliveryCargoAuthority.ScalarStock;
 				bool manifest = central && Value.DeliveryCargoAuthorityKinds[i]
 					== (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest;
+				bool construction = central && Value.DeliveryCargoAuthorityKinds[i]
+					== (int)Simulation.City.KingdomDeliveryCargoAuthority.ConstructionInput;
+				if (central && Value.DeliveryPhases[i]
+						== (int)Simulation.City.KingdomDeliveryPhase.LandedAwaitingOwner
+					&& !construction) return false;
 				if (scalar && (Value.Cargos[i] != (int)Simulation.City.KingdomStockKind.Water
 					&& Value.Cargos[i] != (int)Simulation.City.KingdomStockKind.Food)) return false;
 				if (scalar && (string.IsNullOrEmpty(Value.DeliverySourceObjectIds[i])
@@ -181,7 +186,34 @@ namespace ThousandAndFirst
 						|| Value.DeliveryOwnerManifestRevisions[i] != 0L))
 					|| (!reservation && (Value.DeliveryOwnerManifestVersions[i] <= 0
 						|| string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i]))))) return false;
-				if (central && !scalar && !manifest) return false;
+				bool constructionNeutral = Value.DeliveryOwnerManifestVersions[i] == 0
+					&& string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i])
+					&& Value.DeliveryOwnerManifestRevisions[i] == 0L;
+				bool constructionBound = Value.DeliveryOwnerManifestVersions[i] > 0
+					&& !string.IsNullOrEmpty(Value.DeliveryOwnerManifestDigests[i])
+					&& Value.DeliveryOwnerManifestRevisions[i] >= 0L;
+				bool constructionReservation = Value.DeliveryPhases[i]
+					== (int)Simulation.City.KingdomDeliveryPhase.ReservationPrepared;
+				bool constructionQuarantine = Value.DeliveryPhases[i]
+					== (int)Simulation.City.KingdomDeliveryPhase.Quarantined;
+				if (construction && (Value.Cargos[i]
+						!= (int)Simulation.City.KingdomStockKind.OpaqueManifest
+					|| string.IsNullOrEmpty(Value.DeliveryOwnerOperationIds[i])
+					|| Value.DeliveryTargetBeforeAmounts[i] != 0L
+					|| Value.DeliveryTargetReceiptStates[i] != 0
+					|| Value.DeliveryPhases[i] == (int)Simulation.City.KingdomDeliveryPhase.Planned
+					|| Value.DeliveryManifestSourceStarts[i] < 0
+					|| Value.DeliveryManifestSourceCounts[i] <= 0
+					|| Value.DeliveryManifestSourceCounts[i]
+						> Simulation.City.KingdomLogisticsRules.CarrierCapacity
+					|| Value.CargoAmounts[i] != Value.DeliveryManifestSourceCounts[i]
+					|| Value.DeliverySourceBeforeAmounts[i] != 0L
+					|| (constructionReservation && !constructionNeutral)
+					|| (!constructionReservation && !constructionQuarantine
+						&& !constructionBound)
+					|| (constructionQuarantine && !constructionNeutral
+						&& !constructionBound))) return false;
+				if (central && !scalar && !manifest && !construction) return false;
 				if (central && Value.DeliveryPhases[i]
 					== (int)Simulation.City.KingdomDeliveryPhase.Planned)
 				{

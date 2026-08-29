@@ -13,6 +13,11 @@ This is the supported programming contract, not a release-status ledger. Current
 evidence and unsigned native gates are in [STATUS.md](STATUS.md); runtime ownership and the
 single-survey execution model are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
+Engine-evidence citations use `D/...` for paths in the local decompiled `Assembly-CSharp` review
+corpus and `B/...` for paths in the locally installed `StreamingAssets/Base` corpus. These are
+evidence locators, not repository paths. This project redistributes neither decompiled source nor
+installed game data.
+
 ## Getting the system
 
 ```csharp
@@ -25,6 +30,57 @@ if (kingdom.Founded) { /* ... */ }
 `RequireSystem` creates the system if absent, so it is always safe. Every property below is
 readable at any time; a kingdom that has not been founded reports `Founded == false` and
 neutral values.
+
+## External ground-ownership provider protocol
+
+The dependency-free core publishes `ThousandAndFirst.Api.IKingdomExternalOwnershipProvider` and
+`KingdomExternalOwnershipProviderAttribute`. A provider is a read-only translator for one
+external ownership system. Mark one public parameterless implementation; TAF discovers it through
+Qud's mod-sensitive type catalogue. Provider IDs must be unique, stable, and no longer than 64
+characters. Versions are stable strings up to 32 characters.
+
+```csharp
+[KingdomExternalOwnershipProvider]
+public sealed class MyOwnershipProvider : IKingdomExternalOwnershipProvider
+{
+    public string ProviderId => "MySettlementMod";
+    public string ProviderVersion => "1.4.0";
+
+    public bool TryObserve(Zone activeZone,
+        out KingdomExternalOwnershipObservation observation, out string failure)
+    {
+        // Read only the supplied exact active zone and your existing registries.
+        // Return false/null/null when it is not yours.
+    }
+}
+```
+
+`TryObserve` receives the exact active zone. It must not load another zone, create/claim a
+settlement, move or convert a person, publish a building, clear leadership, or alter either mod's
+state. Return `false` with both outputs null for unowned ground. Return `true` with a complete
+observation for owned ground. A nonempty `failure` means observation could not be proved and TAF
+fails closed. Throwing has the same result.
+
+| Observation member | Contract |
+|---|---|
+| `ProviderId`, `ProviderVersion` | Must exactly equal the provider properties. |
+| `OwnerGuid` | Nonempty lowercase canonical `Guid` D text for the external settlement/owner. |
+| `SectorGuid` | Lowercase canonical nonempty `Guid` D text when zone-level evidence exists; otherwise null/empty. |
+| `Evidence` | Stable bounded evidence kind, not display prose. |
+| `ZoneId` | Must exactly equal the supplied active zone ID. |
+| `ParasangId` | Stable external ownership cell evidence. |
+
+`KingdomExternalOwnershipRules` is the engine-free v1 validation, canonical codec, equality, and
+binding-verdict surface. `Encode(None())` records an explicit unowned decision;
+`Encode(Bind(observation))` records exact provider/version/owner/sector/zone/parasang evidence.
+Both accepted modes remain permanent TAF-owned zone evidence after the claim commits, so a later
+owner appearing on explicitly unbound ground is detectable. Bindings contain strings only, never
+serialized foreign objects. Directly writing zone binding properties or invoking the internal
+founding adapter is unsupported.
+
+The shipped `Integrations/Hearthpyre223` provider implements this protocol only when exact enabled
+Hearthpyre 2.2.3 loaded first. Other versions do not load the shard. Qud Industry 0.3 has no typed
+API in the audited release and remains resolved-capability based.
 
 ## `KingdomSystem` — the game system
 
@@ -51,11 +107,99 @@ neutral values.
 | `Dictionary<string,string> ZoneDistricts` | Zone ID → district key. |
 | `List<string> ChronicleEntries` / `OutsiderEntries` | The two registers, oldest first, capped. |
 | `Dictionary<string,int> OriginCounts` | Settler origin → count (population composition). |
-| `int GetStanding(string factionName)` | The kingdom's own standing with a faction — **separate from player reputation**. |
-| `void SetStanding(string, int, bool mirror = true)` | Set standing and mirror the faction's feeling toward the kingdom. |
-| `void AdjustStanding(string, int, bool mirror = true)` | Apply a delta. Prefer this over writing `Standings` directly. |
-| `void MirrorFeeling(string factionName)` | Re-write one faction's feeling from its standing. Safe when unfounded. |
+| `Dictionary<string,int> RegardForRealm` | Foreign faction → realm regard. This is the authoritative inbound civic direction used for offers and foreign attitudes toward realm citizens. Treat as read-only; use the named methods below. `Standings` remains the mutable compatibility field backing this same map. |
+| `Dictionary<string,int> RealmPolicyToward` | Realm → foreign-faction policy, projected only onto the realm faction's exact edge. Absence means **unspecified** and writes no edge. Treat as read-only. |
+| `Dictionary<string,int> RegardSpilloverRemainders` | Signed hundredths carried when permanent personal reputation spills into `RegardForRealm`. Treat as read-only. Standing plus carry is one canonical scaled pair: zero carry rows are absent, carry has the scaled total's sign, and saturated endpoints retain no outward debt. Equal weighted histories are partition/order independent only while no intermediate update clips at an integer endpoint. |
+| `Dictionary<string,int> RegardSpilloverObservedReputation` | Last personal-reputation event poststate observed per eligible faction. This persisted advisory observation is neither civic regard nor civic policy and is never dedupe authority. Treat as read-only. |
+| `KingdomPolityLedger PolityLedger` | Realm-scoped semantic polity authority. Treat as read-only host state: call `KingdomPolityRules.Usable` before reading rows and never treat a faction, creature, route body, dialogue, or map mark as authority over it. Unknown or quarantined state is inert. |
+| `KingdomPolityRealmTransition PolityTransition` | Durable exile/return/refound receipt. It owns phase/revision CAS, exact-return escrow, bounded legacy facts, old owned-faction tombstone evidence, and fresh refound ids. Do not copy or mutate it directly. |
+| `int GetRegardForRealm(string factionName)` | Read foreign-faction → realm regard. Returns 0 for an unspecified entry; check `RegardForRealm.ContainsKey` when that distinction matters. |
+| `bool TrySetRegardForRealm(...)` / `SetRegardForRealm(...)` / `AdjustRegardForRealm(...)` | Set or adjust only foreign-faction → realm regard. Refuses an unfounded/pending realm, missing or reserved endpoint, malformed key, malformed standing/carry root, or full ledger. Absolute `Set` clears that edge's fractional carry in the same copy-on-write publication; `Adjust` adds whole points to the complete scaled pair and preserves canonical carry unless it clips. Successful writes optionally project only that edge. |
+| `bool TryAdjustRegardForRealmBatch(IList<KeyValuePair<string,int>>, bool mirror = true)` | Validate pair canonicality, capacity, authority, uniqueness, and every foreign endpoint on private copies before one all-or-none standing-and-carry root publication. Allocation, arithmetic, or validation failure leaves both old roots exact. Each edge saturates without outward carry, then the method optionally projects only those exact edges. |
+| `bool TryGetRealmPolicyToward(...)` / `int GetRealmPolicyToward(...)` | Read realm → foreign-faction policy. `TryGet` preserves unspecified versus explicit zero. |
+| `bool TrySetRealmPolicyToward(...)` / `void AdjustRealmPolicyToward(...)` | Set or adjust only realm → foreign-faction policy and optionally project that exact edge. These methods never infer a matching inbound-regard change. |
+| `void MirrorRegardForRealm(...)` / `MirrorRealmPolicyToward(...)` / `ReassertFeelings()` | Re-project only recorded, namespaced pair entries. Unknown factions are not created and unspecified entries write nothing. |
+| `GetStanding` / `SetStanding` / `AdjustStanding` / `MirrorFeeling` | Compatibility aliases for the **inbound** `RegardForRealm` direction. New integrations should use the directional names so symmetry is never inferred accidentally. |
 | `static void Guard(string step, Action work)` | Run work inside engine dispatch without letting exceptions escape. Use for any code the engine invokes. |
+
+A clean new realm starts both civic directions, signed carry, and diagnostic observation empty; it
+does not enumerate or inherit personal reputation. Permanent, non-transient
+`AfterReputationChangeEvent` deltas spill only into
+`RegardForRealm`; `RealmPolicyToward` and vanilla personal reputation remain separate. The rate
+dampens from Camp to City; canonical signed fractional carry makes equal weighted histories
+independent of event batching and order while no intermediate update clips. Saturation deliberately
+discards overflow debt, so a clipped history is not promised reversible or reorderable. Transient and master-disabled events update only the advisory observation, so they
+never become later catch-up.
+
+Native Qud can also set personal reputation without emitting this event, so an observed poststate is
+advisory and never suppresses a later permanent event as a presumed replay. Direct native
+`Reputation.Set` writes do not spill. The engine event has no durable source ID; this coarse adapter
+must not be treated as grievance evidence, while typed grievances and their dedupe receipts use
+their own adapters.
+
+Serialization-v8 load migration reconstructs outbound policy only from canonical explicit feelings
+on the exactly owned realm faction and the phase-appropriate current polity ledger or validated
+exile escrow. It never mirrors inbound regard, reads personal reputation, or seeds carry/observation.
+Impossible phase pairs, missing or reserved endpoints, ambiguous feelings, and refounded `Rebound`
+archives whose old-ledger envelope was deliberately destroyed quarantine rather than infer authority.
+
+## Semantic polity authority
+
+`KingdomPolityLedger` is bounded persisted meaning, not a background-world simulator. Its records
+describe current/imported/authored/vanilla-reference polities, directional relations, immutable
+fact-derived profile revisions, semantic routes, caused grievances and fronts, finite cohort plans,
+scarce named figures, witnessed incident plans/conclusions, projection receipts, independent
+import/presentation options, and declared compaction evidence. Engine factions, creatures,
+dialogue, map marks, and encounters are reversible or witnessed projections with their own
+receipts; they never become semantic authority by existing.
+
+| Member | Contract |
+|---|---|
+| `KingdomPolityRules.Usable(ledger)` / `TryValidate(ledger, out failure)` | Whole-graph admission. Current compatible state is canonical, bounded, referentially complete, and owner-bound or the whole authority refuses. Unknown/future and quarantined state is never usable. |
+| `KingdomPolityRules.Clone(ledger)` | Canonical deep copy through the current strict wire envelope. Invalid state throws before a copy is exposed. |
+| `KingdomPolityRules.TrySetEmptyImportPolicy(...)` / `TryPublishFoundation(...)` / `TryObserveCurrentFoundation(...)` | Typed compare-and-swap foundation lane. It freezes import consent, publishes the current realm plus zero/one bounded legacy snapshot atomically, and later observes the frozen authority without re-reading mutable live facts. |
+| `KingdomPolityRules.TryPrepareLegacyFaction(...)` / `TryCommitLegacyFaction(...)` / `TryPrepareLegacyFactionTombstone(...)` / `TryCommitLegacyFactionTombstone(...)` | Semantic half of owned faction projection and retirement. The Qud adapter must prove the exact prepared id/digest; it may recover missing owned state but never reuse an old faction id or overwrite divergent/foreign state. |
+| `KingdomPolityRules.TryPrepareRealmExile(...)` / `TryMarkRealmExileTombstoned(...)` / `TryDetachRealmExile(...)` / `TryRestoreRealmReturn(...)` / `TryCommitRealmRefound(...)` / `TryCompleteRealmReturn(...)` | Typed current→legacy transaction. One CAS ends current/imported polities at the archive close tick; owned physical factions then tombstone before detach. Exact return restores the byte-identical source ledger. Refound requires fresh realm/polity/faction ids and destroys rollback escrow. Retry acknowledges only exact state; divergence refuses or quarantines. |
+| `KingdomPolityProfileRules.TryCreateCurrent(...)` / `TryCreateLegacy(...)`; `KingdomPolityNpcRules.TryResolve(...)` | Pure immutable profile and NPC expression. The resolver deterministically returns blueprint, level/stats, skills, bounded mutations, role gear, technology band, and digest for one ordinal; it creates or places no actor. |
+| `KingdomPolityRules.CanEmitOptionalProjection(ledger, causeTick)` | Presentation option gate. Enabling starts at its recorded future-cause floor; disabled time never creates a backlog. Semantic causes remain recorded even when optional rendering is off. |
+| `KingdomPolityManifestRules.TryCreateErrandProof(...)` / `TryCreateCargoProof(...)`; `KingdomPolityRouteRules.TryPlan(...)` / `TryDepart(...)` / `TryAdvance(...)` / `TryDeliverEntitlement(...)` / `TryReturn(...)` | Conserved route protocol. Errands prove zero cargo; cargo proofs bind the external custody owner and digest. Semantic travel changes endpoint phase only and never loads a zone or creates a walking actor. |
+| `KingdomPolityCorrespondenceRules.TryCreateProof(...)` / `TryDescribe(...)` | Binds one message to an exact route/counterparty/digest and exposes a bounded phase/verb view without inventing a courier body. |
+| `KingdomPolityCohortRules.TryPlan(...)` / `TryPrepareEndpointManifestation(...)` / `TryCommitEndpointManifestation(...)` / `TryConcludeEndpointCohort(...)` / `TryCommitEndpointCleanup(...)` | Freezes 1–7 exact resolved members and runs the prepare→commit→conclude→cleanup receipt protocol. At most one member is a named face. Physical adapters must preserve foreign objects and may not remint a missing committed body. |
+| `KingdomPolityDiplomacyRules.TryOpenGrievance(...)` / `TryPlanTerms(...)` / `TryAnswerTerms(...)`; `KingdomPolityHospitalityRules.TryCreateProof(...)` | Caused diplomacy only. Standing/creed is not a grievance; answers are exact CAS choices. Hospitality is optional transaction evidence and empty food cannot block ordinary diplomacy. |
+| `KingdomPolityRules.MaxPolities` / `MaxRoutes` / `MaxActiveFronts` / `MaxCohortMembers` | Hard attention bounds: four total polity records, eight routes, one active front, and 1–7 bodies in one cohort. The graph additionally permits at most one substantive live external polity and one named representative per cohort. |
+
+Profile revisions are immutable once referenced. A cohort freezes exact profile id/revision and
+resolved members before physical manifestation. A conflict plan freezes participants, stakes,
+surfaces, interventions, and deterministic inputs, but never a winner, casualties, or conquest.
+Only a fresh live scene may record observed facts; the separately consented escrow lane may apply
+only its exact reserved stake and at most one reversible wound. Incident views and aftermath
+rendering cannot author a conclusion.
+
+The v3 codec is canonical and fail closed: wire v1 and v2 have independent migration fixtures,
+future versions remain byte-exact opaque and inert, hostile lengths/trailing bytes refuse, and invalid
+current graphs quarantine while preserving inspectable evidence. The host owns binds, transitions,
+projection commits, and compaction. External code may read compatible state; direct list mutation
+is unsupported.
+
+## Assenting-moot authority
+
+`KingdomAssentingMootReceipt` is copy-on-write city authority for one exact moot. Native zone and
+body parts are reversible projections, never semantic authority. Receipt and phase numeric values
+are append-only. Direct field/list mutation is unsupported: use the pure rules and publish the
+returned copy through the owning city transaction.
+
+| Member | Contract |
+|---|---|
+| `KingdomAssentingMootRules.ActivationEligible(...)` | Pure all-proofs gate for founded state, assent node, Chavvah rite, claimed surface, cardinal Moon Stair adjacency, and owner readiness. The runtime key remains derived and is never learned. |
+| `StrengthFor(validAssents, grantedExemptions)` | Ten native stabilization strength per current valid assent, minus ten per durable exemption, clamped to 0–60. |
+| `TryPrepare(...)` / `TryChangeMember(...)` / `TryRebind(...)` | Authenticated copy-on-write authority for exact realm/city/zone/building/lot and bounded named bodies. Six assents and six exemptions are hard caps. |
+| `PrepareProjection(...)` / `Applied(...)` / `Suspended(...)` / `Quarantined(...)` | Append-only projection lifecycle. Suspension has zero strength; quarantine preserves bounded inert evidence. |
+| `Validate(receipt, out failure)` | Admission gate for version, phase, authority hash, canonical membership fingerprint, bounds, dates, and strength. Invalid state must not project. |
+
+The engine adapter uses one native `ZoneParts.AmbientStabilization` immediately beside its
+namespaced owner marker and owns only effects stamped to the exact moot building. It refuses
+pre-existing, duplicate, or foreign fields instead of adopting them. Exempt exact resident bodies
+veto `ApplyAmbientRealityStabilized`; no NormCore or global faction mutation is part of this API.
 
 ## `KingdomFounding` — founding, territory, citizenship
 
@@ -68,6 +212,14 @@ neutral values.
 | `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Founds the realm's second city. `force` waives only the not-adjacent requirement. |
 | `static KingdomZoningRules.ClaimVerdict JudgeClaim(KingdomSystem, Zone)` | What the founder's own claim on this ground would do — gathers the facts off the world (ours, the other city's, an exiled realm's, foreign, adjacent) and hands them to the pure verdict below. The engine-coupled half of `KingdomZoningRules` § *The claim*, below. |
 | `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomData.StyleForSite` owns which style a site resolves to. |
+
+Founder-basin publication is receipt-owned. A village charter stages a property-map write-ahead
+effect binding transaction, authority, exact faction/display/site, and canonical standing/carry
+before/after pairs before changing civic regard. `Prepared` plus the exact after pair is the single
+supported save/exception cut before `Applied`; a raw standing threshold is never publication proof.
+Pre-effect completed covenants remain readable from their exact archived covenant row, while an
+unarchived legacy threshold cannot be adopted. The old direct `CharterVillage` entry point is an
+inert compatibility stub; integrations must enter through the founder-basin transaction.
 
 ## `KingdomExileRules` — regard, expulsion, and return
 
@@ -269,12 +421,14 @@ settlement's clock. Nothing is counted twice.
 **`TeachesDish` — classified, not silently omitted.** The survey lists it as a free carrier (no
 vanilla blueprint uses it). It is a per-*creature* override that sits **above** the faction recipe
 in `WaterRitualCookingRecipe`'s resolution order. The faction recipe is the realm's one shipped dish
-authority, so using `TeachesDish` as a competing realm-dish authority is `REJECTED`. A separately
-authored named cook teaching an alternate recipe is `AUTHOR-DEFERRED`; it needs its own bounded
-identity/spawn/recipe contract if the author later reopens it.
+authority, so using `TeachesDish` as a competing realm-dish authority is `REJECTED`. The reopened
+named-cook feature is narrower: one exact city-local resident identity may teach one separately
+authored, direct vanilla-component recipe. Its resident/body/recipe receipts, replacement/revocation,
+save recovery, and water-rite resolution are active v1 work; display-name substitution and random
+procedural recipe generation remain forbidden.
 
-**Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s explicitly deferred third kind
-("food spoilage waits until food is a flow"), now spent: a damaged larder loses servings on world
+**Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s formerly postponed third kind
+("food spoilage waits until food is a flow"). That prerequisite is now satisfied: a damaged larder loses servings on world
 days exactly as a damaged cistern loses drams, through the same `Leaked` arithmetic, announced
 once by name and unsaid when it is mended. Spoilage runs *after* the ration draw in the pass, so
 it can never be the reason a settlement goes hungry — only the reason it has no cushion when
@@ -282,7 +436,10 @@ something else is.
 
 ## Acting on its own judgment
 
-`KingdomBounty` (posted prices: no escrow, completion-paid, deterministic taker draws),
+`KingdomBounty` (posted prices: no escrow, completion-paid, deterministic taker draws; manning
+binds one exact resident/work and advances only through ordinary reserved-crew serviced time;
+realm option/master epochs and monotone resident/work availability epochs reanchor every interval
+that cannot be proved continuous),
 `KingdomRoads` (worn ground: traffic accrual from stored tick stamps, founder paving),
 `KingdomYards` (one yard trade per small house, registry in `KingdomYardWorks.xml` — mergeable),
 `KingdomGuestbook` (notable guests with hooks that decay into rumors, and the carry-sign's
@@ -327,7 +484,9 @@ shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exoti
 `KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`) or exact vanilla
 skill presence (`skill.tinkering`, `skill.harvestry`, `skill.customs`, `skill.physic`,
 `skill.wayfaring`, each at threshold `1`), ablest-first deterministic assignment, shortfalls slow
-and named. `KingdomWear` / `KingdomWearRules`:
+and named. Only the first positive demand selects the capability lane; `CrewNeeds` affects pace,
+not building eligibility or an improvement trigger (`fieldrows` uses `skill.harvestry:1`).
+`KingdomWear` / `KingdomWearRules`:
 damage from raids, hard running and temperamental tech — never from the calendar — bounded,
 mending auto-queued and holdable, costed from the chain. Hard running is counted in
 **activity-days** (`KingdomRules.ActivityDays`), so a work that ran hard through an absence wore
@@ -383,7 +542,15 @@ settler an address: Needs gate the home; housemates are gated by the closeness l
 quarrel, Close refuses the ambient grudge, Roomed tolerates it, and open hostility (≥100, the
 named fault lines) refuses any shared roof at every tier. `Refuses` tags are absolute. Closeness
 derives from beds-per-footprint density, `Closeness` attribute overriding. Arrivals join only if a
-home they would accept exists. A settler whose acceptable housing is lost does not start a
+home they would accept exists. Among those eligible homes, an ordinary/non-luxury resident takes
+any non-`finehouse` before a fine house; only then does the ordinary fewest-free-beds/ordinal-plot
+tiebreak run. This is a last-resort preference, not a hard reservation: when a fine house is the
+only acceptable shelter it is used, existing assignments are never displaced, and projected
+arrival occupancy calls the same chooser as the real settlement pass. The public
+`KingdomLodgingRules.ChooseOrdinaryIndex` surface accepts the candidates plus parallel fine-house
+flags; null or mismatched advisory flags fall back to `ChooseIndex`, so bad advisory input cannot
+manufacture homelessness. `LodgingCandidate` retains its three-field ABI. A settler whose
+acceptable housing is lost does not start a
 countdown: they are recorded at a **roof brink** the moment they have nowhere, word is pushed to
 the founder naming what would keep them, and they leave only once the brink's six **world-day**
 window is spent — attended or not, dated to the day it ran out. An absence of any length still
@@ -409,14 +576,19 @@ XML pass — named overrides, omitted survives, blank erases, skins append (same
 chains extend across files; the post-merge design is what the validator sees. `Plot`, `Footprint`,
 and `Roof` describe catalogue capacity and eligibility; they do not generate geometry. Exact
 geometry comes from the selected architecture map and palette. `KingdomSocket` keeps a struck lot
-as a rebuildable reservation. A same-set plan change exists only when
-`KingdomArchitectureTransitions` declares the exact directional `(from, to, type, actual size)`
-delta; it keeps the lot identity. Retype or resize performs fresh siting/restaking and mints a new
-lot identity. Skins change declared presentation metadata, not authored topology. The upgrade
-trigger law (`KingdomUpgradeRules`): housing auto-upgrades only when residents can be displaced to
-their own `LodgingStandard`; working buildings additionally need the reserve to cover the outage
-(`AbsorptionDemand`), else the verdict is a held offer (`IsOffer`), forceable via
-`KingdomUpgrade.Force` with the dip disclosed. No trigger reads elapsed time.
+as a rebuildable reservation. Three lanes remain distinct. An `UpgradesTo` tier automatically
+resolves only inside the standing receipt's same exact plan/binding/type/actual-size route (the
+adjacent civic-heart rung is the sole exception), resolves the successor's exact frozen
+`VariantKey` rather than current demographic selectors, and preserves `LotId`. A missing matching
+successor variant refuses before debit. A founder-selected plan
+change exists only when `KingdomArchitectureTransitions` declares the exact directional
+`(from, to, type, actual size)` delta. Same-set transitions preserve `LotId` only through an explicit
+transition receipt. Retype or resize performs fresh
+siting/restaking and mints a new lot identity. Skins change presentation metadata, not topology.
+The real automatic trigger gates are stage, style, holds, exact `Knowledge`/`MinTech`, free hands,
+contents fit, water price plus reserve, `UpgradeMaterials`, one-work-at-a-time pacing, and frozen-lot
+room. The predecessor stays live throughout construction; no temporary lodging, output outage,
+held offer, or force-through-harm path exists. No trigger reads elapsed time.
 
 ## Reserved lots, occupied plans, materials, and gates
 
@@ -432,9 +604,11 @@ Preview freezes this authority before debit; commit re-proves the same snapshot 
 a variant twice. The stamper applies ordered ground, structure, and object layers. No current
 commission stretches a smaller map, builds a generic rectangle, guesses a door, or scatters
 furnishings. Missing exact bindings are filtered from the picker and refuse direct calls before
-mutation. Same-set transitions preserve `LotId` only through an explicit transition receipt;
-retype/resize is a fresh lot. Already-standing legacy work remains on its frozen compatibility
-path and is never silently converted.
+mutation. Automatic same-binding tiers preserve the standing variant identity; explicit
+same-type/same-size transition receipts may select the target's current lawful variant only when
+every declared target variant retains the source's stateful fabric. Both lanes
+preserve `LotId`; retype/resize is a fresh lot. Already-standing legacy work remains on its frozen
+compatibility path and is never silently converted.
 
 Materials (`KingdomMaterials` / `KingdomMaterialRules`) come from clearance—never minted—and live
 in dedicated stockpiles; building costs are water plus materials, and condemning returns half.
@@ -467,7 +641,7 @@ last, and stop at the first refusal — the founder is told one thing to fix, no
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster)` | The four-gate verdict, stratum untested (equivalent to `Underground: false, RequiresSky: false`). |
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky)` | The same, with the stratum folded in. A design whose plot spec declares `Sky` is refused **`RefusedStratum`** (`Note: "wants open sky"`) on ground below `KingdomRules.SurfaceZLevel` — checked before the district, so the menu itself carries the tag at the moment the founder is choosing, rather than only once they've picked the design and `KingdomPlotRules.RefuseSky` turns them away at the plot. The other half of the stratum question — which SET a design belongs to — is the `Strata` gate below, and the nine-argument overload folds both in. |
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky, BuilderRoll roll, string groundStratum)` | The full verdict, stratum set included: after weather (asked first, because it is the half nothing can answer) the ground's stratum is asked against the gate's `Strata` list, and a design that does not stand here is refused **`RefusedStratum`** with `Detail` naming every stratum that *would* take it and `Note` naming where it lives. The eight-argument overload delegates with `StratumOfGround(underground)`, so every shipped caller gets the gate unchanged. |
-| `static string HomeStratum(string strata)` / `static string StrataShared(string strata)` / `static bool StrataAdmits(string strata, string stratum)` / `static string StratumOfGround(bool underground)` / `static string StratumName(string stratum)` / `static string DescribeStrata(string strata)` | The strata vocabulary (Addendum 15): first welcomed token is home, the rest are share-tags, `all`/`!` spellings shared with `TagAccepts`, and the set is open — a third-party token names itself. `StrataAdmits` answers for `sky` by falling back to the *surface* answer unless the list mentions sky, which is the whole of "sky is a filtered subset of the surface": the sky set is never enumerated, it is the surface set minus what filters itself out with `!sky`. Constants `StratumSurface`/`StratumDeep`/`StratumSky`/`StratumArcology` name the shipped tokens; `StratumArcology` is a name only — its records wait on the capital wave. |
+| `static string HomeStratum(string strata)` / `static string StrataShared(string strata)` / `static bool StrataAdmits(string strata, string stratum)` / `static string StratumOfGround(bool underground)` / `static string StratumName(string stratum)` / `static string DescribeStrata(string strata)` | The strata vocabulary (Addendum 15): first welcomed token is home, the rest are share-tags, `all`/`!` spellings shared with `TagAccepts`, and the set is open — a third-party token names itself. `StrataAdmits` answers for `sky` by falling back to the *surface* answer unless the list mentions sky, which is the whole of "sky is a filtered subset of the surface": the sky set is never enumerated, it is the surface set minus what filters itself out with `!sky`. Constants `StratumSurface`/`StratumDeep`/`StratumSky`/`StratumArcology` name the shipped tokens. The built-in arcology lots declare only `arcology`; they are commissioned through their exact host and never enter surface offers. |
 | `static ZoningJudgement Judge(ZoneGate, string tileDistrict, string category, int claimedZones, IEnumerable<string> roster, bool underground, bool requiresSky, BuilderRoll roll)` | The same again with the city's own people folded in. The three creed gates are checked **before** all five older ones, in Addendum 16's order — alignment, then amount, then hands — because alignment is the only gate a founder cannot answer by walking somewhere or carrying something home. Against `BuilderRoll.Unknown` this answers exactly as the overload above. |
 | `static bool TagAccepts(string tags, string value)` | **The one tag idiom**, and what `KingdomRules.StyleAllows` now is. An empty list accepts everything; a matching `!`-negation refuses whatever else the list says; otherwise accept on `all`, on the value, or on a list of nothing but refusals ("everywhere except"). Case-folded both sides. `NegationPrefix` is `'!'`, matching vanilla's own `RecipeGenotype="!True Kin"`. |
 | `static string DescribeTags(string tags)` | The list read back as prose, or null when it gates nothing. |
@@ -477,6 +651,37 @@ last, and stop at the first refusal — the founder is told one thing to fix, no
 | `static bool StratumAccepts(bool underground, bool requiresSky)` | The one depth rule the catalogue can state today: `!(underground && requiresSky)` — weather does not reach under the rock. |
 | `static string StratumName(bool underground)` | `"under the rock"` / `"open sky"`, for the sentence that names it. |
 | `static int ZonesForStage(GrowthStage)` | How many zones a city of this stage may hold at most: Camp/Steading 1, Village 2, Town 3, City 4. Read off the catalogue's own `MinZones` pairs, not chosen separately — the two-zone designs are `MinStage="Village"`, the three-zone `Town`, the four-zone `City` — so a settlement reaches the ground a design wants at the same moment it reaches the stage that design wants. |
+
+## Hosted-lot registration and read-only views
+
+`KingdomHostedArcologyRules` owns a process-bounded, copy-on-read registry (maximum 16 definitions).
+`RegisterHostedLot(KingdomHostedLotDefinition, out string)` accepts either paid work with an exact
+material key, duration, crew, and support receipt, or a read-only definition with none of those
+mutation fields and one `KnowledgeView` key. Duplicate/malformed keys refuse; registration never
+commissions work.
+
+`KingdomHostedArcology.RegisterKnowledgeView(string,
+KingdomHostedReadOnlyEligibility, KingdomHostedKnowledgeView, out string)` binds a read-only key to:
+
+- eligibility: `bool (KingdomSystem, Zone loadedHostZone, GameObject exactHostRoot,
+  out string refusal)`; and
+- rendering: `string (KingdomSystem)`.
+
+The callback is invoked only from the loaded exact shell. It receives no research queue, budget,
+timer, or mutation API; false/exception refuses safely. A provider may take one bounded survey of
+the supplied zone but must never load another zone. Realm, root, and loaded-zone identity are
+snapshotted and reproved after both callbacks, so a view whose context changes is discarded. The
+built-in Great Archive uses this seam to
+require the active crowned arcology plus local keeper's shelf and vellum press, then renders only
+the realm knowledge DAG.
+
+`StableChildId(rootId, role)` returns the deterministic `taf:arcology:v1:` SHA-256 identity for
+host-owned fixtures. `AdvanceLabor` applies only prior-pass staffing and caps one loaded-ground
+catch-up at 36,000 ticks. `CanReserveAt`/`TryReserve`/`BindAuthority` enforce one exact active or
+reserved hosted-shell carrier for the realm and capital; ambiguous evidence is quarantined, never
+adopted or destroyed. `AuthoritySlotForWrite(first, second, currentRealm, retainedRealm)` is the
+engine-free selection law for two fixed save slots: it updates the current row, preserves the one
+exact exiled archive row, and only replaces authority outside both retained identities.
 
 ### Where knowledge lives, and the research work (`KingdomResearch` / `KingdomResearchRules`)
 
@@ -535,7 +740,10 @@ including what lies past the nook), and the chrome-debt petition strings. `r_Kin
 answers vanilla's `IsTrueKinEvent` with a per-tick-cached live read across every city the
 realm still holds; losing the rolls closes a door and never reaches into a body. The annexe
 grants the True Kin genotype's own two cybernetics license points — the door would otherwise
-open onto an empty room. `GatheredYield`/`HarvestYield` gained additive `MethodPercent`
+open onto an empty room. Enrolment snapshots exact vessel receipt, roster, body record, licenses,
+and both standing/carry roots; any core exception attempts every compensation axis, verifies exact
+readback, and quarantines the realm if restoration cannot be proved. Standing cost publishes as one
+copy-on-write batch. `GatheredYield`/`HarvestYield` gained additive `MethodPercent`
 overloads, and `KingdomCityAdvanceable` a fourth constructor argument, for the method lane.
 
 ### The crown, the satellites, and the delve (`KingdomCrownRules` / `KingdomSatelliteRules` / `KingdomDelveRules`)
@@ -591,6 +799,18 @@ the holding line together, so the founder always knows how much more the rung al
 
 ## City plans — three ways a thing gets built
 
+### Heart ring-call relocation
+
+`KingdomRelocationRules` and `KingdomRelocationCodec` are public deterministic support types for the
+internal Heart ring-call transaction. `KingdomRelocationRules.Valid` applies bounded identity,
+geometry, sequential-phase, collision, architecture, and completion-parity law;
+`LabourTicks`, `Days`, `Shift`, `Overlaps`, and `TotalTicks` expose the pure quote/geometry rules.
+The codec accepts only schema 1 canonical base64 receipts, bounded UTF-8 text/collections, and exact
+four-stake moves; unknown schema, duplicate IDs/LotIds, overlap, trailing bytes, malformed state, or
+oversize payload fails closed. These types do not grant a general move API: runtime offers exist only
+for settlement-raised plots explicitly marked yielding when the next Heart rung needs their ground,
+and founder consent through the engine UI remains mandatory.
+
 A settlement is laid out by a grammar, not scattered. All three paths end at the same building:
 a single-cell design rises on an `r_KingdomScaffold` and a plot design rises through
 `r_KingdomPlotWorks`' own staged raising, and **both close through
@@ -637,8 +857,8 @@ that dislike strangers by default are exactly the ones that make a realm hard to
 | `CreedOf` / `SeatCreed` / `AwayCreed` | The creed a city holds, or null. |
 | `Draw` / `Record` / `Forget` | Creed at arrival, and its removal on death or departure. `Forget` takes the **whole person** out of both tallies — what they hold and what they have held before. |
 | `const string CreedPastProperty` / `PastOf` / `Aligns` / `RememberPast` | **Creed history.** A settler's once-held creeds, stamped on the settler (so a seat swap, a secession and a save carry it without any map remembering to), bounded to `KingdomCreedRules.MaxKeptCreeds`. `RememberPast` is called from `KingdomConversion.Convert` and nowhere else: the one conversion path is the one place a creed is ever *left*. `Aligns(settler, creed)` is "holds it, or has held it". |
-| `RiteAvailable` / `HoldRite` / `EaseForMeal` | The founder's levers against dissent. |
-| `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. |
+| `RiteAvailable` / `HoldRite` / `EaseForMeal` | The founder's levers against dissent. `HoldRite` publishes water, rite tick, and dissent under one compensated governance reservation; false/exception restores exact snapshots before the action can commit. |
+| `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. Declaration snapshots both standing/carry roots, creed, and dissent, then compensates every injected or engine failure before governance commit. |
 | `SecededHolds` / `Secede` / `TryRejoin` | A city may leave, keeping its ground, people and buildings. It can be asked back once the cause is gone. |
 
 Dissent accrues on world time like everything else, uncapped. A realm does not fall apart while
@@ -901,6 +1121,12 @@ nothing per turn anywhere else.
 that actor's turn**. So it is selective — it claims only a settler posted to *this* work, only when
 the hour actually wants them somewhere else, and at most once every 50 ticks, which is the same
 cooldown and the same figure `Bed` keeps.
+
+At an attended post, the station maps authoritative work/day shape to one short visible act:
+tending rows, sorting stores, plying a craft, maintaining works, setting a construction piece,
+keeping watch, or attending a shrine. The queued delegate re-proves the exact body, post, work,
+zone, and proximity before showing an explicit-velocity particle cue. It consumes no simulation
+RNG and grants no stock, progress, standing, skill, experience, or other gameplay state.
 
 | Member | Contract |
 |---|---|
@@ -1299,7 +1525,8 @@ separate live per-city count dictionaries, preserving Addendum 17's knowledge/bo
 
 `KingdomArchitectureRuntime.TrySelectionContext` is the only engine projection. Once
 `TryPrepare`/`TryFreeze` records the selected variant's full snapshot, later resident changes do not
-reselect or repaint the standing work. Maps/palettes remain subject to exact-lot, material,
+reselect or repaint the standing work, including during an in-place tier successor: the next tier
+must contain the exact frozen `VariantKey` and retain its stateful placements. Maps/palettes remain subject to exact-lot, material,
 technology, knowledge, power, topology, and protected-state checks. See
 [MODDING.md](../MODDING.md#identity-aware-architecture-variants) for XML semantics and exact shipped
 coverage; absence from that bounded list means fallback, not claimed handcrafted support.
@@ -1457,6 +1684,12 @@ These are read and written across the mod and are part of the API:
 | `KingdomCropSownTick` (int) / `KingdomCropRows` (int) / `KingdomCropCycles` (int) / `KingdomCropSeed` (string) / `KingdomCropSaid` (int) | One sown field's commitment: when the founder sowed it, how many rows went in, how many gatherings it has resolved (the kernel ordinal the seed-return draw is keyed on), which seed is in it, and the last want it announced. On the FIELD. Properties rather than part fields on purpose — `r_KingdomPlot` serializes positionally, and appending to it would put every already-built field's layout at risk. |
 | `KingdomCropRow` (int) / `KingdomCropField` (string) | A standing crop plant this mod laid, and the field that laid it. The protection law's whole warrant for taking one up. |
 | `KingdomWildSeedTaken` (int) | A wild plant already stripped of its seed. One plant is one seed, forever. |
+
+`r_KingdomProperty` is the durable object-level property warrant. It records receipt version,
+realm, settlement, faction, exact object ID, exact prior native owner, phase, ticks, and fault.
+Only the Charter's explicit nearby-object action creates it; a ground claim never does. Active
+receipts prevent stacking and replication. Release restores the exact prior `Physics.Owner` value
+and removes the receipt; any third-party ownership change quarantines without overwrite.
 
 ## Guarantees
 

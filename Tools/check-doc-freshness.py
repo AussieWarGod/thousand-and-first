@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FINAL_SUITE_CASES = "7,743"
 PORTABLE_SUITE_CASES = "173"
 TOOLS_TEST_CASES = "35"
-ART_TEST_CASES = "19"
+ART_TEST_CASES = "20"
 HARDENING_DECOMPOSITIONS = "144"
 CUMULATIVE_DECOMPOSITIONS = "154"
 FOCUSED_SURVEY_CASES = 9
@@ -24,12 +24,16 @@ FOCUSED_SURVEY_CASES = 9
 # evidence at today's shards would falsify what was inspected; _notes/README.md owns this policy.
 FROZEN_SOURCE_CITATION_DOCUMENTS = frozenset(
     {
+        "_notes/ASSIGNMENT-LOG.md",
+        "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
         "_notes/CLOCK-REWORK-CHANGE-MAP.md",
         "_notes/CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md",
         "_notes/COVERAGE-GAP-MAP.md",
         "_notes/ECONOMY-ADVERSARIAL-AUDIT.md",
         "_notes/ECONOMY-MODEL.md",
+        "_notes/FOUNDATION-RUNTIME-FULL-AUDIT-CLAUDE.md",
         "_notes/IDEA-INBOX.md",
+        "_notes/STALE-COMMENT-INVENTORY.md",
         "_notes/THREAT-DIPLOMACY-AUDIT.md",
         "_notes/UX-PACING-AUDIT.md",
         "_notes/VANILLA-PRODUCTION-TRUTH.md",
@@ -66,7 +70,7 @@ def forbid(problems, relative, *terms):
 
 
 def catalogue_counts():
-    buildings = list(ET.parse(ROOT / "KingdomBuildings.xml").getroot().iter("building"))
+    buildings = list(ET.parse(ROOT / "RuntimeData/KingdomBuildings.xml").getroot().iter("building"))
     architecture = sorted((ROOT / "Architecture").glob("KingdomArchitectures-*.xml"))
     maps = 0
     variants = 0
@@ -105,6 +109,20 @@ def structure_counts(payload=None):
         payload["over1000"],
         payload["over2000"],
         payload["over5000"],
+    )
+
+
+def changelog_structure_status_terms(files, at_or_over):
+    """Return truthful changelog wording for executable and human structure gates."""
+    if at_or_over:
+        return (
+            f"Current {files}-file census remains red",
+            "Addendum 9 structural debt is now an executable release blocker",
+        )
+    return (
+        f"Current {files}-file census is line-cap green",
+        "Addendum 9 line-cap debt is cleared",
+        "exact-inventory human semantic review remains a release blocker",
     )
 
 
@@ -209,7 +227,10 @@ def audit_archive_contract(problems):
         for path in sorted((ROOT / "Core").glob("KingdomArchivedSettlementCodec*.cs"))
     )
     expected = (
-        "public const int CurrentVersion = HappeningCursorVersion;",
+        "public const int FirstGuestVersion = 15;",
+        "public const int PhysicalFirstGuestVersion = 16;",
+        "public const int ArrivalCadenceVersion = 17;",
+        "public const int CurrentVersion = ArrivalCadenceVersion;",
         "TryEncodeLegacyV1ForTests",
         "TryEncodePreviousV2ForTests",
         "TryEncodeRaidV3ForTests",
@@ -221,28 +242,67 @@ def audit_archive_contract(problems):
         "TryEncodeExactLogisticsV9ForTests",
         "TryEncodeDefensiveReservationV10ForTests",
         "TryEncodeSemanticSelectionV11ForTests",
+        "TryEncodeHappeningCursorV12ForTests",
+        "TryEncodeDeliveryDomainV13ForTests",
+        "TryEncodeCivicAuthorityV14ForTests",
+        "TryEncodeFirstGuestV15ForTests",
+        "TryEncodePhysicalFirstGuestV16ForTests",
     )
     for term in expected:
         if term not in source:
-            problems.append(f"archive source no longer proves documented v1-v11 -> v12 contract: {term}")
+            problems.append(f"archive source no longer proves documented v1-v16 -> v17 contract: {term}")
     require(
         problems,
         "TESTING.md",
-        "current settlement-archive reader is **v12**",
-        "Independently frozen portable writers cover archive v1-v11",
+        "current settlement-archive reader is **v17**",
+        "Independently frozen portable writers cover archive v1-v16",
         "marker** over the same reachable field envelope as v8",
         "realm Jobs v3/v4 fixtures own that proof",
-        "stable v12 rewrite",
+        "stable v17 rewrite",
         "v11 predates per-source happening cursors",
+        "v13 admits construction-input delivery authority",
+        "v14 adds city-local named-cook and assenting-moot receipts",
+        "v15 adds first-guest correspondence",
+        "v16 adds the durable physical pre-citizen guest phase",
+        "v17 adds fixed-rate arrival cadence authority",
     )
     require(
         problems,
         "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
-        "Independently frozen test writers exist for v1-v11",
+        "settlement archive current reader is v17",
+        "Independently frozen test writers exist for v1-v16",
         "v9 is an independently frozen marker-only epoch",
         "realm Jobs v3/v4 fixtures own logistics migration proof",
-        "Every historical shape migrates through its current reader to a stable rewrite",
+        "Every historical shape migrates through its current reader to a stable v17 rewrite",
         "one engine-owned pre-bump gate remains",
+    )
+    require(
+        problems,
+        "CHANGELOG.md",
+        "nested settlement archive reader is now version 17",
+        "frozen v1-v16 migration evidence",
+    )
+    forbid(
+        problems,
+        "TESTING.md",
+        "current settlement-archive reader is **v12**",
+        "Current nested archive v12",
+        "stable v12 rewrite",
+        "frozen portable writers cover archive v1-v11",
+    )
+    forbid(
+        problems,
+        "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
+        "settlement archive current reader is v12",
+        "current archive v12",
+        "current-v12",
+        "remains intact in v12",
+        "frozen test writers exist for v1-v11",
+    )
+    forbid(
+        problems,
+        "CHANGELOG.md",
+        "nested settlement archive is version 8",
     )
     for relative in ("TESTING.md", "_notes/BRIEF-IMPLEMENTATION-AUDIT.md"):
         forbid(
@@ -266,6 +326,7 @@ def audit_public(problems):
     direct_xrl = report["directXrlImports"]
     large_direct_xrl = report["largeDirectXrlImports"]
     inventory_sha = report["inventorySha256"]
+    changelog_structure_status = changelog_structure_status_terms(files, at_or_over)
 
     require(
         problems,
@@ -300,9 +361,44 @@ def audit_public(problems):
         "structural release gate",
         "stock never grants an indefinite passive bonus",
         "VISION.md",
-        "AUTHOR-DEFERRED",
+        "reopened every positive polity/world-presence direction",
         "REJECTED",
     )
+    require(
+        problems,
+        "docs/V1-UNDEFERRAL.md",
+        "let's un-defer everything",
+        "Reopened product work",
+        "Reopened discovery work",
+        "Reopened integrated experience vertical",
+        "Hard rejects are not deferrals",
+        "exact old actor/object continuation",
+        "Realm retirement / prepare-save-for-removal",
+        "A current authoritative document may say `deferred` only for a hard external action",
+    )
+    require(
+        problems,
+        "docs/V1-EXPERIENCE-UNDEFERRAL.md",
+        "implement-or-prove-a-stronger-supersession",
+        "Native/human evidence gates survive code completion",
+        "Live W0 receipt",
+        "Dependency-aware implementation fan-out",
+        "Exact assignment check",
+        "Preserved hard boundaries",
+    )
+    for relative in (
+        "README.md",
+        "VISION.md",
+        "TESTING.md",
+        "docs/V1-UNDEFERRAL.md",
+        "docs/V1-EXPERIENCE-UNDEFERRAL.md",
+    ):
+        forbid(
+            problems,
+            relative,
+            "_notes/V1-UNDEFERRAL-LEDGER-2026-08-27.md",
+            "_notes/V1-EXPERIENCE-UNDEFERRAL-DIFF-2026-08-27.md",
+        )
     forbid(
         problems,
         "docs/STATUS.md",
@@ -395,7 +491,7 @@ def audit_public(problems):
         "one maintained `KingdomSurvey` classification",
         "no second whole-zone scan",
         "Current implementation limits and v1 scope gates",
-        "AUTHOR-DEFERRED",
+        "author reopened every positive direction",
         "VISION.md",
     )
     forbid(
@@ -432,7 +528,7 @@ def audit_public(problems):
         "Multiple-settlement traffic",
         "Food and water",
         "SHIP",
-        "AUTHOR-DEFERRED",
+        "reopened every positive direction",
         "REJECTED",
     )
     forbid(problems, "VISION.md", "_notes/V1-POLITY-SCOPE.md")
@@ -441,7 +537,7 @@ def audit_public(problems):
         problems,
         "CHANGELOG.md",
         "One due settlement pass now owns one maintained zone survey",
-        f"Current {files}-file census remains red",
+        *changelog_structure_status,
         f"{physical_lines} physical lines",
         f"{over300} files exceed 300",
         f"{over1000} exceed 1,000",
@@ -456,9 +552,8 @@ def audit_public(problems):
         f"{plots} plotted plans over {maps} inspectable authored maps",
         "Nine focused survey source-contract cases pass",
         f"passes {FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
-        "AUTHOR-DEFERRED",
+        "All positive polity/world-presence scope is activated",
         "REJECTED",
-        "Addendum 9 structural debt is now an executable release blocker",
         "Art/runtime-assets.json",
         "Concurrent legacy publication now has one cross-process decision boundary",
         "Linux CI exposed",
@@ -659,7 +754,7 @@ def audit_private(problems):
         "expanded private evidence worksheet",
         "V1-V11 reconciled matrix",
         "SHIP",
-        "AUTHOR-DEFERRED",
+        "reopened every positive row",
         "REJECTED",
         "Ingredients, crops, larders, meals, and industry",
         "Passive bonus merely while ingredients remain stocked",
@@ -671,7 +766,7 @@ def audit_private(problems):
         "One survey per due active-seat reconciliation",
         "dense native instrumentation remains",
         "The people are not the old roll walking around",
-        "AUTHOR-DEFERRED",
+        "author reopened the positive living-echo direction",
         "REJECTED",
     )
     require(
@@ -679,7 +774,7 @@ def audit_private(problems):
         "_notes/QUESTION-BACKLOG.md",
         "QB-16 — CLOSED",
         "implemented through the measured sparse",
-        "Author-deferred world presence",
+        "Reopened world presence",
         "Exact old actors",
         "offscreen conquest/loss remain rejected",
     )
@@ -694,7 +789,7 @@ def audit_private(problems):
         "Tools/stage.sh deploy",
         "maintainer has explicitly authorized push",
         "generative-assisted drafts",
-        "AUTHOR-DEFERRED",
+        "reopened every positive",
     )
     require_if_present(
         problems,

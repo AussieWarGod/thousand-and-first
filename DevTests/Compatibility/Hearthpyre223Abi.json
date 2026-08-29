@@ -1,0 +1,11 @@
+{
+  "id": "Hearthpyre",
+  "version": "2.2.3",
+  "files": {
+    "manifest.json": "b78b35fb8d6d97bafb88de2f2a9c05621ea75a8a1897b6e744f54ee652597c66",
+    "CS/RealmSystem.cs": "911044cfc2670560aba5a1791584200f9d249ab1782841c681253394fe885633",
+    "CS/Realm/Settlement.cs": "27b059a868fe5ca14e834170debf91b16d71722c3a677fe4833ca71e1424d393",
+    "CS/Realm/Sector.cs": "6456c630fb16a98992f55477042c9b7bd4f0fcd6ee73685a6ae8b346df384d5e"
+  },
+  "stubSha256": "438c0ae0258d66c0be7d08c4e08ff4588eb65cf856b30a862e1f14a3043cfa71"
+}

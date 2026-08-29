@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			if (Prepared == null || !GameObject.Validate(Marker)
-				|| Marker.ID != Prepared.MarkerId || Marker.CurrentZone != Z
+				|| Marker.IDIfAssigned != Prepared.MarkerId || Marker.CurrentZone != Z
 				|| Marker.GetPart<r_KingdomSocket>() == null || HasBlockingReceipt(Marker)
 				|| !KingdomPlots.TryReadRect(Marker, out KingdomPlotRules.PlotRect liveRect)
 				|| liveRect.X1 != Prepared.Rect.X1 || liveRect.Y1 != Prepared.Rect.Y1
@@ -49,16 +49,37 @@ namespace ThousandAndFirst
 				Failure = "The authored building's main ground already has paid construction in hand.";
 				return false;
 			}
-			if (KingdomGrowth.CountStoredWater(Z) < entry.CostDrams)
+			if (!GameObject.Validate(Marker) || Marker.IDIfAssigned != Prepared.MarkerId
+				|| Marker.CurrentZone != Z
+				|| Marker.CurrentCell != Z.GetCell(Prepared.Rect.CenterX, Prepared.Rect.CenterY)
+				|| Marker.GetPart<r_KingdomSocket>() == null || HasBlockingReceipt(Marker)
+				|| !KingdomPlots.TryReadRect(Marker, out liveRect)
+				|| liveRect.X1 != Prepared.Rect.X1 || liveRect.Y1 != Prepared.Rect.Y1
+				|| liveRect.X2 != Prepared.Rect.X2 || liveRect.Y2 != Prepared.Rect.Y2)
 			{
-				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
+				Failure = "The cleared lot's identity or rectangle changed before its exact debit.";
 				return false;
 			}
-			if (!KingdomMaterials.CanPay(Z, entry.Key, out string materialFailure))
+			if (!KingdomPlots.TryDecodePlotPayload(payload, out var promisedRect,
+				out string promisedSkin, out KingdomArchitectureIntent promisedArchitecture,
+				out bool legacyPromise, out Failure) || legacyPromise
+				|| promisedRect.X1 != Prepared.Rect.X1 || promisedRect.Y1 != Prepared.Rect.Y1
+				|| promisedRect.X2 != Prepared.Rect.X2 || promisedRect.Y2 != Prepared.Rect.Y2
+				|| promisedArchitecture.BuildKey != entry.Key
+				|| promisedArchitecture.EncodedSnapshot != architecture.EncodedSnapshot
+				|| promisedArchitecture.SnapshotHash != architecture.SnapshotHash
+				|| promisedArchitecture.MainWorldX != architecture.MainWorldX
+				|| promisedArchitecture.MainWorldY != architecture.MainWorldY
+				|| promisedSkin != (string.IsNullOrEmpty(Prepared.SkinKey) ? null : Prepared.SkinKey))
 			{
-				Failure = materialFailure;
+				if (Failure == null)
+					Failure = "The prepared architecture promise changed before its exact debit.";
 				return false;
 			}
+			if (!SocketAcceptsArchitecture(Marker, promisedArchitecture, out Failure)) return false;
+			architecture = promisedArchitecture;
+			// A cleared local lot may be supplied by exact realm routes. The funding receipt,
+			// not a settlement-local preview check, owns affordability and custody.
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(entry.CostDrams);
 			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, entry.Key);

@@ -54,6 +54,12 @@ namespace ThousandAndFirst
 					"The named works turned the warband back before it entered the settlement.");
 				return;
 			}
+			if (string.IsNullOrEmpty(objective.IDIfAssigned))
+			{
+				CancelIncident(system, incident, KingdomRaidResolution.NoValidObjective,
+					"The named raid objective lacks assigned physical identity.");
+				return;
+			}
 			List<Cell> cells = DeterministicEntryCells(zone, objective.CurrentCell, incident.Seed);
 			party = Math.Min(party, Math.Min(cells.Count, KingdomRaidIncidentRules.MaxParty));
 			if (party <= 0)
@@ -80,7 +86,7 @@ namespace ThousandAndFirst
 			op.ObjectId = incident.Id;
 			op.Faction = incident.AttackerFactionId;
 			op.DisplayFaction = DisplayFaction(incident.AttackerFactionId);
-			op.Origin = objective.ID;
+			op.Origin = objective.IDIfAssigned;
 			op.ArrivalText = "stores";
 			op.Target = objective.CurrentCell.X;
 			op.Count = objective.CurrentCell.Y;
@@ -103,7 +109,7 @@ namespace ThousandAndFirst
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op,
 				"a warband of " + display + " entered " + KingdomPresentation.Rich(system.SeatName)
 					+ " seeking the exact dedicated stores named in its grievance",
-				"Raiders entered for store " + objective.ID + "; no plunder is recorded before contact.",
+				"Raiders entered for store " + objective.IDIfAssigned + "; no plunder is recorded before contact.",
 				"{{R|A warband of " + display + " enters the settlement and moves on the named stores!}}",
 				"the watch that met the warband of " + display, null);
 			if (!KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(system.LifecycleBook, op)

@@ -31,24 +31,10 @@ namespace ThousandAndFirst
 			{
 				demands[i] = Survey.Works[i].GetIntProperty("KingdomStaffNeeded");
 			}
-			// Resident rows choose who may labour. Survey bodies are only execution endpoints;
-			// a body absent from the authoritative roll cannot acquire a post.
-			Dictionary<int, GameObject> grounded = new Dictionary<int, GameObject>();
-			for (int i = 0; i < Survey.Settlers.Count; i++)
-			{
-				GameObject settler = Survey.Settlers[i];
-				int residentId = Simulation.City.KingdomResidents.IdOf(settler);
-				if (residentId > 0 && !Simulation.City.KingdomPhysicalHappenings.IsStaged(settler)
-					&& !grounded.ContainsKey(residentId)) grounded.Add(residentId, settler);
-			}
-			List<Simulation.City.KingdomResidentRow> labour =
-				Simulation.City.KingdomResidents.RollRows(System, true);
-			List<GameObject> available = new List<GameObject>();
-			for (int i = 0; i < labour.Count; i++)
-				if (grounded.TryGetValue(labour[i].ResidentId, out GameObject settler))
-					available.Add(settler);
+			// Resident rows choose who may labour. Survey bodies are execution endpoints only.
+			List<GameObject> available = KingdomCrews.AvailableSettlers(System, Survey);
 			// Water hands are spent before works: one resident cannot carry and mill at once.
-			int forWorks = Math.Max(0, available.Count - System.WaterCrew);
+			int forWorks = KingdomCrews.WorkHandCount(System, available);
 			// Addendum 7: capability-aware, ablest-first, deterministic (KingdomCrewRules /
 			// KingdomCrews). The pool is exactly the forWorks-many settlers hands-spent-once has
 			// left for these works; who is capable of what is read off them, never assigned by the
@@ -56,20 +42,27 @@ namespace ThousandAndFirst
 			// KingdomThresholdManning property the old int[] path passed along beside it.
 			KingdomCrewRules.SettlerCapability[] pool = KingdomCrews.CapabilitiesOf(available,
 				forWorks);
-			KingdomCrewRules.CrewOutcome[] outcomes = KingdomCrews.AssignWorks(Survey.Works, pool,
-				available);
+			KingdomBounty.ManningPass manning = KingdomBounty.PrepareManningPass(System, Survey,
+				available, forWorks);
+			KingdomCrewRules.CrewOutcome[] outcomes;
+			bool reservationsValid = KingdomCrews.TryAssignWorks(Survey.Works, pool, available,
+				manning.Reservations, out outcomes);
+			if (!reservationsValid)
+			{
+				KingdomBounty.RefuseManningPass(System, manning);
+				outcomes = KingdomCrews.AssignWorks(Survey.Works, pool, available);
+			}
 			int idle = 0;
 			int shorthanded = 0;
+			int[] postIds = new int[available.Count];
+			Simulation.City.KingdomWorkKind[] postKinds =
+				new Simulation.City.KingdomWorkKind[available.Count];
 			// LIVING-CITY-ARCHITECTURE §3.2(b) needs a settler's day to be a fact about the PERSON,
 			// and until this wave crewing was only ever a fact about the work: every resident row
 			// read JobWorkId = 0 and every day shape derived honestly, and uselessly, to the hearth.
-			// The stamp is cleared for everybody first so that a settler taken off a mill this pass
-			// does not keep walking to it.
-			for (int i = 0; i < available.Count; i++)
-			{
-				Simulation.City.KingdomStations.Post(available[i], 0,
-					Simulation.City.KingdomWorkKind.Other);
-			}
+			// Derive every desired post first, then publish once per body. Clear-then-restamp made an
+			// unchanged assignment look like two availability transitions and defeated exact
+			// serviced-time proofs.
 			for (int j = 0; j < Survey.Works.Count; j++)
 			{
 				GameObject work = Survey.Works[j];
@@ -83,7 +76,8 @@ namespace ThousandAndFirst
 					int at = outcome.SettlerIndices[k];
 					if (at >= 0 && at < available.Count)
 					{
-						Simulation.City.KingdomStations.Post(available[at], postId, postKind);
+						postIds[at] = postId;
+						postKinds[at] = postKind;
 					}
 				}
 				int headcountEffectiveness = KingdomRules.CrewEffectiveness(outcome.Assigned, demands[j]);
@@ -127,6 +121,9 @@ namespace ThousandAndFirst
 					}
 				}
 			}
+			for (int i = 0; i < available.Count; i++)
+				Simulation.City.KingdomStations.Post(available[i], postIds[i], postKinds[i]);
+			KingdomBounty.PublishManningPass(System, manning, outcomes, reservationsValid);
 			System.ShorthandedWorks = shorthanded;
 			System.IdleWorks = idle;
 			// Hands are spent once. Whatever is crewing a work this pass is not available to walk

@@ -63,7 +63,7 @@ namespace ThousandAndFirst
 			// loudly: TrySeat tests the seated claims first, so the zone would simply never
 			// swap, and whichever city happened to be seated would answer for ground the other
 			// one thinks it holds.
-			if (system.Away != null && system.Away.ClaimedZones.Contains(Z.ZoneID))
+			if (system.FindNonSeatSettlementByZone(Z.ZoneID) != null)
 			{
 				return false;
 			}

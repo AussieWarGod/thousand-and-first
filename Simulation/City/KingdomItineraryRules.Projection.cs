@@ -2,6 +2,38 @@ namespace ThousandAndFirst.Simulation.City
 {
 	internal static partial class KingdomItineraryRules
 	{
+		/// <summary>Freezes a whole itinerary across a global simulation pause. Unlike live
+		/// re-projection, no leg advanced while disabled, so every departure and arrival moves by
+		/// the same non-negative span.</summary>
+		internal static bool TryShiftAll(KingdomLeg[] legs, int count, long deltaTicks,
+			out KingdomLeg[] shifted, out KingdomCityFault fault)
+		{
+			shifted = null;
+			if (!TryValidate(legs, count, out fault)) return false;
+			if (deltaTicks < 0L)
+			{
+				fault = KingdomCityFault.InvalidTick;
+				return false;
+			}
+			KingdomLeg[] copy = new KingdomLeg[count];
+			for (int i = 0; i < count; i++)
+			{
+				KingdomLeg leg = legs[i];
+				if (leg.DepartTick > long.MaxValue - deltaTicks
+					|| leg.ArriveTick > long.MaxValue - deltaTicks)
+				{
+					fault = KingdomCityFault.ArithmeticOverflow;
+					return false;
+				}
+				copy[i] = leg.WithTicks(leg.DepartTick + deltaTicks,
+					leg.ArriveTick + deltaTicks);
+			}
+			if (!TryValidate(copy, count, out fault)) return false;
+			shifted = copy;
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
 		/// <summary>
 		/// Shifts an itinerary after a live delay or a corrected length.
 		/// <para>

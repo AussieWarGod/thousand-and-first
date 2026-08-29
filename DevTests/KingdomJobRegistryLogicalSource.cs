@@ -21,7 +21,8 @@ namespace ThousandAndFirst.Tests
 			"Simulation/City/KingdomJobRegistry.z11.RegistryNormalize.cs",
 			"Simulation/City/KingdomJobRegistry.z12.RegistryPersistence.cs",
 			"Simulation/City/KingdomJobRegistry.z13.RegistryHelpers.cs",
-			"Simulation/City/KingdomJobRegistry.z14.WireFixture.cs"
+			"Simulation/City/KingdomJobRegistry.z14.WireFixture.cs",
+			"Simulation/City/KingdomJobRegistry.z15.TableExact.cs"
 		};
 
 		internal static string Read()

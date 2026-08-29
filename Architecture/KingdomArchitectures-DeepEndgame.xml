@@ -96,6 +96,7 @@
   </palette>
 
   <palette Key="deepend-registry-workshop">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="office-floor" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -108,6 +109,7 @@
 
   <palette Key="deepend-fungal-natural">
     <slot Key="floor" Blueprint="FungalTrailBrick" Role="damp-run" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="trodden-cut-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-rock" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="cut" Blueprint="r_KingdomStructureSandstone" Role="cut-rock" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="cut-entry" Material="stone" MinTech="hands" Natural="no" />
@@ -123,6 +125,8 @@
   </palette>
 
   <palette Key="deepend-cut-natural">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-stone-lot-path" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="ground" Blueprint="DirtFloor" Role="retained-stone-dust-ground" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="cut-floor" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="retained-work-face" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="support" Blueprint="r_KingdomStructureHalfStone" Role="roof-support" Material="stone" MinTech="hands" Natural="no" />
@@ -141,6 +145,7 @@
   </palette>
 
   <palette Key="deepend-underbench-workshop">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="practical-floor" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -186,9 +191,9 @@
     <row Cells="........" />
     <row Cells="........" />
     <row Cells=".######." />
-    <row Cells=".#vlt##." />
-    <row Cells=".#i@i##." />
-    <row Cells=".#+is##." />
+    <row Cells=".#vstl#." />
+    <row Cells=".#i@ii#." />
+    <row Cells=".##+###." />
   </map>
 
   <map Key="deepend-graftinghall-l0" Width="12" Height="9" DefaultCover="walled">
@@ -430,9 +435,9 @@
     <row Cells="........" />
     <row Cells="........" />
     <row Cells=".rrrrr.." />
-    <row Cells=".rdiir.." />
+    <row Cells=".rdipr.." />
     <row Cells=".rs@lr.." />
-    <row Cells=".rp+rr.." />
+    <row Cells=".rr+rr.." />
   </map>
 
   <map Key="deepend-delve-deep-m0" Width="8" Height="6" DefaultCover="natural">
@@ -517,7 +522,8 @@
     <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
     <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="+" Ground="$service" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
     <row Cells="...................." />
@@ -532,57 +538,61 @@
     <row Cells="....#iiRi@iRii#....." />
     <row Cells="....#iiRiiiRii#....." />
     <row Cells="....#SiiiliiiS#....." />
-    <row Cells="....####iii####....." />
-    <row Cells="........+++........." />
+    <row Cells="....####+++####....." />
+    <row Cells="........eee........." />
   </map>
 
   <map Key="deepend-mirrorgate-verdant-xl0" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
     <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="v" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:verdant-court" />
-    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
-    <row Cells="...................." />
-    <row Cells="...................." />
-    <row Cells="......#######......." />
-    <row Cells=".....##vvvvv##......" />
-    <row Cells="....##viiiiiv##....." />
-    <row Cells="....#viiR@Riiv#....." />
-    <row Cells="....##viiRiiv##....." />
-    <row Cells=".....##vvlvv##......" />
-    <row Cells="......##iii##......." />
-    <row Cells="........+++........." />
+    <row Cells="......########......" />
+    <row Cells=".....##vvvvvv##....." />
+    <row Cells=".....#vvvvvvvv#....." />
+    <row Cells=".....###dd#####....." />
+    <row Cells=".....#iiR@Riii#....." />
+    <row Cells=".....#iiRiiRii#....." />
+    <row Cells=".....#SiiiliiS#....." />
+    <row Cells=".....###+++####....." />
+    <row Cells="........vvv........." />
+    <row Cells="........eee........." />
   </map>
 
   <map Key="deepend-mirrorgate-fungal-xl0" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
     <glyph Char="f" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="style:damp-circulation" />
+    <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
     <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="entrance:public" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
+    <row Cells=".......##########..." />
+    <row Cells="ffffff.#iiRiiiRi#..." />
+    <row Cells="Effffff+iiRii@iR#..." />
+    <row Cells="Effffff+iiRiiiiR#..." />
+    <row Cells="Effffff#SiiiliiS#..." />
+    <row Cells="ffffff.##########..." />
+    <row Cells="ffffff.............." />
     <row Cells="...................." />
     <row Cells="...................." />
-    <row Cells="......#######......." />
-    <row Cells="....###fffff###....." />
-    <row Cells="....#ffRfffRff#....." />
-    <row Cells="....#ffRi@iRff#....." />
-    <row Cells="....#ffRfffRff#....." />
-    <row Cells="....###fflff###....." />
-    <row Cells="......##iii##......." />
-    <row Cells="........+++........." />
+    <row Cells="...................." />
   </map>
 
   <map Key="deepend-mirrorgate-gyre-xl0" Width="20" Height="14" DefaultCover="walled">
@@ -591,23 +601,24 @@
     <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:gate-bank" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:ritual-asymmetry" />
-    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
+    <row Cells=".......##########..." />
+    <row Cells="yyyy...#iRiiiRii#..." />
+    <row Cells="Eyyyyyy+Rii@iRii#..." />
+    <row Cells="Eyyyyy.+RiiiiRii#..." />
+    <row Cells="Eyyyyyy#SiiiliiS#..." />
+    <row Cells="yyyy...##########..." />
+    <row Cells="..yyyyyy............" />
     <row Cells="...................." />
     <row Cells="...................." />
-    <row Cells="....###########....." />
-    <row Cells="....#yyiiRiiii#....." />
-    <row Cells="....#yiiRiiRii#....." />
-    <row Cells="....#yi@RiiRii#....." />
-    <row Cells="....#yyyiiRiii#....." />
-    <row Cells="....#SiiiiliSy#....." />
-    <row Cells="....#####ii####....." />
-    <row Cells=".........++........." />
+    <row Cells="...................." />
   </map>
 
   <map Key="deepend-mirrorgate-eater-xl0" Width="20" Height="14" DefaultCover="walled">
@@ -615,11 +626,11 @@
     <glyph Char="R" Ground="$floor" Structure="$ring" Claim="building" Pass="walk" Cover="walled" Anchors="gate:ring" />
     <glyph Char="S" Ground="$service" Structure="$scrap" Claim="building" Pass="walk" Cover="walled" Anchors="service:retained-bank" />
     <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="+" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="style:retained-apron" />
+    <glyph Char="E" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:keying" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:mirror-gate" Stateful="yes" />
-    <row Cells="...................." />
-    <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells="...................." />
@@ -630,8 +641,10 @@
     <row Cells="....#iiRi@iRii#....." />
     <row Cells="....#SiRiiiRiS#....." />
     <row Cells="....#SSiilSSii#....." />
-    <row Cells="....###ii######....." />
-    <row Cells=".......++..........." />
+    <row Cells="....####+++####....." />
+    <row Cells=".......eee.........." />
+    <row Cells=".......eee.........." />
+    <row Cells=".......EEE.........." />
   </map>
 
   <!-- Crown hall: the root is the crown/dais. Variants recompose witness access and focal axis. -->
@@ -643,7 +656,8 @@
     <glyph Char="q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
-    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
@@ -655,8 +669,8 @@
     <row Cells="...#QqqiiiiiiqqQ#..." />
     <row Cells="...#liiiiiiiiiil#..." />
     <row Cells="...#SiiiiiiiiiiS#..." />
-    <row Cells="...#####iiii#####..." />
-    <row Cells=".......++++........." />
+    <row Cells="...######++######..." />
+    <row Cells=".........ee........." />
     <row Cells="...................." />
     <row Cells="...................." />
   </map>
@@ -668,22 +682,23 @@
     <glyph Char="v" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:verdant-court" />
     <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
-    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
     <row Cells=".....##########....." />
-    <row Cells="....##iiiiiiii##...." />
-    <row Cells="...##iiii@iiiii##..." />
-    <row Cells="...#vviimmmiiivv#..." />
-    <row Cells="...#vvQiiiiiiQvv#..." />
-    <row Cells="....##vviiii##......" />
-    <row Cells=".....##viilv##......" />
-    <row Cells="......##ii##........" />
-    <row Cells=".......iiii........." />
-    <row Cells=".......++++........." />
-    <row Cells="...................." />
-    <row Cells="...................." />
+    <row Cells=".....#iii@iiii#....." />
+    <row Cells=".....#iimmmiii#....." />
+    <row Cells=".....#QiiiiQii#....." />
+    <row Cells=".....#iiiiiiii#....." />
+    <row Cells=".....#QiiiiQii#....." />
+    <row Cells=".....#liiiiiil#....." />
+    <row Cells=".....####++####....." />
+    <row Cells="......vvvvvvvv......" />
+    <row Cells="......vvvvvvvv......" />
+    <row Cells="........vv.........." />
+    <row Cells="........ee.........." />
   </map>
 
   <map Key="deepend-crownhall-fungal-xl0" Width="20" Height="14" DefaultCover="walled">
@@ -693,20 +708,21 @@
     <glyph Char="f" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="style:damp-circulation" />
     <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
-    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="soft" Anchors="entrance:public" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
-    <row Cells=".....##########....." />
-    <row Cells="....##ffff@fff##...." />
-    <row Cells="...##ffiimiiiff##..." />
-    <row Cells="...#ffimmmiiifff#..." />
-    <row Cells="...#fQfiiiiiiQff#..." />
-    <row Cells="...#fffiiiiiffff#..." />
-    <row Cells="....##ffiilf##......" />
-    <row Cells=".....###ii###......." />
-    <row Cells=".......iiii........." />
-    <row Cells=".......++++........." />
+    <row Cells="....##########......" />
+    <row Cells="....#iii@iiii#......" />
+    <row Cells="....#iimmmiii#ffff.." />
+    <row Cells="....#QiiiiiQi+fffE.." />
+    <row Cells="....#iiiiiiii#ffff.." />
+    <row Cells="....#QiiiiiQi+fffE.." />
+    <row Cells="....#liiiiiil#ffff.." />
+    <row Cells="....##########ffff.." />
+    <row Cells="..............ffff.." />
+    <row Cells="..............ffff.." />
     <row Cells="...................." />
     <row Cells="...................." />
   </map>
@@ -719,20 +735,21 @@
     <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="style:ritual-asymmetry" />
     <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
-    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
-    <row Cells="...##############..." />
-    <row Cells="...#ii@iiiiiiiii#..." />
-    <row Cells="...#iimmmiiiiiii#..." />
-    <row Cells="...#yQyiiiiiQiii#..." />
-    <row Cells="...#yyyiiiiiiiii#..." />
-    <row Cells="...#iyQiiiiQiiii#..." />
-    <row Cells="...#SiiiiliiiiiS#..." />
-    <row Cells="...#yyyiiiiiiiii#..." />
-    <row Cells="...###ii#########..." />
-    <row Cells=".....++............." />
+    <row Cells=".......##########..." />
+    <row Cells="yyyy...#iii@iiii#..." />
+    <row Cells="yyyy...#iimmmiii#..." />
+    <row Cells="Eyyyyyy+iQiiiiiQ#..." />
+    <row Cells="yyyy...#iiiiiiii#..." />
+    <row Cells="Eyyyyyy+iQiiiiiQ#..." />
+    <row Cells="yyyy...#SliiiilS#..." />
+    <row Cells="yyyy...##########..." />
+    <row Cells="yyyy................" />
+    <row Cells="yyyy................" />
     <row Cells="...................." />
     <row Cells="...................." />
   </map>
@@ -744,7 +761,8 @@
     <glyph Char="i" Ground="$service" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:witness" Stateful="yes" />
     <glyph Char="l" Ground="$service" Object="$light" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:hall" Stateful="yes" />
-    <glyph Char="+" Ground="$service" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$service" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="e" Ground="$service" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,style:retained-apron" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:crown-hall,dais:crown" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="...................." />
@@ -756,8 +774,8 @@
     <row Cells="...#iQiiiiiiiQii#..." />
     <row Cells="...#SiiiiliiiiiS#..." />
     <row Cells="...#SSiiiiiiiSSi#..." />
-    <row Cells="...######ii######..." />
-    <row Cells="........++.........." />
+    <row Cells="...######++######..." />
+    <row Cells=".........ee........." />
     <row Cells="...................." />
     <row Cells="...................." />
   </map>

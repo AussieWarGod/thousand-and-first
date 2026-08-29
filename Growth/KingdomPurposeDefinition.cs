@@ -21,6 +21,9 @@ namespace ThousandAndFirst
 		public KingdomMaterialTally CargoCost;
 		public string ProducerSpec;
 		public string Effect;
+		/// <summary>True for Deep/Forge/Harvest declarations whose cargo recipes come from the
+		/// reciprocal ten-row portfolio rather than the body-work bootstrap consignment.</summary>
+		public bool PortfolioOnly;
 
 		public KingdomPurposeDefinition Copy()
 		{
@@ -35,7 +38,8 @@ namespace ThousandAndFirst
 				CargoWater = CargoWater,
 				CargoCost = CargoCost?.Copy() ?? new KingdomMaterialTally(),
 				ProducerSpec = ProducerSpec,
-				Effect = Effect
+				Effect = Effect,
+				PortfolioOnly = PortfolioOnly
 			};
 		}
 	}

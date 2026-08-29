@@ -76,33 +76,6 @@ namespace ThousandAndFirst
 				: ("the frontier was walked, and " + Data.ScoutGround + " lies past it"));
 		}
 
-		private static void ManOneWork(KingdomSystem System, KingdomSurvey Survey)
-		{
-			for (int i = 0; i < Survey.Works.Count; i++)
-			{
-				GameObject work = Survey.Works[i];
-				if (work.GetIntProperty("KingdomEffectiveness") > 0)
-				{
-					continue;
-				}
-				work.SetIntProperty("KingdomStaffed", 1);
-				work.SetIntProperty("KingdomEffectiveness", 100);
-				// The hired hand is not a witnessed resident identity. Neutral is the only
-				// honest factor; retaining yesterday's crew would lend their culture to a stranger.
-				work.SetIntProperty(KingdomCrews.IdentityAffinityProperty,
-					KingdomIdentityAffinityRules.NeutralPercent);
-				if (System.IdleWorks > 0)
-				{
-					System.IdleWorks--;
-				}
-				if (System.IdleWorks == 0)
-				{
-					System.IdleWorksAnnounced = false;
-				}
-				return;
-			}
-		}
-
 		/// <summary>Marks the work finished and tries to pay for it in the same breath.</summary>
 		private static void Finish(KingdomSystem System, Zone Z, KingdomSurvey Survey, GameObject Notice, r_KingdomNotice Data, string Extra)
 		{

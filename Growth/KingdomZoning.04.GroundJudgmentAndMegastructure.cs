@@ -32,7 +32,8 @@ namespace ThousandAndFirst
 			}
 			ZoningJudgement covenant = KingdomZoningRules.JudgeCovenant(
 				new CovenantGate(Entry.CovenantFaction, Entry.CovenantMinStanding),
-				string.IsNullOrEmpty(Entry.CovenantFaction) ? 0 : System.GetStanding(Entry.CovenantFaction));
+				string.IsNullOrEmpty(Entry.CovenantFaction) ? 0 :
+				System.GetRegardForRealm(Entry.CovenantFaction));
 			if (!covenant.Permitted)
 			{
 				return covenant;

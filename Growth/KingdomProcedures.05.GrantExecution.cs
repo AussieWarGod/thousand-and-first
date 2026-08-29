@@ -14,7 +14,7 @@ namespace ThousandAndFirst
 		private static KingdomLabGrantAttempt GrantLimb(GameObject Who, LabProcedure Procedure,
 			BodyPart Slot, string JobId, string Manager, string Detail, string Fingerprint)
 		{
-			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.ID };
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.IDIfAssigned };
 			string type = string.IsNullOrEmpty(Detail) ? Slot.Type : Detail;
 			BodyPart grown = new BodyPart(type, 0, Slot.ParentBody, Manager: Manager);
 			int grownId = grown.ID;
@@ -84,7 +84,7 @@ namespace ThousandAndFirst
 			BodyPart Slot, string Stamp, string JobId, string Manager, string Detail,
 			string Fingerprint)
 		{
-			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.ID };
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Who.IDIfAssigned };
 			XRL.World.Parts.Mutations mutations = Who.RequirePart<XRL.World.Parts.Mutations>();
 			if (Who.GetPart(Procedure.Grants) is XRL.World.Parts.Mutation.BaseMutation)
 			{

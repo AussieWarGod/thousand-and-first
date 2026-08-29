@@ -48,15 +48,17 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>LIVING-CITY-ARCHITECTURE §3.6: at most one ambient line an in-game hour, city-wide.</summary>
 		internal const int HeartbeatToldLinesPerSlice = 1;
 
-		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the ceiling the model in RAM answers to.</summary>
-		internal const long ModelBytesCeiling = 256L * 1024L;
+		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the ceiling the three-city model in RAM
+		/// answers to. The former 256-KiB ceiling priced only two owned cities.</summary>
+		internal const long ModelBytesCeiling = 384L * 1024L;
 
 		/// <summary>Advisory rung under the model ceiling. Repinned with the pre-release retirement
 		/// of the flat forty-work proxy: the bound now prices every City-stage plot in four zones,
 		/// and the current composed realm remains below this rung. Resident-row authority added two
-		/// shared evidence references per row and moved the honest formula above 192 KiB, so the
-		/// advisory rung moves to 208 KiB; the 256-KiB failure ceiling does not move.</summary>
-		internal const long ModelBytesWarn = 208L * 1024L;
+		/// shared evidence references per row. Un-deferring the third owned city makes the live
+		/// composed bound about 287 KiB, so warning/failure move to 320/384 KiB. The formula and
+		/// caps remain the contract; this is not an unbounded allowance.</summary>
+		internal const long ModelBytesWarn = 320L * 1024L;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §3.10: jobs considered by one planning slice.</summary>
 		internal const int PlannerMaxJobs = 16;
@@ -94,8 +96,8 @@ namespace ThousandAndFirst.Simulation.City
 			// LIVING-CITY-ARCHITECTURE §0.0: ≤ 39 turns at 8/turn; > 40 warns; the fail is a
 			// counter that never reaches zero, which is a shape rather than a number.
 			new KingdomBudgetRow(KingdomBudgetLane.CatchUpDrain, "drain", NoLimit, NoLimit, "turns", 40L, NoLimit),
-			// Full live City envelope across two settlements composes to about 193 KiB. Warn at
-			// 208 KiB, fail at 256 KiB; a permanently-lit warning is noise, not evidence.
+			// Full live City envelope across three settlements composes to about 287 KiB. Warn at
+			// 320 KiB, fail at 384 KiB; a permanently-lit warning is noise, not evidence.
 			new KingdomBudgetRow(KingdomBudgetLane.ModelBytes, "model", NoLimit, NoLimit, "bytes", ModelBytesWarn, ModelBytesCeiling),
 			// Named-field save has larger per-row framing than the RAM table: > 256 KiB warns,
 			// > 1 MiB fails at the public baseline.

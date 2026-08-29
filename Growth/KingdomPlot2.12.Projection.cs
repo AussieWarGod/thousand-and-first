@@ -65,14 +65,14 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Job)
-				&& Works.ID == (Job.OutputId ?? Job.SubjectId)
+				&& Works.IDIfAssigned == (Job.OutputId ?? Job.SubjectId)
 				&& KingdomConstruction.HasReceipt(Works, Job))
 			{
 				KingdomConstruction.FinishProjection(ref Updated, true, true);
 				return true;
 			}
 			if (GameObject.Validate(Works)
-				&& (Works.ID != Job.OutputId && Works.ID != Job.SubjectId
+				&& (Works.IDIfAssigned != Job.OutputId && Works.IDIfAssigned != Job.SubjectId
 					|| !ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Job)
 					|| !KingdomConstruction.HasReceipt(Works, Job)))
 			{
@@ -109,7 +109,7 @@ namespace ThousandAndFirst
 			Works = Stake(System, Z, Rect, Entry, Spec, Grid, SkinKey, Carved,
 				architecture, legacyArchitecture, ref Updated);
 			if (!ExpectedWorks(Works, cell, Entry.Key, architecture, legacyArchitecture, Updated)
-				|| Works.ID != Updated.OutputId || !KingdomConstruction.HasReceipt(Works, Updated))
+				|| Works.IDIfAssigned != Updated.OutputId || !KingdomConstruction.HasReceipt(Works, Updated))
 			{
 				Failure = "The plot works could not be verified in the staked cell.";
 				if (Updated.Phase != KingdomConstructionPhase.InspectionRequired)
@@ -118,7 +118,7 @@ namespace ThousandAndFirst
 			}
 			if ((Updated.Route == KingdomConstructionRoute.PlotCommission
 					|| Updated.Route == KingdomConstructionRoute.SocketBuild)
-				&& !KingdomConstruction.UpdateSubject(ref Updated, Works.ID))
+				&& !KingdomConstruction.UpdateSubject(ref Updated, Works.IDIfAssigned))
 			{
 				Failure = "The plot-works identity could not be published after placement.";
 				return false;

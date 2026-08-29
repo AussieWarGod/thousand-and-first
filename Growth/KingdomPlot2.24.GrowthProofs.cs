@@ -30,17 +30,17 @@ namespace ThousandAndFirst
 				|| Successor.CurrentZone != zone
 				|| Predecessor.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
 				|| Successor.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
-				|| KingdomConstruction.FindExactId(zone, Predecessor.ID, out exactPredecessor)
+				|| KingdomConstruction.FindExactId(zone, Predecessor.IDIfAssigned, out exactPredecessor)
 					!= KingdomPhysicalLookupState.Exact
 				|| !ReferenceEquals(exactPredecessor, Predecessor)
-				|| KingdomConstruction.FindExactId(zone, Successor.ID, out exactSuccessor)
+				|| KingdomConstruction.FindExactId(zone, Successor.IDIfAssigned, out exactSuccessor)
 					!= KingdomPhysicalLookupState.Exact
 				|| !ReferenceEquals(exactSuccessor, Successor)) return false;
 			if (Plan != null)
 			{
 				string encoded = EncodeGrowthPlan(Plan);
-				if (encoded == null || Predecessor.ID != Plan.PredecessorId
-					|| Successor.ID != Plan.SuccessorId
+				if (encoded == null || Predecessor.IDIfAssigned != Plan.PredecessorId
+					|| Successor.IDIfAssigned != Plan.SuccessorId
 					|| Successor.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
 						!= Plan.SuccessorKey
 					|| Predecessor.GetStringProperty(GrowthReceiptProperty) != encoded) return false;
@@ -52,8 +52,8 @@ namespace ThousandAndFirst
 				? null : The.Game.RequireSystem<KingdomSystem>();
 			return KingdomConstruction.TryFind(receipt, out job)
 				&& job.Route == KingdomConstructionRoute.Improvement
-				&& job.SubjectId == Predecessor.ID && job.SourceId == Predecessor.ID
-				&& job.OutputId == Successor.ID && job.TargetKey == Plan.SuccessorKey
+				&& job.SubjectId == Predecessor.IDIfAssigned && job.SourceId == Predecessor.IDIfAssigned
+				&& job.OutputId == Successor.IDIfAssigned && job.TargetKey == Plan.SuccessorKey
 				&& job.X == ExpectedCell.X && job.Y == ExpectedCell.Y
 				&& KingdomConstruction.Owns(system, zone, job)
 				&& KingdomConstruction.IsCurrent(job)
@@ -66,7 +66,7 @@ namespace ThousandAndFirst
 		{
 			return GameObject.Validate(Item) && Item.Physics != null
 				&& Item.Physics.InInventory == null && Item.CurrentZone == Z
-				&& Item.CurrentCell == Z.GetCell(Row.X, Row.Y) && Item.ID == Row.Id
+				&& Item.CurrentCell == Z.GetCell(Row.X, Row.Y) && Item.IDIfAssigned == Row.Id
 				&& Item.Blueprint == Row.Blueprint && Item.GetIntProperty(PlotPartProperty) == 1
 				&& Item.GetStringProperty(PlotIdProperty) == PlotId
 				&& Item.GetIntProperty(KingdomYards.YardWorkProperty) != 1
@@ -80,7 +80,7 @@ namespace ThousandAndFirst
 			GameObject global;
 			if (!GameObject.Validate(Item) || Item.Physics == null
 				|| Item.Physics.InInventory != null || Item.CurrentZone != Z
-				|| Item.CurrentCell != Z.GetCell(Row.X, Row.Y) || Item.ID != Row.Id
+				|| Item.CurrentCell != Z.GetCell(Row.X, Row.Y) || Item.IDIfAssigned != Row.Id
 				|| Item.Blueprint != Row.Blueprint || Item.GetIntProperty(PlotPartProperty) != 1
 				|| Item.GetStringProperty(PlotIdProperty) != PlotId
 				|| ReferenceCountInCell(Item.CurrentCell, Item) != 1
@@ -115,9 +115,9 @@ namespace ThousandAndFirst
 
 		private static string GrowthRootKey(GameObject Predecessor, GrowthRow Row)
 		{
-			if (!BoundedGrowthIdentity(Predecessor?.ID) || !BoundedGrowthIdentity(Row?.Id))
+			if (!BoundedGrowthIdentity(Predecessor?.IDIfAssigned) || !BoundedGrowthIdentity(Row?.Id))
 				return null;
-			byte[] bytes = System.Text.Encoding.UTF8.GetBytes(Predecessor.ID + "\n" + Row.Id);
+			byte[] bytes = System.Text.Encoding.UTF8.GetBytes(Predecessor.IDIfAssigned + "\n" + Row.Id);
 			byte[] digest;
 			using (System.Security.Cryptography.SHA256 hash =
 				System.Security.Cryptography.SHA256.Create()) digest = hash.ComputeHash(bytes);
@@ -137,7 +137,7 @@ namespace ThousandAndFirst
 					&& !ReferenceEquals(rooted, Output))) return false;
 			The.Game.SetObjectGameState(key, Output);
 			return The.Game.ObjectGameState.TryGetValue(key, out rooted)
-				&& ReferenceEquals(rooted, Output) && Output.ID == Row.Id
+				&& ReferenceEquals(rooted, Output) && Output.IDIfAssigned == Row.Id
 				&& Output.Blueprint == Row.Blueprint;
 		}
 
@@ -150,7 +150,7 @@ namespace ThousandAndFirst
 			if (The.Game == null || string.IsNullOrEmpty(key)
 				|| !The.Game.ObjectGameState.TryGetValue(key, out rooted)) return false;
 			Output = rooted as GameObject;
-			return GameObject.Validate(Output) && Output.ID == Row.Id
+			return GameObject.Validate(Output) && Output.IDIfAssigned == Row.Id
 				&& Output.Blueprint == Row.Blueprint
 				&& Output.GetIntProperty(PlotPartProperty) == 1;
 		}
@@ -183,8 +183,8 @@ namespace ThousandAndFirst
 			KingdomPlotRules.RoofState Roof, int HeartX, int HeartY, bool KeepInner,
 			string Wall)
 		{
-			return Plan != null && Plan.PredecessorId == Predecessor.ID
-				&& Plan.SuccessorId == Successor.ID && Plan.SuccessorKey == SuccessorKey
+			return Plan != null && Plan.PredecessorId == Predecessor.IDIfAssigned
+				&& Plan.SuccessorId == Successor.IDIfAssigned && Plan.SuccessorKey == SuccessorKey
 				&& Plan.PlotId == PlotId && SameGrowthRect(Plan.Old, Old)
 				&& SameGrowthRect(Plan.Grown, Grown) && Plan.Roof == Roof
 				&& Plan.HeartX == HeartX && Plan.HeartY == HeartY

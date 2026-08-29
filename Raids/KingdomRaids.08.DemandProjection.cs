@@ -70,8 +70,8 @@ namespace ThousandAndFirst
 			ids = 0; markers = 0; exact = null;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(zone))
 			{
-				if (item.ID == projection.ObjectId) { ids++; exact = item; }
 				if (item.GetStringProperty(ProjectionMarkerProperty) == projection.Marker) markers++;
+				if (item.IDIfAssigned == projection.ObjectId) { ids++; exact = item; }
 			}
 		}
 
@@ -85,8 +85,8 @@ namespace ThousandAndFirst
 			for (int i = 0; i < owner.Inventory.Objects.Count; i++)
 			{
 				GameObject item = owner.Inventory.Objects[i];
-				if (item.ID == projection.ObjectId) { ids++; exact = item; }
 				if (item.GetStringProperty(ProjectionMarkerProperty) == projection.Marker) markers++;
+				if (item.IDIfAssigned == projection.ObjectId) { ids++; exact = item; }
 			}
 		}
 
@@ -96,7 +96,7 @@ namespace ThousandAndFirst
 			GameObject owner = The.Player;
 			if (system == null || zone == null || op == null || !GameObject.Validate(owner)
 				|| op.Action != KingdomLifecycleAction.RaidDeliverDemand
-				|| op.Projections.Count != 1 || owner.ID != op.Projections[0].OwnerId
+				|| op.Projections.Count != 1 || owner.IDIfAssigned != op.Projections[0].OwnerId
 				|| zone.ZoneID != op.Projections[0].ZoneId) return false;
 			KingdomLifecycleProjection projection = op.Projections[0];
 			for (int guard = 0; guard < 2; guard++)
@@ -118,7 +118,7 @@ namespace ThousandAndFirst
 					if (!ExactDemandBody(exact, op, projection)
 						|| !KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(
 							system.LifecycleBook, op, projection, ids, markers, exact.Blueprint,
-							owner.ID, zone.ZoneID, -1, -1))
+							owner.IDIfAssigned, zone.ZoneID, -1, -1))
 					{
 						KingdomLifecycleRules.Quarantine(op,
 							"demand delivery intent had ambiguous physical evidence");
@@ -144,7 +144,7 @@ namespace ThousandAndFirst
 				if (!ReferenceEquals(accepted, body) || !ReferenceEquals(exact, body)
 					|| !KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(
 						system.LifecycleBook, op, projection, ids, markers, body.Blueprint,
-						owner.ID, zone.ZoneID, -1, -1)) return false;
+						owner.IDIfAssigned, zone.ZoneID, -1, -1)) return false;
 				return true;
 			}
 			return false;
@@ -162,7 +162,7 @@ namespace ThousandAndFirst
 		private static bool ExactDemandBody(GameObject body,
 			KingdomLifecycleOperation op, KingdomLifecycleProjection projection)
 		{
-			if (!GameObject.Validate(body) || body.ID != projection.ObjectId
+			if (!GameObject.Validate(body) || body.IDIfAssigned != projection.ObjectId
 				|| body.Blueprint != projection.Blueprint
 				|| body.GetStringProperty(ProjectionMarkerProperty) != projection.Marker
 				|| !ReferenceEquals(body.InInventory, The.Player)) return false;

@@ -112,6 +112,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("CrewNeeds=\"skill.harvestry:1\"", catalogue);
 			StringAssert.Contains("CrewNeeds=\"skill.customs:1\"", catalogue);
 			StringAssert.Contains("CrewNeeds=\"skill.physic:1\"", catalogue);
+			int fieldrows = catalogue.IndexOf("<building Key=\"fieldrows\"");
+			Assert.GreaterOrEqual(fieldrows, 0);
+			int afterFieldrows = catalogue.IndexOf("<building", fieldrows + 1);
+			Assert.Greater(afterFieldrows, fieldrows);
+			StringAssert.Contains("CrewNeeds=\"skill.harvestry:1\"",
+				catalogue.Substring(fieldrows, afterFieldrows - fieldrows));
 		}
 
 		[Test]
@@ -277,6 +283,49 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.AreEqual(0, KingdomCrewRules.AssignCrew(null, null).Length);
 			Assert.AreEqual(0, KingdomCrewRules.AssignCrew(null, new Demand[] { new Demand(1, false, null, 0) })[0].Assigned);
+		}
+
+		[Test]
+		public void ExactReservationPinsAResidentAndProtectsThemFromEarlierWork()
+		{
+			Capability[] pool = { Cap(30, 0), Cap(20, 0), Cap(10, 0) };
+			Demand[] demands =
+			{
+				new Demand(1, false, KingdomCrewRules.KindStrength, 1),
+				new Demand(1, false, KingdomCrewRules.KindStrength, 1)
+			};
+			var reservations = new[] { new KingdomCrewRules.CrewReservation(0, 1) };
+			Assert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+				reservations, out Outcome[] outcomes));
+			CollectionAssert.AreEqual(new[] { 1 }, outcomes[0].SettlerIndices);
+			CollectionAssert.AreEqual(new[] { 0 }, outcomes[1].SettlerIndices);
+		}
+
+		[Test]
+		public void ReservedThresholdWorkStillRequiresItsFullCrew()
+		{
+			Capability[] pool = { Cap(30, 0) };
+			Demand[] demands = { new Demand(2, true, null, 0) };
+			var reservations = new[] { new KingdomCrewRules.CrewReservation(0, 0) };
+			Assert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+				reservations, out Outcome[] outcomes));
+			Assert.AreEqual(0, outcomes[0].Assigned);
+		}
+
+		[Test]
+		public void DuplicateOrOutOfRangeReservationsFailWithoutPartialAssignment()
+		{
+			Capability[] pool = { Cap(10, 0), Cap(9, 0) };
+			Demand[] demands = { new Demand(1, false, null, 0), new Demand(1, false, null, 0) };
+			var duplicate = new[]
+			{
+				new KingdomCrewRules.CrewReservation(0, 0),
+				new KingdomCrewRules.CrewReservation(0, 1)
+			};
+			Assert.IsFalse(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+				duplicate, out Outcome[] outcomes));
+			Assert.AreEqual(0, outcomes[0].Assigned);
+			Assert.AreEqual(0, outcomes[1].Assigned);
 		}
 
 		[Test]

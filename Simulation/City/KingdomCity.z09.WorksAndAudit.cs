@@ -62,7 +62,7 @@ namespace ThousandAndFirst.Simulation.City
 					continue;
 				}
 				Cell at = work.CurrentCell;
-				int workId = KingdomCityRules.StableId(work.ID);
+				int workId = KingdomCityRules.StableId(work.IDIfAssigned);
 				kept.Add(new KingdomWorkRow(
 					// The object's own persistent id, folded by a written-out hash rather than the
 					// runtime's: a runtime hash is not stable across processes, and a work id that
@@ -111,7 +111,7 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomCatchUpCounter counter = CityCounter(book);
 			return KingdomCityRules.AuditNote(
 				book.ZoneWaterLevels[index], book.ZoneOwedWater[index], Survey.StoredWater,
-				book.ZoneFoodLevels[index], book.ZoneOwedFood[index], Survey.FoodStored,
+				book.ZoneFoodLevels[index], book.ZoneOwedFood[index], Survey.FoodAvailable,
 				counter.OwedThirds);
 		}
 
@@ -135,7 +135,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			return KingdomCityRules.AuditNote(
 				row.Stocks.Water.Level, row.OwedWater, Survey.StoredWater,
-				row.Stocks.Food.Level, row.OwedFood, Survey.FoodStored,
+				row.Stocks.Food.Level, row.OwedFood, Survey.FoodAvailable,
 				KingdomCityRules.CityCounter(state).OwedThirds);
 		}
 

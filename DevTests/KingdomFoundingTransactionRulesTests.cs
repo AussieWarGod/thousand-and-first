@@ -319,31 +319,34 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SecondRecoveryCannotReplaceUnrelatedAwaySeatOrBreakCap()
+		public void LaterRecoveryUsesEitherOpenSlotWithoutReplacingUnrelatedCities()
 		{
 			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				1, 2, AwayIsNull: true, TargetIsExactSeat: false,
+				1, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
 				AlreadyPublished: false));
 			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				2, 2, AwayIsNull: false, TargetIsExactSeat: true,
+				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
+				AlreadyPublished: false), "third city may use second open non-seat slot");
+			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: true,
 				AlreadyPublished: true));
 			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				2, 2, AwayIsNull: false, TargetIsExactSeat: false,
-				TargetIsExactAway: true, AlreadyPublished: true),
-				"the exact transaction city may recover from Away");
+				3, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: false,
+				TargetIsExactNonSeat: true, AlreadyPublished: true),
+				"exact transaction city may recover from either non-seat row");
 
 			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				2, 2, AwayIsNull: false, TargetIsExactSeat: false,
-				AlreadyPublished: false), "unrelated second city blocks stale receipt");
+				3, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: false,
+				AlreadyPublished: false), "full realm blocks new publication");
 			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				2, 2, AwayIsNull: false, TargetIsExactSeat: false,
-				TargetIsExactAway: false, AlreadyPublished: true),
-				"an unrelated Away city blocks the receipt");
+				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
+				TargetIsExactNonSeat: false, AlreadyPublished: true),
+				"unrelated city blocks published receipt");
 			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				2, 2, AwayIsNull: true, TargetIsExactSeat: true,
-				AlreadyPublished: true), "two-city projection requires retained old seat");
+				3, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: true,
+				AlreadyPublished: true), "room flag must agree with bounded count");
 			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
-				3, 2, AwayIsNull: false, TargetIsExactSeat: true,
+				4, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: true,
 				AlreadyPublished: true), "over-cap state is never trusted");
 		}
 
@@ -495,6 +498,53 @@ namespace ThousandAndFirst.Tests
 			authority.RiteX = 1;
 			authority.OwnerKind = (KingdomFoundingOwnerKind)99;
 			Assert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
+		}
+
+		[Test]
+		public void VillageStandingEffectBindsExactOwnedTransitionAndRejectsPreexistingHigh()
+		{
+			string transaction = "0123456789abcdef0123456789abcdef";
+			string owner = "fedcba9876543210fedcba9876543210";
+			string zone = "JoppaWorld.1.1.1.1.10";
+			KingdomFoundingAuthority authority = Authority(transaction, owner, "Kavvat", zone);
+			authority.Kind = KingdomFoundingKind.VillageCharter;
+			string encoded = KingdomFoundingTransactionRules.FormatAuthority(authority);
+			string digest = KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				599, 99, 600, 0);
+			Assert.IsNotNull(digest);
+			Assert.AreEqual(digest,
+				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+					transaction, encoded, "village-faction", "the village", zone,
+					599, 99, 600, 0), "canonical input is deterministic");
+			Assert.AreNotEqual(digest,
+				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+					transaction, encoded, "other-faction", "the village", zone,
+					599, 99, 600, 0), "faction is receipt-bound");
+			Assert.AreNotEqual(digest,
+				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+					transaction, encoded, "village-faction", "other display", zone,
+					599, 99, 600, 0), "display is receipt-bound");
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				600, 0, 600, 0), "preexisting sealed standing is not this transaction's effect");
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				601, 0, 600, 0), "preexisting higher standing is not this transaction's effect");
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				599, -1, 600, 0), "noncanonical before pair is refused");
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				599, 99, 600, 1), "after pair must be exact whole standing");
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, encoded, "village-faction", "the village", zone,
+				599, 99, 601, 0), "after pair must be the sealed covenant target");
+			KingdomFoundingAuthority wrongKind = authority;
+			wrongKind.Kind = KingdomFoundingKind.SecondCity;
+			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+				transaction, KingdomFoundingTransactionRules.FormatAuthority(wrongKind),
+				"village-faction", "the village", zone, 599, 99, 600, 0));
 		}
 
 		[Test]

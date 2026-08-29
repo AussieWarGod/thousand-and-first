@@ -67,7 +67,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string reader = Source(Path.Combine("Core", "KingdomQolResidents.cs"));
 			StringAssert.Contains("truth.Species = Resident.GetSpecies();", reader);
-			string lodging = Source(Path.Combine("Growth", "KingdomLodging.cs"));
+			string lodging = KingdomLodgingLogicalSource.Read();
 			StringAssert.Contains("KingdomQolRules.SelfTags(Profile)", lodging);
 		}
 

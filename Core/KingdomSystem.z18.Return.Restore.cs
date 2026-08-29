@@ -111,8 +111,14 @@ namespace ThousandAndFirst
 		private bool CurrentRealmIsCanonicalBlank(KingdomRealmArchive Archive)
 		{
 			if (Archive == null || Founded || KingdomFactionName != null || RealmId != null ||
-				KingdomDisplayName != null ||
-				Away != null || Standings == null || Standings.Count != 0 ||
+				KingdomDisplayName != null || SettlementTopology == null ||
+				SettlementTopology.Count != 0 || SettlementTopology.HasOpaqueEvidence ||
+				Standings == null || Standings.Count != 0 || RealmPolicyToward == null ||
+				RealmPolicyToward.Count != 0 || RegardSpilloverRemainders == null ||
+				RegardSpilloverRemainders.Count != 0 ||
+				RegardSpilloverObservedReputation == null ||
+				RegardSpilloverObservedReputation.Count != 0 ||
+				DirectionalStandingSchemaVersion != 0 ||
 				RealmIdentityVersion != 0 || RealmIdentityOrigin != KingdomIdentityOrigin.None ||
 				RealmIdentityTransactionId != null || RealmIdentityLegacyFaction != null ||
 				RealmIdentityFoundedTick != 0L || RealmIdentitySeedHigh != 0UL ||
@@ -151,8 +157,9 @@ namespace ThousandAndFirst
 			if (Archive == null ||
 				!KingdomArchivedSettlementCodec.TryClone(Archive.Seat,
 					out KingdomSettlement seat, out Failure) ||
-				!KingdomArchivedSettlementCodec.TryClone(Archive.Away,
-					out KingdomSettlement away, out Failure) ||
+				Archive.SettlementTopology == null ||
+				!Archive.SettlementTopology.TryClone(
+					out KingdomSettlementTopology topology, out Failure) ||
 				!KingdomArchivedSettlementCodec.TryClone(Archive.Seceded,
 					out KingdomSettlement seceded, out Failure) ||
 				!KingdomRealmArchive.TryCloneCarry(Archive.CarryBook,
@@ -163,8 +170,15 @@ namespace ThousandAndFirst
 			List<string> chronicle = KingdomRealmArchive.CloneStrings(Archive.ChronicleEntries);
 			List<string> outsider = KingdomRealmArchive.CloneStrings(Archive.OutsiderEntries);
 			Dictionary<string, int> standings = KingdomRealmArchive.CloneStandings(Archive.Standings);
+			Dictionary<string, int> policy =
+				KingdomRealmArchive.CloneStandings(Archive.RealmPolicyToward);
+			Dictionary<string, int> remainders =
+				KingdomRealmArchive.CloneStandings(Archive.RegardSpilloverRemainders);
+			Dictionary<string, int> observed = KingdomRealmArchive.CloneStandings(
+				Archive.RegardSpilloverObservedReputation);
 			if (seat == null || bindings == null || jobs == null || chronicle == null ||
-				outsider == null || standings == null)
+				outsider == null || standings == null || policy == null || remainders == null ||
+				observed == null)
 			{
 				Failure = "archived realm graph has a null required root";
 				return false;
@@ -172,8 +186,13 @@ namespace ThousandAndFirst
 			KingdomFactionName = Archive.FactionName;
 			KingdomDisplayName = Archive.DisplayName;
 			Restore(seat);
-			Away = away;
+			SettlementTopology = topology;
+			SynchronizeLegacySettlementProjection();
 			Standings = standings;
+			RealmPolicyToward = policy;
+			RegardSpilloverRemainders = remainders;
+			RegardSpilloverObservedReputation = observed;
+			DirectionalStandingSchemaVersion = Archive.DirectionalStandingSchemaVersion;
 			RealmId = Archive.RealmId;
 			RealmIdentityVersion = Archive.RealmIdentityVersion;
 			RealmIdentityOrigin = Archive.RealmIdentityOrigin;
@@ -234,7 +253,8 @@ namespace ThousandAndFirst
 				if (!string.Equals(ids[i], Archive.SettlementIds[i],
 					StringComparison.Ordinal)) return false;
 			return string.Equals(RealmId, Archive.RealmId, StringComparison.Ordinal) &&
-				ExactArchivedSettlements(Archive.RealmId, ExiledSeat, ExiledAway,
+				ExactArchivedSettlements(Archive.RealmId, ExiledSeat,
+					ExiledSettlementTopology,
 					Archive.SettlementIds) && Archive.CurrentGraphMatches(this, out failure);
 		}
 

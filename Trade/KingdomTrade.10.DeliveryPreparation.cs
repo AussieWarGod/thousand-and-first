@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 				operation.PriorProjectionZoneId = prior.ZoneId;
 			}
 			FreezeMaterials(operation, KingdomMaterials.DealMaterialsFor(deal.Key).Scaled(cycles * 100));
-			int before = System.GetStanding(Charter.Faction);
+			int before = System.GetRegardForRealm(Charter.Faction);
 			long after = (long)before + KingdomRules.DealTrickleStanding;
 			if (after < int.MinValue || after > int.MaxValue)
 			{

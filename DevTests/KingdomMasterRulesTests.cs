@@ -142,7 +142,14 @@ namespace ThousandAndFirst.Tests
 				KingdomCharterAction.AnswerThreat,
 				KingdomCharterAction.CityBook,
 				KingdomCharterAction.TechMap,
-				KingdomCharterAction.CityAsks
+				KingdomCharterAction.CityAsks,
+				KingdomCharterAction.FirstGuestCorrespondence,
+				KingdomCharterAction.FirstFeastPractice,
+				KingdomCharterAction.PracticeAndVocation,
+				KingdomCharterAction.CivicKnowledge,
+				KingdomCharterAction.BodyHistory,
+				KingdomCharterAction.GuestFeastRecord,
+				KingdomCharterAction.CivicCommitments
 			};
 			foreach (KingdomCharterAction action in Enum.GetValues(typeof(KingdomCharterAction)))
 				Assert.AreEqual(expected.Contains(action),

@@ -45,7 +45,23 @@ namespace ThousandAndFirst
 		public const int SemanticSelectionVersion = 11;
 		/// <summary>First archive surface carrying independent extension-happening cursors.</summary>
 		public const int HappeningCursorVersion = 12;
-		public const int CurrentVersion = HappeningCursorVersion;
+		/// <summary>First archive surface admitting construction-input delivery authority and its
+		/// landed-awaiting-owner phase. The reflected field layout is unchanged from v12.</summary>
+		public const int DeliveryDomainVersion = 13;
+		/// <summary>First archive surface carrying city-local named-cook and assenting-moot
+		/// receipts. Both are bounded semantic authorities; their native parts remain projections.</summary>
+		public const int CivicAuthorityVersion = 14;
+		/// <summary>First archive surface carrying Growth-owned first-guest correspondence facts,
+		/// choice state, and the exact shared-capacity lease proof. Older archives retain their
+		/// immutable candidate shape and migrate only from decoded evidence.</summary>
+		public const int FirstGuestVersion = 15;
+		/// <summary>First archive surface carrying the durable physical pre-citizen guest phase,
+		/// its explicit player action receipt, and observed loaded-body terminal evidence.</summary>
+		public const int PhysicalFirstGuestVersion = 16;
+		/// <summary>First archive surface carrying fixed-rate arrival epochs, compressed semantic
+		/// debt, one frozen opportunity, and exact candidate/operation opportunity bindings.</summary>
+		public const int ArrivalCadenceVersion = 17;
+		public const int CurrentVersion = ArrivalCadenceVersion;
 		public const int MaxPayloadBytes = 2 * 1024 * 1024;
 		public const int MaxStringBytes = 16 * 1024;
 		public const int MaxByteArrayBytes = 512 * 1024;
@@ -188,9 +204,15 @@ namespace ThousandAndFirst
 			typeof(KingdomGrowthOutboxEvent),
 			typeof(KingdomGrowthObjectCallbackStep),
 			typeof(KingdomGrowthArrivalCandidate),
+			typeof(KingdomGrowthArrivalDebtRange),
+			typeof(KingdomGrowthArrivalOpportunity),
+			typeof(KingdomGrowthFirstGuestOpportunity),
+			typeof(KingdomGrowthFirstGuestTerminalReceipt),
 			typeof(KingdomCarryBook),
 			typeof(KingdomCarryOperation),
 			typeof(KingdomCarrySource),
+			typeof(KingdomNamedCookReceipt),
+			typeof(KingdomAssentingMootReceipt),
 			typeof(Simulation.City.KingdomCityBook),
 			typeof(Simulation.City.KingdomBindingRegistry),
 			typeof(Simulation.City.KingdomJobRegistry)

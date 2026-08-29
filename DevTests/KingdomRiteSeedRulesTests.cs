@@ -282,12 +282,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomZoningLogicalSource.Read();
 			int teaching = source.IndexOf("private static void SetDownWhatWasLearned", StringComparison.Ordinal);
-			int teachingEnd = source.IndexOf("\n\t\tprivate static string AwayName", teaching,
+			int teachingEnd = source.IndexOf("\n\t\tprivate static string SourceName", teaching,
 				StringComparison.Ordinal);
 			Assert.Greater(teachingEnd, teaching);
 			string body = source.Substring(teaching, teachingEnd - teaching);
-			StringAssert.Contains("System.Away.City.SettlementId", body);
-			StringAssert.Contains("KingdomZoningRules.ComposeKey(\"settlement\", awayId)", body);
+			StringAssert.Contains("string source = KingdomZoningRules.ComposeKey(\"settlement\",\n"
+				+ "\t\t\t\tSource?.City?.SettlementId);", body);
+			StringAssert.DoesNotContain("System.Away", body,
+				"the selected non-seat city, not the legacy first-away projection, owns provenance");
 			StringAssert.Contains("KingdomResearch.SeedFromSource(System, Carried[i].Key, source", body);
 			StringAssert.DoesNotContain("KingdomResearch.Seed(System, Carried[i].Key", body);
 		}
@@ -337,10 +339,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FounderLedger_ExistsBeforeFoundingAndIsClearedForKingdomSuccession()
 		{
-			string source = ReadRepoSource("Core/KingdomLoader.cs");
+			string source = ReadRepoSource("Core/KingdomSaveSystemRosterRuntime.Patches.cs");
 			StringAssert.Contains("[PlayerMutator]", source);
-			Assert.GreaterOrEqual(Occurrences(source, "RequireSystem<KingdomSystem>()"), 2,
-				"new games and loaded games must both own the player-scoped rite listener before founding");
+			StringAssert.Contains("KingdomSaveSystemRosterNewGameLoader", source);
+			StringAssert.Contains("TryInitializeNewGame(The.Game", source,
+				"new-game roster initialization must own the player-scoped rite listener before founding");
+			StringAssert.DoesNotContain("[PlayerMutator]",
+				ReadRepoSource("Core/KingdomLoader.cs"),
+				"a second mutator could create a partial roster before the atomic owner runs");
 
 			source = KingdomSuccessionLogicalSource.Read();
 			int reset = source.IndexOf("private static bool TryResetPersonalKnowledge", StringComparison.Ordinal);

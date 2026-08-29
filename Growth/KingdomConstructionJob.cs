@@ -31,6 +31,12 @@ namespace ThousandAndFirst
 		public string PhysicalReceipt;
 		public string TargetKey;
 		public string Payload;
+		/// <summary>Construction-owned routed-input state. Central logistics may retain child
+		/// itinerary rows, but this receipt alone owns source identity, custody and payment.</summary>
+		public string InputReceipt;
+		/// <summary>SHA-256 of <see cref="InputReceipt"/> while active, retained after terminal
+		/// compaction so routed economic identity remains part of the replay proof.</summary>
+		public string InputReceiptHash;
 		/// <summary>Version of immutable paid build-effect truth. Zero is a legacy receipt;
 		/// it must never be completed from live catalogue data.</summary>
 		public int BuildTruthSchema;
@@ -77,6 +83,8 @@ namespace ThousandAndFirst
 				PhysicalReceipt = PhysicalReceipt,
 				TargetKey = TargetKey,
 				Payload = Payload,
+				InputReceipt = InputReceipt,
+				InputReceiptHash = InputReceiptHash,
 				BuildTruthSchema = BuildTruthSchema,
 				BuildHasPlot = BuildHasPlot,
 				BuildFrontier = BuildFrontier,

@@ -32,14 +32,16 @@ namespace ThousandAndFirst
 					+ KingdomCreedRules.CreedClause(CreedName(CreedOf(System.Seceded))) + ", and it still keeps everything it kept.\n\n"
 					+ "Stand on their ground and ask, when what split you is no longer true.";
 			}
-			if (System.SettlementCount < KingdomSettlement.MaxSettlements)
+			if (System.SettlementCount < 2)
 			{
 				return "{{C|" + KingdomPresentation.Rich(System.SeatName) + "}} is " + KingdomCreedRules.CreedClause(CreedName(SeatCreed(System)))
 					+ ".\n\nOne city cannot fall out with itself. Nothing here needs watching.";
 			}
-			string report = KingdomCreedRules.TemperReport(Temper(System), System.Dissent, KingdomPresentation.Rich(System.SeatName),
-				(System.Away != null) ? KingdomPresentation.Rich(System.Away.SettlementName) : null,
-				CreedName(SeatCreed(System)), CreedName(AwayCreed(System)));
+			if (!TryDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second)) return "The realm's city pair cannot be proved.";
+			string report = KingdomCreedRules.TemperReport(Temper(System), System.Dissent,
+				KingdomPresentation.Rich(first.Name), KingdomPresentation.Rich(second.Name),
+				CreedName(first.Creed), CreedName(second.Creed));
 			if (!string.IsNullOrEmpty(System.DeclaredCreed))
 			{
 				report += "\n\nThe realm has declared for {{C|" + CreedName(System.DeclaredCreed) + "}}. Whoever walks the roads here knows it.";
@@ -63,13 +65,10 @@ namespace ThousandAndFirst
 			{
 				Consider(System, candidates, held.Key);
 			}
-			if (System.Away != null)
-			{
-				foreach (KeyValuePair<string, int> held in System.Away.CreedCounts)
-				{
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				foreach (KeyValuePair<string, int> held in nonSeat[i].CreedCounts)
 					Consider(System, candidates, held.Key);
-				}
-			}
 			Consider(System, candidates, System.DeclaredCreed);
 			candidates.Sort(global::System.StringComparer.Ordinal);
 			return candidates;
@@ -92,7 +91,8 @@ namespace ThousandAndFirst
 		/// <see cref="KingdomCreedRules.RememberedTemper"/>: jitter across one threshold says
 		/// nothing further, and only easing all the way back to concord re-arms the ladder.
 		/// </summary>
-		private static void Announce(KingdomSystem System, string HereCreed, string ThereCreed)
+		private static void Announce(KingdomSystem System, KingdomCreedPairCity First,
+			KingdomCreedPairCity Second)
 		{
 			CityTemper temper = KingdomCreedRules.ClassifyTemper(System.Dissent);
 			CityTemper spoken = (CityTemper)System.DissentSpoken;
@@ -102,18 +102,20 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			string speech = KingdomCreedRules.TemperSpeech(temper, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName));
+			string speech = KingdomCreedRules.TemperSpeech(temper,
+				KingdomPresentation.Rich(First.Name), KingdomPresentation.Rich(Second.Name));
 			if (!string.IsNullOrEmpty(speech))
 			{
 				MessageQueue.AddPlayerMessage(speech + " {{K|(Charter: how your cities hold each other)}}");
 			}
-			string entry = KingdomCreedRules.TemperChronicle(temper, KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName));
+			string entry = KingdomCreedRules.TemperChronicle(temper,
+				KingdomPresentation.Rich(First.Name), KingdomPresentation.Rich(Second.Name));
 			if (!string.IsNullOrEmpty(entry))
 			{
 				KingdomChronicle.Record(System, entry);
 			}
-			KingdomLog.Log("dissent: " + System.Dissent + " temper=" + temper + " here=" + (HereCreed ?? "-") + " there=" + (ThereCreed ?? "-"));
+			KingdomLog.Log("dissent: " + System.Dissent + " temper=" + temper + " first=" +
+				(First.Creed ?? "-") + " second=" + (Second.Creed ?? "-"));
 		}
 
 		/// <summary>Re-arms the spoken ladder after a lever eased the quarrel, so a founder who
@@ -131,7 +133,9 @@ namespace ThousandAndFirst
 			// standing at the edge are not billed again the moment it steps back.
 			string leaver;
 			string kept;
-			NameTheLeaver(System, SeatCreed(System), AwayCreed(System), out leaver, out kept);
+			if (!TryDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second)) return;
+			NameTheLeaver(first, second, out leaver, out kept);
 			bool wasWarned = KingdomBrink.OfCity(System).Warned;
 			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			if (wasWarned)
@@ -160,10 +164,11 @@ namespace ThousandAndFirst
 			// even though the sum across creeds may legitimately exceed it (one person can be
 			// remembered under MaxKeptCreeds names).
 			Trim(System.CreedPastCounts, System.Population);
-			if (System.Away != null)
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				Trim(System.Away.CreedCounts, System.Away.Population);
-				Trim(System.Away.CreedPastCounts, System.Away.Population);
+				Trim(nonSeat[i].CreedCounts, nonSeat[i].Population);
+				Trim(nonSeat[i].CreedPastCounts, nonSeat[i].Population);
 			}
 		}
 
@@ -229,8 +234,12 @@ namespace ThousandAndFirst
 
 		private static string OtherCityName(KingdomSystem System)
 		{
-			string name = (System.Away != null) ? System.Away.SettlementName : null;
-			return string.IsNullOrEmpty(name) ? "your other city" : ("{{C|" + KingdomPresentation.Rich(name) + "}}");
+			if (!TryDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second)) return "your other city";
+			string name = first.Seated ? second.Name : (second.Seated ? first.Name :
+				first.Name + " and " + second.Name);
+			return string.IsNullOrEmpty(name) ? "your other city" :
+				("{{C|" + KingdomPresentation.Rich(name) + "}}");
 		}
 
 		private static string SecessionRefusal(SecessionVerdict Verdict)

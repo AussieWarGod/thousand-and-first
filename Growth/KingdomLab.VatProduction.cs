@@ -13,6 +13,12 @@ namespace ThousandAndFirst
 	{
 		private static void ManagePending(r_KingdomVatHouse Vat, GameObject Actor, GameObject Input)
 		{
+			if (!VatRawReceiptMatches(Input, Vat.ParentObject))
+			{
+				QuarantineVatReceipt(Input, null);
+				Popup.Show("The vat's raw-part custody is protected or no longer exact. It was not moved.");
+				return;
+			}
 			int remaining = Input.GetIntProperty(VatRemainingProperty);
 			GameObject output = OutputFor(Vat, Input);
 			if (output != null)
@@ -64,10 +70,21 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			string inputId = Input.IDIfAssigned;
+			string inputBlueprint = Input.Blueprint;
+			int inputCount = Input.Count;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)) return;
 			Actor.RequirePart<Inventory>().AddObjectToInventory(Input, Actor, Silent: true, NoStack: true);
-			if (Input.Physics == null || Input.Physics.InInventory != Actor)
+			bool landed = LabObjectAt(Input, Actor, null, inputId, inputBlueprint, inputCount)
+				&& KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure);
+			if (!landed)
 			{
-				Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(Input, Actor, Silent: true, NoStack: true);
+				if (KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)
+					&& Input.IDIfAssigned == inputId && Input.Blueprint == inputBlueprint
+					&& Input.Count == inputCount)
+					Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(Input, Actor,
+						Silent: true, NoStack: true);
 				Popup.Show("The vat-house could not hand the part back. The raw part was not consumed; inspect the vats before trying again.");
 				return;
 			}
@@ -83,6 +100,9 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Ready.Count; i++)
 			{
 				GameObject output = Ready[i];
+				string outputId = output.IDIfAssigned;
+				string outputBlueprint = output.Blueprint;
+				int outputCount = output.Count;
 				if (output.GetIntProperty(VatOutputPhaseProperty)
 						!= (int)KingdomVatOutputPhase.Added
 					|| output.GetIntProperty(VatRawPhaseProperty)
@@ -93,7 +113,9 @@ namespace ThousandAndFirst
 					continue;
 				}
 				inventory.AddObjectToInventory(output, Actor, Silent: true, NoStack: true);
-				if (output.Physics != null && output.Physics.InInventory == Actor)
+				string authorityFailure;
+				if (LabObjectAt(output, Actor, null, outputId, outputBlueprint, outputCount)
+					&& KingdomOrdinaryFoodAuthority.TryObjectNow(output, out authorityFailure))
 				{
 					output.RemoveIntProperty(VatReadyProperty);
 					output.RemoveStringProperty(VatOutputJobProperty);
@@ -102,8 +124,11 @@ namespace ThousandAndFirst
 				}
 				else
 				{
-					Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(output, Actor,
-						Silent: true, NoStack: true);
+					if (KingdomOrdinaryFoodAuthority.TryObjectNow(output, out authorityFailure)
+						&& output.IDIfAssigned == outputId && output.Blueprint == outputBlueprint
+						&& output.Count == outputCount)
+						Vat.ParentObject.RequirePart<Inventory>().AddObjectToInventory(output, Actor,
+							Silent: true, NoStack: true);
 				}
 			}
 			if (taken > 0)
@@ -172,14 +197,17 @@ namespace ThousandAndFirst
 
 		private static void QuarantineVatReceipt(GameObject Input, GameObject Output)
 		{
-			if (GameObject.Validate(Input))
+			string authorityFailure;
+			if (GameObject.Validate(Input)
+				&& KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure))
 			{
 				Input.SetIntProperty(VatOutputPhaseProperty,
 					(int)KingdomVatOutputPhase.Quarantined);
 				Input.SetIntProperty(VatRawPhaseProperty, (int)KingdomVatRawPhase.Quarantined);
 				Input.SetIntProperty(VatBlockedProperty, 1);
 			}
-			if (GameObject.Validate(Output))
+			if (GameObject.Validate(Output)
+				&& KingdomOrdinaryFoodAuthority.TryObjectNow(Output, out authorityFailure))
 			{
 				Output.SetIntProperty(VatOutputPhaseProperty,
 					(int)KingdomVatOutputPhase.Quarantined);

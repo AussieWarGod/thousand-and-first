@@ -21,10 +21,15 @@ namespace ThousandAndFirst
 		{
 			GameObject parent = Works.ParentObject;
 			Cell cell = parent?.CurrentCell;
-			if (cell == null || !KingdomData.TryGetBuilding(Works.DesignKey, out var entry))
+			if (cell == null) return false;
+			KingdomRules.BuildEntry entry = null;
+			FoundingHeartContext founding = null;
+			if (FoundingHeartWorkIdentityEvidence(parent))
 			{
-				return false;
+				if (!TryReadFoundingHeartWorkAuthority(Z, parent, out founding)) return false;
+				entry = founding.Entry;
 			}
+			else if (!KingdomData.TryGetBuilding(Works.DesignKey, out entry)) return false;
 			bool architectureMarker = HasArchitectureReceiptEvidence(parent);
 			KingdomArchitectureIntent architecture = null;
 			bool legacyArchitecture = !architectureMarker;
@@ -69,6 +74,13 @@ namespace ThousandAndFirst
 			{
 				// Legacy plot works have no labour receipt and preserve their old nominal tick.
 				completeTick = Works.StartTick + Works.TotalTicks;
+			}
+			if (founding != null)
+			{
+				KingdomSystem foundingSystem = The.Game == null
+					? null : The.Game.RequireSystem<KingdomSystem>();
+				return FinishFoundingHeart(Works, foundingSystem, Z, founding, displayName,
+					completeTick, planQuote, yielding);
 			}
 			string receipt = parent.GetStringProperty(KingdomConstruction.ReceiptProperty);
 			KingdomConstructionJob construction = null;

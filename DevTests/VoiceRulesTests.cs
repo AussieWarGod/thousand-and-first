@@ -12,6 +12,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.AreEqual("ThousandAndFirst.VoiceOccasion", typeof(VoiceOccasion).FullName);
 			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(VoiceOccasion)));
+			Assert.AreEqual(8, AllOccasions.Length);
 		}
 
 		/// <summary>A settlement id inside the frozen <c>taf:</c> grammar, as
@@ -26,13 +27,16 @@ namespace ThousandAndFirst.Tests
 		/// </summary>
 		private const ulong Sweep = 64uL;
 
-		private static readonly VoiceOccasion[] AllOccasions = new VoiceOccasion[5]
+		private static readonly VoiceOccasion[] AllOccasions = new VoiceOccasion[8]
 		{
 			VoiceOccasion.StageUp,
 			VoiceOccasion.RaidRepelled,
 			VoiceOccasion.ThirstBroken,
 			VoiceOccasion.MealShared,
-			VoiceOccasion.CitizenLost
+			VoiceOccasion.CitizenLost,
+			VoiceOccasion.Wedding,
+			VoiceOccasion.Feast,
+			VoiceOccasion.FounderRegarded
 		};
 
 		private static List<string> Roll()
@@ -231,7 +235,7 @@ namespace ThousandAndFirst.Tests
 		/// this goes red rather than shipping a settler who answers in the plain register forever.
 		/// </summary>
 		[Test]
-		public void EveryOriginSpeaksForItselfOnEveryOccasion()
+		public void EveryOriginSpeaksOrFounderRegardStaysPlainOnEveryOccasion()
 		{
 			for (int i = 0; i < AllOccasions.Length; i++)
 			{
@@ -243,8 +247,16 @@ namespace ThousandAndFirst.Tests
 				{
 					string line = KingdomVoiceRules.Line(occasion, KingdomRules.Origins[j]);
 					Assert.IsFalse(string.IsNullOrEmpty(line), KingdomRules.Origins[j] + " has nothing to say about " + occasion);
-					Assert.AreNotEqual(plain, line, KingdomRules.Origins[j] + " falls through to the plain register on " + occasion);
-					Assert.IsTrue(said.Add(line), "two origins say the same thing about " + occasion);
+					if (occasion == VoiceOccasion.FounderRegarded)
+						Assert.AreEqual(plain, line,
+							"founder regard is creed truth, never origin belief");
+					else
+					{
+						Assert.AreNotEqual(plain, line, KingdomRules.Origins[j]
+							+ " falls through to the plain register on " + occasion);
+						Assert.IsTrue(said.Add(line),
+							"two origins say the same thing about " + occasion);
+					}
 				}
 			}
 		}

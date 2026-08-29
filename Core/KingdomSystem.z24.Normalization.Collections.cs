@@ -19,17 +19,42 @@ namespace ThousandAndFirst
 			// clear, allocate, or normalize one half of that transaction.
 			if (!archiveTransactionActive)
 			{
+				if (ExiledSettlementTopology == null)
+					ExiledSettlementTopology = new KingdomSettlementTopology();
 				if (ExiledStandings == null)
 				{
 					ExiledStandings = new Dictionary<string, int>();
 				}
+				if (ExiledRealmPolicyToward == null)
+					ExiledRealmPolicyToward = new Dictionary<string, int>();
+				if (ExiledRegardSpilloverRemainders == null)
+					ExiledRegardSpilloverRemainders = new Dictionary<string, int>();
+				if (ExiledRegardSpilloverObservedReputation == null)
+					ExiledRegardSpilloverObservedReputation =
+						new Dictionary<string, int>();
 				if (Exiled)
 				{
 					// Legacy saves without an archive may promote their sole remembered city.
+				#pragma warning disable 618
+					KingdomSettlement legacyExiled = ExiledAway;
+				#pragma warning restore 618
 					if (ExiledSeat == null)
 					{
-						ExiledSeat = ExiledAway ?? new KingdomSettlement();
-						ExiledAway = null;
+						ExiledSeat = legacyExiled ?? new KingdomSettlement();
+						ExiledSettlementTopology = new KingdomSettlementTopology();
+					}
+					else if (ExiledSettlementTopology.Count == 0 && legacyExiled != null)
+					{
+						if (!ExiledSettlementTopology.TryAdoptLegacy(legacyExiled,
+							out string migrationFailure)) QuarantineIdentity(migrationFailure);
+					}
+					else if (legacyExiled != null && ExiledSettlementTopology.Count > 0 &&
+						!ReferenceEquals(legacyExiled, ExiledSettlementTopology.Get(0)) &&
+						!KingdomArchivedSettlementCodec.ExactGraph(legacyExiled,
+							ExiledSettlementTopology.Get(0), out string projectionFailure))
+					{
+						QuarantineIdentity("legacy ExiledAway projection differs from topology: " +
+							projectionFailure);
 					}
 				}
 				else
@@ -37,13 +62,18 @@ namespace ThousandAndFirst
 					ExiledDisplayName = null;
 					ExiledDeed = null;
 					ExiledSeat = null;
-					ExiledAway = null;
+					ExiledSettlementTopology = new KingdomSettlementTopology();
 					ExiledStandings.Clear();
+					ExiledRealmPolicyToward.Clear();
+					ExiledRegardSpilloverRemainders.Clear();
+					ExiledRegardSpilloverObservedReputation.Clear();
 				}
 				ExiledSeat?.Normalize();
-				ExiledAway?.Normalize();
+				ExiledSettlementTopology.NormalizeMembers();
+				SynchronizeLegacyExiledProjection();
 			}
-			if (ExiledRealmArchive != null && !ExiledRealmArchive.Quarantined)
+			if (ExiledRealmArchive != null && !ExiledRealmArchive.Quarantined &&
+				!ExiledRealmArchive.RequiresDirectionalStandingMigration)
 			{
 				string archiveFailure;
 				if (!ExiledRealmArchive.Validate(out archiveFailure))
@@ -99,6 +129,7 @@ namespace ThousandAndFirst
 				ClaimedZones = new List<string>();
 			}
 			NormalizeIdentity(AllowLegacyIdentityMigration);
+			ValidateSettlementTopology();
 			if (ZoneDistricts == null)
 			{
 				ZoneDistricts = new Dictionary<string, string>();
@@ -116,6 +147,26 @@ namespace ThousandAndFirst
 				DealNextTicks = new List<long>();
 			}
 			NormalizeTradeBook();
+			if (PolityLedger == null) PolityLedger = new KingdomPolityLedger();
+			KingdomPolityRules.Normalize(PolityLedger);
+			KingdomPolityRealmTransitionRuntime.Normalize(this);
+			if (Founded && string.IsNullOrEmpty(IdentityFault) &&
+				PolityLedger.SchemaState == KingdomPolitySchemaState.Compatible)
+			{
+				// Additive saves have no trustworthy new-game option snapshot. Freeze Off; the
+				// inheritance owner remains sole authority for any already-applied historical site.
+				// A different non-empty owner cannot be silently relabelled across exile/refounding.
+				if (!KingdomPolityRules.TryRebindEmptyIdentity(PolityLedger, RealmId,
+					KingdomPolityImportPolicy.Off, out string polityIdentityFailure))
+					KingdomPolityRules.Quarantine(PolityLedger, polityIdentityFailure);
+			}
+			if (Experience == null) Experience = new KingdomExperienceLedger();
+			KingdomExperienceRules.Normalize(Experience);
+			if (Founded && string.IsNullOrEmpty(IdentityFault)
+				&& Experience.SchemaState == KingdomExperienceSchemaState.Compatible
+				&& !KingdomExperienceRules.TryRebindEmptyIdentity(Experience, RealmId,
+					out string experienceIdentityFailure))
+				KingdomExperienceRules.Quarantine(Experience, experienceIdentityFailure);
 			if (ChronicleEntries == null)
 			{
 				ChronicleEntries = new List<string>();
@@ -152,6 +203,13 @@ namespace ThousandAndFirst
 			{
 				Standings = new Dictionary<string, int>();
 			}
+			if (RealmPolicyToward == null)
+				RealmPolicyToward = new Dictionary<string, int>();
+			if (RegardSpilloverRemainders == null)
+				RegardSpilloverRemainders = new Dictionary<string, int>();
+			if (RegardSpilloverObservedReputation == null)
+				RegardSpilloverObservedReputation = new Dictionary<string, int>();
+			NormalizeDirectionalStandingState();
 		}
 
 	}

@@ -69,6 +69,7 @@ from __future__ import annotations
 import math
 import os
 import re
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -139,15 +140,95 @@ CAT_CS = source_family_paths("Growth", "KingdomCatalogueRules")
 SUB_CS = source_family_paths("Growth", "KingdomSubsidenceRules")
 SUBIMPL_CS = source_family_paths("Growth", "KingdomSubsidence")
 WEAR_CS = source_family_paths("Growth", "KingdomWearRules")
+WEARIMPL_CS = source_family_paths("Growth", "KingdomWear")
 LODGE_CS = source_family_paths("Growth", "KingdomLodgingRules")
 REACH_CS = source_family_paths("Growth", "KingdomReachRules")
-CEREMONY_CS = source_family_paths("Experience", "KingdomCeremonyRules")
-QOL_CS = source_family_paths("Core", "KingdomQolRules")
+FOUNDATION_CS = os.path.join(ROOT, "Core", "KingdomSystem.z01.State.Foundation.cs")
+SYSTEM_NORMALIZE_CS = os.path.join(ROOT, "Core", "KingdomSystem.z23.Normalization.cs")
+SETTLEMENT_NORMALIZE_CS = os.path.join(ROOT, "Core", "KingdomSettlement.Normalize.cs")
 YARD_CS = source_family_paths("Growth", "KingdomYardRules")
-YARD_XML = os.path.join(ROOT, "KingdomYardWorks.xml")
-DEALS_XML = os.path.join(ROOT, "KingdomDeals.xml")
-BUILD_XML = os.path.join(ROOT, "KingdomBuildings.xml")
-BLUEPRINTS_XML = os.path.join(ROOT, "ObjectBlueprints.xml")
+RUNTIME_DATA = os.path.join(ROOT, "RuntimeData")
+YARD_XML = os.path.join(RUNTIME_DATA, "KingdomYardWorks.xml")
+DEALS_XML = os.path.join(RUNTIME_DATA, "KingdomDeals.xml")
+BUILD_XML = os.path.join(RUNTIME_DATA, "KingdomBuildings.xml")
+BLUEPRINTS_XML = os.path.join(RUNTIME_DATA, "ObjectBlueprints.xml")
+PROCEDURES_XML = os.path.join(RUNTIME_DATA, "KingdomProcedures.xml")
+CIVIC_MEMORY_LIMITS_CS = os.path.join(ROOT, "Core", "KingdomCivicMemoryLimits.cs")
+CIVIC_MEMORY_DERIVATION_CS = os.path.join(ROOT, "Core", "KingdomCivicMemoryDerivation.cs")
+PURPOSE_KIND_CS = os.path.join(ROOT, "Growth", "KingdomPurposeKind.cs")
+PURPOSE_CATALOGUE_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.Catalogue.cs")
+PURPOSE_PAIR_CS = os.path.join(ROOT, "Growth", "KingdomPurposePairReceipt.cs")
+PURPOSE_OPERATION_CS = os.path.join(ROOT, "Growth", "KingdomPurposeOperationReceipt.cs")
+PURPOSE_ACCOUNTING_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.Accounting.cs")
+PURPOSE_VALIDATION_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.OperationValidation.cs")
+PURPOSE_TRANSITIONS_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.Transitions.cs")
+PURPOSE_CARDINALITY_CS = os.path.join(ROOT, "Growth", "KingdomLabRules.Purpose.cs")
+PURPOSE_FACTORIES_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.Factories.cs")
+PURPOSE_TOPOLOGY_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.Topology.cs")
+PURPOSE_RUNTIME_REGISTRY_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolio.RuntimeRegistry.cs")
+PURPOSE_DRIVE_CS = os.path.join(ROOT, "Growth", "KingdomPurposePortfolio.OperationDrive.cs")
+PURPOSE_CONTROL_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolio.OperationControl.cs")
+PURPOSE_OUTPUT_CS = os.path.join(ROOT, "Growth", "KingdomPurposePortfolio.OutputRuntime.cs")
+PURPOSE_EFFECT_RULES_CS = os.path.join(
+    ROOT, "Growth", "KingdomPurposePortfolioRules.EffectStep.cs")
+ANNEXE_RULES_CS = os.path.join(ROOT, "Growth", "KingdomAnnexeRules.cs")
+ANNEXE_PURPOSE_CS = os.path.join(ROOT, "Growth", "KingdomAnnexe.Purpose.cs")
+LAB_PURPOSE_SELECTION_CS = os.path.join(ROOT, "Growth", "KingdomLab.PurposeSelection.cs")
+MIRROR_GATE_RULES_CS = os.path.join(ROOT, "Growth", "KingdomMirrorGateRules.cs")
+MIRROR_GATE_PURPOSE_CS = os.path.join(ROOT, "Growth", "KingdomMirrorGate.Purpose.cs")
+POWER_RULES_CS = os.path.join(ROOT, "Growth", "KingdomPowerRules.cs")
+SETTLEMENT_TOPOLOGY_CS = os.path.join(
+    ROOT, "Core", "KingdomSettlementTopologyRules.cs")
+HOSTED_RULES_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcologyRules.cs")
+HOSTED_RUNTIME_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Runtime.cs")
+HOSTED_CONSTRUCTION_CS = os.path.join(
+    ROOT, "Growth", "KingdomHostedArcology.Construction.cs")
+HOSTED_AUTHORITY_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Authority.cs")
+HOSTED_LOT_CS = os.path.join(ROOT, "Growth", "KingdomHostedLotDefinition.cs")
+HOSTED_VISUAL_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Visual.cs")
+GREAT_ARCHIVE_CS = os.path.join(ROOT, "Growth", "KingdomGreatArchive.cs")
+CONSTRUCTION_INPUT_RULES_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputRules.cs")
+CONSTRUCTION_INPUT_DECLARATIONS_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInput.Declarations.cs")
+CONSTRUCTION_INPUT_PLAN_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputPlan.Planning.cs")
+CONSTRUCTION_INPUT_PLAN_VALIDATION_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputPlan.Validation.cs")
+CONSTRUCTION_INPUT_STATE_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputRules.State.cs")
+CONSTRUCTION_INPUT_TRANSITIONS_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputRules.Transitions.cs")
+CONSTRUCTION_INPUT_RECOVERY_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputRules.Recovery.cs")
+CONSTRUCTION_INPUT_COMMIT_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstructionInputRules.Commit.cs")
+CONSTRUCTION_INPUT_DRIVE_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstruction.InputDrive.Open.cs")
+CONSTRUCTION_INPUT_GLOBAL_RECOVERY_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstruction.GlobalRecovery.cs")
+CONSTRUCTION_INPUT_CANCELLATION_CS = os.path.join(
+    ROOT, "Growth", "KingdomConstruction.InputDrive.Cancellation.cs")
+CENTRAL_CONSTRUCTION_RESERVATION_CS = os.path.join(
+    ROOT, "Simulation", "City", "KingdomCentralLogistics.09.ConstructionInputReservation.cs")
+LOGISTICS_RULES_CS = os.path.join(ROOT, "Simulation", "City", "KingdomLogisticsRules.cs")
+CITY_MEMORY_RULES_CS = os.path.join(ROOT, "Simulation", "City", "KingdomCityMemoryRules.cs")
+ITINERARY_RULES_CS = os.path.join(ROOT, "Simulation", "City", "KingdomItineraryRules.cs")
+DISTANCE_RULES_CS = os.path.join(ROOT, "Simulation", "City", "KingdomDistanceRules.cs")
+JOB_DRAWS_CS = os.path.join(ROOT, "Simulation", "City", "KingdomJobRegistry.z06.Draws.cs")
+PORTERS_OPENING_CS = os.path.join(ROOT, "Simulation", "City", "KingdomPorters.00.Opening.cs")
+CENTRAL_ROUTE_CS = os.path.join(
+    ROOT, "Simulation", "City", "KingdomCentralLogistics.06.ManifestOwnershipAndRoute.cs")
+CENTRAL_LEGS_CS = os.path.join(
+    ROOT, "Simulation", "City", "KingdomCentralLogistics.07.RouteSegmentsAndPassages.cs")
 
 
 # --------------------------------------------------------------------------------------
@@ -211,20 +292,17 @@ SRC = {
     "FavoredMealPercent": read_const(RULES_CS, "FavoredMealPercent"),
     "MaxCyclesPerVisit": read_const(CROP_CS, "MaxCyclesPerVisit"),
     "EffortPerHandPerDay": read_const(MAT_CS, "EffortPerHandPerDay"),
+    "StrikeBaseEffort": read_const(MAT_CS, "StrikeBaseEffort"),
+    "StrikeEffortPerUnit": read_const(MAT_CS, "StrikeEffortPerUnit"),
     "RefineEffortPerUnit": read_const(MAT_CS, "RefineEffortPerUnit"),
     "RawPerRefined": read_const(MAT_CS, "RawPerRefined"),
     "MaxRefinedPerDay": read_const(MAT_CS, "MaxRefinedPerDay"),
     "MaxClearingHands": read_const(MAT_CS, "MaxClearingHands"),
     # Level and subsidence, from the package that consumes the catalogue's Carries.
     "LiftCapPercent": read_const(CAT_CS, "LiftCapPercent"),
-    # Comfort's two new inputs. The shade is what one named notable is worth (met tastes, the
-    # virtue net of the flaw, met Prefers); MaxShadePerWork is the whole ceiling a household's
-    # yard trade can reach. Both ride the lift term and are bound by LiftCapPercent again.
-    "TasteShadeAmount": read_const(CEREMONY_CS, "TasteShadeAmount"),
-    "MaxTastesStated": read_const(CEREMONY_CS, "MaxTastesStated"),
-    "VirtueShadeAmount": read_const(CEREMONY_CS, "VirtueShadeAmount"),
-    "FlawShadeAmount": read_const(CEREMONY_CS, "FlawShadeAmount"),
-    "MaxPrefersCounted": read_const(QOL_CS, "MaxPrefersCounted"),
+    # A household's authored yard trade still rides the common lift term. Civic-office taste,
+    # virtue, flaw, and preference constants are deliberately absent: title-only offices may not
+    # enter the economy, and legacy NotableShade is retired during normalization below.
     "MaxShadePerWork": read_const(YARD_CS, "MaxShadePerWork"),
     "FloorLevel": read_const(CAT_CS, "FloorLevel"),
     "StartMarginPercent": read_const(SUB_CS, "StartMarginPercent"),
@@ -312,7 +390,9 @@ for needle, complaint in _PINS:
 _sub_text = read_source(SUB_CS)
 _cat_text = read_source(CAT_CS)
 _reach_text = read_source(REACH_CS)
-_ceremony_text = read_source(CEREMONY_CS)
+_foundation_text = read_source(FOUNDATION_CS)
+_system_normalize_text = read_source(SYSTEM_NORMALIZE_CS)
+_settlement_normalize_text = read_source(SETTLEMENT_NORMALIZE_CS)
 _SUB_PINS = [
     (
         _sub_text,
@@ -342,7 +422,7 @@ _SUB_PINS = [
     (
         _cat_text,
         "int lift = ((Lift < 0) ? 0 : Lift) + ((Shade < 0) ? 0 : Shade);",
-        "Equilibrium's shade term moved - a notable is supposed to ride the lift, under its cap",
+        "Equilibrium's transient shade term moved - attended meal lift belongs under the cap",
     ),
     (
         _cat_text,
@@ -362,7 +442,7 @@ _SUB_PINS = [
     (
         _sub_text,
         "LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof, Supports.Lift, Shade);",
-        "SupportedLevel no longer hands the notable's shade to the frozen arithmetic",
+        "SupportedLevel no longer hands attended transient shade to the frozen arithmetic",
     ),
     (
         _sub_text,
@@ -372,6 +452,16 @@ _SUB_PINS = [
 ]
 for text, needle, complaint in _SUB_PINS:
     assert needle in text, complaint
+
+assert "return (MealShade < 0) ? 0 : MealShade;" in _foundation_text, (
+    "KingdomSystem.Shade no longer excludes the legacy civic-office modifier"
+)
+assert "NotableShade = 0;" in _system_normalize_text, (
+    "seat normalization no longer retires legacy civic-office economy"
+)
+assert "NotableShade = 0;" in _settlement_normalize_text, (
+    "off-seat normalization no longer retires legacy civic-office economy"
+)
 
 # The retired constants may still be NAMED in the comments that mark where they lived (and
 # should be); what must not come back is either declaration. MaxUpkeepDaysCharged went in P1,
@@ -407,6 +497,41 @@ assert "long units = effort / RefineEffortPerUnit;" in _mat_text, (
 assert "long ceiling = (long)MaxRefinedPerDay * Days;" in _mat_text, (
     "RefinedThisPass' throughput ceiling is no longer denominated per day"
 )
+
+# Mending uses the same uncapped effort clock as clearing and striking. These bodies are
+# pinned together because an apparently harmless visit cap in either half would make a
+# month away mend less than a month watched, while moving the hands gate would let time mend
+# a work nobody is tending. Q4b prices the resulting schedules.
+_wearimpl_text = read_source(WEARIMPL_CS)
+_MENDING_PINS = [
+    (
+        _mat_text,
+        "long effort = hands * Days * EffortPerHandPerDay;",
+        "EffortWorked no longer multiplies the full day count by the bounded gang",
+    ),
+    (
+        _mat_text,
+        "return (effort > int.MaxValue) ? int.MaxValue : (int)effort;",
+        "EffortWorked no longer saturates before returning to a long-absence caller",
+    ),
+    (
+        _mat_text,
+        "int effort = StrikeBaseEffort / 2 + units * StrikeEffortPerUnit;",
+        "RepairEffort's material schedule moved",
+    ),
+    (
+        _wearimpl_text,
+        "if (Hands <= 0)",
+        "the repair worker no longer stops before time can advance an unstaffed mend",
+    ),
+    (
+        _wearimpl_text,
+        "int left = WearPart.RepairEffortLeft - KingdomMaterialRules.EffortWorked(Hands, days);",
+        "repair completion no longer spends the common hands-times-days effort law",
+    ),
+]
+for text, needle, complaint in _MENDING_PINS:
+    assert needle in text, complaint
 
 # The feedback loop's own six bodies. Section 5 reproduces each of them exactly. The fifth and
 # sixth are the ones that decide the whole shape of the answer, and Addendum 10(b) moved them:
@@ -990,6 +1115,59 @@ names outright. A two-hand yard shapes {pace} unit(s) a day.
     drams side is untouched by this wave.""")
 
 
+def q4b_mending():
+    rule("Q4b Mending: time times hands, never visits")
+
+    def effort_worked(hands: int, days: int) -> int:
+        if hands <= 0 or days <= 0:
+            return 0
+        gang = min(hands, SRC["MaxClearingHands"])
+        return min(gang * days * SRC["EffortPerHandPerDay"], 2_147_483_647)
+
+    def repair_effort(material_units: int, wear: int = 1) -> int:
+        if wear <= 0:
+            return 0
+        units = max(0, material_units)
+        return max(1, SRC["StrikeBaseEffort"] // 2 + units * SRC["StrikeEffortPerUnit"])
+
+    print(f"""
+A mend pays for its replacement materials and bits before this clock starts. Its labour bill
+is half the strike base ({SRC["StrikeBaseEffort"]} / 2) plus {SRC["StrikeEffortPerUnit"]} effort for every material unit in
+the original work. One resident removes {SRC["EffortPerHandPerDay"]} effort per day; the gang is bounded at
+{SRC["MaxClearingHands"]} hands, but the calendar is not bounded. Wear decides whether a mend exists and what
+physical stock it costs. It does not make the same building take a different number of hands
+to put back together merely because the damage roll was larger.
+""")
+    print(f"{'material units':>14}{'effort':>10}" + "".join(f"{str(h) + ' hand':>12}" for h in (1, 2, 4, 6)))
+    for units in (0, 8, 24, 64, 120):
+        effort = repair_effort(units)
+        row = f"{units:>14}{effort:>10}"
+        for hands in (1, 2, 4, 6):
+            per_day = effort_worked(hands, 1)
+            row += f"{math.ceil(effort / per_day):>12}"
+        print(row)
+
+    # The table is also an executable receipt for the absence doctrine. One thirty-day
+    # resolve must equal thirty one-day resolves, while empty hands must never become a
+    # magical worker however large the elapsed count. A nonsense-length save saturates rather
+    # than wrapping negative and adding effort back to the job.
+    for hands in (1, 2, 4, SRC["MaxClearingHands"]):
+        assert effort_worked(hands, 30) == 30 * effort_worked(hands, 1)
+    assert effort_worked(0, 400) == 0
+    assert effort_worked(-4, 400) == 0
+    assert effort_worked(SRC["MaxClearingHands"], 2_147_483_647) == 2_147_483_647
+    assert repair_effort(120, 0) == 0
+    assert repair_effort(-5, 1) == SRC["StrikeBaseEffort"] // 2
+
+    print(f"""
+The cells are DAYS TO FINISH after the exact stock is in custody. Returning every day does
+not improve them: thirty watched one-day passes and one thirty-day absence remove the same
+effort. Leaving nobody assigned removes zero after 400 days. This closes the old 'uncapped
+mending' note as a measured doctrine: HANDS are the rate; elapsed world days are the clock;
+homecomings are neither.
+""")
+
+
 def q5_sensitivity():
     rule("Q5  Sensitivity: the two numbers the water economy stands on")
     print("""
@@ -1028,7 +1206,7 @@ class Design:
     capacity: int = 0  # drams its blueprint's LiquidVolume holds; 0 for anything that is not a store
     plot: str = ""  # S / M / L / XL, or "" for a single-cell design. KingdomReachRules.BandForSize
     larder: int = 0  # servings its blueprint's r_KingdomLarderCapacity tag holds; 0 if not a pantry
-    rows: int = 0  # rows its blueprint's r_KingdomCropRows tag stands when sown; 0 if it grows nothing
+    rows: int = 0  # physical rows from its blueprint, or exact hosted producer count x producer tag
     styles: str = "all"  # the design's Styles tag list, verbatim (KingdomZoningRules.TagAccepts)
 
 
@@ -1100,27 +1278,17 @@ def _crop_rows() -> dict:
     rung and override only their own, so the lookup walks the chain the way the engine's
     blueprint loader does - the same walk `_producer_rates` makes for the water half.
     """
-    text = open(BLUEPRINTS_XML, encoding="utf-8-sig").read()
-    own, parent = {}, {}
-    for block in re.split(r"<object\s+", text)[1:]:
-        name = re.match(r'Name="([^"]+)"', block)
-        if not name:
-            continue
-        inherits = re.match(r'Name="[^"]+"\s+Inherits="([^"]+)"', block)
-        if inherits:
-            parent[name.group(1)] = inherits.group(1)
-        tag = re.search(r'<tag\s+Name="r_KingdomCropRows"\s+Value="(\d+)"', block)
-        if tag:
-            own[name.group(1)] = int(tag.group(1))
-    out = dict(own)
-    for name in list(parent):
-        seen, walk = set(), name
-        while walk and walk not in own and walk not in seen:
-            seen.add(walk)
-            walk = parent.get(walk)
-        if walk in own:
-            out[name] = own[walk]
-    return out
+    return _inherited_tag_values("r_KingdomCropRows")
+
+
+def _hosted_crop_rows() -> dict:
+    """Blueprint -> static hosted growbed rows.
+
+    Hosted fixtures are physical evidence for one receipt-owned rate, not ordinary fields. They
+    therefore never carry `r_KingdomCropRows` or `r_KingdomPlot`, which would run and count the
+    surface crop lifecycle a second time.
+    """
+    return _inherited_tag_values("r_TAF_HostedCropRows")
 
 
 def _read_catalogue() -> list[Design]:
@@ -1128,6 +1296,7 @@ def _read_catalogue() -> list[Design]:
     capacities = _store_capacities()
     larders = _larder_capacities()
     rows = _crop_rows()
+    hosted_row_rates = _hosted_crop_rows()
     tier = {"S": 0, "M": 1, "L": 3, "XL": 4}  # KingdomPlotRules.StageForSize
     names = {n: i for i, (n, _p, _c) in enumerate(STAGES)}
     out = []
@@ -1160,6 +1329,25 @@ def _read_catalogue() -> list[Design]:
             tier.get(plot.group(1), 0) if plot else 0,
         )
         blueprint = re.search(r'\sBlueprint="([^"]+)"', attrs)
+        hosted_blueprint = re.search(r'\sHostedProducerBlueprint="([^"]+)"', attrs)
+        hosted_count = re.search(r'\sHostedProducerCount="(\d+)"', attrs)
+        if bool(hosted_blueprint) != bool(hosted_count):
+            raise AssertionError(
+                f"HOSTED PRODUCER CONTRACT RAGGED: {key.group(1)} must name blueprint and count"
+            )
+        hosted_rows = 0
+        if hosted_blueprint:
+            producer = hosted_blueprint.group(1)
+            count = int(hosted_count.group(1))
+            if count < 1 or hosted_row_rates.get(producer, 0) < 1:
+                raise AssertionError(
+                    f"HOSTED PRODUCER CONTRACT EMPTY: {key.group(1)} names {count} x {producer}"
+                )
+            hosted_rows = count * hosted_row_rates[producer]
+        if blueprint and rows.get(blueprint.group(1), 0) and hosted_rows:
+            raise AssertionError(
+                f"HOSTED PRODUCER DOUBLE COUNT: {key.group(1)} is both a surface and hosted grower"
+            )
         styles = re.search(r'\sStyles="([^"]*)"', attrs)
         out.append(
             Design(
@@ -1171,7 +1359,7 @@ def _read_catalogue() -> list[Design]:
                 capacities.get(blueprint.group(1), 0) if blueprint else 0,
                 plot.group(1) if plot else "",
                 larders.get(blueprint.group(1), 0) if blueprint else 0,
-                rows.get(blueprint.group(1), 0) if blueprint else 0,
+                (rows.get(blueprint.group(1), 0) if blueprint else 0) or hosted_rows,
                 styles.group(1) if styles else "all",
             )
         )
@@ -1194,9 +1382,9 @@ def level_from_water(water: int, stage: int) -> int:
 def equilibrium(water: int, food: int, roof: int, lift: int, stage: int, shade: int = 0) -> int:
     """KingdomCatalogueRules.Equilibrium, with the water converted first.
 
-    `shade` is what the settlement's named notable is worth to it
-    (`KingdomCeremonyRules.NotableShade`: met tastes, the virtue net of the flaw, met Prefers).
-    It rides the lift term and is bound by the same cap, so no notable ever outruns the water.
+    `shade` is attended transient lift. The shipped caller currently supplies MealShade only;
+    the read-compatible NotableShade field is normalized to zero and never enters this model.
+    Transient lift remains under the common cap, so a meal never outruns the binding supports.
     """
     least = max(0, min(level_from_water(water, stage), food, roof))
     cap = least * SRC["LiftCapPercent"] // 100
@@ -1362,7 +1550,8 @@ works among its houses still reaches that cap easily - so a real City holds abou
 the table above says. That is authored (the frozen arithmetic's own doc) and it is why these
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
-covers, and a notable's own shade rides the same cap. Q10 is that whole reckoning.""")
+covers. A civic-office title contributes zero; the only settlement-wide transient shade is
+the last attended meal. Q10 is the authored reach reckoning.""")
 
 
 
@@ -2486,7 +2675,7 @@ def w7_networks_and_power():
         "Simulation/City/KingdomNetworkGraph.Bottleneck.cs",
     ))
     memory = read_source(source_family_paths("Simulation/City", "KingdomCityMemoryRules"))
-    blueprints = open(os.path.join(ROOT, "ObjectBlueprints.xml"), encoding="utf-8-sig").read()
+    blueprints = open(BLUEPRINTS_XML, encoding="utf-8-sig").read()
 
     print("""
 1. THE POWER LANE HAS ONE CLOCK, AND IT IS THE MODEL'S. Power used to count its own days, per
@@ -2616,12 +2805,16 @@ def w7_networks_and_power():
    DECLARED: a main says what runs in it and which faces it offers, a crossing types NOTHING so
    it can never be the place two liquids met, and a cross-liquid join refuses by name.
 """)
+    # New pieces start as useful east-west straights.  Their exact serialized mask is frozen on
+    # the piece and the player-facing Configure action offers every legal cap/end/straight/corner/
+    # tee/cross form; old saves that already hold NSEW remain readable.  Pin the creation default,
+    # not the legacy value that W7 deliberately stopped writing.
     for blueprint, needle in (
-        ("r_KingdomWaterMain", 'Liquid="water" Joins="NSEW"'),
-        ("r_KingdomBrineMain", 'Liquid="salt" Joins="NSEW"'),
+        ("r_KingdomWaterMain", 'Liquid="water" Joins="EW"'),
+        ("r_KingdomBrineMain", 'Liquid="salt" Joins="EW"'),
         ("r_KingdomLiquidCrossing", 'Pairs="NSEW"'),
-        ("r_KingdomWaterTap", 'Liquid="water" Joins="NSEW"'),
-        ("r_KingdomBrineTap", 'Liquid="salt" Joins="NSEW"'),
+        ("r_KingdomWaterTap", 'Liquid="water" Joins="EW"'),
+        ("r_KingdomBrineTap", 'Liquid="salt" Joins="EW"'),
     ):
         assert f'<object Name="{blueprint}"' in blueprints, f"{blueprint} is not in ObjectBlueprints.xml"
         assert needle in blueprints, f"{blueprint} does not carry its declaration: {needle}"
@@ -2683,6 +2876,1485 @@ def w7_networks_and_power():
     assert "civic" in housing_block, "lodging drifted off the amenity rung"
     for i, rung in enumerate(ladder):
         print(f"   {i}  {rung:<9} {'<- lodging, comfort, civic, faith, memorial' if rung == 'Amenity' else ''}")
+
+
+@dataclass(frozen=True)
+class FounderGraftSlot:
+    """One exact slot in the pinned 2.0.211.51 Humanoid anatomy stress fixture."""
+
+    name: str
+    slot_type: str
+    bears_weapon: bool
+    procedure_key: str
+    source_magnitude: int | None = None
+
+
+# D/../Bodies.xml:199-214: the non-abstract graftable Humanoid places, in anatomy order.
+# Missile Weapon is abstract and Feet matches no shipped procedure. The two hands bear
+# DefaultFist; no other fixture slot below is asked to host a weapon-attached grant.
+FULLY_GRAFTED_FOUNDER = (
+    FounderGraftSlot("head", "Head", False, "packstooth"),
+    FounderGraftSlot("face", "Face", False, "sapskiss"),
+    FounderGraftSlot("back", "Back", False, "mirrorcarapace", 100),
+    FounderGraftSlot("right arm", "Arm", False, "tarrygrip"),
+    FounderGraftSlot("right hand", "Hand", True, "leechpseudopod"),
+    FounderGraftSlot("left arm", "Arm", False, "galvanicleech"),
+    FounderGraftSlot("left hand", "Hand", True, "vintnersfang"),
+    FounderGraftSlot("hands", "Hands", False, "trollkingsgrip"),
+)
+
+
+def _procedure_catalogue() -> dict[str, dict]:
+    root = ET.parse(PROCEDURES_XML).getroot()
+    assert root.tag.lower() == "kingdomprocedures", "procedure catalogue root moved"
+    rows = {}
+    for element in root.findall("procedure"):
+        key = (element.get("Key") or "").strip().lower()
+        assert key and key not in rows, f"duplicate or blank procedure key: {key!r}"
+        row = dict(element.attrib)
+        row["disclosures"] = [
+            (item.get("Text") or "").strip() for item in element.findall("discloses")
+        ]
+        rows[key] = row
+    return rows
+
+
+def fully_grafted_founder():
+    rule("C3  Fully-grafted founder structural stress case")
+    catalogue = _procedure_catalogue()
+    assert len(catalogue) == 16, "the lab catalogue count moved; re-author the stress fixture"
+    assert len({slot.name for slot in FULLY_GRAFTED_FOUNDER}) == 8
+    assert tuple(slot.slot_type for slot in FULLY_GRAFTED_FOUNDER) == (
+        "Head", "Face", "Back", "Arm", "Hand", "Arm", "Hand", "Hands"
+    ), "the pinned Humanoid anatomy fixture moved"
+
+    total_cost = 0
+    total_days = 0
+    total_preserved = 0
+    bits = {}
+    grants = set()
+    disclosures = 0
+    print("  pinned founder: Qud 2.0.211.51 Humanoid; category Animal; eight occupied slots")
+    print(f"  {'slot':<14}{'procedure':<20}{'grant':<23}{'water':>7}{'days':>7}{'kept':>7}")
+    for slot in FULLY_GRAFTED_FOUNDER:
+        row = catalogue.get(slot.procedure_key)
+        assert row is not None, f"stress procedure disappeared: {slot.procedure_key}"
+        accepted_slots = {value.strip().lower() for value in row["Slots"].split(",")}
+        assert slot.slot_type.lower() in accepted_slots, (
+            f"{slot.procedure_key} no longer admits the fixture's {slot.slot_type}"
+        )
+        categories = {
+            value.strip() for value in row.get("SlotCategories", "").split(",") if value.strip()
+        }
+        assert not categories or "Animal" in categories, (
+            f"{slot.procedure_key} no longer admits an Animal founder"
+        )
+        attach = row.get("Attach", "body").lower()
+        assert attach != "weapon" or slot.bears_weapon, (
+            f"{slot.procedure_key} needs a natural weapon at {slot.name}"
+        )
+        assert row.get("Source", "part").lower() == "part", (
+            "this stress case compares exact copied vanilla parts, not unlike grant routes"
+        )
+        grant = row["Grants"]
+        assert grant not in grants, f"duplicate runtime grant in stress stack: {grant}"
+        grants.add(grant)
+        band = row.get("Magnitude")
+        if band:
+            match = re.fullmatch(r"([^:]+):(\d+)-(\d+)", band)
+            assert match and slot.source_magnitude is not None
+            assert int(match.group(2)) <= slot.source_magnitude <= int(match.group(3)), (
+                f"{slot.procedure_key} source magnitude left its authored price band"
+            )
+        else:
+            assert slot.source_magnitude is None
+        cost = int(row.get("Cost", "0"))
+        days = int(row.get("StaffDays", "0"))
+        kept = int(row.get("Preserved", "0"))
+        assert cost > 0 and days > 0 and kept > 0
+        authored = row["disclosures"]
+        assert authored and all(authored), f"{slot.procedure_key} lost consequence disclosure"
+        disclosures += len(authored)
+        total_cost += cost
+        total_days += days
+        total_preserved += kept
+        for bit in row.get("Bits", ""):
+            assert bit.isdigit(), f"unmodelled lab bit token: {bit!r}"
+            bits[bit] = bits.get(bit, 0) + 1
+        print(f"  {slot.name:<14}{slot.procedure_key:<20}{grant:<23}{cost:>7}{days:>7}{kept:>7}")
+
+    assert (total_cost, total_days, total_preserved) == (305, 66, 12), (
+        "the fully-grafted bill moved; review the risk case rather than accepting drift"
+    )
+    assert len(grants) == len(FULLY_GRAFTED_FOUNDER)
+    assert disclosures >= len(FULLY_GRAFTED_FOUNDER) * 2
+    print(f"  total bill: {total_cost} drams, {total_days} staffed days, {total_preserved} kept parts")
+    print("  bits: " + ", ".join(f"{key}x{bits[key]}" for key in sorted(bits)))
+    print(f"  authored consequence lines read before commitment: {disclosures}")
+    print("  ninth simultaneous graft: refused; every fixture slot already carries one exact manager")
+    print("  structural verdict: PASS (finite slots, exact bands, full resource bill, disclosures)")
+    print("  sub-adventuring invariant: UNSIGNED -- requires pinned native combat/session evidence;")
+    print("  this simulator does not turn eight vanilla effects into invented damage or defence numbers.")
+
+
+@dataclass(frozen=True)
+class PurposeRecipe:
+    source: str
+    destination: str
+    cargo: str
+    water: int
+    food: int
+    materials: dict[str, int]
+    embodied: str
+    embodied_units: int
+    carried_food: int
+
+
+def _material_amounts(raw: str) -> dict[str, int]:
+    """Parse one exact comma-separated material tally used by source or catalogue XML."""
+    answer: dict[str, int] = {}
+    if not raw:
+        return answer
+    for item in raw.split(","):
+        fields = item.split(":")
+        assert len(fields) == 2 and fields[0] and fields[1].isdigit(), (
+            "malformed material tally in a structurally modelled authority: " + raw)
+        key, amount = fields[0], int(fields[1])
+        assert key in MATERIAL_KEYS and amount > 0 and key not in answer, (
+            "unknown, zero, or duplicate material tally row: " + item)
+        answer[key] = amount
+    return answer
+
+
+def _building_rows() -> dict[str, dict[str, str]]:
+    root = ET.parse(BUILD_XML).getroot()
+    answer: dict[str, dict[str, str]] = {}
+    for element in root.findall("building"):
+        key = element.get("Key")
+        assert key and key not in answer, "duplicate or blank building key: " + str(key)
+        answer[key] = dict(element.attrib)
+    return answer
+
+
+def q13_purpose_portfolio():
+    """Structural closure for five purposeful works and their exact reciprocal cargo cycle.
+
+    This deliberately does not add any catalogue Carries to W6/W7 or any water/food rate to
+    G1/G2. It audits the operation-local bill, retained cargo, graph cardinality, and one-at-a-time
+    receipt shape only. Native interruption and appearance evidence remain a separate gate.
+    """
+    rule("Q13 Purpose portfolio: five pairs, ten exact directions, one live operation")
+    kind_text = read_source(PURPOSE_KIND_CS)
+    catalogue_text = read_source(PURPOSE_CATALOGUE_CS)
+    rules_family_text = read_source(
+        source_family_paths("Growth", "KingdomPurposePortfolioRules"))
+    pair_text = read_source(PURPOSE_PAIR_CS)
+    operation_text = read_source(PURPOSE_OPERATION_CS)
+    accounting_text = read_source(PURPOSE_ACCOUNTING_CS)
+    validation_text = read_source(PURPOSE_VALIDATION_CS)
+    transitions_text = read_source(PURPOSE_TRANSITIONS_CS)
+    cardinality_text = read_source(PURPOSE_CARDINALITY_CS)
+    factories_text = read_source(PURPOSE_FACTORIES_CS)
+    topology_text = read_source(PURPOSE_TOPOLOGY_CS)
+    registry_text = read_source(PURPOSE_RUNTIME_REGISTRY_CS)
+    drive_text = read_source(PURPOSE_DRIVE_CS)
+    control_text = read_source(PURPOSE_CONTROL_CS)
+    output_text = read_source(PURPOSE_OUTPUT_CS)
+    effect_text = read_source(PURPOSE_EFFECT_RULES_CS)
+    annexe_text = read_source(ANNEXE_PURPOSE_CS)
+    lab_text = read_source(LAB_PURPOSE_SELECTION_CS)
+    gate_rules_text = read_source(MIRROR_GATE_RULES_CS)
+    gate_runtime_text = read_source(MIRROR_GATE_PURPOSE_CS)
+
+    portfolio_caps = {
+        "debit_lines": read_const(
+            source_family_paths("Growth", "KingdomPurposePortfolioRules"), "MaxDebitLines"),
+        "drive_steps": read_const(PURPOSE_DRIVE_CS, "MaxPurposeOperationSteps"),
+        "owned_settlements": read_const(SETTLEMENT_TOPOLOGY_CS, "MaxOwnedSettlements"),
+        "gate_slots": read_const(MIRROR_GATE_RULES_CS, "MaxGates"),
+        "post_charge": read_const(POWER_RULES_CS, "PostDailyNeedCharge"),
+        "annexe_water": read_const(ANNEXE_RULES_CS, "EnrolmentDrams"),
+        "annexe_licenses": read_const(ANNEXE_RULES_CS, "EnrolmentLicenses"),
+    }
+    assert portfolio_caps == {"debit_lines": 64, "drive_steps": 128,
+        "owned_settlements": 3, "gate_slots": 8, "post_charge": 4000,
+        "annexe_water": 180, "annexe_licenses": 2}, (
+            "purpose portfolio structural constants moved")
+    assert "OpenChargePerDay = 3 * KingdomPowerRules.PostDailyNeedCharge" in gate_rules_text
+    open_charge_per_day = 3 * portfolio_caps["post_charge"]
+
+    kind_match = re.search(r"enum\s+KingdomPurposeKind\s*:\s*byte\s*\{(.*?)\}",
+        kind_text, re.S)
+    assert kind_match, "KingdomPurposeKind wire enum moved"
+    kinds = {name: int(value) for name, value in re.findall(
+        r"\b([A-Za-z]+)\s*=\s*([0-9]+)", kind_match.group(1))}
+    assert kinds == {"None": 0, "Flesh": 1, "Chrome": 2, "Deep": 3,
+        "Forge": 4, "Harvest": 5}, "purpose-kind wire values moved"
+
+    recipe_pattern = re.compile(
+        r"R\(KingdomPurposeKind\.(\w+),\s*KingdomPurposeKind\.(\w+),\s*"
+        r'"([^"]+)",\s*"[^"]+",\s*([0-9]+),\s*([0-9]+),\s*'
+        r'"([^"]*)",\s*KingdomMaterial\.(\w+),\s*([0-9]+),\s*([0-9]+)\)',
+        re.S)
+    recipes = tuple(PurposeRecipe(source, destination, cargo, int(water), int(food),
+        _material_amounts(materials), embodied.lower(), int(units), int(carried_food))
+        for source, destination, cargo, water, food, materials, embodied, units, carried_food
+        in recipe_pattern.findall(catalogue_text))
+    assert len(recipes) == 10, "purpose recipe catalogue is no longer ten directed rows"
+    directions = {(row.source, row.destination) for row in recipes}
+    assert len(directions) == len(recipes), "purpose recipe catalogue duplicates a direction"
+    purpose_names = {name for name, value in kinds.items() if value > 0}
+    assert {row.source for row in recipes} == purpose_names
+    assert {row.destination for row in recipes} == purpose_names
+    for row in recipes:
+        assert row.source != row.destination, "a purpose became compatible with itself"
+        assert (row.destination, row.source) in directions, (
+            "purpose direction lost its reciprocal: " + row.source + ">" + row.destination)
+        assert sum(1 for other in recipes if other.source == row.source) == 2, (
+            row.source + " no longer has exactly two cycle neighbours")
+        assert row.embodied_units == 1
+        assert row.materials.get(row.embodied, 0) >= row.embodied_units, (
+            row.cargo + " embodies material its local bill did not supply")
+        assert row.carried_food <= row.food, (
+            row.cargo + " carries more food than its local bill supplied")
+
+    undirected = {tuple(sorted((row.source, row.destination), key=lambda name: kinds[name]))
+        for row in recipes}
+    assert len(undirected) == 5, "purpose graph is no longer one five-edge cycle"
+    assert all(sum(name in edge for edge in undirected) == 2 for name in purpose_names), (
+        "purpose graph no longer gives every work degree two")
+
+    build_key_method = re.search(
+        r"public static string BuildKey\(KingdomPurposeKind Kind\)\s*\{(.*?)\n\t\t\}",
+        catalogue_text, re.S)
+    assert build_key_method, "purpose BuildKey switch moved"
+    build_keys = dict(re.findall(
+        r"case\s+KingdomPurposeKind\.(\w+):\s*return\s+\"([^\"]+)\";",
+        build_key_method.group(1)))
+    assert set(build_keys) == purpose_names, "purpose build-key switch moved"
+    buildings = _building_rows()
+    for name, key in build_keys.items():
+        row = buildings.get(key)
+        assert row is not None, "purpose building is absent: " + key
+        assert row.get("Purpose", "").lower() == name.lower(), (
+            key + " no longer declares its source-pinned purpose")
+        assert row.get("Megastructure") == "yes" and row.get("Capital", "") != "yes", (
+            key + " no longer spends one ordinary-city purpose slot")
+        assert row.get("Plot") == "XL" and row.get("MinStage") == "City", (
+            key + " escaped its authored XL City ground")
+
+    source_pins = (
+        (catalogue_text,
+            "return TryRecipe(A, B, out _) && TryRecipe(B, A, out _);",
+            "purpose compatibility is no longer exact and reciprocal"),
+        (pair_text, "public KingdomPurposeOperationReceipt Operation;",
+            "pair receipt no longer owns one singular operation"),
+        (pair_text, "public string CreditCargoId;",
+            "pair receipt no longer owns one singular cargo credit"),
+        (accounting_text,
+            "Water = Operation.WaterRequested - Operation.WaterSpent - Operation.WaterLost;",
+            "purpose water accounting moved"),
+        (accounting_text,
+            "Food = Operation.FoodRequested - Operation.FoodSpent - Operation.FoodLost;",
+            "purpose food accounting moved"),
+        (validation_text, "&& (!FullyDebited(Operation) || Operation.WaterLost != 0",
+            "purpose effects no longer wait for full lossless local debit"),
+        (factories_text,
+            "WaterRequested = recipe.WaterDrams,",
+            "purpose operation quantities no longer come straight from its recipe"),
+        (factories_text,
+            "FoodRequested = recipe.FoodServings, MaterialRequested = recipe.MaterialClaim,",
+            "purpose operation food/material quantities moved away from its recipe"),
+        (rules_family_text, "if (body != procedure",
+            "body-sourced purpose operations no longer require exactly one body authority"),
+        (annexe_text, "WaterCost = KingdomAnnexeRules.EnrolmentDrams,",
+            "Chrome purpose surcharge moved away from the enrolment authority"),
+        (annexe_text, "survey.StoredWater >= Authority.WaterCost + PortfolioWater",
+            "Chrome preflight no longer composes body and portfolio water"),
+        (lab_text, "WaterCost = procedure.Cost,",
+            "Flesh purpose surcharge moved away from the selected procedure"),
+        (lab_text, "survey.StoredWater < Authority.WaterCost + PortfolioWater",
+            "Flesh preflight no longer composes body and portfolio water"),
+        (transitions_text,
+            "Before.Phase == KingdomPurposeOperationPhase.Dispatching\n"
+            "\t\t\t\t\t&& After.Phase == KingdomPurposeOperationPhase.PickupComplete",
+            "purpose route lost its explicit pickup checkpoint"),
+        (transitions_text,
+            "Before.Phase == KingdomPurposeOperationPhase.PickupComplete\n"
+            "\t\t\t\t\t&& After.Phase == KingdomPurposeOperationPhase.LandingPending",
+            "purpose route lost its explicit landing checkpoint"),
+        (cardinality_text,
+            "return string.Equals(Kept, Key, System.StringComparison.OrdinalIgnoreCase)\n"
+            "\t\t\t\t? KingdomPurposeVerdict.Allowed\n"
+            "\t\t\t\t: KingdomPurposeVerdict.RefusedKept;",
+            "ordinary-city one-purpose cardinality moved"),
+        (cardinality_text,
+            "return Crowned ? KingdomPurposeVerdict.Allowed : KingdomPurposeVerdict.RefusedUncrowned;",
+            "capital-only megastructures no longer fail closed on the crown"),
+        (topology_text,
+            "ActiveSettlementIds.Count >\n\t\t\t\t\tKingdomSettlementTopologyRules.MaxOwnedSettlements",
+            "purpose topology no longer follows the realm settlement cap"),
+        (registry_text,
+            'PortfolioStateKey = "r_TAF_PurposePortfolioPair";',
+            "purpose portfolio no longer has one singular durable register"),
+        (drive_text,
+            "if (!KingdomPurposePortfolioRules.OperationPhaseIsCommitted(operation.Phase)\n"
+            "\t\t\t\t\t&& !KingdomMaster.NewWorkAllowed(System))",
+            "purpose drive no longer distinguishes committed recovery from new work under pause"),
+        (control_text, "if (!KingdomMaster.NewWorkAllowed(system))",
+            "purpose preflight no longer refuses brand-new work under the master pause"),
+        (gate_runtime_text, "if (Gate.Dark || destinationGate.Dark)",
+            "purpose route no longer requires both physical gates to be powered"),
+        (gate_runtime_text,
+            "now >= destinationGate.LastDrawTick + KingdomRules.TicksPerDay)",
+            "purpose route no longer requires a fresh draw at both gates"),
+    )
+    for source, needle, complaint in source_pins:
+        assert needle in source, complaint
+    assert "List<KingdomPurposeOperationReceipt>" not in pair_text
+
+    print("  fixed graph cap: 5 symmetric pairs / 10 directed recipes")
+    print(f"  {'pair':<22}{'water':>8}{'food':>7}  {'local materials':<50}retained cargo")
+    total_water = total_food = total_carried_food = 0
+    total_materials = {key: 0 for key in MATERIAL_KEYS}
+    retained_materials = {key: 0 for key in MATERIAL_KEYS}
+    for first, second in sorted(undirected, key=lambda edge: (kinds[edge[0]], kinds[edge[1]])):
+        rows = [row for row in recipes
+            if {row.source, row.destination} == {first, second}]
+        assert len(rows) == 2
+        water = sum(row.water for row in rows)
+        food = sum(row.food for row in rows)
+        material = {key: sum(row.materials.get(key, 0) for row in rows)
+            for key in MATERIAL_KEYS}
+        material = {key: amount for key, amount in material.items() if amount}
+        retained = []
+        for row in rows:
+            retained_materials[row.embodied] += row.embodied_units
+            total_carried_food += row.carried_food
+            retained.append(row.cargo + "=" + row.embodied + ":"
+                + str(row.embodied_units) + ("+food:" + str(row.carried_food)
+                    if row.carried_food else ""))
+        total_water += water
+        total_food += food
+        for key, amount in material.items():
+            total_materials[key] += amount
+        material_text = ",".join(key + ":" + str(amount)
+            for key, amount in material.items())
+        print(f"  {(first + '<->' + second):<22}{water:>8}{food:>7}  "
+            f"{material_text:<50}{'; '.join(retained)}")
+
+    material_total_text = ",".join(key + ":" + str(total_materials[key])
+        for key in MATERIAL_KEYS if total_materials[key])
+    retained_text = ",".join(key + ":" + str(retained_materials[key])
+        for key in MATERIAL_KEYS if retained_materials[key])
+    sink_text = ",".join(key + ":"
+        + str(total_materials[key] - retained_materials[key])
+        for key in MATERIAL_KEYS if total_materials[key] - retained_materials[key])
+    assert (total_water, total_food, total_carried_food) == (134, 24, 12)
+    assert all(total_materials[key] >= retained_materials[key] for key in MATERIAL_KEYS)
+    print(f"  ten-direction local bill: water={total_water}, food={total_food}, "
+        f"materials={material_total_text}")
+    print(f"  operation-boundary cargo: carried-food metadata={total_carried_food}, "
+        f"embodied materials={retained_text}")
+    print(f"  local claim less dispatched material objects: food remains {total_food}, "
+        f"materials={sink_text}")
+
+    production_roots = ("Api", "Core", "Experience", "Growth", "Polity",
+        "Simulation", "Trade", "World")
+
+    def source_hits(token: str) -> set[str]:
+        hits = set()
+        for relative in production_roots:
+            directory = os.path.join(ROOT, relative)
+            if not os.path.isdir(directory):
+                continue
+            for base, _dirs, names in os.walk(directory):
+                for filename in sorted(name for name in names if name.endswith(".cs")):
+                    path = os.path.join(base, filename)
+                    if token in read_source(path):
+                        hits.add(os.path.relpath(path, ROOT))
+        return hits
+
+    carried_food_sites = source_hits("CarriedFood")
+    assert carried_food_sites == {
+        "Growth/KingdomPurposeCargoReceipt.cs",
+        "Growth/KingdomPurposePortfolio.ConstructionCargo.cs",
+        "Growth/KingdomPurposePortfolio.LandingFood.cs",
+        "Growth/KingdomPurposePortfolio.Open.cs",
+        "Growth/KingdomPurposePortfolio.OperationControl.cs",
+        "Growth/KingdomPurposePortfolio.OperationDrive.cs",
+        "Growth/KingdomPurposePortfolio.OutputRuntime.cs",
+        "Growth/KingdomPurposePortfolioRecipe.cs",
+        "Growth/KingdomPurposePortfolioRules.Catalogue.cs",
+        "Growth/KingdomPurposePortfolioRules.Codec.cs",
+        "Growth/KingdomPurposePortfolioRules.Factories.cs",
+        "Growth/KingdomPurposePortfolioRules.LandingAttempt.cs",
+        "Growth/KingdomPurposePortfolioRules.LandingFood.cs",
+        "Growth/KingdomPurposePortfolioRules.Validation.cs",
+    }, "purpose CarriedFood reader set drifted; re-audit the landing lane before trusting food return"
+    assert source_hits("r_TAF_PurposePairCargoFood") == {
+        "Core/KingdomRemovalCoverage.Generated.cs",
+        "Growth/KingdomPurposePortfolio.OperationControl.cs",
+    }, "purpose cargo food metadata acquired a runtime consumer"
+    assert "PortfolioCargoFoodProperty" in output_text
+    carrying_rows = tuple(row for row in recipes if row.carried_food > 0)
+    local_food_rows = tuple(row for row in recipes if row.carried_food == 0 and row.food > 0)
+    carriage_debit = sum(row.food for row in carrying_rows)
+    carriage_landed = sum(row.carried_food for row in carrying_rows)
+    carriage_loss = sum(row.food - row.carried_food for row in carrying_rows)
+    local_food_sink = sum(row.food for row in local_food_rows)
+    assert (carriage_debit, carriage_landed, carriage_loss, local_food_sink) == (16, 12, 4, 8)
+    assert total_food == carriage_landed + carriage_loss + local_food_sink == 24
+    assert all(row.source == "Harvest" and (row.food, row.carried_food) == (8, 6)
+        for row in carrying_rows)
+    print(f"  food conservation: {total_food} debited = {carriage_landed} landed + "
+        f"{carriage_loss} carriage loss + {local_food_sink} local process sink")
+    print("  active Harvest edge: 8 debited = 6 landed + 2 carriage loss; "
+        "landed food becomes physical servings via the purpose-food landing lane")
+
+    effect_units = {
+        "raw": read_const(PURPOSE_EFFECT_RULES_CS, "PurposeEffectRawUnits"),
+        "refined": read_const(PURPOSE_EFFECT_RULES_CS, "PurposeEffectRefinedUnits"),
+        "crops": read_const(PURPOSE_EFFECT_RULES_CS, "PurposeEffectCropUnits"),
+        "seeds": read_const(PURPOSE_EFFECT_RULES_CS, "PurposeEffectSeedUnits"),
+        "milled_crops": read_const(PURPOSE_EFFECT_RULES_CS, "PurposeEffectMilledCrops"),
+        "staples_per_crop": read_const(
+            PURPOSE_EFFECT_RULES_CS, "PurposeEffectStaplesPerCrop"),
+    }
+    assert effect_units == {"raw": 2, "refined": 1, "crops": 3, "seeds": 1,
+        "milled_crops": 2, "staples_per_crop": 3}
+    assert "KingdomMaterial.Stone" in effect_text and "KingdomMaterial.ShapedStone" in effect_text
+    assert "KingdomMaterial.Scrap" in effect_text and "KingdomMaterial.WorkedMetal" in effect_text
+    refine_rows = tuple(row for row in recipes if row.source in {"Deep", "Forge"})
+    raw_debited = len(refine_rows) * effect_units["raw"]
+    refined_credited = len(refine_rows) * effect_units["refined"]
+    assert len(refine_rows) == 4 and raw_debited == refined_credited + 4 == 8
+    assert sum(row.source == "Deep" for row in refine_rows) * effect_units["raw"] == 4
+    assert sum(row.source == "Forge" for row in refine_rows) * effect_units["raw"] == 4
+    print("  bounded refine effects: 8 raw debited = 4 refined credited + 4 process loss")
+
+    harvest_rows = tuple(row for row in recipes if row.source == "Harvest")
+    crops_debited = len(harvest_rows) * effect_units["crops"]
+    seeds_credited = len(harvest_rows) * effect_units["seeds"]
+    crops_ground = len(harvest_rows) * effect_units["milled_crops"]
+    measures_credited = crops_ground * effect_units["staples_per_crop"]
+    assert len(harvest_rows) == 2 and (crops_debited, seeds_credited,
+        crops_ground, measures_credited) == (6, 2, 4, 12)
+    assert measures_credited - crops_debited == 6
+    print("  bounded Harvest effects: 6 crops = 2 seed corn + 4 ground -> "
+        "12 preserved measures; net +6 servings and +2 seeds")
+
+    procedure_root = ET.parse(PROCEDURES_XML).getroot()
+    procedure_costs = sorted(int(row.get("Cost", "-1"))
+        for row in procedure_root.findall("procedure"))
+    assert len(procedure_costs) == 16 and procedure_costs[0] == 20
+    assert procedure_costs[-1] == portfolio_caps["annexe_water"] == 180
+
+    def body_surcharge(source_kind: str, pick: str) -> int:
+        if source_kind == "Chrome":
+            return portfolio_caps["annexe_water"]
+        if source_kind == "Flesh":
+            return procedure_costs[0] if pick == "cheapest" else procedure_costs[-1]
+        return 0
+
+    def operation_cost(row: PurposeRecipe, pick: str) -> tuple[int, int, int]:
+        return (row.water + body_surcharge(row.source, pick), row.food,
+            sum(row.materials.values()))
+
+    def preactive_cost(first: str, second: str, pick: str) -> tuple[int, int, int]:
+        outward = next(row for row in recipes
+            if row.source == first and row.destination == second)
+        returned = next(row for row in recipes
+            if row.source == second and row.destination == first)
+        legs = (operation_cost(outward, pick), operation_cost(returned, pick),
+            operation_cost(outward, pick))
+        return tuple(sum(row[index] for row in legs) for index in range(3))
+
+    def round_trip_cost(first: str, second: str, pick: str) -> tuple[int, int, int]:
+        legs = [operation_cost(row, pick) for row in recipes
+            if {row.source, row.destination} == {first, second}]
+        assert len(legs) == 2
+        return tuple(sum(row[index] for row in legs) for index in range(3))
+
+    catalogue_by_key = {design.key: design for design in CATALOGUE}
+    print("  bootstrap -> reciprocal return -> activation (construction is a Q4 lookup):")
+    print(f"  {'orientation':<20}{'build':>8}{'days':>7}{'recipe':>9}"
+        f"{'cheap+body':>13}{'dear+body':>12}{'steady water':>15}")
+    for first, second in sorted(directions, key=lambda edge: (kinds[edge[0]], kinds[edge[1]])):
+        first_row = buildings[build_keys[first]]
+        second_row = buildings[build_keys[second]]
+        first_design = catalogue_by_key[build_keys[first]]
+        second_design = catalogue_by_key[build_keys[second]]
+        assert int(first_row["Cost"]) == first_design.cost
+        assert int(second_row["Cost"]) == second_design.cost
+        build_water = first_design.cost + second_design.cost
+        build_days = (int(first_row["Ticks"]) + int(second_row["Ticks"])) // SRC["TicksPerDay"]
+        recipe_only = (2 * next(row.water for row in recipes
+                if row.source == first and row.destination == second)
+            + next(row.water for row in recipes
+                if row.source == second and row.destination == first))
+        cheap = preactive_cost(first, second, "cheapest")[0]
+        dear = preactive_cost(first, second, "dearest")[0]
+        steady_cheap = round_trip_cost(first, second, "cheapest")[0]
+        steady_dear = round_trip_cost(first, second, "dearest")[0]
+        steady = str(steady_cheap) if steady_cheap == steady_dear \
+            else str(steady_cheap) + ".." + str(steady_dear)
+        assert recipe_only <= cheap <= dear
+        print(f"  {(first + '->' + second):<20}{build_water:>8}{build_days:>7}"
+            f"{recipe_only:>9}{cheap:>13}{dear:>12}{steady:>15}")
+
+    repayment_ratios = []
+    for row in recipes:
+        local_units = sum(row.materials.values())
+        assert row.embodied_units == 1 and row.embodied_units <= local_units
+        repayment_ratios.append((row.source + "->" + row.destination,
+            local_units, row.embodied, row.embodied_units))
+    assert sum(units for _direction, _local, _kind, units in repayment_ratios) == len(recipes)
+    print("  bootstrap repayment: every orientation funds exactly one embodied material unit;")
+    print("  no row repays water, food, body surcharge, or more than its own local material claim")
+
+    # Cap and cap+1: Recipes is a fixed lookup, not an extensible runtime list. All ten unique
+    # directed rows resolve; an eleventh row can only duplicate one or occupy a forbidden edge.
+    ordered_nonself = {(a, b) for a in purpose_names for b in purpose_names if a != b}
+    forbidden = ordered_nonself - directions
+    assert len(forbidden) == 10
+    assert all((b, a) in forbidden for a, b in forbidden)
+    cap_plus_one = recipes[0]
+    assert (cap_plus_one.source, cap_plus_one.destination) in directions
+    assert len(directions | {(cap_plus_one.source, cap_plus_one.destination)}) == 10
+    assert all((name, name) not in directions for name in purpose_names)
+    print("  cap case: all 10 unique directions resolve; cap+1 duplicate/non-edge/self refuses")
+
+    live_edge_cap = min(portfolio_caps["owned_settlements"] // 2, 1)
+    assert live_edge_cap == 1
+    assert registry_text.count(
+        'PortfolioStateKey = "r_TAF_PurposePortfolioPair"') == 1
+    noncapital_megastructures = {key for key, row in buildings.items()
+        if row.get("Megastructure") == "yes" and row.get("Capital") != "yes"}
+    assert noncapital_megastructures == set(build_keys.values())
+    assert portfolio_caps["owned_settlements"] >= 2
+    assert portfolio_caps["owned_settlements"] < 2 * (live_edge_cap + 1)
+    print(f"  live-edge cap: min({portfolio_caps['owned_settlements']} cities // 2, "
+        f"one pair register) = {live_edge_cap}; edge {live_edge_cap + 1} refuses")
+
+    normal_steps = 12 + portfolio_caps["debit_lines"]
+    exempt_steps = 10 + portfolio_caps["debit_lines"]
+    assert normal_steps == 76 and exempt_steps == 74
+    assert normal_steps < portfolio_caps["drive_steps"]
+    assert exempt_steps < portfolio_caps["drive_steps"]
+    assert drive_text.count("KingdomMaster.NewWorkAllowed") == 1
+    assert all(token not in read_source(
+        source_family_paths("Growth", "KingdomPurposePortfolio"))
+        for token in ("TimeTicks", "ElapsedDays", "AdvanceCheckpoint"))
+    route_charge = 2 * open_charge_per_day
+    assert route_charge == 24_000
+    print(f"  drive bound: normal {normal_steps}, exempt {exempt_steps} < "
+        f"slice {portfolio_caps['drive_steps']}; headroom "
+        f"{portfolio_caps['drive_steps'] - normal_steps}")
+    print(f"  route standing demand: 2 gates x {open_charge_per_day} = "
+        f"{route_charge} charge/day (W7 owns supply/conservation)")
+
+    # Boundary/sensitivity: full local debit has zero outstanding. A one-unit shortfall in every
+    # nonzero scalar/material dimension remains outstanding, so no effect/output checkpoint opens.
+    sensitivity_checks = 0
+    for row in recipes:
+        for requested in (row.water, row.food):
+            if requested > 0:
+                assert requested - requested - 0 == 0
+                assert requested - (requested - 1) - 0 == 1
+                sensitivity_checks += 1
+        for amount in row.materials.values():
+            assert amount - amount - 0 == 0
+            assert amount - (amount - 1) - 0 == 1
+            sensitivity_checks += 1
+    assert sensitivity_checks == 31
+    assert transitions_text.count("AdoptOnce(") == 11
+    assert "After.WaterSpent < Before.WaterSpent" in transitions_text
+    assert "After.FoodSpent < Before.FoodSpent" in transitions_text
+    assert "!ClaimMonotone(Before.MaterialSpent, After.MaterialSpent)" in transitions_text
+    assert all(body_surcharge("Chrome", pick) == portfolio_caps["annexe_water"]
+        for pick in ("cheapest", "dearest"))
+    assert all(body_surcharge("Flesh", pick) > 0
+        for pick in ("cheapest", "dearest"))
+    assert next(row for row in recipes
+        if row.source == "Chrome" and row.destination == "Flesh").water \
+        + body_surcharge("Chrome", "cheapest") > portfolio_caps["annexe_water"]
+    phases = ("Prepared", "InputDebitPending", "InputDebited", "LocalDebitPending",
+        "LocalDebited", "EffectPending", "EffectApplied", "OutputPending", "Dispatching",
+        "PickupComplete", "LandingPending", "Delivered")
+    assert all("KingdomPurposeOperationPhase." + phase in transitions_text
+        or "KingdomPurposeOperationPhase." + phase in validation_text for phase in phases)
+    print("  sensitivity: 31 scalar/material -1 boundaries remain outstanding before effect")
+    print("  interruption: one parent -> one operation -> one cargo; explicit pickup and landing")
+    print("  conservation: requested = spent + lost + outstanding; active path requires lost = 0")
+    print("  W6/W7/G1/G2/C4 accounting reuse: yes; no Carries, rate, or save bytes added here")
+    print("  native ten-direction/save/interruption/appearance evidence: UNSIGNED")
+
+
+def q14_hosted_arcology():
+    """Structural closure for one hosted capital shell and its bounded composite lots.
+
+    Existing catalogue sections already count each declared building once. This section composes
+    their exact bills and conditionally exposes receipt-owned supports; it does not add a second
+    city-production or equilibrium pass.
+    """
+    rule("Q14 Hosted arcology: one shell, bounded lots, physical water-gated food")
+    rules_text = read_source(HOSTED_RULES_CS)
+    runtime_text = read_source(HOSTED_RUNTIME_CS)
+    construction_text = read_source(HOSTED_CONSTRUCTION_CS)
+    authority_text = read_source(HOSTED_AUTHORITY_CS)
+    lot_text = read_source(HOSTED_LOT_CS)
+    visual_text = read_source(HOSTED_VISUAL_CS)
+    archive_text = read_source(GREAT_ARCHIVE_CS)
+    subsidence_text = read_source(SUBIMPL_CS)
+    folding_text = read_source(CAT_CS)
+
+    max_lots = read_const(HOSTED_RULES_CS, "MaxHostedLots")
+    catchup = read_const(HOSTED_RULES_CS, "MaxLaborCatchupTicks")
+    assert (max_lots, catchup) == (16, 36_000), "hosted capacity/labour pins moved"
+    slot_keys = re.findall(r'"r_TAF_HostedArcologyAuthorityV1:[0-9]+"', authority_text)
+    assert slot_keys == ['"r_TAF_HostedArcologyAuthorityV1:0"',
+        '"r_TAF_HostedArcologyAuthorityV1:1"'], "hosted authority fixed slots moved"
+
+    built_in_blocks = re.findall(
+        r"RegisterHostedLot\(new\s+KingdomHostedLotDefinition\s*\{(.*?)\}\s*,\s*out ignored\);",
+        rules_text, re.S)
+    assert len(built_in_blocks) == 2, "hosted paid-lot built-ins moved"
+
+    def string_field(block: str, name: str, required: bool = True) -> str:
+        match = re.search(r"\b" + name + r'\s*=\s*"([^"]*)"', block)
+        assert match or not required, "hosted lot lost field " + name
+        return match.group(1) if match else ""
+
+    def int_field(block: str, name: str, required: bool = True) -> int:
+        match = re.search(r"\b" + name + r"\s*=\s*([0-9]+)(?:L)?", block)
+        assert match or not required, "hosted lot lost numeric field " + name
+        return int(match.group(1)) if match else 0
+
+    paid_lots = {}
+    for block in built_in_blocks:
+        key = string_field(block, "Key")
+        assert key not in paid_lots
+        paid_lots[key] = {
+            "cell": string_field(block, "InteriorCell"),
+            "material": string_field(block, "MaterialKey"),
+            "ticks": int_field(block, "BuildTicks"),
+            "crew": int_field(block, "Crew"),
+            "supports": string_field(block, "Supports"),
+            "water": bool(re.search(r"\bRequiresWater\s*=\s*true", block)),
+            "producer": string_field(block, "PhysicalProducerBlueprint", False),
+            "producers": int_field(block, "PhysicalProducerCount", False),
+        }
+    assert set(paid_lots) == {"arcologyward", "arcologyterrace"}
+    assert paid_lots["arcologyward"] == {
+        "cell": "TAFArcologyWard", "material": "arcologyward", "ticks": 9600,
+        "crew": 2, "supports": "roof:26,luxury:2", "water": False,
+        "producer": "", "producers": 0}
+    assert paid_lots["arcologyterrace"] == {
+        "cell": "TAFArcologyTerrace", "material": "arcologyterrace", "ticks": 7200,
+        "crew": 2, "supports": "food:14", "water": True,
+        "producer": "r_KingdomArcologyGrowbed", "producers": 14}
+
+    source_pins = (
+        (rules_text, "if (Lots.Count >= MaxHostedLots)",
+            "hosted registry no longer refuses before cap+1"),
+        (rules_text, "if (Carries(D.Supports, \"food\") && !hasProducer)",
+            "hosted food no longer requires a physical producer"),
+        (runtime_text, "if (!Operational(Work)) return answer;",
+            "inoperative shell can now expose hosted supports"),
+        (runtime_text,
+            "|| (receipt.RequiresWater && !FreshWaterAvailable)) continue;",
+            "hosted terrace no longer closes without physical fresh water"),
+        (runtime_text, "&& receipt.Phase == KingdomHostedLotPhase.Working",
+            "hosted construction staffing no longer follows the working receipt"),
+        (construction_text,
+            "KingdomWaterDebit water = survey.ReserveExactWater(entry.CostDrams);",
+            "hosted lot no longer reserves its exact XML water bill"),
+        (construction_text,
+            "KingdomMaterialDebit materials = KingdomMaterials.ReserveComposite(Z, cost);",
+            "hosted lot no longer reserves its exact composite material bill"),
+        (construction_text,
+            "KingdomConstruction.HasActiveSubject(System, Z,\n"
+            "\t\t\t\t\tKingdomConstructionRoute.HostedArcology, shell)",
+            "hosted shell no longer limits paid construction to one live lot"),
+        (construction_text,
+            "Receipt.LastTick, System.MasterOptionTick, now, Receipt.StaffingBasis,",
+            "hosted labour no longer clamps its receipt clock to the master edge"),
+        (rules_text,
+            "return AdvanceLabor(Remaining, Math.Max(LastTick, MasterOptionTick),\n"
+            "\t\t\t\tNowTick, PriorEffectiveness, out NextTick);",
+            "hosted labour no longer excludes time before the latest master edge"),
+        (authority_text, "KingdomCrown.CrownedOn(System, ZoneId)",
+            "hosted authority no longer requires exact capital ground"),
+        (authority_text,
+            '"This realm already has a hosted arcology authority; its shell is not duplicated."',
+            "hosted authority no longer rejects a second current-realm shell"),
+        (archive_text, "InteriorCell = \"TAFGreatArchive\", ReadOnly = true,",
+            "Great Archive no longer registers as a read-only hosted view"),
+        (subsidence_text, "Survey.StoredWater > 0",
+            "hosted fresh-water gate no longer reads physical stored water"),
+        (folding_text,
+            "return (EffectivenessPercent >= 100) ? Amount : (Amount * EffectivenessPercent / 100);",
+            "hosted support effectiveness no longer follows catalogue carried arithmetic"),
+    )
+    for source, needle, complaint in source_pins:
+        assert needle in source, complaint
+    assert "List<string> LotReceipts" in read_source(
+        os.path.join(ROOT, "Growth", "r_KingdomArcology.cs"))
+    assert "Dormant = 0" in lot_text and "Working = 1" in lot_text
+    assert "Active = 2" in lot_text and "Quarantined = 3" in lot_text
+    assert construction_text.count("ReserveExactWater(entry.CostDrams)") == 1
+    assert construction_text.count("KingdomMaterials.ReserveComposite(Z, cost)") == 1
+    assert "ReserveExactWater" not in runtime_text and "ReserveComposite" not in runtime_text
+
+    buildings = _building_rows()
+    keys = ("arcology", "arcologyward", "arcologyterrace")
+    assert all(key in buildings for key in keys)
+    shell = buildings["arcology"]
+    assert shell.get("Capital") == "yes" and shell.get("Megastructure") == "yes"
+    assert shell.get("UpgradesTo", "") == ""
+    for key, lot in paid_lots.items():
+        row = buildings[key]
+        assert row.get("Strata") == "arcology" and row.get("Capital") == "yes"
+        assert int(row["Ticks"]) == lot["ticks"] and row["Carries"] == lot["supports"]
+        assert row.get("HostedProducerBlueprint", "") == lot["producer"]
+        assert int(row.get("HostedProducerCount", "0")) == lot["producers"]
+
+    # The shell's catalogue price is already owned by Q4. Q14 prices only the two reachable
+    # hosted commissions inside it, once each, from the XML rows BeginLot consumes.
+    composite_materials = {key: 0 for key in MATERIAL_KEYS}
+    composite_bits: dict[str, int] = {}
+    composite_exotics: dict[str, int] = {}
+    total_water = total_ticks = 0
+    for key in paid_lots:
+        row = buildings[key]
+        total_water += int(row["Cost"])
+        total_ticks += int(row["Ticks"])
+        for material, amount in _material_amounts(row.get("Materials", "")).items():
+            composite_materials[material] += amount
+        for tier in row.get("Bits", ""):
+            assert tier.isdigit()
+            composite_bits[tier] = composite_bits.get(tier, 0) + 1
+        for item in row.get("Exotics", "").split(","):
+            if not item:
+                continue
+            exotic, amount = item.split(":")
+            assert amount.isdigit() and int(amount) > 0
+            composite_exotics[exotic] = composite_exotics.get(exotic, 0) + int(amount)
+    assert (total_water, total_ticks) == (116, 16_800)
+    assert {key: value for key, value in composite_materials.items() if value} == {
+        "stone": 74, "mud": 8, "shapedstone": 26, "workedmetal": 20}
+    assert composite_bits == {"0": 2, "3": 1, "4": 1}
+    assert composite_exotics == {}
+    print("  composite paid interior: ward + terrace (shell remains Q4-owned)")
+    print(f"  {'lot':<20}{'water':>8}{'materials':>12}{'bits':>7}{'exotics':>10}"
+        f"{'ticks':>9}{'crew':>7}")
+    for key, lot in paid_lots.items():
+        row = buildings[key]
+        material_units = sum(_material_amounts(row.get("Materials", "")).values())
+        bit_units = sum(1 for token in row.get("Bits", "") if token.isdigit())
+        exotic_units = sum(int(item.split(":")[1])
+            for item in row.get("Exotics", "").split(",") if item)
+        print(f"  {key:<20}{int(row['Cost']):>8}{material_units:>12}{bit_units:>7}"
+            f"{exotic_units:>10}{lot['ticks']:>9}{lot['crew']:>7}")
+    print(f"  exact bill: water={total_water}; build ticks={total_ticks} "
+        f"({total_ticks / SRC['TicksPerDay']:.1f} days summed, not a concurrency claim)")
+    print("  materials: " + ",".join(key + ":" + str(composite_materials[key])
+        for key in MATERIAL_KEYS if composite_materials[key]))
+    print("  bits: " + ",".join("tier" + key + ":" + str(composite_bits[key])
+        for key in sorted(composite_bits)) + "; exotics: "
+        + (",".join(key + ":" + str(composite_exotics[key])
+            for key in sorted(composite_exotics)) or "none"))
+
+    def support_tally(raw: str) -> dict[str, int]:
+        answer: dict[str, int] = {}
+        for item in raw.split(",") if raw else ():
+            kind, amount = item.split(":")
+            assert amount.isdigit() and kind not in answer
+            answer[kind] = int(amount)
+        return answer
+
+    def hosted_supports(operational: bool, active_lots: set[str], fresh_water: bool,
+            effectiveness: int = 100):
+        if not operational:
+            return {"roof": 0, "food": 0, "order": 0, "luxury": 0}
+        answer = support_tally(shell["Carries"])
+        for key, lot in paid_lots.items():
+            if key not in active_lots or (lot["water"] and not fresh_water):
+                continue
+            for kind, amount in support_tally(lot["supports"]).items():
+                answer[kind] = answer.get(kind, 0) + amount
+        return {kind: carried(answer.get(kind, 0), effectiveness)
+            for kind in ("roof", "food", "order", "luxury")}
+
+    support_cases = (
+        ("dark shell", False, set(), False, (0, 0, 0, 0)),
+        ("bare shell", True, set(), False, (60, 0, 4, 4)),
+        ("ward active", True, {"arcologyward"}, False, (86, 0, 4, 6)),
+        ("both, dry", True, set(paid_lots), False, (86, 0, 4, 6)),
+        ("both, fresh", True, set(paid_lots), True, (86, 14, 4, 6)),
+    )
+    print(f"  {'state':<14}{'roof':>7}{'food':>7}{'order':>8}{'luxury':>9}")
+    for label, operational, active, fresh, expected in support_cases:
+        got = hosted_supports(operational, active, fresh)
+        values = tuple(got[key] for key in ("roof", "food", "order", "luxury"))
+        assert values == expected
+        print(f"  {label:<14}{values[0]:>7}{values[1]:>7}{values[2]:>8}{values[3]:>9}")
+
+    effectiveness_points = tuple(sorted({0, 100 - SRC["MaxWearPercent"],
+        SRC["MaxWearPercent"], 100}))
+    print("  both paid lots active; exact shell-effectiveness sensitivity:")
+    print(f"  {'effectiveness':<15}{'dry food':>10}{'fresh roof':>12}"
+        f"{'fresh food':>12}{'order':>8}{'luxury':>10}")
+    for effectiveness in effectiveness_points:
+        dry = hosted_supports(True, set(paid_lots), False, effectiveness)
+        fresh = hosted_supports(True, set(paid_lots), True, effectiveness)
+        assert dry["food"] == 0 and fresh["food"] <= 14
+        assert hosted_supports(False, set(paid_lots), True, effectiveness) == {
+            "roof": 0, "food": 0, "order": 0, "luxury": 0}
+        print(f"  {effectiveness:<15}{dry['food']:>10}{fresh['roof']:>12}"
+            f"{fresh['food']:>12}{fresh['order']:>8}{fresh['luxury']:>10}")
+    condition_floor = 100 - SRC["MaxWearPercent"]
+    assert hosted_supports(True, set(paid_lots), True, condition_floor)["food"] \
+        == 14 * condition_floor // 100
+
+    terrace = paid_lots["arcologyterrace"]
+    hosted_rows = _hosted_crop_rows()
+    physical_rows = terrace["producers"] * hosted_rows[terrace["producer"]]
+    physical_food = physical_rows * SRC["YieldPerRow"] // SRC["CropDays"]
+    fixture_count = visual_text.count('"r_KingdomArcologyGrowbed"')
+    assert fixture_count == terrace["producers"]
+    assert int(buildings["arcologyterrace"]["HostedProducerCount"]) == fixture_count
+    assert physical_rows == 28 and physical_food == 14
+    assert physical_rows * SRC["YieldPerRow"] == 14 * SRC["CropDays"]
+    print(f"  terrace proof: {terrace['producers']} growbeds x "
+        f"{hosted_rows[terrace['producer']]} rows = {physical_rows} rows -> food:{physical_food}")
+    print("  water boundary: StoredWater=0 -> food:0; StoredWater>0 -> food:14")
+
+    # Registration cap/cap+1. Current loader registers two paid rows and one read-only view.
+    # Fill only a local integer model; never mutate the process-global C# registry from this tool.
+    current_registered = len(paid_lots) + 1
+    assert current_registered == 3 and current_registered <= max_lots
+    occupancy = current_registered
+    admitted = 0
+    while occupancy < max_lots:
+        occupancy += 1
+        admitted += 1
+    assert occupancy == max_lots and admitted == 13
+    cap_plus_one_admitted = occupancy < max_lots
+    assert not cap_plus_one_admitted
+    print(f"  registry cap: 2 paid + 1 read-only + {admitted} extension slots = "
+        f"{max_lots}; slot {max_lots + 1} refuses before publication")
+    print("  authority cap: one exact current-realm shell; second fixed slot protects retained history")
+
+    def advance_labor(remaining: int, last: int, now: int, effectiveness: int) -> int:
+        if remaining <= 0:
+            return 0
+        if last <= 0 or now <= last:
+            return remaining
+        elapsed = min(now - last, catchup)
+        effective = max(0, min(100, effectiveness))
+        spent = elapsed * effective // 100
+        return 0 if spent >= remaining else remaining - spent
+
+    def advance_labor_after_master_edge(remaining: int, last: int, master_edge: int,
+            now: int, effectiveness: int) -> int:
+        return advance_labor(remaining, max(last, master_edge), now, effectiveness)
+
+    ward_ticks = paid_lots["arcologyward"]["ticks"]
+    clock_origin = SRC["TicksPerDay"]
+    assert advance_labor(ward_ticks, clock_origin,
+        clock_origin + ward_ticks, 100) == 0
+    halfway = advance_labor(ward_ticks, clock_origin,
+        clock_origin + ward_ticks // 2, 100)
+    assert halfway == ward_ticks // 2
+    assert advance_labor(halfway, clock_origin + ward_ticks // 2,
+        clock_origin + ward_ticks, 100) == 0
+    assert advance_labor(ward_ticks, clock_origin,
+        clock_origin + catchup * 2, 0) == ward_ticks
+    assert advance_labor(ward_ticks, clock_origin + SRC["TicksPerDay"],
+        clock_origin, 100) == ward_ticks
+    max_lot_ticks_match = re.search(r"D\.BuildTicks > ([0-9]+)L", rules_text)
+    assert max_lot_ticks_match
+    max_lot_ticks = int(max_lot_ticks_match.group(1))
+    assert advance_labor(max_lot_ticks, clock_origin,
+        clock_origin + catchup * 2, 100) == max_lot_ticks - catchup
+    pause_edge = clock_origin + ward_ticks // 2
+    assert advance_labor_after_master_edge(ward_ticks, clock_origin, pause_edge,
+        pause_edge, 100) == ward_ticks
+    assert advance_labor_after_master_edge(ward_ticks, clock_origin, pause_edge,
+        pause_edge + ward_ticks // 2, 100) == ward_ticks // 2
+    assert advance_labor_after_master_edge(ward_ticks, clock_origin, pause_edge,
+        pause_edge + ward_ticks, 100) == 0
+    assert advance_labor_after_master_edge(ward_ticks, clock_origin, 0,
+        clock_origin + ward_ticks, 100) == 0
+    need_literals = tuple(int(value) for value in re.findall(
+        r"\bneed\s*=\s*([0-9]+);", runtime_text))
+    assert need_literals == (0, 4)
+    base_need = need_literals[-1]
+    assert base_need + max(lot["crew"] for lot in paid_lots.values()) == 6
+    assert all(lot["crew"] == 2 for lot in paid_lots.values())
+
+    def passes_to_finish(build_ticks: int, effectiveness: int, elapsed: int) -> int | None:
+        per_staffed_pass = min(elapsed, catchup) * effectiveness // 100
+        if per_staffed_pass <= 0:
+            return None
+        # BeginLot freezes StaffingBasis=0: first observation advances no work.
+        return 1 + math.ceil(build_ticks / per_staffed_pass)
+
+    assert passes_to_finish(ward_ticks, 0, catchup) is None
+    assert passes_to_finish(ward_ticks, 100, ward_ticks) == 2
+    assert passes_to_finish(ward_ticks, condition_floor, catchup) == 2
+    assert passes_to_finish(ward_ticks, 100, catchup) \
+        == passes_to_finish(ward_ticks, 100, catchup * 2)
+    assert min(catchup, catchup * 2) * condition_floor // 100 >= ward_ticks
+    print(f"  staffing: shell {base_need}; one Working lot adds 2 -> transient peak 6; "
+        "Active lots add 0")
+    print(f"  interruption: prior staffing x elapsed; catch-up <= {catchup} ticks; "
+        "first pass/zero crew/time regression = zero work")
+    print("  master pause: physical labour freezes; MasterOptionTick discards pre-resume "
+        "elapsed time, so paused labour is never repaid")
+    print("  conservation: every paid lot reserves XML Cost + materials once; only Active adds support")
+    print("  W6/W7/G1/G2/C4 accounting reuse: yes; hosted food is not a second crop or save budget")
+    print("  native traversal/save/cardinality/water/appearance evidence: UNSIGNED")
+
+
+def q15_routed_construction_inputs():
+    """Structural closure for physical cross-zone construction funding.
+
+    This models receipt shape, itinerary/custody checkpoints, exact reserve arithmetic, and
+    conservation. It never credits city production, spends a live object, or claims native carrier
+    evidence. W6/W7/G1/G2 and C4 remain the sole owners of their existing totals.
+    """
+    rule("Q15 Routed construction inputs: itinerary, custody, debit, rollback, recovery")
+    rules_text = read_source(CONSTRUCTION_INPUT_RULES_CS)
+    declarations_text = read_source(CONSTRUCTION_INPUT_DECLARATIONS_CS)
+    plan_text = read_source(CONSTRUCTION_INPUT_PLAN_CS)
+    plan_validation_text = read_source(CONSTRUCTION_INPUT_PLAN_VALIDATION_CS)
+    state_text = read_source(CONSTRUCTION_INPUT_STATE_CS)
+    transition_text = read_source(CONSTRUCTION_INPUT_TRANSITIONS_CS)
+    recovery_text = read_source(CONSTRUCTION_INPUT_RECOVERY_CS)
+    commit_text = read_source(CONSTRUCTION_INPUT_COMMIT_CS)
+    drive_text = read_source(CONSTRUCTION_INPUT_DRIVE_CS)
+    drive_family_text = read_source(
+        source_family_paths("Growth", "KingdomConstruction.InputDrive"))
+    cancellation_text = drive_family_text
+    central_text = read_source(CENTRAL_CONSTRUCTION_RESERVATION_CS)
+    logistics_text = read_source(LOGISTICS_RULES_CS)
+    itinerary_text = read_source(ITINERARY_RULES_CS)
+    global_recovery_text = read_source(CONSTRUCTION_INPUT_GLOBAL_RECOVERY_CS)
+    route_text = read_source(CENTRAL_ROUTE_CS)
+    leg_text = read_source(CENTRAL_LEGS_CS)
+
+    cap = {
+        "schema": read_const(CONSTRUCTION_INPUT_RULES_CS, "Schema"),
+        "legacy_schema": read_const(CONSTRUCTION_INPUT_RULES_CS, "LegacySchema"),
+        "sources": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxSourceLines"),
+        "cargo": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxCargoLines"),
+        "children": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxChildren"),
+        "required": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxRequiredObjects"),
+        "per_child": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxCargoPerChild"),
+        "water_cask": read_const(CONSTRUCTION_INPUT_RULES_CS, "WaterCargoCapacity"),
+        "reserve_days": read_const(CONSTRUCTION_INPUT_RULES_CS, "WaterReserveDays"),
+        "scanned": read_const(CONSTRUCTION_INPUT_PLAN_VALIDATION_CS, "MaxScannedCandidates"),
+        "carrier": read_const(LOGISTICS_RULES_CS, "CarrierCapacity"),
+        "legs": read_const(CITY_MEMORY_RULES_CS, "MaxLegs"),
+        "drive_steps": read_const(CONSTRUCTION_INPUT_DRIVE_CS,
+            "MaxRoutedInputStepsPerPass"),
+        "receipts_per_turn": read_const(CONSTRUCTION_INPUT_GLOBAL_RECOVERY_CS,
+            "MaxGlobalInputReceiptsPerTurn"),
+        "open_jobs": read_const(CITY_MEMORY_RULES_CS, "MaxOpenJobs"),
+        "load_per_trip": read_const(PORTERS_OPENING_CS, "LoadPerTrip"),
+        "zone_transit": read_const(DISTANCE_RULES_CS, "ZoneTransitCells"),
+        "max_nodes": read_const(DISTANCE_RULES_CS, "MaxNodes"),
+        "zone_width": read_const(JOB_DRAWS_CS, "ZoneWidth"),
+        "zone_height": read_const(JOB_DRAWS_CS, "ZoneHeight"),
+        "sinuosity_open": read_const(ITINERARY_RULES_CS, "SinuosityOpenPercent"),
+        "sinuosity_built": read_const(ITINERARY_RULES_CS, "SinuosityBuiltPercent"),
+        "road_discount": read_const(ITINERARY_RULES_CS, "RoadDiscountPercent"),
+        "no_road_discount": read_const(ITINERARY_RULES_CS, "NoRoadDiscountPercent"),
+        "walk_ticks": read_const(ITINERARY_RULES_CS, "WalkTicksPerCellDefault"),
+        "payload_bytes": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxPayloadBytes"),
+        "encoded_chars": read_const(CONSTRUCTION_INPUT_RULES_CS, "MaxEncodedChars"),
+    }
+    assert cap == {"schema": 3, "legacy_schema": 1,
+        "sources": 64, "cargo": 64, "children": 16, "required": 8,
+        "per_child": 12, "water_cask": 64, "reserve_days": 3, "scanned": 4096,
+        "carrier": 12, "legs": 6, "drive_steps": 192, "receipts_per_turn": 8,
+        "open_jobs": 16, "load_per_trip": 12, "zone_transit": 40, "max_nodes": 9,
+        "zone_width": 80, "zone_height": 25, "sinuosity_open": 125,
+        "sinuosity_built": 160, "road_discount": 60, "no_road_discount": 100,
+        "walk_ticks": 1, "payload_bytes": 131072, "encoded_chars": 180000}, (
+            "routed-construction structural caps moved")
+    assert cap["per_child"] == cap["carrier"] == cap["load_per_trip"], (
+        "parent packing, reservation, and physical porter capacity diverged")
+    assert cap["children"] == cap["open_jobs"], (
+        "one maximal routed receipt no longer meets the global job-table cap")
+
+    source_pins = (
+        (rules_text,
+            "long value = (long)DailyUpkeep * WaterReserveDays;",
+            "construction-input water reserve floor moved"),
+        (rules_text,
+            "Sources.Count < 1 || Sources.Count > MaxSourceLines",
+            "construction-input parent source cap moved"),
+        (plan_text,
+            "int leg = Math.Min(left, KingdomConstructionInputRules.WaterCargoCapacity);",
+            "construction-input water cask split moved"),
+        (plan_text, "&& count < KingdomConstructionInputRules.MaxCargoPerChild",
+            "construction-input child packing moved"),
+        (plan_validation_text,
+            "int compare = left.RouteCost.CompareTo(right.RouteCost);",
+            "nearest routed-input candidate ordering moved"),
+        (central_text,
+            "sourceCount > KingdomLogisticsRules.CarrierCapacity",
+            "central construction carrier cap moved"),
+        (central_text,
+            "deliveryCargoAuthority: KingdomDeliveryCargoAuthority.ConstructionInput",
+            "central route no longer binds cargo to construction authority"),
+        (itinerary_text, "count > legs.Length || count > MaxLegs",
+            "construction itinerary leg cap moved"),
+        (itinerary_text, "scaled = scaled / 100L;\n"
+            "\t\t\tscaled = (scaled * roadDiscountPercent) / 100L;",
+            "construction itinerary estimate changed its truncation order"),
+        (route_text, "if (i + 1 < pathCount) cells++;",
+            "construction route lost its non-final inter-zone cell"),
+        (route_text, "legCount = pathCount + (claimedSource ? 0 : 1);",
+            "construction route leg count moved"),
+        (leg_text,
+            "long duration = cells * KingdomItineraryRules.WalkTicksPerCellDefault;",
+            "construction route duration moved away from physical cells"),
+        (transition_text,
+            "&& !SourcesAre(Receipt, SourceDebited)",
+            "construction cargo can enter flight before exact source debit"),
+        (state_text,
+            "return receipt.TxPhase == KingdomConstructionInputTxPhase.SourcePending\n"
+            "\t\t\t\t\t&& SourcesAre(receipt, SourceDebited) && CargoAre(receipt, CargoInFlight)",
+            "construction parent can route without debited source/in-flight cargo"),
+        (state_text,
+            "p >= KingdomConstructionInputSourcePhase.Reserved && p <= KingdomConstructionInputSourcePhase.TransferIntent",
+            "construction source rollback frontier moved"),
+        (state_text,
+            "p >= KingdomConstructionInputCargoPhase.Planned && p <= KingdomConstructionInputCargoPhase.PickupIntent",
+            "construction cargo rollback frontier moved"),
+        (state_text,
+            "p >= KingdomConstructionInputCargoPhase.AtSource && p <= KingdomConstructionInputCargoPhase.DebitIntent",
+            "construction cargo compensation frontier moved"),
+        (state_text,
+            "&& !CargoAny(receipt, KingdomConstructionInputCargoPhase.DebitIntent)",
+            "construction manual cancellation can cross a debit intent"),
+        (state_text,
+            "&& !SourcesAny(receipt, KingdomConstructionInputSourcePhase.Spent)",
+            "construction cancellation can refund a spent source"),
+        (state_text,
+            "&& !CargoAny(receipt, KingdomConstructionInputCargoPhase.Spent)",
+            "construction cancellation can refund spent cargo"),
+        (recovery_text,
+            "if (FixedEquals(ObservedWitnessHash, AfterWitnessHash))\n"
+            "\t\t\t\treturn KingdomConstructionInputDecision.Acknowledge;",
+            "construction recovery no longer acknowledges exact after-state first"),
+        (recovery_text,
+            "return Paused ? KingdomConstructionInputDecision.WaitPaused\n"
+            "\t\t\t\t: KingdomConstructionInputDecision.Apply;",
+            "construction master pause no longer blocks a new physical callback"),
+        (recovery_text,
+            "start, elapsed, null, null, null);",
+            "construction pause update no longer preserves source/cargo/child rows"),
+        (recovery_text,
+            "EffectiveArrivalTick = FrozenArrivalTick + PausedTicks;",
+            "construction pause no longer shifts the frozen physical arrival exactly"),
+        (recovery_text,
+            "long total = source + flight + landed + spent + compensating + quarantined + lost;",
+            "construction-input conservation buckets moved"),
+        (commit_text,
+            "Next.WaterSpent = (int)waterSpent;\n\t\t\tNext.WaterOutstanding = 0;",
+            "routed water no longer closes through exact construction claims"),
+        (drive_text, "for (int step = 0; step < MaxRoutedInputStepsPerPass; step++)",
+            "routed-input recovery pass lost its bounded slice"),
+        (drive_family_text,
+            "KingdomConstructionInputCargoPhase.CreateIntent",
+            "water cargo lost its physical cask-creation checkpoint"),
+        (drive_family_text,
+            "KingdomConstructionInputSourcePhase.SplitProved",
+            "partial material lost its proved split checkpoint"),
+        (drive_family_text,
+            "KingdomConstructionInputTopology.CarrierInventory",
+            "routed input lost explicit carrier custody evidence"),
+        (drive_family_text,
+            "KingdomConstructionInputTopology.LandingEscrow",
+            "routed input lost explicit landing escrow evidence"),
+        (drive_family_text,
+            "KingdomConstructionInputTopology.Consumed",
+            "routed input debit lost exact consumed evidence"),
+        (global_recovery_text,
+            "attended < MaxGlobalInputReceiptsPerTurn",
+            "global routed-input recovery lost its per-turn owner cap"),
+        (global_recovery_text,
+            "!KingdomMaster.AutomaticWorkAllowed(system)",
+            "master pause no longer freezes global routed-input recovery"),
+        (cancellation_text,
+            "Reconciles each line independently across its own physical boundary.",
+            "mixed routed-input cancellation lost its physical boundary"),
+        (cancellation_text, "if (item.Count != source.Before)",
+            "material rollback no longer proves the restored whole count"),
+        (cancellation_text, "item.Count = source.Before;",
+            "partial material rollback no longer restores the frozen whole count"),
+    )
+    for source, needle, complaint in source_pins:
+        assert needle in source, complaint
+
+    def enum_wire(name: str) -> dict[str, int]:
+        match = re.search(r"enum\s+" + name + r"\s*:\s*byte\s*\{(.*?)\}",
+            declarations_text, re.S)
+        assert match, "construction-input wire enum moved: " + name
+        return {token: int(value) for token, value in re.findall(
+            r"\b([A-Za-z]+)\s*=\s*([0-9]+)", match.group(1))}
+
+    tx_values = enum_wire("KingdomConstructionInputTxPhase")
+    source_values = enum_wire("KingdomConstructionInputSourcePhase")
+    cargo_values = enum_wire("KingdomConstructionInputCargoPhase")
+    assert tx_values == {
+        "Invalid": 0, "ReservationPrepared": 1, "Reserved": 2, "SourcePending": 3,
+        "Routing": 4, "LandedAwaitingOwner": 5, "DebitPending": 6, "Closing": 7,
+        "Committed": 8, "RollbackPending": 9, "RolledBack": 10,
+        "CompensationPending": 11, "Compensated": 12, "Quarantined": 13,
+        "CancellationPending": 14, "Cancelled": 15}
+    assert source_values == {
+        "Invalid": 0, "Reserved": 1, "SplitIntent": 2, "SplitProved": 3,
+        "TransferIntent": 4, "Debited": 5, "RestoreIntent": 6, "Restored": 7,
+        "Spent": 8, "CompensationIntent": 9, "Compensated": 10,
+        "Quarantined": 11}
+    assert cargo_values == {
+        "Invalid": 0, "Planned": 1, "CreateIntent": 2, "AtSource": 3,
+        "PickupIntent": 4, "InFlight": 5, "Landed": 6, "DebitIntent": 7,
+        "Spent": 8, "ReleaseIntent": 9, "Released": 10,
+        "CompensationIntent": 11, "Compensated": 12, "Quarantined": 13}
+
+    print("  source-pinned bounds:")
+    print(f"    source/cargo lines {cap['sources']}/{cap['cargo']}; children "
+        f"{cap['children']}; cargo/child {cap['per_child']}; required objects {cap['required']}")
+    print(f"    scanned candidates {cap['scanned']}; itinerary legs {cap['legs']}; "
+        f"drive steps/pass {cap['drive_steps']}")
+    print(f"    recovery owners/turn {cap['receipts_per_turn']}; global jobs "
+        f"{cap['open_jobs']}; schema {cap['schema']} (legacy {cap['legacy_schema']})")
+    print(f"    receipt wire caps {cap['payload_bytes']} bytes / "
+        f"{cap['encoded_chars']} chars (reported only; excluded from C4)")
+
+    # One water source is split into physical casks. Source and cargo line caps bind first:
+    # 64 full casks carry 4096 drams; one more dram needs a 65th exact line and refuses.
+    def water_lines(amount: int) -> tuple[int, ...]:
+        if amount <= 0:
+            return ()
+        rows = []
+        left = amount
+        while left > 0:
+            take = min(left, cap["water_cask"])
+            rows.append(take)
+            left -= take
+        return tuple(rows)
+
+    water_at_cap = cap["sources"] * cap["water_cask"]
+    water_per_carrier = min(cap["per_child"], cap["carrier"]) * cap["water_cask"]
+    assert water_per_carrier == 768
+    assert len(water_lines(water_at_cap)) == cap["sources"]
+    assert sum(water_lines(water_at_cap)) == water_at_cap
+    assert len(water_lines(water_at_cap + 1)) == cap["sources"] + 1
+    print(f"  water-line cap: {water_at_cap} drams = {cap['sources']} x "
+        f"{cap['water_cask']}; {water_at_cap + 1} drams needs {cap['sources'] + 1} and refuses")
+    print(f"  water/carrier: {cap['per_child']} casks x {cap['water_cask']} = "
+        f"{water_per_carrier} drams")
+
+    # Exact consecutive-endpoint packing: same endpoint fills 12-cargo porters; a new endpoint
+    # starts a new child. It proves both independent caps without inventing a traffic rate.
+    def packed_children(endpoints: tuple[str, ...]) -> tuple[tuple[int, int], ...]:
+        children = []
+        start = 0
+        while start < len(endpoints):
+            count = 1
+            while (start + count < len(endpoints) and count < cap["per_child"]
+                    and endpoints[start + count] == endpoints[start]):
+                count += 1
+            children.append((start, count))
+            start += count
+        return tuple(children)
+
+    same_endpoint = tuple("holder" for _ in range(cap["cargo"]))
+    same_children = packed_children(same_endpoint)
+    assert len(same_children) == math.ceil(cap["cargo"] / cap["per_child"])
+    assert sum(count for _start, count in same_children) == cap["cargo"]
+    assert len(packed_children(tuple("holder" for _ in range(cap["per_child"])))) == 1
+    assert len(packed_children(tuple("holder" for _ in range(cap["per_child"] + 1)))) == 2
+    sixteen_endpoints = tuple("holder-" + str(i) for i in range(cap["children"]))
+    assert len(packed_children(sixteen_endpoints)) == cap["children"]
+    seventeen_endpoints = tuple("holder-" + str(i) for i in range(cap["children"] + 1))
+    assert len(packed_children(seventeen_endpoints)) == cap["children"] + 1
+    print(f"  carrier packing: 64 same-holder cargo -> {len(same_children)} porters; "
+        "16 endpoint groups fit; 17 refuse")
+    assert len(packed_children(sixteen_endpoints)) == cap["open_jobs"]
+    print("  global job boundary: 16 endpoint children fill all 16 rows; any second job refuses")
+    def within_bound(count: int, maximum: int) -> bool:
+        return 0 <= count <= maximum
+
+    for key in ("required", "legs", "scanned"):
+        assert within_bound(cap[key], cap[key])
+        assert not within_bound(cap[key] + 1, cap[key])
+    print("  other cap+1: required objects 8/9; itinerary legs 6/7; scanned candidates 4096/4097")
+
+    # Reserve sensitivity uses only source values. Floor is three actual daily-upkeep units;
+    # exact stock pays request + prior reservations + floor, and one less refuses.
+    int_max = (1 << 31) - 1
+
+    def reserve_floor(daily: int) -> int | None:
+        if daily < 0 or daily * cap["reserve_days"] > int_max:
+            return None
+        return daily * cap["reserve_days"]
+
+    daily_boundary = int_max // cap["reserve_days"]
+    assert reserve_floor(0) == 0
+    assert reserve_floor(1) == cap["reserve_days"]
+    assert reserve_floor(daily_boundary) == daily_boundary * cap["reserve_days"]
+    assert reserve_floor(daily_boundary + 1) is None
+    daily_samples = []
+    for _stage, floor_population, storage in STAGES:
+        population = max(floor_population, SRC["FloorLevel"])
+        daily = upkeep_per_day(population, storage)
+        held = reserve_floor(daily)
+        assert held is not None and held // cap["reserve_days"] == daily
+        assert held % cap["reserve_days"] == 0
+        daily_samples.append(daily)
+    requested = cap["water_cask"]
+    prior_reserved = cap["water_cask"]
+    floor = reserve_floor(daily_samples[-1])
+    assert floor is not None
+    exact_stock = requested + prior_reserved + floor
+    assert exact_stock - prior_reserved - floor == requested
+    assert exact_stock - 1 - prior_reserved - floor == requested - 1
+    print(f"  reserve sensitivity: floor=daily x {cap['reserve_days']}; daily "
+        f"{daily_boundary} fits, {daily_boundary + 1} overflows/refuses")
+    print("  G1 reuse: rung-floor daily upkeep " + "/".join(str(value)
+        for value in daily_samples) + " round-trips through each three-day reserve")
+    print(f"  stock boundary: {exact_stock} - prior:{prior_reserved} - floor:{floor} = "
+        f"request:{requested}; stock -1 is insufficient")
+
+    happy_tx = ("ReservationPrepared", "Reserved", "SourcePending", "Routing",
+        "LandedAwaitingOwner", "DebitPending", "Closing", "Committed")
+    for phase in happy_tx:
+        assert "KingdomConstructionInputTxPhase." + phase in state_text
+    source_material = ("Reserved", "SplitIntent", "SplitProved", "TransferIntent",
+        "Debited", "Spent")
+    cargo_material = ("Planned", "AtSource", "PickupIntent", "InFlight", "Landed",
+        "DebitIntent", "Spent")
+    cargo_water = ("Planned", "CreateIntent", "AtSource", "PickupIntent", "InFlight",
+        "Landed", "DebitIntent", "Spent")
+    for phase in set(source_material):
+        assert "KingdomConstructionInputSourcePhase." + phase in transition_text
+    for phase in set(cargo_material + cargo_water):
+        assert "KingdomConstructionInputCargoPhase." + phase in transition_text
+    print("  happy parent: " + " -> ".join(happy_tx))
+    print("  partial material: " + " -> ".join(source_material))
+    print("  water cargo: " + " -> ".join(cargo_water))
+
+    def estimate_cells(chebyshev: int, sinuosity: int, road_discount: int) -> int:
+        assert chebyshev >= 0 and sinuosity > 0 and 0 < road_discount <= 100
+        scaled_cells = chebyshev * sinuosity // 100
+        return scaled_cells * road_discount // 100
+
+    def leg_ticks(cells: int) -> int:
+        return max(cells, 1) * cap["walk_ticks"]
+
+    def route_ticks(hops: int, built: bool, paved: bool) -> int:
+        assert 1 <= hops <= cap["legs"]
+        sinuosity = cap["sinuosity_built"] if built else cap["sinuosity_open"]
+        discount = cap["road_discount"] if paved else cap["no_road_discount"]
+        base = estimate_cells(cap["zone_transit"], sinuosity, discount)
+        return sum(leg_ticks(base + (1 if index + 1 < hops else 0))
+            for index in range(hops))
+
+    assert leg_ticks(0) == cap["walk_ticks"]
+    for hops in range(1, cap["legs"] + 1):
+        assert route_ticks(hops, False, True) <= route_ticks(hops, False, False)
+        assert route_ticks(hops, True, True) <= route_ticks(hops, True, False)
+
+    # Counts are lengths of the exact durable-checkpoint walks traced above, not tuning knobs.
+    tx_checkpoints = happy_tx[1:]
+    material_checkpoints = ("adopt-object", "cargo-at-source", "source-transfer-intent",
+        "cargo-pickup-intent", "move-before", "move-after", "carrier-custody",
+        "source-debited", "cargo-in-flight", "cargo-landed", "cargo-debit-intent",
+        "consume-before", "consume-after", "cargo-spent", "source-spent")
+    split_extras = ("split-intent", "split-before", "split-after",
+        "remainder-adopted", "split-proved")
+    water_checkpoints = ("create-intent", "cask-adopted", "cask-custody", "at-source",
+        "source-transfer-intent", "pickup-intent", "pour-before", "pour-after",
+        "source-debited", "in-flight", "landed", "debit-intent", "consume-before",
+        "consume-after", "spent", "source-spent")
+    child_checkpoints = ("central-in-flight", "central-landed")
+    assert (len(tx_checkpoints), len(material_checkpoints), len(split_extras),
+        len(water_checkpoints), len(child_checkpoints)) == (7, 15, 5, 16, 2)
+
+    def children_for(lines: int) -> int:
+        if lines <= 0:
+            return 0
+        return math.ceil(lines / min(cap["per_child"], cap["carrier"]))
+
+    def receipt_steps(material_lines: int, split_lines: int, water_line_count: int) -> int:
+        lines = material_lines + split_lines + water_line_count
+        assert 1 <= lines <= cap["cargo"]
+        return (len(tx_checkpoints)
+            + material_lines * len(material_checkpoints)
+            + split_lines * (len(material_checkpoints) + len(split_extras))
+            + water_line_count * len(water_checkpoints)
+            + children_for(lines) * len(child_checkpoints))
+
+    def passes_needed(steps: int) -> int:
+        return math.ceil(steps / cap["drive_steps"])
+
+    assert receipt_steps(1, 0, 0) == 24
+    line_points = tuple(sorted({1, cap["per_child"], cap["cargo"] // 2, cap["cargo"]}))
+    print("  deterministic open/unpaved itinerary ticks; cells/leg = ZoneTransitCells:")
+    print(f"  {'cargo':<8}{'steps':>8}{'passes':>8}" + "".join(
+        f"{('h' + str(hop)):>7}" for hop in range(1, cap["legs"] + 1)))
+    for lines in line_points:
+        steps = receipt_steps(lines, 0, 0)
+        passes = passes_needed(steps)
+        route_cells = [route_ticks(hops, False, False)
+            for hops in range(1, cap["legs"] + 1)]
+        delivered = [max(passes, ticks) for ticks in route_cells]
+        print(f"  {lines:<8}{steps:>8}{passes:>8}" + "".join(
+            f"{turns:>7}" for turns in delivered))
+
+    max_whole_steps = receipt_steps(cap["cargo"], 0, 0)
+    max_split_steps = receipt_steps(0, cap["cargo"], 0)
+    max_water_steps = receipt_steps(0, 0, cap["cargo"])
+    assert (max_whole_steps, max_split_steps, max_water_steps) == (979, 1299, 1043)
+    assert tuple(passes_needed(value)
+        for value in (max_whole_steps, max_split_steps, max_water_steps)) == (6, 7, 6)
+    print("  step sensitivity at 64 lines: whole material 979/6 passes; "
+        "split material 1299/7; water 1043/6")
+
+    road_heading = "route ticks at " + str(cap["legs"]) + " legs"
+    print(f"  {'road state':<20}{road_heading:>24}")
+    road_cases = ((False, False, "open/unpaved"), (False, True, "open/paved"),
+        (True, False, "built/unpaved"), (True, True, "built/paved"))
+    road_values = {}
+    for built, paved, label in road_cases:
+        road_values[label] = route_ticks(cap["legs"], built, paved)
+        print(f"  {label:<20}{road_values[label]:>24}")
+    assert road_values["open/paved"] < road_values["open/unpaved"]
+    assert road_values["built/paved"] < road_values["built/unpaved"]
+
+    # Pure mirror of DecidePhysicalMutation. Pause may stop only a before-state callback; it
+    # cannot hide an already-applied callback or a foreign third state.
+    def decide(observed: str, paused: bool) -> str:
+        before, after = "before", "after"
+        if observed == after:
+            return "Acknowledge"
+        if observed != before:
+            return "Quarantine"
+        return "WaitPaused" if paused else "Apply"
+
+    assert decide("before", False) == "Apply"
+    assert decide("before", True) == "WaitPaused"
+    assert decide("after", True) == "Acknowledge"
+    assert decide("third", True) == "Quarantine"
+    long_max = (1 << 63) - 1
+
+    def effective_arrival(frozen: int, paused: int) -> int | None:
+        if frozen < 0 or paused < 0 or frozen > long_max - paused:
+            return None
+        return frozen + paused
+
+    assert effective_arrival(0, cap["drive_steps"]) == cap["drive_steps"]
+    assert effective_arrival(long_max, 0) == long_max
+    assert effective_arrival(long_max, 1) is None
+    frozen_route = road_values["open/unpaved"]
+    paused_route = effective_arrival(frozen_route, cap["drive_steps"])
+    assert paused_route is not None
+    unpaused_delivery = max(frozen_route, passes_needed(max_whole_steps))
+    paused_delivery = max(paused_route, passes_needed(max_whole_steps))
+    assert paused_delivery == unpaused_delivery + cap["drive_steps"]
+    print("  interruption: before+paused waits; exact after acknowledges; third state quarantines")
+    print(f"  pause timing: route {frozen_route} + pause {cap['drive_steps']} = "
+        f"{paused_delivery}; long.MaxValue + 1 refuses, never wraps")
+    print("  master pause: global physical recovery freezes; PausedTicks shifts arrival "
+        "exactly and custody remains unchanged")
+
+    # Conservation buckets reproduce TryDeriveConservation for one cargo. A physical unit is in
+    # exactly one custody bucket plus proved loss. Over-spend/over-loss refuses.
+    def conservation(amount: int, phase: str, spent: int = 0, lost: int = 0):
+        if amount < 0 or spent < 0 or lost < 0 or spent + lost > amount:
+            return None
+        remainder = amount - spent - lost
+        buckets = {"source": 0, "flight": 0, "landed": 0, "spent": spent,
+            "compensating": 0, "quarantined": 0, "lost": lost}
+        if phase == "InFlight":
+            buckets["flight"] = remainder
+        elif phase in ("Landed", "DebitIntent"):
+            buckets["landed"] = remainder
+        elif phase == "CompensationIntent":
+            buckets["compensating"] = remainder
+        elif phase == "Quarantined":
+            buckets["quarantined"] = remainder
+        else:
+            buckets["source"] = remainder
+        assert sum(buckets.values()) == amount
+        return buckets
+
+    amount = cap["water_cask"]
+    def named_bucket(phase: str) -> str:
+        if phase == "InFlight":
+            return "flight"
+        if phase in ("Landed", "DebitIntent"):
+            return "landed"
+        if phase == "Spent":
+            return "spent"
+        if phase == "CompensationIntent":
+            return "compensating"
+        if phase == "Quarantined":
+            return "quarantined"
+        return "source"
+
+    for phase in (name for name in cargo_values if name != "Invalid"):
+        spent = amount if phase == "Spent" else 0
+        buckets = conservation(amount, phase, spent, 0)
+        assert buckets is not None and sum(buckets.values()) == amount
+        assert buckets[named_bucket(phase)] == amount
+    before_pause_buckets = conservation(amount, "InFlight", 0, 0)
+    after_pause_buckets = dict(before_pause_buckets) if before_pause_buckets else None
+    assert after_pause_buckets == before_pause_buckets, "pause changed custody buckets"
+
+    custody_cases = (
+        ("AtSource", 0, 0, "source"),
+        ("InFlight", 0, 0, "flight"),
+        ("Landed", 0, 0, "landed"),
+        ("Spent", amount, 0, "spent"),
+        ("CompensationIntent", 0, 0, "compensating"),
+        ("Quarantined", 0, cap["reserve_days"], "quarantined"),
+    )
+    print(f"  {'custody cut':<22}{'expected':>10}{'named bucket':>15}{'proved lost':>14}")
+    for phase, spent, lost, named in custody_cases:
+        buckets = conservation(amount, phase, spent, lost)
+        assert buckets is not None
+        expected_bucket = amount if named == "spent" else amount - spent - lost
+        assert buckets[named] == expected_bucket
+        print(f"  {phase:<22}{amount:>10}{buckets[named]:>15}{buckets['lost']:>14}")
+    assert conservation(amount, "Spent", amount + 1, 0) is None
+    assert conservation(amount, "Quarantined", amount, 1) is None
+
+    rollback_sources = ("Reserved", "SplitIntent", "SplitProved", "TransferIntent")
+    rollback_cargo = ("Planned", "CreateIntent", "AtSource", "PickupIntent")
+    compensation_cargo = ("AtSource", "PickupIntent", "InFlight", "Landed", "DebitIntent")
+    assert all(phase in source_values for phase in rollback_sources)
+    assert all(phase in cargo_values for phase in rollback_cargo + compensation_cargo)
+    assert max(source_values[phase] for phase in rollback_sources) == source_values["TransferIntent"]
+    assert max(cargo_values[phase] for phase in rollback_cargo) == cargo_values["PickupIntent"]
+    assert min(cargo_values[phase] for phase in compensation_cargo) == cargo_values["AtSource"]
+    assert max(cargo_values[phase] for phase in compensation_cargo) == cargo_values["DebitIntent"]
+    print("  rollback frontier: all sources Reserved..TransferIntent and cargo Planned..PickupIntent")
+    print("  compensation frontier: a crossing parent has debited sources; cargo AtSource..DebitIntent")
+    print("  manual cancellation frontier: DebitIntent/Spent refuse before physical recovery")
+    print("  conservation: source + flight + landed + spent + compensating + quarantine + loss = expected")
+    print("  W6/W7/G1/G2/C4 accounting reuse: yes; no production, transport aura, or save bytes added")
+    print("  native cold-save/obstruction/carrier/custody/debit/recovery evidence: UNSIGNED")
 
 
 def caveats():
@@ -2763,13 +4435,7 @@ def caveats():
 
 
 def q10_comfort():
-    rule("Q10 Comfort, now that it has consumers: the notable's shade and the reach")
-    max_shade = (
-        SRC["MaxTastesStated"] * SRC["TasteShadeAmount"]
-        + SRC["VirtueShadeAmount"]
-        - SRC["FlawShadeAmount"]
-        + SRC["MaxPrefersCounted"] * SRC["TasteShadeAmount"]
-    )
+    rule("Q10 Comfort: authored yard shade and physical reach; civic title excluded")
     yard_shades = re.findall(r'Shades="([^"]*)"', open(YARD_XML, encoding="utf-8-sig").read())
     yard_points = 0
     for raw in yard_shades:
@@ -2778,32 +4444,18 @@ def q10_comfort():
             if len(bits) == 2 and bits[1].strip().isdigit():
                 yard_points += int(bits[1])
     print(f"""
-Three numbers that were computed and thrown away now reach the level, and one of them reaches
-it less than it used to. All three ride the SAME lift term and are capped by the same
-`LiftCapPercent` = {SRC["LiftCapPercent"]}, so none of them can outrun the water.
+Two authored inputs reach the permanent lift term, and physical reach reduces one of them.
+Both are capped by `LiftCapPercent` = {SRC["LiftCapPercent"]}, so neither outruns the water.
 
-  the notable's shade  `KingdomCeremonyRules.NotableShade`: {SRC["MaxTastesStated"]} tastes met at {SRC["TasteShadeAmount"]} each, a virtue
-                       ({SRC["VirtueShadeAmount"]}) net of a flaw ({SRC["FlawShadeAmount"]}), and {SRC["MaxPrefersCounted"]} met Prefers at {SRC["TasteShadeAmount"]} each = {max_shade} at the very most,
-                       and {SRC["VirtueShadeAmount"] - SRC["FlawShadeAmount"]} for a notable who found nothing here at all.
   a yard trade         `Shades` on a <yardwork>, capped at {SRC["MaxShadePerWork"]} per house. The shipped four
                        declare {yard_points} points between them, and one house takes ONE trade.
   the reach            a work's lift now lands in proportion to the settlement's roofs it
                        covers (`KingdomReachRules.Landed`). Binding goods are untouched.
 
-THE SHADE, against the cap it rides under. A notable cannot lift a rung that has no water to
-spare, which is the whole reason the shade was put inside the cap rather than beside it.
+THE TITLE-ONLY FENCE. `KingdomSystem.Shade` reads MealShade only, and seat plus off-seat
+normalization force the serialized legacy NotableShade field to zero. An office therefore
+changes identity and fiction, never capacity, even before the player revisits an old save.
 """)
-    print(f"{'rung':<9}{'people':>8}{'lift cap':>10}{'shade':>8}{'lands':>8}   verdict")
-    for i, (name, floor, _cap) in enumerate(STAGES):
-        # Camp's own floor is FloorLevel rather than the stage table's zero: a camp carries
-        # itself with nothing standing, which is what the frozen arithmetic's floor means.
-        least = max(floor, SRC["FloorLevel"])
-        cap = least * SRC["LiftCapPercent"] // 100
-        lands = min(max_shade, cap)
-        verdict = (
-            "the cap bites first" if lands < max_shade else "the notable is worth all of it"
-        )
-        print(f"{name:<9}{least:>8}{cap:>10}{max_shade:>8}{lands:>8}   {verdict}")
 
     print("""
 THE REACH, which is the half that TAKES. Before this wave every lifting work counted citywide
@@ -2885,9 +4537,8 @@ many of them stand, and its level is its binding goods alone. That is the addend
 literally - a wayside statue shades the ground it stands on, not the settlement - and it costs
 a camp the whole {max(STAGES[0][1], SRC["FloorLevel"]) * SRC["LiftCapPercent"] // 100} settlers of headroom it used to get for free. It is not a stall: Camp is
 floored at `FloorLevel` = {SRC["FloorLevel"]} regardless, every rung stays holdable on its binding goods, and
-one notable's shade ({SRC["VirtueShadeAmount"] - SRC["FlawShadeAmount"]} even for a notable who found nothing) puts a camp's headroom
-back the moment an office is filled. Flagged rather than tuned: if it wants softening, the
-lever is a `Reach` attribute on the design, not this arithmetic.
+an office cannot put that headroom back. If Camp needs softening, the lever is a `Reach`
+attribute on an authored design, not a hidden reward attached to a named resident.
 """)
 
 
@@ -3621,7 +5272,7 @@ def meals_and_industry():
 3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
    re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
    effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
-   is {SRC["TicksPerDay"]}. It rides the same lift term as a notable's shade and a shrine's spirit, so
+   is {SRC["TicksPerDay"]}. It rides the same capped lift term as authored spirit works, so
    `LiftCapPercent` = {SRC["LiftCapPercent"]}% binds it again on top of that.
 
    Below: the level a settlement holds at each rung with its binding supports level-pegged and no
@@ -3706,6 +5357,316 @@ def meals_and_industry():
     print(f"  reserve kept back:  one day's rations for the whole population, on top of that")
 
 
+def v1_authority_capacity():
+    """Static source-plus-retirement headroom for the activated experience authorities.
+
+    This is not native save-size evidence. It places every independently declared active-source
+    maximum beside the UTF-8 content C2 can add to the native Journal before the TAF carrier is
+    cut, then charges both against the same 4 MiB comparison budget without compression. Native
+    serialization has its own token table and framing, so every generated note also pays a
+    deliberately conservative 128-byte framing allowance. Real save p50/p95/max remain unsigned.
+    """
+    rule("C4  Activated v1 authority capacity and concurrency boundaries")
+    limit_names = (
+        ("witness + recognition", "MaxCivicArtifactsBytes"),
+        ("practice + services", "MaxCivicPracticeBytes"),
+        ("body history", "MaxBodyHistoryBytes"),
+        ("curiosity", "MaxCuriosityBytes"),
+        ("civic leads", "MaxCivicLeadsBytes"),
+        ("treaties", "MaxTreatyBytes"),
+        ("communal rite", "MaxCommunalRiteBytes"),
+        ("Guest's Feast", "MaxGuestFeastBytes"),
+        ("village covenant", "MaxVillageCovenantBytes"),
+    )
+    sections = tuple(
+        (name, read_const(CIVIC_MEMORY_LIMITS_CS, constant))
+        for name, constant in limit_names
+    )
+    limits = read_source(CIVIC_MEMORY_LIMITS_CS)
+    derivation = read_source(CIVIC_MEMORY_DERIVATION_CS)
+    for _name, constant in limit_names:
+        assert f"KingdomCivicMemoryLimits.{constant}" in derivation, (
+            f"civic-memory derivation pin missing for {constant}"
+        )
+    assert "MaxSections = KnownSectionCount * 2" in limits
+    assert "MaxEnvelopeBytes = EnvelopeOverheadBytes" in limits
+    assert "+ MaxSections * SectionFramingBytes + MaxCumulativePayloadBytes" in limits
+
+    known_sections = read_const(CIVIC_MEMORY_LIMITS_CS, "SectionVillageCovenant")
+    envelope_overhead = read_const(CIVIC_MEMORY_LIMITS_CS, "EnvelopeOverheadBytes")
+    section_framing = read_const(CIVIC_MEMORY_LIMITS_CS, "SectionFramingBytes")
+    max_sections = known_sections * 2
+    civic_payload = sum(size for _name, size in sections)
+    civic_envelope = envelope_overhead + max_sections * section_framing + civic_payload
+
+    experience_bytes = 24_576
+    experience_codec = read_source(
+        os.path.join(ROOT, "Experience", "KingdomExperienceCodec.cs")
+    )
+    assert "MaxEnvelopeBytes = 24 * 1024" in experience_codec
+
+    experience_rules_path = source_family_paths("Experience", "KingdomExperienceRules")
+    experience = read_source(experience_rules_path)
+    for token in (
+        "MaxSettlements = 3",
+        "MaxTransientBodySlots = 16",
+        "MaxBodiesPerReservation = 7",
+        "MaxFirstFeastReceipts = MaxSettlements",
+    ):
+        assert token in experience, f"experience concurrency pin moved: {token}"
+    count_pins = (
+        ("Experience/KingdomWitnessWorkRules.cs", "MaxRows = 8"),
+        ("Core/KingdomArtifactRecognitionRules.cs", "MaxRows = 8"),
+        ("Core/KingdomSitePracticeRules.cs", "MaxRows = 8"),
+        ("Core/KingdomVocationServiceRules.cs", "public const int MaxRows = 48;"),
+        ("Core/KingdomBodyHistoryRules.cs", "MaxRows = 8"),
+        ("Experience/KingdomCuriosityModels.cs", "MaxRows = 3"),
+        ("Experience/KingdomCivicLeadModels.cs", "MaxRows = 8"),
+        ("Treaty/KingdomTreatyModels.cs", "MaxPacts=16"),
+        ("Experience/KingdomCommunalRiteRules.cs", "MaxRows = KingdomExperienceRules.MaxSettlements"),
+        ("Experience/KingdomGuestFeastRules.cs", "MaxRows = KingdomExperienceRules.MaxSettlements"),
+        ("Core/KingdomVillageCovenantModels.cs", "MaxRows = 48"),
+    )
+    for relative, token in count_pins:
+        source = open(os.path.join(ROOT, relative), encoding="utf-8-sig").read()
+        assert token in source, f"authority count pin moved: {relative}: {token}"
+    witness_codec = read_source(os.path.join(ROOT, "Experience", "KingdomWitnessWorkCodec.cs"))
+    recognition_codec = read_source(os.path.join(ROOT, "Core", "KingdomArtifactRecognitionCodec.cs"))
+    covenant_codec = read_source(os.path.join(ROOT, "Core", "KingdomVillageCovenantCodec.cs"))
+    assert "MaxRowEncodedBytes = 4096" in witness_codec
+    assert "MaxRowEncodedBytes = 4096" in recognition_codec
+    assert "MaxAuthoredRowBytes" in covenant_codec and "MaxRowBytes = 4096" in covenant_codec
+    shop = read_source(os.path.join(ROOT, "Growth", "KingdomShopStockRules.cs"))
+    shop_runtime = read_source(os.path.join(ROOT, "Growth", "KingdomGrowth.z18.StageAndShops.cs"))
+    assert "MaximumTier = 8" in shop
+    assert re.search(r"\.Chance\s*=\s*0;", shop_runtime)
+    assert re.search(r"\.RestockFrequency\s*=\s*long\.MaxValue;", shop_runtime)
+    assert not re.search(r"\.Chance\s*=\s*100;", shop_runtime)
+
+    # C2 preserves exactly one native General note per known C18 section. At every section cap,
+    # strict base64 is ASCII, so character and UTF-8 byte counts are identical. The archive cap
+    # is deliberately one widest-section cap, not an old per-note chunk size.
+    retirement_c18 = read_source(os.path.join(
+        ROOT, "Core", "KingdomRemovalProjectionRuntime.CivicMemory.cs"))
+    retirement_semantics = read_source(os.path.join(
+        ROOT, "Core", "KingdomRemovalProjectionRuntime.CivicSemantics.cs"))
+    retirement_text = read_source(os.path.join(
+        ROOT, "Core", "KingdomRemovalProjectionRuntime.CivicNoteText.cs"))
+    assert "MaxCivicMemorySectionArchiveChars" in retirement_c18
+    assert "((KingdomCivicMemoryLimits.MaxTreatyBytes + 2) / 3) * 4" in retirement_c18
+    assert "digest, 0, 1, payload" in retirement_c18
+    assert "CivicMemoryChunkChars" not in retirement_c18
+    assert "JournalObservation" in retirement_c18
+    assert "JournalObservation" in retirement_semantics
+    assert "JournalAPI.Observations" in retirement_semantics
+    assert "History = \"\"" in retirement_semantics
+    assert "NativeArchiveAttribute(wire)" in retirement_semantics
+    assert "NativeArchiveAttributePrefix" in retirement_semantics
+    assert "TryPrepareExperienceNotes(System, Tick, notes" in retirement_semantics
+    for collection in ("Offices", "Remembrances", "Voices", "FirstFeasts"):
+        assert ("ledger." + collection + "[i], Notes") in retirement_text, (
+            "experience native-note publication moved: " + collection)
+    assert "FieldInfo[] fields = Row.GetType().GetFields" in retirement_semantics
+    assert "KingdomPresentation.Rich" in retirement_text
+    assert "Append(Reading).Append(\"\\nRecord seal: \"" in retirement_text
+
+    section_base64 = tuple(((size + 2) // 3) * 4 for _name, size in sections)
+    c18_archive_chars = sum(section_base64)
+    max_section_archive_chars = max(section_base64)
+
+    # Every current founding path caps a city name at 256 UTF-16 code units. Four strict UTF-8
+    # bytes per code unit is deliberately wider than Unicode can lawfully require, and paying it
+    # independently in every note avoids relying on the native writer's string-token reuse.
+    founding = read_source(os.path.join(ROOT, "Core", "KingdomFoundingTransaction.10Begin.cs"))
+    assert "Name.Length > 256" in founding
+    seat_name_utf8_upper = 256 * 4
+    rich_text_multiplier = 2
+    escaped_seat_name_upper = seat_name_utf8_upper * rich_text_multiplier
+    native_note_framing_bytes = 128
+    digest_chars = 64
+
+    # JournalObservation serializes one time, six strings, weight, three flags, and an attribute
+    # list. 128 bytes per note covers their scalar/type/list/token framing plus five bytes of
+    # string-length/token allowance for every field even at the widest four-attribute C18 note.
+    # String CONTENT is charged separately below; NotesByID is rebuilt from Observations on load,
+    # so it is not a second serialized copy.
+    c18_note_metadata = 0
+    for section_id in range(1, known_sections + 1):
+        hidden_archive = (len("taf:retired-archive:v1:") + len("taf-c18-v1|")
+            + len(str(section_id)) + len("|present|0|1|"))
+        text_bytes = (len("Before ") + escaped_seat_name_upper
+            + len(" retired its charter, civic-memory section ") + len(str(section_id))
+            + len(" was preserved exactly (part 1 of 1)."))
+        note_id = len("taf-c18-") + len(str(section_id)) + 1 + digest_chars + len("-0")
+        fixed_fields = (len("Retired realms") + len("civic history")
+            + len("civic memory") + len("retired realm") + len("exact archive"))
+        c18_note_metadata += (hidden_archive + text_bytes + note_id + fixed_fields
+            + native_note_framing_bytes)
+
+    # C2 turns each current Experience civic row into one visible note. A private serialized
+    # attribute holds the canonical exact row; Text holds separately rendered player-facing prose.
+    # codec rather than guessing average prose: pay the whole declared row budget once as canonical
+    # string content and twice more for formatting-escaped readable fields, then add every reflected
+    # field label/length separator and widest scalar rendering. Binary row framing is double-counted.
+    def class_fields(relative: str, class_name: str):
+        source = read_source(os.path.join(ROOT, relative))
+        marker = "public sealed class " + class_name
+        start = source.find(marker)
+        assert start >= 0, "experience retirement row class moved: " + class_name
+        opening = source.find("{", start)
+        depth = 0
+        closing = -1
+        for at in range(opening, len(source)):
+            if source[at] == "{": depth += 1
+            elif source[at] == "}":
+                depth -= 1
+                if depth == 0:
+                    closing = at
+                    break
+        assert closing > opening, "experience retirement row class is malformed: " + class_name
+        return tuple(re.findall(
+            r"^\s*public\s+([A-Za-z_][A-Za-z0-9_]*)\s+([A-Za-z_][A-Za-z0-9_]*)"
+            r"(?:\s*=.*)?;", source[opening + 1:closing], re.MULTILINE))
+
+    enum_sources = "\n".join(read_source(os.path.join(ROOT, relative)) for relative in (
+        "Experience/KingdomExperienceState.Civic.cs",
+        "Experience/KingdomCivicVoiceModels.cs",
+        "Experience/KingdomFirstFeastModels.cs",
+    ))
+
+    def enum_text_upper(enum_name: str) -> int:
+        marker = "enum " + enum_name
+        start = enum_sources.find(marker)
+        assert start >= 0, "experience retirement enum moved: " + enum_name
+        opening = enum_sources.find("{", start)
+        closing = enum_sources.find("}", opening)
+        names = re.findall(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*=\s*[0-9]+",
+            enum_sources[opening + 1:closing])
+        assert names, "experience retirement enum is empty: " + enum_name
+        return max(len(name) for name in names)
+
+    scalar_text_upper = {"int": 11, "long": 20, "bool": 5}
+    assert "MaxFaultTextBytes = 256" in experience
+    assert "MaxCivicTextBytes = 96" in experience
+    civic_voice = read_source(os.path.join(ROOT, "Experience", "KingdomCivicVoiceRules.cs"))
+    assert "MaxFactsBytes = 384" in civic_voice
+    presentation = read_source(os.path.join(ROOT, "Core", "KingdomPresentation.cs"))
+    assert "return ColorUtility.EscapeFormatting(Plain ?? \"\");" in presentation
+    settlement_rows = read_const(experience_rules_path, "MaxSettlements")
+    voice_rows = read_const(os.path.join(
+        ROOT, "Experience", "KingdomCivicVoiceRules.cs"), "MaxReceipts")
+    readable_fixed = {
+        "office": (len(" was remembered as a predecessor of the vacant civic office in ")
+            + len(".") + len("an unnamed citizen") + len("an unnamed settlement")),
+        "remembrance": (len(" had a ") + len(" in ") + len(", witnessed by ") + len(".")
+            + len("lost but still recorded memorial") + len("An unnamed citizen")
+            + len("an unnamed settlement") + len("an unnamed mourner")),
+        "voice": (len(" and ") + len(" remembered the ") + len(" of ") + len(": ")
+            + len(".") + len("creed declaration") + len("One citizen")
+            + len("another citizen") + len("their settlement") + len("the exact ruling")),
+        "first-feast": (len(" proposed ") + len(" in ") + len(" after ")
+            + len("; the proposal was ") + len(".")
+            + len("adapted as a private practice") + len("One citizen")
+            + len("a shared dish") + len("an unnamed settlement")
+            + len("a remembered deed")),
+    }
+    # Voice rows identify their city but do not duplicate its display name. Retirement resolves
+    # that name from exact topology before rendering, so charge one separately escaped city name.
+    readable_external = {"office": 0, "remembrance": 0,
+        "voice": escaped_seat_name_upper, "first-feast": 0}
+    family_specs = (
+        ("office", settlement_rows, "CivicRowByteBudget",
+            "Experience/KingdomExperienceState.Civic.cs", "KingdomCivicOfficeReceipt"),
+        ("remembrance", settlement_rows, "CivicRowByteBudget",
+            "Experience/KingdomExperienceState.Civic.cs", "KingdomRemembranceReceipt"),
+        ("voice", voice_rows, "VoiceRowByteBudget",
+            "Experience/KingdomCivicVoiceModels.cs", "KingdomCivicVoiceReceipt"),
+        ("first-feast", settlement_rows, "FirstFeastRowByteBudget",
+            "Experience/KingdomFirstFeastModels.cs", "KingdomFirstFeastReceipt"),
+    )
+    experience_native_rows = []
+    for label, count, budget_name, relative, class_name in family_specs:
+        row_budget = read_const(experience_rules_path, budget_name)
+        fields = class_fields(relative, class_name)
+        assert fields, "experience retirement row has no public fields: " + class_name
+        scalar_bytes = 0
+        for field_type, _field_name in fields:
+            if field_type == "string": continue
+            scalar_bytes += (scalar_text_upper[field_type]
+                if field_type in scalar_text_upper else enum_text_upper(field_type))
+        # Canonical writes Name=Length:Value and one U+001E separator. Three decimal digits cover
+        # every <=384-byte string and every <=20-character scalar representation.
+        canonical_format = sum(len(name) + 5 for _kind, name in fields) + len(fields) - 1
+        canonical_upper = row_budget + scalar_bytes + canonical_format
+        readable_upper = (row_budget * rich_text_multiplier
+            + readable_fixed[label] + readable_external[label])
+        note_text_fixed = (len("Before ")
+            + len(" put away its charter, it preserved one exact civic memory.\n")
+            + len("\nRecord seal: ") + 12 + len("."))
+        note_fixed_fields = (len("taf-civic-memory-") + digest_chars
+            + len("Retired realms") + len("civic history")
+            + len("civic memory") + len("retired realm")
+            + len("taf:retired-archive:v1:")
+            + native_note_framing_bytes)
+        per_note = (escaped_seat_name_upper + note_text_fixed + canonical_upper
+            + readable_upper + note_fixed_fields)
+        experience_native_rows.append((label, count, per_note, count * per_note))
+    experience_native_notes = sum(total for _label, _count, _each, total
+        in experience_native_rows)
+    experience_note_count = sum(count for _label, count, _each, _total
+        in experience_native_rows)
+
+    active_source = experience_bytes + civic_envelope
+    native_retirement = c18_archive_chars + c18_note_metadata + experience_native_notes
+    total = active_source + native_retirement
+    budget = 4 * 1024 * 1024
+    headroom = budget - total
+    assert civic_payload == 839_860
+    assert civic_envelope == 840_048
+    assert c18_archive_chars == 1_119_828
+    assert max_section_archive_chars == 321_848
+    assert c18_note_metadata == 22_077
+    assert experience_note_count == 12
+    assert experience_native_notes == 86_811
+    assert native_retirement == 1_228_716
+    assert active_source == 864_624
+    assert total == 2_093_340
+    assert headroom == 2_100_964
+    assert total * 4 < budget * 3, "activated authorities consume more than 75% of budget"
+
+    print("C18 section caps, deliberately filled together at every lawful maximum:")
+    print(f"  {'authority':<24}{'bytes':>12}{'KiB':>12}")
+    for name, size in sections:
+        print(f"  {name:<24}{size:>12,}{size / 1024:>12.1f}")
+    print(f"  {'C18 payload':<24}{civic_payload:>12,}{civic_payload / 1024:>12.1f}")
+    print(f"  {'C18 framed envelope':<24}{civic_envelope:>12,}{civic_envelope / 1024:>12.1f}")
+    print(f"  {'experience v4':<24}{experience_bytes:>12,}{experience_bytes / 1024:>12.1f}")
+    print(f"  {'ACTIVE SOURCE':<24}{active_source:>12,}{active_source / 1024:>12.1f}")
+    print("Native retirement archive, charged concurrently before carrier removal:")
+    print("  C2 shape: MaxCivicMemorySectionArchiveChars = 321,848; one General note per")
+    print("            known section; CivicMemoryChunkChars absent")
+    print(f"  {'C18 base64 content':<24}{c18_archive_chars:>12,}{c18_archive_chars / 1024:>12.1f}")
+    print(f"  {'C18 note metadata':<24}{c18_note_metadata:>12,}{c18_note_metadata / 1024:>12.1f}")
+    for label, count, each, family_total in experience_native_rows:
+        print(f"  {('experience ' + label):<24}{family_total:>12,}{family_total / 1024:>12.1f}"
+            f"   ({count} notes x {each:,})")
+    print(f"  {'experience note total':<24}{experience_native_notes:>12,}"
+        f"{experience_native_notes / 1024:>12.1f}")
+    print(f"  {'NATIVE RETIREMENT':<24}{native_retirement:>12,}{native_retirement / 1024:>12.1f}")
+    print(f"  {'ACTIVE + RETIREMENT':<24}{total:>12,}{total / 1024:>12.1f}")
+    print(f"  {'4 MiB contract headroom':<24}{headroom:>12,}{headroom / 1024:>12.1f}")
+    print(f"  worst-lawful share: {100.0 * total / budget:.2f}%")
+    print("  native notes: 9 C18 sections + 12 Experience civic rows = 21")
+    print("  bound kind: uncompressed UTF-8 structural content + conservative per-note framing")
+    print("  concurrency: 3 audiences, 16 transient bodies, 7 bodies/request, 3 First Feasts")
+    print("  rows: witness 8, recognition 8, practice 8, vocation-service 48 (16/city), body-history 8,")
+    print("        curiosity 3, leads 8, treaties 16, rites 3, feasts 3, covenants 48")
+    print("  row wire: witness/recognition accept <=4096 bytes; covenant authors <=4094 and accepts <=4096")
+    print("  market stock: 8 one-shot tier consignments; periodic restock rate = 0")
+    print("  cap+1 law: refuse before publication; no eviction, truncation, backlog, or catch-up")
+    print("  native save size/p50/p95/max: UNSIGNED -- no native distribution is inferred")
+
+
 if __name__ == "__main__":
     print("Constants read from source:")
     for k, v in SRC.items():
@@ -3716,6 +5677,7 @@ if __name__ == "__main__":
     q2_floor()
     q3_ladder()
     q4_refined()
+    q4b_mending()
     q5_sensitivity()
     q6_level()
     q12_styles()
@@ -3729,4 +5691,9 @@ if __name__ == "__main__":
     meals_and_industry()
     w6_production_and_logistics()
     w7_networks_and_power()
+    fully_grafted_founder()
+    q13_purpose_portfolio()
+    q14_hosted_arcology()
+    q15_routed_construction_inputs()
+    v1_authority_capacity()
     caveats()

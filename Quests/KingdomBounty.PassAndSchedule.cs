@@ -129,10 +129,8 @@ namespace ThousandAndFirst
 			int presented = 0;
 			int omittedRefusals = 0;
 			string settlementId = KingdomChronicle.SettlementId(System);
-			Simulation.City.KingdomCityState residentState;
-			Simulation.City.KingdomResidentRollProjection roll;
-			List<string> residentNames = Simulation.City.KingdomResidents.TryRoll(System,
-				out residentState, out roll) ? roll.Names : new List<string>();
+			List<int> residentIds;
+			List<string> residentNames = ReaderRoster(System, Survey, task, out residentIds);
 			for (int i = 0; i < due && string.IsNullOrEmpty(Data.WorkerName)
 				&& !Data.AttemptScheduleExhausted
 				&& Data.Passes < KingdomBountyRules.MaxPasses; i++)
@@ -148,7 +146,10 @@ namespace ThousandAndFirst
 				}
 				if (attempt.Outcome == BountyOutcome.Taken)
 				{
-					bool taken = Take(System, Z, Notice, Data, task, attempt, scheduledTick);
+					int residentId = ReaderResidentId(residentIds, residentNames,
+						attempt.RosterIndex, attempt.Name);
+					bool taken = Take(System, Z, Notice, Data, task, attempt, scheduledTick,
+						residentId);
 					if ((BountyTakePhase)Data.TakePhase == BountyTakePhase.Complete) CompleteTakeCursor(Data);
 					if (taken)
 					{
@@ -194,7 +195,7 @@ namespace ThousandAndFirst
 			{
 				if (string.IsNullOrEmpty(Data.EventStreamId))
 				{
-					Data.EventStreamId = KingdomBountyRules.NoticeEventStream((Notice != null) ? Notice.ID : null);
+					Data.EventStreamId = KingdomBountyRules.NoticeEventStream((Notice != null) ? Notice.IDIfAssigned : null);
 				}
 				if (!Data.AttemptScheduleExhausted && Data.NextAttemptTick <= 0L)
 				{
@@ -205,7 +206,7 @@ namespace ThousandAndFirst
 			}
 			// Legacy Passes are already-consumed outcomes. Start their absolute lane strictly after
 			// migration time, retaining Passes only as the audit count; loading cannot reroll a reader.
-			Data.EventStreamId = KingdomBountyRules.NoticeEventStream((Notice != null) ? Notice.ID : null);
+			Data.EventStreamId = KingdomBountyRules.NoticeEventStream((Notice != null) ? Notice.IDIfAssigned : null);
 			Data.AttemptScheduleExhausted = !KingdomBountyRules.TryAttemptAfter(NowTick,
 				Data.PostedTick, out Data.NextAttemptTick);
 			Data.ScheduleVersion = 2;
@@ -216,7 +217,7 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(Data.LifecycleId))
 			{
 				Data.LifecycleId = KingdomBountyRules.NoticeEventId(
-					GameObject.Validate(Notice) ? Notice.ID : null);
+					GameObject.Validate(Notice) ? Notice.IDIfAssigned : null);
 			}
 			else if (!KingdomBountyRules.IsNoticeEventId(Data.LifecycleId))
 			{

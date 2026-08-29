@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 			KingdomStrikeIntent Intent, ref KingdomConstructionJob Job)
 		{
 			if (Intent == null || Intent.Effort <= 0 || Intent.Targets == null
-				|| !GameObject.Validate(Building) || Building.ID != Job.SourceId
+				|| !GameObject.Validate(Building) || Building.IDIfAssigned != Job.SourceId
 				|| Building.CurrentZone != Z || Building.CurrentCell != Z.GetCell(Job.X, Job.Y)
 				|| Building.GetIntProperty("KingdomBuilt") != 1)
 			{
@@ -38,7 +38,7 @@ namespace ThousandAndFirst
 				Building.SetIntProperty(StrikeTotalProperty, Intent.Effort);
 				Building.SetIntProperty(StrikeAnnouncedProperty, 0);
 				WriteTick(Building, StrikeWorkedProperty, The.Game.TimeTicks);
-				if (!GameObject.Validate(Building) || Building.ID != Job.SourceId
+				if (!GameObject.Validate(Building) || Building.IDIfAssigned != Job.SourceId
 					|| Building.CurrentZone != Z || !KingdomConstruction.HasReceipt(Building, Job)
 					|| Building.GetIntProperty(StrikeEffortProperty) != Intent.Effort
 					|| Building.GetIntProperty(StrikeTotalProperty) != Intent.Effort)
@@ -60,7 +60,7 @@ namespace ThousandAndFirst
 			ref KingdomConstructionJob Job)
 		{
 			if (Job == null || Job.PhysicalPhase != KingdomPhysicalPhase.StrikeCancellationPending
-				|| !GameObject.Validate(Building) || Building.ID != Job.SourceId
+				|| !GameObject.Validate(Building) || Building.IDIfAssigned != Job.SourceId
 				|| Building.CurrentZone != Z || Building.CurrentCell != Z.GetCell(Job.X, Job.Y)
 				|| !KingdomConstruction.HasReceipt(Building, Job))
 			{
@@ -74,7 +74,7 @@ namespace ThousandAndFirst
 			Building.SetIntProperty(StrikeTotalProperty, 0);
 			Building.SetIntProperty(StrikeAnnouncedProperty, 0);
 			Building.RemoveStringProperty(StrikeWorkedProperty);
-			if (!GameObject.Validate(Building) || Building.ID != Job.SourceId
+			if (!GameObject.Validate(Building) || Building.IDIfAssigned != Job.SourceId
 				|| Building.CurrentZone != Z || Building.GetIntProperty(StrikeEffortProperty) != 0
 				|| Building.GetIntProperty(StrikeTotalProperty) != 0
 				|| !string.IsNullOrEmpty(Building.GetStringProperty(StrikeWorkedProperty)))

@@ -72,6 +72,104 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("a", KingdomLocusRules.SelectKeeper(candidates, "gone"));
 		}
 
+		// ---- Staffed-locus ambient vocabulary and bounds ----
+
+		[Test]
+		public void AmbientVocabularyHasExactlyTwoPositiveCosmeticUses()
+		{
+			CollectionAssert.AreEqual(new[] { "None", "ShareNews", "KeepCompany" },
+				System.Enum.GetNames(typeof(KingdomLocusRules.AmbientUse)));
+			Assert.AreEqual(2, KingdomLocusRules.AmbientUseCount);
+			Assert.AreEqual(KingdomLocusRules.AmbientUse.ShareNews,
+				KingdomLocusRules.AmbientUseFor(1));
+			Assert.AreEqual(KingdomLocusRules.AmbientUse.KeepCompany,
+				KingdomLocusRules.AmbientUseFor(2));
+			Assert.AreEqual(KingdomLocusRules.AmbientUse.None,
+				KingdomLocusRules.AmbientUseFor(0));
+			Assert.IsTrue(KingdomLocusRules.Cue(
+				KingdomLocusRules.AmbientUse.ShareNews).Exists);
+			Assert.IsTrue(KingdomLocusRules.Cue(
+				KingdomLocusRules.AmbientUse.KeepCompany).Exists);
+			Assert.IsFalse(KingdomLocusRules.Cue(KingdomLocusRules.AmbientUse.None).Exists);
+		}
+
+		[Test]
+		public void AmbientThrottleNeverBanksOrCatchesUp()
+		{
+			Assert.IsTrue(KingdomLocusRules.MayUse(false, 0L, 0L));
+			Assert.IsFalse(KingdomLocusRules.MayUse(true, 100L,
+				100L + KingdomLocusRules.AmbientThrottleTicks - 1L));
+			Assert.IsTrue(KingdomLocusRules.MayUse(true, 100L,
+				100L + KingdomLocusRules.AmbientThrottleTicks));
+			Assert.IsFalse(KingdomLocusRules.MayUse(true, 100L, 99L));
+			Assert.IsFalse(KingdomLocusRules.MayUse(false, 0L, -1L));
+		}
+
+		[Test]
+		public void AmbientClaimRefusesEveryAuthorityAndActorEscapeHatch()
+		{
+			System.Func<bool, bool, bool, bool, bool, bool, bool, bool, int, bool> claim =
+				(authority, resident, same, keeper, post, staged, player, led, distance) =>
+					KingdomLocusRules.MayClaim(authority, resident, same, keeper, post,
+						staged, player, led, distance, false, 0L, 100L);
+			Assert.IsTrue(claim(true, true, true, false, false, false, false, false, 2));
+			Assert.IsFalse(claim(false, true, true, false, false, false, false, false, 2));
+			Assert.IsFalse(claim(true, false, true, false, false, false, false, false, 2));
+			Assert.IsFalse(claim(true, true, false, false, false, false, false, false, 2));
+			Assert.IsFalse(claim(true, true, true, true, false, false, false, false, 2));
+			Assert.IsFalse(claim(true, true, true, false, true, false, false, false, 2));
+			Assert.IsFalse(claim(true, true, true, false, false, true, false, false, 2));
+			Assert.IsFalse(claim(true, true, true, false, false, false, true, false, 2));
+			Assert.IsFalse(claim(true, true, true, false, false, false, false, true, 2));
+			Assert.IsFalse(claim(true, true, true, false, false, false, false, false, 3));
+		}
+
+		[Test]
+		public void FirstExactCityBookGroundIsTheOnlyLocusAuthority()
+		{
+			Assert.AreEqual(41, KingdomLocusRules.SelectLocusWork(
+				new[] { 7, 41, 29 }, new[] { "r_Field", "r_KingdomBench",
+					"r_KingdomBench" }, "r_KingdomBench"));
+			Assert.AreEqual(29, KingdomLocusRules.SelectLocusWork(
+				new[] { 7, 29 }, new[] { "r_Field", "r_KingdomBench" },
+				"r_KingdomBench"));
+			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+				new[] { 41, 41 }, new[] { "r_KingdomBench", "r_KingdomBench" },
+				"r_KingdomBench"));
+			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+				new[] { 41, 41 }, new[] { "r_KingdomBench", "r_Field" },
+				"r_KingdomBench"));
+			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+				new[] { 41 }, new[] { "r_Field", "r_KingdomBench" },
+				"r_KingdomBench"));
+			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(null, null,
+				"r_KingdomBench"));
+		}
+
+		[Test]
+		public void EveryKeeperServiceStateIsTruthfulAndReadyNamesTheKeeper()
+		{
+			foreach (KingdomLocusRules.KeeperServiceState state in
+				System.Enum.GetValues(typeof(KingdomLocusRules.KeeperServiceState)))
+			{
+				string text = KingdomLocusRules.BenchDescription(state,
+					state == KingdomLocusRules.KeeperServiceState.Ready ? "Ashwe" : null);
+				Assert.IsFalse(string.IsNullOrWhiteSpace(text), state.ToString());
+			}
+			StringAssert.Contains("No owned gathering ground",
+				KingdomLocusRules.BenchDescription(
+					KingdomLocusRules.KeeperServiceState.MissingGround, null));
+			StringAssert.Contains("no posted hand", KingdomLocusRules.BenchDescription(
+				KingdomLocusRules.KeeperServiceState.Unstaffed, null));
+			StringAssert.Contains("no exact keeper", KingdomLocusRules.BenchDescription(
+				KingdomLocusRules.KeeperServiceState.KeeperMissing, null));
+			StringAssert.Contains("cannot prove which gathering ground",
+				KingdomLocusRules.BenchDescription(
+					KingdomLocusRules.KeeperServiceState.AuthorityUnknown, null));
+			StringAssert.Contains("Ashwe", KingdomLocusRules.BenchDescription(
+				KingdomLocusRules.KeeperServiceState.Ready, "Ashwe"));
+		}
+
 		// ---- Guest cadence and eligibility ----
 
 		[TestCase(999L, 1000L, false)]
@@ -324,8 +422,7 @@ namespace ThousandAndFirst.Tests
 			string populations = TestMain.ReadRepositoryText("PopulationTables.xml");
 			StringAssert.DoesNotContain("Blueprint=\"r_KingdomGuestPilgrim\"", populations);
 
-			string happenings = TestMain.ReadRepositoryText(
-				"Simulation/City/KingdomHappenings.cs");
+			string happenings = KingdomHappeningsLogicalSource.Read();
 			StringAssert.Contains("RecordDisputed", happenings);
 			StringAssert.Contains("KingdomLocusRules.PilgrimCause", happenings);
 			string physical = KingdomPhysicalHappeningsLogicalSource.Read();
@@ -333,7 +430,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("BeginUninspectable(book, operation.EventId, SinkLane.Effect",
 				physical);
 
-			string locus = TestMain.ReadRepositoryText("Experience/KingdomLocus.cs");
+			string locus = KingdomLocusLogicalSource.Read();
 			StringAssert.Contains("RunPilgrimPass", locus);
 			StringAssert.Contains("KingdomPlots.TryRiteGround", locus);
 			StringAssert.Contains("HeartArrivalCell", locus);

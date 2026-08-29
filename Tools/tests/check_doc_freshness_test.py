@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Focused tests for optional ignored-note freshness checks."""
+"""Focused tests for maintained-document freshness contracts."""
 
 from __future__ import annotations
 
@@ -20,6 +20,32 @@ SPEC.loader.exec_module(CHECKER)
 
 
 class DocumentationFreshnessTests(unittest.TestCase):
+    def test_archive_contract_tracks_current_v17_and_frozen_v1_to_v16(self) -> None:
+        problems = []
+        CHECKER.audit_archive_contract(problems)
+        self.assertEqual([], problems)
+
+    def test_green_line_cap_keeps_human_structure_review_open(self) -> None:
+        terms = CHECKER.changelog_structure_status_terms(2458, 0)
+        self.assertEqual(
+            (
+                "Current 2458-file census is line-cap green",
+                "Addendum 9 line-cap debt is cleared",
+                "exact-inventory human semantic review remains a release blocker",
+            ),
+            terms,
+        )
+        self.assertNotIn("remains red", " ".join(terms))
+
+    def test_line_cap_breaches_keep_executable_gate_red(self) -> None:
+        self.assertEqual(
+            (
+                "Current 42-file census remains red",
+                "Addendum 9 structural debt is now an executable release blocker",
+            ),
+            CHECKER.changelog_structure_status_terms(42, 1),
+        )
+
     def test_stale_resolvable_source_citation_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             original_root = CHECKER.ROOT
@@ -98,6 +124,16 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 self.assertNotIn("COVERAGE-GAP-MAP", problems[0])
             finally:
                 CHECKER.ROOT = original_root
+
+    def test_read_only_audit_snapshots_keep_pinned_source_citations(self) -> None:
+        self.assertIn(
+            "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
+            CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
+        )
+        self.assertIn(
+            "_notes/FOUNDATION-RUNTIME-FULL-AUDIT-CLAUDE.md",
+            CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
+        )
 
     def test_optional_local_note_is_skipped_when_public_checkout_omits_it(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

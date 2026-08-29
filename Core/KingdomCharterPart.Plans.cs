@@ -120,13 +120,17 @@ namespace ThousandAndFirst
 				Popup.Show("The plan could not be staked.");
 				return;
 			}
+			// Freeze object identity while this is still a new command-owned object. Registry
+			// reads use IDIfAssigned and must never mint identity later from a menu or retry.
+			string markerId = marker.ID;
 			r_KingdomPlanMarker part = marker.GetPart<r_KingdomPlanMarker>();
 			string freezeFailure = null;
 			part?.ApplyDesign(chosen);
-			if (part == null || (quote != null
+			if (string.IsNullOrEmpty(markerId) || marker.IDIfAssigned != markerId || part == null
+				|| (quote != null
 				&& !KingdomPlots.TryFreezePlan(marker, chosen, quote, out freezeFailure)))
 			{
-				marker.Obliterate(null, Silent: true);
+				KingdomPlanMarker.TryDiscardUnplaced(marker);
 				Popup.Show(freezeFailure ?? "The exact plan receipt could not be frozen. Nothing was staked.");
 				return;
 			}
@@ -135,13 +139,28 @@ namespace ThousandAndFirst
 				marker.SetStringProperty(KingdomDesign.PlannedSkinProperty, plannedSkin);
 			}
 			KingdomCeremony.StakePlan(marker, chosen, plannedSkin);
-			cell.AddObject(marker);
-			if (marker.CurrentCell != cell)
+			if (!KingdomPlanMarker.TryPrepareNewMarker(System, marker, zone, cell, chosen.Key,
+				out string frozenMarker, out string provenanceFailure))
 			{
-				marker.Obliterate(null, Silent: true);
-				Popup.Show("The plan could not be staked.");
+				KingdomPlanMarker.TryDiscardUnplaced(marker);
+				Popup.Show(provenanceFailure ?? "The plan's exact ownership could not be frozen.");
 				return;
 			}
+			GameObject accepted = null;
+			Exception addFailure = null;
+			try { accepted = cell.AddObject(marker); }
+			catch (Exception ex) { addFailure = ex; }
+			finally { KingdomSurvey.ObserveAddResultInActive(zone, marker, accepted); }
+			if (!KingdomPlanMarker.PlacementProved(System, marker, zone, cell, frozenMarker))
+			{
+				KingdomPlanMarker.TryDiscardDetached(System, zone, marker, frozenMarker);
+				Popup.Show("The plan's placement callback left ambiguous identity or custody. "
+					+ "Nothing was committed; any moved state was left untouched for inspection.");
+				return;
+			}
+			if (addFailure != null)
+				KingdomLog.Log("plans: AddObject threw after exact placement was proved: "
+					+ addFailure.Message);
 			KingdomGovernanceScope.Commit("stake building plan");
 			KingdomChronicle.Record(System, "a plan for " + XRL.Language.Grammar.A(chosen.Name) + " was staked at " + KingdomPresentation.Rich(System.KingdomDisplayName));
 			Popup.Show("{{G|The plan is staked.}} " + (quote == null
@@ -151,9 +170,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Where the founder sees what is staked and calls plans off. Cancelling costs nothing and
-		/// returns nothing, because a staked plan never spends anything until the moment it is
-		/// realised -- there is nothing to refund.
+		/// Where the founder sees what is staked and calls economically untouched plans off.
 		/// </summary>
 		public void ManagePlans(KingdomSystem System)
 		{
@@ -165,7 +182,9 @@ namespace ThousandAndFirst
 				options[0] = "{{W|Stake a new plan}}";
 				for (int i = 0; i < markers.Count; i++)
 				{
-					options[i + 1] = KingdomPlanMarker.Describe(markers[i]) + " {{K|[cancel]}}";
+					bool cancellable = KingdomPlanMarker.CanCancel(System, markers[i], out _);
+					options[i + 1] = KingdomPlanMarker.Describe(markers[i])
+						+ (cancellable ? " {{K|[cancel]}}" : " {{Y|[construction-bound]}}");
 				}
 				int num = Popup.PickOption(Title: "Plans staked at " + KingdomPresentation.Rich(System.SeatName), Options: options, AllowEscape: true);
 				if (num < 0)
@@ -184,10 +203,24 @@ namespace ThousandAndFirst
 				}
 				GameObject target = markers[num - 1];
 				string name = KingdomPlanMarker.Describe(target);
-				if (Popup.ShowYesNo("Cancel the plan for " + name + "? Nothing was spent, and nothing is returned, because nothing was taken.") == DialogResult.Yes)
+				if (!KingdomPlanMarker.CanCancel(System, target, out string refusal))
 				{
-					KingdomChronicle.Record(System, "the plan for " + name + " at " + KingdomPresentation.Rich(System.KingdomDisplayName) + " was called off");
-					KingdomPlanMarker.Cancel(target);
+					Popup.Show(refusal ?? "This plan cannot be cancelled safely.");
+					markers = KingdomPlanMarker.FindPending(zone);
+					continue;
+				}
+				if (Popup.ShowYesNo("Cancel the plan for " + name
+					+ "? Only a plan with no active or committed construction receipt can be removed.")
+					== DialogResult.Yes)
+				{
+					if (!KingdomPlanMarker.TryCancel(System, target, out string failure))
+					{
+						Popup.Show(failure ?? "The plan could not be cancelled safely.");
+						markers = KingdomPlanMarker.FindPending(zone);
+						continue;
+					}
+					KingdomChronicle.Record(System, "the plan for " + name + " at "
+						+ KingdomPresentation.Rich(System.KingdomDisplayName) + " was called off");
 					markers = KingdomPlanMarker.FindPending(zone);
 				}
 			}

@@ -61,17 +61,53 @@ namespace ThousandAndFirst
 					+ architectureFailure);
 				return false;
 			}
+			KingdomSocketTransition transition = null;
+			KingdomArchitectureIntent transitionBefore = null;
+			KingdomArchitectureIntent transitionAfter = null;
+			if (A.Transition != null)
+			{
+				KingdomPlotRules.PlotRect transitionRect;
+				string transitionSkin;
+				bool transitionLegacy;
+				if (!KingdomArchitectureRuntime.TryRead(Work, out transitionBefore,
+					out architectureFailure)
+					|| !KingdomPlots.TryDecodePlotPayload(payload, out transitionRect,
+						out transitionSkin, out transitionAfter, out transitionLegacy,
+						out architectureFailure)
+					|| transitionLegacy || transitionAfter == null
+					|| !TryCurrentTransition(transitionBefore, A, out transition,
+						out architectureFailure))
+				{
+					System.Ledger.Note("{{r|The plan change waits. "
+						+ (architectureFailure ?? "Its exact declaration changed before debit.")
+						+ "}}");
+					return false;
+				}
+				A.Key = transition.FromBuildKey;
+				A.SuccessorKey = transition.ToBuildKey;
+				A.CostDrams = transition.WaterDrams;
+				A.BuildTicks = transition.WorkTicks;
+				A.Transition = transition;
+			}
 			KingdomWaterDebit water = Survey.ReserveExactWater(A.CostDrams);
-			KingdomMaterialTally transitionMaterials = A.Transition == null
-				? null : A.Transition.Materials;
+			bool hostedAuthority = A.SuccessorKey == KingdomHostedArcology.ArcologyKey;
+			KingdomMaterialTally transitionMaterials = transition == null
+				? null : transition.Materials;
 			KingdomMaterialDebit materials;
-			if (A.Transition == null)
-				materials = KingdomMaterials.ReserveUpgradePayment(Z, A.Key);
+			if (transition == null)
+				materials = hostedAuthority
+					? KingdomMaterials.ReserveComposite(Z, new KingdomMaterialDebitCost(
+						KingdomMaterials.UpgradeCostFor(A.Key),
+						KingdomMaterials.BitCostFor(A.SuccessorKey),
+						KingdomMaterials.ExoticCostFor(A.SuccessorKey)))
+					: KingdomMaterials.ReserveUpgradePayment(Z, A.Key);
 			else
 				materials = KingdomMaterials.ReserveTransitionPayment(Z, transitionMaterials);
 			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-				A.Transition == null ? KingdomMaterials.UpgradeCostFor(A.Key)
-					: transitionMaterials);
+				transition == null ? KingdomMaterials.UpgradeCostFor(A.Key)
+					: transitionMaterials,
+				hostedAuthority ? KingdomMaterials.BitCostFor(A.SuccessorKey) : null,
+				hostedAuthority ? KingdomMaterials.ExoticCostFor(A.SuccessorKey) : null);
 			long now = The.Game.TimeTicks;
 			KingdomConstructionJob job = KingdomConstruction.NewJob(System, Z,
 				KingdomConstructionRoute.Improvement, cell, Work, A.SuccessorKey, payload,
@@ -85,22 +121,24 @@ namespace ThousandAndFirst
 				System.Ledger.Note("{{r|The improvement waits. Its exact build effects could not be frozen.}}");
 				return false;
 			}
-			if (A.Transition != null)
+			if (hostedAuthority && !KingdomHostedArcology.TryReserve(System, Z, Work,
+				job.Id, out string hostedFailure))
 			{
-				KingdomArchitectureIntent before;
-				KingdomArchitectureIntent after;
-				KingdomPlotRules.PlotRect transitionRect;
-				string transitionSkin;
-				bool legacy;
+				water.Rollback();
+				materials.Cancel();
+				System.Ledger.Note("{{r|The improvement waits. " + hostedFailure + "}}");
+				return false;
+			}
+			if (transition != null)
+			{
 				string transitionFailure = null;
-				if (!KingdomArchitectureRuntime.TryRead(Work, out before, out _)
-					|| !KingdomPlots.TryDecodePlotPayload(payload, out transitionRect,
-						out transitionSkin, out after, out legacy, out _)
-					|| legacy || after == null
-					|| !KingdomSocketTransitions.BindReceipt(Work, job, before, after,
-						A.Transition, out transitionFailure))
+				if (!KingdomSocketTransitions.BindReceipt(Work, job, transitionBefore,
+					transitionAfter, transition, out transitionFailure))
 				{
-					KingdomSocketTransitions.ClearReceipt(Work);
+					if (hostedAuthority)
+						KingdomHostedArcology.ReleaseCleanReservation(System, Z, Work, job.Id);
+					water.Rollback();
+					materials.Cancel();
 					System.Ledger.Note("{{r|The plan change waits. "
 						+ (transitionFailure ?? "Its exact transition receipt could not be frozen.")
 						+ "}}");
@@ -111,23 +149,23 @@ namespace ThousandAndFirst
 				water, materials, out job, out string fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
 			{
-				if (A.Transition != null) KingdomSocketTransitions.ClearReceipt(Work);
+				if (hostedAuthority)
+				{
+					System.Ledger.Note("{{r|The hosted arcology waits. "
+						+ (fundingFailure ?? "Its exact stores are not ready.") + "}}");
+					KingdomHostedArcology.ReleaseCleanReservation(System, Z, Work, job.Id);
+				}
+				if (transition != null) KingdomSocketTransitions.ClearReceipt(Work, job,
+					transitionBefore, transitionAfter, transition);
 				KingdomLog.Log("improvement refused cleanly: "
 					+ (fundingFailure ?? A.SuccessorKey));
 				return false;
 			}
 			KingdomConstruction.Bind(Work, job);
-			if (A.Transition != null)
+			if (transition != null)
 			{
-				KingdomArchitectureIntent before;
-				KingdomArchitectureIntent after;
-				KingdomPlotRules.PlotRect transitionRect;
-				string transitionSkin;
-				bool legacy;
-				if (!KingdomArchitectureRuntime.TryRead(Work, out before, out _)
-					|| !KingdomPlots.TryDecodePlotPayload(payload, out transitionRect,
-						out transitionSkin, out after, out legacy, out _)
-					|| legacy || !KingdomSocketTransitions.Authorizes(Work, before, after))
+				if (!KingdomSocketTransitions.Authorizes(Work, transitionBefore,
+					transitionAfter))
 				{
 					KingdomConstruction.Quarantine(ref job,
 						"The funded same-set transition lost its frozen endpoint receipt.");

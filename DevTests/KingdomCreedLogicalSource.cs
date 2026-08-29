@@ -12,6 +12,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomCreed.01.ResidentHistory.cs",
 			"Core/KingdomCreed.02.DissentAndBrink.cs",
 			"Core/KingdomCreed.03.RiteAndDeclaration.cs",
+			"Core/KingdomCreed.03a.PublicationTransactions.cs",
 			"Core/KingdomCreed.04.SecessionAndRejoin.cs",
 			"Core/KingdomCreed.05.ReportingAndReconciliation.cs"
 		};

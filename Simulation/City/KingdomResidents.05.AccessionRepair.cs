@@ -9,7 +9,7 @@ namespace ThousandAndFirst.Simulation.City
 	public static partial class KingdomResidents
 	{
 		internal static KingdomAccessionOutcome TryRepairAccession(KingdomSystem System,
-			GameObject Body, int ResidentId, bool Seated, string Name, long ArrivedTick,
+			GameObject Body, int ResidentId, string SettlementId, string Name, long ArrivedTick,
 			string KeptCreeds, out KingdomResidentRow FormerRow)
 		{
 			FormerRow = default(KingdomResidentRow);
@@ -18,8 +18,11 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-			KingdomSettlement away = Seated ? null : System.Away;
-			KingdomCityBook book = Seated ? System.City : away?.City;
+			bool seated = string.Equals(System.City?.SettlementId, SettlementId,
+				StringComparison.Ordinal);
+			KingdomSettlement other = seated ? null :
+				System.FindNonSeatSettlementById(SettlementId);
+			KingdomCityBook book = seated ? System.City : other?.City;
 			KingdomCityState city;
 			KingdomBindingTable bindings;
 			KingdomCityFault fault;
@@ -58,9 +61,10 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomAccessionOutcome.RepairRequired;
 			}
 
-			Dictionary<string, int> creedCounts = Seated ? System.CreedCounts : away?.CreedCounts;
-			Dictionary<string, int> creedPastCounts = Seated ? System.CreedPastCounts : away?.CreedPastCounts;
-			if ((!Seated && away == null) || creedCounts == null || creedPastCounts == null)
+			Dictionary<string, int> creedCounts = seated ? System.CreedCounts : other?.CreedCounts;
+			Dictionary<string, int> creedPastCounts = seated ? System.CreedPastCounts : other?.CreedPastCounts;
+			if (!KingdomIdentityRules.IsSettlementId(SettlementId) ||
+				(!seated && other == null) || creedCounts == null || creedPastCounts == null)
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
@@ -109,15 +113,15 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-			if (Seated)
+			if (seated)
 			{
 				System.CreedCounts = nextCreedCounts;
 				System.CreedPastCounts = nextCreedPastCounts;
 			}
 			else
 			{
-				away.CreedCounts = nextCreedCounts;
-				away.CreedPastCounts = nextCreedPastCounts;
+				other.CreedCounts = nextCreedCounts;
+				other.CreedPastCounts = nextCreedPastCounts;
 			}
 			ProjectCompatibility(System);
 			if (!KingdomCitizenship.TryRemove(System, Body,

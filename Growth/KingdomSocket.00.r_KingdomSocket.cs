@@ -23,7 +23,9 @@ namespace XRL.World.Parts
 	/// <c>KingdomPlots.PlotX1Property</c> family every laid plot already carries &mdash;
 	/// <c>KingdomSocket</c> stamps them with <c>KingdomPlots.StampRect</c> the moment this part is
 	/// attached &mdash; so <c>KingdomPlots.ReadPlots</c>, the lane rule, and the road budget all
-	/// count a socket exactly as they count a standing plot, with no change to any of the three.
+	/// count a socket exactly as they count a standing plot. Named <c>GameObject</c> properties
+	/// preserve the lot's frozen type, actual size, and facing without changing this positional
+	/// part layout; save-era sockets without that receipt remain visibly legacy and untyped.
 	/// <see cref="LastDesignKey"/> is purely descriptive: nothing anywhere reads it to decide
 	/// anything, only to tell the founder what stood here.
 	/// </para>
@@ -42,7 +44,9 @@ namespace XRL.World.Parts
 
 		public override bool HandleEvent(GetShortDescriptionEvent E)
 		{
-			E.Postfix.Append("\n{{rules|This ground stands cleared, staked out, and ready to be built on again.}}");
+			E.Postfix.Append("\n{{rules|This ground stands as "
+				+ KingdomSocket.SocketLotLabel(ParentObject)
+				+ ", staked out and ready for a matching plan.}}");
 			return base.HandleEvent(E);
 		}
 	}

@@ -9,6 +9,31 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomArchitectureRules
 	{
+		/// <summary>
+		/// Resolves an in-place tier successor through the exact variant frozen by the standing
+		/// architecture receipt. Later demographic or creed changes may shape new commissions,
+		/// but cannot silently restyle already-paid stateful fabric.
+		/// </summary>
+		public static bool TrySelectFrozenSuccessorVariant(
+			IList<ArchitectureVariantDraft> Variants, string FrozenVariantKey,
+			out ArchitectureVariantDraft Variant, out string Failure)
+		{
+			Variant = null;
+			if (!TryValidateVariants(Variants, out Failure)) return false;
+			if (!ValidKey(FrozenVariantKey))
+				return Fail("standing architecture has no bounded frozen variant identity",
+					out Failure);
+			for (int i = 0; i < Variants.Count; i++)
+				if (Variants[i].Key == FrozenVariantKey)
+				{
+					Variant = Variants[i];
+					Failure = null;
+					return true;
+				}
+			return Fail("authored successor has no exact frozen variant " + FrozenVariantKey,
+				out Failure);
+		}
+
 		private static bool ValidSelector(ArchitectureSelector Selector, out string Failure)
 		{
 			Failure = null;

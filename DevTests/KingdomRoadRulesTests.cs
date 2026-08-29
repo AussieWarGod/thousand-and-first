@@ -530,6 +530,109 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomRoadRules.TryLane(rect, doorX, doorY, out _, out _));
 		}
 
+		[Test]
+		public void AnInteriorAuthoredEntranceUsesOnlyUnclaimedGroundAndRotatesItsExactWay()
+		{
+			ArchitectureLayoutSnapshot snapshot = InteriorEntranceSnapshot();
+			foreach (ArchitectureFacing facing in System.Enum.GetValues(typeof(ArchitectureFacing)))
+			{
+				snapshot.Facing = facing;
+				Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
+					snapshot.Height, facing, out int width, out int height));
+				KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(
+					10, 10, 9 + width, 9 + height);
+				List<ArchitecturePoint> route = new List<ArchitecturePoint>();
+				Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
+					snapshot.Anchors[0], route, out int doorX, out int doorY,
+					out int laneX, out int laneY), facing.ToString());
+				Assert.AreEqual(2, route.Count, "one unclaimed edge cell plus one road margin");
+				Assert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
+					snapshot.Width, snapshot.Height, facing, 4, 2,
+					out int edgeX, out int edgeY));
+				Assert.AreEqual(edgeX, route[0].X, facing.ToString());
+				Assert.AreEqual(edgeY, route[0].Y, facing.ToString());
+				Assert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
+				Assert.IsTrue(KingdomRoadRules.TryExactTrace(
+					delegate(int x, int y) { return x != doorX || y != doorY; },
+					30, 30, doorX, doorY, laneX, laneY,
+					KingdomRoadRules.MaxRouteCells, route, new List<int>()));
+			}
+		}
+
+		[Test]
+		public void ACornerEntranceTakesCanonicalNorthThenRotatesWithTheBuilding()
+		{
+			ArchitectureLayoutSnapshot snapshot = InteriorEntranceSnapshot();
+			snapshot.Anchors[0].Key = "entrance:public@0,0";
+			snapshot.Anchors[0].X = 0;
+			snapshot.Anchors[0].Y = 0;
+			ArchitectureCellState oldEntrance = snapshot.Cells.Find(cell => cell.X == 3 && cell.Y == 2);
+			oldEntrance.Passability = ArchitecturePassability.Blocked;
+			ArchitectureCellState corner = snapshot.Cells.Find(cell => cell.X == 0 && cell.Y == 0);
+			corner.Passability = ArchitecturePassability.Walkable;
+			snapshot.Facing = ArchitectureFacing.East;
+			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 13, 14);
+			List<ArchitecturePoint> route = new List<ArchitecturePoint>();
+			Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, snapshot.Anchors[0],
+				route, out int doorX, out int doorY, out int laneX, out int laneY));
+			Assert.AreEqual(1, route.Count, "a border entrance contributes only the exterior margin");
+			Assert.AreEqual(doorX + 2, laneX, "canonical north rotates east");
+			Assert.AreEqual(doorY, laneY);
+		}
+
+		[Test]
+		public void ExactAuthoredTraceRefusesBlockedDuplicateAndDiagonalIntermediatesWhole()
+		{
+			List<int> packed = new List<int> { 99 };
+			List<ArchitecturePoint> route = new List<ArchitecturePoint>
+			{
+				new ArchitecturePoint(2, 1), new ArchitecturePoint(3, 1)
+			};
+			Assert.IsFalse(KingdomRoadRules.TryExactTrace(
+				delegate(int x, int y) { return x != 2 || y != 1; },
+				8, 6, 1, 1, 4, 1, 8, route, packed));
+			Assert.IsEmpty(packed, "a refused exact route publishes no prefix");
+
+			route[1] = new ArchitecturePoint(2, 1);
+			Assert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
+				8, 6, 1, 1, 3, 1, 8, route, packed));
+			Assert.IsEmpty(packed);
+
+			route[0] = new ArchitecturePoint(2, 2);
+			route.RemoveAt(1);
+			Assert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
+				8, 6, 1, 1, 3, 2, 8, route, packed));
+			Assert.IsEmpty(packed);
+		}
+
+		private static ArchitectureLayoutSnapshot InteriorEntranceSnapshot()
+		{
+			ArchitectureLayoutSnapshot snapshot = new ArchitectureLayoutSnapshot
+			{
+				Width = 5, Height = 4, Facing = ArchitectureFacing.North
+			};
+			for (int y = 0; y < snapshot.Height; y++)
+				for (int x = 0; x < snapshot.Width; x++)
+					snapshot.Cells.Add(new ArchitectureCellState
+					{
+						X = x, Y = y, Claim = true,
+						Passability = ArchitecturePassability.Blocked,
+						Cover = ArchitectureCover.Walled
+					});
+			ArchitectureCellState entrance = snapshot.Cells.Find(cell => cell.X == 3 && cell.Y == 2);
+			entrance.Passability = ArchitecturePassability.Walkable;
+			ArchitectureCellState exterior = snapshot.Cells.Find(cell => cell.X == 4 && cell.Y == 2);
+			exterior.Claim = false;
+			exterior.Passability = ArchitecturePassability.Walkable;
+			exterior.Cover = ArchitectureCover.Open;
+			snapshot.Anchors.Add(new ArchitectureAnchor
+			{
+				Key = "entrance:public@3,2", X = 3, Y = 2,
+				Access = ArchitectureAnchorAccess.OnCell
+			});
+			return snapshot;
+		}
+
 		// --- The tally -------------------------------------------------------------------
 
 		[Test]

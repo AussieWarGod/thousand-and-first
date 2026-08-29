@@ -16,28 +16,6 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomUpgrade
 	{
-		public const string HousingCategory = "housing";
-
-		/// <summary>The lifting support the luxury lane is denominated in. A design that lifts it
-		/// houses somebody with a standard; one that does not houses settlers.</summary>
-		public const string LuxurySupport = "luxury";
-
-		/// <summary>
-		/// Shelter rank of a design's own tier. A design that is not a plot has no roof state of
-		/// its own and is read as a walled room, because a single-cell work the settlement raised
-		/// stands as an object with its own walls rather than as open ground.
-		/// </summary>
-		/// <param name="Key">Registry key of the design.</param>
-		public static int ShelterOf(string Key)
-		{
-			KingdomPlotRules.PlotSpec spec;
-			if (string.IsNullOrEmpty(Key) || !KingdomPlots.TryGetSpec(Key, out spec) || spec == null)
-			{
-				return KingdomUpgradeRules.RoomShelter;
-			}
-			return KingdomPlotRules.ShelterRank(spec.Roof);
-		}
-
 		/// <summary>
 		/// Whether the settlement's craft and learning reach a design. The district and territory
 		/// gates are deliberately NOT applied: the predecessor is already standing on this ground,
@@ -46,14 +24,21 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool CraftReaches(KingdomSystem System, Zone Z, string Key)
 		{
+			return CraftReaches(System, Z, Key, out _);
+		}
+
+		/// <summary>The same gate with its exact refusal detail preserved for player disclosure.</summary>
+		public static bool CraftReaches(KingdomSystem System, Zone Z, string Key,
+			out ZoningJudgement Judgement)
+		{
 			KingdomRules.BuildEntry entry;
 			if (System == null || string.IsNullOrEmpty(Key) || !KingdomData.TryGetBuilding(Key, out entry))
 			{
+				Judgement = ZoningJudgement.Allowed;
 				return true;
 			}
-			ZoningJudgement judgement = KingdomZoning.Judge(System, Z?.ZoneID, entry);
-			return judgement.Verdict != ZoningVerdict.RefusedUnlearned
-				&& judgement.Verdict != ZoningVerdict.RefusedTechLevel;
+			Judgement = KingdomZoning.Judge(System, Z?.ZoneID, entry);
+			return KingdomUpgradeRules.CraftGateAdmits(Judgement.Verdict);
 		}
 
 		/// <summary>
@@ -67,10 +52,17 @@ namespace ThousandAndFirst
 		/// <param name="Survey">This pass's survey.</param>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || Survey == null || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (System == null || !System.Founded || Z == null || Survey == null
+				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
+			if (KingdomRelocation.HasActive(Z))
+			{
+				KingdomRelocation.OnZoneActivated(System, Z, Survey);
+				if (KingdomRelocation.HasActive(Z)) return;
+			}
+			if (!Enabled) return;
 			// HandOver asks for one more pass so a founder who stands and watches sees the next
 			// work start. That call must not re-enter this one: the settlement betters one work
 			// per visit, and a pass that started an improvement inside its own handover would

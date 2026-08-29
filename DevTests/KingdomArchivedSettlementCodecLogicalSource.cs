@@ -16,6 +16,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomArchivedSettlementCodec.ValueWriter.cs",
 			"Core/KingdomArchivedSettlementCodec.ValueReader.cs",
 			"Core/KingdomArchivedSettlementCodec.Schema.cs",
+			"Core/KingdomArchivedSettlementCodec.ArrivalCadence.cs",
 			"Core/KingdomArchivedSettlementCodec.Shape.cs"
 		};
 

@@ -106,17 +106,7 @@ namespace ThousandAndFirst
 			{
 				throw new InvalidOperationException("The village covenant no longer names this ground.");
 			}
-			if (system.GetStanding(Basin.PendingVillageFaction) <
-				KingdomRules.VillageCharterSealedStanding)
-			{
-				system.SetStanding(Basin.PendingVillageFaction,
-					KingdomRules.VillageCharterSealedStanding);
-			}
-			if (system.GetStanding(Basin.PendingVillageFaction) <
-				KingdomRules.VillageCharterSealedStanding)
-			{
-				throw new InvalidOperationException("The covenant standing projection was refused.");
-			}
+			EnsureVillageStandingEffectApplied(Basin, Site, system);
 			Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
 			Projection = KingdomFoundingProjection.Identity;
 			RecordChronicleOnce(system, Basin.PendingChronicleEventID,
@@ -140,6 +130,28 @@ namespace ThousandAndFirst
 					Basin.PendingChronicleDisposition))
 			{
 				throw new InvalidOperationException("The village chronicle outbox remains incomplete.");
+			}
+			// The durable cut, and its position is the whole of its argument. The covenant's
+			// standing is exact and its chronicle entry is terminal, so there is something true to
+			// record; the seal, the completion and the reservation cleanup have not run, so the
+			// receipt that paid for this is still on the basin. A failure here therefore retains
+			// that receipt for forward recovery instead of leaving a sealed covenant with nothing
+			// written down.
+			string covenantFailure = "the exact site reservation and its tick are unreadable";
+			int sealedStanding = Basin.PendingVillageEffectState ==
+				KingdomFoundingTransactionRules.VillageStandingEffectApplied
+				? Basin.PendingVillageEffectAfter
+				: system.GetRegardForRealm(Basin.PendingVillageFaction); // legacy archived retry only
+			if (!TryReadSiteReservation(Site, out _, out _, out _, out _, out _,
+					out long reservationTick) ||
+				!KingdomVillageCovenantRuntime.TryRecord(system, Basin.PendingTransactionID,
+					Basin.PendingAuthority, Basin.PendingVillageFaction,
+					Basin.PendingVillageDisplayName, Site.ZoneID, Basin.PendingChronicleEventID,
+					sealedStanding, reservationTick,
+					out covenantFailure))
+			{
+				throw new InvalidOperationException(
+					"The village covenant was not durably archived: " + covenantFailure);
 			}
 			string failure;
 			if (!KingdomSeal.TryStageSemanticSnapshot("village charter", out failure))
@@ -179,15 +191,7 @@ namespace ThousandAndFirst
 				return SiteReservationMatches(Site, Basin.PendingAuthority) &&
 					PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority);
 			case KingdomFoundingKind.VillageCharter:
-				Faction village = Factions.GetIfExists(Basin.PendingVillageFaction);
-				return SiteReservationMatches(Site, Basin.PendingAuthority) &&
-					system.Founded && !string.IsNullOrEmpty(Basin.PendingVillageFaction) &&
-					FactionRegistryCoherent(Basin.PendingVillageFaction, village) &&
-					village.GetIntProperty("Village") == 1 &&
-					village.GetStringProperty(VillageReservationProperty, null) ==
-						Basin.PendingAuthority &&
-					system.GetStanding(Basin.PendingVillageFaction) >=
-						KingdomRules.VillageCharterSealedStanding;
+				return VillageStandingEffectProvesPublication(Basin, Site, system);
 			default:
 				return false;
 			}

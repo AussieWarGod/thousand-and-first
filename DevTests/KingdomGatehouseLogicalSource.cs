@@ -9,6 +9,8 @@ namespace ThousandAndFirst.Tests
 		{
 			"Growth/KingdomGatehouse.cs",
 			"Growth/KingdomGatehouse.Projection.cs",
+			"Growth/KingdomGatehouse.ProjectionEvidence.cs",
+			"Growth/KingdomGatehouse.ProjectionEvidenceScan.cs",
 			"Growth/KingdomGatehouse.Validation.cs",
 			"Growth/r_KingdomGatehouse.cs"
 		};

@@ -64,7 +64,7 @@ namespace ThousandAndFirst.Simulation.City
 		/// Copied by value here because the settlement type is not engine-free; the test asserts
 		/// the copy still equals its source, which is the ladder idiom <c>KingdomExileRules</c>
 		/// already uses for vanilla's reputation thresholds.</summary>
-		internal const int CitiesPerRealm = 2;
+		internal const int CitiesPerRealm = 3;
 
 		/// <summary>key 4 + kind 1 + zone ref 8 + object ref 8 + minted tick 8 + pad 3.
 		/// LIVING-CITY-ARCHITECTURE §0.0(c) / §3.8.</summary>

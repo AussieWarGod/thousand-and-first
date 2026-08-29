@@ -51,7 +51,7 @@ namespace ThousandAndFirst
 			if (!KingdomDelveLinkRules.TryCreate(Derived.HeadZoneId, Derived.FootZoneId,
 				Derived.X, Derived.Y, Derived.RootId, Derived.LotId,
 				Derived.Architecture.SnapshotHash, Derived.Down.Slot,
-				headEndpoint.ID, footEndpoint.ID, out receipt, out Failure)) return false;
+				headEndpoint.IDIfAssigned, footEndpoint.IDIfAssigned, out receipt, out Failure)) return false;
 			string encoded;
 			if (!KingdomDelveLinkRules.TryEncode(receipt, out encoded, out Failure)) return false;
 			string rooted = Owner.GetStringProperty(ReceiptProperty);
@@ -87,7 +87,7 @@ namespace ThousandAndFirst
 			string encoded = Owner.GetStringProperty(ReceiptProperty);
 			if (!KingdomDelveLinkRules.TryDecode(encoded, out receipt, out Failure)
 				|| receipt.HeadZoneId != Derived.HeadZoneId || receipt.FootZoneId != Derived.FootZoneId
-				|| receipt.HeadEndpointId != headEndpoint.ID || receipt.FootEndpointId != footEndpoint.ID
+				|| receipt.HeadEndpointId != headEndpoint.IDIfAssigned || receipt.FootEndpointId != footEndpoint.IDIfAssigned
 				|| receipt.RootId != Derived.RootId || receipt.Token != Derived.Token
 				|| ReadState(Derived.HeadZoneId) != encoded)
 				return Fail("published delve receipt disagrees with physical endpoints", out Failure);
@@ -146,7 +146,7 @@ namespace ThousandAndFirst
 			if (!KingdomArchitectureStamper.TryReadOwner(Owner, out architecture, out snapshot,
 				out lot, out Failure)) return false;
 			if (!KingdomDelveRules.IsDelve(architecture.BuildKey)) return true;
-			if (!TryDerive(architecture, Head, Owner.ID, lot, out Derived, out Failure)
+			if (!TryDerive(architecture, Head, Owner.IDIfAssigned, lot, out Derived, out Failure)
 				|| !TryReadRoot(Owner, Derived, out Failure)
 				|| !TryLoadBuiltFoot(Head, Derived, out Foot, out Failure)) return false;
 			if (Owner.GetIntProperty(PhaseProperty) != 3)

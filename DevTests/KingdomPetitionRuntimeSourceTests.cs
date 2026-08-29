@@ -6,8 +6,7 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomPetitionRuntimeSourceTests
 	{
-		private static string Runtime => TestMain.ReadRepositoryText(
-			"Quests/KingdomPetitionLifecycle.cs");
+		private static string Runtime => KingdomPetitionLifecycleLogicalSource.Read();
 
 		private static string Facade => TestMain.ReadRepositoryText(
 			"Quests/KingdomPetitions.cs");

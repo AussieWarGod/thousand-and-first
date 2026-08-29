@@ -8,10 +8,15 @@ namespace ThousandAndFirst.Tests
 		private static readonly string[] Paths = new string[]
 		{
 			"Simulation/City/KingdomPorters.cs",
+			"Simulation/City/KingdomPorterRouteRules.cs",
 			"Simulation/City/KingdomPorters.00.Opening.cs",
 			"Simulation/City/KingdomPorters.01.RenderingSteppingAndRetirement.cs",
+			"Simulation/City/KingdomPorters.01a.ConstructionInputSweepGuard.cs",
 			"Simulation/City/KingdomPorters.02.CarrierRendering.cs",
+			"Simulation/City/KingdomPorters.02a.ConstructionInputSourceRendering.cs",
+			"Simulation/City/KingdomPorters.07.Deposit.cs",
 			"Simulation/City/KingdomPorters.03.ClosingAndCustodyHandoff.cs",
+			"Simulation/City/KingdomPorters.06.CustodySafety.cs",
 			"Simulation/City/KingdomPorters.04.RoutePlanning.cs",
 			"Simulation/City/KingdomPorters.05.CargoAndMovementHelpers.cs"
 		};

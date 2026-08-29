@@ -81,16 +81,8 @@ namespace ThousandAndFirst
 				Failure = KingdomPlotRules.RefuseBudget(KingdomPresentation.Rich(System.SeatName));
 				return false;
 			}
-			if (KingdomGrowth.CountStoredWater(Z) < Entry.CostDrams)
-			{
-				Failure = "The work would cost {{C|" + Entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
-				return false;
-			}
-			if (!KingdomMaterials.CanPay(Z, Entry.Key, out string materialFailure))
-			{
-				Failure = materialFailure;
-				return false;
-			}
+			// Realm logistics may cover a local shortfall. The exact local attempt and routed
+			// fallback share one construction receipt after the immutable preview is frozen.
 			GroundGrid grid = new GroundGrid(Z);
 			if (!TryFindRect(Z, System, Entry, spec, staked, grid, null, out var rect, out var outcome, out var refusal))
 			{
@@ -140,11 +132,17 @@ namespace ThousandAndFirst
 			GameObject purposeCargo = null;
 			if (purposeReceipt != null && !KingdomPurpose.ResolveCommitCargo(Z, Entry.Key,
 				purposeReceipt, out purposeCargo, out Failure)) return false;
-			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
-			KingdomWaterDebit water = survey.ReserveExactWater(Entry.CostDrams);
-			KingdomMaterialDebit materials = purposeCargo == null
-				? KingdomMaterials.ReservePayment(Z, Entry.Key)
-				: KingdomMaterials.ReservePaymentWithRequiredItem(Z, Entry.Key, purposeCargo);
+			GameObject reciprocalCargo = null;
+			if (purposeReceipt != null && !KingdomPurpose.ResolveCommitReciprocalCargo(
+				Z, Entry.Key, purposeReceipt, out reciprocalCargo, out Failure)) return false;
+			KingdomWaterDebit water = null;
+			KingdomMaterialDebit materials = null;
+			if (purposeReceipt == null)
+			{
+				KingdomSurvey survey = KingdomSurvey.Take(Z, System);
+				water = survey.ReserveExactWater(Entry.CostDrams);
+				materials = KingdomMaterials.ReservePayment(Z, Entry.Key);
+			}
 			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
 				KingdomMaterials.CostFor(Entry.Key), KingdomMaterials.BitCostFor(Entry.Key),
 				KingdomMaterials.ExoticCostFor(Entry.Key));
@@ -155,13 +153,21 @@ namespace ThousandAndFirst
 			job.PhysicalReceipt = purposeReceipt;
 			if (!KingdomConstruction.FreezeBuildTruth(job, System, Entry.Defence, true))
 			{
-				water.Rollback();
-				materials.Cancel();
+				water?.Rollback();
+				materials?.Cancel();
 				Failure = "The plot's exact build effects could not be frozen.";
 				return false;
 			}
-			KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,
-				water, materials, out job, out string fundingFailure);
+			KingdomConstructionStartResult funding;
+			string fundingFailure;
+			if (purposeReceipt == null)
+				funding = KingdomConstruction.TryFundNew(job, water, materials,
+					out job, out fundingFailure);
+			else if (!KingdomPurpose.TryRequiredFundingObjectIds(job,
+				out List<string> requiredObjects, out fundingFailure))
+				funding = KingdomConstructionStartResult.Refused;
+			else funding = KingdomConstruction.TryFundNewRouted(job, requiredObjects,
+				out job, out fundingFailure);
 			if (funding == KingdomConstructionStartResult.Refused)
 			{
 				Failure = fundingFailure ?? "The stores could not cover the plot after all.";

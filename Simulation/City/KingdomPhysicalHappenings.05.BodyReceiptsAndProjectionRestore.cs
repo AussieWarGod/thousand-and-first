@@ -77,9 +77,12 @@ namespace ThousandAndFirst.Simulation.City
 			Sitting sitting = body.GetEffect<Sitting>();
 			if (sitting == null) return true;
 			GameObject fixture = sitting.SittingOn;
+			// A foreign sitting effect is never ours to remove. Preserve it and keep the
+			// restoration receipt open for explicit recovery.
 			if (!GameObject.Validate(fixture)
-				|| fixture.IDIfAssigned != operation.FixtureObjectId)
-				return body.RemoveEffect(sitting);
+				|| fixture.IDIfAssigned != operation.FixtureObjectId
+				|| fixture.GetStringProperty(FixtureTokenProperty) != operation.EventId)
+				return false;
 			Chair chair = fixture.GetPart<Chair>();
 			return chair != null && chair.StandUp(body, S: sitting);
 		}

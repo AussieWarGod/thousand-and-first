@@ -54,8 +54,16 @@ namespace ThousandAndFirst
 				}
 				else if (Job.Phase != KingdomConstructionPhase.Working)
 				{
-					if (inspected.SubjectId != result.ID
-						&& !KingdomConstruction.UpdateSubject(ref inspected, result.ID)) return;
+					if (inspected.SubjectId != result.IDIfAssigned)
+					{
+						if (!HasPlotPlanMarkerRemovalProof(result, inspected.SubjectId))
+						{
+							KingdomConstruction.Quarantine(ref inspected,
+								"Plot works lack exact plan-marker removal proof after reload.");
+							return;
+						}
+						if (!KingdomConstruction.UpdateSubject(ref inspected, result.IDIfAssigned)) return;
+					}
 					KingdomConstruction.FinishProjection(ref inspected, true, true);
 				}
 				return;
@@ -73,15 +81,28 @@ namespace ThousandAndFirst
 				}
 				else
 				{
-					if (!r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+					if (inspected.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
+					{
+						RecoverPendingPlotRemoval(System, Z, result, ref inspected);
+						return;
+					}
+					string removedWorks = result.GetStringProperty(
+						r_KingdomScaffold.RemovalProofProperty);
+					if (!string.IsNullOrEmpty(removedWorks)
+						&& inspected.SubjectId != removedWorks)
+					{
+						if (!HasPlotPlanMarkerRemovalProof(result, inspected.SubjectId))
+						{
+							KingdomConstruction.Quarantine(ref inspected,
+								"Completed plot lacks exact plan-marker removal proof after reload.");
+							return;
+						}
+						if (!KingdomConstruction.UpdateSubject(ref inspected, removedWorks)) return;
+					}
+					if (!r_KingdomScaffold.HasRemovalProof(result, inspected.SubjectId))
 					{
 						KingdomConstruction.Quarantine(ref inspected,
 							"The completed plot lacks exact works-removal proof.");
-					}
-					else if (inspected.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
-					{
-						KingdomConstruction.Quarantine(ref inspected,
-							"Plot removal was interrupted before callback-success proof.");
 					}
 					else FinishPlotEffects(System, Z, result, ref inspected);
 				}

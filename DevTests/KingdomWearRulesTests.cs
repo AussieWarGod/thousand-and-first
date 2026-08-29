@@ -23,6 +23,16 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomWearRulesTests
 	{
+		[Test]
+		public void FoodLeakPlansOnlySpendableStacksButKeepsPhysicalCapacityOccupied()
+		{
+			string source = KingdomWearLogicalSource.Read();
+			StringAssert.Contains("int held = KingdomSurvey.HeldIn(Work);", source);
+			StringAssert.Contains("AvailableIn(Work, leases)", source);
+			StringAssert.Contains("CanSpend(leases, food)", source);
+			StringAssert.Contains("TrySpoilFromExact", source);
+		}
+
 		private const string City = "taf:settlement:test-city";
 
 		[Test]
@@ -898,7 +908,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(spoilBody.IndexOf("PublishSpoilCounters(frame, Lost)", destroy,
 				StringComparison.Ordinal), destroy);
 			StringAssert.Contains("ReferenceEquals(Frame.Inventory.Objects, Frame.List)", survey);
-			StringAssert.Contains("item.ID != Frame.ItemIds[i]", survey);
+			StringAssert.Contains("item.IDIfAssigned != Frame.ItemIds[i]", survey);
 			int leak = survey.IndexOf("public bool TryLeakFromExact", StringComparison.Ordinal);
 			int drain = survey.IndexOf("KingdomLiquids.Drain(Store, Drams)", leak,
 				StringComparison.Ordinal);
@@ -910,7 +920,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(leakProof, drain);
 			Assert.Greater(waterCounter, leakProof);
 			StringAssert.Contains("ReferenceEquals(Store.ComponentLiquids, dictionary)", survey);
-			StringAssert.Contains("owner.ID != ownerId", survey);
+			StringAssert.Contains("owner.IDIfAssigned != ownerId", survey);
 		}
 
 		[Test]

@@ -68,10 +68,31 @@ as polished as the game's flagship features. These rules are binding for every s
   substitute for that review. See `docs/STRUCTURE.md`.
 - **Folder-per-system** (`Core`, `Founding`, `Growth`, `Chronicle`, ... as slices land), matching
   the Creature Control layout. `Debug` holds the wish harness; anything in `Debug` must be
-  side-effect-free on ordinary saves (reversible probes only).
+  side-effect-free on ordinary saves (reversible probes only). `Harness` holds the developer
+  scenario harness and is the one exception, which is why it is a sibling rather than more
+  `Debug`: scenarios are world-CREATING, never save-mutating, so they run only from a new-game
+  `[PlayerMutator]` and never touch an existing save. It is absent from `manifest.json`
+  `Directories` and listed in `Tools/stage.sh` `EXCLUDE_DIRS`, so an ordinary build never compiles
+  it and no release artifact carries it; a scenario-built state is stamped and can never sign
+  native acceptance without independently curated ordinary-play anchor evidence.
 - **Pure logic is engine-free.** Every rule that can be computed without the engine lives in a
   static class with zero `XRL` usings (`KingdomRules` is the template): coupling math, parsers,
   stage thresholds, name grammars. These classes are the unit-testable surface.
+- **Presence means key presence.** For any durable game state this mod owns, absence is proved with
+  the engine's `HasStringGameState` / `HasIntGameState` / `HasInt64GameState` /
+  `HasObjectGameState` / `HasBooleanGameState` family. `Get*GameState(name, 0)` and
+  `Get*GameState(name, "")` answer identically for a key that was never written and for one
+  explicitly holding zero or the empty string, so a default getter can never decide absence. A key
+  under the wrong table, or under two, is torn and refuses rather than resolving in either
+  direction. The verdict lives in a pure classifier (`KingdomScenarioStateShape` is the template)
+  so every corrupt shape executes without a live game, and the runtime reader is pinned to it.
+- **A digest over live values is length-prefixed.** Any canonical text built from runtime strings
+  frames each field as its exact length and the value, never a separator join with an absent
+  sentinel: a property carrying the separator, or spelled like the sentinel, otherwise collides
+  with a different fact sequence. Bound every value, refuse control values and unpaired surrogates,
+  and encode with strict UTF-8 — the default encoder folds distinct malformed strings onto the same
+  bytes. Nested subgrammars are framed the same way or they reopen the hole
+  (`KingdomRealizedCaptureRules` is the template).
 - **Data-driven where vanilla is.** Content goes in mergeable XML (`Options`, factions,
   conversations, population tables, embark modules) with our `r_` prefix; C# is for behavior
   only. Never overwrite a vanilla blueprint — merge or patch.
@@ -93,8 +114,12 @@ as polished as the game's flagship features. These rules are binding for every s
 - Sifrah-flavored interactions are gated on the relevant `Options.Sifrah*` flag with a
   first-class plain resolution beside them (the becoming-nook hack precedent). Neither path is
   the afterthought.
-- Optional integrations (Hearthpyre, Qud Industry) live behind manifest `Directories` gating
-  and compile symbols; the core never references them.
+- Strongly typed optional integrations live in dependency/version-gated sibling directories and
+  compile against a pinned ABI fixture; the core never references foreign types. Capability-only
+  integrations such as Qud Industry 0.3 stay data/resolved-object based and need no typed shard.
+- Internal civic-memory, polity, cargo, body, and retirement receipts are not extension APIs.
+  Third parties extend declared XML/public behavior protocols or a separately reviewed typed
+  provider; they never write authenticated save keys/object markers or share mutation authority.
 
 ## 4. Testing — three layers, all required
 
@@ -128,6 +153,10 @@ dangling reference are both errors, and neither is detectable by validating eith
 `Art/runtime-assets.json` provenance-manifest entry and staged file, rejects unlisted/local-orphan rasters, and proves every
 referenced vanilla path occurs in the installed base XML corpus. A misspelling or dead asset
 therefore fails before Qud can silently fall back.
+
+Current v1 runtime deliberately has **zero** custom runtime bitmap paths and **65** verified vanilla
+tile references. This is a snapshot, not a quota: native gallery evidence may justify an original
+asset, but only through the complete provenance/review/wiring policy above.
 
 `Art/check_xml_refs.py` is the instance for names the game resolves at load or roll time. Writing
 it immediately found the population-table case the paragraph above predicted: an entry merging our
@@ -211,6 +240,10 @@ overwritten by kingdom systems without explicit designation:
 - Kingdom systems may destroy only objects they created and marked (`KingdomCitizen`,
   `KingdomBuilt`, `KingdomRaider`); wounds to anything else come only from ordinary
   simulation (combat, fire), never from scripted deletion.
+- Preparing a save for removal is an attended, terminal, exact-owner transaction while this mod is
+  still loaded. It visits only known ground through ordinary play, reports outstanding locators,
+  preserves foreign/player custody, and writes its identity fence last. Never promise that an
+  absent mod can execute cleanup or remotely load unvisited ground.
 
 ## 7b. Nothing stalls in silence
 

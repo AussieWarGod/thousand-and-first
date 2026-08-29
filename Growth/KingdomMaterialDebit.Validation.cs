@@ -24,6 +24,25 @@ namespace ThousandAndFirst
 			return TopologyMatchesObserved();
 		}
 
+		private bool CurrentLeaseAuthorityAllowsPlan()
+		{
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (Plan == null || !KingdomConstructionInputLeaseAuthority.TryCapture(
+				out leases, out failure)) return false;
+			for (int i = 0; i < Plan.Steps.Count; i++)
+			{
+				Entry entry = EntryFor(Plan.Steps[i]);
+				if (entry == null || entry.Item == null) return false;
+				string id = entry.Item.IDIfAssigned;
+				if (!string.IsNullOrEmpty(id) && leases.ContainsObject(id)) return false;
+				if (GameObject.Validate(entry.Item)
+					&& !KingdomConstructionInputLeaseAuthority.CanUseMaterial(
+						leases, entry.Item)) return false;
+			}
+			return true;
+		}
+
 		private bool AllAtPlannedResult()
 		{
 			for (int i = 0; i < Plan.Steps.Count; i++)
@@ -52,7 +71,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (ReferenceEquals(Entry.Item, RequiredItem)
-				&& (Entry.Item.ID != RequiredItemId || Entry.Item.Count != 1)) return false;
+				&& (Entry.Item.IDIfAssigned != RequiredItemId || Entry.Item.Count != 1)) return false;
 			KingdomMaterialDebitSourceKind kind;
 			int kindIndex;
 			KingdomBitTally bits;
@@ -176,7 +195,7 @@ namespace ThousandAndFirst
 			KindIndex = -1;
 			UnitBits = new KingdomBitTally();
 			KingdomMaterial material;
-			if (KingdomMaterials.TryMaterialOf(Item, out material))
+			if (KingdomMaterials.TryOrdinaryMaterialOf(Item, out material))
 			{
 				Kind = KingdomMaterialDebitSourceKind.Material;
 				KindIndex = (int)material;

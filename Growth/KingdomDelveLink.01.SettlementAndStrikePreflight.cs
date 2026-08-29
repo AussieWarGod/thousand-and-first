@@ -28,7 +28,7 @@ namespace ThousandAndFirst
 			if (Owner.GetIntProperty(KingdomArchitectureStamper.NextLayerProperty) != 3)
 				return Fail("delve link cannot settle before every authored layer is complete", out Failure);
 			Derived derived;
-			if (!TryDerive(architecture, Head, Owner.ID, lot, out derived, out Failure)) return false;
+			if (!TryDerive(architecture, Head, Owner.IDIfAssigned, lot, out derived, out Failure)) return false;
 			Zone foot;
 			if (!TryLoadBuiltFoot(Head, derived, out foot, out Failure)) return false;
 			GameObject headEndpoint;
@@ -57,10 +57,13 @@ namespace ThousandAndFirst
 					return Quarantine(Owner, Failure ?? "delve Down endpoint receipt did not settle",
 						out Failure);
 				string rooted = Owner.GetStringProperty(HeadEndpointProperty);
-				if (!string.IsNullOrEmpty(rooted) && rooted != headEndpoint.ID)
+				string headEndpointId = headEndpoint.IDIfAssigned;
+				if (string.IsNullOrEmpty(headEndpointId))
+					return Fail("delve head endpoint has no stable identity", out Failure);
+				if (!string.IsNullOrEmpty(rooted) && rooted != headEndpointId)
 					return Quarantine(Owner, "delve head endpoint changed across an interrupted phase",
 						out Failure);
-				Owner.SetStringProperty(HeadEndpointProperty, headEndpoint.ID);
+				Owner.SetStringProperty(HeadEndpointProperty, headEndpointId);
 				Owner.SetIntProperty(PhaseProperty, 1);
 				phase = 1;
 			}

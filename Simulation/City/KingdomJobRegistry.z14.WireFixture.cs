@@ -14,13 +14,15 @@ namespace ThousandAndFirst.Simulation.City
 {
 #if TAF_TESTS
 	/// <summary>Engine-free fixture for the exact realm-archive job segment. Production owns the
-	/// same field order in <c>KingdomRealmArchive.WriteJobs/ReadJobs</c>; this seam freezes v2 bytes
-	/// and executes v2 padding, v3 rewrite, and repeated cold reads without mocking Qud's serializer.</summary>
+	/// same field order in <c>KingdomRealmArchive.WriteJobs/ReadJobs</c>; this seam freezes v2 and
+	/// v4 bytes and executes old-envelope padding and repeated cold reads without mocking Qud's
+	/// serializer.</summary>
 	internal static class KingdomRealmJobWireFixture
 	{
 		internal const int LegacyVersion = 2;
 		internal const int MissionVersion = 3;
-		internal const int CurrentVersion = 4;
+		internal const int ExactDeliveryVersion = 4;
+		internal const int CurrentVersion = 5;
 		private const int MaxJobs = 16;
 		private const int MaxLegs = 96;
 		private const int MaxChars = 512;
@@ -30,7 +32,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			payload = null;
 			if (value == null || (version != LegacyVersion && version != MissionVersion
-				&& version != CurrentVersion)) return false;
+				&& version != ExactDeliveryVersion && version != CurrentVersion)) return false;
 			try
 			{
 				KingdomJobTable table;
@@ -43,11 +45,19 @@ namespace ThousandAndFirst.Simulation.City
 					for (int i = 0; i < canonical.Count; i++)
 						if (canonical.Kinds[i] != (int)KingdomJobKind.Delivery) return false;
 				}
-				if (version < CurrentVersion)
+				if (version < ExactDeliveryVersion)
 				{
 					for (int i = 0; i < canonical.Count; i++)
 						if (canonical.DeliveryPhases[i] != (int)KingdomDeliveryPhase.Legacy)
 							return false;
+				}
+				if (version == ExactDeliveryVersion)
+				{
+					for (int i = 0; i < canonical.Count; i++)
+						if (canonical.DeliveryCargoAuthorityKinds[i]
+								> (int)KingdomDeliveryCargoAuthority.CarryBookManifest
+							|| canonical.DeliveryPhases[i]
+								> (int)KingdomDeliveryPhase.Quarantined) return false;
 				}
 				using (MemoryStream stream = new MemoryStream())
 				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
@@ -72,7 +82,7 @@ namespace ThousandAndFirst.Simulation.City
 							writer.Write(canonical.DueTicks[i]); writer.Write(canonical.WaterCosts[i]);
 							writer.Write(canonical.ProvisionCosts[i]); writer.Write(canonical.OutcomeCodes[i]);
 						}
-						if (version >= CurrentVersion)
+						if (version >= ExactDeliveryVersion)
 						{
 							writer.Write(canonical.DeliverySourceEndpointIds[i]);
 							WriteText(writer, canonical.DeliverySourceObjectIds[i]);
@@ -119,7 +129,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			value = null;
 			if (payload == null || (version != LegacyVersion && version != MissionVersion
-				&& version != CurrentVersion)) return false;
+				&& version != ExactDeliveryVersion && version != CurrentVersion)) return false;
 			try
 			{
 				KingdomJobRegistry read = new KingdomJobRegistry();
@@ -144,7 +154,7 @@ namespace ThousandAndFirst.Simulation.City
 							read.WaterCosts.Add(reader.ReadInt32()); read.ProvisionCosts.Add(reader.ReadInt32());
 							read.OutcomeCodes.Add(reader.ReadInt32());
 						}
-						if (version >= CurrentVersion)
+						if (version >= ExactDeliveryVersion)
 						{
 							read.DeliverySourceEndpointIds.Add(reader.ReadInt32());
 							read.DeliverySourceObjectIds.Add(ReadText(reader));
@@ -181,7 +191,13 @@ namespace ThousandAndFirst.Simulation.City
 					}
 					if (stream.Position != stream.Length) return false;
 				}
-				read.Normalize();
+				if (version == ExactDeliveryVersion)
+					for (int i = 0; i < read.Count; i++)
+						if (read.DeliveryCargoAuthorityKinds[i]
+								> (int)KingdomDeliveryCargoAuthority.CarryBookManifest
+							|| read.DeliveryPhases[i]
+								> (int)KingdomDeliveryPhase.Quarantined) return false;
+				if (version < ExactDeliveryVersion) read.Normalize();
 				KingdomJobTable table;
 				KingdomCityFault fault;
 				if (!read.TryRead(out table, out fault)) return false;

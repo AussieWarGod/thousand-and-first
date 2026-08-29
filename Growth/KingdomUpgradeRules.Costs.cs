@@ -45,12 +45,40 @@ namespace ThousandAndFirst
 		/// </param>
 		public static long BuildTicks(long SuccessorTicks, long Override)
 		{
+			return BuildTicks(SuccessorTicks, Override, KingdomRules.DistrictNeutralPercent);
+		}
+
+		/// <summary>
+		/// Ticks after settlement construction infrastructure. The percent is a duration factor,
+		/// not free labour: 80 means the canonical craft district builds in 80% of fresh time.
+		/// It is applied before the default improvement fraction, with integer floors at each
+		/// boundary. Positive authored <c>UpgradeTicks</c> remain exact and are never discounted.
+		/// Positive external factors are clamped to the canonical district band; nonpositive values
+		/// degrade to neutral rather than making instant work.
+		/// </summary>
+		public static long BuildTicks(long SuccessorTicks, long Override,
+			int InfrastructureDurationPercent)
+		{
 			if (Override > 0L)
 			{
 				return Override;
 			}
-			long ticks = ((SuccessorTicks > 0L) ? SuccessorTicks : 1L) * BuildTicksPercent / 100L;
+			long fresh = (SuccessorTicks > 0L) ? SuccessorTicks : 1L;
+			int percent = InfrastructureDurationPercent;
+			if (percent <= 0) percent = KingdomRules.DistrictNeutralPercent;
+			else if (percent < KingdomRules.DistrictPercentFloor)
+				percent = KingdomRules.DistrictPercentFloor;
+			else if (percent > KingdomRules.DistrictNeutralPercent)
+				percent = KingdomRules.DistrictNeutralPercent;
+			long adjusted = ScaleTicks(fresh, percent);
+			if (adjusted < 1L) adjusted = 1L;
+			long ticks = ScaleTicks(adjusted, BuildTicksPercent);
 			return (ticks < 1L) ? 1L : ticks;
+		}
+
+		private static long ScaleTicks(long Ticks, int Percent)
+		{
+			return Ticks / 100L * Percent + Ticks % 100L * Percent / 100L;
 		}
 
 		/// <summary>

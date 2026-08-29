@@ -74,6 +74,8 @@ MAX_GLYPHS = 96
 MAX_MAP_AREA = 280
 MAX_PLACEMENTS = 512
 MAX_ANCHORS = 64
+MAX_ROUTE_CELLS = 48
+ROAD_MARGIN = 1
 MAX_BINDINGS_PER_PLAN = 16
 MAX_TIERS_PER_BINDING = 16
 MAX_VARIANTS_PER_TIER = 32
@@ -91,6 +93,12 @@ MAX_BLUEPRINT_FILES = 256
 MAX_BLUEPRINTS = 65536
 MAX_GOLDENS = 8192
 MAX_GOLDEN_BYTES = 64 * 1024 * 1024
+GENERATED_ARCHITECTURE_NAME = "KingdomArchitectures-LotRealizations.xml"
+VISUAL_BLUEPRINT_EQUIVALENTS: Mapping[str, str] = {
+    "DirtFloor": "vanilla-random-dirt",
+    "DirtPath": "vanilla-random-dirt",
+    "DirtRoad": "vanilla-random-dirt",
+}
 
 KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:+-]*$")
 ANCHOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:+-]*$")
@@ -119,7 +127,133 @@ VERTICAL_BLUEPRINT_PAIRS: Mapping[str, Tuple[str, str]] = {
 RAW_VERTICAL_BLUEPRINTS = ("StairsUp", "StairsDown")
 VERTICAL_ROLE_TERMS = ("vertical", "stair", "travel", "elevator", "lift")
 POSES = ("north", "east", "south", "west")
-HEART_BUILD_KEYS = ("heartbasin", "heartwaterstone", "heartmoot", "heartcourt")
+HEART_BUILD_KEYS = (
+    "heartbasin",
+    "heartwaterstone",
+    "heartmoot",
+    "heartcourt",
+    "arcology",
+)
+HOSTED_ARCOLOGY_BUILD_KEYS = {"arcologyward", "arcologyterrace"}
+
+
+def _runtime_heart_build_keys(repo_root: Path) -> Optional[Tuple[str, ...]]:
+    """Read the shipped runtime roster when present, so the independent mirror cannot drift."""
+
+    source_path = repo_root / "Growth" / "KingdomPlotHeartRules.cs"
+    if not source_path.is_file():
+        return None
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return tuple()
+    match = re.search(
+        r"HeartRungKeys\s*=\s*new\s+string\s*\[\s*\d+\s*\]\s*\{(.*?)\};",
+        source,
+        flags=re.DOTALL,
+    )
+    if match is None:
+        return tuple()
+    return tuple(re.findall(r'"([A-Za-z0-9_.:+-]+)"', match.group(1)))
+
+
+def _runtime_ground_strata(repo_root: Path) -> Optional[Tuple[str, ...]]:
+    """Read the exact ground vocabulary returned by the canonical runtime function.
+
+    Architecture selection receives a ground stratum, not every token understood by the wider
+    open zoning vocabulary. Keep the checker sourced from StratumOfGround itself: constants such
+    as sky or arcology are not selectable merely because the runtime can describe them elsewhere.
+    """
+
+    source_path = repo_root / "Growth" / "KingdomZoningStrataRules.cs"
+    if not source_path.is_file():
+        return None
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return tuple()
+    constants = dict(
+        re.findall(
+            r'public\s+const\s+string\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"([^"\r\n]+)"\s*;',
+            source,
+        )
+    )
+    match = re.search(
+        r"public\s+static\s+string\s+StratumOfGround\s*"
+        r"\(\s*bool\s+(?P<argument>[A-Za-z_][A-Za-z0-9_]*)\s*\)\s*\{\s*"
+        r"return\s+(?P=argument)\s*\?\s*"
+        r"(?P<underground>[A-Za-z_][A-Za-z0-9_]*)\s*:\s*"
+        r"(?P<surface>[A-Za-z_][A-Za-z0-9_]*)\s*;\s*\}",
+        source,
+        flags=re.DOTALL,
+    )
+    if match is None:
+        return tuple()
+    surface = constants.get(match.group("surface"), "")
+    underground = constants.get(match.group("underground"), "")
+    if (
+        not surface
+        or not underground
+        or any(any(ord(char) < 32 for char in value) for value in (surface, underground))
+    ):
+        return tuple()
+    return tuple(dict.fromkeys((surface.lower(), underground.lower())))
+
+
+PURPOSE_ARCHITECTURE_CONTRACTS: Mapping[str, Mapping[str, str]] = {
+    "deepbore": {
+        "purpose:input": "r_KingdomPurposeInputStore",
+        "purpose:output": "r_KingdomPurposeOutputStore",
+        "purpose:machine": "r_KingdomPurposeBoreHead",
+    },
+    "greatfoundry": {
+        "purpose:input": "r_KingdomPurposeInputStore",
+        "purpose:output": "r_KingdomPurposeOutputStore",
+        "purpose:machine": "r_KingdomPurposeGlassFurnace",
+    },
+    "realmgranary": {
+        "purpose:input": "r_KingdomPurposeInputBasket",
+        "purpose:output": "r_KingdomPurposeOutputBasket",
+        "purpose:machine": "r_KingdomRealmGranary",
+    },
+}
+REOPENED_ACTIVATION_KEYS: Mapping[str, str] = {
+    "assentingmoot": "node:assentingmoot-runtime-v1",
+    "stasisvault": "node:stasisvault-runtime-v1",
+}
+REOPENED_EXACT_ANCHORS: Mapping[str, Tuple[str, ...]] = {
+    "assentingmoot": (
+        "main", "function:assenting-moot", "rite:conductor", "ward:focus",
+        "ward:exemption",
+    ),
+    "stasisvault": (
+        "main", "function:stasis-vault", "stasis:power", "stasis:operator",
+        "stasis:transfer", "storage:effects",
+    ),
+}
+REOPENED_MIN_ANCHORS: Mapping[str, Mapping[str, int]] = {
+    "assentingmoot": {
+        "entrance:public": 2, "entrance:service": 2, "rite:assent-seat": 6,
+        "ward:boundary": 18,
+    },
+    "stasisvault": {
+        "entrance:public": 2, "entrance:service": 2, "stasis:body-bay": 4,
+    },
+}
+REOPENED_FIXTURES: Mapping[str, Mapping[str, str]] = {
+    "assentingmoot": {
+        "rite:conductor": "r_KingdomFixtureTableMarble",
+        "ward:focus": "r_KingdomAssentFocus",
+        "ward:exemption": "r_KingdomFixtureShelfMetal",
+    },
+    "stasisvault": {
+        "stasis:body-bay": "r_KingdomStasisCradle",
+        "stasis:power": "r_KingdomStasisProjectorFixture",
+        "stasis:operator": "r_KingdomFixtureTableMarble",
+        "stasis:transfer": "r_KingdomFixtureTableStone",
+        "storage:effects": "r_KingdomFixtureLockerScrap",
+    },
+}
 
 # These vanilla records are useful population content, not stable authored-map components. Their
 # inheritance can roll Animated/RandomTile builders or leaves the fixture takeable. Shipped maps
@@ -129,6 +263,7 @@ HEART_BUILD_KEYS = ("heartbasin", "heartwaterstone", "heartmoot", "heartcourt")
 UNSAFE_AUTHORED_BLUEPRINTS: Mapping[str, str] = {
     "Wall": "base wall can roll Animated",
     "BaseWallMud": "wall can roll Animated",
+    "BaseWallRock": "wall can roll Animated",
     "BrickWall": "wall can roll Animated",
     "BrinestalkWall": "wall can roll Animated",
     "CanvasWall": "wall can roll Animated",
@@ -361,6 +496,7 @@ class CheckResult:
     goldens_written: bool
     max_snapshot_payload_bytes: int
     max_snapshot_encoded_chars: int
+    max_snapshot_key: str
 
     @property
     def ok(self) -> bool:
@@ -368,6 +504,10 @@ class CheckResult:
 
     def report(self) -> str:
         plot_count = sum(1 for item in self.buildings.values() if item.plot)
+        generated_maps = sum(
+            1 for item in self.model.maps.values() if _is_generated_map(item)
+        )
+        source_maps = len(self.model.maps) - generated_maps
         lines = [
             "ARCHITECTURE CHECK v1",
             f"building-files: {len(self.building_files)}",
@@ -375,14 +515,16 @@ class CheckResult:
             f"buildings: {len(self.buildings)}",
             f"plot-buildings: {plot_count}",
             f"palettes: {len(self.model.palettes)}",
-            f"maps: {len(self.model.maps)}",
+            f"maps: {len(self.model.maps)} ({source_maps} source / "
+            f"{generated_maps} generated)",
             f"plans: {len(self.model.plans)}",
             f"bindings: {len(self.model.bindings)}",
             f"tiers: {len(self.model.tiers)}",
             f"variants: {len(self.model.variants)}",
             f"blueprints: {self.blueprint_resolution} ({self.blueprint_count})",
             f"largest-snapshot: {self.max_snapshot_payload_bytes} bytes / "
-            f"{self.max_snapshot_encoded_chars} characters",
+            f"{self.max_snapshot_encoded_chars} characters "
+            f"({self.max_snapshot_key or 'none'})",
             f"goldens: {len(self.goldens)} ({'written' if self.goldens_written else 'not written'})",
             f"warnings: {len(self.notices)}",
             f"issues: {len(self.issues)}",
@@ -541,6 +683,38 @@ def _selector_tokens(value: str, location: str, name: str, issues: List[Issue]) 
     if any(any(ord(char) < 32 for char in token) for token in tokens):
         issues.append(Issue(location, "selector.control", f"{name} contains a control character"))
     return tokens
+
+
+def _validate_selector_strata(
+    model: ArchitectureModel,
+    ground_strata: Sequence[str],
+    issues: List[Issue],
+) -> None:
+    """Reject dead selector names that StratumOfGround can never supply."""
+
+    reachable = {value.lower() for value in ground_strata}
+    for variant in model.variants:
+        unreachable: List[str] = []
+        for token in _selector_tokens(
+            variant.selectors.get("Strata", ""), variant.location, "Strata", []
+        ):
+            negative = len(token) > 1 and token[0] == "!"
+            name = token[1:].strip() if negative else token
+            folded = name.lower()
+            if not negative and folded in {"all", "*"}:
+                continue
+            if folded not in reachable and name not in unreachable:
+                unreachable.append(name)
+        if unreachable:
+            issues.append(
+                Issue(
+                    variant.location,
+                    "variant.strata-unreachable",
+                    f"Strata names {unreachable!r} cannot be returned by "
+                    "KingdomZoningRules.StratumOfGround; reachable ground vocabulary is "
+                    f"{tuple(ground_strata)!r}",
+                )
+            )
 
 
 def _canonical_material(value: str) -> Optional[str]:
@@ -929,10 +1103,85 @@ def _cells(architecture_map: ArchitectureMap) -> Iterable[Tuple[int, int, Glyph]
                 yield x, y, glyph
 
 
+def _is_generated_map(architecture_map: ArchitectureMap) -> bool:
+    source = architecture_map.location.split(":", 1)[0]
+    return source.endswith(GENERATED_ARCHITECTURE_NAME)
+
+
 def _neighbors(x: int, y: int, width: int, height: int) -> Iterable[Tuple[int, int]]:
     for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
         if 0 <= nx < width and 0 <= ny < height:
             yield nx, ny
+
+
+def _entrance_egress(
+    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
+    """Mirror the runtime's bounded canonical N/E/S/W unclaimed-walk route law."""
+
+    steps = ((0, -1), (1, 0), (0, 1), (-1, 0))
+
+    def outward(x: int, y: int) -> Optional[Tuple[int, int]]:
+        if y == 0:
+            return (0, -1)
+        if x == architecture_map.width - 1:
+            return (1, 0)
+        if y == architecture_map.height - 1:
+            return (0, 1)
+        if x == 0:
+            return (-1, 0)
+        return None
+
+    direct = outward(entrance_x, entrance_y)
+    if direct is not None:
+        return (), direct
+    entrance = (entrance_x, entrance_y)
+    parent: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {entrance: None}
+    queue: deque[Tuple[int, int]] = deque((entrance,))
+    boundary: Optional[Tuple[int, int]] = None
+    exit_step: Optional[Tuple[int, int]] = None
+    while queue and boundary is None:
+        x, y = queue.popleft()
+        for dx, dy in steps:
+            neighbor = (x + dx, y + dy)
+            nx, ny = neighbor
+            if (
+                neighbor in parent
+                or not (0 <= nx < architecture_map.width and 0 <= ny < architecture_map.height)
+                or architecture_map.glyph_at(nx, ny) is not None
+            ):
+                continue
+            parent[neighbor] = (x, y)
+            queue.append(neighbor)
+            direction = outward(nx, ny)
+            if direction is not None:
+                boundary = neighbor
+                exit_step = direction
+                break
+    if boundary is None or exit_step is None:
+        return None
+    reversed_path: List[Tuple[int, int]] = []
+    step: Optional[Tuple[int, int]] = boundary
+    while step is not None and step != entrance:
+        if len(reversed_path) >= MAX_ROUTE_CELLS - ROAD_MARGIN:
+            return None
+        reversed_path.append(step)
+        step = parent[step]
+    if step != entrance:
+        return None
+    return tuple(reversed(reversed_path)), exit_step
+
+
+def _pose_point(
+    x: int, y: int, width: int, height: int, pose: str
+) -> Tuple[int, int]:
+    if pose == "east":
+        return height - 1 - y, x
+    if pose == "south":
+        return width - 1 - x, height - 1 - y
+    if pose == "west":
+        return y, width - 1 - x
+    return x, y
 
 
 def _access_ok(
@@ -948,6 +1197,97 @@ def _access_ok(
         neighbor in reachable
         for neighbor in _neighbors(x, y, architecture_map.width, architecture_map.height)
     )
+
+
+def _physical_walk_reach(
+    architecture_map: ArchitectureMap, entrances: Sequence[Tuple[int, int]]
+) -> Set[Tuple[int, int]]:
+    """Player walk over claimed paths plus each entrance's exact unclaimed egress route.
+
+    Runtime anchor authority remains the stricter claimed-cell graph below. Generated neutral yard
+    has no anchor and may sit across the explicit frontage route feet use in-world. Other ``.``
+    cells—including declared intentional-open scenery—cannot mask a disconnected claimed yard.
+    """
+
+    allowed_open: Set[Tuple[int, int]] = set()
+    has_exterior_route = False
+    for entrance_x, entrance_y in entrances:
+        egress = _entrance_egress(architecture_map, entrance_x, entrance_y)
+        if egress is not None:
+            has_exterior_route = True
+            allowed_open.update(egress[0])
+    boundary_walk = {
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if has_exterior_route
+        and glyph.pass_mode == "walk"
+        and glyph.claim in CLAIMS
+        and (x in {0, architecture_map.width - 1} or y in {0, architecture_map.height - 1})
+    }
+    # A valid entrance route and the reserved circulation lane form one virtual exterior node.
+    # Boundary yard may therefore be entered from outside without blessing any intervening dot.
+    reached: Set[Tuple[int, int]] = set(entrances) | boundary_walk
+    queue: deque[Tuple[int, int]] = deque(reached)
+    while queue:
+        x, y = queue.popleft()
+        for neighbor in _neighbors(x, y, architecture_map.width, architecture_map.height):
+            if neighbor in reached:
+                continue
+            glyph = architecture_map.glyph_at(neighbor[0], neighbor[1])
+            if glyph is None and neighbor not in allowed_open:
+                continue
+            if glyph is not None and not (
+                glyph.pass_mode == "walk" and glyph.claim in CLAIMS
+            ):
+                continue
+            reached.add(neighbor)
+            queue.append(neighbor)
+    return reached
+
+
+def _declared_opening(glyph: Optional[Glyph]) -> bool:
+    if glyph is None:
+        return False
+    return any(
+        anchor.split(":", 1)[0] in {"door", "entrance", "exit", "threshold"}
+        for anchor in glyph.anchors
+    )
+
+
+def _validate_map_enclosure(architecture_map: ArchitectureMap, issues: List[Issue]) -> None:
+    """Refuse bare gaps in walled building cover; open plans and authored barriers are legal."""
+
+    for x, y, glyph in _cells(architecture_map):
+        if (
+            glyph.claim != "building"
+            or glyph.cover != "walled"
+            or glyph.structure
+            or _declared_opening(glyph)
+        ):
+            continue
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if not (0 <= nx < architecture_map.width and 0 <= ny < architecture_map.height):
+                issues.append(
+                    Issue(
+                        architecture_map.location,
+                        "topology.enclosure",
+                        f"walled building perimeter has a bare leak at {x},{y} toward {nx},{ny}",
+                    )
+                )
+                break
+            neighbor = architecture_map.glyph_at(nx, ny)
+            exterior = neighbor is None or neighbor.claim != "building"
+            if neighbor is not None and neighbor.cover != "walled":
+                exterior = not neighbor.structure and not _declared_opening(neighbor)
+            if exterior:
+                issues.append(
+                    Issue(
+                        architecture_map.location,
+                        "topology.enclosure",
+                        f"walled building perimeter has a bare leak at {x},{y} toward {nx},{ny}",
+                    )
+                )
+                break
 
 
 def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue]) -> None:
@@ -1052,6 +1392,16 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
                 )
             )
             continue
+        if _entrance_egress(architecture_map, entrance_x, entrance_y) is None:
+            issues.append(
+                Issue(
+                    architecture_map.location,
+                    "entrance.road-route",
+                    f"entrance:public at {entrance_x},{entrance_y} has no bounded "
+                    "unclaimed walk to the lot exterior",
+                )
+            )
+            continue
         valid_entrances.append((entrance_x, entrance_y))
     walkable = {
         (x, y)
@@ -1070,7 +1420,12 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
             if neighbor in walkable and neighbor not in reachable:
                 reachable.add(neighbor)
                 queue.append(neighbor)
-    missing_walk = sorted(walkable - reachable, key=lambda value: (value[1], value[0]))
+    walk_reach = (
+        _physical_walk_reach(architecture_map, valid_entrances)
+        if _is_generated_map(architecture_map)
+        else reachable
+    )
+    missing_walk = sorted(walkable - walk_reach, key=lambda value: (value[1], value[0]))
     if missing_walk:
         preview = ", ".join(f"{x},{y}" for x, y in missing_walk[:8])
         tail = "" if len(missing_walk) <= 8 else f" (+{len(missing_walk) - 8} more)"
@@ -1101,6 +1456,7 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
                         f"anchor {anchor!r} at {x},{y} is not accessible from entrance:public",
                     )
                 )
+    _validate_map_enclosure(architecture_map, issues)
     snapshot = _canonical_map_snapshot(architecture_map)
     if len(snapshot) > MAX_SNAPSHOT_CHARS:
         issues.append(
@@ -1615,22 +1971,47 @@ def _compiled_snapshot_size(
 def _snapshot_maxima(
     buildings: Mapping[str, Building], model: ArchitectureModel
 ) -> Tuple[int, int]:
+    payload, encoded, _key = _snapshot_maximum(buildings, model)
+    return payload, encoded
+
+
+def _snapshot_maximum(
+    buildings: Mapping[str, Building], model: ArchitectureModel
+) -> Tuple[int, int, str]:
     maximum_payload = 0
     maximum_encoded = 0
-    for tier in model.tiers:
+    maximum_key = ""
+    for tier in sorted(
+        model.tiers,
+        key=lambda item: (item.build_key, item.binding.type_key, item.binding.size, item.key),
+    ):
         building = buildings.get(tier.build_key)
         if building is None:
             continue
-        for variant in tier.variants:
+        for variant in sorted(tier.variants, key=lambda item: item.key):
             architecture_map = model.maps.get(variant.map_key or tier.map_key)
             palette = model.palettes.get(variant.palette_key or tier.palette_key)
             if architecture_map is None or palette is None:
                 continue
             size = _compiled_snapshot_size(tier, variant, building, architecture_map, palette)
             if size is not None:
-                maximum_payload = max(maximum_payload, size[0])
-                maximum_encoded = max(maximum_encoded, size[1])
-    return maximum_payload, maximum_encoded
+                key = (
+                    f"{tier.build_key}/{tier.binding.type_key}-{tier.binding.size.lower()}/"
+                    f"{variant.key}/{architecture_map.key}+{palette.key}"
+                )
+                if (
+                    size[0] > maximum_payload
+                    or (size[0] == maximum_payload and size[1] > maximum_encoded)
+                    or (
+                        size[0] == maximum_payload
+                        and size[1] == maximum_encoded
+                        and (not maximum_key or key < maximum_key)
+                    )
+                ):
+                    maximum_payload = size[0]
+                    maximum_encoded = size[1]
+                    maximum_key = key
+    return maximum_payload, maximum_encoded, maximum_key
 
 
 def _looks_like_vertical_travel(value: str) -> bool:
@@ -1964,38 +2345,51 @@ def _validate_tier_variant(
             for x, y, glyph in _cells(architecture_map)
             if "entrance:public" in glyph.anchors
         ]
-        for pose in POSES:
-            posed_width = (
-                architecture_map.height
-                if pose in {"east", "west"}
-                else architecture_map.width
-            )
-            posed_height = (
-                architecture_map.width
-                if pose in {"east", "west"}
-                else architecture_map.height
-            )
-            for entrance_x, entrance_y in entrances:
-                if pose == "north":
-                    world_x, world_y = entrance_x, entrance_y
-                elif pose == "east":
-                    world_x, world_y = architecture_map.height - 1 - entrance_y, entrance_x
-                elif pose == "south":
-                    world_x = architecture_map.width - 1 - entrance_x
-                    world_y = architecture_map.height - 1 - entrance_y
-                else:
-                    world_x, world_y = entrance_y, architecture_map.width - 1 - entrance_x
-                if world_x not in {0, posed_width - 1} and world_y not in {
-                    0,
-                    posed_height - 1,
-                }:
+        for entrance_x, entrance_y in entrances:
+            egress = _entrance_egress(architecture_map, entrance_x, entrance_y)
+            if egress is None:
+                continue  # topology emits the primary canonical-route fault
+            route, exit_step = egress
+            edge_x, edge_y = route[-1] if route else (entrance_x, entrance_y)
+            outside_x = edge_x + exit_step[0]
+            outside_y = edge_y + exit_step[1]
+            for pose in POSES:
+                posed_width = (
+                    architecture_map.height
+                    if pose in {"east", "west"}
+                    else architecture_map.width
+                )
+                posed_height = (
+                    architecture_map.width
+                    if pose in {"east", "west"}
+                    else architecture_map.height
+                )
+                world_edge = _pose_point(
+                    edge_x, edge_y, architecture_map.width, architecture_map.height, pose
+                )
+                world_outside = _pose_point(
+                    outside_x,
+                    outside_y,
+                    architecture_map.width,
+                    architecture_map.height,
+                    pose,
+                )
+                outside_bounds = not (
+                    0 <= world_outside[0] < posed_width
+                    and 0 <= world_outside[1] < posed_height
+                )
+                cardinal = (
+                    abs(world_outside[0] - world_edge[0])
+                    + abs(world_outside[1] - world_edge[1])
+                    == 1
+                )
+                if not outside_bounds or not cardinal:
                     issues.append(
                         Issue(
                             location,
-                            "frontage.road-exterior",
+                            "frontage.road-route",
                             f"road-facing entrance:public at canonical {entrance_x},{entrance_y} "
-                            f"lands at interior {world_x},{world_y} in {pose} pose; every public "
-                            "entrance must have an orthogonally adjacent exterior road cell",
+                            f"does not rotate to one exact exterior step in {pose} pose",
                         )
                     )
     for glyph in architecture_map.glyphs.values():
@@ -2060,7 +2454,7 @@ def _validate_tier_variant(
 def _validate_heart_accretion(
     buildings: Dict[str, Building], model: ArchitectureModel, issues: List[Issue]
 ) -> None:
-    """The four civic-heart snapshots must be one nested monument, not four rebuilds."""
+    """All five civic-heart snapshots must be one nested monument, not five rebuilds."""
 
     plan = model.plans.get("civic-heart")
     if plan is None:
@@ -2077,7 +2471,7 @@ def _validate_heart_accretion(
             Issue(
                 plan.location,
                 "heart.rungs",
-                "civic-heart must carry all four ordered rungs; missing "
+                "civic-heart must carry all five ordered rungs; missing "
                 + ", ".join(repr(key) for key in missing),
             )
         )
@@ -2218,6 +2612,532 @@ def _validate_heart_accretion(
                         f"{before[0].build_key!r}->{after[0].build_key!r} does not retain "
                         f"{layer} fabric at main-relative {dx},{dy}: {identity[0]!r} becomes "
                         + ("absent" if next_identity is None else repr(next_identity[0])),
+                    )
+                )
+
+
+def _validate_purpose_architecture(
+    buildings: Mapping[str, Building], model: ArchitectureModel, issues: List[Issue]
+) -> None:
+    """Keep the three physical portfolio works compatible with exact receipted runtime
+    anchor binding."""
+
+    checked: Set[Tuple[str, str, str]] = set()
+    exact_once = (
+        "main",
+        "purpose:operator",
+        "purpose:machine",
+        "purpose:input",
+        "purpose:output",
+    )
+    for tier in model.tiers:
+        fixture_contract = PURPOSE_ARCHITECTURE_CONTRACTS.get(tier.build_key)
+        building = buildings.get(tier.build_key)
+        if fixture_contract is None or building is None:
+            continue
+        for variant in tier.variants:
+            map_key = variant.map_key or tier.map_key
+            palette_key = variant.palette_key or tier.palette_key
+            identity = (tier.build_key, map_key, palette_key)
+            if identity in checked:
+                continue
+            checked.add(identity)
+            architecture_map = model.maps.get(map_key)
+            palette = model.palettes.get(palette_key)
+            if architecture_map is None or palette is None:
+                continue
+            by_anchor: Dict[str, List[Tuple[int, int, Glyph]]] = {}
+            for x, y, glyph in _cells(architecture_map):
+                for anchor in glyph.anchors:
+                    by_anchor.setdefault(anchor, []).append((x, y, glyph))
+            for role in exact_once:
+                count = len(by_anchor.get(role, ()))
+                if count != 1:
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "purpose.anchor-contract",
+                            f"portfolio map {map_key!r} needs exactly one exact {role!r} "
+                            f"anchor; found {count}",
+                        )
+                    )
+            for role in ("entrance:public", "entrance:service"):
+                if not by_anchor.get(role):
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "purpose.anchor-contract",
+                            f"portfolio map {map_key!r} needs an exact {role!r} anchor",
+                        )
+                    )
+            for role in ("purpose:operator", *fixture_contract):
+                cells = by_anchor.get(role, ())
+                if len(cells) != 1:
+                    continue
+                x, y, glyph = cells[0]
+                if not glyph.object or not glyph.stateful:
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "purpose.fixture-state",
+                            f"portfolio {role!r} at {x},{y} must be a stateful Object fixture",
+                        )
+                    )
+                expected = fixture_contract.get(role)
+                if expected is None:
+                    continue
+                actual = _resolve_reference(glyph.object, palette, building)
+                if actual != expected:
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "purpose.fixture-blueprint",
+                            f"portfolio {role!r} at {x},{y} resolves to {actual!r}; "
+                            f"expected {expected!r}",
+                        )
+                    )
+
+
+def _validate_reopened_exotic_architecture(
+    buildings: Mapping[str, Building], model: ArchitectureModel, issues: List[Issue]
+) -> None:
+    """Pin hidden activation and physical seams for reopened runtime-owned exotics."""
+
+    checked: Set[Tuple[str, str, str]] = set()
+    for build_key, activation in REOPENED_ACTIVATION_KEYS.items():
+        building = buildings.get(build_key)
+        if building is None:
+            continue
+        knowledge = {
+            token.strip().lower()
+            for token in building.attributes.get("Knowledge", "").split(",")
+            if token.strip()
+        }
+        if activation not in knowledge:
+            issues.append(
+                Issue(
+                    building.location,
+                    "reopened.activation-gate",
+                    f"reopened exotic {build_key!r} must remain sealed behind {activation!r}",
+                )
+            )
+    for tier in model.tiers:
+        building = buildings.get(tier.build_key)
+        if tier.build_key not in REOPENED_ACTIVATION_KEYS or building is None:
+            continue
+        for variant in tier.variants:
+            map_key = variant.map_key or tier.map_key
+            palette_key = variant.palette_key or tier.palette_key
+            identity = (tier.build_key, map_key, palette_key)
+            if identity in checked:
+                continue
+            checked.add(identity)
+            architecture_map = model.maps.get(map_key)
+            palette = model.palettes.get(palette_key)
+            if architecture_map is None or palette is None:
+                continue
+            by_anchor: Dict[str, List[Tuple[int, int, Glyph]]] = {}
+            for x, y, glyph in _cells(architecture_map):
+                for anchor in glyph.anchors:
+                    by_anchor.setdefault(anchor, []).append((x, y, glyph))
+            for role in REOPENED_EXACT_ANCHORS[tier.build_key]:
+                count = len(by_anchor.get(role, ()))
+                if count != 1:
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "reopened.anchor-contract",
+                            f"reopened map {map_key!r} needs exactly one {role!r}; found {count}",
+                        )
+                    )
+            for role, minimum in REOPENED_MIN_ANCHORS[tier.build_key].items():
+                count = len(by_anchor.get(role, ()))
+                if count < minimum:
+                    issues.append(
+                        Issue(
+                            variant.location,
+                            "reopened.anchor-contract",
+                            f"reopened map {map_key!r} needs at least {minimum} {role!r}; found {count}",
+                        )
+                    )
+            for role, expected in REOPENED_FIXTURES[tier.build_key].items():
+                for x, y, glyph in by_anchor.get(role, ()):
+                    actual = _resolve_reference(glyph.object, palette, building)
+                    if not glyph.object or not glyph.stateful or actual != expected:
+                        issues.append(
+                            Issue(
+                                variant.location,
+                                "reopened.fixture-contract",
+                                f"reopened {role!r} at {x},{y} must be stateful Object "
+                                f"{expected!r}; found {actual!r}",
+                            )
+                        )
+
+
+def _function_roles(tier: Tier) -> Set[str]:
+    return {item.role for item in tier.requirements if item.role.startswith("function:")}
+
+
+def _selector_roster(tier: Tier) -> Dict[str, Tuple[Tuple[str, str], ...]]:
+    return {
+        variant.key: tuple((name, variant.selectors.get(name, "")) for name in SELECTOR_ATTRIBUTES)
+        for variant in tier.variants
+    }
+
+
+def _main_coordinate(tier: Tier, variant: Variant, model: ArchitectureModel) -> Optional[Tuple[int, int]]:
+    architecture_map = model.maps.get(variant.map_key or tier.map_key)
+    if architecture_map is None:
+        return None
+    found = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if "main" in glyph.anchors
+    ]
+    return found[0] if len(found) == 1 else None
+
+
+def _stateful_fixtures(
+    tier: Tier,
+    variant: Variant,
+    building: Building,
+    model: ArchitectureModel,
+) -> Optional[
+    Dict[Tuple[str, int, int], Tuple[str, str, str, str, str, str]]
+]:
+    """Return exact compiled identity for every non-root stateful Object fixture."""
+
+    architecture_map = model.maps.get(variant.map_key or tier.map_key)
+    palette = model.palettes.get(variant.palette_key or tier.palette_key)
+    if architecture_map is None or palette is None:
+        return None
+    result: Dict[
+        Tuple[str, int, int], Tuple[str, str, str, str, str, str]
+    ] = {}
+    for x, y, glyph in _cells(architecture_map):
+        if not glyph.stateful or not glyph.object or glyph.object == "$building":
+            continue
+        anchors = [
+            anchor
+            for anchor in glyph.anchors
+            if anchor != "main" and not anchor.startswith("entrance:")
+        ]
+        if len(anchors) != 1:
+            continue  # glyph schema emits the primary stateful-anchor fault
+        slot = (
+            palette.slots.get(glyph.object[1:])
+            if glyph.object.startswith("$")
+            else None
+        )
+        result[(anchors[0], x, y)] = (
+            _resolve_reference(glyph.object, palette, building),
+            "" if slot is None else (_canonical_material(slot.material) or ""),
+            "" if slot is None else slot.min_tech,
+            "" if slot is None else slot.knowledge,
+            "" if slot is None else slot.power,
+            "" if slot is None else slot.natural,
+        )
+    return result
+
+
+def _fixture_truth_text(truth: Tuple[str, str, str, str, str, str]) -> str:
+    names = ("blueprint", "material", "tech", "knowledge", "power", "natural")
+    return ", ".join(f"{name}={value!r}" for name, value in zip(names, truth))
+
+
+def _validate_adjacent_tier_upgrades(
+    buildings: Mapping[str, Building], model: ArchitectureModel, issues: List[Issue]
+) -> None:
+    """Freeze exact variant and occupied-fixture identity across every in-place tier step."""
+
+    for binding in model.bindings:
+        tiers_by_level: Dict[int, List[Tier]] = {}
+        for tier in binding.tiers:
+            tiers_by_level.setdefault(tier.level, []).append(tier)
+        for level in sorted(tiers_by_level):
+            successors = tiers_by_level.get(level + 1, ())
+            for before in sorted(tiers_by_level[level], key=lambda item: item.key):
+                for after in sorted(successors, key=lambda item: item.key):
+                    route = (
+                        f"{binding.plan.key}/{binding.key}/{binding.type_key}/{binding.size} "
+                        f"levels {before.level}->{after.level}"
+                    )
+                    before_variants = {item.key: item for item in before.variants}
+                    after_variants = {item.key: item for item in after.variants}
+                    before_keys = set(before_variants)
+                    after_keys = set(after_variants)
+                    if before_keys != after_keys:
+                        issues.append(
+                            Issue(
+                                after.location,
+                                "upgrade.variant-keys",
+                                f"adjacent tiers {before.build_key!r} -> {after.build_key!r} "
+                                f"in {route} must keep exact frozen variant keys; "
+                                f"missing={sorted(before_keys - after_keys)}, "
+                                f"added={sorted(after_keys - before_keys)}",
+                            )
+                        )
+                    before_building = buildings.get(before.build_key)
+                    after_building = buildings.get(after.build_key)
+                    if before_building is None or after_building is None:
+                        continue  # tier BuildKey validation emits the primary fault
+                    for key in sorted(before_keys & after_keys):
+                        before_variant = before_variants[key]
+                        after_variant = after_variants[key]
+                        before_main = _main_coordinate(before, before_variant, model)
+                        after_main = _main_coordinate(after, after_variant, model)
+                        if before_main != after_main:
+                            issues.append(
+                                Issue(
+                                    after_variant.location,
+                                    "upgrade.main-coordinate",
+                                    f"adjacent tiers {before.build_key!r} -> {after.build_key!r} "
+                                    f"variant {key!r} in {route} move main from "
+                                    f"{before_main} to {after_main}",
+                                )
+                            )
+                        before_fixtures = _stateful_fixtures(
+                            before, before_variant, before_building, model
+                        )
+                        after_fixtures = _stateful_fixtures(
+                            after, after_variant, after_building, model
+                        )
+                        if before_fixtures is None or after_fixtures is None:
+                            continue  # effective map/palette validation emits the primary fault
+                        after_by_role: Dict[str, List[Tuple[int, int]]] = {}
+                        for role, x, y in after_fixtures:
+                            after_by_role.setdefault(role, []).append((x, y))
+                        for fixture, before_truth in sorted(before_fixtures.items()):
+                            role, x, y = fixture
+                            after_truth = after_fixtures.get(fixture)
+                            if after_truth is None:
+                                issues.append(
+                                    Issue(
+                                        after_variant.location,
+                                        "upgrade.stateful-fixture",
+                                        f"adjacent tiers {before.build_key!r} -> "
+                                        f"{after.build_key!r} variant {key!r} in {route} "
+                                        f"lose or move prior stateful fixture {role!r} at {x},{y}; "
+                                        f"same-role successor coordinates="
+                                        f"{sorted(after_by_role.get(role, ())) or 'none'}",
+                                    )
+                                )
+                            elif before_truth != after_truth:
+                                issues.append(
+                                    Issue(
+                                        after_variant.location,
+                                        "upgrade.stateful-fixture",
+                                        f"adjacent tiers {before.build_key!r} -> "
+                                        f"{after.build_key!r} variant {key!r} in {route} "
+                                        f"change prior stateful fixture {role!r} at {x},{y} "
+                                        f"from {_fixture_truth_text(before_truth)} to "
+                                        f"{_fixture_truth_text(after_truth)}",
+                                    )
+                                )
+
+
+def _catalogue_selector_set(building: Building, name: str) -> Set[str]:
+    return {
+        token.strip().lower()
+        for token in building.attributes.get(name, "").split(",")
+        if token.strip()
+    }
+
+
+def _validate_upgrade_routes(
+    buildings: Mapping[str, Building], model: ArchitectureModel, issues: List[Issue]
+) -> None:
+    """Prove every declared tier successor inside every concrete frozen exact binding."""
+
+    by_build: Dict[str, List[Tier]] = {}
+    for tier in model.tiers:
+        by_build.setdefault(tier.build_key, []).append(tier)
+    heart_index = {key: index for index, key in enumerate(HEART_BUILD_KEYS)}
+    for source_key, source in sorted(buildings.items()):
+        target_key = source.attributes.get("UpgradesTo", "").strip()
+        if not target_key:
+            continue
+        target = buildings.get(target_key)
+        if target is None:
+            issues.append(
+                Issue(source.location, "upgrade.target", f"UpgradesTo names unknown BuildKey {target_key!r}")
+            )
+            continue
+        if not source.plot:
+            if target.plot or target.category != source.category:
+                issues.append(
+                    Issue(
+                        source.location,
+                        "upgrade.unplotted-shape",
+                        f"unplotted {source_key!r} may only upgrade to an unplotted "
+                        f"{source.category!r} design; found {target.category!r}/{target.plot or 'unplotted'}",
+                    )
+                )
+            continue
+        source_heart = source_key in heart_index
+        target_heart = target_key in heart_index
+        if source_heart or target_heart:
+            expected = heart_index.get(source_key, -1) + 1
+            if not source_heart or not target_heart or heart_index[target_key] != expected:
+                issues.append(
+                    Issue(
+                        source.location,
+                        "upgrade.heart-route",
+                        f"heart UpgradesTo must name the next exact civic-heart rung; "
+                        f"found {source_key!r} -> {target_key!r}",
+                    )
+                )
+            continue
+        if (
+            target.plot != source.plot
+            or target.category != source.category
+            or _catalogue_selector_set(target, "Styles")
+            != _catalogue_selector_set(source, "Styles")
+            or _catalogue_selector_set(target, "Strata")
+            != _catalogue_selector_set(source, "Strata")
+        ):
+            issues.append(
+                Issue(
+                    source.location,
+                    "upgrade.catalogue-shape",
+                    f"ordinary UpgradesTo {source_key!r} -> {target_key!r} must keep minimum "
+                    "plot size, category, Styles, and Strata",
+                )
+            )
+        source_tiers = by_build.get(source_key, [])
+        if not source_tiers:
+            issues.append(
+                Issue(source.location, "upgrade.source-coverage", f"plotted predecessor {source_key!r} has no architecture tier")
+            )
+        for before in source_tiers:
+            afters = [item for item in before.binding.tiers if item.build_key == target_key]
+            route = (
+                f"{before.binding.plan.key}/{before.binding.key}/"
+                f"{before.binding.type_key}/{before.binding.size}"
+            )
+            if len(afters) != 1:
+                issues.append(
+                    Issue(
+                        before.location,
+                        "upgrade.exact-route",
+                        f"{source_key!r} -> {target_key!r} needs exactly one successor tier "
+                        f"inside frozen binding {route}; found {len(afters)}",
+                    )
+                )
+                continue
+            after = afters[0]
+            if after.level != before.level + 1:
+                issues.append(
+                    Issue(
+                        after.location,
+                        "upgrade.level",
+                        f"{source_key!r} -> {target_key!r} in {route} must advance exactly one "
+                        f"level; found {before.level} -> {after.level}",
+                    )
+                )
+            if _function_roles(before) != _function_roles(after):
+                issues.append(
+                    Issue(
+                        after.location,
+                        "upgrade.function",
+                        f"{source_key!r} -> {target_key!r} in {route} changes function roles "
+                        f"from {sorted(_function_roles(before))} to {sorted(_function_roles(after))}",
+                    )
+                )
+            before_roster = _selector_roster(before)
+            after_roster = _selector_roster(after)
+            if before_roster != after_roster:
+                issues.append(
+                    Issue(
+                        after.location,
+                        "upgrade.selector-roster",
+                        f"{source_key!r} -> {target_key!r} in {route} changes the frozen variant selector roster",
+                    )
+                )
+                continue
+            before_variants = {item.key: item for item in before.variants}
+            after_variants = {item.key: item for item in after.variants}
+            for key in sorted(before_variants):
+                before_main = _main_coordinate(before, before_variants[key], model)
+                after_main = _main_coordinate(after, after_variants[key], model)
+                if before_main != after_main:
+                    issues.append(
+                        Issue(
+                            after_variants[key].location,
+                            "upgrade.main-coordinate",
+                            f"{source_key!r} -> {target_key!r} variant {key!r} in {route} "
+                            f"moves main from {before_main} to {after_main}",
+                        )
+                    )
+
+
+def validate_generated_visual_surfaces(
+    model: ArchitectureModel, issues: List[Issue]
+) -> None:
+    """Independently reject generated lots whose neutral yard/path surfaces render alike."""
+
+    checked: Set[Tuple[str, str]] = set()
+    for tier in model.tiers:
+        if tier.build_key in HOSTED_ARCOLOGY_BUILD_KEYS:
+            continue
+        for variant in tier.variants:
+            map_key = variant.map_key or tier.map_key
+            palette_key = variant.palette_key or tier.palette_key
+            identity = (map_key, palette_key)
+            if identity in checked:
+                continue
+            checked.add(identity)
+            architecture_map = model.maps.get(map_key)
+            palette = model.palettes.get(palette_key)
+            if (
+                architecture_map is None
+                or palette is None
+                or not _is_generated_map(architecture_map)
+            ):
+                continue
+            surface_by_char: Dict[str, str] = {}
+            for char, glyph in architecture_map.glyphs.items():
+                if (
+                    glyph.claim != "yard"
+                    or glyph.pass_mode != "walk"
+                    or glyph.cover != "open"
+                    or glyph.structure
+                    or glyph.object
+                    or glyph.anchors
+                ):
+                    continue
+                reference = glyph.ground
+                slot = palette.slots.get(reference[1:]) if reference.startswith("$") else None
+                blueprint = slot.blueprint if slot is not None else reference
+                surface_by_char[char] = VISUAL_BLUEPRINT_EQUIVALENTS.get(
+                    blueprint, blueprint
+                )
+            counts: Counter[str] = Counter()
+            for row in architecture_map.rows:
+                for char in row:
+                    blueprint = surface_by_char.get(char)
+                    if blueprint:
+                        counts[blueprint] += 1
+            if len(counts) < 2:
+                concrete = next(iter(counts), "none")
+                issues.append(
+                    Issue(
+                        architecture_map.location,
+                        "generated.surface-monoculture",
+                        f"ordinary generated layout {map_key!r} through palette {palette_key!r} "
+                        f"has no visibly distinct neutral yard/path surface; concrete={concrete!r}",
+                    )
+                )
+                continue
+            total = sum(counts.values())
+            minority = total - max(counts.values())
+            if tier.binding.size in {"L", "XL"} and minority * 14 < total:
+                issues.append(
+                    Issue(
+                        architecture_map.location,
+                        "generated.surface-density",
+                        f"ordinary generated layout {map_key!r} through palette {palette_key!r} "
+                        f"is near-monoculture: neutral surfaces={dict(sorted(counts.items()))}",
                     )
                 )
 
@@ -2395,6 +3315,10 @@ def validate_model(
                     )
                 )
     _validate_heart_accretion(buildings, model, issues)
+    _validate_adjacent_tier_upgrades(buildings, model, issues)
+    _validate_upgrade_routes(buildings, model, issues)
+    _validate_purpose_architecture(buildings, model, issues)
+    _validate_reopened_exotic_architecture(buildings, model, issues)
     for records in compiled_identities.values():
         by_build: Dict[str, List[Tuple[str, str, str, str]]] = {}
         for build_key, variant_key, location, map_key, palette_key in records:
@@ -2956,6 +3880,18 @@ def make_goldens(
             palette = model.palettes.get(palette_key)
             if architecture_map is None or palette is None:
                 continue
+            # Malformed dimensions are already reported by _parse_map. Goldens are diagnostic
+            # output, so hostile or half-edited rows must never make the checker itself crash.
+            if (
+                architecture_map.width <= 0
+                or architecture_map.height <= 0
+                or len(architecture_map.rows) != architecture_map.height
+                or any(
+                    len(row) != architecture_map.width
+                    for row in architecture_map.rows
+                )
+            ):
+                continue
             for pose in POSES:
                 name = _golden_name(tier, variant, pose)
                 if name in result:
@@ -3018,6 +3954,26 @@ def run_check(
     prepared_output = _prepare_output_directory(output_dir) if output_dir is not None else None
     issues: List[Issue] = []
     notices: List[Notice] = []
+    runtime_heart = _runtime_heart_build_keys(repo_root)
+    if runtime_heart is not None and runtime_heart != HEART_BUILD_KEYS:
+        issues.append(
+            Issue(
+                "Growth/KingdomPlotHeartRules.cs",
+                "heart.runtime-drift",
+                "runtime heart roster " + repr(runtime_heart)
+                + " differs from architecture checker roster " + repr(HEART_BUILD_KEYS),
+            )
+        )
+    runtime_ground_strata = _runtime_ground_strata(repo_root)
+    if runtime_ground_strata == ():
+        issues.append(
+            Issue(
+                "Growth/KingdomZoningStrataRules.cs",
+                "selector.strata-runtime-source",
+                "cannot derive canonical ground vocabulary from "
+                "KingdomZoningRules.StratumOfGround",
+            )
+        )
     building_files = _discover(repo_root, "KingdomBuildings.xml")
     architecture_files = _discover(repo_root, "KingdomArchitectures*.xml")
     if len(building_files) > MAX_XML_FILES:
@@ -3044,8 +4000,11 @@ def run_check(
         )
     buildings = load_buildings(building_files[:MAX_XML_FILES], repo_root, issues)
     model = load_architectures(architecture_files[:MAX_XML_FILES], repo_root, issues)
+    if runtime_ground_strata:
+        _validate_selector_strata(model, runtime_ground_strata, issues)
     validate_model(buildings, model, issues)
-    maximum_payload, maximum_encoded = _snapshot_maxima(buildings, model)
+    validate_generated_visual_surfaces(model, issues)
+    maximum_payload, maximum_encoded, maximum_key = _snapshot_maximum(buildings, model)
     blueprint_resolution = "skipped"
     blueprint_count = 0
     if qud_base is not None:
@@ -3077,6 +4036,7 @@ def run_check(
         written,
         maximum_payload,
         maximum_encoded,
+        maximum_key,
     )
 
 

@@ -55,6 +55,8 @@ namespace ThousandAndFirst
 		private Zone ReservedZone;
 		private readonly GameObject RequiredItem;
 		private readonly string RequiredItemId;
+		/// <summary>Identity frozen by a read-only local attempt, retained for routed fallback.</summary>
+		internal string FrozenRequiredItemId { get { return RequiredItemId; } }
 		private int RequiredSource = -1;
 		private bool TopologyUncertain;
 		private bool Operating;
@@ -116,6 +118,13 @@ namespace ThousandAndFirst
 			{
 				debit.FailReservation(KingdomMaterialDebitFault.InvalidStock,
 					"The stockpile reading is absent.");
+				return debit;
+			}
+			if (!Stock.InputLeaseAuthorityExact || Stock.InputLeases == null)
+			{
+				debit.FailReservation(KingdomMaterialDebitFault.InvalidStock,
+					Stock.InputLeaseFailure
+						?? "The durable routed-input leases cannot be read.");
 				return debit;
 			}
 			try

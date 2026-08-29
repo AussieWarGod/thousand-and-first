@@ -154,16 +154,31 @@ namespace ThousandAndFirst
 			// meal. This is the heaviest thing in the Charter - it moves a faction's regard for
 			// the realm across the whole world and bends every settler who comes afterwards - and
 			// it was the one spending action that committed without a word.
-			if (chosen != null && Popup.ShowYesNo("Declare " + KingdomPresentation.Rich(System.KingdomDisplayName) + " for " + KingdomPresentation.Rich(KingdomCreed.CreedName(chosen))
-				+ "?\n\nEvery settler who comes after will lean toward them. Those who stand against them will hold it against the whole realm, wherever they are, and the cities will feel it before they feel the peace.") != DialogResult.Yes)
+			KingdomCivicVoiceReceipt voice = null;
+			if (chosen != null)
 			{
-				return;
+				int slighted = 0;
+				for (int i = 0; i < Declarable.Count; i++)
+					if (Declarable[i] != chosen) slighted++;
+				string facts = KingdomCreedRules.DeclarationPreview(
+					KingdomCreed.CreedName(chosen), slighted, System.Dissent);
+				long tick = The.Game == null || The.Game.TimeTicks < 0L ? 0L : The.Game.TimeTicks;
+				string settlement = System.City?.SettlementId;
+				string source = string.IsNullOrEmpty(settlement) ? null
+					: KingdomLifecycleRules.ChildId(settlement, "civic-creed-" + tick, 0);
+				KingdomExperienceRuntime.TryPrepareCivicVoice(System,
+					KingdomCivicVoiceFixture.CreedDeclaration, 1, source, settlement, facts, tick,
+					out voice, out string rendering);
+				string precedent = KingdomDecisionTagRules.CreedScene(System.City?.AssentingMoot);
+				if (!string.IsNullOrEmpty(precedent)) rendering += "\n\n" + precedent;
+				if (Popup.ShowYesNo(rendering) != DialogResult.Yes) return;
 			}
 			if (!KingdomCreed.Declare(System, chosen, out var failure))
 			{
 				Popup.Show(failure);
 				return;
 			}
+			if (chosen != null) KingdomExperienceRuntime.TryPublishCivicVoice(System, voice);
 		}
 	}
 }

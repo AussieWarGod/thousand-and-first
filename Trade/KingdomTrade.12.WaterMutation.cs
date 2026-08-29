@@ -52,7 +52,7 @@ namespace ThousandAndFirst
 					? vessel.Volume - delta : vessel.Volume + delta;
 				KingdomTradeWaterLeg leg = new KingdomTradeWaterLeg
 				{
-					OwnerId = owner.ID,
+					OwnerId = owner.IDIfAssigned,
 					ZoneId = Z.ZoneID,
 					Capacity = vessel.MaxVolume,
 					Before = vessel.Volume,
@@ -65,7 +65,7 @@ namespace ThousandAndFirst
 					Operation.WaterLegs.Add(leg);
 					GameObject resolvedOwner;
 					LoadedTopologyWitness ownerTopology;
-					if (ResolveLoadedObject(owner.ID, Z, out resolvedOwner, out ownerTopology)
+					if (ResolveLoadedObject(owner.IDIfAssigned, Z, out resolvedOwner, out ownerTopology)
 						!= LoadedObjectResolution.ExactUnique
 						|| !ReferenceEquals(resolvedOwner, owner))
 					{
@@ -84,10 +84,18 @@ namespace ThousandAndFirst
 				planned += delta;
 			}
 			RefreshReceiptRows(Frame);
-			if (Operation.WaterDirection == KingdomTradeWaterDirection.Debit
-				&& planned != Operation.RequestedWater)
+			if (Operation.WaterDirection == KingdomTradeWaterDirection.Debit &&
+				planned != Operation.RequestedWater && Operation.Kind !=
+				KingdomTradeOperationKind.PolityConsignmentDelivery)
 			{
 				Quarantine(Operation, "The exact source vessels cannot cover the published manifest.");
+				return false;
+			}
+			if (planned == 0 && Operation.Kind ==
+				KingdomTradeOperationKind.PolityConsignmentDelivery)
+			{
+				Quarantine(Operation,
+					"No fresh water was available for this one-shot consignment request.");
 				return false;
 			}
 			if (planned == 0) return true;
@@ -96,6 +104,8 @@ namespace ThousandAndFirst
 			{
 				WaterWitness witness = physical.Water[i];
 				KingdomTradeWaterLeg leg = witness.Leg;
+				if (!RequirePolityConsignmentRecipient(Frame.System, Operation, Z,
+					"water debit leg")) return false;
 				if (!ExactAuthority(Frame, KingdomTradePhase.ResourceIntent)
 					|| !ExactPhysicalFrame(Frame, Operation, Z))
 				{
@@ -144,6 +154,8 @@ namespace ThousandAndFirst
 				leg.State = KingdomTradePhysicalState.Proved;
 				Operation.ProvedWater = KingdomTradeRules.SaturatingAdd(
 					Operation.ProvedWater, witness.Delta);
+				if (!RequirePolityConsignmentRecipient(Frame.System, Operation, Z,
+					"post-debit landing")) return false;
 			}
 			Operation.AmbiguousWater = 0;
 			return true;
@@ -181,7 +193,7 @@ namespace ThousandAndFirst
 				|| Witness.Owner.CurrentCell != Witness.Cell || Witness.Cell == null
 				|| Witness.Cell.ParentZone != Z
 				|| !ReferenceEquals(Witness.Vessel.ComponentLiquids, Witness.Dictionary)
-				|| !string.Equals(Witness.Owner.ID, Witness.OwnerId,
+				|| !string.Equals(Witness.Owner.IDIfAssigned, Witness.OwnerId,
 					StringComparison.Ordinal)
 				|| !string.Equals(Z.ZoneID, Witness.ZoneId, StringComparison.Ordinal)
 				|| Witness.Vessel.MaxVolume != Witness.Capacity) return false;
@@ -202,7 +214,7 @@ namespace ThousandAndFirst
 				&& Owner.CurrentCell != null && Owner.CurrentCell.ParentZone == Z
 				&& ReferenceEquals(Owner.GetPart<LiquidVolume>(), Vessel)
 				&& Owner.GetIntProperty("KingdomStores") == 1
-				&& Vessel.MaxVolume >= 0 && !string.IsNullOrEmpty(Owner.ID);
+				&& Vessel.MaxVolume >= 0 && !string.IsNullOrEmpty(Owner.IDIfAssigned);
 		}
 
 		private static bool ExactWaterFrame(KingdomSurvey Survey,

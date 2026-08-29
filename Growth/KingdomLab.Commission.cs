@@ -1,7 +1,6 @@
 using System; using System.Collections.Generic; using XRL; using XRL.Messages; using XRL.UI; using XRL.World; using XRL.World.Parts;
 namespace ThousandAndFirst {
 	internal static partial class KingdomLab {
-
 		/// <summary>
 		/// Takes the drams, spends the kept parts, pays the standing, and performs the work.
 		/// <para>
@@ -11,8 +10,7 @@ namespace ThousandAndFirst {
 		/// one day take a founder's water for a thing it cannot do.
 		/// </para>
 		/// </summary>
-		private static void Commission(GameObject Building, GameObject Actor, KingdomSystem System, LabProcedure Procedure,
-			List<LabSlot> Anatomy, int At, List<GameObject> Kept, string City)
+		private static void Commission(GameObject Building, GameObject Actor, KingdomSystem System, LabProcedure Procedure, List<LabSlot> Anatomy, int At, List<GameObject> Kept, string City)
 		{
 			if (Building == null || Building.GetPart<r_KingdomLabJob>() != null
 				|| ActiveRemovalJob(Actor) != null)
@@ -67,6 +65,8 @@ namespace ThousandAndFirst {
 				Popup.Show("A live commission for that procedure already follows you. Recover it before commissioning another.");
 				return;
 			}
+			KingdomRulerLifeSnapshot rulerLife;
+			if (!TryFreezeRulerLife(System, Actor, realmId, out rulerLife)) return;
 			KingdomSurvey survey = (Actor.CurrentZone == null) ? null : KingdomSurvey.Take(Actor.CurrentZone, System);
 			KingdomWaterDebit debit;
 			if (survey == null || !survey.TryReserveExactWater(Procedure.Cost, out debit))
@@ -91,7 +91,8 @@ namespace ThousandAndFirst {
 				Popup.Show("The settlement's dedicated stockpiles cannot cover that exact bit price. Nothing was spent.");
 				return;
 			}
-			string jobId = Guid.NewGuid().ToString("N");
+			string jobId = PurposeCommissionJobId(Building, Actor, Procedure, selected)
+				?? Guid.NewGuid().ToString("N");
 			string manager = KingdomProcedures.ManagerFor(Procedure.Key);
 			string detail = KingdomProcedures.ExecutionDetail(Procedure, stamp);
 			string fingerprint = KingdomLabRules.EffectFingerprint(
@@ -106,6 +107,7 @@ namespace ThousandAndFirst {
 				GameId = The.Game?.GameID ?? "",
 				RealmId = realmId,
 				RealmFoundedTick = System.FoundedTick,
+					RulerSuccessionOrdinal = rulerLife.SuccessionOrdinal, RulerLifeId = rulerLife.RulerLifeId, BodyHistoryContractVersion = KingdomBodyHistoryRules.LabContractVersion, BodyHistoryPhase = (int)KingdomLabBodyHistoryPhase.Pending,
 				BodyPartId = selected.ID,
 				BearerId = bearer.ID,
 				Stamp = stamp,
@@ -276,8 +278,7 @@ namespace ThousandAndFirst {
 			keptPhase = (waterExact && bitsExact) ? SpendKeptExact(keptSpend)
 				: KingdomKeptSpendPhase.RefusedClean;
 			int keptMeasured = (waterExact && bitsExact) ? KeptSpent(keptSpend) : 0;
-			job.KeptPaid = keptMeasured;
-			job.KeptLost = keptMeasured;
+			job.KeptPaid = keptMeasured; job.KeptLost = keptMeasured;
 			if (keptPhase == KingdomKeptSpendPhase.Partial)
 			{
 				job.KeptMeasurementExact = false;
@@ -294,5 +295,4 @@ namespace ThousandAndFirst {
 			}
 			Popup.Show("The paid commission is persisted, but its exact funding was interrupted. No graft was made. Read this hall's slate to inspect and retry the outstanding receipt.");
 		}
-
 	} }

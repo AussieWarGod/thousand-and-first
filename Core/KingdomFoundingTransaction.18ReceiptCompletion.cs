@@ -39,7 +39,9 @@ namespace ThousandAndFirst
 			switch (Basin.PendingKind)
 			{
 			case KingdomFoundingKind.FirstCity:
-				projected = System.SettlementCount == 1 && System.Away == null &&
+				projected = System.SettlementCount == 1 &&
+					System.NonSeatSettlementCount == 0 &&
+					KingdomPolityRuntime.FoundationObserved(System, realm) &&
 					System.FirstIdentityMatches(Basin.PendingTransactionID, Site.ZoneID) &&
 					System.SettlementName == Basin.PendingName &&
 					System.ClaimedZones.Contains(Site.ZoneID) &&
@@ -59,12 +61,13 @@ namespace ThousandAndFirst
 					Site.GetZoneProperty(ClaimFoundingProperty, null) == "1";
 				break;
 			case KingdomFoundingKind.SecondCity:
-				projected = System.SettlementCount == 2 &&
+				projected = System.SettlementCount >= 2 &&
+					System.SettlementCount <= KingdomSettlement.MaxSettlements &&
 					System.TryProveSettledSecondCityTopology(out string _) &&
 					PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority) &&
 					SecondIsExactSeat(System, Basin.PendingName, Site.ZoneID,
 						Basin.PendingTransactionID) &&
-					System.Away != null &&
+					System.NonSeatSettlementCount >= 1 &&
 					Site.GetZoneProperty(SecondChronicleDispositionProperty, null) ==
 						((int)Basin.PendingChronicleDisposition).ToString() &&
 					Site.GetZoneProperty("faction", null) == Basin.PendingRealmFaction &&
@@ -72,17 +75,29 @@ namespace ThousandAndFirst
 				break;
 			case KingdomFoundingKind.VillageCharter:
 				Faction village = Factions.GetIfExists(Basin.PendingVillageFaction);
+				// The archived row is required, and the covenant's own frozen standing and
+				// reservation tick are what prove it -- never today's ledger, not even by way of
+				// a live standing read. Completion is what releases the reservation and clears the
+				// receipt, so a covenant allowed to complete without its record would have that
+				// cleanup erase the only evidence the rite happened; and a covenant proved by a
+				// standing that has moved since would be history read off the weather.
 				projected = FactionRegistryCoherent(Basin.PendingVillageFaction, village) &&
 					village.GetIntProperty("Village") == 1 &&
 					village.DisplayName == Basin.PendingVillageDisplayName &&
 					Site.GetZoneProperty("faction", null) == Basin.PendingVillageFaction &&
-					System.GetStanding(Basin.PendingVillageFaction) >=
-						KingdomRules.VillageCharterSealedStanding;
+					KingdomVillageCovenantRuntime.TryArchived(System,
+						Basin.PendingTransactionID, Basin.PendingAuthority,
+						Basin.PendingVillageFaction, Basin.PendingVillageDisplayName,
+						Site.ZoneID, Basin.PendingChronicleEventID,
+						out int sealedStanding, out long reservationTick) &&
+					sealedStanding >= KingdomVillageCovenantRules.MinimumSealedStandingV1 &&
+					ArchivedReservationTickStillMatches(Site, reservationTick);
 				break;
 			default:
 				return false;
 			}
-			if (!projected || !EnsureAbility(Actor) ||
+			if (!projected || !ExternalBindingCompletionObserved(Basin, Site) ||
+				!EnsureAbility(Actor) ||
 				(Basin.PendingKind != KingdomFoundingKind.VillageCharter &&
 				 !EnsurePlacement(System, Site, Basin.PendingRiteX, Basin.PendingRiteY)))
 			{
@@ -125,6 +140,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (!FinishExternalBinding(Basin, Site)) return false;
 			if (HasSiteReservation(Site) &&
 				!ClearCompletedSiteReservation(Site, Basin))
 			{

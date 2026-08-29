@@ -91,6 +91,8 @@ namespace ThousandAndFirst.Simulation.City
 				// still on the road, which is where it already was.
 				return 0;
 			}
+			if (!KingdomExperienceRuntime.TryAdmitNewFoundationTransientClaims(System, 1,
+				out KingdomExperienceCapacityFault _, out string _)) return 0;
 			int load = (Amount < LoadPerTrip) ? Amount : LoadPerTrip;
 			int jobId = System.Jobs.MintJobId();
 			int width = (Z.Width > 2) ? Z.Width : KingdomJobRules.ZoneWidth;
@@ -117,7 +119,7 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return 0;
 			}
-			int carried = Load(body, Blueprint, load);
+			int carried = Load(body, Blueprint, load, jobId);
 			if (carried <= 0)
 			{
 				Release(System, jobId, body, KingdomUnbindCause.JobClosed);
@@ -197,7 +199,9 @@ namespace ThousandAndFirst.Simulation.City
 					continue;
 				}
 				int room = LoadPerTrip - row.CargoAmount;
-				int added = Load(body, Blueprint, (Amount < room) ? Amount : room);
+				List<GameObject> beforeLoad = body.Inventory == null ? null
+					: new List<GameObject>(body.Inventory.GetObjects());
+				int added = Load(body, Blueprint, (Amount < room) ? Amount : room, row.JobId);
 				if (added <= 0)
 				{
 					continue;
@@ -208,6 +212,7 @@ namespace ThousandAndFirst.Simulation.City
 					|| !System.Jobs.TryPublish(next, out fault))
 				{
 					Refuse("fold", fault);
+					RollbackPorterLoad(body, row.JobId, beforeLoad);
 					return 0;
 				}
 				KingdomLog.Log("porter: job " + row.JobId + " takes " + added + " more, now carrying "

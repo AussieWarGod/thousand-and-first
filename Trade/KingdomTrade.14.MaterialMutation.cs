@@ -50,7 +50,7 @@ namespace ThousandAndFirst
 					break;
 				}
 			}
-			if (destination == null || string.IsNullOrEmpty(destination.ID))
+			if (destination == null || string.IsNullOrEmpty(destination.IDIfAssigned))
 			{
 				Quarantine(Operation,
 					"The material load had no exact stockpile owner and remains quarantined on the caravan.");
@@ -58,7 +58,7 @@ namespace ThousandAndFirst
 			}
 			GameObject resolvedDestination;
 			LoadedTopologyWitness destinationTopology;
-			if (ResolveLoadedObject(destination.ID, Z, out resolvedDestination,
+			if (ResolveLoadedObject(destination.IDIfAssigned, Z, out resolvedDestination,
 				out destinationTopology) != LoadedObjectResolution.ExactUnique
 				|| !ReferenceEquals(resolvedDestination, destination))
 				return QuarantineFalse(Operation,
@@ -82,7 +82,7 @@ namespace ThousandAndFirst
 					Marker = KingdomTradeRules.MaterialMarker(Operation.Id, i),
 					Blueprint = blueprint,
 					Count = amounts[i],
-					DestinationOwnerId = destination.ID,
+					DestinationOwnerId = destination.IDIfAssigned,
 					ZoneId = Z.ZoneID,
 					State = KingdomTradePhysicalState.CreateIntent,
 					CleanupState = KingdomTradePhysicalState.None
@@ -119,7 +119,7 @@ namespace ThousandAndFirst
 						KingdomTradeRules.MaterialMarker(Operation.Id, i), StringComparison.Ordinal)
 					|| !string.Equals(output.Blueprint, blueprint, StringComparison.Ordinal)
 					|| output.Count != amounts[i]
-					|| !string.Equals(output.DestinationOwnerId, destination.ID,
+					|| !string.Equals(output.DestinationOwnerId, destination.IDIfAssigned,
 						StringComparison.Ordinal)
 					|| !string.Equals(output.ZoneId, Z.ZoneID, StringComparison.Ordinal)
 					|| !ExactPhysicalFrame(Frame, Operation, Z)

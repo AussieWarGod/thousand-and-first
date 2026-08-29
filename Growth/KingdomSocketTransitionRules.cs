@@ -1,19 +1,75 @@
 using System;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ThousandAndFirst
 {
 	/// <summary>One explicit, directional same-set plan-change declaration.</summary>
 	public sealed class KingdomSocketTransition
 	{
+		private readonly KingdomMaterialTally materials;
+
+		public string Key { get; private set; }
+		public string FromBuildKey { get; private set; }
+		public string ToBuildKey { get; private set; }
+		public string LotType { get; private set; }
+		public ArchitectureLotSize LotSize { get; private set; }
+		public int WaterDrams { get; private set; }
+		public long WorkTicks { get; private set; }
+
+		/// <summary>Detached price copy. Callers cannot mutate declaration authority.</summary>
+		public KingdomMaterialTally Materials
+		{
+			get { return materials == null ? null : materials.Copy(); }
+		}
+
+		internal KingdomSocketTransition(string Key, string FromBuildKey, string ToBuildKey,
+			string LotType, ArchitectureLotSize LotSize, int WaterDrams,
+			KingdomMaterialTally Materials, long WorkTicks)
+		{
+			this.Key = Key;
+			this.FromBuildKey = FromBuildKey;
+			this.ToBuildKey = ToBuildKey;
+			this.LotType = LotType;
+			this.LotSize = LotSize;
+			this.WaterDrams = WaterDrams;
+			this.materials = Materials == null ? null : Materials.Copy();
+			this.WorkTicks = WorkTicks;
+		}
+
+		internal bool HasMaterials()
+		{
+			return materials != null;
+		}
+
+		internal int MaterialUnits(KingdomMaterial Material)
+		{
+			return materials == null ? 0 : materials.Get(Material);
+		}
+	}
+
+	/// <summary>Observed engine-property shape for one durable transition receipt.</summary>
+	public struct KingdomSocketTransitionReceiptShape
+	{
+		public bool SchemaHasInt;
+		public bool SchemaHasString;
+		public int Schema;
+		public bool KeyHasInt;
+		public bool KeyHasString;
 		public string Key;
-		public string FromBuildKey;
-		public string ToBuildKey;
-		public string LotType;
-		public ArchitectureLotSize LotSize;
-		public int WaterDrams;
-		public long WorkTicks;
-		public KingdomMaterialTally Materials;
+		public bool DeclarationHasInt;
+		public bool DeclarationHasString;
+		public string DeclarationDigest;
+		public bool BeforeHasInt;
+		public bool BeforeHasString;
+		public string BeforeHash;
+		public bool AfterHasInt;
+		public bool AfterHasString;
+		public string AfterHash;
+		public bool JobHasInt;
+		public bool JobHasString;
+		public string JobId;
 	}
 
 	/// <summary>Pure validation for the mergeable socket-transition schema.</summary>
@@ -23,6 +79,8 @@ namespace ThousandAndFirst
 		public const int MaxTransitions = 256;
 		public const int MaxKeyChars = 128;
 		public const long MaxWorkTicks = 100000000L;
+		public const int LegacyReceiptSchema = 1;
+		public const int ReceiptSchema = 2;
 
 		public static bool TryParse(string Key, string From, string To, string Type,
 			string Size, string Water, string Materials, string Ticks,
@@ -49,13 +107,72 @@ namespace ThousandAndFirst
 					+ " has malformed identity, typed lot, water, materials, or work";
 				return false;
 			}
-			Transition = new KingdomSocketTransition
-			{
-				Key = Key, FromBuildKey = From, ToBuildKey = To, LotType = type,
-				LotSize = size, WaterDrams = water, WorkTicks = ticks,
-				Materials = materials
-			};
+			Transition = new KingdomSocketTransition(Key, From, To, type, size, water,
+				materials, ticks);
 			return true;
+		}
+
+		/// <summary>Returns a detached, deep snapshot only for a complete declaration.</summary>
+		public static bool TrySnapshot(KingdomSocketTransition Source,
+			out KingdomSocketTransition Snapshot)
+		{
+			Snapshot = null;
+			if (!ValidDeclaration(Source)) return false;
+			Snapshot = new KingdomSocketTransition(Source.Key, Source.FromBuildKey,
+				Source.ToBuildKey, Source.LotType, Source.LotSize, Source.WaterDrams,
+				Source.Materials, Source.WorkTicks);
+			return true;
+		}
+
+		/// <summary>Exact declaration equality, including key and all priced work.</summary>
+		public static bool SameDeclaration(KingdomSocketTransition Left,
+			KingdomSocketTransition Right)
+		{
+			if (!ValidDeclaration(Left) || !ValidDeclaration(Right)
+				|| Left.Key != Right.Key || Left.FromBuildKey != Right.FromBuildKey
+				|| Left.ToBuildKey != Right.ToBuildKey || Left.LotType != Right.LotType
+				|| Left.LotSize != Right.LotSize || Left.WaterDrams != Right.WaterDrams
+				|| Left.WorkTicks != Right.WorkTicks) return false;
+			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+				if (Left.MaterialUnits((KingdomMaterial)i)
+					!= Right.MaterialUnits((KingdomMaterial)i)) return false;
+			return true;
+		}
+
+		/// <summary>Canonical digest binds key, route, typed lot, water, materials, and ticks.</summary>
+		public static bool TryDeclarationDigest(KingdomSocketTransition Declaration,
+			out string Digest)
+		{
+			Digest = null;
+			if (!ValidDeclaration(Declaration)) return false;
+			StringBuilder canonical = new StringBuilder("socket-transition-v1");
+			AppendTerm(canonical, Declaration.Key);
+			AppendTerm(canonical, Declaration.FromBuildKey);
+			AppendTerm(canonical, Declaration.ToBuildKey);
+			AppendTerm(canonical, Declaration.LotType);
+			AppendTerm(canonical, ((int)Declaration.LotSize).ToString(
+				CultureInfo.InvariantCulture));
+			AppendTerm(canonical, Declaration.WaterDrams.ToString(CultureInfo.InvariantCulture));
+			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+				AppendTerm(canonical, Declaration.MaterialUnits((KingdomMaterial)i).ToString(
+					CultureInfo.InvariantCulture));
+			AppendTerm(canonical, Declaration.WorkTicks.ToString(CultureInfo.InvariantCulture));
+			try
+			{
+				byte[] bytes = Encoding.UTF8.GetBytes(canonical.ToString());
+				byte[] hash;
+				using (SHA256 sha = SHA256.Create()) hash = sha.ComputeHash(bytes);
+				StringBuilder encoded = new StringBuilder(hash.Length * 2);
+				for (int i = 0; i < hash.Length; i++)
+					encoded.Append(hash[i].ToString("x2", CultureInfo.InvariantCulture));
+				Digest = encoded.ToString();
+				return true;
+			}
+			catch
+			{
+				Digest = null;
+				return false;
+			}
 		}
 
 		public static string IndexKey(string From, string To, string Type,
@@ -65,6 +182,68 @@ namespace ThousandAndFirst
 			return !ValidKey(From) || !ValidKey(To) || !ValidKey(type)
 				? null : From + "\n" + To + "\n" + type + "\n"
 					+ ((int)Size).ToString(CultureInfo.InvariantCulture);
+		}
+
+		/// <summary>
+		/// Pure fixed-lot authorization used by preflight and paid retry. Ordinary improvements
+		/// stay inside both frozen plan and binding. A declared plan change may cross those two
+		/// identities only while preflight explicitly owns that declaration, or after its exact
+		/// durable transition receipt has been rebound. Neither authority may move or retype the lot.
+		/// </summary>
+		public static bool AuthorizesFixedLotTransition(bool SamePlan, bool SameBinding,
+			bool SameType, bool SameSize, bool SameRect, bool SameFacing, bool SameMainRoot,
+			bool ExactLotIdentity, bool AllowPlanChange, bool DurableRouteAuthority)
+		{
+			return SameType && SameSize && SameRect && SameFacing && SameMainRoot &&
+				ExactLotIdentity && ((SamePlan && SameBinding) || AllowPlanChange ||
+					DurableRouteAuthority);
+		}
+
+		/// <summary>Directional typed endpoint match. Declaration authority also needs exact equality.</summary>
+		public static bool MatchesRoute(KingdomSocketTransition Transition, string From,
+			string To, string Type, ArchitectureLotSize Size)
+		{
+			string expected = IndexKey(From, To, Type, Size);
+			return ValidDeclaration(Transition) && expected != null &&
+				IndexKey(Transition.FromBuildKey, Transition.ToBuildKey,
+					Transition.LotType, Transition.LotSize) == expected;
+		}
+
+		/// <summary>Authority match against one current declaration, including all priced work.</summary>
+		public static bool MatchesRoute(KingdomSocketTransition Supplied,
+			KingdomSocketTransition CurrentDeclaration)
+		{
+			return SameDeclaration(Supplied, CurrentDeclaration);
+		}
+
+		/// <summary>
+		/// Pure receipt law. Every committed field has exactly one engine type. Schema 2 binds the
+		/// canonical declaration digest; exact schema 1 remains adoptable only while that field is absent.
+		/// </summary>
+		public static bool ReceiptAuthorizes(KingdomSocketTransitionReceiptShape Receipt,
+			string ExpectedKey, string ExpectedDeclarationDigest, string ExpectedBeforeHash,
+			string ExpectedAfterHash, string ExpectedJobId, out bool Legacy)
+		{
+			Legacy = false;
+			if (!Receipt.SchemaHasInt || Receipt.SchemaHasString
+				|| !ValidKey(ExpectedKey) || !CanonicalHash(ExpectedDeclarationDigest)
+				|| !CanonicalHash(ExpectedBeforeHash) || !CanonicalHash(ExpectedAfterHash)
+				|| string.IsNullOrEmpty(ExpectedJobId)
+				|| !ExactString(Receipt.KeyHasInt, Receipt.KeyHasString, Receipt.Key,
+					ExpectedKey)
+				|| !ExactString(Receipt.BeforeHasInt, Receipt.BeforeHasString,
+					Receipt.BeforeHash, ExpectedBeforeHash)
+				|| !ExactString(Receipt.AfterHasInt, Receipt.AfterHasString,
+					Receipt.AfterHash, ExpectedAfterHash)
+				|| !ExactString(Receipt.JobHasInt, Receipt.JobHasString, Receipt.JobId,
+					ExpectedJobId)) return false;
+			if (Receipt.Schema == ReceiptSchema)
+				return ExactString(Receipt.DeclarationHasInt, Receipt.DeclarationHasString,
+					Receipt.DeclarationDigest, ExpectedDeclarationDigest);
+			if (Receipt.Schema != LegacyReceiptSchema || Receipt.DeclarationHasInt
+				|| Receipt.DeclarationHasString || Receipt.DeclarationDigest != null) return false;
+			Legacy = true;
+			return true;
 		}
 
 		public static string RefuseUndeclared(string FromName, string ToName)
@@ -98,6 +277,39 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(Value) || Value.Length > MaxKeyChars) return false;
 			for (int i = 0; i < Value.Length; i++)
 				if (char.IsControl(Value[i]) || char.IsWhiteSpace(Value[i])) return false;
+			return true;
+		}
+
+		private static bool ValidDeclaration(KingdomSocketTransition Declaration)
+		{
+			return Declaration != null && ValidKey(Declaration.Key)
+				&& ValidKey(Declaration.FromBuildKey) && ValidKey(Declaration.ToBuildKey)
+				&& Declaration.FromBuildKey != Declaration.ToBuildKey
+				&& ValidKey(Declaration.LotType) && Fold(Declaration.LotType) == Declaration.LotType
+				&& (int)Declaration.LotSize >= (int)ArchitectureLotSize.Small
+				&& (int)Declaration.LotSize <= (int)ArchitectureLotSize.Huge
+				&& Declaration.WaterDrams >= 0 && Declaration.WorkTicks >= 1L
+				&& Declaration.WorkTicks <= MaxWorkTicks && Declaration.HasMaterials();
+		}
+
+		private static void AppendTerm(StringBuilder Builder, string Value)
+		{
+			Builder.Append('|').Append(Value.Length.ToString(CultureInfo.InvariantCulture))
+				.Append(':').Append(Value);
+		}
+
+		private static bool ExactString(bool HasInt, bool HasString, string Value,
+			string Expected)
+		{
+			return !HasInt && HasString && Value == Expected;
+		}
+
+		private static bool CanonicalHash(string Value)
+		{
+			if (Value == null || Value.Length != 64) return false;
+			for (int i = 0; i < Value.Length; i++)
+				if (!((Value[i] >= '0' && Value[i] <= '9')
+					|| (Value[i] >= 'a' && Value[i] <= 'f'))) return false;
 			return true;
 		}
 	}

@@ -14,7 +14,7 @@ namespace ThousandAndFirst
 		public static bool RiteAvailable(KingdomSystem System)
 		{
 			return Enabled && System != null && System.Founded
-				&& System.SettlementCount >= KingdomSettlement.MaxSettlements
+				&& System.SettlementCount >= 2
 				&& KingdomCreedRules.RiteCost(Temper(System)) > 0;
 		}
 
@@ -41,14 +41,20 @@ namespace ThousandAndFirst
 		public static bool HoldRite(KingdomSystem System, Zone Z, out string Failure)
 		{
 			Failure = "";
-			if (!Enabled || System == null || !System.Founded || System.SettlementCount < KingdomSettlement.MaxSettlements)
+			if (!Enabled || System == null || !System.Founded || System.SettlementCount < 2)
 			{
-				Failure = "A rite of shared water is held between two cities. This realm has one.";
+				Failure = "A rite of shared water needs two cities. This realm has one.";
 				return false;
 			}
 			if (Z == null || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				Failure = "The rite is held on the realm's own ground.";
+				return false;
+			}
+			if (!EnsureDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second))
+			{
+				Failure = "The cities at odds cannot be identified exactly.";
 				return false;
 			}
 			CityTemper temper = Temper(System);
@@ -71,21 +77,27 @@ namespace ThousandAndFirst
 					+ " drams}} from the dedicated stores, and they cannot provide it.";
 				return false;
 			}
-			// Last safe point before the realm's cadence, dissent or history changes. This receipt
-			// either drains the whole stated cost or restores every vessel it touched.
-			if (!debit.Commit())
+			// Governance is marked only after the exact vessel debit and both civic fields publish.
+			// Every injected/engine exception restores their exact snapshots first.
+			if (!TryPublishRiteEffects(System, debit, temper,
+				out bool compensationExact))
 			{
-				Failure = "The dedicated stores could not yield exactly {{C|" + cost
-					+ " drams}}. No rite was held.";
+				Failure = compensationExact
+					? "The dedicated stores could not yield exactly {{C|" + cost
+						+ " drams}} under one Charter receipt. No rite was held."
+					: "The rite's exact compensation could not be proved. Civic work is quarantined; "
+						+ "inspect the dedicated stores before continuing.";
 				return false;
 			}
-			System.LastRiteTick = The.Game.TimeTicks;
-			KingdomGovernanceScope.Commit("hold shared rite");
-			System.Dissent = KingdomCreedRules.ApplyDissent(System.Dissent, -KingdomCreedRules.RiteEase(temper));
-			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(KingdomPresentation.Rich(System.SeatName), KingdomPresentation.Rich(awayName), cost));
-			Popup.Show(KingdomCreedRules.RiteNotice(Temper(System), KingdomPresentation.Rich(awayName)));
-			Rearm(System);
+			KingdomSystem.Guard("shared rite telling", delegate
+			{
+				KingdomChronicle.Record(System, KingdomCreedRules.RiteTelling(
+					KingdomPresentation.Rich(first.Name),
+					KingdomPresentation.Rich(second.Name), cost));
+				Popup.Show(KingdomCreedRules.RiteNotice(Temper(System),
+					KingdomPresentation.Rich(first.Seated ? second.Name : first.Name)));
+				Rearm(System);
+			});
 			return true;
 		}
 
@@ -102,15 +114,17 @@ namespace ThousandAndFirst
 				return creeds;
 			}
 			string here = SeatCreed(System);
-			string there = AwayCreed(System);
 			if (!string.IsNullOrEmpty(here))
 			{
 				creeds.Add(here);
 			}
-			if (!string.IsNullOrEmpty(there) && there != here)
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				creeds.Add(there);
+				string creed = CreedOf(nonSeat[i]);
+				if (!string.IsNullOrEmpty(creed) && !creeds.Contains(creed)) creeds.Add(creed);
 			}
+			creeds.Sort(global::System.StringComparer.Ordinal);
 			return creeds;
 		}
 
@@ -150,8 +164,20 @@ namespace ThousandAndFirst
 					Failure = "The realm has said nothing about itself. There is nothing to unsay.";
 					return false;
 				}
-				System.DeclaredCreed = null;
-				KingdomGovernanceScope.Commit("recant creed");
+				string beforeCreed = System.DeclaredCreed;
+				if (!KingdomGovernanceScope.TryPublish("recant creed", delegate
+				{
+					System.DeclaredCreed = null;
+					return System.DeclaredCreed == null;
+				}, delegate
+				{
+					System.DeclaredCreed = beforeCreed;
+					return System.DeclaredCreed == beforeCreed;
+				}))
+				{
+					Failure = "The Charter could not publish that recantation. Nothing changed.";
+					return false;
+				}
 				KingdomChronicle.Record(System, KingdomCreedRules.RecantTelling(KingdomPresentation.Rich(System.KingdomDisplayName)));
 				Popup.Show("You unsay it. The roads go back to carrying whoever they were carrying before, and nobody is owed an explanation.");
 				return true;
@@ -167,29 +193,45 @@ namespace ThousandAndFirst
 				Failure = "You have said it already, and saying it twice is not louder.";
 				return false;
 			}
-			string slighted = null;
+			List<string> slighted = new List<string>();
 			for (int i = 0; i < declarable.Count; i++)
 			{
 				if (declarable[i] != CreedFactionName)
 				{
-					slighted = declarable[i];
+					slighted.Add(declarable[i]);
 				}
 			}
-			System.DeclaredCreed = CreedFactionName;
-			KingdomGovernanceScope.Commit("declare creed");
-			if (!string.IsNullOrEmpty(slighted))
+			List<KeyValuePair<string, int>> standing =
+				new List<KeyValuePair<string, int>>(slighted.Count);
+			for (int i = 0; i < slighted.Count; i++)
+				standing.Add(new KeyValuePair<string, int>(slighted[i],
+					KingdomCreedRules.DeclarationStandingCost));
+			if (!TryPublishDeclarationEffects(System, CreedFactionName, slighted.Count,
+				standing, out bool declarationCompensationExact))
 			{
-				System.AdjustStanding(slighted, KingdomCreedRules.DeclarationStandingCost);
+				Failure = declarationCompensationExact
+					? "The realm could not publish every declared slight under one receipt. "
+						+ "Nothing changed."
+					: "The declaration's exact compensation could not be proved. Civic work is "
+						+ "quarantined for inspection.";
+				return false;
+			}
+			for (int i = 0; i < slighted.Count; i++)
+			{
+				string other = slighted[i];
+				System.MirrorRegardForRealm(other);
 				string provocation = KingdomLifecycleRules.ChildId(System.LifecycleBook.SettlementId,
-					"creed-declaration-" + The.Game.TimeTicks + "-" + slighted + "-" + CreedFactionName, 0);
-				KingdomRaids.RecordProvocation(System, slighted, "creed-declaration-slight",
+					"creed-declaration-" + The.Game.TimeTicks + "-" + other + "-" + CreedFactionName, 0);
+				KingdomRaids.RecordProvocation(System, other, "creed-declaration-slight",
 					provocation, KingdomPresentation.Rich(System.KingdomDisplayName) + " publicly declared for "
-						+ CreedName(CreedFactionName) + " over " + CreedName(slighted),
+						+ CreedName(CreedFactionName) + " over " + CreedName(other),
 					The.Player?.CurrentZone?.ZoneID, 1);
-				System.Dissent = KingdomCreedRules.ApplyDissent(System.Dissent, KingdomCreedRules.DeclarationShock);
 			}
 			KingdomChronicle.Record(System, KingdomCreedRules.DeclarationTelling(KingdomPresentation.Rich(System.KingdomDisplayName), CreedName(CreedFactionName)));
-			Popup.Show(KingdomCreedRules.DeclarationNotice(CreedName(CreedFactionName), CreedName(slighted)));
+			List<string> slightedNames = new List<string>();
+			for (int i = 0; i < slighted.Count; i++) slightedNames.Add(CreedName(slighted[i]));
+			Popup.Show(KingdomCreedRules.DeclarationNotice(CreedName(CreedFactionName),
+				KingdomZoningRules.JoinAnd(slightedNames)));
 			return true;
 		}
 	}

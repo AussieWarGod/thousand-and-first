@@ -93,7 +93,12 @@ namespace ThousandAndFirst
 		Law,
 
 		/// <summary>The founder's own will picked. Config A, and C13 prices it.</summary>
-		Chosen
+		Chosen,
+
+		/// <summary>The realm raised an exact resident through its durable grooming custom.
+		/// Unlike the founder's one-life choice, this is a lawful accession and never costs the
+		/// successor the Charter.</summary>
+		Groomed
 	}
 
 	/// <summary>Whether a death-token may begin the one synchronous accession transaction.</summary>
@@ -220,23 +225,20 @@ namespace ThousandAndFirst
 		/// the record. Only somebody on the roll may take the charter.</summary>
 		public readonly bool OnTheRoll;
 
-		/// <summary>Whether they already hold the settlement's one office.</summary>
-		public readonly bool HoldsOffice;
-
 		/// <summary>The zone their body was last bound in, or null when the realm never bound one.</summary>
 		public readonly string BoundZoneId;
 
 		/// <summary>Their resident id, or zero. Used only to break a tie no other field breaks.</summary>
 		public readonly int ResidentId;
 
-		public KingdomHeir(string name, long arrivedTick, string creed, string keptCreeds, bool onTheRoll, bool holdsOffice, string boundZoneId, int residentId)
+		public KingdomHeir(string name, long arrivedTick, string creed, string keptCreeds,
+			bool onTheRoll, string boundZoneId, int residentId)
 		{
 			Name = name;
 			ArrivedTick = arrivedTick;
 			Creed = creed;
 			KeptCreeds = keptCreeds;
 			OnTheRoll = onTheRoll;
-			HoldsOffice = holdsOffice;
 			BoundZoneId = boundZoneId;
 			ResidentId = residentId;
 		}

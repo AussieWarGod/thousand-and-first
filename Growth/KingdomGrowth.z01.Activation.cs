@@ -150,14 +150,16 @@ namespace ThousandAndFirst
 			}
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
 			if (!PublishArrivalHealth(System, Z, timeTicks, heartbeatHealthy)) return;
+			if (!AdvanceArrivalCadence(System, Z, timeTicks)) return;
 			// AFTER the day is eaten, and never before it: industry consumes foodstuffs
 			// (Addendum 11(b)) and residents eat first. The order is the whole guarantee - a
 			// settlement cannot go hungry because its mill was busy - and KingdomRules.MillableStock
 			// keeps a day's rations back on top of it. Same elapsed days the fields were paid for,
 			// off the same checkpoint, which is why grownDays is read once and used twice.
 			GrindHarvest(System, survey, grownDays);
-			int arrivals = reconciledArrivals;
-			while (arrivalsEnabled && heartbeatHealthy && timeTicks >= System.NextArrivalTick
+			int arrivals = reconciledOpen && reconciledResult != ArrivalResult.Deferred ? 1 : 0;
+			while (arrivalsEnabled && heartbeatHealthy
+				&& System.LifecycleBook.Growth.ArrivalOpportunity != null
 				&& arrivals < KingdomRules.MaxArrivalsPerVisit)
 			{
 				// Addendum 4b: the arrival gate is assignment-level, not a bed tally. A settler
@@ -173,19 +175,15 @@ namespace ThousandAndFirst
 					{
 						return;
 					}
-					break;
+					if (result == ArrivalResult.Deferred) break;
 				}
-				System.NoRoomAnnounced = false;
 				arrivals++;
+				if (result == ArrivalResult.Joined) System.NoRoomAnnounced = false;
+				if (!AdvanceArrivalCadence(System, Z, timeTicks)) return;
+				if (result != ArrivalResult.Joined) break;
 			}
-			// The queue still stands due and this pass could seat nobody else - the visit budget
-			// is spent, the population is capped, or the band's edge is reached. The overshoot
-			// is burned rather than banked, through the same KingdomRules.RestampDeadline the
-			// manifest turn-back and the raid re-warn read: a fresh full interval from now, with
-			// no witness band, because an arrival slot is spent the instant it comes due. A
-			// hundred days away is a settler at the gate, never a hundred of them.
-			// Arrival operation owns deadline burn/restamp. Never write this mirror directly: a
-			// save between real-world clock CAS and authority receipt must remain reconcilable.
+			// Physical work is bounded above. Unmaterialized semantic heads remain persisted debt.
+			KingdomHostedArcology.PrepareStaffing(System, survey);
 			AssignWork(System, survey);
 			UpdateStage(System, Z, survey);
 			// Last of the water-consuming steps in the pass, on purpose: a plot only ever

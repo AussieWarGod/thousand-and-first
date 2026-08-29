@@ -127,6 +127,7 @@ namespace ThousandAndFirst
 				|| operation.WaterLegs.Count > MaxWaterLegs
 				|| operation.MaterialOutputs.Count > MaxMaterialOutputs;
 			if (!ValidAccountingEvidence(operation)) malformed = true;
+			if (!ValidPolityConsignmentOperation(operation)) malformed = true;
 			if (!string.IsNullOrEmpty(operation.ProjectionId)
 				&& !string.Equals(operation.ProjectionId, ProjectionId(operation.Id), StringComparison.Ordinal)) malformed = true;
 			if (operation.Outbox != null && !string.Equals(operation.Outbox.EventId,
@@ -147,7 +148,8 @@ namespace ThousandAndFirst
 							operation.WaterLegs[j].OwnerId, leg.OwnerId,
 							StringComparison.Ordinal)) malformed = true;
 				}
-				if (leg != null && leg.State == KingdomTradePhysicalState.Intent)
+				if (leg != null && leg.State == KingdomTradePhysicalState.Intent &&
+					operation.Kind != KingdomTradeOperationKind.PolityConsignmentDelivery)
 				{
 					operation.AmbiguousWater = Math.Max(operation.AmbiguousWater,
 						operation.RequestedWater - operation.ProvedWater);
@@ -155,6 +157,9 @@ namespace ThousandAndFirst
 					operation.Fault = AppendFault(operation.Fault,
 						"reloaded water intent lacks live part witnesses");
 				}
+				else if (leg != null && leg.State == KingdomTradePhysicalState.Intent &&
+					operation.Phase != KingdomTradePhase.ResourceIntent &&
+					operation.Phase != KingdomTradePhase.Quarantined) malformed = true;
 			}
 			if (plannedWater > operation.RequestedWater || provedWater != operation.ProvedWater)
 				malformed = true;
@@ -227,14 +232,7 @@ namespace ThousandAndFirst
 					|| !ValidName(operation.DestinationName))) malformed = true;
 			if (operation.Kind == KingdomTradeOperationKind.ManifestLoad
 				&& !string.Equals(operation.ManifestId, ManifestId(operation.Id), StringComparison.Ordinal)) malformed = true;
-			if ((operation.Kind == KingdomTradeOperationKind.ManifestLoad
-					&& operation.WaterDirection != KingdomTradeWaterDirection.Debit)
-				|| ((operation.Kind == KingdomTradeOperationKind.CharterDelivery
-						|| operation.Kind == KingdomTradeOperationKind.ManifestDelivery)
-					&& operation.WaterDirection != KingdomTradeWaterDirection.Credit)
-				|| ((operation.Kind == KingdomTradeOperationKind.ManifestTurnback
-						|| operation.Kind == KingdomTradeOperationKind.ManifestLapse)
-					&& operation.WaterDirection != KingdomTradeWaterDirection.None)) malformed = true;
+			if (InvalidWaterDirection(operation)) malformed = true;
 			NormalizeStanding(operation.Standing, ref malformed);
 			if (operation.Standing != null
 				&& operation.Standing.State == KingdomTradePhysicalState.Intent)

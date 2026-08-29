@@ -20,6 +20,7 @@ namespace ThousandAndFirst
 			string VillageDisplayName, int committedVolume,
 			Dictionary<string, int> originalComponents,
 			Dictionary<string, int> committedComponents,
+			string externalBinding,
 			out string StagedFailure,
 			out KingdomFoundingResult Failure)
 		{
@@ -31,7 +32,9 @@ namespace ThousandAndFirst
 				Basin.PendingPhase = KingdomFoundingPhase.None;
 				Basin.PendingOwnerKind = KingdomFoundingOwnerKind.Basin;
 				Basin.PendingTransactionID = transaction;
-				Basin.PendingBasinID = Basin.ParentObject.ID;
+				// Begin runs only after the player's founding confirmation. Staging the durable
+				// transaction is the sole seam allowed to assign this basin an engine identity.
+				Basin.PendingBasinID = AssignConsentedFoundingBasinIdentity(Basin);
 				Basin.PendingOwnerNonce = ownerNonce;
 				Basin.PendingPayloadDigest = payloadDigest;
 				Basin.PendingAuthority = encodedAuthority;
@@ -49,6 +52,7 @@ namespace ThousandAndFirst
 				Basin.PendingCommittedVolume = committedVolume;
 				Basin.PendingCommittedMaxVolume = vessel.MaxVolume;
 				Basin.PendingCommittedComponents = committedComponents;
+				Basin.PendingExternalBinding = externalBinding;
 				Basin.PendingChronicleRecorded = false;
 				Basin.PendingChronicleStage = 0;
 				Basin.PendingChronicleDisposition = KingdomChronicleDisposition.None;
@@ -82,21 +86,31 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static string AssignConsentedFoundingBasinIdentity(r_FounderBasin Basin)
+		{
+			return Basin.ParentObject.ID;
+		}
+
 		private static bool TryAcquireFoundingReservations(r_FounderBasin Basin, Zone Site,
 			LiquidVolume vessel, KingdomFoundingKind Kind, string encodedAuthority,
 			string realmFaction, string Name, string Vocation, string VillageFaction,
-			string VillageDisplayName, string stagedFailure,
+			string VillageDisplayName, string externalBinding, string stagedFailure,
 			out KingdomFoundingResult Failure)
 		{
 			Failure = default(KingdomFoundingResult);
 			bool siteWasReserved = HasSiteReservation(Site);
+			string externalFailure = null;
 			if (!StageSiteReservation(Site, encodedAuthority, Name, Vocation,
 					VillageFaction, VillageDisplayName) ||
+				!TryStageExternalBinding(Site, Kind, encodedAuthority,
+					externalBinding, out externalFailure) ||
 				!ValidateReceiptPayload(Basin, Site, vessel, out stagedFailure) ||
 				!OriginalSnapshotStillExact(Basin, vessel))
 			{
 				if (!siteWasReserved)
 				{
+					RollbackExternalBinding(Site, encodedAuthority,
+						externalBinding, PublicationObserved: false);
 					ClearStagedSiteSubset(Site, encodedAuthority, Name, Vocation,
 						VillageFaction, VillageDisplayName);
 				}
@@ -109,7 +123,8 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.Untouched,
 					KingdomFoundingProjection.None,
 					"The exact site reservation could not be staged and read back before the pour: " +
-						stagedFailure);
+						(string.IsNullOrEmpty(externalFailure)
+							? stagedFailure : externalFailure));
 				return false;
 			}
 			string reservationVillage = Kind == KingdomFoundingKind.VillageCharter
@@ -118,8 +133,12 @@ namespace ThousandAndFirst
 				reservationVillage))
 			{
 				if (!siteWasReserved)
+				{
+					RollbackExternalBinding(Site, encodedAuthority,
+						externalBinding, PublicationObserved: false);
 					ClearStagedSiteSubset(Site, encodedAuthority, Name, Vocation,
 						VillageFaction, VillageDisplayName);
+				}
 				bool cleared = ExactAuthorityMarkersAbsent(encodedAuthority,
 					realmFaction, reservationVillage, Site) &&
 					(siteWasReserved || !HasSiteReservation(Site)) && SafeClearReceipt(Basin);

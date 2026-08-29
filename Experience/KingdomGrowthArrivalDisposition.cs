@@ -9,6 +9,8 @@ namespace ThousandAndFirst
 		NoAcceptableHome = 3,
 		NoGround = 4,
 		PopulationCap = 5,
-		SupportCap = 6
+		SupportCap = 6,
+		Declined = 7,
+		Departed = 8
 	}
 }

@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 		private static bool ExactRoadOld(GameObject Old, Cell Cell, RoadRow Row)
 		{
 			GameObject global;
-			return GameObject.Validate(Old) && Cell != null && Old.ID == Row.OldId
+			return GameObject.Validate(Old) && Cell != null && Old.IDIfAssigned == Row.OldId
 				&& Old.CurrentCell == Cell
 				&& Old.Blueprint == Row.OldBlueprint
 				&& Old.GetIntProperty(PathStateProperty) == (int)KingdomRoadRules.WearState.Path

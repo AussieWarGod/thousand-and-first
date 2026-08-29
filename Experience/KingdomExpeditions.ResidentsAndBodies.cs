@@ -15,12 +15,8 @@ namespace ThousandAndFirst.Simulation.City
 		private static bool TrySetResident(KingdomSystem System, int ResidentId,
 			KingdomResidentStanding Standing, KingdomStandingCause Cause, string ZoneId)
 		{
-			KingdomCityBook[] books = new KingdomCityBook[2]
-			{
-				(System == null) ? null : System.City,
-				(System == null || System.Away == null) ? null : System.Away.City
-			};
-			for (int b = 0; b < books.Length; b++)
+			List<KingdomCityBook> books = Books(System);
+			for (int b = 0; b < books.Count; b++)
 			{
 				KingdomCityBook book = books[b];
 				KingdomCityState state;
@@ -47,12 +43,8 @@ namespace ThousandAndFirst.Simulation.City
 			out KingdomResidentRow Resident)
 		{
 			Resident = default(KingdomResidentRow);
-			KingdomCityBook[] books = new KingdomCityBook[2]
-			{
-				(System == null) ? null : System.City,
-				(System == null || System.Away == null) ? null : System.Away.City
-			};
-			for (int b = 0; b < books.Length; b++)
+			List<KingdomCityBook> books = Books(System);
+			for (int b = 0; b < books.Count; b++)
 			{
 				KingdomCityState state;
 				KingdomCityFault fault;
@@ -62,6 +54,17 @@ namespace ThousandAndFirst.Simulation.City
 					&& state.TryResident(index, out Resident)) return true;
 			}
 			return false;
+		}
+
+		private static List<KingdomCityBook> Books(KingdomSystem System)
+		{
+			List<KingdomCityBook> books = new List<KingdomCityBook>();
+			if (System?.City != null) books.Add(System.City);
+			List<KingdomSettlement> nonSeat = System?.NonSeatSettlements();
+			if (nonSeat != null)
+				for (int i = 0; i < nonSeat.Count; i++)
+					if (nonSeat[i]?.City != null) books.Add(nonSeat[i].City);
+			return books;
 		}
 
 		private static bool EnsureResidentUnbound(KingdomSystem System, int ResidentId,

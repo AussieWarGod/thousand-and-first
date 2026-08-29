@@ -9,6 +9,9 @@ namespace ThousandAndFirst.Tests
 		{
 			"Core/KingdomCharterPart.cs",
 			"Core/KingdomCharterPart.Chapters.cs",
+			"Core/KingdomCharterPart.ExternalOwnership.cs",
+			"Core/KingdomCharterPart.Succession.cs",
+			"Core/KingdomCharterPart.RealmRemoval.cs",
 			"Core/KingdomCharterPart.Ground.cs",
 			"Core/KingdomCharterPart.GroundWork.cs",
 			"Core/KingdomCharterPart.Civic.cs",

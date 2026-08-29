@@ -74,7 +74,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// Writes down what this zone's dedicated pantries hold and can hold, on the pass that
 		/// stood in it. <c>KingdomCrops.RecordLarders</c>'s own contract, in the book.
 		/// </summary>
-		public static void RecordLarder(KingdomSystem System, Zone Z, int FoodStored, int FoodCapacity, long TimeTicks)
+		public static void RecordLarder(KingdomSystem System, Zone Z, int FoodPhysical,
+			int FoodAvailable, int FoodCapacity, long TimeTicks)
 		{
 			if (System == null || Z == null || System.City == null)
 			{
@@ -96,7 +97,9 @@ namespace ThousandAndFirst.Simulation.City
 			// W7 repair, and the same one Ground() carries: a pantry holding more than it was
 			// counted able to hold is the count being wrong, never the shelves. Reading it through
 			// Measured raises the ceiling to the reading rather than refusing the whole write.
-			KingdomStockPair larder = Measured(FoodStored, FoodCapacity);
+			KingdomStockPair larder = Measured(FoodAvailable,
+				KingdomOrdinaryFoodAuthority.EffectiveCapacity(
+					FoodPhysical, FoodAvailable, FoodCapacity));
 			KingdomProductionStep food;
 			if (!KingdomProductionRules.TryReconcile(larder.Level, larder.Capacity, row.OwedFood, out food, out fault))
 			{

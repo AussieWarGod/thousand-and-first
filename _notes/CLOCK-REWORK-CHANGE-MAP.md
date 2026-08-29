@@ -1,5 +1,11 @@
 # Clock rework — change map
 
+> **Historical audit, not current status.** This map is frozen to the 2026-08-21 pre-rework tree.
+> The clock, food, refining, reach, subsidence, wear, and chronicle rows were subsequently built or
+> superseded. The 2026-08-27 re-audit is canonical in `../docs/V1-UNDEFERRAL.md`; in particular it
+> records bounty manning and mending as subsequently closed code defects. Do not use an
+> `OPEN` or future-tense row below as present implementation truth.
+
 Date: 2026-08-21. Read-only audit; nothing in this pass was edited, compiled, or run.
 
 **Spec:** `BUILDING-CATALOGUE-BRIEF.md` Addendum 8 (the time doctrine) plus the BACKLOG absence
@@ -173,7 +179,7 @@ change** — this family is the mechanical bulk of the wave.
 | **Resented-creed grace** — `ResentedPasses = 6` (= 3 × `GracePasses`, by explicit reference), `ResentmentAfterPass`/`ResentmentRunOut` (`Core/KingdomConversionRules*.cs`); `ConversionResented` dict, per-city, seat-swapped; **the map entry itself is the announce flag**. Pressure is re-derived every pass, never remembered (`Core/KingdomConversion.cs:9-15`). Consequence: `Emigrate`. | PASS | Same. Its **re-derive-every-pass contract is the one the shared brink should adopt** — it is what makes "take the pressure off and it goes away" a guarantee rather than a coincidence. | **C** (unify) | Medium. |
 | **Dissent accrual** — `AccrueDissent(Dissent, hostility, days)`, `DissentPerDay`, `HostilityPerDissentPoint = 25`, `DissentBreaking = 100` (`Core/KingdomCreedRules.cs:120-124,352,369`); `System.LastDissentTick` via `HeartbeatDays`. Two-city realms only. | **HB** — the only social consumer of the heartbeat cap in the repo | Uncapped time × hostility. | **B** | Medium. |
 | **Secession** — `Dissent >= 100` → `Secede` **on the same pass, with no grace** (`Core/KingdomCreed.cs:300-303`). Four-tier warning ladder with hysteresis (`DissentSpoken`), but the "window" between Rupture (70) and Breaking (100) is emergent from the accrual rate, not a named constant. | HB, no window | **The biggest brink gap.** A warning ladder with no arrestable window that has a name. Needs a named window constant so `TheLoudestWarningStandsForManyAttendedDaysBeforeTheCityLeaves` keeps meaning something once accrual is uncapped. | **C** | **Top-three (joint).** Uncapping dissent without adding the window makes secession *faster* in absence, which is the exact inversion of clause 3. |
-| **Rite cooldowns** — `RiteCooldownDays = 3`, `RiteReady` (`Core/KingdomCreedRules.cs:139,478`); reused verbatim for the soul rite (`Experience/KingdomWaterRite.cs:520`). `LastRiteTick`, `LastSoulRiteTick`. | RAW | Gates only — running out *enables* a lever and never costs anything. Correct. The number is calibrated "matching the absence cap"; retiring the cap orphans the **rationale**, not the value. | **A** (+ comment) | Low. |
+| **Rite cooldowns** — `RiteCooldownDays = 3`, `RiteReady` (`Core/KingdomCreedRules.cs:139,478`); reused verbatim for the soul rite in logical `Experience/KingdomWaterRite*.cs`, symbol `BarFor`. `LastRiteTick`, `LastSoulRiteTick`. | RAW | Gates only — running out *enables* a lever and never costs anything. Correct. The number is calibrated "matching the absence cap"; retiring the cap orphans the **rationale**, not the value. | **A** (+ comment) | Low. |
 | **Exile regard ladder** — `Core/KingdomExileRules.cs`, whole file. Deed-driven, reads no time whatsoever. | NONE | Correct and deliberately so. | **A** | Low — but see §4.3: a reflection test bans `long` parameters and the substrings `tick`/`elapsed`/`day` in parameter names across the whole public surface of this file. **The shared brink API must not be reachable from it.** |
 | **Guest arrival / departure** — `GuestIntervalTicks = 3d` / `GuestPatienceTicks = 1/3 d` (`Experience/KingdomLocusRules.cs:187,195`); `NotableGuestIntervalTicks = 7d` / `NotableGuestPatienceTicks = 2d` (`Experience/KingdomGuestRules.cs:135,140`). Raw ticks *observed* at pass granularity; no banking (an existing guest blocks the next). | RAW, observed attended-only | A 200-day absence and a 3-day absence currently produce the same single guest. Under clause 1, guests arrive and leave through the absence and are told at awareness — which is exactly what the "guests at the gate" co-opt already promises ("notable wanderers logged between visits… ignored, they leave a letter"). Consequences are explicitly non-lossy, so no brink is needed. | **B**/**C** | Low-medium. |
 | **Ceremony `IsAttended`** — `NowTicks - CompleteTick < TicksPerDay` (`Experience/KingdomCeremonyRules.Raising.cs:23`). | RAW classifier | **The exemplar of awareness-crystallisation done right**: it changes prose, never outcome. Model the brink's announcement on it. | **A** | Low. |
@@ -190,9 +196,9 @@ change** — this family is the mechanical bulk of the wave.
 | **Raid re-warn** — `Raids/KingdomRaids*.cs`. Overshoot ≤ 1 day → the raid fires; > 1 day → re-stamp a fresh warning window, nothing taken. **The only raw-tick clip in the mod that does not go through `HeartbeatDays`** — a hand-rolled `> KingdomRules.TicksPerDay` compared inline. | RAW with an inline grace band | Doctrine-correct in spirit (a raid waits at the gate for a witness), hand-rolled in form. Fold into the shared helper. | **A** / **B** (consolidate) | Low — untested grace band. |
 | **Recent-raid window** — `RecentRaidWindowTicks = 2d` (`Experience/KingdomLocusRules.cs:34`), feeds keeper mood. | RAW | Correct. | **A** | Low. |
 | **Bounty due-ticks** — `TakenTick`/`DueTick`, `WorkDays` (`Quests/KingdomBounty.Take.cs:85`; `Quests/KingdomBountyRules.WorkAndBlocking.cs:60`). Haul 1–5 d, Manning 30 d, Scouting 4 d, **Clearance 0 (no clock — read off the world)**. No expiry, ever. The `Quests/KingdomBounty*.cs` class doctrine remains unchanged. | RAW due-ticks | Correct. | **A** | Low. |
-| **Bounty manning** — `ManOneWork` runs **every attended pass** while `now < DueTick`, then the due-tick ends the season (`Quests/KingdomBounty.WorkAndCarry.cs:14`, `Quests/KingdomBounty.CompletionAndScouting.cs:79`). | **PASS for the labour, RAW for the finish** — mixed denominators inside one case | Labour becomes time × hands like every other work. | **B** | Low. |
+| **Bounty manning** — historical defect: `ManOneWork` ran every attended pass while a raw due-tick ended the season. | **FIXED 2026-08-27:** one exact resident/work reservation, ordinary shared labour allocation, and a 30-serviced-day clock. | Labour is elapsed time × one proved reserved hand; no visit denominator or free hand remains. | **B — closed in code** | Native lived-service/save evidence remains in the current ledger. |
 | **Bounty notice `Passes`** — `r_KingdomNotice.Passes`, `MaxPasses = 10000000`. | PASS | The true denominator for who reads a notice. Fine. | **A** | Low. |
-| **Ticks-as-kernel-ordinals** — `r_KingdomNotice.PostedTick` (`Quests/KingdomBounty.cs:42`), `KingdomCarryHaul.PlantedTick` (`Experience/KingdomGuestbook.cs:590`), `Data.TakenTick` bridged at `:683`. Each is fed to `SemanticEventKey.TryCreate` as a `ulong` draw ordinal. | EVENT ordinal | **FLAG:** these are not clocks, but a rework that re-bases or re-anchors any stored tick **silently re-rolls every determinism draw keyed off it.** Any migration in §4.1 must leave these three fields untouched. | **A** (hazard) | Medium — a silent correctness trap. |
+| **Ticks-as-kernel-ordinals** — `r_KingdomNotice.PostedTick` (logical `Quests/KingdomBounty*.cs`), `KingdomCarryHaul.PlantedTick` (`Experience/KingdomGuestbook.z04.CarryHaulAndParts.cs`, type `KingdomCarryHaul`), and `r_KingdomNotice.TakenTick` (`Quests/r_KingdomNotice.cs`). Each is fed to `SemanticEventKey.TryCreate` as a `ulong` draw ordinal. | EVENT ordinal | **FLAG:** these are not clocks, but a rework that re-bases or re-anchors any stored tick **silently re-rolls every determinism draw keyed off it.** Any migration in §4.1 must leave these three fields untouched. | **A** (hazard) | Medium — a silent correctness trap. |
 | **Petition cooldown / lifetime** — `PetitionCooldownTicks = 3600`, `PetitionLifetimeTicks = 24000` (`Core/KingdomRules.cs:533,535`). `IsPetitionMet` is checked **before** the expiry branch, so a petition satisfied during an absence is fulfilled rather than timed out. Expiry is a grey ledger note, no penalty. | RAW | Correct, and the ordering is load-bearing. | **A** | Low — both branches untested. |
 | **Carry-sign haul** — `HaulDueTick` (`Experience/KingdomGuestRules.CarrySign.cs:44`), no expiry whatsoever. | RAW | Correct. | **A** | Low. |
 | **Deed memory** — `DeedMemoryTicks = 12000` (`Core/KingdomRules*.cs`), flavour text only. | RAW | Correct. | **A** | Low. |
@@ -453,8 +459,8 @@ breakpoints into dated chronicle entries; arrests the slide on arrival.
 
 **Owns:** new `Core/KingdomBrinkRules.cs` + `Core/KingdomBrink.cs`, `Growth/KingdomLodging.cs`,
 `Growth/KingdomLodgingRules.cs`, `Core/KingdomConversion.cs`, `Core/KingdomConversionRules.cs`,
-`Core/KingdomCreed.cs`, `Core/KingdomCreedRules.cs`, `Experience/KingdomFaith.cs`,
-`Experience/KingdomFaithRules.cs`, `Experience/KingdomWaterRite.cs`,
+`Core/KingdomCreed.cs`, `Core/KingdomCreedRules.cs`, logical `Experience/KingdomFaith*.cs`,
+`Experience/KingdomFaithRules.cs`, logical `Experience/KingdomWaterRite*.cs`,
 `Experience/KingdomWaterRiteRules.cs`, `Core/KingdomLedger.cs`.
 
 **Must not touch** `Core/KingdomExileRules.cs`. Builds the one window shape; migrates osmosis,
@@ -463,8 +469,8 @@ named window; gives shrine-pull conversion the announce it has never had.
 
 ### P4 — deadline consolidation and the prose sweep · **last** · balance re-run: **NO**
 
-**Owns:** `Raids/KingdomRaids*.cs`, `Trade/KingdomTrade.cs`, `Experience/KingdomGuestbook.cs`,
-`Experience/KingdomGuestRules.cs`, `Experience/KingdomLocus.cs`,
+**Owns:** `Raids/KingdomRaids*.cs`, `Trade/KingdomTrade.cs`, `Experience/KingdomGuestbook*.cs`,
+`Experience/KingdomGuestRules.cs`, logical `Experience/KingdomLocus*.cs`,
 `Experience/KingdomLocusRules.cs`, `Quests/KingdomBounty.cs`, `Quests/KingdomPetitions.cs`, and
 every prose surface in §6 including `_notes/balance-sim.py`.
 
@@ -543,9 +549,8 @@ breakpoint's own tick. → P4.
 
 ## After P4 (orchestrator) — known-open, deliberate
 
-- Bounty manning's mixed PASS/RAW denominator (§2f, class B, low risk) — left as-is by P4
-  mechanics; smallest remaining swap, fold into the next mechanics change that touches
-  `Quests/KingdomBounty.cs`.
+- Bounty manning's mixed PASS/RAW denominator (§2f, class B) — **closed 2026-08-27** by the exact
+  resident/work reservation and serviced-time clock indexed in `../docs/V1-UNDEFERRAL.md`.
 - Staffless works never wear-reduce their level contribution (`KingdomSubsidence.Supports`
   staffed-only ternary): a ruined reservoir still carries its full drams. Deliberate-for-now,
   documented in API.md and balance-sim Q9. WANTS AN AUTHOR RULING.

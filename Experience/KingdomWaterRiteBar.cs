@@ -19,8 +19,8 @@ namespace ThousandAndFirst
 		/// <summary>They already hold what the realm holds. There is nothing between them.</summary>
 		NothingBetweenYou = 3,
 
-		/// <summary>They hold an office at the founder's word. A notable asked this by the person
-		/// who named them is not being asked.</summary>
+		/// <summary>Reserved compatibility value from the earlier bundled-office prototype.
+		/// A title-only civic office never produces this bar.</summary>
 		TheirOffice = 4,
 
 		/// <summary>They could not leave if they wanted to, so their yes would not be a yes.</summary>

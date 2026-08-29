@@ -175,6 +175,9 @@ namespace ThousandAndFirst
 			Publish(old, false);
 			RemoveLoadedBranch(old);
 			IndexedRow fresh = Capture(Item, The.Game?.GetSystem<KingdomSystem>(), old.Order);
+			if (old.Work != fresh.Work || old.Settler != fresh.Settler
+				|| old.ResidentId != fresh.ResidentId)
+				Simulation.City.KingdomStations.TouchAvailability(Item);
 			Rows[Item] = fresh;
 			Publish(fresh, true);
 			IndexLoadedBranch(fresh);
@@ -195,6 +198,10 @@ namespace ThousandAndFirst
 		{
 			IndexedRow row;
 			if (Item == null || !Rows.TryGetValue(Item, out row)) return false;
+			// A moved endpoint can return before the next crew pass. Preserve that interruption
+			// on the object itself instead of inferring continuity from its restored identity.
+			if (row.Work || row.ResidentId > 0)
+				Simulation.City.KingdomStations.TouchAvailability(Item);
 			Publish(row, false);
 			RemoveLoadedBranch(row);
 			Rows.Remove(Item);

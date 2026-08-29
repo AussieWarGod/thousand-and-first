@@ -70,6 +70,11 @@ namespace ThousandAndFirst
 					+ " drams remain retained under permanent receipt; none were destroyed or reissued.}}";
 				message = "{{y|The manifest road has closed; its escrow is retained for inspection.}}";
 				break;
+			case KingdomTradeOperationKind.PolityConsignmentDelivery:
+				// The calling witnessed conversation is the only presentation. Keeping this
+				// outbox empty prevents a callback cut from announcing success before the
+				// exact recipient survives the final terminal checkpoint.
+				break;
 			}
 			Operation.Outbox = new KingdomTradeOutbox
 			{
@@ -80,7 +85,8 @@ namespace ThousandAndFirst
 				LedgerDeliveredDelta = Operation.Kind == KingdomTradeOperationKind.CharterDelivery
 					|| Operation.Kind == KingdomTradeOperationKind.ManifestDelivery
 					? Operation.ProvedWater : 0,
-				LedgerState = ledger == null && Operation.ProvedWater == 0
+				LedgerState = ledger == null && (Operation.ProvedWater == 0 || Operation.Kind ==
+					KingdomTradeOperationKind.PolityConsignmentDelivery)
 					? KingdomTradeSinkState.Skipped : KingdomTradeSinkState.Pending,
 				Message = message,
 				MessageState = message == null ? KingdomTradeSinkState.Skipped : KingdomTradeSinkState.Pending,

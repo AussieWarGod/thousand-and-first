@@ -83,6 +83,7 @@ namespace ThousandAndFirst
 			if (reconciledOpen && reconciledResult != ArrivalResult.Deferred)
 				return reconciledResult == ArrivalResult.Joined;
 			if (!Enabled) return false;
+			if (!AdvanceArrivalCadence(System, Z, The.Game.TimeTicks)) return false;
 			return ResolveOrStartArrival(System, Z, survey, The.Game.TimeTicks,
 				out Refusal) == ArrivalResult.Joined;
 		}
@@ -106,7 +107,8 @@ namespace ThousandAndFirst
 				KingdomLog.Log("growth arrival refused: lifecycle authority is invalid or quarantined");
 				return false;
 			}
-			long interval = Interval(system, zone);
+			if (!TryArrivalCohort(system, parent.Growth, out int cohort)) return false;
+			long interval = Interval(system, zone, cohort);
 			if (parent.Growth != null && parent.Growth.MigrationPending
 				&& !TryMigrateArrivalAuthority(system, parent, tick, interval))
 			{
@@ -120,7 +122,10 @@ namespace ThousandAndFirst
 				KingdomLog.Log("growth arrival refused: growth authority is invalid or quarantined");
 				return false;
 			}
+			if (!growth.ArrivalCadenceMigrationPending
+				&& !AdvanceArrivalCadence(system, zone, tick)) return false;
 			bool lastObservedHealthy = growth.HealthState == KingdomGrowthHealthState.Healthy;
+			bool wasPaused = growth.WorkPaused;
 			KingdomGrowthAvailabilityDecision decision =
 				KingdomLifecycleRules.ObserveGrowthAvailability(growth, Enabled,
 					lastObservedHealthy, tick, interval);
@@ -137,6 +142,13 @@ namespace ThousandAndFirst
 				KingdomLog.Log("growth arrival refused: availability observation did not publish");
 				return false;
 			}
+			if (growth.ArrivalCadenceResumePending && !growth.ArrivalCadenceMigrationPending
+				&& growth.ArrivalCandidate == null && growth.ArrivalOp == null
+				&& !KingdomLifecycleRules.TryRestartGrowthArrivalCadenceAfterPause(growth,
+					tick, interval, cohort, KingdomSemanticSelectionRules.RulesVersion,
+					out string restartFailure))
+				return CadenceFault("resume", restartFailure);
+			if (wasPaused && !growth.WorkPaused) system.NextArrivalTick = growth.NextArrivalTick;
 			if (open)
 			{
 				reconciledResult = ReconcileArrival(system, zone, survey, tick,
@@ -193,11 +205,19 @@ namespace ThousandAndFirst
 				|| system.NextArrivalTick != growth.NextArrivalTick
 				|| !KingdomLifecycleRules.CanOwnGrowthAuthority(parent)
 				|| !KingdomLifecycleRules.CanOwnGrowthAuthority(growth, settlementId)) return false;
+			if (!TryArrivalCohort(system, growth, out int cohort)) return false;
+			long interval = Interval(system, zone, cohort);
 			KingdomGrowthAvailabilityDecision decision =
 				KingdomLifecycleRules.ObserveGrowthAvailability(growth, Enabled, healthy, tick,
-					Interval(system, zone));
+					interval);
 			if (!decision.Valid || !KingdomLifecycleRules.ApplyGrowthAvailability(growth,
 				decision)) return false;
+			if (growth.ArrivalCadenceResumePending && !growth.ArrivalCadenceMigrationPending
+				&& growth.ArrivalCandidate == null && growth.ArrivalOp == null
+				&& !KingdomLifecycleRules.TryRestartGrowthArrivalCadenceAfterPause(growth,
+					tick, interval, cohort, KingdomSemanticSelectionRules.RulesVersion,
+					out string restartFailure))
+				return CadenceFault("health resume", restartFailure);
 			system.NextArrivalTick = growth.NextArrivalTick;
 			return KingdomLifecycleRules.CanOwnGrowthAuthority(parent)
 				&& system.NextArrivalTick == growth.NextArrivalTick;

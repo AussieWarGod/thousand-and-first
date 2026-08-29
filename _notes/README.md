@@ -9,13 +9,16 @@ live in the repo root and `docs/`.
 Read current status in this order:
 
 1. `../README.md` and `../docs/STATUS.md` — public scope, exact automated evidence, and open gates.
-2. `../VISION.md` § “Canonical v1 polity scope matrix” — publishable `SHIP` /
-   `AUTHOR-DEFERRED` / `REJECTED` disposition; `V1-POLITY-SCOPE.md` is its expanded private
-   evidence/reopening worksheet.
+2. `../docs/V1-UNDEFERRAL.md` — live index for every reopened positive implementation
+   and evidence gap. `../VISION.md` owns the Canonical v1 polity scope matrix and publishable
+   `SHIP` versus hard `REJECTED` disposition; `V1-POLITY-SCOPE.md` is its expanded private
+   evidence/reopening worksheet and
+   `POLITY-ACTIVATION-RECONCILIATION-2026-08-27.md` owns the exact polity consumer diff.
 3. `BRIEF-IMPLEMENTATION-AUDIT.md` — current brief-to-runtime acceptance matrix.
-4. `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` — current high-risk runtime closure ledger.
-5. `ARCHITECTURE-POLISH-CONTRACT.md` and `../TESTING.md` — visual/building law and executable
-   native acceptance protocol.
+4. `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` — dated reconciliation/attack ledger; its top
+   supersession banner controls later status conflicts.
+5. `ARCHITECTURE-POLISH-CONTRACT.md` and `../TESTING.md` — accepted visual/building law and the
+   current executable native acceptance protocol; implementation status comes from the ledgers above.
 6. `COORDINATION.md` — only the present work lane and handoff.
 
 Files explicitly labelled **historical**, **research**, **review**, **draft**, **plan**, or
@@ -24,16 +27,22 @@ material, not current implementation status. Never repair history by rewriting i
 finding; add a current disposition to one of the ledgers above and link it. Undated status language
 in an authoritative/current document is a defect.
 
+For chronological notes, the dated supersession banner at the top controls current interpretation;
+preserve the historical body rather than deleting or silently modernizing its old claims.
+
 ## Contents
 
 | File | What it is |
 |---|---|
 | `COORDINATION.md` | **Read first.** Claude ↔ Codex handoff: lanes, work in flight, open questions, recent exchanges |
 | `BUILDING-CATALOGUE-BRIEF.md` | **The ruling record.** Author-approved design law for plots, materials, the catalogue, and every addendum since (layers/sockets, typed plots, the upgrade trigger law, the QoL vocabulary, housing binds, the closeness ladder and fault-line ceiling, creed conversion, reach, the material chain) plus the BACKLOG. Where it and an older note disagree, it wins. |
-| `ARCHITECTURE-POLISH-CONTRACT.md` | Current authored-lot, architecture, material, furnishing, visual-state, gallery, and native acceptance law. |
+| `ARCHITECTURE-POLISH-CONTRACT.md` | Accepted authored-lot, architecture, material, furnishing, visual-state, gallery, and native acceptance law; its top banner defers implementation status to current ledgers. |
+| `../docs/V1-UNDEFERRAL.md` | Live closure index after the author reopened every positive direction; hard rejects and external manual gates remain distinct. |
 | `V1-POLITY-SCOPE.md` | Expanded evidence/reopening worksheet for `../VISION.md`'s canonical public polity matrix. Every prior-kingdom, successor, rival, war, party, route, clash, and food/relationship idea retains an explicit disposition and owner. |
+| `POLITY-ACTIVATION-RECONCILIATION-2026-08-27.md` | Current polity foundation ledger: what semantic authority exists, every exact remaining runtime consumer, hard rejected shapes, and the evidence boundary after all positive polity scope reopened. |
 | `BRIEF-IMPLEMENTATION-AUDIT.md` | Current player-visible promise-to-code matrix. A code/content repair remains separate from native/human acceptance. |
-| `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` | Current high-risk foundation/runtime gap ledger and remaining evidence gates. |
+| `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` | Dated high-risk foundation/runtime reconciliation and attack ledger; current deltas live in its top supersession banner and the public status ledger. |
+| `SESSION-HANDOFF.md` | Frozen chronological handoff; never use its “current” snapshot wording as present working-tree truth. |
 | `LIVING-CITY-ARCHITECTURE.md` | Adopted city-state, boundedness, physical-authority, happening, logistics, and extension architecture. |
 | `CODEX-VALIDATION.md` | Codex's audit ledger and the pinned engine provenance (DLL hash, build ID) |
 | `SESSION-LOG.md` | Blow-by-blow rundown of what was done, in order, with checkpoints to verify |
@@ -41,7 +50,7 @@ in an authoritative/current document is a defect.
 | `QUESTION-BACKLOG.md` | Decisions still needing human taste/account authority plus historical provisionals; current engineering state belongs in the acceptance ledgers. |
 | `RESEARCH.md` | Historical early research digest; useful hypotheses and engine notes, not current status or final comparable authority. |
 | `RESEARCH-RERUN.md` and `COMPARABLES-RERUN.md` | Later corrections and rerun evidence. Read these before relying on an early comparable claim. |
-| `POLITY-RECONCILIATION-FINAL-R3.md` and `POLITY-EXPANSION-RECONCILIATION.md` | Polity discovery/reconciliation inputs; `V1-POLITY-SCOPE.md` owns the current implementation disposition. |
+| `POLITY-RECONCILIATION-FINAL-R3.md` and `POLITY-EXPANSION-RECONCILIATION.md` | Historical polity discovery/reconciliation inputs; the activation reconciliation and `V1-POLITY-SCOPE.md` own current disposition. |
 | `FOOD-WATER-FINAL-REVIEW.md` | Historical research disposition; later author Addendum 11, current API/TESTING, and the brief audit own the shipped food/water mechanism. |
 | `AGENT-PLAYBOOK.md` | Every investigation run, with prompts to repeat or extend them |
 | `EXPOSURE.md` | What is public vs private, and why |
@@ -57,23 +66,23 @@ happened), `DECISIONS.md` (why), then the code.
 scope/acceptance ledgers before treating a finding as authoritative. `AGENT-PLAYBOOK.md` lets you
 re-run or extend an investigation rather than taking its conclusions on trust.
 
-**The single most important evidence boundary:** portable and installed-assembly compilation,
+**Frozen evidence snapshot (2026-08-27; not current counts).** The single most important evidence boundary: portable and installed-assembly compilation,
 pure/source tests, generators, and static architecture checks do not sign native behavior or human
 appearance. The structural hardening revisions have no complete current-revision native protocol receipt.
-Its current full suite passes 7,743 / 7,743 cases locally. Latest retained hosted checkpoint
-`1c2d619` has green repository-audit, Ubuntu source-suite, and Windows source-suite jobs for its
+That snapshot's full suite passed 7,743 / 7,743 cases locally. Latest retained hosted checkpoint
+`d285129` has green repository-audit, Ubuntu source-suite, and Windows source-suite jobs for its
 exact bytes; later working-tree changes remain unsigned. The portable suite remains 173 / 173 with
 zero skipped, with 35 passing Python tool tests, 19 passing art
 tests, clean baseline/compatibility compilation, and unchanged
 architecture evidence: 136 buildings, 126 plotted plans, 499 maps, 355 bindings, 403 tiers, 516
 variants, and 2,064 goldens with zero issues plus three expected malformed-vanilla recovery
-warnings. Lot realizations are current at 337 maps / 242 bindings / 277 tiers. Cold-install
+warnings. Lot realizations in that snapshot were 337 maps / 242 bindings / 277 tiers. Cold-install
 inventory is 1,599 files; IPart ABI is 36 shipped classes / 3 contracts; art policy allowlists 0 local
 tiles and verifies 55 vanilla paths. Its exact 1,575-source/252,982-line structural inventory is
 `736bb6fa198a3ed599ddc51302ffeccf7be0c01e7839cd9fbb7d11c9e79c1822`: 27 files exceed 300
 physical lines, 0 are exactly 300, 3 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000; 689 files
 import XRL directly, 25 at or over the line limit. Thirteen more oversized authorities were decomposed
-after hosted checkpoint `1c2d619`, bringing the current hardening sequence to 144 additional families and 154 cumulative.
+after hosted checkpoint `1c2d619`, bringing the then-current hardening sequence to 144 additional families and 154 cumulative.
 Fan-in preserved exact logical source bodies, persisted/public ABI, namespace wrappers, and source-reader
 families. Hosted Ubuntu exposed a legacy-publication no-replace race; an exclusive legacy-folder
 publication lock and deterministic contention test repair it. Exact-inventory

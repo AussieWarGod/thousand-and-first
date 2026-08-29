@@ -59,7 +59,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			// The four civic-heart records are rite-owned internal growth rungs. They are never
+			if (KingdomHostedArcologyRules.IsHostedLotKey(Entry.Key)) return false;
+			// The five civic-heart records are rite-owned internal growth rungs. They are never
 			// commissions: the founding rite lays the basin and improvement accretes the rest.
 			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
 			{
@@ -156,6 +157,8 @@ namespace ThousandAndFirst
 		/// <param name="Failure">Set to the refusal when this returns false; untouched otherwise.</param>
 		public static bool Permits(KingdomSystem System, string ZoneID, KingdomRules.BuildEntry Entry, out string Failure)
 		{
+			if (Entry != null && Entry.Key == KingdomHostedArcology.ArcologyKey
+				&& !KingdomHostedArcology.CanReserveAt(System, ZoneID, out Failure)) return false;
 			string refusal = null;
 			KingdomSystem.Guard("zoning gate", delegate
 			{

@@ -18,26 +18,38 @@ namespace ThousandAndFirst
 			HeartAccretion = false;
 			Failure = null;
 			if (Owner == null || Z == null || BeforeIntent == null || AfterIntent == null
-				|| Before == null || After == null || Before.PlanKey != After.PlanKey
-				|| Before.LotType != After.LotType || Before.Facing != After.Facing
-				|| BeforeIntent.MainWorldX != AfterIntent.MainWorldX
-				|| BeforeIntent.MainWorldY != AfterIntent.MainWorldY)
-				return Fail("authored transition changes plan, lot type, pose, or main root", out Failure);
+				|| Before == null || After == null)
+				return Fail("authored transition lacks exact frozen endpoints", out Failure);
 			int beforeRung = KingdomPlotRules.HeartRungOf(Before.BuildKey);
 			int afterRung = KingdomPlotRules.HeartRungOf(After.BuildKey);
-			if (beforeRung == 0 && afterRung == 0 && Before.BindingKey == After.BindingKey
-				&& Before.LotSize == After.LotSize
-				&& SameRect(BeforeIntent.Rect, AfterIntent.Rect)) return true;
-			if (beforeRung == 0 && afterRung == 0 && Before.LotSize == After.LotSize
-				&& SameRect(BeforeIntent.Rect, AfterIntent.Rect)
-				&& (AllowPlanChange || KingdomSocketTransitions.Authorizes(Owner,
-					BeforeIntent, AfterIntent))) return true;
+			if (beforeRung == 0 && afterRung == 0)
+			{
+				bool samePlan = Before.PlanKey == After.PlanKey;
+				bool sameBinding = Before.BindingKey == After.BindingKey;
+				bool needsRouteAuthority = !samePlan || !sameBinding;
+				bool durableRouteAuthority = needsRouteAuthority && !AllowPlanChange &&
+					KingdomSocketTransitions.Authorizes(Owner, BeforeIntent, AfterIntent);
+				if (KingdomSocketTransitionRules.AuthorizesFixedLotTransition(samePlan,
+					sameBinding, Before.LotType == After.LotType,
+					Before.LotSize == After.LotSize,
+					SameRect(BeforeIntent.Rect, AfterIntent.Rect),
+					Before.Facing == After.Facing,
+					BeforeIntent.MainWorldX == AfterIntent.MainWorldX &&
+						BeforeIntent.MainWorldY == AfterIntent.MainWorldY,
+					ValidLotId(Owner.GetStringProperty(LotIdProperty)), AllowPlanChange,
+					durableRouteAuthority)) return true;
+				return Fail("authored fixed-lot transition changes frozen identity without " +
+					"an explicit same-set authority", out Failure);
+			}
 
 			KingdomPlotRules.PlotRect expectedBefore;
 			KingdomPlotRules.PlotRect expectedAfter;
 			if (beforeRung < 1 || afterRung != beforeRung + 1
 				|| Before.PlanKey != "civic-heart" || After.PlanKey != "civic-heart"
 				|| Before.LotType != "civic" || After.LotType != "civic"
+				|| Before.Facing != After.Facing
+				|| BeforeIntent.MainWorldX != AfterIntent.MainWorldX
+				|| BeforeIntent.MainWorldY != AfterIntent.MainWorldY
 				|| (int)Before.LotSize != beforeRung || (int)After.LotSize != afterRung
 				|| Owner.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1
 				|| KingdomPlots.HeartRung(Z) != beforeRung

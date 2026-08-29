@@ -56,10 +56,11 @@ namespace ThousandAndFirst.Tests
 		[TestCase("heartwaterstone", 2)]
 		[TestCase("heartmoot", 3)]
 		[TestCase("heartcourt", 4)]
+		[TestCase("arcology", 5)]
 		[TestCase("hall", 0)]
 		[TestCase("", 0)]
 		[TestCase(null, 0)]
-		public void OnlyTheFourRungsAreTheHeart(string Key, int Expected)
+		public void OnlyTheFiveRungsAreTheHeart(string Key, int Expected)
 		{
 			Assert.AreEqual(Expected, KingdomPlotRules.HeartRungOf(Key));
 		}
@@ -81,7 +82,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, Size.Medium)]
 		[TestCase(3, Size.Large)]
 		[TestCase(4, Size.Huge)]
-		[TestCase(5, Size.None)]
+		[TestCase(5, Size.Huge)]
+		[TestCase(6, Size.None)]
 		[TestCase(0, Size.None)]
 		public void TheHeartClimbsTheSameSizeLadderTheStagesGate(int Rung, Size Expected)
 		{
@@ -106,6 +108,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, 4)]
 		[TestCase(3, 12)]
 		[TestCase(4, 40)]
+		[TestCase(5, 80)]
 		public void TheRiteGroundsWeightRisesWithTheRungStandingOnIt(int Rung, int Expected)
 		{
 			Assert.AreEqual(Expected, KingdomPlotRules.HeartWeightForRung(Rung));
@@ -179,7 +182,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Rect survey = Survey(40, 12);
 			Rect previous = Rung(survey, 40, 12, 1);
-			for (int rung = 2; rung <= 4; rung++)
+			for (int rung = 2; rung <= 5; rung++)
 			{
 				Rect ground = Rung(survey, 40, 12, rung);
 				Assert.IsTrue(Contains(ground, previous), "rung " + rung + " is built over rung " + (rung - 1));
@@ -195,7 +198,7 @@ namespace ThousandAndFirst.Tests
 			// The clamped case, which is the one that could break the nesting.
 			Rect survey = Survey(3, 3);
 			Rect previous = Rung(survey, 3, 3, 1);
-			for (int rung = 2; rung <= 4; rung++)
+			for (int rung = 2; rung <= 5; rung++)
 			{
 				Rect ground = Rung(survey, 3, 3, rung);
 				Assert.IsTrue(Contains(ground, previous), "rung " + rung + " is built over rung " + (rung - 1));
@@ -208,7 +211,7 @@ namespace ThousandAndFirst.Tests
 		public void EveryRungIsStakedInsideTheGroundSurveyedForIt()
 		{
 			Rect survey = Survey(40, 12);
-			for (int rung = 1; rung <= 4; rung++)
+			for (int rung = 1; rung <= 5; rung++)
 			{
 				Assert.IsTrue(Contains(survey, Rung(survey, 40, 12, rung)), "rung " + rung + " needs no ground the rite did not survey");
 			}
@@ -353,7 +356,8 @@ namespace ThousandAndFirst.Tests
 			string line = KingdomPlotRules.RefuseHeartYielding("great court", "chalk hut");
 			StringAssert.Contains("chalk hut", line);
 			StringAssert.Contains("marked to yield", line);
-			StringAssert.Contains("comes down and goes up again", line);
+			StringAssert.Contains("carry the same whole lot to lawful ground", line);
+			StringAssert.Contains("nothing moves until the founder reviews and consents", line);
 			Assert.AreNotEqual(KingdomPlotRules.RefuseHeartGround("great court", "chalk hut"), line,
 				"a plot that was warned is not told the same thing as one that never was");
 		}
@@ -406,7 +410,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, false)]
 		[TestCase(3, true)]
 		[TestCase(4, true)]
-		[TestCase(5, false)]
+		[TestCase(5, true)]
 		public void OnlyTheRungsAStrangerWouldCallAPlaceAreAccomplishments(int Rung, bool Expected)
 		{
 			Assert.AreEqual(Expected, KingdomCeremonyHeartRules.IsAccomplishment(Rung));

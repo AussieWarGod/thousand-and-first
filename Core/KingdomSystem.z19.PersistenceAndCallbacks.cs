@@ -78,6 +78,15 @@ namespace ThousandAndFirst
 				return;
 			}
 			int regard = ExiledRealmRegard();
+			KingdomSuccession succession = The.Game?.GetSystem<KingdomSuccession>();
+			if (succession != null && succession.ChosenSeatBlocksReturn(this,
+				out string chosenSeatRefusal))
+			{
+				if (regard <= ReturnAskedRegard) return;
+				ReturnAskedRegard = regard;
+				XRL.Messages.MessageQueue.AddPlayerMessage(chosenSeatRefusal);
+				return;
+			}
 			// Nothing is said again until the founder has actually changed the realm's mind about
 			// them. A founder who walks away from the question is never asked it twice for free,
 			// and a founder who ignores the whole feature is never spoken to at all.
@@ -120,92 +129,22 @@ namespace ThousandAndFirst
 			return The.Game.PlayerReputation.Get(Factions.GetIfExists(FactionName));
 		}
 
-		public override bool WantFieldReflection => false;
-
-		public override void Write(SerializationWriter Writer)
-		{
-			SerializationVersion = CurrentSerializationVersion;
-			// Named-field serializer writes compatibility field as stored data, not a property.
-			// Refresh immediately before every save, including a save cut through an open receipt.
-			SynchronizeLegacyManifestProjection();
-			Writer.Write(SerializationMagic);
-			Writer.Write(CurrentSerializationVersion);
-			Writer.WriteNamedFields(this, typeof(KingdomSystem));
-		}
-
-		/// <summary>
-		/// Reads kingdom state, tolerating every layout this mod has ever written.
-		/// <para>
-		/// Two regimes meet here. Saves written before named fields arrived were emitted by the
-		/// engine's positional reflection, so the engine has already filled every field by the
-		/// time we are called &mdash; including <see cref="SerializationVersion"/>, which is how we
-		/// recognise them. Nothing remains in the block to read, so we return.
-		/// </para>
-		/// <para>
-		/// Named-field saves are self-describing: a reader may meet a field it does not know, and
-		/// may miss one it expects, without either being an error. Any named-field version from
-		/// the first through ours is therefore readable. Older positional versions and saves from
-		/// a <i>newer</i> build are genuinely beyond this path.
-		/// </para>
-		/// <para>
-		/// Throwing is the only way to reach the engine's block-skip recovery, so an unreadable
-		/// save must throw &mdash; but it flags <see cref="LoadFailed"/> first, because the engine
-		/// swallows the exception and hands back a blank system. Without the flag the founder's
-		/// settlement would simply be gone, unremarked. See <see cref="ReportLoadFailure"/>.
-		/// </para>
-		/// </summary>
-		public override void Read(SerializationReader Reader)
-		{
-			try
-			{
-				if (SerializationVersion == LegacyReflectedSerializationVersion)
-				{
-					SerializationVersion = CurrentSerializationVersion;
-					NormalizeState(AllowLegacyIdentityMigration: true);
-					return;
-				}
-				int magic = Reader.ReadInt32();
-				if (magic != SerializationMagic)
-				{
-					throw new InvalidOperationException("Invalid ThousandAndFirst kingdom save marker.");
-				}
-				int version = Reader.ReadInt32();
-				if (version < FirstNamedSerializationVersion || version > CurrentSerializationVersion)
-				{
-					throw new InvalidOperationException("Unsupported ThousandAndFirst kingdom save version " + version + "; this build reads named versions " + FirstNamedSerializationVersion + " through " + CurrentSerializationVersion + ".");
-				}
-				Reader.ReadNamedFields(this, typeof(KingdomSystem));
-				SerializationVersion = CurrentSerializationVersion;
-				NormalizeState(AllowLegacyIdentityMigration: false);
-			}
-			catch
-			{
-				LoadFailed = true;
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Tells the founder, once, that the records could not be read. The engine catches
-		/// deserialization failures and carries on with a blank system, so without this the loss
-		/// would be visible only in the metrics log &mdash; the player would find the settlement
-		/// unfounded and no reason given.
-		/// </summary>
-		private void ReportLoadFailure()
-		{
-			LoadFailed = false;
-			MetricsManager.LogError("ThousandAndFirst: kingdom state could not be read; the settlement has been reset.");
-			Popup.Show("The founding records cannot be read. Whatever kingdom you held is not recorded in this save, and the founding must begin again.\n\nYour game is otherwise unharmed.");
-		}
-
 		public override void AfterLoad(XRLGame Game)
 		{
 			base.AfterLoad(Game);
+			// A positional reader can fail before Read() is entered. Detect that constructor-default
+			// sentinel before touching the blank recovery object returned by Qud's block skipper.
+			if (RefuseIncompleteLoad()) return;
 			// The research registry and everything it caches about the world are process statics,
 			// so a second game in the same session would otherwise read the first one's quest
 			// verdicts and believe its journal notes were already filed.
 			KingdomResearch.Reload();
 			NormalizeState(AllowLegacyIdentityMigration: false);
+			MigrateDirectionalStandingStateAfterLoad();
+			ValidateDirectionalFactionRegistryAfterLoad();
+			// Committed presentation recovery is not new simulation work and remains safe while
+			// the master option is off. It only re-proves or restores the exact namespaced view.
+			KingdomFounderHistory.ReconcileBestEffort(this);
 			// AfterGameLoadedEvent owns option observation. Until then, configured master-off load is
 			// decode/validation only: do not continue an external/profile or physical transition.
 			if (!KingdomMaster.AutomaticWorkAllowed(this))

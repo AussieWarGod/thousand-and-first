@@ -76,7 +76,7 @@ namespace ThousandAndFirst
 		/// Every city keeping a standing crown hall, in NAME order.
 		/// <para>
 		/// Name order rather than seat order, and that is the whole of &sect;5.1's warning made
-		/// operational: seat and Away exchange every time the founder walks into the other city's
+		/// operational: seat and non-seat records exchange whenever the founder changes cities;
 		/// ground, so a tie-break that read them would hand the realm a different capital depending
 		/// on where its founder happened to be standing. Names do not move.
 		/// </para>
@@ -86,12 +86,11 @@ namespace ThousandAndFirst
 			List<string> found = new List<string>();
 			string blueprint = BlueprintOfCrown();
 			AddIfKeeping(found, System.SeatName, System.City, blueprint);
-			KingdomSettlement away = System.Away;
-			if (away != null)
-			{
-				AddIfKeeping(found, string.IsNullOrEmpty(away.SettlementName) ? System.KingdomDisplayName : away.SettlementName,
-					away.City, blueprint);
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				AddIfKeeping(found, string.IsNullOrEmpty(nonSeat[i].SettlementName)
+					? System.KingdomDisplayName : nonSeat[i].SettlementName,
+					nonSeat[i].City, blueprint);
 			// The freshness patch: a hall finished since this zone's last settlement pass stands in
 			// the world and is not yet in the book. The book is still the record -- it covers ground
 			// nobody has stood in for a season -- and the two only ever disagree in this one
@@ -191,10 +190,11 @@ namespace ThousandAndFirst
 			{
 				return System.SeatName;
 			}
-			KingdomSettlement away = System.Away;
-			if (away != null && away.ClaimedZones != null && away.ClaimedZones.Contains(ZoneId))
+			KingdomSettlement other = System.FindNonSeatSettlementByZone(ZoneId);
+			if (other != null)
 			{
-				return string.IsNullOrEmpty(away.SettlementName) ? System.KingdomDisplayName : away.SettlementName;
+				return string.IsNullOrEmpty(other.SettlementName) ?
+					System.KingdomDisplayName : other.SettlementName;
 			}
 			return null;
 		}

@@ -67,8 +67,10 @@ namespace ThousandAndFirst
 				? "causal-pilgrim" : null;
 			op.ArrivalText = op.Creed == null ? null : system.City.PilgrimPlaceName;
 			op.DepartTick = semanticDepart;
-			if (!KingdomLifecycleRules.GuestRuntimeAdapter.PrepareRemoval(book, op,
-				guest.ID, guest.Blueprint, zone.ZoneID, cell.X, cell.Y)) return false;
+			string guestId = guest.IDIfAssigned;
+			if (string.IsNullOrEmpty(guestId)
+				|| !KingdomLifecycleRules.GuestRuntimeAdapter.PrepareRemoval(book, op,
+					guestId, guest.Blueprint, zone.ZoneID, cell.X, cell.Y)) return false;
 			if (waterCost > 0 && !PrepareWater(book, op, KingdomSurvey.Take(zone), waterCost))
 				return false;
 			long domainBefore = action == KingdomLifecycleAction.OfferWater ? 0L : 1L;
@@ -93,8 +95,12 @@ namespace ThousandAndFirst
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book,
 				KingdomLifecycleLane.NotableGuest, KingdomLifecycleAction.Lodge, now);
 			if (op == null) return false;
-			op.ObjectId = guest.ID;
-			op.ObjectMarker = GameObject.Validate(fineHouse) ? fineHouse.ID : null;
+			string guestId = guest.IDIfAssigned;
+			string houseId = GameObject.Validate(fineHouse) ? fineHouse.IDIfAssigned : null;
+			if (string.IsNullOrEmpty(guestId)
+				|| (GameObject.Validate(fineHouse) && string.IsNullOrEmpty(houseId))) return false;
+			op.ObjectId = guestId;
+			op.ObjectMarker = houseId;
 			op.Blueprint = guest.Blueprint;
 			op.ObjectName = PlainObjectName(guest);
 			op.Origin = guest.GetStringProperty("KingdomOrigin");

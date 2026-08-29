@@ -102,6 +102,57 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void VariantSelection_UsesCanonicalSurfaceFallbackAndDeepMap()
+		{
+			ArchitectureVariantDraft fallback = Variant("fallback", 0, null);
+			fallback.MapKey = "surface-map";
+			ArchitectureVariantDraft deep = Variant("deep", 30,
+				new ArchitectureSelector { Strata = KingdomZoningRules.StratumDeep });
+			deep.MapKey = "deepend-delve-deep-m0";
+			List<ArchitectureVariantDraft> variants = new List<ArchitectureVariantDraft>
+				{ fallback, deep };
+
+			ArchitectureSelectionContext surface = new ArchitectureSelectionContext
+			{
+				Stratum = KingdomZoningRules.StratumOfGround(false), Stage = 2, Tech = 1
+			};
+			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, surface,
+				out ArchitectureVariantDraft selected, out string failure), failure);
+			Assert.AreEqual("fallback", selected.Key);
+			Assert.AreEqual("surface-map", selected.MapKey);
+
+			ArchitectureSelectionContext underground = new ArchitectureSelectionContext
+			{
+				Stratum = KingdomZoningRules.StratumOfGround(true), Stage = 2, Tech = 1
+			};
+			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, underground,
+				out selected, out failure), failure);
+			Assert.AreEqual("deep", selected.Key);
+			Assert.AreEqual("deepend-delve-deep-m0", selected.MapKey);
+		}
+
+		[Test]
+		public void TierSuccessor_PreservesFrozenVariantDespiteChangedLiveSelectors()
+		{
+			List<ArchitectureVariantDraft> variants = new List<ArchitectureVariantDraft>
+			{
+				Variant("fallback", 0, null),
+				Variant("new-creed", 40, new ArchitectureSelector { Creeds = "Mechanimists" })
+			};
+			ArchitectureSelectionContext changed = new ArchitectureSelectionContext
+				{ Creed = "Mechanimists", Stage = 3, Tech = 2 };
+			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, changed,
+				out ArchitectureVariantDraft fresh, out string failure), failure);
+			Assert.AreEqual("new-creed", fresh.Key, "new commissions use current facts");
+			Assert.IsTrue(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
+				"fallback", out ArchitectureVariantDraft successor, out failure), failure);
+			Assert.AreEqual("fallback", successor.Key, "paid fabric keeps receipt identity");
+			Assert.IsFalse(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
+				"missing", out _, out failure));
+			StringAssert.Contains("exact frozen variant", failure);
+		}
+
+		[Test]
 		public void VariantSelection_HonoursExclusionsRangesAndMandatoryFallback()
 		{
 			List<ArchitectureVariantDraft> variants = new List<ArchitectureVariantDraft>
@@ -544,6 +595,19 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, ordinary,
 				out _, out failure));
 			StringAssert.Contains("typed lot", failure);
+		}
+
+		[Test]
+		public void HeartDelta_AllowsCourtToArcologyOnTheSameHugeLot()
+		{
+			ArchitectureLayoutSnapshot court = HeartSnapshot(4,
+				ArchitectureLotSize.Huge, 20, 14, 9, 5);
+			ArchitectureLayoutSnapshot arcology = HeartSnapshot(5,
+				ArchitectureLotSize.Huge, 20, 14, 9, 5);
+			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(court, arcology,
+				out ArchitectureLayoutDelta delta, out string failure), failure);
+			Assert.AreEqual(0, delta.Removed.Count);
+			Assert.AreEqual(delta.Retained.Count, delta.RetainedAfter.Count);
 		}
 
 		[Test]

@@ -26,7 +26,18 @@ namespace ThousandAndFirst.Tests
 				"private static bool TryBuildManifestRoute(",
 				"private static bool TryPassage(",
 				"private static bool TryExactScalarAmount(",
-				"private static void SweepTarget(");
+				"private static void SweepTarget(",
+				"internal static bool TryPrepareConstructionInputReservation(",
+				"internal static bool TryActivateConstructionInputReservations(",
+				"internal static bool TryConstructionInputTrip(",
+				"internal static bool TryAcknowledgeConstructionInputPickup(",
+				"internal static bool TryMaterializeConstructionInputArrival(",
+				"internal static bool TryAcknowledgeConstructionInputLanded(",
+				"internal static bool TryCloseConstructionInputTrip(",
+				"internal static bool TryReleaseUndebitedConstructionInputOwner(",
+				"internal static bool TryQuarantineConstructionInputOwner(",
+				"internal readonly struct KingdomConstructionInputRouteProof",
+				"internal static bool TryDescribeConstructionInputReservation(");
 		}
 
 		[Test]
@@ -35,7 +46,7 @@ namespace ThousandAndFirst.Tests
 			string source = KingdomCentralLogisticsLogicalSource.Read();
 			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestTripView"));
 			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestReservation"));
-			Assert.AreEqual(10, Count(source, "internal static partial class KingdomCentralLogistics"));
+			Assert.AreEqual(17, Count(source, "internal static partial class KingdomCentralLogistics"));
 			Assert.AreEqual(1, Count(source, "TargetReceiptProperty = \"KingdomDeliveryReceipt\""));
 			Assert.AreEqual(1, Count(source, "FoodReceiptJobProperty = \"KingdomDeliveryReceiptJob\""));
 			StringAssert.DoesNotContain("internal static class KingdomCentralLogistics", source);
@@ -50,6 +61,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("survey.SynchronizeReceiptObject(target);", source);
 			StringAssert.Contains("KingdomLogisticsRules.TryPlanSnapshot", source);
 			StringAssert.Contains("TryDebitScalar(survey, seed, total", source);
+			StringAssert.Contains("AvailableIn(candidate, leases)", source);
+			StringAssert.Contains("target.Inventory.AddObject(food, Silent: true, NoStack: true)", source);
+			StringAssert.Contains("survey.RefreshFoodTopology();", source);
 		}
 
 		private static void Ordered(string source, params string[] markers)

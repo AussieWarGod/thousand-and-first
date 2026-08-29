@@ -159,19 +159,49 @@ namespace ThousandAndFirst
 			return total + DistrictDefenceBonus;
 		}
 
-		/// <summary>Draws water from the dedicated stores, updating the survey's counters.</summary>
+		/// <summary>Draws ordinary-use water from unleased dedicated stores without crossing a
+		/// settlement-wide routed-input reserve floor.</summary>
 		/// <param name="Drams">Amount requested.</param>
 		/// <returns>Amount actually drawn, which may be less than requested.</returns>
 		public int Consume(int Drams)
 		{
-			int remaining = Drams;
+			return ConsumeAvailable(Drams, true);
+		}
+
+		/// <summary>Draws the settlement's survival bill. Exact routed cargo remains unavailable,
+		/// while the policy floor is spendable because sustaining residents is its purpose.</summary>
+		internal int ConsumeUpkeep(int Drams)
+		{
+			return ConsumeAvailable(Drams, false);
+		}
+
+		private int ConsumeAvailable(int Drams, bool PreserveFloor)
+		{
+			if (Drams <= 0) return 0;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			int available;
+			if (!KingdomConstructionInputLeaseAuthority.TryCapture(out leases, out failure)
+				|| !KingdomConstructionInputLeaseAuthority.TryWaterAllowance(
+					leases, this, PreserveFloor, out available, out failure)) return 0;
+			int remaining = Math.Min(Drams, available);
+			int budget = remaining;
+			HashSet<LiquidVolume> seen = new HashSet<LiquidVolume>();
 			for (int i = 0; i < Stores.Count && remaining > 0; i++)
 			{
 				LiquidVolume store = Stores[i];
-				if (!KingdomLiquids.HasFreshWater(store))
+				GameObject owner = store == null ? null : store.ParentObject;
+				if (store == null || !seen.Add(store) || !GameObject.Validate(owner)
+					|| owner.GetIntProperty("KingdomStores") != 1
+					|| !ReferenceEquals(owner.GetPart<LiquidVolume>(), store)
+					|| KingdomConstructionInputLeaseAuthority.IsLeased(leases, owner)
+					|| !KingdomLiquids.HasFreshWater(store))
 				{
 					continue;
 				}
+				string leaseFailure;
+				if (!KingdomConstructionInputLeaseAuthority.TryObjectAvailableForLocalDebit(
+					owner, out leaseFailure)) continue;
 				int removed = KingdomLiquids.Drain(store, remaining);
 				if (removed > 0)
 				{
@@ -181,7 +211,7 @@ namespace ThousandAndFirst
 					SynchronizeReceiptObject(store.ParentObject);
 				}
 			}
-			return Drams - remaining;
+			return budget - remaining;
 		}
 
 		/// <summary>

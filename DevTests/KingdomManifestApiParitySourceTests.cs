@@ -45,17 +45,18 @@ namespace ThousandAndFirst.Tests
 				hash = BitConverter.ToString(sha.ComputeHash(
 					Encoding.UTF8.GetBytes(shape.ToString()))).Replace("-", "").ToLowerInvariant();
 			}
-			Assert.AreEqual(186, fields.Count);
+			Assert.AreEqual(194, fields.Count);
 			Assert.AreEqual(
-				"c97a420e8c54abcb6df61a47ceebf59a6e9a4bb3460898511857d2bd6e1a00d0",
+				"03e08192b52987061f7ed8338f4fe186afa7e210858c5e6dbec7adb395dc7e42",
 				hash, "public field names, types, defaults, and declaration order are save ABI");
-			Assert.AreEqual(27,
-				Regex.Matches(source, "public partial class KingdomSystem").Count);
+			Assert.AreEqual(30,
+				Regex.Matches(source, "public partial class KingdomSystem").Count,
+				"the reviewed logical-source shard set is part of the save-ABI pin");
 			Assert.AreEqual(1, Regex.Matches(source, @"^\t\[Serializable\]$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(6, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
+			Assert.AreEqual(8, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(4, Regex.Matches(source, @"^\t\t\[Obsolete\(",
+			Assert.AreEqual(6, Regex.Matches(source, @"^\t\t\[Obsolete\(",
 				RegexOptions.Multiline).Count);
 			Assert.AreEqual(1, Regex.Matches(source,
 				@"^\t\tprivate sealed class CharterAbilityObservation$",

@@ -642,20 +642,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		// ==================================================================================
-		// The one shade a named notable carries into the level.
+		// Historical notable scoring helpers retained for narrative/tool compatibility.
 		// ==================================================================================
 
 		[Test]
-		public void NotableShade_IsMetTastesPlusTheLeadersNetPlusMetPrefers()
+		public void HistoricalNotableScoreCombinesTastesLeaderAndMetPrefers()
 		{
-			// Two tastes met, the virtue net of the flaw, and two Prefers met: the whole of what
-			// one notable is worth, and the number KingdomSubsidenceRules.SupportedLevel reads.
+			// This proves old chronicle/tool vocabulary remains deterministic. Live capacity never
+			// reads this score; civic-office authority is title-only.
 			Assert.AreEqual((2 * KingdomCeremonyRules.TasteShadeAmount) + KingdomCeremonyRules.LeaderShade() + 2,
 				KingdomCeremonyRules.NotableShade(new List<bool> { true, true }, 2));
 		}
 
 		[Test]
-		public void NotableShade_IsNeverNothingBecauseEveryNotableCarriesAVirtue()
+		public void HistoricalNotableScoreStillIncludesNarrativeVirtue()
 		{
 			// Unmet tastes are not a penalty (the brief rejects the penalty half outright), so a
 			// notable who found nothing here is still worth their virtue net of their flaw.
@@ -665,13 +665,13 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void NotableShade_TreatsANegativePreferShadeAsNone()
+		public void HistoricalNotableScoreTreatsNegativePreferenceAsNone()
 		{
 			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, -9));
 		}
 
 		[Test]
-		public void NotableShade_NeverExceedsTheCeilingItsOwnParts()
+		public void HistoricalNotableScoreNeverExceedsItsVocabularyCeiling()
 		{
 			Assert.AreEqual(KingdomCeremonyRules.MaxNotableShade,
 				KingdomCeremonyRules.NotableShade(new List<bool> { true, true, true, true }, 99));
@@ -680,7 +680,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void MaxNotableShade_AgreesWithTheWidestDrawChooseTastesCanMake()
+		public void HistoricalScoreCeilingAgreesWithTheWidestTasteDraw()
 		{
 			// A ceiling that disagreed with the draw would be a ceiling nothing reached.
 			List<int> widest = new List<int>();
@@ -699,14 +699,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ShadeClause_SaysNothingForASettlementWhoseNotableIsWorthNothing()
+		public void HistoricalShadeClauseSaysNothingForZero()
 		{
 			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(0));
 			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(-2));
 		}
 
 		[Test]
-		public void ShadeClause_NamesTheNumberSoItIsNotAnInvisibleModifier()
+		public void HistoricalShadeClauseNamesItsRetiredScoreForTooling()
 		{
 			string clause = KingdomCeremonyRules.ShadeClause(3);
 			StringAssert.Contains("+3", clause);

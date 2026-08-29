@@ -23,11 +23,20 @@ namespace ThousandAndFirst
 			Preparation = null;
 			List<GameObject> sources = new List<GameObject>();
 			List<string> stamps = new List<string>();
+			List<GameObject> owners = new List<GameObject>();
+			List<Cell> cells = new List<Cell>();
+			List<string> ids = new List<string>();
+			List<string> blueprints = new List<string>();
 			List<int> counts = new List<int>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure))
+				return KingdomKeptSpendPhase.RefusedClean;
 			for (int i = 0; Kept != null && i < Kept.Count; i++)
 			{
 				GameObject item = Kept[i];
-				if (!GameObject.Validate(item) || item.Count <= 0 || sources.Contains(item))
+				if (!GameObject.Validate(item) || item.Count <= 0 || sources.Contains(item)
+					|| !KingdomOrdinaryFoodAuthority.CanMutate(leases, item))
 				{
 					continue;
 				}
@@ -39,6 +48,10 @@ namespace ThousandAndFirst
 				}
 				sources.Add(item);
 				stamps.Add(stamp);
+				owners.Add(item.InInventory);
+				cells.Add(item.CurrentCell);
+				ids.Add(item.IDIfAssigned);
+				blueprints.Add(item.Blueprint);
 				counts.Add(item.Count);
 			}
 			KingdomKeptSpendPlan plan;
@@ -47,7 +60,8 @@ namespace ThousandAndFirst
 			{
 				return KingdomKeptSpendPhase.RefusedClean;
 			}
-			Preparation = new KeptSpendPreparation(sources, stamps, Procedure, plan);
+			Preparation = new KeptSpendPreparation(sources, stamps, owners, cells, ids,
+				blueprints, Procedure, plan);
 			return PreflightKeptSpend(Preparation);
 		}
 
@@ -94,7 +108,9 @@ namespace ThousandAndFirst
 				for (int unit = 0; unit < step.Taken; unit++)
 				{
 					int expected = step.Original - unit;
-					if (!GameObject.Validate(item) || item.Count != expected)
+					string authorityFailure;
+					if (!SourceAt(Preparation, step.Source, expected)
+						|| !KingdomOrdinaryFoodAuthority.TryObjectNow(item, out authorityFailure))
 					{
 						bool restored = finalized == 0
 							&& RestoreChangedCounts(Preparation, changed);
@@ -112,7 +128,8 @@ namespace ThousandAndFirst
 					}
 					bool last = expected == 1;
 					bool measured = last ? !GameObject.Validate(item)
-						: (GameObject.Validate(item) && item.Count == expected - 1);
+						: SourceAt(Preparation, step.Source, expected - 1)
+							&& KingdomOrdinaryFoodAuthority.TryObjectNow(item, out authorityFailure);
 					if (!measured)
 					{
 						bool restored = finalized == 0
@@ -142,7 +159,9 @@ namespace ThousandAndFirst
 				string stamp = GameObject.Validate(item)
 					? item.GetStringProperty(KingdomProcedures.StampProperty)
 					: null;
-				if (!GameObject.Validate(item) || item.Count != step.Original
+				string authorityFailure;
+				if (!SourceAt(Preparation, step.Source, step.Original)
+					|| !KingdomOrdinaryFoodAuthority.TryObjectNow(item, out authorityFailure)
 					|| !string.Equals(stamp, Preparation.Stamps[step.Source], StringComparison.Ordinal)
 					|| !KingdomProcedureRules.StampCarries(stamp, Preparation.Procedure.Grants)
 					|| !KingdomProcedureRules.MagnitudeAdmits(Preparation.Procedure, stamp))
@@ -162,8 +181,10 @@ namespace ThousandAndFirst
 				string stamp = GameObject.Validate(item)
 					? item.GetStringProperty(KingdomProcedures.StampProperty)
 					: null;
+				string authorityFailure;
 				if (step.NeedsFinalization ? GameObject.Validate(item)
-					: (!GameObject.Validate(item) || item.Count != step.Remaining
+					: (!SourceAt(Preparation, step.Source, step.Remaining)
+						|| !KingdomOrdinaryFoodAuthority.TryObjectNow(item, out authorityFailure)
 						|| !string.Equals(stamp, Preparation.Stamps[step.Source], StringComparison.Ordinal)
 						|| !KingdomProcedureRules.StampCarries(stamp, Preparation.Procedure.Grants)
 						|| !KingdomProcedureRules.MagnitudeAdmits(Preparation.Procedure, stamp)))
@@ -183,7 +204,10 @@ namespace ThousandAndFirst
 				GameObject item = Preparation.Sources[source];
 				try
 				{
-					if (GameObject.Validate(item) && item.Count != step.Original)
+					string authorityFailure;
+					if (GameObject.Validate(item) && item.Count != step.Original
+						&& SourceAt(Preparation, source, item.Count)
+						&& KingdomOrdinaryFoodAuthority.TryObjectNow(item, out authorityFailure))
 					{
 						item.Count = step.Original;
 						item.FlushTransientCache();
@@ -197,6 +221,16 @@ namespace ThousandAndFirst
 				}
 			}
 			return SourcesAtOriginal(Preparation);
+		}
+
+		private static bool SourceAt(KeptSpendPreparation preparation, int source, int count)
+		{
+			GameObject item = preparation.Sources[source];
+			return GameObject.Validate(item) && item.Count == count
+				&& item.InInventory == preparation.Owners[source]
+				&& item.CurrentCell == preparation.Cells[source]
+				&& item.IDIfAssigned == preparation.Ids[source]
+				&& item.Blueprint == preparation.Blueprints[source];
 		}
 
 		private static KingdomKeptSpendStep StepForSource(KingdomKeptSpendPlan Plan, int Source)

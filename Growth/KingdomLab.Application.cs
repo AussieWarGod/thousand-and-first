@@ -91,13 +91,15 @@ namespace ThousandAndFirst
 					Job.StandingPhases[at];
 				if (standingPhase == KingdomLabStandingPhase.Pending)
 				{
-					Job.StandingBefore[at] = System.GetStanding(Job.StandingFactions[at]);
+					Job.StandingBefore[at] =
+						System.GetRegardForRealm(Job.StandingFactions[at]);
 					Job.StandingTargets[at] = KingdomLabRules.StandingAfter(
 						Job.StandingBefore[at], Job.StandingDeltas[at]);
 					Job.StandingPhases[at] = (int)KingdomLabStandingPhase.Bound;
 					standingPhase = KingdomLabStandingPhase.Bound;
 				}
-				int currentStanding = System.GetStanding(Job.StandingFactions[at]);
+				int currentStanding =
+					System.GetRegardForRealm(Job.StandingFactions[at]);
 				standingPhase = KingdomLabRules.ObserveStanding(standingPhase,
 					currentStanding, Job.StandingBefore[at], Job.StandingTargets[at]);
 				Job.StandingPhases[at] = (int)standingPhase;
@@ -122,7 +124,8 @@ namespace ThousandAndFirst
 				try
 				{
 					Job.StandingPhases[at] = (int)KingdomLabStandingPhase.Intent;
-					System.SetStanding(Job.StandingFactions[at], Job.StandingTargets[at]);
+					System.SetRegardForRealm(Job.StandingFactions[at],
+						Job.StandingTargets[at]);
 				}
 				catch (Exception ex)
 				{
@@ -131,7 +134,8 @@ namespace ThousandAndFirst
 					return;
 				}
 				standingPhase = KingdomLabRules.ObserveStanding(KingdomLabStandingPhase.Intent,
-					System.GetStanding(Job.StandingFactions[at]), Job.StandingBefore[at],
+					System.GetRegardForRealm(Job.StandingFactions[at]),
+					Job.StandingBefore[at],
 					Job.StandingTargets[at]);
 				Job.StandingPhases[at] = (int)standingPhase;
 				if (standingPhase != KingdomLabStandingPhase.Applied)
@@ -163,6 +167,7 @@ namespace ThousandAndFirst
 				Job.Fault = "The exact effect changed before terminal cleanup.";
 				return;
 			}
+			SettleCompletedBodyHistory(Actor, System, Job);
 			if (!FinalizeApplicationProjection(Actor, Job, KingdomLabRegistryStatus.Complete))
 			{
 				Job.State = KingdomLabJobPhase.ApplicationRecovery;
@@ -236,7 +241,7 @@ namespace ThousandAndFirst
 				&& KingdomLabRules.MessageSettled(
 					(KingdomLabMessagePhase)Job.TerminalMessagePhase))
 			{
-				PurgeApplicationReceipt(Job.ParentObject, Job,
+				PurgeApplicationReceipt(Job.ParentObject, Actor, System, Job,
 					KingdomLabRegistryStatus.Complete);
 			}
 		}

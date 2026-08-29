@@ -81,6 +81,14 @@ namespace ThousandAndFirst
 				Book.Manifest.Status = KingdomTradeManifestStatus.Quarantined;
 				Book.Manifest.Fault = "Both road windows closed; escrow remains retained under its permanent receipt.";
 				break;
+			case KingdomTradeOperationKind.PolityConsignmentDelivery:
+				if (!RequirePolityConsignmentRecipient(System, Operation, Frame.Zone,
+					"domain landing")) return false;
+				if (Operation.ProvedWater < 1 ||
+					Operation.ProvedWater > Operation.RequestedWater)
+					return QuarantineFalse(Operation,
+						"Polity consignment lacks a bounded exact physical debit proof.");
+				break;
 			}
 			RefreshBookDomain(Frame);
 			// Domain state is now externally visible to outbox callbacks. Publish compatibility
@@ -90,6 +98,8 @@ namespace ThousandAndFirst
 				|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone))
 				return QuarantineFalse(Operation,
 					"The domain settlement CAS changed its exact authority or physical frame.");
+			if (!RequirePolityConsignmentRecipient(System, Operation, Frame.Zone,
+				"DomainSettled publication")) return false;
 			Operation.Phase = KingdomTradePhase.DomainSettled;
 			return true;
 		}
@@ -206,7 +216,7 @@ namespace ThousandAndFirst
 				|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone))
 				return QuarantineFalse(Operation,
 					"The standing frame changed before its exact callback.");
-			int current = System.GetStanding(standing.Faction);
+			int current = System.GetRegardForRealm(standing.Faction);
 			if (current == standing.After)
 			{
 				standing.State = KingdomTradePhysicalState.Proved;
@@ -224,7 +234,7 @@ namespace ThousandAndFirst
 				standing.State = KingdomTradePhysicalState.Lost;
 				return QuarantineFalse(Operation, "Standing callback frame could not be frozen.");
 			}
-			System.SetStanding(standing.Faction, standing.After);
+			System.SetRegardForRealm(standing.Faction, standing.After);
 			if (!ExactCallbackWitness(Frame, callback)
 				|| !ReferenceEquals(Frame.System.TradeBook, Frame.Book)
 				|| !ReferenceEquals(Frame.Book.OpenOperation, Operation)
@@ -232,7 +242,7 @@ namespace ThousandAndFirst
 				return FailDetachedAuthority(Frame,
 					"A standing callback detached its official trade authority.");
 			if (standing.State != KingdomTradePhysicalState.Intent
-				|| System.GetStanding(standing.Faction) != standing.After
+				|| System.GetRegardForRealm(standing.Faction) != standing.After
 				|| !ExactStandingWithOverride(Frame, standing.Faction, standing.After)
 				|| !ExactPhysicalFrame(Frame, Operation, Frame.Zone)
 				|| !ExactSettlement(Frame))

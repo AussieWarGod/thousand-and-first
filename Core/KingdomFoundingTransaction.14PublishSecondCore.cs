@@ -24,6 +24,11 @@ namespace ThousandAndFirst
 			{
 				throw new InvalidOperationException("The realm or recovery binding disappeared during second founding.");
 			}
+			if (!CommitExternalBinding(Basin, Site, out string externalFailure))
+			{
+				throw new InvalidOperationException(
+					"External ownership changed before city publication: " + externalFailure);
+			}
 			if (!TryFreezeSecondIdentity(Basin, System, Site,
 				out string frozenSettlementId, out string identityFailure))
 			{
@@ -43,11 +48,12 @@ namespace ThousandAndFirst
 				PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority);
 			bool targetIsExactSeat = SecondIsExactSeat(System, Basin.PendingName,
 				Site.ZoneID, Basin.PendingTransactionID);
-			bool targetIsExactAway = SecondIsExactAway(System, Basin.PendingName,
+			bool targetIsExactNonSeat = SecondIsExactNonSeat(System, Basin.PendingName,
 				Site.ZoneID, Basin.PendingTransactionID);
 			if (!KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				System.SettlementCount, KingdomSettlement.MaxSettlements,
-				System.Away == null, targetIsExactSeat, targetIsExactAway, published))
+				System.NonSeatSettlementCount < KingdomSettlementTopologyRules.MaxNonSeatSettlements,
+				targetIsExactSeat, targetIsExactNonSeat, published))
 			{
 				throw new InvalidOperationException("The second-city cap or seat changed before projection.");
 			}
@@ -125,18 +131,16 @@ namespace ThousandAndFirst
 				founded.NextArrivalTick = foundedTick +
 					KingdomRules.ArrivalIntervalTicks(founded.Population);
 
-				bool awayIsNew = SecondIsExactAway(System, Basin.PendingName, Site.ZoneID,
+				bool nonSeatIsNew = SecondIsExactNonSeat(System, Basin.PendingName, Site.ZoneID,
 					Basin.PendingTransactionID);
-				if (!awayIsNew)
+				if (!nonSeatIsNew)
 				{
-					if (System.Away != null)
+					if (!System.TryAddNonSeatSettlement(founded, out string topologyFailure))
 					{
-						throw new InvalidOperationException("An unrelated Away city appeared before the second seat could publish.");
+						throw new InvalidOperationException(
+							"The bounded non-seat topology refused the exact city: " +
+							topologyFailure);
 					}
-					// Publish the new city into the open Away slot first. TrySeat then captures the
-					// old seat and restores only this exact transaction city. If seat exchange is
-					// interrupted, no old city was overwritten and zone activation can retry it.
-					System.Away = founded;
 				}
 				if (!SeatSecond(System, Basin.PendingName, Site, Basin.PendingAuthority,
 					Basin.PendingTransactionID))

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using XRL;
 using XRL.World;
+using XRL.World.AI;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.Parts;
 
@@ -104,7 +105,8 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return false;
 			}
-			KingdomDayShape shape = KingdomResidentRules.DayShapeFor(Station.WorkId, KindOf(Work));
+			KingdomWorkKind kind = (KingdomWorkKind)Station.Kind;
+			KingdomDayShape shape = KingdomResidentRules.DayShapeFor(Station.WorkId, kind);
 			KingdomPost wanted = KingdomPlacementRules.PostFor(shape, KingdomPlacementRules.BandFor(NowTick));
 			Cell target = (wanted == KingdomPost.Station) ? Standing(zone, post) : Hearth(zone, Actor);
 			if (target == null)
@@ -114,9 +116,20 @@ namespace ThousandAndFirst.Simulation.City
 			Cell standing = Actor.CurrentCell;
 			if (standing == target)
 			{
-				// Already where the hour wants them. Claiming the turn to walk nowhere is exactly
-				// the "settlement stands around doing one thing" failure the cooldown is for.
-				return false;
+				if (wanted != KingdomPost.Station)
+				{
+					// Home already means done. A workplace must never claim somebody merely for
+					// standing at their hearth.
+					return false;
+				}
+				KingdomStationActivity activity = KingdomStationActivityRules.For(kind, shape);
+				if (activity == KingdomStationActivity.None)
+				{
+					return false;
+				}
+				Station.LastClaimTick = NowTick;
+				PushActivity(Work, Station.WorkId, Actor, activity);
+				return true;
 			}
 			Station.LastClaimTick = NowTick;
 			// The anchor moves and vanilla walks them: Bored's own StartingCell branch takes them
@@ -124,8 +137,44 @@ namespace ThousandAndFirst.Simulation.City
 			Actor.Brain.Wanders = false;
 			Actor.Brain.WandersRandomly = false;
 			Actor.Brain.Stay(target);
+			if (wanted == KingdomPost.Station)
+			{
+				KingdomStationActivity activity = KingdomStationActivityRules.For(kind, shape);
+				if (activity != KingdomStationActivity.None)
+				{
+					// Goal stacks are last-in-first-out. Queue the save-tolerant cosmetic delegate
+					// first, then MoveTo, exactly as vanilla Bed and Shrine do.
+					PushActivity(Work, Station.WorkId, Actor, activity);
+				}
+			}
 			Actor.Brain.PushGoal(new MoveTo(target, careful: true));
 			return true;
+		}
+
+		/// <summary>Queues one bounded cosmetic act. Re-proves body, post, work, and proximity when
+		/// it runs; a reassignment or interrupted walk therefore produces nothing.</summary>
+		private static void PushActivity(GameObject Work, int WorkId, GameObject Actor, KingdomStationActivity Activity)
+		{
+			GameObject work = Work;
+			GameObject actor = Actor;
+			actor.Brain.PushGoal(new DelegateGoal(delegate(GoalHandler goal)
+			{
+				if (GameObject.Validate(actor) && GameObject.Validate(work)
+					&& actor.Brain != null && PostOf(actor) == WorkId
+					&& actor.CurrentZone == work.CurrentZone && actor.DistanceTo(work) <= 1)
+				{
+					KingdomStationActivityCue cue = KingdomStationActivityRules.Cue(Activity);
+					if (cue.Exists)
+					{
+						// The explicit-velocity overload consumes no simulation RNG. The shorter
+						// ParticleText overload randomizes its angle through the simulation RNG, which would
+						// let a cosmetic work cue perturb later gameplay draws.
+						actor.ParticleText(cue.Text, 0f, -0.2f, cue.Color,
+							IgnoreVisibility: false);
+					}
+				}
+				goal.FailToParent();
+			}));
 		}
 
 		/// <summary>The cell the founder actually sees somebody standing on: the work's own cell

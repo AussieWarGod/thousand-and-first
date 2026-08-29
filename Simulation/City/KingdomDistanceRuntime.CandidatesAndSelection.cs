@@ -51,6 +51,13 @@ namespace ThousandAndFirst.Simulation.City
 			out List<Candidate> candidates)
 		{
 			Dictionary<int, Candidate> indexed = new Dictionary<int, Candidate>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure))
+			{
+				candidates = null;
+				return false;
+			}
 			for (int i = 0; i < survey.Built.Count; i++)
 			{
 				Candidate row;
@@ -74,8 +81,9 @@ namespace ThousandAndFirst.Simulation.City
 				Candidate row;
 				if (!Merge(indexed, larder, out row)) { candidates = null; return false; }
 				if (row == null) continue;
-				row.FoodAmount = KingdomSurvey.HeldIn(larder);
-				row.FoodRoom = KingdomSurvey.CapacityOf(larder) - row.FoodAmount;
+				int physical = KingdomSurvey.HeldIn(larder);
+				row.FoodAmount = KingdomOrdinaryFoodAuthority.AvailableIn(larder, leases);
+				row.FoodRoom = KingdomSurvey.CapacityOf(larder) - physical;
 				if (row.FoodRoom < 0L) row.FoodRoom = 0L;
 			}
 			KingdomJobTable jobs;
@@ -142,7 +150,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			row = null;
 			if (!GameObject.Validate(obj) || obj.CurrentCell == null) return true;
-			string objectId = obj.ID;
+			string objectId = obj.IDIfAssigned;
 			int id = KingdomCityRules.StableId(objectId);
 			if (id <= 0) return true;
 			if (indexed.TryGetValue(id, out row))

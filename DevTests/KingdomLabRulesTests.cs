@@ -94,11 +94,13 @@ namespace ThousandAndFirst.Tests
 				new[] { "Paid", "Lost", "Outstanding", "Quarantined", "Settled" },
 				new[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(bool) }, true);
 			AssertFields(typeof(KingdomLabRegistryEntry), new[] { "JobId", "BuildingId",
-				"PatientId", "GameId", "RealmId", "RealmFoundedTick", "ContractVersion",
-				"ProcedureKey", "Grants", "Source", "Attach", "Manager", "Detail",
+				"PatientId", "GameId", "RealmId", "RealmFoundedTick", "RulerSuccessionOrdinal",
+				"RulerLifeId", "ContractVersion", "ProcedureKey", "Grants", "Source",
+				"Attach", "Manager", "Detail",
 				"Fingerprint", "Status", "UpdatedTick" }, new[] { typeof(string), typeof(string),
 				typeof(string), typeof(string), typeof(string), typeof(long), typeof(int),
-				typeof(string), typeof(string), typeof(int), typeof(int), typeof(string),
+				typeof(string), typeof(int), typeof(string), typeof(string), typeof(int),
+				typeof(int), typeof(string),
 				typeof(string), typeof(string), typeof(KingdomLabRegistryStatus), typeof(long) },
 				false);
 
@@ -109,6 +111,8 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("", row.GameId);
 			Assert.AreEqual("", row.RealmId);
 			Assert.AreEqual(0L, row.RealmFoundedTick);
+			Assert.AreEqual(-1, row.RulerSuccessionOrdinal);
+			Assert.AreEqual("", row.RulerLifeId);
 			Assert.AreEqual(0, row.ContractVersion);
 			Assert.AreEqual("", row.ProcedureKey);
 			Assert.AreEqual("", row.Grants);

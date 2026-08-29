@@ -205,6 +205,22 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>Test-only producer for archive v15, before durable physical guest evidence.</summary>
+		internal static bool TryEncodeFirstGuestV15ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV16ForTests(Value, FirstGuestVersion,
+				"v15", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v16, before fixed-rate arrival cadence.</summary>
+		internal static bool TryEncodePhysicalFirstGuestV16ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV16ForTests(Value, PhysicalFirstGuestVersion,
+				"v16", out Payload, out Failure);
+		}
+
 #endif
 	}
 }

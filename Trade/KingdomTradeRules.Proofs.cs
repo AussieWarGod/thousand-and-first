@@ -34,6 +34,7 @@ namespace ThousandAndFirst
 				LedgerState = box == null ? KingdomTradeSinkState.Skipped : box.LedgerState,
 					MessageState = box == null ? KingdomTradeSinkState.Skipped : box.MessageState,
 					DeedState = box == null ? KingdomTradeSinkState.Skipped : box.DeedState,
+					PolityRecipient = ClonePolityRecipientWitness(Operation.PolityRecipient),
 					ManifestCleanup = (Operation.Kind == KingdomTradeOperationKind.ManifestDelivery
 						&& Operation.ManifestEscrowAfter == 0)
 						|| Operation.Kind == KingdomTradeOperationKind.ManifestLapse,
@@ -96,6 +97,7 @@ namespace ThousandAndFirst
 				}
 			}
 			Book.FormatVersion = CurrentFormatVersion;
+			QuarantineLegacyConsignmentWithoutWitness(Book, "wire-v3");
 			if (migratePending)
 				pending.OperationEvidenceHash = OperationEvidenceDigest(operation);
 		}
@@ -207,6 +209,8 @@ namespace ThousandAndFirst
 				&& Left.LedgerState == Right.LedgerState
 				&& Left.MessageState == Right.MessageState
 				&& Left.DeedState == Right.DeedState
+				&& ((Left.PolityRecipient == null && Right.PolityRecipient == null) ||
+					ExactPolityRecipientWitness(Left.PolityRecipient, Right.PolityRecipient))
 				&& Left.ManifestCleanup == Right.ManifestCleanup
 				&& Left.Tick == Right.Tick
 				&& string.Equals(Left.Fault, Right.Fault, StringComparison.Ordinal);

@@ -18,7 +18,7 @@ namespace ThousandAndFirst
 		{
 			if (Wear == null || !GameObject.Validate(Work) || Wear.ParentObject != Work
 				|| !ReferenceEquals(Work.GetPart<r_KingdomWear>(), Wear)
-				|| !string.Equals(Wear.LeakOwnerId, Work.ID, StringComparison.Ordinal)
+				|| !string.Equals(Wear.LeakOwnerId, Work.IDIfAssigned, StringComparison.Ordinal)
 				|| Work.CurrentZone == null || Work.CurrentCell == null
 				|| Work.CurrentCell.ParentZone != Work.CurrentZone
 				|| !string.Equals(Wear.LeakZoneId, Work.CurrentZone.ZoneID,
@@ -107,6 +107,9 @@ namespace ThousandAndFirst
 			List<int> originals = new List<int>();
 			List<int> allocations = new List<int>();
 			List<GameObject> seen = new List<GameObject>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure)) return false;
 			int remaining = Wanted;
 			for (int i = 0; i < Work.Inventory.Objects.Count && remaining > 0; i++)
 			{
@@ -117,19 +120,19 @@ namespace ThousandAndFirst
 					if (ReferenceEquals(seen[j], food)) duplicate = true;
 				}
 				if (duplicate || !GameObject.Validate(food) || food.InInventory != Work
-					|| (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient")))
+					|| !KingdomOrdinaryFoodAuthority.CanSpend(leases, food))
 				{
 					continue;
 				}
-				if (string.IsNullOrEmpty(food.ID) || food.ID.IndexOf('|') >= 0 || food.Count <= 0)
+				if (string.IsNullOrEmpty(food.IDIfAssigned) || food.IDIfAssigned.IndexOf('|') >= 0 || food.Count <= 0)
 				{
 					return false;
 				}
 				int take = (food.Count < remaining) ? food.Count : remaining;
-				if (food.ID.Length > KingdomWearRules.MaxObjectIdChars
+				if (food.IDIfAssigned.Length > KingdomWearRules.MaxObjectIdChars
 					|| ids.Count >= KingdomWearRules.MaxRows) return false;
 				seen.Add(food);
-				ids.Add(food.ID);
+				ids.Add(food.IDIfAssigned);
 				originals.Add(food.Count);
 				allocations.Add(take);
 				remaining -= take;
@@ -154,8 +157,11 @@ namespace ThousandAndFirst
 				|| !KingdomWearRules.TryObjectIdRows(Wear.LeakItemIds, out ids)) return false;
 			int[] originals;
 			int[] allocations;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
 			if (!TryWearInts(Wear.LeakItemOriginalCounts, out originals)
 				|| !TryWearInts(Wear.LeakItemAllocations, out allocations)
+				|| !KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure)
 				|| ids.Length == 0 || ids.Length != originals.Length
 				|| ids.Length != allocations.Length) return false;
 			bool allOriginal = true;
@@ -177,7 +183,7 @@ namespace ThousandAndFirst
 				else
 				{
 					if (food.InInventory != Work || !Work.Inventory.Objects.Contains(food)
-						|| (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+						|| !KingdomOrdinaryFoodAuthority.CanSpend(leases, food)
 						|| food.Count < 0) return false;
 					rowCurrent = food.Count;
 				}

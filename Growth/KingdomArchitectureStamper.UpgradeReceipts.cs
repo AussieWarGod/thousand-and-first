@@ -15,13 +15,13 @@ namespace ThousandAndFirst
 			out string Failure)
 		{
 			Failure = null;
-			if (!GameObject.Validate(Target) || string.IsNullOrEmpty(Target.ID)
-				|| Target.ID.Length > KingdomConstructionRules.MaxSubjectChars)
+			if (!GameObject.Validate(Target) || string.IsNullOrEmpty(Target.IDIfAssigned)
+				|| Target.IDIfAssigned.Length > KingdomConstructionRules.MaxSubjectChars)
 				return Fail("authored successor has no bounded exact identity", out Failure);
 			try
 			{
 				Owner.RemoveIntProperty(UpgradeSchemaProperty);
-				Owner.SetStringProperty(UpgradeTargetProperty, Target.ID);
+				Owner.SetStringProperty(UpgradeTargetProperty, Target.IDIfAssigned);
 				Owner.SetStringProperty(UpgradeHashProperty, Successor.SnapshotHash);
 				Owner.SetStringProperty(UpgradeLotProperty, Lot);
 				Owner.SetIntProperty(UpgradePhaseProperty, 0);
@@ -47,7 +47,7 @@ namespace ThousandAndFirst
 			if (Owner == null || Target == null || !Owner.HasIntProperty(UpgradeSchemaProperty)
 				|| Owner.HasStringProperty(UpgradeSchemaProperty)
 				|| Owner.GetIntProperty(UpgradeSchemaProperty) != UpgradeSchema
-				|| Owner.GetStringProperty(UpgradeTargetProperty) != Target.ID
+				|| Owner.GetStringProperty(UpgradeTargetProperty) != Target.IDIfAssigned
 				|| Owner.GetStringProperty(UpgradeHashProperty) != Successor.SnapshotHash
 				|| Owner.GetStringProperty(UpgradeLotProperty) != Lot)
 				return Fail("authored upgrade receipt is absent, partial, unknown, or changed",

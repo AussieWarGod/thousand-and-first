@@ -58,8 +58,30 @@ namespace ThousandAndFirst.Simulation.City
 				|| !book.TryRead(out state, out fault)
 				|| !KingdomResidentRules.TryRemove(state, residentId, out next, out FormerRow,
 					out fault)) return false;
+			if (!KingdomNamedCook.PrepareCookLoss(System, Body,
+				KingdomNamedCookVacancyCause.Departure,
+				out KingdomNamedCookReceipt priorCook, out string prepareCookFailure))
+			{
+				KingdomLog.Log("named cook: departure preparation refused ("
+					+ (prepareCookFailure ?? "unknown failure") + ")"); return false;
+			}
 			if (!PublishRowAndUnbind(System, book, state, next, residentId,
-				KingdomUnbindCause.Abroad)) return false;
+				KingdomUnbindCause.Abroad))
+			{
+				if (!KingdomNamedCook.CancelPreparedCookLoss(System, Body, priorCook,
+					KingdomNamedCookVacancyCause.Departure, out string rollbackCookFailure))
+					KingdomLog.Log("named cook: departure rollback refused ("
+						+ (rollbackCookFailure ?? "unknown failure") + ")");
+				return false;
+			}
+			if (!KingdomOfficeRuntime.ObserveHolderLoss(System, Body,
+				KingdomCivicOfficeVacancyCause.Departure, out string officeFailure))
+				KingdomLog.Log("office: departing holder title removal waits ("
+					+ (officeFailure ?? "unknown failure") + ")");
+			if (!KingdomNamedCook.ObserveCookLoss(System, Body,
+				KingdomNamedCookVacancyCause.Departure, out string cookFailure))
+				KingdomLog.Log("named cook: departing cook vacancy waits ("
+					+ (cookFailure ?? "unknown failure") + ")");
 			Body.RemoveIntProperty(ResidentIdProperty);
 			ProjectCompatibility(System);
 			return true;
@@ -94,10 +116,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// </para>
 		/// </summary>
 		internal static KingdomAccessionOutcome TryAccede(KingdomSystem System, GameObject Body,
-			out KingdomResidentRow formerRow, out bool Seated)
+			out KingdomResidentRow formerRow, out string SettlementId)
 		{
 			formerRow = default(KingdomResidentRow);
-			Seated = false;
+			SettlementId = null;
 			if (System == null || System.Bindings == null || !GameObject.Validate(Body) || !Body.IsAlive)
 			{
 				return KingdomAccessionOutcome.RefusedClean;
@@ -140,12 +162,13 @@ namespace ThousandAndFirst.Simulation.City
 
 			// Accession is keyed on the row and binding only. Compatibility projections are rebuilt
 			// after both durable carriers commit; they never veto or identify the heir.
-			Seated = ReferenceEquals(book, System.City);
-			KingdomSettlement away = (!Seated && System.Away != null
-				&& ReferenceEquals(book, System.Away.City)) ? System.Away : null;
-			Dictionary<string, int> creedCounts = Seated ? System.CreedCounts : away?.CreedCounts;
-			Dictionary<string, int> creedPastCounts = Seated ? System.CreedPastCounts : away?.CreedPastCounts;
-			if ((!Seated && away == null) || creedCounts == null || creedPastCounts == null)
+			bool seated = ReferenceEquals(book, System.City);
+			KingdomSettlement other = seated ? null : System.FindNonSeatSettlementByBook(book);
+			SettlementId = seated ? System.City?.SettlementId : other?.City?.SettlementId;
+			Dictionary<string, int> creedCounts = seated ? System.CreedCounts : other?.CreedCounts;
+			Dictionary<string, int> creedPastCounts = seated ? System.CreedPastCounts : other?.CreedPastCounts;
+			if (!KingdomIdentityRules.IsSettlementId(SettlementId) ||
+				(!seated && other == null) || creedCounts == null || creedPastCounts == null)
 			{
 				KingdomLog.Log("binding: accession refused; the chosen resident's settlement tallies are unreadable");
 				formerRow = default(KingdomResidentRow);
@@ -203,15 +226,15 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				return outcome;
 			}
-			if (Seated)
+			if (seated)
 			{
 				System.CreedCounts = nextCreedCounts;
 				System.CreedPastCounts = nextCreedPastCounts;
 			}
 			else
 			{
-				away.CreedCounts = nextCreedCounts;
-				away.CreedPastCounts = nextCreedPastCounts;
+				other.CreedCounts = nextCreedCounts;
+				other.CreedPastCounts = nextCreedPastCounts;
 			}
 			ProjectCompatibility(System);
 			if (!KingdomCitizenship.TryRemove(System, Body,

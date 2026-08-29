@@ -30,25 +30,93 @@ namespace ThousandAndFirst
 
 		private static bool Covers(Zone Z, GameObject Work, int Wear)
 		{
-			BuildTallies(Work, Wear, out KingdomMaterialTally cost, out KingdomBitTally bitCost);
+			if (!TryBuildTallies(Work, Wear, out KingdomMaterialTally cost,
+				out KingdomBitTally bitCost)) return false;
 			KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z);
 			return KingdomMaterialRules.Covers(stock.Tally, cost) && KingdomMaterialRules.CoversBits(stock.Bits, bitCost);
 		}
 
-		private static void BuildTallies(GameObject Work, int Wear, out KingdomMaterialTally Cost, out KingdomBitTally BitCost)
+		private static bool TryBuildTallies(GameObject Work, int Wear,
+			out KingdomMaterialTally Cost, out KingdomBitTally BitCost)
 		{
+			Cost = new KingdomMaterialTally();
+			BitCost = new KingdomBitTally();
+			if (!GameObject.Validate(Work)) return false;
 			string designKey = KingdomUpgrade.DesignKeyOf(Work);
-			KingdomMaterialTally buildCost = string.IsNullOrEmpty(designKey) ? null : KingdomMaterials.CostFor(designKey);
-			KingdomBitTally buildBits = string.IsNullOrEmpty(designKey) ? null : KingdomMaterials.BitCostFor(designKey);
+			KingdomMaterialTally buildCost;
+			KingdomBitTally buildBits;
+			if (KingdomGatehouseRules.IsGatehouse(designKey))
+			{
+				if (!TryGatehouseRepairTruth(Work, out buildCost, out buildBits)) return false;
+			}
+			else
+			{
+				buildCost = string.IsNullOrEmpty(designKey)
+					? null : KingdomMaterials.CostFor(designKey);
+				buildBits = string.IsNullOrEmpty(designKey)
+					? null : KingdomMaterials.BitCostFor(designKey);
+			}
 			Cost = KingdomMaterialRules.RepairCost(buildCost, Wear);
 			BitCost = KingdomMaterialRules.RepairBits(buildBits, Wear);
+			return true;
+		}
+
+		private static bool TryGatehouseRepairTruth(GameObject Work,
+			out KingdomMaterialTally Materials, out KingdomBitTally Bits)
+		{
+			Materials = null;
+			Bits = null;
+			if (!KingdomGatehouse.TryReadPlan(Work, out KingdomGatehousePlan plan, out _))
+				return false;
+			if (Work.HasStringProperty(KingdomConstruction.PaidBuildSchemaProperty))
+				return false;
+			int schema = Work.GetIntProperty(KingdomConstruction.PaidBuildSchemaProperty);
+			if (schema == KingdomConstruction.PaidBuildSchema)
+			{
+				if (!Work.HasIntProperty(KingdomConstruction.PaidBuildSchemaProperty)
+					|| Work.HasStringProperty(KingdomConstruction.PaidBuildSchemaProperty)
+					|| !Work.HasIntProperty(KingdomConstruction.PaidBuildWaterProperty)
+					|| Work.HasStringProperty(KingdomConstruction.PaidBuildWaterProperty)
+					|| !Work.HasStringProperty(KingdomConstruction.PaidBuildMaterialProperty)
+					|| Work.HasIntProperty(KingdomConstruction.PaidBuildMaterialProperty)
+					|| !Work.HasStringProperty(KingdomConstruction.PaidBuildWorkProperty)
+					|| Work.HasIntProperty(KingdomConstruction.PaidBuildWorkProperty)
+					|| !KingdomConstruction.TryReadPaidBuild(Work,
+					out KingdomPaidBuildReceipt paid)
+					|| Work.GetStringProperty(KingdomConstruction.PaidBuildMaterialProperty)
+						!= paid.Material.ToClaimString()
+					|| Work.GetStringProperty(KingdomConstruction.PaidBuildWorkProperty)
+						!= paid.WorkTicks.ToString(
+							global::System.Globalization.CultureInfo.InvariantCulture)
+					|| !KingdomGatehouseRules.MaterialClaimMatches(plan,
+						paid.Material.ToClaimString())) return false;
+				Materials = paid.Material.Materials;
+				Bits = paid.Material.Bits;
+				return true;
+			}
+			if (schema != 0
+				|| Work.HasIntProperty(KingdomConstruction.PaidBuildSchemaProperty)
+				|| Work.HasIntProperty(KingdomConstruction.PaidBuildWaterProperty)
+				|| Work.HasStringProperty(KingdomConstruction.PaidBuildWaterProperty)
+				|| Work.HasIntProperty(KingdomConstruction.PaidBuildMaterialProperty)
+				|| Work.HasStringProperty(KingdomConstruction.PaidBuildMaterialProperty)
+				|| Work.HasIntProperty(KingdomConstruction.PaidBuildWorkProperty)
+				|| Work.HasStringProperty(KingdomConstruction.PaidBuildWorkProperty)
+				|| plan.ReceiptVersion == 2
+				|| !KingdomGatehouse.ProjectionComplete(Work, Work.CurrentZone)) return false;
+			// True schema-0/v1 standing work predates paid-build receipts. Its exact six-body
+			// topology is migration evidence for the original catalogue price and nothing newer.
+			Materials = KingdomMaterials.CostFor(KingdomGatehouseRules.BuildKey);
+			Bits = KingdomMaterials.BitCostFor(KingdomGatehouseRules.BuildKey);
+			return true;
 		}
 
 		private static void StartRepair(KingdomSystem System, GameObject Work, r_KingdomWear WearPart, long TimeTicks)
 		{
 			RepairTargetFrame targetFrame;
 			if (!TryCaptureRepairTarget(Work, WearPart, out targetFrame)) return;
-			BuildTallies(Work, WearPart.Wear, out KingdomMaterialTally cost, out KingdomBitTally bitCost);
+			if (!TryBuildTallies(Work, WearPart.Wear, out KingdomMaterialTally cost,
+				out KingdomBitTally bitCost)) return;
 			Zone zone = Work.CurrentZone;
 			if (zone == null || HasActiveRepair(Work, out _)
 				|| KingdomConstruction.HasActiveSubject(System, zone,

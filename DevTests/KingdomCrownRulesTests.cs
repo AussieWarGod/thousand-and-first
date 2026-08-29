@@ -622,20 +622,15 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(12, (int)ZoningVerdict.RefusedUncrowned);
 		}
 
-		// --- The arcology set: home stratum, shared into the surface -------------------------------
+		// --- Hosted arcology lots: private stratum, never surface plots ----------------------------
 
 		[Test]
-		public void TheArcologySetLivesInTheArcologyAndSharesIntoTheSurface()
+		public void HostedArcologyLotsNeverLeakOntoSurfaceGround()
 		{
-			// Addendum 15's "sharing is BY TAG", used exactly as it was ruled: the first welcomed
-			// token is the home set and the rest are the strata the design may also stand in. So
-			// the shipped interior records belong to the arcology set from the day they land, and
-			// they are reachable on the capital's own ground until the hosted-plot carrier gives
-			// the arcology ground of its own.
-			const string Interior = "arcology,surface";
+			const string Interior = "arcology";
 			Assert.AreEqual(KingdomZoningRules.StratumArcology, KingdomZoningRules.HomeStratum(Interior));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumSurface),
-				"reachable today, which is what stops this shipping as content that renders nowhere");
+			Assert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumSurface),
+				"hosted lots are commissioned through the exact shell, never a surface offer");
 			Assert.IsTrue(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumArcology),
 				"and it moves indoors without a schema change the day the stratum exists");
 			Assert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumDeep),

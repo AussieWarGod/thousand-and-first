@@ -186,6 +186,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("BindingRecordKey(PlanKey, BindingKey, type, ActualLotSize)", source);
 			StringAssert.Contains("binding.TryGetValue(SuccessorBuildKey, out record)", source);
 			StringAssert.Contains("no valid authored successor ", source);
+			StringAssert.Contains("string PredecessorVariantKey, string SuccessorBuildKey", source);
+			StringAssert.Contains("TrySelectFrozenSuccessorVariant(", source);
 
 			int successor = source.IndexOf("public static bool TryResolveSuccessor(",
 				StringComparison.Ordinal);
@@ -196,6 +198,7 @@ namespace ThousandAndFirst.Tests
 			string frozenPath = source.Substring(successor, helper - successor);
 			StringAssert.Contains("LoadState frozen = state;", frozenPath);
 			StringAssert.Contains("TrySelectVariant(record.Tier.Variants, Context", frozenPath);
+			StringAssert.Contains("record.Tier.Variants, PredecessorVariantKey", frozenPath);
 			StringAssert.Contains("CompileFrozen(frozen, record, variant, Facing", frozenPath);
 			Assert.IsFalse(frozenPath.Contains("KingdomData"));
 			Assert.IsFalse(frozenPath.Contains("KingdomPlots"));

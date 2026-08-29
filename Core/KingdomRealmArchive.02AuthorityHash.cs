@@ -25,8 +25,7 @@ namespace ThousandAndFirst
 			try
 			{
 				if (!KingdomArchivedSettlementCodec.TryEncode(Seat, out byte[] seatBytes,
-					out Failure) || !KingdomArchivedSettlementCodec.TryEncode(Away,
-						out byte[] awayBytes, out Failure) ||
+					out Failure) ||
 					!KingdomArchivedSettlementCodec.TryEncode(Seceded,
 						out byte[] secededBytes, out Failure) ||
 					!TryCarryBytes(CarryBook, out byte[] carryBytes, out Failure)) return false;
@@ -35,7 +34,8 @@ namespace ThousandAndFirst
 				{
 					writer.Write(0x54414131); // TAA1
 					writer.Write((byte)Scope);
-					WriteGraphBytes(writer, seatBytes); WriteGraphBytes(writer, awayBytes);
+					WriteGraphBytes(writer, seatBytes); WriteTopologyGraph(writer,
+						SettlementTopology);
 					WriteGraphBytes(writer, secededBytes); WriteGraphBytes(writer, carryBytes);
 					WriteGraphString(writer, RealmId); WriteGraphString(writer, FactionName);
 					WriteGraphString(writer, DisplayName); WriteGraphString(writer, ExileDeed);
@@ -52,6 +52,15 @@ namespace ThousandAndFirst
 					writer.Write(ReifyTick); writer.Write(ReifyThirdsSpent);
 					writer.Write(ReifyHeavySpent); writer.Write(ReifyQuietUntilTick);
 					writer.Write(DedicationCounter); WriteGraphDictionary(writer, Standings);
+					if (CallbackAuthoritySchemaVersion >= 2)
+					{
+						writer.Write(CallbackAuthoritySchemaVersion);
+						writer.Write(DirectionalStandingSchemaVersion);
+						WriteGraphString(writer, DirectionalStandingDigest);
+						WriteGraphDictionary(writer, RealmPolicyToward);
+						WriteGraphDictionary(writer, RegardSpilloverRemainders);
+						WriteGraphDictionary(writer, RegardSpilloverObservedReputation);
+					}
 					if (Scope != KingdomRealmCallbackScope.Chronicle)
 					{
 						WriteGraphStrings(writer, ChronicleEntries);
@@ -68,7 +77,7 @@ namespace ThousandAndFirst
 					WriteGraphHaul(writer, Haul); writer.Write(ReturnRegard);
 					WritePriorAuthorityCallbacks(writer, ExcludedReceipt);
 					writer.Flush();
-					if (stream.Length > KingdomArchivedSettlementCodec.MaxPayloadBytes * 4L)
+					if (stream.Length > KingdomArchivedSettlementCodec.MaxPayloadBytes * 6L)
 						throw new InvalidDataException("Archive authority graph exceeds proof cap.");
 					using (global::System.Security.Cryptography.SHA256 sha =
 						global::System.Security.Cryptography.SHA256.Create())

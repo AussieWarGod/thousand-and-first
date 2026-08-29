@@ -36,6 +36,33 @@ class ArtPolicyTests(unittest.TestCase):
         references = check_wiring.referenced_tiles([path])
         self.assertIn("ThousandAndFirst/preview.png", references)
 
+    def test_runtime_csharp_tile_literals_are_in_reference_set(self):
+        handle, path = tempfile.mkstemp(suffix=".cs")
+        os.close(handle)
+        self.addCleanup(os.unlink, path)
+        with io.open(path, "w", encoding="utf-8") as stream:
+            stream.write(
+                '// "Items/comment-only.bmp"\n'
+                'var first = "Items/wrench.bmp";\n'
+                'var second = @"Tiles/tile-dirt1.png";\n'
+                'var fragment = "fragment.bmp";\n'
+                'var extension = ".png";\n'
+                'var glyph = \'x\'; /* "Items/block-comment.png" */\n'
+            )
+        references = check_wiring.referenced_csharp_tiles([path])
+        self.assertEqual(
+            {"Items/wrench.bmp", "Tiles/tile-dirt1.png", "fragment.bmp"}, set(references)
+        )
+        self.assertIn(":2:CSharpString", references["Items/wrench.bmp"][0])
+
+    def test_reference_sets_merge_owners_without_losing_duplicates(self):
+        merged = check_wiring.merge_references(
+            {"Items/shared.bmp": ["xml"]},
+            {"Items/shared.bmp": ["code"], "Items/other.bmp": ["code"]},
+        )
+        self.assertEqual(["xml", "code"], merged["Items/shared.bmp"])
+        self.assertEqual(["code"], merged["Items/other.bmp"])
+
     def test_reference_checks_read_split_source_authorities(self):
         self.assertEqual(
             {"agrarian", "market", "craft", "shrine", "garrison", "academy"},
@@ -56,6 +83,43 @@ class ArtPolicyTests(unittest.TestCase):
         self.assertIn("const int Proof = 1", check_xml_refs.read_source_family(root))
         os.unlink(root)
         self.assertEqual([], check_xml_refs.source_family_paths(root))
+
+    def test_no_base_mode_ignores_an_installed_default(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.assertIsNone(check_xml_refs.selected_base(["--no-base"], temporary.name))
+        self.assertEqual(
+            "/licensed/base",
+            check_xml_refs.selected_base(["--base", "/licensed/base"], temporary.name),
+        )
+        self.assertEqual(temporary.name, check_xml_refs.selected_base([], temporary.name))
+        with self.assertRaisesRegex(ValueError, "choose only one"):
+            check_xml_refs.selected_base(
+                ["--no-base", "--base", "/licensed/base"], temporary.name
+            )
+
+    def test_sealed_runtime_activation_contract_is_exact(self):
+        self.assertTrue(
+            check_xml_refs.is_sealed_runtime_activation(
+                "assentingmoot", "assentingmoot-runtime-v1"
+            )
+        )
+        self.assertTrue(
+            check_xml_refs.is_sealed_runtime_activation(
+                "stasisvault", "stasisvault-runtime-v1"
+            )
+        )
+        self.assertFalse(
+            check_xml_refs.is_sealed_runtime_activation(
+                "assentingmoot", "stasisvault-runtime-v1"
+            )
+        )
+        self.assertFalse(
+            check_xml_refs.is_sealed_runtime_activation(
+                "some-other-building", "assentingmoot-runtime-v1"
+            )
+        )
+        self.assertEqual([], check_xml_refs.research_reference_problems(None))
 
     def test_repository_runtime_asset_manifest_is_canonical_and_complete(self):
         records, problems = check_wiring.runtime_asset_records()

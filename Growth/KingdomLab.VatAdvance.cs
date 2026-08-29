@@ -102,6 +102,12 @@ namespace ThousandAndFirst
 			// point, recovery observes the exact raw identity once and never calls Obliterate again.
 			input.SetIntProperty(VatRawPhaseProperty, (int)KingdomVatRawPhase.DestroyIntent);
 			output.SetIntProperty(VatRawPhaseProperty, (int)KingdomVatRawPhase.DestroyIntent);
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(input, out authorityFailure))
+			{
+				QuarantineVatReceipt(input, output);
+				return;
+			}
 			try { input.Obliterate(); }
 			catch (Exception ex)
 			{
@@ -140,6 +146,9 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)
+				|| !KingdomOrdinaryFoodAuthority.TryObjectNow(kept, out authorityFailure)) return null;
 			string fingerprint = VatFingerprint(Input, Job);
 			kept.Count = yield;
 			kept.SetIntProperty(KeptProperty, 1);
@@ -163,9 +172,11 @@ namespace ThousandAndFirst
 			kept.SetIntProperty(VatRawCountProperty, Input.GetIntProperty(VatRawCountProperty));
 			kept.SetStringProperty(VatRawFingerprintProperty,
 				Input.GetStringProperty(VatRawFingerprintProperty));
-			kept.SetStringProperty(VatOwnerIdProperty, Vat.ParentObject.ID ?? "");
+			kept.SetStringProperty(VatOwnerIdProperty, Vat.ParentObject.IDIfAssigned ?? "");
 			if (!string.Equals(Input.GetStringProperty(VatOutputIdProperty), kept.ID,
 				StringComparison.Ordinal)) return null;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)
+				|| !KingdomOrdinaryFoodAuthority.TryObjectNow(kept, out authorityFailure)) return null;
 			try
 			{
 				Vat.ParentObject.RequirePart<Inventory>().AddObject(kept, null,

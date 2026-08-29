@@ -19,9 +19,11 @@ namespace ThousandAndFirst
 			Cell cell = Z?.GetCell(Job.X, Job.Y);
 			bool gatehouse = KingdomGatehouseRules.IsGatehouse(Entry?.Key);
 			KingdomGatehousePlan gatePlan = null;
-			if (gatehouse && !KingdomGatehouseRules.TryDecode(Job.Payload, out gatePlan))
+			if (gatehouse && (!KingdomGatehouseRules.TryDecode(Job.Payload, out gatePlan)
+				|| !KingdomGatehouseRules.MaterialClaimMatches(gatePlan,
+					Job.Claims?.MaterialRequested)))
 			{
-				Failure = "The paid gatehouse receipt has no exact frozen footprint.";
+				Failure = "The paid gatehouse receipt has no exact frozen form and material claim.";
 				KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
@@ -44,8 +46,16 @@ namespace ThousandAndFirst
 			}
 			if (IsExpectedScaffold(existing, cell, Entry, Job))
 			{
-				if (Updated.SubjectId != existing.ID
-					&& !KingdomConstruction.UpdateSubject(ref Updated, existing.ID))
+				r_KingdomScaffold existingPart = existing.GetPart<r_KingdomScaffold>();
+				if (existingPart == null || !existingPart.TryValidateInitialDurableWork(
+					Updated, Job.UpdatedTick, out Failure))
+				{
+					Failure = Failure ?? "The interrupted commissioned scaffold lost its initial labour proof.";
+					KingdomConstruction.Quarantine(ref Updated, Failure);
+					return false;
+				}
+				if (Updated.SubjectId != existing.IDIfAssigned
+					&& !KingdomConstruction.UpdateSubject(ref Updated, existing.IDIfAssigned))
 				{
 					Failure = "The scaffold identity could not be published.";
 					return false;
@@ -95,21 +105,6 @@ namespace ThousandAndFirst
 				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
 				return false;
 				}
-				if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
-				{
-					bool removed = RemoveCreated(scaffold, Z);
-					Failure = "The scaffold identity could not be published before AddObject.";
-					if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
-					return false;
-				}
-				if (!KingdomConstruction.Owns(System, Z, Updated)
-					|| !KingdomConstruction.IsCurrent(Updated))
-				{
-					RemoveCreated(scaffold, Z);
-					Failure = "Commission authority changed during scaffold creation.";
-					KingdomConstruction.Quarantine(ref Updated, Failure);
-					return false;
-				}
 			scaffold.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Entry.Key);
 			if (!KingdomConstruction.ApplyBuildTruth(scaffold, Updated))
 			{
@@ -137,11 +132,34 @@ namespace ThousandAndFirst
 				else KingdomConstruction.Quarantine(ref Updated, Failure);
 				return false;
 			}
-			part.TargetBlueprint = Entry.Blueprint;
+			part.TargetBlueprint = gatehouse
+				? KingdomGatehouseRules.RootBlueprint : Entry.Blueprint;
 			part.TargetDisplayName = Entry.Name;
-			part.CompleteTick = Updated.DueTick;
 			part.StaffNeeded = Entry.Staff;
 			part.ThresholdManning = KingdomRules.IsThresholdManning(Entry.Manning);
+			long projectionTick = Updated.UpdatedTick;
+			if (!part.TryInitializeDurableWork(Updated, projectionTick, out Failure))
+			{
+				bool removed = RemoveCreated(scaffold, Z);
+				if (removed) KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);
+				else KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID))
+			{
+				bool removed = RemoveCreated(scaffold, Z);
+				Failure = "The scaffold identity could not be published before AddObject.";
+				if (!removed) KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
+			if (!KingdomConstruction.Owns(System, Z, Updated)
+				|| !KingdomConstruction.IsCurrent(Updated))
+			{
+				RemoveCreated(scaffold, Z);
+				Failure = "Commission authority changed during scaffold creation.";
+				KingdomConstruction.Quarantine(ref Updated, Failure);
+				return false;
+			}
 			GameObject accepted;
 			try
 			{
@@ -163,6 +181,9 @@ namespace ThousandAndFirst
 					!= KingdomPhysicalLookupState.Exact
 				|| !ReferenceEquals(exactScaffold, scaffold)
 				|| !IsExpectedScaffold(scaffold, cell, Entry, Updated)
+				|| !ReferenceEquals(scaffold.GetPart<r_KingdomScaffold>(), part)
+				|| scaffold.GetIntProperty(r_KingdomScaffold.FinalPendingProperty) != 0
+				|| !part.MatchesInitialDurableWork(Updated, projectionTick)
 				|| !KingdomConstruction.HasReceipt(scaffold, Updated)
 				|| !KingdomConstruction.IsCurrent(Updated))
 			{
@@ -199,13 +220,14 @@ namespace ThousandAndFirst
 					&& KingdomConstruction.HasReceipt(item, Job))
 				{
 					count++;
-					if (item.ID == Job.OutputId || item.ID == Job.SubjectId) exact = item;
+					if (item.IDIfAssigned == Job.OutputId
+						|| item.IDIfAssigned == Job.SubjectId) exact = item;
 					else if (found == null) found = item;
 				}
 			}
 			GameObject global;
 			return count == 1 && exact != null
-				&& KingdomConstruction.FindExactId(Z, exact.ID, out global)
+				&& KingdomConstruction.FindExactId(Z, exact.IDIfAssigned, out global)
 					== KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(global, exact) ? exact : null;
 		}
@@ -238,7 +260,8 @@ namespace ThousandAndFirst
 					if (IsExpectedScaffold(item, cell, Entry, Job)
 						&& KingdomConstruction.HasReceipt(item, Job))
 					{
-						if (item.ID != Job.OutputId && item.ID != Job.SubjectId) return 2;
+						if (item.IDIfAssigned != Job.OutputId
+							&& item.IDIfAssigned != Job.SubjectId) return 2;
 						count++;
 					}
 			return count;

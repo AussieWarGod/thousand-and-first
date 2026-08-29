@@ -214,10 +214,22 @@ namespace ThousandAndFirst.Tests
 				Assert.AreEqual(provedGround, row.DestZoneId);
 				Assert.IsTrue(registry.TryPublish(read, out fault));
 			}
+			byte[] missionPayload;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
+				KingdomRealmJobWireFixture.MissionVersion, out missionPayload));
+			KingdomJobRegistry decoded;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(missionPayload,
+				KingdomRealmJobWireFixture.MissionVersion, out decoded));
+			KingdomJobTable missionTable;
+			KingdomJobRow missionRow;
+			Assert.IsTrue(decoded.TryRead(out missionTable, out fault));
+			Assert.IsTrue(missionTable.TryGet(19, out missionRow));
+			Assert.AreEqual((int)KingdomExpeditionPhase.ResolutionPrepared,
+				missionRow.OriginCode);
+
 			byte[] payload;
 			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
 				KingdomRealmJobWireFixture.CurrentVersion, out payload));
-			KingdomJobRegistry decoded;
 			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(payload,
 				KingdomRealmJobWireFixture.CurrentVersion, out decoded));
 			KingdomJobTable decodedTable;
@@ -283,7 +295,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void FrozenRealmV2JobWireRewritesV3AndSurvivesSecondColdRead()
+		public void FrozenRealmV2JobWireRewritesCurrentAndSurvivesSecondColdRead()
 		{
 			KingdomLeg leg = new KingdomLeg(Target, 1, 2, 7, 8, 12, 100L, 112L);
 			KingdomJobRow delivery = new KingdomJobRow(5, KingdomJobKind.Delivery,
@@ -314,16 +326,16 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("", migrated.SubjectNames[0]);
 			Assert.AreEqual(0, migrated.OutcomeCodes[0]);
 
-			byte[] v3;
+			byte[] current;
 			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(migrated,
-				KingdomRealmJobWireFixture.CurrentVersion, out v3));
+				KingdomRealmJobWireFixture.CurrentVersion, out current));
 			KingdomJobRegistry coldOne;
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v3,
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(current,
 				KingdomRealmJobWireFixture.CurrentVersion, out coldOne));
 			byte[] rewritten;
 			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(coldOne,
 				KingdomRealmJobWireFixture.CurrentVersion, out rewritten));
-			CollectionAssert.AreEqual(v3, rewritten);
+			CollectionAssert.AreEqual(current, rewritten);
 			KingdomJobRegistry coldTwo;
 			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(rewritten,
 				KingdomRealmJobWireFixture.CurrentVersion, out coldTwo));

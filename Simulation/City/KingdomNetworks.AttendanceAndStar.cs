@@ -53,34 +53,27 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return 0;
 			}
-			LiquidVolume fullest = null;
-			LiquidVolume emptiest = null;
+			// The choice of giver and taker is pure arithmetic, proven separately in
+			// KingdomNetworkRules.TrySelectLevellingPair -- this loop's only job is reading each
+			// real store's receivability off the same predicate every other water lane already
+			// checks before a Fill (KingdomLiquids.CanReceiveFreshWater), so a brine or otherwise
+			// incompatible store is never offered as a landing candidate, however empty it reads.
+			KingdomNetworkStoreLevel[] levels = new KingdomNetworkStoreLevel[Survey.Stores.Count];
 			for (int i = 0; i < Survey.Stores.Count; i++)
 			{
 				LiquidVolume store = Survey.Stores[i];
-				if (store == null || store.MaxVolume <= 0)
-				{
-					continue;
-				}
-				if (fullest == null || (long)store.Volume * fullest.MaxVolume > (long)fullest.Volume * store.MaxVolume)
-				{
-					fullest = store;
-				}
-				if (emptiest == null || (long)store.Volume * emptiest.MaxVolume < (long)emptiest.Volume * store.MaxVolume)
-				{
-					emptiest = store;
-				}
+				levels[i] = (store == null) ? default(KingdomNetworkStoreLevel)
+					: new KingdomNetworkStoreLevel(store.Volume, store.MaxVolume,
+						KingdomLiquids.CanReceiveFreshWater(store));
 			}
-			if (fullest == null || emptiest == null || fullest == emptiest)
+			int fullestIndex;
+			int emptiestIndex;
+			if (!KingdomNetworkRules.TrySelectLevellingPair(levels, levels.Length, out fullestIndex, out emptiestIndex))
 			{
 				return 0;
 			}
-			// Levelling only. A main that pushed a cask past the one it was drawing from would be
-			// running uphill, and a founder watching it would be right to call it a bug.
-			if ((long)fullest.Volume * emptiest.MaxVolume <= (long)emptiest.Volume * fullest.MaxVolume)
-			{
-				return 0;
-			}
+			LiquidVolume fullest = Survey.Stores[fullestIndex];
+			LiquidVolume emptiest = Survey.Stores[emptiestIndex];
 			int want = HeartbeatTransferDrams;
 			int room = emptiest.MaxVolume - emptiest.Volume;
 			if (want > room)

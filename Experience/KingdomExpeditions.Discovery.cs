@@ -114,16 +114,14 @@ namespace ThousandAndFirst.Simulation.City
 			if (System == null || string.IsNullOrEmpty(ZoneId)) return null;
 			if (System.ClaimedZones != null && System.ClaimedZones.Contains(ZoneId))
 				return System.Ledger;
-			if (System.Away != null && System.Away.ClaimedZones != null
-				&& System.Away.ClaimedZones.Contains(ZoneId)) return System.Away.Ledger;
+			KingdomSettlement other = System.FindNonSeatSettlementByZone(ZoneId);
+			if (other != null) return other.Ledger;
 			return null;
 		}
 
 		private static bool RealmHolds(KingdomSystem System, string ZoneId)
 		{
-			return System != null && ((System.ClaimedZones != null
-				&& System.ClaimedZones.Contains(ZoneId)) || (System.Away != null
-				&& System.Away.ClaimedZones != null && System.Away.ClaimedZones.Contains(ZoneId)));
+			return System != null && System.OwnedZone(ZoneId);
 		}
 
 	}

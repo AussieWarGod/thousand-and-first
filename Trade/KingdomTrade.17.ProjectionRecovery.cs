@@ -135,7 +135,7 @@ namespace ThousandAndFirst
 			return GameObject.Validate(Body) && Cell != null && Cell.ParentZone == Z
 				&& Body.CurrentZone == Z && Body.CurrentCell == Cell
 				&& Cell.X == Operation.ProjectionX && Cell.Y == Operation.ProjectionY
-				&& string.Equals(Body.ID, Operation.ProjectionObjectId,
+				&& string.Equals(Body.IDIfAssigned, Operation.ProjectionObjectId,
 					StringComparison.Ordinal)
 				&& string.Equals(Body.Blueprint, Operation.CaravanBlueprint,
 					StringComparison.Ordinal)

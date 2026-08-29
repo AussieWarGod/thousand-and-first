@@ -70,11 +70,13 @@ namespace ThousandAndFirst
 			for (int i = 0; i < carrier.Inventory.Objects.Count; i++)
 			{
 				GameObject item = carrier.Inventory.Objects[i];
-				if (!GameObject.Validate(item) || item.ID != incident.DemandObjectId) continue;
+				if (!GameObject.Validate(item)) continue;
 				r_KingdomRaidDemand part = item.GetPart<r_KingdomRaidDemand>();
-				if (part == null || part.Inert || part.IncidentId != incident.Id
-					|| part.ChannelId != incident.DemandChannelId
-					|| part.Revision != incident.ChannelRevision
+				bool admitted = part != null && !part.Inert && part.IncidentId == incident.Id
+					&& part.ChannelId == incident.DemandChannelId
+					&& part.Revision == incident.ChannelRevision;
+				if (item.IDIfAssigned != incident.DemandObjectId) continue;
+				if (!admitted
 					|| !ReferenceEquals(item.InInventory, carrier) || witness != null) return false;
 				witness = item;
 			}

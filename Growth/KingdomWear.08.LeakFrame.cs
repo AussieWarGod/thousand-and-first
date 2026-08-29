@@ -55,12 +55,12 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Work) || Wear == null || Work.CurrentZone == null
 				|| Work.CurrentCell == null || Work.CurrentCell.ParentZone != Work.CurrentZone
 				|| Wear.ParentObject != Work || !ReferenceEquals(Work.GetPart<r_KingdomWear>(), Wear)
-				|| Work.ID != Wear.LeakOwnerId || Work.CurrentZone.ZoneID != Wear.LeakZoneId
+				|| Work.IDIfAssigned != Wear.LeakOwnerId || Work.CurrentZone.ZoneID != Wear.LeakZoneId
 				|| Work.CurrentCell.X != Wear.LeakCellX || Work.CurrentCell.Y != Wear.LeakCellY) return false;
 			Frame = new LeakWorkFrame
 			{
 				Work = Work,
-				WorkId = Work.ID,
+				WorkId = Work.IDIfAssigned,
 				Zone = Work.CurrentZone,
 				Cell = Work.CurrentCell,
 				WearPart = Wear,
@@ -97,7 +97,7 @@ namespace ThousandAndFirst
 		private static bool LeakWorkExact(LeakWorkFrame Frame,
 			KingdomWearLeakPhase ExpectedPhase)
 		{
-			if (Frame == null || !GameObject.Validate(Frame.Work) || Frame.Work.ID != Frame.WorkId
+			if (Frame == null || !GameObject.Validate(Frame.Work) || Frame.Work.IDIfAssigned != Frame.WorkId
 				|| Frame.Work.CurrentZone != Frame.Zone || Frame.Work.CurrentCell != Frame.Cell
 				|| Frame.Cell == null || Frame.Cell.ParentZone != Frame.Zone
 				|| Frame.WearPart == null || Frame.WearPart.ParentObject != Frame.Work

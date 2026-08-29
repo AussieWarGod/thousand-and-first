@@ -197,7 +197,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long registry;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRegistryBytes(KingdomCityState.MaxResidents, KingdomCityMemoryRules.CitiesPerRealm, KingdomCityMemoryRules.MaxOpenJobs, out registry));
-			Assert.AreEqual(4480L, registry, "binding registry, realm-scope");
+			Assert.AreEqual(6400L, registry, "binding registry, realm-scope");
 
 			long jobs;
 			Assert.IsTrue(KingdomCityMemoryRules.TryJobBytes(KingdomCityMemoryRules.MaxOpenJobs, out jobs));
@@ -236,7 +236,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(197796L, bytes, "the composed realm total moved");
+			Assert.AreEqual(294134L, bytes, "the composed three-city realm total moved");
 			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling,
 				"the full live realm broke its bounded model ceiling");
 			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
@@ -247,7 +247,7 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The same formula at one whole parasang, caps scaled with it. §0.0(f)'s claim is that
 		/// nothing here changes when the city grows — only R does — and this is the figure that
-		/// claim is worth: about 327 KiB, over today's ceiling and still under half a megabyte,
+		/// claim is worth: about 542 KiB, over today's ceiling and still under three quarters MiB,
 		/// which is why the ceiling is checked against the formula at the live caps rather than
 		/// against a frozen number.
 		/// </summary>
@@ -256,9 +256,9 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(371956L, bytes);
+			Assert.AreEqual(555374L, bytes);
 			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
-			Assert.Less(bytes, 512L * KiB, "still under half a megabyte");
+			Assert.Less(bytes, 768L * KiB, "still under three quarters of a MiB");
 		}
 
 		/// <summary>Cost is O(rows) and nothing else: doubling the residents moves the total by

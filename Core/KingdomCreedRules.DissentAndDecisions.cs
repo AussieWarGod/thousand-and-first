@@ -199,7 +199,7 @@ namespace ThousandAndFirst
 		/// nothing else.</param>
 		public static SecessionVerdict JudgeSecession(int Cities, int Hostility, int Dissent, bool Forced)
 		{
-			if (Cities < KingdomSettlement.MaxSettlements)
+			if (Cities < 2)
 			{
 				return SecessionVerdict.OneCity;
 			}

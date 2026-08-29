@@ -39,7 +39,8 @@ namespace ThousandAndFirst
 					// per-turn inventory walk is a cost this design refuses to pay.
 					KingdomResearch.RevealFromCarried(System, CarriedKeys(disks));
 					KingdomResearch.ApplySources(System);
-					List<ResearchNode> carried = KingdomResearch.CarriedFromAway(System);
+					List<KingdomSettlement> sources = System.NonSeatSettlements();
+					List<List<ResearchNode>> carried = new List<List<ResearchNode>>();
 					List<string> options = new List<string>();
 					List<char> hotkeys = new List<char>();
 					options.Add((disks.Count > 0)
@@ -48,10 +49,15 @@ namespace ThousandAndFirst
 					hotkeys.Add('t');
 					if (KingdomResearch.Enabled)
 					{
-						if (carried.Count > 0)
+						for (int i = 0; i < sources.Count; i++)
 						{
-							options.Add("{{W|Set down what the keepers of " + AwayName(System) + " worked out}}");
-							hotkeys.Add('s');
+							List<ResearchNode> from = KingdomResearch.CarriedFrom(System,
+								sources[i]);
+							carried.Add(from);
+							if (from.Count == 0) continue;
+							options.Add("{{W|Set down what the keepers of " +
+								SourceName(System, sources[i]) + " worked out}}");
+							hotkeys.Add(i == 0 ? 's' : 'u');
 						}
 					}
 					options.Add("Close");
@@ -70,7 +76,11 @@ namespace ThousandAndFirst
 						}
 						break;
 					case 's':
-						SetDownWhatWasLearned(System, carried);
+					case 'u':
+						int sourceIndex = hotkeys[chosen] == 's' ? 0 : 1;
+						if (sourceIndex < sources.Count && sourceIndex < carried.Count)
+							SetDownWhatWasLearned(System, sources[sourceIndex],
+								carried[sourceIndex]);
 						break;
 					}
 					if (KingdomGovernanceScope.HasCommitted)

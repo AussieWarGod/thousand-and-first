@@ -16,8 +16,9 @@ namespace ThousandAndFirst
 	{
 		private void CarryFounderSuccession(AfterDieEvent E, XRLGame game, GameObject founder,
 			KingdomSystem system, string founderName, string founderCause, long deathTick,
-			string token, HeirRuntime chosen, GameObject heirBody, string heirZoneId,
-			bool heirWasSeated, KingdomSuccessionRite.Plan ritePlan)
+			string token, string selectionReceipt, HeirRuntime chosen, GameObject heirBody,
+			string heirZoneId,
+			string heirSettlementId, KingdomSuccessionRite.Plan ritePlan)
 		{
 			string riteFailure;
 			string citizenshipFailure;
@@ -25,10 +26,11 @@ namespace ThousandAndFirst
 			NewsRoad newsRoad;
 			JudgeActualNews(system, founder.CurrentZone, out newsDays, out newsRoad);
 			long dueTick = KingdomSuccessionRules.NewsDueTick(deathTick, newsDays);
-			bool heldOffice = chosen.Rule.HoldsOffice;
 			string heirCreed = heirBody.GetStringProperty(KingdomCreed.CreedProperty);
 
 			PendingDeathToken = token;
+			PendingSelectionReceipt = selectionReceipt;
+			LegacySelectionReceiptUnavailable = false;
 			PendingPhase = InterregnumPhase.WordOnTheRoad;
 			PendingDueTick = dueTick;
 			PendingRoad = newsRoad;
@@ -112,7 +114,7 @@ namespace ThousandAndFirst
 			// returns it after re-reading both exact original carriers, or when the
 			// publication boundary was never entered at all.
 			KingdomAccessionOutcome accession = KingdomAccessionOutcome.RepairRequired;
-			bool accessionSeated = heirWasSeated;
+			string accessionSettlementId = heirSettlementId;
 			bool founderRestored = false;
 			bool heirContinuationRegistrationsExact = false;
 			// Procession and shrine callbacks can advance world state after early preflight.
@@ -139,19 +141,19 @@ namespace ThousandAndFirst
 				{
 					accession = KingdomAccessionOutcome.RepairRequired;
 					accession = KingdomResidents.TryAccede(system, heirBody,
-						out formerRow, out accessionSeated);
+						out formerRow, out accessionSettlementId);
 					if (accession == KingdomAccessionOutcome.RefusedClean)
 					{
 						accession = KingdomAccessionOutcome.RepairRequired;
 						accession = KingdomResidents.TryAccede(system, heirBody,
-							out formerRow, out accessionSeated);
+							out formerRow, out accessionSettlementId);
 					}
 					if (accession == KingdomAccessionOutcome.RepairRequired
 						&& formerRow.ResidentId == chosen.Rule.ResidentId)
 					{
 						accession = KingdomAccessionOutcome.RepairRequired;
 						accession = KingdomResidents.TryRepairAccession(system, heirBody,
-							chosen.Rule.ResidentId, accessionSeated, formerRow.Name,
+							chosen.Rule.ResidentId, accessionSettlementId, formerRow.Name,
 							formerRow.ArrivedTick, formerRow.KeptCreeds, out formerRow);
 					}
 				}
@@ -186,7 +188,8 @@ namespace ThousandAndFirst
 						return;
 					}
 					AccessionOwnershipCommitted = true;
-					QueueAccessionRepair(chosen.Rule, founderName, accessionSeated);
+					QueueAccessionRepair(chosen.Rule, founderName,
+						accessionSettlementId);
 					TryPrepareRepairableHeir(heirBody);
 					KingdomLog.Log("succession: accession carriers need repair; control remains with the heir");
 					TryTellFailure("Control passed from the founder, but the resident accession carriers did not converge. The line remains open and the exact repair is queued.");
@@ -215,7 +218,8 @@ namespace ThousandAndFirst
 					// SetBody may change control and then throw. Never terminalize a lineage after
 					// control left the dying founder; resident-law repair remains a separate task.
 					AccessionOwnershipCommitted = true;
-					QueueAccessionRepair(chosen.Rule, founderName, accessionSeated);
+					QueueAccessionRepair(chosen.Rule, founderName,
+						accessionSettlementId);
 					TryPrepareRepairableHeir(heirBody);
 					KingdomLog.Log("succession: CRITICAL founder control could not be restored; line remains open for accession repair");
 					TryTellFailure("Control passed from the founder, but the resident accession record could not be published or rolled back. The line remains open and requires repair.");
@@ -227,7 +231,7 @@ namespace ThousandAndFirst
 			}
 
 			CompleteAccession(game, system, heirBody, founderName, formerRow, token,
-				newsRoad, newsDays, heldOffice, heirCreed, heirZoneId, "accession");
+				newsRoad, newsDays, heirCreed, heirZoneId, "accession");
 		}
 
 	}

@@ -36,7 +36,8 @@ namespace ThousandAndFirst
 			w.Write((byte)x.ManifestEscrowState); w.Write(x.RetainedBefore); w.Write(x.RetainedDelta);
 			w.Write(x.RetainedAfter); w.Write((byte)x.RetainedState);
 			WriteNullable(w, x.Standing, WriteStanding); WriteNullable(w, x.Outbox, WriteOutbox);
-			WriteNullable(w, x.Pattern, WritePattern); WriteString(w, x.Fault);
+			WriteNullable(w, x.Pattern, WritePattern);
+			WriteNullable(w, x.PolityRecipient, WritePolityRecipient); WriteString(w, x.Fault);
 		}
 
 		private static KingdomTradeOperation ReadOperation(BinaryReader r)
@@ -66,7 +67,8 @@ namespace ThousandAndFirst
 			x.RetainedDelta = r.ReadInt64(); x.RetainedAfter = r.ReadInt64();
 			x.RetainedState = (KingdomTradePhysicalState)r.ReadByte();
 			x.Standing = ReadNullable(r, ReadStanding); x.Outbox = ReadNullable(r, ReadOutbox);
-			x.Pattern = ReadNullable(r, ReadPattern); x.Fault = ReadString(r);
+			x.Pattern = ReadNullable(r, ReadPattern);
+			x.PolityRecipient = ReadNullable(r, ReadPolityRecipient); x.Fault = ReadString(r);
 			if ((x.Kind == KingdomTradeOperationKind.CharterDelivery) != (x.Pattern != null))
 				throw new InvalidDataException("Trade operation pattern lane does not match its kind.");
 			return x;
@@ -139,6 +141,7 @@ namespace ThousandAndFirst
 			w.Write(x.RetainedBefore); w.Write(x.RetainedDelta); w.Write(x.RetainedAfter); w.Write((byte)x.RetainedState);
 			w.Write(x.MaterialRequested); w.Write(x.MaterialProved); w.Write((byte)x.ChronicleState);
 			w.Write((byte)x.LedgerState); w.Write((byte)x.MessageState); w.Write((byte)x.DeedState);
+			WriteNullable(w, x.PolityRecipient, WritePolityRecipient);
 			w.Write(x.ManifestCleanup); w.Write(x.Tick); WriteString(w, x.Fault);
 		}
 
@@ -155,8 +158,28 @@ namespace ThousandAndFirst
 				RetainedState = (KingdomTradePhysicalState)r.ReadByte(), MaterialRequested = r.ReadInt32(),
 					MaterialProved = r.ReadInt32(), ChronicleState = (KingdomTradeSinkState)r.ReadByte(),
 					LedgerState = (KingdomTradeSinkState)r.ReadByte(), MessageState = (KingdomTradeSinkState)r.ReadByte(),
-					DeedState = (KingdomTradeSinkState)r.ReadByte(), ManifestCleanup = ReadExactBoolean(r),
+					DeedState = (KingdomTradeSinkState)r.ReadByte(),
+					PolityRecipient = ReadNullable(r, ReadPolityRecipient),
+					ManifestCleanup = ReadExactBoolean(r),
 					Tick = r.ReadInt64(), Fault = ReadString(r) };
+		}
+
+		private static void WritePolityRecipient(BinaryWriter w,
+			KingdomTradePolityRecipientWitness x)
+		{
+			WriteString(w, x.BodyId); WriteString(w, x.CohortId);
+			WriteString(w, x.ProjectionId); WriteString(w, x.SurfaceRef);
+			WriteString(w, x.RequestDigest); WriteString(w, x.WitnessDigest);
+		}
+
+		private static KingdomTradePolityRecipientWitness ReadPolityRecipient(BinaryReader r)
+		{
+			return new KingdomTradePolityRecipientWitness
+			{
+				BodyId = ReadString(r), CohortId = ReadString(r),
+				ProjectionId = ReadString(r), SurfaceRef = ReadString(r),
+				RequestDigest = ReadString(r), WitnessDigest = ReadString(r)
+			};
 		}
 
 		private static void WriteArchive(BinaryWriter w, KingdomTradeArchive x)

@@ -58,6 +58,19 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomSurvey.ObserveCurrentTopologyInActive", source);
 		}
 
+		[Test]
+		public void AuthoredEntrancesUseFrozenExactRoutesWhileLegacyGeometryStillSearches()
+		{
+			string source = KingdomRoadsLogicalSource.Read();
+			StringAssert.Contains("public List<ArchitecturePoint> ExactRoute;", source);
+			StringAssert.Contains("KingdomRoadRules.TryAuthoredLane", source);
+			StringAssert.Contains("KingdomArchitectureRules.IsCurrentSnapshotEncoding", source);
+			StringAssert.Contains("KingdomRoadRules.TryExactTrace", source);
+			StringAssert.Contains("errand.ExactRoute == null", source);
+			StringAssert.Contains("KingdomPlotRules.TryDoor(rect, HeartX, HeartY", source);
+			StringAssert.DoesNotContain("TryWorldAnchor(snapshot, rect, anchor", source);
+		}
+
 		private static void AssertOrdered(string Source, params string[] Markers)
 		{
 			int position = -1;

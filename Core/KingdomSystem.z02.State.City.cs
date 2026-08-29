@@ -246,6 +246,10 @@ namespace ThousandAndFirst
 		/// </summary>
 		public KingdomTradeBook TradeBook = new KingdomTradeBook();
 
+		/// <summary>Realm polity truth. Factions, parties, encounters, and map marks are receipted
+		/// projections of this bounded explicit-codec ledger, never alternate authority.</summary>
+		public KingdomPolityLedger PolityLedger = new KingdomPolityLedger();
+
 		public List<string> ChronicleEntries = new List<string>();
 
 	}

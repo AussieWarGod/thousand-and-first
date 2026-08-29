@@ -66,7 +66,8 @@ namespace ThousandAndFirst
 			{
 				GameObject item = cell.Objects[i];
 				if (!GameObject.Validate(item) || item.Blueprint != Row.Blueprint
-					|| Simulation.City.KingdomCityRules.StableId(item.ID) != Row.WorkId) continue;
+					|| Simulation.City.KingdomCityRules.StableId(item.IDIfAssigned)
+						!= Row.WorkId) continue;
 				Root = item;
 				count++;
 			}

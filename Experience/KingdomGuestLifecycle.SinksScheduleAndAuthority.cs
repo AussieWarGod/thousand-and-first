@@ -118,12 +118,13 @@ namespace ThousandAndFirst
 			{
 				LiquidVolume liquid = survey.Stores[i];
 				GameObject owner = liquid == null ? null : liquid.ParentObject;
-				if (!GameObject.Validate(owner) || !ids.Add(owner.ID)
+				string ownerId = GameObject.Validate(owner) ? owner.IDIfAssigned : null;
+				if (string.IsNullOrEmpty(ownerId) || !ids.Add(ownerId)
 					|| owner.GetIntProperty("KingdomStores") != 1
 					|| !KingdomLiquids.HasFreshWater(liquid) || liquid.MaxVolume < 0) continue;
 				int take = Math.Min(remaining, liquid.Volume);
 				if (KingdomLifecycleRules.GuestRuntimeAdapter.PrepareWater(book, op,
-					op.WaterLegs.Count, owner.ID, owner.Blueprint, owner.CurrentZone.ZoneID,
+					op.WaterLegs.Count, ownerId, owner.Blueprint, owner.CurrentZone.ZoneID,
 					liquid.MaxVolume, liquid.Volume, take, "water") == null) return false;
 				remaining -= take;
 			}
@@ -199,7 +200,7 @@ namespace ThousandAndFirst
 
 		private static bool ExactProjection(GameObject item, KingdomLifecycleProjection p)
 		{
-			return GameObject.Validate(item) && item.ID == p.ObjectId
+			return GameObject.Validate(item) && item.IDIfAssigned == p.ObjectId
 				&& item.Blueprint == p.Blueprint && item.CurrentZone != null
 				&& item.CurrentZone.ZoneID == p.ZoneId && item.CurrentCell != null
 				&& item.CurrentCell.X == p.X && item.CurrentCell.Y == p.Y

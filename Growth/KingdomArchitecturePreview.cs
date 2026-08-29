@@ -58,21 +58,6 @@ namespace ThousandAndFirst
 				detail, null, out Preview, out Failure);
 		}
 
-		/// <summary>Renders one preflighted tier successor with actual disruption and map delta.</summary>
-		public static bool TryRenderImprovement(KingdomArchitectureIntent Intent,
-			KingdomRules.BuildEntry Entry, KingdomUpgrade.Assessment Assessment,
-			ArchitectureLayoutDelta Delta, out string Preview, out string Failure)
-		{
-			string detail = "Improvement effect: " + Assessment.CrewNeeded + " crew; "
-				+ Assessment.OutputLost + " drams of output unavailable; reserve margin "
-				+ Assessment.Margin + ".";
-			KingdomMaterialTally materials = Assessment.Transition == null
-				? KingdomMaterials.UpgradeCostFor(Assessment.Key)
-				: Assessment.Transition.Materials;
-			return TryRenderExact(Intent, Entry, Assessment.BuildTicks, Assessment.CostDrams,
-				materials?.Describe(), null, null, detail, Delta, out Preview, out Failure);
-		}
-
 		private static bool TryRenderExact(KingdomArchitectureIntent Intent,
 			KingdomRules.BuildEntry Entry, long LabourTicks, int CostDrams,
 			string MaterialCost, string BitCost, string ExoticCost, string ReceiptLine,

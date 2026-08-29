@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomDelveLink.00.ReceiptDeclarationsAndPreflight.cs",
 			"Growth/KingdomDelveLink.01.SettlementAndStrikePreflight.cs",
 			"Growth/KingdomDelveLink.02.StrikeCompletionAndReceiptProof.cs",
+			"Growth/KingdomDelveLink.02b.LoadedCompletionProof.cs",
 			"Growth/KingdomDelveLink.03.DerivationAndFootSafety.cs",
 			"Growth/KingdomDelveLink.04.ReceiptAndEndpointCustody.cs",
 			"Growth/KingdomDelveLink.05.ConnectionStrikeAndFaultHelpers.cs"

@@ -170,7 +170,7 @@ namespace ThousandAndFirst
 					&& operation.HeartbeatAfter > operation.HeartbeatBefore;
 			case KingdomGrowthAction.Arrival:
 				return clockBefore == operation.ArrivalBefore && clockAfter == operation.ArrivalAfter
-					&& operation.ArrivalAfter > operation.CreatedTick;
+					&& operation.ArrivalAfter > operation.ArrivalBefore;
 			case KingdomGrowthAction.Departure:
 				return clockBefore == operation.DepartureBefore
 					&& clockAfter == operation.DepartureAfter

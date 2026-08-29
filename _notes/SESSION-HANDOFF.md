@@ -1,12 +1,20 @@
 # Session handoff — current v1.0 test-candidate work
 
+> **Supersession banner — 2026-08-28.** This is a chronological handoff snapshot; “current” below
+> means the snapshot date, not the working tree. Current runtime holds one seat plus two non-seat
+> cities (third founding succeeds, fourth refuses; manifests offer both non-seat destinations). The
+> narrow physical-food landing is code-complete with integrated/native proof open. Prior hosted-
+> arcology implementation claims are superseded under active AMENDED 19+ review; production,
+> XML/fabric, and tests are held. Use `../docs/STATUS.md`, `../docs/V1-UNDEFERRAL.md`, and
+> `BRIEF-IMPLEMENTATION-AUDIT.md` for live status.
+
 > **Status audit: 2026-08-27.** Use `../docs/STATUS.md` for exact current evidence,
 > `BRIEF-IMPLEMENTATION-AUDIT.md` and
 > `CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md` for open contract gates,
 > `../TESTING.md` for native/human proof, and `../docs/RELEASING.md` for Steam. Historical
 > candidate receipts below prove only their frozen bytes.
 
-## Current state
+## Frozen handoff state (2026-08-27)
 
 - Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening
   changes are not signed by that receipt; preserve them and all later user changes rather than
@@ -17,9 +25,11 @@
 - Architecture: 136 buildings, 126 plotted building plans, 499 maps, 355 bindings, 403 tiers,
   516 variants, and 2,064 variant/pose goldens; generator/checker clean with zero issues plus three
   expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML.
-  Lot realizations are current at 337 maps, 242 bindings, and 277 tiers.
+  Lot realizations remain 337 maps, 242 bindings, and 277 tiers. Their 45,056 added cells now split
+  into 33,772 yard, 8,933 visibly distinct path, 193 lawful sparse boundary, 1,549 unioned exact
+  frontage-route, and 609 declared intentional-open cells; three hosted holds remain unchanged.
 - Nine focused one-survey source-contract cases pass. The current integrated pure/source suite passes
-  7,743 / 7,743 cases locally. Latest retained hosted checkpoint `1c2d619` has green repository-audit,
+  7,743 / 7,743 cases locally. Latest retained hosted checkpoint `d285129` has green repository-audit,
   Ubuntu source-suite, and Windows source-suite jobs for its exact bytes; later working-tree changes
   remain unsigned. The portable suite passes 173 / 173 with zero skipped; all 35 Python tool tests
   and all 19 art tests pass. Hosted Ubuntu exposed a legacy
@@ -44,10 +54,25 @@
   source, persisted/public ABI, deterministic order, and source-reader coverage. The structural release gate remains red until
   every staged file is strictly under 300 and exact-inventory human semantic review exists in
   `../docs/STRUCTURE_REVIEW.json` with no exceptions.
-- Current focus: checkpoint the 13-authority CentralLogistics-through-DelveLink hardening batch;
-  then implement routed construction inputs, the two-city reciprocal purposeful
-  portfolio, and Charter succession configuration; then rerun exact-revision native proof and
-  complete every remaining semantic-review/human/compatibility/Steam gate.
+- Current focus: checkpoint the current routed-input/purpose batch. Charter seniority,
+  chosen-life/seat consequence, and activated groomed-designee configuration are implemented;
+  their expanded native Pass 36 remains. Then rerun exact-revision native proof and complete every
+  remaining semantic-review/human/compatibility/Steam gate.
+- Reopened assenting-moot runtime is implemented in the working tree. Its activation key is a
+  derived seated-city observation only; the exact building owns bounded named assent/exemption,
+  native ambient stabilization, exact body veto, and lifecycle recovery. Focused portable and
+  native filters pass 10/10 each; `Tools/gate.sh` compiles 1,818 staged sources clean under baseline
+  and compatibility symbols. TESTING 136t-136w remain the unsigned live-Qud acceptance gate.
+- **Superseded implementation claim:** this snapshot recorded hosted-arcology runtime as implemented.
+  That status is now under active AMENDED 19+ review; production, XML/fabric, and tests are held.
+  The snapshot's proposed fifth-heart design said the rung owns
+  one realm/capital authority in two fixed current/exiled slots and an indestructible shell with persistent vanilla Interior atrium,
+  ward, and terrace. Paid lots use exact composite debit/construction/root receipts, bounded prior-
+  staffing labour, stable additive fixtures, and water-gated support; loss of capital leaves the
+  intact shell dark. The generic read-only host seam receives only the exact loaded host zone/root;
+  callback context is reproved before display; Great Archive uses it without queue/budget/timer
+  mutation. Foreign shells stay inert, and no custom raster was added. TESTING
+  136j–136j.5 remains unsigned native traversal/save/appearance evidence.
 
 ## Historical 0.2.0 candidate evidence
 
@@ -87,15 +112,15 @@
 5. Only then canonicalize public metadata, tag the exact manifest version, publish, and
    subscription-verify public bytes. Never infer a manual or Steam pass from automation.
 
-## Author-deferred polity/world-presence targets
+## Reopened polity/world-presence work
 
-`VISION.md` owns the canonical public matrix; `V1-POLITY-SCOPE.md` is its expanded private
-worksheet. Existing inherited ruins/history, causal raids, bounded current
-parties, caravans, and two-city manifests ship at their implemented scope. Successor/namesake
-polities, any legacy rival, generalized diplomats/emissaries, visible polity traffic, route
-correspondence, and polity clashes are positive `AUTHOR-DEFERRED` targets needing explicit
-reopening and owning adapters. Exact old actors, automatic ideological war, persistent unloaded
-actors, mass background simulation, and offscreen conquest/loss are rejected. Balance/flavour
+`VISION.md` owns the canonical public matrix; `V1-POLITY-SCOPE.md` is its expanded worksheet and
+`docs/V1-UNDEFERRAL.md` is the live closure index. The author reopened every positive
+direction on 2026-08-27. Successor/namesake polities, one bounded legacy rival/partner,
+generalized diplomats/emissaries, visible polity traffic, route correspondence, and witnessed
+polity clashes are active v1 implementation/evidence work under their owning adapters. Exact old
+actors, automatic ideological war, persistent unloaded actors, mass background simulation, and
+offscreen conquest/loss remain rejected. Balance/flavour
 questions still worth real play data include Swarmer timing, deep-crop flavour, research gate
 depth, annexe/removal prices, capital costs, and inherited-site discoverability.
 
@@ -129,7 +154,8 @@ depth, annexe/removal prices, capital costs, and inherited-site discoverability.
   hotkeys full at 36 — new entries become chapters; save-compat waived pre-release
   (Addendum 9) but serialization bumps stay clean and named.
 - **Questions the author must decide come back as questions, not code.** Scope discipline:
-  agents told to flag rather than grow scope; deferrals recorded with reasons.
+  agents flag material authority changes rather than invent them; every positive gap is tracked in
+  the un-deferral ledger and hard external actions remain explicit gates.
 - **Tone**: the author rules, fast and well, in plain words — quote them verbatim in pins.
   Caveman mode (user's global rules) governs reply style. Honest reporting always: failures,
   gaps, and unverified claims named, never papered.

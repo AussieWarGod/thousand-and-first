@@ -9,7 +9,8 @@ namespace ThousandAndFirst
 	/// <summary>Pure phase, claim, owner, route and registry format laws.</summary>
 	public static partial class KingdomConstructionRules
 	{
-		public const string FormatHeader = "TAF-CONSTRUCTION-4";
+		public const string FormatHeader = "TAF-CONSTRUCTION-5";
+		public const string PreviousFormatHeader = "TAF-CONSTRUCTION-4";
 		public const string PriorFormatHeader = "TAF-CONSTRUCTION-3";
 		public const string OlderFormatHeader = "TAF-CONSTRUCTION-2";
 		public const string LegacyFormatHeader = "TAF-CONSTRUCTION-1";
@@ -24,6 +25,7 @@ namespace ThousandAndFirst
 		public const int MaxPayloadChars = 8192;
 		public const int MaxFailureChars = 2048;
 		public const int MaxPhysicalReceiptChars = 65536;
+		public const int MaxInputReceiptChars = 262144;
 		public const int MaxStrikeTargets = 256;
 		public const int MaxOutboxTextChars = 4096;
 		public const int MaxRouteCells = 128;
@@ -122,6 +124,8 @@ namespace ThousandAndFirst
 				return KingdomConstructionProjection.StrikeOrder;
 			case KingdomConstructionRoute.PurposeConsignment:
 				return KingdomConstructionProjection.PurposeConsignment;
+			case KingdomConstructionRoute.HostedArcology:
+				return KingdomConstructionProjection.HostedLot;
 			default:
 				return KingdomConstructionProjection.None;
 			}
@@ -137,7 +141,8 @@ namespace ThousandAndFirst
 				|| Route == KingdomConstructionRoute.SocketConvert
 				|| Route == KingdomConstructionRoute.Improvement
 				|| Route == KingdomConstructionRoute.WearRepair
-				|| Route == KingdomConstructionRoute.Strike;
+				|| Route == KingdomConstructionRoute.Strike
+				|| Route == KingdomConstructionRoute.HostedArcology;
 		}
 
 		public static bool IsTerminal(KingdomConstructionPhase Phase)

@@ -14,7 +14,8 @@ namespace ThousandAndFirst.Tests
 			"Simulation/City/KingdomPhysicalHappenings.03.RestoreAndParticipants.cs",
 			"Simulation/City/KingdomPhysicalHappenings.04.FixturesCellsAndPathing.cs",
 			"Simulation/City/KingdomPhysicalHappenings.05.BodyReceiptsAndProjectionRestore.cs",
-			"Simulation/City/KingdomPhysicalHappenings.06.LookupAndPersistence.cs"
+			"Simulation/City/KingdomPhysicalHappenings.06.LookupAndPersistence.cs",
+			"Simulation/City/KingdomPhysicalHappenings.07.CommunalRite.cs"
 		};
 
 		internal static string Read()

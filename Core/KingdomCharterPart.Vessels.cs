@@ -116,6 +116,12 @@ namespace ThousandAndFirst
 				}
 				if (vessel.GetIntProperty("KingdomStores") == 1)
 				{
+					if (!KingdomDesignationReleaseAuthority.TryCanRelease(
+						System, zone, vessel, out string releaseFailure))
+					{
+						Popup.Show(releaseFailure);
+						return;
+					}
 					vessel.SetIntProperty("KingdomStores", 0);
 					KingdomGovernanceScope.Commit("change water stores");
 					Popup.Show("The " + vessel.ShortDisplayName + " is yours alone again.");
@@ -155,6 +161,12 @@ namespace ThousandAndFirst
 					}
 					if (isLarder)
 					{
+						if (!KingdomDesignationReleaseAuthority.TryCanRelease(
+							System, zone, store, out string releaseFailure))
+						{
+							Popup.Show(releaseFailure);
+							return;
+						}
 						store.SetIntProperty("KingdomLarder", 0);
 						KingdomGovernanceScope.Commit("change larder");
 						Popup.Show("The " + store.ShortDisplayName + " is no longer a larder. Nothing in it will be counted as food.");

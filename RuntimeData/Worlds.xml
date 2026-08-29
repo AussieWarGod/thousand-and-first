@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<worlds>
+  <world Name="Interior">
+    <cell Name="TAFArcologyAtrium">
+      <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
+      <zone Level="10" x="1" y="1" Name="hosted atrium" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
+        <builder Class="KingdomHostedArcologyBuilder" Kind="atrium" />
+        <widget Blueprint="AmbientLight" />
+        <intproperty Name="AmbushChance" Value="0" />
+      </zone>
+    </cell>
+    <cell Name="TAFArcologyWard">
+      <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
+      <zone Level="10" x="1" y="1" Name="vertical ward" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
+        <builder Class="KingdomHostedArcologyBuilder" Kind="ward" />
+        <widget Blueprint="AmbientLight" />
+        <intproperty Name="AmbushChance" Value="0" />
+      </zone>
+    </cell>
+    <cell Name="TAFArcologyTerrace">
+      <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
+      <zone Level="10" x="1" y="1" Name="hydroponic terrace" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
+        <builder Class="KingdomHostedArcologyBuilder" Kind="terrace" />
+        <widget Blueprint="AmbientLight" />
+        <intproperty Name="AmbushChance" Value="0" />
+      </zone>
+    </cell>
+  </world>
+</worlds>

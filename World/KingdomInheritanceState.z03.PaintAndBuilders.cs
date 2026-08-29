@@ -31,7 +31,7 @@ namespace ThousandAndFirst
 			switch (TargetTerrainRank)
 			{
 			case 0:
-				Tile = "Terrain/sw_ground_desert_1.bmp";
+				Tile = "Terrain/sw_desert.bmp";
 				Color = "&y";
 				break;
 			case 1:

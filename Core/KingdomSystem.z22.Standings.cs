@@ -12,7 +12,23 @@ namespace ThousandAndFirst
 	{
 		public override bool HandleEvent(AfterReputationChangeEvent E)
 		{
-			if (!KingdomMaster.AutomaticWorkAllowed(this)) return base.HandleEvent(E);
+			bool automaticWorkAllowed = KingdomMaster.AutomaticWorkAllowed(this);
+			// Observation is not civic work. Remember ignored/transient poststates for diagnostics;
+			// they are not dedupe authority because native Qud also changes reputation without events.
+			Guard("reputation observation", delegate
+			{
+				if (Founded && E.Faction != null && The.Game != null &&
+					(E.Transient || !automaticWorkAllowed) &&
+					CanOwnRelationship(E.Faction.Name) &&
+					The.Game.PlayerReputation.Get(E.Faction) == E.To &&
+					TryObservePersonalReputationPoststate(E.Faction.Name, E.To))
+				{
+					KingdomLog.Log("spillover observation only: " +
+						(E.Transient ? "transient" : "master-disabled") + " Player->" +
+						E.Faction.Name + " rep " + E.From + "->" + E.To);
+				}
+			});
+			if (!automaticWorkAllowed) return base.HandleEvent(E);
 			// The realm's own faction is excluded from the mirror below — a polity does not hold a
 			// standing with itself — but it is the one faction whose reputation cell says what the
 			// realm thinks of its founder, so it is read here instead of ignored.
@@ -25,11 +41,20 @@ namespace ThousandAndFirst
 			});
 			Guard("reputation mirror", delegate
 			{
-				if (Founded && !E.Transient && E.Faction != null && E.Faction.Name != KingdomFactionName && E.Faction.Name != "Player")
+				if (Founded && !E.Transient && E.Faction != null && The.Game != null &&
+					CanOwnRelationship(E.Faction.Name))
 				{
-					int delta = KingdomRules.SpilloverDelta(E.To - E.From, Stage);
-					AdjustStanding(E.Faction.Name, delta);
-					KingdomLog.Log("mirror: " + E.Faction.Name + " rep " + E.From + "->" + E.To + " spillover=" + delta + " standing=" + GetStanding(E.Faction.Name));
+					int before = GetRegardForRealm(E.Faction.Name);
+					int observed = The.Game.PlayerReputation.Get(E.Faction);
+					if (observed == E.To &&
+						TryApplyPersonalReputationSpillover(
+						E.Faction.Name, E.From, E.To))
+						KingdomLog.Log("spillover: Player->" + E.Faction.Name + " rep " +
+							E.From + "->" + E.To + ", " + E.Faction.Name + "->realm " +
+							before + "->" + GetRegardForRealm(E.Faction.Name) + ", source=" +
+							(E.Type ?? "unspecified") + (E.Silent ? ",silent" : ""));
+					else KingdomLog.Log("spillover refused for " + E.Faction.Name +
+						" (event poststate " + E.To + ", observed " + observed + ")");
 				}
 			});
 			return base.HandleEvent(E);
@@ -40,11 +65,20 @@ namespace ThousandAndFirst
 			if (LoadFailed)
 			{
 				Guard("load failure report", ReportLoadFailure);
+				return base.HandleEvent(E);
 			}
 			XRLGame game = The.Game;
 			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
 			Guard("feeling re-assert", ReassertFeelings);
+			Guard("named cook recovery", delegate
+			{
+				KingdomNamedCook.ReconcileAll(this, false);
+			});
+			Guard("assenting moot recovery", delegate
+			{
+				KingdomAssentingMoot.ReconcileAll(this, false);
+			});
 			return base.HandleEvent(E);
 		}
 
@@ -56,6 +90,12 @@ namespace ThousandAndFirst
 		/// <param name="FactionName">Faction name (not display name).</param>
 		/// <returns>Standing on the vanilla reputation scale; 0 if never recorded.</returns>
 		public int GetStanding(string FactionName)
+		{
+			return GetRegardForRealm(FactionName);
+		}
+
+		/// <summary>Reads faction-to-realm regard. Absence is neutral/unspecified.</summary>
+		public int GetRegardForRealm(string FactionName)
 		{
 			if (FactionName == null || !Standings.TryGetValue(FactionName, out var value))
 			{
@@ -74,15 +114,14 @@ namespace ThousandAndFirst
 		/// re-asserted on game load regardless.</param>
 		public void SetStanding(string FactionName, int Value, bool Mirror = true)
 		{
-			if (FactionName == null)
-			{
-				return;
-			}
-			Standings[FactionName] = Value;
-			if (Mirror)
-			{
-				MirrorFeeling(FactionName);
-			}
+			SetRegardForRealm(FactionName, Value, Mirror);
+		}
+
+		/// <summary>Sets foreign-faction-to-realm regard. Returns false when the exact
+		/// directional edge is unavailable, reserved, or beyond its bounded ledger.</summary>
+		public bool SetRegardForRealm(string FactionName, int Value, bool Mirror = true)
+		{
+			return TrySetRegardForRealm(FactionName, Value, Mirror);
 		}
 
 		/// <summary>
@@ -94,10 +133,20 @@ namespace ThousandAndFirst
 		/// <param name="Mirror">False to defer the feeling write.</param>
 		public void AdjustStanding(string FactionName, int Delta, bool Mirror = true)
 		{
-			if (Delta != 0)
-			{
-				SetStanding(FactionName, GetStanding(FactionName) + Delta, Mirror);
-			}
+			AdjustRegardForRealm(FactionName, Delta, Mirror);
+		}
+
+		/// <summary>Adjusts foreign-faction-to-realm regard without touching the reverse
+		/// realm-policy edge.</summary>
+		public bool AdjustRegardForRealm(string FactionName, int Delta, bool Mirror = true)
+		{
+			if (!CanOwnRelationship(FactionName)) return false;
+			if (Delta == 0) return true;
+			return TryAdjustRegardForRealmBatch(
+				new List<KeyValuePair<string, int>>
+				{
+					new KeyValuePair<string, int>(FactionName, Delta)
+				}, Mirror);
 		}
 
 		/// <summary>
@@ -107,8 +156,13 @@ namespace ThousandAndFirst
 		/// <param name="FactionName">Faction name (not display name).</param>
 		public void MirrorFeeling(string FactionName)
 		{
-			if (!Founded || string.IsNullOrEmpty(FactionName)
-				|| FactionName == KingdomFactionName || FactionName == "Player")
+			MirrorRegardForRealm(FactionName);
+		}
+
+		/// <summary>Projects only foreign-faction-to-realm regard.</summary>
+		public void MirrorRegardForRealm(string FactionName)
+		{
+			if (!Founded || !CanOwnRelationship(FactionName))
 			{
 				return;
 			}
@@ -123,7 +177,7 @@ namespace ThousandAndFirst
 				if (faction != null)
 				{
 					faction.SetFactionFeeling(KingdomFactionName,
-						Reputation.GetFeeling((float)GetStanding(FactionName)));
+						Reputation.GetFeeling((float)GetRegardForRealm(FactionName)));
 				}
 			});
 		}
@@ -141,7 +195,11 @@ namespace ThousandAndFirst
 			}
 			foreach (KeyValuePair<string, int> standing in Standings)
 			{
-				MirrorFeeling(standing.Key);
+				MirrorRegardForRealm(standing.Key);
+			}
+			foreach (KeyValuePair<string, int> policy in RealmPolicyToward)
+			{
+				MirrorRealmPolicyToward(policy.Key);
 			}
 			// Derived from the founder's actual reputation, never hardcoded to 100. A realm holds
 			// whatever opinion of its founder their deeds earned it: stamping love here on every

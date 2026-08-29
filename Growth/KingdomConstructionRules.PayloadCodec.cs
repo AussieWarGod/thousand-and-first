@@ -36,9 +36,16 @@ namespace ThousandAndFirst
 		/// <summary>Canonical, bounded physical strike receipt.</summary>
 		public static bool TryEncodeStrikeIntent(KingdomStrikeIntent Intent, out string Receipt)
 		{
+			return TryEncodeStrikeIntent(Intent, 3, out Receipt);
+		}
+
+		private static bool TryEncodeStrikeIntent(KingdomStrikeIntent Intent, int Version,
+			out string Receipt)
+		{
 			Receipt = null;
 			KingdomMaterialDebitCost salvage;
-			if (Intent == null || !TextLength(Intent.DisplayName, 1, 512)
+			if ((Version != 2 && Version != 3) || Intent == null
+				|| !TextLength(Intent.DisplayName, 1, 512)
 				|| !TextLength(Intent.BuildKey, 0, MaxTargetChars)
 				|| !TextLength(Intent.TargetDisplayName, 0, 512)
 				|| !TextLength(Intent.PlotId, 0, MaxSubjectChars)
@@ -49,6 +56,20 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if ((Version == 2 && Intent.HasTypedLot)
+				|| (Intent.HasTypedLot && (!Intent.HasPlot
+					|| !TextLength(Intent.LotType, 1, KingdomArchitectureRules.MaxKeyChars)
+					|| (int)Intent.LotSize < (int)ArchitectureLotSize.Small
+					|| (int)Intent.LotSize > (int)ArchitectureLotSize.Huge
+					|| (int)Intent.Facing < (int)ArchitectureFacing.North
+					|| (int)Intent.Facing > (int)ArchitectureFacing.West
+					|| !KingdomArchitectureRules.TryClassifySetChange(Intent.LotType,
+						Intent.LotSize, Intent.LotType, Intent.LotSize,
+						out ArchitectureSetChange typedSet)
+					|| typedSet != ArchitectureSetChange.SameSet))
+				|| (!Intent.HasTypedLot && (!string.IsNullOrEmpty(Intent.LotType)
+					|| (int)Intent.LotSize != 0 || Intent.Facing != ArchitectureFacing.North)))
+				return false;
 			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
 				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2, Intent.PlotId,
 				Intent.Targets.Count);
@@ -57,6 +78,10 @@ namespace ThousandAndFirst
 				if (Intent.X1 < 0 || Intent.X1 > Intent.X2 || Intent.X2 > 1023
 					|| Intent.Y1 < 0 || Intent.Y1 > Intent.Y2 || Intent.Y2 > 1023
 					|| string.IsNullOrEmpty(Intent.PlotId)) return false;
+				if (Intent.HasTypedLot && (!KingdomSocketRules.TryActualSize(
+					Intent.X2 - Intent.X1 + 1, Intent.Y2 - Intent.Y1 + 1,
+					out KingdomPlotRules.PlotSize actualSize)
+					|| (int)actualSize != (int)Intent.LotSize)) return false;
 			}
 			else if (!networkStrike && (Intent.X1 != -1 || Intent.Y1 != -1 || Intent.X2 != -1
 				|| Intent.Y2 != -1 || !string.IsNullOrEmpty(Intent.PlotId)
@@ -85,7 +110,8 @@ namespace ThousandAndFirst
 					.Append(target.X.ToString(CultureInfo.InvariantCulture)).Append(',')
 					.Append(target.Y.ToString(CultureInfo.InvariantCulture));
 			}
-			string text = "v2|" + EncodeText(Intent.DisplayName) + "|"
+			string text = "v" + Version.ToString(CultureInfo.InvariantCulture) + "|"
+				+ EncodeText(Intent.DisplayName) + "|"
 				+ EncodeText(Intent.BuildKey) + "|" + EncodeText(Intent.TargetDisplayName) + "|"
 				+ EncodeText(Intent.SalvageClaim) + "|"
 				+ (Intent.HasPlot ? "1" : "0") + "|"
@@ -95,6 +121,11 @@ namespace ThousandAndFirst
 				+ Intent.Y2.ToString(CultureInfo.InvariantCulture) + "|"
 				+ EncodeText(Intent.PlotId) + "|"
 				+ Intent.Effort.ToString(CultureInfo.InvariantCulture) + "|" + targetText;
+			if (Version == 3)
+				text += "|" + (Intent.HasTypedLot ? "1" : "0") + "|"
+					+ EncodeText(Intent.LotType) + "|"
+					+ ((int)Intent.LotSize).ToString(CultureInfo.InvariantCulture) + "|"
+					+ ((int)Intent.Facing).ToString(CultureInfo.InvariantCulture);
 			if (text.Length > MaxPhysicalReceiptChars) return false;
 			Receipt = text;
 			return true;
@@ -109,7 +140,8 @@ namespace ThousandAndFirst
 			string displayName, buildKey, targetDisplayName, salvageClaim, plotId;
 			int x1, y1, x2, y2;
 			if (!((f.Length == 11 && f[0] == "v1")
-					|| (f.Length == 13 && f[0] == "v2"))
+					|| (f.Length == 13 && f[0] == "v2")
+					|| (f.Length == 17 && f[0] == "v3"))
 				|| (f[5] != "0" && f[5] != "1")
 				|| !TryDecodeText(f[1], 512, out displayName)
 				|| !TryDecodeText(f[2], MaxTargetChars, out buildKey)
@@ -162,8 +194,25 @@ namespace ThousandAndFirst
 			}
 			parsed.Effort = effort;
 			parsed.Targets = targets;
+			if (f[0] == "v3")
+			{
+				string lotType;
+				int lotSize;
+				int facing;
+				if ((f[13] != "0" && f[13] != "1")
+					|| !TryDecodeText(f[14], KingdomArchitectureRules.MaxKeyChars, out lotType)
+					|| !TryInt(f[15], 0, (int)ArchitectureLotSize.Huge, out lotSize)
+					|| !TryInt(f[16], (int)ArchitectureFacing.North,
+						(int)ArchitectureFacing.West, out facing)) return false;
+				parsed.HasTypedLot = f[13] == "1";
+				parsed.LotType = lotType;
+				parsed.LotSize = (ArchitectureLotSize)lotSize;
+				parsed.Facing = (ArchitectureFacing)facing;
+			}
 			string canonical;
-			if (!TryEncodeStrikeIntent(parsed, out canonical) || canonical != Receipt) return false;
+			int version = f[0] == "v3" ? 3 : 2;
+			if (!TryEncodeStrikeIntent(parsed, version, out canonical)
+				|| canonical != Receipt) return false;
 			Intent = parsed;
 			return true;
 		}

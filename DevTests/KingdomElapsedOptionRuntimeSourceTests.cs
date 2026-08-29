@@ -46,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SubsidenceUsesSettlementIdentityAndObservesBeforeSurveyWork()
 		{
-			string source = TestMain.ReadRepositoryText("Growth/KingdomSubsidence.cs");
+			string source = KingdomSubsidenceLogicalSource.Read();
 			StringAssert.Contains("OptionStatePrefix + settlementId", source);
 			StringAssert.Contains("KingdomIdentityRules.IsSettlementId(settlementId)", source);
 			StringAssert.Contains("System.MasterAppliedResumeToken", source);
@@ -65,7 +65,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FaithObservesBeforeBuildingPassAndCancelsOnlyUnpaidShrinePressure()
 		{
-			string source = TestMain.ReadRepositoryText("Experience/KingdomFaith.cs");
+			string source = KingdomFaithLogicalSource.Read();
 			StringAssert.Contains("public const string OptionStateProperty = \"r_TAF_FaithOption_v1\"", source);
 			StringAssert.Contains("public const string OptionOwnerProperty = \"r_TAF_FaithOptionOwner_v1\"", source);
 			StringAssert.Contains("public const string GlobalOptionStatePrefix = \"r_TAF_FaithGlobalOption_v1:\"", source);
@@ -88,6 +88,25 @@ namespace ThousandAndFirst.Tests
 				"faith cancellation must finish before its local option latch commits");
 			StringAssert.Contains("KingdomFaithRules.EffectiveWindowStart", source);
 			StringAssert.DoesNotContain("SetStringProperty(ShrineCreedProperty, null)", source);
+		}
+
+		[Test]
+		public void BountyManningObservesRealmEpochBeforeMasterGuardAndServiceAccrual()
+		{
+			string events = TestMain.ReadRepositoryText("Core/KingdomSystem.z20.Events.cs");
+			AssertBefore(events, "public override bool HandleEvent(EndTurnEvent E)",
+				"KingdomBounty.ObserveManningGlobalOption(this, game.TimeTicks)",
+				"KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks)",
+				"bounty option changes must remain observable while master work is disabled");
+			string bounty = KingdomBountyLogicalSource.Read();
+			StringAssert.Contains("ManningGlobalOptionPrefix", bounty);
+			StringAssert.Contains("System.MasterAppliedResumeToken", bounty);
+			AssertBefore(bounty, "internal static ManningPass PrepareManningPass",
+				"ObserveManningOption(System, now)",
+				"KingdomBountyManningRules.TryAccrue",
+				"option transition must reanchor before serviced time can advance");
+			StringAssert.Contains("current.ObservedTick == Now", bounty);
+			StringAssert.Contains("Data.ManningCheckpointTick = Now", bounty);
 		}
 	}
 }

@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Tests
 		public void LogicalFamilyPreservesAuthorityNestedTypesAndInitializerOrder()
 		{
 			string source = KingdomSurveyLogicalSource.Read();
-			Assert.AreEqual(11, Count(source, "public partial class KingdomSurvey"));
+			Assert.AreEqual(12, Count(source, "public partial class KingdomSurvey"));
 			Assert.AreEqual(1, Count(source, "private sealed class ReferenceComparer"));
 			Assert.AreEqual(1, Count(source, "private sealed class IndexedRow"));
 			Assert.AreEqual(1, Count(source, "public sealed class PassScope"));
@@ -82,6 +82,28 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(changed, "Publish(old, false)", "RemoveLoadedBranch(old)",
 				"Capture(Item", "Rows[Item] = fresh", "Publish(fresh, true)",
 				"IndexLoadedBranch(fresh)", "ChangedMutations++");
+		}
+
+		[Test]
+		public void FoodAvailabilitySeparatesPhysicalOccupancyFromSpendableCustody()
+		{
+			string source = KingdomSurveyLogicalSource.Read();
+			string authority = TestMain.ReadRepositoryText(
+				"Growth/KingdomOrdinaryFoodAuthority.cs");
+			StringAssert.Contains("public int FoodAvailable", source);
+			StringAssert.Contains("RefreshPhysicalFoodCount();", source);
+			StringAssert.Contains("KingdomPurpose.HasProtectedCargoEvidence(item)", authority);
+			StringAssert.Contains("KingdomConstructionInputLeaseAuthority.IsLeased(leases, item)", authority);
+			StringAssert.Contains("PorterReceiptProperty", authority);
+			StringAssert.Contains("TrySpendNow(food, out failure)", source);
+			string distance = TestMain.ReadRepositoryText(
+				"Simulation/City/KingdomDistanceRuntime.CandidatesAndSelection.cs");
+			string city = TestMain.ReadRepositoryText(
+				"Simulation/City/KingdomCity.z10.StateAndPublish.cs");
+			StringAssert.Contains("int physical = KingdomSurvey.HeldIn(larder);", distance);
+			StringAssert.Contains("AvailableIn(larder, leases)", distance);
+			StringAssert.Contains("CapacityOf(larder) - physical", distance);
+			StringAssert.Contains("EffectiveCapacity(", city);
 		}
 
 		private static string Between(string source, string startTerm, string endTerm)

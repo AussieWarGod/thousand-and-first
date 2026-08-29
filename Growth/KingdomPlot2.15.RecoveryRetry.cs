@@ -48,13 +48,19 @@ namespace ThousandAndFirst
 						"A plot plan-marker or final ID is duplicated or malformed.");
 					return;
 				}
-				if (finalState == KingdomPhysicalLookupState.Exact)
-				{
-					KingdomConstructionJob recovered = Job;
+					if (finalState == KingdomPhysicalLookupState.Exact)
+					{
+						KingdomConstructionJob recovered = Job;
+						if (recovered.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
+						{
+							RecoverPendingPlotRemoval(System, Z, final, ref recovered);
+							return;
+						}
 					if (marker != null && marker != final
 						&& marker.GetPart<r_KingdomPlanMarker>() != null)
 					{
 						if (!KingdomConstruction.BeginProjection(ref recovered, out _)) return;
+						string markerId = marker.IDIfAssigned;
 						bool removed;
 						try { removed = marker.Destroy(null, Silent: true); }
 						catch (System.Exception ex)
@@ -68,27 +74,34 @@ namespace ThousandAndFirst
 							KingdomSurvey.ObserveRemovedFromActive(Z, marker);
 						// Destroy moves the exact object to the graveyard with all parts retained.
 						// Callback success plus invalidity is the engine's exact tombstone.
-					if (!KingdomConstruction.Owns(System, Z, recovered)
-						|| KingdomConstructionRules.ExactRemovalAction(true, removed,
+					if (KingdomConstructionRules.ExactRemovalAction(true, removed,
 						GameObject.Validate(marker), KingdomConstruction.FindExactId(
-							Z, marker.ID, out _) != KingdomPhysicalLookupState.Absent, true)
+							Z, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
 						!= KingdomExactRemovalAction.ProvedAbsent)
 					{
 						KingdomConstruction.Quarantine(ref recovered,
 							"Completed-plot plan-marker removal was vetoed or remained valid.");
 							return;
 						}
+						if (!TryProvePlotPlanMarkerRemoval(System, Z, final, true, markerId,
+							ref recovered, out string markerFailure))
+						{
+							KingdomConstruction.Quarantine(ref recovered, markerFailure);
+							return;
+						}
 					}
 					string removedWorks = final.GetStringProperty(
 						r_KingdomScaffold.RemovalProofProperty);
 					if (!string.IsNullOrEmpty(removedWorks)
-						&& recovered.SubjectId != removedWorks
-						&& !KingdomConstruction.UpdateSubject(ref recovered, removedWorks)) return;
-					if (recovered.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
+						&& recovered.SubjectId != removedWorks)
 					{
-						KingdomConstruction.Quarantine(ref recovered,
-							"Plot removal was interrupted before callback-success proof.");
-						return;
+						if (!HasPlotPlanMarkerRemovalProof(final, recovered.SubjectId))
+						{
+							KingdomConstruction.Quarantine(ref recovered,
+								"Completed plot lacks exact plan-marker removal proof.");
+							return;
+						}
+						if (!KingdomConstruction.UpdateSubject(ref recovered, removedWorks)) return;
 					}
 					if (!r_KingdomScaffold.HasRemovalProof(final, recovered.SubjectId))
 					{
@@ -116,6 +129,7 @@ namespace ThousandAndFirst
 					if (marker != null && marker.GetPart<r_KingdomPlanMarker>() != null)
 					{
 						if (!KingdomConstruction.BeginProjection(ref recovered, out _)) return;
+						string markerId = marker.IDIfAssigned;
 						bool removed;
 						try { removed = marker.Destroy(null, Silent: true); }
 						catch (System.Exception ex)
@@ -127,19 +141,32 @@ namespace ThousandAndFirst
 						}
 						if (removed && !GameObject.Validate(marker))
 							KingdomSurvey.ObserveRemovedFromActive(Z, marker);
-					if (!KingdomConstruction.Owns(System, Z, recovered)
-						|| KingdomConstructionRules.ExactRemovalAction(true, removed,
+					if (KingdomConstructionRules.ExactRemovalAction(true, removed,
 						GameObject.Validate(marker), KingdomConstruction.FindExactId(
-							Z, marker.ID, out _) != KingdomPhysicalLookupState.Absent, true)
+							Z, markerId, out _) != KingdomPhysicalLookupState.Absent, true)
 						!= KingdomExactRemovalAction.ProvedAbsent)
 					{
 						KingdomConstruction.Quarantine(ref recovered,
 							"Plot-works plan-marker removal was vetoed or remained valid.");
 							return;
 						}
+						if (!TryProvePlotPlanMarkerRemoval(System, Z, works, false, markerId,
+							ref recovered, out string markerFailure))
+						{
+							KingdomConstruction.Quarantine(ref recovered, markerFailure);
+							return;
+						}
 					}
-					if (recovered.SubjectId != works.ID
-						&& !KingdomConstruction.UpdateSubject(ref recovered, works.ID)) return;
+					if (recovered.SubjectId != works.IDIfAssigned)
+					{
+						if (!HasPlotPlanMarkerRemovalProof(works, recovered.SubjectId))
+						{
+							KingdomConstruction.Quarantine(ref recovered,
+								"Plot works lack exact plan-marker removal proof.");
+							return;
+						}
+						if (!KingdomConstruction.UpdateSubject(ref recovered, works.IDIfAssigned)) return;
+					}
 					KingdomConstruction.FinishProjection(ref recovered, true, true);
 					return;
 				}

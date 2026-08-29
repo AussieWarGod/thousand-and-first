@@ -30,6 +30,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairResidentId = 0;
 			PendingAccessionRepairFounderName = "";
 			PendingAccessionRepairHeirName = "";
+			PendingAccessionRepairSettlementId = "";
 			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
@@ -86,6 +87,8 @@ namespace ThousandAndFirst
 			PendingDueTick = 0L;
 			PendingRoad = NewsRoad.Seat;
 			PendingDays = 0;
+			PendingSelectionReceipt = "";
+			LegacySelectionReceiptUnavailable = false;
 			ClearPendingRiteIdentity();
 		}
 

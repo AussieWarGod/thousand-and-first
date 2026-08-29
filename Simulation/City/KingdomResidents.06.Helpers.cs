@@ -135,7 +135,7 @@ namespace ThousandAndFirst.Simulation.City
 				string plotId = item.GetStringProperty(KingdomPlots.PlotIdProperty);
 				if (!string.IsNullOrEmpty(plotId) && !homes.ContainsKey(plotId))
 				{
-					homes[plotId] = KingdomCityRules.StableId(item.ID);
+					homes[plotId] = KingdomCityRules.StableId(item.IDIfAssigned);
 				}
 			}
 			return homes;
@@ -197,10 +197,9 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				yield return System.City;
 			}
-			if (System.Away != null && System.Away.City != null)
-			{
-				yield return System.Away.City;
-			}
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				if (nonSeat[i]?.City != null) yield return nonSeat[i].City;
 		}
 
 		private static KingdomCityBook BookFor(KingdomSystem System, string zoneId)
@@ -213,11 +212,24 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return System.City;
 			}
-			if (System.Away != null && System.Away.ClaimedZones != null && System.Away.ClaimedZones.Contains(zoneId))
-			{
-				return System.Away.City;
-			}
+			KingdomSettlement nonSeat = System.FindNonSeatSettlementByZone(zoneId);
+			if (nonSeat != null) return nonSeat.City;
 			return null;
+		}
+
+		private static KingdomSettlement SettlementForBook(KingdomSystem System,
+			KingdomCityBook Book)
+		{
+			if (System == null || Book == null || ReferenceEquals(Book, System.City)) return null;
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			KingdomSettlement found = null;
+			for (int i = 0; i < nonSeat.Count; i++)
+			{
+				if (!ReferenceEquals(nonSeat[i]?.City, Book)) continue;
+				if (found != null) return null;
+				found = nonSeat[i];
+			}
+			return found;
 		}
 
 		private static bool TryTable(KingdomSystem System, out KingdomBindingTable table)

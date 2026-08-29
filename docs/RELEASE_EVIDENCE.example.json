@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "releaseVersion": "0.2.0",
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
   "gameMarketingVersion": "1.0.5",
@@ -39,14 +39,27 @@
       "artifactRef": "docs/release-evidence/compatibility-matrix.csv",
       "artifactSha256": "SHA256_OF_EXACT_MOD_VERSION_MATRIX"
     },
+    "previewReview": {
+      "passId": "final-native-preview-review",
+      "artifactRef": "docs/release-evidence/final-native-preview-review.txt",
+      "artifactSha256": "SHA256_OF_FINAL_NATIVE_PREVIEW_PROVENANCE_AND_REVIEW",
+      "source": "native-game-screenshot",
+      "generativeAssistance": false,
+      "previewSha256": "SHA256_OF_PREVIEW_PNG",
+      "capturedBy": "HUMAN_SCREENSHOT_CAPTURER_NAME_OR_ALIAS",
+      "captureUtc": "YYYY-MM-DDTHH:MM:SSZ",
+      "sourceSave": "REPLACE_WITH_NATIVE_SOURCE_SAVE_IDENTITY",
+      "editSummary": "REPLACE_WITH_CROP_RESIZE_AND_OTHER_NON_GENERATIVE_EDITS",
+      "reviewedBy": "HUMAN_PREVIEW_REVIEWER_NAME_OR_ALIAS",
+      "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
+    },
     "numberedProtocols": {
       "artifactRef": "docs/release-evidence/numbered-protocols.txt",
       "artifactSha256": "SHA256_OF_NUMBERED_TESTING_TRANSCRIPT",
       "passIds": [
-        "0a",
-        "55f3",
-        "124i"
-      ]
+        "EVERY_UNIQUE_TESTING_ID_IN_FILE_ORDER"
+      ],
+      "waivers": []
     }
   },
   "privateSubscription": {

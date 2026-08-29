@@ -10,8 +10,9 @@ integration checks against any newer game build before claiming compatibility.
 ## Release boundary
 
 The Workshop content root is the mod root. `Tools/stage.sh` defines its exact inventory. Source
-tests, tools, design notes, contributor documents, local game files, logs, saves, and generated
-assemblies are excluded. The optional root `modconfig.json` is runtime metadata and is included.
+tests, tools, design notes, contributor documents, the developer scenario harness (`Harness/`),
+local game files, logs, saves, and generated assemblies are excluded. The optional root
+`modconfig.json` is runtime metadata and is included.
 Every selected path must also have one unambiguous Windows spelling: the stage gate rejects NTFS
 reserved names, invalid Win32 characters, trailing dots/spaces, and case-fold collisions before
 copying or packaging anything.
@@ -28,9 +29,11 @@ allowlisted runtime raster paths, case-insensitively rejecting every other image
 1. Update `manifest.json`, `CHANGELOG.md`, `README.md`, and `TESTING.md` together. Keep the manifest
    ID `r_ThousandAndFirst`; use numeric `major.minor.patch` versioning.
 2. Supply `preview.png`: exactly 512 by 512 pixels, 8-bit RGB/RGBA non-interlaced PNG,
-   under 1,000,000 bytes. Add the exact manifest field `"PreviewImage": "preview.png"`. Prefer a
-   clean in-game screenshot of the tested build. Record capture date, game build, source save,
-   crop/edit steps, and author in the release issue. Do not use AI-generated or
+   under 1,000,000 bytes. Add the exact manifest field `"PreviewImage": "preview.png"`. Use a
+   clean final-build in-game screenshot that shows representative authored settlement architecture
+   and remains legible at Workshop thumbnail scale; a founding popup over empty ground, debug
+   overlay, or synthetic mock-up is not final preview evidence. Record capture date, game build,
+   source save, crop/edit steps, and author in the release issue. Do not use AI-generated or
    generative-image-assisted material, copied/extracted game assets, or unlicensed art.
 3. Run the portable checks on a clean checkout, then the licensed Windows/Qud checks:
 
@@ -193,6 +196,21 @@ not prove that content uploaded or loads. The bootstrap receipt is now obsolete 
    verification transcript, screenshot bundle, performance receipt, survey receipt, and matrix
    under `docs/release-evidence/`; every `artifactRef` is an exact safe repo-relative path below
    that directory and every `artifactSha256` must match the referenced regular non-link file.
+   `previewReview` must bind the final `preview.png` hash to a retained human provenance/review
+   artifact naming capture date, game build, source save, crop/edit steps, author, and native
+   thumbnail review. The known interim preview is rejected mechanically; synthetic preview proof
+   is not accepted. `numberedProtocols.passIds` must contain every unique row printed by the
+   authoritative parser, in file order:
+
+   ```bash
+   python3 Tools/workshop_metadata.py testing-pass-ids TESTING.md
+   ```
+
+   A row may be absent from `passIds` only when `waivers` contains one exact object with that
+   `passId`, a specific 20–500 character reason, human reviewer, and real second-precision UTC
+   completion time. Passed and waived IDs cannot overlap; duplicates, ranges, unknown IDs,
+   malformed/ambiguous TESTING rows, reordered lists, or uncovered omissions fail. Placeholder,
+   sentinel, example, TODO, TBD, UNKNOWN, and N/A human fields fail.
    Commit those artifacts with the evidence record; they remain outside the runtime package, while
    the release packager's clean-HEAD boundary proves the validator read committed bytes. Update
    README/CHANGELOG so they no longer say live evidence is pending, then run:
@@ -232,7 +250,9 @@ Only after the subscribed private-item pass:
 
    This avoids editor newline/BOM drift and Qud's non-truncating rewrite edge. The validator
    requires Qud's exact field order/format and public visibility so its pre-upload save does not
-   change the tagged bytes.
+   change the tagged bytes. It also requires README's exact version-bound status
+   `**Status: <manifest version> public playtest release.**` and CHANGELOG's first version heading
+   `## [<manifest version>] — YYYY-MM-DD`; pending or Unreleased claims cannot package.
 2. Commit the frozen public artifact. Create an annotated tag and build it at a new destination:
 
    ```bash

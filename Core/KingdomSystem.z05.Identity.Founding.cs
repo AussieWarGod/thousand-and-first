@@ -91,7 +91,7 @@ namespace ThousandAndFirst
 		internal bool FirstIdentityMatches(string TransactionId, string ZoneId)
 		{
 			KingdomIdentityFault fault = KingdomIdentityFault.None;
-			return string.IsNullOrEmpty(IdentityFault) && Away == null && City != null &&
+			return string.IsNullOrEmpty(IdentityFault) && NonSeatSettlementCount == 0 && City != null &&
 				RealmIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
 				SettlementIdentityOrigin == KingdomIdentityOrigin.FoundingTransaction &&
 				RealmIdentityTransactionId == TransactionId &&
@@ -140,7 +140,8 @@ namespace ThousandAndFirst
 					PendingSettlementZoneId == ZoneId &&
 					!string.IsNullOrEmpty(PendingSettlementAuthority) &&
 					(SeatedLaterIdentityMatches(SettlementId, TransactionId, ZoneId) ||
-					 LaterSettlementIdentityMatches(Away, SettlementId, TransactionId, ZoneId));
+					 LaterSettlementIdentityMatches(FindNonSeatSettlementById(SettlementId),
+						SettlementId, TransactionId, ZoneId));
 				if (exactPendingPublication) return true;
 				Failure = "The later founding transaction collides with an existing city identity.";
 				SettlementId = null;
@@ -156,10 +157,18 @@ namespace ThousandAndFirst
 			List<string> ids = new List<string>();
 			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
 			if (IncludeSeat) AddLifecycleCollisionId(ids, seen, City?.SettlementId);
-			if (IncludeAway) AddLifecycleCollisionId(ids, seen, Away?.City?.SettlementId);
+			if (IncludeAway)
+			{
+				List<KingdomSettlement> nonSeat = NonSeatSettlements();
+				for (int i = 0; i < nonSeat.Count; i++)
+					AddLifecycleCollisionId(ids, seen, nonSeat[i]?.City?.SettlementId);
+			}
 			AddLifecycleCollisionId(ids, seen, Seceded?.City?.SettlementId);
 			AddLifecycleCollisionId(ids, seen, ExiledSeat?.City?.SettlementId);
-			AddLifecycleCollisionId(ids, seen, ExiledAway?.City?.SettlementId);
+			List<KingdomSettlement> exiled = ExiledSettlementTopology?.Snapshot();
+			if (exiled != null)
+				for (int i = 0; i < exiled.Count; i++)
+					AddLifecycleCollisionId(ids, seen, exiled[i]?.City?.SettlementId);
 			ids.Sort(StringComparer.Ordinal);
 			return ids;
 		}

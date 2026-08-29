@@ -25,6 +25,11 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			if (string.IsNullOrEmpty(PendingSelectionReceipt))
+			{
+				QuarantinePendingRite(Context, "the frozen selection receipt is absent");
+				return;
+			}
 			try
 			{
 				XRLGame game = The.Game;
@@ -142,12 +147,13 @@ namespace ThousandAndFirst
 					QuarantinePendingRite(Context, "the frozen resident row cannot cross the rite boundary");
 					return;
 				}
-				int officeId = ReferenceEquals(book, system.City)
-					? system.OfficeHolderResidentId : system.Away?.OfficeHolderResidentId ?? 0;
-				string legacyOffice = ReferenceEquals(book, system.City)
-					? system.OfficeHolderName : system.Away?.OfficeHolderName;
-				bool heldOffice = officeId > 0 ? officeId == row.ResidentId
-					: string.Equals(legacyOffice, row.Name, StringComparison.Ordinal);
+				if (!system.TryFindSettlement(book, out bool seated,
+					out KingdomSettlement ownedSettlement))
+				{
+					QuarantinePendingRite(Context,
+						"the frozen resident book no longer has one exact city owner");
+					return;
+				}
 				string heirCreed = heir.GetStringProperty(KingdomCreed.CreedProperty);
 				if (!alreadyCrossed)
 				{
@@ -169,20 +175,20 @@ namespace ThousandAndFirst
 					Checkpoint(MourningRiteStage.BodyCrossed);
 				}
 				KingdomResidentRow former;
-				bool seated;
+				string settlementId;
 				KingdomAccessionOutcome outcome = KingdomResidents.TryAccede(system, heir,
-					out former, out seated);
+					out former, out settlementId);
 				if (outcome != KingdomAccessionOutcome.Committed)
 				{
 					AccessionOwnershipCommitted = true;
 					QueueAccessionRepair(new KingdomHeir(row.Name, row.ArrivedTick, null,
-						row.KeptCreeds, true, heldOffice, row.BoundZoneId, row.ResidentId),
-						PendingFounderName, ReferenceEquals(book, system.City));
+						row.KeptCreeds, true, row.BoundZoneId, row.ResidentId),
+						PendingFounderName, settlementId);
 					TryPrepareRepairableHeir(heir);
 					return;
 				}
 				CompleteAccession(game, system, heir, PendingFounderName, former,
-					PendingDeathToken, PendingRoad, PendingDays, heldOffice, heirCreed,
+					PendingDeathToken, PendingRoad, PendingDays, heirCreed,
 					PendingHeirZoneId, "cold-load accession " + Context);
 			}
 			catch (Exception ex)

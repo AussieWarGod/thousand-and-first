@@ -87,8 +87,9 @@ namespace ThousandAndFirst
 			Failure = null;
 			GameObject endpoint;
 			int count = FindEndpointByToken(Foot, Derived, FootRole, out endpoint);
+			bool created = false;
 			string rooted = Owner.GetStringProperty(FootEndpointProperty);
-			if (count > 1 || (count == 1 && !string.IsNullOrEmpty(rooted) && rooted != endpoint.ID))
+			if (count > 1 || (count == 1 && !string.IsNullOrEmpty(rooted) && rooted != endpoint.IDIfAssigned))
 				return Quarantine(Owner, "paired Up identity is duplicated or conflicts with its root",
 					out Failure);
 			if (count == 0)
@@ -103,6 +104,7 @@ namespace ThousandAndFirst
 				}
 				if (!GameObject.Validate(endpoint) || endpoint.Blueprint != UpBlueprint)
 					return Fail("paired Up blueprint created no exact endpoint", out Failure);
+				created = true;
 				StampEndpoint(endpoint, Derived, FootRole);
 				try
 				{
@@ -123,7 +125,10 @@ namespace ThousandAndFirst
 			}
 			if (!ExactEndpoint(endpoint, Foot, Derived, FootRole, out Failure))
 				return Quarantine(Owner, Failure ?? "paired Up failed exact world proof", out Failure);
-			Owner.SetStringProperty(FootEndpointProperty, endpoint.ID);
+			string endpointId = created ? endpoint.ID : endpoint.IDIfAssigned;
+			if (string.IsNullOrEmpty(endpointId))
+				return Fail("paired Up endpoint has no stable identity", out Failure);
+			Owner.SetStringProperty(FootEndpointProperty, endpointId);
 			Owner.SetIntProperty(PhaseProperty, 2);
 			return true;
 		}
@@ -241,7 +246,7 @@ namespace ThousandAndFirst
 				return KingdomConstruction.FindExactId(Zone, Id, out Endpoint);
 			GameObject candidate = GameObject.FindByID(Id);
 			if (!GameObject.Validate(candidate)) return KingdomPhysicalLookupState.Absent;
-			if (candidate.ID != Id || candidate.CurrentZone != Zone || candidate.CurrentCell == null)
+			if (candidate.IDIfAssigned != Id || candidate.CurrentZone != Zone || candidate.CurrentCell == null)
 				return KingdomPhysicalLookupState.Ambiguous;
 			Endpoint = candidate;
 			return KingdomPhysicalLookupState.Exact;

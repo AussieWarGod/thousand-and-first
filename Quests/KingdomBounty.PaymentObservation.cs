@@ -88,7 +88,7 @@ namespace ThousandAndFirst
 			{
 				GameObject owner = GameObject.FindByID(ids[i]);
 				LiquidVolume vessel = GameObject.Validate(owner) ? owner.GetPart<LiquidVolume>() : null;
-				if (vessel == null || owner.ID != ids[i] || owner.CurrentZone != Z
+				if (vessel == null || owner.IDIfAssigned != ids[i] || owner.CurrentZone != Z
 					|| owner.CurrentCell == null || owner.CurrentCell.ParentZone != Z
 					|| vessel.ParentObject != owner
 					|| !ReferenceEquals(owner.GetPart<LiquidVolume>(), vessel)
@@ -132,7 +132,7 @@ namespace ThousandAndFirst
 			{
 				GameObject owner = Frame.Owners[i];
 				LiquidVolume vessel = Frame.Vessels[i];
-				same[i] = GameObject.Validate(owner) && owner.ID == Frame.OwnerIds[i]
+				same[i] = GameObject.Validate(owner) && owner.IDIfAssigned == Frame.OwnerIds[i]
 					&& owner.CurrentZone == Frame.Zone && owner.CurrentCell == Frame.OwnerCells[i]
 					&& Frame.OwnerCells[i] != null && Frame.OwnerCells[i].ParentZone == Frame.Zone
 					&& vessel != null && vessel.ParentObject == owner

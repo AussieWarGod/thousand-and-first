@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomTradeLogicalSource
 	{
-		internal const int FileCount = 23;
+		internal const int FileCount = 27;
 
 		private static readonly string[] Paths =
 		{
@@ -23,6 +23,7 @@ namespace ThousandAndFirst.Tests
 			"Trade/KingdomTrade.11.OperationAndResources.cs",
 			"Trade/KingdomTrade.12.WaterMutation.cs",
 			"Trade/KingdomTrade.13.WaterRecovery.cs",
+			"Trade/KingdomTrade.13b.PhysicalFailure.cs",
 			"Trade/KingdomTrade.14.MaterialMutation.cs",
 			"Trade/KingdomTrade.15.MaterialRecovery.cs",
 			"Trade/KingdomTrade.16.ProjectionMutation.cs",
@@ -31,6 +32,9 @@ namespace ThousandAndFirst.Tests
 			"Trade/KingdomTrade.19.Outbox.cs",
 			"Trade/KingdomTrade.20.PatternBook.cs",
 			"Trade/KingdomTrade.21.Quarantine.cs",
+			"Trade/KingdomTrade.PolityConsignment.cs",
+			"Trade/KingdomTrade.PolityConsignmentRetention.cs",
+			"Trade/KingdomTrade.PolityRecipientRuntime.cs",
 			"Trade/KingdomTrade.cs"
 		};
 

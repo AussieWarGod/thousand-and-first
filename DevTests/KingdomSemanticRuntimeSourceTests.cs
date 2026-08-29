@@ -24,6 +24,10 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = files[i] == "Growth/KingdomGrowth.cs"
 					? KingdomGrowthLogicalSource.Read()
+					: files[i] == "Experience/KingdomLocus.cs"
+						? KingdomLocusLogicalSource.Read()
+					: files[i] == "Experience/KingdomGuestbook.cs"
+						? KingdomGuestbookLogicalSource.Read()
 					: files[i] == "Growth/KingdomCommission.cs"
 						? KingdomCommissionLogicalSource.Read()
 						: files[i] == "Growth/KingdomPlot2.cs"
@@ -78,10 +82,13 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText("Growth/KingdomSalvage.cs");
 			int signatory = source.IndexOf("string settler = FrozenSignatory(System)",
 				global::System.StringComparison.Ordinal);
-			int consume = source.IndexOf("survey.Consume(waterCost)", signatory,
+			int reserve = source.IndexOf("survey.ReserveExactWater(waterCost)", signatory,
+				global::System.StringComparison.Ordinal);
+			int consume = source.IndexOf("water.Commit()", reserve,
 				global::System.StringComparison.Ordinal);
 			Assert.That(signatory, Is.GreaterThanOrEqualTo(0));
-			Assert.That(consume, Is.GreaterThan(signatory));
+			Assert.That(reserve, Is.GreaterThan(signatory));
+			Assert.That(consume, Is.GreaterThan(reserve));
 			StringAssert.Contains("string.CompareOrdinal(name, chosen)", source);
 			StringAssert.DoesNotContain("GetRandomElement", source);
 		}

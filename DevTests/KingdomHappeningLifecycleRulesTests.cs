@@ -104,7 +104,7 @@ namespace ThousandAndFirst.Tests
 		public void DeclarationsKeepExactBackingValuesFieldOrderAndDefaults()
 		{
 			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomPhysicalHappeningKind)));
-			Assert.AreEqual("0:None,1:Wedding,2:Funeral,3:Feast,4:Raising",
+			Assert.AreEqual("0:None,1:Wedding,2:Funeral,3:Feast,4:Raising,5:CommunalRite",
 				string.Join(",", Array.ConvertAll((KingdomPhysicalHappeningKind[])Enum.GetValues(
 					typeof(KingdomPhysicalHappeningKind)), value => ((byte)value) + ":" + value)));
 			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningLifecyclePhase)));

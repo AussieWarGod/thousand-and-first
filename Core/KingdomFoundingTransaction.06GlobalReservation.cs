@@ -38,6 +38,15 @@ namespace ThousandAndFirst
 				VillageFaction, VillageDisplay, -1, -1, -1, -1, "", "");
 		}
 
+		private static string DirectPayloadDigest(KingdomFoundingKind Kind, string Name,
+			string Vocation, string VillageFaction, string VillageDisplay,
+			string ExternalBinding)
+		{
+			return KingdomFoundingTransactionRules.PayloadDigestWithExternalBinding(Kind,
+				Name, Vocation, VillageFaction, VillageDisplay, -1, -1, -1, -1,
+				"", "", ExternalBinding);
+		}
+
 		internal static bool HasGlobalReservation()
 		{
 			return The.Game != null && The.Game.HasStringGameState(GlobalReservationState) &&

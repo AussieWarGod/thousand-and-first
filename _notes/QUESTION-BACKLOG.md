@@ -30,18 +30,17 @@ These require observation, taste, or signed-in account authority; none blocks lo
 4. **Balance/taste knobs:** revisit Swarmer timing, deep-crop flavour, research access/gate depth,
    graft-removal and annexe prices, capital costs, and inherited-site discoverability only with
    play data in hand.
-5. **Author-deferred world presence:** `V1-POLITY-SCOPE.md` preserves successor/namesake people,
-   one bounded legacy rival, diplomats/emissaries, visible endpoint traffic/correspondence, and
-   witnessed polity clashes as positive targets outside v1. Reopen only an exact row after current
-   inheritance, raid, two-city routing, recognition, and native-performance gates close; then rule
-   its lore premise, owning adapter, attention/body caps, and empirical acceptance study. Exact old
-   actors, automatic ideological war, persistent unloaded parties, mass background simulation,
-   and offscreen conquest/loss remain rejected rather than queued engineering work.
+5. **Reopened world presence:** successor/namesake people, one bounded legacy rival/partner,
+   diplomats/emissaries, visible endpoint traffic/correspondence, and witnessed polity clashes are
+   active v1 work. `docs/V1-UNDEFERRAL.md` owns their implementation/evidence gaps;
+   `V1-POLITY-SCOPE.md` owns their lore and safety boundary. Exact old actors, automatic ideological
+   war, persistent unloaded parties, mass background simulation, and offscreen conquest/loss remain
+   rejected rather than queued engineering work.
 6. **Steam authority:** create and test the private Workshop item, retain Qud's `workshop.json`,
    subscribe-install the frozen bytes, and author release evidence. Follow `docs/RELEASING.md`;
    automation cannot answer or attest this item.
 
-## Tracked current debt and later extensions
+## Tracked current debt and active extensions
 
 - Succession quest relabeling and giver-location marks are wired at accession, and corpse reading
   reports restored eligible journal knowledge and quest marks. Native Pass 36 remains the gate.
@@ -53,18 +52,18 @@ These require observation, taste, or signed-in account authority; none blocks lo
   psyberneticist contract; a roster name is not staffing proof.
 - Exact multi-zone and vertical porter itineraries are implemented through the measured sparse
   distance cache and central logistics authority. Native three-plus-zone follow/save/obstruction
-  proof remains open; the historical west-edge fallback is forbidden. Later hosted/zone-spanning
-  arcology ground remains an explicit later extension, not a substitute for testing current
-  two-city transport.
-- Routed construction inputs remain accepted v1 work: ordinary construction must mint one central
-  job for its exact water/material cargo from the nearest lawful holder. Until that adapter lands,
-  exact local custody is required and remote stock cannot be spent directly.
-- The theatre/annexe purpose route is a two-body trial. The accepted v1 portfolio is a reciprocal
-  two-city-compatible choice graph across those works plus the Deep-Bore, Great Foundry, and
-  Granary-Colossus. First-work bootstrap, second-work exact input, reciprocal activation, and the
-  three authored XL sites remain open; a three-city dependency chain is invalid under the live cap.
-- Charter declaration/change of seniority and the bounded chosen-resident/seat-consequence path
-  remain accepted v1 work. Persistent groomed-designee simulation is separately author-deferred.
+  proof remains open; the historical west-edge fallback is forbidden. Hosted zone-spanning arcology
+  ground is implemented at code scope and retains its separate native traversal/save/appearance gate.
+- Routed construction inputs are implemented through one central job with frozen nearest lawful
+  custody, itinerary, carrier, landing, debit, rollback, recovery, and master-pause authority.
+  Integrated interruption/conservation and native proof remain open; remote stock is never direct
+  spending permission.
+- The five-purpose portfolio is implemented as five symmetric edges and ten directed recipes across
+  the theatre, annexe, Deep-Bore, Great Foundry, and Granary-Colossus, with twelve authored XL sites.
+  Native interruption/save and human gallery proof remain open; no three-city dependency is implied.
+- Charter seniority, chosen-life/seat consequence, and the later-activated groomed-designee law
+  are implemented. Grooming uses exact resident identity plus bounded service/schooling proof;
+  native Pass 36 remains open.
 
 ## Historical design record and adopted 0.2 defaults
 
@@ -153,14 +152,13 @@ obstruction, and stamps the traversable native-Door topology. The single current
 key-matched; introduce a public `Sited=` schema only when a second independently useful design
 needs the same placement contract. Native traversal remains a test gate, not a design question.
 
-**QB-17 — Deep crops key on style, not stratum.** `KingdomCropRules.CropBlueprintForStyle`
-reads style only, so a common-style city's fungal vault grows **Starapple in the dark**.
-DIVERSITY:213 wanted fungal crops underground; Addendum 15's "behaviour may differ by stratum
-only when the design says so" is the hook, and no machinery expresses it yet. Options: (a) a
-stratum column in the crop table; (b) the vault records name their crop outright (a
-`Crop=`-shaped declaration, design-says-so literally); (c) leave it — starapple grows in the
-dark in Qud and nobody promised botany. **PROVISIONAL: none — vaults ship on the style table
-as-is; the crop question rides to the author.** (Pure flavor today: yields are identical.)
+**QB-17 — CLOSED: specialized deep fields declare their exact crop.** The fungal vault now
+inherits `r_KingdomCropBlueprint="Plump Mushroom"`; vault galleries inherit that same physical
+field declaration. Sowing resolves seed and standing row through the open merged style registry
+and refuses a wrong seed before consent, water reservation, debit, mutation, or destruction.
+Ordinary fields remain flexible. No stratum-wide crop grammar, second crop table, passive deep
+bonus, different cycle, or yield change was added. Focused exact-engine/native evidence remains a
+release gate, not an open design decision.
 
 **QB-18 — How does a SHARED design declare stratum-divergent behaviour?** Addendum 15 permits
 it ("only when the design says so"); nothing expresses it. Per-stratum overrides are new
@@ -283,12 +281,13 @@ A4 ruled it MOVABLE, and a heart rung cannot move without unbuilding the foundin
 own history (`UpgradesTo` never un-upgrades). Shipped as its own XL civic hall; the one place
 a shipped recommendation and a later ruling disagree. **PROVISIONAL: own hall.**
 
-**QB-42 — What the hub's arch offers a 3+-city realm.** A row carries one partner (vanilla's
-`DestinationKey` is one key), so the capital's arch answers the first spoke in register
-order. At two cities a hub IS a pair and nothing is lost. Menu of spokes, round-robin, or
-first-spoke? Supersedes QB-15's relaxation note — the hub kept one row per city with no
-schema change, exactly as predicted. **PROVISIONAL: first-spoke until the roster wave brings
-a third city.**
+**QB-42 — CLOSED: the founder explicitly re-keys the capital arch.** With two or more lawful
+incoming spokes, the capital arch lists every destination in register order, marks the current
+one, states the exact consequence, and confirms before one canonical compare/write/readback.
+Only the hub's outgoing partner changes; every spoke still answers the hub. Malformed or changed
+registers fail closed before mutation. No remote zone loads, movement, round-robin surprise,
+spend, guessed partner, or second gate authority was added. Focused exact-engine/native evidence
+remains a release gate.
 
 **QB-43 — The delve design fork not taken.** The stronger fiction is "the delve CLAIMS the
 rock at its foot" — then `ClaimedZones` alone carries everything and no register exists. It
@@ -304,20 +303,23 @@ measuredwork.**
 endpoints, and runtime use of the distance matrix are an active release repair and are not
 accepted as nonblocking debt. The remaining design questions stay historical: tune the shaft
 hop multiplier with play data; decide whether a ruined delve disables access; and whether civic
-reach through rock is desirable. Hosted/zone-spanning arcology ground is separately deferred.
+reach through rock is desirable. Hosted arcology ground is now implemented through persistent
+vanilla Interior zones; it does not broaden delve reach or load remote zones.
 
 **QB-46 — Capital numbers are tabled and untuned** (crown 110/13200; the arcology set), same
 shape as QB-36. And a struck crown does NOT auto-promote a former crown hall — the realm
 goes capital-less until the founder sets the crown down again, because a capital that moved
 back on its own would be a capital nobody decided. **PROVISIONAL: keep both.**
 
-**QB-47 — The arcology has no ground of its own yet.** The interior records ship
-`Strata="arcology,surface"` so they are reachable today and move indoors free when the
-hosted-plot carrier gives the arcology real interior ground (zone-spanning was deliberately
-not built — the shipped plot vocabulary tops out at 20×14, and the arcology takes all of
-it). Nothing gates the interior records on the arcology STANDING — capital-only is the
-proxy until the stratum is real. And the registry office reads the SEAT's roster ("a copy
-of a book kept somewhere else") — arguably correct, worth an eye.
+**QB-47 — CLOSED (2026-08-27): hosted arcology ground.** The final heart improvement owns one
+exact authority per realm/capital and a persistent vanilla Interior atrium with nested ward and
+terrace floors. Two fixed slots retain current plus the one exact exiled realm without unbounded
+save-key growth, and foreign shells remain inert. The two paid records now declare only `Strata="arcology"`, never enter surface
+offers, and exist only as exact hosted-lot construction receipts. Ward support requires the active
+capital; terrace food additionally requires stored fresh water. The shell remains intact and dark
+after capital loss. No remote zone is loaded and no unloaded resident is simulated. Native
+TESTING 136j–136j.5 remains acceptance, not a design question. The registry office's seat-roster
+reading remains a separate historical observation.
 
 **QB-48 — CLOSED/PINNED (2026-08-23): Seal/Succession engine authority.** Source verification
 against 2.0.211.51 fixed one owner for every transition; no two systems race to interpret the
@@ -381,6 +383,33 @@ accomplishment (and 1 XP). Decide whether final UX keeps the inherited chart as 
 legacy, starts unrevealed behind a rumor/natural discovery, or uses another nonmodal reveal. This
 choice changes only note/finder presentation; it must not change reservation, placement,
 durability, or one-seat consumption.
+
+**QB-50 — CLOSED (2026-08-27): how the Heart keeps the yielding-lot promise.** The separately
+owned ring call is the narrow ruled verb, not a general move tool: only exact finished
+settlement-raised blockers already marked yielding and only when the next Heart rect needs their
+ground. The founder receives one complete re-proved plan, the existing deterministic scorer chooses
+same-sized lawful destinations with manual override, and one real crew completes one frame at a
+time for world-time/labour with no water or material debit. Handover moves the original exact
+objects under bounded CAS/escrow, preserving stable LotId, frozen architecture, contents,
+residents/home binding, staffing/holds/work/history/wear, and network declarations. Obstruction,
+duplicates, callbacks, frame loss, thaw/load, and ownership loss resume, roll back, or quarantine;
+never strike, clone, displace, or infer. TESTING 136j.6–136j.10 remains native acceptance, not an
+open design decision.
+
+**QB-51 — CLOSED (2026-08-28): master pause freezes in-flight physical work.** New work remains
+refused while paused and committed recovery remains lawful, but disabled time never becomes
+labour, cargo progress, yield, or another passive reward. Routed construction inputs already
+freeze and rebase through `KingdomConstruction.MasterPause`; hosted arcology labour now calls
+`KingdomHostedArcologyRules.AdvanceLaborAfterMasterEdge`, clamping its prior receipt clock to
+`KingdomSystem.MasterOptionTick`. The first wake after resume therefore contributes no disabled
+ticks, while later active ticks progress normally at the previously witnessed staffing basis.
+Focused portable and engine-linked tests prove zero disabled-span labour, genuine post-resume
+labour, and the runtime's explicit master-edge use. The 36,000-tick ordinary loaded-zone catch-up
+bound remains intact for absences while the master option stays enabled.
+
+**QB-52 — CLOSED (2026-08-29, delegated to Fable): MIT for the whole repo.** The author delegated ('whatever fits the mod best'). Ruling: MIT — the Caves of Qud modding ecosystem norm, simplest for open-source contribution, no split-license friction for contributors touching both code and authored maps; Workshop distribution is governed by Freehold's modding terms regardless, and the repo distributes no engine code (decompile references are read-only research, never shipped). Original options below for the record.
+
+**QB-52 (original) — Open-source license for the public repo.** The release directive (2026-08-29) orders the repo published with proper open-source contribution setup, but no license was named. Options: (a) MIT — maximal reuse, common for Qud mods, lets anyone fork/redistribute including commercially; (b) GPL-3.0 — derivatives must stay open, protects against closed forks of the kingdom systems; (c) CC-BY-NC-SA for content + MIT for code — split license acknowledging the authored maps/lore are creative work; (d) no license file yet — repo public but all-rights-reserved until you decide (contributions legally murky, weakest option). PROVISIONAL while you sleep: the repo will NOT go public until either you answer or root rules from a standing preference — publication order was protections-first anyway, so nothing is blocked tonight except the final public flip. Steam Workshop publication is unaffected (the mod ships as content regardless of repo license).
 
 ## Answered
 

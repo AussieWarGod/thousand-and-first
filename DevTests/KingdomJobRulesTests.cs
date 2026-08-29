@@ -55,6 +55,38 @@ namespace ThousandAndFirst.Tests
 				Start, KingdomItineraryRules.WalkTicksPerCellDefault, KingdomJobStatus.Open, 1, 0, legs, 3);
 		}
 
+		private static KingdomJobRow OwnerDelivery(int jobId,
+			KingdomDeliveryCargoAuthority authority, KingdomStockKind cargo, int amount,
+			KingdomDeliveryPhase phase, string owner = "construction:1", int version = 1,
+			string digest = "0123456789abcdef", long revision = 1L,
+			long sourceBefore = 0L, int sourceStart = 0, int sourceCount = 0,
+			long targetBefore = 0L, KingdomDeliveryTargetReceiptState targetReceipt
+				= KingdomDeliveryTargetReceiptState.None,
+			string sourceObject = "source:urn", string targetObject = "target:yard")
+		{
+			KingdomLeg[] legs = new KingdomLeg[]
+			{
+				new KingdomLeg(Westward, 79, 12, 0, 12, 79, Start, Start + 79L),
+				new KingdomLeg(Here, 0, 12, 40, 12, 40, Start + 79L, Start + 119L)
+			};
+			return new KingdomJobRow(jobId, KingdomJobKind.Delivery, cargo, amount,
+				Westward, Here, Start, 1, KingdomJobStatus.Open, 1, 1, legs, 2,
+				deliverySourceEndpointId: 101, deliverySourceObjectId: sourceObject,
+				deliverySourceX: 40, deliverySourceY: 12,
+				deliveryTargetEndpointId: 202, deliveryTargetObjectId: targetObject,
+				deliveryTargetX: 40, deliveryTargetY: 12,
+				deliverySourceBeforeAmount: sourceBefore, deliveryTripId: jobId,
+				deliveryStopOrdinal: 1, deliveryPhase: phase,
+				deliveryCargoAuthority: authority, deliveryOwnerOperationId: owner,
+				deliveryOwnerManifestVersion: version,
+				deliveryOwnerManifestDigest: digest,
+				deliveryOwnerManifestRevision: revision,
+				deliveryManifestSourceStart: sourceStart,
+				deliveryManifestSourceCount: sourceCount,
+				deliveryTargetBeforeAmount: targetBefore,
+				deliveryTargetReceiptState: targetReceipt);
+		}
+
 		private static KingdomItineraryFix At(KingdomJobRow job, long tick)
 		{
 			KingdomItineraryFix fix;
@@ -718,6 +750,259 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ConstructionInputObjectManifestsAreExactAndOwnerBound()
+		{
+			KingdomJobTable table;
+			KingdomCityFault fault;
+			KingdomJobRow reservation = OwnerDelivery(21,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 1,
+				KingdomDeliveryPhase.ReservationPrepared, version: 0, digest: null,
+				revision: 0L, sourceStart: 0, sourceCount: 1,
+				sourceObject: null, targetObject: null);
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { reservation }, out table, out fault));
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1,
+					KingdomDeliveryPhase.ReservationPrepared,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "reservation precedes parent manifest adoption");
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.Quarantined,
+					version: 0, digest: null, revision: 0L,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "quarantine retains pre-adoption evidence");
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.Quarantined,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "quarantine retains post-adoption evidence");
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1,
+					KingdomDeliveryPhase.LandedAwaitingOwner,
+					sourceStart: 0, sourceCount: 1,
+					sourceObject: null, targetObject: null)
+			}, out table, out fault));
+			KingdomJobRow manifest = OwnerDelivery(22,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
+				sourceStart: 3, sourceCount: 2);
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { manifest }, out table, out fault));
+
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(23, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.Water, 1, KingdomDeliveryPhase.InFlight,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "water casks still use opaque object-manifest cargo");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(24, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
+					sourceStart: 3, sourceCount: 0)
+			}, out table, out fault), "object cargo requires an exact positive range");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					owner: "", sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "orphan owner ids are refused");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					version: 0, sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "owner manifest version is explicit");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					digest: "", sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "owner manifest digest is explicit");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					revision: -1L, sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "owner manifest revision cannot go backwards");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(26, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					sourceStart: 0, sourceCount: 1, targetBefore: 4L,
+					targetReceipt: KingdomDeliveryTargetReceiptState.Prepared)
+			}, out table, out fault), "the parent, never a scalar callback, owns landing");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(27, KingdomDeliveryCargoAuthority.CarryBookManifest,
+					KingdomStockKind.OpaqueManifest, 1,
+					KingdomDeliveryPhase.LandedAwaitingOwner,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "landed-awaiting-owner belongs only to construction");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(28, (KingdomDeliveryCargoAuthority)3,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "future authority is not current authority");
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				OwnerDelivery(29, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, (KingdomDeliveryPhase)99,
+					sourceStart: 0, sourceCount: 1)
+			}, out table, out fault), "future phase is not current phase");
+		}
+
+		[Test]
+		public void ConstructionInputRangesCannotOverlapOrChangeParentManifest()
+		{
+			KingdomJobRow first = OwnerDelivery(31,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
+				sourceStart: 0, sourceCount: 2);
+			KingdomJobRow disjoint = OwnerDelivery(32,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
+				sourceStart: 2, sourceCount: 2);
+			KingdomJobTable table;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { first, disjoint },
+				out table, out fault));
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				first,
+				OwnerDelivery(33, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
+					sourceStart: 1, sourceCount: 2)
+			}, out table, out fault));
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				first,
+				OwnerDelivery(34, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+					digest: "different", sourceStart: 4, sourceCount: 1)
+			}, out table, out fault));
+			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			{
+				first,
+				OwnerDelivery(35, KingdomDeliveryCargoAuthority.ConstructionInput,
+					KingdomStockKind.OpaqueManifest, 1,
+					KingdomDeliveryPhase.ReservationPrepared, version: 0, digest: null,
+					revision: 0L, sourceStart: 4, sourceCount: 1)
+			}, out table, out fault), "owner adoption is one atomic table rewrite");
+			Assert.IsTrue(KingdomJobRules.UsesExactObjectRange(
+				KingdomDeliveryCargoAuthority.ConstructionInput, KingdomStockKind.Water),
+				"construction is object-ranged before cargo-shape validation");
+			Assert.AreEqual(1L, KingdomJobRules.DeliveryCapacityLoad(
+				KingdomDeliveryCargoAuthority.ConstructionInput, KingdomStockKind.Water,
+				64, 1), "one 64-dram cask consumes one carrier slot");
+			Assert.AreEqual(2L, KingdomJobRules.DeliveryCapacityLoad(
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 99, 2));
+		}
+
+		[Test]
+		public void RealmJobV4StaysFrozenAndV5RoundTripsConstructionInput()
+		{
+			KingdomJobRow construction = OwnerDelivery(41,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 1,
+				KingdomDeliveryPhase.LandedAwaitingOwner,
+				sourceStart: 0, sourceCount: 1);
+			KingdomJobTable table;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
+			KingdomJobRegistry registry = new KingdomJobRegistry { JobCounter = 41 };
+			Assert.IsTrue(registry.TryPublish(table, out fault));
+			byte[] v5;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
+				KingdomRealmJobWireFixture.CurrentVersion, out v5));
+			Assert.IsFalse(KingdomRealmJobWireFixture.TryEncode(registry,
+				KingdomRealmJobWireFixture.ExactDeliveryVersion, out _));
+			Assert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5,
+				KingdomRealmJobWireFixture.ExactDeliveryVersion, out _));
+			Assert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5, 1, out _));
+
+			KingdomJobRegistry decoded;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v5,
+				KingdomRealmJobWireFixture.CurrentVersion, out decoded));
+			KingdomJobTable cold;
+			KingdomJobRow row;
+			Assert.IsTrue(decoded.TryRead(out cold, out fault));
+			Assert.IsTrue(cold.TryGet(41, out row));
+			Assert.AreEqual(KingdomDeliveryCargoAuthority.ConstructionInput,
+				row.DeliveryCargoAuthority);
+			Assert.AreEqual(KingdomDeliveryPhase.LandedAwaitingOwner, row.DeliveryPhase);
+
+			KingdomJobRow carry = OwnerDelivery(42,
+				KingdomDeliveryCargoAuthority.CarryBookManifest,
+				KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
+				sourceStart: 0, sourceCount: 1);
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { carry }, out table, out fault));
+			registry = new KingdomJobRegistry { JobCounter = 42 };
+			Assert.IsTrue(registry.TryPublish(table, out fault));
+			byte[] v4;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
+				KingdomRealmJobWireFixture.ExactDeliveryVersion, out v4));
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v4,
+				KingdomRealmJobWireFixture.ExactDeliveryVersion, out decoded));
+			byte[] repeated;
+			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(decoded,
+				KingdomRealmJobWireFixture.ExactDeliveryVersion, out repeated));
+			CollectionAssert.AreEqual(v4, repeated);
+		}
+
+		[Test]
+		public void ReflectedSettlementV12RejectsTheV13DeliveryEnumDomain()
+		{
+			KingdomJobRow construction = OwnerDelivery(51,
+				KingdomDeliveryCargoAuthority.ConstructionInput,
+				KingdomStockKind.OpaqueManifest, 1,
+				KingdomDeliveryPhase.LandedAwaitingOwner,
+				sourceStart: 0, sourceCount: 1);
+			KingdomJobTable table;
+			KingdomCityFault fault;
+			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
+			KingdomJobRegistry registry = new KingdomJobRegistry { JobCounter = 51 };
+			Assert.IsTrue(registry.TryPublish(table, out fault));
+
+			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
+				"v12 must reject authority 2 and phase 6");
+			Assert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.DeliveryDomainVersion));
+
+			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.InFlight;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
+				"v12 must reject authority 2 independently of phase 6");
+			registry.DeliveryCargoAuthorityKinds[0] =
+				(int)KingdomDeliveryCargoAuthority.CarryBookManifest;
+			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.LandedAwaitingOwner;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
+				"v12 must reject phase 6 independently of authority 2");
+			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.InFlight;
+			Assert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion));
+			registry.DeliveryCargoAuthorityKinds[0] = 3;
+			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+				registry, KingdomArchivedSettlementCodec.DeliveryDomainVersion));
+			string source = KingdomArchivedSettlementCodecLogicalSource.Read();
+			Assert.AreEqual(2, source.Split(new[]
+			{
+				"Archived settlement delivery enum domain is invalid for its version."
+			}, StringSplitOptions.None).Length - 1,
+				"both reflected writer and reader must enforce the domain boundary");
+		}
+
+		[Test]
 		public void RegistryPublicSaveColumnsKeepTheirExactMetadataShapeAndOrder()
 		{
 			Type registry = typeof(KingdomJobRegistry);
@@ -778,12 +1063,12 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, (int)KingdomJobStatus.Delivered);
 			Assert.AreEqual(2, (int)KingdomJobStatus.Failed);
 			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomDeliveryPhase)));
-			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5 },
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5, 6 },
 				Array.ConvertAll((KingdomDeliveryPhase[])Enum.GetValues(
 					typeof(KingdomDeliveryPhase)), value => (int)value));
 			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(
 				typeof(KingdomDeliveryCargoAuthority)));
-			CollectionAssert.AreEqual(new int[] { 0, 1 },
+			CollectionAssert.AreEqual(new int[] { 0, 1, 2 },
 				Array.ConvertAll((KingdomDeliveryCargoAuthority[])Enum.GetValues(
 					typeof(KingdomDeliveryCargoAuthority)), value => (int)value));
 		}

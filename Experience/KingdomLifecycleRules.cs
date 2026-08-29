@@ -26,7 +26,12 @@ namespace ThousandAndFirst
 		public const int MaxCarrySectionBytes = 512 * 1024;
 		public const int LegacyGrowthFormatVersion = 1;
 		public const int PreviousGrowthFormatVersion = 2;
-		public const int CurrentGrowthFormatVersion = 3;
+		public const int SemanticGrowthFormatVersion = 3;
+		public const int FirstGuestGrowthFormatVersion = 4;
+		public const int TerminalReceiptGrowthFormatVersion = 5;
+		public const int FirstGuestPhysicalGrowthFormatVersion = 6;
+		public const int CadenceGrowthFormatVersion = 7;
+		public const int CurrentGrowthFormatVersion = CadenceGrowthFormatVersion;
 		public const int MaxGrowthFields = 8;
 		public const int MaxGrowthSources = 64;
 		public const int MaxGrowthOutputs = 96;

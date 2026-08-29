@@ -16,6 +16,10 @@ namespace ThousandAndFirst
 		private static void WriteGrowth(BinaryWriter w, KingdomGrowthBook b, int wireVersion)
 		{
 			if (wireVersion != KingdomLifecycleRules.CurrentGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.FirstGuestPhysicalGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.FirstGuestGrowthFormatVersion
+				&& wireVersion != KingdomLifecycleRules.SemanticGrowthFormatVersion
 				&& wireVersion != KingdomLifecycleRules.PreviousGrowthFormatVersion
 				&& wireVersion != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 				throw new InvalidDataException("unsupported growth fixture version");
@@ -61,6 +65,10 @@ namespace ThousandAndFirst
 			for (int i = 0; i < b.Resources.Count; i++) WriteResource(w, b.Resources[i]);
 			w.Write(b.RecentProofs.Count);
 			for (int i = 0; i < b.RecentProofs.Count; i++) WriteGrowthProof(w, b.RecentProofs[i]);
+			if (wireVersion >= KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion)
+				WriteGrowthFirstGuestTerminal(w, b.FirstGuestTerminal, wireVersion);
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+				WriteGrowthArrivalCadence(w, b);
 		}
 
 		private static KingdomGrowthBook ReadGrowth(BinaryReader r, int wireVersion)
@@ -113,10 +121,21 @@ namespace ThousandAndFirst
 			int proofs = ReadCount(r, KingdomLifecycleRules.MaxRecentProofs);
 			b.RecentProofs = new List<KingdomGrowthProof>(proofs);
 			for (int i = 0; i < proofs; i++) b.RecentProofs.Add(ReadGrowthProof(r));
+			b.FirstGuestTerminal = wireVersion >=
+				KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion
+				? ReadGrowthFirstGuestTerminal(r, wireVersion) : null;
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+				ReadGrowthArrivalCadence(r, b);
 			if (wireVersion == KingdomLifecycleRules.LegacyGrowthFormatVersion
 				&& !KingdomLifecycleRules.UpgradeLegacyGrowthArrivalCandidate(
 					b.ArrivalCandidate))
 				throw new InvalidDataException("legacy growth arrival candidate cannot migrate");
+			if (wireVersion < KingdomLifecycleRules.FirstGuestGrowthFormatVersion
+				&& !KingdomLifecycleRules.UpgradeFirstGuestOpportunity(b, wireVersion))
+				throw new InvalidDataException("historical first-guest authority cannot migrate");
+			if (wireVersion < KingdomLifecycleRules.CadenceGrowthFormatVersion
+				&& !KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(b))
+				throw new InvalidDataException("historical arrival cadence cannot migrate");
 			return b;
 		}
 	}

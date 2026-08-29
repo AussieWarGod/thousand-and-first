@@ -87,18 +87,10 @@ namespace ThousandAndFirst
 					KingdomGovernanceScope.Commit("set ground improvements");
 					return;
 				}
-				// A held offer is the one verdict the founder may overrule, so picking it asks
-				// rather than toggling: the dip is disclosed and consented to before anything moves.
-				// Everything else in this screen still only ever decides what to leave alone.
 				Assessment picking = assessments[picked];
-				if (KingdomUpgradeRules.IsOffer(picking.Verdict))
+				if (KingdomRelocation.CanOffer(System, zone, works[picked], picking))
 				{
-					if (OpenHeldOffer(System, zone, works[picked], picking, survey))
-					{
-						KingdomGovernanceScope.Commit("force improvement");
-					}
-					// Leaving, escaping, or failing the force attempt is a cancellation. A held
-					// offer must never fall through into the ordinary held-state toggle.
+					KingdomRelocation.OpenHeartRingCall(System, zone, works[picked], picking);
 					return;
 				}
 				r_KingdomImprovement held = works[picked].RequirePart<r_KingdomImprovement>();
@@ -121,8 +113,12 @@ namespace ThousandAndFirst
 				return "{{G|" + name + "}} - being raised into " + successor;
 			case KingdomUpgradeRules.UpgradeVerdict.Ready:
 				return "{{G|" + name + "}} - ready to be raised into " + successor + " for {{C|" + A.CostDrams + " drams}}";
-			case KingdomUpgradeRules.UpgradeVerdict.HeldOffer:
-				return "{{W|" + name + "}} - ready to improve, and held: the city leans on it. Pick it to raise it anyway.";
+			case KingdomUpgradeRules.UpgradeVerdict.NoGroundToGrow:
+				if (KingdomPlots.IsHeartPlot(Work) && A.Reason != null
+					&& A.Reason.IndexOf("marked to yield", StringComparison.Ordinal) >= 0)
+					return "{{W|" + name + "}} - " + (A.Reason ?? "its next ring needs ground")
+						+ " Pick it to review the complete ring-call plan.";
+				return "{{K|" + name + "}} - " + (A.Reason ?? ("would become " + successor));
 			case KingdomUpgradeRules.UpgradeVerdict.NotOurWork:
 				return "{{K|" + name + "}} - yours, not the settlement's. It is left exactly as you made it.";
 			case KingdomUpgradeRules.UpgradeVerdict.StyleForbids:

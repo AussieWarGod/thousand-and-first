@@ -94,7 +94,8 @@ namespace ThousandAndFirst
 				if (verdict != KingdomSettlement.SecondFoundingVerdict.Allowed ||
 					!KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 						system.SettlementCount, KingdomSettlement.MaxSettlements,
-						system.Away == null, TargetIsExactSeat: false,
+						system.NonSeatSettlementCount < KingdomSettlementTopologyRules.MaxNonSeatSettlements,
+						TargetIsExactSeat: false,
 						AlreadyPublished: false))
 				{
 					return Result(KingdomFoundingOutcome.Refused,
@@ -151,6 +152,13 @@ namespace ThousandAndFirst
 					KingdomFoundingProjection.None,
 					"The basin does not hold the exact fresh-water cost.");
 			}
+			if (!TryChooseExternalBinding(Site, Kind, out string externalBinding,
+				out string externalFailure))
+			{
+				return Result(KingdomFoundingOutcome.Refused,
+					KingdomFoundingWaterDisposition.Untouched,
+					KingdomFoundingProjection.None, externalFailure);
+			}
 
 			string ownerNonce = Basin.EnsureOwnerNonce();
 			string transaction = Guid.NewGuid().ToString("N");
@@ -170,9 +178,11 @@ namespace ThousandAndFirst
 				? new Dictionary<string, int>() : Copy(vessel.ComponentLiquids);
 			string originalEncoding = EncodeComponents(originalComponents);
 			string committedEncoding = EncodeComponents(committedComponents);
-			string payloadDigest = KingdomFoundingTransactionRules.PayloadDigest(Kind, Name,
+			string payloadDigest =
+				KingdomFoundingTransactionRules.PayloadDigestWithExternalBinding(Kind, Name,
 				Vocation, VillageFaction, VillageDisplayName, vessel.Volume, vessel.MaxVolume,
-				committedVolume, vessel.MaxVolume, originalEncoding, committedEncoding);
+				committedVolume, vessel.MaxVolume, originalEncoding, committedEncoding,
+				externalBinding);
 			KingdomFoundingAuthority authority = NewAuthority(Kind,
 				KingdomFoundingOwnerKind.Basin, transaction, ownerNonce, realmFaction,
 				Site.ZoneID, Actor.CurrentCell.X, Actor.CurrentCell.Y, payloadDigest);
@@ -199,23 +209,29 @@ namespace ThousandAndFirst
 				}
 			}
 
+			if (!VillageCovenantPreflight(system, Kind, transaction, encodedAuthority,
+				VillageFaction, VillageDisplayName, Site, out KingdomFoundingResult covenantBar))
+				return covenantBar;
 			if (!TryStageFoundingReceipt(Basin, Actor, Site, vessel, Kind, transaction,
 				ownerNonce, payloadDigest, encodedAuthority, realmFaction, Name, Vocation,
 				VillageFaction, VillageDisplayName, committedVolume, originalComponents,
-				committedComponents, out string stagedFailure,
+				committedComponents, externalBinding, out string stagedFailure,
 				out KingdomFoundingResult stagingResult))
 			{
 				return stagingResult;
 			}
 			if (!TryAcquireFoundingReservations(Basin, Site, vessel, Kind, encodedAuthority,
 				realmFaction, Name, Vocation, VillageFaction, VillageDisplayName,
-				stagedFailure, out KingdomFoundingResult reservationResult))
+				externalBinding, stagedFailure,
+				out KingdomFoundingResult reservationResult))
 			{
 				return reservationResult;
 			}
 
 			try
 			{
+				if (!TryPassExternalPourBarrier(Basin, Site,
+					out KingdomFoundingResult externalBlocked)) return externalBlocked;
 				// Durable forward-recovery intent precedes liquid removal. A save from inside
 				// Drain can never look like an unpaid staged receipt.
 				Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted;
@@ -229,7 +245,7 @@ namespace ThousandAndFirst
 						Basin.PendingPhase = KingdomFoundingPhase.None;
 						cleaned = ClearExactReservationSet(Site, encodedAuthority,
 							realmFaction, Kind == KingdomFoundingKind.VillageCharter
-								? VillageFaction : null) && SafeClearReceipt(Basin);
+								? VillageFaction : null, externalBinding) && SafeClearReceipt(Basin);
 					}
 					else
 					{
@@ -253,22 +269,22 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.Spent,
 					KingdomFoundingProjection.Water);
 			}
-				catch (Exception ex)
+			catch (Exception ex)
+			{
+				bool restored = RestorePrePublication(Basin, vessel);
+				bool cleaned = false;
+				if (restored)
 				{
-					bool restored = RestorePrePublication(Basin, vessel);
-					bool cleaned = false;
-					if (restored)
-					{
-						Basin.PendingPhase = KingdomFoundingPhase.None;
-						cleaned = ClearExactReservationSet(Site, encodedAuthority,
-							realmFaction, Kind == KingdomFoundingKind.VillageCharter
-								? VillageFaction : null) && SafeClearReceipt(Basin);
+					Basin.PendingPhase = KingdomFoundingPhase.None;
+					cleaned = ClearExactReservationSet(Site, encodedAuthority,
+						realmFaction, Kind == KingdomFoundingKind.VillageCharter
+							? VillageFaction : null, externalBinding) && SafeClearReceipt(Basin);
 				}
 				else
 				{
 					PoisonReceipt(Basin, vessel);
 				}
-					return Result(restored && cleaned
+				return Result(restored && cleaned
 						? KingdomFoundingOutcome.CompensatedFailure
 						: KingdomFoundingOutcome.RecoverableFailure,
 					restored

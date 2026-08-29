@@ -34,7 +34,7 @@ namespace ThousandAndFirst.Tests
 			string source = KingdomPhysicalHappeningsLogicalSource.Read();
 			Assert.AreEqual(1, Count(source, "internal enum KingdomPhysicalQueueResult"));
 			Assert.AreEqual(1, Count(source, "internal sealed class KingdomHappeningMoveTo"));
-			Assert.AreEqual(8, Count(source, "internal static partial class KingdomPhysicalHappenings"));
+			Assert.AreEqual(9, Count(source, "internal static partial class KingdomPhysicalHappenings"));
 			Assert.AreEqual(1, Count(source, "private enum SinkLane"));
 			Assert.AreEqual(1, Count(source, "private sealed class Evidence"));
 			StringAssert.DoesNotContain("internal static class KingdomPhysicalHappenings", source);

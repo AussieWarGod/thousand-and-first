@@ -54,13 +54,15 @@ namespace ThousandAndFirst
 			return result;
 		}
 
-		private void QueueAccessionRepair(KingdomHeir Heir, string FounderName, bool Seated)
+		private void QueueAccessionRepair(KingdomHeir Heir, string FounderName,
+			string SettlementId)
 		{
 			PendingPhase = InterregnumPhase.RiteDue;
 			PendingAccessionRepairResidentId = Heir.ResidentId;
 			PendingAccessionRepairFounderName = BoundPendingName(FounderName);
 			PendingAccessionRepairHeirName = BoundPendingName(Heir.Name);
-			PendingAccessionRepairSeated = Seated;
+			PendingAccessionRepairSettlementId = SettlementId;
+			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = Heir.ArrivedTick;
 			PendingAccessionRepairKeptCreeds = BoundPendingCreeds(Heir.KeptCreeds);
 		}
@@ -83,9 +85,16 @@ namespace ThousandAndFirst
 						+ Context);
 					return;
 				}
+				string settlementId = PendingAccessionRepairSettlementId;
+				if (string.IsNullOrEmpty(settlementId))
+				{
+					settlementId = PendingAccessionRepairSeated ? system.City?.SettlementId :
+						(system.NonSeatSettlementCount == 1
+							? system.NonSeatSettlementAt(0)?.City?.SettlementId : null);
+				}
 				KingdomResidentRow formerRow = default(KingdomResidentRow);
 				KingdomAccessionOutcome outcome = KingdomResidents.TryRepairAccession(system,
-					heir, PendingAccessionRepairResidentId, PendingAccessionRepairSeated,
+					heir, PendingAccessionRepairResidentId, settlementId,
 					PendingAccessionRepairHeirName, PendingAccessionRepairArrivedTick,
 					PendingAccessionRepairKeptCreeds, out formerRow);
 				if (outcome != KingdomAccessionOutcome.Committed)
@@ -97,13 +106,9 @@ namespace ThousandAndFirst
 				string founderName = string.IsNullOrEmpty(PendingAccessionRepairFounderName)
 					? "the founder" : PendingAccessionRepairFounderName;
 				string token = PendingDeathToken ?? "";
-				bool heldOffice = system.OfficeHolderResidentId > 0
-					? system.OfficeHolderResidentId == formerRow.ResidentId
-					: string.Equals(system.OfficeHolderName, formerRow.Name,
-						StringComparison.Ordinal);
 				string heirCreed = heir.GetStringProperty(KingdomCreed.CreedProperty);
 				CompleteAccession(game, system, heir, founderName, formerRow, token,
-					PendingRoad, PendingDays, heldOffice, heirCreed,
+					PendingRoad, PendingDays, heirCreed,
 					heir.CurrentZone?.ZoneID ?? "", "accession repair " + Context);
 			}
 			catch (Exception ex)

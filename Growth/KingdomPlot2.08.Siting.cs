@@ -19,15 +19,30 @@ namespace ThousandAndFirst
 		/// not take it, or the engine refuses the object.</returns>
 		public static GameObject StakeHeartRung(KingdomSystem System, Zone Z, int Rung, KingdomPlotRules.PlotRect Survey, int RiteX, int RiteY)
 		{
-			string key = KingdomPlotRules.HeartKeyForRung(Rung);
-			if (key == null || Z == null || !KingdomData.TryGetBuilding(key, out var entry) || !TryGetSpec(key, out var spec))
-			{
-				return null;
-			}
-			if (!KingdomPlotRules.TryHeartRect(Survey, RiteX, RiteY, KingdomPlotRules.HeartSizeForRung(Rung), out var rect))
-			{
-				return null;
-			}
+			if (Rung != 1 || Z == null
+				|| !KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Z.Width, Z.Height,
+					out KingdomPlotRules.PlotRect expected)
+				|| !SameRect(expected, Survey)
+				|| !EnsureFoundingHeartProjection(System, Z, RiteX, RiteY)) return null;
+			GameObject exact = null;
+			int count = 0;
+			foreach (GameObject item in Z.GetObjects())
+				if (GameObject.Validate(item) && item.GetIntProperty(HeartPlotProperty) == 1
+					&& item.GetIntProperty(PlotPartProperty) != 1)
+				{
+					exact = item;
+					count++;
+				}
+			return count == 1 ? exact : null;
+		}
+
+		private static GameObject StakeFirstHeartPrepared(KingdomSystem System, Zone Z,
+			FoundingHeartContext Context, FoundingHeartPlacement Placement)
+		{
+			if (System == null || Z == null || Context == null || Placement?.Zone != Z
+				|| !ReferenceEquals(Context, Placement.Context)
+				|| Placement.Slot != KingdomFoundingHeartRules.WorksSlot
+				|| !FoundingHeartGroundAllows(Z, Context.Rect)) return null;
 			GroundGrid grid = new GroundGrid(Z);
 			// The rite ground is not chosen by the plan; it is chosen by where the water was
 			// poured, and the heart is laid on it whatever else is standing there. That is safe
@@ -38,37 +53,10 @@ namespace ThousandAndFirst
 			// (HeartGrowRefused).
 			// Open water is the one exception, and it is fatal rather than awkward: a plot is
 			// never laid over liquid and liquid is never filled in.
-			for (int y = rect.Y1; y <= rect.Y2; y++)
-			{
-				for (int x = rect.X1; x <= rect.X2; x++)
-				{
-					if (grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid)
-					{
-						MessageQueue.AddPlayerMessage("{{K|" + KingdomPlotRules.RefuseLiquid(x, y) + " The basin is set down all the same, and the heart is laid when the ground is.}}");
-						return null;
-					}
-				}
-			}
-			if (!KingdomZoning.Permits(System, Z.ZoneID, entry, out string zoningFailure))
-			{
-				MessageQueue.AddPlayerMessage("{{K|" + zoningFailure + "}}");
-				return null;
-			}
-			if (!TryPreparePlotPayload(System, Z, rect, entry.Key, entry.Category, null,
-				out KingdomArchitectureIntent architecture, out _, out string architectureFailure))
-			{
-				MessageQueue.AddPlayerMessage("{{K|" + (architectureFailure
-					?? "No authored architecture fits the heart's exact ground.") + "}}");
-				return null;
-			}
 			KingdomConstructionJob founding = null;
-			GameObject works = Stake(System, Z, rect, entry, spec, grid, null,
-				KingdomPlotRules.IsUnderground(Z.Z), architecture, false, ref founding);
-			if (works != null)
-			{
-				works.SetIntProperty(HeartPlotProperty, 1);
-			}
-			return works;
+			return Stake(System, Z, Context.Rect, Context.Entry, Context.Spec, grid, null,
+				KingdomPlotRules.IsUnderground(Z.Z), Context.Architecture, false,
+				ref founding, Placement);
 		}
 
 		// --- Siting -----------------------------------------------------------------------

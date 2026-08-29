@@ -42,7 +42,10 @@ Automation cannot decide whether a type owns one coherent responsibility or whet
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore
 also requires `docs/STRUCTURE_REVIEW.json`, bound to the exact staged source inventory digest.
 Copy `docs/STRUCTURE_REVIEW.example.json` only after a human review; replace every placeholder and
-record concrete evidence in both notes fields. Schema 1 accepts no exceptions. Changing that rule
+record concrete evidence in both notes fields. Schema 1 accepts exactly the template keys and no
+exceptions. Reviewer identity is 2–80 printable characters; each evidence note is 20–2,000
+printable characters; completion uses a real second-precision UTC timestamp. Placeholder,
+sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected. Changing that rule
 requires an explicit author amendment to Addendum 9, not a tooling allowlist.
 
 Decompose debt one owned state machine or transaction at a time. Preserve serialized names and

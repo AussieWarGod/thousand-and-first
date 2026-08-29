@@ -204,6 +204,23 @@ namespace ThousandAndFirst
 				+ "\n\nFrom now on the people who walk here are people who wanted to walk toward that. Give it time and one of your two cities will stop being what it was.";
 		}
 
+		/// <summary>Exact declaration delta shown before commit and copied by civic voices.</summary>
+		public static string DeclarationPreview(string CreedDisplayName, int SlightedCount,
+			int DissentBefore)
+		{
+			int count = SlightedCount < 0 ? 0 : SlightedCount;
+			string creed = string.IsNullOrEmpty(CreedDisplayName) ? "the selected creed"
+				: ("{{C|" + CreedDisplayName + "}}");
+			string change = count == 0
+				? "No other locally held creed changes standing or dissent."
+				: count + " other locally held creed" + (count == 1 ? "" : "s")
+					+ " each changes realm standing by " + DeclarationStandingCost
+					+ ". Dissent changes from " + DissentBefore + " to "
+					+ ApplyDissent(DissentBefore, DeclarationShock) + ".";
+			return "Declare " + creed + " as the realm creed?\n\nFacts: " + change
+				+ " Future settlers use the declared creed as an arrival influence.";
+		}
+
 		/// <summary>Dissent clamped to the range it is allowed to occupy.</summary>
 		private static int Clamp(int Dissent)
 		{

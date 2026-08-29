@@ -21,6 +21,13 @@ namespace ThousandAndFirst
 				FailDetachedAuthority(Frame, "Detached trade quarantine could not finalize authority.");
 				return;
 			}
+			if (Operation.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery)
+			{
+				// Intent can mean a callback committed before throwing. It may be retired only
+				// after the loaded immutable vessel classifies it as exact before/after.
+				if (KingdomTradeRules.HasPolityWaterIntent(Operation)) return;
+				KingdomTradeRules.SealUnstartedPolityConsignmentLegs(Operation);
+			}
 			if (Operation.Kind == KingdomTradeOperationKind.ManifestLoad
 				&& Operation.ProvedWater > 0 && Book.Manifest == null)
 			{
@@ -57,9 +64,26 @@ namespace ThousandAndFirst
 				Book.Manifest.Status = KingdomTradeManifestStatus.Quarantined;
 				Book.Manifest.Fault = Operation.Fault;
 			}
+			if (Operation.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery &&
+				Operation.ProvedWater > 0 &&
+				!SettlePolityConsignmentRetention(Book, Operation)) return;
 			RefreshBookDomain(Frame);
 			System.SynchronizeLegacyManifestProjection();
-			if (Operation.Outbox == null)
+			if (Operation.Outbox == null && Operation.Kind ==
+				KingdomTradeOperationKind.PolityConsignmentDelivery)
+			{
+				// The directed conversation consumes the typed terminal-failure receipt.
+				// No second unsolicited callback may strand exact retained custody.
+				Operation.Outbox = new KingdomTradeOutbox
+				{
+					EventId = Operation.Id,
+					ChronicleState = KingdomTradeSinkState.Skipped,
+					LedgerState = KingdomTradeSinkState.Skipped,
+					MessageState = KingdomTradeSinkState.Skipped,
+					DeedState = KingdomTradeSinkState.Skipped
+				};
+			}
+			else if (Operation.Outbox == null)
 			{
 				Operation.Outbox = new KingdomTradeOutbox
 				{
@@ -110,6 +134,8 @@ namespace ThousandAndFirst
 
 		private static void Quarantine(KingdomTradeOperation Operation, string Fault)
 		{
+			if (Operation?.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery)
+				KingdomTradeRules.SealUnstartedPolityConsignmentLegs(Operation);
 			Operation.Fault = AppendFault(Operation.Fault, Fault);
 			Operation.Phase = KingdomTradePhase.Quarantined;
 		}

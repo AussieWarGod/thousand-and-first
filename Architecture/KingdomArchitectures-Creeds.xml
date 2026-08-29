@@ -3,13 +3,15 @@
   Built-in creed practices for the thirty CanBeCreed factions not covered by DeepEndgame.
 
   These are authored minimum lots. generate-lot-realizations.py expands them into ordinary exact
-  M/L/XL maps; Qud never synthesises architecture. Geometry follows use: open rings remain open,
+  M/L/XL maps with scaled inert practice fixtures beside visible work paths; Qud never synthesises
+  architecture. Geometry follows use: open rings remain open,
   guarded work has controlled throats, wet work drains toward basins, and public trade keeps a
   witness path. The palette is shared only where material truth is shared. Each plan owns a unique
   BuildKey, topology, function anchors, and catalogue behavior.
 -->
 <KingdomArchitectures Schema="1">
   <palette Key="creed-practice-hands">
+    <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="unworked-ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="packed-floor" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-screen" Material="stone" MinTech="hands" Natural="no" />
@@ -24,6 +26,25 @@
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="working-hearth" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="clean-pallet" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="canvas" Blueprint="r_KingdomStructureCanvasWall" Role="cloth-baffle" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="spindle" Blueprint="r_KingdomCreedSpindleWheel" Role="hand-spindle-wheel" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="contact" Blueprint="r_KingdomCreedDryContact" Role="inert-dry-contact" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="hornpost" Blueprint="r_KingdomCreedHornPost" Role="horn-bound-challenge-post" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="altar" Blueprint="r_KingdomCreedScrapAltar" Role="wired-scrap-altar" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="drain" Blueprint="r_KingdomStructureStoneGutter" Role="descending-stone-drain" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="armsrack" Blueprint="r_KingdomCreedWeaponRack" Role="empty-ordered-arms-rack" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="brazier" Blueprint="r_KingdomCreedColdBrazier" Role="cold-ash-brazier" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="trellis" Blueprint="r_KingdomCreedVineTrellis" Role="fruiting-vine-trellis" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="trunk" Blueprint="r_KingdomCreedLivingTrunk" Role="living-teaching-trunk" Material="timber" MinTech="hands" Natural="yes" />
+    <!-- Generated M/L/XL courts alone use these inert silhouettes. Authored S-core utility keeps
+         the functional slots above; the generator's closed mapping never copies those utilities. -->
+    <slot Key="practicebasket" Blueprint="r_KingdomCreedPracticeBasket" Role="sealed-practice-hamper" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="practicetable" Blueprint="r_KingdomCreedPracticeTable" Role="bare-practice-board" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="practicehearth" Blueprint="r_KingdomCreedPracticeColdHearth" Role="cold-practice-hearth" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="practiceshelf" Blueprint="r_KingdomCreedPracticeShelf" Role="empty-practice-rack" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="practicestone" Blueprint="r_KingdomCreedPracticeStone" Role="marked-practice-slab" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="practicebasin" Blueprint="r_KingdomCreedPracticeDryBasin" Role="dry-practice-basin" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="practicebench" Blueprint="r_KingdomCreedPracticeBench" Role="practice-witness-rail" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="practicepallet" Blueprint="r_KingdomCreedPracticePallet" Role="rolled-practice-pallet" Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 
   <map Key="creed-joppa-seedhouse-s0" Width="5" Height="4" DefaultCover="walled">
@@ -33,7 +54,7 @@
     <glyph Char="s" Ground="$floor" Object="$basket" Claim="building" Pass="walk" Cover="walled" Anchors="storage:seed-bin" Stateful="yes" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="work:sorting-board" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:seed-keeping" Stateful="yes" />
-    <row Cells=".###." /><row Cells=".#st." /><row Cells=".#@#." /><row Cells=".#+#." />
+    <row Cells=".###." /><row Cells=".#st#" /><row Cells=".#@#." /><row Cells=".#+#." />
   </map>
   <map Key="creed-kyakukya-hearth-s0" Width="5" Height="4" DefaultCover="walled">
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -42,13 +63,15 @@
     <glyph Char="j" Ground="$floor" Object="$basket" Claim="building" Pass="walk" Cover="walled" Anchors="storage:spice-jars" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="walk" Cover="walled" Anchors="work:smoke-hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:spice-preserving" Stateful="yes" />
-    <row Cells="i###." /><row Cells="i#h#." /><row Cells="ij@#." /><row Cells="i+##." />
+    <!-- The road enters the working aisle, never through the spice basket. The flared rear
+         shell keeps Kyakukya's small smoke-house asymmetry without turning storage into a door. -->
+    <row Cells=".###." /><row Cells=".#h#." /><row Cells="#j@i#" /><row Cells="##+##" />
   </map>
   <map Key="creed-ezra-wheelshade-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="open" Anchors="work:drying-rack" Stateful="yes" />
-    <glyph Char="w" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
+    <glyph Char="w" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:fibre-teaching" Stateful="yes" />
     <row Cells="riiir" /><row Cells="iw@ii" /><row Cells="iirii" /><row Cells="ii+ii" />
   </map>
@@ -69,14 +92,14 @@
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:ground-listening" Stateful="yes" />
     <row Cells="sisis" /><row Cells="iiiii" /><row Cells="si@is" /><row Cells="ii+ii" />
   </map>
-  <map Key="creed-robot-chargebay-s0" Width="5" Height="4" DefaultCover="walled">
-    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="#" Ground="$floor" Structure="$screen" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="c" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="power:dry-contact" Stateful="yes" />
-    <glyph Char="r" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:grounded-rail" />
-    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:robot-charging" Stateful="yes" />
-    <row Cells="i###i" /><row Cells="ic@ci" /><row Cells="irrri" /><row Cells="ii+ii" />
+  <map Key="creed-robot-chargebay-s0" Width="5" Height="4" DefaultCover="soft">
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="#" Ground="$floor" Structure="$screen" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="+" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="c" Ground="$floor" Object="$contact" Claim="building" Pass="walk" Cover="soft" Anchors="power:dry-contact" Stateful="yes" />
+    <glyph Char="r" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="soft" Anchors="service:grounded-rail" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:robot-charging" Stateful="yes" />
+    <row Cells="i###i" /><row Cells="ic@ci" /><row Cells="iriri" /><row Cells="ii+ii" />
   </map>
   <map Key="creed-baetyl-frame-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
@@ -107,7 +130,7 @@
   <map Key="creed-goatfolk-moot-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="h" Ground="$ground" Object="$stone" Claim="yard" Pass="walk" Cover="open" Anchors="ring:horn-post" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hornpost" Claim="yard" Pass="walk" Cover="open" Anchors="ring:horn-post" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:challenge-moot" Stateful="yes" />
     <row Cells="ihihi" /><row Cells="hiiih" /><row Cells="ih@hi" /><row Cells="ii+ii" />
   </map>
@@ -124,9 +147,10 @@
     <glyph Char="#" Ground="$floor" Structure="$screen" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="n" Ground="$floor" Object="$shelf" Claim="building" Pass="walk" Cover="walled" Anchors="offering:guarded-niche" Stateful="yes" />
-    <glyph Char="a" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="shrine:scrap-altar" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$altar" Claim="building" Pass="walk" Cover="walled" Anchors="shrine:scrap-altar" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:scrap-veneration" Stateful="yes" />
-    <row Cells="i###." /><row Cells="i#n#." /><row Cells="ia@#." /><row Cells="i+##." />
+    <!-- Guarded altar remains off the public line; the central throat now reaches the main. -->
+    <row Cells=".###." /><row Cells=".#n#." /><row Cells="#a@i#" /><row Cells="##+##" />
   </map>
   <map Key="creed-troll-bridgecourt-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
@@ -172,7 +196,7 @@
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="d" Ground="$floor" Structure="$wall" Claim="building" Pass="adjacent" Cover="walled" Anchors="drain:descending" />
+    <glyph Char="d" Ground="$floor" Structure="$drain" Claim="building" Pass="walk" Cover="walled" Anchors="drain:descending" />
     <glyph Char="v" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="shrine:sealed-vessel" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:rot-sacrament" Stateful="yes" />
     <row Cells="#d#d#" /><row Cells="divid" /><row Cells="di@id" /><row Cells="##+##" />
@@ -181,7 +205,7 @@
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="r" Ground="$floor" Object="$shelf" Claim="building" Pass="walk" Cover="walled" Anchors="storage:ordered-arms" Stateful="yes" />
+    <glyph Char="r" Ground="$floor" Object="$armsrack" Claim="building" Pass="walk" Cover="walled" Anchors="storage:ordered-arms" Stateful="yes" />
     <glyph Char="I" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:inspection-lane" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:purity-arsenal" Stateful="yes" />
     <row Cells="#####" /><row Cells="#rir#" /><row Cells="#I@I#" /><row Cells="##+##" />
@@ -189,7 +213,7 @@
   <map Key="creed-gyre-ashcourt-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$stone" Claim="yard" Pass="walk" Cover="open" Anchors="shrine:cold-brazier" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$brazier" Claim="yard" Pass="walk" Cover="open" Anchors="shrine:cold-brazier" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:ash-procession" Stateful="yes" />
     <row Cells="biiib" /><row Cells="iiibi" /><row Cells="bi@ii" /><row Cells="i+iii" />
   </map>
@@ -200,7 +224,8 @@
     <glyph Char="b" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="shrine:red-sealed-basin" Stateful="yes" />
     <glyph Char="w" Ground="$floor" Object="$shelf" Claim="building" Pass="walk" Cover="walled" Anchors="registry:dry-witness" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:tithe-cistern" Stateful="yes" />
-    <row Cells="i###." /><row Cells="i#b#." /><row Cells="iw@#." /><row Cells="i+##." />
+    <!-- Dry witness shelf is furniture, not a threshold. Keep it beside the central tithe aisle. -->
+    <row Cells=".###." /><row Cells=".#b#." /><row Cells="#w@i#" /><row Cells="##+##" />
   </map>
   <map Key="creed-seekers-cell-s0" Width="5" Height="4" DefaultCover="walled">
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -209,7 +234,8 @@
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="s" Ground="$floor" Object="$stone" Claim="building" Pass="walk" Cover="walled" Anchors="work:listening-seat" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:quiet-listening" Stateful="yes" />
-    <row Cells="##b##" /><row Cells="#b@b#" /><row Cells="#isi#" /><row Cells="##+##" />
+    <!-- Listener sits beside the ingress axis; visitors no longer walk across the occupied seat. -->
+    <row Cells="##b##" /><row Cells="#b@b#" /><row Cells="#sii#" /><row Cells="##+##" />
   </map>
   <map Key="creed-wardens-lodge-s0" Width="5" Height="4" DefaultCover="walled">
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -236,7 +262,9 @@
     <glyph Char="s" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="work:public-scale" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Object="$shelf" Claim="building" Pass="walk" Cover="walled" Anchors="registry:price-board" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:guild-weighing" Stateful="yes" />
-    <row Cells="#####" /><row Cells="#sps#" /><row Cells="#i@i#" /><row Cells="+#+##" />
+    <!-- Two public scale doors now open onto the two clear witness lanes. The former west
+         entrance was boxed against a wall on every side and existed only to satisfy a count. -->
+    <row Cells="#####" /><row Cells="#sps#" /><row Cells="#i@i#" /><row Cells="#+#+#" />
   </map>
   <map Key="creed-farmers-commons-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
@@ -262,12 +290,12 @@
     <glyph Char="b" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="work:repair-bench" Stateful="yes" />
     <glyph Char="r" Ground="$floor" Object="$shelf" Claim="building" Pass="walk" Cover="walled" Anchors="storage:named-parts" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:repair-teaching" Stateful="yes" />
-    <row Cells="#####" /><row Cells="#brr#" /><row Cells="ib@bi" /><row Cells="##+##" />
+    <row Cells="#####" /><row Cells="#brr#" /><row Cells="#b@b#" /><row Cells="##+##" />
   </map>
   <map Key="creed-yd-bower-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="v" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
+    <glyph Char="v" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="seat:traveller-table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:vine-hospitality" Stateful="yes" />
     <row Cells="viviv" /><row Cells="vitiv" /><row Cells="vi@iv" /><row Cells="+iii+" />
@@ -276,12 +304,13 @@
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="d" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:low-desk" Stateful="yes" />
-    <glyph Char="t" Ground="$ground" Object="$stone" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
+    <glyph Char="t" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:bough-school" Stateful="yes" />
     <row Cells="ditid" /><row Cells="ididi" /><row Cells="ti@it" /><row Cells="ii+ii" />
   </map>
 
-  <!-- Exact S bindings. The checked-in generator expands each into concrete M/L/XL copies. -->
+  <!-- Exact S bindings. Generator expands each into concrete M/L/XL courts with 2/5/10
+       non-authoritative practice fixtures; all contract anchors remain in the authored core. -->
   <plan Key="creed-joppa"><binding Key="food-s-joppaseedhouse" Type="food" Size="S" Facing="road"><tier Key="joppaseedhouse" BuildKey="joppaseedhouse" Level="0" Map="creed-joppa-seedhouse-s0" Palette="creed-practice-hands"><require Role="main" Min="1" Max="1"/><require Role="entrance:public" Min="1"/><require Role="function:seed-keeping" Min="1"/><require Role="storage:seed-bin" Min="1"/><require Role="work:sorting-board" Min="1"/><variant Key="fallback" Priority="0"/></tier></binding></plan>
   <plan Key="creed-kyakukya"><binding Key="food-s-kyakukyaspicehearth" Type="food" Size="S" Facing="road"><tier Key="kyakukyaspicehearth" BuildKey="kyakukyaspicehearth" Level="0" Map="creed-kyakukya-hearth-s0" Palette="creed-practice-hands"><require Role="main" Min="1" Max="1"/><require Role="entrance:public" Min="1"/><require Role="function:spice-preserving" Min="1"/><require Role="storage:spice-jars" Min="1"/><require Role="work:smoke-hearth" Min="1"/><variant Key="fallback" Priority="0"/></tier></binding></plan>
   <plan Key="creed-ezra"><binding Key="craft-s-ezrawheelshade" Type="craft" Size="S" Facing="road"><tier Key="ezrawheelshade" BuildKey="ezrawheelshade" Level="0" Map="creed-ezra-wheelshade-s0" Palette="creed-practice-hands"><require Role="main" Min="1" Max="1"/><require Role="entrance:public" Min="1"/><require Role="function:fibre-teaching" Min="1"/><require Role="work:drying-rack" Min="1"/><require Role="work:spindle-wheel" Min="1"/><variant Key="fallback" Priority="0"/></tier></binding></plan>

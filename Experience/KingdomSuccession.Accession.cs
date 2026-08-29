@@ -16,8 +16,18 @@ namespace ThousandAndFirst
 	{
 		private void CompleteAccession(XRLGame Game, KingdomSystem System, GameObject Heir,
 			string FounderName, KingdomResidentRow FormerRow, string Token, NewsRoad Road,
-			int Days, bool HeldOffice, string HeirCreed, string HeirZoneId, string Context)
+			int Days, string HeirCreed, string HeirZoneId, string Context)
 		{
+			string publicMemoryCity = PendingRiteCityName ?? System?.SeatName ?? "the settlement";
+			string publicMemoryCause = PendingFounderCause ?? "died beyond any surviving account";
+			int publicMemoryOrdinal = 0;
+			long publicMemoryDeathTick = 0L;
+			bool publicMemoryEligible = !LegacyPhysicalRiteUnavailable
+				&& string.Equals(CompletedShrineToken, Token, StringComparison.Ordinal)
+				&& !string.IsNullOrEmpty(CompletedShrineObjectId)
+				&& !string.IsNullOrEmpty(CompletedShrineZoneId)
+				&& KingdomSuccessionRules.TryReadDeathToken(Token,
+					out publicMemoryOrdinal, out publicMemoryDeathTick);
 			// Player body and resident law have committed. No later presentation, knowledge,
 			// chronicle, or profile failure may declare the line ended.
 			AccessionOwnershipCommitted = true;
@@ -40,6 +50,12 @@ namespace ThousandAndFirst
 						KingdomPresentation.Rich(FounderName),
 						KingdomPresentation.Rich(PendingFounderCause), shownHeir, Road, Days,
 						KingdomPresentation.Rich(PendingRiteFixtureName)));
+				KingdomSuccessionSelectionReceipt selection;
+				if (KingdomSuccessionSelectionReceipt.TryDecode(PendingSelectionReceipt,
+					out selection))
+					PendingSealRiteChronicle = BoundPendingRite(PendingSealRiteChronicle + " "
+						+ KingdomPresentation.Rich(
+							KingdomSuccessionRules.SelectionChronicle(selection)));
 			}
 			catch (Exception ex)
 			{
@@ -51,6 +67,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairResidentId = 0;
 			PendingAccessionRepairFounderName = "";
 			PendingAccessionRepairHeirName = "";
+			PendingAccessionRepairSettlementId = "";
 			PendingAccessionRepairSeated = false;
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
@@ -69,7 +86,7 @@ namespace ThousandAndFirst
 				bool creedLeft = KingdomCreedRules.KeptHolds(FormerRow.KeptCreeds,
 					System.DeclaredCreed);
 				regard = KingdomSuccessionRules.AccessionRegard(FormerRow.ArrivedTick,
-					Game.TimeTicks, creedMatches, creedLeft, HeldOffice);
+					Game.TimeTicks, creedMatches, creedLeft);
 				if (!TryResetPersonalKnowledge(System, Token, regard))
 				{
 					KingdomLog.Log("succession: honesty reset rolled back after accession; successor remains seated with prior knowledge intact");
@@ -80,6 +97,14 @@ namespace ThousandAndFirst
 			{
 				MetricsManager.LogError("ThousandAndFirst: post-accession honesty step failed", ex);
 				KingdomLog.Log("succession: post-accession honesty step failed without reversing accession");
+			}
+			if (publicMemoryEligible)
+			{
+				// This is deliberately after the successor's personal-knowledge reset. The rite is
+				// public civic memory, not inherited private knowledge, and cannot be erased by it.
+				KingdomFounderHistory.PublishBestEffort(System, Token, publicMemoryDeathTick,
+					FounderName, publicMemoryCity, System.FoundingRegionName,
+					publicMemoryCause);
 			}
 
 			TryCompletePendingSealAccession(Context);
@@ -97,6 +122,7 @@ namespace ThousandAndFirst
 			{
 				MetricsManager.LogError("ThousandAndFirst: accession telling failed after commit", ex);
 			}
+			TrySettleSelectionConsequence(System, Context);
 		}
 
 		private static void TryInheritOpenQuests(XRLGame Game, KingdomSystem System,

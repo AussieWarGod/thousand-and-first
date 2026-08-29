@@ -75,7 +75,12 @@ namespace ThousandAndFirst
 				return null;
 			}
 			case BountyTask.Manning:
-				return (Survey.Works.Count == 0) ? "the settlement has no works to stand" : null;
+				if (Survey.Works.Count == 0) return "the settlement has no works to stand";
+				if (ManningCandidates(Survey).Count == 0)
+					return "the settlement has no idle, unpromised work to stand";
+				return KingdomCrews.WorkHandCount(System,
+					KingdomCrews.AvailableSettlers(System, Survey)) > 0
+					? null : "every grounded labour hand is already carrying water";
 			case BountyTask.Scouting:
 				return (Frontier(System).Count == 0) ? "the claim has no unclaimed edge left" : null;
 			default:
@@ -91,6 +96,7 @@ namespace ThousandAndFirst
 			int x2 = 0;
 			int y2 = 0;
 			GameObject pile = null;
+			GameObject manningWork = null;
 			if (Task == BountyTask.Clearance && !PickRect(System, Z, Founder, out x1, out y1, out x2, out y2, out magnitude))
 			{
 				return;
@@ -101,7 +107,8 @@ namespace ThousandAndFirst
 			}
 			if (Task == BountyTask.Manning)
 			{
-				magnitude = Survey.Works.Count;
+				if (!PickManningWork(Survey, out manningWork)) return;
+				magnitude = manningWork.GetIntProperty("KingdomStaffNeeded");
 			}
 			int price = PickPrice(System, Survey, Task, magnitude);
 			if (price <= 0)
@@ -111,7 +118,9 @@ namespace ThousandAndFirst
 			string warning = (Survey.StoredWater < price)
 				? ("\n\n{{r|The stores hold " + Survey.StoredWater + " drams, which will not cover it today.}} Nothing is set aside now, so the notice may stand until they do -- but whoever claims it will be owed until then.")
 				: "";
-			if (Popup.ShowYesNo("Stake the notice?\n\n" + KingdomBountyRules.NoticeText(Task, price, null)
+			string detail = Task == BountyTask.Manning
+				? "The promised work is " + manningWork.ShortDisplayName + "." : null;
+			if (Popup.ShowYesNo("Stake the notice?\n\n" + KingdomBountyRules.NoticeText(Task, price, detail)
 				+ "\n\nNo water leaves the stores until somebody has done it." + warning) != DialogResult.Yes)
 			{
 				return;
@@ -138,6 +147,16 @@ namespace ThousandAndFirst
 			data.LifecycleId = KingdomBountyRules.NoticeEventId(notice.ID);
 			data.AttemptScheduleExhausted = !KingdomBountyRules.TryFirstAttemptTick(data.PostedTick, out data.NextAttemptTick);
 			data.Magnitude = magnitude;
+			if (Task == BountyTask.Manning)
+			{
+				BindManningTarget(data, manningWork);
+				if (!BindManningOption(System, data, data.PostedTick))
+				{
+					InvokeCleanupOnce(notice, true);
+					Popup.Show("The realm's manning clock could not be bound safely.");
+					return;
+				}
+			}
 			data.X1 = x1;
 			data.Y1 = y1;
 			data.X2 = x2;

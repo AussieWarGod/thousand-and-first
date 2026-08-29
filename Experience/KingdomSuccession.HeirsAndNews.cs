@@ -17,15 +17,19 @@ namespace ThousandAndFirst
 		private static bool TryReadHeirs(KingdomSystem System, out List<HeirRuntime> Result)
 		{
 			Result = new List<HeirRuntime>();
-			if (!ReadHeirs(System.City, System.OfficeHolderResidentId,
-				System.OfficeHolderName, Result))
+			long now = The.Game == null || The.Game.TimeTicks < 0L ? 0L : The.Game.TimeTicks;
+			if (!ReadHeirs(System.City, System.SeatName, KingdomResearch.Enabled
+					&& KingdomResearch.Held(System, "schooling"), now, Result))
 			{
 				return false;
 			}
-			if (System.Away != null)
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				if (!ReadHeirs(System.Away.City, System.Away.OfficeHolderResidentId,
-					System.Away.OfficeHolderName, Result))
+				KingdomSettlement row = nonSeat[i];
+				if (!ReadHeirs(row.City, row.SettlementName,
+					KingdomResearch.Enabled && KingdomResearch.HeldIn(row, "schooling"),
+					now, Result))
 				{
 					return false;
 				}
@@ -33,8 +37,8 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool ReadHeirs(KingdomCityBook Book, int OfficeHolderResidentId,
-			string LegacyOfficeHolder, List<HeirRuntime> Result)
+		private static bool ReadHeirs(KingdomCityBook Book, string CityName, bool SchoolingHeld,
+			long NowTick, List<HeirRuntime> Result)
 		{
 			KingdomCityState state;
 			KingdomCityFault fault = default(KingdomCityFault);
@@ -46,21 +50,50 @@ namespace ThousandAndFirst
 			for (int i = 0; i < state.ResidentCount; i++)
 			{
 				KingdomResidentRow row;
-				if (!state.TryResident(i, out row) || row.Standing != KingdomResidentStanding.Resident)
+				if (!state.TryResident(i, out row))
 				{
 					continue;
 				}
-				KingdomHeir rule = new KingdomHeir(row.Name, row.ArrivedTick, null, row.KeptCreeds,
-					onTheRoll: true,
-					holdsOffice: OfficeHolderResidentId > 0
-						? row.ResidentId == OfficeHolderResidentId
-						: !string.IsNullOrEmpty(LegacyOfficeHolder)
-							&& string.Equals(row.Name, LegacyOfficeHolder,
-								StringComparison.Ordinal),
+				KingdomHeir rule = new KingdomHeir(row.Name, row.ArrivedTick, null,
+					row.KeptCreeds, row.Standing == KingdomResidentStanding.Resident,
 					row.BoundZoneId, row.ResidentId);
-				Result.Add(new HeirRuntime(rule));
+				int service = KingdomGroomingRules.ServiceEvidence(row.JobWorkId > 0,
+					KingdomSuccessionRules.MonthsServed(row.ArrivedTick, NowTick));
+				int study = KingdomGroomingRules.StudyEvidence(SchoolingHeld,
+					KnowledgePost(state, row.JobWorkId));
+				Result.Add(new HeirRuntime(rule, CityName, HomeName(state, row.HomeWorkId),
+					string.IsNullOrEmpty(row.Arrived)
+						? (row.ArrivedTick > 0L ? "arrival tick " + row.ArrivedTick : "tenure unrecorded")
+						: row.Arrived, service, study));
 			}
 			return true;
+		}
+
+		private static string HomeName(KingdomCityState State, int WorkId)
+		{
+			if (State == null || WorkId <= 0) return "no recorded home";
+			for (int i = 0; i < State.WorkCount; i++)
+			{
+				KingdomWorkRow work;
+				if (State.TryWork(i, out work) && work.WorkId == WorkId)
+					return KingdomUpgrade.DisplayNameOf(work.DesignKey);
+			}
+			return "home record " + WorkId;
+		}
+
+		private static bool KnowledgePost(KingdomCityState State, int WorkId)
+		{
+			if (State == null || WorkId <= 0) return false;
+			for (int i = 0; i < State.WorkCount; i++)
+			{
+				KingdomWorkRow work;
+				KingdomRules.BuildEntry entry;
+				if (State.TryWork(i, out work) && work.WorkId == WorkId
+					&& KingdomData.TryGetBuilding(work.DesignKey, out entry))
+					return string.Equals(entry.Category, KingdomResearch.BenchCategory,
+						StringComparison.Ordinal);
+			}
+			return false;
 		}
 
 		private static void JudgeActualNews(KingdomSystem System, Zone DeathZone, out int Days, out NewsRoad Road)
@@ -84,10 +117,7 @@ namespace ThousandAndFirst
 				out deathWorld, out dwx, out dwy, out dzx, out dzy, out dz);
 			bool seatParsed = TryParseZone(seatZoneId,
 				out seatWorld, out swx, out swy, out szx, out szy, out sz);
-			bool onOwnedGround = !string.IsNullOrEmpty(deathZoneId)
-				&& ((System.ClaimedZones != null && System.ClaimedZones.Contains(deathZoneId))
-					|| (System.Away?.ClaimedZones != null
-						&& System.Away.ClaimedZones.Contains(deathZoneId)));
+			bool onOwnedGround = System.OwnedZone(deathZoneId);
 			bool sameWorld = onOwnedGround || (deathParsed && seatParsed
 				&& string.Equals(deathWorld, seatWorld, StringComparison.Ordinal));
 			int dx = 0;

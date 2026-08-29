@@ -356,16 +356,18 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1)]
 		[TestCase(64)]
 		[TestCase(288)]
+		[TestCase(384)]
 		public void LarderCapacity_TakesADeclaredSizeAtItsWord(int declared)
 		{
 			Assert.AreEqual(declared, KingdomRules.LarderCapacity(declared));
 		}
 
 		[Test]
-		public void IsCivicLarderBlueprint_KnowsTheTwoPantriesAndNothingElse()
+		public void IsCivicLarderBlueprint_KnowsTheThreePantriesAndNothingElse()
 		{
 			Assert.IsTrue(KingdomRules.IsCivicLarderBlueprint("r_KingdomLarder"));
 			Assert.IsTrue(KingdomRules.IsCivicLarderBlueprint("r_KingdomGranary"));
+			Assert.IsTrue(KingdomRules.IsCivicLarderBlueprint("r_KingdomRealmGranary"));
 			// The charging post carries a Container/Inventory pair and is not a pantry, which is
 			// the whole reason this is a named list rather than "has an Inventory".
 			Assert.IsFalse(KingdomRules.IsCivicLarderBlueprint("r_KingdomChargingPost"));

@@ -11,13 +11,13 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomBounty
 	{
-		private static bool Take(KingdomSystem System, Zone Z, GameObject Notice, r_KingdomNotice Data, BountyTask Task, KingdomBountyRules.BountyAttempt Attempt, long ScheduledTick)
+		private static bool Take(KingdomSystem System, Zone Z, GameObject Notice, r_KingdomNotice Data, BountyTask Task, KingdomBountyRules.BountyAttempt Attempt, long ScheduledTick, int ResidentId)
 		{
 			if ((BountyTakePhase)Data.TakePhase == BountyTakePhase.None)
 			{
 				Data.PendingAttemptTick = ScheduledTick;
 				Data.PendingWorkerName = Attempt.Name;
-				Data.PendingWorkerResidentId = ResidentIdFor(System, Attempt.RosterIndex, Attempt.Name);
+				Data.PendingWorkerResidentId = ResidentId;
 				Data.PendingVirtueIndex = Attempt.VirtueIndex;
 				Data.PendingFlawIndex = Attempt.FlawIndex;
 				Data.PendingTasteMatched = Attempt.TasteMatched;
@@ -49,6 +49,19 @@ namespace ThousandAndFirst
 			}
 			if (phase == BountyTakePhase.TaskIntent)
 			{
+				if (task == BountyTask.Manning && !CanTakeManning(System, Z, Data,
+					Data.PendingWorkerResidentId))
+				{
+					if (!taskMayStart)
+					{
+						Quarantine(Data, "A manning takeover lost its exact resident or work before publication.");
+						Data.TakePhase = (int)BountyTakePhase.Quarantined;
+						return;
+					}
+					Data.PendingWorkerName = null;
+					Data.TakePhase = (int)BountyTakePhase.Complete;
+					return;
+				}
 				if (task == BountyTask.Clearance && !HasMatchingClearance(Z, Data))
 				{
 					if (!taskMayStart)
@@ -82,9 +95,12 @@ namespace ThousandAndFirst
 			if (phase == BountyTakePhase.TaskDone)
 			{
 				Data.WorkerName = Data.PendingWorkerName;
+				Data.WorkerResidentId = task == BountyTask.Manning
+					? Data.PendingWorkerResidentId : 0;
 				Data.TakenTick = Data.PendingAttemptTick;
-				Data.DueTick = KingdomBountyRules.WorkDueTick(Data.TakenTick,
-					KingdomBountyRules.WorkDays(task, Data.Magnitude));
+				Data.DueTick = task == BountyTask.Manning ? 0L
+					: KingdomBountyRules.WorkDueTick(Data.TakenTick,
+						KingdomBountyRules.WorkDays(task, Data.Magnitude));
 				if (!KingdomChronicle.RecordOnce(System, EventId(Data, "taken"),
 					KingdomBountyRules.TakenChronicle(
 						KingdomPresentation.Rich(Data.PendingWorkerName), task,
@@ -163,18 +179,6 @@ namespace ThousandAndFirst
 			Data.TakePhase = (int)BountyTakePhase.None;
 			Data.PendingAttemptTick = 0L;
 			Data.PendingWorkerName = null;
-		}
-
-		private static int ResidentIdFor(KingdomSystem System, int Index, string Name)
-		{
-			List<Simulation.City.KingdomResidentRow> rows =
-				Simulation.City.KingdomResidents.RollRows(System);
-			if (Index < 0 || Index >= rows.Count
-				|| !string.Equals(rows[Index].Name, Name, StringComparison.Ordinal))
-			{
-				return 0;
-			}
-			return rows[Index].ResidentId;
 		}
 
 		private static bool HasMatchingClearance(Zone Z, r_KingdomNotice Data)

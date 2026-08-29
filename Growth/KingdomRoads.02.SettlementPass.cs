@@ -96,8 +96,14 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				if (!KingdomRoadRules.TryTrace(passable, Z.Width, Z.Height, errand.FromX, errand.FromY, errand.ToX, errand.ToY,
-					KingdomRoadRules.MaxRouteCells, KingdomRoadRules.MaxExploreCells, route))
+				bool traced = errand.ExactRoute == null
+					? KingdomRoadRules.TryTrace(passable, Z.Width, Z.Height,
+						errand.FromX, errand.FromY, errand.ToX, errand.ToY,
+						KingdomRoadRules.MaxRouteCells, KingdomRoadRules.MaxExploreCells, route)
+					: KingdomRoadRules.TryExactTrace(passable, Z.Width, Z.Height,
+						errand.FromX, errand.FromY, errand.ToX, errand.ToY,
+						KingdomRoadRules.MaxRouteCells, errand.ExactRoute, route);
+				if (!traced)
 				{
 					continue;
 				}

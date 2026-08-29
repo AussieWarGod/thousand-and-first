@@ -25,9 +25,18 @@ Explain each checked risk and compatibility strategy:
 
 Record command, result, and environment. Mark unavailable checks honestly.
 
+Engine-free/public checks:
+
 - [ ] `./Tools/stage.sh verify`
-- [ ] `python3 Art/check_xml_refs.py`
-- [ ] `dotnet run --project DevTests/TafTests.csproj -v q --nologo`
+- [ ] `python3 Tools/generate-lot-realizations.py --check`
+- [ ] `python3 Tools/check-architecture.py --repo-root .`
+- [ ] `python3 Art/check_xml_refs.py --no-base`
+- [ ] `dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo`
+- [ ] `dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo` with the exact public no-Qud `TAF_ALLOWED_SKIPS` from [CONTRIBUTING.md](../CONTRIBUTING.md)
+
+Licensed/local checks; require exact installed Caves of Qud data and accept zero skips:
+
+- [ ] `dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo`
 - [ ] `./Tools/gate.sh`
 - [ ] `python3 Art/check_xml_refs.py --base "/path/to/CoQ_Data/StreamingAssets/Base"`
 - [ ] `TAF_QUD_BASE="/path/to/CoQ_Data/StreamingAssets/Base" python3 Art/check_wiring.py`

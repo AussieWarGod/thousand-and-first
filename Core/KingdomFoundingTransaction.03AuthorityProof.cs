@@ -42,6 +42,11 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (parsed.Kind != KingdomFoundingKind.VillageCharter &&
+				!RevalidateExternalBinding(basin, Site, out string externalFailure))
+			{
+				return false;
+			}
 			Faction realm = Factions.GetIfExists(parsed.RealmFaction);
 			if (realm == null || realm.GetStringProperty(RealmReservationProperty, null) != Authority)
 			{
@@ -69,14 +74,19 @@ namespace ThousandAndFirst
 			}
 			if (Authority.OwnerKind == KingdomFoundingOwnerKind.Direct)
 			{
-				return Basin.ParentObject == null && Authority.PayloadDigest ==
-					DirectPayloadDigest(Authority.Kind, Basin.PendingName,
+				if (Basin.ParentObject != null) return false;
+				string directDigest = Basin.HasExternalBindingField
+					? DirectPayloadDigest(Authority.Kind, Basin.PendingName,
+						Basin.PendingVocation, Basin.PendingVillageFaction,
+						Basin.PendingVillageDisplayName, Basin.PendingExternalBinding)
+					: DirectPayloadDigest(Authority.Kind, Basin.PendingName,
 						Basin.PendingVocation, Basin.PendingVillageFaction,
 						Basin.PendingVillageDisplayName);
+				return Authority.PayloadDigest == directDigest;
 			}
 			if (Authority.OwnerKind != KingdomFoundingOwnerKind.Basin ||
 				Basin.ParentObject == null || !Basin.HasCompleteReceiptSchema ||
-				Basin.PendingBasinID != Basin.ParentObject.ID ||
+				Basin.PendingBasinID != Basin.ParentObject.IDIfAssigned ||
 				!Basin.TryGetOriginalComponents(out var original, out var originalEncoded) ||
 				!Basin.TryGetCommittedComponents(out var committed, out var committedEncoded) ||
 				EncodeComponents(original) != originalEncoded ||
@@ -94,12 +104,19 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			return Authority.PayloadDigest == KingdomFoundingTransactionRules.PayloadDigest(
-				Authority.Kind, Basin.PendingName, Basin.PendingVocation,
-				Basin.PendingVillageFaction, Basin.PendingVillageDisplayName,
-				Basin.PendingOriginalVolume, Basin.PendingOriginalMaxVolume,
-				Basin.PendingCommittedVolume, Basin.PendingCommittedMaxVolume,
-				originalEncoded, committedEncoded);
+			string digest = Basin.HasExternalBindingField
+				? KingdomFoundingTransactionRules.PayloadDigestWithExternalBinding(
+					Authority.Kind, Basin.PendingName, Basin.PendingVocation,
+					Basin.PendingVillageFaction, Basin.PendingVillageDisplayName,
+					Basin.PendingOriginalVolume, Basin.PendingOriginalMaxVolume,
+					Basin.PendingCommittedVolume, Basin.PendingCommittedMaxVolume,
+					originalEncoded, committedEncoded, Basin.PendingExternalBinding)
+				: KingdomFoundingTransactionRules.PayloadDigest(Authority.Kind,
+					Basin.PendingName, Basin.PendingVocation, Basin.PendingVillageFaction,
+					Basin.PendingVillageDisplayName, Basin.PendingOriginalVolume,
+					Basin.PendingOriginalMaxVolume, Basin.PendingCommittedVolume,
+					Basin.PendingCommittedMaxVolume, originalEncoded, committedEncoded);
+			return Authority.PayloadDigest == digest;
 		}
 
 		/// <summary>

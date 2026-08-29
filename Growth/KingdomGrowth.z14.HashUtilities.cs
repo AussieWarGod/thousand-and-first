@@ -36,7 +36,7 @@ namespace ThousandAndFirst
 
 		private static string WaterOwnerHash(GameObject owner, int volume, string composition)
 		{
-			return HashText("arrival-water-owner", owner?.ID, owner?.Blueprint,
+			return HashText("arrival-water-owner", owner?.IDIfAssigned, owner?.Blueprint,
 				owner?.GetIntProperty("KingdomStores").ToString(CultureInfo.InvariantCulture),
 				owner?.CurrentZone?.ZoneID,
 				owner?.CurrentCell?.X.ToString(CultureInfo.InvariantCulture),
@@ -47,14 +47,14 @@ namespace ThousandAndFirst
 		private static string WaterPartHash(GameObject owner, int volume, string composition)
 		{
 			LiquidVolume vessel = owner?.GetPart<LiquidVolume>();
-			return HashText("arrival-water-part", owner?.ID,
+			return HashText("arrival-water-part", owner?.IDIfAssigned,
 				vessel?.MaxVolume.ToString(CultureInfo.InvariantCulture),
 				volume.ToString(CultureInfo.InvariantCulture), composition);
 		}
 
 		private static string WaterTopologyHash(Zone zone, GameObject owner, int volume)
 		{
-			return HashText("arrival-water-topology", zone?.ZoneID, owner?.ID,
+			return HashText("arrival-water-topology", zone?.ZoneID, owner?.IDIfAssigned,
 				owner?.CurrentCell?.X.ToString(CultureInfo.InvariantCulture),
 				owner?.CurrentCell?.Y.ToString(CultureInfo.InvariantCulture),
 				volume.ToString(CultureInfo.InvariantCulture));
@@ -67,8 +67,8 @@ namespace ThousandAndFirst
 
 		private static string ReferenceHash(string domain, object authority, object reference)
 		{
-			string id = reference is GameObject obj ? obj.ID
-				: reference is LiquidVolume liquid ? liquid.ParentObject?.ID
+			string id = reference is GameObject obj ? obj.IDIfAssigned
+				: reference is LiquidVolume liquid ? liquid.ParentObject?.IDIfAssigned
 				: reference?.GetType().FullName;
 			return HashText("arrival-reference", domain, authority?.GetType().FullName, id);
 		}

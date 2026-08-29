@@ -82,6 +82,7 @@ namespace ThousandAndFirst
 				KingdomGrowthArrivalCandidatePhase.Quarantined
 					? Candidate.EvidencePhase : Candidate.Phase;
 			if (phase != KingdomGrowthArrivalCandidatePhase.Prepared
+				&& phase != KingdomGrowthArrivalCandidatePhase.AwaitingChoice
 				&& phase != KingdomGrowthArrivalCandidatePhase.CreateIntent
 				&& phase != KingdomGrowthArrivalCandidatePhase.Escrowed) return false;
 			string oldHash = Candidate.PlanHash;

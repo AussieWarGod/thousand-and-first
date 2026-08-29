@@ -8,6 +8,20 @@ using XRL.World;
 
 namespace ThousandAndFirst
 {
+	/// <summary>
+	/// Immutable landing witness for a directed polity consignment. Trade owns this receipt;
+	/// it never treats a cohort id alone as proof that the same loaded recipient remains.
+	/// </summary>
+	[Serializable]
+	public sealed class KingdomTradePolityRecipientWitness
+	{
+		public string BodyId;
+		public string CohortId;
+		public string ProjectionId;
+		public string SurfaceRef;
+		public string RequestDigest;
+		public string WitnessDigest;
+	}
 
 	[Serializable]
 	public sealed class KingdomTradeOperation
@@ -67,6 +81,7 @@ namespace ThousandAndFirst
 		public KingdomTradeStandingCas Standing;
 		public KingdomTradeOutbox Outbox;
 		public KingdomTradePatternReceipt Pattern;
+		public KingdomTradePolityRecipientWitness PolityRecipient;
 		public string Fault;
 
 	}
@@ -99,6 +114,8 @@ namespace ThousandAndFirst
 		public KingdomTradeSinkState LedgerState;
 		public KingdomTradeSinkState MessageState;
 		public KingdomTradeSinkState DeedState;
+		/// <summary>Exact directed landing witness copied from the retired operation.</summary>
+		public KingdomTradePolityRecipientWitness PolityRecipient;
 		/// <summary>Receipt owns removal of its exact terminal manifest row.</summary>
 		public bool ManifestCleanup;
 		public long Tick;

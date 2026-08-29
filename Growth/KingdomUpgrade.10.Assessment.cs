@@ -46,23 +46,8 @@ namespace ThousandAndFirst
 
 			public long BuildTicks;
 
-			/// <summary>Sustained output this work contributes, in drams a day &mdash; the
-			/// <c>water</c> it carries. Zero for a work the settlement does not drink from.
-			/// </summary>
-			public int SupportPerDay;
-
-			/// <summary>Drams the settlement goes without while this work is rebuilt, from
-			/// <c>KingdomUpgradeRules.OutputLost</c>.</summary>
-			public int OutputLost;
-
-			/// <summary>Drams the stores would still hold above the reserve once the improvement
-			/// is paid for and the outage borne. Negative is the dip a forced improvement takes.
-			/// </summary>
-			public int Margin;
-
-			/// <summary>What the absorption law was told about this work, kept so the Charter can
-			/// disclose the dip without measuring it a second time.</summary>
-			public KingdomUpgradeRules.AbsorptionDemand Demand;
+			/// <summary>Exact present-tense craft and material requirements.</summary>
+			public KingdomUpgradeRules.ImprovementDemand Demand;
 
 			/// <summary>The sentence the founder is owed, or null when the verdict correctly
 			/// says nothing.</summary>
@@ -123,17 +108,20 @@ namespace ThousandAndFirst
 			KingdomRules.BuildEntry predecessor;
 			int predecessorCost = KingdomData.TryGetBuilding(assessment.Key, out predecessor) ? predecessor.CostDrams : 0;
 			assessment.CostDrams = KingdomUpgradeRules.CostDrams(known ? successor.CostDrams : 0, predecessorCost, chain.CostDramsOverride);
-			assessment.BuildTicks = KingdomUpgradeRules.BuildTicks(known ? successor.BuildTicks : 0L, chain.BuildTicksOverride);
+			// Infrastructure is frozen into the quoted duration before affordability and debit are
+			// judged. Craft districts use the same bounded best-wins percent as fresh work;
+			// an authored positive UpgradeTicks remains exact inside BuildTicks.
+			int infrastructureDurationPercent = KingdomRules.DistrictsBuildPercent(
+				System.ZoneDistricts.Values);
+			assessment.BuildTicks = KingdomUpgradeRules.BuildTicks(
+				known ? successor.BuildTicks : 0L, chain.BuildTicksOverride,
+				infrastructureDurationPercent);
 			assessment.CrewNeeded = KingdomUpgradeRules.CrewRequired(known ? successor.Staff : 0, chain.CrewOverride);
 			assessment.StageNeeded = KingdomUpgradeRules.StageRequired(known ? successor.MinStage : GrowthStage.Camp, chain.HasMinStageOverride, chain.MinStageOverride);
 			assessment.Reserve = KingdomUpgradeRules.ReserveDrams(System.Population, System.Stage);
 			assessment.Shortfall = KingdomUpgradeRules.Shortfall(Survey.StoredWater, assessment.CostDrams, assessment.Reserve);
-			// The absorption law (brief, Addendum 3). Measured here, judged in the rules half.
-			assessment.Demand = MeasureAbsorption(System, Z, Work, predecessor,
-				assessment.SuccessorKey, assessment.BuildTicks, Survey);
-			assessment.SupportPerDay = assessment.Demand.SupportPerDay;
-			assessment.OutputLost = KingdomUpgradeRules.OutputLost(assessment.Demand.SupportPerDay, assessment.BuildTicks);
-			assessment.Margin = KingdomUpgradeRules.AbsorptionMargin(Survey.StoredWater, assessment.CostDrams, assessment.Reserve, assessment.OutputLost);
+			assessment.Demand = MeasureRequirements(System, Z, predecessor,
+				assessment.SuccessorKey);
 			r_KingdomImprovement improvement = Work.GetPart<r_KingdomImprovement>();
 			assessment.Verdict = KingdomUpgradeRules.Assess(
 				HasSuccessor: true,
@@ -153,8 +141,12 @@ namespace ThousandAndFirst
 				Cost: assessment.CostDrams,
 				Reserve: assessment.Reserve,
 				OtherWorkUnderway: OtherWorkUnderway,
-				Absorption: assessment.Demand);
-			assessment.Reason = KingdomUpgradeRules.ReasonLine(assessment.Verdict, KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName), known ? successor.Name : null, assessment.StageNeeded, assessment.CrewNeeded, assessment.Shortfall);
+				Demand: assessment.Demand);
+			assessment.Reason = KingdomUpgradeRules.ReasonLine(assessment.Verdict,
+				KingdomDesign.ReferenceFor(Work, Work.ShortDisplayName),
+				known ? successor.Name : null, assessment.StageNeeded, assessment.CrewNeeded,
+				assessment.Shortfall, assessment.Demand.CraftDetail,
+				assessment.Demand.KnowledgeMissing);
 			// An improvement climbs within the ground it was staked on. When the next tier wants more
 			// of the plot than the founder staked, or the ground it would grow onto is where a
 			// household's yard trade stands, the founder is told by name and chooses.

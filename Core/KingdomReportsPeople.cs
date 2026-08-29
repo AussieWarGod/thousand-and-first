@@ -128,7 +128,9 @@ namespace ThousandAndFirst
 		public static string Standings(KingdomSystem System, int Limit = 18)
 		{
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append("{{C|Standings of ").Append(KingdomPresentation.Rich(System.KingdomDisplayName)).Append("}}\n");
+			stringBuilder.Append("{{C|Relationships of ").Append(
+				KingdomPresentation.Rich(System.KingdomDisplayName)).Append("}}\n")
+				.Append("{{K|Their regard for us and our policy toward them are separate.}}\n");
 			int shown = 0;
 			foreach (Faction faction in Factions.Loop())
 			{
@@ -136,14 +138,15 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				int standing = System.GetStanding(faction.Name);
-				if (standing != 0)
+				bool hasRegard = System.RegardForRealm.ContainsKey(faction.Name);
+				bool hasPolicy = System.TryGetRealmPolicyToward(faction.Name, out int policy);
+				if (hasRegard || hasPolicy)
 				{
-					faction.FactionFeeling.TryGetValue(System.KingdomFactionName, out var feeling);
-					stringBuilder.Append("\n").Append(KingdomPresentation.Rich(faction.DisplayName)).Append(": standing ")
-						.Append(standing)
-						.Append(", their feeling toward us ")
-						.Append(feeling);
+					stringBuilder.Append("\n").Append(
+						KingdomPresentation.Rich(faction.DisplayName)).Append(": their regard ")
+						.Append(hasRegard ? System.GetRegardForRealm(faction.Name).ToString()
+							: "unspecified").Append("; our policy ")
+						.Append(hasPolicy ? policy.ToString() : "unspecified");
 					shown++;
 					if (shown >= Limit)
 					{
@@ -154,7 +157,7 @@ namespace ThousandAndFirst
 			}
 			if (shown == 0)
 			{
-				stringBuilder.Append("\nThe world holds no strong opinion of us yet.");
+				stringBuilder.Append("\nNo civic relationship has been recorded yet.");
 			}
 			return stringBuilder.ToString();
 		}

@@ -37,8 +37,9 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					LiquidVolume candidate = survey.Stores[i];
 					GameObject owner = candidate == null ? null : candidate.ParentObject;
-					if (!GameObject.Validate(owner) || !string.Equals(owner.ID, objectId,
-						StringComparison.Ordinal) || KingdomCityRules.StableId(owner.ID) != endpoint)
+					if (!GameObject.Validate(owner) || !string.Equals(owner.IDIfAssigned, objectId,
+						StringComparison.Ordinal)
+						|| KingdomCityRules.StableId(owner.IDIfAssigned) != endpoint)
 						continue;
 					target = owner; water = candidate;
 					amount = KingdomLiquids.HasFreshWater(candidate) ? candidate.Volume : 0L;
@@ -51,10 +52,20 @@ namespace ThousandAndFirst.Simulation.City
 				for (int i = 0; i < survey.Larders.Count; i++)
 				{
 					GameObject candidate = survey.Larders[i];
-					if (!GameObject.Validate(candidate) || !string.Equals(candidate.ID, objectId,
-						StringComparison.Ordinal) || KingdomCityRules.StableId(candidate.ID) != endpoint)
+					if (!GameObject.Validate(candidate)
+						|| !string.Equals(candidate.IDIfAssigned, objectId, StringComparison.Ordinal)
+						|| KingdomCityRules.StableId(candidate.IDIfAssigned) != endpoint)
 						continue;
-					target = candidate; amount = KingdomSurvey.HeldIn(candidate);
+					target = candidate;
+					if (!source) amount = KingdomSurvey.HeldIn(candidate);
+					else
+					{
+						KingdomConstructionInputLeaseSnapshot leases;
+						string failure;
+						if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure))
+							return false;
+						amount = KingdomOrdinaryFoodAuthority.AvailableIn(candidate, leases);
+					}
 					return true;
 				}
 			}
@@ -87,14 +98,24 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					GameObject food = GameObject.Create(blueprint);
 					if (!GameObject.Validate(food)
-						|| (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient")))
+						|| food.Count != 1 || !KingdomOrdinaryFoodAuthority.IsEdible(food))
 					{
-						if (GameObject.Validate(food)) food.Obliterate();
+						string cleanupFailure;
+						if (GameObject.Validate(food) && KingdomOrdinaryFoodAuthority.TryObjectNow(
+							food, out cleanupFailure)) food.Obliterate();
 						break;
 					}
+					string foodId = food.ID;
 					food.SetIntProperty(KingdomPorters.StockProperty, 1);
 					food.SetIntProperty(FoodReceiptJobProperty, jobId);
-					target.Inventory.AddObject(food, Silent: true);
+					target.Inventory.AddObject(food, Silent: true, NoStack: true);
+					string failure;
+					if (!GameObject.Validate(food) || food.InInventory != target
+						|| food.CurrentCell != null || food.Count != 1 || food.IDIfAssigned != foodId
+						|| food.Blueprint != blueprint
+						|| food.GetIntProperty(KingdomPorters.StockProperty) != 1
+						|| !KingdomOrdinaryFoodAuthority.TrySpendNow(food,
+							FoodReceiptJobProperty, jobId, out failure)) break;
 				}
 			}
 			catch
@@ -111,10 +132,9 @@ namespace ThousandAndFirst.Simulation.City
 			int jobId, int before)
 		{
 			int added = MarkedFood(target, jobId) - before;
+			survey.RefreshFoodTopology();
 			if (added > 0)
 			{
-				survey.FoodStored += added;
-				survey.FoodAbundance = KingdomRules.ClassifyPantry(survey.FoodStored);
 				survey.SynchronizeReceiptObject(target);
 			}
 			return added;
@@ -123,14 +143,19 @@ namespace ThousandAndFirst.Simulation.City
 		private static int MarkedFood(GameObject target, int jobId)
 		{
 			int count = 0;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return 0;
 			List<GameObject> items = !GameObject.Validate(target) || target.Inventory == null
 				? null : target.Inventory.GetObjects();
 			for (int i = 0; items != null && i < items.Count; i++)
 			{
 				GameObject item = items[i];
-				if (GameObject.Validate(item) && item.GetIntProperty(FoodReceiptJobProperty) == jobId
+				if (GameObject.Validate(item) && item.InInventory == target
+					&& item.GetIntProperty(FoodReceiptJobProperty) == jobId
 					&& item.GetIntProperty(KingdomPorters.StockProperty) == 1
-					&& (item.HasPart("Food") || item.HasPart("PreparedCookingIngredient")))
+					&& KingdomOrdinaryFoodAuthority.CanSpend(leases, item,
+						FoodReceiptJobProperty, jobId))
 					count += item.Count;
 			}
 			return count;
@@ -182,7 +207,7 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				KingdomJobRow row;
 				if (table.TryAt(i, out row) && string.Equals(row.DeliveryTargetObjectId,
-					target.ID, StringComparison.Ordinal) && string.Equals(Receipt(row), marker,
+					target.IDIfAssigned, StringComparison.Ordinal) && string.Equals(Receipt(row), marker,
 					StringComparison.Ordinal)) { active = true; break; }
 			}
 			if (!active && !string.IsNullOrEmpty(marker)) target.RemoveStringProperty(TargetReceiptProperty);

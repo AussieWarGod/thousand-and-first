@@ -14,6 +14,7 @@ namespace ThousandAndFirst
 
 		public void Write(SerializationWriter Writer)
 		{
+			if (AwayOpaque == null) Away = SettlementTopology?.Get(0);
 			string failure;
 			if (!ValidateEnvelope(out failure)) throw new InvalidDataException(failure);
 			Writer.Write(Magic); Writer.Write(Version); Writer.Write((byte)Phase);
@@ -55,6 +56,13 @@ namespace ThousandAndFirst
 			WriteCallback(Writer, ReturnChronicle); WriteCallback(Writer, ReturnReputation);
 			WriteCallback(Writer, ReturnFeelings); WriteCallback(Writer, ReturnSeat);
 			WriteCallback(Writer, ReturnAbility);
+			Writer.Write((IComposite)SettlementTopology);
+			WriteStandings(Writer, RealmPolicyToward);
+			WriteStandings(Writer, RegardSpilloverRemainders);
+			WriteStandings(Writer, RegardSpilloverObservedReputation);
+			Writer.Write(DirectionalStandingSchemaVersion);
+			Writer.Write(CallbackAuthoritySchemaVersion);
+			WriteString(Writer, DirectionalStandingDigest, 64);
 		}
 
 		public void Read(SerializationReader Reader)
@@ -79,8 +87,10 @@ namespace ThousandAndFirst
 			Version = Reader.ReadInt32();
 			if (Version == 1) throw new InvalidDataException(
 				"Pre-release realm archive v1 used unsafe nested reflected settlement wire.");
-			if (Version != LegacyJobVersion && Version != MissionJobVersion
-				&& Version != CurrentVersion)
+			if (Version != LegacyJobVersion && Version != MissionJobVersion &&
+				Version != ExactDeliveryJobVersion &&
+				Version != ExpandedDeliveryJobVersion &&
+				Version != SettlementTopologyVersion && Version != CurrentVersion)
 				throw new InvalidDataException("Unknown realm archive version.");
 			int wireVersion = Version;
 			Phase = (KingdomRealmArchivePhase)Reader.ReadByte();
@@ -131,14 +141,63 @@ namespace ThousandAndFirst
 			ReturnChronicle = ReadCallback(Reader); ReturnReputation = ReadCallback(Reader);
 			ReturnFeelings = ReadCallback(Reader); ReturnSeat = ReadCallback(Reader);
 			ReturnAbility = ReadCallback(Reader);
+			if (wireVersion >= SettlementTopologyVersion)
+			{
+				KingdomSettlement legacyProjection = Away;
+				SettlementTopology = Reader.ReadComposite<KingdomSettlementTopology>();
+				if (SettlementTopology == null)
+					throw new InvalidDataException("Archived settlement topology is absent.");
+				if (SettlementTopology.HasOpaqueEvidence)
+				{
+					Away = null;
+				}
+				else
+				{
+					KingdomSettlement canonical = SettlementTopology.Get(0);
+					if (!KingdomArchivedSettlementCodec.ExactGraph(legacyProjection, canonical,
+						out string projectionFailure))
+						Quarantine("legacy archive projection differs from topology: " +
+							projectionFailure);
+					Away = canonical;
+				}
+			}
+			else
+			{
+				SettlementTopology = new KingdomSettlementTopology();
+				if (Away != null && AwayOpaque == null &&
+					!SettlementTopology.TryAdoptLegacy(Away, out string migrationFailure))
+					throw new InvalidDataException(migrationFailure);
+			}
+			if (wireVersion >= DirectionalStandingVersion)
+			{
+				RealmPolicyToward = ReadStandings(Reader);
+				RegardSpilloverRemainders = ReadStandings(Reader);
+				RegardSpilloverObservedReputation = ReadStandings(Reader);
+				DirectionalStandingSchemaVersion = Reader.ReadInt32();
+				CallbackAuthoritySchemaVersion = Reader.ReadInt32();
+				DirectionalStandingDigest = ReadString(Reader, 64);
+			}
+			else
+			{
+				RealmPolicyToward = new Dictionary<string, int>(StringComparer.Ordinal);
+				RegardSpilloverRemainders =
+					new Dictionary<string, int>(StringComparer.Ordinal);
+				RegardSpilloverObservedReputation =
+					new Dictionary<string, int>(StringComparer.Ordinal);
+				DirectionalStandingSchemaVersion = 0;
+				CallbackAuthoritySchemaVersion = 1;
+				DirectionalStandingDigest = null;
+				RequiresDirectionalStandingMigration = true;
+			}
 			// v2 predates mission and delivery columns; v3 predates delivery columns. ReadJobs
-			// pads only the absent envelopes; every subsequent save is canonical v4.
+			// pads only absent envelopes; v4 delivery columns remain the exact v5 layout.
 			Version = CurrentVersion;
 			string failure;
 			if (!ValidateEnvelope(out failure)) throw new InvalidDataException(failure);
 			if (SeatOpaque != null || AwayOpaque != null || SecededOpaque != null)
 				Quarantine("archive contains a future opaque settlement payload");
-			else if (!Quarantined && !Validate(out failure)) Quarantine(failure);
+			else if (!Quarantined && !RequiresDirectionalStandingMigration &&
+				!Validate(out failure)) Quarantine(failure);
 		}
 
 		internal void ResetToPoisonEnvelope(string Failure)
@@ -155,9 +214,18 @@ namespace ThousandAndFirst
 			RealmIdentitySeedLow = 0UL; RealmIdentityFirstClaimedZone = null;
 			SimulationSeedHigh = 0UL; SimulationSeedLow = 0UL;
 			Seat = null; Away = null; Seceded = null;
+			SettlementTopology = new KingdomSettlementTopology();
 			SeatOpaque = null; AwayOpaque = null; SecededOpaque = null;
 			SeatWireVersion = 0; AwayWireVersion = 0; SecededWireVersion = 0;
 			Standings = new Dictionary<string, int>(StringComparer.Ordinal);
+			RealmPolicyToward = new Dictionary<string, int>(StringComparer.Ordinal);
+			RegardSpilloverRemainders = new Dictionary<string, int>(StringComparer.Ordinal);
+			RegardSpilloverObservedReputation =
+				new Dictionary<string, int>(StringComparer.Ordinal);
+			DirectionalStandingSchemaVersion = 0;
+			CallbackAuthoritySchemaVersion = 2;
+			DirectionalStandingDigest = null;
+			RequiresDirectionalStandingMigration = false;
 			Bindings = new Simulation.City.KingdomBindingRegistry(); ResidentCounter = 0;
 			Jobs = new Simulation.City.KingdomJobRegistry(); LastSliceTick = 0L;
 			ReifyTick = 0L; ReifyThirdsSpent = 0; ReifyHeavySpent = 0;

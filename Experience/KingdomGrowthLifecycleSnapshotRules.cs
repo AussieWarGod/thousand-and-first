@@ -175,10 +175,17 @@ namespace ThousandAndFirst
 					StringComparison.Ordinal)) return false;
 			if (operation.Action == KingdomGrowthAction.Arrival)
 			{
-				long after;
-				if (book.ArrivalIntervalTicks <= 0L || operation.CreatedTick < book.NextArrivalTick
-					|| !CheckedAdd(operation.CreatedTick, book.ArrivalIntervalTicks, out after)
-					|| operation.ArrivalAfter != after) return false;
+				if (book.ArrivalCadenceMigrationPending)
+				{
+					long after;
+					if (book.ArrivalIntervalTicks <= 0L
+						|| operation.CreatedTick < book.NextArrivalTick
+						|| !CheckedAdd(operation.CreatedTick, book.ArrivalIntervalTicks, out after)
+						|| operation.ArrivalAfter != after) return false;
+				}
+				else if (!GrowthArrivalOperationOpportunityShape(book, operation)
+					|| operation.ArrivalBefore != book.ArrivalOpportunity.DueTick
+					|| operation.ArrivalAfter != ArrivalClockAfterOpportunity(book)) return false;
 			}
 			if (field != null && (operation.ClockLease.Before != field.CommitRevision
 				|| operation.FieldClockBefore != field.ClockTick)) return false;

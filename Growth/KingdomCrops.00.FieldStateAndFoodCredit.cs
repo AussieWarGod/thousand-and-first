@@ -21,6 +21,12 @@ namespace ThousandAndFirst
 		/// <c>Carries</c> from this tag.</summary>
 		public const string RowsTag = "r_KingdomCropRows";
 
+		/// <summary>An optional exact crop-blueprint declaration on a field design. A field
+		/// without it accepts every seed in the merged style registry; a field with it accepts
+		/// only that crop's seed. This is object behavior, not stratum behavior: the two deep
+		/// vault designs can name fungus without inventing a second crop table for every cave.</summary>
+		public const string CropBlueprintTag = "r_KingdomCropBlueprint";
+
 		/// <summary>Marks a plant this file laid, so a later withdrawal or striking can find its
 		/// own rows and nothing else's. The protection law's whole warrant for removing them.</summary>
 		public const string RowProperty = "KingdomCropRow";
@@ -81,6 +87,18 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			return rows;
+		}
+
+		/// <summary>The exact crop this field design accepts, or null when its design leaves the
+		/// choice to the founder. Blueprint inheritance is resolved by Qud's ordinary tag lookup.</summary>
+		public static string DeclaredCrop(GameObject Work)
+		{
+			if (!GameObject.Validate(Work))
+			{
+				return null;
+			}
+			string crop = Work.GetTag(CropBlueprintTag, "");
+			return string.IsNullOrWhiteSpace(crop) ? null : crop.Trim();
 		}
 
 		/// <summary>Whether the founder has committed seed to this field. The whole of the

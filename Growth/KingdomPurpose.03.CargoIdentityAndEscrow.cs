@@ -16,7 +16,8 @@ namespace ThousandAndFirst
 		private static List<KingdomPurposeDefinition> DefinitionsInOrder()
 		{
 			List<KingdomPurposeDefinition> values = new List<KingdomPurposeDefinition>();
-			foreach (var pair in Definitions) values.Add(pair.Value.Copy());
+			foreach (var pair in Definitions)
+				if (!pair.Value.PortfolioOnly) values.Add(pair.Value.Copy());
 			values.Sort((a, b) => string.CompareOrdinal(a.BuildKey, b.BuildKey));
 			return values;
 		}
@@ -39,8 +40,10 @@ namespace ThousandAndFirst
 			KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z);
 			for (int i = 0; i < stock.Stockpiles.Count; i++)
 				if (GameObject.Validate(stock.Stockpiles[i])
-					&& stock.Stockpiles[i].Inventory != null) choices.Add(stock.Stockpiles[i]);
-			choices.Sort((a, b) => string.CompareOrdinal(a.ID, b.ID));
+					&& stock.Stockpiles[i].Inventory != null
+					&& !string.IsNullOrEmpty(stock.Stockpiles[i].IDIfAssigned))
+					choices.Add(stock.Stockpiles[i]);
+			choices.Sort((a, b) => string.CompareOrdinal(a.IDIfAssigned, b.IDIfAssigned));
 			return choices.Count == 0 ? null : choices[0];
 		}
 
@@ -159,19 +162,49 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Cargo) || Job == null || Manifest == null
 				|| encoded == null
 				|| Cargo.Count != 1 || Cargo.HasPart("Stacker")
+				|| CargoFieldPresent(Cargo, PortfolioCargoSchemaProperty)
+				|| CargoFieldPresent(Cargo, PortfolioCargoReceiptProperty)
+				|| CargoFieldPresent(Cargo, PortfolioCargoKeyProperty)
+				|| CargoFieldPresent(Cargo, PortfolioCargoFoodProperty)
+				|| CargoFieldPresent(Cargo, PortfolioLandedFoodProperty)
+				|| CargoFieldPresent(Cargo, PortfolioLandedReceiptProperty)
+				|| CargoFieldPresent(Cargo, PortfolioLandedCountProperty)
+				|| CargoFieldPresent(Cargo, PortfolioLandedAttemptProperty)
+				|| CargoFieldPresent(Cargo, PortfolioLandedFaultProperty)
 				|| Cargo.Blueprint != KingdomMaterials.BlueprintFor(Manifest.CargoMaterial)
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoSchemaProperty),
+					Cargo.HasStringProperty(CargoSchemaProperty), true)
 				|| Cargo.GetIntProperty(CargoSchemaProperty) != CargoSchema
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoKeyProperty),
+					Cargo.HasStringProperty(CargoKeyProperty), false)
 				|| Cargo.GetStringProperty(CargoKeyProperty) != Manifest.CargoKey
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoManifestProperty),
+					Cargo.HasStringProperty(CargoManifestProperty), false)
 				|| Cargo.GetStringProperty(CargoManifestProperty) != encoded
 				|| (!Job.Compacted && (Job.Payload != encoded
 					|| Job.PhysicalReceipt != encoded))
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoConsignmentProperty),
+					Cargo.HasStringProperty(CargoConsignmentProperty), false)
 				|| Cargo.GetStringProperty(CargoConsignmentProperty) != Job.Id
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoOriginProperty),
+					Cargo.HasStringProperty(CargoOriginProperty), false)
 				|| Cargo.GetStringProperty(CargoOriginProperty) != Manifest.OriginSettlementId
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(CargoDestinationProperty),
+					Cargo.HasStringProperty(CargoDestinationProperty), false)
 				|| Cargo.GetStringProperty(CargoDestinationProperty) != Manifest.DestinationSettlementId
+				|| !KingdomPurposePortfolioRules.PurposeCargoFieldTypeIsExact(
+					Cargo.HasIntProperty(KingdomConstruction.ReceiptProperty),
+					Cargo.HasStringProperty(KingdomConstruction.ReceiptProperty), false)
 				|| Cargo.GetStringProperty(KingdomConstruction.ReceiptProperty) != Job.Id
 				|| !KingdomMaterials.TryMaterialOf(Cargo, out KingdomMaterial material)
 				|| material != Manifest.CargoMaterial) return false;
-			return string.IsNullOrEmpty(Job.OutputId) || Cargo.ID == Job.OutputId;
+			return string.IsNullOrEmpty(Job.OutputId) || Cargo.IDIfAssigned == Job.OutputId;
 		}
 
 		private static string EscrowKey(KingdomConstructionJob Job)
@@ -235,7 +268,7 @@ namespace ThousandAndFirst
 				|| Item.InInventory != null || Item.CurrentCell != null) return false;
 			// Qud IDs are global authority. A rooted loose object may remain in FindByID's
 			// one-entry cache, but no different live object may answer its exact ID.
-			GameObject found = GameObject.FindByID(Item.ID);
+			GameObject found = GameObject.FindByID(Item.IDIfAssigned);
 			return !GameObject.Validate(found) || ReferenceEquals(found, Item);
 		}
 

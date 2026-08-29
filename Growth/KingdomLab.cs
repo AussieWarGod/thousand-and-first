@@ -62,14 +62,23 @@ namespace ThousandAndFirst
 		{
 			public readonly List<GameObject> Sources;
 			public readonly List<string> Stamps;
+			public readonly List<GameObject> Owners;
+			public readonly List<Cell> Cells;
+			public readonly List<string> Ids;
+			public readonly List<string> Blueprints;
 			public readonly LabProcedure Procedure;
 			public readonly KingdomKeptSpendPlan Plan;
 
 			public KeptSpendPreparation(List<GameObject> Sources, List<string> Stamps,
-				LabProcedure Procedure, KingdomKeptSpendPlan Plan)
+				List<GameObject> Owners, List<Cell> Cells, List<string> Ids,
+				List<string> Blueprints, LabProcedure Procedure, KingdomKeptSpendPlan Plan)
 			{
 				this.Sources = Sources;
 				this.Stamps = Stamps;
+				this.Owners = Owners;
+				this.Cells = Cells;
+				this.Ids = Ids;
+				this.Blueprints = Blueprints;
 				this.Procedure = Procedure;
 				this.Plan = Plan;
 			}
@@ -125,6 +134,8 @@ namespace ThousandAndFirst
 				GameId = Job?.GameId ?? "",
 				RealmId = Job?.RealmId ?? "",
 				RealmFoundedTick = Job?.RealmFoundedTick ?? -1L,
+				RulerSuccessionOrdinal = Job?.RulerSuccessionOrdinal ?? -1,
+				RulerLifeId = Job?.RulerLifeId ?? "",
 				ContractVersion = Job?.ContractVersion ?? 0,
 				ProcedureKey = Job?.ProcedureKey ?? "",
 				Grants = Job?.FrozenGrants ?? "",
@@ -209,11 +220,23 @@ namespace ThousandAndFirst
 			return !quarantined && KingdomLabRules.IndexOfRegistry(rows, Job.JobId) < 0;
 		}
 
-		private static bool PurgeApplicationReceipt(GameObject Building,
-			r_KingdomLabJob Job, KingdomLabRegistryStatus Status)
+		private static bool PurgeApplicationReceipt(GameObject Building, GameObject Actor,
+			KingdomSystem System, r_KingdomLabJob Job, KingdomLabRegistryStatus Status)
 		{
-			if (Building == null || Job == null || !ReferenceEquals(Job.ParentObject, Building)
-				|| !RecordReplayProof("apply:" + Job.JobId)) return false;
+			if (Building == null || Job == null
+				|| !ReferenceEquals(Job.ParentObject, Building)) return false;
+			if (Status == KingdomLabRegistryStatus.Complete)
+			{
+				SettleCompletedBodyHistory(Actor, System, Job);
+				if (!KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(
+					Job.BodyHistoryState))
+				{
+					Job.Fault = "Physical procedure is complete; body history still waits: "
+						+ Job.BodyHistoryFault;
+					return false;
+				}
+			}
+			if (!RecordReplayProof("apply:" + Job.JobId)) return false;
 			try { Building.RemovePart(Job); }
 			catch (Exception ex)
 			{

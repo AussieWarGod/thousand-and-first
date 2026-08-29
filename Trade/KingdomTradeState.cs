@@ -32,7 +32,9 @@ namespace ThousandAndFirst
 		ManifestLoad = 2,
 		ManifestDelivery = 3,
 		ManifestTurnback = 4,
-		ManifestLapse = 5
+		ManifestLapse = 5,
+		/// <summary>One witnessed polity request; direct debit lands only under terminal proof.</summary>
+		PolityConsignmentDelivery = 6
 	}
 
 	/// <summary>Prepared precedes every physical mutation; terminal rows never regain authority.</summary>
@@ -71,6 +73,15 @@ namespace ThousandAndFirst
 		Lost = 5,
 		CreateIntent = 6,
 		CleanupIntent = 7
+	}
+
+	/// <summary>Exact reconstruction of a persisted consignment water intent.</summary>
+	public enum KingdomTradeWaterIntentResolution : byte
+	{
+		Invalid = 0,
+		Before = 1,
+		After = 2,
+		Ambiguous = 3
 	}
 
 	public enum KingdomTradeSinkState : byte

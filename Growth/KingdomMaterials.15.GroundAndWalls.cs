@@ -38,6 +38,17 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (KingdomPurpose.HasProtectedCargoEvidence(Object))
+			{
+				Reason = "Protected purpose cargo lies on that ground. Move or consume it through its exact commitment; the settlement will not clear it away.";
+				return true;
+			}
+			if (!KingdomOrdinaryCustody.TryProveEmpty(Object, out _))
+			{
+				Reason = "The " + Object.ShortDisplayName
+					+ " holds equipment or stored objects. Empty it before clearing this ground.";
+				return true;
+			}
 			if (Object.GetIntProperty("KingdomBuilt") == 1 || Object.GetIntProperty("KingdomCitizen") == 1
 				|| Object.GetIntProperty("KingdomStores") == 1 || Object.GetIntProperty("KingdomLarder") == 1
 				|| Object.GetIntProperty(StockpileProperty) == 1
@@ -92,7 +103,9 @@ namespace ThousandAndFirst
 		public static bool TryClassify(GameObject Object, out KingdomStanding Standing)
 		{
 			Standing = KingdomStanding.Nothing;
-			if (Object == null || !GameObject.Validate(Object) || Object.IsCreature || Object.IsPlayer())
+			if (Object == null || !GameObject.Validate(Object) || Object.IsCreature || Object.IsPlayer()
+				|| KingdomPurpose.HasProtectedCargoEvidence(Object)
+				|| !KingdomOrdinaryCustody.TryProveEmpty(Object, out _))
 			{
 				return false;
 			}

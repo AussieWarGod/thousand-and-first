@@ -96,6 +96,20 @@ namespace ThousandAndFirst
 					&& Operation.ManifestEscrowDebit == 0
 					&& Operation.ManifestEscrowAfter == 0
 					&& Operation.ManifestEscrowState == KingdomTradePhysicalState.None;
+			case KingdomTradeOperationKind.PolityConsignmentDelivery:
+				bool retained = Operation.Phase == KingdomTradePhase.Quarantined &&
+					(Operation.ProvedWater == 0 ? Operation.RetainedBefore == 0L &&
+						Operation.RetainedDelta == 0L && Operation.RetainedAfter == 0L &&
+						Operation.RetainedState == KingdomTradePhysicalState.None :
+						Operation.RetainedDelta == Operation.ProvedWater &&
+						Operation.RetainedState == KingdomTradePhysicalState.Proved);
+				bool landed = Operation.Phase != KingdomTradePhase.Quarantined &&
+					Operation.RetainedBefore == 0L && Operation.RetainedDelta == 0L &&
+					Operation.RetainedAfter == 0L &&
+					Operation.RetainedState == KingdomTradePhysicalState.None;
+				return (retained || landed) && Operation.ManifestEscrowBefore == 0 &&
+					Operation.ManifestEscrowDebit == 0 && Operation.ManifestEscrowAfter == 0 &&
+					Operation.ManifestEscrowState == KingdomTradePhysicalState.None;
 			default:
 				return Operation.ManifestEscrowBefore == 0
 					&& Operation.ManifestEscrowDebit == 0

@@ -16,16 +16,18 @@ namespace ThousandAndFirst
 			if (System == null || !System.Founded || Z == null || Job == null
 				|| !GameObject.Validate(Building)
 				|| Building.CurrentZone != Z || Building.CurrentCell != Z.GetCell(Job.X, Job.Y)
-				|| Building.ID != Job.OutputId || !KingdomConstruction.HasReceipt(Building, Job)
+				|| Building.IDIfAssigned != Job.OutputId || !KingdomConstruction.HasReceipt(Building, Job)
 				|| Building.GetIntProperty("KingdomBuilt") != 1
 				|| Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey
-				|| !r_KingdomScaffold.HasRemovalProof(Building, Job.SubjectId)) return false;
+				|| !r_KingdomScaffold.HasRemovalProof(Building, Job.SubjectId)
+				|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
 			if (Job.Phase != KingdomConstructionPhase.Complete)
 			{
 				if (Job.PhysicalPhase != KingdomPhysicalPhase.FinalRemoved
 					|| !KingdomConstruction.Complete(ref Job)) return false;
 			}
-			if (Job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled) return true;
+			if (Job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled)
+				return RetirePlotFinalRoot(Job.OutputId, Building);
 			if (Job.PhysicalPhase != KingdomPhysicalPhase.EffectsPending
 				&& !KingdomConstruction.UpdatePhysical(ref Job,
 					KingdomPhysicalPhase.EffectsPending, Job.PhysicalIndex, Job.PhysicalAmount,
@@ -37,9 +39,13 @@ namespace ThousandAndFirst
 			if (!long.TryParse(Building.GetStringProperty(r_KingdomScaffold.CompletionTickProperty),
 				global::System.Globalization.NumberStyles.Integer,
 				global::System.Globalization.CultureInfo.InvariantCulture, out tick)) tick = Job.DueTick;
-			if (!KingdomCeremony.EnsureBuildingRaised(System, Building.CurrentCell, display, tick,
-				Building.GetStringProperty(r_KingdomScaffold.CompletionPlanProperty), ref Job)) return false;
-			if (!ExactPlotEffectEndpoint(System, Z, Building, Job)) return false;
+			bool raised = false;
+			try { raised = KingdomCeremony.EnsureBuildingRaised(System, Building.CurrentCell, display,
+				tick, Building.GetStringProperty(r_KingdomScaffold.CompletionPlanProperty), ref Job); }
+			catch { }
+			if (!ExactPlotEffectEndpoint(System, Z, Building, Job)
+				|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
+			if (!raised) return false;
 
 			bool heart = Building.GetIntProperty(HeartPlotProperty) == 1;
 			int rung = KingdomPlotRules.HeartRungOf(Job.TargetKey);
@@ -57,8 +63,13 @@ namespace ThousandAndFirst
 				{
 					Building.SetIntProperty(HeartEffectProperty, 1);
 					if (Building.GetIntProperty(HeartEffectProperty) != 1) return false;
-					KingdomCeremonyHeart.OnRungRaised(System, Z, Job.TargetKey, true);
-					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)) return false;
+					bool callbackReturned = false;
+					try { KingdomCeremonyHeart.OnRungRaised(System, Z, Job.TargetKey, true);
+						callbackReturned = true; }
+					catch { }
+					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)
+						|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
+					if (!callbackReturned) return false;
 				}
 				if (Building.GetIntProperty(HeartEffectProperty) == 1)
 					Building.SetIntProperty(HeartEffectProperty, 2);
@@ -66,46 +77,49 @@ namespace ThousandAndFirst
 			}
 			if (KingdomDelveRules.IsDelve(Job.TargetKey))
 			{
-				if (!KingdomDelveLink.TrySettle(Building, Z, out string linkFailure))
+				bool linkSettled = false;
+				string linkFailure = null;
+				try { linkSettled = KingdomDelveLink.TrySettle(Building, Z, out linkFailure); }
+				catch { }
+				if (!ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
+				if (!linkSettled)
 				{
 					KingdomLog.Log("delve link: effects wait: " + linkFailure);
 					return false;
 				}
-				KingdomDelve.RecordShaft(Z.ZoneID);
+				bool shaftReturned = false;
+				try { KingdomDelve.RecordShaft(Z.ZoneID); shaftReturned = true; }
+				catch { }
+				if (!ExactPlotFinalRootCustody(Job.OutputId, Building) || !shaftReturned) return false;
 				if (!KingdomDelve.ShaftStands(Z.ZoneID)) return false;
 				int state = Building.GetIntProperty(DelveEffectProperty);
 				if (state < 0 || state > 2) return false;
 				if (state == 0)
 				{
+					if (!TryExactSettlementName(System, Z, out string settlementName)) return false;
 					Building.SetIntProperty(DelveEffectProperty, 1);
 					if (Building.GetIntProperty(DelveEffectProperty) != 1) return false;
-					string opened = KingdomDelveRules.ShaftOpens(KingdomPresentation.Rich(System.SeatName));
-					System.Ledger.Note("{{G|" + opened + "}}");
-					MessageQueue.AddPlayerMessage("{{G|" + opened + "}}");
-					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)) return false;
+					string opened = KingdomDelveRules.ShaftOpens(
+						KingdomPresentation.Rich(settlementName));
+					bool tellingReturned = false;
+					try { System.Ledger.Note("{{G|" + opened + "}}");
+						MessageQueue.AddPlayerMessage("{{G|" + opened + "}}"); tellingReturned = true; }
+					catch { }
+					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)
+						|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
+					if (!tellingReturned) return false;
 				}
 				if (Building.GetIntProperty(DelveEffectProperty) == 1)
 					Building.SetIntProperty(DelveEffectProperty, 2);
 				if (Building.GetIntProperty(DelveEffectProperty) != 2) return false;
+				KingdomCivicKnowledgeRuntime.ObserveCurrentDelveBestEffort(System, Z, tick);
 			}
-			return KingdomConstruction.UpdatePhysical(ref Job,
+			if (!ExactPlotFinalRootCustody(Job.OutputId, Building)
+				|| !KingdomConstruction.UpdatePhysical(ref Job,
 				KingdomPhysicalPhase.EffectsSettled, Job.PhysicalIndex, Job.PhysicalAmount,
-				Job.PhysicalSpilled, Job.SubjectId, Job.OutputId, Job.PhysicalReceipt);
+				Job.PhysicalSpilled, Job.SubjectId, Job.OutputId, Job.PhysicalReceipt)) return false;
+			return RetirePlotFinalRoot(Job.OutputId, Building);
 		}
-
-		private static bool ExactPlotEffectEndpoint(KingdomSystem System, Zone Z,
-			GameObject Building, KingdomConstructionJob Job)
-		{
-			GameObject exact;
-			return KingdomConstruction.Owns(System, Z, Job)
-				&& KingdomConstruction.IsCurrent(Job)
-				&& KingdomConstruction.FindExactId(Z, Job.OutputId, out exact)
-					== KingdomPhysicalLookupState.Exact
-				&& ReferenceEquals(exact, Building) && GameObject.Validate(Building)
-				&& Building.CurrentCell == Z.GetCell(Job.X, Job.Y)
-				&& KingdomConstruction.HasReceipt(Building, Job);
-		}
-
 
 		private static bool FurnishDurable(Zone Z, KingdomPlotRules.PlotRect Rect,
 			string Table, string PlotId, string Key, ref KingdomConstructionJob Job)
@@ -259,7 +273,7 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item)
 					|| item.GetStringProperty(FurnishReceiptProperty) != Job.Id) continue;
 				bool known = false;
-				for (int i = 0; i < rows.Count; i++) if (rows[i].Id == item.ID) known = true;
+				for (int i = 0; i < rows.Count; i++) if (rows[i].Id == item.IDIfAssigned) known = true;
 				if (!known)
 				{
 					KingdomConstruction.Quarantine(ref Job,

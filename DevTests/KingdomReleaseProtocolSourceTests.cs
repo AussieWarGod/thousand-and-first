@@ -18,7 +18,7 @@ namespace ThousandAndFirst.Tests
 		private static XmlElement Building(string key)
 		{
 			XmlDocument document = new XmlDocument();
-			document.Load(Path.Combine(TestMain.RepositoryRoot, "KingdomBuildings.xml"));
+			document.LoadXml(TestMain.ReadRepositoryText("KingdomBuildings.xml"));
 			XmlElement found = null;
 			int matches = 0;
 			foreach (XmlElement building in document.GetElementsByTagName("building"))
@@ -156,6 +156,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TAF_ALLOWED_SKIPS", testMain);
 			StringAssert.Contains("unauthorized skip", testMain);
 			StringAssert.Contains("expected skip did not occur", testMain);
+			StringAssert.Contains("TestExecutionContext.IsolatedContext", testMain,
+				"direct invocation must isolate NUnit result state per selected case");
+			Assert.AreEqual(2, Regex.Matches(testMain, @"InvokeIsolated\(method,").Count,
+				"plain tests and TestCase rows must share the isolated invocation path");
 			string workflow = Source(Path.Combine(".github", "workflows", "portable.yml"));
 			StringAssert.Contains("TAF_ALLOWED_SKIPS", workflow);
 			foreach (string label in new[]
@@ -185,7 +189,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string metadata = Source(Path.Combine("Tools", "workshop_metadata.py"));
 			string example = Source(Path.Combine("docs", "RELEASE_EVIDENCE.example.json"));
-			StringAssert.Contains("RELEASE_EVIDENCE_SCHEMA = 3", metadata);
+			StringAssert.Contains("RELEASE_EVIDENCE_SCHEMA = 4", metadata);
 			foreach (string lane in new[]
 			{
 				"nativeCompileLoad", "architectureGallery", "controllerAndColor",

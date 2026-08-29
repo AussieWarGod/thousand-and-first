@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < loaded.Count; i++)
 			{
 				GameObject item = loaded[i];
-				if (item.ID != Id) continue;
+				if (item.IDIfAssigned != Id) continue;
 				count++;
 				if (count == 1) Exact = item;
 			}

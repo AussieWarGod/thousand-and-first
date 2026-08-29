@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using XRL;
-using XRL.Messages;
-using XRL.UI;
 using XRL.World;
-using ThousandAndFirst;
 
 namespace ThousandAndFirst
 {
@@ -12,6 +9,12 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomSocket
 	{
+		internal const int SocketLotSchema = 1;
+		internal const string SocketLotSchemaProperty = "r_TAF_SocketLotSchema";
+		internal const string SocketLotTypeProperty = "r_TAF_SocketLotType";
+		internal const string SocketLotSizeProperty = "r_TAF_SocketLotSize";
+		internal const string SocketLotFacingProperty = "r_TAF_SocketLotFacing";
+
 		private static bool HasStrikePlotParts(Zone Z, KingdomPlotRules.PlotRect Rect,
 			string PlotId)
 		{
@@ -60,7 +63,7 @@ namespace ThousandAndFirst
 					|| architecture.BuildKey != Job.TargetKey
 					|| Job.X != architecture.MainWorldX || Job.Y != architecture.MainWorldY))
 				|| (legacyArchitecture && (Job.X != rect.CenterX || Job.Y != rect.CenterY))
-				|| !GameObject.Validate(Output) || Output.ID != Job.OutputId
+				|| !GameObject.Validate(Output) || Output.IDIfAssigned != Job.OutputId
 				|| Output.CurrentZone != Z || !KingdomConstruction.HasReceipt(Output, Job)
 				|| !KingdomPlots.ExpectedArchitectureReceipt(Output, Z.GetCell(Job.X, Job.Y),
 					Job.TargetKey, architecture, legacyArchitecture))
@@ -77,41 +80,18 @@ namespace ThousandAndFirst
 		{
 			r_KingdomSocket socket = GameObject.Validate(Output)
 				? Output.GetPart<r_KingdomSocket>() : null;
-			if (socket == null || Output.ID != Job.OutputId || Output.CurrentZone != Z
+			if (socket == null || Output.IDIfAssigned != Job.OutputId || Output.CurrentZone != Z
 				|| Output.CurrentCell != Z.GetCell(Rect.CenterX, Rect.CenterY)
 				|| socket.LastDesignKey != Intent.BuildKey
 				|| !KingdomConstruction.HasReceipt(Output, Job)
-				|| !KingdomPlots.TryReadRect(Output, out var observed)) return false;
+				|| !KingdomPlots.TryReadRect(Output, out var observed)
+				|| !SocketLotMatches(Output, Intent)) return false;
 			return observed.X1 == Rect.X1 && observed.Y1 == Rect.Y1
 				&& observed.X2 == Rect.X2 && observed.Y2 == Rect.Y2;
 		}
 
-		/// <summary>
-		/// Called from <c>KingdomMaterials.WorkStrike</c> the instant a strike finishes, while
-		/// <paramref name="Building"/> still stands and still carries its own stamped rect &mdash;
-		/// see MODDING.md / the wiring note in <c>KingdomMaterials.cs</c> for exactly where.
-		/// Does nothing, and returns false, for a building that never stood on a plot at all: every
-		/// single-cell design in this mod is untouched by any of this.
-		/// <para>
-		/// For a plot design, this always sweeps the plot's own walls, floor, door, and
-		/// furnishings off the rect (everything <c>KingdomPlots.Furnish</c> and
-		/// <c>KingdomPlots.Apply</c> stamped with this same plot's own id) before doing anything
-		/// else, because a struck plot whose shell is left standing is not a re-buildable slot; it
-		/// is dead ground the survey will refuse forever. Then:
-		/// </para>
-		/// <list type="bullet">
-		/// <item>if <see cref="ExecuteConvert"/> staged a true retype, the new design is projected
-		/// on the distinct fresh site frozen in its paid receipt, with a new LotId. The old rectangle
-		/// is left bare rather than renamed into the successor; one combined line is chronicled and
-		/// the caller suppresses its ordinary "struck" message (return value <c>true</c>);</item>
-		/// <item>otherwise, or if the restake could not land (a design withdrawn mid-strike, a torn
-		/// down zone), the rect is left a plain <see cref="r_KingdomSocket"/> marker and the caller
-		/// proceeds exactly as an ordinary strike always has (return value <c>false</c>).</item>
-		/// </list>
-		/// </summary>
-		/// <returns>True when this call fully told the conversion's story and the caller's own
-		/// "struck" chronicle/message should not also fire; false for every ordinary strike,
-		/// where the caller's own messaging still applies unchanged.</returns>
+		/// <summary>Compatibility event hook. It never mutates strike topology; the durable
+		/// construction inspector alone resumes the published callback receipt.</summary>
 		public static bool OnCleared(KingdomSystem System, Zone Z, GameObject Building)
 		{
 			if (System == null || Z == null || !GameObject.Validate(Building)
@@ -123,7 +103,7 @@ namespace ThousandAndFirst
 				|| KingdomConstructionRules.IsTerminal(construction.Phase)
 				|| (construction.Route != KingdomConstructionRoute.Strike
 					&& construction.Route != KingdomConstructionRoute.SocketConvert)
-				|| construction.SourceId != Building.ID
+				|| construction.SourceId != Building.IDIfAssigned
 				|| construction.PhysicalPhase == KingdomPhysicalPhase.None
 				|| !KingdomConstructionRules.TryDecodeStrikeIntent(
 					construction.PhysicalReceipt, out var intent)) return false;
@@ -140,106 +120,162 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		/// <summary>Removes every object this plot raised over its own rect &mdash; walls, floor,
-		/// door, contents &mdash; leaving bare cells. Scoped to <paramref name="PlotId"/> so a
-		/// neighbouring plot's own lane, which never overlaps this rect by construction (
-		/// <c>KingdomPlotRules.CrowdsExisting</c>), is never touched even if IDs collide across
-		/// zones somehow. Only ever objects the settlement itself created and marked
-		/// (<c>KingdomPlots.PlotPartProperty</c>) &mdash; the protection law's own exemption,
-		/// exercised here the same way striking already exercises it on the building itself.</summary>
-		private static bool TrySweepLegacyPlotParts(Zone Z,
-			KingdomPlotRules.PlotRect Rect, string PlotId, GameObject Owner)
+		/// <summary>Reads a schema-last typed-lot promise without consulting current catalogue data.
+		/// A marker with none of the four properties is an honest save-era untyped socket; a partial,
+		/// wrong-typed, or unknown-schema promise is malformed and freezes rebuilding.</summary>
+		internal static bool TryReadSocketLot(GameObject Marker, out string LotType,
+			out ArchitectureLotSize LotSize, out ArchitectureFacing Facing, out bool Legacy,
+			out string Failure)
 		{
-			if (Z == null || !GameObject.Validate(Owner)
-				|| Owner.HasIntProperty(KingdomArchitectureRuntime.SchemaProperty)
-				|| Owner.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty)) return false;
-			List<GameObject> targets = new List<GameObject>();
-			for (int y = Rect.Y1; y <= Rect.Y2; y++)
+			LotType = null;
+			LotSize = default(ArchitectureLotSize);
+			Facing = default(ArchitectureFacing);
+			Legacy = false;
+			Failure = null;
+			if (!GameObject.Validate(Marker))
 			{
-				for (int x = Rect.X1; x <= Rect.X2; x++)
-				{
-					Cell cell = Z.GetCell(x, y);
-					if (cell == null)
-					{
-						continue;
-					}
-					List<GameObject> standing = new List<GameObject>(cell.GetObjects());
-					for (int i = 0; i < standing.Count; i++)
-					{
-						GameObject item = standing[i];
-						if (item == null || !GameObject.Validate(item) || item.GetIntProperty(KingdomPlots.PlotPartProperty) != 1)
-						{
-							continue;
-						}
-						if (!string.IsNullOrEmpty(PlotId) && item.GetStringProperty(KingdomPlots.PlotIdProperty) != PlotId)
-						{
-							continue;
-						}
-						if (item.Inventory != null && item.Inventory.Objects.Count != 0) return false;
-						LiquidVolume liquid = item.GetPart<LiquidVolume>();
-						if (liquid != null && liquid.Volume > 0) return false;
-						if (item.GetIntProperty("KingdomCitizen") == 1
-							|| item.GetIntProperty("KingdomStores") == 1
-							|| item.GetIntProperty("KingdomLarder") == 1
-							|| item.GetIntProperty(KingdomMaterials.StockpileProperty) == 1)
-							return false;
-						targets.Add(item);
-					}
-				}
+				Failure = "There is no cleared lot there.";
+				return false;
 			}
-			for (int i = 0; i < targets.Count; i++)
+			bool schemaInt = Marker.HasIntProperty(SocketLotSchemaProperty);
+			bool schemaString = Marker.HasStringProperty(SocketLotSchemaProperty);
+			bool typeString = Marker.HasStringProperty(SocketLotTypeProperty);
+			bool typeInt = Marker.HasIntProperty(SocketLotTypeProperty);
+			bool sizeInt = Marker.HasIntProperty(SocketLotSizeProperty);
+			bool sizeString = Marker.HasStringProperty(SocketLotSizeProperty);
+			bool facingInt = Marker.HasIntProperty(SocketLotFacingProperty);
+			bool facingString = Marker.HasStringProperty(SocketLotFacingProperty);
+			if (!schemaInt && !schemaString && !typeString && !typeInt
+				&& !sizeInt && !sizeString && !facingInt && !facingString)
 			{
-				GameObject target = targets[i];
-				if (!GameObject.Validate(target))
-					return false;
-				bool removed = target.Obliterate(null, Silent: true);
-				if (removed || !GameObject.Validate(target))
-					KingdomSurvey.ObserveRemovedFromActive(Z, target);
-				if (!removed || GameObject.Validate(target)) return false;
+				Legacy = true;
+				return true;
+			}
+			int rawSize = Marker.GetIntProperty(SocketLotSizeProperty);
+			int rawFacing = Marker.GetIntProperty(SocketLotFacingProperty);
+			string type = Marker.GetStringProperty(SocketLotTypeProperty);
+			if (!schemaInt || schemaString || Marker.GetIntProperty(SocketLotSchemaProperty)
+					!= SocketLotSchema || !typeString || typeInt || !sizeInt || sizeString
+				|| !facingInt || facingString || string.IsNullOrEmpty(type)
+				|| type.Length > KingdomArchitectureRules.MaxKeyChars || type != type.Trim()
+				|| rawSize < (int)ArchitectureLotSize.Small
+				|| rawSize > (int)ArchitectureLotSize.Huge
+				|| rawFacing < (int)ArchitectureFacing.North
+				|| rawFacing > (int)ArchitectureFacing.West
+				|| !KingdomArchitectureRules.TryClassifySetChange(type,
+					(ArchitectureLotSize)rawSize, type, (ArchitectureLotSize)rawSize,
+					out ArchitectureSetChange exact)
+				|| exact != ArchitectureSetChange.SameSet)
+			{
+				Failure = "The cleared lot's typed-lot receipt is incomplete, contradictory, or unknown.";
+				return false;
+			}
+			LotType = type;
+			LotSize = (ArchitectureLotSize)rawSize;
+			Facing = (ArchitectureFacing)rawFacing;
+			return true;
+		}
+
+		internal static bool TryStampSocketLot(GameObject Marker, KingdomStrikeIntent Intent,
+			out string Failure)
+		{
+			Failure = null;
+			if (!GameObject.Validate(Marker) || Intent == null)
+			{
+				Failure = "The cleared lot has no exact typed-lot target.";
+				return false;
+			}
+			if (!Intent.HasTypedLot) return true;
+			if (!Intent.HasPlot || string.IsNullOrEmpty(Intent.LotType)
+				|| Intent.LotType.Length > KingdomArchitectureRules.MaxKeyChars
+				|| (int)Intent.LotSize < (int)ArchitectureLotSize.Small
+				|| (int)Intent.LotSize > (int)ArchitectureLotSize.Huge
+				|| (int)Intent.Facing < (int)ArchitectureFacing.North
+				|| (int)Intent.Facing > (int)ArchitectureFacing.West)
+			{
+				Failure = "The strike's typed-lot promise is malformed.";
+				return false;
+			}
+			try
+			{
+				Marker.RemoveIntProperty(SocketLotSchemaProperty);
+				Marker.RemoveStringProperty(SocketLotSchemaProperty);
+				Marker.SetStringProperty(SocketLotTypeProperty, Intent.LotType);
+				Marker.SetIntProperty(SocketLotSizeProperty, (int)Intent.LotSize);
+				Marker.SetIntProperty(SocketLotFacingProperty, (int)Intent.Facing);
+				Marker.SetIntProperty(SocketLotSchemaProperty, SocketLotSchema);
+			}
+			catch (Exception exception)
+			{
+				try { Marker.RemoveIntProperty(SocketLotSchemaProperty); } catch { }
+				Failure = "The cleared lot's typed-lot receipt could not be written: "
+					+ exception.Message;
+				return false;
+			}
+			if (!TryReadSocketLot(Marker, out string type, out ArchitectureLotSize size,
+				out ArchitectureFacing facing, out bool legacy, out Failure)
+				|| legacy || type != Intent.LotType || size != Intent.LotSize
+				|| facing != Intent.Facing)
+			{
+				if (Failure == null) Failure = "The cleared lot's typed-lot receipt changed while it was written.";
+				return false;
 			}
 			return true;
 		}
 
-		/// <summary>Leaves a socket marker at the rect's centre, stamped with the rect itself so
-		/// every later siting pass counts it exactly as it counts a standing plot.</summary>
-		private static void LeaveSocket(Zone Z, KingdomPlotRules.PlotRect Rect, string OldKey,
-			KingdomConstructionJob Job = null)
+		internal static bool SocketLotMatches(GameObject Marker, KingdomStrikeIntent Intent)
 		{
-			Cell cell = Z.GetCell(Rect.CenterX, Rect.CenterY);
-			if (cell == null)
+			if (Intent == null || !TryReadSocketLot(Marker, out string type,
+				out ArchitectureLotSize size, out ArchitectureFacing facing,
+				out bool legacy, out _)) return false;
+			return Intent.HasTypedLot
+				? !legacy && type == Intent.LotType && size == Intent.LotSize
+					&& facing == Intent.Facing
+				: legacy;
+		}
+
+		internal static bool SocketAcceptsArchitecture(GameObject Marker,
+			KingdomArchitectureIntent Architecture, out string Failure)
+		{
+			if (!TryReadSocketLot(Marker, out string type, out ArchitectureLotSize size,
+				out ArchitectureFacing facing, out bool legacy, out Failure)) return false;
+			if (legacy) return true;
+			if (Architecture == null || Architecture.LotType != type
+				|| Architecture.LotSize != size || Architecture.Facing != facing)
 			{
-				return;
+				Failure = "The prepared plan changes the cleared lot's frozen type, size, or facing. Rebuild this exact lot, or order a full re-type while a predecessor still stands so strike and fresh siting can be frozen together.";
+				return false;
 			}
-			GameObject marker = GameObject.Create(SocketBlueprint);
-			if (marker == null)
+			return true;
+		}
+
+		internal static string SocketLotLabel(GameObject Marker)
+		{
+			if (!TryReadSocketLot(Marker, out string type, out ArchitectureLotSize size,
+				out ArchitectureFacing facing, out bool legacy, out _))
+				return "a cleared lot with an unreadable typed-lot receipt";
+			if (legacy)
 			{
-				return;
+				if (KingdomPlots.TryReadRect(Marker, out KingdomPlotRules.PlotRect rect)
+					&& KingdomSocketRules.TryActualSize(rect.Width, rect.Height,
+						out KingdomPlotRules.PlotSize actual))
+					return "a legacy cleared lot (" + SocketSizeName((ArchitectureLotSize)(int)actual)
+						+ "; type and facing unrecorded)";
+				return "a legacy cleared lot (type, size, and facing unrecorded)";
 			}
-			r_KingdomSocket part = marker.GetPart<r_KingdomSocket>();
-			if (part == null)
+			return "a cleared " + type + " lot (" + SocketSizeName(size) + ", facing "
+				+ facing.ToString().ToLowerInvariant() + ")";
+		}
+
+		private static string SocketSizeName(ArchitectureLotSize Size)
+		{
+			switch (Size)
 			{
-				marker.Obliterate();
-				return;
-			}
-			part.LastDesignKey = OldKey;
-			KingdomPlots.StampRect(marker, Rect);
-			if (Job != null)
-			{
-				KingdomConstruction.Bind(marker, Job);
-			}
-			GameObject accepted;
-			try { accepted = cell.AddObject(marker); }
-			catch
-			{
-				KingdomSurvey.ObserveCurrentTopologyInActive(Z, marker);
-				throw;
-			}
-			KingdomSurvey.ObserveAddResultInActive(Z, marker, accepted);
-			if (marker.CurrentCell != cell)
-			{
-				bool removed = marker.Obliterate(null, Silent: true);
-				if (removed || !GameObject.Validate(marker))
-					KingdomSurvey.ObserveRemovedFromActive(Z, marker);
+			case ArchitectureLotSize.Small: return "S";
+			case ArchitectureLotSize.Medium: return "M";
+			case ArchitectureLotSize.Large: return "L";
+			case ArchitectureLotSize.Huge: return "XL";
+			default: return "?";
 			}
 		}
 	}

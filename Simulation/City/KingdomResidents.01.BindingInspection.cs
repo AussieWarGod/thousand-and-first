@@ -37,6 +37,11 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomBinding binding;
 			if (!table.TryGet(bindingKey, kind, out binding))
 			{
+				if (kind == KingdomBindingKind.Transient
+					&& !KingdomExperienceRuntime.FoundationOwnsCarrierClaim(System, bindingKey)
+					&& !KingdomExperienceRuntime.TryAdmitFoundationTransientClaim(System,
+						bindingKey, out KingdomExperienceCapacityFault _, out string _))
+					return KingdomBindingVerdict.Refuse;
 				return KingdomBindingRules.Judge(kind, KingdomBodyPresence.None);
 			}
 			return KingdomBindingRules.Judge(kind, PresenceOf(binding, zoneId));

@@ -50,10 +50,18 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(EndTurnEvent E)
 		{
 			XRLGame game = The.Game;
-			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+			if (game == null) return base.HandleEvent(E);
+			KingdomBounty.ObserveManningGlobalOption(this, game.TimeTicks);
+			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+				return base.HandleEvent(E);
+			if (!ExternalOwnershipAllows(The.ZoneManager?.ActiveZone))
 				return base.HandleEvent(E);
 			Guard("pump", delegate
 			{
+				// Realm-global construction work is semantic only. Exact source/target visits
+				// own every physical pickup, return, landing, and debit.
+				KingdomConstruction.OnGlobalRecoveryPass(this);
+				AttendFormerClaimCustody(The.ZoneManager?.ActiveZone);
 				Simulation.City.KingdomHeartbeat.OnEndTurn(this, AttendSeatedSemantics);
 			});
 			return base.HandleEvent(E);
@@ -67,11 +75,19 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(ZoneThawedEvent E)
 		{
 			XRLGame game = The.Game;
-			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+			if (game == null) return base.HandleEvent(E);
+			Guard("first guest thaw", delegate
+			{
+				KingdomGrowth.OnPhysicalFirstGuestZoneActivated(this, E.Zone);
+			});
+			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
+			if (!ExternalOwnershipAllows(E.Zone)) return base.HandleEvent(E);
 			Guard("thaw", delegate
 			{
 				Simulation.City.KingdomHeartbeat.OnThawed(this, E.Zone, E.TicksFrozen);
+				KingdomNamedCook.ReconcileZone(this, E.Zone);
+				KingdomAssentingMoot.ReconcileZone(this, E.Zone);
 			});
 			return base.HandleEvent(E);
 		}
@@ -79,14 +95,19 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(SuspendingEvent E)
 		{
 			XRLGame game = The.Game;
-			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+			if (game == null) return base.HandleEvent(E);
+			Guard("first guest suspend", delegate
+			{
+				KingdomGrowth.OnPhysicalFirstGuestSuspending(this, E.Zone);
+			});
+			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
+			if (!ExternalOwnershipAllows(E.Zone)) return base.HandleEvent(E);
 			Guard("check-out", delegate
 			{
 				Simulation.City.KingdomCity.OnSuspending(this, E.Zone);
 			});
-			if (Founded && E.Zone != null && (ClaimedZones.Contains(E.Zone.ZoneID)
-				|| (Away != null && Away.ClaimedZones.Contains(E.Zone.ZoneID))))
+			if (Founded && E.Zone != null && OwnedZone(E.Zone.ZoneID))
 			{
 				Guard("seal final read", delegate
 				{
@@ -104,8 +125,24 @@ namespace ThousandAndFirst
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
 			XRLGame game = The.Game;
-			if (game == null || !KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
+			if (game == null) return base.HandleEvent(E);
+			Guard("first guest activation", delegate
+			{
+				KingdomGrowth.OnPhysicalFirstGuestZoneActivated(this, E.Zone);
+			});
+			Guard("founding heart reserved identity audit", delegate
+			{
+				if (!KingdomPlots.AuditFoundingHeartReservations(this, E.Zone))
+					KingdomLog.Log("founding heart: reserved identity audit refused");
+			});
+			Guard("legacy plot final effects audit", delegate
+			{
+				if (!KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone))
+					KingdomLog.Log("plot effects: active-zone legacy recovery refused");
+			});
+			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
+			if (!ExternalOwnershipAllows(E.Zone)) return base.HandleEvent(E);
 			// The seat moves first. A second city's ground belongs to Away, not to ClaimedZones,
 			// so a swap tested after the guard below could never fire: walking into your own
 			// second city would read as walking into a stranger's zone.
@@ -135,8 +172,19 @@ namespace ThousandAndFirst
 			});
 			Guard("semantic activation", delegate
 			{
+				if (E.Zone != null && ClaimedZones != null
+					&& !ClaimedZones.Contains(E.Zone.ZoneID))
+				{
+					AttendFormerClaimCustody(E.Zone);
+					return;
+				}
+				KingdomNamedCook.ReconcileZone(this, E.Zone);
+				KingdomAssentingMoot.ReconcileZone(this, E.Zone);
 				Simulation.City.KingdomSemanticDispatcher.OnZoneActivated(this, E.Zone,
 					The.Game.TimeTicks, AttendSeatedSemantics);
+				if (!KingdomPolityActiveRuntime.TryReconcile(this, The.Game.TimeTicks,
+					out string polityFailure))
+					KingdomLog.Log("polity: zone reconciliation refused (" + polityFailure + ")");
 			});
 			return base.HandleEvent(E);
 		}

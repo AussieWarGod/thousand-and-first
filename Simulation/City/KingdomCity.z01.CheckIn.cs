@@ -91,6 +91,14 @@ namespace ThousandAndFirst.Simulation.City
 			state = KingdomResidents.ReadRoster(System, Z, Survey, state, TimeTicks);
 			state = ReadWorks(state, Z, Survey);
 			Publish(System, state);
+			if (!KingdomPolityResidentRuntime.TryReconcile(System, TimeTicks,
+				out string polityFigureFailure))
+				KingdomLog.Log("polity: resident figure reconciliation refused (" +
+					polityFigureFailure + ")");
+			if (!KingdomPolityVisitRuntime.TryReconcile(System, TimeTicks,
+				out string polityVisitFailure))
+				KingdomLog.Log("polity: first-contact reconciliation refused (" +
+					polityVisitFailure + ")");
 			// API-v3 is a real model lane, not a registration-only surface. It advances beside the
 			// closed city state and keeps its one bounded wire on this exact city book.
 			KingdomBehaviourRuntime.Reckon(System, System.City, System.SeatName);

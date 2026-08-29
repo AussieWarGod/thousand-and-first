@@ -40,9 +40,9 @@ namespace ThousandAndFirst
 				GameObject item = items[i];
 				if (!GameObject.Validate(item) || item.Physics == null || item.InInventory != Owner
 					|| item.CurrentCell != null || item.Count <= 0
-					|| string.IsNullOrEmpty(item.ID)) return false;
+					|| string.IsNullOrEmpty(item.IDIfAssigned)) return false;
 				for (int j = 0; j < i; j++) if (ReferenceEquals(items[j], item)) return false;
-				ids[i] = item.ID;
+				ids[i] = item.IDIfAssigned;
 				counts[i] = item.Count;
 			}
 			Frame = new InventoryFrame
@@ -55,7 +55,7 @@ namespace ThousandAndFirst
 				Counts = counts,
 				Zone = Z,
 				Cell = Owner.CurrentCell,
-				Id = Owner.ID
+				Id = Owner.IDIfAssigned
 			};
 			return true;
 		}
@@ -63,7 +63,7 @@ namespace ThousandAndFirst
 		private static bool InventoryHeaderExact(InventoryFrame Frame)
 		{
 			return Frame != null && GameObject.Validate(Frame.Owner) && Frame.Part != null
-				&& Frame.Owner.ID == Frame.Id
+				&& Frame.Owner.IDIfAssigned == Frame.Id
 				&& Frame.Owner.CurrentZone == Frame.Zone && Frame.Owner.CurrentCell == Frame.Cell
 				&& Frame.Cell != null && Frame.Cell.ParentZone == Frame.Zone
 				&& Frame.Part.ParentObject == Frame.Owner
@@ -78,7 +78,7 @@ namespace ThousandAndFirst
 			{
 				GameObject item = Frame.Items[i];
 				if (!ReferenceEquals(Frame.List[i], item) || !GameObject.Validate(item)
-					|| item.ID != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
+					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
 					|| item.InInventory != Frame.Owner
 					|| item.CurrentCell != null) return false;
 			}
@@ -105,7 +105,7 @@ namespace ThousandAndFirst
 				if (i == removedIndex) continue;
 				GameObject item = Frame.Items[i];
 				if (!ReferenceEquals(Frame.List[current++], item) || !GameObject.Validate(item)
-					|| item.ID != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
+					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
 					|| item.InInventory != Frame.Owner
 					|| item.CurrentCell != null) return false;
 			}
@@ -122,7 +122,7 @@ namespace ThousandAndFirst
 			{
 				GameObject item = Frame.Items[i];
 				if (!ReferenceEquals(Frame.List[i], item) || !GameObject.Validate(item)
-					|| item.ID != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
+					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
 					|| item.InInventory != Frame.Owner
 					|| item.CurrentCell != null) return false;
 			}
@@ -148,7 +148,9 @@ namespace ThousandAndFirst
 				|| !TryCaptureInventory(source, Z, out sourceFrame)
 				|| !TryCaptureInventory(destination, Z, out destinationFrame)
 				|| !sourceFrame.List.Contains(item) || item.InInventory != source
-				|| destinationFrame.List.Contains(item))
+				|| destinationFrame.List.Contains(item)
+				|| !KingdomConstructionInputLeaseAuthority
+					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
 			{
 				Quarantine(Data, "A bound fetch item or container can no longer be proved.");
 				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;
@@ -166,6 +168,13 @@ namespace ThousandAndFirst
 				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;
 				return false;
 			}
+			if (!KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
+			{
+				Quarantine(Data, "The bound fetch item became protected purpose cargo before removal.");
+				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;
+				return false;
+			}
 			Data.TransferPhase = (int)BountyTransferPhase.RemoveIntent;
 			try
 			{
@@ -178,10 +187,12 @@ namespace ThousandAndFirst
 			KingdomSurvey.ObserveCurrentTopologyInActive(Z, sourceFrame.Owner);
 			if (!TransferReceiptExact(Data, BountyTransferPhase.RemoveIntent, itemId,
 				sourceId, destinationId, units, totalBefore, creditedBefore)
-				|| item.ID != itemId
+				|| item.IDIfAssigned != itemId
 				|| !NoticeBindingExact(Notice, Data, Z, noticeCell)
 				|| !InventoryMinusExact(sourceFrame, item, units)
-				|| !InventoryOriginalExact(destinationFrame))
+				|| !InventoryOriginalExact(destinationFrame)
+				|| !KingdomConstructionInputLeaseAuthority
+					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
 			{
 				Quarantine(Data, "The fetch removal callback changed an exact item, inventory, list, owner, cell, zone, notice, or count witness.");
 				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;
@@ -190,6 +201,13 @@ namespace ThousandAndFirst
 			Data.TransferPhase = (int)BountyTransferPhase.Detached;
 			Data.TransferPhase = (int)BountyTransferPhase.AddIntent;
 			GameObject accepted = null;
+			if (!KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
+			{
+				Quarantine(Data, "The detached fetch custody graph became protected before addition.");
+				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;
+				return false;
+			}
 			try
 			{
 				accepted = destinationFrame.Part.AddObject(item, Silent: true, NoStack: true);
@@ -202,10 +220,12 @@ namespace ThousandAndFirst
 			KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
 			if (!TransferReceiptExact(Data, BountyTransferPhase.AddIntent, itemId,
 				sourceId, destinationId, units, totalBefore, creditedBefore)
-				|| item.ID != itemId
+				|| item.IDIfAssigned != itemId
 				|| !NoticeBindingExact(Notice, Data, Z, noticeCell)
 				|| !InventoryMinusExact(sourceFrame, item, units)
-				|| !InventoryPlusExact(destinationFrame, item, units))
+				|| !InventoryPlusExact(destinationFrame, item, units)
+				|| !KingdomConstructionInputLeaseAuthority
+					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
 			{
 				Quarantine(Data, "The fetch addition callback changed an exact item, inventory, list, owner, cell, zone, notice, or count witness.");
 				Data.TransferPhase = (int)BountyTransferPhase.Quarantined;

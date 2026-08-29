@@ -142,6 +142,16 @@ namespace ThousandAndFirst
 			if (!TryRemoveHandoverPredecessor(Predecessor, Successor, cell, predecessorId,
 				SuccessorKey, intent, ownerSystem, ref job, carriedLiquid, carriedItems,
 				out predecessorName)) return;
+			if (SuccessorKey == KingdomHostedArcology.ArcologyKey && job != null)
+			{
+				string authorityFailure;
+				if (!KingdomHostedArcology.BindAuthority(ownerSystem, Successor.CurrentZone,
+					job, Successor, out authorityFailure))
+				{
+					KingdomConstruction.Quarantine(ref job, authorityFailure);
+					return;
+				}
+			}
 			if (carriedLiquid > 0 || carriedItems > 0)
 			{
 				MessageQueue.AddPlayerMessage("{{G|Everything the " + predecessorName + " held was moved into " + KingdomDesign.ReferenceFor(Successor, Successor.ShortDisplayName) + ".}}");

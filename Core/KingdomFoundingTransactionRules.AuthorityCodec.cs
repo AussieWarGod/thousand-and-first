@@ -195,6 +195,47 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>Builds one write-ahead village-standing effect receipt. It binds the paid
+		/// transaction and authority to the exact faction, display, site, and canonical before/after
+		/// scaled pair; it is not inferred from today's standing.</summary>
+		public static string VillageStandingEffectDigest(string TransactionId,
+			string Authority, string VillageFaction, string VillageDisplay, string ZoneId,
+			int Before, int BeforeCarry, int After, int AfterCarry)
+		{
+			if (!IsNonce(TransactionId) ||
+				!TryParseAuthority(Authority, out KingdomFoundingAuthority parsed) ||
+				parsed.Kind != KingdomFoundingKind.VillageCharter ||
+				parsed.TransactionID != TransactionId || parsed.ZoneID != ZoneId ||
+				!Bounded(VillageFaction, 256) || !Bounded(VillageDisplay, 256) ||
+				!KingdomStandingRules.CanonicalPair(Before, BeforeCarry) ||
+				!KingdomStandingRules.CanonicalPair(After, AfterCarry) ||
+				After != KingdomRules.VillageCharterSealedStanding || AfterCarry != 0 ||
+				(long)Before * KingdomStandingRules.FractionScale + BeforeCarry >=
+					(long)After * KingdomStandingRules.FractionScale + AfterCarry) return null;
+			StringBuilder payload = new StringBuilder();
+			AppendDigestField(payload, "taf-village-standing-effect-v1");
+			AppendDigestField(payload, TransactionId);
+			AppendDigestField(payload, Authority);
+			AppendDigestField(payload, VillageFaction);
+			AppendDigestField(payload, VillageDisplay);
+			AppendDigestField(payload, ZoneId);
+			AppendDigestField(payload, Before.ToString());
+			AppendDigestField(payload, BeforeCarry.ToString());
+			AppendDigestField(payload, After.ToString());
+			AppendDigestField(payload, AfterCarry.ToString());
+			try
+			{
+				using (SHA256 sha = SHA256.Create())
+				{
+					byte[] digest = sha.ComputeHash(Encoding.UTF8.GetBytes(payload.ToString()));
+					StringBuilder hex = new StringBuilder(64);
+					for (int i = 0; i < digest.Length; i++) hex.Append(digest[i].ToString("x2"));
+					return hex.ToString();
+				}
+			}
+			catch { return null; }
+		}
+
 		private static bool Bounded(string Value, int Maximum)
 		{
 			return !string.IsNullOrEmpty(Value) && Value.Length <= Maximum;

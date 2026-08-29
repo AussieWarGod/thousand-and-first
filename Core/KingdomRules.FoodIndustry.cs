@@ -117,7 +117,10 @@ namespace ThousandAndFirst
 		/// post, which carries a Container/Inventory pair and is not a pantry.
 		/// </para>
 		/// </summary>
-		public static readonly string[] CivicLarderBlueprints = new string[2] { "r_KingdomLarder", "r_KingdomGranary" };
+		public static readonly string[] CivicLarderBlueprints = new string[3]
+		{
+			"r_KingdomLarder", "r_KingdomGranary", "r_KingdomRealmGranary"
+		};
 
 		/// <summary>Whether a finished work's blueprint is one the settlement keeps its food in.</summary>
 		public static bool IsCivicLarderBlueprint(string Blueprint)

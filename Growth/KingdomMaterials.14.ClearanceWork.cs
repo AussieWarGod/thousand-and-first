@@ -90,8 +90,25 @@ namespace ThousandAndFirst
 					for (int i = 0; i < standing.Count; i++)
 					{
 						GameObject item = standing[i];
-						if (!GameObject.Validate(item) || !TryClassify(item, out var kind))
+						if (!GameObject.Validate(item))
 						{
+							continue;
+						}
+						if (IsProtected(item, out string reason)
+							|| !TryClassify(item, out var kind))
+						{
+							if (reason != null)
+							{
+								vetoed = true;
+								vetoedName = item.ShortDisplayNameStripped;
+							}
+							continue;
+						}
+						if (IsProtected(item, out reason)
+							|| !KingdomOrdinaryCustody.TryProveEmpty(item, out _))
+						{
+							vetoed = true;
+							vetoedName = item.ShortDisplayNameStripped;
 							continue;
 						}
 						bool gone = false;
@@ -153,6 +170,13 @@ namespace ThousandAndFirst
 					return;
 				}
 				StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 2);
+			}
+			if (KingdomPurpose.HasProtectedCargoEvidence(StakeObject)
+				|| !KingdomOrdinaryCustody.TryProveEmpty(StakeObject, out _))
+			{
+				Order.BlockedAnnounced = true;
+				System.Ledger.Note("{{r|The clearance stake now holds another object. Empty it before removal; no ground yield will be issued again.}}");
+				return;
 			}
 			bool stakeRemoved;
 			try { stakeRemoved = StakeObject.Obliterate(null, Silent: true); }

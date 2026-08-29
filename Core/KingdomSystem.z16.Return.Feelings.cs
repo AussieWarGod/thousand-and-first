@@ -99,7 +99,9 @@ namespace ThousandAndFirst
 			out string Effect)
 		{
 			Effect = null;
-			if (Archive?.Standings == null || Archive.Standings.Count > 512) return false;
+			if (Archive?.Standings == null || Archive.RealmPolicyToward == null ||
+				Archive.Standings.Count > KingdomStandingRules.MaxRelationships ||
+				Archive.RealmPolicyToward.Count > KingdomStandingRules.MaxRelationships) return false;
 			try
 			{
 				IReadOnlyList<Faction> source = Factions.GetList();
@@ -126,6 +128,11 @@ namespace ThousandAndFirst
 						if (Desired && mirrorsStanding && !keys.Contains(Archive.FactionName))
 							keys.Add(Archive.FactionName);
 						bool mirrorsPlayer = faction.Name == Archive.FactionName;
+						bool mirrorsPolicy = mirrorsPlayer;
+						if (Desired && mirrorsPolicy)
+							foreach (string policyFaction in Archive.RealmPolicyToward.Keys)
+								if (Factions.GetIfExists(policyFaction) != null &&
+									!keys.Contains(policyFaction)) keys.Add(policyFaction);
 						if (Desired && mirrorsPlayer && !keys.Contains("Player")) keys.Add("Player");
 						keys.Sort(StringComparer.Ordinal); writer.Write(keys.Count);
 						for (int j = 0; j < keys.Count; j++)
@@ -134,6 +141,9 @@ namespace ThousandAndFirst
 							if (Desired && mirrorsStanding && keys[j] == Archive.FactionName)
 								writer.Write(Reputation.GetFeeling(
 									(float)Archive.Standings[faction.Name]));
+							else if (Desired && mirrorsPolicy &&
+								Archive.RealmPolicyToward.TryGetValue(keys[j], out int policy))
+								writer.Write(Reputation.GetFeeling((float)policy));
 							else if (Desired && mirrorsPlayer && keys[j] == "Player")
 								writer.Write(Reputation.GetFeeling((float)Archive.ReturnRegard));
 							else writer.Write(faction.FactionFeeling[keys[j]]);

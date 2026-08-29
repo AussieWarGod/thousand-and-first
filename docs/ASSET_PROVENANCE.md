@@ -2,7 +2,7 @@
 
 ## Current release boundary
 
-Current runtime asset trees contain zero project-authored bitmap sprites: all 55 shipped `Tile=`
+Current runtime asset trees contain zero project-authored bitmap sprites: all 84 shipped tile
 paths presently resolve to art supplied by Caves of Qud, and the game art is not copied into this
 repository or Workshop package. Objects may instead use an intentional text glyph. This is the
 current inventory, not a permanent ban. A project-authored runtime sprite may ship only through
@@ -79,7 +79,11 @@ dimensions, palette, contrast, function, and live in-game readability are indepe
 ## Workshop preview
 
 The committed root `preview.png` is presentation media captured from the tested mod running in
-Qud. It is not referenced by XML and is not a runtime sprite.
+Qud. It is not referenced by XML and is not a runtime sprite. This founding-popup capture is a
+valid provenance record but an **interim preview only**: it does not show the final architecture
+and must be replaced by a reviewed native final-build architecture screenshot before public
+Workshop upload. Generated art, a static gallery render, or a synthetic mock-up cannot close that
+gate.
 
 | Field | Record |
 |---|---|

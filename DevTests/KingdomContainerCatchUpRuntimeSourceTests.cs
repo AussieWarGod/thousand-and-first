@@ -59,7 +59,10 @@ namespace ThousandAndFirst.Tests
 			string food = Slice(survey, "public int StoreFoodIn(", "private sealed class SpoilFrame");
 			string water = Slice(survey, "public int StoreIn(", "public int DrawFromPools(");
 			StringAssert.Contains("heldAfter != heldBefore + 1", food);
-			StringAssert.Contains("FoodStored += accepted", food);
+			StringAssert.Contains("if (!exact) break;", food);
+			StringAssert.DoesNotContain("if (!TryStoreOneExact(Container, Blueprint)) break;", food);
+			StringAssert.Contains("RefreshPhysicalFoodCount();", food);
+			StringAssert.DoesNotContain("FoodStored += accepted", food);
 			StringAssert.Contains("int added = Store.Volume - before", water);
 			StringAssert.Contains("StoredWater += added", water);
 			StringAssert.Contains("StorageSpace -= added", water);

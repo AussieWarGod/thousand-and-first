@@ -12,7 +12,8 @@ namespace ThousandAndFirst
 	{
 		public const int Magic = 0x54414654;
 		public const int PriorWireVersion = 3;
-		public const int CurrentWireVersion = 4;
+		public const int ImmediatePriorWireVersion = 4;
+		public const int CurrentWireVersion = 5;
 		public const int MaxEnvelopeBytes = 1024 * 1024;
 		public const int MaxStringBytes = 65536;
 		private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
@@ -73,6 +74,8 @@ namespace ThousandAndFirst
 					throw new InvalidDataException("Unsafe pre-release Trade wire v1 migration refused.");
 				if (wire == PriorWireVersion)
 					return DecodePayloadV3(payload);
+				if (wire == ImmediatePriorWireVersion)
+					return DecodePayloadV4(payload);
 				if (wire != CurrentWireVersion)
 				{
 					if (wire <= 0) throw new InvalidDataException("Invalid Trade wire version.");
@@ -158,8 +161,8 @@ namespace ThousandAndFirst
 				WriteList(writer, Book.Charters, KingdomTradeRules.MaxCharters, WriteCharter);
 				WriteNullable(writer, Book.Manifest, WriteManifest);
 				WriteNullable(writer, Book.OpenOperation, WriteOperationV3);
-				WriteNullable(writer, Book.PendingRetirement, WriteProof);
-				WriteList(writer, Book.RecentProofs, KingdomTradeRules.MaxRecentProofs, WriteProof);
+				WriteNullable(writer, Book.PendingRetirement, WriteProofV4);
+				WriteList(writer, Book.RecentProofs, KingdomTradeRules.MaxRecentProofs, WriteProofV4);
 				WriteList(writer, Book.CompactedProofs, KingdomTradeRules.MaxCompactedProofs,
 					WriteProofCompaction);
 				WriteString(writer, Book.ActiveProjectionId);
@@ -186,6 +189,19 @@ namespace ThousandAndFirst
 			{
 				writer.Write(Magic); writer.Write(PriorWireVersion); writer.Write(payload.Length);
 				writer.Write(payload, 0, payload.Length);
+				return stream.ToArray();
+			}
+		}
+
+		/// <summary>Fixture-only exact wire-v4 writer; recipient witnesses did not exist.</summary>
+		public static byte[] EncodeEnvelopeV4Fixture(KingdomTradeBook Book)
+		{
+			byte[] payload = EncodePayloadV4ForMigration(Book);
+			using (MemoryStream stream = new MemoryStream(12 + payload.Length))
+			using (BinaryWriter writer = new BinaryWriter(stream))
+			{
+				writer.Write(Magic); writer.Write(ImmediatePriorWireVersion);
+				writer.Write(payload.Length); writer.Write(payload, 0, payload.Length);
 				return stream.ToArray();
 			}
 		}

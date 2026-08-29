@@ -126,6 +126,7 @@ namespace ThousandAndFirst
 				List<GameObject> objects;
 				bool receiptEvidence = false;
 				bool exactReceipt = false;
+				bool legacyReceiptFallback = false;
 				if (roots.TryGetValue(RectKey(rect), out objects))
 				{
 					for (int o = 0; o < objects.Count; o++)
@@ -139,19 +140,26 @@ namespace ThousandAndFirst
 							|| !KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out failure))
 							continue;
 						exactReceipt = true;
+						bool currentSnapshot = KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+							intent.EncodedSnapshot);
 						for (int a = 0; a < snapshot.Anchors.Count; a++)
 						{
 							ArchitectureAnchor anchor = snapshot.Anchors[a];
 							if (anchor == null || !(anchor.Key == "entrance:public"
 								|| anchor.Key.StartsWith("entrance:public@",
 									System.StringComparison.Ordinal))) continue;
-							int doorX;
-							int doorY;
-							if (!KingdomArchitectureRuntime.TryWorldAnchor(snapshot, rect, anchor,
-								out doorX, out doorY, out failure)) continue;
-							AddEntranceErrand(rect, doorX, doorY, routes, Errands);
+							if (!AddAuthoredEntranceErrand(Z, rect, snapshot, anchor,
+								routes, Errands) && !currentSnapshot) legacyReceiptFallback = true;
 						}
 					}
+				}
+				if (legacyReceiptFallback)
+				{
+					// An a1 snapshot predates the exterior-route invariant. Preserve its old
+					// heart-facing geometric path if its authored boundary cannot name one.
+					if (KingdomPlotRules.TryDoor(rect, HeartX, HeartY,
+						out int oldDoorX, out int oldDoorY))
+						AddEntranceErrand(rect, oldDoorX, oldDoorY, routes, Errands);
 				}
 				if (exactReceipt || receiptEvidence) continue;
 
@@ -187,6 +195,28 @@ namespace ThousandAndFirst
 			if (!Routes.Add(key)) return;
 			Errands.Add(new Errand(DoorX, DoorY, laneX, laneY,
 				KingdomRoadRules.RouteKind.DoorToLane));
+		}
+
+		private static bool AddAuthoredEntranceErrand(Zone Z,
+			KingdomPlotRules.PlotRect Rect, ArchitectureLayoutSnapshot Snapshot,
+			ArchitectureAnchor Entrance, ISet<string> Routes, IList<Errand> Errands)
+		{
+			List<ArchitecturePoint> exact = new List<ArchitecturePoint>();
+			if (!KingdomRoadRules.TryAuthoredLane(Snapshot, Rect, Entrance, exact,
+				out int doorX, out int doorY, out int laneX, out int laneY)
+				|| !InZone(Z, doorX, doorY) || !InZone(Z, laneX, laneY)) return false;
+			for (int i = 0; i < exact.Count; i++)
+				if (!InZone(Z, exact[i].X, exact[i].Y)) return false;
+			string key = doorX + "," + doorY + ">" + laneX + "," + laneY;
+			if (!Routes.Add(key)) return true;
+			Errands.Add(new Errand(doorX, doorY, laneX, laneY,
+				KingdomRoadRules.RouteKind.DoorToLane, exact));
+			return true;
+		}
+
+		private static bool InZone(Zone Z, int X, int Y)
+		{
+			return Z != null && X >= 0 && X < Z.Width && Y >= 0 && Y < Z.Height;
 		}
 
 		private static int CompareRects(KingdomPlotRules.PlotRect A,

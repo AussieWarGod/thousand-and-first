@@ -14,7 +14,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomFoundingTransaction
 	{
 		private static bool ClearExactReservationSet(Zone Site, string Authority,
-			string Realm, string VillageFaction)
+			string Realm, string VillageFaction, string ExternalBinding = null)
 		{
 			if (Site == null || string.IsNullOrEmpty(Authority))
 			{
@@ -34,6 +34,12 @@ namespace ThousandAndFirst
 			// Clear broad reservation before site evidence. A save cut therefore leaves the
 			// exact site marker available to reacquire authority; never an ownerless global lock.
 			if (!ReleaseGlobalReservation(Authority, Realm, VillageFaction))
+			{
+				return false;
+			}
+			if (KingdomExternalOwnershipBindingRuntime.HasStage(Site) &&
+				!RollbackExternalBinding(Site, Authority, ExternalBinding,
+					PublicationObserved: false))
 			{
 				return false;
 			}

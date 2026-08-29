@@ -81,6 +81,11 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.InvalidIndex;
 				return false;
 			}
+			if (!KingdomExperienceRuntime.TryAdmitNewFoundationTransientClaims(system, 1,
+				out KingdomExperienceCapacityFault _, out string _))
+			{
+				fault = KingdomCityFault.RowCapExceeded; return false;
+			}
 			int jobId = system.Jobs.MintJobId();
 			KingdomJobRow opened = new KingdomJobRow(jobId, KingdomJobKind.Delivery,
 				kind, (int)amount, sourceZone.ZoneId, destinationZoneId, now,

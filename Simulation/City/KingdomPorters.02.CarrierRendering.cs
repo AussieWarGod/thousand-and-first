@@ -30,17 +30,25 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return null;
 			}
+			GameObject pending;
+			int pendingCount = ExactPendingMint(Z, jobId, at, out pending);
+			if (pendingCount != 0)
+			{
+				if (pendingCount != 1 || !KingdomResidents.Bind(System, jobId,
+					KingdomBindingKind.Transient, Z.ZoneID, pending, TimeTicks)) return null;
+				KingdomSurvey.ObserveAddedToActive(Z, pending);
+				return pending;
+			}
 			GameObject body = GameObject.Create(KingdomGrowth.DefaultSettlerBlueprint);
 			if (body == null)
 			{
 				return null;
 			}
-			at.AddObject(body);
-			body.MakeActive();
 			// A carrier is a visitor, not a resident: never enrolled, never named on the roll,
 			// never counted in the population. The job id is the whole of their identity and it is
 			// what the sweep is keyed on.
 			body.SetIntProperty(KingdomResidents.JobIdProperty, jobId);
+			body.RequirePart<r_KingdomPorter>().JobId = jobId;
 			Settle(body);
 			string origin = KingdomResidentRules.OriginKey(originCode);
 			if (!string.IsNullOrEmpty(origin))
@@ -52,9 +60,45 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				render.DisplayName = "porter";
 			}
-			KingdomResidents.Bind(System, jobId, KingdomBindingKind.Transient, Z.ZoneID, body, TimeTicks);
+			GameObject accepted = null;
+			try { accepted = at.AddObject(body); } catch { }
+			finally { KingdomSurvey.ObserveAddResultInActive(Z, body, accepted); }
+			if (!ReferenceEquals(accepted, body) || !ReferenceEquals(body.CurrentCell, at))
+				return null;
+			body.MakeActive();
+			if (!KingdomResidents.Bind(System, jobId, KingdomBindingKind.Transient,
+				Z.ZoneID, body, TimeTicks))
+			{
+				KingdomLog.Log("porter: stamped unbound body waits for visible recovery");
+				return null;
+			}
 			KingdomSurvey.ObserveAddedToActive(Z, body);
 			return body;
+		}
+
+		private static int ExactPendingMint(Zone zone, int jobId, Cell standing,
+			out GameObject exact)
+		{
+			exact = null;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone);
+			if (survey == null || !survey.TryLoaded(out IList<GameObject> loaded)) return -1;
+			int count = 0;
+			for (int i = 0; i < loaded.Count; i++)
+			{
+				GameObject body = loaded[i];
+				int propertyStamp = body?.GetIntProperty(KingdomResidents.JobIdProperty) ?? 0;
+				int partStamp = body?.GetPart<r_KingdomPorter>()?.JobId ?? 0;
+				if (propertyStamp != jobId && partStamp != jobId) continue;
+				count++;
+				if (count == 1 && GameObject.Validate(body)
+					&& propertyStamp == jobId && partStamp == jobId
+					&& body.IsAlive && !body.IsPlayer() && !body.IsPlayerLed()
+					&& body.Blueprint == KingdomGrowth.DefaultSettlerBlueprint
+					&& ReferenceEquals(body.CurrentCell, standing)
+					&& KingdomOrdinaryCustody.TryProveEmpty(body, out string _)) exact = body;
+			}
+			if (count != 1) exact = null;
+			return count;
 		}
 
 		/// <summary>Puts a carrier where the model says they are, minting one if the registry says
@@ -70,6 +114,18 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			if (verdict == KingdomBindingVerdict.Move)
 			{
+				if (row.DeliveryCargoAuthority
+						== KingdomDeliveryCargoAuthority.ConstructionInput
+					&& row.DeliveryPhase == KingdomDeliveryPhase.SourceDebitPrepared)
+				{
+					KeepExactGoal(Z, bindingId);
+					return;
+				}
+				if (!KingdomPorterRouteRules.ReprojectsOnMove(row.DeliveryCargoAuthority))
+				{
+					KeepExactGoal(Z, bindingId);
+					return;
+				}
 				// Already standing here and already walking. The model's answer and the ground's
 				// may have drifted while the founder was in the room, so this is where the ground
 				// wins and the remainder of the itinerary shifts to match it (§3.7).
@@ -81,12 +137,27 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return;
 			}
-			if (!central && row.CargoAmount > 0)
-			{
-				Load(body, KingdomData.CropForStyle(System.Style), row.CargoAmount);
-			}
 			r_KingdomPorter part = body.RequirePart<r_KingdomPorter>();
 			part.JobId = bindingId;
+			if (!central && row.CargoAmount > 0)
+			{
+				if (Load(body, KingdomData.CropForStyle(System.Style), row.CargoAmount,
+					row.JobId) != row.CargoAmount)
+				{
+					Fail(System, row.JobId);
+					return;
+				}
+			}
+			if (row.DeliveryCargoAuthority
+					== KingdomDeliveryCargoAuthority.ConstructionInput
+				&& row.DeliveryPhase == KingdomDeliveryPhase.SourceDebitPrepared)
+			{
+				part.DestX = row.DeliverySourceX;
+				part.DestY = row.DeliverySourceY;
+				part.ExitX = row.DeliverySourceX;
+				part.ExitY = row.DeliverySourceY;
+				return;
+			}
 			KingdomLeg leg;
 			if (row.TryLeg((fix.LegIndex < 0) ? 0 : fix.LegIndex, out leg))
 			{
@@ -113,6 +184,25 @@ namespace ThousandAndFirst.Simulation.City
 				+ " at " + fix.X + "," + fix.Y);
 		}
 
+		/// <summary>Authority-2 movement is already frozen by its parent receipt. Wake the same
+		/// body and retain its exact persisted destination; only restore that goal if engine state
+		/// lost it. This never rewrites job rows, route timing, or owner evidence.</summary>
+		private static void KeepExactGoal(Zone Z, int bindingId)
+		{
+			GameObject body = Resolve(bindingId);
+			r_KingdomPorter part = body == null ? null : body.GetPart<r_KingdomPorter>();
+			Brain brain = body == null ? null : body.Brain;
+			Cell target = part == null || Z == null ? null : Z.GetCell(part.DestX, part.DestY);
+			if (brain == null || target == null) return;
+			brain.Wake();
+			Cell moving = brain.MovingTo();
+			if ((moving != null && moving.X == target.X && moving.Y == target.Y
+					&& moving.ParentZone != null && string.Equals(moving.ParentZone.ZoneID,
+						Z.ZoneID, StringComparison.Ordinal))
+				|| ReferenceEquals(body.CurrentCell, target)) return;
+			Walk(body, Z, part.DestX, part.DestY);
+		}
+
 		/// <summary>
 		/// The re-projection rule, at the one place &sect;3.7 puts it: check-in, where the ground
 		/// already wins.
@@ -132,6 +222,11 @@ namespace ThousandAndFirst.Simulation.City
 		private static void Reproject(KingdomSystem System, Zone Z, KingdomJobRow row,
 			KingdomItineraryFix fix, long TimeTicks, int bindingId)
 		{
+			if (!KingdomPorterRouteRules.ReprojectsOnMove(row.DeliveryCargoAuthority))
+			{
+				KeepExactGoal(Z, bindingId);
+				return;
+			}
 			GameObject body = Resolve(bindingId);
 			r_KingdomPorter part = (body == null) ? null : body.GetPart<r_KingdomPorter>();
 			Cell at = (body == null) ? null : body.CurrentCell;
@@ -165,43 +260,5 @@ namespace ThousandAndFirst.Simulation.City
 				+ " ticks on leg " + fix.LegIndex + "; the remainder shifts and nothing sprints");
 		}
 
-		/// <summary>The load, put into the real container it was carried to. One medium reify unit
-		/// (&sect;0.0(b)): one item stack into one container.</summary>
-		private static void Deposit(KingdomSystem System, Zone Z, GameObject Body, r_KingdomPorter Part, KingdomJobRow row, long TimeTick)
-		{
-			Cell at = Z.GetCell(Part.DestX, Part.DestY);
-			GameObject store = LarderAt(at);
-			if (store == null || store.Inventory == null)
-			{
-				// The larder was struck while the porter was walking to it. The goods are real and
-				// stay on their back; the overrun rule closes the job and tells it.
-				return;
-			}
-			List<GameObject> carried = Body.Inventory == null ? null : Body.Inventory.GetObjects();
-			int landed = 0;
-			for (int i = 0; carried != null && i < carried.Count; i++)
-			{
-				GameObject item = carried[i];
-				if (!GameObject.Validate(item))
-				{
-					continue;
-				}
-				Body.Inventory.RemoveObject(item);
-				store.Inventory.AddObject(item, Silent: true);
-				landed++;
-			}
-			KingdomJobTable table;
-			KingdomJobTable next;
-			KingdomCityFault fault;
-			if (System.Jobs.TryRead(out table, out fault)
-				&& table.TryReplace(row.WithCargoLanded(), out next, out fault))
-			{
-				System.Jobs.TryPublish(next, out fault);
-			}
-			System.Ledger.Note("{{G|" + KingdomCityRules.PorterNote(landed, store.ShortDisplayName) + "}}");
-			XRL.Messages.MessageQueue.AddPlayerMessage("{{G|" + KingdomCityRules.PorterNote(landed, store.ShortDisplayName) + "}}");
-			KingdomLog.Log("porter: job " + row.JobId + " deposited " + landed + " into " + store.ShortDisplayName);
-			Walk(Body, Z, Part.ExitX, Part.ExitY);
-		}
 	}
 }

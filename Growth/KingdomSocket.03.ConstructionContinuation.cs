@@ -37,7 +37,7 @@ namespace ThousandAndFirst
 				Cell center = Z.GetCell(rect.CenterX, rect.CenterY);
 				if (!MayProject || sourceState != KingdomPhysicalLookupState.Exact
 					|| !GameObject.Validate(source) || source.CurrentZone != Z
-					|| source.CurrentCell != center || source.ID != current.SourceId
+					|| source.CurrentCell != center || source.IDIfAssigned != current.SourceId
 					|| source.GetPart<r_KingdomSocket>() == null
 					|| !KingdomConstruction.HasReceipt(source, current)
 					|| !KingdomPlots.TryReadRect(source, out var observed)
@@ -54,7 +54,7 @@ namespace ThousandAndFirst
 				GameObject exactSource;
 				if (!KingdomConstruction.Owns(System, Z, current)
 					|| !KingdomConstruction.IsCurrent(current) || !GameObject.Validate(source)
-					|| source.CurrentCell != center || source.ID != current.SourceId
+					|| source.CurrentCell != center || source.IDIfAssigned != current.SourceId
 					|| source.GetPart<r_KingdomSocket>() == null
 					|| !KingdomConstruction.HasReceipt(source, current)
 					|| KingdomConstruction.FindExactId(Z, current.SourceId, out exactSource)
@@ -158,8 +158,8 @@ namespace ThousandAndFirst
 			}
 			if (worksState == KingdomPhysicalLookupState.Exact)
 			{
-				if (current.SubjectId != works.ID
-					&& !KingdomConstruction.UpdateSubject(ref current, works.ID)) return;
+				if (current.SubjectId != works.IDIfAssigned
+					&& !KingdomConstruction.UpdateSubject(ref current, works.IDIfAssigned)) return;
 				if (current.Phase != KingdomConstructionPhase.Working)
 					KingdomConstruction.FinishProjection(ref current, true, true);
 				if (current.PhysicalAmount != 1
@@ -182,7 +182,7 @@ namespace ThousandAndFirst
 			{
 				if (KingdomConstruction.FindExactId(Z, current.SourceId, out _)
 					!= KingdomPhysicalLookupState.Absent
-					|| !GameObject.Validate(works) || works.ID != current.OutputId
+					|| !GameObject.Validate(works) || works.IDIfAssigned != current.OutputId
 					|| !KingdomConstruction.HasReceipt(works, current)
 					|| !KingdomConstruction.Owns(System, Z, current)
 					|| FindSocketResult(Z, current, false, out var exactWorks)

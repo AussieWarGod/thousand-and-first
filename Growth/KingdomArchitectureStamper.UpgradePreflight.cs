@@ -34,15 +34,29 @@ namespace ThousandAndFirst
 			KingdomArchitectureIntent before;
 			ArchitectureLayoutSnapshot snapshot;
 			string lot;
-			if (Transition == null || !TryReadOwner(Owner, out before, out snapshot, out lot,
-				out Failure) || Transition.FromBuildKey != before.BuildKey
-				|| Transition.ToBuildKey != Successor?.BuildKey
-				|| Transition.LotType != before.LotType
-				|| Transition.LotSize != before.LotSize)
+			if (!TryReadOwner(Owner, out before, out snapshot, out lot, out Failure) ||
+				!KingdomSocketTransitions.TryResolveCurrent(Transition, before.BuildKey,
+					Successor?.BuildKey, before.LotType, before.LotSize,
+					out KingdomSocketTransition declared)
+				|| !ExactTransitionClaim(PaidClaim, declared.Materials))
 				return Failure != null ? false : Fail(
-					"same-set declaration does not match its frozen endpoints", out Failure);
+					"same-set declaration or paid claim is not exactly current", out Failure);
 			return TryPreflightUpgradeCore(System, Z, Owner, Successor, PaidClaim, true,
 				out Delta, out Failure);
+		}
+
+		private static bool ExactTransitionClaim(KingdomMaterialDebitCost Claim,
+			KingdomMaterialTally Materials)
+		{
+			if (Claim == null || Materials == null) return false;
+			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
+				if (Claim.Materials.Get((KingdomMaterial)i)
+					!= Materials.Get((KingdomMaterial)i)) return false;
+			for (int i = 0; i < KingdomMaterialRules.BitTierCount; i++)
+				if (Claim.Bits.Get(i) != 0) return false;
+			for (int i = 0; i < KingdomMaterialRules.ExoticCount; i++)
+				if (Claim.Exotics.Get((KingdomExotic)i) != 0) return false;
+			return true;
 		}
 
 		private static bool TryPreflightUpgradeCore(KingdomSystem System, Zone Z,

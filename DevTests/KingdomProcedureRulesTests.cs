@@ -8,6 +8,20 @@ namespace ThousandAndFirst.Tests
 	public class KingdomProcedureRulesTests
 	{
 		[Test]
+		public void LabConsumersFenceProtectedCustodyAtSelectionMoveAndDestruction()
+		{
+			string preparation = TestMain.ReadRepositoryText("Growth/KingdomLab.Preparation.cs");
+			string spend = TestMain.ReadRepositoryText("Growth/KingdomLab.KeptSpend.cs");
+			string receipts = TestMain.ReadRepositoryText("Growth/KingdomLab.VatReceipts.cs");
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.CanMutate(leases, item)", preparation);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TryObjectNow(part", preparation);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TryObjectNow(item", spend);
+			StringAssert.Contains("SourceAt(Preparation", spend);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TryObjectNow(Raw", receipts);
+			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TryObjectNow(Output", receipts);
+		}
+
+		[Test]
 		public void PublicLabTypes_KeepTheirPublishedMetadata()
 		{
 			Assert.AreEqual("ThousandAndFirst.LabAttach", typeof(LabAttach).FullName);
@@ -1009,6 +1023,19 @@ namespace ThousandAndFirst.Tests
 		public void RungName_NamesEachRungTheWayAFounderWould(int rung, string expected)
 		{
 			Assert.AreEqual(expected, KingdomProcedureRules.RungName(rung));
+		}
+
+		[Test]
+		public void ReopenedSafeWishlistShipsWithExactCostsAndDisclosures()
+		{
+			string xml = TestMain.ReadRepositoryText("KingdomProcedures.xml");
+			StringAssert.Contains("Key=\"packstooth\"", xml);
+			StringAssert.Contains("Grants=\"Swarmer\"", xml);
+			StringAssert.Contains("alone, it does nothing at all", xml);
+			StringAssert.Contains("Key=\"nephalsfurnace\"", xml);
+			StringAssert.Contains("Grants=\"TemperatureVenting\"", xml);
+			StringAssert.Contains("Knowledge=\"rite:Girsh,node:graft\"", xml);
+			StringAssert.Contains("the steam or cryogenic gas has no loyalty", xml);
 		}
 	}
 }

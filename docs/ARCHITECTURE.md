@@ -1,14 +1,14 @@
 # Architecture
 
-The Thousand and First is a Caves of Qud scripting mod. Qud streams root XML and compiles shipped
-C#; no standalone executable or server exists. `Tools/stage.sh` is the canonical inventory of
+The Thousand and First is a Caves of Qud scripting mod. Qud streams declared XML directories and
+compiles their shipped C#; no standalone executable or server exists. `Tools/stage.sh` is the canonical inventory of
 what reaches the game and Workshop package. [STATUS.md](STATUS.md) is the canonical short evidence
 snapshot; this document describes design, not release signoff.
 
 ## Shape
 
 ```text
-root XML registries ──> loaders/catalogues ──> pure *Rules decisions
+RuntimeData XML registries ──> loaders/catalogues ──> pure *Rules decisions
                                                   │
 Qud events/objects ──> systems, parts, adapters ──┼──> physical mutations
                                                   ├──> persisted books/receipts
@@ -30,14 +30,44 @@ refuse a retry safely.
 | `Simulation/City/` | City state/rules, semantic clocks, execution, bindings, residents, jobs, logistics, networks, production, happenings, and engine-facing city parts/systems. |
 | `Experience/` | Rites, belief, offices, notables, succession, and persisted lifecycle/carry/growth transaction books and wire codec. |
 | `Chronicle/` | Realm history and receipt rules. |
+| `Polity/` | Realm-scoped semantic polity authority plus narrow Qud projection adapters: foundation/faction recovery, immutable NPC resolution, finite loaded-endpoint cohorts, first-contact diplomacy, and visible witnessed clash cleanup. Semantic rules remain separate from engine-facing `*Runtime`/part shards. |
 | `Trade/`, `Quests/`, `Raids/` | Trade manifests/routes, asks/petitions/bounties, and witnessed raid behavior. |
 | `World/` | Explicit opt-in cross-run inheritance world hooks and inherited-site builders. |
 | `Api/` | Versioned third-party extension contracts, immutable readings, admission, and clamping. Public contract is documented in [API.md](API.md). |
 | `Debug/` | Wishes and reversible diagnostic probes; never ordinary-save behavior. |
-| Root `*.xml` | Mergeable content registries, blueprints, options, books, procedures, research, and population data. |
+| `RuntimeData/` | Mergeable content registries, blueprints, options, books, procedures, research, and population data. Keeping runtime XML off the recursive root makes optional typed shards isolatable. |
+| `Integrations/Hearthpyre223/` | Exact Hearthpyre 2.2.3 typed, read-only ownership translator. The manifest omits it unless that exact enabled dependency loaded first. |
 | `DevTests/` | Engine-free rule/source-contract NUnit runner. It is excluded from runtime staging. |
 | `Tools/` | Canonical staging, compile/ABI/release gates, isolated smoke profile, and log checks. |
 | `Art/` | Runtime tile/reference policy and XML cross-reference audits; excluded from staging. |
+
+### Optional typed-directory boundary
+
+`manifest.json` declares every common runtime directory positively and declares the Hearthpyre
+shard in a separate row with dependency range `2.2.3`. It never declares `/`: Qud loads declared
+paths recursively, so a common root row would silently subsume every optional child. Missing,
+disabled, wrong-version, failed, or later-loading Hearthpyre therefore selects the same core
+C#/XML set; exact 2.2.3 adds only `Integrations/Hearthpyre223`. Root README, manifest, preview,
+license, and Workshop metadata remain package artifacts, not loader paths.
+
+The core protocol carries only stable strings, GUID text, zone/parasang evidence, and a provider
+interface. A marked provider receives the exact active `Zone`; it may observe but must not load a
+remote zone or mutate either ownership system. The built-in translator cross-proves Hearthpyre's
+parasang, settlement-GUID, zone-sector, sector-GUID, and settlement-local sector registries. TAF's
+founding receipt owns the explicit-none or exact-bind decision. It stores a canonical v1 encoding
+inside the v2 payload digest before water intent/debit, stages its self-describing half first under
+the existing site/global authority, and rechecks the live observation before debit and before
+publication. Both modes become permanent TAF claim evidence. Two-property CAS recovery admits
+only absent or exact halves; claim retry retains any partial TAF publication. Active-zone
+activation, thaw, suspension, stationary work, semantic work, and mutating Charter entry all gate
+before civic mutation. This is claim evidence, not foreign lifecycle or construction authority.
+
+`Tools/check-manifest-directories.py` models the engine's directory predicate and emits exact
+cold-install hashes for absent, exact-present, wrong-version, disabled, failed, and bad-load-order
+states. `Tools/check-hearthpyre-abi.py` pins the reviewed 2.2.3 manifest/source hashes, checks the
+tracked non-shipping compile stub, rejects foreign type references in core, and bans lifecycle,
+catalog, and remote-zone APIs from the typed shard. `Tools/gate.sh` runs both proofs, compiles core
+alone, then compiles the one optional shard against that ABI assembly.
 
 ### Split-authority map
 
@@ -49,6 +79,8 @@ split by responsibility. Search these families instead of assuming one monolithi
 | Lifecycle state | Lifecycle/carry/growth/raid declaration files under `Experience/`; `Experience/KingdomLifecycleWireCodec*.cs` | Persisted books, operations, receipts, leases, outboxes, declarations, and wire read/write/upgrade lanes. |
 | Lifecycle rules | `Experience/KingdomLifecycleRules.cs`, `Experience/KingdomLifecycle*Rules.cs`, and `Experience/KingdomGrowthLifecycle*Rules.cs` | Validation, normalization, conservation, transitions, recovery, callbacks, and trusted physical observations. |
 | Realm archive | `Core/KingdomRealmArchive.*.cs` plus `Core/KingdomRealmArchivePhase.cs` and `Core/KingdomRealmCallback*.cs` | Capture, authority hash, bounded validation, graph matching, exact clone, callback/job/delivery evidence, and wire registry. |
+| Semantic polity authority | `Polity/KingdomPolityLedger.cs`, `Polity/KingdomPolity*State.cs`, `Polity/KingdomPolityRules.*.cs`, and `Polity/KingdomPolityCodec.*.cs` | Bounded polity/relation/profile/route/front/cohort/figure/incident meaning, whole-graph validation, independent options, strict current/prior/future wire behavior, and declared compaction. |
+| Polity projection adapters | `Polity/KingdomPolityRuntime.cs`, `Polity/KingdomPolityFactionRuntime.cs`, `Polity/KingdomPolityNpcRuntime.cs`, `Polity/KingdomPolityEndpointRuntime*.cs`, `Polity/KingdomPolityVisit*.cs`, `Polity/KingdomPolityResidentRuntime.cs`, and `Polity/r_KingdomPolityCohortBody.cs` | Exact foundation/faction reconciliation, fresh profile-derived bodies, loaded-endpoint prepare/commit/cleanup, one bounded imported-polity visit, player terms, visible clash witness, and exact groomed-resident successor bridge. |
 | Founding transaction | `Core/KingdomFoundingTransaction.*.cs` | Reservation, staging, first/second-city publication, receipt recovery, faction/chronicle projection, and engine projection. |
 | Laboratory runtime | `Growth/KingdomLab.cs`, `Growth/KingdomLab.*.cs`, and the moved `Growth/r_Kingdom*.cs` laboratory IParts | Candidate selection, funding, commission/application/removal state, vats, governance, recovery, and XML-resolved part identities. |
 | Plot rules | `Growth/KingdomPlotRules.cs`, `Growth/KingdomPlot*Rules.cs`, and `Growth/KingdomPlotDeclarations.cs` | Typed-lot bounds, siting, ground/roof/heart evidence, stages, refusal, transition chain, and codec. |
@@ -67,9 +99,9 @@ split by responsibility. Search these families instead of assuming one monolithi
 | Post-`2cb97fc` growth, raid, and inheritance adapters | The ordered `Growth/KingdomGrowth.z*.cs`, `Growth/KingdomMaterials.[0-9][0-9].*.cs`, `Growth/KingdomProcedures.[0-9][0-9].*.cs`, `Growth/KingdomSocket.[0-9][0-9].*.cs`, `Growth/KingdomUpgrade.[0-9][0-9].*.cs`, `Growth/KingdomWear.[0-9][0-9].*.cs`, `Raids/KingdomRaids.[0-9][0-9].*.cs`, and `World/KingdomInheritanceState.z*.cs` families, plus their type-named declarations | Growth activation/arrivals/work/scarcity, physical material and clearance transactions, procedure ownership/application/removal, socket and wear transactions, improvement funding/projection/handover, raid answers/projection/recovery, and inherited-state selection/install/release while preserving serialized identities and original member order. |
 | Survey, road, and city runtime adapters | The ordered `Growth/KingdomSurvey.[0-9][0-9].*.cs` and `Growth/KingdomRoads.[0-9][0-9].*.cs` families plus their anchors; `Simulation/City/KingdomCity.cs` and ordered `Simulation/City/KingdomCity.z*.cs` shards | One bound classified survey and maintained indexes; road observation, errands, paving, physical receipts, and presentation; city journal identity, check-in/out, sightings, reckoning, physical reification, budgets/networks, carry/reconciliation, works/audit, publication, and dedication. |
 | Civic runtime authorities split after hosted checkpoint `1c2d619` | The ordered `Simulation/City/KingdomCentralLogistics.[0-9][0-9].*.cs`, `KingdomResidents.[0-9][0-9].*.cs`, `KingdomPhysicalHappenings.[0-9][0-9].*.cs`, `KingdomPorters.[0-9][0-9].*.cs`, and `KingdomCityBook.[0-9][0-9].*.cs` families; `Growth/KingdomPurpose.[0-9][0-9].*.cs`, `KingdomZoning.[0-9][0-9].*.cs`, `KingdomCrops.[0-9][0-9].*.cs`, and `KingdomDelveLink.[0-9][0-9].*.cs`; `Trade/KingdomTradeState.[0-9][0-9].*.cs`; `Core/KingdomFounding.[0-9][0-9].*.cs` and `KingdomCreed.[0-9][0-9].*.cs`; and `Raids/KingdomRaidIncidentRules.[0-9][0-9].*.cs`, each plus its anchor | Scalar/manifest custody and routes; resident identity and binding; physical happening recovery; porter movement; city-book state; purpose cargo; zoning/knowledge; crops; delve receipts; trade wire/state; founding and claims; creed/dissent; and raid incident publication/recovery. Logical-source helpers preserve original member/declaration order for source contracts; CityBook alone extracts ordered private normalization helpers without changing save columns or public ABI. |
-| City state, calculation, network, and happening lifecycle | `Simulation/City/KingdomBindingRegistry*.cs`; `Simulation/City/KingdomCityState*.cs` plus type-named city rows; `Simulation/City/KingdomCityRules*.cs` plus reckon declarations; `Simulation/City/KingdomDistanceMatrix*.cs` and `KingdomDistanceRuntime*.cs`; `Simulation/City/KingdomJobRegistry.[0-9][0-9].*.cs`; `Simulation/City/KingdomNetworkRules*.cs`, `KingdomNetworkGraph*.cs`, and type-named network rows; `Simulation/City/KingdomHappeningLifecycleRules*.cs` plus lifecycle declarations; and the `KingdomResidentRules*`, `KingdomStocks*`, and `KingdomWorkRules*` families | Frozen city DTO/state mutation, binding and distance caches, job-registry wire/state mutation, graph and transfer computation, declared typed-network topology and carry, happening transition/recovery/codec/wire validation, resident decisions, stock projection, and work execution. |
+| City state, calculation, network, and happening lifecycle | `Simulation/City/KingdomBindingRegistry*.cs`; `Simulation/City/KingdomCityState*.cs` plus type-named city rows; `Simulation/City/KingdomCityRules*.cs` plus reckon declarations; `Simulation/City/KingdomDistanceMatrix*.cs` and `KingdomDistanceRuntime*.cs`; `Simulation/City/KingdomJobRegistry.z*.cs`; `Simulation/City/KingdomNetworkRules*.cs`, `KingdomNetworkGraph*.cs`, and type-named network rows; `Simulation/City/KingdomHappeningLifecycleRules*.cs` plus lifecycle declarations; and the `KingdomResidentRules*`, `KingdomStocks*`, and `KingdomWorkRules*` families | Frozen city DTO/state mutation, binding and distance caches, job-registry wire/state mutation, graph and transfer computation, declared typed-network topology and carry, happening transition/recovery/codec/wire validation, resident decisions, stock projection, and work execution. |
 | City and deterministic kernel rules | The `Simulation/City/KingdomAdvanceRules*`, `KingdomBookRules*`, `KingdomBudgetRules*`, `KingdomCatchUpRules*`, `KingdomCityMemoryRules*`, `KingdomDistanceSliceRules*`, `KingdomExecutor*`, `KingdomFlowRules*`, `KingdomItineraryRules*`, and `KingdomStations*` families; `Simulation/Kernel/CounterRandom*.cs` | Arithmetic and clocks, roll/budget declarations, catch-up, memory calculations, distance, execution, flow, itinerary projection, station claims, and deterministic draws. |
-| Creed, bounty, and behavior API decisions | `Core/KingdomCreedRules*.cs` plus type-named creed verdicts; `Quests/KingdomBountyRules*.cs` plus type-named bounty phases; `Api/KingdomBehaviourRules*.cs` plus behavior/job/carrier declarations | Creed dominance/dissent/reporting, bounty identity/payment/scheduling/taking/frontier/prose, and bounded extension job/network planning and canonical wire behavior. |
+| Creed, bounty, and behavior API decisions | `Core/KingdomCreedRules*.cs` plus type-named creed verdicts; `Quests/KingdomBountyRules*.cs`, `KingdomBountyManningRules.cs`, and type-named bounty phases; `Api/KingdomBehaviourRules*.cs` plus behavior/job/carrier declarations | Creed dominance/dissent/reporting; bounty identity/payment/scheduling/taking/frontier/prose plus exact resident/work reserved-crew serviced time guarded by option/master and endpoint-availability epochs; and bounded extension job/network planning and canonical wire behavior. |
 | Quest, trade, and inherited-site adapters | `Quests/KingdomAskRules*.cs`, `Quests/KingdomPetitionRules*.cs`, the ordered `Trade/KingdomTrade.[0-9][0-9].*.cs` family, `Trade/KingdomTradePatternRules*.cs`, `World/KingdomInheritedSiteBuilder*.cs`, and `World/KingdomInheritanceWorld*.cs` | Ask/petition rendering and state, trade runtime/selection, inherited-site construction/fallback, and world-extension publication. |
 
 The map above covers 144 additional semantic decompositions in the current hardening sequence; with
@@ -93,6 +125,93 @@ City simulation uses deterministic state and books under `Simulation/City`; engi
 dispatches semantic work and projects results into existing realm surfaces. Physical resources
 remain game objects or liquids. Abstract ledgers are evidence and reports, not permission to mint
 or delete physical stock.
+
+### Hosted arcology authority
+
+The arcology is the fifth and final rite-owned heart rung, not a second surface commission. A
+`KingdomHostedArcologyAuthority` row reserves the exact great-court predecessor and improvement
+job before debit, then binds the exact successor root after handover. Two fixed game-state slots
+retain at most the current realm and the single realm named by `ExiledRealmArchive`; an authority
+outside those two exact identities is the only row eligible for deterministic replacement. Thus
+repeated exile/refounding cannot mint an unbounded family of save keys. Same-capital
+zoning may re-read that reservation, but only the exact carrier/job can confirm it; a second shell,
+duplicate ID, malformed receipt, or foreign carrier refuses or quarantines. Moving the crown leaves
+the historical shell intact and dark. A loaded foreign shell is inert and is not relabelled or
+quarantined merely because another realm is current.
+
+`r_KingdomArcology` owns a bounded list of versioned hosted-lot receipts. Paid lots use the shared
+construction registry's append-only `HostedArcology` route, composite water/material/bit/exotic
+debit, pre-callback projection states, exact root receipt, prior-pass staffing, and 36,000-tick
+loaded-ground catch-up cap. Active supports fold into the root only while it remains the current
+capital; terrace food additionally requires current stored fresh water. No actor, liquid, food, or
+material is created inside an unloaded floor.
+
+Vanilla `Interior` parts own the persistent atrium, ward, and terrace zones. Nested lift hosts
+resolve back to the exact exterior root without loading a remote zone. Paid furnishings reconcile
+additively by deterministic root/role IDs; displacement or duplication quarantines and nothing is
+deleted speculatively. The atrium preserves the old court/basin as architecture. Read-only hosted
+views use a separate eligibility/render seam supplied the exact already-loaded host zone/root; it
+cannot enqueue research or mutate the knowledge graph. The caller snapshots realm/root/zone
+identity and rechecks it after eligibility and rendering before showing the result.
+
+### Heart ring-call relocation authority
+
+`KingdomRelocation` owns one zone property, `r_TAF_HeartRelocationReceipt`, for a founder-approved
+ring call. Planning is mutation-free: it discovers only exact finished settlement-built yielding
+plot roots blocking the next Heart rect, freezes every plot-part object ID/blueprint/offset plus the
+root's architecture snapshot/hash/pose, and sends same-sized candidates through the existing
+`KingdomPlotRules.ChooseRect` scorer. A manual destination is an override into that same lawful
+candidate set. The complete source→destination slate is re-surveyed and compared immediately before
+the first receipt publication; cancel or changed evidence costs nothing.
+
+The durable receipt advances one move and one visible crew frame at a time. Labour completes the
+receiving frame while the old plot remains standing and working. Handover then roots each original
+`GameObject` in game state, CAS-publishes row state around removal/add callbacks, and places that
+same object at the translated cell; it never clones, restakes, strikes, or debits stores. The root's
+rect, footprint/roof, and frozen architecture intent are translated only after every row arrives, so
+stable LotId-based lodging and every object-owned inventory, part, name, wear, staff/hold/job, and
+network declaration survive unchanged. Creatures, the player, protected work, changed natural
+ground, duplicate IDs, or callback divergence pause or quarantine without displacement. Activation,
+thaw, cold load, frame loss, ownership loss, and partial handover reconcile from the bounded receipt
+and rooted escrow; completed topology is re-solved before Heart growth is offered again.
+
+### Polity authority
+
+`KingdomSystem.PolityLedger` is the single realm-scoped authority for polity meaning. It persists
+canonical bounded polity records, directional relations, immutable fact-derived profile revisions,
+semantic routes, grievances/fronts, resolved finite cohort plans, scarce named figures, witnessed
+incident plans and conclusions, projection receipts, presentation/import options, and compaction
+proof. Engine factions, bodies, conversations, map marks, and encounter objects are projections;
+their existence cannot repair, extend, or override the ledger.
+
+The authority admits at most one substantive live external polity, one active front, eight routes,
+seven bodies per cohort, and one named representative per cohort. Conflict plans freeze disclosed
+participants, surfaces, stakes, and intervention choices, never victory or casualties. A live scene
+may conclude from freshly observed facts. The separately consented escrow lane may spend only an
+exact reserved stake and at most one reversible wound. Views and aftermath are presentation, not
+conclusion authority. Creed or opposition alone never creates a grievance or war.
+
+Trade remains sole physical cargo/custody authority; resident and binding books remain sole current
+person/body authority; archive/seal state remains sole cross-run historical source. Polity adapters
+must bridge those owners with exact receipts instead of copying their facts into parallel stores.
+No adapter may load a zone to advance a route, keep an actor walking unloaded tiles, or settle
+conquest/casualties unseen. A non-empty ledger cannot silently change realm owner across
+exile/refounding. `KingdomSystem.PolityTransition` implements that explicit transformation: old
+semantic polities end at the archive close tick, owned factions tombstone, exact return bytes remain
+escrowed only until return/refound, and a refound binds fresh realm/polity/faction ids to bounded
+institutional legacy facts. Unknown future wire stays
+opaque and inert, while invalid current state quarantines whole and remains inspectable.
+
+The implemented gameplay consumer is deliberately finite. Foundation publishes the current realm
+and at most one opted-in legacy-derived partner/rival with fresh ids; owned faction projection then
+activates it. One semantic delegation route freezes one owned-settlement endpoint. After its due
+tick, optional presentation may create a two-body envoy only on that loaded claimed ground. A
+rival's exact claim can lead through terms to a three-body refusal warband; only a visible loaded
+body event can conclude that clash. Exact cleanup removes cohort-owned bodies/gear, returns foreign
+objects to the loaded cell, and never resurrects a missing committed body. Presentation disabling
+does not stop semantic time and re-enable cannot backlog old causes. General Trade cargo,
+correspondence UI, other cohort schedulers, multi-city traffic, and physical hospitality remain
+separate consumers, not behavior inferred from this vertical.
 
 ### Resident authority
 

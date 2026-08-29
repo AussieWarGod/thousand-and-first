@@ -96,33 +96,42 @@ require_release_tag() {
 		echo "release package requires annotated tag v$VERSION at HEAD" >&2; exit 3; }
 }
 
-require_release_structure() {
-	local gate_path gate_entry gate_metadata gate_tracked_path gate_mode gate_kind gate_blob
-	gate_path="Tools/check-structure.py"
-	gate_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- "$gate_path")"
-	[ -n "$gate_entry" ] || {
-		echo "release package requires $gate_path in HEAD" >&2; return 1; }
-	gate_metadata="${gate_entry%%$'\t'*}"
-	gate_tracked_path="${gate_entry#*$'\t'}"
-	read -r gate_mode gate_kind gate_blob <<< "$gate_metadata"
-	[ "$gate_tracked_path" = "$gate_path" ] && [ "$gate_kind" = "blob" ] \
-		&& { [ "$gate_mode" = "100644" ] || [ "$gate_mode" = "100755" ]; } || {
-		echo "structural release gate is not an ordinary file in HEAD: $gate_path" >&2
-		return 1
-	}
-	[ -f "$REPO/$gate_path" ] && [ ! -L "$REPO/$gate_path" ] \
-		&& [ "$(git hash-object -- "$REPO/$gate_path")" = "$gate_blob" ] || {
-		echo "structural release gate does not match HEAD: $gate_path" >&2
-		return 1
-	}
-	# Clean checks around the binding gate make its stage inventory, source bytes, and
-	# semantic-review ledger evidence from this exact committed checkout.
-	require_clean_head
-	PYTHONDONTWRITEBYTECODE=1 python3 "$REPO/$gate_path" --repo-root "$REPO" --release
-	require_clean_head
+extract_head_blob() {
+	local path="$1" output="$2" label="$3" mode_policy="$4"
+	local entry metadata tracked_path mode kind blob
+	entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- ":(literal)$path")"
+	[ -n "$entry" ] || {
+		echo "release package requires $label in HEAD: $path" >&2; return 1; }
+	metadata="${entry%%$'\t'*}"
+	tracked_path="${entry#*$'\t'}"
+	read -r mode kind blob <<< "$metadata"
+	[ "$tracked_path" = "$path" ] && [ "$kind" = "blob" ] || {
+		echo "$label is not an ordinary file in HEAD: $path" >&2; return 1; }
+	case "$mode_policy:$mode" in
+		ordinary:100644|ordinary:100755|nonexec:100644) ;;
+		*) echo "$label has an unsafe Git mode in HEAD: $path ($mode)" >&2; return 1 ;;
+	esac
+	git cat-file blob "$blob" > "$output"
 }
 
-[ "$MODE" != "release" ] || require_release_structure
+require_release_structure() {
+	local path
+	extract_head_blob "Tools/check-structure.py" "$STRUCTURE_GATE_FILE" \
+		"structural release gate" ordinary
+	extract_head_blob "docs/STRUCTURE_REVIEW.json" "$STRUCTURE_LEDGER_FILE" \
+		"exact-inventory semantic review" nonexec
+	: > "$STRUCTURE_INVENTORY_FILE"
+	while IFS= read -r path; do
+		case "$path" in *.cs) printf '%s\n' "$path" >> "$STRUCTURE_INVENTORY_FILE" ;; esac
+	done < "$LIST_FILE"
+	[ -s "$STRUCTURE_INVENTORY_FILE" ] || {
+		echo "structural release inventory contains no production C#" >&2; return 1; }
+	assert_scratch_workspace "before immutable structural release gate"
+	PYTHONDONTWRITEBYTECODE=1 python3 "$STRUCTURE_GATE_FILE" \
+		--repo-root "$BUILD_DIR" --inventory-file "$STRUCTURE_INVENTORY_FILE" \
+		--review-ledger "$STRUCTURE_LEDGER_FILE" --release
+	assert_scratch_workspace "after immutable structural release gate"
+}
 
 SCRATCH_DIR=""
 SCRATCH_ID=""
@@ -140,6 +149,12 @@ CANDIDATE_LIST=""
 CANDIDATE_PROOF_FILE=""
 CANDIDATE_MANIFEST=""
 CANDIDATE_WORKSHOP=""
+ARTIFACT_LIST=""
+TESTING_FILE=""
+EVIDENCE_ROOT=""
+STRUCTURE_GATE_FILE=""
+STRUCTURE_LEDGER_FILE=""
+STRUCTURE_INVENTORY_FILE=""
 PUBLISHED_DEST_ID=""
 PUBLISHED_RECEIPT_ID=""
 RECEIPT_PAYLOAD_SHA=""
@@ -514,11 +529,19 @@ new_scratch_file PROOF_FILE proof
 new_scratch_file ACTUAL_LIST actual-list
 if [ "$MODE" = "release" ]; then
 	new_scratch_file EVIDENCE_FILE evidence
+	new_scratch_file ARTIFACT_LIST artifact-list
+	new_scratch_file TESTING_FILE testing
+	new_scratch_file STRUCTURE_GATE_FILE structure-gate
+	new_scratch_file STRUCTURE_LEDGER_FILE structure-ledger
+	new_scratch_file STRUCTURE_INVENTORY_FILE structure-inventory
 	new_scratch_file CANDIDATE_RECEIPT_FILE candidate-receipt
 	new_scratch_file CANDIDATE_LIST candidate-list
 	new_scratch_file CANDIDATE_PROOF_FILE candidate-proof
 	new_scratch_file CANDIDATE_MANIFEST candidate-manifest
 	new_scratch_file CANDIDATE_WORKSHOP candidate-workshop
+	EVIDENCE_ROOT="$SCRATCH_DIR/evidence-root"
+	mkdir -- "$EVIDENCE_ROOT"
+	chmod 700 -- "$EVIDENCE_ROOT"
 fi
 assert_scratch_workspace "after private workspace creation"
 
@@ -530,7 +553,39 @@ require_candidate_binding() {
 	local candidate_receipt_path candidate_receipt_mode candidate_receipt_kind candidate_receipt_blob
 	local head_receipt_entry head_receipt_metadata head_receipt_path head_receipt_mode
 	local head_receipt_kind head_receipt_blob
+	local candidate_testing_entry candidate_testing_metadata candidate_testing_path
+	local candidate_testing_mode candidate_testing_kind candidate_testing_blob
+	local head_testing_entry head_testing_metadata head_testing_path head_testing_mode
+	local head_testing_kind head_testing_blob
 	assert_scratch_workspace "before candidate receipt binding"
+	path="TESTING.md"
+	candidate_testing_entry="$(git -c core.quotePath=false ls-tree "$EVIDENCE_COMMIT" -- \
+		":(literal)$path")"
+	head_testing_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- \
+		":(literal)$path")"
+	[ -n "$candidate_testing_entry" ] && [ -n "$head_testing_entry" ] || {
+		echo "candidate and release must both contain TESTING.md" >&2; return 1; }
+	candidate_testing_metadata="${candidate_testing_entry%%$'\t'*}"
+	candidate_testing_path="${candidate_testing_entry#*$'\t'}"
+	head_testing_metadata="${head_testing_entry%%$'\t'*}"
+	head_testing_path="${head_testing_entry#*$'\t'}"
+	read -r candidate_testing_mode candidate_testing_kind candidate_testing_blob \
+		<<< "$candidate_testing_metadata"
+	read -r head_testing_mode head_testing_kind head_testing_blob <<< "$head_testing_metadata"
+	[ "$candidate_testing_path" = "$path" ] && [ "$candidate_testing_kind" = "blob" ] \
+		&& [ "$candidate_testing_mode" = "100644" ] || {
+		echo "private candidate TESTING.md is not an ordinary non-executable file" >&2
+		return 1
+	}
+	[ "$head_testing_path" = "$path" ] && [ "$head_testing_kind" = "blob" ] \
+		&& [ "$head_testing_mode" = "100644" ] || {
+		echo "release TESTING.md is not an ordinary non-executable file" >&2
+		return 1
+	}
+	[ "$candidate_testing_blob" = "$head_testing_blob" ] || {
+		echo "release TESTING.md differs from subscribed private candidate" >&2
+		return 1
+	}
 	receipt_path="docs/PRIVATE_PACKAGE_RECEIPT.sha256"
 	candidate_receipt_entry="$(git -c core.quotePath=false ls-tree "$EVIDENCE_COMMIT" -- \
 		":(literal)$receipt_path")"
@@ -769,6 +824,8 @@ while IFS=$'\t' read -r path head_blob _head_mode; do
 done < "$PROOF_FILE"
 assert_scratch_workspace "after materialised blob proof"
 
+[ "$MODE" != "release" ] || require_release_structure
+
 for forbidden in .git .github _notes DevTests Art docs Tools; do
 	[ ! -e "$BUILD_DIR/$forbidden" ] && [ ! -L "$BUILD_DIR/$forbidden" ] || {
 		echo "forbidden package path: $forbidden" >&2; exit 4; }
@@ -828,21 +885,39 @@ assert_scratch_workspace "after package metadata validation"
 
 if [ "$MODE" = "release" ]; then
 	evidence_path="docs/RELEASE_EVIDENCE.json"
-	evidence_entry="$(git ls-tree "$HEAD_COMMIT" -- "$evidence_path")"
-	[ -n "$evidence_entry" ] || {
-		echo "release package requires $evidence_path in HEAD" >&2; exit 3; }
-	evidence_metadata="${evidence_entry%%$'\t'*}"
-	evidence_tracked_path="${evidence_entry#*$'\t'}"
-	read -r evidence_mode evidence_kind evidence_blob <<< "$evidence_metadata"
-	[ "$evidence_tracked_path" = "$evidence_path" ] && [ "$evidence_kind" = "blob" ] \
-		&& { [ "$evidence_mode" = "100644" ] || [ "$evidence_mode" = "100755" ]; } || {
-		echo "release evidence is not an ordinary file in HEAD: $evidence_path" >&2; exit 3; }
 	assert_scratch_workspace "before release evidence extraction"
-	git cat-file blob "$evidence_blob" > "$EVIDENCE_FILE"
+	extract_head_blob "$evidence_path" "$EVIDENCE_FILE" "release evidence" nonexec
+	extract_head_blob "TESTING.md" "$TESTING_FILE" "authoritative numbered protocol" nonexec
 	assert_scratch_workspace "after release evidence extraction"
+	python3 "$METADATA" evidence-artifact-refs "$EVIDENCE_FILE" > "$ARTIFACT_LIST"
+	assert_scratch_workspace "after release artifact inventory"
+	while IFS= read -r artifact_path; do
+		artifact_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- \
+			":(literal)$artifact_path")"
+		[ -n "$artifact_entry" ] || {
+			echo "release evidence artifact is absent from HEAD: $artifact_path" >&2; exit 3; }
+		artifact_metadata="${artifact_entry%%$'\t'*}"
+		artifact_tracked_path="${artifact_entry#*$'\t'}"
+		read -r artifact_mode artifact_kind artifact_blob <<< "$artifact_metadata"
+		[ "$artifact_tracked_path" = "$artifact_path" ] \
+			&& [ "$artifact_kind" = "blob" ] && [ "$artifact_mode" = "100644" ] || {
+			echo "release evidence artifact is not an ordinary non-executable HEAD blob: $artifact_path" >&2
+			exit 3
+		}
+		[ "$(git cat-file -s "$artifact_blob")" -le 536870912 ] || {
+			echo "release evidence artifact exceeds the evidence size cap: $artifact_path" >&2
+			exit 3
+		}
+		artifact_output="$EVIDENCE_ROOT/$artifact_path"
+		mkdir -p -- "$(dirname -- "$artifact_output")"
+		git cat-file blob "$artifact_blob" > "$artifact_output"
+		chmod 600 -- "$artifact_output"
+	done < "$ARTIFACT_LIST"
+	assert_scratch_workspace "after immutable release artifact extraction"
 	EVIDENCE_COMMIT="$(python3 "$METADATA" evidence "$BUILD_DIR/manifest.json" \
 		"$BUILD_DIR/$PREVIEW" "$BUILD_DIR/workshop.json" "$EVIDENCE_FILE" \
-		"$BUILD_DIR/README.md" "$BUILD_DIR/CHANGELOG.md")"
+		"$BUILD_DIR/README.md" "$BUILD_DIR/CHANGELOG.md" \
+		--repository-root "$EVIDENCE_ROOT" --testing "$TESTING_FILE")"
 	assert_scratch_workspace "after release evidence validation"
 	[ "$EVIDENCE_COMMIT" != "$HEAD_COMMIT" ] \
 		&& git cat-file -e "$EVIDENCE_COMMIT^{commit}" 2>/dev/null \

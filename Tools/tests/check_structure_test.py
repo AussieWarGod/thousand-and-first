@@ -119,6 +119,66 @@ class StructureCheckerTests(unittest.TestCase):
         self.assertTrue(any("does not bind" in issue for issue in issues))
         self.assertTrue(any("exceptions must be empty" in issue for issue in issues))
 
+    def test_review_schema_rejects_unknown_and_missing_keys(self) -> None:
+        self.source("Core/One.cs", 20)
+        census = CHECKER.build_census(self.root, ["Core/One.cs"])
+        review = self.valid_review(census)
+        payload = json.loads(review.read_text(encoding="utf-8"))
+        payload["unexpected"] = True
+        payload["oneResponsibility"]["extra"] = "passed"
+        del payload["protocolsAtBoundaries"]["notes"]
+        review.write_text(json.dumps(payload), encoding="utf-8")
+        issues = CHECKER.review_issues(review, census)
+        self.assertIn("semantic review fields must exactly match schema version 1", issues)
+        self.assertIn(
+            "semantic review oneResponsibility fields must be notes and status", issues
+        )
+        self.assertIn(
+            "semantic review protocolsAtBoundaries fields must be notes and status", issues
+        )
+
+    def test_review_rejects_placeholder_and_nonprintable_human_text(self) -> None:
+        self.source("Core/One.cs", 20)
+        census = CHECKER.build_census(self.root, ["Core/One.cs"])
+        substitutions = (
+            ("reviewedBy", "HUMAN_REVIEWER_NAME_OR_ALIAS"),
+            ("reviewedBy", "Example Reviewer"),
+            ("reviewedBy", "N/A"),
+            ("oneResponsibility", "TODO: inspect every source boundary before release."),
+            ("protocolsAtBoundaries", "Reviewed the API boundary.\nSecond synthetic line."),
+        )
+        for target, value in substitutions:
+            with self.subTest(target=target, value=value):
+                review = self.valid_review(census)
+                payload = json.loads(review.read_text(encoding="utf-8"))
+                if target == "reviewedBy":
+                    payload[target] = value
+                else:
+                    payload[target]["notes"] = value
+                review.write_text(json.dumps(payload), encoding="utf-8")
+                issues = CHECKER.review_issues(review, census)
+                self.assertTrue(
+                    any(target in issue or "reviewedBy" in issue for issue in issues),
+                    issues,
+                )
+
+    def test_review_timestamp_requires_real_second_precision_utc(self) -> None:
+        self.source("Core/One.cs", 20)
+        census = CHECKER.build_census(self.root, ["Core/One.cs"])
+        for timestamp in (
+            "2026-08-26T12:00:00.000Z",
+            "2026-02-30T12:00:00Z",
+            "2026-08-26T12:00:00+00:00",
+        ):
+            with self.subTest(timestamp=timestamp):
+                review = self.valid_review(census)
+                payload = json.loads(review.read_text(encoding="utf-8"))
+                payload["completedUtc"] = timestamp
+                review.write_text(json.dumps(payload), encoding="utf-8")
+                self.assertTrue(
+                    any("completedUtc" in issue for issue in CHECKER.review_issues(review, census))
+                )
+
     def test_inventory_rejects_escape_duplicate_and_non_csharp_paths(self) -> None:
         self.source("Core/One.cs", 1)
         with self.assertRaisesRegex(CHECKER.StructureError, "duplicate"):

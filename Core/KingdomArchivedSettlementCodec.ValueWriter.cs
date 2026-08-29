@@ -62,6 +62,29 @@ namespace ThousandAndFirst
 					&& raw > (long)KingdomRaidIncidentState.Queued)
 					throw new InvalidDataException(
 						"Archived settlement historical raid state is unknown.");
+				if (SchemaVersion < FirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+					&& (raw < (long)KingdomGrowthArrivalCandidatePhase.None
+						|| raw > (long)KingdomGrowthArrivalCandidatePhase.Quarantined))
+					throw new InvalidDataException(
+						"Archived settlement historical arrival phase is unknown.");
+				if (SchemaVersion < FirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalDisposition)
+					&& raw > (long)KingdomGrowthArrivalDisposition.SupportCap)
+					throw new InvalidDataException(
+						"Archived settlement historical arrival disposition is unknown.");
+				if (SchemaVersion >= FirstGuestVersion
+					&& SchemaVersion < PhysicalFirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+					&& raw > (long)KingdomGrowthArrivalCandidatePhase.Declined)
+					throw new InvalidDataException(
+						"Archived settlement historical physical guest phase is unknown.");
+				if (SchemaVersion >= FirstGuestVersion
+					&& SchemaVersion < PhysicalFirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalDisposition)
+					&& raw > (long)KingdomGrowthArrivalDisposition.Declined)
+					throw new InvalidDataException(
+						"Archived settlement historical physical guest disposition is unknown.");
 				Writer.Write(raw);
 				return;
 			}
@@ -129,6 +152,26 @@ namespace ThousandAndFirst
 			if (Value == null) return;
 			if (++Budget.Objects > MaxObjects)
 				throw new InvalidDataException("Archived settlement object count exceeds cap.");
+			if (Type == typeof(KingdomGrowthFirstGuestOpportunity)
+				&& !HistoricalPhysicalFirstGuestOpportunity(
+					(KingdomGrowthFirstGuestOpportunity)Value, SchemaVersion))
+				throw new InvalidDataException(
+					"Archived settlement historical physical first-guest evidence is unknown.");
+			if (SchemaVersion < ArrivalCadenceVersion
+				&& !HistoricalArrivalCadenceValue(Type, Value))
+				throw new InvalidDataException(
+					"Archived settlement historical arrival cadence is unknown.");
+			if (SchemaVersion >= ExactLogisticsVersion
+				&& Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& !ValidDeliveryDomain(
+					(Simulation.City.KingdomJobRegistry)Value, SchemaVersion))
+				throw new InvalidDataException(
+					"Archived settlement delivery enum domain is invalid for its version.");
+			if (SchemaVersion >= CivicAuthorityVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& !ValidCivicAuthority((Simulation.City.KingdomCityBook)Value))
+				throw new InvalidDataException(
+					"Archived settlement civic authority is invalid for its version.");
 			FieldInfo[] fields = Fields(Type, SchemaVersion);
 			for (int i = 0; i < fields.Length; i++)
 			{
@@ -165,8 +208,16 @@ namespace ThousandAndFirst
 					fieldValue = 2;
 				if (Type == typeof(KingdomGrowthBook)
 					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
-					&& SchemaVersion < SemanticSelectionVersion)
-					fieldValue = KingdomLifecycleRules.PreviousGrowthFormatVersion;
+					&& SchemaVersion < PhysicalFirstGuestVersion)
+					fieldValue = SchemaVersion < FirstGuestVersion
+						? SchemaVersion < SemanticSelectionVersion
+							? KingdomLifecycleRules.PreviousGrowthFormatVersion
+							: KingdomLifecycleRules.SemanticGrowthFormatVersion
+						: KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion;
+				if (Type == typeof(KingdomGrowthFirstGuestTerminalReceipt)
+					&& string.Equals(fields[i].Name, "Version", StringComparison.Ordinal)
+					&& SchemaVersion < PhysicalFirstGuestVersion)
+					fieldValue = KingdomGrowthFirstGuestTerminalReceipt.LegacyVersion;
 				WriteValue(Writer, fields[i].FieldType, fieldValue,
 					Depth + 1, Budget, SchemaVersion);
 			}

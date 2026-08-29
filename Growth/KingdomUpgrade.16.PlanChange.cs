@@ -35,9 +35,19 @@ namespace ThousandAndFirst
 			Prepared = null;
 			Failure = null;
 			if (System == null || Z == null || !GameObject.Validate(Work) || Successor == null
-				|| Transition == null || Transition.ToBuildKey != Successor.Key)
+				|| Transition == null)
 			{
 				Failure = "The same-set plan change has no exact endpoints.";
+				return false;
+			}
+			if (!KingdomArchitectureRuntime.TryRead(Work,
+				out KingdomArchitectureIntent standing, out Failure)
+				|| !KingdomSocketTransitions.TryResolveCurrent(Transition, standing.BuildKey,
+					Successor.Key, standing.LotType, standing.LotSize,
+					out KingdomSocketTransition declared))
+			{
+				if (Failure == null)
+					Failure = "The supplied same-set declaration is forged, stale, or incomplete.";
 				return false;
 			}
 			if (!ContentsWouldFit(Work, Successor.Blueprint)
@@ -48,21 +58,21 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
-			if (survey.StoredWater < Transition.WaterDrams)
+			if (survey.StoredWater < declared.WaterDrams)
 			{
-				Failure = "The change wants {{C|" + Transition.WaterDrams
+				Failure = "The change wants {{C|" + declared.WaterDrams
 					+ " drams}}, and the stores cannot bear it.";
 				return false;
 			}
-			if (!KingdomMaterials.CanPayTransition(Z, Transition.Materials, out Failure))
+			if (!KingdomMaterials.CanPayTransition(Z, declared.Materials, out Failure))
 				return false;
 			Assessment assessment = new Assessment
 			{
 				Valid = true, Verdict = KingdomUpgradeRules.UpgradeVerdict.Ready,
-				Key = Transition.FromBuildKey, SuccessorKey = Transition.ToBuildKey,
-				Successor = Successor, CostDrams = Transition.WaterDrams,
-				BuildTicks = Transition.WorkTicks,
-				CrewNeeded = Math.Max(1, Successor.Staff), Transition = Transition
+				Key = declared.FromBuildKey, SuccessorKey = declared.ToBuildKey,
+				Successor = Successor, CostDrams = declared.WaterDrams,
+				BuildTicks = declared.WorkTicks,
+				CrewNeeded = Math.Max(1, Successor.Staff), Transition = declared
 			};
 			if (!TryPrepareImprovement(System, Z, Work, assessment, out Prepared, out Failure)
 				|| Prepared.Legacy || Prepared.Architecture == null)
@@ -81,9 +91,24 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			if (!Assessment.Valid || Assessment.Transition == null || Prepared == null
-				|| Assessment.Successor == null)
+				|| Assessment.Successor == null || Prepared.Legacy
+				|| Prepared.Architecture == null)
 			{
 				Failure = "The previewed same-set plan change is incomplete.";
+				return false;
+			}
+			if (!KingdomArchitectureRuntime.TryRead(Work,
+				out KingdomArchitectureIntent standing, out Failure)
+				|| !TryCurrentTransition(standing, Assessment,
+					out KingdomSocketTransition declared, out Failure)
+				|| Prepared.SourceKey != declared.FromBuildKey
+				|| Prepared.SuccessorKey != declared.ToBuildKey
+				|| Prepared.Architecture.BuildKey != declared.ToBuildKey
+				|| Prepared.Architecture.LotType != standing.LotType
+				|| Prepared.Architecture.LotSize != standing.LotSize)
+			{
+				if (Failure == null)
+					Failure = "The previewed declaration or authored target is no longer current.";
 				return false;
 			}
 			if (!ContentsWouldFit(Work, Assessment.Successor.Blueprint)
@@ -94,15 +119,21 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
-			if (survey.StoredWater < Assessment.CostDrams)
+			if (survey.StoredWater < declared.WaterDrams)
 			{
-				Failure = "The change wants {{C|" + Assessment.CostDrams
+				Failure = "The change wants {{C|" + declared.WaterDrams
 					+ " drams}}, and the stores cannot bear it.";
 				return false;
 			}
-			if (!KingdomMaterials.CanPayTransition(Z, Assessment.Transition.Materials,
+			if (!KingdomMaterials.CanPayTransition(Z, declared.Materials,
 				out Failure)) return false;
-			if (!BeginPrepared(System, Z, Work, Assessment, survey, Prepared))
+			Assessment current = Assessment;
+			current.Key = declared.FromBuildKey;
+			current.SuccessorKey = declared.ToBuildKey;
+			current.CostDrams = declared.WaterDrams;
+			current.BuildTicks = declared.WorkTicks;
+			current.Transition = declared;
+			if (!BeginPrepared(System, Z, Work, current, survey, Prepared))
 			{
 				Failure = "The declared plan change could not raise its exact previewed scaffold.";
 				return false;

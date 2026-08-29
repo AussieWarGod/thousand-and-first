@@ -23,11 +23,17 @@ namespace ThousandAndFirst.Tests
 			source.Append(TestMain.ReadRepositoryText(
 				"Trade/KingdomTradeState.02.CodecEnvelopeAndPayload.cs")).Append('\n');
 			source.Append(TestMain.ReadRepositoryText(
+				"Trade/KingdomTradeState.02b.CodecWireV4Payload.cs")).Append('\n');
+			source.Append(TestMain.ReadRepositoryText(
 				"Trade/KingdomTradeState.03.CodecDecodeAndPrimitiveHelpers.cs")).Append('\n');
+			source.Append(TestMain.ReadRepositoryText(
+				"Trade/KingdomTradeState.03b.CodecWireV4Decode.cs")).Append('\n');
 			source.Append(TestMain.ReadRepositoryText(
 				"Trade/KingdomTradeState.04.CodecCargoAndPatternRows.cs")).Append('\n');
 			source.Append(TestMain.ReadRepositoryText(
 				"Trade/KingdomTradeState.05.CodecOperationProofArchiveRows.cs")).Append('\n');
+			source.Append(TestMain.ReadRepositoryText(
+				"Trade/KingdomTradeState.05b.CodecWireV4Rows.cs")).Append('\n');
 			return source.ToString();
 		}
 	}

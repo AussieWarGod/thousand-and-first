@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frozen independently from the v2 form writer: this is the geometry-only v1 save shape,
+     with engine-assigned (not hash-derived) satellite IDs and the carrier-removal/schema cut. -->
+<gatehouse-v1-pending RootId="legacy-gate-root"
+  Plan="v1,1,40,1,39,1,41,3"
+  PaidClaim="v1|m:0,0,10,34,0,6,0,0,0|b:0,0,0,0,0,0,0,0,0|e:0,0,0,0">
+  <cut Name="carrier-removed-before-schema" SchemaInt="false" SchemaString="false"
+    V2Carrier="false" V1PendingCarrier="false" CanonicalPlan="true"
+    UniqueStoredIds="true" ExactSixBodies="true" RetainOwner="true" ResumeSchema="true" />
+  <cut Name="duplicate-body-after-removal" SchemaInt="false" SchemaString="false"
+    V2Carrier="false" V1PendingCarrier="false" CanonicalPlan="true"
+    UniqueStoredIds="true" ExactSixBodies="false" RetainOwner="true" ResumeSchema="false" />
+  <cut Name="missing-body-after-removal" SchemaInt="false" SchemaString="false"
+    V2Carrier="false" V1PendingCarrier="false" CanonicalPlan="true"
+    UniqueStoredIds="true" ExactSixBodies="false" RetainOwner="true" ResumeSchema="false" />
+  <cut Name="carrier-not-retired" SchemaInt="false" SchemaString="false"
+    V2Carrier="false" V1PendingCarrier="true" CanonicalPlan="true"
+    UniqueStoredIds="true" ExactSixBodies="true" RetainOwner="false" ResumeSchema="false" />
+  <publication-cuts>
+    <!-- Carrier is already durable, while root identity is not. Retry must finish this body. -->
+    <legacy Name="custody-before-id" Index="4" State="Empty"
+      PublishedIdentity="false" ExactCarrier="true" BlueprintExact="true"
+      Unplaced="true" BoundedIdentity="true" UniqueGlobalIdentity="true"
+      ExistingMarksCompatible="true" Evidence="Foreign" Expected="AdoptCustody"
+      CreateNewBody="false" PreserveCarrierIdentity="true" />
+    <!-- Exact marks and root ID are durable; only the pending-state write remains. -->
+    <legacy Name="id-before-state" Index="4" State="Empty"
+      PublishedIdentity="true" ExactCarrier="true" BlueprintExact="true"
+      Unplaced="true" BoundedIdentity="true" UniqueGlobalIdentity="true"
+      ExistingMarksCompatible="true" Evidence="Staged" Expected="PublishPending"
+      CreateNewBody="false" PreserveCarrierIdentity="true" />
+    <legacy Name="landed-unpublished-carrier" Index="4" State="Empty"
+      PublishedIdentity="false" ExactCarrier="true" BlueprintExact="true"
+      Unplaced="false" BoundedIdentity="true" UniqueGlobalIdentity="true"
+      ExistingMarksCompatible="true" Evidence="Foreign" Expected="Refuse"
+      CreateNewBody="false" PreserveCarrierIdentity="true" />
+    <legacy Name="duplicate-unpublished-identity" Index="4" State="Empty"
+      PublishedIdentity="false" ExactCarrier="true" BlueprintExact="true"
+      Unplaced="true" BoundedIdentity="true" UniqueGlobalIdentity="false"
+      ExistingMarksCompatible="true" Evidence="Duplicate" Expected="Refuse"
+      CreateNewBody="false" PreserveCarrierIdentity="true" />
+    <legacy Name="foreign-unpublished-marks" Index="4" State="Empty"
+      PublishedIdentity="false" ExactCarrier="true" BlueprintExact="true"
+      Unplaced="true" BoundedIdentity="true" UniqueGlobalIdentity="true"
+      ExistingMarksCompatible="false" Evidence="Foreign" Expected="Refuse"
+      CreateNewBody="false" PreserveCarrierIdentity="true" />
+    <!-- v2 never serializes a partial body. A pre-custody cut persists no satellite. -->
+    <deterministic Name="v2-stamped-before-custody" Index="4"
+      Width="80" Height="25" Frontier="North" HeartX="40" HeartY="12" Style="common"
+      PaletteExact="true" IdentityExact="true" MarksExact="true"
+      MaySerialize="true" PersistedBodiesAtPreCustodyCut="0"
+      RetryDerivesSameIdentity="true" />
+    <deterministic Name="v2-partial-stamp-refused" Index="4"
+      Width="80" Height="25" Frontier="North" HeartX="40" HeartY="12" Style="common"
+      PaletteExact="true" IdentityExact="true" MarksExact="false"
+      MaySerialize="false" PersistedBodiesAtPreCustodyCut="0"
+      RetryDerivesSameIdentity="true" />
+  </publication-cuts>
+  <states>
+    <state Index="0" Value="2" />
+    <state Index="1" Value="2" />
+    <state Index="2" Value="2" />
+    <state Index="3" Value="2" />
+    <state Index="4" Value="2" />
+    <state Index="5" Value="2" />
+  </states>
+  <bodies>
+    <body Index="0" Id="legacy-random-A91f" Owner="legacy-gate-root"
+      Slot="stone-0-left" Blueprint="r_KingdomStructureSandstone" X="39" Y="1"
+      GlobalCount="1" InZone="true" InCustody="false" />
+    <body Index="1" Id="legacy-random-0b72" Owner="legacy-gate-root"
+      Slot="stone-0-right" Blueprint="r_KingdomStructureSandstone" X="41" Y="1"
+      GlobalCount="1" InZone="true" InCustody="false" />
+    <body Index="2" Id="legacy-random-C3e4" Owner="legacy-gate-root"
+      Slot="stone-1-left" Blueprint="r_KingdomStructureSandstone" X="39" Y="2"
+      GlobalCount="1" InZone="true" InCustody="false" />
+    <body Index="3" Id="legacy-random-d5F6" Owner="legacy-gate-root"
+      Slot="stone-1-right" Blueprint="r_KingdomStructureSandstone" X="41" Y="2"
+      GlobalCount="1" InZone="true" InCustody="false" />
+    <body Index="4" Id="legacy-random-E708" Owner="legacy-gate-root"
+      Slot="watch-2-left" Blueprint="r_KingdomFixtureBenchTimber" X="39" Y="3"
+      GlobalCount="1" InZone="true" InCustody="false" />
+    <body Index="5" Id="legacy-random-f92A" Owner="legacy-gate-root"
+      Slot="watch-2-right" Blueprint="r_KingdomFixtureBenchTimber" X="41" Y="3"
+      GlobalCount="1" InZone="true" InCustody="false" />
+  </bodies>
+</gatehouse-v1-pending>

@@ -507,7 +507,9 @@ namespace ThousandAndFirst.Tests
 				Entry("heartmoot", KingdomPlotRules.PlotSize.Large, GrowthStage.Town,
 					"civic", "spirit:4,order:3", 46, Successor: "heartcourt"),
 				Entry("heartcourt", KingdomPlotRules.PlotSize.Huge, GrowthStage.City,
-					"civic", "spirit:8,order:6,learning:2", 96)
+					"civic", "spirit:8,order:6,learning:2", 96, Successor: "arcology"),
+				Entry("arcology", KingdomPlotRules.PlotSize.Huge, GrowthStage.City,
+					"civic", "roof:60,order:4,luxury:4", 190)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
 			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));

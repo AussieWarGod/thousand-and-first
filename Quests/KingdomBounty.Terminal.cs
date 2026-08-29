@@ -133,11 +133,7 @@ namespace ThousandAndFirst
 				return KingdomMaterials.Stock(Z).None ? BountyBlock.NowhereToCarry : BountyBlock.None;
 			}
 			case BountyTask.Manning:
-				if (Survey.Works.Count == 0)
-				{
-					return BountyBlock.NoWorks;
-				}
-				return (System.IdleWorks <= 0) ? BountyBlock.NoIdleWork : BountyBlock.None;
+				return ManningBlock(System, Survey, Data);
 			case BountyTask.Scouting:
 				return (Frontier(System).Count == 0) ? BountyBlock.NoFrontier : BountyBlock.None;
 			default:

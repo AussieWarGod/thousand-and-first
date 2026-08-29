@@ -26,12 +26,10 @@ namespace ThousandAndFirst
 		/// <para>
 		/// <b>Why the hub answers ONE spoke rather than all of them.</b> A row carries a single
 		/// partner because vanilla's own <c>DestinationKey</c> is a single game-state key: an arch
-		/// goes one place. Every spoke landing at the capital is therefore exact, and the capital's
-		/// own arch has to pick, so it picks the first spoke in register order &mdash; deterministic
-		/// without a sort and without a draw, which is the rule <see cref="TryDedicate"/> already
-		/// keeps. At the two cities the roster can hold today a hub IS a pair and nothing is lost;
-		/// what a three-city realm should be offered when it steps into the hub is a design question
-		/// and is in the backlog, not improvised here.
+		/// goes one place. Every spoke landing at the capital is therefore exact. A new hub initially
+		/// answers the first spoke in register order, without a draw; a founder may then choose another
+		/// lawful spoke through <see cref="TrySelectHubDestination"/>. Re-running this reconciliation
+		/// preserves that choice while it remains a registered spoke.
 		/// </para>
 		/// <para>
 		/// <b>Nothing goes dark.</b> Darkness in this file means the works could not pay
@@ -68,7 +66,9 @@ namespace ThousandAndFirst
 			hubKey = next[hub].Key;
 			KingdomGateRow[] built = new KingdomGateRow[next.Length];
 			Array.Copy(next, built, next.Length);
+			string selectedSpoke = built[hub].Partner;
 			string firstSpoke = "";
+			bool selectedStillLawful = false;
 			for (int i = 0; i < built.Length; i++)
 			{
 				if (i == hub)
@@ -79,15 +79,18 @@ namespace ThousandAndFirst
 				{
 					firstSpoke = built[i].Key;
 				}
+				if (string.Equals(built[i].Key, selectedSpoke, StringComparison.Ordinal))
+					selectedStillLawful = true;
 				if (!string.Equals(built[i].Partner, hubKey, StringComparison.Ordinal))
 				{
 					built[i] = built[i].WithPartner(hubKey);
 					rekeyed++;
 				}
 			}
-			if (!string.Equals(built[hub].Partner, firstSpoke, StringComparison.Ordinal))
+			string outward = selectedStillLawful ? selectedSpoke : firstSpoke;
+			if (!string.Equals(built[hub].Partner, outward, StringComparison.Ordinal))
 			{
-				built[hub] = built[hub].WithPartner(firstSpoke);
+				built[hub] = built[hub].WithPartner(outward);
 				rekeyed++;
 			}
 			next = built;

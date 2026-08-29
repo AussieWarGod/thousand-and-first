@@ -37,6 +37,15 @@ namespace ThousandAndFirst
 		NoFrontier = 7,
 
 		/// <summary>The work is done and the stores cannot cover the price.</summary>
-		StoresCannotPay = 8
+		StoresCannotPay = 8,
+
+		/// <summary>The exact work named at posting no longer exists as a staffed work.</summary>
+		ManningTargetLost = 9,
+
+		/// <summary>The named worker is not presently grounded at the settlement.</summary>
+		ManningWorkerAbsent = 10,
+
+		/// <summary>No ordinary work-pool hand remains for this contract.</summary>
+		NoFreeHands = 11
 	}
 }

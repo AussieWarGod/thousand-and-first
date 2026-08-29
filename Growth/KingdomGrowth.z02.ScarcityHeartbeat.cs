@@ -106,7 +106,7 @@ namespace ThousandAndFirst
 			// Agrarian ground feeds itself: it discounts the daily draw before the draw is made,
 			// not after, so a dry agrarian settlement runs its dry streak slower, never zero.
 			int upkeep = KingdomRules.PolicyUpkeepForElapsed(System.Population, Elapsed, System.Stores, System.Stage) * KingdomRules.DistrictsUpkeepPercent(System.ZoneDistricts.Values) / 100;
-			int paid = Survey.Consume(upkeep);
+			int paid = Survey.ConsumeUpkeep(upkeep);
 			System.Ledger.UpkeepDrawn += paid;
 			if (paid >= upkeep)
 			{

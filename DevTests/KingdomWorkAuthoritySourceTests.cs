@@ -67,10 +67,14 @@ namespace ThousandAndFirst.Tests
 			int emigrate = growth.IndexOf("public static bool Emigrate", assign,
 				StringComparison.Ordinal);
 			string body = growth.Substring(assign, emigrate - assign);
-			StringAssert.Contains("KingdomResidents.RollRows(System, true)", body);
+			StringAssert.Contains("KingdomCrews.AvailableSettlers(System, Survey)", body);
+			string crews = Source("Growth/KingdomCrews.Availability.cs");
+			StringAssert.Contains("KingdomResidents.RollRows(System, true)", crews);
 			StringAssert.Contains("KingdomCityRules.StableId(work.ID)", body);
 			StringAssert.Contains("KingdomStations.KindOf(work)", body);
-			StringAssert.Contains("KingdomStations.Post(available[at], postId, postKind)", body);
+			StringAssert.Contains("postIds[at] = postId", body);
+			StringAssert.Contains("postKinds[at] = postKind", body);
+			StringAssert.Contains("KingdomStations.Post(available[i], postIds[i], postKinds[i])", body);
 		}
 	}
 }

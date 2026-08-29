@@ -15,8 +15,10 @@ git switch -c type/short-topic
 ```
 
 No submodules or vendored game files are required for documentation and checkout-only checks.
-Python 3 is needed for XML/art audits. Licensed integration checks need the local game and tools
-described below.
+Python 3 is needed for XML/art audits. Code tests use the exact .NET SDK `9.0.306` pinned by
+`global.json`; roll-forward is disabled so a different local SDK cannot silently sign the result.
+The hosted workflow installs that exact SDK. Licensed integration checks need the local game and
+tools described below.
 
 ## Before opening a pull request
 
@@ -34,20 +36,33 @@ Baseline checks, from repository root:
 
 ```bash
 ./Tools/stage.sh verify
-python3 Art/check_xml_refs.py
+python3 Tools/generate-lot-realizations.py --check
+python3 Tools/check-architecture.py --repo-root .
+python3 Art/check_xml_refs.py --no-base
 ```
 
-`Tools/stage.sh verify` is checkout-only. `Art/check_xml_refs.py` always checks internal XML; it
-also verifies vanilla references when the script's default Qud install is present or `--base` is
-given. Public contributors can run the locked, engine-free full pure/source suite plus the small
+`Tools/portable-check.sh` composes these deterministic repository checks with documentation,
+structure, staging, package-reference, XML, and Python-unit audits. `Tools/stage.sh verify` is
+checkout-only. `Art/check_xml_refs.py --no-base` always checks only internal XML, even when a
+developer's default Qud install is present; the licensed lane below adds exact vanilla resolution.
+Run the composition with `./Tools/portable-check.sh` after the focused commands pass.
+Public contributors can run the locked, engine-free full pure/source suite plus the small
 repository-locator slice without owning or installing Qud:
 
 ```bash
 dotnet restore DevTests/TafTests.csproj --locked-mode
-dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
+TAF_ALLOWED_SKIPS='KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone;KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology;KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath' \
+  dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
 dotnet restore DevTests/PortableTests.csproj --locked-mode
 dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 ```
+
+Run these restore/build/test commands serially. Every `TafTests` configuration writes shared mutable
+NuGet/MSBuild state under `DevTests/obj/` (including `project.assets.json`), and repository scripts
+may invoke that project too; concurrent invocations can overwrite another run's restore inputs.
+`PortableTests` redirects its intermediates to `Tools/PortableOutput/obj/`, but do not overlap it
+with the documented full-suite scripts. Keep each restore immediately beside its matching
+`--no-restore` run.
 
 These suites prove engine-free rules and source contracts; they do not compile or execute the mod
 inside Qud. They use the locked NUnit package and .NET 9. When licensed installed data is absent,

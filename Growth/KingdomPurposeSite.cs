@@ -10,6 +10,9 @@ namespace ThousandAndFirst
 	{
 		None = 0,
 		LivingSurgery = 1,
-		RuinEnrollment = 2
+		RuinEnrollment = 2,
+		DeepDelve = 3,
+		ForgeQuench = 4,
+		HarvestWater = 5
 	}
 }

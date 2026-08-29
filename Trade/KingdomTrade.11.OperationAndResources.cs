@@ -42,6 +42,14 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
+			// A persisted consignment Intent is physical evidence, so reconcile its exact
+			// vessel before recipient loss can seal the never-started suffix.
+			if (KingdomTradeRules.HasPolityWaterIntent(operation) &&
+				!TryBindPersistedPhysicalFrame(frame, operation, Z, Survey))
+			{
+				FinalizeQuarantine(System, Book, operation, Now, frame);
+				return;
+			}
 			if (operation.Phase == KingdomTradePhase.Quarantined)
 			{
 				FinalizeQuarantine(System, Book, operation, Now, frame);
@@ -59,6 +67,8 @@ namespace ThousandAndFirst
 			if (operation.Phase == KingdomTradePhase.Prepared
 				|| operation.Phase == KingdomTradePhase.ResourceIntent)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "physical debit")) return;
 				if (!SettleResources(operation, Z, Survey, frame))
 				{
 					if (operation.Phase == KingdomTradePhase.Quarantined)
@@ -69,6 +79,8 @@ namespace ThousandAndFirst
 			if (operation.Phase == KingdomTradePhase.ResourceSettled
 				|| operation.Phase == KingdomTradePhase.ProjectionIntent)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "projection settlement")) return;
 				SettleProjection(operation, Z, frame);
 				if (operation.Phase == KingdomTradePhase.Quarantined)
 				{
@@ -80,6 +92,8 @@ namespace ThousandAndFirst
 			if (operation.Phase == KingdomTradePhase.ProjectionSettled
 				|| operation.Phase == KingdomTradePhase.DomainIntent)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "domain settlement")) return;
 				if (!SettleDomain(System, Book, operation, frame))
 				{
 					FinalizeQuarantine(System, Book, operation, Now, frame);
@@ -88,6 +102,8 @@ namespace ThousandAndFirst
 			}
 			if (operation.Phase == KingdomTradePhase.DomainSettled)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "success outbox")) return;
 				BuildOutbox(System, operation);
 				if (operation.Kind == KingdomTradeOperationKind.CharterDelivery
 					&& !KingdomTradeRules.CharterOutboxReadyForDispatch(operation))
@@ -100,6 +116,8 @@ namespace ThousandAndFirst
 			}
 			if (operation.Phase == KingdomTradePhase.Sinks)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "success sink dispatch")) return;
 				if (operation.Kind == KingdomTradeOperationKind.CharterDelivery
 					&& !KingdomTradeRules.CharterOutboxReadyForDispatch(operation))
 				{
@@ -118,6 +136,8 @@ namespace ThousandAndFirst
 			}
 			if (operation.Phase == KingdomTradePhase.ScheduleIntent)
 			{
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "terminal publication")) return;
 				if (operation.Kind == KingdomTradeOperationKind.CharterDelivery
 					&& !ContinuePatternBook(System, operation, frame))
 				{
@@ -138,6 +158,8 @@ namespace ThousandAndFirst
 					FinalizeQuarantine(System, Book, operation, Now, frame);
 					return;
 				}
+				if (!ContinueOrQuarantinePolityRecipient(System, Book, operation, frame,
+					Now, "terminal receipt")) return;
 				KingdomTradePhase disposition = string.IsNullOrEmpty(operation.Fault)
 					? KingdomTradePhase.Terminal : KingdomTradePhase.Quarantined;
 				operation.Phase = KingdomTradePhase.RetirementReady;

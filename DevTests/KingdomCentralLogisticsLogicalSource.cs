@@ -16,7 +16,14 @@ namespace ThousandAndFirst.Tests
 			"Simulation/City/KingdomCentralLogistics.05.ManifestArrivalAndAcknowledgements.cs",
 			"Simulation/City/KingdomCentralLogistics.06.ManifestOwnershipAndRoute.cs",
 			"Simulation/City/KingdomCentralLogistics.07.RouteSegmentsAndPassages.cs",
-			"Simulation/City/KingdomCentralLogistics.08.ScalarCustodyAndReceiptHelpers.cs"
+			"Simulation/City/KingdomCentralLogistics.08.ScalarCustodyAndReceiptHelpers.cs",
+			"Simulation/City/KingdomCentralLogistics.09.ConstructionInputReservation.cs",
+			"Simulation/City/KingdomCentralLogistics.10.ConstructionInputActivationAndTripView.cs",
+			"Simulation/City/KingdomCentralLogistics.11.ConstructionInputArrivalAndAcknowledgements.cs",
+			"Simulation/City/KingdomCentralLogistics.12.ConstructionInputRecovery.cs",
+			"Simulation/City/KingdomCentralLogistics.13.ConstructionInputRouteProof.cs",
+			"Simulation/City/KingdomCentralLogistics.18.ConstructionInputObservedRoute.cs",
+			"Simulation/City/KingdomCentralLogistics.19.ConstructionInputTransitCustody.cs"
 		};
 
 		internal static string Read()

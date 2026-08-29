@@ -46,20 +46,23 @@ namespace ThousandAndFirst
 				QuarantineIdentity(lifecycleFailure);
 				return;
 			}
-			if (Away != null)
+			List<KingdomSettlement> nonSeat = NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				if (Away.LifecycleBook == null) Away.LifecycleBook = new KingdomLifecycleBook();
-				KingdomLifecycleRules.Normalize(Away.LifecycleBook);
-				List<string> seatedLifecycleIds = LifecycleCollisionIds(
-					IncludeSeat: true, IncludeAway: false);
-				if (!KingdomLifecycleRules.BindSettlementIdentity(Away.LifecycleBook,
-					Away.City?.SettlementId, LegacyMigration: false, MigrationKey: null,
-					ExistingIds: seatedLifecycleIds))
+				KingdomSettlement row = nonSeat[i];
+				if (row.LifecycleBook == null) row.LifecycleBook = new KingdomLifecycleBook();
+				KingdomLifecycleRules.Normalize(row.LifecycleBook);
+				List<string> collisionIds = LifecycleCollisionIds(
+					IncludeSeat: true, IncludeAway: true);
+				collisionIds.Remove(row.City?.SettlementId);
+				if (!KingdomLifecycleRules.BindSettlementIdentity(row.LifecycleBook,
+					row.City?.SettlementId, LegacyMigration: false, MigrationKey: null,
+					ExistingIds: collisionIds))
 				{
-					Away.LifecycleBook.Quarantined = true;
-					Away.LifecycleBook.Fault =
-						"away lifecycle book does not match immutable city identity";
-					QuarantineIdentity(Away.LifecycleBook.Fault);
+					row.LifecycleBook.Quarantined = true;
+					row.LifecycleBook.Fault =
+						"non-seat lifecycle book does not match immutable city identity";
+					QuarantineIdentity(row.LifecycleBook.Fault);
 					return;
 				}
 			}
@@ -98,40 +101,60 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			string seatZone;
-			string awayZone = null;
+			List<KingdomSettlement> nonSeat = NonSeatSettlements();
+			List<string> otherZones = new List<string>();
 			if (!TryFirstClaimEvidence(ClaimedZones, out seatZone) ||
-				(Away != null && !TryFirstClaimEvidence(Away.ClaimedZones, out awayZone)) ||
 				string.IsNullOrEmpty(KingdomFactionName) || KingdomFactionName.Length > 512 ||
-				(City != null && City.SettlementId != null && City.SettlementId.Length > 256) ||
-				(Away?.City != null && Away.City.SettlementId != null &&
-				 Away.City.SettlementId.Length > 256))
+				(City != null && City.SettlementId != null && City.SettlementId.Length > 256))
 			{
 				Failure = "legacy identity evidence is partial or outside hard bounds";
 				return false;
 			}
+			for (int i = 0; i < nonSeat.Count; i++)
+			{
+				if (!TryFirstClaimEvidence(nonSeat[i].ClaimedZones, out string zone) ||
+					(nonSeat[i].City?.SettlementId != null &&
+					 nonSeat[i].City.SettlementId.Length > 256))
+				{
+					Failure = "legacy non-seat identity evidence is partial or outside hard bounds";
+					return false;
+				}
+				otherZones.Add(zone);
+			}
 			KingdomIdentityFault fault;
 			string realm;
 			string seatId;
-			string awayId = null;
 			if (!KingdomIdentityRules.TryMigrateRealm(KingdomFactionName, FoundedTick,
 					SimulationSeedHigh, SimulationSeedLow, seatZone, out realm, out fault) ||
 				!KingdomIdentityRules.TryMigrateSettlement(realm, FoundedTick, seatZone,
-					out seatId, out fault) ||
-				(Away != null && !KingdomIdentityRules.TryMigrateSettlement(realm,
-					Away.FoundedTick, awayZone, out awayId, out fault)))
+					out seatId, out fault))
 			{
 				Failure = "legacy identity evidence could not mint a complete set (" + fault + ").";
 				return false;
 			}
+			List<string> otherIds = new List<string>();
+			for (int i = 0; i < nonSeat.Count; i++)
+			{
+				if (!KingdomIdentityRules.TryMigrateSettlement(realm, nonSeat[i].FoundedTick,
+					otherZones[i], out string id, out fault))
+				{
+					Failure = "legacy identity evidence could not mint a complete set (" +
+						fault + ").";
+					return false;
+				}
+				otherIds.Add(id);
+			}
 			List<string> ids = new List<string> { seatId };
-			if (awayId != null) ids.Add(awayId);
+			ids.AddRange(otherIds);
 			if (!KingdomIdentityRules.ValidateRealmTopology(realm, ids, out fault))
 			{
 				Failure = "legacy identity set is duplicate or malformed (" + fault + ").";
 				return false;
 			}
 			string oldSeatId = City?.SettlementId;
-			string oldAwayId = Away?.City?.SettlementId;
+			List<string> oldOtherIds = new List<string>();
+			for (int i = 0; i < nonSeat.Count; i++)
+				oldOtherIds.Add(nonSeat[i]?.City?.SettlementId);
 			RealmId = realm;
 			RealmIdentityVersion = KingdomIdentityRules.RulesVersion;
 			RealmIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
@@ -149,16 +172,17 @@ namespace ThousandAndFirst
 			SettlementIdentityFoundedTick = FoundedTick;
 			SettlementIdentityFirstClaimedZone = seatZone;
 			SettlementIdentityLegacyId = oldSeatId;
-			if (Away != null)
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				if (Away.City == null) Away.City = new Simulation.City.KingdomCityBook();
-				Away.City.SettlementId = awayId;
-				Away.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
-				Away.SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
-				Away.SettlementIdentityTransactionId = null;
-				Away.SettlementIdentityFoundedTick = Away.FoundedTick;
-				Away.SettlementIdentityFirstClaimedZone = awayZone;
-				Away.SettlementIdentityLegacyId = oldAwayId;
+				KingdomSettlement row = nonSeat[i];
+				if (row.City == null) row.City = new Simulation.City.KingdomCityBook();
+				row.City.SettlementId = otherIds[i];
+				row.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
+				row.SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
+				row.SettlementIdentityTransactionId = null;
+				row.SettlementIdentityFoundedTick = row.FoundedTick;
+				row.SettlementIdentityFirstClaimedZone = otherZones[i];
+				row.SettlementIdentityLegacyId = oldOtherIds[i];
 			}
 			IdentityFault = null;
 			return true;

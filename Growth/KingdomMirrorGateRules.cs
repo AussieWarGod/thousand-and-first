@@ -185,6 +185,13 @@ namespace ThousandAndFirst
 					dropped++;
 					continue;
 				}
+				// One keyed arch per city is also save authority. A hostile duplicate city must
+				// not become a second destination merely because its key differs.
+				if (IndexOfCity(read, columns[1]) >= 0)
+				{
+					dropped++;
+					continue;
+				}
 				read[kept++] = new KingdomGateRow(columns[0], columns[1], columns[2]);
 			}
 			rows = new KingdomGateRow[kept];

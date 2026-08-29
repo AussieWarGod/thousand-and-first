@@ -17,9 +17,11 @@ namespace ThousandAndFirst.Tests
 	{
 		/// <summary>Realm state: one faction, one history. None of this may live on a city, or
 		/// walking between cities would rewrite the realm.</summary>
-		private static readonly string[] RealmOnlyFields = new string[16]
+		private static readonly string[] RealmOnlyFields = new string[19]
 		{
-			"KingdomFactionName", "KingdomDisplayName", "Standings", "ChronicleEntries", "OutsiderEntries",
+			"KingdomFactionName", "KingdomDisplayName", "Standings", "RealmPolicyToward",
+			"RegardSpilloverRemainders", "RegardSpilloverObservedReputation",
+			"ChronicleEntries", "OutsiderEntries",
 			"SerializationVersion", "LoadFailed", "ActiveDealKeys", "ActiveDealFactions",
 			"DealNextTicks", "Away",
 			// LIVING-CITY-ARCHITECTURE §3.8: the binding registry and the id counter under it are
@@ -262,6 +264,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void NormalizeRetiresLegacyNotableEconomyButPreservesMealEvidence()
+		{
+			KingdomSettlement legacy = new KingdomSettlement
+			{
+				NotableShade = 17,
+				MealShade = 1
+			};
+			legacy.Normalize();
+			Assert.AreEqual(0, legacy.NotableShade,
+				"title-only civic offices cannot retain a hidden legacy capacity modifier");
+			Assert.AreEqual(1, legacy.MealShade,
+				"retiring notable economy must not erase attended food evidence");
+		}
+
+		[Test]
+		public void SeatCaptureAndRestoreCannotReanimateLegacyNotableEconomy()
+		{
+			KingdomSettlement legacySeat = new KingdomSettlement
+			{
+				NotableShade = 17,
+				MealShade = 1
+			};
+			KingdomSettlement captured = new KingdomSettlement();
+			captured.ReadFrom(legacySeat);
+			KingdomSettlement restored = new KingdomSettlement();
+			captured.WriteTo(restored);
+			Assert.AreEqual(0, captured.NotableShade);
+			Assert.AreEqual(0, restored.NotableShade);
+			Assert.AreEqual(1, restored.MealShade);
+		}
+
+		[Test]
 		public void NormalizeRejectsEveryUnnamedSerializedLifecycleValue()
 		{
 			KingdomSettlement settlement = new KingdomSettlement
@@ -339,8 +373,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, 1, false, false, KingdomSettlement.SecondFoundingVerdict.Allowed)]
 		[TestCase(true, 1, true, false, KingdomSettlement.SecondFoundingVerdict.GroundIsAlreadyOurs)]
 		[TestCase(true, 1, false, true, KingdomSettlement.SecondFoundingVerdict.GroundIsTooClose)]
-		[TestCase(true, 2, false, false, KingdomSettlement.SecondFoundingVerdict.RealmIsFull)]
-		[TestCase(true, 2, false, true, KingdomSettlement.SecondFoundingVerdict.RealmIsFull)]
+		[TestCase(true, 2, false, false, KingdomSettlement.SecondFoundingVerdict.Allowed)]
+		[TestCase(true, 2, false, true, KingdomSettlement.SecondFoundingVerdict.GroundIsTooClose)]
 		[TestCase(true, 3, false, false, KingdomSettlement.SecondFoundingVerdict.RealmIsFull)]
 		public void JudgeSecondFounding(bool founded, int held, bool claimed, bool adjacent, KingdomSettlement.SecondFoundingVerdict expected)
 		{
@@ -348,9 +382,9 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheCapIsTwoCities()
+		public void TheCapIsThreeCities()
 		{
-			Assert.AreEqual(2, KingdomSettlement.MaxSettlements);
+			Assert.AreEqual(3, KingdomSettlement.MaxSettlements);
 			Assert.AreEqual(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, KingdomSettlement.JudgeSecondFounding(true, KingdomSettlement.MaxSettlements, false, false));
 		}
 
@@ -446,6 +480,8 @@ namespace ThousandAndFirst.Tests
 			SetSample(fields, Settlement, written, "SemanticPassZoneId", "JoppaWorld.11.22.1.1.10");
 			SetSample(fields, Settlement, written, "SemanticPassStartedMask", 7L);
 			SetSample(fields, Settlement, written, "SemanticPassCompletedMask", 3L);
+			// Read-compatible only: capture normalization must retire this old economy field.
+			SetSample(fields, Settlement, written, "NotableShade", 0);
 			return written;
 		}
 

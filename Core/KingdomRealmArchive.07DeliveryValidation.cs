@@ -66,9 +66,11 @@ namespace ThousandAndFirst
 						|| !string.Equals(value.LegZoneIds[last], value.DestZoneIds[found],
 							StringComparison.Ordinal)
 						|| (ordinal > 1 && value.LegDepartTicks[first] < priorArrival)) return false;
-					load += value.DeliveryCargoAuthorityKinds[found]
-						== (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
-						? value.DeliveryManifestSourceCounts[found] : value.CargoAmounts[found];
+					load += Simulation.City.KingdomJobRules.DeliveryCapacityLoad(
+						(Simulation.City.KingdomDeliveryCargoAuthority)
+							value.DeliveryCargoAuthorityKinds[found],
+						(Simulation.City.KingdomStockKind)value.Cargos[found],
+						value.CargoAmounts[found], value.DeliveryManifestSourceCounts[found]);
 					if (load > Simulation.City.KingdomLogisticsRules.CarrierCapacity) return false;
 					priorArrival = value.LegArriveTicks[last];
 					priorDestination = value.DestZoneIds[found];
@@ -88,14 +90,20 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < jobs; i++)
 			{
-				if (value.DeliveryCargoAuthorityKinds[i]
-					!= (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest) continue;
+				if (!Simulation.City.KingdomJobRules.UsesExactObjectRange(
+					(Simulation.City.KingdomDeliveryCargoAuthority)
+						value.DeliveryCargoAuthorityKinds[i],
+					(Simulation.City.KingdomStockKind)value.Cargos[i])) continue;
 				long leftEnd = (long)value.DeliveryManifestSourceStarts[i]
 					+ value.DeliveryManifestSourceCounts[i];
 				for (int j = i + 1; j < jobs; j++)
 				{
-					if (value.DeliveryCargoAuthorityKinds[j]
-						!= (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
+					if (!Simulation.City.KingdomJobRules.UsesExactObjectRange(
+							(Simulation.City.KingdomDeliveryCargoAuthority)
+								value.DeliveryCargoAuthorityKinds[j],
+							(Simulation.City.KingdomStockKind)value.Cargos[j])
+						|| value.DeliveryCargoAuthorityKinds[j]
+							!= value.DeliveryCargoAuthorityKinds[i]
 						|| !string.Equals(value.DeliveryOwnerOperationIds[i],
 							value.DeliveryOwnerOperationIds[j], StringComparison.Ordinal)) continue;
 					if (value.DeliveryOwnerManifestVersions[i]
@@ -107,6 +115,23 @@ namespace ThousandAndFirst
 					if (leftEnd > int.MaxValue || rightEnd > int.MaxValue
 						|| (value.DeliveryManifestSourceStarts[i] < rightEnd
 							&& value.DeliveryManifestSourceStarts[j] < leftEnd)) return false;
+				}
+			}
+			for (int i = 0; i < jobs; i++)
+			{
+				if (value.DeliveryCargoAuthorityKinds[i]
+					!= (int)Simulation.City.KingdomDeliveryCargoAuthority.ConstructionInput)
+					continue;
+				for (int j = i + 1; j < jobs; j++)
+				{
+					if (value.DeliveryCargoAuthorityKinds[j]
+							!= (int)Simulation.City.KingdomDeliveryCargoAuthority.ConstructionInput
+						|| !string.Equals(value.DeliveryOwnerOperationIds[i],
+							value.DeliveryOwnerOperationIds[j], StringComparison.Ordinal)) continue;
+					if (value.DeliveryOwnerManifestVersions[i]
+							!= value.DeliveryOwnerManifestVersions[j]
+						|| !string.Equals(value.DeliveryOwnerManifestDigests[i],
+							value.DeliveryOwnerManifestDigests[j], StringComparison.Ordinal)) return false;
 				}
 			}
 			return true;

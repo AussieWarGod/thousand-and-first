@@ -136,6 +136,26 @@ namespace ThousandAndFirst
 				foot = The.ZoneManager.GetZone(receipt.FootZoneId);
 			}
 			catch { return false; }
+			return ExactPhysicalLinkStands(receipt, head, foot);
+		}
+
+		/// <summary>
+		/// The same exact proof for optional civic observation, but only when both endpoints are
+		/// already cached. It never calls <c>GetZone</c>, so a Charter read cannot thaw remote ground.
+		/// </summary>
+		public static bool PhysicalLinkStandsLoaded(string HeadZoneId)
+		{
+			if (!TryReadPhysicalReceipt(HeadZoneId, out KingdomDelveLinkReceipt receipt)
+				|| The.ZoneManager?.CachedZones == null
+				|| !The.ZoneManager.CachedZones.TryGetValue(receipt.HeadZoneId, out Zone head)
+				|| !The.ZoneManager.CachedZones.TryGetValue(receipt.FootZoneId, out Zone foot))
+				return false;
+			return ExactPhysicalLinkStands(receipt, head, foot);
+		}
+
+		private static bool ExactPhysicalLinkStands(KingdomDelveLinkReceipt receipt,
+			Zone head, Zone foot)
+		{
 			if (head == null || foot == null || !head.Built || !foot.Built
 				|| head.ZoneID != receipt.HeadZoneId
 				|| foot.ZoneID != receipt.FootZoneId || head.Width != foot.Width
@@ -150,7 +170,7 @@ namespace ThousandAndFirst
 					!= KingdomPhysicalLookupState.Exact
 				|| FindExactEndpoint(foot, receipt.FootEndpointId, out up)
 					!= KingdomPhysicalLookupState.Exact) return false;
-			string encoded = ReadState(HeadZoneId);
+			string encoded = ReadState(receipt.HeadZoneId);
 			StairsDown downPart = down.GetPart<StairsDown>();
 			StairsUp upPart = up.GetPart<StairsUp>();
 			return root.CurrentZone == head

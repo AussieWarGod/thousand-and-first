@@ -249,11 +249,11 @@ namespace ThousandAndFirst.Tests
 		public void CreedDeclarationAndWishMintExplicitStableSources()
 		{
 			string creed = KingdomCreedLogicalSource.Read();
-			string wishes = Source(Path.Combine("Debug", "KingdomWishes.cs"));
+			string wishes = Source(Path.Combine("Debug",
+				"KingdomWishes.DumpDelvesAndRaids.cs"));
 			string declaration = Slice(creed, "public static bool Declare(",
 				"public static void EaseForMeal(");
-			string raidWish = Slice(wishes, "public static void RaidWish()",
-				"[WishCommand(\"kingdom:reset\"");
+			string raidWish = Slice(wishes, "public static void RaidWish()", "\n\t}\n}");
 			StringAssert.Contains("creed-declaration-slight", declaration);
 			StringAssert.Contains("KingdomRaids.RecordProvocation", declaration);
 			StringAssert.Contains("debug-test-provocation", raidWish);

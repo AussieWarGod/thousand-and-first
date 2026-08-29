@@ -29,11 +29,7 @@ namespace ThousandAndFirst
 			}
 			case BountyTask.Manning:
 			{
-				ManOneWork(System, Survey);
-				if (now < Data.DueTick)
-				{
-					return;
-				}
+				if (!ManningComplete(Data)) return;
 				Finish(System, Z, Survey, Notice, Data, null);
 				return;
 			}
@@ -129,16 +125,24 @@ namespace ThousandAndFirst
 					for (int i = 0; i < pile.Inventory.Objects.Count; i++)
 					{
 						GameObject candidate = pile.Inventory.Objects[i];
-						if (GameObject.Validate(candidate) && KingdomMaterials.TryMaterialOf(candidate, out _))
+						if (GameObject.Validate(candidate)
+							&& KingdomConstructionInputLeaseAuthority
+								.TryObjectGraphAvailableForOrdinaryTransfer(candidate, out _)
+							&& KingdomMaterials.TryOrdinaryMaterialOf(candidate, out _))
 						{
 							next = candidate;
 							break;
 						}
 					}
 					if (next == null) break;
-					Data.TransferItemId = next.ID;
-					Data.TransferSourceId = pile.ID;
-					Data.TransferDestinationId = container.ID;
+					string itemId = next.IDIfAssigned;
+					string sourceId = pile.IDIfAssigned;
+					string destinationId = container.IDIfAssigned;
+					if (string.IsNullOrEmpty(itemId) || string.IsNullOrEmpty(sourceId)
+						|| string.IsNullOrEmpty(destinationId)) break;
+					Data.TransferItemId = itemId;
+					Data.TransferSourceId = sourceId;
+					Data.TransferDestinationId = destinationId;
 					Data.TransferUnits = next.Count;
 					Data.TransferTotalBefore = Data.TransferredUnits;
 					Data.TransferPhase = (int)BountyTransferPhase.Bound;

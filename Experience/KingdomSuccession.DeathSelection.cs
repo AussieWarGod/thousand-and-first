@@ -36,6 +36,7 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			ReconcileAbandonedSeatClimb(system);
 
 			string founderName = founder.BaseDisplayNameStripped;
 			string founderCause = DeathCause(E);
@@ -101,15 +102,67 @@ namespace ThousandAndFirst
 			{
 				candidates[i] = heirs[i].Rule;
 			}
-			int chosenIndex;
-			if (!KingdomSuccessionRules.TryChooseHeir(candidates, SuccessionLaw.Seniority, null, out chosenIndex))
+			KingdomSuccessionConfiguration configuration;
+			string configurationFailure;
+			if (!TryGetCurrentConfiguration(system, out configuration, out configurationFailure))
+			{
+				KingdomLog.Log("succession: the realm's custom could not be proved ("
+					+ configurationFailure + ")");
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			KingdomSuccessionSelection selection;
+			KingdomGroomingRecord grooming;
+			bool hasGrooming;
+			if (!TryRefreshGrooming(system, true, out grooming, out hasGrooming,
+				out configurationFailure))
+			{
+				KingdomLog.Log("succession: grooming proof could not be refreshed ("
+					+ configurationFailure + ")");
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			if (!KingdomSuccessionRules.TryResolveConfiguredHeir(candidates, configuration,
+				grooming, hasGrooming, out selection))
 			{
 				PublishFounderDeath(system, founderName, E);
 				EndDynasty(system, founderName, SuccessionVerdict.NoHeir, E);
 				return;
 			}
 
-			HeirRuntime chosen = heirs[chosenIndex];
+			HeirRuntime chosen = heirs[selection.HeirIndex];
+			HeirRuntime lawHeir = heirs[selection.LawHeirIndex];
+			KingdomSuccessionSelectionReceipt receipt;
+			if (!KingdomSuccessionSelectionReceipt.TryCreate(system.RealmId, token,
+				configuration.Revision, chosen.Rule.ResidentId, chosen.Rule.Name,
+				lawHeir.Rule.ResidentId, lawHeir.Rule.Name, selection.Choice,
+				selection.CostsTheSeat, selection.Reason, out receipt))
+			{
+				KingdomLog.Log("succession: configured selection could not freeze an exact receipt");
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			string selectionReceipt = KingdomSuccessionSelectionReceipt.Encode(receipt);
+			if (string.IsNullOrEmpty(selectionReceipt))
+			{
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			if (selection.Reason == SuccessionSelectionReason.ChosenMissing
+				|| selection.Reason == SuccessionSelectionReason.ChosenIneligible
+				|| selection.Reason == SuccessionSelectionReason.ChosenAmbiguous)
+				KingdomLog.Log("succession: configured resident failed exact roll proof ("
+					+ selection.Reason + "); seniority applied without a seat cost");
+			if (selection.Reason == SuccessionSelectionReason.GroomedMissing
+				|| selection.Reason == SuccessionSelectionReason.GroomedIneligible
+				|| selection.Reason == SuccessionSelectionReason.GroomedAmbiguous
+				|| selection.Reason == SuccessionSelectionReason.GroomedUnready)
+				KingdomLog.Log("succession: groomed successor was not ready ("
+					+ selection.Reason + "); seniority applied without a seat cost");
 			if ((chosen.Rule.KeptCreeds ?? "").Length > MaxPendingRepairCreedsChars)
 			{
 				KingdomLog.Log("succession: chosen heir's creed history exceeded the repair bound");
@@ -156,8 +209,18 @@ namespace ThousandAndFirst
 				return;
 			}
 			bool heirWasSeated = ReferenceEquals(heirBook, system.City);
-			string riteCityName = heirWasSeated ? system.SeatName
-				: (system.Away?.SettlementName ?? system.SeatName);
+			KingdomSettlement heirSettlement = heirWasSeated ? null :
+				system.FindNonSeatSettlementByBook(heirBook);
+			string heirSettlementId = heirWasSeated ? system.City?.SettlementId :
+				heirSettlement?.City?.SettlementId;
+			if (!KingdomIdentityRules.IsSettlementId(heirSettlementId))
+			{
+				KingdomLog.Log("succession: heir city has no exact topology identity");
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			string riteCityName = heirWasSeated ? system.SeatName :
+				heirSettlement.SettlementName;
 			KingdomSuccessionRite.Plan ritePlan;
 			string riteFailure;
 			if (!KingdomSuccessionRite.TryFreeze(system, heirBook, heirBody, riteCityName,
@@ -177,7 +240,8 @@ namespace ThousandAndFirst
 			}
 
 			CarryFounderSuccession(E, game, founder, system, founderName, founderCause,
-				deathTick, token, chosen, heirBody, heirZoneId, heirWasSeated, ritePlan);
+				deathTick, token, selectionReceipt, chosen, heirBody, heirZoneId,
+				heirSettlementId, ritePlan);
 		}
 	}
 }

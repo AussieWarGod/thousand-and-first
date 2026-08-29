@@ -8,6 +8,10 @@ creator, license, fallback, and human review. This check proves both sides:
   local reference   every ThousandAndFirst/ Tile= resolves to that allowlist
   unknown vanilla   any external tile path absent from the installed base XML corpus is a typo
 
+References are discovered from both staged XML attributes and staged C# string literals. Runtime
+code can assign ``Render.Tile``/``PaintTile`` directly; ignoring those paths would make the XML
+inventory a partial truth while still printing a release-wide count.
+
 The last tests do not unpack or copy game assets. They check that Qud names each path in its XML,
 that the engine-normalized packed asset key exists, and that every text fallback fits Qud's
 256-character renderer. Qud's `SpriteManager` replaces path separators and lower-cases the whole
@@ -46,8 +50,8 @@ def read(path):
         return handle.read()
 
 
-def runtime_xml_paths():
-    """Return the canonical staged XML set instead of maintaining a second inventory."""
+def runtime_paths(extension):
+    """Return one canonical staged suffix set instead of maintaining another inventory."""
     if not os.path.isfile(STAGE_TOOL):
         raise RuntimeError("canonical runtime inventory is missing: %s" % STAGE_TOOL)
     result = subprocess.run(
@@ -62,14 +66,24 @@ def runtime_xml_paths():
         raise RuntimeError("canonical runtime inventory failed: %s" % detail)
     paths = sorted(
         line.strip() for line in result.stdout.splitlines()
-        if line.strip().lower().endswith(".xml")
+        if line.strip().lower().endswith(extension.lower())
     )
     if not paths:
-        raise RuntimeError("canonical runtime inventory contains no XML")
+        raise RuntimeError("canonical runtime inventory contains no %s files" % extension)
     missing = [path for path in paths if not os.path.isfile(path)]
     if missing:
-        raise RuntimeError("staged XML is missing: %s" % ", ".join(missing))
+        raise RuntimeError("staged %s is missing: %s" % (extension, ", ".join(missing)))
     return paths
+
+
+def runtime_xml_paths():
+    """Return the canonical staged XML set."""
+    return runtime_paths(".xml")
+
+
+def runtime_csharp_paths():
+    """Return the canonical staged C# set, including optional integration shards."""
+    return runtime_paths(".cs")
 
 
 def tile_paths(attribute, value):
@@ -99,6 +113,128 @@ def referenced_tiles(paths):
                         "%s:%s:%s" % (path, owner or element.tag, attribute)
                     )
     return references
+
+
+def csharp_string_literals(source):
+    """Yield decoded-enough C# string literals with their starting line.
+
+    This is a bounded lexer, not a C# parser. It deliberately skips line/block comments and
+    character literals, understands ordinary/verbatim/interpolated prefixes, and handles raw
+    string delimiters. Tile paths use no semantic escapes beyond slash/backslash, so decoding the
+    ordinary quote and backslash escapes is sufficient for exact path inventory. Interpolation is
+    retained literally; a dynamic value cannot accidentally equal a known vanilla path.
+    """
+    index = 0
+    line = 1
+    length = len(source)
+    while index < length:
+        if source.startswith("//", index):
+            end = source.find("\n", index + 2)
+            if end < 0:
+                return
+            index = end
+            continue
+        if source.startswith("/*", index):
+            end = source.find("*/", index + 2)
+            if end < 0:
+                return
+            line += source.count("\n", index, end + 2)
+            index = end + 2
+            continue
+        if source[index] == "'":
+            index += 1
+            while index < length:
+                if source[index] == "\\":
+                    index += 2
+                    continue
+                if source[index] == "'":
+                    index += 1
+                    break
+                if source[index] == "\n":
+                    line += 1
+                index += 1
+            continue
+
+        prefix_length = 0
+        verbatim = False
+        if source.startswith("$@\"", index) or source.startswith("@$\"", index):
+            prefix_length = 3
+            verbatim = True
+        elif source.startswith("@\"", index):
+            prefix_length = 2
+            verbatim = True
+        elif source.startswith("$\"", index):
+            prefix_length = 2
+        elif source[index] == '"':
+            prefix_length = 1
+
+        if prefix_length:
+            quote_at = index + prefix_length - 1
+            delimiter = 1
+            while quote_at + delimiter < length and source[quote_at + delimiter] == '"':
+                delimiter += 1
+            start_line = line
+            if delimiter >= 3:
+                body_at = quote_at + delimiter
+                end_token = '"' * delimiter
+                end = source.find(end_token, body_at)
+                if end < 0:
+                    return
+                body = source[body_at:end]
+                yield body, start_line
+                line += source.count("\n", index, end + delimiter)
+                index = end + delimiter
+                continue
+
+            cursor = quote_at + 1
+            pieces = []
+            while cursor < length:
+                char = source[cursor]
+                if verbatim and char == '"' and cursor + 1 < length \
+                        and source[cursor + 1] == '"':
+                    pieces.append('"')
+                    cursor += 2
+                    continue
+                if char == '"':
+                    cursor += 1
+                    break
+                if not verbatim and char == "\\" and cursor + 1 < length:
+                    escaped = source[cursor + 1]
+                    pieces.append("\\" if escaped == "\\" else escaped)
+                    cursor += 2
+                    continue
+                if char == "\n":
+                    line += 1
+                pieces.append(char)
+                cursor += 1
+            yield "".join(pieces), start_line
+            index = cursor
+            continue
+
+        if source[index] == "\n":
+            line += 1
+        index += 1
+
+
+def referenced_csharp_tiles(paths):
+    """Return direct runtime tile literals from staged C# in the same shape as XML refs."""
+    references = {}
+    for path in paths:
+        for value, line in csharp_string_literals(read(path)):
+            tile = value.strip()
+            if (not tile.lower().endswith(RASTER_EXTENSIONS)
+                    or (tile.startswith(".") and "/" not in tile and "\\" not in tile)):
+                continue
+            references.setdefault(tile, []).append("%s:%d:CSharpString" % (path, line))
+    return references
+
+
+def merge_references(*reference_sets):
+    merged = {}
+    for references in reference_sets:
+        for tile, owners in references.items():
+            merged.setdefault(tile, []).extend(owners)
+    return merged
 
 
 def render_string_problems(paths):
@@ -139,7 +275,7 @@ def render_string_problems(paths):
     return problems
 
 
-def fixed_farmer_tile_problems(blueprint_path="ObjectBlueprints.xml"):
+def fixed_farmer_tile_problems(blueprint_path="RuntimeData/ObjectBlueprints.xml"):
     """A BaseFarmer descendant's RandomTile builder otherwise overwrites its fixed render."""
     if not os.path.isfile(blueprint_path):
         return ["required runtime XML is missing: %s" % blueprint_path]
@@ -356,13 +492,16 @@ def main():
 
     try:
         runtime_xml = runtime_xml_paths()
+        runtime_csharp = runtime_csharp_paths()
     except RuntimeError as error:
         problems.append(str(error))
         references = {}
     else:
-        references = referenced_tiles(runtime_xml)
+        references = merge_references(
+            referenced_tiles(runtime_xml), referenced_csharp_tiles(runtime_csharp)
+        )
         if not references:
-            problems.append("staged runtime XML contains no tile references")
+            problems.append("staged runtime XML/C# contains no tile references")
         problems.extend(render_string_problems(runtime_xml))
 
     local_assets, asset_problems = runtime_asset_records()

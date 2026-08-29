@@ -55,6 +55,33 @@ namespace ThousandAndFirst.Simulation.City
 		/// without a second zone walk. One of <see cref="KingdomWorkKind"/>, as an int.</summary>
 		public const string PostKindProperty = "KingdomPostWorkKind";
 
+		/// <summary>Monotone witness for any interval-breaking availability transition. A
+		/// manning contract records both endpoint epochs only after the ordinary allocator
+		/// publishes its reservation; changed posts, staging, or removal therefore cannot be
+		/// hidden by restoring the same object before the next settlement pass.</summary>
+		internal const string AvailabilityEpochProperty = "r_TAF_AvailabilityEpoch";
+
+		internal static int AvailabilityEpochOf(GameObject Item)
+		{
+			if (!GameObject.Validate(Item)) return -1;
+			int epoch = Item.GetIntProperty(AvailabilityEpochProperty);
+			return epoch < 0 ? -1 : epoch;
+		}
+
+		internal static bool TouchAvailability(GameObject Item)
+		{
+			if (!GameObject.Validate(Item)) return false;
+			int prior = Item.GetIntProperty(AvailabilityEpochProperty);
+			if (prior < 0 || prior == int.MaxValue)
+			{
+				Item.SetIntProperty(AvailabilityEpochProperty, -1);
+				return false;
+			}
+			int next = prior + 1;
+			Item.SetIntProperty(AvailabilityEpochProperty, next);
+			return Item.GetIntProperty(AvailabilityEpochProperty) == next;
+		}
+
 		/// <summary>Stamps one settler with the post this pass gave them. Cleared rather than left
 		/// standing when nobody crewed them, because a stale post is a settler walking to a mill
 		/// they were taken off.</summary>
@@ -64,8 +91,12 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return;
 			}
+			int rawKind = (int)Kind;
+			if (Settler.GetIntProperty(PostWorkProperty) != WorkId
+				|| Settler.GetIntProperty(PostKindProperty) != rawKind)
+				TouchAvailability(Settler);
 			Settler.SetIntProperty(PostWorkProperty, WorkId, RemoveIfZero: true);
-			Settler.SetIntProperty(PostKindProperty, (int)Kind, RemoveIfZero: true);
+			Settler.SetIntProperty(PostKindProperty, rawKind, RemoveIfZero: true);
 		}
 
 		/// <summary>The post one settler stands at, or zero.</summary>

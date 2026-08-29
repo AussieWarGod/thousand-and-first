@@ -9,6 +9,10 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Source(string relative)
 		{
+			if (relative == Path.Combine("Chronicle", "KingdomChronicle.cs"))
+				return KingdomChronicleLogicalSource.Read();
+			if (relative == Path.Combine("Chronicle", "KingdomChronicleReceiptRules.cs"))
+				return KingdomChronicleReceiptRulesLogicalSource.Read();
 			return TestMain.ReadRepositoryText(relative);
 		}
 
@@ -62,6 +66,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BothRegisterPathsUseTheRootPreservingBoundedAppend()
+		{
+			string telling = Source(Path.Combine("Chronicle", "KingdomChronicle.Telling.cs"));
+			string rules = Source(Path.Combine("Chronicle",
+				"KingdomChronicleReceiptRules.cs"));
+			Assert.AreEqual(2, Count(telling,
+				"KingdomChronicleReceiptRules.AppendBounded("));
+			StringAssert.DoesNotContain("RemoveAt(0)", telling);
+			StringAssert.Contains("Values.RemoveAt(Values.Count > 1 ? 1 : 0)", rules);
+		}
+
+		[Test]
 		public void HashesAreCanonicalLengthPrefixedSha256Only()
 		{
 			string shell = Source(Path.Combine("Chronicle", "KingdomChronicle.cs"));
@@ -105,7 +121,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void JournalAttemptNeverRepeatsAndOptionOffFreezesSkipped()
+		public void JournalAttemptRecoversByExactIdWithoutRepeatingAndOptionOffSkips()
 		{
 			string shell = Source(Path.Combine("Chronicle", "KingdomChronicle.cs"));
 			int journal = shell.IndexOf("private static bool DeliverJournal",
@@ -113,24 +129,40 @@ namespace ThousandAndFirst.Tests
 			int attempting = shell.IndexOf(
 				"state == KingdomChronicleSinkDisposition.Attempting", journal,
 				StringComparison.Ordinal);
-			int lost = shell.IndexOf(
-				"Receipt.JournalState = KingdomChronicleSinkDisposition.Lost", attempting,
+			int observed = shell.IndexOf(
+				"CountJournalAccomplishments(Receipt.EventId)", attempting,
 				StringComparison.Ordinal);
-			int option = shell.IndexOf("GetOption(\"r_TAF_OptionChronicle\")", lost,
+			int recovered = shell.IndexOf(
+				"? KingdomChronicleSinkDisposition.Delivered", observed,
+				StringComparison.Ordinal);
+			int option = shell.IndexOf("GetOption(\"r_TAF_OptionChronicle\")", recovered,
 				StringComparison.Ordinal);
 			int skipped = shell.IndexOf(
 				"Receipt.JournalState = KingdomChronicleSinkDisposition.Skipped", option,
 				StringComparison.Ordinal);
 			int callback = shell.IndexOf("JournalAPI.AddAccomplishment", skipped,
 				StringComparison.Ordinal);
-			Assert.Greater(lost, attempting);
-			Assert.Greater(option, lost,
-				"reloaded Attempting must settle Lost before option/callback path");
+			Assert.Greater(observed, attempting);
+			Assert.Greater(recovered, observed);
+			Assert.Greater(option, recovered,
+				"reloaded Attempting must settle from exact ID before option/callback path");
 			Assert.Greater(skipped, option);
 			Assert.Greater(callback, skipped,
 				"option-off Skipped must persist without calling journal API");
 			StringAssert.Contains("journal-intent", shell.Substring(skipped,
 				callback - skipped));
+		}
+
+		[Test]
+		public void JournalProjectionUsesExactIdentityGospelAndBoundedCodaShare()
+		{
+			string shell = Source(Path.Combine("Chronicle", "KingdomChronicle.cs"));
+			StringAssert.Contains("internal const int MaxCodaEligibleAccomplishments = 3;", shell);
+			StringAssert.Contains("row.ID.StartsWith(\"taf:\", StringComparison.Ordinal)", shell);
+			StringAssert.Contains("GospelText = \"In =year=, =name= \" + clause + \".\";", shell);
+			StringAssert.Contains("projectedMural, gospelText, null, \"general\"", shell);
+			StringAssert.Contains("weight, Receipt.EventId, -1L", shell);
+			StringAssert.Contains("CountJournalAccomplishments(Receipt.EventId) == 1", shell);
 		}
 
 		[Test]
@@ -174,6 +206,14 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(refusal, parse);
 			Assert.Greater(migrationWrite, refusal,
 				"parse failure returns before any registry migration write");
+		}
+
+		private static int Count(string value, string token)
+		{
+			int count = 0;
+			for (int at = 0; (at = value.IndexOf(token, at,
+				StringComparison.Ordinal)) >= 0; at += token.Length) count++;
+			return count;
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace ThousandAndFirst
 		// --- The heart's own ladder -------------------------------------------------------
 
 		/// <summary>
-		/// The four rungs of the heart, in order, by design key. The heart is ONE plot that grows
+		/// The five rungs of the heart, in order, by design key. The heart is ONE plot that grows
 		/// with its rung &mdash; basin, then the waterstone laid around it, then the moot yard
 		/// raised over that, then the great court raised around the yard &mdash; and each rung is
 		/// built OVER the last rather than in place of it, so the ground reads as history.
@@ -34,16 +34,17 @@ namespace ThousandAndFirst
 		/// <c>Heart="yes"</c> attribute noted in the wave report.
 		/// </para>
 		/// </summary>
-		public static readonly string[] HeartRungKeys = new string[4]
+		public static readonly string[] HeartRungKeys = new string[5]
 		{
 			"heartbasin",
 			"heartwaterstone",
 			"heartmoot",
-			"heartcourt"
+			"heartcourt",
+			"arcology"
 		};
 
 		/// <summary>Which rung of the heart a design key is, one-based.</summary>
-		/// <returns>Zero for every design that is not the heart, which is all but four of
+		/// <returns>Zero for every design that is not the heart, which is all but five of
 		/// them.</returns>
 		public static int HeartRungOf(string Key)
 		{
@@ -88,6 +89,7 @@ namespace ThousandAndFirst
 				case 3:
 					return PlotSize.Large;
 				case 4:
+				case 5:
 					return PlotSize.Huge;
 				default:
 					return PlotSize.None;
@@ -115,6 +117,8 @@ namespace ThousandAndFirst
 					return 12;
 				case 4:
 					return 40;
+				case 5:
+					return 80;
 				default:
 					return RiteHeartWeight;
 			}

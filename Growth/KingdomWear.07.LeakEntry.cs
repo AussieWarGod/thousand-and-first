@@ -73,7 +73,16 @@ namespace ThousandAndFirst
 			long checkpoint;
 			if (!TryLeakWindow(System, Work, Wear, TimeTicks, out days, out checkpoint)) return;
 			int held = KingdomSurvey.HeldIn(Work);
-			int wanted = KingdomWearRules.Leaked(KingdomSurvey.CapacityOf(Work), held, Wear.Wear, days);
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure))
+			{
+				QuarantineWear(System, Work, "Its spoilage cannot prove the durable food leases.");
+				return;
+			}
+			int available = KingdomOrdinaryFoodAuthority.AvailableIn(Work, leases);
+			int wanted = KingdomWearRules.Leaked(KingdomSurvey.CapacityOf(Work), available,
+				Wear.Wear, days);
 			if (wanted <= 0)
 			{
 				if (held <= 0) Wear.LastLeakTick = checkpoint;

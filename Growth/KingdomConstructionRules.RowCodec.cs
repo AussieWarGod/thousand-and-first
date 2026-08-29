@@ -9,15 +9,16 @@ namespace ThousandAndFirst
 	public static partial class KingdomConstructionRules
 	{
 		private static bool TryDecodeRow(string Line, bool Legacy, bool Older, bool Prior,
-			out KingdomConstructionJob Row)
+			bool Previous, out KingdomConstructionJob Row)
 		{
 			if (Legacy) return TryDecodeLegacyRow(Line, out Row);
 			Row = null;
 			string[] f = Line.Split('|');
-			if (f.Length != (Older ? 45 : Prior ? 51 : 55)) return false;
+			if (f.Length != (Older ? 45 : Prior ? 51 : Previous ? 55 : 57)) return false;
 			string owner, zone, subject, source, output, physicalItem, physicalDestination;
 			string physicalReceipt, target, payload, requested, spent, outstanding, lost, failure;
 			string eventId, chronicle, ledger, message, deed;
+			string inputReceipt = null, inputReceiptHash = null;
 			int route, phase, projection, x, y, physicalPhase, physicalIndex, physicalAmount;
 			int physicalSpilled, revision, waterRequested, waterSpent, waterOutstanding, waterLost;
 			int mode, chronicleState, ledgerState, messageState, deedState;
@@ -29,11 +30,13 @@ namespace ThousandAndFirst
 			bool compacted = false;
 			if (!TryDecodeText(f[1], MaxOwnerChars, out owner)
 				|| !TryDecodeText(f[2], MaxZoneChars, out zone)
-				|| !TryInt(f[3], 1, (int)(Older
-					? KingdomConstructionRoute.Strike : KingdomConstructionRoute.PurposeConsignment), out route)
+				|| !TryInt(f[3], 1, (int)(Older ? KingdomConstructionRoute.Strike
+					: (Prior || Previous) ? KingdomConstructionRoute.PurposeConsignment
+					: KingdomConstructionRoute.HostedArcology), out route)
 				|| !TryInt(f[4], 1, (int)KingdomConstructionPhase.InspectionRequired, out phase)
-				|| !TryInt(f[5], 1, (int)(Older
-					? KingdomConstructionProjection.Repair : KingdomConstructionProjection.PurposeConsignment), out projection)
+				|| !TryInt(f[5], 1, (int)(Older ? KingdomConstructionProjection.Repair
+					: (Prior || Previous) ? KingdomConstructionProjection.PurposeConsignment
+					: KingdomConstructionProjection.HostedLot), out projection)
 				|| !TryInt(f[6], -1, 1023, out x) || !TryInt(f[7], -1, 1023, out y)
 				|| !TryDecodeText(f[8], MaxSubjectChars, out subject)
 				|| !TryDecodeText(f[9], MaxSubjectChars, out source)
@@ -81,6 +84,9 @@ namespace ThousandAndFirst
 				|| (f[52] != "0" && f[52] != "1")
 				|| (f[53] != "0" && f[53] != "1")
 				|| !TryInt(f[54], 0, int.MaxValue, out buildDefence))) return false;
+			if (!Older && !Prior && !Previous
+				&& (!TryDecodeText(f[55], MaxInputReceiptChars, out inputReceipt)
+					|| !TryDecodeText(f[56], 64, out inputReceiptHash))) return false;
 			if (!Older && !Prior)
 			{
 				buildHasPlot = f[52] == "1";
@@ -116,6 +122,7 @@ namespace ThousandAndFirst
 				PhysicalSpilled = physicalSpilled, PhysicalItemId = physicalItem,
 				PhysicalDestinationId = physicalDestination, PhysicalReceipt = physicalReceipt,
 				TargetKey = target, Payload = payload,
+				InputReceipt = inputReceipt, InputReceiptHash = inputReceiptHash,
 				BuildTruthSchema = buildTruthSchema, BuildHasPlot = buildHasPlot,
 				BuildFrontier = buildFrontier, BuildDefence = buildDefence,
 				CreatedTick = created,

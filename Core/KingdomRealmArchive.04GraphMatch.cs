@@ -47,6 +47,7 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			if (System == null || Quarantined ||
+				System.DirectionalStandingSchemaVersion != DirectionalStandingSchemaVersion ||
 				!string.IsNullOrEmpty(System.IdentityFault) ||
 				!string.IsNullOrEmpty(System.PendingSettlementId) ||
 				!string.IsNullOrEmpty(System.PendingSettlementTransactionId) ||
@@ -67,17 +68,24 @@ namespace ThousandAndFirst
 				!string.Equals(System.RealmIdentityFirstClaimedZone,
 					RealmIdentityFirstClaimedZone, StringComparison.Ordinal))
 				return Refuse("current realm scalar identity differs from archive", out Failure);
+			if (!ExactLiveSettlementTopology(System, out Failure) ||
+				!KingdomArchivedSettlementCodec.ExactGraph(Seceded, System.Seceded, out Failure))
+				return false;
 			KingdomSettlement currentSeat;
 			try { currentSeat = System.Capture(); }
 			catch (Exception ex) { return Refuse(Bound(ex.Message, 512), out Failure); }
-			KingdomSettlement expectedSeat = SeatSwapped ? Away : Seat;
-			KingdomSettlement expectedAway = SeatSwapped ? Seat : Away;
-			if (!KingdomArchivedSettlementCodec.ExactGraph(expectedSeat, currentSeat, out Failure) ||
-				!KingdomArchivedSettlementCodec.ExactGraph(expectedAway, System.Away, out Failure) ||
-				!KingdomArchivedSettlementCodec.ExactGraph(Seceded, System.Seceded, out Failure))
-				return false;
-			if (!ExactDictionary(Standings, System.Standings) ||
-				ReferenceEquals(Standings, System.Standings))
+			if (!ExactDictionary(Standings, System.RegardForRealm) ||
+				ReferenceEquals(Standings, System.RegardForRealm) ||
+				!ExactDictionary(RealmPolicyToward, System.RealmPolicyToward) ||
+				ReferenceEquals(RealmPolicyToward, System.RealmPolicyToward) ||
+				!ExactDictionary(RegardSpilloverRemainders,
+					System.RegardSpilloverRemainders) ||
+				ReferenceEquals(RegardSpilloverRemainders,
+					System.RegardSpilloverRemainders) ||
+				!ExactDictionary(RegardSpilloverObservedReputation,
+					System.RegardSpilloverObservedReputation) ||
+				ReferenceEquals(RegardSpilloverObservedReputation,
+					System.RegardSpilloverObservedReputation))
 				return Refuse("current standings differ from or alias archive", out Failure);
 			if (IgnoreChronicle && (ReferenceEquals(ChronicleEntries, System.ChronicleEntries) ||
 				ReferenceEquals(ChronicleEntries, System.OutsiderEntries) ||
@@ -95,11 +103,15 @@ namespace ThousandAndFirst
 			// IgnoreChronicle suppresses only the two value comparisons while their declared
 			// callback is in flight. Chronicle roots remain in the reference proof so they
 			// cannot alias a seat, registry, carry, haul, or opposite-realm root.
-			object[] archivedRoots = { Seat, Away, Seceded, Standings, Bindings, Jobs,
-				ChronicleEntries, OutsiderEntries, Haul, CarryBook };
-			object[] liveRoots = { currentSeat, System.Away, System.Seceded, System.Standings,
-				System.Bindings, System.Jobs, System.ChronicleEntries, System.OutsiderEntries,
-				System.Haul, System.CarryBook };
+			object[] archivedRoots = SettlementRoots(Seat, SettlementTopology, Seceded,
+				Standings, RealmPolicyToward, RegardSpilloverRemainders,
+				RegardSpilloverObservedReputation, Bindings, Jobs,
+				ChronicleEntries, OutsiderEntries, Haul, CarryBook);
+			object[] liveRoots = SettlementRoots(currentSeat, System.SettlementTopology,
+				System.Seceded, System.RegardForRealm, System.RealmPolicyToward,
+				System.RegardSpilloverRemainders,
+				System.RegardSpilloverObservedReputation, System.Bindings, System.Jobs,
+				System.ChronicleEntries, System.OutsiderEntries, System.Haul, System.CarryBook);
 			if (!KingdomArchivedSettlementCodec.DisjointMutableGraphs(archivedRoots, liveRoots,
 				out Failure)) return false;
 			if (SimulationSeedHigh != System.SimulationSeedHigh ||
@@ -121,7 +133,11 @@ namespace ThousandAndFirst
 
 		internal bool ExactMirrors(string MirrorFaction, string MirrorDisplay,
 			string MirrorDeed, long MirrorTick, KingdomSettlement MirrorSeat,
-			KingdomSettlement MirrorAway, Dictionary<string, int> MirrorStandings,
+			KingdomSettlementTopology MirrorTopology,
+			Dictionary<string, int> MirrorStandings,
+			Dictionary<string, int> MirrorPolicy,
+			Dictionary<string, int> MirrorRemainders,
+			Dictionary<string, int> MirrorObserved,
 			out string Failure)
 		{
 			Failure = null;
@@ -129,13 +145,22 @@ namespace ThousandAndFirst
 				!string.Equals(DisplayName, MirrorDisplay, StringComparison.Ordinal) ||
 				!string.Equals(ExileDeed, MirrorDeed, StringComparison.Ordinal) ||
 				ClosedTick != MirrorTick || !KingdomArchivedSettlementCodec.ExactGraph(Seat,
-					MirrorSeat, out Failure) || !KingdomArchivedSettlementCodec.ExactGraph(Away,
-					MirrorAway, out Failure)) return false;
+					MirrorSeat, out Failure) || !ExactTopologyGraphs(SettlementTopology,
+					MirrorTopology, out Failure)) return false;
 			if (ReferenceEquals(Standings, MirrorStandings) ||
-				!ExactDictionary(Standings, MirrorStandings))
+				!ExactDictionary(Standings, MirrorStandings) ||
+				ReferenceEquals(RealmPolicyToward, MirrorPolicy) ||
+				!ExactDictionary(RealmPolicyToward, MirrorPolicy) ||
+				ReferenceEquals(RegardSpilloverRemainders, MirrorRemainders) ||
+				!ExactDictionary(RegardSpilloverRemainders, MirrorRemainders) ||
+				ReferenceEquals(RegardSpilloverObservedReputation, MirrorObserved) ||
+				!ExactDictionary(RegardSpilloverObservedReputation, MirrorObserved))
 				return Refuse("exile standings mirror differs from or aliases archive", out Failure);
-			object[] archivedRoots = { Seat, Away, Standings };
-			object[] mirrorRoots = { MirrorSeat, MirrorAway, MirrorStandings };
+			object[] archivedRoots = SettlementRoots(Seat, SettlementTopology, null,
+				Standings, RealmPolicyToward, RegardSpilloverRemainders,
+				RegardSpilloverObservedReputation);
+			object[] mirrorRoots = SettlementRoots(MirrorSeat, MirrorTopology, null,
+				MirrorStandings, MirrorPolicy, MirrorRemainders, MirrorObserved);
 			if (!KingdomArchivedSettlementCodec.DisjointMutableGraphs(archivedRoots, mirrorRoots,
 				out Failure)) return false;
 			return true;
@@ -151,8 +176,6 @@ namespace ThousandAndFirst
 			{
 				KingdomSettlement seat = System.Capture();
 				if (!KingdomArchivedSettlementCodec.TryEncode(seat, out byte[] seatBytes, out Failure) ||
-					!KingdomArchivedSettlementCodec.TryEncode(System.Away, out byte[] awayBytes,
-						out Failure) ||
 					!KingdomArchivedSettlementCodec.TryEncode(System.Seceded, out byte[] secededBytes,
 						out Failure) ||
 					!TryCarryBytes(System.CarryBook, out byte[] carryBytes, out Failure)) return false;
@@ -160,7 +183,8 @@ namespace ThousandAndFirst
 				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
 				{
 					writer.Write(0x54414731); // TAG1
-					WriteGraphBytes(writer, seatBytes); WriteGraphBytes(writer, awayBytes);
+					WriteGraphBytes(writer, seatBytes); WriteTopologyGraph(writer,
+						System.SettlementTopology);
 					WriteGraphBytes(writer, secededBytes); WriteGraphBytes(writer, carryBytes);
 					WriteGraphString(writer, System.RealmId); WriteGraphString(writer, System.KingdomFactionName);
 					WriteGraphString(writer, System.KingdomDisplayName);
@@ -182,7 +206,11 @@ namespace ThousandAndFirst
 					writer.Write(System.ReifyTick); writer.Write(System.ReifyThirdsSpent);
 					writer.Write(System.ReifyHeavySpent); writer.Write(System.ReifyQuietUntilTick);
 					writer.Write(System.DedicationCounter);
-					WriteGraphDictionary(writer, System.Standings);
+					writer.Write(System.DirectionalStandingSchemaVersion);
+					WriteGraphDictionary(writer, System.RegardForRealm);
+					WriteGraphDictionary(writer, System.RealmPolicyToward);
+					WriteGraphDictionary(writer, System.RegardSpilloverRemainders);
+					WriteGraphDictionary(writer, System.RegardSpilloverObservedReputation);
 					WriteGraphStrings(writer, System.ChronicleEntries);
 					WriteGraphStrings(writer, System.OutsiderEntries);
 					writer.Write(System.RegardSpoken); writer.Write(System.Dissent);
@@ -193,7 +221,7 @@ namespace ThousandAndFirst
 					writer.Write(System.LastSoulRiteTick); writer.Write(System.SecededTick);
 					WriteGraphHaul(writer, System.Haul);
 					writer.Flush();
-					if (stream.Length > KingdomArchivedSettlementCodec.MaxPayloadBytes * 4L)
+					if (stream.Length > KingdomArchivedSettlementCodec.MaxPayloadBytes * 6L)
 						throw new InvalidDataException("Current realm graph exceeds proof cap.");
 					using (global::System.Security.Cryptography.SHA256 sha =
 						global::System.Security.Cryptography.SHA256.Create())

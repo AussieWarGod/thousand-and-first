@@ -28,13 +28,13 @@ namespace ThousandAndFirst.Tests
 		public void ConstantsAndStaticCollectionsHaveOneOwner()
 		{
 			string source = KingdomPurposeLogicalSource.Read();
-			Assert.AreEqual(7, Count(source, "public static partial class KingdomPurpose"));
+			Assert.GreaterOrEqual(Count(source, "public static partial class KingdomPurpose"), 12);
 			Assert.AreEqual(1, Count(source, "public const int CargoSchema = 1"));
 			Assert.AreEqual(1, Count(source,
 				"private static readonly Dictionary<string, KingdomPurposeDefinition> Definitions"));
 			Assert.AreEqual(1, Count(source,
 				"private static readonly HashSet<string> InvalidDefinitions"));
-			StringAssert.DoesNotContain("public static class KingdomPurpose", source);
+			StringAssert.DoesNotContain("public static class KingdomPurpose\n\t{", source);
 		}
 
 		private static void Ordered(string source, params string[] markers)

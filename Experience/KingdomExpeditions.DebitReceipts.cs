@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 using Qud.API;
 using XRL;
 using XRL.Messages;
@@ -22,8 +21,10 @@ namespace ThousandAndFirst.Simulation.City
 			Encoded = null;
 			Failure = null;
 			if (Survey == null || Water == null || JobId <= 0 || WaterCost <= 0
-				|| ProvisionCost <= 0 || Survey.FoodStored < ProvisionCost)
+				|| ProvisionCost <= 0 || Survey.FoodAvailable < ProvisionCost)
 				return Refuse("Dedicated stores no longer cover the exact quote.", out Failure);
+			KingdomConstructionInputLeaseSnapshot leases;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out Failure)) return false;
 			KingdomWaterDebitLeg[] described;
 			if (!Water.TryDescribe(out described) || described.Length <= 0)
 				return Refuse("The exact water reservation could not expose a bounded receipt.", out Failure);
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < described.Length; i++)
 			{
 				GameObject owner = described[i].Owner;
-				string ownerId = GameObject.Validate(owner) ? owner.ID : null;
+				string ownerId = GameObject.Validate(owner) ? owner.IDIfAssigned : null;
 				if (string.IsNullOrEmpty(ownerId)
 					|| ownerId.Length > KingdomExpeditionDebitReceipt.MaxIdentityChars)
 					return Refuse("A dedicated water vessel lacks a bounded persistent identity.", out Failure);
@@ -49,7 +50,7 @@ namespace ThousandAndFirst.Simulation.City
 				GameObject larder = Survey.Larders[i];
 				if (!GameObject.Validate(larder) || larder.Inventory == null
 					|| larder.GetIntProperty("KingdomLarder") != 1) continue;
-				string larderId = larder.ID;
+				string larderId = larder.IDIfAssigned;
 				if (string.IsNullOrEmpty(larderId)
 					|| larderId.Length > KingdomExpeditionDebitReceipt.MaxIdentityChars) continue;
 				List<GameObject> items = new List<GameObject>(larder.Inventory.GetObjects());
@@ -57,10 +58,9 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					GameObject item = items[j];
 					if (!GameObject.Validate(item) || !seen.Add(item) || item.InInventory != larder
-						|| item.Count <= 0 || item.GetIntProperty(ProvisionJobProperty) != 0
-						|| (!item.HasPart("Food")
-							&& !item.HasPart("PreparedCookingIngredient"))) continue;
-					string itemId = item.ID;
+						|| item.GetIntProperty(ProvisionJobProperty) != 0
+						|| !KingdomOrdinaryFoodAuthority.CanSpend(leases, item)) continue;
+					string itemId = item.IDIfAssigned;
 					if (string.IsNullOrEmpty(itemId)
 						|| itemId.Length > KingdomExpeditionDebitReceipt.MaxIdentityChars
 						|| !seenIds.Add(itemId)) continue;
@@ -124,25 +124,36 @@ namespace ThousandAndFirst.Simulation.City
 					present, current, out remaining))
 					return Refuse("A receipt-bound provision stack left its exact before/after range; it was not charged again.", out Failure);
 				if (!present) continue;
-				int marker = item.GetIntProperty(ProvisionJobProperty);
-				if (marker != 0 && marker != JobId)
-					return Refuse("A provision stack belongs to another durable receipt.", out Failure);
-				if (remaining > 0)
-				{
-					item.SetIntProperty(ProvisionJobProperty, JobId);
-					while (remaining > 0)
+					int marker = item.GetIntProperty(ProvisionJobProperty);
+					if (marker != 0 && marker != JobId)
+						return Refuse("A provision stack belongs to another durable receipt.", out Failure);
+					if (remaining > 0)
 					{
-						int before = item.Count;
-						try { item.Destroy(null, Silent: true); }
+						if (!KingdomOrdinaryFoodAuthority.TrySpendNow(item,
+							ProvisionJobProperty, JobId, out Failure)) return false;
+						item.SetIntProperty(ProvisionJobProperty, JobId);
+						while (remaining > 0)
+						{
+							int before = item.Count;
+							if (!GameObject.Validate(item) || item.InInventory != larder
+								|| item.IDIfAssigned != leg.ItemId
+								|| !KingdomOrdinaryFoodAuthority.TrySpendNow(item,
+									ProvisionJobProperty, JobId, out Failure)) return false;
+							try { item.Destroy(null, Silent: true); }
 						catch
 						{
 							KingdomSurvey.ObserveCurrentTopologyInActive(Source, larder);
 							return Refuse("A provision callback stopped; the exact partial count remains recoverable.", out Failure);
 						}
 						KingdomSurvey.ObserveChangedInActive(Source, larder);
-						present = GameObject.Validate(item) && item.InInventory == larder;
-						current = present ? item.Count : 0;
-						if (current != before - 1
+							present = GameObject.Validate(item) && item.InInventory == larder;
+							current = present ? item.Count : 0;
+							if ((before == 1 && GameObject.Validate(item))
+								|| (before > 1 && (!present || item.IDIfAssigned != leg.ItemId
+									|| !KingdomOrdinaryFoodAuthority.IsEdible(item)
+									|| !KingdomOrdinaryFoodAuthority.TrySpendNow(item,
+										ProvisionJobProperty, JobId, out Failure)))
+								|| current != before - 1
 							|| !KingdomExpeditionRules.TryDebitProgress(leg.BeforeCount,
 								leg.AfterCount, present, current, out remaining))
 							return Refuse("A provision callback left an unexpected count; no second stack was touched.", out Failure);

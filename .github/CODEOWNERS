@@ -1,0 +1,17 @@
+# Default review authority. Branch protection requires code-owner review for pull requests.
+* @AussieWarGod
+
+# Persistence, release, and contribution-policy boundaries receive explicit ownership even if
+# narrower directory rules are added later.
+/Core/ @AussieWarGod
+/Growth/ @AussieWarGod
+/Polity/ @AussieWarGod
+/Simulation/ @AussieWarGod
+/Trade/ @AussieWarGod
+/Treaty/ @AussieWarGod
+/DevTests/ @AussieWarGod
+/.github/ @AussieWarGod
+/Tools/ @AussieWarGod
+/docs/ @AussieWarGod
+/manifest.json @AussieWarGod
+/LICENSE @AussieWarGod

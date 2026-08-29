@@ -14,27 +14,27 @@ namespace ThousandAndFirst
 			out string Refusal)
 		{
 			Refusal = "";
-			string before = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
-			bool shouldSwap = Site != null && Archive.Away != null &&
-				Archive.Away.ClaimedZones != null && Archive.Away.ClaimedZones.Contains(Site.ZoneID) &&
+			string before = SeatEffect(City?.SettlementId, NonSeatSettlements());
+			KingdomSettlement target = Site == null ? null :
+				Archive.SettlementTopology?.FindByZone(Site.ZoneID);
+			bool shouldSwap = target != null &&
 				(Archive.Seat.ClaimedZones == null || !Archive.Seat.ClaimedZones.Contains(Site.ZoneID));
-			string after = shouldSwap
-				? SeatEffect(Archive.Away.City?.SettlementId, Archive.Seat.City?.SettlementId)
-				: SeatEffect(Archive.Seat.City?.SettlementId, Archive.Away?.City?.SettlementId);
+			string after = SeatEffect(shouldSwap ? target.City?.SettlementId :
+				Archive.Seat.City?.SettlementId, Archive.SettlementIds);
 			KingdomRealmCallbackReceipt receipt = Archive.ReturnSeat;
 			if (receipt.Phase != KingdomRealmCallbackPhase.None)
 			{
 				before = receipt.BeforeEffect; after = receipt.AfterEffect;
 				shouldSwap = !string.Equals(before, after, StringComparison.Ordinal);
 			}
-			string current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			string current = SeatEffect(City?.SettlementId, NonSeatSettlements());
 			if (receipt.Phase == KingdomRealmCallbackPhase.Settled)
 				return current == after && SettledCallbackStillMatches(Archive, receipt,
 					current, out Refusal);
 			if (!PrepareReturnCallback(Archive, receipt, KingdomRealmCallbackScope.Seat,
 				before, after,
 				out bool invokeAuthorized, out Refusal)) return false;
-			current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			current = SeatEffect(City?.SettlementId, NonSeatSettlements());
 			if (current == after)
 			{
 				if (!Archive.CurrentGraphMatchesAfterSeat(this, shouldSwap, out string failure))
@@ -56,7 +56,7 @@ namespace ThousandAndFirst
 				return QuarantineReturn(Archive,
 					"seat callback was interrupted before exact topology publication", out Refusal);
 			TrySeat(Site);
-			current = SeatEffect(City?.SettlementId, Away?.City?.SettlementId);
+			current = SeatEffect(City?.SettlementId, NonSeatSettlements());
 			string afterFailure = null;
 			if (current != after || !Archive.CurrentGraphMatchesAfterSeat(this, true,
 				out afterFailure))
@@ -67,9 +67,26 @@ namespace ThousandAndFirst
 				SeatSwapped: true);
 		}
 
-		private static string SeatEffect(string SeatId, string AwayId)
+		private static string SeatEffect(string SeatId,
+			IEnumerable<KingdomSettlement> NonSeat)
 		{
-			return (SeatId ?? "-") + "|" + (AwayId ?? "-");
+			List<string> ids = new List<string>();
+			if (NonSeat != null)
+				foreach (KingdomSettlement row in NonSeat)
+					if (!string.IsNullOrEmpty(row?.City?.SettlementId))
+						ids.Add(row.City.SettlementId);
+			ids.Sort(StringComparer.Ordinal);
+			return (SeatId ?? "-") + "|" + string.Join(",", ids.ToArray());
+		}
+
+		private static string SeatEffect(string SeatId, IEnumerable<string> AllIds)
+		{
+			List<string> nonSeat = new List<string>();
+			if (AllIds != null)
+				foreach (string id in AllIds)
+					if (!string.Equals(id, SeatId, StringComparison.Ordinal)) nonSeat.Add(id);
+			nonSeat.Sort(StringComparer.Ordinal);
+			return (SeatId ?? "-") + "|" + string.Join(",", nonSeat.ToArray());
 		}
 
 		private bool DispatchReturnAbility(KingdomRealmArchive Archive,

@@ -116,7 +116,7 @@ namespace ThousandAndFirst
 			RetryConstruction(System, Z, Job);
 		}
 
-		private static bool HasActiveStrikeReceipt(KingdomSystem System, Zone Z,
+		internal static bool HasActiveStrikeReceipt(KingdomSystem System, Zone Z,
 			GameObject Building)
 		{
 			return TryStrikeJob(System, Z, Building, out KingdomConstructionJob job)
@@ -134,14 +134,14 @@ namespace ThousandAndFirst
 				&& !KingdomConstructionRules.IsTerminal(Job.Phase)
 				&& (Job.Route == KingdomConstructionRoute.Strike
 					|| Job.Route == KingdomConstructionRoute.SocketConvert)
-				&& Job.SourceId == Building.ID;
+				&& Job.SourceId == Building.IDIfAssigned;
 		}
 
 		private static GameObject ExactObject(string Id)
 		{
 			if (string.IsNullOrEmpty(Id)) return null;
 			GameObject item = GameObject.FindByID(Id);
-			return GameObject.Validate(item) && item.ID == Id ? item : null;
+			return GameObject.Validate(item) && item.IDIfAssigned == Id ? item : null;
 		}
 
 	}

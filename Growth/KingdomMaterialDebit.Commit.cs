@@ -24,7 +24,7 @@ namespace ThousandAndFirst
 			Operating = true;
 			try
 			{
-				if (!AllStillReserved())
+				if (!CurrentLeaseAuthorityAllowsPlan() || !AllStillReserved())
 				{
 					MarkAllUncertain();
 					return FinishFailure(KingdomMaterialDebitFault.SourceChanged,
@@ -44,7 +44,8 @@ namespace ThousandAndFirst
 					for (int unit = 0; unit < step.Taken; unit++)
 					{
 						int expectedBefore = step.Original - unit;
-						if (!ObservedStateMatches() || !StillSame(entry) ||
+						if (!CurrentLeaseAuthorityAllowsPlan()
+							|| !ObservedStateMatches() || !StillSame(entry) ||
 							entry.Item.Count != expectedBefore || Removed[i] != unit)
 						{
 							MarkAllUncertain();
@@ -83,7 +84,8 @@ namespace ThousandAndFirst
 						continue;
 					}
 					Entry entry = EntryFor(step);
-					if (!ObservedStateMatches() || !StillSame(entry) ||
+					if (!CurrentLeaseAuthorityAllowsPlan()
+						|| !ObservedStateMatches() || !StillSame(entry) ||
 						entry.Item.Count != step.Original || Removed[i] != 0)
 					{
 						MarkAllUncertain();

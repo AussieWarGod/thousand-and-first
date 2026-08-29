@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Tests
 		public void PersistedEnumsAndNestedAttemptAbi_RemainExactAfterDecomposition()
 		{
 			AssertEnumAbi(typeof(BountyTask), "Clearance|Fetch|Manning|Scouting");
-			AssertEnumAbi(typeof(BountyBlock), "None|NobodyToTry|NothingStanding|PileEmpty|NowhereToCarry|NoWorks|NoIdleWork|NoFrontier|StoresCannotPay");
+			AssertEnumAbi(typeof(BountyBlock), "None|NobodyToTry|NothingStanding|PileEmpty|NowhereToCarry|NoWorks|NoIdleWork|NoFrontier|StoresCannotPay|ManningTargetLost|ManningWorkerAbsent|NoFreeHands");
 			AssertEnumAbi(typeof(BountyOutcome), "NobodyTried|Refused|Taken");
 			AssertEnumAbi(typeof(BountyTakePhase), "None|Bound|TaskIntent|TaskDone|ChronicleDone|LedgerIntent|LedgerDone|MessageIntent|MessageDone|Complete|Quarantined");
 			AssertEnumAbi(typeof(BountyTransferPhase), "None|Bound|RemoveIntent|Detached|AddIntent|Arrived|Quarantined");
@@ -681,6 +681,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(BountyBlock.NoIdleWork, false)]
 		[TestCase(BountyBlock.NoFrontier, true)]
 		[TestCase(BountyBlock.StoresCannotPay, false)]
+		[TestCase(BountyBlock.ManningTargetLost, true)]
+		[TestCase(BountyBlock.ManningWorkerAbsent, false)]
+		[TestCase(BountyBlock.NoFreeHands, false)]
 		public void IsPermanent_SeparatesWhatCanLiftFromWhatNeverWill(BountyBlock block, bool expected)
 		{
 			Assert.AreEqual(expected, KingdomBountyRules.IsPermanent(block));
@@ -712,7 +715,9 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string reason = KingdomBountyRules.BlockReason(block, BountyTask.Clearance, "Ulu");
-				Assert.IsTrue(reason.Contains("No one will ever claim it"), "block " + block + " reads as a wait: " + reason);
+				Assert.IsTrue(reason.Contains("No one will ever claim it")
+					|| reason.Contains("take the notice down"),
+					"block " + block + " reads as a wait: " + reason);
 			}
 		}
 
@@ -722,6 +727,12 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "Ulu").Contains("Ulu"));
 			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, null).Contains("the settlement"));
 			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "").Contains("the settlement"));
+			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningTargetLost,
+				BountyTask.Manning, "Ulu").Contains("exact work"));
+			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningWorkerAbsent,
+				BountyTask.Manning, "Ulu").Contains("clock is stopped"));
+			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoFreeHands,
+				BountyTask.Manning, "Ulu").Contains("ordinary work pool"));
 		}
 
 		[Test]
@@ -976,9 +987,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomBountyLogicalSource.Read();
 			string notice = ReadRepoSource("Quests/r_KingdomNotice.cs");
-			Assert.AreEqual(16, KingdomBountyLogicalSource.FileCount);
+			Assert.AreEqual(19, KingdomBountyLogicalSource.FileCount);
 			Assert.AreEqual(2, Count(source, "public partial class r_KingdomNotice"));
-			Assert.AreEqual(14, Count(source, "public static partial class KingdomBounty"));
+			Assert.AreEqual(17, Count(source, "public static partial class KingdomBounty"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class CleanupFrame"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class InventoryFrame"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class PaymentFrame"));
@@ -1002,7 +1013,11 @@ namespace ThousandAndFirst.Tests
 				"int WithdrawMessageState", "int TakePhase", "long PendingAttemptTick",
 				"string PendingWorkerName", "int PendingWorkerResidentId", "int PendingVirtueIndex",
 				"int PendingFlawIndex", "bool PendingTasteMatched", "bool PendingAttemptConsumed",
-				"int TakeLedgerState", "int TakeMessageState", "int TransferPhase",
+				"int TakeLedgerState", "int TakeMessageState", "int ManningVersion",
+				"string ManningWorkId", "string ManningWorkName", "int WorkerResidentId",
+				"long ManningServedTicks", "long ManningCheckpointTick", "bool ManningAssigned",
+				"string ManningOptionRecord", "int ManningResidentEpoch", "int ManningWorkEpoch",
+				"int TransferPhase",
 				"string TransferItemId", "string TransferSourceId", "string TransferDestinationId",
 				"int TransferUnits", "int TransferTotalBefore", "int TransferredUnits", "int HaulPhase",
 				"int ScoutPhase", "string ScoutZoneId", "string ScoutGround", "int ScoutDeedState",
@@ -1070,6 +1085,26 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BoundFetchTransfer_ReprovesPurposeCargoBeforeRemovalMoveAndCredit()
+		{
+			string transfer = ReadRepoSource("Quests/KingdomBounty.Transfer.cs");
+			const string protectedEvidence =
+				"TryObjectGraphAvailableForOrdinaryTransfer(item, out _)";
+			Assert.AreEqual(5, Count(transfer, protectedEvidence));
+			AssertOrdered(transfer, "private static bool ContinueTransfer(",
+				protectedEvidence, protectedEvidence,
+				"Data.TransferPhase = (int)BountyTransferPhase.RemoveIntent",
+				"sourceFrame.Part.RemoveObject(item)", protectedEvidence,
+				"Data.TransferPhase = (int)BountyTransferPhase.AddIntent", protectedEvidence,
+				"destinationFrame.Part.AddObject(item, Silent: true, NoStack: true)",
+				protectedEvidence,
+				"Data.TransferPhase = (int)BountyTransferPhase.Arrived",
+				"Data.TransferredUnits = totalBefore + units");
+			StringAssert.DoesNotContain(".SetIntProperty(", transfer);
+			StringAssert.DoesNotContain(".SetStringProperty(", transfer);
+		}
+
+		[Test]
 		public void BountySource_WiresLiveFramesBeforeExactPaymentAndOneShotTerminalCleanup()
 		{
 			string source = KingdomBountyLogicalSource.Read();
@@ -1083,7 +1118,13 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ObserveCapturedPayment(frame", source);
 			StringAssert.Contains("ReferenceEquals(vessel.ComponentLiquids, Frame.Dictionaries[i])", source);
 			StringAssert.Contains("ReferenceEquals(Frame.Survey.Stores, Frame.Stores)", source);
-			StringAssert.Contains("PendingWorkerResidentId = ResidentIdFor", source);
+			StringAssert.Contains("PendingWorkerResidentId = ResidentId", source);
+			StringAssert.Contains("ReaderResidentId(residentIds, residentNames", source);
+			StringAssert.Contains("KingdomBountyManningRules.TryAccrue", source);
+			StringAssert.Contains("TryAssignWorks(Survey.Works, pool, available", ReadRepoSource(
+				"Growth/KingdomGrowth.z15.WorkAssignment.cs"));
+			StringAssert.DoesNotContain("ManOneWork", source);
+			StringAssert.DoesNotContain("SetIntProperty(\"KingdomEffectiveness\", 100)", source);
 			StringAssert.Contains("KingdomChronicle.RecordOnce", source);
 			int cleanupIntent = source.IndexOf(
 				"Data.TerminalPhase = (int)BountyTerminalPhase.CleanupAttempting",

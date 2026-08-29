@@ -37,7 +37,7 @@ namespace ThousandAndFirst.Simulation.City
 				Survey.StorageSpace,
 				TimeTicks);
 			current = CarryKind(System, Z, current, KingdomStockKind.Food,
-				KingdomRules.RationsForElapsed(System.Population, elapsed) - Survey.FoodStored,
+				KingdomRules.RationsForElapsed(System.Population, elapsed) - Survey.FoodAvailable,
 				Survey.FoodSpace,
 				TimeTicks);
 			return current;

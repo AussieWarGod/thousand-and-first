@@ -135,5 +135,16 @@ namespace ThousandAndFirst.Simulation.City
 		/// block is a fact about the realm's own faction and not about any one settler.
 		/// </summary>
 		public int RiteBlocked;
+
+		/// <summary>One bounded appointment receipt for this city's resident cook. The native
+		/// <c>TeachesDish</c> body part is a reversible projection; recipes already learned through
+		/// Qud's water ritual remain vanilla-owned player knowledge after release.</summary>
+		public ThousandAndFirst.KingdomNamedCookReceipt NamedCook =
+			new ThousandAndFirst.KingdomNamedCookReceipt();
+
+		/// <summary>Exact city-local assenting-moot, named voices, exemptions, and native ward
+		/// projection. The physical building and body/zone parts are derived and reversible.</summary>
+		public ThousandAndFirst.KingdomAssentingMootReceipt AssentingMoot =
+			new ThousandAndFirst.KingdomAssentingMootReceipt();
 	}
 }

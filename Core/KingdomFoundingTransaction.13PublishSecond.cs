@@ -29,11 +29,12 @@ namespace ThousandAndFirst
 				PublishedSecondAuthorityMatches(Site, Basin.PendingAuthority);
 			bool targetIsExactSeat = SecondIsExactSeat(system, Basin.PendingName,
 				Site.ZoneID, Basin.PendingTransactionID);
-			bool targetIsExactAway = SecondIsExactAway(system, Basin.PendingName,
+			bool targetIsExactNonSeat = SecondIsExactNonSeat(system, Basin.PendingName,
 				Site.ZoneID, Basin.PendingTransactionID);
 			if (!KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				system.SettlementCount, KingdomSettlement.MaxSettlements,
-				system.Away == null, targetIsExactSeat, targetIsExactAway, published) ||
+				system.NonSeatSettlementCount < KingdomSettlementTopologyRules.MaxNonSeatSettlements,
+				targetIsExactSeat, targetIsExactNonSeat, published) ||
 				!SiteReservationMatches(Site, Basin.PendingAuthority))
 			{
 				throw new InvalidOperationException("The second founding cannot replace the realm's current city seats.");
@@ -83,7 +84,8 @@ namespace ThousandAndFirst
 				throw new InvalidOperationException("The second city's claim projections are incomplete.");
 			}
 			Projection = KingdomFoundingProjection.Claim;
-			if (system.Away == null || system.SettlementCount != 2 ||
+			if (system.NonSeatSettlementCount < 1 || system.SettlementCount < 2 ||
+				system.SettlementCount > KingdomSettlement.MaxSettlements ||
 				system.SettlementName != Basin.PendingName)
 			{
 				throw new InvalidOperationException("The second city is not seated exactly once.");

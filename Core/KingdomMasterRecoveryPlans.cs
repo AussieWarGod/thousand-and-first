@@ -14,13 +14,16 @@ namespace ThousandAndFirst
 			private readonly KingdomLifecycleOptionState Raid;
 			private readonly KingdomLifecycleOptionState Petition;
 			private readonly long Arrival;
+			private readonly KingdomLifecycleOptionState Growth;
+			private readonly KingdomLifecycleOptionState Scarcity;
 
 			private LifecyclePlan(long now, KingdomLifecycleOptionState locus,
 				KingdomLifecycleOptionState notable, KingdomLifecycleOptionState raid,
-				KingdomLifecycleOptionState petition, long arrival)
+				KingdomLifecycleOptionState petition, long arrival,
+				KingdomLifecycleOptionState growth, KingdomLifecycleOptionState scarcity)
 			{
 				Now = now; Locus = locus; Notable = notable; Raid = raid;
-				Petition = petition; Arrival = arrival;
+				Petition = petition; Arrival = arrival; Growth = growth; Scarcity = scarcity;
 			}
 
 			internal static bool TryCreate(KingdomLifecycleBook book, long now, long arrival,
@@ -38,7 +41,11 @@ namespace ThousandAndFirst
 					KingdomRaids.Enabled ? KingdomLifecycleOptionState.Enabled
 						: KingdomLifecycleOptionState.Disabled,
 					KingdomPetitions.Enabled ? KingdomLifecycleOptionState.Enabled
-						: KingdomLifecycleOptionState.Disabled, arrival);
+						: KingdomLifecycleOptionState.Disabled, arrival,
+					KingdomGrowth.Enabled ? KingdomLifecycleOptionState.Enabled
+						: KingdomLifecycleOptionState.Disabled,
+					KingdomGrowth.ScarcityEnabled ? KingdomLifecycleOptionState.Enabled
+						: KingdomLifecycleOptionState.Disabled);
 				return true;
 			}
 
@@ -51,11 +58,9 @@ namespace ThousandAndFirst
 				book.PetitionOption = Petition; book.PetitionOptionTick = Now;
 				KingdomGrowthBook growth = book.Growth;
 				if (growth == null) return;
-				growth.OptionState = KingdomGrowth.Enabled ? KingdomLifecycleOptionState.Enabled
-					: KingdomLifecycleOptionState.Disabled;
+				growth.OptionState = Growth;
 				growth.OptionTick = Now;
-				growth.ScarcityOptionState = KingdomGrowth.ScarcityEnabled
-					? KingdomLifecycleOptionState.Enabled : KingdomLifecycleOptionState.Disabled;
+				growth.ScarcityOptionState = Scarcity;
 				growth.ScarcityOptionTick = Now;
 				if (growth.HeartbeatOp == null) growth.LastHeartbeatTick = Now;
 				if (growth.FetchOp == null) growth.LastFetchTick = Now;
@@ -75,12 +80,13 @@ namespace ThousandAndFirst
 			private readonly long Epoch;
 			private readonly long[] CharterTicks;
 			private readonly long ManifestDeadline;
+			private readonly byte[] SourceEnvelope;
 
 			private TradePlan(KingdomTradeOptionState state, long tick, long epoch,
-				long[] charterTicks, long manifestDeadline)
+				long[] charterTicks, long manifestDeadline, byte[] sourceEnvelope)
 			{
 				State = state; Tick = tick; Epoch = epoch; CharterTicks = charterTicks;
-				ManifestDeadline = manifestDeadline;
+				ManifestDeadline = manifestDeadline; SourceEnvelope = sourceEnvelope;
 			}
 
 			internal static bool TryCreate(KingdomTradeBook book, long now, long disabledAt,
@@ -90,6 +96,9 @@ namespace ThousandAndFirst
 				if (book == null) return true;
 				if (!KingdomTradeRules.BookUsable(book) || book.OptionObservedTick > now
 					|| book.Charters == null) return false;
+				byte[] sourceEnvelope;
+				try { sourceEnvelope = KingdomTradeCodec.EncodeEnvelope(book); }
+				catch (Exception) { return false; }
 				bool enabled = KingdomTrade.Enabled;
 				KingdomTradeOptionState state = enabled ? KingdomTradeOptionState.Enabled
 					: KingdomTradeOptionState.Disabled;
@@ -115,8 +124,15 @@ namespace ThousandAndFirst
 					&& book.Manifest.Status == KingdomTradeManifestStatus.InFlight
 					&& !KingdomMasterRules.TryResumeCommittedDeadline(manifest, disabledAt,
 						now, out manifest)) return false;
-				plan = new TradePlan(state, now, epoch, ticks, manifest);
+				plan = new TradePlan(state, now, epoch, ticks, manifest, sourceEnvelope);
 				return true;
+			}
+
+			internal bool MatchesSource(KingdomTradeBook book)
+			{
+				if (book == null || SourceEnvelope == null) return false;
+				try { return SameBytes(SourceEnvelope, KingdomTradeCodec.EncodeEnvelope(book)); }
+				catch (Exception) { return false; }
 			}
 
 			internal void Publish(KingdomTradeBook book)
@@ -131,6 +147,14 @@ namespace ThousandAndFirst
 				if (book.Manifest != null
 					&& book.Manifest.Status == KingdomTradeManifestStatus.InFlight)
 					book.Manifest.DeadlineTick = ManifestDeadline;
+			}
+
+			private static bool SameBytes(byte[] left, byte[] right)
+			{
+				if (left == null || right == null || left.Length != right.Length) return false;
+				int difference = 0;
+				for (int i = 0; i < left.Length; i++) difference |= left[i] ^ right[i];
+				return difference == 0;
 			}
 		}
 	}

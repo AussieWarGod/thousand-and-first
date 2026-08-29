@@ -7,7 +7,7 @@ namespace XRL.World.Parts
 {
 	/// <summary>One persisted, paid procedure job owned by its physical hall.</summary>
 	[Serializable]
-	public class r_KingdomLabJob : IPart
+	public partial class r_KingdomLabJob : IPart
 	{
 		public string JobId = "";
 		public string BuildingId = "";
@@ -16,6 +16,8 @@ namespace XRL.World.Parts
 		public string GameId = "";
 		public string RealmId = "";
 		public long RealmFoundedTick;
+		public int RulerSuccessionOrdinal = -1;
+		public string RulerLifeId = "";
 		public int BodyPartId;
 		public string BearerId = "";
 		public string Stamp = "";
@@ -94,6 +96,7 @@ namespace XRL.World.Parts
 			PatientId = PatientId ?? "";
 			GameId = GameId ?? "";
 			RealmId = RealmId ?? "";
+			RulerLifeId = RulerLifeId ?? "";
 			BearerId = BearerId ?? "";
 			Stamp = Stamp ?? "";
 			City = City ?? "";
@@ -114,7 +117,10 @@ namespace XRL.World.Parts
 			TerminalMessageText = TerminalMessageText ?? "";
 			PetitionFaction = PetitionFaction ?? "";
 			Fault = Fault ?? "";
-			bool malformed = WaterOwed < 0 || WaterPaid < 0 || WaterPaid > WaterOwed
+			bool bodyHistoryMalformed = false;
+			NormalizeBodyHistory(ref bodyHistoryMalformed);
+			bool malformed = bodyHistoryMalformed
+				|| WaterOwed < 0 || WaterPaid < 0 || WaterPaid > WaterOwed
 				|| WaterLost < 0 || KeptOwed < 0 || KeptPaid < 0 || KeptPaid > KeptOwed
 				|| KeptLost < 0 || RemainingTicks < 0 || StandingAppliedCount < 0
 				|| PetitionAttemptTick < -1L
@@ -125,6 +131,9 @@ namespace XRL.World.Parts
 				|| string.IsNullOrEmpty(JobId) || string.IsNullOrEmpty(BuildingId)
 				|| string.IsNullOrEmpty(PatientId) || string.IsNullOrEmpty(GameId)
 				|| string.IsNullOrEmpty(RealmId) || RealmFoundedTick < 0L
+				|| (BodyHistoryRequiresRulerLife
+					&& !KingdomBodyHistoryRulerLifeRules.ValidIdentity(RealmId,
+						RulerSuccessionOrdinal, "taf:object:" + PatientId, RulerLifeId))
 				|| JobId.Length > 128 || BuildingId.Length > 128 || PatientId.Length > 128
 				|| GameId.Length > 256 || RealmId.Length > 256 || ProcedureKey.Length > 128
 				|| FrozenName.Length > 512 || FrozenDetail.Length > 512

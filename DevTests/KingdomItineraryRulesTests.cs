@@ -171,6 +171,25 @@ namespace ThousandAndFirst.Tests
 			Assert.AreNotSame(legs, shifted);
 		}
 
+		[Test]
+		public void MasterPauseMovesEveryLegWithoutAdvancingTheCarrier()
+		{
+			KingdomLeg[] legs = Contiguous();
+			Assert.IsTrue(KingdomItineraryRules.TryShiftAll(legs, legs.Length, 40L,
+				out KingdomLeg[] shifted, out KingdomCityFault fault), fault.ToString());
+			Assert.AreEqual(100L, legs[0].DepartTick, "input mutated");
+			Assert.AreEqual(140L, shifted[0].DepartTick);
+			Assert.AreEqual(195L, shifted[2].ArriveTick);
+			KingdomItineraryFix before = At(legs, 105L);
+			KingdomItineraryFix resumed = At(shifted, 145L);
+			Assert.AreEqual(before.ZoneId, resumed.ZoneId);
+			Assert.AreEqual(before.X, resumed.X);
+			Assert.AreEqual(before.StepsTaken, resumed.StepsTaken);
+			Assert.IsFalse(KingdomItineraryRules.TryShiftAll(legs, legs.Length, -1L,
+				out shifted, out fault));
+			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+		}
+
 		/// <summary>A carrier that made up time still cannot arrive before it left, and an
 		/// impossible shift is refused whole rather than half-applied.</summary>
 		[Test]

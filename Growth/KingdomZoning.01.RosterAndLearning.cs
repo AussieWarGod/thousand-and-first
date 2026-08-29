@@ -49,6 +49,7 @@ namespace ThousandAndFirst
 				KingdomZoningRules.KindSpecies));
 			AppendKeys(roster,
 				KingdomResidentIdentityRules.IdentityRosterKeys(System.IdentityCounts));
+			KingdomReopenedExoticActivation.AppendDerivedKeys(System, roster);
 			return roster;
 		}
 

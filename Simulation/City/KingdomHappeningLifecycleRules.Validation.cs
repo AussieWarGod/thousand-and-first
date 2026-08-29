@@ -61,6 +61,22 @@ namespace ThousandAndFirst.Simulation.City
 				|| kind == KingdomPhysicalHappeningKind.Raising;
 		}
 
+		private const string CommunalRiteProofPrefix = "taf:communal-rite-lease:v1:";
+
+		private static bool ValidCommunalRiteProof(string value, int subject)
+		{
+			if (value == null || !value.StartsWith(CommunalRiteProofPrefix,
+				StringComparison.Ordinal)) return false;
+			int separator = value.IndexOf(':', CommunalRiteProofPrefix.Length);
+			if (separator <= CommunalRiteProofPrefix.Length
+				|| !long.TryParse(value.Substring(CommunalRiteProofPrefix.Length,
+					separator - CommunalRiteProofPrefix.Length), NumberStyles.None,
+					CultureInfo.InvariantCulture, out long epoch) || epoch <= 0L) return false;
+			string practiceId = value.Substring(separator + 1);
+			return KingdomCommunalRiteRules.TryPracticeSubject(practiceId,
+				out int exactSubject) && exactSubject == subject;
+		}
+
 		private static bool ValidBook(KingdomHappeningLifecycleBook book)
 		{
 			if (book == null || book.Sequence < 0 || book.SemanticReceipts == null
@@ -96,7 +112,11 @@ namespace ThousandAndFirst.Simulation.City
 				|| proposal.EventId != CanonicalEventId(proposal.SettlementId, proposal.Kind,
 					proposal.EventTick, proposal.SubjectA, proposal.SubjectB, proposal.Outcome)
 				|| (proposal.ExternalSemantic
-					&& proposal.Kind != KingdomPhysicalHappeningKind.Raising)
+					&& proposal.Kind != KingdomPhysicalHappeningKind.Raising
+					&& proposal.Kind != KingdomPhysicalHappeningKind.CommunalRite)
+				|| (proposal.Kind == KingdomPhysicalHappeningKind.CommunalRite
+					&& (!proposal.ExternalSemantic || !ValidCommunalRiteProof(
+						proposal.PlanQuote, proposal.SubjectA)))
 				|| proposal.Participants.Length > MaxParticipants
 				|| !Text(proposal.ChronicleAttended, proposal.ExternalSemantic ? false : true)
 				|| !Text(proposal.ChronicleUnattended, proposal.ExternalSemantic ? false : true)
@@ -136,7 +156,11 @@ namespace ThousandAndFirst.Simulation.City
 				|| operation.EventId != CanonicalEventId(operation.SettlementId, operation.Kind,
 					operation.EventTick, operation.SubjectA, operation.SubjectB, operation.Outcome)
 				|| (operation.ExternalSemantic
-					&& operation.Kind != KingdomPhysicalHappeningKind.Raising)
+					&& operation.Kind != KingdomPhysicalHappeningKind.Raising
+					&& operation.Kind != KingdomPhysicalHappeningKind.CommunalRite)
+				|| (operation.Kind == KingdomPhysicalHappeningKind.CommunalRite
+					&& (!operation.ExternalSemantic || !ValidCommunalRiteProof(
+						operation.PlanQuote, operation.SubjectA)))
 				|| (operation.ExternalSemantic
 					&& (!string.IsNullOrEmpty(operation.ChronicleAttended)
 						|| !string.IsNullOrEmpty(operation.ChronicleUnattended)
@@ -221,6 +245,7 @@ namespace ThousandAndFirst.Simulation.City
 				return subjectA > 0 && subjectB > subjectA;
 			case KingdomPhysicalHappeningKind.Funeral:
 			case KingdomPhysicalHappeningKind.Raising:
+			case KingdomPhysicalHappeningKind.CommunalRite:
 				return subjectA > 0 && subjectB == 0;
 			case KingdomPhysicalHappeningKind.Feast:
 				return subjectA == 0 && subjectB == 0;

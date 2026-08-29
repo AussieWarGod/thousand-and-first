@@ -185,6 +185,7 @@ namespace ThousandAndFirst
 				|| Proof.AmbiguousWater != 0
 				|| Proof.MaterialRequested < 0 || Proof.MaterialProved < 0
 				|| Proof.MaterialProved != Proof.MaterialRequested
+				|| !ValidPolityRecipientProof(Proof)
 				|| Proof.ManifestEscrowBefore < 0 || Proof.ManifestEscrowDebit < 0
 				|| Proof.ManifestEscrowDebit > Proof.ManifestEscrowBefore
 				|| Proof.ManifestEscrowAfter != Proof.ManifestEscrowBefore - Proof.ManifestEscrowDebit
@@ -199,6 +200,9 @@ namespace ThousandAndFirst
 				|| ((Proof.Kind == KingdomTradeOperationKind.CharterDelivery
 						|| Proof.Kind == KingdomTradeOperationKind.ManifestLoad)
 					&& Proof.ProvedWater != Proof.RequestedWater)
+				|| (Proof.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery &&
+					Proof.Disposition == KingdomTradePhase.Terminal &&
+					(Proof.ProvedWater < 1 || Proof.ProvedWater > Proof.RequestedWater))
 				|| (Proof.Kind == KingdomTradeOperationKind.CharterDelivery
 					&& (Proof.ChronicleState != KingdomTradeSinkState.Delivered
 						|| Proof.LedgerState != KingdomTradeSinkState.Delivered
@@ -232,6 +236,18 @@ namespace ThousandAndFirst
 				|| (Proof.ManifestCleanup != (Proof.Kind == KingdomTradeOperationKind.ManifestLapse
 					|| (Proof.Kind == KingdomTradeOperationKind.ManifestDelivery
 						&& Proof.ManifestEscrowAfter == 0)))
+				|| (Proof.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery &&
+					(Proof.ManifestEscrowBefore != 0 || Proof.ManifestEscrowDebit != 0 ||
+					 Proof.ManifestEscrowAfter != 0 || Proof.ManifestEscrowState !=
+						KingdomTradePhysicalState.None || Proof.Disposition == KingdomTradePhase.Terminal &&
+						(Proof.RetainedBefore != 0L || Proof.RetainedDelta != 0L ||
+						 Proof.RetainedAfter != 0L || Proof.RetainedState !=
+							KingdomTradePhysicalState.None) || Proof.Disposition ==
+						KingdomTradePhase.Quarantined && (Proof.RetainedDelta != Proof.ProvedWater ||
+						 Proof.RetainedState != (Proof.ProvedWater == 0 ?
+							KingdomTradePhysicalState.None : KingdomTradePhysicalState.Proved) ||
+						 Proof.ProvedWater == 0 && (Proof.RetainedBefore != 0L ||
+							Proof.RetainedAfter != 0L))))
 				|| TooLong(Proof.Fault, MaxTextChars)) return false;
 			return Enum.IsDefined(typeof(KingdomTradeOperationKind), Proof.Kind)
 				&& Enum.IsDefined(typeof(KingdomTradePhase), Proof.Disposition)

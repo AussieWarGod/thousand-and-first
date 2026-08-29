@@ -39,8 +39,9 @@ namespace ThousandAndFirst
 			}
 			if (!KingdomArchivedSettlementCodec.TryClone(capturedSeat,
 				out KingdomSettlement frozenSeat, out Failure) ||
-				!KingdomArchivedSettlementCodec.TryClone(System.Away,
-					out KingdomSettlement frozenAway, out Failure) ||
+				System.SettlementTopology == null ||
+				!System.SettlementTopology.TryClone(
+					out KingdomSettlementTopology frozenTopology, out Failure) ||
 				!KingdomArchivedSettlementCodec.TryClone(System.Seceded,
 					out KingdomSettlement frozenSeceded, out Failure) ||
 				!TryCloneCarry(System.CarryBook, out KingdomCarryBook frozenCarry, out Failure) ||
@@ -68,11 +69,19 @@ namespace ThousandAndFirst
 				RealmIdentitySeedHigh = System.RealmIdentitySeedHigh,
 				RealmIdentitySeedLow = System.RealmIdentitySeedLow,
 				RealmIdentityFirstClaimedZone = System.RealmIdentityFirstClaimedZone,
-				SimulationSeedHigh = System.SimulationSeedHigh,
-				SimulationSeedLow = System.SimulationSeedLow,
-				Seat = frozenSeat,
-				Away = frozenAway,
-				Standings = CloneStandings(System.Standings),
+					SimulationSeedHigh = System.SimulationSeedHigh,
+					SimulationSeedLow = System.SimulationSeedLow,
+					Seat = frozenSeat,
+					SettlementTopology = frozenTopology,
+					Away = frozenTopology.Get(0),
+				Standings = CloneStandings(System.RegardForRealm),
+				RealmPolicyToward = CloneStandings(System.RealmPolicyToward),
+				RegardSpilloverRemainders = CloneStandings(
+					System.RegardSpilloverRemainders),
+				RegardSpilloverObservedReputation = CloneStandings(
+					System.RegardSpilloverObservedReputation),
+				DirectionalStandingSchemaVersion = System.DirectionalStandingSchemaVersion,
+				CallbackAuthoritySchemaVersion = 2,
 				Bindings = CloneBindings(System.Bindings),
 				ResidentCounter = System.ResidentCounter,
 				Jobs = CloneJobs(System.Jobs),
@@ -111,7 +120,8 @@ namespace ThousandAndFirst
 				Failure = "realm graph clone failed: " + Bound(ex.Message, 512);
 				return false;
 			}
-			if (!candidate.Validate(out Failure) ||
+			if (!candidate.TryRefreshDirectionalStandingDigest(out Failure) ||
+				!candidate.Validate(out Failure) ||
 				!candidate.CurrentGraphMatches(System, out Failure)) return false;
 			Archive = candidate;
 			return true;

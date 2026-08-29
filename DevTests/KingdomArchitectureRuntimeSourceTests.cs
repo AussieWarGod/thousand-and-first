@@ -10,8 +10,23 @@ namespace ThousandAndFirst.Tests
 	{
 		private static string Runtime()
 		{
-			return TestMain.ReadRepositoryText(
-				Path.Combine("Growth", "KingdomArchitectureRuntime.cs"));
+			return string.Join("\n", new string[]
+			{
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.Successors.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.HeartAndFacing.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.FoundingHeart.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.Selection.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.Receipt.cs")),
+				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.Coordinates.cs"))
+			});
 		}
 
 		private static string Rules()
@@ -42,7 +57,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string PlanMarker()
 		{
-			return TestMain.ReadRepositoryText(Path.Combine("Growth", "KingdomPlanMarker.cs"));
+			return KingdomPlanMarkerLogicalSource.Read();
 		}
 
 		[Test]
@@ -108,8 +123,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomResidentIdentityRules.KindBody", context);
 			StringAssert.Contains("Z.GetTerrainObject()", context);
 			StringAssert.Contains("System.FoundingTerrainBlueprint", context);
-			StringAssert.Contains("Z.Z > KingdomRules.SurfaceZLevel ? \"underground\" : \"surface\"",
-				context);
+			StringAssert.Contains("KingdomZoningRules.StratumOfGround(", context);
+			StringAssert.Contains("Z.Z > KingdomRules.SurfaceZLevel", context);
+			StringAssert.DoesNotContain("\"underground\"", context);
 			StringAssert.Contains("TechLevel tech = KingdomZoning.Tech(System)", context);
 			StringAssert.Contains("Stage = (int)System.Stage", context);
 			StringAssert.Contains("Tech = (int)tech", context);
@@ -183,7 +199,7 @@ namespace ThousandAndFirst.Tests
 			string successor = Between(source, "public static bool TryPrepareSuccessor(",
 				"private static bool TryHeartBasinInvariant(");
 			AssertOrdered(successor,
-				"KingdomArchitecture.TryResolveSuccessor(before.BuildKey, SuccessorBuildKey",
+				"KingdomArchitecture.TryResolveSuccessor(before.BuildKey, before.VariantKey",
 				"KingdomArchitectureRules.TryBuildDelta(before, after",
 				"KingdomPlots.HeartRung(Z) != beforeRung",
 				"KingdomPlots.TryHeartRectFor(Z, beforeRung",
@@ -197,7 +213,7 @@ namespace ThousandAndFirst.Tests
 				"private static bool SameRect(");
 			StringAssert.Contains("placement.Blueprint != \"r_KingdomFirstBasin\"", basin);
 			StringAssert.Contains("placement.StatefulAnchor != \"fixture:first-basin\"", basin);
-			StringAssert.Contains("basinX != riteX || basinY != riteY", basin);
+			StringAssert.Contains("basinX != RiteX || basinY != RiteY", basin);
 			Assert.IsFalse(successor.Contains("GrowInPlace"));
 			Assert.IsFalse(successor.Contains("Generic"));
 		}
@@ -380,7 +396,7 @@ namespace ThousandAndFirst.Tests
 				"GameObject.Create(WorksBlueprint)",
 				"KingdomArchitectureRuntime.TryFreeze(",
 				"KingdomConstruction.UpdateOutput(ref Job, works.ID)",
-				"cell.AddObject(works)");
+				"cell.AddObject(works, NoStack: Heart != null)");
 			StringAssert.Contains("Z.GetCell(Architecture.MainWorldX, Architecture.MainWorldY)",
 				stake);
 			StringAssert.Contains("ExpectedWorks(works, cell, Entry.Key, Architecture, LegacyArchitecture, Job)",

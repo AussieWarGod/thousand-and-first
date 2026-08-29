@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 			GameObject owner = (Store == null) ? null : Store.ParentObject;
 			Zone zone = GameObject.Validate(owner) ? owner.CurrentZone : null;
 			Cell cell = GameObject.Validate(owner) ? owner.CurrentCell : null;
-			string ownerId = GameObject.Validate(owner) ? owner.ID : null;
+			string ownerId = GameObject.Validate(owner) ? owner.IDIfAssigned : null;
 			string zoneId = (zone == null) ? null : zone.ZoneID;
 			Dictionary<string, int> dictionary = (Store == null) ? null : Store.ComponentLiquids;
 			Dictionary<string, int> components = (dictionary == null)
@@ -42,6 +42,7 @@ namespace ThousandAndFirst
 			int occurrences = 0;
 			for (int i = 0; i < rows.Length; i++) if (ReferenceEquals(rows[i], Store)) occurrences++;
 			if (Store == null || Drams <= 0 || occurrences != 1 || !GameObject.Validate(owner)
+				|| string.IsNullOrEmpty(ownerId)
 				|| zone == null || cell == null || cell.ParentZone != zone
 				|| owner.GetIntProperty("KingdomStores") != 1 || Store.ParentObject != owner
 				|| !ReferenceEquals(owner.GetPart<LiquidVolume>(), Store)
@@ -52,6 +53,9 @@ namespace ThousandAndFirst
 			int max = Store.MaxVolume;
 			int oldStored = StoredWater;
 			int oldSpace = StorageSpace;
+			string leaseFailure;
+			if (!KingdomConstructionInputLeaseAuthority.TryObjectAvailableForLocalDebit(
+				owner, out leaseFailure)) return false;
 			try
 			{
 				KingdomLiquids.Drain(Store, Drams);
@@ -60,7 +64,7 @@ namespace ThousandAndFirst
 			{
 				// Exact post-state below is authoritative even when a refresh callback throws.
 			}
-			if (!GameObject.Validate(owner) || owner.ID != ownerId || owner.CurrentZone != zone
+			if (!GameObject.Validate(owner) || owner.IDIfAssigned != ownerId || owner.CurrentZone != zone
 				|| zone.ZoneID != zoneId || owner.CurrentCell != cell || cell.ParentZone != zone
 				|| owner.GetIntProperty("KingdomStores") != 1
 				|| Store.ParentObject != owner || !ReferenceEquals(owner.GetPart<LiquidVolume>(), Store)

@@ -35,8 +35,8 @@ namespace ThousandAndFirst
 				}
 				if (!GameObject.Validate(old)
 					|| old.GetIntProperty(PathStateProperty) != (int)KingdomRoadRules.WearState.Path
-					|| !ids.Add(old.ID)) return false;
-				if (KingdomConstruction.FindExactId(Z, old.ID, out var exactOld)
+					|| !ids.Add(old.IDIfAssigned)) return false;
+				if (KingdomConstruction.FindExactId(Z, old.IDIfAssigned, out var exactOld)
 					!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(exactOld, old)) return false;
 				string outputId;
 				do { outputId = System.Guid.NewGuid().ToString("N"); }
@@ -44,7 +44,7 @@ namespace ThousandAndFirst
 				if (KingdomConstruction.FindExactId(Z, outputId, out _)
 					!= KingdomPhysicalLookupState.Absent || !ids.Add(outputId)) return false;
 				receipt.Rows.Add(new RoadRow { X = Cells[i].X, Y = Cells[i].Y,
-					OldId = old.ID, OldBlueprint = old.Blueprint, NewId = outputId });
+					OldId = old.IDIfAssigned, OldBlueprint = old.Blueprint, NewId = outputId });
 				KingdomRoadRules.Retire(tally, Cells[i].X, Cells[i].Y);
 			}
 			receipt.TallyAfter = KingdomRoadRules.Encode(tally) ?? "";

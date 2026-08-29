@@ -46,6 +46,56 @@ namespace XRL.World.Parts
 			return base.HandleEvent(E);
 		}
 	}
+
+	/// <summary>
+	/// Active-only motion for a hand-cranked civic charger. Vanilla's
+	/// <c>AnimatedMaterialElectric</c> flashes even when a machine is empty and unstaffed, so the
+	/// charging post cannot honestly reuse it. This stateless reader alternates a visible glyph
+	/// only while the exact work is sound, fully staffed, and actually holds charge.
+	/// </summary>
+	[Serializable]
+	public class r_KingdomHandCrankedVisual : IPart
+	{
+		private const string ActiveGlyph = "~";
+
+		public override bool WantEvent(int ID, int cascade)
+		{
+			return base.WantEvent(ID, cascade) || ID == GetShortDescriptionEvent.ID;
+		}
+
+		public override bool FinalRender(RenderEvent E)
+		{
+			if (IsActive())
+			{
+				// Same vanilla effect-indicator channel as ordinary Qud status motion. The glyph,
+				// not its color, distinguishes the active half-frame for color-independent reading.
+				E.RenderEffectIndicator(ActiveGlyph, null, "&Y", "W", 30, 30);
+			}
+			return base.FinalRender(E);
+		}
+
+		public override bool HandleEvent(GetShortDescriptionEvent E)
+		{
+			if (IsActive())
+			{
+				E.Postfix.Append("\n{{rules|Map sign ").Append(ActiveGlyph)
+					.Append(": hand-cranked, fully staffed, and holding charge.}}");
+			}
+			return base.HandleEvent(E);
+		}
+
+		private bool IsActive()
+		{
+			if (!GameObject.Validate(ParentObject)
+				|| ParentObject.GetIntProperty(KingdomAdopt.HandCrankedProperty) != 1
+				|| KingdomVisualState.StateOf(ParentObject) != KingdomVisualStateKind.Sound)
+			{
+				return false;
+			}
+			Capacitor store = ParentObject.GetPart<Capacitor>();
+			return store != null && store.Charge > 0;
+		}
+	}
 }
 
 namespace ThousandAndFirst
@@ -74,6 +124,10 @@ namespace ThousandAndFirst
 					|| item.GetIntProperty(KingdomConstructionPresence.ActiveProperty) == 1;
 				if (!eligible) continue;
 				item.RequirePart<r_KingdomVisualState>();
+				if (item.GetIntProperty(KingdomAdopt.HandCrankedProperty) == 1)
+				{
+					item.RequirePart<r_KingdomHandCrankedVisual>();
+				}
 				if (heart && System.Withered) item.SetIntProperty(WitheredProperty, 1);
 				else item.RemoveIntProperty(WitheredProperty);
 				if (heart && System.Famished) item.SetIntProperty(FamishedProperty, 1);

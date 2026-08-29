@@ -18,37 +18,31 @@ namespace ThousandAndFirst
 			int amount = ClearInt(Works, ClearAmountProperty);
 			if (phase == 1)
 			{
-				// A save taken after intent but before Destroy is replayable because the exact source
-				// still stands on the frozen cell. Absence without our callback-success tombstone is
-				// ambiguous across engine callbacks and is never guessed into a second removal.
-				if (ClearInt(Works, ClearRemovedProperty) != 1)
-				{
-					GameObject exact;
-					KingdomPhysicalLookupState source = KingdomConstruction.FindExactId(Z,
-						sourceId, out exact);
-					KingdomPlotRules.Material material = (KingdomPlotRules.Material)materialCode;
-					Cell cell = Z?.GetCell(ClearInt(Works, ClearXProperty),
-						ClearInt(Works, ClearYProperty));
-					if (source != KingdomPhysicalLookupState.Exact || cell == null
-						|| !ExactClearSource(Works, Z, exact, cell, material, amount))
-						return QuarantineClear(Works,
-							"Interrupted clearance cannot prove its exact still-standing source.");
-					bool removed;
-					try { removed = exact.Destroy(null, Silent: true); }
-					catch (System.Exception ex)
+					if (ClearInt(Works, ClearRemovedProperty) != 1)
 					{
-						KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact);
-						return QuarantineClear(Works,
-							"Resumed clearance removal threw: " + ex.Message);
-					}
-					if (!removed || GameObject.Validate(exact)
-						|| GameObject.Validate(GameObject.FindByID(sourceId)))
-						return QuarantineClear(Works,
-							"Resumed clearance removal was vetoed, moved, or replaced its source.");
-					KingdomSurvey.ObserveRemovedFromActive(Z, exact);
-					ClearInt(Works, ClearRemovedProperty, 1);
+						GameObject exact;
+						KingdomPhysicalLookupState source = KingdomConstruction.FindExactId(Z,
+							sourceId, out exact);
+						KingdomPlotRules.Material material = (KingdomPlotRules.Material)materialCode;
+						Cell cell = Z?.GetCell(ClearInt(Works, ClearXProperty),
+							ClearInt(Works, ClearYProperty));
+						if (cell == null || source == KingdomPhysicalLookupState.Ambiguous)
+							return QuarantineClear(Works,
+								"Interrupted clearance source topology is ambiguous.");
+						if (source == KingdomPhysicalLookupState.Exact)
+						{
+							if (!ExactClearSource(Works, Z, exact, cell, material, amount))
+								return QuarantineClear(Works,
+									"Interrupted clearance source changed before retry.");
+							try { exact.Destroy(null, Silent: true); }
+							catch { }
+							finally { KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact); }
+						}
+						if (!SettleClearRemovalTopology(Works, Z, exact, cell, material, amount))
+							return false;
 				}
-				if (GameObject.Validate(GameObject.FindByID(sourceId)))
+				if (KingdomConstruction.FindExactId(Z, sourceId, out _)
+					!= KingdomPhysicalLookupState.Absent)
 					return QuarantineClear(Works,
 						"Removed clearance source reappeared before payout.");
 				phase = 2;
@@ -57,7 +51,8 @@ namespace ThousandAndFirst
 			if (phase < 2 || phase > 6 || materialCode < 1 || materialCode > 4
 				|| amount <= 0 || ClearInt(Works, ClearRemovedProperty) != 1)
 				return QuarantineClear(Works, "Clearance receipt is malformed or ambiguous.");
-			if (GameObject.Validate(GameObject.FindByID(sourceId)))
+			if (KingdomConstruction.FindExactId(Z, sourceId, out _)
+				!= KingdomPhysicalLookupState.Absent)
 				return QuarantineClear(Works,
 					"Clearance source reappeared before its economic receipts settled.");
 			try
@@ -176,7 +171,10 @@ namespace ThousandAndFirst
 				return QuarantineClear(Works,
 					"Clearance payout has neither a stockpile nor a ground cell.");
 
-			string marker = "plot-clear:" + Works.ParentObject.ID + ":"
+			string rootId = Works.ParentObject?.IDIfAssigned;
+			if (string.IsNullOrEmpty(rootId))
+				return QuarantineClear(Works, "Clearance payout root lacks assigned identity.");
+			string marker = "plot-clear:" + rootId + ":"
 				+ ClearString(Works, ClearIdProperty);
 			if (marker.Length > 1024)
 				return QuarantineClear(Works, "Clearance payout identity is too long.");
@@ -185,8 +183,11 @@ namespace ThousandAndFirst
 			ClearString(Works, ClearDestinationZoneProperty, Z.ZoneID);
 			if (destination != null)
 			{
+				if (string.IsNullOrEmpty(destination.IDIfAssigned))
+					return QuarantineClear(Works,
+						"Clearance payout stockpile lacks assigned identity.");
 				ClearInt(Works, ClearDestinationKindProperty, 1);
-				ClearString(Works, ClearDestinationIdProperty, destination.ID);
+				ClearString(Works, ClearDestinationIdProperty, destination.IDIfAssigned);
 			}
 			else
 			{
@@ -217,7 +218,7 @@ namespace ThousandAndFirst
 			string blueprint = ClearString(Works, ClearOutputBlueprintProperty);
 			string marker = ClearString(Works, ClearOutputMarkerProperty);
 			GameObject item = Created;
-			if (!GameObject.Validate(item) || item.ID != outputId)
+			if (!GameObject.Validate(item) || item.IDIfAssigned != outputId)
 			{
 				GameObject globally = GameObject.FindByID(outputId);
 				if (GameObject.Validate(globally)) item = globally;
@@ -246,6 +247,7 @@ namespace ThousandAndFirst
 					"Clearance output changed before its exact AddObject callback.");
 
 			GameObject accepted = null;
+			bool callbackReturned = false;
 			int kind = ClearInt(Works, ClearDestinationKindProperty);
 			if (kind == 1)
 			{
@@ -256,7 +258,9 @@ namespace ThousandAndFirst
 					|| destination.GetIntProperty(KingdomMaterials.StockpileProperty) != 1)
 					return QuarantineClear(Works,
 						"Clearance payout's exact stockpile disappeared before placement.");
-				try { accepted = destination.Inventory.AddObject(item, null, Silent: true, NoStack: true); }
+				try { accepted = destination.Inventory.AddObject(item, null, Silent: true,
+					NoStack: true); callbackReturned = true; }
+				catch { }
 				finally
 				{
 					KingdomSurvey.ObserveCurrentTopologyInActive(Z, destination);
@@ -269,15 +273,23 @@ namespace ThousandAndFirst
 				if (cell == null)
 					return QuarantineClear(Works,
 						"Clearance payout's exact ground cell disappeared before placement.");
-				try { accepted = cell.AddObject(item, NoStack: true, Silent: true); }
+				try { accepted = cell.AddObject(item, NoStack: true, Silent: true); callbackReturned = true; }
+				catch { }
 				finally { KingdomSurvey.ObserveAddResultInActive(Z, item, accepted); }
 			}
 			else return QuarantineClear(Works, "Clearance payout destination is malformed.");
-			if (!ReferenceEquals(accepted, item)
-				|| !ExactClearOutput(Works, Z, Material, Amount, out GameObject exact)
-				|| !ReferenceEquals(exact, item))
+			bool exactEndpoint = ExactClearOutput(Works, Z, Material, Amount,
+				out GameObject exact) && ReferenceEquals(exact, item);
+			if (!KingdomFoundingHeartTerminalRules.ExactAddCut(callbackReturned,
+				ReferenceEquals(accepted, item), exactEndpoint, exactEndpoint))
+			{
+				if (GameObject.Validate(item) && item.IDIfAssigned == outputId
+					&& item.Blueprint == blueprint && item.Count == Amount
+					&& item.GetStringProperty(ClearOutputMark) == marker
+					&& item.InInventory == null && item.CurrentCell == null) return false;
 				return QuarantineClear(Works,
 					"Clearance AddObject callback did not leave one exact no-stack output.");
+			}
 			return true;
 		}
 

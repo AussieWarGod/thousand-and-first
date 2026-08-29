@@ -24,7 +24,7 @@ namespace ThousandAndFirst
 				if (ReferenceEquals(Topology.Zones[i].Zone, ExpectedZone)) zoneLoaded = true;
 			if (!zoneLoaded) return LoadedObjectResolution.Incomplete;
 			KingdomTradeExactLookup result = KingdomTradeRules.ResolveExactUnique(
-				Topology.Objects, Id, row => row.Object.ID, out exact);
+				Topology.Objects, Id, row => row.Object.IDIfAssigned, out exact);
 			if (result == KingdomTradeExactLookup.Incomplete) return LoadedObjectResolution.Incomplete;
 			if (result == KingdomTradeExactLookup.Missing) return LoadedObjectResolution.Missing;
 			if (result == KingdomTradeExactLookup.Ambiguous) return LoadedObjectResolution.Ambiguous;

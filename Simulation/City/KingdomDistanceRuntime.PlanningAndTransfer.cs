@@ -133,7 +133,8 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					LiquidVolume store = survey.Stores[i];
 					GameObject owner = (store == null) ? null : store.ParentObject;
-					if (GameObject.Validate(owner) && KingdomCityRules.StableId(owner.ID) == plan.TargetId)
+					if (GameObject.Validate(owner)
+						&& KingdomCityRules.StableId(owner.IDIfAssigned) == plan.TargetId)
 						return survey.StoreIn(store, offer);
 				}
 			}
@@ -142,7 +143,8 @@ namespace ThousandAndFirst.Simulation.City
 				for (int i = 0; i < survey.Larders.Count; i++)
 				{
 					GameObject larder = survey.Larders[i];
-					if (GameObject.Validate(larder) && KingdomCityRules.StableId(larder.ID) == plan.TargetId)
+					if (GameObject.Validate(larder)
+						&& KingdomCityRules.StableId(larder.IDIfAssigned) == plan.TargetId)
 						return survey.StoreFoodIn(larder, offer, crop);
 				}
 			}

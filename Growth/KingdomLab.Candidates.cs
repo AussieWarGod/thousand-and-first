@@ -63,9 +63,13 @@ namespace ThousandAndFirst
 		private static List<GameObject> KeptParts(GameObject Actor)
 		{
 			List<GameObject> kept = new List<GameObject>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return kept;
 			foreach (GameObject item in Actor.GetInventoryAndEquipment())
 			{
-				if (item != null && item.GetIntProperty(KeptProperty) == 1)
+				if (item != null && item.GetIntProperty(KeptProperty) == 1
+					&& KingdomOrdinaryFoodAuthority.CanMutate(leases, item))
 				{
 					kept.Add(item);
 				}
@@ -76,9 +80,12 @@ namespace ThousandAndFirst
 		private static int TotalKept(List<GameObject> Kept)
 		{
 			int total = 0;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return 0;
 			for (int i = 0; i < Kept.Count; i++)
 			{
-				total += Kept[i].Count;
+				if (KingdomOrdinaryFoodAuthority.CanMutate(leases, Kept[i])) total += Kept[i].Count;
 			}
 			return total;
 		}
@@ -88,8 +95,12 @@ namespace ThousandAndFirst
 		private static int CountFor(List<GameObject> Kept, LabProcedure Procedure)
 		{
 			int total = 0;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return 0;
 			for (int i = 0; i < Kept.Count; i++)
 			{
+				if (!KingdomOrdinaryFoodAuthority.CanMutate(leases, Kept[i])) continue;
 				string stamp = Kept[i].GetStringProperty(KingdomProcedures.StampProperty);
 				if (KingdomProcedureRules.StampCarries(stamp, Procedure.Grants)
 					&& KingdomProcedureRules.MagnitudeAdmits(Procedure, stamp))
@@ -102,8 +113,12 @@ namespace ThousandAndFirst
 
 		private static GameObject FirstSourceFor(List<GameObject> Kept, LabProcedure Procedure)
 		{
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return null;
 			for (int i = 0; i < Kept.Count; i++)
 			{
+				if (!KingdomOrdinaryFoodAuthority.CanMutate(leases, Kept[i])) continue;
 				string stamp = Kept[i].GetStringProperty(KingdomProcedures.StampProperty);
 				if (KingdomProcedureRules.StampCarries(stamp, Procedure.Grants)
 					&& KingdomProcedureRules.MagnitudeAdmits(Procedure, stamp))

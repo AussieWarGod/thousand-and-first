@@ -4,9 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-
 using ThousandAndFirst.Simulation.City;
-
 namespace ThousandAndFirst
 {
 	public static partial class KingdomLifecycleRules
@@ -209,8 +207,10 @@ namespace ThousandAndFirst
 			long nextArrival = Book.NextArrivalTick;
 			bool restamp = active != wasActive || Book.OptionState == KingdomLifecycleOptionState.Unknown ||
 				Book.HealthState == KingdomGrowthHealthState.Unknown;
-			bool openArrival = Book.ArrivalOp != null || Book.ArrivalCandidate != null;
-			if (!active) nextArrival = openArrival ? Book.NextArrivalTick : 0L;
+			bool openArrival = Book.ArrivalOp != null || Book.ArrivalCandidate != null
+				|| HasGrowthArrivalSemanticDebt(Book);
+			if (!Book.ArrivalCadenceMigrationPending) nextArrival = Book.NextArrivalTick;
+			else if (!active) nextArrival = openArrival ? Book.NextArrivalTick : 0L;
 			else if (restamp && !openArrival
 				&& !CheckedAdd(Now, CurrentArrivalIntervalTicks, out nextArrival))
 				return result;
@@ -258,6 +258,7 @@ namespace ThousandAndFirst
 			long oldHealthTick = Book.HealthTick;
 			bool oldPaused = Book.WorkPaused; long oldPauseStart = Book.WorkPauseStartedTick;
 			long oldPausedTicks = Book.WorkPausedTicks; long oldEffective = Book.EffectiveWorkTick;
+			bool oldArrivalResume = Book.ArrivalCadenceResumePending;
 			long oldArrival = Book.NextArrivalTick; long oldInterval = Book.ArrivalIntervalTicks;
 			Book.OptionState = Decision.OptionState; Book.OptionTick = Decision.ObservedTick;
 			Book.HealthState = Decision.HealthState; Book.HealthTick = Decision.ObservedTick;
@@ -265,13 +266,18 @@ namespace ThousandAndFirst
 			Book.WorkPauseStartedTick = Decision.PauseStartedTick;
 			Book.WorkPausedTicks = Decision.PausedTicks;
 			Book.EffectiveWorkTick = Decision.EffectiveWorkTick;
+			if (!Book.ArrivalCadenceMigrationPending && oldPaused && !Decision.WorkPaused)
+				Book.ArrivalCadenceResumePending = true;
 			Book.NextArrivalTick = Decision.NextArrivalTick;
-			Book.ArrivalIntervalTicks = Decision.ArrivalIntervalTicks;
+			if (Book.ArrivalCadenceMigrationPending && Book.ArrivalCandidate == null
+				&& Book.ArrivalOp == null)
+				Book.ArrivalIntervalTicks = Decision.ArrivalIntervalTicks;
 			if (CanOwnGrowthAuthority(Book, Book.SettlementId)) return true;
 			Book.OptionState = oldOption; Book.OptionTick = oldOptionTick;
 			Book.HealthState = oldHealth; Book.HealthTick = oldHealthTick;
 			Book.WorkPaused = oldPaused; Book.WorkPauseStartedTick = oldPauseStart;
 			Book.WorkPausedTicks = oldPausedTicks; Book.EffectiveWorkTick = oldEffective;
+			Book.ArrivalCadenceResumePending = oldArrivalResume;
 			Book.NextArrivalTick = oldArrival; Book.ArrivalIntervalTicks = oldInterval;
 			return false;
 		}
@@ -289,6 +295,5 @@ namespace ThousandAndFirst
 			Elapsed = effectiveNow - Book.EffectiveWorkTick;
 			return true;
 		}
-
 	}
 }

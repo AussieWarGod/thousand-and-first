@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import re
 import sys
 import tempfile
 import textwrap
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -178,6 +180,94 @@ class ArchitectureCheckerTests(unittest.TestCase):
     def check(self, output: Path | None = None):
         return CHECKER.run_check(self.repo, self.base, output)
 
+    def write_upgrade_repo(self, buildings: str | None = None, architecture: str | None = None):
+        if buildings is None or architecture is None:
+            buildings = BUILDINGS.replace(
+                'Materials="stone:1,timber:1"',
+                'Materials="stone:1,timber:1" UpgradesTo="hut2"',
+            ).replace(
+                "</kingdombuildings>",
+                '  <building Key="hut2" Blueprint="r_TestHut2" Category="housing" '
+                'Plot="S" Materials="stone:2,timber:2" />\n</kingdombuildings>',
+            )
+            root = ET.fromstring(ARCHITECTURE)
+            successor_maps = {}
+            plan_offset = next(
+                index for index, item in enumerate(list(root)) if item.tag == "plan"
+            )
+            for source_map in root.findall("map"):
+                target_map = copy.deepcopy(source_map)
+                target_key = source_map.get("Key", "") + "-successor"
+                target_map.set("Key", target_key)
+                first_row = next(
+                    index for index, item in enumerate(list(target_map)) if item.tag == "row"
+                )
+                target_map.insert(
+                    first_row,
+                    ET.Element(
+                        "glyph",
+                        {
+                            "Char": ";",
+                            "Ground": "$floor",
+                            "Claim": "building",
+                            "Pass": "walk",
+                            "Cover": "walled",
+                            "Anchors": "tier:successor",
+                        },
+                    ),
+                )
+                for row in target_map.findall("row"):
+                    cells = row.get("Cells", "")
+                    at = cells.rfind(",")
+                    if at >= 0:
+                        row.set("Cells", cells[:at] + ";" + cells[at + 1 :])
+                        break
+                root.insert(plan_offset, target_map)
+                plan_offset += 1
+                successor_maps[source_map.get("Key", "")] = target_key
+            for binding in root.findall("./plan/binding"):
+                source = binding.find("tier")
+                self.assertIsNotNone(source)
+                target = copy.deepcopy(source)
+                target.set("Key", source.get("Key", "") + "-successor")
+                target.set("BuildKey", "hut2")
+                target.set("Level", "1")
+                target.set("Map", successor_maps[source.get("Map", "")])
+                binding.append(target)
+            architecture = ET.tostring(root, encoding="unicode")
+        self.write_repo(buildings, architecture)
+        blueprints = self.repo / "ObjectBlueprints.xml"
+        text = blueprints.read_text(encoding="utf-8")
+        if 'Name="r_TestHut2"' not in text:
+            blueprints.write_text(
+                text.replace(
+                    "</objects>",
+                    '<object Name="r_TestHut2"><part Name="Physics" Solid="false" /></object>'
+                    "</objects>",
+                ),
+                encoding="utf-8",
+            )
+        return buildings, architecture
+
+    def write_adjacent_repo(self):
+        """Create consecutive tiers without a catalogue edge, exercising binding law alone."""
+
+        buildings, architecture = self.write_upgrade_repo()
+        buildings = buildings.replace(' UpgradesTo="hut2"', "")
+        return self.write_upgrade_repo(buildings, architecture)
+
+    @staticmethod
+    def successor_tier(root: ET.Element, size: str = "S") -> ET.Element:
+        binding = next(
+            item for item in root.findall("./plan/binding") if item.get("Size") == size
+        )
+        return next(item for item in binding.findall("tier") if item.get("Level") == "1")
+
+    @classmethod
+    def successor_map(cls, root: ET.Element, size: str = "S") -> ET.Element:
+        map_key = cls.successor_tier(root, size).get("Map")
+        return next(item for item in root.findall("map") if item.get("Key") == map_key)
+
     @staticmethod
     def codes(result) -> set[str]:
         return {issue.code for issue in result.issues}
@@ -193,6 +283,247 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertEqual(first.blueprint_count, 9)
         self.assertEqual(len(first.goldens), 16)
         self.assertFalse(first.goldens_written)
+
+    def write_ground_runtime(self, surface: str = "surface", underground: str = "deep") -> None:
+        growth = self.repo / "Growth"
+        growth.mkdir(exist_ok=True)
+        (growth / "KingdomZoningStrataRules.cs").write_text(
+            textwrap.dedent(
+                f'''\
+                namespace ThousandAndFirst
+                {{
+                    public static partial class KingdomZoningRules
+                    {{
+                        public const string StratumSurface = "{surface}";
+                        public const string StratumDeep = "{underground}";
+                        public static string StratumOfGround(bool Underground)
+                        {{
+                            return Underground ? StratumDeep : StratumSurface;
+                        }}
+                    }}
+                }}
+                '''
+            ),
+            encoding="utf-8",
+        )
+
+    @staticmethod
+    def with_strata_selector(expression: str) -> str:
+        return ARCHITECTURE.replace(
+            '<variant Key="fallback" Priority="0" />',
+            '<variant Key="fallback" Priority="0" />\n'
+            f'        <variant Key="strata" Priority="10" Strata="{expression}" />',
+            1,
+        )
+
+    def test_strata_selector_accepts_only_reachable_names_and_positive_wildcards(self) -> None:
+        self.write_ground_runtime()
+        for expression in (
+            "surface",
+            "deep",
+            "SURFACE,!deep",
+            "!surface",
+            "all",
+            "*",
+            "all,!deep",
+        ):
+            with self.subTest(expression=expression):
+                self.write_repo(BUILDINGS, self.with_strata_selector(expression))
+                self.assertNotIn("variant.strata-unreachable", self.codes(self.check()))
+
+    def test_strata_selector_rejects_names_stratum_of_ground_cannot_return(self) -> None:
+        self.write_ground_runtime()
+        for expression, unreachable in (
+            ("underground", "underground"),
+            ("sky", "sky"),
+            ("arcology", "arcology"),
+            ("seabed", "seabed"),
+            ("!sky", "sky"),
+            ("all,!arcology", "arcology"),
+        ):
+            with self.subTest(expression=expression):
+                self.write_repo(BUILDINGS, self.with_strata_selector(expression))
+                result = self.check()
+                self.assertIn("variant.strata-unreachable", self.codes(result))
+                self.assertIn(repr(unreachable), result.report())
+                self.assertIn("KingdomZoningRules.StratumOfGround", result.report())
+
+    def test_ground_selector_vocabulary_is_derived_from_runtime_source(self) -> None:
+        source_repo = CHECKER_PATH.parents[1]
+        self.assertEqual(
+            ("surface", "deep"),
+            CHECKER._runtime_ground_strata(source_repo),
+        )
+        self.write_ground_runtime(surface="open", underground="cavern")
+        self.write_repo(BUILDINGS, self.with_strata_selector("surface"))
+        result = self.check()
+        self.assertIn("variant.strata-unreachable", self.codes(result))
+        self.assertIn("('open', 'cavern')", result.report())
+
+    def test_present_but_unreadable_ground_runtime_contract_fails_closed(self) -> None:
+        growth = self.repo / "Growth"
+        growth.mkdir()
+        (growth / "KingdomZoningStrataRules.cs").write_text(
+            "public static string StratumOfGround(bool Underground) => \"surface\";\n",
+            encoding="utf-8",
+        )
+        self.assertIn("selector.strata-runtime-source", self.codes(self.check()))
+
+    def test_upgrade_routes_exist_in_every_exact_frozen_binding(self) -> None:
+        self.write_upgrade_repo()
+        result = self.check()
+        self.assertTrue(result.ok, result.report())
+
+    def test_upgrade_route_missing_from_one_larger_binding_is_reported(self) -> None:
+        buildings, architecture = self.write_upgrade_repo()
+        root = ET.fromstring(architecture)
+        binding = next(
+            item for item in root.findall("./plan/binding") if item.get("Size") == "M"
+        )
+        binding.remove(next(item for item in binding.findall("tier") if item.get("BuildKey") == "hut2"))
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        self.assertIn("upgrade.exact-route", self.codes(self.check()))
+
+    def test_upgrade_route_rejects_cross_size_function_and_level_skip(self) -> None:
+        buildings, architecture = self.write_upgrade_repo()
+        self.write_upgrade_repo(
+            buildings.replace(
+                'Key="hut2" Blueprint="r_TestHut2" Category="housing" Plot="S"',
+                'Key="hut2" Blueprint="r_TestHut2" Category="housing" Plot="M"',
+            ),
+            architecture,
+        )
+        self.assertIn("upgrade.catalogue-shape", self.codes(self.check()))
+
+        buildings, architecture = self.write_upgrade_repo()
+        root = ET.fromstring(architecture)
+        target = next(item for item in root.findall("./plan/binding/tier") if item.get("BuildKey") == "hut2")
+        target.set("Level", "2")
+        target.insert(0, ET.Element("require", {"Role": "function:market", "Min": "1"}))
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        codes = self.codes(self.check())
+        self.assertIn("upgrade.level", codes)
+        self.assertIn("upgrade.function", codes)
+
+    def test_upgrade_route_rejects_selector_roster_drift(self) -> None:
+        buildings, architecture = self.write_upgrade_repo()
+        root = ET.fromstring(architecture)
+        target = next(item for item in root.findall("./plan/binding/tier") if item.get("BuildKey") == "hut2")
+        target.find("variant").set("Key", "changed-fallback")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        self.assertIn("upgrade.selector-roster", self.codes(self.check()))
+
+    def test_adjacent_tiers_reject_variant_key_mismatch_without_catalogue_edge(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        self.successor_tier(root).find("variant").set("Key", "changed-fallback")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        result = self.check()
+        self.assertIn("upgrade.variant-keys", self.codes(result))
+        self.assertNotIn("upgrade.selector-roster", self.codes(result))
+
+    def test_adjacent_tiers_reject_moved_main_anchor_without_catalogue_edge(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        source_map = self.successor_map(root)
+        moved = copy.deepcopy(source_map)
+        moved.set("Key", "test-map-moved-main")
+        moved.findall("row")[1].set("Cells", "#,@;#")
+        root.insert(list(root).index(source_map) + 1, moved)
+        self.successor_tier(root).set("Map", "test-map-moved-main")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        self.assertIn("upgrade.main-coordinate", self.codes(self.check()))
+
+    def test_adjacent_tiers_reject_moved_stateful_fixture(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        architecture_map = self.successor_map(root)
+        self.assertEqual("#,b,+", architecture_map.findall("row")[2].get("Cells"))
+        architecture_map.findall("row")[2].set("Cells", "#b,,+")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        result = self.check()
+        self.assertIn("upgrade.stateful-fixture", self.codes(result))
+        self.assertIn("same-role successor coordinates=[(1, 2)]", result.report())
+
+    def test_adjacent_tiers_reject_lost_stateful_fixture(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        architecture_map = self.successor_map(root)
+        architecture_map.findall("row")[2].set("Cells", "#,,,+")
+        tier = self.successor_tier(root)
+        tier.remove(
+            next(
+                item
+                for item in tier.findall("require")
+                if item.get("Role") == "fixture:bed"
+            )
+        )
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        result = self.check()
+        self.assertIn("upgrade.stateful-fixture", self.codes(result))
+        self.assertNotIn("require.count", self.codes(result))
+
+    def test_adjacent_tiers_reject_stateful_fixture_material_mutation(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        palette = root.find("palette")
+        self.assertIsNotNone(palette)
+        successor_palette = copy.deepcopy(palette)
+        successor_palette.set("Key", "successor-palette")
+        next(
+            item
+            for item in successor_palette.findall("slot")
+            if item.get("Key") == "bed"
+        ).set("Material", "stone")
+        root.insert(list(root).index(palette) + 1, successor_palette)
+        self.successor_tier(root).set("Palette", "successor-palette")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        result = self.check()
+        self.assertIn("upgrade.stateful-fixture", self.codes(result))
+        self.assertIn("material='timber'", result.report())
+        self.assertIn("material='stone'", result.report())
+
+    def test_adjacent_tiers_allow_new_stateful_fixture(self) -> None:
+        buildings, architecture = self.write_adjacent_repo()
+        root = ET.fromstring(architecture)
+        palette = root.find("palette")
+        self.assertIsNotNone(palette)
+        ET.SubElement(
+            palette,
+            "slot",
+            {
+                "Key": "chair",
+                "Blueprint": "TestBed",
+                "Role": "seat",
+                "Material": "timber",
+                "MinTech": "hands",
+                "Natural": "no",
+            },
+        )
+        architecture_map = self.successor_map(root)
+        first_row = next(
+            index for index, item in enumerate(list(architecture_map)) if item.tag == "row"
+        )
+        architecture_map.insert(
+            first_row,
+            ET.Element(
+                "glyph",
+                {
+                    "Char": "c",
+                    "Ground": "$floor",
+                    "Object": "$chair",
+                    "Claim": "building",
+                    "Pass": "walk",
+                    "Cover": "walled",
+                    "Anchors": "fixture:chair",
+                    "Stateful": "yes",
+                },
+            ),
+        )
+        architecture_map.findall("row")[1].set("Cells", "#@c;#")
+        self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
+        result = self.check()
+        self.assertTrue(result.ok, result.report())
 
     def test_goldens_require_explicit_existing_empty_output(self) -> None:
         output = self.root / "goldens"
@@ -248,6 +579,63 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertIn("variant.no-op", self.codes(result))
         self.assertEqual(list(output.iterdir()), [])
+
+    def test_malformed_row_is_reported_without_crashing_golden_generation(self) -> None:
+        architecture = ARCHITECTURE.replace(
+            '<row Cells="#@,,#" />', '<row Cells="#@,,##" />', 1
+        )
+        self.write_repo(BUILDINGS, architecture)
+        result = self.check()
+        self.assertFalse(result.ok)
+        self.assertIn("map.row-width", self.codes(result))
+        self.assertEqual(len(result.goldens), 12)
+
+    def test_purpose_portfolio_requires_exact_anchors_and_dedicated_stores(self) -> None:
+        buildings = BUILDINGS.replace(
+            'Key="hut" Blueprint="r_TestHut" Category="housing" Plot="S"',
+            'Key="deepbore" Blueprint="r_KingdomDeepBore" Category="craft" '
+            'Plot="S" Purpose="deep"',
+        )
+        architecture = (
+            ARCHITECTURE.replace('BuildKey="hut"', 'BuildKey="deepbore"')
+            .replace('Type="housing"', 'Type="craft"')
+            .replace('Anchors="fixture:bed"', 'Anchors="purpose:input"')
+            .replace('Role="fixture:bed"', 'Role="purpose:input"')
+        )
+        self.write_repo(buildings, architecture)
+        result = self.check()
+        self.assertFalse(result.ok)
+        self.assertIn("purpose.anchor-contract", self.codes(result))
+        self.assertIn("purpose.fixture-blueprint", self.codes(result))
+
+    def test_reopened_exotic_requires_hidden_activation_and_exact_runtime_seams(self) -> None:
+        buildings = BUILDINGS.replace(
+            'Key="hut" Blueprint="r_TestHut" Category="housing" Plot="S"',
+            'Key="stasisvault" Blueprint="r_KingdomStasisVault" Category="craft" '
+            'Plot="S" Knowledge="node:chimerism"',
+        )
+        architecture = (
+            ARCHITECTURE.replace('BuildKey="hut"', 'BuildKey="stasisvault"')
+            .replace('Type="housing"', 'Type="craft"')
+        )
+        self.write_repo(buildings, architecture)
+        result = self.check()
+        self.assertFalse(result.ok)
+        self.assertIn("reopened.activation-gate", self.codes(result))
+        self.assertIn("reopened.anchor-contract", self.codes(result))
+
+    def test_shipped_reopened_activation_keys_are_ungranted(self) -> None:
+        source_repo = CHECKER_PATH.parents[1]
+        research_path = source_repo / "RuntimeData" / "KingdomResearch.xml"
+        research = research_path.read_text(encoding="utf-8")
+        self.assertIn('Requires="node:listening,rite:Chavvah"', research)
+        published = ",".join(
+            value
+            for node in CHECKER.ET.parse(research_path).getroot().iter("node")
+            for value in (node.get("Grants", ""), node.get("Reveals", ""))
+        )
+        for activation in CHECKER.REOPENED_ACTIVATION_KEYS.values():
+            self.assertNotIn(activation, published)
 
     def test_style_creed_or_identity_variant_cannot_be_palette_only(self) -> None:
         second_palette = """\
@@ -318,7 +706,39 @@ class ArchitectureCheckerTests(unittest.TestCase):
             '<row Cells="#@,,#" />', '<row Cells="#@,+#" />', 1
         ).replace('<row Cells="#,b,+" />', '<row Cells="#,b,#" />', 1)
         self.write_repo(BUILDINGS, interior_road)
-        self.assertIn("frontage.road-exterior", self.codes(self.check()))
+        self.assertIn("entrance.boundary", self.codes(self.check()))
+
+        enclosed_egress = ARCHITECTURE.replace(
+            '<row Cells="#,b,+" />', '<row Cells="#,+.#" />', 1
+        )
+        self.write_repo(BUILDINGS, enclosed_egress)
+        self.assertIn("entrance.road-route", self.codes(self.check()))
+
+    def test_generated_yard_reachability_cannot_cross_unrouted_empty_ground(self) -> None:
+        self.assertEqual(
+            CHECKER.VISUAL_BLUEPRINT_EQUIVALENTS["DirtFloor"],
+            CHECKER.VISUAL_BLUEPRINT_EQUIVALENTS["DirtPath"],
+        )
+        generated = ARCHITECTURE.replace(
+            '  <map Key="test-map-m" Width="8" Height="6" DefaultCover="walled">',
+            '  <map Key="test-map-m" Width="8" Height="6" DefaultCover="walled">\n'
+            '    <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />\n',
+            1,
+        ).replace(
+            '    <row Cells="...#,b,+" />\n'
+            '    <row Cells="...#####" />\n'
+            '    <row Cells="........" />',
+            '    <row Cells="...#,b,+" />\n'
+            '    <row Cells="...###.." />\n'
+            '    <row Cells="...y...." />',
+            1,
+        )
+        self.write_repo(BUILDINGS, generated)
+        source = self.repo / "KingdomArchitectures-Test.xml"
+        source.rename(self.repo / CHECKER.GENERATED_ARCHITECTURE_NAME)
+        codes = self.codes(self.check())
+        self.assertIn("topology.disconnected", codes)
+        self.assertIn("generated.surface-monoculture", codes)
 
     def test_functional_verticality_needs_runtime_owned_external_pair(self) -> None:
         decorative = ARCHITECTURE.replace(
@@ -464,6 +884,12 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.write_repo(BUILDINGS, unstable_wall)
         self.assertIn("fixture.unstable-blueprint", self.codes(self.check()))
 
+        unstable_base_rock = ARCHITECTURE.replace(
+            'Blueprint="TestWall"', 'Blueprint="BaseWallRock"'
+        )
+        self.write_repo(BUILDINGS, unstable_base_rock)
+        self.assertIn("fixture.unstable-blueprint", self.codes(self.check()))
+
     def test_pass_labels_must_match_inherited_blueprint_physics(self) -> None:
         solid_walk = ARCHITECTURE.replace(
             'Char="," Ground="$floor"',
@@ -483,7 +909,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
     def test_shipped_heart_keeps_rite_and_all_earlier_fabric(self) -> None:
         source_repo = CHECKER_PATH.parents[1]
         (self.repo / "KingdomBuildings.xml").write_text(
-            (source_repo / "KingdomBuildings.xml").read_text(encoding="utf-8"),
+            (source_repo / "RuntimeData" / "KingdomBuildings.xml").read_text(
+                encoding="utf-8"
+            ),
             encoding="utf-8",
         )
         for source in sorted((source_repo / "Architecture").glob("KingdomArchitectures*.xml")):
@@ -523,6 +951,11 @@ class ArchitectureCheckerTests(unittest.TestCase):
         )
         self.assertEqual([], issues)
         payload, encoded = CHECKER._snapshot_maxima(buildings, model)
+        keyed_payload, keyed_encoded, maximum_key = CHECKER._snapshot_maximum(
+            buildings, model
+        )
+        self.assertEqual((payload, encoded), (keyed_payload, keyed_encoded))
+        self.assertIn("arcology/civic-xl/fallback/", maximum_key)
         # Regression for the native-only failure this gate originally missed: several valid XL
         # maps are larger than the old 4,600-byte limit, but every shipped mapping fits the new
         # bounded codec contract with measured headroom.
@@ -534,6 +967,60 @@ class ArchitectureCheckerTests(unittest.TestCase):
             + 4 * ((CHECKER.MAX_SNAPSHOT_PAYLOAD_BYTES + 2) // 3)
         )
         self.assertLessEqual(largest_possible_text, CHECKER.MAX_SNAPSHOT_CHARS)
+
+        result = CHECKER.run_check(source_repo)
+        self.assertTrue(result.ok, result.report())
+        self.assertEqual(result.max_snapshot_key, maximum_key)
+        self.assertIn("maps: 514 (177 source / 337 generated)", result.report())
+        self.assertIn(f"({maximum_key})", result.report())
+
+    def test_shipped_entrance_census_is_live_routable_in_all_poses(self) -> None:
+        source_repo = CHECKER_PATH.parents[1]
+        issues = []
+        model = CHECKER.load_architectures(
+            CHECKER._discover(source_repo, "KingdomArchitectures*.xml"),
+            source_repo,
+            issues,
+        )
+        self.assertEqual([], issues)
+        configs = 0
+        entrances = 0
+        interior = 0
+        maximum = 0
+        for tier in model.tiers:
+            for variant in tier.variants:
+                configs += 1
+                architecture_map = model.maps[variant.map_key or tier.map_key]
+                for x, y, glyph in CHECKER._cells(architecture_map):
+                    if "entrance:public" not in glyph.anchors:
+                        continue
+                    route = CHECKER._entrance_egress(architecture_map, x, y)
+                    self.assertIsNotNone(route, f"{architecture_map.key} {x},{y}")
+                    maximum = max(maximum, len(route[0]))
+                    entrances += 1
+                    if 0 < x < architecture_map.width - 1 and 0 < y < architecture_map.height - 1:
+                        interior += 1
+        self.assertEqual(530, configs)
+        self.assertEqual(2120, configs * 4)
+        # Housing boundary/door cleanup removed redundant entrance observations and moved the
+        # surviving exact doors onto their intended lot boundaries.
+        self.assertEqual(649, entrances)
+        self.assertEqual(417, interior)
+        self.assertEqual(9, maximum)
+
+    def test_heart_checker_roster_matches_runtime_and_refuses_drift(self) -> None:
+        source_repo = CHECKER_PATH.parents[1]
+        self.assertEqual(
+            CHECKER.HEART_BUILD_KEYS,
+            CHECKER._runtime_heart_build_keys(source_repo),
+        )
+        self.assertEqual(5, len(CHECKER.HEART_BUILD_KEYS))
+        growth = self.repo / "Growth"
+        growth.mkdir()
+        (growth / "KingdomPlotHeartRules.cs").write_text(
+            'HeartRungKeys = new string[1] { "heartbasin" };\n', encoding="utf-8"
+        )
+        self.assertIn("heart.runtime-drift", self.codes(self.check()))
 
     def test_static_codec_contract_is_pinned_to_runtime_source(self) -> None:
         """Runtime codec edits must update independent gate in same change."""
@@ -568,6 +1055,19 @@ class ArchitectureCheckerTests(unittest.TestCase):
         for name, static_value in mirrored.items():
             self.assertEqual(runtime_int(name), static_value, name)
         self.assertEqual(2, runtime_int("SnapshotSchema"))
+
+        roads = (source_repo / "Growth" / "KingdomRoadRules.Routing.cs").read_text(
+            encoding="utf-8"
+        )
+        margin = (source_repo / "Growth" / "KingdomPlotBoundsRules.cs").read_text(
+            encoding="utf-8"
+        )
+        self.assertRegex(
+            roads, rf"public const int MaxRouteCells\s*=\s*{CHECKER.MAX_ROUTE_CELLS}\s*;"
+        )
+        self.assertRegex(
+            margin, rf"public const int RoadMargin\s*=\s*{CHECKER.ROAD_MARGIN}\s*;"
+        )
 
         start = runtime.index("private static bool TryEncodeSnapshotVersion")
         end = runtime.index("public static bool TryDecodeSnapshot", start)

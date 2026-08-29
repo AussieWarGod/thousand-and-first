@@ -41,7 +41,7 @@ namespace XRL.World.Parts
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public class r_KingdomLiquidConduit : IPart
+	public partial class r_KingdomLiquidConduit : IPart
 	{
 		/// <summary>
 		/// What this line carries, by vanilla liquid id &mdash; <c>water</c>, <c>salt</c>,
@@ -55,7 +55,7 @@ namespace XRL.World.Parts
 		/// Which faces offer a join, as any of <c>N</c>, <c>S</c>, <c>E</c>, <c>W</c>. An
 		/// unreadable value declares nothing, which caps the segment rather than opening it.
 		/// </summary>
-		public string Joins = "NSEW";
+		public string Joins = "EW";
 
 		/// <summary>Set once the founder has been told this segment would not join what it touches,
 		/// so a refused main says so once rather than at every homecoming (STANDARDS 7b).</summary>
@@ -102,7 +102,7 @@ namespace XRL.World.Parts
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public class r_KingdomLiquidCrossover : IPart
+	public partial class r_KingdomLiquidCrossover : IPart
 	{
 		/// <summary>
 		/// Which faces are paired through. <c>NSEW</c> is the ordinary cross: north-south is one
@@ -147,13 +147,13 @@ namespace XRL.World.Parts
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public class r_KingdomLiquidTap : IPart
+	public partial class r_KingdomLiquidTap : IPart
 	{
 		/// <summary>What this tap's line carries. Same vocabulary, same untrusted parse.</summary>
 		public string Liquid = "water";
 
 		/// <summary>Which faces offer a join to the main.</summary>
-		public string Joins = "NSEW";
+		public string Joins = "EW";
 
 		/// <summary>Set once the founder has been told this tap would not take from what it
 		/// touches (STANDARDS 7b).</summary>

@@ -15,8 +15,13 @@ namespace ThousandAndFirst
 			KingdomFactionName = null;
 			KingdomDisplayName = null;
 			Restore(new KingdomSettlement());
-			Away = null;
+			SettlementTopology = new KingdomSettlementTopology();
+			SynchronizeLegacySettlementProjection();
 			Standings = new Dictionary<string, int>();
+			RealmPolicyToward = new Dictionary<string, int>();
+			RegardSpilloverRemainders = new Dictionary<string, int>();
+			RegardSpilloverObservedReputation = new Dictionary<string, int>();
+			DirectionalStandingSchemaVersion = 0;
 			RealmId = null;
 			RealmIdentityVersion = 0;
 			RealmIdentityOrigin = KingdomIdentityOrigin.None;
@@ -86,6 +91,9 @@ namespace ThousandAndFirst
 				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.Restored ||
 				 ExiledRealmArchive.Phase == KingdomRealmArchivePhase.ReturnCleaning))
 				return ContinueReturnTransition(Site, out Refusal);
+			KingdomSuccession succession = The.Game?.GetSystem<KingdomSuccession>();
+			if (succession != null && succession.ChosenSeatBlocksReturn(this, out Refusal))
+				return false;
 			int regard = ExiledRealmRegard();
 			ReturnVerdict verdict = KingdomExileRules.JudgeReturn(Exiled, Founded, ExiledRealmKeptGround, Site != null && ExiledRealmHolds(Site.ZoneID), regard);
 			if (verdict != ReturnVerdict.Allowed)
@@ -110,6 +118,14 @@ namespace ThousandAndFirst
 			{
 				archive.Quarantine("return found a third current-realm identity before intent");
 				Refusal = "A different current realm state blocks exact return.";
+				return false;
+			}
+			if (PolityTransition == null ||
+				PolityTransition.Phase != KingdomPolityRealmTransitionPhase.Detached ||
+				PolityTransition.OldRealmId != archive.RealmId)
+			{
+				archive.Quarantine("return lacks exact detached polity authority");
+				Refusal = "The exiled realm's polity record blocks exact return.";
 				return false;
 			}
 			if (TradeBook == null || TradeBook.IdentityBound ||
@@ -163,6 +179,8 @@ namespace ThousandAndFirst
 			if (archive.Phase == KingdomRealmArchivePhase.Restoring)
 			{
 				if (!RestoreArchivedRealmCore(archive, out failure) ||
+					!KingdomPolityRealmTransitionRuntime.TryRestoreReturn(this, archive,
+						out failure) ||
 					!KingdomChronicle.TryRestoreRealmRegistry(archive.ChronicleRegistry,
 					archive.ChronicleRegistryFault, out failure) ||
 					!TryBindTradeIdentity(out failure) ||
@@ -206,11 +224,18 @@ namespace ThousandAndFirst
 			if (SeatNameValue == null) SeatNameValue = SeatName;
 			if (DisplayName == null) DisplayName = KingdomDisplayName;
 			if (Restored == int.MinValue) Restored = Archive.ReturnRegard;
+			string returnedRealmId = Archive.RealmId;
 			if (!TryClearExileMirrors(Archive, out string failure))
 				return QuarantineReturn(Archive, failure, out Refusal);
+			if (!KingdomPolityRealmTransitionRuntime.TryCompleteReturn(this,
+				returnedRealmId, out failure))
+				return QuarantineReturn(Archive, failure ??
+					"returned polity transition could not close", out Refusal);
 			ReturnAskedRegard = int.MinValue;
 			DoorClosedTold = false;
 			ExiledRealmArchive = null;
+			The.Game?.GetSystem<KingdomSuccession>()?.CompleteChosenSeatClimb(
+				returnedRealmId);
 			KingdomLog.Log("return: " + FactionName + " took the founder back -> " + Restored
 				+ "; seated " + SeatNameValue);
 			Popup.Show(KingdomExileRules.ReturnNotice(

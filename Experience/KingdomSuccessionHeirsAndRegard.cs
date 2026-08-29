@@ -14,9 +14,8 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// Which candidate the realm raises. Seniority is <c>KingdomOffices.UpdateOffice</c>'s own
-		/// rule &mdash; the settler who has served longest &mdash; asked a second time and for a
-		/// second purpose, which is what makes config B free of new machinery.
+		/// Which candidate the realm raises. Seniority reads the resident row's arrival tick directly;
+		/// the optional title-only civic office is deliberately irrelevant to succession.
 		/// <para>
 		/// Ties are broken by name and then by resident id rather than left to enumeration order,
 		/// because two settlers who arrived on the same tick is the ordinary case for a growth pass
@@ -143,9 +142,6 @@ namespace ThousandAndFirst
 		/// realm remembers, and a realm that did not would be a realm with no creed worth leaving.</summary>
 		public const int RegardForCreedLeft = -75;
 
-		/// <summary>Already held the settlement's one office when the founder fell.</summary>
-		public const int RegardForOffice = 50;
-
 		/// <summary>
 		/// What the realm's own faction holds the heir at on the day they take the charter, derived
 		/// from the heir's row and from nothing else &mdash; which is the whole of C4: the founder's
@@ -163,8 +159,8 @@ namespace ThousandAndFirst
 		/// <param name="NowTick">The tick of the accession.</param>
 		/// <param name="CreedMatchesRealm">The heir holds the realm's declared creed.</param>
 		/// <param name="OnceLeftRealmCreed">The heir's kept roll names the realm's declared creed.</param>
-		/// <param name="HoldsOffice">The heir already held the office.</param>
-		public static int AccessionRegard(long ArrivedTick, long NowTick, bool CreedMatchesRealm, bool OnceLeftRealmCreed, bool HoldsOffice)
+		public static int AccessionRegard(long ArrivedTick, long NowTick,
+			bool CreedMatchesRealm, bool OnceLeftRealmCreed)
 		{
 			int regard = MonthsServed(ArrivedTick, NowTick) * RegardPerMonthServed;
 			if (CreedMatchesRealm)
@@ -174,10 +170,6 @@ namespace ThousandAndFirst
 			if (OnceLeftRealmCreed)
 			{
 				regard += RegardForCreedLeft;
-			}
-			if (HoldsOffice)
-			{
-				regard += RegardForOffice;
 			}
 			if (regard < AccessionRegardFloor)
 			{

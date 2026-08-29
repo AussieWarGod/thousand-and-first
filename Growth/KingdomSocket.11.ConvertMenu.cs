@@ -58,7 +58,7 @@ namespace ThousandAndFirst
 			int socketsStart = targets.Count;
 			for (int i = 0; i < sockets.Count; i++)
 			{
-				options.Add("{{K|a cleared lot}}");
+				options.Add("{{K|" + SocketLotLabel(sockets[i]) + "}}");
 				targets.Add(sockets[i]);
 			}
 			int picked = Popup.PickOption(Title: "Change what stands on a lot, at " + KingdomPresentation.Rich(System.SeatName), Options: options.ToArray(), AllowEscape: true);
@@ -72,6 +72,11 @@ namespace ThousandAndFirst
 			string currentKey = null;
 			KingdomPlotRules.PlotSize currentSize = KingdomPlotRules.PlotSize.None;
 			KingdomArchitectureIntent standingArchitecture = null;
+			string socketType = null;
+			ArchitectureLotSize socketSize = default(ArchitectureLotSize);
+			ArchitectureFacing socketFacing = default(ArchitectureFacing);
+			bool legacySocket = false;
+			KingdomPlotRules.PlotRect socketRect = default(KingdomPlotRules.PlotRect);
 			if (!onSocket)
 			{
 				currentKey = target.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
@@ -81,7 +86,27 @@ namespace ThousandAndFirst
 					currentCategory = oldEntry.Category;
 					if (!KingdomPlots.TryReadRect(target, out KingdomPlotRules.PlotRect actualRect)
 						|| !KingdomSocketRules.TryActualSize(actualRect.Width, actualRect.Height,
-							out currentSize)) currentSize = oldSpec.Size;
+						out currentSize)) currentSize = oldSpec.Size;
+				}
+			}
+			else
+			{
+				if (!TryReadSocketLot(target, out socketType, out socketSize,
+					out socketFacing, out legacySocket, out string socketReceiptFailure)
+					|| !KingdomPlots.TryReadRect(target, out socketRect))
+				{
+					Popup.Show(socketReceiptFailure ?? "That cleared lot's rectangle cannot be read.");
+					return;
+				}
+				if (legacySocket)
+				{
+					if (!KingdomSocketRules.TryActualSize(socketRect.Width, socketRect.Height,
+						out KingdomPlotRules.PlotSize actualSocketSize))
+					{
+						Popup.Show("That legacy cleared lot has no recognized actual size.");
+						return;
+					}
+					socketSize = (ArchitectureLotSize)(int)actualSocketSize;
 				}
 			}
 			List<KingdomRules.BuildEntry> available = new List<KingdomRules.BuildEntry>();
@@ -110,12 +135,21 @@ namespace ThousandAndFirst
 								standingArchitecture.LotType, standingArchitecture.LotSize, out _)))
 						continue;
 				}
-				else if (KingdomPlots.TryReadRect(target, out KingdomPlotRules.PlotRect socketRect)
-					&& KingdomSocketRules.TryActualSize(socketRect.Width, socketRect.Height,
-						out KingdomPlotRules.PlotSize socketSize)
-					&& !KingdomArchitecture.TryGetMapping(entry.Key, entry.Category,
-						(ArchitectureLotSize)(int)socketSize, out _))
-					continue;
+				else if (legacySocket)
+				{
+					if (!KingdomArchitecture.TryGetMapping(entry.Key, entry.Category,
+						socketSize, out _)) continue;
+				}
+				else
+				{
+					ArchitectureLotSize candidateSize = (ArchitectureLotSize)(int)spec.Size;
+					if (!KingdomArchitectureRules.TryClassifySetChange(socketType, socketSize,
+						entry.Category, candidateSize, out ArchitectureSetChange socketChange)
+						|| socketChange != ArchitectureSetChange.SameSet
+						|| !KingdomArchitectureRuntime.TryPrepare(System, zone, socketRect,
+							entry.Key, socketType, out KingdomArchitectureIntent candidate, out _)
+						|| candidate.Facing != socketFacing) continue;
+				}
 				available.Add(entry);
 			}
 			if (available.Count == 0)
@@ -147,9 +181,14 @@ namespace ThousandAndFirst
 						+ " drams]}}";
 				}
 				designOptions[i] = available[i].DisplayName
-					+ (onSocket ? " {{C|[" + available[i].CostDrams + " drams]}}" : "") + tag;
+					+ (onSocket ? " {{C|[" + available[i].CostDrams + " drams]}}" : "")
+					+ (onSocket && legacySocket
+						? " {{y|[legacy lot: establishes type and facing]}}" : "") + tag;
 			}
-			int designPicked = Popup.PickOption(Title: onSocket ? "Build on the cleared lot" : ("Change the " + target.ShortDisplayName + " into"), Options: designOptions, AllowEscape: true);
+			int designPicked = Popup.PickOption(Title: onSocket
+				? "Build on " + SocketLotLabel(target)
+				: ("Change the " + target.ShortDisplayName + " into"),
+				Options: designOptions, AllowEscape: true);
 			if (designPicked < 0)
 			{
 				return;
@@ -166,6 +205,10 @@ namespace ThousandAndFirst
 					Popup.Show(socketFailure);
 					return;
 				}
+				if (legacySocket)
+					socketPreview = "This save-era cleared lot did not record its type or facing. "
+						+ "The exact plan below establishes both now; nothing is inferred from what stood here.\n\n"
+						+ socketPreview;
 				int socketConfirmed = Popup.PickOption(Title: "Build exact plan: " + chosen.Name,
 					Intro: socketPreview, Options: new string[1] { "Build this exact plan" },
 					AllowEscape: true);

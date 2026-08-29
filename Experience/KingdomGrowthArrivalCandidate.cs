@@ -14,6 +14,14 @@ namespace ThousandAndFirst
 		public long UpdatedTick;
 		public KingdomGrowthArrivalCandidatePhase Phase;
 		public KingdomGrowthArrivalCandidatePhase EvidencePhase;
+		public ulong ArrivalOpportunityOrdinal;
+		public long ArrivalOpportunityDueTick;
+		public long ArrivalOpportunityRateEpoch;
+		public string ArrivalOpportunityPayloadHash;
+		/// <summary>True only for a pre-v4 transaction whose possible physical callback means
+		/// correspondence cannot safely be interposed. It may recover; it cannot mint new work.</summary>
+		public bool LegacyAutomaticRecovery;
+		public KingdomGrowthFirstGuestOpportunity FirstGuest;
 		/// <summary>Historical Growth-v1 candidates published before lodging did not bind an
 		/// origin zone. This compatibility state grants no starter authority; the first claimed
 		/// zone must bind it transactionally before reconciliation can continue.</summary>

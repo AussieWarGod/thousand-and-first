@@ -1,5 +1,13 @@
 # Building catalogue brief — the authoritative input for the plots/materials/catalogue wave
 
+> **Supersession banner — 2026-08-28.** This chronological ruling record preserves accepted product
+> law and old implementation snapshots. Current runtime holds one seat plus two non-seat cities;
+> third founding succeeds, fourth refuses, and the manifest offers both non-seat destinations. The
+> narrow physical-food landing is code-complete with integrated/native proof open. Prior hosted-
+> arcology implementation assertions are superseded under active AMENDED 19+ review; production,
+> XML/fabric, and tests are held. `VISION.md`, `docs/STATUS.md`, `docs/V1-UNDEFERRAL.md`, and the
+> current brief audit control implementation/evidence status.
+
 Date: 2026-08-20. Author-approved in session ("this looks pretty good"). Supersedes nothing;
 composes with the author rulings already on `main` (`fc7a710` no wells, `fc8c0cb`/`0a0c9bd`
 equilibrium, `5818727` the capability grammar, `78c0bc0` vision verbs/haulage ladder).
@@ -78,7 +86,10 @@ follows, a staked plan beats the grammar anywhere.
 Fine houses are a different good (quality vs quantity), and notables are the cash-out: a
 **legendary trader settles only when a vacant fine house of sufficient tier exists** and the
 shop tier warrants; office holders and keepers may want the same. S plots never obsolete —
-struck economy-huts become fine-house ground.
+struck economy-huts become fine-house ground. Ordinary/non-luxury residents therefore treat an
+eligible fine house as last-resort shelter: they take any other acceptable roof first, but use the
+fine house when it is the only acceptable roof. This is deterministic placement, not eviction or
+a hard vacancy lock; every standing assignment remains standing.
 
 ## Bindings
 
@@ -124,8 +135,10 @@ disasters (off-screen loss is a debt).
 > **Current model clarification, 2026-08-27.** “Plot” means the reserved typed lot; “plan” means
 > its authored occupant. Only a declared same-set plan transition preserves LotId. Ordinary retype
 > or resize strikes and sites a fresh lot with a new LotId. The rite-owned civic heart is the sole
-> size-changing exception: S basin → M waterstone → L moot → XL court preserves LotId. Heart
-> relocation and hosted arcology plots remain `AUTHOR-DEFERRED`. This clarification controls where
+> size-changing exception: S basin → M waterstone → L moot → XL court → hosted arcology preserves
+> LotId. The hosted arcology remains the accepted exact-capital/persistent-Interior design, but its
+> prior implementation claim is superseded under AMENDED 19+ review; yielding-lot relocation remains
+> a separately implemented custody verb. This clarification controls where
 > the older socket/relocation prose below is broader.
 
 **The layer stack**: plot (ground envelope) / building (what it is: I/O, cost, staff, chain) /
@@ -764,9 +777,9 @@ trivial; materialisation never scales with city count (runs only where the playe
 reckon is closed-form, linear in cities, with staggering and a next-breakpoint priority queue
 (O(events), not O(cities×passes)) in reserve. NO engineering cap. Any cap on city count/size is
 GAMEPLAY (charter gates, rank, fiction), chosen for feel, never for viability. The one
-structural limit is inherited, not simulative: the seat + single-Away record pair — generalises
+structural limit was inherited, not simulative: the then-current seat + single-Away record pair — generalises
 to a roster of settlement records after W1/W2 (the by-name carry already doesn't care how many
-records there are); scheduled as its own wave.
+records there are); scheduled as its own wave. Current runtime has one seat plus two non-seat rows.
 
 
 ## BACKLOG addition, 2026-08-22 — strata-filtered plots + the sky (author side thought, stored)
@@ -927,9 +940,21 @@ by creed, genotype, race, and Qud-native traits (ideation dispatched, proposal d
 feature) — endorsed in principle, lands with the tech-tree design; (c) exotic buildings that
 introduce new mechanics and endgame content — per the XL-unlocks-functions ruling.
 
-**Current v1 scope, 2026-08-27:** the heart's S→M→L→XL rungs preserve its one LotId. Yielding-lot
-relocation and hosted/zone-spanning arcology ground are positive `AUTHOR-DEFERRED` directions,
-not v1 implementation gaps. `VISION.md` owns that product boundary.
+**Superseded status annotation, 2026-08-27:** the accepted heart S→M→L→XL→arcology design preserves
+one LotId, but the implementation claim in this paragraph is now under AMENDED 19+ review with
+production, XML/fabric, and tests held. The snapshot described one realm/capital authority closing the shell around the exact court; two fixed authority slots
+retain current plus the one exact exiled realm without lifetime key growth. Vanilla Interior zones host a
+bounded atrium, ward, terrace, and prerequisite-gated read-only views. Paid lots preserve exact
+debit/construction/root receipts and deterministic fixtures; loss of capital leaves the intact shell
+dark. A foreign loaded shell remains inert without relabelling or quarantine. This v1 topology
+deliberately loads no remote zone and simulates no unloaded actor. The
+separately owned yielding-lot transaction is now implemented: only exact marked blockers of a needed
+Heart rect enter one founder-approved complete plan; the existing layout scorer chooses receiving
+ground; one labour-only frame completes at a time; then the same original lot objects, stable LotId,
+frozen architecture, contents, residents, staffing/work/wear, and network declarations move whole.
+Its bounded CAS receipt owns interruption, obstruction, rollback/quarantine, thaw/load, destroyed-
+frame, and ownership-loss recovery; it never strikes, clones, or debits water/material. Native
+TESTING 136j.6–136j.10 remains acceptance. `VISION.md` owns the product boundary.
 
 
 ## Addendum 14, 2026-08-22 — research, ruled (author answer to ideation Q1)
@@ -1045,10 +1070,11 @@ foundry, or something)."
 - Composes with: the heart ladder (is the arcology the capital's crown or any city's?), the
   N-city roster, per-realm-vs-per-city research (a capital research megastructure?).
 
-**Ideation Q8 DEFERRED (author, 2026-08-22):** the four named lab procedures (Weeping Graft /
-Chimeric Confession / Cold Regard / Lantern Rib — DIVERSITY doc §3.7) stand as the working
-proposal; the author will circle back. Not blocking: the lab wave is behind the end-state
-ruling anyway, and the procedures are data-shaped — renameable and swappable up to build.
+**Q8 implementation correction, 2026-08-27:** the four named lab procedures — Weeping Graft,
+Chimeric Confession, Cold Regard, and Lantern Rib — are implemented in `KingdomProcedures.xml`
+and the durable lab engine. Their vat/grafting/theatre authored station floors are current;
+native procedure use, removal, damage, and cold-load remain acceptance evidence rather than
+grounds to describe the feature as deferred.
 
 
 ## Addendum 20, 2026-08-22 — the exotics doctrine (author answer to ideation Q9)
@@ -1142,8 +1168,9 @@ RESEARCH-SITING-AND-SECESSION, SUCCESSION-RESEARCH, DIVERSITY §3) carry the ful
 - **A3 — capital may NOT stack both body-megastructures.**
 - **A4 — the crown is a building, movable at real cost** (never named `Seat`).
 
-> **Current v1 portfolio reconciliation, 2026-08-27.** The live realm cap is two cities, so the
-> portfolio cannot require a simultaneous three-city chain. v1 uses a reciprocal choice graph:
+> **Current v1 portfolio reconciliation, amended 2026-08-28.** The live realm cap is three cities—
+> one seat plus two non-seat—but the portfolio remains usable with two owned cities and therefore
+> cannot require a simultaneous three-city chain. v1 uses a reciprocal choice graph:
 > Deep-Bore, Great Foundry, Granary-Colossus, theatre, and becoming annexe. The first purpose may
 > bootstrap from ordinary precursor works; a compatible second purpose consumes the first's exact
 > cargo; exact reciprocal cargo then activates the first. Incompatible pairs refuse before debit.
@@ -1243,7 +1270,7 @@ text, visual-state, damage/repair, pathing, and cold-save galleries all remain b
 - **C1 — the ladder confirmed**: Classic untouched (+ optional seal), KINGDOM MODE the named
   middle, Roleplay untouched, clone-vat is content in every mode.
 - **C2 — charter declares the realm's succession law at the moot, changeable in-fiction.**
-- **C3 — seniority law now; groomed designee as the first succession verb later.**
+- **C3 — seniority first; groomed designee activated as the first succession verb.**
 - **C4 — reputation reset + realm cell derived from the heir's row.** Rider: "player
   configurable, but in the spirit of qud it should be like starting a new game as if you were
   that citizen."
@@ -1264,17 +1291,21 @@ text, visual-state, damage/repair, pathing, and cold-save galleries all remain b
 - **C9 — the climb gates the charter on regard** (TryReturn threshold).
 - **C10 — the seal is orthogonal to the mode ladder; default import latest-eligible.**
 - **C11 — named procedures reset per heir; priced by world scarcity; no cap.**
-- **C12 — founder's shrine on owned registers now; sultanHistory rendering as stretch.**
+- **C12 — founder's shrine on owned registers plus one isolated public-history view.** The
+  reopened stretch is implemented as one custom `taf-founder-memory` entity/event and one exact
+  non-tradable/non-forgettable journal note. It is presentation-only, never a Sultan/cult/village
+  candidate, and its one-world receipt recovers missing exact views or quarantines divergence.
 - **C13 — choosing costs the seat, confirmed as config A's definition.** Rider: "player
   configurable, you decide default config as aligned to vanilla qud ethos, we can tweak later
   based on feedback." Orchestrator's default, per that delegation: **seat-cost ON by
   default** — choice may be free, consequence is not, which is Qud's own ethos; a sandbox
   toggle may disable it.
 
-> **Current v1 succession status, 2026-08-27.** Seniority death succession is implemented, but C2
-> and C13 still lack their Charter declaration/change and exact chosen-resident/seat-consequence
-> runtime. That bounded path is an open `SHIP` implementation gap. C3's persistent groomed-designee
-> system remains separately `AUTHOR-DEFERRED`; it is not needed to close C2/C13.
+> **Current v1 succession status, 2026-08-27.** C2/C13's Charter configuration, exact chosen-life
+> identity, and seat consequence are implemented. Activated C3 now adds a distinct lawful groomed
+> successor: exact realm-bound resident identity, monotonic service and city-schooling proofs,
+> Charter nominate/replace/revoke/progress UI, and explicit seniority fallbacks. Automated evidence
+> is green for this vertical; native Pass 36 remains required.
 
 ### D — the lab
 - **D1 — blocklist sustained** (self-replication, Invisibility, WallWalker, Metamorphosis

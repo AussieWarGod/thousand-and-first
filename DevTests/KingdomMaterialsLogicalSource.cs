@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomMaterialsLogicalSource
 	{
-		internal const int FileCount = 17;
+		internal const int FileCount = 18;
 
 		private static readonly string[] Paths =
 		{
@@ -22,6 +22,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomMaterials.10.SettlementPassAndYards.cs",
 			"Growth/KingdomMaterials.11.StrikeWorkAndRecoveryEntry.cs",
 			"Growth/KingdomMaterials.12.StrikeContinuation.cs",
+			"Growth/KingdomMaterials.12b.GatehouseRemovalProof.cs",
 			"Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs",
 			"Growth/KingdomMaterials.14.ClearanceWork.cs",
 			"Growth/KingdomMaterials.15.GroundAndWalls.cs",

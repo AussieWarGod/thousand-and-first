@@ -35,8 +35,13 @@ namespace ThousandAndFirst.Simulation.City
 			if (operation.Phase == KingdomHappeningLifecyclePhase.Ready)
 			{
 				if (operation.ExternalSemantic
+					&& operation.Kind != KingdomPhysicalHappeningKind.CommunalRite
 					&& nowTick - operation.UpdatedTick >= ExternalReadyTimeoutTicks)
 					return KingdomHappeningResumeAction.Restore;
+				// D8 is two-authority acknowledgement. Ready is the only physical attendance
+				// proof C18 may consume, so a communal rite holds it until C18 has published its
+				// terminal cut and explicitly asks the physical owner to restore. Missing or
+				// Restoring are never interpreted as success by this rule.
 				return operation.ExternalSemantic ? KingdomHappeningResumeAction.WaitExternal
 					: KingdomHappeningResumeAction.Publish;
 			}

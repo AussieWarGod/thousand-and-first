@@ -26,7 +26,7 @@ namespace ThousandAndFirst
 			{
 				KingdomLabRegistryEntry row = rows[i];
 				if (row.Status != KingdomLabRegistryStatus.Active
-					|| !string.Equals(row.PatientId, Actor.ID, StringComparison.Ordinal)
+					|| !string.Equals(row.PatientId, Actor.IDIfAssigned, StringComparison.Ordinal)
 					|| !string.Equals(row.GameId, The.Game.GameID, StringComparison.Ordinal)
 					|| !string.Equals(row.RealmId, RealmIdentity(System), StringComparison.Ordinal)
 					|| row.RealmFoundedTick != System.FoundedTick) continue;
@@ -98,7 +98,7 @@ namespace ThousandAndFirst
 			LabProcedure Procedure)
 		{
 			if (Actor == null || Job == null || Procedure == null
-				|| !string.Equals(Actor.ID, Job.PatientId, StringComparison.Ordinal)
+				|| !string.Equals(Actor.IDIfAssigned, Job.PatientId, StringComparison.Ordinal)
 				|| !string.Equals(Actor.GetStringProperty(PendingProperty(Job.ProcedureKey)),
 					Job.JobId, StringComparison.Ordinal)) return false;
 			XRL.World.Anatomy.BodyPart slot = KingdomProcedures.ExactBodyPart(Actor, Job.BodyPartId);
@@ -107,7 +107,7 @@ namespace ThousandAndFirst
 			GameObject bearer = (Procedure.Attach == LabAttach.Weapon)
 				? slot.DefaultBehavior : Actor;
 			return GameObject.Validate(bearer)
-				&& string.Equals(bearer.ID, Job.BearerId, StringComparison.Ordinal)
+				&& string.Equals(bearer.IDIfAssigned, Job.BearerId, StringComparison.Ordinal)
 				&& (Procedure.Attach != LabAttach.Weapon
 					|| ReferenceEquals(slot.DefaultBehavior, bearer))
 				&& !KingdomProcedures.HasProcedureClass(Actor, Procedure);
@@ -127,7 +127,7 @@ namespace ThousandAndFirst
 		private static bool CleanupApplicationMarker(GameObject Actor, r_KingdomLabJob Job)
 		{
 			if (Actor == null || Job == null
-				|| !string.Equals(Actor.ID, Job.PatientId, StringComparison.Ordinal)) return false;
+				|| !string.Equals(Actor.IDIfAssigned, Job.PatientId, StringComparison.Ordinal)) return false;
 			Job.MarkerCleanupPending = true;
 			string key = PendingProperty(Job.ProcedureKey);
 			string marker = Actor.GetStringProperty(key);
@@ -190,7 +190,7 @@ namespace ThousandAndFirst
 			r_KingdomLabRemovalJob Job)
 		{
 			return Actor != null && System != null && Job != null && The.Game != null
-				&& string.Equals(Actor.ID, Job.PatientId, StringComparison.Ordinal)
+				&& string.Equals(Actor.IDIfAssigned, Job.PatientId, StringComparison.Ordinal)
 				&& string.Equals(The.Game.GameID, Job.GameId, StringComparison.Ordinal)
 				&& string.Equals(RealmIdentity(System), Job.RealmId, StringComparison.Ordinal)
 				&& System.FoundedTick == Job.RealmFoundedTick && !Job.SchemaQuarantined;

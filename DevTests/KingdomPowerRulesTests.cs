@@ -26,6 +26,15 @@ namespace ThousandAndFirst.Tests
 			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("if (work.GetIntProperty(\"KingdomHandCranked\") == 1)", growth);
 			StringAssert.Contains("capacitor.Charge = target;", growth);
+
+			string visual = TestMain.ReadRepositoryText("Growth/KingdomVisualState.cs");
+			StringAssert.Contains("public class r_KingdomHandCrankedVisual : IPart", visual);
+			StringAssert.Contains("item.RequirePart<r_KingdomHandCrankedVisual>()", visual);
+			StringAssert.Contains("KingdomVisualState.StateOf(ParentObject) != KingdomVisualStateKind.Sound", visual);
+			StringAssert.Contains("store != null && store.Charge > 0", visual);
+			StringAssert.Contains("E.RenderEffectIndicator(ActiveGlyph, null", visual);
+			Assert.IsFalse(visual.Contains("RequirePart<AnimatedMaterialElectric>"),
+				"the state-aware replacement must not smuggle the unconditional vanilla flash back in");
 		}
 
 		// --- RatedChargePerDay: each kind of work is worth its own day's labour ---------------

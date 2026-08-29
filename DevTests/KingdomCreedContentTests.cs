@@ -89,7 +89,7 @@ namespace ThousandAndFirst.Tests
 			AssertFoodMechanism(objects, "r_KingdomKyakukyaSpiceHearth",
 				"r_KingdomLarder", "r_KingdomLarderCapacity", 96);
 			AssertFoodMechanism(objects, "r_KingdomSnapjawTrailDen",
-				"r_KingdomRampart", "r_KingdomLarderCapacity", 64);
+				"r_KingdomRampartFurnitureProfile", "r_KingdomLarderCapacity", 64);
 			XElement trailDen = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomSnapjawTrailDen");
 			CollectionAssert.IsSupersetOf(trailDen.Elements("part")
@@ -164,6 +164,79 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("behavior-bearing mapped creed-work", source);
 			Assert.IsFalse(source.Contains("Joppa"));
 			Assert.IsFalse(source.Contains("Barathrumites"));
+		}
+
+		[Test]
+		public void CreedAndTempleVisualFixturesAreSemanticInertAndFunctional()
+		{
+			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
+			var fixtures = new Dictionary<string, string>
+			{
+				{ "r_KingdomCreedSpindleWheel", "Items/sw_waterwheel_1.bmp" },
+				{ "r_KingdomCreedDryContact", "Items/sw_induction_station.bmp" },
+				{ "r_KingdomCreedHornPost", "Terrain/sw_monument1.bmp" },
+				{ "r_KingdomCreedScrapAltar", "Terrain/sw_monument7.bmp" },
+				{ "r_KingdomCreedWeaponRack", "Items/sw_weapons_rack.bmp" },
+				{ "r_KingdomCreedColdBrazier", "Items/sw_firepan.bmp" },
+				{ "r_KingdomCreedVineTrellis", "Tiles/sw_watervine2.bmp" },
+				{ "r_KingdomCreedLivingTrunk", "Terrain/sw_bigtree1.bmp" }
+			};
+			foreach (var fixture in fixtures)
+			{
+				XElement blueprint = objects.Descendants("object").Single(e =>
+					(string)e.Attribute("Name") == fixture.Key);
+				Assert.AreEqual("Furniture", (string)blueprint.Attribute("Inherits"), fixture.Key);
+				Assert.AreEqual(fixture.Value, (string)blueprint.Elements("part").Single(e =>
+					(string)e.Attribute("Name") == "Render").Attribute("Tile"), fixture.Key);
+				CollectionAssert.IsSubsetOf(blueprint.Elements("part").Select(e =>
+					(string)e.Attribute("Name")).ToArray(),
+					new string[] { "Render", "Description", "Physics", "Metal" }, fixture.Key);
+			}
+
+			string creed = TestMain.ReadRepositoryText(Path.Combine("Architecture",
+				"KingdomArchitectures-Creeds.xml"));
+			foreach (string slot in new string[] { "$spindle", "$contact", "$hornpost", "$altar",
+				"$drain", "$armsrack", "$brazier", "$trellis", "$trunk" })
+				StringAssert.Contains(slot, creed);
+			XElement creedPalette = XDocument.Parse(creed).Descendants("palette").Single(e =>
+				(string)e.Attribute("Key") == "creed-practice-hands");
+			XElement trunkSlot = creedPalette.Elements("slot").Single(e =>
+				(string)e.Attribute("Key") == "trunk");
+			Assert.AreEqual("timber", (string)trunkSlot.Attribute("Material"));
+			Assert.AreEqual("yes", (string)trunkSlot.Attribute("Natural"));
+			XElement path = objects.Descendants("object").Single(e =>
+				(string)e.Attribute("Name") == "r_KingdomGroundTroddenPath");
+			Assert.AreEqual("DirtPath", (string)path.Attribute("Inherits"));
+			Assert.IsNull(path.Elements("part").Single(e =>
+				(string)e.Attribute("Name") == "Render").Attribute("Tile"));
+
+			XDocument faith = XDocument.Parse(TestMain.ReadRepositoryText(Path.Combine(
+				"Architecture", "KingdomArchitectures-CivicFaith.xml")));
+			Assert.AreEqual(2, faith.Descendants("slot").Count(e =>
+				(string)e.Attribute("Blueprint") == "r_KingdomFixtureChairStone"
+				&& (string)e.Attribute("Role") == "functional-stone-nave-seat"));
+			XElement[] seats = faith.Descendants("glyph").Where(e =>
+				(string)e.Attribute("Anchors") == "seat:nave").ToArray();
+			Assert.AreEqual(2, seats.Length);
+			Assert.IsTrue(seats.All(e => (string)e.Attribute("Object") == "$seat"
+				&& e.Attribute("Structure") == null && (string)e.Attribute("Pass") == "adjacent"));
+		}
+
+		[Test]
+		public void LifecycleMarkersAndArcologyHaveDistinctLocalRenderLanguage()
+		{
+			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
+			string[] names = { "r_KingdomHeartStake", "r_KingdomPlanMarker",
+				"r_KingdomRelocationStake", "r_KingdomClearanceStake", "r_KingdomSocket",
+				"r_KingdomNotice", "r_KingdomCarrySign" };
+			string[] glyphs = names.Select(name => (string)objects.Descendants("object").Single(e =>
+				(string)e.Attribute("Name") == name).Elements("part").Single(e =>
+				(string)e.Attribute("Name") == "Render").Attribute("RenderString")).ToArray();
+			Assert.AreEqual(names.Length, glyphs.Distinct(StringComparer.Ordinal).Count());
+			XElement arcology = objects.Descendants("object").Single(e =>
+				(string)e.Attribute("Name") == "r_KingdomArcology");
+			Assert.AreEqual("Tiles/sw_arch.png", (string)arcology.Elements("part").Single(e =>
+				(string)e.Attribute("Name") == "Render").Attribute("Tile"));
 		}
 
 		private static bool Positive(XElement element, string name)

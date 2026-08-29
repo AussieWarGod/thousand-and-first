@@ -27,19 +27,53 @@ namespace ThousandAndFirst
 			string expectedOutput = construction == null
 				? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId;
 			bool hasFrozenFinal = !string.IsNullOrEmpty(expectedOutput)
-				&& expectedOutput != parent.ID;
+				&& expectedOutput != parent.IDIfAssigned;
 			if (hasFrozenFinal)
 			{
-				KingdomPhysicalLookupState outputState = KingdomConstruction.FindExactId(
-					Z, expectedOutput, out building);
-				if (outputState != KingdomPhysicalLookupState.Exact || building == null)
+				if (!TryPlotFinalRoot(expectedOutput, out building))
 				{
 					if (construction != null) KingdomConstruction.Quarantine(ref construction,
-						"The exact frozen final plot output is absent or duplicated in its loaded owner zone.");
+						"The frozen final plot output lost its canonical custody root.");
 					return false;
 				}
 			}
-			bool created = building == null;
+			else
+			{
+				KingdomPhysicalLookupState rootState = FindPlotFinalRootForPredecessor(
+					parent.IDIfAssigned, out building);
+				if (rootState == KingdomPhysicalLookupState.Ambiguous)
+				{
+					if (construction != null) KingdomConstruction.Quarantine(ref construction,
+						"The plot predecessor has ambiguous canonical final custody.");
+					return false;
+				}
+				if (rootState == KingdomPhysicalLookupState.Exact)
+				{
+					expectedOutput = building.IDIfAssigned;
+					if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
+						Footprint, Roof, expectedOutput, construction)) return false;
+					if (construction != null)
+					{
+						if (!KingdomConstruction.UpdateFinalOutput(ref construction,
+							parent.IDIfAssigned, expectedOutput)) return false;
+					}
+					else parent.SetStringProperty(FinalOutputIdProperty, expectedOutput);
+						hasFrozenFinal = true;
+					}
+				}
+				if (building != null && (building.IDIfAssigned != expectedOutput
+					|| building.GetStringProperty(PlotFinalPredecessorProperty) != parent.IDIfAssigned
+					|| (!string.IsNullOrEmpty(receipt)
+						&& building.GetStringProperty(KingdomConstruction.ReceiptProperty) != receipt)
+					|| (construction != null && (!KingdomConstruction.HasReceipt(building, construction)
+						|| !KingdomConstruction.PaidBuildMatches(building, construction)))
+					|| !PlotPlanMarkerRemovalProofMatches(parent, building)))
+				{
+					if (construction != null) KingdomConstruction.Quarantine(ref construction,
+						"The rooted final plot lacks authenticated predecessor provenance.");
+					return false;
+				}
+				bool created = building == null;
 			if (created)
 			{
 				try { building = GameObject.Create(entry.Blueprint); }
@@ -78,18 +112,12 @@ namespace ThousandAndFirst
 					"The final building could not inherit its frozen city-purpose commitment.");
 				return false;
 			}
-			if (created)
+			if (created && !TryCopyPlotPlanMarkerRemovalProof(parent, building))
 			{
-				if (construction != null)
-				{
-					if (!KingdomConstruction.UpdateFinalOutput(ref construction,
-						parent.ID, building.ID))
-					{
-						RemoveCreatedWorks(building, Z);
-						return false;
-					}
-				}
-				else parent.SetStringProperty(FinalOutputIdProperty, building.ID);
+				RemoveCreatedWorks(building, Z);
+				if (construction != null) KingdomConstruction.Quarantine(ref construction,
+					"The final plot could not retain its plan-marker removal proof.");
+				return false;
 			}
 			if (created)
 			{
@@ -104,39 +132,54 @@ namespace ThousandAndFirst
 						"The exact paid plot receipt could not be frozen on its final output.");
 					return false;
 				}
-				if (construction != null && !KingdomConstruction.UpdatePhysical(ref construction,
-					KingdomPhysicalPhase.FinalOutputPending, construction.PhysicalIndex,
-					construction.PhysicalAmount,
-					construction.PhysicalSpilled, parent.ID, building.ID,
-					construction.PhysicalReceipt))
+				building.SetStringProperty(PlotFinalPredecessorProperty, parent.IDIfAssigned);
+				expectedOutput = building.IDIfAssigned;
+				if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
+					Footprint, Roof, expectedOutput, construction)
+					|| !RootPlotFinalOutput(expectedOutput, building)) return false;
+				if (construction != null)
 				{
-					RemoveCreatedWorks(building, Z);
-					return false;
+					if (!KingdomConstruction.UpdateFinalOutput(ref construction,
+						parent.IDIfAssigned, building.ID))
+					{
+						return false;
+					}
 				}
-				GameObject accepted;
-				try
-				{
-					accepted = cell.AddObject(building);
-					building.MakeActive();
-					KingdomSurvey.ObserveAddResultInActive(Z, building, accepted);
-				}
-				catch (System.Exception ex)
-				{
-					bool cleaned = RemoveCreatedWorks(building, Z);
-					if (construction != null) KingdomConstruction.Quarantine(ref construction,
-						(cleaned ? "Final plot AddObject threw after identity publication: "
-							: "Final plot AddObject threw and cleanup failed: ") + ex.Message);
-					return false;
-				}
-				if (!ReferenceEquals(accepted, building))
-				{
-					if (construction != null) KingdomConstruction.Quarantine(ref construction,
-						"Final plot AddObject replaced its exact return identity.");
-					return false;
-				}
+				else parent.SetStringProperty(FinalOutputIdProperty, building.ID);
+				if ((construction == null
+						? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId)
+					!= expectedOutput) return false;
 			}
-			if (!ExactFinalBuilding(building, Z, cell, entry, receipt, id, Rect,
-				Footprint, Roof, architecture, legacyArchitecture, construction))
+			if (construction != null
+				&& construction.PhysicalPhase != KingdomPhysicalPhase.FinalOutputPending
+				&& construction.PhysicalPhase != KingdomPhysicalPhase.FinalOutputSettled
+				&& !KingdomConstruction.UpdatePhysical(ref construction,
+					KingdomPhysicalPhase.FinalOutputPending, construction.PhysicalIndex,
+					construction.PhysicalAmount, construction.PhysicalSpilled,
+					parent.IDIfAssigned, building.ID, construction.PhysicalReceipt)) return false;
+			if (construction != null
+				&& (construction.PhysicalItemId != parent.IDIfAssigned
+					|| construction.PhysicalDestinationId != expectedOutput)) return false;
+			GameObject accepted = null;
+			bool callbackReturned = false;
+			if (building.CurrentCell == null && building.InInventory == null)
+			{
+				if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
+					Footprint, Roof, expectedOutput, construction)) return false;
+				try { accepted = cell.AddObject(building); callbackReturned = true; building.MakeActive(); }
+				catch { }
+				finally { KingdomSurvey.ObserveAddResultInActive(Z, building, accepted); }
+			}
+			bool exactEndpoint = ExactFinalBuilding(building, Z, cell, entry, receipt, id, Rect,
+				Footprint, Roof, architecture, legacyArchitecture, construction);
+			bool exactCustody = ExactPlotFinalRootCustody(expectedOutput, building);
+			if (!KingdomFoundingHeartTerminalRules.ExactAddCut(callbackReturned,
+				object.ReferenceEquals(accepted, building), exactEndpoint, exactCustody)
+				|| building.IDIfAssigned != expectedOutput
+				|| (construction == null
+					? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId)
+					!= expectedOutput
+				|| !PlotPlanMarkerRemovalProofMatches(parent, building))
 			{
 				if (construction != null) KingdomConstruction.Quarantine(ref construction,
 					"The exact final plot output changed across AddObject.");
@@ -147,10 +190,9 @@ namespace ThousandAndFirst
 				&& !KingdomConstruction.UpdatePhysical(ref construction,
 					KingdomPhysicalPhase.FinalOutputSettled, construction.PhysicalIndex,
 					construction.PhysicalAmount,
-					construction.PhysicalSpilled, parent.ID, building.ID,
+					construction.PhysicalSpilled, parent.IDIfAssigned, building.ID,
 					construction.PhysicalReceipt)) return false;
-			if (building.CurrentCell != cell || building.ID != (construction == null
-					? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId)
+			if (building.CurrentCell != cell || building.IDIfAssigned != expectedOutput
 				|| building.GetIntProperty("KingdomBuilt") != 1
 				|| building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != entry.Key
 				|| (!string.IsNullOrEmpty(receipt)
@@ -158,8 +200,7 @@ namespace ThousandAndFirst
 				|| (construction != null && (!KingdomConstruction.IsCurrent(construction)
 					|| !KingdomConstruction.PaidBuildMatches(building, construction))))
 			{
-				if (created) RemoveCreatedWorks(building, Z);
-				return false;
+					return false;
 			}
 			Building = building;
 			Created = created;

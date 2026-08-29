@@ -97,7 +97,7 @@ namespace ThousandAndFirst
 			// A market district stocks the stalls a rung above what the settlement's raw size
 			// would otherwise carry.
 			int tier = KingdomRules.ShopTierForStage(System.Stage) + KingdomRules.DistrictsShopTierBonus(System.ZoneDistricts.Values);
-			if (System.HasShopkeeper && tier > System.ShopTier)
+			if (System.HasShopkeeper)
 			{
 				RestockShops(System, Z, tier);
 			}
@@ -117,14 +117,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Raises the settlement's shops to a new stock tier: the trader's stock table and the
-		/// per-creature InventoryTier both climb, and the shelves are restocked at once so the
-		/// change is visible the moment the player next trades.
+		/// Issues one explicitly named local market-output batch for a newly reached tier. ShopTier commits
+		/// before the opaque population-table callback, making the issue at-most-once. Vanilla's
+		/// periodic restock is disabled: merchant replacement never manufactures another batch.
 		/// </summary>
 		public static void RestockShops(KingdomSystem System, Zone Z, int Tier)
 		{
 			if (!KingdomMaster.NewWorkAllowed(System)) return;
-			int raised = 0;
+			Tier = KingdomShopStockRules.NextIssueTier(System.ShopTier, Tier);
+			GameObject merchant = null;
+			int merchants = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (item.GetIntProperty("VillageMerchant") != 1
@@ -132,26 +134,62 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				GenericInventoryRestocker restocker = item.GetPart<GenericInventoryRestocker>();
-				if (restocker == null)
-				{
-					continue;
-				}
-				restocker.Clear();
-				restocker.AddTable("Tier" + Tier + "Wares");
-				restocker.Chance = 100;
-				item.SetIntProperty("InventoryTier", Tier);
-				restocker.PerformRestock(Silent: true);
-				KingdomSurvey.ObserveChangedInActive(Z, item);
-				raised++;
+				merchants++;
+				merchant = item;
 			}
-			if (raised > 0)
+			KingdomShopStockVerdict verdict = KingdomShopStockRules.Classify(
+				System.ShopTier, Tier, merchants);
+			if (merchant != null && merchants == 1 && RecoverMarketOutputCut(System, merchant)) return;
+			if (verdict != KingdomShopStockVerdict.Issue || merchant == null) return;
+			string sourceId = KingdomShopStockRules.SourceId(System.RealmId,
+				System.CurrentSettlementId, Tier);
+			if (sourceId == null) return;
+			GenericInventoryRestocker restocker = merchant.GetPart<GenericInventoryRestocker>();
+			if (restocker == null) return;
+			List<GameObject> before = new List<GameObject>(merchant.Inventory.Objects);
+			ProtectPriorMarketStock(before);
+			ConfigureFiniteStock(restocker, Tier);
+			merchant.SetIntProperty("InventoryTier", Tier);
+			merchant.SetStringProperty(KingdomShopStockRules.IssueIntentProperty,
+				KingdomShopStockRules.IntentReceipt(sourceId));
+			System.ShopTier = Tier;
+			Exception callbackFailure = null;
+			int stamped = 0;
+			try
 			{
-				System.ShopTier = Tier;
+				restocker.PerformRestock(Silent: true);
+			}
+			catch (Exception ex) { callbackFailure = ex; }
+			finally
+			{
+				try { stamped = StampMarketOutput(merchant, before, sourceId,
+					System.CurrentSettlementId, Tier); }
+				catch (Exception ex) { KingdomLog.Log("local market-output stamping failed: " + ex.Message); }
+				try { DisableAutomaticStock(restocker); }
+				catch (Exception ex) { KingdomLog.Log("shop restocker sealing failed: " + ex.Message); }
+				merchant.SetStringProperty(KingdomShopStockRules.IssueIntentProperty, null,
+					RemoveIfNull: true);
+			}
+			KingdomSurvey.ObserveChangedInActive(Z, merchant);
+			if (callbackFailure == null && stamped > 0)
+			{
 				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
-				KingdomChronicle.Record(System, "the stalls of " + realm + " began carrying finer goods");
-				MessageQueue.AddPlayerMessage("{{G|The traders of " + realm + " have better wares to show you.}}");
-				if (KingdomLog.Enabled) KingdomLog.Log("shops raised to tier " + Tier + " (" + raised + " traders)");
+				KingdomChronicle.Record(System, "the stalls of " + realm
+					+ " produced one new tier of local market wares");
+				MessageQueue.AddPlayerMessage("{{G|The traders of " + realm
+					+ " have produced one new batch of local wares.}}");
+				if (KingdomLog.Enabled) KingdomLog.Log("local market output issued at tier " +
+					Tier + " (" + sourceId + ", " + stamped + " stamped items)");
+			}
+			else
+			{
+				KingdomLog.Log(callbackFailure == null
+					? "local market output produced no physical items after at-most-once receipt"
+					: "local market output callback failed after at-most-once receipt: " +
+						callbackFailure.Message);
+				MessageQueue.AddPlayerMessage(stamped > 0
+					? "{{y|Only part of the new local market batch survived handling. Its stamped goods remain, but its tier receipt is closed.}}"
+					: "{{r|The new local market batch was lost in handling. Its tier receipt remains closed, so it will not be duplicated.}}");
 			}
 		}
 
@@ -173,17 +211,87 @@ namespace ThousandAndFirst
 				return;
 			}
 			GenericInventoryRestocker restocker = citizen.RequirePart<GenericInventoryRestocker>();
-			restocker.Clear();
-			restocker.AddTable("Tier1Wares");
-			restocker.Chance = 100;
-			restocker.PerformRestock(Silent: true);
+			int tier = Math.Max(1, System.ShopTier);
+			ProtectPriorMarketStock(new List<GameObject>(citizen.Inventory.Objects));
+			DisableAutomaticStock(restocker);
 			citizen.SetIntProperty("VillageMerchant", 1);
+			citizen.SetIntProperty("Merchant", 1);
+			citizen.SetIntProperty("InventoryTier", tier);
 			KingdomSurvey.ObserveChangedInActive(Z, citizen);
 			TakeOnRoleEvent.Send(citizen, "Merchant");
 			System.HasShopkeeper = true;
 			string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
 			KingdomChronicle.Record(System, "a settler took up the trade, and the first stall opened at " + realm);
-			MessageQueue.AddPlayerMessage("{{G|A settler has taken up the trade. The first stall of " + realm + " is open.}}");
+			MessageQueue.AddPlayerMessage("{{G|A settler has taken up the trade. The first stall of " +
+				realm + " is open. Each newly reached tier can produce one local batch of wares.}}");
+		}
+
+		private static void ConfigureFiniteStock(GenericInventoryRestocker Restocker, int Tier)
+		{
+			Restocker.Clear();
+			Restocker.AddTable("Tier" + Tier + "Wares");
+			Restocker.Chance = 0;
+			Restocker.RestockFrequency = long.MaxValue;
+			Restocker.LastRestockTick = Math.Max(1L, The.Game.TimeTicks);
+		}
+
+		private static void DisableAutomaticStock(GenericInventoryRestocker Restocker)
+		{
+			Restocker.Clear();
+			Restocker.Chance = 0;
+			Restocker.RestockFrequency = long.MaxValue;
+			Restocker.LastRestockTick = Math.Max(1L, The.Game.TimeTicks);
+		}
+
+		private static void ProtectPriorMarketStock(List<GameObject> Before)
+		{
+			for (int i = 0; i < Before.Count; i++)
+				if (Before[i].HasProperty("_stock")) Before[i].SetIntProperty("norestock", 1);
+		}
+
+		private static int StampMarketOutput(GameObject Merchant, List<GameObject> Before,
+			string SourceId, string SettlementId, int Tier)
+		{
+			int count = 0;
+			foreach (GameObject item in Merchant.Inventory.Objects)
+			{
+				if (Before.Contains(item)) continue;
+				item.SetStringProperty(KingdomShopStockRules.ItemSourceProperty, SourceId);
+				item.SetStringProperty(KingdomShopStockRules.ItemSettlementProperty, SettlementId);
+				item.SetIntProperty(KingdomShopStockRules.ItemTierProperty, Tier);
+				item.SetIntProperty("norestock", 1);
+				count++;
+			}
+			return count;
+		}
+
+		private static bool RecoverMarketOutputCut(KingdomSystem System, GameObject Merchant)
+		{
+			if (System.ShopTier < 1) return false;
+			string source = KingdomShopStockRules.SourceId(System.RealmId,
+				System.CurrentSettlementId, System.ShopTier);
+			if (Merchant.GetStringProperty(KingdomShopStockRules.IssueIntentProperty)
+				!= KingdomShopStockRules.IntentReceipt(source)) return false;
+			int stamped = 0;
+			foreach (GameObject item in Merchant.Inventory.Objects)
+			{
+				if (item.GetStringProperty(KingdomShopStockRules.ItemSourceProperty) == source)
+				{ stamped++; continue; }
+				if (!item.HasProperty("_stock") || item.HasPropertyOrTag("norestock")) continue;
+				item.SetStringProperty(KingdomShopStockRules.ItemSourceProperty, source);
+				item.SetStringProperty(KingdomShopStockRules.ItemSettlementProperty,
+					System.CurrentSettlementId);
+				item.SetIntProperty(KingdomShopStockRules.ItemTierProperty, System.ShopTier);
+				item.SetIntProperty("norestock", 1); stamped++;
+			}
+			GenericInventoryRestocker restocker = Merchant.GetPart<GenericInventoryRestocker>();
+			if (restocker != null) DisableAutomaticStock(restocker);
+			Merchant.SetStringProperty(KingdomShopStockRules.IssueIntentProperty, null,
+				RemoveIfNull: true);
+			MessageQueue.AddPlayerMessage(stamped > 0
+				? "{{y|The market recovered a partly handled local batch; only its stamped goods remain.}}"
+				: "{{r|A tier's local market batch was lost before completion and will not be duplicated.}}");
+			return true;
 		}
 	}
 }

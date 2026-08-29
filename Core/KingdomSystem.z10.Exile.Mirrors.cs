@@ -39,20 +39,36 @@ namespace ThousandAndFirst
 		private bool ExactExileMirrors(KingdomRealmArchive Archive)
 		{
 			if (Archive == null || ExiledSeat == null || string.IsNullOrEmpty(ExiledFactionName)
-				|| ExiledStandings == null) return false;
+				|| ExiledStandings == null || ExiledRealmPolicyToward == null ||
+				ExiledRegardSpilloverRemainders == null ||
+				ExiledRegardSpilloverObservedReputation == null) return false;
 			string failure;
 			if (!Archive.ExactMirrors(ExiledFactionName, ExiledDisplayName, ExiledDeed,
-				ExiledTick, ExiledSeat, ExiledAway, ExiledStandings, out failure)) return false;
-			if (!ExactArchivedSettlements(Archive.RealmId, ExiledSeat, ExiledAway,
+				ExiledTick, ExiledSeat, ExiledSettlementTopology, ExiledStandings,
+				ExiledRealmPolicyToward, ExiledRegardSpilloverRemainders,
+				ExiledRegardSpilloverObservedReputation,
+				out failure)) return false;
+			if (!ExactArchivedSettlements(Archive.RealmId, ExiledSeat,
+				ExiledSettlementTopology,
 				Archive.SettlementIds)) return false;
 			KingdomSettlement currentSeat;
 			try { currentSeat = Capture(); }
 			catch { return false; }
-			object[] currentRoots = { currentSeat, Away, Seceded, Standings, Bindings, Jobs,
-				ChronicleEntries, OutsiderEntries, Haul, CarryBook };
-			object[] mirrorRoots = { ExiledSeat, ExiledAway, ExiledStandings };
-			return KingdomArchivedSettlementCodec.DisjointMutableGraphs(currentRoots,
-				mirrorRoots, out failure);
+			List<object> currentRoots = new List<object> { currentSeat };
+			for (int i = 0; i < NonSeatSettlementCount; i++)
+				currentRoots.Add(NonSeatSettlementAt(i));
+			currentRoots.AddRange(new object[] { Seceded, RegardForRealm,
+				RealmPolicyToward, RegardSpilloverRemainders,
+				RegardSpilloverObservedReputation, Bindings, Jobs,
+				ChronicleEntries, OutsiderEntries, Haul, CarryBook });
+			List<object> mirrorRoots = new List<object> { ExiledSeat };
+			for (int i = 0; i < (ExiledSettlementTopology?.Count ?? 0); i++)
+				mirrorRoots.Add(ExiledSettlementTopology.Get(i));
+			mirrorRoots.AddRange(new object[] { ExiledStandings, ExiledRealmPolicyToward,
+				ExiledRegardSpilloverRemainders,
+				ExiledRegardSpilloverObservedReputation });
+			return KingdomArchivedSettlementCodec.DisjointMutableGraphs(currentRoots.ToArray(),
+				mirrorRoots.ToArray(), out failure);
 		}
 
 		/// <summary>Clears the published exile mirror by exact-or-cleared CAS. Each assignment may
@@ -64,14 +80,23 @@ namespace ThousandAndFirst
 				!ClearMirrorString(ref ExiledFactionName, Archive.FactionName) ||
 				!ClearMirrorString(ref ExiledDisplayName, Archive.DisplayName) ||
 				!ClearSettlementMirror(ref ExiledSeat, Archive.Seat, out Failure) ||
-				!ClearSettlementMirror(ref ExiledAway, Archive.Away, out Failure) ||
-				!ClearStandingsMirror(Archive.Standings, out Failure) ||
+				!ClearTopologyMirror(Archive.SettlementTopology, out Failure) ||
+				!ClearStandingsMirror(ref ExiledStandings, Archive.Standings,
+					"regard", out Failure) ||
+				!ClearStandingsMirror(ref ExiledRealmPolicyToward,
+					Archive.RealmPolicyToward, "policy", out Failure) ||
+				!ClearStandingsMirror(ref ExiledRegardSpilloverRemainders,
+					Archive.RegardSpilloverRemainders, "spillover", out Failure) ||
+				!ClearStandingsMirror(ref ExiledRegardSpilloverObservedReputation,
+				Archive.RegardSpilloverObservedReputation, "spillover observation",
+					out Failure) ||
 				!ClearMirrorString(ref ExiledDeed, Archive.ExileDeed) ||
 				!ClearMirrorTick(ref ExiledTick, Archive.ClosedTick))
 			{
 				Failure = Failure ?? "return cleanup mirror reached a third value";
 				return false;
 			}
+			SynchronizeLegacyExiledProjection();
 			return true;
 		}
 
@@ -104,35 +129,52 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private bool ClearStandingsMirror(Dictionary<string, int> Expected,
+		private bool ClearTopologyMirror(KingdomSettlementTopology Expected,
 			out string Failure)
 		{
 			Failure = null;
-			if (ExiledStandings == null)
+			if (ExiledSettlementTopology == null)
 			{
-				Failure = "return cleanup standings mirror is null";
+				Failure = "return cleanup topology mirror is null";
 				return false;
 			}
-			if (ReferenceEquals(Expected, ExiledStandings))
+			if (ExiledSettlementTopology.Count == 0 &&
+				!ExiledSettlementTopology.HasOpaqueEvidence) return true;
+			if (!ExactTopologyMirror(Expected, ExiledSettlementTopology, out Failure))
+				return false;
+			ExiledSettlementTopology = new KingdomSettlementTopology();
+			return true;
+		}
+
+		private static bool ClearStandingsMirror(ref Dictionary<string, int> Current,
+			Dictionary<string, int> Expected, string Label, out string Failure)
+		{
+			Failure = null;
+			if (Current == null)
 			{
-				Failure = "return cleanup standings mirror aliases archive";
+				Failure = "return cleanup " + Label + " mirror is null";
 				return false;
 			}
-			if (ExiledStandings.Count == 0) return true;
+			if (ReferenceEquals(Expected, Current))
+			{
+				Failure = "return cleanup " + Label + " mirror aliases archive";
+				return false;
+			}
+			if (Current.Count == 0) return true;
 			if (Expected == null ||
-				!KingdomRealmArchive.ExactDictionary(Expected, ExiledStandings))
+				!KingdomRealmArchive.ExactDictionary(Expected, Current))
 			{
-				Failure = "return cleanup standings mirror reached a third value or alias";
+				Failure = "return cleanup " + Label + " mirror reached a third value or alias";
 				return false;
 			}
-			ExiledStandings = new Dictionary<string, int>();
+			Current = new Dictionary<string, int>();
 			return true;
 		}
 
 		/// <summary>Completes only canonical missing writes from the authoritative TradeClosed
 		/// archive. A third scalar, partial collection, or non-equal graph is never overwritten.</summary>
 		private bool TryEnsureExileMirrors(KingdomRealmArchive Archive,
-			bool AllowCanonicalMissing, out string Failure)
+			bool AllowCanonicalMissing, bool AllowDirectionalMissing, out string Failure)
 		{
 			Failure = null;
 			if (Archive == null) { Failure = "exile archive is absent"; return false; }
@@ -147,21 +189,47 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (!EnsureSettlementMirror(ref ExiledSeat, Archive.Seat, AllowCanonicalMissing,
-				out Failure) || !EnsureSettlementMirror(ref ExiledAway, Archive.Away,
+				out Failure) || !EnsureTopologyMirror(Archive.SettlementTopology,
 					AllowCanonicalMissing, out Failure)) return false;
-			if (ExiledStandings == null ||
-				(AllowCanonicalMissing && ExiledStandings.Count == 0 && Archive.Standings.Count != 0))
+			if (!EnsureStandingsMirror(ref ExiledStandings, Archive.Standings,
+				"regard", AllowCanonicalMissing, out Failure) ||
+				!EnsureStandingsMirror(ref ExiledRealmPolicyToward,
+					Archive.RealmPolicyToward, "policy",
+					AllowCanonicalMissing || AllowDirectionalMissing,
+					out Failure) ||
+				!EnsureStandingsMirror(ref ExiledRegardSpilloverRemainders,
+					Archive.RegardSpilloverRemainders, "spillover",
+					AllowCanonicalMissing || AllowDirectionalMissing,
+					out Failure) ||
+				!EnsureStandingsMirror(ref ExiledRegardSpilloverObservedReputation,
+					Archive.RegardSpilloverObservedReputation, "spillover observation",
+					AllowCanonicalMissing || AllowDirectionalMissing,
+					out Failure)) return false;
+			SynchronizeLegacyExiledProjection();
+			return true;
+		}
+
+		private static bool EnsureStandingsMirror(ref Dictionary<string, int> Current,
+			Dictionary<string, int> Expected, string Label, bool AllowCanonicalMissing,
+			out string Failure)
+		{
+			Failure = null;
+			if (Expected == null) { Failure = "archive " + Label + " is absent"; return false; }
+			if (Current == null ||
+				(AllowCanonicalMissing && Current.Count == 0 && Expected.Count != 0))
 			{
 				if (!AllowCanonicalMissing)
 				{
-					Failure = "exile standings mirror is absent";
+					Failure = "exile " + Label + " mirror is absent";
 					return false;
 				}
-				ExiledStandings = KingdomRealmArchive.CloneStandings(Archive.Standings);
+				Current = KingdomRealmArchive.CloneStandings(Expected);
+				return true;
 			}
-			else if (!KingdomRealmArchive.ExactDictionary(Archive.Standings, ExiledStandings))
+			if (ReferenceEquals(Current, Expected) ||
+				!KingdomRealmArchive.ExactDictionary(Expected, Current))
 			{
-				Failure = "exile standings mirror reached a third value";
+				Failure = "exile " + Label + " mirror reached a third value";
 				return false;
 			}
 			return true;
@@ -202,45 +270,23 @@ namespace ThousandAndFirst
 			return KingdomArchivedSettlementCodec.ExactGraph(Expected, Current, out Failure);
 		}
 
-		private static bool ExactArchivedSettlements(string RealmId,
-			KingdomSettlement Seat, KingdomSettlement Away,
-			IList<string> ExpectedIds = null)
+		private bool EnsureTopologyMirror(KingdomSettlementTopology Expected,
+			bool AllowCanonicalMissing, out string Failure)
 		{
-			List<string> ids = new List<string>();
-			if (!ArchivedSettlementMatches(RealmId, Seat, out string seatId))
-				return false;
-			ids.Add(seatId);
-			if (Away != null)
+			Failure = null;
+			bool missing = ExiledSettlementTopology == null ||
+				(ExiledSettlementTopology.Count == 0 &&
+				 !ExiledSettlementTopology.HasOpaqueEvidence && Expected?.Count > 0);
+			if (missing)
 			{
-				if (!ArchivedSettlementMatches(RealmId, Away, out string awayId))
+				if (!AllowCanonicalMissing || Expected == null)
+				{
+					Failure = "exile topology mirror is absent";
 					return false;
-				ids.Add(awayId);
+				}
+				return Expected.TryClone(out ExiledSettlementTopology, out Failure);
 			}
-			KingdomIdentityFault fault;
-			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, ids, out fault)) return false;
-			ids.Sort(StringComparer.Ordinal);
-			if (ExpectedIds == null || ids.Count != ExpectedIds.Count) return ExpectedIds == null;
-			for (int i = 0; i < ids.Count; i++)
-				if (!string.Equals(ids[i], ExpectedIds[i], StringComparison.Ordinal)) return false;
-			return true;
-		}
-
-		private static bool ArchivedSettlementMatches(string RealmId,
-			KingdomSettlement Settlement, out string SettlementId)
-		{
-			SettlementId = Settlement?.City?.SettlementId;
-			KingdomIdentityFault fault;
-			return Settlement != null && Settlement.ClaimedZones != null &&
-				Settlement.ClaimedZones.Contains(Settlement.SettlementIdentityFirstClaimedZone) &&
-				KingdomIdentityRules.ReproveSettlement(SettlementId, RealmId,
-					Settlement.SettlementIdentityVersion, Settlement.SettlementIdentityOrigin,
-					Settlement.SettlementIdentityTransactionId,
-					Settlement.SettlementIdentityFoundedTick,
-					Settlement.SettlementIdentityFirstClaimedZone, out fault) &&
-				Settlement.LifecycleBook != null && !Settlement.LifecycleBook.LegacyIdentity &&
-				string.Equals(Settlement.LifecycleBook.SettlementId, SettlementId,
-					StringComparison.Ordinal) &&
-				KingdomLifecycleRules.CanOwnAuthority(Settlement.LifecycleBook);
+			return ExactTopologyMirror(Expected, ExiledSettlementTopology, out Failure);
 		}
 
 	}

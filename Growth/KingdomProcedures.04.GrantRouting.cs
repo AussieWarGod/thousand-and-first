@@ -69,7 +69,7 @@ namespace ThousandAndFirst
 			}
 			return GrantAt(Who, Procedure, slot.ID,
 				(Procedure.Attach == LabAttach.Weapon && GameObject.Validate(slot.DefaultBehavior))
-					? slot.DefaultBehavior.ID : Who.ID,
+					? slot.DefaultBehavior.IDIfAssigned : Who.IDIfAssigned,
 				Stamp, Guid.NewGuid().ToString("N"), out Failure);
 		}
 
@@ -113,7 +113,7 @@ namespace ThousandAndFirst
 				return attempt;
 			}
 			GameObject expected = (Procedure.Attach == LabAttach.Weapon) ? slot.DefaultBehavior : Who;
-			if (!GameObject.Validate(expected) || !string.Equals(expected.ID, BearerId,
+			if (!GameObject.Validate(expected) || !string.Equals(expected.IDIfAssigned, BearerId,
 				StringComparison.Ordinal) || (Procedure.Attach == LabAttach.Weapon
 					&& !ReferenceEquals(slot.DefaultBehavior, expected)))
 			{
@@ -142,7 +142,7 @@ namespace ThousandAndFirst
 			BodyPart Slot, GameObject Bearer, string Stamp, string JobId, string Manager,
 			string Detail, string Fingerprint)
 		{
-			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Bearer.ID };
+			KingdomLabGrantAttempt attempt = new KingdomLabGrantAttempt { BearerId = Bearer.IDIfAssigned };
 			IPart built;
 			if (!TryRebuild(Procedure.Grants, Stamp, out built))
 			{

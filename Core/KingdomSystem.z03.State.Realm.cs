@@ -80,25 +80,21 @@ namespace ThousandAndFirst
 		/// </summary>
 		public Dictionary<string, int> ConversionResented = new Dictionary<string, int>();
 
-		public Dictionary<string, int> Standings = new Dictionary<string, int>();
+		/// <summary>The bounded exact collection of owned cities which are not currently seated.
+		/// It is authoritative; seat exchange moves one member into the flat seat and the captured
+		/// former seat back into this collection.</summary>
+		public KingdomSettlementTopology SettlementTopology = new KingdomSettlementTopology();
 
 		/// <summary>
-		/// The city the founder is not standing in, or null until a second is founded.
+		/// Serialized compatibility projection of the first immutable-id-ordered non-seat city.
 		/// <para>
-		/// Everything above this line describes the seat &mdash; the settlement the founder is
-		/// currently in &mdash; and every physical consumer reads those fields directly. The other
-		/// city's serialized seat mirror waits here, and the two are exchanged by
-		/// <see cref="TrySeat"/> when the founder walks into its ground.
-		/// </para>
-		/// <para>
-		/// The away city's <see cref="KingdomSettlement.City"/> book advances beside the seated
-		/// book on <c>KingdomHeartbeat</c>; production, upkeep, bounded arrivals, brinks, and news
-		/// therefore follow world time without loading its zone. Physical objects and advisory
-		/// seat fields reconcile only after <see cref="TrySeat"/> obtains that ground as the fresh
-		/// active seat. Its tick stamps travel with it so the projection cannot bill a modeled day
-		/// twice.
+		/// Old saves carried their sole non-seat city here. Load normalization migrates it into
+		/// <see cref="SettlementTopology"/> once; new saves refresh this field immediately before
+		/// writing so older integrations retain their documented read surface. Runtime code must
+		/// use the topology APIs and never treat this projection as ownership authority.
 		/// </para>
 		/// </summary>
+		[Obsolete("Use NonSeatSettlements(), FindNonSeatSettlementByZone(), or the exact topology APIs.")]
 		public KingdomSettlement Away;
 
 		/// <summary>
@@ -168,16 +164,12 @@ namespace ThousandAndFirst
 		public KingdomSettlement ExiledSeat;
 
 		/// <summary>The expelled-from realm's other city, or null if it held only one.</summary>
+		[Obsolete("Use ExiledSettlementTopology.")]
 		public KingdomSettlement ExiledAway;
 
-		/// <summary>
-		/// The expelled-from realm's own ledger of standings. Held apart from
-		/// <see cref="Standings"/> so a realm founded afterwards cannot inherit the grudges and
-		/// friendships of the one that disowned the founder &mdash; two realms sharing one
-		/// standings pool would receive identical feelings from every third party, which is the
-		/// exact opposite of the old realm keeping its own opinion.
-		/// </summary>
-		public Dictionary<string, int> ExiledStandings = new Dictionary<string, int>();
+		/// <summary>Bounded non-seat topology mirror of the expelled-from realm.</summary>
+		public KingdomSettlementTopology ExiledSettlementTopology =
+			new KingdomSettlementTopology();
 
 		/// <summary>
 		/// The worst regard the realm has said out loud about the founder, as a
@@ -192,6 +184,11 @@ namespace ThousandAndFirst
 		/// realm holding two cities, not of either city on its own. See <see cref="KingdomCreed"/>
 		/// and <see cref="KingdomCreedRules"/>.</summary>
 		public int Dissent;
+
+		/// <summary>Immutable ordered city ids owning the one active inter-city dissent account.
+		/// Empty together means no pair is frozen; partial or non-owned values fail closed.</summary>
+		public string DissentSettlementAId;
+		public string DissentSettlementBId;
 
 		/// <summary>The worst <see cref="CityTemper"/> already spoken and chronicled, so the
 		/// warning ladder only speaks once per tier. See <see cref="KingdomCreedRules.RememberedTemper"/>.</summary>

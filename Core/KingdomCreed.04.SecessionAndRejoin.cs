@@ -20,7 +20,8 @@ namespace ThousandAndFirst
 		/// peace, so a founder who holds one city never learns this exists.</param>
 		public static void EaseForMeal(KingdomSystem System)
 		{
-			if (!Enabled || System == null || !System.Founded || System.SettlementCount < KingdomSettlement.MaxSettlements || System.Dissent <= 0)
+			if (!Enabled || System == null || !System.Founded ||
+				System.SettlementCount < 2 || System.Dissent <= 0)
 			{
 				return;
 			}
@@ -63,42 +64,63 @@ namespace ThousandAndFirst
 				Refusal = "There is no realm to leave.";
 				return false;
 			}
-			string here = SeatCreed(System);
-			string there = AwayCreed(System);
-			SecessionVerdict verdict = KingdomCreedRules.JudgeSecession(System.SettlementCount, HostilityBetween(here, there), System.Dissent, Forced);
+			if (!EnsureDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second))
+			{
+				Refusal = "The cities at odds cannot be identified exactly.";
+				return false;
+			}
+			SecessionVerdict verdict = KingdomCreedRules.JudgeSecession(System.SettlementCount,
+				HostilityBetween(first.Creed, second.Creed), System.Dissent, Forced);
 			if (verdict != SecessionVerdict.Warranted)
 			{
 				Refusal = SecessionRefusal(verdict);
 				return false;
 			}
-			bool awayLeaves = KingdomCreedRules.AwayIsTheLeaver(
-				Feeling(here, there), Feeling(there, here),
-				System.Population, (System.Away != null) ? System.Away.Population : 0);
+			bool secondLeaves = KingdomCreedRules.AwayIsTheLeaver(
+				Feeling(first.Creed, second.Creed), Feeling(second.Creed, first.Creed),
+				first.Population, second.Population);
+			KingdomCreedPairCity leaving = secondLeaves ? second : first;
+			KingdomCreedPairCity staying = secondLeaves ? first : second;
 			// Read before anything moves: once the seat is exchanged, "the seated city" names the
 			// other one and every string below would be about the wrong place.
-			string keptName = awayLeaves ? System.SeatName : ((System.Away != null) ? System.Away.SettlementName : null);
-			string leaverName = awayLeaves ? ((System.Away != null) ? System.Away.SettlementName : null) : System.SeatName;
-			string leaverCreed = CreedName(awayLeaves ? there : here);
-			int leaverPopulation = awayLeaves ? ((System.Away != null) ? System.Away.Population : 0) : System.Population;
-			if (awayLeaves)
+			string keptName = staying.Name;
+			string leaverName = leaving.Name;
+			string leaverCreed = CreedName(leaving.Creed);
+			int leaverPopulation = leaving.Population;
+			KingdomRelocation.BeforeOwnershipLoss(System, leaving.Seated
+				? System.ClaimedZones : leaving.Settlement?.ClaimedZones,
+				"The city seceded while the heart's ring was called.");
+			if (!leaving.Seated)
 			{
-				System.Seceded = System.Away;
+				if (!System.TryRemoveNonSeatSettlement(leaving.Settlement, out Refusal))
+					return false;
+				System.Seceded = leaving.Settlement;
 			}
 			else
 			{
 				// Capture-then-Restore is the sanctioned exchange (see KingdomSystem.TrySeat): the
 				// two share their containers for exactly as long as it takes to write the survivor
 				// over the flat fields.
-				KingdomSettlement leaving = System.Capture();
-				System.Restore(System.Away);
-				System.Seceded = leaving;
+				KingdomSettlement leavingSeat = System.Capture();
+				if (staying.Settlement == null ||
+					!System.TryRemoveNonSeatSettlement(staying.Settlement, out Refusal))
+					return false;
+				try { System.Restore(staying.Settlement); }
+				catch (global::System.Exception ex)
+				{
+					System.TryAddNonSeatSettlement(staying.Settlement, out string _);
+					Refusal = "The surviving city could not take the seat: " + ex.Message;
+					return false;
+				}
+				System.Seceded = leavingSeat;
 			}
-			System.Away = null;
 			System.SecededTick = The.Game.TimeTicks;
 			System.Dissent = 0;
 			System.DissentSpoken = 0;
 			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			System.LastDissentTick = The.Game.TimeTicks;
+			ClearDissentPair(System);
 			KingdomChronicle.RecordDisputed(System,
 				KingdomCreedRules.SecessionTelling(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(keptName), leaverCreed),
 				KingdomCreedRules.SecessionRumour(KingdomPresentation.Rich(leaverName), KingdomPresentation.Rich(KingdomChronicle.FounderName())));
@@ -140,15 +162,19 @@ namespace ThousandAndFirst
 				System.Seceded != null,
 				System.SettlementCount,
 				Site != null && SecededHolds(System, Site.ZoneID),
-				HostilityBetween(leaverCreed, SeatCreed(System)),
-				System.GetStanding(leaverCreed));
+				MaxHostilityWithRealm(System, leaverCreed),
+				System.GetRegardForRealm(leaverCreed));
 			string leaverName = (System.Seceded != null) ? System.Seceded.SettlementName : null;
 			if (verdict != RejoinVerdict.Allowed)
 			{
 				Refusal = KingdomCreedRules.RejoinRefusal(verdict, KingdomPresentation.Rich(leaverName), CreedName(leaverCreed));
 				return false;
 			}
-			System.Away = System.Seceded;
+			if (!System.TryAddNonSeatSettlement(System.Seceded, out string topologyFailure))
+			{
+				Refusal = "The city cannot rejoin the exact realm topology: " + topologyFailure;
+				return false;
+			}
 			KingdomGovernanceScope.Commit("rejoin city");
 			System.Seceded = null;
 			System.SecededTick = 0;
@@ -158,6 +184,7 @@ namespace ThousandAndFirst
 			// slot was left holding by a secession that has since been undone.
 			KingdomBrink.LiftCity(System, The.Game.TimeTicks);
 			System.LastDissentTick = The.Game.TimeTicks;
+			ClearDissentPair(System);
 			// The founder is standing in it, so it becomes the seat by the ordinary route rather
 			// than a second one invented here.
 			System.TrySeat(Site);
@@ -172,11 +199,20 @@ namespace ThousandAndFirst
 		/// <summary>The realm's temper between its two cities. Concord for anything else.</summary>
 		public static CityTemper Temper(KingdomSystem System)
 		{
-			if (System == null || !System.Founded || System.SettlementCount < KingdomSettlement.MaxSettlements)
+			if (System == null || !System.Founded || System.SettlementCount < 2)
 			{
 				return CityTemper.Concord;
 			}
 			return KingdomCreedRules.ClassifyTemper(System.Dissent);
+		}
+
+		private static int MaxHostilityWithRealm(KingdomSystem System, string Creed)
+		{
+			int hostility = HostilityBetween(Creed, SeatCreed(System));
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++) hostility = global::System.Math.Max(
+				hostility, HostilityBetween(Creed, CreedOf(nonSeat[i])));
+			return hostility;
 		}
 	}
 }

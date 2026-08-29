@@ -68,7 +68,6 @@ namespace ThousandAndFirst
 			Assessment readyAssessment = default;
 			GameObject speaksFirst = null;
 			Assessment speaksFirstAssessment = default;
-			bool anyImprovable = false;
 			for (int i = 0; i < works.Count; i++)
 			{
 				Assessment assessment = Assess(System, Z, works[i], Survey, freeHands, otherWorkUnderway);
@@ -76,7 +75,6 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				anyImprovable = true;
 				if (KingdomUpgradeRules.IsReady(assessment.Verdict) && readyWork == null)
 				{
 					readyWork = works[i];
@@ -89,10 +87,7 @@ namespace ThousandAndFirst
 					speaksFirstAssessment = assessment;
 				}
 			}
-			if (anyImprovable)
-			{
-				GiveFirstNotice(System);
-			}
+			if (readyWork != null && GiveFirstNotice(System)) return;
 			if (readyWork != null)
 			{
 				Begin(System, Z, readyWork, readyAssessment, Survey);
@@ -113,14 +108,15 @@ namespace ThousandAndFirst
 		/// nobody should ever discover that by finding it already done.
 		/// </summary>
 		/// <param name="System">The kingdom, for its name.</param>
-		public static void GiveFirstNotice(KingdomSystem System)
+		public static bool GiveFirstNotice(KingdomSystem System)
 		{
 			if (The.Game == null || The.Game.GetIntGameState(NoticedState) == 1)
 			{
-				return;
+				return false;
 			}
 			The.Game.SetIntGameState(NoticedState, 1);
 			Popup.Show(KingdomUpgradeRules.FirstNoticeLine(KingdomPresentation.Rich(System.SeatName)));
+			return true;
 		}
 
 		/// <summary>

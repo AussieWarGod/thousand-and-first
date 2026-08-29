@@ -28,21 +28,13 @@ namespace ThousandAndFirst.Tests
 			Type verdict = typeof(KingdomUpgradeRules.UpgradeVerdict);
 			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+UpgradeVerdict", verdict.FullName);
 			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(verdict));
-			Assert.AreEqual("Ready|NoSuccessor|SuccessorUnknown|StyleForbids|NotOurWork|AlreadyWorking|HeldOnThisGround|HeldByFounder|StageTooLow|NotEnoughHands|WouldSpill|NotEnoughWater|WorksElsewhere|NoGroundToGrow|CraftNotMet|NotEnoughMaterial|NoTolerableLodging|HeldOffer",
+			Assert.AreEqual("Ready|NoSuccessor|SuccessorUnknown|StyleForbids|NotOurWork|AlreadyWorking|HeldOnThisGround|HeldByFounder|StageTooLow|NotEnoughHands|WouldSpill|NotEnoughWater|WorksElsewhere|NoGroundToGrow|CraftNotMet|NotEnoughMaterial",
 				string.Join("|", Enum.GetNames(verdict)));
 			Array verdicts = Enum.GetValues(verdict);
 			for (int i = 0; i < verdicts.Length; i++)
 			{
 				Assert.AreEqual(i, Convert.ToInt32(verdicts.GetValue(i)), "verdict " + i);
 			}
-
-			Type lodging = typeof(KingdomUpgradeRules.LodgingStandard);
-			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+LodgingStandard", lodging.FullName);
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(lodging));
-			Assert.AreEqual("Settler|Notable|Discerning", string.Join("|", Enum.GetNames(lodging)));
-			Assert.AreEqual(0, (int)KingdomUpgradeRules.LodgingStandard.Settler);
-			Assert.AreEqual(1, (int)KingdomUpgradeRules.LodgingStandard.Notable);
-			Assert.AreEqual(2, (int)KingdomUpgradeRules.LodgingStandard.Discerning);
 
 			Type chainType = typeof(KingdomUpgradeRules.UpgradeChain);
 			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+UpgradeChain", chainType.FullName);
@@ -55,13 +47,36 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(chain.HasMinStageOverride);
 			Assert.IsFalse(chain.Defined);
 
-			Type demandType = typeof(KingdomUpgradeRules.AbsorptionDemand);
-			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+AbsorptionDemand", demandType.FullName);
-			Assert.AreEqual("IsHousing|Residents|SpareLodging|OfferedShelter|CurrentShelter|LuxuryCarried|SupportPerDay|BuildTicks|MaterialsInHand|CraftMet|QuartersRefused",
+			Type demandType = typeof(KingdomUpgradeRules.ImprovementDemand);
+			Assert.AreEqual("ThousandAndFirst.KingdomUpgradeRules+ImprovementDemand", demandType.FullName);
+			Assert.AreEqual("MaterialsInHand|CraftMet|CraftDetail|KnowledgeMissing",
 				DeclaredFieldNames(demandType));
-			Assert.IsTrue(KingdomUpgradeRules.AbsorptionDemand.None.MaterialsInHand);
-			Assert.IsTrue(KingdomUpgradeRules.AbsorptionDemand.None.CraftMet);
-			Assert.IsFalse(KingdomUpgradeRules.AbsorptionDemand.None.QuartersRefused);
+			Assert.IsTrue(KingdomUpgradeRules.ImprovementDemand.None.MaterialsInHand);
+			Assert.IsTrue(KingdomUpgradeRules.ImprovementDemand.None.CraftMet);
+		}
+
+		[TestCase(ZoningVerdict.RefusedUnaligned)]
+		[TestCase(ZoningVerdict.RefusedCreedShare)]
+		[TestCase(ZoningVerdict.RefusedBuilders)]
+		public void FabricatedSuccessorPeopleGatesCannotPassCraftReach(ZoningVerdict verdict)
+		{
+			Assert.IsFalse(KingdomUpgradeRules.CraftGateAdmits(verdict));
+		}
+
+		[TestCase(ZoningVerdict.Permitted)]
+		[TestCase(ZoningVerdict.RefusedTerritory)]
+		[TestCase(ZoningVerdict.RefusedStratum)]
+		[TestCase(ZoningVerdict.RefusedDistrict)]
+		public void StandingSuccessorRetainsLegacyGroundGateExemptions(ZoningVerdict verdict)
+		{
+			Assert.IsTrue(KingdomUpgradeRules.CraftGateAdmits(verdict));
+		}
+
+		[TestCase(ZoningVerdict.RefusedUnlearned)]
+		[TestCase(ZoningVerdict.RefusedTechLevel)]
+		public void ExistingCraftAndKnowledgeRefusalsRemainClosed(ZoningVerdict verdict)
+		{
+			Assert.IsFalse(KingdomUpgradeRules.CraftGateAdmits(verdict));
 		}
 
 		// --- CostDrams: what an improvement is worth, and the two clamps around it -------------
@@ -146,6 +161,44 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.AreEqual(2700L, KingdomUpgradeRules.BuildTicks(3600L, KingdomUpgradeRules.UnsetTicks));
 			Assert.AreEqual(2700L, KingdomUpgradeRules.BuildTicks(3600L, -1L));
+		}
+
+		[TestCase(100, 2700L)]
+		[TestCase(80, 2160L)]
+		[TestCase(50, 1350L)]
+		public void BuildTicks_AppliesBoundedInfrastructureBeforeDefaultUpgradeFraction(
+			int infrastructurePercent, long expected)
+		{
+			Assert.AreEqual(expected, KingdomUpgradeRules.BuildTicks(3600L,
+				KingdomUpgradeRules.UnsetTicks, infrastructurePercent));
+		}
+
+		[TestCase(-1)]
+		[TestCase(0)]
+		[TestCase(101)]
+		public void BuildTicks_InvalidInfrastructureDegradesToNeutral(int infrastructurePercent)
+		{
+			Assert.AreEqual(2700L, KingdomUpgradeRules.BuildTicks(3600L,
+				KingdomUpgradeRules.UnsetTicks, infrastructurePercent));
+		}
+
+		[TestCase(1)]
+		[TestCase(49)]
+		public void BuildTicks_PositiveInfrastructureClampsToCanonicalFloor(
+			int infrastructurePercent)
+		{
+			Assert.AreEqual(1350L, KingdomUpgradeRules.BuildTicks(3600L,
+				KingdomUpgradeRules.UnsetTicks, infrastructurePercent));
+		}
+
+		[Test]
+		public void BuildTicks_InfrastructureNeverDiscountsAuthoredOverrideOrOverflows()
+		{
+			Assert.AreEqual(1500L, KingdomUpgradeRules.BuildTicks(3600L, 1500L, 50));
+			long huge = KingdomUpgradeRules.BuildTicks(long.MaxValue,
+				KingdomUpgradeRules.UnsetTicks, 80);
+			Assert.Greater(huge, 0L);
+			Assert.Less(huge, long.MaxValue);
 		}
 
 		// --- CrewRequired ---------------------------------------------------------------------
@@ -711,465 +764,83 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, KingdomUpgradeRules.ChooseDesignIndex(new bool[3] { false, false, false }));
 		}
 
-		// =====================================================================================
-		// The absorption law (brief, Addendum 3): auto-improve when the city can absorb the
-		// disruption, OFFER when it cannot, and never on a timer.
-		// =====================================================================================
+		// --- Present-tense improvement requirements ------------------------------------------
 
-		// --- Tolerance by standard ------------------------------------------------------------
-
-		[TestCase(0, KingdomUpgradeRules.LodgingStandard.Settler)]
-		[TestCase(KingdomUpgradeRules.NotableLuxury - 1, KingdomUpgradeRules.LodgingStandard.Settler)]
-		[TestCase(KingdomUpgradeRules.NotableLuxury, KingdomUpgradeRules.LodgingStandard.Notable)]
-		[TestCase(KingdomUpgradeRules.DiscerningLuxury - 1, KingdomUpgradeRules.LodgingStandard.Notable)]
-		[TestCase(KingdomUpgradeRules.DiscerningLuxury, KingdomUpgradeRules.LodgingStandard.Discerning)]
-		[TestCase(KingdomUpgradeRules.DiscerningLuxury + 5, KingdomUpgradeRules.LodgingStandard.Discerning)]
-		public void StandardFor_ReadsTheRefinementTheDesignLiftsBy(int luxury, KingdomUpgradeRules.LodgingStandard expected)
+		private static KingdomUpgradeRules.ImprovementDemand Requirements(
+			bool MaterialsInHand = true, bool CraftMet = true, string CraftDetail = null,
+			bool KnowledgeMissing = false)
 		{
-			// Both thresholds are pinned from below and above, so widening or narrowing either one
-			// fails here rather than quietly rehousing every notable in a tent.
-			Assert.AreEqual(expected, KingdomUpgradeRules.StandardFor(luxury));
-		}
-
-		[Test]
-		public void ShelterRequired_IsABunkForASettlerAndARoomForANotable()
-		{
-			Assert.AreEqual(KingdomUpgradeRules.BunkShelter,
-				KingdomUpgradeRules.ShelterRequired(KingdomUpgradeRules.LodgingStandard.Settler, CurrentShelter: 9));
-			Assert.AreEqual(KingdomUpgradeRules.RoomShelter,
-				KingdomUpgradeRules.ShelterRequired(KingdomUpgradeRules.LodgingStandard.Notable, CurrentShelter: 9));
-			Assert.Less(KingdomUpgradeRules.BunkShelter, KingdomUpgradeRules.RoomShelter);
-		}
-
-		[Test]
-		public void ShelterRequired_MeasuresADiscerningNotableAgainstTheirOwnRoofAndNeverBelowARoom()
-		{
-			Assert.AreEqual(4, KingdomUpgradeRules.ShelterRequired(KingdomUpgradeRules.LodgingStandard.Discerning, CurrentShelter: 4));
-			Assert.AreEqual(KingdomUpgradeRules.RoomShelter,
-				KingdomUpgradeRules.ShelterRequired(KingdomUpgradeRules.LodgingStandard.Discerning, CurrentShelter: 0));
-		}
-
-		[Test]
-		public void CanDisplace_AnOrdinarySettlerToleratesABunk()
-		{
-			Assert.IsTrue(KingdomUpgradeRules.CanDisplace(Residents: 2, SpareLodging: 2,
-				OfferedShelter: KingdomUpgradeRules.BunkShelter,
-				Standard: KingdomUpgradeRules.StandardFor(0), CurrentShelter: KingdomUpgradeRules.RoomShelter));
-		}
-
-		[Test]
-		public void CanDisplace_ANotableDoesNotTolerateATent()
-		{
-			// The author's own example, and the whole reason the standard exists: identical ground,
-			// identical spare lodging, and the answer turns only on who is being moved.
-			KingdomUpgradeRules.LodgingStandard notable = KingdomUpgradeRules.StandardFor(KingdomUpgradeRules.NotableLuxury);
-			Assert.IsFalse(KingdomUpgradeRules.CanDisplace(Residents: 1, SpareLodging: 4,
-				OfferedShelter: KingdomUpgradeRules.BunkShelter, Standard: notable,
-				CurrentShelter: KingdomUpgradeRules.RoomShelter));
-			Assert.IsTrue(KingdomUpgradeRules.CanDisplace(Residents: 1, SpareLodging: 4,
-				OfferedShelter: KingdomUpgradeRules.RoomShelter, Standard: notable,
-				CurrentShelter: KingdomUpgradeRules.RoomShelter));
-		}
-
-		[Test]
-		public void CanDisplace_ADiscerningNotableWillNotBeMovedDownFromTheirOwnRoof()
-		{
-			KingdomUpgradeRules.LodgingStandard discerning = KingdomUpgradeRules.StandardFor(KingdomUpgradeRules.DiscerningLuxury);
-			Assert.IsFalse(KingdomUpgradeRules.CanDisplace(Residents: 1, SpareLodging: 9,
-				OfferedShelter: 3, Standard: discerning, CurrentShelter: 4));
-			Assert.IsTrue(KingdomUpgradeRules.CanDisplace(Residents: 1, SpareLodging: 9,
-				OfferedShelter: 4, Standard: discerning, CurrentShelter: 4));
-		}
-
-		[Test]
-		public void CanDisplace_AnEmptyHouseDisplacesNobody()
-		{
-			// Nothing standing empty anywhere, no shelter offered at all, and it is still
-			// improvable: there is nobody to put anywhere.
-			Assert.IsTrue(KingdomUpgradeRules.CanDisplace(Residents: 0, SpareLodging: 0, OfferedShelter: 0,
-				Standard: KingdomUpgradeRules.LodgingStandard.Discerning, CurrentShelter: 9));
-		}
-
-		[TestCase(3, 3, true)]
-		[TestCase(3, 2, false)]
-		[TestCase(3, 4, true)]
-		public void CanDisplace_NeedsARoofPerResidentAndCountsExactlyAtTheBoundary(int residents, int spare, bool expected)
-		{
-			Assert.AreEqual(expected, KingdomUpgradeRules.CanDisplace(residents, spare,
-				OfferedShelter: KingdomUpgradeRules.RoomShelter,
-				Standard: KingdomUpgradeRules.LodgingStandard.Settler, CurrentShelter: KingdomUpgradeRules.RoomShelter));
-		}
-
-		[Test]
-		public void CanDisplace_RoomForThemIsNotEnoughIfItIsBelowTheirStandard()
-		{
-			// A mutation that drops the shelter half and keeps only the count passes the test
-			// above and fails this one.
-			Assert.IsFalse(KingdomUpgradeRules.CanDisplace(Residents: 1, SpareLodging: 100,
-				OfferedShelter: 0, Standard: KingdomUpgradeRules.LodgingStandard.Settler, CurrentShelter: 0));
-		}
-
-		// --- Addendum 4 re-basing: tolerance is also the Needs check against the quarters ------
-
-		private static QolProfile Resident(params string[] Needs)
-		{
-			return new QolProfile
+			return new KingdomUpgradeRules.ImprovementDemand
 			{
-				Needs = Needs,
-				Prefers = KingdomQolRules.NoTags,
-				Refuses = KingdomQolRules.NoTags,
-				EatsFood = true,
-				DrinksWater = true
+				MaterialsInHand = MaterialsInHand,
+				CraftMet = CraftMet,
+				CraftDetail = CraftDetail,
+				KnowledgeMissing = KnowledgeMissing
 			};
 		}
 
-		[Test]
-		public void QuartersRefused_NobodyMeasuredRefusesNothing()
+		private static KingdomUpgradeRules.UpgradeVerdict AssessDemand(
+			KingdomUpgradeRules.ImprovementDemand Demand,
+			bool HeldByFounder = false, int FreeHands = 4, bool ContentsFit = true,
+			int StoredWater = 100, bool OtherWorkUnderway = false)
 		{
-			string tag;
-			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(null, null, out tag));
-			Assert.AreEqual("", tag);
-			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[0], new List<QolProfile>(), out tag));
+			return KingdomUpgradeRules.Assess(HasSuccessor: true, SuccessorKnown: true,
+				StyleAllowed: true, OurWork: true, AlreadyWorking: false,
+				HeldOnThisGround: false, HeldByFounder: HeldByFounder,
+				Stage: GrowthStage.Village, StageNeeded: GrowthStage.Steading,
+				FreeHands: FreeHands, CrewNeeded: 1, ContentsFit: ContentsFit,
+				StoredWater: StoredWater, Cost: 10, Reserve: 30,
+				OtherWorkUnderway: OtherWorkUnderway, Demand: Demand);
 		}
 
 		[Test]
-		public void QuartersRefused_AResidentWhoAsksNothingTakesQuartersThatOfferNothing()
+		public void Assess_UnmeasuredRequirementsFailOpenWithoutInventingHarm()
 		{
-			// Every settler in an unauthored catalogue, which is why this re-basing changes nothing
-			// for a city that has not written a single Provides.
-			string tag;
-			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[0],
-				new List<QolProfile> { Resident() }, out tag));
-		}
-
-		[Test]
-		public void QuartersRefused_AResidentWhoseNeedTheQuartersDoNotMeetRefusesAndIsNamed()
-		{
-			string tag;
-			Assert.IsTrue(KingdomUpgradeRules.QuartersRefused(new string[0],
-				new List<QolProfile> { Resident(KingdomQolRules.TagCharge) }, out tag));
-			Assert.AreEqual(KingdomQolRules.TagCharge, tag, "the founder is owed the tag that would lift it");
-		}
-
-		[Test]
-		public void QuartersRefused_QuartersThatMeetTheNeedAreAccepted()
-		{
-			string tag;
-			Assert.IsFalse(KingdomUpgradeRules.QuartersRefused(new string[1] { KingdomQolRules.TagCharge },
-				new List<QolProfile> { Resident(KingdomQolRules.TagCharge) }, out tag));
-			Assert.AreEqual("", tag);
-		}
-
-		[Test]
-		public void QuartersRefused_OneRefusingResidentAmongManyIsEnough()
-		{
-			string tag;
-			Assert.IsTrue(KingdomUpgradeRules.QuartersRefused(new string[1] { KingdomQolRules.TagCharge },
-				new List<QolProfile> { Resident(), Resident(KingdomQolRules.TagCharge), Resident(KingdomQolRules.TagDamp) }, out tag));
-			Assert.AreEqual(KingdomQolRules.TagDamp, tag);
-		}
-
-		[Test]
-		public void Assess_ARefusedQuartersHoldsTheRebuildExactlyAsAMissingRoofDoes()
-		{
-			// A tent is tolerable lodging for a settler and no lodging whatever for the robot who
-			// needs a cradle: the rank ladder passes and the vocabulary still refuses.
-			KingdomUpgradeRules.AbsorptionDemand house = LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 4,
-				OfferedShelter: KingdomUpgradeRules.RoomShelter, SupportPerDay: 0);
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(house));
-			house.QuartersRefused = true;
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(house));
-		}
-
-		[Test]
-		public void Assess_TheVocabularyRefusalOnlyEverAppliesToHousing()
-		{
-			// A workshop's residents are not being moved out of it, so the Needs check has nothing
-			// to say about rebuilding one. A mutation dropping the IsHousing guard fails here.
-			KingdomUpgradeRules.AbsorptionDemand work = LeanedOn(SupportPerDay: 0);
-			work.QuartersRefused = true;
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(work));
-		}
-
-		[Test]
-		public void Assess_NothingMeasuredStillMeansNobodyRefused()
-		{
-			// The default of an unset struct and of None is "no refusal", so every caller that has
-			// not measured behaves exactly as it did before this half of tolerance existed.
-			Assert.IsFalse(KingdomUpgradeRules.AbsorptionDemand.None.QuartersRefused);
-			Assert.IsFalse(default(KingdomUpgradeRules.AbsorptionDemand).QuartersRefused);
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(
-				LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 2, OfferedShelter: KingdomUpgradeRules.BunkShelter)));
-		}
-
-		[Test]
-		public void Assess_TheShelterLadderStillRefusesOnItsOwnWithNobodyRefusingTheQuarters()
-		{
-			// Both halves stand: the rank ladder is untouched and still decides how GOOD the
-			// lodging must be, independently of whether anybody would live in it at all.
-			KingdomUpgradeRules.AbsorptionDemand notable = LeanedOn(IsHousing: true, Residents: 1, SpareLodging: 2,
-				OfferedShelter: KingdomUpgradeRules.BunkShelter, LuxuryCarried: KingdomUpgradeRules.NotableLuxury, SupportPerDay: 0);
-			Assert.IsFalse(notable.QuartersRefused);
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(notable));
-		}
-
-		// --- Margin arithmetic, at the boundary -----------------------------------------------
-
-		[TestCase(0L, 0)]
-		[TestCase(1L, 1)]
-		[TestCase(KingdomRules.TicksPerDay, 1)]
-		[TestCase(KingdomRules.TicksPerDay + 1L, 2)]
-		[TestCase(KingdomRules.TicksPerDay * 3L, 3)]
-		public void BuildDays_RoundsUpSoAPartDayStillCostsADaysOutput(long ticks, int expected)
-		{
-			Assert.AreEqual(expected, KingdomUpgradeRules.BuildDays(ticks));
-		}
-
-		[Test]
-		public void OutputLost_IsTheSustainedRateForEveryDayOfLabour()
-		{
-			Assert.AreEqual(10, KingdomUpgradeRules.OutputLost(SupportPerDay: 5, BuildTicks: KingdomRules.TicksPerDay * 2L));
-			Assert.AreEqual(15, KingdomUpgradeRules.OutputLost(SupportPerDay: 5, BuildTicks: KingdomRules.TicksPerDay * 2L + 1L));
-		}
-
-		[Test]
-		public void OutputLost_IsNothingForAWorkTheSettlementDoesNotDrinkFrom()
-		{
-			// However long the labour, a work that sustains nothing costs nothing to go without.
-			Assert.AreEqual(0, KingdomUpgradeRules.OutputLost(SupportPerDay: 0, BuildTicks: KingdomRules.TicksPerDay * 99L));
-		}
-
-		[Test]
-		public void AbsorptionMargin_IsWhatIsLeftOverTheReserveOnceBothArePaid()
-		{
-			// 100 stored, 10 to build, 30 that must remain, 20 gone without: 40 spare.
-			Assert.AreEqual(40, KingdomUpgradeRules.AbsorptionMargin(StoredWater: 100, Cost: 10, Reserve: 30, OutputLost: 20));
-			Assert.AreEqual(-5, KingdomUpgradeRules.AbsorptionMargin(StoredWater: 100, Cost: 10, Reserve: 30, OutputLost: 65));
-		}
-
-		[TestCase(60, 0, true)]
-		[TestCase(61, -1, false)]
-		[TestCase(59, 1, true)]
-		public void CoversOutage_CoveringItExactlyIsCoveringIt(int outputLost, int expectedMargin, bool expected)
-		{
-			// 100 - 10 - 30 = 60 spare. The boundary is the whole point: a mutation to > or to >= 1
-			// changes exactly the first of these three rows.
-			Assert.AreEqual(expectedMargin, KingdomUpgradeRules.AbsorptionMargin(100, 10, 30, outputLost));
-			Assert.AreEqual(expected, KingdomUpgradeRules.CoversOutage(100, 10, 30, outputLost));
-		}
-
-		// --- The held offer, and what outranks it ---------------------------------------------
-
-		/// <summary>A working building the city leans on: everything in order, and the stores
-		/// cannot go without what it puts out for as long as the work would take.</summary>
-		private static KingdomUpgradeRules.AbsorptionDemand LeanedOn(
-			bool IsHousing = false, int Residents = 0, int SpareLodging = 0, int OfferedShelter = 0,
-			int CurrentShelter = KingdomUpgradeRules.RoomShelter, int LuxuryCarried = 0,
-			int SupportPerDay = 20, long BuildTicks = KingdomRules.TicksPerDay * 4L,
-			bool MaterialsInHand = true, bool CraftMet = true)
-		{
-			KingdomUpgradeRules.AbsorptionDemand demand = default(KingdomUpgradeRules.AbsorptionDemand);
-			demand.IsHousing = IsHousing;
-			demand.Residents = Residents;
-			demand.SpareLodging = SpareLodging;
-			demand.OfferedShelter = OfferedShelter;
-			demand.CurrentShelter = CurrentShelter;
-			demand.LuxuryCarried = LuxuryCarried;
-			demand.SupportPerDay = SupportPerDay;
-			demand.BuildTicks = BuildTicks;
-			demand.MaterialsInHand = MaterialsInHand;
-			demand.CraftMet = CraftMet;
-			return demand;
-		}
-
-		private static KingdomUpgradeRules.UpgradeVerdict AssessAbsorbing(
-			KingdomUpgradeRules.AbsorptionDemand Demand,
-			bool AlreadyWorking = false, bool HeldOnThisGround = false, bool HeldByFounder = false,
-			GrowthStage Stage = GrowthStage.Village, GrowthStage StageNeeded = GrowthStage.Steading,
-			int FreeHands = 4, int CrewNeeded = 1, bool ContentsFit = true,
-			int StoredWater = 100, int Cost = 10, int Reserve = 30, bool OtherWorkUnderway = false)
-		{
-			return KingdomUpgradeRules.Assess(HasSuccessor: true, SuccessorKnown: true, StyleAllowed: true,
-				OurWork: true, AlreadyWorking: AlreadyWorking, HeldOnThisGround: HeldOnThisGround,
-				HeldByFounder: HeldByFounder, Stage: Stage, StageNeeded: StageNeeded, FreeHands: FreeHands,
-				CrewNeeded: CrewNeeded, ContentsFit: ContentsFit, StoredWater: StoredWater, Cost: Cost,
-				Reserve: Reserve, OtherWorkUnderway: OtherWorkUnderway, Absorption: Demand);
-		}
-
-		[Test]
-		public void Assess_MeasuringNothingIsExactlyTheBehaviourThatShippedBeforeThisLaw()
-		{
-			// AbsorptionDemand.None grants material and craft, moves nobody, and loses no output,
-			// so every caller that has not measured gets Ready where it always did.
 			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready,
-				AssessAbsorbing(KingdomUpgradeRules.AbsorptionDemand.None));
+				AssessDemand(KingdomUpgradeRules.ImprovementDemand.None));
 			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessReady());
 		}
 
 		[Test]
-		public void Assess_AWorkingBuildingTheCityLeansOnBecomesAHeldOffer()
+		public void Assess_RealRequirementsStillRefuseInActionableOrder()
 		{
-			// 20 drams a day for 4 days is 80; 100 stored, 10 spent, 30 reserved leaves 60.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.HeldOffer, AssessAbsorbing(LeanedOn()));
-		}
-
-		[TestCase(60, KingdomUpgradeRules.UpgradeVerdict.Ready)]
-		[TestCase(61, KingdomUpgradeRules.UpgradeVerdict.HeldOffer)]
-		public void Assess_TheOfferBeginsExactlyOneDramPastWhatTheStoresCanCarry(int outputLost, KingdomUpgradeRules.UpgradeVerdict expected)
-		{
-			// One dram a day, for as many days as the loss asks for, so the boundary inside Assess
-			// is the same boundary CoversOutage draws and neither can drift from the other.
-			Assert.AreEqual(expected, AssessAbsorbing(LeanedOn(SupportPerDay: 1, BuildTicks: KingdomRules.TicksPerDay * outputLost)));
-		}
-
-		[Test]
-		public void Assess_EveryRealRefusalOutranksTheOffer()
-		{
-			// The offer is checked last on purpose: a founder is never asked to force a work that
-			// something else was going to stop anyway. Each of these spoils one thing about a work
-			// the city also leans on, and each must report the refusal rather than the offer.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.WorksElsewhere, AssessAbsorbing(LeanedOn(), OtherWorkUnderway: true));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughWater, AssessAbsorbing(LeanedOn(), StoredWater: 35));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial, AssessAbsorbing(LeanedOn(MaterialsInHand: false)));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.CraftNotMet, AssessAbsorbing(LeanedOn(CraftMet: false)));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughHands, AssessAbsorbing(LeanedOn(), FreeHands: 0));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.HeldByFounder, AssessAbsorbing(LeanedOn(), HeldByFounder: true));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.StageTooLow, AssessAbsorbing(LeanedOn(), Stage: GrowthStage.Camp));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.WouldSpill, AssessAbsorbing(LeanedOn(), ContentsFit: false));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.CraftNotMet,
+				AssessDemand(Requirements(CraftMet: false)));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughHands,
+				AssessDemand(Requirements(), FreeHands: 0));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.WouldSpill,
+				AssessDemand(Requirements(), ContentsFit: false));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughWater,
+				AssessDemand(Requirements(), StoredWater: 35));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial,
+				AssessDemand(Requirements(MaterialsInHand: false)));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.WorksElsewhere,
+				AssessDemand(Requirements(), OtherWorkUnderway: true));
+			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.HeldByFounder,
+				AssessDemand(Requirements(), HeldByFounder: true));
 		}
 
 		[Test]
-		public void Assess_CraftAndMaterialGateEverythingIncludingHousing()
+		public void ReasonLine_NamesExactKnowledgeAndTechnologyRequirements()
 		{
-			KingdomUpgradeRules.AbsorptionDemand house = LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 4,
-				OfferedShelter: KingdomUpgradeRules.RoomShelter, SupportPerDay: 0);
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(house));
-			house.MaterialsInHand = false;
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial, AssessAbsorbing(house));
-			house = LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 4,
-				OfferedShelter: KingdomUpgradeRules.RoomShelter, SupportPerDay: 0, CraftMet: false);
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.CraftNotMet, AssessAbsorbing(house));
+			string knowledge = KingdomUpgradeRules.ReasonLine(
+				KingdomUpgradeRules.UpgradeVerdict.CraftNotMet, "salt pan", "salt terrace",
+				GrowthStage.Steading, 1, 0, "the salt marshes", KnowledgeMissing: true);
+			StringAssert.Contains("keepers know", knowledge);
+			StringAssert.Contains("the salt marshes", knowledge);
+			string technology = KingdomUpgradeRules.ReasonLine(
+				KingdomUpgradeRules.UpgradeVerdict.CraftNotMet, "smithy", "forge",
+				GrowthStage.Village, 3, 0, "workshop", KnowledgeMissing: false);
+			StringAssert.Contains("craft reaches", technology);
+			StringAssert.Contains("workshop", technology);
 		}
 
 		[Test]
-		public void Assess_HousingIsJudgedByDisplacementAndNotByTheOutputMargin()
+		public void ReasonLine_MaterialRefusalNamesTheStockpile()
 		{
-			// The same crushing outage that makes a working building a held offer leaves housing
-			// Ready, because a roof's own output is the people under it and displacement is the
-			// question the law asks about them. A mutation inverting the IsHousing test fails here
-			// and in the pair below.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, AssessAbsorbing(
-				LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 2, OfferedShelter: KingdomUpgradeRules.BunkShelter)));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.HeldOffer, AssessAbsorbing(LeanedOn(IsHousing: false)));
-		}
-
-		[Test]
-		public void Assess_HousingNobodyCanBeMovedOutOfIsRefusedByName()
-		{
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(
-				LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 1, OfferedShelter: KingdomUpgradeRules.RoomShelter, SupportPerDay: 0)));
-			// And the notable's own standard is what refuses it, not the count.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(
-				LeanedOn(IsHousing: true, Residents: 1, SpareLodging: 8, OfferedShelter: KingdomUpgradeRules.BunkShelter,
-					LuxuryCarried: KingdomUpgradeRules.NotableLuxury, SupportPerDay: 0)));
-		}
-
-		[Test]
-		public void Assess_LodgingOutranksThePacingGateAndTheOfferOutranksNothing()
-		{
-			// Displacement is a refusal and is checked before "the settlement is already busy";
-			// the offer is checked after it. That ordering is what makes the founder's one
-			// forceable decision the last thing anything can be waiting on.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging, AssessAbsorbing(
-				LeanedOn(IsHousing: true, Residents: 2, SpareLodging: 0, SupportPerDay: 0), OtherWorkUnderway: true));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.WorksElsewhere, AssessAbsorbing(LeanedOn(), OtherWorkUnderway: true));
-		}
-
-		[Test]
-		public void IsOffer_IsTrueForTheHeldOfferAndNothingElse()
-		{
-			foreach (KingdomUpgradeRules.UpgradeVerdict verdict in Verdicts())
-			{
-				Assert.AreEqual(verdict == KingdomUpgradeRules.UpgradeVerdict.HeldOffer,
-					KingdomUpgradeRules.IsOffer(verdict), verdict.ToString());
-			}
-		}
-
-		[Test]
-		public void IsReady_IsFalseForAHeldOfferSoTheSettlementNeverActsOnItAlone()
-		{
-			Assert.IsFalse(KingdomUpgradeRules.IsReady(KingdomUpgradeRules.UpgradeVerdict.HeldOffer));
-			Assert.IsTrue(KingdomUpgradeRules.IsBlocked(KingdomUpgradeRules.UpgradeVerdict.HeldOffer));
-		}
-
-		// --- Forced, with the dip disclosed first ---------------------------------------------
-
-		[Test]
-		public void ReasonLine_TheHeldOfferSaysItIsReadyAndSaysWhoIsLeaningOnIt()
-		{
-			string line = KingdomUpgradeRules.ReasonLine(KingdomUpgradeRules.UpgradeVerdict.HeldOffer,
-				"cask rack", "great cistern", GrowthStage.Steading, 2, 0);
-			StringAssert.Contains("ready to improve", line);
-			StringAssert.Contains("held", line);
-			StringAssert.Contains("the city leans on it", line);
-			// And it names where the founder goes to overrule it, which is the whole of 7b here.
-			StringAssert.Contains("Charter", line);
-		}
-
-		[Test]
-		public void ReasonLine_EveryAbsorptionRefusalNamesWhatWouldLiftIt()
-		{
-			StringAssert.Contains("craft", KingdomUpgradeRules.ReasonLine(KingdomUpgradeRules.UpgradeVerdict.CraftNotMet,
-				"cask rack", "great cistern", GrowthStage.Steading, 2, 0));
-			StringAssert.Contains("stockpiles", KingdomUpgradeRules.ReasonLine(KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial,
-				"cask rack", "great cistern", GrowthStage.Steading, 2, 0));
-			StringAssert.Contains("sleep", KingdomUpgradeRules.ReasonLine(KingdomUpgradeRules.UpgradeVerdict.NoTolerableLodging,
-				"hut", "stone house", GrowthStage.Steading, 2, 0));
-		}
-
-		[Test]
-		public void DipLine_DisclosesTheRateTheLabourTheWholeLossAndHowFarUnder()
-		{
-			// 20 drams a day for 4 days is 80 lost; the margin says the stores are 20 short of it.
-			string line = KingdomUpgradeRules.DipLine("cask rack", "great cistern",
-				SupportPerDay: 20, BuildTicks: KingdomRules.TicksPerDay * 4L, Margin: -20);
-			StringAssert.Contains("cask rack", line);
-			StringAssert.Contains("great cistern", line);
-			StringAssert.Contains("20 drams a day", line);
-			StringAssert.Contains("4 days", line);
-			StringAssert.Contains("80 drams in all", line);
-			StringAssert.Contains("20 drams further into the reserve", line);
-		}
-
-		[Test]
-		public void DipLine_TheDisclosedShortfallIsExactlyTheMarginAndNotTheLoss()
-		{
-			// A mutation that discloses the loss where the shortfall belongs passes the test above
-			// (80 and 20 both appear) and fails this one, where they cannot be confused.
-			string line = KingdomUpgradeRules.DipLine("cask rack", "great cistern",
-				SupportPerDay: 10, BuildTicks: KingdomRules.TicksPerDay * 5L, Margin: -3);
-			StringAssert.Contains("50 drams in all", line);
-			StringAssert.Contains("3 drams further into the reserve", line);
-			Assert.IsFalse(line.Contains("50 drams further"), "the disclosure must name the shortfall, not the loss");
-		}
-
-		[Test]
-		public void ForcedLine_RecordsThatItWasTheFoundersWordAndHowDeepItWent()
-		{
-			string line = KingdomUpgradeRules.ForcedLine("cask rack", "great cistern", Margin: -12);
-			StringAssert.Contains("on your word", line);
-			StringAssert.Contains("12 drams into its reserve", line);
-		}
-
-		[Test]
-		public void DipLine_IsSingularWhereItShouldBe()
-		{
-			string line = KingdomUpgradeRules.DipLine("cask rack", "great cistern",
-				SupportPerDay: 1, BuildTicks: 1L, Margin: -1);
-			StringAssert.Contains("1 dram a day", line);
-			StringAssert.Contains("1 day", line);
-			StringAssert.Contains("1 dram in all", line);
-			StringAssert.Contains("1 dram further into the reserve", line);
+			StringAssert.Contains("stockpiles", KingdomUpgradeRules.ReasonLine(
+				KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial, "smithy", "forge",
+				GrowthStage.Village, 3, 0));
 		}
 
 		// --- Never a timer --------------------------------------------------------------------
@@ -1184,13 +855,10 @@ namespace ThousandAndFirst.Tests
 			// Matched word by word rather than by substring, because a substring sweep calls
 			// "SuccessorKnown" a clock and would have to be loosened until it caught nothing.
 			string[] clockWords = new string[12] { "now", "elapsed", "age", "since", "today", "time", "day", "days", "clock", "duration", "wait", "waited" };
-			// Two exemptions, both by exact name. LABOUR is the build's own authored time -- real
-			// and felt, and the thing the author ruled time IS. A RATE names an amount the
-			// settlement sustains per day; it is a quantity, not a reading of the clock, and
-			// "DaysStanding" or "DaysSinceRaised" would still fail below.
+			// LABOUR is the build's own authored time -- real and felt, and the thing the
+			// author ruled time IS. "DaysStanding" or "DaysSinceRaised" would still fail.
 			string[] labour = new string[3] { "buildticks", "successorticks", "override" };
-			string[] rates = new string[1] { "supportperday" };
-			string[] deciders = new string[7] { "Assess", "CanDisplace", "CoversOutage", "AbsorptionMargin", "OutputLost", "StandardFor", "ShelterRequired" };
+			string[] deciders = new string[1] { "Assess" };
 			int checkedParameters = 0;
 			foreach (string name in deciders)
 			{
@@ -1203,7 +871,7 @@ namespace ThousandAndFirst.Tests
 					foreach (System.Reflection.ParameterInfo parameter in method.GetParameters())
 					{
 						string lowered = parameter.Name.ToLowerInvariant();
-						if (Array.IndexOf(labour, lowered) >= 0 || Array.IndexOf(rates, lowered) >= 0)
+						if (Array.IndexOf(labour, lowered) >= 0)
 						{
 							continue;
 						}
@@ -1218,7 +886,7 @@ namespace ThousandAndFirst.Tests
 			}
 			// The sweep has to have actually looked at something: a rename that made every decider
 			// unfindable would otherwise pass silently.
-			Assert.Greater(checkedParameters, 20, "the sweep found almost no parameters to check");
+			Assert.Greater(checkedParameters, 15, "the sweep found almost no parameters to check");
 		}
 
 		/// <summary>A parameter name split into its camel-case words, lowered. "SuccessorKnown"
@@ -1263,51 +931,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LabourDurationOnlyEverBlocks_ItNeverTriggers()
-		{
-			// Longer labour can turn Ready into an offer, because the city goes without for longer.
-			// It can never turn an offer back into Ready: nothing in this mod improves because time
-			// passed. Swept across the whole range rather than sampled, so a non-monotone mutation
-			// -- a modulus, a wrap, an "once past N days it goes ahead" -- is caught.
-			bool offered = false;
-			for (int days = 0; days <= 12; days++)
-			{
-				KingdomUpgradeRules.UpgradeVerdict verdict = AssessAbsorbing(
-					LeanedOn(SupportPerDay: 10, BuildTicks: KingdomRules.TicksPerDay * days));
-				if (verdict == KingdomUpgradeRules.UpgradeVerdict.HeldOffer)
-				{
-					offered = true;
-					continue;
-				}
-				Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready, verdict, days + " days of labour");
-				Assert.IsFalse(offered, "labour handed a held offer back as ready at " + days + " days");
-			}
-			Assert.IsTrue(offered, "no amount of labour ever produced the offer, so the margin is not being read");
-		}
-
-		[Test]
-		public void ADurationAloneNeverDecidesAnything()
-		{
-			// A work the settlement does not drink from is Ready however long it takes to raise.
-			// The cause is what the city goes without, never how long the waiting is.
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready,
-				AssessAbsorbing(LeanedOn(SupportPerDay: 0, BuildTicks: KingdomRules.TicksPerDay * 1000L)));
-			Assert.AreEqual(KingdomUpgradeRules.UpgradeVerdict.Ready,
-				AssessAbsorbing(LeanedOn(SupportPerDay: 0, BuildTicks: 0L)));
-		}
-
-		[Test]
 		public void TheVerdictIsAPureFunctionOfWhatTheSettlementHolds()
 		{
 			// No hidden clock: the same question asked twice, and asked again after other
 			// questions, answers the same. A trigger that consulted anything outside its arguments
 			// would drift across these calls.
-			KingdomUpgradeRules.AbsorptionDemand demand = LeanedOn();
-			KingdomUpgradeRules.UpgradeVerdict first = AssessAbsorbing(demand);
-			AssessAbsorbing(LeanedOn(SupportPerDay: 0));
-			AssessAbsorbing(LeanedOn(IsHousing: true, Residents: 9, SpareLodging: 0));
-			Assert.AreEqual(first, AssessAbsorbing(demand));
-			Assert.AreEqual(first, AssessAbsorbing(demand));
+			KingdomUpgradeRules.ImprovementDemand demand = Requirements();
+			KingdomUpgradeRules.UpgradeVerdict first = AssessDemand(demand);
+			AssessDemand(Requirements(MaterialsInHand: false));
+			AssessDemand(Requirements(CraftMet: false, CraftDetail: "workshop"));
+			Assert.AreEqual(first, AssessDemand(demand));
+			Assert.AreEqual(first, AssessDemand(demand));
 		}
 
 		private static List<KingdomUpgradeRules.UpgradeVerdict> Verdicts()

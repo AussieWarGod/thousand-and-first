@@ -29,7 +29,7 @@ namespace ThousandAndFirst.Tests
 		public void ConstantsAndAuthorityDeclarationHaveOneOwner()
 		{
 			string source = KingdomCreedLogicalSource.Read();
-			Assert.AreEqual(7, Count(source, "public static partial class KingdomCreed"));
+			Assert.AreEqual(8, Count(source, "public static partial class KingdomCreed"));
 			Assert.AreEqual(1, Count(source, "public const string CreedProperty"));
 			Assert.AreEqual(1, Count(source, "public const int CreedSignificance = 3"));
 			Assert.AreEqual(1, Count(source, "public static bool Declare("));

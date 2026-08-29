@@ -233,13 +233,13 @@ character finds is a local account of a place, which is also the honest fiction:
 records that disagree with each other.
 
 **The people are not the old roll walking around.** The named roll crosses as *history* and must
-never be respawned as the same creatures. Current v1 scope ships the inherited site, layout, works,
-condition, cairn, and readable history only. A successor, namesake, claimant, or envoy is a positive
-`AUTHOR-DEFERRED` target requiring explicit reopening; whether such a person is a descendant,
-namesake, institutional successor, or apocryphal claimant is still an author lore ruling. Exact old
-creature/object continuation is `REJECTED`, including replay of possibly modded creature graphs.
-`VISION.md` owns this canonical disposition and `V1-POLITY-SCOPE.md` expands its evidence/reopening
-gates; together they supersede generic “current v0” or “later-version” wording elsewhere.
+never be respawned as the same creatures. The author reopened the positive living-echo direction on
+2026-08-27: a successor, namesake, claimant, or envoy is a fresh current-run person derived only
+from bounded institutional facts and an explicit lore role. Exact old creature/object continuation
+is `REJECTED`, including replay of possibly modded creature graphs. `VISION.md` owns this canonical
+disposition, `V1-POLITY-SCOPE.md` expands its safety/evidence boundary, and
+`docs/V1-UNDEFERRAL.md` owns active closure; together they supersede generic “current
+v0,” “later-version,” and positive deferral wording elsewhere.
 
 **No item inheritance, ever, and say so up front.** Layout, name, chronicle, condition, founder
 cairn, and bounded faction identity facts needed by the history carry. No living successor does.
@@ -301,9 +301,25 @@ human spatial-fidelity protocols still gate release; implementation is not a sig
 - Binary staffing — replaced by per-type manning.
 - Ability class `"Kingdom"` — invented; vanilla has ~9 real categories, now uses `Skills`.
 
+## Architectural style does not cause dissent — ruled 2026-08-29
+
+A city style is evidence about ground, material culture, technology, and the people who built
+there. It is not an ideology. Two cities in one realm may therefore carry different architecture
+without accumulating an invisible friction score or opening a fourth brink. Creed, explicit civic
+decisions, directional relationships, and witnessed incidents already own caused conflict. If a
+future event makes architectural difference matter, that event must name its cause and enter one
+of those authorities; mere style mismatch never mints hostility.
+
+*Reverses if:* the author asks for a specific visible dispute whose choices and resolution cannot
+be represented by the existing caused-conflict lanes. It does not reverse for a desire to make a
+meter move.
+
 ## Open decisions
 
-- Does the design doc (vision/roadmap) belong in the public repo? See `EXPOSURE.md`.
+- **Resolved 2026-08-29:** keep the trimmed canonical `VISION.md` public. Contributors need the
+  product laws and bounded direction; its header separates intent from schedule and links current
+  evidence. Private research, comparative criticism, raw agent/session material, and local paths
+  remain outside the public vision.
 - Dynasty persistence is implemented through seal/promotion/reservation/application receipts;
   current native succession, cold-save, and subscribed-install evidence remains unsigned. Treat
   this as a release gate, not an unbuilt design question.

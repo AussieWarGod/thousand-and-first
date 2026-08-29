@@ -115,19 +115,8 @@ namespace ThousandAndFirst
 				Failure = "There is no more room in the plan. " + KingdomPresentation.Rich(System.SeatName) + " is as built-up as this ground allows, until it grows into something larger.";
 				return false;
 			}
-			if (KingdomGrowth.CountStoredWater(zone) < entry.CostDrams)
-			{
-				Failure = "The work would cost {{C|" + entry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
-				return false;
-			}
-			// After the water and before the ground is chosen: a founder is told the whole price
-			// before anything is committed, and a design with no material cost is always affordable,
-			// which is every design the catalogue carried before materials existed.
-			if (!KingdomMaterials.CanPay(zone, entry.Key, out var materialRefusal))
-			{
-				Failure = materialRefusal;
-				return false;
-			}
+			// Do not reject against this settlement alone. Exact local reservation is attempted
+			// below; its durable funding boundary may instead source eligible realm stores.
 			Cell cell;
 			string payload = SkinKey;
 			KingdomLayoutRules.LayoutOutcome outcome;
@@ -135,9 +124,7 @@ namespace ThousandAndFirst
 			long started = The.Game.TimeTicks;
 			long due = started + CraftBuildTicks(entry.BuildTicks,
 				System.ZoneDistricts.Values);
-			KingdomMaterialDebitCost claim = new KingdomMaterialDebitCost(
-				KingdomMaterials.CostFor(entry.Key), KingdomMaterials.BitCostFor(entry.Key),
-				KingdomMaterials.ExoticCostFor(entry.Key));
+			KingdomMaterialDebitCost claim = null;
 			KingdomConstructionJob job = null;
 			if (KingdomGatehouseRules.IsGatehouse(entry.Key))
 			{
@@ -146,7 +133,8 @@ namespace ThousandAndFirst
 				// both road approaches, existing reservations, creatures, and fixtures are proved
 				// before either water or materials are reserved. Nothing is cleared or displaced.
 				if (!KingdomGatehouse.TryPlan(zone, System, out gatePlan, out Failure)
-					|| !KingdomGatehouseRules.TryEncode(gatePlan, out payload))
+					|| !KingdomGatehouseRules.TryEncode(gatePlan, out payload)
+					|| !KingdomGatehouseRules.TryMaterialCost(gatePlan, out claim))
 				{
 					Failure = Failure ?? "The exact gatehouse footprint could not be frozen.";
 					return false;
@@ -167,6 +155,9 @@ namespace ThousandAndFirst
 			}
 			else
 			{
+				claim = new KingdomMaterialDebitCost(KingdomMaterials.CostFor(entry.Key),
+					KingdomMaterials.BitCostFor(entry.Key),
+					KingdomMaterials.ExoticCostFor(entry.Key));
 				// Mint the durable construction owner before semantic siting. Its exact X/Y are
 				// frozen into this same job before publication or any debit.
 				job = KingdomConstruction.NewJob(System, zone,
@@ -190,6 +181,12 @@ namespace ThousandAndFirst
 				job = KingdomConstruction.NewJob(System, zone,
 					KingdomConstructionRoute.CommissionScaffold, cell, null, entry.Key, payload,
 					entry.CostDrams, claim, started, due);
+			if (gatePlan != null && !KingdomGatehouseRules.MaterialClaimMatches(gatePlan,
+				job?.Claims?.MaterialRequested))
+			{
+				Failure = "The gatehouse's frozen form and material claim disagree before funding.";
+				return false;
+			}
 			if (!KingdomConstruction.FreezeBuildTruth(job, System, entry.Defence, false))
 			{
 				Failure = "The commission's exact build effects could not be frozen.";
@@ -197,7 +194,9 @@ namespace ThousandAndFirst
 			}
 			KingdomSurvey survey = KingdomSurvey.Take(zone, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(entry.CostDrams);
-			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(zone, entry.Key);
+			KingdomMaterialDebit materials = gatePlan == null
+				? KingdomMaterials.ReservePayment(zone, entry.Key)
+				: KingdomMaterials.ReserveComposite(zone, claim);
 			KingdomConstructionStartResult funded = KingdomConstruction.TryFundNew(job,
 				water, materials, out job, out string fundingFailure);
 			if (funded == KingdomConstructionStartResult.Refused)

@@ -12,6 +12,22 @@ namespace ThousandAndFirst
 	{
 		private void NormalizeState(bool AllowLegacyIdentityMigration)
 		{
+			if (FounderHistory == null)
+			{
+				FounderHistory = new KingdomFounderHistoryReceipt();
+			}
+			FounderHistory.Normalize();
+			if (FounderHistory.Phase != KingdomFounderHistoryPhase.None
+				&& FounderHistory.Phase != KingdomFounderHistoryPhase.Quarantined
+				&& !KingdomFounderHistoryRules.Validate(FounderHistory,
+					out string founderHistoryFailure))
+			{
+				FounderHistory.Phase = KingdomFounderHistoryPhase.Quarantined;
+				FounderHistory.PublicationEnabled = true;
+				FounderHistory.CommittedTick = 0L;
+				FounderHistory.Fault = KingdomFounderHistoryRules.QuarantineReason(
+					founderHistoryFailure);
+			}
 			if (!KingdomMasterRules.WellFormed(MasterOption, MasterOptionTick,
 				MasterResumeToken, MasterAppliedResumeToken))
 			{
@@ -69,6 +85,7 @@ namespace ThousandAndFirst
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			StageLegacySettlementTopology();
 			if (LifecycleBook == null)
 			{
 				LifecycleBook = new KingdomLifecycleBook();
@@ -162,21 +179,15 @@ namespace ThousandAndFirst
 			{
 				SupportedLevel = 0;
 			}
-			// A shade below zero is a corrupt reading too: a notable is texture and never a tax,
-			// so the worst any of them can be worth is nothing. Nothing clamps it from above
-			// here - a shade a later build writes wider is still a number this one can read, and
-			// KingdomCatalogueRules.LiftCapPercent binds whatever it is against the water.
-			if (NotableShade < 0)
-			{
-				NotableShade = 0;
-			}
+			// Read the old field for ABI compatibility, then retire its economy unconditionally.
+			// Optional civic titles cannot grant hidden capacity, including on legacy saves.
+			NotableShade = 0;
 			// The meal shade fails closed the same way and for the same reason: a day's
 			// eating is never a tax, so the worst a bad supper can be worth is nothing.
 			if (MealShade < 0)
 			{
 				MealShade = 0;
 			}
-			Away?.Normalize();
 			Seceded?.Normalize();
 			if (Dissent < 0 || Dissent > KingdomCreedRules.DissentBreaking)
 			{

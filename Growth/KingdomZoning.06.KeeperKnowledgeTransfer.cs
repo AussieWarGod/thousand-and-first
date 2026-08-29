@@ -16,12 +16,12 @@ namespace ThousandAndFirst
 		// rooms - Addendum 18's clause, applied to the road between two of your own cities exactly
 		// as it applies to the road out of exile. The other city's immutable id is the source, so
 		// opening this menu repeatedly cannot turn one lesson into several seeds.
-		private static void SetDownWhatWasLearned(KingdomSystem System, List<ResearchNode> Carried)
+		private static void SetDownWhatWasLearned(KingdomSystem System,
+			KingdomSettlement Source, List<ResearchNode> Carried)
 		{
-			string away = AwayName(System);
-			string awayId = (System.Away == null || System.Away.City == null)
-				? null : System.Away.City.SettlementId;
-			string source = KingdomZoningRules.ComposeKey("settlement", awayId);
+			string away = SourceName(System, Source);
+			string source = KingdomZoningRules.ComposeKey("settlement",
+				Source?.City?.SettlementId);
 			List<string> named = new List<string>();
 			for (int i = 0; i < Carried.Count; i++)
 			{
@@ -41,10 +41,10 @@ namespace ThousandAndFirst
 			KingdomChronicle.Record(System, "what the keepers of " + KingdomPresentation.Rich(away) + " knew was set down at " + KingdomPresentation.Rich(System.SeatName));
 		}
 
-		private static string AwayName(KingdomSystem System)
+		private static string SourceName(KingdomSystem System, KingdomSettlement Source)
 		{
-			return (System.Away != null && !string.IsNullOrEmpty(System.Away.SettlementName))
-				? System.Away.SettlementName
+			return (Source != null && !string.IsNullOrEmpty(Source.SettlementName))
+				? Source.SettlementName
 				: "your other city";
 		}
 

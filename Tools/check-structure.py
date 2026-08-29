@@ -25,6 +25,17 @@ LINE_LIMIT = 300
 REVIEW_SCHEMA = 1
 DEFAULT_REVIEW_LEDGER = "docs/STRUCTURE_REVIEW.json"
 XRL_IMPORT = re.compile(r"^\s*using\s+XRL(?:\.|;)", re.MULTILINE)
+REVIEW_KEYS = {
+    "schemaVersion", "inventorySha256", "exceptions", "reviewedBy", "completedUtc",
+    "oneResponsibility", "protocolsAtBoundaries",
+}
+REVIEW_SECTION_KEYS = {"status", "notes"}
+HUMAN_SENTINEL = re.compile(
+    r"(?:^|[^a-z0-9])(?:placeholder|example|todo|tbd|unknown|n\s*/\s*a)"
+    r"(?:$|[^a-z0-9])|human[_ -]*(?:reviewer|tester)|name[_ -]*the|"
+    r"replace[_ -]*with|your[_ -]*name",
+    re.IGNORECASE,
+)
 
 
 class StructureError(ValueError):
@@ -162,13 +173,27 @@ def build_census(root: Path, relatives: Iterable[str]) -> Census:
 
 
 def _utc_timestamp(value: object) -> bool:
-    if not isinstance(value, str) or not value.endswith("Z"):
+    if (not isinstance(value, str)
+            or re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z",
+                value,
+            ) is None):
         return False
     try:
-        datetime.fromisoformat(value[:-1] + "+00:00")
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         return False
     return True
+
+
+def _human_text(value: object, minimum: int, maximum: int) -> bool:
+    return (
+        isinstance(value, str)
+        and value == value.strip()
+        and minimum <= len(value) <= maximum
+        and value.isprintable()
+        and HUMAN_SENTINEL.search(value) is None
+    )
 
 
 def review_issues(path: Path, census: Census) -> list[str]:
@@ -182,23 +207,31 @@ def review_issues(path: Path, census: Census) -> list[str]:
         return ["semantic review root must be an object"]
 
     issues: list[str] = []
-    if payload.get("schemaVersion") != REVIEW_SCHEMA:
+    if set(payload) != REVIEW_KEYS:
+        issues.append("semantic review fields must exactly match schema version 1")
+    if type(payload.get("schemaVersion")) is not int or payload.get("schemaVersion") != REVIEW_SCHEMA:
         issues.append(f"semantic review schemaVersion must be {REVIEW_SCHEMA}")
     if payload.get("inventorySha256") != census.inventory_sha256:
         issues.append("semantic review does not bind the current staged C# inventory")
     if payload.get("exceptions") != []:
         issues.append("semantic review exceptions must be empty; only an author ruling may amend Addendum 9")
-    if not isinstance(payload.get("reviewedBy"), str) or not payload.get("reviewedBy", "").strip():
-        issues.append("semantic review requires reviewedBy")
+    if not _human_text(payload.get("reviewedBy"), 2, 80):
+        issues.append("semantic review reviewedBy must name the human reviewer")
     if not _utc_timestamp(payload.get("completedUtc")):
-        issues.append("semantic review requires an ISO-8601 UTC completedUtc")
+        issues.append("semantic review completedUtc must be a real second-precision UTC date")
     for key in ("oneResponsibility", "protocolsAtBoundaries"):
         review = payload.get(key)
-        if not isinstance(review, dict) or review.get("status") != "passed":
-            issues.append(f"semantic review {key}.status must be 'passed'")
+        if not isinstance(review, dict):
+            issues.append(f"semantic review {key} must be an object")
             continue
-        if not isinstance(review.get("notes"), str) or not review.get("notes", "").strip():
-            issues.append(f"semantic review {key}.notes must name the evidence reviewed")
+        if set(review) != REVIEW_SECTION_KEYS:
+            issues.append(f"semantic review {key} fields must be notes and status")
+        if review.get("status") != "passed":
+            issues.append(f"semantic review {key}.status must be 'passed'")
+        if not _human_text(review.get("notes"), 20, 2000):
+            issues.append(
+                f"semantic review {key}.notes must be bounded human evidence notes"
+            )
     return issues
 
 

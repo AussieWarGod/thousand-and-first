@@ -60,7 +60,7 @@ namespace ThousandAndFirst
 				|| Building.GetIntProperty("KingdomBuilt") != 1
 				|| Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
 				|| Building.GetStringProperty(PlotIdProperty) != PlotId
-				|| (Job != null && (Building.ID != Job.OutputId
+				|| (Job != null && (Building.IDIfAssigned != Job.OutputId
 					|| !KingdomConstruction.HasReceipt(Building, Job)
 					|| !KingdomConstruction.PaidBuildMatches(Building, Job)
 					|| !KingdomConstruction.IsCurrent(Job)))
@@ -80,7 +80,7 @@ namespace ThousandAndFirst
 					Architecture.EncodedSnapshot)
 				&& !KingdomArchitectureStamper.TryVerifyComplete(Building, Z, out _)) return false;
 			GameObject exact;
-			if (KingdomConstruction.FindExactId(Z, Building.ID, out exact)
+			if (KingdomConstruction.FindExactId(Z, Building.IDIfAssigned, out exact)
 				!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(exact, Building)) return false;
 			if (Job == null) return true;
 			KingdomSystem system = The.Game == null
@@ -145,7 +145,7 @@ namespace ThousandAndFirst
 							KingdomPlotRules.Material material = KingdomPlotRules.YieldOf(kind,
 								out var amount);
 							if (material == KingdomPlotRules.Material.None || amount <= 0) continue;
-							ClearString(Works, ClearIdProperty, item.ID);
+							ClearString(Works, ClearIdProperty, item.IDIfAssigned);
 							ClearString(Works, ClearBlueprintProperty, item.Blueprint);
 							ClearInt(Works, ClearXProperty, x);
 							ClearInt(Works, ClearYProperty, y);
@@ -155,21 +155,11 @@ namespace ThousandAndFirst
 							if (!ExactClearSource(Works, Z, item, cell, material, amount))
 								return QuarantineClear(Works,
 									"Clearance source changed before its removal callback.");
-							bool removed;
-							try { removed = item.Destroy(null, Silent: true); }
-							catch (System.Exception ex)
-							{
-								KingdomSurvey.ObserveCurrentTopologyInActive(Z, item);
-								return QuarantineClear(Works,
-									"Clearance removal threw: " + ex.Message);
-							}
-							if (!removed || GameObject.Validate(item) || GameObject.Validate(
-								GameObject.FindByID(ClearString(Works, ClearIdProperty))))
-								return QuarantineClear(Works,
-									"Clearance removal was vetoed, moved, or replaced its exact source.");
-							KingdomSurvey.ObserveRemovedFromActive(Z, item);
-							ClearInt(Works, ClearRemovedProperty, 1);
-							ClearInt(Works, ClearPhaseProperty, 2);
+							try { item.Destroy(null, Silent: true); }
+							catch { }
+							finally { KingdomSurvey.ObserveCurrentTopologyInActive(Z, item); }
+							if (!SettleClearRemovalTopology(Works, Z, item, cell, material, amount))
+								return false;
 							if (!ResumeClearPayout(Works, Z)) return false;
 						}
 				}
@@ -192,7 +182,7 @@ namespace ThousandAndFirst
 		{
 			if (Works == null || Z == null || !GameObject.Validate(Works.ParentObject)
 				|| Works.ParentObject.CurrentZone != Z || Works.ParentObject.GetPart<r_KingdomPlotWorks>() != Works
-				|| !GameObject.Validate(Item) || Item.ID != ClearString(Works, ClearIdProperty)
+				|| !GameObject.Validate(Item) || Item.IDIfAssigned != ClearString(Works, ClearIdProperty)
 				|| Item.Blueprint != ClearString(Works, ClearBlueprintProperty) || Item.CurrentCell != Cell
 				|| Cell.X != ClearInt(Works, ClearXProperty) || Cell.Y != ClearInt(Works, ClearYProperty)
 				|| ClearInt(Works, ClearMaterialProperty) != (int)Material

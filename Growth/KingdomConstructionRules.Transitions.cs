@@ -32,6 +32,9 @@ namespace ThousandAndFirst
 				|| Current.BuildHasPlot != Next.BuildHasPlot
 				|| Current.BuildFrontier != Next.BuildFrontier
 				|| Current.BuildDefence != Next.BuildDefence
+				|| !ValidInputRegistryUpdate(Current, Next)
+				|| (!string.IsNullOrEmpty(Current.InputReceiptHash)
+					&& string.IsNullOrEmpty(Next.InputReceiptHash))
 				|| Current.CreatedTick != Next.CreatedTick
 				|| Next.UpdatedTick < Current.UpdatedTick
 				|| (RequiresFullFunding(Next.Phase) && !FullyFundedExact(Next))
@@ -55,6 +58,8 @@ namespace ThousandAndFirst
 		{
 			if (Next.Phase == Current.Phase) return true;
 			if (IsTerminal(Current.Phase)) return false;
+			if (IsRoutedCommitUpdate(Current, Next)
+				|| IsRoutedCompensationUpdate(Current, Next)) return true;
 			if (Next.Phase == KingdomConstructionPhase.InspectionRequired
 				|| Next.Phase == KingdomConstructionPhase.Cancelled) return true;
 			if (Next.Phase == KingdomConstructionPhase.Complete)
@@ -144,7 +149,7 @@ namespace ThousandAndFirst
 			if (Job == null || !Guid.TryParseExact(Job.Id, "N", out ignored)
 				|| !TextLength(Job.OwnerKey, 1, MaxOwnerChars)
 				|| !TextLength(Job.ZoneId, 1, MaxZoneChars)
-				|| Job.Route <= KingdomConstructionRoute.None || Job.Route > KingdomConstructionRoute.PurposeConsignment
+				|| Job.Route <= KingdomConstructionRoute.None || Job.Route > KingdomConstructionRoute.HostedArcology
 				|| Job.Phase <= KingdomConstructionPhase.Invalid || Job.Phase > KingdomConstructionPhase.InspectionRequired
 				|| Job.Projection != ProjectionFor(Job.Route)
 				|| Job.X < -1 || Job.X > 1023 || Job.Y < -1 || Job.Y > 1023
@@ -160,6 +165,8 @@ namespace ThousandAndFirst
 				|| !TextLength(Job.PhysicalReceipt, 0, MaxPhysicalReceiptChars)
 				|| !TextLength(Job.TargetKey, 0, MaxTargetChars)
 				|| !TextLength(Job.Payload, 0, MaxPayloadChars)
+				|| !TextLength(Job.InputReceipt, 0, MaxInputReceiptChars)
+				|| !TextLength(Job.InputReceiptHash, 0, 64)
 				|| !ValidBuildTruth(Job)
 				|| !TextLength(Job.Failure, 0, MaxFailureChars)
 				|| Job.CreatedTick < 0L || Job.StartedTick < Job.CreatedTick
@@ -169,14 +176,24 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			bool hasInput = !string.IsNullOrEmpty(Job.InputReceipt);
+			bool hasInputHash = !string.IsNullOrEmpty(Job.InputReceiptHash);
+			if (hasInput && (!hasInputHash || !IsSha256(Job.InputReceiptHash)
+				|| Job.InputReceiptHash != Sha256(Job.InputReceipt))) return false;
+			KingdomConstructionInputReceipt input;
+			if (hasInput && (!TryGetInputReceipt(Job, out input)
+				|| !ValidInputReceipt(Job, input))) return false;
 			if (Job.Compacted)
 			{
 				return IsTerminal(Job.Phase) && Job.Outbox == null
 					&& string.IsNullOrEmpty(Job.Payload)
 					&& string.IsNullOrEmpty(Job.PhysicalReceipt)
+					&& string.IsNullOrEmpty(Job.InputReceipt)
 					&& string.IsNullOrEmpty(Job.Failure)
+					&& (!hasInputHash || IsSha256(Job.InputReceiptHash))
 					&& IsSha256(Job.CompactHash) && Job.CompactHash == CompactIdentityHash(Job);
 			}
+			if (hasInputHash != hasInput) return false;
 			if (!string.IsNullOrEmpty(Job.CompactHash)) return false;
 			return true;
 		}

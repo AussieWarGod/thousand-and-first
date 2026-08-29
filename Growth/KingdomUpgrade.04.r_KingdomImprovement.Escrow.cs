@@ -77,12 +77,12 @@ namespace XRL.World.Parts
 			string key = Receipt?.HandoverItemEscrowKey;
 			object rooted;
 			if (The.Game == null || !BoundedEscrowKey(key)
-				|| key != EscrowKeyFor(Source?.ID, Receipt?.HandoverItemId,
+				|| key != EscrowKeyFor(Source?.IDIfAssigned, Receipt?.HandoverItemId,
 					Receipt.HandoverItemMovedBefore)
 				|| !The.Game.ObjectGameState.TryGetValue(key, out rooted))
 				return FailHandover(Receipt, "The exact inventory escrow root is absent or malformed.");
 			Item = rooted as GameObject;
-			if (!GameObject.Validate(Item) || Item.ID != Receipt.HandoverItemId
+			if (!GameObject.Validate(Item) || Item.IDIfAssigned != Receipt.HandoverItemId
 				|| Item.Blueprint != Receipt.HandoverItemBlueprint
 				|| Item.Count != Receipt.HandoverItemCount
 				|| EscrowTopologyOf(Source, Target, Where, Receipt, Item)
@@ -140,7 +140,7 @@ namespace XRL.World.Parts
 				for (int i = 0; i < loaded.Count; i++)
 				{
 					GameObject item = loaded[i];
-					if (item == null || item.ID != Id) continue;
+					if (item == null || item.IDIfAssigned != Id) continue;
 					Occurrences++;
 					if (ReferenceEquals(item, Exact)) ExactOccurrences++;
 				}
@@ -156,7 +156,7 @@ namespace XRL.World.Parts
 				GameObject item = pending[last];
 				pending.RemoveAt(last);
 				if (item == null) continue;
-				if (item.ID == Id)
+				if (item.IDIfAssigned == Id)
 				{
 					Occurrences++;
 					if (ReferenceEquals(item, Exact)) ExactOccurrences++;
@@ -191,7 +191,7 @@ namespace XRL.World.Parts
 				&& Item.Physics != null && Item.Physics.InInventory == Owner
 				&& ReferenceCount(Owner.Inventory.Objects, Item) == 1
 				&& (Receipt == null || (ExactEscrowReference(Receipt, Item)
-					&& Item.ID == Receipt.HandoverItemId
+					&& Item.IDIfAssigned == Receipt.HandoverItemId
 					&& Item.Blueprint == Receipt.HandoverItemBlueprint
 					&& Item.Count == Receipt.HandoverItemCount));
 		}
@@ -201,7 +201,7 @@ namespace XRL.World.Parts
 			return GameObject.Validate(Item) && Item.Physics != null
 				&& Item.Physics.InInventory == null && Item.CurrentCell == null
 				&& ExactEscrowReference(Receipt, Item)
-				&& Item.ID == Receipt.HandoverItemId && Item.Blueprint == Receipt.HandoverItemBlueprint
+				&& Item.IDIfAssigned == Receipt.HandoverItemId && Item.Blueprint == Receipt.HandoverItemBlueprint
 				&& Item.Count == Receipt.HandoverItemCount;
 		}
 
@@ -209,12 +209,12 @@ namespace XRL.World.Parts
 			r_KingdomImprovement Receipt)
 		{
 			if (!GameObject.Validate(Item) || !ExactEscrowReference(Receipt, Item)
-				|| Item.ID != Receipt.HandoverItemId
+				|| Item.IDIfAssigned != Receipt.HandoverItemId
 				|| Item.Blueprint != Receipt.HandoverItemBlueprint
 				|| Item.Count != Receipt.HandoverItemCount) return false;
 			if (Receipt.HandoverItemDestinationKind == 1)
 				return GameObject.Validate(Target) && ExactItemOwner(Item, Target, Receipt)
-					&& Target.ID == Receipt.HandoverItemDestinationId;
+					&& Target.IDIfAssigned == Receipt.HandoverItemDestinationId;
 			return Receipt.HandoverItemDestinationKind == 2 && Where != null
 				&& Item.Physics != null && Item.Physics.InInventory == null
 				&& Item.CurrentCell == Where

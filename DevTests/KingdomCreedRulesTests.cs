@@ -627,7 +627,8 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(RejoinVerdict.NothingSeceded, KingdomCreedRules.JudgeRejoin(false, 1, true, 0, 0));
 		}
 
-		[TestCase(true, 2, true, 0, 0, RejoinVerdict.RealmIsFull)]
+		[TestCase(true, 3, true, 0, 0, RejoinVerdict.RealmIsFull)]
+		[TestCase(true, 2, true, 0, 0, RejoinVerdict.Allowed)]
 		[TestCase(true, 1, false, 0, 0, RejoinVerdict.NotOnTheirGround)]
 		[TestCase(true, 1, true, 100, 0, RejoinVerdict.ClashStillLive)]
 		[TestCase(true, 1, true, 25, 0, RejoinVerdict.ClashStillLive)]

@@ -22,10 +22,11 @@ namespace ThousandAndFirst
 				out failure)) return false;
 			List<string> names = new List<string> { SettlementName };
 			List<string> ids = new List<string> { City.SettlementId };
-			if (Away != null)
+			List<KingdomSettlement> nonSeat = NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				names.Add(Away.SettlementName);
-				ids.Add(Away.City.SettlementId);
+				names.Add(nonSeat[i].SettlementName);
+				ids.Add(nonSeat[i].City.SettlementId);
 			}
 			KingdomIdentityFault fault;
 			return KingdomIdentityRules.TryResolveUniqueSettlementName(names, ids, Name,
@@ -59,20 +60,21 @@ namespace ThousandAndFirst
 				return false;
 			}
 			SettlementIds.Add(City.SettlementId);
-			if (Away != null)
+			List<KingdomSettlement> nonSeat = NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				if (!SettlementIdentityMatches(Away.City, Away.SettlementIdentityVersion,
-					Away.SettlementIdentityOrigin, Away.SettlementIdentityTransactionId,
-					Away.SettlementIdentityFoundedTick,
-					Away.SettlementIdentityFirstClaimedZone, RequirePublishedClaims,
-					Away.ClaimedZones, out fault) ||
-					!LifecycleIdentityMatches(Away.LifecycleBook,
-						Away.City?.SettlementId))
+				KingdomSettlement row = nonSeat[i];
+				if (!SettlementIdentityMatches(row.City, row.SettlementIdentityVersion,
+					row.SettlementIdentityOrigin, row.SettlementIdentityTransactionId,
+					row.SettlementIdentityFoundedTick,
+					row.SettlementIdentityFirstClaimedZone, RequirePublishedClaims,
+					row.ClaimedZones, out fault) ||
+					!LifecycleIdentityMatches(row.LifecycleBook, row.City?.SettlementId))
 				{
-					Failure = "The away city identity cannot be reproved (" + fault + ").";
+					Failure = "A non-seat city identity cannot be reproved (" + fault + ").";
 					return false;
 				}
-				SettlementIds.Add(Away.City.SettlementId);
+				SettlementIds.Add(row.City.SettlementId);
 			}
 			if (!KingdomIdentityRules.ValidateRealmTopology(RealmId, SettlementIds,
 				out fault))
@@ -224,7 +226,9 @@ namespace ThousandAndFirst
 				new HashSet<string>(StringComparer.Ordinal), City?.SettlementId);
 			HashSet<string> seen = new HashSet<string>(SettlementIds,
 				StringComparer.Ordinal);
-			AddLifecycleCollisionId(SettlementIds, seen, Away?.City?.SettlementId);
+			List<KingdomSettlement> nonSeat = NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				AddLifecycleCollisionId(SettlementIds, seen, nonSeat[i]?.City?.SettlementId);
 			AddLifecycleCollisionId(SettlementIds, seen, Seceded?.City?.SettlementId);
 			bool hasPending = !string.IsNullOrEmpty(PendingSettlementId) ||
 				!string.IsNullOrEmpty(PendingSettlementTransactionId) ||

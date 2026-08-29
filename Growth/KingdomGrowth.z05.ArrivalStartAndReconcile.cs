@@ -18,87 +18,6 @@ namespace ThousandAndFirst
 	public static partial class KingdomGrowth
 	{
 
-		private static ArrivalResult ResolveOrStartArrival(KingdomSystem system, Zone zone,
-			KingdomSurvey survey, long tick, out ArrivalRefusal refusal)
-		{
-			refusal = default(ArrivalRefusal);
-			KingdomGrowthBook growth = system?.LifecycleBook?.Growth;
-			string settlementId = system?.CurrentSettlementId;
-			if (growth == null || string.IsNullOrEmpty(settlementId)
-				|| !KingdomLifecycleRules.CanOwnGrowthAuthority(system.LifecycleBook)
-				|| !KingdomLifecycleRules.CanOwnGrowthAuthority(growth, settlementId)
-				|| system.NextArrivalTick != growth.NextArrivalTick
-				|| tick < growth.NextArrivalTick) return ArrivalResult.Failed;
-			if (growth.ArrivalCandidate != null || growth.ArrivalOp != null)
-				return ReconcileArrival(system, zone, survey, tick, out refusal);
-			if (system.Population >= KingdomRules.MaxPopulation)
-				return StartSimpleArrival(system, zone, tick,
-					KingdomGrowthArrivalDisposition.PopulationCap);
-			if (system.SupportedLevel > 0 && system.Population >=
-				KingdomSubsidenceRules.SlideBeginsAbove(system.SupportedLevel))
-				return StartSimpleArrival(system, zone, tick,
-					KingdomGrowthArrivalDisposition.SupportCap);
-			if (survey == null || survey.StoredWater < KingdomRules.DramsPerArrival)
-				return StartSimpleArrival(system, zone, tick,
-					KingdomGrowthArrivalDisposition.WaterUnavailable);
-			long sequence = growth.ArrivalCandidateNextSequence;
-			KingdomSemanticPersonPlan person;
-			string semanticFailure;
-			if (!KingdomSemanticSelection.TryPrepareGrowthArrival(system, zone, sequence,
-				tick, out person, out semanticFailure))
-			{
-				if (string.Equals(semanticFailure,
-					KingdomSemanticSelection.NoArrivalGroundFailure, StringComparison.Ordinal))
-					return StartSimpleArrival(system, zone, tick,
-						KingdomGrowthArrivalDisposition.NoGround);
-				KingdomLog.Log("growth arrival semantic plan refused: " + semanticFailure);
-				return ArrivalResult.Failed;
-			}
-			Cell cell = zone.GetCell(person.X, person.Y);
-			if (cell == null) return ArrivalResult.Failed;
-			string id = KingdomLifecycleRules.GrowthArrivalCandidateId(growth.SettlementId,
-				sequence);
-			string marker = StableId("arrival-marker", id);
-			string escrow = "r_TAF_GrowthArrivalEscrow:" + StableId("arrival-escrow", id);
-			string blueprint = person.Blueprint;
-			string beforeOwner = HashText("arrival-create-owner-before", escrow, zone.ZoneID);
-			string beforeObject = HashText("arrival-create-object-before", marker, blueprint);
-			string beforeTopology = ArrivalZoneIdentityHash(zone, null, marker, escrow,
-				KingdomGrowthLocationKind.Absent, -1, -1);
-			KingdomGrowthArrivalCandidate candidate =
-				KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, marker, blueprint,
-					escrow, zone.ZoneID, tick, beforeOwner, beforeObject, beforeTopology,
-					person.RulesVersion, person.StreamId, person.EventKind, person.Origin,
-					string.IsNullOrEmpty(person.Creed) ? "-" : person.Creed, person.Name,
-					person.Arrived, person.X, person.Y);
-			if (candidate == null || !KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
-				growth, candidate)) return ArrivalResult.Failed;
-			return ReconcileArrival(system, zone, survey, tick, out refusal, cell);
-		}
-
-		private static ArrivalResult StartSimpleArrival(KingdomSystem system, Zone zone,
-			long tick, KingdomGrowthArrivalDisposition disposition)
-		{
-			KingdomGrowthBook growth = system.LifecycleBook.Growth;
-			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
-				growth, KingdomGrowthAction.Arrival, null, tick);
-			if (operation == null) return ArrivalResult.Failed;
-			operation.ArrivalDisposition = disposition;
-			if (disposition == KingdomGrowthArrivalDisposition.NoGround
-				&& !system.NoRoomAnnounced
-				&& !AppendArrivalOutbox(system, operation, "no-ground",
-					"a settler reached " + KingdomPresentation.Rich(system.KingdomDisplayName)
-						+ " and found nowhere to stand",
-					"{{r|A settler came and found nowhere to stand. There is no open ground left here.}}"))
-				return ArrivalResult.Failed;
-			if (!KingdomLifecycleRules.TryPublishGrowth(growth, operation))
-				return ArrivalResult.Failed;
-			ArrivalResult result = ReconcileArrival(system, zone, null, tick,
-				out ArrivalRefusal ignored);
-			if (result == ArrivalResult.NoGround) system.NoRoomAnnounced = true;
-			return result;
-		}
-
 		private static ArrivalResult ReconcileArrival(KingdomSystem system, Zone zone,
 			KingdomSurvey survey, long tick, out ArrivalRefusal refusal, Cell preferred = null,
 			bool AllowCandidateConsumption = true)
@@ -121,6 +40,11 @@ namespace ThousandAndFirst
 						candidate, zone.ZoneID, tick))
 					return CandidateFault(growth, candidate,
 						"historical candidate origin zone could not bind");
+				if (!KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(candidate,
+					zone.ZoneID)) return ArrivalResult.Deferred;
+				if (!TryInterposeLegacyFirstGuest(system, zone, growth, candidate, tick,
+					out string interposeFailure))
+					return CandidateFault(growth, candidate, interposeFailure);
 				if (candidate.LegacySemanticPlan)
 				{
 					string migrationFailure;
@@ -134,8 +58,30 @@ namespace ThousandAndFirst
 							migrationFailure ?? "historical semantic plan could not migrate");
 					}
 				}
-				if (!string.Equals(candidate.LodgingZoneId, zone.ZoneID,
-					StringComparison.Ordinal)) return ArrivalResult.Deferred;
+				if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice)
+					return ArrivalResult.Deferred;
+				// O11 is an optional observer. Growth continues from its own exact decision even
+				// when civic memory is absent, full, disabled, future, or quarantined.
+				if (candidate.FirstGuest != null
+					&& !KingdomGuestFeastRuntime.TryObserveAndProveGrowthDecision(system,
+						zone, survey, candidate, tick, out string feastFailure))
+				{
+					KingdomLog.Log("optional first-guest observation retained: "
+						+ feastFailure);
+				}
+				if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.Declined)
+				{
+					if (growth.ArrivalOp == null && (!AllowCandidateConsumption || growth.WorkPaused))
+						return ArrivalResult.Deferred;
+					if (growth.ArrivalOp == null && !PrepareDeclinedFirstGuestOperation(system,
+						candidate, tick)) return CandidateFault(growth, candidate,
+							"declined correspondence clock operation could not publish");
+					return CompleteArrivalOperation(system, zone, survey, growth.ArrivalOp,
+						candidate, tick, out refusal);
+				}
+				if (candidate.FirstGuest != null
+					&& !EnsureFirstGuestBodyLeaseForRecovery(system, candidate, tick,
+					out string leaseFailure)) return CandidateFault(growth, candidate, leaseFailure);
 				GameObject settler = null;
 				if (candidate.Phase == KingdomGrowthArrivalCandidatePhase.Prepared
 					|| candidate.Phase == KingdomGrowthArrivalCandidatePhase.CreateIntent)
@@ -170,10 +116,13 @@ namespace ThousandAndFirst
 					if (!KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
 						candidate, settler.ID, afterOwner, afterObject, afterTopology,
 						ReferenceHash("candidate-create", candidate, settler), true, tick))
-						return CandidateFault(growth, candidate,
-							"candidate create receipt did not commit");
-				}
-				if (!TryArrivalObject(candidate, zone, out settler))
+							return CandidateFault(growth, candidate,
+								"candidate create receipt did not commit");
+					}
+					if (TryReconcilePhysicalFirstGuest(system, zone, survey, candidate, tick,
+						AllowCandidateConsumption, out ArrivalResult physicalResult))
+						return physicalResult;
+					if (!TryArrivalObject(candidate, zone, out settler))
 					return CandidateFault(growth, candidate,
 						"saved candidate phase cannot prove its exact object");
 				if ((candidate.Phase == KingdomGrowthArrivalCandidatePhase.Escrowed

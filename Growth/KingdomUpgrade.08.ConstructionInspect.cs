@@ -108,11 +108,29 @@ namespace ThousandAndFirst
 			{
 				GameObject attemptedScaffold = scaffold;
 				r_KingdomScaffold scaffoldPart = scaffold.GetPart<r_KingdomScaffold>();
+				GameObject exactFinal;
+				int exactFinals = r_KingdomScaffold.FindExactSuccessors(Z, Job,
+					successor.Blueprint, scaffold, out exactFinal);
+				if (exactFinals > 1)
+				{
+					KingdomConstruction.Quarantine(ref inspected,
+						"More than one exact improvement successor carries this receipt.");
+					return;
+				}
 				int finalPending = scaffold.GetIntProperty(r_KingdomScaffold.FinalPendingProperty);
 				if (finalPending != 0 && finalPending != 1)
 				{
 					KingdomConstruction.Quarantine(ref inspected,
 						"The improvement scaffold final flag is not an exact boolean.");
+					return;
+				}
+				if (exactFinals == 0 && finalPending == 0
+					&& (Job.Phase == KingdomConstructionPhase.ProjectionPending
+						|| Job.Phase == KingdomConstructionPhase.Outstanding)
+					&& !scaffoldPart.TryValidateInitialDurableWork(Job, Job.UpdatedTick,
+						out string initialFailure))
+				{
+					KingdomConstruction.Quarantine(ref inspected, initialFailure);
 					return;
 				}
 				if (Job.Phase == KingdomConstructionPhase.ProjectionPending
@@ -142,7 +160,7 @@ namespace ThousandAndFirst
 			}
 			if (GameObject.Validate(work) && work.GetIntProperty(BuiltProperty) == 1
 				&& work.GetStringProperty(BuildKeyProperty) == Job.TargetKey
-				&& work.ID != Job.SubjectId)
+				&& work.IDIfAssigned != Job.SubjectId)
 			{
 				if (!r_KingdomScaffold.HasRemovalProof(work, Job.SubjectId))
 				{
@@ -155,7 +173,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			if (GameObject.Validate(work) && !string.IsNullOrEmpty(Job.SubjectId)
-				&& work.ID != Job.SubjectId)
+				&& work.IDIfAssigned != Job.SubjectId)
 			{
 				return;
 			}

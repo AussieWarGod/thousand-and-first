@@ -7,99 +7,19 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomLabRules
 	{
-		internal static List<KingdomLabRegistryEntry> ParseRegistry(string Text,
-			out bool Quarantined)
-		{
-			List<KingdomLabRegistryEntry> rows = new List<KingdomLabRegistryEntry>();
-			Quarantined = false;
-			if (string.IsNullOrEmpty(Text))
-			{
-				return rows;
-			}
-			string[] lines = Text.Split('\n');
-			if (lines.Length == 0 || lines[0] != "v1")
-			{
-				Quarantined = true;
-				return rows;
-			}
-			for (int i = 1; i < lines.Length; i++)
-			{
-				if (string.IsNullOrEmpty(lines[i])) continue;
-				if (rows.Count >= MaxRegistryRows)
-				{
-					Quarantined = true;
-					break;
-				}
-				string[] fields = lines[i].Split('|');
-				long founded;
-				long updated;
-				int status;
-				string job;
-				string building;
-				string patient;
-				string game;
-				string realm;
-				string key;
-				string grants;
-				string manager;
-				string detail;
-				string fingerprint;
-				int version;
-				int source;
-				int attach;
-				if (fields.Length != 16 || !Decode(fields[0], out job)
-					|| !Decode(fields[1], out building) || !Decode(fields[2], out patient)
-					|| !Decode(fields[3], out game) || !Decode(fields[4], out realm)
-					|| !long.TryParse(fields[5], NumberStyles.Integer, CultureInfo.InvariantCulture,
-						out founded)
-					|| !int.TryParse(fields[6], NumberStyles.None, CultureInfo.InvariantCulture,
-						out version) || !Decode(fields[7], out key) || !Decode(fields[8], out grants)
-					|| !int.TryParse(fields[9], NumberStyles.Integer, CultureInfo.InvariantCulture,
-						out source) || !int.TryParse(fields[10], NumberStyles.Integer,
-						CultureInfo.InvariantCulture, out attach) || !Decode(fields[11], out manager)
-					|| !Decode(fields[12], out detail) || !Decode(fields[13], out fingerprint)
-					|| !int.TryParse(fields[14], NumberStyles.None, CultureInfo.InvariantCulture,
-					out status) || !Enum.IsDefined(typeof(KingdomLabRegistryStatus),
-						(KingdomLabRegistryStatus)status)
-					|| !long.TryParse(fields[15], NumberStyles.Integer, CultureInfo.InvariantCulture,
-						out updated))
-				{
-					Quarantined = true;
-					continue;
-				}
-				KingdomLabRegistryEntry row = new KingdomLabRegistryEntry
-				{
-					JobId = job,
-					BuildingId = building,
-					PatientId = patient,
-					GameId = game,
-					RealmId = realm,
-					RealmFoundedTick = founded,
-					ContractVersion = version,
-					ProcedureKey = key,
-					Grants = grants,
-					Source = source,
-					Attach = attach,
-					Manager = manager,
-					Detail = detail,
-					Fingerprint = fingerprint,
-					Status = (KingdomLabRegistryStatus)status,
-					UpdatedTick = updated
-				};
-				if (!ValidRegistryEntry(row) || IndexOfRegistry(rows, row.JobId) >= 0)
-				{
-					Quarantined = true;
-					continue;
-				}
-				rows.Add(row);
-			}
-			return rows;
-		}
-
 		internal static string FormatRegistry(IList<KingdomLabRegistryEntry> Rows)
 		{
-			StringBuilder text = new StringBuilder("v1");
+			bool rulerLifeWire = false;
 			int count = Math.Min(Rows?.Count ?? 0, MaxRegistryRows);
+			for (int i = 0; i < count; i++)
+			{
+				if (ValidRegistryEntry(Rows[i]) && HasBoundRulerLife(Rows[i]))
+				{
+					rulerLifeWire = true;
+					break;
+				}
+			}
+			StringBuilder text = new StringBuilder(rulerLifeWire ? "v2" : "v1");
 			for (int i = 0; i < count; i++)
 			{
 				KingdomLabRegistryEntry row = Rows[i];
@@ -109,8 +29,14 @@ namespace ThousandAndFirst
 					.Append(Encode(row.PatientId)).Append('|')
 					.Append(Encode(row.GameId)).Append('|')
 					.Append(Encode(row.RealmId)).Append('|')
-					.Append(row.RealmFoundedTick.ToString(CultureInfo.InvariantCulture)).Append('|')
-					.Append(row.ContractVersion.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(row.RealmFoundedTick.ToString(CultureInfo.InvariantCulture)).Append('|');
+				if (rulerLifeWire)
+				{
+					text.Append(row.RulerSuccessionOrdinal.ToString(
+						CultureInfo.InvariantCulture)).Append('|')
+						.Append(Encode(row.RulerLifeId)).Append('|');
+				}
+				text.Append(row.ContractVersion.ToString(CultureInfo.InvariantCulture)).Append('|')
 					.Append(Encode(row.ProcedureKey)).Append('|')
 					.Append(Encode(row.Grants)).Append('|')
 					.Append(row.Source.ToString(CultureInfo.InvariantCulture)).Append('|')
@@ -240,8 +166,22 @@ namespace ThousandAndFirst
 				&& Bounded(Entry.RealmId, 256) && Bounded(Entry.Fingerprint, 32)
 				&& ValidEffectContract(Entry.ContractVersion, Entry.ProcedureKey, Entry.Grants,
 					Entry.Source, Entry.Attach, Entry.Manager, Entry.Fingerprint, Entry.Detail)
+				&& (LegacyRulerLife(Entry) || HasBoundRulerLife(Entry))
 				&& Entry.RealmFoundedTick >= 0L && Entry.UpdatedTick >= 0L
 				&& Enum.IsDefined(typeof(KingdomLabRegistryStatus), Entry.Status);
+		}
+
+		private static bool LegacyRulerLife(KingdomLabRegistryEntry Entry)
+		{
+			return Entry.RulerSuccessionOrdinal == -1
+				&& string.IsNullOrEmpty(Entry.RulerLifeId);
+		}
+
+		private static bool HasBoundRulerLife(KingdomLabRegistryEntry Entry)
+		{
+			return Entry != null && KingdomBodyHistoryRulerLifeRules.ValidIdentity(
+				Entry.RealmId, Entry.RulerSuccessionOrdinal,
+				"taf:object:" + (Entry.PatientId ?? ""), Entry.RulerLifeId);
 		}
 
 		private static bool Bounded(string Text, int Maximum)

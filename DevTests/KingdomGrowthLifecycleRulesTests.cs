@@ -1404,7 +1404,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LifecycleV6GrowthV3RichWireGoldenPinsAllPreparedBranches()
+		public void LifecycleV6GrowthV4AndHistoricalV3RichWireGoldensPinAllPreparedBranches()
 		{
 			KingdomLifecycleBook parent = MigratedParent("city-rich-golden", 100L, true, true, 20L);
 			Assert.IsTrue(KingdomLifecycleRules.TryRegisterGrowthField(parent.Growth, "field-a"));
@@ -1427,8 +1427,15 @@ namespace ThousandAndFirst.Tests
 				"independent semantic producer emits exact same nested bytes");
 			CollectionAssert.AreEqual(wrapper, independentWrapper,
 				"independent semantic producer emits exact same wrapper bytes");
-			Console.WriteLine("[TAF] growth-v3-rich nested={0} sha={1} wrapper={2} sha={3}",
+			Console.WriteLine("[TAF] growth-v4-rich nested={0} sha={1} wrapper={2} sha={3}",
 				nested.Length, Sha256(nested), wrapper.Length, Sha256(wrapper));
+			byte[] semanticV3 = KingdomLifecycleWireCodec.GrowthV3PayloadFixture(parent.Growth);
+			Assert.AreEqual(KingdomLifecycleRules.SemanticGrowthFormatVersion,
+				BitConverter.ToInt32(semanticV3, 4));
+			Assert.AreEqual(10699, semanticV3.Length);
+			Assert.AreEqual("0d6b0c056cf2e07ecc9de69bee2d1afb1dd3bf6b27b25bc1e37f333feef6c29d",
+				Sha256(semanticV3));
+			Assert.IsFalse(KingdomLifecycleWireCodec.ReadGrowthPayload(semanticV3).Quarantined);
 			int lengthOffset = wrapper.Length - nested.Length - 4;
 			byte[] extractedNested = new byte[nested.Length];
 			Buffer.BlockCopy(wrapper, lengthOffset + 4, extractedNested, 0, nested.Length);
@@ -1443,15 +1450,29 @@ namespace ThousandAndFirst.Tests
 				BitConverter.ToInt32(nested, 0));
 			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				BitConverter.ToInt32(nested, 4));
-			Assert.AreEqual(10699, nested.Length);
-			Assert.AreEqual("0d6b0c056cf2e07ecc9de69bee2d1afb1dd3bf6b27b25bc1e37f333feef6c29d",
-				Sha256(nested));
-			Assert.AreEqual(10944, wrapper.Length);
-			Assert.AreEqual("ef7c1f6d4d1e34d0da2d605f7b54ae2322676707489d3f0a250b72c88bb1bcc5",
-				Sha256(wrapper));
+			byte[] physicalV6 = KingdomLifecycleWireCodec.GrowthV6PayloadFixture(parent.Growth);
+			Assert.Greater(nested.Length, physicalV6.Length);
+			Assert.AreEqual(10700, physicalV6.Length);
+			Assert.AreEqual("39f0099ea91787ff4f006c1e3d416cdebf89c6629a32c94731c4de9976765dcb",
+				Sha256(physicalV6));
+			KingdomGrowthBook migratedV6 =
+				KingdomLifecycleWireCodec.ReadGrowthPayload(physicalV6);
+			Assert.IsTrue(migratedV6.ArrivalCadenceMigrationPending);
+			Assert.AreEqual(0, migratedV6.ArrivalDebtRanges.Count);
+			Assert.AreEqual((ulong)migratedV6.ArrivalCandidateRetiredThrough,
+				migratedV6.ArrivalOrdinalHighWater);
+			byte[] physicalV6Wrapper = new byte[lengthOffset + 4 + physicalV6.Length];
+			Buffer.BlockCopy(wrapper, 0, physicalV6Wrapper, 0, lengthOffset);
+			Buffer.BlockCopy(BitConverter.GetBytes(physicalV6.Length), 0, physicalV6Wrapper,
+				lengthOffset, 4);
+			Buffer.BlockCopy(physicalV6, 0, physicalV6Wrapper, lengthOffset + 4,
+				physicalV6.Length);
+			Assert.AreEqual(10945, physicalV6Wrapper.Length);
+			Assert.AreEqual("290c12b831b75a55ad1dc7dfea054d4d9827720104c5a4c922feeb99cbb66bd4",
+				Sha256(physicalV6Wrapper));
 
 			// Growth v1 stays byte-exact and readable. V2 added the compatibility bit and dual
-			// Chronicle registers; v3 adds semantic-person fields only when a candidate exists.
+			// Chronicle registers; v3 adds semantic-person fields and v4 first-guest authority.
 			byte[] legacyNested = KingdomLifecycleWireCodec.GrowthV1PayloadFixture(parent.Growth);
 			Assert.AreEqual(KingdomLifecycleRules.LegacyGrowthFormatVersion,
 				BitConverter.ToInt32(legacyNested, 4));
@@ -2564,7 +2585,7 @@ namespace ThousandAndFirst.Tests
 				"candidate.LegacyGrowthV1UnboundZone",
 				"BindLegacyGrowthArrivalCandidateZone");
 
-			string lodgingSource = TestMain.ReadRepositoryText("Growth/KingdomLodging.cs");
+			string lodgingSource = KingdomLodgingLogicalSource.Read();
 			string observation = Slice(lodgingSource,
 				"internal static bool ObservePreparedArrival(KingdomSystem System, Zone Z,",
 				"public static string HomeDesignKeyOf");
@@ -2584,8 +2605,20 @@ namespace ThousandAndFirst.Tests
 				"private static bool ObserveOccupantConflicts");
 			StringAssert.Contains("AssignOne(System, Z, unassigned[i], homes, occupancy",
 				settle);
+			AssertOrdered(settle,
+				"if (!string.IsNullOrEmpty(plotId) && homeByPlot.ContainsKey(plotId))",
+				"AddOccupant(occupancy, plotId, resident);", "continue;",
+				"unassigned.Add(resident);");
+			StringAssert.DoesNotContain("finehouse", settle,
+				"soft reservation must never reconsider or evict a standing assignment");
 			StringAssert.Contains("ChooseHome(Z, Resident, Homes, Occupancy", assign);
 			StringAssert.Contains("ChooseHome(Z, unassigned[i], homes, result", projection);
+			StringAssert.Contains("eligibleFineHouses.Add(string.Equals(entry.Key, \"finehouse\"",
+				chooser);
+			StringAssert.Contains("KingdomLodgingRules.ChooseOrdinaryIndex(eligible, eligibleFineHouses)",
+				chooser);
+			StringAssert.Contains("KingdomGuestbook.LegendaryTraderResidentProperty", chooser);
+			StringAssert.Contains("luxuryResident ? KingdomLodgingRules.ChooseIndex(eligible)", chooser);
 			foreach (string mutation in new[] { "SetStringProperty", "SetIntProperty",
 				"KingdomChronicle.Record", ".Ledger.Note", "KingdomBrink.",
 				"ForgetCohabitation" })

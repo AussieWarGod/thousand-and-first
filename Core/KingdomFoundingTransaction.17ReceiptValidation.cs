@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Qud.API;
+using ThousandAndFirst.Api;
 using XRL;
 using XRL.Language;
 using XRL.Rules;
@@ -56,7 +57,7 @@ namespace ThousandAndFirst
 				Basin.PendingOwnerKind != KingdomFoundingOwnerKind.Basin ||
 				string.IsNullOrEmpty(Basin.PendingBasinID) ||
 				Basin.PendingBasinID.Length > 256 ||
-				Basin.PendingBasinID != Basin.ParentObject.ID ||
+				Basin.PendingBasinID != Basin.ParentObject.IDIfAssigned ||
 				string.IsNullOrEmpty(Basin.PendingRealmFaction) ||
 				Basin.PendingRealmFaction.Length > 256 ||
 				string.IsNullOrEmpty(Basin.PendingName) || Basin.PendingName.Length > 256 ||
@@ -117,6 +118,8 @@ namespace ThousandAndFirst
 				Failure = "kind-specific payload fields are malformed";
 				return false;
 			}
+			if (!VillageStandingEffectReceiptValid(Basin, kind, phase, out Failure))
+				return false;
 			if (!Basin.TryGetOriginalComponents(out var original, out var originalEncoded) ||
 				!Basin.TryGetCommittedComponents(out var committed, out var committedEncoded) ||
 				EncodeComponents(original) != originalEncoded ||
@@ -133,11 +136,30 @@ namespace ThousandAndFirst
 				Failure = "liquid components or volume algebra is malformed";
 				return false;
 			}
-			string digest = KingdomFoundingTransactionRules.PayloadDigest(kind,
-				Basin.PendingName, Basin.PendingVocation, Basin.PendingVillageFaction,
-				Basin.PendingVillageDisplayName, Basin.PendingOriginalVolume,
-				Basin.PendingOriginalMaxVolume, Basin.PendingCommittedVolume,
-				Basin.PendingCommittedMaxVolume, originalEncoded, committedEncoded);
+			string digest;
+			if (Basin.HasExternalBindingField)
+			{
+				if (!KingdomExternalOwnershipRules.TryDecode(
+					Basin.PendingExternalBinding, out var externalBinding))
+				{
+					Failure = "external-owner receipt is malformed";
+					return false;
+				}
+				digest = KingdomFoundingTransactionRules.PayloadDigestWithExternalBinding(
+					kind, Basin.PendingName, Basin.PendingVocation,
+					Basin.PendingVillageFaction, Basin.PendingVillageDisplayName,
+					Basin.PendingOriginalVolume, Basin.PendingOriginalMaxVolume,
+					Basin.PendingCommittedVolume, Basin.PendingCommittedMaxVolume,
+					originalEncoded, committedEncoded, Basin.PendingExternalBinding);
+			}
+			else
+			{
+				digest = KingdomFoundingTransactionRules.PayloadDigest(kind,
+					Basin.PendingName, Basin.PendingVocation, Basin.PendingVillageFaction,
+					Basin.PendingVillageDisplayName, Basin.PendingOriginalVolume,
+					Basin.PendingOriginalMaxVolume, Basin.PendingCommittedVolume,
+					Basin.PendingCommittedMaxVolume, originalEncoded, committedEncoded);
+			}
 			if (digest != Basin.PendingPayloadDigest ||
 				!KingdomFoundingTransactionRules.TryParseAuthority(
 					Basin.PendingAuthority, out var authority) ||
@@ -179,6 +201,14 @@ namespace ThousandAndFirst
 					 siteDisplay != Basin.PendingVillageDisplayName))
 				{
 					Failure = "site reservation payload differs";
+					return false;
+				}
+				if (kind != KingdomFoundingKind.VillageCharter &&
+					Basin.HasExternalBindingField && phase != KingdomFoundingPhase.Complete &&
+					!KingdomExternalOwnershipBindingRuntime.StageMatches(Site,
+						Basin.PendingAuthority, Basin.PendingExternalBinding))
+				{
+					Failure = "external-owner site reservation differs";
 					return false;
 				}
 			}
@@ -224,7 +254,8 @@ namespace ThousandAndFirst
 			string village = Basin.PendingKind == KingdomFoundingKind.VillageCharter
 				? Basin.PendingVillageFaction : null;
 			if (!ClearExactReservationSet(Site, authority,
-				Basin.PendingRealmFaction, village))
+				Basin.PendingRealmFaction, village,
+				Basin.HasExternalBindingField ? Basin.PendingExternalBinding : null))
 			{
 				return false;
 			}

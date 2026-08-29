@@ -83,28 +83,19 @@ namespace ThousandAndFirst
 				int put = (room < remaining) ? room : remaining;
 				for (int j = 0; j < put; j++)
 				{
-					GameObject food = GameObject.Create(Blueprint);
-					if (food == null)
+					if (!TryStoreOneExact(container, Blueprint))
 					{
-						// The blueprint does not resolve. Nothing further is stored and nothing is
-						// lost: the caller gets the rest of its offer back and can say so.
-						return Amount - remaining;
+						int partial = Amount - remaining;
+						RefreshPhysicalFoodCount();
+						FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+						SynchronizeLarders();
+						return partial;
 					}
-					// A crop this settlement's own style names but that is not actually food would
-					// otherwise be an unbounded spawn: HeldIn would never count it, so the room
-					// would never fill and every pass would put more of it in the chest forever.
-					// Refuse the whole errand instead, and take the one object back out with us.
-					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
-					{
-						food.Obliterate();
-						return Amount - remaining;
-					}
-					container.Inventory.AddObject(food, Silent: true);
 					remaining--;
 				}
 			}
 			int stored = Amount - remaining;
-			FoodStored += stored;
+			RefreshPhysicalFoodCount();
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			SynchronizeLarders();
 			return stored;
@@ -132,37 +123,53 @@ namespace ThousandAndFirst
 			for (int i = 0; i < wanted; i++)
 			{
 				int heldBefore = HeldIn(Container);
-				GameObject food = null;
-				try
-				{
-					food = GameObject.Create(Blueprint);
-					if (!GameObject.Validate(food)
-						|| (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient")))
-					{
-						if (GameObject.Validate(food)) food.Obliterate();
-						break;
-					}
-					Container.Inventory.AddObject(food, Silent: true);
-				}
-				catch
-				{
-					// Measured inventory delta below decides whether callback completed.
-				}
+				bool exact = TryStoreOneExact(Container, Blueprint);
 				int heldAfter = HeldIn(Container);
-				if (heldAfter != heldBefore + 1)
-				{
-					if (GameObject.Validate(food) && food.InInventory != Container) food.Obliterate();
-					break;
-				}
+				if (heldAfter != heldBefore + 1) break;
 				accepted++;
+				// A callback may throw after vanilla has already inserted the item. Count that
+				// measured landing once, then stop: retrying it would mint a duplicate while
+				// continuing past an unproved custody transition would hide the fault.
+				if (!exact) break;
 			}
-			if (accepted > 0)
-			{
-				FoodStored += accepted;
-				FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
-				SynchronizeReceiptObject(Container);
-			}
+			RefreshPhysicalFoodCount();
+			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
+			SynchronizeReceiptObject(Container);
 			return accepted;
+		}
+
+		private bool TryStoreOneExact(GameObject Container, string Blueprint)
+		{
+			if (!GameObject.Validate(Container) || Container.Inventory == null) return false;
+			GameObject food = null;
+			try
+			{
+				food = GameObject.Create(Blueprint);
+				if (!KingdomOrdinaryFoodAuthority.IsEdible(food) || food.Count != 1)
+				{
+					string cleanupFailure;
+					if (GameObject.Validate(food)
+						&& KingdomOrdinaryFoodAuthority.TryCustodyAvailable(food,
+							out cleanupFailure)) food.Obliterate();
+					return false;
+				}
+				string identity = food.ID;
+				if (string.IsNullOrEmpty(identity)) return false;
+				Container.Inventory.AddObject(food, null, Silent: true, NoStack: true);
+			}
+			catch { }
+			string failure;
+			return GameObject.Validate(food) && food.Count == 1 && food.Blueprint == Blueprint
+				&& food.InInventory == Container && food.CurrentCell == null
+				&& KingdomOrdinaryFoodAuthority.IsEdible(food)
+				&& KingdomOrdinaryFoodAuthority.TryCustodyAvailable(food, out failure);
+		}
+
+		private void RefreshPhysicalFoodCount()
+		{
+			long physical = 0L;
+			for (int i = 0; i < Larders.Count; i++) physical += HeldIn(Larders[i]);
+			FoodStored = physical > int.MaxValue ? int.MaxValue : (int)physical;
 		}
 
 		/// <summary>

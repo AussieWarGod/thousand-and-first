@@ -2,14 +2,16 @@
 
 *Canonical product direction, v1 boundary, and the rules this mod holds itself to.*
 
-**Revision: 2026-08-27.** This is the canonical product truth, not a release receipt or schedule.
-Accepted scope remains accepted even when implementation or human evidence is incomplete. The
-labels below keep those questions separate:
+**Revision: 2026-08-29.** This is the canonical product truth, not a release receipt or schedule.
+The author reopened every positive direction on 2026-08-27. Older `AUTHOR-DEFERRED`, positive
+`DEFERRED`, “later”, and “post-v1” labels are superseded by the
+[live un-deferral ledger](docs/V1-UNDEFERRAL.md). Accepted scope remains
+accepted even when implementation or human evidence is incomplete. The labels below keep those
+questions separate:
 
 - **`SHIP`** — accepted, bounded v1 scope. Its row says whether it is implemented, has an open
   implementation gap, or awaits evidence.
-- **`AUTHOR-DEFERRED`** — a positive direction deliberately outside v1 until the author reopens
-  that exact scope.
+- **Active gap** — accepted positive v1 work whose implementation or named evidence is still open.
 - **`REJECTED`** — a shape incompatible with a controlling product law. It is not hidden debt.
 - **Evidence/manual gate** — implementation exists, but source tests or compilation cannot prove
   its native behavior, appearance, usability, accessibility, performance, or compatibility.
@@ -89,6 +91,11 @@ Resheph's harborage, a young people finding a home. But Qud's nature is that any
 playable, and the system does not judge. The *world* does, through factions that already have
 opinions and a chronicle that records what you did in two competing tellings.
 
+Architecture is not ideology. A city answers its ground, available material, technology, creed,
+and builders, so two cities of one realm may look unlike each other without an automatic dissent
+meter. Conflict needs a caused creed, relationship, decision, or witnessed incident; different
+roofs alone never manufacture a grievance.
+
 **Water is covenant.** It is the currency, the greeting, and the social fabric of the setting,
 so it is the spine of the settlement: what founds it, what limits it, what threatens it, and
 what everything is ultimately paid in.
@@ -111,6 +118,9 @@ what you cannot be dealt is a loss nobody ever warned you about. Nothing anywher
 on a timer, because nothing needs to be: what bounds
 the worst of an absence is the level the works honestly carry, and the floor below that is a
 camp. You come home to a report of what happened, not an inspection.
+
+**A warned abstract brink may resolve during absence; an unwitnessed physical loss, casualty, or
+conquest may not.**
 
 **Loss writes chronicles, not game-overs.** The settlement is woundable and never deletable.
 Raids take water and sometimes people; drought drives settlers away; districts can fail. All
@@ -152,9 +162,18 @@ stable typed lot identity, not an abstract building bonus and not the building i
 behavior comes from one authored, inspectable plan with an exact footprint, entrances, fixtures,
 palette, and tier map. The plan may evolve on the same lot when an explicit transition permits
 it. Ordinary retype or resize uses fresh siting and a new lot identity. The rite-owned civic heart
-is the explicit exception: its S basin → M waterstone → L moot → XL court growth preserves one
-LotId. Relocating yielding lots for a later heart rung, and hosted plots inside an arcology, remain
-`AUTHOR-DEFERRED`. Stage/tier, knowledge or technology, physical materials, infrastructure,
+is the explicit exception: its S basin → M waterstone → L moot → XL court → hosted arcology growth
+preserves one LotId. The final shell is one capital/realm authority around that exact court. Two
+fixed authority slots retain at most the current realm and its one archived exiled realm, so
+refounding cannot grow save keys without bound. It hosts persistent vanilla Interior zones and a
+bounded registry of receipted lots; hosted lots spend
+no surface plot, load no remote zone, and simulate no unloaded actor. When a later heart rung needs
+occupied ground, its ring call may offer a complete plan for only the settlement-raised lots already
+marked yielding. The ordinary deterministic layout scorer chooses receiving ground (with lawful
+founder override); one original whole lot moves at a time after its labour-only frame completes,
+preserving the same LotId, objects, architecture, contents, residents, staffing, work, wear, and
+declared networks. It spends no water or material and acts only after founder consent. Stage/tier,
+knowledge or technology, physical materials, infrastructure,
 capable labour, style, creed, and other authored triggers may open a change. Missing gates refuse
 before cost and name what is missing. The ruling record is
 [Building catalogue brief](_notes/BUILDING-CATALOGUE-BRIEF.md#plots-are-the-unit-of-building),
@@ -172,8 +191,21 @@ ethnic stat packages or a parallel city simulation. See the
 [materials and craft law](_notes/ARCHITECTURE-POLISH-CONTRACT.md#7-materials-and-craft-rungs)
 and [creed-gate ruling](_notes/BUILDING-CATALOGUE-BRIEF.md#addendum-16-2026-08-22--styles-and-creed-gated-building-ruled-author-answer-to-q3).
 Current presentation is vanilla-art/glyph-first. Original art is permitted when it meets the
-[asset provenance, human-revision, fallback, and native-review policy](ASSET_PROVENANCE.md); it is
-not required to make the architecture structurally distinct.
+[asset provenance, human-revision, fallback, and native-review policy](docs/ASSET_PROVENANCE.md); it is
+not required to make the architecture structurally distinct. Current runtime wiring deliberately
+uses 84 verified vanilla tile references and zero custom runtime bitmap paths. Structural breadth
+is 141 building records, 131 plotted building plans, 86 palettes, 514 maps, 356 plans, 359 exact
+bindings, 408 tiers, 530 variants, and 2,120 deterministic goldens; those static facts do not sign
+native appearance or usability.
+
+**Assent is a witnessed civic resource, not a faction-wide switch.** The assenting moot appears
+only in the currently seated city's derived catalogue when that city holds assent research, the
+founder carries Chavvah's rite, and claimed surface ground lies cardinally beside the Moon Stair.
+That observation is never permanent knowledge. One exact finished moot records at most six named
+resident assents and six named exemptions. Only currently valid exact assenting bodies strengthen
+its native ambient ward; every granted exemption spends one voice and its exact body may refuse
+the ambient effect. Damage, absence, departure, strike, secession, or lost prerequisites suspend
+or weaken the projection without changing NormCore or global faction state.
 
 **Food/water availability is physical; city bonuses are earned.** Fresh water sits in dedicated
 vessels. Cultivation begins with seed and authored crop rows. Food enters through bounded foraging,
@@ -188,43 +220,46 @@ specific match or admission and name the refusal. Plain food, scraps, and empty 
 extra penalty beyond the explicit scarcity lane, and stocked ingredients give no indefinite aura.
 
 **Logistics uses one routing substrate and real routes.** The v1 logistics substrate has frozen
-central plans, nearest-holder proofs, exact multi-zone itineraries, city-local porters, a two-city
-water manifest, and trade caravans. Each cargo transaction has one owning receipt; the shared
+central plans, nearest-holder proofs, exact multi-zone itineraries, city-local porters, a bounded
+intercity water manifest whose three-city menu offers both non-seat destinations, and trade
+caravans. Each cargo transaction has one owning receipt; the shared
 routing substrate does not become a parallel cargo authority. Stable records answer where cargo
 is, whose custody it is in, and when a body should render; actors do not literally walk unloaded
-world tiles. Stores remain settlement- and zone-local rather than a pooled realm workshop. One
-accepted v1 connection is still missing:
-[ordinary construction funding](Growth/KingdomConstruction.Funding.cs) directly
-uses the [zone-local material reservation](Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs);
-it does not yet mint a central routed input job from a nearer stockpile in another zone. That is
-a **`SHIP` implementation gap**, not an `AUTHOR-DEFERRED` feature and not
-permission for remote spending. Until repaired, construction must refuse when the exact local
-stock is absent. Current implementation and proof status belong to
+world tiles. Stores remain settlement- and zone-local rather than a pooled realm workshop.
+Ordinary construction funding now mints one central construction-input job when exact local stock
+is absent: the job freezes nearest lawful water/material custody, itinerary, carrier, landing,
+debit, rollback, recovery, and master-pause authority before work can begin. It never licenses a
+remote debit or pooled stock. This is implemented at code scope; integrated conservation,
+interruption, and native evidence remains an active gate. Current proof status belongs to
 [STATUS](docs/STATUS.md), the [brief audit](_notes/BRIEF-IMPLEMENTATION-AUDIT.md), and the
 [contract/runtime reconciliation](_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md).
 
 ## Where it stands
 
 **Implemented at code/content scope.** Founding by rite, including ruin reclamation, plus
-covenants with living villages; two distinct cities under one realm; horizontal and vertical
+covenants with living villages; a seat and up to two non-seat cities under one realm; horizontal and vertical
 claims; roads, shafts, districts, reserved typed lots, exact authored building plans and tier
 maps, typed materials, power, wear, and repair. Water and food are separate physical flows:
 dedicated vessels, fetching, seeds, authored crop rows, larders, daily rations, meals, mills,
 industry, scarcity, and cross-zone delivery. Production runs on world time and named labour.
-Central logistics, trade, porters, conduits, and the bounded intercity manifest conserve their
-owned cargo through explicit records and routes, subject to the construction-input gap above.
+Central logistics, routed construction inputs, trade, porters, conduits, and the bounded intercity
+manifest conserve their owned cargo through explicit records and routes.
 Settlers have origins, homes, posts, creeds, conversations, offices, petitions, rites, and
 funerals. Style tags, creed gates, material bills, research, certified machinery, laboratories,
-grafts, the becoming annexe, the crown, arcology foundation/surface prototype, and mirror-gates
+grafts, the becoming annexe, the crown, and mirror-gates
 extend the city into Qud's adventuring systems. Raids, brinks, dissent, exile and return,
 succession, and optional cross-world inheritance make losses persistent without deleting the
 realm. The Charter, two-register chronicle, city book, asks board, homecoming report, debug wishes,
 and extension API expose the same authority rather than parallel summaries.
 
-**Open v1 implementation gaps.** Routed construction inputs across zones, described above, are
-not wired. The existing route planner and material debit are real substrate, but their coexistence
-does not prove the missing adapter. The accepted purposeful-megastructure model also remains
-partial. v1's two-city cap requires a portfolio of compatible pairs, not a three-city dependency
+**Code-scope closure ledger; evidence and arcology review still open.** Reopened positive work and its exact
+implementation/evidence boundary are indexed in the
+[live un-deferral ledger](docs/V1-UNDEFERRAL.md). Every surviving non-arcology experience and polity
+row has a bounded production owner or an expressly ruled stronger supersession; the accepted
+hosted-arcology design remains under active AMENDED 19+ review, with its production, XML/fabric,
+and tests held. Final serialized integration gates follow the final source/project freeze, and
+native/human proof is not inferred from source. The
+purposeful-megastructure model uses a portfolio of compatible pairs, not a three-city dependency
 chain: the first purpose may bootstrap from ordinary works, the second consumes the first's exact
 cargo, and reciprocal cargo activates the first. The exact symmetric five-cycle is Deep-Bore ↔
 Great Foundry ↔ Granary-Colossus ↔ chimeric theatre ↔ becoming annexe ↔ Deep-Bore; there are no
@@ -232,28 +267,57 @@ self-pairs or implied diagonals. Once activated, one exact incoming partner carg
 debit permit one bounded effect and one outgoing cargo, then the operation token changes sides.
 The detailed recipes, receipts, site gates, and architecture floor are controlled by the
 [current paired-purpose contract](_notes/BUILDING-CATALOGUE-BRIEF.md#current-v1-paired-purpose-contract).
-Current code implements only the theatre/annexe trial from ordinary vat/graft or
-smelter/charging inputs. The paired portfolio remains `SHIP` scope requiring runtime operations,
-authored XL sites, conservation and interruption proof, and human validation.
-Hosted/zone-spanning arcology ground stays separately `AUTHOR-DEFERRED`.
+The complete five-edge, ten-direction portfolio now has exact paired authority, initial shell,
+bootstrap, return, paid alternating operations, purpose-specific body engines, conserved cargo,
+and twelve authored XL sites. Its narrow physical-food landing transaction is complete at code
+scope; integrated adversarial fan-in, native interruption/save, and human visual validation remain
+open. Earlier claims that the hosted arcology was implemented are superseded. Its accepted vision
+is unchanged, but implementation is under active AMENDED 19+ review; production, XML/fabric, tests,
+native traversal/interruption/save, and human visual acceptance remain open.
+The yielding-lot heart ring call is implemented at code/content scope: one bounded zone receipt,
+CAS/idempotent sequential handovers, exact object and architecture evidence, rooted interruption
+escrow, obstruction-safe recovery/rollback, and temporary vanilla-art crew frames. Native
+plan/cancellation, every-cut save/load, identity parity, roof continuity, network rejoin, and visual
+acceptance remain open in TESTING 136j.6–136j.10.
 
-Charter succession configuration is also an open `SHIP` gap. Current death succession implements
-seniority, but the founder cannot yet declare or change that custom, configure a chosen resident by
-stable identity, or pay the declared seat consequence. A persistent groomed-designee system is a
-different, `AUTHOR-DEFERRED` idea and is not smuggled into this bounded configuration path.
+Charter succession configuration and grooming are implemented. Seniority remains the default;
+the founder can select an exact resident and preview/pay the declared seat consequence, or nominate,
+replace, revoke, and inspect a groomed designee whose service and schooling proofs are monotone.
+Missing, dead, departed, duplicate, or unready identities fall back only through the disclosed law.
+
+The reopened civic-experience vertical is implemented through separate exact owners: two named
+voices over owner facts, optional remembrance, explicit offices, staffed loci, fixed witness works,
+First Guest choice and optional physical hosting, First Feast practice, curiosity curation, an
+integrated three-return Guest's Feast, evidence-derived site practice, cook vacancy/handoff,
+decision tags, body history, non-custodial artifact recognition, a genuinely sourced delve lead,
+manual communal rite, one joint civic view, shared attention/fairness, and explicit vocation
+services. An attended prepare-save-for-removal state machine fences new work, cleans only exact
+owned projections on visited ground, reports outstanding locators, retires owned faction state,
+and preserves a high-water identity fence. None of these code-scope claims signs native UI,
+accessibility, pacing, fun, performance, save behavior, or absent-mod cleanup.
 
 **Deliberate v1 boundaries.** Claiming ground changes realm/zone metadata and never transfers or
-faction-stamps existing object ownership; realm property and theft law are `AUTHOR-DEFERRED`.
-Authored post/home day shape ships while bespoke idle activities remain `AUTHOR-DEFERRED`.
-Within-realm physical food routing ships; external charter food imports do not. Founder memory
-ships through the owned shrine, Chronicle, and corpse-reading surfaces, while public vanilla
-`sultanHistory` rendering remains `AUTHOR-DEFERRED`. The faction dish is the realm's one recipe
-authority: a competing per-creature `TeachesDish` override is `REJECTED`, while a separately
-authored named-cook recipe may be reconsidered only as `AUTHOR-DEFERRED` scope.
+faction-stamps existing object ownership. Realm property is instead one explicit Charter
+designation over one adjacent, takeable, founder-owned object. A versioned receipt owns only that
+object's native `Physics.Owner` slot, release restores the exact prior value, and divergence
+quarantines rather than guessing. Qud's ordinary ownership warning and help broadcast are the theft
+law. Working-tree source and pure gates exist; native theft/release/save proof remains open.
+Authored post/home day shape and attended station activity cues ship. Posted residents visibly tend,
+sort, craft, maintain, build, watch, or attend a shrine through cosmetic, RNG-free acts that grant
+no stock, progress, skill, experience, or standing; native lived-day proof remains open.
+Within-realm physical food routing, exact Trade-owned polity consignments, and loaded
+food/water-backed hospitality ship at code scope under separate conserved authorities. Final
+integration and native proof remain open. Founder memory ships through the owned
+shrine, Chronicle, corpse-reading surfaces, and one optional presentation-only custom entity/event
+in vanilla `sultanHistory`. That entity is never a Sultan/cult/village candidate; its exact,
+non-tradable and non-forgettable journal note has a durable one-world receipt. The faction dish
+remains realm authority: competing arbitrary per-creature overrides are `REJECTED`, while one exact
+named cook per city teaches a separately authored alternate recipe and retains explicit
+vacancy/predecessor/handoff truth.
 
 **Open evidence/manual gates.** Exact current static and source-suite receipts live in
 [STATUS](docs/STATUS.md) rather than this product contract. The latest retained hosted checkpoint is
-`b049c17`: repository audit, Ubuntu source suite, and Windows source suite are green for those exact
+`d285129`: repository audit, Ubuntu source suite, and Windows source suite are green for those exact
 bytes; later working-tree changes remain unsigned. The latest retained native founding,
 single-gallery, save/reload, and clean-log smoke belongs only to `19fb8ee`. Neither older receipt
 signs the current working tree's native behavior. The current-revision complete building gallery
@@ -267,26 +331,35 @@ those gates. Exact live results and blockers are maintained in [STATUS](docs/STA
 
 This matrix applies the vocabulary at the top of this file. Every `SHIP` cell is accepted v1
 scope at the stated boundary; its evidence column says what is implemented and what remains to be
-proved. `AUTHOR-DEFERRED` and `REJECTED` must not be inferred from nearby substrate.
+proved. The author reopened every positive polity direction on 2026-08-27. Reopening changes
+scope, not evidence: implemented source/staged adapters remain subject to the native/human gates
+named below. `REJECTED` shapes must not be inferred from nearby substrate.
 
 | Idea | v1 disposition and exact boundary | Current runtime / evidence owner |
 |---|---|---|
-| Prior kingdoms recur | `SHIP`: bounded prior-realm inheritance lets one opted-in sealed realm return as an inherited site, layout, condition, cairn, and apocryphal history. `AUTHOR-DEFERRED`: living successor polity. | **Implemented at site/history scope; native fidelity gate open.** Inheritance seal/archive/site protocol in [TESTING](TESTING.md#pass-0--cross-run-inheritance-consent). |
-| Prior NPC appears | `AUTHOR-DEFERRED`: one successor, namesake, claimant, or envoy. `REJECTED`: continuation of the old live actor/object graph. | **Missing by design.** Old-actor exclusion belongs to inheritance tests; no living adapter exists. |
-| Rival kingdom | `AUTHOR-DEFERRED`: at most one legacy-derived live rival polity or partner as first experiment. | **Missing by design.** Future polity identity/profile contract; current raids and ruins are not rivals. |
-| War between opposites | `SHIP`: current settlement raids require authored grievance, remedies, and witnessed contact. `AUTHOR-DEFERRED`: polity conflict. `REJECTED`: creed/standing/opposition alone starts war. | **Implemented at raid scope; native encounter gate open.** Threat/raid lifecycle and native raid protocol. |
-| Polity-shaped NPC levels, bodies, mutations, skills, gear, and relationships | `SHIP`: current residents keep provenance/role identity and authored raid profiles bind roster/tactics/equipment. `AUTHOR-DEFERRED`: one reusable successor/rival phenotype revision. | **Implemented at resident/raid-profile scope; broader profile absent.** Resident identity and raid-profile registry. |
-| Scarce named people | `SHIP`: bounded named residents, notables, office holders, causal guests, and defenders. `AUTHOR-DEFERRED`: external-polity anchor/promotion budget. | **Implemented at current-city scope; human recall gate open.** Resident/office/guest identity plus dense-city protocol. |
-| Unnamed guards, parties, diplomats, or armies | `SHIP`: existing purpose-specific raid bands, merchants/caravans, plain guests, and porters on separate bounded lifecycles. `AUTHOR-DEFERRED`: generalized guards/patrols, diplomats/emissaries, and route cohorts. `REJECTED`: persistent strategic armies. | **Implemented only on separate existing lanes.** Raid/trade/guest/porter lifecycle, cleanup, and cap tests. |
-| Actual trade across tiles | `SHIP`: trade charters/caravans and the two-city water manifest conserve custody between stable endpoints. `AUTHOR-DEFERRED`: prior/rival route graph, correspondence, and visible endpoint parties. `REJECTED`: actors walk unloaded tiles. | **Implemented at charter/two-city-manifest scope; native routing gate open.** Trade/manifest/job registry and conservation/save protocol. |
-| Kingdoms clash | `SHIP`: current raid waits for fresh physical contact. `AUTHOR-DEFERRED`: prior/rival/current polity clash. `REJECTED`: offscreen conquest or casualties. | **Implemented only for founder-realm raid incidents.** Threat/raid no-pre-contact-plunder and witness evidence. |
-| Population without naming a crowd | `SHIP`: named citizens coexist with bounded unnamed/transient bodies that never enter citizen memorial authority. `AUTHOR-DEFERRED`: unified external-polity population presentation. | **Implemented on existing lanes; generalized presentation absent.** Body caps/cleanup plus dense-city recognition protocol. |
-| Multiple-settlement traffic | `SHIP`: two-city cap, conserved water manifest, city-local porters, and caravans. `AUTHOR-DEFERRED`: anonymous visible intercity traffic and correspondence. | **Implemented at semantic two-city cargo scope; generalized visible traffic absent.** Manifest/porter/trade isolation, routing, save, and performance gates. |
-| Food and water | `SHIP`: separate physical water custody plus seeds, authored crops, larders, daily ration/meal transactions, and industry. `AUTHOR-DEFERRED`: a future witnessed meal or exact consignment may express a polity relationship only after its own polity hospitality/correspondence transaction is explicitly reopened and authored; today's civic meal is not that transaction, and empty stock never blocks ordinary diplomacy. `REJECTED`: indefinite passive bonus merely because ingredients remain stocked. | **Implemented; native full-play gate open.** Food/water acceptance in [TESTING](TESTING.md) and [API](docs/API.md). |
+| Prior kingdoms recur | `SHIP`: one opted-in sealed legacy may return as inherited site and one autonomous successor/claimant polity. | **Implemented at code scope.** Foundation imports one latest eligible snapshot under fresh ids; exile ends current/imported semantic authority, tombstones exact owned factions, and return restores byte-identical authority or refound imports bounded institutional facts under fresh ids. Native site/person recognition and every-cut proof remain open. |
+| Prior NPC appears | `SHIP`: one regenerated successor, namesake, claimant, or legacy envoy. `REJECTED`: continuation of the old live actor/object graph. | **Implemented at code scope.** Fresh current-run faces use frozen profile/body/gear receipts and exact cleanup. No old actor id, inventory, membership, mutation rank, quest, reputation, or personal state crosses. Native dialogue/readability/death/cleanup proof remains open. |
+| Rival kingdom | `SHIP`: at most one substantive live legacy-derived rival or partner first. | **Implemented at code scope.** One imported rival/partner owns faction projection, relation, typed profile revisions, caused contact, bounded traffic, tombstone/recovery, and retirement. Native coexistence/recovery/readability proof remains open. |
+| War between opposites | `SHIP`: caused grievance → terms/counteroffer/truce → explicit escalation → finite witnessed conflict. `REJECTED`: creed, standing, or opposition alone starts war. | **Implemented at code scope.** Exact refusal, broken pact, resource decline, witnessed support/harm, trespass, and loaded death may ingest one grievance; terms, counteroffer, truce, intervention, visible conclusion, aftermath, and consented escrow are separately receipted. Native breadth/save proof remains open. |
+| Polity-shaped NPC levels, bodies, mutations, skills, gear, and relationships | `SHIP`: immutable profile revisions derive bounded expression from concrete facts, never ethnic packages. | **Implemented at code scope.** Typed concrete fact producers append immutable revisions by CAS; cohort plans pin exact blueprint, level/stats, skills, bounded mutations, technology/material-legal gear, role, faction, and signature. Native blind-recognition/value/loot/fact-change proof remains open. |
+| Scarce named people | `SHIP`: bounded external figures use one cohort face at most plus deed, office, naming, or promotion causes; never cast quotas. | **Implemented at code scope.** Foundation, exact deed promotion, and resident-successor bridge are causal; civic office remains title-only; every cohort has at most one face and deterministic promotion/retirement. Native readability/recall proof remains open. |
+| Unnamed guards, parties, diplomats, or armies | `SHIP`: finite guard, patrol, trader, envoy, courier, warband, and migrant cohorts with distinct verbs. `REJECTED`: persistent strategic armies. | **Implemented at code scope.** All seven purposes have distinct bounded schedulers. W0 reserves shared bodies before semantic/projection work; exact distinct route-reachable loaded placement, recursive custody, gear receipts/foreign transfer, removal witnesses, and fail-closed moved/copied-body handling own physical life. A death becomes polity evidence only through the visible `EarlyBeforeDeathRemoval` → `BeforeDestroy` → `OnDestroy` chain. Exact cleanup precedes the sole W0 release. Native each-role/save/anti-farm proof remains open. |
+| Actual trade across tiles | `SHIP`: semantic route topology, conserved manifests/correspondence, and optional endpoint parties. `REJECTED`: actors walk unloaded tiles. | **Implemented at code scope.** Deterministic realm dispatch advances semantic routes unloaded; Trade alone owns physical consignment intent/debit/custody/landing/retention; endpoint parties exist only on eligible loaded ground. Native every-cut/three-city/UI proof remains open. |
+| Kingdoms clash | `SHIP`: finite current/rival/prior clashes resolve at fresh witness, or through a separately consented exact escrow. `REJECTED`: offscreen conquest or casualties. | **Implemented at code scope.** Finite plans freeze no result; exact fresh loaded intervention/body/death facts may commit one conclusion and aftermath. Separately consented escrow freezes/refunds exact custody. No absence authors a casualty, conquest, or theft. Native event-order/save proof remains open. |
+| Population without naming a crowd | `SHIP`: bounded transient external bodies remain visibly non-citizen while named identity stays scarce. | **Implemented at code scope.** Shared sixteen-body/seven-per-request authority, explicit polity/cohort/role marks, scarce face, deterministic direct-record fallback, bounded aggregates, and exact retirement prevent modal/body floods. Native dense accessibility/performance proof remains open. |
+| Multiple-settlement traffic | `SHIP`: bounded route endpoints generate correspondence and anonymous visible traffic without pooling economies. | **Implemented at code scope.** Per-settlement deterministic dispatch records, current/rival traffic choice, three-city endpoint resolution, correspondence, fairness, no-backlog option floors, and direct fallback are wired. Stores remain local. Native simultaneous traffic/seat-order/performance proof remains open. |
+| Food and water | `SHIP`: physical crops, larders, meals, industry, and water continue; a witnessed meal or exact consignment may express a relationship through its own transaction. `REJECTED`: indefinite passive benefit merely because ingredients remain stocked. | **Implemented at code scope.** Loaded hospitality uses exact intent-first physical source/debit/custody and one terminal relationship conclusion; Trade consignments classify zero/partial/full/failed delivery without minting stock. Final integrated fan-in and native custody/UI proof remain open. |
 
-Moving an `AUTHOR-DEFERRED` row into v1 requires an explicit author ruling, an owning
-contract/adapter, bounded tests, a numbered native protocol, and current-build human evidence.
-Existing ruins, raids, caravans, or manifests never silently prove their deferred expansions.
+The semantic foundation is persisted as `KingdomSystem.PolityLedger`: canonical bounded records,
+relations, immutable profiles, routes, fronts, grievances, cohorts, figures, incidents, projection
+receipts, options, and compaction evidence under a strict current/prior/future wire boundary. It is
+the authority consumed by the bounded adapters above, not permission to infer a native result.
+Existing ruins, raids, caravans, or manifests never silently prove their expansions.
+
+`KingdomSystem.PolityTransition` owns the separate crash receipt for exile, return, and refounding.
+Its rollback ledger bytes exist only while exact return remains possible; a successful refound
+destroys that escrow and retains only bounded legacy facts plus old faction tombstone evidence.
+No actor id crosses this seam, and no faction id may be reused by the refounded realm.
 
 **Not the v1 model.** A live actor/object graph, inventory, personal quest or reputation state,
 and actor faction membership never cross saves. Bounded faction identity facts needed to tell the
@@ -295,10 +368,9 @@ Ideological opposition alone never creates war. TAF does not keep armies or cara
 unloaded tiles, resolve conquest/casualties unseen, simulate a Dwarf-Fortress-scale background
 world, or pool every settlement's stores. Those shapes are rejected because they violate Qud's
 physical authority, bounded attention, causal grievance, and no-unseen-loss laws—not because they
-are unfinished shortcuts. Successor/namesake polities, any legacy rival, diplomats/emissaries,
-generalized visible traffic, polity clashes, a third owned city, the heart relocation verb, and
-fully hosted zone-spanning arcology ground remain author-deferred until separately reopened. The
-current implementation-limit list is in
+are unfinished shortcuts. Every positive polity direction above is accepted v1 work; each row's
+remaining adapter and evidence clauses stay open until they close. The current
+code/evidence boundary is in
 [TESTING.md](TESTING.md#current-implementation-limits-and-v1-scope-gates).
 
 ## For people who want to build on it
@@ -325,12 +397,14 @@ people run this alongside a hundred other mods.
 
 ---
 
-*Revision note, 2026-08-27: reconciled reserved evolving lots, architecture/creed/material truth,
-physical food/water availability and bounded city bonuses, current logistics plus routed
-construction, two-city purposeful-pair, and succession-configuration gaps, bounded prior-realm
-inheritance, native ownership preservation, and author-deferred live rival-polity scope against
+*Revision note, 2026-08-28: reconciled reserved evolving lots, architecture/creed/material truth,
+physical food/water availability and bounded city bonuses, routed construction, purposeful pairs,
+succession configuration, bounded prior-realm inheritance, native ownership preservation, every
+reopened bounded civic-experience owner, the complete bounded polity adapters, explicit realm
+retirement, and the author's full positive-scope reopening against the
+[un-deferral ledger](docs/V1-UNDEFERRAL.md),
 [STATUS](docs/STATUS.md), the [brief audit](_notes/BRIEF-IMPLEMENTATION-AUDIT.md), and the
-[contract/runtime reconciliation](_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md). No
-deferred research was promoted and no open manual gate was converted into implementation evidence.*
+[contract/runtime reconciliation](_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md). Reopening
+changes scope, never evidence; no open manual gate is presented as proved.*
 
 *Live and drink.*

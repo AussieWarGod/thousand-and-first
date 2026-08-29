@@ -136,6 +136,15 @@ namespace ThousandAndFirst
 		private static bool PrepareArrivalWaterLegs(KingdomGrowthBook growth,
 			KingdomGrowthOperation operation, Zone zone, KingdomSurvey survey, int amount)
 		{
+			if (amount <= 0) return true;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string leaseFailure;
+			int available;
+			if (!KingdomConstructionInputLeaseAuthority.TryCapture(
+				out leases, out leaseFailure)
+				|| !KingdomConstructionInputLeaseAuthority.TryWaterAllowance(
+					leases, survey, true, out available, out leaseFailure)
+				|| available < amount) return false;
 			int remaining = amount;
 			HashSet<LiquidVolume> seen = new HashSet<LiquidVolume>();
 			for (int i = 0; i < survey.Stores.Count && remaining > 0; i++)
@@ -145,6 +154,7 @@ namespace ThousandAndFirst
 				if (vessel == null || !seen.Add(vessel) || !GameObject.Validate(owner)
 					|| !ReferenceEquals(owner.GetPart<LiquidVolume>(), vessel)
 					|| owner.GetIntProperty("KingdomStores") != 1
+					|| KingdomConstructionInputLeaseAuthority.IsLeased(leases, owner)
 					|| owner.CurrentCell == null || !ReferenceEquals(owner.CurrentZone, zone)
 					|| !KingdomLiquids.HasFreshWater(vessel) || vessel.MaxVolume <= 0) continue;
 				int take = Math.Min(remaining, vessel.Volume);

@@ -98,7 +98,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void BoundedEvictionAfterHashMatchesExactResultingList()
+		public void BoundedEvictionPreservesConstitutionalRootAndMatchesHash()
 		{
 			List<string> values = new List<string>();
 			for (int i = 0; i < KingdomChronicleReceiptRules.MaxEntries; i++)
@@ -108,7 +108,9 @@ namespace ThousandAndFirst.Tests
 				"tail", out predicted));
 			KingdomChronicleReceiptRules.AppendBounded(values, "tail");
 			Assert.AreEqual(KingdomChronicleReceiptRules.MaxEntries, values.Count);
-			Assert.AreEqual("entry-1", values[0]);
+			Assert.AreEqual("entry-0", values[0],
+				"the founding/root milestone is not ordinary FIFO news");
+			Assert.AreEqual("entry-2", values[1]);
 			Assert.AreEqual("tail", values[values.Count - 1]);
 			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", values,
 				out actual));

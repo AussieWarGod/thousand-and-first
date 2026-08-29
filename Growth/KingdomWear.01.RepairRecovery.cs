@@ -184,7 +184,7 @@ namespace ThousandAndFirst
 			return System != null && Z != null && Job != null
 				&& Job.Route == KingdomConstructionRoute.WearRepair
 				&& KingdomConstruction.Owns(System, Z, Job)
-				&& GameObject.Validate(Work) && Work.ID == Job.SubjectId
+				&& GameObject.Validate(Work) && Work.IDIfAssigned == Job.SubjectId
 				&& Work.CurrentZone == Z && Work.CurrentCell != null
 				&& Work.CurrentCell.ParentZone == Z
 				&& KingdomConstruction.HasReceipt(Work, Job);

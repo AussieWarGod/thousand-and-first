@@ -47,38 +47,55 @@ namespace ThousandAndFirst
 		public static KingdomCrewRules.CrewOutcome[] AssignWorks(IList<GameObject> Works,
 			KingdomCrewRules.SettlerCapability[] Pool, IList<GameObject> Settlers = null)
 		{
-			int n = (Works != null) ? Works.Count : 0;
+			KingdomCrewRules.CrewDemand[] demands = DemandsOf(Works);
+			int[,] extensionAffinities = ExtensionAffinities(demands, Settlers,
+				Pool == null ? 0 : Pool.Length);
+			return KingdomCrewRules.AssignCrew(Pool, demands, extensionAffinities);
+		}
+
+		/// <summary>Reserved form of <see cref="AssignWorks"/>. Invalid or duplicate exact
+		/// reservations publish no partial result and return false.</summary>
+		public static bool TryAssignWorks(IList<GameObject> Works,
+			KingdomCrewRules.SettlerCapability[] Pool, IList<GameObject> Settlers,
+			IList<KingdomCrewRules.CrewReservation> Reservations,
+			out KingdomCrewRules.CrewOutcome[] Outcomes)
+		{
+			KingdomCrewRules.CrewDemand[] demands = DemandsOf(Works);
+			int[,] extensionAffinities = ExtensionAffinities(demands, Settlers,
+				Pool == null ? 0 : Pool.Length);
+			return KingdomCrewRules.TryAssignCrewReserved(Pool, demands, extensionAffinities,
+				Reservations, out Outcomes);
+		}
+
+		private static KingdomCrewRules.CrewDemand[] DemandsOf(IList<GameObject> Works)
+		{
+			int n = Works != null ? Works.Count : 0;
 			KingdomCrewRules.CrewDemand[] demands = new KingdomCrewRules.CrewDemand[n];
 			for (int i = 0; i < n; i++)
 			{
 				GameObject work = Works[i];
-				int headcount = work.GetIntProperty("KingdomStaffNeeded");
-				bool threshold = work.GetIntProperty("KingdomThresholdManning") == 1;
 				List<KindAmount> needs = NeedsOf(work);
 				string kind = null;
+				int threshold = 0;
+				for (int k = 0; k < KingdomCrewRules.KnownKinds.Length; k++)
+				{
+					int wanted = KingdomCrewRules.ThresholdOf(needs,
+						KingdomCrewRules.KnownKinds[k]);
+					if (wanted <= 0) continue;
+					kind = KingdomCrewRules.KnownKinds[k];
+					threshold = wanted;
+					break;
+				}
 				string workKind = null;
 				string buildKey = work.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
 				if (KingdomData.TryGetBuilding(buildKey, out KingdomRules.BuildEntry entry))
-				{
 					workKind = entry.Category;
-				}
-				int capabilityThreshold = 0;
-				for (int k = 0; k < KingdomCrewRules.KnownKinds.Length; k++)
-				{
-					int need = KingdomCrewRules.ThresholdOf(needs, KingdomCrewRules.KnownKinds[k]);
-					if (need > 0)
-					{
-						kind = KingdomCrewRules.KnownKinds[k];
-						capabilityThreshold = need;
-						break;
-					}
-				}
-				demands[i] = new KingdomCrewRules.CrewDemand(headcount, threshold, kind,
-					capabilityThreshold, workKind);
+				demands[i] = new KingdomCrewRules.CrewDemand(
+					work.GetIntProperty("KingdomStaffNeeded"),
+					work.GetIntProperty("KingdomThresholdManning") == 1,
+					kind, threshold, workKind);
 			}
-			int[,] extensionAffinities = ExtensionAffinities(demands, Settlers,
-				Pool == null ? 0 : Pool.Length);
-			return KingdomCrewRules.AssignCrew(Pool, demands, extensionAffinities);
+			return demands;
 		}
 
 		/// <summary>Draws one temporary raising gang through the same capability, identity, and

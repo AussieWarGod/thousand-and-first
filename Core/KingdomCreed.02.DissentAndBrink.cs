@@ -34,12 +34,16 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z)
 		{
-			if (!Enabled || System == null || !System.Founded || Z == null || System.SettlementCount < KingdomSettlement.MaxSettlements || !System.ClaimedZones.Contains(Z.ZoneID))
+			if (!Enabled || System == null || !System.Founded || Z == null ||
+				System.SettlementCount < 2 || !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
 			long timeTicks = The.Game.TimeTicks;
 			Reconcile(System);
+			if (System.Dissent == 0 && !KingdomBrink.CityStands()) ClearDissentPair(System);
+			if (!EnsureDissentPair(System, out KingdomCreedPairCity first,
+				out KingdomCreedPairCity second)) return;
 			// A realm that has only just acquired its second city has no checkpoint yet. Starting
 			// one costs nothing rather than charging the whole absence cap on the first pass.
 			if (System.LastDissentTick <= 0)
@@ -47,15 +51,15 @@ namespace ThousandAndFirst
 				System.LastDissentTick = timeTicks;
 				return;
 			}
-			string here = SeatCreed(System);
-			string there = AwayCreed(System);
+			string here = first.Creed;
+			string there = second.Creed;
 			int hostility = HostilityBetween(here, there);
 			if (KingdomBrink.CityStands())
 			{
 				// Nothing accrues past a brink, and the checkpoint is deliberately NOT advanced:
 				// while the brink stands, LastDissentTick is the day the realm reached it, which
 				// is what the announcement quotes and what the arrest resets.
-				RunSecessionWindow(System, Z, hostility, timeTicks);
+				RunSecessionWindow(System, Z, first, second, hostility, timeTicks);
 				return;
 			}
 			int days = KingdomRules.ElapsedDays(timeTicks - System.LastDissentTick);
@@ -66,7 +70,7 @@ namespace ThousandAndFirst
 			}
 			int before = System.Dissent;
 			System.Dissent = KingdomCreedRules.AccrueDissent(before, hostility, days);
-			Announce(System, here, there);
+			Announce(System, first, second);
 			if (KingdomCreedRules.ClassifyTemper(System.Dissent) != CityTemper.Secession)
 			{
 				return;
@@ -76,7 +80,7 @@ namespace ThousandAndFirst
 			long reached = KingdomBrinkRules.CrossingTick(
 				timeTicks - (long)days * KingdomRules.TicksPerDay, timeTicks, before,
 				KingdomCreedRules.DissentBreaking, KingdomCreedRules.DissentPerDay(hostility));
-			RecordSecessionBrink(System, Z, here, there, reached, timeTicks);
+			RecordSecessionBrink(System, Z, first, second, reached, timeTicks);
 		}
 
 		// The realm reaches the breaking point: recorded, warned once by name with the honest
@@ -87,14 +91,16 @@ namespace ThousandAndFirst
 		// The warning is PUSHED (Addendum 10(a)). It goes to the founder wherever they stand, and
 		// it names the arrest, because from here the window is the world's: nine days of it, and
 		// then the city goes whether anybody came back or not.
-		private static void RecordSecessionBrink(KingdomSystem System, Zone Z, string HereCreed, string ThereCreed, long ReachedTick, long NowTick)
+		private static void RecordSecessionBrink(KingdomSystem System, Zone Z,
+			KingdomCreedPairCity First, KingdomCreedPairCity Second, long ReachedTick,
+			long NowTick)
 		{
 			if (!KingdomBrink.RecordCity(System, ReachedTick))
 			{
 				return;
 			}
 			KingdomBrink.MarkCityWarned(NowTick);
-			SayTheCityBrink(System, Z, HereCreed, ThereCreed, NowTick);
+			SayTheCityBrink(System, Z, First, Second, NowTick);
 		}
 
 		// The realm's window, judged against the world's clock, and the arrest that ends it. Rule
@@ -105,13 +111,13 @@ namespace ThousandAndFirst
 		// What absence cannot do is start the clock. A realm carrying a brink nobody was ever
 		// warned of (a save from before the word went out, a record made by a path that could not
 		// speak) is warned here and gets the whole window from here.
-		private static void RunSecessionWindow(KingdomSystem System, Zone Z, int Hostility, long NowTick)
+		private static void RunSecessionWindow(KingdomSystem System, Zone Z,
+			KingdomCreedPairCity First, KingdomCreedPairCity Second, int Hostility,
+			long NowTick)
 		{
-			string here = SeatCreed(System);
-			string there = AwayCreed(System);
 			string leaver;
 			string kept;
-			NameTheLeaver(System, here, there, out leaver, out kept);
+			NameTheLeaver(First, Second, out leaver, out kept);
 			if (Hostility <= 0 || System.Dissent < KingdomCreedRules.DissentBreaking)
 			{
 				bool wasWarned = KingdomBrink.OfCity(System).Warned;
@@ -128,7 +134,7 @@ namespace ThousandAndFirst
 			}
 			if (KingdomBrink.MarkCityWarned(NowTick))
 			{
-				SayTheCityBrink(System, Z, here, there, NowTick);
+				SayTheCityBrink(System, Z, First, Second, NowTick);
 				return;
 			}
 			if (!KingdomBrink.CityWindowSpent(NowTick))
@@ -155,11 +161,12 @@ namespace ThousandAndFirst
 		// it is about when that is not the one they are in -- and FILES the shared brink note in
 		// the report and the chronicle. Two registers of one warning, said once each, exactly as
 		// this tier has always been told; what changed is that the speech now travels.
-		private static void SayTheCityBrink(KingdomSystem System, Zone Z, string HereCreed, string ThereCreed, long NowTick)
+		private static void SayTheCityBrink(KingdomSystem System, Zone Z,
+			KingdomCreedPairCity First, KingdomCreedPairCity Second, long NowTick)
 		{
 			string leaver;
 			string kept;
-			NameTheLeaver(System, HereCreed, ThereCreed, out leaver, out kept);
+			NameTheLeaver(First, Second, out leaver, out kept);
 			BrinkRecord brink = KingdomBrink.OfCity(System);
 			KingdomBrink.Announce(System, BrinkKind.City, leaver, kept, brink, NowTick,
 				StandsInLeaver(System, Z, leaver), leaver,
@@ -180,14 +187,14 @@ namespace ThousandAndFirst
 		// decision -- KingdomCreedRules.AwayIsTheLeaver decides it again, from the same facts, on
 		// the day itself -- but it is deterministic in exactly those facts, so a founder told
 		// which city is drawing up its own charter is told the truth.
-		private static void NameTheLeaver(KingdomSystem System, string HereCreed, string ThereCreed, out string Leaver, out string Kept)
+		private static void NameTheLeaver(KingdomCreedPairCity First,
+			KingdomCreedPairCity Second, out string Leaver, out string Kept)
 		{
-			string awayName = (System.Away != null) ? System.Away.SettlementName : null;
-			bool awayLeaves = KingdomCreedRules.AwayIsTheLeaver(
-				Feeling(HereCreed, ThereCreed), Feeling(ThereCreed, HereCreed),
-				System.Population, (System.Away != null) ? System.Away.Population : 0);
-			Leaver = awayLeaves ? awayName : System.SeatName;
-			Kept = awayLeaves ? System.SeatName : awayName;
+			bool secondLeaves = KingdomCreedRules.AwayIsTheLeaver(
+				Feeling(First.Creed, Second.Creed), Feeling(Second.Creed, First.Creed),
+				First.Population, Second.Population);
+			Leaver = secondLeaves ? Second.Name : First.Name;
+			Kept = secondLeaves ? First.Name : Second.Name;
 		}
 	}
 }

@@ -96,7 +96,8 @@ namespace ThousandAndFirst.Simulation.City
 			bool preferConstruction, out KingdomHappeningParticipant[] participants)
 		{
 			participants = null;
-			List<GameObject> candidates = ExactResidents(system, zone);
+			List<GameObject> candidates = ExactResidents(system, zone,
+				kind == KingdomPhysicalHappeningKind.CommunalRite);
 			if (preferConstruction)
 			{
 				candidates.Sort(delegate(GameObject a, GameObject b)
@@ -159,13 +160,16 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		private static List<GameObject> ExactResidents(KingdomSystem system, Zone zone)
+		private static List<GameObject> ExactResidents(KingdomSystem system, Zone zone,
+			bool protectCivicRoles)
 		{
 			List<GameObject> result = new List<GameObject>();
 			foreach (GameObject candidate in KingdomSurvey.ObjectsFor(zone))
 			{
 				if (!GameObject.Validate(candidate) || !candidate.IsAlive || candidate.Brain == null
-					|| candidate.IsPlayer() || candidate.IsPlayerLed() || IsStaged(candidate)) continue;
+					|| candidate.IsPlayer() || candidate.IsPlayerLed() || IsStaged(candidate)
+					|| !SafeToStage(candidate)
+					|| protectCivicRoles && ProtectedForCommunalRite(candidate, zone)) continue;
 				int residentId = KingdomResidents.IdOf(candidate);
 				GameObject exact;
 				string bound;
@@ -179,6 +183,34 @@ namespace ThousandAndFirst.Simulation.City
 				return KingdomResidents.IdOf(a).CompareTo(KingdomResidents.IdOf(b));
 			});
 			return result;
+		}
+
+		private static bool ProtectedForCommunalRite(GameObject body, Zone zone)
+		{
+			if (body.GetIntProperty("KingdomKeeper") == 1
+				|| body.GetPart<r_KingdomNamedCook>() != null
+				|| body.GetPart<r_KingdomOfficeProjection>() != null
+				|| KingdomStations.PostOf(body) != 0
+				|| !string.IsNullOrEmpty(body.GetStringProperty(KingdomExpeditions.ResidentJobProperty)))
+				return true;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone);
+			int residentId = KingdomResidents.IdOf(body);
+			for (int i = 0; survey != null && i < survey.Notices.Count; i++)
+			{
+				r_KingdomNotice notice = survey.Notices[i].GetPart<r_KingdomNotice>();
+				if (notice != null && !notice.Done && notice.ManningAssigned
+					&& notice.WorkerResidentId == residentId) return true;
+			}
+			return false;
+		}
+
+		private static bool SafeToStage(GameObject body)
+		{
+			// Never borrow a person already performing quest/combat/service movement or
+			// sitting at a foreign fixture. Their post is snapshotted separately below.
+			return GameObject.Validate(body) && body.Brain != null
+				&& body.GetEffect<Sitting>() == null
+				&& (body.Brain.Goals?.Items == null || body.Brain.Goals.Items.Count == 0);
 		}
 	}
 }

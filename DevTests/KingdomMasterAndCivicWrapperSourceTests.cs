@@ -69,7 +69,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomMaster.ObserveAutomaticWake", "Guard(\"feeling re-assert\"");
 
 			string master = TestMain.ReadRepositoryText("Core/KingdomMaster.cs") + "\n"
-				+ TestMain.ReadRepositoryText("Core/KingdomMasterSettlementPlan.cs");
+				+ TestMain.ReadRepositoryText("Core/KingdomMasterSettlementPlan.cs") + "\n"
+				+ TestMain.ReadRepositoryText("Core/KingdomMasterRecoveryPlans.cs") + "\n"
+				+ TestMain.ReadRepositoryText("Core/KingdomMaster.ResumeAtomicity.cs");
 			StringAssert.Contains("if (decision.Transition == KingdomMasterTransition.None)", master);
 			StringAssert.Contains("decision.AutomaticWorkAllowed && decision.ChangedAtTick != now", master);
 			StringAssert.Contains("// Initialization and both real transitions consume this wake.", master);
@@ -80,6 +82,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("city.ExtensionHappeningCursors = ExtensionHappeningCursors;",
 				master);
 			StringAssert.Contains("city.ExtensionModel = ExtensionModel;", master);
+			StringAssert.Contains("KingdomMasterPublicationGate.TryOpen", master);
+			StringAssert.Contains("PublishMasterResumePrevalidated", master);
 		}
 
 		[Test]
@@ -97,6 +101,15 @@ namespace ThousandAndFirst.Tests
 			string research = KingdomResearchLogicalSource.Read();
 			StringAssert.Contains("if (!KingdomMaster.AutomaticWorkAllowed(System)) return LabLastWorkedTick;", research);
 			StringAssert.Contains("if (!KingdomMaster.NewWorkAllowed(System))", research);
+			string slate = TestMain.ReadRepositoryText("Growth/KingdomLab.Slate.cs");
+			int slateRecovery = slate.IndexOf("HandleActivePatientRegistry(Actor, system)",
+				StringComparison.Ordinal);
+			int slateGate = slate.IndexOf("KingdomMaster.NewWorkAllowed(system)", slateRecovery,
+				StringComparison.Ordinal);
+			int slateCommission = slate.IndexOf("Commission(Building, Actor", slateGate,
+				StringComparison.Ordinal);
+			Assert.Less(slateRecovery, slateGate, "lab recovery must remain available while paused");
+			Assert.Less(slateGate, slateCommission, "new lab commission must follow master gate");
 			string succession = KingdomSuccessionLogicalSource.Read();
 			Assert.GreaterOrEqual(Occurrences(succession,
 				"KingdomMaster.AutomaticWorkAllowed(system)"), 3,
@@ -137,6 +150,7 @@ namespace ThousandAndFirst.Tests
 			string[] independentTicks =
 			{
 				"Growth/KingdomInquiry.cs",
+				"Growth/r_KingdomAssentingMoot.cs",
 				"Growth/KingdomLab.cs",
 				"Growth/KingdomMirrorGate.cs",
 				"Growth/r_KingdomPlot.cs",

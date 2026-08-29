@@ -52,9 +52,11 @@ namespace ThousandAndFirst
 				return 0;
 			}
 
-			int prefix = System.Population - System.WaterCrew;
-			if (prefix < 0) prefix = 0;
-			if (prefix > Survey.Settlers.Count) prefix = Survey.Settlers.Count;
+			// Resident rows decide who may labour; the survey is only the loaded-body endpoint.
+			// Keep the same authoritative order and water-detail prefix used by AssignWork so a
+			// stale population projection cannot mint a free construction hand.
+			List<GameObject> available = KingdomCrews.AvailableSettlers(System, Survey);
+			int prefix = KingdomCrews.WorkHandCount(System, available);
 
 			// A prior pass's construction post is not a second claim on the same body. Ordinary
 			// work posts remain: those hands are already spent before construction is asked.
@@ -76,7 +78,7 @@ namespace ThousandAndFirst
 			int occupied = 0;
 			for (int i = 0; i < prefix; i++)
 			{
-				GameObject settler = Survey.Settlers[i];
+				GameObject settler = available[i];
 				if (!GameObject.Validate(settler)
 					|| KingdomPhysicalHappenings.IsStaged(settler)) continue;
 				if (KingdomStations.PostOf(settler) == 0) free.Add(settler);
@@ -207,7 +209,7 @@ namespace ThousandAndFirst
 				if (GameObject.Validate(item) && item.GetIntProperty(ActiveProperty) == 1
 					&& item.GetIntProperty(SelectedProperty) == 1 && NeedsLabour(item))
 				{
-					active.Add(KingdomCityRules.StableId(item.ID));
+					active.Add(KingdomCityRules.StableId(item.IDIfAssigned));
 				}
 			}
 			for (int i = 0; i < Survey.Settlers.Count; i++)
@@ -231,21 +233,26 @@ namespace ThousandAndFirst
 				GameObject item = Survey.ConstructionRoots[i];
 				r_KingdomPlotWorks plot = item.GetPart<r_KingdomPlotWorks>();
 				r_KingdomScaffold scaffold = item.GetPart<r_KingdomScaffold>();
-				bool constructionRoot = plot != null || scaffold != null;
+				bool relocation = item.GetPart<r_KingdomRelocationFrame>() != null;
+				bool constructionRoot = plot != null || scaffold != null || relocation;
 				if (!constructionRoot) continue;
+				string itemId = item.IDIfAssigned;
+				if (string.IsNullOrEmpty(itemId)) continue;
 				Reset(item);
 				if (!NeedsLabour(item)) continue;
 				item.SetIntProperty(SchemaProperty, KingdomConstructionPresenceRules.Schema);
 				item.SetIntProperty(ActiveProperty, 1);
 				item.RequirePart<r_KingdomVisualState>();
 				Cell at = item.CurrentCell;
-				long started = Started(item, plot, scaffold);
-				string display = plot != null ? plot.DisplayName : scaffold.TargetDisplayName;
+				long started = relocation ? KingdomRelocation.FrameStarted(item)
+					: Started(item, plot, scaffold);
+				string display = relocation ? KingdomRelocation.FrameDisplay(item)
+					: (plot != null ? plot.DisplayName : scaffold.TargetDisplayName);
 				if (string.IsNullOrEmpty(display)) display = item.ShortDisplayName;
 				result.Add(new Candidate
 				{
 					Root = item,
-					Reading = new KingdomRaisingCandidate(item.ID, started,
+					Reading = new KingdomRaisingCandidate(itemId, started,
 						at == null ? int.MaxValue : at.X, at == null ? int.MaxValue : at.Y),
 					DisplayName = display
 				});

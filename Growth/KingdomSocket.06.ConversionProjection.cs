@@ -124,7 +124,7 @@ namespace ThousandAndFirst
 				KingdomPhysicalLookupState exactState = KingdomConstruction.FindExactId(
 					Z, Job.OutputId, out exact);
 				if (exactState == KingdomPhysicalLookupState.Exact
-					&& GameObject.Validate(exact) && exact.ID == Job.OutputId
+					&& GameObject.Validate(exact) && exact.IDIfAssigned == Job.OutputId
 					&& exact.CurrentZone == Z && KingdomConstruction.HasReceipt(exact, Job))
 				{
 					if (Converted && ExactConversionOutput(exact, Z, Job)) return true;
@@ -176,8 +176,8 @@ namespace ThousandAndFirst
 					Failure = "The conversion callback did not retain its exact generated works.";
 					return false;
 				}
-				if (Job.SubjectId != works.ID
-					&& !KingdomConstruction.UpdateSubject(ref Job, works.ID))
+				if (Job.SubjectId != works.IDIfAssigned
+					&& !KingdomConstruction.UpdateSubject(ref Job, works.IDIfAssigned))
 				{
 					Failure = "The conversion works identity could not replace the absent predecessor.";
 					return false;
@@ -208,6 +208,11 @@ namespace ThousandAndFirst
 			}
 			part.LastDesignKey = Intent.BuildKey;
 			KingdomPlots.StampRect(marker, rect);
+			if (!TryStampSocketLot(marker, Intent, out Failure))
+			{
+				marker.Obliterate(null, Silent: true);
+				return false;
+			}
 			if (!KingdomConstruction.UpdateOutput(ref Job, marker.ID))
 			{
 				marker.Obliterate(null, Silent: true);

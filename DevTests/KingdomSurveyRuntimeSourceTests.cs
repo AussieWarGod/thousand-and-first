@@ -43,7 +43,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ActiveConsumersUseSharedIndexesInsteadOfSecondZoneWalks()
 		{
-			string offices = Source("Experience", "KingdomOffices.cs");
+			string offices = Source("Experience", "KingdomOffices.cs") + "\n"
+				+ Source("Experience", "KingdomOfficeRuntime.Context.cs") + "\n"
+				+ Source("Experience", "KingdomOfficeRuntime.Reconcile.cs") + "\n"
+				+ Source("Experience", "KingdomRemembranceRuntime.Open.cs");
 			StringAssert.DoesNotContain("Z.GetObjects()", offices);
 			StringAssert.Contains("Survey.CitizenBodies", offices);
 			StringAssert.Contains("Survey.Cairns", offices);
@@ -59,7 +62,7 @@ namespace ThousandAndFirst.Tests
 
 			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string resolve = Between(upgrade, "private static void Resolve(KingdomSystem System",
-				"public static void GiveFirstNotice(");
+				"public static bool GiveFirstNotice(");
 			StringAssert.DoesNotContain("Z.GetObjects()", resolve);
 			StringAssert.Contains("Survey.Improvements", resolve);
 			StringAssert.Contains("Survey.Built", resolve);
@@ -187,7 +190,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(clockIntent, refresh);
 			StringAssert.Contains("Survey?.ObserveCurrentTopology(leaver);", growth);
 
-			string water = Source("Growth", "KingdomWaterDebit.cs");
+			string water = KingdomWaterDebitLogicalSource.Read();
 			StringAssert.Contains("SynchronizeCachedRows();", water);
 			StringAssert.Contains("ReconcilePhysicalRows();", water);
 
@@ -198,7 +201,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted);",
 				architecture);
 			StringAssert.Contains("KingdomSurvey.ObserveRemovedFromActive(Z, exact);", architecture);
-			StringAssert.Contains("KingdomSurvey.ObserveCurrentTopologyInActive(Z, placed);", architecture);
+			StringAssert.Contains("KingdomSurvey.ObserveChangedInActive(Z, placed);", architecture);
 
 			string upgrade = KingdomUpgradeLogicalSource.Read();
 			string handover = Between(upgrade,
@@ -236,11 +239,11 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (string source in new[]
 			{
-				Source("Growth", "KingdomScaffold.cs"),
+				KingdomScaffoldLogicalSource.Read(),
 				KingdomPlot2LogicalSource.Read(),
 				KingdomRoadsLogicalSource.Read(),
 				KingdomMaterialsLogicalSource.Read(),
-				Source("Experience", "KingdomCarryRuntime.cs"),
+				KingdomCarryRuntimeLogicalSource.Read(),
 				KingdomExpeditionsLogicalSource.Read(),
 				Source("Simulation/City", "KingdomBehaviourRuntime.cs")
 			})

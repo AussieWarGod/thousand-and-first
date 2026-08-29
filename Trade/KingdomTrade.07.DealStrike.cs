@@ -36,10 +36,10 @@ namespace ThousandAndFirst
 				Failure = "No such faction.";
 				return false;
 			}
-			if (System.GetStanding(FactionName) < deal.MinStanding)
+			if (System.GetRegardForRealm(FactionName) < deal.MinStanding)
 			{
 				Failure = faction.DisplayName + " will not treat with the kingdom yet (standing "
-					+ System.GetStanding(FactionName) + " of " + deal.MinStanding + " needed).";
+					+ System.GetRegardForRealm(FactionName) + " of " + deal.MinStanding + " needed).";
 				return false;
 			}
 			long now = The.Game.TimeTicks;

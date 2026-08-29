@@ -51,14 +51,21 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < items.Count; i++)
 			{
 				GameObject item = items[i];
-				if (!GameObject.Validate(item) || item.GetIntProperty(ProvisionJobProperty) != JobId)
+				if (!GameObject.Validate(item) || item.InInventory != Body
+					|| item.GetIntProperty(ProvisionJobProperty) != JobId)
 					continue;
+				string itemId = item.IDIfAssigned;
 				while (GameObject.Validate(item) && item.Count > 0)
 				{
 					int before = item.Count;
+					string failure;
+					if (!KingdomOrdinaryFoodAuthority.TrySpendNow(item,
+						ProvisionJobProperty, JobId, out failure)) break;
 					try { item.Destroy(null, Silent: true); }
 					catch { break; }
-					if (GameObject.Validate(item) && item.Count >= before) break;
+					if (before == 1 ? GameObject.Validate(item)
+						: (!GameObject.Validate(item) || item.InInventory != Body
+							|| item.IDIfAssigned != itemId || item.Count != before - 1)) break;
 				}
 			}
 			KingdomSurvey.ObserveChangedInActive(Body.CurrentZone, Body);

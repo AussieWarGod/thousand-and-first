@@ -1,16 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-using XRL;
-using XRL.Messages;
-using XRL.Rules;
-using XRL.UI;
 using XRL.World;
-using XRL.World.AI;
-using XRL.World.Conversations;
 using XRL.World.Parts;
 
 namespace ThousandAndFirst
@@ -24,6 +13,7 @@ namespace ThousandAndFirst
 		{
 			refusal = default(ArrivalRefusal);
 			KingdomGrowthBook growth = system.LifecycleBook.Growth;
+			KingdomGrowthArrivalOpportunity opportunity = growth.ArrivalOpportunity;
 			if (operation == null || operation.Phase == KingdomGrowthPhase.Quarantined)
 				return ArrivalResult.Failed;
 			if (candidate != null && candidate.Disposition ==
@@ -49,9 +39,24 @@ namespace ThousandAndFirst
 			if (candidate != null && candidate.Phase !=
 				KingdomGrowthArrivalCandidatePhase.Settled)
 			{
-				if (!ReconcileCandidateDisposition(growth, operation, candidate, zone, tick))
+					bool settled = candidate.Phase == KingdomGrowthArrivalCandidatePhase.Declined
+						? KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(growth,
+							candidate, tick)
+						: candidate.Phase == KingdomGrowthArrivalCandidatePhase.GuestTerminal
+							? KingdomLifecycleRules.TryBindDepartedFirstGuestOperation(growth,
+								candidate, tick)
+						: ReconcileCandidateDisposition(growth, operation, candidate, zone, tick);
+				if (!settled)
 					return OperationFault(growth, operation,
 						"candidate disposition did not prove one exact object");
+			}
+			if (candidate?.Phase == KingdomGrowthArrivalCandidatePhase.Settled
+				&& candidate.Disposition == KingdomGrowthArrivalDisposition.NoAcceptableHome
+				&& !ReleaseFirstGuestBodyAfterCitizenship(system, growth, candidate, tick,
+					out string refusedReleaseFailure))
+			{
+				KingdomLog.Log("first-guest refusal retained body capacity: "
+					+ refusedReleaseFailure); return ArrivalResult.Deferred;
 			}
 			if (operation.Phase == KingdomGrowthPhase.Prepared
 				|| operation.Phase == KingdomGrowthPhase.WaterSettled)
@@ -86,6 +91,12 @@ namespace ThousandAndFirst
 						out residentBook, out residentId))
 					return OperationFault(growth, operation,
 						"accepted arrival did not publish one resident row and binding");
+				if (!ReleaseFirstGuestBodyAfterCitizenship(system, growth, candidate, tick,
+					out string releaseFailure))
+				{
+					KingdomLog.Log("accepted first guest retained body capacity: "
+						+ releaseFailure); return ArrivalResult.Deferred;
+				}
 				// The body entered the cell while it was still an un-enrolled candidate. Domain
 				// settlement and resident binding change every civic index that later lanes consume;
 				// publish that final identity before AssignWork, lodging, offices, or faith read it.
@@ -117,15 +128,43 @@ namespace ThousandAndFirst
 			ArrivalResult result = OperationResult(operation.ArrivalDisposition);
 			if (operation.Phase == KingdomGrowthPhase.Terminal)
 			{
+				if (candidate?.FirstGuest != null)
+				{
+					int residentId = 0;
+					if (candidate.Disposition == KingdomGrowthArrivalDisposition.Joined)
+					{
+						if (!TryArrivalObject(candidate, zone, out GameObject resident))
+							return OperationFault(growth, operation,
+								"first-guest terminal resident is absent");
+						residentId = Simulation.City.KingdomResidents.IdOf(resident);
+					}
+					if (!KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
+						candidate, operation, residentId, tick))
+						return OperationFault(growth, operation,
+							"first-guest terminal receipt did not publish");
+					if (!KingdomGuestFeastRuntime.TryObserveGrowthTerminalBestEffort(system,
+						growth.FirstGuestTerminal, out string feastFailure))
+						KingdomLog.Log("optional guest-feast terminal retained: " + feastFailure);
+				}
+				if (!TransitionArrivalCadenceForRetirement(system, zone, growth, operation,
+					opportunity, tick)) return ArrivalResult.Failed;
 				if (!KingdomLifecycleRules.RetireGrowth(growth, operation, tick))
 					return OperationFault(growth, operation,
 						"arrival operation retirement failed");
+				if (candidate == null && opportunity != null
+					&& !KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
+						opportunity))
+					return ArrivalResult.Failed;
 				system.NextArrivalTick = growth.NextArrivalTick;
 			}
 			if (candidate != null)
 			{
 				if (!RetireArrivalCandidate(system, zone, growth, candidate))
 					return ArrivalResult.Failed;
+				if (opportunity != null
+					&& !KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
+						opportunity)) return ArrivalResult.Failed;
+				system.NextArrivalTick = growth.NextArrivalTick;
 				if (result == ArrivalResult.Refused) system.NoRoomAnnounced = true;
 				else if (result == ArrivalResult.Joined) system.NoRoomAnnounced = false;
 			}
@@ -159,6 +198,9 @@ namespace ThousandAndFirst
 				if (leg.State == KingdomLifecyclePhysicalState.Prepared
 					&& !KingdomLifecycleRules.BeginGrowthWaterCallback(growth, operation,
 						ordinal)) return false;
+				string leaseFailure;
+				if (!KingdomConstructionInputLeaseAuthority.TryObjectAvailableForLocalDebit(
+					owner, out leaseFailure)) return false;
 				int removed = KingdomLiquids.Drain(vessel, leg.Delta);
 				if (removed != leg.Delta || !ExactWaterEndpoint(zone, owner, vessel, leg,
 					leg.After)) return false;

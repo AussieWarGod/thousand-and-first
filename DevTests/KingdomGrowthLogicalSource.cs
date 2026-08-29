@@ -8,6 +8,13 @@ namespace ThousandAndFirst.Tests
 		private static readonly string[] Files =
 		{
 			"Growth/KingdomGrowth.cs",
+			"Growth/KingdomGrowth.FirstGuestCapacity.cs",
+			"Growth/KingdomGrowth.FirstGuestCompletion.cs",
+			"Growth/KingdomGrowth.FirstGuestInteraction.cs",
+			"Growth/KingdomGrowth.FirstGuestRecovery.cs",
+			"Growth/KingdomGrowth.FirstGuestStart.cs",
+			"Growth/KingdomGrowth.ArrivalCadence.cs",
+			"Growth/KingdomGrowth.ArrivalStart.cs",
 			"Growth/KingdomGrowth.z01.Activation.cs",
 			"Growth/KingdomGrowth.z02.ScarcityHeartbeat.cs",
 			"Growth/KingdomGrowth.z03.FoodAndHarvest.cs",

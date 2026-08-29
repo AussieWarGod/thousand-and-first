@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase((int)KingdomBudgetLane.Heartbeat, -1L, 4L)]
 		[TestCase((int)KingdomBudgetLane.HeartbeatAmortised, 40L, 80L)]
 		[TestCase((int)KingdomBudgetLane.CatchUpDrain, 40L, -1L)]
-		[TestCase((int)KingdomBudgetLane.ModelBytes, 212992L, 262144L)]
+		[TestCase((int)KingdomBudgetLane.ModelBytes, 327680L, 393216L)]
 		[TestCase((int)KingdomBudgetLane.SaveBytes, 262144L, 1048576L)]
 		[TestCase((int)KingdomBudgetLane.RoutePlan, 2000L, -1L)]
 		[TestCase((int)KingdomBudgetLane.NetworkSolve, 8000L, 12000L)]
@@ -80,7 +80,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(50, KingdomBudgetRules.HeartbeatCadenceTicks);
 			Assert.AreEqual(4, KingdomBudgetRules.HeartbeatStepsPerSlice);
 			Assert.AreEqual(1, KingdomBudgetRules.HeartbeatToldLinesPerSlice);
-			Assert.AreEqual(262144L, KingdomBudgetRules.ModelBytesCeiling);
+			Assert.AreEqual(393216L, KingdomBudgetRules.ModelBytesCeiling);
 			Assert.AreEqual(16, KingdomBudgetRules.PlannerMaxJobs);
 			Assert.AreEqual(8, KingdomBudgetRules.PlannerMaxStops);
 			Assert.AreEqual(50, KingdomBudgetRules.PlannerMaxSwapTests);

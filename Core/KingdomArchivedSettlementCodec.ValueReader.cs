@@ -52,6 +52,29 @@ namespace ThousandAndFirst
 					&& raw > (long)KingdomRaidIncidentState.Queued)
 					throw new InvalidDataException(
 						"Archived settlement historical raid state is unknown.");
+				if (SchemaVersion < FirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+					&& (raw < (long)KingdomGrowthArrivalCandidatePhase.None
+						|| raw > (long)KingdomGrowthArrivalCandidatePhase.Quarantined))
+					throw new InvalidDataException(
+						"Archived settlement historical arrival phase is unknown.");
+				if (SchemaVersion < FirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalDisposition)
+					&& raw > (long)KingdomGrowthArrivalDisposition.SupportCap)
+					throw new InvalidDataException(
+						"Archived settlement historical arrival disposition is unknown.");
+				if (SchemaVersion >= FirstGuestVersion
+					&& SchemaVersion < PhysicalFirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalCandidatePhase)
+					&& raw > (long)KingdomGrowthArrivalCandidatePhase.Declined)
+					throw new InvalidDataException(
+						"Archived settlement historical physical guest phase is unknown.");
+				if (SchemaVersion >= FirstGuestVersion
+					&& SchemaVersion < PhysicalFirstGuestVersion
+					&& Type == typeof(KingdomGrowthArrivalDisposition)
+					&& raw > (long)KingdomGrowthArrivalDisposition.Declined)
+					throw new InvalidDataException(
+						"Archived settlement historical physical guest disposition is unknown.");
 				return value;
 			}
 			if (Type == typeof(bool))
@@ -134,6 +157,28 @@ namespace ThousandAndFirst
 				fields[i].SetValue(result, ReadValue(Reader, fields[i].FieldType,
 					Depth + 1, Budget, SchemaVersion));
 			}
+			if (Type == typeof(KingdomGrowthFirstGuestOpportunity)
+				&& !HistoricalPhysicalFirstGuestOpportunity(
+					(KingdomGrowthFirstGuestOpportunity)result, SchemaVersion))
+				throw new InvalidDataException(
+					"Archived settlement historical physical first-guest evidence is unknown.");
+			if (SchemaVersion < PhysicalFirstGuestVersion
+				&& Type == typeof(KingdomGrowthFirstGuestTerminalReceipt)
+				&& ((KingdomGrowthFirstGuestTerminalReceipt)result).Version !=
+					KingdomGrowthFirstGuestTerminalReceipt.LegacyVersion)
+				throw new InvalidDataException(
+					"Archived settlement historical first-guest terminal version is unknown.");
+			if (SchemaVersion >= ExactLogisticsVersion
+				&& Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& !ValidDeliveryDomain(
+					(Simulation.City.KingdomJobRegistry)result, SchemaVersion))
+				throw new InvalidDataException(
+					"Archived settlement delivery enum domain is invalid for its version.");
+			if (SchemaVersion >= CivicAuthorityVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& !ValidCivicAuthority((Simulation.City.KingdomCityBook)result))
+				throw new InvalidDataException(
+					"Archived settlement civic authority is invalid for its version.");
 			return result;
 		}
 

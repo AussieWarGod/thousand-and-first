@@ -18,12 +18,17 @@ namespace ThousandAndFirst
 				|| Water.State != KingdomWaterDebitState.Reserved
 				|| Material.Reservation.Outcome != KingdomMaterialDebitOutcome.Reserved)
 			{
+				string requiredObjectId = Material == null ? null : Material.FrozenRequiredItemId;
 				Water?.Rollback();
 				Material?.Cancel();
-				Failure = Water != null && Water.Failure != null
+				string localFailure = Water != null && Water.Failure != null
 					? Water.Failure
 					: (Material == null ? "The material receipt is absent." : Material.Reservation.Failure);
-				return KingdomConstructionStartResult.Refused;
+				KingdomConstructionStartResult routed = TryBeginRoutedFunding(Job,
+					requiredObjectId, true, out Published, out Failure);
+				if (routed == KingdomConstructionStartResult.Refused && string.IsNullOrEmpty(Failure))
+					Failure = localFailure;
+				return routed;
 			}
 			if (!TryPublish(Job, out Failure))
 			{
@@ -67,10 +72,19 @@ namespace ThousandAndFirst
 			if (water.State != KingdomWaterDebitState.Reserved
 				|| material.Reservation.Outcome != KingdomMaterialDebitOutcome.Reserved)
 			{
+				string requiredObjectId = GameObject.Validate(RequiredItem)
+					? RequiredItem.ID : material.FrozenRequiredItemId;
 				water.Rollback();
 				material.Cancel();
-				Failure = water.Failure ?? material.Reservation.Failure;
-				return KingdomConstructionStartResult.Outstanding;
+				string localFailure = water.Failure ?? material.Reservation.Failure;
+				KingdomConstructionStartResult routed = TryBeginRoutedFunding(Job,
+					requiredObjectId, false, out Updated, out Failure);
+				if (routed == KingdomConstructionStartResult.Refused)
+				{
+					Failure = Failure ?? localFailure;
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				return routed;
 			}
 			return Fund(Job.Copy(), water, material, false, out Updated, out Failure);
 		}

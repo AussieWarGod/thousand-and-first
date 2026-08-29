@@ -89,7 +89,7 @@ namespace ThousandAndFirst
 			case ZoningVerdict.RefusedCovenantStanding:
 			{
 				int standing = (System == null || string.IsNullOrEmpty(Judgement.Detail))
-					? 0 : System.GetStanding(Judgement.Detail);
+					? 0 : System.GetRegardForRealm(Judgement.Detail);
 				int wanted = (Entry == null) ? 0 : Entry.CovenantMinStanding;
 				return XRL.Language.Grammar.A(name) + " is opened by covenant with {{C|"
 					+ CovenantName(Judgement.Detail) + "}}. " + seat + " holds {{C|" + standing

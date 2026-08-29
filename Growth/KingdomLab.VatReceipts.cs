@@ -22,15 +22,18 @@ namespace ThousandAndFirst
 		private static bool VatOutputMatches(GameObject Output, GameObject Input, string Job,
 			string Fingerprint, GameObject VatOwner)
 		{
-			return GameObject.Validate(Output) && Output.GetIntProperty(KeptProperty) == 1
+			string authorityFailure;
+			return KingdomOrdinaryFoodAuthority.TryObjectNow(Output, out authorityFailure)
+				&& KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)
+				&& Output.GetIntProperty(KeptProperty) == 1
 				&& GameObject.Validate(Input) && GameObject.Validate(VatOwner)
 				&& Output.Physics != null && ReferenceEquals(Output.Physics.InInventory, VatOwner)
-				&& string.Equals(Output.GetStringProperty(VatOwnerIdProperty), VatOwner.ID,
+				&& string.Equals(Output.GetStringProperty(VatOwnerIdProperty), VatOwner.IDIfAssigned,
 					StringComparison.Ordinal)
-				&& !string.IsNullOrEmpty(Output.ID)
-				&& string.Equals(Output.GetStringProperty(VatOutputIdProperty), Output.ID,
+				&& !string.IsNullOrEmpty(Output.IDIfAssigned)
+				&& string.Equals(Output.GetStringProperty(VatOutputIdProperty), Output.IDIfAssigned,
 					StringComparison.Ordinal)
-				&& string.Equals(Input.GetStringProperty(VatOutputIdProperty), Output.ID,
+				&& string.Equals(Input.GetStringProperty(VatOutputIdProperty), Output.IDIfAssigned,
 					StringComparison.Ordinal)
 				&& string.Equals(Output.GetStringProperty(VatOutputJobProperty), Job,
 					StringComparison.Ordinal)
@@ -45,15 +48,17 @@ namespace ThousandAndFirst
 
 		private static bool VatOutputReceiptMatches(GameObject Output, GameObject VatOwner)
 		{
-			if (!GameObject.Validate(Output) || !GameObject.Validate(VatOwner)
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Output, out authorityFailure)
+				|| !GameObject.Validate(VatOwner)
 				|| Output.Physics == null || !ReferenceEquals(Output.Physics.InInventory, VatOwner)
 				|| Output.GetIntProperty(KeptProperty) != 1
 				|| Output.GetIntProperty(VatOutputPhaseProperty)
 					!= (int)KingdomVatOutputPhase.Added
-				|| string.IsNullOrEmpty(Output.ID)
-				|| !string.Equals(Output.GetStringProperty(VatOutputIdProperty), Output.ID,
+				|| string.IsNullOrEmpty(Output.IDIfAssigned)
+				|| !string.Equals(Output.GetStringProperty(VatOutputIdProperty), Output.IDIfAssigned,
 					StringComparison.Ordinal)
-				|| !string.Equals(Output.GetStringProperty(VatOwnerIdProperty), VatOwner.ID,
+				|| !string.Equals(Output.GetStringProperty(VatOwnerIdProperty), VatOwner.IDIfAssigned,
 					StringComparison.Ordinal)) return false;
 			string job = Output.GetStringProperty(VatOutputJobProperty);
 			string fingerprint = KingdomLabRules.VatOutputFingerprint(job, Output.Blueprint,
@@ -74,12 +79,14 @@ namespace ThousandAndFirst
 
 		private static bool VatRawReceiptMatches(GameObject Raw, GameObject VatOwner)
 		{
-			if (!GameObject.Validate(Raw) || !GameObject.Validate(VatOwner)
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Raw, out authorityFailure)
+				|| !GameObject.Validate(VatOwner)
 				|| Raw.Physics == null || !ReferenceEquals(Raw.Physics.InInventory, VatOwner)
-				|| string.IsNullOrEmpty(Raw.ID)
-				|| !string.Equals(Raw.GetStringProperty(VatRawIdProperty), Raw.ID,
+				|| string.IsNullOrEmpty(Raw.IDIfAssigned)
+				|| !string.Equals(Raw.GetStringProperty(VatRawIdProperty), Raw.IDIfAssigned,
 					StringComparison.Ordinal)
-				|| !string.Equals(Raw.GetStringProperty(VatOwnerIdProperty), VatOwner.ID,
+				|| !string.Equals(Raw.GetStringProperty(VatOwnerIdProperty), VatOwner.IDIfAssigned,
 					StringComparison.Ordinal)
 				|| !string.Equals(Raw.GetStringProperty(VatRawBlueprintProperty), Raw.Blueprint,
 					StringComparison.Ordinal)
@@ -87,7 +94,7 @@ namespace ThousandAndFirst
 			string job = Raw.GetStringProperty(VatJobProperty);
 			return !string.IsNullOrEmpty(job)
 				&& string.Equals(Raw.GetStringProperty(VatRawFingerprintProperty),
-					KingdomLabRules.VatRawFingerprint(job, Raw.ID, Raw.Blueprint, Raw.Count,
+					KingdomLabRules.VatRawFingerprint(job, Raw.IDIfAssigned, Raw.Blueprint, Raw.Count,
 						Raw.GetStringProperty(KingdomProcedures.StampProperty),
 						Raw.GetStringProperty(KingdomProcedures.SourceProperty)),
 					StringComparison.Ordinal);
@@ -101,6 +108,8 @@ namespace ThousandAndFirst
 				GameObject output = contents[i];
 				if (output == null || string.IsNullOrEmpty(
 					output.GetStringProperty(VatOutputJobProperty))) continue;
+				string authorityFailure;
+				if (!KingdomOrdinaryFoodAuthority.TryObjectNow(output, out authorityFailure)) continue;
 				KingdomVatRawPhase phase = (KingdomVatRawPhase)
 					output.GetIntProperty(VatRawPhaseProperty);
 				if (phase != KingdomVatRawPhase.DestroyIntent) continue;
@@ -122,10 +131,14 @@ namespace ThousandAndFirst
 		private static List<GameObject> VatContents(r_KingdomVatHouse Vat, string Marker)
 		{
 			List<GameObject> result = new List<GameObject>();
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return result;
 			List<GameObject> contents = Vat?.ParentObject?.Inventory?.Objects;
 			for (int i = 0; contents != null && i < contents.Count; i++)
 			{
-				if (contents[i] != null && contents[i].GetIntProperty(Marker) == 1)
+				if (contents[i] != null && contents[i].GetIntProperty(Marker) == 1
+					&& KingdomOrdinaryFoodAuthority.CanMutate(leases, contents[i]))
 				{
 					result.Add(contents[i]);
 				}
@@ -135,6 +148,8 @@ namespace ThousandAndFirst
 
 		private static void ClearPending(GameObject Input)
 		{
+			string authorityFailure;
+			if (!KingdomOrdinaryFoodAuthority.TryObjectNow(Input, out authorityFailure)) return;
 			Input.RemoveIntProperty(VatPendingProperty);
 			Input.RemoveIntProperty(VatRemainingProperty);
 			Input.RemoveStringProperty(VatResultProperty);

@@ -98,6 +98,7 @@ namespace ThousandAndFirst
 				Failure = "The settlement converts what it raised. That is not one of its buildings.";
 				return false;
 			}
+			if (!KingdomMirrorGate.TryPreflightRemoval(Building, Z, out Failure)) return false;
 			if (HasBlockingReceipt(Building))
 			{
 				Failure = "That building already has construction work in hand.";

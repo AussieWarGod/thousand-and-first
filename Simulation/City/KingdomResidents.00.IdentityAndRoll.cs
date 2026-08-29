@@ -51,17 +51,28 @@ namespace ThousandAndFirst.Simulation.City
 		// The resident-row authority
 		// ==================================================================================
 
-		/// <summary>Reads the seated city's bounded living roll. This is the only production bridge
-		/// from a realm to resident rows; the three historical parallel lists are projections only.</summary>
+		/// <summary>Reads the seated city's bounded living roll. This row service is the production
+		/// bridge from a realm or exact city book; historical parallel lists are projections only.</summary>
 		internal static bool TryRoll(KingdomSystem System, out KingdomCityState State,
 			out KingdomResidentRollProjection Roll)
 		{
-			State = null;
+			return TryRoll(System?.City, out State, out Roll);
+		}
+
+		/// <summary>Reads any exact city book through the same bounded row authority as the seat.</summary>
+		internal static bool TryRoll(KingdomCityBook Book, out KingdomCityState State,
+			out KingdomResidentRollProjection Roll)
+		{
 			Roll = null;
-			KingdomCityFault fault;
-			return System != null && System.City != null
-				&& System.City.TryRead(out State, out fault)
+			return TryState(Book, out State)
 				&& KingdomResidentRules.TryProject(State, out Roll);
+		}
+
+		private static bool TryState(KingdomCityBook Book, out KingdomCityState State)
+		{
+			State = null;
+			KingdomCityFault fault;
+			return Book != null && Book.TryRead(out State, out fault);
 		}
 
 		internal static int OnRollCount(KingdomSystem System)
@@ -81,10 +92,16 @@ namespace ThousandAndFirst.Simulation.City
 		internal static List<KingdomResidentRow> RollRows(KingdomSystem System,
 			bool LabourOnly = false)
 		{
+			return RollRows(System?.City, LabourOnly);
+		}
+
+		internal static List<KingdomResidentRow> RollRows(KingdomCityBook Book,
+			bool LabourOnly = false)
+		{
 			List<KingdomResidentRow> rows = new List<KingdomResidentRow>();
 			KingdomCityState state;
 			KingdomResidentRollProjection ignored;
-			if (!TryRoll(System, out state, out ignored)) return rows;
+			if (!TryRoll(Book, out state, out ignored)) return rows;
 			for (int i = 0; i < state.ResidentCount; i++)
 			{
 				KingdomResidentRow row;
@@ -93,6 +110,17 @@ namespace ThousandAndFirst.Simulation.City
 					: KingdomResidentRules.OnTheRoll(row)) rows.Add(row);
 			}
 			return rows;
+		}
+
+		internal static bool TryResident(KingdomCityBook Book, int ResidentId,
+			out KingdomResidentRow Row)
+		{
+			Row = default(KingdomResidentRow);
+			KingdomCityState state;
+			int index;
+			return ResidentId > 0 && TryState(Book, out state)
+				&& state.TryResidentIndex(ResidentId, out index)
+				&& state.TryResident(index, out Row);
 		}
 
 		internal static bool TryFindByName(KingdomSystem System, string Name,
@@ -160,12 +188,14 @@ namespace ThousandAndFirst.Simulation.City
 				System.AssignedCrew = Math.Min(System.AssignedCrew, seatRoll.Labour);
 				System.OriginCounts = Counts(seatRoll.Origins);
 			}
-			if (System.Away != null)
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				bool unresolvedAway = System.Away.City != null && System.Away.City.ResidentCount == 0
-					&& (System.Away.RosterNames?.Count > 0 || System.Away.RosterOrigins?.Count > 0
-						|| System.Away.RosterArrived?.Count > 0);
-				if (!unresolvedAway) ProjectCompatibility(System.Away);
+				KingdomSettlement row = nonSeat[i];
+				bool unresolved = row.City != null && row.City.ResidentCount == 0
+					&& (row.RosterNames?.Count > 0 || row.RosterOrigins?.Count > 0
+						|| row.RosterArrived?.Count > 0);
+				if (!unresolved) ProjectCompatibility(row);
 			}
 			return seat;
 		}
@@ -202,14 +232,17 @@ namespace ThousandAndFirst.Simulation.City
 			if (System == null) return;
 			int counter = Math.Max(0, System.ResidentCounter);
 			counter = Math.Max(counter, MaxResidentId(System.City));
-			counter = Math.Max(counter, MaxResidentId(System.Away?.City));
+			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				counter = Math.Max(counter, MaxResidentId(nonSeat[i]?.City));
 			System.ResidentCounter = counter;
 			Adopt(System.City, System.RosterNames, System.RosterOrigins, System.RosterArrived,
 				ref System.ResidentCounter, "seat");
-			if (System.Away != null)
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				Adopt(System.Away.City, System.Away.RosterNames, System.Away.RosterOrigins,
-					System.Away.RosterArrived, ref System.ResidentCounter, "away");
+				KingdomSettlement row = nonSeat[i];
+				Adopt(row.City, row.RosterNames, row.RosterOrigins,
+					row.RosterArrived, ref System.ResidentCounter, "non-seat");
 			}
 			ProjectCompatibility(System);
 		}

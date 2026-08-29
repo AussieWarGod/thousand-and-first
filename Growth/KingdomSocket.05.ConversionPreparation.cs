@@ -107,14 +107,11 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Orders the ceremony: pays the new design's full water and material cost right now,
-		/// exactly as an ordinary commission would (<see cref="KingdomMaterials.CanPay"/> /
-		/// <c>Pay</c>, <c>KingdomGrowth.ConsumeStoredWater</c>, unmodified), then hands the strike
-		/// itself to <see cref="KingdomMaterials.OrderStrike"/>, also unmodified. Nothing is built
-		/// yet &mdash; the crew has to take the old work down first, on its own ordinary schedule
-		/// &mdash; but the whole price is spent and disclosed before any of that begins, which is
-		/// what "before anything moves" means here. <see cref="OnCleared"/> is what actually
-		/// raises the new design, once the strike finishes.
+		/// Orders the ceremony: freezes the new design's full exact water/material claim and
+		/// gives it to the shared construction funding contract. Local stores may settle it now;
+		/// otherwise the same receipt routes exact realm stock before the strike begins. Nothing
+		/// is built yet &mdash; the crew takes the old work down on its ordinary schedule after
+		/// funding commits. <see cref="OnCleared"/> raises the new design once that strike finishes.
 		/// </summary>
 		public static bool ExecuteConvert(KingdomSystem System, Zone Z, GameObject Building, string NewKey, string NewSkinKey, out string Failure)
 		{
@@ -171,16 +168,8 @@ namespace ThousandAndFirst
 				Failure = "The authored successor's main ground already has paid construction in hand.";
 				return false;
 			}
-			if (KingdomGrowth.CountStoredWater(Z) < context.NewEntry.CostDrams)
-			{
-				Failure = "The work would cost {{C|" + context.NewEntry.CostDrams + " drams}} from the stores, and the stores cannot bear it.";
-				return false;
-			}
-			if (!KingdomMaterials.CanPay(Z, context.NewEntry.Key, out string materialFailure))
-			{
-				Failure = materialFailure;
-				return false;
-			}
+			// Funding, including any exact inter-settlement route, starts only after the
+			// successor footprint has passed its immutable preflight above.
 			KingdomSurvey survey = KingdomSurvey.Take(Z, System);
 			KingdomWaterDebit water = survey.ReserveExactWater(context.NewEntry.CostDrams);
 			KingdomMaterialDebit materials = KingdomMaterials.ReservePayment(Z, context.NewEntry.Key);

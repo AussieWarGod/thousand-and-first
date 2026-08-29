@@ -833,6 +833,9 @@ true ending into ground the next life walks on.**
    declared creed's preference, or a groomed designee (a new charter verb, ties into the
    schooling/Int ladder from RESEARCH-SYSTEM-DESIGN if research raises citizen stats).
    Recommended: seniority now; designee as the first succession *verb* later.
+   **Implementation status, 2026-08-27:** the author later activated that verb. It now uses an
+   exact realm-bound resident ID and monotonic service plus city-schooling/knowledge-post proof;
+   unfinished or invalid proof falls back to seniority without the chosen-life seat consequence.
 4. **Reputation siting (§5.1):** full reset with realm-cell initialization from the heir's row —
    accept? And is the realm cell floored at indifference (`RegardFloorOnReturn` idiom) or
    derived richer (creed alignment, tenure)?
@@ -859,9 +862,9 @@ true ending into ground the next life walks on.**
     machinery.
 11. **Named procedures reset per heir** — confirm the §5.3 reading (feature, priced by world
     scarcity; no cap needed).
-12. **The founder's shrine:** proceed with the owned registers (cairn + chronicle + rumour) now,
-    and treat sultanHistory-rendered shrines/murals as a stretch pending the §8 verification —
-    confirm.
+12. **The founder's shrine:** owned registers plus the reopened public-history view are now
+    implemented. The safe shape is one custom non-Sultan entity/event and one journal category;
+    it deliberately does not attach vanilla shrine/mural/cult/relic machinery.
 
 ---
 
@@ -875,8 +878,10 @@ true ending into ground the next life walks on.**
 - A dedicated "promote companion to player" function — Metempsychosis is the nearest template.
 
 **Unverified (runtime verification needed before build):**
-- Whether appending a mod-authored entity/event to `The.Game.sultanHistory` at runtime is safe
-  for every consumer (shrines, murals, relic gen) — §5.6.
+- Native UI/save/interruption behavior of the implemented isolated `taf-founder-memory` entity,
+  event, and custom journal note. Static engine audit proves it is absent from `isCandidate`,
+  `type=sultan`, `type=village`, statue, cult, mural, and relic selectors; TESTING 135a4h-135a4j
+  still require live proof.
 - Whether force-abandoning vanilla quests mid-step is safe — §5.1 (the documented
   `ForceFinishQuest` traps suggest not).
 - The heir's post-reset reputation baseline: how chargen-derived initial reputation modifiers

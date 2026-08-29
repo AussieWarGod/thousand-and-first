@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 			case WaterRiteBar.NothingBetweenYou:
 				return name + " already holds with " + creed + ". You have shared water with " + name + " a hundred times over a cookfire; there is nothing here that wants a ceremony.";
 			case WaterRiteBar.TheirOffice:
-				return name + " holds office at your word. Put the basin down in front of them and they will drink to whatever you like, and it will mean nothing, and you will both know it.";
+				return name + " is marked by a retired office bar from older rules. Civic titles grant no service, capability, or ritual authority; recalculate this offer.";
 			case WaterRiteBar.NoRoadOut:
 				return name + " has nowhere to go if the answer is no — the settlement is too small to let anybody walk. A yes from somebody you have left no room to refuse is not a yes. Ask when there are more of you.";
 			case WaterRiteBar.AskedTooOften:

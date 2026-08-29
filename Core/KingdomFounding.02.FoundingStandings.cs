@@ -13,41 +13,24 @@ namespace ThousandAndFirst
 	public static partial class KingdomFounding
 	{
 		/// <summary>
-		/// Freezes the founder's standings before the first standing mutation. A publication
-		/// retry must finish the same ledger even if reputation changed while the prior attempt
-		/// was interrupted.
+		/// Freezes an empty, bounded retry marker before directional authority is published. A new
+		/// civic entity begins with both foreign directions unspecified; no personal regard is copied.
 		/// </summary>
-		private static bool TryReadOrFreezeFoundingStandings(Faction Realm,
+		private static bool TryReadOrFreezeFoundingStandings(KingdomSystem System, Faction Realm,
 			out List<KeyValuePair<string, int>> Targets)
 		{
 			Targets = null;
-			if (Realm == null || string.IsNullOrEmpty(Realm.Name))
+			if (System == null || Realm == null || string.IsNullOrEmpty(Realm.Name))
 			{
 				return false;
 			}
 			if (!Realm.HasProperty(FoundingStandingsProperty))
 			{
-				List<KeyValuePair<string, int>> captured =
-					new List<KeyValuePair<string, int>>();
-				foreach (Faction other in Factions.Loop())
-				{
-					if (other == null || ReferenceEquals(other, Realm) || other.Name == "Player")
-					{
-						continue;
-					}
-					if (string.IsNullOrEmpty(other.Name) || other.Name.Length > 512)
-					{
-						return false;
-					}
-					captured.Add(new KeyValuePair<string, int>(other.Name,
-						The.Game.PlayerReputation.Get(other)));
-				}
-				captured.Sort(delegate(KeyValuePair<string, int> Left,
-					KeyValuePair<string, int> Right)
-				{
-					return StringComparer.Ordinal.Compare(Left.Key, Right.Key);
-				});
-				string encoded = EncodeFoundingStandings(captured);
+				// New civic entities inherit no personal relationship edge. Retain the bounded
+				// empty freeze marker only so a cut through founding remains retryable by the same
+				// transaction protocol used by grandfathered builds.
+				string encoded = EncodeFoundingStandings(
+					new List<KeyValuePair<string, int>>());
 				if (encoded == null)
 				{
 					return false;
@@ -62,24 +45,72 @@ namespace ThousandAndFirst
 				Realm.GetStringProperty(FoundingStandingsProperty, null), out Targets);
 		}
 
-		private static bool TryResolveFoundingStandings(Faction Realm,
+		private static bool TryResolveFoundingStandings(KingdomSystem System, Faction Realm,
 			List<KeyValuePair<string, int>> Targets,
 			out List<KeyValuePair<Faction, int>> Resolved)
 		{
 			Resolved = new List<KeyValuePair<Faction, int>>();
-			if (Realm == null || Targets == null)
+			if (System == null || Realm == null || Targets == null ||
+				Targets.Count > KingdomStandingRules.MaxRelationships)
 			{
 				return false;
 			}
 			foreach (KeyValuePair<string, int> target in Targets)
 			{
 				Faction other = Factions.GetIfExists(target.Key);
-				if (other == null || ReferenceEquals(other, Realm) || other.Name == "Player")
+				if (other == null || ReferenceEquals(other, Realm) || other.Name == "Player" ||
+					!System.CanReserveDirectionalRelationship(target.Key))
 				{
 					return false;
 				}
 				Resolved.Add(new KeyValuePair<Faction, int>(other, target.Value));
 			}
+			return true;
+		}
+
+		/// <summary>Publishes the frozen empty relationship set without invoking engine callbacks.
+		/// A cut may leave an exact subset; retry accepts only that subset and completes it. Both civic
+		/// directions and the advisory observation cache remain empty and Unspecified.</summary>
+		private static bool TryPublishFoundingStandings(KingdomSystem System,
+			List<KeyValuePair<Faction, int>> Targets)
+		{
+			if (System == null || Targets == null ||
+				Targets.Count > KingdomStandingRules.MaxRelationships ||
+				System.Standings == null || System.RealmPolicyToward == null ||
+				System.RegardSpilloverRemainders == null ||
+				System.RegardSpilloverObservedReputation == null ||
+				System.RegardSpilloverRemainders.Count != 0 ||
+				System.Standings.Count != 0 ||
+				System.RealmPolicyToward.Count != 0 ||
+				System.RegardSpilloverObservedReputation.Count > Targets.Count) return false;
+
+			Dictionary<string, int> desired = new Dictionary<string, int>(
+				StringComparer.Ordinal);
+			for (int i = 0; i < Targets.Count; i++)
+			{
+				Faction faction = Targets[i].Key;
+				if (faction == null || !System.CanReserveDirectionalRelationship(faction.Name) ||
+					desired.ContainsKey(faction.Name)) return false;
+				desired.Add(faction.Name, Targets[i].Value);
+			}
+			if (!ExactSubset(System.RegardSpilloverObservedReputation, desired)) return false;
+			foreach (KeyValuePair<string, int> row in desired)
+				System.RegardSpilloverObservedReputation[row.Key] = row.Value;
+			System.DirectionalStandingSchemaVersion = 1;
+			return System.DirectionalStandingSchemaVersion == 1 &&
+				System.Standings.Count == 0 &&
+				System.RealmPolicyToward.Count == 0 &&
+				System.RegardSpilloverObservedReputation.Count == desired.Count &&
+				ExactSubset(System.RegardSpilloverObservedReputation, desired);
+		}
+
+		private static bool ExactSubset(Dictionary<string, int> Actual,
+			Dictionary<string, int> Desired)
+		{
+			if (Actual == null || Desired == null) return false;
+			foreach (KeyValuePair<string, int> row in Actual)
+				if (!Desired.TryGetValue(row.Key, out int value) || value != row.Value)
+					return false;
 			return true;
 		}
 

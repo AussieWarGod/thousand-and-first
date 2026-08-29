@@ -58,12 +58,12 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// A second projection may start only from one exact city and no Away seat. Once published,
-		/// only its own exact seated city may resume. This prevents a stale receipt from replacing an
-		/// unrelated second city.
+		/// A later-city projection may start only while bounded topology has room. Once published,
+		/// only its own exact seated or non-seat city may resume. This prevents a stale receipt from
+		/// replacing an unrelated city while allowing both v1 non-seat slots to use one contract.
 		/// </summary>
 		public static bool SecondRecoveryCanProject(int SettlementCount, int MaximumSettlements,
-			bool AwayIsNull, bool TargetIsExactSeat, bool TargetIsExactAway,
+			bool HasOpenNonSeatSlot, bool TargetIsExactSeat, bool TargetIsExactNonSeat,
 			bool AlreadyPublished)
 		{
 			if (MaximumSettlements < 2 || SettlementCount < 0 ||
@@ -73,18 +73,20 @@ namespace ThousandAndFirst
 			}
 			if (AlreadyPublished)
 			{
-				return !AwayIsNull && SettlementCount == MaximumSettlements &&
-					(TargetIsExactSeat ^ TargetIsExactAway);
+				return SettlementCount >= 2 &&
+					HasOpenNonSeatSlot == (SettlementCount < MaximumSettlements) &&
+					(TargetIsExactSeat ^ TargetIsExactNonSeat);
 			}
-			return !TargetIsExactSeat && !TargetIsExactAway && AwayIsNull &&
-				SettlementCount == MaximumSettlements - 1;
+			return !TargetIsExactSeat && !TargetIsExactNonSeat && HasOpenNonSeatSlot &&
+				SettlementCount >= 1 && SettlementCount < MaximumSettlements;
 		}
 
 		public static bool SecondRecoveryCanProject(int SettlementCount, int MaximumSettlements,
-			bool AwayIsNull, bool TargetIsExactSeat, bool AlreadyPublished)
+			bool HasOpenNonSeatSlot, bool TargetIsExactSeat, bool AlreadyPublished)
 		{
-			return SecondRecoveryCanProject(SettlementCount, MaximumSettlements, AwayIsNull,
-				TargetIsExactSeat, TargetIsExactAway: false, AlreadyPublished);
+			return SecondRecoveryCanProject(SettlementCount, MaximumSettlements,
+				HasOpenNonSeatSlot, TargetIsExactSeat, TargetIsExactNonSeat: false,
+				AlreadyPublished);
 		}
 
 		/// <summary>Exact liquid algebra for a basin receipt, independent of current vessel.</summary>

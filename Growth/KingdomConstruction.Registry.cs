@@ -30,8 +30,8 @@ namespace ThousandAndFirst
 				Projection = KingdomConstructionRules.ProjectionFor(Route),
 				X = Cell == null ? -1 : Cell.X,
 				Y = Cell == null ? -1 : Cell.Y,
-				SubjectId = GameObject.Validate(Subject) ? Subject.ID : null,
-				SourceId = GameObject.Validate(Subject) ? Subject.ID : null,
+				SubjectId = GameObject.Validate(Subject) ? Subject.IDIfAssigned : null,
+				SourceId = GameObject.Validate(Subject) ? Subject.IDIfAssigned : null,
 				TargetKey = TargetKey,
 				Payload = Payload,
 				CreatedTick = now,
@@ -159,6 +159,8 @@ namespace ThousandAndFirst
 				&& observed.SourceId == Job.SourceId && observed.OutputId == Job.OutputId
 				&& observed.PhysicalPhase == Job.PhysicalPhase
 				&& observed.TargetKey == Job.TargetKey
+				&& observed.InputReceipt == Job.InputReceipt
+				&& observed.InputReceiptHash == Job.InputReceiptHash
 				&& observed.BuildTruthSchema == Job.BuildTruthSchema
 				&& observed.BuildHasPlot == Job.BuildHasPlot
 				&& observed.BuildFrontier == Job.BuildFrontier
@@ -182,7 +184,7 @@ namespace ThousandAndFirst
 				return false;
 			string receipt = Object.GetStringProperty(ReceiptProperty);
 			return KingdomConstructionRules.CanSupersedeTerminal(Job, OwnerOf(System), Z.ZoneID,
-				receipt, Object.ID);
+				receipt, Object.IDIfAssigned);
 		}
 
 		/// <summary>Copies current-owner active rows, failing closed with no partial list.</summary>
@@ -229,7 +231,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < jobs.Count; i++)
 			{
 				KingdomConstructionJob job = jobs[i];
-				if (job.Route == Route && job.SubjectId == Subject.ID) return true;
+				if (job.Route == Route && job.SubjectId == Subject.IDIfAssigned) return true;
 			}
 			return false;
 		}

@@ -21,7 +21,7 @@ namespace ThousandAndFirst.Simulation.City
 	/// </summary>
 	internal sealed class KingdomBindingTable
 	{
-		/// <summary>LIVING-CITY-ARCHITECTURE &sect;3.8: sixty residents times two cities.</summary>
+		/// <summary>LIVING-CITY-ARCHITECTURE &sect;3.8: sixty residents per owned city.</summary>
 		internal const int MaxResidentBindings = KingdomCityState.MaxResidents * KingdomCityMemoryRules.CitiesPerRealm;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE &sect;3.8: open jobs, realm-wide. A closed job is

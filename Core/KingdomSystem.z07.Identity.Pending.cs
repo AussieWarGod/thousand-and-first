@@ -249,7 +249,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Mints the realm's simulation seed, once, at founding.
 		/// <para>
-		/// LIVING-CITY-ARCHITECTURE W0 deferred this to W1 and the kernel says what it has to be:
+		/// LIVING-CITY-ARCHITECTURE staged this after W0; the implemented kernel says what it has to be:
 		/// "whatever mints it must domain-separate on realm incarnation". So it is a pure function
 		/// of the world seed, the immutable realm id and the tick the water was poured &mdash; two realms
 		/// in one world differ, and the same realm across a reload does not. Re-minting is refused

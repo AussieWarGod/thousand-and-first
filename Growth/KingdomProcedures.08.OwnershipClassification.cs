@@ -23,12 +23,12 @@ namespace ThousandAndFirst
 			{
 				return KingdomLabOwnedTargetState.Uncertain;
 			}
-			GameObject bearer = string.Equals(BearerId, Who.ID, StringComparison.Ordinal)
+			GameObject bearer = string.Equals(BearerId, Who.IDIfAssigned, StringComparison.Ordinal)
 				? Who : GameObject.FindByID(BearerId);
 			XRL.World.Parts.r_KingdomLabEffectLedger ledger =
 				bearer?.GetPart<XRL.World.Parts.r_KingdomLabEffectLedger>();
 			int at = ledger?.IndexOf(Procedure.Key, JobId) ?? -1;
-			if (at < 0 || !string.Equals(ledger.PatientIds[at], Who.ID,
+			if (at < 0 || !string.Equals(ledger.PatientIds[at], Who.IDIfAssigned,
 				StringComparison.Ordinal) || ledger.LedgerQuarantined
 				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
 					ledger.ProcedureKeys[at], ledger.ClassNames[at], ledger.Sources[at],
@@ -37,7 +37,7 @@ namespace ThousandAndFirst
 			{
 				return KingdomLabOwnedTargetState.Uncertain;
 			}
-			Snapshot = new KingdomLabOwnershipSnapshot(Procedure.Key, JobId, Who.ID,
+			Snapshot = new KingdomLabOwnershipSnapshot(Procedure.Key, JobId, Who.IDIfAssigned,
 				ledger.BodyPartIds[at], BearerId, ledger.ClassNames[at], ledger.Sources[at],
 				ledger.Attaches[at], ledger.Managers[at], ledger.Details[at],
 				ledger.Fingerprints[at], ledger.PartOrdinals[at], ledger.NonceAt(at));
@@ -65,7 +65,7 @@ namespace ThousandAndFirst
 		{
 			Target = null;
 			if (Who == null
-				|| !string.Equals(Who.ID, Snapshot.PatientId, StringComparison.Ordinal)
+				|| !string.Equals(Who.IDIfAssigned, Snapshot.PatientId, StringComparison.Ordinal)
 				|| string.IsNullOrEmpty(Snapshot.JobId) || Snapshot.BodyPartId <= 0
 				|| string.IsNullOrEmpty(Snapshot.BearerId) || Snapshot.EffectNonce.Length != 32
 				|| !KingdomLabRules.ValidEffectContract(KingdomLabRules.EffectContractVersion,
@@ -92,7 +92,7 @@ namespace ThousandAndFirst
 				|| !string.Equals(bearer.GetStringProperty(
 					OwnerNonceProperty(Snapshot.ProcedureKey)), Snapshot.EffectNonce,
 					StringComparison.Ordinal)
-				|| !ledger.EntryMatches(entry, Snapshot.ProcedureKey, Snapshot.JobId, Who.ID,
+				|| !ledger.EntryMatches(entry, Snapshot.ProcedureKey, Snapshot.JobId, Who.IDIfAssigned,
 					Snapshot.BodyPartId, Snapshot.Source, Snapshot.Attach, Snapshot.Grants,
 					Snapshot.Manager, Snapshot.Detail, Snapshot.Fingerprint,
 					Snapshot.PartOrdinal))
@@ -185,7 +185,7 @@ namespace ThousandAndFirst
 			if (Snapshot.Source != (int)LabSource.Part
 				|| Snapshot.Attach == (int)LabAttach.Body)
 			{
-				if (!string.Equals(Snapshot.BearerId, Who.ID, StringComparison.Ordinal)) return false;
+				if (!string.Equals(Snapshot.BearerId, Who.IDIfAssigned, StringComparison.Ordinal)) return false;
 				Bearer = Who;
 				return true;
 			}
@@ -194,7 +194,7 @@ namespace ThousandAndFirst
 			GameObject exact = slot?.DefaultBehavior;
 			if (slot == null || !BodyOwnsPart(Who, slot) || !GameObject.Validate(exact)
 				|| !ReferenceEquals(slot.DefaultBehavior, exact)
-				|| !string.Equals(exact.ID, Snapshot.BearerId, StringComparison.Ordinal)) return false;
+				|| !string.Equals(exact.IDIfAssigned, Snapshot.BearerId, StringComparison.Ordinal)) return false;
 			Bearer = exact;
 			return true;
 		}

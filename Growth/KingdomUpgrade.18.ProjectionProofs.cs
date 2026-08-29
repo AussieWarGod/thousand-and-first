@@ -62,7 +62,7 @@ namespace ThousandAndFirst
 			{
 				if (!KingdomConstruction.HasReceipt(item, Job)) continue;
 				count++;
-				if (count > 1 || item.ID != Job.OutputId
+				if (count > 1 || item.IDIfAssigned != Job.OutputId
 					|| !ExpectedImprovementScaffold(item, Cell, Successor, Job,
 						Architecture, Authored))
 					return KingdomPhysicalLookupState.Ambiguous;
@@ -89,7 +89,7 @@ namespace ThousandAndFirst
 			string architectureFailure;
 			return GameObject.Validate(Work) && cell != null
 				&& KingdomConstruction.Owns(System, Z, Job)
-				&& Work.ID == Job.SubjectId && Work.CurrentZone == Z && Work.CurrentCell == cell
+				&& Work.IDIfAssigned == Job.SubjectId && Work.CurrentZone == Z && Work.CurrentCell == cell
 				&& Work.GetIntProperty(BuiltProperty) == 1
 				&& TryReadImprovementArchitecture(Work, Job, out architecture, out authored,
 					out architectureFailure);
@@ -127,19 +127,5 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>
-		/// Begins an improvement the settlement offered and would not start on its own: a working
-		/// building the city leans on (<c>HeldOffer</c>). The dip must already have been disclosed
-		/// to the founder and consented to &mdash; <see cref="OpenHeldOffer"/> is the only caller,
-		/// and it shows <c>KingdomUpgradeRules.DipLine</c> before it asks.
-		/// <para>
-		/// The verdict is copied to <c>Ready</c> before <see cref="Begin"/> is called, because the
-		/// founder's word is exactly what makes it ready: every other condition the law checks has
-		/// already passed, and the offer is the ONE verdict a founder may overrule. Nothing else
-		/// is relaxed &mdash; <see cref="Begin"/> still refuses if the water or the material is
-		/// not actually there when it reaches for it.
-		/// </para>
-		/// </summary>
-		/// <returns>True once scaffolding is standing and the water is spent.</returns>
 	}
 }

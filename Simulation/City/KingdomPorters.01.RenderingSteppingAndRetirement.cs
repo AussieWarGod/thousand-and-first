@@ -48,6 +48,10 @@ namespace ThousandAndFirst.Simulation.City
 				bool central = KingdomJobRules.IsCentralDelivery(row);
 				if (central)
 				{
+					// Construction freight has no walking body between attended pickup and
+					// attended landing. Exact body+inventory remain rooted in semantic transit.
+					if (row.DeliveryCargoAuthority
+							== KingdomDeliveryCargoAuthority.ConstructionInput) continue;
 					if (row.JobId != row.DeliveryTripId
 						|| !TryActiveTripRow(table, row.DeliveryTripId, TimeTicks, out row, out fix))
 						continue;
@@ -102,9 +106,15 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			if (KingdomJobRules.IsCentralDelivery(row))
 			{
+				if (row.DeliveryCargoAuthority
+					== KingdomDeliveryCargoAuthority.ConstructionInput) return;
 				KingdomItineraryFix centralFix;
 				KingdomJobRow active;
 				if (!TryActiveTripRow(table, Part.JobId, TimeTick, out active, out centralFix)) return;
+				// Authority-2 cargo does not enter itinerary custody until the parent has
+				// durably debited every source and acknowledged pickup.
+				if (active.DeliveryCargoAuthority
+					== KingdomDeliveryCargoAuthority.ConstructionInput) return;
 				if (Near(Body, Part.DestX, Part.DestY))
 				{
 					if (active.DeliveryCargoAuthority == KingdomDeliveryCargoAuthority.ScalarStock)
@@ -177,10 +187,15 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					continue;
 				}
+				if (ConstructionInputSweepProtected(System, body)) continue;
 				Spill(body);
+				int jobId = body.GetPart<r_KingdomPorter>()?.JobId ?? 0;
+				if (!CanRetireBody(body, jobId)) continue;
 				KingdomLog.Log("porter: swept a stale carrier out of " + Z.ZoneID + " (job "
 					+ body.GetIntProperty(KingdomResidents.JobIdProperty) + ")");
-				body.Obliterate();
+				try { body.Obliterate(); }
+				catch { continue; }
+				if (GameObject.Validate(body)) continue;
 				survey.ObserveRemoved(body);
 				swept++;
 			}

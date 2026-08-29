@@ -112,7 +112,7 @@ namespace ThousandAndFirst
 			KingdomLifecycleOperation op, KingdomLifecycleProjection projection)
 		{
 			if (!GameObject.Validate(body) || body.CurrentCell == null
-				|| body.ID != projection.ObjectId || body.Blueprint != projection.Blueprint
+				|| body.IDIfAssigned != projection.ObjectId || body.Blueprint != projection.Blueprint
 				|| body.CurrentZone?.ZoneID != projection.ZoneId
 				|| body.CurrentCell.X != projection.X || body.CurrentCell.Y != projection.Y
 				|| body.GetStringProperty(ProjectionMarkerProperty) != projection.Marker
@@ -146,7 +146,7 @@ namespace ThousandAndFirst
 		{
 			GameObject found = null;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(zone))
-				if (item.ID == id) { if (found != null) return null; found = item; }
+				if (item.IDIfAssigned == id) { if (found != null) return null; found = item; }
 			return found;
 		}
 

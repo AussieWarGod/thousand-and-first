@@ -152,6 +152,9 @@ namespace ThousandAndFirst
 				Expected.BuildingId, Expected.PatientId, Expected.GameId, Expected.RealmId,
 				Expected.RealmFoundedTick, Expected.Fingerprint, RequireActive)
 				&& Entry.ContractVersion == Expected.ContractVersion
+				&& Entry.RulerSuccessionOrdinal == Expected.RulerSuccessionOrdinal
+				&& string.Equals(Entry.RulerLifeId, Expected.RulerLifeId,
+					StringComparison.Ordinal)
 				&& string.Equals(Entry.ProcedureKey, Expected.ProcedureKey, StringComparison.OrdinalIgnoreCase)
 				&& string.Equals(Entry.Grants, Expected.Grants, StringComparison.Ordinal)
 				&& Entry.Source == Expected.Source && Entry.Attach == Expected.Attach

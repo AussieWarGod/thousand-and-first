@@ -237,7 +237,7 @@ namespace ThousandAndFirst.Simulation.City
 					if (DeliveryStopOrdinals[i] < 0) { DeliveryStopOrdinals[i] = 0; }
 					if (!KingdomJobRules.IsDeliveryPhase(DeliveryPhases[i])) { DeliveryPhases[i] = 0; }
 					if (DeliveryCargoAuthorityKinds[i] < 0
-						|| DeliveryCargoAuthorityKinds[i] > 1) { DeliveryCargoAuthorityKinds[i] = 0; }
+						|| DeliveryCargoAuthorityKinds[i] > 2) { DeliveryCargoAuthorityKinds[i] = 0; }
 					if (DeliveryOwnerOperationIds[i] == null) { DeliveryOwnerOperationIds[i] = ""; }
 					if (DeliveryOwnerManifestVersions[i] < 0) { DeliveryOwnerManifestVersions[i] = 0; }
 					if (DeliveryOwnerManifestDigests[i] == null) { DeliveryOwnerManifestDigests[i] = ""; }

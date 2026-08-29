@@ -14,6 +14,7 @@ namespace ThousandAndFirst
 		internal static void OnSemanticStep(KingdomSystem System, Zone Zone, KingdomSurvey Survey,
 			long BoundaryTick)
 		{
+			KingdomLabCivicRuntime.Observe(System, Zone, Survey);
 			List<GameObject> objects = (Survey != null && ReferenceEquals(Survey.Ground, Zone))
 				? Survey.LabJobs : null;
 			for (int i = 0; objects != null && i < objects.Count; i++)
@@ -98,7 +99,10 @@ namespace ThousandAndFirst
 				+ ", kept " + Job.KeptPaid + "/" + Job.KeptOwed
 				+ ", bits " + (string.IsNullOrEmpty(Job.BitOutstanding) ? "exact" : "outstanding")
 				+ ", standing " + Job.StandingAppliedCount + "/" + Job.StandingFactions.Count
-				+ " projected. Paid costs are not returned after commissioning.";
+				+ " projected, body history " + BodyHistoryStatus(Job)
+				+ ". Paid costs are not returned after commissioning."
+				+ (string.IsNullOrEmpty(Job.BodyHistoryFault) ? ""
+					: ("\nbody-history note: " + Job.BodyHistoryFault));
 			string intro = KingdomLabRules.JobProgressLine(procedure.Named, Job.State,
 				Job.RemainingTicks, procedure.StaffDays, staffed, wornOut) + receipt
 				+ (string.IsNullOrEmpty(Job.Fault) ? "" : ("\n\n{{r|" + Job.Fault + "}}"));
@@ -140,6 +144,24 @@ namespace ThousandAndFirst
 				{
 					FinishJobTellings(Actor, System, Job, procedure);
 				}
+				if (!ReferenceEquals(Job.ParentObject, Building)) return;
+				if (Job.State == KingdomLabJobPhase.Complete
+					&& Job.BodyHistoryState == KingdomLabBodyHistoryPhase.Pending)
+				{
+					int historyChoice = Popup.PickOption(Title: "completed procedure",
+						Intro: intro + "\n\nPhysical and standing effects are complete. Civic history remains optional and pending; no effect will replay.",
+						Options: new string[] { "Leave exact history pending.",
+							"Finish without a civic-history row." }, AllowEscape: true);
+					if (historyChoice == 1 && Popup.ShowYesNo(
+						"Finish this physical receipt without adding its civic-history row?")
+						== DialogResult.Yes)
+					{
+						OmitPendingBodyHistory(Job);
+						PurgeApplicationReceipt(Building, Actor, System, Job,
+							KingdomLabRegistryStatus.Complete);
+					}
+					return;
+				}
 				Popup.Show(intro);
 				if (Job.State == KingdomLabJobPhase.Cancelled && !Job.RegistryFinalized)
 					FinalizeApplicationProjection(Actor, Job, KingdomLabRegistryStatus.Cancelled);
@@ -158,7 +180,7 @@ namespace ThousandAndFirst
 					&& (Job.State == KingdomLabJobPhase.Cancelled
 						|| (Job.Chronicled && Job.Spoken)))
 				{
-					PurgeApplicationReceipt(Building, Job,
+					PurgeApplicationReceipt(Building, Actor, System, Job,
 						Job.State == KingdomLabJobPhase.Cancelled
 							? KingdomLabRegistryStatus.Cancelled
 							: KingdomLabRegistryStatus.Complete);
@@ -183,7 +205,7 @@ namespace ThousandAndFirst
 					&& KingdomLabRules.MessageSettled(
 						(KingdomLabMessagePhase)Job.TerminalMessagePhase))
 				{
-					PurgeApplicationReceipt(Building, Job,
+					PurgeApplicationReceipt(Building, Actor, System, Job,
 						KingdomLabRegistryStatus.Cancelled);
 				}
 			}

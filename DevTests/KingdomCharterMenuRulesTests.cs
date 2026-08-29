@@ -125,7 +125,7 @@ namespace ThousandAndFirst.Tests
 			string[] actions = new string[cases.Count];
 			for (int i = 0; i < cases.Count; i++) actions[i] = cases[i].Groups[1].Value;
 			Assert.AreEqual(
-				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition",
+				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition,DesignateProperty,ManageNamedCook,ManageCivicOffice,DedicateRemembrance,FirstGuestCorrespondence,FirstFeastPractice,PracticeAndVocation,CivicKnowledge,BodyHistory,GuestFeastRecord,CivicCommitments,RecognizeArtifact,FixedWitnessWorks",
 				string.Join(",", actions));
 		}
 
@@ -159,7 +159,7 @@ namespace ThousandAndFirst.Tests
 			}
 
 			Array actions = Enum.GetValues(typeof(KingdomCharterAction));
-			Assert.AreEqual(36, actions.Length, "the routing contract must account for every shipped verb");
+			Assert.AreEqual(49, actions.Length, "the routing contract must account for every shipped verb");
 			Assert.AreEqual(actions.Length, counts.Count);
 			foreach (KingdomCharterAction action in actions)
 			{
@@ -180,7 +180,8 @@ namespace ThousandAndFirst.Tests
 
 			string source = KingdomSocketLogicalSource.Read();
 			StringAssert.Contains("Change what stands on a lot, at ", source);
-			StringAssert.Contains("Build on the cleared lot", source);
+			StringAssert.Contains("Build on \" + SocketLotLabel(target)", source);
+			StringAssert.Contains("a cleared \" + type + \" lot (", source);
 			StringAssert.DoesNotContain("Change what a plot is", source);
 		}
 
@@ -208,6 +209,23 @@ namespace ThousandAndFirst.Tests
 				}
 				Assert.AreEqual(KingdomCharterRouteKind.Back, routes[routes.Length - 1].Kind);
 			}
+		}
+
+		[Test]
+		public void ReopenedExperienceReadingsLiveInTheirPlayerFacingChapters()
+		{
+			AssertChapterAction(KingdomCharterChapter.PeopleAndBelief,
+				KingdomCharterAction.CivicKnowledge, "Read civic knowledge", 'u');
+			AssertChapterAction(KingdomCharterChapter.PeopleAndBelief,
+				KingdomCharterAction.GuestFeastRecord,
+				"Review the Guest's Feast record", 'j');
+			AssertChapterAction(KingdomCharterChapter.PeopleAndBelief,
+				KingdomCharterAction.FixedWitnessWorks, "Review fixed witness works", 'i');
+			AssertChapterAction(KingdomCharterChapter.DynastyAndLegacy,
+				KingdomCharterAction.BodyHistory, "Read the founder's body history", 'b');
+			AssertChapterAction(KingdomCharterChapter.CityReadings,
+				KingdomCharterAction.CivicCommitments,
+				"Read civic commitments together", 'c');
 		}
 
 		[Test]
@@ -293,7 +311,20 @@ namespace ThousandAndFirst.Tests
 				{ "CityBook", "Simulation.City.KingdomBookReport.Open(System);" },
 				{ "TechMap", "Popup.Show(KingdomTechMap.Draw(System));" },
 				{ "CityAsks", "Popup.Show(KingdomAsks.Board(System));" },
-				{ "SalvageExpedition", "Simulation.City.KingdomExpeditions.Open(System, ParentObject);" }
+				{ "SalvageExpedition", "Simulation.City.KingdomExpeditions.Open(System, ParentObject);" },
+				{ "DesignateProperty", "KingdomProperty.Open(System, ParentObject);" },
+				{ "ManageNamedCook", "KingdomNamedCook.Open(System, ParentObject);" },
+				{ "ManageCivicOffice", "KingdomOfficeRuntime.Open(System, ParentObject);" },
+				{ "DedicateRemembrance", "KingdomRemembranceRuntime.Open(System, ParentObject);" },
+				{ "FirstGuestCorrespondence", "KingdomFirstGuestRuntime.Open(System, ParentObject);" },
+				{ "FirstFeastPractice", "KingdomFirstFeastRuntime.Open(System, ParentObject);" },
+				{ "PracticeAndVocation", "KingdomCivicPracticeRuntime.OpenPracticeAndVocation(System, ParentObject);" },
+				{ "CivicKnowledge", "KingdomCivicKnowledgeRuntime.OpenCurrent(System, ParentObject);" },
+				{ "BodyHistory", "KingdomBodyHistoryRuntime.OpenCurrent(ParentObject, System);" },
+				{ "GuestFeastRecord", "KingdomGuestFeastRuntime.OpenRecord(System, ParentObject);" },
+				{ "CivicCommitments", "OpenCivicCommitments(System);" },
+				{ "RecognizeArtifact", "KingdomArtifactRecognitionCharterRuntime.Open(System, ParentObject);" },
+				{ "FixedWitnessWorks", "KingdomWitnessWorkCharterRuntime.Open(System, ParentObject);" }
 			};
 
 			string source = KingdomCharterPartLogicalSource.Read();
@@ -302,7 +333,7 @@ namespace ThousandAndFirst.Tests
 			MatchCollection cases = Regex.Matches(run,
 				@"case\s+KingdomCharterAction\.(\w+)\s*:\s*(.*?)\s*break\s*;",
 				RegexOptions.Singleline);
-			Assert.AreEqual(36, expected.Count);
+			Assert.AreEqual(49, expected.Count);
 			Assert.AreEqual(expected.Count, cases.Count, "RunAction case count");
 
 			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
@@ -336,14 +367,14 @@ namespace ThousandAndFirst.Tests
 			for (int i = innerCases.Count - 1; i >= 0; i--)
 				switchInner = switchInner.Remove(innerCases[i].Index, innerCases[i].Length);
 			Assert.AreEqual("", Normalize(switchInner),
-				"switch may contain only the 36 pinned case bodies");
+				"switch may contain only the 49 pinned case bodies");
 
 			string skeleton = run.Remove(switchOpen, switchBlock.Length)
 				.Insert(switchOpen, "{ CASES }");
 			Assert.AreEqual(
-				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action) { if (!KingdomMaster.NewWorkAllowed(System) && !KingdomCharterMenuRules.AvailableWhileSimulationPaused(Action)) { Popup.Show(\"Settlement simulation is paused by the master option. Records and committed recovery remain available; resume the realm before ordering new work.\"); return false; } KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject); try { switch (Action) { CASES } } finally { action.Dispose(); } return action.Committed; }",
+				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action) { if (!ExternalOwnershipActionAllowed(System, Action, out string externalFailure)) { Popup.Show(\"Civic work is paused on this ground: \" + externalFailure); return false; } if (!KingdomMaster.NewWorkAllowed(System) && !KingdomCharterMenuRules.AvailableWhileSimulationPaused(Action)) { Popup.Show(\"Settlement simulation is paused by the master option. Records and committed recovery remain available; resume the realm before ordering new work.\"); return false; } KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject); try { switch (Action) { CASES } } finally { action.Dispose(); } return action.Committed; }",
 				Normalize(skeleton),
-				"only the zero-energy master gate may sit outside the pinned switch");
+				"only ownership and zero-energy master gates may sit outside the pinned switch");
 		}
 
 		[Test]
@@ -382,9 +413,12 @@ namespace ThousandAndFirst.Tests
 				"Charter action handlers must retain their governed durable commits");
 			Assert.AreEqual(0, Occurrences(run, "KingdomGovernanceScope.Commit("),
 				"RunAction opens scope then dispatches; only handlers may mark it committed");
+			int scopeClass = governance.IndexOf("public sealed class KingdomGovernanceScope",
+				StringComparison.Ordinal);
+			int scopeDispose = governance.IndexOf("public void Dispose()", scopeClass,
+				StringComparison.Ordinal);
 			string dispose = BraceBlockAt(governance,
-				governance.IndexOf('{', governance.IndexOf("public void Dispose()",
-					StringComparison.Ordinal)));
+				governance.IndexOf('{', scopeDispose));
 			MatchCollection committedGuards = Regex.Matches(dispose,
 				@"if\s*\(\s*!Committed\s*\)\s*(\{[^{}]*\})",
 				RegexOptions.Singleline);
@@ -433,6 +467,46 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ReopenedReadingsKeepDynamicLabelOwnershipAndLoadedGroundBoundary()
+		{
+			string root = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
+			string labels = Method(root,
+				"private static string[] RouteLabels(KingdomCharterMenuRoute[] Routes, KingdomSystem System)");
+			StringAssert.Contains("route.Action == KingdomCharterAction.GuestFeastRecord", labels);
+			StringAssert.Contains("KingdomGuestFeastRuntime.CharterLabel(System)", labels);
+
+			string external = Source(Path.Combine("Core",
+				"KingdomCharterPart.ExternalOwnership.cs"));
+			string reports = Method(external,
+				"private static bool IsOwnershipReport(KingdomCharterAction Action)");
+			foreach (string action in new string[] { "BodyHistory", "GuestFeastRecord",
+				"CivicCommitments" })
+				StringAssert.Contains("case KingdomCharterAction." + action + ":", reports);
+			StringAssert.DoesNotContain("case KingdomCharterAction.CivicKnowledge:", reports,
+				"civic knowledge choices can mutate and must obey the external-owner gate");
+
+			string open = Method(external,
+				"private void OpenCivicCommitments(KingdomSystem System)");
+			string moot = Method(external,
+				"private static GameObject CurrentMoot(KingdomSystem System, Zone Zone)");
+			string enclave = Method(external,
+				"private static GameObject CurrentEnclave(KingdomSystem System, Zone Zone)");
+			string loaded = open + moot + enclave;
+			StringAssert.Contains("ParentObject?.CurrentZone", open);
+			StringAssert.Contains("System.OwnedZone(zone.ZoneID)", open);
+			StringAssert.Contains("KingdomJointCivicViewRuntime.TryRead(System, zone, moot, enclave", open);
+			StringAssert.Contains("if (!KingdomHostedArcology.TryReadAuthorityIdentityForJointView",
+				enclave, "the locator must not consume out values from a failed native read");
+			Assert.AreEqual(2, Occurrences(loaded, "Zone.FindObjectByID("));
+			StringAssert.DoesNotContain("GameObject.FindByID", loaded);
+			StringAssert.DoesNotContain("ZoneManager", loaded);
+			StringAssert.DoesNotContain("GetZone(", loaded);
+			StringAssert.DoesNotContain("Normalize(", loaded);
+			StringAssert.DoesNotContain("Reconcile", loaded);
+			StringAssert.DoesNotContain("KingdomGovernanceScope.Commit", loaded);
+		}
+
+		[Test]
 		public void DetailedTradeStatusPreservesWishOnlyDiagnosticBranch()
 		{
 			string reports = Source(Path.Combine("Core", "KingdomReports.cs"));
@@ -473,7 +547,8 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.AreEqual(1, callers,
 				"production must have exactly one true Detailed TradeStatus caller");
-			Assert.AreEqual(Path.Combine(root, "Debug", "KingdomWishes.cs"), callerPath);
+			Assert.AreEqual(Path.Combine(root, "Debug",
+				"KingdomWishes.DumpDelvesAndRaids.cs"), callerPath);
 		}
 
 		private static void CountActions(KingdomCharterMenuRoute[] Routes,
@@ -486,6 +561,18 @@ namespace ThousandAndFirst.Tests
 				Counts.TryGetValue(Routes[i].Action, out count);
 				Counts[Routes[i].Action] = count + 1;
 			}
+		}
+
+		private static void AssertChapterAction(KingdomCharterChapter Chapter,
+			KingdomCharterAction Action, string Label, char Hotkey)
+		{
+			KingdomCharterMenuRoute[] routes = KingdomCharterMenuRules.ChapterEntries(Chapter);
+			KingdomCharterMenuRoute row = Array.Find(routes,
+				candidate => candidate.Kind == KingdomCharterRouteKind.Action
+					&& candidate.Action == Action);
+			Assert.IsNotNull(row, Chapter + " / " + Action);
+			Assert.AreEqual(Label, row.Label);
+			Assert.AreEqual(Hotkey, row.Hotkey);
 		}
 
 		private static void AssertMenu(KingdomCharterMenuRoute[] Routes, bool ExpectBack)

@@ -1,5 +1,21 @@
 # The evolving heart — research pass
 
+> **Implementation reconciliation, 2026-08-27.** v1 closes the great court into one exact
+> capital/realm hosted arcology. The court becomes a persistent vanilla Interior atrium; bounded
+> ward and hydroponic floors are paid lots with exact receipts and deterministic additive fixtures.
+> The terrace contributes food only with current fresh-water stores, and a former-capital shell
+> remains intact and dark. Two fixed authority slots retain current plus the exact archived realm;
+> a loaded foreign shell stays inert rather than being relabelled or quarantined. This realizes the hosted/topological intent without remote surface-zone
+> loads, unloaded residents, or offscreen work. Parasang-scale exterior simulation is not inferred.
+> Native TESTING 136j–136j.5 remains acceptance evidence.
+>
+> The separately owned yielding-lot verb is now implemented as the narrow ruled ring call. Only an
+> exact finished settlement-raised plot already marked yielding, and only when the next Heart rect
+> needs it, may enter the founder's complete source→destination preview. Existing layout scoring,
+> one-at-a-time labour frames, same-object/LotId architecture and state carry, zero store debit,
+> obstruction-safe CAS handover, and load/thaw/secession rollback/quarantine are wired. Native
+> TESTING 136j.6–136j.10 remains acceptance; this does not create a general move tool.
+
 **Question (author, 2026-08-22, research-first):** "how do we handle the 'heart' of the city
 evolving since the bowl will become something else, then something else, and eventually an
 arcology … a smooth way … without too much striking, building, moving to make room … maybe plots
@@ -22,7 +38,8 @@ nine 80×25 sections; the arcology spans *a parasang and then some*). The recomm
 re-cut against this: see **§3.0** (the register — accretion, not upgrade), **§3e(i)** (the radius
 left in the quarry), **§3e-bis** (the anti-overfit audit), and rejections **15–17**.
 
-Status: RESEARCH ONLY. Nothing here is ruled. Sections 2 and 3 are recommendations to the author.
+Historical status: this document began as research only. Later author rulings live in the building
+brief and VISION; the reconciliation note above records the implemented v1 topology.
 
 ## Findings in brief
 

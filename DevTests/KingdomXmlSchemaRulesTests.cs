@@ -46,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		public void EveryShippedPublicRegistryDeclaresSchemaOne(string file, string root)
 		{
 			XmlDocument document = new XmlDocument();
-			document.Load(Path.Combine(TestMain.RepositoryRoot, file));
+			document.LoadXml(TestMain.ReadRepositoryText(file));
 			Assert.AreEqual(root, document.DocumentElement.Name);
 			Assert.AreEqual(KingdomXmlSchemaRules.CurrentVersion.ToString(),
 				document.DocumentElement.GetAttribute("Schema"));

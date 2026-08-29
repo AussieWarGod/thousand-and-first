@@ -117,6 +117,14 @@ namespace ThousandAndFirst
 					return;
 				}
 				r_KingdomScaffold scaffoldPart = improvement.Scaffold.GetPart<r_KingdomScaffold>();
+				if (Job.Phase != KingdomConstructionPhase.Working
+					&& !scaffoldPart.TryValidateInitialDurableWork(Job, Job.UpdatedTick,
+						out string initialFailure))
+				{
+					KingdomConstructionJob damaged = Job;
+					KingdomConstruction.Quarantine(ref damaged, initialFailure);
+					return;
+				}
 				if (scaffoldPart.RemainingTicks <= 0 && scaffoldPart.LastWorkedTick > 0)
 					scaffoldPart.RetryDurable(System, Z, Job);
 				else

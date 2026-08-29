@@ -46,19 +46,49 @@ namespace ThousandAndFirst
 			int best = 0;
 			for (int i = 1; i < Eligible.Count; i++)
 			{
-				int freeHere = Eligible[i].Capacity - Eligible[i].Occupants;
-				int freeBest = Eligible[best].Capacity - Eligible[best].Occupants;
-				if (freeHere < freeBest)
-				{
-					best = i;
-					continue;
-				}
-				if (freeHere == freeBest && string.CompareOrdinal(Eligible[i].PlotId, Eligible[best].PlotId) < 0)
-				{
-					best = i;
-				}
+				if (ComesBefore(Eligible[i], Eligible[best])) best = i;
 			}
 			return best;
+		}
+
+		/// <summary>
+		/// Picks a home for an ordinary, non-luxury resident while holding an eligible fine house
+		/// as a last resort. Any otherwise-eligible ordinary home wins before every fine house;
+		/// when fine houses are the only eligible shelter, they remain candidates and the resident
+		/// is housed. Within the winning class, <see cref="ChooseIndex"/>'s compaction and ordinal
+		/// tiebreak are unchanged.
+		/// </summary>
+		/// <param name="Eligible">Candidates that already passed every hard lodging gate.</param>
+		/// <param name="FineHouses">One flag per candidate. A null or mismatched list falls back
+		/// to <see cref="ChooseIndex"/> so incomplete advisory metadata can never manufacture
+		/// homelessness.</param>
+		/// <returns>The winning index in <paramref name="Eligible"/>, or -1 for no candidates.</returns>
+		public static int ChooseOrdinaryIndex(IReadOnlyList<LodgingCandidate> Eligible,
+			IReadOnlyList<bool> FineHouses)
+		{
+			if (Eligible == null || Eligible.Count == 0) return -1;
+			if (FineHouses == null || FineHouses.Count != Eligible.Count)
+				return ChooseIndex(Eligible);
+			bool hasOrdinaryHome = false;
+			for (int i = 0; i < FineHouses.Count; i++)
+			{
+				if (!FineHouses[i]) { hasOrdinaryHome = true; break; }
+			}
+			int best = -1;
+			for (int i = 0; i < Eligible.Count; i++)
+			{
+				if (hasOrdinaryHome && FineHouses[i]) continue;
+				if (best < 0 || ComesBefore(Eligible[i], Eligible[best])) best = i;
+			}
+			return best;
+		}
+
+		private static bool ComesBefore(LodgingCandidate Candidate, LodgingCandidate Incumbent)
+		{
+			int candidateFree = Candidate.Capacity - Candidate.Occupants;
+			int incumbentFree = Incumbent.Capacity - Incumbent.Occupants;
+			return candidateFree < incumbentFree || (candidateFree == incumbentFree
+				&& string.CompareOrdinal(Candidate.PlotId, Incumbent.PlotId) < 0);
 		}
 
 		/// <summary>Why a resident who is not housed this pass is not housed, in the order a

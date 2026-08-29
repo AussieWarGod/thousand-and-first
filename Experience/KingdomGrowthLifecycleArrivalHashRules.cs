@@ -91,9 +91,15 @@ namespace ThousandAndFirst
 			KingdomGrowthArrivalCandidatePhase phase = Candidate.Phase ==
 				KingdomGrowthArrivalCandidatePhase.Quarantined
 					? Candidate.EvidencePhase : Candidate.Phase;
-			if (phase == KingdomGrowthArrivalCandidatePhase.Prepared
+			if (phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice
+				|| phase == KingdomGrowthArrivalCandidatePhase.Declined
+				|| GrowthFirstGuestDeclinedSettled(Candidate, phase)
+				|| GrowthFirstGuestPhysicalTerminalSettled(Candidate, phase)
+				|| phase == KingdomGrowthArrivalCandidatePhase.Prepared
 				|| phase == KingdomGrowthArrivalCandidatePhase.CreateIntent
-				|| phase == KingdomGrowthArrivalCandidatePhase.Escrowed)
+				|| phase == KingdomGrowthArrivalCandidatePhase.Escrowed
+				|| phase == KingdomGrowthArrivalCandidatePhase.GuestHosted
+				|| phase == KingdomGrowthArrivalCandidatePhase.GuestTerminal)
 			{
 				Hash = baseHash;
 				return true;
@@ -193,17 +199,27 @@ namespace ThousandAndFirst
 			KingdomGrowthArrivalCandidate Candidate, out string Hash)
 		{
 			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, true,
-				Candidate != null && !Candidate.LegacySemanticPlan, out Hash);
+				Candidate != null && !Candidate.LegacySemanticPlan,
+				Candidate != null && Candidate.FirstGuest != null, out Hash);
 		}
 
 		private static bool TryLegacyGrowthArrivalCandidateBasePlanHash(
 			KingdomGrowthArrivalCandidate Candidate, out string Hash)
 		{
-			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, false, false, out Hash);
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, false, false, false,
+				out Hash);
+		}
+
+		private static bool TryGrowthV3ArrivalCandidateBasePlanHash(
+			KingdomGrowthArrivalCandidate Candidate, out string Hash)
+		{
+			return TryGrowthArrivalCandidateBasePlanHashCore(Candidate, true,
+				Candidate != null && !Candidate.LegacySemanticPlan, false, out Hash);
 		}
 
 		private static bool TryGrowthArrivalCandidateBasePlanHashCore(
 			KingdomGrowthArrivalCandidate Candidate, bool IncludeZone, bool IncludeSemantic,
+			bool IncludeFirstGuest,
 			out string Hash)
 		{
 			Hash = null;
@@ -214,6 +230,14 @@ namespace ThousandAndFirst
 				{
 					w.Write(Candidate.Sequence); CanonicalString(w, Candidate.Id);
 					CanonicalString(w, Candidate.SettlementId); w.Write(Candidate.CreatedTick);
+					if (Candidate.ArrivalOpportunityOrdinal != 0UL)
+					{
+						CanonicalString(w, "arrival-opportunity-v1");
+						w.Write(Candidate.ArrivalOpportunityOrdinal);
+						w.Write(Candidate.ArrivalOpportunityDueTick);
+						w.Write(Candidate.ArrivalOpportunityRateEpoch);
+						CanonicalString(w, Candidate.ArrivalOpportunityPayloadHash);
+					}
 					CanonicalString(w, Candidate.Marker); CanonicalString(w, Candidate.Blueprint);
 					CanonicalString(w, Candidate.EscrowKey);
 					if (IncludeZone) CanonicalString(w, Candidate.LodgingZoneId);
@@ -229,6 +253,7 @@ namespace ThousandAndFirst
 						CanonicalString(w, Candidate.PlannedArrived);
 						w.Write(Candidate.ArrivalX); w.Write(Candidate.ArrivalY);
 					}
+					if (IncludeFirstGuest) WriteGrowthFirstGuestPlan(w, Candidate.FirstGuest);
 					WriteLeasePlan(w, Candidate.CandidateLease);
 					WriteLeasePlan(w, Candidate.LodgingLease);
 					WriteLeasePlan(w, Candidate.EscrowLease);

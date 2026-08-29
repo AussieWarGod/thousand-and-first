@@ -161,11 +161,16 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("lost its published output before settlement", settle);
 			StringAssert.Contains("changed after output publication", settle);
 			AssertOrdered(settle, "CanInsert(Owner, Z, cell", "GameObject.Create(Placement.Blueprint)",
-				"StampComponent(placed, Lot, Intent.SnapshotHash, Placement)",
-				"Owner.SetStringProperty(idProperty, placed.ID)",
-				"Owner.SetIntProperty(stateProperty, 1)", "cell.AddObject(placed",
-				"ExactComponent(placed, Z, Intent, Lot, Placement",
+					"StampComponent(placed, Lot, Intent.SnapshotHash, Placement)",
+					"RootStagingOutput(placed)", "Owner.SetStringProperty(idProperty, placed.ID)",
+					"Owner.SetIntProperty(stateProperty, 1)",
+					"cell.AddObject(placed",
+				"bool exactEndpoint = ExactComponent(placed, Z, Intent, Lot, Placement",
+				"bool exactCustody = Placement.ExistingAuthority",
+				"KingdomFoundingHeartTerminalRules.ExactAddCut(callbackReturned",
 				"Owner.SetIntProperty(stateProperty, 2)");
+			StringAssert.Contains("object.ReferenceEquals(accepted, placed)", settle);
+			StringAssert.Contains("object.ReferenceEquals(rootedOutput, placed)", settle);
 
 			string exact = Between(source, "private static bool ExactComponent(",
 				"private static bool CanInsert(");
@@ -200,7 +205,8 @@ namespace ThousandAndFirst.Tests
 				"private static bool RemoveCreatedWorks(");
 			AssertOrdered(stake, "KingdomArchitectureRuntime.TryFreeze(",
 				"KingdomArchitectureStamper.TryInitializeOwner(",
-				"KingdomConstruction.UpdateOutput(ref Job, works.ID)", "cell.AddObject(works)");
+				"KingdomConstruction.UpdateOutput(ref Job, works.ID)",
+				"cell.AddObject(works, NoStack: Heart != null)");
 
 			string apply = Between(source, "private static bool Apply(",
 				"private static void PrepareFinalBuilding(");
@@ -266,6 +272,58 @@ namespace ThousandAndFirst.Tests
 				"public static void HandOver(", StringComparison.Ordinal));
 			StringAssert.Contains("KingdomArchitectureStamper.TryApplyUpgrade", handover);
 			StringAssert.Contains("KingdomPlots.TryStampAuthoredGrowth", handover);
+		}
+
+		[Test]
+		public void PlanChangeAuthorityPrecedesDebitAndRebindsEveryPaidApplication()
+		{
+			string transition = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Transitions.cs");
+			StringAssert.Contains("AuthorizesFixedLotTransition", transition);
+			StringAssert.Contains("needsRouteAuthority && !AllowPlanChange", transition);
+			StringAssert.Contains("KingdomSocketTransitions.Authorizes(Owner", transition);
+			StringAssert.DoesNotContain(
+				"Before == null || After == null || Before.PlanKey != After.PlanKey", transition);
+			AssertOrdered(transition, "Before.LotType == After.LotType",
+				"Before.LotSize == After.LotSize",
+				"SameRect(BeforeIntent.Rect, AfterIntent.Rect)",
+				"Before.Facing == After.Facing",
+				"BeforeIntent.MainWorldX == AfterIntent.MainWorldX",
+				"ValidLotId(Owner.GetStringProperty(LotIdProperty))");
+
+			string preflight = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradePreflight.cs");
+			string declared = Between(preflight,
+				"public static bool TryPreflightPlanTransition(",
+				"private static bool TryPreflightUpgradeCore(");
+			AssertOrdered(declared, "TryReadOwner(Owner",
+				"KingdomSocketTransitions.TryResolveCurrent(Transition",
+				"ExactTransitionClaim(PaidClaim, declared.Materials)",
+				"return TryPreflightUpgradeCore(System, Z, Owner, Successor, PaidClaim, true");
+
+			string prepare = TestMain.ReadRepositoryText("Growth/KingdomUpgrade.15.Prepare.cs");
+			StringAssert.Contains("TryPreflightPlanTransition(System, Z, Work", prepare);
+			string begin = TestMain.ReadRepositoryText("Growth/KingdomUpgrade.14.Begin.cs");
+			AssertOrdered(begin, "TryReprovePreparedImprovement(System, Z, Work",
+				"Survey.ReserveExactWater(A.CostDrams)");
+
+			string components = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Components.cs");
+			StringAssert.Contains("TryAuthorizedTransition(Owner, Z, BeforeIntent, Before, " +
+				"Successor, After,", components);
+			StringAssert.Contains("false, out heartAccretion", components);
+			string application = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
+			AssertOrdered(application, "TryUpgradeBase(Owner, Z, Successor",
+				"TryBeginUpgradeReceipt(Owner, Target, Successor",
+				"TryRemoveUpgradeSlot(Owner", "TryCarryUpgradeSlot(Owner, Target",
+				"TryStageLayer(Target, Z, ArchitectureLayer.Ground");
+			string receipts = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
+			AssertOrdered(receipts, "Target.SetStringProperty(OutputId(AfterPlacement), id)",
+				"Owner.SetIntProperty(stateProperty, 1)",
+				"StampComponent(exact, Lot, After.SnapshotHash, AfterPlacement)",
+				"Owner.SetIntProperty(stateProperty, 2)");
 		}
 
 		[Test]

@@ -22,18 +22,18 @@ namespace XRL.World.ZoneBuilders
 				{
 					return false;
 				}
-				string secret = "taf.inherit." + (LegacyId ?? "");
+				string mapNoteId = "taf.inherit." + (LegacyId ?? "");
 				List<GameObject> objects = Z.GetObjects();
 				for (int i = objects.Count - 1; i >= 0; i--)
 				{
 					XRL.World.Parts.LocationFinder finder =
 						objects[i].GetPart<XRL.World.Parts.LocationFinder>();
-					if (finder != null && finder.ID == secret)
+					if (finder != null && finder.ID == mapNoteId)
 					{
 						objects[i].Obliterate(null, Silent: true);
 					}
 				}
-				JournalMapNote note = JournalAPI.GetMapNote(secret);
+				JournalMapNote note = JournalAPI.GetMapNote(mapNoteId);
 				if (note != null && note.ZoneID == TargetZoneId)
 				{
 					JournalAPI.DeleteMapNote(note);
@@ -152,7 +152,7 @@ namespace XRL.World.ZoneBuilders
 					Cell cell = Z.GetCell(x, y);
 					if (cell == null) continue;
 					if (string.IsNullOrEmpty(cell.PaintTile))
-						cell.PaintTile = "Terrain/sw_ground_desert_1.bmp";
+						cell.PaintTile = "Terrain/sw_desert.bmp";
 					if (string.IsNullOrEmpty(cell.PaintTileColor)) cell.PaintTileColor = "&y";
 					if (string.IsNullOrEmpty(cell.PaintColorString)) cell.PaintColorString = "&y";
 					if (string.IsNullOrEmpty(cell.PaintRenderString)) cell.PaintRenderString = ".";

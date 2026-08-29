@@ -8,10 +8,9 @@ using XRL.World;
 namespace ThousandAndFirst
 {
 	using XRL.World.Parts;
-
 	public static partial class KingdomBounty
 	{
-		/// <summary>Every notice standing on this ground, in the order the zone yields them.</summary>
+		/// <summary>Every notice standing on this ground, in zone order.</summary>
 		public static List<GameObject> Notices(Zone Z)
 		{
 			List<GameObject> found = new List<GameObject>();
@@ -80,7 +79,7 @@ namespace ThousandAndFirst
 			int units = 0;
 			foreach (GameObject held in Container.Inventory.Objects)
 			{
-				if (KingdomMaterials.TryMaterialOf(held, out _))
+				if (KingdomMaterials.TryOrdinaryMaterialOf(held, out _))
 				{
 					units += held.Count;
 				}
@@ -106,7 +105,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			if (Notice != null && marked != Notice.ID)
+			if (Notice != null && marked != Notice.IDIfAssigned)
 			{
 				return null;
 			}
@@ -202,7 +201,7 @@ namespace ThousandAndFirst
 				return (pile == null) ? null : ("The mark is cut into " + pile.ShortDisplayName + ".");
 			}
 			case BountyTask.Manning:
-				return "A season is " + KingdomBountyRules.ManningSeasonDays + " days, and the settlement counts them.";
+				return ManningDetail(Data);
 			default:
 				return null;
 			}
@@ -223,6 +222,7 @@ namespace ThousandAndFirst
 					(BountyTask)Data.TaskCode, KingdomPresentation.Rich(System.SeatName));
 				return (reason == null) ? "{{K|Nobody has taken it yet.}}" : ("{{r|" + reason + "}}");
 			}
+			if ((BountyTask)Data.TaskCode == BountyTask.Manning) return ManningProgress(Data);
 			if (Data.DueTick <= 0L)
 			{
 				return "{{W|" + KingdomPresentation.Rich(Data.WorkerName) + " has it, and is at it now.}}";

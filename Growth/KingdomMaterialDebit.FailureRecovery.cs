@@ -95,6 +95,9 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			string leaseFailure;
+			if (!KingdomConstructionInputLeaseAuthority.TryObjectAvailableForLocalDebit(
+				entry.Item, out leaseFailure)) return false;
 			try
 			{
 				entry.Item.Count = step.Original;

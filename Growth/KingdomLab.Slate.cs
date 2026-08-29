@@ -32,10 +32,11 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
+			if (KingdomLabCivicRuntime.HandleSlate(system, Building.CurrentZone, Building)) return;
 			r_KingdomLabRemovalJob removal = ActiveRemovalJob(Actor);
 			if (removal != null)
 			{
-				if (!string.Equals(removal.PatientId, Actor.ID, StringComparison.Ordinal))
+				if (!string.Equals(removal.PatientId, Actor.IDIfAssigned, StringComparison.Ordinal))
 				{
 					removal.State = KingdomLabRemovalPhase.Quarantined;
 					removal.Fault = "This removal receipt belongs to another patient. It offers no action here.";
@@ -48,7 +49,7 @@ namespace ThousandAndFirst
 			r_KingdomLabJob existing = Building?.GetPart<r_KingdomLabJob>();
 			if (existing != null)
 			{
-				if (!string.Equals(existing.PatientId, Actor.ID, StringComparison.Ordinal))
+				if (!string.Equals(existing.PatientId, Actor.IDIfAssigned, StringComparison.Ordinal))
 				{
 					existing.State = KingdomLabJobPhase.ApplicationRecovery;
 					existing.Fault = "This hall's commission belongs to another patient. No payment, cancellation, application, or cleanup is offered.";
@@ -59,6 +60,11 @@ namespace ThousandAndFirst
 				return;
 			}
 			if (HandleActivePatientRegistry(Actor, system)) return;
+			if (!KingdomMaster.NewWorkAllowed(system))
+			{
+				Popup.Show("Kingdom work is paused. Existing laboratory recovery remains available, but no new procedure can be commissioned.");
+				return;
+			}
 			// Turning the feature off refuses only a new commission. Existing application,
 			// removal, registry and terminal outbox cleanup above must always keep running.
 			if (!KingdomProcedures.Enabled) return;
@@ -121,7 +127,9 @@ namespace ThousandAndFirst
 					Title: KingdomLabRules.SlateTitle(KingdomPresentation.Rich(city)),
 					Intro: KingdomLabRules.SlateIntro(
 						KingdomPresentation.Rich(SavantAt(system)), null, TotalKept(kept))
-						+ ((gap == null) ? "" : ("\n" + gap)),
+						+ ((gap == null) ? "" : ("\n" + gap))
+						+ (string.IsNullOrEmpty(KingdomLabCivicRuntime.Status(Building)) ? ""
+							: ("\n\n" + KingdomLabCivicRuntime.Status(Building))),
 					Options: options, AllowEscape: true, RespectOptionNewlines: true);
 				if (picked < 0)
 				{
@@ -168,7 +176,7 @@ namespace ThousandAndFirst
 				job.Normalize();
 				if (job.State != KingdomLabRemovalPhase.Complete
 					&& job.State != KingdomLabRemovalPhase.Cancelled) return job;
-				if (!string.Equals(job.PatientId, Actor.ID, StringComparison.Ordinal)
+				if (!string.Equals(job.PatientId, Actor.IDIfAssigned, StringComparison.Ordinal)
 					|| job.SchemaQuarantined) return job;
 				KingdomLabOwnedTarget ignored;
 				KingdomLabOwnedTargetState observed = KingdomProcedures.ClassifyOwned(Actor,

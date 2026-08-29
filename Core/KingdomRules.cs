@@ -30,7 +30,10 @@ namespace ThousandAndFirst
 
 		public static int SpilloverDelta(int RepDelta, GrowthStage Stage)
 		{
-			return RepDelta * SpilloverPercent(Stage) / 100;
+			long scaled = (long)RepDelta * SpilloverPercent(Stage) / 100L;
+			if (scaled > int.MaxValue) return int.MaxValue;
+			if (scaled < int.MinValue) return int.MinValue;
+			return (int)scaled;
 		}
 
 		public const int DramsPerArrival = 2;

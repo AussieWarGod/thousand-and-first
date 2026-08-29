@@ -28,6 +28,8 @@ namespace ThousandAndFirst
 		private static bool NeedsLabour(GameObject Root)
 		{
 			if (!GameObject.Validate(Root)) return false;
+			if (Root.GetPart<r_KingdomRelocationFrame>() != null)
+				return KingdomRelocation.FrameNeedsLabour(Root);
 			r_KingdomScaffold scaffold = Root.GetPart<r_KingdomScaffold>();
 			if (scaffold != null)
 			{

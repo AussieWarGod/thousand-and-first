@@ -134,10 +134,16 @@ namespace ThousandAndFirst.Simulation.City
 				out sourceEndpointId, out targetEndpointId, out fault)) return false;
 			int[] jobIds = new int[expected];
 			int[] tripIds = new int[expected];
-			int start = 0;
+			if (!KingdomExperienceRuntime.TryAdmitNewFoundationTransientClaims(system, expected,
+				out KingdomExperienceCapacityFault _, out string _))
+			{ fault = KingdomCityFault.RowCapExceeded; return false; }
 			for (int i = 0; i < expected; i++)
 			{
 				jobIds[i] = system.Jobs.MintJobId(); tripIds[i] = jobIds[i];
+			}
+			int start = 0;
+			for (int i = 0; i < expected; i++)
+			{
 				int count = sourceObjectCount - start;
 				if (count > KingdomLogisticsRules.CarrierCapacity)
 					count = KingdomLogisticsRules.CarrierCapacity;

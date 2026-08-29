@@ -48,7 +48,12 @@ namespace ThousandAndFirst
 						&& version != ExactLogisticsVersion
 						&& version != DefensiveReservationVersion
 						&& version != SemanticSelectionVersion
-						&& version != CurrentVersion)
+							&& version != HappeningCursorVersion
+							&& version != DeliveryDomainVersion
+							&& version != CivicAuthorityVersion
+							&& version != FirstGuestVersion
+							&& version != PhysicalFirstGuestVersion
+							&& version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);
 					if (!string.Equals(shape, Shape(typeof(KingdomSettlement), version),
@@ -61,6 +66,19 @@ namespace ThousandAndFirst
 					Value = (KingdomSettlement)decoded;
 					if (version < SemanticSelectionVersion)
 						StageHistoricalSemanticPlan(Value);
+					if (version < FirstGuestVersion
+						&& !StageHistoricalFirstGuestAuthority(Value, version))
+						throw new InvalidDataException(
+							"Archived settlement historical first-guest authority could not migrate.");
+					if (version == FirstGuestVersion
+						&& !StageHistoricalPhysicalFirstGuestAuthority(Value))
+						throw new InvalidDataException(
+							"Archived settlement historical physical first-guest authority could not migrate.");
+					if (version < ArrivalCadenceVersion && Value?.LifecycleBook?.Growth != null
+						&& !KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(
+							Value.LifecycleBook.Growth))
+						throw new InvalidDataException(
+							"Archived settlement historical arrival cadence could not migrate.");
 					if (version == LegacyVersion && Value != null)
 					{
 						if (!KingdomLifecycleRules.StageLegacyGrowthMigration(Value.LifecycleBook))
@@ -82,6 +100,10 @@ namespace ThousandAndFirst
 						|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
 						throw new InvalidDataException(
 							"Archived settlement raid evidence is malformed.");
+					// All archive versions can carry the pre-v1 notable economy field. Keep its
+					// serialized position, but never return a clone whose optional civic title grants
+					// capacity before normal load/seat normalization gets another chance to run.
+					if (Value != null) Value.NotableShade = 0;
 					return true;
 				}
 			}
@@ -117,6 +139,63 @@ namespace ThousandAndFirst
 			candidate.PlannedArrived = null;
 			candidate.ArrivalX = -1;
 			candidate.ArrivalY = -1;
+		}
+
+		private static bool StageHistoricalFirstGuestAuthority(KingdomSettlement Value,
+			int ArchiveVersion)
+		{
+			KingdomGrowthBook growth = Value?.LifecycleBook?.Growth;
+			if (growth == null) return true;
+			int growthVersion = ArchiveVersion < SemanticSelectionVersion
+				? KingdomLifecycleRules.PreviousGrowthFormatVersion : growth.FormatVersion;
+			if (growthVersion < KingdomLifecycleRules.LegacyGrowthFormatVersion
+				|| growthVersion >= KingdomLifecycleRules.CurrentGrowthFormatVersion)
+				return false;
+			if (!KingdomLifecycleRules.UpgradeFirstGuestOpportunity(growth, growthVersion)
+				&& !ExactPreFirstGuestPreparedCarrier(growth.ArrivalCandidate, ArchiveVersion))
+				return false;
+			growth.FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion;
+			return true;
+		}
+
+		private static bool StageHistoricalPhysicalFirstGuestAuthority(
+			KingdomSettlement Value)
+		{
+			KingdomGrowthBook growth = Value?.LifecycleBook?.Growth;
+			if (growth == null) return true;
+			if (growth.FormatVersion != KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion)
+				return false;
+			if (growth.FirstGuestTerminal != null)
+				growth.FirstGuestTerminal.Version =
+					KingdomGrowthFirstGuestTerminalReceipt.CurrentVersion;
+			growth.FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion;
+			return true;
+		}
+
+		private static bool ExactPreFirstGuestPreparedCarrier(
+			KingdomGrowthArrivalCandidate Candidate, int ArchiveVersion)
+		{
+			// Pre-first-guest archives admitted a sparse Prepared carrier without a lifecycle hash.
+			// Its absent first-guest columns prove no choice or body authority; do not synthesize
+			// either a current opportunity or the legacy-interposition marker from that absence.
+			return ArchiveVersion >= PhysicalHappeningVersion
+				&& ArchiveVersion < FirstGuestVersion && Candidate != null
+				&& Candidate.Phase == KingdomGrowthArrivalCandidatePhase.Prepared
+				&& Candidate.FirstGuest == null && !Candidate.LegacyAutomaticRecovery
+				&& Candidate.PlanHash == null && Candidate.ObjectId == null
+				&& Candidate.Disposition == KingdomGrowthArrivalDisposition.None
+				&& Candidate.RefusalReason == KingdomGrowthArrivalRefusalReason.None
+				&& Candidate.CandidateLease == null && Candidate.LodgingLease == null
+				&& Candidate.EscrowLease == null && Candidate.CreateStep == null
+				&& Candidate.DispositionStep == null && Candidate.LodgingZoneId == null
+				&& Candidate.LodgingBeforeGraphHash == null
+				&& Candidate.LodgingDeclaredGraphHash == null
+				&& Candidate.LodgingReceiptGraphHash == null
+				&& Candidate.LodgingCallbackReferenceHash == null
+				&& !Candidate.LodgingSameReference && Candidate.LodgingReceiptId == null
+				&& Candidate.LodgingState == KingdomLifecyclePhysicalState.None
+				&& Candidate.ConsumingOperationId == null
+				&& Candidate.ConsumingOperationSequence == 0L;
 		}
 
 		public static bool TryClone(KingdomSettlement Source, out KingdomSettlement Clone,

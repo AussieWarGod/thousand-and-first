@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomSocketLogicalSource
 	{
-		internal const int FileCount = 14;
+		internal const int FileCount = 15;
 
 		private static readonly string[] Paths = new string[]
 		{
@@ -17,6 +17,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomSocket.05.ConversionPreparation.cs",
 			"Growth/KingdomSocket.06.ConversionProjection.cs",
 			"Growth/KingdomSocket.07.ClearanceAndSockets.cs",
+			"Growth/KingdomSocket.07b.LegacySweep.cs",
 			"Growth/KingdomSocket.08.SocketBuildPreparation.cs",
 			"Growth/KingdomSocket.09.SocketBuildExecution.cs",
 			"Growth/KingdomSocket.10.Redress.cs",

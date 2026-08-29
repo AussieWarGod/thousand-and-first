@@ -116,6 +116,9 @@ namespace ThousandAndFirst.Simulation.City
 		internal static int Drive(KingdomSystem system, KingdomCityBook book, string label,
 			bool here, long nowTick, int pushBudget)
 		{
+			// D8 has a second, authenticated semantic owner. Only that owner may decide
+			// whether its option epoch is current before staging or advancing residents.
+			if (CommunalRiteActive(book)) return 0;
 			KingdomPhysicalQueueResult result = DriveCore(system, book, label, here, nowTick,
 				pushBudget < 0 ? 0 : pushBudget, out int pushed);
 			return result == KingdomPhysicalQueueResult.Refused ? 0 : pushed;

@@ -23,6 +23,15 @@ namespace ThousandAndFirst
 			}
 			PendingDeathToken = PendingDeathToken ?? "";
 			CompletedDeathToken = CompletedDeathToken ?? "";
+			SuccessionConfigurationWire = SuccessionConfigurationWire ?? "";
+			GroomingRecordWire = GroomingRecordWire ?? "";
+			PendingConfigurationChronicle = PendingConfigurationChronicle ?? "";
+			PendingSelectionReceipt = PendingSelectionReceipt ?? "";
+			CompletedSeatConsequenceToken = CompletedSeatConsequenceToken ?? "";
+			ActiveSeatClimbRealmId = ActiveSeatClimbRealmId ?? "";
+			ActiveSeatClimbToken = ActiveSeatClimbToken ?? "";
+			ActiveSeatKeeperName = ActiveSeatKeeperName ?? "";
+			ValidateConfigurationState();
 			PendingSealAccessionToken = PendingSealAccessionToken ?? "";
 			PendingFounderName = PendingFounderName ?? "";
 			PendingFounderObjectId = PendingFounderObjectId ?? "";
@@ -56,11 +65,16 @@ namespace ThousandAndFirst
 			PendingSealRiteChronicle = PendingSealRiteChronicle ?? "";
 			PendingAccessionRepairFounderName = PendingAccessionRepairFounderName ?? "";
 			PendingAccessionRepairHeirName = PendingAccessionRepairHeirName ?? "";
+			PendingAccessionRepairSettlementId = PendingAccessionRepairSettlementId ?? "";
 			PendingAccessionRepairKeptCreeds = PendingAccessionRepairKeptCreeds ?? "";
 			if (PendingAccessionRepairResidentId < 0
 				|| PendingAccessionRepairFounderName.Length > KingdomSealRecord.MaxNameChars
 				|| PendingAccessionRepairHeirName.Length > KingdomSealRecord.MaxNameChars
 				|| PendingAccessionRepairKeptCreeds.Length > MaxPendingRepairCreedsChars
+				|| (PendingAccessionRepairSettlementId.Length != 0 &&
+					!KingdomIdentityRules.IsSettlementId(PendingAccessionRepairSettlementId))
+				|| (PendingAccessionRepairSettlementId.Length != 0 &&
+					PendingAccessionRepairSeated)
 				|| PendingAccessionRepairArrivedTick < 0L
 				|| (PendingAccessionRepairResidentId != 0
 					&& (string.IsNullOrEmpty(PendingDeathToken)
@@ -73,6 +87,7 @@ namespace ThousandAndFirst
 			{
 				PendingAccessionRepairFounderName = "";
 				PendingAccessionRepairHeirName = "";
+				PendingAccessionRepairSettlementId = "";
 				PendingAccessionRepairSeated = false;
 				PendingAccessionRepairArrivedTick = 0L;
 				PendingAccessionRepairKeptCreeds = "";
@@ -174,47 +189,63 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private void ClearDisabledSavedState()
+		private void ValidateConfigurationState()
 		{
-			int completedOrdinal;
-			long completedTick;
-			if (!KingdomSuccessionRules.TryReadDeathToken(CompletedDeathToken,
-				out completedOrdinal, out completedTick))
-			{
-				CompletedDeathToken = "";
-				SuccessionOrdinal = 0;
-				PendingPhase = InterregnumPhase.None;
-			}
-			else
-			{
-				SuccessionOrdinal = completedOrdinal;
-				PendingPhase = InterregnumPhase.Reigning;
-			}
-			PendingDeathToken = "";
-			PendingDueTick = 0L;
-			PendingRoad = NewsRoad.Seat;
-			PendingDays = 0;
-			PendingSealAccessionToken = "";
-			PendingSealRiteChronicle = "";
-			PendingSealAccessionReady = false;
-			PendingAccessionRepairResidentId = 0;
-			PendingAccessionRepairFounderName = "";
-			PendingAccessionRepairHeirName = "";
-			PendingAccessionRepairSeated = false;
-			PendingAccessionRepairArrivedTick = 0L;
-			PendingAccessionRepairKeptCreeds = "";
-			ClearPendingRiteIdentity();
-			int shrineOrdinal;
-			long shrineTick;
-			if (!KingdomSuccessionRules.TryReadDeathToken(CompletedShrineToken,
-				out shrineOrdinal, out shrineTick)
-				|| string.IsNullOrEmpty(CompletedShrineObjectId)
-				|| string.IsNullOrEmpty(CompletedShrineZoneId))
-			{
-				CompletedShrineToken = "";
-				CompletedShrineObjectId = "";
-				CompletedShrineZoneId = "";
-			}
+			KingdomSuccessionConfiguration configuration =
+				default(KingdomSuccessionConfiguration);
+			bool hasConfiguration = SuccessionConfigurationWire.Length > 0;
+			if (SuccessionConfigurationWire.Length > 0
+				&& !KingdomSuccessionConfiguration.TryDecode(SuccessionConfigurationWire,
+					out configuration))
+				throw new InvalidOperationException("The saved succession custom is invalid.");
+			if (hasConfiguration)
+				SuccessionConfigurationWire = KingdomSuccessionConfiguration.Encode(configuration);
+			ValidateGroomingState(hasConfiguration, configuration);
+			if (PendingConfigurationChronicle.Length > MaxPendingConfigurationChronicleChars
+				|| (PendingConfigurationChronicle.Length > 0
+					&& SuccessionConfigurationWire.Length == 0))
+				throw new InvalidOperationException("The pending succession custom Chronicle is invalid.");
+			KingdomSuccessionSelectionReceipt receipt =
+				default(KingdomSuccessionSelectionReceipt);
+			if (PendingSelectionReceipt.Length > 0
+				&& !KingdomSuccessionSelectionReceipt.TryDecode(PendingSelectionReceipt,
+					out receipt))
+				throw new InvalidOperationException("The saved succession selection receipt is invalid.");
+			if (PendingSelectionReceipt.Length > 0
+				&& !string.Equals(receipt.DeathToken, PendingDeathToken,
+					StringComparison.Ordinal)
+				&& !string.Equals(receipt.DeathToken, CompletedDeathToken,
+					StringComparison.Ordinal))
+				throw new InvalidOperationException("The succession selection owns another death.");
+			if (!string.IsNullOrEmpty(PendingDeathToken)
+				&& PendingSelectionReceipt.Length == 0
+				&& !LegacySelectionReceiptUnavailable)
+				throw new InvalidOperationException("The pending succession lacks its selection receipt.");
+			if (PendingSelectionReceipt.Length > 0) LegacySelectionReceiptUnavailable = false;
+			if (string.IsNullOrEmpty(PendingDeathToken)) LegacySelectionReceiptUnavailable = false;
+			bool anyClimb = ActiveSeatClimbRealmId.Length > 0 || ActiveSeatClimbToken.Length > 0;
+			bool wholeClimb = ActiveSeatClimbRealmId.Length > 0 && ActiveSeatClimbToken.Length > 0;
+			int ordinal;
+			long tick;
+			if (anyClimb != wholeClimb || (wholeClimb != (ActiveSeatKeeperResidentId > 0
+					&& ActiveSeatKeeperName.Length > 0))
+				|| (!wholeClimb && (ActiveSeatKeeperResidentId != 0
+					|| ActiveSeatKeeperName.Length != 0))
+				|| ActiveSeatKeeperName.Length > 512
+				|| ActiveSeatClimbRealmId.Length > KingdomSuccessionConfiguration.MaxRealmIdChars
+				|| (wholeClimb && !KingdomSuccessionRules.TryReadDeathToken(
+					ActiveSeatClimbToken, out ordinal, out tick))
+				|| (CompletedSeatConsequenceToken.Length > 0
+					&& !KingdomSuccessionRules.TryReadDeathToken(
+						CompletedSeatConsequenceToken, out ordinal, out tick))
+				|| (wholeClimb && PendingSelectionReceipt.Length > 0
+					&& !string.Equals(ActiveSeatClimbToken, receipt.DeathToken,
+						StringComparison.Ordinal))
+				|| (wholeClimb && CompletedSeatConsequenceToken.Length > 0
+					&& PendingSelectionReceipt.Length == 0
+					&& !string.Equals(ActiveSeatClimbToken,
+						CompletedSeatConsequenceToken, StringComparison.Ordinal)))
+				throw new InvalidOperationException("The chosen-seat climb receipt is invalid.");
 		}
 
 	}

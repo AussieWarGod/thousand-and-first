@@ -62,7 +62,9 @@ namespace ThousandAndFirst
 					.Append(row.BuildTruthSchema).Append('|')
 					.Append(row.BuildHasPlot ? '1' : '0').Append('|')
 					.Append(row.BuildFrontier ? '1' : '0').Append('|')
-					.Append(row.BuildDefence.ToString(CultureInfo.InvariantCulture));
+					.Append(row.BuildDefence.ToString(CultureInfo.InvariantCulture)).Append('|')
+					.Append(EncodeText(row.InputReceipt)).Append('|')
+					.Append(EncodeText(row.InputReceiptHash));
 				if (output.Length > MaxRegistryChars)
 				{
 					return false;
@@ -83,7 +85,9 @@ namespace ThousandAndFirst
 			bool legacy = lines.Length > 0 && lines[0] == LegacyFormatHeader;
 			bool older = lines.Length > 0 && lines[0] == OlderFormatHeader;
 			bool prior = lines.Length > 0 && lines[0] == PriorFormatHeader;
-			if (lines.Length == 0 || (!legacy && !older && !prior && lines[0] != FormatHeader)
+			bool previous = lines.Length > 0 && lines[0] == PreviousFormatHeader;
+			if (lines.Length == 0 || (!legacy && !older && !prior && !previous
+					&& lines[0] != FormatHeader)
 				|| lines.Length - 1 > MaxRows)
 			{
 				return false;
@@ -97,7 +101,8 @@ namespace ThousandAndFirst
 					return false;
 				}
 				KingdomConstructionJob row;
-				if (!TryDecodeRow(lines[i], legacy, older, prior, out row) || !ids.Add(row.Id))
+				if (!TryDecodeRow(lines[i], legacy, older, prior, previous, out row)
+					|| !ids.Add(row.Id))
 				{
 					return false;
 				}

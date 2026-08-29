@@ -106,13 +106,24 @@ namespace ThousandAndFirst
 
 			public KingdomRoadRules.RouteKind Kind;
 
+			/// <summary>Frozen authored intermediates for a DoorToLane route. Null alone means the
+			/// receipt-less geometric compatibility path may search live walkable ground.</summary>
+			public List<ArchitecturePoint> ExactRoute;
+
 			public Errand(int FromX, int FromY, int ToX, int ToY, KingdomRoadRules.RouteKind Kind)
+				: this(FromX, FromY, ToX, ToY, Kind, null)
+			{
+			}
+
+			public Errand(int FromX, int FromY, int ToX, int ToY,
+				KingdomRoadRules.RouteKind Kind, IList<ArchitecturePoint> ExactRoute)
 			{
 				this.FromX = FromX;
 				this.FromY = FromY;
 				this.ToX = ToX;
 				this.ToY = ToY;
 				this.Kind = Kind;
+				this.ExactRoute = ExactRoute == null ? null : new List<ArchitecturePoint>(ExactRoute);
 			}
 		}
 

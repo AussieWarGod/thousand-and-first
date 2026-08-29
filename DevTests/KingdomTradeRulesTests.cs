@@ -1682,8 +1682,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomTradeLogicalSource.Read();
 			string declarations = ReadRepoSource("Trade/KingdomTrade.00.Declarations.cs");
-			Assert.AreEqual(23, KingdomTradeLogicalSource.FileCount);
-			Assert.AreEqual(23, Count(source, "public static partial class KingdomTrade"));
+			Assert.AreEqual(27, KingdomTradeLogicalSource.FileCount);
+			Assert.AreEqual(27, Count(source, "public static partial class KingdomTrade"));
 			CollectionAssert.AreEqual(new[]
 			{
 				"private const string ProjectionProperty = \"KingdomTradeProjectionId\";",
@@ -1714,10 +1714,20 @@ namespace ThousandAndFirst.Tests
 				"Incomplete = 0", "Missing = 1", "ExactUnique = 2", "Ambiguous = 3");
 
 			string[] methods = TopLevelMethodRows(source);
-			Assert.AreEqual(136, methods.Length);
-			Assert.AreEqual("bee1d1159bcc7349ce14e0a16595d17e0d36c47d2a31fb51894f60f9525dae7b",
+			Assert.AreEqual(144, methods.Length);
+			Assert.AreEqual("d036ee978679118adcacf019f13c42282218a1f9b5df16f564fcc985680fd35e",
 				Sha256(string.Join("\n", methods)),
 				"all top-level method signatures and declaration order are metadata contract");
+			AssertOrdered(source,
+				"private static void ReconcilePhysicalFailure(TradeLiveFrame Frame,",
+				"public static bool TryDeliverPolityConsignment(KingdomSystem System,",
+				"private static bool TryDeliverPolityConsignmentCore(KingdomSystem System,",
+				"private static bool TryPreflightPolityConsignmentGround(KingdomSystem System,",
+				"private static bool PreparePolityConsignment(KingdomSystem System,",
+				"private static bool SettlePolityConsignmentRetention(KingdomTradeBook Book,",
+				"private static bool TryBindPolityConsignmentRecipient(KingdomSystem System,",
+				"private static bool RequirePolityConsignmentRecipient(KingdomSystem System,",
+				"private static bool ContinueOrQuarantinePolityRecipient(KingdomSystem System,");
 			CollectionAssert.AreEqual(new[]
 			{
 				"public static KingdomTradeManifestState CurrentManifest(KingdomSystem System)",
@@ -1727,6 +1737,7 @@ namespace ThousandAndFirst.Tests
 				"public static bool TryLoadManifest(KingdomSystem System, Zone Z, int Amount, string OriginName, string DestinationName, out string Failure)",
 				"public static KingdomManifest ExpireManifestIfStale(KingdomSystem System, Zone Here, long Now)",
 				"public static bool TryOnExile(KingdomSystem System, long Now, string ExactRealmId, List<string> ExactSettlementIds, out long SettledTick, out string Failure)",
+				"public static bool TryDeliverPolityConsignment(KingdomSystem System, Zone Ground, GameObject Recipient, KingdomPolityConsignmentRequest Request, out KingdomTradePolityConsignmentReceipt Receipt, out string Failure)",
 				"internal static KingdomManifest LegacyManifestSnapshot( KingdomTradeManifestState Manifest)",
 				"internal static KingdomManifest LegacyManifestSnapshot(KingdomManifest Manifest)",
 				"internal static bool LegacyManifestMatches(KingdomManifest Legacy, KingdomTradeManifestState Authoritative)"
@@ -1970,7 +1981,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(patternCall, schedulePhase);
 			Assert.Greater(retire, patternCall);
 
-			string ceremony = ReadRepoSource("Experience/KingdomCeremony.cs");
+			string ceremony = KingdomCeremonyLogicalSource.Read();
 			StringAssert.Contains("DecodeRoster(System.KeepersRoster)", ceremony);
 			Assert.IsFalse(ceremony.Contains("OnCaravanArrived"),
 				"unreachable tick-owned ceremony must not remain as parallel authority");

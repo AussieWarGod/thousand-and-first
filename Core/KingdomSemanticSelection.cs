@@ -107,6 +107,28 @@ namespace ThousandAndFirst
 			long sequence, long createdTick, out KingdomSemanticPersonPlan plan,
 			out string failure)
 		{
+			if (!TryPrepareGrowthArrivalPayload(system, (ulong)sequence, createdTick, false,
+				out plan, out failure))
+				return false;
+			Cell cell;
+			if (!TryLocateGrowthArrival(system, zone, plan.RulesVersion, (ulong)sequence,
+				out cell, out failure)) return false;
+			plan.X = cell.X; plan.Y = cell.Y;
+			return true;
+		}
+
+		internal static bool TryPrepareGrowthArrivalPayload(KingdomSystem system,
+			ulong ordinal, long dueTick, bool firstGuest, out KingdomSemanticPersonPlan plan,
+			out string failure)
+		{
+			plan = null; failure = null;
+			if (ordinal == 0UL || ordinal > (ulong)long.MaxValue || dueTick < 0L)
+			{
+				failure = "growth arrival semantic identity is absent"; return false;
+			}
+			if (firstGuest) return TryPrepareGrowthFirstGuestPayload(system, ordinal, dueTick,
+				out plan, out failure);
+			long sequence = (long)ordinal;
 			if (!TryPreparePerson(system, "r_KingdomSettlers", "r_KingdomSettler",
 				GrowthArrivalStream, PersonEventKind, sequence, false, out plan, out failure))
 				return false;
@@ -124,15 +146,25 @@ namespace ThousandAndFirst
 				failure = "growth arrival creed draw refused";
 				return false;
 			}
-			Cell cell;
-			if (!TryProbeArrivalCell(zone, system.SimulationSeed, key, CellDraw, out cell,
-				out failure)) return false;
-			plan.X = cell.X;
-			plan.Y = cell.Y;
-			plan.Arrived = XRL.World.Calendar.GetDay(createdTick) + " of "
-				+ XRL.World.Calendar.GetMonth(createdTick) + ", "
-				+ XRL.World.Calendar.GetYear(createdTick) + " AR";
+			plan.Arrived = XRL.World.Calendar.GetDay(dueTick) + " of "
+				+ XRL.World.Calendar.GetMonth(dueTick) + ", "
+				+ XRL.World.Calendar.GetYear(dueTick) + " AR";
 			return true;
+		}
+
+		internal static bool TryLocateGrowthArrival(KingdomSystem system, Zone zone,
+			int rulesVersion, ulong ordinal, out Cell cell, out string failure)
+		{
+			cell = null; failure = null;
+			SemanticEventKey key; KernelFaultCode kernelFault;
+			if (system == null || ordinal == 0UL || !SemanticEventKey.TryCreate(rulesVersion,
+				system.CurrentSettlementId, GrowthArrivalStream, PersonEventKind, ordinal,
+				out key, out kernelFault))
+			{
+				failure = "growth arrival placement identity is absent"; return false;
+			}
+			return TryProbeArrivalCell(zone, system.SimulationSeed, key, CellDraw,
+				out cell, out failure);
 		}
 
 		internal static bool TryPrepareGrowthArrivalForFrozenBlueprint(KingdomSystem system,

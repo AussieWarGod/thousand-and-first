@@ -80,11 +80,16 @@ namespace ThousandAndFirst.Simulation.City
 		/// succeeded. The single publisher &sect;1.3 requires.</summary>
 		internal bool TryPublish(KingdomJobTable table, out KingdomCityFault fault)
 		{
-			if (table == null)
-			{
-				fault = KingdomCityFault.NullArgument;
-				return false;
-			}
+			if (!CanPublish(table, out fault)) return false;
+			PublishPrevalidated(table);
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		/// <summary>Copy-only publisher. Caller must pass the immutable table through
+		/// <see cref="CanPublish"/> before any cross-owner publication starts.</summary>
+		internal void PublishPrevalidated(KingdomJobTable table)
+		{
 			JobIds.Clear(); Kinds.Clear(); Cargos.Clear(); CargoAmounts.Clear();
 			SourceZoneIds.Clear(); DestZoneIds.Clear(); StartTicks.Clear(); WalkTicksPerCell.Clear();
 			Statuses.Clear(); OriginCodes.Clear(); DepositLegIndexes.Clear(); LegCounts.Clear();
@@ -106,11 +111,7 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < table.Count; i++)
 			{
 				KingdomJobRow row;
-				if (!table.TryAt(i, out row))
-				{
-					fault = KingdomCityFault.InvalidIndex;
-					return false;
-				}
+				table.TryAt(i, out row);
 				JobIds.Add(row.JobId);
 				Kinds.Add((int)row.Kind);
 				Cargos.Add((int)row.Cargo);
@@ -154,11 +155,7 @@ namespace ThousandAndFirst.Simulation.City
 				for (int j = 0; j < row.LegCount; j++)
 				{
 					KingdomLeg leg;
-					if (!row.TryLeg(j, out leg))
-					{
-						fault = KingdomCityFault.InvalidIndex;
-						return false;
-					}
+					row.TryLeg(j, out leg);
 					LegZoneIds.Add(leg.ZoneId ?? "");
 					LegEnterX.Add(leg.EnterX);
 					LegEnterY.Add(leg.EnterY);
@@ -169,8 +166,6 @@ namespace ThousandAndFirst.Simulation.City
 					LegArriveTicks.Add(leg.ArriveTick);
 				}
 			}
-			fault = KingdomCityFault.None;
-			return true;
 		}
 	}
 }

@@ -50,6 +50,10 @@ namespace ThousandAndFirst.Simulation.City
 				return fixture.HasPart("Shrine");
 			case KingdomPhysicalHappeningKind.Feast:
 				return fixture.HasPart("Campfire");
+			case KingdomPhysicalHappeningKind.CommunalRite:
+				return fixture.Blueprint == "r_KingdomBench" && fixture.HasPart("Chair")
+					|| fixture.Blueprint == "r_KingdomFirstBasin"
+						&& fixture.HasPart("LiquidVolume");
 			case KingdomPhysicalHappeningKind.Raising:
 				return fixture.Blueprint == "r_KingdomFirstBasin"
 					&& fixture.HasPart("LiquidVolume");
@@ -62,6 +66,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			if (kind == KingdomPhysicalHappeningKind.Feast)
 				return fixture.Blueprint == "r_KingdomOven" ? 0 : 1;
+			if (kind == KingdomPhysicalHappeningKind.CommunalRite)
+				return fixture.Blueprint == "r_KingdomBench" ? 0 : 1;
 			if (kind == KingdomPhysicalHappeningKind.Funeral)
 			{
 				if (fixture.Blueprint == "r_KingdomShrine") return 0;
@@ -78,7 +84,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			List<Cell> result = new List<Cell>();
 			Cell fixture = fixtureObject.CurrentCell;
-			if (kind == KingdomPhysicalHappeningKind.Wedding
+			if ((kind == KingdomPhysicalHappeningKind.Wedding
+				|| kind == KingdomPhysicalHappeningKind.CommunalRite)
 				&& fixtureObject.GetPart<Chair>() != null
 				&& ActivityCell(fixture, fixtureObject)) result.Add(fixture);
 			for (int radius = 1; radius <= 4

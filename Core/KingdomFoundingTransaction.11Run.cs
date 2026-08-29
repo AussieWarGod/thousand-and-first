@@ -48,6 +48,25 @@ namespace ThousandAndFirst
 					KingdomFoundingProjection.None,
 					"This basin does not own the founding receipt; its authority was quarantined.");
 			}
+			if (Basin == null || Actor == null || Site == null || Actor.CurrentZone != Site ||
+				Site.ZoneID != Basin.PendingZoneID)
+			{
+				return Result(KingdomFoundingOutcome.RecoverableFailure,
+					KingdomFoundingWaterDisposition.HeldForRecovery,
+					KingdomFoundingProjection.Water,
+					"Return with this basin to the ground where the interrupted rite began.");
+			}
+			string externalFailure = null;
+			if (!ValidateReceiptPayload(Basin, Site, vessel, out payloadFailure) ||
+				!RevalidateExternalBinding(Basin, Site, out externalFailure))
+			{
+				return Result(KingdomFoundingOutcome.RecoverableFailure,
+					KingdomFoundingWaterDisposition.HeldForRecovery,
+					KingdomFoundingProjection.Water,
+					"The founding ground changed before the deferred pour: " +
+						(string.IsNullOrEmpty(externalFailure)
+							? payloadFailure : externalFailure));
+			}
 			if (Basin.PendingPhase == KingdomFoundingPhase.WaterCommitted &&
 				OriginalSnapshotStillExact(Basin, vessel) &&
 				!TryFinishWaterCommit(Basin, vessel, out string waterFailure))
@@ -65,14 +84,6 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.RestorationFailed,
 					KingdomFoundingProjection.Water,
 					"The receipt-bound basin is not the exact committed liquid snapshot; it is quarantined.");
-			}
-			if (Basin == null || Actor == null || Site == null || Actor.CurrentZone != Site ||
-				Site.ZoneID != Basin.PendingZoneID)
-			{
-				return Result(KingdomFoundingOutcome.RecoverableFailure,
-					KingdomFoundingWaterDisposition.HeldForRecovery,
-					KingdomFoundingProjection.Water,
-					"Return with this basin to the ground where the interrupted rite began.");
 			}
 			if (!ValidateReceiptPayload(Basin, Site, vessel, out payloadFailure))
 			{
@@ -105,6 +116,13 @@ namespace ThousandAndFirst
 					KingdomFoundingProjection.Water,
 					"The exact global or site founding reservation is missing or belongs to another transaction.");
 			}
+			if (!complete && !RevalidateExternalBinding(Basin, Site, out externalFailure))
+			{
+				return Result(KingdomFoundingOutcome.RecoverableFailure,
+					KingdomFoundingWaterDisposition.HeldForRecovery,
+					KingdomFoundingProjection.Water,
+					"External ownership changed before publication: " + externalFailure);
+			}
 
 			// Structural receipt, water algebra, site, digest and authority are proved before any
 			// live realm/faction identity is consulted.
@@ -125,6 +143,18 @@ namespace ThousandAndFirst
 					KingdomFoundingWaterDisposition.HeldForRecovery,
 					KingdomFoundingProjection.Identity,
 					"The exact faction registry publication is incomplete or was replaced; recovery retained it.");
+			}
+			if (Basin.PendingKind == KingdomFoundingKind.FirstCity && system.Founded)
+			{
+				Faction currentRealm = Factions.GetIfExists(Basin.PendingRealmFaction);
+				if (!KingdomPolityRuntime.TryEnsureFoundation(system, currentRealm,
+					The.Game.TimeTicks, out string polityFailure))
+				{
+					return Result(KingdomFoundingOutcome.RecoverableFailure,
+						KingdomFoundingWaterDisposition.HeldForRecovery,
+						KingdomFoundingProjection.Identity,
+						"The realm's polity publication remains recoverable: " + polityFailure);
+				}
 			}
 			if (complete)
 			{
@@ -153,11 +183,12 @@ namespace ThousandAndFirst
 					SiteReservationMatches(Site, authority);
 				bool exactSecondSeat = SecondIsExactSeat(system, Basin.PendingName,
 					Site.ZoneID, Basin.PendingTransactionID);
-				bool exactSecondAway = SecondIsExactAway(system, Basin.PendingName,
+				bool exactSecondNonSeat = SecondIsExactNonSeat(system, Basin.PendingName,
 					Site.ZoneID, Basin.PendingTransactionID);
 				if (!KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 					system.SettlementCount, KingdomSettlement.MaxSettlements,
-					system.Away == null, exactSecondSeat, exactSecondAway, publishedSecond))
+					system.NonSeatSettlementCount < KingdomSettlementTopologyRules.MaxNonSeatSettlements,
+					exactSecondSeat, exactSecondNonSeat, publishedSecond))
 				{
 					return Result(KingdomFoundingOutcome.RecoverableFailure,
 						KingdomFoundingWaterDisposition.HeldForRecovery,
@@ -203,23 +234,25 @@ namespace ThousandAndFirst
 					Basin.PendingPhase = KingdomFoundingPhase.PublicationCommitted;
 					return Result(KingdomFoundingOutcome.RecoverableFailure,
 						KingdomFoundingWaterDisposition.HeldForRecovery, projection, Describe(ex));
-					}
-					bool restored = RestoreOriginal(Basin, vessel, TrustCurrent: false);
-					bool cleaned = false;
-					if (restored)
-					{
-						Basin.PendingPhase = KingdomFoundingPhase.None;
-						cleaned = ClearExactReservationSet(Site,
-							Basin.PendingAuthority, Basin.PendingRealmFaction,
-							Basin.PendingKind == KingdomFoundingKind.VillageCharter
-								? Basin.PendingVillageFaction : null) &&
-							SafeClearReceipt(Basin);
+				}
+				bool restored = RestoreOriginal(Basin, vessel, TrustCurrent: false);
+				bool cleaned = false;
+				if (restored)
+				{
+					Basin.PendingPhase = KingdomFoundingPhase.None;
+					cleaned = ClearExactReservationSet(Site,
+						Basin.PendingAuthority, Basin.PendingRealmFaction,
+						Basin.PendingKind == KingdomFoundingKind.VillageCharter
+							? Basin.PendingVillageFaction : null,
+						Basin.HasExternalBindingField
+							? Basin.PendingExternalBinding : null) &&
+						SafeClearReceipt(Basin);
 				}
 				else
 				{
 					PoisonReceipt(Basin, vessel);
 				}
-					return Result(restored && cleaned
+				return Result(restored && cleaned
 						? KingdomFoundingOutcome.CompensatedFailure
 						: KingdomFoundingOutcome.RecoverableFailure,
 					restored
@@ -262,6 +295,5 @@ namespace ThousandAndFirst
 			Failure = "The deferred water commit did not yield the exact measured amount.";
 			return false;
 		}
-
 	}
 }

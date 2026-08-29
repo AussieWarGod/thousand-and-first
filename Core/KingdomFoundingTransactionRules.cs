@@ -15,6 +15,8 @@ namespace ThousandAndFirst
 		public const int MaximumComponentEncodingLength = 4096;
 		public const int MaximumComponentCount = 32;
 		public const int MaximumComponentNameLength = 64;
+		public const int VillageStandingEffectPrepared = 1;
+		public const int VillageStandingEffectApplied = 2;
 
 		private const string AuthorityVersion = "taf-founding-v1";
 

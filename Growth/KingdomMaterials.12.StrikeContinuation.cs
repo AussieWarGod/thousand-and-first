@@ -30,6 +30,7 @@ namespace ThousandAndFirst
 					|| Job.Phase == KingdomConstructionPhase.InspectionRequired) return;
 				if (Job.PhysicalPhase == KingdomPhysicalPhase.StrikeWorkComplete)
 				{
+					if (!KingdomMirrorGate.TryPreflightRemoval(Building, Z, out _)) return;
 					if (!ValidateFrozenStrikeTargets(Z, intent, Job.SourceId,
 						Job.PhysicalIndex, out GameObject plotPart, out string targetFailure))
 					{
@@ -51,7 +52,14 @@ namespace ThousandAndFirst
 						else KingdomLog.Log("delve link: strike waits: " + linkFailure);
 						return;
 					}
-					RemoveStrikePredecessor(Z, Building, ref Job);
+					if (!KingdomMirrorGate.TryPreflightRemoval(Building, Z, out _)) return;
+					if (!ValidateFrozenStrikeTargets(Z, intent, Job.SourceId,
+						Job.PhysicalIndex, out _, out targetFailure))
+					{
+						QuarantineStrike(Job, targetFailure);
+						return;
+					}
+					RemoveStrikePredecessor(Z, Building, intent, ref Job);
 					if (Job.PhysicalPhase != KingdomPhysicalPhase.PredecessorRemoved) return;
 				}
 				else if (Job.PhysicalPhase == KingdomPhysicalPhase.PlotPartRemovalPending)
@@ -72,7 +80,13 @@ namespace ThousandAndFirst
 				if (Job.PhysicalPhase == KingdomPhysicalPhase.PredecessorRemoved
 					|| Job.PhysicalPhase == KingdomPhysicalPhase.SalvageAddPending)
 				{
-					if (ExactObject(Job.SourceId) != null)
+					bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(intent.BuildKey,
+						intent.HasPlot, intent.X1, intent.Y1, intent.X2, intent.Y2,
+						intent.PlotId, intent.Targets.Count);
+					bool sourceAbsent = networkStrike
+						? KingdomGatehouse.LoadedIdentityAbsent(Z, Job.SourceId)
+						: ExactObject(Job.SourceId) == null;
+					if (!sourceAbsent)
 					{
 						QuarantineStrike(Job, "Salvage was blocked because the exact predecessor still exists.");
 						return;
@@ -125,6 +139,11 @@ namespace ThousandAndFirst
 			bool networkStrike = KingdomGatehouseRules.IsNetworkStrike(Intent.BuildKey,
 				Intent.HasPlot, Intent.X1, Intent.Y1, Intent.X2, Intent.Y2,
 				Intent.PlotId, Intent.Targets.Count);
+			if (networkStrike && !KingdomGatehouse.TryStrikeReceipt(Z, Intent, out _))
+			{
+				Failure = "The gatehouse strike root or six exact target receipts changed.";
+				return false;
+			}
 			if (!Intent.HasPlot && !networkStrike)
 			{
 				if (Intent.Targets.Count == 0 && Index == 0) return true;
@@ -135,27 +154,36 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Intent.Targets.Count; i++)
 			{
 				KingdomStrikeTarget target = Intent.Targets[i];
-				GameObject exact = ExactObject(target.Id);
 				if (i < Index)
 				{
-					if (GameObject.Validate(exact))
+					bool reappeared = networkStrike
+						? !KingdomGatehouse.LoadedIdentityAbsent(Z, target.Id)
+						: GameObject.Validate(ExactObject(target.Id));
+					if (reappeared)
 					{
 						Failure = "A proved-removed strike target reappeared.";
 						return false;
 					}
 					continue;
 				}
-				bool exactTarget = networkStrike
-					? KingdomGatehouse.IsOwnedSatellite(exact, Intent.PlotId,
-						target.Blueprint, target.X, target.Y, Z)
-					: GameObject.Validate(exact) && exact.ID != SourceId
+				GameObject exact;
+				bool exactTarget;
+				if (networkStrike)
+					exactTarget = KingdomGatehouse.TryResolveStrikeSatellite(Z,
+						Intent.PlotId, i, target.Id, target.Blueprint,
+						target.X, target.Y, out exact);
+				else
+				{
+					exact = ExactObject(target.Id);
+					exactTarget = GameObject.Validate(exact) && exact.IDIfAssigned != SourceId
 						&& exact.CurrentZone == Z
 						&& exact.CurrentCell == Z.GetCell(target.X, target.Y)
 						&& exact.Blueprint == target.Blueprint
 						&& exact.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
 						&& exact.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
+				}
 				if (!remaining.Add(target.Id) || !GameObject.Validate(exact)
-					|| exact.ID == SourceId || exact.CurrentZone != Z
+					|| exact.IDIfAssigned == SourceId || exact.CurrentZone != Z
 					|| exact.CurrentCell != Z.GetCell(target.X, target.Y)
 					|| exact.Blueprint != target.Blueprint
 					|| !exactTarget)
@@ -173,10 +201,10 @@ namespace ThousandAndFirst
 				GameObject item = candidates[i];
 				bool owned = networkStrike
 					? KingdomGatehouse.IsOwnedSatellite(item, Intent.PlotId)
-					: GameObject.Validate(item) && item.ID != SourceId
+					: GameObject.Validate(item) && item.IDIfAssigned != SourceId
 						&& item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
 						&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == Intent.PlotId;
-				if (owned && !remaining.Contains(item.ID))
+				if (owned && !remaining.Contains(item.IDIfAssigned))
 				{
 					Failure = "A new or replacement plot part entered the frozen strike footprint.";
 					return false;

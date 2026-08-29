@@ -109,7 +109,13 @@ namespace ThousandAndFirst
 					}
 					if (existing == 0)
 					{
-						bool wantsMural = !string.IsNullOrEmpty(MuralText);
+						if (!KingdomChronicle.TryPrepareJournalProjection(EventID, MuralText,
+							out string projectedMural, out string gospelText,
+							out MuralWeight weight))
+						{
+							throw new InvalidOperationException(
+								"The founding journal projection is malformed.");
+						}
 						int callbackStage = ReadStage();
 						int? callbackDisposition = ReadDisposition();
 						if (ValidateAuthority != null && !ValidateAuthority())
@@ -120,9 +126,9 @@ namespace ThousandAndFirst
 						try
 						{
 							JournalAPI.AddAccomplishment(Text.Capitalize() + ".",
-								wantsMural ? MuralText : null, null, null, "general",
+								projectedMural, gospelText, null, "general",
 								MuralCategory.CreatesSomething,
-								wantsMural ? MuralWeight.Medium : MuralWeight.Nil,
+								weight,
 								EventID, -1L);
 						}
 						catch

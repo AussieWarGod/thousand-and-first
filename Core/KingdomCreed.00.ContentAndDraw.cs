@@ -147,10 +147,13 @@ namespace ThousandAndFirst
 			return KingdomCreedRules.DominantCreed(System.CreedCounts, System.Population);
 		}
 
-		/// <summary>The realm's other city's creed, or null when there is no other city.</summary>
+		/// <summary>Compatibility read for the former two-city surface. Ambiguous in a three-city
+		/// realm and therefore returns null there.</summary>
+		[System.Obsolete("Enumerate KingdomSystem.NonSeatSettlements and call CreedOf.")]
 		public static string AwayCreed(KingdomSystem System)
 		{
-			return (System == null) ? null : CreedOf(System.Away);
+			return System != null && System.NonSeatSettlementCount == 1 ?
+				CreedOf(System.NonSeatSettlementAt(0)) : null;
 		}
 
 		/// <summary>
@@ -195,7 +198,9 @@ namespace ThousandAndFirst
 			for (int i = 0; i < candidates.Count; i++)
 			{
 				System.CreedCounts.TryGetValue(candidates[i], out var here);
-				weights[i] = KingdomCreedRules.CreedWeight(System.GetStanding(candidates[i]), here, candidates[i] == System.DeclaredCreed);
+				weights[i] = KingdomCreedRules.CreedWeight(
+					System.GetRegardForRealm(candidates[i]), here,
+					candidates[i] == System.DeclaredCreed);
 			}
 			int total = KingdomCreedRules.TotalWeight(weights);
 			ulong roll;

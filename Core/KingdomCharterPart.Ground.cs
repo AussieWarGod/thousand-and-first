@@ -37,6 +37,7 @@ namespace ThousandAndFirst
 		public void ClaimGround(KingdomSystem System)
 		{
 			Zone zone = ParentObject.CurrentZone;
+			if (ResumeExternalClaimIfNeeded(System, zone)) return;
 			KingdomZoningRules.ClaimVerdict verdict = KingdomFounding.JudgeClaim(System, zone);
 			if (verdict != KingdomZoningRules.ClaimVerdict.Allowed)
 			{
@@ -56,12 +57,53 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			if (!KingdomFounding.ClaimZone(zone))
+			if (!KingdomFoundingTransaction.TryChooseClaimExternalBinding(zone,
+				out string externalBinding, out string externalFailure))
+			{
+				Popup.Show(externalFailure);
+				return;
+			}
+			string externalAuthority = KingdomExternalOwnershipBindingRuntime.ClaimAuthority(
+				System.KingdomFactionName, zone.ZoneID);
+			if (!KingdomExternalOwnershipBindingRuntime.TryStage(zone,
+					externalAuthority, externalBinding, out externalFailure) ||
+				!KingdomExternalOwnershipBindingRuntime.TryCommit(zone,
+					externalAuthority, externalBinding, out externalFailure))
+			{
+				KingdomExternalOwnershipBindingRuntime.RollbackStage(zone,
+					externalAuthority, externalBinding, PublicationObserved: false);
+				Popup.Show("The claim was left unchanged: " + externalFailure);
+				return;
+			}
+			bool claimed = false;
+			string claimFailure = null;
+			try
+			{
+				claimed = KingdomFounding.ClaimZone(zone);
+			}
+			catch (Exception ex)
+			{
+				claimFailure = ex.Message;
+				KingdomLog.Log("externally bound claim remains recoverable: " + ex.Message);
+			}
+			if (!claimed)
 			{
 				// The primitive judges the same ground a second time and is entitled to disagree
 				// - it is the one that actually writes the zone property. Refused rather than
 				// reported as done.
-				Popup.Show("The claim did not hold. This ground is not the city's.");
+				bool partial = ExternalClaimPublicationObserved(System, zone);
+				if (!partial) KingdomExternalOwnershipBindingRuntime.RollbackStage(zone,
+					externalAuthority, externalBinding, PublicationObserved: false);
+				Popup.Show(partial
+					? "The claim is partly published and will finish its exact binding on this ground." +
+						(string.IsNullOrEmpty(claimFailure) ? "" : "\n\n" + claimFailure)
+					: "The claim did not hold. This ground is not the city's.");
+				return;
+			}
+			if (!KingdomExternalOwnershipBindingRuntime.FinishStage(zone,
+				externalAuthority, externalBinding))
+			{
+				Popup.Show("The ground is claimed; its exact external-owner receipt remains for recovery.");
 				return;
 			}
 			KingdomGovernanceScope.Commit("claim ground");

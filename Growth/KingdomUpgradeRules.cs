@@ -95,22 +95,7 @@ namespace ThousandAndFirst
 
 			/// <summary>The stockpiles do not cover the improvement's material. Asked BEFORE the
 			/// work is begun rather than discovered halfway through paying for it.</summary>
-			NotEnoughMaterial = 15,
-
-			/// <summary>Housing whose residents have nowhere they would tolerate sleeping while it
-			/// is rebuilt. Never a matter of how long they have lived there &mdash; only of whether
-			/// somewhere of their own standard is standing empty now.</summary>
-			NoTolerableLodging = 16,
-
-			/// <summary>
-			/// Earned, affordable, materialled, crafted, and free to begin &mdash; and NOT begun,
-			/// because the settlement leans on what this work puts out and the stores could not
-			/// carry the loss for as long as the work would take. The one verdict that is an OFFER
-			/// rather than a refusal: the founder may force it from the Charter once the dip has
-			/// been disclosed to them (<see cref="DipLine"/>). Checked last, so every real refusal
-			/// outranks it and a work is only ever offered when nothing else stands in its way.
-			/// </summary>
-			HeldOffer = 17
+			NotEnoughMaterial = 15
 		}
 
 		/// <summary>An upgrade chain read off one <c>&lt;building&gt;</c> entry's optional

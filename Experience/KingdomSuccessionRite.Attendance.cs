@@ -162,9 +162,7 @@ namespace ThousandAndFirst
 
 		private static bool OwnedGround(KingdomSystem system, string zoneId)
 		{
-			return !string.IsNullOrEmpty(zoneId) && ((system.ClaimedZones != null
-				&& system.ClaimedZones.Contains(zoneId)) || (system.Away?.ClaimedZones != null
-				&& system.Away.ClaimedZones.Contains(zoneId)));
+			return system != null && system.OwnedZone(zoneId);
 		}
 
 		private sealed class Walker

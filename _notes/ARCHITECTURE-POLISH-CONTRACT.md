@@ -1,5 +1,12 @@
 # Architecture polish contract
 
+> **Status supersession banner — 2026-08-28.** The architecture/product laws below remain accepted;
+> chronological implementation-status claims do not override the live ledgers. Static non-arcology
+> architecture targets and the named semantic repairs are complete at code/content/checker scope,
+> with native/human proof open. Prior hosted-arcology implementation claims are superseded under
+> active AMENDED 19+ review; production, XML/fabric, and tests are held. See `../docs/STATUS.md`,
+> `../docs/V1-UNDEFERRAL.md`, and `BRIEF-IMPLEMENTATION-AUDIT.md` for current status.
+
 **Status:** implementation authority for the first full visual/architectural polish pass.
 **Source:** the author's direct rulings of 2026-08-25, reconciled with the author-approved
 `BUILDING-CATALOGUE-BRIEF.md`, `STANDARDS.md`, and the target Qud 2.0.211.51 data/source.
@@ -72,8 +79,10 @@ An occupied lot freezes:
 
 ### 2.3 Plan changes
 
-- **Tier upgrade:** same plan/binding/lot/rect/pose. Apply an exact authored delta after the
-  existing material, knowledge, labour, displacement, and output-reserve gates pass.
+- **Tier upgrade:** same plan/binding/lot/rect/pose and exact frozen `VariantKey`. Apply an exact
+  authored delta after the existing material, knowledge, labour, displacement, and output-reserve
+  gates pass. Current population, creed, or body facts may shape new commissions but never restyle
+  occupied fabric; a successor missing that variant refuses before debit.
 - **Same-set plan change:** same type and actual size. Keep LotId/rect/pose; require an explicit
   cheap conversion quote and a preflighted map delta. Absence of a declared transition refuses.
 - **Retype or resize:** full strike and fresh siting/restake with a new LotId. Never reuse the old
@@ -146,6 +155,11 @@ Both old and successor snapshots transform through the same frozen pose. The del
 3. adds new pieces in ground -> structure -> object order;
 4. updates claim, cover, anchors, and frontage only after exact placement succeeds;
 5. preserves the same behavior root unless an explicitly reviewed handover applies.
+
+Every adjacent tier exposes the same variant-key set. Each same-key successor keeps the main cell
+and every prior stateful placement's coordinate, anchor role, concrete blueprint, material,
+technology, knowledge, power, and natural/artificial fact. Static checking enforces this before the
+catalogue can ship.
 
 Non-empty containers, liquids, residents, wear, names, player additions, and third-party state are
 never silently deleted or rerolled. A changed stateful anchor needs a registered handover. A new
@@ -227,8 +241,13 @@ palette. Mature-city solvers must not omit entrances through a small arbitrary p
 caravan courts, gates, and monumental axes may require two-cell clearance.
 
 Gatehouses are multi-cell wall connectors with a passable gate and guard space. Liquid crossings
-preserve fresh/brine topology without accidental junctions. Network pieces author straight,
-corner, tee, crossing, and termination forms. Water and brine are visually distinct.
+preserve fresh/brine topology without accidental junctions and visibly name which isolated axis
+carries each liquid. Every main and tap freezes its own serialized face declaration; no render or
+graph read infers an unused face from adjacency. Player configuration covers cap, four ends, two
+straights, four corners, four tees, and cross, and equivalent selection is mutation-free. Network
+pieces author straight, corner, tee, crossing, and termination forms. Water and brine are visually
+distinct without colour through vanilla CP437 single-line and double-line families; no custom
+raster is required.
 
 Delves and shafts create safe paired travel endpoints and real player/porter traversal; recording
 a below-zone string is not physical verticality. Deep plans have authored landing, work face,
@@ -253,10 +272,10 @@ release-blocking for this pass because public or locked briefs currently claim t
 7. grievance-based raid incidents with no pre-contact plunder;
 8. human lived-city, visual, UI/accessibility, performance, and compatibility proof.
 
-P1 semantic debts remain required work after the substrate: culture/species research sources,
-the promised extension API dimensions, exact fine-house/notable semantics,
-physical succession rite/founder shrine, and gatherings that use authored loci. They must be fixed
-or explicitly and publicly narrowed; they may not remain stronger in prose than in runtime.
+The named P1 semantic targets are complete at code scope: culture/species research sources, the
+promised extension API dimensions, exact fine-house/notable semantics, physical succession
+rite/founder shrine, and gatherings using authored loci. Their integrated/native gates remain;
+code-scope completion does not turn them into release evidence.
 
 The locked salvage expedition is now implemented: one founder-visited journal destination, one
 named resident/body binding, exact dedicated water and food, a prepared body receipt before any
@@ -264,15 +283,26 @@ physical callback, bounded deterministic world-time resolution, and one dated ho
 result. Its remaining gate is the native Pass 38 playtest, not another proxy implementation.
 
 `VISION.md` owns the canonical world-presence boundary; `V1-POLITY-SCOPE.md` expands its evidence
-and reopening gates. Inherited site/history, current causal
-raids, existing bounded parties, caravans, and two-city manifests are `SHIP` only at their
-implemented scope. Successor/namesake people, a bounded legacy rival, diplomats/emissaries,
-generalized visible traffic/correspondence, witnessed polity clashes, a third city, heart
-relocation that yields ordinary lots, and fully hosted zone-spanning arcology ground are positive
-`AUTHOR-DEFERRED` targets. Exact old actors,
+and reopening gates. Inherited site/history, current causal raids, bounded parties, caravans,
+three-city manifests, successor/namesake people, one bounded legacy rival, diplomats/emissaries,
+generalized visible traffic/correspondence, witnessed polity clashes, the third owned city, and
+heart relocation are complete at their bounded code scope; their named integrated/native gates
+remain open. Hosted-arcology ground remains an accepted design target, but its prior implementation
+claim is superseded under active AMENDED 19+ review with production, XML/fabric, and tests held.
+Exact old actors,
 automatic ideological war, persistent unloaded parties, mass background simulation, and offscreen
-conquest/loss are `REJECTED`. Current arcology and inheritance surfaces must still be named and
-rendered honestly; deferred prose cannot make their absent expansions look present.
+conquest/loss are `REJECTED`. Arcology and inheritance surfaces must still be named and rendered
+honestly; active design prose cannot make absent runtime look present.
+
+The reopened assenting moot and stasis vault now carry truthful 20×14 physical prerequisites in
+`Architecture/KingdomArchitectures-ReopenedExotics.xml`. The moot is an open Chavvah-derived
+congregational circuit; the vault is a sealed four-bay custody plan distinct from the lab. Both use
+inert-safe vanilla-art wrappers and exact runtime anchors. The moot now has its behavior owner: a
+derived seated-city activation key, one exact finished-building receipt, bounded named
+assent/exemption UI, and reversible native ambient-stabilization projection. Its floor remains
+commissionable only while current assent, Chavvah, surface-claim, and cardinal Moon Stair proof
+hold. The vault's custody owner is tracked independently. Authored appearance is never permission
+to expose a nonfunctional commission.
 
 ## 11. Acceptance gates
 
@@ -282,9 +312,13 @@ Release-candidate status cannot return until all applicable gates pass:
    network piece. No shipped plot uses a generic shell fallback.
 2. Every reachable type x size binding has a plan; every plan/tier/variant compiles within caps.
    The external gate mirrors the a2 binary codec rather than estimating XML text: current maximum
-   is 6,324 bytes / 8,500 characters under the bounded 8,192 / 11,264 envelopes.
+   is 7,105 bytes / 9,544 characters at
+   `arcology/civic-xl/fallback/civic-arcology-xl4+civic-heart-court`, under the bounded
+   8,192 / 11,264 envelopes.
 3. Static topology proves public/service ingress, main access, every required use cell, exit/width,
-   layer exclusivity, roof/sky rules, and lot/frontage fit in every pose.
+   layer exclusivity, roof/sky rules, and lot/frontage fit in every pose. Ordinary generated lots
+   also prove visibly distinct concrete yard/path surfaces, non-monoculture L/XL forms, unrelated
+   family fingerprints, and upgrade-stable shared exterior kinds from exact catalogue succession.
 4. Static material proof ties every structural and required fixture blueprint to paid inputs,
    craft rung, knowledge, power, and retained-site authority.
 5. Snapshot codecs are canonical, bounded, hashed, tamper-detecting, and fail closed on unknown

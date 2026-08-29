@@ -1,0 +1,8 @@
+base	1dca10b8b8f58171e03517811d0d3ce0c7ea5277
+type	r_KingdomEnrolled
+wire	WriteNamedFields/ReadNamedFields
+field	string	Who	gene-old
+field	string	Named	Aru
+field	string	City	Old Ibul
+field	long	Tick	9876543210
+field	bool	LapseAnnounced	true

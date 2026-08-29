@@ -74,7 +74,10 @@ namespace ThousandAndFirst
 			if (!IsExactSuccessor(next, retired) || next == long.MaxValue) return null;
 			if (Action == KingdomGrowthAction.Arrival &&
 				(Book.ArrivalIntervalTicks <= 0L || Book.NextArrivalTick <= 0L
-					|| Tick < Book.NextArrivalTick)) return null;
+					|| Tick < Book.NextArrivalTick
+					|| !Book.ArrivalCadenceMigrationPending
+						&& (Book.ArrivalOpportunity == null
+							|| Tick < Book.ArrivalOpportunity.DueTick))) return null;
 			long actionClockBefore = GrowthClockValue(Book, Action, field);
 			long clockBefore = slot == KingdomGrowthSlotKind.Field
 				? field.CommitRevision : actionClockBefore;
@@ -89,7 +92,15 @@ namespace ThousandAndFirst
 			}
 			else if (Action == KingdomGrowthAction.Arrival)
 			{
-				if (!CheckedAdd(Tick, Book.ArrivalIntervalTicks, out clockAfter)) return null;
+				if (Book.ArrivalCadenceMigrationPending)
+				{
+					if (!CheckedAdd(Tick, Book.ArrivalIntervalTicks, out clockAfter)) return null;
+				}
+				else
+				{
+					clockAfter = ArrivalClockAfterOpportunity(Book);
+					if (clockAfter <= clockBefore) return null;
+				}
 			}
 			else if (Action == KingdomGrowthAction.Heartbeat
 				|| Action == KingdomGrowthAction.Fetch || Action == KingdomGrowthAction.Mill)
@@ -149,7 +160,7 @@ namespace ThousandAndFirst
 				PendingCropBlueprintAfter = Book.PendingCropBlueprint,
 				PendingCropZoneIdAfter = Book.PendingCropZoneId,
 				ClockState = KingdomLifecyclePhysicalState.Prepared,
-				ClockLease = new KingdomLifecycleResourceLease
+					ClockLease = new KingdomLifecycleResourceLease
 				{
 					OperationId = id, Kind = KingdomLifecycleResourceKind.GrowthClock,
 					ScopeId = Book.SettlementId, SubjectId = subject, Key = key,
@@ -158,6 +169,14 @@ namespace ThousandAndFirst
 					State = KingdomLifecycleLeaseState.Prepared
 				}
 			};
+			if (Action == KingdomGrowthAction.Arrival && !Book.ArrivalCadenceMigrationPending)
+			{
+				KingdomGrowthArrivalOpportunity opportunity = Book.ArrivalOpportunity;
+				operation.ArrivalOpportunityOrdinal = opportunity.Ordinal;
+				operation.ArrivalOpportunityDueTick = opportunity.DueTick;
+				operation.ArrivalOpportunityRateEpoch = opportunity.RateEpoch;
+				operation.ArrivalOpportunityPayloadHash = opportunity.PayloadHash;
+			}
 			operation.OutboxEvents = new List<KingdomGrowthOutboxEvent>();
 			return operation;
 		}

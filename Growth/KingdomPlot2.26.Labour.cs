@@ -10,29 +10,30 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomPlots
 	{
+		/// <summary>Canonical prior-interval witness; named property keeps shipped part ABI fixed.</summary>
+		public const string PlotWorkWindowProperty = "r_TAF_PlotWorkWindow";
+		private const int PlotWorkLabourSaid = 1;
+		private const int PlotWorkInfrastructureSaid = 2;
+
+		/// <summary>Compatibility entry. Current work fails closed until settlement infrastructure
+		/// authority calls the full overload; schema-zero plots retain their frozen calendar.</summary>
 		public static void Advance(r_KingdomPlotWorks Works, KingdomSystem System, long TimeTick)
+		{
+			Advance(Works, System, TimeTick,
+				KingdomPlotLabourWindowRules.InfrastructureUnavailable,
+				"The plot's construction infrastructure was not witnessed on its owner ground.");
+		}
+
+		public static void Advance(r_KingdomPlotWorks Works, KingdomSystem System, long TimeTick,
+			int InfrastructurePercent, string InfrastructureFailure)
 		{
 			if (Works == null || Works.DesignKey == null)
 			{
 				return;
 			}
 			KingdomPlotRules.PlotStage target;
-			GameObject parent = Works.ParentObject;
-			int schema = parent == null ? 0 : parent.GetIntProperty(PlotWorkSchemaProperty);
-			if (schema == 0)
-			{
-				// Compatibility only. New Stake always writes schema 2.
-				target = KingdomPlotRules.StageAt(TimeTick - Works.StartTick, Works.TotalTicks);
-			}
-			else if (schema != PlotWorkSchema
-				|| !TryAdvancePlotLabour(Works, System, TimeTick, out target))
-			{
-				if (schema != PlotWorkSchema)
-				{
-					SayPlotWorkFault(System, parent, "The plot work has an unknown labour receipt and cannot advance safely.");
-				}
-				return;
-			}
+			if (!TryAdvancePlotLabour(Works, System, TimeTick, InfrastructurePercent,
+				InfrastructureFailure, out target)) return;
 			if ((int)target <= Works.StageApplied)
 			{
 				return;
@@ -56,44 +57,72 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryAdvancePlotLabour(r_KingdomPlotWorks Works,
-			KingdomSystem System, long TimeTick, out KingdomPlotRules.PlotStage Target)
+			KingdomSystem System, long TimeTick, int InfrastructurePercent,
+			string InfrastructureFailure, out KingdomPlotRules.PlotStage Target,
+			bool PricePriorWitness = true, bool CaptureCurrentWitness = true)
 		{
 			Target = (KingdomPlotRules.PlotStage)Works.StageApplied;
 			GameObject parent = Works.ParentObject;
-			if (parent == null
-				|| !TryGetPlotWorkLong(parent, PlotWorkRequiredProperty, out long required)
-				|| !TryGetPlotWorkLong(parent, PlotWorkRemainingProperty, out long remaining)
-				|| !TryGetPlotWorkLong(parent, PlotWorkLastTickProperty, out long last)
-				|| required < 1L || remaining < 0L || remaining > required || last < 0L)
+			KingdomPlotLabourReceipt receipt = new KingdomPlotLabourReceipt
 			{
-				SayPlotWorkFault(System, parent,
-					"The plot work's labour receipt is incomplete or contradictory; it has been left unchanged.");
+				Schema = parent == null ? KingdomPlotLabourRules.LegacySchema
+					: parent.GetIntProperty(PlotWorkSchemaProperty),
+				LegacyStartTick = Works.StartTick,
+				LegacyTotalTicks = Works.TotalTicks
+			};
+			receipt.HasRequiredTicks = TryGetPlotWorkLong(parent,
+				PlotWorkRequiredProperty, out receipt.RequiredTicks);
+			receipt.HasRemainingTicks = TryGetPlotWorkLong(parent,
+				PlotWorkRemainingProperty, out receipt.RemainingTicks);
+			receipt.HasLastTick = TryGetPlotWorkLong(parent,
+				PlotWorkLastTickProperty, out receipt.LastTick);
+			KingdomPlotLabourStep step = KingdomPlotLabourRules.Assess(receipt, TimeTick);
+			if (step.Verdict == KingdomPlotLabourVerdict.Invalid)
+			{
+				SayPlotWorkFault(System, parent, step.Failure);
 				return false;
 			}
+			Target = KingdomPlotRules.StageAt(step.CompletedTicks, step.RequiredTicks);
+			if (step.Verdict != KingdomPlotLabourVerdict.Attended || step.Complete) return true;
+			if (TimeTick < receipt.LastTick) return true;
+			if (TimeTick == receipt.LastTick)
+				return CaptureCurrentWitness
+					? TryCapturePlotLabourWindow(parent, System, TimeTick,
+						InfrastructurePercent, InfrastructureFailure, Works.DisplayName)
+					: TryCaptureZeroPlotLabourWindow(parent, System, TimeTick, InfrastructureFailure);
 
-			long completed = required - remaining;
-			Target = KingdomPlotRules.StageAt(completed, required);
-			if (remaining == 0L || TimeTick <= last)
+			// Prior loaded facts price the elapsed interval. Current loaded facts are captured only
+			// for the next one, so a settler seated on this wake cannot work the preceding absence.
+			KingdomPlotLabourWindow prior = null;
+			bool witnessed = PricePriorWitness && KingdomPlotLabourWindowRules.TryForInterval(
+				parent.GetStringProperty(PlotWorkWindowProperty), receipt.LastTick, out prior);
+			step = KingdomPlotLabourRules.Advance(receipt, TimeTick,
+				witnessed ? prior.LabourPercent : 0,
+				witnessed ? prior.InfrastructurePercent : 0);
+			if (!step.WriteReceipt) return false;
+			SetPlotWorkLong(parent, PlotWorkLastTickProperty, step.NextTick);
+			SetPlotWorkLong(parent, PlotWorkRemainingProperty, step.RemainingTicks);
+			if (step.Complete)
 			{
-				return true;
+				SetPlotWorkLong(parent, PlotWorkCompletedTickProperty, step.CompletionTick);
+				parent.RemoveStringProperty(PlotWorkWindowProperty);
 			}
+			Target = KingdomPlotRules.StageAt(step.CompletedTicks, step.RequiredTicks);
+			if (step.Complete) return true;
+			return CaptureCurrentWitness
+				? TryCapturePlotLabourWindow(parent, System, TimeTick,
+					InfrastructurePercent, InfrastructureFailure, Works.DisplayName)
+				: TryCaptureZeroPlotLabourWindow(parent, System, TimeTick, InfrastructureFailure);
+		}
 
-			// Spend the interval before sampling work. No hands means no progress, but the same
-			// empty interval can never be claimed after hands arrive. Craft-district infrastructure
-			// is already frozen into required duration; authored layout infrastructure joins the
-			// second percentage when the architecture receipt supplies it.
-			int effectiveness = KingdomConstructionPresence.EffectivenessOf(parent, System,
-				out int freeHands, out bool selected);
-			if (selected) SayPlotWorkShortfall(System, parent, Works.DisplayName, freeHands);
-			ArchitectureLabourProgress progress = KingdomArchitectureRules.AdvanceLabour(
-				last, TimeTick, remaining, effectiveness, 100);
-			SetPlotWorkLong(parent, PlotWorkLastTickProperty, progress.NextTick);
-			remaining = progress.RemainingTicks;
-			SetPlotWorkLong(parent, PlotWorkRemainingProperty, remaining);
-			if (progress.Complete)
-				SetPlotWorkLong(parent, PlotWorkCompletedTickProperty, progress.CompletionTick);
-			Target = KingdomPlotRules.StageAt(required - remaining, required);
-			return true;
+		/// <summary>Burns an unauthorized interval at zero without applying any physical stage.</summary>
+		internal static void ConsumePlotLabourAtZero(r_KingdomPlotWorks Works,
+			KingdomSystem System, long TimeTick, string Failure)
+		{
+			KingdomPlotRules.PlotStage ignored;
+			TryAdvancePlotLabour(Works, System, TimeTick,
+				KingdomPlotLabourWindowRules.InfrastructureUnavailable, Failure,
+				out ignored, false, false);
 		}
 
 		private static void SayPlotWorkShortfall(KingdomSystem System, GameObject Works,
@@ -103,11 +132,13 @@ namespace ThousandAndFirst
 			string line = KingdomRules.RaisingShortfallLine(DisplayName ?? "structure", FreeHands);
 			if (line == null)
 			{
-				Works.SetIntProperty(PlotWorkShortfallSaidProperty, 0);
+				Works.SetIntProperty(PlotWorkShortfallSaidProperty,
+					Works.GetIntProperty(PlotWorkShortfallSaidProperty) & ~PlotWorkLabourSaid);
 				return;
 			}
-			if (Works.GetIntProperty(PlotWorkShortfallSaidProperty) == 1) return;
-			Works.SetIntProperty(PlotWorkShortfallSaidProperty, 1);
+			int said = Works.GetIntProperty(PlotWorkShortfallSaidProperty);
+			if ((said & PlotWorkLabourSaid) != 0) return;
+			Works.SetIntProperty(PlotWorkShortfallSaidProperty, said | PlotWorkLabourSaid);
 			System.Ledger.Note("{{r|" + line + "}}");
 		}
 
@@ -141,6 +172,10 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			bool foundingHeart = FoundingHeartWorkIdentityEvidence(parent);
+			int priorStage = Works.StageApplied;
+			if (foundingHeart
+				&& !TryReadFoundingHeartWorkAuthority(zone, parent, out _)) return false;
 			KingdomPlotRules.PlotRect plot = Works.Rect();
 			KingdomPlotRules.PlotRect footprint = TryReadFootprint(parent, out var stamped) ? stamped : plot;
 			KingdomPlotRules.RoofState roof = RoofOf(parent);
@@ -222,7 +257,8 @@ namespace ThousandAndFirst
 			{
 				MessageQueue.AddPlayerMessage("{{W|" + line + "}}");
 			}
-			return true;
+			return !foundingHeart || Works.StageApplied == priorStage
+				&& TryReadFoundingHeartWorkAuthority(zone, parent, out _);
 		}
 
 	}

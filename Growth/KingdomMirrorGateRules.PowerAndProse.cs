@@ -4,6 +4,17 @@ namespace ThousandAndFirst
 {
 	internal static partial class KingdomMirrorGateRules
 	{
+		internal const string KeyedRemovalFailureLine =
+			"Unkey this mirror-gate before striking or converting it. Its crossing must be released while the arch still stands.";
+
+		internal const string RemovalProofFailureLine =
+			"The mirror-gate register cannot prove this arch unkeyed. Repair the register before taking the arch down.";
+
+		/// <summary>Removal is safe only when the exact physical-ground key has no register row.</summary>
+		internal static bool MayRemove(KingdomGateRow[] Rows, string Key)
+		{
+			return !string.IsNullOrEmpty(Key) && IndexOfKey(Rows, Key) < 0;
+		}
 
 		/// <summary>
 		/// What an open arch owes for a span of days.

@@ -53,74 +53,18 @@ namespace ThousandAndFirst
 				|| Book.CompactedProofs.Count > MaxCompactedProofs) return false;
 			if (Book.RecentProofs.Count < MaxRecentProofs) return true;
 			const int compactCount = MaxRecentProofs / 2;
-			List<KingdomTradeProof> batch = Book.RecentProofs.GetRange(0, compactCount);
-			for (int i = 0; i < batch.Count; i++)
-				if (!ValidProof(Book, batch[i], true)
-					|| !string.Equals(batch[i].RealmId, Book.RealmId,
-						StringComparison.Ordinal)) return false;
-			string digest = ProofCompactionDigest(batch, Book.CompactedProofs);
-			if (!ValidId(digest)) return false;
-			long first = batch[0].Sequence;
-			long last = batch[0].Sequence;
-			for (int i = 1; i < batch.Count; i++)
-			{
-				first = Math.Min(first, batch[i].Sequence);
-				last = Math.Max(last, batch[i].Sequence);
-			}
-			int total = batch.Count;
-			if (Book.CompactedProofs.Count >= MaxCompactedProofs)
-			{
-				for (int i = 0; i < Book.CompactedProofs.Count; i++)
+			// D2 proofs are the only durable source from which Polity can publish its reply.
+			// Keep them exact until the matching durable Polity conclusion acknowledges them.
+			List<KingdomTradeProof> batch = new List<KingdomTradeProof>();
+			List<int> indexes = new List<int>();
+			for (int i = 0; i < Book.RecentProofs.Count && batch.Count < compactCount; i++)
+				if (Book.RecentProofs[i]?.Kind !=
+					KingdomTradeOperationKind.PolityConsignmentDelivery)
 				{
-					KingdomTradeProofCompaction prior = Book.CompactedProofs[i];
-					if (!ValidProofCompaction(prior) || prior.ProofCount > int.MaxValue - total)
-						return false;
-					total += prior.ProofCount;
-					first = Math.Min(first, prior.FirstSequence);
-					last = Math.Max(last, prior.LastSequence);
+					batch.Add(Book.RecentProofs[i]); indexes.Add(i);
 				}
-			}
-			KingdomTradeProofCompaction compact = new KingdomTradeProofCompaction
-			{
-				RealmId = Book.RealmId,
-				FirstSequence = first,
-				LastSequence = last,
-				ProofCount = total,
-				EvidenceHash = digest
-			};
-			// All validation and hashing precede this bounded atomic in-memory replacement.
-			Book.RecentProofs.RemoveRange(0, compactCount);
-			if (Book.CompactedProofs.Count >= MaxCompactedProofs)
-			{
-				Book.CompactedProofs.Clear();
-				Book.CompactedProofs.Add(compact);
-			}
-			else Book.CompactedProofs.Add(compact);
-			return true;
-		}
-
-		private static string ProofCompactionDigest(List<KingdomTradeProof> Proofs,
-			List<KingdomTradeProofCompaction> Prior)
-		{
-			try
-			{
-				KingdomTradeBook evidence = new KingdomTradeBook
-				{
-					RecentProofs = new List<KingdomTradeProof>(Proofs),
-					CompactedProofs = new List<KingdomTradeProofCompaction>(Prior)
-				};
-				byte[] encoded = KingdomTradeCodec.EncodePayload(evidence);
-				using (MemoryStream canonical = new MemoryStream())
-				{
-					if (!WriteCanonicalField(canonical, IdentityNamespace)
-						|| !WriteCanonicalField(canonical, "proof-compaction")) return null;
-					WriteInt32(canonical, encoded.Length);
-					canonical.Write(encoded, 0, encoded.Length);
-					using (SHA256 sha = SHA256.Create())
-						return Hex(sha.ComputeHash(canonical.ToArray()));
-				}
-			}
-			catch { return null; }
+			if (batch.Count == 0) return false;
+			return TryCompactProofRows(Book, batch, indexes, out string _);
 		}
 
 		public static bool Retire(KingdomTradeBook Book, KingdomTradeOperation Operation,
@@ -166,6 +110,15 @@ namespace ThousandAndFirst
 					|| !KingdomTradePatternRules.Terminal(Operation.Pattern))) return true;
 			if (Operation.Kind == KingdomTradeOperationKind.ManifestLoad
 				&& Operation.ProvedWater != Operation.RequestedWater) return true;
+			if (Operation.Kind == KingdomTradeOperationKind.PolityConsignmentDelivery &&
+				(Operation.Phase == KingdomTradePhase.Quarantined
+					? Operation.ProvedWater == 0 ? Operation.RetainedBefore != 0L ||
+						Operation.RetainedDelta != 0L || Operation.RetainedAfter != 0L ||
+						Operation.RetainedState != KingdomTradePhysicalState.None :
+						Operation.RetainedDelta != Operation.ProvedWater ||
+						Operation.RetainedState != KingdomTradePhysicalState.Proved
+					: Operation.ProvedWater < 1 ||
+						Operation.ProvedWater > Operation.RequestedWater)) return true;
 			if (Operation.WaterLegs == null) return true;
 			long provedWater = 0L;
 			for (int i = 0; i < Operation.WaterLegs.Count; i++)

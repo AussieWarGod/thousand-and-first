@@ -64,12 +64,10 @@ namespace ThousandAndFirst
 				realms.Add(System.ExiledFactionName);
 			}
 			bool realmListsSite = Site != null &&
-				(System.ClaimedZones.Contains(Site.ZoneID) ||
-				 (System.Away != null && System.Away.ClaimedZones.Contains(Site.ZoneID)) ||
+				(System.OwnedZone(Site.ZoneID) ||
 				 (System.ExiledSeat != null &&
 				  System.ExiledSeat.ClaimedZones.Contains(Site.ZoneID)) ||
-				 (System.ExiledAway != null &&
-				  System.ExiledAway.ClaimedZones.Contains(Site.ZoneID)));
+				 System.ExiledSettlementTopology?.FindByZone(Site.ZoneID) != null);
 			string zoneFaction = Site?.GetZoneProperty("faction", null);
 			if (realmListsSite && !string.IsNullOrEmpty(zoneFaction) &&
 				!realms.Contains(zoneFaction))
@@ -154,6 +152,8 @@ namespace ThousandAndFirst
 				Failure = "The current zone carries a foreign or malformed second-founding publication.";
 				return false;
 			}
+			if (!KingdomExternalOwnershipBindingRuntime.CanResetForRealms(
+				Site, realms, out Failure)) return false;
 
 			// Everything above is read-only. From here on no paid or foreign authority is touched.
 			if (!string.IsNullOrEmpty(liveAuthority))
@@ -182,7 +182,6 @@ namespace ThousandAndFirst
 				Failure = "A site founding marker remains after exact cleanup.";
 				return false;
 			}
-
 			if (realmOwnsSite)
 			{
 				Site.RemoveZoneProperty("faction");
@@ -229,7 +228,8 @@ namespace ThousandAndFirst
 				Failure = "Founding or claim cleanup did not retain an empty exact state.";
 				return false;
 			}
-			return true;
+			return KingdomExternalOwnershipBindingRuntime.TryClearForRealmReset(
+				Site, realms, out Failure);
 		}
 
 	}

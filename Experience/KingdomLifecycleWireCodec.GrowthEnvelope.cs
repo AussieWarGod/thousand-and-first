@@ -72,6 +72,98 @@ namespace ThousandAndFirst
 			}
 		}
 
+		/// <summary>Exact Growth-v3 fixture used to prove first-guest migration.</summary>
+		internal static byte[] GrowthV3PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v3 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			if (fixture == null || fixture.Quarantined || fixture.OpaquePayload != null
+				|| !KingdomLifecycleRules.DowngradeFirstGuestForV3Fixture(fixture))
+				throw new InvalidDataException("growth v3 first-guest fixture could not downgrade");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture, KingdomLifecycleRules.SemanticGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		/// <summary>Exact Growth-v4 fixture used to prove terminal-receipt migration.</summary>
+		internal static byte[] GrowthV4PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v4 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			fixture.FirstGuestTerminal = null;
+			if (!KingdomLifecycleRules.DowngradePhysicalFirstGuestForLegacyFixture(fixture))
+				throw new InvalidDataException("growth v4 fixture could not drop terminal receipt");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture,
+					KingdomLifecycleRules.FirstGuestGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		/// <summary>Exact Growth-v5 fixture. Physical guest evidence was added in v6.</summary>
+		internal static byte[] GrowthV5PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v5 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			if (!KingdomLifecycleRules.DowngradePhysicalFirstGuestForLegacyFixture(fixture)
+				|| !V5FirstGuestRepresentable(fixture.ArrivalCandidate?.FirstGuest)
+				|| !V5FirstGuestRepresentable(fixture.FirstGuestTerminal?.Opportunity))
+				throw new InvalidDataException("growth v5 cannot encode physical guest evidence");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture,
+					KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		/// <summary>Exact Growth-v6 fixture. Arrival cadence authority was added in v7.</summary>
+		internal static byte[] GrowthV6PayloadFixture(KingdomGrowthBook Book)
+		{
+			if (Book == null || Book.OpaquePayload != null
+				|| !KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
+				throw new InvalidDataException("growth v6 fixture source is malformed");
+			KingdomGrowthBook fixture = ReadGrowthPayload(GrowthPayloadForWrite(Book));
+			if (!fixture.ArrivalCadenceMigrationPending || fixture.ArrivalOpportunity != null
+				|| fixture.ArrivalDebtRanges.Count != 0
+				|| fixture.ArrivalCandidate != null
+					&& fixture.ArrivalCandidate.ArrivalOpportunityOrdinal != 0UL
+				|| fixture.ArrivalOp != null && fixture.ArrivalOp.ArrivalOpportunityOrdinal != 0UL)
+				throw new InvalidDataException("growth v6 cannot encode arrival cadence evidence");
+			using (GrowthCappedWriteStream stream =
+				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
+			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
+			{
+				WriteGrowth(writer, fixture,
+					KingdomLifecycleRules.FirstGuestPhysicalGrowthFormatVersion);
+				writer.Flush(); return stream.ToArray();
+			}
+		}
+
+		private static bool V5FirstGuestRepresentable(KingdomGrowthFirstGuestOpportunity x)
+		{
+			return x == null || x.RulesVersion == 1
+				&& x.GuestPhase == KingdomGrowthFirstGuestGuestPhase.None
+				&& x.GuestTerminalState == KingdomGrowthFirstGuestTerminalState.None
+				&& x.GuestActionTick == -1L && x.GuestActionReceiptId == null
+				&& x.GuestTerminalTick == -1L && x.GuestTerminalReceiptId == null;
+		}
+
 		private static bool GrowthV1OperationsRepresentable(KingdomGrowthBook Book)
 		{
 			if (Book == null) return false;
@@ -153,6 +245,10 @@ namespace ThousandAndFirst
 						return OpaqueGrowth(Payload, version,
 							"future growth payload preserved as opaque evidence");
 					if (version != KingdomLifecycleRules.CurrentGrowthFormatVersion
+						&& version != KingdomLifecycleRules.FirstGuestPhysicalGrowthFormatVersion
+						&& version != KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion
+						&& version != KingdomLifecycleRules.FirstGuestGrowthFormatVersion
+						&& version != KingdomLifecycleRules.SemanticGrowthFormatVersion
 						&& version != KingdomLifecycleRules.PreviousGrowthFormatVersion
 						&& version != KingdomLifecycleRules.LegacyGrowthFormatVersion)
 						return OpaqueGrowth(Payload, version,

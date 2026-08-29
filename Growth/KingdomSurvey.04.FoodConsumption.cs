@@ -62,11 +62,7 @@ namespace ThousandAndFirst
 			}
 			Draw(ref remaining, null);
 			int spent = Amount - remaining;
-			FoodStored -= spent;
-			if (FoodStored < 0)
-			{
-				FoodStored = 0;
-			}
+			RefreshPhysicalFoodCount();
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			SynchronizeLarders();
 			return spent;
@@ -82,10 +78,14 @@ namespace ThousandAndFirst
 		private int Draw(ref int Remaining, string Blueprint)
 		{
 			int took = 0;
+			KingdomConstructionInputLeaseSnapshot leases;
+			string authorityFailure;
+			if (Remaining <= 0 || !KingdomOrdinaryFoodAuthority.TryCapture(
+				out leases, out authorityFailure)) return 0;
 			for (int i = 0; i < Larders.Count && Remaining > 0; i++)
 			{
 				GameObject container = Larders[i];
-				if (container == null || container.Inventory == null)
+				if (!GameObject.Validate(container) || container.Inventory == null)
 				{
 					continue;
 				}
@@ -95,7 +95,8 @@ namespace ThousandAndFirst
 				for (int j = 0; j < held.Count && Remaining > 0; j++)
 				{
 					GameObject food = held[j];
-					if (!food.HasPart("Food") && !food.HasPart("PreparedCookingIngredient"))
+					if (!ReferenceEquals(food == null ? null : food.InInventory, container)
+						|| !KingdomOrdinaryFoodAuthority.CanSpend(leases, food))
 					{
 						continue;
 					}
@@ -109,7 +110,27 @@ namespace ThousandAndFirst
 					// that happens, rather than trusting a return value for it.
 					while (Remaining > 0 && GameObject.Validate(food))
 					{
-						food.Destroy(null, Silent: true);
+						int before = food.Count;
+						string beforeBlueprint = food.Blueprint;
+						Inventory beforeInventory = container.Inventory;
+						Zone beforeZone = container.CurrentZone;
+						Cell beforeCell = container.CurrentCell;
+						string failure;
+						if (before <= 0 || beforeInventory == null || beforeZone != Ground
+							|| beforeCell == null || food.InInventory != container
+							|| (Blueprint != null && beforeBlueprint != Blueprint)
+							|| !KingdomOrdinaryFoodAuthority.TrySpendNow(food, out failure)) return took;
+						try { food.Destroy(null, Silent: true); }
+						catch { }
+						bool ownerExact = GameObject.Validate(container)
+							&& container.Inventory == beforeInventory
+							&& container.CurrentZone == beforeZone && container.CurrentCell == beforeCell;
+						bool exact = ownerExact && (before == 1 ? !GameObject.Validate(food)
+							: GameObject.Validate(food) && food.InInventory == container
+								&& food.CurrentCell == null && food.Count == before - 1
+								&& food.Blueprint == beforeBlueprint
+								&& KingdomOrdinaryFoodAuthority.IsEdible(food));
+						if (!exact) return took;
 						Remaining--;
 						took++;
 					}
@@ -139,11 +160,7 @@ namespace ThousandAndFirst
 			}
 			int remaining = Amount;
 			int took = Draw(ref remaining, Blueprint);
-			FoodStored -= took;
-			if (FoodStored < 0)
-			{
-				FoodStored = 0;
-			}
+			RefreshPhysicalFoodCount();
 			FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 			SynchronizeLarders();
 			return took;
@@ -181,6 +198,9 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
+			KingdomConstructionInputLeaseSnapshot leases;
+			string failure;
+			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out failure)) return 0;
 			int held = 0;
 			for (int i = 0; i < Larders.Count; i++)
 			{
@@ -191,8 +211,9 @@ namespace ThousandAndFirst
 				}
 				foreach (GameObject item in container.Inventory.Objects)
 				{
-					if (item.Blueprint != Blueprint || (!item.HasPart("Food")
-						&& !item.HasPart("PreparedCookingIngredient")) || item.Count <= 0)
+					if (!GameObject.Validate(item) || item.Blueprint != Blueprint
+						|| item.InInventory != container
+						|| !KingdomOrdinaryFoodAuthority.CanSpend(leases, item))
 					{
 						continue;
 					}

@@ -53,6 +53,32 @@ namespace ThousandAndFirst.Simulation.City
 
 		private void NormalizeCityMetadata()
 		{
+			if (AssentingMoot == null)
+			{
+				AssentingMoot = new ThousandAndFirst.KingdomAssentingMootReceipt();
+			}
+			AssentingMoot.Normalize();
+			string mootFailure;
+			if (AssentingMoot.Phase != ThousandAndFirst.KingdomAssentingMootPhase.None
+				&& !ThousandAndFirst.KingdomAssentingMootRules.Validate(
+					AssentingMoot, out mootFailure))
+			{
+				AssentingMoot = ThousandAndFirst.KingdomAssentingMootRules.Quarantined(
+					AssentingMoot, mootFailure) ??
+					new ThousandAndFirst.KingdomAssentingMootReceipt();
+			}
+			if (NamedCook == null)
+			{
+				NamedCook = new ThousandAndFirst.KingdomNamedCookReceipt();
+			}
+			NamedCook.Normalize();
+			string cookFailure;
+			if (NamedCook.Phase != ThousandAndFirst.KingdomNamedCookPhase.None
+				&& !ThousandAndFirst.KingdomNamedCookRules.Validate(NamedCook, out cookFailure))
+			{
+				NamedCook = ThousandAndFirst.KingdomNamedCookRules.Quarantined(
+					NamedCook, cookFailure) ?? new ThousandAndFirst.KingdomNamedCookReceipt();
+			}
 			if (SettlementId == null)
 			{
 				SettlementId = "";

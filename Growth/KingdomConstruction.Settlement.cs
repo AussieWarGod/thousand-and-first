@@ -11,17 +11,28 @@ namespace ThousandAndFirst
 		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
 			if (Resolving || System == null || !System.Founded || Z == null || Survey == null
-				|| !System.ClaimedZones.Contains(Z.ZoneID))
+				|| !System.ClaimedZones.Contains(Z.ZoneID)
+				|| !KingdomMaster.AutomaticWorkAllowed(System))
 			{
 				return;
 			}
 			Resolving = true;
 			try
 			{
+				if (!KingdomPlots.RecoverFoundingHeart(System, Z))
+				{
+					KingdomLog.Log("construction: founding heart recovery requires inspection");
+					return;
+				}
+				ReleaseTerminalInputRemaindersOnActiveZone(System, Z);
+				if (!CaptureInputObservation(System, Z, Survey, out string observationFailure))
+					KingdomLog.Log("construction input observation: " + observationFailure);
 				// Freeze one real, named raising gang before any labour clock is read. Every
 				// active root below consumes its own stamp; only the oldest selected root can
 				// therefore spend these bodies in this pass.
 				KingdomConstructionPresence.Assign(System, Survey);
+				List<KingdomMaterialRules.KingdomYardStanding> yards =
+					KingdomMaterials.YardsStanding(Z);
 				List<KingdomConstructionJob> jobs;
 				string fault;
 				if (!TryRead(out jobs, out fault))
@@ -37,15 +48,37 @@ namespace ThousandAndFirst
 					r_KingdomPlotWorks works = plot.GetPart<r_KingdomPlotWorks>();
 					if (works == null) continue;
 					string receipt = plot.GetStringProperty(ReceiptProperty);
-					bool mayAdvance = string.IsNullOrEmpty(receipt);
-					for (int j = 0; !mayAdvance && j < jobs.Count; j++)
+					if (string.IsNullOrEmpty(receipt))
+					{
+						if (plot.GetIntProperty(KingdomPlots.PlotWorkSchemaProperty)
+							== KingdomPlotLabourRules.LegacySchema)
+							KingdomPlots.Advance(works, System, The.Game.TimeTicks,
+								KingdomPlotLabourWindowRules.InfrastructureReady, null);
+						else KingdomPlots.ConsumePlotLabourAtZero(works, System,
+							The.Game.TimeTicks, "Current plot labour has no paid receipt authority.");
+						continue;
+					}
+					KingdomConstructionJob labourJob = null;
+					for (int j = 0; j < jobs.Count; j++)
 					{
 						KingdomConstructionJob carried = jobs[j];
-						mayAdvance = carried.Id == receipt && carried.OwnerKey == owner
-							&& carried.ZoneId == Z.ZoneID
-							&& !KingdomConstructionRules.IsTerminal(carried.Phase);
+						if (carried.Id == receipt && carried.OwnerKey == owner
+							&& carried.ZoneId == Z.ZoneID) labourJob = carried;
 					}
-					if (mayAdvance) KingdomPlots.Advance(works, System, The.Game.TimeTicks);
+					string authorityFailure = null;
+					if (labourJob == null || !TryPlotLabourAuthority(System, Z, plot,
+						works, labourJob, out authorityFailure))
+					{
+						KingdomPlots.ConsumePlotLabourAtZero(works, System, The.Game.TimeTicks,
+							authorityFailure ?? "Plot labour authority could not be proved.");
+					}
+					else
+					{
+						int infrastructure = PlotInfrastructurePercent(plot, works, labourJob,
+							yards, out string infrastructureFailure);
+						KingdomPlots.Advance(works, System, The.Game.TimeTicks,
+							infrastructure, infrastructureFailure);
+					}
 				}
 
 				// Plot completion may have updated a row. Never dispatch the stale pre-advance copy.
@@ -57,10 +90,23 @@ namespace ThousandAndFirst
 				for (int i = 0; i < jobs.Count; i++)
 				{
 					KingdomConstructionJob job = jobs[i];
-					if (job.OwnerKey != owner || job.ZoneId != Z.ZoneID)
+					if (job.OwnerKey != owner)
 					{
 						continue;
 					}
+					bool targetHere = job.ZoneId == Z.ZoneID;
+					bool inputDriven = false;
+					if (!string.IsNullOrEmpty(job.InputReceipt)
+						&& KingdomConstructionRules.TryGetInputReceipt(job,
+							out KingdomConstructionInputReceipt routed)
+						&& InputReceiptTouchesZone(routed, Z.ZoneID))
+					{
+						inputDriven = true;
+						DriveRoutedInput(System, Z, ref job, out fault);
+						if (!TryFind(job.Id, out job) || !targetHere
+							|| job.Phase != KingdomConstructionPhase.Funded) continue;
+					}
+					else if (!targetHere) continue;
 					if (KingdomConstructionRules.IsTerminal(job.Phase))
 					{
 						if (job.Compacted) continue;
@@ -79,6 +125,12 @@ namespace ThousandAndFirst
 							KingdomCeremony.DispatchPending(System, ref job);
 						continue;
 					}
+					if (!inputDriven && !string.IsNullOrEmpty(job.InputReceipt))
+					{
+						DriveRoutedInput(System, Z, ref job, out fault);
+						if (!TryFind(job.Id, out job)
+							|| job.Phase != KingdomConstructionPhase.Funded) continue;
+					}
 					KingdomConstructionResumeAction action = KingdomConstructionRules.ResumeAction(job);
 					if (action == KingdomConstructionResumeAction.ResumeFunding)
 					{
@@ -90,16 +142,23 @@ namespace ThousandAndFirst
 								"This legacy construction receipt predates frozen build effects; its original catalogue and founder-skill truth cannot be reconstructed.");
 							continue;
 						}
-						GameObject required = null;
-						if (KingdomPurpose.RequiresExactFunding(job)
-							&& !KingdomPurpose.TryRequiredFundingItem(Z, job, out required, out fault))
+						KingdomConstructionStartResult resumed;
+						if (KingdomPurpose.RequiresExactFunding(job))
 						{
-							Quarantine(ref job, fault
-								?? "The exact city-purpose cargo cannot be reproved for funding retry.");
-							continue;
+							if (!KingdomPurpose.TryRequiredFundingItems(Z, job,
+								out List<GameObject> requiredItems, out fault)
+								|| !KingdomPurpose.TryRequiredFundingObjectIds(job,
+									out List<string> requiredIds, out fault))
+							{
+								Quarantine(ref job, fault
+									?? "The exact city-purpose cargo set cannot be reproved for funding retry.");
+								continue;
+							}
+							resumed = TryResumeRoutedFunding(job, requiredIds,
+								out job, out fault);
 						}
-						KingdomConstructionStartResult resumed = TryResumeFunding(job, Z, Survey,
-							required, out job, out fault);
+						else resumed = TryResumeFunding(job, Z, Survey,
+							null, out job, out fault);
 						if (resumed != KingdomConstructionStartResult.Funded) continue;
 						action = KingdomConstructionResumeAction.RetryProjection;
 					}
@@ -125,6 +184,8 @@ namespace ThousandAndFirst
 			}
 			finally
 			{
+				if (!CaptureInputObservation(System, Z, Survey, out string observationFailure))
+					KingdomLog.Log("construction input observation refresh: " + observationFailure);
 				Resolving = false;
 				KingdomConstructionPresence.ReleaseFinished(Z, Survey);
 				KingdomVisualState.Refresh(System, Z, Survey);
@@ -165,6 +226,9 @@ namespace ThousandAndFirst
 			case KingdomConstructionRoute.PurposeConsignment:
 				KingdomPurpose.RetryConstruction(System, Z, Job);
 				break;
+			case KingdomConstructionRoute.HostedArcology:
+				KingdomHostedArcology.RetryConstruction(System, Z, Job);
+				break;
 			}
 		}
 
@@ -202,6 +266,9 @@ namespace ThousandAndFirst
 				break;
 			case KingdomConstructionRoute.PurposeConsignment:
 				KingdomPurpose.InspectConstruction(System, Z, Job);
+				break;
+			case KingdomConstructionRoute.HostedArcology:
+				KingdomHostedArcology.InspectConstruction(System, Z, Job);
 				break;
 			}
 		}

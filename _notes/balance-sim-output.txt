@@ -23,16 +23,13 @@ Constants read from source:
     FavoredMealPercent       = 50
     MaxCyclesPerVisit        = 120
     EffortPerHandPerDay      = 10
+    StrikeBaseEffort         = 20
+    StrikeEffortPerUnit      = 3
     RefineEffortPerUnit      = 15
     RawPerRefined            = 2
     MaxRefinedPerDay         = 8
     MaxClearingHands         = 6
     LiftCapPercent           = 50
-    TasteShadeAmount         = 1
-    MaxTastesStated          = 2
-    VirtueShadeAmount        = 2
-    FlawShadeAmount          = 1
-    MaxPrefersCounted        = 2
     MaxShadePerWork          = 2
     FloorLevel               = 4
     StartMarginPercent       = 20
@@ -231,30 +228,30 @@ refining chain, and it eats 2 raw per unit on top of the raw the design
 names outright. A two-hand yard shapes 1 unit(s) a day.
 
 design                drams  build d  raw named  refined  raw eaten  raw total  bit weight  yard-days
-arcology                190     19.0        188       84        168        356          18         84
+arcology                190     19.0        208       90        180        388          18         90
+greatfoundry            160     15.0        144       76        152        296           0         76
 becomingannexe          140     14.0        120       72        144        264          18         72
+stasisvault             150     15.0        132       72        144        276          25         72
+realmgranary            140     14.0        120       60        120        240           0         60
+deepbore                150     15.0        136       52        104        240           0         52
 chimerictheatre         140     14.0        126       48         96        222          18         48
+assentingmoot           120     12.5         88       40         80        168          18         40
+heartcourt               96     10.0        128       38         76        204          11         38
 mirrorgate              120     12.0        116       36         72        188          18         36
 crownhall               110     11.0        106       36         72        178          11         36
-heartcourt               96     10.0        108       32         64        172          11         32
 arcologyward             70      8.0         48       30         60        108          11         30
-condensery              100     10.0        116       28         56        172          11         28
-graftinghall             90      7.5         60       28         56        116           9         28
-waterworks               72     10.0        138       26         52        190          11         26
-homefarm                 92     10.0        124       24         48        172           0         24
-arcologyterrace          46      6.0         26       16         32         58           0         16
 
-    Bits, the third cost. 14 of 106 designs ask for vanilla tinkering bits at all,
-    and they are exactly the high-craft ones: arcology, arcologyward, becomingannexe, chargingpost, chimerictheatre, condensery, crownhall, graftinghall, hallsurgery, heartcourt, mirrorgate, underbench, vathouse, waterworks.
+    Bits, the third cost. 17 of 141 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: arcology, arcologyward, assentingmoot, becomingannexe, chargingpost, chimerictheatre, condensery, crownhall, graftinghall, hallsurgery, heartcourt, mirrorgate, robotchargebay, stasisvault, underbench, vathouse, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
     That is the intended shape (the catalogue's header says so) and it means the bit line is
     a GATE and not a rate - it never appears in the yard-days column, and no amount of crew
     shortens it.
 
-    Reading. The heaviest design in the catalogue (arcology) wants 84 refined
-    units: 84 days of a two-hand yard, and 168 raw loads eaten on top of the
-    188 it names outright. Against a build time of 19 days, the YARD is the schedule
+    Reading. The heaviest design in the catalogue (arcology) wants 90 refined
+    units: 90 days of a two-hand yard, and 180 raw loads eaten on top of the
+    208 it names outright. Against a build time of 19 days, the YARD is the schedule
     for anything grand - the scaffold is not what you wait for.
 
     The yard-days column is now TRUE rather than aspirational. It was not, for the whole of
@@ -265,6 +262,31 @@ arcologyterrace          46      6.0         26       16         32         58  
 
     Refining is not water-priced twice. Building costs are drams AND materials, and the
     drams side is untouched by this wave.
+
+======================================================================================
+Q4b Mending: time times hands, never visits
+======================================================================================
+
+A mend pays for its replacement materials and bits before this clock starts. Its labour bill
+is half the strike base (20 / 2) plus 3 effort for every material unit in
+the original work. One resident removes 10 effort per day; the gang is bounded at
+6 hands, but the calendar is not bounded. Wear decides whether a mend exists and what
+physical stock it costs. It does not make the same building take a different number of hands
+to put back together merely because the damage roll was larger.
+
+material units    effort      1 hand      2 hand      4 hand      6 hand
+             0        10           1           1           1           1
+             8        34           4           2           1           1
+            24        82           9           5           3           2
+            64       202          21          11           6           4
+           120       370          37          19          10           7
+
+The cells are DAYS TO FINISH after the exact stock is in custody. Returning every day does
+not improve them: thirty watched one-day passes and one thirty-day absence remove the same
+effort. Leaving nobody assigned removes zero after 400 days. This closes the old 'uncapped
+mending' note as a measured doctrine: HANDS are the rate; elapsed world days are the clock;
+homecomings are neither.
+
 
 ======================================================================================
 Q5  Sensitivity: the two numbers the water economy stands on
@@ -376,7 +398,8 @@ works among its houses still reaches that cap easily - so a real City holds abou
 the table above says. That is authored (the frozen arithmetic's own doc) and it is why these
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
-covers, and a notable's own shade rides the same cap. Q10 is that whole reckoning.
+covers. A civic-office title contributes zero; the only settlement-wide transient shade is
+the last attended meal. Q10 is the authored reach reckoning.
 
 ======================================================================================
 Q12 Styles: what each of the five cities may raise, and that every one can still stand
@@ -400,11 +423,11 @@ The third is not a balance rule, it is a design rule, and it is here because it 
 pass silently breaks. A style is a place, not a penalty.
 
   style      offered  refused   own   categories missing
-  common          92        5     3   none
-  verdant         90        6     2   none
-  fungal          92        4     2   none
-  gyre            91        5     2   none
-  eater           91        6     3   none
+  common         127        5     3   none
+  verdant        125        6     2   none
+  fungal         127        4     2   none
+  gyre           126        5     2   none
+  eater          126        6     3   none
 
   common   is refused hut, hutyard, sawyeryard, palisade, waterwheel
            and raises mudhut, mudhutcourt, caravanserai
@@ -730,30 +753,21 @@ Reading.
    day. Nothing here accumulates a debt, and nothing here remembers.
 
 ======================================================================================
-Q10 Comfort, now that it has consumers: the notable's shade and the reach
+Q10 Comfort: authored yard shade and physical reach; civic title excluded
 ======================================================================================
 
-Three numbers that were computed and thrown away now reach the level, and one of them reaches
-it less than it used to. All three ride the SAME lift term and are capped by the same
-`LiftCapPercent` = 50, so none of them can outrun the water.
+Two authored inputs reach the permanent lift term, and physical reach reduces one of them.
+Both are capped by `LiftCapPercent` = 50, so neither outruns the water.
 
-  the notable's shade  `KingdomCeremonyRules.NotableShade`: 2 tastes met at 1 each, a virtue
-                       (2) net of a flaw (1), and 2 met Prefers at 1 each = 5 at the very most,
-                       and 1 for a notable who found nothing here at all.
   a yard trade         `Shades` on a <yardwork>, capped at 2 per house. The shipped four
                        declare 3 points between them, and one house takes ONE trade.
   the reach            a work's lift now lands in proportion to the settlement's roofs it
                        covers (`KingdomReachRules.Landed`). Binding goods are untouched.
 
-THE SHADE, against the cap it rides under. A notable cannot lift a rung that has no water to
-spare, which is the whole reason the shade was put inside the cap rather than beside it.
+THE TITLE-ONLY FENCE. `KingdomSystem.Shade` reads MealShade only, and seat plus off-seat
+normalization force the serialized legacy NotableShade field to zero. An office therefore
+changes identity and fiction, never capacity, even before the player revisits an old save.
 
-rung       people  lift cap   shade   lands   verdict
-Camp            4         2       5       2   the cap bites first
-Steading        5         2       5       2   the cap bites first
-Village        12         6       5       5   the notable is worth all of it
-Town           25        12       5       5   the notable is worth all of it
-City           50        25       5       5   the notable is worth all of it
 
 THE REACH, which is the half that TAKES. Before this wave every lifting work counted citywide
 off its Carries; now it counts for the share of the settlement's roofs it covers, which is
@@ -765,10 +779,10 @@ roofs and a plot band reaches nobody who lives anywhere.
 
 rung      declared gathered scattered   cap   was gathered scattered
 Camp            15        0         0     2     6        4         4
-Steading        37       16         7     2     7        7         7
-Village        101       78        22     6    18       18        18
-Town           168      145        90    12    37       37        37
-City           249      226       171    25    75       75        75
+Steading        71       16         7     2     7        7         7
+Village        190       78        22     6    18       18        18
+Town           257      145        90    12    37       37        37
+City           364      252       197    25    75       75        75
 
 Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
 rung can reach standing, the declared lift overruns the cap so far that scoping changes the
@@ -780,7 +794,7 @@ its way up. Same arithmetic, one design at a time - the biggest lift each rung c
 
 rung     design        band      declared gathered scattered
 Camp     shrinegarth   plot             3        0         0
-Steading smithy        quarter          3        3         1
+Steading hindrenmooncourtplot             5        0         0
 Village  workshop      quarter          8        8         2
 Town     reliquary     zone            11       11        11
 City     heartcourt    city            16       16        16
@@ -795,9 +809,8 @@ many of them stand, and its level is its binding goods alone. That is the addend
 literally - a wayside statue shades the ground it stands on, not the settlement - and it costs
 a camp the whole 2 settlers of headroom it used to get for free. It is not a stall: Camp is
 floored at `FloorLevel` = 4 regardless, every rung stays holdable on its binding goods, and
-one notable's shade (1 even for a notable who found nothing) puts a camp's headroom
-back the moment an office is filled. Flagged rather than tuned: if it wants softening, the
-lever is a `Reach` attribute on the design, not this arithmetic.
+an office cannot put that headroom back. If Camp needs softening, the lever is a `Reach`
+attribute on an authored design, not a hidden reward attached to a named resident.
 
 
 ======================================================================================
@@ -888,10 +901,10 @@ season), foraging is all that is left, and this is how long the larders cover th
 
 rung       people  pantry plan        held   blackout   against water
 Camp            4  larderx1             64     no gap   0 d of water
-Steading        5  larderx2            128      128 d   53 d of water
+Steading        5  joppaseedhousex1    288      288 d   53 d of water
 Village        12  granaryx1           288       36 d   35 d of water
 Town           25  granaryx2           576       27 d   34 d of water
-City           50  granaryx3           864       18 d   43 d of water
+City           50  realmgranaryx2      768       16 d   43 d of water
 
 READING. The two cushions CROSS, and they cross at Town. Below it food is the safer of the two
 - a camp cannot have a food blackout at all, because the wild already covers it, and a village
@@ -1030,6 +1043,8 @@ G2  The food lane's invariants, re-derived from the XML
 
   design      blueprint                 rows  derived  declared   plot cells
   plot        r_KingdomPlot                6        3         3   6/20 (30%)
+  ydvinebower r_KingdomYdVineBower         6        3         3   6/20 (30%)
+  svardymbrinenurseryr_KingdomSvardymBrineNursery     8        4         4   8/20 (40%)
   plotrows    r_KingdomPlotRows           10        5         5   10/20 (50%)
   fungalvault r_KingdomFungalVault        12        6         6   12/48 (25%)
   field       r_KingdomField              16        8         8   16/48 (33%)
@@ -1047,13 +1062,21 @@ G2  The food lane's invariants, re-derived from the XML
    fourth reason would be a number nobody can derive.
 
   larder      food:2   keeps (64 servings)
+  snapjawtraildenfood:2   keeps (64 servings)
   plot        food:3   grows (6 rows)
+  kyakukyaspicehearthfood:3   keeps (96 servings)
+  ydvinebower food:3   grows (6 rows)
   grindmill   food:4   makes (a mill, and it carries craft to say so)
+  joppaseedhousefood:4   keeps (288 servings)
+  svardymbrinenurseryfood:4   grows (8 rows)
+  mopangorefugekitchenfood:4   keeps (128 servings)
   plotrows    food:5   grows (10 rows)
+  farmersseedcommonsfood:5   keeps (288 servings)
   fungalvault food:6   grows (12 rows)
   field       food:8   grows (16 rows)
   granary     food:9   keeps (288 servings)
   sporecellar food:9   keeps (288 servings)
+  realmgranaryfood:12  keeps (384 servings)
   arcologyterracefood:14  grows (28 rows)
   fieldrows   food:18  grows (36 rows)
   vaultgalleriesfood:18  grows (36 rows)
@@ -1070,7 +1093,7 @@ G2  The food lane's invariants, re-derived from the XML
    making a year.
 
   Camp     4 people eat 4/d; 2 hands forage 4/d; the wild alone
-  Steading 5 people eat 5/d; 2 hands forage 4/d; larderx1 (needs no seed) for 2
+  Steading 5 people eat 5/d; 2 hands forage 2/d; joppaseedhousex1 (needs no seed) for 4
 
   Foraging is UNCHANGED by this wave: 2 a hand a day, ceiling
   4, and the ceiling is still `FloorLevel`. The gate binds where it
@@ -1085,6 +1108,8 @@ G2  The food lane's invariants, re-derived from the XML
 
   design        rows  carries/d   over 6d  one gathering
   plot             6          3        18             18
+  ydvinebower      6          3        18             18
+  svardymbrinenursery     8          4        24             24
   plotrows        10          5        30             30
   fungalvault     12          6        36             36
   field           16          8        48             48
@@ -1164,7 +1189,7 @@ G3  Meals and industry, re-derived from the source and the XML
 3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
    re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
    effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
-   is 1200. It rides the same lift term as a notable's shade and a shrine's spirit, so
+   is 1200. It rides the same capped lift term as authored spirit works, so
    `LiftCapPercent` = 50% binds it again on top of that.
 
    Below: the level a settlement holds at each rung with its binding supports level-pegged and no
@@ -1244,11 +1269,11 @@ W6  Production on the model, and logistics that never look stupid
    unbounded claim, because production is clamped by the room the model believes the zone has and
    the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
    what makes the amortised landing finite: the worst debt a quarter can present is its own
-   capacity, and §0.0(b) prices draining a full backlog at 29 turns.
+   capacity, and §0.0(b) prices draining a full backlog inside the 40-turn grace window.
 
    reify budget:      8 units a turn
-   worst backlog:     232 units
-   turns to drain:    29   (§0.0(b) warns above 40)
+   worst backlog:     312 units
+   turns to drain:    39   (§0.0(b) warns above 40)
 
 5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every column in Q1-Q11 above is a
    ONE-QUARTER balance and none of them moves: the same works make the same drams on the same
@@ -1376,6 +1401,189 @@ W7  Networks, the flow solve, and power on one accounting
    5  Watch     
 
 ======================================================================================
+C3  Fully-grafted founder structural stress case
+======================================================================================
+  pinned founder: Qud 2.0.211.51 Humanoid; category Animal; eight occupied slots
+  slot          procedure           grant                    water   days   kept
+  head          packstooth          Swarmer                     20      5      1
+  face          sapskiss            SapOnPenetration            25      6      1
+  back          mirrorcarapace      ReflectDamage               90     16      3
+  right arm     tarrygrip           StickOnHit                  20      6      1
+  right hand    leechpseudopod      LifeDrainOnHit              45     10      2
+  left arm      galvanicleech       SapChargeOnHit              25      6      1
+  left hand     vintnersfang        DrunkOnHit                  20      5      1
+  hands         trollkingsgrip      GiantHands                  60     12      2
+  total bill: 305 drams, 66 staffed days, 12 kept parts
+  bits: 0x16, 2x7, 3x4, 4x1
+  authored consequence lines read before commitment: 21
+  ninth simultaneous graft: refused; every fixture slot already carries one exact manager
+  structural verdict: PASS (finite slots, exact bands, full resource bill, disclosures)
+  sub-adventuring invariant: UNSIGNED -- requires pinned native combat/session evidence;
+  this simulator does not turn eight vanilla effects into invented damage or defence numbers.
+
+======================================================================================
+Q13 Purpose portfolio: five pairs, ten exact directions, one live operation
+======================================================================================
+  fixed graph cap: 5 symmetric pairs / 10 directed recipes
+  pair                     water   food  local materials                                   retained cargo
+  Flesh<->Chrome              32      4  brush:4,scrap:4,workedmetal:3                     living-neural-lattice=workedmetal:1; psybernetic-control-wafer=workedmetal:1
+  Flesh<->Harvest             22     12  brush:4,workedmetal:1                             sterile-culture-mash=workedmetal:1+food:6; blightproof-seed-graft=brush:1
+  Chrome<->Deep               24      0  stone:4,scrap:6,workedmetal:2                     strata-sense-coil=workedmetal:1; conductor-assay=scrap:1
+  Deep<->Forge                28      0  stone:6,scrap:2,shapedstone:2,workedmetal:4       deep-ore-assay=scrap:1; drill-crown=workedmetal:1
+  Forge<->Harvest             28      8  shapedtimber:3,workedmetal:3                      irrigation-manifold=workedmetal:1; quench-provision-lot=shapedtimber:1+food:6
+  ten-direction local bill: water=134, food=24, materials=brush:8,stone:10,scrap:12,shapedtimber:3,shapedstone:2,workedmetal:13
+  operation-boundary cargo: carried-food metadata=12, embodied materials=brush:1,scrap:2,shapedtimber:1,workedmetal:6
+  local claim less dispatched material objects: food remains 24, materials=brush:7,stone:10,scrap:10,shapedtimber:2,shapedstone:2,workedmetal:7
+  food conservation: 24 debited = 12 landed + 4 carriage loss + 8 local process sink
+  active Harvest edge: 8 debited = 6 landed + 2 carriage loss; landed food becomes physical servings via the purpose-food landing lane
+  bootstrap -> reciprocal return -> activation (construction is a Q4 lookup):
+  orientation            build   days   recipe   cheap+body   dear+body   steady water
+  Flesh->Chrome            280     28       48          268         588       232..392
+  Flesh->Harvest           280     28       34           74         394        42..202
+  Chrome->Flesh            280     28       48          428         588       232..392
+  Chrome->Deep             290     29       38          398         398            204
+  Deep->Chrome             290     29       34          214         214            204
+  Deep->Forge              310     30       40           40          40             28
+  Forge->Deep              310     30       44           44          44             28
+  Forge->Harvest           300     29       44           44          44             28
+  Harvest->Flesh           280     28       32           52         212        42..202
+  Harvest->Forge           300     29       40           40          40             28
+  bootstrap repayment: every orientation funds exactly one embodied material unit;
+  no row repays water, food, body surcharge, or more than its own local material claim
+  cap case: all 10 unique directions resolve; cap+1 duplicate/non-edge/self refuses
+  live-edge cap: min(3 cities // 2, one pair register) = 1; edge 2 refuses
+  drive bound: normal 76, exempt 74 < slice 128; headroom 52
+  route standing demand: 2 gates x 12000 = 24000 charge/day (W7 owns supply/conservation)
+  sensitivity: 31 scalar/material -1 boundaries remain outstanding before effect
+  interruption: one parent -> one operation -> one cargo; explicit pickup and landing
+  conservation: requested = spent + lost + outstanding; active path requires lost = 0
+  W6/W7/G1/G2/C4 accounting reuse: yes; no Carries, rate, or save bytes added here
+  native ten-direction/save/interruption/appearance evidence: UNSIGNED
+
+======================================================================================
+Q14 Hosted arcology: one shell, bounded lots, physical water-gated food
+======================================================================================
+  composite paid interior: ward + terrace (shell remains Q4-owned)
+  lot                    water   materials   bits   exotics    ticks   crew
+  arcologyward              70          78      4         0     9600      2
+  arcologyterrace           46          50      0         0     7200      2
+  exact bill: water=116; build ticks=16800 (14.0 days summed, not a concurrency claim)
+  materials: mud:8,stone:74,shapedstone:26,workedmetal:20
+  bits: tier0:2,tier3:1,tier4:1; exotics: none
+  state            roof   food   order   luxury
+  dark shell          0      0       0        0
+  bare shell         60      0       4        4
+  ward active        86      0       4        6
+  both, dry          86      0       4        6
+  both, fresh        86     14       4        6
+  both paid lots active; exact shell-effectiveness sensitivity:
+  effectiveness    dry food  fresh roof  fresh food   order    luxury
+  0                       0           0           0       0         0
+  40                      0          34           5       1         2
+  60                      0          51           8       2         3
+  100                     0          86          14       4         6
+  terrace proof: 14 growbeds x 2 rows = 28 rows -> food:14
+  water boundary: StoredWater=0 -> food:0; StoredWater>0 -> food:14
+  registry cap: 2 paid + 1 read-only + 13 extension slots = 16; slot 17 refuses before publication
+  authority cap: one exact current-realm shell; second fixed slot protects retained history
+  staffing: shell 4; one Working lot adds 2 -> transient peak 6; Active lots add 0
+  interruption: prior staffing x elapsed; catch-up <= 36000 ticks; first pass/zero crew/time regression = zero work
+  master pause: physical labour freezes; MasterOptionTick discards pre-resume elapsed time, so paused labour is never repaid
+  conservation: every paid lot reserves XML Cost + materials once; only Active adds support
+  W6/W7/G1/G2/C4 accounting reuse: yes; hosted food is not a second crop or save budget
+  native traversal/save/cardinality/water/appearance evidence: UNSIGNED
+
+======================================================================================
+Q15 Routed construction inputs: itinerary, custody, debit, rollback, recovery
+======================================================================================
+  source-pinned bounds:
+    source/cargo lines 64/64; children 16; cargo/child 12; required objects 8
+    scanned candidates 4096; itinerary legs 6; drive steps/pass 192
+    recovery owners/turn 8; global jobs 16; schema 3 (legacy 1)
+    receipt wire caps 131072 bytes / 180000 chars (reported only; excluded from C4)
+  water-line cap: 4096 drams = 64 x 64; 4097 drams needs 65 and refuses
+  water/carrier: 12 casks x 64 = 768 drams
+  carrier packing: 64 same-holder cargo -> 6 porters; 16 endpoint groups fit; 17 refuse
+  global job boundary: 16 endpoint children fill all 16 rows; any second job refuses
+  other cap+1: required objects 8/9; itinerary legs 6/7; scanned candidates 4096/4097
+  reserve sensitivity: floor=daily x 3; daily 715827882 fits, 715827883 overflows/refuses
+  G1 reuse: rung-floor daily upkeep 4/6/18/45/110 round-trips through each three-day reserve
+  stock boundary: 458 - prior:64 - floor:330 = request:64; stock -1 is insufficient
+  happy parent: ReservationPrepared -> Reserved -> SourcePending -> Routing -> LandedAwaitingOwner -> DebitPending -> Closing -> Committed
+  partial material: Reserved -> SplitIntent -> SplitProved -> TransferIntent -> Debited -> Spent
+  water cargo: Planned -> CreateIntent -> AtSource -> PickupIntent -> InFlight -> Landed -> DebitIntent -> Spent
+  deterministic open/unpaved itinerary ticks; cells/leg = ZoneTransitCells:
+  cargo      steps  passes     h1     h2     h3     h4     h5     h6
+  1             24       1     50    101    152    203    254    305
+  12           189       1     50    101    152    203    254    305
+  32           493       3     50    101    152    203    254    305
+  64           979       6     50    101    152    203    254    305
+  step sensitivity at 64 lines: whole material 979/6 passes; split material 1299/7; water 1043/6
+  road state             route ticks at 6 legs
+  open/unpaved                             305
+  open/paved                               185
+  built/unpaved                            389
+  built/paved                              233
+  interruption: before+paused waits; exact after acknowledges; third state quarantines
+  pause timing: route 305 + pause 192 = 497; long.MaxValue + 1 refuses, never wraps
+  master pause: global physical recovery freezes; PausedTicks shifts arrival exactly and custody remains unchanged
+  custody cut             expected   named bucket   proved lost
+  AtSource                      64             64             0
+  InFlight                      64             64             0
+  Landed                        64             64             0
+  Spent                         64             64             0
+  CompensationIntent            64             64             0
+  Quarantined                   64             61             3
+  rollback frontier: all sources Reserved..TransferIntent and cargo Planned..PickupIntent
+  compensation frontier: a crossing parent has debited sources; cargo AtSource..DebitIntent
+  manual cancellation frontier: DebitIntent/Spent refuse before physical recovery
+  conservation: source + flight + landed + spent + compensating + quarantine + loss = expected
+  W6/W7/G1/G2/C4 accounting reuse: yes; no production, transport aura, or save bytes added
+  native cold-save/obstruction/carrier/custody/debit/recovery evidence: UNSIGNED
+
+======================================================================================
+C4  Activated v1 authority capacity and concurrency boundaries
+======================================================================================
+C18 section caps, deliberately filled together at every lawful maximum:
+  authority                      bytes         KiB
+  witness + recognition         65,774        64.2
+  practice + services          229,774       224.4
+  body history                  32,946        32.2
+  curiosity                     22,031        21.5
+  civic leads                   37,708        36.8
+  treaties                     241,384       235.7
+  communal rite                  1,214         1.2
+  Guest's Feast                 12,083        11.8
+  village covenant             196,946       192.3
+  C18 payload                  839,860       820.2
+  C18 framed envelope          840,048       820.4
+  experience v4                 24,576        24.0
+  ACTIVE SOURCE                864,624       844.4
+Native retirement archive, charged concurrently before carrier removal:
+  C2 shape: MaxCivicMemorySectionArchiveChars = 321,848; one General note per
+            known section; CivicMemoryChunkChars absent
+  C18 base64 content         1,119,828      1093.6
+  C18 note metadata             22,077        21.6
+  experience office             15,312        15.0   (3 notes x 5,104)
+  experience remembrance        15,171        14.8   (3 notes x 5,057)
+  experience voice              23,445        22.9   (3 notes x 7,815)
+  experience first-feast        32,883        32.1   (3 notes x 10,961)
+  experience note total         86,811        84.8
+  NATIVE RETIREMENT          1,228,716      1199.9
+  ACTIVE + RETIREMENT        2,093,340      2044.3
+  4 MiB contract headroom    2,100,964      2051.7
+  worst-lawful share: 49.91%
+  native notes: 9 C18 sections + 12 Experience civic rows = 21
+  bound kind: uncompressed UTF-8 structural content + conservative per-note framing
+  concurrency: 3 audiences, 16 transient bodies, 7 bodies/request, 3 First Feasts
+  rows: witness 8, recognition 8, practice 8, vocation-service 48 (16/city), body-history 8,
+        curiosity 3, leads 8, treaties 16, rites 3, feasts 3, covenants 48
+  row wire: witness/recognition accept <=4096 bytes; covenant authors <=4094 and accepts <=4096
+  market stock: 8 one-shot tier consignments; periodic restock rate = 0
+  cap+1 law: refuse before publication; no eviction, truncation, backlog, or catch-up
+  native save size/p50/p95/max: UNSIGNED -- no native distribution is inferred
+
+======================================================================================
 Where this model is too crude to decide anything
 ======================================================================================
 
@@ -1450,4 +1658,3 @@ Where this model is too crude to decide anything
 6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
    3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches
    that, and this model does not answer it.
-

@@ -54,6 +54,11 @@ namespace ThousandAndFirst
 			w.Write(o.HarvestEffectivenessPercent); w.Write(o.HarvestMethodPercent);
 			w.Write(o.HarvestFirstOrdinal);
 			S(w, o.HarvestCropBlueprint, false); S(w, o.HarvestSeedBlueprint, false);
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+			{
+				w.Write(o.ArrivalOpportunityOrdinal); w.Write(o.ArrivalOpportunityDueTick);
+				w.Write(o.ArrivalOpportunityRateEpoch); S(w, o.ArrivalOpportunityPayloadHash, true);
+			}
 			w.Write(o.WaterCursor); w.Write(o.WaterLegs.Count);
 			for (int i = 0; i < o.WaterLegs.Count; i++) WriteGrowthWater(w, o.WaterLegs[i]);
 			w.Write(o.SourceCursor); w.Write(o.Sources.Count);
@@ -126,8 +131,8 @@ namespace ThousandAndFirst
 				SubsidenceBefore = r.ReadInt64(), SubsidenceAfter = r.ReadInt64(),
 				DeliveryBefore = r.ReadInt64(), DeliveryAfter = r.ReadInt64(),
 				DepartureBefore = r.ReadInt64(), DepartureAfter = r.ReadInt64(),
-				ArrivalDisposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
-				ArrivalCandidateId = S(r, true),
+					ArrivalDisposition = (KingdomGrowthArrivalDisposition)r.ReadByte(),
+					ArrivalCandidateId = S(r, true),
 				DeliveryMode = (KingdomGrowthDeliveryMode)r.ReadByte(),
 				DepartureCauseKind = (KingdomGrowthDepartureCauseKind)r.ReadByte(),
 				DepartureCause = S(r, false), DepartureNote = S(r, false, true),
@@ -147,7 +152,14 @@ namespace ThousandAndFirst
 				HarvestMethodPercent = r.ReadInt32(),
 				HarvestFirstOrdinal = r.ReadUInt64(),
 				HarvestCropBlueprint = S(r, false), HarvestSeedBlueprint = S(r, false)
-			};
+				};
+			if (wireVersion >= KingdomLifecycleRules.CadenceGrowthFormatVersion)
+			{
+				o.ArrivalOpportunityOrdinal = r.ReadUInt64();
+				o.ArrivalOpportunityDueTick = r.ReadInt64();
+				o.ArrivalOpportunityRateEpoch = r.ReadInt64();
+				o.ArrivalOpportunityPayloadHash = S(r, true);
+			}
 			o.WaterCursor = r.ReadInt32();
 			int water = ReadCount(r, KingdomLifecycleRules.MaxWaterLegs);
 			o.WaterLegs = new List<KingdomGrowthWaterLeg>(water);

@@ -115,6 +115,14 @@ namespace ThousandAndFirst
 					w.Write(Operation.DeliveryAfter); w.Write(Operation.DepartureBefore);
 					w.Write(Operation.DepartureAfter); w.Write((byte)Operation.ArrivalDisposition);
 					CanonicalString(w, Operation.ArrivalCandidateId);
+					if (Operation.ArrivalOpportunityOrdinal != 0UL)
+					{
+						CanonicalString(w, "arrival-opportunity-v1");
+						w.Write(Operation.ArrivalOpportunityOrdinal);
+						w.Write(Operation.ArrivalOpportunityDueTick);
+						w.Write(Operation.ArrivalOpportunityRateEpoch);
+						CanonicalString(w, Operation.ArrivalOpportunityPayloadHash);
+					}
 					w.Write((byte)Operation.DeliveryMode);
 					w.Write((byte)Operation.DepartureCauseKind);
 					CanonicalString(w, Operation.DepartureCause);

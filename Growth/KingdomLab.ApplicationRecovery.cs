@@ -16,7 +16,7 @@ namespace ThousandAndFirst
 		{
 			KingdomLabOwnershipSnapshot snapshot;
 			return Actor != null && Procedure != null && Job != null
-				&& string.Equals(Actor.ID, Job.PatientId, StringComparison.Ordinal)
+				&& string.Equals(Actor.IDIfAssigned, Job.PatientId, StringComparison.Ordinal)
 				&& SnapshotJobEffect(Actor, Procedure, Job, out snapshot)
 					== KingdomLabOwnedTargetState.Present;
 		}
@@ -125,7 +125,7 @@ namespace ThousandAndFirst
 					Snapshot.BodyPartId)?.DefaultBehavior;
 			}
 			if (!GameObject.Validate(bearer)
-				|| !string.Equals(bearer.ID, Snapshot.BearerId, StringComparison.Ordinal)) return false;
+				|| !string.Equals(bearer.IDIfAssigned, Snapshot.BearerId, StringComparison.Ordinal)) return false;
 			string marker = bearer.GetStringProperty(
 				KingdomProcedures.OwnerProperty(Snapshot.ProcedureKey));
 			if (!string.IsNullOrEmpty(marker)
@@ -159,7 +159,7 @@ namespace ThousandAndFirst
 			catch { return false; }
 			int at = record.IndexOf(Snapshot.ProcedureKey);
 			KingdomLabOwnershipSnapshot receipt;
-			return record.ContractAt(at, out receipt, Actor.ID)
+			return record.ContractAt(at, out receipt, Actor.IDIfAssigned)
 				&& string.Equals(receipt.JobId, Snapshot.JobId, StringComparison.Ordinal)
 				&& string.Equals(receipt.Fingerprint, Snapshot.Fingerprint,
 					StringComparison.Ordinal)

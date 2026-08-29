@@ -106,7 +106,8 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(foot, "FindEndpointByToken(Foot", "TrySafeFoot(null, Foot",
 				"GameObject.Create(UpBlueprint)", "StampEndpoint(endpoint, Derived, FootRole)",
 				"AddObject(endpoint", "FindEndpointByToken(Foot",
-				"Owner.SetStringProperty(FootEndpointProperty, endpoint.ID)",
+				"string endpointId = created ? endpoint.ID : endpoint.IDIfAssigned",
+				"Owner.SetStringProperty(FootEndpointProperty, endpointId)",
 				"Owner.SetIntProperty(PhaseProperty, 2)");
 		}
 
@@ -208,6 +209,20 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("write `r_TAF_DelveLink*` or `r_TAF_DelveEndpoint*`",
 				modding);
 			StringAssert.Contains("foreign objects are a refusal, never cleanup targets", modding);
+		}
+
+		[Test]
+		public void DelveCompletionNamesItsExactSettlementRatherThanTheSeatCursor()
+		{
+			string plot = Plot();
+			Assert.GreaterOrEqual(Count(plot,
+				"TryExactSettlementName(System, Z, out string settlementName)"), 2);
+			StringAssert.Contains("SettlementIdForOwnedZone(Z?.ZoneID)", plot);
+			StringAssert.Contains("System.TryFindSettlement(id", plot);
+			StringAssert.DoesNotContain("ShaftOpens(KingdomPresentation.Rich(system.SeatName))",
+				plot);
+			StringAssert.DoesNotContain("ShaftOpens(KingdomPresentation.Rich(System.SeatName))",
+				plot);
 		}
 
 		private static int Count(string Source, string Term)

@@ -10,7 +10,7 @@ the harvest cycle, extend-the-real-machines). Head at writing: `4b128cb`.
 > forty-work proxy. The live City envelope is four zones times 220 plots: `W=880`, `R=956`, and
 > `64 × 2R = 122,368` maximum reckon row-visits. The composed current-realm model estimate is
 > 197,796 bytes after the resident-authority carrier correction; current advisory/ceiling rungs
-> are 208/256 KiB. Every later `40 works`, `R=116`,
+> are 320/384 KiB for the un-deferred three-city realm. Every later `40 works`, `R=116`,
 > `14,848`, 56/64-KiB, or flat-`MaxBuildings` figure in this historical design is superseded by
 > those bounds and `KingdomCityMemoryRules`. Catch-up is now re-derived from 220 legal physical
 > root containers, the 24+8 manual dedication allowances, and sixty bodies: **312 weighted units,
@@ -1397,7 +1397,10 @@ standing in; the model owns the whole of it.
 never inferred, and that law is four pieces and one refusal:
 
 - **Typed mains.** `r_KingdomLiquidConduit` carries a `Liquid` (a vanilla liquid id) and a `Joins`
-  face mask. Two segments meet only when **both** declare toward each other *and* agree on the
+  face mask. `Joins` is the frozen serialized declaration on that exact piece; rendering and graph
+  composition read it and never infer unused faces from adjacency. New mains start as a useful
+  east-west straight; old saves retain their serialized `NSEW` cross. Two segments meet only when
+  **both** declare toward each other *and* agree on the
   liquid; an untyped line joins nothing, including another untyped line, because a blank
   declaration is not a declaration. A misspelt mask joins **nothing** rather than everything — the
   dangerous default is the permissive one, and a silent merge is the single thing the law forbids
@@ -1405,9 +1408,19 @@ never inferred, and that law is four pieces and one refusal:
 - **The crossing piece.** `r_KingdomLiquidCrossover` pairs opposite faces — north to south, east to
   west — and pairs nothing else. It carries **no liquid of its own**, deliberately: a piece that
   typed anything could be the place two liquids met, and this one holds no declaration to disagree
-  with. Half a crossing is a dead end, not a corner.
+  with. Half a crossing is a dead end, not a corner. Its existing serialized `Pairs` text also
+  freezes which isolated axis is fresh: `NSEW` keeps old saves as fresh north-south/brine
+  east-west, while `EWNS` rotates that visible fact without changing the opposite-face graph law.
 - **The tap.** `r_KingdomLiquidTap` is the declared join between a main and a vessel, so the
   founder's act of *tapping* a cistern is what puts it on the line and standing near one is not.
+  It has the same frozen 16-mask configuration surface as a main.
+- **The physical sign and control.** Examining a piece states its liquid, form, and exact frozen
+  faces. Its in-world **Configure** action offers cap, four ends, two straights, four corners, four
+  tees, and cross; only the player can commit it, an equivalent selection writes nothing, and the
+  topology stamp moves only after changed text reads back as the requested mask. `FinalRender`
+  remains read-only. Fresh uses vanilla CP437 single-line forms, brine double-line forms, and the
+  crossing uses mixed single/double glyphs 216/215, so neither liquid nor crossing orientation
+  depends on colour or custom raster art. End arrows point at the declared join, never flow.
 - **The refusal.** A cross-liquid join returns `RefusedLiquid` and is told **by name** — *"the water
   line will not join the salt line… lay a crossover if they are meant to pass"* — once per piece,
   and once per composition on the founder's own register (7b: a sentence they will see, not twenty

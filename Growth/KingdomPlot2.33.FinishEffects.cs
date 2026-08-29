@@ -16,53 +16,60 @@ namespace ThousandAndFirst
 			string displayName, long completeTick, string planQuote,
 			ref KingdomConstructionJob construction)
 		{
+			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
+			if (construction == null) return FinishLegacyPlotEffects(system, Z, building);
 			// Physical verticality settles after every authored piece and exact final root exist,
 			// but before the construction job can become terminal. Retry reads only the frozen root.
-			if (currentAuthored && KingdomDelveRules.IsDelve(entry.Key)
-				&& !KingdomDelveLink.TrySettle(building, Z, out string delveLinkFailure))
+			string delveLinkFailure = null;
+			bool delveSettled = true;
+			if (currentAuthored && KingdomDelveRules.IsDelve(entry.Key))
 			{
-				KingdomLog.Log("delve link: finalization waits: " + delveLinkFailure);
-				if (construction != null && !string.IsNullOrEmpty(
-					building.GetStringProperty(KingdomDelveLink.FaultProperty)))
-					KingdomConstruction.Quarantine(ref construction, delveLinkFailure);
-				return false;
+				try { delveSettled = KingdomDelveLink.TrySettle(building, Z,
+					out delveLinkFailure); }
+				catch { delveSettled = false; }
+				if (!ExactPlotFinalRootCustody(construction.OutputId, building)) return false;
+				if (!delveSettled)
+				{
+					KingdomLog.Log("delve link: finalization waits: " + delveLinkFailure);
+					if (!string.IsNullOrEmpty(building.GetStringProperty(
+						KingdomDelveLink.FaultProperty)))
+						KingdomConstruction.Quarantine(ref construction, delveLinkFailure);
+					return false;
+				}
 			}
+			if (!ExactPlotFinalRootCustody(construction.OutputId, building)) return false;
 			if (construction != null && !KingdomConstruction.Complete(ref construction))
 			{
 				return false;
 			}
+			if (!ExactPlotFinalRootCustody(construction.OutputId, building)) return false;
 			KingdomLog.Log("plot complete: " + displayName + " (" + entry.Blueprint
 				+ ") over " + Rect.X1 + "," + Rect.Y1 + " to " + Rect.X2 + "," + Rect.Y2);
-			KingdomSystem system = The.Game.RequireSystem<KingdomSystem>();
-			if (construction != null)
-			{
-				if (!FinishPlotEffects(system, Z, building, ref construction)) return false;
-			}
-			else if (system.Founded)
-			{
-				// The same close a single-cell scaffold has always had (r_KingdomScaffold.Complete):
-				// attended, the crew gathers and a measure of water is shared; unattended, the
-				// homecoming tells it. A house is not a lesser thing to raise than a palisade.
-				KingdomCeremony.OnBuildingRaised(system, cell, displayName, completeTick, planQuote);
-				// And the heart's own rung gets the chronicle's own voice on top of it: the same
-				// crew, the same shared water, one more sentence about what the ground has become.
-				KingdomCeremonyHeart.OnRungRaised(system, Z, entry.Key, heart);
-				if (KingdomDelveRules.IsDelve(entry.Key))
-				{
-					// A work whose whole point is that the settlement can now do something it
-					// could not do yesterday has to say so (STANDARDS 7b). Nothing else about a
-					// finished shaft looks different from any other roof on the skyline.
-					KingdomDelve.RecordShaft(Z.ZoneID);
-					string opened = KingdomDelveRules.ShaftOpens(KingdomPresentation.Rich(system.SeatName));
-					system.Ledger.Note("{{G|" + opened + "}}");
-					MessageQueue.AddPlayerMessage("{{G|" + opened + "}}");
-				}
-			}
-			else
-			{
-				MessageQueue.AddPlayerMessage("{{G|The " + displayName + " is complete.}}");
-			}
-			return true;
+			return FinishPlotEffects(system, Z, building, ref construction);
+		}
+
+		private static bool TryExactSettlementName(KingdomSystem System, Zone Z,
+			out string Name)
+		{
+			Name = null;
+			string id = System?.SettlementIdForOwnedZone(Z?.ZoneID);
+			if (string.IsNullOrEmpty(id) || !System.TryFindSettlement(id,
+				out bool seated, out KingdomSettlement settlement)) return false;
+			Name = seated ? System.SeatName : settlement?.SettlementName;
+			return !string.IsNullOrEmpty(Name);
+		}
+
+		private static bool ExactPlotEffectEndpoint(KingdomSystem System, Zone Z,
+			GameObject Building, KingdomConstructionJob Job)
+		{
+			GameObject exact;
+			return KingdomConstruction.Owns(System, Z, Job)
+				&& KingdomConstruction.IsCurrent(Job)
+				&& KingdomConstruction.FindExactId(Z, Job.OutputId, out exact)
+					== KingdomPhysicalLookupState.Exact
+				&& ReferenceEquals(exact, Building) && GameObject.Validate(Building)
+				&& Building.CurrentCell == Z.GetCell(Job.X, Job.Y)
+				&& KingdomConstruction.HasReceipt(Building, Job);
 		}
 	}
 }

@@ -59,6 +59,19 @@ namespace ThousandAndFirst.Tests
 			return rows;
 		}
 
+		[Test]
+		public void MayRemove_RequiresAValidKeyAbsentFromTheExactRegister()
+		{
+			KingdomGateRow[] rows = Register(
+				new KingdomGateRow(KeyA, "Kavvat", KeyB),
+				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
+			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyA));
+			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyB));
+			Assert.IsTrue(KingdomMirrorGateRules.MayRemove(rows, KeyC));
+			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, null));
+			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, ""));
+		}
+
 		// --- ComposeLocationKey: the ground names the arch, and names it the same way twice ------
 
 		[Test]
