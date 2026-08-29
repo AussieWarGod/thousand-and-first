@@ -132,6 +132,8 @@ namespace ThousandAndFirst.Tests
 			Ordered(remainder, "source.HolderId",
 				"ReferenceEquals(remainder.InInventory, holder)",
 				"MaterialStockpiles[source.DedicationOrdinal]",
+				"remainder.GetIntProperty(\"NeverStack\") == expectedNeverStack",
+				"!KingdomPurpose.HasProtectedCargoEvidence(remainder)",
 				"KingdomOrdinaryCustody.TryProveEmpty(remainder",
 				"TryInputClassification(remainder");
 			StringAssert.DoesNotContain("ExactInputDedication", remainder);
@@ -139,21 +141,32 @@ namespace ThousandAndFirst.Tests
 			string cancel = Read("Growth/KingdomConstruction.InputDrive.Cancellation.Split.cs");
 			cancel = cancel.Substring(cancel.IndexOf(
 				"private static bool RestoreCancelledSplit(", StringComparison.Ordinal));
-			Ordered(cancel, "if (!KingdomMaster.NewWorkAllowed(system)) return false;",
-				"!ExactRoutedMaterialAtHolder(zone, holder, item, job, receipt, source,",
-				"!ExactRoutedSplitRemainder(zone, holder, job, receipt, source, remainder)",
-				"remainder.Obliterate", "FindGlobalInputId(receipt, source.RemainderObjectId",
+			// Both destructive callbacks reprove authority and exact routed material at the
+			// holder immediately before they run: the remainder obliteration, then the count
+			// restoration. Neither may fire on stale evidence.
+			Ordered(cancel,
+				"if (!ExactRoutedMaterialAtHolder(zone, holder, item, job, receipt, source,",
+				"|| !ExactRoutedSplitRemainder(zone, holder, job, receipt, source, remainder))",
 				"if (!KingdomMaster.NewWorkAllowed(system)) return false;",
-				"!ExactRoutedMaterialAtHolder(zone, holder, item, job, receipt, source,",
+				"if (!ExactRoutedMaterialAtHolder(zone, holder, item, job, receipt, source,",
+				"|| !ExactRoutedSplitRemainder(zone, holder, job, receipt, source, remainder)",
+				"remainder.Obliterate", "FindGlobalInputId(receipt, source.RemainderObjectId",
+				"if (!KingdomMaster.NewWorkAllowed(system)",
+				"|| !ExactRoutedMaterialAtHolder(zone, holder, item, job, receipt, source,",
 				"item.Count = source.Before");
 
 			string close = Read("Growth/KingdomConstruction.InputDrive.Close.cs");
-			Ordered(close, "if (!protectedCargo && source.GetIntProperty(\"NeverStack\") == 1)",
-				"source.RemoveIntProperty(\"NeverStack\")");
-			StringAssert.Contains("&& !KingdomPurpose.HasProtectedCargoEvidence(remainder)", close);
-			Ordered(close, "remainder.RemoveStringProperty(InputMarkerProperty)",
-				"remainder.GetIntProperty(\"NeverStack\") == 1",
-				"remainder.RemoveIntProperty(\"NeverStack\")");
+			// Terminal release drops only the policy this route set: protected cargo keeps its
+			// own NeverStack, and the remainder is proved route-owned before and after the cut.
+			Ordered(close, "bool protectedCargo = KingdomPurpose.HasProtectedCargoEvidence(source);",
+				"source.RemoveStringProperty(InputMarkerProperty);",
+				"if (!protectedCargo) source.RemoveIntProperty(\"NeverStack\");");
+			Ordered(close, "if (ExactRoutedSplitRemainderState(zone, holder, job, receipt, line,",
+				"remainder, line.RemainderMarker, 1))",
+				"remainder.RemoveStringProperty(InputMarkerProperty);",
+				"remainder.RemoveIntProperty(\"NeverStack\");",
+				"return ExactRoutedSplitRemainderState(zone, holder, job, receipt, line,",
+				"remainder, null, 0);");
 		}
 
 		[Test]
@@ -205,7 +218,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("row.DeliverySourceX", handoff);
 			string step = Read(
 				"Simulation/City/KingdomPorters.01.RenderingSteppingAndRetirement.cs");
-			Ordered(step, "KingdomDeliveryPhase.SourceDebitPrepared", "return;",
+			// A prepared construction-input carrier leaves Step before any movement or handoff:
+			// both the durable row and the active trip row refuse ahead of the arrival test.
+			Ordered(step, "if (KingdomJobRules.IsCentralDelivery(row))",
+				"== KingdomDeliveryCargoAuthority.ConstructionInput) return;",
+				"if (!TryActiveTripRow(table, Part.JobId, TimeTick, out active, out centralFix)) return;",
+				"== KingdomDeliveryCargoAuthority.ConstructionInput) return;",
 				"if (Near(Body, Part.DestX");
 
 			string master = Read("Core/KingdomMaster.cs") + "\n"

@@ -47,14 +47,14 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.AreEqual(194, fields.Count);
 			Assert.AreEqual(
-				"03e08192b52987061f7ed8338f4fe186afa7e210858c5e6dbec7adb395dc7e42",
+				"2f05be43f2bad9b5f903a9e02a74100d41794e69b24f2670de6f9d315949f5b3",
 				hash, "public field names, types, defaults, and declaration order are save ABI");
-			Assert.AreEqual(30,
+			Assert.AreEqual(33,
 				Regex.Matches(source, "public partial class KingdomSystem").Count,
 				"the reviewed logical-source shard set is part of the save-ABI pin");
 			Assert.AreEqual(1, Regex.Matches(source, @"^\t\[Serializable\]$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(8, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
+			Assert.AreEqual(9, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
 				RegexOptions.Multiline).Count);
 			Assert.AreEqual(6, Regex.Matches(source, @"^\t\t\[Obsolete\(",
 				RegexOptions.Multiline).Count);

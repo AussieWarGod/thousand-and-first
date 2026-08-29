@@ -604,6 +604,10 @@ namespace ThousandAndFirst.DevTests
 			record.Tick = Projection.CommittedTick + 1L;
 			record.Attribution = KingdomPolityDeathAttribution.Unattributed;
 			record.Visibility = KingdomPolityDeathVisibility.PhysicalOnly;
+			// A physical-only loss freezes no incident: TryFreezeDeathIncident returns the empty
+			// tuple when the death was unwitnessed, and the record refuses any incident claim
+			// that no player-visible representative death authorized.
+			record.IncidentPlanId = record.IncidentId = record.IncidentDigest = "";
 			return record;
 		}
 

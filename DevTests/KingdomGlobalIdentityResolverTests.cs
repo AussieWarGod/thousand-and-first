@@ -277,9 +277,10 @@ namespace ThousandAndFirst.Tests
 				"anatomical BodyPart IDs are not GameObject identity reads");
 			Assert.AreEqual(0, MintingReads(Source("Growth", "KingdomGatehouse.Projection.cs")),
 				"gatehouse recovery observes only already-assigned root identity");
-			Assert.AreEqual(1, MintingReads(Source("Growth",
+			Assert.AreEqual(2, MintingReads(Source("Growth",
 				"KingdomGatehouse.ProjectionEvidence.cs")),
-				"one explicit deterministic satellite identity setter");
+				"one legacy engine-assigned satellite identity read at creation, and one "
+					+ "explicit deterministic satellite identity setter");
 			Assert.AreEqual(1, MintingReads(Source("Growth", "KingdomSocket.06.ConversionProjection.cs")));
 			Assert.AreEqual(11, MintingReads(Source("Growth", "KingdomPurpose.01.Transport.cs")));
 			Assert.AreEqual(11, MintingReads(Source("Growth", "KingdomUpgrade.20.HandOver.cs")));

@@ -143,8 +143,8 @@ namespace ThousandAndFirst.Tests
 			string normalize = Read("Trade/KingdomTradeRules.NormalizeOperation.cs") +
 				Read("Trade/KingdomTradeRules.NormalizeEvidence.cs");
 			StringAssert.Contains("KingdomTradePolityRecipientWitness PolityRecipient", declarations);
-			StringAssert.Contains("CurrentWireVersion = 6", envelope);
-			StringAssert.Contains("ImmediatePriorWireVersion = 5", envelope);
+			StringAssert.Contains("CurrentWireVersion = 5", envelope);
+			StringAssert.Contains("ImmediatePriorWireVersion = 4", envelope);
 			StringAssert.Contains("WritePolityRecipient", rows);
 			StringAssert.Contains("ReadPolityRecipient", rows);
 			StringAssert.DoesNotContain("WritePolityRecipient", oldRows);

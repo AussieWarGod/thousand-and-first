@@ -11,7 +11,7 @@ namespace ThousandAndFirst
 		Quarantine = 4
 	}
 
-	internal enum KingdomPolityCleanupEvidenceProof : byte
+	public enum KingdomPolityCleanupEvidenceProof : byte
 	{
 		Absent = 0,
 		Exact = 1,
@@ -19,7 +19,7 @@ namespace ThousandAndFirst
 		Unscannable = 3
 	}
 
-	internal enum KingdomPolityLegacyRewriteRecovery : byte
+	public enum KingdomPolityLegacyRewriteRecovery : byte
 	{
 		Applied = 1,
 		OldBytesPreserved = 2,
@@ -53,21 +53,21 @@ namespace ThousandAndFirst
 
 		internal static string RemovalWitnessKey(string ProjectionId, string ObjectId)
 		{
-			return KingdomPolityRules.ActivationId(
+			return KingdomPolityRules.ActivationKey(
 				"r_TAF_PolityBodyRemovalWitness_v1:", "polity-removal-witness-key-v1",
 				ProjectionId, ObjectId);
 		}
 
 		internal static string DeathIntentKey(string ProjectionId, string ObjectId)
 		{
-			return KingdomPolityRules.ActivationId(
+			return KingdomPolityRules.ActivationKey(
 				"r_TAF_PolityDeathIntent_v1:", "polity-death-intent-key-v1",
 				ProjectionId, ObjectId);
 		}
 
 		internal static string CleanupIntentKey(string ProjectionId, string ObjectId)
 		{
-			return KingdomPolityRules.ActivationId("r_TAF_PolityCleanupIntent_v1:",
+			return KingdomPolityRules.ActivationKey("r_TAF_PolityCleanupIntent_v1:",
 				"polity-cleanup-intent-key-v1", ProjectionId, ObjectId);
 		}
 
@@ -91,7 +91,7 @@ namespace ThousandAndFirst
 
 		internal static string ContestedWitnessKey(string ProjectionId, string ObjectId)
 		{
-			return KingdomPolityRules.ActivationId(
+			return KingdomPolityRules.ActivationKey(
 				"r_TAF_PolityPhysicalContested_v1:", "polity-physical-contested-key-v1",
 				ProjectionId, ObjectId);
 		}

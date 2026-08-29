@@ -135,9 +135,11 @@ namespace ThousandAndFirst.Tests
 		public void QuarantinePreservesBodyCargoAndBinding()
 		{
 			string source = KingdomConstructionInputCentralLogicalSource.Read();
-			string quarantine = source.Substring(source.IndexOf(
-				"internal static bool TryQuarantineConstructionInputOwner(",
-				StringComparison.Ordinal));
+			// The quarantine pair closes its own shard; bound the region at that shard's class
+			// end so the law is read from the quarantine code and not from every later file.
+			string quarantine = Between(source,
+				"internal static bool TryQuarantineConstructionInputOwner(", "\n\t}\n}");
+			StringAssert.Contains("QuarantineConstructionInputOwner(system, table,", quarantine);
 			StringAssert.Contains("WithDeliveryPhase(KingdomDeliveryPhase.Quarantined)", quarantine);
 			StringAssert.Contains("system.Jobs.TryPublish", quarantine);
 			StringAssert.DoesNotContain("RetireCentralCarrier", quarantine);

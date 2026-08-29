@@ -535,6 +535,8 @@
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.OutcomeDeclarations.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.BindingAndState.cs" />
+	<Compile Include="..\Core\KingdomRules.Spatial.cs" />
+	<Compile Include="..\Core\KingdomRules.Claims.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.AuthorityCodec.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.OutcomeRules.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransactionRules.Result.cs" />

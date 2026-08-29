@@ -70,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed, Seed,
+			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
 				out plan, out failure), failure);
 			return plan;
 		}
@@ -122,9 +122,6 @@ namespace ThousandAndFirst.Tests
 			domain.Add("north");
 			oversizeDomain.Parameters[0].Domain = domain;
 			broken.Add(oversizeDomain);
-			KingdomScenarioDefinition badSeed = Sound();
-			badSeed.Seed = "Kavvat";
-			broken.Add(badSeed);
 			KingdomScenarioDefinition badSynthetic = Sound();
 			badSynthetic.SyntheticRaw = "True";
 			broken.Add(badSynthetic);
@@ -191,7 +188,6 @@ namespace ThousandAndFirst.Tests
 				Key = "broken",
 				Family = null,
 				AuthorityClass = null,
-				Seed = null,
 				SyntheticRaw = "maybe",
 				Parameters = null,
 				Steps = null
@@ -278,7 +274,7 @@ namespace ThousandAndFirst.Tests
 				new List<KingdomScenarioDefinition> { b, a });
 			Assert.AreEqual(forward, reversed);
 			KingdomScenarioDefinition changed = Sound();
-			changed.Seed = "#4243";
+			changed.AuthorityClass = "architecture-stamper-changed";
 			Assert.AreNotEqual(KingdomScenarioDigests.Registry(
 				new List<KingdomScenarioDefinition> { a }),
 				KingdomScenarioDigests.Registry(new List<KingdomScenarioDefinition> { changed }));

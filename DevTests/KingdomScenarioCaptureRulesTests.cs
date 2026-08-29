@@ -16,6 +16,8 @@ namespace ThousandAndFirst.Tests
 		private const string Authority = "architecture-stamper";
 		private const string KeySetDigest =
 			"fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
+		private const string DefinitionDigest =
+			"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
 		// ----- capture digest law -------------------------------------------------------------
 

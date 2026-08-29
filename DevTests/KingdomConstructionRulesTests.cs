@@ -1125,7 +1125,7 @@ namespace ThousandAndFirst.Tests
 			string root = LocateRepository();
 			string plot = KingdomPlot2LogicalSource.Read();
 			AssertOrdered(plot, "works = GameObject.Create", "UpdateOutput(ref Job, works.ID",
-				"cell.AddObject(works)");
+				"cell.AddObject(works, NoStack: Heart != null)");
 			AssertOrdered(plot, "UpdateFinalOutput(ref construction", "FinalOutputPending",
 				"cell.AddObject(building)");
 			AssertOrdered(plot, "row.Id = placed.ID", "FurnishingPending",
@@ -1170,7 +1170,7 @@ namespace ThousandAndFirst.Tests
 				"SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks)",
 				"SetPlotWorkLong(works, PlotWorkRemainingProperty, part.TotalTicks)",
 				"SetPlotWorkLong(works, PlotWorkLastTickProperty, The.Game.TimeTicks)",
-				"KingdomConstruction.UpdateOutput(ref Job, works.ID)", "cell.AddObject(works)");
+				"KingdomConstruction.UpdateOutput(ref Job, works.ID)", "cell.AddObject(works, NoStack: Heart != null)");
 			StringAssert.Contains("Schema = parent == null ? KingdomPlotLabourRules.LegacySchema", plot);
 			AssertOrdered(plot, "LegacyStartTick = Works.StartTick",
 				"LegacyTotalTicks = Works.TotalTicks",
@@ -1421,8 +1421,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z)",
 				source);
 			StringAssert.Contains("KingdomMaterials.BlueprintFor(stockMaterial)", source);
-			StringAssert.Contains("destination.Inventory.AddObject(item, null, Silent: true, NoStack: true)",
-				source);
+			AssertOrdered(source, "destination.Inventory.AddObject(item, null, Silent: true,",
+				"NoStack: true); callbackReturned = true; }");
 			StringAssert.Contains("cell.AddObject(item, NoStack: true, Silent: true)", source);
 			StringAssert.Contains("ReferenceEquals(accepted, item)", source);
 			StringAssert.Contains("ExactClearOutput", source);
@@ -1431,15 +1431,18 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("MaterialStatePrefix", source);
 			StringAssert.DoesNotContain("ModIntGameState(\"r_TAF_Material_", source);
 
-			int removal = source.IndexOf("ClearInt(Works, ClearRemovedProperty, 1);",
-				StringComparison.Ordinal);
-			int payout = source.IndexOf("PrepareClearOutput(Works, Z, material, amount)",
-				removal, StringComparison.Ordinal);
-			int tally = source.IndexOf("SetClearTally(Works, material", payout,
-				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(removal, 0);
-			Assert.Greater(payout, removal, "source removal must be proved before payout");
-			Assert.Greater(tally, payout, "summary tally must follow exact physical payout");
+			// The removal proof is stamped by the proofs shard; the payout phase machine then
+			// refuses outright unless that stamp is present, places the exact physical stock,
+			// and only afterwards commits the summary tally.
+			StringAssert.Contains("ClearInt(Works, ClearRemovedProperty, 1);",
+				TestMain.ReadRepositoryText("Growth/KingdomPlot2.29.ClearProofs.cs"),
+				"source removal must be proved before payout");
+			AssertOrdered(TestMain.ReadRepositoryText("Growth/KingdomPlot2.28.ClearPayout.cs"),
+				"|| amount <= 0 || ClearInt(Works, ClearRemovedProperty) != 1)",
+				"return QuarantineClear(Works, \"Clearance receipt is malformed or ambiguous.\");",
+				"if (!PrepareClearOutput(Works, Z, material, amount)) return false;",
+				"if (!PlaceOrProveClearOutput(Works, Z, material, amount)) return false;",
+				"SetClearTally(Works, material, ClearInt(Works, ClearTallyAfterProperty));");
 		}
 
 		[Test]

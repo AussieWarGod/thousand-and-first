@@ -12,10 +12,10 @@ namespace ThousandAndFirst.Harness
 	/// declared semantic key set matches. This class owns what "matches" means, and is engine-free
 	/// so the verdict is testable without a game.
 	/// </summary>
-	internal static partial class KingdomScenarioAnchorRules
+	public static partial class KingdomScenarioAnchorRules
 	{
 		/// <summary>How a state was reached. Only OrdinaryPlay may found an anchor.</summary>
-		internal enum Provenance : byte
+		public enum Provenance : byte
 		{
 			Unknown = 0,
 			OrdinaryPlay = 1,
@@ -92,11 +92,15 @@ namespace ThousandAndFirst.Harness
 			if (Captured == null)
 				return Refuse("No capture was supplied for the declared key set.", out Failure);
 			// Exact arity BEFORE enumeration: a different shape is refused as a shape, not
-			// discovered by walking a capture whose size nobody bounded.
+			// discovered by walking a capture whose size nobody bounded. A surplus still NAMES its
+			// cause - keys are unique, so more entries than the class declares proves at least one
+			// undeclared key by counting alone, with no walk of the capture.
 			if (Captured.Count != keys.Count)
 				return Refuse("The capture declares " + Captured.Count + " keys where the authority "
-					+ "class declares " + keys.Count + "; a different shape is not a comparison.",
-					out Failure);
+					+ "class declares " + keys.Count + "; "
+					+ (Captured.Count > keys.Count
+						? "it therefore carries at least one undeclared key, and " : "")
+					+ "a different shape is not a comparison.", out Failure);
 			StringBuilder sb = new StringBuilder(Grammar);
 			// The class that SELECTED these keys is part of what was measured. Two classes
 			// declaring identical key lists would otherwise digest identically.

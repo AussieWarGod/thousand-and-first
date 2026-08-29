@@ -41,6 +41,10 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioStep stage =
 				new KingdomScenarioStep { Verb = KingdomScenarioVerb.StageGalleryCase };
 			stage.Arguments["Suite"] = "architecture";
+			// The exact expected case is frozen in authored data, so StageGalleryCase requires
+			// Build and Variant alongside Facing; a slice missing either is a malformed row.
+			stage.Arguments["Build"] = "tent";
+			stage.Arguments["Variant"] = "fallback";
 			stage.Arguments["Facing"] = referenced ? "{facing}" : "north";
 			definition.Steps.Add(prove);
 			definition.Steps.Add(stage);

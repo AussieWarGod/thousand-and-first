@@ -39,8 +39,7 @@ namespace ThousandAndFirst.Tests
 
 		private static readonly string[] PortsWithoutASemanticVersionConstant =
 		{
-			"KingdomArchivedSettlementCodec", "KingdomBehaviourRulesCodec",
-			"KingdomPurposePortfolioRules", "KingdomTradeState", "KingdomVocationServiceCodec"
+			"KingdomArchivedSettlementCodec", "KingdomPurposePortfolioRules", "KingdomTradeState"
 		};
 
 		/// <summary>

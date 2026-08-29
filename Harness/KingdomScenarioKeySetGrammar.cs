@@ -14,7 +14,7 @@ namespace ThousandAndFirst.Harness
 	/// grammar removed one authority over.
 	/// </para>
 	/// </summary>
-	internal static partial class KingdomScenarioAnchorRules
+	public static partial class KingdomScenarioAnchorRules
 	{
 		/// <summary>Bounded so one hostile measured value cannot make the canonical text huge.</summary>
 		internal const int MaxFieldChars = 512;

@@ -228,10 +228,11 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(predecessorRemoval, successorRefresh);
 
 			string gatehouse = KingdomGatehouseLogicalSource.Read();
-			StringAssert.Contains("ObserveCurrentTopologyInActive(Cell.ParentZone, created[i])",
+			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, Item, accepted);",
 				gatehouse);
-			StringAssert.DoesNotContain("ObserveRemovedFromActive(Cell.ParentZone, created[i])",
+			StringAssert.Contains("KingdomSurvey.ObserveCurrentTopologyInActive(Z, Item);",
 				gatehouse);
+			StringAssert.DoesNotContain("ObserveRemovedFromActive", gatehouse);
 		}
 
 		[Test]

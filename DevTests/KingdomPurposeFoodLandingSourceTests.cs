@@ -26,6 +26,8 @@ namespace ThousandAndFirst.Tests
 		private const string DebitValidation = "Growth/KingdomMaterialDebit.Validation.cs";
 		private const string LocalDebit = "Growth/KingdomPurposePortfolio.LocalDebitRuntime.cs";
 		private const string InputScan = "Growth/KingdomConstruction.InputPlannerScan.cs";
+		private const string InputObservation =
+			"Growth/KingdomConstruction.InputObservationRegistry.cs";
 		private const string InputReservation =
 			"Growth/KingdomConstruction.InputPlannerReservation.cs";
 		private const string Funding = "Growth/KingdomPurposePortfolio.Funding.cs";
@@ -34,12 +36,16 @@ namespace ThousandAndFirst.Tests
 		private const string InputDebit = "Growth/KingdomConstruction.InputDrive.Debit.cs";
 		private const string InputCancellation =
 			"Growth/KingdomConstruction.InputDrive.Cancellation.cs";
+		private const string InputCancellationSplit =
+			"Growth/KingdomConstruction.InputDrive.Cancellation.Split.cs";
 		private const string InputClose = "Growth/KingdomConstruction.InputDrive.Close.cs";
 		private const string ClearanceGround = "Growth/KingdomMaterials.15.GroundAndWalls.cs";
 		private const string ClearanceWork = "Growth/KingdomMaterials.14.ClearanceWork.cs";
 		private const string StrikeOrder = "Growth/KingdomMaterials.08.StrikeOrdering.cs";
 		private const string StrikeRemoval =
 			"Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs";
+		private const string StrikeGatehouseRemoval =
+			"Growth/KingdomMaterials.12b.GatehouseRemovalProof.cs";
 		private const string StrikeProtection = "Growth/KingdomMaterials.StrikeProtection.cs";
 		private const string BountyRead = "Quests/KingdomBounty.ReadingGround.cs";
 		private const string BountyCarry = "Quests/KingdomBounty.WorkAndCarry.cs";
@@ -561,16 +567,21 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomMaterials.TryOrdinaryMaterialOf(candidate",
 				Source(BountyCarry));
 
+			// The durable observation shard classifies the physical item; the planner shard then
+			// admits protected cargo only when this exact frozen commitment names it once.
+			Ordered(Source(InputObservation),
+				"bool valid = GameObject.Validate(item), protectedCargo = valid",
+				"&& KingdomPurpose.HasProtectedCargoEvidence(item)",
+				"|| !protectedCargo && item.GetIntProperty(\"NeverStack\") != 0",
+				"|| !TryInputClassification(item");
 			string scan = Source(InputScan);
 			Ordered(scan, "private static bool ScanInputMaterials(",
-				"bool protectedCargo = valid",
-				"RequiredPurposeCargo(job, requiredObjectIds, item)",
-				"(!exactRequiredCargo && item.GetIntProperty(\"NeverStack\") != 0)",
-				"(protectedCargo && !exactRequiredCargo)",
-				"TryInputClassification(item");
+				"|| line.ProtectedCargo && !RequiredPurposeCargo(job,",
+				"requiredObjectIds, line.SourceObjectId)) continue;");
 			Ordered(scan, "private static bool RequiredPurposeCargo(",
-				"KingdomPurpose.ExactProtectedFundingAuthorization(",
-				"job, requiredObjectIds, item)");
+				"KingdomPurpose.RequiredFundingObjectsMatch(job, requiredObjectIds)",
+				"if (requiredObjectIds[i] == objectId) count++;",
+				"return count == 1;");
 			string reservation = Source(InputReservation);
 			Ordered(reservation, "TryScanInputCandidates(System, zones, leases, Job,",
 				"RequiredObjectIds", "TryPlanWithRequiredObjects(Job.Id");
@@ -589,13 +600,13 @@ namespace ThousandAndFirst.Tests
 				Source(InputSource));
 			Ordered(Source(InputArrival), "private static bool ExactInputCargo(",
 				"RoutedInputItemAuthorized(job, receipt, exact)",
-				"private static bool RoutedInputItemAuthorized(",
+				"internal static bool RoutedInputItemAuthorized(",
 				"KingdomPurpose.HasProtectedCargoEvidence(item)",
 				"receipt.RequiresObject(item.IDIfAssigned)",
 				"ExactProtectedFundingAuthorization(job");
 			StringAssert.Contains("ExactInputCargo(target, carrier, job, receipt, cargo",
 				Source(InputDebit));
-			Ordered(Source(InputCancellation), "private static bool RestoreCancelledSplit(",
+			Ordered(Source(InputCancellationSplit), "private static bool RestoreCancelledSplit(",
 				"KingdomPurpose.HasProtectedCargoEvidence(item)",
 				"ExactRoutedSplitRemainder(zone, holder, job, receipt, source, remainder)",
 				"remainder.Obliterate");
@@ -622,8 +633,10 @@ namespace ThousandAndFirst.Tests
 				"KingdomOrdinaryCustody.TryProveEmpty(target, out _)");
 			Ordered(Source(StrikeOrder), "StrikeTargetsUnencumbered(Building, Z, intent",
 				"TryEncodeStrikeIntent(intent");
-			Assert.AreEqual(4, Count(Source(StrikeRemoval),
-				"StrikeObjectUnencumbered("));
+			// The gatehouse removal proof shard carries two of the four unencumbered proofs
+			// since it was split out of the strike-removal shard; the law counts both.
+			Assert.AreEqual(4, Count(Source(StrikeRemoval), "StrikeObjectUnencumbered(")
+				+ Count(Source(StrikeGatehouseRemoval), "StrikeObjectUnencumbered("));
 		}
 
 		[Test]

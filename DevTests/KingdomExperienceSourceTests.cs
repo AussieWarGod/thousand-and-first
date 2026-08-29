@@ -263,11 +263,16 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryAdmitFoundationTransientClaim", inspect);
 			StringAssert.Contains("FoundationOwnsCarrierClaim", mutation);
 			StringAssert.Contains("TryAdmitFoundationTransientClaim", mutation);
+			// A mint that cannot bind refuses and leaves the stamped body for visible recovery.
+			// Rolling back by destroying the body is exactly what this seam must never do.
 			int bind = mint.IndexOf("if (!KingdomResidents.Bind", StringComparison.Ordinal);
-			int obliterate = mint.IndexOf("body.Obliterate", StringComparison.Ordinal);
-			int refused = mint.IndexOf("return null", bind, StringComparison.Ordinal);
-			Assert.Greater(bind, 0); Assert.Greater(obliterate, bind);
-			Assert.Greater(refused, obliterate);
+			int waits = mint.IndexOf("porter: stamped unbound body waits for visible recovery",
+				bind, StringComparison.Ordinal);
+			int refused = mint.IndexOf("return null", waits, StringComparison.Ordinal);
+			Assert.Greater(bind, 0); Assert.Greater(waits, bind);
+			Assert.Greater(refused, waits);
+			StringAssert.DoesNotContain("body.Obliterate", mint);
+			StringAssert.DoesNotContain("body.Destroy", mint);
 		}
 
 		[Test]

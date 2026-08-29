@@ -147,9 +147,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("exact five-work reciprocal portfolio is implemented", testingWords);
 
 			string changelog = Source("CHANGELOG.md");
-			StringAssert.Contains("arcology is now a hosted gameplay system, not a surface prop", changelog);
-			StringAssert.Contains("persistent Interior", changelog);
-			StringAssert.Contains("bounded ward and terrace lifts", changelog);
+			StringAssert.Contains(
+				"Hosted-arcology implementation status is superseded; its accepted vision remains.",
+				changelog);
+			StringAssert.Contains("persistent interiors, paid lots, water gate,", changelog);
+			StringAssert.Contains(
+				"persistent interior lots rather than surface prototypes", changelog);
 		}
 
 		[Test]

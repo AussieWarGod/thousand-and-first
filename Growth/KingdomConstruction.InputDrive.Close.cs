@@ -107,7 +107,7 @@ namespace ThousandAndFirst
 				line.RemainderObjectId, out remainder, out bool graveyard);
 			if (remainderState == KingdomPhysicalLookupState.Exact && graveyard) return true;
 			if (remainderState != KingdomPhysicalLookupState.Exact
-				|| FindExactId(zone, line.HolderId, out GameObject holder)
+				|| FindExactId(zone, line.HolderId, out holder)
 					!= KingdomPhysicalLookupState.Exact) return false;
 			if (ExactRoutedSplitRemainderState(zone, holder, job, receipt, line,
 				remainder, line.RemainderMarker, 1))

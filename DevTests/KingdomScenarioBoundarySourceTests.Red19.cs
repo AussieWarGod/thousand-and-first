@@ -293,6 +293,17 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain(
 				"The exact production verb sequence the anchor state was reached by.", models);
 		}
+		private static void AssertOrder(string Source, params string[] Terms)
+		{
+			int offset = 0;
+			for (int i = 0; i < Terms.Length; i++)
+			{
+				int found = Source.IndexOf(Terms[i], offset, StringComparison.Ordinal);
+				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + Terms[i]);
+				offset = found + Terms[i].Length;
+			}
+		}
+
 	}
 }
 #endif

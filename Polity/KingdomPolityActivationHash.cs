@@ -10,6 +10,9 @@ namespace ThousandAndFirst
 	{
 		private static readonly char[] ActivationHex = "0123456789abcdef".ToCharArray();
 
+		/// <summary>The same 128-byte ceiling the semantic grammar freezes, applied to key names.</summary>
+		private const int KeyMaximumCharacters = 128;
+
 		internal static string ActivationDigest(string Domain, params string[] Values)
 		{
 			if (string.IsNullOrEmpty(Domain))
@@ -42,6 +45,36 @@ namespace ThousandAndFirst
 			string id = Prefix + ActivationDigest(Domain, Values);
 			if (!SemanticId(id)) throw new InvalidOperationException("Generated polity id is invalid.");
 			return id;
+		}
+
+		/// <summary>
+		/// A durable zone-property key name, not a semantic id. These carry the engine's
+		/// <c>r_TAF_</c> part-name prefix, which can never satisfy the frozen <c>taf:</c>
+		/// semantic grammar, so they are gated on their own bounded ASCII shape instead. The
+		/// digest is computed identically, so the stored bytes are the same either way.
+		/// </summary>
+		internal static string ActivationKey(string Prefix, string Domain, params string[] Values)
+		{
+			string key = Prefix + ActivationDigest(Domain, Values);
+			if (!ActivationKeyShape(key))
+				throw new InvalidOperationException("Generated polity key is invalid.");
+			return key;
+		}
+
+		private static bool ActivationKeyShape(string Value)
+		{
+			const string required = "r_TAF_";
+			if (Value == null || Value.Length > KeyMaximumCharacters ||
+				!Value.StartsWith(required, StringComparison.Ordinal)) return false;
+			int separator = Value.Length - 65;
+			if (separator <= required.Length || Value[separator] != ':') return false;
+			for (int i = required.Length; i < separator; i++)
+			{
+				char c = Value[i];
+				if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+					(c >= '0' && c <= '9') || c == '_')) return false;
+			}
+			return Digest(Value.Substring(separator + 1));
 		}
 
 		private static void WriteHashText(BinaryWriter Writer, string Value)

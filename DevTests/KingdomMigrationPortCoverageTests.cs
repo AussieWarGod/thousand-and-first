@@ -28,8 +28,14 @@ namespace ThousandAndFirst.Tests
 		/// proofs, not coverage, and deliberately do not reduce this total. The manifest stays
 		/// non-final until the independent rereview of the polity v6 completion lane is green.
 		/// </para>
+		/// <para>
+		/// 66 until the vocation-service row was corrected. That row declared four live versions
+		/// while KingdomVocationServiceReceipt.CurrentVersion is 3 and the header writes exactly
+		/// that, so the manifest was claiming a fourth readable version that never existed. No
+		/// coverage was added; one imaginary version was removed.
+		/// </para>
 		/// </summary>
-		private const int ExpectedHardGaps = 66;
+		private const int ExpectedHardGaps = 65;
 
 		private const int ExpectedPorts = 19;
 

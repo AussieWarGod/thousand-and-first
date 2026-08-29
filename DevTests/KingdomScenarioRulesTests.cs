@@ -70,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed, Seed,
+			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
 				out plan, out failure), failure);
 			return plan;
 		}

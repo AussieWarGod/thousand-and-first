@@ -177,8 +177,14 @@ namespace ThousandAndFirst.Tests
 		public void LiveBodyAfterOnDestroyCutCancelsOnlyBodyWitnessThenIntent()
 		{
 			string replay = Read("Polity/KingdomPolityEndpointRuntime.DeathIntent.cs");
-			int present = replay.IndexOf("if (present)", StringComparison.Ordinal);
+			// Anchor inside the replay loop: "if (present)" also names the slot-collision guard in
+			// TryWriteDeathIntent, and starting there would swallow the whole file.
+			int loop = replay.IndexOf("internal static bool TryReplayDeathIntents",
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(loop, 0, "TryReplayDeathIntents");
+			int present = replay.IndexOf("if (present)", loop, StringComparison.Ordinal);
 			int absent = replay.IndexOf("if (!witnessed)", present, StringComparison.Ordinal);
+			Assert.Greater(absent, present, "if (!witnessed)");
 			string branch = replay.Substring(present, absent - present);
 			AssertBefore(branch, "TryBuildCustodyPlan", "TryClearRemovalWitness");
 			AssertBefore(branch, "TryClearRemovalWitness", "TryClearDeathIntent");

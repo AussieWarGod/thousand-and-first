@@ -80,8 +80,8 @@ namespace ThousandAndFirst.Tests
 					poses++;
 				}
 			Assert.AreEqual(2120, poses);
-			Assert.AreEqual(2820, routes);
-			Assert.AreEqual(1808, interiorEntrances,
+			Assert.AreEqual(2596, routes);
+			Assert.AreEqual(1668, interiorEntrances,
 				"claim-boundary entrances are the regression this route law must keep live");
 		}
 

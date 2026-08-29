@@ -119,8 +119,9 @@
     {
       "codec": "KingdomVocationServiceCodec",
       "reader": "Core/KingdomVocationServiceCodec.cs",
-      "versionConstant": "Core/KingdomVocationServiceCodec.cs:35-37",
-      "currentVersion": 4,
+      "versionConstant": "Core/KingdomVocationServiceModels.cs:51",
+      "versionConstantIdentifier": "CurrentVersion",
+      "currentVersion": 3,
       "migrationAuthority": "Core/KingdomVocationServiceCodec.cs:35-37",
       "opaqueFuturePolicy": "inherited-from-civic-practice-envelope",
       "opaqueFutureSite": "Core/KingdomCivicPracticeCodec.cs:98",
@@ -216,7 +217,8 @@
     {
       "codec": "KingdomBehaviourRulesCodec",
       "reader": "Api/KingdomBehaviourRules.Codec.cs",
-      "versionConstant": "Api/KingdomBehaviourRules.Codec.cs:13",
+      "versionConstant": "Api/KingdomBehaviourRules.cs:19",
+      "versionConstantIdentifier": "WireVersion",
       "currentVersion": 2,
       "migrationAuthority": "Api/KingdomBehaviourRules.Codec.cs:105-106",
       "opaqueFuturePolicy": "none",

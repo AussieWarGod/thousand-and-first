@@ -141,6 +141,13 @@ namespace ThousandAndFirst.Harness
 			if (Definition == null) return Refuse("No scenario was selected.", out Failure);
 			if (!ValidDigest(DefinitionDigest))
 				return Refuse("The scenario registry digest is malformed.", out Failure);
+			// A seed is optional: absent is lawful and simply claims no determinism. PRESENT means
+			// the launcher froze one, so it is judged HERE rather than accepted and ignored - the
+			// plan digest deliberately excludes the seed, so an unjudged one would reach the stamp
+			// naming a world nothing ever proved.
+			if (Seed != null && !ValidSeed(Seed))
+				return Refuse("The requested seed '" + Bounded(Seed)
+					+ "' is not a recordable seed token.", out Failure);
 			IList<string> findings = KingdomScenarioRowValidator.Findings(Definition);
 			if (findings.Count > 0)
 				return Refuse("Scenario "

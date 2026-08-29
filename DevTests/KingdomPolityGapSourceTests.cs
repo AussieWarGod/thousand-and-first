@@ -42,9 +42,15 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(3, Count(harm, "KingdomPolityAuthority.Commit("),
 				"initial, correspondence recovery, and capacity recovery each own one CAS");
 			string harmRuntime = Read("KingdomPolityVisitInteraction.Harm.cs");
-			StringAssert.Contains("Killer.IsPlayer()", harmRuntime);
-			StringAssert.Contains("CurrentCell.IsVisible()", harmRuntime);
 			StringAssert.Contains("TryRecordWitnessedEnvoyHarm", harmRuntime);
+			// Attribution and visibility are frozen once, at death time, into the durable intent;
+			// the replay above reads only Intent.Attribution and must never re-observe the body.
+			string freeze = Read("KingdomPolityEndpointRuntime.Death.cs");
+			StringAssert.Contains("Killer.IsPlayer()", freeze);
+			StringAssert.Contains("CurrentCell.IsVisible()", freeze);
+			StringAssert.Contains("KingdomPolityDeathAttribution.PlayerWitnessed", freeze);
+			StringAssert.DoesNotContain("Killer.IsPlayer()", harmRuntime);
+			StringAssert.Contains("Intent.Attribution ==", harmRuntime);
 			StringAssert.Contains("E.Killer", Read("r_KingdomPolityCohortBody.cs"));
 			StringAssert.Contains("internal static bool TryOpenGrievance",
 				Read("KingdomPolityDiplomacyRules.cs"));

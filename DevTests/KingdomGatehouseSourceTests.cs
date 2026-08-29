@@ -409,7 +409,13 @@ namespace ThousandAndFirst.Tests
 			string runtime = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
 			string read = Slice(runtime, "public static bool TryReadPlan(",
 				"public static bool TryFreezeStrikeTargets(");
-			StringAssert.Contains("(Plan.ReceiptVersion == 2)", read);
+			// The stored receipt version decides which custody part may be present: a v2 form
+			// requires the V2 part and forbids the v1 pending carrier; a v1 form forbids both.
+			Ordered(read, "(Plan.ReceiptVersion == 2",
+				"? Root.GetPart<r_KingdomGatehouseProjectionV2>() == null",
+				"|| Root.GetPart<r_KingdomGatehouseProjectionV1Pending>() != null",
+				": Root.GetPart<r_KingdomGatehouseProjectionV2>() != null",
+				"|| Root.GetPart<r_KingdomGatehouseProjectionV1Pending>() != null)");
 			StringAssert.Contains("Root.GetPart<r_KingdomGatehouseProjectionV2>() != null", read);
 			string projection = Source(Path.Combine("Growth",
 				"KingdomGatehouse.Projection.cs"));

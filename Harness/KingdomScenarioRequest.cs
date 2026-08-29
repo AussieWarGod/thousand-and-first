@@ -120,6 +120,7 @@ namespace ThousandAndFirst.Harness
 			return true;
 		}
 
+#if !TAF_TESTS
 		/// <summary>Resolves a request line into a fully preflighted plan. Mutates nothing.</summary>
 		internal static bool TryPlan(string Request, out KingdomScenarioPlan Plan,
 			out string Failure)
@@ -150,6 +151,7 @@ namespace ThousandAndFirst.Harness
 			return findings == null || findings.Count == 0
 				? new List<string> { "unknown fault" } : findings;
 		}
+#endif
 
 		private static bool Refuse(string Message, out string Failure)
 		{

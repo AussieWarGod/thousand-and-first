@@ -26,6 +26,7 @@ namespace ThousandAndFirst
 			"r_KingdomCrownHall", "r_KingdomEnrolled", "r_KingdomFirstGuestBody",
 			"r_KingdomFounderKnowledge",
 			"r_KingdomFounderRemains", "r_KingdomFounderShrine", "r_KingdomGatehouse",
+			"r_KingdomGatehouseProjectionV1Pending", "r_KingdomGatehouseProjectionV2",
 			"r_KingdomGraftingHall", "r_KingdomGuest", "r_KingdomHandCrankedVisual",
 			"r_KingdomImprovement",
 			"r_KingdomInheritedFabric", "r_KingdomInquiry", "r_KingdomLabCivicFriction",
