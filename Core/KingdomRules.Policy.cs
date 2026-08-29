@@ -59,16 +59,6 @@ namespace ThousandAndFirst
 			return BaseUpkeep * 75 / 100;
 		}
 
-		/// <summary>Raid cooldown after standing policy; guarded gates buy quiet.</summary>
-		public static long PolicyRaidCooldown(long BaseCooldown, GatePolicy Gate)
-		{
-			if (Gate != GatePolicy.Guarded)
-			{
-				return BaseCooldown;
-			}
-			return BaseCooldown * 160 / 100;
-		}
-
 		public const int TributeEscalationPercent = 50;
 
 		/// <summary>

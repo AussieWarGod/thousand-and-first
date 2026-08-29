@@ -108,13 +108,6 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>What one design was registered as needing, as written.</summary>
-		public static string DeclaredCrewNeeds(string Key)
-		{
-			string declared;
-			return (!string.IsNullOrEmpty(Key) && Declared.TryGetValue(Key, out declared)) ? declared : null;
-		}
-
 		/// <summary>The parsed <c>CrewNeeds</c> for one design. Never null; empty for a design
 		/// that declares none.</summary>
 		public static List<KindAmount> NeedsOf(string BuildingKey)

@@ -17,11 +17,6 @@ namespace ThousandAndFirst
 			return CanonicalId("settlement", 0L, RealmId, Name);
 		}
 
-		public static string LegacyRealmId(string FactionName, string DisplayName)
-		{
-			return CanonicalId("realm", 0L, FactionName, DisplayName);
-		}
-
 		public static string LegacyCharterId(string RealmId, string Deal, string Faction, int Row)
 		{
 			return CanonicalId("legacy-charter", Row + 1L, RealmId, Deal, Faction);

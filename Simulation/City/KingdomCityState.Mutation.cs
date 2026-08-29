@@ -28,21 +28,6 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		internal bool TryWithWork(int index, KingdomWorkRow row, out KingdomCityState next, out KingdomCityFault fault)
-		{
-			next = null;
-			KingdomWorkRow[] replaced;
-			if (!TryReplace(works, index, row, out replaced))
-			{
-				fault = KingdomCityFault.InvalidIndex;
-				return false;
-			}
-			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
-				zones, replaced, residents, clocks, told, toldCount, toldNext);
-			fault = KingdomCityFault.None;
-			return true;
-		}
-
 		internal bool TryWithResident(int index, KingdomResidentRow row, out KingdomCityState next, out KingdomCityFault fault)
 		{
 			next = null;
@@ -54,21 +39,6 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
 				zones, works, replaced, clocks, told, toldCount, toldNext);
-			fault = KingdomCityFault.None;
-			return true;
-		}
-
-		internal bool TryWithClock(int index, KingdomClockRow row, out KingdomCityState next, out KingdomCityFault fault)
-		{
-			next = null;
-			KingdomClockRow[] replaced;
-			if (!TryReplace(clocks, index, row, out replaced))
-			{
-				fault = KingdomCityFault.InvalidIndex;
-				return false;
-			}
-			next = new KingdomCityState(SchemaVersion, RulesVersion, SettlementId, ProcessedThroughTick, Stocks,
-				zones, works, residents, replaced, told, toldCount, toldNext);
 			fault = KingdomCityFault.None;
 			return true;
 		}

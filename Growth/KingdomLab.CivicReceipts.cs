@@ -38,14 +38,6 @@ namespace ThousandAndFirst
 				&& Resident.GetStringProperty(RefusalDigestProperty) == Receipt.CauseDigest;
 		}
 
-		private static void ClearMarker(GameObject Resident, KingdomLabCivicReceipt Receipt)
-		{
-			if (!MarkerMatches(Resident, Receipt)) return;
-			Resident.SetStringProperty(RefusalEventProperty, null, RemoveIfNull: true);
-			Resident.SetStringProperty(RefusalOwnerProperty, null, RemoveIfNull: true);
-			Resident.SetStringProperty(RefusalDigestProperty, null, RemoveIfNull: true);
-		}
-
 		private static void Close(KingdomSystem System, Zone Z,
 			r_KingdomLabCivicFriction Part, KingdomLabCivicReceipt Before,
 			KingdomLabCivicClosure Closure, GameObject Resident)

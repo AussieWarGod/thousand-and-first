@@ -9,49 +9,6 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomLifecycleRules
 	{
-		public static void NormalizeGrowth(KingdomGrowthBook Book)
-		{
-			if (Book == null || GrowthEnvelopeWritable(Book)) return;
-			Book.FormatVersion = CurrentGrowthFormatVersion;
-			Book.Quarantined = true;
-			Book.Fault = "malformed growth authority was quarantined";
-			Book.OpaqueWireVersion = 0;
-			Book.OpaquePayload = null;
-			Book.SettlementId = null; Book.IdentityBound = false; Book.IdentityProof = null;
-			Book.MigratedFromLifecycleVersion = 0; Book.MigrationPending = false;
-			Book.MigrationTick = 0L; Book.OptionState = KingdomLifecycleOptionState.Unknown;
-			Book.OptionTick = 0L; Book.HealthState = KingdomGrowthHealthState.Unknown;
-			Book.HealthTick = 0L; Book.ScarcityOptionState = KingdomLifecycleOptionState.Unknown;
-			Book.ScarcityOptionTick = 0L; Book.WorkPaused = false; Book.WorkPauseStartedTick = 0L;
-			Book.WorkPausedTicks = 0L; Book.EffectiveWorkTick = 0L;
-			Book.LastHeartbeatTick = 0L; Book.NextArrivalTick = 0L;
-			Book.ArrivalIntervalTicks = 0L; Book.LastFetchTick = 0L;
-			Book.ArrivalEventStreamId = GrowthArrivalEventStreamId;
-			Book.ArrivalRulesVersion = 0; Book.ArrivalRateEpoch = 0L;
-			Book.ArrivalRateEpochStartedTick = 0L; Book.ArrivalProcessedThroughTick = 0L;
-			Book.ArrivalCadenceNextDueTick = 0L; Book.ArrivalRateCohort = 0;
-			Book.ArrivalOrdinalHighWater = 0UL; Book.ArrivalOrdinalRetiredThrough = 0UL;
-			Book.ArrivalCadenceMigrationPending = true; Book.ArrivalCadenceResumePending = false;
-			Book.ArrivalOpportunity = null; Book.ArrivalDebtRanges = new List<KingdomGrowthArrivalDebtRange>();
-			Book.LastMillTick = 0L; Book.LastSubsidenceTick = 0L;
-			Book.LastDeliveryTick = 0L; Book.LastDepartureTick = 0L;
-			Book.PendingCrop = 0; Book.PendingCropBlueprint = null; Book.PendingCropZoneId = null;
-			Book.HeartbeatNextSequence = Book.ArrivalNextSequence =
-				Book.DepartureNextSequence = Book.DeliveryNextSequence = 1L;
-			Book.FetchNextSequence = Book.MillNextSequence = 1L;
-			Book.ArrivalCandidateNextSequence = 1L;
-			Book.HeartbeatRetiredThrough = Book.ArrivalRetiredThrough =
-				Book.DepartureRetiredThrough = Book.DeliveryRetiredThrough = 0L;
-			Book.FetchRetiredThrough = Book.MillRetiredThrough = 0L;
-			Book.ArrivalCandidateRetiredThrough = 0L;
-			Book.HeartbeatOp = Book.ArrivalOp = Book.DepartureOp = Book.DeliveryOp = null;
-			Book.FetchOp = Book.MillOp = null; Book.ArrivalCandidate = null;
-			Book.FirstGuestTerminal = null;
-			Book.FieldOps = new List<KingdomGrowthFieldSlot>();
-			Book.CropRows = new List<KingdomGrowthCropRow>();
-			Book.Resources = new List<KingdomLifecycleResourceRevision>();
-			Book.RecentProofs = new List<KingdomGrowthProof>();
-		}
 		private static KingdomGrowthBook NewStagedGrowth()
 		{
 			return new KingdomGrowthBook

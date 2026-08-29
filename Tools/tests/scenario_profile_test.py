@@ -2,7 +2,7 @@
 
 These execute the authoritative implementation in Tools/scenario_profile.py. The PowerShell
 launcher mirrors the same closed rule for Windows; its correctness is asserted separately as a
-source contract in DevTests/KingdomScenarioRuntimeSourceTests.cs.
+source contract in DevTests/KingdomScenarioLauncherSourceTests.cs.
 """
 
 from __future__ import annotations

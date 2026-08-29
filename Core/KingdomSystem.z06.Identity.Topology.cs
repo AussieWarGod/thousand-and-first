@@ -10,29 +10,6 @@ namespace ThousandAndFirst
 {
 	public partial class KingdomSystem
 	{
-		/// <summary>Resolves a mutable city name only when it denotes exactly one proven current
-		/// city. It returns the immutable id; no caller receives first-match authority.</summary>
-		internal bool TryResolveSettlementIdByName(string Name, out string SettlementId)
-		{
-			SettlementId = null;
-			if (string.IsNullOrEmpty(Name)) return false;
-			List<string> identities;
-			string failure;
-			if (!TryExactSettlementIds(RequirePublishedClaims: true, out identities,
-				out failure)) return false;
-			List<string> names = new List<string> { SettlementName };
-			List<string> ids = new List<string> { City.SettlementId };
-			List<KingdomSettlement> nonSeat = NonSeatSettlements();
-			for (int i = 0; i < nonSeat.Count; i++)
-			{
-				names.Add(nonSeat[i].SettlementName);
-				ids.Add(nonSeat[i].City.SettlementId);
-			}
-			KingdomIdentityFault fault;
-			return KingdomIdentityRules.TryResolveUniqueSettlementName(names, ids, Name,
-				out SettlementId, out fault);
-		}
-
 		internal bool TryExactSettlementIds(bool RequirePublishedClaims,
 			out List<string> SettlementIds, out string Failure)
 		{

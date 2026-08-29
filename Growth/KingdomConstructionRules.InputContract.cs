@@ -46,14 +46,5 @@ namespace ThousandAndFirst
 			}
 			return true;
 		}
-
-		public static bool TryInputIntentDigest(KingdomConstructionJob Job, out string Digest)
-		{
-			Digest = null;
-			KingdomConstructionInputIntent ignored;
-			return Job != null && Job.Claims != null && Job.Claims.Exact
-				&& TryInputIntent(Job, Job.Claims.WaterOutstanding,
-					Job.Claims.MaterialOutstanding, out ignored, out Digest);
-		}
 	}
 }

@@ -59,7 +59,10 @@ namespace ThousandAndFirst.Tests
 				string codec = Text(port, "codec");
 				string constant = Text(port, "versionConstant");
 				string identifier = Text(port, "versionConstantIdentifier");
-				if (string.IsNullOrEmpty(constant) || !Exists(FilePart(constant))) continue;
+				if (string.IsNullOrEmpty(constant)) continue;
+				if (!Exists(FilePart(constant)))
+				{ offenders.Add(codec + " names versionConstant " + constant
+					+ " but that file does not exist"); continue; }
 				int current = port.GetProperty("currentVersion").GetInt32();
 				if (current < 1) { offenders.Add(codec + " declares version " + current); continue; }
 				string source = File.ReadAllText(Path.Combine(TestMain.RepositoryRoot,

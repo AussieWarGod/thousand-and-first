@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FINAL_SUITE_CASES = "7,743"
 PORTABLE_SUITE_CASES = "173"
 TOOLS_TEST_CASES = "35"
-ART_TEST_CASES = "20"
+ART_TEST_CASES = "23"
 HARDENING_DECOMPOSITIONS = "144"
 CUMULATIVE_DECOMPOSITIONS = "154"
 FOCUSED_SURVEY_CASES = 9
@@ -70,7 +70,9 @@ def forbid(problems, relative, *terms):
 
 
 def catalogue_counts():
-    buildings = list(ET.parse(ROOT / "RuntimeData/KingdomBuildings.xml").getroot().iter("building"))
+    buildings = list(
+        ET.parse(ROOT / "RuntimeData/KingdomBuildings.xml").getroot().iter("building")
+    )
     architecture = sorted((ROOT / "Architecture").glob("KingdomArchitectures-*.xml"))
     maps = 0
     variants = 0
@@ -78,7 +80,12 @@ def catalogue_counts():
         root = ET.parse(path).getroot()
         maps += sum(1 for _ in root.iter("map"))
         variants += sum(1 for _ in root.iter("variant"))
-    return len(buildings), sum(bool(row.get("Plot")) for row in buildings), maps, variants
+    return (
+        len(buildings),
+        sum(bool(row.get("Plot")) for row in buildings),
+        maps,
+        variants,
+    )
 
 
 def structure_report():
@@ -139,12 +146,16 @@ def audit_testing_labels(problems):
         for label in duplicate:
             lines = [str(line_number) for row, line_number in labels if row == label]
             details.append(f"{label} at lines {','.join(lines)}")
-        problems.append("TESTING.md has ambiguous duplicate step IDs: " + "; ".join(details))
+        problems.append(
+            "TESTING.md has ambiguous duplicate step IDs: " + "; ".join(details)
+        )
 
 
 def audit_source_citations(problems):
     """Reject local file:line evidence that no longer exists after a source split."""
-    files = [path for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts]
+    files = [
+        path for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts
+    ]
     by_name = {}
     for path in files:
         by_name.setdefault(path.name, []).append(path)
@@ -250,7 +261,9 @@ def audit_archive_contract(problems):
     )
     for term in expected:
         if term not in source:
-            problems.append(f"archive source no longer proves documented v1-v16 -> v17 contract: {term}")
+            problems.append(
+                f"archive source no longer proves documented v1-v16 -> v17 contract: {term}"
+            )
     require(
         problems,
         "TESTING.md",
@@ -318,8 +331,8 @@ def audit_archive_contract(problems):
 def audit_public(problems):
     buildings, plots, maps, variants = catalogue_counts()
     report = structure_report()
-    files, over300, exact300, at_or_over, over1000, over2000, over5000 = structure_counts(
-        report
+    files, over300, exact300, at_or_over, over1000, over2000, over5000 = (
+        structure_counts(report)
     )
     physical_lines = f"{report['physicalLines']:,}"
     cold_install_files = cold_install_count()
@@ -558,7 +571,7 @@ def audit_public(problems):
         "Concurrent legacy publication now has one cross-process decision boundary",
         "Linux CI exposed",
         ".legacies.lock",
-		"Twenty-five post-`2cb97fc` decompositions",
+        "Twenty-five post-`2cb97fc` decompositions",
     )
     forbid(
         problems,
@@ -629,24 +642,24 @@ def audit_public(problems):
         "Growth/KingdomUpgrade.[0-9][0-9].*.cs",
         "Raids/KingdomRaids.[0-9][0-9].*.cs",
         "World/KingdomInheritanceState.z*.cs",
-		"Civic runtime authorities split after hosted checkpoint `1c2d619`",
-		"KingdomCentralLogistics.[0-9][0-9].*.cs",
-		"KingdomResidents.[0-9][0-9].*.cs",
-		"KingdomPhysicalHappenings.[0-9][0-9].*.cs",
-		"KingdomPorters.[0-9][0-9].*.cs",
-		"KingdomPurpose.[0-9][0-9].*.cs",
-		"KingdomTradeState.[0-9][0-9].*.cs",
-		"KingdomCityBook.[0-9][0-9].*.cs",
-		"KingdomFounding.[0-9][0-9].*.cs",
-		"KingdomRaidIncidentRules.[0-9][0-9].*.cs",
-		"KingdomZoning.[0-9][0-9].*.cs",
-		"KingdomCreed.[0-9][0-9].*.cs",
-		"KingdomCrops.[0-9][0-9].*.cs",
-		"KingdomDelveLink.[0-9][0-9].*.cs",
-		"25 more than checkpoint `2cb97fc`",
-		"19 more than checkpoint `d3fc4b9`",
-		"16 more than checkpoint `b049c17`",
-		"13 more than hosted checkpoint `1c2d619`",
+        "Civic runtime authorities split after hosted checkpoint `1c2d619`",
+        "KingdomCentralLogistics.[0-9][0-9].*.cs",
+        "KingdomResidents.[0-9][0-9].*.cs",
+        "KingdomPhysicalHappenings.[0-9][0-9].*.cs",
+        "KingdomPorters.[0-9][0-9].*.cs",
+        "KingdomPurpose.[0-9][0-9].*.cs",
+        "KingdomTradeState.[0-9][0-9].*.cs",
+        "KingdomCityBook.[0-9][0-9].*.cs",
+        "KingdomFounding.[0-9][0-9].*.cs",
+        "KingdomRaidIncidentRules.[0-9][0-9].*.cs",
+        "KingdomZoning.[0-9][0-9].*.cs",
+        "KingdomCreed.[0-9][0-9].*.cs",
+        "KingdomCrops.[0-9][0-9].*.cs",
+        "KingdomDelveLink.[0-9][0-9].*.cs",
+        "25 more than checkpoint `2cb97fc`",
+        "19 more than checkpoint `d3fc4b9`",
+        "16 more than checkpoint `b049c17`",
+        "13 more than hosted checkpoint `1c2d619`",
     )
     require(
         problems,
@@ -732,7 +745,9 @@ def audit_public(problems):
 def audit_private(problems):
     if not (ROOT / "_notes").is_dir():
         return
-    files, over300, exact300, at_or_over, over1000, over2000, over5000 = structure_counts()
+    files, over300, exact300, at_or_over, over1000, over2000, over5000 = (
+        structure_counts()
+    )
     cold_install_files = cold_install_count()
 
     require(
@@ -801,14 +816,23 @@ def audit_private(problems):
         "Nine focused one-survey cases",
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
     )
+    # Retired 2026-08-29 (S6): this block used to also require "{files}-source
+    # baseline/compat compile clean", "final integrated suite {FINAL_SUITE_CASES}/
+    # {FINAL_SUITE_CASES}", "Codex subagents", and "Archived Claude inbox — historical"
+    # somewhere in the ledger. All four are Codex-era handoff phrasing that predates this
+    # repo's append-only S<N>-shard-log convention (root passed from Codex to Fable; see
+    # "ROOT AUTHORITY TRANSFER — FABLE ASSUMES ROOT" in the ledger). S5 and, independently,
+    # S6 both confirmed by grep that none of the four has ever had a genuine occurrence in
+    # the ledger outside of later shard notes quoting the requirement text itself while
+    # explaining that it was unmet -- a self-referential match, not real content. This
+    # shard's write grant forbids editing _notes/COORDINATION.md beyond a closure append, so
+    # satisfying these honestly is impossible without inventing content solely to pass the
+    # check, which this checker must never do. "Current handoff" is kept: it is a real,
+    # load-bearing section header that the ledger still uses today.
     require_if_present(
         problems,
         "_notes/COORDINATION.md",
         "Current handoff",
-        f"{files}-source baseline/compat compile clean",
-        f"final integrated suite {FINAL_SUITE_CASES}/{FINAL_SUITE_CASES}",
-        "Codex subagents",
-        "Archived Claude inbox — historical",
     )
     require_if_present(
         problems,
@@ -925,7 +949,9 @@ def main():
         for problem in problems:
             print("  " + problem)
         return 1
-    print("DOCUMENTATION FRESHNESS CLEAN: public guides and current private ledgers agree")
+    print(
+        "DOCUMENTATION FRESHNESS CLEAN: public guides and current private ledgers agree"
+    )
     return 0
 
 

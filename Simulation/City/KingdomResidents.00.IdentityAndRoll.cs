@@ -82,13 +82,6 @@ namespace ThousandAndFirst.Simulation.City
 			return TryRoll(System, out state, out roll) ? roll.Population : 0;
 		}
 
-		internal static int LabourCount(KingdomSystem System)
-		{
-			KingdomCityState state;
-			KingdomResidentRollProjection roll;
-			return TryRoll(System, out state, out roll) ? roll.Labour : 0;
-		}
-
 		internal static List<KingdomResidentRow> RollRows(KingdomSystem System,
 			bool LabourOnly = false)
 		{

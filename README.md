@@ -10,9 +10,11 @@ supersession. Architecture's current static census is 141 buildings, 131 plotted
 86 palettes, 514 maps, 356 plans, 359 exact bindings, 408 tiers, 530 variants, and 2,120 goldens;
 runtime art uses 84 verified vanilla tile references and zero custom bitmap paths. Final serialized
 integration gates remain pending until the tree freezes, so earlier suite counts remain historical
-receipts rather than current-tree proof. The current snapshot stages 2480 production C# sources and
-a 2507-file cold-install inventory; it has 357,421 physical lines, and 0 files still breach the
-strict 300-line cap. The hardening sequence decomposed 154 oversized authorities. Its snapshot
+receipts rather than current-tree proof. The current snapshot stages 2637 production C# sources and
+a 2664-file cold-install inventory; it has 383,315 physical lines, and 4 files still breach the
+strict 300-line cap — the adjudicated Gatehouse quartet docketed in
+[docs/STRUCTURE.md](docs/STRUCTURE.md#current-hardening-checkpoint), not an unreviewed regression.
+The hardening sequence decomposed 154 oversized authorities. Its snapshot
 digest must be regenerated after the last source freezes, and the required human
 `docs/STRUCTURE_REVIEW.json` review is still open. Nine focused one-survey cases pass at source
 scope. The last retained final 7,743-case Qud-referenced/source checkpoint and 173-case portable

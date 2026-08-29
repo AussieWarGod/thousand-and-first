@@ -51,11 +51,6 @@ namespace ThousandAndFirst
 				+ "; source-digest=" + SourceDigest + "; cause=" + Cause + "; event=" + Source;
 		}
 
-		internal static bool ValidDueFacts(string Value)
-		{
-			return TryReadDueFacts(Value, out DueFactParts _);
-		}
-
 		private static bool TryReadDueFacts(string Value, out DueFactParts Facts)
 		{
 			Facts = null;

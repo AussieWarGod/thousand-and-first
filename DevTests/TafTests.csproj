@@ -254,6 +254,7 @@
     <Compile Include="KingdomMergeRulesTests.cs" />
     <Compile Include="KingdomSocketRulesTests.cs" />
     <Compile Include="KingdomSocketTransitionRulesTests.cs" />
+    <Compile Include="KingdomSocketTransitionPortableTests.cs" />
     <Compile Include="KingdomQolRulesTests.cs" />
 	<Compile Include="KingdomCharterMenuRulesTests.cs" />
 	<Compile Include="KingdomDesignationReleaseSourceTests.cs" />
@@ -748,6 +749,7 @@
     <Compile Include="..\Growth\KingdomMergeRules.Reconciliation.cs" />
     <Compile Include="..\Growth\KingdomSocketRules.cs" />
 	<Compile Include="..\Growth\KingdomSocketRules.Conversion.cs" />
+    <Compile Include="..\Growth\KingdomSocketTransition.cs" />
     <Compile Include="..\Growth\KingdomSocketTransitionRules.cs" />
     <Compile Include="..\Growth\KingdomLodgingRules.cs" />
     <Compile Include="..\Growth\KingdomLodgingRules.Closeness.cs" />

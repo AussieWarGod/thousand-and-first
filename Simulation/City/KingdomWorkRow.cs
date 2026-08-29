@@ -47,10 +47,5 @@ namespace ThousandAndFirst.Simulation.City
 			RanThroughTick = ranThroughTick;
 			RunState = runState;
 		}
-
-		internal KingdomWorkRow WithRunState(KingdomWorkRunState runState, long ranThroughTick)
-		{
-			return new KingdomWorkRow(WorkId, ZoneId, AnchorX, AnchorY, DesignKey, ConditionPercent, CrewAssigned, ranThroughTick, runState);
-		}
 	}
 }

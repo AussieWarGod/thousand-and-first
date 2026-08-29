@@ -135,12 +135,6 @@ namespace ThousandAndFirst
 		public static int MappingCount { get { return state.Records.Count; } }
 		public static int FaultCount { get { return state.Faults.Count; } }
 
-		/// <summary>Copies the bounded fault report; callers cannot mutate loader authority.</summary>
-		public static IList<KingdomArchitectureFault> InspectFaults()
-		{
-			return new List<KingdomArchitectureFault>(state.Faults).AsReadOnly();
-		}
-
 		/// <summary>Copies all valid mappings in ordinal exact-record order.</summary>
 		public static IList<KingdomArchitectureMapping> InspectMappings()
 		{

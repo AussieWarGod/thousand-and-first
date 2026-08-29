@@ -186,6 +186,7 @@
 	<Compile Include="..\Growth\KingdomMaterialRules.Bits.cs" />
 	<Compile Include="..\Growth\KingdomMaterialRules.Exotics.cs" />
 	<Compile Include="..\Growth\KingdomMaterialTally.cs" />
+	<Compile Include="..\Growth\KingdomSocketTransition.cs" />
 	<Compile Include="..\Growth\KingdomSocketTransitionRules.cs" />
 	<Compile Include="..\Growth\KingdomBitTally.cs" />
 	<Compile Include="..\Growth\KingdomExoticTally.cs" />

@@ -128,6 +128,9 @@ or delete physical stock.
 
 ### Hosted arcology authority
 
+**Caveat:** the authored-interior hosted-arcology replacement is design-complete but deferred
+post-v1; the legacy hosted arcology described below is functional and ships in v1.
+
 The arcology is the fifth and final rite-owned heart rung, not a second surface commission. A
 `KingdomHostedArcologyAuthority` row reserves the exact great-court predecessor and improvement
 job before debit, then binds the exact successor root after handover. Two fixed game-state slots

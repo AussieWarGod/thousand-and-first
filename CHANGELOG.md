@@ -18,6 +18,36 @@ native/human protocol and gallery, compatibility testing, structural release gat
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
+- **Persisted polity saves bump to wire v6, admitting the `Abandoned` cohort phase.**
+  `KingdomPolityCodec.CurrentWireVersion` is now 6. Phase `Abandoned` (value 6: exact physical loss
+  proved, with no semantic death, return, or reward claimed) is lawful only on that wire — every
+  wire v1-v5 fixture writer refuses an `Abandoned` cohort before validation even runs, and a v1-v5
+  payload that reaches the shared validator carrying one is quarantined rather than silently
+  accepted. A migrated legacy v1 death-intent record, which carries no stored plan id, is stamped
+  `FrozenAtFirstRead` provenance at its first read and stays permanently distinct from a
+  `FrozenAtDeath` record frozen at death time by the incident binding; the two use disjoint wire
+  prefixes and digest domains, so neither can be restated as the other.
+- **A phase-1 scenario capture harness lands under `Harness/`, dev-only and excluded from the
+  shipped mod.** The harness stamps, validates, and digests a declared key set against a built
+  settlement to prove ordinary-commission origin — no gallery or upgrade authority on the owner or
+  lot components, a real construction receipt, a staked plot whose rect matches the building's —
+  and refuses on ambiguity instead of taking the first match. `Harness/` carries no entry in
+  `manifest.json`'s `Directories`, is excluded by `Tools/stage.sh`'s `EXCLUDE_DIRS`, and fails
+  `Tools/portable-check.sh` on any staged path, so it never reaches a player's install; a
+  dev-compile route builds it alongside the mod purely for source-contract proof.
+- **A repo-wide reconciliation pass removed 39 certain-dead methods and split the remaining
+  size-law breach in the socket lane.** A zero-caller sweep across Core, Growth, Experience,
+  Simulation/City, Trade, Api, and Polity confirmed all 39 had no reachable caller anywhere in
+  source, XML, JSON, csproj, or markdown before deletion. `Growth/KingdomSocketTransitionRules.cs`
+  (316 lines) had its `KingdomSocketTransition` class and `KingdomSocketTransitionReceiptShape`
+  struct — never partial, just bundled in the wrong file — extracted into a new
+  `Growth/KingdomSocketTransition.cs`, leaving a 249-line rules file; `Growth/
+  KingdomSocketTransitions.cs` (401 lines) became `partial` with its unreferenced loader/reload/XML
+  plumbing split into `Growth/KingdomSocketTransitions.Helpers.cs`, leaving a 290-line base file in
+  its original declaration order. Both new files are registered in `TafTests.csproj` alongside
+  their siblings. The pass also repaired three stale filenames in the save-migration port manifest
+  and replaced a `continue`-on-missing-file gap that let a renamed codec's wire-version check
+  silently stop proving anything with a recorded, failing offender.
 - **A delayed arrival now changes its population-rate epoch at the durable disposition tick.**
   The outstanding cohort is folded only through the operation's recorded terminal tick, then the
   post-join/refusal cohort and interval become authoritative before either operation or opportunity
@@ -159,12 +189,13 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. That checkpoint's 1575-file census remained red: 252,982 physical lines; 27 files exceed
-  300, 0 are exactly 300, 3 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
-  imports occur in 689 files, 25 of them over the line limit. Its
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,315 physical lines; 4 files exceed
+  300, 0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 — the four are the
+  adjudicated Gatehouse family, docketed by the R3 registration sweep. Direct `XRL`
+  imports occur in 1204 files, 3 of them over the line limit. Its
   exact inventory digest is
-  `736bb6fa198a3ed599ddc51302ffeccf7be0c01e7839cd9fbb7d11c9e79c1822`;
-  the corresponding cold-install inventory contains 1599 files. The
+  `67a786670a85a30c36651a493069353355734701e33199d5397f5e21969b18ff`;
+  the corresponding cold-install inventory contains 2664 files. The
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
   material-rule source family instead of one obsolete monolith path, and a repository test now
@@ -280,7 +311,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
   that would have caught the defect lands with the fix.
 - **Every offered plot size now has an exact authored realization.** The merged catalogue currently
-  contains 131 plotted buildings over 514 inspectable maps (177 source / 337 generated);
+  contains 131 plotted plans over 514 inspectable authored maps (177 source / 337 generated);
   larger-lot data adds 242 exact bindings and 277 predecessor tiers. Larger stakes preserve the
   complete source block, then realize added space as category-appropriate courts, service aprons,
   crop/tending ground, paths, sparse boundaries, or an explicitly reasoned opening using only the

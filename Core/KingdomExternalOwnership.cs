@@ -83,17 +83,6 @@ namespace ThousandAndFirst
 			};
 		}
 
-		public static string ProviderStatus()
-		{
-			List<ProviderRow> providers = Registry();
-			if (RegistrationFaults.Count > 0) return "refused: " + RegistrationFaults[0];
-			if (providers.Count == 0) return "no typed ownership provider loaded";
-			List<string> names = new List<string>();
-			for (int i = 0; i < providers.Count; i++)
-				names.Add(providers[i].Id + " " + providers[i].Version);
-			return string.Join(", ", names.ToArray());
-		}
-
 		private static KingdomExternalOwnershipReading Failed(string Failure)
 		{
 			return new KingdomExternalOwnershipReading

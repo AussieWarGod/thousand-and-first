@@ -102,25 +102,6 @@ namespace ThousandAndFirst
 			return verdict;
 		}
 
-		/// <summary>The plain yes-or-no for cohabitation.</summary>
-		[System.Obsolete("Retired before public release; use KingdomLodging with the home's explicit closeness rung.", true)]
-		public static bool CanCohabit(GameObject Newcomer, GameObject Resident)
-		{
-			int hostility = 0;
-			if (Newcomer != null && Resident != null && KingdomCreed.Enabled)
-			{
-				hostility = KingdomCreed.HostilityBetween(
-					Newcomer.GetStringProperty(KingdomCreed.CreedProperty),
-					Resident.GetStringProperty(KingdomCreed.CreedProperty));
-			}
-			QolProfile newcomer = ProfileOf(Newcomer);
-			QolProfile resident = ProfileOf(Resident);
-			return !KingdomLodgingRules.Conflicts(newcomer.Refuses,
-				KingdomQolRules.SelfTags(newcomer), resident.Refuses,
-				KingdomQolRules.SelfTags(resident), hostility,
-				KingdomLodgingRules.Closeness.Packed);
-		}
-
 		/// <summary>
 		/// The first design in a list this person would actually live in, for a caller choosing
 		/// among the settlement's standing housing.

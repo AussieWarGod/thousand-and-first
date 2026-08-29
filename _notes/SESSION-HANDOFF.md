@@ -14,6 +14,8 @@
 > `../TESTING.md` for native/human proof, and `../docs/RELEASING.md` for Steam. Historical
 > candidate receipts below prove only their frozen bytes.
 
+> **S6 current-truth note — 2026-08-29.** The frozen handoff state below is the 2026-08-27 snapshot, kept verbatim; the live structural census is 2637 staged sources, per `../docs/STATUS.md` and `../docs/STRUCTURE.md`.
+
 ## Frozen handoff state (2026-08-27)
 
 - Integrated feature/polish baseline is clean commit `19fb8ee`. Later structural/CI hardening

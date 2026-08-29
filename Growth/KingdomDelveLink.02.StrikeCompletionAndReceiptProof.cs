@@ -139,20 +139,6 @@ namespace ThousandAndFirst
 			return ExactPhysicalLinkStands(receipt, head, foot);
 		}
 
-		/// <summary>
-		/// The same exact proof for optional civic observation, but only when both endpoints are
-		/// already cached. It never calls <c>GetZone</c>, so a Charter read cannot thaw remote ground.
-		/// </summary>
-		public static bool PhysicalLinkStandsLoaded(string HeadZoneId)
-		{
-			if (!TryReadPhysicalReceipt(HeadZoneId, out KingdomDelveLinkReceipt receipt)
-				|| The.ZoneManager?.CachedZones == null
-				|| !The.ZoneManager.CachedZones.TryGetValue(receipt.HeadZoneId, out Zone head)
-				|| !The.ZoneManager.CachedZones.TryGetValue(receipt.FootZoneId, out Zone foot))
-				return false;
-			return ExactPhysicalLinkStands(receipt, head, foot);
-		}
-
 		private static bool ExactPhysicalLinkStands(KingdomDelveLinkReceipt receipt,
 			Zone head, Zone foot)
 		{

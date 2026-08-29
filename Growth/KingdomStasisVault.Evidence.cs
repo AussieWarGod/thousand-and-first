@@ -63,14 +63,6 @@ namespace ThousandAndFirst
 			return string.Compare(Left?.ID, Right?.ID, StringComparison.Ordinal);
 		}
 
-		private static GameObject CradleAt(GameObject Vault, int Slot)
-		{
-			List<GameObject> rows = Cradles(Vault, true);
-			for (int i = 0; i < rows.Count; i++)
-				if (rows[i].GetIntProperty(BayIndexProperty) == Slot + 1) return rows[i];
-			return null;
-		}
-
 		private static bool CradleCellClear(GameObject Cradle, GameObject Body)
 		{
 			Cell cell = Cradle?.CurrentCell;

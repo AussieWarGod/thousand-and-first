@@ -78,6 +78,14 @@ function Get-ProfileInventory {
         if (-not ($item -is [IO.FileInfo])) {
             throw "Profile tree contains a non-regular file: $($item.FullName)"
         }
+        # .NET exposes no direct hard-link-count accessor; fsutil is the simplest robust source on
+        # Windows. A hard link is a second name for the same sealed inode, so it carries the same
+        # attributes and hash as the original and passes every other check in this loop - only the
+        # link count catches it, mirroring Tools/scenario_profile.py's refuse_links (st_nlink != 1).
+        $hardLinkNames = @(& fsutil hardlink list $item.FullName)
+        if ($hardLinkNames.Count -gt 1) {
+            throw "Profile tree contains a hard-linked file with $($hardLinkNames.Count) names: $($item.FullName)"
+        }
         if (-not $item.FullName.StartsWith($prefix, [StringComparison]::Ordinal)) {
             throw "Profile tree escaped its root: $($item.FullName)"
         }

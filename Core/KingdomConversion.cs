@@ -134,13 +134,6 @@ namespace ThousandAndFirst
 			Sources.Add(Source);
 		}
 
-		/// <summary>Forgets every registered pressure source. For a registry loader re-reading its
-		/// streams, and for tests; a save carries none of this.</summary>
-		public static void ClearPressureSources()
-		{
-			Sources.Clear();
-		}
-
 		/// <summary>
 		/// The kingdom's one attended pass over what its people believe: credits every household's
 		/// minority the days they actually spent under its roof, records a brink for anyone who

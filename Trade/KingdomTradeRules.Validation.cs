@@ -36,11 +36,6 @@ namespace ThousandAndFirst
 			return !string.IsNullOrWhiteSpace(Value) && Value.Length <= MaxNameChars;
 		}
 
-		private static long PositiveCounter(long Value)
-		{
-			return Value <= 0L ? 1L : Value;
-		}
-
 		private static int Nonnegative(int Value)
 		{
 			return Value < 0 ? 0 : Value;

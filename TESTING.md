@@ -34,8 +34,8 @@ file order; use the table as the top-level checklist.
 ## Current portable evidence boundary
 
 Latest retained integrated checkpoint passes 7,743 / 7,743 cases in the Qud-referenced/source suite and
-173 / 173 portable cases with zero skipped. Tools suite passes 35 tests. Art suite passes 20 / 20
-and verifies 65 vanilla tile paths with zero custom runtime paths. Nine focused one-survey
+173 / 173 portable cases with zero skipped. Tools suite passes 35 tests. Art suite passes 23 / 23
+and verifies 85 vanilla tile paths with zero custom runtime paths. Nine focused one-survey
 source-contract cases pass for maintained-index use and no reachable second whole-zone scan.
 Hosted checkpoint `d285129` has green repository
 audit, Ubuntu source suite, and Windows source suite for its exact bytes. Later un-deferral code is
@@ -49,10 +49,10 @@ exact Qud base.
 `docs/STATUS.md` owns the exact latest receipts. None of this signs native Qud behavior,
 appearance, accessibility, current-revision native/human/compatibility/performance gates, or Steam
 installation. Product scope remains owned by [VISION.md](VISION.md). The current structural scan
-runs across 2480 production C# sources; the cold-install
-inventory contains 2507 files, and 0 staged sources breach the line cap. Its 357,421-line inventory
-digest must be regenerated after final source freeze, and human `docs/STRUCTURE_REVIEW.json` review
-remains open.
+runs across 2637 production C# sources; the cold-install
+inventory contains 2664 files, and 4 staged sources breach the line cap. Its 383,315-line inventory
+digest is `67a786670a85a30c36651a493069353355734701e33199d5397f5e21969b18ff`, and human
+`docs/STRUCTURE_REVIEW.json` review remains open.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
 
@@ -139,12 +139,18 @@ Running it:
    `manifest.json` selecting `/Harness/`, and both option files - and only then seals it **once** as
    one exact closed inventory. The repository manifest is never edited.
 2. `Tools/run-scenario.ps1` verifies that one seal **closed in both directions** (missing, extra,
-   renamed, modified, duplicate-normalized, symlinked, hard-linked, and reparse-point files all
-   fail) and launches. Hard links matter as much as symbolic ones: a hard link is a second *name*
-   for the sealed inode, so `os.path.islink` answers no while the sealed bytes stay writable from
-   outside the profile; the link count is what catches it. It is a **separate launcher from
-   `Tools/run-smoke.ps1` on purpose**: the smoke launcher's single-mod, single-seal assertions are
-   what `Tools/release-check.sh [8/11]` depends on, and must not be widened.
+   renamed, modified, and duplicate-normalized files all fail) and launches. The two checkers split
+   the link-and-reparse-point refusal by when each runs, not by which one "owns" it: prepare-time
+   `Tools/scenario_profile.py` refuses every alias for one byte stream - symlinks, hard links
+   (`st_nlink != 1`), and reparse points - over the **whole** inventory before it ever seals a
+   profile. Launch-time `Tools/run-scenario.ps1` then **re-verifies** reparse points and, on every
+   regular file, its hard-link count (`fsutil hardlink list`) before trusting the seal. Hard links
+   matter as much as symbolic ones: a hard link is a second *name* for the sealed inode, so it
+   carries the seal's own hash while the sealed bytes stay writable from outside the profile - and a
+   link created **after** `prepare-scenario.sh` already sealed the profile is exactly the case only
+   the launch-time re-check can catch. It is a **separate launcher from `Tools/run-smoke.ps1` on
+   purpose**: the smoke launcher's single-mod, single-seal assertions are what
+   `Tools/release-check.sh [8/11]` depends on, and must not be widened.
 3. In game, start a new game in the `[Dev] TAF scenario` mode. **You enter the sealed world seed
    yourself** at character creation - Qud exposes no launcher-side seed injection, so the profile
    only exposes the native seed field - then run `kingdom:scenario realize`.

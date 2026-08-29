@@ -52,13 +52,19 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// GetWorldSeed parses its digits with int.TryParse and returns the parsed value, so exact
 		/// '#0' names a world the engine reproduces. Both sealed checks must admit it, and neither
-		/// may narrow the other's inventory.
+		/// may narrow the other's inventory. The launcher's own hard-link refusal is pinned in
+		/// adjacency form - the check and its throw as one contiguous literal - so deleting either
+		/// half fails this test instead of leaving a same-file Contains blind to the mutant.
 		/// </summary>
 		[Test]
 		public void BothSealCheckersAgreeOnTheSeedRangeAndOnLinks()
 		{
 			string launcher = Read("Tools/run-scenario.ps1");
 			StringAssert.Contains("[int64]$seedDigits -lt 0", launcher);
+			StringAssert.Contains(
+				"if ($hardLinkNames.Count -gt 1) {\n"
+				+ "            throw \"Profile tree contains a hard-linked file with $($hardLinkNames.Count) names: $($item.FullName)\"",
+				launcher);
 			string python = Read("Tools/scenario_profile.py");
 			StringAssert.Contains("MIN_SEED = 0", python);
 			StringAssert.Contains("MAX_SEED = 2147483647", python);

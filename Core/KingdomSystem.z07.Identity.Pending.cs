@@ -73,25 +73,6 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		/// <summary>Verifies that published Carry authority names the complete live city set.</summary>
-		internal bool TryBindCarryIdentity(out string Failure)
-		{
-			List<string> settlements;
-			if (!TryRetainedSettlementIds(RequirePublishedClaims: true,
-				IncludePending: true, out settlements, out Failure)) return false;
-			if (CarryBook == null)
-			{
-				Failure = "Carry identity is absent.";
-				return false;
-			}
-			KingdomLifecycleRules.Normalize(CarryBook);
-			if (KingdomLifecycleRules.BindCarryIdentity(CarryBook, RealmId, settlements,
-				LegacyMigration: false, MigrationKey: null) && CarryIdentityMatches())
-				return true;
-			Failure = "Carry identity does not match the complete published city set.";
-			return false;
-		}
-
 		internal bool TryStagePendingSettlementIdentity(string SettlementId,
 			string TransactionId, string ZoneId, string Authority, out string Failure)
 		{

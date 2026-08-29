@@ -20,11 +20,19 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 1575 staged production C# files and 252,982
-physical lines. Of those, 27 exceed 300 lines, 0 are exactly 300, and therefore 27 fail the strict
-cap; 3 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`736bb6fa198a3ed599ddc51302ffeccf7be0c01e7839cd9fbb7d11c9e79c1822`. The census reports
-689 files with direct `XRL` imports; 25 of those exceed the line limit.
+`Tools/check-structure.py --json` currently reports 2637 staged production C# files and 383,315
+physical lines. Of those, 4 exceed 300 lines, 0 are exactly 300, and therefore 4 fail the strict
+cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`67a786670a85a30c36651a493069353355734701e33199d5397f5e21969b18ff`. The census reports
+1204 files with direct `XRL` imports; 3 of those exceed the line limit.
+
+The four breaching files are the Gatehouse family — `Growth/KingdomGatehouseRules.cs` (682),
+`Growth/KingdomGatehouse.ProjectionEvidence.cs` (522), `Growth/KingdomGatehouse.cs` (517), and
+`Growth/KingdomGatehouse.Projection.cs` (326) — docketed and adjudicated by the R3 registration
+sweep. Docketed is not exempted: the release gate still fails on them, and this file states that
+failure honestly rather than reporting a stale zero. The socket-transition pair that previously
+also breached (`Growth/KingdomSocketTransitions.cs`, `Growth/KingdomSocketTransitionRules.cs`) was
+split under the size law by repair shard S2 and no longer appears in the over-cap list.
 
 The current hardening sequence semantically decomposed 144 additional oversized authorities,
 bringing the cumulative total to 154. That is 25 more decompositions since checkpoint `2cb97fc`,
@@ -33,7 +41,7 @@ checkpoint `1c2d619`.
 [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 27 line-cap
+do not create a second authority. This is measurable progress, not release signoff: 4 line-cap
 failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
 block release. Any staged source change invalidates this digest and requires a new census and
 review binding.
@@ -42,9 +50,9 @@ Automation cannot decide whether a type owns one coherent responsibility or whet
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore
 also requires `docs/STRUCTURE_REVIEW.json`, bound to the exact staged source inventory digest.
 Copy `docs/STRUCTURE_REVIEW.example.json` only after a human review; replace every placeholder and
-record concrete evidence in both notes fields. Schema 1 accepts exactly the template keys and no
-exceptions. Reviewer identity is 2–80 printable characters; each evidence note is 20–2,000
-printable characters; completion uses a real second-precision UTC timestamp. Placeholder,
+record concrete evidence in both notes fields. Schema 1 accepts no exceptions: exactly the
+template keys, nothing else. Reviewer identity is 2–80 printable characters; each evidence note is
+20–2,000 printable characters; completion uses a real second-precision UTC timestamp. Placeholder,
 sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected. Changing that rule
 requires an explicit author amendment to Addendum 9, not a tooling allowlist.
 

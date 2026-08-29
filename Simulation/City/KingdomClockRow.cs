@@ -22,10 +22,5 @@ namespace ThousandAndFirst.Simulation.City
 			NextDueTick = nextDueTick;
 			Ordinal = ordinal;
 		}
-
-		internal KingdomClockRow WithNext(long nextDueTick, int ordinal)
-		{
-			return new KingdomClockRow(Kind, nextDueTick, ordinal);
-		}
 	}
 }

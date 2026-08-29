@@ -157,7 +157,6 @@ namespace ThousandAndFirst
 		private static bool SourcePreparing(KingdomConstructionInputSourcePhase p) { return p >= KingdomConstructionInputSourcePhase.Reserved && p <= KingdomConstructionInputSourcePhase.Debited; }
 		private static bool CargoPreparing(KingdomConstructionInputCargoPhase p) { return p >= KingdomConstructionInputCargoPhase.Planned && p <= KingdomConstructionInputCargoPhase.InFlight; }
 		private static bool SourceDebited(KingdomConstructionInputSourcePhase p) { return p == KingdomConstructionInputSourcePhase.Debited; }
-		private static bool CargoAtSource(KingdomConstructionInputCargoPhase p) { return p == KingdomConstructionInputCargoPhase.AtSource; }
 		private static bool CargoInFlight(KingdomConstructionInputCargoPhase p) { return p == KingdomConstructionInputCargoPhase.InFlight; }
 		private static bool CargoRouting(KingdomConstructionInputCargoPhase p) { return p >= KingdomConstructionInputCargoPhase.InFlight && p <= KingdomConstructionInputCargoPhase.Landed; }
 		private static bool CargoLanded(KingdomConstructionInputCargoPhase p) { return p == KingdomConstructionInputCargoPhase.Landed; }

@@ -125,10 +125,6 @@ namespace ThousandAndFirst
 			second = Render(snapshot, 2, tagA, tagB);
 			return true;
 		}
-		public static bool CancelPreview(KingdomSitePracticeBook book, out string failure)
-		{
-			return TryValidate(book, out failure);
-		}
 		public static bool TryValidate(KingdomSitePracticeBook book, out string failure)
 		{
 			failure = null;

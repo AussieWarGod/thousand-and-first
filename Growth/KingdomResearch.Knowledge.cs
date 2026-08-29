@@ -172,20 +172,5 @@ namespace ThousandAndFirst
 			return taught;
 		}
 
-		/// <summary>Whether the city has heard of enough people to be sent word of them
-		/// (<c>recruitreveal:</c>, the census's own effect). The guestbook's gate for the wave that
-		/// adds the lead hook.</summary>
-		public static bool HearsOfPeople(KingdomSystem System)
-		{
-			foreach (ResearchEffect effect in HeldEffects(System))
-			{
-				if (effect.Kind == KingdomResearchRules.EffectRecruitReveal && effect.Amount > 0)
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
 	}
 }

@@ -66,12 +66,6 @@ namespace ThousandAndFirst
 			return total;
 		}
 
-		public static int ConsumeStoredWater(Zone Z, int Drams)
-		{
-			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
-			return survey.Consume(Drams);
-		}
-
 		/// <summary>Counts vessels currently dedicated to the settlement's stores in a zone.</summary>
 		public static int CountDedicatedVessels(Zone Z)
 		{

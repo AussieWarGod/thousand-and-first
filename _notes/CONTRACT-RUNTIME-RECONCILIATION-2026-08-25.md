@@ -8,6 +8,11 @@
 > `VISION.md`, `docs/STATUS.md`, `docs/V1-UNDEFERRAL.md`, and
 > `BRIEF-IMPLEMENTATION-AUDIT.md` control current status where this dated body conflicts.
 
+> **S6 current-truth addendum — 2026-08-29.** The historical checks below are the frozen 2026-08-25 snapshot, kept verbatim for the record; they are not live status.
+> The current live census is 2637 production C# files, of which 4 exceed 300 physical lines, 0 are exactly 300, so 4 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
+> The last retained integrated pure/source checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, and the cold-install inventory holds 2,664 cold-install files.
+> See `docs/STATUS.md` and `docs/STRUCTURE.md` for the signed current receipts.
+
 Status: adversarial static pass, reconciled through the 2026-08-28 code-scope fan-in. This is not
 release evidence.
 Authoritative promises were read directly; `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and the historic

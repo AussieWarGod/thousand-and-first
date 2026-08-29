@@ -201,14 +201,6 @@ namespace ThousandAndFirst
 			return "A manifest of " + Drams + " drams is already crossing from " + OriginName + " to " + DestinationName + " (" + window + "). Only one may travel at a time.";
 		}
 
-		/// <summary>What the founder is told directly when loading a new manifest discovers the
-		/// old one lapsed unresolved. The realm's own chronicle carries the permanent record;
-		/// this is the same news, told to the person standing there.</summary>
-		public static string ManifestLapseNotice(string OriginName, string DestinationName, int Drams)
-		{
-			return "{{r|The manifest sent from " + OriginName + " toward " + DestinationName + " never reached the road's end. " + Drams + " drams are given up for lost.}} The road stands clear now; load another if you mean to.";
-		}
-
 		/// <summary>The chronicle clause written when a manifest's window closes before it is delivered.</summary>
 		/// <summary>
 		/// The carters give up on the road and start for home. Written as a fact about the

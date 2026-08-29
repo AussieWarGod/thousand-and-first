@@ -131,7 +131,7 @@ namespace ThousandAndFirst
 		/// Whether the dedicated stockpiles on this ground cover an IMPROVEMENT's material cost,
 		/// without spending any of it. The absorption law asks this before a work is judged ready,
 		/// so an improvement short of material is refused by name rather than begun and abandoned
-		/// at the moment <see cref="PayUpgrade"/> would have taken the cost.
+		/// at the moment <see cref="ReserveUpgradePayment"/> would have taken the cost.
 		/// </summary>
 		/// <param name="Z">Ground the work stands on.</param>
 		/// <param name="PredecessorKey">Registry key of the standing design whose transition is
@@ -152,37 +152,6 @@ namespace ThousandAndFirst
 				return true;
 			}
 			Missing = KingdomMaterialRules.Missing(stock.Tally, cost).Describe();
-			return false;
-		}
-
-		/// <summary>
-		/// Reserves and commits an improvement's material cost, and says once why it is waiting
-		/// when it cannot. The automatic improvement path has no founder standing at it, so the
-		/// reason goes in the ledger where the homecoming report will read it out. STANDARDS 7b.
-		/// </summary>
-		/// <returns>True only for an exact receipt. Partial outcomes are named in the ledger.</returns>
-		public static bool PayUpgrade(KingdomSystem System, Zone Z, string PredecessorKey)
-		{
-			KingdomMaterialTally cost = UpgradeCostFor(PredecessorKey);
-			if (cost.IsEmpty())
-			{
-				return true;
-			}
-			KingdomMaterialDebit debit = ReserveUpgradePayment(Z, PredecessorKey);
-			KingdomMaterialDebitResult result = debit.Commit();
-			if (result.Exact)
-			{
-				return true;
-			}
-			if (System != null)
-			{
-				string missing = result.Outstanding.Materials.Describe();
-				System.Ledger.Note(result.Partial
-					? ("{{r|An improvement's material receipt was interrupted after a measured loss. It remains owed "
-						+ (missing ?? "part of its price") + "; inspect the stockpiles before retrying.}}")
-					: ("{{r|A work is ready to be bettered, and the stockpiles are short "
-						+ ((missing == null) ? "of what it wants" : missing) + ".}}"));
-			}
 			return false;
 		}
 

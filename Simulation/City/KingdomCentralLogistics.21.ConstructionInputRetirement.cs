@@ -116,16 +116,6 @@ namespace ThousandAndFirst.Simulation.City
 			catch { return false; }
 		}
 
-		private static bool ExactGraveyardObjectEvidence(string objectId)
-		{
-			if (string.IsNullOrEmpty(objectId) || The.ZoneManager?.Graveyard?.Objects == null)
-				return false;
-			int count = 0;
-			for (int i = 0; i < The.ZoneManager.Graveyard.Objects.Count; i++)
-				if (The.ZoneManager.Graveyard.Objects[i]?.IDIfAssigned == objectId) count++;
-			return count == 1;
-		}
-
 		private static string ReadRetirement(string owner, int tripId)
 		{
 			string key = RetirementKey(owner, tripId);

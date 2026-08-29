@@ -49,17 +49,6 @@ namespace ThousandAndFirst
 			return builder.ToString();
 		}
 
-		/// <summary>
-		/// What the heir is told the moment they find themselves alive and somewhere else. Spoken
-		/// once, at the swap, before the realm knows anything at all.
-		/// </summary>
-		public static string WakingLine(string HeirName, string SeatName)
-		{
-			string who = string.IsNullOrEmpty(HeirName) ? "somebody else" : "{{C|" + HeirName + "}}";
-			string where = string.IsNullOrEmpty(SeatName) ? "the settlement" : "{{C|" + SeatName + "}}";
-			return "You are " + who + ", and you are standing in " + where + ". Somewhere a long way from here, the founder is dead, and nobody has been told.";
-		}
-
 		/// <summary>How the word came, said in the rite's own voice. Named roads only, never a
 		/// number of days on screen.</summary>
 		public static string RoadClause(NewsRoad Road, int Days)
@@ -116,15 +105,6 @@ namespace ThousandAndFirst
 			return where + " has heard: " + RoadClause(Road, Days) + ".\n\n"
 				+ "They lay out water for " + founder + ", and drink none of it, and stand in the dust until the sun is off the roofs.\n\n"
 				+ "Then they turn round and look at " + heir + ", because there is nobody else left to look at.";
-		}
-
-		/// <summary>The line pushed to an heir who was not there. The rite happens whether or not
-		/// anybody attends it (STANDARDS &sect;5.4), and this is how they hear.</summary>
-		public static string RiteAbsentWord(string SeatName, string FounderName)
-		{
-			string where = string.IsNullOrEmpty(SeatName) ? "the settlement" : SeatName;
-			string founder = string.IsNullOrEmpty(FounderName) ? "the founder" : FounderName;
-			return where + " buried " + founder + " without you, and the charter was set aside with your name on it";
 		}
 
 		/// <summary>What the founder's remains offer, once, to whoever kneels at them.</summary>

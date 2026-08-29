@@ -114,58 +114,6 @@ namespace ThousandAndFirst
 				return taken;
 			}
 
-			/// <summary>
-			/// Legacy immediate material-only draw. New work should reserve a composite
-			/// <see cref="KingdomMaterialDebit"/> before making its durable job. This wrapper returns
-			/// true only for an exact commit; any engine veto is measured and logged by the receipt,
-			/// never described as an all-or-nothing refusal after a terminal source vanished.
-			/// </summary>
-			public bool Spend(KingdomMaterialTally Cost)
-			{
-				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
-					new KingdomMaterialDebitCost(Cost, null, null));
-				KingdomMaterialDebitResult result = debit.Commit();
-				LogLegacyPartial("material", result);
-				return result.Exact;
-			}
-
-			/// <summary>
-			/// Legacy immediate bit-only receipt. Bits are not held loose &mdash; the settlement
-			/// holds SCRAP, and the keepers break up whatever answers the price, exactly as a
-			/// tinker would. Dynamic vetoes remain explicitly classified by the receipt.
-			/// <para>
-			/// A piece broken up for one bit gives up whatever else was in it, and that surplus is
-			/// gone. That is honest and it is the reason a design is priced in cheap tiers wherever
-			/// it can be: nobody breaks an AI master unit for the tier-zero bit in it if there is a
-			/// bent metal sheet on the shelf, and this walks the shelf cheapest-first so it does not
-			/// either.
-			/// </para>
-			/// </summary>
-			/// <returns>True only when the exact receipt committed.</returns>
-			public bool SpendBits(KingdomBitTally Cost)
-			{
-				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
-					new KingdomMaterialDebitCost(null, Cost, null));
-				KingdomMaterialDebitResult result = debit.Commit();
-				LogLegacyPartial("bit", result);
-				return result.Exact;
-			}
-
-			/// <summary>
-			/// Legacy immediate exotic-only receipt. A gemstone is a gemstone: the keepers take
-			/// the first one that answers, because nothing here is worth more to a wall than any
-			/// other of its kind. Dynamic vetoes remain explicitly classified by the receipt.
-			/// </summary>
-			/// <returns>True only when the exact receipt committed.</returns>
-			public bool SpendExotics(KingdomExoticTally Cost)
-			{
-				KingdomMaterialDebit debit = KingdomMaterialDebit.Reserve(this,
-					new KingdomMaterialDebitCost(null, null, Cost));
-				KingdomMaterialDebitResult result = debit.Commit();
-				LogLegacyPartial("exotic", result);
-				return result.Exact;
-			}
-
 			private static void LogLegacyPartial(string Lane, KingdomMaterialDebitResult Result)
 			{
 				if (Result != null && Result.Partial)

@@ -116,16 +116,6 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>What one design was registered as reaching, where it declared anything.
-		/// </summary>
-		/// <returns>False for the ordinary case: a design that says nothing and is derived.
-		/// </returns>
-		public static bool TryGetDeclared(string Key, out ReachBand Band)
-		{
-			Band = ReachBand.Plot;
-			return !string.IsNullOrEmpty(Key) && Declared.TryGetValue(Key, out Band);
-		}
-
 		/// <summary>
 		/// How far a design carries: its declared <c>Reach</c>, else derived from its plot tier
 		/// and its place in its own improvement chain. Cached per key and dropped whenever the

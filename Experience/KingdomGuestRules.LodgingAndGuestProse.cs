@@ -138,11 +138,6 @@ namespace ThousandAndFirst
 			return "{{G|" + GuestName + " settles in as " + ArticleFor(trade) + " " + trade + ".}}";
 		}
 
-		public static string LodgedConversationAnswer(HookKind Kind, string HookText)
-		{
-			return "I was bound for " + HookText + ". I still think about it. But a bed's a bed, and I've had enough of the road for a while.";
-		}
-
 		/// <summary>The official chronicle line for a notable who left unmet.</summary>
 		public static string DepartedChronicleLine(string GuestName, string SettlementName)
 		{

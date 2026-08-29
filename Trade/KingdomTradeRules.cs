@@ -90,14 +90,6 @@ namespace ThousandAndFirst
 				|| Book.RetainedEscrowDrams > 0L);
 		}
 
-		public static bool CanBindRealm(KingdomTradeBook Book)
-		{
-			return Book != null && Book.FormatVersion == CurrentFormatVersion
-				&& Book.SchemaState == KingdomTradeSchemaState.Compatible
-				&& !Book.IdentityBound && string.IsNullOrEmpty(Book.RealmId)
-				&& !HasActiveAuthority(Book);
-		}
-
 		public static bool BindExactIdentity(KingdomTradeBook Book, string RealmId,
 			IEnumerable<string> SettlementIds, out string Failure)
 		{

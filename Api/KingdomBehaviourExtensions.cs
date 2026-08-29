@@ -191,15 +191,6 @@ namespace ThousandAndFirst.Api
 			return true;
 		}
 
-		/// <summary>Reads a durable wire for reports and extension snapshots. Malformed input becomes
-		/// an empty reading only on this presentation path; authoritative advancement retains it.</summary>
-		internal static KingdomBehaviourReading BehaviourReading(string wire)
-		{
-			KingdomBehaviourState state;
-			return KingdomBehaviourRules.TryDecode(wire, out state)
-				? state.Reading() : KingdomBehaviourState.Empty.Reading();
-		}
-
 		private static KingdomExtensionDraws DrawHandle(KingdomSystem system,
 			KingdomCityReading reading, Binding binding)
 		{
