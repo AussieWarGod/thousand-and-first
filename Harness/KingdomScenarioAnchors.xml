@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Curated ordinary-play differential anchor evidence.
+
+  Authority constraint: a row here is written by a reviewer from a state ORDINARY PLAY actually
+  reached, never by a scenario run. The harness reads this store and has no path that writes one.
+  An empty store is the correct state until a reviewer captures an anchor by hand; until then every
+  scenario verdict is ineligible, which is the honest answer rather than a failure.
+
+  A row must declare Reached="ordinary-play" exactly; any other value stays Unknown and the
+  signing law refuses it, so a typo can never promote curated evidence.
+
+  Row shape:
+    <anchor AnchorId="anchor-arch-01" AuthorityClass="architecture-stamper"
+            Verbs="provecatalogue+stagegallerycase"
+            KeySetDigest="<64 hex>" DefinitionDigest="<64 hex>" PlanDigest="<64 hex>"
+            ModVersion="0.2.0" QudCoreVersion="2.0.211.51" Reached="ordinary-play" />
+-->
+<kingdomscenarioanchors Schema="1">
+</kingdomscenarioanchors>

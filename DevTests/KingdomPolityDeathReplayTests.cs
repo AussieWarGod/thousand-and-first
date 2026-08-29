@@ -59,13 +59,20 @@ namespace ThousandAndFirst.DevTests
 			string wire = KingdomPolityDeathIntentRules.EncodeV1Fixture(source);
 			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(wire,
 				out KingdomPolityDeathIntentRecord decoded, out string failure), failure);
-			Assert.IsTrue(decoded.LegacyV1);
+			Assert.AreEqual(KingdomPolityDeathIntentProvenance.LegacyV1, decoded.Provenance);
 			Assert.AreEqual("", decoded.IncidentPlanId);
 			Assert.AreEqual("", decoded.IncidentId);
 			Assert.AreEqual("", decoded.IncidentDigest);
+
+			// A v1 record cannot re-encode until a first-read freeze stamps its provenance, and
+			// when it does the bytes carry the migrated prefix, never the death-time one.
+			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(decoded, out _, out failure));
+			StringAssert.Contains("freeze at first read", failure);
+			decoded.Provenance = KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
 			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(decoded,
 				out string rewritten, out failure), failure);
-			StringAssert.StartsWith(KingdomPolityDeathIntentRules.WirePrefix, rewritten);
+			StringAssert.StartsWith(KingdomPolityDeathIntentRules.MigratedWirePrefix, rewritten);
+			StringAssert.DoesNotStartWith(KingdomPolityDeathIntentRules.WirePrefix, rewritten);
 		}
 
 		[Test]

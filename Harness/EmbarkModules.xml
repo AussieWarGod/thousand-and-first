@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Developer scenario embark mode. Loads only inside a throwaway scenario profile, because the
+  Harness directory is absent from the shipped manifest Directories and excluded from
+  Tools/stage.sh; an ordinary build never sees this file and the mode cannot be selected.
+
+  The mode sets the scenario request before world build. Qud's gamemode descriptor applies
+  stringgamestate values during bootGame, which is ahead of the player-mutator step where
+  KingdomScenarioNewGameGate proves the request and writes the stamp.
+
+  Phase 1 authors one scenario, so one mode carries it. A later phase replaces this with a
+  starting-location Set filter once the roster holds more than one row.
+-->
+<embarkmodules>
+  <module Class="XRL.CharacterBuilds.Qud.QudGamemodeModule">
+    <modes>
+      <mode ID="TAFScenario" Title="[Dev] TAF scenario">
+        <icon Tile="Items/sw_book_1.bmp" Foreground="y" Detail="W"></icon>
+        <description>
+          Developer scenario harness. Builds a pinned-seed state for review. Never ships: this mode exists only inside an isolated scenario profile, and any verdict taken here is ineligible until its authority class has a green ordinary-play differential anchor.
+        </description>
+        <stringgamestate Name="GameMode" Value="Kingdom"></stringgamestate>
+        <boolgamestate Name="r_TAF_KingdomMode" Value="true"></boolgamestate>
+        <stringgamestate Name="r_TAF_ScenarioRequest_v1" Value="arch-gallery-slice;facing=north"></stringgamestate>
+        <gamesystem Class="ThousandAndFirst.KingdomSuccession" />
+      </mode>
+    </modes>
+  </module>
+</embarkmodules>

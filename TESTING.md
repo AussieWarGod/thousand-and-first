@@ -188,6 +188,16 @@ What a scenario run proves, and what it does not:
   `kingdom:scenario anchor` share one fail-closed eligibility proof: the stamp pair exactly absent,
   the transaction pair exactly none, and the request key exactly absent across every durable type
   table. Deleting or tearing a stamp does not launder a prepared profile into an ordinary anchor.
+- **Curating an anchor is a deliberate act, and the evidence has a ruled limit.** Capture reproves
+  positive ordinary-commission evidence — no debug-gallery authority on the owner or any of its lot
+  components, no upgrade authority, a construction receipt, and a real staked plot whose rect is the
+  building's rect. That is the accepted v1 granularity: it proves a commission happened, but
+  **plot-plus-receipt cannot distinguish an ordinary commission from an inherited, relocated,
+  socketed, or plot2 origin**, because no durable marker on the production object names the route.
+  So the curation rule is yours to keep: **curate only a building you commissioned in this run.**
+  The capture report prints this caveat immediately above the row you paste. A commission-origin
+  marker is deferred to the reconciliation-gate review; if architecture work reopens the stampers,
+  the marker lands there and this allowlist tightens to it. The existing refusals never loosen.
 - **Capture names the building by the scenario's own frozen case.** A settled town holds many
   buildings, so the command resolves the plan's mutating case first and filters owners by its exact
   Build/Variant/Facing/LotType/LotSize identity. If more than one matches, it refuses with a stable

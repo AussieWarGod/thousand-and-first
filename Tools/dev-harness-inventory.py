@@ -18,6 +18,8 @@ shipped runtime inventory. Prints the source list so the gate compiles exactly w
 from __future__ import annotations
 
 import argparse
+import datetime
+import hashlib
 import json
 from pathlib import Path
 import stat
@@ -42,6 +44,11 @@ def harness_shards() -> list[str]:
     The one place this rule lives. The scenario profile, the registration checker, and the licensed
     gate all ask this helper rather than keeping a second hand-maintained list that could drift from
     the tree the game would actually compile.
+
+    Subdirectories are REFUSED rather than walked. A non-recursive glob silently dropped
+    `Harness/Sub/*.cs`: compiled by nothing, registered nowhere, and guarded by no rule. The tree is
+    flat by design, so an explicit refusal is the fail-closed reading - a nested shard stops the
+    gate instead of disappearing from it.
     """
     found: dict[str, str] = {}
     if not HARNESS.is_dir():
@@ -49,7 +56,18 @@ def harness_shards() -> list[str]:
     for path in sorted(HARNESS.iterdir()):
         if path.is_symlink():
             raise SystemExit("harness tree contains a link: " + path.name)
-        if not path.is_file() or path.suffix != ".cs":
+        if path.is_dir():
+            raise SystemExit(
+                "harness tree contains a subdirectory, which no compile route covers: "
+                + path.name
+            )
+        # Case-folded, and here is the fact stated correctly at last, verified by running it:
+        # `find -name '*.cs'` is CASE-SENSITIVE and does NOT select Bar.CS, so stage.sh never
+        # ships one. The ordinary inventory therefore stays case-sensitive to match what the gate
+        # compiles. The overlay is different: the gate copies it from THIS list, not from stage.sh,
+        # so folding here surfaces an oddly-cased dev shard instead of leaving it invisible to
+        # every route. Two earlier amendments got this backwards in opposite directions.
+        if not path.is_file() or path.suffix.casefold() != ".cs":
             continue
         status = path.lstat()
         if status.st_nlink != 1:
@@ -185,7 +203,9 @@ def ordinary_sources(stage: Path, mode: str) -> list[Path]:
     kept = []
     for path in walk(stage):
         relative = path.relative_to(stage).as_posix()
-        if relative.startswith(OVERLAY):
+        # Case-folded: a directory named "harness/" escaped both this exclusion and the
+        # ordinary-mode guard below, and was counted as an ordinary source.
+        if relative.casefold().startswith(OVERLAY.casefold()):
             continue
         if any(relative.startswith(prefix) for prefix in excluded):
             continue
@@ -193,11 +213,35 @@ def ordinary_sources(stage: Path, mode: str) -> list[Path]:
     return kept
 
 
+def digest(path: Path) -> str:
+    sha = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(65536), b""):
+            sha.update(block)
+    return sha.hexdigest()
+
+
 def overlay_sources(stage: Path) -> list[Path]:
-    """All and only the harness shards, proved against the repository tree."""
+    """All and only the harness shards, proved against the repository tree BY BYTES.
+
+    Matching filenames is not matching shards: the copy is what a compiler reads, so the overlay is
+    compared against the repository content it claims to be, not merely against its directory
+    listing.
+    """
     overlay = stage / OVERLAY.rstrip("/")
     expected = harness_shards()
-    present = sorted(path.name for path in overlay.glob("*.cs")) if overlay.is_dir() else []
+    if overlay.is_dir():
+        for child in sorted(overlay.iterdir()):
+            if child.is_dir():
+                raise SystemExit(
+                    "the dev overlay carries a subdirectory no compile route covers: " + child.name
+                )
+    # Folded to match harness_shards(), or a lawfully-named Odd.CS shard is reported "missing"
+    # from an overlay that in fact carries it.
+    present = sorted(
+        path.name for path in overlay.iterdir()
+        if path.is_file() and path.suffix.casefold() == ".cs"
+    ) if overlay.is_dir() else []
     missing = sorted(set(expected) - set(present))
     extra = sorted(set(present) - set(expected))
     if missing:
@@ -206,6 +250,9 @@ def overlay_sources(stage: Path) -> list[Path]:
         raise SystemExit(
             "dev profile carries unexpected harness shards: " + ", ".join(extra)
         )
+    for name in present:
+        if digest(overlay / name) != digest(HARNESS / name):
+            raise SystemExit("dev overlay shard differs from the repository source: " + name)
     return sorted(overlay / name for name in present)
 
 
@@ -216,11 +263,11 @@ def emit(stage: str, out: str, mode: str, dev: bool) -> int:
     ordinary = ordinary_sources(stage_root, mode)
     label = ("dev" if dev else "ordinary") + " " + mode + " inventory"
     if not dev:
-        overlay = stage_root / OVERLAY.rstrip("/")
-        if overlay.is_dir():
-            raise SystemExit(
-                "an ordinary inventory was taken from a tree carrying the harness overlay"
-            )
+        for child in sorted(stage_root.iterdir()):
+            if child.is_dir() and child.name.casefold() == OVERLAY.rstrip("/").casefold():
+                raise SystemExit(
+                    "an ordinary inventory was taken from a tree carrying the harness overlay"
+                )
         rows = validated(ordinary, stage_root, label)
         Path(out).write_text("\n".join(rows) + "\n", encoding="utf-8")
         print("%s: %d sources" % (label, len(rows)))
@@ -235,6 +282,73 @@ def emit(stage: str, out: str, mode: str, dev: bool) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------------------
+# Route receipt
+# --------------------------------------------------------------------------------------
+
+RECEIPT_SCHEMA = "taf-dev-harness-receipt-v1"
+
+
+def inventory_digest(_unused=None) -> str:
+    """Content digest over the FULL dev compile inventory, computed from the repository.
+
+    Binds the whole 2600-plus file compile set, not just the 22 overlay shards: a receipt that only
+    pinned the shards would still verify after any runtime source changed underneath it. Paths are
+    relative and sorted, so the digest is identical in a /tmp stage and in the repo.
+    """
+    rows = []
+    for relative in sorted(staged_rows()):
+        if not relative.endswith(".cs"):
+            continue
+        rows.append((relative, digest(ROOT / relative)))
+    for name in harness_shards():
+        rows.append((OVERLAY + name, digest(HARNESS / name)))
+    rows.sort()
+    sha = hashlib.sha256()
+    for relative, content in rows:
+        sha.update(relative.encode("utf-8"))
+        sha.update(b"\x00")
+        sha.update(content.encode("ascii"))
+        sha.update(b"\x00")
+    return sha.hexdigest()
+
+
+def read_receipt(path: str):
+    """The receipt, or None. A stale, malformed, or failing one is None: never a weaker green.
+
+    Every field is read defensively. A receipt is untrusted input like any other durable artifact,
+    so a missing key must be a refusal rather than a traceback, and its text is never echoed.
+    """
+    target = Path(path)
+    if not target.is_file():
+        return None
+    try:
+        body = json.loads(target.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return None
+    if not isinstance(body, dict) or body.get("schema") != RECEIPT_SCHEMA:
+        return None
+    stamped = body.get("recordedUtc")
+    if not isinstance(stamped, str):
+        return None
+    try:
+        datetime.datetime.strptime(stamped, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return None
+    if body.get("harnessShards") != harness_shards():
+        return None
+    if body.get("inventoryDigest") != inventory_digest():
+        return None
+    modes = body.get("devModes")
+    if not isinstance(modes, dict) or sorted(modes) != sorted(MODE_EXCLUSIONS):
+        return None
+    if any(modes.get(name) != 0 for name in MODE_EXCLUSIONS):
+        return None
+    if body.get("gateStatus") != 0:
+        return None
+    return body
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -242,6 +356,7 @@ def main() -> int:
     parser.add_argument("--sources", action="store_true")
     parser.add_argument("--dev-sources", action="store_true")
     parser.add_argument("--mode", choices=sorted(MODE_EXCLUSIONS))
+    parser.add_argument("--inventory-digest", action="store_true")
     parser.add_argument("--stage")
     parser.add_argument("--out")
     args = parser.parse_args()
@@ -251,8 +366,15 @@ def main() -> int:
         return 0
     if args.check:
         return check()
+    if args.inventory_digest:
+        # Read-only. This PRINTS a digest; it cannot create a receipt. The gate assembles the
+        # receipt itself from its own return codes, so no CLI can mint a compile that never ran.
+        print(inventory_digest())
+        return 0
     if not (args.sources or args.dev_sources):
-        raise SystemExit("use --check, --list-harness, --sources, or --dev-sources")
+        raise SystemExit(
+            "use --check, --list-harness, --inventory-digest, --sources, or --dev-sources"
+        )
     if not args.stage or not args.out or not args.mode:
         raise SystemExit("--sources/--dev-sources need --stage DIR --mode M --out FILE")
     return emit(args.stage, args.out, args.mode, args.dev_sources)

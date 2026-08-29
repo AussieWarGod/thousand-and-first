@@ -113,6 +113,7 @@
 	<Compile Include="KingdomPolityEnvoyDeathSourceTests.cs" />
 	<Compile Include="KingdomPolityDeathReplayTests.cs" />
 	<Compile Include="KingdomPolityDeathReplaySourceTests.cs" />
+	<Compile Include="KingdomPolityDeathIntentFreezeTests.cs" />
 	<Compile Include="KingdomPolityConsentedEscrowTests.cs" />
 	<Compile Include="KingdomPolityGapSourceTests.cs" />
     <Compile Include="KingdomPurposePortfolioDebitRulesTests.cs" />
@@ -668,6 +669,8 @@
 	<Compile Include="KingdomScenarioProvenanceRulesTests.cs" />
 	<Compile Include="KingdomScenarioCodecInjectivityTests.cs" />
 	<Compile Include="KingdomScenarioRequestRulesTests.cs" />
+	<Compile Include="KingdomScenarioCapTraversalTests.cs" />
+	<Compile Include="KingdomScenarioValidatorRulesTests.cs" />
 	<Compile Include="KingdomScenarioKeySetDigestTests.cs" />
 	<Compile Include="KingdomScenarioRulesTests.cs" />
 	<Compile Include="KingdomScenarioValidatorTests.cs" />
@@ -688,5 +691,6 @@
 	<Compile Include="KingdomRealizedAuthorityShapeTests.cs" />
 	<Compile Include="KingdomRealizedCarriedShapeTests.cs" />
 	<Compile Include="KingdomMigrationPortCoverageTests.cs" />
+	<Compile Include="KingdomMigrationPortSemanticCensusTests.cs" />
   </ItemGroup>
 </Project>

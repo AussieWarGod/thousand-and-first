@@ -26,7 +26,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import importlib.util
+import os
 import re
+import shlex
 import subprocess
 import sys
 import xml.etree.ElementTree as etree
@@ -85,6 +88,10 @@ def relative(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
 
 
+class InventoryRefused(Exception):
+    """The shared inventory helper refused. Surfaced as a problem line, never as a traceback."""
+
+
 def dev_route_shards() -> set[str]:
     """Exactly the shards the licensed dev-profile compile inventory covers.
 
@@ -92,12 +99,17 @@ def dev_route_shards() -> set[str]:
     second thing to drift, and the whole point is that the checker and the gate agree about which
     shards a compiler will see.
     """
-    listing = subprocess.check_output(
+    result = subprocess.run(
         [sys.executable, str(ROOT / "Tools" / "dev-harness-inventory.py"), "--list-harness"],
+        capture_output=True,
         text=True,
         cwd=str(ROOT),
     )
-    return {row for row in listing.splitlines() if row}
+    if result.returncode != 0:
+        # A refusal from the shared helper is this audit's finding too, not a traceback escaping
+        # through it. The operator should read one problem line, not a stack.
+        raise InventoryRefused((result.stderr or result.stdout).strip() or "unknown fault")
+    return {row for row in result.stdout.splitlines() if row}
 
 
 def staged_runtime() -> set[str]:
@@ -246,55 +258,324 @@ def shipped_manifest_paths() -> set[str]:
     return paths
 
 
-# The exact call sites the licensed dev route must perform. A helper nothing invokes proves nothing,
-# so the clean verdict binds to these rather than to the helper's own opinion of the inventory.
-ROUTE_REQUIREMENTS = (
-    ('DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"',
-     "the dev tree must be independently allocated, never derived from another path"),
-    ('cleanup() { rm -rf "$STAGE" "$DEV"; }',
-     "one trap must remove exactly the two trees this run allocated"),
-    ("trap cleanup EXIT",
-     "cleanup must be bound to a trap"),
-    ("\nprepare_dev_harness\ncompile_dev_harness baseline",
-     "the dev profile must be prepared before the dev compiles run"),
-    ("compile_dev_harness baseline || failed=1",
-     "dev baseline must compile and its failure must fail the gate"),
-    ("compile_dev_harness compatibility || failed=1",
-     "dev compatibility must compile and its failure must fail the gate"),
-    ('--sources \\\n\t\t--stage "$STAGE" --mode "$mode"',
-     "the ordinary inventory must come from the shared primitive"),
-    ('--dev-sources \\\n\t\t--stage "$DEV" --mode "$mode"',
-     "the dev inventory must come from the shared primitive, per mode"),
-    ("compile_mode baseline || failed=1",
-     "the ordinary baseline compile must stay wired"),
-    ("compile_mode compatibility || failed=1",
-     "the ordinary compatibility compile must stay wired"),
+RECEIPT = ROOT / "Tools" / "PortableOutput" / "dev-harness-receipt.json"
+
+# Driver statements that must appear, in order, at nesting depth zero and exactly once each.
+DRIVER_SEQUENCE = (
+    "failed=0",
+    "dev_baseline_rc=1",
+    "dev_compatibility_rc=1",
+    "compile_mode baseline || failed=1",
+    "compile_mode compatibility || failed=1",
+    "prepare_dev_harness",
+    "compile_dev_harness baseline && dev_baseline_rc=0 || failed=1",
+    "compile_dev_harness compatibility && dev_compatibility_rc=0 || failed=1",
+    'exit "$failed"',
 )
 
+# Assignments that must occur exactly ONCE in the whole script. A second `failed=0` after the
+# compiles, or a `dev_*_rc=0` initialiser, forges success without touching anything the ordered
+# scan looks at.
+SINGLE_ASSIGNMENTS = ("failed=0", "dev_baseline_rc=1", "dev_compatibility_rc=1")
+FORBIDDEN_ASSIGNMENTS = ("dev_baseline_rc=0", "dev_compatibility_rc=0")
 
-def assert_route_wiring(problems: list[str], gate: str = None) -> None:
-    """The gate must actually perform both exact dev compiles.
+FUNCTION_BODIES = {
+    "prepare_dev_harness": (
+        ('"$REPO/Tools/stage.sh" copy "$DEV"', "the dev profile must be staged"),
+        ("--list-harness", "the overlay must come from the shared inventory"),
+        ("scenario_profile.py", "the dev manifest must be derived"),
+    ),
+    "compile_dev_harness": (
+        ("--dev-sources", "the dev list must come from the shared primitive, per mode"),
+        ("csc.dll", "the compiler must actually be invoked"),
+        ("rc=$?", "the compiler's status must be captured"),
+        ('return "$rc"', "the compiler's status must be returned, not discarded"),
+    ),
+    "compile_mode": (
+        ("csc.dll", "the ordinary compiler must actually be invoked"),
+        ('return "$rc"', "the ordinary compile status must be returned"),
+    ),
+}
 
-    Removing the three dev call sites used to leave this checker green, which meant a clean verdict
-    described a helper that nothing ran. Each requirement below is a call site, not a mention.
+# The lane's only destructive action. The body is an ALLOWLIST: exactly the two paths this run
+# allocated, nothing else. The previous rule exempted any line mentioning cleanup, so the
+# amendment's own named bypass and `cleanup() { rm -rf "$REPO"; }` both audited green.
+CLEANUP_BODY = 'rm -rf "$STAGE" "$DEV"'
+CLEANUP_ONE_LINE = 'cleanup() { rm -rf "$STAGE" "$DEV"; }'
+
+OPENERS = ("if ", "if\t", "while ", "for ", "case ", "until ")
+
+# Everything that ends one command and begins another. A destructive command hiding behind a
+# compound-command keyword is still a destructive command.
+COMMAND_SEPARATORS = frozenset({
+    ";", "&&", "||", "|", "&", "{", "}", "(", ")", "((", "))",
+    "then", "else", "elif", "do", "done", "fi", "esac", "in", "!",
+})
+COMPOUND_OPENERS = "{(`"
+COMPOUND_CLOSERS = "})`"
+
+# Command-substitution and process-substitution openers. These are multi-character, so a
+# single-character `token[0] in COMPOUND_OPENERS` test never peeled them - and gate.sh itself uses
+# $( 31 times, so `X=$(rm -rf ...)` looked like an ordinary assignment.
+SUBSTITUTION_OPENERS = ("$((", "$(", "<(", ">(", "`")
+FUNCTION_PREFIX = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\(\)")
+ASSIGNMENT_SUBSTITUTION = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=(?=[$`<>]\()")
+FUNCTION_NAME = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*\(\)\s*\{")
+
+
+def code_lines(text: str) -> list[str]:
+    """Statements only: comments stripped, blank lines dropped."""
+    rows = []
+    for raw in text.split("\n"):
+        if raw.lstrip().startswith("#"):
+            continue
+        statement = raw.split("#", 1)[0].strip()
+        if statement:
+            rows.append(statement)
+    return rows
+
+
+def normalise_exit(statement: str) -> str | None:
+    """The exit ARGUMENT, quoting and trailing punctuation removed.
+
+    `exit "0"` and `exit 0;` are the same instruction as `exit 0`; an audit that compares spellings
+    is testing its own vocabulary rather than the script.
+    """
+    if not statement.startswith("exit"):
+        return None
+    rest = statement[4:].strip().rstrip(";").strip()
+    if rest.startswith(("'", '"')) and rest.endswith(("'", '"')) and len(rest) >= 2:
+        rest = rest[1:-1]
+    return rest
+
+
+def shell_regions(text: str):
+    """Top-level statements at depth zero, plus every function body keyed by name.
+
+    One-line definitions are recognised. A `compile_dev_harness() { :; }` shadow above the driver
+    was previously filed as an ordinary line while the original multi-line body still matched -
+    bash uses the last definition, so the shadow won at runtime and the audit never saw it.
+    """
+    driver: list[str] = []
+    bodies: dict[str, list[list[str]]] = {}
+    current = None
+    depth = 0
+    for statement in code_lines(text):
+        match = FUNCTION_NAME.match(statement)
+        if current is None and match:
+            name = match.group(1)
+            rest = statement[match.end():].strip()
+            if rest.endswith("}"):
+                bodies.setdefault(name, []).append([rest[:-1].strip().rstrip(";").strip()])
+                continue
+            current = name
+            bodies.setdefault(current, []).append([])
+            continue
+        if current is not None:
+            if statement == "}":
+                current = None
+                continue
+            bodies[current][-1].append(statement)
+            continue
+        if depth == 0:
+            driver.append(statement)
+        if statement.startswith(OPENERS) or statement == "if":
+            depth += 1
+        elif statement in ("fi", "done", "esac"):
+            depth = max(0, depth - 1)
+    return driver, bodies
+
+
+def assert_route_wiring(problems: list[str], gate: str | None = None) -> None:
+    """BEST-EFFORT tripwire over the known neutralisation classes.
+
+    Per the standing ruling this can never establish that a compile happened. A structural audit of
+    a shell script cannot win a mutation arms race, and three rounds proved it; what it can do is
+    catch the classes below and fail loudly when the route stops being able to fail. The compiled
+    claim belongs to the receipt, written by an actual gate run.
     """
     text = gate if gate is not None else read(ROOT / "Tools" / "gate.sh")
-    for needle, why in ROUTE_REQUIREMENTS:
-        if needle not in text:
-            problems.append("gate route wiring: " + why)
-    # Comments are allowed to explain the hazard; code is not allowed to be it.
-    code = [
-        line for line in text.split("\n") if not line.strip().startswith("#")
-    ]
-    for line in code:
-        if '"$STAGE.dev"' in line:
+    statements = code_lines(text)
+    driver, bodies = shell_regions(text)
+    cursor = -1
+    for needle in DRIVER_SEQUENCE:
+        try:
+            cursor = driver.index(needle, cursor + 1)
+        except ValueError:
+            problems.append("gate route wiring: the top-level driver does not run " + needle)
+    for needle in SINGLE_ASSIGNMENTS:
+        name, _, value = needle.partition("=")
+        # Cheap extra spellings of the same assignment. Arithmetic and indirect forms still
+        # survive: this is a tripwire over known classes, not a bash evaluator, and section 4 of
+        # the amendment says so rather than implying completeness.
+        base = {needle, name + '="' + value + '"', name + "='" + value + "'"}
+        variants = base | {row + ";" for row in base}
+        seen = sum(
+            1 for row in statements
+            if row in variants or any(row.endswith("; " + v) for v in variants)
+        )
+        if seen != 1:
+            problems.append(
+                "gate route wiring: %s occurs %d times; a second assignment forges the outcome"
+                % (needle, seen)
+            )
+    for needle in FORBIDDEN_ASSIGNMENTS:
+        if any(row == needle for row in statements):
+            problems.append(
+                "gate route wiring: " + needle + " initialises a compile result as success"
+            )
+    if not driver or driver[-1] != 'exit "$failed"':
+        problems.append(
+            "gate route wiring: the gate does not end by propagating its own failure status"
+        )
+    for statement in statements:
+        argument = normalise_exit(statement)
+        if argument == "0":
+            problems.append(
+                "gate route wiring: an early exit 0 reports success without running the route"
+            )
+    for name, requirements in FUNCTION_BODIES.items():
+        definitions = bodies.get(name, [])
+        if len(definitions) != 1:
+            problems.append(
+                "gate route wiring: %s is defined %d times; a later definition shadows the route"
+                % (name, len(definitions))
+            )
+            continue
+        body = "\n".join(definitions[0])
+        for needle, why in requirements:
+            if needle not in body:
+                problems.append("gate route wiring: " + name + " - " + why)
+    assert_cleanup_allowlist(problems, text, statements, bodies)
+    # The trap must be the LITERAL form. `T='- EXIT'; trap $T` and `trap "" EXIT` both disarm it
+    # while a startswith-scan for "trap" sees nothing wrong.
+    traps = [row for row in statements if "trap" in row.split()]
+    if not any(row.endswith("trap cleanup EXIT") for row in traps):
+        problems.append("gate route wiring: cleanup is not bound to a literal trap")
+    for statement in traps:
+        if not statement.endswith("trap cleanup EXIT"):
+            problems.append("gate route wiring: a trap other than the literal cleanup trap")
+    if 'DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"' not in statements:
+        problems.append("gate route wiring: the dev tree is not independently allocated")
+    if not any("--inventory-digest" in row for row in statements):
+        problems.append("gate route wiring: the receipt does not bind the compile inventory")
+    receipt_at = next((i for i, row in enumerate(statements) if "$RECEIPT" in row and ">" in row), -1)
+    compile_at = max(
+        (i for i, row in enumerate(statements) if row.startswith("compile_dev_harness ")),
+        default=-1,
+    )
+    if receipt_at < 0:
+        problems.append("gate route wiring: no receipt is written")
+    elif compile_at < 0 or receipt_at < compile_at:
+        problems.append("gate route wiring: the receipt is written before the compiles run")
+    for statement in statements:
+        if '"$STAGE.dev"' in statement:
             problems.append(
                 "gate route wiring: the dev tree is a derived sibling, not an allocation"
             )
-        if "rm -rf" in line and "cleanup() {" not in line:
-            problems.append(
-                "gate route wiring: a recursive removal outside the single cleanup trap"
-            )
+
+
+def assert_cleanup_allowlist(problems, text, statements, bodies) -> None:
+    """The one destructive action, allowlisted by TOKEN rather than by spelling.
+
+    Matching the literal "rm -rf" tested one spelling of one command: `rm -fr`, `rm -r -f`,
+    `rm -Rf`, `rm -rvf`, `rm --recursive --force`, a double space, and a `cleanup2()` indirection
+    were all destructive and all green. The question is not how the flags are written, it is whether
+    the command being run is `rm` at all.
+    """
+    if CLEANUP_ONE_LINE not in text:
+        problems.append("gate route wiring: cleanup is not the exact allowlisted one-line form")
+    definitions = bodies.get("cleanup", [])
+    if len(definitions) != 1 or [CLEANUP_BODY] != definitions[0]:
+        problems.append(
+            "gate route wiring: cleanup's body is not exactly the two allocated paths"
+        )
+    for statement in statements:
+        if statement == CLEANUP_ONE_LINE:
+            continue
+        for command in split_commands(statement):
+            if not command:
+                continue
+            if argv_zero(command) == "rm":
+                problems.append(
+                    "gate route wiring: a removal outside the allowlisted cleanup body: "
+                    + statement[:80]
+                )
+                break
+
+
+# Every lexical thing that ends one command and begins another, longest-match first.
+BOUNDARY = re.compile(r"(;;&|;;|;|&&|\|\||\||&|\$\(\(|\$\(|<\(|>\(|\(|\)|\{|\}|`)")
+
+# Words that end a command in shell grammar without any punctuation.
+BOUNDARY_WORDS = frozenset({
+    "then", "else", "elif", "do", "done", "fi", "esac", "in", "!", "case", "while",
+    "until", "if", "for", "select",
+})
+
+
+def split_commands(statement: str) -> list[list[str]]:
+    """Every command in one statement, found by LEXICAL split rather than token surgery.
+
+    Peeling characters off shlex tokens could not see three whole classes: a `case` arm's `)` was
+    absorbed into the pattern token so the arm's body stayed in the pattern's command; a quoted
+    `"$(rm -rf ...)"` arrived as ONE token with spaces inside it; and `X=$(rm ...)` looked like an
+    ordinary assignment. Spacing every boundary out of the raw statement first, then splitting on
+    whitespace, makes all three ordinary.
+
+    Quotes are deliberately not honoured here. This is not a shell; it is looking for whether `rm`
+    is invoked anywhere in a statement, and a quoted separator that hides a command from this scan
+    would hide it from a reader too.
+    """
+    commands: list[list[str]] = [[]]
+    for token in BOUNDARY.sub(r" \1 ", statement).split():
+        if BOUNDARY.fullmatch(token) or token in BOUNDARY_WORDS:
+            commands.append([])
+            continue
+        token = token.strip("\"'")
+        if token:
+            commands[-1].append(token)
+    return commands
+
+
+# Wrappers that run some OTHER command named in their own arguments. `xargs rm -rf` runs rm.
+DELEGATING = ("xargs", "nice", "ionice", "timeout", "stdbuf")
+
+
+def argv_zero(command: list[str]) -> str:
+    """The command actually executed, past env assignments, prefixes, and delegating wrappers."""
+    for index, token in enumerate(command):
+        if "=" in token and not token.startswith("="):
+            name = token.split("=", 1)[0]
+            if name.replace("_", "").isalnum():
+                continue
+        if token in ("sudo", "command", "exec", "nohup", "time", "env", "-"):
+            continue
+        name = os.path.basename(token.strip("\"'"))
+        if name in DELEGATING:
+            for candidate in command[index + 1:]:
+                # Skip the wrapper's own options and operands (timeout's duration, nice's level).
+                if candidate.startswith("-") or "=" in candidate:
+                    continue
+                if candidate.replace(".", "", 1).rstrip("smhd").isdigit():
+                    continue
+                return os.path.basename(candidate.strip("\"'"))
+            return name
+        return name
+    return ""
+
+
+def route_receipt():
+    """A verified receipt, or None. Only a real gate run can produce one."""
+    spec = importlib.util.spec_from_file_location(
+        "dev_harness_inventory", ROOT / "Tools" / "dev-harness-inventory.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        return module.read_receipt(str(RECEIPT))
+    except SystemExit:
+        return None
 
 
 def assert_containment(problems: list[str]) -> None:
@@ -311,7 +592,10 @@ def assert_containment(problems: list[str]) -> None:
 
 def main() -> int:
     problems: list[str] = []
-    assert_inventory(problems)
+    try:
+        assert_inventory(problems)
+    except InventoryRefused as refusal:
+        problems.append("dev-harness inventory: " + str(refusal))
     assert_fixture_parity(problems)
     assert_namespaces(problems)
     assert_containment(problems)
@@ -322,10 +606,17 @@ def main() -> int:
         return 1
     shards = harness_sources()
     engine = [p for p in shards if not engine_free(p)]
+    receipt = route_receipt()
+    state = ("compiled by a gate run recorded " + receipt["recordedUtc"]) if receipt else (
+        "WIRED BUT NEVER EXECUTED - no verified gate receipt, so nothing here has met a compiler"
+    )
     print(
         "harness registration audit clean (%d shards; %d engine-free in both public projects, "
-        "%d engine-touching compiled by the wired licensed route)"
-        % (len(shards), len(shards) - len(engine), len(engine))
+        "%d engine-touching %s)" % (len(shards), len(shards) - len(engine), len(engine), state)
+    )
+    print(
+        "  route wiring is a BEST-EFFORT tripwire over known neutralisation classes, never proof "
+        "of execution; the compiled claim rests on the receipt a real gate run writes."
     )
     return 0
 

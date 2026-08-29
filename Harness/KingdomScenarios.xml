@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Developer scenario roster. This file loads only inside a throwaway scenario profile: the
+  Harness directory is absent from the shipped manifest Directories and excluded from
+  Tools/stage.sh, so an ordinary build never reads it.
+
+  Phase 1 authors exactly one scenario. Its steps are read-only observations followed by exactly
+  one mutating verb, declared last: the row validator enforces that shape, which is what makes the
+  attended run atomic rather than merely careful.
+
+  AnchorId names the ordinary-play differential anchor this scenario leans on. It is declared
+  BEFORE the evidence exists, and missing evidence still means ineligible. Leaving it empty until
+  curation was self-defeating: the capture row would be computed with AnchorId=null, and filling
+  the attribute in afterwards changes the definition and plan digests, making the row it just
+  emitted stale. The id is stable; only the curated row in KingdomScenarioAnchors.xml is pending.
+
+  No seed is authored here. Caves of Qud 2.0.211.51 has no launcher-reachable pre-generation seed
+  injection, so a fixed value in this file would claim a determinism nobody arranged. The seed is
+  frozen by Tools/prepare-scenario.sh into the generated, excluded request, and the new-game gate
+  proves the engine actually generated under it.
+-->
+<kingdomscenarios Schema="1">
+  <scenario Key="arch-gallery-slice"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-01"
+            DisplayName="architecture gallery slice">
+    <description Text="Dev game that drives the production architecture gallery staging path for one exact frozen case and pose, then measures the shared semantic key set off the staged owner and judges it against curated ordinary-play anchor evidence." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Variant="fallback" Facing="{facing}" />
+  </scenario>
+</kingdomscenarios>

@@ -1440,6 +1440,7 @@
 	<Compile Include="KingdomPolityEnvoyDeathSourceTests.cs" />
 	<Compile Include="KingdomPolityDeathReplayTests.cs" />
 	<Compile Include="KingdomPolityDeathReplaySourceTests.cs" />
+	<Compile Include="KingdomPolityDeathIntentFreezeTests.cs" />
 	<Compile Include="KingdomPolityConsignmentAbsenceTests.cs" />
 	<Compile Include="KingdomPolityConsentedEscrowTests.cs" />
 	<Compile Include="KingdomPolityGapSourceTests.cs" />
@@ -1870,12 +1871,15 @@
 	<Compile Include="KingdomScenarioProvenanceRulesTests.cs" />
 	<Compile Include="KingdomScenarioCodecInjectivityTests.cs" />
 	<Compile Include="KingdomScenarioRequestRulesTests.cs" />
+	<Compile Include="KingdomScenarioCapTraversalTests.cs" />
+	<Compile Include="KingdomScenarioValidatorRulesTests.cs" />
 	<Compile Include="KingdomScenarioKeySetDigestTests.cs" />
 	<Compile Include="KingdomScenarioRulesTests.cs" />
 	<Compile Include="KingdomScenarioValidatorTests.cs" />
 	<Compile Include="KingdomScenarioAnchorRulesTests.cs" />
 	<Compile Include="KingdomScenarioPlanDigestTests.cs" />
 	<Compile Include="KingdomMigrationPortCoverageTests.cs" />
+	<Compile Include="KingdomMigrationPortSemanticCensusTests.cs" />
 	<Compile Include="KingdomScenarioCaptureRulesTests.cs" />
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />

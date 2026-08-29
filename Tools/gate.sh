@@ -32,10 +32,16 @@ MANAGED_WIN="$(wslpath -w "$MANAGED")"
 # Both trees are independently allocated and owned by this run, and ONE trap removes exactly what
 # this run created. A derived sibling path such as "$STAGE.dev" would be a name we never allocated,
 # so recursively removing it would be removing somebody else's directory on a bad day.
+# Order matters: the trap is armed between the two allocations, so a failing second mktemp cannot
+# leak the first. Both paths are printed IMMEDIATELY - under --keep no trap is installed at all, and
+# an abort before the compiles finish would otherwise leave two /tmp trees nobody was told about.
+DEV=""
 STAGE="$(mktemp -d /tmp/taf-stage.XXXXXX)"
-DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"
 cleanup() { rm -rf "$STAGE" "$DEV"; }
 [ "${1:-}" = "--keep" ] || trap cleanup EXIT
+DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"
+echo "staged tree: $STAGE"
+echo "dev profile: $DEV"
 
 "$REPO/Tools/stage.sh" copy "$STAGE"
 python3 "$REPO/Tools/generate-removal-coverage.py" --check
@@ -157,16 +163,26 @@ compile_dev_harness() {
 	return "$rc"
 }
 
+RECEIPT="$REPO/Tools/PortableOutput/dev-harness-receipt.json"
 failed=0
+dev_baseline_rc=1
+dev_compatibility_rc=1
 compile_mode baseline || failed=1
 compile_mode compatibility || failed=1
 prepare_dev_harness
-compile_dev_harness baseline || failed=1
-compile_dev_harness compatibility || failed=1
-if [ "${1:-}" = "--keep" ]; then
-	echo "staged tree: $STAGE"
-	echo "dev profile: $DEV"
-fi
+compile_dev_harness baseline && dev_baseline_rc=0 || failed=1
+compile_dev_harness compatibility && dev_compatibility_rc=0 || failed=1
+# The receipt is what lets an audit say a compile HAPPENED, and it is assembled HERE from this
+# run's own return codes. No helper CLI can mint one: a flag that writes a receipt is a compiler
+# nobody ran. It guards against accident across processes, never against an adversary editing this
+# file - that claim belongs to root reading csc output at the serialized execution phase.
+mkdir -p "$(dirname "$RECEIPT")"
+printf '{\n  "schema": "taf-dev-harness-receipt-v1",\n  "recordedUtc": "%s",\n  "harnessShards": [%s],\n  "inventoryDigest": "%s",\n  "devModes": {"baseline": %d, "compatibility": %d},\n  "gateStatus": %d\n}\n' \
+	"$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+	"$(python3 "$REPO/Tools/dev-harness-inventory.py" --list-harness \
+		| sed 's/.*/"&"/' | paste -sd, -)" \
+	"$(python3 "$REPO/Tools/dev-harness-inventory.py" --inventory-digest)" \
+	"$dev_baseline_rc" "$dev_compatibility_rc" "$failed" > "$RECEIPT"
 if [ "$failed" -eq 0 ]; then
 	echo "STAGED COMPILE CLEAN ($COUNT sources; baseline + compatibility symbols; dev profile both)"
 else
