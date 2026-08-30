@@ -662,6 +662,8 @@
 	<Compile Include="..\Harness\KingdomScenarioVerbSchema.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRowValidator.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
+	<Compile Include="..\Harness\KingdomScenarioVerbProvider.cs" />
+	<Compile Include="..\Harness\KingdomScenarioVerbProviderRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioDigests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRequest.cs" />
 	<Compile Include="..\Harness\KingdomScenarioAnchorRules.cs" />
@@ -682,6 +684,8 @@
 	<Compile Include="KingdomScenarioCaptureRulesTests.cs" />
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />
+	<Compile Include="KingdomScenarioVerbProviderRulesTests.cs" />
+	<Compile Include="KingdomScenarioPersonaSourceTests.cs" />
 	<Compile Include="KingdomScenarioPresenceSourceTests.cs" />
 	<Compile Include="KingdomScenarioStateShapeTests.cs" />
 	<Compile Include="KingdomScenarioStampShapeTests.cs" />

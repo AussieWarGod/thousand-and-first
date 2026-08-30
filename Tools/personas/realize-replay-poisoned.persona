@@ -1,0 +1,12 @@
+# The poison law, as a behavioural test rather than a promise.
+#
+# Gallery staging does not journal ground-layer cells, so the transaction marker is made durable
+# BEFORE the mutating call and advanced to committed on its return. Every non-None marker state
+# then refuses permanently: a spent profile is replaced by a new dev game, never repaired. The
+# second `realize` is that refusal, and the run must STOP on it rather than walk on.
+#
+# The expectation binds to the stable reason code, never to the sentence beside it.
+DESCRIPTION=a second realize refuses permanently and stops the script
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=flatten;realize;realize
+EXPECT=flatten:OK,realize:OK,realize:REFUSED~taf-scenario-transaction-committed,STOPPED

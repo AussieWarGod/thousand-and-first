@@ -30,6 +30,21 @@ namespace ThousandAndFirst.Harness
 		/// </summary>
 		internal const string RealizedState = "r_TAF_ScenarioRealized_v1";
 
+		/// <summary>
+		/// Stable refusal codes, carried beside the prose exactly as
+		/// <see cref="KingdomScenarioAdvance"/> carries its own. A host asserting on this verb's
+		/// journal row binds to the code; the wording beside it is free to improve without
+		/// silently retargeting somebody's expectation.
+		/// </summary>
+		internal const string CodeAttempted = "taf-scenario-transaction-attempted";
+
+		internal const string CodeCommitted = "taf-scenario-transaction-committed";
+
+		internal const string CodeTorn = "taf-scenario-transaction-torn";
+
+		/// <summary>The marker did not read back in the exact shape a marker has.</summary>
+		internal const string CodeUnwritable = "taf-scenario-transaction-marker-unwritable";
+
 		/// <summary>Reads the durable transaction state, failing closed on every ambiguity.</summary>
 		internal static KingdomScenarioTransactionShape Observe(out string Detail)
 		{
@@ -51,14 +66,16 @@ namespace ThousandAndFirst.Harness
 				case KingdomScenarioTransactionShape.None:
 					break;
 				case KingdomScenarioTransactionShape.Attempted:
-					return Refuse("this profile already attempted its production transaction. The "
+					return Refuse(CodeAttempted,
+						"this profile already attempted its production transaction. The "
 						+ "ground may have been altered and is not journalled, so it can never be "
 						+ "retried here; prepare a new dev game", out Failure);
 				case KingdomScenarioTransactionShape.Committed:
-					return Refuse("this profile already committed its production transaction; "
+					return Refuse(CodeCommitted,
+						"this profile already committed its production transaction; "
 						+ "re-running a scenario is a new dev game, never a second pass", out Failure);
 				default:
-					return Refuse("the scenario transaction marker is torn ("
+					return Refuse(CodeTorn, "the scenario transaction marker is torn ("
 						+ (detail ?? "unknown fault") + "); this profile is poisoned and cannot run",
 						out Failure);
 			}
@@ -68,7 +85,8 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomScenarioDurableState.ProvesExactInt(TransactionState,
 					KingdomScenarioStateShape.AttemptedValue)
 				|| Observe(out detail) != KingdomScenarioTransactionShape.Attempted)
-				return Refuse("the attempt marker did not read back as exactly one int key; refusing "
+				return Refuse(CodeUnwritable,
+					"the attempt marker did not read back as exactly one int key; refusing "
 					+ "to mutate without a durable record that the attempt happened", out Failure);
 			Failure = null;
 			return true;
@@ -88,15 +106,20 @@ namespace ThousandAndFirst.Harness
 				|| !KingdomScenarioDurableState.ProvesExactInt(RealizedState,
 					KingdomScenarioStateShape.MarkerValue)
 				|| Observe(out detail) != KingdomScenarioTransactionShape.Committed)
-				return Refuse("the commit marker did not read back as exactly the two int keys",
+				return Refuse(CodeUnwritable,
+					"the commit marker did not read back as exactly the two int keys",
 					out Failure);
 			Failure = null;
 			return true;
 		}
 
-		private static bool Refuse(string Message, out string Failure)
+		/// <summary>
+		/// One refusal, code first. The code is the assertable half and the prose is the readable
+		/// half; both callers of this shard hand the whole string to the journal unchanged.
+		/// </summary>
+		private static bool Refuse(string Code, string Message, out string Failure)
 		{
-			Failure = Message;
+			Failure = "[" + Code + "] " + Message;
 			return false;
 		}
 	}

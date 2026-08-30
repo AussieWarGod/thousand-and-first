@@ -207,6 +207,20 @@ MAX_ADVANCE_TURNS = 10000
 # back the durable stamp and its differential verdict.
 DEFAULT_SCRIPT = ("flatten", "realize", "status")
 
+# Names the runtime dispatches itself and no provider may claim. Must equal
+# Harness/KingdomScenarioVerbProvider.cs KingdomScenarioVerbApi.Reserved.
+RESERVED_VERBS = (
+    "advance",
+    "anchor",
+    "capture",
+    "flatten",
+    "ground",
+    "help",
+    "list",
+    "realize",
+    "status",
+)
+
 SCRIPT_HEADER = (
     "# Sealed developer scenario script. One kingdom:scenario verb per line, executed once by\n"
     "# ThousandAndFirst.KingdomScenarioAutoRunner on the first player action opportunity in the\n"
@@ -217,7 +231,38 @@ SCRIPT_HEADER = (
 )
 
 
-def parse_script(tokens: list[str]) -> list[str]:
+def parse_extra_verbs(raw: str) -> tuple[str, ...]:
+    """Comma-separated verb names another mod's provider contributes to THIS profile.
+
+    The sealed set above stays closed on purpose, so a third-party verb has to be named for the
+    profile that will run it rather than admitted globally. Names are held to the runtime's own
+    SafeToken shape and may not shadow a verb the harness dispatches itself, because
+    KingdomScenarioVerbApi refuses such a provider outright and sealing the name would guarantee a
+    stopped run.
+    """
+    if not raw:
+        return ()
+    chosen: list[str] = []
+    for name in raw.split(","):
+        verb = name.strip()
+        if not verb:
+            fail("extra scenario verb list carries an empty name: " + repr(raw))
+        if len(verb) > 96 or any(
+            c not in "abcdefghijklmnopqrstuvwxyz0123456789-." for c in verb
+        ):
+            fail(
+                "extra scenario verb %r is not a lowercase SafeToken; the runtime would "
+                "refuse the provider that claimed it" % verb
+            )
+        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS:
+            fail("extra scenario verb %r is reserved by the harness" % verb)
+        if verb in chosen:
+            fail("extra scenario verb %r is named more than once" % verb)
+        chosen.append(verb)
+    return tuple(chosen)
+
+
+def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
     """Shell words to script LINES, closed on both the verb set and the one argument.
 
     The words arrive unquoted from prepare-scenario.sh, so `advance 1200` is two words that must
@@ -244,17 +289,29 @@ def parse_script(tokens: list[str]) -> list[str]:
                 )
             lines.append("%s %d" % (COUNTED_VERB, value))
             continue
-        if verb not in SCRIPT_VERBS:
+        if verb not in SCRIPT_VERBS and verb not in extra:
             fail(
                 "unknown scenario script verb %r; the sealed set is %s, advance <turns>"
-                % (verb, ", ".join(SCRIPT_VERBS))
+                "%s"
+                % (
+                    verb,
+                    ", ".join(SCRIPT_VERBS),
+                    (
+                        ", plus this profile's " + ", ".join(extra)
+                        if extra
+                        else " (TAF_SCENARIO_EXTRA_VERBS names third-party verbs)"
+                    ),
+                )
             )
         lines.append(verb)
     return lines
 
 
 def write_script(destination: str, verbs: list[str]) -> None:
-    chosen = parse_script(list(verbs)) if verbs else list(DEFAULT_SCRIPT)
+    extra = parse_extra_verbs(os.environ.get("TAF_SCENARIO_EXTRA_VERBS", ""))
+    if extra:
+        print("profile admits third-party scenario verbs: " + ", ".join(extra))
+    chosen = parse_script(list(verbs), extra) if verbs else list(DEFAULT_SCRIPT)
     if not chosen:
         fail("the scenario script would declare no verbs")
     with open(destination, "w", encoding="utf-8") as handle:

@@ -1,0 +1,7 @@
+# Pose coverage. The roster declares facing over the closed domain north|east|south|west and the
+# staging step binds it as {facing}, so all four are authored cases rather than a north-only plan;
+# the gallery resolver enumerates mapping, then variant, then the four poses in that order.
+DESCRIPTION=tent/fallback staged in the West pose
+REQUEST=arch-gallery-slice;facing=west
+SCRIPT=flatten;realize;status
+EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE

@@ -97,6 +97,11 @@ namespace ThousandAndFirst.Harness
 			string displayName = Xml.GetAttribute("DisplayName");
 			KingdomScenarioDefinition definition = new KingdomScenarioDefinition
 			{
+				// Provenance comes from the STREAM, not from the row: XmlDataHelper carries the
+				// public ModInfo it was opened for, so a third-party row is attributed by the
+				// engine's own record of who shipped the file rather than by an attribute the
+				// file could set to anybody's name.
+				Owner = Xml.modInfo == null ? "" : (Xml.modInfo.ID ?? ""),
 				Key = Trim(key),
 				Family = Trim(family),
 				AuthorityClass = Trim(authority),

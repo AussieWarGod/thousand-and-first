@@ -165,6 +165,13 @@ Running it (unattended - no keyboard beyond starting the game):
    argument — `advance <turns>` — written as two shell words that `Tools/scenario_profile.py` folds
    into one sealed line, refusing a count outside `1..10000`:
    `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`.
+   `TAF_REQUEST="arch-gallery-slice;facing=south"` chooses the request — the scenario key and its
+   declared parameters, **without a seed**. The seed stays this script's to freeze, because it is
+   the one field the launcher owns and the new-game gate independently proves; a `TAF_REQUEST`
+   naming its own seed is refused rather than quietly overwritten.
+   `TAF_SCENARIO_EXTRA_VERBS="myprobe,other"` widens the sealable verb set for **this profile
+   only**, so a verb another mod contributes through `IKingdomScenarioVerbProvider` can be sealed
+   into a script. A name the harness reserves is refused here rather than in game.
    `TAF_SCENARIO_START=<wx>.<wy>[@x,y]` moves the dev start parasang inside the profile copy before
    the seal (for example `TAF_SCENARIO_START=14.18`). Off-map values are **refused, not clamped**:
    the engine's biome arrays are exactly 80x25 parasangs and a surface zone exactly 80x25 cells, and
@@ -246,6 +253,10 @@ Running it (unattended - no keyboard beyond starting the game):
    scripted run is `RUNNER-ARMED`, naming which seam armed it and whether popups were suppressed —
    if no primer fired, that row says so and the boot popups still need a keypress.
 5. Read `<profileRoot>/scenario-journal.tsv`.
+
+For **many** runs asserted end to end rather than one read by hand, see the persona matrix below:
+`Tools/run-personas.sh` drives steps 1-5 per persona and judges the journal against a declared
+expectation.
 
 The journal is the machine-readable record, and it covers the attended path too: **every**
 `kingdom:scenario` verb appends exactly one tab-separated row - UTC timestamp, verb, `OK` or
@@ -353,6 +364,170 @@ Two files, two jobs. Verdict evidence rows are appended to
 `<SavePath>/ThousandAndFirst/scenario-evidence.tsv` - one row per *realized* scenario, in the
 shipped evidence grammar. The verb journal is `<profileRoot>/scenario-journal.tsv` - one row per
 *verb*, which is how you read an unattended run.
+
+## Persona matrix — many unattended runs, asserted
+
+A **persona** is one unattended run declared as data: which request to freeze, which verbs to seal,
+and what the journal must say afterwards. `Tools/run-personas.sh` runs them one at a time and
+writes a verdict per persona; `Tools/personas/persona_matrix.py` owns the grammar and the
+judgement, so everything that decides PASS or FAIL is executable without a licensed install and is
+covered by `Tools/tests/persona_matrix_test.py`.
+
+```
+Tools/run-personas.sh                     every persona, serially
+Tools/run-personas.sh arch-tent-north     only the named ones
+Tools/run-personas.sh --check             parse every manifest and stop; launches nothing
+```
+
+Each persona is a `Tools/personas/<name>.persona` file of `KEY=VALUE` lines. `#` comments and blank
+lines are dropped; an unknown key, a repeated key, or a missing required key is **refused, not
+ignored**.
+
+| Key | Required | Meaning |
+|---|---|---|
+| `REQUEST` | yes | The request to freeze, **without** its seed — `arch-gallery-slice;facing=south`. `TAF_REQUEST` carries it into `Tools/prepare-scenario.sh`, which appends the seed it froze. A persona naming its own seed is refused. |
+| `SCRIPT` | yes | Verbs, semicolon-separated — `flatten;realize;status`, or `advance 300` as one step. `@<file>` reads a sibling file, one verb per line. |
+| `EXPECT` | yes | Ordered per-verb expectations, ending in exactly one terminal. |
+| `START` | no | `TAF_SCENARIO_START` — the dev start parasang, `<wx>.<wy>[@x,y]`. |
+| `CHECK` | no | One extra assertion. Today: `status-digest-stable`. |
+| `TIMEOUT` | no | Seconds to wait for a terminal row. Default 300. |
+| `VERBS` | no | Third-party verb names this persona seals, comma-separated (see the next section). |
+| `DESCRIPTION` | no | One line, for the report. |
+
+**`EXPECT` grammar.** Comma-separated items in journal order:
+`<verb>:OK` / `<verb>:REFUSED`, optionally `~<substring>`, then one terminal —
+`COMPLETE` (`SCRIPT-COMPLETE`), `STOPPED` (`SCRIPT-STOPPED`), or `GATE-REFUSED`. For example:
+
+```
+EXPECT=flatten:OK,realize:OK,realize:REFUSED~taf-scenario-transaction-committed,STOPPED
+```
+
+**What an expectation may bind to.** The journal's stable columns are the verb and the
+`OK|REFUSED` outcome. The message column carries a whole operator report, and its wording is meant
+to improve. So an expectation binds to the outcome column and, when it needs more, to a **stable
+reason code** (`taf-scenario-transaction-committed`) or to a word the law itself owns
+(`ineligible`) — **never to a sentence**. `DevTests/KingdomScenarioPersonaSourceTests.cs` proves
+every code a persona asserts on is a code the runtime actually emits, so deleting or renaming one
+fails a test rather than silently turning a persona green forever.
+
+**Strict in both directions.** The significant rows must equal the declared expectations exactly:
+an unexpected `OK` fails as loudly as an unexpected refusal, a missing row as loudly as an extra
+one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TESTGROUND-BUILT`,
+`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `VERB-REFUSED`.
+
+**`CHECK=status-digest-stable`** compares the 64-hex digests in the **first** and **last** `status`
+rows and fails if they differ or if the first carries none. Digests are data, not prose, so the
+comparison survives every rewording of the report around them.
+
+**Each persona is a fresh profile.** The runner stops any running `CoQ`, wipes every
+`/mnt/c/taf-scenario.*` root and seal, prepares, launches quietly, waits for a terminal row, stops
+the game, and asserts. Serial always: Qud is one process reading one profile, and the launcher
+refuses to start onto an existing journal because two runs' rows in one file cannot be told apart.
+A persona with no terminal row inside its `TIMEOUT` is `TIMEOUT`, which is its own verdict and
+never a silent pass. Results land one row per persona in
+`Tools/PortableOutput/personas-report.tsv` (`TAF_PERSONA_REPORT` moves it) and the script exits
+nonzero if any persona is not `PASS`.
+
+**Adding a persona.** Write `Tools/personas/<name>.persona`, run `Tools/run-personas.sh --check`
+to parse it, then `Tools/run-personas.sh <name>`. Nothing else registers it — the runner globs the
+directory. If the behaviour you are asserting refuses with prose and no code, **add the code to the
+runtime first**: an expectation bound to a sentence is a test that will pass for the wrong reason.
+
+The authored set today:
+
+| Persona | Proves |
+|---|---|
+| `arch-tent-north` | the phase-1 happy path: flatten, realize, status, all `OK` |
+| `arch-tent-east` / `-south` / `-west` | the other three declared poses of the same case |
+| `realize-replay-poisoned` | a second `realize` refuses permanently and stops the script |
+| `advance-stability` | the measured key set still reads the same after 300 game turns |
+| `bad-param-refusal` | a facing outside the declared domain is refused at the new-game gate |
+| `ordinary-anchor-eligibility` | a scenario-built game may not found an anchor; its verdict is `ineligible` |
+
+**`GATE-REFUSED` is why a bad request is assertable at all.** The new-game gate runs at the embark
+player-mutator step, long before the auto-runner's first action opportunity — so a refusal there
+means no `SCRIPT-BEGIN`, `SCRIPT-COMPLETE`, or `SCRIPT-STOPPED` row will ever land, and without a
+row of its own a gate refusal is indistinguishable from a hang. The gate therefore journals one
+`GATE-REFUSED` row, **fail-open and before it throws**, carrying
+`taf-scenario-gate-refused` or `taf-scenario-gate-unreadable-request`.
+
+The transaction marker's refusals carry codes on the same law:
+`taf-scenario-transaction-attempted`, `taf-scenario-transaction-committed`,
+`taf-scenario-transaction-torn`, `taf-scenario-transaction-marker-unwritable`.
+
+## Testing your own mod with this framework
+
+The harness is dev-only and stays that way — `Harness/` is absent from `manifest.json`
+`Directories` and excluded from `Tools/stage.sh`, so it never reaches a Workshop package, ours or
+yours. But everything in it is usable by another mod, and there are exactly two extension points.
+
+**1. Ship your own scenarios.** The roster loads through `DataManager.YieldXMLStreamsWithRoot`,
+the engine's merged XML stream reader, so a file of yours with the `<kingdomscenarios Schema="1">`
+root **merges with ours for free** — no registration, no reference, no patch. Rows keep the same
+shape (`Key`, `Family`, `AuthorityClass`, `Synthetic`, `AnchorId`, `<param>`, `<step>`), and every
+row is attributed to the stream's own `ModInfo.ID` rather than to an attribute the file could set
+to somebody else's name. `kingdom:scenario list` prints the owner beside each key. The roster
+digest covers that provenance and the rows are ordinal-sorted before hashing, so a merged roster
+digests identically regardless of mod load order — and two mods shipping the same row shape are
+not interchangeable. A duplicate `Key` across mods is a roster fault, not a race.
+
+**2. Ship your own verbs.** Implement `IKingdomScenarioVerbProvider` and mark the class
+`[KingdomScenarioVerbProvider]`; discovery is `ModManager.GetTypesWithAttribute`, the same cached
+attribute scan the engine runs for wishes and world builders.
+
+```csharp
+[KingdomScenarioVerbProvider]
+public sealed class MyProbes : IKingdomScenarioVerbProvider
+{
+    public int ScenarioVerbApiVersion { get { return 1; } }
+    public IEnumerable<string> ScenarioVerbs { get { return new[] { "myprobe" }; } }
+    public string RunScenarioVerb(string Verb, string Argument, out bool Ok)
+    {
+        Ok = true;                       // false means the verb DECLINED TO ACT
+        return "my probe found 3 things";
+    }
+}
+```
+
+- **`Ok` is the verdict, never the prose.** `false` means the verb declined to act, and it is the
+  only thing that stops a sealed script. An unwelcome *answer* is still an answer and returns true.
+- **No popups.** `Popup.Show` blocks on a keypress, so a verb that owned one could never run on a
+  turn nobody is watching.
+- **Refused loudly, never skipped.** A constructor that throws, a drifted
+  `ScenarioVerbApiVersion`, a malformed name, a duplicate inside one provider, or a name the
+  harness reserves refuses **the whole provider** by mod name, in the log and in a `VERB-REFUSED`
+  journal row. Two providers claiming one verb: **neither** holds it — first-registered wins
+  nothing, because "first" is the player's mod list and a verb that means different things on two
+  machines with the same mods is not a test verb. The one asymmetry is deliberate: a provider
+  claiming a **reserved** built-in (`realize`, `flatten`, `status`, …) is refused and the built-in
+  stands, because a mod that could revoke `realize` could make every verdict on the machine
+  unfalsifiable while the journal still read green.
+- **Sealing a third-party verb** needs it named for the profile that will run it:
+  `TAF_SCENARIO_EXTRA_VERBS="myprobe,other"` on `Tools/prepare-scenario.sh`, or `VERBS=myprobe` in
+  a persona. The base sealable set stays closed.
+- **Sealed third-party verbs take no argument yet.** `advance <turns>` is still the only counted
+  verb the script grammar folds into one line, so a provider verb is sealed as a bare name. Typed
+  at the wish, `kingdom:scenario myprobe some argument` reaches `RunScenarioVerb` with
+  `Argument = "some argument"` as normal — the limit is the sealed-script grammar, not the
+  contract.
+
+**Where your test code lives.** Both extension points are dev-only for you too. Put your scenario
+XML and your provider in a directory your own manifest selects **only in a dev profile**, add a
+manifest dependency on The Thousand and First so its assembly compiles first (Qud compiles mods in
+dependency order and adds each successful assembly as a reference for later mods), and keep the
+directory out of your shipped `Directories` exactly as we keep `Harness/` out of ours.
+
+**Running it.** Copy both mods into one profile's `Local/Mods/` and use
+`Tools/prepare-scenario.sh` + `Tools/run-scenario.ps1` as they are — the seal is computed over
+whatever the profile contains, so a second mod is sealed like the first. The persona manifest
+format works unchanged; point `REQUEST` at your scenario key. What you get back is
+`scenario-journal.tsv`: one row per verb, UTC timestamp, verb, `OK|REFUSED`, message, with
+newlines and tabs escaped so one verb is always one row.
+
+**Licence.** This repository is MIT (see `LICENSE`). `Tools/prepare-scenario.sh`,
+`Tools/run-scenario.ps1`, `Tools/scenario_profile.py`, `Tools/run-personas.sh` and
+`Tools/personas/` may be copied into your own repository under those terms if you would rather not
+depend on ours.
 
 ## Pass 0 — Cross-run inheritance consent
 

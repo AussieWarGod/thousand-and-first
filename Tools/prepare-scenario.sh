@@ -102,7 +102,22 @@ find "$REPO/Harness" -mindepth 1 -maxdepth 1 -type f \( -name '*.cs' -o -name '*
 	-exec cp -- {} "$MOD/Harness/" \;
 
 # 3. The frozen request, written into the profile's own embark module.
-REQUEST="arch-gallery-slice;facing=north;seed=$SEED"
+#
+#    TAF_REQUEST names the request WITHOUT its seed - `arch-gallery-slice;facing=south`, say - so a
+#    persona can select another declared parameter value without editing this file or the roster.
+#    The seed stays this script's to freeze: it is the one field the launcher owns and the gate
+#    independently proves, and letting a caller name it would let two runs claim one world.
+#    A caller that tries anyway is refused rather than having its seed quietly replaced.
+DEFAULT_REQUEST="arch-gallery-slice;facing=north"
+REQUEST_BASE="${TAF_REQUEST:-$DEFAULT_REQUEST}"
+case "$REQUEST_BASE" in
+	*";seed="*)
+		echo "refusing TAF_REQUEST that names its own seed: $REQUEST_BASE" >&2
+		echo "the seed is frozen per profile by this script; pass it as argument 2 instead" >&2
+		exit 2
+		;;
+esac
+REQUEST="$REQUEST_BASE;seed=$SEED"
 TAF_REQUEST="$REQUEST" python3 "$PROFILE_TOOL" request "$MOD/Harness/EmbarkModules.xml"
 
 # 3b. The dev start parasang, rewritten inside the profile copy only.
@@ -138,6 +153,11 @@ cp "$REPO/Tools/smoke/ModSettings.json" "$LOCAL/ModSettings.json"
 #    for behaviour that only happens on a clock. Write it as two words - for example
 #    TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status" - and scenario_profile.py folds them
 #    into one sealed line and refuses a count outside 1..10000.
+#
+#    TAF_SCENARIO_EXTRA_VERBS="myverb,other" widens the sealable set for THIS profile only, so a
+#    verb another mod contributes through IKingdomScenarioVerbProvider can be sealed into a script.
+#    The base set stays closed: a third-party verb is admitted for the profile that will run it,
+#    never globally, and a name the harness reserves is refused here rather than in game.
 SCENARIO_SCRIPT="${TAF_SCENARIO_SCRIPT:-flatten realize status}"
 if [ "$SCENARIO_SCRIPT" = none ]; then
 	echo "no scenario script sealed; this profile is attended-only"

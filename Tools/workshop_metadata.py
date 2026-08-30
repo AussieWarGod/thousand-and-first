@@ -35,14 +35,18 @@ VERIFICATION_PASS_IDS = {
     "compatibilityMatrix": "compatibility-matrix",
 }
 MAX_WORKSHOP_ID = (1 << 64) - 1
-MAX_PREVIEW_BYTES = 1_000_000  # Steam says under 1 MB; use the conservative decimal bound.
+MAX_PREVIEW_BYTES = (
+    1_000_000  # Steam says under 1 MB; use the conservative decimal bound.
+)
 EVIDENCE_ARTIFACT_ROOT = "docs/release-evidence"
 MAX_EVIDENCE_ARTIFACT_BYTES = 512 * 1024 * 1024
 MAX_NUMBERED_PROTOCOLS = 1024
 MAX_PROTOCOL_WAIVERS = 64
 TESTING_PASS_ID_TEXT = r"[0-9]+[a-z0-9]*(?:\.[0-9]+)?"
 TESTING_PASS_ID = re.compile(rf"^{TESTING_PASS_ID_TEXT}$")
-INTERIM_PREVIEW_SHA256 = "498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad"
+INTERIM_PREVIEW_SHA256 = (
+    "498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad"
+)
 PREVIEW_REVIEW_PASS_ID = "final-native-preview-review"
 HUMAN_SENTINEL = re.compile(
     r"(?:^|[^a-z0-9])(?:placeholder|example|todo|tbd|unknown|n\s*/\s*a)"
@@ -90,16 +94,28 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
     if data.get("title") != TITLE:
         errors.append(f"manifest title must be {TITLE}")
     description = data.get("description")
-    if not isinstance(description, str) or description != description.strip() or len(description) < 80:
+    if (
+        not isinstance(description, str)
+        or description != description.strip()
+        or len(description) < 80
+    ):
         errors.append("manifest description must be a trimmed, current feature summary")
     elif "slice 0.1" in description.lower() or "debug wish" in description.lower():
         errors.append("manifest description still describes the 0.1 debug slice")
-    elif "optionally" not in description.lower() or "legacy across worlds" not in description.lower():
-        errors.append("manifest description must disclose that cross-world legacy is optional")
+    elif (
+        "optionally" not in description.lower()
+        or "legacy across worlds" not in description.lower()
+    ):
+        errors.append(
+            "manifest description must disclose that cross-world legacy is optional"
+        )
     elif (reason := _qud_text_error(description)) is not None:
         errors.append(f"manifest description {reason}")
     version = data.get("version")
-    if not isinstance(version, str) or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None:
+    if (
+        not isinstance(version, str)
+        or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None
+    ):
         errors.append("manifest version must be numeric major.minor.patch")
     if data.get("author") != AUTHOR:
         errors.append(f"manifest author must be {AUTHOR}")
@@ -119,10 +135,18 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
 
 def canonical_description(manifest: dict) -> str:
     return (
-        f"Pre-release playtest build for Caves of Qud v{GAME_MARKETING_VERSION} "
-        f"(core {GAME_CORE_BUILD}).\n\n"
+        f"ALPHA/BETA — pre-release playtest build for Caves of Qud "
+        f"v{GAME_MARKETING_VERSION} (core {GAME_CORE_BUILD}). Expect bugs, missing content, "
+        "and rough edges.\n\n"
         + manifest["description"]
-        + "\n\nBack up your saves before testing. Report issues at "
+        + "\n\nSource, issue tracker, and full documentation: "
+        "https://github.com/AussieWarGod/thousand-and-first\n\n"
+        "Open-source (MIT), with an in-game scenario test framework modders can reuse for "
+        "their own additions — see the repo.\n\n"
+        "Save-format versioning: durable state carries an explicit version and a registered "
+        "migration port. Updates only rarely need to change save-format; when one must, a save "
+        "that a port cannot read is quarantined and reported to you, never silently corrupted.\n\n"
+        "Back up your saves before testing. Report issues at "
         "https://github.com/AussieWarGod/thousand-and-first/issues. "
         "This is an unofficial community mod, not affiliated with or endorsed by Freehold Games."
     )
@@ -139,14 +163,25 @@ def _text_limits(title: str, description: str, tags: tuple[str, ...]) -> list[st
     if description_error is not None:
         errors.append(f"Workshop Description {description_error}")
     elif not description or len(description.encode("utf-8")) >= 8000:
-        errors.append("Workshop Description must be nonempty and under 8000 UTF-8 bytes")
+        errors.append(
+            "Workshop Description must be nonempty and under 8000 UTF-8 bytes"
+        )
     for tag in tags:
         reason = _qud_text_error(tag)
         encoded = tag.encode("utf-8") if reason is None else b""
-        if (reason is not None or not tag or len(encoded) > 255 or "," in tag
-                or "\x00" in tag or not tag.isprintable()):
+        if (
+            reason is not None
+            or not tag
+            or len(encoded) > 255
+            or "," in tag
+            or "\x00" in tag
+            or not tag.isprintable()
+        ):
             errors.append(f"Workshop tag is outside Steam limits: {tag!r}")
-    if all(_qud_text_error(tag) is None for tag in tags) and len(",".join(tags).encode("utf-8")) >= 1025:
+    if (
+        all(_qud_text_error(tag) is None for tag in tags)
+        and len(",".join(tags).encode("utf-8")) >= 1025
+    ):
         errors.append("Workshop tag list must be under 1025 UTF-8 bytes")
     return errors
 
@@ -171,8 +206,11 @@ def canonical_workshop_bytes(data: dict) -> bytes:
 
 def _workshop_id(data: dict) -> int:
     value = data.get("WorkshopId")
-    if (not isinstance(value, int) or isinstance(value, bool)
-            or not 0 < value <= MAX_WORKSHOP_ID):
+    if (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or not 0 < value <= MAX_WORKSHOP_ID
+    ):
         raise ValidationError("WorkshopId must be an unsigned 64-bit positive integer")
     return value
 
@@ -180,15 +218,21 @@ def _workshop_id(data: dict) -> int:
 def canonicalize_workshop(path: Path, manifest: dict, mode: str) -> None:
     """Atomically rewrite Qud's public fields while preserving its published-file ID."""
     if path.is_symlink() or not path.is_file():
-        raise ValidationError("workshop.json canonicalization requires an existing regular non-link file")
+        raise ValidationError(
+            "workshop.json canonicalization requires an existing regular non-link file"
+        )
     existing = _load_json(path)
     allowed = {"WorkshopId", "Title", "Description", "Tags", "Visibility", "ImagePath"}
     unknown = set(existing) - allowed
     if unknown:
-        raise ValidationError("workshop.json has unknown fields: " + ", ".join(sorted(unknown)))
+        raise ValidationError(
+            "workshop.json has unknown fields: " + ", ".join(sorted(unknown))
+        )
     workshop_id = _workshop_id(existing)
     visibility = "0" if mode == "test" else "2"
-    payload = canonical_workshop_bytes(canonical_workshop_data(manifest, workshop_id, visibility))
+    payload = canonical_workshop_bytes(
+        canonical_workshop_data(manifest, workshop_id, visibility)
+    )
     temporary_name: str | None = None
     try:
         descriptor, temporary_name = tempfile.mkstemp(
@@ -202,7 +246,9 @@ def canonicalize_workshop(path: Path, manifest: dict, mode: str) -> None:
         os.replace(temporary_name, path)
         temporary_name = None
     except OSError as error:
-        raise ValidationError(f"cannot atomically canonicalize workshop.json: {error}") from error
+        raise ValidationError(
+            f"cannot atomically canonicalize workshop.json: {error}"
+        ) from error
     finally:
         if temporary_name is not None:
             try:
@@ -223,11 +269,14 @@ def _human_text_valid(value: object, minimum: int, maximum: int) -> bool:
 
 
 def _second_precision_utc(value: object) -> bool:
-    if (not isinstance(value, str)
-            or re.fullmatch(
-                r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z",
-                value,
-            ) is None):
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(
+            r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z",
+            value,
+        )
+        is None
+    ):
         return False
     try:
         datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
@@ -246,7 +295,9 @@ def testing_pass_ids(path: Path) -> tuple[str, ...]:
     try:
         lines = path.read_text(encoding="utf-8-sig").splitlines()
     except (OSError, UnicodeError) as error:
-        raise ValidationError(f"cannot read the authoritative TESTING.md: {error}") from error
+        raise ValidationError(
+            f"cannot read the authoritative TESTING.md: {error}"
+        ) from error
     rows: list[tuple[str, int]] = []
     for line_number, line in enumerate(lines, 1):
         stripped = line.lstrip()
@@ -264,7 +315,9 @@ def testing_pass_ids(path: Path) -> tuple[str, ...]:
             )
         rows.append((cell, line_number))
     if not rows:
-        raise ValidationError("authoritative TESTING.md contains no numbered protocol rows")
+        raise ValidationError(
+            "authoritative TESTING.md contains no numbered protocol rows"
+        )
     locations: dict[str, list[int]] = {}
     for pass_id, line_number in rows:
         locations.setdefault(pass_id, []).append(line_number)
@@ -280,7 +333,9 @@ def testing_pass_ids(path: Path) -> tuple[str, ...]:
     return tuple(pass_id for pass_id, _line_number in rows)
 
 
-def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: Path) -> None:
+def validate_release_claims(
+    manifest: dict, readme_path: Path, changelog_path: Path
+) -> None:
     version = manifest.get("version")
     if not isinstance(version, str):
         raise ValidationError("release claims require a valid manifest version")
@@ -290,24 +345,25 @@ def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: P
         try:
             documents[path] = path.read_text(encoding="utf-8-sig")
         except (OSError, UnicodeError) as error:
-            raise ValidationError(f"cannot read release evidence document {path.name}: {error}") from error
+            raise ValidationError(
+                f"cannot read release evidence document {path.name}: {error}"
+            ) from error
 
     expected_status = f"**Status: {version} public playtest release.**"
     readme_lines = documents[readme_path].splitlines()
     status_indexes = [
-        index for index, line in enumerate(readme_lines)
+        index
+        for index, line in enumerate(readme_lines)
         if line.strip().casefold().startswith("**status:")
     ]
-    status_lines = [
-        readme_lines[index].strip() for index in status_indexes
-    ]
+    status_lines = [readme_lines[index].strip() for index in status_indexes]
     status_claim = ""
     if len(status_indexes) == 1:
         status_end = status_indexes[0] + 1
         while status_end < len(readme_lines) and readme_lines[status_end].strip():
             status_end += 1
         status_claim = " ".join(
-            line.strip() for line in readme_lines[status_indexes[0]:status_end]
+            line.strip() for line in readme_lines[status_indexes[0] : status_end]
         )
     if status_lines != [expected_status]:
         errors.append(
@@ -317,14 +373,18 @@ def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: P
 
     changelog_lines = documents[changelog_path].splitlines()
     changelog_indexes = [
-        index for index, line in enumerate(changelog_lines)
+        index
+        for index, line in enumerate(changelog_lines)
         if line.startswith("## ") and not line.startswith("### ")
     ]
     changelog_headings = [changelog_lines[index].strip() for index in changelog_indexes]
     expected_heading = re.compile(
         rf"^## \[{re.escape(version)}\] — ([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}})$"
     )
-    if not changelog_headings or (match := expected_heading.fullmatch(changelog_headings[0])) is None:
+    if (
+        not changelog_headings
+        or (match := expected_heading.fullmatch(changelog_headings[0])) is None
+    ):
         errors.append(
             f"{changelog_path.name} first version heading must bind {version} to a release date"
         )
@@ -332,12 +392,17 @@ def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: P
         try:
             datetime.strptime(match.group(1), "%Y-%m-%d")
         except ValueError:
-            errors.append(f"{changelog_path.name} release heading contains an invalid date")
+            errors.append(
+                f"{changelog_path.name} release heading contains an invalid date"
+            )
 
-    first_changelog_end = changelog_indexes[1] if len(changelog_indexes) > 1 else len(changelog_lines)
+    first_changelog_end = (
+        changelog_indexes[1] if len(changelog_indexes) > 1 else len(changelog_lines)
+    )
     current_changelog_claim = " ".join(
-        line.strip() for line in changelog_lines[
-            changelog_indexes[0] if changelog_indexes else 0:first_changelog_end
+        line.strip()
+        for line in changelog_lines[
+            changelog_indexes[0] if changelog_indexes else 0 : first_changelog_end
         ]
     )
     blocked_claims = (
@@ -346,10 +411,15 @@ def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: P
         (r"\bnot (?:once|yet) run in (?:the )?live game\b", "not live-tested"),
         (r"\bno replacement native receipt(?: yet)?\b", "no current native receipt"),
         (r"\b(?:remain|remains|remaining) (?:open|pending)\b", "gates remain open"),
-        (r"\b(?:outstanding|pending) (?:release |native |human |playtest |testing |steam |structural )?(?:gate|gates|pass|passes)\b", "pending gate"),
+        (
+            r"\b(?:outstanding|pending) (?:release |native |human |playtest |testing |steam |structural )?(?:gate|gates|pass|passes)\b",
+            "pending gate",
+        ),
     )
-    for label, claim in ((readme_path.name, status_claim),
-                         (changelog_path.name, current_changelog_claim)):
+    for label, claim in (
+        (readme_path.name, status_claim),
+        (changelog_path.name, current_changelog_claim),
+    ):
         for pattern, description in blocked_claims:
             if re.search(pattern, claim, re.IGNORECASE):
                 errors.append(f"{label} current release claim still says {description}")
@@ -357,11 +427,17 @@ def validate_release_claims(manifest: dict, readme_path: Path, changelog_path: P
         raise ValidationError("release evidence is still pending; " + "; ".join(errors))
 
 
-def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path: Path,
-                              evidence_path: Path, readme_path: Path,
-                              changelog_path: Path, *,
-                              repository_root: Path | None = None,
-                              testing_path: Path | None = None) -> str:
+def validate_release_evidence(
+    manifest: dict,
+    preview_path: Path,
+    workshop_path: Path,
+    evidence_path: Path,
+    readme_path: Path,
+    changelog_path: Path,
+    *,
+    repository_root: Path | None = None,
+    testing_path: Path | None = None,
+) -> str:
     validate_release_claims(manifest, readme_path, changelog_path)
     evidence = _load_json(evidence_path)
     if repository_root is None:
@@ -369,31 +445,48 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
     try:
         repository_root = repository_root.resolve(strict=True)
     except OSError as error:
-        raise ValidationError(f"cannot resolve release evidence root: {error}") from error
+        raise ValidationError(
+            f"cannot resolve release evidence root: {error}"
+        ) from error
     if not repository_root.is_dir() or repository_root.is_symlink():
         raise ValidationError("release evidence root must be an ordinary directory")
     if testing_path is None:
         testing_path = repository_root / "TESTING.md"
     top_keys = {
-        "schemaVersion", "releaseVersion", "candidateCommit", "gameMarketingVersion",
-        "gameCoreBuild", "gameAssemblySha256", "workshopId", "previewSha256",
-        "privatePackageReceiptSha256", "privateSubscription", "verification",
+        "schemaVersion",
+        "releaseVersion",
+        "candidateCommit",
+        "gameMarketingVersion",
+        "gameCoreBuild",
+        "gameAssemblySha256",
+        "workshopId",
+        "previewSha256",
+        "privatePackageReceiptSha256",
+        "privateSubscription",
+        "verification",
     }
     errors: list[str] = []
     if set(evidence) != top_keys:
         errors.append(
             f"release evidence fields must exactly match schema version {RELEASE_EVIDENCE_SCHEMA}"
         )
-    if (type(evidence.get("schemaVersion")) is not int
-            or evidence.get("schemaVersion") != RELEASE_EVIDENCE_SCHEMA):
+    if (
+        type(evidence.get("schemaVersion")) is not int
+        or evidence.get("schemaVersion") != RELEASE_EVIDENCE_SCHEMA
+    ):
         errors.append(
             f"release evidence schemaVersion must be {RELEASE_EVIDENCE_SCHEMA}"
         )
     if evidence.get("releaseVersion") != manifest.get("version"):
         errors.append("release evidence version must match manifest version")
     candidate = evidence.get("candidateCommit")
-    if not isinstance(candidate, str) or re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
-        errors.append("release evidence candidateCommit must be a lowercase full Git commit")
+    if (
+        not isinstance(candidate, str)
+        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
+    ):
+        errors.append(
+            "release evidence candidateCommit must be a lowercase full Git commit"
+        )
         candidate = ""
     if evidence.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
         errors.append(
@@ -402,10 +495,14 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
     if evidence.get("gameCoreBuild") != GAME_CORE_BUILD:
         errors.append(f"release evidence gameCoreBuild must be {GAME_CORE_BUILD}")
     assembly_hash = evidence.get("gameAssemblySha256")
-    if (not isinstance(assembly_hash, str)
-            or re.fullmatch(r"[0-9a-f]{64}", assembly_hash) is None
-            or assembly_hash == "0" * 64):
-        errors.append("release evidence gameAssemblySha256 must be a nonzero lowercase SHA-256")
+    if (
+        not isinstance(assembly_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", assembly_hash) is None
+        or assembly_hash == "0" * 64
+    ):
+        errors.append(
+            "release evidence gameAssemblySha256 must be a nonzero lowercase SHA-256"
+        )
 
     try:
         workshop_id = _workshop_id(_load_json(workshop_path))
@@ -423,15 +520,24 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
     if evidence.get("previewSha256") != preview_hash:
         errors.append("release evidence previewSha256 must match preview.png")
     if preview_hash == INTERIM_PREVIEW_SHA256:
-        errors.append("release evidence refuses the known interim preview; capture the final native preview")
+        errors.append(
+            "release evidence refuses the known interim preview; capture the final native preview"
+        )
     receipt_hash = evidence.get("privatePackageReceiptSha256")
-    if (not isinstance(receipt_hash, str)
-            or re.fullmatch(r"[0-9a-f]{64}", receipt_hash) is None
-            or receipt_hash == "0" * 64):
-        errors.append("release evidence privatePackageReceiptSha256 must be a nonzero lowercase SHA-256")
+    if (
+        not isinstance(receipt_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", receipt_hash) is None
+        or receipt_hash == "0" * 64
+    ):
+        errors.append(
+            "release evidence privatePackageReceiptSha256 must be a nonzero lowercase SHA-256"
+        )
 
     verification = evidence.get("verification")
-    verification_keys = set(VERIFICATION_PASS_IDS) | {"previewReview", "numberedProtocols"}
+    verification_keys = set(VERIFICATION_PASS_IDS) | {
+        "previewReview",
+        "numberedProtocols",
+    }
     if not isinstance(verification, dict) or set(verification) != verification_keys:
         errors.append(
             "release evidence verification fields must exactly match schema version "
@@ -439,12 +545,19 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
         )
     else:
         for lane, pass_id in VERIFICATION_PASS_IDS.items():
-            _validate_artifact_binding(verification.get(lane),
-                                       f"verification.{lane}", errors,
-                                       repository_root,
-                                       expected_pass_id=pass_id)
-        _validate_assembly_receipt(verification.get("nativeCompileLoad"),
-                                   assembly_hash, errors, repository_root)
+            _validate_artifact_binding(
+                verification.get(lane),
+                f"verification.{lane}",
+                errors,
+                repository_root,
+                expected_pass_id=pass_id,
+            )
+        _validate_assembly_receipt(
+            verification.get("nativeCompileLoad"),
+            assembly_hash,
+            errors,
+            repository_root,
+        )
         preview_review = verification.get("previewReview")
         _validate_artifact_binding(
             preview_review,
@@ -453,8 +566,15 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
             repository_root,
             expected_pass_id=PREVIEW_REVIEW_PASS_ID,
             extra_keys={
-                "source", "generativeAssistance", "previewSha256", "capturedBy",
-                "captureUtc", "sourceSave", "editSummary", "reviewedBy", "completedUtc",
+                "source",
+                "generativeAssistance",
+                "previewSha256",
+                "capturedBy",
+                "captureUtc",
+                "sourceSave",
+                "editSummary",
+                "reviewedBy",
+                "completedUtc",
             },
         )
         if isinstance(preview_review, dict):
@@ -462,8 +582,10 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                 errors.append(
                     "release evidence verification.previewReview.source must be 'native-game-screenshot'"
                 )
-            if type(preview_review.get("generativeAssistance")) is not bool or preview_review.get(
-                    "generativeAssistance") is not False:
+            if (
+                type(preview_review.get("generativeAssistance")) is not bool
+                or preview_review.get("generativeAssistance") is not False
+            ):
                 errors.append(
                     "release evidence verification.previewReview.generativeAssistance must be False"
                 )
@@ -497,20 +619,30 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                 )
         protocols = verification.get("numberedProtocols")
         if not isinstance(protocols, dict) or set(protocols) != {
-                "artifactRef", "artifactSha256", "passIds", "waivers"}:
+            "artifactRef",
+            "artifactSha256",
+            "passIds",
+            "waivers",
+        }:
             errors.append(
                 "release evidence verification.numberedProtocols fields must be "
                 "artifactRef, artifactSha256, passIds, and waivers"
             )
         else:
-            _validate_artifact_binding(protocols,
-                                       "verification.numberedProtocols", errors,
-                                       repository_root,
-                                       include_pass_id=False,
-                                       extra_keys={"passIds", "waivers"})
+            _validate_artifact_binding(
+                protocols,
+                "verification.numberedProtocols",
+                errors,
+                repository_root,
+                include_pass_id=False,
+                extra_keys={"passIds", "waivers"},
+            )
             pass_ids = protocols.get("passIds")
-            if (not isinstance(pass_ids, list) or not pass_ids
-                    or len(pass_ids) > MAX_NUMBERED_PROTOCOLS):
+            if (
+                not isinstance(pass_ids, list)
+                or not pass_ids
+                or len(pass_ids) > MAX_NUMBERED_PROTOCOLS
+            ):
                 errors.append(
                     "release evidence verification.numberedProtocols.passIds must be "
                     "a nonempty bounded list"
@@ -521,8 +653,10 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                 seen: set[str] = set()
                 valid_pass_ids = True
                 for pass_id in pass_ids:
-                    if (not isinstance(pass_id, str)
-                            or TESTING_PASS_ID.fullmatch(pass_id) is None):
+                    if (
+                        not isinstance(pass_id, str)
+                        or TESTING_PASS_ID.fullmatch(pass_id) is None
+                    ):
                         errors.append(
                             "release evidence verification.numberedProtocols.passIds "
                             "must contain exact individual TESTING.md IDs"
@@ -557,8 +691,10 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                         valid_waivers = False
                         continue
                     waiver_id = waiver.get("passId")
-                    if (not isinstance(waiver_id, str)
-                            or TESTING_PASS_ID.fullmatch(waiver_id) is None):
+                    if (
+                        not isinstance(waiver_id, str)
+                        or TESTING_PASS_ID.fullmatch(waiver_id) is None
+                    ):
                         errors.append(
                             f"release evidence {label}.passId must be one exact TESTING.md ID"
                         )
@@ -605,7 +741,8 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                     if unknown_waivers:
                         errors.append(
                             "release evidence verification.numberedProtocols.waivers "
-                            "name IDs absent from TESTING.md: " + ", ".join(unknown_waivers)
+                            "name IDs absent from TESTING.md: "
+                            + ", ".join(unknown_waivers)
                         )
                 if valid_pass_ids and valid_waivers:
                     overlap = sorted(seen & set(waiver_ids))
@@ -615,7 +752,8 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                             + ", ".join(overlap)
                         )
                     missing = [
-                        pass_id for pass_id in defined_rows
+                        pass_id
+                        for pass_id in defined_rows
                         if pass_id not in seen and pass_id not in set(waiver_ids)
                     ]
                     if missing:
@@ -624,10 +762,14 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
                             + ", ".join(missing)
                         )
                     expected_passes = [
-                        pass_id for pass_id in defined_rows if pass_id not in set(waiver_ids)
+                        pass_id
+                        for pass_id in defined_rows
+                        if pass_id not in set(waiver_ids)
                     ]
                     expected_waivers = [
-                        pass_id for pass_id in defined_rows if pass_id in set(waiver_ids)
+                        pass_id
+                        for pass_id in defined_rows
+                        if pass_id in set(waiver_ids)
                     ]
                     if pass_ids != expected_passes:
                         errors.append(
@@ -640,9 +782,19 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
 
     private = evidence.get("privateSubscription")
     private_keys = {
-        "source", "inventory", "receipt", "loader", "newGame", "saveReload", "oldSave",
-        "representativeFeatures", "playerLog", "localDuplicatesRemoved", "uploadHiddenFiles",
-        "testedBy", "completedUtc",
+        "source",
+        "inventory",
+        "receipt",
+        "loader",
+        "newGame",
+        "saveReload",
+        "oldSave",
+        "representativeFeatures",
+        "playerLog",
+        "localDuplicatesRemoved",
+        "uploadHiddenFiles",
+        "testedBy",
+        "completedUtc",
     }
     if not isinstance(private, dict) or set(private) != private_keys:
         errors.append(
@@ -666,48 +818,64 @@ def validate_release_evidence(manifest: dict, preview_path: Path, workshop_path:
         for key, value in expected.items():
             actual = private.get(key)
             if type(actual) is not type(value) or actual != value:
-                errors.append(f"release evidence privateSubscription.{key} must be {value!r}")
+                errors.append(
+                    f"release evidence privateSubscription.{key} must be {value!r}"
+                )
         tester = private.get("testedBy")
         if not _human_text_valid(tester, 2, 80):
             errors.append("release evidence testedBy must name the human tester")
         completed = private.get("completedUtc")
         if not _second_precision_utc(completed):
-            errors.append("release evidence completedUtc must be a real second-precision UTC date")
+            errors.append(
+                "release evidence completedUtc must be a real second-precision UTC date"
+            )
     if errors:
         raise ValidationError("release evidence is invalid; " + "; ".join(errors))
     return candidate
 
 
-def _validate_artifact_binding(value: object, label: str, errors: list[str],
-                               repository_root: Path,
-                               expected_pass_id: str | None = None,
-                               include_pass_id: bool = True,
-                               extra_keys: set[str] | None = None) -> None:
+def _validate_artifact_binding(
+    value: object,
+    label: str,
+    errors: list[str],
+    repository_root: Path,
+    expected_pass_id: str | None = None,
+    include_pass_id: bool = True,
+    extra_keys: set[str] | None = None,
+) -> None:
     keys = {"artifactRef", "artifactSha256"}
     if include_pass_id:
         keys.add("passId")
     if extra_keys:
         keys.update(extra_keys)
     if not isinstance(value, dict) or set(value) != keys:
-        errors.append(f"release evidence {label} fields must be "
-                      + ", ".join(sorted(keys)))
+        errors.append(
+            f"release evidence {label} fields must be " + ", ".join(sorted(keys))
+        )
         return
     if include_pass_id and value.get("passId") != expected_pass_id:
         errors.append(f"release evidence {label}.passId must be {expected_pass_id!r}")
     artifact_ref = value.get("artifactRef")
-    if (not isinstance(artifact_ref, str) or artifact_ref != artifact_ref.strip()
-            or not 3 <= len(artifact_ref) <= 512
-            or artifact_ref.casefold() in {"todo", "tbd", "unknown", "n/a"}
-            or "placeholder" in artifact_ref.casefold()
-            or "artifact_reference" in artifact_ref.casefold()
-            or _qud_text_error(artifact_ref) is not None
-            or not _safe_evidence_artifact_ref(artifact_ref)):
-        errors.append(f"release evidence {label}.artifactRef must identify the retained artifact")
+    if (
+        not isinstance(artifact_ref, str)
+        or artifact_ref != artifact_ref.strip()
+        or not 3 <= len(artifact_ref) <= 512
+        or artifact_ref.casefold() in {"todo", "tbd", "unknown", "n/a"}
+        or "placeholder" in artifact_ref.casefold()
+        or "artifact_reference" in artifact_ref.casefold()
+        or _qud_text_error(artifact_ref) is not None
+        or not _safe_evidence_artifact_ref(artifact_ref)
+    ):
+        errors.append(
+            f"release evidence {label}.artifactRef must identify the retained artifact"
+        )
         artifact_ref = None
     artifact_hash = value.get("artifactSha256")
-    if (not isinstance(artifact_hash, str)
-            or re.fullmatch(r"[0-9a-f]{64}", artifact_hash) is None
-            or artifact_hash == "0" * 64):
+    if (
+        not isinstance(artifact_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", artifact_hash) is None
+        or artifact_hash == "0" * 64
+    ):
         errors.append(
             f"release evidence {label}.artifactSha256 must be a nonzero lowercase SHA-256"
         )
@@ -741,12 +909,16 @@ def _validate_artifact_binding(value: object, label: str, errors: list[str],
                 )
 
 
-def _validate_assembly_receipt(value: object, expected_hash: object,
-                               errors: list[str], repository_root: Path) -> None:
+def _validate_assembly_receipt(
+    value: object, expected_hash: object, errors: list[str], repository_root: Path
+) -> None:
     """Bind the declared licensed game binary to the retained native transcript."""
-    if (not isinstance(value, dict) or not isinstance(value.get("artifactRef"), str)
-            or not isinstance(expected_hash, str)
-            or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None):
+    if (
+        not isinstance(value, dict)
+        or not isinstance(value.get("artifactRef"), str)
+        or not isinstance(expected_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None
+    ):
         return
     artifact_ref = value["artifactRef"]
     if not _safe_evidence_artifact_ref(artifact_ref):
@@ -781,9 +953,11 @@ def _safe_evidence_artifact_ref(value: str) -> bool:
     if not value.startswith(prefix) or value.startswith("/") or "\\" in value:
         return False
     components = value.split("/")
-    if (posixpath.normpath(value) != value
-            or any(component in ("", ".", "..") for component in components)
-            or any(unicodedata.category(character).startswith("C") for character in value)):
+    if (
+        posixpath.normpath(value) != value
+        or any(component in ("", ".", "..") for component in components)
+        or any(unicodedata.category(character).startswith("C") for character in value)
+    ):
         return False
     reserved = re.compile(
         r"^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|"
@@ -791,9 +965,11 @@ def _safe_evidence_artifact_ref(value: str) -> bool:
         re.IGNORECASE,
     )
     for component in components:
-        if (any(character in '<>:"|?*' for character in component)
-                or component.endswith((".", " "))
-                or reserved.fullmatch(component.rstrip(". ").split(".", 1)[0])):
+        if (
+            any(character in '<>:"|?*' for character in component)
+            or component.endswith((".", " "))
+            or reserved.fullmatch(component.rstrip(". ").split(".", 1)[0])
+        ):
             return False
     return True
 
@@ -812,8 +988,9 @@ def release_evidence_artifact_refs(path: Path) -> tuple[str, ...]:
         if isinstance(value, dict):
             if "artifactRef" in value:
                 artifact_ref = value["artifactRef"]
-                if (not isinstance(artifact_ref, str)
-                        or not _safe_evidence_artifact_ref(artifact_ref)):
+                if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
+                    artifact_ref
+                ):
                     raise ValidationError(
                         "release evidence contains an unsafe artifactRef before extraction"
                     )
@@ -842,14 +1019,23 @@ def validate_workshop(path: Path, manifest: dict, mode: str) -> dict | None:
     if not path.exists():
         if mode == "test":
             return None
-        raise ValidationError("release package requires workshop.json created by Qud's private-item flow")
+        raise ValidationError(
+            "release package requires workshop.json created by Qud's private-item flow"
+        )
     data = _load_json(path)
     expected_keys = (
-        "WorkshopId", "Title", "Description", "Tags", "Visibility", "ImagePath"
+        "WorkshopId",
+        "Title",
+        "Description",
+        "Tags",
+        "Visibility",
+        "ImagePath",
     )
     errors: list[str] = []
     if tuple(data.keys()) != expected_keys:
-        errors.append("workshop.json fields/order must match Qud's completed serializer shape")
+        errors.append(
+            "workshop.json fields/order must match Qud's completed serializer shape"
+        )
     workshop_id = data.get("WorkshopId")
     try:
         workshop_id = _workshop_id(data)
@@ -861,13 +1047,19 @@ def validate_workshop(path: Path, manifest: dict, mode: str) -> dict | None:
     for key, value in expected.items():
         if data.get(key) != value:
             errors.append(f"{key} must exactly match the {mode} release metadata")
-    errors.extend(_text_limits(
-        data.get("Title") if isinstance(data.get("Title"), str) else "",
-        data.get("Description") if isinstance(data.get("Description"), str) else "",
-        tuple(data.get("Tags", "").split(",")) if isinstance(data.get("Tags"), str) else (),
-    ))
+    errors.extend(
+        _text_limits(
+            data.get("Title") if isinstance(data.get("Title"), str) else "",
+            data.get("Description") if isinstance(data.get("Description"), str) else "",
+            tuple(data.get("Tags", "").split(","))
+            if isinstance(data.get("Tags"), str)
+            else (),
+        )
+    )
     if not errors and path.read_bytes() != canonical_workshop_bytes(expected):
-        errors.append("workshop.json bytes are not Qud's canonical Windows serializer output")
+        errors.append(
+            "workshop.json bytes are not Qud's canonical Windows serializer output"
+        )
     if errors:
         raise ValidationError("; ".join(errors))
     return data
@@ -888,8 +1080,8 @@ def validate_preview(path: Path) -> None:
     while offset < len(payload):
         if len(payload) - offset < 12:
             raise ValidationError("Workshop preview has a truncated PNG chunk")
-        length = struct.unpack(">I", payload[offset:offset + 4])[0]
-        kind = payload[offset + 4:offset + 8]
+        length = struct.unpack(">I", payload[offset : offset + 4])[0]
+        kind = payload[offset + 4 : offset + 8]
         if len(kind) != 4 or not kind.isalpha() or kind[2] & 0x20:
             raise ValidationError("Workshop preview has an invalid PNG chunk type")
         if not kind[0] & 0x20 and kind not in (b"IHDR", b"PLTE", b"IDAT", b"IEND"):
@@ -897,8 +1089,8 @@ def validate_preview(path: Path) -> None:
         end = offset + 12 + length
         if end > len(payload):
             raise ValidationError("Workshop preview has a truncated PNG chunk body")
-        body = payload[offset + 8:offset + 8 + length]
-        expected_crc = struct.unpack(">I", payload[offset + 8 + length:end])[0]
+        body = payload[offset + 8 : offset + 8 + length]
+        expected_crc = struct.unpack(">I", payload[offset + 8 + length : end])[0]
         if zlib.crc32(kind + body) & 0xFFFFFFFF != expected_crc:
             raise ValidationError("Workshop preview has a bad PNG chunk checksum")
         chunks.append((kind, body))
@@ -909,7 +1101,10 @@ def validate_preview(path: Path) -> None:
         raise ValidationError("Workshop preview must end with one complete IEND chunk")
     if chunks[0][0] != b"IHDR" or len(chunks[0][1]) != 13:
         raise ValidationError("Workshop preview must begin with a complete IHDR chunk")
-    if sum(kind == b"IHDR" for kind, _ in chunks) != 1 or sum(kind == b"IEND" for kind, _ in chunks) != 1:
+    if (
+        sum(kind == b"IHDR" for kind, _ in chunks) != 1
+        or sum(kind == b"IEND" for kind, _ in chunks) != 1
+    ):
         raise ValidationError("Workshop preview has duplicate structural PNG chunks")
 
     width, height, depth, color, compression, filtering, interlace = struct.unpack(
@@ -917,18 +1112,32 @@ def validate_preview(path: Path) -> None:
     )
     if (width, height) != (512, 512):
         raise ValidationError(f"Workshop preview must be 512x512, got {width}x{height}")
-    if depth != 8 or color not in (2, 6) or compression != 0 or filtering != 0 or interlace != 0:
-        raise ValidationError("Workshop preview must be non-interlaced 8-bit RGB or RGBA PNG")
+    if (
+        depth != 8
+        or color not in (2, 6)
+        or compression != 0
+        or filtering != 0
+        or interlace != 0
+    ):
+        raise ValidationError(
+            "Workshop preview must be non-interlaced 8-bit RGB or RGBA PNG"
+        )
     idat_indexes = [index for index, (kind, _) in enumerate(chunks) if kind == b"IDAT"]
-    if not idat_indexes or idat_indexes != list(range(idat_indexes[0], idat_indexes[-1] + 1)):
-        raise ValidationError("Workshop preview must contain contiguous image-data chunks")
+    if not idat_indexes or idat_indexes != list(
+        range(idat_indexes[0], idat_indexes[-1] + 1)
+    ):
+        raise ValidationError(
+            "Workshop preview must contain contiguous image-data chunks"
+        )
     plte_indexes = [index for index, (kind, _) in enumerate(chunks) if kind == b"PLTE"]
     if len(plte_indexes) > 1:
         raise ValidationError("Workshop preview has duplicate palette chunks")
     if plte_indexes:
         palette = chunks[plte_indexes[0]][1]
         if len(palette) < 3 or len(palette) > 768 or len(palette) % 3:
-            raise ValidationError("Workshop preview has an invalid palette chunk length")
+            raise ValidationError(
+                "Workshop preview has an invalid palette chunk length"
+            )
         if plte_indexes[0] > idat_indexes[0]:
             raise ValidationError("Workshop preview palette must precede image data")
     compressed = b"".join(chunks[index][1] for index in idat_indexes)
@@ -939,14 +1148,22 @@ def validate_preview(path: Path) -> None:
     try:
         raw = decoder.decompress(compressed, expected_decoded + 1)
         if len(raw) > expected_decoded or decoder.unconsumed_tail:
-            raise ValidationError("Workshop preview decoded image exceeds its declared size")
+            raise ValidationError(
+                "Workshop preview decoded image exceeds its declared size"
+            )
         raw += decoder.flush(expected_decoded + 1 - len(raw))
     except zlib.error as error:
-        raise ValidationError(f"Workshop preview image data cannot be decoded: {error}") from error
+        raise ValidationError(
+            f"Workshop preview image data cannot be decoded: {error}"
+        ) from error
     if len(raw) > expected_decoded:
-        raise ValidationError("Workshop preview decoded image exceeds its declared size")
+        raise ValidationError(
+            "Workshop preview decoded image exceeds its declared size"
+        )
     if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail:
-        raise ValidationError("Workshop preview image data is incomplete or has trailing bytes")
+        raise ValidationError(
+            "Workshop preview image data is incomplete or has trailing bytes"
+        )
     if len(raw) != expected_decoded:
         raise ValidationError("Workshop preview decoded image size is inconsistent")
     if any(raw[row * (row_bytes + 1)] > 4 for row in range(height)):
@@ -996,7 +1213,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "fields":
             manifest = load_manifest(args.manifest, require_preview=True)
-            for value in (manifest["version"], manifest["title"], manifest["PreviewImage"]):
+            for value in (
+                manifest["version"],
+                manifest["title"],
+                manifest["PreviewImage"],
+            ):
                 print(value)
         elif args.command == "copy":
             print(_copy(load_manifest(args.manifest, require_preview=False)))
@@ -1011,10 +1232,18 @@ def main(argv: list[str] | None = None) -> int:
             validate_workshop(args.path, manifest, args.mode)
         elif args.command == "evidence":
             manifest = load_manifest(args.manifest, require_preview=True)
-            print(validate_release_evidence(manifest, args.preview, args.workshop,
-                                            args.record, args.readme, args.changelog,
-                                            repository_root=args.repository_root,
-                                            testing_path=args.testing))
+            print(
+                validate_release_evidence(
+                    manifest,
+                    args.preview,
+                    args.workshop,
+                    args.record,
+                    args.readme,
+                    args.changelog,
+                    repository_root=args.repository_root,
+                    testing_path=args.testing,
+                )
+            )
         elif args.command == "evidence-artifact-refs":
             for artifact_ref in release_evidence_artifact_refs(args.record):
                 print(artifact_ref)

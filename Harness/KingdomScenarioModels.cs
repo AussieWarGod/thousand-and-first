@@ -76,6 +76,17 @@ namespace ThousandAndFirst.Harness
 
 		internal string DisplayName;
 		internal string Description;
+
+		/// <summary>
+		/// Which mod authored this row. The roster loads through
+		/// <c>DataManager.YieldXMLStreamsWithRoot</c>, so a third-party mod extends it just by
+		/// shipping a file with the same root element - and a merged roster whose rows are
+		/// anonymous cannot tell an operator whose scenario just refused. Taken from the stream's
+		/// own <c>XmlDataHelper.modInfo.ID</c>, never asserted by the row, so a row cannot claim
+		/// another mod's name. Empty for a base-game stream, which is not a case that occurs today.
+		/// </summary>
+		internal string Owner;
+
 		internal IList<KingdomScenarioParameter> Parameters = new List<KingdomScenarioParameter>();
 		internal IList<KingdomScenarioStep> Steps = new List<KingdomScenarioStep>();
 	}

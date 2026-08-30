@@ -102,6 +102,10 @@ version if that save must remain playable. Maintainers and source-build testers 
 - [docs/STRUCTURE.md](docs/STRUCTURE.md) — Addendum 9 census, semantic-review evidence, and
   structural release gate.
 - [TESTING.md](TESTING.md) — the current playtest protocol.
+- [TESTING.md's developer scenario harness](TESTING.md#developer-scenario-harness-phase-1) — an
+  open, MIT-licensed in-game behavioral test framework (scenario personas, scripted verbs,
+  machine-readable journals) other modders can reuse for their own additions. Dev-profile only;
+  never ships in the player-facing package.
 - [MODDING.md](MODDING.md) and [docs/API.md](docs/API.md) — data-first extensions and the supported
   programming surface.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — checkout, evidence, review, provenance, and pull-request

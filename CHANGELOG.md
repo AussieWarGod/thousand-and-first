@@ -17,6 +17,43 @@ revision's two-city loader/persistence smoke remains historical evidence only. T
 native/human protocol and gallery, compatibility testing, structural release gate, and private
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
+### Added
+- **A modder-extensible scenario harness: third-party verb providers, a merged multi-mod scenario
+  roster, and an eight-persona assertion matrix.** `Harness/KingdomScenarioVerbProvider.cs`
+  publishes `IKingdomScenarioVerbProvider` and the `[KingdomScenarioVerbProvider]` discovery
+  attribute — the same cached `ModManager.GetTypesWithAttribute` scan `WishManager` and
+  `WorldFactory` already use — so another mod's dev-only assembly can claim its own
+  `kingdom:scenario` verb with no reference to this one. `KingdomScenarioVerbProviderRules` admits
+  every claim whole or refuses it whole: a malformed name, a version drift, an over-cap provider,
+  or a name the harness reserves refuses that provider by mod label, and a verb two providers both
+  claim is held by **neither** — first-registered wins nothing, because "first" is only the
+  player's mod load order. `KingdomScenarioVerbRegistry` runs admitted verbs behind the harness's
+  one existing dispatch path, so an extension verb produces the same `OK|REFUSED` journal row and
+  stop-on-refusal behaviour as a built-in, and a provider that throws becomes a
+  `taf-scenario-verb-threw` refusal rather than an escaped exception. `Tools/prepare-scenario.sh`'s
+  new `TAF_SCENARIO_EXTRA_VERBS` widens the sealable script grammar per profile, never globally.
+  Separately, the scenario roster now merges across mods with attribution: `KingdomScenarioRegistry`
+  stamps each row's `Owner` from the defining stream's own `ModInfo.ID` — never from an attribute
+  the file could set to somebody else's name — `kingdom:scenario list` prints it beside every key,
+  and `KingdomScenarioDigests.Canonical` folds owner into the roster digest, guarded against a
+  separator character forging a field boundary, so a merged roster from several mods digests
+  identically regardless of load order and one mod's rows can never pass as another's.
+- **A persona matrix drives many unattended scenario runs end to end and asserts each one, instead
+  of one journal read by hand.** `Tools/run-personas.sh` seals a fresh profile per
+  `Tools/personas/<name>.persona` manifest — a seed-free `REQUEST` (the seed stays the launcher's
+  to freeze), a `SCRIPT`, and an ordered `EXPECT` list ending in exactly one terminal
+  (`COMPLETE`/`STOPPED`/`GATE-REFUSED`) — launches it, waits for the terminal row, then judges the
+  journal strictly in both directions: an unexpected `OK` fails as loudly as an unexpected refusal,
+  and a missing row as loudly as an extra one. `Tools/personas/persona_matrix.py` owns the parsing
+  and verdict grammar so it runs without a licensed install, proven by
+  `Tools/tests/persona_matrix_test.py`; `DevTests/KingdomScenarioPersonaSourceTests.cs` proves every
+  reason code and terminal a persona can bind to is one the C# runtime still actually emits. Eight
+  authored personas ship today: the phase-1 happy path in all four declared facings
+  (`arch-tent-north/-east/-south/-west`), a poisoned-replay refusal (`realize-replay-poisoned`),
+  300-turn key-set stability (`advance-stability`), an out-of-domain facing refused at the
+  new-game gate (`bad-param-refusal`), and an anchor-ineligibility verdict on a scenario-built game
+  (`ordinary-anchor-eligibility`).
+
 ### Fixed
 - **Engine `Widget` blueprints now read as bare ground instead of refusing every plot that touches
   one.** `KingdomPlotRules.ReadObject` (`Growth/KingdomPlot2.04.Ground.cs`) previously read invisible
@@ -218,12 +255,12 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,381 physical lines; 4 files exceed
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,416 physical lines; 4 files exceed
   300, 0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 — the four are the
   adjudicated Gatehouse family, docketed by the R3 registration sweep. Direct `XRL`
   imports occur in 1204 files, 3 of them over the line limit. Its
   exact inventory digest is
-  `d5fb01d63260dde70a994f8e17c8d282eee71686cf9f9d8d93c4eeee26e29de3`;
+  `afc4955625dbe18f4f89ba2815d047a984db26ef76cc7907f155805e4345e4de`;
   the corresponding cold-install inventory contains 2664 files. The
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full

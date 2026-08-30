@@ -1,0 +1,15 @@
+# Does a staged case still measure the same after the clock has run?
+#
+# `status` recomputes the differential verdict from the DURABLE stamp, so the digests it prints are
+# what a reviewer would read after a reload. Three hundred turns of real simulation later - real
+# turns through the engine's own pass, not a fast-forward - the same digests must come back.
+#
+# CHECK=status-digest-stable compares the 64-hex digests of the FIRST and LAST status rows. Digests
+# are the stablest thing the message column carries: they are data, not prose, so the comparison
+# survives every rewording of the report around them.
+DESCRIPTION=the measured key set still reads the same after 300 game turns
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=flatten;realize;status;advance 300;status
+EXPECT=flatten:OK,realize:OK,status:OK,advance:OK,status:OK,COMPLETE
+CHECK=status-digest-stable
+TIMEOUT=900

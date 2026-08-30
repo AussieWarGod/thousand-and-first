@@ -1,0 +1,13 @@
+# The two halves of the acceptance law, read back from inside a scenario-built game.
+#
+# `anchor` shares one fail-closed eligibility proof with `capture`: a game carrying a stamp, a
+# transaction marker, or a request key may not found ordinary-play anchor evidence. It ANSWERS
+# rather than refusing - an unwelcome answer is still an answer - so its verdict column is OK.
+#
+# `status` then recomputes the differential verdict from the durable stamp. With no curated anchor
+# in the store the honest verdict is ineligible, and that is the correct state rather than a
+# failure. The expectation binds to the word the law itself owns.
+DESCRIPTION=a scenario-built game may not found an anchor, and its verdict is ineligible
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=anchor;status
+EXPECT=anchor:OK,status:OK~ineligible,COMPLETE

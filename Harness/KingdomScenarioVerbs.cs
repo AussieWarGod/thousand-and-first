@@ -90,11 +90,27 @@ namespace ThousandAndFirst.Harness
 				case "ground": return KingdomScenarioGround.Scout(out Ok);
 				case "flatten": return KingdomScenarioFlatten.Flatten(out Ok);
 				default:
+				{
+					// The second SOURCE behind this one dispatch path: verbs contributed by other
+					// mods loaded in the same dev profile. Asked only after the closed built-in set
+					// has declined, so a provider can never shadow a harness verb.
+					string message;
+					if (KingdomScenarioVerbRegistry.TryRun(Token(Raw), Argument(Raw), out message,
+						out Ok)) return message;
 					// An unrecognised verb is a REFUSAL, not help. A script that names a verb this
 					// harness does not have must stop rather than walk on past a usage line.
 					Ok = false;
-					return Usage;
+					return Usage + KingdomScenarioVerbRegistry.Describe();
+				}
 			}
+		}
+
+		/// <summary>Everything after the first word, trimmed. Empty for a bare verb.</summary>
+		internal static string Argument(string Raw)
+		{
+			string raw = (Raw ?? "").Trim();
+			int space = raw.IndexOf(' ');
+			return space < 0 ? "" : raw.Substring(space + 1).Trim();
 		}
 
 		private static string Realize(out bool Ok)
@@ -126,7 +142,8 @@ namespace ThousandAndFirst.Harness
 				+ "Harness scope: a scenario skips the walk between production verbs. No verdict "
 				+ "taken in a scenario-built state signs native acceptance until independently "
 				+ "curated anchor evidence proves a green ordinary-play anchor for its authority "
-				+ "class.";
+				+ "class."
+				+ KingdomScenarioVerbRegistry.Describe();
 		}
 
 		private static string List()
@@ -135,7 +152,9 @@ namespace ThousandAndFirst.Harness
 			StringBuilder sb = new StringBuilder("{{C|Authored scenarios}}\nRoster digest ")
 				.Append(KingdomScenarioRegistry.Digest ?? "(none)");
 			for (int i = 0; i < rows.Count; i++)
-				sb.Append("\n\n{{W|").Append(rows[i].Key ?? "(unkeyed)").Append("}}  family=")
+				sb.Append("\n\n{{W|").Append(rows[i].Key ?? "(unkeyed)").Append("}}  from ")
+					.Append(string.IsNullOrEmpty(rows[i].Owner) ? "(unowned stream)" : rows[i].Owner)
+					.Append("\n  family=")
 					.Append(rows[i].Family).Append("  authority=").Append(rows[i].AuthorityClass)
 					.Append(string.Equals(rows[i].SyntheticRaw, "true", StringComparison.Ordinal)
 						? "  {{R|SYNTHETIC}}" : "")
@@ -143,6 +162,9 @@ namespace ThousandAndFirst.Harness
 					.Append("\n  ").Append(rows[i].Description ?? "");
 			Faults(sb, "roster", KingdomScenarioRegistry.Findings);
 			Faults(sb, "anchors", KingdomScenarioAnchorStore.Findings);
+			// `list` is the sealable roster verb, so it is where an unattended run records which
+			// mods contributed scenarios AND which verb providers were admitted or refused.
+			sb.Append(KingdomScenarioVerbRegistry.Describe());
 			return sb.ToString();
 		}
 

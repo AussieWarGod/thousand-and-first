@@ -1,0 +1,20 @@
+# A request naming a value outside a declared domain must refuse, and must refuse ASSERTABLY.
+#
+# `facing=skyward` is a well-formed token, so the request parser accepts it and the fast-embark
+# module fills chargen from it. The refusal lands later, at the new-game gate: the plan binder
+# holds every parameter to its closed domain, and the gate throws rather than stamping.
+#
+# WHERE IT SURFACES. The gate runs at the embark player-mutator step, long before the auto-runner's
+# first action opportunity - so no SCRIPT-BEGIN, SCRIPT-COMPLETE, or SCRIPT-STOPPED row will ever
+# land, and without a row of its own a gate refusal is indistinguishable from a hang. The gate
+# therefore journals one GATE-REFUSED row, fail-open, BEFORE it throws. That row is this persona's
+# terminal, and the matrix host stops waiting on it instead of timing out.
+#
+# OPEN QUESTION, honestly stated: whether the engine continues past a throwing IPlayerMutator is
+# not proved here. If it does, the sealed script will run afterwards and this persona fails with
+# "row N unexpected" - which is the evidence, not a flaw in the expectation.
+DESCRIPTION=a facing outside the declared domain is refused at the new-game gate
+REQUEST=arch-gallery-slice;facing=skyward
+SCRIPT=status
+EXPECT=GATE-REFUSED~taf-scenario-gate-refused
+TIMEOUT=420

@@ -23,6 +23,25 @@ namespace ThousandAndFirst.Harness
 		/// <summary>Set declaratively by the harness embark mode before world build.</summary>
 		internal const string RequestState = "r_TAF_ScenarioRequest_v1";
 
+		/// <summary>
+		/// Journal verb column for a gate refusal.
+		/// <para>
+		/// The gate runs at the embark player-mutator step, long before the auto-runner's first
+		/// action opportunity, so a refusal here means the runner never arms and no
+		/// <c>SCRIPT-BEGIN</c>, <c>SCRIPT-COMPLETE</c>, or <c>SCRIPT-STOPPED</c> row will ever
+		/// land. Without a row of its own, an unattended run that the gate refused is
+		/// indistinguishable from one that hung, and a matrix host can only time out on it. This
+		/// row is that terminal, and it is written BEFORE the throw for exactly that reason.
+		/// </para>
+		/// </summary>
+		internal const string RefusedRow = "GATE-REFUSED";
+
+		/// <summary>The request key was present in a shape no gate ever wrote.</summary>
+		internal const string CodeUnreadableRequest = "taf-scenario-gate-unreadable-request";
+
+		/// <summary>The request was readable and the gate declined to open it.</summary>
+		internal const string CodeRefused = "taf-scenario-gate-refused";
+
 		public void mutate(GameObject player)
 		{
 			string request;
@@ -31,15 +50,27 @@ namespace ThousandAndFirst.Harness
 			// An ordinary game has no request KEY at all. A key holding an empty string, or living
 			// under the wrong type table, is corruption and may never be read as "no scenario".
 			if (!KingdomScenarioRealizer.TryReadRequest(out request, out present, out detail))
+			{
+				// Fail-open, exactly like every other journal write: a lost row must not also lose
+				// the refusal, so the return value is deliberately ignored and the throw stands.
+				KingdomScenarioJournal.Append(RefusedRow, false, "[" + CodeUnreadableRequest
+					+ "] the scenario request state is unreadable ("
+					+ (detail ?? "unknown fault") + ")");
 				throw new InvalidOperationException(
 					"ThousandAndFirst scenario harness found an unreadable request state ("
 					+ (detail ?? "unknown fault") + ").");
+			}
 			if (!present) return;
 			string failure;
 			if (!KingdomScenarioRealizer.TryOpen(request, out failure))
+			{
+				KingdomScenarioJournal.Append(RefusedRow, false, "[" + CodeRefused
+					+ "] the gate refused '" + KingdomScenarioRules.Bounded(request) + "': "
+					+ failure);
 				throw new InvalidOperationException(
 					"ThousandAndFirst scenario harness refused to open '"
 					+ KingdomScenarioRules.Bounded(request) + "' (" + failure + ").");
+			}
 		}
 	}
 

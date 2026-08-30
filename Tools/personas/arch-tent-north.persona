@@ -1,0 +1,7 @@
+# The proven green path: prepare ground, commit the single production transaction, read the
+# durable stamp back. This is the persona every other one is a variation of, and the one whose
+# failure means the framework itself is broken rather than the case under test.
+DESCRIPTION=tent/fallback staged in the North pose; the phase-1 happy path
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=flatten;realize;status
+EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE

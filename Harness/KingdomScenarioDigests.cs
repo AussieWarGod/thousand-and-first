@@ -74,8 +74,16 @@ namespace ThousandAndFirst.Harness
 		internal static string Canonical(KingdomScenarioDefinition Definition)
 		{
 			if (!KingdomScenarioRowValidator.Valid(Definition)) return null;
+			// Provenance is part of the row's identity, because the roster is MERGED: two mods can
+			// ship rows with the same shape, and a digest blind to who authored which would let one
+			// mod's roster pass as another's. Empty is lawful (an unowned stream); a separator
+			// character inside an owner id is not, because it could forge a field boundary, and an
+			// uncanonicalizable row makes the whole digest null rather than a laundered value.
+			string owner = Definition.Owner ?? "";
+			if (owner.IndexOf(Unit) >= 0 || owner.IndexOf(Record) >= 0) return null;
 			StringBuilder sb = new StringBuilder();
-			sb.Append(Definition.Key).Append(Unit).Append(Definition.Family)
+			sb.Append(owner).Append(Unit)
+				.Append(Definition.Key).Append(Unit).Append(Definition.Family)
 				.Append(Unit).Append(Definition.AuthorityClass)
 				.Append(Unit).Append(Definition.SyntheticRaw)
 				.Append(Unit).Append(Definition.AnchorId ?? "");

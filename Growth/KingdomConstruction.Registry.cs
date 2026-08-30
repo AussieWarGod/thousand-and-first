@@ -240,18 +240,9 @@ namespace ThousandAndFirst
 		public static bool HasActiveAt(KingdomSystem System, Zone Z, Cell Cell)
 		{
 			if (Cell == null || Cell.ParentZone != Z) return true;
-			// An UNFOUNDED game provably has no active construction: no owner exists to hold a
-			// job. TryOwnedActive folds that lawful case into the same false as a malformed
-			// registry, and failing closed here turned every cell of every zone "active" in any
-			// game that had not founded yet (proven live 2026-08-30: the gallery canvas could
-			// never pass pre-founding). Distinguish them: a readable registry with no owner is
-			// exactly zero active cells; an UNREADABLE registry still blocks every cell.
+			// Unfounded = provably zero active jobs (live, 2026-08-30); unreadable still blocks.
 			if (System != null && string.IsNullOrEmpty(OwnerOf(System)))
-			{
-				List<KingdomConstructionJob> readable;
-				string readFailure;
-				return !TryRead(out readable, out readFailure);
-			}
+				return !TryRead(out List<KingdomConstructionJob> _, out string _);
 			List<KingdomConstructionJob> jobs;
 			if (!TryOwnedActive(System, Z, out jobs)) return true;
 			for (int i = 0; i < jobs.Count; i++)
