@@ -317,6 +317,15 @@ not a refusal), and is left exactly as it was.
 | `resourcedigest` | Water and food state — `storedwater=`, `openwater=`, `foodperday=` from the ground under the player, plus `hungerstreak=`, `drystreak=`, `population=` — or `founded=false`. |
 | `standingdigest` | Faction standings — the full `standings=` count, then `faction=<key>:<value>` rows in ordinal key order (first 16) — or `founded=false`. |
 
+**The authored scenario roster** (`Harness/KingdomScenarios.xml`; `kingdom:scenario list` prints
+it in game). Every scenario is read-only observations followed by exactly one mutating verb,
+declared last:
+
+| Scenario | Family / authority class | The one production transaction |
+|---|---|---|
+| `arch-gallery-slice` | `architecture` / `architecture-stamper` | proves the authored catalogue, then stages one exact frozen gallery case and pose through the production staging path (`facing` picks the pose) |
+| `founding-first-city` | `founding` / `founding-transaction` | proves the world holds no realm, then founds the first city through the production founding transaction at the operator's position in the born-clean test zone; the city name is frozen in the roster, so the request carries no parameter |
+
 What a scenario run proves, and what it does not:
 
 - The new-game gate reads the engine's own `OriginalWorldSeed` and `GetWorldSeed()` back and
@@ -460,6 +469,7 @@ The authored set today:
 | `bad-param-refusal` | a facing outside the declared domain is refused at the new-game gate |
 | `ordinary-anchor-eligibility` | a scenario-built game may not found an anchor; its verdict is `ineligible` |
 | `digest-unfounded` | the three domain digests read an unfounded born-clean world honestly (`founded=false`), minting nothing |
+| `found-first-city` | the production first-city founding transaction runs end to end; the digests flip from `founded=false` to a founded `stage=Camp` realm |
 
 **`GATE-REFUSED` is why a bad request is assertable at all.** The new-game gate runs at the embark
 player-mutator step, long before the auto-runner's first action opportunity — so a refusal there

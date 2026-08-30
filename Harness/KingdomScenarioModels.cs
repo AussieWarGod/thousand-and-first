@@ -20,7 +20,16 @@ namespace ThousandAndFirst.Harness
 		/// Mutating: drives the production architecture gallery staging path for one exact case
 		/// and pose. The single production transaction a phase-1 scenario is allowed.
 		/// </summary>
-		StageGalleryCase = 2
+		StageGalleryCase = 2,
+
+		/// <summary>Read-only: proves no realm stands, so a first city may be founded here.</summary>
+		ProveUnfounded = 3,
+
+		/// <summary>
+		/// Mutating: drives the production first-city founding transaction at the operator's
+		/// position. The single production transaction a founding scenario is allowed.
+		/// </summary>
+		FoundFirstCity = 4
 	}
 
 	/// <summary>One declared parameter and the exact closed domain its value must come from.</summary>

@@ -49,6 +49,12 @@ namespace ThousandAndFirst.Harness
 					specs.Add(Spec("Variant", KingdomScenarioArgumentKind.Token, true));
 					specs.Add(Spec("Facing", KingdomScenarioArgumentKind.Token, true));
 					break;
+				case KingdomScenarioVerb.FoundFirstCity:
+					// The one caller-supplied fact production founding needs: the city's display
+					// name. Frozen in the authored roster rather than requested per run, so the
+					// scenario carries no open parameter surface it does not need.
+					specs.Add(Spec("CityName", KingdomScenarioArgumentKind.Name, true));
+					break;
 			}
 			return specs;
 		}
@@ -56,7 +62,8 @@ namespace ThousandAndFirst.Harness
 		/// <summary>Verbs that change production state. At most one per scenario, declared last.</summary>
 		internal static bool Mutates(KingdomScenarioVerb Verb)
 		{
-			return Verb == KingdomScenarioVerb.StageGalleryCase;
+			return Verb == KingdomScenarioVerb.StageGalleryCase
+				|| Verb == KingdomScenarioVerb.FoundFirstCity;
 		}
 
 		private static KingdomScenarioArgumentSpec Spec(string Name,

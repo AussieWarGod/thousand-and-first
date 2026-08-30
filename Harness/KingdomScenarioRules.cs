@@ -31,6 +31,8 @@ namespace ThousandAndFirst.Harness
 			{
 				case "provecatalogue": Verb = KingdomScenarioVerb.ProveCatalogue; return true;
 				case "stagegallerycase": Verb = KingdomScenarioVerb.StageGalleryCase; return true;
+				case "proveunfounded": Verb = KingdomScenarioVerb.ProveUnfounded; return true;
+				case "foundfirstcity": Verb = KingdomScenarioVerb.FoundFirstCity; return true;
 				default:
 					return Refuse("Unknown scenario verb '" + Bounded(Raw)
 						+ "'; the verb set is closed.", out Failure);
@@ -43,6 +45,8 @@ namespace ThousandAndFirst.Harness
 			{
 				case KingdomScenarioVerb.ProveCatalogue: return "provecatalogue";
 				case KingdomScenarioVerb.StageGalleryCase: return "stagegallerycase";
+				case KingdomScenarioVerb.ProveUnfounded: return "proveunfounded";
+				case KingdomScenarioVerb.FoundFirstCity: return "foundfirstcity";
 				default: return null;
 			}
 		}
@@ -263,8 +267,7 @@ namespace ThousandAndFirst.Harness
 		{
 			if (string.IsNullOrEmpty(Value)) return false;
 			return Value[0] == '#'
-				? Value.Length > 1 && SafeToken(Value.Substring(1))
-				: SafeToken(Value);
+				? Value.Length > 1 && SafeToken(Value.Substring(1)) : SafeToken(Value);
 		}
 
 		internal static bool ValidDigest(string Value)

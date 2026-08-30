@@ -1,0 +1,15 @@
+# Founding is the root domain every other kingdom behaviour depends on: claims, growth, trade,
+# and standings all read the founded system. This persona proves the production first-city
+# founding transaction end to end - the SAME entry the debug wish drives, never a harness copy -
+# and that the domain digests flip from founded=false before the transaction to a founded
+# Camp-stage realm after it.
+#
+# stage=Camp is bound deliberately, not hopefully: KingdomSystem.Stage is initialised to Camp and
+# only the clocked growth reckonings (KingdomGrowth.UpdateStage via KingdomSubsidence.Reckon)
+# ever move it, so with no advance between realize and the digest a fresh single-founder city
+# reads Camp deterministically. founded=true and founded=false are words the digest law owns.
+DESCRIPTION=the production founding transaction founds a first city; digests flip to founded
+REQUEST=founding-first-city
+SCRIPT=stagedigest;realize;stagedigest;resourcedigest;status
+EXPECT=stagedigest:OK~founded=false,realize:OK,stagedigest:OK~stage=Camp,resourcedigest:OK~founded=true,status:OK,COMPLETE
+SET=founding,smoke

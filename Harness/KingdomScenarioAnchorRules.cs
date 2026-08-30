@@ -68,6 +68,20 @@ namespace ThousandAndFirst.Harness
 				keys.Add("architecture.tier.key");
 				keys.Add("architecture.variant.key");
 			}
+			if (string.Equals(AuthorityClass, "founding-transaction", StringComparison.Ordinal))
+			{
+				// Every key below is recomputed from the persisted KingdomSystem, the durable
+				// authority both an ordinary founding and a scenario founding publish. The realm
+				// faction NAME is measured as presence only: production founding mints the internal
+				// realm key from a fresh transaction GUID, so a value key could never agree between
+				// a scenario run and an ordinary-play anchor, and a key that can never match would
+				// make the differential unsatisfiable by construction - the same reason the
+				// architecture keys exclude absolute placement.
+				keys.Add("founding.claimedzones");
+				keys.Add("founding.faction.present");
+				keys.Add("founding.founded");
+				keys.Add("founding.stage");
+			}
 			return keys;
 		}
 

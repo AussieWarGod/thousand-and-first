@@ -4,9 +4,11 @@
   Harness directory is absent from the shipped manifest Directories and excluded from
   Tools/stage.sh, so an ordinary build never reads it.
 
-  Phase 1 authors exactly one scenario. Its steps are read-only observations followed by exactly
-  one mutating verb, declared last: the row validator enforces that shape, which is what makes the
-  attended run atomic rather than merely careful.
+  Every scenario's steps are read-only observations followed by exactly one mutating verb,
+  declared last: the row validator enforces that shape, which is what makes the attended run
+  atomic rather than merely careful. Phase 1 authored the architecture gallery slice; the founding
+  scenario rides the same rails with the production first-city founding transaction as its one
+  mutating step.
 
   AnchorId names the ordinary-play differential anchor this scenario leans on. It is declared
   BEFORE the evidence exists, and missing evidence still means ineligible. Leaving it empty until
@@ -31,5 +33,15 @@
     <param Name="facing" Domain="north|east|south|west" />
     <step Verb="ProveCatalogue" Catalogue="architecture" />
     <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="founding-first-city"
+            Family="founding"
+            AuthorityClass="founding-transaction"
+            Synthetic="false"
+            AnchorId="anchor-founding-01"
+            DisplayName="founding first city">
+    <description Text="Dev game that proves the world holds no realm, then drives the production first-city founding transaction at the operator's position in the born-clean test zone. The city name is frozen here; the digests flip from founded=false to a founded Camp-stage realm." />
+    <step Verb="ProveUnfounded" />
+    <step Verb="FoundFirstCity" CityName="Kavvat" />
   </scenario>
 </kingdomscenarios>

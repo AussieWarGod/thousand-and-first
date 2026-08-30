@@ -55,6 +55,12 @@ namespace ThousandAndFirst.Harness
 				}
 				if (mutation == null)
 					return Refuse("this scenario declares no production transaction", out Failure);
+				// One dispatch per admitted mutating verb. Founding rides the same rails as the
+				// gallery staging: preconditions pre-marker, TryBegin, ONE production call,
+				// TryCommit, then the shared measurement and differential judgment.
+				if (mutation.Verb == KingdomScenarioVerb.FoundFirstCity)
+					return TryRealizeFounding(plan, stamp, mutation, zone, log, out Report,
+						out Failure);
 				string facing;
 				string build;
 				string variant;
@@ -119,9 +125,52 @@ namespace ThousandAndFirst.Harness
 					Log.Add("  provecatalogue: " + catalogue + " healthy");
 					return true;
 				}
+				case KingdomScenarioVerb.ProveUnfounded:
+				{
+					string detail;
+					if (!KingdomScenarioFoundingStep.TryProveUnfounded(out detail, out Failure))
+						return false;
+					Log.Add("  proveunfounded: " + detail);
+					return true;
+				}
 				default:
 					return Refuse("the resolved step carries no admitted observation verb", out Failure);
 			}
+		}
+
+		/// <summary>
+		/// The founding transaction on the shared rails. The marker law is inherited verbatim:
+		/// attempt durable BEFORE the production call, committed before any capture or reporting,
+		/// and every prior marker state already refused at the top of <see cref="TryRun"/>.
+		/// </summary>
+		private static bool TryRealizeFounding(KingdomScenarioPlan Plan,
+			KingdomScenarioProvenance Stamp, KingdomScenarioResolvedStep Mutation, Zone Zone,
+			List<string> Log, out string Report, out string Failure)
+		{
+			Report = null;
+			Failure = null;
+			string name;
+			if (!Mutation.Arguments.TryGetValue("CityName", out name))
+				return Refuse("the resolved transaction is missing its frozen city name",
+					out Failure);
+			if (!KingdomScenarioFoundingStep.TryProvePreconditions(Zone, name, out Failure))
+				return Refuse("refused before mutation: " + Failure, out Failure);
+			// Everything above is a precondition and refuses BEFORE the attempt is recorded.
+			if (!KingdomScenarioTransactionMarker.TryBegin(out Failure))
+				return Refuse(Failure, out Failure);
+			string line;
+			if (!KingdomScenarioFoundingStep.TryFound(Zone, name, out line, out Failure))
+				return Refuse("the production transaction refused: " + Failure
+					+ ". The attempt marker stands, so this profile is spent: founding "
+					+ "reservations and faction registration are not journalled by the harness "
+					+ "and cannot be proved unchanged. Prepare a new dev game.", out Failure);
+			string commitFailure;
+			if (!KingdomScenarioTransactionMarker.TryCommit(out commitFailure))
+				return Refuse("the production transaction committed but its marker did not: "
+					+ commitFailure, out Failure);
+			Log.Add("  foundfirstcity: " + line);
+			Report = Conclude(Plan, Stamp, null, Log);
+			return true;
 		}
 
 		/// <summary>
@@ -134,9 +183,18 @@ namespace ThousandAndFirst.Harness
 		{
 			StringBuilder sb = new StringBuilder("{{C|Scenario realized}} ").Append(Plan.Key)
 				.Append("\n").Append(string.Join("\n", Log));
-			IDictionary<string, string> captured;
-			string failure;
-			if (!KingdomScenarioCapture.TryMeasure(Owner, out captured, out failure))
+			IDictionary<string, string> captured = null;
+			string failure = null;
+			// Measurement dispatches on the authority class the plan declares: architecture
+			// measures the staged owner, founding measures the persisted kingdom system. Both are
+			// recomputed from durable state the production path published, never from a run cache.
+			bool captureOk;
+			if (string.Equals(Plan.AuthorityClass, KingdomScenarioFoundingStep.FoundingAuthority,
+				StringComparison.Ordinal))
+				captureOk = KingdomScenarioFoundingStep.TryMeasure(out captured, out failure);
+			else
+				captureOk = KingdomScenarioCapture.TryMeasure(Owner, out captured, out failure);
+			if (!captureOk)
 				return sb.Append("\n\n{{R|Capture refused}}: ").Append(failure)
 					.Append("\nThe transaction committed; the differential comparison did not run.")
 					.ToString();

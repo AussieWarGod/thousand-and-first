@@ -179,6 +179,15 @@ namespace ThousandAndFirst.Harness
 			{
 				KingdomScenarioResolvedStep step = Plan.Steps[i];
 				if (!KingdomScenarioVerbSchema.Mutates(step.Verb)) continue;
+				// The ordinary capture route measures stamped architecture owners only. Refusing
+				// by name beats refusing over a missing case argument: an operator pointing this
+				// at the founding scenario should read "no capture route yet", not a shape fault.
+				if (step.Verb != KingdomScenarioVerb.StageGalleryCase)
+					return Refuse("this scenario's production transaction is not an architecture "
+						+ "staging; the ordinary capture route measures stamped architecture "
+						+ "owners only, and authority class '"
+						+ KingdomScenarioRules.Bounded(Plan.AuthorityClass)
+						+ "' has no capture route yet", out Failure);
 				string facing;
 				string build;
 				string variant;
