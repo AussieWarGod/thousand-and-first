@@ -376,6 +376,8 @@ covered by `Tools/tests/persona_matrix_test.py`.
 ```
 Tools/run-personas.sh                     every persona, serially
 Tools/run-personas.sh arch-tent-north     only the named ones
+Tools/run-personas.sh --personas a,b,c    same as naming them positionally
+Tools/run-personas.sh --set smoke         only personas whose SET tags include smoke
 Tools/run-personas.sh --check             parse every manifest and stop; launches nothing
 ```
 
@@ -392,6 +394,7 @@ ignored**.
 | `CHECK` | no | One extra assertion. Today: `status-digest-stable`. |
 | `TIMEOUT` | no | Seconds to wait for a terminal row. Default 300. |
 | `VERBS` | no | Third-party verb names this persona seals, comma-separated (see the next section). |
+| `SET` | no | Tags for `--set` selection, comma-separated lowercase (`smoke,architecture`). The `smoke` set is the fast slice covering the load-bearing laws; release evidence remains the full matrix. |
 | `DESCRIPTION` | no | One line, for the report. |
 
 **`EXPECT` grammar.** Comma-separated items in journal order:
