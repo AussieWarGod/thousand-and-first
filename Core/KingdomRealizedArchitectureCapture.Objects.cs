@@ -74,19 +74,40 @@ namespace ThousandAndFirst
 				return Fail("the layout owner's schema key is absent, dual-typed, or not this "
 					+ "schema", out Failure);
 			if (!ExactText(Owner, KingdomArchitectureStamper.LotIdProperty)
-				|| !ExactText(Owner, KingdomArchitectureStamper.HashProperty)
-				|| !ExactText(Owner, KingdomPlots.PlotIdProperty))
-				return Fail("the layout owner's lot, hash, or plot custody key is absent or lives "
-					+ "under the wrong durable type table", out Failure);
+				|| !ExactText(Owner, KingdomArchitectureStamper.HashProperty))
+				return Fail("the layout owner's lot or hash key is absent or lives under the "
+					+ "wrong durable type table", out Failure);
+			// Plot custody has TWO lawful shapes, and which one is present is provenance
+			// validity, never cross-path identity (the carried-marker and lot-id rulings):
+			// an ordinary commission stakes a plot, so its owner carries exact string custody
+			// naming this lot; a gallery staging deliberately stakes NO plot, so its owner
+			// carries a gallery receipt and no custody key under any table. A custody key of
+			// the wrong type, a dual-typed key, or a receipt-and-custody mix is torn and
+			// refuses. Proven live 2026-08-30: the first real gallery capture carried no plot
+			// custody, which is the lawful gallery shape, not damage.
+			bool custodyString = Owner.HasStringProperty(KingdomPlots.PlotIdProperty);
+			bool custodyInt = Owner.HasIntProperty(KingdomPlots.PlotIdProperty);
+			bool galleryReceipt = ExactText(Owner, GalleryReceiptProperty);
+			if (custodyInt)
+				return Fail("the layout owner's plot custody key lives under the wrong durable "
+					+ "type table", out Failure);
+			if (custodyString && galleryReceipt)
+				return Fail("the layout owner carries both plot custody and a gallery receipt; "
+					+ "no lawful path writes both", out Failure);
+			if (!custodyString && !galleryReceipt)
+				return Fail("the layout owner carries neither plot custody nor a gallery "
+					+ "receipt; no lawful path staged it", out Failure);
 			// Type is not custody. Every component receipt below is keyed to this lot, so a valid
 			// layout receipt sitting on a root whose plot custody names a DIFFERENT lot would drag
 			// another lot's ground into this digest.
-			if (!string.Equals(Owner.GetStringProperty(KingdomPlots.PlotIdProperty), Lot,
-					StringComparison.Ordinal)
-				|| !string.Equals(Owner.GetStringProperty(
-					KingdomArchitectureStamper.LotIdProperty), Lot, StringComparison.Ordinal))
+			if (custodyString
+				&& !string.Equals(Owner.GetStringProperty(KingdomPlots.PlotIdProperty), Lot,
+					StringComparison.Ordinal))
 				return Fail("the layout owner's plot custody names a different lot than its layout "
 					+ "receipt", out Failure);
+			if (!string.Equals(Owner.GetStringProperty(
+					KingdomArchitectureStamper.LotIdProperty), Lot, StringComparison.Ordinal))
+				return Fail("the layout owner's layout receipt names a different lot", out Failure);
 			if (!ExactInt(Owner, KingdomArchitectureStamper.NextLayerProperty))
 				return Fail("the layout owner's stage key is absent or dual-typed", out Failure);
 			if (Owner.GetIntProperty(KingdomArchitectureStamper.NextLayerProperty) != CompleteStage)
@@ -94,6 +115,8 @@ namespace ThousandAndFirst
 					+ "state to compare", out Failure);
 			return true;
 		}
+
+		private const string GalleryReceiptProperty = "r_TAF_ArchitectureGalleryReceipt";
 
 		private static bool ExactInt(GameObject Item, string Property)
 		{

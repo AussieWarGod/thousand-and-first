@@ -93,6 +93,11 @@ namespace ThousandAndFirst
 				final = GameObject.Create(Case.Mapping.BuildingBlueprint);
 				if (!GameObject.Validate(final) || final.Blueprint != Case.Mapping.BuildingBlueprint)
 					return Fail("The production behavior-root blueprint created no exact object.", out Failure);
+				// The engine assigns ids lazily and observation paths (realized capture) are
+				// forbidden to mint identity, so the STAGING side - the one lawful writer -
+				// assigns the owner's durable id at creation. Proven live 2026-08-30: capture
+				// refused the first staged owner for carrying no assigned identity.
+				_ = final.ID;
 				StampGallery(final, Receipt, Case.Key);
 				final.DisplayName = "gallery: " + Case.Mapping.BuildKey;
 				if (!KingdomArchitectureStamper.TryCopyFrozenOwner(works, final, out Failure)) return false;

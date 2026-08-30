@@ -217,7 +217,11 @@ namespace ThousandAndFirst.Tests
 				{ "ExactInt(Owner, KingdomArchitectureStamper.SchemaProperty)",
 					"ExactText(Owner, KingdomArchitectureStamper.LotIdProperty)",
 					"ExactText(Owner, KingdomArchitectureStamper.HashProperty)",
-					"ExactText(Owner, KingdomPlots.PlotIdProperty)",
+					"Owner.HasStringProperty(KingdomPlots.PlotIdProperty)",
+					"Owner.HasIntProperty(KingdomPlots.PlotIdProperty)",
+					"ExactText(Owner, GalleryReceiptProperty)",
+					"custody and a gallery receipt",
+					"neither plot custody nor a gallery",
 					"ExactInt(Owner, KingdomArchitectureStamper.NextLayerProperty)",
 					"!= CompleteStage" })
 				StringAssert.Contains(required, proof, required);

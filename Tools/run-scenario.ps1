@@ -223,5 +223,39 @@ $arguments = @(
     'GALAXY:NO'
 )
 Write-Host "Launching: $Game $($arguments -join ' ')"
+# A scripted profile runs itself, so its window must never steal the operator's focus.
+# Minimizing is NOT safe - Unity may pause a minimized player and stall the runner - so the
+# window is instead launched detached and, once it exists, moved to the bottom-right screen
+# edge WITHOUT activation. It keeps rendering and the script keeps running; the operator's
+# foreground window keeps the focus. Attended profiles (no sealed script) launch normally.
+$scriptPath = Join-Path $localRoot 'scenario-script.txt'
+if (Test-Path -LiteralPath $scriptPath) {
+    $process = Start-Process -FilePath $Game -ArgumentList $arguments -PassThru
+    Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class QuietWindow {
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr after,
+        int x, int y, int w, int hh, uint flags);
+}
+'@
+    Add-Type -AssemblyName System.Windows.Forms
+    $deadline = (Get-Date).AddSeconds(90)
+    while ((Get-Date) -lt $deadline) {
+        $process.Refresh()
+        if ($process.HasExited) { exit $process.ExitCode }
+        if ($process.MainWindowHandle -ne 0) {
+            $area = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+            # HWND_BOTTOM keeps it under every other window; SWP_NOACTIVATE (0x10) never takes
+            # focus; a small edge placement keeps a sliver visible so rendering continues.
+            [QuietWindow]::SetWindowPos($process.MainWindowHandle, [IntPtr]1,
+                $area.Right - 480, $area.Bottom - 270, 480, 270, 0x10) | Out-Null
+            break
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    Write-Host "Scenario game launched quietly (PID $($process.Id)); it will not take focus."
+    exit 0
+}
 & $Game @arguments
 exit $LASTEXITCODE

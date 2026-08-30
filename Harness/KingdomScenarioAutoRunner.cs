@@ -151,8 +151,8 @@ namespace ThousandAndFirst
 			if (PrimedSeam != null || ScriptConsidered) return;
 			if (!KingdomScenarioScript.Present()) return;
 			PrimedSeam = Seam;
-			SuppressedPopups = true;
-			Popup.Suppress = true;
+			SuppressedPopups = Popup.Suppress = true;
+			UnityEngine.Application.runInBackground = true; // quiet launch must not pause
 		}
 
 		public override bool HandleEvent(BeginTakeActionEvent E)
