@@ -79,26 +79,31 @@ dimensions, palette, contrast, function, and live in-game readability are indepe
 ## Workshop preview
 
 The committed root `preview.png` is presentation media captured from the tested mod running in
-Qud. It is not referenced by XML and is not a runtime sprite. This founding-popup capture is a
-valid provenance record but an **interim preview only**: it does not show the final architecture
-and must be replaced by a reviewed native final-build architecture screenshot before public
-Workshop upload. Generated art, a static gallery render, or a synthetic mock-up cannot close that
-gate.
+Qud. It is not referenced by XML and is not a runtime sprite. It shows a mod-authored building —
+the civic heart-court (`heartcourt|civic|Huge|fallback|North`) — staged by the architecture
+gallery's production snapshot/stamper/rendering path in the harness's born-clean test zone.
+Generated art, a static gallery render, or a synthetic mock-up cannot stand here; this is a
+native game screenshot. Final human preview review (`final-native-preview-review`) is recorded
+in the release evidence at upload time.
 
 | Field | Record |
 |---|---|
-| Capture operator | Repository maintainer's Codex-controlled local test automation; all source pixels were rendered by Qud |
-| Captured | 2026-08-25 03:50:19 +10:00 (Australia/Sydney) |
-| Game | Caves of Qud marketing 1.0.5, core 2.0.211.51, Steam build 24626113 |
-| Runtime commit | `99133f6a1b24f3be652903e16576ddd7bb929230` |
-| Procedure | Isolated fresh profile; quickstart; found Kavvat; travel to unclaimed ground; wish `kingdom:found2 Sheol:refuge`; capture the resulting in-game founding popup |
-| Source save | `401ec47e-a410-4e92-b932-d4e9283e48e6` |
-| Source evidence | `09-second-founded.png`, 2560×1440 RGBA PNG, kept outside runtime staging |
-| Source SHA-256 | `3fc76737b80f81dbf95fa6c4fff8173e8aa3c72da2e9a3501bddbac43ebdf0ee` |
-| Transformation | Exact pixel crop only: source rectangle x=1120, y=500, width=512, height=512. No scaling, redaction, overlay, retouching, color change, or generative transformation |
-| Output | `preview.png`, 512×512, 8-bit RGBA, non-interlaced, 122,055 bytes |
-| Output SHA-256 | `498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad` |
-| Verification | Pixel-by-pixel comparison against the source rectangle passed; the final view preserves field context and Qud's complete “Sheol is founded here as Kavvat.” line at native resolution |
+| Capture operator | Repository maintainer's Claude-controlled local test automation; all source pixels were rendered by Qud (PrintWindow, PW_RENDERFULLCONTENT) |
+| Captured | 2026-08-30 19:06 +10:00 (Australia/Sydney); user-consented attended window |
+| Game | Caves of Qud marketing 1.0.5, core 2.0.211.51, Unity 6000.0.77f1 |
+| Runtime commit | `e52270f4768879e7f4e6162d4237e945ee90fd22` |
+| Procedure | Isolated sealed scenario profile (`arch-gallery-slice;facing=north`, dev start 6.17@40,12); [Dev] Test Game; born-clean test zone; wish `kingdom:archgallery 853` staged the heart-court via the production staging path (receipt `ag1-88ae1e2a95af1c521a2e64d7`, layout snapshot `4ccd30a051663854308edde41c13a1a4f75409f9e4228338fffa3fff3e51bb99`, zone JoppaWorld.6.17.1.1.10, rect 31,7,50,20); capture the framebuffer |
+| Source save | `05b00330-5280-4cac-915d-24f2336c4e96` (throwaway dev profile) |
+| Source evidence | `docs/release-evidence/preview-source.png`, 2575×1407 RGBA PNG, 2,489,849 bytes — outside runtime staging (docs/ never ships) |
+| Source SHA-256 | `50389b00b12e1986c2272c41987b61dad0ebc446637899af5fa8ed64bf9b0ca3` |
+| Transformation | Exact pixel crop x=1256, y=383, width=1024, height=1024, then exact 2:1 box-filter downscale to 512×512. No redaction, overlay, retouching, color change, or generative transformation |
+| Output | `preview.png`, 512×512, 8-bit RGBA, non-interlaced, 394,895 bytes |
+| Output SHA-256 | `9b62b33f7f39ac00b842868abf06afd62de9a39dde09d473d2f284ca885602ba` |
+| Verification | Crop and downscale reproducible byte-exactly from the committed source evidence with Pillow (`crop((1256,383,2280,1407)).resize((512,512), Image.BOX)`); human preview review pending in release evidence |
+
+The prior interim preview (founding-popup capture, output SHA-256
+`498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad`) is superseded by this
+capture; `Tools/workshop_metadata.py` continues to refuse that interim hash at release.
 
 No AI-generated or generative-image-assisted imagery was used. Automation sent input, captured
 the game framebuffer, and performed the exact crop. Qud's presentation remains the property of
