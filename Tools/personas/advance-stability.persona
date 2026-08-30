@@ -13,3 +13,4 @@ SCRIPT=flatten;realize;status;advance 300;status
 EXPECT=flatten:OK,realize:OK,status:OK,advance:OK,status:OK,COMPLETE
 CHECK=status-digest-stable
 TIMEOUT=900
+SET=progression

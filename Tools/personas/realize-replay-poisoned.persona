@@ -10,3 +10,4 @@ DESCRIPTION=a second realize refuses permanently and stops the script
 REQUEST=arch-gallery-slice;facing=north
 SCRIPT=flatten;realize;realize
 EXPECT=flatten:OK,realize:OK,realize:REFUSED~taf-scenario-transaction-committed,STOPPED
+SET=smoke,laws

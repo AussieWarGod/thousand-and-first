@@ -18,3 +18,4 @@ REQUEST=arch-gallery-slice;facing=skyward
 SCRIPT=status
 EXPECT=GATE-REFUSED~taf-scenario-gate-refused
 TIMEOUT=420
+SET=smoke,laws

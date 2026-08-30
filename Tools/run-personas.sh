@@ -16,7 +16,9 @@
 #
 #   Tools/run-personas.sh                run every persona
 #   Tools/run-personas.sh arch-tent-north realize-replay-poisoned
-#   Tools/run-personas.sh --list         name the personas and their expectations
+#   Tools/run-personas.sh --set smoke    run the personas tagged SET=...smoke...
+#   Tools/run-personas.sh --personas a,b same as naming a b positionally
+#   Tools/run-personas.sh --list         name the personas, sets and expectations
 #   Tools/run-personas.sh --check        parse every manifest and stop; launches nothing
 #
 #   TAF_PERSONA_REPORT=<path>            default Tools/PortableOutput/personas-report.tsv
@@ -52,17 +54,31 @@ die() { echo "run-personas: $*" >&2; exit 2; }
 [ -d "$PERSONA_DIR" ] || die "no persona directory: $PERSONA_DIR"
 [ -f "$MATRIX" ] || die "no persona matrix engine: $MATRIX"
 
-# The persona set: named arguments, or every manifest on disk in ordinal order.
+# The persona selection: named arguments (or --personas a,b,c), a tagged --set slice, or every
+# manifest on disk in ordinal order. Names and sets compose: both filters must admit a persona.
 MODE=run
 PERSONAS=()
+SETS=""
+expect_value=""
 for argument in "$@"; do
+	if [ -n "$expect_value" ]; then
+		case "$expect_value" in
+			set) SETS="$SETS,$argument" ;;
+			personas) PERSONAS+=(${argument//,/ }) ;;
+		esac
+		expect_value=""
+		continue
+	fi
 	case "$argument" in
 		--list) MODE=list ;;
 		--check) MODE=check ;;
+		--set) expect_value=set ;;
+		--personas) expect_value=personas ;;
 		-*) die "unknown option: $argument" ;;
 		*) PERSONAS+=("$argument") ;;
 	esac
 done
+[ -z "$expect_value" ] || die "--$expect_value needs a value"
 if [ "${#PERSONAS[@]}" -eq 0 ]; then
 	while IFS= read -r path; do
 		PERSONAS+=("$(basename "$path" .persona)")
@@ -82,6 +98,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
+	P_SET=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -92,17 +109,36 @@ load_persona() {
 			timeout) P_TIMEOUT="$value" ;;
 			verbs) P_VERBS="$value" ;;
 			description) P_DESC="$value" ;;
+			set) P_SET="$value" ;;
 		esac
 	done <<< "$fields"
 	[ -n "$P_REQUEST" ] || die "persona $1 declares no request"
 	[ -n "$P_SCRIPT" ] || die "persona $1 declares no script"
 }
 
+# The --set slice: keep only personas whose SET tags intersect the requested tags. Runs after
+# load_persona exists and before list/check so every mode sees the same selection.
+if [ -n "$SETS" ]; then
+	SELECTED=()
+	for persona in "${PERSONAS[@]}"; do
+		load_persona "$persona"
+		for tag in ${SETS//,/ }; do
+			[ -n "$tag" ] || continue
+			case ",$P_SET," in
+				*",$tag,"*) SELECTED+=("$persona"); break ;;
+			esac
+		done
+	done
+	[ "${#SELECTED[@]}" -gt 0 ] || die "no personas carry set tag(s):${SETS}"
+	PERSONAS=("${SELECTED[@]}")
+fi
+
 if [ "$MODE" = list ] || [ "$MODE" = check ]; then
 	for persona in "${PERSONAS[@]}"; do
 		load_persona "$persona"
-		printf '%s\n  request %s\n  script  %s\n  expect  %s\n' "$persona" "$P_REQUEST" \
-			"$P_SCRIPT" "$(grep -m1 '^EXPECT=' "$(persona_path "$persona")" | cut -d= -f2-)"
+		printf '%s\n  request %s\n  script  %s\n  sets    %s\n  expect  %s\n' "$persona" \
+			"$P_REQUEST" "$P_SCRIPT" "${P_SET:-<untagged>}" \
+			"$(grep -m1 '^EXPECT=' "$(persona_path "$persona")" | cut -d= -f2-)"
 	done
 	echo "${#PERSONAS[@]} persona(s) parsed clean"
 	exit 0

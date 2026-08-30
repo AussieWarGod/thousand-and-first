@@ -5,3 +5,4 @@ DESCRIPTION=tent/fallback staged in the East pose
 REQUEST=arch-gallery-slice;facing=east
 SCRIPT=flatten;realize;status
 EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE
+SET=architecture

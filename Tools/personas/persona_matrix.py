@@ -78,7 +78,11 @@ OUTCOMES = ("OK", "REFUSED")
 CHECKS = ("status-digest-stable",)
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
-OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS")
+OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET")
+
+# Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
+# Same alphabet as verbs: lowercase, digits, hyphen, dot. Order inside SET= is not significant.
+SET_TAG = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
 
 DEFAULT_TIMEOUT = 300
 MAX_TIMEOUT = 3600
@@ -132,7 +136,22 @@ def parse_manifest(text: str, name: str) -> dict:
             % (name, check, ", ".join(CHECKS))
         )
     found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
+    found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
     return found
+
+
+def parse_set(value: str, name: str) -> tuple[str, ...]:
+    """Set tags, deduplicated in declaration order. An empty SET= means untagged."""
+    chosen: list[str] = []
+    for raw in value.split(","):
+        tag = raw.strip()
+        if not tag:
+            continue
+        if not SET_TAG.match(tag):
+            fail("%s declares malformed set tag %r" % (name, tag))
+        if tag not in chosen:
+            chosen.append(tag)
+    return tuple(chosen)
 
 
 def parse_verbs(value: str, name: str) -> tuple[str, ...]:
@@ -390,6 +409,7 @@ def main(argv: list[str]) -> int:
             "TIMEOUT",
             "VERBS",
             "DESCRIPTION",
+            "SET",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
         return 0

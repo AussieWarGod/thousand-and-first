@@ -5,3 +5,4 @@ DESCRIPTION=tent/fallback staged in the North pose; the phase-1 happy path
 REQUEST=arch-gallery-slice;facing=north
 SCRIPT=flatten;realize;status
 EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE
+SET=smoke,architecture

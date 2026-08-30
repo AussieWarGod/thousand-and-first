@@ -77,6 +77,20 @@ class ManifestGrammarTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 matrix.parse_timeout(bad, "x")
 
+    def test_set_tags_parse_and_deduplicate_in_order(self):
+        found = matrix.parse_manifest(
+            GREEN + "SET=smoke, architecture,smoke\n", "x.persona"
+        )
+        self.assertEqual("smoke,architecture", found["SET"])
+
+    def test_absent_set_means_untagged(self):
+        self.assertEqual("", matrix.parse_manifest(GREEN, "x.persona")["SET"])
+
+    def test_malformed_set_tag_is_refused(self):
+        for bad in ("Smoke", "sm oke", "-smoke", "smoke;laws"):
+            with self.assertRaises(SystemExit):
+                matrix.parse_manifest(GREEN + "SET=%s\n" % bad, "x.persona")
+
     def test_unknown_check_is_refused(self):
         with self.assertRaises(SystemExit):
             matrix.parse_manifest(GREEN + "CHECK=whatever\n", "x.persona")

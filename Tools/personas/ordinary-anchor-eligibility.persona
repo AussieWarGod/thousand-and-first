@@ -11,3 +11,4 @@ DESCRIPTION=a scenario-built game may not found an anchor, and its verdict is in
 REQUEST=arch-gallery-slice;facing=north
 SCRIPT=anchor;status
 EXPECT=anchor:OK,status:OK~ineligible,COMPLETE
+SET=architecture
