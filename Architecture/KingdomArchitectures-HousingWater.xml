@@ -169,7 +169,7 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="door" Material="workedmetal" MinTech="arclight" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedMetal" Role="sleep" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureShelfMetal" Role="storage" Material="workedmetal" MinTech="foundry" Natural="no" />
-    <slot Key="light" Blueprint="Techlight1" Role="light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="light" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairMetal" Role="seating" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="core" Blueprint="r_KingdomStructureMetalWall" Role="service-core" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>

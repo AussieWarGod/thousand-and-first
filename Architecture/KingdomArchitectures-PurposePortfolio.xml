@@ -26,6 +26,7 @@
     <slot Key="output" Blueprint="r_KingdomPurposeOutputStore" Role="exact-purpose-output-store" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="drain" Blueprint="r_KingdomStructureStoneGutter" Role="dry-drainage-run" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="spoil" Blueprint="Rubble" Role="sorted-stone-spoil" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="bore-service-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="purpose-forge-foundry">
@@ -46,6 +47,7 @@
     <slot Key="quench" Blueprint="r_KingdomFixtureBasinMetal" Role="empty-quench-basin" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="gutter" Blueprint="r_KingdomStructureStoneGutter" Role="dry-slag-gutter" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="slag" Blueprint="Rubble" Role="cold-sorted-slag" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="casting-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="purpose-harvest-foundry">
@@ -64,10 +66,12 @@
     <slot Key="cistern" Blueprint="r_KingdomFixtureBasinStone" Role="empty-fresh-cistern" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="trellis" Blueprint="r_KingdomVineLattice" Role="fruiting-trellis" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="trunk" Blueprint="r_KingdomStructureWornWoodWall" Role="living-bough-column" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="mill-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <!-- Deep-Bore fallback: protected head, transverse drainage, repair wall, two exits. -->
   <map Key="purpose-deepbore-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -87,19 +91,20 @@
     <row Cells="..#iIiiiiiiiiiiOi#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#siiiiiiiiiiiis#.." />
-    <row Cells="..#iiiiiiMiiiiiii#.." />
+    <row Cells="..#iiiiiiMLiiiiii#.." />
     <row Cells="..#iiiiii@oiiiiii#.." />
     <row Cells="..#iiiiiiiiiiiiiiE==" />
     <row Cells="..#bbbbiiiiiiiiss#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
-    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#iiiiiLiiiiiiii#.." />
     <row Cells="..######DD########.." />
     <row Cells="........++.........." />
   </map>
 
   <!-- Barathrumites: broad machine court with open repair bays and an offset service route. -->
   <map Key="purpose-deepbore-barathrumites-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:repair-bay" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -119,19 +124,20 @@
     <row Cells=".#Iiiiiiiiiiiiiii#.." />
     <row Cells=".#iiRRiiiiiiRRiii#.." />
     <row Cells=".#iiiiiiiiiiiiiii#.." />
-    <row Cells=".#iiMiiiiiiiioiii#.." />
+    <row Cells=".#iiMLiiiiiiioiii#.." />
     <row Cells=".#ii@iiiiiiiiiiii#.." />
     <row Cells=".#iiii####iiiiiii#.." />
     <row Cells=".#siidiiidiiiiOii#.." />
     <row Cells=".#iiiiiiiiiiiiiii#.." />
     <row Cells=".#ddddddiiiiidddd#.." />
-    <row Cells=".#iiiiiiiiiiiiiiiE==" />
+    <row Cells=".#iiiiiiLiiiiiiiiE==" />
     <row Cells=".######DDD########.." />
     <row Cells=".......+++.........." />
   </map>
 
   <!-- Daughters: receipt enters left, crosses repair/bore stations, exits right. -->
   <map Key="purpose-deepbore-daughters-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="p" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -151,19 +157,20 @@
     <row Cells="..#Iiii#iiii#iiiO#.." />
     <row Cells="..#iiii#ioii#iiii#.." />
     <row Cells="..#iiii#iiii#iiii#.." />
-    <row Cells="..#iiiiDiiiiDiiii#.." />
+    <row Cells="..#iiiiDiLiiDiiii#.." />
     <row Cells="==EiiiiiiM@iiiiiiE==" />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#pppiiiiiiiippp#.." />
     <row Cells="..#iiiisiiiiiiiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
-    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#iiiiiiLiiiiiii#.." />
     <row Cells="..#######DD#######.." />
     <row Cells=".........++........." />
   </map>
 
   <!-- Cragmensch: broad low ring, warm stone pauses, and a centred ground-listening head. -->
   <map Key="purpose-deepbore-cragmensch-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="l" Ground="$floor" Structure="$partition" Claim="building" Pass="adjacent" Cover="walled" Anchors="rest:warm-stone" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -183,19 +190,20 @@
     <row Cells="..#liIiiiiiiiiOlil.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#liiiiiiiiiiiil#.." />
-    <row Cells="..#iiiiiiMiiiiiii#.." />
+    <row Cells="..#iiiiiiMLiiiiii#.." />
     <row Cells="..#iiiiii@oiiiiii#.." />
     <row Cells="==EiiiiiiiiiiiiiiE==" />
     <row Cells="..#liiiiiiiiiiiil#.." />
     <row Cells="..#iisiiiiiiisiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
-    <row Cells="..#liiiiiiiiiiiil#.." />
+    <row Cells="..#liiiiiLiiiiiil#.." />
     <row Cells="..#######DD#######.." />
     <row Cells=".........++........." />
   </map>
 
   <!-- Great Foundry fallback: stone fire hall above an empty, drained quench court. -->
   <map Key="purpose-greatfoundry-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="H" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="heat:screen" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -220,10 +228,10 @@
     <row Cells="...................." />
     <row Cells="..################.." />
     <row Cells="..#iIiiFiiiiiiiOi#.." />
-    <row Cells="..#iiiiikiiiiiiii#.." />
+    <row Cells="..#iiiiikLiiiiiii#.." />
     <row Cells="..#iiiigiiiaiiiii#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
-    <row Cells="..#iiii@oipiiiiii#.." />
+    <row Cells="..#iiii@oipiLiiii#.." />
     <row Cells="..#HHHHDDDDDDHHHH#.." />
     <row Cells="..#ccccuccccccccc#.." />
     <row Cells="..#ccqcccccccccccE==" />
@@ -235,6 +243,7 @@
 
   <!-- Mechanimists: a processional machine ring keeps furnace and receipts in one circuit. -->
   <map Key="purpose-greatfoundry-mechanimists-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="ritual:recovered-machine" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -260,9 +269,9 @@
     <row Cells="..#IiiiiiiiiiiiiO#.." />
     <row Cells="..#iiRiiiiiiiiRii#.." />
     <row Cells="..#iRiiFiiiiiiRii#.." />
-    <row Cells="..#RiiigiiiiaiiRi#.." />
+    <row Cells="..#RiiigLiiiaiiRi#.." />
     <row Cells="..#iiiiki@oiiiiii#.." />
-    <row Cells="..#iiiipiiiiiiiRi#.." />
+    <row Cells="..#iiiipiLiiiiiRi#.." />
     <row Cells="..#DRiDDDDDDiRDDD#.." />
     <row Cells="..#ccRucccccRccqcE==" />
     <row Cells="..#cccccccccccccc#.." />
@@ -273,6 +282,7 @@
 
   <!-- Barathrumites: separated hot bays around one generous maintenance aisle. -->
   <map Key="purpose-greatfoundry-barathrumites-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="P" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -298,9 +308,9 @@
     <row Cells="..#Iiii#iiii#iiiO#.." />
     <row Cells="..#iFii#iiii#iiai#.." />
     <row Cells="..#iiiiDiiiiDiiii#.." />
-    <row Cells="..#iiiiikiiiiiiii#.." />
+    <row Cells="..#iiiiikLiiiiiii#.." />
     <row Cells="..#iigiii@oiipiii#.." />
-    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#iiiiiiLiiiiiii#.." />
     <row Cells="..#PPPPDDDDDDPPPP#.." />
     <row Cells="..#ccqcccccccccccE==" />
     <row Cells="..#ccccuccccccccc#.." />
@@ -311,6 +321,7 @@
 
   <!-- Templar: narrow inspection lane; receipts and hot work never share a side aisle. -->
   <map Key="purpose-greatfoundry-templar-xl0" Width="20" Height="14" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="M" Ground="$floor" Structure="$metal" Claim="building" Pass="adjacent" Cover="walled" Anchors="inspection:whitewashed-screen" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -335,9 +346,9 @@
     <row Cells="..################.." />
     <row Cells="..#IiiMiiiiiiMiiO#.." />
     <row Cells="..#iFiMiiiiiiMiai#.." />
-    <row Cells="..#iiiMiiikiiMiii#.." />
+    <row Cells="..#iiiMiiLkiiMiii#.." />
     <row Cells="..#igiMii@oiiMipi#.." />
-    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#iiiiiiLiiiiiii#.." />
     <row Cells="..#DDDMDDDDDDMDDD#.." />
     <row Cells="..#cccMccucccMccc#.." />
     <row Cells="..#ccqMccccccMcccE==" />
@@ -349,6 +360,7 @@
 
   <!-- Granary fallback: a rectilinear field-and-road half beside raised stores and mill floor. -->
   <map Key="purpose-realmgranary-xl0" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
@@ -373,7 +385,7 @@
     <row Cells="FrrrrrrrrrrF#iiiiii#" />
     <row Cells="FrrRrrrrRrrF#bbbbii#" />
     <row Cells="FpppppppppppDiiiiii#" />
-    <row Cells="FrrrrrrrrrrF#it@mhi#" />
+    <row Cells="FrrrrrrrrrrF#it@mhL#" />
     <row Cells="FrrrrrrrrrrF#iiiiii#" />
     <row Cells="FrrRrrrrRrrF###DD###" />
     <row Cells="Fppppppppppppppppppp" />
@@ -386,6 +398,7 @@
 
   <!-- Farmers: a common threshing square opens directly onto four communal crop courts. -->
   <map Key="purpose-realmgranary-farmers-xl0" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
@@ -409,7 +422,7 @@
     <row Cells="FRrrpp#IbiibO#ppRrrF" />
     <row Cells="FrrRpp#iiiiii#ppRrrF" />
     <row Cells="Frrrrp#bbbbii#prrrrF" />
-    <row Cells="ppppppDit@mhiDpppppp" />
+    <row Cells="ppppppDit@mhLDpppppp" />
     <row Cells="FrrRpp#iiiiii#ppRrrF" />
     <row Cells="Frrrrp###DD###prrrrF" />
     <row Cells="pppppppppppppppppppp" />
@@ -423,6 +436,7 @@
 
   <!-- Yd Freehold: long bower lanes keep the public road open between field and raised hall. -->
   <map Key="purpose-realmgranary-yd-xl0" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="soft" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="r" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
@@ -448,7 +462,7 @@
     <row Cells="Rrrrpp#IbiibO#ppRrrr" />
     <row Cells="TTTTpp#iiiiii#ppTTTT" />
     <row Cells="rrRrpp#bbbbii#pprRrr" />
-    <row Cells="TTTTppDit@mhiDppTTTT" />
+    <row Cells="TTTTppDit@mhLDppTTTT" />
     <row Cells="Rrrrpp#iiiiii#ppRrrr" />
     <row Cells="TTTTpp###DD###ppTTTT" />
     <row Cells="rrrrpppppppppppprrrr" />
@@ -462,6 +476,7 @@
 
   <!-- Chavvah: crop and irrigation spiral around a living timber column and central mill. -->
   <map Key="purpose-realmgranary-chavvah-xl0" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="soft" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="x" Ground="$soil" Structure="$trunk" Claim="yard" Pass="adjacent" Cover="soft" Anchors="living:central-trunk" />
@@ -486,7 +501,7 @@
     <row Cells="FRrppp#IbiibO#ppRrrF" />
     <row Cells="Frxppp#iiiiii#pprxrF" />
     <row Cells="FRrppp#bbbbii#ppRrrF" />
-    <row Cells="ppppppDit@mhiDpppppp" />
+    <row Cells="ppppppDit@mhLDpppppp" />
     <row Cells="Frrppp#iiiiii#prrrrF" />
     <row Cells="FrRppp###DD###pprRrF" />
     <row Cells="FrrpppppppppppprrrrF" />
@@ -510,6 +525,7 @@
         <require Role="purpose:output" Min="1" Max="1" />
         <require Role="drainage:dry" Min="1" />
         <require Role="service:spoil-lane" Min="1" />
+        <require Role="light:service" Min="2" />
         <variant Key="fallback" Priority="0" />
         <variant Key="barathrumites" Priority="80" Creeds="Barathrumites" Map="purpose-deepbore-barathrumites-xl0" />
         <variant Key="daughters" Priority="80" Creeds="Daughters" Map="purpose-deepbore-daughters-xl0" />
@@ -535,6 +551,7 @@
         <require Role="water:quench-court" Min="1" />
         <require Role="water:empty-quench" Min="1" />
         <require Role="waste:slag-lane" Min="1" />
+        <require Role="light:casting" Min="2" />
         <variant Key="fallback" Priority="0" />
         <variant Key="mechanimists" Priority="80" Creeds="Mechanimists" Map="purpose-greatfoundry-mechanimists-xl0" />
         <variant Key="barathrumites" Priority="80" Creeds="Barathrumites" Map="purpose-greatfoundry-barathrumites-xl0" />
@@ -559,6 +576,7 @@
         <require Role="work:mill" Min="1" />
         <require Role="water:fresh-cistern" Min="1" />
         <require Role="irrigation:inert" Min="2" />
+        <require Role="light:mill" Min="1" />
         <variant Key="fallback" Priority="0" />
         <variant Key="farmers" Priority="80" Creeds="Farmers" Map="purpose-realmgranary-farmers-xl0" />
         <variant Key="yd-freehold" Priority="80" Creeds="Yd Freehold" Map="purpose-realmgranary-yd-xl0" />

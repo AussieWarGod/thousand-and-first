@@ -171,6 +171,7 @@
     <slot Key="shield" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-heat-shield" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="curb" Blueprint="r_KingdomStructureHalfStone" Role="salt-bed-curb" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="tap-light" Material="scrap" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="production-weavehall-hindren">
@@ -585,10 +586,11 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:tap" Stateful="yes" />
     <row Cells=".SSSSS.." />
     <row Cells=".SHRRS.." />
     <row Cells=".SC@TS.." />
-    <row Cells=".SPCPS.." />
+    <row Cells=".SPClS.." />
     <row Cells=".SSDSSSL" />
     <row Cells="...ELLLL" />
   </map>
@@ -908,6 +910,7 @@
         <require Role="hazard:hot-salt" Min="1" />
         <require Role="hazard:clearance" Min="1" />
         <require Role="service:loading" Min="1" />
+        <require Role="light:tap" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>

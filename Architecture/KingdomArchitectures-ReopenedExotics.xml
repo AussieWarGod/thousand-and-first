@@ -16,13 +16,14 @@
     <slot Key="ground" Blueprint="DirtFloor" Role="far-gyre-approach" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="MarbleFloor" Role="open-rite-floor" Material="marble" MinTech="workshop" Natural="no" />
     <slot Key="path" Blueprint="SmallHexFloor" Role="assent-circuit" Material="shapedstone" MinTech="workshop" Natural="no" />
-    <slot Key="wall" Blueprint="r_KingdomStructureHalfStone" Role="open-moot-boundary" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureHalfStone" Role="open-moot-boundary" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="ward-threshold" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairMarble" Role="assenting-seat" Material="marble" MinTech="workshop" Natural="no" />
     <slot Key="chime" Blueprint="r_KingdomAssentChime" Role="faceted-marble-chime" Material="marble" MinTech="arclight" Natural="no" />
     <slot Key="focus" Blueprint="r_KingdomAssentFocus" Role="inert-consent-focus" Material="workedmetal" MinTech="arclight" Natural="no" />
     <slot Key="conductor" Blueprint="r_KingdomFixtureTableMarble" Role="rite-conductor-table" Material="marble" MinTech="workshop" Natural="no" />
     <slot Key="register" Blueprint="r_KingdomFixtureShelfMetal" Role="exemption-register" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="rite-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <!--
@@ -45,6 +46,7 @@
     <glyph Char="C" Ground="$path" Object="$conductor" Claim="yard" Pass="adjacent" Cover="open" Anchors="rite:conductor" Stateful="yes" />
     <glyph Char="X" Ground="$path" Object="$register" Claim="yard" Pass="adjacent" Cover="open" Anchors="ward:exemption" Stateful="yes" />
     <glyph Char="@" Ground="$path" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:assenting-moot" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="yard" Pass="walk" Cover="open" Anchors="light:rite" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
     <row Cells="..#cSiiiiiiiiiiSc#.." />
@@ -52,11 +54,11 @@
     <row Cells="..#iiiiRiiiiRiiii#.." />
     <row Cells="..#iiiirrrrrriiii#.." />
     <row Cells="..#iiiirRF@Rriiii#.." />
-    <row Cells="..#iiiirRiCRriiiiE==" />
+    <row Cells="..#iiiirRiCRriiiLE==" />
     <row Cells="..#iiiirRiXRriiii#.." />
     <row Cells="..#iiiirrrrrriiii#.." />
     <row Cells="..#iiiiRiiiiRiiii#.." />
-    <row Cells="..#iSiiiiiiiiiiSi#.." />
+    <row Cells="..#iSiiiLLiiiiiSi#.." />
     <row Cells="..######DD########.." />
     <row Cells="........++.........." />
   </map>
@@ -64,7 +66,7 @@
   <palette Key="reopened-stasis-arclight">
     <slot Key="ground" Blueprint="DirtFloor" Role="vault-approach" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="SmallHexFloor" Role="clean-service-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
-    <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="stone-vault-shell" Material="stone" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="cast-vault-shell" Material="shapedstone" MinTech="foundry" Natural="no" />
     <slot Key="partition" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-bay-partition" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="interlocked-vault-door" Material="workedmetal" MinTech="arclight" Natural="no" />
     <slot Key="bay" Blueprint="r_KingdomStasisCradle" Role="inert-body-bay" Material="workedmetal" MinTech="arclight" Natural="no" />
@@ -72,6 +74,7 @@
     <slot Key="operator" Blueprint="r_KingdomFixtureTableMarble" Role="custody-console" Material="marble" MinTech="workshop" Natural="no" />
     <slot Key="transfer" Blueprint="r_KingdomFixtureTableStone" Role="body-transfer-slab" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="locker" Blueprint="r_KingdomFixtureLockerScrap" Role="empty-effects-locker" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="custody-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <!--
@@ -95,6 +98,7 @@
     <glyph Char="l" Ground="$floor" Object="$locker" Claim="building" Pass="adjacent" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$transfer" Claim="building" Pass="adjacent" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:stasis-vault" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:custody" Stateful="yes" />
     <row Cells="...................." />
     <row Cells=".##################." />
     <row Cells=".#B#tiiiiiiiiiit#B#." />
@@ -102,11 +106,11 @@
     <row Cells=".#B#iiiiiiiiiiii#B#." />
     <row Cells=".####D########D####." />
     <row Cells=".#Liii#ii@iii#iiiP#." />
-    <row Cells=".#iiiiDiiTiiiDiiii#." />
-    <row Cells="==Eiii#iiOiii#iiii#." />
+    <row Cells=".#iiiiDiiTgiiDiiii#." />
+    <row Cells="==Egii#iiOiii#iiii#." />
     <row Cells=".#iiii#iiiiii#iiii#." />
     <row Cells=".####D########D####." />
-    <row Cells=".#liiiiiiiiiiiiiil#." />
+    <row Cells=".#liiiiiiigiiiiiil#." />
     <row Cells=".########DD########." />
     <row Cells=".........++........." />
   </map>
@@ -123,6 +127,7 @@
         <require Role="ward:focus" Min="1" Max="1" />
         <require Role="ward:exemption" Min="1" Max="1" />
         <require Role="ward:boundary" Min="18" Max="18" />
+        <require Role="light:rite" Min="3" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -140,6 +145,7 @@
         <require Role="stasis:operator" Min="1" Max="1" />
         <require Role="stasis:transfer" Min="1" Max="1" />
         <require Role="storage:effects" Min="1" Max="1" />
+        <require Role="light:custody" Min="3" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>

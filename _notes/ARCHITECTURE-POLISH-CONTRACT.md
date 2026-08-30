@@ -311,10 +311,10 @@ Release-candidate status cannot return until all applicable gates pass:
 1. Every loaded commissionable catalogue key resolves to a behavior-bearing authored tier or an explicitly typed
    network piece. No shipped plot uses a generic shell fallback.
 2. Every reachable type x size binding has a plan; every plan/tier/variant compiles within caps.
-   The external gate mirrors the a2 binary codec rather than estimating XML text: current maximum
-   is 7,105 bytes / 9,544 characters at
-   `arcology/civic-xl/fallback/civic-arcology-xl4+civic-heart-court`, under the bounded
-   8,192 / 11,264 envelopes.
+   The external gate mirrors the a2 binary codec rather than estimating XML text: the live
+   maximum is whatever `Tools/check-architecture.py` prints as `largest-snapshot` (the
+   heart-chain map has held it throughout), under the bounded 8,192 / 11,264 envelopes — the
+   checker fails any map that crosses them, so no figure is pinned here to rot.
 3. Static topology proves public/service ingress, main access, every required use cell, exit/width,
    layer exclusivity, roof/sky rules, and lot/frontage fit in every pose. Ordinary generated lots
    also prove visibly distinct concrete yard/path surfaces, non-monoculture L/XL forms, unrelated

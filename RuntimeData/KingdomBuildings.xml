@@ -1080,7 +1080,7 @@
             CrewNeeds="skill.customs:1" Carries="luxury:3,order:1" />
   <building Key="entropyblind" DisplayName="entropy blind (offset baffles around a warm-static witness plate)" Blueprint="r_KingdomEntropyBlind"
             Cost="9" Ticks="2700" Styles="all" Category="knowledge" Plot="S" MinStage="Village" MinTech="salvage"
-            Builders="creed:Entropic" Creed="Entropic" Materials="stone:8,scrap:10,canvas:3" Staff="1" Manning="scaled"
+            Builders="creed:Entropic" Creed="Entropic" Materials="stone:8,scrap:10,canvas:3,timber:1" Staff="1" Manning="scaled"
             CrewNeeds="intelligence:14" Carries="learning:3,spirit:2" />
   <building Key="goatfolkhornmoot" DisplayName="goatfolk horn-moot (a ring of horn posts with the centre left for challenge)" Blueprint="r_KingdomGoatfolkHornMoot"
             Cost="7" Ticks="2100" Styles="all" Category="civic" Plot="S" MinStage="Steading" Open="yes"

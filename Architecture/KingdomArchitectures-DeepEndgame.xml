@@ -45,7 +45,7 @@
     <slot Key="table" Blueprint="r_KingdomFixtureTableMarble" Role="marble-operation-table" Material="marble" MinTech="foundry" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairMetal" Role="audience-seat" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="vat" Blueprint="r_KingdomFixtureBasinScrap" Role="empty-preservation-vat" Material="scrap" MinTech="workshop" Natural="no" />
-    <slot Key="light" Blueprint="Techlight1" Role="surgical-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="surgical-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="deepend-annexe-arclight">
@@ -60,7 +60,7 @@
     <slot Key="desk" Blueprint="r_KingdomFixtureTableMarble" Role="marble-registry-desk" Material="marble" MinTech="foundry" Natural="no" />
     <slot Key="chair" Blueprint="r_KingdomFixtureChairMetal" Role="becoming-chair" Material="workedmetal" MinTech="arclight" Natural="no" />
     <slot Key="book" Blueprint="r_KingdomFixtureShelfMetal" Role="sealed-rolls" Material="workedmetal" MinTech="arclight" Natural="no" />
-    <slot Key="light" Blueprint="Techlight1" Role="clean-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="clean-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="deepend-mirror-arclight">
@@ -72,7 +72,7 @@
     <slot Key="ring" Blueprint="r_KingdomStructureMetalRingArch" Role="open-gate-ring-brace" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="scrap" Blueprint="r_KingdomFixtureServiceBankScrap" Role="empty-recovered-service-bank" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorSecurity" Role="service-door" Material="workedmetal" MinTech="arclight" Natural="no" />
-    <slot Key="light" Blueprint="Techlight1" Role="keying-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="keying-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="deepend-crown-foundry">
@@ -92,7 +92,7 @@
     <slot Key="walk" Blueprint="SmallHexFloor" Role="hanging-walk" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="curb" Blueprint="r_KingdomStructureLowConcrete" Role="terrace-curb" Material="shapedstone" MinTech="foundry" Natural="no" />
     <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-ballast" Material="stone" MinTech="hands" Natural="no" />
-    <slot Key="light" Blueprint="Techlight1" Role="growth-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="Techlight1" Role="growth-light" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="deepend-registry-workshop">

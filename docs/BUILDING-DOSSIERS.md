@@ -54,7 +54,7 @@
 | weeptap/gallery (S/M) | tapped seam | 4→12 | limestone + casing, drain anchor | underground, zero authored light |
 | cistern(vault) (M) / reservoir (L) | capacity only — never claims production | 256→768 drams / open water | sandstone | vault enclosed and unlit; reservoir no Contents |
 | waterworks (XL, workshop) | cistern, court, channel, one thing | capacity + luxury | brick + torchpost | none — first lit water tier |
-| condensery (XL, foundry) | recovered solar-still machine | water 50/day, best in game | metal cold-face + concrete + Techlight1 | Techlight1 gated foundry here, arclight everywhere else (unify) |
+| condensery (XL, foundry) | recovered solar-still machine | water 50/day, best in game | metal cold-face + concrete + Techlight1 | none — its foundry Techlight1 gate is now the catalogue-wide law (B1) |
 | waterbaronsgaugehouse (creed S) | sealed measures, sluice lock | order only — zero water | sandstone | a regulatory office wearing the storage type; no Contents |
 
 ## Food
@@ -75,37 +75,39 @@
 
 | Building | Purpose | Materials | Gaps |
 |---|---|---|---|
-| toolshed / grindmill / workshop / yards | hands→salvage production | culture-correct | zero light in the entire family |
+| toolshed / grindmill / workshop / yards | hands→salvage production | culture-correct | unlit, and honestly so under the lighting law (hands/salvage, no fire function); lit rungs arrive with B4 progressions |
 | smithy → forge (M) | the settlement's smithing | anvil declared stone/hands at BOTH tiers | never worked metal even after the smelter exists; no foundry smithy anywhere |
 | smelter (M) | makes workedmetal | sandstone + salvage shield | owns none of its product as fabric; NO output store |
 | butcherslab | butchery | timber + gutter | no meat storage anchor |
 | vathouse / hallsurgery | preserving / surgery | walls hands under a "workshop" palette name | under-reach |
 | graftinghall (L, foundry) | body grafting | genuinely foundry metal | light is an unlit sconce mesh |
 | chimerictheatre / becomingannexe / mirrorgate (XL, arclight) | surgery / becoming rite / interdiction gate | metal + security doors + Techlight1 | none — the positive exemplars |
-| deepbore / greatfoundry (XL, foundry) | drilling / casting | metal machinery in masonry shells | zero authored light (furnace glow only); no eater variants |
-| power family (mill, waterwheel, sailvane, saltstore, robotchargebay) | five buildings, one tier each | matches rungs | no progression, no lights; robot bay scrap forever |
-| barracks (L, Town) + 4 creed watch-huts | garrison + watches | hands/salvage | barracks has NO light and NO heat with 4 bunks; every watch-themed building is unlit; no M garrison, no fortification line |
+| deepbore / greatfoundry (XL, foundry) | drilling / casting | metal machinery in masonry shells | ~~zero authored light~~ Techlight1 at work face and hall in every variant map (B1); no eater variants |
+| power family (mill, waterwheel, sailvane, saltstore, robotchargebay) | five buildings, one tier each | matches rungs | no progression; saltstore tap now torch-lit (B1), the open-air hands/salvage rest honestly unlit; robot bay scrap forever |
+| barracks (L, Town) + 4 creed watch-huts | garrison + watches | hands/salvage | ~~no light/heat~~ barracks carries a muster torchpost and a bunk-room hearth, all four watch posts carry watch-fires (B1); no M garrison, no fortification line |
 
 ## Civic / Faith / Memorial / Knowledge
 
 | Building | Purpose | Materials | Gaps |
 |---|---|---|---|
 | fire → oven (S) | where the meal happens | hands, half-stone oven | XL realizations add pure yard padding, zero furniture |
-| bench / hall (S/M) | argument ground / charter read aloud | hands; eater hall variant exists | hall unlit; eater hall = rubble + archway, ZERO metal/tech/light (worst Eater violation — the starter hut's eater upgrade carries 57% scrap, the civic hall none) |
-| bazaar (M) / bathhouse (L) | market court / the town's showpiece | awnings + counters / brick + marble, hot & cold basins | both unlit — the bathhouse is the file's worst lighting gap |
-| heart chain: basin → waterstone → moot → court → arcology(stub) | the founding rite ground, wrapped rung by rung | retained fabric law holds cell-for-cell | ceremonial centre of the whole settlement: unlit at every rung |
+| bench / hall (S/M) | argument ground / charter read aloud | hands; eater hall variant exists | ~~hall unlit~~ hall carries a gathering hearth (B1); eater hall = rubble + archway, ZERO metal/tech/light (worst Eater violation — B2) |
+| bazaar (M) / bathhouse (L) | market court / the town's showpiece | awnings + counters / brick + marble, hot & cold basins | ~~bathhouse unlit~~ torch-lit at corridor and entrance (B1); the open-air hands bazaar stays honestly unlit |
+| heart chain: basin → waterstone → moot → court → arcology(stub) | the founding rite ground, wrapped rung by rung | retained fabric law holds cell-for-cell | ~~unlit at every rung~~ moot torchposts threaded cell-identically through court and arcology stub, court gate lights likewise (B1); basin/waterstone honestly unlit at hands |
 | caravanserai (L) | one gate wide enough for a laden dromad | canvas awnings, trough | common style only — no variant for anyone else |
-| registryoffice / factorhouse / crownhall (Deep) | clerk / counting room / dais of the kingdom | registry lit, crownhall lit; factorhouse dark | the counting room is the civic building that most needs a lit desk |
-| shrine → shrinegarth / temple (S/L) | offerings / seen from the road | kerb + marble; fungal variant has a named dark-ambulatory | the offering anchor is a bare ground tile — no altar, no bowl, nothing held; temple unlit so the authored darkness reads as oversight |
+| registryoffice / factorhouse / crownhall (Deep) | clerk / counting room / dais of the kingdom | registry lit, crownhall lit; factorhouse dark | the counting room most needs a lit desk, but factorhouse is hands-gated in KingdomBuildings.xml — a workshop light slot would raise its commission gate (checker palette.tech-underdeclared); awaiting root ruling |
+| shrine → shrinegarth / temple (S/L) | offerings / seen from the road | kerb + marble; fungal variant has a named dark-ambulatory | the offering anchor is a bare ground tile — no altar, no bowl, nothing held; ~~temple unlit~~ sanctum torch-lit (B1) so the fungal dark-ambulatory reads as designed contrast |
 | reliquary (L, Mechanimist covenant) | one machine, cased and lit | salvage + relic light | case AND relic are the same generic wall blueprint |
 | cairn / grave-grove / nichetomb | markers | fieldstone / saplings / cut rock | correctly unlit; no inspectable lore (vanilla RevealVillageHistoryOnLook idiom unused) |
-| bookshelf / scriptorium | archive / two registers side by side | timber shelves | shelves are empty (no MarkovBookshelf content) and both reading rooms are unlit — the clearest work-surface light violation in scope |
-| assentingmoot / stasisvault (XL, sealed) | consent congregation / body custody | tech props genuine; WALL RUNG TAGS WRONG (HalfStone inflated to workshop; ConcreteWall deflated two rungs below its own catalogue consensus) | both arclight-gated buildings totally unlit |
+| bookshelf / scriptorium | archive / two registers side by side | timber shelves | shelves are empty (no MarkovBookshelf content); both reading rooms remain unlit — both are hands-gated, so a workshop light slot would raise their commission gates (checker palette.tech-underdeclared); awaiting root ruling or a rung progression |
+| assentingmoot / stasisvault (XL, sealed) | consent congregation / body custody | tech props genuine; wall rung tags corrected to catalogue consensus (HalfStone stone/hands, ConcreteWall shapedstone/foundry) | ~~totally unlit~~ Techlight1 at thresholds and work surfaces (B1) |
 
 ## Creeds (30) — all topology-true, none a recolour; standing gaps
 
 All 30 verified distinct in topology and anchors; two carry real light (kyakukya spice-hearth,
-mopango paired hearths); 14 walled interiors are unlit. Named idiom gaps: **dromad** "travelling
+mopango paired hearths), and the four watch posts now carry watch-fires (B1). The remaining
+walled interiors are unlit and stay so honestly: at hands/salvage the lighting law grants fire
+only where the function includes it, and none of their functions does. Named idiom gaps: **dromad** "travelling
 frames" has zero structure (the canvas awning slot already exists in trade-caravan-hands);
 **baetyl** "offering frame" has no frame; **gyre** bone/chitin exists nowhere in the materials
 vocabulary; **goatfolk** generator filler reuses the anchored horn-post unanchored, faking extra
@@ -117,15 +119,25 @@ stands ready if one is ever wanted.
 ## Master gap list (build order)
 
 **B1 — data bugs and the lighting backbone (cross-cutting):**
-1. Rung-tag bugs: reopened-stasis-arclight/wall (ConcreteWall two rungs under catalogue
-   consensus), reopened-assent-arclight/wall (HalfStone inflated), production-smith-salvage/anvil,
-   craft underbench DoorMetal, Techlight1 foundry-vs-arclight unification. These are lintable —
-   a blueprint-rung-consistency checker floor lands with the fix.
-2. The lighting law, catalogue-wide: hands interiors with working fire = Campfire-derived glow;
-   workshop+ interiors/entrances/work surfaces = torchpost; foundry/arclight = Techlight1.
-   Priority: heart chain, bathhouse, temple (a lit counterpoint makes the fungal dark-ambulatory
-   deliberate), scriptorium/bookshelf, factorhouse, barracks (+ heat), both reopened halls, all
-   watch posts, the three dark XL megastructures.
+1. ~~Rung-tag bugs: reopened-stasis-arclight/wall (ConcreteWall two rungs under catalogue
+   consensus), reopened-assent-arclight/wall (HalfStone inflated), Techlight1
+   foundry-vs-arclight unification.~~ DONE (B1 build wave). Still open, contested at root:
+   production-smith-salvage/anvil and craft underbench DoorMetal — either retag raises the
+   owning building's commission gate (smithy is hands-gated, underbench workshop-gated in
+   KingdomBuildings.xml; the checker's palette.tech-underdeclared floor refuses a used slot
+   above the building's declared MinTech). The blueprint-rung-consistency lint floor is also
+   still owed (Tools/ is root-owned).
+2. ~~The lighting law, catalogue-wide~~ — B1 landed: heart chain (torchposts from the moot rung,
+   threaded cell-identically through court and the arcology stub; court-added gate lights),
+   bathhouse, hall hearth, temple sanctum (the fungal dark-ambulatory stays dark and now reads
+   as designed contrast), barracks (torchpost + hearth), saltstore tap, both reopened halls
+   (Techlight1), all four creed watch posts (watch-fires: snapjaw trail-den, Issachari
+   rifle-porch, Wardens' lodge, entropy blind), the three dark XL megastructures (Techlight1 in
+   every variant map). Still honestly unlit under the law's own rungs — a hands-tier room with
+   no fire function cannot carry a workshop light slot without raising its commission gate:
+   scriptorium, bookshelf, factorhouse counting desk, toolshed, grindmill (hands); workshop,
+   smelter, butcherslab (salvage, non-watch); the walled creed interiors whose functions exclude
+   fire. These wait on a root ruling or their B4 rung progressions.
 
 **B2 — Eater fidelity (author ruling):** civic-hall-eater to scrap/metal + metal door + light;
 stasisvault and assentingmoot wall retags + lights; crownhall-eater concrete/metal + Techlight1;

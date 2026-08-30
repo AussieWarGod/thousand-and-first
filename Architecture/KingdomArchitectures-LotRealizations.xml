@@ -194,10 +194,11 @@
     <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot" Stateful="yes" />
     <glyph Char="H" Ground="$floor" Object="$archive" Claim="building" Pass="adjacent" Cover="walled" Anchors="archive:charter" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yySSWWWSS.yy" />
-    <row Cells="yySWH@PPS.yy" />
+    <row Cells="yySWH@PhS.yy" />
     <row Cells="yySBPPPBS.yy" />
     <row Cells="ypSPPCPPS.yy" />
     <row Cells="ypSSSPSSS.yy" />
@@ -238,10 +239,11 @@
     <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot" Stateful="yes" />
     <glyph Char="H" Ground="$floor" Object="$archive" Claim="building" Pass="adjacent" Cover="walled" Anchors="archive:charter" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyyyySSWWWSS.yyyyyy" />
-    <row Cells="yyyyyySWH@PPS.yyyyyy" />
+    <row Cells="yyyyyySWH@PhS.yyyyyy" />
     <row Cells="yyyyyySBPPPBS.pyyyyy" />
     <row Cells="yyyyyySPPCPPS.yyyyyy" />
     <row Cells="yyyyyySSSPSSS.yyyyyy" />
@@ -343,14 +345,15 @@
     <glyph Char="D" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
     <glyph Char="E" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$stonefloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:bath" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$marble" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyySSSSSSSSSSSSyyyy" />
     <row Cells="yyyySMM@MPPMMMMSyyyy" />
-    <row Cells="yyyySMMMMWPMMMMSyyyy" />
+    <row Cells="yyyySMMMMWlMMMMSyyyy" />
     <row Cells="yyyySMCMMDPMHMMSyyyy" />
     <row Cells="yyyySMMMMWPMMMMSyyyy" />
-    <row Cells="yyypSPPPPPPPPPPSyyyy" />
+    <row Cells="yyypSPPPPlPPPPPSyyyy" />
     <row Cells="yyppSXPPPPPRPPPQyyyy" />
     <row Cells="yypySSSSSPPSSSSSyyyy" />
     <row Cells="yypp.....EE.....yyyy" />
@@ -489,10 +492,11 @@
     <glyph Char="B" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:nave" Stateful="yes" />
     <glyph Char="@" Ground="$marble" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:shrine" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:sanctum" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyySSSSSDDSSSSSyyyy" />
-    <row Cells="yyyySMMMP@PMMMMSyyyy" />
+    <row Cells="yyyySMMlP@PlMMMSyyyy" />
     <row Cells="yyyySMMMPLPMMMMSyyyy" />
     <row Cells="yyyySMBMPPMPBMMSyyyy" />
     <row Cells="yyyySMPPPXPPPMMSyyyy" />
@@ -659,15 +663,17 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:muster" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:muster" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyySSSSSSSSSSSSyyyy" />
     <row Cells="yyyySPBPP@PPBPPSyyyy" />
-    <row Cells="yyyySPPPPPPPPPPSyyyy" />
+    <row Cells="yyyySPPPPhPPPPPSyyyy" />
     <row Cells="yyyySPBPWWPPBPPSyyyy" />
     <row Cells="yyyySPPPDDPPPPPQpyyy" />
     <row Cells="yyyySPPTPPAPPPPSyyyy" />
-    <row Cells="yyyySPPPPPPPPPPSyyyy" />
+    <row Cells="yyyySPPPPPlPPPPSyyyy" />
     <row Cells="yyyySSSSSPPSSSSSpyyy" />
     <row Cells="yyyy.....EE.....ppyy" />
     <row Cells="yyyyyyyyy..ppyyyyyyy" />
@@ -1056,15 +1062,16 @@
     <glyph Char="p" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spoor-board" Stateful="yes" />
     <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:trail-meat" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:trail-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="open" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiyviiii" />
-    <row Cells="iexixeii" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="iiyoiiii" />
+    <row Cells="iexfxeii" />
     <row Cells="yip@piii" />
     <row Cells="ixibixii" />
     <row Cells="iii+iiii" />
-    <row Cells="fiy.iiii" />
+    <row Cells="viy.iiii" />
   </map>
   <!-- realization source=creed-snapjaw-trailden-s0; design=snapjawtrailden; policy=drill-court; yard-reason=muster court and guarded edge; yard=62; path=25; boundary=0; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=47595a2d21f48d55; reason=none -->
   <map Key="creed-snapjaw-trailden-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
@@ -1075,14 +1082,15 @@
     <glyph Char="p" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spoor-board" Stateful="yes" />
     <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:trail-meat" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:trail-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="open" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiiyyyifiiii" />
-    <row Cells="iivyyyiiiiii" />
-    <row Cells="ivyyyyiiiiii" />
-    <row Cells="iiyyyyyfifii" />
-    <row Cells="iiiexixeyiii" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="iiiyyyiviiii" />
+    <row Cells="iioyyyiiiiii" />
+    <row Cells="ioyyyyiiiiii" />
+    <row Cells="iiyyyyyvivii" />
+    <row Cells="iiiexfxeyiii" />
     <row Cells="yyyip@piyiii" />
     <row Cells="iiyxibixiiii" />
     <row Cells="iyyii+iiiiii" />
@@ -1097,23 +1105,24 @@
     <glyph Char="p" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spoor-board" Stateful="yes" />
     <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:trail-meat" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:trail-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="open" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasket" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="iiiiiiiyyyiiiiiiiiii" />
-    <row Cells="iiiiifiyyyfiiiiiiiii" />
+    <row Cells="iiiiiviyyyviiiiiiiii" />
     <row Cells="iiiiiyyyyyiiiiiiiiii" />
-    <row Cells="iiiiiiiyyyiiviiiiiii" />
+    <row Cells="iiiiiiiyyyiioiiiiiii" />
     <row Cells="iiiiiiiyyyiiiiiiiiii" />
-    <row Cells="iiiviiyyyyifyiiiiiii" />
-    <row Cells="iviyyyyyyyyyyyiiiiii" />
-    <row Cells="iiiiiiiyyyiyviiiiiii" />
-    <row Cells="iiiiiviyyyfiiiiiiiii" />
-    <row Cells="iiiiiiiexixeiiiiiiii" />
+    <row Cells="iiioiiyyyyivyiiiiiii" />
+    <row Cells="ioiyyyyyyyyyyyiiiiii" />
+    <row Cells="iiiiiiiyyyiyoiiiiiii" />
+    <row Cells="iiiiioiyyyviiiiiiiii" />
+    <row Cells="iiiiiiiexfxeiiiiiiii" />
     <row Cells="iiiiiiiip@piiiiiiiii" />
     <row Cells="iiiiiiixibixiiiiiiii" />
     <row Cells="iiiiiiiii+iiiiiiiiii" />
-    <row Cells="iiiiiifyy.iiiiiiiiii" />
+    <row Cells="iiiiiivyy.iiiiiiiiii" />
   </map>
   <!-- realization source=creed-cragmensch-garden-s0; design=cragmenschstonegarden; policy=memorial-grove; yard-reason=memorial walk and planting ground; yard=23; path=4; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=acf6466fbd059c06; reason=none -->
   <map Key="creed-cragmensch-garden-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
@@ -1374,13 +1383,14 @@
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="w" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="work:witness-plate" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:entropy-observation" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="pppfyyyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="pppvyyyy" />
     <row Cells="p#b###yy" />
     <row Cells="y#w@b#yy" />
-    <row Cells="f#bii#yy" />
+    <row Cells="v#bif#yy" />
     <row Cells="y##+##yy" />
     <row Cells="yyp.yyyy" />
   </map>
@@ -1392,18 +1402,19 @@
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="w" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="work:witness-plate" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:entropy-observation" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyfyypyyyyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyyvyypyyyyy" />
     <row Cells="yyyyypppyyyy" />
-    <row Cells="yyyppppfyyyy" />
-    <row Cells="yyyppppyfyyy" />
-    <row Cells="yyf#b###yyyy" />
+    <row Cells="yyyppppvyyyy" />
+    <row Cells="yyyppppyvyyy" />
+    <row Cells="yyv#b###yyyy" />
     <row Cells="yyy#w@b#yyyy" />
-    <row Cells="yyy#bii#yyyy" />
+    <row Cells="yyy#bif#yyyy" />
     <row Cells="yyy##+##yyyy" />
-    <row Cells="yyyyy.ypyfyy" />
+    <row Cells="yyyyy.ypyvyy" />
   </map>
   <!-- realization source=creed-entropy-blind-s0; design=entropyblind; policy=quiet-court; yard-reason=reading court and quiet approach; yard=231; path=28; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=4b88fc3302de204e; reason=none -->
   <map Key="creed-entropy-blind-s0-lot-xl-road" Width="20" Height="14" DefaultCover="walled">
@@ -1413,23 +1424,24 @@
     <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="w" Ground="$floor" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="work:witness-plate" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:entropy-observation" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="v" Ground="$ground" Object="$practicebasin" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyyyyyyppyyyyyyyyyy" />
-    <row Cells="yyyyyfyppyfyyyyyyyyy" />
-    <row Cells="yyfypyyypyyyyyyyyyyy" />
-    <row Cells="yyyppppppfyyyyyyyyyy" />
-    <row Cells="yyyyyfypyyyyyyyyyyyy" />
-    <row Cells="yyyppppppyfyyyyyyyyy" />
-    <row Cells="yyfyyyppppyyyyyyyyyy" />
+    <row Cells="yyyyyvyppyvyyyyyyyyy" />
+    <row Cells="yyvypyyypyyyyyyyyyyy" />
+    <row Cells="yyyppppppvyyyyyyyyyy" />
+    <row Cells="yyyyyvypyyyyyyyyyyyy" />
+    <row Cells="yyyppppppyvyyyyyyyyy" />
+    <row Cells="yyvyyyppppyyyyyyyyyy" />
     <row Cells="yyyyyyypppyyyyyyyyyy" />
-    <row Cells="yyyyyyyyfpyfyyyyyyyy" />
+    <row Cells="yyyyyyyyvpyvyyyyyyyy" />
     <row Cells="yyyyyyy#b###yyyyyyyy" />
     <row Cells="yyyyyyy#w@b#yyyyyyyy" />
-    <row Cells="yyyyyyy#bii#yyyyyyyy" />
+    <row Cells="yyyyyyy#bif#yyyyyyyy" />
     <row Cells="yyyyyyy##+##yyyyyyyy" />
-    <row Cells="yyyyyyfpy.yyyyyyyyyy" />
+    <row Cells="yyyyyyvpy.yyyyyyyyyy" />
   </map>
   <!-- realization source=creed-goatfolk-moot-s0; design=goatfolkhornmoot; policy=public-court; yard-reason=public court and processional approach; yard=18; path=9; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=e2c46b6ac680028d; reason=none -->
   <map Key="creed-goatfolk-moot-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
@@ -1683,13 +1695,14 @@
     <glyph Char="s" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" Anchors="screen:glare" />
     <glyph Char="r" Ground="$ground" Object="$bench" Claim="yard" Pass="walk" Cover="soft" Anchors="defense:rifle-rest" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:road-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="soft" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="fpyfyyyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="vpyvyyyy" />
     <row Cells="p.sis.yy" />
     <row Cells="ysirisyy" />
-    <row Cells="ysi@isyy" />
+    <row Cells="ysi@fsyy" />
     <row Cells="yii+iiyy" />
     <row Cells="ypy.yyyy" />
   </map>
@@ -1700,18 +1713,19 @@
     <glyph Char="s" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" Anchors="screen:glare" />
     <glyph Char="r" Ground="$ground" Object="$bench" Claim="yard" Pass="walk" Cover="soft" Anchors="defense:rifle-rest" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:road-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="soft" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyypppyyfyyy" />
-    <row Cells="yfyppppyyfyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyypppyyvyyy" />
+    <row Cells="yvyppppyyvyy" />
     <row Cells="yyypppppppyy" />
     <row Cells="yyypppyyyyyy" />
-    <row Cells="yyp.sis.ppfy" />
+    <row Cells="yyp.sis.ppvy" />
     <row Cells="pppsirispyyy" />
-    <row Cells="yyysi@ispyyy" />
+    <row Cells="yyysi@fspyyy" />
     <row Cells="yyyii+iiyyyy" />
-    <row Cells="yyypp.yyfyyy" />
+    <row Cells="yyypp.yyvyyy" />
   </map>
   <!-- realization source=creed-issachari-porch-s0; design=issacharirifleporch; policy=drill-court; yard-reason=muster court and guarded edge; yard=212; path=47; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=aba1fd555f4ea3c7; reason=none -->
   <map Key="creed-issachari-porch-s0-lot-xl-road" Width="20" Height="14" DefaultCover="soft">
@@ -1720,23 +1734,24 @@
     <glyph Char="s" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" Anchors="screen:glare" />
     <glyph Char="r" Ground="$ground" Object="$bench" Claim="yard" Pass="walk" Cover="soft" Anchors="defense:rifle-rest" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:road-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$ground" Object="$watchfire" Claim="yard" Pass="adjacent" Cover="soft" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyyyypppfyyyyyyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyyyyyyyypppvyyyyyyy" />
     <row Cells="yyyyyyyyypppyyyyyyyy" />
     <row Cells="yyyyyyyyyppppyyyyyyy" />
-    <row Cells="yyyyyyfyppppyyyyyyyy" />
-    <row Cells="yyyfypppypppyyfyyyyy" />
+    <row Cells="yyyyyyvyppppyyyyyyyy" />
+    <row Cells="yyyvypppypppyyvyyyyy" />
     <row Cells="yyyyypppppppppppyyyy" />
-    <row Cells="yyypppfyypppyyyyyyyy" />
-    <row Cells="yyyfyyyyypppyyfyyyyy" />
-    <row Cells="yyyyyfyyypppyyyyyyyy" />
-    <row Cells="yyyyyyy.sis.pfyyyyyy" />
+    <row Cells="yyypppvyypppyyyyyyyy" />
+    <row Cells="yyyvyyyyypppyyvyyyyy" />
+    <row Cells="yyyyyvyyypppyyyyyyyy" />
+    <row Cells="yyyyyyy.sis.pvyyyyyy" />
     <row Cells="yyyyyyysirisyyyyyyyy" />
-    <row Cells="yyyyyyysi@isyyyyyyyy" />
+    <row Cells="yyyyyyysi@fsyyyyyyyy" />
     <row Cells="yyyyyyyii+iipyyyyyyy" />
-    <row Cells="yyyyyyyyy.ppfyyyyyyy" />
+    <row Cells="yyyyyyyyy.ppvyyyyyyy" />
   </map>
   <!-- realization source=creed-strangers-screen-s0; design=strangersguestscreen; policy=house-court; yard-reason=domestic court and approach; yard=17; path=10; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=89eea87b70281908; reason=none -->
   <map Key="creed-strangers-screen-s0-lot-m-road" Width="8" Height="6" DefaultCover="soft">
@@ -2251,15 +2266,16 @@
     <glyph Char="b" Ground="$floor" Object="$bench" Claim="building" Pass="walk" Cover="walled" Anchors="seat:public" Stateful="yes" />
     <glyph Char="w" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="defense:road-sightline" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:warden-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yypyyyyy" />
-    <row Cells="y#####fy" />
+    <row Cells="y#####vy" />
     <row Cells="p#b@w#yy" />
-    <row Cells="y#iiw.py" />
+    <row Cells="y#fiw.py" />
     <row Cells="y##+##yy" />
-    <row Cells="fyp.yyyy" />
+    <row Cells="vyp.yyyy" />
   </map>
   <!-- realization source=creed-wardens-lodge-s0; design=wardenswatchlodge; policy=drill-court; yard-reason=muster court and guarded edge; yard=55; path=32; boundary=0; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=6c3cf4749890a71a; reason=none -->
   <map Key="creed-wardens-lodge-s0-lot-l-road" Width="12" Height="9" DefaultCover="walled">
@@ -2269,18 +2285,19 @@
     <glyph Char="b" Ground="$floor" Object="$bench" Claim="building" Pass="walk" Cover="walled" Anchors="seat:public" Stateful="yes" />
     <glyph Char="w" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="defense:road-sightline" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:warden-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyfyypppfyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyyvyypppvyy" />
     <row Cells="yypppppppyyy" />
     <row Cells="yyyyyypppyyy" />
-    <row Cells="yppppppppfyy" />
+    <row Cells="yppppppppvyy" />
     <row Cells="yyp#####pppp" />
-    <row Cells="yyf#b@w#pyyy" />
-    <row Cells="yyy#iiw.pyyy" />
+    <row Cells="yyv#b@w#pyyy" />
+    <row Cells="yyy#fiw.pyyy" />
     <row Cells="yyy##+##pyyy" />
-    <row Cells="yyyyf.pppyyy" />
+    <row Cells="yyyyv.pppyyy" />
   </map>
   <!-- realization source=creed-wardens-lodge-s0; design=wardenswatchlodge; policy=drill-court; yard-reason=muster court and guarded edge; yard=208; path=51; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=25b26a2304f1943d; reason=none -->
   <map Key="creed-wardens-lodge-s0-lot-xl-road" Width="20" Height="14" DefaultCover="walled">
@@ -2290,23 +2307,24 @@
     <glyph Char="b" Ground="$floor" Object="$bench" Claim="building" Pass="walk" Cover="walled" Anchors="seat:public" Stateful="yes" />
     <glyph Char="w" Ground="$floor" Structure="$screen" Claim="building" Pass="adjacent" Cover="walled" Anchors="defense:road-sightline" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:warden-watch" Stateful="yes" />
+    <glyph Char="f" Ground="$floor" Object="$watchfire" Claim="building" Pass="adjacent" Cover="walled" Anchors="light:watch-fire" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <glyph Char="f" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyyfpppfyyyyyyyy" />
+    <glyph Char="v" Ground="$ground" Object="$practicebench" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyyyyyyvpppvyyyyyyyy" />
     <row Cells="yyyyyyyypppppppyyyyy" />
-    <row Cells="yyyyfyyypppyyyyyyyyy" />
-    <row Cells="yyyyyyfypppyyyyyyyyy" />
-    <row Cells="yyyfpyyppppyyfyyyyyy" />
+    <row Cells="yyyyvyyypppyyyyyyyyy" />
+    <row Cells="yyyyyyvypppyyyyyyyyy" />
+    <row Cells="yyyvpyyppppyyvyyyyyy" />
     <row Cells="yyypppppppppppppyyyy" />
     <row Cells="yyyyyypypppypppppyyy" />
-    <row Cells="yyyfyyyfpppyyyyfyyyy" />
+    <row Cells="yyyvyyyvpppyyyyvyyyy" />
     <row Cells="yyyyyyyypppyyyyyyyyy" />
     <row Cells="yyyyyyy#####yyyyyyyy" />
     <row Cells="yyyyyyy#b@w#yyyyyyyy" />
-    <row Cells="yyyyyyy#iiw.yyyyyyyy" />
+    <row Cells="yyyyyyy#fiw.yyyyyyyy" />
     <row Cells="yyyyyyy##+##yyyyyyyy" />
-    <row Cells="yyyyyyyfp.pyyyyyyyyy" />
+    <row Cells="yyyyyyyvp.pyyyyyyyyy" />
   </map>
   <!-- realization source=creed-water-gaugehouse-s0; design=waterbaronsgaugehouse; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=17; path=10; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=dacb2d9000b76f03; reason=none -->
   <map Key="creed-water-gaugehouse-s0-lot-m-road" Width="8" Height="6" DefaultCover="walled">
@@ -7400,12 +7418,13 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:tap" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yp.SSSSS..yy" />
     <row Cells="yp.SHRRS..yy" />
     <row Cells="yp.SC@TS..yy" />
-    <row Cells="yp.SPCPS..yy" />
+    <row Cells="yp.SPClS..yy" />
     <row Cells="yp.SSDSSSLyy" />
     <row Cells="yp...ELLLLyy" />
     <row Cells="ypyyy.yyypyy" />
@@ -7424,12 +7443,13 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="L" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="service:loading" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:tap" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyyyp.SSSSS..yyypyy" />
     <row Cells="yyyyyp.SHRRS..yyypyy" />
     <row Cells="yyyyyp.SC@TS..yyypyy" />
-    <row Cells="yyyyyp.SPCPS..yyypyy" />
+    <row Cells="yyyyyp.SPClS..yyypyy" />
     <row Cells="yyyyyp.SSDSSSLyyypyy" />
     <row Cells="yyyyyp...ELLLLyyypyy" />
     <row Cells="yyyyypppp.ppppppppyy" />
@@ -7759,6 +7779,7 @@
         <require Role="liquid:hot-basin" Min="1" />
         <require Role="service:heat" Min="1" />
         <require Role="service:loading" Min="1" />
+        <require Role="light:bath" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -7903,6 +7924,8 @@
         <require Role="fixture:mess" Min="1" />
         <require Role="storage:watch" Min="1" />
         <require Role="service:muster" Min="1" />
+        <require Role="fixture:hearth" Min="1" />
+        <require Role="light:muster" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8115,6 +8138,7 @@
         <require Role="screen:low-hide" Min="2" />
         <require Role="work:spoor-board" Min="2" />
         <require Role="storage:trail-meat" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8128,6 +8152,7 @@
         <require Role="screen:low-hide" Min="2" />
         <require Role="work:spoor-board" Min="2" />
         <require Role="storage:trail-meat" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8141,6 +8166,7 @@
         <require Role="screen:low-hide" Min="2" />
         <require Role="work:spoor-board" Min="2" />
         <require Role="storage:trail-meat" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8294,6 +8320,7 @@
         <require Role="function:entropy-observation" Min="1" />
         <require Role="screen:entropy-baffle" Min="2" />
         <require Role="work:witness-plate" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8306,6 +8333,7 @@
         <require Role="function:entropy-observation" Min="1" />
         <require Role="screen:entropy-baffle" Min="2" />
         <require Role="work:witness-plate" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8318,6 +8346,7 @@
         <require Role="function:entropy-observation" Min="1" />
         <require Role="screen:entropy-baffle" Min="2" />
         <require Role="work:witness-plate" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8471,6 +8500,7 @@
         <require Role="function:road-watch" Min="1" />
         <require Role="screen:glare" Min="3" />
         <require Role="defense:rifle-rest" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8483,6 +8513,7 @@
         <require Role="function:road-watch" Min="1" />
         <require Role="screen:glare" Min="3" />
         <require Role="defense:rifle-rest" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8495,6 +8526,7 @@
         <require Role="function:road-watch" Min="1" />
         <require Role="screen:glare" Min="3" />
         <require Role="defense:rifle-rest" Min="1" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8786,6 +8818,7 @@
         <require Role="function:warden-watch" Min="1" />
         <require Role="seat:public" Min="1" />
         <require Role="defense:road-sightline" Min="2" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8798,6 +8831,7 @@
         <require Role="function:warden-watch" Min="1" />
         <require Role="seat:public" Min="1" />
         <require Role="defense:road-sightline" Min="2" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -8810,6 +8844,7 @@
         <require Role="function:warden-watch" Min="1" />
         <require Role="seat:public" Min="1" />
         <require Role="defense:road-sightline" Min="2" />
+        <require Role="light:watch-fire" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -10798,6 +10833,7 @@
         <require Role="hazard:hot-salt" Min="1" />
         <require Role="hazard:clearance" Min="1" />
         <require Role="service:loading" Min="1" />
+        <require Role="light:tap" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -10812,6 +10848,7 @@
         <require Role="hazard:hot-salt" Min="1" />
         <require Role="hazard:clearance" Min="1" />
         <require Role="service:loading" Min="1" />
+        <require Role="light:tap" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>

@@ -40,6 +40,7 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bench" Blueprint="r_KingdomFixtureBenchTimber" Role="empty-seating" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="archive" Blueprint="r_KingdomFixtureShelfTimber" Role="empty-archive" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="civic-hall-eater">
@@ -72,6 +73,7 @@
     <slot Key="service" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-heater-jacket" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFixtureBasinStone" Role="empty-bath-basin" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="bath-light" Material="shapedstone" MinTech="workshop" Natural="no" />
   </palette>
 
   <!-- Heart palettes. -->
@@ -104,6 +106,7 @@
     <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="moot-bench" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="moot-light" Material="stone" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="civic-heart-court">
@@ -123,6 +126,7 @@
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="arcwall" Blueprint="r_KingdomStructureConcreteWall" Role="arcology-outer-shell" Material="shapedstone" MinTech="foundry" Natural="no" />
     <slot Key="arcrib" Blueprint="r_KingdomStructureMetalWall" Role="arcology-service-rib" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="retained-moot-light" Material="stone" MinTech="workshop" Natural="no" />
   </palette>
 
   <!-- Faith and knowledge palettes. -->
@@ -143,6 +147,7 @@
     <slot Key="dressed" Blueprint="r_KingdomStructureBrickWall" Role="dressed-wall" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairStone" Role="functional-stone-nave-seat" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="open-portal" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="sanctum-light" Material="shapedstone" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="faith-temple-fungal">
@@ -184,6 +189,8 @@
     <slot Key="bed" Blueprint="r_KingdomFixtureBedTimber" Role="bunk" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="mess-table" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="empty-watch-storage" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="muster-light" Material="stone" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="memorial-cairn-hands">
@@ -261,15 +268,17 @@
     <glyph Char="M" Ground="$ground" Structure="$wall" Object="$arcrib" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$mootfloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" Stateful="yes" />
+    <glyph Char="G" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" Stateful="yes" />
     <!-- STUB under the hosted-arcology programme (AMENDED 19+): the real arcology is a
          multi-storey megastructure spanning the parasang and some, its shell outside the
          parasang and the city inside. Until that lands, this map is the heart-court under the
          arcology shell ribs, kept cell-identical on every retained fixture so the rung
-         transition law holds. -->
+         transition law holds - the retained moot torch-posts and court gate lights included. -->
     <row Cells="Maa##Maa##Maa##Maa#M" />
     <row Cells="MbssscsbssssbscsssbM" />
     <row Cells="MssswwwwwwDwwwwwsssM" />
-    <row Cells="MscswIIXIIIIYIIwscsM" />
+    <row Cells="MscswILXIIIIYLIwscsM" />
     <row Cells="MssswIJJJJPJJJIwsssM" />
     <row Cells="MscswIJPP@PPJJIwscsM" />
     <row Cells="MssswIJPRBRPJJIwsssM" />
@@ -278,7 +287,7 @@
     <row Cells="MscswIJJJEJJJJIwscsM" />
     <row Cells="MssswwwwwDwwwwwwsssM" />
     <row Cells="MbssmmmmmPmmmmmmssbM" />
-    <row Cells="MsscmmmcmPmmcmmmcssM" />
+    <row Cells="MsscmmmcGPmGcmmmcssM" />
     <row Cells="M####M###++###M####M" />
   </map>
 
@@ -316,8 +325,9 @@
     <glyph Char="B" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:moot" Stateful="yes" />
     <glyph Char="H" Ground="$floor" Object="$archive" Claim="building" Pass="adjacent" Cover="walled" Anchors="archive:charter" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <row Cells="SSWWWSS." />
-    <row Cells="SWH@PPS." />
+    <row Cells="SWH@PhS." />
     <row Cells="SBPPPBS." />
     <row Cells="SPPCPPS." />
     <row Cells="SSSPSSS." />
@@ -370,12 +380,13 @@
     <glyph Char="D" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
     <glyph Char="E" Ground="$stonefloor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$stonefloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:bath" Stateful="yes" />
     <row Cells="SSSSSSSSSSSS" />
     <row Cells="SMM@MPPMMMMS" />
-    <row Cells="SMMMMWPMMMMS" />
+    <row Cells="SMMMMWlMMMMS" />
     <row Cells="SMCMMDPMHMMS" />
     <row Cells="SMMMMWPMMMMS" />
-    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SPPPPlPPPPPS" />
     <row Cells="SXPPPPPRPPPQ" />
     <row Cells="SSSSSPPSSSSS" />
     <row Cells=".....EE....." />
@@ -428,8 +439,9 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" Stateful="yes" />
     <row Cells="WWWWWWDWWWWW" />
-    <row Cells="WIIXIIIIYIIW" />
+    <row Cells="WILXIIIIYLIW" />
     <row Cells="WIJJJJPJJJIW" />
     <row Cells="WIJPP@PPJJIW" />
     <row Cells="WIJPRBRPJJIW" />
@@ -458,16 +470,19 @@
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$mootfloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" Stateful="yes" />
+    <glyph Char="G" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" Stateful="yes" />
     <!-- The court is raised AROUND the settlement's retained fabric, which the rung law keeps
          standing: the brinestalk moot hall whole at its recorded rite, the first basin behind
          its kerb rail, the dirt rite-path. The additions are the wrap: a bench-lined cloister
          walk across the north (the retained back door opens into it), colonnaded side aisles,
          and a marble forecourt where the rite path runs from the worked south gate between
-         paired columns to the moot door. -->
+         paired columns to the moot door. The moot's two torch-posts stand retained beside the
+         moot seats; the court adds its own pair of gate lights on the marble forecourt. -->
     <row Cells="####################" />
     <row Cells="#bssscsbssssbscsssb#" />
     <row Cells="#ssswwwwwwDwwwwwsss#" />
-    <row Cells="#scswIIXIIIIYIIwscs#" />
+    <row Cells="#scswILXIIIIYLIwscs#" />
     <row Cells="#ssswIJJJJPJJJIwsss#" />
     <row Cells="#scswIJPP@PPJJIwscs#" />
     <row Cells="#ssswIJPRBRPJJIwsss#" />
@@ -476,7 +491,7 @@
     <row Cells="#scswIJJJEJJJJIwscs#" />
     <row Cells="#ssswwwwwDwwwwwwsss#" />
     <row Cells="#bssmmmmmPmmmmmmssb#" />
-    <row Cells="#sscmmmcmPmmcmmmcss#" />
+    <row Cells="#sscmmmcGPmGcmmmcss#" />
     <row Cells="#########++#########" />
   </map>
 
@@ -517,8 +532,9 @@
     <glyph Char="B" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="walled" Anchors="seat:nave" Stateful="yes" />
     <glyph Char="@" Ground="$marble" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:shrine" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="l" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:sanctum" Stateful="yes" />
     <row Cells="SSSSSDDSSSSS" />
-    <row Cells="SMMMP@PMMMMS" />
+    <row Cells="SMMlP@PlMMMS" />
     <row Cells="SMMMPLPMMMMS" />
     <row Cells="SMBMPPMPBMMS" />
     <row Cells="SMPPPXPPPMMS" />
@@ -596,13 +612,15 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="Q" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:muster" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:muster" Stateful="yes" />
     <row Cells="SSSSSSSSSSSS" />
     <row Cells="SPBPP@PPBPPS" />
-    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SPPPPhPPPPPS" />
     <row Cells="SPBPWWPPBPPS" />
     <row Cells="SPPPDDPPPPPQ" />
     <row Cells="SPPTPPAPPPPS" />
-    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SPPPPPlPPPPS" />
     <row Cells="SSSSSPPSSSSS" />
     <row Cells=".....EE....." />
   </map>
@@ -745,6 +763,7 @@
         <require Role="liquid:hot-basin" Min="1" />
         <require Role="service:heat" Min="1" />
         <require Role="service:loading" Min="1" />
+        <require Role="light:bath" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -779,6 +798,7 @@
         <require Role="function:water-queue" Min="1" />
         <require Role="seat:moot1" Min="1" />
         <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -791,6 +811,8 @@
         <require Role="function:water-queue" Min="1" />
         <require Role="seat:moot1" Min="1" />
         <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
       <tier Key="arcology" BuildKey="arcology" Level="4" Map="civic-arcology-xl4" Palette="civic-heart-court">
@@ -801,6 +823,8 @@
         <require Role="function:water-queue" Min="1" />
         <require Role="seat:moot1" Min="1" />
         <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -877,6 +901,8 @@
         <require Role="fixture:mess" Min="1" />
         <require Role="storage:watch" Min="1" />
         <require Role="service:muster" Min="1" />
+        <require Role="fixture:hearth" Min="1" />
+        <require Role="light:muster" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
