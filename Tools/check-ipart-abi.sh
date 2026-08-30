@@ -100,18 +100,24 @@ scan_baseline() {
 		done
 }
 
+# Tracked files only, via git: the deployed baseline is a commit, so comparing it against
+# anything untracked would judge classes no release ships.  git grep exits 1 on a lawful
+# zero-match scan and >1 only on a real fault, so the two are told apart explicitly - a scan
+# tool failure must never read as "every shipped class was removed".
 scan_worktree() {
-	local known
-	known="$({
-		rg -o --no-filename \
-			'public (sealed )?(partial )?class[[:space:]]+[A-Za-z0-9_]+[[:space:]]*:[[:space:]]*IPart' \
-			--glob '*.cs' --glob '!DevTests/**' |
-			sed -E 's/.*class[[:space:]]+([A-Za-z0-9_]+).*/\1/' |
-			LC_ALL=C sort -u | paste -sd'|' -
-	} || true)"
+	local known status=0
+	known="$(git grep -h -o -E \
+		'public (sealed )?(partial )?class[[:space:]]+[A-Za-z0-9_]+[[:space:]]*:[[:space:]]*IPart' \
+		-- '*.cs' ':(exclude)DevTests' |
+		sed -E 's/.*class[[:space:]]+([A-Za-z0-9_]+).*/\1/' |
+		LC_ALL=C sort -u | paste -sd'|' -)" || status=$?
+	if [ "$status" -gt 1 ]; then
+		echo "IPART ABI SCAN FAILED: git grep exited $status" >&2
+		exit 2
+	fi
 	[ -n "$known" ] || return 0
 	known="|$known|"
-	rg --files --glob '*.cs' --glob '!DevTests/**' |
+	git ls-files -- '*.cs' ':(exclude)DevTests' |
 		LC_ALL=C sort |
 		while IFS= read -r file; do
 			extract_parts "$known" < "$file"
