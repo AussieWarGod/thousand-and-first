@@ -152,7 +152,6 @@ namespace ThousandAndFirst
 			if (!KingdomScenarioScript.Present()) return;
 			PrimedSeam = Seam;
 			SuppressedPopups = Popup.Suppress = true;
-			UnityEngine.Application.runInBackground = true; // quiet launch must not pause
 		}
 
 		public override bool HandleEvent(BeginTakeActionEvent E)
@@ -204,6 +203,7 @@ namespace ThousandAndFirst
 				Finish(StoppedRow, false, failure);
 				return false;
 			}
+			UnityEngine.Application.runInBackground = true; // in-world only; mid-boot crashed
 			KingdomScenarioJournal.Append(ArmedRow, true, "armed by BeginTakeActionEvent; popups "
 				+ (SuppressedPopups ? "suppressed from " + PrimedSeam : "NOT suppressed - no primer "
 					+ "seam fired, so the boot and arrival popups still need a keypress"));

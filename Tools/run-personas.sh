@@ -33,6 +33,8 @@ MATRIX="$PERSONA_DIR/persona_matrix.py"
 PREPARE="$REPO/Tools/prepare-scenario.sh"
 LAUNCHER="$REPO/Tools/run-scenario.ps1"
 REPORT="${TAF_PERSONA_REPORT:-$REPO/Tools/PortableOutput/personas-report.tsv}"
+REPORT_DIR="$(dirname "$REPORT")"
+mkdir -p "$REPORT_DIR"
 POLL_SECONDS=5
 
 QUD_ROOT_DEFAULT="/mnt/f/SteamLibrary/steamapps/common/Caves of Qud"
@@ -153,18 +155,18 @@ run_persona() {
 		TAF_SCENARIO_START="$P_START" \
 		TAF_SCENARIO_EXTRA_VERBS="$P_VERBS" \
 		TAF_QUD_ROOT="$QUD_ROOT" \
-		"$PREPARE" "$root" > "$root.prepare.log" 2>&1
+		"$PREPARE" "$root" > "$REPORT_DIR/prepare-$persona.log" 2>&1
 	then
-		DETAIL="prepare refused: $(tail -n 3 "$root.prepare.log" | tr '\n\t' '  ')"
+		DETAIL="prepare refused: $(tail -n 3 "$REPORT_DIR/prepare-$persona.log" | tr '\n\t' '  ')"
 		return
 	fi
 
 	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
 		-File "$(wslpath -w "$LAUNCHER")" \
 		-Root "$(wslpath -w "$root")" \
-		-Game "$(wslpath -w "$GAME")" > "$root.launch.log" 2>&1
+		-Game "$(wslpath -w "$GAME")" > "$REPORT_DIR/launch-$persona.log" 2>&1
 	then
-		DETAIL="launch refused: $(tail -n 3 "$root.launch.log" | tr '\n\t' '  ')"
+		DETAIL="launch refused: $(tail -n 3 "$REPORT_DIR/launch-$persona.log" | tr '\n\t' '  ')"
 		stop_game
 		return
 	fi
@@ -204,6 +206,9 @@ run_persona() {
 		DETAIL="$problems"
 	fi
 	[ -z "$warnings" ] || DETAIL="$DETAIL; verb providers refused: $warnings"
+	# The profile is wiped before the next persona, so the journal - the only evidence a
+	# failure leaves - is archived beside the report first.
+	[ ! -f "$journal" ] || cp -f "$journal" "$REPORT_DIR/journal-$persona.tsv" || true
 }
 
 # ---- the matrix -------------------------------------------------------------------------------
@@ -214,6 +219,12 @@ failed=0
 for persona in "${PERSONAS[@]}"; do
 	echo "=== $persona"
 	run_persona "$persona"
+	# One retry absorbs launch-level flakes (a Unity boot race killed one clean persona in
+	# eight live launches); a persona that fails twice is a real red, and the retry is named.
+	if [ "$VERDICT" = TIMEOUT ]; then
+		run_persona "$persona"
+		[ "$VERDICT" != PASS ] || DETAIL="$DETAIL (passed on retry after a launch flake)"
+	fi
 	printf '%s\t%s\t%s\n' "$persona" "$VERDICT" "$(printf '%s' "$DETAIL" | tr '\n\t' '  ')" \
 		>> "$REPORT"
 	echo "    $VERDICT  $DETAIL"

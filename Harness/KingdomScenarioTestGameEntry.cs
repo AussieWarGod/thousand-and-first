@@ -210,4 +210,26 @@ namespace ThousandAndFirst.Harness
 			});
 		}
 	}
+
+	/// <summary>
+	/// The embark overlay's per-frame Update can ask a window for DataErrors while the scripted
+	/// fast-embark is mid-teardown of that exact window, and the engine method dereferences its
+	/// half-retired module (crashed live 2026-08-30, seven clean launches then one NRE). Under a
+	/// sealed script no human is reading the overlay, so the error text is inert; the finalizer
+	/// swallows ONLY that NRE, only in a scripted dev profile, and reports no errors for the
+	/// frame instead of killing the run. Attended profiles keep the engine's behavior whole.
+	/// </summary>
+	[HarmonyPatch(typeof(XRL.CharacterBuilds.AbstractBuilderModuleWindowBase), "DataErrors")]
+	internal static class KingdomScenarioEmbarkOverlayRacePatch
+	{
+		[HarmonyFinalizer]
+		internal static Exception Finalizer(Exception __exception, ref string __result)
+		{
+			if (__exception == null) return null;
+			if (!(__exception is NullReferenceException)) return __exception;
+			if (!KingdomScenarioScript.Present()) return __exception;
+			__result = null;
+			return null;
+		}
+	}
 }
