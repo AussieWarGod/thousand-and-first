@@ -4479,7 +4479,8 @@
   <!-- realization source=housing-caproof-s0; design=caproof; policy=house-court; yard-reason=domestic court and approach; yard=15; path=13; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=2148dcb01b2cbb0d; reason=none -->
   <map Key="housing-caproof-s0-lot-m-heart" Width="8" Height="6" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
@@ -4488,7 +4489,7 @@
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="y.###.yy" />
     <row Cells="y#b@#.yy" />
-    <row Cells="y#si+.pp" />
+    <row Cells="y#sid+pp" />
     <row Cells="y.###.yp" />
     <row Cells="yyyppppp" />
     <row Cells="yyyppppp" />
@@ -4496,7 +4497,8 @@
   <!-- realization source=housing-caproof-s0; design=caproof; policy=house-court; yard-reason=domestic court and approach; yard=56; path=32; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=0cc092d9178c6697; reason=none -->
   <map Key="housing-caproof-s0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
@@ -4505,7 +4507,7 @@
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyy.###.yyyy" />
     <row Cells="yyy#b@#.pyyy" />
-    <row Cells="yyy#si+.yyyy" />
+    <row Cells="yyy#sid+yyyy" />
     <row Cells="yyy.###.yyyy" />
     <row Cells="yyyypppypyyy" />
     <row Cells="yppppppppppy" />
@@ -4516,7 +4518,8 @@
   <!-- realization source=housing-caproof-s0; design=caproof; policy=house-court; yard-reason=domestic court and approach; yard=202; path=58; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=4d78819c849d2f20; reason=none -->
   <map Key="housing-caproof-s0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
@@ -4525,7 +4528,7 @@
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyyyyy.###.yyyyyyyy" />
     <row Cells="yyyyyyy#b@#.yyyyyyyy" />
-    <row Cells="yyyyyyy#si+.yyyyyyyy" />
+    <row Cells="yyyyyyy#sid+yyyyyyyy" />
     <row Cells="yyyyyyy.###.yyyyyyyy" />
     <row Cells="yyyyyyypyyyyyyyyyyyy" />
     <row Cells="yyyyyyypyyyyyyyyyyyy" />
@@ -4730,7 +4733,7 @@
     <row Cells="yyyyypyyyypyyyypyyyy" />
     <row Cells="yyyyypyyyypyyyypyyyy" />
   </map>
-  <!-- realization source=housing-house-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-m0-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -4745,13 +4748,13 @@
     <row Cells=",,.######.,," />
     <row Cells=",p.#b#b##.p," />
     <row Cells=",,.#s#ih#..." />
-    <row Cells=",,.#@iii#.pp" />
+    <row Cells=",,.#@iii#..." />
     <row Cells=",,.##+###.,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-house-broad-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-broad-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-broad-m0-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -4767,13 +4770,13 @@
     <row Cells="yy.######.yy" />
     <row Cells="yp.#bBBb#.py" />
     <row Cells="yy.#sBBh#..." />
-    <row Cells="yy.#@iii#.pp" />
+    <row Cells="yy.#@iii#..." />
     <row Cells="yy.##++##.yp" />
     <row Cells="yyypp..ppppp" />
     <row Cells="yyypy..pyyyp" />
     <row Cells="yyypy..pyyyp" />
   </map>
-  <!-- realization source=housing-house-verdant-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-verdant-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-verdant-m0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4790,13 +4793,13 @@
     <row Cells=",,.#bib#c.,," />
     <row Cells=",p.#s#i#=.p," />
     <row Cells=",,.#i@ih=+.." />
-    <row Cells=",,..##,==.pp" />
+    <row Cells=",,..##,==..." />
     <row Cells=",,....c...,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-house-fungal-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-fungal-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-fungal-m0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4811,14 +4814,14 @@
     <row Cells="yy..####..yy" />
     <row Cells="yy.#bib#..yy" />
     <row Cells="yp#si@i~#.py" />
-    <row Cells="yy#i#h#~+..." />
-    <row Cells="yy.##~~~..pp" />
+    <row Cells="yy#i#h#~+~.." />
+    <row Cells="yy.##~~~...." />
     <row Cells="yy...##...yp" />
     <row Cells="yyypp..ppppp" />
     <row Cells="yyypy..pyyyp" />
     <row Cells="yyypy..pyyyp" />
   </map>
-  <!-- realization source=housing-house-hindren-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-hindren-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-hindren-m0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4833,14 +4836,14 @@
     <row Cells=",,..####..,," />
     <row Cells=",,.#bib#..,," />
     <row Cells=",p#siiih#.p," />
-    <row Cells=",,#ii@iC+..." />
-    <row Cells=",,.##,CC..pp" />
+    <row Cells=",,#ii@iC+,.." />
+    <row Cells=",,.##,CC...." />
     <row Cells=",,...,,...,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-house-kyakukya-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-house-kyakukya-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-house-kyakukya-m0-lot-l-heart" Width="12" Height="9" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4856,13 +4859,13 @@
     <row Cells=",,.#siiM..,," />
     <row Cells=",p.#@ih,+.p," />
     <row Cells=",,..iM,....." />
-    <row Cells=",,.###....pp" />
+    <row Cells=",,.###......" />
     <row Cells=",,........,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-m1-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
@@ -4877,13 +4880,13 @@
     <row Cells=",,.######.,," />
     <row Cells=",p.#b#bb#.p," />
     <row Cells=",,.#s#dh#..." />
-    <row Cells=",,.#@d,d#.pp" />
+    <row Cells=",,.#@d,d#..." />
     <row Cells=",,.##+,,#.,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-broad-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-broad-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-broad-m1-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
@@ -4899,13 +4902,13 @@
     <row Cells=",,.######.,," />
     <row Cells=",p.#bBBb#.p," />
     <row Cells=",,.#sBBh#..." />
-    <row Cells=",,.#@ddd#.pp" />
+    <row Cells=",,.#@ddd#..." />
     <row Cells=",,.##+,,#.,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-verdant-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-verdant-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-verdant-m1-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4922,13 +4925,13 @@
     <row Cells=",,.#bib#c.,," />
     <row Cells=",p.#s#i#=.p," />
     <row Cells=",,.,i@ih=+.." />
-    <row Cells=",,.b,,===.pp" />
+    <row Cells=",,.b,,===..." />
     <row Cells=",,..c.....,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-fungal-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-fungal-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-fungal-m1-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4943,14 +4946,14 @@
     <row Cells=",,..####..,," />
     <row Cells=",,.#bib#..,," />
     <row Cells=",p#si@i~#.p," />
-    <row Cells=",,#i#h~~+..." />
-    <row Cells=",,.b,~~~..pp" />
+    <row Cells=",,#i#h~~+~.." />
+    <row Cells=",,.b,~~~...." />
     <row Cells=",,..###...,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-hindren-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-hindren-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-hindren-m1-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4965,14 +4968,14 @@
     <row Cells=",,..####..,," />
     <row Cells=",,.#bib#..,," />
     <row Cells=",p#siiih#.p," />
-    <row Cells=",,#ii@iC+..." />
-    <row Cells=",,.b,,CC..pp" />
+    <row Cells=",,#ii@iC+,.." />
+    <row Cells=",,.b,,CC...." />
     <row Cells=",,..,CC...,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-housecourt-kyakukya-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
+  <!-- realization source=housing-housecourt-kyakukya-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=34; path=16; boundary=0; fixtures=0; route-open=10; intentional-open=0; inaccessible-open=0; family-fingerprint=ac2fa6e50b41a7e6; reason=none -->
   <map Key="housing-housecourt-kyakukya-m1-lot-l-heart" Width="12" Height="9" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -4988,13 +4991,13 @@
     <row Cells=",,.#siiM..,," />
     <row Cells=",p.#@ih,+.p," />
     <row Cells=",,.biM,,...." />
-    <row Cells=",,..,M....pp" />
+    <row Cells=",,..,M......" />
     <row Cells=",,........,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-house-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -5005,11 +5008,11 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,........,,,,,," />
-    <row Cells=",,,,,,.######.,,,,,," />
-    <row Cells=",,,,,,.#b#b##.,,,,,," />
-    <row Cells=",,,,,,.#s#ih#.,,,,,," />
-    <row Cells=",,,,,,.#@iii#.,,,,,," />
+    <row Cells=",,,,,,.........,,,,," />
+    <row Cells=",,,,,,.######..,,,,," />
+    <row Cells=",,,,,,.#b#b##..,,,,," />
+    <row Cells=",,,,,,.#s#ih#..,,,,," />
+    <row Cells=",,,,,,.#@iii#..,,,,," />
     <row Cells=",,,,,,.##+###.,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5020,7 +5023,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-house-broad-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-broad-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-broad-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -5032,11 +5035,11 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyy........yyyyyy" />
-    <row Cells="yyyyyy.######.yyyyyy" />
-    <row Cells="yyyyyy.#bBBb#.yyyyyy" />
-    <row Cells="yyyyyy.#sBBh#.yyyyyy" />
-    <row Cells="yyyyyy.#@iii#.yyyyyy" />
+    <row Cells="yyyyyy.........yyyyy" />
+    <row Cells="yyyyyy.######..yyyyy" />
+    <row Cells="yyyyyy.#bBBb#..yyyyy" />
+    <row Cells="yyyyyy.#sBBh#..yyyyy" />
+    <row Cells="yyyyyy.#@iii#..yyyyy" />
     <row Cells="yyyyyy.##++##.yyyyyy" />
     <row Cells="yyyyyyppp..yyyyyyyyy" />
     <row Cells="yyyyppppp..ppppyyyyy" />
@@ -5047,7 +5050,7 @@
     <row Cells="yyyypyyyy..yyypyyyyy" />
     <row Cells="yyyypyyyy..yyypyyyyy" />
   </map>
-  <!-- realization source=housing-house-verdant-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-verdant-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-verdant-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5060,11 +5063,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.#bib#c.,,,,,," />
-    <row Cells=",,,,,,.#s#i#=.,,,,,," />
-    <row Cells=",,,,,,.#i@ih=+,,,,,," />
-    <row Cells=",,,,,,..##,==.,,,,,," />
+    <row Cells=",,,,,,..####...,,,,," />
+    <row Cells=",,,,,,.#bib#c..,,,,," />
+    <row Cells=",,,,,,.#s#i#=..,,,,," />
+    <row Cells=",,,,,,.#i@ih=+.,,,,," />
+    <row Cells=",,,,,,..##,==..,,,,," />
     <row Cells=",,,,,,....c...,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5075,7 +5078,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-house-fungal-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-fungal-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-fungal-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5087,11 +5090,11 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyy..####..yyyyyy" />
-    <row Cells="yyyyyy.#bib#..yyyyyy" />
-    <row Cells="yyyyyy#si@i~#.yyyyyy" />
-    <row Cells="yyyyyy#i#h#~+.yyyyyy" />
-    <row Cells="yyyyyy.##~~~..yyyyyy" />
+    <row Cells="yyyyyy..####...yyyyy" />
+    <row Cells="yyyyyy.#bib#...yyyyy" />
+    <row Cells="yyyyyy#si@i~#..yyyyy" />
+    <row Cells="yyyyyy#i#h#~+~.yyyyy" />
+    <row Cells="yyyyyy.##~~~...yyyyy" />
     <row Cells="yyyyyy...##...yyyyyy" />
     <row Cells="yyyyyyppp..yyyyyyyyy" />
     <row Cells="yyyyppppp..ppppyyyyy" />
@@ -5102,7 +5105,7 @@
     <row Cells="yyyypyyyy..yyypyyyyy" />
     <row Cells="yyyypyyyy..yyypyyyyy" />
   </map>
-  <!-- realization source=housing-house-hindren-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-hindren-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-hindren-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5114,11 +5117,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.#bib#..,,,,,," />
-    <row Cells=",,,,,,#siiih#.,,,,,," />
-    <row Cells=",,,,,,#ii@iC+.,,,,,," />
-    <row Cells=",,,,,,.##,CC..,,,,,," />
+    <row Cells=",,,,,,..####...,,,,," />
+    <row Cells=",,,,,,.#bib#...,,,,," />
+    <row Cells=",,,,,,#siiih#..,,,,," />
+    <row Cells=",,,,,,#ii@iC+,.,,,,," />
+    <row Cells=",,,,,,.##,CC...,,,,," />
     <row Cells=",,,,,,...,,...,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5129,7 +5132,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-house-kyakukya-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-house-kyakukya-m0; design=house; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-house-kyakukya-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5141,11 +5144,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..b.b...,,,,,," />
-    <row Cells=",,,,,,.#siiM..,,,,,," />
-    <row Cells=",,,,,,.#@ih,+.,,,,,," />
-    <row Cells=",,,,,,..iM,...,,,,,," />
-    <row Cells=",,,,,,.###....,,,,,," />
+    <row Cells=",,,,,,..b.b....,,,,," />
+    <row Cells=",,,,,,.#siiM...,,,,," />
+    <row Cells=",,,,,,.#@ih,+..,,,,," />
+    <row Cells=",,,,,,..iM,....,,,,," />
+    <row Cells=",,,,,,.###.....,,,,," />
     <row Cells=",,,,,,........,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5156,7 +5159,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
@@ -5167,11 +5170,11 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,........,,,,,," />
-    <row Cells=",,,,,,.######.,,,,,," />
-    <row Cells=",,,,,,.#b#bb#.,,,,,," />
-    <row Cells=",,,,,,.#s#dh#.,,,,,," />
-    <row Cells=",,,,,,.#@d,d#.,,,,,," />
+    <row Cells=",,,,,,.........,,,,," />
+    <row Cells=",,,,,,.######..,,,,," />
+    <row Cells=",,,,,,.#b#bb#..,,,,," />
+    <row Cells=",,,,,,.#s#dh#..,,,,," />
+    <row Cells=",,,,,,.#@d,d#..,,,,," />
     <row Cells=",,,,,,.##+,,#.,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5182,7 +5185,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-broad-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-broad-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-broad-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
@@ -5194,11 +5197,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling,threshold:household" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,........,,,,,," />
-    <row Cells=",,,,,,.######.,,,,,," />
-    <row Cells=",,,,,,.#bBBb#.,,,,,," />
-    <row Cells=",,,,,,.#sBBh#.,,,,,," />
-    <row Cells=",,,,,,.#@ddd#.,,,,,," />
+    <row Cells=",,,,,,.........,,,,," />
+    <row Cells=",,,,,,.######..,,,,," />
+    <row Cells=",,,,,,.#bBBb#..,,,,," />
+    <row Cells=",,,,,,.#sBBh#..,,,,," />
+    <row Cells=",,,,,,.#@ddd#..,,,,," />
     <row Cells=",,,,,,.##+,,#.,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5209,7 +5212,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-verdant-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-verdant-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-verdant-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5222,11 +5225,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..##c...,,,,,," />
-    <row Cells=",,,,,,.#bib#c.,,,,,," />
-    <row Cells=",,,,,,.#s#i#=.,,,,,," />
-    <row Cells=",,,,,,.,i@ih=+,,,,,," />
-    <row Cells=",,,,,,.b,,===.,,,,,," />
+    <row Cells=",,,,,,..##c....,,,,," />
+    <row Cells=",,,,,,.#bib#c..,,,,," />
+    <row Cells=",,,,,,.#s#i#=..,,,,," />
+    <row Cells=",,,,,,.,i@ih=+.,,,,," />
+    <row Cells=",,,,,,.b,,===..,,,,," />
     <row Cells=",,,,,,..c.....,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5237,7 +5240,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-fungal-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-fungal-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-fungal-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5249,11 +5252,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.#bib#..,,,,,," />
-    <row Cells=",,,,,,#si@i~#.,,,,,," />
-    <row Cells=",,,,,,#i#h~~+.,,,,,," />
-    <row Cells=",,,,,,.b,~~~..,,,,,," />
+    <row Cells=",,,,,,..####...,,,,," />
+    <row Cells=",,,,,,.#bib#...,,,,," />
+    <row Cells=",,,,,,#si@i~#..,,,,," />
+    <row Cells=",,,,,,#i#h~~+~.,,,,," />
+    <row Cells=",,,,,,.b,~~~...,,,,," />
     <row Cells=",,,,,,..###...,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5264,7 +5267,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-hindren-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-hindren-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-hindren-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5276,11 +5279,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.#bib#..,,,,,," />
-    <row Cells=",,,,,,#siiih#.,,,,,," />
-    <row Cells=",,,,,,#ii@iC+.,,,,,," />
-    <row Cells=",,,,,,.b,,CC..,,,,,," />
+    <row Cells=",,,,,,..####...,,,,," />
+    <row Cells=",,,,,,.#bib#...,,,,," />
+    <row Cells=",,,,,,#siiih#..,,,,," />
+    <row Cells=",,,,,,#ii@iC+,.,,,,," />
+    <row Cells=",,,,,,.b,,CC...,,,,," />
     <row Cells=",,,,,,..,CC...,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5291,7 +5294,7 @@
     <row Cells=",,,,p,,,,..,,,p,,,,," />
     <row Cells=",,,,p,,,,..,,,p,,,,," />
   </map>
-  <!-- realization source=housing-housecourt-kyakukya-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=181; path=35; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
+  <!-- realization source=housing-housecourt-kyakukya-m1; design=housecourt; policy=house-court; yard-reason=domestic court and approach; yard=176; path=35; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dcb5660470a3dcd1; reason=none -->
   <map Key="housing-housecourt-kyakukya-m1-lot-xl-heart" Width="20" Height="14" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5303,11 +5306,11 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..b.b...,,,,,," />
-    <row Cells=",,,,,,.#siiM..,,,,,," />
-    <row Cells=",,,,,,.#@ih,+.,,,,,," />
-    <row Cells=",,,,,,.biM,,..,,,,,," />
-    <row Cells=",,,,,,..,M....,,,,,," />
+    <row Cells=",,,,,,..b.b....,,,,," />
+    <row Cells=",,,,,,.#siiM...,,,,," />
+    <row Cells=",,,,,,.#@ih,+..,,,,," />
+    <row Cells=",,,,,,.biM,,...,,,,," />
+    <row Cells=",,,,,,..,M.....,,,,," />
     <row Cells=",,,,,,........,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -5345,10 +5348,11 @@
     <row Cells=",,,p,,,,p,.,,p,,,,,," />
     <row Cells=",,,p,,,,p,.,,p,,,,,," />
   </map>
-  <!-- realization source=housing-finehouse-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
+  <!-- realization source=housing-finehouse-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=36; path=16; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
   <map Key="housing-finehouse-m0-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
@@ -5356,19 +5360,19 @@
     <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,..####..,," />
-    <row Cells=",,.##bb##.,," />
-    <row Cells=",,.#s@hi#.,," />
-    <row Cells=",p.#citi#..." />
-    <row Cells=",,.###+##.pp" />
-    <row Cells=",,........,p" />
-    <row Cells=",,,p,..p,,pp" />
-    <row Cells=",,,pp..ppppp" />
-    <row Cells=",,,p,..p,,,p" />
+    <row Cells="yy..####..yy" />
+    <row Cells="yy.##bb##.yy" />
+    <row Cells="yy.#s@hi#.yy" />
+    <row Cells="yp.#citi#.yy" />
+    <row Cells="yy.###d##..." />
+    <row Cells="yy....+...yp" />
+    <row Cells="yyypy..pyypp" />
+    <row Cells="yyypp..ppppp" />
+    <row Cells="yyypy..pyyyp" />
   </map>
-  <!-- realization source=housing-finehouse-broad-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
+  <!-- realization source=housing-finehouse-broad-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=36; path=16; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
   <map Key="housing-finehouse-broad-m0-lot-l-heart" Width="12" Height="9" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -5385,14 +5389,14 @@
     <row Cells="yy........yy" />
     <row Cells="yy.######.yy" />
     <row Cells="yy.#bBBb#.yy" />
-    <row Cells="yp.#sBBh#..." />
-    <row Cells="yy.#@ict#.pp" />
+    <row Cells="yp.#sBBh#.yy" />
+    <row Cells="yy.#@ict#..." />
     <row Cells="yy.##++##.yp" />
     <row Cells="yyypy..pyypp" />
     <row Cells="yyypp..ppppp" />
     <row Cells="yyypy..pyyyp" />
   </map>
-  <!-- realization source=housing-finehouse-hindren-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=34; path=18; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
+  <!-- realization source=housing-finehouse-hindren-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=36; path=16; boundary=0; fixtures=0; route-open=8; intentional-open=0; inaccessible-open=0; family-fingerprint=4ca17f5f117e40f9; reason=none -->
   <map Key="housing-finehouse-hindren-m0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5409,17 +5413,18 @@
     <row Cells=",,..####..,," />
     <row Cells=",,.#bib#..,," />
     <row Cells=",,#si@ih#.,," />
-    <row Cells=",p#iictC+..." />
-    <row Cells=",,.##CCC..pp" />
+    <row Cells=",p#iictC+,,," />
+    <row Cells=",,.##CCC...." />
     <row Cells=",,...,,...,p" />
     <row Cells=",,,p,..p,,pp" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
   </map>
-  <!-- realization source=housing-finehouse-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=177; path=39; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
+  <!-- realization source=housing-finehouse-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=172; path=39; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
   <map Key="housing-finehouse-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
@@ -5427,24 +5432,24 @@
     <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.##bb##.,,,,,," />
-    <row Cells=",,,,,,.#s@hi#.,,,,,," />
-    <row Cells=",,,,,,.#citi#.,,,,,," />
-    <row Cells=",,,,,,.###+##.,,,,,," />
-    <row Cells=",,,,,,........,,,,,," />
-    <row Cells=",,,,,,,,p..,,,,,,,,," />
-    <row Cells=",,,,,,,,p..,,,,,,,,," />
-    <row Cells=",,ppppppp..pppp,,,,," />
-    <row Cells=",,p,,,,,p..p,pp,,,,," />
-    <row Cells=",,p,,,,,p..,,,p,,,,," />
-    <row Cells=",,ppppppp..pppp,,,,," />
-    <row Cells=",,p,,,,,p..p,,p,,,,," />
-    <row Cells=",,p,,,,,p..,,,p,,,,," />
+    <row Cells="yyyyyy..####...yyyyy" />
+    <row Cells="yyyyyy.##bb##..yyyyy" />
+    <row Cells="yyyyyy.#s@hi#..yyyyy" />
+    <row Cells="yyyyyy.#citi#..yyyyy" />
+    <row Cells="yyyyyy.###d##..yyyyy" />
+    <row Cells="yyyyyy....+...yyyyyy" />
+    <row Cells="yyyyyyyyp..yyyyyyyyy" />
+    <row Cells="yyyyyyyyp..yyyyyyyyy" />
+    <row Cells="yyppppppp..ppppyyyyy" />
+    <row Cells="yypyyyyyp..pyppyyyyy" />
+    <row Cells="yypyyyyyp..yyypyyyyy" />
+    <row Cells="yyppppppp..ppppyyyyy" />
+    <row Cells="yypyyyyyp..pyypyyyyy" />
+    <row Cells="yypyyyyyp..yyypyyyyy" />
   </map>
-  <!-- realization source=housing-finehouse-broad-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=177; path=39; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
+  <!-- realization source=housing-finehouse-broad-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=172; path=39; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
   <map Key="housing-finehouse-broad-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -5458,11 +5463,11 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyy........yyyyyy" />
-    <row Cells="yyyyyy.######.yyyyyy" />
-    <row Cells="yyyyyy.#bBBb#.yyyyyy" />
-    <row Cells="yyyyyy.#sBBh#.yyyyyy" />
-    <row Cells="yyyyyy.#@ict#.yyyyyy" />
+    <row Cells="yyyyyy.........yyyyy" />
+    <row Cells="yyyyyy.######..yyyyy" />
+    <row Cells="yyyyyy.#bBBb#..yyyyy" />
+    <row Cells="yyyyyy.#sBBh#..yyyyy" />
+    <row Cells="yyyyyy.#@ict#..yyyyy" />
     <row Cells="yyyyyy.##++##.yyyyyy" />
     <row Cells="yyyyyyyyp..yyyyyyyyy" />
     <row Cells="yyyyyyyyp..yyyyyyyyy" />
@@ -5473,7 +5478,7 @@
     <row Cells="yypyyyyyp..pyypyyyyy" />
     <row Cells="yypyyyyyp..yyypyyyyy" />
   </map>
-  <!-- realization source=housing-finehouse-hindren-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=177; path=39; boundary=0; fixtures=0; route-open=16; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
+  <!-- realization source=housing-finehouse-hindren-m0; design=finehouse; policy=house-court; yard-reason=domestic court and approach; yard=172; path=39; boundary=0; fixtures=0; route-open=21; intentional-open=0; inaccessible-open=0; family-fingerprint=dc2a149e0a09f745; reason=none -->
   <map Key="housing-finehouse-hindren-m0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -5487,11 +5492,11 @@
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells=",,,,,,..####..,,,,,," />
-    <row Cells=",,,,,,.#bib#..,,,,,," />
-    <row Cells=",,,,,,#si@ih#.,,,,,," />
-    <row Cells=",,,,,,#iictC+.,,,,,," />
-    <row Cells=",,,,,,.##CCC..,,,,,," />
+    <row Cells=",,,,,,..####...,,,,," />
+    <row Cells=",,,,,,.#bib#...,,,,," />
+    <row Cells=",,,,,,#si@ih#..,,,,," />
+    <row Cells=",,,,,,#iictC+,.,,,,," />
+    <row Cells=",,,,,,.##CCC...,,,,," />
     <row Cells=",,,,,,...,,...,,,,,," />
     <row Cells=",,,,,,,,p..,,,,,,,,," />
     <row Cells=",,,,,,,,p..,,,,,,,,," />
@@ -6095,8 +6100,8 @@
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yy########yy" />
-    <row Cells="yy#b#i#i##yy" />
-    <row Cells="yy#d#d#i##yy" />
+    <row Cells="yy#bii#i##yy" />
+    <row Cells="yy###d#i##yy" />
     <row Cells="yy#@iiii##yy" />
     <row Cells="yy#i===ii#yy" />
     <row Cells="yp####+###yy" />
@@ -6116,8 +6121,8 @@
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyyyyy########yyyyyy" />
-    <row Cells="yyyyyy#b#i#i##yyyyyy" />
-    <row Cells="yyyyyy#d#d#i##yyyyyy" />
+    <row Cells="yyyyyy#bii#i##yyyyyy" />
+    <row Cells="yyyyyy###d#i##yyyyyy" />
     <row Cells="yyyyyy#@iiii##yyyyyy" />
     <row Cells="yyyyyy#i===ii#yyyyyy" />
     <row Cells="yyyyyy####+###pppyyy" />

@@ -710,7 +710,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
 
     def test_repeated_coordinate_keyed_roles_are_legal(self) -> None:
         architecture = ARCHITECTURE.replace(
-            '<row Cells="#####" />', '<row Cells="+####" />', 1
+            '<row Cells="#@,,#" />', '<row Cells="+@,,#" />', 1
         )
         self.write_repo(BUILDINGS, architecture)
         result = self.check()
@@ -719,8 +719,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
     def test_doctrine_floors_flag_pointless_doors_and_featureless_rooms(self) -> None:
         clean = self.check()
         self.assertTrue(clean.ok, clean.report())
-        self.assertNotIn("doctrine.pointless-door", self.notice_codes(clean))
-        self.assertNotIn("doctrine.featureless-room", self.notice_codes(clean))
+        self.assertNotIn("doctrine.pointless-door", self.codes(clean))
+        self.assertNotIn("doctrine.featureless-room", self.codes(clean))
 
         # A perimeter door on the M hut that opens onto nothing inside: one walk
         # neighbour only, so it joins fewer than two walkable cells.
@@ -731,8 +731,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertNotEqual(pointless, ARCHITECTURE)
         self.write_repo(BUILDINGS, pointless)
         result = self.check()
-        self.assertTrue(result.ok, result.report())
-        self.assertIn("doctrine.pointless-door", self.notice_codes(result))
+        self.assertFalse(result.ok)
+        self.assertIn("doctrine.pointless-door", self.codes(result))
 
         # An annex behind an interior door holding no anchor, object, or ground
         # variety: a room a door serves for nothing.
@@ -749,7 +749,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertNotEqual(featureless, ARCHITECTURE)
         self.write_repo(BUILDINGS, featureless)
         result = self.check()
-        self.assertIn("doctrine.featureless-room", self.notice_codes(result))
+        self.assertIn("doctrine.featureless-room", self.codes(result))
 
     def test_schema_coverage_dimensions_and_topology_faults(self) -> None:
         lower_root = ARCHITECTURE.replace(
@@ -1114,8 +1114,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
         # Housing boundary/door cleanup removed redundant entrance observations and moved the
         # surviving exact doors onto their intended lot boundaries.
         self.assertEqual(649, entrances)
-        self.assertEqual(417, interior)
-        self.assertEqual(9, maximum)
+        self.assertEqual(415, interior)
+        self.assertEqual(8, maximum)
 
     def test_heart_checker_roster_matches_runtime_and_refuses_drift(self) -> None:
         source_repo = CHECKER_PATH.parents[1]

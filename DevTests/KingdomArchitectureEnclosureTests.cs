@@ -81,7 +81,11 @@ namespace ThousandAndFirst.Tests
 				}
 			Assert.AreEqual(2120, poses);
 			Assert.AreEqual(2596, routes);
-			Assert.AreEqual(1668, interiorEntrances,
+			// 2026-08-30 doctrine sweep: caproof and finehouse each moved one doorstep
+			// entrance from an interior claim-boundary cell onto its lot boundary, so the
+			// interior census dropped by two cells across four poses (matches the host-side
+			// pin moving 417 -> 415 in check_architecture_test.py).
+			Assert.AreEqual(1660, interiorEntrances,
 				"claim-boundary entrances are the regression this route law must keep live");
 		}
 

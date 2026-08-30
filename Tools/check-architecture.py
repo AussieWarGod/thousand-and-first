@@ -1627,9 +1627,9 @@ def _validate_map_topology(
 
 
 # Doctrine floors (polish contract section 6/8, user ruling 2026-08-30): every authored map is
-# held to the code-checkable slice of "walls, pathways, and door placement make sense".  These
-# are notices, not issues, while the catalogue sweep is in flight; they promote to issues once
-# the census is clean.
+# held to the code-checkable slice of "walls, pathways, and door placement make sense".  The
+# catalogue census reached zero on 2026-08-30, so these are hard issues: no map with a pointless
+# door or a featureless room is commissionable or releasable.
 FEATURELESS_ROOM_MIN_CELLS = 4
 
 
@@ -1637,7 +1637,7 @@ def _doctrine_is_door(glyph: Glyph) -> bool:
     return "door" in glyph.structure.lower()
 
 
-def validate_map_doctrine(model: "ArchitectureModel", notices: List[Notice]) -> None:
+def validate_map_doctrine(model: "ArchitectureModel", issues: List[Issue]) -> None:
     for architecture_map in model.maps.values():
         if _is_generated_map(architecture_map):
             continue
@@ -1648,11 +1648,11 @@ def validate_map_doctrine(model: "ArchitectureModel", notices: List[Notice]) -> 
             or any(len(row) != architecture_map.width for row in architecture_map.rows)
         ):
             continue
-        _validate_one_map_doctrine(architecture_map, notices)
+        _validate_one_map_doctrine(architecture_map, issues)
 
 
 def _validate_one_map_doctrine(
-    architecture_map: "ArchitectureMap", notices: List[Notice]
+    architecture_map: "ArchitectureMap", issues: List[Issue]
 ) -> None:
     walkable: Dict[Tuple[int, int], Glyph] = {}
     doors: Dict[Tuple[int, int], Glyph] = {}
@@ -1680,8 +1680,8 @@ def _validate_one_map_doctrine(
         if boundary:
             open_sides += 1  # the lot exterior is the other side of a boundary door
         if open_sides < 2:
-            notices.append(
-                Notice(
+            issues.append(
+                Issue(
                     architecture_map.location,
                     "doctrine.pointless-door",
                     f"door at {x},{y} joins fewer than two walkable cells",
@@ -1731,8 +1731,8 @@ def _validate_one_map_doctrine(
         )
         if not has_feature and not adjoins_use and len(grounds) <= 1 and touches_door:
             x, y = region[0]
-            notices.append(
-                Notice(
+            issues.append(
+                Issue(
                     architecture_map.location,
                     "doctrine.featureless-room",
                     f"room of {len(region)} cells at {x},{y} has no anchor, object, "
@@ -4482,7 +4482,7 @@ def run_check(
     if runtime_ground_strata:
         _validate_selector_strata(model, runtime_ground_strata, issues)
     validate_model(buildings, model, issues)
-    validate_map_doctrine(model, notices)
+    validate_map_doctrine(model, issues)
     validate_generated_visual_surfaces(model, issues)
     maximum_payload, maximum_encoded, maximum_key = _snapshot_maximum(buildings, model)
     blueprint_resolution = "skipped"

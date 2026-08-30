@@ -92,10 +92,12 @@
     <glyph Char="O" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="stasis:operator" Stateful="yes" />
     <glyph Char="T" Ground="$floor" Object="$transfer" Claim="building" Pass="adjacent" Cover="walled" Anchors="stasis:transfer" Stateful="yes" />
     <glyph Char="L" Ground="$floor" Object="$locker" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:effects" Stateful="yes" />
+    <glyph Char="l" Ground="$floor" Object="$locker" Claim="building" Pass="adjacent" Cover="walled" />
+    <glyph Char="t" Ground="$floor" Object="$transfer" Claim="building" Pass="adjacent" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:stasis-vault" Stateful="yes" />
     <row Cells="...................." />
     <row Cells=".##################." />
-    <row Cells=".#B#iiiiiiiiiiii#B#." />
+    <row Cells=".#B#tiiiiiiiiiit#B#." />
     <row Cells=".#iDiiiiiiiiiiiiDi#." />
     <row Cells=".#B#iiiiiiiiiiii#B#." />
     <row Cells=".####D########D####." />
@@ -104,7 +106,7 @@
     <row Cells="==Eiii#iiOiii#iiii#." />
     <row Cells=".#iiii#iiiiii#iiii#." />
     <row Cells=".####D########D####." />
-    <row Cells=".#iiiiiiiiiiiiiiii#." />
+    <row Cells=".#liiiiiiiiiiiiiil#." />
     <row Cells=".########DD########." />
     <row Cells=".........++........." />
   </map>

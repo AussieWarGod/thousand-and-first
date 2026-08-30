@@ -11,7 +11,9 @@ from pathlib import Path
 
 
 GENERATOR_PATH = Path(__file__).resolve().parents[1] / "generate-lot-realizations.py"
-SPEC = importlib.util.spec_from_file_location("taf_generate_lot_realizations", GENERATOR_PATH)
+SPEC = importlib.util.spec_from_file_location(
+    "taf_generate_lot_realizations", GENERATOR_PATH
+)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {GENERATOR_PATH}")
 GENERATOR = importlib.util.module_from_spec(SPEC)
@@ -58,7 +60,10 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 for key in keys:
                     architecture_map = maps[key]
                     self.assertEqual(
-                        (int(architecture_map.get("Width")), int(architecture_map.get("Height"))),
+                        (
+                            int(architecture_map.get("Width")),
+                            int(architecture_map.get("Height")),
+                        ),
                         dimensions,
                     )
 
@@ -79,7 +84,10 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 )
                 for key in keys:
                     architecture_map = maps[key]
-                    canvas = [list(row.get("Cells", "")) for row in architecture_map.findall("row")]
+                    canvas = [
+                        list(row.get("Cells", ""))
+                        for row in architecture_map.findall("row")
+                    ]
                     entrances = GENERATOR._public_entrances(architecture_map)
                     self.assertTrue(entrances, key)
                     for x, y in entrances:
@@ -89,7 +97,9 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                             all(canvas[ry][rx] == "." for rx, ry in route), key
                         )
 
-    def test_yard_census_accounts_every_added_cell_without_density_heuristics(self) -> None:
+    def test_yard_census_accounts_every_added_cell_without_density_heuristics(
+        self,
+    ) -> None:
         result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
         totals = tuple(
             sum(getattr(record, field) for record in result.records)
@@ -103,7 +113,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 "inaccessible_open_cells",
             )
         )
-        self.assertEqual(totals, (45056, 33753, 8984, 194, 1524, 601, 0))
+        self.assertEqual(totals, (45056, 33684, 8954, 194, 1623, 601, 0))
         self.assertEqual(sum(record.hosted_hold for record in result.records), 3)
         for record in result.records:
             facts = record.yard_cells + record.path_cells + record.boundary_cells
@@ -133,7 +143,9 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
         by_source = {}
         for record in result.records:
-            by_source.setdefault(record.source_key, {})[record.context.target_size] = record
+            by_source.setdefault(record.source_key, {})[record.context.target_size] = (
+                record
+            )
         for source_key in ("housing-hut-s0", "production-plot-s0"):
             records = by_source[source_key]
             self.assertEqual(set(records), {"M", "L", "XL"})
@@ -141,7 +153,9 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 record = records[size]
                 self.assertGreater(record.yard_cells, 0, record.generated_key)
                 self.assertGreater(record.path_cells, 0, record.generated_key)
-                self.assertGreater(record.added_cells, record.route_cells, record.generated_key)
+                self.assertGreater(
+                    record.added_cells, record.route_cells, record.generated_key
+                )
         self.assertLess(
             by_source["housing-hut-s0"]["M"].yard_cells,
             by_source["housing-hut-s0"]["XL"].yard_cells,
@@ -158,23 +172,34 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         for _path, root in GENERATOR._source_roots(repository):
             sources.update({item.get("Key"): item for item in root.findall("map")})
             palettes.update({item.get("Key"): item for item in root.findall("palette")})
-        objects_root = ET.parse(repository / "RuntimeData" / "ObjectBlueprints.xml").getroot()
+        objects_root = ET.parse(
+            repository / "RuntimeData" / "ObjectBlueprints.xml"
+        ).getroot()
         objects = {item.get("Name"): item for item in objects_root.iter("object")}
         allowed_parts = {"Render", "Description", "Physics", "Metal"}
         inert_references = set(GENERATOR.CREED_EXPANSION_INERT_OBJECTS.values())
         expected_blueprints = {
-            "r_KingdomCreedPracticeBasket", "r_KingdomCreedPracticeTable",
-            "r_KingdomCreedPracticeColdHearth", "r_KingdomCreedPracticeShelf",
-            "r_KingdomCreedPracticeStone", "r_KingdomCreedPracticeDryBasin",
-            "r_KingdomCreedPracticeBench", "r_KingdomCreedPracticePallet",
-            "r_KingdomCreedSpindleWheel", "r_KingdomCreedDryContact",
-            "r_KingdomCreedHornPost", "r_KingdomCreedScrapAltar",
-            "r_KingdomCreedWeaponRack", "r_KingdomCreedColdBrazier",
-            "r_KingdomCreedVineTrellis", "r_KingdomCreedLivingTrunk",
+            "r_KingdomCreedPracticeBasket",
+            "r_KingdomCreedPracticeTable",
+            "r_KingdomCreedPracticeColdHearth",
+            "r_KingdomCreedPracticeShelf",
+            "r_KingdomCreedPracticeStone",
+            "r_KingdomCreedPracticeDryBasin",
+            "r_KingdomCreedPracticeBench",
+            "r_KingdomCreedPracticePallet",
+            "r_KingdomCreedSpindleWheel",
+            "r_KingdomCreedDryContact",
+            "r_KingdomCreedHornPost",
+            "r_KingdomCreedScrapAltar",
+            "r_KingdomCreedWeaponRack",
+            "r_KingdomCreedColdBrazier",
+            "r_KingdomCreedVineTrellis",
+            "r_KingdomCreedLivingTrunk",
         }
         expected = {"M": 2, "L": 5, "XL": 10}
         records = [
-            record for record in result.records
+            record
+            for record in result.records
             if record.context.plan_key.startswith("creed-")
         ]
         self.assertEqual(90, len(records))
@@ -182,46 +207,65 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         resolved_cells = 0
         resolved_blueprints = set()
         for record in records:
-            self.assertEqual(expected[record.context.target_size], record.fixture_cells,
-                             record.generated_key)
+            self.assertEqual(
+                expected[record.context.target_size],
+                record.fixture_cells,
+                record.generated_key,
+            )
             architecture_map = generated[record.generated_key]
             source = sources[record.source_key]
             glyphs = GENERATOR._glyphs(architecture_map)
             placed = 0
             for y, row in enumerate(architecture_map.findall("row")):
                 for x, char in enumerate(row.get("Cells", "")):
-                    inside = (
-                        record.offset_x <= x < record.offset_x + int(source.get("Width"))
-                        and record.offset_y <= y < record.offset_y + int(source.get("Height"))
+                    inside = record.offset_x <= x < record.offset_x + int(
+                        source.get("Width")
+                    ) and record.offset_y <= y < record.offset_y + int(
+                        source.get("Height")
                     )
                     glyph = glyphs.get(char)
                     if (
-                        not inside and glyph is not None and glyph.get("Object")
+                        not inside
+                        and glyph is not None
+                        and glyph.get("Object")
                         and glyph.get("Claim") == "yard"
                     ):
                         self.assertIsNone(glyph.get("Anchors"), record.generated_key)
                         self.assertIsNone(glyph.get("Stateful"), record.generated_key)
                         object_reference = glyph.get("Object")
-                        self.assertIn(object_reference, inert_references,
-                                      record.generated_key)
+                        self.assertIn(
+                            object_reference, inert_references, record.generated_key
+                        )
                         slots = {
                             "$" + slot.get("Key"): slot
-                            for slot in palettes[record.context.palette_key].findall("slot")
+                            for slot in palettes[record.context.palette_key].findall(
+                                "slot"
+                            )
                         }
                         slot = slots[object_reference]
                         blueprint_name = slot.get("Blueprint")
                         blueprint = objects[blueprint_name]
-                        self.assertEqual("Furniture", blueprint.get("Inherits"),
-                                         blueprint_name)
-                        self.assertTrue(all(child.tag == "part" for child in blueprint),
-                                        blueprint_name)
+                        self.assertEqual(
+                            "Furniture", blueprint.get("Inherits"), blueprint_name
+                        )
+                        self.assertTrue(
+                            all(child.tag == "part" for child in blueprint),
+                            blueprint_name,
+                        )
                         parts = {part.get("Name") for part in blueprint.findall("part")}
-                        self.assertTrue({"Render", "Description", "Physics"} <= parts,
-                                        blueprint_name)
+                        self.assertTrue(
+                            {"Render", "Description", "Physics"} <= parts,
+                            blueprint_name,
+                        )
                         self.assertTrue(parts <= allowed_parts, blueprint_name)
-                        physics = next(part for part in blueprint.findall("part")
-                                       if part.get("Name") == "Physics")
-                        self.assertEqual("false", physics.get("Takeable"), blueprint_name)
+                        physics = next(
+                            part
+                            for part in blueprint.findall("part")
+                            if part.get("Name") == "Physics"
+                        )
+                        self.assertEqual(
+                            "false", physics.get("Takeable"), blueprint_name
+                        )
                         self.assertEqual("false", physics.get("Solid"), blueprint_name)
                         resolved_blueprints.add(blueprint_name)
                         resolved_cells += 1
@@ -271,12 +315,14 @@ class LotRealizationGeneratorTests(unittest.TestCase):
             'Material="mud" MinTech="hands" Natural="yes" />'
             '<slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="natural-rock" '
             'Material="stone" MinTech="hands" Natural="yes" />'
-            '</palette>'
+            "</palette>"
         )
         self.assertEqual("$floor", GENERATOR._ground_reference(source, palette, False))
         self.assertEqual("$floor", GENERATOR._ground_reference(source, palette, True))
 
-    def test_vanilla_dirt_floor_and_path_share_one_native_visual_treatment(self) -> None:
+    def test_vanilla_dirt_floor_and_path_share_one_native_visual_treatment(
+        self,
+    ) -> None:
         self.assertEqual(
             GENERATOR._visual_blueprint_key("DirtFloor"),
             GENERATOR._visual_blueprint_key("DirtPath"),
@@ -290,21 +336,22 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         repository = GENERATOR_PATH.parents[1]
         result = GENERATOR.materialize(repository)
         generated = {
-            item.get("Key"): item
-            for item in ET.fromstring(result.text).findall("map")
+            item.get("Key"): item for item in ET.fromstring(result.text).findall("map")
         }
         maps = {}
         palettes = {}
         for _path, root in GENERATOR._source_roots(repository):
             maps.update({item.get("Key"): item for item in root.findall("map")})
-            palettes.update(
-                {item.get("Key"): item for item in root.findall("palette")}
-            )
+            palettes.update({item.get("Key"): item for item in root.findall("palette")})
 
         hut = maps["housing-hut-s0"]
         hut_palette = palettes["housing-timber-hands"]
-        self.assertEqual("$ground", GENERATOR._ground_reference(hut, hut_palette, False))
-        self.assertEqual("$lotpath", GENERATOR._ground_reference(hut, hut_palette, True))
+        self.assertEqual(
+            "$ground", GENERATOR._ground_reference(hut, hut_palette, False)
+        )
+        self.assertEqual(
+            "$lotpath", GENERATOR._ground_reference(hut, hut_palette, True)
+        )
         hut_glyphs = GENERATOR._glyphs(generated["housing-hut-s0-lot-xl-heart"])
         self.assertEqual("$ground", hut_glyphs["y"].get("Ground"))
         self.assertEqual("$lotpath", hut_glyphs["p"].get("Ground"))
@@ -342,16 +389,13 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 record.generated_key,
             )
             self.assertNotEqual(
-                GENERATOR._visual_blueprint_key(
-                    slots[yard_reference].get("Blueprint")
-                ),
-                GENERATOR._visual_blueprint_key(
-                    slots[path_reference].get("Blueprint")
-                ),
+                GENERATOR._visual_blueprint_key(slots[yard_reference].get("Blueprint")),
+                GENERATOR._visual_blueprint_key(slots[path_reference].get("Blueprint")),
                 record.generated_key,
             )
             generated_references = {
-                item.get("Ground") for item in generated[record.generated_key].findall("glyph")
+                item.get("Ground")
+                for item in generated[record.generated_key].findall("glyph")
             }
             self.assertIn(yard_reference, generated_references, record.generated_key)
             self.assertIn(path_reference, generated_references, record.generated_key)
@@ -378,20 +422,19 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 (x, y)
                 for y in range(14)
                 for x in range(20)
-                if GENERATOR._yard_kind(policy, context, "N", x, y, 20, 14)
-                == "path"
+                if GENERATOR._yard_kind(policy, context, "N", x, y, 20, 14) == "path"
             )
             signatures[category] = paths
-            full_rows = sum(
-                all((x, y) in paths for x in range(20)) for y in range(14)
-            )
+            full_rows = sum(all((x, y) in paths for x in range(20)) for y in range(14))
             if category == "food":
                 self.assertGreater(full_rows, 1)
             else:
                 self.assertEqual(0, full_rows, category)
         self.assertEqual(len(signatures), len(set(signatures.values())))
 
-    def test_unrelated_upgrade_families_have_distinct_overlay_fingerprints(self) -> None:
+    def test_unrelated_upgrade_families_have_distinct_overlay_fingerprints(
+        self,
+    ) -> None:
         result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
         fingerprints = {}
         for record in result.records:
@@ -419,12 +462,8 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         source_maps = {}
         palettes = {}
         for _path, root in GENERATOR._source_roots(repository):
-            source_maps.update(
-                {item.get("Key"): item for item in root.findall("map")}
-            )
-            palettes.update(
-                {item.get("Key"): item for item in root.findall("palette")}
-            )
+            source_maps.update({item.get("Key"): item for item in root.findall("map")})
+            palettes.update({item.get("Key"): item for item in root.findall("palette")})
 
         def kind_mask(record):
             architecture_map = generated_maps[record.generated_key]
@@ -475,9 +514,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         checked = 0
         for plan in generated_root.findall("plan"):
             for binding in plan.findall("binding"):
-                tiers = {
-                    item.get("BuildKey"): item for item in binding.findall("tier")
-                }
+                tiers = {item.get("BuildKey"): item for item in binding.findall("tier")}
                 for predecessor_key, successor_key in edges:
                     if predecessor_key not in tiers or successor_key not in tiers:
                         continue
@@ -506,12 +543,24 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                             for y in range(len(before_kinds)):
                                 for x in range(len(before_kinds[0])):
                                     inside_before = (
-                                        before.offset_x <= x < before.offset_x + int(before_source.get("Width"))
-                                        and before.offset_y <= y < before.offset_y + int(before_source.get("Height"))
+                                        before.offset_x
+                                        <= x
+                                        < before.offset_x
+                                        + int(before_source.get("Width"))
+                                        and before.offset_y
+                                        <= y
+                                        < before.offset_y
+                                        + int(before_source.get("Height"))
                                     )
                                     inside_after = (
-                                        after.offset_x <= x < after.offset_x + int(after_source.get("Width"))
-                                        and after.offset_y <= y < after.offset_y + int(after_source.get("Height"))
+                                        after.offset_x
+                                        <= x
+                                        < after.offset_x
+                                        + int(after_source.get("Width"))
+                                        and after.offset_y
+                                        <= y
+                                        < after.offset_y
+                                        + int(after_source.get("Height"))
                                     )
                                     if inside_before or inside_after:
                                         continue
@@ -544,7 +593,9 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         f"{record.generated_key} source {x},{y}",
                     )
 
-    def test_every_generated_binding_preserves_the_complete_source_tier_set(self) -> None:
+    def test_every_generated_binding_preserves_the_complete_source_tier_set(
+        self,
+    ) -> None:
         repository = GENERATOR_PATH.parents[1]
         generated_root = ET.fromstring(GENERATOR.materialize(repository).text)
         generated_plans = {

@@ -384,14 +384,15 @@
 
   <map Key="housing-caproof-s0" Width="5" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <row Cells=".###." />
     <row Cells="#b@#." />
-    <row Cells="#si+." />
+    <row Cells="#sid+" />
     <row Cells=".###." />
   </map>
 
@@ -532,7 +533,8 @@
 
   <map Key="housing-finehouse-m0" Width="8" Height="6" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
@@ -540,13 +542,12 @@
     <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="..####.." />
     <row Cells=".##bb##." />
     <row Cells=".#s@hi#." />
     <row Cells=".#citi#." />
-    <row Cells=".###+##." />
-    <row Cells="........" />
+    <row Cells=".###d##." />
+    <row Cells="....+..." />
   </map>
 
   <map Key="housing-finehouse-broad-m0" Width="8" Height="6" DefaultCover="walled">
@@ -610,9 +611,9 @@
     <row Cells=".#,,,,,,@,,,,,,,,,#." />
     <row Cells=".#,,,,c,t,,,,,,,,,#." />
     <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells=".#d#d#...,,...#d#d#." />
-    <row Cells=".#b#i#...,,...#i#b#." />
-    <row Cells=".#b#i#...,,...#b#b#." />
+    <row Cells=".#d#d#..,,,,..#d#d#." />
+    <row Cells=".#b#i#..,,,,..#i#b#." />
+    <row Cells=".#b#i#..,,,,..#b#b#." />
     <row Cells=".#######d++d#######." />
     <row Cells="...................." />
     <row Cells="...................." />
@@ -778,8 +779,8 @@
     <glyph Char="b" Ground="$path" Object="$basin" Claim="building" Pass="adjacent" Cover="natural" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$path" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:water-source" Stateful="yes" />
     <row Cells="########" />
-    <row Cells="#b#i#i##" />
-    <row Cells="#d#d#i##" />
+    <row Cells="#bii#i##" />
+    <row Cells="###d#i##" />
     <row Cells="#@iiii##" />
     <row Cells="#i===ii#" />
     <row Cells="####+###" />
@@ -1075,7 +1076,7 @@
     <row Cells="..####.." />
     <row Cells=".#bib#.." />
     <row Cells="#si@i~#." />
-    <row Cells="#i#h#~+." />
+    <row Cells="#i#h#~+~" />
     <row Cells=".##~~~.." />
     <row Cells="...##..." />
   </map>
@@ -1093,7 +1094,7 @@
     <row Cells="..####.." />
     <row Cells=".#bib#.." />
     <row Cells="#siiih#." />
-    <row Cells="#ii@iC+." />
+    <row Cells="#ii@iC+," />
     <row Cells=".##,CC.." />
     <row Cells="...,,..." />
   </map>
@@ -1148,7 +1149,7 @@
     <row Cells="..####.." />
     <row Cells=".#bib#.." />
     <row Cells="#si@i~#." />
-    <row Cells="#i#h~~+." />
+    <row Cells="#i#h~~+~" />
     <row Cells=".b,~~~.." />
     <row Cells="..###..." />
   </map>
@@ -1166,7 +1167,7 @@
     <row Cells="..####.." />
     <row Cells=".#bib#.." />
     <row Cells="#siiih#." />
-    <row Cells="#ii@iC+." />
+    <row Cells="#ii@iC+," />
     <row Cells=".b,,CC.." />
     <row Cells="..,CC..." />
   </map>
@@ -1204,7 +1205,7 @@
     <row Cells="..####.." />
     <row Cells=".#bib#.." />
     <row Cells="#si@ih#." />
-    <row Cells="#iictC+." />
+    <row Cells="#iictC+," />
     <row Cells=".##CCC.." />
     <row Cells="...,,..." />
   </map>
