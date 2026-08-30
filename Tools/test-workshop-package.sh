@@ -189,15 +189,18 @@ PY
 
 assert_public_workshop_golden() {
 	local path="$1/workshop.json"
+	# Golden republished 2026-08-30: canonical_description now wraps every manifest in the
+	# reviewed ALPHA/BETA pre-release frame (header, repo links, save-format note), so the
+	# fixture's canonical bytes grew from the prior 656-byte golden 99cd43c1....
 	[ "$(sha256sum "$path" | cut -d' ' -f1)" = \
-		"99cd43c167b3f08336ec29ac608f178bc905645ec217656812f791535635b1bc" ] || {
+		"73477ab64eb01af9e3ccdd5d8adab1582b441adc6e3e8d25081d7c25a9d873ae" ] || {
 		echo "Qud workshop.json golden hash changed" >&2; exit 1; }
 	python3 - "$path" <<'PY'
 import sys
 from pathlib import Path
 
 payload = Path(sys.argv[1]).read_bytes()
-assert len(payload) == 656
+assert len(payload) == 1199
 assert not payload.startswith(b"\xef\xbb\xbf")
 assert payload.startswith(b'{\r\n  "WorkshopId": 123456789,\r\n')
 assert payload.endswith(b'  "ImagePath": "preview.png"\r\n}')
