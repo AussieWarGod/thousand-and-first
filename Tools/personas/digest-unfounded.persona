@@ -1,0 +1,19 @@
+# The digests must observe an unfounded born-clean world honestly, without minting state.
+#
+# The three domain digests are pure reads: the kingdom system is fetched by presence
+# (GetSystem, never RequireSystem), so a world where nothing was ever founded must answer
+# founded=false from all three - and answering must leave the world exactly as it was. Each
+# digest is an OBSERVATION, so an unfounded world journals OK; refusal is reserved for a verb
+# that declines to act.
+#
+# The expectations bind to the stable token founded=false (a word the law owns), never to the
+# sentences around it. Every digest report also carries the taf-scenario-digest reason code,
+# so a later persona can bind ~taf-scenario-digest instead.
+#
+# The request reuses the existing gallery scenario: the digests are scenario-independent reads,
+# and no verb here stages, realizes, or founds anything.
+DESCRIPTION=the three domain digests read an unfounded world honestly
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=stagedigest;resourcedigest;standingdigest
+EXPECT=stagedigest:OK~founded=false,resourcedigest:OK~founded=false,standingdigest:OK~founded=false,COMPLETE
+SET=digests

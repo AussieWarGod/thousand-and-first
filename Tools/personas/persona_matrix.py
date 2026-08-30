@@ -52,7 +52,17 @@ BOOKKEEPING = frozenset(
 
 # Must equal scenario_profile.SCRIPT_VERBS and its one counted verb. A persona that seals a verb
 # the profile tool refuses would spend a whole prepare discovering it.
-SCRIPT_VERBS = ("anchor", "flatten", "ground", "list", "realize", "status")
+SCRIPT_VERBS = (
+    "anchor",
+    "flatten",
+    "ground",
+    "list",
+    "realize",
+    "resourcedigest",
+    "stagedigest",
+    "standingdigest",
+    "status",
+)
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
 
@@ -67,6 +77,9 @@ RESERVED_VERBS = (
     "help",
     "list",
     "realize",
+    "resourcedigest",
+    "stagedigest",
+    "standingdigest",
     "status",
 )
 

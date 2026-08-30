@@ -95,7 +95,7 @@ namespace ThousandAndFirst.Harness
 		internal static readonly string[] Reserved =
 		{
 			"advance", "anchor", "capture", "flatten", "ground", "help", "list", "realize",
-			"status"
+			"resourcedigest", "stagedigest", "standingdigest", "status"
 		};
 
 		/// <summary>Whether a claimed name is one of the reserved built-ins.</summary>

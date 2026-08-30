@@ -296,13 +296,26 @@ the seal closed, and no assertion re-reads the profile after the game starts.
 
 **Manual wish path (fallback).** Nothing above removes it. Prepare with
 `TAF_SCENARIO_SCRIPT=none`, or just keep using the wish in any profile: `kingdom:scenario` with
-`list`, `status`, `realize`, `anchor`, `ground`, `flatten`, `advance <turns>`, or
+`list`, `status`, `realize`, `anchor`, `ground`, `flatten`, `stagedigest`, `resourcedigest`,
+`standingdigest`, `advance <turns>`, or
 `capture <anchor-id> <scenario-key>`. Verbs, text, and journal rows are identical either way -
 `Harness/KingdomScenarioWishes.cs` adds exactly one thing to the shared entry, the popup. That
 split is what makes the harness scriptable at all: a verb that blocked on a keypress could never
 run on a turn nobody is watching. `capture` is deliberately **not** in the sealed script set - it
 is fail-closed on ordinary play, so inside a prepared scenario profile it could only ever refuse,
 and curating an anchor stays a reviewer's deliberate act in an ordinary game.
+
+**Domain digest verbs** are read-only observations of the kingdom itself, answered as stable
+`key=value` tokens (every report also carries the `taf-scenario-digest` reason code). They read
+the kingdom system by **presence** — `GetSystem`, never `RequireSystem` — so a world with no
+founded kingdom answers `founded=false` honestly, journals `OK` (an unfounded world is an answer,
+not a refusal), and is left exactly as it was.
+
+| Verb | Meaning |
+|---|---|
+| `stagedigest` | The kingdom growth stage — `stage=Camp\|Steading\|Village\|Town\|City` — or `founded=false`. |
+| `resourcedigest` | Water and food state — `storedwater=`, `openwater=`, `foodperday=` from the ground under the player, plus `hungerstreak=`, `drystreak=`, `population=` — or `founded=false`. |
+| `standingdigest` | Faction standings — the full `standings=` count, then `faction=<key>:<value>` rows in ordinal key order (first 16) — or `founded=false`. |
 
 What a scenario run proves, and what it does not:
 
@@ -446,6 +459,7 @@ The authored set today:
 | `advance-stability` | the measured key set still reads the same after 300 game turns |
 | `bad-param-refusal` | a facing outside the declared domain is refused at the new-game gate |
 | `ordinary-anchor-eligibility` | a scenario-built game may not found an anchor; its verdict is `ineligible` |
+| `digest-unfounded` | the three domain digests read an unfounded born-clean world honestly (`founded=false`), minting nothing |
 
 **`GATE-REFUSED` is why a bad request is assertable at all.** The new-game gate runs at the embark
 player-mutator step, long before the auto-runner's first action opportunity — so a refusal there

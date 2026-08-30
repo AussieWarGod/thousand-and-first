@@ -65,7 +65,9 @@ namespace ThousandAndFirst.Tests
 			string realizer = Read("Harness/KingdomScenarioRealizer.cs");
 			string advance = Read("Harness/KingdomScenarioAdvance.cs");
 			string providers = Read("Harness/KingdomScenarioVerbProviderRules.cs");
-			string sources = transaction + "\n" + realizer + "\n" + advance + "\n" + providers;
+			string digests = Read("Harness/KingdomScenarioDigestVerbs.cs");
+			string sources = transaction + "\n" + realizer + "\n" + advance + "\n" + providers
+				+ "\n" + digests;
 			int asserted = 0;
 			foreach (string path in Personas())
 			{

@@ -194,7 +194,17 @@ def write_manifest(source: str, destination: str) -> None:
 #
 # The runtime verb set lives in Harness/KingdomScenarioVerbs.cs and stays the authority on what a
 # verb DOES; this list only decides what may be sealed into an unattended run.
-SCRIPT_VERBS = ("anchor", "flatten", "ground", "list", "realize", "status")
+SCRIPT_VERBS = (
+    "anchor",
+    "flatten",
+    "ground",
+    "list",
+    "realize",
+    "resourcedigest",
+    "stagedigest",
+    "standingdigest",
+    "status",
+)
 
 # The one verb that takes an argument. `advance <turns>` runs game turns with no player input, for
 # behaviour that only happens on a clock (settlement simulation ticks on turns). The bound below
@@ -218,6 +228,9 @@ RESERVED_VERBS = (
     "help",
     "list",
     "realize",
+    "resourcedigest",
+    "stagedigest",
+    "standingdigest",
     "status",
 )
 

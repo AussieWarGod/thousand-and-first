@@ -31,6 +31,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string Usage =
 			"Use {{W|kingdom:scenario}} with list, status, realize, anchor, ground, flatten, "
+			+ "stagedigest, resourcedigest, standingdigest, "
 			+ "advance <turns>, or capture <anchor-id> <scenario-key>[;param=value] "
 			+ "[at=<x>,<y>|id=<object-id>].";
 
@@ -89,6 +90,12 @@ namespace ThousandAndFirst.Harness
 				case "realize": return Realize(out Ok);
 				case "ground": return KingdomScenarioGround.Scout(out Ok);
 				case "flatten": return KingdomScenarioFlatten.Flatten(out Ok);
+				case KingdomScenarioDigestVerbs.StageVerb:
+					return KingdomScenarioDigestVerbs.Stage(out Ok);
+				case KingdomScenarioDigestVerbs.ResourceVerb:
+					return KingdomScenarioDigestVerbs.Resources(out Ok);
+				case KingdomScenarioDigestVerbs.StandingVerb:
+					return KingdomScenarioDigestVerbs.Standings(out Ok);
 				default:
 				{
 					// The second SOURCE behind this one dispatch path: verbs contributed by other
@@ -134,6 +141,9 @@ namespace ThousandAndFirst.Harness
 				+ "<scenario-key> [at=<x>,<y>|id=<object-id>]}} to emit a curated row from an "
 				+ "ordinary-play state. The selector is needed only when a zone holds more than "
 				+ "one building of the scenario's exact frozen case.\n\n"
+				+ "{{W|stagedigest}}, {{W|resourcedigest}}, and {{W|standingdigest}} are read-only "
+				+ "domain digests - growth stage, water and food state, and faction standings - as "
+				+ "stable key=value tokens; an unfounded world honestly reports founded=false.\n\n"
 				+ "{{W|advance <turns>}} runs up to " + KingdomScenarioAdvance.MaxTurns
 				+ " game turns with no player input, for behaviour that only happens on a clock. "
 				+ "It spends one turn per action opportunity through the engine's own pass, so "
