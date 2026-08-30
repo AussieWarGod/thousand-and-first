@@ -113,7 +113,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 "inaccessible_open_cells",
             )
         )
-        self.assertEqual(totals, (45056, 33684, 8954, 194, 1623, 601, 0))
+        self.assertEqual(totals, (45056, 33579, 8945, 293, 1638, 601, 0))
         self.assertEqual(sum(record.hosted_hold for record in result.records), 3)
         for record in result.records:
             facts = record.yard_cells + record.path_cells + record.boundary_cells

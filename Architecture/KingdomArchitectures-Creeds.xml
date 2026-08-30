@@ -72,8 +72,11 @@
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="open" Anchors="work:drying-rack" Stateful="yes" />
     <glyph Char="w" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:fibre-teaching" Stateful="yes" />
-    <row Cells="riiir" /><row Cells="iw@ii" /><row Cells="iirii" /><row Cells="ii+ii" />
+    <!-- The wheel-shade proper: four staked cloth baffles corner the shade over wheel and
+         teacher; the drying racks stand out in the sun and wind where fibre actually dries. -->
+    <row Cells="xiiix" /><row Cells="iw@ri" /><row Cells="xirix" /><row Cells="ii+ii" />
   </map>
   <map Key="creed-snapjaw-trailden-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
@@ -115,8 +118,11 @@
     <glyph Char="e" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="exit:caravan" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="soft" Anchors="display:sample-rack" Stateful="yes" />
     <glyph Char="m" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:water-measure" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:caravan-market" Stateful="yes" />
-    <row Cells="eiiie" /><row Cells="ri@ir" /><row Cells="iimii" /><row Cells="ii+ii" />
+    <!-- The travelling-folk tent frame carries the broad awning: staked canvas on the ridge and
+         lower corners, caravan exits left clear at both top corners, no locked road. -->
+    <row Cells="exixe" /><row Cells="ri@ir" /><row Cells="ximix" /><row Cells="ii+ii" />
   </map>
   <map Key="creed-entropy-blind-s0" Width="5" Height="4" DefaultCover="walled">
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
@@ -269,7 +275,9 @@
   <map Key="creed-farmers-commons-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:labelled-seed-bin" Stateful="yes" />
+    <!-- The commons is honestly open ground: threshing wants wind and the bins are sealed,
+         lidded hampers, not sheltered stock. Nothing here claims cover it does not build. -->
+    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="open" Anchors="storage:labelled-seed-bin" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="work:threshing-floor" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:seed-commons" Stateful="yes" />
     <row Cells="bibib" /><row Cells="it@ti" /><row Cells="biiib" /><row Cells="ii+ii" />
@@ -296,17 +304,23 @@
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="v" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
+    <glyph Char="V" Ground="$ground" Structure="$trellis" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="seat:traveller-table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:vine-hospitality" Stateful="yes" />
-    <row Cells="viviv" /><row Cells="vitiv" /><row Cells="vi@iv" /><row Cells="+iii+" />
+    <!-- The bower's woven frame: four corner trellis posts carry the vine canopy; fruiting
+         runs are trained between them over the traveller's table. Both road ends stay open. -->
+    <row Cells="VvvvV" /><row Cells="vitiv" /><row Cells="Vi@iV" /><row Cells="+iii+" />
   </map>
   <map Key="creed-chavvah-school-s0" Width="5" Height="4" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="d" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:low-desk" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
+    <glyph Char="T" Ground="$ground" Structure="$trunk" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:bough-school" Stateful="yes" />
-    <row Cells="ditid" /><row Cells="ididi" /><row Cells="ti@it" /><row Cells="ii+ii" />
+    <!-- Grown, restrained: four living trunk posts carry the bough canopy at the corners, the
+         paired teaching trunks hold the centre aisle, and the low desks bend around them. -->
+    <row Cells="TitiT" /><row Cells="ditid" /><row Cells="Td@dT" /><row Cells="ii+ii" />
   </map>
 
   <!-- Exact S bindings. Generator expands each into concrete M/L/XL courts with 2/5/10

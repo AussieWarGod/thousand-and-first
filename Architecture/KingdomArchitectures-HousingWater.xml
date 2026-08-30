@@ -1182,11 +1182,14 @@
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <!-- Kyakukya keeps its grown asymmetry when the court opens: the mushroom-timber shell
+         returns along the south-west so the new bed sleeps in a walled alcove, while the old
+         south wall's east end stands down for the market court and its stall. -->
     <row Cells="..b.b..." />
     <row Cells=".#siiM.." />
     <row Cells=".#@ih,+." />
     <row Cells=".biM,,.." />
-    <row Cells="..,M...." />
+    <row Cells=".##M...." />
     <row Cells="........" />
   </map>
 

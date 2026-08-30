@@ -13,6 +13,7 @@
     <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="gathering-ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="fire-ring-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="hearthstone" Blueprint="r_KingdomStructureLimestone" Role="fire-ring-hearthstone" Material="stone" MinTech="hands" Natural="yes" />
   </palette>
 
   <palette Key="civic-oven-hands">
@@ -80,6 +81,9 @@
     <!-- The basin is founding equipment already fixed at the rite coordinate. It is retained,
          not fabricated by this zero-material tier; the stamper must bind it, never duplicate it. -->
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <!-- Two unshaped stones rolled to the rite at founding. Natural retained rock, no bill;
+         every later rung keeps them at the same rite-relative coordinates. -->
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
   </palette>
 
   <palette Key="civic-heart-stone">
@@ -87,6 +91,7 @@
     <slot Key="path" Blueprint="DirtPath" Role="queue-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="waterstone-kerb" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
   </palette>
 
   <palette Key="civic-heart-moot">
@@ -98,6 +103,7 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="moot-bench" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
   </palette>
 
   <palette Key="civic-heart-court">
@@ -114,6 +120,7 @@
     <slot Key="column" Blueprint="r_KingdomStructureBrickWall" Role="dressed-column" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="worked-gate" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="arcwall" Blueprint="r_KingdomStructureConcreteWall" Role="arcology-outer-shell" Material="shapedstone" MinTech="foundry" Natural="no" />
     <slot Key="arcrib" Blueprint="r_KingdomStructureMetalWall" Role="arcology-service-rib" Material="workedmetal" MinTech="arclight" Natural="no" />
   </palette>
@@ -217,11 +224,14 @@
 
   <!-- Civic maps. -->
   <map Key="civic-fire-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$hearthstone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clearance" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:cooking" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <row Cells="....." />
+    <!-- Unshaped field rock rolled into a windward arc behind the fire: the cooking site is a
+         composed hearth from day one, and the oven rung later raises its stone shell in front. -->
+    <row Cells=".SSS." />
     <row Cells=".C@C." />
     <row Cells=".PPP." />
     <row Cells="..E.." />
@@ -249,6 +259,7 @@
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
     <glyph Char="a" Ground="$ground" Structure="$wall" Object="$arcwall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="M" Ground="$ground" Structure="$wall" Object="$arcrib" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <!-- STUB under the hosted-arcology programme (AMENDED 19+): the real arcology is a
          multi-storey megastructure spanning the parasang and some, its shell outside the
@@ -261,7 +272,7 @@
     <row Cells="MscswIIXIIIIYIIwscsM" />
     <row Cells="MssswIJJJJPJJJIwsssM" />
     <row Cells="MscswIJPP@PPJJIwscsM" />
-    <row Cells="MssswIJPPBPPJJIwsssM" />
+    <row Cells="MssswIJPRBRPJJIwsssM" />
     <row Cells="MscswIJPPPPPQJIwscsM" />
     <row Cells="MssswIJPPEPPJJIwsssM" />
     <row Cells="MscswIJJJEJJJJIwscsM" />
@@ -377,9 +388,12 @@
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
     <glyph Char="B" Ground="$path" Object="$basin" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <!-- The founding well-yard: two unshaped rite-stones flank the first basin. They are natural
+         retained rock (no bill) and every later rung keeps them at the same rite offsets. -->
     <row Cells="PP@PP" />
-    <row Cells="PPBPP" />
+    <row Cells="PRBRP" />
     <row Cells="PPPPP" />
     <row Cells="PPEPP" />
   </map>
@@ -391,10 +405,11 @@
     <glyph Char="B" Ground="$path" Object="$basin" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Stateful="yes" />
     <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="function:water-queue" />
     <glyph Char="e" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <row Cells="KKKKPKKK" />
     <row Cells="KPP@PPKK" />
-    <row Cells="KPPBPPKK" />
+    <row Cells="KPRBRPKK" />
     <row Cells="KPPPPPQK" />
     <row Cells="KPPePPKK" />
     <row Cells="KKKEKKKK" />
@@ -412,11 +427,12 @@
     <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <row Cells="WWWWWWDWWWWW" />
     <row Cells="WIIXIIIIYIIW" />
     <row Cells="WIJJJJPJJJIW" />
     <row Cells="WIJPP@PPJJIW" />
-    <row Cells="WIJPPBPPJJIW" />
+    <row Cells="WIJPRBRPJJIW" />
     <row Cells="WIJPPPPPQJIW" />
     <row Cells="WIJPPEPPJJIW" />
     <row Cells="WIJJJEJJJJIW" />
@@ -440,6 +456,7 @@
     <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
     <glyph Char="D" Ground="$mootfloor" Structure="$mootdoor" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:retained-moot-door" />
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <!-- The court is raised AROUND the settlement's retained fabric, which the rung law keeps
          standing: the brinestalk moot hall whole at its recorded rite, the first basin behind
@@ -453,7 +470,7 @@
     <row Cells="#scswIIXIIIIYIIwscs#" />
     <row Cells="#ssswIJJJJPJJJIwsss#" />
     <row Cells="#scswIJPP@PPJJIwscs#" />
-    <row Cells="#ssswIJPPBPPJJIwsss#" />
+    <row Cells="#ssswIJPRBRPJJIwsss#" />
     <row Cells="#scswIJPPPPPQJIwscs#" />
     <row Cells="#ssswIJPPEPPJJIwsss#" />
     <row Cells="#scswIJJJEJJJJIwscs#" />
@@ -470,7 +487,9 @@
     <glyph Char="O" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="ritual:offering" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:shrine" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <row Cells="..S.." />
+    <!-- A kerb arc backs the shrine stone: the offering ground reads as a set place, and the
+         garth rung later closes the same stones into a full ring. -->
+    <row Cells=".SSS." />
     <row Cells=".P@P." />
     <row Cells=".POP." />
     <row Cells="..E.." />
@@ -538,8 +557,10 @@
     <glyph Char="T" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="work:copy" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:archive" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <!-- The keeper's booth is a three-sided timber screen: back wall and two returns shelter
+         the shelf, seat, and copy table; the reading front opens south to the light. -->
     <row Cells=".WWW." />
-    <row Cells=".B@T." />
+    <row Cells="WB@TW" />
     <row Cells=".PPP." />
     <row Cells="..E.." />
   </map>

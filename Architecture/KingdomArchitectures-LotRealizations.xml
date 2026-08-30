@@ -6,13 +6,14 @@
 <KingdomArchitectures Schema="1">
   <!-- realization source=civic-fire-s0; design=fire; policy=public-court; yard-reason=public court and processional approach; yard=17; path=9; boundary=0; fixtures=0; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=57d78b389855c12f; reason=none -->
   <map Key="civic-fire-s0-lot-m-heart" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$hearthstone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clearance" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:cooking" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="y.....yy" />
+    <row Cells="y.SSS.yy" />
     <row Cells="y.C@C.yy" />
     <row Cells="y.PPP.yy" />
     <row Cells="y..E..yy" />
@@ -39,13 +40,14 @@
   </map>
   <!-- realization source=civic-fire-s0; design=fire; policy=public-court; yard-reason=public court and processional approach; yard=54; path=29; boundary=0; fixtures=0; route-open=5; intentional-open=0; inaccessible-open=0; family-fingerprint=9376ee13f601781f; reason=none -->
   <map Key="civic-fire-s0-lot-l-heart" Width="12" Height="9" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$hearthstone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clearance" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:cooking" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyy.....yyyy" />
+    <row Cells="yyy.SSS.yyyy" />
     <row Cells="yyy.C@C.yyyy" />
     <row Cells="yyy.PPP.yyyy" />
     <row Cells="yyy..E..yyyy" />
@@ -78,13 +80,14 @@
   </map>
   <!-- realization source=civic-fire-s0; design=fire; policy=public-court; yard-reason=public court and processional approach; yard=213; path=40; boundary=0; fixtures=0; route-open=7; intentional-open=0; inaccessible-open=0; family-fingerprint=0c52ad3f2ccbb848; reason=none -->
   <map Key="civic-fire-s0-lot-xl-heart" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="S" Ground="$ground" Structure="$hearthstone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="C" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="hazard:clearance" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:cooking" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyy......yyyyyyy" />
+    <row Cells="yyyyyyy.SSS..yyyyyyy" />
     <row Cells="yyyyyyy.C@C..yyyyyyy" />
     <row Cells="yyyyyyy.PPP..pyyyyyy" />
     <row Cells="yyyyyyy..E...yyyyyyy" />
@@ -366,7 +369,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="y..S..yy" />
+    <row Cells="y.SSS.yy" />
     <row Cells="y.P@P.py" />
     <row Cells="y.POP.yy" />
     <row Cells="y..E..py" />
@@ -398,7 +401,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyy..S..yyyy" />
+    <row Cells="yyy.SSS.yyyy" />
     <row Cells="yyy.P@P.yyyy" />
     <row Cells="yyy.POP.yyyy" />
     <row Cells="yyy..E..yyyy" />
@@ -436,7 +439,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyy..S...yyyyyyy" />
+    <row Cells="yyyyyyy.SSS..yyyyyyy" />
     <row Cells="yyyyypp.P@P..yyyyyyy" />
     <row Cells="yyyyyyy.POP..yyyyyyy" />
     <row Cells="yyyyyyy..E...yyyyyyy" />
@@ -542,13 +545,13 @@
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="y.WWW.yy" />
-    <row Cells="y.B@T.yy" />
+    <row Cells="yWB@TWyy" />
     <row Cells="y.PPP.py" />
     <row Cells="y..E..py" />
     <row Cells="ypp.pyyy" />
     <row Cells="yyy.yyyy" />
   </map>
-  <!-- realization source=knowledge-bookshelf-s0; design=bookshelf; policy=quiet-court; yard-reason=reading court and quiet approach; yard=65; path=23; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=195be39437a18413; reason=none -->
+  <!-- realization source=knowledge-bookshelf-s0; design=bookshelf; policy=quiet-court; yard-reason=reading court and quiet approach; yard=64; path=19; boundary=0; fixtures=0; route-open=5; intentional-open=0; inaccessible-open=0; family-fingerprint=195be39437a18413; reason=none -->
   <map Key="knowledge-bookshelf-s0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -559,16 +562,16 @@
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="yyy.WWW.yyyy" />
-    <row Cells="yyy.B@T.yyyy" />
+    <row Cells="yyyWB@TWyyyy" />
     <row Cells="yyy.PPP.yyyy" />
     <row Cells="yyy..E..yyyy" />
-    <row Cells="yypppppyyyyy" />
-    <row Cells="yyppppppyyyy" />
-    <row Cells="ypppppppyyyy" />
-    <row Cells="yyyyyyppyyyy" />
-    <row Cells="yyyyypppyyyy" />
+    <row Cells="yyppp.pyyyyy" />
+    <row Cells="yyppp.ppyyyy" />
+    <row Cells="ypppp.ppyyyy" />
+    <row Cells="yyyyy.ppyyyy" />
+    <row Cells="yyyyy.ppyyyy" />
   </map>
-  <!-- realization source=knowledge-bookshelf-s0; design=bookshelf; policy=quiet-court; yard-reason=reading court and quiet approach; yard=229; path=31; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=a8a1a6b8e431d72e; reason=none -->
+  <!-- realization source=knowledge-bookshelf-s0; design=bookshelf; policy=quiet-court; yard-reason=reading court and quiet approach; yard=226; path=31; boundary=0; fixtures=0; route-open=3; intentional-open=0; inaccessible-open=0; family-fingerprint=a8a1a6b8e431d72e; reason=none -->
   <map Key="knowledge-bookshelf-s0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="P" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -578,9 +581,9 @@
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyy.WWW.yyyyyyyy" />
-    <row Cells="yyyyyyy.B@T.yyyyyyyy" />
-    <row Cells="yyyyyyy.PPP.yyyyyyyy" />
+    <row Cells="yyyyyyy.WWW..yyyyyyy" />
+    <row Cells="yyyyyyyWB@TW.yyyyyyy" />
+    <row Cells="yyyyyyy.PPP..yyyyyyy" />
     <row Cells="yyyyyyy..E..yyyyyyyy" />
     <row Cells="yyyyyyyyppyyyyyyyyyy" />
     <row Cells="yyyyyyyyyppyyyyyyyyy" />
@@ -979,67 +982,70 @@
     <row Cells="yyyyyyy##+##yyyyyyyy" />
     <row Cells="yyyyyyyyy.yyyyyyyyyy" />
   </map>
-  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=24; path=3; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a9470653353efc01; reason=none -->
+  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=19; path=3; boundary=5; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a9470653353efc01; reason=none -->
   <map Key="creed-ezra-wheelshade-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="open" Anchors="work:drying-rack" Stateful="yes" />
     <glyph Char="w" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:fibre-teaching" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="vipiiiii" />
-    <row Cells="priiirii" />
-    <row Cells="fiw@iiii" />
-    <row Cells="iiiriiii" />
+    <row Cells="vxpiixii" />
+    <row Cells="pxiiixii" />
+    <row Cells="fiw@riix" />
+    <row Cells="ixirixii" />
     <row Cells="iii+iiii" />
-    <row Cells="iip.iiii" />
+    <row Cells="xip.xiii" />
   </map>
-  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=66; path=21; boundary=0; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=4123d1c639e72252; reason=none -->
+  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=57; path=21; boundary=9; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=4123d1c639e72252; reason=none -->
   <map Key="creed-ezra-wheelshade-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="open" Anchors="work:drying-rack" Stateful="yes" />
     <glyph Char="w" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:fibre-teaching" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiiiiipiipfi" />
+    <row Cells="iiixiipxipfx" />
     <row Cells="ifpppppiipii" />
     <row Cells="iiivippiipvi" />
-    <row Cells="iippppppppii" />
-    <row Cells="iiiriiiriiii" />
-    <row Cells="iipiw@iiiiii" />
-    <row Cells="iiiiiriiiiii" />
-    <row Cells="iifii+iiiiii" />
-    <row Cells="iiiii.piiiii" />
+    <row Cells="xippppppppii" />
+    <row Cells="iiixiiixiiix" />
+    <row Cells="iipiw@riiiii" />
+    <row Cells="iiixirixiiii" />
+    <row Cells="xifii+iiiiii" />
+    <row Cells="iiixi.pxiiix" />
   </map>
-  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=224; path=35; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a1d1b52f274578f0; reason=none -->
+  <!-- realization source=creed-ezra-wheelshade-s0; design=ezrawheelshade; policy=working-court; yard-reason=working court and loading approach; yard=208; path=35; boundary=16; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a1d1b52f274578f0; reason=none -->
   <map Key="creed-ezra-wheelshade-s0-lot-xl-road" Width="20" Height="14" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="open" Anchors="work:drying-rack" Stateful="yes" />
     <glyph Char="w" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="soft" Anchors="work:spindle-wheel" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:fibre-teaching" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$spindle" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiiiifipiipiviiiiiii" />
-    <row Cells="iiiiiiipiipiiiiiiiii" />
-    <row Cells="iipipiipiipiiiiiiiii" />
+    <row Cells="ixiiixipixpivxiiixii" />
+    <row Cells="xiviiiipiipiiiiiiiii" />
+    <row Cells="iipipiipiipiiiiiiiix" />
     <row Cells="iipppppppipiiiiiiiii" />
-    <row Cells="iiipppipiipfiiiiiiii" />
-    <row Cells="iiiviivppppppifiiiii" />
-    <row Cells="iiiiiiipviiiiiiiiiii" />
-    <row Cells="iiiivipppppfiiiiiiii" />
+    <row Cells="iiipppipiipviiiiiiii" />
+    <row Cells="xiifiifppppppifiiiii" />
+    <row Cells="iiiiiiipviiiiiiiiiix" />
+    <row Cells="iiiifipppppviiiiiiii" />
     <row Cells="iiiiiiipifiiiiiiiiii" />
-    <row Cells="iiiiiiiriiiriiiiiiii" />
-    <row Cells="iiiiiiiiw@iiiiiiiiii" />
-    <row Cells="iiiiiiiiiriiiiiiiiii" />
+    <row Cells="xiiiiiixiiixiiiiiiii" />
+    <row Cells="iiiiiiiiw@riiiiiiiix" />
+    <row Cells="iiiiiiixirixiiiiiiii" />
     <row Cells="iiiiiiiii+iiiiiiiiii" />
-    <row Cells="iiiiiiipi.iiiiiiiiii" />
+    <row Cells="xiiixiipx.iixiiixiii" />
   </map>
   <!-- realization source=creed-snapjaw-trailden-s0; design=snapjawtrailden; policy=drill-court; yard-reason=muster court and guarded edge; yard=24; path=3; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=3efe3cb524f8b9e7; reason=none -->
   <map Key="creed-snapjaw-trailden-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
@@ -1292,70 +1298,73 @@
     <row Cells="iiiiiiiii+iiiiiiiiii" />
     <row Cells="iiiiiiiiv.ppifiiiiii" />
   </map>
-  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=19; path=8; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=1ac7b3a3771812f7; reason=none -->
+  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=17; path=8; boundary=2; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=1ac7b3a3771812f7; reason=none -->
   <map Key="creed-dromad-shade-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:caravan" />
     <glyph Char="e" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="exit:caravan" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="soft" Anchors="display:sample-rack" Stateful="yes" />
     <glyph Char="m" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:water-measure" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:caravan-market" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="iipppppf" />
-    <row Cells="ieiiiepi" />
+    <row Cells="iexixepx" />
     <row Cells="iri@irpi" />
-    <row Cells="iiimiiiv" />
+    <row Cells="xximixiv" />
     <row Cells="iii+iiii" />
     <row Cells="iii.piii" />
   </map>
-  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=60; path=27; boundary=0; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=e5f234e7f3889632; reason=none -->
+  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=53; path=27; boundary=7; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=e5f234e7f3889632; reason=none -->
   <map Key="creed-dromad-shade-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:caravan" />
     <glyph Char="e" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="exit:caravan" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="soft" Anchors="display:sample-rack" Stateful="yes" />
     <glyph Char="m" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:water-measure" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:caravan-market" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiipipipiiii" />
-    <row Cells="iiipppipiiii" />
-    <row Cells="iivpvpipipfi" />
+    <row Cells="iixpipipiiii" />
+    <row Cells="iiipppipiiix" />
+    <row Cells="xivpvpipipfi" />
     <row Cells="ipppppppppif" />
-    <row Cells="fpieiiiepiii" />
+    <row Cells="fpiexixepiii" />
     <row Cells="ippri@irppii" />
-    <row Cells="iiiiimiipiii" />
-    <row Cells="iiiii+iiiiii" />
-    <row Cells="iiiii.iiiiii" />
+    <row Cells="iiiximixpiix" />
+    <row Cells="xiiii+iiiiii" />
+    <row Cells="iiiix.iiixii" />
   </map>
-  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=209; path=50; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=cf56a608e600f406; reason=none -->
+  <!-- realization source=creed-dromad-shade-s0; design=dromadcaravanshade; policy=loading-apron; yard-reason=loading apron and dry service ground; yard=196; path=50; boundary=13; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=cf56a608e600f406; reason=none -->
   <map Key="creed-dromad-shade-s0-lot-xl-road" Width="20" Height="14" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:caravan" />
     <glyph Char="e" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="exit:caravan" />
     <glyph Char="r" Ground="$ground" Object="$shelf" Claim="yard" Pass="walk" Cover="soft" Anchors="display:sample-rack" Stateful="yes" />
     <glyph Char="m" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:water-measure" Stateful="yes" />
+    <glyph Char="x" Ground="$ground" Structure="$canvas" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:caravan-market" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$practiceshelf" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiivpipipiiiiiiiiiii" />
-    <row Cells="iiiipipipiiiiiiiiiii" />
+    <row Cells="xiivpxpipixiiiixiiii" />
+    <row Cells="iiiipipipiiiiiiiiiix" />
     <row Cells="iiiipipipiifiiiiiiii" />
     <row Cells="ifiipippppppiiiiiiii" />
     <row Cells="ipppppppppppiiiiiiii" />
-    <row Cells="iiiiiipfpiiiiiiiiiii" />
-    <row Cells="vpppppppppppiiiiiiii" />
+    <row Cells="xiiiiipfpiiiiiiiiiii" />
+    <row Cells="vpppppppppppiiiiiiix" />
     <row Cells="iiviiipiiiiviiiiiiii" />
     <row Cells="iiiiiipfiiiiiiiiiiii" />
-    <row Cells="iiiifipeiiieiiiiiiii" />
-    <row Cells="iiippppri@iriiiiiiii" />
-    <row Cells="iiiviipiimiiiiiiiiii" />
+    <row Cells="iiiifipexixeiiiiiiii" />
+    <row Cells="xiippppri@iriiiiiiii" />
+    <row Cells="iiiviipximixiiiiiiix" />
     <row Cells="iiiiiipii+iiiiiiiiii" />
-    <row Cells="iiiiiipii.iiiiiiiiii" />
+    <row Cells="iixiiipxi.iixiiiixii" />
   </map>
   <!-- realization source=creed-entropy-blind-s0; design=entropyblind; policy=quiet-court; yard-reason=reading court and quiet approach; yard=22; path=5; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=77106e49190bf482; reason=none -->
   <map Key="creed-entropy-blind-s0-lot-m-road" Width="8" Height="6" DefaultCover="walled">
@@ -2439,7 +2448,7 @@
   <map Key="creed-farmers-commons-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:labelled-seed-bin" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="open" Anchors="storage:labelled-seed-bin" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="work:threshing-floor" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:seed-commons" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
@@ -2456,7 +2465,7 @@
   <map Key="creed-farmers-commons-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:labelled-seed-bin" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="open" Anchors="storage:labelled-seed-bin" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="work:threshing-floor" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:seed-commons" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
@@ -2476,7 +2485,7 @@
   <map Key="creed-farmers-commons-s0-lot-xl-road" Width="20" Height="14" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="soft" Anchors="storage:labelled-seed-bin" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$basket" Claim="yard" Pass="walk" Cover="open" Anchors="storage:labelled-seed-bin" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="work:threshing-floor" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="open" Anchors="main,function:seed-commons" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
@@ -2633,129 +2642,135 @@
     <row Cells="yyyyyyy##+##yyyyyyyy" />
     <row Cells="yyyyyyyyy.pyyyyyyyyy" />
   </map>
-  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=12; path=14; boundary=0; fixtures=2; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=a1bbf543f9f64c92; reason=none -->
+  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=9; path=14; boundary=3; fixtures=2; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=a1bbf543f9f64c92; reason=none -->
   <map Key="creed-yd-bower-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="v" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
+    <glyph Char="V" Ground="$ground" Structure="$trellis" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="seat:traveller-table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:vine-hospitality" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="ifiipoii" />
-    <row Cells="pvivivpp" />
-    <row Cells="ivitivii" />
-    <row Cells="pvi@ivpp" />
+    <row Cells="ifVipoVi" />
+    <row Cells="pVvvvVpp" />
+    <row Cells="Vvitivii" />
+    <row Cells="pVi@iVpp" />
     <row Cells="i+iii+pi" />
     <row Cells="p.ppp.pp" />
   </map>
-  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=49; path=37; boundary=0; fixtures=5; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=aa927880c1683838; reason=none -->
+  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=40; path=37; boundary=9; fixtures=5; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=aa927880c1683838; reason=none -->
   <map Key="creed-yd-bower-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="v" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
+    <glyph Char="V" Ground="$ground" Structure="$trellis" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="seat:traveller-table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:vine-hospitality" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="ifiipioiiiii" />
+    <row Cells="iViipVoiiVii" />
     <row Cells="pppppppppppp" />
-    <row Cells="iopfppppiifi" />
-    <row Cells="iiiipiipppii" />
-    <row Cells="pppvivivpppp" />
-    <row Cells="iiivitiviiii" />
-    <row Cells="iiivi@iviiii" />
+    <row Cells="ifpfppppiioV" />
+    <row Cells="fiiipiipppii" />
+    <row Cells="pppVvvvVpppp" />
+    <row Cells="Viivitiviiii" />
+    <row Cells="iiiVi@iViiiV" />
     <row Cells="ppp+iii+pppp" />
-    <row Cells="iii.pii.iiii" />
+    <row Cells="iVi.pVi.iVii" />
   </map>
-  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=170; path=88; boundary=0; fixtures=10; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=6e24c1e28ace1851; reason=none -->
+  <!-- realization source=creed-yd-bower-s0; design=ydvinebower; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=157; path=88; boundary=13; fixtures=10; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=6e24c1e28ace1851; reason=none -->
   <map Key="creed-yd-bower-s0-lot-xl-road" Width="20" Height="14" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="v" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="soft" Anchors="crop:fruiting-trellis" Stateful="yes" />
+    <glyph Char="V" Ground="$ground" Structure="$trellis" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="seat:traveller-table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:vine-hospitality" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trellis" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="o" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiiiiifipiiiiiiiiiii" />
-    <row Cells="iiiioiiipiiiiiiiiiii" />
+    <row Cells="iViiiVoipViiiViiiVii" />
+    <row Cells="Viiifiiipiiiiiiiiiii" />
     <row Cells="pppppppppppppppppppp" />
-    <row Cells="iiiiiiiippiiiioiiioi" />
-    <row Cells="iiiiiiiipiiiiiiioiii" />
+    <row Cells="iiiiiiiippiiiifiiifi" />
+    <row Cells="iiiiiiiipiiiiiiifiii" />
     <row Cells="pppppppppppppppppppp" />
-    <row Cells="iiiiiiiipiiiiiifiiii" />
-    <row Cells="iiiiiiippioippiiiiii" />
+    <row Cells="iiiiiiiipiiiiiioiiiV" />
+    <row Cells="iiiiiiippifippiiiiii" />
     <row Cells="pppppppppppppppppppp" />
-    <row Cells="iiiippiviviviiiiiifi" />
-    <row Cells="iiiiiiivitiviiiiiiii" />
-    <row Cells="pppppppvi@ivpppppppp" />
-    <row Cells="iiiiiii+iii+iiiiifii" />
-    <row Cells="fiiiiii.pii.iiiiiiii" />
+    <row Cells="ViiippiVvvvViiiiiioi" />
+    <row Cells="iiiiiiivitiviiiiiiiV" />
+    <row Cells="pppppppVi@iVpppppppp" />
+    <row Cells="iiiiiii+iii+iiiiioii" />
+    <row Cells="ViiiVii.pii.ViioViii" />
   </map>
-  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=22; path=5; boundary=0; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=49337362cfedb25c; reason=none -->
+  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=18; path=5; boundary=4; fixtures=2; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=49337362cfedb25c; reason=none -->
   <map Key="creed-chavvah-school-s0-lot-m-road" Width="8" Height="6" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="d" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:low-desk" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
+    <glyph Char="T" Ground="$ground" Structure="$trunk" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:bough-school" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="ipppiiii" />
+    <row Cells="ipppiTii" />
+    <row Cells="iTitiTii" />
     <row Cells="iditidii" />
-    <row Cells="iididiii" />
-    <row Cells="iti@itii" />
-    <row Cells="iii+iipi" />
-    <row Cells="iiv.piif" />
+    <row Cells="iTd@dTii" />
+    <row Cells="iii+iipT" />
+    <row Cells="Tiv.piTf" />
   </map>
-  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=67; path=20; boundary=0; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a2bd0bbd83260ea5; reason=none -->
+  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=61; path=20; boundary=6; fixtures=5; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=a2bd0bbd83260ea5; reason=none -->
   <map Key="creed-chavvah-school-s0-lot-l-road" Width="12" Height="9" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="d" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:low-desk" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
+    <glyph Char="T" Ground="$ground" Structure="$trunk" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:bough-school" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iifiiipiiiii" />
+    <row Cells="iifiiTpiiiiT" />
     <row Cells="iiippppiiiii" />
     <row Cells="iivpppiiiiii" />
     <row Cells="ifipppppviii" />
-    <row Cells="iiiditidiiii" />
-    <row Cells="iiiididiiifi" />
-    <row Cells="iiiti@itpppi" />
+    <row Cells="iiiTitiTiiii" />
+    <row Cells="Tiiditidiifi" />
+    <row Cells="iiiTd@dTpppT" />
     <row Cells="iiiii+iipppi" />
-    <row Cells="iiiii.piiiii" />
+    <row Cells="iiiTi.piiTii" />
   </map>
-  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=224; path=35; boundary=0; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=4b869e3ce94f6100; reason=none -->
+  <!-- realization source=creed-chavvah-school-s0; design=chavvahboughschool; policy=quiet-court; yard-reason=reading court and quiet approach; yard=212; path=35; boundary=12; fixtures=10; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=4b869e3ce94f6100; reason=none -->
   <map Key="creed-chavvah-school-s0-lot-xl-road" Width="20" Height="14" DefaultCover="open">
     <glyph Char="i" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="d" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="soft" Anchors="work:low-desk" Stateful="yes" />
     <glyph Char="t" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="soft" Anchors="living:central-trunk" Stateful="yes" />
+    <glyph Char="T" Ground="$ground" Structure="$trunk" Claim="yard" Pass="adjacent" Cover="soft" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="walk" Cover="soft" Anchors="main,function:bough-school" Stateful="yes" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="f" Ground="$ground" Object="$trunk" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="v" Ground="$ground" Object="$practicetable" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="iiiiiipiiviiiiiiiiii" />
-    <row Cells="iiiifippppiiiiiiiiii" />
+    <row Cells="iTiiiipTiviiiTiiiiiT" />
+    <row Cells="Tiiifippppiiiiiiiiii" />
     <row Cells="iiiiippppiiiiiiiiiii" />
     <row Cells="iifiiipvpiiiiiiiiiii" />
     <row Cells="iiippppppiiiiiiiiiii" />
     <row Cells="iiifiivpppfiiiiiiiii" />
-    <row Cells="iiipppppiiiiiiiiiiii" />
-    <row Cells="iipppiipviiiiiiiiiii" />
+    <row Cells="iiipppppiiiiiiiiiiiT" />
+    <row Cells="Tipppiipviiiiiiiiiii" />
     <row Cells="iiiiiippiiiiiiiiiiii" />
-    <row Cells="iiiviipditidiiiiiiii" />
-    <row Cells="iiiiifpididiiiiiiiii" />
-    <row Cells="iiiiiipti@itiiiiiiii" />
-    <row Cells="iiiiiiiii+iiiiiiiiii" />
-    <row Cells="iiiiiiiip.iiiiiiiiii" />
+    <row Cells="iiiviipTitiTiiiiiiii" />
+    <row Cells="iiiiifpditidiiiiiiii" />
+    <row Cells="iiiiiipTd@dTiiiiiiii" />
+    <row Cells="iiiiiiiii+iiiiiiiiiT" />
+    <row Cells="TiiiiiTip.iiTiiiiiTi" />
   </map>
   <!-- realization source=deepend-vathouse-m0; design=vathouse; policy=working-court; yard-reason=working court and loading approach; yard=48; path=11; boundary=0; fixtures=0; route-open=1; intentional-open=0; inaccessible-open=0; family-fingerprint=00f9d43bb6711e63; reason=none -->
   <map Key="deepend-vathouse-m0-lot-l-road" Width="12" Height="9" DefaultCover="walled">
@@ -4991,7 +5006,7 @@
     <row Cells=",,.#siiM..,," />
     <row Cells=",p.#@ih,+.p," />
     <row Cells=",,.biM,,...." />
-    <row Cells=",,..,M......" />
+    <row Cells=",,.##M......" />
     <row Cells=",,........,p" />
     <row Cells=",,,pp..ppppp" />
     <row Cells=",,,p,..p,,,p" />
@@ -5310,7 +5325,7 @@
     <row Cells=",,,,,,.#siiM...,,,,," />
     <row Cells=",,,,,,.#@ih,+..,,,,," />
     <row Cells=",,,,,,.biM,,...,,,,," />
-    <row Cells=",,,,,,..,M.....,,,,," />
+    <row Cells=",,,,,,.##M.....,,,,," />
     <row Cells=",,,,,,........,,,,,," />
     <row Cells=",,,,,,ppp..,,,,,,,,," />
     <row Cells=",,,,ppppp..pppp,,,,," />
@@ -6334,6 +6349,7 @@
   </map>
   <!-- realization source=production-plot-s0; design=plot; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=8; path=18; boundary=0; fixtures=0; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=19ceed5f861ae615; reason=none -->
   <map Key="production-plot-s0-lot-m-heart" Width="8" Height="6" DefaultCover="open">
+    <glyph Char="R" Ground="$soil" Structure="$rock" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
     <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
@@ -6341,7 +6357,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="y.....yy" />
+    <row Cells="yR...Ryy" />
     <row Cells="paP@Pbpp" />
     <row Cells="yPPPPPpy" />
     <row Cells="p..E..pp" />
@@ -6369,6 +6385,7 @@
   </map>
   <!-- realization source=production-plot-s0; design=plot; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=44; path=39; boundary=0; fixtures=0; route-open=5; intentional-open=0; inaccessible-open=0; family-fingerprint=a3b50ff272e69046; reason=none -->
   <map Key="production-plot-s0-lot-l-heart" Width="12" Height="9" DefaultCover="open">
+    <glyph Char="R" Ground="$soil" Structure="$rock" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
     <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
@@ -6376,7 +6393,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyy.....yyyy" />
+    <row Cells="yyyR...Ryyyy" />
     <row Cells="pppaP@Pbpppp" />
     <row Cells="yyyPPPPPyyyy" />
     <row Cells="yyy..E..yyyy" />
@@ -6410,6 +6427,7 @@
   </map>
   <!-- realization source=production-plot-s0; design=plot; policy=field-bands; yard-reason=cultivation rows and tending lanes; yard=163; path=93; boundary=0; fixtures=0; route-open=4; intentional-open=0; inaccessible-open=0; family-fingerprint=e4f45b4ee92e41fb; reason=none -->
   <map Key="production-plot-s0-lot-xl-heart" Width="20" Height="14" DefaultCover="open">
+    <glyph Char="R" Ground="$soil" Structure="$rock" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
     <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
@@ -6417,7 +6435,7 @@
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$soil" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyyyyy......yyyyyyy" />
+    <row Cells="yyyyyyyR...R.yyyyyyy" />
     <row Cells="yyyyyyyaP@Pb.yypyyyy" />
     <row Cells="pppppppPPPPP.ppppppp" />
     <row Cells="yyyyyyy..E...yyyyyyy" />
@@ -7190,14 +7208,14 @@
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="y.WWW.yy" />
+    <row Cells="yWWWWWyy" />
     <row Cells="y.C@C.py" />
     <row Cells="y.PPP.yy" />
     <row Cells="y..E..py" />
     <row Cells="ppp.pyyy" />
     <row Cells="ppp.yyyy" />
   </map>
-  <!-- realization source=production-mill-s0; design=mill; policy=clearance-court; yard-reason=machine clearance and inspection walk; yard=50; path=38; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=e255de1b94ba89e5; reason=none -->
+  <!-- realization source=production-mill-s0; design=mill; policy=clearance-court; yard-reason=machine clearance and inspection walk; yard=50; path=33; boundary=0; fixtures=0; route-open=5; intentional-open=0; inaccessible-open=0; family-fingerprint=e255de1b94ba89e5; reason=none -->
   <map Key="production-mill-s0-lot-l-heart" Width="12" Height="9" DefaultCover="soft">
     <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="work:walking-bar" />
@@ -7206,17 +7224,17 @@
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="ypy.WWW.ypyy" />
+    <row Cells="ypyWWWWWypyy" />
     <row Cells="ypy.C@C.yppy" />
     <row Cells="ypy.PPP.ypyy" />
     <row Cells="ypp..E..ypyy" />
-    <row Cells="ypppppppppyy" />
-    <row Cells="ypypypyyypyy" />
-    <row Cells="ypppppppppyy" />
-    <row Cells="ypyyypyyypyy" />
-    <row Cells="ypyyypyyypyy" />
+    <row Cells="ypppp.ppppyy" />
+    <row Cells="ypypy.yyypyy" />
+    <row Cells="ypppp.ppppyy" />
+    <row Cells="ypyyy.yyypyy" />
+    <row Cells="ypyyy.yyypyy" />
   </map>
-  <!-- realization source=production-mill-s0; design=mill; policy=clearance-court; yard-reason=machine clearance and inspection walk; yard=198; path=62; boundary=0; fixtures=0; route-open=0; intentional-open=0; inaccessible-open=0; family-fingerprint=3d828ad733d58ee6; reason=none -->
+  <!-- realization source=production-mill-s0; design=mill; policy=clearance-court; yard-reason=machine clearance and inspection walk; yard=196; path=62; boundary=0; fixtures=0; route-open=2; intentional-open=0; inaccessible-open=0; family-fingerprint=3d828ad733d58ee6; reason=none -->
   <map Key="production-mill-s0-lot-xl-heart" Width="20" Height="14" DefaultCover="soft">
     <glyph Char="W" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="C" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="work:walking-bar" />
@@ -7225,8 +7243,8 @@
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="yyyypyy.WWW.yypyyyyy" />
-    <row Cells="yypppyy.C@C.yypyyyyy" />
+    <row Cells="yyyypyyWWWWW.ypyyyyy" />
+    <row Cells="yypppyy.C@C..ypyyyyy" />
     <row Cells="yyyypyy.PPP.yypyyyyy" />
     <row Cells="yyyypyy..E..yppyyyyy" />
     <row Cells="yyyypyyyypyyyypyyyyy" />

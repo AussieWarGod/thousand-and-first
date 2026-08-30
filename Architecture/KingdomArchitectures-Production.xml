@@ -25,6 +25,7 @@
     <slot Key="soil" Blueprint="DirtFloor" Role="cultivated-soil" Material="mud" MinTech="hands" Natural="no" />
     <slot Key="path" Blueprint="DirtPath" Role="garden-path" Material="mud" MinTech="hands" Natural="no" />
     <slot Key="stake" Blueprint="r_KingdomStructureBrinestalkWall" Role="row-stake" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="rock" Blueprint="r_KingdomStructureLimestone" Role="plot-corner-stone" Material="stone" MinTech="hands" Natural="yes" />
   </palette>
 
   <palette Key="production-field-hands">
@@ -214,12 +215,15 @@
   </map>
 
   <map Key="production-plot-s0" Width="5" Height="4" DefaultCover="open">
+    <glyph Char="R" Ground="$soil" Structure="$rock" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="a" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row1" />
     <glyph Char="b" Ground="$soil" Claim="yard" Pass="walk" Cover="open" Anchors="crop:row2" />
     <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$soil" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:garden" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <row Cells="....." />
+    <!-- Field stones rolled to the two back corners stake the garden's claim; the plotrows rung
+         drives its timber row-stakes along the same edge. -->
+    <row Cells="R...R" />
     <row Cells="aP@Pb" />
     <row Cells="PPPPP" />
     <row Cells="..E.." />
@@ -532,7 +536,9 @@
     <glyph Char="P" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="yard" Pass="adjacent" Cover="soft" Anchors="main,function:hand-power" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <row Cells=".WWW." />
+    <!-- The full-width timber screen braces the crank head and carries its lean-to shade; the
+         walking bars and their sweep stay in the open where the settlers push. -->
+    <row Cells="WWWWW" />
     <row Cells=".C@C." />
     <row Cells=".PPP." />
     <row Cells="..E.." />

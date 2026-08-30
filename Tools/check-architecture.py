@@ -1626,11 +1626,18 @@ def _validate_map_topology(
         )
 
 
-# Doctrine floors (polish contract section 6/8, user ruling 2026-08-30): every authored map is
-# held to the code-checkable slice of "walls, pathways, and door placement make sense".  The
-# catalogue census reached zero on 2026-08-30, so these are hard issues: no map with a pointless
-# door or a featureless room is commissionable or releasable.
+# Doctrine floors (polish contract section 6/8, user rulings 2026-08-30): every authored map is
+# held to the code-checkable slice of "walls, pathways, and door placement make sense" and to
+# "everything is a building" — even the starting tent is a fabric shack, and an open plot is a
+# composed scene, never furniture on a bare rectangle.  The catalogue census reached zero on
+# 2026-08-30, so these are hard issues: no offending map is commissionable or releasable.
 FEATURELESS_ROOM_MIN_CELLS = 4
+# A map that claims shelter must build shelter: walled/soft cover with fewer structure cells
+# than this is a rectangle pretending to be a roof.
+SHELTER_MIN_STRUCTURE_CELLS = 4
+# Every building, roofed or open, is a composition: beyond the $building root the map must
+# place at least this many structure or object cells (rings, frames, benches, walls, fixtures).
+COMPOSITION_MIN_PLACEMENTS = 2
 
 
 def _doctrine_is_door(glyph: Glyph) -> bool:
@@ -1654,6 +1661,36 @@ def validate_map_doctrine(model: "ArchitectureModel", issues: List[Issue]) -> No
 def _validate_one_map_doctrine(
     architecture_map: "ArchitectureMap", issues: List[Issue]
 ) -> None:
+    structure_cells = 0
+    sheltered_cells = 0
+    composition = 0
+    for x, y, glyph in _cells(architecture_map):
+        if glyph.structure:
+            structure_cells += 1
+            composition += 1
+        if glyph.object and glyph.object != "$building":
+            composition += 1
+        cover = glyph.cover or architecture_map.default_cover
+        if glyph.claim in CLAIMS and cover in ("walled", "soft"):
+            sheltered_cells += 1
+    if sheltered_cells > 0 and structure_cells < SHELTER_MIN_STRUCTURE_CELLS:
+        issues.append(
+            Issue(
+                architecture_map.location,
+                "doctrine.unsheltered-shelter",
+                f"map claims walled/soft cover on {sheltered_cells} cells with only "
+                f"{structure_cells} structure cells; a roof needs walls",
+            )
+        )
+    if composition < COMPOSITION_MIN_PLACEMENTS:
+        issues.append(
+            Issue(
+                architecture_map.location,
+                "doctrine.bare-lot",
+                f"map places only {composition} structure/object cells beyond the "
+                "building root; furniture on a bare rectangle is not a building",
+            )
+        )
     walkable: Dict[Tuple[int, int], Glyph] = {}
     doors: Dict[Tuple[int, int], Glyph] = {}
     for x, y, glyph in _cells(architecture_map):

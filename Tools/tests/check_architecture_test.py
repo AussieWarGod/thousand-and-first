@@ -751,6 +751,36 @@ class ArchitectureCheckerTests(unittest.TestCase):
         result = self.check()
         self.assertIn("doctrine.featureless-room", self.codes(result))
 
+    def test_doctrine_floors_flag_bare_lots_and_unsheltered_shelter(self) -> None:
+        # Strip the S hut's walls of their structure and its bedroll from the lot:
+        # the map still claims walled cover, so the shelter floor fires, and with
+        # nothing placed beyond the building root the bare-lot floor fires too.
+        bare = ARCHITECTURE.replace(
+            '<glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" '
+            'Pass="blocked" Cover="walled" />\n'
+            '    <glyph Char="," Ground="$floor" Claim="building" Pass="walk" '
+            'Cover="walled" />\n'
+            '    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" '
+            'Pass="walk" Cover="walled" Anchors="entrance:public" />\n'
+            '    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" '
+            'Pass="adjacent" Cover="walled" Anchors="fixture:bed" Stateful="yes" />',
+            '<glyph Char="#" Ground="$floor" Claim="building" '
+            'Pass="blocked" Cover="walled" />\n'
+            '    <glyph Char="," Ground="$floor" Claim="building" Pass="walk" '
+            'Cover="walled" />\n'
+            '    <glyph Char="+" Ground="$floor" Claim="building" '
+            'Pass="walk" Cover="walled" Anchors="entrance:public" />\n'
+            '    <glyph Char="b" Ground="$floor" Claim="building" '
+            'Pass="adjacent" Cover="walled" Anchors="fixture:bed" Stateful="yes" />',
+            1,
+        )
+        self.assertNotEqual(bare, ARCHITECTURE)
+        self.write_repo(BUILDINGS, bare)
+        result = self.check()
+        self.assertFalse(result.ok)
+        self.assertIn("doctrine.unsheltered-shelter", self.codes(result))
+        self.assertIn("doctrine.bare-lot", self.codes(result))
+
     def test_schema_coverage_dimensions_and_topology_faults(self) -> None:
         lower_root = ARCHITECTURE.replace(
             "KingdomArchitectures", "kingdomarchitectures"
@@ -1030,7 +1060,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
 
         civic_path = self.repo / "KingdomArchitectures-CivicFaith.xml"
         civic = civic_path.read_text(encoding="utf-8").replace(
-            '<row Cells="PPBPP" />', '<row Cells="PBPPP" />', 1
+            '<row Cells="PRBRP" />', '<row Cells="PBRRP" />', 1
         )
         civic_path.write_text(civic, encoding="utf-8")
         self.assertIn("heart.basin-rite", self.codes(CHECKER.run_check(self.repo)))
