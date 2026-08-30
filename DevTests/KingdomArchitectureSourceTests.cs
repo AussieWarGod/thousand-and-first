@@ -143,7 +143,7 @@ namespace ThousandAndFirst.Tests
 		public void ExactTypedActualLotIndexSupportsLargerAuthoredStakesWithoutNearestFallback()
 		{
 			string source = Loader();
-			StringAssert.Contains("public const int MaxMappings = 512;", source);
+			StringAssert.Contains("public const int MaxMappings = 1024;", source);
 			StringAssert.Contains("Dictionary<string, List<ResolvedRecord>> RecordsByBuild", source);
 			StringAssert.Contains("Dictionary<string, Dictionary<string, ResolvedRecord>> RecordsByBinding",
 				source);

@@ -126,6 +126,31 @@ dispatches semantic work and projects results into existing realm surfaces. Phys
 remain game objects or liquids. Abstract ledgers are evidence and reports, not permission to mint
 or delete physical stock.
 
+### Ground classification
+
+`KingdomPlotRules.ReadObject` (`Growth/KingdomPlot2.04.Ground.cs`) classifies what one object makes
+of the cell it stands in — `Bare`, `Held`, or `Liquid` — and every plot and staging-rectangle check
+reads cells through it. Engine `Widget` blueprints (invisible bookkeeping: spawn managers, ambient
+markers, terrain notes) read as `Bare`. Before this, any wilderness plot or staging rectangle that
+touched one refused with an unresolvable "[Widget] may not be taken" the player could never act on —
+proven live in wild marsh zones, which scatter widgets densely enough that every rectangle read
+`Held`. This is a player-facing founding fix, not only a harness concern: ground scattered with
+invisible engine bookkeeping was previously unfoundable.
+
+### World geometry
+
+`JoppaWorld` is 80×25 parasangs (`World/KingdomInheritanceWorldIndex.cs` sizes its per-parasang fact
+table `[80, 25]`); the engine's own zone-grid arrays are sized to exactly 3× that per axis — 240×75
+zones — so a world or zone coordinate outside those bounds crashes zone build rather than refusing
+cleanly. Any code that iterates world or zone coordinates must clamp to these bounds itself; the
+engine will not do it for you.
+
+Wilderness is never naturally "Bare" at scale: brush, invisible widgets (see
+[Ground classification](#ground-classification)), one-cell puddles, and zone travel-connection cells
+are everywhere. There is no naturally occurring "empty test zone." Tooling that needs one clears
+ground explicitly instead of searching for a pristine rectangle (see the developer scenario harness
+in [TESTING.md](../TESTING.md)).
+
 ### Hosted arcology authority
 
 **Caveat:** the authored-interior hosted-arcology replacement is design-complete but deferred
@@ -300,6 +325,23 @@ capabilities still require the compatibility pass in `TESTING.md`.
 Root XML registries load with Qud's mergeable-stream idiom. Reusing a documented key merges by
 load order; a new content record should normally require no C# catalog edit. Schemas and examples
 live in [MODDING.md](../MODDING.md).
+
+### Architecture catalogue: caps and lazy load
+
+`KingdomArchitecture` loads `KingdomArchitectures-*.xml` into an in-memory catalogue capped at
+`MaxTopRecords`/`MaxMappings` (`Growth/KingdomArchitecture.cs`, currently 1024). The cap was raised
+from 512 after the authored census reached 514 maps and started being refused at live engine load —
+no static checker enforces this cap, so a census growing past it is caught only by launching the game
+and reading `Player.log` for the refusal. The census currently totals 513 maps (176 source, 337
+generated); one orphaned map (`housing-arcology-xl0`, deferred arcology content with no reachable
+binding) was removed because the runtime enforces exact catalogue consumption — an unbound map is
+dead weight, not a harmless spare.
+
+The catalogue also loads **lazily**: `KingdomArchitecture.Healthy` reads `false` until the first
+production ask (`KingdomData.Buildings` or equivalent) triggers the load. A health check taken
+before anything has asked reads "never loaded," not "data fault" — trigger the real lazy path before
+judging health, the way the developer scenario harness does before its own catalogue observations
+(see [TESTING.md](../TESTING.md)).
 
 The supported C# surface is only `ThousandAndFirst.Api` as documented in [API.md](API.md).
 Everything else is internal even where C# visibility is public for Qud integration. Extensions

@@ -99,6 +99,15 @@ namespace ThousandAndFirst
 			{
 				return KingdomPlotRules.GroundKind.Bare;
 			}
+			if (blueprint != null && blueprint.InheritsFrom("Widget"))
+			{
+				// Engine bookkeeping: spawn managers, ambient markers, terrain notes. A widget
+				// has no physical presence a founder could see, act on, or clear, and refusing a
+				// plot for one produces an invisible "[Widget] may not be taken" the player can
+				// never resolve. Proven live 2026-08-29: wild marsh zones scatter these, which
+				// made every wilderness rectangle read Held.
+				return KingdomPlotRules.GroundKind.Bare;
+			}
 			if (Object.IsTakeable() || Object.IsOwned())
 			{
 				// A dropped waterskin is inviolate, and so is anything anybody's name is on.

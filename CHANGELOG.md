@@ -18,6 +18,35 @@ native/human protocol and gallery, compatibility testing, structural release gat
 Steam subscription/install pass remain gates before any release-candidate claim is restored.
 
 ### Fixed
+- **Engine `Widget` blueprints now read as bare ground instead of refusing every plot that touches
+  one.** `KingdomPlotRules.ReadObject` (`Growth/KingdomPlot2.04.Ground.cs`) previously read invisible
+  engine bookkeeping objects — spawn managers, ambient markers, terrain notes — as held ground, so
+  any wilderness plot or staging rectangle that touched one refused with an unresolvable "[Widget]
+  may not be taken" the player could never act on. Proven live in wild marsh zones, which scatter
+  widgets densely enough that every rectangle read held. This is a player-facing founding fix, not
+  only a harness one.
+- **The architecture catalogue's record caps are raised from 512 to 1024, and one orphaned map is
+  removed from the census.** `KingdomArchitecture.MaxTopRecords`/`MaxMappings`
+  (`Growth/KingdomArchitecture.cs`) refused the catalogue's own rows only at live engine load — the
+  old 512 cap was never a static-checker concern, since no static gate replays the loader's own
+  record limit, so only launching the game surfaced the refusal. Separately, `housing-arcology-xl0`
+  (deferred arcology content with no reachable binding) is removed: the runtime enforces exact
+  catalogue consumption, so an unbound map is dead weight, not a harmless spare. The authored census
+  is now 513 maps (176 source, 337 generated).
+- **The scenario launcher now uses the same modern path arguments as the smoke launcher.**
+  `Tools/run-scenario.ps1` passed `-savelocation`, which redirects saves only: the game still loaded
+  mods from the default AppData profile, so the sealed profile's `Harness` overlay never reached the
+  engine while a stale default-profile mod copy could silently supply content instead. It now passes
+  `-savepath`/`-sharedpath`/`-syncedpath`/`-logFile` plus `NOMETRICS STEAM:NO GALAXY:NO`, confining
+  saves, shared data (including `Mods`), synced data, and the log to the sealed profile root. Proven
+  live: with `-savelocation` the game listed the AppData mod directories in `RefreshModDirectory`;
+  with the modern arguments it lists only the profile's.
+- **A conditional-access `TryGetValue` out-var pattern that desktop `csc` accepts is now
+  pre-declared instead, because the in-game compiler rejects it.** The engine's own compiler flagged
+  CS0165 (definite assignment) on `The.Game?.ObjectGameState.TryGetValue(k, out var v) == true` in
+  `Growth/KingdomPurposePortfolio.OutputRuntime.cs`; the out variable is now declared ahead of the
+  conditional-access call. This is the first commit to compile and load clean in-engine, with zero
+  `MODERROR`.
 - **Persisted polity saves bump to wire v6, admitting the `Abandoned` cohort phase.**
   `KingdomPolityCodec.CurrentWireVersion` is now 6. Phase `Abandoned` (value 6: exact physical loss
   proved, with no semantic death, return, or reward claimed) is lawful only on that wire — every
@@ -189,12 +218,12 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,315 physical lines; 4 files exceed
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,381 physical lines; 4 files exceed
   300, 0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 — the four are the
   adjudicated Gatehouse family, docketed by the R3 registration sweep. Direct `XRL`
   imports occur in 1204 files, 3 of them over the line limit. Its
   exact inventory digest is
-  `67a786670a85a30c36651a493069353355734701e33199d5397f5e21969b18ff`;
+  `d5fb01d63260dde70a994f8e17c8d282eee71686cf9f9d8d93c4eeee26e29de3`;
   the corresponding cold-install inventory contains 2664 files. The
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
@@ -311,7 +340,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
   that would have caught the defect lands with the fix.
 - **Every offered plot size now has an exact authored realization.** The merged catalogue currently
-  contains 131 plotted plans over 514 inspectable authored maps (177 source / 337 generated);
+  contains 131 plotted plans over 513 inspectable authored maps (176 source / 337 generated);
   larger-lot data adds 242 exact bindings and 277 predecessor tiers. Larger stakes preserve the
   complete source block, then realize added space as category-appropriate courts, service aprons,
   crop/tending ground, paths, sparse boundaries, or an explicitly reasoned opening using only the

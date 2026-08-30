@@ -176,11 +176,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StatusRecomputesTheVerdictFromDurableProvenance()
 		{
-			string wishes = Read("Harness/KingdomScenarioWishes.cs");
+			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
 			StringAssert.Contains("private static string Verdict(KingdomScenarioProvenance Record)",
-				wishes);
-			StringAssert.Contains("Record.KeySetDigest", wishes);
-			StringAssert.Contains("KingdomScenarioAnchorRules.TrySignAcceptance(Record", wishes);
+				verbs);
+			StringAssert.Contains("Record.KeySetDigest", verbs);
+			StringAssert.Contains("KingdomScenarioAnchorRules.TrySignAcceptance(Record", verbs);
 		}
 
 		// ----- item 8: the anchor id is stable before the evidence exists -------------------------

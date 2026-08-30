@@ -971,7 +971,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
         result = CHECKER.run_check(source_repo)
         self.assertTrue(result.ok, result.report())
         self.assertEqual(result.max_snapshot_key, maximum_key)
-        self.assertIn("maps: 514 (177 source / 337 generated)", result.report())
+        self.assertIn("maps: 513 (176 source / 337 generated)", result.report())
         self.assertIn(f"({maximum_key})", result.report())
 
     def test_shipped_entrance_census_is_live_routable_in_all_poses(self) -> None:

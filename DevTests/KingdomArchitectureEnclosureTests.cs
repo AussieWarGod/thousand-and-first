@@ -17,7 +17,7 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
 			Assert.AreEqual(86, corpus.Palettes.Count);
-			Assert.AreEqual(514, corpus.Maps.Count);
+			Assert.AreEqual(513, corpus.Maps.Count);
 			Assert.AreEqual(530, corpus.Cases.Count);
 			int compiled = 0;
 			for (int i = 0; i < corpus.Cases.Count; i++)

@@ -7,9 +7,11 @@ namespace ThousandAndFirst.Harness
 	/// The scenario request line, as the launcher freezes it into the profile's embark module:
 	/// <c>&lt;key&gt;[;param=value][;seed=#N]</c>.
 	/// <para>
-	/// The seed is a request field rather than a scenario field. Caves of Qud exposes no
-	/// launcher-reachable pre-generation seed injection, so authored data declares no seed and the
-	/// launcher freezes one here; the new-game gate proves the engine actually generated under it.
+	/// The seed is a request field rather than a scenario field: authored data declares no seed, the
+	/// launcher freezes one here, and <c>KingdomScenarioFastEmbarkModule</c> reads it back off the
+	/// parsed mode descriptor in-chargen and sets <c>EmbarkInfo.GameSeed</c> from it. Nobody types
+	/// it. The new-game gate is independent of that and still proves the engine actually generated
+	/// under the frozen seed.
 	/// </para>
 	/// <para>
 	/// The parser is TOTAL and BOUNDED. It is fed a durable game-state string, so it is an untrusted

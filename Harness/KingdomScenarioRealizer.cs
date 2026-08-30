@@ -134,8 +134,10 @@ namespace ThousandAndFirst.Harness
 
 		/// <summary>
 		/// Reads the engine's own seed evidence and proves the world was generated under the
-		/// declared seed. The harness cannot set the seed at this point, so a mismatch is a refusal
-		/// telling the operator to arrange it before generation rather than a stamped claim.
+		/// declared seed. <c>KingdomScenarioFastEmbarkModule</c> sets the seed in-chargen from the
+		/// same sealed request, but that is an ASSERTION and this is the proof: the value recorded is
+		/// the one the engine reports having generated under, and a mismatch is a refusal rather than
+		/// a stamped claim. Nothing here trusts the setter.
 		/// </summary>
 		internal static bool TryProveSeed(string Declared, out string Actual, out string Failure)
 		{
@@ -153,7 +155,8 @@ namespace ThousandAndFirst.Harness
 				return Refuse("this world was generated under seed '"
 					+ KingdomScenarioRules.Bounded(engine) + "' but the request froze '"
 					+ KingdomScenarioRules.Bounded(Declared)
-					+ "'; arrange the frozen seed before world generation", out Failure);
+					+ "'; the scenario mode sets the frozen seed before world generation, so this "
+					+ "world was not built by it", out Failure);
 			if (engine[0] == '#')
 			{
 				int declaredInt;

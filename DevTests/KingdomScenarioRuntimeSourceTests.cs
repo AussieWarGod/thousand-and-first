@@ -196,9 +196,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("this game is not ordinary play", report);
 			StringAssert.Contains("Nothing was written to the anchor store", report);
 			StringAssert.DoesNotContain("Anchors.Add", report);
-			string wishes = Read("Harness/KingdomScenarioWishes.cs");
+			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
 			StringAssert.Contains("KingdomScenarioDurableState.OrdinaryAnchorEligible(out failure)",
-				wishes, "the status must not claim more than the capture would allow");
+				verbs, "the status must not claim more than the capture would allow");
 			string store = Read("Harness/KingdomScenarioAnchorStore.cs");
 			StringAssert.DoesNotContain("internal static void Insert", store);
 			StringAssert.DoesNotContain("SetStringGameState", store);

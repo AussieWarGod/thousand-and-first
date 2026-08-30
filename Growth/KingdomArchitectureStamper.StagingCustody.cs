@@ -10,10 +10,14 @@ namespace ThousandAndFirst
 
 		private static bool RootStagingOutput(GameObject Output)
 		{
-			string id = Output?.IDIfAssigned;
+			// The engine assigns object ids lazily: a freshly Created output has none yet, so
+			// IDIfAssigned here refused every staging on its first live run (2026-08-30). The
+			// root key needs a durable id; asking for ID assigns one, which is exactly what
+			// rooting a brand-new output means.
+			if (The.Game?.ObjectGameState == null || !GameObject.Validate(Output)) return false;
+			string id = Output.ID;
 			string key = StagingRootPrefix + id;
-			if (The.Game?.ObjectGameState == null || !GameObject.Validate(Output)
-				|| string.IsNullOrEmpty(id)) return false;
+			if (string.IsNullOrEmpty(id)) return false;
 			if (The.Game.ObjectGameState.TryGetValue(key, out object prior)
 				&& !object.ReferenceEquals(prior, Output)) return false;
 			try { The.Game.SetObjectGameState(key, Output); }

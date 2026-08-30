@@ -17,6 +17,12 @@ A live watcher is optional. For a standalone retained log, quit cleanly, locate 
 `Player.log`, then run `./Tools/check-player-log.sh /absolute/path/to/Player.log`. The checker never
 guesses which profile or log belongs to the run; record that absolute path with the receipt.
 
+**The engine compiles the mod fresh on every launch.** `MODERROR`/`MODWARN` lines in `Player.log`
+naming The Thousand and First are the verdict, and `Tools/check-player-log.sh` fails on them: zero
+such lines means the mod loaded clean. A clean desktop build is not evidence by itself — the in-game
+compiler has rejected patterns desktop `csc` accepts (see [MODDING.md](MODDING.md) for the definite-
+assignment example that first surfaced this).
+
 ## Execution index
 
 Pass labels are stable case identifiers, not a numeric running order. Execute the sections in this
@@ -125,6 +131,19 @@ commissionable `(BuildKey, type, size)`, exact dimensions, topology, material/te
 and all four poses, including exterior road ingress. These gates do not replace looking at the
 buildings in Qud.
 
+The architecture catalogue's `MaxTopRecords`/`MaxMappings` cap and its lazy-load `Healthy` flag are
+both things static checkers cannot see coming: the cap is enforced only at live engine load, and
+`Healthy` reads false before anything has asked the catalogue for data, not only on a genuine fault.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#architecture-catalogue-caps-and-lazy-load) before
+treating either as a native-session verdict on its own.
+
+The harness also exposes dev-only `kingdom:scenario ground` and `kingdom:scenario flatten` wish
+verbs for staging test ground — see the section below for what they do and how they fit the
+preflight/attempt-marker sequence. One law is worth flagging before you run either: a **no-canvas
+refusal before the attempt marker costs nothing** (the profile is not spent), but an **in-gallery
+refusal after the marker is written permanently spends the profile** — witnessed live. Don't expect
+a retry on the same profile once you're past that point.
+
 ## Developer scenario harness (phase 1)
 
 The harness lives in `Harness/` and is **not part of any release artifact**. It is absent from
@@ -132,12 +151,25 @@ The harness lives in `Harness/` and is **not part of any release artifact**. It 
 `Tools/stage.sh` `EXCLUDE_DIRS`, so it never reaches the live mod folder or the Workshop package.
 `Tools/portable-check.sh` fails CI if a `Harness/` path ever enters the runtime inventory.
 
-Running it:
+Running it (unattended - no keyboard beyond starting the game):
 
 1. `Tools/prepare-scenario.sh` builds the **complete** throwaway `/mnt/c/taf-scenario.<id>` profile
    first - byte-verified staged runtime, harness overlay, generated request, derived dev
-   `manifest.json` selecting `/Harness/`, and both option files - and only then seals it **once** as
-   one exact closed inventory. The repository manifest is never edited.
+   `manifest.json` selecting `/Harness/`, both option files, and the auto-runner script
+   `Local/scenario-script.txt` (default `flatten`, `realize`, `status`, one verb per line) - and
+   only then seals it **once** as one exact closed inventory. The repository manifest is never
+   edited. The script is written **before** the seal on purpose: an unattended run must execute
+   sealed content, so a script dropped in afterwards fails the launcher's closed inventory.
+   `TAF_SCENARIO_SCRIPT="ground flatten realize status"` chooses the verbs;
+   `TAF_SCENARIO_SCRIPT=none` seals no script and prepares an attended profile. One verb takes an
+   argument — `advance <turns>` — written as two shell words that `Tools/scenario_profile.py` folds
+   into one sealed line, refusing a count outside `1..10000`:
+   `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`.
+   `TAF_SCENARIO_START=<wx>.<wy>[@x,y]` moves the dev start parasang inside the profile copy before
+   the seal (for example `TAF_SCENARIO_START=14.18`). Off-map values are **refused, not clamped**:
+   the engine's biome arrays are exactly 80x25 parasangs and a surface zone exactly 80x25 cells, and
+   an off-map parasang crashes zone generation rather than declining. Prepare echoes the chosen
+   `Start zone:` beside the frozen seed either way.
 2. `Tools/run-scenario.ps1` verifies that one seal **closed in both directions** (missing, extra,
    renamed, modified, and duplicate-normalized files all fail) and launches. The two checkers split
    the link-and-reparse-point refusal by when each runs, not by which one "owns" it: prepare-time
@@ -151,9 +183,115 @@ Running it:
    the launch-time re-check can catch. It is a **separate launcher from `Tools/run-smoke.ps1` on
    purpose**: the smoke launcher's single-mod, single-seal assertions are what
    `Tools/release-check.sh [8/11]` depends on, and must not be widened.
-3. In game, start a new game in the `[Dev] TAF scenario` mode. **You enter the sealed world seed
-   yourself** at character creation - Qud exposes no launcher-side seed injection, so the profile
-   only exposes the native seed field - then run `kingdom:scenario realize`.
+   It also prints the sealed script's verbs, and refuses to launch onto an existing
+   `scenario-journal.tsv` for the same reason it refuses an existing `Player.log`: both are
+   appended to, and two runs' rows in one file cannot be told apart.
+3. In game, pick **`[Dev] Test Game`** — the row `Harness/KingdomScenarioTestGameEntry.cs` inserts
+   above New Game on the main menu. It emits the engine's own `Pick:New Game` command (XRLCore's
+   menu loop dispatches by literal command string, so a new one would be matched by nothing) and
+   remembers **by object identity** that the dev row was the one activated; a postfix on
+   `EmbarkBuilder.InitModules` then calls `QudGamemodeModule.SelectMode("TAFScenario")`, exactly as
+   clicking the tile would. Ordinary **New Game** is untouched and still shows the mode carousel,
+   with the `[Dev] TAF scenario` tile sorted first. Either way the fast-embark module fills the
+   whole flow, including the sealed seed, so there is nothing to type. (Qud exposes no
+   launcher-side seed injection; the profile exposes the native seed field, and the new-game gate
+   still reads back what the engine actually generated under.) It embarks at the harness's own
+   `[Dev] TAF test ground` location - by default `JoppaWorld.6.17.1.1.10@40,12`, open salt dunes
+   whose whole 3x3 parasang region is `TerrainSaltdunes` in the base game's own
+   `Base/QudWorldMap.rpm` - declared in `Harness/EmbarkModules.xml` and therefore dev-profile-only.
+   Joppa itself is a built village whose cells the production clearance law lawfully refuses, so
+   embarking there would spend a one-shot profile on ground `flatten` was never going to accept.
+   The location is set **after** the auto-advance walk on purpose:
+   `QudChooseStartingLocationModuleWindow.BeforeShow` replaces the module's data with a fresh one
+   pinned to Joppa every time that window is shown, so an earlier assignment is discarded.
+
+   **The parasang is only a default, not a guarantee.** Worldgen places villages, ruins, and lairs
+   in wilderness parasangs by seed, so *no* hardcoded start can be trusted — the previous default
+   `JoppaWorld.11.21` was live-confirmed to contain a village (arrival announcement, held-object
+   clearance refusals, ruins in sight), and its own XML comment had described it as open wilderness
+   when `Base/QudWorldMap.rpm` paints it `TerrainJoppaRedrockChannel`. The guarantee comes instead
+   from `Harness/KingdomScenarioTestGround.cs`: `KingdomScenarioTestGroundModule` binds
+   `XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder` as a **post-builder for exactly that
+   one zone id**, on the `BootStartingLocation` boot event — which `QudGameBootModule` fires well
+   before `GlobalLocation.ResolveCell` generates the zone. Post-builders run at priority 5000, after
+   the terrain, village, ruin, and lair builders, so it strips what they placed: every interior cell
+   is cleared of anything the settlement's own `KingdomPlots.ReadObject` law does not already read
+   as bare, creatures and liquid pools included. It **keeps** the one-cell border (the zone's travel
+   connections to its neighbours) and any stairs (its connection to the strata below). It only ever
+   removes, never places or rolls, so under the sealed seed it is deterministic. It is bound to the
+   **resolved** location, so `TAF_SCENARIO_START` and a hand-walked chargen both get the same
+   treatment, and it is inert without a sealed script — an attended profile is one an operator is
+   driving by hand, and rewriting the world under them is exactly the surprise this must not spring.
+   It journals one `TESTGROUND-BUILT` row naming the zone, what it cleared, what it kept, and how
+   many interior cells are still impassable or hold open liquid. **No row means it did not fire.**
+4. **Wait — hands-free.** `ThousandAndFirst.KingdomScenarioAutoRunner`, an `IPlayerSystem` the
+   scenario mode registers as a `<gamesystem>` in `Harness/EmbarkModules.xml`, uses two seams. It
+   **primes** in `IGameSystem.OnAdded` — `QudGamemodeModule` is the second module in the embark
+   configuration and `QudGameBootModule` the last, so the `AddSystem` that lands the runner happens
+   before a single boot event fires: before world init, before the starting zone is generated, and
+   long before `QudSpecificBootHandlersModule` shows the blocking "You embark for the caves of Qud."
+   popup on `GameStarting`. That earliness is load-bearing and was learned live: priming on
+   `ZoneActivatedEvent` instead still let a **village arrival announcement** through, because
+   `VillageSurface` reveals fire off zone build and cell entry, both of which precede it.
+   `ZoneActivatedEvent` is kept only as a fallback. The
+   primer raises the engine's **own** `Popup.Suppress`, which every `Popup.Show` / `ShowBlock` /
+   `ShowSpace` / `ShowBlockPrompt` / `ShowBlockSpace` path already honours by logging the message to
+   the player's message queue and returning `Keys.Space` — the engine's auto-acknowledge, and
+   exactly the key you were pressing. Nothing is lost; every suppressed message is in the message
+   log. It **runs** the sealed script on the first `BeginTakeActionEvent` for the player, through
+   the same entry the wish uses. Suppression is raised **only** when a sealed script is present, so
+   the attended path keeps every popup, and it is lowered again the moment the run ends by any route
+   — completion, refusal, or fault. The runner never quits the game. The one-shot is durable, so a
+   reload does not replay a transaction that has already committed. The first journal row of a
+   scripted run is `RUNNER-ARMED`, naming which seam armed it and whether popups were suppressed —
+   if no primer fired, that row says so and the boot popups still need a keypress.
+5. Read `<profileRoot>/scenario-journal.tsv`.
+
+The journal is the machine-readable record, and it covers the attended path too: **every**
+`kingdom:scenario` verb appends exactly one tab-separated row - UTC timestamp, verb, `OK` or
+`REFUSED`, message - whether it was scripted or typed. Newlines, tabs, and backslashes inside a
+message are escaped (`\n`, `\t`, `\\`), so one verb is always one row. A scripted run brackets its
+verbs with `SCRIPT-BEGIN` and closes with `SCRIPT-COMPLETE`, or with `SCRIPT-STOPPED` naming the
+verb that refused - execution **stops at the first `REFUSED`**, because a scenario's steps are
+ordered and staging onto ground nobody prepared proves nothing.
+
+**`advance <turns>`** is the one verb that spans turns, for behaviour that only happens on a clock
+(settlement simulation ticks on turns). It spends **one turn per player action opportunity** through
+the engine's own `GameObject.PassTurn` — the exact `UseEnergy(1000, "Pass", Passive: true)` call
+`CmdWait` makes — driven from the runner's `BeginTakeActionEvent` handler, so `ActionManager`'s
+per-turn work (`EndTurnEvent`, `ProcessSingleTurn`, `ZoneManager.Tick`, `game.Turns++`) happens
+exactly as in ordinary play. It is a real wait, not a fast-forward, and it never spins: spending the
+turn inside that handler drops the player below the energy threshold the inner action loop needs, so
+the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attended long waits
+(`AutoAct.Setting = "." + N`) are deliberately **not** used — every one of them is interruptible by
+`Keyboard.kbhit()`, by a hostile, and at a zone edge, because their purpose is handing control back
+to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
+`XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
+the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
+`advance-complete`. Refusals carry a **stable reason code** beside the prose — bind expectations to
+the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
+(the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
+`taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
+
+`OK` and `REFUSED` come from each verb's own boolean, never from matching its prose. `REFUSED`
+means the verb declined to act; an ineligible verdict, an unhealthy roster, and an empty anchor
+store are **answers**, so they journal `OK`. The journal write is fail-open: a write that fails is
+logged and appended to the verb's own message as a note, and never breaks the verb.
+
+Like `Player.log`, the journal is **post-seal output**. `Tools/run-scenario.ps1` asserts the closed
+seal once, before launch, over `<profileRoot>/Local` only - the sealed launcher *inputs*. The
+journal sits beside that tree in `<profileRoot>`, so nothing a run writes is inside the inventory
+the seal closed, and no assertion re-reads the profile after the game starts.
+
+**Manual wish path (fallback).** Nothing above removes it. Prepare with
+`TAF_SCENARIO_SCRIPT=none`, or just keep using the wish in any profile: `kingdom:scenario` with
+`list`, `status`, `realize`, `anchor`, `ground`, `flatten`, `advance <turns>`, or
+`capture <anchor-id> <scenario-key>`. Verbs, text, and journal rows are identical either way -
+`Harness/KingdomScenarioWishes.cs` adds exactly one thing to the shared entry, the popup. That
+split is what makes the harness scriptable at all: a verb that blocked on a keypress could never
+run on a turn nobody is watching. `capture` is deliberately **not** in the sealed script set - it
+is fail-closed on ordinary play, so inside a prepared scenario profile it could only ever refuse,
+and curating an anchor stays a reviewer's deliberate act in an ordinary game.
 
 What a scenario run proves, and what it does not:
 
@@ -211,7 +349,10 @@ What a scenario run proves, and what it does not:
   `id=<object-id>` — and the choice is re-proved after selection. It never takes the first.
 - `Synthetic="true"` scenarios are recovery diagnostics only and never sign acceptance at all.
 
-Evidence rows are appended to `<SavePath>/ThousandAndFirst/scenario-evidence.tsv`.
+Two files, two jobs. Verdict evidence rows are appended to
+`<SavePath>/ThousandAndFirst/scenario-evidence.tsv` - one row per *realized* scenario, in the
+shipped evidence grammar. The verb journal is `<profileRoot>/scenario-journal.tsv` - one row per
+*verb*, which is how you read an unattended run.
 
 ## Pass 0 — Cross-run inheritance consent
 

@@ -91,6 +91,81 @@ def write_request(embark_path: str) -> None:
     print("generated request: " + request)
 
 
+# The engine's biome arrays are exactly 80x25 parasangs and a surface zone is exactly 80x25 cells.
+# An off-map parasang does not refuse, it crashes zone generation, so this is a hard bound on both.
+WORLD_WIDTH = 80
+WORLD_HEIGHT = 25
+ZONE_WIDTH = 80
+ZONE_HEIGHT = 25
+
+# The surface layer of the middle 3x3 sub-cell, matching the shipped default and the only shape the
+# ground scout walks (it refuses any z but 10).
+START_ZONE_SUFFIX = "1.1.10"
+START_DEFAULT_CELL = (40, 12)
+START_MARKER = 'ID="TAFTestGround"'
+START_ATTRIBUTE = 'Location="'
+
+
+def parse_start(spec: str) -> str:
+    """`<wx>.<wy>[@x,y]` to the engine's own GlobalLocation string, bounds-checked."""
+    body, _, cell = spec.partition("@")
+    parts = body.split(".")
+    if len(parts) != 2 or not all(p.isdigit() and p.isascii() for p in parts):
+        fail("start parasang must be '<wx>.<wy>': " + repr(spec))
+    wx, wy = int(parts[0]), int(parts[1])
+    if wx >= WORLD_WIDTH or wy >= WORLD_HEIGHT:
+        fail(
+            "start parasang %d.%d is off the %dx%d world map"
+            % (wx, wy, WORLD_WIDTH, WORLD_HEIGHT)
+        )
+    x, y = START_DEFAULT_CELL
+    if cell:
+        coords = cell.split(",")
+        if len(coords) != 2 or not all(c.isdigit() and c.isascii() for c in coords):
+            fail("start cell must be '@x,y': " + repr(spec))
+        x, y = int(coords[0]), int(coords[1])
+        if x >= ZONE_WIDTH or y >= ZONE_HEIGHT:
+            fail(
+                "start cell %d,%d is outside the %dx%d zone"
+                % (x, y, ZONE_WIDTH, ZONE_HEIGHT)
+            )
+    return "GlobalLocation:JoppaWorld.%d.%d.%s@%d,%d" % (
+        wx,
+        wy,
+        START_ZONE_SUFFIX,
+        x,
+        y,
+    )
+
+
+def write_start(embark_path: str, spec: str) -> None:
+    """Rewrites the profile copy's dev starting location, or reports the shipped default.
+
+    An empty spec is not an error: it is how prepare-scenario.sh asks what the sealed profile is
+    about to start on, so the chosen zone is always echoed beside the frozen seed whether or not
+    the operator overrode it.
+    """
+    with open(embark_path, encoding="utf-8") as handle:
+        text = handle.read()
+    marker = text.find(START_MARKER)
+    if marker < 0:
+        fail("the embark module declares no dev starting location")
+    start = text.find(START_ATTRIBUTE, marker)
+    if start < 0:
+        fail("the dev starting location declares no Location attribute")
+    start += len(START_ATTRIBUTE)
+    end = text.find('"', start)
+    if end < 0:
+        fail("the dev starting location's Location attribute is unterminated")
+    if not spec:
+        print("start zone: " + text[start:end] + " (profile default)")
+        return
+    location = parse_start(spec)
+    with open(embark_path, "w", encoding="utf-8") as handle:
+        handle.write(text[:start] + location + text[end:])
+    print("start zone: " + location + " (TAF_SCENARIO_START)")
+
+
 def write_manifest(source: str, destination: str) -> None:
     with open(source, encoding="utf-8") as handle:
         manifest = json.loads(handle.read())
@@ -107,6 +182,84 @@ def write_manifest(source: str, destination: str) -> None:
     with open(destination, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(manifest, indent=2) + "\n")
     print("dev manifest selects /Harness/")
+
+
+# The verbs a SEALED script may name. Closed on purpose, and deliberately narrower than the wish:
+#
+#   - the bare help verb prints a usage page and proves nothing, so a script that named it would
+#     spend a run saying what the operator already read;
+#   - `capture` founds anchor evidence and is fail-closed on ORDINARY play, so inside a prepared
+#     scenario profile it can only ever refuse. Sealing it would seal a guaranteed stop. Curating an
+#     anchor stays a reviewer's deliberate act in an ordinary game, exactly as the ruling requires.
+#
+# The runtime verb set lives in Harness/KingdomScenarioVerbs.cs and stays the authority on what a
+# verb DOES; this list only decides what may be sealed into an unattended run.
+SCRIPT_VERBS = ("anchor", "flatten", "ground", "list", "realize", "status")
+
+# The one verb that takes an argument. `advance <turns>` runs game turns with no player input, for
+# behaviour that only happens on a clock (settlement simulation ticks on turns). The bound below
+# must equal KingdomScenarioAdvance.MaxTurns: sealing a count the runtime refuses would spend a
+# whole non-retryable profile discovering a disagreement between this file and that one.
+COUNTED_VERB = "advance"
+MAX_ADVANCE_TURNS = 10000
+
+# The ordinary phase-1 run: prepare the ground, commit the single production transaction, then read
+# back the durable stamp and its differential verdict.
+DEFAULT_SCRIPT = ("flatten", "realize", "status")
+
+SCRIPT_HEADER = (
+    "# Sealed developer scenario script. One kingdom:scenario verb per line, executed once by\n"
+    "# ThousandAndFirst.KingdomScenarioAutoRunner on the first player action opportunity in the\n"
+    "# built world. 'advance <turns>' suspends the script for that many game turns and then\n"
+    "# resumes at the next line. Execution stops at the first REFUSED verb. Results land in the\n"
+    "# profile root's scenario-journal.tsv.\n"
+    "# Written by Tools/prepare-scenario.sh BEFORE the profile seal, so this file is sealed content.\n"
+)
+
+
+def parse_script(tokens: list[str]) -> list[str]:
+    """Shell words to script LINES, closed on both the verb set and the one argument.
+
+    The words arrive unquoted from prepare-scenario.sh, so `advance 1200` is two words that must
+    become one line. The count is validated here rather than left to the runtime: a sealed profile
+    is not retryable, and a malformed count discovered in game costs a whole run.
+    """
+    lines: list[str] = []
+    index = 0
+    while index < len(tokens):
+        verb = tokens[index]
+        index += 1
+        if verb == COUNTED_VERB:
+            if index >= len(tokens):
+                fail("script verb 'advance' needs a turn count, as 'advance 1200'")
+            count = tokens[index]
+            index += 1
+            if not count.isdigit() or not count.isascii():
+                fail("advance turn count must be decimal digits only: " + repr(count))
+            value = int(count)
+            if value < 1 or value > MAX_ADVANCE_TURNS:
+                fail(
+                    "advance turn count %d is outside 1..%d"
+                    % (value, MAX_ADVANCE_TURNS)
+                )
+            lines.append("%s %d" % (COUNTED_VERB, value))
+            continue
+        if verb not in SCRIPT_VERBS:
+            fail(
+                "unknown scenario script verb %r; the sealed set is %s, advance <turns>"
+                % (verb, ", ".join(SCRIPT_VERBS))
+            )
+        lines.append(verb)
+    return lines
+
+
+def write_script(destination: str, verbs: list[str]) -> None:
+    chosen = parse_script(list(verbs)) if verbs else list(DEFAULT_SCRIPT)
+    if not chosen:
+        fail("the scenario script would declare no verbs")
+    with open(destination, "w", encoding="utf-8") as handle:
+        handle.write(SCRIPT_HEADER + "\n".join(chosen) + "\n")
+    print("sealed scenario script: " + ", ".join(chosen))
 
 
 def write_options(source: str, destination: str) -> None:
@@ -251,11 +404,16 @@ def verify(root: str, seal_path: str) -> None:
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         fail(
-            "usage: scenario_profile.py <request|manifest|options|seal|verify|seed> ..."
+            "usage: scenario_profile.py "
+            "<request|start|manifest|options|script|seal|verify|seed> ..."
         )
     action = argv[1]
-    if action == "request" and len(argv) == 3:
+    if action == "script" and len(argv) >= 3:
+        write_script(argv[2], argv[3:])
+    elif action == "request" and len(argv) == 3:
         write_request(argv[2])
+    elif action == "start" and len(argv) == 4:
+        write_start(argv[2], argv[3])
     elif action == "manifest" and len(argv) == 4:
         write_manifest(argv[2], argv[3])
     elif action == "options" and len(argv) == 4:

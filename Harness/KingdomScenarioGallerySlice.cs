@@ -75,7 +75,7 @@ namespace ThousandAndFirst.Harness
 			Resolved = null;
 			ArchitectureFacing facing;
 			if (!TryParseFacing(FacingToken, out facing, out Failure)) return false;
-			if (!KingdomArchitecture.Healthy)
+			if (!CatalogueHealthyAfterLoad())
 				return Refuse("the authored architecture catalogue is not healthy", out Failure);
 			IList<KingdomArchitectureMapping> mappings = KingdomArchitecture.InspectMappings();
 			int number = 0;
@@ -113,11 +113,25 @@ namespace ThousandAndFirst.Harness
 		{
 			Failure = null;
 			if (Zone == null) return Refuse("no loaded zone to stage into", out Failure);
-			if (!KingdomArchitecture.Healthy)
+			if (!CatalogueHealthyAfterLoad())
 				return Refuse("the authored architecture catalogue is not healthy", out Failure);
 			if (Existing(Zone) != null)
 				return Refuse("this zone already holds a staged gallery case; clear it first",
 					out Failure);
+			// A read-only canvas probe before the durable attempt marker: the production staging
+			// refuses without a fitting untouched rectangle anyway, but that refusal lands AFTER
+			// the marker and permanently spends the profile. Probing the same preflight here is a
+			// conservative pre-marker refusal, which the transaction law always permits. The probe
+			// dimensions cover the phase-1 case with margin; if a wider case ever stages, the
+			// production refusal (post-marker) still holds the line.
+			KingdomPlotRules.PlotRect probe;
+			string canvasFailure;
+			if (!KingdomArchitectureGalleryWishes.TryFindCanvas(Zone, 10, 8, out probe,
+					out canvasFailure))
+				return Refuse("no staging canvas fits before any attempt was recorded: "
+					+ canvasFailure + " Use {{W|kingdom:scenario ground}} or "
+					+ "{{W|kingdom:scenario flatten}}, step out of the flattened rectangle, and "
+					+ "run realize again - the profile is NOT spent", out Failure);
 			return true;
 		}
 
@@ -137,17 +151,32 @@ namespace ThousandAndFirst.Harness
 		{
 			Owner = null;
 			Failure = null;
+			// The inner staging API is called directly rather than through the wish wrapper:
+			// the wrapper reports every refusal through Popup.Show, and under a sealed script
+			// popups are suppressed, which swallowed the reason (proven live 2026-08-30). The
+			// wrapper's own prechecks are replicated here and every failure string reaches the
+			// journal verbatim.
+			GameObject staged = null;
 			try
 			{
-				KingdomArchitectureGalleryWishes.Gallery(
-					Expected.Number.ToString(CultureInfo.InvariantCulture));
+				KingdomData.EnsureBuildings();
+				List<KingdomArchitectureGalleryWishes.GalleryCase> cases =
+					KingdomArchitectureGalleryWishes.Cases();
+				if (Expected.Number < 1 || Expected.Number > cases.Count)
+					return Refuse("the frozen case number " + Expected.Number
+						+ " is outside the catalogue's " + cases.Count + " cases", out Failure);
+				string stageFailure;
+				if (!KingdomArchitectureGalleryWishes.TryStage(Zone,
+						cases[Expected.Number - 1], cases.Count, out staged, out _,
+						out stageFailure))
+					return Refuse("the production staging refused: "
+						+ KingdomScenarioRules.Bounded(stageFailure ?? "unnamed"), out Failure);
 			}
 			catch (Exception exception)
 			{
 				return Refuse("the production gallery path threw: "
 					+ KingdomScenarioRules.Bounded(exception.Message), out Failure);
 			}
-			GameObject staged = Existing(Zone);
 			if (staged == null)
 				return Refuse("the production gallery path staged nothing; the case was refused "
 					+ "without replacing live ground", out Failure);
@@ -217,5 +246,18 @@ namespace ThousandAndFirst.Harness
 			Failure = Message;
 			return false;
 		}
+		/// <summary>
+		/// The catalogue loads lazily on the first KingdomData ask. A fresh dev-scenario game may
+		/// reach this observation before any production system has asked, in which case Healthy
+		/// reads false for "never loaded" rather than for a data fault. Trigger the exact lazy
+		/// path production callers use, then judge health; a triggered load that still reports
+		/// unhealthy is a genuine catalogue fault and refuses.
+		/// </summary>
+		private static bool CatalogueHealthyAfterLoad()
+		{
+			if (!KingdomArchitecture.Loaded && KingdomData.Buildings != null) { }
+			return KingdomArchitecture.Healthy;
+		}
+
 	}
 }

@@ -50,7 +50,7 @@ namespace ThousandAndFirst
 			return "ag1-" + Hash(payload).Substring(0, 24);
 		}
 
-		private static HashSet<int> ConnectionCells(Zone Zone)
+		internal static HashSet<int> ConnectionCells(Zone Zone)
 		{
 			HashSet<int> result = new HashSet<int>();
 			foreach (ZoneConnection connection in Zone.EnumerateConnections())

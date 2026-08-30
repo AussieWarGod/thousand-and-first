@@ -447,6 +447,11 @@ class ReceiptMintingTest(unittest.TestCase):
             shutil.rmtree(tmp, ignore_errors=True)
 
     def test_the_inventory_digest_command_writes_nothing(self):
+        receipt = ROOT / "Tools" / "PortableOutput" / "dev-harness-receipt.json"
+        # A real gate run lawfully leaves a receipt; the law here is only that
+        # READING a digest never creates or alters one. Compare state across
+        # the call instead of demanding absence.
+        before = receipt.read_bytes() if receipt.exists() else None
         result = subprocess.run(
             [sys.executable, str(ROOT / "Tools" / "dev-harness-inventory.py"),
              "--inventory-digest"],
@@ -454,10 +459,9 @@ class ReceiptMintingTest(unittest.TestCase):
         )
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertRegex(result.stdout.strip(), r"^[0-9a-f]{64}$")
-        self.assertFalse(
-            (ROOT / "Tools" / "PortableOutput" / "dev-harness-receipt.json").exists(),
-            "reading a digest must not create a receipt",
-        )
+        after = receipt.read_bytes() if receipt.exists() else None
+        self.assertEqual(before, after,
+            "reading a digest must not create or alter a receipt")
 
 
 class OverlayBytesTest(unittest.TestCase):

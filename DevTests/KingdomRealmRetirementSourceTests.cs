@@ -476,6 +476,11 @@ namespace ThousandAndFirst.Tests
 				if (relative.StartsWith("DevTests" + Path.DirectorySeparatorChar,
 					StringComparison.Ordinal) || relative.StartsWith("Tools" +
 					Path.DirectorySeparatorChar, StringComparison.Ordinal)
+					// Harness/ never ships (absent from manifest Directories, excluded from
+					// staging), so its systems can never appear in a shipped save and must not
+					// be demanded of the serializable-coverage registry.
+					|| relative.StartsWith("Harness" + Path.DirectorySeparatorChar,
+						StringComparison.Ordinal)
 					|| relative.StartsWith("Integrations" + Path.DirectorySeparatorChar,
 						StringComparison.Ordinal)) continue;
 				string source = File.ReadAllText(file);

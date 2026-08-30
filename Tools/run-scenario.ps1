@@ -181,6 +181,18 @@ Write-Host "ENTER world seed $frozenSeed yourself at character creation. Qud exp
 Write-Host 'seed injection, so this is manual operator entry; the gate refuses any other world.'
 Write-Host ''
 
+$scriptPath = Join-Path $localRoot 'scenario-script.txt'
+if (Test-Path -LiteralPath $scriptPath -PathType Leaf) {
+    $scriptVerbs = @(Get-Content -LiteralPath $scriptPath |
+        Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') })
+    Write-Host "Sealed auto-runner script ($($scriptVerbs.Count) verb(s)): $($scriptVerbs -join ', ')"
+    Write-Host 'It runs itself on your first turn in the world. No further keyboard input is needed.'
+} else {
+    Write-Host 'No sealed auto-runner script; drive kingdom:scenario by hand.'
+}
+Write-Host "Journal: $(Join-Path $rootPath 'scenario-journal.tsv')"
+Write-Host ''
+
 # -savelocation is the legacy switch and redirects SAVES ONLY: a game launched with it
 # still loads mods from the default AppData profile, so the sealed profile's Harness
 # overlay never reaches the engine while a stale default-profile mod copy silently
@@ -191,6 +203,16 @@ Write-Host ''
 # the profile's.
 $logPath = Join-Path $rootPath 'Player.log'
 if (Test-Path -LiteralPath $logPath) { throw "scenario log already exists: $logPath" }
+# The scenario journal is POST-SEAL OUTPUT, exactly like Player.log above. Assert-ClosedSeal ran
+# once, before launch, over $localRoot only - the sealed launcher INPUTS. Both this file and the
+# log sit beside that tree in $rootPath, so nothing a run writes is inside the inventory the seal
+# closed, and no assertion here re-reads the profile after the game starts. Refused when it already
+# exists for the same reason the log is: the journal is appended to, and two runs' rows in one file
+# cannot be told apart.
+$journalPath = Join-Path $rootPath 'scenario-journal.tsv'
+if (Test-Path -LiteralPath $journalPath) {
+    throw "scenario journal already exists: $journalPath"
+}
 $arguments = @(
     '-savepath', (Join-Path $rootPath 'Save'),
     '-sharedpath', $localRoot,

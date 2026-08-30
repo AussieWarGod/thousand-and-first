@@ -8,6 +8,12 @@
   stringgamestate values during bootGame, which is ahead of the player-mutator step where
   KingdomScenarioNewGameGate proves the request and writes the stamp.
 
+  The same request is ALSO read in-chargen, straight off the parsed mode descriptor, by
+  KingdomScenarioFastEmbarkModule below: that is how the frozen seed reaches EmbarkInfo.GameSeed
+  without anyone typing it. Tools/prepare-scenario.sh rewrites the Value below and then seals it,
+  and Tools/run-scenario.ps1 re-proves the overlay still carries exactly the sealed request, so the
+  seed the mode applies is the seed the gate later demands the engine generated under.
+
   Phase 1 authors one scenario, so one mode carries it. A later phase replaces this with a
   starting-location Set filter once the roster holds more than one row.
 -->
@@ -23,7 +29,109 @@
         <boolgamestate Name="r_TAF_KingdomMode" Value="true"></boolgamestate>
         <stringgamestate Name="r_TAF_ScenarioRequest_v1" Value="arch-gallery-slice;facing=north"></stringgamestate>
         <gamesystem Class="ThousandAndFirst.KingdomSuccession" />
+        <!--
+          Unattended scenario execution. bootGame hands every declared class to XRLGame.AddSystem,
+          which resolves it through ModManager.CreateInstance, so a mod type is reached by name -
+          the same route the succession system above already takes. The runner is an IPlayerSystem
+          that primes on ZoneActivatedEvent - raising the engine's own Popup.Suppress so the boot
+          and arrival popups auto-acknowledge instead of waiting on a keypress - and then runs the
+          script ONCE, on the first player action opportunity in the built world. It is inert unless
+          the profile's sealed Local/scenario-script.txt exists, suppresses nothing without one, and
+          never quits the game.
+        -->
+        <gamesystem Class="ThousandAndFirst.KingdomScenarioAutoRunner" />
       </mode>
     </modes>
+  </module>
+
+  <!--
+    Dev start location. EmbarkBuilderConfiguration.Init keys its module dictionary by class name, so
+    this block MERGES into the base game's own QudChooseStartingLocationModule instance rather than
+    replacing it, and the location handler appends by ID - every stock location keeps working.
+
+    WHY NOT JOPPA. The scenario script's first verb prepares ground, and Joppa's zone is a built
+    village: the gallery's clearance law lawfully refuses most of it, so a run would spend its one
+    profile discovering that.
+
+    WHY 6.17, AND WHY NOT 11.21. This default was JoppaWorld.11.21, described here as open
+    wilderness one parasang north of Joppa. The base game's own world map says otherwise:
+    Base/QudWorldMap.rpm paints parasang 11,21 as TerrainJoppaRedrockChannel, a named channel cell,
+    not generic wilderness. JoppaWorld.6.17 is TerrainSaltdunes - the canonical salt-dune world
+    terrain, DefaultWall Halite, no village or ruin painted on it - and every one of its eight
+    neighbours is salt dunes too, so the 3x3 parasang region a future arcology persona needs is
+    homogeneous. Nothing in JoppaWorldBuilder hardcodes a zone anywhere near it (its nearest
+    hardcoded coordinates are 11.22 and 22.14). It is in bounds with margin: the engine's biome
+    arrays are exactly 80x25 parasangs and the whole 3x3 spans x=5..7, y=16..18. Cell 40,12 is the
+    middle of an 80x25 zone.
+
+    Procedural content (lairs, ruins, wandering creatures) is seed-dependent and no static map can
+    rule it out, so if the zone still refuses, flatten says so by name in the journal and the
+    operator reruns with `ground` ahead of it, or re-prepares with TAF_SCENARIO_START set to another
+    parasang. Tools/prepare-scenario.sh rewrites the Location below inside the throwaway profile.
+
+    NO Set ATTRIBUTE, on purpose. QudChooseStartingLocationModuleWindow filters by `Set ==
+    currentSet`, and QudGamemodeModule answers that query with null for every mode but Tutorial, so
+    a Set value here would hide this entry from its own mode's carousel. Containment is not the
+    filter, it is this file: Harness/ is absent from the shipped manifest and excluded from
+    Tools/stage.sh, so an ordinary build never loads a line of it. ExcludeFromDaily keeps the dev
+    tile out of Daily's random pick regardless.
+
+    The grid must carry ALL FIFTEEN positions: StartingLocationControl.UpdateTiles indexes its
+    originals dictionary by the prefab's own tile keys and throws on a missing one, and
+    GetBreadcrumb reads "21" directly.
+  -->
+  <module Class="XRL.CharacterBuilds.Qud.QudChooseStartingLocationModule">
+    <locations>
+      <location ID="TAFTestGround" Name="{{W|[Dev] TAF}}&#10;test ground" Location="GlobalLocation:JoppaWorld.6.17.1.1.10@40,12" ExcludeFromDaily="Yes">
+        <description>
+          Developer scenario harness. Open salt dunes in the ivory sea west of Joppa, chosen so the scenario script's ground preparation has somewhere to work and so a 3x3-parasang region around it is one uniform terrain. Never ships.
+        </description>
+
+        <grid Position="00" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="10" Tile="Terrain/sw_desert.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="20" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="30" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="40" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+
+        <grid Position="01" Tile="Terrain/sw_desert.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="11" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="21" Tile="Items/sw_book_1.bmp" Foreground="y" Detail="W" Background="k"></grid>
+        <grid Position="31" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="41" Tile="Terrain/sw_desert.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+
+        <grid Position="02" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="12" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="22" Tile="Terrain/sw_plains.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="32" Tile="Terrain/sw_desert.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="42" Tile="Terrain/sw_desert.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+      </location>
+    </locations>
+  </module>
+
+  <!--
+    Fast embark. Carries no windows and no data of its own: it exists to pre-fill the flow the
+    moment the mode above is selected, and is inert for every other mode. Registered by name -
+    EmbarkBuilderConfiguration resolves module classes through ModManager.ResolveType, which
+    searches mod assemblies before the game assembly. Element form mirrors the base game's own
+    windowless module rows.
+  -->
+  <module Class="ThousandAndFirst.Harness.KingdomScenarioFastEmbarkModule">
+
+  </module>
+
+  <!--
+    Born-clean test ground. Also windowless, and also inert outside the scenario mode. It binds a
+    post-builder to whatever starting zone the flow actually settled on, on the BootStartingLocation
+    boot event - which QudGameBootModule fires long before GlobalLocation.ResolveCell generates that
+    zone - so the persona starts on flat bare passable ground instead of on whatever worldgen
+    painted. Worldgen places villages, ruins, and lairs by seed, so no hardcoded start parasang can
+    be trusted: JoppaWorld.11.21 was live-confirmed to hold a village. Declaring the ground is the
+    durable answer; the parasang below is now only a default.
+
+    Inert without a sealed script, because an attended profile is one an operator is driving by hand
+    and silently rewriting the world under them is exactly the surprise this harness must not spring.
+  -->
+  <module Class="ThousandAndFirst.Harness.KingdomScenarioTestGroundModule">
+
   </module>
 </embarkmodules>

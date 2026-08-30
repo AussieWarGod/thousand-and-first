@@ -16,9 +16,13 @@ namespace ThousandAndFirst
 	{
 		public const int Schema = 1;
 		public const int MaxFaults = 256;
-		public const int MaxMappings = 512;
+		public const int MaxMappings = 1024;
 		private const int MaxStreams = 256;
-		private const int MaxTopRecords = 512;
+		// The authored catalogue already carries 514 map records (2026-08 census); 512 refused
+		// the last rows in the live engine and cascaded into unresolved-variant faults. The cap
+		// exists to bound hostile or runaway XML, not to ration lawful authored content, so it
+		// carries headroom over the census.
+		private const int MaxTopRecords = 1024;
 		private const int MaxAttributeChars = 4096;
 
 		private class RawRecord

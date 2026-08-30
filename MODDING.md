@@ -375,6 +375,12 @@ refused. An argument value of `{name}` resolves from the bound parameter at pref
 mutating verb per scenario, and it must be the last step** — that is what makes an attended run
 atomic rather than merely careful.
 
+Driving a live session by keystrokes is its own hazard: Unity's gameplay view ignores `SendKeys`,
+while low-level scancode `keybd_event` input reaches menus and the wish console; numpad movement
+works, but extended-key arrow input is NumLock-sensitive; and a blind, timed key-chain script can
+desync when a popup eats one of its keystrokes. See the Developer scenario harness section in
+[TESTING.md](TESTING.md) for the file-driven auto-runner this drove.
+
 ### Curated anchor evidence (`KingdomScenarioAnchors.xml`, root `<kingdomscenarioanchors Schema="1">`)
 
 Written by a reviewer from a state ordinary play actually reached. The harness reads this store and
@@ -1465,6 +1471,13 @@ carrier, not to our version of anything else.
 
 Option gate: `r_TAF_OptionExtensions`, default `Yes`. With it off, the data lane is unaffected and
 no third-party code runs against the city.
+
+**The engine compiles your C# fresh, in-process, at mod load** — a clean desktop `csc`/IDE build does
+not guarantee that. The in-game Roslyn host has flagged patterns desktop `csc` accepts: for example
+CS0165 (definite assignment) on a conditional-access `TryGetValue` out-var chain
+(`The.Game?.X.TryGetValue(k, out var v) == true`), where pre-declaring the out variable instead is
+what the in-game compiler wants. The verdict is `Player.log`: `MODERROR`/`MODWARN` lines naming your
+mod mean it failed or warned to compile; their absence means it loaded clean.
 
 ### What is published
 

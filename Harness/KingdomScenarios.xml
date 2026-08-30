@@ -14,10 +14,11 @@
   the attribute in afterwards changes the definition and plan digests, making the row it just
   emitted stale. The id is stable; only the curated row in KingdomScenarioAnchors.xml is pending.
 
-  No seed is authored here. Caves of Qud 2.0.211.51 has no launcher-reachable pre-generation seed
-  injection, so a fixed value in this file would claim a determinism nobody arranged. The seed is
-  frozen by Tools/prepare-scenario.sh into the generated, excluded request, and the new-game gate
-  proves the engine actually generated under it.
+  No seed is authored here. A fixed value in this file would bind a scenario definition - and its
+  digests - to one world, which is not what a scenario is. The seed is frozen per profile by
+  Tools/prepare-scenario.sh into the generated, excluded request; KingdomScenarioFastEmbarkModule
+  reads it back in character creation and sets EmbarkInfo.GameSeed from it, so nobody types it; and
+  the new-game gate independently proves the engine actually generated under it.
 -->
 <kingdomscenarios Schema="1">
   <scenario Key="arch-gallery-slice"

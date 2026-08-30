@@ -109,6 +109,10 @@ namespace ThousandAndFirst.Harness
 					string catalogue;
 					if (!Step.Arguments.TryGetValue("Catalogue", out catalogue))
 						return Refuse("the resolved step carries no Catalogue argument", out Failure);
+					// Trigger the production lazy load before judging health: a fresh dev game
+					// may observe before any system has asked KingdomData, and an unloaded
+					// catalogue must read as "load it, then judge", not as a fault.
+					if (!KingdomArchitecture.Loaded && KingdomData.Buildings != null) { }
 					if (!KingdomArchitecture.Healthy)
 						return Refuse("the authored " + catalogue
 							+ " catalogue is not healthy", out Failure);

@@ -14,7 +14,7 @@ namespace ThousandAndFirst
 {
 	public partial class KingdomArchitectureGalleryWishes
 	{
-		private static bool TryFindCanvas(Zone Zone, int Width, int Height,
+		internal static bool TryFindCanvas(Zone Zone, int Width, int Height,
 			out KingdomPlotRules.PlotRect Rect, out string Failure)
 		{
 			Rect = default(KingdomPlotRules.PlotRect);
@@ -44,7 +44,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool SafeCanvas(Zone Zone, KingdomPlotRules.PlotRect Rect,
+		internal static bool SafeCanvas(Zone Zone, KingdomPlotRules.PlotRect Rect,
 			HashSet<int> Connections, Cell Player)
 		{
 			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();

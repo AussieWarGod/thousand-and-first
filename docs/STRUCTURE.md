@@ -20,10 +20,10 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2637 staged production C# files and 383,315
+`Tools/check-structure.py --json` currently reports 2637 staged production C# files and 383,381
 physical lines. Of those, 4 exceed 300 lines, 0 are exactly 300, and therefore 4 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`67a786670a85a30c36651a493069353355734701e33199d5397f5e21969b18ff`. The census reports
+`d5fb01d63260dde70a994f8e17c8d282eee71686cf9f9d8d93c4eeee26e29de3`. The census reports
 1204 files with direct `XRL` imports; 3 of those exceed the line limit.
 
 The four breaching files are the Gatehouse family — `Growth/KingdomGatehouseRules.cs` (682),

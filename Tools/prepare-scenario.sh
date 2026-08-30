@@ -10,9 +10,11 @@
 # manifest.json never lists it.
 #
 # SEAL ORDER. The COMPLETE dev profile is built first - staged runtime, harness overlay, dev
-# manifest, generated request, options - and only then sealed, ONCE, as one exact closed inventory.
-# Sealing the runtime before deriving the dev manifest would seal the shipped manifest and then
-# replace it, leaving a profile that could never verify.
+# manifest, generated request, options, auto-runner script - and only then sealed, ONCE, as one
+# exact closed inventory. Sealing the runtime before deriving the dev manifest would seal the
+# shipped manifest and then replace it, leaving a profile that could never verify. The script obeys
+# the same rule for the same reason: an unattended run must execute sealed content, never a file
+# that appeared after the inventory was taken.
 #
 # SEED AUTHORITY. Caves of Qud 2.0.211.51 exposes no launcher-reachable pre-generation seed
 # injection: EmbarkInfo.GameSeed is set during character creation, the only entry point is a popup
@@ -103,6 +105,18 @@ find "$REPO/Harness" -mindepth 1 -maxdepth 1 -type f \( -name '*.cs' -o -name '*
 REQUEST="arch-gallery-slice;facing=north;seed=$SEED"
 TAF_REQUEST="$REQUEST" python3 "$PROFILE_TOOL" request "$MOD/Harness/EmbarkModules.xml"
 
+# 3b. The dev start parasang, rewritten inside the profile copy only.
+#
+#     TAF_SCENARIO_START=<wx>.<wy>[@x,y] - for example 14.18 or 14.18@40,12 - moves the harness's
+#     [Dev] TAF test ground before the profile is sealed, so a persona can be run against another
+#     terrain without editing the tree. Bounds are refused hard rather than clamped: an off-map
+#     parasang does not make the engine refuse, it makes zone generation crash on biome arrays that
+#     are exactly 80x25. Unset asks for and echoes the shipped default.
+START_LINE="$(python3 "$PROFILE_TOOL" start "$MOD/Harness/EmbarkModules.xml" "${TAF_SCENARIO_START:-}")"
+printf '%s\n' "$START_LINE"
+START_ZONE="${START_LINE#start zone: }"
+START_ZONE="${START_ZONE%% (*}"
+
 # 4. The dev manifest that selects the harness. The repository manifest is never edited, so the
 #    shipped selection stays provably harness-free and check-manifest-directories.py is unaffected.
 python3 "$PROFILE_TOOL" manifest "$REPO/manifest.json" "$MOD/manifest.json"
@@ -110,6 +124,26 @@ python3 "$PROFILE_TOOL" manifest "$REPO/manifest.json" "$MOD/manifest.json"
 # 5. Options. Diagnostics on, plus the native world-seed field exposed for OPERATOR entry.
 python3 "$PROFILE_TOOL" options "$REPO/Tools/smoke/PlayerOptions.json" "$LOCAL/PlayerOptions.json"
 cp "$REPO/Tools/smoke/ModSettings.json" "$LOCAL/ModSettings.json"
+
+# 6. The script the in-game auto-runner executes on the first player turn. Written HERE, inside
+#    Local/, so it is covered by the single closed seal below: the script an unattended run
+#    executes is then exactly the script this preparation sealed, and a file dropped in afterwards
+#    fails the launcher's two-direction inventory. Unquoted on purpose - the verbs are separate
+#    arguments, and scenario_profile.py refuses any word outside its closed set.
+#
+#    TAF_SCENARIO_SCRIPT=none prepares an ATTENDED profile: no script file, so the auto-runner
+#    stays inert and the operator drives kingdom:scenario by hand exactly as before.
+#
+#    One verb takes an argument: `advance <turns>` runs that many game turns with no player input,
+#    for behaviour that only happens on a clock. Write it as two words - for example
+#    TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status" - and scenario_profile.py folds them
+#    into one sealed line and refuses a count outside 1..10000.
+SCENARIO_SCRIPT="${TAF_SCENARIO_SCRIPT:-flatten realize status}"
+if [ "$SCENARIO_SCRIPT" = none ]; then
+	echo "no scenario script sealed; this profile is attended-only"
+else
+	python3 "$PROFILE_TOOL" script "$LOCAL/scenario-script.txt" $SCENARIO_SCRIPT
+fi
 
 # ---- the profile is complete: seal it once, closed ------------------------------------------
 
@@ -122,10 +156,17 @@ printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 
 echo "SCENARIO PROFILE READY: $ROOT"
 echo "Frozen seed:  $SEED"
+echo "Start zone:   $START_ZONE"
 echo "Request:      $REQUEST"
 echo "Profile seal: $SEAL_DIR/profile.sha256"
 echo "Launch: powershell.exe -NoProfile -ExecutionPolicy Bypass -File '$(wslpath -w "$REPO/Tools/run-scenario.ps1")' -Root '$(wslpath -w "$ROOT")' -Game '$(wslpath -w "$GAME")'"
 echo
 echo "In game: start a new game in the [Dev] TAF scenario mode and ENTER world seed $SEED"
-echo "yourself at character creation - Qud has no launcher-side seed injection - then run"
-echo "kingdom:scenario realize. The gate refuses to stamp anything generated under another seed."
+echo "yourself at character creation - Qud has no launcher-side seed injection. The gate refuses"
+echo "to stamp anything generated under another seed."
+if [ "$SCENARIO_SCRIPT" = none ]; then
+	echo "No script is sealed, so drive the harness by hand: kingdom:scenario realize."
+else
+	echo "The sealed script then runs itself on your first turn in the world; read the results in"
+	echo "$ROOT/scenario-journal.tsv. Every kingdom:scenario verb journals there, scripted or typed."
+fi

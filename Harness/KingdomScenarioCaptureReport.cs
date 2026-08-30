@@ -29,6 +29,18 @@ namespace ThousandAndFirst.Harness
 		/// </summary>
 		internal static string Emit(string Parameter)
 		{
+			bool ok;
+			return Emit(Parameter, out ok);
+		}
+
+		/// <summary>
+		/// The same report, with its outcome as a boolean rather than a string the caller has to
+		/// read. The journal and the auto-runner need OK vs REFUSED as a fact, and recovering it by
+		/// matching the "{{R|Capture refused}}" prefix would break the first time it is reworded.
+		/// </summary>
+		internal static string Emit(string Parameter, out bool Ok)
+		{
+			Ok = false;
 			string anchorId;
 			string request;
 			string selector;
@@ -65,6 +77,7 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomScenarioAnchorRules.TryFoundAnchor(
 				KingdomScenarioAnchorRules.Provenance.OrdinaryPlay, plan.AuthorityClass, keySet,
 				out check)) return "{{R|Capture refused}}: " + check;
+			Ok = true;
 			return Report(anchorId, plan, captured, keySet);
 		}
 

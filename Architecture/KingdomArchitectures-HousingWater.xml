@@ -671,32 +671,6 @@
     <row Cells=".#####+####." />
   </map>
 
-  <map Key="housing-arcology-xl0" Width="20" Height="14" DefaultCover="walled">
-    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="," Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="^" Ground="$floor" Structure="$core" Claim="building" Pass="blocked" Cover="walled" Anchors="fixture:service-core" />
-    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="l" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells=".##################." />
-    <row Cells=".#b#b##########b#b#." />
-    <row Cells=".#i#i###l##l###i#i#." />
-    <row Cells=".#d#d#,,,,,,,,#d#d#." />
-    <row Cells=".#,,,,^,,,,^,,,,,,#." />
-    <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells="+,,,,,,,@,,,,,,,,,,+" />
-    <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells=".#,,,,^,,,,^,,,,,,#." />
-    <row Cells=".#d#d####,,####d#d#." />
-    <row Cells=".#b#b###s,,l###b#b#." />
-    <row Cells=".#i#i####,,####i#i#." />
-    <row Cells=".########+#########." />
-    <row Cells="...................." />
-  </map>
 
   <!-- Water maps. -->
   <map Key="water-saltpan-s0" Width="5" Height="4" DefaultCover="open">

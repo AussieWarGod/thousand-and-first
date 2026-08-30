@@ -40,7 +40,7 @@ namespace ThousandAndFirst
 			"r_TAF_ArchitectureGalleryExpectedScreenshot";
 		private const string WorksBlueprint = "r_KingdomPlotWorks";
 
-		private sealed class GalleryCase
+		internal sealed class GalleryCase
 		{
 			public int Number;
 			public KingdomArchitectureMapping Mapping;

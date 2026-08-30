@@ -14,7 +14,7 @@ namespace ThousandAndFirst
 {
 	public partial class KingdomArchitectureGalleryWishes
 	{
-		private static List<GalleryCase> Cases()
+		internal static List<GalleryCase> Cases()
 		{
 			List<GalleryCase> result = new List<GalleryCase>();
 			IList<KingdomArchitectureMapping> mappings = KingdomArchitecture.InspectMappings();
@@ -30,7 +30,7 @@ namespace ThousandAndFirst
 			return result;
 		}
 
-		private static bool TryStage(Zone Zone, GalleryCase Case, int Total,
+		internal static bool TryStage(Zone Zone, GalleryCase Case, int Total,
 			out GameObject Owner, out string Receipt, out string Failure)
 		{
 			Owner = null;
