@@ -194,7 +194,9 @@ def _runtime_ground_strata(repo_root: Path) -> Optional[Tuple[str, ...]]:
     if (
         not surface
         or not underground
-        or any(any(ord(char) < 32 for char in value) for value in (surface, underground))
+        or any(
+            any(ord(char) < 32 for char in value) for value in (surface, underground)
+        )
     ):
         return tuple()
     return tuple(dict.fromkeys((surface.lower(), underground.lower())))
@@ -223,21 +225,32 @@ REOPENED_ACTIVATION_KEYS: Mapping[str, str] = {
 }
 REOPENED_EXACT_ANCHORS: Mapping[str, Tuple[str, ...]] = {
     "assentingmoot": (
-        "main", "function:assenting-moot", "rite:conductor", "ward:focus",
+        "main",
+        "function:assenting-moot",
+        "rite:conductor",
+        "ward:focus",
         "ward:exemption",
     ),
     "stasisvault": (
-        "main", "function:stasis-vault", "stasis:power", "stasis:operator",
-        "stasis:transfer", "storage:effects",
+        "main",
+        "function:stasis-vault",
+        "stasis:power",
+        "stasis:operator",
+        "stasis:transfer",
+        "storage:effects",
     ),
 }
 REOPENED_MIN_ANCHORS: Mapping[str, Mapping[str, int]] = {
     "assentingmoot": {
-        "entrance:public": 2, "entrance:service": 2, "rite:assent-seat": 6,
+        "entrance:public": 2,
+        "entrance:service": 2,
+        "rite:assent-seat": 6,
         "ward:boundary": 18,
     },
     "stasisvault": {
-        "entrance:public": 2, "entrance:service": 2, "stasis:body-bay": 4,
+        "entrance:public": 2,
+        "entrance:service": 2,
+        "stasis:body-bay": 4,
     },
 }
 REOPENED_FIXTURES: Mapping[str, Mapping[str, str]] = {
@@ -428,7 +441,9 @@ class Variant:
 
     @property
     def fallback(self) -> bool:
-        return all(not self.selectors.get(name, "").strip() for name in SELECTOR_ATTRIBUTES)
+        return all(
+            not self.selectors.get(name, "").strip() for name in SELECTOR_ATTRIBUTES
+        )
 
 
 @dataclass
@@ -573,12 +588,20 @@ def _parse_xml(
     location = _location(path, root)
     try:
         if path.is_symlink():
-            issues.append(Issue(location, "input.symlink", "XML inputs must not be symbolic links"))
+            issues.append(
+                Issue(
+                    location, "input.symlink", "XML inputs must not be symbolic links"
+                )
+            )
             return None
         size = path.stat().st_size
         if size > maximum_bytes:
             issues.append(
-                Issue(location, "input.size", f"XML is {size} bytes; cap is {maximum_bytes}")
+                Issue(
+                    location,
+                    "input.size",
+                    f"XML is {size} bytes; cap is {maximum_bytes}",
+                )
             )
             return None
         data = path.read_bytes()
@@ -587,7 +610,9 @@ def _parse_xml(
         return None
     upper = data.upper()
     if b"<!DOCTYPE" in upper or b"<!ENTITY" in upper:
-        issues.append(Issue(location, "xml.dtd", "DTD and entity declarations are forbidden"))
+        issues.append(
+            Issue(location, "xml.dtd", "DTD and entity declarations are forbidden")
+        )
         return None
     try:
         return ET.fromstring(data)
@@ -603,7 +628,9 @@ def _unknown_attributes(
     issues: List[Issue],
 ) -> None:
     for name in sorted(set(element.attrib) - allowed):
-        issues.append(Issue(location, "schema.attribute", f"unknown attribute {name!r}"))
+        issues.append(
+            Issue(location, "schema.attribute", f"unknown attribute {name!r}")
+        )
 
 
 def _required_attribute(
@@ -623,7 +650,11 @@ def _valid_key(value: str, location: str, label: str, issues: List[Issue]) -> bo
         return False
     if len(value) > MAX_KEY_CHARS:
         issues.append(
-            Issue(location, "cap.key", f"{label} is {len(value)} characters; cap is {MAX_KEY_CHARS}")
+            Issue(
+                location,
+                "cap.key",
+                f"{label} is {len(value)} characters; cap is {MAX_KEY_CHARS}",
+            )
         )
         return False
     if not KEY_RE.fullmatch(value):
@@ -643,7 +674,9 @@ def _canonical_int(
     try:
         value = int(text, 10)
     except (TypeError, ValueError):
-        issues.append(Issue(location, "schema.integer", f"{label} must be a canonical integer"))
+        issues.append(
+            Issue(location, "schema.integer", f"{label} must be a canonical integer")
+        )
         return None
     if str(value) != text or not minimum <= value <= maximum:
         issues.append(
@@ -657,7 +690,9 @@ def _canonical_int(
     return value
 
 
-def _selector_tokens(value: str, location: str, name: str, issues: List[Issue]) -> Tuple[str, ...]:
+def _selector_tokens(
+    value: str, location: str, name: str, issues: List[Issue]
+) -> Tuple[str, ...]:
     if not value:
         return ()
     if len(value) > MAX_SELECTOR_CHARS:
@@ -671,7 +706,9 @@ def _selector_tokens(value: str, location: str, name: str, issues: List[Issue]) 
     raw = value.split(",")
     tokens = tuple(token.strip() for token in raw)
     if any(not token for token in tokens):
-        issues.append(Issue(location, "selector.token", f"{name} contains an empty token"))
+        issues.append(
+            Issue(location, "selector.token", f"{name} contains an empty token")
+        )
     if len(tokens) > MAX_SELECTOR_TOKENS:
         issues.append(
             Issue(
@@ -681,7 +718,9 @@ def _selector_tokens(value: str, location: str, name: str, issues: List[Issue]) 
             )
         )
     if any(any(ord(char) < 32 for char in token) for token in tokens):
-        issues.append(Issue(location, "selector.control", f"{name} contains a control character"))
+        issues.append(
+            Issue(location, "selector.control", f"{name} contains a control character")
+        )
     return tokens
 
 
@@ -732,14 +771,18 @@ def _material_cost(building: Building, issues: List[Issue]) -> Optional[Set[str]
         split = term.rfind(":")
         if split <= 0 or split == len(term) - 1:
             issues.append(
-                Issue(building.location, "material.cost", f"bad Materials term {term!r}")
+                Issue(
+                    building.location, "material.cost", f"bad Materials term {term!r}"
+                )
             )
             return None
         material = _canonical_material(term[:split])
         amount = term[split + 1 :].strip()
         if material is None or not amount.isdigit() or int(amount, 10) <= 0:
             issues.append(
-                Issue(building.location, "material.cost", f"bad Materials term {term!r}")
+                Issue(
+                    building.location, "material.cost", f"bad Materials term {term!r}"
+                )
             )
             return None
         if material in result:
@@ -755,7 +798,9 @@ def _material_cost(building: Building, issues: List[Issue]) -> Optional[Set[str]
     return result
 
 
-def load_buildings(paths: Sequence[Path], repo_root: Path, issues: List[Issue]) -> Dict[str, Building]:
+def load_buildings(
+    paths: Sequence[Path], repo_root: Path, issues: List[Issue]
+) -> Dict[str, Building]:
     buildings: Dict[str, Building] = {}
     declarations = 0
     for path in paths:
@@ -765,7 +810,11 @@ def load_buildings(paths: Sequence[Path], repo_root: Path, issues: List[Issue]) 
         location = _location(path, repo_root)
         if xml.tag != BUILDING_ROOT:
             issues.append(
-                Issue(location, "building.root", f"expected <{BUILDING_ROOT}>, found <{xml.tag}>")
+                Issue(
+                    location,
+                    "building.root",
+                    f"expected <{BUILDING_ROOT}>, found <{xml.tag}>",
+                )
             )
             continue
         for index, element in enumerate(xml):
@@ -802,7 +851,16 @@ def _parse_slot(
 ) -> Optional[Slot]:
     _unknown_attributes(
         element,
-        {"Key", "Blueprint", "Role", "Material", "MinTech", "Knowledge", "Power", "Natural"},
+        {
+            "Key",
+            "Blueprint",
+            "Role",
+            "Material",
+            "MinTech",
+            "Knowledge",
+            "Power",
+            "Natural",
+        },
         location,
         issues,
     )
@@ -826,7 +884,9 @@ def _parse_slot(
             )
         )
     if blueprint.startswith("$"):
-        issues.append(Issue(location, "palette.blueprint", "palette Blueprint must be concrete"))
+        issues.append(
+            Issue(location, "palette.blueprint", "palette Blueprint must be concrete")
+        )
     if _canonical_material(material) is None:
         issues.append(
             Issue(
@@ -843,7 +903,9 @@ def _parse_slot(
         _valid_key(power, location, "slot Power", issues)
     if natural not in YES_NO:
         issues.append(Issue(location, "schema.yes-no", "Natural must be 'yes' or 'no'"))
-    return Slot(key, blueprint, role, material, min_tech, knowledge, power, natural, location)
+    return Slot(
+        key, blueprint, role, material, min_tech, knowledge, power, natural, location
+    )
 
 
 def _parse_palette(
@@ -873,7 +935,11 @@ def _parse_palette(
         child_location = f"{location}/slot[{child_index}]"
         if child.tag != "slot":
             issues.append(
-                Issue(child_location, "schema.element", f"palette child must be <slot>, found <{child.tag}>")
+                Issue(
+                    child_location,
+                    "schema.element",
+                    f"palette child must be <slot>, found <{child.tag}>",
+                )
             )
             continue
         slot = _parse_slot(child, child_location, issues)
@@ -881,12 +947,18 @@ def _parse_palette(
             continue
         if slot.key in slots:
             issues.append(
-                Issue(child_location, "palette.duplicate-slot", f"duplicate slot Key {slot.key!r}")
+                Issue(
+                    child_location,
+                    "palette.duplicate-slot",
+                    f"duplicate slot Key {slot.key!r}",
+                )
             )
             continue
         slots[slot.key] = slot
     if not slots:
-        issues.append(Issue(location, "palette.empty", "palette must declare at least one slot"))
+        issues.append(
+            Issue(location, "palette.empty", "palette must declare at least one slot")
+        )
     return Palette(key, slots, location)
 
 
@@ -909,7 +981,11 @@ def _layer_reference(
         )
     if value == "$building" and layer != "Object":
         issues.append(
-            Issue(location, "glyph.building-layer", "$building is permitted only on Object")
+            Issue(
+                location,
+                "glyph.building-layer",
+                "$building is permitted only on Object",
+            )
         )
     if value.startswith("$") and value != "$building":
         _valid_key(value[1:], location, f"{layer} slot reference", issues)
@@ -940,27 +1016,45 @@ def _parse_glyph(
     char = _required_attribute(element, "Char", location, issues)
     if len(char) != 1 or char == "." or char.isspace() or ord(char) < 32:
         issues.append(
-            Issue(location, "glyph.char", "Char must be one non-whitespace character other than '.'")
+            Issue(
+                location,
+                "glyph.char",
+                "Char must be one non-whitespace character other than '.'",
+            )
         )
         return None
     ground = _layer_reference(element.get("Ground", ""), "Ground", location, issues)
-    structure = _layer_reference(element.get("Structure", ""), "Structure", location, issues)
+    structure = _layer_reference(
+        element.get("Structure", ""), "Structure", location, issues
+    )
     object_ref = _layer_reference(element.get("Object", ""), "Object", location, issues)
     if not any((ground, structure, object_ref)):
-        issues.append(Issue(location, "glyph.empty", "glyph must place at least one permanent layer"))
+        issues.append(
+            Issue(
+                location, "glyph.empty", "glyph must place at least one permanent layer"
+            )
+        )
     claim = _required_attribute(element, "Claim", location, issues)
     pass_mode = _required_attribute(element, "Pass", location, issues)
     cover = _required_attribute(element, "Cover", location, issues)
     if claim not in CLAIMS:
-        issues.append(Issue(location, "glyph.claim", f"Claim must be one of {sorted(CLAIMS)}"))
+        issues.append(
+            Issue(location, "glyph.claim", f"Claim must be one of {sorted(CLAIMS)}")
+        )
     if pass_mode not in PASS_MODES:
-        issues.append(Issue(location, "glyph.pass", f"Pass must be one of {sorted(PASS_MODES)}"))
+        issues.append(
+            Issue(location, "glyph.pass", f"Pass must be one of {sorted(PASS_MODES)}")
+        )
     if cover not in COVERS:
-        issues.append(Issue(location, "glyph.cover", f"Cover must be one of {sorted(COVERS)}"))
+        issues.append(
+            Issue(location, "glyph.cover", f"Cover must be one of {sorted(COVERS)}")
+        )
     raw_anchors = element.get("Anchors", "")
     anchors = tuple(item.strip() for item in raw_anchors.split(",") if item.strip())
     if raw_anchors and len(anchors) != len(raw_anchors.split(",")):
-        issues.append(Issue(location, "anchor.empty", "Anchors contains an empty token"))
+        issues.append(
+            Issue(location, "anchor.empty", "Anchors contains an empty token")
+        )
     if len(set(anchors)) != len(anchors):
         issues.append(Issue(location, "anchor.duplicate", "glyph repeats an anchor"))
     for anchor in anchors:
@@ -968,17 +1062,23 @@ def _parse_glyph(
             issues.append(Issue(location, "anchor.key", f"invalid anchor {anchor!r}"))
     stateful_text = element.get("Stateful", "no").strip()
     if stateful_text not in YES_NO:
-        issues.append(Issue(location, "schema.yes-no", "Stateful must be 'yes' or 'no'"))
+        issues.append(
+            Issue(location, "schema.yes-no", "Stateful must be 'yes' or 'no'")
+        )
     stateful = stateful_text == "yes"
     if stateful and not object_ref:
-        issues.append(Issue(location, "stateful.object", "Stateful=yes requires an Object layer"))
+        issues.append(
+            Issue(location, "stateful.object", "Stateful=yes requires an Object layer")
+        )
     stable = [
         anchor
         for anchor in anchors
         if anchor != "main" and not anchor.startswith("entrance:")
     ]
     if object_ref == "$building" and not stateful:
-        issues.append(Issue(location, "stateful.building", "$building must be Stateful=yes"))
+        issues.append(
+            Issue(location, "stateful.building", "$building must be Stateful=yes")
+        )
     if object_ref and object_ref != "$building" and stable and not stateful:
         issues.append(
             Issue(
@@ -1018,25 +1118,37 @@ def _parse_map(
     issues: List[Issue],
 ) -> Optional[ArchitectureMap]:
     base_location = _location(path, repo_root, f"map[{index}]")
-    _unknown_attributes(element, {"Key", "Width", "Height", "DefaultCover"}, base_location, issues)
+    _unknown_attributes(
+        element, {"Key", "Width", "Height", "DefaultCover"}, base_location, issues
+    )
     key = _required_attribute(element, "Key", base_location, issues)
     if not _valid_key(key, base_location, "map Key", issues):
         return None
     location = _location(path, repo_root, f"map[{key}]")
     width_text = _required_attribute(element, "Width", location, issues)
     height_text = _required_attribute(element, "Height", location, issues)
-    width = _canonical_int(width_text, location, "Width", issues, 1, LOT_DIMENSIONS["XL"][0])
-    height = _canonical_int(height_text, location, "Height", issues, 1, LOT_DIMENSIONS["XL"][1])
+    width = _canonical_int(
+        width_text, location, "Width", issues, 1, LOT_DIMENSIONS["XL"][0]
+    )
+    height = _canonical_int(
+        height_text, location, "Height", issues, 1, LOT_DIMENSIONS["XL"][1]
+    )
     width = width or 0
     height = height or 0
     if width * height > MAX_MAP_AREA:
         issues.append(
-            Issue(location, "cap.map-area", f"map area {width * height} exceeds cap {MAX_MAP_AREA}")
+            Issue(
+                location,
+                "cap.map-area",
+                f"map area {width * height} exceeds cap {MAX_MAP_AREA}",
+            )
         )
     default_cover = _required_attribute(element, "DefaultCover", location, issues)
     if default_cover not in COVERS:
         issues.append(
-            Issue(location, "map.cover", f"DefaultCover must be one of {sorted(COVERS)}")
+            Issue(
+                location, "map.cover", f"DefaultCover must be one of {sorted(COVERS)}"
+            )
         )
     glyphs: Dict[str, Glyph] = {}
     rows: List[str] = []
@@ -1048,14 +1160,22 @@ def _parse_map(
             glyph_count += 1
             if saw_row:
                 issues.append(
-                    Issue(child_location, "map.order", "glyph declarations must precede rows")
+                    Issue(
+                        child_location,
+                        "map.order",
+                        "glyph declarations must precede rows",
+                    )
                 )
             glyph = _parse_glyph(child, child_location, issues)
             if glyph is None:
                 continue
             if glyph.char in glyphs:
                 issues.append(
-                    Issue(child_location, "glyph.duplicate", f"duplicate glyph Char {glyph.char!r}")
+                    Issue(
+                        child_location,
+                        "glyph.duplicate",
+                        f"duplicate glyph Char {glyph.char!r}",
+                    )
                 )
                 continue
             glyphs[glyph.char] = glyph
@@ -1065,26 +1185,44 @@ def _parse_map(
             rows.append(_required_attribute(child, "Cells", child_location, issues))
         else:
             issues.append(
-                Issue(child_location, "schema.element", f"map child must be <glyph> or <row>, found <{child.tag}>")
+                Issue(
+                    child_location,
+                    "schema.element",
+                    f"map child must be <glyph> or <row>, found <{child.tag}>",
+                )
             )
     if glyph_count > MAX_GLYPHS:
         issues.append(
-            Issue(location, "cap.glyphs", f"{glyph_count} glyphs exceed cap {MAX_GLYPHS}")
+            Issue(
+                location, "cap.glyphs", f"{glyph_count} glyphs exceed cap {MAX_GLYPHS}"
+            )
         )
     if len(rows) != height:
         issues.append(
-            Issue(location, "map.rows", f"declares Height={height} but has {len(rows)} rows")
+            Issue(
+                location,
+                "map.rows",
+                f"declares Height={height} but has {len(rows)} rows",
+            )
         )
     for row_index, row in enumerate(rows):
         row_location = f"{location}/row[{row_index}]"
         if len(row) != width:
             issues.append(
-                Issue(row_location, "map.row-width", f"row width {len(row)} does not equal Width={width}")
+                Issue(
+                    row_location,
+                    "map.row-width",
+                    f"row width {len(row)} does not equal Width={width}",
+                )
             )
         for char in row:
             if char != "." and char not in glyphs:
                 issues.append(
-                    Issue(row_location, "glyph.undeclared", f"row uses undeclared glyph {char!r}")
+                    Issue(
+                        row_location,
+                        "glyph.undeclared",
+                        f"row uses undeclared glyph {char!r}",
+                    )
                 )
     architecture_map = ArchitectureMap(
         key, width, height, default_cover, glyphs, tuple(rows), location
@@ -1147,7 +1285,10 @@ def _entrance_egress(
             nx, ny = neighbor
             if (
                 neighbor in parent
-                or not (0 <= nx < architecture_map.width and 0 <= ny < architecture_map.height)
+                or not (
+                    0 <= nx < architecture_map.width
+                    and 0 <= ny < architecture_map.height
+                )
                 or architecture_map.glyph_at(nx, ny) is not None
             ):
                 continue
@@ -1172,9 +1313,7 @@ def _entrance_egress(
     return tuple(reversed(reversed_path)), exit_step
 
 
-def _pose_point(
-    x: int, y: int, width: int, height: int, pose: str
-) -> Tuple[int, int]:
+def _pose_point(x: int, y: int, width: int, height: int, pose: str) -> Tuple[int, int]:
     if pose == "east":
         return height - 1 - y, x
     if pose == "south":
@@ -1195,7 +1334,9 @@ def _access_ok(
     x, y = position
     return any(
         neighbor in reachable
-        for neighbor in _neighbors(x, y, architecture_map.width, architecture_map.height)
+        for neighbor in _neighbors(
+            x, y, architecture_map.width, architecture_map.height
+        )
     )
 
 
@@ -1222,7 +1363,10 @@ def _physical_walk_reach(
         if has_exterior_route
         and glyph.pass_mode == "walk"
         and glyph.claim in CLAIMS
-        and (x in {0, architecture_map.width - 1} or y in {0, architecture_map.height - 1})
+        and (
+            x in {0, architecture_map.width - 1}
+            or y in {0, architecture_map.height - 1}
+        )
     }
     # A valid entrance route and the reserved circulation lane form one virtual exterior node.
     # Boundary yard may therefore be entered from outside without blessing any intervening dot.
@@ -1230,7 +1374,9 @@ def _physical_walk_reach(
     queue: deque[Tuple[int, int]] = deque(reached)
     while queue:
         x, y = queue.popleft()
-        for neighbor in _neighbors(x, y, architecture_map.width, architecture_map.height):
+        for neighbor in _neighbors(
+            x, y, architecture_map.width, architecture_map.height
+        ):
             if neighbor in reached:
                 continue
             glyph = architecture_map.glyph_at(neighbor[0], neighbor[1])
@@ -1254,7 +1400,9 @@ def _declared_opening(glyph: Optional[Glyph]) -> bool:
     )
 
 
-def _validate_map_enclosure(architecture_map: ArchitectureMap, issues: List[Issue]) -> None:
+def _validate_map_enclosure(
+    architecture_map: ArchitectureMap, issues: List[Issue]
+) -> None:
     """Refuse bare gaps in walled building cover; open plans and authored barriers are legal."""
 
     for x, y, glyph in _cells(architecture_map):
@@ -1266,7 +1414,9 @@ def _validate_map_enclosure(architecture_map: ArchitectureMap, issues: List[Issu
         ):
             continue
         for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-            if not (0 <= nx < architecture_map.width and 0 <= ny < architecture_map.height):
+            if not (
+                0 <= nx < architecture_map.width and 0 <= ny < architecture_map.height
+            ):
                 issues.append(
                     Issue(
                         architecture_map.location,
@@ -1290,7 +1440,9 @@ def _validate_map_enclosure(architecture_map: ArchitectureMap, issues: List[Issu
                 break
 
 
-def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue]) -> None:
+def _validate_map_topology(
+    architecture_map: ArchitectureMap, issues: List[Issue]
+) -> None:
     # Skip positional checks when malformed dimensions/rows would make indexing unsafe.  The
     # structural faults were already reported by _parse_map.
     if (
@@ -1344,7 +1496,11 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
                 "main anchor must share an Object=$building glyph",
             )
         )
-    building_cells = [(x, y) for x, y, glyph in _cells(architecture_map) if glyph.object == "$building"]
+    building_cells = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if glyph.object == "$building"
+    ]
     if len(building_cells) != 1:
         issues.append(
             Issue(
@@ -1373,10 +1529,10 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
                 )
             )
             continue
-        boundary = (
-            entrance_x in {0, architecture_map.width - 1}
-            or entrance_y in {0, architecture_map.height - 1}
-        )
+        boundary = entrance_x in {0, architecture_map.width - 1} or entrance_y in {
+            0,
+            architecture_map.height - 1,
+        }
         for nx, ny in _neighbors(
             entrance_x, entrance_y, architecture_map.width, architecture_map.height
         ):
@@ -1416,7 +1572,9 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
             queue.append(entrance_position)
     while queue:
         x, y = queue.popleft()
-        for neighbor in _neighbors(x, y, architecture_map.width, architecture_map.height):
+        for neighbor in _neighbors(
+            x, y, architecture_map.width, architecture_map.height
+        ):
             if neighbor in walkable and neighbor not in reachable:
                 reachable.add(neighbor)
                 queue.append(neighbor)
@@ -1466,6 +1624,121 @@ def _validate_map_topology(architecture_map: ArchitectureMap, issues: List[Issue
                 f"canonical map snapshot is {len(snapshot)} characters; cap is {MAX_SNAPSHOT_CHARS}",
             )
         )
+
+
+# Doctrine floors (polish contract section 6/8, user ruling 2026-08-30): every authored map is
+# held to the code-checkable slice of "walls, pathways, and door placement make sense".  These
+# are notices, not issues, while the catalogue sweep is in flight; they promote to issues once
+# the census is clean.
+FEATURELESS_ROOM_MIN_CELLS = 4
+
+
+def _doctrine_is_door(glyph: Glyph) -> bool:
+    return "door" in glyph.structure.lower()
+
+
+def validate_map_doctrine(model: "ArchitectureModel", notices: List[Notice]) -> None:
+    for architecture_map in model.maps.values():
+        if _is_generated_map(architecture_map):
+            continue
+        if (
+            architecture_map.width <= 0
+            or architecture_map.height <= 0
+            or len(architecture_map.rows) != architecture_map.height
+            or any(len(row) != architecture_map.width for row in architecture_map.rows)
+        ):
+            continue
+        _validate_one_map_doctrine(architecture_map, notices)
+
+
+def _validate_one_map_doctrine(
+    architecture_map: "ArchitectureMap", notices: List[Notice]
+) -> None:
+    walkable: Dict[Tuple[int, int], Glyph] = {}
+    doors: Dict[Tuple[int, int], Glyph] = {}
+    for x, y, glyph in _cells(architecture_map):
+        if glyph.pass_mode != "walk" or glyph.claim not in CLAIMS:
+            continue
+        if _doctrine_is_door(glyph):
+            doors[(x, y)] = glyph
+        else:
+            walkable[(x, y)] = glyph
+
+    # A door that does not join at least two walkable cells joins nothing: it is scenery
+    # pretending to be circulation.
+    for (x, y), glyph in sorted(
+        doors.items(), key=lambda item: (item[0][1], item[0][0])
+    ):
+        open_sides = 0
+        for nx, ny in _neighbors(x, y, architecture_map.width, architecture_map.height):
+            if (nx, ny) in walkable or (nx, ny) in doors:
+                open_sides += 1
+        boundary = x in {0, architecture_map.width - 1} or y in {
+            0,
+            architecture_map.height - 1,
+        }
+        if boundary:
+            open_sides += 1  # the lot exterior is the other side of a boundary door
+        if open_sides < 2:
+            notices.append(
+                Notice(
+                    architecture_map.location,
+                    "doctrine.pointless-door",
+                    f"door at {x},{y} joins fewer than two walkable cells",
+                )
+            )
+
+    # Rooms are the walkable regions left when doors are removed.  A room of meaningful size
+    # holding no anchor, no object, and only one ground treatment is filler, not architecture.
+    seen: Set[Tuple[int, int]] = set()
+    for start in sorted(walkable, key=lambda value: (value[1], value[0])):
+        if start in seen:
+            continue
+        region: List[Tuple[int, int]] = []
+        queue: deque[Tuple[int, int]] = deque([start])
+        seen.add(start)
+        while queue:
+            x, y = queue.popleft()
+            region.append((x, y))
+            for neighbor in _neighbors(
+                x, y, architecture_map.width, architecture_map.height
+            ):
+                if neighbor in walkable and neighbor not in seen:
+                    seen.add(neighbor)
+                    queue.append(neighbor)
+        if len(region) < FEATURELESS_ROOM_MIN_CELLS:
+            continue
+        grounds = {walkable[cell].ground for cell in region}
+        has_feature = any(
+            walkable[cell].anchors or walkable[cell].object for cell in region
+        )
+        touches_door = any(
+            neighbor in doors
+            for cell in region
+            for neighbor in _neighbors(
+                cell[0], cell[1], architecture_map.width, architecture_map.height
+            )
+        )
+        adjoins_use = any(
+            (
+                (glyph := architecture_map.glyph_at(nx, ny)) is not None
+                and glyph.pass_mode == "adjacent"
+            )
+            for cell in region
+            for nx, ny in _neighbors(
+                cell[0], cell[1], architecture_map.width, architecture_map.height
+            )
+        )
+        if not has_feature and not adjoins_use and len(grounds) <= 1 and touches_door:
+            x, y = region[0]
+            notices.append(
+                Notice(
+                    architecture_map.location,
+                    "doctrine.featureless-room",
+                    f"room of {len(region)} cells at {x},{y} has no anchor, object, "
+                    "or ground variety; a door serves it for nothing",
+                )
+            )
 
 
 def _canonical_map_snapshot(architecture_map: ArchitectureMap) -> str:
@@ -1527,7 +1800,9 @@ def _parse_variant(
     if not _valid_key(key, location, "variant Key", issues):
         return None
     priority_text = _required_attribute(element, "Priority", location, issues)
-    priority = _canonical_int(priority_text, location, "Priority", issues, 0, 2147483647)
+    priority = _canonical_int(
+        priority_text, location, "Priority", issues, 0, 2147483647
+    )
     selectors: Dict[str, str] = {}
     for name in SELECTOR_ATTRIBUTES:
         value = element.get(name, "").strip()
@@ -1538,16 +1813,38 @@ def _parse_variant(
     min_tech = selectors["MinTech"].lower()
     max_tech = selectors["MaxTech"].lower()
     if min_stage and min_stage not in STAGE_ORDER:
-        issues.append(Issue(location, "variant.stage", f"unknown MinStage {selectors['MinStage']!r}"))
+        issues.append(
+            Issue(
+                location, "variant.stage", f"unknown MinStage {selectors['MinStage']!r}"
+            )
+        )
     if max_stage and max_stage not in STAGE_ORDER:
-        issues.append(Issue(location, "variant.stage", f"unknown MaxStage {selectors['MaxStage']!r}"))
-    if min_stage in STAGE_ORDER and max_stage in STAGE_ORDER and STAGE_ORDER[min_stage] > STAGE_ORDER[max_stage]:
-        issues.append(Issue(location, "variant.stage-range", "MinStage exceeds MaxStage"))
+        issues.append(
+            Issue(
+                location, "variant.stage", f"unknown MaxStage {selectors['MaxStage']!r}"
+            )
+        )
+    if (
+        min_stage in STAGE_ORDER
+        and max_stage in STAGE_ORDER
+        and STAGE_ORDER[min_stage] > STAGE_ORDER[max_stage]
+    ):
+        issues.append(
+            Issue(location, "variant.stage-range", "MinStage exceeds MaxStage")
+        )
     if min_tech and min_tech not in TECH_ORDER:
-        issues.append(Issue(location, "variant.tech", f"unknown MinTech {selectors['MinTech']!r}"))
+        issues.append(
+            Issue(location, "variant.tech", f"unknown MinTech {selectors['MinTech']!r}")
+        )
     if max_tech and max_tech not in TECH_ORDER:
-        issues.append(Issue(location, "variant.tech", f"unknown MaxTech {selectors['MaxTech']!r}"))
-    if min_tech in TECH_ORDER and max_tech in TECH_ORDER and TECH_ORDER[min_tech] > TECH_ORDER[max_tech]:
+        issues.append(
+            Issue(location, "variant.tech", f"unknown MaxTech {selectors['MaxTech']!r}")
+        )
+    if (
+        min_tech in TECH_ORDER
+        and max_tech in TECH_ORDER
+        and TECH_ORDER[min_tech] > TECH_ORDER[max_tech]
+    ):
         issues.append(Issue(location, "variant.tech-range", "MinTech exceeds MaxTech"))
     return Variant(
         key,
@@ -1564,7 +1861,9 @@ def _parse_tier(
     location: str,
     issues: List[Issue],
 ) -> Optional[Tier]:
-    _unknown_attributes(element, {"Key", "BuildKey", "Level", "Map", "Palette"}, location, issues)
+    _unknown_attributes(
+        element, {"Key", "BuildKey", "Level", "Map", "Palette"}, location, issues
+    )
     key = _required_attribute(element, "Key", location, issues)
     build_key = _required_attribute(element, "BuildKey", location, issues)
     map_key = _required_attribute(element, "Map", location, issues)
@@ -1575,7 +1874,9 @@ def _parse_tier(
     _valid_key(map_key, location, "tier Map", issues)
     _valid_key(palette_key, location, "tier Palette", issues)
     level_text = _required_attribute(element, "Level", location, issues)
-    level = _canonical_int(level_text, location, "Level", issues, 0, MAX_TIERS_PER_BINDING - 1)
+    level = _canonical_int(
+        level_text, location, "Level", issues, 0, MAX_TIERS_PER_BINDING - 1
+    )
     requirements: List[Requirement] = []
     variants: List[Variant] = []
     saw_variant = False
@@ -1586,14 +1887,22 @@ def _parse_tier(
         if child.tag == "require":
             if saw_variant:
                 issues.append(
-                    Issue(child_location, "tier.order", "require elements must precede variants")
+                    Issue(
+                        child_location,
+                        "tier.order",
+                        "require elements must precede variants",
+                    )
                 )
             requirement = _parse_requirement(child, child_location, issues)
             if requirement is None:
                 continue
             if requirement.role in requirement_roles:
                 issues.append(
-                    Issue(child_location, "require.duplicate", f"duplicate Role {requirement.role!r}")
+                    Issue(
+                        child_location,
+                        "require.duplicate",
+                        f"duplicate Role {requirement.role!r}",
+                    )
                 )
             else:
                 requirement_roles.add(requirement.role)
@@ -1605,14 +1914,22 @@ def _parse_tier(
                 continue
             if variant.key in variant_keys:
                 issues.append(
-                    Issue(child_location, "variant.duplicate", f"duplicate variant Key {variant.key!r}")
+                    Issue(
+                        child_location,
+                        "variant.duplicate",
+                        f"duplicate variant Key {variant.key!r}",
+                    )
                 )
             else:
                 variant_keys.add(variant.key)
                 variants.append(variant)
         else:
             issues.append(
-                Issue(child_location, "schema.element", f"tier child must be <require> or <variant>, found <{child.tag}>")
+                Issue(
+                    child_location,
+                    "schema.element",
+                    f"tier child must be <require> or <variant>, found <{child.tag}>",
+                )
             )
     if len(requirements) > MAX_REQUIREMENTS_PER_TIER:
         issues.append(
@@ -1665,7 +1982,13 @@ def _parse_binding(
         return None
     _valid_key(type_key, location, "binding Type", issues)
     if size not in LOT_DIMENSIONS:
-        issues.append(Issue(location, "binding.size", f"Size must be one of {sorted(LOT_DIMENSIONS)}"))
+        issues.append(
+            Issue(
+                location,
+                "binding.size",
+                f"Size must be one of {sorted(LOT_DIMENSIONS)}",
+            )
+        )
     if facing not in {"heart", "road"}:
         issues.append(
             Issue(
@@ -1681,18 +2004,28 @@ def _parse_binding(
         child_location = f"{location}/{child.tag}[{child_index}]"
         if child.tag != "tier":
             issues.append(
-                Issue(child_location, "schema.element", f"binding child must be <tier>, found <{child.tag}>")
+                Issue(
+                    child_location,
+                    "schema.element",
+                    f"binding child must be <tier>, found <{child.tag}>",
+                )
             )
             continue
         tier = _parse_tier(child, child_location, issues)
         if tier is None:
             continue
         if tier.key in tier_keys:
-            issues.append(Issue(child_location, "tier.duplicate", f"duplicate tier Key {tier.key!r}"))
+            issues.append(
+                Issue(
+                    child_location, "tier.duplicate", f"duplicate tier Key {tier.key!r}"
+                )
+            )
             continue
         if tier.level in levels:
             issues.append(
-                Issue(child_location, "tier.level", f"duplicate tier Level {tier.level}")
+                Issue(
+                    child_location, "tier.level", f"duplicate tier Level {tier.level}"
+                )
             )
         tier_keys.add(tier.key)
         levels.add(tier.level)
@@ -1706,7 +2039,9 @@ def _parse_binding(
             )
         )
     if not tiers:
-        issues.append(Issue(location, "binding.empty", "binding must declare at least one tier"))
+        issues.append(
+            Issue(location, "binding.empty", "binding must declare at least one tier")
+        )
     binding = Binding(key, type_key, size, facing, tiers, location)
     for tier in tiers:
         tier.binding = binding
@@ -1732,7 +2067,11 @@ def _parse_plan(
         child_location = f"{location}/{child.tag}[{child_index}]"
         if child.tag != "binding":
             issues.append(
-                Issue(child_location, "schema.element", f"plan child must be <binding>, found <{child.tag}>")
+                Issue(
+                    child_location,
+                    "schema.element",
+                    f"plan child must be <binding>, found <{child.tag}>",
+                )
             )
             continue
         binding = _parse_binding(child, child_location, issues)
@@ -1740,7 +2079,11 @@ def _parse_plan(
             continue
         if binding.key in binding_keys:
             issues.append(
-                Issue(child_location, "binding.duplicate", f"duplicate binding Key {binding.key!r}")
+                Issue(
+                    child_location,
+                    "binding.duplicate",
+                    f"duplicate binding Key {binding.key!r}",
+                )
             )
             continue
         binding_keys.add(binding.key)
@@ -1754,7 +2097,9 @@ def _parse_plan(
             )
         )
     if not bindings:
-        issues.append(Issue(location, "plan.empty", "plan must declare at least one binding"))
+        issues.append(
+            Issue(location, "plan.empty", "plan must declare at least one binding")
+        )
     plan = Plan(key, bindings, location)
     for binding in bindings:
         binding.plan = plan
@@ -1784,7 +2129,11 @@ def load_architectures(
         _unknown_attributes(xml, {"Schema"}, location, issues)
         if xml.get("Schema", "").strip() != SCHEMA_VERSION:
             issues.append(
-                Issue(location, "architecture.schema", f"Schema must be {SCHEMA_VERSION!r}")
+                Issue(
+                    location,
+                    "architecture.schema",
+                    f"Schema must be {SCHEMA_VERSION!r}",
+                )
             )
         for index, element in enumerate(xml):
             record_count += 1
@@ -1794,7 +2143,11 @@ def load_architectures(
                     continue
                 if palette.key in model.palettes:
                     issues.append(
-                        Issue(palette.location, "palette.duplicate", f"duplicate palette Key {palette.key!r}")
+                        Issue(
+                            palette.location,
+                            "palette.duplicate",
+                            f"duplicate palette Key {palette.key!r}",
+                        )
                     )
                 else:
                     model.palettes[palette.key] = palette
@@ -1804,7 +2157,11 @@ def load_architectures(
                     continue
                 if architecture_map.key in model.maps:
                     issues.append(
-                        Issue(architecture_map.location, "map.duplicate", f"duplicate map Key {architecture_map.key!r}")
+                        Issue(
+                            architecture_map.location,
+                            "map.duplicate",
+                            f"duplicate map Key {architecture_map.key!r}",
+                        )
                     )
                 else:
                     model.maps[architecture_map.key] = architecture_map
@@ -1813,7 +2170,13 @@ def load_architectures(
                 if plan is None:
                     continue
                 if plan.key in model.plans:
-                    issues.append(Issue(plan.location, "plan.duplicate", f"duplicate plan Key {plan.key!r}"))
+                    issues.append(
+                        Issue(
+                            plan.location,
+                            "plan.duplicate",
+                            f"duplicate plan Key {plan.key!r}",
+                        )
+                    )
                     continue
                 for binding in plan.bindings:
                     if binding.key in binding_keys:
@@ -1869,7 +2232,11 @@ def _used_palette_slots(
     result: Dict[str, Slot] = {}
     for _x, _y, glyph in _cells(architecture_map):
         for _layer, reference in glyph.layers():
-            if not reference or reference == "$building" or not reference.startswith("$"):
+            if (
+                not reference
+                or reference == "$building"
+                or not reference.startswith("$")
+            ):
                 continue
             slot = palette.slots.get(reference[1:])
             if slot is not None:
@@ -1908,8 +2275,7 @@ def _compiled_snapshot_size(
     placements: List[Tuple[str, str, str, str, str, str]] = []
     for x, y, glyph in _cells(architecture_map):
         cell_anchors = [
-            role if role == "main" else f"{role}@{x},{y}"
-            for role in glyph.anchors
+            role if role == "main" else f"{role}@{x},{y}" for role in glyph.anchors
         ]
         anchors.extend(cell_anchors)
         for layer, reference in glyph.layers():
@@ -1983,7 +2349,12 @@ def _snapshot_maximum(
     maximum_key = ""
     for tier in sorted(
         model.tiers,
-        key=lambda item: (item.build_key, item.binding.type_key, item.binding.size, item.key),
+        key=lambda item: (
+            item.build_key,
+            item.binding.type_key,
+            item.binding.size,
+            item.key,
+        ),
     ):
         building = buildings.get(tier.build_key)
         if building is None:
@@ -1993,7 +2364,9 @@ def _snapshot_maximum(
             palette = model.palettes.get(variant.palette_key or tier.palette_key)
             if architecture_map is None or palette is None:
                 continue
-            size = _compiled_snapshot_size(tier, variant, building, architecture_map, palette)
+            size = _compiled_snapshot_size(
+                tier, variant, building, architecture_map, palette
+            )
             if size is not None:
                 key = (
                     f"{tier.build_key}/{tier.binding.type_key}-{tier.binding.size.lower()}/"
@@ -2034,15 +2407,20 @@ def _validate_vertical_evidence(
     claimed_vertical = False
     for x, y, glyph in _cells(architecture_map):
         if any(
-            anchor == "function:vertical-core" or anchor.startswith("function:vertical-core:")
+            anchor == "function:vertical-core"
+            or anchor.startswith("function:vertical-core:")
             for anchor in glyph.anchors
         ):
             claimed_vertical = True
         for layer, reference in glyph.layers():
-            slot = palette.slots.get(reference[1:]) if reference.startswith("$") else None
+            slot = (
+                palette.slots.get(reference[1:]) if reference.startswith("$") else None
+            )
             blueprint = _resolve_reference(reference, palette, building)
             role = "" if slot is None else slot.role
-            suspect = _looks_like_vertical_travel(blueprint) or _looks_like_vertical_travel(role)
+            suspect = _looks_like_vertical_travel(
+                blueprint
+            ) or _looks_like_vertical_travel(role)
             if not suspect:
                 continue
             claimed_vertical = True
@@ -2051,7 +2429,9 @@ def _validate_vertical_evidence(
                 issues.append(
                     Issue(
                         location,
-                        "travel.link-owner" if blueprint in RAW_VERTICAL_BLUEPRINTS else "travel.blueprint",
+                        "travel.link-owner"
+                        if blueprint in RAW_VERTICAL_BLUEPRINTS
+                        else "travel.blueprint",
                         f"map {architecture_map.key!r} cell {x},{y} uses {blueprint!r} as vertical travel; "
                         + (
                             "raw vanilla stairs carry no delve link ownership"
@@ -2135,7 +2515,9 @@ def _effective_architecture_snapshot(
         for x, char in enumerate(row):
             glyph = None if char == "." else architecture_map.glyphs.get(char)
             if glyph is None:
-                fields.extend((str(x), str(y), "unclaimed", "walk", "open", "", "", "", "no"))
+                fields.extend(
+                    (str(x), str(y), "unclaimed", "walk", "open", "", "", "", "no")
+                )
                 continue
 
             def resolved(reference: str) -> str:
@@ -2189,8 +2571,7 @@ def _has_procedural_shell_signature(
     border = [
         (x, y, glyph)
         for x, y, glyph in cells
-        if x in {0, architecture_map.width - 1}
-        or y in {0, architecture_map.height - 1}
+        if x in {0, architecture_map.width - 1} or y in {0, architecture_map.height - 1}
     ]
     enclosure_signatures: Set[Tuple[str, str, str, str]] = set()
     for x, y, glyph in border:
@@ -2209,10 +2590,7 @@ def _has_procedural_shell_signature(
     if len(enclosure_signatures) != 1:
         return False
     mains = [
-        (x, y)
-        for x, y, glyph in cells
-        for anchor in glyph.anchors
-        if anchor == "main"
+        (x, y) for x, y, glyph in cells for anchor in glyph.anchors if anchor == "main"
     ]
     if len(mains) != 1:
         return False
@@ -2269,7 +2647,9 @@ def _validate_tier_variant(
     if architecture_map is None:
         issues.append(Issue(location, "reference.map", f"unknown map {map_key!r}"))
     if palette is None:
-        issues.append(Issue(location, "reference.palette", f"unknown palette {palette_key!r}"))
+        issues.append(
+            Issue(location, "reference.palette", f"unknown palette {palette_key!r}")
+        )
     if architecture_map is None or palette is None:
         return
     paid = _material_cost(building, issues)
@@ -2309,19 +2689,27 @@ def _validate_tier_variant(
                     f"building {building.key!r} Materials",
                 )
             )
-    building_tech = building.attributes.get("MinTech", "hands").strip().lower() or "hands"
+    building_tech = (
+        building.attributes.get("MinTech", "hands").strip().lower() or "hands"
+    )
     variant_tech = variant.selectors.get("MinTech", "").strip().lower()
     declared_tech = max(
         TECH_ORDER.get(building_tech, -1), TECH_ORDER.get(variant_tech, -1)
     )
-    used_tech = max((TECH_ORDER.get(slot.min_tech, -1) for slot in used_slots), default=0)
+    used_tech = max(
+        (TECH_ORDER.get(slot.min_tech, -1) for slot in used_slots), default=0
+    )
     if building_tech not in TECH_ORDER:
         issues.append(
-            Issue(location, "building.tech", f"unknown building MinTech {building_tech!r}")
+            Issue(
+                location, "building.tech", f"unknown building MinTech {building_tech!r}"
+            )
         )
     elif used_tech > declared_tech:
         required = next(name for name, rank in TECH_ORDER.items() if rank == used_tech)
-        declared = next(name for name, rank in TECH_ORDER.items() if rank == declared_tech)
+        declared = next(
+            name for name, rank in TECH_ORDER.items() if rank == declared_tech
+        )
         issues.append(
             Issue(
                 location,
@@ -2365,7 +2753,11 @@ def _validate_tier_variant(
                     else architecture_map.height
                 )
                 world_edge = _pose_point(
-                    edge_x, edge_y, architecture_map.width, architecture_map.height, pose
+                    edge_x,
+                    edge_y,
+                    architecture_map.width,
+                    architecture_map.height,
+                    pose,
                 )
                 world_outside = _pose_point(
                     outside_x,
@@ -2521,15 +2913,17 @@ def _validate_heart_accretion(
                 if anchor != "main" and not anchor.startswith("entrance:")
             ]
             stateful_anchor = (
-                stable_anchors[0]
-                if glyph.stateful and len(stable_anchors) == 1
-                else ""
+                stable_anchors[0] if glyph.stateful and len(stable_anchors) == 1 else ""
             )
             for layer, reference in glyph.layers():
                 if reference == "$building":
                     continue
                 blueprint = _resolve_reference(reference, palette, building)
-                slot = palette.slots.get(reference[1:]) if reference.startswith("$") else None
+                slot = (
+                    palette.slots.get(reference[1:])
+                    if reference.startswith("$")
+                    else None
+                )
                 if not blueprint:
                     continue
                 if blueprint == "r_KingdomFirstBasin":
@@ -2579,7 +2973,14 @@ def _validate_heart_accretion(
         return
     main_offset = snapshots[0][3]
     basin_relative = snapshots[0][4]
-    for tier, _architecture_map, _palette, next_main, next_basin, _placements in snapshots[1:]:
+    for (
+        tier,
+        _architecture_map,
+        _palette,
+        next_main,
+        next_basin,
+        _placements,
+    ) in snapshots[1:]:
         if next_main != main_offset:
             issues.append(
                 Issue(
@@ -2611,7 +3012,11 @@ def _validate_heart_accretion(
                         "heart.fabric-replaced",
                         f"{before[0].build_key!r}->{after[0].build_key!r} does not retain "
                         f"{layer} fabric at main-relative {dx},{dy}: {identity[0]!r} becomes "
-                        + ("absent" if next_identity is None else repr(next_identity[0])),
+                        + (
+                            "absent"
+                            if next_identity is None
+                            else repr(next_identity[0])
+                        ),
                     )
                 )
 
@@ -2775,24 +3180,28 @@ def _validate_reopened_exotic_architecture(
 
 
 def _function_roles(tier: Tier) -> Set[str]:
-    return {item.role for item in tier.requirements if item.role.startswith("function:")}
+    return {
+        item.role for item in tier.requirements if item.role.startswith("function:")
+    }
 
 
 def _selector_roster(tier: Tier) -> Dict[str, Tuple[Tuple[str, str], ...]]:
     return {
-        variant.key: tuple((name, variant.selectors.get(name, "")) for name in SELECTOR_ATTRIBUTES)
+        variant.key: tuple(
+            (name, variant.selectors.get(name, "")) for name in SELECTOR_ATTRIBUTES
+        )
         for variant in tier.variants
     }
 
 
-def _main_coordinate(tier: Tier, variant: Variant, model: ArchitectureModel) -> Optional[Tuple[int, int]]:
+def _main_coordinate(
+    tier: Tier, variant: Variant, model: ArchitectureModel
+) -> Optional[Tuple[int, int]]:
     architecture_map = model.maps.get(variant.map_key or tier.map_key)
     if architecture_map is None:
         return None
     found = [
-        (x, y)
-        for x, y, glyph in _cells(architecture_map)
-        if "main" in glyph.anchors
+        (x, y) for x, y, glyph in _cells(architecture_map) if "main" in glyph.anchors
     ]
     return found[0] if len(found) == 1 else None
 
@@ -2802,18 +3211,14 @@ def _stateful_fixtures(
     variant: Variant,
     building: Building,
     model: ArchitectureModel,
-) -> Optional[
-    Dict[Tuple[str, int, int], Tuple[str, str, str, str, str, str]]
-]:
+) -> Optional[Dict[Tuple[str, int, int], Tuple[str, str, str, str, str, str]]]:
     """Return exact compiled identity for every non-root stateful Object fixture."""
 
     architecture_map = model.maps.get(variant.map_key or tier.map_key)
     palette = model.palettes.get(variant.palette_key or tier.palette_key)
     if architecture_map is None or palette is None:
         return None
-    result: Dict[
-        Tuple[str, int, int], Tuple[str, str, str, str, str, str]
-    ] = {}
+    result: Dict[Tuple[str, int, int], Tuple[str, str, str, str, str, str]] = {}
     for x, y, glyph in _cells(architecture_map):
         if not glyph.stateful or not glyph.object or glyph.object == "$building":
             continue
@@ -2960,7 +3365,11 @@ def _validate_upgrade_routes(
         target = buildings.get(target_key)
         if target is None:
             issues.append(
-                Issue(source.location, "upgrade.target", f"UpgradesTo names unknown BuildKey {target_key!r}")
+                Issue(
+                    source.location,
+                    "upgrade.target",
+                    f"UpgradesTo names unknown BuildKey {target_key!r}",
+                )
             )
             continue
         if not source.plot:
@@ -2978,7 +3387,11 @@ def _validate_upgrade_routes(
         target_heart = target_key in heart_index
         if source_heart or target_heart:
             expected = heart_index.get(source_key, -1) + 1
-            if not source_heart or not target_heart or heart_index[target_key] != expected:
+            if (
+                not source_heart
+                or not target_heart
+                or heart_index[target_key] != expected
+            ):
                 issues.append(
                     Issue(
                         source.location,
@@ -3007,10 +3420,16 @@ def _validate_upgrade_routes(
         source_tiers = by_build.get(source_key, [])
         if not source_tiers:
             issues.append(
-                Issue(source.location, "upgrade.source-coverage", f"plotted predecessor {source_key!r} has no architecture tier")
+                Issue(
+                    source.location,
+                    "upgrade.source-coverage",
+                    f"plotted predecessor {source_key!r} has no architecture tier",
+                )
             )
         for before in source_tiers:
-            afters = [item for item in before.binding.tiers if item.build_key == target_key]
+            afters = [
+                item for item in before.binding.tiers if item.build_key == target_key
+            ]
             route = (
                 f"{before.binding.plan.key}/{before.binding.key}/"
                 f"{before.binding.type_key}/{before.binding.size}"
@@ -3107,7 +3526,11 @@ def validate_generated_visual_surfaces(
                 ):
                     continue
                 reference = glyph.ground
-                slot = palette.slots.get(reference[1:]) if reference.startswith("$") else None
+                slot = (
+                    palette.slots.get(reference[1:])
+                    if reference.startswith("$")
+                    else None
+                )
                 blueprint = slot.blueprint if slot is not None else reference
                 surface_by_char[char] = VISUAL_BLUEPRINT_EQUIVALENTS.get(
                     blueprint, blueprint
@@ -3166,7 +3589,11 @@ def validate_model(
         building = buildings.get(tier.build_key)
         if building is None:
             issues.append(
-                Issue(tier.location, "tier.build-key", f"unknown BuildKey {tier.build_key!r}")
+                Issue(
+                    tier.location,
+                    "tier.build-key",
+                    f"unknown BuildKey {tier.build_key!r}",
+                )
             )
             continue
         if not building.plot:
@@ -3200,13 +3627,25 @@ def validate_model(
             )
         if not building.blueprint:
             issues.append(
-                Issue(tier.location, "building.blueprint", "plot building has no concrete Blueprint")
+                Issue(
+                    tier.location,
+                    "building.blueprint",
+                    "plot building has no concrete Blueprint",
+                )
             )
         if tier.map_key not in model.maps:
-            issues.append(Issue(tier.location, "reference.map", f"unknown tier map {tier.map_key!r}"))
+            issues.append(
+                Issue(
+                    tier.location, "reference.map", f"unknown tier map {tier.map_key!r}"
+                )
+            )
         if tier.palette_key not in model.palettes:
             issues.append(
-                Issue(tier.location, "reference.palette", f"unknown tier palette {tier.palette_key!r}")
+                Issue(
+                    tier.location,
+                    "reference.palette",
+                    f"unknown tier palette {tier.palette_key!r}",
+                )
             )
         fallbacks = [variant for variant in tier.variants if variant.fallback]
         if len(fallbacks) == 1:
@@ -3285,9 +3724,7 @@ def validate_model(
                         effective_pair[1],
                     )
                 )
-                if _has_procedural_shell_signature(
-                    architecture_map, palette, building
-                ):
+                if _has_procedural_shell_signature(architecture_map, palette, building):
                     procedural_shells.setdefault(
                         (tier.build_key, effective_pair[0], effective_pair[1]), []
                     ).append((variant.key, variant.location))
@@ -3350,7 +3787,9 @@ def validate_model(
                 f"without an Alias contract: {preview}",
             )
         )
-    for (build_key, map_key, palette_key), variants in sorted(procedural_shells.items()):
+    for (build_key, map_key, palette_key), variants in sorted(
+        procedural_shells.items()
+    ):
         variant_names = ",".join(sorted(item[0] for item in variants))
         issues.append(
             Issue(
@@ -3409,11 +3848,11 @@ def _repair_invalid_xml_characters(value: str) -> str:
     def replace_entity(match: re.Match[str]) -> str:
         raw = match.group(1) or match.group(2)
         codepoint = int(raw, 16 if match.group(1) is not None else 10)
-        return match.group(0) if _valid_xml_character(codepoint) else "\uFFFD"
+        return match.group(0) if _valid_xml_character(codepoint) else "\ufffd"
 
     repaired = _NUMERIC_ENTITY_RE.sub(replace_entity, value)
     return "".join(
-        character if _valid_xml_character(ord(character)) else "\uFFFD"
+        character if _valid_xml_character(ord(character)) else "\ufffd"
         for character in repaired
     )
 
@@ -3427,12 +3866,20 @@ def _blueprint_data_from_file(
     location = _location(path, root)
     try:
         if path.is_symlink():
-            issues.append(Issue(location, "input.symlink", "XML inputs must not be symbolic links"))
+            issues.append(
+                Issue(
+                    location, "input.symlink", "XML inputs must not be symbolic links"
+                )
+            )
             return set(), []
         size = path.stat().st_size
         if size > MAX_XML_BYTES:
             issues.append(
-                Issue(location, "input.size", f"XML is {size} bytes; cap is {MAX_XML_BYTES}")
+                Issue(
+                    location,
+                    "input.size",
+                    f"XML is {size} bytes; cap is {MAX_XML_BYTES}",
+                )
             )
             return set(), []
         data = path.read_bytes()
@@ -3441,7 +3888,9 @@ def _blueprint_data_from_file(
         return set(), []
     upper = data.upper()
     if b"<!DOCTYPE" in upper or b"<!ENTITY" in upper:
-        issues.append(Issue(location, "xml.dtd", "DTD and entity declarations are forbidden"))
+        issues.append(
+            Issue(location, "xml.dtd", "DTD and entity declarations are forbidden")
+        )
         return set(), []
     try:
         xml = ET.fromstring(data)
@@ -3477,7 +3926,9 @@ def _blueprint_data_from_file(
             flags=re.IGNORECASE | re.DOTALL,
         )
         names = {
-            html.unescape(match.group(1) if match.group(1) is not None else match.group(2)).strip()
+            html.unescape(
+                match.group(1) if match.group(1) is not None else match.group(2)
+            ).strip()
             for match in matches
         }
         names.discard("")
@@ -3702,7 +4153,9 @@ def validate_passability(
                 if not resolved:
                     continue
                 any_door = any(shape.door is True for _layer, _name, shape in resolved)
-                any_solid = any(shape.solid is True for _layer, _name, shape in resolved)
+                any_solid = any(
+                    shape.solid is True for _layer, _name, shape in resolved
+                )
                 unknown_solid = [
                     name for _layer, name, shape in resolved if shape.solid is None
                 ]
@@ -3725,7 +4178,8 @@ def validate_passability(
                             Issue(
                                 variant.location,
                                 "passability.unknown",
-                                prefix + " cannot resolve inherited Physics.Solid/Door truth for "
+                                prefix
+                                + " cannot resolve inherited Physics.Solid/Door truth for "
                                 + ", ".join(repr(name) for name in unknown),
                             )
                         )
@@ -3734,7 +4188,8 @@ def validate_passability(
                             Issue(
                                 variant.location,
                                 "passability.walk-solid",
-                                prefix + " declares Pass=walk but contains a solid non-door",
+                                prefix
+                                + " declares Pass=walk but contains a solid non-door",
                             )
                         )
                 elif glyph.pass_mode == "blocked":
@@ -3743,7 +4198,8 @@ def validate_passability(
                             Issue(
                                 variant.location,
                                 "passability.blocked-door",
-                                prefix + " declares Pass=blocked but contains an authored Door",
+                                prefix
+                                + " declares Pass=blocked but contains an authored Door",
                             )
                         )
                     elif unknown_solid or unknown_door:
@@ -3752,7 +4208,8 @@ def validate_passability(
                             Issue(
                                 variant.location,
                                 "passability.unknown",
-                                prefix + " cannot resolve inherited Physics.Solid/Door truth for "
+                                prefix
+                                + " cannot resolve inherited Physics.Solid/Door truth for "
                                 + ", ".join(repr(name) for name in unknown),
                             )
                         )
@@ -3761,7 +4218,8 @@ def validate_passability(
                             Issue(
                                 variant.location,
                                 "passability.blocked-open",
-                                prefix + " declares Pass=blocked but every layer is physically open",
+                                prefix
+                                + " declares Pass=blocked but every layer is physically open",
                             )
                         )
 
@@ -3834,7 +4292,9 @@ def _render_golden(
     ]
     lines.extend(posed_rows)
     lines.append("legend:")
-    lines.append(". ground=- structure=- object=- claim=unclaimed pass=walk cover=open anchors=- stateful=no")
+    lines.append(
+        ". ground=- structure=- object=- claim=unclaimed pass=walk cover=open anchors=- stateful=no"
+    )
     for char in sorted(architecture_map.glyphs):
         glyph = architecture_map.glyphs[char]
         anchors = ",".join(glyph.anchors) or "-"
@@ -3873,7 +4333,9 @@ def make_goldens(
         building = buildings.get(tier.build_key)
         if building is None:
             continue
-        for variant in sorted(tier.variants, key=lambda item: (item.priority, item.key)):
+        for variant in sorted(
+            tier.variants, key=lambda item: (item.priority, item.key)
+        ):
             map_key = variant.map_key or tier.map_key
             palette_key = variant.palette_key or tier.palette_key
             architecture_map = model.maps.get(map_key)
@@ -3887,8 +4349,7 @@ def make_goldens(
                 or architecture_map.height <= 0
                 or len(architecture_map.rows) != architecture_map.height
                 or any(
-                    len(row) != architecture_map.width
-                    for row in architecture_map.rows
+                    len(row) != architecture_map.width for row in architecture_map.rows
                 )
             ):
                 continue
@@ -3910,7 +4371,11 @@ def make_goldens(
                 total_bytes += len(content.encode("utf-8"))
     if len(result) > MAX_GOLDENS:
         issues.append(
-            Issue("goldens", "cap.goldens", f"{len(result)} goldens exceed cap {MAX_GOLDENS}")
+            Issue(
+                "goldens",
+                "cap.goldens",
+                f"{len(result)} goldens exceed cap {MAX_GOLDENS}",
+            )
         )
     if total_bytes > MAX_GOLDEN_BYTES:
         issues.append(
@@ -3927,7 +4392,9 @@ def _prepare_output_directory(path: Path) -> Path:
     if path.is_symlink():
         raise OutputDirectoryError("output directory must not be a symbolic link")
     if not path.exists() or not path.is_dir():
-        raise OutputDirectoryError("output directory must already exist and be a directory")
+        raise OutputDirectoryError(
+            "output directory must already exist and be a directory"
+        )
     try:
         if any(path.iterdir()):
             raise OutputDirectoryError("output directory must be empty")
@@ -3951,7 +4418,9 @@ def run_check(
     repo_root = repo_root.resolve()
     if not repo_root.is_dir():
         raise ValueError("repo root must be an existing directory")
-    prepared_output = _prepare_output_directory(output_dir) if output_dir is not None else None
+    prepared_output = (
+        _prepare_output_directory(output_dir) if output_dir is not None else None
+    )
     issues: List[Issue] = []
     notices: List[Notice] = []
     runtime_heart = _runtime_heart_build_keys(repo_root)
@@ -3960,8 +4429,10 @@ def run_check(
             Issue(
                 "Growth/KingdomPlotHeartRules.cs",
                 "heart.runtime-drift",
-                "runtime heart roster " + repr(runtime_heart)
-                + " differs from architecture checker roster " + repr(HEART_BUILD_KEYS),
+                "runtime heart roster "
+                + repr(runtime_heart)
+                + " differs from architecture checker roster "
+                + repr(HEART_BUILD_KEYS),
             )
         )
     runtime_ground_strata = _runtime_ground_strata(repo_root)
@@ -3993,16 +4464,25 @@ def run_check(
             )
         )
     if not building_files:
-        issues.append(Issue("KingdomBuildings.xml", "input.missing", "no building catalogue found"))
+        issues.append(
+            Issue(
+                "KingdomBuildings.xml", "input.missing", "no building catalogue found"
+            )
+        )
     if not architecture_files:
         issues.append(
-            Issue("KingdomArchitectures*.xml", "input.missing", "no architecture files found")
+            Issue(
+                "KingdomArchitectures*.xml",
+                "input.missing",
+                "no architecture files found",
+            )
         )
     buildings = load_buildings(building_files[:MAX_XML_FILES], repo_root, issues)
     model = load_architectures(architecture_files[:MAX_XML_FILES], repo_root, issues)
     if runtime_ground_strata:
         _validate_selector_strata(model, runtime_ground_strata, issues)
     validate_model(buildings, model, issues)
+    validate_map_doctrine(model, notices)
     validate_generated_visual_surfaces(model, issues)
     maximum_payload, maximum_encoded, maximum_key = _snapshot_maximum(buildings, model)
     blueprint_resolution = "skipped"
@@ -4066,7 +4546,9 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     arguments = _parser().parse_args(argv)
     try:
-        result = run_check(arguments.repo_root, arguments.qud_base, arguments.output_dir)
+        result = run_check(
+            arguments.repo_root, arguments.qud_base, arguments.output_dir
+        )
     except (OutputDirectoryError, ValueError) as error:
         print("ARCHITECTURE CHECK v1")
         print(f"ERROR [output] --output-dir: {error}")

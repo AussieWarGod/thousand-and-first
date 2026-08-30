@@ -249,19 +249,25 @@
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
     <glyph Char="a" Ground="$ground" Structure="$wall" Object="$arcwall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="M" Ground="$ground" Structure="$wall" Object="$arcrib" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <!-- STUB under the hosted-arcology programme (AMENDED 19+): the real arcology is a
+         multi-storey megastructure spanning the parasang and some, its shell outside the
+         parasang and the city inside. Until that lands, this map is the heart-court under the
+         arcology shell ribs, kept cell-identical on every retained fixture so the rung
+         transition law holds. -->
     <row Cells="Maa##Maa##Maa##Maa#M" />
-    <row Cells="MsssscssmmsscssssssM" />
+    <row Cells="MbssscsbssssbscsssbM" />
     <row Cells="MssswwwwwwDwwwwwsssM" />
-    <row Cells="MssswIIXIIIIYIIwsssM" />
-    <row Cells="MscswIJJJJPJJJIwscsM" />
-    <row Cells="MssswIJPP@PPJJIwsssM" />
-    <row Cells="MscswIJPPBPPJJIwscsM" />
-    <row Cells="MssswIJPPPPPQJIwsssM" />
-    <row Cells="MscswIJPPEPPJJIwscsM" />
+    <row Cells="MscswIIXIIIIYIIwscsM" />
+    <row Cells="MssswIJJJJPJJJIwsssM" />
+    <row Cells="MscswIJPP@PPJJIwscsM" />
+    <row Cells="MssswIJPPBPPJJIwsssM" />
+    <row Cells="MscswIJPPPPPQJIwscsM" />
+    <row Cells="MssswIJPPEPPJJIwsssM" />
     <row Cells="MscswIJJJEJJJJIwscsM" />
     <row Cells="MssswwwwwDwwwwwwsssM" />
-    <row Cells="MsssscsssssscssssssM" />
-    <row Cells="MssssssmmssssssssssM" />
+    <row Cells="MbssmmmmmPmmmmmmssbM" />
+    <row Cells="MsscmmmcmPmmcmmmcssM" />
     <row Cells="M####M###++###M####M" />
   </map>
 
@@ -434,19 +440,26 @@
     <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
     <glyph Char="D" Ground="$mootfloor" Structure="$mootdoor" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:retained-moot-door" />
     <glyph Char="E" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:founder-ingress" />
+    <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <!-- The court is raised AROUND the settlement's retained fabric, which the rung law keeps
+         standing: the brinestalk moot hall whole at its recorded rite, the first basin behind
+         its kerb rail, the dirt rite-path. The additions are the wrap: a bench-lined cloister
+         walk across the north (the retained back door opens into it), colonnaded side aisles,
+         and a marble forecourt where the rite path runs from the worked south gate between
+         paired columns to the moot door. -->
     <row Cells="####################" />
-    <row Cells="#sssscssmmsscssssss#" />
+    <row Cells="#bssscsbssssbscsssb#" />
     <row Cells="#ssswwwwwwDwwwwwsss#" />
-    <row Cells="#ssswIIXIIIIYIIwsss#" />
-    <row Cells="#scswIJJJJPJJJIwscs#" />
-    <row Cells="#ssswIJPP@PPJJIwsss#" />
-    <row Cells="#scswIJPPBPPJJIwscs#" />
-    <row Cells="#ssswIJPPPPPQJIwsss#" />
-    <row Cells="#scswIJPPEPPJJIwscs#" />
+    <row Cells="#scswIIXIIIIYIIwscs#" />
+    <row Cells="#ssswIJJJJPJJJIwsss#" />
+    <row Cells="#scswIJPP@PPJJIwscs#" />
+    <row Cells="#ssswIJPPBPPJJIwsss#" />
+    <row Cells="#scswIJPPPPPQJIwscs#" />
+    <row Cells="#ssswIJPPEPPJJIwsss#" />
     <row Cells="#scswIJJJEJJJJIwscs#" />
     <row Cells="#ssswwwwwDwwwwwwsss#" />
-    <row Cells="#sssscsssssscssssss#" />
-    <row Cells="#ssssssmmssssssssss#" />
+    <row Cells="#bssmmmmmPmmmmmmssb#" />
+    <row Cells="#sscmmmcmPmmcmmmcss#" />
     <row Cells="#########++#########" />
   </map>
 

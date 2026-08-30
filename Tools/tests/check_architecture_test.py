@@ -150,7 +150,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
         (self.repo / "ObjectBlueprints.xml").write_text(
             '<objects><object Name="r_TestHut"><part Name="Physics" Solid="false" />'
             '</object><object Name="r_KingdomDelveDown" Inherits="StairsDown" />'
-            '<object Name="r_KingdomDelveUp" Inherits="StairsUp" /></objects>\n', encoding="utf-8"
+            '<object Name="r_KingdomDelveUp" Inherits="StairsUp" /></objects>\n',
+            encoding="utf-8",
         )
         (self.base / "ObjectBlueprints.xml").write_text(
             textwrap.dedent(
@@ -180,7 +181,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
     def check(self, output: Path | None = None):
         return CHECKER.run_check(self.repo, self.base, output)
 
-    def write_upgrade_repo(self, buildings: str | None = None, architecture: str | None = None):
+    def write_upgrade_repo(
+        self, buildings: str | None = None, architecture: str | None = None
+    ):
         if buildings is None or architecture is None:
             buildings = BUILDINGS.replace(
                 'Materials="stone:1,timber:1"',
@@ -200,7 +203,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
                 target_key = source_map.get("Key", "") + "-successor"
                 target_map.set("Key", target_key)
                 first_row = next(
-                    index for index, item in enumerate(list(target_map)) if item.tag == "row"
+                    index
+                    for index, item in enumerate(list(target_map))
+                    if item.tag == "row"
                 )
                 target_map.insert(
                     first_row,
@@ -261,7 +266,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         binding = next(
             item for item in root.findall("./plan/binding") if item.get("Size") == size
         )
-        return next(item for item in binding.findall("tier") if item.get("Level") == "1")
+        return next(
+            item for item in binding.findall("tier") if item.get("Level") == "1"
+        )
 
     @classmethod
     def successor_map(cls, root: ET.Element, size: str = "S") -> ET.Element:
@@ -271,6 +278,10 @@ class ArchitectureCheckerTests(unittest.TestCase):
     @staticmethod
     def codes(result) -> set[str]:
         return {issue.code for issue in result.issues}
+
+    @staticmethod
+    def notice_codes(result) -> set[str]:
+        return {notice.code for notice in result.notices}
 
     def test_valid_fixture_is_deterministic_and_read_only_by_default(self) -> None:
         before = sorted(path.relative_to(self.repo) for path in self.repo.rglob("*"))
@@ -284,7 +295,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertEqual(len(first.goldens), 16)
         self.assertFalse(first.goldens_written)
 
-    def write_ground_runtime(self, surface: str = "surface", underground: str = "deep") -> None:
+    def write_ground_runtime(
+        self, surface: str = "surface", underground: str = "deep"
+    ) -> None:
         growth = self.repo / "Growth"
         growth.mkdir(exist_ok=True)
         (growth / "KingdomZoningStrataRules.cs").write_text(
@@ -316,7 +329,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
             1,
         )
 
-    def test_strata_selector_accepts_only_reachable_names_and_positive_wildcards(self) -> None:
+    def test_strata_selector_accepts_only_reachable_names_and_positive_wildcards(
+        self,
+    ) -> None:
         self.write_ground_runtime()
         for expression in (
             "surface",
@@ -331,7 +346,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
                 self.write_repo(BUILDINGS, self.with_strata_selector(expression))
                 self.assertNotIn("variant.strata-unreachable", self.codes(self.check()))
 
-    def test_strata_selector_rejects_names_stratum_of_ground_cannot_return(self) -> None:
+    def test_strata_selector_rejects_names_stratum_of_ground_cannot_return(
+        self,
+    ) -> None:
         self.write_ground_runtime()
         for expression, unreachable in (
             ("underground", "underground"),
@@ -364,7 +381,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
         growth = self.repo / "Growth"
         growth.mkdir()
         (growth / "KingdomZoningStrataRules.cs").write_text(
-            "public static string StratumOfGround(bool Underground) => \"surface\";\n",
+            'public static string StratumOfGround(bool Underground) => "surface";\n',
             encoding="utf-8",
         )
         self.assertIn("selector.strata-runtime-source", self.codes(self.check()))
@@ -380,7 +397,13 @@ class ArchitectureCheckerTests(unittest.TestCase):
         binding = next(
             item for item in root.findall("./plan/binding") if item.get("Size") == "M"
         )
-        binding.remove(next(item for item in binding.findall("tier") if item.get("BuildKey") == "hut2"))
+        binding.remove(
+            next(
+                item
+                for item in binding.findall("tier")
+                if item.get("BuildKey") == "hut2"
+            )
+        )
         self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
         self.assertIn("upgrade.exact-route", self.codes(self.check()))
 
@@ -397,7 +420,11 @@ class ArchitectureCheckerTests(unittest.TestCase):
 
         buildings, architecture = self.write_upgrade_repo()
         root = ET.fromstring(architecture)
-        target = next(item for item in root.findall("./plan/binding/tier") if item.get("BuildKey") == "hut2")
+        target = next(
+            item
+            for item in root.findall("./plan/binding/tier")
+            if item.get("BuildKey") == "hut2"
+        )
         target.set("Level", "2")
         target.insert(0, ET.Element("require", {"Role": "function:market", "Min": "1"}))
         self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
@@ -408,12 +435,18 @@ class ArchitectureCheckerTests(unittest.TestCase):
     def test_upgrade_route_rejects_selector_roster_drift(self) -> None:
         buildings, architecture = self.write_upgrade_repo()
         root = ET.fromstring(architecture)
-        target = next(item for item in root.findall("./plan/binding/tier") if item.get("BuildKey") == "hut2")
+        target = next(
+            item
+            for item in root.findall("./plan/binding/tier")
+            if item.get("BuildKey") == "hut2"
+        )
         target.find("variant").set("Key", "changed-fallback")
         self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
         self.assertIn("upgrade.selector-roster", self.codes(self.check()))
 
-    def test_adjacent_tiers_reject_variant_key_mismatch_without_catalogue_edge(self) -> None:
+    def test_adjacent_tiers_reject_variant_key_mismatch_without_catalogue_edge(
+        self,
+    ) -> None:
         buildings, architecture = self.write_adjacent_repo()
         root = ET.fromstring(architecture)
         self.successor_tier(root).find("variant").set("Key", "changed-fallback")
@@ -422,7 +455,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertIn("upgrade.variant-keys", self.codes(result))
         self.assertNotIn("upgrade.selector-roster", self.codes(result))
 
-    def test_adjacent_tiers_reject_moved_main_anchor_without_catalogue_edge(self) -> None:
+    def test_adjacent_tiers_reject_moved_main_anchor_without_catalogue_edge(
+        self,
+    ) -> None:
         buildings, architecture = self.write_adjacent_repo()
         root = ET.fromstring(architecture)
         source_map = self.successor_map(root)
@@ -502,7 +537,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         )
         architecture_map = self.successor_map(root)
         first_row = next(
-            index for index, item in enumerate(list(architecture_map)) if item.tag == "row"
+            index
+            for index, item in enumerate(list(architecture_map))
+            if item.tag == "row"
         )
         architecture_map.insert(
             first_row,
@@ -590,7 +627,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertIn("map.row-width", self.codes(result))
         self.assertEqual(len(result.goldens), 12)
 
-    def test_purpose_portfolio_requires_exact_anchors_and_dedicated_stores(self) -> None:
+    def test_purpose_portfolio_requires_exact_anchors_and_dedicated_stores(
+        self,
+    ) -> None:
         buildings = BUILDINGS.replace(
             'Key="hut" Blueprint="r_TestHut" Category="housing" Plot="S"',
             'Key="deepbore" Blueprint="r_KingdomDeepBore" Category="craft" '
@@ -608,16 +647,17 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertIn("purpose.anchor-contract", self.codes(result))
         self.assertIn("purpose.fixture-blueprint", self.codes(result))
 
-    def test_reopened_exotic_requires_hidden_activation_and_exact_runtime_seams(self) -> None:
+    def test_reopened_exotic_requires_hidden_activation_and_exact_runtime_seams(
+        self,
+    ) -> None:
         buildings = BUILDINGS.replace(
             'Key="hut" Blueprint="r_TestHut" Category="housing" Plot="S"',
             'Key="stasisvault" Blueprint="r_KingdomStasisVault" Category="craft" '
             'Plot="S" Knowledge="node:chimerism"',
         )
-        architecture = (
-            ARCHITECTURE.replace('BuildKey="hut"', 'BuildKey="stasisvault"')
-            .replace('Type="housing"', 'Type="craft"')
-        )
+        architecture = ARCHITECTURE.replace(
+            'BuildKey="hut"', 'BuildKey="stasisvault"'
+        ).replace('Type="housing"', 'Type="craft"')
         self.write_repo(buildings, architecture)
         result = self.check()
         self.assertFalse(result.ok)
@@ -676,8 +716,45 @@ class ArchitectureCheckerTests(unittest.TestCase):
         result = self.check()
         self.assertTrue(result.ok, result.report())
 
+    def test_doctrine_floors_flag_pointless_doors_and_featureless_rooms(self) -> None:
+        clean = self.check()
+        self.assertTrue(clean.ok, clean.report())
+        self.assertNotIn("doctrine.pointless-door", self.notice_codes(clean))
+        self.assertNotIn("doctrine.featureless-room", self.notice_codes(clean))
+
+        # A perimeter door on the M hut that opens onto nothing inside: one walk
+        # neighbour only, so it joins fewer than two walkable cells.
+        pointless = ARCHITECTURE.replace(
+            '<row Cells="...#,b,+" />\n    <row Cells="...#####" />',
+            '<row Cells="...#,b,+" />\n    <row Cells="...#+###" />',
+        )
+        self.assertNotEqual(pointless, ARCHITECTURE)
+        self.write_repo(BUILDINGS, pointless)
+        result = self.check()
+        self.assertTrue(result.ok, result.report())
+        self.assertIn("doctrine.pointless-door", self.notice_codes(result))
+
+        # An annex behind an interior door holding no anchor, object, or ground
+        # variety: a room a door serves for nothing.
+        featureless = ARCHITECTURE.replace(
+            '<row Cells="...#,b,+" />\n'
+            '    <row Cells="...#####" />\n'
+            '    <row Cells="........" />\n'
+            '    <row Cells="........" />',
+            '<row Cells="...#,b,+" />\n'
+            '    <row Cells="...##+##" />\n'
+            '    <row Cells="#,,,,,,#" />\n'
+            '    <row Cells="########" />',
+        )
+        self.assertNotEqual(featureless, ARCHITECTURE)
+        self.write_repo(BUILDINGS, featureless)
+        result = self.check()
+        self.assertIn("doctrine.featureless-room", self.notice_codes(result))
+
     def test_schema_coverage_dimensions_and_topology_faults(self) -> None:
-        lower_root = ARCHITECTURE.replace("KingdomArchitectures", "kingdomarchitectures")
+        lower_root = ARCHITECTURE.replace(
+            "KingdomArchitectures", "kingdomarchitectures"
+        )
         self.write_repo(BUILDINGS, lower_root)
         self.assertIn("architecture.root", self.codes(self.check()))
 
@@ -714,7 +791,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.write_repo(BUILDINGS, enclosed_egress)
         self.assertIn("entrance.road-route", self.codes(self.check()))
 
-    def test_generated_yard_reachability_cannot_cross_unrouted_empty_ground(self) -> None:
+    def test_generated_yard_reachability_cannot_cross_unrouted_empty_ground(
+        self,
+    ) -> None:
         self.assertEqual(
             CHECKER.VISUAL_BLUEPRINT_EQUIVALENTS["DirtFloor"],
             CHECKER.VISUAL_BLUEPRINT_EQUIVALENTS["DirtPath"],
@@ -741,56 +820,68 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertIn("generated.surface-monoculture", codes)
 
     def test_functional_verticality_needs_runtime_owned_external_pair(self) -> None:
-        decorative = ARCHITECTURE.replace(
-            "  </palette>",
-            '    <slot Key="stair" Blueprint="Sunken Room Stairs" Role="vertical-core" '
-            'Material="stone" MinTech="hands" Natural="no" />\n  </palette>',
-            1,
-        ).replace(
-            '    <glyph Char="b"',
-            '    <glyph Char="^" Ground="$stair" Claim="building" Pass="walk" '
-            'Cover="walled" Anchors="function:vertical-core" />\n    <glyph Char="b"',
-            1,
-        ).replace('Cells="#@,,#"', 'Cells="#@^,#"')
+        decorative = (
+            ARCHITECTURE.replace(
+                "  </palette>",
+                '    <slot Key="stair" Blueprint="Sunken Room Stairs" Role="vertical-core" '
+                'Material="stone" MinTech="hands" Natural="no" />\n  </palette>',
+                1,
+            )
+            .replace(
+                '    <glyph Char="b"',
+                '    <glyph Char="^" Ground="$stair" Claim="building" Pass="walk" '
+                'Cover="walled" Anchors="function:vertical-core" />\n    <glyph Char="b"',
+                1,
+            )
+            .replace('Cells="#@,,#"', 'Cells="#@^,#"')
+        )
         self.write_repo(BUILDINGS, decorative)
         codes = self.codes(self.check())
         self.assertIn("travel.blueprint", codes)
         self.assertIn("travel.runtime-owner", codes)
 
-        same_map = ARCHITECTURE.replace(
-            "  </palette>",
-            '    <slot Key="up" Blueprint="StairsUp" Role="vertical-up" Material="stone" '
-            'MinTech="hands" Natural="no" />\n'
-            '    <slot Key="down" Blueprint="StairsDown" Role="vertical-down" Material="stone" '
-            'MinTech="hands" Natural="no" />\n  </palette>',
-            1,
-        ).replace(
-            '    <glyph Char="b"',
-            '    <glyph Char="^" Object="$up" Claim="building" Pass="walk" Cover="walled" '
-            'Anchors="travel:up" Stateful="yes" />\n'
-            '    <glyph Char="v" Object="$down" Claim="building" Pass="walk" Cover="walled" '
-            'Anchors="travel:down" Stateful="yes" />\n    <glyph Char="b"',
-            1,
-        ).replace('Cells="#@,,#"', 'Cells="#@^,#"').replace('Cells="#,b,+"', 'Cells="#vb,+"')
+        same_map = (
+            ARCHITECTURE.replace(
+                "  </palette>",
+                '    <slot Key="up" Blueprint="StairsUp" Role="vertical-up" Material="stone" '
+                'MinTech="hands" Natural="no" />\n'
+                '    <slot Key="down" Blueprint="StairsDown" Role="vertical-down" Material="stone" '
+                'MinTech="hands" Natural="no" />\n  </palette>',
+                1,
+            )
+            .replace(
+                '    <glyph Char="b"',
+                '    <glyph Char="^" Object="$up" Claim="building" Pass="walk" Cover="walled" '
+                'Anchors="travel:up" Stateful="yes" />\n'
+                '    <glyph Char="v" Object="$down" Claim="building" Pass="walk" Cover="walled" '
+                'Anchors="travel:down" Stateful="yes" />\n    <glyph Char="b"',
+                1,
+            )
+            .replace('Cells="#@,,#"', 'Cells="#@^,#"')
+            .replace('Cells="#,b,+"', 'Cells="#vb,+"')
+        )
         self.write_repo(BUILDINGS, same_map)
         codes = self.codes(self.check())
         self.assertIn("travel.link-owner", codes)
         self.assertIn("travel.same-map", codes)
 
         delve_building = BUILDINGS.replace('Key="hut"', 'Key="delve"')
-        externally_paired = ARCHITECTURE.replace(
-            'BuildKey="hut"', 'BuildKey="delve"'
-        ).replace(
-            "  </palette>",
-            '    <slot Key="down" Blueprint="r_KingdomDelveDown" Role="vertical-down" '
-            'Material="stone" MinTech="hands" Natural="no" />\n  </palette>',
-            1,
-        ).replace(
-            '    <glyph Char="b"',
-            '    <glyph Char="v" Object="$down" Claim="building" Pass="walk" '
-            'Cover="walled" Anchors="travel:down" Stateful="yes" />\n    <glyph Char="b"',
-            1,
-        ).replace('Cells="#,b,+"', 'Cells="#vb,+"')
+        externally_paired = (
+            ARCHITECTURE.replace('BuildKey="hut"', 'BuildKey="delve"')
+            .replace(
+                "  </palette>",
+                '    <slot Key="down" Blueprint="r_KingdomDelveDown" Role="vertical-down" '
+                'Material="stone" MinTech="hands" Natural="no" />\n  </palette>',
+                1,
+            )
+            .replace(
+                '    <glyph Char="b"',
+                '    <glyph Char="v" Object="$down" Claim="building" Pass="walk" '
+                'Cover="walled" Anchors="travel:down" Stateful="yes" />\n    <glyph Char="b"',
+                1,
+            )
+            .replace('Cells="#,b,+"', 'Cells="#vb,+"')
+        )
         self.write_repo(delve_building, externally_paired)
         result = self.check()
         self.assertTrue(result.ok, result.report())
@@ -836,15 +927,21 @@ class ArchitectureCheckerTests(unittest.TestCase):
             '<objects><object Name="Recovered Fixture" /><text V="&#11;" /></objects>\n',
             encoding="utf-8",
         )
-        architecture = ARCHITECTURE.replace('Blueprint="TestBed"', 'Blueprint="Recovered Fixture"')
+        architecture = ARCHITECTURE.replace(
+            'Blueprint="TestBed"', 'Blueprint="Recovered Fixture"'
+        )
         self.write_repo(BUILDINGS, architecture)
         result = self.check()
         self.assertTrue(result.ok, result.report())
-        self.assertEqual([notice.code for notice in result.notices], ["blueprint.xml-fallback"])
+        self.assertEqual(
+            [notice.code for notice in result.notices], ["blueprint.xml-fallback"]
+        )
         self.assertNotIn("blueprint.missing", self.codes(result))
 
     def test_missing_blueprint_and_dtd_are_hard_faults(self) -> None:
-        architecture = ARCHITECTURE.replace('Blueprint="TestBed"', 'Blueprint="Not A Blueprint"')
+        architecture = ARCHITECTURE.replace(
+            'Blueprint="TestBed"', 'Blueprint="Not A Blueprint"'
+        )
         self.write_repo(BUILDINGS, architecture)
         self.assertIn("blueprint.missing", self.codes(self.check()))
 
@@ -855,7 +952,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertIn("xml.dtd", self.codes(self.check()))
 
     def test_paid_material_and_declared_technology_are_architecture_truth(self) -> None:
-        unpaid = BUILDINGS.replace('Materials="stone:1,timber:1"', 'Materials="stone:1"')
+        unpaid = BUILDINGS.replace(
+            'Materials="stone:1,timber:1"', 'Materials="stone:1"'
+        )
         self.write_repo(unpaid, ARCHITECTURE)
         self.assertIn("material.unpaid", self.codes(self.check()))
 
@@ -872,9 +971,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertTrue(result.ok, result.report())
 
     def test_population_furniture_and_animated_walls_need_stable_wrappers(self) -> None:
-        unstable_bed = ARCHITECTURE.replace(
-            'Blueprint="TestBed"', 'Blueprint="Bed"'
-        )
+        unstable_bed = ARCHITECTURE.replace('Blueprint="TestBed"', 'Blueprint="Bed"')
         self.write_repo(BUILDINGS, unstable_bed)
         self.assertIn("fixture.unstable-blueprint", self.codes(self.check()))
 
@@ -898,10 +995,14 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.write_repo(BUILDINGS, solid_walk)
         self.assertIn("passability.walk-solid", self.codes(self.check()))
 
-        open_wall = (self.base / "ObjectBlueprints.xml").read_text(
-            encoding="utf-8"
-        ).replace('Name="TestWall"><part Name="Physics" Solid="true"',
-                  'Name="TestWall"><part Name="Physics" Solid="false"')
+        open_wall = (
+            (self.base / "ObjectBlueprints.xml")
+            .read_text(encoding="utf-8")
+            .replace(
+                'Name="TestWall"><part Name="Physics" Solid="true"',
+                'Name="TestWall"><part Name="Physics" Solid="false"',
+            )
+        )
         (self.base / "ObjectBlueprints.xml").write_text(open_wall, encoding="utf-8")
         self.write_repo(BUILDINGS, ARCHITECTURE)
         self.assertIn("passability.blocked-open", self.codes(self.check()))
@@ -914,7 +1015,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        for source in sorted((source_repo / "Architecture").glob("KingdomArchitectures*.xml")):
+        for source in sorted(
+            (source_repo / "Architecture").glob("KingdomArchitectures*.xml")
+        ):
             (self.repo / source.name).write_text(
                 source.read_text(encoding="utf-8"), encoding="utf-8"
             )
@@ -932,7 +1035,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
         civic_path.write_text(civic, encoding="utf-8")
         self.assertIn("heart.basin-rite", self.codes(CHECKER.run_check(self.repo)))
 
-    def test_immutable_first_basin_is_existing_authority_not_a_material_debit(self) -> None:
+    def test_immutable_first_basin_is_existing_authority_not_a_material_debit(
+        self,
+    ) -> None:
         architecture = ARCHITECTURE.replace(
             'Blueprint="TestBed" Role="sleep" Material="timber"',
             'Blueprint="r_KingdomFirstBasin" Role="sleep" Material="scrap"',
@@ -947,7 +1052,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
             CHECKER._discover(source_repo, "KingdomBuildings.xml"), source_repo, issues
         )
         model = CHECKER.load_architectures(
-            CHECKER._discover(source_repo, "KingdomArchitectures*.xml"), source_repo, issues
+            CHECKER._discover(source_repo, "KingdomArchitectures*.xml"),
+            source_repo,
+            issues,
         )
         self.assertEqual([], issues)
         payload, encoded = CHECKER._snapshot_maxima(buildings, model)
@@ -962,9 +1069,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.assertGreater(payload, 4600)
         self.assertLessEqual(payload, CHECKER.MAX_SNAPSHOT_PAYLOAD_BYTES)
         self.assertLessEqual(encoded, CHECKER.MAX_SNAPSHOT_CHARS)
-        largest_possible_text = (
-            CHECKER.SNAPSHOT_TEXT_OVERHEAD
-            + 4 * ((CHECKER.MAX_SNAPSHOT_PAYLOAD_BYTES + 2) // 3)
+        largest_possible_text = CHECKER.SNAPSHOT_TEXT_OVERHEAD + 4 * (
+            (CHECKER.MAX_SNAPSHOT_PAYLOAD_BYTES + 2) // 3
         )
         self.assertLessEqual(largest_possible_text, CHECKER.MAX_SNAPSHOT_CHARS)
 
@@ -998,7 +1104,10 @@ class ArchitectureCheckerTests(unittest.TestCase):
                     self.assertIsNotNone(route, f"{architecture_map.key} {x},{y}")
                     maximum = max(maximum, len(route[0]))
                     entrances += 1
-                    if 0 < x < architecture_map.width - 1 and 0 < y < architecture_map.height - 1:
+                    if (
+                        0 < x < architecture_map.width - 1
+                        and 0 < y < architecture_map.height - 1
+                    ):
                         interior += 1
         self.assertEqual(530, configs)
         self.assertEqual(2120, configs * 4)
@@ -1039,7 +1148,9 @@ class ArchitectureCheckerTests(unittest.TestCase):
             match = re.search(
                 rf"public const int {re.escape(name)}\s*=\s*(\d+)\s*;", runtime
             )
-            self.assertIsNotNone(match, f"runtime constant {name} is absent or no longer literal")
+            self.assertIsNotNone(
+                match, f"runtime constant {name} is absent or no longer literal"
+            )
             return int(match.group(1))
 
         mirrored = {
@@ -1063,7 +1174,8 @@ class ArchitectureCheckerTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertRegex(
-            roads, rf"public const int MaxRouteCells\s*=\s*{CHECKER.MAX_ROUTE_CELLS}\s*;"
+            roads,
+            rf"public const int MaxRouteCells\s*=\s*{CHECKER.MAX_ROUTE_CELLS}\s*;",
         )
         self.assertRegex(
             margin, rf"public const int RoadMargin\s*=\s*{CHECKER.ROAD_MARGIN}\s*;"
