@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 MOD_ID = "r_ThousandAndFirst"
-TITLE = "The Thousand and First"
+TITLE = "The Thousand and First [ALPHA]"
 AUTHOR = "AussieWarGod"
 TAGS = ("Beta", "Faction", "Settlement", "Script")
 PREVIEW = "preview.png"
@@ -135,14 +135,19 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
 
 def canonical_description(manifest: dict) -> str:
     return (
-        f"ALPHA/BETA — pre-release playtest build for Caves of Qud "
+        f"ALPHA — pre-release playtest build for Caves of Qud "
         f"v{GAME_MARKETING_VERSION} (core {GAME_CORE_BUILD}). Expect bugs, missing content, "
-        "and rough edges.\n\n"
+        "and rough edges. This listing stays ALPHA; BETA and RELEASE will ship as separate "
+        "Workshop listings when they come.\n\n"
         + manifest["description"]
         + "\n\nSource, issue tracker, and full documentation: "
         "https://github.com/AussieWarGod/thousand-and-first\n\n"
         "Open-source (MIT), with an in-game scenario test framework modders can reuse for "
         "their own additions — see the repo.\n\n"
+        "Art and buildings wanted: if you enjoy drawing Qud-style tiles or laying out "
+        "settlements, submissions are welcome on the repo — every building ships with a full "
+        "design dossier to work from, and a paid artist/designer pass over the whole catalogue "
+        "is planned for BETA.\n\n"
         "Save-format versioning: durable state carries an explicit version and a registered "
         "migration port. Updates only rarely need to change save-format; when one must, a save "
         "that a port cannot read is quarantined and reported to you, never silently corrupted.\n\n"

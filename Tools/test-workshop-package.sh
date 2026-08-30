@@ -193,14 +193,14 @@ assert_public_workshop_golden() {
 	# reviewed ALPHA/BETA pre-release frame (header, repo links, save-format note), so the
 	# fixture's canonical bytes grew from the prior 656-byte golden 99cd43c1....
 	[ "$(sha256sum "$path" | cut -d' ' -f1)" = \
-		"73477ab64eb01af9e3ccdd5d8adab1582b441adc6e3e8d25081d7c25a9d873ae" ] || {
+		"20850c4f309fc9979f9bf4203839a6256b6251a49d10d5a8e7f39467d5693b0a" ] || {
 		echo "Qud workshop.json golden hash changed" >&2; exit 1; }
 	python3 - "$path" <<'PY'
 import sys
 from pathlib import Path
 
 payload = Path(sys.argv[1]).read_bytes()
-assert len(payload) == 1199
+assert len(payload) == 1574
 assert not payload.startswith(b"\xef\xbb\xbf")
 assert payload.startswith(b'{\r\n  "WorkshopId": 123456789,\r\n')
 assert payload.endswith(b'  "ImagePath": "preview.png"\r\n}')
@@ -307,7 +307,7 @@ from pathlib import Path
 root = Path(sys.argv[1])
 manifest = {
     "id": "r_ThousandAndFirst",
-    "title": "The Thousand and First",
+    "title": "The Thousand and First [ALPHA]",
     "description": (
         "Found a faction through a water rite, plant and govern settlements, build districts, "
         "grow food, manage water, trade between cities, answer threats, and optionally leave a "
@@ -1383,6 +1383,28 @@ expect_fail "placeholder preview reviewer" "reviewedBy must name the human revie
 
 interim_preview="$(clone_case interim-preview-evidence)"
 cp -- "$SOURCE_REPO/preview.png" "$interim_preview/preview.png"
+# The live repo preview is no longer the historical interim capture, so the case pins the
+# fixture's own interim constant to the fixture preview's hash: the refusal mechanism is what
+# the gate must prove, not the 2026-08 bytes.
+python3 - "$interim_preview" <<'PY'
+import hashlib
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+digest = hashlib.sha256((root / "preview.png").read_bytes()).hexdigest()
+tool = root / "Tools" / "workshop_metadata.py"
+text = tool.read_text(encoding="utf-8")
+updated = re.sub(
+    r'INTERIM_PREVIEW_SHA256 = \(\n    "[0-9a-f]{64}"\n\)',
+    f'INTERIM_PREVIEW_SHA256 = (\n    "{digest}"\n)',
+    text,
+    count=1,
+)
+assert updated != text
+tool.write_text(updated, encoding="utf-8")
+PY
 interim_preview_candidate="$(freeze_private_candidate "$interim_preview")"
 write_workshop "$interim_preview" 2
 write_evidence "$interim_preview" "$interim_preview_candidate"
