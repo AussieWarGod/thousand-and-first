@@ -83,6 +83,17 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			if (Case == null) return Fail("The selected visual case is absent.", out Failure);
+			if (Case.YardKey != null)
+			{
+				KingdomYardRules.YardWorkSpec yard;
+				if (!KingdomYards.TryGetSpec(Case.YardKey, out yard) || yard == null)
+					return Fail("The hosted-yard registry no longer contains " + Case.YardKey + ".",
+						out Failure);
+				return string.Equals(yard.Blueprint, PrimaryVisualBlueprint(Case),
+					StringComparison.Ordinal)
+					|| Fail("The hosted-yard visual blueprint disagrees with its live registry.",
+						out Failure);
+			}
 			if (Case.CatalogueKey == null) return true;
 			KingdomRules.BuildEntry entry;
 			if (!KingdomData.TryGetBuilding(Case.CatalogueKey, out entry))

@@ -361,8 +361,33 @@ def footprint_of(raw):
     return int(match.group(1)), int(match.group(2))
 
 
+def architecture_expansion_routes(paths=None):
+    """Return exact ``(from, to, target tier)`` routes authorized by authored bindings.
+
+    A catalogue ``Plot`` is a minimum envelope.  Crossing that minimum is lawful only when one
+    concrete binding contains adjacent predecessor/successor tiers and the successor explicitly
+    declares an expanding transition.  Merely naming a larger ``UpgradesTo`` target never counts.
+    """
+    if paths is None:
+        paths = sorted(glob.glob(os.path.join("Architecture", "*.xml")))
+    routes = set()
+    for path in paths:
+        root = ET.parse(path).getroot()
+        for binding in root.iter("binding"):
+            raw_size = (binding.get("Size") or "").strip().lower()
+            target_tier = PLOT_TIERS.get(raw_size, raw_size)
+            tiers = list(binding.findall("tier"))
+            for predecessor, successor in zip(tiers, tiers[1:]):
+                mode = (successor.get("Transition") or "").strip().lower()
+                before = (predecessor.get("BuildKey") or "").strip()
+                after = (successor.get("BuildKey") or "").strip()
+                if mode in {"additive-expand", "renovate-expand"} and before and after:
+                    routes.add((before, after, target_tier))
+    return routes
+
+
 def building_reference_problems():
-    """UpgradesTo resolution, chain cycles, chain plot agreement, footprint against plot,
+    """UpgradesTo resolution, chain cycles, authored expansion authority, footprint against plot,
     mis-spelled merge keys, Districts tokens, skin tiles and Contents tables -- every one of them
     against the MERGED catalogue, because merge-by-key means the design the game builds is not the
     element any one author wrote."""
@@ -370,6 +395,7 @@ def building_reference_problems():
     if not merged:
         return []
     problems = []
+    expansion_routes = architecture_expansion_routes()
     runtime_rungs = runtime_heart_rungs()
     if runtime_rungs != HEART_RUNG_KEYS:
         problems.append(
@@ -412,8 +438,9 @@ def building_reference_problems():
             problems.append("upgrade chain loops: %s -> %s" % (" -> ".join(seen), at))
             break
 
-    # Upgrades climb within a plot; sizes compete across plots. One file may name the chain and a
-    # later file re-tier a single link, and neither element is wrong where it stands.
+    # Upgrades ordinarily climb within a plot. A minimum-envelope change is allowed only when an
+    # authored binding contains the adjacent pair and marks the successor as an exact expansion.
+    # One file may name the chain and a later file re-tier a single link, so inspect merged truth.
     for key, successor in sorted(chain.items()):
         if successor not in keys or plot_of(key) == plot_of(successor):
             continue
@@ -426,9 +453,11 @@ def building_reference_problems():
                 and plot_of(successor) == HEART_RUNG_PLOTS[rung + 1]
             ):
                 continue
+        if (key, successor, plot_of(successor)) in expansion_routes:
+            continue
         problems.append(
             "building %s stands on plot %s and improves into %s, which wants plot %s; an "
-            "improvement climbs within its own plot%s%s"
+            "improvement needs a same-plot route or an adjacent authored *-expand tier%s%s"
             % (
                 key,
                 plot_of(key) or "none",
@@ -659,6 +688,87 @@ def raising_ceremony_problems():
     return problems
 
 
+def hosted_arcology_authority():
+    """Paid hosted-lot definitions and their exact programme fixtures.
+
+    Producer identity/cardinality belongs to the runtime definition. Physical placement belongs
+    to the programme manifest. The building catalogue owns price and carried-support declarations,
+    not a second copy of either producer field.
+    """
+    problems = []
+    rules_path = os.path.join("Growth", "KingdomHostedArcologyRules.cs")
+    programme_path = os.path.join("World", "KingdomHostedArcologyProgrammeBuilder.cs")
+    topology_path = os.path.join("Growth", "KingdomHostedArcologyTopology.cs")
+    missing = [path for path in (rules_path, programme_path, topology_path)
+               if not source_family_paths(path)]
+    if missing:
+        return (["hosted arcology authority source is missing: " + path for path in missing],
+                {}, {})
+    rules = read_source_family(rules_path)
+    programme = read_source_family(programme_path)
+    topology = read_source_family(topology_path)
+
+    lots = {}
+    blocks = re.findall(
+        r"RegisterBuiltInPaidLot\(new\s+KingdomHostedLotDefinition\s*\{(.*?)\}\s*\);",
+        rules, re.S)
+    if not blocks:
+        problems.append("hosted runtime declares no built-in paid-lot definitions")
+    for block in blocks:
+        key_match = re.search(r'\bKey\s*=\s*"([^"]+)"', block)
+        supports_match = re.search(r'\bSupports\s*=\s*"([^"]*)"', block)
+        producer_match = re.search(
+            r'\bPhysicalProducerBlueprint\s*=\s*"([^"]*)"', block)
+        count_match = re.search(r"\bPhysicalProducerCount\s*=\s*([0-9]+)", block)
+        if not key_match or not supports_match:
+            problems.append("a hosted paid-lot definition lost its key or support contract")
+            continue
+        key = key_match.group(1)
+        if key in lots:
+            problems.append("hosted runtime declares paid lot %s more than once" % key)
+            continue
+        producer = producer_match.group(1) if producer_match else ""
+        count = int(count_match.group(1)) if count_match else 0
+        if bool(producer) != bool(count):
+            problems.append("hosted runtime lot %s has a ragged physical producer contract" % key)
+        lots[key] = {"supports": supports_match.group(1), "producer": producer,
+                     "count": count}
+
+    arrays = {}
+    for match in re.finditer(
+            r"private static readonly KingdomArcologyFixtureSpec\[\]\s+([A-Za-z]+)\s*=\s*"
+            r"new KingdomArcologyFixtureSpec\[\]\s*\{(.*?)\};", programme, re.S):
+        name, body = match.groups()
+        fixtures = re.findall(
+            r'F\(\s*\d+\s*,\s*\d+\s*,\s*"([^"]+)"\s*,\s*"[^"]+"\s*\)', body)
+        if len(fixtures) != len(re.findall(r"\bF\s*\(", body)):
+            problems.append("hosted programme fixture array %s is malformed" % name)
+        arrays[name] = fixtures
+
+    constants = dict(re.findall(
+        r'public const string\s+([A-Za-z]+LotKey)\s*=\s*"([^"]+)"\s*;', topology))
+    links = re.findall(
+        r"LotKey\s*==\s*KingdomHostedArcologyTopology\.([A-Za-z]+LotKey)\s*"
+        r"&&\s*Programme\s*==\s*KingdomArcologyProgramme\.([A-Za-z]+)\s*\?\s*"
+        r"([A-Za-z]+)",
+        programme, re.S)
+    fixtures_by_lot = {}
+    for constant, programme_name, array_name in links:
+        key = constants.get(constant)
+        if not key or array_name not in arrays:
+            problems.append("hosted programme links an unresolved lot key or fixture array")
+            continue
+        if key in fixtures_by_lot:
+            problems.append("hosted programme links paid lot %s more than once" % key)
+            continue
+        fixtures_by_lot[key] = {
+            "programme": programme_name, "blueprints": arrays[array_name]}
+    for key in lots:
+        if key not in fixtures_by_lot:
+            problems.append("hosted runtime lot %s has no exact paid fixture programme" % key)
+    return problems, lots, fixtures_by_lot
+
+
 def crop_chain_problems(vanilla):
     """The seed chain, walked in both directions.
 
@@ -782,15 +892,21 @@ def crop_chain_problems(vanilla):
                     "%s mixes hosted static rows with r_KingdomPlot runtime rows" % name
                 )
 
-    # And the catalogue side: a design that grows must say how much it grows.
+    # And the catalogue side: a design that grows must say how much it grows. Hosted producer
+    # identity/count comes from the runtime definition and is re-proved against the programme's
+    # actual fixture array; KingdomBuildings.xml must not carry a third, loader-ignored copy.
     used_hosted_blueprints = set()
+    authority_problems, hosted_lots, hosted_fixtures = hosted_arcology_authority()
+    problems.extend(authority_problems)
     crop_days = re.search(r"public const int CropDays = (\d+);", rules)
     yield_per_row = re.search(r"public const int YieldPerRow = (\d+);", rules)
     if not crop_days or not yield_per_row:
         problems.append("KingdomCropRules crop-rate constants are gone; hosted rates cannot be proved")
     crop_days_value = int(crop_days.group(1)) if crop_days else 0
     yield_value = int(yield_per_row.group(1)) if yield_per_row else 0
-    for building in ET.parse("RuntimeData/KingdomBuildings.xml").getroot().iter("building"):
+    buildings = list(ET.parse("RuntimeData/KingdomBuildings.xml").getroot().iter("building"))
+    buildings_by_key = {building.get("Key", ""): building for building in buildings}
+    for building in buildings:
         blueprint = building.get("Blueprint")
         if not blueprint:
             continue
@@ -801,51 +917,79 @@ def crop_chain_problems(vanilla):
                 "r_KingdomCropRows, so it would sow no rows and carry food it never grows"
                 % (building.get("Key", "<unkeyed>"), blueprint)
             )
-        producer = building.get("HostedProducerBlueprint")
-        count_text = building.get("HostedProducerCount")
-        if bool(producer) != bool(count_text):
+        stale = sorted(name for name in building.attrib if name.startswith("HostedProducer"))
+        if stale:
             problems.append(
-                "%s has a ragged hosted producer blueprint/count contract"
-                % building.get("Key", "<unkeyed>")
+                "%s carries loader-ignored %s; hosted producer authority belongs to runtime and "
+                "its exact fixture programme"
+                % (building.get("Key", "<unkeyed>"), ",".join(stale))
             )
+
+    def support_tally(raw, owner):
+        tally = {}
+        for token in (raw or "").split(","):
+            pair = token.strip().split(":")
+            if len(pair) != 2 or not pair[0].strip() or not pair[1].strip().isdigit():
+                problems.append("%s has a malformed hosted support contract" % owner)
+                continue
+            kind, amount = pair[0].strip(), int(pair[1].strip())
+            if kind in tally:
+                problems.append("%s repeats hosted support %s" % (owner, kind))
+            tally[kind] = amount
+        return tally
+
+    for key, lot in hosted_lots.items():
+        building = buildings_by_key.get(key)
+        if building is None:
+            problems.append("hosted runtime lot %s has no building catalogue row" % key)
             continue
+        runtime_supports = support_tally(lot["supports"], "runtime lot " + key)
+        building_supports = support_tally(building.get("Carries"), "building " + key)
+        if runtime_supports != building_supports:
+            problems.append(
+                "hosted runtime lot %s supports %s but its building row carries %s"
+                % (key, runtime_supports, building_supports)
+            )
+        producer, count = lot["producer"], lot["count"]
         if not producer:
             continue
         used_hosted_blueprints.add(producer)
+        manifest = hosted_fixtures.get(key, {})
+        fixture_count = manifest.get("blueprints", []).count(producer)
         rows = hosted_row_blueprints.get(producer, 0)
-        if (
-            not count_text.isdigit()
-            or str(int(count_text)) != count_text
-            or int(count_text) < 1
-            or rows < 1
-        ):
+        if count < 1 or rows < 1 or fixture_count != count:
             problems.append(
-                "%s has no exact positive hosted fixture count/row contract"
-                % building.get("Key", "<unkeyed>")
+                "%s runtime declares %d x %s, its programme places %d, and its row tag is %d"
+                % (key, count, producer, fixture_count, rows)
             )
             continue
-        food = None
-        for token in (building.get("Carries") or "").split(","):
-            pair = token.strip().split(":")
-            if len(pair) == 2 and pair[0].strip() == "food" and pair[1].strip().isdigit():
-                food = int(pair[1].strip())
-        product = int(count_text) * rows * yield_value
+        product = fixture_count * rows * yield_value
         if (
             crop_days_value < 1
             or product % crop_days_value != 0
-            or food != product // crop_days_value
+            or runtime_supports.get("food") != product // crop_days_value
+            or building_supports.get("food") != product // crop_days_value
         ):
             problems.append(
-                "%s hosted fixtures derive food:%s, not its declared food:%s"
+                "%s physical fixtures derive food:%s, not runtime/building food:%s/%s"
                 % (
-                    building.get("Key", "<unkeyed>"),
+                    key,
                     product // crop_days_value if crop_days_value else "?",
-                    food,
+                    runtime_supports.get("food"),
+                    building_supports.get("food"),
                 )
             )
+    terrace = hosted_lots.get("arcologyterrace", {})
+    if (terrace.get("producer") != "r_KingdomArcologyGrowbed"
+            or terrace.get("count") != 14
+            or hosted_fixtures.get("arcologyterrace", {}).get("programme")
+                != "HydroponicTerrace"
+            or hosted_fixtures.get("arcologyterrace", {}).get("blueprints", []).count(
+                "r_KingdomArcologyGrowbed") != 14):
+        problems.append("hosted terrace is not exactly fourteen runtime-bound physical growbeds")
     for producer in sorted(set(hosted_row_blueprints) - used_hosted_blueprints):
         problems.append(
-            "%s declares hosted crop rows but no building owns its exact producer count" % producer
+            "%s declares hosted crop rows but no runtime paid lot owns it" % producer
         )
     return problems
 

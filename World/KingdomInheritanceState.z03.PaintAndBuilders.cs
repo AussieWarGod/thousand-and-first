@@ -55,7 +55,6 @@ namespace ThousandAndFirst
 		{
 			Failure = "";
 			if (Zone == null || Zone.ZoneID != ZoneId || ZoneId != TargetZoneId
-				|| ReconstructionVersion != KingdomInheritEngine.ReconstructionVersion
 				|| (Phase != KingdomInheritancePhase.AppliedPendingDurability
 					&& Phase != KingdomInheritancePhase.Committed))
 			{
@@ -64,7 +63,10 @@ namespace ThousandAndFirst
 			KingdomSealRecord legacy;
 			KingdomSealReceipt receipt;
 			string expected;
-			if (!TryGetReservation(out legacy, out receipt) || legacy.LegacyId != LegacyId
+			if (!TryGetReservation(out legacy, out receipt)
+				|| ReconstructionVersion <= 0
+				|| ReconstructionVersion != KingdomInheritEngine.ReconstructionVersionFor(legacy)
+				|| legacy.LegacyId != LegacyId
 				|| receipt.TargetGameId != TargetGameId
 				|| !KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy, receipt,
 					ZoneId, ReconstructionVersion, out expected)

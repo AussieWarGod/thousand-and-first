@@ -80,6 +80,10 @@ namespace ThousandAndFirst
 				Jobs.WaterCosts.Count == 0 && Jobs.ProvisionCosts != null &&
 				Jobs.ProvisionCosts.Count == 0 && Jobs.OutcomeCodes != null &&
 				Jobs.OutcomeCodes.Count == 0 && Jobs.DeliverySourceEndpointIds != null &&
+				Jobs.ExpeditionDeedDispositions != null && Jobs.ExpeditionDeedDispositions.Count == 0 &&
+				Jobs.ExpeditionDeedPolityIds != null && Jobs.ExpeditionDeedPolityIds.Count == 0 &&
+				Jobs.ExpeditionDeedCauseRefs != null && Jobs.ExpeditionDeedCauseRefs.Count == 0 &&
+				Jobs.ExpeditionDeedFigureRefs != null && Jobs.ExpeditionDeedFigureRefs.Count == 0 &&
 				Jobs.DeliverySourceEndpointIds.Count == 0 &&
 				Jobs.DeliverySourceObjectIds != null && Jobs.DeliverySourceObjectIds.Count == 0 &&
 				Jobs.DeliverySourceXs != null && Jobs.DeliverySourceXs.Count == 0 &&

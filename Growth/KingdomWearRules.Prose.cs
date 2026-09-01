@@ -46,10 +46,9 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The one line a store gets when the founder is first told it is losing what it holds
-		/// (STANDARDS 7b), named by kind because a cistern and a bed of salt fail in different
-		/// sentences. Said once per work and unsaid by <see cref="LeakStoppedLine"/> when it is
-		/// mended.
+		/// The one line a live water or charge store gets when the founder is first told it is
+		/// losing what it holds (STANDARDS 7b). Food remains a persisted compatibility kind only;
+		/// its text describes retirement and never announces loss.
 		/// </summary>
 		public static string LeakBegunLine(string WorkName, LeakKind Kind)
 		{
@@ -58,7 +57,7 @@ namespace ThousandAndFirst
 			case LeakKind.Charge:
 				return WorkName + " has gone cold at the seams, and the night's charge bleeds out of it.";
 			case LeakKind.Food:
-				return WorkName + " has let the damp in, and what is stored there is going over.";
+				return WorkName + " keeps every pantry item; its old food-loss record is retired.";
 			default:
 				return WorkName + " weeps down its east face, and what it holds runs away into the ground.";
 			}
@@ -73,7 +72,7 @@ namespace ThousandAndFirst
 			case LeakKind.Charge:
 				return WorkName + " is sealed again, and keeps its heat overnight.";
 			case LeakKind.Food:
-				return WorkName + " is dry and tight again, and what is stored there keeps.";
+				return WorkName + " keeps every pantry item while it is mended.";
 			default:
 				return WorkName + " is sealed again, and holds every dram it is given.";
 			}

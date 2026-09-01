@@ -50,7 +50,7 @@ namespace ThousandAndFirst
 				|| !string.Equals(copy.LotId,
 					Building.GetStringProperty(KingdomPlots.PlotIdProperty),
 					StringComparison.Ordinal)
-				|| Building.GetIntProperty("KingdomBuilt") != 1)
+				|| !KingdomUpgrade.IsFunctionallyBuilt(Building))
 				return KingdomJointCivicViewAdapters.Invalid("moot",
 					"The moot receipt does not own this exact loaded building and ground.");
 			return KingdomJointCivicViewAdapters.Moot(copy, Status(null, copy));

@@ -40,7 +40,12 @@ namespace ThousandAndFirst
 		/// went in. Never negative &mdash; <see cref="PreserveMultiple"/> is at least one.</summary>
 		public static int MilledGain(int Crops)
 		{
-			return (Crops <= 0) ? 0 : (Crops * (PreserveMultiple - 1));
+			if (Crops <= 0)
+			{
+				return 0;
+			}
+			long gain = (long)Crops * (PreserveMultiple - 1);
+			return (gain >= int.MaxValue) ? int.MaxValue : (int)gain;
 		}
 
 		/// <summary>Raw crops a mill must grind to gain <paramref name="Gain"/> servings, rounded
@@ -52,18 +57,17 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			int per = PreserveMultiple - 1;
-			return (Gain + per - 1) / per;
+			return (int)(((long)Gain + per - 1L) / per);
 		}
 
 		/// <summary>
-		/// How much of the larder the mill is allowed to touch: everything above one day's
-		/// rations for everybody living here.
+		/// How much raw crop stock an operating mill may consider for its disclosed physical
+		/// transformation.
 		/// <para>
-		/// <b>Industry never eats before the residents do.</b> The pass draws the day's rations
-		/// first and grinds afterwards, and even then it grinds only what is left above the next
-		/// day's bill &mdash; so a settlement can never wake up hungry because its mill was busy.
-		/// This is the food half of the standing order the water lane already keeps, where the
-		/// plot spends only what upkeep and arrivals left in the stores.
+		/// Food is not billed as passive upkeep. Therefore no invisible household reserve is
+		/// subtracted here: the caller still proves an operating mill, names the crop, and can take
+		/// no more real crop items than the larders contain. The legacy population parameter stays
+		/// in the public signature for source compatibility and has no economic meaning.
 		/// </para>
 		/// </summary>
 		/// <param name="FoodStored">Servings in the dedicated larders right now.</param>
@@ -71,18 +75,14 @@ namespace ThousandAndFirst
 		/// <returns>Servings the mill may take, never negative.</returns>
 		public static int MillableStock(int FoodStored, int Population)
 		{
-			int reserve = RationsPerDay(Population);
-			int free = FoodStored - reserve;
-			return (free > 0) ? free : 0;
+			return (FoodStored > 0) ? FoodStored : 0;
 		}
 
 		// --- Where the settlement keeps its food -------------------------------------------
 		//
-		// Water's capacity is physical and lives on the blueprint (LiquidVolume MaxVolume), never
-		// in the catalogue: a design's Carries says what it adds to the sustainable LEVEL, and
-		// how much the vessel holds is a fact about the vessel. Food is given exactly the same
-		// shape - a tag on the blueprint, read by KingdomSurvey - so that a third party's own
-		// pantry declares its size the same way a third party's own cistern does.
+		// Storage capacity is physical and lives on the blueprint. A larder's tag is occupancy
+		// metadata read by KingdomSurvey, so a third party's pantry declares its size like a
+		// cistern does. Unlike water, food capacity never contributes population support.
 
 		/// <summary>
 		/// Blueprint tag naming how much food a dedicated container holds, mirroring
@@ -139,131 +139,34 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		// ==================================================================================
-		// FOOD AS A FLOW (Wave B). The water lane's mirror, function for function, and where it
-		// deliberately parts company said out loud rather than left to be inferred.
-		//
-		//   water                                  food
-		//   -----                                  ----
-		//   UpkeepDrams(pop, stage)                RationsPerDay(pop)          -- NO stage term
-		//   PolicyUpkeepForElapsed(...)            RationsForElapsed(...)      -- no policy term
-		//   FetchableDrams(hands, pool, room, d)   ForagedRations(hands, days) -- ceiling, not a pool
-		//   ResolveThirst(streak, stage, pop)      ResolveHunger(streak, stage, pop)
-		//   DryIntervalsToEmigrate / ToWither      HungryIntervalsToEmigrate / ToFamine
-		//
-		// THE TWO DIVERGENCES, AND WHY.
-		//
-		// (1) NO STAGE RATE. Water is billed 100/120/150/180/220 per hundred by stage and the
-		//     catalogue's `water` Carries are divided back out by that same percentage
-		//     (KingdomSubsidenceRules.LevelFromWater), so a cistern carrying eight settlers at
-		//     camp carries three in a city. Food is not, and the catalogue says so in its own
-		//     voice: "a dinner and a bed are both counted in people, and neither is divided by
-		//     the settlement's own thirst the way a dram is" (KingdomBuildings.xml, the big-plot
-		//     note). So one point of `food` is one settler fed for one day, flat, at every rung.
-		//     That is what makes the whole lane check out on its face: a settlement standing at
-		//     its own equilibrium eats exactly what its fields make, because the food arm of
-		//     KingdomCatalogueRules.Equilibrium IS the daily ration bill.
-		//
-		//     Putting a stage rate on food would not be a tuning knob, it would be a rewrite of
-		//     every food figure in the catalogue and of the level arithmetic that reads them.
-		//
-		// (2) NO STORES POLICY. Thrift discounts the daily draw by a quarter and its own blurb
-		//     names what it is doing - "the water-keepers ration". It is a water lever, tuned
-		//     against the water economy, and letting it silently halve the food bill as well
-		//     would make one menu choice strictly better than the other for a reason nobody
-		//     wrote. The agrarian district's upkeep discount is left on the water side for the
-		//     same reason: it is already spent there, and spending it twice is a double count.
-		// ==================================================================================
+		// Legacy API seam. Pre-alpha builds mirrored water with an abstract daily ration and
+		// hand-to-mouth foraging. The ruling record rejects that model: food stays as physical items
+		// until a player-authorized meal, recipe, industry, or trade transaction names an exact debit.
+		// Keep these symbols neutral so old source and lifecycle rows still decode without ever
+		// charging a save on upgrade.
 
-		/// <summary>
-		/// Food the settlement eats in a day: one ration per settler, at every rung.
-		/// <para>
-		/// Deliberately NOT the mirror of <see cref="UpkeepDrams(int, GrowthStage)"/>'s stage
-		/// scaling &mdash; see the divergence note above. The flatness is load-bearing rather
-		/// than lazy: it is what makes a settlement standing at its own supported level exactly
-		/// food-neutral, because <c>KingdomCatalogueRules.Equilibrium</c>'s food arm is
-		/// denominated in settlers fed and is handed through undivided.
-		/// </para>
-		/// </summary>
-		/// <param name="Population">Living settlers. Zero or fewer eats nothing.</param>
+		/// <summary>Legacy compatibility projection. Passive daily food upkeep is retired.</summary>
 		public static int RationsPerDay(int Population)
 		{
-			return (Population > 0) ? Population : 0;
+			return 0;
 		}
 
-		/// <summary>
-		/// What the settlement ate over a stretch of elapsed time, uncapped (Addendum 8 clause 1)
-		/// exactly as <see cref="PolicyUpkeepForElapsed"/> is: people go on eating whether or not
-		/// anyone is watching.
-		/// <para>
-		/// A BILL and not a debt, for the same reason the water one is: the caller draws it
-		/// against what is actually foraged and stored, both of which floor at zero, and what a
-		/// settlement could not pay it simply did not eat. Saturates rather than wrapping.
-		/// </para>
-		/// </summary>
+		/// <summary>Legacy compatibility projection. Elapsed time never creates a food bill.</summary>
 		public static int RationsForElapsed(int Population, long ElapsedTicks)
 		{
-			if (Population <= 0 || ElapsedTicks <= 0)
-			{
-				return 0;
-			}
-			return SaturateToInt(ElapsedDays(ElapsedTicks) * (long)RationsPerDay(Population));
+			return 0;
 		}
 
-		/// <summary>
-		/// Rations one pair of free hands brings in off the land in a day, before the ceiling.
-		/// The same figure as <see cref="FetchDramsPerSettler"/>, and for the same reason: a
-		/// settler spending a day on the settlement's own supply brings back a day's worth for
-		/// two.
-		/// </summary>
-		public const int ForageRationsPerHand = 2;
+		/// <summary>Legacy compatibility constant. Abstract foraging credit is retired.</summary>
+		public const int ForageRationsPerHand = 0;
 
-		/// <summary>
-		/// The most the ground around a settlement will give up in a day, however many people
-		/// walk it. This is foraging's <c>OpenWater</c> &mdash; the real thing that bounds the
-		/// haul &mdash; except that the wild does not care how many baskets you bring, so the
-		/// bound is a flat ceiling rather than a pool that drains.
-		/// <para>
-		/// Four, deliberately: the same figure as <c>KingdomCatalogueRules.FloorLevel</c> and the
-		/// same figure as the population ceiling of the Camp rung (<see cref="StageFor"/> opens
-		/// Steading at five). So a Camp feeds itself off the parasang and nothing above a Camp
-		/// does &mdash; which is exactly the shape the water lane already has, where a camp's
-		/// bill is covered by putting half its people on the detail and a Town's is not. Pinned
-		/// against both figures by test rather than by a code dependency, because
-		/// <c>KingdomCatalogueRules</c> reads this file and not the other way round.
-		/// </para>
-		/// </summary>
-		public const int MaxForagedRationsPerDay = 4;
+		/// <summary>Legacy compatibility constant. Abstract foraging credit is retired.</summary>
+		public const int MaxForagedRationsPerDay = 0;
 
-		/// <summary>
-		/// Rations the settlement's free hands bring in off the land over a stretch of days.
-		/// Foraging is hand-to-mouth: the caller pays the day's ration bill from this FIRST and
-		/// only then draws the shortfall out of the larders, which is why a camp with no larder
-		/// dedicated is not a camp that starves.
-		/// <para>
-		/// The rate is clamped BEFORE the days are multiplied, exactly as
-		/// <c>PolicyUpkeep</c> is applied to the daily rate before
-		/// <see cref="PolicyUpkeepForElapsed"/> multiplies it out: what the ground gives is a
-		/// daily fact, and a long absence is more days of it and never a bigger day.
-		/// </para>
-		/// </summary>
-		/// <param name="Hands">Settlers on neither the water detail nor a work
-		/// (<c>KingdomMaterialRules.FreeHands</c>). Hands are spent once here as everywhere:
-		/// a settler turning a mill is not also out on the ridge with a basket.</param>
-		/// <param name="Days">Whole world days since the last reckoning. Uncapped, for the reason
-		/// fetch is.</param>
+		/// <summary>Legacy compatibility projection. Only physical gathered items count as food.</summary>
 		public static int ForagedRations(int Hands, int Days)
 		{
-			if (Hands <= 0 || Days <= 0)
-			{
-				return 0;
-			}
-			long rate = (long)Hands * ForageRationsPerHand;
-			if (rate > MaxForagedRationsPerDay)
-			{
-				rate = MaxForagedRationsPerDay;
-			}
-			return SaturateToInt(rate * Days);
+			return 0;
 		}
 	}
 }

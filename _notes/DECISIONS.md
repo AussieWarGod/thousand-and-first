@@ -13,16 +13,28 @@ must say **OVERTURNED** beside the original text; silently treating it as curren
 
 ## Framing
 
-**The city is a character you have a relationship with, not a process you administer.**
+**The city is a character you have a relationship with, not a process you administer — NARROWED
+2026-09-01.**
 Drawn from what separates the survivors (Suikoden, Kenshi, Dwarf Fortress, Terraria) from the
 graveyard (Kingmaker, Fallout 4, Hearthfire). Everything else is downstream.
 *Reverses if:* playtesting shows players want a management screen after all. Unlikely; the
 evidence base is twenty games deep.
 
-**Renewal, not reclamation.** The Templar already own "reclaim and purify", so a player city
-tells the other story — Abram sowing watervine, Resheph's harborage. Later generalised: the
-system never judges, the *world* does, so any covenant (including a Girsh necropolis) is
-playable and priced by the faction web.
+**Correction:** the survivor/graveyard ranking and “twenty games deep” causal-confidence claim are
+superseded. Those games serve different audiences and are design quarries, not one natural
+experiment. The supported decision is narrower: an opt-in Qud cast-and-place should visibly answer
+adventure through people, places, and physical function while leaving scheduling and hidden
+management pressure out. Current authority: `../VISION.md` and
+`RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md`.
+
+**Renewal, not reclamation — RECONCILED 2026-09-01.** The Templar already own "reclaim and
+purify", so a player city tells the other story — Abram sowing watervine, Resheph's harborage.
+Later generalised: the system never judges, the *world* does, so any covenant (including a Girsh
+necropolis) is playable and priced by the faction web.
+
+**Correction:** Abram's renewal is tragic and contested; Resheph's harborage is poetic and
+cosmopolitan cosmic-port resonance, not sanctuary proof. The retained law is plural, priced,
+contestable covenants and situated histories, not an uncomplicated canonical renewal story.
 
 **Two ledgers, not one.** Kingdom standing is separate from personal reputation, coupled by a
 spillover that dampens as the city gains identity (50% at Camp → 10% at City).
@@ -55,6 +67,13 @@ immediately: the shopkeeper NRE would otherwise have silently killed trade and r
 
 **Everything data-driven.** Registries load through `DataManager.YieldXMLStreamsWithRoot`, so
 third-party mods extend with no code. A hardcoded catalog is a defect by our own standard.
+
+**One canonical building map; pose is runtime authority.** Architecture is authored north-facing.
+Heart or road frontage resolves north/east/south/west before payment, the preview names that
+facing, and the frozen receipt rotates map, footprint, walls, doors, fixtures, anchors, yards,
+entrances, and routes together. Four routine directional maps would multiply drift and review
+cost without adding architecture. Separate maps are allowed only when direction changes the
+design itself; an asymmetric sprite may instead need a posed asset. *User-confirmed 2026-09-01.*
 
 ## Balance
 
@@ -314,6 +333,90 @@ of those authorities; mere style mismatch never mints hostility.
 be represented by the existing caused-conflict lanes. It does not reverse for a desire to make a
 meter move.
 
+## Plot geometry and authored transformation — ruled 2026-08-31
+
+**Every plot tier uses one even-axis law:** S `6x4`, M `8x6`, L `12x10`, XL `20x18`.
+The consistent centre is the seam between two cells, so doors, aisles, monuments, and paired
+fixtures can straddle one axis in every cardinal pose. `20x18` is the largest lawful rectangular
+XL: the documented minimum mature-zone mix occupies 936 of the 957 plot cells available inside
+an ordinary 80x25 zone; `20x20` would occupy 976 and violate that budget. The interrupted
+`25x17` experiment is superseded.
+
+**Growth is authored transformation, not universal accretion.** This applies to the civic heart
+and to every other building and reserved plot. Each transition chooses the form its purpose needs:
+
+- **additive** keeps all standing fabric and adds within unused space;
+- **additive-expand** keeps all standing fabric and adds an authored wing, court, yard, or service
+  band in a proved larger envelope;
+- **renovate** may rebuild walls, floors, rooms, circulation, and stateless furnishings inside the
+  reserved lot;
+- **renovate-expand** rebuilds where useful while also growing into a proved larger envelope;
+- **replacement** is an explicit strike-and-fresh functional conversion, never an accidental
+  consequence of two maps differing.
+
+The behavior root, LotId, paid receipt, immutable founding basin, non-empty containers, liquids,
+resident/custody state, names, wear, player additions, and third-party state remain protected.
+An authored handover may relocate a protected fixture while preserving its exact object identity;
+otherwise occupied or ambiguous work refuses before debit. Static scenery is not protected merely
+because an earlier plan placed it. A larger reserved lot may support a fuller later plan; actual
+lot-envelope growth additionally proves adjacent ground, lanes, entrances, and both rectangular
+poses before commitment. Generated larger-lot plans therefore cannot universally be the source
+map plus padding.
+
+**This is the final named pre-Alpha geometry break.** No public release or tag exists, and the
+standing pre-release policy explicitly waives development-save compatibility. Pre-redesign saves
+are refused clearly rather than silently interpreting old 5x4/12x9/20x14 receipts under the new
+law. The geometry/version boundary freezes before public Alpha testing.
+
+**The hosted arcology is not an XL lot.** Its surface heart/gateway may occupy the XL reservation,
+but the megastructure itself spans one complete parasang's 3x3 local-zone grid on each of three
+storeys: 27 ordinary zones under one unique surface-root authority. The former
+single-interior/single-lot implementation is a stub and cannot satisfy the feature by enlargement
+or decoration. `_notes/ARCOLOGY-ZONE-TOPOLOGY.md` is the implementation and acceptance contract.
+
+**Quickstart stock is physical.** A pre-founded start may provide water-holding and resource-
+holding Camp shelters, filled vessels, food, and materials. Holding is not production: these
+buildings never mint water or grant an indefinite stock aura. The optional advisor explains the
+same production rules ordinary play uses.
+
+*Reverses if:* playtesting demonstrates the exact tier dimensions cannot produce readable Qud
+architecture or the mature-zone mix is itself deliberately changed. The transformation and
+physical-state laws do not reverse merely to simplify a generator.
+
+## Creed visual idioms and Mechanimist scope — ruled 2026-09-01
+
+**Creed distinction uses physical function before new art or new currency.** Joppa, Kyakukya,
+snapjaw, and farmers' stores are separate usable empty containers with native basket, fired-jar,
+red woven-cache, and timber-bin silhouettes. Generated campuses receive matching sealed direct-
+`Furniture` markers, never copied containers. Goatfolk expansion extends its witness line with
+canvas pennons instead of multiplying the authored ritual horn posts. Gyre's connected native
+bone-wall screen is vowed bone and chitin over a paid fieldstone spine; this does not invent a
+bone commodity or rewrite the existing material bill. Chavvah's school uses native crystalline-
+trunk wall fabric as a real grown cell.
+
+**Mechanimists receive no early small proxy.** Their one creed work remains the L,
+Town/workshop-gated reliquary. Machine curation needs the processional case/relic room and its
+material/standing decision; a decorative S shrine would duplicate the Six Day Stilt's existing
+pantheon, dilute the covenant, and violate the one bespoke work per admitted creed census.
+
+*Reverses if:* native capture shows one borrowed silhouette communicates the wrong interaction,
+or playtest shows Mechanimists need an earlier behavior-bearing decision that cannot be supplied
+by the existing covenant path. It does not reverse to add decorative variety alone.
+
+## Creed is an affiliation umbrella, not universal theology — ruled 2026-09-01
+
+Preserve `Creed` and `KingdomCreed` on public/save/catalogue surfaces, but resolve behavior through
+mergeable typed kinds: community, people, polity, order, doctrine, cult. Only doctrine/cult and an
+explicitly opted-in order may use belief, conversion, consecration, shrine pull, or theological
+pressure. Other kinds use covenant/allegiance/adoption and retain every architecture, arrival,
+declaration, history, and dissent role. Unknown third-party keys fail closed to neutral affiliation
+without save migration. Installed-source mapping and disputed rulings are frozen in
+`_notes/CREED-KIND-EVIDENCE.md`.
+
+*Reverses if:* updated primary Qud text changes one curated identity, or a third-party author ships
+an explicit valid semantic row. It does not reverse by inferring from faction grammar or worship
+attitudes.
+
 ## Open decisions
 
 - **Resolved 2026-08-29:** keep the trimmed canonical `VISION.md` public. Contributors need the
@@ -324,3 +427,112 @@ meter move.
   current native succession, cold-save, and subscribed-install evidence remains unsigned. Treat
   this as a release gate, not an unbuilt design question.
 - Whether to keep the WSL clone or work directly on the Windows path over `/mnt/c`.
+
+## Larger starter-housing lots show use without inventing an estate — ruled 2026-09-01
+
+S/M/L/XL names the reserved plot, not the building. The compact tent, hut, mud-hut, and recovered-
+block bills are invariant by reservation size and pay for only their exact 3x2–5x4 shelter,
+fixtures, and natural ground treatment. Generated larger lots must not multiply rooms, beds,
+storage, hearths, walls, or households to fill space the player did not buy.
+
+They also must not imply a fully developed estate through repeated formal path grids. Their
+larger-lot grammar is one exact frontage route plus a restrained family-specific court: canvas
+dooryard, timber return court, mud drying apron, or angular salvage-block corner. At XL the visible
+natural path treatment stays within 25–35 cells; the rest remains honest future yard. Optional
+yard trades arise through their own gameplay and receipts. A genuinely occupied XL estate needs a
+new paid successor or the existing strike-and-commission route into house, terrace, manor, or
+court; decoration cannot substitute for progression authority.
+
+*Reverses if:* playtest establishes a new paid size-specific starter tier and its exact material,
+labour, fixture, and transition contract. It does not reverse because empty future ground is less
+spectacular than fabricated construction.
+
+## v1.0 is the public Alpha feedback release — ruled 2026-08-31
+
+The terminal target for this work is a **public, playable v1.0 Alpha**, not an indefinitely
+polished private candidate. Its purpose is to put the complete intended game in players' hands,
+learn from real play, and make outside contribution practical. The version remains `0.2.0` while
+the tree is structurally in motion; the frozen public candidate becomes numeric `1.0.0`, with the
+Workshop title and description saying **Alpha** plainly.
+
+Alpha does not mean a knowingly incoherent vertical slice. Before publication, the complete
+founding -> building -> provisioning -> growth -> threat/relationship -> return/inheritance loop
+must be understandable and playable; every shipped building must be structurally valid,
+functionally legible, era/material coherent, reachable, and free of known release-blocking visual
+faults; install, save/cold-load, removal, and bounded catch-up must work; and the repository must
+give a new contributor one documented, reproducible path from checkout to a tested change.
+
+Alpha also does not require every subjective embellishment to be final. Once automated/static
+coverage, representative native galleries, the production persona matrix, a fresh end-to-end
+playtest, packaging, and subscribed-copy smoke are green, non-blocking aesthetic alternatives and
+balance refinements become public feedback work. A valid but ugly, misleading, inaccessible, or
+functionally nonsensical plan remains blocking; an arguable preference between two already-good
+forms does not.
+
+The checked-in developer scenario/persona harness is the production conveyor, not optional demo
+tooling. It must exercise deterministic positive and refusal paths through the real transactions,
+produce sealed machine-readable journals, and run from the frozen candidate. Static unit tests do
+not replace it; the harness does not replace native human appearance or Steam-install evidence.
+
+*Reverses if:* the author explicitly changes the public version or release channel. It does not
+reverse merely because additional post-Alpha ideas are discovered.
+
+## Building benefits are physically embodied — ruled 2026-09-01
+
+**A catalogue declaration is a cap and contract, never the source of a building benefit.** A
+house shelters people because it contains usable beds; a workshop supports craft because its
+actual benches or machines work; learning, order, spirit, luxury, charge, storage, and other
+benefits likewise come from present furniture, equipment, structure, contents, or technology.
+Food and water retain their stronger existing physical flows and custody rather than becoming
+passive provider auras.
+
+**Providers attach to things; designations decide where they count.** The core contract is one
+typed, bounded provider protocol plus one typed, bounded building-designation protocol. A
+designation names an exact stable cell set, accepted benefit kinds, and per-kind caps. A valid
+provider physically inside that designation contributes up to its declared amount only when its
+own spatial and operational conditions hold. The effective result is the lesser of valid physical
+supply and the designation's cap. Extra furniture remains ordinary usable furniture but grants no
+extra settlement lift. A provider belongs to at most one designation; overlap or uncertain custody
+fails closed and is explained by inspection rather than counted twice.
+
+**The whole designated place may count, subject to what the object actually needs.** Beds require
+covered habitable building cells. Outdoor benches, markets, shrines, or yard apparatus may opt into
+appropriate yard cells. Containers are judged by real contents and custody. Machines may require
+power, condition, access, staffing, or their existing native operation. Merely sharing a plot does
+not turn a broken, packed, carried, unreachable, unpowered, or wrongly sited object into civic
+capacity.
+
+**Authored and player-made buildings use the same law.** Shipped plot architecture supplies one
+designation source from its frozen lot/claim/footprint authority. A TAF-adopted room must persist
+the exact measured cells the founder approved; a centred catalogue rectangle is not a room.
+Exact Hearthpyre 2.2.3 supplies the same normalized source from its stable `Home` identity and
+enumerated cells through the optional bridge. Furniture may be placed by the authored stamper, the
+player, Hearthpyre, or another compatible mod; provenance does not grant or deny the benefit.
+Blueprint-name allowlists and one-off building arithmetic are not authorities.
+
+**Foreign extension faults are row-local.** A known malformed or ambiguous exact footprint becomes
+refused evidence on only those cells; healthy siblings and other providers survive. Provider-wide,
+registration, unknown-cell, and deterministic budget faults are bounded and quarantined rather
+than becoming global civic state. An already bound row pauses only when its own provider/evidence
+fails or known foreign ground now intersects it; an unrelated extension fault cannot erase it.
+Roster count above 512, or the sum of otherwise row-bounded cell-array counts above 65,536, is a
+provider-wide protocol fault checked before exact-cell enumeration; null, empty, and individually
+over-row cell arrays remain row-local and do not erase healthy siblings.
+For Hearthpyre specifically, sector identity/list-snapshot/roster churn remains provider-wide.
+The snapshot unions `Sector.Homes` with every globally indexed Home backlinking that sector, so an
+unlisted backlink is refused evidence rather than an omission. One Home's global-key, backlink,
+duplicate-custody, cell, or overlap defect does not erase unrelated Homes. Exact cells are refused
+when they can be proved, and no cell is invented when membership cannot be proved. Both Hearth
+proof passes share one 1,048,576-entry registry/backlink/cell work budget; exhaustion faults the
+provider atomically, preventing individually bounded reverse registries from multiplying into an
+unbounded nested scan.
+
+Loaded ground is evaluated from live physical state and exposes accepted, active, capped, missing,
+and ineligible providers to the player. Unloaded ground keeps only its bounded dated last-observed
+result; this feature never loads a remote zone or simulates an unwitnessed object. Moving,
+destroying, breaking, emptying, or disabling a provider changes the next live observation without
+silently rewriting its building designation.
+
+*Reverses if:* playtesting changes a named cap, spatial scope, or operational condition. The
+physical-source, exact-designation, single-assignment, inspectability, and shared-adapter laws do
+not reverse merely to simplify authored maps or preserve an old catalogue total.

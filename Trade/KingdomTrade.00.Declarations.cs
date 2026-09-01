@@ -42,7 +42,7 @@ namespace ThousandAndFirst
 		{
 			internal KingdomSystem System;
 			internal Simulation.City.KingdomCityBook City;
-			internal KingdomSettlement Away;
+			internal KingdomSettlementTopology SettlementTopology;
 			internal string GraphHash;
 			internal KingdomTradeReferenceSeal References;
 		}

@@ -36,6 +36,8 @@ namespace ThousandAndFirst
 			case KingdomCharterAction.BodyHistory:
 			case KingdomCharterAction.GuestFeastRecord:
 			case KingdomCharterAction.CivicCommitments:
+			case KingdomCharterAction.InspectBuildingBenefits:
+			case KingdomCharterAction.TrafficRecords:
 				return true;
 			default:
 				return false;

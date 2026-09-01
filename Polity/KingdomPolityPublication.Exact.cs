@@ -33,6 +33,7 @@ namespace ThousandAndFirst
 						ExactProfileList(a.BodyKeys, E.BodyKeys) &&
 						ExactProfileList(a.RoleKeys, E.RoleKeys) &&
 						ExactProfileList(a.GearKeys, E.GearKeys) &&
+						ExactExpressionCues(a.ExpressionCues, E.ExpressionCues) &&
 						ExactLoadout(a.Loadout, E.Loadout);
 			}
 			return false;
@@ -61,7 +62,10 @@ namespace ThousandAndFirst
 				if (a.RelationId == E.RelationId) return a.FromPolityId == E.FromPolityId &&
 					a.ToPolityId == E.ToPolityId && a.Band == E.Band &&
 					a.ChangedTick == E.ChangedTick && a.SourceRefs.Count == 1 &&
-					a.SourceRefs[0] == E.SourceRefs[0];
+					a.SourceRefs[0] == E.SourceRefs[0] &&
+					a.FoundationState == E.FoundationState && a.InitialBand == E.InitialBand &&
+					a.FoundationOriginalCauseRef == E.FoundationOriginalCauseRef &&
+					a.FoundationCorrectionReceiptId == E.FoundationCorrectionReceiptId;
 			}
 			return false;
 		}
@@ -75,6 +79,7 @@ namespace ThousandAndFirst
 					a.DisplayName == E.DisplayName && a.RoleKey == E.RoleKey &&
 					a.Origin == E.Origin && a.Phase == E.Phase && a.CauseRef == E.CauseRef &&
 					a.ChronicleRef == E.ChronicleRef && a.ConclusionRef == E.ConclusionRef &&
+					a.DeedSummary == E.DeedSummary &&
 					a.ResidentId == E.ResidentId &&
 					a.ResidentSettlementId == E.ResidentSettlementId;
 			}
@@ -110,6 +115,19 @@ namespace ThousandAndFirst
 		{
 			if (A == null || B == null || A.Count != B.Count) return false;
 			for (int i = 0; i < A.Count; i++) if (A[i] != B[i]) return false;
+			return true;
+		}
+
+		private static bool ExactExpressionCues(
+			System.Collections.Generic.IList<KingdomPolityExpressionCue> A,
+			System.Collections.Generic.IList<KingdomPolityExpressionCue> B)
+		{
+			if (A == null || B == null || A.Count != B.Count) return false;
+			for (int i = 0; i < A.Count; i++)
+				if (A[i].Kind != B[i].Kind || A[i].ExpressionKey != B[i].ExpressionKey ||
+					A[i].Weight != B[i].Weight || A[i].SourceKind != B[i].SourceKind ||
+					A[i].SourceValueKey != B[i].SourceValueKey || A[i].SourceRef != B[i].SourceRef ||
+					A[i].ReasonFactId != B[i].ReasonFactId) return false;
 			return true;
 		}
 	}

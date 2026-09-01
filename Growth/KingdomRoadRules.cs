@@ -45,11 +45,10 @@ namespace ThousandAndFirst
 		{
 			/// <summary>Nobody crosses here, or not often enough to show.</summary>
 			Untouched = 0,
-			/// <summary>The grass is bent and the ground shows through. Nothing is laid: Qud has
-			/// no blueprint for trodden grass, and inventing one to sit under every settler's
-			/// feet would be a lie told in art.</summary>
+			/// <summary>The surface is scuffed into a faint, discontinuous track. This is a visual
+			/// trace of use, not constructed roadwork.</summary>
 			Worn = 1,
-			/// <summary>Packed dirt. The first rung that changes what the ground looks like.</summary>
+			/// <summary>Packed earth, denser and warmer than the first foot-scars.</summary>
 			Trodden = 2,
 			/// <summary>A path, and everyone in the settlement knows where it goes.</summary>
 			Path = 3,
@@ -106,7 +105,7 @@ namespace ThousandAndFirst
 
 		// --- The ladder ------------------------------------------------------------------
 
-		/// <summary>Traffic at which the grass gives up. Nothing is laid at this rung.</summary>
+		/// <summary>Traffic at which a faint foot-scar first becomes visible.</summary>
 		public const int WornTraffic = 40;
 
 		/// <summary>Traffic at which the ground is packed dirt.</summary>

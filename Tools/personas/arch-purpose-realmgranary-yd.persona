@@ -1,0 +1,6 @@
+# Repetition risk: native tiles decide whether the dense vine lattice reads as architecture or noise.
+DESCRIPTION=Yd Freehold realm granary stages for native density review
+REQUEST=arch-purpose-realmgranary-yd;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,food,taste

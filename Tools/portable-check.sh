@@ -81,8 +81,9 @@ if dependency["requested"] != "[3.14.0, 3.14.0]" or dependency["resolved"] != "3
     raise SystemExit("portable lock must resolve exactly NUnit 3.14.0")
 
 staged = subprocess.check_output(["Tools/stage.sh", "list"], text=True).splitlines()
-if "LICENSE" not in staged or "NOTICE" not in staged:
-    raise SystemExit("runtime package omits LICENSE or NOTICE")
+for public_document in ("README.md", "PLAYTESTING.md", "SUPPORT.md", "LICENSE", "NOTICE"):
+    if public_document not in staged:
+        raise SystemExit("runtime package omits public document: " + public_document)
 for relative in staged:
     if relative.startswith(("DevTests/", "Harness/", "Tools/", "Art/", "docs/")):
         raise SystemExit("development-only path entered runtime inventory: " + relative)

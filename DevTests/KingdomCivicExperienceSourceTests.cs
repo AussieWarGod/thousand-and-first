@@ -26,7 +26,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CivicOfficeIsAnExplicitTwoResidentTitleOnlyChoice()
+		public void CivicOfficeIsAnExplicitTwoResidentChoice()
 		{
 			string context = Read("Experience/KingdomOfficeRuntime.Context.cs");
 			string open = Read("Experience/KingdomOfficeRuntime.Open.cs");
@@ -43,7 +43,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("First = null; Second = null; return false", offer);
 			StringAssert.Contains("A.ArrivedTick < B.ArrivedTick", offer);
 			StringAssert.Contains("Leave the office vacant", open);
-			StringAssert.Contains("no service, stock, capability, or succession claim", open);
+			StringAssert.Contains("exact holder also runs the finite local market", open);
+			StringAssert.Contains("At Steading or later", open);
 			StringAssert.DoesNotContain("KingdomResidents.TryHead", Logical("KingdomOfficeRuntime"));
 		}
 
@@ -76,6 +77,22 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void NoTafProductionSourceBroadcastsVanillaRoleEvents()
+		{
+			foreach (string file in Directory.GetFiles(TestMain.RepositoryRoot, "*.cs",
+				SearchOption.AllDirectories))
+			{
+				string relative = file.Substring(TestMain.RepositoryRoot.Length)
+					.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+				string first = relative.Split(Path.DirectorySeparatorChar,
+					Path.AltDirectorySeparatorChar)[0];
+				if (first == "DevTests" || first == "Harness" || first == "Tools"
+					|| first == ".git" || first == ".nuget") continue;
+				StringAssert.DoesNotContain("TakeOnRoleEvent", File.ReadAllText(file), relative);
+			}
+		}
+
+		[Test]
 		public void HolderDeathBecomesVacancyBeforeIdentityIsForgotten()
 		{
 			string offices = Read("Experience/KingdomOffices.cs");
@@ -101,6 +118,50 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void DeathVacancyRecoveryUsesTerminalRowAndQuarantinesPhysicalResidue()
+		{
+			string rules = Read("Experience/KingdomExperienceRules.Office.cs");
+			string commands = Read("Experience/KingdomOfficeRuntime.Commands.cs");
+			string reconcile = Read("Experience/KingdomOfficeRuntime.Reconcile.cs");
+			string projection = Read("Experience/KingdomOfficeRuntime.Projection.cs");
+			string marker = Read("Experience/r_KingdomOfficeProjection.cs");
+
+			StringAssert.Contains("CanCompleteOfficeDeathVacancy", rules);
+			StringAssert.Contains("TryCompleteOfficeDeathVacancy", rules);
+			StringAssert.Contains("State.SettlementId != SettlementId", rules);
+			StringAssert.Contains("resident.Standing != KingdomResidentStanding.Dead", rules);
+			StringAssert.Contains("row.VacancyCause != KingdomCivicOfficeVacancyCause.Death", rules);
+			StringAssert.Contains("civic office death requires its exact terminal resident row", rules);
+			StringAssert.Contains("Cause == KingdomCivicOfficeVacancyCause.Death", commands);
+			StringAssert.Contains("TryOfficeCityState(System, prepared.SettlementId", commands);
+			StringAssert.Contains("CanCompleteOfficeDeathVacancy", commands);
+			StringAssert.Contains("TryCompleteOfficeDeathVacancy", commands);
+			Assert.Less(commands.IndexOf("CanCompleteOfficeDeathVacancy",
+				StringComparison.Ordinal), commands.IndexOf("TryCleanupDeathProjection(System, prepared",
+				StringComparison.Ordinal));
+			StringAssert.Contains("receipt.VacancyCause == KingdomCivicOfficeVacancyCause.Death",
+				reconcile);
+			StringAssert.Contains("KingdomCivicOfficeVacancyCause cause = residentFound", reconcile);
+			Assert.Less(reconcile.IndexOf("row.Standing == KingdomResidentStanding.Dead",
+				StringComparison.Ordinal), reconcile.IndexOf("? KingdomCivicOfficeVacancyCause.AuthorityLost",
+				StringComparison.Ordinal));
+			StringAssert.Contains("context.State, out Failure", reconcile);
+			StringAssert.Contains("CanCompleteOfficeDeathVacancy", reconcile);
+			Assert.Less(reconcile.IndexOf("CanCompleteOfficeDeathVacancy",
+				StringComparison.Ordinal), reconcile.IndexOf("TryCleanupDeathProjection(System, receipt",
+				StringComparison.Ordinal));
+			StringAssert.Contains("MarkDeathResidue", commands + reconcile + projection);
+			StringAssert.Contains("resident.Standing != KingdomResidentStanding.Dead", projection);
+			StringAssert.Contains("TryCompleteTransferredMarketService", projection);
+			StringAssert.Contains("dead-holder projection cleanup threw", projection);
+			StringAssert.Contains("remains quarantined", projection);
+			StringAssert.Contains("public bool DeathResidue", marker);
+			StringAssert.Contains("&& !DeathResidue", marker);
+			StringAssert.DoesNotContain("TrySealDeparting", projection);
+			StringAssert.DoesNotContain("TryAdmitHeld", projection);
+		}
+
+		[Test]
 		public void TitleOnlyOfficeCannotBuySuccessionOrLegacyShade()
 		{
 			string succession = "";
@@ -119,7 +180,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("System.NotableShade = KingdomCeremonyRules.NotableShade",
 				legacyCeremony);
 			string seat = Read("Core/KingdomSystem.z01.State.Foundation.cs");
-			StringAssert.Contains("return (MealShade < 0) ? 0 : MealShade", seat);
+			StringAssert.Contains("return 0", seat);
 			StringAssert.DoesNotContain("NotableShade < 0) ? 0 : NotableShade", seat);
 			StringAssert.Contains("NotableShade = 0",
 				Read("Core/KingdomSystem.z23.Normalization.cs"));

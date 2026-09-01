@@ -1,0 +1,6 @@
+# First-stage civic programme: public moot, charter custody, archive, and seating.
+DESCRIPTION=medium civic hall stages for governance programme and circulation review
+REQUEST=arch-civic-hall-m;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,civic,progression,taste

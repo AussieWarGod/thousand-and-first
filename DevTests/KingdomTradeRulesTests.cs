@@ -1830,7 +1830,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal), "Trade exile must have one publish cut");
 			StringAssert.Contains("ExactSettlementTopology(liveTopology, exact)", body);
 			StringAssert.Contains("ExactSettlementTopology(finalTopology, exact)", body);
-			StringAssert.Contains("ReferenceEquals(System.Away, Seal.Away)", source);
+			StringAssert.Contains("ReferenceEquals(System.SettlementTopology,", source);
+			StringAssert.Contains("Roots.Add(System.SettlementTopology);", source);
+			StringAssert.Contains("Roots.Add(System.SettlementTopology.Get(i));", source);
+			Assert.IsFalse(source.Contains("System.Away"));
 			StringAssert.Contains("KingdomRealmArchive.TryCurrentGraphHash", source);
 			StringAssert.Contains("KingdomTradeRules.ExactReferenceSeal", source);
 		}
@@ -1881,6 +1884,41 @@ namespace ThousandAndFirst.Tests
 				new object[] { away }, out seal));
 			away.Nested.Rows = new List<string> { "row" };
 			Assert.IsFalse(KingdomTradeRules.ExactReferenceSeal(new object[] { away }, seal));
+		}
+
+		[Test]
+		public void ExactReferenceSeal_RejectsGraphEquivalentTopologyMemberReplacement()
+		{
+			KingdomSettlementTopology topology = new KingdomSettlementTopology();
+			KingdomSettlement b = new KingdomSettlement { SettlementName = "Basin" };
+			b.City.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('b', 64);
+			KingdomSettlement c = new KingdomSettlement { SettlementName = "Cairn" };
+			c.City.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('c', 64);
+			Assert.IsTrue(topology.TryAdd(b, out string failure), failure);
+			Assert.IsTrue(topology.TryAdd(c, out failure), failure);
+			Assert.IsTrue(KingdomTradeRules.TryCaptureExactReferenceSeal(
+				new object[] { topology, topology.Get(0), topology.Get(1) },
+				out KingdomTradeReferenceSeal seal));
+
+			KingdomSettlement replacement = new KingdomSettlement { SettlementName = "Cairn" };
+			replacement.City.SettlementId = c.City.SettlementId;
+			Assert.IsTrue(topology.TryReplaceReference(c, replacement, out failure), failure);
+			Assert.IsFalse(KingdomTradeRules.ExactReferenceSeal(
+				new object[] { topology, topology.Get(0), topology.Get(1) }, seal));
+		}
+
+		[Test]
+		public void ManifestDestinationUsesUniqueAuthoritativeNonSeatName()
+		{
+			string manifest = ReadRepoSource("Trade/KingdomTrade.08.ActivationAndManifest.cs");
+			string topology = ReadRepoSource("Core/KingdomSettlementTopology.cs");
+			StringAssert.Contains(
+				"System.TryFindNonSeatSettlementByName(DestinationName,", manifest);
+			StringAssert.Contains("destination.City.SettlementId", manifest);
+			Assert.IsFalse(manifest.Contains("System.Away"));
+			StringAssert.Contains("if (Settlement != null)", topology,
+				"duplicate exact names must refuse rather than choose a city");
+			StringAssert.Contains("Settlement = null;", topology);
 		}
 
 		[Test]

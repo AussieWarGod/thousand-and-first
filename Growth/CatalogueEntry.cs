@@ -39,7 +39,8 @@ namespace ThousandAndFirst
 		/// the salt-pan.</summary>
 		public bool Open;
 
-		/// <summary>Population table the finished interior is furnished from, or null.</summary>
+		/// <summary>Legacy/third-party furnishing fallback table, or null. Current authored maps
+		/// place exact fixtures and do not roll it.</summary>
 		public string Contents;
 
 		public int CostDrams;
@@ -60,6 +61,12 @@ namespace ThousandAndFirst
 
 		/// <summary>The <c>UpgradesTo</c> key, or null for a design that never changes.</summary>
 		public string SuccessorKey;
+
+		/// <summary>True only when the frozen architecture catalogue proves this exact successor as
+		/// an adjacent ordinary lot expansion. The validator remains engine-free: its caller supplies
+		/// this evidence after architecture materialisation, and a bare catalogue entry defaults to
+		/// no authority.</summary>
+		public bool SuccessorEnvelopeGrowth;
 
 		/// <summary>
 		/// Width of the footprint this tier declares, or zero for a design that fills its plot.

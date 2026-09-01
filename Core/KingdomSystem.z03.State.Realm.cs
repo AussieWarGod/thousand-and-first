@@ -207,8 +207,8 @@ namespace ThousandAndFirst
 		// (Faction.WaterRitualRecipe / ...Text, D/XRL/World/Faction.cs:72-76), and a realm has
 		// exactly one faction however many cities it holds. These four fields are the mod's copy
 		// of what was written there, so a pass can tell whether the people who live here have
-		// changed their minds without re-deriving to find out, and so the ration draw knows what
-		// to look for on the shelves. See KingdomRules.DeriveDish and KingdomDish.Ensure.
+		// changed their minds without re-deriving to find out, and so an explicit meal knows what
+		// staple to look for on the shelves. See KingdomRules.DeriveDish and KingdomDish.Ensure.
 
 		/// <summary>What the realm's favourite dish is called, lower case
 		/// (<c>KingdomRules.FavoredDish.Name</c>). Null until the realm is founded.</summary>
@@ -220,8 +220,8 @@ namespace ThousandAndFirst
 		public string DishText;
 
 		/// <summary>The preserved staple the dish is made of, and what the grinding mill makes:
-		/// the one blueprint that ties the fields, the mill and the table together. The ration
-		/// draw reaches for this first (<c>KingdomSurvey.ConsumeFood</c>).</summary>
+		/// the one blueprint that ties the fields, the mill and the table together. An explicit
+		/// shared-meal debit reaches for this first (<c>KingdomSurvey.ConsumeFood</c>).</summary>
 		public string DishStaple;
 
 		/// <summary>The creed dish this one's form was borrowed from, or empty for a realm of

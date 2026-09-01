@@ -21,8 +21,6 @@ namespace ThousandAndFirst
 			{
 			case KingdomCatalogueRules.SupportWater:
 				return "because the water here was never enough for this many";
-			case KingdomCatalogueRules.SupportFood:
-				return "because the fields here never fed this many";
 			case KingdomCatalogueRules.SupportRoof:
 				return "because there was never a roof here for this many";
 			default:
@@ -258,8 +256,6 @@ namespace ThousandAndFirst
 			{
 			case KingdomCatalogueRules.SupportWater:
 				return "and it is the water that holds it there";
-			case KingdomCatalogueRules.SupportFood:
-				return "and it is the harvest that holds it there";
 			case KingdomCatalogueRules.SupportRoof:
 				return "and there are only so many roofs";
 			default:

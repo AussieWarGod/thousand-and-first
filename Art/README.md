@@ -39,7 +39,7 @@ game's `CoQ_Data/StreamingAssets/Base` directory.
 | crown hall | `Items/sw_chair_throne.bmp` | throne |
 | arcology | `Tiles/sw_arch.png` | monumental local atrium gate |
 | creed spindle-wheel | `Items/sw_waterwheel_1.bmp` | low-tech hand wheel silhouette |
-| creed dry contact | `Items/sw_induction_station.bmp` | inert charging alignment pad |
+| creed dry contact | `Items/sw_copper_wire.bmp` | fixed coil and severed, inert charging leads |
 | creed horn post | `Terrain/sw_monument1.bmp` | standing challenge marker |
 | creed scrap altar | `Terrain/sw_monument7.bmp` | wired chrome altar shape |
 | creed arms rack | `Items/sw_weapons_rack.bmp` | empty ordered weapon rests |
@@ -51,8 +51,13 @@ game's `CoQ_Data/StreamingAssets/Base` directory.
 | generated creed cold hearth | `Items/sw_campfire_noflame.png` | stone spacing marker; no fire or light |
 | generated creed practice rack | `Items/sw_bookshelf1.bmp` | empty rack silhouette; no inventory |
 | generated creed practice slab/rail | `Items/sw_bench.bmp` | position marker; no chair behavior |
-| generated creed dry basin | `Items/sw_catchbasin.bmp` | pierced bowl; no liquid or collection |
-| generated creed rolled pallet | `Items/sw_bedroll.bmp` | weighted canvas marker; no bed behavior |
+| generated creed arms frame | `Items/sw_fence_gates_2_open.bmp` | bare timber peg-frame; no rack or inventory behavior |
+| generated creed dry basin | `Items/sw_regen_tank_broken2.bmp` | breached shell; no liquid or collection |
+| generated creed rolled pallet | `Items/sw_scroll1.bmp` | bound canvas roll; no bed behavior |
+| timber/stone civic lecterns | `Items/sw_table_low_drawers.bmp`, `Items/sw_table_cylinder.bmp` | fixed reading surface or geometric sanctum stand; never the similarly named beak mutation |
+| great-court rostrum | `Items/sw_table_ornate_1.bmp` | worked civic speaking table; never the similarly named beak mutation |
+| deep-bore cutting head | `Creatures/natural-weapon-drill.bmp` | exposed drill cone in an inert installed collar; never the portable spiral-borer satchel |
+| stilling projector | `Items/sw_forceprojector.bmp` | installed field-projector chassis with all vanilla field and power behavior omitted |
 
 Colour remains mod-owned metadata (`TileColor` and `DetailColor`), so the same vanilla silhouette
 can still carry a settlement's identity without bundling a derivative image.

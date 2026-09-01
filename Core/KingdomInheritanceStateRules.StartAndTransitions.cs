@@ -11,7 +11,9 @@ namespace ThousandAndFirst
 		{
 			return !TutorialActive
 				&& !string.Equals(GameMode, "Tutorial", StringComparison.Ordinal)
-				&& !string.Equals(GameMode, "Daily", StringComparison.Ordinal);
+				&& !string.Equals(GameMode, "Daily", StringComparison.Ordinal)
+				&& !string.Equals(GameMode, KingdomQuickstartRules.ModeId,
+					StringComparison.Ordinal);
 		}
 
 		internal static KingdomInheritanceStartFault ValidateStart(string TargetZoneId,

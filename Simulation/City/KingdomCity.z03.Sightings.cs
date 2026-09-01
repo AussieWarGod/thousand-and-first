@@ -26,7 +26,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// downstream reads the same numbers.
 		/// </para>
 		/// </summary>
-		public static void RecordSupports(KingdomSystem System, Zone Z, KingdomSurvey Survey, int Roof, int StorageCapacity, long TimeTicks)
+		public static void RecordSupports(KingdomSystem System, Zone Z, KingdomSurvey Survey,
+			int Roof, int WaterCarry, int FoodCarry, int StorageCapacity, long TimeTicks)
 		{
 			if (System == null || Z == null || Survey == null || System.City == null)
 			{
@@ -50,19 +51,10 @@ namespace ThousandAndFirst.Simulation.City
 				row.Stocks.Food,
 				row.Stocks.Materials);
 			KingdomCityState written;
-			// W7 repair. This used to be handed the RAW tally: `Supports.Water` and
-			// `Supports.Food` as KingdomSubsidence counted them. The water half agreed with every
-			// other writer by luck -- ScopedSupports only rewrites `Lift` -- but the FOOD half did
-			// not, because KingdomGrowth.FoodMadePerDay subtracts the sown fields and the mills,
-			// which deliver PHYSICALLY rather than as a credit, and the raw tally does not.
-			// Normally CheckOut wrote over it before the model ever ran on it; a reconcile that
-			// refused (an over-stuffed larder used to fault the whole pass) left the unsubtracted
-			// rate standing, and the model then booked field and mill output every day while the
-			// physical path delivered the same food -- fed twice, and the audit had nothing to say
-			// about it because both halves of ITS identity moved together. So the rate is no
-			// longer passed in at all: all three writers now read the same two expressions off the
-			// same survey, and disagreeing is unrepresentable rather than merely unlikely.
-			if (!state.TryWithZone(index, row.WithReading(TimeTicks, stocks, Floor(Roof), row.Defence, Floor(WaterMadePerDay(Survey)), Floor(FoodMadePerDay(Survey))), out written, out fault))
+			// FoodCarry is a frozen row/API column, not a live rate. Ignore even a legacy or external
+			// nonzero argument so city integration cannot mint physical food from support metadata.
+			if (!state.TryWithZone(index, row.WithReading(TimeTicks, stocks, Floor(Roof),
+				row.Defence, Floor(WaterCarry), 0), out written, out fault))
 			{
 				Refuse("record supports", fault);
 				return;
@@ -113,7 +105,7 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomCityState written;
 			if (!state.TryWithZone(
 					index,
-					row.WithReading(TimeTicks, stocks, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry)
+					row.WithReading(TimeTicks, stocks, row.Roofs, row.Defence, row.WaterCarry, 0)
 						.WithOwed(row.OwedWater, food.NextOwed, row.OwedMaterials),
 					out written,
 					out fault))

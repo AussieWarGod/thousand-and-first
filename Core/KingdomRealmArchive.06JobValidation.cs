@@ -13,6 +13,9 @@ namespace ThousandAndFirst
 				|| Value.SubjectIds == null || Value.SubjectNames == null || Value.TargetNames == null
 				|| Value.DueTicks == null || Value.WaterCosts == null || Value.ProvisionCosts == null
 				|| Value.OutcomeCodes == null || Value.DeliverySourceEndpointIds == null
+				|| Value.ExpeditionDeedDispositions == null
+				|| Value.ExpeditionDeedPolityIds == null || Value.ExpeditionDeedCauseRefs == null
+				|| Value.ExpeditionDeedFigureRefs == null
 				|| Value.DeliverySourceObjectIds == null || Value.DeliverySourceXs == null
 				|| Value.DeliverySourceYs == null || Value.DeliveryTargetEndpointIds == null
 				|| Value.DeliveryTargetObjectIds == null || Value.DeliveryTargetXs == null
@@ -41,6 +44,10 @@ namespace ThousandAndFirst
 				|| Value.TargetNames.Count != jobs || Value.DueTicks.Count != jobs
 				|| Value.WaterCosts.Count != jobs || Value.ProvisionCosts.Count != jobs
 				|| Value.OutcomeCodes.Count != jobs
+				|| Value.ExpeditionDeedDispositions.Count != jobs
+				|| Value.ExpeditionDeedPolityIds.Count != jobs
+				|| Value.ExpeditionDeedCauseRefs.Count != jobs
+				|| Value.ExpeditionDeedFigureRefs.Count != jobs
 				|| Value.DeliverySourceEndpointIds.Count != jobs
 				|| Value.DeliverySourceObjectIds.Count != jobs
 				|| Value.DeliverySourceXs.Count != jobs || Value.DeliverySourceYs.Count != jobs
@@ -64,6 +71,9 @@ namespace ThousandAndFirst
 				|| !BoundedStrings(Value.DestZoneIds, 512)
 				|| !BoundedStrings(Value.SubjectNames, 512)
 				|| !BoundedStrings(Value.TargetNames, 512)
+				|| !BoundedStrings(Value.ExpeditionDeedPolityIds, 512)
+				|| !BoundedStrings(Value.ExpeditionDeedCauseRefs, 512)
+				|| !BoundedStrings(Value.ExpeditionDeedFigureRefs, 512)
 				|| !BoundedStrings(Value.DeliverySourceObjectIds, 512)
 				|| !BoundedStrings(Value.DeliveryTargetObjectIds, 512)
 				|| !BoundedStrings(Value.DeliveryOwnerOperationIds, 512)
@@ -100,6 +110,13 @@ namespace ThousandAndFirst
 						Value.DeliveryPhases[i])) return false;
 				bool expedition = Value.Kinds[i]
 					== (int)Simulation.City.KingdomJobKind.Expedition;
+				if (!Simulation.City.KingdomJobRules.ValidExpeditionResultReceipt(
+					(Simulation.City.KingdomJobKind)Value.Kinds[i], Value.OriginCodes[i],
+					Value.OutcomeCodes[i],
+					(Simulation.City.KingdomExpeditionDeedDisposition)
+						Value.ExpeditionDeedDispositions[i],
+					Value.ExpeditionDeedPolityIds[i], Value.ExpeditionDeedCauseRefs[i],
+					Value.ExpeditionDeedFigureRefs[i])) return false;
 				if (expedition)
 				{
 					if (Value.SubjectIds[i] <= 0 || string.IsNullOrEmpty(Value.SubjectNames[i])

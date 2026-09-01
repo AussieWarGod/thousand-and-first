@@ -55,7 +55,9 @@ namespace ThousandAndFirst
 
 		// Appended, never renumbered: these ordinals are written into saves.
 		RecognizeArtifact = 47,
-		FixedWitnessWorks = 48
+		FixedWitnessWorks = 48,
+		InspectBuildingBenefits = 49,
+		TrafficRecords = 50
 	}
 
 	public enum KingdomCharterChapter
@@ -189,6 +191,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Send a water manifest", 'm', KingdomCharterAction.SendManifest),
 				KingdomCharterMenuRoute.ForAction("Commission a salvage expedition", 'e', KingdomCharterAction.SalvageExpedition),
 				KingdomCharterMenuRoute.ForAction("Set the water detail", 'w', KingdomCharterAction.SetWaterDetail),
+				KingdomCharterMenuRoute.ForAction("Read traffic records", 'r', KingdomCharterAction.TrafficRecords),
 				KingdomCharterMenuRoute.Back()
 			},
 			new KingdomCharterMenuRoute[]
@@ -212,6 +215,7 @@ namespace ThousandAndFirst
 				KingdomCharterMenuRoute.ForAction("Where the keepers' craft could go", 'k', KingdomCharterAction.TechMap),
 				KingdomCharterMenuRoute.ForAction("What the city is asking for", 'a', KingdomCharterAction.CityAsks),
 				KingdomCharterMenuRoute.ForAction("Read civic commitments together", 'c', KingdomCharterAction.CivicCommitments),
+				KingdomCharterMenuRoute.ForAction("Inspect physical building benefits", 'i', KingdomCharterAction.InspectBuildingBenefits),
 				KingdomCharterMenuRoute.Back()
 			}
 		};
@@ -273,6 +277,8 @@ namespace ThousandAndFirst
 			case KingdomCharterAction.BodyHistory:
 			case KingdomCharterAction.GuestFeastRecord:
 			case KingdomCharterAction.CivicCommitments:
+			case KingdomCharterAction.InspectBuildingBenefits:
+			case KingdomCharterAction.TrafficRecords:
 				return true;
 			default:
 				return false;

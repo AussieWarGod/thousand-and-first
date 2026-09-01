@@ -42,15 +42,16 @@ namespace ThousandAndFirst
 			// settlement with nowhere to keep food is not failing, it is waiting to be told what
 			// to do, and one that is short of a harvest is failing and must be able to say so.
 			KingdomSurvey pantry = KingdomSurvey.Take(Here, System);
-			if (pantry.FoodCapacity <= 0 && KingdomGrowth.FoodMadePerDay(pantry) > 0)
+			if (pantry.FoodCapacity <= 0 && KingdomCrops.CycledFoodPerDay(pantry) > 0)
 			{
 				return "The fields have nowhere to send a harvest. Dedicate a larder, or commission one, and what they grow will be kept.";
 			}
-			if (System.HungerStreak > 0)
+			if (!KingdomGrowth.TryCountBeds(Here, out int beds, out string roofFailure))
 			{
-				return "The larders came up short and the settlement went hungry. More fields, or fewer mouths — a field feeds four settlers to the hand.";
+				return "Lodging evidence is unavailable: " + roofFailure
+					+ ". Restore the exact room designation or its physical bed providers.";
 			}
-			if (!KingdomRules.HasRoomToHouse(System.Population, KingdomGrowth.CountBeds(Here)))
+			if (!KingdomRules.HasRoomToHouse(System.Population, beds))
 			{
 				return "There is no bed free. Commission a communal bunk — and if the beds that exist are ones nobody arriving will take, the roll says whose needs they fail.";
 			}
@@ -119,6 +120,7 @@ namespace ThousandAndFirst
 					}
 				}
 			}
+			AppendDeedNotables(stringBuilder, System, state.SettlementId);
 			stringBuilder.Append("\n\n{{K|").Append(roll.Names.Count).Append(" named; ")
 				.Append(roll.Population).Append(" living in the settlement.}}");
 			stringBuilder.Append(KingdomGuestbook.RollAppendix(System));

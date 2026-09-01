@@ -5,21 +5,21 @@ namespace ThousandAndFirst.Simulation.City
 	{
 		internal string ZoneId = "";
 
-		internal ulong StructureA;
+		internal ulong StructureA = 0UL;
 
-		internal ulong StructureB;
+		internal ulong StructureB = 0UL;
 
-		internal ulong EligibilityA;
+		internal ulong EligibilityA = 0UL;
 
-		internal ulong EligibilityB;
+		internal ulong EligibilityB = 0UL;
 
-		internal bool Observed;
+		internal bool Observed = false;
 
-		internal bool BoundaryObserved;
+		internal bool BoundaryObserved = false;
 
-		internal int Width;
+		internal int Width = 0;
 
-		internal int Height;
+		internal int Height = 0;
 
 		/// <summary>Two 64-bit words per edge; horizontal zones need at most 80 bits and
 		/// vertical edges at most 25. Retained structure only, never a full ground grid.</summary>

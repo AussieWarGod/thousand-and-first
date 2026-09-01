@@ -228,7 +228,7 @@ namespace ThousandAndFirst
 			if (!KingdomChronicleReceiptRules.TryFingerprint(e.Outbox.ChronicleReceiptId,
 				e.Outbox.Chronicle, false, null, out fingerprint)) return false;
 			KingdomChronicleDeclaration declaration = new KingdomChronicleDeclaration(
-				e.Outbox.ChronicleReceiptId, e.Outbox.Chronicle, false, null, fingerprint,
+				e.Outbox.ChronicleReceiptId, e.Outbox.Chronicle, false, null, null, fingerprint,
 				e.ChronicleOfficial, e.ChronicleOutsider, e.ChronicleBeforeHash,
 				e.ChronicleDeclaredAfterHash, e.OutsiderBeforeHash,
 				e.OutsiderDeclaredAfterHash);

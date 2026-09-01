@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HistoryKit;
+using XRL;
 
 namespace ThousandAndFirst
 {
@@ -10,141 +11,215 @@ namespace ThousandAndFirst
 		private const string DeathProperty = "tafDeathToken";
 		private const string ProofProperty = "tafFounderMemoryProof";
 
-		private static bool TryEnsureEntity(History History,
-			KingdomFounderHistoryReceipt Receipt, out HistoricEntity Entity,
-			out string Failure)
+		/// <summary>
+		/// Read-only preflight for a schema-1 HistoryKit insertion. Cleanup is allowed only when
+		/// every list, index, back-reference, id, marker, and payload proves the exact TAF object.
+		/// History's private event allocator is deliberately not rewound; retired ids remain gaps.
+		/// </summary>
+		private static bool TryInspectLegacyHistory(KingdomFounderHistoryReceipt Receipt,
+			out LegacyHistoryCleanupPlan Plan, out string Failure)
 		{
-			Entity = null;
+			Plan = null;
 			Failure = "";
-			int count = 0;
-			for (int i = 0; i < History.entities.Count; i++)
+			History history = The.Game?.sultanHistory;
+			if (history == null || history.entities == null || history.events == null
+				|| history.EntityByID == null)
 			{
-				HistoricEntity candidate = History.entities[i];
+				Failure = "Qud history is not loaded";
+				return false;
+			}
+
+			HistoricEntity entity = null;
+			int entityIndex = -1;
+			int entityMatches = 0;
+			for (int i = 0; i < history.entities.Count; i++)
+			{
+				HistoricEntity candidate = history.entities[i];
 				if (candidate != null && string.Equals(candidate.id, Receipt.EntityId,
 					StringComparison.Ordinal))
 				{
-					count++;
-					Entity = candidate;
+					entityMatches++;
+					entity = candidate;
+					entityIndex = i;
 				}
 			}
-			if (count > 1)
-				return Quarantine(Receipt, "duplicate namespaced history entities", out Failure);
-			if (Entity == null)
-			{
-				if (History.EntityByID.TryGetValue(Receipt.EntityId, out HistoricEntity indexed)
-					&& indexed != null)
-					return Quarantine(Receipt, "history index carries an unlisted entity", out Failure);
-				Entity = History.CreateEntity(Receipt.EntityId, Receipt.HistoricYear);
-				Receipt.Phase = KingdomFounderHistoryPhase.EntityPublished;
-			}
-			if (!History.EntityByID.TryGetValue(Receipt.EntityId, out HistoricEntity mapped)
-				|| !ReferenceEquals(mapped, Entity))
-				return Quarantine(Receipt, "history entity index diverged", out Failure);
-			return ValidateEntityShape(Entity, Receipt, allowMissingEvent: true, out Failure)
-				|| Quarantine(Receipt, Failure, out Failure);
-		}
+			if (entityMatches > 1)
+				return Quarantine(Receipt, "duplicate schema-1 history entities", out Failure);
 
-		private static bool TryEnsureEvent(History History, HistoricEntity Entity,
-			KingdomFounderHistoryReceipt Receipt, out string Failure)
-		{
-			Failure = "";
-			HistoricEvent found = null;
-			int marked = 0;
-			for (int i = 0; i < Entity.events.Count; i++)
+			bool indexKey = history.EntityByID.TryGetValue(Receipt.EntityId,
+				out HistoricEntity mapped);
+			bool indexed = indexKey && mapped != null;
+			if (entity == null)
 			{
-				HistoricEvent candidate = Entity.events[i];
-				if (candidate != null && string.Equals(candidate.GetEventProperty(
+				if (indexKey)
+					return Quarantine(Receipt,
+						"schema-1 history index carries an unlisted entity", out Failure);
+				if (LegacyHistoryEventsRemain(history, Receipt))
+					return Quarantine(Receipt,
+						"schema-1 history events remain without their owned entity", out Failure);
+				Plan = new LegacyHistoryCleanupPlan(history);
+				return true;
+			}
+			if (!indexed || !ReferenceEquals(mapped, entity))
+				return Quarantine(Receipt, "schema-1 history entity index diverged", out Failure);
+			if (!ReferenceEquals(entity._history, history) || entity.events == null
+				|| entity.events.Count < 1 || entity.events.Count > 2)
+				return Quarantine(Receipt, "schema-1 history entity graph diverged", out Failure);
+
+			HistoricEvent created = null;
+			HistoricEvent marked = null;
+			for (int i = 0; i < entity.events.Count; i++)
+			{
+				HistoricEvent candidate = entity.events[i];
+				if (candidate != null && candidate.GetType() == typeof(CreatedHistoricEvent))
+				{
+					if (created != null)
+						return Quarantine(Receipt,
+							"schema-1 history has duplicate creation events", out Failure);
+					created = candidate;
+				}
+				else if (candidate != null && string.Equals(candidate.GetEventProperty(
 					KingdomFounderHistoryRules.EventMarker), Receipt.ProofId,
 					StringComparison.Ordinal))
 				{
-					marked++;
-					found = candidate;
+					if (marked != null)
+						return Quarantine(Receipt,
+							"schema-1 history has duplicate marked events", out Failure);
+					marked = candidate;
 				}
+				else return Quarantine(Receipt,
+					"schema-1 history entity carries an unowned event", out Failure);
 			}
-			if (marked > 1)
-				return Quarantine(Receipt, "duplicate founder-memory history events", out Failure);
-			if (found == null)
+			if (!CreatedEventExact(history, entity, created, Receipt))
+				return Quarantine(Receipt, "schema-1 creation event diverged", out Failure);
+			if (marked != null && !MarkedEventExact(history, entity, marked, Receipt))
+				return Quarantine(Receipt, "schema-1 founder event diverged", out Failure);
+			if (!LegacyPhaseAllowsEvent(Receipt, marked != null))
+				return Quarantine(Receipt,
+					"schema-1 history event disagrees with its frozen phase", out Failure);
+
+			List<HistoricEvent> ownedEvents = new List<HistoricEvent> { created };
+			if (marked != null) ownedEvents.Add(marked);
+			List<int> historyEventIndices = new List<int>();
+			for (int i = 0; i < ownedEvents.Count; i++)
 			{
-				if (!ValidateEntityShape(Entity, Receipt, allowMissingEvent: true, out Failure))
-					return Quarantine(Receipt, Failure, out Failure);
-				HistoricEvent created = new HistoricEvent
+				HistoricEvent owned = ownedEvents[i];
+				int references = 0;
+				int idMatches = 0;
+				int at = -1;
+				for (int j = 0; j < history.events.Count; j++)
 				{
-					duration = 0L,
-					eventProperties = new Dictionary<string, string>
-					{
-						{ KingdomFounderHistoryRules.EventMarker, Receipt.ProofId },
-						{ "gospel", Receipt.Gospel }
-					},
-					entityProperties = ExpectedEntityProperties(Receipt)
-				};
-				Entity.ApplyEvent(created, Receipt.HistoricYear);
-				found = created;
+					HistoricEvent candidate = history.events[j];
+					if (ReferenceEquals(candidate, owned)) { references++; at = j; }
+					if (candidate != null && candidate.id == owned.id) idMatches++;
+				}
+				if (references != 1 || idMatches != 1 || at < 0)
+					return Quarantine(Receipt,
+						"schema-1 history event index diverged", out Failure);
+				historyEventIndices.Add(at);
 			}
-			if (!ValidateEvent(History, Entity, found, Receipt, out Failure))
-				return Quarantine(Receipt, Failure, out Failure);
-			if (Receipt.EventId > 0L && Receipt.EventId != found.id)
-				return Quarantine(Receipt, "history event id changed", out Failure);
-			Receipt.EventId = found.id;
-			if (Receipt.Phase < KingdomFounderHistoryPhase.EventPublished)
-				Receipt.Phase = KingdomFounderHistoryPhase.EventPublished;
+			if (OtherEntityOwnsLegacyEvent(history, entity, ownedEvents, Receipt))
+				return Quarantine(Receipt,
+					"schema-1 history event is shared or duplicated", out Failure);
+
+			Plan = new LegacyHistoryCleanupPlan(history, entity, entityIndex,
+				ownedEvents, historyEventIndices);
 			return true;
 		}
 
-		private static bool ValidateEntityShape(HistoricEntity Entity,
-			KingdomFounderHistoryReceipt Receipt, bool allowMissingEvent, out string Failure)
+		private static bool CreatedEventExact(History History, HistoricEntity Entity,
+			HistoricEvent Event, KingdomFounderHistoryReceipt Receipt)
 		{
-			Failure = "";
-			if (Entity == null || Entity.events == null || Entity.events.Count < 1
-				|| Entity.events.Count > 2)
+			return Event != null && Event.id > 0L && Event.year == Receipt.HistoricYear
+				&& Event.duration == 0L && ReferenceEquals(Event.entity, Entity)
+				&& ReferenceEquals(Event.history, History)
+				&& Empty(Event.eventProperties) && Empty(Event.entityProperties)
+				&& Empty(Event.addedListProperties) && Empty(Event.removedListProperties)
+				&& Empty(Event.perspectives);
+		}
+
+		private static bool MarkedEventExact(History History, HistoricEntity Entity,
+			HistoricEvent Event, KingdomFounderHistoryReceipt Receipt)
+		{
+			Dictionary<string, string> expected = ExpectedLegacyEntityProperties(Receipt);
+			return Event.GetType() == typeof(HistoricEvent) && Event.id > 0L
+				&& Event.year == Receipt.HistoricYear && Event.duration == 0L
+				&& ReferenceEquals(Event.entity, Entity) && ReferenceEquals(Event.history, History)
+				&& Event.eventProperties != null && Event.eventProperties.Count == 2
+				&& Event.GetEventProperty(KingdomFounderHistoryRules.EventMarker) == Receipt.ProofId
+				&& Event.GetEventProperty("gospel") == Receipt.Gospel
+				&& ExactProperties(Event.entityProperties, expected)
+				&& Empty(Event.addedListProperties) && Empty(Event.removedListProperties)
+				&& Empty(Event.perspectives)
+				&& (Receipt.EventId == 0L || Receipt.EventId == Event.id);
+		}
+
+		private static bool LegacyPhaseAllowsEvent(KingdomFounderHistoryReceipt Receipt,
+			bool HasMarkedEvent)
+		{
+			if (Receipt.LegacyPhase == KingdomFounderHistoryPhase.EntityPublished)
+				return !HasMarkedEvent && Receipt.EventId == 0L;
+			if (Receipt.LegacyPhase == KingdomFounderHistoryPhase.EventPublished
+				|| Receipt.LegacyPhase == KingdomFounderHistoryPhase.NotePublished
+				|| Receipt.LegacyPhase == KingdomFounderHistoryPhase.Committed)
+				return HasMarkedEvent && Receipt.EventId > 0L;
+			return Receipt.LegacyPhase == KingdomFounderHistoryPhase.Quarantined;
+		}
+
+		private static bool LegacyHistoryEventsRemain(History History,
+			KingdomFounderHistoryReceipt Receipt)
+		{
+			for (int i = 0; i < History.events.Count; i++)
 			{
-				Failure = "history entity carries an unexpected event graph";
-				return false;
-			}
-			int created = 0;
-			int marked = 0;
-			for (int i = 0; i < Entity.events.Count; i++)
-			{
-				HistoricEvent item = Entity.events[i];
-				if (item is CreatedHistoricEvent && item.year == Receipt.HistoricYear
-					&& item.duration == 0L) created++;
-				else if (item != null && string.Equals(item.GetEventProperty(
+				HistoricEvent candidate = History.events[i];
+				if (candidate == null) continue;
+				if (string.Equals(candidate.entity?.id, Receipt.EntityId,
+					StringComparison.Ordinal)) return true;
+				if (Receipt.EventId > 0L && candidate.id == Receipt.EventId) return true;
+				if (string.Equals(candidate.GetEventProperty(
 					KingdomFounderHistoryRules.EventMarker), Receipt.ProofId,
-					StringComparison.Ordinal)) marked++;
-				else
+					StringComparison.Ordinal)) return true;
+			}
+			return false;
+		}
+
+		private static bool OtherEntityOwnsLegacyEvent(History History,
+			HistoricEntity Owner, List<HistoricEvent> OwnedEvents,
+			KingdomFounderHistoryReceipt Receipt)
+		{
+			for (int i = 0; i < History.entities.Count; i++)
+			{
+				HistoricEntity candidate = History.entities[i];
+				if (candidate == null || ReferenceEquals(candidate, Owner)
+					|| candidate.events == null) continue;
+				for (int j = 0; j < candidate.events.Count; j++)
 				{
-					Failure = "history entity carries an unowned event";
-					return false;
+					HistoricEvent item = candidate.events[j];
+					if (item == null) continue;
+					for (int k = 0; k < OwnedEvents.Count; k++)
+						if (ReferenceEquals(item, OwnedEvents[k]) || item.id == OwnedEvents[k].id)
+							return true;
+					if (string.Equals(item.GetEventProperty(
+						KingdomFounderHistoryRules.EventMarker), Receipt.ProofId,
+						StringComparison.Ordinal)) return true;
 				}
 			}
-			if (created != 1 || marked > 1 || (!allowMissingEvent && marked != 1))
+			for (int i = 0; i < History.events.Count; i++)
 			{
-				Failure = "history entity event cardinality diverged";
-				return false;
+				HistoricEvent item = History.events[i];
+				if (item == null) continue;
+				bool owned = false;
+				for (int j = 0; j < OwnedEvents.Count; j++)
+					if (ReferenceEquals(item, OwnedEvents[j])) { owned = true; break; }
+				if (!owned && (string.Equals(item.entity?.id, Receipt.EntityId,
+					StringComparison.Ordinal) || string.Equals(item.GetEventProperty(
+						KingdomFounderHistoryRules.EventMarker), Receipt.ProofId,
+						StringComparison.Ordinal))) return true;
 			}
-			return true;
+			return false;
 		}
 
-		private static bool ValidateEvent(History History, HistoricEntity Entity,
-			HistoricEvent Event, KingdomFounderHistoryReceipt Receipt, out string Failure)
-		{
-			Failure = "";
-			Dictionary<string, string> expected = ExpectedEntityProperties(Receipt);
-			if (Event == null || Event.id <= 0L || Event.year != Receipt.HistoricYear
-				|| Event.duration != 0L || !ReferenceEquals(Event.entity, Entity)
-				|| !ReferenceEquals(Event.history, History)
-				|| Event.eventProperties == null || Event.eventProperties.Count != 2
-				|| Event.GetEventProperty(KingdomFounderHistoryRules.EventMarker) != Receipt.ProofId
-				|| Event.GetEventProperty("gospel") != Receipt.Gospel
-				|| !ExactProperties(Event.entityProperties, expected)
-				|| !ReferenceEquals(History.GetEvent(Event.id), Event))
-			{
-				Failure = "founder-memory history event diverged";
-				return false;
-			}
-			return ValidateEntityShape(Entity, Receipt, allowMissingEvent: false, out Failure);
-		}
-
-		private static Dictionary<string, string> ExpectedEntityProperties(
+		private static Dictionary<string, string> ExpectedLegacyEntityProperties(
 			KingdomFounderHistoryReceipt Receipt)
 		{
 			return new Dictionary<string, string>
@@ -167,5 +242,11 @@ namespace ThousandAndFirst
 					|| !string.Equals(value, pair.Value, StringComparison.Ordinal)) return false;
 			return true;
 		}
+
+		private static bool Empty<TKey, TValue>(Dictionary<TKey, TValue> Value)
+		{
+			return Value == null || Value.Count == 0;
+		}
+
 	}
 }

@@ -253,7 +253,7 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
-		public void WireV5MigratesAndRewritesStableV6()
+		public void WireV5MigratesAndRewritesStableCurrent()
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV5Fixture(source);
@@ -268,6 +268,26 @@ namespace ThousandAndFirst.DevTests
 				BitConverter.ToInt32(current, 4));
 			CollectionAssert.AreEqual(current, KingdomPolityCodec.EncodeEnvelope(
 				KingdomPolityCodec.DecodeEnvelope(current)));
+		}
+
+		[Test]
+		public void WireV6MigratesWithoutInventingTypedExpression()
+		{
+			KingdomPolityLedger source = KingdomPolityTestData.Full();
+			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV6Fixture(source);
+			Assert.AreEqual(KingdomPolityCodec.PreviousWireVersion,
+				BitConverter.ToInt32(prior, 4));
+			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
+			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
+			Assert.AreEqual(KingdomPolityRules.PreviousFormatVersion,
+				migrated.MigratedFromVersion);
+			for (int i = 0; i < migrated.Profiles.Count; i++)
+			{
+				Assert.AreEqual(KingdomPolityProfileRules.LegacyRulesVersion,
+					migrated.Profiles[i].RulesVersion);
+				CollectionAssert.IsEmpty(migrated.Profiles[i].ExpressionCues);
+			}
+			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 		}
 
 		/// <summary>

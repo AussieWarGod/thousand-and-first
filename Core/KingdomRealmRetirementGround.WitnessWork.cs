@@ -150,7 +150,7 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item) || item.CurrentZone != Zone
 					|| item.CurrentCell == null || !seen.Add(item)) continue;
 				survey.Objects.Add(item);
-				if (item.GetIntProperty("KingdomBuilt") == 1
+				if (KingdomUpgrade.IsFunctionallyBuilt(item)
 					&& KingdomWitnessWorkProjectionRuntime.SupportsFixture(item.Blueprint))
 					survey.Cairns.Add(item);
 			}

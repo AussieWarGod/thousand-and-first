@@ -17,25 +17,37 @@ namespace ThousandAndFirst
 		private static string DefenceAndPantryLine(KingdomSystem System, Zone Here)
 		{
 			KingdomSurvey survey = KingdomSurvey.Take(Here, System);
+			int kitchens = KingdomCapabilityRuntime.Count(Here, survey,
+				KingdomBenefitCapabilities.Cooking, "status meal");
 			string pantryName = KingdomRules.PantryTierNames[(int)survey.FoodAbundance];
+			int available;
+			string custodyFailure;
+			bool custodyProved = KingdomOrdinaryFoodAuthority.TryAvailable(survey,
+				out available, out custodyFailure);
+			if (!custodyProved) available = 0;
+			KingdomRules.PantryTier mealTier = KingdomRules.ClassifyPantry(available);
 			// Names the same size a shared meal would call right now, so the Status report
 			// doubles as the honest preview the Charter's meal action promises.
-			string pantryHint = (survey.FoodAbundance == KingdomRules.PantryTier.Empty)
-				? "nothing dedicated is stored yet"
-				: "enough for " + KingdomRules.MealSizeName(survey.FoodAbundance);
+			string pantryHint = (mealTier == KingdomRules.PantryTier.Empty)
+				? "no spendable meal ingredients; nothing is spent"
+				: "enough spendable ingredients for " + KingdomRules.MealSizeName(mealTier);
+			int mealCost = KingdomRules.MealServingsSpent(available);
+			string meal = KingdomRules.CanHoldSharedMeal(available,
+				System.Population, kitchens)
+				? ("available for " + mealCost + " physical ingredients")
+				: (!custodyProved ? ("unavailable: " + (custodyFailure ?? "custody unproved"))
+					: (kitchens <= 0) ? "unavailable: no capable kitchen"
+					: "unavailable: pantry empty");
 			return "\nWater detail: " + ((System.WaterCrew > 0) ? (System.WaterCrew + " of " + System.Population + " carrying") : "nobody carrying")
 				+ "\nDefence: " + survey.Defence()
 				+ (survey.DistrictDefenceBonus > 0 ? ("  (garrison " + survey.DistrictDefenceBonus + ")") : "")
-				+ "  Larder: " + pantryName + " (" + survey.FoodStored + " of " + survey.FoodCapacity + ") — " + pantryHint
-				// The food economy in one line beside the pantry it fills and empties, on the same
-				// terms the water line above states its own: what the fields make against what the
-				// people eat, so a founder never has to reverse-engineer a hunger streak.
-				+ "\nFields: " + KingdomGrowth.FoodMadePerDay(survey) + " a day made against "
-				+ KingdomRules.RationsPerDay(System.Population) + " eaten"
-				+ "  {{K|(" + KingdomRules.ForagedRations(KingdomMaterialRules.FreeHands(System.Population, System.AssignedCrew), 1) + " of it foraged)}}"
+				+ "  Larder: " + pantryName + " (" + survey.FoodStored + " physical, "
+				+ available + " spendable, capacity " + survey.FoodCapacity + ") — " + pantryHint
+				+ "\nFood flow: crops harvest into these physical larders; no passive ration draw."
+				+ "  Shared meal: " + meal
 				+ ((string.IsNullOrEmpty(System.DishName)) ? "" : ("\n" + KingdomRules.DishStatusLine(
 					System.DishName, System.DishStaple, survey.CountFood(System.DishStaple),
-					survey.Kitchens, System.LastMeal)));
+					kitchens, System.LastMeal)));
 		}
 
 		/// <summary>
@@ -78,7 +90,6 @@ namespace ThousandAndFirst
 				.Append("\nStage: ")
 				.Append(System.Stage)
 				.Append(System.Withered ? " {{r|(withered)}}" : "")
-				.Append(System.Famished ? " {{r|(famished)}}" : "")
 				.Append("  Population: ")
 				.Append(System.Population)
 				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "")
@@ -109,7 +120,7 @@ namespace ThousandAndFirst
 			stringBuilder.Append("\nClaimed zones: ").Append(System.ClaimedZones.Count)
 				.Append((unopened == null) ? "" : ("\n{{r|" + unopened + "}}"))
 				.Append(currentClaimed ? ("  (here: " + KingdomGrowth.CountStoredWater(currentZone) + " drams stored, " + KingdomGrowth.CountOpenWater(currentZone) + " open, space for " + KingdomGrowth.CountStorageSpace(currentZone) + ")") : "")
-				.Append("\nShops: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "").Append(KingdomWearRules.StatusSuffix(System.DamagedWorks))
+				.Append("\nMarket standing: tier ").Append(System.ShopTier).Append(System.IdleWorks > 0 ? ("  {{r|" + System.IdleWorks + " works idle for want of hands}}") : "").Append(KingdomWearRules.StatusSuffix(System.DamagedWorks))
 				// Defence and the pantry are surveyed live: both are facts about the ground the
 				// founder is standing on, and neither is carried on the system.
 				.Append(currentClaimed ? DefenceAndPantryLine(System, currentZone) : "")
@@ -132,8 +143,6 @@ namespace ThousandAndFirst
 				.Append(KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(System.Population, System.Stage), System.Stores))
 				.Append(" drams per interval  Thirst streak: ")
 				.Append(System.DryStreak)
-				.Append("  Hunger streak: ")
-				.Append(System.HungerStreak)
 				.Append("\nNext arrival: ")
 				.Append(KingdomCharterMenuRules.DueWhen(System.NextArrivalTick, now,
 					KingdomRules.TicksPerDay))

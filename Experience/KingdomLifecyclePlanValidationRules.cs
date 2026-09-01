@@ -31,7 +31,8 @@ namespace ThousandAndFirst
 				|| op.Projections == null || op.Projections.Count > MaxProjections
 				|| op.ResourceLeases == null || op.ResourceLeases.Count > MaxResourceLeases
 				|| !KnownPhysical(op.WaterState) || !KnownPhysical(op.RemovalState)
-				|| !KnownPhysical(op.EffectState) || !OutboxShape(op, Publication)) return false;
+				|| !KnownPhysical(op.EffectState) || !OutboxShape(op, Publication)
+				|| !LodgeTerminalShape(op, Publication)) return false;
 
 			HashSet<string> waterOwners = new HashSet<string>(StringComparer.Ordinal);
 			for (int i = 0; i < op.WaterLegs.Count; i++)
@@ -164,6 +165,8 @@ namespace ThousandAndFirst
 		private static bool TerminalComponentsSettled(KingdomLifecycleBook Book,
 			KingdomLifecycleOperation op)
 		{
+			if (LodgeAuthorityReleased(op)) return LodgeReleasedComponentsSettled(Book, op);
+			if (LodgeAbandoned(op)) return LodgeAbandonedComponentsSettled(Book, op);
 			if (Book == null || op == null || !PlanShape(op, false) || !OutboxTerminal(op)
 				|| !ConservationEquations(op, true)) return false;
 			for (int i = 0; i < op.ResourceLeases.Count; i++)

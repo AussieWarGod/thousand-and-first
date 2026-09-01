@@ -26,6 +26,10 @@ namespace ThousandAndFirst
 
 			public int Defence;
 
+			/// <summary>Explicit permission for a player-built exact room or vessel to take this
+			/// catalogue role. Absence is false; authored/stateful works must never be inferred.</summary>
+			public bool Adoptable;
+
 			/// <summary>Faction key of the optional covenant that opens this design. Null means no
 			/// covenant gate. The key is validated against Qud's faction registry while the merged
 			/// catalogue is loaded.</summary>
@@ -197,7 +201,14 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool StyleAllows(string EntryStyles, string CityStyle)
 		{
-			return KingdomZoningRules.TagAccepts(EntryStyles, CityStyle);
+			return KingdomStyleRules.TagAccepts(EntryStyles, CityStyle);
+		}
+
+		/// <summary>Registry-aware form for engine callers and third-party style aliases.</summary>
+		public static bool StyleAllows(string EntryStyles,
+			System.Collections.Generic.IList<string> CityStyleKeys)
+		{
+			return KingdomStyleRules.TagAccepts(EntryStyles, CityStyleKeys);
 		}
 
 	}

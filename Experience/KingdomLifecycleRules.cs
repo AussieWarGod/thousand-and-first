@@ -15,7 +15,10 @@ namespace ThousandAndFirst
 		public const int LegacyLifecycleFormatVersion = 5;
 		public const int PreviousLifecycleFormatVersion = 6;
 		public const int RaidLedgerLifecycleFormatVersion = 7;
-		public const int CurrentFormatVersion = 8;
+		public const int DefenceReservationLifecycleFormatVersion = 8;
+		public const int LodgeTerminalLifecycleFormatVersion = 9;
+		public const int LodgeMarketSourceLifecycleFormatVersion = 10;
+		public const int CurrentFormatVersion = LodgeMarketSourceLifecycleFormatVersion;
 		public const int MaxRaidGrievances = 64;
 		public const int MaxRaidIncidents = 64;
 		public const int LegacyCarryFormatVersion = 5;

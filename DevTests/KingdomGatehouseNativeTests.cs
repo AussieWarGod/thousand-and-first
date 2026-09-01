@@ -60,14 +60,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void V2FormsUseOnlyVerifiedWallAndFunctionalWatchWrappers()
+		public void V2FormsUseOnlyVerifiedWallsAndFunctionalWatchWrappers()
 		{
 			XDocument authored = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XDocument catalogue = XDocument.Parse(TestMain.ReadRepositoryText(
 				"KingdomBuildings.xml"));
 			CollectionAssert.AreEqual(new string[]
 			{
-				"common", "verdant", "fungal", "gyre", "eater"
+				"common", "verdant", "fungal", "moonstair", "eater"
 			}, catalogue.Root.Elements("style").Select(e => (string)e.Attribute("Name")).ToArray());
 			XElement gateEntry = catalogue.Descendants("building").Single(e =>
 				(string)e.Attribute("Key") == "gatehouse");
@@ -77,8 +77,7 @@ namespace ThousandAndFirst.Tests
 			string[] walls = new string[]
 			{
 				"r_KingdomStructureSandstone", "r_KingdomStructureBrinestalkWall",
-				"r_KingdomStructureMushroomWall", "r_KingdomStructureLimestone",
-				"r_KingdomRubbleWall"
+				"r_KingdomStructureMushroomWall", "r_KingdomRubbleWall"
 			};
 			string[] watches = new string[]
 			{
@@ -91,7 +90,20 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < watches.Length; i++)
 				Assert.AreEqual(1, authored.Descendants("object").Count(e =>
 					(string)e.Attribute("Name") == watches[i]), watches[i]);
-			string rules = TestMain.ReadRepositoryText("Growth/KingdomGatehouseRules.cs");
+			string nativeWalls = File.ReadAllText(Path.Combine(LocateBase(),
+				"ObjectBlueprints", "Walls.xml"));
+			StringAssert.Contains("<object Name=\"Black Marble\" Inherits=\"BaseMetamorphicRock\">",
+				nativeWalls);
+			string nativeTerrain = File.ReadAllText(Path.Combine(LocateBase(),
+				"ObjectBlueprints", "WorldTerrain.xml"));
+			StringAssert.Contains("<tag Name=\"DefaultWall\" Value=\"Black Marble\" />",
+				nativeTerrain);
+			string nativeFloors = File.ReadAllText(Path.Combine(LocateBase(),
+				"ObjectBlueprints", "ZoneTerrain.xml"));
+			StringAssert.Contains("<object Name=\"BlackMarbleWalkway\" Inherits=\"Walkway\">",
+				nativeFloors);
+			string rules = KingdomGatehouseLogicalSource.ReadRules();
+			StringAssert.Contains("\"Black Marble\"", rules);
 			StringAssert.DoesNotContain("r_KingdomStructureMetalWall", rules);
 			StringAssert.DoesNotContain("r_KingdomStructureRustedMetalWall", rules);
 			StringAssert.Contains("Items/sw_bench.bmp", rules);

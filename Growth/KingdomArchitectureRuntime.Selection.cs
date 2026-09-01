@@ -43,6 +43,7 @@ namespace ThousandAndFirst
 			Context = new ArchitectureSelectionContext
 			{
 				Style = System.Style,
+				StyleKeys = KingdomData.StyleKeys(System.Style),
 				Creed = creed,
 				Cultures = KingdomResidentIdentityRules.FactNames(System.CultureCounts,
 					KingdomZoningRules.KindCulture),

@@ -5,7 +5,10 @@ using HarmonyLib;
 using Qud.UI;
 using XRL.CharacterBuilds;
 using XRL.CharacterBuilds.Qud;
+using XRL.UI;
 using XRL.UI.Framework;
+using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Harness
 {
@@ -36,10 +39,12 @@ namespace ThousandAndFirst.Harness
 	/// the original. The vanilla list shape is never observed changed by vanilla code.
 	/// </para>
 	/// <para>
-	/// SCENARIO PICKER DEFERRED. The docket's roster picker (one selectable row per authored
-	/// scenario, with per-scenario scripts) waits on the roster growing past one row; today the mode
-	/// carries exactly one sealed request, so this entry selects the mode and the fast-embark module
-	/// owns everything after it.
+	/// SCENARIO SELECTION IS OUTSIDE THE GAME BY DESIGN. <c>Tools/prepare-scenario.sh</c> resolves
+	/// <c>TAF_REQUEST</c> against the authored roster, freezes its parameters and seed into this
+	/// throwaway profile, and seals those bytes before launch. An in-game picker would choose after
+	/// that authority was sealed and make the displayed request differ from the one the native gate
+	/// proves. This row therefore starts the one sealed request; the launcher is the full roster
+	/// picker for attended, automated, and persona runs alike.
 	/// </para>
 	/// </summary>
 	internal static class KingdomScenarioTestGameEntry
@@ -230,6 +235,40 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomScenarioScript.Present()) return __exception;
 			__result = null;
 			return null;
+		}
+	}
+
+	/// <summary>
+	/// Suppresses only vanilla <see cref="OpeningStory" />'s first modal in a sealed scenario.
+	/// The scenario runner executes on <see cref="BeginTakeActionEvent" /> and restores its broad
+	/// boot bracket when it writes the terminal row; OpeningStory runs later in that same action
+	/// cycle on <see cref="BeforeTakeActionEvent" />. Without this narrow bracket, its otherwise
+	/// correct arrival modal covers the native evidence frame after the script has finished.
+	/// <para>
+	/// The original handler still performs every non-UI effect and logs the suppressed message.
+	/// The finalizer restores only a false value this patch changed, even when vanilla throws.
+	/// Attended profiles and an already-suppressed caller are untouched.
+	/// </para>
+	/// </summary>
+	[HarmonyPatch(typeof(OpeningStory), "HandleEvent",
+		new Type[] { typeof(BeforeTakeActionEvent) })]
+	internal static class KingdomScenarioOpeningStoryPatch
+	{
+		[HarmonyPrefix]
+		internal static void Prefix(OpeningStory __instance, out bool __state)
+		{
+			__state = false;
+			if (__instance == null || __instance.Triggered || Popup.Suppress
+				|| !KingdomScenarioScript.Present()) return;
+			Popup.Suppress = true;
+			__state = true;
+		}
+
+		[HarmonyFinalizer]
+		internal static Exception Finalizer(Exception __exception, bool __state)
+		{
+			if (__state) Popup.Suppress = false;
+			return __exception;
 		}
 	}
 }

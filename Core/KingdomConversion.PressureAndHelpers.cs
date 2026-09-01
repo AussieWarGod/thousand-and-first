@@ -68,7 +68,8 @@ namespace ThousandAndFirst
 		private static string ResentedPressure(KingdomSystem System, Zone Z, GameObject Resident)
 		{
 			string creed = Resident.GetStringProperty(KingdomCreed.CreedProperty);
-			if (Resents(creed, System.DeclaredCreed))
+			if (KingdomData.CreedUsesTheology(System.DeclaredCreed)
+				&& Resents(creed, System.DeclaredCreed))
 			{
 				return System.DeclaredCreed;
 			}
@@ -81,7 +82,7 @@ namespace ThousandAndFirst
 				{
 					pressing = Sources[i].PressingCreed(System, Z, Resident);
 				});
-				if (Resents(creed, pressing))
+				if (KingdomData.CreedUsesTheology(pressing) && Resents(creed, pressing))
 				{
 					return pressing;
 				}

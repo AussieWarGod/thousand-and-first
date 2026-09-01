@@ -1,12 +1,40 @@
 using System;
 using System.Collections.Generic;
-
 namespace ThousandAndFirst
 {
 	/// <summary>Freezes a finite endpoint party from one immutable polity profile revision.</summary>
 	public static partial class KingdomPolityCohortRules
 	{
 		public const int MaximumVisibleMembers = KingdomPolityRules.MaxCohortMembers;
+		public static bool TryLevelBand(KingdomPolityLedger Ledger, string PolityId,
+			KingdomPolityCohortPurpose Purpose, out int Minimum, out int Maximum,
+			out string Failure)
+		{
+			return TryResolverContract(Ledger, PolityId, Purpose, out _, out Minimum,
+				out Maximum, out Failure);
+		}
+
+		public static bool TryResolverContract(KingdomPolityLedger Ledger, string PolityId,
+			KingdomPolityCohortPurpose Purpose, out int ResolverRulesVersion,
+			out int Minimum, out int Maximum, out string Failure)
+		{
+			ResolverRulesVersion = 0; Minimum = Maximum = 0; Failure = null;
+			KingdomPolityRecord polity = KingdomPolityAuthority.Polity(Ledger, PolityId);
+			KingdomPolityProfileRevision profile = polity == null ? null :
+				KingdomPolityAuthority.Profile(Ledger, polity.ProfileId, polity.ProfileRevision);
+			if (polity == null || profile == null || polity.Lifecycle !=
+				KingdomPolityLifecycle.Active || Purpose == KingdomPolityCohortPurpose.None ||
+				(byte)Purpose > 7)
+				return KingdomPolityRules.Fail(
+					"level band lacks an exact active polity profile and purpose", out Failure);
+			ResolverRulesVersion = profile.RulesVersion == KingdomPolityProfileRules.RulesVersion
+				? KingdomPolityNpcRules.RulesVersion : profile.RulesVersion ==
+					KingdomPolityProfileRules.LegacyRulesVersion || profile.RulesVersion ==
+					KingdomPolityProfileRules.PriorExpressionRulesVersion ? 1 : 0;
+			if (ResolverRulesVersion == 0) return KingdomPolityRules.Fail(
+				"active polity profile pins an unknown NPC resolver contract", out Failure);
+			return TryLevelBandForProfile(profile, Purpose, out Minimum, out Maximum);
+		}
 
 		public static bool TryPlan(KingdomPolityLedger Ledger, long ExpectedRevision,
 			KingdomPolityCohortPlanRequest Request, out KingdomPolityPublicationResult Result,
@@ -80,12 +108,22 @@ namespace ThousandAndFirst
 				R.SourceRef.StartsWith("taf:standing:", StringComparison.Ordinal) ||
 				!KingdomPolityRules.SemanticId(R.PolityId) ||
 				!KingdomPolityRules.SemanticId(R.SurfaceRef) || R.MemberCount < 1 ||
-				R.MemberCount > MaximumVisibleMembers ||
+				R.MemberCount > MaximumVisibleMembers || R.MinimumLevel < 1 ||
+				R.MaximumLevel < R.MinimumLevel ||
+				R.MaximumLevel > KingdomPolityRules.MaxLevel ||
 				(!string.IsNullOrEmpty(R.NamedFigureId) &&
 				 !KingdomPolityRules.TypedId(R.NamedFigureId, "taf:figure:")) ||
 				!KingdomPolityRules.TypedId(R.EventStreamId, "taf:stream:") ||
-				R.RulesVersion != KingdomPolityNpcRules.RulesVersion ||
-				!ValidPresentationAuthority(R.Purpose, R.PresentationAuthority))
+				(R.RulesVersion != 1 && R.RulesVersion !=
+					KingdomPolityLoadoutCatalogue.PriorResolverVersion &&
+				 R.RulesVersion != KingdomPolityNpcRules.RulesVersion) ||
+				!ValidPresentationAuthority(R.Purpose, R.PresentationAuthority) ||
+				(IsWeeklyAmbient(R) && !KingdomPolityAmbientTransactionRules.Valid(
+					R.AmbientTransaction, R.CohortId, out _)) ||
+				(IsWeeklyAmbient(R) && (R.AmbientTransaction.Purpose != R.Purpose ||
+					R.AmbientTransaction.SourcePolityId != R.PolityId ||
+					R.AmbientTransaction.DestinationSettlementId != R.SurfaceRef)) ||
+				(!IsWeeklyAmbient(R) && R.AmbientTransaction != null))
 			{
 				Failure = "cohort plan request is invalid, unbounded, or standing-only"; return false;
 			}
@@ -115,24 +153,36 @@ namespace ThousandAndFirst
 			KingdomPolityProfileRevision Profile, KingdomPolityNamedFigureRecord Figure,
 			out KingdomPolityCohortPlan Plan, out string Failure)
 		{
+			Plan = null; Failure = null;
+			if (!TryLevelBandForProfile(Profile, R.Purpose, out int bandMinimum,
+				out int bandMaximum) || R.MinimumLevel != bandMinimum ||
+				R.MaximumLevel != bandMaximum || R.RulesVersion !=
+				(Profile.RulesVersion == KingdomPolityProfileRules.RulesVersion
+					? KingdomPolityNpcRules.RulesVersion : 1))
+			{
+				Failure = "cohort request does not carry the canonical pinned level band";
+				return false;
+			}
 			Plan = new KingdomPolityCohortPlan
 			{
 				CohortId = R.CohortId, Purpose = R.Purpose, SourceRef = R.SourceRef,
 				PolityId = R.PolityId, ProfileId = Profile.ProfileId,
-				ProfileRevision = Profile.Revision, SurfaceRef = R.SurfaceRef,
+				ProfileRevision = Profile.Revision, MinimumLevel = R.MinimumLevel,
+				MaximumLevel = R.MaximumLevel, SurfaceRef = R.SurfaceRef,
 				ScaleBudget = R.MemberCount, NamedRepresentativeAllowance = Figure == null ? 0 : 1,
 				EventStreamId = R.EventStreamId, RulesVersion = R.RulesVersion,
 				EventOrdinal = R.EventOrdinal,
 				PresentationOptionKind = R.PresentationAuthority.OptionKind,
 				PresentationEnableEpoch = R.PresentationAuthority.EnableEpoch,
 				PresentationReservedTick = R.PresentationAuthority.ReservedTick,
-				Phase = KingdomPolityCohortPhase.Planned
+				Phase = KingdomPolityCohortPhase.Planned,
+				AmbientTransaction = KingdomPolityAmbientTransactionRules.Copy(R.AmbientTransaction)
 			};
-			Failure = null; int minimum = int.MaxValue, maximum = 0;
 			for (int i = 0; i < R.MemberCount; i++)
 			{
 				string role = i == 0 && Figure != null ? Figure.RoleKey : Role(R.Purpose, i);
-				if (role.IndexOf('|') >= 0 || !KingdomPolityNpcRules.TryResolve(Profile, role, i,
+				if (role.IndexOf('|') >= 0 || !KingdomPolityNpcRules.TryResolvePinned(Profile,
+					role, i, R.RulesVersion, R.MinimumLevel, R.MaximumLevel,
 					out KingdomPolityNpcSpec spec, out Failure)) return false;
 				KingdomPolityAuthority.AddSortedUnique(Plan.RoleSlots, role);
 				string figureId = i == 0 && Figure != null ? Figure.FigureId : null;
@@ -144,9 +194,26 @@ namespace ThousandAndFirst
 					BlueprintKey = spec.BodyBlueprint, LoadoutKey = spec.ResolverDigest,
 					SignatureKey = "v1|" + role + "|" + spec.ResolverDigest + "|" + (figureId ?? "")
 				});
-				minimum = Math.Min(minimum, spec.Level); maximum = Math.Max(maximum, spec.Level);
 			}
-			Plan.MinimumLevel = minimum; Plan.MaximumLevel = maximum; return true;
+			return true;
+		}
+
+		private static bool TryLevelBandForProfile(KingdomPolityProfileRevision Profile,
+			KingdomPolityCohortPurpose Purpose, out int Minimum, out int Maximum)
+		{
+			Minimum = Maximum = 0;
+			if (Profile == null || Profile.TechnologyBand < 0 || Profile.TechnologyBand > 10 ||
+				Purpose == KingdomPolityCohortPurpose.None || (byte)Purpose > 7) return false;
+			int purpose = Purpose == KingdomPolityCohortPurpose.Warband ? 4 :
+				Purpose == KingdomPolityCohortPurpose.Guard ||
+				Purpose == KingdomPolityCohortPurpose.Patrol ? 3 :
+				Purpose == KingdomPolityCohortPurpose.Envoy ||
+				Purpose == KingdomPolityCohortPurpose.Trader ||
+				Purpose == KingdomPolityCohortPurpose.Courier ? 1 : 0;
+			Minimum = Math.Min(KingdomPolityRules.MaxLevel,
+				1 + Profile.TechnologyBand * 3 + purpose);
+			Maximum = Math.Min(KingdomPolityRules.MaxLevel, Minimum + 3);
+			return true;
 		}
 
 		private static string Role(KingdomPolityCohortPurpose Purpose, int Ordinal)
@@ -198,6 +265,12 @@ namespace ThousandAndFirst
 			return Proof.OptionKind == expected;
 		}
 
+		private static bool IsWeeklyAmbient(KingdomPolityCohortPlanRequest R)
+		{
+			return R != null && R.EventStreamId != null && R.EventStreamId.StartsWith(
+				"taf:stream:polity-due:v1:", StringComparison.Ordinal);
+		}
+
 		private static bool ExactPlan(KingdomPolityCohortPlan A, KingdomPolityCohortPlan E)
 		{
 			if (A.Purpose != E.Purpose || A.SourceRef != E.SourceRef || A.PolityId != E.PolityId ||
@@ -209,6 +282,8 @@ namespace ThousandAndFirst
 				A.PresentationOptionKind != E.PresentationOptionKind ||
 				A.PresentationEnableEpoch != E.PresentationEnableEpoch ||
 				A.PresentationReservedTick != E.PresentationReservedTick ||
+				!KingdomPolityAmbientTransactionRules.Same(
+					A.AmbientTransaction, E.AmbientTransaction) ||
 				A.ResolvedMembers.Count != E.ResolvedMembers.Count)
 				return false;
 			for (int i = 0; i < A.ResolvedMembers.Count; i++)

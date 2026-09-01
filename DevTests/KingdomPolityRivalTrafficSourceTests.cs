@@ -17,23 +17,25 @@ namespace ThousandAndFirst.Tests
 		{
 			string runtime = Read("KingdomPolitySchedulerRuntime.cs");
 			int assign = runtime.IndexOf("KingdomPolityRivalTrafficRules.TryAssign");
-			int reserve = runtime.IndexOf("TryReserveAmbientPlan", assign);
+			int freeze = runtime.IndexOf("KingdomPolityAmbientTransactionRules.TryFreeze", assign);
+			int reserve = runtime.IndexOf("TryReserveAmbientPlan", freeze);
 			int plan = runtime.IndexOf("KingdomPolityCohortRules.TryPlan", reserve);
-			Assert.GreaterOrEqual(assign, 0); Assert.Greater(reserve, assign);
+			Assert.GreaterOrEqual(assign, 0); Assert.Greater(freeze, assign);
+			Assert.Greater(reserve, freeze);
 			Assert.Greater(plan, reserve);
 			StringAssert.Contains("PolityId = assignment.PolityId", runtime);
 			StringAssert.Contains("Present(S, cohort, loadedSettlementId)", runtime);
 		}
 
 		[Test]
-		public void ExternalTrafficHasFreshIdsAndCannotBecomeWarOrRemoteSimulation()
+		public void ExternalTrafficIsUnavailableWithoutExactSettlementProvenance()
 		{
 			string rules = Read("KingdomPolityRivalTrafficRules.cs");
 			string runtime = Read("KingdomPolitySchedulerRuntime.cs");
-			StringAssert.Contains("polity-external-traffic-cohort-v1", rules);
-			StringAssert.Contains("polity-external-traffic-event-v1", rules);
-			StringAssert.Contains("HasFactionProjection", rules);
-			StringAssert.Contains("Purpose == KingdomPolityCohortPurpose.Guard", rules);
+			StringAssert.Contains("V8 has no external settlement/zone carrier", rules);
+			StringAssert.Contains("return !Value.External", rules);
+			StringAssert.DoesNotContain("polity-external-traffic-cohort-v1", rules);
+			StringAssert.DoesNotContain("polity-external-traffic-event-v1", rules);
 			StringAssert.Contains("Due.Purpose != KingdomPolityCohortPurpose.Warband", rules);
 			StringAssert.DoesNotContain("TryOpenGrievance", rules + runtime);
 			StringAssert.DoesNotContain("TryPlanTerms", rules + runtime);
@@ -43,11 +45,12 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void PresentationNamesExternalOwnerWithoutInventingOutcome()
+		public void PresentationUsesFrozenEndpointNamesWithoutInventingOutcome()
 		{
 			string runtime = Read("KingdomPolitySchedulerRuntime.cs");
-			StringAssert.Contains("KingdomPresentation.Rich(polity.DisplayName)", runtime);
-			StringAssert.Contains("is sighted at the boundary", runtime);
+			StringAssert.Contains("t.SourceSettlementName", runtime);
+			StringAssert.Contains("t.DestinationSettlementName", runtime);
+			StringAssert.DoesNotContain("is sighted at the boundary", runtime);
 			StringAssert.DoesNotContain("winner", runtime.ToLowerInvariant());
 			StringAssert.DoesNotContain("conquest", runtime.ToLowerInvariant());
 		}

@@ -8,7 +8,7 @@ namespace ThousandAndFirst
 	{
 		public int X;
 		public int Y;
-		public bool Claim;
+		public ArchitectureClaim Claim;
 		public ArchitecturePassability Passability;
 		public ArchitectureCover Cover;
 	}
@@ -54,11 +54,24 @@ namespace ThousandAndFirst
 		public string PaletteKey;
 		public string LotType;
 		public ArchitectureLotSize LotSize;
+		/// <summary>
+		/// Frozen incoming-edge authority. None denotes a fresh/base tier. Explicit socket routes
+		/// replace this value before freezing their target, binding route mode into the target hash.
+		/// </summary>
+		public ArchitectureTransitionMode IncomingTransitionMode;
 		public ArchitectureFacing Facing;
 		public int Width;
 		public int Height;
 		public int MainX;
 		public int MainY;
+		/// <summary>Exact canonical building footprint, independent from building/yard claim use.</summary>
+		public int FootprintX;
+		public int FootprintY;
+		public int FootprintWidth;
+		public int FootprintHeight;
+		/// <summary>Catalogue roof frozen before underground ground truth transforms it.</summary>
+		public KingdomPlotRules.RoofState BaseRoof =
+			(KingdomPlotRules.RoofState)byte.MaxValue;
 		public List<ArchitectureCellState> Cells = new List<ArchitectureCellState>();
 		/// <summary>Authored scenery only. Runtime-owned main behavior root is never included.</summary>
 		public List<ArchitecturePlacement> Placements = new List<ArchitecturePlacement>();

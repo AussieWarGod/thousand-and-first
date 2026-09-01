@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using XRL.World;
 
@@ -8,14 +9,17 @@ namespace ThousandAndFirst
 
 	/// <summary>
 	/// The engine-coupled half of the quality-of-life vocabulary (<see cref="KingdomQolRules"/> is
-	/// the whole of the matching, and is engine-free): the registry of what each design
-	/// <c>Provides</c>, the reads that turn a real creature into a
+	/// the whole of the matching, and is engine-free): the catalogue contract of what each design
+	/// may <c>Provide</c>, the reads that turn a real creature into a
 	/// <see cref="ResidentTruth"/>, and the two-line answers the rest of the mod asks for &mdash;
 	/// will this person live here, will they live beside that one, and what is their being here
 	/// worth.
 	/// <para>
 	/// <b>No state of its own.</b> Nothing in this file is serialized, and there is no per-city or
-	/// realm-level field anywhere in the system: every answer is recomputed from the tags in hand,
+	/// realm-level field anywhere in the system. Live-building callers obtain tags through
+	/// <c>TryPhysicalOfferOf</c> and the current benefit index; the key-only methods in this file
+	/// describe catalogue ceilings for previews and authoring validation, never physical supply.
+	/// Every resident answer is recomputed from the tags in hand,
 	/// which is what makes "nothing decays, nothing accumulates" a property of the code rather than
 	/// a promise about it. The only tables here are the registry, cleared and refilled by the
 	/// loader's single pass, and a parse cache keyed by blueprint.
@@ -104,7 +108,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Everything a design offers a resident on the ground it is standing on: its declared
+		/// Everything a design is allowed to offer on the named stratum: its declared
 		/// tags plus what its own roof gives (sky under canvas and open ground, shade under wall
 		/// and rock), so an author who never wrote a <c>Provides</c> still houses a photosynthetic
 		/// settler correctly.
@@ -119,9 +123,11 @@ namespace ThousandAndFirst
 		/// <param name="Underground">Whether this ground is below
 		/// <c>KingdomRules.SurfaceZLevel</c>; <c>KingdomPlotRules.IsUnderground</c> is the read
 		/// that answers it.</param>
+		/// This is catalogue-preview authority only. Runtime building supply must use
+		/// <c>TryPhysicalOfferOf</c>.
 		/// <returns>Never null. Empty for a design that declares nothing and takes no ground.
 		/// </returns>
-		public static string[] OfferOf(string BuildingKey, bool Underground)
+		public static string[] CatalogueOfferOf(string BuildingKey, bool Underground)
 		{
 			if (string.IsNullOrEmpty(BuildingKey))
 			{
@@ -144,28 +150,54 @@ namespace ThousandAndFirst
 		/// <summary>The same offer, for a caller holding the zone the design stands in &mdash;
 		/// which is every caller that reads a settlement's own housing. A null zone reads as the
 		/// surface.</summary>
-		public static string[] OfferOf(string BuildingKey, Zone Z)
+		public static string[] CatalogueOfferOf(string BuildingKey, Zone Z)
 		{
-			return OfferOf(BuildingKey, Z != null && KingdomPlotRules.IsUnderground(Z.Z));
+			return CatalogueOfferOf(BuildingKey,
+				Z != null && KingdomPlotRules.IsUnderground(Z.Z));
 		}
 
 		/// <summary>What a design offers on the surface.</summary>
-		public static string[] OfferOf(string BuildingKey)
+		public static string[] CatalogueOfferOf(string BuildingKey)
 		{
-			return OfferOf(BuildingKey, Underground: false);
+			return CatalogueOfferOf(BuildingKey, Underground: false);
 		}
 
 		/// <summary>What a work standing on the ground offers, read off the design key it was
 		/// raised under and the stratum it is standing in. A work with no key on it &mdash;
 		/// anything the settlement did not raise &mdash; offers nothing, and a work in no zone at
 		/// all is read as standing on the surface.</summary>
-		public static string[] OfferOf(GameObject Work)
+		public static string[] CatalogueOfferOf(GameObject Work)
 		{
 			if (Work == null)
 			{
 				return KingdomQolRules.NoTags;
 			}
-			return OfferOf(Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty), Work.CurrentZone);
+			return CatalogueOfferOf(Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty),
+				Work.CurrentZone);
+		}
+
+		[Obsolete("Catalogue preview only; use CatalogueOfferOf or TryPhysicalOfferOf.", true)]
+		public static string[] OfferOf(string BuildingKey, bool Underground)
+		{
+			return CatalogueOfferOf(BuildingKey, Underground);
+		}
+
+		[Obsolete("Catalogue preview only; use CatalogueOfferOf or TryPhysicalOfferOf.", true)]
+		public static string[] OfferOf(string BuildingKey, Zone Z)
+		{
+			return CatalogueOfferOf(BuildingKey, Z);
+		}
+
+		[Obsolete("Catalogue preview only; use CatalogueOfferOf or TryPhysicalOfferOf.", true)]
+		public static string[] OfferOf(string BuildingKey)
+		{
+			return CatalogueOfferOf(BuildingKey);
+		}
+
+		[Obsolete("Catalogue preview only; use CatalogueOfferOf or TryPhysicalOfferOf.", true)]
+		public static string[] OfferOf(GameObject Work)
+		{
+			return CatalogueOfferOf(Work);
 		}
 	}
 }

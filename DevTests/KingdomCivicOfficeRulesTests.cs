@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -91,8 +92,11 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomExperienceRules.TryPrepareOfficeVacancy(ledger,
 				ledger.Revision, "taf:settlement:one", 11,
 				KingdomCivicOfficeVacancyCause.Death, 30, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryCompleteOfficeVacancy(ledger,
-				ledger.Revision, "taf:settlement:one", 1, out failure), failure);
+			Assert.IsTrue(KingdomExperienceRules.TryCompleteOfficeDeathVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 1,
+				City("taf:settlement:one", Resident(11, "Ari",
+					KingdomResidentStanding.Dead, KingdomStandingCause.Violence)), out failure),
+				failure);
 			Assert.IsTrue(KingdomExperienceRules.TryGetOffice(ledger, "taf:settlement:one",
 				out KingdomCivicOfficeReceipt row, out failure), failure);
 			Assert.AreEqual(KingdomCivicOfficePhase.Vacant, row.Phase);
@@ -101,6 +105,65 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(11, row.PredecessorResidentId);
 			Assert.AreEqual("Ari", row.PredecessorName);
 			Assert.IsFalse(row.OwnsRole, "borrowed and owned roles both leave no removal claim");
+		}
+
+		[Test]
+		public void DeathVacancyNeedsExactTerminalRowThenAllowsNewAppointment()
+		{
+			KingdomExperienceLedger ledger = Bound();
+			Assert.IsTrue(Prepare(ledger, "one", 11, "Ari", "body-11", true, 20));
+			Assert.IsTrue(KingdomExperienceRules.TryCompleteOfficeAppointment(ledger,
+				ledger.Revision, "taf:settlement:one", 1, out string failure), failure);
+			Assert.IsTrue(KingdomExperienceRules.TryPrepareOfficeVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 11,
+				KingdomCivicOfficeVacancyCause.Death, 30, out failure), failure);
+			byte[] prepared = Bytes(ledger);
+
+			Assert.IsFalse(KingdomExperienceRules.TryCompleteOfficeVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 1, out failure));
+			CollectionAssert.AreEqual(prepared, Bytes(ledger));
+			Assert.IsFalse(KingdomExperienceRules.TryCompleteOfficeDeathVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 1,
+				City("taf:settlement:one", Resident(11, "Ari",
+					KingdomResidentStanding.Abroad, KingdomStandingCause.Astray)), out failure));
+			CollectionAssert.AreEqual(prepared, Bytes(ledger));
+			Assert.IsFalse(KingdomExperienceRules.TryCompleteOfficeDeathVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 1,
+				City("taf:settlement:other", Resident(11, "Ari",
+					KingdomResidentStanding.Dead, KingdomStandingCause.Violence)), out failure));
+			CollectionAssert.AreEqual(prepared, Bytes(ledger));
+
+			Assert.IsTrue(KingdomExperienceRules.TryCompleteOfficeDeathVacancy(ledger,
+				ledger.Revision, "taf:settlement:one", 1,
+				City("taf:settlement:one", Resident(11, "Ari",
+					KingdomResidentStanding.Dead, KingdomStandingCause.Violence)), out failure),
+				failure);
+			Assert.IsTrue(KingdomExperienceRules.TryGetOffice(ledger, "taf:settlement:one",
+				out KingdomCivicOfficeReceipt vacant, out failure), failure);
+			Assert.AreEqual(KingdomCivicOfficePhase.Vacant, vacant.Phase);
+			Assert.AreEqual(KingdomCivicOfficeVacancyCause.Death, vacant.VacancyCause);
+			Assert.AreEqual(11, vacant.PredecessorResidentId);
+
+			Assert.IsTrue(Prepare(ledger, "one", 12, "Bex", "body-12", false, 40));
+			Assert.IsTrue(KingdomExperienceRules.TryGetOffice(ledger, "taf:settlement:one",
+				out KingdomCivicOfficeReceipt successor, out failure), failure);
+			Assert.AreEqual(KingdomCivicOfficePhase.AppointmentPrepared, successor.Phase);
+			Assert.AreEqual(2, successor.Generation);
+			Assert.AreEqual(12, successor.HolderResidentId);
+
+			KingdomExperienceLedger departure = Bound();
+			Assert.IsTrue(Prepare(departure, "two", 21, "Cai", "body-21", true, 20));
+			Assert.IsTrue(KingdomExperienceRules.TryCompleteOfficeAppointment(departure,
+				departure.Revision, "taf:settlement:two", 1, out failure), failure);
+			Assert.IsTrue(KingdomExperienceRules.TryPrepareOfficeVacancy(departure,
+				departure.Revision, "taf:settlement:two", 21,
+				KingdomCivicOfficeVacancyCause.Departure, 30, out failure), failure);
+			byte[] departurePrepared = Bytes(departure);
+			Assert.IsFalse(KingdomExperienceRules.TryCompleteOfficeDeathVacancy(departure,
+				departure.Revision, "taf:settlement:two", 1,
+				City("taf:settlement:two", Resident(21, "Cai",
+					KingdomResidentStanding.Dead, KingdomStandingCause.Violence)), out failure));
+			CollectionAssert.AreEqual(departurePrepared, Bytes(departure));
 		}
 
 		[Test]
@@ -154,6 +217,24 @@ namespace ThousandAndFirst.Tests
 			return KingdomExperienceRules.TryPrepareOfficeAppointment(L, L.Revision,
 				"taf:settlement:" + Suffix, "City " + Suffix, 7, Resident, Name, Body,
 				Owns, Tick, out string _);
+		}
+
+		private static KingdomResidentRow Resident(int Id, string Name,
+			KingdomResidentStanding Standing, KingdomStandingCause Cause)
+		{
+			return new KingdomResidentRow(Id, Name, 0, 0, 10L, 0, 0, 0,
+				KingdomDayShape.Hearth, Standing, Cause, "taf:zone:one",
+				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
+		}
+
+		private static KingdomCityState City(string SettlementId,
+			params KingdomResidentRow[] Residents)
+		{
+			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion,
+				KingdomCityRules.RulesVersion, SettlementId, 30L, default(KingdomStocks),
+				null, null, Residents, null, out KingdomCityState state,
+				out KingdomCityFault fault), fault.ToString());
+			return state;
 		}
 
 		private static byte[] Bytes(KingdomExperienceLedger L)

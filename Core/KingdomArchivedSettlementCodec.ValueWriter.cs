@@ -167,6 +167,11 @@ namespace ThousandAndFirst
 					(Simulation.City.KingdomJobRegistry)Value, SchemaVersion))
 				throw new InvalidDataException(
 					"Archived settlement delivery enum domain is invalid for its version.");
+			if (Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& !HistoricalExpeditionResultDomain(
+					(Simulation.City.KingdomJobRegistry)Value, SchemaVersion))
+				throw new InvalidDataException(
+					"Archived settlement expedition-result domain is invalid for its version.");
 			if (SchemaVersion >= CivicAuthorityVersion
 				&& Type == typeof(Simulation.City.KingdomCityBook)
 				&& !ValidCivicAuthority((Simulation.City.KingdomCityBook)Value))

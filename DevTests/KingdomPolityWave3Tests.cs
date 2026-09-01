@@ -30,7 +30,7 @@ namespace ThousandAndFirst.DevTests
 			Assert.AreEqual(2, Current(ledger).ProfileRevision,
 				"unchanged facts must not mint calendar-only revisions");
 
-			KingdomPolityCohortPlanRequest request = Request("taf:cohort:profile-pin", 2,
+			KingdomPolityCohortPlanRequest request = Request(ledger, "taf:cohort:profile-pin", 2,
 				KingdomPolityCohortPurpose.Guard);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out failure), failure);
@@ -68,6 +68,40 @@ namespace ThousandAndFirst.DevTests
 				valid, out KingdomPolityPublicationResult conflict, out _));
 			Assert.AreEqual(KingdomPolityCasOutcome.Conflict, conflict.Outcome);
 			Assert.AreEqual(1, Current(ledger).ProfileRevision);
+		}
+
+		[TestCase("population=none", "none")]
+		[TestCase("population=unresolved", "unresolved")]
+		public void PopulationFactsReplaceBodyPoolAndUnresolvedBodiesRefuseCohorts(
+			string terminalPopulation, string token)
+		{
+			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
+			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
+			KingdomPolityProfileFactSet manifested = FactsWithPopulation(
+				1, "goatfolk-" + token, 20L, "body=goatfolk");
+			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+				manifested, out _, out string failure), failure);
+			KingdomPolityProfileRevision replaced = FindProfile(ledger,
+				KingdomPolityTestData.CurrentProfile, 2);
+			CollectionAssert.AreEqual(new[] { "goatfolk" }, replaced.BodyKeys,
+				"observed population must replace, not merge with, the prior body pool");
+
+			KingdomPolityProfileFactSet unmanifested = FactsWithPopulation(
+				2, token, 30L, terminalPopulation);
+			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+				unmanifested, out _, out failure), failure);
+			KingdomPolityProfileRevision unresolved = FindProfile(ledger,
+				KingdomPolityTestData.CurrentProfile, 3);
+			CollectionAssert.AreEqual(new[] { "unresolved" }, unresolved.BodyKeys);
+
+			KingdomPolityCohortPlanRequest request = Request(ledger,
+				"taf:cohort:unresolved-population-" + token, 1,
+				KingdomPolityCohortPurpose.Guard);
+			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
+				request, out _, out failure));
+			StringAssert.Contains("no admissible manifested body", failure);
+			Assert.IsNull(FindCohort(ledger, request.CohortId),
+				"resolver refusal must not publish a partial cohort");
 		}
 
 		[TestCase(1)]
@@ -166,7 +200,7 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out List<KingdomPolityDueWork> recovered, out failure), failure);
 			Assert.AreEqual(first[0].CohortId, recovered[0].CohortId);
-			KingdomPolityCohortPlanRequest request = FromDue(first[0]);
+			KingdomPolityCohortPlanRequest request = FromDue(ledger, first[0]);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out failure), failure);
 			Assert.IsTrue(KingdomPolityDispatchRules.TryComplete(state, 0UL, 0, out failure), failure);
@@ -307,7 +341,7 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
-			KingdomPolityCohortPlanRequest request = Request(
+			KingdomPolityCohortPlanRequest request = Request(ledger,
 				"taf:cohort:authority-pin", 2, KingdomPolityCohortPurpose.Trader);
 			request.PresentationAuthority.EnableEpoch = 7L;
 			request.PresentationAuthority.ReservedTick = 123L;
@@ -426,7 +460,7 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 5,
 				out string failure), failure);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
-				Request("taf:cohort:budget-warband", 5, KingdomPolityCohortPurpose.Warband,
+				Request(ledger, "taf:cohort:budget-warband", 5, KingdomPolityCohortPurpose.Warband,
 					KingdomPolityTestData.Rival), out _, out failure), failure);
 			Assert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure));
 			StringAssert.Contains("shared polity", failure);
@@ -486,7 +520,7 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
-			KingdomPolityCohortPlanRequest request = Request(
+			KingdomPolityCohortPlanRequest request = Request(ledger,
 				"taf:cohort:polity-wave3-lapsed", 7, KingdomPolityCohortPurpose.Guard);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out string failure), failure);
@@ -530,7 +564,7 @@ namespace ThousandAndFirst.DevTests
 			ledger.NamedFigures.Add(legacyOffice);
 			ledger.NamedFigures.Sort((a, b) => string.CompareOrdinal(a.FigureId, b.FigureId));
 			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
-			KingdomPolityCohortPlanRequest guard = Request(
+			KingdomPolityCohortPlanRequest guard = Request(ledger,
 				"taf:cohort:legacy-office-cannot-guard", 1, KingdomPolityCohortPurpose.Guard);
 			guard.NamedFigureId = legacyOffice.FigureId;
 			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
@@ -630,6 +664,21 @@ namespace ThousandAndFirst.DevTests
 			};
 		}
 
+		private static KingdomPolityProfileFactSet FactsWithPopulation(int previous,
+			string token, long tick, string population)
+		{
+			KingdomPolityProfileFactSet result = Facts(previous, token, tick);
+			result.Facts.Add(new KingdomPolityProfileFact
+			{
+				FactId = "taf:fact:profile:m-" + token,
+				Kind = KingdomPolityProfileFactKind.Population,
+				ValueKey = population,
+				SourceRef = KingdomPolityTestData.Settlement
+			});
+			result.Facts.Sort((a, b) => string.CompareOrdinal(a.FactId, b.FactId));
+			return result;
+		}
+
 		private static KingdomPolityDispatchOffer Offer(int count, long tick)
 		{
 			List<KingdomPolityEndpointFacts> rows = new List<KingdomPolityEndpointFacts>
@@ -648,23 +697,35 @@ namespace ThousandAndFirst.DevTests
 				MigrantCauseRef = "taf:fact:room:" + id };
 		}
 
-		private static KingdomPolityCohortPlanRequest FromDue(KingdomPolityDueWork work)
+		private static KingdomPolityCohortPlanRequest FromDue(KingdomPolityLedger Ledger,
+			KingdomPolityDueWork work)
 		{
+			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger,
+				KingdomPolityTestData.Realm, work.Purpose, out int resolverRulesVersion,
+				out int minimum, out int maximum,
+				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest { CohortId = work.CohortId,
 				Purpose = work.Purpose, SourceRef = work.SourceRef,
 				PolityId = KingdomPolityTestData.Realm, SurfaceRef = work.SettlementId,
-				MemberCount = work.MemberCount, EventStreamId = work.EventStreamId,
-				RulesVersion = KingdomPolityNpcRules.RulesVersion, EventOrdinal = work.WindowOrdinal,
+				MemberCount = work.MemberCount, MinimumLevel = minimum, MaximumLevel = maximum,
+				EventStreamId = work.EventStreamId,
+				RulesVersion = resolverRulesVersion, EventOrdinal = work.WindowOrdinal,
 				PresentationAuthority = Authority(work.Purpose, work.CauseTick) };
 		}
 
-		private static KingdomPolityCohortPlanRequest Request(string id, int members,
+		private static KingdomPolityCohortPlanRequest Request(KingdomPolityLedger Ledger,
+			string id, int members,
 			KingdomPolityCohortPurpose purpose, string polity = KingdomPolityTestData.Realm)
 		{
+			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, polity, purpose,
+				out int resolverRulesVersion, out int minimum, out int maximum,
+				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest { CohortId = id, Purpose = purpose,
 				SourceRef = "taf:event:" + id, PolityId = polity,
 				SurfaceRef = KingdomPolityTestData.Settlement, MemberCount = members,
-				EventStreamId = "taf:stream:" + id, RulesVersion = 1, EventOrdinal = 2UL,
+				MinimumLevel = minimum, MaximumLevel = maximum,
+				EventStreamId = "taf:stream:" + id,
+				RulesVersion = resolverRulesVersion, EventOrdinal = 2UL,
 				PresentationAuthority = Authority(purpose, 10L) };
 		}
 
@@ -715,7 +776,7 @@ namespace ThousandAndFirst.DevTests
 				SettlementId = KingdomPolityTestData.Settlement, ResidentId = resident,
 				DisplayName = name, RoleKey = "officeholder",
 				Origin = KingdomPolityFigureOrigin.Officeholder,
-				CauseRef = cause };
+				CauseRef = cause, DeedSummary = "completed a proved civic deed" };
 		}
 
 		private static KingdomExperienceBodyReservation ExperienceBody(string realm,

@@ -220,15 +220,15 @@ namespace ThousandAndFirst.Tests
 
 		// --- The invariant: footprint fits plot ---------------------------------------------
 
-		[TestCase(Size.Small, 5, 4, true)]
+		[TestCase(Size.Small, 6, 4, true)]
 		[TestCase(Size.Small, 3, 3, true)]
-		[TestCase(Size.Small, 6, 4, false)]
-		[TestCase(Size.Small, 5, 5, false)]
+		[TestCase(Size.Small, 7, 4, false)]
+		[TestCase(Size.Small, 6, 5, false)]
 		[TestCase(Size.Medium, 8, 6, true)]
 		[TestCase(Size.Medium, 9, 6, false)]
-		[TestCase(Size.Large, 12, 9, true)]
-		[TestCase(Size.Huge, 20, 14, true)]
-		[TestCase(Size.Huge, 20, 15, false)]
+		[TestCase(Size.Large, 12, 10, true)]
+		[TestCase(Size.Huge, 20, 18, true)]
+		[TestCase(Size.Huge, 20, 19, false)]
 		[TestCase(Size.None, 1, 1, false)]
 		public void AFootprintFitsItsPlotOrItDoesNot(Size Plot, int Width, int Height, bool Expected)
 		{
@@ -244,15 +244,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(3, 3, Size.Small)]
-		[TestCase(5, 4, Size.Small)]
-		[TestCase(6, 4, Size.Medium)]
+		[TestCase(6, 4, Size.Small)]
+		[TestCase(7, 4, Size.Medium)]
 		[TestCase(8, 6, Size.Medium)]
 		[TestCase(9, 6, Size.Large)]
-		[TestCase(12, 9, Size.Large)]
-		[TestCase(13, 9, Size.Huge)]
-		[TestCase(20, 14, Size.Huge)]
-		[TestCase(21, 14, Size.None)]
-		[TestCase(20, 15, Size.None)]
+		[TestCase(12, 10, Size.Large)]
+		[TestCase(13, 10, Size.Huge)]
+		[TestCase(20, 18, Size.Huge)]
+		[TestCase(21, 18, Size.None)]
+		[TestCase(20, 19, Size.None)]
 		public void TheSmallestPlotThatHoldsAFootprintIsNamed(int Width, int Height, Size Expected)
 		{
 			Assert.AreEqual(Expected, KingdomPlotRules.SmallestPlotFor(Width, Height));
@@ -383,7 +383,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AChainFitsUntilOneTierDoesNot()
 		{
-			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 6, 4));
+			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 7, 4));
 			Assert.IsFalse(KingdomPlotRules.ChainFits(Size.Small, chain, out var unfit));
 			Assert.AreEqual(2, unfit, "the first tier that will not fit is the one the founder is told about");
 			Assert.IsTrue(KingdomPlotRules.ChainFits(Size.Medium, chain, out var none));
@@ -439,10 +439,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheForesightNamesTheTierThatOutgrowsThePlotAndThePlotThatWouldHoldIt()
 		{
-			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 6, 4));
+			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 7, 4));
 			string line = KingdomPlotRules.ForesightLine(Size.Small, chain);
-			StringAssert.Contains("5 by 4", line, "the ground being staked is named");
-			StringAssert.Contains("hut 6 by 4", line, "the tier that outgrows it is named with its own ground");
+			StringAssert.Contains("6 by 4", line, "the ground being staked is named");
+			StringAssert.Contains("hut 7 by 4", line, "the tier that outgrows it is named with its own ground");
 			StringAssert.Contains("middling", line, "and so is the plot that would hold the whole chain");
 			StringAssert.Contains("struck", line, "the ceiling is a choice with a way out, and it says so");
 		}
@@ -468,11 +468,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AStakeOptionSaysHowFarItCarriesAndHowMuchYardItLeaves()
 		{
-			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 6, 4));
+			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 7, 4));
 			string small = KingdomPlotRules.StakeOptionLine(Size.Small, chain);
-			StringAssert.Contains("5 by 4", small);
+			StringAssert.Contains("6 by 4", small);
 			StringAssert.Contains("tentrow", small, "the last tier this ground carries is named");
-			StringAssert.Contains("14 cells of yard", small, "20 cells of plot less the 6 the tent stands on");
+			StringAssert.Contains("18 cells of yard", small, "24 cells of plot less the 6 the tent stands on");
 			string medium = KingdomPlotRules.StakeOptionLine(Size.Medium, chain);
 			StringAssert.Contains("holds every tier", medium);
 			StringAssert.Contains("42 cells of yard", medium);
@@ -564,7 +564,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsNull(spec);
 			StringAssert.Contains("hall", error);
 			StringAssert.Contains("8 by 6", error);
-			StringAssert.Contains("5 by 4", error);
+			StringAssert.Contains("6 by 4", error);
 			StringAssert.Contains("never outgrows its plot", error);
 		}
 
@@ -681,7 +681,7 @@ namespace ThousandAndFirst.Tests
 			string refusal = KingdomPlotRules.RefuseFootprint("stone house", 8, 6, Size.Small);
 			StringAssert.Contains("stone house", refusal);
 			StringAssert.Contains("8 by 6", refusal);
-			StringAssert.Contains("5 by 4", refusal);
+			StringAssert.Contains("6 by 4", refusal);
 			StringAssert.Contains("more ground than this plot holds", refusal);
 			StringAssert.Contains("stake larger ground", refusal);
 		}

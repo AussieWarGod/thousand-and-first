@@ -75,7 +75,10 @@ namespace ThousandAndFirst
 			}
 			string[] authored = KingdomQolRules.ParseTags(Resident.GetPropertyOrTag(
 				KingdomQolRules.RefusesTagName, ""));
-			string[] offer = KingdomQol.OfferOf(KingdomUpgrade.DesignKeyOf(owner), Z);
+			if (!TryPhysicalOffer(survey, owner, out string[] offer, out _))
+			{
+				RefusedTag = "an unresolved physical laboratory benefit"; return true;
+			}
 			bool stands = KingdomQolRules.Has(authored, receipt.RefusedTag)
 				&& KingdomQolRules.Has(offer, receipt.RefusedTag);
 			if (!stands) return false;

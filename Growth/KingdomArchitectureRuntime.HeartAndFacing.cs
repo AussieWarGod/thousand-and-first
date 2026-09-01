@@ -142,7 +142,8 @@ namespace ThousandAndFirst
 				if (!MatchesMapping(resolved, Mapping))
 					return Fail("road-facing candidate disagrees with its frozen mapping", out Failure);
 				int score;
-				if (!TryRoadIngressScore(Z, Rect, resolved, out score, out Failure)) return false;
+				if (!TryPhysicalRoadIngressScore(Z, Rect, resolved, out score, out Failure))
+					return false;
 				// Candidate order is the fixed N/E/S/W tie law; equal scores keep the earlier pose.
 				if (score > bestScore)
 				{
@@ -179,63 +180,5 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		private static bool TryRoadIngressScore(Zone Z, KingdomPlotRules.PlotRect Rect,
-			ArchitectureLayoutSnapshot Snapshot, out int Score, out string Failure)
-		{
-			Score = 0;
-			Failure = null;
-			bool foundEntrance = false;
-			for (int i = 0; i < Snapshot.Anchors.Count; i++)
-			{
-				ArchitectureAnchor anchor = Snapshot.Anchors[i];
-				if (anchor == null || !(anchor.Key == "entrance:public"
-					|| anchor.Key.StartsWith("entrance:public@", StringComparison.Ordinal))) continue;
-				foundEntrance = true;
-				int x;
-				int y;
-				if (!TryWorldAnchor(Snapshot, Rect, anchor, out x, out y, out Failure)) return false;
-				int[] dx = new int[4] { 0, 1, 0, -1 };
-				int[] dy = new int[4] { -1, 0, 1, 0 };
-				for (int d = 0; d < 4; d++)
-				{
-					int roadX = x + dx[d];
-					int roadY = y + dy[d];
-					if (Rect.Contains(roadX, roadY) || roadX < 0 || roadX >= Z.Width
-						|| roadY < 0 || roadY >= Z.Height) continue;
-					int evidence;
-					if (!TryRoadEvidenceAt(Z, roadX, roadY, out evidence, out Failure)) return false;
-					if (evidence > Score) Score = evidence;
-				}
-			}
-			if (!foundEntrance)
-				return Fail("road-facing architecture has no entrance:public anchor", out Failure);
-			return true;
-		}
-
-		private static bool TryRoadEvidenceAt(Zone Z, int X, int Y,
-			out int Score, out string Failure)
-		{
-			Score = 0;
-			Failure = null;
-			Cell cell = Z.GetCell(X, Y);
-			GameObject floor;
-			KingdomPhysicalLookupState floorState = KingdomRoads.FindOurFloor(cell, out floor);
-			if (floorState == KingdomPhysicalLookupState.Ambiguous)
-				return Fail("road ingress evidence is physically ambiguous", out Failure);
-			if (floorState == KingdomPhysicalLookupState.Exact)
-				Score = 100000 + 1000 * floor.GetIntProperty(KingdomRoads.PathStateProperty);
-			System.Collections.Generic.List<KingdomRoadRules.WornCell> tally = KingdomRoads.ReadTally(Z);
-			for (int i = 0; i < tally.Count; i++)
-			{
-				KingdomRoadRules.WornCell worn = tally[i];
-				if (worn.X != X || worn.Y != Y
-					|| KingdomRoadRules.WearAt(worn.Traffic) <= KingdomRoadRules.WearState.Untouched) continue;
-				int traffic = worn.Traffic > KingdomRoadRules.MaxTraffic
-					? KingdomRoadRules.MaxTraffic : worn.Traffic;
-				int evidence = 1000 + traffic;
-				if (evidence > Score) Score = evidence;
-			}
-			return true;
-		}
 	}
 }

@@ -14,6 +14,8 @@ namespace ThousandAndFirst
 			Plan.ObjectRecord = Plan.ObjectCompletionRecords[0].Clone();
 			KingdomRealmRetirementState preview = State;
 			List<KingdomRemovalRecord> rows = new List<KingdomRemovalRecord>();
+			if (Plan.LegacyCitizenRecord != null) rows.Add(Plan.LegacyCitizenRecord);
+			if (Plan.SharedFactionRecord != null) rows.Add(Plan.SharedFactionRecord);
 			rows.AddRange(Plan.ObjectPreviewRecords);
 			rows.AddRange(Plan.ObjectCompletionRecords);
 			for (int i = 0; i < rows.Count; i++)
@@ -32,6 +34,7 @@ namespace ThousandAndFirst
 			Failure = null;
 			string generation = "v2";
 			KingdomRemovalRecord firstCompletion = GroundRecord(State,
+				KingdomRemovalProjectionKind.Object,
 				"taf:ground-complete:" + Plan.Zone.ZoneID + ":v2");
 			KingdomRemovalLocator locator = State.Locators.Find(row =>
 				row.ZoneId == Plan.Zone.ZoneID);
@@ -40,14 +43,17 @@ namespace ThousandAndFirst
 				if (!TryActualGroundEvidence(Plan, out string firstActual, out Failure)) return false;
 				if (firstActual != firstCompletion.AfterDigest) generation = "v3";
 			}
+			if (!TryBuildGroundDisclosures(State, Plan, generation, out Failure)) return false;
 			string previewId = "taf:ground-preview:" + Plan.Zone.ZoneID + ":" + generation;
 			string completionId = "taf:ground-complete:" + Plan.Zone.ZoneID + ":" + generation;
 			if (!TryGroundRows(Plan, false, out List<string> liveRows, out Failure)
 				|| !TryGroundRows(Plan, true, out List<string> projectedRows, out Failure)) return false;
 			string before = KingdomRetirementDigestRules.Evidence("ground-before-v2", liveRows);
 			string projected = KingdomRetirementDigestRules.Evidence("clean-ground-v2", projectedRows);
-			KingdomRemovalRecord preview = GroundRecord(State, previewId);
-			KingdomRemovalRecord committed = GroundRecord(State, completionId);
+			KingdomRemovalRecord preview = GroundRecord(State,
+				KingdomRemovalProjectionKind.Object, previewId);
+			KingdomRemovalRecord committed = GroundRecord(State,
+				KingdomRemovalProjectionKind.Object, completionId);
 			if (preview == null)
 				preview = new KingdomRemovalRecord
 				{
@@ -86,11 +92,66 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		private static bool TryBuildGroundDisclosures(KingdomRealmRetirementState State,
+			KingdomRealmRemovalGroundPlan Plan, string Generation, out string Failure)
+		{
+			Failure = null;
+			string zone = Plan.Zone.ZoneID;
+			if (Plan.LegacyCitizenCount > 0)
+			{
+				string id = "taf:ground-legacy-citizens:" + zone + ":" + Generation;
+				string count = Plan.LegacyCitizenCount.ToString(
+					System.Globalization.CultureInfo.InvariantCulture);
+				string digest = KingdomRetirementDigestRules.Evidence(
+					"ground-legacy-citizens-v1", new List<string>
+					{
+						"zone=" + zone, "count=" + count
+					});
+				KingdomRemovalRecord expected = new KingdomRemovalRecord
+				{
+					Kind = KingdomRemovalProjectionKind.Citizen, Id = id,
+					Disposition = KingdomRemovalDisposition.PriorUnknown,
+					BeforeDigest = digest, AfterDigest = digest,
+					Amount = Plan.LegacyCitizenCount,
+					Detail = count + " legacy citizen allegiance record(s) remain unchanged because no exact prior-allegiance receipt exists"
+				};
+				KingdomRemovalRecord prior = GroundRecord(State,
+					KingdomRemovalProjectionKind.Citizen, id);
+				if (prior != null && !ExactRecord(prior, expected))
+					return Fail("legacy-citizen disclosure differs from its frozen ground evidence",
+						out Failure);
+				Plan.LegacyCitizenRecord = prior ?? expected;
+			}
+			if (!string.IsNullOrEmpty(Plan.SharedFaction))
+			{
+				string id = "taf:ground-shared-faction:" + zone + ":" + Generation;
+				string digest = KingdomRetirementDigestRules.Evidence(
+					"ground-shared-faction-v1", new List<string>
+					{
+						"zone=" + zone, "faction=" + Plan.SharedFaction
+					});
+				KingdomRemovalRecord expected = new KingdomRemovalRecord
+				{
+					Kind = KingdomRemovalProjectionKind.ZoneProperty, Id = id,
+					Disposition = KingdomRemovalDisposition.PriorUnknown,
+					BeforeDigest = digest, AfterDigest = digest, Amount = 1,
+					Detail = "the shared zone faction value remains unchanged because no exclusive prior-value receipt exists"
+				};
+				KingdomRemovalRecord prior = GroundRecord(State,
+					KingdomRemovalProjectionKind.ZoneProperty, id);
+				if (prior != null && !ExactRecord(prior, expected))
+					return Fail("shared-faction disclosure differs from its frozen ground evidence",
+						out Failure);
+				Plan.SharedFactionRecord = prior ?? expected;
+			}
+			return true;
+		}
+
 		private static KingdomRemovalRecord GroundRecord(KingdomRealmRetirementState State,
-			string Id)
+			KingdomRemovalProjectionKind Kind, string Id)
 		{
 			for (int i = 0; i < (State?.Records?.Count ?? 0); i++)
-				if (State.Records[i].Kind == KingdomRemovalProjectionKind.Object
+				if (State.Records[i].Kind == Kind
 					&& State.Records[i].Id == Id) return State.Records[i].Clone();
 			return null;
 		}
@@ -104,11 +165,13 @@ namespace ThousandAndFirst
 		}
 
 		private static string ProjectedObjectRow(GameObject Item,
-			Dictionary<GameObject, GameObjectBlueprint> Fallbacks)
+			KingdomRealmRemovalGroundPlan Plan)
 		{
-			string blueprint = Fallbacks.TryGetValue(Item, out GameObjectBlueprint fallback)
+			string blueprint = Plan.Fallbacks.TryGetValue(Item, out GameObjectBlueprint fallback)
 				? fallback.Name : Item.Blueprint;
-			return ObjectRosterRow(Item, blueprint, true, true);
+			return ObjectRosterRow(Item, blueprint, true, true,
+				Plan.MarketStockRetirements.Contains(Item),
+				Plan.LegendaryMarketRetirements.Contains(Item));
 		}
 
 		internal static bool TryRevalidate(KingdomSystem System,
@@ -119,6 +182,10 @@ namespace ThousandAndFirst
 				out Failure)) return false;
 			if (!SameReferences(Expected.Objects, actual.Objects)
 				|| !SameReferences(Expected.ExactForeignCitizens, actual.ExactForeignCitizens)
+				|| !SameReferences(new List<GameObject>(Expected.MarketStockRetirements),
+					new List<GameObject>(actual.MarketStockRetirements))
+				|| !SameReferences(new List<GameObject>(Expected.LegendaryMarketRetirements),
+					new List<GameObject>(actual.LegendaryMarketRetirements))
 				|| !SameWitnessPlan(Expected, actual)
 				|| !SameFallbacks(Expected.Fallbacks, actual.Fallbacks)
 				|| !SameReferences(new List<GameObject>(Expected.RemovedObjects),
@@ -149,7 +216,7 @@ namespace ThousandAndFirst
 				if (Projected && removed) continue;
 				if (!Projected && removed && !GameObject.Validate(item)) continue;
 				Rows.Add(Projected && mutations.Contains(item)
-					? ProjectedObjectRow(item, Plan.Fallbacks) : ObjectRosterRow(item));
+					? ProjectedObjectRow(item, Plan) : ObjectRosterRow(item));
 			}
 			Rows.Add("zone=" + Plan.Zone.ZoneID); Rows.Add("recovery=" + Plan.RecoveryDigest);
 			Rows.Add("legacy=" + Plan.LegacyCitizenCount); Rows.Add("shared="

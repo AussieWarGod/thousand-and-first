@@ -14,30 +14,39 @@ namespace ThousandAndFirst
 	public static partial class KingdomArchitectureRules
 	{
 		public const int LegacySnapshotSchema = 1;
-		public const int SnapshotSchema = 2;
+		public const int PlacementTruthSnapshotSchema = 2;
+		public const int TransitionSnapshotSchema = 3;
+		public const int SnapshotSchema = 4;
 		public const int MaxKeyChars = 128;
 		public const int MaxBlueprintChars = 256;
 		public const int MaxSelectorChars = 256;
 		public const int MaxSelectorTokens = 16;
 		public const int MaxPaletteSlots = 128;
 		public const int MaxGlyphs = 96;
-		public const int MaxMapArea = 280;
-		public const int MaxPlacements = 512;
+		public const int MaxPoseRecords = 1024;
+		/// <summary>One exact canonical XL lot. Maps cannot outgrow land the plot authority can
+		/// reserve, including a posed 18-by-20 quarter turn.</summary>
+		public const int MaxMapArea = 360;
+		/// <summary>Two materialised layers per lot cell on average. Individual cells may still
+		/// carry ground, structure, and object together; a whole design averaging more than ground
+		/// plus one feature is rejected as over-layered rather than given an unbounded receipt.</summary>
+		public const int MaxPlacements = 720;
 		public const int MaxAnchors = 64;
 		public const int MaxBindingsPerPlan = 16;
 		public const int MaxTiersPerBinding = 16;
 		public const int MaxVariantsPerTier = 32;
 		public const int MaxRequirementsPerTier = 32;
-		/// <summary>Hard binary envelope for one canonical authored-layout receipt. Eight KiB keeps
-		/// save properties bounded while leaving measured headroom above the densest shipped XL
-		/// design. The independent architecture gate reproduces the codec and proves every authored
-		/// tier/variant against this exact value.</summary>
-		public const int MaxSnapshotPayloadBytes = 8192;
+		/// <summary>Hard binary envelope for one canonical authored-layout receipt. Twelve KiB
+		/// covers 360 three-byte cells, 720 eleven-byte placements, and more than three KiB of
+		/// bounded metadata/table/anchor reserve. The independent architecture gate reproduces the
+		/// codec and proves every authored tier/variant against this exact value.</summary>
+		public const int MaxSnapshotPayloadBytes = 12288;
 
 		/// <summary>Outer text envelope for the version, base64 payload, separator, and SHA-256.
-		/// Deliberately a little wider than the largest encoding of
-		/// <see cref="MaxSnapshotPayloadBytes"/> so the binary cap remains the controlling bound.</summary>
-		public const int MaxSnapshotChars = 11264;
+		/// Admits one byte beyond <see cref="MaxSnapshotPayloadBytes"/> after base64, plus version,
+		/// separators, and SHA-256. This four-character diagnostic margin lets decoding reach and
+		/// report the binary bound; the binary cap remains controlling.</summary>
+		public const int MaxSnapshotChars = 16456;
 		private const ushort NoAnchorIndex = ushort.MaxValue;
 		private const byte NoKnowledgeIndex = byte.MaxValue;
 		private const byte NoPowerIndex = byte.MaxValue;
@@ -49,10 +58,18 @@ namespace ThousandAndFirst
 		{
 			switch (Size)
 			{
-			case ArchitectureLotSize.Small: Width = 5; Height = 4; return true;
-			case ArchitectureLotSize.Medium: Width = 8; Height = 6; return true;
-			case ArchitectureLotSize.Large: Width = 12; Height = 9; return true;
-			case ArchitectureLotSize.Huge: Width = 20; Height = 14; return true;
+			case ArchitectureLotSize.Small:
+				return KingdomPlotRules.TryDimensions(KingdomPlotRules.PlotSize.Small,
+					out Width, out Height);
+			case ArchitectureLotSize.Medium:
+				return KingdomPlotRules.TryDimensions(KingdomPlotRules.PlotSize.Medium,
+					out Width, out Height);
+			case ArchitectureLotSize.Large:
+				return KingdomPlotRules.TryDimensions(KingdomPlotRules.PlotSize.Large,
+					out Width, out Height);
+			case ArchitectureLotSize.Huge:
+				return KingdomPlotRules.TryDimensions(KingdomPlotRules.PlotSize.Huge,
+					out Width, out Height);
 			default: Width = 0; Height = 0; return false;
 			}
 		}
@@ -203,6 +220,8 @@ namespace ThousandAndFirst
 					if (tier == null || !ValidKey(tier.Key) || !tierKeys.Add(tier.Key)
 						|| !ValidKey(tier.BuildKey) || !buildKeys.Add(tier.BuildKey)
 						|| tier.Level < 0 || !ValidKey(tier.MapKey) || !ValidKey(tier.PaletteKey)
+						|| !KingdomArchitectureTransitionRules.ValidTierMode(tier.Level,
+							tier.IncomingTransitionMode)
 						|| tier.Requirements == null || tier.Requirements.Count > MaxRequirementsPerTier)
 						return Fail("binding has a bad or duplicate tier", out Failure);
 					for (int r = 0; r < tier.Requirements.Count; r++)

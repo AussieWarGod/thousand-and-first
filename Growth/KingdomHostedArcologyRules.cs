@@ -12,6 +12,7 @@ namespace ThousandAndFirst
 	{
 		public const int MaxHostedLots = 16;
 		public const int MaxText = 512;
+		public const int MaxEncodedObservationChars = 8192;
 		public const long MaxLaborCatchupTicks = 36000L;
 		private static readonly object Sync = new object();
 		private static readonly SortedDictionary<string, KingdomHostedLotDefinition> Lots =
@@ -19,27 +20,28 @@ namespace ThousandAndFirst
 
 		static KingdomHostedArcologyRules()
 		{
-			string ignored;
-			RegisterHostedLot(new KingdomHostedLotDefinition {
+			RegisterBuiltInPaidLot(new KingdomHostedLotDefinition {
 				Key = "arcologyward", DisplayName = "sealed vertical lodging ward",
-				InteriorCell = "TAFArcologyWard", MaterialKey = "arcologyward",
-				BuildTicks = 9600L, Crew = 2, Supports = "roof:26,luxury:2"
-			}, out ignored);
-			RegisterHostedLot(new KingdomHostedLotDefinition {
+				InteriorCell = "TAFArcology", MaterialKey = "arcologyward",
+				BuildTicks = 9600L, Crew = 2, Supports = "roof:8,luxury:2"
+			});
+			RegisterBuiltInPaidLot(new KingdomHostedLotDefinition {
 				Key = "arcologyterrace", DisplayName = "sealed hydroponic terrace",
-				InteriorCell = "TAFArcologyTerrace", MaterialKey = "arcologyterrace",
+				InteriorCell = "TAFArcology", MaterialKey = "arcologyterrace",
 				BuildTicks = 7200L, Crew = 2, Supports = "food:14", RequiresWater = true,
 				PhysicalProducerBlueprint = "r_KingdomArcologyGrowbed",
 				PhysicalProducerCount = 14
-			}, out ignored);
+			});
 		}
 
-		/// <summary>Stable registration seam for bounded hosted content. Read-only definitions
-		/// may provide a knowledge view but cannot acquire a material key or build queue.</summary>
-		public static bool RegisterHostedLot(KingdomHostedLotDefinition Definition,
+		/// <summary>Stable extension seam for bounded read-only views. Paid hosted floors are
+		/// a closed v1 manifest because each requires an exact authored zone and fixture plan.</summary>
+		public static bool RegisterReadOnlyHostedLot(KingdomHostedLotDefinition Definition,
 			out string Failure)
 		{
 			Failure = null;
+			if (Definition == null || !Definition.ReadOnly)
+				return Fail("paid hosted-lot registration is closed in v1", out Failure);
 			if (!Valid(Definition, out Failure)) return false;
 			lock (Sync)
 			{
@@ -49,6 +51,16 @@ namespace ThousandAndFirst
 				Lots.Add(Definition.Key, Definition.Copy());
 				return true;
 			}
+		}
+
+		private static void RegisterBuiltInPaidLot(KingdomHostedLotDefinition Definition)
+		{
+			string failure = null;
+			if (Definition == null || Definition.ReadOnly || !Valid(Definition, out failure)
+				|| Lots.ContainsKey(Definition.Key))
+				throw new InvalidOperationException("Invalid built-in hosted lot: "
+					+ (failure ?? Definition?.Key ?? "null"));
+			Lots.Add(Definition.Key, Definition.Copy());
 		}
 
 		public static bool TryHostedLot(string Key, out KingdomHostedLotDefinition Definition)
@@ -119,6 +131,40 @@ namespace ThousandAndFirst
 		{
 			if (!Token(RootId) || !Token(Role)) return "";
 			return "taf:arcology:v1:" + Digest("TAF-HOSTED-CHILD-V1", RootId, Role);
+		}
+
+		/// <summary>Canonical revision of the exact current paid-lot receipt. Consumers compare
+		/// this digest and never load an interior to ask whether an observation is stale.</summary>
+		public static string ReceiptRevision(KingdomHostedLotReceipt Receipt)
+		{
+			string encoded = KingdomHostedArcologyReceiptCodec.EncodeLot(Receipt);
+			return string.IsNullOrEmpty(encoded) ? ""
+				: Digest("TAF-HOSTED-LOT-REVISION-V1", encoded);
+		}
+
+		/// <summary>Food physically represented by live hosted crop rows.</summary>
+		public static int PhysicalFoodForRows(int Rows, int YieldPerRow, int CropDays)
+		{
+			if (Rows <= 0 || YieldPerRow <= 0 || CropDays <= 0) return 0;
+			long food = (long)Rows * YieldPerRow / CropDays;
+			return food >= int.MaxValue ? int.MaxValue : (int)food;
+		}
+
+		/// <summary>Reads one hosted catalogue ceiling. This never creates live supply.</summary>
+		public static int ContractCap(KingdomHostedLotDefinition Definition, string Kind)
+		{
+			if (Definition == null || string.IsNullOrWhiteSpace(Definition.Supports)
+				|| string.IsNullOrWhiteSpace(Kind)) return 0;
+			long total = 0L; string[] rows = Definition.Supports.Split(',');
+			for (int i = 0; i < rows.Length; i++)
+			{
+				string[] pair = rows[i].Split(':');
+				if (pair.Length != 2 || !int.TryParse(pair[1].Trim(), NumberStyles.None,
+					CultureInfo.InvariantCulture, out int amount) || amount <= 0) return 0;
+				if (string.Equals(pair[0].Trim(), Kind.Trim(),
+					StringComparison.OrdinalIgnoreCase)) total += amount;
+			}
+			return total >= int.MaxValue ? int.MaxValue : (int)total;
 		}
 
 		public static int AdvanceLabor(int Remaining, long LastTick, long NowTick,

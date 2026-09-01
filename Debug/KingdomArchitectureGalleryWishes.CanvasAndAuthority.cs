@@ -14,19 +14,24 @@ namespace ThousandAndFirst
 {
 	public partial class KingdomArchitectureGalleryWishes
 	{
+		/// <summary>The reserved plot margin plus its true exterior road-lane endpoint.</summary>
+		internal const int ReviewClearance = KingdomPlotRules.RoadMargin + 1;
+
 		internal static bool TryFindCanvas(Zone Zone, int Width, int Height,
 			out KingdomPlotRules.PlotRect Rect, out string Failure)
 		{
 			Rect = default(KingdomPlotRules.PlotRect);
 			Failure = null;
-			if (Zone == null || Width < 1 || Height < 1 || Width + 2 > Zone.Width
-				|| Height + 2 > Zone.Height)
-				return Fail("The selected pose cannot fit inside this zone with a review margin.", out Failure);
+			KingdomPlotRules.PlotRect origins;
+			if (Zone == null || !KingdomPlotRules.TryInsetOriginBounds(Zone.Width, Zone.Height,
+				Width, Height, ReviewClearance, out origins))
+				return Fail("The selected pose cannot fit inside this zone with its complete "
+					+ "review and exterior-ingress clearance.", out Failure);
 			HashSet<int> connections = ConnectionCells(Zone);
 			Cell player = The.Player?.CurrentCell;
 			int best = int.MaxValue;
-			for (int y = 1; y + Height < Zone.Height; y++)
-				for (int x = 1; x + Width < Zone.Width; x++)
+			for (int y = origins.Y1; y <= origins.Y2; y++)
+				for (int x = origins.X1; x <= origins.X2; x++)
 				{
 					KingdomPlotRules.PlotRect candidate = new KingdomPlotRules.PlotRect(
 						x, y, x + Width - 1, y + Height - 1);
@@ -38,7 +43,8 @@ namespace ThousandAndFirst
 					best = distance;
 				}
 			if (best == int.MaxValue)
-				return Fail("No untouched passable rectangle with a one-cell review margin fits here. "
+				return Fail("No untouched passable rectangle with complete review and exterior-ingress "
+					+ "clearance fits here. "
 					+ "Move to an empty test zone; the gallery will not clear live terrain or objects.",
 					out Failure);
 			return true;
@@ -47,15 +53,15 @@ namespace ThousandAndFirst
 		internal static bool SafeCanvas(Zone Zone, KingdomPlotRules.PlotRect Rect,
 			HashSet<int> Connections, Cell Player)
 		{
-			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
-			for (int y = Rect.Y1 - 1; y <= Rect.Y2 + 1; y++)
-				for (int x = Rect.X1 - 1; x <= Rect.X2 + 1; x++)
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			for (int y = Rect.Y1 - ReviewClearance; y <= Rect.Y2 + ReviewClearance; y++)
+				for (int x = Rect.X1 - ReviewClearance; x <= Rect.X2 + ReviewClearance; x++)
 				{
 					Cell cell = Zone.GetCell(x, y);
 					if (cell == null || (Player != null && cell == Player)
 						|| Connections.Contains(y * Zone.Width + x) || cell.HasStairs()
 						|| cell.HasObjectWithPart("StairsUp") || cell.HasObjectWithPart("StairsDown")
-						|| cell.HasOpenLiquidVolume() || !cell.IsPassable()) return false;
+						|| !KingdomRoads.Walkable(cell)) return false;
 					if (Rect.Contains(x, y))
 					{
 						string blocker;

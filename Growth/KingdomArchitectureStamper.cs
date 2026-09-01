@@ -37,7 +37,7 @@ namespace ThousandAndFirst
 		public const string ComponentExistingProperty = "r_TAF_LayoutExisting";
 		public const string ComponentCarriedProperty = "r_TAF_LayoutCarried";
 
-		public const int UpgradeSchema = 1;
+		public const int UpgradeSchema = 2;
 		public const string UpgradeSchemaProperty = "r_TAF_LayoutUpgradeSchema";
 		public const string UpgradeTargetProperty = "r_TAF_LayoutUpgradeTarget";
 		public const string UpgradeHashProperty = "r_TAF_LayoutUpgradeHash";

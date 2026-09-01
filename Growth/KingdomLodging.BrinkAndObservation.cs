@@ -49,7 +49,10 @@ namespace ThousandAndFirst
 				KingdomBrinkRules.DaysStood(brink.ReachedTick, went))
 				+ KingdomBrinkRules.FiredClause(KingdomBrinkRules.DaysStood(went, now));
 			int residentId = Simulation.City.KingdomResidents.IdOf(Resident);
-			if (KingdomGrowth.Emigrate(System, Z, null, Resident, KingdomLodgingRules.DepartureCause))
+			if (!KingdomLabCivicRuntime.TryAuthorizeDeparture(System, Z, Resident,
+				out Simulation.City.KingdomResidentDestructionAuthorization authorization)) return;
+			if (KingdomGrowth.EmigrateAuthorized(System, Z, Resident,
+				KingdomLodgingRules.DepartureCause, authorization))
 			{
 				KingdomLabCivicRuntime.ObserveDeparture(System, Z, Resident, residentId);
 				KingdomWord.Aftermath(System, System.SeatName, here, leaving);
@@ -79,16 +82,17 @@ namespace ThousandAndFirst
 		/// <summary>Purely projects the ordinary settlement pass: standing assignments keep
 		/// their beds, then every unassigned or stale-home resident is seated in normal resident
 		/// order. No property, brink, Chronicle, ledger, or cohabitation state is changed.</summary>
-		private static Dictionary<string, List<GameObject>> ProjectedOccupancy(Zone Z)
+		private static Dictionary<string, List<GameObject>> ProjectedOccupancy(Zone Z,
+			KingdomBenefitIndex Benefits)
 		{
 			Dictionary<string, List<GameObject>> result =
 				new Dictionary<string, List<GameObject>>(StringComparer.Ordinal);
 			HashSet<string> standing = new HashSet<string>(StringComparer.Ordinal);
-			List<GameObject> homes = HousingIn(Z);
+			List<GameObject> homes = HousingIn(Z, Benefits);
 			for (int i = 0; i < homes.Count; i++)
 			{
 				string plot = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
-				if (!string.IsNullOrEmpty(plot)) standing.Add(plot);
+				if (!string.IsNullOrEmpty(plot) && !IsCondemned(homes[i])) standing.Add(plot);
 			}
 			List<GameObject> residents = ResidentsIn(Z);
 			List<GameObject> unassigned = new List<GameObject>();
@@ -104,7 +108,7 @@ namespace ThousandAndFirst
 				KingdomLodgingRules.UnhousedReason ignoredReason;
 				KingdomLodgingRules.Closeness ignoredRefusal;
 				List<string> ignoredNeeds;
-				string plot = ChooseHome(Z, unassigned[i], homes, result, out ignoredHome,
+				string plot = ChooseHome(Z, unassigned[i], homes, result, Benefits, out ignoredHome,
 					out ignoredReason, out ignoredRefusal, out ignoredNeeds);
 				if (plot != null) AddOccupant(result, plot, unassigned[i]);
 			}

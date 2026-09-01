@@ -11,16 +11,16 @@ namespace ThousandAndFirst
 	{
 
 		/// <summary>
-		/// What the Charter shows about the two cities. Always available while the realm holds two,
-		/// whatever the temper, so the founder can watch this coming from the first muttering
-		/// rather than being told about it once.
+		/// What the Charter shows about the exact city pair currently carrying dissent. Available
+		/// while the realm holds at least two cities, whatever the temper, so the founder can watch
+		/// this coming from the first muttering rather than being told about it once.
 		/// </summary>
 		/// <returns>The report, or a line explaining why there is nothing to report.</returns>
 		public static string Report(KingdomSystem System)
 		{
 			if (!Enabled)
 			{
-				return "You are not keeping account of what your cities believe.";
+				return "You are not keeping account of your cities' covenants and allegiances.";
 			}
 			if (System == null || !System.Founded)
 			{
@@ -249,7 +249,7 @@ namespace ThousandAndFirst
 			case SecessionVerdict.OneCity:
 				return "A realm of one city has nobody to fall out with.";
 			case SecessionVerdict.NoClash:
-				return "Your two cities hold nothing against each other worth leaving over.";
+				return "No two cities hold anything against each other worth leaving over.";
 			default:
 				return "It has not come to that, and it is not going to today.";
 			}

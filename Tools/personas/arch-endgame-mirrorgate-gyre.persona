@@ -1,0 +1,6 @@
+# Endgame monument: approach and threshold must remain readable in every transformed pose.
+DESCRIPTION=Moon Stair mirror gate precinct stages with exact monumental identity
+REQUEST=arch-endgame-mirrorgate-gyre;facing=east
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame

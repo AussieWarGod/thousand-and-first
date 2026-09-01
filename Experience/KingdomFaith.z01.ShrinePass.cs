@@ -22,8 +22,8 @@ namespace ThousandAndFirst
 		/// <param name="System">The kingdom. Unfounded or a zone the realm does not claim does
 		/// nothing.</param>
 		/// <param name="Z">The activated zone.</param>
-		/// <param name="Survey">This pass's already-taken survey, for its <c>Works</c> and
-		/// <c>Settlers</c> lists.</param>
+		/// <param name="Survey">This pass's already-taken survey and immutable physical-benefit
+		/// snapshot.</param>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
 			if (System == null || !System.Founded || Z == null || Survey == null
@@ -53,23 +53,25 @@ namespace ThousandAndFirst
 			}
 			if (option.Action != KingdomElapsedOptionAction.Run) return;
 			HashSet<GameObject> claimed = new HashSet<GameObject>();
-			for (int i = 0; i < Survey.Works.Count; i++)
+			if (!KingdomCapabilityRuntime.TryIndex(Z, Survey, "faith pass",
+				out KingdomBenefitIndex benefits))
 			{
-				GameObject work = Survey.Works[i];
-				KingdomRules.BuildEntry entry;
-				string key = work.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
-				{
-					continue;
-				}
-				if (KingdomFaithRules.CanConsecrate(entry.Category))
-				{
+				ForgetUnreached(System, Z, Survey, claimed); return;
+			}
+			IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+			for (int i = 0; i < readings.Count; i++)
+			{
+				KingdomBenefitReading reading = readings[i];
+				if (!KingdomReach.TryRoot(Z, reading, out GameObject work)
+					|| !KingdomData.TryGetBuilding(reading.Designation.BuildingKey,
+						out KingdomRules.BuildEntry entry)) continue;
+				if (KingdomBenefitCapabilities.Has(reading,
+					KingdomBenefitCapabilities.Shrine))
 					RunShrine(System, Z, Survey, work, entry, claimed);
-				}
-				else if (KingdomFaithRules.IsEducationCategory(entry.Category))
-				{
-					RunEducationLapse(work, entry);
-				}
+				if (KingdomBenefitCapabilities.Accepts(reading,
+					KingdomBenefitCapabilities.Education))
+					RunEducationLapse(work, entry, KingdomBenefitCapabilities.Has(reading,
+						KingdomBenefitCapabilities.Education));
 			}
 			ForgetUnreached(System, Z, Survey, claimed);
 		}
@@ -127,7 +129,8 @@ namespace ThousandAndFirst
 		private static void RunShrine(KingdomSystem System, Zone Z, KingdomSurvey Survey, GameObject Shrine, KingdomRules.BuildEntry Entry, HashSet<GameObject> Claimed)
 		{
 			string shrineCreed = Shrine.GetStringProperty(ShrineCreedProperty);
-			if (string.IsNullOrEmpty(shrineCreed))
+			if (string.IsNullOrEmpty(shrineCreed)
+				|| !KingdomData.CreedUsesTheology(shrineCreed))
 			{
 				// Not applicable: an unconsecrated shrine has no pass to run and says nothing
 				// (STANDARDS 7b's other kind of early return).

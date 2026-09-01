@@ -32,7 +32,8 @@ These require observation, taste, or signed-in account authority; none blocks lo
    play data in hand.
 5. **Reopened world presence:** successor/namesake people, one bounded legacy rival/partner,
    diplomats/emissaries, visible endpoint traffic/correspondence, and witnessed polity clashes are
-   active v1 work. `docs/V1-UNDEFERRAL.md` owns their implementation/evidence gaps;
+   implemented at code scope; their current native behavior/evidence pass remains open.
+   `docs/V1-UNDEFERRAL.md` owns their implementation/evidence boundary;
    `V1-POLITY-SCOPE.md` owns their lore and safety boundary. Exact old actors, automatic ideological
    war, persistent unloaded parties, mass background simulation, and offscreen conquest/loss remain
    rejected rather than queued engineering work.
@@ -56,7 +57,7 @@ These require observation, taste, or signed-in account authority; none blocks lo
   ground is implemented at code scope and retains its separate native traversal/save/appearance gate.
 - Routed construction inputs are implemented through one central job with frozen nearest lawful
   custody, itinerary, carrier, landing, debit, rollback, recovery, and master-pause authority.
-  Integrated interruption/conservation and native proof remain open; remote stock is never direct
+  Frozen integrated interruption/conservation is green and native proof remains open; remote stock is never direct
   spending permission.
 - The five-purpose portfolio is implemented as five symmetric edges and ten directed recipes across
   the theatre, annexe, Deep-Bore, Great Foundry, and Granary-Colossus, with twelve authored XL sites.
@@ -165,10 +166,11 @@ it ("only when the design says so"); nothing expresses it. Per-stratum overrides
 parallel machinery and must earn it (Addendum 13). No design needs it yet — the deep set went
 separate-records instead. **Recorded so the want has a number when it arrives.**
 
-**QB-20 — LATENT: the rest of the QoL read family is surface-only.** `KingdomQol.Judge` /
-`WillLive` / `Tolerates` / `PreferFlags` / `FirstTolerable` still resolve offers by design key
-alone. Zero live callers today, so no Zone overloads were minted (no speculative API). The day
-one is called from a deep zone it will be wrong. Recorded so the decision is visible.
+**QB-20 — CLOSED: catalogue QoL reads cannot masquerade as live evidence.** The design-key
+family is named `PreviewJudge` / `PreviewWillLive` / `PreviewTolerates` /
+`PreviewPreferFlags` / `PreviewFirstTolerable`; catalogue offers are `CatalogueOfferOf`.
+The old live-looking names are compile-time-obsolete. Runtime housing uses one physical benefit
+index, and `TryPhysicalOfferOf` is the explicit root/survey API.
 
 **QB-21 — CLOSED: the housing/beds invariant is enforced at catalogue load.** Effective open
 ground carrying `roof:N` is a Fault even when the author omitted the `Roof` attribute; open

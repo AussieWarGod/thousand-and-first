@@ -18,30 +18,35 @@ namespace ThousandAndFirst
 				{
 					return;
 				}
-				List<GameObject> built = KingdomSurvey.Take(Z, System).Built;
-				for (int i = 0; i < built.Count; i++)
+				KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z, System);
+				List<GameObject> benches = KingdomCapabilityRuntime.Roots(Z, survey,
+					KingdomBenefitCapabilities.Inquiry, "research benches");
+				for (int i = 0; i < benches.Count; i++)
 				{
-					GameObject work = built[i];
-					if (!GameObject.Validate(work) || work.HasPart<XRL.World.Parts.r_KingdomInquiry>()
-						|| work.GetIntProperty(KingdomAdopt.StaffNeededProperty) <= 0)
-					{
-						continue;
-					}
-					KingdomRules.BuildEntry entry;
-					if (!KingdomData.TryGetBuilding(work.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out entry)
-						|| entry.Category != BenchCategory)
-					{
-						continue;
-					}
+					GameObject work = benches[i];
+					if (work.HasPart<XRL.World.Parts.r_KingdomInquiry>()) continue;
 					work.AddPart(new XRL.World.Parts.r_KingdomInquiry());
 					KingdomLog.Log("research: " + work.ShortDisplayName + " at " + System.SeatName + " is a bench");
 				}
 			});
 		}
 
-		/// <summary>The catalogue category a design has to be in for its finished work to be a place
-		/// people think at.</summary>
-		public const string BenchCategory = "knowledge";
+		internal static bool LiveBench(GameObject Bench)
+		{
+			Zone zone = Bench?.CurrentZone;
+			KingdomSurvey survey = zone == null ? null
+				: KingdomSurvey.ActiveFor(zone) ?? KingdomSurvey.Take(zone);
+			return zone != null && KingdomCapabilityRuntime.HasRoot(zone, survey, Bench,
+				KingdomBenefitCapabilities.Inquiry, "research bench");
+		}
+
+		internal static long PauseUnavailable(KingdomSystem System, long TimeTick,
+			string LabName)
+		{
+			if (KingdomMaster.AutomaticWorkAllowed(System))
+				Stall(System, KingdomResearchRules.UnavailableBenchLine(LabName));
+			return TimeTick;
+		}
 
 		// ==================================================================================
 		// The loop: one stretch of thinking, charged

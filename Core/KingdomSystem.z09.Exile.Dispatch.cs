@@ -88,6 +88,12 @@ namespace ThousandAndFirst
 			}
 			if (archive.Phase == KingdomRealmArchivePhase.Resetting)
 			{
+				if (!KingdomZoneObservationRevocation.TryRevokeOwned(this, out failure))
+				{
+					Refusal = "The realm's ground observations could not retire exactly: "
+						+ (failure ?? "ground registry unavailable") + ".";
+					return false;
+				}
 				if (!KingdomPolityRealmTransitionRuntime.TryAdvanceExile(this, archive,
 					out failure))
 				{
@@ -105,123 +111,13 @@ namespace ThousandAndFirst
 			out string Refusal)
 		{
 			string eventId = "taf:realm:exile:v1:" + Archive.RealmId;
+			string realm = KingdomPresentation.Rich(Archive.DisplayName);
 			string telling = KingdomExileRules.ExileTelling(
-				KingdomPresentation.Rich(Archive.DisplayName),
-				Archive.ExileDeed);
+				realm, Archive.ExileDeed);
+			string outsider = KingdomExileRules.ExileRumour(realm,
+				KingdomPresentation.Rich(KingdomChronicle.FounderName()));
 			return DispatchRealmChronicle(Archive, Archive.ExileChronicle, eventId, telling,
-				"exile", out Refusal);
-		}
-
-		private bool DispatchRealmChronicle(KingdomRealmArchive Archive,
-			KingdomRealmCallbackReceipt Receipt, string EventId, string Telling,
-			string Context, out string Refusal)
-		{
-			Refusal = "";
-			if (!KingdomChronicleReceiptRules.TryFingerprint(EventId, Telling, true, null,
-				out string fingerprint) || !TryInspectChronicle(EventId, fingerprint,
-				out string registryHash, out bool present, out bool terminal, out bool lost,
-				out bool conflict, out string registry, out string registryFault,
-				out string otherRegistryHash, out KingdomChronicleReceipt eventReceipt))
-				return QuarantineReturn(Archive, Context + " Chronicle cannot be inspected", out Refusal);
-			string expected = EventId + "|" + fingerprint;
-			KingdomChronicleDeclaration declaration;
-			string frozenRegistryHash;
-			string frozenOtherHash;
-			string frozenRegistryFault;
-			string before;
-			if (Receipt.Phase == KingdomRealmCallbackPhase.None)
-			{
-				if (present)
-					return QuarantineReturn(Archive, Context +
-						" Chronicle row exists without outer declaration intent", out Refusal);
-				if (!KingdomChronicle.TryDeclareOnce(this, EventId, Telling, true, null,
-					out declaration) || declaration.Fingerprint != fingerprint ||
-					!TryCreateChronicleIntent(EventId, declaration, registryHash,
-						otherRegistryHash, registryFault, out before))
-					return QuarantineReturn(Archive, Context +
-						" Chronicle declaration cannot be frozen", out Refusal);
-				frozenRegistryHash = registryHash; frozenOtherHash = otherRegistryHash;
-				frozenRegistryFault = registryFault;
-			}
-			else if (!TryParseChronicleIntent(Receipt.BeforeEffect, EventId, Telling, true,
-				null, out declaration, out frozenRegistryHash, out frozenOtherHash,
-				out frozenRegistryFault))
-				return QuarantineReturn(Archive, Context +
-					" Chronicle declaration receipt is malformed", out Refusal);
-			else before = Receipt.BeforeEffect;
-			if (Receipt.Phase != KingdomRealmCallbackPhase.None && Receipt.AfterEffect != expected)
-				return QuarantineReturn(Archive,
-					Context + " Chronicle intent conflicts with frozen content", out Refusal);
-			if (!ChronicleDeclarationMatchesArchive(Archive, declaration, out string proofFailure) ||
-				conflict || otherRegistryHash != frozenOtherHash ||
-				!TryValidateChronicleLists(declaration, eventReceipt, present, terminal,
-					out string officialHash, out string outsiderHash, out bool listLost) ||
-				!KingdomRealmCallbackProofRules.ChronicleFaultMatches(present, terminal,
-					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
-						eventReceipt.OfficialState,
-					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
-						eventReceipt.OutsiderState,
-					eventReceipt == null ? KingdomChronicleSinkDisposition.Pending :
-						eventReceipt.JournalState, registryFault, frozenRegistryFault))
-				return QuarantineReturn(Archive, proofFailure ?? Context +
-					" Chronicle lists or unrelated rows reached a third state", out Refusal);
-			string observed = terminal ? ChronicleObserved(registryHash, otherRegistryHash,
-				officialHash, outsiderHash, eventReceipt) : null;
-			if (Receipt.Phase == KingdomRealmCallbackPhase.Settled)
-				return terminal && EnsureArchiveChronicleState(Archive, declaration,
-					eventReceipt, registry, registryFault, frozenRegistryHash, out Refusal) &&
-					SettledCallbackStillMatches(Archive, Receipt, observed, out Refusal);
-			if (!PrepareReturnCallback(Archive, Receipt, KingdomRealmCallbackScope.Chronicle,
-				before, expected,
-				out bool invokeAuthorized, out Refusal)) return false;
-			if (!present && (registryHash != frozenRegistryHash ||
-				officialHash != declaration.OfficialBefore ||
-				outsiderHash != declaration.OutsiderBefore))
-				return QuarantineReturn(Archive,
-					Context + " Chronicle reached a third prestate", out Refusal);
-			if (!terminal)
-			{
-				if (!present && !invokeAuthorized)
-					return QuarantineReturn(Archive,
-						Context + " Chronicle callback was interrupted before receipt publication",
-						out Refusal);
-				if (!Archive.CurrentGraphMatchesExceptChronicle(this,
-					out string graphFailure) || (!present &&
-					(!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph,
-						out graphFailure) || graph != Receipt.BeforeGraph)))
-					return QuarantineReturn(Archive, graphFailure ??
-						Context + " Chronicle Core graph changed before callback", out Refusal);
-				List<string> officialReference = ChronicleEntries;
-				List<string> outsiderReference = OutsiderEntries;
-				if (!KingdomChronicle.RecordDeclaredOnce(this, declaration) ||
-					!ReferenceEquals(officialReference, ChronicleEntries) ||
-					!ReferenceEquals(outsiderReference, OutsiderEntries) ||
-					!Archive.CurrentGraphMatchesExceptChronicle(this, out graphFailure))
-				{
-					Refusal = "The " + Context + " telling remains in its exact Chronicle receipt.";
-					return false;
-				}
-				if (!TryInspectChronicle(EventId, fingerprint, out registryHash, out present,
-					out terminal, out lost, out conflict, out registry, out registryFault,
-					out otherRegistryHash, out eventReceipt) || conflict || !terminal ||
-					otherRegistryHash != frozenOtherHash ||
-					!TryValidateChronicleLists(declaration, eventReceipt, true, true,
-						out officialHash, out outsiderHash, out listLost) ||
-					!KingdomRealmCallbackProofRules.ChronicleFaultMatches(true, true,
-						eventReceipt.OfficialState, eventReceipt.OutsiderState,
-						eventReceipt.JournalState, registryFault, frozenRegistryFault))
-					return QuarantineReturn(Archive,
-						Context + " Chronicle callback lacks exact terminal proof", out Refusal);
-			}
-			if (!EnsureArchiveChronicleState(Archive, declaration, eventReceipt, registry,
-				registryFault, frozenRegistryHash, out Refusal)) return false;
-			observed = ChronicleObserved(registryHash, otherRegistryHash, officialHash,
-				outsiderHash, eventReceipt);
-			return SettleReturnCallback(Archive, Receipt, (listLost ||
-				eventReceipt.JournalState == KingdomChronicleSinkDisposition.Lost || lost)
-				? KingdomRealmCallbackDisposition.Lost
-				: KingdomRealmCallbackDisposition.Delivered,
-				observed, out Refusal);
+				outsider, "exile", out Refusal);
 		}
 
 		private bool DispatchExileAbilityRemoval(KingdomRealmArchive Archive,

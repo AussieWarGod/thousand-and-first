@@ -20,7 +20,7 @@ Grounded in vanilla's own village generator (`Village_InitialStructureSegmentati
 (`Village_StructureWall_*Default`: Fulcrete, Marble, Limestone, Foamcrete, Verdigris,
 BrinestalkWall).
 
-- Tiers: **S** (~5×4), **M** (~8×6), **L** (~12×9), **XL** (~20×14). Not every plot is roofed:
+- Tiers: **S** (6×4), **M** (8×6), **L** (12×10), **XL** (20×18). Not every plot is roofed:
   fields, yards, reservoirs, markets, salt-pans are open plots.
 - **Plot size is stage-gated**: Camp lays S; Steading M; Town L; City XL. The city literally
   builds bigger as it grows. Composes with district/tech gates without touching them.
@@ -31,8 +31,10 @@ BrinestalkWall).
 - Gatehouse is a placement rule, not a size: on the frontier wall, astride a road. Vanilla
   `PlaceHut` CLEARS its rect — never call it on ground holding anything player-placed; refuse
   instead.
-- **Upgrades climb within a plot; sizes compete across plots** (author: "agree, that's great").
-  No in-place S→M metamorphosis. M-entry ≈ 1.5× mature-S per plot at much higher raise cost;
+- **Upgrades ordinarily climb within a plot; sizes compete across plots** (author: "agree, that's
+  great"). The later transformative-growth ruling adds one narrow exception: a reviewed adjacent
+  additive-expand or renovate-expand tier may annex newly proved ground. No catalogue-only S→M
+  metamorphosis. M-entry ≈ 1.5× mature-S per plot at much higher raise cost;
   M-ceiling ≈ 4× mature-S. The overlap band is deliberate: plot-starved goes M, water-starved
   stacks S, crew-starved waits.
 
@@ -157,6 +159,22 @@ roofed test.
 attributes override, omitted survive, `<skin>` children append (same skin-key replaces), chains
 extendable. Guardrail: merges shape future commissions only; a standing building keeps its
 materialised state, so a mod update never rewrites a built city.
+
+**Adoption proof ledger (2026-09-01):** `Adoptable="yes"` now means a load-validated physical
+contract, not merely permission to stamp a key. The current shipped set is 51 roles: ordinary
+enclosed housing patterns and work roles with stocked takeable/native provider routes, ordinary
+open yards/grounds with exact catalogue-sized rectangles, and one exact dry-container larder.
+Staffed work carries a signed operation
+receipt (root/build/category/staff/manning); catalogue benefit strings are never copied. Provider
+condition, root condition, crew/power/custom state, scope, exact design affinity, and catalogue cap
+remain independent gates. Housing/storage/staffless roles cannot mint staffing authority.
+
+Current exclusions are evidence boundaries: unplotted/network geometry lacks the ordinary
+room/yard receipt shape; water storage lacks a typed capacity/production match; fields, power works,
+refiners, labs, fixed creed practices, Heart, remote/purpose/crown, and hosted roles still depend
+on authored root parts or topology. They can move into adoption only when that physical operation
+is itself re-provable; they are not permanently rejected categories. Release preflights the exact
+designation authority and clears both typed receipt projections and adoption-owned state.
 
 **The plot as socket**: condemning keeps the plot as a re-buildable slot; "change what this plot
 is" is one ceremony (strike + rebuild, keeping rect, lanes, door orientation). **Re-dress**: apply
@@ -521,6 +539,23 @@ consumed for favored meals or recipes by the residents, or used by industry to p
   and addable by hand.
 - Consumption is **meals**: residents favour meals/recipes (Qud's cooking vocabulary), not an
   abstract ration tick; industry can consume foodstuffs as inputs to produce things.
+
+**Author ruling reconciliation (2026-09-01).** This paragraph supersedes earlier Wave-B/G3 prose
+that implemented daily per-capita rations, bounded abstract foraging, hunger/famine state, a
+one-day population-capacity meal shade, or Addendum 6's claim that food is a population-binding
+pool. Water keeps its separate physical upkeep/scarcity lane. Live supported level, binding cause,
+and subsidence use water plus roof only; the frozen three-kind food support vocabulary remains
+compatibility/physical-lane metadata and is inert to population.
+Food is positive and transaction-bound: an explicit meal/recipe/industry act requires spendable
+physical ingredients plus its currently capable physical provider, debits the exact disclosed
+ingredients where designed, and grants only that act's bounded positive result. Missing food or
+provider withholds the act, names what is unavailable, and loses no hidden stock or residents.
+Zero food cannot bind or subside a settlement, and additional food cannot raise base supported
+population. Legacy hunger and meal-shade fields remain wire-compatible projections only and
+normalize inert. This ruling also supersedes Addendum 10(b)'s provisional food-spoilage extension:
+damaged larders lose effectiveness but never passively rot or debit their exact contents, however
+long the absence. The frozen Food leak ordinal and valid open receipts migrate inert before any
+inventory callback; water and charge leakage remain unchanged.
 
 Method note (standing): derive-before-author — survey the decompile + game XML for the vanilla
 parts, furniture, plants, seeds, and cooking systems FIRST; co-opt before inventing.
@@ -1014,6 +1049,15 @@ learning idioms: "similar feel to the way blueprints/data disks/psychometry work
 - Refusals name the missing gate per 7b; the visibility law (Addendum 14) applies to
   creed-buildings a city cannot see its way to.
 
+**v1 progression reconciliation (2026-09-01):** “Each creed gets unique buildings” is a
+creed-practice coverage promise, not a generic second-tier quota. A successor is authored only
+when that same practice has a distinct later physical programme, material bill, technology/stage
+gate, and map. The current corpus therefore gives 32 creeds one complete standalone work and gives
+Robots the one justified two-step chain: open salvage charge-bay -> enclosed workshop service-bay.
+M/L/XL creed-campus realizations reserve and compose larger sites for the same paid practice; they
+are not free Level-1 buildings. Future creed successors remain ordinary mergeable catalogue and
+architecture data, never a core whitelist or automatically invented upgrade.
+
 
 ## Addendum 17, 2026-08-22 — the identity doctrine (author answer to ideation Q4)
 
@@ -1238,9 +1282,9 @@ wire; existing `Flesh=1` and `Chrome=2` never change. Their exact catalogue/arch
 
 | Key | Fresh-site/precursor gate | Build bill | Required authored ground |
 |---|---|---|---|
-| `deepbore` | XL City lot; proved reciprocal delve and claimed dry deep foot; local `deepcut` or `masonyard`; foundry tech; six staff and one Strength/Tinkering foreman | 150 drams; 18,000 ticks; `stone:100,shapedstone:40,timber:12,scrap:24,workedmetal:12` | 20×14 fallback plus Barathrumites, Daughters, and Cragmensch topologies; protected render-only bore head, spoil/service lane, repair bench, exact input/output stores, drainage, public and service exits |
-| `greatfoundry` | XL City lot; local `masonyard`, `smelter`, `chargingpost`, dedicated fresh quench vessel; foundry tech; six staff and one Intelligence/Tinkering foreman | 160 drams; 18,000 ticks; `stone:96,shapedstone:36,scrap:48,workedmetal:40` | 20×14 fallback plus Mechanimists, Barathrumites, and Templar topologies; stone fire hall, casting floor, safe furnace/forge/anvil/press wrappers, empty quench court, exact stores, slag lane, two wide exits |
-| `realmgranary` | XL City lot; local `granary` and `grange` or `homefarm`; real crop rows, mill, dedicated fresh water; foundry tech; six staff and one harvesting/steward foreman | 140 drams; 16,800 ticks; `timber:80,shapedtimber:36,stone:40,shapedstone:16,workedmetal:8` | 20×14 fallback plus Farmers, YdFreehold, and Chavvah topologies; raised dry store, crop court, mill/threshing floor, empty larders/baskets/cistern, inert irrigation lanes, public and service exits |
+| `deepbore` | XL City lot; proved reciprocal delve and claimed dry deep foot; local `deepcut` or `masonyard`; foundry tech; six staff and one Strength/Tinkering foreman | 150 drams; 18,000 ticks; `stone:100,shapedstone:40,timber:12,scrap:24,workedmetal:12` | 20×18 fallback plus Barathrumites, Daughters, and Cragmensch topologies; protected render-only bore head, spoil/service lane, repair bench, exact input/output stores, drainage, public and service exits |
+| `greatfoundry` | XL City lot; local `masonyard`, `smelter`, `chargingpost`, dedicated fresh quench vessel; foundry tech; six staff and one Intelligence/Tinkering foreman | 160 drams; 18,000 ticks; `stone:96,shapedstone:36,scrap:48,workedmetal:40` | 20×18 fallback plus Mechanimists, Barathrumites, and Templar topologies; stone fire hall, casting floor, safe furnace/forge/anvil/press wrappers, empty quench court, exact stores, slag lane, two wide exits |
+| `realmgranary` | XL City lot; local `granary` and `grange` or `homefarm`; real crop rows, mill, dedicated fresh water; foundry tech; six staff and one harvesting/steward foreman | 140 drams; 16,800 ticks; `timber:80,shapedtimber:36,stone:40,shapedstone:16,workedmetal:8` | 20×18 fallback plus Farmers, YdFreehold, and Chavvah topologies; raised dry store, crop court, mill/threshing floor, empty larders/baskets/cistern, inert irrigation lanes, public and service exits |
 
 Every topology declares reachable `entrance:public`, `entrance:service`, `purpose:operator`,
 `purpose:machine`, `purpose:input`, and `purpose:output` anchors. Founder, citizen, and porter flood

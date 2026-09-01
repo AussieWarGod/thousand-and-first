@@ -12,10 +12,15 @@ namespace ThousandAndFirst
 			Home = null;
 			PlotId = Resident?.GetStringProperty(HomePlotIdProperty);
 			if (Z == null || string.IsNullOrEmpty(PlotId)) return false;
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string failure))
 			{
-				if (!GameObject.Validate(item)
-					|| item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+				LogBenefitFailure(Z, "lab home", failure);
+				return false;
+			}
+			foreach (GameObject item in HousingIn(Z, benefits))
+			{
+				if (IsCondemned(item)
 					|| !string.Equals(item.GetStringProperty(KingdomPlots.PlotIdProperty),
 						PlotId, StringComparison.Ordinal)) continue;
 				if (Home != null) { Home = null; return false; }
@@ -32,7 +37,11 @@ namespace ThousandAndFirst
 			if (!TryLabHome(Z, Resident, out GameObject source, out string current)
 				|| !string.Equals(current, ExpectedSourcePlot, StringComparison.Ordinal))
 				return LabFail("The neighbour no longer occupies the exact source plot.", out Failure);
-			List<GameObject> homes = HousingIn(Z);
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string benefitFailure))
+				return LabFail("Physical lodging evidence is unavailable: " + benefitFailure,
+					out Failure);
+			List<GameObject> homes = HousingIn(Z, benefits);
 			for (int i = homes.Count - 1; i >= 0; i--)
 				if (homes[i] == source || string.Equals(homes[i].GetStringProperty(
 					KingdomPlots.PlotIdProperty), ExpectedSourcePlot, StringComparison.Ordinal))
@@ -49,7 +58,7 @@ namespace ThousandAndFirst
 			KingdomLodgingRules.UnhousedReason reason;
 			KingdomLodgingRules.Closeness roomiest;
 			List<string> needs;
-			TargetPlot = ChooseHome(Z, Resident, homes, occupancy, out TargetHome,
+			TargetPlot = ChooseHome(Z, Resident, homes, occupancy, benefits, out TargetHome,
 				out reason, out roomiest, out needs);
 			if (TargetPlot == null)
 				return LabFail(

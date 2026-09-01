@@ -93,13 +93,13 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(0L, 0L, 0L, 0L), null, null, null)), "thirst"));
 		}
 
-		/// <summary>Bare larders are only an ask when somebody is alive to eat from them.</summary>
+		/// <summary>Bare larders with residents report that the optional meal is unavailable.</summary>
 		[Test]
 		public void Derive_BareLardersAskOnlyWhenSomebodyLivesHere()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null, null)), "hunger"));
+			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null, null)), "meal"));
 			Assert.IsTrue(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null,
-				new KingdomResidentRow[1] { Settler(1) })), "hunger"));
+				new KingdomResidentRow[1] { Settler(1) })), "meal"));
 		}
 
 		/// <summary>More people than roofs asks for exactly the shortfall, counted across every
@@ -176,7 +176,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomZoneRow[1] { Zone(Here, 0, 0L, 0L) }, new KingdomWorkRow[1] { Work(1, 100, 0, KingdomWorkKind.Producer) },
 				new KingdomResidentRow[1] { Settler(1) }));
 			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "thirst", asks[0].Kind);
-			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "hunger", asks[1].Kind);
+			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "shelter", asks[1].Kind);
+			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "meal", asks[2].Kind);
 			for (int i = 1; i < asks.Length; i++)
 			{
 				Assert.IsTrue(asks[i - 1].Weight >= asks[i].Weight, "weights must not ascend");

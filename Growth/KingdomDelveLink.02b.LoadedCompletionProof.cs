@@ -26,7 +26,7 @@ namespace ThousandAndFirst
 				return Fail("both exact loaded delve landings do not stand", out Failure);
 			if (FindExactEndpoint(head, receipt.RootId, out GameObject root)
 					!= KingdomPhysicalLookupState.Exact
-				|| root.GetIntProperty("KingdomBuilt") != 1
+				|| !KingdomUpgrade.IsFunctionallyBuilt(root)
 				|| !KingdomDelveRules.IsDelve(root.GetStringProperty(
 					KingdomUpgrade.BuildKeyProperty))
 				|| !long.TryParse(root.GetStringProperty(

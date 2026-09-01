@@ -13,21 +13,6 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomWear
 	{
-		private static string JoinWearInts(List<int> Values)
-		{
-			string[] rows = new string[Values.Count];
-			for (int i = 0; i < Values.Count; i++)
-			{
-				rows[i] = Values[i].ToString(global::System.Globalization.CultureInfo.InvariantCulture);
-			}
-			return string.Join("|", rows);
-		}
-
-		private static bool TryWearInts(string Text, out int[] Values)
-		{
-			return KingdomWearRules.TryCanonicalIntRows(Text, out Values);
-		}
-
 		private static bool TryReadStrictTick(GameObject Work, string Property, out long Tick)
 		{
 			Tick = 0L;
@@ -91,6 +76,30 @@ namespace ThousandAndFirst
 			Wear.LeakItemIds = null;
 			Wear.LeakItemOriginalCounts = null;
 			Wear.LeakItemAllocations = null;
+		}
+
+		/// <summary>
+		/// Migrates the retired food-loss receipt in place. Its fields remain serializable for
+		/// old-save compatibility, but no phase may resume and no pantry object is inspected or
+		/// mutated. Completed legacy announcements on a larder are also silenced.
+		/// </summary>
+		internal static bool RetireFoodLeakReceipt(GameObject Work, r_KingdomWear Wear)
+		{
+			if (Wear == null) return false;
+			bool retired = Wear.LeakKind == (int)KingdomWearRules.LeakKind.Food;
+			if (retired)
+			{
+				ClearLeakReceipt(Wear);
+				Wear.LeakLedgerState = (int)KingdomWearSinkDisposition.None;
+				Wear.LeakMessageState = (int)KingdomWearSinkDisposition.None;
+				Wear.LeakAnnounced = false;
+			}
+			else if ((KingdomWearLeakPhase)Wear.LeakPhase == KingdomWearLeakPhase.None
+				&& GameObject.Validate(Work) && Work.GetIntProperty(LarderProperty) == 1)
+			{
+				Wear.LeakAnnounced = false;
+			}
+			return retired;
 		}
 
 		private static void QuarantineWear(KingdomSystem System, GameObject Work, string Reason)

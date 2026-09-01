@@ -23,10 +23,30 @@ namespace ThousandAndFirst.Tests
 				TestMain.ReadRepositoryText(
 					Path.Combine("Growth", "KingdomArchitectureRuntime.Selection.cs")),
 				TestMain.ReadRepositoryText(
+					Path.Combine("Growth", "KingdomArchitectureRuntime.ReceiptPrefixes.cs")),
+				TestMain.ReadRepositoryText(
 					Path.Combine("Growth", "KingdomArchitectureRuntime.Receipt.cs")),
 				TestMain.ReadRepositoryText(
 					Path.Combine("Growth", "KingdomArchitectureRuntime.Coordinates.cs"))
 			});
+		}
+
+		private static string RoadIngress()
+		{
+			return TestMain.ReadRepositoryText(Path.Combine("Growth",
+				"KingdomArchitectureRuntime.RoadIngress.cs"));
+		}
+
+		private static string SitingProbe()
+		{
+			return TestMain.ReadRepositoryText(Path.Combine("Growth",
+				"KingdomArchitectureRuntime.SitingProbe.cs"));
+		}
+
+		private static string FrozenEnvelope()
+		{
+			return TestMain.ReadRepositoryText(Path.Combine("Growth",
+				"KingdomArchitectureRuntime.FrozenEnvelope.cs"));
 		}
 
 		private static string Rules()
@@ -168,28 +188,57 @@ namespace ThousandAndFirst.Tests
 				"ArchitectureFacing.South, ArchitectureFacing.West");
 			StringAssert.Contains("width != Rect.Width || height != Rect.Height", road);
 			StringAssert.Contains("KingdomArchitecture.TryResolve(BuildKey, Mapping.TypeKey", road);
-			StringAssert.Contains("TryRoadIngressScore(Z, Rect, resolved", road);
+			StringAssert.Contains("TryPhysicalRoadIngressScore(Z, Rect, resolved", road);
 			StringAssert.Contains("if (score > bestScore)", road);
 			Assert.IsFalse(road.Contains("score >= bestScore"),
 				"equal road scores must retain fixed N/E/S/W candidate order");
 			StringAssert.Contains("no authored public entrance connected to existing road evidence", road);
 
-			string ingress = Between(source, "private static bool TryRoadIngressScore(",
-				"private static bool TrySelectionContext(");
+			string ingress = RoadIngress();
 			StringAssert.Contains("anchor.Key == \"entrance:public\"", ingress);
 			StringAssert.Contains("anchor.Key.StartsWith(\"entrance:public@\"", ingress);
-			StringAssert.Contains("TryWorldAnchor(Snapshot, Rect, anchor", ingress);
-			StringAssert.Contains("Rect.Contains(roadX, roadY)", ingress);
-			StringAssert.Contains("KingdomRoads.FindOurFloor(cell, out floor)", ingress);
-			StringAssert.Contains("KingdomRoads.ReadTally(Z)", ingress);
-			StringAssert.Contains("KingdomRoadRules.WearAt(worn.Traffic)", ingress);
-			StringAssert.Contains("KingdomRoadRules.WearState.Untouched", ingress);
+			AssertOrdered(ingress, "KingdomRoadRules.TryAuthoredLane(Snapshot, Rect, anchor",
+				"for (int r = 0; r < route.Count; r++)",
+				"KingdomRoads.Walkable(Z.GetCell(point.X, point.Y))",
+				"KingdomRoadRules.InBounds(laneX, laneY, Z.Width, Z.Height)",
+				"resolved.Add(new ArchitecturePoint(laneX, laneY))");
+			StringAssert.Contains("authored public ingress is physically blocked", ingress);
+
+			string probe = SitingProbe();
+			StringAssert.Contains("TryPhysicalRoadIngressLanes(zone, Rect, Snapshot, lanes",
+				probe);
+			StringAssert.Contains("TryRoadEvidenceAt(lanes[i].X, lanes[i].Y", probe);
+			StringAssert.DoesNotContain("TryWorldAnchor(Snapshot, Rect, anchor", probe);
+			StringAssert.DoesNotContain("Rect.Contains(roadX, roadY)", probe);
+
+			string frozen = FrozenEnvelope();
+			StringAssert.Contains("TryPhysicalRoadIngressLanes(Z, Rect, Snapshot, lanes",
+				frozen);
+			StringAssert.Contains("TryPhysicalRoadEvidenceAt(Z, lanes[i].X, lanes[i].Y",
+				frozen);
+			StringAssert.Contains("KingdomRoads.FindOurFloor(Z.GetCell(X, Y), out floor)",
+				frozen);
+			StringAssert.Contains("KingdomRoads.ReadTally(Z)", frozen);
+			StringAssert.Contains("KingdomRoadRules.WearAt(worn.Traffic)", frozen);
+			StringAssert.Contains("KingdomRoadRules.WearState.Untouched", frozen);
 			Assert.IsFalse(ingress.Contains("Math.Abs"));
 			Assert.IsFalse(ingress.ToLowerInvariant().Contains("nearest"));
 			Assert.IsFalse(source.Contains("GenericRectangle"),
 				"runtime must not invent a fallback map");
 			Assert.IsFalse(source.Contains("GenericShell"),
 				"runtime must not invent a fallback shell");
+		}
+
+		[Test]
+		public void CompletedStampReprovesTheLiveFrozenIngressRoute()
+		{
+			string staging = TestMain.ReadRepositoryText(Path.Combine("Growth",
+				"KingdomArchitectureStamper.Staging.cs"));
+			string complete = Between(staging, "public static bool TryVerifyComplete(",
+				"private static bool TrySettlePlacement(");
+			AssertOrdered(complete, "TryVerifyPassability(Z, intent, snapshot, lot",
+				"KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(");
+			StringAssert.Contains("Z, intent.Rect, snapshot, out Failure", complete);
 		}
 
 		[Test]
@@ -226,19 +275,23 @@ namespace ThousandAndFirst.Tests
 				"public static bool TryFreeze(",
 				"public static bool TryRead(");
 			int validate = freeze.IndexOf("TryValidateIntent(Intent", StringComparison.Ordinal);
-			int firstMutation = freeze.IndexOf("Target.RemoveIntProperty(SchemaProperty)",
+			int prefix = freeze.IndexOf("TryAcceptReceiptPrefix(Target, Intent",
+				StringComparison.Ordinal);
+			int firstMutation = freeze.IndexOf("Target.SetStringProperty(BuildKeyProperty",
 				StringComparison.Ordinal);
 			int schemaWrite = freeze.IndexOf(
 				"Target.SetIntProperty(SchemaProperty, ReceiptSchema);",
 				StringComparison.Ordinal);
 			Assert.GreaterOrEqual(validate, 0);
+			Assert.Greater(prefix, validate);
 			Assert.Greater(firstMutation, validate);
+			Assert.Greater(firstMutation, prefix);
 			Assert.Greater(schemaWrite, firstMutation);
 			Assert.AreEqual(schemaWrite,
 				freeze.LastIndexOf("Target.Set", StringComparison.Ordinal),
 				"schema must be final property write");
-			StringAssert.Contains("TryRead(Target, out read", freeze);
-			StringAssert.Contains("Target.RemoveIntProperty(SchemaProperty)", freeze);
+			StringAssert.Contains("TryReadExactFrozen(Target, Intent", freeze);
+			StringAssert.DoesNotContain("RemoveIntProperty(SchemaProperty)", freeze);
 		}
 
 		[Test]
@@ -275,11 +328,13 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SnapshotCodecWritesA2AndReadsA1OnlyAtItsOriginalVersion()
+		public void SnapshotCodecWritesA4AndReadsA1ThroughA3AtTheirOriginalVersions()
 		{
 			string source = Rules();
 			StringAssert.Contains("public const int LegacySnapshotSchema = 1;", source);
-			StringAssert.Contains("public const int SnapshotSchema = 2;", source);
+			StringAssert.Contains("public const int PlacementTruthSnapshotSchema = 2;", source);
+			StringAssert.Contains("public const int TransitionSnapshotSchema = 3;", source);
+			StringAssert.Contains("public const int SnapshotSchema = 4;", source);
 			StringAssert.Contains(
 				"return TryEncodeSnapshotVersion(Snapshot, SnapshotSchema, out Encoded, out Failure);",
 				source);
@@ -288,15 +343,19 @@ namespace ThousandAndFirst.Tests
 			string decode = Between(source, "public static bool TryDecodeSnapshot(",
 				"public static bool TrySnapshotHash(");
 			StringAssert.Contains("terms[0] == \"a1\" ? LegacySnapshotSchema", decode);
-			StringAssert.Contains("terms[0] == \"a2\" ? SnapshotSchema", decode);
+			StringAssert.Contains("terms[0] == \"a2\" ? PlacementTruthSnapshotSchema", decode);
+			StringAssert.Contains("terms[0] == \"a3\" ? TransitionSnapshotSchema", decode);
+			StringAssert.Contains("terms[0] == \"a4\" ? SnapshotSchema", decode);
 			StringAssert.Contains("reader.ReadByte() != schema", decode);
 			StringAssert.Contains("schema == LegacySnapshotSchema", decode);
 			StringAssert.Contains("TryEncodeSnapshotVersion(parsed, schema", decode);
 			StringAssert.Contains("canonical != Encoded", decode);
 
-			string version = Between(source, "public static bool IsCurrentSnapshotEncoding(",
+			string version = Between(source, "public static bool IsLatestSnapshotEncoding(",
 				"// --- Exact tier delta");
-			StringAssert.Contains("Encoded.StartsWith(\"a2|\"", version);
+			StringAssert.Contains("Encoded.StartsWith(\"a4|\"", version);
+			StringAssert.Contains("Encoded.StartsWith(\"a3|\"", version);
+			StringAssert.Contains("IsLatestSnapshotEncoding(Encoded)", version);
 			StringAssert.Contains("LegacyPlacementTruthOnly", source);
 		}
 
@@ -359,9 +418,12 @@ namespace ThousandAndFirst.Tests
 			string plot = Plot();
 			string commission = Between(plot,
 				"public static bool Commission(KingdomSystem System, Zone Z, KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake, out string Failure)",
-				"private static KingdomPlotRules.PlotRect PlannedFootprint(");
+				"public static GameObject Stake(KingdomSystem System, Zone Z, KingdomPlotRules.PlotRect Rect");
 			AssertOrdered(commission, "KingdomZoning.Permits(System, Z.ZoneID, Entry",
-				"TryPreparePlotPayload(System, Z, rect", "ReserveExactWater(Entry.CostDrams)",
+				"TryPreparePlotPayload(System, Z, rect",
+				"KingdomArchitectureRuntime.TryWorldFootprint(architecture",
+				"KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved",
+				"ReserveExactWater(Entry.CostDrams)",
 				"ReservePayment(Z, Entry.Key)", "KingdomConstruction.NewJob(System, Z");
 			StringAssert.Contains("KingdomConstructionRoute.PlotCommission, mainCell", commission);
 			StringAssert.Contains("null, Entry.Key, payload", commission);

@@ -120,6 +120,9 @@ namespace ThousandAndFirst
 			if (!CounterShape(next, retired)) return false;
 			if (op == null) return IsExactSuccessor(next, retired);
 			long after;
+			if (LodgeAuthorityReleased(op))
+				return op.Sequence == retired && CheckedAdd(op.Sequence, 1L, out after)
+					&& next == after;
 			return IsExactSuccessor(op.Sequence, retired)
 				&& CheckedAdd(op.Sequence, 1L, out after) && next == after;
 		}

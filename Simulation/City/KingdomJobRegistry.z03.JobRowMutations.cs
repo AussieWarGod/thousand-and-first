@@ -54,7 +54,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithLegs(KingdomLeg[] next, int count)
@@ -69,7 +71,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		/// <summary>Rewrites delivery flavour, or the expedition dispatch phase carried in this
@@ -86,14 +90,17 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		/// <summary>Freezes one no-body terminal expedition result before resident standing or
 		/// binding authority changes. <paramref name="resolutionTick"/> replaces the now-irrelevant
 		/// return due date and becomes the immutable date used by every telling retry.</summary>
 		internal KingdomJobRow WithExpeditionResolution(int outcomeCode, long resolutionTick,
-			string resolutionZoneId)
+			string resolutionZoneId, KingdomExpeditionDeedDisposition deedDisposition,
+			string deedPolityId, string deedCauseRef, string deedFigureRef)
 		{
 			return new KingdomJobRow(JobId, Kind, Cargo, CargoAmount, SourceZoneId,
 				resolutionZoneId,
@@ -107,7 +114,8 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryCargoAuthority, DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState, deedDisposition,
+				deedPolityId, deedCauseRef, deedFigureRef);
 		}
 
 		/// <summary>
@@ -131,7 +139,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		/// <summary>The cargo has landed once the deposit leg has been finished. Copy-on-write, so
@@ -148,7 +158,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithDeliveryPlan(long startTick, int originCode,
@@ -164,7 +176,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryCargoAuthority, DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithDeliveryPhase(KingdomDeliveryPhase phase)
@@ -179,7 +193,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithManifestRevision(long revision,
@@ -194,7 +210,8 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryCargoAuthority, DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, revision, DeliveryManifestSourceStart,
 				DeliveryManifestSourceCount, DeliveryTargetBeforeAmount,
-				DeliveryTargetReceiptState);
+				DeliveryTargetReceiptState, ExpeditionDeedDisposition,
+				ExpeditionDeedPolityId, ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithManifestAuthority(int version, string digest, long revision,
@@ -208,7 +225,9 @@ namespace ThousandAndFirst.Simulation.City
 				DeliverySourceBeforeAmount, DeliveryTripId, DeliveryStopOrdinal, phase,
 				DeliveryCargoAuthority, DeliveryOwnerOperationId, version, digest, revision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState);
+				DeliveryTargetBeforeAmount, DeliveryTargetReceiptState,
+				ExpeditionDeedDisposition, ExpeditionDeedPolityId,
+				ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 
 		internal KingdomJobRow WithTargetReceipt(long beforeAmount,
@@ -224,7 +243,8 @@ namespace ThousandAndFirst.Simulation.City
 				DeliveryOwnerOperationId, DeliveryOwnerManifestVersion,
 				DeliveryOwnerManifestDigest, DeliveryOwnerManifestRevision,
 				DeliveryManifestSourceStart, DeliveryManifestSourceCount,
-				beforeAmount, receiptState);
+				beforeAmount, receiptState, ExpeditionDeedDisposition,
+				ExpeditionDeedPolityId, ExpeditionDeedCauseRef, ExpeditionDeedFigureRef);
 		}
 	}
 }

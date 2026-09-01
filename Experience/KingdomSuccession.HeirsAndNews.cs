@@ -18,7 +18,7 @@ namespace ThousandAndFirst
 		{
 			Result = new List<HeirRuntime>();
 			long now = The.Game == null || The.Game.TimeTicks < 0L ? 0L : The.Game.TimeTicks;
-			if (!ReadHeirs(System.City, System.SeatName, KingdomResearch.Enabled
+			if (!ReadHeirs(System, System.City, System.SeatName, KingdomResearch.Enabled
 					&& KingdomResearch.Held(System, "schooling"), now, Result))
 			{
 				return false;
@@ -27,7 +27,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < nonSeat.Count; i++)
 			{
 				KingdomSettlement row = nonSeat[i];
-				if (!ReadHeirs(row.City, row.SettlementName,
+				if (!ReadHeirs(System, row.City, row.SettlementName,
 					KingdomResearch.Enabled && KingdomResearch.HeldIn(row, "schooling"),
 					now, Result))
 				{
@@ -37,8 +37,8 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool ReadHeirs(KingdomCityBook Book, string CityName, bool SchoolingHeld,
-			long NowTick, List<HeirRuntime> Result)
+		private static bool ReadHeirs(KingdomSystem System, KingdomCityBook Book,
+			string CityName, bool SchoolingHeld, long NowTick, List<HeirRuntime> Result)
 		{
 			KingdomCityState state;
 			KingdomCityFault fault = default(KingdomCityFault);
@@ -54,13 +54,26 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				bool eligible = row.Standing == KingdomResidentStanding.Resident;
+				if (eligible)
+				{
+					// Death selection is rare and irreversible. Load each named carrier before
+					// applying seniority so an unreachable or open-handoff body cannot suppress a
+					// later lawful heir after the rite is already frozen.
+					if (!KingdomResidents.TryResolveBoundBody(System, row.ResidentId,
+						true, out GameObject body, out string _)
+						|| KingdomGrowth.SuccessorMarketBlocked(body,
+							KingdomSurvey.ActiveFor(body.CurrentZone))
+						|| !KingdomResidentTransitionAuthority.CanAccede(System, body,
+							row.ResidentId)) eligible = false;
+				}
 				KingdomHeir rule = new KingdomHeir(row.Name, row.ArrivedTick, null,
-					row.KeptCreeds, row.Standing == KingdomResidentStanding.Resident,
+					row.KeptCreeds, eligible,
 					row.BoundZoneId, row.ResidentId);
 				int service = KingdomGroomingRules.ServiceEvidence(row.JobWorkId > 0,
 					KingdomSuccessionRules.MonthsServed(row.ArrivedTick, NowTick));
 				int study = KingdomGroomingRules.StudyEvidence(SchoolingHeld,
-					KnowledgePost(state, row.JobWorkId));
+					SchoolingHeld && EducationPost(System, state, row.JobWorkId, NowTick));
 				Result.Add(new HeirRuntime(rule, CityName, HomeName(state, row.HomeWorkId),
 					string.IsNullOrEmpty(row.Arrived)
 						? (row.ArrivedTick > 0L ? "arrival tick " + row.ArrivedTick : "tenure unrecorded")
@@ -81,19 +94,19 @@ namespace ThousandAndFirst
 			return "home record " + WorkId;
 		}
 
-		private static bool KnowledgePost(KingdomCityState State, int WorkId)
+		private static bool EducationPost(KingdomSystem System, KingdomCityState State,
+			int WorkId, long NowTick)
 		{
 			if (State == null || WorkId <= 0) return false;
+			KingdomWorkRow exact = default(KingdomWorkRow); int matches = 0;
 			for (int i = 0; i < State.WorkCount; i++)
 			{
 				KingdomWorkRow work;
-				KingdomRules.BuildEntry entry;
-				if (State.TryWork(i, out work) && work.WorkId == WorkId
-					&& KingdomData.TryGetBuilding(work.DesignKey, out entry))
-					return string.Equals(entry.Category, KingdomResearch.BenchCategory,
-						StringComparison.Ordinal);
+				if (!State.TryWork(i, out work) || work.WorkId != WorkId) continue;
+				matches++; if (matches == 1) exact = work;
 			}
-			return false;
+			return matches == 1 && KingdomEducationPostObservationRuntime.Proves(System,
+				State.SettlementId, exact, NowTick);
 		}
 
 		private static void JudgeActualNews(KingdomSystem System, Zone DeathZone, out int Days, out NewsRoad Road)

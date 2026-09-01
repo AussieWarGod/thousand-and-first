@@ -30,13 +30,13 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityPublicationResult _, out failure), failure);
 			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route,
 				0, 100L, 100L, out _, out failure), failure);
-			KingdomPolityCohortPlanRequest envoy = CohortRequest(Envoy,
+			KingdomPolityCohortPlanRequest envoy = CohortRequest(ledger, Envoy,
 				KingdomPolityCohortPurpose.Envoy, Route, 2);
 			envoy.NamedFigureId = "taf:figure:rival-envoy";
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, envoy,
 				out _, out failure), failure);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
-				CohortRequest(Warband, KingdomPolityCohortPurpose.Warband,
+				CohortRequest(ledger, Warband, KingdomPolityCohortPurpose.Warband,
 					"taf:event:warband-mustered", 2), out _, out failure), failure);
 			CommitManifestation(ledger, Envoy, 120L);
 			CommitManifestation(ledger, Warband, 121L);
@@ -158,16 +158,22 @@ namespace ThousandAndFirst.DevTests
 			};
 		}
 
-		private static KingdomPolityCohortPlanRequest CohortRequest(string Id,
+		private static KingdomPolityCohortPlanRequest CohortRequest(KingdomPolityLedger Ledger,
+			string Id,
 			KingdomPolityCohortPurpose Purpose, string Source, int Count)
 		{
+			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger,
+				KingdomPolityTestData.Rival, Purpose, out int resolverRulesVersion,
+				out int minimum, out int maximum,
+				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest
 			{
 				CohortId = Id, Purpose = Purpose, SourceRef = Source,
 				PolityId = KingdomPolityTestData.Rival,
 				SurfaceRef = KingdomPolityTestData.Settlement, MemberCount = Count,
+				MinimumLevel = minimum, MaximumLevel = maximum,
 				EventStreamId = "taf:stream:" + Id.Substring("taf:cohort:".Length),
-				RulesVersion = KingdomPolityNpcRules.RulesVersion,
+				RulesVersion = resolverRulesVersion,
 				PresentationAuthority = new KingdomPolityPresentationAuthorityProof
 				{
 					OptionKind = KingdomExperienceOptionKind.CivicStory,

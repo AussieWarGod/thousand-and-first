@@ -1,0 +1,6 @@
+# Native taste proof for the passable rifle-porch marker, sightline, and screened campus.
+DESCRIPTION=Issachari rifle-porch campus stages for native marker and route review
+REQUEST=arch-lot-issachari-rifleporch-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 			using (MemoryStream stream = new MemoryStream())
 			using (BinaryWriter w = new BinaryWriter(stream))
 			{
-				WriteHeader(w, L, KingdomPolityRules.CurrentFormatVersion);
+				WriteHeader(w, L, KingdomPolityRules.PreviousFormatVersion);
 				WriteOptions(w, L.Options);
 				WriteAuthorityRows(w, L, WriteFigure, WriteCohort, WriteIncident);
 				WriteList(w, L.Projections, KingdomPolityRules.MaxProjections, WriteProjection);
@@ -113,7 +113,7 @@ namespace ThousandAndFirst
 			using (MemoryStream stream = new MemoryStream(Payload, false))
 			using (BinaryReader r = new BinaryReader(stream))
 			{
-				KingdomPolityLedger l = ReadHeader(r, KingdomPolityRules.CurrentFormatVersion);
+				KingdomPolityLedger l = ReadHeader(r, KingdomPolityRules.PreviousFormatVersion);
 				l.Options = ReadOptions(r); ReadAuthorityRows(r, l, ReadFigure, ReadCohortV6,
 					ReadIncident);
 				l.Projections = ReadList(r, KingdomPolityRules.MaxProjections, ReadProjection);

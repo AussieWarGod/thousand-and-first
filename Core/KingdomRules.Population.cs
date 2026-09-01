@@ -2,7 +2,9 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomRules
 	{
-		/// <summary>Stock tier a settlement's shops carry at a given growth stage.</summary>
+		/// <summary>Legacy ABI for the market-service standing ceiling associated with growth.
+		/// Runtime service still requires a live capable fixture, staffing, and an appointed keeper;
+		/// this value never promises wares or authorizes stock creation.</summary>
 		public static int ShopTierForStage(GrowthStage Stage)
 		{
 			switch (Stage)

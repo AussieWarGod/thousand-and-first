@@ -25,7 +25,7 @@ namespace ThousandAndFirst
 				return Fail("authored layout preflight needs a founded settlement, zone, and exact paid claim",
 					out Failure);
 			if (!KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)) return false;
-			if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot))
+			if (!KingdomArchitectureRules.IsLatestSnapshotEncoding(Intent.EncodedSnapshot))
 				return Fail("legacy architecture snapshots are read-only and cannot stamp new scenery",
 					out Failure);
 			TechLevel liveTech = KingdomZoning.Tech(System);

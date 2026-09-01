@@ -40,6 +40,10 @@ namespace ThousandAndFirst.Simulation.City
 			WaterCosts = Repair(WaterCosts);
 			ProvisionCosts = Repair(ProvisionCosts);
 			OutcomeCodes = Repair(OutcomeCodes);
+			ExpeditionDeedDispositions = Repair(ExpeditionDeedDispositions);
+			ExpeditionDeedPolityIds = Repair(ExpeditionDeedPolityIds);
+			ExpeditionDeedCauseRefs = Repair(ExpeditionDeedCauseRefs);
+			ExpeditionDeedFigureRefs = Repair(ExpeditionDeedFigureRefs);
 			DeliverySourceEndpointIds = Repair(DeliverySourceEndpointIds);
 			DeliverySourceObjectIds = Repair(DeliverySourceObjectIds);
 			DeliverySourceXs = Repair(DeliverySourceXs);
@@ -99,6 +103,19 @@ namespace ThousandAndFirst.Simulation.City
 				legacyJobs, SubjectIds.Count, SubjectNames.Count, TargetNames.Count, DueTicks.Count,
 				WaterCosts.Count, ProvisionCosts.Count, OutcomeCodes.Count
 			});
+			bool legacyResultEnvelope = ExpeditionDeedDispositions.Count == 0
+				&& ExpeditionDeedPolityIds.Count == 0 && ExpeditionDeedCauseRefs.Count == 0
+				&& ExpeditionDeedFigureRefs.Count == 0;
+			if (legacyResultEnvelope)
+			{
+				Pad(ExpeditionDeedDispositions, missionJobs, 0);
+				Pad(ExpeditionDeedPolityIds, missionJobs, "");
+				Pad(ExpeditionDeedCauseRefs, missionJobs, "");
+				Pad(ExpeditionDeedFigureRefs, missionJobs, "");
+			}
+			int resultJobs = Shortest(new int[] { missionJobs,
+				ExpeditionDeedDispositions.Count, ExpeditionDeedPolityIds.Count,
+				ExpeditionDeedCauseRefs.Count, ExpeditionDeedFigureRefs.Count });
 			bool legacyDeliveryEnvelope = DeliverySourceEndpointIds.Count == 0
 				&& DeliverySourceObjectIds.Count == 0 && DeliveryTargetEndpointIds.Count == 0
 				&& DeliverySourceXs.Count == 0 && DeliverySourceYs.Count == 0
@@ -116,31 +133,27 @@ namespace ThousandAndFirst.Simulation.City
 				&& DeliveryTargetReceiptStates.Count == 0;
 			if (legacyDeliveryEnvelope)
 			{
-				Pad(DeliverySourceEndpointIds, missionJobs, 0);
-				Pad(DeliverySourceObjectIds, missionJobs, "");
-				Pad(DeliverySourceXs, missionJobs, -1);
-				Pad(DeliverySourceYs, missionJobs, -1);
-				Pad(DeliveryTargetEndpointIds, missionJobs, 0);
-				Pad(DeliveryTargetObjectIds, missionJobs, "");
-				Pad(DeliveryTargetXs, missionJobs, -1);
-				Pad(DeliveryTargetYs, missionJobs, -1);
-				Pad(DeliverySourceBeforeAmounts, missionJobs, 0L);
-				Pad(DeliveryTripIds, missionJobs, 0);
-				Pad(DeliveryStopOrdinals, missionJobs, 0);
-				Pad(DeliveryPhases, missionJobs, 0);
-				Pad(DeliveryCargoAuthorityKinds, missionJobs, 0);
-				Pad(DeliveryOwnerOperationIds, missionJobs, "");
-				Pad(DeliveryOwnerManifestVersions, missionJobs, 0);
-				Pad(DeliveryOwnerManifestDigests, missionJobs, "");
-				Pad(DeliveryOwnerManifestRevisions, missionJobs, 0L);
-				Pad(DeliveryManifestSourceStarts, missionJobs, 0);
-				Pad(DeliveryManifestSourceCounts, missionJobs, 0);
-				Pad(DeliveryTargetBeforeAmounts, missionJobs, 0L);
-				Pad(DeliveryTargetReceiptStates, missionJobs, 0);
+				Pad(DeliverySourceEndpointIds, resultJobs, 0);
+				Pad(DeliverySourceObjectIds, resultJobs, "");
+				Pad(DeliverySourceXs, resultJobs, -1); Pad(DeliverySourceYs, resultJobs, -1);
+				Pad(DeliveryTargetEndpointIds, resultJobs, 0);
+				Pad(DeliveryTargetObjectIds, resultJobs, "");
+				Pad(DeliveryTargetXs, resultJobs, -1); Pad(DeliveryTargetYs, resultJobs, -1);
+				Pad(DeliverySourceBeforeAmounts, resultJobs, 0L);
+				Pad(DeliveryTripIds, resultJobs, 0); Pad(DeliveryStopOrdinals, resultJobs, 0);
+				Pad(DeliveryPhases, resultJobs, 0); Pad(DeliveryCargoAuthorityKinds, resultJobs, 0);
+				Pad(DeliveryOwnerOperationIds, resultJobs, "");
+				Pad(DeliveryOwnerManifestVersions, resultJobs, 0);
+				Pad(DeliveryOwnerManifestDigests, resultJobs, "");
+				Pad(DeliveryOwnerManifestRevisions, resultJobs, 0L);
+				Pad(DeliveryManifestSourceStarts, resultJobs, 0);
+				Pad(DeliveryManifestSourceCounts, resultJobs, 0);
+				Pad(DeliveryTargetBeforeAmounts, resultJobs, 0L);
+				Pad(DeliveryTargetReceiptStates, resultJobs, 0);
 			}
 			int jobs = Shortest(new int[]
 			{
-				missionJobs, DeliverySourceEndpointIds.Count, DeliverySourceObjectIds.Count,
+				resultJobs, DeliverySourceEndpointIds.Count, DeliverySourceObjectIds.Count,
 				DeliverySourceXs.Count, DeliverySourceYs.Count, DeliveryTargetEndpointIds.Count,
 				DeliveryTargetObjectIds.Count, DeliveryTargetXs.Count, DeliveryTargetYs.Count,
 				DeliverySourceBeforeAmounts.Count, DeliveryTripIds.Count,
@@ -169,6 +182,9 @@ namespace ThousandAndFirst.Simulation.City
 			Trim(WaterCosts, jobs);
 			Trim(ProvisionCosts, jobs);
 			Trim(OutcomeCodes, jobs);
+			Trim(ExpeditionDeedDispositions, jobs);
+			Trim(ExpeditionDeedPolityIds, jobs); Trim(ExpeditionDeedCauseRefs, jobs);
+			Trim(ExpeditionDeedFigureRefs, jobs);
 			Trim(DeliverySourceEndpointIds, jobs);
 			Trim(DeliverySourceObjectIds, jobs);
 			Trim(DeliverySourceXs, jobs);
@@ -228,6 +244,11 @@ namespace ThousandAndFirst.Simulation.City
 					if (WaterCosts[i] < 0) { WaterCosts[i] = 0; }
 					if (ProvisionCosts[i] < 0) { ProvisionCosts[i] = 0; }
 					if (OutcomeCodes[i] < 0) { OutcomeCodes[i] = 0; }
+					if (ExpeditionDeedDispositions[i] < 0
+						|| ExpeditionDeedDispositions[i] > 3) ExpeditionDeedDispositions[i] = 0;
+					if (ExpeditionDeedPolityIds[i] == null) ExpeditionDeedPolityIds[i] = "";
+					if (ExpeditionDeedCauseRefs[i] == null) ExpeditionDeedCauseRefs[i] = "";
+					if (ExpeditionDeedFigureRefs[i] == null) ExpeditionDeedFigureRefs[i] = "";
 					if (DeliverySourceObjectIds[i] == null) { DeliverySourceObjectIds[i] = ""; }
 					if (DeliveryTargetObjectIds[i] == null) { DeliveryTargetObjectIds[i] = ""; }
 					if (DeliverySourceEndpointIds[i] < 0) { DeliverySourceEndpointIds[i] = 0; }

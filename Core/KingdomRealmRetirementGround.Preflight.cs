@@ -63,12 +63,18 @@ namespace ThousandAndFirst
 			for (int i = 0; i < plan.Objects.Count; i++)
 			{
 				GameObject item = plan.Objects[i];
+				if (!KingdomMarketRemoval.CanRetireStock(System, item,
+					out bool retireStock, out Failure)
+					|| !KingdomMarketRemoval.CanRetireLegendary(System, item,
+						out bool retireLegend, out Failure)) return false;
+				if (retireStock) plan.MarketStockRetirements.Add(item);
+				if (retireLegend) plan.LegendaryMarketRetirements.Add(item);
 				if (!TryClassifyOwnedObject(System, item, constructionOwned,
 					out bool owned, out Failure)) return false;
 				if (!KingdomRemovalProjectionRuntime.TryInspectCampfire(item,
 					out List<string> campfireRows, out Failure)) return false;
 				if (!owned && campfireRows.Count == 0) continue;
-				if (!CanRemoveExperienceProjections(item, out Failure)) return false;
+				if (!CanRemoveExperienceProjections(System, item, out Failure)) return false;
 				string objectId = item.RequireID();
 				if (string.IsNullOrEmpty(objectId))
 					return Fail("an active-ground object could not retain identity", out Failure);

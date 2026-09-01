@@ -1,5 +1,20 @@
 # The evolving heart — research pass
 
+> **AUTHOR RULING / DESIGN SUPERSESSION, 2026-08-31.** The comparative research in this file
+> remains useful; its universal **accretion-only** recommendation does not. The heart, like every
+> other plot and building chain, may use an authored renovation, additive expansion, replacement,
+> or a deliberate combination. Static walls, rooms, paths, roofs and furniture may be re-cut when
+> that makes the successor more coherent or uses the larger interior better. The rite-ground point,
+> first basin and live/stateful custody remain protected; other state must either remain exact or
+> cross an explicit interruption-safe handover. A larger reserved envelope still requires proof of
+> adjacent owned ground, both supported poses and usable road access before any debit or mutation.
+> Generic centred padding and the claim that every prior piece of fabric must survive are defects.
+> The historical comparator row's “most loved Fallout” wording is also unsupported and superseded;
+> current product authority retains only the narrow typed-plot, authored-plan, delegated-growth
+> lesson and makes no popularity claim (`../VISION.md`).
+> The final arcology target is one whole parasang's **3×3 local-zone grid across multiple
+> storeys**; the present hosted three-floor shell is a superseded prototype, not that target.
+>
 > **Implementation reconciliation, 2026-08-27.** v1 closes the great court into one exact
 > capital/realm hosted arcology. The court becomes a persistent vanilla Interior atrium; bounded
 > ward and hydroponic floors are paid lots with exact receipts and deterministic additive fixtures.
@@ -38,8 +53,9 @@ nine 80×25 sections; the arcology spans *a parasang and then some*). The recomm
 re-cut against this: see **§3.0** (the register — accretion, not upgrade), **§3e(i)** (the radius
 left in the quarry), **§3e-bis** (the anti-overfit audit), and rejections **15–17**.
 
-Historical status: this document began as research only. Later author rulings live in the building
-brief and VISION; the reconciliation note above records the implemented v1 topology.
+Historical status: this document began as research only. Later author rulings live in the decision
+ledger, building brief and VISION. The 2026-08-27 note below the supersession banner records an
+intermediate prototype, not current v1 acceptance.
 
 ## Findings in brief
 
@@ -63,7 +79,7 @@ brief and VISION; the reconciliation note above records the implemented v1 topol
    rite and staked a rung at a time, **rungs 1–4 need no relocation at all** — the heart grows into
    ground it already holds, and the unbuilt part is the plaza meanwhile. Relocation becomes a rare
    late verb, not the growth mechanism.
-6. **And the register the author's steer forces is the best answer of all: the rungs ACCRETE rather
+6. **HISTORICAL FINDING — OVERTURNED 2026-08-31.** The register initially suggested that rungs accrete rather
    than replace.** A town hall that levels up is Anno's shape; Qud's is sediment — the Yd Freehold
    built *"over the course of hundreds of years"*, Ezra as an *"archaeological and cultural
    outgrowth"* of the Tomb. Keep the basin, build the kerb around it, raise the hall over the kerb,
@@ -730,7 +746,7 @@ The sketch is right that consent must be taken at placement. Two changes:
 
 ---
 
-## 3. Recommended design — **the heart ACCRETES; the city re-centres on it**
+## 3. Historical recommendation — **SUPERSEDED: accretion is one authored option**
 
 ### 3.0 The register, before the mechanics (author steer, 2026-08-22)
 
@@ -743,14 +759,15 @@ The sketch is right that consent must be taken at placement. Two changes:
 Taking that seriously changes one thing at the root, and it happens to be the best answer to the
 author's original question.
 
-**The heart's rungs ACCRETE. They do not replace.** A city-builder's town hall levels up: the small
+**Superseded premise (retained for provenance): the heart's rungs accrete and do not replace.** A city-builder's town hall levels up: the small
 one vanishes and a bigger one appears on its footprint. That is Anno's shape and it is the wrong
 one here, because Qud's own great places are *layered*: the Yd Freehold was built by four beings
 *"over the course of hundreds of years"*; Ezra is an *"archaeological and cultural outgrowth"* of
 the Tomb; the Tomb itself is twelve stories accumulated **around** the Spindle. Qud's register is
 sediment, not upgrade.
 
-So: **the basin is never removed. The waterstone kerb is never removed — the moot hall is built
+The current ruling keeps only the invariant at the centre: **the basin is never removed.** The
+following full-fabric prescription is historical, not binding: the waterstone kerb is never removed — the moot hall is built
 over it and it becomes the hall's floor. The cairns are never moved — the colonnade is built around
 them. The arcology does not replace the great court; it is raised over it, and the court becomes its
 atrium, with the kerb still underfoot and the basin still in the middle.** Each rung is a *layer*
@@ -784,11 +801,9 @@ granary; a temple-city) stay possible only as *a different top rung for the same
 the burden of proof on the design — never as a second structure raised alongside.
 
 
-One sentence: **the heart is one plot whose full ground is SURVEYED at the founding rite and STAKED
-a rung at a time; each rung is built OVER the last rather than in place of it, so the ground itself
-carries the city's history — and the only thing that ever needs relocating is what the founder
-deliberately chose to put in that surveyed ground, moved on consent for labour and days, carrying
-its people and its history with it, never destroyed.**
+Current one sentence: **the heart is one identity and protected rite ground whose authored rungs
+may renovate, expand or combine both; the first basin and live custody survive, while static fabric
+is rebuilt whenever doing so makes the next place more useful, legible and Qud-like.**
 
 ### 3a. The ladder — five rungs on the five stages, in the existing catalogue's own vocabulary
 
@@ -837,8 +852,8 @@ needed.** `MinZones` is already a parsed, tested gate (`RefusedTerritory`; catal
 
 | | Rule |
 |---|---|
-| **Never moves** | The **rite ground point** (`RiteXProperty`/`RiteYProperty`) — the ladder is anchored to where water was shared, permanently. The **basin** — kept and displayed at every rung. **Every earlier rung's fabric** — the kerb, the hall's beams, the cairns — because rungs accrete rather than replace (§3.0). Anything **player-placed or player-built** — protection law, absolute, no exception, refuse by name and stop. |
-| **Never needs to move** | Everything at rungs 1–4, because the heart grows into its own staked yard. This is the design's main claim: **relocation is a rare late verb, not the growth mechanism.** |
+| **Never moves without explicit custody** | The **rite ground point** (`RiteXProperty`/`RiteYProperty`) and **first basin** remain exact. Player-placed/player-built work and every stateful fixture, inventory, liquid, resident binding or other live authority is preserved in place or crosses a registered interruption-safe handover; otherwise preflight refuses by name. Static authored fabric is not protected merely because an older rung drew it. |
+| **May be re-cut during any rung** | Stateless walls, floors, roofs, paths, rooms and furniture. A rung may renovate inside its standing envelope, add into proved ground, or combine the two. |
 | **May move, on consent** | Settlement-raised plots the founder deliberately staked inside surveyed heart ground (marked **yielding** at placement, stated in the plot's description forever), when the arcology rung is called and needs their ground. |
 | **Moves with the building** | Plot id (so residents follow with zero re-assignment — `HomePlotIdProperty`), tier, dedication, contents, **wear**, staffing, held/hold-as-is flags, name, chronicle history. **This list IS the feature** — the survey found no game that preserves it, and every community complains about the loss. |
 

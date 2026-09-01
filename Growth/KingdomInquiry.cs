@@ -126,6 +126,12 @@ namespace XRL.World.Parts
 				LastWorkedTick = TimeTick;
 				return;
 			}
+			if (!KingdomResearch.LiveBench(ParentObject))
+			{
+				LastWorkedTick = KingdomResearch.PauseUnavailable(system, TimeTick,
+					ParentObject.ShortDisplayName);
+				return;
+			}
 			// The two factors are read APART rather than through KingdomWear.EffectivenessOf, which
 			// already multiplies them: the 7b sentence has to be able to say whether the bench is
 			// empty or merely in a bad state, and one number cannot. Multiplied back together in

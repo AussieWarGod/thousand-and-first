@@ -18,6 +18,7 @@ namespace ThousandAndFirst
 		public static List<Cell> PathCells(Zone Z, Cell From)
 		{
 			List<Cell> cells = new List<Cell>();
+			HashSet<int> seen = new HashSet<int>();
 			if (Z == null)
 			{
 				return cells;
@@ -29,7 +30,9 @@ namespace ThousandAndFirst
 					continue;
 				}
 				Cell cell = item.CurrentCell;
-				if (cell != null)
+				if (cell != null && FindOurFloor(cell, out var exact)
+					== KingdomPhysicalLookupState.Exact && ReferenceEquals(item, exact)
+					&& seen.Add(KingdomRoadRules.Pack(cell.X, cell.Y, Z.Width)))
 				{
 					cells.Add(cell);
 				}
@@ -55,7 +58,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Lays the settlement's worn paths in the material it builds its walls in.
+		/// Lays the settlement's worn paths in the surface resolved from terrain, saved route
+		/// role, and current city craft.
 		/// <para>
 		/// Consent before cost: the founder is shown the cells and the price and asked, and a
 		/// refusal spends nothing and changes nothing. Nothing is paved that is not already a
@@ -101,8 +105,26 @@ namespace ThousandAndFirst
 				Failure = KingdomRoadRules.RefuseNothingWorn(KingdomPresentation.Rich(System.SeatName));
 				return false;
 			}
-			string wall = KingdomPlotRules.WallBlueprintFor(System.Style, System.FoundingRegionName);
-			KingdomMaterial material = KingdomRoadRules.PaveMaterialFor(wall);
+			GameObject firstFloor = OurFloor(paths[0]);
+			if (!TryRoadSurface(System, Z, firstFloor, out var surface))
+			{
+				Failure = "No safe paving palette matches this ground, route, and craft level.";
+				return false;
+			}
+			List<Cell> compatible = new List<Cell>();
+			for (int i = 0; i < paths.Count; i++)
+			{
+				GameObject floor = OurFloor(paths[i]);
+				if (TryRoadSurface(System, Z, floor, out var candidate)
+					&& SameSurface(surface, candidate)) compatible.Add(paths[i]);
+			}
+			if (compatible.Count == 0)
+			{
+				Failure = "The paving palette changed while the order was being read. Nothing was spent.";
+				return false;
+			}
+			paths = compatible;
+			KingdomMaterial material = surface.Material;
 			if (!KingdomRoadRules.CanPaveIn(material))
 			{
 				Failure = KingdomRoadRules.RefuseMaterialKind(material);
@@ -129,7 +151,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			string blueprint = KingdomRoadRules.PavedFloorFor(wall);
+			string blueprint = surface.Blueprint;
 			List<KingdomConstructionCell> route = new List<KingdomConstructionCell>();
 			for (int i = 0; i < cells; i++)
 			{
@@ -171,7 +193,9 @@ namespace ThousandAndFirst
 			// Paving retires cells from the tally, so the ground the settlement is wearing now
 			// has room to be recorded again, and the reason it stalled is over.
 			SettleRoadTerminal(System, Z, blueprint, route, ref job);
-			KingdomLog.Log("roads: paved " + laid + " cells in " + KingdomMaterialRules.MaterialKey(material) + " at " + System.SeatName);
+			KingdomLog.Log("roads: paved " + laid + " cells in "
+				+ KingdomMaterialRules.MaterialKey(material) + " via " + surface.RuleKey
+				+ " at " + System.SeatName);
 			return true;
 		}
 

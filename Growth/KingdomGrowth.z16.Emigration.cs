@@ -37,7 +37,24 @@ namespace ThousandAndFirst
 		/// <param name="Note">The same departure in the ledger's shorter voice. Null falls back to
 		/// <paramref name="Cause"/>, which is what a caller with only one phrasing wants, and
 		/// what every caller written before the two registers wanted different lengths passed.</param>
-		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null, GameObject Leaver = null, string Cause = null, bool Chronicled = true, string Note = null)
+		public static bool Emigrate(KingdomSystem System, Zone Z, KingdomSurvey Survey = null,
+			GameObject Leaver = null, string Cause = null, bool Chronicled = true,
+			string Note = null)
+		{
+			return EmigrateCore(System, Z, Survey, Leaver, Cause, Chronicled, Note,
+				default(Simulation.City.KingdomResidentDestructionAuthorization));
+		}
+
+		internal static bool EmigrateAuthorized(KingdomSystem System, Zone Z,
+			GameObject Leaver, string Cause,
+			Simulation.City.KingdomResidentDestructionAuthorization Authorization)
+		{
+			return EmigrateCore(System, Z, null, Leaver, Cause, true, null, Authorization);
+		}
+
+		private static bool EmigrateCore(KingdomSystem System, Zone Z, KingdomSurvey Survey,
+			GameObject Leaver, string Cause, bool Chronicled, string Note,
+			Simulation.City.KingdomResidentDestructionAuthorization Authorization)
 		{
 			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			if (Survey == null) Survey = KingdomSurvey.ActiveFor(Z);
@@ -54,7 +71,9 @@ namespace ThousandAndFirst
 				// stays and is asked again next pass.
 				if (KingdomCitizenship.BelongsTo(System, Leaver)
 					&& Leaver.GetIntProperty("KingdomBorn") == 1 && Leaver.GetIntProperty("VillageMerchant") == 0 && !Leaver.IsPlayer() && !Leaver.IsPlayerLed()
-					&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(Leaver))
+					&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(Leaver)
+					&& !PreparedMarketHandoffParty(Leaver, Survey)
+					&& CanPrepareGenericEmigrate(System, Leaver, Authorization))
 				{
 					leaver = Leaver;
 				}
@@ -67,7 +86,9 @@ namespace ThousandAndFirst
 				{
 					if (KingdomCitizenship.BelongsTo(System, item)
 						&& item.GetIntProperty("KingdomBorn") == 1 && item.GetIntProperty("VillageMerchant") == 0 && !item.IsPlayer() && !item.IsPlayerLed()
-						&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(item))
+						&& !Simulation.City.KingdomPhysicalHappenings.IsStaged(item)
+						&& !PreparedMarketHandoffParty(item, Survey)
+						&& CanPrepareGenericEmigrate(System, item, Authorization))
 					{
 						leaver = item;
 						break;
@@ -78,65 +99,78 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			string citizenshipFailure;
-			if (!KingdomCitizenship.CanRemove(System, leaver, out citizenshipFailure))
+			if (!KingdomResidentDepartureRuntime.TryBegin(System, leaver, Cause,
+				Chronicled, Note, Authorization,
+				out Simulation.City.KingdomResidentRow _, out string failure))
 			{
-				KingdomLog.Log("emigrate: exact citizenship removal refused ("
-					+ (citizenshipFailure ?? "unknown failure") + ")");
+				KingdomLog.Log("emigrate: exact resident departure refused ("
+					+ (failure ?? "unknown failure") + ")");
 				return false;
 			}
-			if (!KingdomCitizenship.TryRemove(System, leaver,
-				KingdomCitizenshipRemovalReason.Emigration, out citizenshipFailure))
-			{
-				KingdomLog.Log("emigrate: exact citizenship removal did not commit ("
-					+ (citizenshipFailure ?? "unknown failure") + ")");
-				return false;
-			}
-			Simulation.City.KingdomResidentRow former;
-			if (!Simulation.City.KingdomResidents.TryDepart(System, leaver, out former))
-			{
-				Simulation.City.KingdomCityBook stillBook;
-				int stillResidentId;
-				if (Simulation.City.KingdomResidents.TryLocate(System, leaver,
-					out stillBook, out stillResidentId))
-				{
-					KingdomCitizenship.TryRestoreEmigrationAfterCleanRefusal(System, leaver,
-						out citizenshipFailure);
-				}
-				else
-				{
-					KingdomLog.Log("emigrate: resident carriers need repair after citizenship "
-						+ "committed; the body remains alive and is not obliterated");
-				}
-				return false;
-			}
-			string name = string.IsNullOrEmpty(former.Name) ? leaver.BaseDisplayNameStripped : former.Name;
-			string origin = former.Origin;
-			KingdomResidentIdentity.Forget(System, leaver);
-			KingdomCreed.Forget(System, leaver);
-			try { leaver.Obliterate(); }
-			finally { Survey?.ObserveCurrentTopology(leaver); }
-			// Both registers name the person and the cause. The default clause is the drought's,
-			// word for word as it always read; a caller that hands one in replaces it in both
-			// places at once, so the chronicle and the ledger can never disagree about why
-			// somebody left.
-			string chronicled = string.IsNullOrEmpty(Cause) ? "for wetter country, the cisterns having run dry" : Cause;
-			string noted = string.IsNullOrEmpty(Note) ? (string.IsNullOrEmpty(Cause) ? "for wetter country" : Cause) : Note;
-			// The count is never sampled, only the telling: a founder who reads the ledger's
-			// departure tally gets the true number however the story of it was told.
-			System.Ledger.Departures++;
-			if (Chronicled)
-			{
-				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
-				string named = KingdomPresentation.Rich(XRL.Language.Grammar.A(name));
-				string namedAtStart = KingdomPresentation.Rich(
-					XRL.Language.Grammar.A(name, Capitalize: true));
-				KingdomChronicle.Record(System, named + " left " + realm + " " + chronicled);
-				System.Ledger.Note(KingdomVoices.Say(System, VoiceOccasion.CitizenLost,
-					"{{R|" + namedAtStart + " left " + realm + " " + noted + ".}}"));
-			}
-			if (KingdomLog.Enabled) KingdomLog.Log("emigrate: pop now " + System.Population + " origin=" + (origin ?? "-") + " cause=" + (Cause ?? "drought"));
 			return true;
+		}
+
+		/// <summary>An exact open market handoff owns both bodies until commit or terminal abort.
+		/// Emigration cannot erase either durable endpoint between retry cuts.</summary>
+		internal static bool PreparedMarketHandoffParty(GameObject Body, KingdomSurvey Survey)
+		{
+			if (!GameObject.Validate(Body)) return false;
+			string id = Body.IDIfAssigned;
+			r_KingdomLegendaryMarketProjection own =
+				Body.GetPart<r_KingdomLegendaryMarketProjection>();
+			if (own?.HandoffPrepared == 1 && own.BodyObjectId == id) return true;
+			r_KingdomMarketHandoffSourceProjection sourceOwn =
+				Body.GetPart<r_KingdomMarketHandoffSourceProjection>();
+			if (sourceOwn != null && (sourceOwn.SourceBodyObjectId == id
+				|| sourceOwn.TargetBodyObjectId == id)) return true;
+			for (int i = 0; Survey != null && i < Survey.Objects.Count; i++)
+			{
+				r_KingdomLegendaryMarketProjection marker =
+					Survey.Objects[i]?.GetPart<r_KingdomLegendaryMarketProjection>();
+				if (marker?.HandoffPrepared == 1
+					&& (marker.BodyObjectId == id || marker.PriorBodyObjectId == id)) return true;
+				r_KingdomMarketHandoffSourceProjection source = Survey.Objects[i]?
+					.GetPart<r_KingdomMarketHandoffSourceProjection>();
+				if (source != null && (source.SourceBodyObjectId == id
+					|| source.TargetBodyObjectId == id)) return true;
+			}
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Body.CurrentZone))
+			{
+				r_KingdomLegendaryMarketProjection marker =
+					item?.GetPart<r_KingdomLegendaryMarketProjection>();
+				if (marker?.HandoffPrepared == 1
+					&& (marker.BodyObjectId == id || marker.PriorBodyObjectId == id)) return true;
+				r_KingdomMarketHandoffSourceProjection source = item?
+					.GetPart<r_KingdomMarketHandoffSourceProjection>();
+				if (source != null && (source.SourceBodyObjectId == id
+					|| source.TargetBodyObjectId == id)) return true;
+			}
+			return false;
+		}
+
+		internal static bool CanGenericEmigrate(KingdomSystem System, GameObject Body,
+			Simulation.City.KingdomResidentDestructionAuthorization Authorization =
+				default(Simulation.City.KingdomResidentDestructionAuthorization))
+		{
+			int residentId = Simulation.City.KingdomResidents.IdOf(Body);
+			return Simulation.City.KingdomResidentTransitionAuthority
+				.CanDestroyResidentBody(System, Body, residentId, Authorization);
+		}
+
+		internal static bool CanPrepareGenericEmigrate(KingdomSystem System, GameObject Body,
+			Simulation.City.KingdomResidentDestructionAuthorization Authorization =
+				default(Simulation.City.KingdomResidentDestructionAuthorization))
+		{
+			int residentId = Simulation.City.KingdomResidents.IdOf(Body);
+			return Simulation.City.KingdomResidentTransitionAuthority
+				.CanPrepareResidentBodyDestruction(System, Body, residentId, Authorization);
+		}
+
+		/// <summary>An open handoff temporarily freezes both resident identities. Completed native
+		/// traders remain lawful heirs; accession retires only their TAF civic projection.</summary>
+		internal static bool SuccessorMarketBlocked(GameObject Body, KingdomSurvey Survey)
+		{
+			return !GameObject.Validate(Body) || PreparedMarketHandoffParty(Body, Survey);
 		}
 	}
 }

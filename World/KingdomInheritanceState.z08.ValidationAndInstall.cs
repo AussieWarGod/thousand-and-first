@@ -24,7 +24,7 @@ namespace ThousandAndFirst
 				|| Zone == null || Zone.ZoneID != TargetZoneId
 				|| Legacy == null || Reserved == null
 				|| !HasOnlyOwnedBuilders(TargetZoneId, Legacy.LegacyId, Reserved.TargetGameId,
-					KingdomInheritEngine.ReconstructionVersion, out Failure)
+					KingdomInheritEngine.ReconstructionVersionFor(Legacy), out Failure)
 				|| The.ZoneManager.CountPartsFor(TargetZoneId) != 0
 				|| Zone.GetObjects().Count != 0)
 			{
@@ -136,6 +136,9 @@ namespace ThousandAndFirst
 			{
 				throw new InvalidDataException("the target no longer carries its exact reservation");
 			}
+			int reconstruction = KingdomInheritEngine.ReconstructionVersionFor(legacy);
+			if (reconstruction <= 0)
+				throw new InvalidDataException("the external seal's spatial shape is unsupported");
 			SecretId = "taf.inherit." + legacy.LegacyId;
 			if (JournalAPI.GetMapNote(SecretId) != null)
 			{
@@ -160,7 +163,7 @@ namespace ThousandAndFirst
 				"LegacyId", legacy.LegacyId,
 				"TargetGameId", receipt.TargetGameId,
 				"TargetZoneId", TargetZoneId,
-				"ReconstructionVersion", KingdomInheritEngine.ReconstructionVersion);
+				"ReconstructionVersion", reconstruction);
 			// ZoneBuilderCollection copies its member count before running. A custom finder must
 			// therefore no-op unless the preceding builder published exact success; removing a generic
 			// AddLocationFinder from persistence cannot suppress that same-attempt local copy.
@@ -169,7 +172,7 @@ namespace ThousandAndFirst
 				"LegacyId", legacy.LegacyId,
 				"TargetGameId", receipt.TargetGameId,
 				"TargetZoneId", TargetZoneId,
-				"ReconstructionVersion", KingdomInheritEngine.ReconstructionVersion);
+				"ReconstructionVersion", reconstruction);
 			JournalAPI.AddMapNote(TargetZoneId, ComposeMapNote(legacy), Category(legacy),
 				new string[4] { "settlement", "historic", "taf", "inheritance" },
 				SecretId, revealed: true, sold: false, 0L, silent: true);

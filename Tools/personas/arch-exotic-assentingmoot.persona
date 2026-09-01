@@ -1,0 +1,6 @@
+# Reopened exotic: deliberative forecourt and light/chime composition need native scrutiny.
+DESCRIPTION=assenting moot precinct stages with exact knowledge and XL identity
+REQUEST=arch-exotic-assentingmoot;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,exotic

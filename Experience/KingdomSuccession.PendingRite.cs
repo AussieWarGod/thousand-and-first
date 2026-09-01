@@ -31,7 +31,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairFounderName = "";
 			PendingAccessionRepairHeirName = "";
 			PendingAccessionRepairSettlementId = "";
-			PendingAccessionRepairSeated = false;
+			ClearLegacyAccessionRepairSeated();
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
 			ClearPendingRiteIdentity();

@@ -22,6 +22,31 @@ namespace ThousandAndFirst
 
 		internal const int ReconstructionVersion = 3;
 
+		/// <summary>Exact marker algorithm for one external seal. Zero means its frozen spatial
+		/// shape cannot be interpreted by this build.</summary>
+		internal static int ReconstructionVersionFor(KingdomSealRecord Legacy)
+		{
+			if (Legacy == null) return 0;
+			if (Legacy.SpatialVersion == KingdomInheritanceSpatialRules.SpatialVersion)
+				return ReconstructionVersion;
+			string failure;
+			return Legacy.SpatialVersion == 0
+				&& KingdomInheritRules.TryValidateLegacyProxyShape(Legacy.WorkKeys,
+					LegacyReconstructionVersion, out failure)
+				? LegacyReconstructionVersion : 0;
+		}
+
+		internal static int ReconstructionVersionForText(string LegacyText)
+		{
+			KingdomSealRecord legacy;
+			KingdomSealFault fault;
+			string detail;
+			return !string.IsNullOrEmpty(LegacyText)
+				&& KingdomSealRecord.TryParse(LegacyText, out legacy, out fault, out detail)
+				&& legacy != null && legacy.Compose() == LegacyText
+				? ReconstructionVersionFor(legacy) : 0;
+		}
+
 		internal const string ZoneMarkerProperty = "ThousandAndFirst.Inherit.Application";
 
 		internal const string ObjectMarkerProperty = "ThousandAndFirst.Inherit.Application";

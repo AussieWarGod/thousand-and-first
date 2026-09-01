@@ -14,7 +14,8 @@ namespace ThousandAndFirst
 
 		public void Write(SerializationWriter Writer)
 		{
-			if (AwayOpaque == null) Away = SettlementTopology?.Get(0);
+			if (AwayOpaque == null)
+				WriteLegacyAwayProjection(SettlementTopology?.Get(0));
 			string failure;
 			if (!ValidateEnvelope(out failure)) throw new InvalidDataException(failure);
 			Writer.Write(Magic); Writer.Write(Version); Writer.Write((byte)Phase);
@@ -32,7 +33,7 @@ namespace ThousandAndFirst
 			WriteString(Writer, RealmIdentityFirstClaimedZone, 512);
 			Writer.Write(SimulationSeedHigh); Writer.Write(SimulationSeedLow);
 			WriteArchivedSettlement(Writer, Seat, SeatOpaque);
-			WriteArchivedSettlement(Writer, Away, AwayOpaque);
+			WriteArchivedSettlement(Writer, ReadLegacyAwayProjection(), AwayOpaque);
 			WriteStandings(Writer, Standings);
 			WriteBindings(Writer, Bindings); Writer.Write(ResidentCounter);
 			WriteJobs(Writer, Jobs); Writer.Write(LastSliceTick); Writer.Write(ReifyTick);
@@ -90,7 +91,8 @@ namespace ThousandAndFirst
 			if (Version != LegacyJobVersion && Version != MissionJobVersion &&
 				Version != ExactDeliveryJobVersion &&
 				Version != ExpandedDeliveryJobVersion &&
-				Version != SettlementTopologyVersion && Version != CurrentVersion)
+				Version != SettlementTopologyVersion && Version != DirectionalStandingVersion
+				&& Version != CurrentVersion)
 				throw new InvalidDataException("Unknown realm archive version.");
 			int wireVersion = Version;
 			Phase = (KingdomRealmArchivePhase)Reader.ReadByte();
@@ -111,7 +113,8 @@ namespace ThousandAndFirst
 			RealmIdentityFirstClaimedZone = ReadString(Reader, 512);
 			SimulationSeedHigh = Reader.ReadUInt64(); SimulationSeedLow = Reader.ReadUInt64();
 			Seat = ReadArchivedSettlement(Reader, out SeatOpaque, out SeatWireVersion);
-			Away = ReadArchivedSettlement(Reader, out AwayOpaque, out AwayWireVersion);
+			WriteLegacyAwayProjection(ReadArchivedSettlement(Reader, out AwayOpaque,
+				out AwayWireVersion));
 			Standings = ReadStandings(Reader);
 			Bindings = ReadBindings(Reader); ResidentCounter = Reader.ReadInt32();
 			Jobs = ReadJobs(Reader, wireVersion); LastSliceTick = Reader.ReadInt64();
@@ -143,13 +146,13 @@ namespace ThousandAndFirst
 			ReturnAbility = ReadCallback(Reader);
 			if (wireVersion >= SettlementTopologyVersion)
 			{
-				KingdomSettlement legacyProjection = Away;
+				KingdomSettlement legacyProjection = ReadLegacyAwayProjection();
 				SettlementTopology = Reader.ReadComposite<KingdomSettlementTopology>();
 				if (SettlementTopology == null)
 					throw new InvalidDataException("Archived settlement topology is absent.");
 				if (SettlementTopology.HasOpaqueEvidence)
 				{
-					Away = null;
+					WriteLegacyAwayProjection(null);
 				}
 				else
 				{
@@ -158,14 +161,16 @@ namespace ThousandAndFirst
 						out string projectionFailure))
 						Quarantine("legacy archive projection differs from topology: " +
 							projectionFailure);
-					Away = canonical;
+					WriteLegacyAwayProjection(canonical);
 				}
 			}
 			else
 			{
 				SettlementTopology = new KingdomSettlementTopology();
-				if (Away != null && AwayOpaque == null &&
-					!SettlementTopology.TryAdoptLegacy(Away, out string migrationFailure))
+				KingdomSettlement legacyProjection = ReadLegacyAwayProjection();
+				if (legacyProjection != null && AwayOpaque == null &&
+					!SettlementTopology.TryAdoptLegacy(legacyProjection,
+						out string migrationFailure))
 					throw new InvalidDataException(migrationFailure);
 			}
 			if (wireVersion >= DirectionalStandingVersion)
@@ -213,7 +218,7 @@ namespace ThousandAndFirst
 			RealmIdentityFoundedTick = 0L; RealmIdentitySeedHigh = 0UL;
 			RealmIdentitySeedLow = 0UL; RealmIdentityFirstClaimedZone = null;
 			SimulationSeedHigh = 0UL; SimulationSeedLow = 0UL;
-			Seat = null; Away = null; Seceded = null;
+			Seat = null; WriteLegacyAwayProjection(null); Seceded = null;
 			SettlementTopology = new KingdomSettlementTopology();
 			SeatOpaque = null; AwayOpaque = null; SecededOpaque = null;
 			SeatWireVersion = 0; AwayWireVersion = 0; SecededWireVersion = 0;

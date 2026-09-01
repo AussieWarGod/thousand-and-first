@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace ThousandAndFirst
 {
+	public enum KingdomPolityFoundationRelationState : byte
+	{
+		Ordinary = 0,
+		LegacyUnresolved = 1,
+		Causal = 2
+	}
+
 	[Serializable]
 	public sealed class KingdomPolityRecord
 	{
@@ -27,6 +34,10 @@ namespace ThousandAndFirst
 		public KingdomPolityRelationBand Band;
 		public List<string> SourceRefs = new List<string>();
 		public long ChangedTick;
+		public KingdomPolityFoundationRelationState FoundationState;
+		public KingdomPolityRelationBand InitialBand;
+		public string FoundationOriginalCauseRef;
+		public string FoundationCorrectionReceiptId;
 	}
 
 	[Serializable]
@@ -54,6 +65,8 @@ namespace ThousandAndFirst
 		public List<string> RoleKeys = new List<string>();
 		public List<string> GearKeys = new List<string>();
 		public KingdomPolityLoadoutPolicy Loadout = new KingdomPolityLoadoutPolicy();
+		public List<KingdomPolityExpressionCue> ExpressionCues =
+			new List<KingdomPolityExpressionCue>();
 	}
 
 	[Serializable]

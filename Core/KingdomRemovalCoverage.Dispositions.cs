@@ -27,6 +27,9 @@ namespace ThousandAndFirst
 			if (Name == "KingdomCharterPart")
 				return KingdomRemovalCarrierDisposition.PlayerTerminalCut;
 			if (Name == "r_KingdomRelocationFrame"
+				|| Name == "r_KingdomMarketHandoffSourceProjection"
+				|| Name == "r_KingdomMarketStockProjection"
+				|| Name == "r_KingdomLegendaryMarketProjection"
 				|| Name == "r_KingdomStasisCustody"
 				|| Name == "r_KingdomStasisFieldAnchor"
 				|| Name == "r_KingdomStasisProjection"
@@ -45,7 +48,8 @@ namespace ThousandAndFirst
 				return KingdomRemovalGlobalDisposition.TerminalMarkerCut;
 			if (Name == "r_TAF_Inheritance")
 				return KingdomRemovalGlobalDisposition.EmptyOnly;
-			if (Contains(HostedArcologyAuthorityStates, Name))
+			if (Contains(HostedArcologyAuthorityStates, Name)
+				|| Contains(HostedArcologyDepartureStates, Name))
 				return KingdomRemovalGlobalDisposition.ExactCurrentRealmClear;
 			return IsOwnedGlobalState(Name)
 				? KingdomRemovalGlobalDisposition.Preserve

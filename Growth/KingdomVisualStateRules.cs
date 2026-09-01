@@ -85,10 +85,18 @@ namespace ThousandAndFirst
 	/// <summary>Pure state priority, legend, and deterministic gallery receipt.</summary>
 	public static class KingdomVisualStateRules
 	{
-		public const string GalleryVersion = "taf:visual-state-gallery:v1";
+		public const string GalleryVersion = "taf:visual-state-gallery:v2";
 
-		public static readonly KingdomVisualStateKind[] GalleryStates =
-			(KingdomVisualStateKind[])Enum.GetValues(typeof(KingdomVisualStateKind));
+		public static readonly KingdomVisualStateKind[] GalleryStates = new KingdomVisualStateKind[]
+		{
+			KingdomVisualStateKind.Sound, KingdomVisualStateKind.Raising,
+			KingdomVisualStateKind.RaisingWaitingForHands, KingdomVisualStateKind.RaisingQueued,
+			KingdomVisualStateKind.SalvageOrdered, KingdomVisualStateKind.Repairing,
+			KingdomVisualStateKind.Ruined, KingdomVisualStateKind.HalfRuined,
+			KingdomVisualStateKind.Battered, KingdomVisualStateKind.Withered,
+			KingdomVisualStateKind.Dark, KingdomVisualStateKind.Idle,
+			KingdomVisualStateKind.Shorthanded
+		};
 
 		public static KingdomVisualStateKind Resolve(KingdomVisualFacts Facts)
 		{
@@ -105,10 +113,7 @@ namespace ThousandAndFirst
 			if (Facts.Wear >= KingdomMaterialRules.BadlyUsedWearPercent)
 				return KingdomVisualStateKind.HalfRuined;
 			if (Facts.Wear > 0) return KingdomVisualStateKind.Battered;
-			if (Facts.Heart && Facts.Withered && Facts.Famished)
-				return KingdomVisualStateKind.WitheredAndFamished;
 			if (Facts.Heart && Facts.Withered) return KingdomVisualStateKind.Withered;
-			if (Facts.Heart && Facts.Famished) return KingdomVisualStateKind.Famished;
 			if (Facts.Brownout) return KingdomVisualStateKind.Dark;
 			if (Facts.StaffNeeded > 0 && Facts.StaffEffectiveness <= 0)
 				return KingdomVisualStateKind.Idle;
@@ -146,14 +151,14 @@ namespace ThousandAndFirst
 				return new KingdomVisualCue("\\", "Tiles2/sw_rubble_1.bmp", "&y", "w",
 					"battered; working at reduced measure");
 			case KingdomVisualStateKind.WitheredAndFamished:
-				return new KingdomVisualCue("!", null, "&R", "K",
-					"city heart withered by thirst and famished by hunger");
+				return new KingdomVisualCue(";", null, "&y", "K",
+					"legacy food mark retired; city heart withered by thirst");
 			case KingdomVisualStateKind.Withered:
 				return new KingdomVisualCue(";", null, "&y", "K",
 					"city heart withered by sustained thirst");
 			case KingdomVisualStateKind.Famished:
-				return new KingdomVisualCue(":", null, "&r", "K",
-					"city heart famished by sustained hunger");
+				return new KingdomVisualCue(null, null, null, null,
+					"legacy food mark retired");
 			case KingdomVisualStateKind.Dark:
 				return new KingdomVisualCue("o", "Items/sw_power_cut_small.png", "&W", "R",
 					"dark in a real power brownout");

@@ -44,6 +44,8 @@ namespace ThousandAndFirst
 			KingdomArchitectureIntent Successor, out string Failure)
 		{
 			Failure = null;
+			bool marked = Owner != null && (Owner.HasIntProperty(UpgradeSchemaProperty)
+				|| Owner.HasStringProperty(UpgradeSchemaProperty));
 			if (!GameObject.Validate(Owner) || !GameObject.Validate(Target) || Z == null
 				|| Owner.CurrentZone != Z || Target.CurrentZone != Z
 				|| Target.CurrentCell != Z.GetCell(Successor == null ? -1 : Successor.MainWorldX,
@@ -55,10 +57,19 @@ namespace ThousandAndFirst
 			ArchitectureLayoutDelta delta;
 			string lot;
 			if (!TryUpgradeBase(Owner, Z, Successor, out beforeIntent, out before, out after,
-				out delta, out lot, out Failure)) return false;
+				out delta, out lot, out Failure))
+				return marked ? UpgradeQuarantine(Owner, Failure, out Failure) : false;
+			if (marked && !TryReadUpgradeReceipt(Owner, Target, Successor, lot, delta,
+				out Failure))
+				return UpgradeQuarantine(Owner, Failure, out Failure);
+			if (!SameRect(beforeIntent.Rect, Successor.Rect))
+			{
+				KingdomSystem system = global::XRL.The.Game == null
+					? null : global::XRL.The.Game.RequireSystem<KingdomSystem>();
+				if (!TryProveEnvelopeGrowth(system, Z, Owner, Target, Successor, true,
+					out Failure)) return false;
+			}
 
-			bool marked = Owner.HasIntProperty(UpgradeSchemaProperty)
-				|| Owner.HasStringProperty(UpgradeSchemaProperty);
 			if (!marked)
 			{
 				if (!TryVerifyComplete(Owner, Z, out Failure)) return false;
@@ -72,61 +83,76 @@ namespace ThousandAndFirst
 				if (!TryBeginUpgradeReceipt(Owner, Target, Successor, lot, delta, out Failure))
 					return false;
 			}
-			else if (!TryReadUpgradeReceipt(Owner, Target, Successor, lot, out Failure))
-				return false;
 
 			int phase = Owner.GetIntProperty(UpgradePhaseProperty);
 			if (phase == 0)
 			{
-				Target.SetStringProperty(KingdomPlots.PlotIdProperty, lot);
 				KingdomArchitectureIntent targetIntent;
 				ArchitectureLayoutSnapshot targetSnapshot;
 				string targetLot;
 				if (!KingdomArchitectureStamper.TryReadOwner(Target, out targetIntent,
 					out targetSnapshot, out targetLot, out _))
 				{
+					if (Target.HasIntProperty(SchemaProperty)
+						|| Target.HasStringProperty(SchemaProperty))
+						return UpgradeQuarantine(Owner,
+							"successor carries a malformed or foreign layout owner",
+							out Failure);
 					if (!KingdomArchitectureRuntime.TryFreeze(Target, Successor, out Failure)
 						|| !TryInitializeOwner(Target, Successor, lot, out Failure))
-						return UpgradeFail(Owner, Failure, out Failure);
+						return false;
 				}
 				else if (targetLot != lot || targetIntent.SnapshotHash != Successor.SnapshotHash)
-					return UpgradeFail(Owner, "successor already carries another layout receipt",
+					return UpgradeQuarantine(Owner, "successor already carries another layout receipt",
 						out Failure);
 				Owner.SetIntProperty(UpgradePhaseProperty, 1);
 				phase = 1;
 			}
 			if (!ExactSuccessorOwner(Target, Successor, lot, out Failure))
-				return UpgradeFail(Owner, Failure, out Failure);
+				return Target.HasIntProperty(SchemaProperty)
+					|| Target.HasStringProperty(SchemaProperty)
+					? UpgradeQuarantine(Owner, Failure, out Failure) : false;
 
 			if (phase == 1)
 			{
-				for (int i = 0; i < delta.Removed.Count; i++)
-					if (!TryRemoveUpgradeSlot(Owner, Z, beforeIntent, lot, delta.Removed[i],
-						out Failure)) return UpgradeFail(Owner, Failure, out Failure);
+				if (!KingdomPlots.TryReserveAuthoredGrowthEnvelope(Owner, Target, Successor,
+					out bool divergentEnvelope, out Failure))
+					return divergentEnvelope
+						? UpgradeQuarantine(Owner, Failure, out Failure) : false;
 				Owner.SetIntProperty(UpgradePhaseProperty, 2);
 				phase = 2;
 			}
 			if (phase == 2)
 			{
-				for (int i = 0; i < delta.Retained.Count; i++)
-					if (!TryCarryUpgradeSlot(Owner, Target, Z, beforeIntent, Successor, lot,
-						delta.Retained[i], delta.RetainedAfter[i], out Failure))
-						return UpgradeFail(Owner, Failure, out Failure);
+				for (int i = 0; i < delta.Removed.Count; i++)
+					if (!TryRemoveUpgradeSlot(Owner, Z, beforeIntent, lot, delta.Removed[i],
+						out Failure)) return false;
 				Owner.SetIntProperty(UpgradePhaseProperty, 3);
 				phase = 3;
 			}
 			if (phase == 3)
 			{
+				for (int i = 0; i < delta.Retained.Count; i++)
+					if (!TryCarryUpgradeSlot(Owner, Target, Z, beforeIntent, Successor, lot,
+						delta.Retained[i], delta.RetainedAfter[i], out Failure))
+						return false;
+				Owner.SetIntProperty(UpgradePhaseProperty, 4);
+				phase = 4;
+			}
+			if (phase == 4)
+			{
 				if (!TryStageLayer(Target, Z, ArchitectureLayer.Ground, out Failure)
 					|| !TryStageLayer(Target, Z, ArchitectureLayer.Structure, out Failure)
 					|| !TryStageLayer(Target, Z, ArchitectureLayer.Object, out Failure)
 					|| !TryVerifyComplete(Target, Z, out Failure))
-					return UpgradeFail(Owner, Failure, out Failure);
-				Owner.SetIntProperty(UpgradePhaseProperty, 4);
-				phase = 4;
+					return !string.IsNullOrEmpty(Target.GetStringProperty(FaultProperty))
+						? UpgradeQuarantine(Owner, Failure, out Failure) : false;
+				Owner.SetIntProperty(UpgradePhaseProperty, 5);
+				phase = 5;
 			}
-			if (phase != 4 || !TryVerifyComplete(Target, Z, out Failure))
-				return UpgradeFail(Owner, Failure ?? "authored upgrade phase is malformed", out Failure);
+			if (phase != 5 || !TryVerifyComplete(Target, Z, out Failure))
+				return UpgradeQuarantine(Owner,
+					Failure ?? "authored upgrade phase is malformed", out Failure);
 			return true;
 		}
 	}

@@ -19,11 +19,11 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// The string property a settler carries the creeds they have HELD AND LEFT on, bounded to
 		/// <c>KingdomCreedRules.MaxKeptCreeds</c> and joined by
-		/// <c>KingdomCreedRules.KeptSeparator</c>. Empty or absent means somebody who has believed
-		/// one thing all their life, which is nearly everybody.
+		/// <c>KingdomCreedRules.KeptSeparator</c>. Empty or absent means somebody who has held one
+		/// affiliation all their life, which is nearly everybody.
 		/// <para>
 		/// Stamped on the settler rather than kept in a map, for exactly the reason
-		/// <c>KingdomConversion.CohabitTickProperty</c> gives: what a person has believed is a
+		/// <c>KingdomConversion.CohabitTickProperty</c> gives: what a person has held with is a
 		/// fact about them, and one carried on them survives a seat swap, a secession and a save
 		/// without any per-city map having to remember to carry it. The city's own
 		/// <c>KingdomSystem.CreedPastCounts</c> is a tally OF this, kept so that a gate can answer
@@ -40,7 +40,8 @@ namespace ThousandAndFirst
 		public const int CreedSignificance = 3;
 
 		/// <summary>
-		/// Whether a faction is something a settler could plausibly believe in.
+		/// Whether a faction is a plausible community, people, polity, order, doctrine, or cult
+		/// affiliation for a settler. The stored/public name remains Creed for compatibility.
 		/// <para>
 		/// A rule rather than a catalogue, so a faction another mod ships is judged on the same
 		/// terms and needs no registration here. A creed is a faction the world names
@@ -52,10 +53,9 @@ namespace ThousandAndFirst
 		/// (<c>FormatWithArticle</c> — "the villagers of Ezra", never "birds").
 		/// </para>
 		/// <para>
-		/// Against the shipped data that admits thirty-three factions, every one of them a people:
-		/// Joppa and Kyakukya and Ezra, the Barathrumites and the Consortium and the Templar, the
-		/// snapjaws and the svardym and the goatfolk. It rejects fifty — every animal and plant
-		/// bucket, every internal marker faction, and the sultan cults.
+		/// Against shipped data this admits thirty-three affiliations. Their semantic kind is
+		/// separately curated in KingdomCreeds.xml; admission never fabricates theology. It rejects
+		/// fifty animal/plant buckets, internal markers, and procedural sultan cults.
 		/// </para>
 		/// </summary>
 		/// <param name="Candidate">A faction. Null reads as unsuitable.</param>
@@ -162,7 +162,7 @@ namespace ThousandAndFirst
 		/// Candidates are the factions the realm already has dealings with — its own standings
 		/// ledger — plus whatever its cities already hold and whatever the founder declared. A
 		/// young realm that has met nobody has no candidates and receives only ordinary settlers,
-		/// which is the intent: belief walks in through what the founder did, not out of a table.
+		/// which is the intent: affiliation walks in through what the founder did, not out of a table.
 		/// </para>
 		/// <para>
 		/// Weighting is <see cref="KingdomCreedRules.CreedWeight"/>: the realm's standing with the

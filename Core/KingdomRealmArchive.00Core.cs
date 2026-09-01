@@ -12,7 +12,7 @@ namespace ThousandAndFirst
 	/// exile mirrors:
 	/// the authoritative archive owns deep settlement and standings copies. Its manual reader
 	/// bounds every archive-owned row, string, and nested settlement payload before allocation.
-	/// Version 7 is the first directional-standing writer; archive v1's unsafe reflected settlement wire was a
+	/// Version 8 freezes exact expedition result/deed publication; archive v1's unsafe reflected settlement wire was a
 	/// pre-release format and is deliberately refused rather than partly interpreted.
 	/// </summary>
 	[Serializable]
@@ -22,15 +22,16 @@ namespace ThousandAndFirst
 #endif
 	{
 		private const int Magic = 0x54415231; // TAR1
-		/// <summary>v7 appends directional policy, signed spillover carry, and advisory observation; v6 appends bounded
-		/// non-seat topology; v5 widened delivery domains.</summary>
-		public const int CurrentVersion = 7;
+		/// <summary>v8 appends expedition-result outbox authority; v7 appends directional policy,
+		/// signed spillover carry, and advisory observation.</summary>
+		public const int CurrentVersion = 8;
 		internal const int LegacyJobVersion = 2;
 		internal const int MissionJobVersion = 3;
 		internal const int ExactDeliveryJobVersion = 4;
 		internal const int ExpandedDeliveryJobVersion = 5;
 		internal const int SettlementTopologyVersion = 6;
 		internal const int DirectionalStandingVersion = 7;
+		internal const int ExpeditionResultJobVersion = 8;
 		private const int MaxTextBytes = 8192;
 		private const int MaxBindings = 196;
 		private const int MaxJobs = 16;
@@ -67,6 +68,23 @@ namespace ThousandAndFirst
 		/// <see cref="SettlementTopology"/>.</summary>
 		[Obsolete("Use SettlementTopology.")]
 		public KingdomSettlement Away;
+
+		// This field name is part of the v2-v7 archive wire. Only these two methods may touch it:
+		// readers preserve/migrate exact legacy evidence, and writers refresh its canonical
+		// compatibility projection. Runtime authority always comes from SettlementTopology.
+		private KingdomSettlement ReadLegacyAwayProjection()
+		{
+#pragma warning disable 618
+			return Away;
+#pragma warning restore 618
+		}
+
+		private void WriteLegacyAwayProjection(KingdomSettlement Value)
+		{
+#pragma warning disable 618
+			Away = Value;
+#pragma warning restore 618
+		}
 		public Dictionary<string, int> Standings;
 		public Dictionary<string, int> RealmPolicyToward;
 		public Dictionary<string, int> RegardSpilloverRemainders;

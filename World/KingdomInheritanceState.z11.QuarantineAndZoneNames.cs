@@ -30,7 +30,8 @@ namespace ThousandAndFirst
 				KingdomSealReceipt receipt;
 				if (!TryGetReservation(out legacy, out receipt)
 					|| !KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy, receipt,
-						TargetZoneId, KingdomInheritEngine.ReconstructionVersion, out expected))
+						TargetZoneId, KingdomInheritEngine.ReconstructionVersionFor(legacy),
+						out expected))
 				{
 					Failure = "the exact application marker could not be recomputed";
 					return false;

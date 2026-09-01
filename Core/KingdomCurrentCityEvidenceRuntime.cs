@@ -117,7 +117,7 @@ namespace ThousandAndFirst
 			List<GameObject> roots = context.Zone.GetObjects();
 			List<GameObject> built = new List<GameObject>();
 			for (int i = 0; i < roots.Count; i++)
-				if (GameObject.Validate(roots[i]) && roots[i].GetIntProperty("KingdomBuilt") == 1)
+				if (KingdomUpgrade.IsFunctionallyBuilt(roots[i]))
 					built.Add(roots[i]);
 			if (!TryBuiltWorksFrom(context, built, out List<Work> works, out failure)) return false;
 			snapshots = new List<BuiltWorkSnapshot>(works.Count);
@@ -167,7 +167,7 @@ namespace ThousandAndFirst
 			IDictionary<string, int> receiptCounts, out Work result)
 		{
 			result = null;
-			if (!GameObject.Validate(item) || item.GetIntProperty("KingdomBuilt") != 1 ||
+			if (!KingdomUpgrade.IsFunctionallyBuilt(item) ||
 				!ReferenceEquals(item.CurrentZone, context.Zone) || item.CurrentCell == null ||
 				string.IsNullOrEmpty(item.IDIfAssigned)) return false;
 			string receipt = item.GetStringProperty(KingdomConstruction.ReceiptProperty);

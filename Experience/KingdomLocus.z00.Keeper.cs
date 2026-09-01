@@ -101,7 +101,7 @@ namespace ThousandAndFirst
 				GameObject item = Survey.Objects[i];
 				if (GameObject.Validate(item) && item.CurrentCell != null
 					&& ReferenceEquals(item.CurrentZone, Z) && item.Blueprint == BenchBlueprint
-					&& item.GetIntProperty("KingdomBuilt") == 1) benches.Add(item);
+					&& KingdomUpgrade.IsFunctionallyBuilt(item)) benches.Add(item);
 			}
 			benches.Sort(delegate(GameObject A, GameObject B)
 			{

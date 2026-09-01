@@ -47,7 +47,8 @@ namespace XRL.World.Parts
 		/// <summary>Blueprint the enclosure is raised in. Empty on an open or carved plot.</summary>
 		public string WallBlueprint;
 
-		/// <summary>Population table the finished interior is furnished from. May be null.</summary>
+		/// <summary>Frozen legacy/third-party furnishing fallback table. May be null; current
+		/// authored realizations preserve it as metadata but do not roll it.</summary>
 		public string ContentsTable;
 
 		/// <summary>Hands the finished work wants, carried through to the finished object.</summary>

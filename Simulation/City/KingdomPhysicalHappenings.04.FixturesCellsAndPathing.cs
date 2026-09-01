@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Simulation.City
 			GameObject fixture)
 		{
 			if (!GameObject.Validate(fixture) || fixture.CurrentCell == null) return false;
-			bool authored = fixture.GetIntProperty("KingdomBuilt") == 1
+			bool authored = KingdomUpgrade.IsFunctionallyBuilt(fixture)
 				|| (fixture.Blueprint ?? "").StartsWith("r_Kingdom", StringComparison.Ordinal);
 			if (!authored) return false;
 			switch (kind)

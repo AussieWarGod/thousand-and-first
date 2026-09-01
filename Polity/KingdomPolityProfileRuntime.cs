@@ -37,16 +37,18 @@ namespace ThousandAndFirst
 		{
 			KingdomPolityProfileFactSet result = Begin(Polity, Tick);
 			int technology = 0;
-			AddCityFacts(result, S.City?.SettlementId, S.Vocation, S.Style, (int)S.Stage,
-				S.Gate, S.Stores, S.KeepersRoster, ref technology);
+			AddCityFacts(result, S.City?.SettlementId, S.Vocation, S.Style, S.Gate,
+				S.Stores, KingdomZoning.Roster(S), S.Population, S.SpeciesCounts,
+				S.IdentityCounts, ref technology);
 			List<KingdomSettlement> rows = S.NonSeatSettlements();
 			for (int i = 0; i < rows.Count; i++)
 			{
 				KingdomSettlement row = rows[i];
 				AddCityFacts(result, row?.City?.SettlementId, row?.Vocation, row?.Style,
-					row == null ? 0 : (int)row.Stage, row == null ? KingdomRules.GatePolicy.Open : row.Gate,
+					row == null ? KingdomRules.GatePolicy.Open : row.Gate,
 					row == null ? KingdomRules.StoresPolicy.Plenty : row.Stores,
-					row?.KeepersRoster, ref technology);
+					KingdomZoning.RosterOf(row), row == null ? 0 : row.Population,
+					row?.SpeciesCounts, row?.IdentityCounts, ref technology);
 			}
 			if (!string.IsNullOrEmpty(S.DeclaredCreed)) Add(result,
 				KingdomPolityProfileFactKind.Creed, S.RealmId,
@@ -83,8 +85,10 @@ namespace ThousandAndFirst
 		}
 
 		private static void AddCityFacts(KingdomPolityProfileFactSet F, string SettlementId,
-			string Vocation, string Style, int Stage, KingdomRules.GatePolicy Gate,
-			KingdomRules.StoresPolicy Stores, string Roster, ref int Technology)
+			string Vocation, string Style, KingdomRules.GatePolicy Gate,
+			KingdomRules.StoresPolicy Stores, IList<string> Roster, int Population,
+			IDictionary<string, int> Species, IDictionary<string, int> Identity,
+			ref int Technology)
 		{
 			if (!KingdomPolityRules.TypedId(SettlementId, "taf:settlement:v1:")) return;
 			string decision = "gate=" + ((int)Gate).ToString(CultureInfo.InvariantCulture) +
@@ -93,13 +97,32 @@ namespace ThousandAndFirst
 			Add(F, KingdomPolityProfileFactKind.Decision, SettlementId, decision);
 			Add(F, KingdomPolityProfileFactKind.Style, SettlementId,
 				"style=" + (Style ?? "common"));
+			List<string> roster = Roster == null ? new List<string>() : new List<string>(Roster);
+			roster.Sort(StringComparer.Ordinal);
+			int localTechnology = (int)KingdomZoningRules.LevelForPoints(
+				KingdomZoningRules.TechPoints(roster)) * 2;
 			string rosterDigest = KingdomPolityRules.ActivationDigest(
-				"polity-technology-roster-v1", Roster ?? "");
+				"polity-technology-roster-v2", roster);
 			Add(F, KingdomPolityProfileFactKind.Technology, SettlementId,
-				"stage=" + Stage.ToString(CultureInfo.InvariantCulture) +
+				"band=" + localTechnology.ToString(CultureInfo.InvariantCulture) +
 				";roster=" + rosterDigest);
-			Technology = Math.Max(Technology, Math.Max(0, Math.Min(8, Stage * 2)) +
-				(string.IsNullOrEmpty(Roster) ? 0 : 1));
+			Technology = Math.Max(Technology, localTechnology);
+			List<string> bodies = KingdomPolityProfileRules.CurrentBodyKeys(
+				PositiveKeys(Species), PositiveKeys(Identity), false);
+			if (Population <= 0) Add(F, KingdomPolityProfileFactKind.Population,
+				SettlementId, "population=none");
+			else if (bodies.Count == 0) Add(F, KingdomPolityProfileFactKind.Population,
+				SettlementId, "population=unresolved");
+			else for (int i = 0; i < bodies.Count; i++) Add(F,
+				KingdomPolityProfileFactKind.Population, SettlementId, "body=" + bodies[i]);
+		}
+
+		private static List<string> PositiveKeys(IDictionary<string, int> Values)
+		{
+			List<string> result = new List<string>();
+			if (Values != null) foreach (KeyValuePair<string, int> row in Values)
+				if (row.Value > 0) result.Add(row.Key);
+			result.Sort(StringComparer.Ordinal); return result;
 		}
 
 		private static void AddRelations(KingdomPolityProfileFactSet F,

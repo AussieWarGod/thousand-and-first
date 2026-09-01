@@ -233,18 +233,32 @@ namespace ThousandAndFirst.Tests
 		public void ProductionLegendaryTraderUsesExactFineHouseHomeAndLiveShop()
 		{
 			string runtime = KingdomGuestbookLogicalSource.Read();
-			StringAssert.Contains("KingdomUpgrade.DesignKeyOf(item), \"finehouse\"", runtime);
+			string helpers = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z01c.MarketHandoffHelpers.cs");
+			StringAssert.Contains("reading.Designation.BuildingKey, \"finehouse\"", runtime);
+			StringAssert.Contains("survey.TryBenefits", runtime);
+			StringAssert.Contains("TryPhysicalHousingTier", runtime);
+			StringAssert.Contains("benefits.Total(\"roof\")", runtime);
+			StringAssert.Contains("KingdomLodging.RoofCapacity", runtime);
+			StringAssert.Contains("KingdomGuestRules.TryExactPlotBounds", runtime);
 			StringAssert.Contains("KingdomLodging.ResidentsOf(Z, item).Count != 0", runtime);
 			StringAssert.Contains("KingdomLodging.HomePlotIdProperty", runtime);
 			StringAssert.Contains("system.HasShopkeeper ? system.ShopTier : 0", runtime);
 			StringAssert.Contains("Trader.SetIntProperty(\"VillageMerchant\", 1)", runtime);
-			StringAssert.Contains("prior.SetIntProperty(\"VillageMerchant\", 0)", runtime);
-			StringAssert.Contains("prior.SetIntProperty(\"Merchant\", 0)", runtime);
-			StringAssert.Contains("Restocker.Chance = 0", runtime);
-			StringAssert.Contains("Restocker.RestockFrequency = long.MaxValue", runtime);
-			StringAssert.Contains("ProtectFiniteTraderStock", runtime);
+			StringAssert.Contains("Prior.RemoveIntProperty(\"VillageMerchant\")", helpers);
+			StringAssert.Contains("Prior.RemovePart(marker)", helpers);
+			StringAssert.Contains("Prior.GetPart<GenericInventoryRestocker>() == old", helpers);
+			StringAssert.DoesNotContain("Prior.RemoveIntProperty(\"Merchant\")", helpers);
+			StringAssert.DoesNotContain("Prior.RemovePart(old)", helpers);
+			StringAssert.Contains("Restocker.Chance = 0", helpers);
+			StringAssert.Contains("Restocker.RestockFrequency = long.MaxValue", helpers);
+			StringAssert.Contains("TryCommitLegendaryMarketProjection", runtime);
+			StringAssert.Contains("KingdomMarketStockCustody.TryAdmitHeld", runtime);
 			StringAssert.DoesNotContain("restocker.Chance = 100", runtime);
 			StringAssert.DoesNotContain("legendary trader restock", runtime);
+			StringAssert.DoesNotContain("KingdomUpgrade.DesignKeyOf", runtime);
+			StringAssert.DoesNotContain("HasPart(\"Bed\")", runtime);
+			StringAssert.DoesNotContain("KingdomGrowth.CountBeds", runtime);
 			string lodging = TestMain.ReadRepositoryText(
 				"Experience/KingdomGuestbook.z01.LodgingAndHousing.cs");
 			StringAssert.DoesNotContain("PerformRestock", lodging);
@@ -260,7 +274,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("MarketHandoffIntentProperty", handoff);
 			StringAssert.Contains("RollbackMarketTransfer", handoff);
 			StringAssert.Contains("Trader.SetIntProperty(\"VillageMerchant\", 1)", handoff);
-			StringAssert.Contains("prior.SetIntProperty(\"VillageMerchant\", 0)", handoff);
+			StringAssert.Contains("Prior.RemoveIntProperty(\"VillageMerchant\")", helpers);
+			StringAssert.Contains("Prior.GetPart<GenericInventoryRestocker>() == old", helpers);
+			StringAssert.DoesNotContain("Prior.RemoveIntProperty(\"Merchant\")", helpers);
 			Assert.Less(handoff.IndexOf("TransferExactLocalMarketStock", StringComparison.Ordinal),
 				handoff.IndexOf("Trader.SetIntProperty(\"VillageMerchant\", 1)",
 					StringComparison.Ordinal),
@@ -293,7 +309,7 @@ namespace ThousandAndFirst.Tests
 				"item.SetStringProperty(MarketTransferTargetProperty, Trader.IDIfAssigned)",
 				protectedEvidence,
 				"Trader.Inventory.AddObjectToInventory(item, null",
-				protectedEvidence, "RollbackMarketTransfer(Prior, Trader, moved)",
+				protectedEvidence, "RollbackMarketTransfer(System, Prior, Trader, moved)",
 				"TryObjectGraphAvailableForOrdinaryTransfer(moved[i], out _)", "return true;");
 
 			string rollback = Slice(handoff, "private static bool RollbackMarketTransfer(",
@@ -304,8 +320,14 @@ namespace ThousandAndFirst.Tests
 				"TryObjectGraphAvailableForOrdinaryTransfer(Moved[i], out _)",
 				"MarketTransferTargetProperty, null, RemoveIfNull: true");
 			string exact = Slice(handoff, "private static bool ExactTransferableStock(",
-				"private static void SealFiniteTrader(");
+				"private static bool OurCurrentMarketReceipt(");
 			StringAssert.Contains("TryObjectGraphAvailableForOrdinaryTransfer(Item, out _)", exact);
+			string helpers = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z01c.MarketHandoffHelpers.cs");
+			StringAssert.Contains("private static void SealFiniteTrader(", helpers);
+			StringAssert.Contains("TryCompleteTransferredMarketService", helpers);
+			StringAssert.Contains("Prior.RemovePart(marker)", helpers);
+			StringAssert.Contains("Prior.GetPart<GenericInventoryRestocker>() == old", helpers);
 			StringAssert.DoesNotContain("CargoSchemaProperty", handoff);
 			StringAssert.DoesNotContain("PortfolioCargo", handoff);
 		}
@@ -351,13 +373,13 @@ namespace ThousandAndFirst.Tests
 		// ---- Rect tier classification: every band this mod actually stamps, plus edges ----
 
 		[TestCase(0, 0, KingdomPlotRules.PlotSize.None)]
-		[TestCase(5, 4, KingdomPlotRules.PlotSize.Small)]
+		[TestCase(6, 4, KingdomPlotRules.PlotSize.Small)]
 		[TestCase(4, 4, KingdomPlotRules.PlotSize.Small)]
 		[TestCase(8, 6, KingdomPlotRules.PlotSize.Medium)]
 		[TestCase(6, 6, KingdomPlotRules.PlotSize.Medium)]
-		[TestCase(12, 9, KingdomPlotRules.PlotSize.Large)]
+		[TestCase(12, 10, KingdomPlotRules.PlotSize.Large)]
 		[TestCase(9, 9, KingdomPlotRules.PlotSize.Large)]
-		[TestCase(20, 14, KingdomPlotRules.PlotSize.Huge)]
+		[TestCase(20, 18, KingdomPlotRules.PlotSize.Huge)]
 		[TestCase(30, 30, KingdomPlotRules.PlotSize.Huge)]
 		public void ClassifyRectTier_MatchesTheFourStampedBands(int width, int height, KingdomPlotRules.PlotSize expected)
 		{
@@ -374,6 +396,38 @@ namespace ThousandAndFirst.Tests
 			Assert.Less(small, medium);
 			Assert.Less(medium, large);
 			Assert.Less(large, huge);
+		}
+
+		[TestCase(4, 4)]
+		[TestCase(16, 1)]
+		public void ExactDesignationBoundsPreservePhysicalShape(int width, int height)
+		{
+			KingdomBenefitReading reading = RectangularReading(width, height);
+			Assert.IsTrue(KingdomGuestRules.TryExactPlotBounds(reading.Designation.Cells,
+				out int actualWidth, out int actualHeight));
+			Assert.AreEqual(width, actualWidth);
+			Assert.AreEqual(height, actualHeight);
+		}
+
+		[Test]
+		public void IrregularDesignationCannotBorrowItsBoundingRectangleTier()
+		{
+			KingdomBenefitReading reading = RectangularReading(2, 2);
+			reading.Designation.Cells.RemoveAt(0);
+			Assert.IsFalse(KingdomGuestRules.TryExactPlotBounds(
+				reading.Designation.Cells, out _, out _));
+		}
+
+		private static KingdomBenefitReading RectangularReading(int width, int height)
+		{
+			KingdomBenefitReading reading = new KingdomBenefitReading {
+				Designation = new KingdomBenefitDesignation()
+			};
+			for (int y = 0; y < height; y++)
+				for (int x = 0; x < width; x++)
+					reading.Designation.Cells.Add(new KingdomBenefitCell(x, y,
+						KingdomBenefitCellUse.Plot));
+			return reading;
 		}
 
 		// ==================================================================================

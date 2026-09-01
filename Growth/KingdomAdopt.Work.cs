@@ -13,8 +13,8 @@ namespace ThousandAndFirst
 		/// does not specifically name. There is no existing object to mark for a role like this,
 		/// so on success this places one small marker object (<see cref="WorkMarkerBlueprint"/>)
 		/// in the anchor cell and marks that instead; nothing the founder built is touched.
-		/// Refuses outright for a Housing or Storage role: see <see cref="AdoptExisting"/> for
-		/// those.
+		/// Housing and ordinary work both designate the exact bounded room. Storage alone uses
+		/// <see cref="AdoptExisting"/>, because its designation root is the exact vessel.
 		/// </summary>
 		/// <param name="System">The kingdom; must be founded.</param>
 		/// <param name="Z">Zone the anchor cell belongs to; must be the kingdom's own claimed
@@ -50,20 +50,41 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomAdoptRules.RoleKind role = KingdomAdoptRules.ClassifyRole(entry.Category);
-			if (role != KingdomAdoptRules.RoleKind.Work)
+			if (!entry.Adoptable)
 			{
-				Failure = "A " + entry.Name + " is adopted from a single thing built for it, not from the room around you.";
+				Failure = "A " + entry.Name + " needs its authored construction and cannot be assigned to a player-built room.";
 				return false;
 			}
+			if (!KingdomPlots.TryGetSpec(entry.Key, out KingdomPlotRules.PlotSpec spec)
+				|| !KingdomAdoptabilityRules.TryClassify(entry.Key, entry.Category,
+					spec.Size, spec.Open, out KingdomAdoptionTargetKind target, out Failure))
+			{
+				if (Failure == null) Failure = "That design has no exact adoption geometry.";
+				return false;
+			}
+			if (target != KingdomAdoptionTargetKind.Room)
+			{
+				Failure = "A " + entry.Name + " is adopted from its exact container, not the room around you.";
+				return false;
+			}
+			if (!KingdomZoning.Permits(System, Z.ZoneID, entry, out Failure)) return false;
 			bool alreadyServing = HasAdoptionMarker(Anchor);
 			bool belowStage = System.Stage < entry.MinStage;
-			KingdomAdoptRules.EnclosureMeasurement enclosure = KingdomAdoptRules.MeasureEnclosure(Anchor.X, Anchor.Y, (X, Y) => CellKindAt(Z, X, Y));
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(role, alreadyServing, belowStage, false, false, enclosure);
+			KingdomAdoptRules.EnclosureMeasurement enclosure = MeasureExactRoom(
+				Z, Anchor.X, Anchor.Y);
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(role,
+				alreadyServing, belowStage, false, enclosure);
 			if (verdict != KingdomAdoptRules.AdoptionVerdict.Adopted)
 			{
 				Failure = RefusalMessage(verdict, entry, null, System);
 				return false;
 			}
+			if (!KingdomAdoptRules.MeetsMinimumUsable(role, spec.Size, enclosure))
+			{
+				Failure = "A " + entry.Name + " needs more usable floor than this room provides.";
+				return false;
+			}
+			if (!RoomIsUnclaimed(Z, enclosure, out Failure)) return false;
 			GameObject marker = GameObject.Create(WorkMarkerBlueprint);
 			if (marker == null)
 			{
@@ -77,14 +98,54 @@ namespace ThousandAndFirst
 				Failure = "The marker could not be set down.";
 				return false;
 			}
-			marker.SetIntProperty(BuiltProperty, 1);
-			KingdomGovernanceScope.Commit("adopt building");
-			marker.SetIntProperty(AdoptedProperty, 1);
-			marker.SetStringProperty(AdoptedKeyProperty, Key);
-			ApplyRoleFixtures(marker, entry);
+			if (!BeginPending(marker, Key, true, out Failure))
+			{
+				if (GameObject.Validate(marker)) marker.Obliterate(null, Silent: true);
+				return false;
+			}
+			KingdomAdoptionDesignationReceipt receipt;
+			if (!KingdomAdoptionDesignation.TryStamp(marker, Z, Key, enclosure,
+				out receipt, out Failure)
+				|| !AdvancePending(marker, Key, 2, out Failure)
+				|| !KingdomPlots.StampAdoptedExact(marker, entry, enclosure.FloorCells)
+				|| !AdvancePending(marker, Key, 3, out Failure)
+				|| !ReproveRoomForCommit(System, Z, marker, entry, receipt, out Failure)
+				|| !AdvancePending(marker, Key, 4, out Failure)
+				|| !FinalizePending(marker, Key, "", out Failure))
+			{
+				RollbackPending(marker);
+				if (Failure == null) Failure = "The room's exact designation could not be recorded.";
+				return false;
+			}
 			AnnounceAdoption(System, entry, marker);
-			KingdomPlots.StampAdopted(marker, entry);
 			return true;
+		}
+
+		private static bool ReproveRoomForCommit(KingdomSystem System, Zone Z,
+			GameObject Marker, KingdomRules.BuildEntry Entry,
+			KingdomAdoptionDesignationReceipt Receipt, out string Failure)
+		{
+			Failure = null;
+			if (!GameObject.Validate(Marker) || Marker.CurrentCell == null
+				|| Marker.CurrentZone != Z || Receipt == null
+				|| !KingdomZoning.Permits(System, Z.ZoneID, Entry, out Failure)) return false;
+			KingdomAdoptRules.EnclosureMeasurement live = MeasureExactRoom(Z,
+				Marker.CurrentCell.X, Marker.CurrentCell.Y);
+			KingdomAdoptRules.RoleKind role = KingdomAdoptRules.ClassifyRole(Entry.Category);
+			if (!KingdomPlots.TryGetSpec(Entry.Key, out KingdomPlotRules.PlotSpec spec)
+				|| !live.Bounded || live.DoorCells < 1 || live.FloorCells == null
+				|| !KingdomAdoptRules.MeetsMinimumUsable(role, spec.Size, live)
+				|| !KingdomAdoptRules.SameMembership(live.FloorCells, Receipt.Cells))
+			{
+				Failure = "The room changed before its designation committed."; return false;
+			}
+			return RoomIsUnclaimed(Z, live, out Failure);
+		}
+
+		private static bool RoomIsUnclaimed(Zone Z,
+			KingdomAdoptRules.EnclosureMeasurement Enclosure, out string Failure)
+		{
+			return CellsAreUnclaimed(Z, Enclosure.FloorCells, out Failure);
 		}
 	}
 }

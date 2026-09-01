@@ -130,7 +130,7 @@ namespace ThousandAndFirst
 				|| !Append(sb, Flag(Item.Owner)) || !Append(sb, Flag(Item.PhysicsPresent))
 				|| !Append(sb, Flag(Item.Solid)) || !Append(sb, Flag(Item.BlueprintSolid))
 				|| !Append(sb, Flag(Item.Door)) || !Append(sb, Text(Item.Liquid))
-				|| !Append(sb, Text(Item.Tile)) || !Append(sb, Text(Item.RenderString))
+				|| !Append(sb, Text(Item.Tile)) || !Append(sb, RenderText(Item.RenderString))
 				|| !Append(sb, Text(Item.ColorString)) || !Append(sb, Text(Item.DetailColor))
 				|| !Append(sb, Text(Item.TileColor)) || !Append(sb, Number(Item.RenderLayer))
 				|| !Append(sb, Number(Item.PathState))) return null;
@@ -149,20 +149,38 @@ namespace ThousandAndFirst
 		/// its exact character count, so a value spelled like the marker is still a present value.
 		/// <para>
 		/// The canonical text is hashed as UTF-8, so injectivity has to survive that encoding too.
-		/// Unicode control values and unpaired surrogates are refused: .NET's default UTF-8 encoder
-		/// substitutes U+FFFD for a lone surrogate, which would fold two distinct live values onto
-		/// identical bytes and hand back one digest for two different lots.
+		/// Ordinary text control values and all unpaired surrogates are refused: .NET's default UTF-8
+		/// encoder substitutes U+FFFD for a lone surrogate, which would fold two distinct live values
+		/// onto identical bytes and hand back one digest for two different lots. RenderString uses the
+		/// dedicated control-glyph path below.
 		/// </para>
 		/// </summary>
 		private static string Text(string Value)
+		{
+			return FramedText(Value, AllowControls: false);
+		}
+
+		/// <summary>
+		/// Qud converts numeric render declarations such as <c>009</c> into their one-character
+		/// CP437 glyph, which is U+0009 in the live <c>RenderString</c>. These are lawful visual
+		/// values, not record delimiters. The length prefix keeps them self-delimiting while strict
+		/// UTF-16 validation still refuses values that would collide under UTF-8 substitution.
+		/// </summary>
+		private static string RenderText(string Value)
+		{
+			return FramedText(Value, AllowControls: true);
+		}
+
+		private static string FramedText(string Value, bool AllowControls)
 		{
 			if (Value == null) return AbsentToken;
 			if (Value.Length > MaxToken) return null;
 			for (int i = 0; i < Value.Length; i++)
 			{
 				char c = Value[i];
-				// A live property carrying a control value is corrupt, not a short field.
-				if (c < ' ' || (c >= (char)0x7F && c <= (char)0x9F)) return null;
+				// Outside RenderString, a live control value is corrupt, not a short field.
+				if (!AllowControls && (c < ' ' || (c >= (char)0x7F && c <= (char)0x9F)))
+					return null;
 				if (char.IsLowSurrogate(c)) return null;
 				if (char.IsHighSurrogate(c))
 				{

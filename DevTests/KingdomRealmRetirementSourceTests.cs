@@ -62,21 +62,39 @@ namespace ThousandAndFirst.Tests
 			string mutation = Read("Core/KingdomRealmRetirementGround.Mutation.cs");
 			AssertBefore(mutation, "TryRevalidate(System, Plan", "TryRetireForRealmRemoval");
 			AssertBefore(mutation, "TryRevalidate(System, Plan", "SetBlueprint");
-			AssertBefore(mutation, "TryRemoveExperienceProjections(item", "SetBlueprint");
+			AssertBefore(mutation, "TryPrepareTransaction(System",
+				"TryRetireForRealmRemoval");
+			AssertBefore(mutation, "TryRemoveExperienceProjections(System, item",
+				"SetBlueprint");
+			AssertBefore(mutation, "TryRetireWitnessWorks(System, Plan",
+				"TryCommitTransaction(System, market");
+			AssertBefore(mutation, "TryCommitTransaction(System, market", "TryVerify(Plan");
+			StringAssert.Contains("TryRollback(market", mutation);
 			StringAssert.DoesNotContain("RemovePart(", mutation,
 				"callback-bearing carriers are residue, never generic pre-fence cuts");
 			StringAssert.Contains("TryRemoveExperienceProjections", mutation);
 			string preflight = Read("Core/KingdomRealmRetirementGround.Preflight.cs");
 			StringAssert.Contains("CarrierDisposition(name)", preflight);
 			StringAssert.Contains("TryInspectPlayer", preflight);
-			StringAssert.Contains("CanRemoveExperienceProjections(item", preflight);
+			StringAssert.Contains("CanRemoveExperienceProjections(System, item", preflight);
 			string authorization = Read("Core/KingdomRealmRetirementGround.Authorization.cs");
 			StringAssert.Contains("SameExternalOwnership(Expected.ExternalOwnership,",
 				authorization);
 			StringAssert.Contains("TryRecord(preview, preview.Revision", authorization);
 			StringAssert.Contains("taf:ground-preview:", authorization);
+			StringAssert.Contains("taf:ground-legacy-citizens:", authorization);
+			StringAssert.Contains("taf:ground-shared-faction:", authorization);
+			StringAssert.Contains("KingdomRemovalProjectionKind.Citizen", authorization);
+			StringAssert.Contains("KingdomRemovalProjectionKind.ZoneProperty", authorization);
+			StringAssert.Contains("KingdomRemovalDisposition.PriorUnknown", authorization);
+			AssertBefore(authorization, "if (Plan.LegacyCitizenRecord != null)",
+				"rows.AddRange(Plan.ObjectPreviewRecords)");
+			AssertBefore(authorization, "if (Plan.SharedFactionRecord != null)",
+				"rows.AddRange(Plan.ObjectPreviewRecords)");
 			StringAssert.DoesNotContain("ground-object-preview:", authorization);
-			StringAssert.Contains("ObjectRosterRow(Item, blueprint, true, true)", authorization);
+			StringAssert.Contains("ObjectRosterRow(Item, blueprint, true, true,", authorization);
+			StringAssert.Contains("Plan.MarketStockRetirements.Contains(Item)", authorization);
+			StringAssert.Contains("Plan.LegendaryMarketRetirements.Contains(Item)", authorization);
 			string experience = Read("Core/KingdomRealmRetirementGround.Experience.cs");
 			StringAssert.Contains("KingdomOfficeRuntime.CanRemoveForRealmRemoval", experience);
 			StringAssert.Contains("KingdomOfficeRuntime.TryRemoveForRealmRemoval", experience);
@@ -193,6 +211,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("Repair", construction);
 			string drive = Read("Core/KingdomRealmRetirementGround.Drive.cs");
 			AssertBefore(drive, "PublishPreMutationDisclosures", "TryApply(System, plan");
+			Assert.AreEqual(3, Occurrences(drive, "PublishPreMutationDisclosures"),
+				"cleaned legacy receipts must publish missing prior-unknown previews on revisit");
 			StringAssert.Contains("Plan.ObjectPreviewRecords", drive);
 			AssertBefore(drive, "TryApply(System, plan", "PublishObjectCompletions");
 		}
@@ -399,6 +419,8 @@ namespace ThousandAndFirst.Tests
 			}, name => name == "KingdomCharterPart" || name.StartsWith("r_Kingdom",
 				StringComparison.Ordinal) || name.StartsWith("r_Founder", StringComparison.Ordinal));
 			AssertSet(parts, Registry("CustomParts"), "custom object parts");
+			AssertSet(parts, Registry("DiscoveredCustomParts",
+				"Core/KingdomRemovalCoverage.Generated.cs"), "generated custom object parts");
 			AssertSet(Derived(bases, new HashSet<string>(StringComparer.Ordinal)
 			{
 				"IGameSystem", "IPlayerSystem"
@@ -432,6 +454,8 @@ namespace ThousandAndFirst.Tests
 			string generator = Read("Tools/generate-removal-coverage.py");
 			StringAssert.Contains("MANUAL_BLUEPRINTS", generator);
 			StringAssert.Contains("MANUAL_OBJECT_PROPERTIES", generator);
+			StringAssert.Contains("collect_custom_parts", generator);
+			StringAssert.Contains("CLASS_CENSUS_SKIP_DIRS", generator);
 			string gate = Read("Tools/gate.sh");
 			StringAssert.Contains(
 				"python3 \"$REPO/Tools/generate-removal-coverage.py\" --check", gate);
@@ -518,9 +542,10 @@ namespace ThousandAndFirst.Tests
 			return derived;
 		}
 
-		private static HashSet<string> Registry(string Name)
+		private static HashSet<string> Registry(string Name,
+			string Path = "Core/KingdomRemovalCoverage.cs")
 		{
-			string source = Read("Core/KingdomRemovalCoverage.cs");
+			string source = Read(Path);
 			Match array = Regex.Match(source, @"\b" + Regex.Escape(Name)
 				+ @"\s*=\s*new\s+string\[\]\s*\{(?<body>.*?)\};",
 				RegexOptions.Singleline);

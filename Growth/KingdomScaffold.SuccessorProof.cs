@@ -34,6 +34,15 @@ namespace XRL.World.Parts
 			{
 				Successor.SetIntProperty("KingdomLarder", 1);
 			}
+			if (Job.Route == KingdomConstructionRoute.Improvement)
+			{
+				if (Successor.HasStringProperty(PendingImprovementSuccessorProperty)
+					|| (Successor.HasIntProperty(PendingImprovementSuccessorProperty)
+						&& Successor.GetIntProperty(PendingImprovementSuccessorProperty) != 1))
+					throw new InvalidOperationException(
+						"The improvement successor carries foreign pending-state evidence.");
+				Successor.SetIntProperty(PendingImprovementSuccessorProperty, 1);
+			}
 			Successor.SetIntProperty("KingdomBuilt", 1);
 			Successor.SetStringProperty(KingdomUpgrade.BuildKeyProperty, Job.TargetKey);
 			int defence = ParentObject.GetIntProperty("KingdomDefencePending");
@@ -168,20 +177,87 @@ namespace XRL.World.Parts
 		private static bool IsMarkedSuccessor(GameObject Successor, Zone Z, Cell Cell,
 			KingdomConstructionJob Job, string Blueprint)
 		{
-			return Z != null && Job != null && Cell != null
-				&& Cell == Z.GetCell(Job.X, Job.Y)
-				&& GameObject.Validate(Successor) && Successor.CurrentZone == Z
-				&& Successor.CurrentCell == Cell && Successor.Blueprint == Blueprint
-				&& Successor.GetIntProperty("KingdomBuilt") == 1
-				&& Successor.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Job.TargetKey
-				&& KingdomConstruction.FinalBuildTruthMatches(Successor, Job)
-				&& KingdomConstruction.HasReceipt(Successor, Job);
+			if (Z == null || Job == null || Cell == null
+				|| Cell != Z.GetCell(Job.X, Job.Y)
+				|| !GameObject.Validate(Successor) || Successor.CurrentZone != Z
+				|| Successor.CurrentCell != Cell || Successor.Blueprint != Blueprint
+				|| Successor.GetIntProperty("KingdomBuilt") != 1
+				|| Successor.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey
+				|| !KingdomConstruction.FinalBuildTruthMatches(Successor, Job)
+				|| !KingdomConstruction.HasReceipt(Successor, Job)) return false;
+			if (Job.Route != KingdomConstructionRoute.Improvement) return true;
+			bool pending = IsExactPendingImprovementSuccessor(Successor);
+			bool anyPending = HasPendingImprovementSuccessorEvidence(Successor);
+			if (!ImprovementRemovalCommitted(Successor, Job)) return pending;
+			// The recovery cut commits global predecessor absence before retiring the marker.
+			// Both sides of that one write are exact; malformed evidence is never accepted.
+			return pending || !anyPending;
 		}
 
 		public static bool HasRemovalProof(GameObject Successor, string PredecessorId)
 		{
 			return GameObject.Validate(Successor) && !string.IsNullOrEmpty(PredecessorId)
+				&& Successor.HasStringProperty(RemovalProofProperty)
+				&& !Successor.HasIntProperty(RemovalProofProperty)
 				&& Successor.GetStringProperty(RemovalProofProperty) == PredecessorId;
+		}
+
+		/// <summary>Any marker evidence is nonfunctional; malformed evidence never grants benefits.</summary>
+		public static bool HasPendingImprovementSuccessorEvidence(GameObject Successor)
+		{
+			return Successor != null
+				&& (Successor.HasIntProperty(PendingImprovementSuccessorProperty)
+					|| Successor.HasStringProperty(PendingImprovementSuccessorProperty));
+		}
+
+		/// <summary>Semantic pending authority survives a callback deleting the convenience marker.
+		/// The construction registry and exact final-removal receipt remain the independent owner.</summary>
+		public static bool HasPendingImprovementSuccessorAuthority(GameObject Successor)
+		{
+			if (HasPendingImprovementSuccessorEvidence(Successor)) return true;
+			if (!GameObject.Validate(Successor)) return false;
+			if (Successor.HasIntProperty(KingdomConstruction.ReceiptProperty)) return true;
+			string receipt = Successor.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			KingdomConstructionJob job;
+			return !string.IsNullOrEmpty(receipt)
+				&& KingdomConstruction.TryFind(receipt, out job)
+				&& job.Route == KingdomConstructionRoute.Improvement
+				&& !string.IsNullOrEmpty(job.OutputId)
+				&& job.OutputId == Successor.IDIfAssigned
+				&& !ImprovementRemovalCommitted(Successor, job);
+		}
+
+		/// <summary>The registry and successor independently prove the predecessor-removal cut.</summary>
+		public static bool HasCommittedImprovementRemoval(GameObject Successor)
+		{
+			if (!GameObject.Validate(Successor)
+				|| Successor.HasIntProperty(KingdomConstruction.ReceiptProperty)) return false;
+			string receipt = Successor.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			KingdomConstructionJob job;
+			return !string.IsNullOrEmpty(receipt)
+				&& KingdomConstruction.TryFind(receipt, out job)
+				&& job.Route == KingdomConstructionRoute.Improvement
+				&& job.OutputId == Successor.IDIfAssigned
+				&& ImprovementRemovalCommitted(Successor, job);
+		}
+
+		private static bool ImprovementRemovalCommitted(GameObject Successor,
+			KingdomConstructionJob Job)
+		{
+			if (!HasRemovalProof(Successor, Job?.SubjectId) || Job == null) return false;
+			return Job.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved
+				|| Job.PhysicalPhase == KingdomPhysicalPhase.EffectsPending
+				|| Job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled
+				|| Job.Phase == KingdomConstructionPhase.Complete;
+		}
+
+		/// <summary>Exact resumable pending state used by the paid handover transaction.</summary>
+		public static bool IsExactPendingImprovementSuccessor(GameObject Successor)
+		{
+			return GameObject.Validate(Successor)
+				&& Successor.HasIntProperty(PendingImprovementSuccessorProperty)
+				&& !Successor.HasStringProperty(PendingImprovementSuccessorProperty)
+				&& Successor.GetIntProperty(PendingImprovementSuccessorProperty) == 1;
 		}
 
 	}

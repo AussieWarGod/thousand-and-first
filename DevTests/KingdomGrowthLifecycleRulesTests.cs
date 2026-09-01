@@ -2589,7 +2589,7 @@ namespace ThousandAndFirst.Tests
 			string observation = Slice(lodgingSource,
 				"internal static bool ObservePreparedArrival(KingdomSystem System, Zone Z,",
 				"public static string HomeDesignKeyOf");
-			StringAssert.Contains("ProjectedOccupancy(Z)", observation);
+			StringAssert.Contains("ProjectedOccupancy(Z, benefits)", observation);
 			foreach (string mutation in new[] { "SetStringProperty", "SetIntProperty",
 				"KingdomChronicle.Record", ".Ledger.Note", "KingdomBrink.", "Settle(" })
 				StringAssert.DoesNotContain(mutation, observation);
@@ -2606,14 +2606,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("AssignOne(System, Z, unassigned[i], homes, occupancy",
 				settle);
 			AssertOrdered(settle,
-				"if (!string.IsNullOrEmpty(plotId) && homeByPlot.ContainsKey(plotId))",
+				"if (!string.IsNullOrEmpty(plotId) && homeByPlot.TryGetValue(plotId,",
+				"out GameObject assignedHome) && !IsCondemned(assignedHome))",
 				"AddOccupant(occupancy, plotId, resident);", "continue;",
 				"unassigned.Add(resident);");
 			StringAssert.DoesNotContain("finehouse", settle,
 				"soft reservation must never reconsider or evict a standing assignment");
 			StringAssert.Contains("ChooseHome(Z, Resident, Homes, Occupancy", assign);
 			StringAssert.Contains("ChooseHome(Z, unassigned[i], homes, result", projection);
-			StringAssert.Contains("eligibleFineHouses.Add(string.Equals(entry.Key, \"finehouse\"",
+			StringAssert.Contains("eligibleFineHouses.Add(string.Equals(reading.Designation.BuildingKey, \"finehouse\"",
 				chooser);
 			StringAssert.Contains("KingdomLodgingRules.ChooseOrdinaryIndex(eligible, eligibleFineHouses)",
 				chooser);

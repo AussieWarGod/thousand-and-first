@@ -51,6 +51,8 @@ namespace ThousandAndFirst
 
 		public const string AttrDefence = "Defence";
 
+		public const string AttrAdoptable = "Adoptable";
+
 		public const string AttrCarries = "Carries";
 
 		public const string AttrMaterials = "Materials";

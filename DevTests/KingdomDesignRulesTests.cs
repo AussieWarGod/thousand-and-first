@@ -108,7 +108,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FindSkin_UnknownKeyReturnsNull()
 		{
-			Assert.IsNull(KingdomDesignRules.FindSkin(ThreeSkins(), "gyre"));
+			Assert.IsNull(KingdomDesignRules.FindSkin(ThreeSkins(), "moonstair"));
 		}
 
 		[Test]
@@ -139,8 +139,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// This is the mutation this test exists to catch: swap the "return null" for
 			// "return Skins[0]" and this assertion fails, because ThreeSkins()[0] is "common",
-			// not null, for a style ("gyre") none of the three skins claim.
-			Assert.IsNull(KingdomDesignRules.ResolveDefaultSkin(ThreeSkins(), "gyre"));
+			// not null, for a style ("moonstair") none of the three skins claim.
+			Assert.IsNull(KingdomDesignRules.ResolveDefaultSkin(ThreeSkins(), "moonstair"));
 		}
 
 		[Test]

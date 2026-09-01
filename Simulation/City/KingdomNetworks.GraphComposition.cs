@@ -141,7 +141,9 @@ namespace ThousandAndFirst.Simulation.City
 				// The founder's designation is the whole of a line's membership, exactly as it is
 				// the whole of the power grid's: nothing the player merely left lying about is ever
 				// read, moved or drained (the protection law).
-				if (item.GetIntProperty("KingdomBuilt") != 1 && item.GetIntProperty("KingdomGrid") != 1)
+				if (!KingdomUpgrade.IsFunctionallyBuilt(item)
+					&& (item.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)))
 				{
 					continue;
 				}

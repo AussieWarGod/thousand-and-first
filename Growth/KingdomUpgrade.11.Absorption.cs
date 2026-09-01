@@ -26,9 +26,12 @@ namespace ThousandAndFirst
 			LiquidVolume volume = Work.GetPart<LiquidVolume>();
 			if (volume != null && volume.Volume > 0)
 			{
+				if (!KingdomUpgradeContentRules.LiquidEndpointSafe(volume.MaxVolume, false,
+					r_KingdomImprovement.LiquidEndpointHasContextRisk(volume))) return false;
 				storedLiquid = volume.Volume;
 			}
 			int heldItems = (Work.Inventory != null) ? Work.Inventory.Objects.Count : 0;
+			if (!KingdomUpgradeContentRules.ManifestCardinalityValid(heldItems)) return false;
 			GameObjectBlueprint blueprint = string.IsNullOrEmpty(SuccessorBlueprint) ? null : GameObjectFactory.Factory.GetBlueprintIfExists(SuccessorBlueprint);
 			if (blueprint == null)
 			{

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using XRL;
 using XRL.Messages;
 using XRL.World;
 using XRL.World.Parts;
-
 namespace ThousandAndFirst
 {
 	public partial class KingdomSurvey
@@ -14,26 +12,18 @@ namespace ThousandAndFirst
 		/// serialized. Construction presence needs the ground even when it contains no finished
 		/// work yet, which cannot be recovered honestly from a population counter.</summary>
 		public Zone Ground;
-
 		public int StoredWater;
-
 		public int OpenWater;
-
 		public int StorageSpace;
-
 		public int StorageCapacity;
-
 		public int Citizens;
-
 		public bool HasTradePost => TradePosts > 0;
-
 		/// <summary>
 		/// Kingdom-wide defence bonus from garrison districts, folded in by
 		/// <see cref="Take(Zone, KingdomSystem)"/>. Zero on a survey taken with the plain
 		/// <see cref="Take(Zone)"/> overload, which knows nothing outside its own zone.
 		/// </summary>
 		public int DistrictDefenceBonus;
-
 		/// <summary>
 		/// Servings of food seen in the settlement's dedicated containers this pass: items
 		/// carrying vanilla <c>Food</c> or <c>PreparedCookingIngredient</c>. Consuming food
@@ -76,17 +66,6 @@ namespace ThousandAndFirst
 		public readonly List<LiquidVolume> Pools = new List<LiquidVolume>();
 
 		public readonly List<GameObject> Settlers = new List<GameObject>();
-
-		/// <summary>Beds the settlement built. Population cannot exceed these.</summary>
-		public int Beds;
-
-		/// <summary>
-		/// Finished works here that carry vanilla's <c>Campfire</c> part &mdash; the communal
-		/// fire, and the oven above it. A settlement with none of these cannot cook, however full
-		/// its larders are, which is the gate on the favoured meal
-		/// (<c>KingdomRules.JudgeMeal</c>).
-		/// </summary>
-		public int Kitchens;
 
 		/// <summary>Works the settlement built that require crew, in placement order.</summary>
 		public readonly List<GameObject> Works = new List<GameObject>();
@@ -221,13 +200,24 @@ namespace ThousandAndFirst
 			// Citizenship controls the civic lists, never whether the one ground scan can find that
 			// exact body for the roster's Present/Led/Killed/Missing judgement.
 			row.ResidentId = Simulation.City.KingdomResidents.IdOf(Item);
-			row.Built = Item.GetIntProperty("KingdomBuilt") == 1;
-			row.Bed = row.Built && Item.HasPart("Bed");
-			row.Kitchen = row.Built && Item.HasPart("Campfire");
-			row.Work = row.Built && Item.GetIntProperty("KingdomStaffNeeded") > 0
+			bool pendingImprovement = r_KingdomScaffold
+				.HasPendingImprovementSuccessorAuthority(Item)
+				|| IsPendingUpgradeComponent(Item);
+			row.Built = !pendingImprovement && Item.GetIntProperty("KingdomBuilt") == 1;
+			// Adoption never copies benefits. A staffed non-storage room may nevertheless enter
+			// the ordinary crew pass when its separate signed operation contract exactly re-proves
+			// build key, category, headcount, manning law, and room designation.
+			bool adoptedDesignation = Item.GetIntProperty(KingdomAdopt.AdoptedProperty) == 1;
+			bool adoptionMarker = Item.Blueprint == KingdomAdopt.WorkMarkerBlueprint;
+			bool adoptedWork = adoptedDesignation
+				&& KingdomAdoptionOperation.TryRead(Item, out _, out _);
+			row.Work = row.Built && (adoptedDesignation || adoptionMarker ? adoptedWork
+				: Item.GetIntProperty("KingdomStaffNeeded") > 0)
 				&& (KingdomCrops.FieldOf(Item) == null || KingdomCrops.IsSown(Item));
-			row.Defence = row.Built && Item.GetIntProperty("KingdomDefence") > 0;
-			row.Larder = Item.GetIntProperty("KingdomLarder") == 1 && Item.Inventory != null;
+			row.Defence = row.Built && !adoptedDesignation && !adoptionMarker
+				&& Item.GetIntProperty("KingdomDefence") > 0;
+			row.Larder = !pendingImprovement && Item.GetIntProperty("KingdomLarder") == 1
+				&& Item.Inventory != null;
 			if (row.Larder)
 			{
 				row.FoodCapacity = CapacityOf(Item);
@@ -237,9 +227,9 @@ namespace ThousandAndFirst
 			if (row.Liquid != null && row.Liquid.Volume >= 0)
 			{
 				bool fresh = KingdomLiquids.HasFreshWater(row.Liquid);
-				row.Pool = row.Liquid.MaxVolume < 0 && fresh;
+				row.Pool = !pendingImprovement && row.Liquid.MaxVolume < 0 && fresh;
 				if (row.Pool) row.OpenWater = row.Liquid.Volume;
-				row.Store = row.Liquid.MaxVolume >= 0
+				row.Store = !pendingImprovement && row.Liquid.MaxVolume >= 0
 					&& Item.GetIntProperty("KingdomStores") == 1;
 				if (row.Store)
 				{
@@ -259,7 +249,6 @@ namespace ThousandAndFirst
 			row.PlotWorks = Item.GetPart<r_KingdomPlotWorks>() != null;
 			row.Improvement = Item.GetPart<r_KingdomImprovement>() != null;
 			row.Notice = Item.GetPart<r_KingdomNotice>() != null;
-			row.Shrine = row.Built && Item.HasPart("Shrine");
 			row.Guest = Item.GetIntProperty("KingdomGuest") == 1;
 			row.NotableGuest = Item.GetIntProperty("KingdomNotableGuest") == 1;
 			row.CausalPilgrim = Item.GetIntProperty(KingdomLocus.CausalPilgrimProperty) == 1;
@@ -269,13 +258,14 @@ namespace ThousandAndFirst
 				|| Item.GetPart<r_KingdomRelocationFrame>() != null;
 			row.PlotRoot = KingdomPlots.TryReadRect(Item, out _);
 			row.LayoutRoot = KingdomLayout.TryReadMark(Item, out _);
-			row.CropRow = Item.GetIntProperty(KingdomCrops.RowProperty) == 1
+			row.CropRow = !pendingImprovement && Item.GetIntProperty(KingdomCrops.RowProperty) == 1
 				&& !string.IsNullOrEmpty(Item.GetStringProperty(KingdomCrops.RowFieldProperty));
-			row.NetworkPiece = (row.Built || Item.GetIntProperty("KingdomGrid") == 1)
+			row.NetworkPiece = !pendingImprovement
+				&& (row.Built || Item.GetIntProperty("KingdomGrid") == 1)
 				&& (Item.GetPart<r_KingdomLiquidConduit>() != null
 					|| Item.GetPart<r_KingdomLiquidTap>() != null
 					|| Item.GetPart<r_KingdomLiquidCrossover>() != null);
-			row.LabJob = Item.GetPart<r_KingdomLabJob>() != null;
+			row.LabJob = !pendingImprovement && Item.GetPart<r_KingdomLabJob>() != null;
 			row.VisualRoot = row.Built || row.ConstructionRoot
 				|| Item.GetIntProperty(KingdomPlots.HeartPlotProperty) == 1
 				|| Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1;
@@ -285,12 +275,13 @@ namespace ThousandAndFirst
 				== KingdomArchitectureStamper.ComponentSchema;
 			row.GatehouseSatellite = Item.GetIntProperty(
 				KingdomGatehouse.SatelliteProperty) == 1;
-			row.DelveEndpoint = Item.GetIntProperty(
+			row.DelveEndpoint = !pendingImprovement && Item.GetIntProperty(
 				KingdomDelveLink.EndpointSchemaProperty) == KingdomDelveLink.EndpointSchema;
 			row.Furnishing = !string.IsNullOrEmpty(Item.GetStringProperty(
 				KingdomPlots.FurnishReceiptProperty));
 			row.HeartRelic = Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1;
-			row.MaterialStockpile = KingdomMaterials.IsStockpile(Item) && Item.Inventory != null;
+			row.MaterialStockpile = !pendingImprovement && KingdomMaterials.IsStockpile(Item)
+				&& Item.Inventory != null;
 			row.Transient = Item.GetIntProperty(Simulation.City.KingdomResidents.JobIdProperty) > 0;
 			return row;
 		}

@@ -1,26 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <worlds>
   <world Name="Interior">
-    <cell Name="TAFArcologyAtrium">
+    <cell Name="TAFArcology">
       <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
-      <zone Level="10" x="1" y="1" Name="hosted atrium" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
-        <builder Class="KingdomHostedArcologyBuilder" Kind="atrium" />
+      <zone Level="9" x="0-2" y="0-2" Name="cultivation district" NameContext="the hosted arcology" IncludeStratumInZoneDisplay="false" DisableForcedConnections="Yes">
+        <builder Class="KingdomHostedArcologyBuilder" />
         <widget Blueprint="AmbientLight" />
         <intproperty Name="AmbushChance" Value="0" />
       </zone>
-    </cell>
-    <cell Name="TAFArcologyWard">
-      <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
-      <zone Level="10" x="1" y="1" Name="vertical ward" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
-        <builder Class="KingdomHostedArcologyBuilder" Kind="ward" />
+      <zone Level="10" x="0-2" y="0-2" Name="civic district" NameContext="the hosted arcology" IncludeStratumInZoneDisplay="false" DisableForcedConnections="Yes">
+        <builder Class="KingdomHostedArcologyBuilder" />
         <widget Blueprint="AmbientLight" />
         <intproperty Name="AmbushChance" Value="0" />
       </zone>
-    </cell>
-    <cell Name="TAFArcologyTerrace">
-      <boolproperty Name="JoinPartyLeaderPossible" Value="false" />
-      <zone Level="10" x="1" y="1" Name="hydroponic terrace" NameContext="the arcology" IncludeStratumInZoneDisplay="false">
-        <builder Class="KingdomHostedArcologyBuilder" Kind="terrace" />
+      <zone Level="11" x="0-2" y="0-2" Name="service district" NameContext="the hosted arcology" IncludeStratumInZoneDisplay="false" DisableForcedConnections="Yes">
+        <builder Class="KingdomHostedArcologyBuilder" />
         <widget Blueprint="AmbientLight" />
         <intproperty Name="AmbushChance" Value="0" />
       </zone>

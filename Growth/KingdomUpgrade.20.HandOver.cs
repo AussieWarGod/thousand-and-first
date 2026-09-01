@@ -40,6 +40,8 @@ namespace ThousandAndFirst
 		{
 			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor))
 			{
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
+					"The improvement handover endpoints are no longer live.");
 				return;
 			}
 			Cell cell = Predecessor.CurrentCell;
@@ -47,40 +49,39 @@ namespace ThousandAndFirst
 			if (cell == null || Successor.CurrentCell != cell
 				|| Successor.GetIntProperty(BuiltProperty) != 1)
 			{
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
+					"The improvement successor moved or lost its built-state proof.");
 				return;
 			}
 			r_KingdomImprovement intent = Predecessor.GetPart<r_KingdomImprovement>();
 			if (intent != null && !string.IsNullOrEmpty(intent.SuccessorBlueprint)
 				&& Successor.Blueprint != intent.SuccessorBlueprint)
 			{
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
+					"The improvement successor blueprint changed before handover.");
 				return;
 			}
-			if (intent == null || !intent.HandoverFlagsValid()) return;
-			if (intent.HandoverSourceId == null && intent.HandoverTargetId == null)
+			if (intent == null || !intent.HandoverFlagsValid()
+				|| !r_KingdomImprovement.ExactHandoverControlTypes(intent))
 			{
-				if (string.IsNullOrEmpty(Predecessor.ID) || Predecessor.ID.Length > 128
-					|| string.IsNullOrEmpty(Successor.ID) || Successor.ID.Length > 128) return;
-				intent.HandoverSourceId = Predecessor.ID;
-				intent.HandoverTargetId = Successor.ID;
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
+					"The improvement handover control state is absent or malformed.");
+				return;
 			}
-			else if (intent.HandoverSourceId != Predecessor.ID
-				|| intent.HandoverTargetId != Successor.ID) return;
 			string receipt = Predecessor.GetStringProperty(KingdomConstruction.ReceiptProperty);
 			if (string.IsNullOrEmpty(receipt))
 			{
-				r_KingdomImprovement.FailHandover(intent,
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
 					"Legacy improvement handover lacks a current exact construction receipt.");
 				return;
 			}
-			if (string.IsNullOrEmpty(intent.HandoverConstructionReceipt))
+			if (!r_KingdomImprovement.TryPublishHandoverEndpoints(Predecessor, Successor,
+				intent, receipt))
 			{
-				if (!string.IsNullOrEmpty(receipt))
-				{
-					if (receipt.Length > 128) return;
-					intent.HandoverConstructionReceipt = receipt;
-				}
+				FailExactHandover(Predecessor, Successor, SuccessorKey,
+					intent.HandoverFailure ?? "The exact handover endpoints could not be published.");
+				return;
 			}
-			else if (intent.HandoverConstructionReceipt != receipt) return;
 			KingdomConstructionJob job = null;
 			KingdomSystem ownerSystem = null;
 			KingdomArchitectureIntent authoredSuccessor = null;
@@ -96,15 +97,40 @@ namespace ThousandAndFirst
 					|| (job.Phase != KingdomConstructionPhase.Working
 						&& job.Phase != KingdomConstructionPhase.ProjectionPending
 						&& job.Phase != KingdomConstructionPhase.Outstanding)
+					|| (job.PhysicalPhase != KingdomPhysicalPhase.None
+						&& (job.PhysicalPhase != KingdomPhysicalPhase.FinalRemovalPending
+							|| !ExactRemovalReceipt(job)))
 					|| job.SubjectId != Predecessor.ID
 					|| SuccessorKey != job.TargetKey || intent == null || !intent.Working
 					|| intent.Scaffold == null
-					|| Successor.GetStringProperty(r_KingdomScaffold.RemovalProofProperty)
-						!= intent.Scaffold.ID
+					|| !r_KingdomScaffold.IsExactPendingImprovementSuccessor(Successor)
 					|| !EnsureExactImprovementPredecessor(ownerSystem, Predecessor.CurrentZone,
 						Predecessor, job)
 					|| !r_KingdomScaffold.IsExactSuccessor(Successor, Predecessor.CurrentZone,
-						cell, job, intent.SuccessorBlueprint)) return;
+						cell, job, intent.SuccessorBlueprint))
+				{
+					FailExactHandover(Predecessor, Successor, SuccessorKey,
+						"The paid improvement job no longer matches its exact physical endpoints.");
+					return;
+				}
+				if (job.PhysicalPhase == KingdomPhysicalPhase.None
+					&& !r_KingdomScaffold.TryCommitScaffoldRemovalProof(ownerSystem,
+						Predecessor.CurrentZone, Successor, intent.Scaffold,
+						intent.SuccessorBlueprint, intent.Scaffold.IDIfAssigned, ref job,
+						out string scaffoldFailure))
+				{
+					r_KingdomImprovement.FailHandover(intent, scaffoldFailure);
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
+				if (!ExactPendingRemovalProof(Successor, intent.Scaffold.IDIfAssigned,
+					Predecessor.IDIfAssigned, job))
+				{
+					r_KingdomImprovement.FailHandover(intent,
+						"Scaffold-removal proof is absent, malformed, or foreign.");
+					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return;
+				}
 				string authoredFailure;
 				if (!TryReadImprovementArchitecture(Predecessor, job,
 					out authoredSuccessor, out authoredUpgrade, out authoredFailure))
@@ -115,14 +141,6 @@ namespace ThousandAndFirst
 					return;
 				}
 				if (!KingdomConstruction.BeginProjection(ref job, out _)) return;
-				if (job.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending)
-				{
-					r_KingdomImprovement.FailHandover(intent,
-						"Improvement removal was interrupted before callback-success proof.");
-					KingdomConstruction.Quarantine(ref job,
-						intent.HandoverFailure);
-					return;
-				}
 				KingdomConstruction.Bind(Successor, job);
 			}
 			if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,

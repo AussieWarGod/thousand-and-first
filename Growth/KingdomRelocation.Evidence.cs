@@ -12,8 +12,7 @@ namespace ThousandAndFirst
 			long Now, out KingdomRelocationMove Move, out string Failure)
 		{
 			Move = null; Failure = null;
-			if (!GameObject.Validate(Root) || Root.CurrentZone != Zone
-				|| Root.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Root) || Root.CurrentZone != Zone
 				|| Root.GetIntProperty(KingdomUpgrade.AdoptedProperty) == 1
 				|| !KingdomPlots.IsYielding(Root)
 				|| Root.GetPart<r_KingdomPlotWorks>() != null

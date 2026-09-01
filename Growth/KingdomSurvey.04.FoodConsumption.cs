@@ -27,7 +27,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The meal-shaped draw (Addendum 11(b)): spends the day's food out of the dedicated
+		/// The explicit-meal draw (Addendum 11(b)): spends its quoted ingredients out of the dedicated
 		/// larders, <b>reaching for the settlement's own dish first</b>.
 		/// <para>
 		/// <b>The order, stated once and deterministic.</b> Pass one takes
@@ -49,8 +49,8 @@ namespace ThousandAndFirst
 		/// <param name="Amount">Food units requested.</param>
 		/// <param name="Preferred">The dish's staple blueprint, or null to draw in plain order.</param>
 		/// <param name="FromPreferred">Set to how much of the draw came off that staple, which is
-		/// what <c>KingdomRules.JudgeMeal</c> reads to decide whether the settlement ate its own
-		/// dish or merely ate.</param>
+		/// what <c>KingdomRules.JudgeMeal</c> reads to decide whether the completed act cooked its
+		/// own dish or used other ingredients.</param>
 		/// <returns>Amount actually spent, which may be less than requested.</returns>
 		public int ConsumeFood(int Amount, string Preferred, out int FromPreferred)
 		{
@@ -191,7 +191,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>Current edible units of one exact blueprint across this survey's dedicated
-		/// larders. Used only for inspection; the ration draw remains authoritative.</summary>
+		/// larders. Used for inspection and exact explicit meal planning.</summary>
 		public int CountFood(string Blueprint)
 		{
 			if (string.IsNullOrEmpty(Blueprint))

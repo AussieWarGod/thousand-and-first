@@ -8,13 +8,23 @@ namespace ThousandAndFirst
 		/// <summary>Checks reversible civic projections before any ground mutation. Generic part
 		/// stripping is insufficient: office titles and memorial descriptions have exact prior
 		/// values which only their owning receipts may restore.</summary>
-		private static bool CanRemoveExperienceProjections(GameObject Item, out string Failure)
+		private static bool CanRemoveExperienceProjections(KingdomSystem System,
+			GameObject Item, out string Failure)
 		{
 			Failure = null;
 			if (!GameObject.Validate(Item)) return true;
+			r_KingdomMarketHandoffSourceProjection handoff =
+				Item.GetPart<r_KingdomMarketHandoffSourceProjection>();
+			if (handoff != null)
+			{
+				Failure = handoff.RealmId == System?.RealmId
+					? "an open market handoff must reach exact completion or terminal abort before realm removal"
+					: "a foreign market handoff receipt blocks realm removal";
+				return false;
+			}
 			r_KingdomOfficeProjection office = Item.GetPart<r_KingdomOfficeProjection>();
 			if (office != null && !KingdomOfficeRuntime.CanRemoveForRealmRemoval(
-				Item, office, out Failure)) return false;
+				System, Item, office, out Failure)) return false;
 			r_KingdomRemembranceProjection remembrance =
 				Item.GetPart<r_KingdomRemembranceProjection>();
 			return remembrance == null || KingdomRemembranceRuntime.CanRemoveForRealmRemoval(
@@ -23,13 +33,14 @@ namespace ThousandAndFirst
 
 		/// <summary>Restores only fields proven by the frozen preflight, before the fallback
 		/// blueprint and generic namespaced carriers are removed.</summary>
-		private static bool TryRemoveExperienceProjections(GameObject Item, out string Failure)
+		private static bool TryRemoveExperienceProjections(KingdomSystem System,
+			GameObject Item, out string Failure)
 		{
 			Failure = null;
 			if (!GameObject.Validate(Item)) return true;
 			r_KingdomOfficeProjection office = Item.GetPart<r_KingdomOfficeProjection>();
 			if (office != null && !KingdomOfficeRuntime.TryRemoveForRealmRemoval(
-				Item, office, out Failure)) return false;
+				System, Item, office, out Failure)) return false;
 			r_KingdomRemembranceProjection remembrance =
 				Item.GetPart<r_KingdomRemembranceProjection>();
 			return remembrance == null || KingdomRemembranceRuntime.TryRemoveForRealmRemoval(

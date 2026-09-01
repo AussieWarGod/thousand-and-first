@@ -79,6 +79,18 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(KingdomUpgradeRules.CraftGateAdmits(verdict));
 		}
 
+		[Test]
+		public void OnlyFinalRemovalCutsRequireAbsentHandoverRecovery()
+		{
+			foreach (KingdomPhysicalPhase phase in Enum.GetValues(typeof(KingdomPhysicalPhase)))
+			{
+				bool expected = phase == KingdomPhysicalPhase.FinalRemovalPending
+					|| phase == KingdomPhysicalPhase.FinalRemoved;
+				Assert.AreEqual(expected,
+					KingdomUpgradeRules.RequiresAbsentHandoverRecovery(phase), phase.ToString());
+			}
+		}
+
 		// --- CostDrams: what an improvement is worth, and the two clamps around it -------------
 
 		[TestCase(16, 4, KingdomUpgradeRules.Unset, 12)]
@@ -309,12 +321,12 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase(1)]
 		[TestCase(1000)]
-		public void ContentsWouldFit_AnUndeclaredCapacityIsNotEvidenceOfAProblem(int storedLiquid)
+		public void ContentsWouldFit_AnUndeclaredCapacityCannotProveSafeCustody(int storedLiquid)
 		{
-			// Qud's own open pools carry a negative MaxVolume for "unbounded", and a blueprint
-			// that declares no LiquidVolume at all reports the same sentinel. Neither is a reason
-			// to refuse; a mutation comparing the sentinel numerically refuses both.
-			Assert.IsTrue(KingdomUpgradeRules.ContentsWouldFit(storedLiquid, KingdomUpgradeRules.UnknownCapacity, 0, SuccessorHoldsItems: true));
+			// Open pools and undeclared capacity share this sentinel. Neither proves a bounded
+			// destination for a callback-free durable transfer.
+			Assert.IsFalse(KingdomUpgradeRules.ContentsWouldFit(storedLiquid,
+				KingdomUpgradeRules.UnknownCapacity, 0, SuccessorHoldsItems: true));
 		}
 
 		// --- Assess: every gate fires, and in the order the founder is owed --------------------

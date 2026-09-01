@@ -35,6 +35,17 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: install_source
+    attributes:
+      label: TAF install source
+      options:
+        - Steam Workshop subscription
+        - Manual tagged release package
+        - Source/developer checkout
+        - Unknown
+    validations:
+      required: true
+  - type: dropdown
     id: profile_kind
     attributes:
       label: Profile and world state
@@ -100,4 +111,6 @@ body:
         - label: I removed personal paths, account identifiers, secrets, and unrelated private data.
           required: true
         - label: I identified which tests used a clean profile, new world, and existing save.
+          required: true
+        - label: I checked for a second local or Workshop copy with manifest ID r_ThousandAndFirst.
           required: true

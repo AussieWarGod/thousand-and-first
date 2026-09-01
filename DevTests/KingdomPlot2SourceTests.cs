@@ -16,7 +16,7 @@ namespace ThousandAndFirst.Tests
 		public void TopLevelAndNestedSerializedIdentitiesRemainExact()
 		{
 			string source = Plot();
-			Assert.AreEqual(53, Count(source, "public static partial class KingdomPlots"));
+			Assert.AreEqual(56, Count(source, "public static partial class KingdomPlots"));
 			StringAssert.DoesNotContain("public static class KingdomPlots", source);
 			string yielding = Between(source, "[Serializable]\n\tpublic class r_KingdomYielding : IPart",
 				"[Serializable]\n\tpublic class r_KingdomPlotWorks : IPart");
@@ -118,6 +118,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PersistedPlotGeometryReadsOnlyCompleteBoundedExactCoordinates()
+		{
+			string geometry = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.06.Geometry.cs");
+			StringAssert.Contains("Zone zone = Object == null ? null : Object.CurrentZone;",
+				geometry);
+			StringAssert.Contains("bool allProperties = x1 && y1 && x2 && y2;", geometry);
+			StringAssert.Contains("bool mistyped = Object.HasStringProperty(PlotX1Property)",
+				geometry);
+			StringAssert.Contains("Object.GetIntProperty(PlotX1Property) != Rect.X1", geometry);
+			StringAssert.Contains("KingdomPlotRules.ValidZoneRect(Rect, zone.Width, zone.Height)",
+				geometry);
+			StringAssert.Contains("internal static bool HasRectEvidence(", geometry);
+			StringAssert.DoesNotContain("if (!Object.HasIntProperty(PlotX2Property))", geometry);
+		}
+
+		[Test]
 		public void PublicAndCrossAuthorityMethodOrderRemainsExact()
 		{
 			AssertOrdered(Plot(), "public static void ClearSpecs(",
@@ -169,9 +186,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Plot();
 			AssertOrdered(Between(source, "public static bool Commission(KingdomSystem System, Zone Z,\n\t\t\tKingdomRules.BuildEntry Entry",
-				"private static KingdomPlotRules.PlotRect PlannedFootprint("),
+				"public static GameObject Stake(KingdomSystem System, Zone Z, KingdomPlotRules.PlotRect Rect"),
 				"Failure = KingdomCommission.StageRefusal(System, Entry)",
 				"TryFindRect(Z, System, Entry", "TryPreparePlotPayload(System, Z, rect",
+				"KingdomArchitectureRuntime.TryWorldFootprint(architecture",
+				"KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved",
 				"Expected != null", "KingdomPurpose.ResolveCommitCargo",
 				"KingdomConstruction.NewJob(System, Z", "KingdomConstruction.FreezeBuildTruth(job",
 				"KingdomConstruction.TryFundNew(job", "ProjectPlot(System, Z",

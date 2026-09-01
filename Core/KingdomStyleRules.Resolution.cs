@@ -28,8 +28,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Definitions.Count; i++)
 			{
 				KingdomStyleDefinition definition = Definitions[i];
-				if (definition != null && string.Equals(definition.Name, wanted,
-					StringComparison.OrdinalIgnoreCase))
+				if (MatchesName(definition, wanted))
 				{
 					Canonical = definition.Name;
 					return true;
@@ -45,8 +44,7 @@ namespace ThousandAndFirst
 				for (int i = 0; i < Definitions.Count; i++)
 				{
 					KingdomStyleDefinition definition = Definitions[i];
-					if (definition != null && string.Equals(definition.Name, Name,
-						StringComparison.OrdinalIgnoreCase))
+					if (MatchesName(definition, Name))
 					{
 						return definition.GroundClause ?? ("ground claimed by a " + definition.Name + " city");
 					}
@@ -140,8 +138,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Definitions.Count; i++)
 			{
 				KingdomStyleDefinition definition = Definitions[i];
-				if (definition != null && string.Equals(definition.Name, Name.Trim(),
-					StringComparison.OrdinalIgnoreCase)) return definition;
+				if (MatchesName(definition, Name)) return definition;
 			}
 			return null;
 		}

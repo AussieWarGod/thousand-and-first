@@ -176,6 +176,11 @@ namespace ThousandAndFirst
 					current.ProjectedFactionId, ProfileExpressionDigest(currentProfile),
 					currentProjection.PreparedTick, true)))
 				return Refuse(Result, "current polity has no exact active foundation", out Failure);
+			if (Facts.Legacy.ProfileSchema !=
+				KingdomPolityProfileRules.CurrentLegacyProfileSchema ||
+				!KingdomPolityProfileRules.MatchesLegacyProfileSource(Facts.Legacy, currentProfile))
+				return Refuse(Result, "realm exile seal lacks exact current profile provenance",
+					out Failure);
 			KingdomPolityRecord imported = ImportedPolity(Ledger);
 			KingdomPolityProjectionReceipt importedProjection = imported == null ? null :
 				FactionReceipt(Ledger, imported.PolityId);

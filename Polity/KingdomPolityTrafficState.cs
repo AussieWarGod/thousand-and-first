@@ -90,5 +90,8 @@ namespace ThousandAndFirst
 		public KingdomPolityCohortPhase Phase;
 		public string ManifestationReceiptId;
 		public string RewardEventId;
+		/// <summary>Frozen semantic authority for weekly ambient cohorts. Null is permitted
+		/// only for non-ambient cohorts; migrated weekly rows carry an explicit unresolved row.</summary>
+		public KingdomPolityAmbientTransaction AmbientTransaction;
 	}
 }

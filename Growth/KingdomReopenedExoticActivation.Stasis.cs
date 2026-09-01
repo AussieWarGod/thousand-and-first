@@ -20,7 +20,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < objects.Count; i++)
 			{
 				GameObject work = objects[i];
-				if (!GameObject.Validate(work) || work.GetIntProperty("KingdomBuilt") != 1)
+				if (!KingdomUpgrade.IsFunctionallyBuilt(work))
 					continue;
 				if (work.GetPart<r_KingdomGraftingHall>() != null
 					|| work.GetPart<r_KingdomChimericTheatre>() != null) return true;

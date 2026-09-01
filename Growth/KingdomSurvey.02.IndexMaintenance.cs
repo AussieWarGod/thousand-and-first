@@ -21,8 +21,6 @@ namespace ThousandAndFirst
 			int sign = Add ? 1 : -1;
 			Citizens += sign * (Row.Citizen ? 1 : 0);
 			TradePosts += sign * (Row.TradePost ? 1 : 0);
-			Beds += sign * (Row.Bed ? 1 : 0);
-			Kitchens += sign * (Row.Kitchen ? 1 : 0);
 			FoodStored += sign * Row.FoodStored;
 			FoodCapacity += sign * Row.FoodCapacity;
 			StoredWater += sign * Row.StoredWater;
@@ -40,7 +38,6 @@ namespace ThousandAndFirst
 			Publish(PlotWorks, Row, Row.PlotWorks, Add);
 			Publish(Improvements, Row, Row.Improvement, Add);
 			Publish(Notices, Row, Row.Notice, Add);
-			Publish(Shrines, Row, Row.Shrine, Add);
 			Publish(Guests, Row, Row.Guest, Add);
 			Publish(NotableGuests, Row, Row.NotableGuest, Add);
 			Publish(CausalPilgrims, Row, Row.CausalPilgrim, Add);
@@ -156,7 +153,7 @@ namespace ThousandAndFirst
 			if (action != KingdomSurveyIndexRules.Mutation.Add) return false;
 			AddRoot(Item, The.Game?.GetSystem<KingdomSystem>());
 			bool added = Rows.ContainsKey(Item);
-			if (added) AddedMutations++;
+			if (added) { AddedMutations++; InvalidateBenefits(); }
 			return added;
 		}
 
@@ -181,7 +178,7 @@ namespace ThousandAndFirst
 			Rows[Item] = fresh;
 			Publish(fresh, true);
 			IndexLoadedBranch(fresh);
-			ChangedMutations++;
+			ChangedMutations++; InvalidateBenefits();
 			return true;
 		}
 
@@ -206,7 +203,7 @@ namespace ThousandAndFirst
 			RemoveLoadedBranch(row);
 			Rows.Remove(Item);
 			Objects.Remove(Item);
-			RemovedMutations++;
+			RemovedMutations++; InvalidateBenefits();
 			return true;
 		}
 
@@ -214,6 +211,7 @@ namespace ThousandAndFirst
 		/// published the exact aggregate delta. Category changes are refused as mixed evidence.</summary>
 		internal bool SynchronizeReceiptObject(GameObject Item)
 		{
+			InvalidateBenefits();
 			IndexedRow old;
 			if (Item == null || !Rows.TryGetValue(Item, out old) || !GameObject.Validate(Item)) return false;
 			IndexedRow fresh = Capture(Item, The.Game?.GetSystem<KingdomSystem>(), old.Order);
@@ -227,12 +225,12 @@ namespace ThousandAndFirst
 		private static bool SameShape(IndexedRow A, IndexedRow B)
 		{
 			return A.Citizen == B.Citizen && A.Settler == B.Settler
-				&& A.TradePost == B.TradePost && A.Built == B.Built && A.Bed == B.Bed
-				&& A.Kitchen == B.Kitchen && A.Work == B.Work && A.Defence == B.Defence
+				&& A.TradePost == B.TradePost && A.Built == B.Built
+				&& A.Work == B.Work && A.Defence == B.Defence
 				&& A.Larder == B.Larder && A.Pool == B.Pool && A.Store == B.Store
 				&& A.Raider == B.Raider && A.Cairn == B.Cairn && A.PlotWorks == B.PlotWorks
 				&& A.Improvement == B.Improvement && A.Notice == B.Notice
-				&& A.Shrine == B.Shrine && A.Guest == B.Guest
+				&& A.Guest == B.Guest
 				&& A.NotableGuest == B.NotableGuest && A.CausalPilgrim == B.CausalPilgrim
 				&& A.Clearance == B.Clearance && A.ConstructionRoot == B.ConstructionRoot
 				&& A.PlotRoot == B.PlotRoot && A.LayoutRoot == B.LayoutRoot

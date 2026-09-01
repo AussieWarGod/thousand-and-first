@@ -60,7 +60,8 @@ namespace ThousandAndFirst.Tests
 
 			string keeper = Read("Experience/KingdomLocus.z00.Keeper.cs");
 			StringAssert.Contains("item.Blueprint == BenchBlueprint", keeper);
-			StringAssert.Contains("item.GetIntProperty(\"KingdomBuilt\") == 1", keeper);
+			StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt(item)", keeper);
+			StringAssert.DoesNotContain("item.GetIntProperty(\"KingdomBuilt\")", keeper);
 			StringAssert.Contains("bench.GetIntProperty(\"KingdomStaffNeeded\") == 0", keeper);
 			StringAssert.Contains("bench.SetIntProperty(\"KingdomStaffNeeded\", 1)", keeper);
 			StringAssert.Contains("Survey.ObserveChanged(bench)", keeper);

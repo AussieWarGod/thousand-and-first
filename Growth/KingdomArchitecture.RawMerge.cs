@@ -48,6 +48,24 @@ namespace ThousandAndFirst
 			return result;
 		}
 
+		private static RawPose GetPose(LoadState State, string Blueprint, string Origin)
+		{
+			if (!ValidBlueprint(Blueprint))
+			{
+				AddFault(State, "pose", "missing or malformed Blueprint at " + Origin);
+				return null;
+			}
+			if (State.RawPoses.TryGetValue(Blueprint, out RawPose result)) return result;
+			if (State.RawPoses.Count >= KingdomArchitectureRules.MaxPoseRecords)
+			{
+				AddFault(State, "poses", "record bound exceeded");
+				return null;
+			}
+			result = new RawPose(Blueprint, Origin);
+			State.RawPoses.Add(Blueprint, result);
+			return result;
+		}
+
 		private static RawPlan GetPlan(LoadState State, string Key, string Origin)
 		{
 			if (!ValidKey(Key))
@@ -143,6 +161,24 @@ namespace ThousandAndFirst
 			}
 			Record.BadAttributes.Remove(Name);
 			Record.Values[Name] = Value;
+		}
+
+		/// <summary>
+		/// Optional pose fields have a deliberate three-state merge: omission inherits, an exact
+		/// empty attribute clears, and every nonempty value survives for strict later parsing.
+		/// Whitespace is not a clear and therefore remains malformed where a token is required.
+		/// </summary>
+		private static void SetOptionalClear(LoadState State, RawRecord Record,
+			string Name, string Value)
+		{
+			if (Value == null) return;
+			if (Value.Length == 0)
+			{
+				Record.Values.Remove(Name);
+				Record.BadAttributes.Remove(Name);
+				return;
+			}
+			Set(State, Record, Name, Value);
 		}
 
 		private static void SetAlias(LoadState State, RawRecord Record, string Name,

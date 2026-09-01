@@ -173,7 +173,8 @@ namespace ThousandAndFirst
 			Body = null; Failure = null; KingdomPolityCohortMember member = Cohort.ResolvedMembers[Ordinal];
 			if (!KingdomPolityCohortRules.TryParseSignature(member.SignatureKey,
 				out string role, out string resolver, out string figureId) ||
-				!KingdomPolityNpcRules.TryResolve(Profile, role, Ordinal,
+				!KingdomPolityNpcRules.TryResolvePinned(Profile, role, Ordinal,
+					Cohort.RulesVersion, Cohort.MinimumLevel, Cohort.MaximumLevel,
 					out KingdomPolityNpcSpec spec, out Failure) || spec.ResolverDigest != resolver ||
 				spec.ResolverDigest != member.LoadoutKey || spec.BodyBlueprint != member.BlueprintKey)
 			{
@@ -192,6 +193,7 @@ namespace ThousandAndFirst
 			}
 			string objectId = KingdomPolityCohortRules.PreparedObjectId(Cohort, Ordinal);
 			bool made = KingdomPolityNpcRuntime.TryCreate(Profile, role, Ordinal,
+				Cohort.RulesVersion, Cohort.MinimumLevel, Cohort.MaximumLevel,
 				Polity.ProjectedFactionId, figureId, figure == null ? null : figure.DisplayName,
 				Ledger.RealmId, Cohort.CohortId, Receipt.ProjectionId, objectId,
 				created =>

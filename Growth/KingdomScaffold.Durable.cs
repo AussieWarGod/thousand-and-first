@@ -199,62 +199,59 @@ namespace XRL.World.Parts
 					"A construction endpoint changed before predecessor removal.");
 				return;
 			}
-			bool removed;
+			if (!TryPublishScaffoldRemovalIntent(successor, predecessorId))
+			{
+				KingdomConstruction.Quarantine(ref current,
+					"The successor could not publish exact scaffold-removal intent.");
+				return;
+			}
+			bool removed = false;
+			string removalException = null;
 			try
 			{
 				removed = ParentObject.Destroy(null, Silent: true);
 			}
 			catch (Exception ex)
 			{
-				KingdomSurvey.ObserveCurrentTopologyInActive(Z, ParentObject);
-				KingdomConstruction.Quarantine(ref current,
-					"The scaffold threw during predecessor removal: " + ex.Message);
+				removalException = ex.Message;
+			}
+			KingdomSurvey.ObserveCurrentTopologyInActive(Z, ParentObject);
+			KingdomPhysicalLookupState predecessorState = KingdomConstruction.FindGlobalLiveId(
+				predecessorId, out GameObject afterPredecessor);
+			bool exactReference = ReferenceEquals(afterPredecessor, ParentObject);
+			bool originalValid = GameObject.Validate(ParentObject);
+			bool exactShape = exactReference && originalValid
+				&& ExactPredecessor(System, Z, current) && ParentObject.CurrentCell == cell
+				&& TargetBlueprint == blueprint
+				&& IsExactSuccessor(successor, Z, cell, current, blueprint,
+					current.Route == KingdomConstructionRoute.Improvement ? ParentObject : null)
+				&& HasExactScaffoldRemovalIntent(successor, predecessorId)
+				&& (!gatehouse || KingdomGatehouse.ProjectionComplete(successor, Z));
+			KingdomExactRemovalAction aftermath =
+				KingdomConstructionRules.ScaffoldRemovalAftermath(predecessorState,
+					exactReference, exactShape, originalValid);
+			if (aftermath == KingdomExactRemovalAction.InvokeOnce)
+			{
+				ReturnToOutstanding(ref current, "The exact successor stands, but scaffold removal "
+					+ (removed ? "reported success without an effect"
+						: removalException == null ? "was vetoed" : "threw before taking effect") + ".");
 				return;
 			}
-			if (!removed || GameObject.Validate(ParentObject))
+			if (aftermath != KingdomExactRemovalAction.ProvedAbsent)
 			{
-				if (GameObject.Validate(ParentObject) && ParentObject.CurrentCell == cell
-					&& ParentObject.CurrentZone == Z && TargetBlueprint == blueprint)
-				{
-					ReturnToOutstanding(ref current,
-						"The exact successor stands, but scaffold removal was vetoed.");
-				}
-				else
-				{
-					KingdomConstruction.Quarantine(ref current,
-						"Scaffold removal moved or partially changed the predecessor.");
-				}
+				KingdomConstruction.Quarantine(ref current,
+					"Scaffold removal moved, replaced, duplicated, or ambiguously changed an endpoint."
+					+ (removalException == null ? "" : " Callback threw: " + removalException));
 				return;
 			}
 			KingdomSurvey.ObserveRemovedFromActive(Z, ParentObject);
-			KingdomPhysicalLookupState predecessorState = KingdomConstruction.FindExactId(
-				Z, predecessorId, out _);
-			if (!KingdomConstruction.Owns(System, Z, current)
-				|| predecessorState != KingdomPhysicalLookupState.Absent
-				|| TargetBlueprint != blueprint
-				|| !IsExactSuccessor(successor, Z, cell, current, blueprint)
-				|| (gatehouse && !KingdomGatehouse.ProjectionComplete(successor, Z)))
+			if (!TryCommitScaffoldRemovalProof(System, Z, successor, ParentObject, blueprint,
+				predecessorId, ref current, out string proofFailure))
 			{
 				KingdomConstruction.Quarantine(ref current,
-					"The successor changed during predecessor removal.");
+					proofFailure ?? "The successor could not commit scaffold-removal proof.");
 				return;
 			}
-			successor.SetStringProperty(RemovalProofProperty, predecessorId);
-			if (successor.GetStringProperty(RemovalProofProperty) != predecessorId)
-			{
-				KingdomConstruction.Quarantine(ref current,
-					"The successor did not retain predecessor-removal proof.");
-				return;
-			}
-			KingdomConstructionJob refreshed;
-			if (!KingdomConstruction.TryFind(current.Id, out refreshed)
-				|| !SameFinalProjectionIdentity(current, refreshed)
-				|| refreshed.Phase != KingdomConstructionPhase.ProjectionPending
-				|| !KingdomConstruction.Owns(System, Z, refreshed)
-				|| !KingdomConstruction.IsCurrent(refreshed)
-				|| !IsExactSuccessor(successor, Z, cell, refreshed, blueprint)
-				|| !HasRemovalProof(successor, predecessorId)) return;
-			current = refreshed;
 
 			if (current.Route == KingdomConstructionRoute.Improvement)
 			{
@@ -276,22 +273,6 @@ namespace XRL.World.Parts
 				KingdomConstruction.Quarantine(ref Job,
 					Failure + " The final-projection marker could not be cleared.");
 			}
-		}
-
-		private static bool SameFinalProjectionIdentity(KingdomConstructionJob Expected,
-			KingdomConstructionJob Observed)
-		{
-			return Expected != null && Observed != null && Expected.Id == Observed.Id
-				&& Expected.OwnerKey == Observed.OwnerKey && Expected.ZoneId == Observed.ZoneId
-				&& Expected.Route == Observed.Route && Expected.Projection == Observed.Projection
-				&& Expected.X == Observed.X && Expected.Y == Observed.Y
-				&& Expected.SubjectId == Observed.SubjectId && Expected.SourceId == Observed.SourceId
-				&& Expected.OutputId == Observed.OutputId && Expected.TargetKey == Observed.TargetKey
-				&& Expected.Payload == Observed.Payload
-				&& Expected.BuildTruthSchema == Observed.BuildTruthSchema
-				&& Expected.BuildHasPlot == Observed.BuildHasPlot
-				&& Expected.BuildFrontier == Observed.BuildFrontier
-				&& Expected.BuildDefence == Observed.BuildDefence;
 		}
 
 	}

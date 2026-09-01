@@ -34,8 +34,7 @@ namespace ThousandAndFirst
 				KingdomMaterials.ExoticCostFor(entry.Key));
 			if (!KingdomArchitectureStamper.TryPreflight(System, Z, architecture, claim,
 				out Failure)) return false;
-			if (!KingdomPlots.TryGetSpec(entry.Key, out KingdomPlotRules.PlotSpec liveSpec)
-				|| !TrySocketBuildLabour(System, Z, Prepared.Rect, entry, liveSpec,
+			if (!TrySocketBuildLabour(System, Z, Prepared.Rect, entry, architecture,
 					out long liveLabour, out Failure)
 				|| liveLabour != Prepared.LabourTicks)
 			{

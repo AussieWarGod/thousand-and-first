@@ -146,9 +146,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Whether the successor can receive everything the predecessor is holding. A liquid
-		/// capacity of <see cref="UnknownCapacity"/> means the successor's blueprint did not
-		/// declare one, which is not evidence of a problem and never blocks; a real capacity
-		/// smaller than what is stored is, and does.
+		/// capacity of <see cref="UnknownCapacity"/> is not bounded evidence and therefore cannot
+		/// receive stored liquid; a real capacity smaller than what is stored also refuses.
 		/// </summary>
 		/// <param name="StoredLiquid">Drams of anything in the predecessor.</param>
 		/// <param name="SuccessorCapacity">The successor's declared liquid capacity, or
@@ -162,7 +161,8 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			if (StoredLiquid > 0 && SuccessorCapacity != UnknownCapacity && SuccessorCapacity < StoredLiquid)
+			if (StoredLiquid > 0 && (SuccessorCapacity == UnknownCapacity
+				|| SuccessorCapacity < StoredLiquid))
 			{
 				return false;
 			}

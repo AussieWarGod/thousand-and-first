@@ -60,7 +60,8 @@ namespace ThousandAndFirst
 		private const string StoresProperty = "KingdomStores";
 
 		/// <summary>The food side of <see cref="StoresProperty"/>: what marks a container the
-		/// settlement keeps its food in, and therefore what can spoil.</summary>
+		/// settlement keeps its physical ingredients in. Wear may reduce the work's effectiveness,
+		/// but never authorizes unattended loss of those ingredients.</summary>
 		private const string LarderProperty = "KingdomLarder";
 
 		/// <summary>

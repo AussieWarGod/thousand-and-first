@@ -54,7 +54,11 @@ namespace ThousandAndFirst
 					ArchitectureCompileRequest request = new ArchitectureCompileRequest
 					{
 						PlanKey = PlanKey, Binding = Binding, Tier = Tier, Variant = variant,
-						Map = map, Palette = palette, BuildingBlueprint = building.Blueprint,
+						Map = map, Palette = palette, PoseRegistry = State.PoseRegistry,
+						BuildingBlueprint = building.Blueprint,
+						CatalogueFootprintWidth = building.FootprintWidth,
+						CatalogueFootprintHeight = building.FootprintHeight,
+						CatalogueRoof = building.Roof,
 						Facing = (ArchitectureFacing)facing
 					};
 					ArchitectureLayoutSnapshot snapshot;
@@ -68,6 +72,9 @@ namespace ThousandAndFirst
 			{
 				Binding = Binding,
 				Tier = Tier,
+				CatalogueFootprintWidth = building.FootprintWidth,
+				CatalogueFootprintHeight = building.FootprintHeight,
+				CatalogueRoof = building.Roof,
 				View = new KingdomArchitectureMapping(building.Blueprint, building.Category,
 					PlanKey, Binding, Tier)
 			};

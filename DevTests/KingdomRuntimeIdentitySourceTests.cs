@@ -34,7 +34,8 @@ namespace ThousandAndFirst.Tests
 				Source("Core/KingdomConversion.cs"),
 				Source("Core/KingdomConversion.PressureAndHelpers.cs"),
 				Source("Core/KingdomConversion.OsmosisAndBrink.cs"),
-				Source("Core/KingdomConversion.MealConversionAndCohabitation.cs")
+				Source("Core/KingdomConversion.MealConversionAndCohabitation.cs"),
+				Source("Core/KingdomConversion.Transitions.cs")
 			});
 		}
 
@@ -137,11 +138,11 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void V8BoundaryRefusesUnreadableNamedIdentityAndAllowsOnlyReflectedMigration()
+		public void V10BoundaryRefusesPreRedesignDevelopmentGeometry()
 		{
 			string system = KingdomSystemLogicalSource.Read();
-			StringAssert.Contains("private const int CurrentSerializationVersion = 9;", system);
-			StringAssert.Contains("private const int FirstNamedSerializationVersion = 8;", system);
+			StringAssert.Contains("private const int CurrentSerializationVersion = 10;", system);
+			StringAssert.Contains("private const int FirstNamedSerializationVersion = 10;", system);
 			int reflected = system.IndexOf("SerializationVersion == LegacyReflectedSerializationVersion",
 				StringComparison.Ordinal);
 			int migrate = system.IndexOf("NormalizeState(AllowLegacyIdentityMigration: true)",
@@ -154,6 +155,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(named, migrate);
 			Assert.Greater(refuseMigration, named);
 			StringAssert.Contains("pre-v8 authority is not readable", system);
+			StringAssert.Contains("final pre-Alpha physical-product break", system);
 		}
 
 		[Test]
@@ -859,12 +861,12 @@ namespace ThousandAndFirst.Tests
 			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("otherRows.Add(rows[i].Copy())", system);
 			StringAssert.Contains("TryWriteRegistry(otherRows", system);
-			StringAssert.Contains("TryDeclareOnce(this", system);
-			StringAssert.Contains("RecordDeclaredOnce(this, declaration)", system);
+			StringAssert.Contains("TryDeclareDisputedOnce(this", system);
+			StringAssert.Contains("RecordDeclaredOnce(this, Declaration)", system);
 			StringAssert.Contains("KingdomRealmCallbackProofRules.ChronicleListsMatch", system);
 			StringAssert.Contains("ChronicleFaultMatches", system);
-			StringAssert.Contains("registryFault, out before", system);
-			StringAssert.Contains("TryFingerprint(eventId, Text, Accomplishment", system);
+			StringAssert.Contains("frozenRegistryFault, out before", system);
+			StringAssert.Contains("TryDisputedFingerprint(Value.EventId", system);
 			StringAssert.Contains("ReferenceEquals(officialReference, ChronicleEntries)", system);
 			StringAssert.Contains("reputation.ReputationValues", system);
 			StringAssert.Contains("reputation.FactionRanks", system);
@@ -880,6 +882,26 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ReferenceEquals(row.Value?.Abilities", system);
 			StringAssert.Contains("CharterReferencesStillMatch", system);
 			StringAssert.Contains("partCount > 1", system);
+		}
+
+		[Test]
+		public void ExileAndReturnFreezeAuthoredCounterHistoryWithLegacyResumeOnly()
+		{
+			string system = KingdomSystemLogicalSource.Read();
+			StringAssert.Contains("KingdomExileRules.ExileRumour", system);
+			StringAssert.Contains("KingdomExileRules.ReturnRumour", system);
+			StringAssert.Contains("TryDeclareDisputedOnce(this", system);
+			StringAssert.Contains("OutsiderTelling, false, null, out declaration", system);
+			StringAssert.Contains("OutsiderText = Declaration.AuthoredOutsiderText", system);
+			StringAssert.Contains("CurrentPrefix = \"chronicle-v3\"", system);
+			StringAssert.Contains("LegacyPrefix = \"chronicle-v2\"", system);
+			StringAssert.Contains("TryDecodeLegacy(Intent, ExpectedEventId", system);
+			StringAssert.Contains("Legacy = true", system);
+			StringAssert.Contains("Receipt.Phase == KingdomRealmCallbackPhase.Settled", system);
+			StringAssert.Contains("RecordDeclaredOnce(this, Declaration)", system);
+			StringAssert.Contains("TryInspectChronicle(EventId, Fingerprint", system);
+			Assert.IsFalse(system.Contains("KingdomChronicle.RecordDisputed(this"),
+				"realm transition must use receipt-backed publication, not direct append");
 		}
 
 		[Test]
@@ -956,12 +978,13 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomArchivedSettlementCodec.ExactGraph(settlement,
 				exactClone, out failure), failure);
 			var sameRootAlias = new System.Collections.Generic.List<string> { "one" };
-			settlement.RosterNames = sameRootAlias;
-			settlement.RosterOrigins = sameRootAlias;
+			KingdomLegacyRosterProjectionTestAccess.SetNames(settlement, sameRootAlias);
+			KingdomLegacyRosterProjectionTestAccess.SetOrigins(settlement, sameRootAlias);
 			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncode(settlement,
 				out byte[] aliasedPayload, out failure));
 			Assert.IsNull(aliasedPayload);
-			settlement.RosterOrigins = new System.Collections.Generic.List<string>();
+			KingdomLegacyRosterProjectionTestAccess.SetOrigins(settlement,
+				new System.Collections.Generic.List<string>());
 			int futureVersion = KingdomArchivedSettlementCodec.CurrentVersion + 1;
 			payload[4] = (byte)futureVersion;
 			payload[5] = 0; payload[6] = 0; payload[7] = 0;
@@ -1094,10 +1117,10 @@ namespace ThousandAndFirst.Tests
 			};
 			string individuallyLegal = new string('x',
 				KingdomArchivedSettlementCodec.MaxStringBytes);
-			source.RosterNames = new List<string>(
-				KingdomArchivedSettlementCodec.MaxCollectionCount);
+			KingdomLegacyRosterProjectionTestAccess.SetNames(source, new List<string>(
+				KingdomArchivedSettlementCodec.MaxCollectionCount));
 			for (int i = 0; i < KingdomArchivedSettlementCodec.MaxCollectionCount; i++)
-				source.RosterNames.Add(individuallyLegal);
+				KingdomLegacyRosterProjectionTestAccess.Names(source).Add(individuallyLegal);
 			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncode(source,
 				out byte[] payload, out string failure));
 			Assert.IsNull(payload);
@@ -1671,27 +1694,35 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ArchiveCloneRetiresLegacyNotableEconomyWithoutErasingMealEvidence()
+		public void ArchiveCloneRetiresLegacyNotableAndPassiveFoodEconomy()
 		{
 			KingdomSettlement legacy = new KingdomSettlement
 			{
 				SettlementName = "Archive Shade",
 				NotableShade = 17,
-				MealShade = 1
+				MealShade = 1,
+				HungerStreak = 4,
+				Famished = true,
+				ScrapsAnnounced = true
 			};
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryClone(legacy,
 				out KingdomSettlement clone, out string failure), failure);
 			Assert.AreEqual(17, legacy.NotableShade,
 				"read-only archive preparation must not mutate its source object");
 			Assert.AreEqual(0, clone.NotableShade);
-			Assert.AreEqual(1, clone.MealShade);
+			Assert.AreEqual(0, clone.MealShade);
+			Assert.AreEqual(0, clone.HungerStreak);
+			Assert.IsFalse(clone.Famished);
+			Assert.IsFalse(clone.ScrapsAnnounced);
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(legacy,
 				out byte[] payload, out failure), failure);
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(payload,
 				out KingdomSettlement restored, out int future, out failure), failure);
 			Assert.AreEqual(0, future);
 			Assert.AreEqual(0, restored.NotableShade);
-			Assert.AreEqual(1, restored.MealShade);
+			Assert.AreEqual(0, restored.MealShade);
+			Assert.AreEqual(0, restored.HungerStreak);
+			Assert.IsFalse(restored.Famished);
 		}
 
 		private static void AssertHistoricalV8ToV10Migration(byte[] payload,
@@ -2018,6 +2049,16 @@ namespace ThousandAndFirst.Tests
 					}
 				}
 			}
+		}
+
+		[Test]
+		public void FirstFoundingEmptyStateUsesAuthoritativeTopologyOnly()
+		{
+			string pending = Source("Core/KingdomSystem.z07.Identity.Pending.cs");
+			StringAssert.Contains("SettlementTopology != null && SettlementTopology.Count == 0",
+				pending);
+			StringAssert.Contains("!SettlementTopology.HasOpaqueEvidence", pending);
+			Assert.IsFalse(pending.Contains("Away == null"));
 		}
 
 		[Test]

@@ -49,6 +49,8 @@ namespace ThousandAndFirst
 		public string Style;
 		public string Creed;
 		public int Stage;
+		/// <summary>Exact craft-derived equipment band; never inferred from growth stage.</summary>
+		public int TechnologyBand;
 		public int Population;
 		public long FoundedTick;
 		public List<string> OriginKeys = new List<string>();
@@ -67,6 +69,19 @@ namespace ThousandAndFirst
 		: IComposite
 #endif
 	{
+		/// <summary>
+		/// Zero identifies a preserved pre-profile-provenance snapshot. Such a snapshot may still
+		/// be imported as institutional history, but cannot manifest a guessed prior population.
+		/// </summary>
+		public int ProfileSchema;
+		/// <summary>Exact technology from the committed source profile when ProfileSchema is current.</summary>
+		public int TechnologyBand;
+		/// <summary>Canonical resolver body keys only; never actor, object, or inventory identities.</summary>
+		public List<string> CanonicalBodyKeys = new List<string>();
+		/// <summary>Digest of projected phenotype only; no source authority identity is hashed.</summary>
+		public string SourceProfileDigest;
+		/// <summary>Self-commitment over the bounded canonical profile fields.</summary>
+		public string ProfileProvenanceDigest;
 		public string LegacyToken;
 		public string LineageToken;
 		public string FounderName;
@@ -99,6 +114,7 @@ namespace ThousandAndFirst
 
 		public void Normalize()
 		{
+			CanonicalBodyKeys = CanonicalBodyKeys ?? new List<string>();
 			RollNames = RollNames ?? new List<string>();
 			OriginKeys = OriginKeys ?? new List<string>();
 			OriginCounts = OriginCounts ?? new List<int>();
@@ -110,6 +126,10 @@ namespace ThousandAndFirst
 		{
 			return new KingdomPolityLegacySnapshot
 			{
+				ProfileSchema = ProfileSchema, TechnologyBand = TechnologyBand,
+				CanonicalBodyKeys = new List<string>(CanonicalBodyKeys),
+				SourceProfileDigest = SourceProfileDigest,
+				ProfileProvenanceDigest = ProfileProvenanceDigest,
 				LegacyToken = LegacyToken, LineageToken = LineageToken,
 				FounderName = FounderName, RealmName = RealmName,
 				SettlementName = SettlementName, Vocation = Vocation, Style = Style,

@@ -33,6 +33,137 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// Native screenshot framing moves only the dev tester after proving one exact gallery lot,
+		/// then centres Qud's presentation camera without changing options or world state. It cannot
+		/// clear an obstruction or edit terrain to manufacture a prettier result.
+		/// </summary>
+		[Test]
+		public void NativeFrameReprovesTheLotBeforeCenteringQudsCameraAtZoomOne()
+		{
+			string frame = Read("Harness/KingdomScenarioFrame.cs");
+			AssertOrder(frame,
+				"TryExactGalleryOwner(zone, out owner, out intent, out lot, out failure)",
+				"KingdomArchitectureStamper.TryVerifyComplete(owner, zone, out failure)",
+				"KingdomRealizedArchitectureCapture.TryCapture(owner, out beforeDigest",
+				"FindTarget(zone, player, owner, intent.Rect, lot)",
+				"player.SystemLongDistanceMoveTo(target",
+				"KingdomArchitectureStamper.TryReadOwner(owner",
+				"KingdomRealizedArchitectureCapture.TryCapture(owner, out afterDigest",
+				"string.Equals(beforeDigest, afterDigest, StringComparison.Ordinal)",
+				"TryCenterCamera(target, intent.Rect, out failure)",
+				"Ok = true");
+			AssertOrder(frame,
+				"manager.uiQueue.awaitTask",
+				"manager.TargetZoomFactor = 1f",
+				"manager.SetPlayerCell(new Point2D(Target.X, Target.Y), updateCamera: false)",
+				"manager.RefreshLayout(updateForceFullscreenIfSwapped: true)",
+				"manager.CenterOnCell(Rect.CenterX, Rect.CenterY)",
+				"GameManager.MainCameraLetterbox.OnUpdate()");
+			AssertOrder(frame,
+				"KingdomScenarioGallerySlice.CarriesGalleryAuthority(candidate)",
+				"if (Owner != null)",
+				"KingdomArchitectureStamper.TryReadOwner(Owner");
+			StringAssert.Contains("Cell.IsPassable(Player, false)", frame);
+			StringAssert.Contains("Cell.IsEmptyOfSolid()", frame);
+			StringAssert.Contains("Cell.HasOpenLiquidVolume()", frame);
+			StringAssert.Contains("BelongsToLot(item, Lot)", frame);
+			StringAssert.Contains("blueprint.InheritsFrom(\"Floor\")", frame);
+			StringAssert.Contains("KingdomArchitectureStamper.LotIdProperty", frame);
+			StringAssert.Contains("KingdomPlots.PlotIdProperty", frame);
+			StringAssert.DoesNotContain("Obliterate", frame);
+			StringAssert.DoesNotContain("Destroy(", frame);
+			StringAssert.DoesNotContain("RemoveObject", frame);
+			StringAssert.DoesNotContain("Options.SetOption", frame);
+			StringAssert.DoesNotContain("TargetZoomFactor = 1.25", frame);
+			StringAssert.DoesNotContain("terrain were not changed", frame);
+		}
+
+		/// <summary>
+		/// Hosted navigation may realize a lazy vanilla zone, but it proves that target before moving
+		/// and may neither manufacture shell/receipts nor use gallery authority.
+		/// </summary>
+		[Test]
+		public void HostedArcologyNavigationProvesAuthorityBeforeLoadingAndNeverForces()
+		{
+			string source = Read("Harness/KingdomScenarioHostedArcology.cs");
+			AssertOrder(source,
+				"GalleryInCurrentContext(zone)",
+				"TryReadAuthorityIdentityForJointView(system",
+				"authority.Phase != KingdomHostedAuthorityPhase.Active",
+				"TryLoadedRoot(player, authority",
+				"KingdomScenarioGallerySlice.CarriesGalleryAuthority(root)",
+				"TryExactAuthority(system, root, authority",
+				"KingdomCrown.CrownedOn(system",
+				"TryPaidReceipt(hosted, lotKey",
+				"TryTargetZoneId(interior, root",
+				"interior.CanEnter(player, Action: true, ShowMessage: false)",
+				"The.ZoneManager.GetZone(targetZoneId)",
+				"TryExactZone(target, root",
+				"anchor.FixturesRealized",
+				"TryPaidReceipt(hosted, lotKey",
+				"TryExactAuthority(system, root, authority",
+				"KingdomCrown.CrownedOn(system",
+				"ReferenceEquals(player.CurrentZone, originZone)",
+				"SystemLongDistanceMoveTo(destination",
+				"ReferenceEquals(player.CurrentCell, destination)",
+				"TryExactZone(target, root",
+				"TryPaidReceipt(hosted, lotKey",
+				"TryExactAuthority(system, root, authority");
+			StringAssert.Contains("case \"entry\": X = 1; Y = 1; Z = 10;", source);
+			StringAssert.Contains("case \"teaching\": X = 1; Y = 0; Z = 10;", source);
+			StringAssert.Contains("case \"terrace\": X = 1; Y = 1; Z = 9;", source);
+			StringAssert.Contains("case \"ward\": X = 0; Y = 1; Z = 11;", source);
+			StringAssert.Contains("receipt.Phase != KingdomHostedLotPhase.Active", source);
+			StringAssert.Contains("forced: false, ignoreCombat: false", source);
+			StringAssert.Contains("anchor.FixturesRealized", source);
+			StringAssert.DoesNotContain("interior.TryEnter(", source);
+			StringAssert.DoesNotContain("player.DirectMoveTo(", source);
+			int move = source.IndexOf("player.SystemLongDistanceMoveTo(", StringComparison.Ordinal);
+			Assert.Greater(move, -1);
+			Assert.AreEqual(move, source.LastIndexOf(
+				"player.SystemLongDistanceMoveTo(", StringComparison.Ordinal));
+			StringAssert.DoesNotContain("KingdomHostedArcology.TryReserve", source);
+			StringAssert.DoesNotContain("KingdomHostedArcology.BindAuthority", source);
+			StringAssert.DoesNotContain("KingdomHostedArcology.BeginLot", source);
+			StringAssert.DoesNotContain("KingdomHostedArcology.SetReceipt", source);
+			StringAssert.DoesNotContain("SetStringGameState", source);
+			StringAssert.DoesNotContain("RequireSystem<KingdomSystem>", source);
+			StringAssert.DoesNotContain("GameObject.Create", source);
+			StringAssert.DoesNotContain("KingdomHostedArcologyBuilder", source);
+			StringAssert.DoesNotContain("BuildZone(", source);
+			StringAssert.DoesNotContain("new InteriorZone", source);
+			StringAssert.DoesNotContain("forced: true", source);
+		}
+
+		/// <summary>
+		/// A terminal row precedes vanilla OpeningStory's later same-cycle event. The runner restores
+		/// its broad boot bracket; an exact Harmony patch then brackets only the untriggered story in
+		/// a sealed profile and restores only the false value it changed, including on exception.
+		/// </summary>
+		[Test]
+		public void OpeningStoryPopupHasANarrowExceptionSafeScenarioBracket()
+		{
+			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
+			int finish = runner.IndexOf("private void Finish(", StringComparison.Ordinal);
+			int release = runner.IndexOf("private void Release()", finish, StringComparison.Ordinal);
+			Assert.Greater(finish, -1);
+			Assert.Greater(release, finish);
+			string finishBody = runner.Substring(finish, release - finish);
+			AssertOrder(finishBody, "KingdomScenarioJournal.Append(Row, Ok, Message)", "Release();");
+
+			string entry = Read("Harness/KingdomScenarioTestGameEntry.cs");
+			AssertOrder(entry,
+				"[HarmonyPatch(typeof(OpeningStory), \"HandleEvent\"",
+				"typeof(BeforeTakeActionEvent)",
+				"__instance.Triggered || Popup.Suppress",
+				"!KingdomScenarioScript.Present()",
+				"Popup.Suppress = true",
+				"if (__state) Popup.Suppress = false",
+				"return __exception");
+			StringAssert.Contains("[HarmonyFinalizer]", entry);
+		}
+
+		/// <summary>
 		/// The attempt marker is durable BEFORE the sole mutating call, and the commit lands before
 		/// any reporting. Gallery staging does not journal ground cells, so a cut between mutation
 		/// and owner creation must leave a permanently non-retryable profile.
@@ -47,6 +178,52 @@ namespace ThousandAndFirst.Tests
 				"KingdomScenarioGallerySlice.TryStage",
 				"KingdomScenarioTransactionMarker.TryCommit(out commitFailure)",
 				"Report = Conclude(");
+		}
+
+		[Test]
+		public void GalleryPreflightUsesTheExactRequestedCaseBeforeTheAttemptMarker()
+		{
+			string run = Read("Harness/KingdomScenarioRun.cs");
+			StringAssert.Contains("TryProvePreconditions(zone, expected, out Failure)", run);
+			string slice = Read("Harness/KingdomScenarioGallerySlice.cs");
+			AssertOrder(slice,
+				"KingdomArchitecture.TryResolveVariant(Expected.BuildKey",
+				"KingdomArchitectureRules.TryWorldDimensions(snapshot.Width",
+				"KingdomArchitectureGalleryWishes.TryFindCanvas(Zone, width, height");
+			StringAssert.DoesNotContain("TryFindCanvas(Zone, 10, 8", slice);
+		}
+
+		[Test]
+		public void GroundPreparationPlansTheExactPoseWithExteriorParkingAndReproof()
+		{
+			string ground = Read("Harness/KingdomScenarioGround.cs");
+			AssertOrder(ground,
+				"KingdomScenarioRealizer.TryBindStampedPlan",
+				"KingdomScenarioRun.TryExpectedGalleryCase",
+				"KingdomArchitecture.TryResolveVariant",
+				"KingdomArchitectureRules.TryWorldDimensions");
+			StringAssert.DoesNotContain("ProbeWidth", ground);
+			StringAssert.Contains("clearance.Contains(x, y)", ground);
+			StringAssert.Contains("FindParkingCell(zone, rect, connections)", ground);
+			StringAssert.Contains("SafeCanvas(zone, rect, connections", ground);
+
+			string flatten = Read("Harness/KingdomScenarioFlatten.cs");
+			AssertOrder(flatten,
+				"KingdomScenarioGround.TryExactDimensions",
+				"KingdomPlotRules.TryInsetOriginBounds",
+				"TryProveClearable(zone, candidate",
+				"KingdomScenarioGround.FindParkingCell",
+				"player.SystemLongDistanceMoveTo(parking",
+				"connections = KingdomArchitectureGalleryWishes.ConnectionCells(zone)",
+				"TryProveClearable(zone, chosen",
+				"TryClear(zone, clearance",
+				"KingdomArchitectureGalleryWishes.SafeCanvas(zone, chosen",
+				"KingdomArchitectureGalleryWishes.TryFindCanvas(zone, width, height");
+			StringAssert.Contains("ReferenceEquals(item, Player)", flatten);
+			StringAssert.Contains("item.Physics.Solid", flatten);
+			StringAssert.Contains("KingdomPlots.ReadObject(item)", flatten);
+			StringAssert.DoesNotContain("ProbeWidth", flatten);
+			StringAssert.DoesNotContain("RequireSystem<KingdomSystem>", flatten);
 		}
 
 		/// <summary>Every non-None marker state refuses, and refuses permanently.</summary>
@@ -213,7 +390,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string report = Read("Harness/KingdomScenarioCaptureReport.cs");
 			AssertOrder(report,
-				"TryExpectedCase(Plan, out expected, out Failure)",
+				"KingdomScenarioRun.TryExpectedGalleryCase(Plan, out expected, out Failure)",
 				"KingdomScenarioSelectorRules.TryParse(",
 				"KingdomScenarioGallerySlice.TryProveExactCase(candidate, expected, out ignored)",
 				"KingdomScenarioSelectorRules.Resolve(",

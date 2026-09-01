@@ -16,10 +16,10 @@ invariants the water lane now has to keep:
   4. THE FEEDBACK LOOP between them, which section 5 closes. A lost rung ruins works, ruin
      lowers what a work carries, and the lower level pulls the settlement further down. It is
      bounded (`MaxWearPercent`, `FloorLevel`) and Q9 measures it. Re-run for Addendum 10(b):
-     ruin used to reach the level ONLY through crewed works, so the loop's whole surface was
-     the food lane (the one binding good that never automates). The ruling closed that door -
-     every work now carries at its own condition, crewed or not - and Q9 measures what the
-     change costs. It also measures the second, kind-appropriate consequence the same ruling
+     ruin used to reach the level ONLY through crewed works. The ruling closed that door - every
+     live water/roof provider now carries at its own condition, crewed or not - and Q9 measures
+     what the change costs. Food is not a population axis under the 2026-09-01 author ruling.
+     Q9 also measures the second, kind-appropriate consequence the same ruling
      added: a damaged STORE leaks what it holds, which lands on the water economy rather than
      on the level.
 
@@ -49,8 +49,9 @@ invariants the water lane now has to keep:
      stands two and a condition folded into a head count of two truncates a damaged yard to
      nobody — and section 2 grows a wear ladder that prices the neglect. (b) The keepers'
      method (`KingdomProductionRules.Methoded`) is a THIRD factor — output = base x crew x
-     wear x method — and it now reaches the city book's water and food rates and the crop
-     harvest as well as the yard. It is 100 for a realm that has researched nothing, and 100
+     wear x method — and it reaches the city book's physical water rate, crop harvest, and
+     yard. The old city food-rate seam is pinned at zero. Method is 100 for a realm that has
+     researched nothing, and 100
      is a no-op, so every table in this file is still a BASELINE table and not one number in
      it moved for the method: what is asserted below is that the baseline agrees and that the
      lane is a bonus and never a tax.
@@ -189,11 +190,15 @@ SETTLEMENT_TOPOLOGY_CS = os.path.join(
     ROOT, "Core", "KingdomSettlementTopologyRules.cs")
 HOSTED_RULES_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcologyRules.cs")
 HOSTED_RUNTIME_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Runtime.cs")
+HOSTED_OBSERVATION_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Observation.cs")
 HOSTED_CONSTRUCTION_CS = os.path.join(
     ROOT, "Growth", "KingdomHostedArcology.Construction.cs")
 HOSTED_AUTHORITY_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Authority.cs")
 HOSTED_LOT_CS = os.path.join(ROOT, "Growth", "KingdomHostedLotDefinition.cs")
 HOSTED_VISUAL_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcology.Visual.cs")
+HOSTED_PROGRAMME_CS = os.path.join(
+    ROOT, "World", "KingdomHostedArcologyProgrammeBuilder.cs")
+HOSTED_TOPOLOGY_CS = os.path.join(ROOT, "Growth", "KingdomHostedArcologyTopology.cs")
 GREAT_ARCHIVE_CS = os.path.join(ROOT, "Growth", "KingdomGreatArchive.cs")
 CONSTRUCTION_INPUT_RULES_CS = os.path.join(
     ROOT, "Growth", "KingdomConstructionInputRules.cs")
@@ -281,11 +286,8 @@ SRC = {
     "CropDays": read_const(CROP_CS, "CropDays"),
     "YieldPerRow": read_const(CROP_CS, "YieldPerRow"),
     "SeedReturnChancePercent": read_const(CROP_CS, "SeedReturnChancePercent"),
-    # Wave G3, Addendum 11(b)+(c): the meal and the mill. `PreserveMultiple` is vanilla's own
-    # Vinewafer -> Vinewafer Sheaf figure; `MillCropsPerDay` is the batch that makes the grinding
-    # mill's declared `food` come out exactly right; `FavoredMealShade` is what one day of eating
-    # the settlement's own dish is worth to the level, and `FavoredMealPercent` is how much of the
-    # day has to come off that dish before it counts as having been eaten.
+    # Physical mill conversion plus explicit-meal compatibility values. Meal shade is retired;
+    # a favorite meal requires its full disclosed ingredient cost from the named staple.
     "PreserveMultiple": read_const(RULES_CS, "PreserveMultiple"),
     "MillCropsPerDay": read_const(RULES_CS, "MillCropsPerDay"),
     "FavoredMealShade": read_const(RULES_CS, "FavoredMealShade"),
@@ -316,13 +318,13 @@ SRC = {
     # The feedback loop section 5 closes: how far a work can be run down, and how far
     # one lost rung runs it.
     "MaxWearPercent": read_const(MAT_CS, "MaxWearPercent"),
-    # Addendum 10(b): a store at the wear ceiling loses its whole capacity to the ground in
-    # this many world days. The one number the leak is tuned on.
+    # Addendum 10(b): a live water/charge store at the wear ceiling loses its whole capacity to
+    # the ground in this many world days. The persisted Food kind is explicitly inert.
     "LeakDaysToEmptyAtCeiling": read_const(WEAR_CS, "LeakDaysToEmptyAtCeiling"),
     "RuinStandingFloorPercent": read_const(RULES_CS, "RuinStandingFloorPercent"),
     "RuinStandingCeilingPercent": read_const(RULES_CS, "RuinStandingCeilingPercent"),
-    # Wave B: food became a flow. The mirror of the water constants above, and where the mirror
-    # deliberately breaks (no stage rate, no stores policy) is Q11's whole first paragraph.
+    # Retired passive-food API values. Kept in the source and model so a regression to nonzero
+    # abstract foraging or hunger state fails loudly.
     "ForageRationsPerHand": read_const(RULES_CS, "ForageRationsPerHand"),
     "MaxForagedRationsPerDay": read_const(RULES_CS, "MaxForagedRationsPerDay"),
     "HungryIntervalsToEmigrate": read_const(RULES_CS, "HungryIntervalsToEmigrate"),
@@ -355,34 +357,16 @@ _PINS = [
         "return SaturateToInt(PolicyUpkeep(UpkeepDrams(Population, Stage), Stores) * (long)ElapsedDays(ElapsedTicks));",
         "PolicyUpkeepForElapsed is no longer uncapped",
     ),
-    # --- the food lane (Wave B) ----------------------------------------------------------
-    # RationsPerDay is flat, and the flatness is the whole reason the food arm of Equilibrium
-    # can be read straight off as a daily bill. A stage term appearing here would silently
-    # invalidate every food figure in the catalogue and every number in Q11.
-    (
-        "return (Population > 0) ? Population : 0;",
-        "RationsPerDay is no longer one ration a settler a day - the food lane's denomination moved",
-    ),
-    (
-        "return SaturateToInt(ElapsedDays(ElapsedTicks) * (long)RationsPerDay(Population));",
-        "RationsForElapsed is no longer uncapped",
-    ),
-    # Foraging's ceiling is applied to the RATE, before the days multiply out. If that order
-    # inverts, a long absence forages a season's worth in one go and Camp stops being the only
-    # rung the wild can carry.
-    (
-        "long rate = (long)Hands * ForageRationsPerHand;",
-        "ForagedRations body changed",
-    ),
-    (
-        "return SaturateToInt(rate * Days);",
-        "ForagedRations no longer clamps the rate before multiplying the days",
-    ),
-    # The composition rule: the worse of the two ladders, never their sum.
-    (
-        "verdict.Bite = (fromThirst > fromHunger) ? fromThirst : fromHunger;",
-        "ComposeScarcity no longer takes the maximum - a dry AND starving city may now double-collapse",
-    ),
+    # --- the reconciled food lane --------------------------------------------------------
+    ("public static int RationsPerDay(int Population)", "legacy ration projection disappeared"),
+    ("public static int RationsForElapsed(int Population, long ElapsedTicks)",
+     "legacy elapsed-ration projection disappeared"),
+    ("public static int ForagedRations(int Hands, int Days)",
+     "legacy abstract-foraging projection disappeared"),
+    ("verdict.Bite = BiteOfThirst(Thirst);",
+     "ComposeScarcity no longer derives its bite solely from water"),
+    ("verdict.Starving = false;", "ComposeScarcity reintroduced a hunger consequence"),
+    ("verdict.Famishing = false;", "ComposeScarcity reintroduced a famine consequence"),
 ]
 for needle, complaint in _PINS:
     assert needle in _rules_text, complaint
@@ -396,7 +380,7 @@ _settlement_normalize_text = read_source(SETTLEMENT_NORMALIZE_CS)
 _SUB_PINS = [
     (
         _sub_text,
-        "return (percent <= 100) ? Water : (Water * 100 / percent);",
+        "return (percent <= 100) ? Water : (int)((long)Water * 100L / percent);",
         "LevelFromWater body changed - the drams-to-settlers conversion moved",
     ),
     (
@@ -411,17 +395,17 @@ _SUB_PINS = [
     ),
     (
         _cat_text,
-        "int cap = least * LiftCapPercent / 100;",
+        "long cap = (long)least * LiftCapPercent / 100L;",
         "Equilibrium's lift cap moved; it is supposed to be frozen",
     ),
     (
         _cat_text,
-        "return (level < FloorLevel) ? FloorLevel : level;",
+        "return (level < FloorLevel) ? FloorLevel : (int)level;",
         "Equilibrium's floor moved; it is supposed to be frozen",
     ),
     (
         _cat_text,
-        "int lift = ((Lift < 0) ? 0 : Lift) + ((Shade < 0) ? 0 : Shade);",
+        "long lift = ((Lift < 0) ? 0L : Lift) + ((Shade < 0) ? 0L : Shade);",
         "Equilibrium's transient shade term moved - attended meal lift belongs under the cap",
     ),
     (
@@ -431,18 +415,18 @@ _SUB_PINS = [
     ),
     (
         _reach_text,
-        "return Scaled(Amount, reached * 100 / Homes);",
+        "int percent = (int)((long)reached * 100L / Homes);\n\t\t\treturn Scaled(Amount, percent);",
         "Landed body changed - what share of a lift reaches the level moved",
     ),
     (
         _reach_text,
-        "int scaled = Amount * Percent / 100;\n\t\t\treturn (scaled < 1) ? 1 : scaled;",
+        "long scaled = (long)Amount * Percent / 100L;\n\t\t\tif (scaled >= int.MaxValue)",
         "Scaled body changed - the floor Landed inherits moved",
     ),
     (
         _sub_text,
-        "LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof, Supports.Lift, Shade);",
-        "SupportedLevel no longer hands attended transient shade to the frozen arithmetic",
+        "LevelFromWater(Supports.Water, Stage), Supports.Roof, Supports.Lift, Shade);",
+        "SupportedLevel no longer uses the water/roof-only population equilibrium",
     ),
     (
         _sub_text,
@@ -453,8 +437,8 @@ _SUB_PINS = [
 for text, needle, complaint in _SUB_PINS:
     assert needle in text, complaint
 
-assert "return (MealShade < 0) ? 0 : MealShade;" in _foundation_text, (
-    "KingdomSystem.Shade no longer excludes the legacy civic-office modifier"
+assert "return 0;" in _foundation_text, (
+    "KingdomSystem.Shade no longer keeps retired food capacity neutral"
 )
 assert "NotableShade = 0;" in _system_normalize_text, (
     "seat normalization no longer retires legacy civic-office economy"
@@ -462,6 +446,12 @@ assert "NotableShade = 0;" in _system_normalize_text, (
 assert "NotableShade = 0;" in _settlement_normalize_text, (
     "off-seat normalization no longer retires legacy civic-office economy"
 )
+for retired in ("HungerStreak = 0;", "Famished = false;", "MealShade = 0;",
+                "ScrapsAnnounced = false;"):
+    assert retired in _system_normalize_text, f"seat normalization lost {retired}"
+    assert retired in _settlement_normalize_text, f"off-seat normalization lost {retired}"
+assert SRC["ForageRationsPerHand"] == 0 and SRC["MaxForagedRationsPerDay"] == 0
+assert SRC["FavoredMealShade"] == 0 and SRC["FavoredMealPercent"] == 100
 
 # The retired constants may still be NAMED in the comments that mark where they lived (and
 # should be); what must not come back is either declaration. MaxUpkeepDaysCharged went in P1,
@@ -559,19 +549,22 @@ _FEEDBACK_PINS = [
     ),
     (
         _cat_text,
-        "return (EffectivenessPercent >= 100) ? Amount : (Amount * EffectivenessPercent / 100);",
+        "long carried = (long)Amount * EffectivenessPercent / 100L;\n"
+        "\t\t\treturn (carried >= int.MaxValue) ? int.MaxValue : (int)carried;",
         "Carried body changed - what a work running short actually contributes moved",
     ),
     (
         _subimpl_text,
         "int effectiveness = KingdomWear.EffectivenessOf(work);\n"
-        "\t\t\t\ttally = KingdomCatalogueRules.FoldWork(tally, carries, effectiveness);",
-        "Supports no longer folds every work at WorkEffectiveness; section 5 assumes it does",
+        "\t\t\t\tif (!work.HasStringProperty(KingdomAdopt.AdoptedKeyProperty))\n"
+        "\t\t\t\t\ttally = KingdomCatalogueRules.FoldWork(tally,\n"
+        "\t\t\t\t\t\tPhysicalFlowContract(work, entry), effectiveness);",
+        "Supports no longer folds physical food/water flow at WorkEffectiveness; section 5 assumes it does",
     ),
     (
         _subimpl_text,
-        "tally = KingdomCatalogueRules.FoldShade(tally, YardShadesOf(work), effectiveness);",
-        "Supports no longer folds a household's yard trade into the level; section 6 counts it",
+        "int yardFood = KingdomYardBenefits.PhysicalFoodForHouse(Survey, work);",
+        "Supports no longer proves a household's exact vine fixture; section 6 counts it",
     ),
     (
         _subimpl_text,
@@ -585,8 +578,8 @@ _FEEDBACK_PINS = [
         "\t\t\t\t: KingdomMaterialRules.ConditionPercent(Wear);",
         "WorkEffectiveness body changed - the staffless arm of Addendum 10(b)'s ruling moved",
     ),
-    # The kind-appropriate consequence: what a damaged STORE goes on losing. Section 5's
-    # `leaked` reproduces this line for line.
+    # The kind-appropriate water/charge consequence. Section 5's `leaked` reproduces this line
+    # for line; F1 separately pins the Food kind's zero-valued guard.
     (
         _wear_text,
         "\t\t\tlong lost = (long)Capacity * wear * Days\n"
@@ -639,8 +632,9 @@ _METHOD_PINS = [
     ),
     (
         _city_text,
-        "return Methoded(RateOf(foodRatePerDay, index, row.FoodCarry));",
-        "the city book's food rate no longer carries the method factor",
+        "internal long FoodRateOf(KingdomZoneRow row, int index)\n\t\t{\n"
+        "\t\t\t// Legacy rows and hosted overrides may carry pre-ruling food rates.",
+        "the city book's retired food-rate seam moved",
     ),
     (
         _crop_text,
@@ -1013,8 +1007,8 @@ catalogue is Staff="2", so this is that yard:
     print(f"""
     The third factor, for the record and for nothing else. The keepers' method
     (RESEARCH-SYSTEM-DESIGN 8.2) now rides this same effort percent, and reaches the city
-    book's water and food rates and the crop harvest besides. A realm that has researched
-    nothing carries {BASELINE_METHOD}%, {BASELINE_METHOD}% is a no-op through Methoded, and NO table in this file moved
+    book's water rate and the physical crop harvest besides; the legacy city food rate stays
+    zero. A realm that has researched nothing carries {BASELINE_METHOD}%, {BASELINE_METHOD}% is a no-op through Methoded, and NO table in this file moved
     for it - they are all baseline tables and they are meant to stay that way. What the
     ceiling would be worth if a realm reached it: a sound two-hand yard shapes {refined_units(2, 30, MAX_METHOD)} units in
     a month at {MAX_METHOD}% against {sound_month} at the baseline. A factor on the effort, never on the days,
@@ -1291,12 +1285,83 @@ def _hosted_crop_rows() -> dict:
     return _inherited_tag_values("r_TAF_HostedCropRows")
 
 
+def _hosted_paid_authority() -> tuple[dict, dict]:
+    """Runtime paid-lot contracts and their exact programme manifests.
+
+    This is the only producer identity/cardinality read in the model. KingdomBuildings.xml owns
+    bills and declared supports; it deliberately carries no loader-ignored producer copy.
+    """
+    rules = read_source(HOSTED_RULES_CS)
+    programme = read_source(HOSTED_PROGRAMME_CS)
+    topology = read_source(HOSTED_TOPOLOGY_CS)
+    blocks = re.findall(
+        r"RegisterBuiltInPaidLot\(new\s+KingdomHostedLotDefinition\s*\{(.*?)\}\s*\);",
+        rules, re.S)
+    assert len(blocks) == 2, "hosted paid-lot built-ins moved"
+
+    def string_field(block: str, name: str, required: bool = True) -> str:
+        match = re.search(r"\b" + name + r'\s*=\s*"([^"]*)"', block)
+        assert match or not required, "hosted lot lost field " + name
+        return match.group(1) if match else ""
+
+    def int_field(block: str, name: str, required: bool = True) -> int:
+        match = re.search(r"\b" + name + r"\s*=\s*([0-9]+)(?:L)?", block)
+        assert match or not required, "hosted lot lost numeric field " + name
+        return int(match.group(1)) if match else 0
+
+    lots = {}
+    for block in blocks:
+        key = string_field(block, "Key")
+        assert key not in lots, "duplicate hosted paid-lot key: " + key
+        lots[key] = {
+            "cell": string_field(block, "InteriorCell"),
+            "material": string_field(block, "MaterialKey"),
+            "ticks": int_field(block, "BuildTicks"),
+            "crew": int_field(block, "Crew"),
+            "supports": string_field(block, "Supports"),
+            "water": bool(re.search(r"\bRequiresWater\s*=\s*true", block)),
+            "producer": string_field(block, "PhysicalProducerBlueprint", False),
+            "producers": int_field(block, "PhysicalProducerCount", False),
+        }
+        assert bool(lots[key]["producer"]) == bool(lots[key]["producers"]), (
+            "ragged hosted producer authority: " + key)
+
+    arrays = {}
+    for match in re.finditer(
+            r"private static readonly KingdomArcologyFixtureSpec\[\]\s+([A-Za-z]+)\s*=\s*"
+            r"new KingdomArcologyFixtureSpec\[\]\s*\{(.*?)\};", programme, re.S):
+        name, body = match.groups()
+        arrays[name] = re.findall(
+            r'F\(\s*\d+\s*,\s*\d+\s*,\s*"([^"]+)"\s*,\s*"[^"]+"\s*\)', body)
+        assert len(arrays[name]) == len(re.findall(r"\bF\s*\(", body)), (
+            "malformed hosted fixture array: " + name)
+    constants = dict(re.findall(
+        r'public const string\s+([A-Za-z]+LotKey)\s*=\s*"([^"]+)"\s*;', topology))
+    links = re.findall(
+        r"LotKey\s*==\s*KingdomHostedArcologyTopology\.([A-Za-z]+LotKey)\s*"
+        r"&&\s*Programme\s*==\s*KingdomArcologyProgramme\.([A-Za-z]+)\s*\?\s*"
+        r"([A-Za-z]+)", programme, re.S)
+    manifests = {}
+    for constant, programme_name, array_name in links:
+        key = constants.get(constant)
+        assert key in lots and array_name in arrays and key not in manifests, (
+            "unresolved or duplicate hosted fixture link: " + constant)
+        manifests[key] = {"programme": programme_name, "blueprints": arrays[array_name]}
+    assert set(manifests) == set(lots), "every paid hosted lot needs one exact fixture programme"
+    return lots, manifests
+
+
 def _read_catalogue() -> list[Design]:
     text = open(BUILD_XML, encoding="utf-8-sig").read()
+    assert "HostedProducer" not in text, (
+        "hosted producer authority must not be duplicated in loader-ignored building XML")
     capacities = _store_capacities()
     larders = _larder_capacities()
     rows = _crop_rows()
     hosted_row_rates = _hosted_crop_rows()
+    hosted_lots, hosted_manifests = _hosted_paid_authority()
+    used_hosted_blueprints = set()
+    seen_hosted_lots = set()
     tier = {"S": 0, "M": 1, "L": 3, "XL": 4}  # KingdomPlotRules.StageForSize
     names = {n: i for i, (n, _p, _c) in enumerate(STAGES)}
     out = []
@@ -1329,21 +1394,29 @@ def _read_catalogue() -> list[Design]:
             tier.get(plot.group(1), 0) if plot else 0,
         )
         blueprint = re.search(r'\sBlueprint="([^"]+)"', attrs)
-        hosted_blueprint = re.search(r'\sHostedProducerBlueprint="([^"]+)"', attrs)
-        hosted_count = re.search(r'\sHostedProducerCount="(\d+)"', attrs)
-        if bool(hosted_blueprint) != bool(hosted_count):
-            raise AssertionError(
-                f"HOSTED PRODUCER CONTRACT RAGGED: {key.group(1)} must name blueprint and count"
-            )
         hosted_rows = 0
-        if hosted_blueprint:
-            producer = hosted_blueprint.group(1)
-            count = int(hosted_count.group(1))
-            if count < 1 or hosted_row_rates.get(producer, 0) < 1:
-                raise AssertionError(
-                    f"HOSTED PRODUCER CONTRACT EMPTY: {key.group(1)} names {count} x {producer}"
-                )
-            hosted_rows = count * hosted_row_rates[producer]
+        hosted = hosted_lots.get(key.group(1))
+        if hosted:
+            seen_hosted_lots.add(key.group(1))
+            runtime_carries = {}
+            for part in hosted["supports"].split(","):
+                bits = part.split(":")
+                assert len(bits) == 2 and bits[0] and bits[1].isdigit(), (
+                    "malformed hosted runtime supports: " + hosted["supports"])
+                assert bits[0] not in runtime_carries, "duplicate hosted runtime support"
+                runtime_carries[bits[0]] = int(bits[1])
+            assert carries == runtime_carries, (
+                f"HOSTED SUPPORT DRIFT: {key.group(1)} runtime={runtime_carries} XML={carries}")
+            producer = hosted["producer"]
+            if producer:
+                fixture_count = hosted_manifests[key.group(1)]["blueprints"].count(producer)
+                assert fixture_count == hosted["producers"] and fixture_count > 0, (
+                    f"HOSTED FIXTURE DRIFT: {key.group(1)} runtime={hosted['producers']} "
+                    f"programme={fixture_count}")
+                assert hosted_row_rates.get(producer, 0) > 0, (
+                    "hosted producer has no physical row tag: " + producer)
+                hosted_rows = fixture_count * hosted_row_rates[producer]
+                used_hosted_blueprints.add(producer)
         if blueprint and rows.get(blueprint.group(1), 0) and hosted_rows:
             raise AssertionError(
                 f"HOSTED PRODUCER DOUBLE COUNT: {key.group(1)} is both a surface and hosted grower"
@@ -1363,6 +1436,9 @@ def _read_catalogue() -> list[Design]:
                 styles.group(1) if styles else "all",
             )
         )
+    assert seen_hosted_lots == set(hosted_lots), "a runtime paid lot has no modelled building row"
+    assert used_hosted_blueprints == set(hosted_row_rates), (
+        "a hosted row blueprint has no runtime paid-lot owner")
     return out
 
 
@@ -1380,13 +1456,9 @@ def level_from_water(water: int, stage: int) -> int:
 
 
 def equilibrium(water: int, food: int, roof: int, lift: int, stage: int, shade: int = 0) -> int:
-    """KingdomCatalogueRules.Equilibrium, with the water converted first.
-
-    `shade` is attended transient lift. The shipped caller currently supplies MealShade only;
-    the read-compatible NotableShade field is normalized to zero and never enters this model.
-    Transient lift remains under the common cap, so a meal never outruns the binding supports.
-    """
-    least = max(0, min(level_from_water(water, stage), food, roof))
+    """Live PopulationEquilibrium; `food` is accepted only to expose ignored legacy inputs."""
+    del food
+    least = max(0, min(level_from_water(water, stage), roof))
     cap = least * SRC["LiftCapPercent"] // 100
     level = least + min(max(lift, 0) + max(shade, 0), cap)
     return max(level, SRC["FloorLevel"])
@@ -1431,9 +1503,9 @@ def q6_level():
 The denomination, restated because everything below turns on it: one point of `water` is one
 dram a day sustained, which is one settler's thirst AT CAMP RATES.
 `KingdomRules.UpkeepDrams` then bills {STAGE_PERCENT} per hundred by stage, so
-`KingdomSubsidenceRules.LevelFromWater` divides the declared water by that percentage before
-the frozen `Equilibrium` sees it. Food and roof are already denominated in people and are not
-converted: a roof is a roof at any rung.
+`KingdomSubsidenceRules.LevelFromWater` divides declared water by that percentage before
+`PopulationEquilibrium` sees it. Roof is already denominated in people. Food is deliberately
+outside population equilibrium; F1 audits its physical positive transactions separately.
 
 The cross-check, first: the drams a rung's own population drinks, converted back, must carry
 that population. If these two columns disagree the catalogue and the upkeep table are
@@ -1479,7 +1551,7 @@ must be plausible, because both are things players do.
             totals = {"works": 0, "cost": 0, "staff": 0}
             points = {}
             ok = True
-            for kind, need in (("water", need_water), ("food", floor), ("roof", floor)):
+            for kind, need in (("water", need_water), ("roof", floor)):
                 globals()["_KIND"] = kind
                 got = _plan(kind, i, need, by)
                 if got is None:
@@ -1493,10 +1565,10 @@ must be plausible, because both are things players do.
                 points[kind] = design.carries[kind] * count
             if not ok:
                 print(
-                    f"  {name:<9}{'-':>7}{'-':>8}{'-':>7}{'-':>7}   NO DESIGN CARRIES ONE OF THE THREE"
+                    f"  {name:<9}{'-':>7}{'-':>8}{'-':>7}{'-':>7}   NO DESIGN CARRIES WATER OR ROOF"
                 )
                 continue
-            lvl = equilibrium(points["water"], points["food"], points["roof"], 0, i)
+            lvl = equilibrium(points["water"], 0, points["roof"], 0, i)
             verdict = "holds" if lvl >= floor else f"SHORT ({lvl})"
             print(
                 f"  {name:<9}{totals['works']:>7}{totals['cost']:>8}{totals['staff']:>7}{lvl:>7}   "
@@ -1531,27 +1603,18 @@ WHAT IT BOUGHT is the rung below the table. Nothing in the water lane opens at C
 no `saltpan`, no `catchment` - so a camp drinks the founder's stock, what the detail hauls out
 of the site's own finite pools, and what a charter pays. Q7 is that curve.
 
-The food asymmetry this table used to expose stays closed. `grange` (L, Town) and `homefarm`
-(XL, City) fill the two rungs that used to be missing at 26 and 40, the same two figures the
-ROOF lane climbs, because a dinner and a bed are both counted in people and neither is divided
-by the stage rate the way a dram is.
-
-What did NOT change, deliberately: food still wants hands at every rung above the kitchen
-garden, and it is the only binding good that does. Water and roof automate to Staff=0 at
-their large and grand designs; food never automates, it only improves its rate - four
-settlers fed per hand at a field, six at ploughed fields, nearly nine at a grange, ten at
-the home farm. What automation buys is a discharge from the LABOUR term, and (since Addendum
-10(b)) never a discharge from the CONDITION term: an air-well field still needs nobody and
-still runs down when it is ruined. Q9 is what that costs when a season goes badly.
+Food designs do not appear in this holding-cost table. They remain meaningful physical crop,
+storage, milling, meal, industry, feast, and trade infrastructure, audited in F1. Adding or
+removing one cannot raise or lower the population level and cannot start this slide.
 
 Comfort is not in these tables. `LiftCapPercent` = {SRC["LiftCapPercent"]} lets craft, spirit, learning, order and
-luxury add up to half the binding level on top, and a settlement that has built its civic
+luxury add up to half the water/roof level on top, and a settlement that has built its civic
 works among its houses still reaches that cap easily - so a real City holds about 1.5x what
 the table above says. That is authored (the frozen arithmetic's own doc) and it is why these
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
-covers. A civic-office title contributes zero; the only settlement-wide transient shade is
-the last attended meal. Q10 is the authored reach reckoning.""")
+covers. Civic-office and meal shade both contribute zero. Q10 is the authored reach
+reckoning.""")
 
 
 
@@ -1699,9 +1762,9 @@ pass silently breaks. A style is a place, not a penalty.
 
     # ---- 2. every style holds every rung -------------------------------------------------
     print(f"""
-NOW THE RUNGS, which is Q6 run five times. Same arithmetic, same cheapest-first plan, but the
-catalogue narrowed to what each style is offered. `common` is the control: it is refused nothing
-in the binding lanes, so its column is Q6's own answer and every other column is read against it.
+NOW THE RUNGS, which is Q6 run five times. Same water/roof population arithmetic, same
+cheapest-first plan, but the catalogue narrowed to what each style is offered. Food-family parity
+was already checked above and F1 checks its physical truth; it is not priced as population support.
 """)
     print(f"  {'rung':<9}{'style':<9}{'works':>7}{'drams':>8}{'level':>7}   plan")
     cheapest = {}
@@ -1713,7 +1776,7 @@ in the binding lanes, so its column is Q6's own answer and every other column is
             reach = [d for d in CATALOGUE if d.stage <= i and style_accepts(d.styles, style)]
             plans, works, cost = [], 0, 0
             points = {}
-            for kind, need in (("water", need_water), ("food", floor), ("roof", floor)):
+            for kind, need in (("water", need_water), ("roof", floor)):
                 rows = [d for d in reach if kind in d.carries]
                 assert rows, (
                     f"STYLE CANNOT HOLD {name}: the {style} city is offered no design carrying "
@@ -1726,7 +1789,7 @@ in the binding lanes, so its column is Q6's own answer and every other column is
                 works += count
                 cost += design.cost * count
                 points[kind] = design.carries[kind] * count
-            level = equilibrium(points["water"], points["food"], points["roof"], 0, i)
+            level = equilibrium(points["water"], 0, points["roof"], 0, i)
             assert level >= floor, (
                 f"STYLE CANNOT HOLD {name}: the {style} city's cheapest plan reaches {level} "
                 f"against a rung of {floor}."
@@ -1841,15 +1904,12 @@ a day is one settler at camp rates, so `airwellfield` x2 both raises a Town's le
 puts 50 drams a day in its casks against a bill of 45 - and it does it out of a LiquidProducer
 whose mean rate is 48 turns a dram, which is 1200/48 = 25, the catalogue number.
 
-FOOD IS NO LONGER THE HALF NOT WIRED, but it has two physical lanes rather than water's one.
-The city model integrates `KingdomGrowth.FoodMadePerDay` off `ProcessedThroughTick`; that
-figure deliberately subtracts sown fields and mills. Sown fields catch up their absolute
-six-day crop cycles through `KingdomPlot`, and mills transform real larder stock through
-`GrindHarvest` on the attended pass. `ResolveHeartbeat` bills
-`KingdomRules.RationsForElapsed` against the real larders before the mill runs.
-`LastFoodWorkTick` belongs to mills only, never to the fields or the city model. Q11 is the
-food half of this table, and its handover reads differently on purpose: water hands over from
-hauling to works and food never does.""")
+FOOD HAS NO POPULATION HANDOVER OR MODEL RATE. Sown fields catch up absolute six-day crop
+cycles into real crop objects; mills transform exact larder stock through `GrindHarvest`; meals,
+recipes, industry, trade, and hospitality debit their own exact physical transactions. Both
+`KingdomGrowth.FoodMadePerDay` and the city FoodCarry rate return zero, while
+`LastFoodWorkTick` belongs to mills only. `ResolveHeartbeat` bills water and never food. F1
+proves that separation and the no-subsidence boundary.""")
 
 
 def q8_trajectories():
@@ -1979,8 +2039,8 @@ def work_effectiveness(staff: int, crew_stretch: int, wear: int) -> int:
     """KingdomWearRules.WorkEffectiveness - Addendum 10(b)'s ruling, in one line.
 
     A work that asks for crew runs at crew TIMES condition; a work that asks for nobody runs at
-    its condition alone. The second arm used to be a flat 100, which is what made ruin a food-lane
-    problem only. Both arms are 100 for a sound work, so this is a strict refinement.
+    its condition alone. The second arm used to be a flat 100, shielding automated water/roof
+    support from ruin. Both arms are 100 for a sound work, so this is a strict refinement.
     """
     return (
         combined_effectiveness(crew_stretch, wear)
@@ -1990,7 +2050,7 @@ def work_effectiveness(staff: int, crew_stretch: int, wear: int) -> int:
 
 
 def leaked(capacity: int, held: int, wear: int, days: int) -> int:
-    """KingdomWearRules.Leaked: what a damaged STORE loses to the ground over world days.
+    """KingdomWearRules.Leaked: what damaged water/charge storage loses over world days.
 
     Linear in the wear, linear in the days, denominated against the store's own capacity, and
     never more than is in there. The division is done last, so a small store over a long stretch
@@ -2049,7 +2109,6 @@ def grandest_plan(stage: int):
     out = []
     for kind, need in (
         ("water", math.ceil(floor * STAGE_PERCENT[stage] / 100)),
-        ("food", floor),
         ("roof", floor),
     ):
         globals()["_KIND"] = kind
@@ -2066,7 +2125,6 @@ def cheapest_plan(stage: int):
     out = []
     for kind, need in (
         ("water", math.ceil(floor * STAGE_PERCENT[stage] / 100)),
-        ("food", floor),
         ("roof", floor),
     ):
         globals()["_KIND"] = kind
@@ -2316,10 +2374,10 @@ grandest staffless water design is a PRODUCER rather than a vessel, so what a lo
 is condensing capacity, and the settlement feels it as drams that stop arriving rather than as
 a level that quietly re-reads lower.
 
-Which means the loop no longer bottoms out in the food lane alone. Water and roof automate to
-Staff=0 at their large and grand rungs and USED to be immune for exactly that reason; they are
-not now. Here is each rung's grandest plan with every work run to the ceiling - the worst the
-loop can do, by construction:
+Water and roof automate to Staff=0 at their large and grand rungs and USED to be immune for
+exactly that reason; they are not now. Food is absent from this population loop by ruling. Here
+is each rung's grandest habitable plan with every work run to the ceiling - the worst the loop
+can do, by construction:
 """)
     print(
         f"  {'rung':<9}{'staff':>6}{'sound':>7}{'wrecked':>9}{'floor':>7}   binds when wrecked"
@@ -2335,7 +2393,6 @@ loop can do, by construction:
         tally = supports(wrecked)
         binder = min(
             ("water", level_from_water(tally["water"], i)),
-            ("food", tally["food"]),
             ("roof", tally["roof"]),
             key=lambda pair: pair[1],
         )[0]
@@ -2425,8 +2482,8 @@ Reading. Three things, and the third is the one worth keeping.
 
 3. THE DOOR OUT OF THE LEVEL IS CLOSED. Under the old ternary a city built entirely out of
    staffless designs took NO level damage from ruin - its wrecked column equalled its sound
-   one - and the whole of the loop's surface was the food lane, which never automates. Addendum
-   10(b) shut that door: the cheapest plan's wrecked column above is now well under its sound
+   one. Addendum 10(b) shut that door: the cheapest water/roof plan's wrecked column above is
+   now well under its sound
    one at every rung, and the automation lanes pay for their ruin like everything else. That is
    the delta this pass was for, and it costs the adversarial cases roughly one further rung.
 
@@ -2449,11 +2506,11 @@ def w6_production_and_logistics():
     THE ONE THING THIS SECTION EXISTS TO PROVE. Every rung above was derived on a daily balance
     where the SEATED zone's works were credited for the settlement's whole elapsed, once per pass,
     out of `KingdomGrowth`. W6 moved that arithmetic onto `Simulation/City` - per zone, off the
-    city model's single `ProcessedThroughTick`. A move is only safe if the number is the same
-    number, so the first four checks are source facts, asserted rather than trusted: the old
-    crediting is GONE from the settlement pass, the new one reads the SAME `Supports` tally the
-    ladder is derived from. The model publishes the water stamp as its mirror; the food stamp
-    remains the mills' separate physical clock.
+    city model's single `ProcessedThroughTick`. Water is safe only if the number is unchanged,
+    so the checks below are source facts: the old water credit is GONE from the settlement pass
+    and the model reads the SAME `Supports` tally the ladder uses. Food follows a different,
+    physical law: the model rate is zero, while field and mill clocks remain with their exact
+    item transactions.
     """
     rule("W6  Production on the model, and logistics that never look stupid")
 
@@ -2467,11 +2524,12 @@ def w6_production_and_logistics():
 
     print("""
 1. NO DAY IS BILLED TWICE, AND IT IS STRUCTURAL RATHER THAN CAREFUL. Two owners of one day is a
-   day paid twice, so W6 leaves exactly one owner. The settlement pass no longer credits the
-   water works or the fields at all; the model integrates every zone's carry off its own
-   `ProcessedThroughTick`; and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so
-   the settlement's stamp is a published mirror of the model's clock rather than a second clock
-   beside it. `LastFoodWorkTick` is left alone on purpose - see 3.
+   day paid twice, so W6 leaves exactly one water owner. The settlement pass no longer credits
+   water works; the model integrates every zone's water carry off its own `ProcessedThroughTick`;
+   and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so the settlement's stamp is
+   a published mirror of the model's clock rather than a second clock beside it. Fields were
+   removed from the abstract city model entirely: their exact crop-cycle/item path owns harvest.
+   `LastFoodWorkTick` remains only the attended physical mill's checkpoint - see 3.
 """)
     assert "survey.Store(KingdomSubsidence.Supports(survey).Water * madeDays)" not in growth, (
         "BILLED TWICE: the settlement pass still credits the water works on its own clock."
@@ -2483,8 +2541,8 @@ def w6_production_and_logistics():
         "the water work stamp is no longer the model's published mirror"
     )
     assert "System.LastFoodWorkTick = state.ProcessedThroughTick" not in city, (
-        "THE MILLS WOULD STARVE: KingdomCity.Stamp must not write LastFoodWorkTick. The fields' "
-        "clocked make moved onto the model; the MILLS did not, and that stamp is theirs. Written "
+        "MILL CLOCK SUPPRESSED: KingdomCity.Stamp must not write LastFoodWorkTick. The city food "
+        "rate is zero and the physical mill alone owns that stamp. Written "
         "from the reckon it would read `now` on every check-in and no mill would ever grind."
     )
     print("   settlement pass credits water works:  no")
@@ -2493,42 +2551,41 @@ def w6_production_and_logistics():
     print("   model stamps LastFoodWorkTick:        no   (it is the MILLS' stamp - see 3)")
 
     print("""
-2. AND IT IS THE SAME NUMBER. The model's per-zone rate is not a new figure invented for the
-   model: it is `KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay`,
-   the exact two the level and every rung above are derived from. If those ever became two
-   answers, a reservoir would be worth one thing to the ladder and another to the casks.
+2. WATER IS THE SAME NUMBER; FOOD IS DELIBERATELY NO NUMBER. The model's per-zone water rate is
+   not invented for the model: it begins at `KingdomSubsidence.OrdinarySupports(Survey)`, the
+   same tally the level uses. Food remains measurable physical-lane metadata, but it is neither
+   a population constraint nor an item rate: both rate seams return zero.
 """)
-    assert "KingdomSubsidence.Supports(Survey).Water" in city, (
+    assert "KingdomSubsidence.OrdinarySupports(Survey).Water" in city, (
         "the model's water rate is no longer the ladder's own Supports tally"
     )
-    assert "KingdomGrowth.FoodMadePerDay(Survey)" in city, (
-        "the model's food rate is no longer KingdomGrowth's own figure"
-    )
-    assert "KingdomCrops.MilledFoodPerDay(Survey)" in growth, (
-        "FED TWICE: FoodMadePerDay no longer subtracts what the mills deliver physically."
-    )
-    print("   water rate  = KingdomSubsidence.Supports(Survey).Water    (the ladder's own tally)")
-    print("   food rate   = KingdomGrowth.FoodMadePerDay(Survey)        (fields and mills already out)")
+    assert "private static int FoodMadePerDay(KingdomSurvey Survey)" in city
+    assert "public static int FoodMadePerDay(KingdomSurvey Survey)" in growth
+    assert "return 0;" in city[city.index("private static int FoodMadePerDay"):]
+    assert "return 0;" in growth[growth.index("public static int FoodMadePerDay"):]
+    print("   water rate  = KingdomSubsidence.OrdinarySupports(Survey).Water (ordinary physical tally)")
+    print("   food rate   = 0 (physical fields, crops, containers, and mills only)")
 
     print("""
 3. THE MILL KEPT ITS OWN CLOCK, AND HAD TO. A mill does not make food out of the day - it takes
-   real crops off real shelves and puts real staples back, where the shelves are. It was never in
-   the model's rate (`MilledFoodPerDay` is subtracted out of `FoodMadePerDay`), so it keeps
-   `LastFoodWorkTick`'s elapsed for itself. One clock each; neither can spend the other's days.
+   real crops off real shelves and puts real staples back, where the shelves are. It is not in
+   the model's rate, so it keeps `LastFoodWorkTick`'s elapsed for itself. One clock each; neither
+   can spend the other's days or mint an abstract food balance.
 """)
     assert "GrindHarvest(System, survey, grownDays)" in growth, "the mill no longer runs"
-    order_rations = growth.find("bool heartbeatHealthy = ResolveHeartbeat(")
+    order_heartbeat = growth.find("bool heartbeatHealthy = ResolveHeartbeat(")
     order_mill = growth.find("GrindHarvest(System, survey, grownDays)")
-    assert order_rations > 0 and order_mill > order_rations, (
-        "INDUSTRY EATS FIRST: GrindHarvest must still run after the ration draw."
+    assert order_heartbeat > 0 and order_mill > order_heartbeat, (
+        "GrindHarvest must run after the separate water-scarcity heartbeat."
     )
 
     print("""
-4. THE BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow an
-   unbounded claim, because production is clamped by the room the model believes the zone has and
-   the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
-   what makes the amortised landing finite: the worst debt a quarter can present is its own
-   capacity, and §0.0(b) prices draining a full backlog inside the 40-turn grace window.
+4. THE WATER BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow
+   an unbounded water claim, because production is clamped by the room the model believes the zone
+   has and overflow is spilled. Food rate/debt remain zero; physical harvest landing separately
+   stops at actual larder room. That makes amortised city-book landing finite: the worst debt a
+   quarter can present is its own water capacity, and §0.0(b) prices draining a full backlog
+   inside the 40-turn grace window.
 """)
     assert "long room = (wanted > 0L) ? (capacity - level) : level;" in production, (
         "UNBOUNDED CLAIM: production is no longer clamped by the room the containers have."
@@ -2565,7 +2622,7 @@ def w6_production_and_logistics():
     assert drain_turns <= 40, "the worst backlog no longer drains inside its own warn rung"
 
     print("""
-5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every column in Q1-Q11 above is a
+5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every water column above is a
    ONE-QUARTER balance and none of them moves: the same works make the same drams on the same
    day. What changes is that the city's OTHER quarters now make theirs too. Before W6 a work in a
    zone the founder was not standing in produced nothing at all, whatever it was built to do; the
@@ -3501,10 +3558,12 @@ def q14_hosted_arcology():
     rule("Q14 Hosted arcology: one shell, bounded lots, physical water-gated food")
     rules_text = read_source(HOSTED_RULES_CS)
     runtime_text = read_source(HOSTED_RUNTIME_CS)
+    observation_text = read_source(HOSTED_OBSERVATION_CS)
     construction_text = read_source(HOSTED_CONSTRUCTION_CS)
     authority_text = read_source(HOSTED_AUTHORITY_CS)
     lot_text = read_source(HOSTED_LOT_CS)
     visual_text = read_source(HOSTED_VISUAL_CS)
+    programme_text = read_source(HOSTED_PROGRAMME_CS)
     archive_text = read_source(GREAT_ARCHIVE_CS)
     subsidence_text = read_source(SUBIMPL_CS)
     folding_text = read_source(CAT_CS)
@@ -3516,54 +3575,31 @@ def q14_hosted_arcology():
     assert slot_keys == ['"r_TAF_HostedArcologyAuthorityV1:0"',
         '"r_TAF_HostedArcologyAuthorityV1:1"'], "hosted authority fixed slots moved"
 
-    built_in_blocks = re.findall(
-        r"RegisterHostedLot\(new\s+KingdomHostedLotDefinition\s*\{(.*?)\}\s*,\s*out ignored\);",
-        rules_text, re.S)
-    assert len(built_in_blocks) == 2, "hosted paid-lot built-ins moved"
-
-    def string_field(block: str, name: str, required: bool = True) -> str:
-        match = re.search(r"\b" + name + r'\s*=\s*"([^"]*)"', block)
-        assert match or not required, "hosted lot lost field " + name
-        return match.group(1) if match else ""
-
-    def int_field(block: str, name: str, required: bool = True) -> int:
-        match = re.search(r"\b" + name + r"\s*=\s*([0-9]+)(?:L)?", block)
-        assert match or not required, "hosted lot lost numeric field " + name
-        return int(match.group(1)) if match else 0
-
-    paid_lots = {}
-    for block in built_in_blocks:
-        key = string_field(block, "Key")
-        assert key not in paid_lots
-        paid_lots[key] = {
-            "cell": string_field(block, "InteriorCell"),
-            "material": string_field(block, "MaterialKey"),
-            "ticks": int_field(block, "BuildTicks"),
-            "crew": int_field(block, "Crew"),
-            "supports": string_field(block, "Supports"),
-            "water": bool(re.search(r"\bRequiresWater\s*=\s*true", block)),
-            "producer": string_field(block, "PhysicalProducerBlueprint", False),
-            "producers": int_field(block, "PhysicalProducerCount", False),
-        }
+    paid_lots, fixture_manifests = _hosted_paid_authority()
     assert set(paid_lots) == {"arcologyward", "arcologyterrace"}
     assert paid_lots["arcologyward"] == {
-        "cell": "TAFArcologyWard", "material": "arcologyward", "ticks": 9600,
-        "crew": 2, "supports": "roof:26,luxury:2", "water": False,
+        "cell": "TAFArcology", "material": "arcologyward", "ticks": 9600,
+        "crew": 2, "supports": "roof:8,luxury:2", "water": False,
         "producer": "", "producers": 0}
     assert paid_lots["arcologyterrace"] == {
-        "cell": "TAFArcologyTerrace", "material": "arcologyterrace", "ticks": 7200,
+        "cell": "TAFArcology", "material": "arcologyterrace", "ticks": 7200,
         "crew": 2, "supports": "food:14", "water": True,
         "producer": "r_KingdomArcologyGrowbed", "producers": 14}
 
     source_pins = (
         (rules_text, "if (Lots.Count >= MaxHostedLots)",
             "hosted registry no longer refuses before cap+1"),
+        (rules_text, "public static bool RegisterReadOnlyHostedLot",
+            "hosted public seam no longer stays read-only"),
+        (rules_text, "paid hosted-lot registration is closed in v1",
+            "hosted paid registration no longer refuses honestly"),
         (rules_text, "if (Carries(D.Supports, \"food\") && !hasProducer)",
             "hosted food no longer requires a physical producer"),
-        (runtime_text, "if (!Operational(Work)) return answer;",
+        (observation_text,
+            "|| string.IsNullOrEmpty(Work.IDIfAssigned) || !IsOperationalPure(Work))",
             "inoperative shell can now expose hosted supports"),
-        (runtime_text,
-            "|| (receipt.RequiresWater && !FreshWaterAvailable)) continue;",
+        (observation_text,
+            "if (receipt.RequiresWater && !FreshWaterAvailable) return true;",
             "hosted terrace no longer closes without physical fresh water"),
         (runtime_text, "&& receipt.Phase == KingdomHostedLotPhase.Working",
             "hosted construction staffing no longer follows the working receipt"),
@@ -3591,10 +3627,16 @@ def q14_hosted_arcology():
             "hosted authority no longer rejects a second current-realm shell"),
         (archive_text, "InteriorCell = \"TAFGreatArchive\", ReadOnly = true,",
             "Great Archive no longer registers as a read-only hosted view"),
+        (archive_text, "RegisterReadOnlyHostedLot(",
+            "Great Archive no longer uses the read-only-only registration seam"),
+        (visual_text, "producers != Definition.PhysicalProducerCount",
+            "hosted realization no longer reproves physical producer cardinality"),
+        (programme_text, "TryPaidFixtures(string LotKey",
+            "hosted fixture manifest no longer binds lot key to exact programme"),
         (subsidence_text, "Survey.StoredWater > 0",
             "hosted fresh-water gate no longer reads physical stored water"),
         (folding_text,
-            "return (EffectivenessPercent >= 100) ? Amount : (Amount * EffectivenessPercent / 100);",
+            "long carried = (long)Amount * EffectivenessPercent / 100L;",
             "hosted support effectiveness no longer follows catalogue carried arithmetic"),
     )
     for source, needle, complaint in source_pins:
@@ -3617,8 +3659,7 @@ def q14_hosted_arcology():
         row = buildings[key]
         assert row.get("Strata") == "arcology" and row.get("Capital") == "yes"
         assert int(row["Ticks"]) == lot["ticks"] and row["Carries"] == lot["supports"]
-        assert row.get("HostedProducerBlueprint", "") == lot["producer"]
-        assert int(row.get("HostedProducerCount", "0")) == lot["producers"]
+        assert not any(name.startswith("HostedProducer") for name in row)
 
     # The shell's catalogue price is already owned by Q4. Q14 prices only the two reachable
     # hosted commissions inside it, once each, from the XML rows BeginLot consumes.
@@ -3689,10 +3730,10 @@ def q14_hosted_arcology():
 
     support_cases = (
         ("dark shell", False, set(), False, (0, 0, 0, 0)),
-        ("bare shell", True, set(), False, (60, 0, 4, 4)),
-        ("ward active", True, {"arcologyward"}, False, (86, 0, 4, 6)),
-        ("both, dry", True, set(paid_lots), False, (86, 0, 4, 6)),
-        ("both, fresh", True, set(paid_lots), True, (86, 14, 4, 6)),
+        ("bare shell", True, set(), False, (0, 0, 4, 4)),
+        ("ward active", True, {"arcologyward"}, False, (8, 0, 4, 6)),
+        ("both, dry", True, set(paid_lots), False, (8, 0, 4, 6)),
+        ("both, fresh", True, set(paid_lots), True, (8, 14, 4, 6)),
     )
     print(f"  {'state':<14}{'roof':>7}{'food':>7}{'order':>8}{'luxury':>9}")
     for label, operational, active, fresh, expected in support_cases:
@@ -3722,9 +3763,15 @@ def q14_hosted_arcology():
     hosted_rows = _hosted_crop_rows()
     physical_rows = terrace["producers"] * hosted_rows[terrace["producer"]]
     physical_food = physical_rows * SRC["YieldPerRow"] // SRC["CropDays"]
-    fixture_count = visual_text.count('"r_KingdomArcologyGrowbed"')
+    fixture_count = fixture_manifests["arcologyterrace"]["blueprints"].count(
+        terrace["producer"])
     assert fixture_count == terrace["producers"]
-    assert int(buildings["arcologyterrace"]["HostedProducerCount"]) == fixture_count
+    assert fixture_manifests["arcologyterrace"]["programme"] == "HydroponicTerrace"
+    assert fixture_manifests["arcologyward"]["programme"] == "LodgingWard"
+    assert fixture_manifests["arcologyward"]["blueprints"].count(
+        "r_KingdomFixtureBedMetal") == 8
+    assert fixture_manifests["arcologyward"]["blueprints"].count(
+        "r_KingdomArcologyWardAmenity") == 1
     assert physical_rows == 28 and physical_food == 14
     assert physical_rows * SRC["YieldPerRow"] == 14 * SRC["CropDays"]
     print(f"  terrace proof: {terrace['producers']} growbeds x "
@@ -4405,33 +4452,25 @@ def caveats():
    sinks omitted here; they are lumpy events, and averaging them per day would flatter the
    model.
 
-5. FOOD IS A CYCLE NOW (Q11, G2), AND THREE THINGS ABOUT IT ARE STILL UNMODELLED HERE. The
-   ripening cycle is no longer one of them: G2 proves the cycle pays exactly what the Carries
-   promised over one crop's {SRC["CropDays"]} days and the runtime subtracts a sown field from the
-   clocked make so it is paid once, which is why Q11's Carries-denominated columns are now the
-   whole truth for a sown settlement rather than a lower bound. What is NOT modelled:
-     - THE SEED GATE'S TIMING. G2's check 3 proves Camp and Steading are held without any seed at
-       all, and Q11 proves every rung is holdable once seed is in the ground. What neither answers
-       is how long a founder actually spends between the two - that is a play question about how
-       often a trader carries seed and how near the nearest watervine is, and it is a playtest
-       reading rather than an arithmetic one.
+5. FOOD IS PHYSICAL POSITIVE PLAY, NOT A POPULATION BALANCE. F1 proves passive rate, ration,
+   hunger, city credit, and population binding are all zero; it also proves the crop-cycle,
+   larder, mill, kitchen/provider, and exact meal debit chain. What remains playtest evidence:
+     - THE SEED GATE'S TIMING. The arithmetic proves conservation after sowing, not how long a
+       founder spends finding the first lawful seed or whether that search feels good.
      - THE FOUNDER'S OWN HAND-HARVEST. A ripe row carries vanilla `Harvestable` for one day before
        the settlement's hands gather it, so a founder standing in a field can take up to
        `Rows x OnSuccessAmount` crop items into their own pack instead. That is a TRANSFER out of
        the settlement's yield and not an addition to it (the gathering counts rows still standing
        RIPE), so it cannot inflate any column here; what it can do is make a founder personally
        rich in vinewafers, which is not an economy this file models.
-     - TRADE. The two shipped deal records declare water income only. The trade operation also
-       has a keyed material-cargo lane, but neither current deal declares materials and neither
-       lane carries food. The only ways into a larder are therefore the fields, the wild and the
-       founder's own hands. Seed moves on the wares tables; food does not. This model assigns
-       trade food zero as the current scope boundary, rather than pretending a future food deal
-       already ships.
+     - EXACT EXTERNAL TRANSACTIONS. Trade consignments, hospitality, expeditions, purpose-pair
+       operations, and the founder's own transfers can move or debit physical food. They are
+       lumpy, identity-bound acts and are intentionally not averaged into a passive daily rate.
 
 6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
    3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches
    that, and this model does not answer it.
-""")
+""".rstrip())
 
 
 def q10_comfort():
@@ -4452,9 +4491,9 @@ Both are capped by `LiftCapPercent` = {SRC["LiftCapPercent"]}, so neither outrun
   the reach            a work's lift now lands in proportion to the settlement's roofs it
                        covers (`KingdomReachRules.Landed`). Binding goods are untouched.
 
-THE TITLE-ONLY FENCE. `KingdomSystem.Shade` reads MealShade only, and seat plus off-seat
-normalization force the serialized legacy NotableShade field to zero. An office therefore
-changes identity and fiction, never capacity, even before the player revisits an old save.
+THE TITLE-AND-MEAL FENCE. `KingdomSystem.Shade` returns zero, and normalization retires both
+serialized NotableShade and MealShade. Offices and meals can change identity, fiction, and their
+bounded explicit act; neither changes population capacity, including on old saves.
 """)
 
     print("""
@@ -4541,317 +4580,6 @@ an office cannot put that headroom back. If Camp needs softening, the lever is a
 attribute on an authored design, not a hidden reward attached to a named resident.
 """)
 
-
-
-# --------------------------------------------------------------------------------------
-# 6. Food, now that it is a flow. The water lane's mirror, and where the mirror breaks.
-# --------------------------------------------------------------------------------------
-
-
-def rations_per_day(pop: int) -> int:
-    """KingdomRules.RationsPerDay: one ration a settler a day, at EVERY rung.
-
-    Flat where `upkeep_per_day` is stage-scaled, and that is the load-bearing divergence:
-    `KingdomSubsidenceRules.SupportedLevel` hands `Supports.Food` to `Equilibrium` undivided,
-    so the food arm of the level IS the daily ration bill and a settlement standing at its own
-    level makes exactly what it eats.
-    """
-    return max(pop, 0)
-
-
-def foraged_rations(hands: int, days: int) -> int:
-    """KingdomRules.ForagedRations: free hands off the land, under a flat daily ceiling.
-
-    Foraging's `OpenWater` is a ceiling rather than a pool, because the wild does not care how
-    many baskets you bring. Clamped on the RATE before the days multiply out.
-    """
-    if hands <= 0 or days <= 0:
-        return 0
-    return min(hands * SRC["ForageRationsPerHand"], SRC["MaxForagedRationsPerDay"]) * days
-
-
-def resolve_hunger(streak: int, stage: int, pop: int) -> str:
-    """KingdomRules.ResolveHunger, shaped exactly like ResolveThirst."""
-    if streak <= 0:
-        return "Fed"
-    if streak >= SRC["HungryIntervalsToFamine"] and stage > 0:
-        return "Famine"
-    if streak >= SRC["HungryIntervalsToEmigrate"] and pop > SRC["LoyalCoreSettlers"]:
-        return "Emigration"
-    return "Warned"
-
-
-def resolve_thirst(streak: int, stage: int, pop: int) -> str:
-    """KingdomRules.ResolveThirst, for the composition table below."""
-    if streak <= 0:
-        return "Sustained"
-    if streak >= SRC["DryIntervalsToWither"] and stage > 0:
-        return "Withering"
-    if streak >= SRC["DryIntervalsToEmigrate"] and pop > SRC["LoyalCoreSettlers"]:
-        return "Emigration"
-    return "Warned"
-
-
-_BITE = {
-    "Sustained": 0,
-    "Fed": 0,
-    "Warned": 1,
-    "Emigration": 2,
-    "Withering": 3,
-    "Famine": 3,
-}
-
-
-def compose_scarcity(thirst: str, hunger: str) -> int:
-    """KingdomRules.ComposeScarcity: the WORSE of the two ladders, never their sum."""
-    return max(_BITE[thirst], _BITE[hunger])
-
-
-def departures_of(bite: int) -> int:
-    """Settlers one resolve at this bite costs. Terminal costs a departure and a mark, not two."""
-    return 1 if bite >= 2 else 0
-
-
-def _food_plan(stage: int, need: int, by):
-    globals()["_KIND"] = "food"
-    return _plan("food", stage, need, by)
-
-
-def _passive_water_crew(stage: int, pop: int) -> int:
-    """Hands the water detail needs once the rung's best passive water works are raised."""
-    bill = pop * STAGE_PERCENT[stage] // 100
-    passive = [
-        d for d in CATALOGUE if "water" in d.carries and d.stage <= stage and d.staff == 0
-    ]
-    covered = 0
-    if passive:
-        best = max(passive, key=lambda d: d.carries["water"])
-        covered = best.carries["water"] * math.ceil(bill / best.carries["water"])
-    short = max(0, bill - covered)
-    return math.ceil(short / SRC["FetchDramsPerSettler"])
-
-
-def q11_food():
-    rule("Q11 Food, now that it is a flow: what a rung grows against what it eats")
-    print(f"""
-THE DENOMINATION, and the one place it deliberately does not mirror water. One point of
-`food` is ONE SETTLER FED FOR ONE DAY, at every rung. Water is billed {STAGE_PERCENT} per
-hundred by stage and its Carries are divided back out by the same percentage; food is billed
-flat and its Carries are handed to `Equilibrium` undivided, because (the catalogue's own
-words) "a dinner and a bed are both counted in people, and neither is divided by the
-settlement's own thirst the way a dram is".
-
-That flatness buys the whole lane its central property, and it is worth stating as an
-identity rather than a table:
-
-    a settlement standing at its own supported level makes exactly the rations it eats.
-
-`Supports.Food` is what the fields make in a day; `RationsPerDay(pop)` is what the people eat
-in a day; the food arm of `Equilibrium` is `Supports.Food`. So food binds at exactly the
-population it feeds, with nothing left over and nothing owed - and every column below is a
-measure of the CUSHION around that identity, not of whether it holds.
-
-THE CUSHION HAS TWO PARTS. Foraging ({SRC["ForageRationsPerHand"]} a hand a day, ceiling
-{SRC["MaxForagedRationsPerDay"]} a day whoever walks the ground) and the larders. Foraging is
-food's answer to the water detail, with one difference that matters: hauled water goes into a
-cask and foraged food goes straight into a mouth, so a settlement that has dedicated NO larder
-still eats. What stops that being an answer above a Camp is the ceiling, and the ceiling is
-chosen: {SRC["MaxForagedRationsPerDay"]} is `FloorLevel`, and it is also the population ceiling
-of the Camp rung ({STAGES[1][0]} opens at {STAGES[1][1]}). The wild feeds a camp and nothing
-larger.
-""")
-    print(f"{'rung':<9}{'people':>8}{'eats/d':>8}{'hauling':>9}{'free':>6}{'forage':>8}   verdict")
-    for i, (name, floor, _cap) in enumerate(STAGES):
-        pop = max(floor, SRC["FloorLevel"])
-        # The MANUAL phase deliberately: everybody the water bill wants is on the detail and
-        # nothing passive is standing. It is the hardest case for foraging (fewest hands left)
-        # and the one the Camp claim has to survive.
-        crew = min(pop, math.ceil(pop * STAGE_PERCENT[i] / 100 / SRC["FetchDramsPerSettler"]))
-        free = max(0, pop - crew)
-        forage = foraged_rations(free, 1)
-        eats = rations_per_day(pop)
-        if forage >= eats:
-            verdict = "FEEDS ITSELF off the land, with no field standing"
-        elif free <= 0:
-            verdict = "every hand is on the water; nothing is foraged and everything must be grown"
-        else:
-            verdict = f"the wild covers {forage / eats:.0%}; the rest must be grown"
-        print(f"{name:<9}{pop:>8}{eats:>8}{crew:>9}{free:>6}{forage:>8}   {verdict}")
-    print("""
-CAMP SELF-SUSTAINS, which is the floor this lane had to clear. A camp of four with two of them
-on the water detail has two hands left, and two hands forage exactly the four rations four
-people eat. That is the same promise the water lane makes at the same rung - Q7's "Camp wants
-half its people on water" - said in food's voice, and it is why a founder who has commissioned
-nothing is never starved by this system.
-
-Now the two ways a founder actually feeds a rung, on Q6's own terms. `staff` is what the food
-plan takes off the free hands, which is why the forage column shrinks as the plan grows: hands
-are spent once, and a settler in a field is not also out on the ridge.
-""")
-    for label, by in (
-        (
-            "cheapest",
-            lambda d: (d.cost / max(d.carries.get("food", 1), 1), -d.carries.get("food", 0)),
-        ),
-        ("grandest", lambda d: -d.carries.get("food", 0)),
-    ):
-        print(f"  --- {label} ---")
-        print(
-            f"  {'rung':<9}{'people':>8}{'eats/d':>8}{'made/d':>8}{'forage':>8}{'spare':>7}   plan"
-        )
-        for i, (name, floor, _cap) in enumerate(STAGES):
-            pop = max(floor, SRC["FloorLevel"])
-            eats = rations_per_day(pop)
-            got = _food_plan(i, eats, by)
-            if got is None:
-                print(f"  {name:<9}{pop:>8}{eats:>8}{'-':>8}{'-':>8}{'-':>7}   NO FOOD DESIGN")
-                continue
-            design, count = got
-            made = design.carries["food"] * count
-            crew = _passive_water_crew(i, pop)
-            free = max(0, pop - crew - design.staff * count)
-            forage = foraged_rations(free, 1)
-            spare = made + forage - eats
-            flag = "" if spare >= 0 else "   SHORT"
-            print(
-                f"  {name:<9}{pop:>8}{eats:>8}{made:>8}{forage:>8}{spare:>7}   "
-                f"{design.key}x{count} ({design.staff * count} hands){flag}"
-            )
-        print()
-
-    print("""
-Every rung feeds itself both ways, with spare on top of the identity - the plans overshoot
-because a whole number of fields rarely lands exactly on the bill, and the overshoot is where
-the larders fill from. What did NOT change from Q6's reading: food never automates. Every rung
-above the kitchen garden wants hands and the grand ones want them still; what scale buys is a
-better rate, never a discharge.
-""")
-
-    rule("Q11b How deep the larders are, and what a bad year costs before the founder sees it")
-    print(f"""
-Food storage is declared on the blueprint (`r_KingdomLarderCapacity`) and never in the
-catalogue, for the same reason a cistern's `MaxVolume` is: what a design adds to the LEVEL is a
-catalogue fact and how much its vessel holds is a fact about the vessel. The ratio is the
-cistern's own - a store holds about 32 days of what it carries - so the larder shed holds
-{[d.larder for d in CATALOGUE if d.key == "larder"][0]} against `food:2` and the granary
-{[d.larder for d in CATALOGUE if d.key == "granary"][0]} against `food:9`. A container the
-founder dedicated by hand and that declares nothing gets {SRC["DefaultLarderCapacity"]}.
-
-"blackout" below is the honest question: the fields stop entirely (ruined, unstaffed, a bad
-season), foraging is all that is left, and this is how long the larders cover the difference.
-""")
-    pantries = [d for d in CATALOGUE if d.larder > 0]
-    print(f"{'rung':<9}{'people':>8}  {'pantry plan':<16}{'held':>7}{'blackout':>11}   against water")
-    for i, (name, floor, _cap) in enumerate(STAGES):
-        pop = max(floor, SRC["FloorLevel"])
-        reach = [d for d in pantries if d.stage <= i]
-        best = max(reach, key=lambda d: d.larder) if reach else None
-        if best is None:
-            print(f"{name:<9}{pop:>8}  {'-':<16}{'-':>7}{'-':>11}   -")
-            continue
-        # One pantry a rung until the granary opens, then as many as the rung's own bill wants
-        # a fortnight of. Both are plans a player plausibly builds.
-        count = max(1, math.ceil(pop * 14 / best.larder))
-        held = best.larder * count
-        crew = _passive_water_crew(i, pop)
-        forage = foraged_rations(max(0, pop - crew), 1)
-        gap = rations_per_day(pop) - forage
-        # The same blackout on the water side: the passive works stop and the casks are all
-        # there is, against the rung's own daily bill.
-        passive = [d for d in CATALOGUE if "water" in d.carries and d.stage <= i and d.staff == 0]
-        wbill = max(1, pop * STAGE_PERCENT[i] // 100)
-        wheld = 0
-        if passive:
-            wbest = max(passive, key=lambda d: d.carries["water"])
-            wheld = wbest.capacity * math.ceil(wbill / max(1, wbest.carries["water"]))
-        # A rung the wild already covers has no blackout to measure: the fields could all fall
-        # and nobody would miss a meal, which is a truer sentence about a camp than a number is.
-        blackout = "no gap" if gap <= 0 else f"{held // gap} d"
-        print(
-            f"{name:<9}{pop:>8}  {best.key + 'x' + str(count):<16}{held:>7}{blackout:>11}   "
-            f"{wheld // wbill} d of water"
-        )
-    print(f"""
-READING. The two cushions CROSS, and they cross at Town. Below it food is the safer of the two
-- a camp cannot have a food blackout at all, because the wild already covers it, and a village
-holds about as many days of bread as of water. Above it the lines part hard: a Town holds 27
-days of food against 71 of water, and a City 18 against 109. So the food lane gets steadily
-LESS forgiving as the settlement grows, which is exactly the shape the catalogue asks for -
-"Food is the good that notices staffing. It is meant to be." A ruined reservoir costs a city
-its cushion; a ruined home farm costs it dinners inside the month.
-
-That crossing is not an accident of the numbers, it is the two bounds meeting. Foraging is
-flat ({SRC["MaxForagedRationsPerDay"]} a day forever) so it is everything at a Camp and
-nothing at a City, while water storage climbs faster than the water bill does because the
-grand water designs are stores as much as makers. Food has no grand STORE - the granary is a
-middling plot and the ladder stops there - so a city keeps its bread in several of the same
-building rather than in one big one.
-
-What bounds the IMMEDIATE hunger ladder is the RESOLVE, not the number of days one resolve
-bills. A long span with no attended claimed ground advances it once when physical stores next
-reconcile; while the founder remains on claimed ground, the stationary scheduler supplies one
-resolve at each absolute daily boundary. Either way one resolve removes at most one settler
-and `Emigrate` floors at {SRC["LoyalCoreSettlers"]}. Subsidence remains the independent
-structural clock and can cash multiple elapsed steps in that same homecoming pass.
-""")
-
-    rule("Q11c The two ladders together: the composition rule, exhaustively")
-    print(f"""
-Both ladders run. Each keeps its own streak ({SRC["DryIntervalsToEmigrate"]} failed resolves to
-a departure, {SRC["DryIntervalsToWither"]} to a mark, and the food ladder is the same shape at
-{SRC["HungryIntervalsToEmigrate"]} and {SRC["HungryIntervalsToFamine"]}), each says its own
-sentence, each sets its own mark. `KingdomRules.ComposeScarcity` decides what the resolve
-actually costs, and the rule is:
-
-    THE BITE IS THE WORSE OF THE TWO LADDERS, NEVER THEIR SUM.
-
-Below is every pairing, with the departures each ladder would cost alone and what the pair
-actually costs. The property that must hold in every row is `both <= max(alone, alone)`, which
-is the "no death spiral" requirement: a dry AND starving city must never empty faster than the
-worse of the two alone would.
-""")
-    thirsts = ["Sustained", "Warned", "Emigration", "Withering"]
-    hungers = ["Fed", "Warned", "Emigration", "Famine"]
-    print(f"  {'thirst':<12}{'hunger':<12}{'alone':>7}{'alone':>7}{'together':>10}   marks")
-    worst = 0
-    for t in thirsts:
-        for h in hungers:
-            bite = compose_scarcity(t, h)
-            a, b = departures_of(_BITE[t]), departures_of(_BITE[h])
-            both = departures_of(bite)
-            assert both <= max(a, b), f"COMPOSITION BROKEN at {t}/{h}: {both} > {max(a, b)}"
-            worst = max(worst, both)
-            marks = []
-            if t == "Withering":
-                marks.append("withered")
-            if h == "Famine":
-                marks.append("famished")
-            print(
-                f"  {t:<12}{h:<12}{a:>7}{b:>7}{both:>10}   {' + '.join(marks) if marks else '-'}"
-            )
-    print(f"""
-Sixteen rows, and the most any single resolve costs is {worst} settler. The bottom-right row is
-the one the rule exists for: a city that is Withering AND Famishing loses ONE person and wears
-BOTH marks - because a mark is a state and a departure is a cost, and only the cost is capped.
-
-WHAT IS DELIBERATELY NOT COMPOSED. Subsidence runs underneath both of these and is not touched
-by either. It is the STRUCTURAL consequence - a settlement standing above what its works carry
-settles back toward them, on its own {SRC["StepDays"]}-day step - and this is the IMMEDIATE
-one. A bad year is both sentences about the same year rather than one sentence counted twice:
-the fields fail, people go hungry NOW and leave one at a time, and over the season the place
-settles to the size the surviving fields honestly carry. The two are already composed in the
-only way that matters, which is that the hunger ladder can never remove a settler the slide
-was going to remove anyway - both go through `Emigrate`, both floor at
-{SRC["LoyalCoreSettlers"]}, and neither mints a departure the population cannot pay for.
-""")
-
-# --------------------------------------------------------------------------------------
-# 7. The water lane's own invariants (Wave G1, Addendum 11(a)).
-#
-# Three claims the catalogue makes about itself, checked against the source rather than
-# asserted in prose. Every one of them FAILS THE RUN if it stops being true, because all
-# three are things a later tuning pass could break silently.
-# --------------------------------------------------------------------------------------
 
 
 def _producer_rates() -> dict:
@@ -4987,374 +4715,158 @@ def water_invariants():
     assert equilibrium(0, 0, 0, 0, 4) == SRC["FloorLevel"], "the camp floor moved at City rates"
     print(f"  equilibrium(0, 0, 0) at every stage = {SRC['FloorLevel']}  (checked)")
 
+# Retired pre-ruling ration/hunger/food-binding simulations were removed on 2026-09-01.
+# `food_ruling_invariants` below is the single current executable food contract.
 
-# --------------------------------------------------------------------------------------
-# 8. The food lane's own invariants (Wave G2, Addendum 11(b) and 11(b-ii)).
-#
-# The exact sibling of section 7, and it exists for the same reason: a `Carries` number that
-# nobody can derive from what the object visibly DOES is an author's opinion wearing an
-# economy's clothes. Water derives from a LiquidProducer's rate. Food now derives from a
-# field's rows.
-# --------------------------------------------------------------------------------------
+def food_ruling_invariants():
+    """2026-09-01 author ruling: physical food enables acts; time never bills it."""
+    rule("F1  Physical food and explicit-provider acts (author ruling 2026-09-01)")
+    heartbeat = read_source(os.path.join(ROOT, "Growth", "KingdomGrowth.z02.ScarcityHeartbeat.cs"))
+    larder = read_source(os.path.join(ROOT, "Growth", "KingdomLarder.cs"))
+    growth = read_source(os.path.join(ROOT, "Growth", "KingdomGrowth.z03.FoodAndHarvest.cs"))
+    carry = read_source(os.path.join(ROOT, "Simulation", "City",
+                                     "KingdomCity.z08.CarryAndReconcile.cs"))
+    advance = read_source(os.path.join(ROOT, "Simulation", "City", "KingdomCityAdvanceable.cs"))
+    reify = read_source(os.path.join(ROOT, "Simulation", "City", "KingdomCity.z05.Reify.cs"))
+    meals = read_source(os.path.join(ROOT, "Core", "KingdomRules.Meals.cs"))
+    scarcity = read_source(os.path.join(ROOT, "Core", "KingdomRules.Scarcity.cs"))
+    subsidence = read_source(os.path.join(ROOT, "Growth", "KingdomSubsidenceRules.cs"))
+    catalogue_rules = read_source(os.path.join(ROOT, "Growth", "KingdomCatalogueRules.cs"))
+    survey = read_source(os.path.join(ROOT, "Growth", "KingdomSurvey.06.ExactSpoilage.cs"))
+    city_containers = read_source(os.path.join(
+        ROOT, "Simulation", "City", "KingdomCity.z06.PlacementAndContainers.cs"))
+    logistics = read_source(os.path.join(
+        ROOT, "Simulation", "City",
+        "KingdomCentralLogistics.08.ScalarCustodyAndReceiptHelpers.cs"))
 
+    # Passive food is zero at every representable population/span. These are source-compatible
+    # symbols only; constants and pure tests own the numeric boundary.
+    for signature in (
+        "public static int RationsPerDay(int Population)",
+        "public static int RationsForElapsed(int Population, long ElapsedTicks)",
+        "public static int ForagedRations(int Hands, int Days)",
+    ):
+        assert signature in _rules_text, f"missing neutral legacy seam: {signature}"
+    assert SRC["ForageRationsPerHand"] == 0
+    assert SRC["MaxForagedRationsPerDay"] == 0
+    assert "KingdomRules.HungerOutcome.Fed" in heartbeat
+    for forbidden in ("ConsumeFood(", "RationsForElapsed", "ResolveHunger",
+                      "HungerStreak++", "verdict.Starving", "verdict.Famishing"):
+        assert forbidden not in heartbeat, f"passive heartbeat food mutation returned: {forbidden}"
+    for retired in ("System.HungerStreak = 0;", "System.Famished = false;",
+                    "System.ScrapsAnnounced = false;", "System.MealShade = 0;"):
+        assert retired in heartbeat, f"legacy food save state not retired: {retired}"
+    assert "verdict.Bite = BiteOfThirst(Thirst);" in scarcity
+    assert "return ScarcityBite.None;" in scarcity
+    assert "KingdomCatalogueRules.PopulationEquilibrium(" in subsidence
+    supported = subsidence[subsidence.index("public static int SupportedLevel"):]
+    supported = supported[:supported.index("public static string BindingSupportFor")]
+    assert "Supports.Food" not in supported
+    assert "KingdomCatalogueRules.PopulationBindingSupport(" in subsidence
+    assert "return Equilibrium(Water, int.MaxValue, Roof, Lift, Shade);" in catalogue_rules
 
-def food_invariants():
-    rule("G2  The food lane's invariants, re-derived from the XML")
-    rows = _crop_rows()
-    blueprints = {}
-    for attrs in re.findall(r"<building\s+(.*?)/?>", open(BUILD_XML, encoding="utf-8-sig").read(), re.S):
-        key = re.search(r'Key="([^"]+)"', attrs)
-        bp = re.search(r'\sBlueprint="([^"]+)"', attrs)
-        if key and bp:
-            blueprints[key.group(1)] = bp.group(1)
+    # Damaged larders conserve every exact object across any absence. The old enum/API/receipt
+    # vocabulary stays readable, but it is fenced from both the live loss arithmetic and the one
+    # exact destructive food transaction retained for explicit logistics.
+    assert "public static int Leaked(LeakKind Kind" in _wear_text
+    assert "return Kind == LeakKind.Food ? 0 : Leaked(" in _wear_text
+    for forbidden in ("SpoilFood(", "TryFoodPlan(", "ObserveFoodPlan(",
+                      "TrySpoilFromExact", "TryDebitFoodFromExact"):
+        assert forbidden not in _wearimpl_text, f"passive larder loss returned: {forbidden}"
+    assert "KingdomWear.RetireFoodLeakReceipt(ParentObject, this);" in _wearimpl_text
+    assert "if (RetireFoodLeakReceipt(Work, Wear)) return;" in _wearimpl_text
+    compatibility = survey[survey.index("public bool TrySpoilFromExact"):]
+    compatibility = compatibility[:compatibility.index("public bool TryDebitFoodFromExact")]
+    assert "Lost = 0;" in compatibility and "return false;" in compatibility
+    assert "Destroy" not in compatibility
+    assert "elapsed city catch-up never destroys pantry stock" in city_containers
+    assert "TryDebitFoodFromExact" not in city_containers
+    assert "survey.TryDebitFoodFromExact(target, amount, out debited)" in logistics
 
-    print(f"""
-1. EVERY DECLARED SERVING IS A ROW'S SERVING. A crop stands {SRC["CropDays"]} days
-   (`KingdomCropRules.CropDays`) and one row yields {SRC["YieldPerRow"]} servings when it is
-   gathered (`YieldPerRow`), so a design standing R rows honestly makes
-   R x {SRC["YieldPerRow"]} / {SRC["CropDays"]} servings a day. Addendum 11(b) asks that the farm
-   BE the thing it is counted for; this re-derives every growing design's `Carries="food:N"` from
-   the `r_KingdomCropRows` tag on its own blueprint rather than trusting the catalogue's comment.
-""")
-    print(f"  {'design':<12}{'blueprint':<24}{'rows':>6}{'derived':>9}{'declared':>10}   plot cells")
-    cells = {"S": 5 * 4, "M": 8 * 6, "L": 12 * 9, "XL": 20 * 14}
-    growers = [d for d in CATALOGUE if d.rows > 0]
-    assert growers, "no design grows anything at all"
-    for d in sorted(growers, key=lambda d: d.rows):
-        derived = d.rows * SRC["YieldPerRow"] // SRC["CropDays"]
-        declared = d.carries.get("food", 0)
-        assert derived == declared, (
-            f"FOOD CLAIM UNEARNED: {d.key} declares food:{declared} but {blueprints[d.key]} "
-            f"stands {d.rows} rows, which is {derived} servings a day."
-        )
-        # The rows have to physically fit in the ground the design occupies, or the harvest is
-        # quietly smaller than the level it was counted for. KingdomPlotRules' tier dimensions.
-        room = cells.get(d.plot, 0)
-        assert room >= d.rows, (
-            f"FIELD OVERSOWN: {d.key} wants {d.rows} rows on a {d.plot} plot of {room} cells."
-        )
-        print(
-            f"  {d.key:<12}{blueprints[d.key]:<24}{d.rows:>6}{derived:>9}{declared:>10}"
-            f"   {d.rows}/{room} ({d.rows / room:.0%})"
-        )
+    carry_body = carry[:carry.index("private static KingdomCityState CarryKind")]
+    assert "KingdomStockKind.Food" not in carry_body
+    assert "RationsForElapsed" not in carry_body
+    assert "internal long FoodRateOf" in advance and "return 0L;" in advance
+    assert "row.OwedFood != 0 || row.FoodCarry != 0" in reify
+    assert "row.Defence, row.WaterCarry, 0).WithOwed(row.OwedWater, 0," in reify
+    assert "public static int FoodMadePerDay(KingdomSurvey Survey)" in growth
+    food_rate = growth[growth.index("public static int FoodMadePerDay"):]
+    assert "return 0;" in food_rate[:food_rate.index("public static int StoreHarvest")]
 
-    print("""
-2. NOTHING CARRIES FOOD IT NEITHER GROWS NOR KEEPS. The food half of "storage stores, producers
-   produce". A design may declare `food` for exactly three reasons, and each is checkable off its
-   own blueprint: it GROWS (a rows tag), it KEEPS (a larder-capacity tag - a granary makes a good
-   year last, which is a real contribution and a cheaper one than growing), or it MAKES something
-   that keeps out of what came in (it carries `craft` beside its `food`, which is the mill). A
-   fourth reason would be a number nobody can derive.
-""")
-    for d in sorted((d for d in CATALOGUE if "food" in d.carries), key=lambda d: d.carries["food"]):
-        if d.rows > 0:
-            why = f"grows ({d.rows} rows)"
-        elif d.larder > 0:
-            why = f"keeps ({d.larder} servings)"
-        elif "craft" in d.carries:
-            why = "makes (a mill, and it carries craft to say so)"
+    # One positive shared meal: current capable furniture/designation, spendable custody,
+    # disclosed exact debit, then bounded effects. Failure before those gates spends nothing.
+    ordered = (
+        "KingdomBenefitCapabilities.Cooking",
+        "KingdomOrdinaryFoodAuthority.TryAvailable",
+        "CanHoldSharedMeal(available, System.Population, kitchens)",
+        "survey.ConsumeFood(cost, System.DishStaple",
+        "spent != cost",
+        "KingdomCreed.EaseForMeal(System)",
+        "KingdomConversion.OnSharedMeal(System, Z)",
+    )
+    cursor = -1
+    for token in ordered:
+        found = larder.find(token, cursor + 1)
+        assert found > cursor, f"shared-meal proof/debit/effect order lost at {token}"
+        cursor = found
+    assert "MealIngredientsSpent" in larder
+    assert "no meal benefit was granted" in larder
+    assert SRC["FavoredMealShade"] == 0
+    assert SRC["FavoredMealPercent"] == 100
+    assert "if (Owed <= 0 || !HasKitchen || FromStores < Owed)" in meals
+    assert "if (FromDish >= Owed)" in meals
+    assert "return 0;" in meals[meals.index("public static int MealShadeFor"):]
+
+    # Physical production remains: every catalogue food claim has a visible growing, keeping,
+    # or transforming source. Growing declarations conserve one whole crop cycle.
+    blueprints = {
+        b.get("Name"): b for b in ET.parse(BLUEPRINTS_XML).getroot().iter("object")
+        if b.get("Name")
+    }
+    design_blueprints = {
+        b.get("Key"): b.get("Blueprint")
+        for b in ET.parse(BUILD_XML).getroot().iter("building")
+        if b.get("Key") and b.get("Blueprint")
+    }
+    growers = []
+    for design in sorted((d for d in CATALOGUE if "food" in d.carries),
+                         key=lambda d: (d.carries["food"], d.key)):
+        if design.rows > 0:
+            reason = f"{design.rows} crop rows"
+            growers.append(design)
+        elif design.larder > 0:
+            reason = f"{design.larder}-unit larder"
+        elif "craft" in design.carries:
+            reason = "physical mill/refiner"
         else:
             raise AssertionError(
-                f"FOOD FROM NOWHERE: {d.key} declares food:{d.carries['food']} and its blueprint "
-                f"{blueprints[d.key]} neither grows rows, holds servings, nor works a craft."
-            )
-        print(f"  {d.key:<12}food:{d.carries['food']:<4}{why}")
+                f"FOOD FROM NOWHERE: {design.key} has no rows, larder, or craft transform")
+        print(f"  {design.key:<14} food:{design.carries['food']:<3} <- {reason}")
+    for design in growers:
+        declared_cycle = design.carries["food"] * SRC["CropDays"]
+        physical_cycle = design.rows * SRC["YieldPerRow"]
+        assert declared_cycle == physical_cycle, (
+            f"crop-cycle mismatch {design.key}: support={declared_cycle}, items={physical_cycle}")
 
-    print(f"""
-3. THE SEED GATE DOES NOT WALL THE EARLY RUNGS. Addendum 11(b) makes a farm produce nothing
-   until seed is committed, so an unsown field carries no food to the level and makes none in a
-   day (`KingdomCrops.WithoutUnsownFood`, folded inside `KingdomSubsidence.Supports`). The price
-   of that ruling would be unacceptable if a founder could be starved while hunting for seed - so
-   the check is that the two rungs a founder reaches BEFORE they can plausibly have traded for any
-   are held by the wild PLUS the designs that need no seed at all. Nothing that grows counts here;
-   only foraging (unchanged by this wave) and the keepers, which make a good year last rather than
-   making a year.
-""")
-    seedless = [d for d in CATALOGUE if "food" in d.carries and d.rows == 0]
-    for i, (name, floor, _cap) in enumerate(STAGES[:2]):
-        pop = max(floor, SRC["FloorLevel"])
-        crew = min(pop, math.ceil(pop * STAGE_PERCENT[i] / 100 / SRC["FetchDramsPerSettler"]))
-        free = max(0, pop - crew)
-        forage = foraged_rations(free, 1)
-        eats = rations_per_day(pop)
-        gap = eats - forage
-        # Cheapest per serving and then fewest hands: a founder who has not found seed yet has
-        # not found much of anything, and a plan that needs a crew takes the very hands that are
-        # out foraging. Picking the GRANDEST seedless design would flatter the check.
-        reach = sorted(
-            (d for d in seedless if d.stage <= i),
-            key=lambda d: (d.cost / d.carries["food"], d.staff),
-        )
-        best = reach[0] if reach else None
-        count = 0 if (gap <= 0 or best is None) else math.ceil(gap / best.carries["food"])
-        made = 0 if best is None else best.carries["food"] * count
-        forage = foraged_rations(max(0, free - (0 if best is None else best.staff * count)), 1)
-        assert forage + made >= eats, (
-            f"SEED GATE WALLS {name}: {pop} people eat {eats} a day, the wild gives {forage} with "
-            f"every spare hand on it, and no seedless design closes the rest. A founder with no "
-            "seed yet would starve."
-        )
-        plan = "the wild alone" if count == 0 else f"{best.key}x{count} (needs no seed) for {made}"
-        print(f"  {name:<9}{pop} people eat {eats}/d; {free} hands forage {forage}/d; {plan}")
-    print(f"""
-  Foraging is UNCHANGED by this wave: {SRC["ForageRationsPerHand"]} a hand a day, ceiling
-  {SRC["MaxForagedRationsPerDay"]}, and the ceiling is still `FloorLevel`. The gate binds where it
-  should - a Village and up must actually farm - and nowhere a founder cannot answer it.
-
-4. THE CYCLE PAYS WHAT THE CARRIES PROMISED, OVER A WHOLE CYCLE. The runtime does not add the
-   two: a SOWN field's `food` is subtracted from the clocked daily make
-   (`KingdomGrowth.FoodMadePerDay` less `KingdomCrops.CycledFoodPerDay`) and delivered physically
-   by the gathering instead, so one field feeds the settlement exactly once. Below is that
-   identity for every growing design: what the ledger would have credited over one crop's days
-   against what the rows actually put in the larder.
-""")
-    print(f"  {'design':<12}{'rows':>6}{'carries/d':>11}{'over ' + str(SRC['CropDays']) + 'd':>10}{'one gathering':>15}")
-    for d in sorted(growers, key=lambda d: d.rows):
-        flow = d.carries["food"] * SRC["CropDays"]
-        gathered = d.rows * SRC["YieldPerRow"]
-        assert flow == gathered, (
-            f"CYCLE DOES NOT PAY: {d.key} carries {d.carries['food']}/day = {flow} over "
-            f"{SRC['CropDays']} days, but one gathering of {d.rows} rows is {gathered}."
-        )
-        print(f"  {d.key:<12}{d.rows:>6}{d.carries['food']:>11}{flow:>10}{gathered:>15}")
-
-    print(f"""
-5. AND EVERY RUNG IS STILL FOOD-HOLDABLE, WITH THE GATE ON. Section 7's water sibling asks
-   whether a cheap plan and a grand one both clear the floor; this asks the same of food, with
-   every field counted only if it is sown - which is what it is, because a founder who has
-   committed seed is the only founder whose fields are in this plan at all.
-""")
-    for i, (name, floor, _cap) in enumerate(STAGES):
-        pop = max(floor, SRC["FloorLevel"])
-        eats = rations_per_day(pop)
-        for label, by in (
-            (
-                "cheapest",
-                lambda d: (d.cost / max(d.carries.get("food", 1), 1), -d.carries.get("food", 0)),
-            ),
-            ("grandest", lambda d: -d.carries.get("food", 0)),
-        ):
-            got = _food_plan(i, eats, by)
-            assert got, f"RUNG IMPOSSIBLE: no food design is reachable at {name}"
-            design, count = got
-            made = design.carries["food"] * count
-            crew = _passive_water_crew(i, pop)
-            free = max(0, pop - crew - design.staff * count)
-            assert made + foraged_rations(free, 1) >= eats, (
-                f"RUNG IMPOSSIBLE: {name}'s {label} food plan ({design.key} x{count}) makes "
-                f"{made} against a bill of {eats}, and the wild does not close it."
-            )
-        print(f"  {name:<9}bill {eats:>3} servings/day; cheapest and grandest plans both clear it")
-
-
-def _switch_map(path: str | tuple[str, ...], function: str) -> dict:
-    """The `case "X": return "Y";` pairs of one C# switch, read straight out of the source.
-
-    Every derivation table printed below is read this way rather than restated here, for the
-    reason every other number in this file is read out of the source: a table copied into the
-    model is a table that drifts from the code the first time somebody retunes one end of it.
-    """
-    text = read_source(path)
-    start = text.find("public static string " + function)
-    if start < 0:
-        raise SystemExit(f"{function} not found in {source_label(path)}")
-    body = text[start : text.find("\n\t\t}", start)]
-    out = {}
-    for m in re.finditer(r'case\s+"([^"]*)":\s*\n\s*return\s+"([^"]*)";', body):
-        out[m.group(1)] = m.group(2)
-    return out
-
-
-def _blueprint_blocks() -> dict:
-    """Blueprint name -> its raw XML block, for asking whether a machine really carries a part."""
-    text = open(BLUEPRINTS_XML, encoding="utf-8-sig").read()
-    out = {}
-    for block in re.split(r"<object\s+", text)[1:]:
-        name = re.match(r'Name="([^"]+)"', block)
-        if name:
-            out[name.group(1)] = block
-    return out
-
-
-def meals_and_industry():
-    rule("G3  Meals and industry, re-derived from the source and the XML")
-
-    forms = _switch_map(RULES_CS, "DishFormFor")
-    staples = _switch_map(RULES_CS, "PreservedStapleFor")
-    crops = _switch_map(CROP_CS, "CropBlueprintForStyle")
-    words = _switch_map(RULES_CS, "CropWordFor")
-    blocks = _blueprint_blocks()
-    growth = read_source(source_family_paths("Growth", "KingdomGrowth"))
-
-    print(f"""
-1. THE DISH IS DERIVED, NOT AUTHORED, AND IT IS TOTAL. Addendum 11(b) asks that residents eat
-   FAVOURED MEALS. Vanilla's own home for that is the faction: `<waterritual Recipe=... RecipeText=...
-   RecipeGenotype=.../>` parses onto `Faction.WaterRitualRecipe` and friends, which the Faction's
-   own serializer writes and reads - so the runtime faction this mod already mints carries its
-   favourite dish across save and load with no persistence of ours. Eight vanilla factions ship
-   one; the realm makes nine.
-
-   The derivation is two switches and a join: the CREED picks the form (borrowed from that
-   faction's own dish), the GROUND picks the body (the crop the style grows), and every form word
-   is one of `CookingRecipe.ingredientTileTypes` so vanilla's recipe-tile generator draws it.
-""")
-    tile_words = {
-        "cake", "bread", "loaf", "slaw", "stew", "soup", "brisket", "borscht", "dip", "baklava",
-        "compote", "hash", "porridge", "matz", "cookies", "yogurt", "goulash", "rice", "hummus",
-        "knish", "broth", "kugel", "latkes", "schnitzel", "pancake", "roast", "shawarma",
-        "flatbread", "meatballs", "pastry", "casserole", "dumpling", "doughnut", "tajine",
-        "couscous", "dolma", "kebab", "fillet",
-    }
-    assert forms, "DishFormFor has no cases; the dish would be the same everywhere"
-    print(f"  {'creed dish':<20}{'form':<12}vanilla tile word?")
-    for creed, form in sorted(forms.items()):
-        assert form in tile_words, (
-            f"DISH FORM UNDRAWABLE: '{form}' is not one of CookingRecipe.ingredientTileTypes, so a "
-            f"settlement whose people hold with {creed} would get a defaulted picture."
-        )
-        print(f"  {creed:<20}{form:<12}yes")
-    default_form = "stew"
-    assert default_form in tile_words
-    print(f"  {'(nobody / unknown)':<20}{default_form:<12}yes")
-
-    print(f"""
-   And the body, per founding ground. Every style must reach a staple, or a settlement founded
-   on that ground would raise a mill that grinds nothing while carrying a food number for it.
-""")
-    print(f"  {'style':<10}{'crop':<18}{'ingredient word':<18}{'preserved staple':<26}source")
-    for style in ("common", "verdant", "fungal", "gyre", "eater"):
-        crop = crops.get(style, crops.get("default", "Starapple"))
-        staple = staples.get(crop)
-        assert staple, f"NO STAPLE: style '{style}' grows {crop}, which nothing can bind to keep."
-        ours = staple.startswith("r_Kingdom")
-        if ours:
-            assert staple in blocks, f"staple {staple} is not a blueprint this mod ships"
-            inherits = re.match(r'Name="[^"]+"\s+Inherits="([^"]+)"', blocks[staple])
-            assert inherits and not inherits.group(1).startswith("r_Kingdom"), (
-                f"FILL-IN NOT GROUNDED: {staple} must inherit a shipped vanilla preserve, so it "
-                "owes no art and needs no new cooking-ingredient plumbing."
-            )
-            source = f"ours, inherits {inherits.group(1)}"
-        else:
-            source = "vanilla PreservableItem"
-        print(f"  {style:<10}{crop:<18}{words.get(crop, crop.lower()):<18}{staple:<26}{source}")
-    print(f"""
-   Two worked examples, in the register the rest of the game writes recipes in:
-     - people who hold with Joppa (`AppleMatz`), founded in a marsh  ->  {words['Vinewafer']} {forms['AppleMatz']}
-     - people who hold with the Barathrumites (`ThePorridge`), on flower fields  ->  {words['Starapple']} {forms['ThePorridge']}
-
-2. THE MEAL IS A RENDERING OF THE RATION, NOT A SECOND BILL. The daily draw spends the same
-   servings it always did; what changed is the ORDER it reaches in and what the day is worth
-   afterwards. The order, stated once and deterministic:
-
-     1. the settlement's own staple, larder by larder in survey order, item by item in inventory
-        order - the thing the fields grew and the mill bound, which is the dish's first component;
-     2. everything else that is food, same walk.
-
-   Nothing is random, so the same larders drained in the same sequence give the same answer on
-   every reload - Addendum 12(d)'s requirement of any draw that lands on real containers.
-
-   A day counts as the settlement having eaten its own dish when a kitchen stands and at least
-   {SRC["FavoredMealPercent"]}% of the bill came off that staple. "Kitchen" is asked of the OBJECT: any finished work
-   carrying vanilla's `Campfire`, which the communal fire has done since the day it shipped.
-""")
-    fire = [d for d in CATALOGUE if d.key == "fire"]
-    assert fire, "the communal fire has left the catalogue; the camp has nowhere to cook"
-    assert "Campfire" in open(BUILD_XML, encoding="utf-8-sig").read(), "the fire no longer commissions vanilla Campfire"
-    assert "r_KingdomOven" in blocks, "no settlement oven ships"
-    assert re.search(r'<part\s+Name="Campfire"[^>]*PresetMeals="r_KingdomFavoredDish"', blocks["r_KingdomOven"]), (
-        "THE OVEN COOKS NOTHING: r_KingdomOven must carry Campfire with PresetMeals naming the "
-        "realm's dish, which is exactly how every named settlement's oven in vanilla works."
-    )
-    assert 'Inherits="Oven"' in blocks["r_KingdomOven"], "the oven must extend vanilla's Oven, not re-implement it"
-
-    print(f"""
-3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
-   re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
-   effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
-   is {SRC["TicksPerDay"]}. It rides the same capped lift term as authored spirit works, so
-   `LiftCapPercent` = {SRC["LiftCapPercent"]}% binds it again on top of that.
-
-   Below: the level a settlement holds at each rung with its binding supports level-pegged and no
-   other lift standing, plain and then well fed. The delta is the whole of what this wave adds to
-   the level, and it is one settler wherever the cap has room for it.
-""")
-    print(f"  {'rung':<10}{'binding least':>14}{'plain':>8}{'well fed':>10}{'delta':>7}   capped by")
-    for i, (name, floor, _cap) in enumerate(STAGES):
-        least = max(floor, SRC["FloorLevel"])
-        water = least * STAGE_PERCENT[i] // 100 if STAGE_PERCENT[i] > 100 else least
-        base = equilibrium(water, least, least, 0, i, 0)
-        with_meal = equilibrium(water, least, least, 0, i, SRC["FavoredMealShade"])
-        cap = max(0, min(level_from_water(water, i), least, least)) * SRC["LiftCapPercent"] // 100
-        assert with_meal - base <= SRC["FavoredMealShade"], "a meal cannot be worth more than its shade"
-        assert with_meal >= base, "a meal is never a penalty"
-        why = "the lift cap" if cap <= SRC["FavoredMealShade"] else "nothing (room to spare)"
-        print(f"  {name:<10}{least:>14}{base:>8}{with_meal:>10}{with_meal - base:>7}   {why}")
-
-    print(f"""
-4. THE MILL CONSERVES. Addendum 11(b)'s other half is food "used by industry to produce things",
-   and per the survey the entire transformation surface in Qud is four parts. The one that fits a
-   harvest is `Mill`, whose blank-target path runs `Campfire.PerformPreserve` - which is what
-   vanilla's own `Millstone` does: a vinewafer becomes three vinewafer sheaves.
-
-   Our mill books that same ratio, flat across styles for the same reason `CropDaysForStyle` is
-   flat. The conservation law is one line and it is asserted here against the catalogue itself:
-   what comes back is what went in TIMES the multiple, and the GAIN is the difference.
-""")
-    grind = [d for d in CATALOGUE if d.key == "grindmill"]
-    assert grind, "the grinding mill has left the catalogue"
-    grind = grind[0]
-    declared = grind.carries.get("food", 0)
-    crops_in = SRC["MillCropsPerDay"]
-    out_units = crops_in * SRC["PreserveMultiple"]
-    gain = out_units - crops_in
-    assert gain == declared, (
-        f"MILL DOES NOT PAY: {crops_in} crops at x{SRC['PreserveMultiple']} is {out_units} staples back, a net of "
-        f"{gain}, but the grinding mill declares food:{declared}."
-    )
-    assert SRC["PreserveMultiple"] >= 1, "a mill that returns less than it takes is a bonfire"
-    print(f"  {'in (crops/day)':<18}{'multiple':>10}{'out (staples)':>15}{'net gain':>10}{'declared food':>15}")
-    print(f"  {crops_in:<18}{'x' + str(SRC['PreserveMultiple']):>10}{out_units:>15}{gain:>10}{declared:>15}")
-    print(f"""
-   x{SRC["PreserveMultiple"]} is the LEAST of the three vanilla numbers this mod's crops carry (starapple gives five,
-   plump mushroom ten), so the settlement never books more than the thinnest preserve in the game
-   actually gives. The physical machine is real either way: r_KingdomGrindMill carries `Mill`,
-   `Container`, `Inventory` and a mechanical-power consumer, which is `Millstone`'s own
-   configuration at `Millstone`'s own tier.
-""")
+    # Mill conversion is exact real input -> real output; no household reserve is modelled.
+    grind = next((d for d in CATALOGUE if d.key == "grindmill"), None)
+    assert grind is not None
+    gain = SRC["MillCropsPerDay"] * (SRC["PreserveMultiple"] - 1)
+    assert gain == grind.carries.get("food", 0)
+    grind_blueprint = design_blueprints.get(grind.key)
+    assert grind_blueprint in blueprints
+    block = ET.tostring(blueprints[grind_blueprint], encoding="unicode")
     for part in ("Mill", "Container", "Inventory", "MechanicalPowerTransmission"):
-        assert f'Name="{part}"' in blocks.get("r_KingdomGrindMill", ""), (
-            f"THE MILL IS STILL A GLYPH: r_KingdomGrindMill declares no {part}, so its food:"
-            f"{declared} is an assertion rather than a machine."
-        )
-    assert 'IsConsumer="true"' in blocks["r_KingdomGrindMill"], (
-        "the mill must CONSUME mechanical power - it is the first consumer on a grid that had "
-        "three producers and nothing to drive."
-    )
+        assert f'Name="{part}"' in block, f"grinding mill missing physical {part}"
 
-    print(f"""
-5. AND THE MILL IS PAID EXACTLY ONCE, AFTER THE RESIDENTS HAVE EATEN. Two source facts, both
-   checked here rather than trusted:
-
-     - the mill's `Carries` is SUBTRACTED from the clocked daily make, exactly as a sown field's
-       is, because it now delivers its food physically instead of as a ledger credit. Without the
-       subtraction a settlement would be fed twice out of one millstone.
-     - the grinding runs AFTER the heartbeat has drawn the day's rations, and even then only on
-       what stands above one more day's bill (`MillableStock`). Industry never eats before the
-       residents do.
-""")
-    assert "KingdomCrops.MilledFoodPerDay(Survey)" in growth, (
-        "FED TWICE: FoodMadePerDay no longer subtracts what the mills deliver physically."
-    )
-    order_rations = growth.find("bool heartbeatHealthy = ResolveHeartbeat(")
-    order_mill = growth.find("GrindHarvest(System, survey, grownDays)")
-    assert order_rations > 0 and order_mill > 0, "the pass no longer draws rations or grinds"
-    assert order_mill > order_rations, (
-        "INDUSTRY EATS FIRST: GrindHarvest runs before ResolveHeartbeat in the settlement pass. "
-        "The residents' day must be drawn before the mill touches the larders."
-    )
-    print("  subtraction present: yes    grinding runs after the ration draw: yes")
-    print(f"  reserve kept back:  one day's rations for the whole population, on top of that")
+    print("  passive ration/forage/hunger rate = 0")
+    print("  population equilibrium/binding = water + roof only; food cannot cause subsidence")
+    print("  city food rate/carry = 0; old debt grounds to observed containers")
+    print("  shared meal = capable kitchen + spendable custody + exact disclosed debit")
+    print("  empty pantry/missing provider = no debit, no effect, no departure")
+    print("  damaged larder + longest absence = exact identities/counts conserved; old receipt inert")
+    print(f"  mill conversion = {SRC['MillCropsPerDay']} crops x{SRC['PreserveMultiple']} "
+          f"-> net {gain}, matching food:{grind.carries.get('food', 0)}")
 
 
 def v1_authority_capacity():
@@ -5438,10 +4950,25 @@ def v1_authority_capacity():
     assert "MaxAuthoredRowBytes" in covenant_codec and "MaxRowBytes = 4096" in covenant_codec
     shop = read_source(os.path.join(ROOT, "Growth", "KingdomShopStockRules.cs"))
     shop_runtime = read_source(os.path.join(ROOT, "Growth", "KingdomGrowth.z18.StageAndShops.cs"))
+    shop_detachment = read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockDetachment.cs"))
+    shop_accession = read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockAccession.cs"))
+    legendary_adapter = read_source(os.path.join(
+        ROOT, "Experience", "KingdomGuestbook.z01c.MarketHandoffHelpers.cs"))
     assert "MaximumTier = 8" in shop
+    assert "FirstPhysicalMarketTier = 3" in shop
+    assert "ShopTier records service reach only" in shop
+    assert "no tier transition may create, replace, or delete it" in shop
+    assert "Stage alone grants nothing" in shop
+    assert "SamePhysicalSet" in shop_runtime
     assert re.search(r"\.Chance\s*=\s*0;", shop_runtime)
     assert re.search(r"\.RestockFrequency\s*=\s*long\.MaxValue;", shop_runtime)
     assert not re.search(r"\.Chance\s*=\s*100;", shop_runtime)
+    assert "Native <c>_stock</c>, item location, stack count, and foreign receipts remain" in shop_detachment
+    assert "Item.SetStringProperty(KingdomShopStockRules.StockReceiptProperty, null" in shop_detachment
+    assert "accession cannot consume an open market handoff" in shop_accession
+    assert "System.HasShopkeeper = false; System.ShopTier = 0;" in shop_accession
+    assert "Restocker.Clear(); Restocker.Chance = 0;" in legendary_adapter
+    assert "Restocker.RestockFrequency = long.MaxValue;" in legendary_adapter
 
     # C2 preserves exactly one native General note per known C18 section. At every section cap,
     # strict base64 is ASCII, so character and UTF-8 byte counts are identical. The archive cap
@@ -5662,7 +5189,10 @@ def v1_authority_capacity():
     print("  rows: witness 8, recognition 8, practice 8, vocation-service 48 (16/city), body-history 8,")
     print("        curiosity 3, leads 8, treaties 16, rites 3, feasts 3, covenants 48")
     print("  row wire: witness/recognition accept <=4096 bytes; covenant authors <=4094 and accepts <=4096")
-    print("  market stock: 8 one-shot tier consignments; periodic restock rate = 0")
+    print("  market: current physical provider + exact held office; first service Village/tier 3")
+    print("  market stock: native TradeUI physical _stock only; generated output/restock = 0")
+    print("  market custody: detached/personal/foreign goods stay physical; TAF marks retire only")
+    print("  market succession: only an open prepared handoff endpoint is temporarily unavailable")
     print("  cap+1 law: refuse before publication; no eviction, truncation, backlog, or catch-up")
     print("  native save size/p50/p95/max: UNSIGNED -- no native distribution is inferred")
 
@@ -5685,10 +5215,8 @@ if __name__ == "__main__":
     q8_trajectories()
     q9_feedback()
     q10_comfort()
-    q11_food()
     water_invariants()
-    food_invariants()
-    meals_and_industry()
+    food_ruling_invariants()
     w6_production_and_logistics()
     w7_networks_and_power()
     fully_grafted_founder()

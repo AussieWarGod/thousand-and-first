@@ -1,12 +1,12 @@
 # Session handoff — current v1.0 test-candidate work
 
-> **Supersession banner — 2026-08-28.** This is a chronological handoff snapshot; “current” below
+> **Supersession banner — 2026-09-01.** This is a chronological handoff snapshot; “current” below
 > means the snapshot date, not the working tree. Current runtime holds one seat plus two non-seat
 > cities (third founding succeeds, fourth refuses; manifests offer both non-seat destinations). The
-> narrow physical-food landing is code-complete with integrated/native proof open. Prior hosted-
-> arcology implementation claims are superseded under active AMENDED 19+ review; production,
-> XML/fabric, and tests are held. Use `../docs/STATUS.md`, `../docs/V1-UNDEFERRAL.md`, and
-> `BRIEF-IMPLEMENTATION-AUDIT.md` for live status.
+> physical-food landing and hosted arcology are implemented at code/content scope. The arcology's
+> full 27-zone native traversal, save/labour/water behavior, and human visual acceptance remain
+> open; static integration is not that evidence. Use `../docs/STATUS.md`,
+> `../docs/V1-UNDEFERRAL.md`, and `BRIEF-IMPLEMENTATION-AUDIT.md` for live status.
 
 > **Status audit: 2026-08-27.** Use `../docs/STATUS.md` for exact current evidence,
 > `BRIEF-IMPLEMENTATION-AUDIT.md` and
@@ -14,7 +14,16 @@
 > `../TESTING.md` for native/human proof, and `../docs/RELEASING.md` for Steam. Historical
 > candidate receipts below prove only their frozen bytes.
 
-> **S6 current-truth note — 2026-08-29.** The frozen handoff state below is the 2026-08-27 snapshot, kept verbatim; the live structural census is 2637 staged sources, per `../docs/STATUS.md` and `../docs/STRUCTURE.md`.
+> **Current-truth note — 2026-09-01.** The frozen handoff state below is the 2026-08-27 snapshot,
+> kept verbatim; the live frozen-source structural census is 2915 staged sources, 2857 cold-install
+> files, and 410,378 physical lines with 0 at or above the 300-line cap, per `../docs/STATUS.md` and
+> `../docs/STRUCTURE.md`. Current automated gates are green; native/human/Steam/preview evidence is open.
+
+> **Market correction — 2026-09-01.** Historical tier-generated/restock wording below is
+> superseded. Current civic service requires the accepted staffed provider plus exact office,
+> opens empty, and recognizes only physical native TradeUI `_stock`. `ShopTier` is current
+> standing/reach and may fall to zero. Completed/dormant personal traders survive civic
+> loss/accession; only prepared handoff endpoints temporarily pause succession.
 
 ## Frozen handoff state (2026-08-27)
 

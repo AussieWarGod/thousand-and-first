@@ -62,9 +62,9 @@ namespace ThousandAndFirst
 			return Then.NeededDays > 0 && Now.SharedDays >= Then.NeededDays;
 		}
 
-		/// <summary>Whether two creed faction names are the same belief. Null and empty are one
-		/// another and both mean "holds nothing in particular", so a realm that recanted and a
-		/// realm that never declared read alike.</summary>
+		/// <summary>Whether two stored creed faction names are the same affiliation or belief. Null
+		/// and empty are one another and both mean "holds nothing in particular", so a realm that
+		/// recanted and a realm that never declared read alike.</summary>
 		public static bool SameCreed(string A, string B)
 		{
 			bool aEmpty = string.IsNullOrEmpty(A);
@@ -166,34 +166,6 @@ namespace ThousandAndFirst
 				return 1;
 			}
 			return (Refusals >= RefusalsBeforeAskingCloses) ? RefusalsBeforeAskingCloses : (Refusals + 1);
-		}
-
-		// ==================================================================================
-		// The quarter. Addendum 4d's quarters emerge from the layout grammar with no code
-		// knowing the word, so this is the only reading of "their quarter" the code can
-		// honestly make: the ground within sight of their own door.
-		//
-		// Narrower than the shrine channel's own scope on purpose. KingdomFaith asks whether a
-		// consecrated shrine stands in the SETTLEMENT, because that is a question about a
-		// settlement. The rite asks whether one stands where THIS PERSON lives, because that is
-		// a question about one person's evening, and a shrine across town is not in their ears
-		// when the basin goes down.
-		// ==================================================================================
-
-		/// <summary>
-		/// Cells from a settler's own door within which a consecrated building is in their quarter.
-		/// Twelve: half a zone's twenty-five rows and a sixth of its eighty columns, which is a few
-		/// streets rather than a city.
-		/// </summary>
-		public const int QuarterRadiusCells = 12;
-
-		/// <summary>Whether a cell offset from a settler's door falls inside their quarter.
-		/// Chebyshev, matching how the engine measures a neighbourhood on a grid.</summary>
-		public static bool WithinQuarter(int DX, int DY)
-		{
-			int x = (DX < 0) ? -DX : DX;
-			int y = (DY < 0) ? -DY : DY;
-			return ((x > y) ? x : y) <= QuarterRadiusCells;
 		}
 	}
 }

@@ -30,6 +30,7 @@ namespace ThousandAndFirst
 			public int Number;
 			public string Key;
 			public string CatalogueKey;
+			public string YardKey;
 			public VisualCaseKind Kind;
 			public int Width;
 			public int Height;
@@ -65,17 +66,105 @@ namespace ThousandAndFirst
 			AddTapCase(result, "brinetap", "r_KingdomBrineTap", "r_KingdomBrineMain");
 			AddWallTopologyCase(result, "rubblewall", "r_KingdomRubbleWall",
 				"r_KingdomFixtureGateBrinestalk");
+			AddYardWorkCase(result, "vinelattice", "r_KingdomVineLattice");
+			AddYardWorkCase(result, "hiderack", "r_KingdomHideRack");
+			AddYardWorkCase(result, "dyevat", "r_KingdomDyeVat");
+			AddYardWorkCase(result, "vellumpress", "r_KingdomVellumPress");
 			result.Add(Road("road-worn", VisualCaseKind.RoadWorn, 3));
 			result.Add(Road("road-trodden", VisualCaseKind.RoadTrodden, 5));
 			result.Add(Road("road-path", VisualCaseKind.RoadPath, 5));
 			result.Add(Road("road-paved", VisualCaseKind.RoadPaved, 5));
+			// Append comparison boards so the original eighteen evidence ordinals stay stable.
+			AddCompositeCase(result, "semantic-aliases", 5, new string[]
+			{
+				"founder-statue", "r_KingdomFounderStatue",
+				"watchtower", "r_KingdomWatchtower",
+				"hide-rack", "r_KingdomHideRack",
+				"spectrum-lamp", "r_KingdomArcologySpectrumLamp",
+				"mud", "r_KingdomMud",
+				"relic-case", "r_KingdomFixtureRelicCaseScrap",
+				"machine-relic", "r_KingdomFixtureMachineRelic",
+				"settler-cairn", "r_KingdomCairn",
+				"grave-grove", "r_KingdomGraveGrove",
+				"niche-tomb", "r_KingdomNicheTomb",
+				"cragmensch-stone-garden", "r_KingdomCragmenschStoneGarden"
+			});
+			AddCompositeCase(result, "creed-affordances", 6, new string[]
+			{
+				"sealed-hamper", "r_KingdomCreedPracticeBasket",
+				"bare-board", "r_KingdomCreedPracticeTable",
+				"cold-hearth", "r_KingdomCreedPracticeColdHearth",
+				"empty-shelf", "r_KingdomCreedPracticeShelf",
+				"marked-slab", "r_KingdomCreedPracticeStone",
+				"dry-basin", "r_KingdomCreedPracticeDryBasin",
+				"witness-rail", "r_KingdomCreedPracticeBench",
+				"rolled-pallet", "r_KingdomCreedPracticePallet",
+				"spindle-wheel", "r_KingdomCreedSpindleWheel",
+				"dry-contact", "r_KingdomCreedDryContact",
+				"practice-arms-rest", "r_KingdomCreedPracticeArmsRack",
+				"empty-arms-rack", "r_KingdomCreedWeaponRack",
+				"solid-living-trunk", "r_KingdomCreedLivingTrunk",
+				"Joppa-seed-bin", "r_KingdomCreedJoppaSeedBin",
+				"Kyakukya-spice-jar", "r_KingdomCreedKyakukyaSpiceJar",
+				"snapjaw-meat-cache", "r_KingdomCreedSnapjawMeatCache",
+				"farmers-labelled-bin", "r_KingdomCreedFarmersLabelledBin",
+				"goatfolk-pennon", "r_KingdomCreedGoatfolkChallengePennon",
+				"gyre-ossuary-screen", "r_KingdomStructureGyreOssuaryScreen",
+				"Chavvah-bough-wall", "r_KingdomStructureChavvahTrunk"
+			});
+			AddCompositeCase(result, "creed-root-markers", 4, new string[]
+			{
+				"snapjaw-den", "r_KingdomSnapjawTrailDen",
+				"issachari-porch", "r_KingdomIssachariRiflePorch",
+				"templar-arsenal", "r_KingdomTemplarPurityArsenal",
+				"wardens-lodge", "r_KingdomWardensWatchLodge"
+			});
+			AddCompositeCase(result, "arcology-props", 5, new string[]
+			{
+				"ceramic-bed", "r_KingdomArcologyCeramicBed",
+				"spectrum-lamp", "r_KingdomArcologySpectrumLamp",
+				"seed-case", "r_KingdomArcologySeedCase",
+				"condenser-shell", "r_KingdomArcologyCondenserShell",
+				"grafting-stand", "r_KingdomArcologyGraftingStand",
+				"drying-rack", "r_KingdomArcologyDryingRack",
+				"cold-range", "r_KingdomArcologyColdRange",
+				"infirmary-couch", "r_KingdomArcologyInfirmaryCouch",
+				"dry-basin", "r_KingdomArcologyDryBasin",
+				"dormant-bunk", "r_KingdomArcologyDormantBunk",
+				"watch-post", "r_KingdomArcologyWatchPost",
+				"service-cabinet", "r_KingdomArcologyServiceCabinet",
+				"freight-pallet", "r_KingdomArcologyFreightPallet",
+				"scrub-bank", "r_KingdomArcologyScrubBank",
+				"repair-stand", "r_KingdomArcologyRepairStand"
+			});
 			for (int i = 0; i < result.Count; i++) result[i].Number = i + 1;
 			return result;
+		}
+
+		private static void AddCompositeCase(List<VisualCase> Into, string Key, int Width,
+			string[] RolesAndBlueprints)
+		{
+			int count = RolesAndBlueprints.Length / 2;
+			VisualCase item = new VisualCase { Key = Key, CatalogueKey = null,
+				Kind = VisualCaseKind.Objects, Width = Width,
+				Height = (count + Width - 1) / Width };
+			for (int i = 0; i < count; i++)
+				item.Placements.Add(At(RolesAndBlueprints[i * 2], RolesAndBlueprints[i * 2 + 1],
+					i % Width, i / Width));
+			Into.Add(item);
 		}
 
 		private static void AddObjectCase(List<VisualCase> Into, string Key, string Blueprint)
 		{
 			VisualCase item = new VisualCase { Key = Key, CatalogueKey = Key,
+				Kind = VisualCaseKind.Objects, Width = 1, Height = 1 };
+			item.Placements.Add(At("root", Blueprint, 0, 0));
+			Into.Add(item);
+		}
+
+		private static void AddYardWorkCase(List<VisualCase> Into, string Key, string Blueprint)
+		{
+			VisualCase item = new VisualCase { Key = Key, YardKey = Key,
 				Kind = VisualCaseKind.Objects, Width = 1, Height = 1 };
 			item.Placements.Add(At("root", Blueprint, 0, 0));
 			Into.Add(item);

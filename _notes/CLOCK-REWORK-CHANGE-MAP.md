@@ -94,7 +94,7 @@ returning `Camp` for a collapsed settlement is computed and then discarded by th
 Population *can* fall (`Emigrate`, `KingdomGrowth*.cs`), so today a City can hold four people.
 
 Already known and recorded in three places — `_notes/STALE-COMMENT-INVENTORY.md:242-244`,
-`docs/API.md:36` and `:109`, `_notes/COORDINATION.md:180`. This map does not rediscover it; it
+`docs/API.md:36` and `:109`, `_notes/COORDINATION.md.original.md:180`. This map does not rediscover it; it
 scopes it.
 
 **The reconciliation verdict: the doctrine composes cleanly with the repivot.** `Carries` is

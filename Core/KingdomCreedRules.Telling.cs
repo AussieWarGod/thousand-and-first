@@ -37,7 +37,7 @@ namespace ThousandAndFirst
 					? "One day, and it is done."
 					: (DaysLeft + " days, and it is done."));
 			return "{{R|" + leaver + " has been drawing up its own charter " + stood + ", and it does not name "
-				+ kept + ". Pour the rite, or settle what the two of them believe, and it holds. " + window
+				+ kept + ". Pour the rite, or settle where the two cities' allegiances lie, and it holds. " + window
 				+ "}} {{K|(Charter: how your cities hold each other)}}";
 		}
 
@@ -52,7 +52,7 @@ namespace ThousandAndFirst
 		{
 			string leaver = string.IsNullOrEmpty(LeaverName) ? "the second city" : LeaverName;
 			string kept = string.IsNullOrEmpty(KeptName) ? "the city you were standing in" : KeptName;
-			string creed = string.IsNullOrEmpty(LeaverCreed) ? "what it had come to believe" : LeaverCreed;
+			string creed = string.IsNullOrEmpty(LeaverCreed) ? "the covenant it had chosen" : LeaverCreed;
 			return leaver + " stopped answering to the realm, holding that it owed " + kept
 				+ " nothing and " + creed + " everything, and no water was spilled over it";
 		}
@@ -128,13 +128,13 @@ namespace ThousandAndFirst
 		public static string RejoinRefusal(RejoinVerdict Verdict, string LeaverName, string LeaverCreed)
 		{
 			string leaver = string.IsNullOrEmpty(LeaverName) ? "the city that left" : ("{{C|" + LeaverName + "}}");
-			string creed = string.IsNullOrEmpty(LeaverCreed) ? "what they believe" : ("{{C|" + LeaverCreed + "}}");
+			string creed = string.IsNullOrEmpty(LeaverCreed) ? "their allegiance" : ("{{C|" + LeaverCreed + "}}");
 			switch (Verdict)
 			{
 			case RejoinVerdict.NothingSeceded:
 				return "No city has left you. There is nothing to ask for.";
 			case RejoinVerdict.RealmIsFull:
-				return "You poured again while " + leaver + " was gone, and a realm holds two cities. There is no room at your table for the one that walked away from it.";
+				return "You poured again while " + leaver + " was gone, and the realm already holds three cities. There is no room at your table for the one that walked away from it.";
 			case RejoinVerdict.NotOnTheirGround:
 				return "Ask it where it can hear you. Stand on " + leaver + "'s own ground, and say it there.";
 			case RejoinVerdict.ClashStillLive:
@@ -201,7 +201,7 @@ namespace ThousandAndFirst
 				: ("\n\n" + slighted + " hears of it before the week is out, and thinks less of your realm for it — everywhere, not only here. The city that holds with them takes it harder still, tonight.");
 			return "You say it out loud, where the water is poured: this realm is for " + creed + "."
 				+ cost
-				+ "\n\nFrom now on the people who walk here are people who wanted to walk toward that. Give it time and one of your two cities will stop being what it was.";
+				+ "\n\nFrom now on the people who walk here are people who wanted to walk toward that. Give it time and one of your cities may stop being what it was.";
 		}
 
 		/// <summary>Exact declaration delta shown before commit and copied by civic voices.</summary>

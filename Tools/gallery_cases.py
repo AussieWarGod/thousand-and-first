@@ -17,6 +17,7 @@ Usage:
   gallery_cases.py                  # census: total cases / records / streams
   gallery_cases.py --find court     # cases whose build key contains "court"
   gallery_cases.py --key court      # cases whose build key equals "court"
+  gallery_cases.py --check-scenarios # prove every authored live selector is exact
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ SIZE_VALUES = {
 }
 SIZE_NAMES = {1: "Small", 2: "Medium", 3: "Large", 4: "Huge"}
 FACINGS = ("North", "East", "South", "West")
+FACING_NAMES = {facing.lower(): facing for facing in FACINGS}
 
 
 def fold(value: str | None) -> str | None:
@@ -111,10 +113,89 @@ def enumerate_cases(records: list[Record]) -> list[Case]:
     return cases
 
 
+def validate_scenario_cases(root_dir: Path, cases: list[Case]) -> tuple[int, list[str]]:
+    """Prove each StageGalleryCase row expands only to exact, existing catalogue identities."""
+    path = root_dir / "Harness" / "KingdomScenarios.xml"
+    try:
+        root = ET.parse(path).getroot()
+    except (OSError, ET.ParseError) as error:
+        return 0, [f"{path}: cannot read scenario roster: {error}"]
+    index: dict[tuple[str, str, int, str, str], list[Case]] = {}
+    for case in cases:
+        key = (
+            case.record.build_key,
+            case.record.type_key,
+            case.record.size,
+            case.variant,
+            case.facing,
+        )
+        index.setdefault(key, []).append(case)
+    checked = 0
+    errors: list[str] = []
+    for scenario in root.findall("scenario"):
+        scenario_key = scenario.get("Key") or "(unkeyed)"
+        parameters = {
+            row.get("Name") or "": (row.get("Domain") or "").split("|")
+            for row in scenario.findall("param")
+        }
+        for step in scenario.findall("step"):
+            if (step.get("Verb") or "").lower() != "stagegallerycase":
+                continue
+            required = ("Build", "Type", "Size", "Variant", "Facing")
+            missing = [name for name in required if not step.get(name)]
+            if missing:
+                errors.append(
+                    f"{scenario_key}: StageGalleryCase misses {', '.join(missing)}"
+                )
+                continue
+            size_token = fold(step.get("Size")) or ""
+            size = SIZE_VALUES.get(size_token)
+            if size is None:
+                errors.append(f"{scenario_key}: unknown lot size {size_token!r}")
+                continue
+            facing_raw = step.get("Facing") or ""
+            if facing_raw.startswith("{") and facing_raw.endswith("}"):
+                parameter = facing_raw[1:-1]
+                facing_tokens = parameters.get(parameter)
+                if not facing_tokens:
+                    errors.append(
+                        f"{scenario_key}: facing references missing parameter {parameter!r}"
+                    )
+                    continue
+            else:
+                facing_tokens = [facing_raw]
+            for facing_token in facing_tokens:
+                facing = FACING_NAMES.get(facing_token)
+                if facing is None:
+                    errors.append(
+                        f"{scenario_key}: unknown facing {facing_token!r}"
+                    )
+                    continue
+                key = (
+                    step.get("Build") or "",
+                    fold(step.get("Type")) or "",
+                    size,
+                    step.get("Variant") or "",
+                    facing,
+                )
+                matches = index.get(key, [])
+                checked += 1
+                if len(matches) != 1:
+                    errors.append(
+                        f"{scenario_key}: selector {key!r} matches {len(matches)} cases"
+                    )
+    return checked, errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--find", help="substring match on build key")
     parser.add_argument("--key", help="exact build key")
+    parser.add_argument(
+        "--check-scenarios",
+        action="store_true",
+        help="prove all StageGalleryCase selectors resolve exactly",
+    )
     parser.add_argument(
         "--root",
         default=str(Path(__file__).resolve().parent.parent),
@@ -124,6 +205,14 @@ def main() -> int:
 
     records, streams = load_records(Path(args.root))
     cases = enumerate_cases(records)
+    if args.check_scenarios:
+        checked, errors = validate_scenario_cases(Path(args.root), cases)
+        for error in errors:
+            print(error, file=sys.stderr)
+        if errors:
+            return 1
+        print(f"scenario-selectors={checked} exact")
+        return 0
     if args.find or args.key:
         for case in cases:
             key = case.record.build_key

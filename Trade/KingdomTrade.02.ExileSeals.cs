@@ -41,7 +41,7 @@ namespace ThousandAndFirst
 				{
 					System = System,
 					City = System.City,
-					Away = System.Away,
+					SettlementTopology = System.SettlementTopology,
 					GraphHash = graphHash,
 					References = references
 				};
@@ -61,7 +61,8 @@ namespace ThousandAndFirst
 			{
 				return Seal != null && ReferenceEquals(System, Seal.System)
 					&& ReferenceEquals(System.City, Seal.City)
-					&& ReferenceEquals(System.Away, Seal.Away)
+					&& ReferenceEquals(System.SettlementTopology,
+						Seal.SettlementTopology)
 					&& KingdomRealmArchive.TryCurrentGraphHash(System, out string graphHash,
 						out string _)
 					&& string.Equals(graphHash, Seal.GraphHash, StringComparison.Ordinal)
@@ -96,7 +97,9 @@ namespace ThousandAndFirst
 					Roots.Add(live.GetValue(System));
 				}
 				Roots.Add(System.City);
-				Roots.Add(System.Away);
+				Roots.Add(System.SettlementTopology);
+				for (int i = 0; i < (System.SettlementTopology?.Count ?? 0); i++)
+					Roots.Add(System.SettlementTopology.Get(i));
 				Roots.Add(System.Seceded);
 				Roots.Add(System.CarryBook);
 				Roots.Add(System.Bindings);

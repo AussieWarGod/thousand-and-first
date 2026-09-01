@@ -19,17 +19,27 @@ namespace ThousandAndFirst
 				Ledger.FormatVersion == OldestFormatVersion ||
 				Ledger.FormatVersion == OlderFormatVersion ||
 				Ledger.FormatVersion == PriorFormatVersion ||
-				Ledger.FormatVersion == ImmediatePriorFormatVersion)
+					Ledger.FormatVersion == ImmediatePriorFormatVersion ||
+					Ledger.FormatVersion == AmbientPriorFormatVersion ||
+					Ledger.FormatVersion == PreviousFormatVersion ||
+					Ledger.FormatVersion == AdmissionPriorFormatVersion)
 			{
 				int sourceFormat = Ledger.FormatVersion;
 				if (Ledger.MigratedFromVersion == 0) Ledger.MigratedFromVersion = sourceFormat;
 				else if (Ledger.MigratedFromVersion < LegacyFormatVersion ||
-					Ledger.MigratedFromVersion > sourceFormat)
+						Ledger.MigratedFromVersion > sourceFormat)
 				{
 					Quarantine(Ledger, "Polity migration provenance is invalid.");
 					return;
 				}
-				Ledger.FormatVersion = CurrentFormatVersion;
+				for (int i = 0; i < Ledger.Cohorts.Count; i++)
+					if (KingdomPolityDispatchRules.IsScheduled(Ledger.Cohorts[i]) &&
+						Ledger.Cohorts[i].AmbientTransaction == null)
+						Ledger.Cohorts[i].AmbientTransaction = new KingdomPolityAmbientTransaction
+						{
+							Version = 0,
+							Fault = "Pre-v8 weekly visit has no frozen semantic transaction; it is non-interactive."
+						};
 				if (sourceFormat == LegacyFormatVersion)
 				{
 					Ledger.Options = KingdomPolityCodec.DisabledDefaultOptions();
@@ -40,6 +50,12 @@ namespace ThousandAndFirst
 						new System.Collections.Generic.List<KingdomPolityCompactionReceipt>();
 					Ledger.FoldedCompactionCount = 0L; Ledger.FoldedCompactionDigest = null;
 				}
+				if (!KingdomPolityV9MigrationRules.TryMigrate(Ledger, sourceFormat,
+					out string migrationFailure))
+				{
+					Quarantine(Ledger, migrationFailure); return;
+				}
+				Ledger.FormatVersion = CurrentFormatVersion;
 			}
 			if (BlankAdditiveDefault(Ledger))
 			{

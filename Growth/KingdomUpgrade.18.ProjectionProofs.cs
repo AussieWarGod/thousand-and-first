@@ -60,7 +60,8 @@ namespace ThousandAndFirst
 			int count = 0;
 			foreach (GameObject item in Cell.GetObjects())
 			{
-				if (!KingdomConstruction.HasReceipt(item, Job)) continue;
+				if (!KingdomConstruction.HasReceipt(item, Job)
+					|| item.GetPart<r_KingdomScaffold>() == null) continue;
 				count++;
 				if (count > 1 || item.IDIfAssigned != Job.OutputId
 					|| !ExpectedImprovementScaffold(item, Cell, Successor, Job,
@@ -72,8 +73,15 @@ namespace ThousandAndFirst
 			KingdomPhysicalLookupState globalState = KingdomConstruction.FindExactId(
 				Cell.ParentZone, Job.OutputId, out global);
 			if (count == 0)
-				return globalState == KingdomPhysicalLookupState.Absent
-					? KingdomPhysicalLookupState.Absent : KingdomPhysicalLookupState.Ambiguous;
+			{
+				if (globalState == KingdomPhysicalLookupState.Absent)
+					return KingdomPhysicalLookupState.Absent;
+				return globalState == KingdomPhysicalLookupState.Exact
+					&& r_KingdomScaffold.IsExactSuccessor(global, Cell.ParentZone, Cell, Job,
+						Successor.Blueprint)
+						? KingdomPhysicalLookupState.Absent
+						: KingdomPhysicalLookupState.Ambiguous;
+			}
 			if (globalState != KingdomPhysicalLookupState.Exact
 				|| !ReferenceEquals(global, found)) return KingdomPhysicalLookupState.Ambiguous;
 			Scaffold = found;

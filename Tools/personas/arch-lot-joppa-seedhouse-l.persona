@@ -1,0 +1,7 @@
+# Explicit larger programme: exact type and size select the Joppa seedhouse campus only because
+# its practice yard adds useful spatial work. Status proves frozen identity survives staging.
+DESCRIPTION=large Joppa seedhouse campus stages with exact useful envelope identity
+REQUEST=arch-lot-joppa-seedhouse-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual

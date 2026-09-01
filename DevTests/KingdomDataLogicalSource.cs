@@ -11,7 +11,9 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomData.Loading.cs",
 			"Core/KingdomData.Buildings.cs",
 			"Core/KingdomData.Catalogue.cs",
-			"Core/KingdomData.Styles.cs"
+			"Core/KingdomData.Styles.cs",
+			"Core/KingdomData.StyleAliases.cs",
+			"Core/KingdomData.Creeds.cs"
 		};
 
 		internal static string Read()

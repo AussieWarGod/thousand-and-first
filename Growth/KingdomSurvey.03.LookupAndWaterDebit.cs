@@ -140,23 +140,38 @@ namespace ThousandAndFirst
 			return survey;
 		}
 
-		/// <summary>
-		/// The settlement's defence: the sum of its defensive works, counting only those with
-		/// the crew to man them, plus any kingdom-wide bonus from garrison districts. A
-		/// watchtower with nobody in it defends nothing; a garrison district defends everywhere.
-		/// </summary>
+		/// <summary>Reads current physical defensive shell supply, already scaled by exact
+		/// staffing, condition, and affinity, then adds the realm's district bonus.</summary>
+		public bool TryDefence(out int Amount, out string Failure)
+		{
+			Amount = 0; Failure = null;
+			if (!TryBenefits(out KingdomBenefitIndex benefits, out Failure)) return false;
+			return TryDefence(benefits, out Amount, out Failure);
+		}
+
+		/// <summary>Pass-scoped overload for callers that already hold this survey's immutable
+		/// benefit observation. Avoids a second full physical scan in one semantic operation.</summary>
+		internal bool TryDefence(KingdomBenefitIndex Benefits, out int Amount,
+			out string Failure)
+		{
+			Amount = 0; Failure = null;
+			if (Benefits == null)
+			{
+				Failure = "defence reading has no physical benefit observation"; return false;
+			}
+			long total = (long)Benefits.Total("defence")
+				+ System.Math.Max(0, DistrictDefenceBonus);
+			Amount = total >= int.MaxValue ? int.MaxValue : (int)total;
+			return true;
+		}
+
+		/// <summary>Compatibility value surface. Failure is visible in the log and contributes
+		/// zero; catalogue/root defence scalars are never a fallback.</summary>
 		public int Defence()
 		{
-			int total = 0;
-			for (int i = 0; i < Defences.Count; i++)
-			{
-				GameObject work = Defences[i];
-				int need = work.GetIntProperty("KingdomStaffNeeded");
-				int effectiveness = (need > 0) ? work.GetIntProperty("KingdomEffectiveness") : 100;
-				effectiveness = KingdomCrews.ApplyAffinity(work, effectiveness);
-				total += work.GetIntProperty("KingdomDefence") * effectiveness / 100;
-			}
-			return total + DistrictDefenceBonus;
+			if (TryDefence(out int amount, out string failure)) return amount;
+			KingdomLog.Log("defence: " + (failure ?? "physical observation failed"));
+			return 0;
 		}
 
 		/// <summary>Draws ordinary-use water from unleased dedicated stores without crossing a

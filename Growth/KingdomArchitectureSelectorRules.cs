@@ -57,7 +57,7 @@ namespace ThousandAndFirst
 			ArchitectureSelectionContext Context)
 		{
 			if (Selector == null) return true;
-			return TagAccepts(Selector.Styles, Context.Style)
+			return StyleTagAccepts(Selector.Styles, Context)
 				&& TagAccepts(Selector.Creeds, Context.Creed)
 				&& TagSetAccepts(Selector.Cultures, Context.Cultures)
 				&& TagSetAccepts(Selector.Species, Context.Species)
@@ -69,6 +69,14 @@ namespace ThousandAndFirst
 				&& (Selector.MaximumStage < 0 || Context.Stage <= Selector.MaximumStage)
 				&& (Selector.MinimumTech < 0 || Context.Tech >= Selector.MinimumTech)
 				&& (Selector.MaximumTech < 0 || Context.Tech <= Selector.MaximumTech);
+		}
+
+		private static bool StyleTagAccepts(string Expression,
+			ArchitectureSelectionContext Context)
+		{
+			if (Context != null && Context.StyleKeys != null && Context.StyleKeys.Count > 0)
+				return TagSetAccepts(Expression, Context.StyleKeys);
+			return TagAccepts(Expression, Context == null ? null : Context.Style);
 		}
 
 		private static int SelectorSpecificity(ArchitectureSelector Selector)

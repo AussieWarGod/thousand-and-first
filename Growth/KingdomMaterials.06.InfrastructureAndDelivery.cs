@@ -58,7 +58,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < candidates.Count; i++)
 			{
 				GameObject item = candidates[i];
-				if (item.GetIntProperty("KingdomBuilt") != 1)
+				if (!KingdomUpgrade.IsFunctionallyBuilt(item))
 				{
 					continue;
 				}

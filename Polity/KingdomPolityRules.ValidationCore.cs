@@ -7,7 +7,10 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomPolityRules
 	{
-		public const int CurrentFormatVersion = 6;
+		public const int CurrentFormatVersion = 9;
+		public const int AdmissionPriorFormatVersion = 8;
+		public const int AmbientPriorFormatVersion = 7;
+		public const int PreviousFormatVersion = 6;
 		public const int ImmediatePriorFormatVersion = 5;
 		public const int PriorFormatVersion = 4;
 		public const int OlderFormatVersion = 3;
@@ -52,7 +55,7 @@ namespace ThousandAndFirst
 			if (Ledger.OpaqueWireVersion != 0 || Ledger.OpaqueFuturePayload != null)
 				return Fail("compatible ledger carries opaque future bytes", out Failure);
 			if (Ledger.Revision < 0L || Ledger.MigratedFromVersion < 0 ||
-				Ledger.MigratedFromVersion > ImmediatePriorFormatVersion)
+				Ledger.MigratedFromVersion > AdmissionPriorFormatVersion)
 				return Fail("ledger version evidence is invalid", out Failure);
 			if (!ValidOptions(Ledger.Options, Ledger.IdentityBound, out Failure)) return false;
 			if (!Ledger.IdentityBound)

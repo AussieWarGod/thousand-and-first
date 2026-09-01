@@ -1,0 +1,6 @@
+# Native taste proof for ordered storage, inert practice racks, and the inspection lane.
+DESCRIPTION=Templar purity-arsenal campus stages for native storage and marker review
+REQUEST=arch-lot-templar-purityarsenal-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

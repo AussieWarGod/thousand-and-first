@@ -7,6 +7,26 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomAdoptRulesTests
 	{
+		[TestCase(KingdomPlotRules.PlotSize.Small, 4)]
+		[TestCase(KingdomPlotRules.PlotSize.Medium, 12)]
+		[TestCase(KingdomPlotRules.PlotSize.Large, 24)]
+		[TestCase(KingdomPlotRules.PlotSize.Huge, 40)]
+		public void AdoptedRoleFloorScalesWithDeclaredPlotTier(
+			KingdomPlotRules.PlotSize size, int expected)
+		{
+			Assert.That(KingdomAdoptRules.MinimumUsableCells(
+				KingdomAdoptRules.RoleKind.Work, size), Is.EqualTo(expected));
+			Assert.That(KingdomAdoptRules.MinimumUsableCells(
+				KingdomAdoptRules.RoleKind.Housing, size), Is.EqualTo(expected));
+		}
+
+		[Test]
+		public void ExactContainerRoleKeepsItsOwnOneCellGeometry()
+		{
+			Assert.That(KingdomAdoptRules.MinimumUsableCells(
+				KingdomAdoptRules.RoleKind.Storage, KingdomPlotRules.PlotSize.Huge),
+				Is.EqualTo(1));
+		}
 		// --- ClassifyRole: BuildEntry.Category reused as the adoption taxonomy ----------------
 
 		[TestCase("housing", KingdomAdoptRules.RoleKind.Housing)]
@@ -59,6 +79,27 @@ namespace ThousandAndFirst.Tests
 					return KingdomAdoptRules.CellKind.Wall;
 				}
 				return KingdomAdoptRules.CellKind.Open;
+			};
+		}
+
+		private static KingdomAdoptRules.ExactCellLookup FromExactGrid(string[] Rows)
+		{
+			return delegate(int X, int Y)
+			{
+				if (Y < 0 || Y >= Rows.Length || X < 0 || X >= Rows[Y].Length)
+					return new KingdomAdoptRules.CellObservation(
+						KingdomAdoptRules.EnclosureRegion.Outside);
+				switch (Rows[Y][X])
+				{
+				case '#': return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Shell);
+				case '+': return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Ingress);
+				case 'X': return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Membership, false);
+				default: return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Membership, true);
+				}
 			};
 		}
 
@@ -196,7 +237,25 @@ namespace ThousandAndFirst.Tests
 			// the fill's budget almost immediately rather than being walked in full.
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(0, 0, (X, Y) => KingdomAdoptRules.CellKind.Open);
 			Assert.IsFalse(measurement.Bounded);
-			Assert.Greater(measurement.RoomCells, KingdomAdoptRules.MaxEnclosedRoomCells);
+			Assert.AreEqual(KingdomAdoptRules.MaxEnclosedRoomCells, measurement.RoomCells);
+		}
+
+		[TestCase(200, true)]
+		[TestCase(201, false)]
+		public void MeasureEnclosure_AcceptsExactBudgetButRefusesOneCellMore(int width,
+			bool expectedBounded)
+		{
+			KingdomAdoptRules.CellLookup lookup = delegate(int x, int y)
+			{
+				if (x == 0 && y == 1) return KingdomAdoptRules.CellKind.Door;
+				if (y == 1 && x >= 1 && x <= width) return KingdomAdoptRules.CellKind.Open;
+				return KingdomAdoptRules.CellKind.Wall;
+			};
+			KingdomAdoptRules.EnclosureMeasurement measurement =
+				KingdomAdoptRules.MeasureEnclosure(1, 1, lookup);
+			Assert.That(measurement.Bounded, Is.EqualTo(expectedBounded));
+			Assert.That(measurement.RoomCells,
+				Is.EqualTo(System.Math.Min(width, KingdomAdoptRules.MaxEnclosedRoomCells)));
 		}
 
 		[Test]
@@ -222,15 +281,73 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, measurement.DoorCells);
 		}
 
+		[Test]
+		public void ExactEnclosureSeparatesMembershipShellIngressAndReachableFloor()
+		{
+			string[] room = {
+				"#######",
+				"+..X..#",
+				"#..X..#",
+				"#..X..#",
+				"#######"
+			};
+			KingdomAdoptRules.EnclosureMeasurement measured =
+				KingdomAdoptRules.MeasureExactEnclosure(1, 1, FromExactGrid(room));
+			Assert.Multiple(() => {
+				Assert.That(measured.Bounded, Is.True);
+				Assert.That(measured.RoomCells, Is.EqualTo(15));
+				Assert.That(measured.DoorCells, Is.EqualTo(1));
+				Assert.That(measured.IngressCells.Count, Is.EqualTo(1));
+				Assert.That(measured.ShellCells.Count, Is.EqualTo(15));
+				Assert.That(measured.UsableCells, Is.EqualTo(6),
+					"a solid furnishing band may not lend the unreachable floor behind it");
+			});
+		}
+
+		[Test]
+		public void FurnitureChangesUsabilityButNeverSignedMembership()
+		{
+			string[] open = { "#####", "+...#", "#...#", "#####" };
+			string[] furnished = { "#####", "+.X.#", "#...#", "#####" };
+			KingdomAdoptRules.EnclosureMeasurement first =
+				KingdomAdoptRules.MeasureExactEnclosure(1, 1, FromExactGrid(open));
+			KingdomAdoptRules.EnclosureMeasurement second =
+				KingdomAdoptRules.MeasureExactEnclosure(1, 1, FromExactGrid(furnished));
+			Assert.That(KingdomAdoptRules.SameMembership(
+				first.MembershipCells, second.MembershipCells), Is.True);
+			Assert.That(second.UsableCells, Is.EqualTo(first.UsableCells - 1));
+		}
+
+		[Test]
+		public void TierMinimumConsumesReachableUsableFloorNotMembershipArea()
+		{
+			string[] room = {
+				"########",
+				"+..X...#",
+				"#..X...#",
+				"########"
+			};
+			KingdomAdoptRules.EnclosureMeasurement measured =
+				KingdomAdoptRules.MeasureExactEnclosure(1, 1, FromExactGrid(room));
+			Assert.That(measured.RoomCells, Is.EqualTo(12));
+			Assert.That(measured.UsableCells, Is.EqualTo(4));
+			Assert.That(KingdomAdoptRules.MeetsMinimumUsable(
+				KingdomAdoptRules.RoleKind.Work, KingdomPlotRules.PlotSize.Medium,
+				measured), Is.False);
+		}
+
 		// --- Assess: Housing --------------------------------------------------------------------
 
-		[TestCase(true, false, true, KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing)]
-		[TestCase(false, true, true, KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage)]
-		[TestCase(false, false, true, KingdomAdoptRules.AdoptionVerdict.Adopted)]
-		[TestCase(false, false, false, KingdomAdoptRules.AdoptionVerdict.RefusedNoBed)]
-		public void Assess_Housing_ChecksInProtectiveOrder(bool alreadyServing, bool belowStage, bool hasBed, KingdomAdoptRules.AdoptionVerdict expected)
+		[TestCase(true, false, KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing)]
+		[TestCase(false, true, KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage)]
+		[TestCase(false, false, KingdomAdoptRules.AdoptionVerdict.Adopted)]
+		public void Assess_Housing_ChecksInProtectiveOrder(bool alreadyServing, bool belowStage,
+			KingdomAdoptRules.AdoptionVerdict expected)
 		{
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Housing, alreadyServing, belowStage, hasBed, false, default);
+			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement {
+				Bounded = true, RoomCells = 8, DoorCells = 1 };
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(
+				KingdomAdoptRules.RoleKind.Housing, alreadyServing, belowStage, false, enclosure);
 			Assert.AreEqual(expected, verdict);
 		}
 
@@ -242,7 +359,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, false, false, KingdomAdoptRules.AdoptionVerdict.RefusedNotStorageCapable)]
 		public void Assess_Storage_ChecksInProtectiveOrder(bool alreadyServing, bool belowStage, bool isStorageCapable, KingdomAdoptRules.AdoptionVerdict expected)
 		{
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Storage, alreadyServing, belowStage, false, isStorageCapable, default);
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Storage, alreadyServing, belowStage, isStorageCapable, default);
 			Assert.AreEqual(expected, verdict);
 		}
 
@@ -252,7 +369,7 @@ namespace ThousandAndFirst.Tests
 		public void Assess_Work_AlreadyServingBeatsAPerfectRoom()
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = 20, DoorCells = 2 };
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, true, false, false, false, enclosure);
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, true, false, false, enclosure);
 			Assert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing, verdict);
 		}
 
@@ -260,7 +377,7 @@ namespace ThousandAndFirst.Tests
 		public void Assess_Work_BelowStageBeatsAPerfectRoom()
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = 20, DoorCells = 2 };
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, true, false, false, enclosure);
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, true, false, enclosure);
 			Assert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage, verdict);
 		}
 
@@ -273,7 +390,7 @@ namespace ThousandAndFirst.Tests
 		public void Assess_Work_ClassifiesEnclosure(bool bounded, int roomCells, int doorCells, KingdomAdoptRules.AdoptionVerdict expected)
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = bounded, RoomCells = roomCells, DoorCells = doorCells };
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, false, enclosure);
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
 			Assert.AreEqual(expected, verdict);
 		}
 
@@ -285,7 +402,7 @@ namespace ThousandAndFirst.Tests
 			for (int roomCells = KingdomAdoptRules.MinEnclosedRoomCells; roomCells <= KingdomAdoptRules.MaxEnclosedRoomCells; roomCells += 11)
 			{
 				KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = roomCells, DoorCells = 0 };
-				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, false, enclosure);
+				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
 				Assert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
 			}
 		}
@@ -299,7 +416,7 @@ namespace ThousandAndFirst.Tests
 			for (int roomCells = 0; roomCells <= KingdomAdoptRules.MaxEnclosedRoomCells * 2; roomCells += 17)
 			{
 				KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = false, RoomCells = roomCells, DoorCells = 3 };
-				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, false, enclosure);
+				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
 				Assert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
 			}
 		}
@@ -323,6 +440,66 @@ namespace ThousandAndFirst.Tests
 			// or make the flood fill's own budget smaller than the minimum it must accept.
 			Assert.Greater(KingdomAdoptRules.MinEnclosedRoomCells, 0);
 			Assert.Greater(KingdomAdoptRules.MaxEnclosedRoomCells, KingdomAdoptRules.MinEnclosedRoomCells);
+		}
+
+		[Test]
+		public void AdoptionReceiptBindsAndHashesExactForeignFootprintEvidence()
+		{
+			ArchitecturePoint[] cells = { new ArchitecturePoint(2, 2),
+				new ArchitecturePoint(1, 1), new ArchitecturePoint(2, 1),
+				new ArchitecturePoint(1, 2) };
+			Assert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+				"tent", cells, false, "Hearthpyre", "2.2.3",
+				"00000000-0000-0000-0000-000000000001", "abc123",
+				out KingdomAdoptionDesignationReceipt receipt, out string failure), failure);
+			string encoded = KingdomAdoptionDesignationRules.Encode(receipt);
+			Assert.IsTrue(KingdomAdoptionDesignationRules.TryDecode(encoded,
+				out KingdomAdoptionDesignationReceipt decoded, out failure), failure);
+			Assert.AreEqual("Hearthpyre", decoded.ForeignProviderId);
+			Assert.AreEqual("2.2.3", decoded.ForeignProviderVersion);
+			Assert.AreEqual("00000000-0000-0000-0000-000000000001",
+				decoded.ForeignIdentity);
+			Assert.AreEqual("abc123", decoded.ForeignRevision);
+			Assert.AreEqual(new ArchitecturePoint(1, 1), decoded.Cells[0]);
+
+			Assert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+				"tent", cells, false, "Hearthpyre", "2.2.3",
+				decoded.ForeignIdentity, "def456", out KingdomAdoptionDesignationReceipt changed,
+				out failure), failure);
+			Assert.AreNotEqual(receipt.Revision, changed.Revision);
+			Assert.IsFalse(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+				"tent", cells, false, "Hearthpyre", null, null, null,
+				out _, out _), "partial foreign identity must fail closed");
+		}
+
+		[Test]
+		public void AdoptionPublicationIsPhasedRecoverableAndAuthorityIsLast()
+		{
+			string transaction = TestMain.ReadRepositoryText(System.IO.Path.Combine(
+				"Growth", "KingdomAdopt.Transaction.cs"));
+			string work = TestMain.ReadRepositoryText(System.IO.Path.Combine(
+				"Growth", "KingdomAdopt.Work.cs"));
+			string existing = TestMain.ReadRepositoryText(System.IO.Path.Combine(
+				"Growth", "KingdomAdopt.cs"));
+			string release = TestMain.ReadRepositoryText(System.IO.Path.Combine(
+				"Growth", "KingdomAdopt.Release.cs"));
+
+			Assert.That(transaction.IndexOf("Target.SetIntProperty(BuiltProperty, 1)"),
+				Is.LessThan(transaction.IndexOf("Target.SetIntProperty(AdoptedProperty, 1)")));
+			StringAssert.Contains("CompleteEvidence(Target, Key)", transaction);
+			StringAssert.Contains("KingdomAdoptionDesignation.Clear(Target)", transaction);
+			StringAssert.Contains("KingdomPlots.ReleaseAdoptedPlot(Target)", transaction);
+			StringAssert.Contains("ZoneActivatedEvent.ID", transaction);
+			StringAssert.Contains("ZoneThawedEvent.ID", transaction);
+			StringAssert.Contains("if (created && Target.Blueprint == WorkMarkerBlueprint)",
+				transaction);
+			StringAssert.Contains("ReproveRoomForCommit", work);
+			StringAssert.Contains("ContainerIsUnclaimed", existing);
+			StringAssert.DoesNotContain("ApplyRoleFixtures", work + existing);
+			Assert.That(release.IndexOf("KingdomDesignationReleaseAuthority.TryCanRelease"),
+				Is.LessThan(release.IndexOf("KingdomAdoptionDesignation.Clear(Adopted)")));
+			Assert.That(release.IndexOf("KingdomAdoptionDesignation.Clear(Adopted)"),
+				Is.LessThan(release.IndexOf("ClearTyped(Adopted, AdoptedProperty)")));
 		}
 	}
 }

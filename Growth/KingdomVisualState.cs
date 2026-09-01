@@ -130,8 +130,9 @@ namespace ThousandAndFirst
 				}
 				if (heart && System.Withered) item.SetIntProperty(WitheredProperty, 1);
 				else item.RemoveIntProperty(WitheredProperty);
-				if (heart && System.Famished) item.SetIntProperty(FamishedProperty, 1);
-				else item.RemoveIntProperty(FamishedProperty);
+				// Pre-ruling famine marks are presentation-only legacy. Clear on every refresh so an
+				// upgraded save cannot keep showing a food penalty the simulation no longer has.
+				item.RemoveIntProperty(FamishedProperty);
 			}
 		}
 

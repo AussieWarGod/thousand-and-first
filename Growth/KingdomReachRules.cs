@@ -143,6 +143,62 @@ namespace ThousandAndFirst
 			return Overridden ? declared : Derive(Size, TierIndex, TierCount);
 		}
 
+		/// <summary>The plot tier an exact designation physically occupies. Runtime reach uses
+		/// this instead of trusting the catalogue tier named by an adopted or external room.</summary>
+		public static KingdomPlotRules.PlotSize SizeForDesignation(
+			IReadOnlyList<KingdomBenefitCell> Cells)
+		{
+			int count = 0;
+			for (int i = 0; Cells != null && i < Cells.Count; i++)
+				if ((Cells[i].Use & KingdomBenefitCellUse.Plot) != 0) count++;
+			if (count <= 0) return KingdomPlotRules.PlotSize.None;
+			if (count <= KingdomPlotRules.SmallWidth * KingdomPlotRules.SmallHeight)
+				return KingdomPlotRules.PlotSize.Small;
+			if (count <= KingdomPlotRules.MediumWidth * KingdomPlotRules.MediumHeight)
+				return KingdomPlotRules.PlotSize.Medium;
+			if (count <= KingdomPlotRules.LargeWidth * KingdomPlotRules.LargeHeight)
+				return KingdomPlotRules.PlotSize.Large;
+			return KingdomPlotRules.PlotSize.Huge;
+		}
+
+		/// <summary>Exact membership, not the bounding rectangle: gaps in an irregular adopted
+		/// room remain outside that room's plot-band reach.</summary>
+		public static bool ContainsPlotCell(IReadOnlyList<KingdomBenefitCell> Cells, int X, int Y)
+		{
+			for (int i = 0; Cells != null && i < Cells.Count; i++)
+				if (Cells[i].X == X && Cells[i].Y == Y
+					&& (Cells[i].Use & KingdomBenefitCellUse.Plot) != 0) return true;
+			return false;
+		}
+
+		/// <summary>Whether one effective physical amount is a subsistence lift. The benefit
+		/// index also carries structural defence, which is a different economic channel and must
+		/// never become comfort merely because it is non-binding. Unknown catalogue support kinds
+		/// remain lifts for third-party compatibility.</summary>
+		public static bool IsPhysicalLift(string Kind)
+		{
+			return !string.Equals((Kind ?? "").Trim(), "defence",
+				System.StringComparison.OrdinalIgnoreCase) && ScopedByReach(Kind);
+		}
+
+		/// <summary>Stable quarter anchor. Prefer the root only when it stands on the exact
+		/// designation; otherwise use the first normalized plot cell.</summary>
+		public static bool TryDesignationAnchor(IReadOnlyList<KingdomBenefitCell> Cells,
+			int PreferredX, int PreferredY, out int X, out int Y)
+		{
+			X = 0; Y = 0;
+			if (ContainsPlotCell(Cells, PreferredX, PreferredY))
+			{
+				X = PreferredX; Y = PreferredY; return true;
+			}
+			for (int i = 0; Cells != null && i < Cells.Count; i++)
+				if ((Cells[i].Use & KingdomBenefitCellUse.Plot) != 0)
+				{
+					X = Cells[i].X; Y = Cells[i].Y; return true;
+				}
+			return false;
+		}
+
 		// --- Covering ------------------------------------------------------------------------
 
 		/// <summary>How near a place must be for a band to reach it.</summary>

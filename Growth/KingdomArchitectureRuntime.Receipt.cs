@@ -11,9 +11,11 @@ namespace ThousandAndFirst
 			ArchitectureLayoutSnapshot snapshot;
 			if (!TryValidateIntent(Intent, out snapshot, out Failure)) return false;
 			if (Target == null) return Fail("architecture receipt target is absent", out Failure);
+			bool complete;
+			if (!TryAcceptReceiptPrefix(Target, Intent, out complete, out Failure)) return false;
+			if (complete) return true;
 			try
 			{
-				Target.RemoveIntProperty(SchemaProperty);
 				Target.SetStringProperty(BuildKeyProperty, Intent.BuildKey);
 				Target.SetStringProperty(PlanKeyProperty, Intent.PlanKey);
 				Target.SetStringProperty(BindingKeyProperty, Intent.BindingKey);
@@ -35,16 +37,12 @@ namespace ThousandAndFirst
 			}
 			catch (Exception exception)
 			{
-				try { Target.RemoveIntProperty(SchemaProperty); } catch { }
-				return Fail("architecture receipt write failed: " + exception.Message, out Failure);
+				string ignored;
+				if (TryReadExactFrozen(Target, Intent, out ignored)) return true;
+				return Fail("architecture receipt publication remains retryable: "
+					+ exception.Message, out Failure);
 			}
-			KingdomArchitectureIntent read;
-			if (!TryRead(Target, out read, out Failure))
-			{
-				try { Target.RemoveIntProperty(SchemaProperty); } catch { }
-				return false;
-			}
-			return true;
+			return TryReadExactFrozen(Target, Intent, out Failure);
 		}
 
 		/// <summary>Reads and proves a complete canonical receipt without consulting live data.</summary>

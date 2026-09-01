@@ -14,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void VersionEightAloneMayEnterTheDirectionalMigrationLane()
+		public void PreAlphaGeometryBreakClosesTheOldDirectionalMigrationLane()
 		{
 			string system = Source(Path.Combine("Core", "KingdomSystem.cs"));
 			string serialization = Source(Path.Combine("Core",
@@ -23,8 +23,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomSystem.z24a.DirectionalStandingNormalization.cs"));
 			string callback = Source(Path.Combine("Core",
 				"KingdomSystem.z19.PersistenceAndCallbacks.cs"));
-			StringAssert.Contains("private const int CurrentSerializationVersion = 9", system);
-			StringAssert.Contains("private const int FirstNamedSerializationVersion = 8", system);
+			StringAssert.Contains("private const int CurrentSerializationVersion = 10", system);
+			StringAssert.Contains("private const int FirstNamedSerializationVersion = 10", system);
 			AssertOrdered(serialization, "LoadedSerializationVersion = version;",
 				"Reader.ReadNamedFields(this, typeof(KingdomSystem));",
 				"NormalizeState(AllowLegacyIdentityMigration: false);");

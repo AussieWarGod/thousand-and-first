@@ -13,9 +13,11 @@ namespace ThousandAndFirst
 			Failure = null;
 			if (!ExactCandidate(System, Context, Candidate, out GameObject body, out Failure))
 				return false;
-			if (body.GetPart<r_KingdomOfficeProjection>() != null)
+			if (body.GetPart<r_KingdomOfficeProjection>() != null
+				|| MarketOfficeCandidateBlocked(body, Context.Survey))
 			{
-				Failure = "An office projection already marks that exact resident."; return false;
+				Failure = "An office or protected market projection already marks that resident.";
+				return false;
 			}
 			string objectId = body.ID;
 			string role = KingdomOfficeRules.ChooseTitle(Context.SettlementName)
@@ -86,7 +88,9 @@ namespace ThousandAndFirst
 			{
 				KingdomCivicOfficeReceipt candidate = System.Experience.Offices[i];
 				if ((candidate.Phase == KingdomCivicOfficePhase.Held
-					|| candidate.Phase == KingdomCivicOfficePhase.AppointmentPrepared)
+					|| candidate.Phase == KingdomCivicOfficePhase.AppointmentPrepared
+					|| candidate.Phase == KingdomCivicOfficePhase.VacancyPrepared
+						&& candidate.VacancyCause == Cause)
 					&& candidate.HolderResidentId == residentId
 					&& candidate.HolderObjectId == objectId) receipt = candidate;
 			}
@@ -96,7 +100,23 @@ namespace ThousandAndFirst
 				out Failure)) return false;
 			KingdomExperienceRules.TryGetOffice(System.Experience, receipt.SettlementId,
 				out KingdomCivicOfficeReceipt prepared, out string _);
-			if (!CleanupProjection(System, prepared, Body, out Failure)
+			if (Cause == KingdomCivicOfficeVacancyCause.Death)
+			{
+				if (!TryOfficeCityState(System, prepared.SettlementId,
+					out Simulation.City.KingdomCityState state, out Failure)
+					|| !KingdomExperienceRules.CanCompleteOfficeDeathVacancy(System.Experience,
+						System.Experience.Revision, prepared.SettlementId, prepared.Generation,
+						state, out Failure)) return false;
+				bool cleaned = TryCleanupDeathProjection(System, prepared, Body, out Failure);
+				string residueFailure = cleaned ? null : Failure;
+				if (!cleaned) MarkDeathResidue(System, prepared, Body);
+				if (!KingdomExperienceRules.TryCompleteOfficeDeathVacancy(System.Experience,
+						System.Experience.Revision, prepared.SettlementId, prepared.Generation,
+						state, out Failure)) return false;
+				if (!cleaned) KingdomLog.Log("office: dead-holder projection quarantined for "
+					+ "exact later cleanup (" + (residueFailure ?? "body absent") + ")");
+			}
+			else if (!CleanupProjection(System, prepared, Body, out Failure)
 				|| !KingdomExperienceRules.TryCompleteOfficeVacancy(System.Experience,
 					System.Experience.Revision, prepared.SettlementId, prepared.Generation,
 					out Failure)) return false;

@@ -51,7 +51,7 @@ namespace ThousandAndFirst.Tests
 			{
 				"r_KingdomSettlers", "r_KingdomGuests", "r_KingdomNotableGuests",
 				"r_KingdomFurnishings_Dwelling", "r_KingdomFurnishings_Water",
-				"r_KingdomFurnishings_Civic", "r_KingdomFurnishings_Comfort",
+				"r_KingdomFurnishings_Food", "r_KingdomFurnishings_Civic", "r_KingdomFurnishings_Comfort",
 				"r_KingdomFurnishings_Learning"
 			};
 			for (int i = 0; i < names.Length; i++)
@@ -79,8 +79,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitectureRuntime.TryRead(root", source);
 			StringAssert.Contains("KingdomRoadRules.TryAuthoredLane(Snapshot, Rect, Entrance",
 				source);
-			StringAssert.Contains("anchor.Key == \"entrance:public\"", source);
-			StringAssert.Contains("anchor.Key.StartsWith(\"entrance:public@\"", source);
+			StringAssert.Contains("RoadEntranceKey(anchor.Key)", source);
+			StringAssert.Contains("Key == \"entrance:public\" || Key == \"entrance:service\"",
+				source);
+			StringAssert.Contains("Key.StartsWith(\"entrance:public@\"", source);
+			StringAssert.Contains("Key.StartsWith(\"entrance:service@\"", source);
 			StringAssert.Contains("KingdomRoadRules.MaxRoutesPerPass", source);
 		}
 

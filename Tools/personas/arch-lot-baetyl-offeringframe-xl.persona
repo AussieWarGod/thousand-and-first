@@ -1,0 +1,6 @@
+# Closest-pair review: measured offerings and gantry fabric must not read as a trail den.
+DESCRIPTION=huge baetyl offering frame stages for native creed-campus comparison
+REQUEST=arch-lot-baetyl-offeringframe-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

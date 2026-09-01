@@ -30,9 +30,10 @@ namespace ThousandAndFirst.Harness
 	internal static class KingdomScenarioVerbs
 	{
 		internal const string Usage =
-			"Use {{W|kingdom:scenario}} with list, status, realize, anchor, ground, flatten, "
+			"Use {{W|kingdom:scenario}} with list, status, realize, anchor, ground, flatten, frame, "
 			+ "stagedigest, resourcedigest, standingdigest, "
-			+ "advance <turns>, or capture <anchor-id> <scenario-key>[;param=value] "
+			+ "advance <turns>, arcology <entry|teaching|terrace|ward>, or capture "
+			+ "<anchor-id> <scenario-key>[;param=value] "
 			+ "[at=<x>,<y>|id=<object-id>].";
 
 		/// <summary>Journal verb column for the bare command, which prints help.</summary>
@@ -41,6 +42,8 @@ namespace ThousandAndFirst.Harness
 		private const string CapturePrefix = "capture ";
 
 		private const string AdvancePrefix = KingdomScenarioAdvance.Verb + " ";
+
+		private const string ArcologyPrefix = KingdomScenarioHostedArcology.Verb + " ";
 
 		/// <summary>
 		/// Runs one verb and journals it. Returns the report; <paramref name="Ok"/> is false only
@@ -79,17 +82,23 @@ namespace ThousandAndFirst.Harness
 			// malformed-count code rather than falling through to a usage line that proves nothing.
 			if (Raw.StartsWith(AdvancePrefix, StringComparison.OrdinalIgnoreCase))
 				return KingdomScenarioAdvance.Run(Raw.Substring(AdvancePrefix.Length), out Ok);
+			if (Raw.StartsWith(ArcologyPrefix, StringComparison.OrdinalIgnoreCase))
+				return KingdomScenarioHostedArcology.Run(
+					Raw.Substring(ArcologyPrefix.Length), out Ok);
 			switch (Raw.ToLowerInvariant())
 			{
 				case "": return Help();
 				case KingdomScenarioAdvance.Verb:
 					return KingdomScenarioAdvance.Run("", out Ok);
+				case KingdomScenarioHostedArcology.Verb:
+					return KingdomScenarioHostedArcology.Run("", out Ok);
 				case "list": return List();
 				case "status": return Status();
 				case "anchor": return Anchor();
 				case "realize": return Realize(out Ok);
 				case "ground": return KingdomScenarioGround.Scout(out Ok);
 				case "flatten": return KingdomScenarioFlatten.Flatten(out Ok);
+				case "frame": return KingdomScenarioFrame.Run(out Ok);
 				case KingdomScenarioDigestVerbs.StageVerb:
 					return KingdomScenarioDigestVerbs.Stage(out Ok);
 				case KingdomScenarioDigestVerbs.ResourceVerb:
@@ -144,6 +153,13 @@ namespace ThousandAndFirst.Harness
 				+ "{{W|stagedigest}}, {{W|resourcedigest}}, and {{W|standingdigest}} are read-only "
 				+ "domain digests - growth stage, water and food state, and faction standings - as "
 				+ "stable key=value tokens; an unfounded world honestly reports founded=false.\n\n"
+				+ "{{W|frame}} re-proves one staged gallery lot and moves only the dev tester to "
+				+ "the safest walkable non-component cell nearest its centre, so XL native captures "
+				+ "are legible without triggering entry-reactive architecture. "
+				+ "It changes no architecture or terrain.\n\n"
+				+ "{{W|arcology <entry|teaching|terrace|ward>}} navigates only an already-active "
+				+ "production shell. Paid floors require active exact receipts; gallery shells and "
+				+ "missing authority refuse before any target zone is loaded.\n\n"
 				+ "{{W|advance <turns>}} runs up to " + KingdomScenarioAdvance.MaxTurns
 				+ " game turns with no player input, for behaviour that only happens on a clock. "
 				+ "It spends one turn per action opportunity through the engine's own pass, so "

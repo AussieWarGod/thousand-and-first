@@ -801,11 +801,17 @@ namespace ThousandAndFirst.Tests
 				State = KingdomSealReceiptState.Reserved,
 				WrittenTick = 1
 			};
-			const string expected = "taf-seal 5\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
+			const string expected = "taf-seal 6\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
 			Assert.AreEqual(expected, receipt.Compose());
 
 			KingdomSealReceipt parsed;
-			Assert.IsTrue(KingdomSealReceipt.TryParse(expected, out parsed));
+			const string schemaFive = "taf-seal 5\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
+			Assert.IsTrue(KingdomSealReceipt.TryParse(schemaFive, out parsed));
+			Assert.AreEqual(schemaFive, parsed.Compose());
+			const string schemaFour = "taf-seal 4\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
+			Assert.IsTrue(KingdomSealReceipt.TryParse(schemaFour,
+				out KingdomSealReceipt schemaFourParsed));
+			Assert.AreEqual(schemaFour, schemaFourParsed.Compose());
 			Assert.AreEqual("dynasty", parsed.LineageId);
 			Assert.AreEqual("legacy", parsed.LegacyId);
 			Assert.AreEqual("target", parsed.TargetGameId);

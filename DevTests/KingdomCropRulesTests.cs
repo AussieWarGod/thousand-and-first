@@ -13,7 +13,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("common", "Starapple")]
 		[TestCase("verdant", "Vinewafer")]
 		[TestCase("fungal", "Plump Mushroom")]
-		[TestCase("gyre", "Godshroom Cap")]
+		[TestCase("moonstair", "Bundle of Noisegrass")]
+		[TestCase("gyre", "Bundle of Noisegrass")]
 		[TestCase("eater", "Dreadroot Tuber")]
 		[TestCase("nonesuch", "Starapple")]
 		[TestCase("", "Starapple")]
@@ -534,6 +535,20 @@ namespace ThousandAndFirst.Tests
 				string crop = KingdomCropRules.CropBlueprintForStyle(style);
 				Assert.IsNotNull(KingdomCropRules.RowForCrop(crop), crop + " has nothing to stand as");
 			}
+		}
+
+		[Test]
+		public void RetiredGyreTerrainCropRemainsAnExplicitCultCropOnly()
+		{
+			Assert.AreEqual("r_KingdomSeedGodshroom",
+				KingdomCropRules.SeedForCrop("Godshroom Cap"));
+			Assert.AreEqual("Godshroom Cap",
+				KingdomCropRules.CropForSeed("r_KingdomSeedGodshroom"));
+			Assert.AreEqual("r_KingdomRowGodshroom",
+				KingdomCropRules.RowForCrop("Godshroom Cap"));
+			foreach (string style in KingdomRules.Styles)
+				Assert.AreNotEqual("Godshroom Cap",
+					KingdomCropRules.CropBlueprintForStyle(style), style);
 		}
 
 		[TestCase("")]

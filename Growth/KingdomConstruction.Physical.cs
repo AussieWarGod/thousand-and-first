@@ -64,6 +64,22 @@ namespace ThousandAndFirst
 			return state;
 		}
 
+		/// <summary>Bounded live-ID proof across active and cached zones, player custody,
+		/// durable object roots, and inventories. Graveyard tombstones do not count as live.</summary>
+		public static KingdomPhysicalLookupState FindGlobalLiveId(string Id,
+			out GameObject Exact)
+		{
+			KingdomPhysicalLookupState state = KingdomPlots.FindGlobalFoundingHeartId(Id,
+				out Exact, out bool graveyard);
+			if (state == KingdomPhysicalLookupState.Exact && graveyard)
+			{
+				Exact = null;
+				return KingdomPhysicalLookupState.Ambiguous;
+			}
+			if (state != KingdomPhysicalLookupState.Exact) Exact = null;
+			return state;
+		}
+
 		private static bool TryLoadedZoneObjects(Zone Z, out IList<GameObject> Loaded)
 		{
 			Loaded = null;

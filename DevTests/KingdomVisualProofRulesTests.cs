@@ -11,8 +11,9 @@ namespace ThousandAndFirst.Tests
 		private const string Digest =
 			"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
-		[TestCase(2120)]
-		[TestCase(14)]
+		[TestCase(1112)]
+		[TestCase(18)]
+		[TestCase(22)]
 		public void CheckpointRoundTripsBoundedHumanVerdictStates(int total)
 		{
 			byte[] states = KingdomVisualProofRules.Empty(total);
@@ -35,13 +36,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CheckpointRejectsCatalogueDriftMalformedPayloadAndUnknownVerdict()
 		{
-			byte[] states = KingdomVisualProofRules.Empty(14);
+			byte[] states = KingdomVisualProofRules.Empty(18);
 			string encoded = KingdomVisualProofRules.EncodeCheckpoint(Digest, states);
 			string other = new string('a', 64);
-			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, 14, other,
+			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, 18, other,
 				out _, out _));
-			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint("vp1|14|" + Digest + "|!",
-				14, Digest, out _, out _));
+			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint("vp1|18|" + Digest + "|!",
+				18, Digest, out _, out _));
 			states[3] = 3;
 			Assert.IsNull(KingdomVisualProofRules.EncodeCheckpoint(Digest, states));
 		}
@@ -50,21 +51,23 @@ namespace ThousandAndFirst.Tests
 		public void ScreenshotNamesAreDeterministicButNeverClaimFileExistence()
 		{
 			Assert.AreEqual("taf-architecture-0001.png",
-				KingdomVisualProofRules.ExpectedScreenshot("architecture", 1, 2120));
-			Assert.AreEqual("taf-architecture-2120.png",
-				KingdomVisualProofRules.ExpectedScreenshot("architecture", 2120, 2120));
-			Assert.AreEqual("taf-visual-0014.png",
-				KingdomVisualProofRules.ExpectedScreenshot("visual", 14, 14));
+				KingdomVisualProofRules.ExpectedScreenshot("architecture", 1, 1112));
+			Assert.AreEqual("taf-architecture-1112.png",
+				KingdomVisualProofRules.ExpectedScreenshot("architecture", 1112, 1112));
+			Assert.AreEqual("taf-visual-0018.png",
+				KingdomVisualProofRules.ExpectedScreenshot("visual", 18, 18));
+			Assert.AreEqual("taf-visual-0022.png",
+				KingdomVisualProofRules.ExpectedScreenshot("visual", 22, 22));
 			Assert.IsTrue(KingdomVisualProofRules.ScreenshotMatches(
-				@"C:\evidence\taf-visual-0014.png", "taf-visual-0014.png"));
+				@"C:\evidence\taf-visual-0018.png", "taf-visual-0018.png"));
 			Assert.IsFalse(KingdomVisualProofRules.ScreenshotMatches(
-				"taf-visual-0013.png", "taf-visual-0014.png"));
+				"taf-visual-0017.png", "taf-visual-0018.png"));
 		}
 
 		[Test]
 		public void EvidenceRowBindsClaimWithoutFabricatingVerdictOrCapture()
 		{
-			string row = KingdomVisualProofRules.EvidenceRow("visual", 4, 14, "gatehouse",
+			string row = KingdomVisualProofRules.EvidenceRow("visual", 4, 18, "gatehouse",
 				"vg1-0123456789abcdef01234567", Digest, "pass",
 				@"C:\evidence\taf-visual-0004.png", "human review");
 			StringAssert.StartsWith("[TAF visual-evidence]\tschema=1\tsuite=visual", row);
@@ -72,7 +75,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\tdigest=" + Digest, row);
 			StringAssert.Contains("\tverdict=pass", row);
 			StringAssert.Contains("\tcapture=human-asserted", row);
-			Assert.IsNull(KingdomVisualProofRules.EvidenceRow("visual", 4, 14, "gatehouse",
+			Assert.IsNull(KingdomVisualProofRules.EvidenceRow("visual", 4, 18, "gatehouse",
 				"vg1-0123456789abcdef01234567", Digest, "", "x.png", null));
 		}
 
@@ -88,7 +91,9 @@ namespace ThousandAndFirst.Tests
 
 			string cases = Read("Debug/KingdomArchitectureGalleryWishes.VisualCases.cs");
 			foreach (string key in new string[] { "palisade", "rampart", "watchtower", "gatehouse",
-				"watermain", "brinemain", "liquidcrossing", "watertap", "brinetap", "rubblewall" })
+				"watermain", "brinemain", "liquidcrossing", "watertap", "brinetap", "rubblewall",
+				"vinelattice", "hiderack", "dyevat", "vellumpress", "semantic-aliases",
+				"creed-affordances", "creed-root-markers", "arcology-props" })
 				StringAssert.Contains("\"" + key + "\"", cases);
 			foreach (string road in new string[] { "road-worn", "road-trodden", "road-path", "road-paved" })
 				StringAssert.Contains("\"" + road + "\"", cases);
@@ -97,6 +102,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRoads.Lay(cell, state, paving)", runtime);
 			StringAssert.Contains("KingdomRoadRules.WornTraffic", runtime);
 			StringAssert.Contains("KingdomGatehouseRules.SatelliteCount", runtime);
+			StringAssert.Contains("KingdomYards.TryGetSpec(Case.YardKey", runtime);
 			StringAssert.Contains("capture=human-asserted", runtime);
 			StringAssert.DoesNotContain("SendKeys", runtime);
 			StringAssert.DoesNotContain("keybd_event", runtime);

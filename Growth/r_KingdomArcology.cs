@@ -10,6 +10,7 @@ namespace XRL.World.Parts
 	public sealed class r_KingdomArcology : IPart
 	{
 		public List<string> LotReceipts = new List<string>();
+		public List<string> LotObservations = new List<string>();
 		public string QuarantineReason;
 
 		public override bool WantEvent(int ID, int cascade)
@@ -46,24 +47,17 @@ namespace XRL.World.Parts
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
-			Reconcile(); return base.HandleEvent(E);
+			return base.HandleEvent(E);
 		}
 
 		public override bool HandleEvent(ZoneThawedEvent E)
 		{
-			Reconcile(); return base.HandleEvent(E);
+			return base.HandleEvent(E);
 		}
 
 		public override bool HandleEvent(BeforeDestroyObjectEvent E)
 		{
 			return false;
-		}
-
-		private void Reconcile()
-		{
-			string failure;
-			if (!KingdomHostedArcology.ReconcileRoot(ParentObject, out failure))
-				KingdomHostedArcology.Quarantine(this, failure);
 		}
 
 		public override bool CanGenerateStacked() { return false; }
@@ -74,6 +68,7 @@ namespace XRL.World.Parts
 		{
 			base.FinalizeCopy(Source, CopyEffects, CopyID, MapInv);
 			LotReceipts = new List<string>();
+			LotObservations = new List<string>();
 			QuarantineReason = "copied hosted carriers cannot acquire realm authority";
 		}
 
@@ -86,8 +81,20 @@ namespace XRL.World.Parts
 		{
 			Reader.ReadNamedFields(this, typeof(r_KingdomArcology));
 			if (LotReceipts == null) LotReceipts = new List<string>();
+			if (LotObservations == null) LotObservations = new List<string>();
 			if (LotReceipts.Count > KingdomHostedArcologyRules.MaxHostedLots)
 				QuarantineReason = "hosted-lot slate exceeds its bounded capacity";
+			if (LotObservations.Count > KingdomHostedArcologyRules.MaxHostedLots)
+				QuarantineReason = "hosted observation slate exceeds its bounded capacity";
+			for (int i = 0; i < LotObservations.Count; i++)
+				if (string.IsNullOrEmpty(LotObservations[i])
+					|| LotObservations[i].Length
+						> KingdomHostedArcologyRules.MaxEncodedObservationChars)
+					QuarantineReason = "hosted observation wire exceeds its bounded capacity";
+			if (LotObservations.Count > 0
+				&& !KingdomHostedArcologySlateRules.TryReadObservations(LotObservations,
+					Basis?.IDIfAssigned, out List<KingdomHostedObservation> observations,
+					out string failure)) QuarantineReason = failure;
 		}
 	}
 }

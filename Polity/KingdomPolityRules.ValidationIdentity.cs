@@ -67,7 +67,7 @@ namespace ThousandAndFirst
 					!SemanticId(r.ToPolityId) || r.FromPolityId == r.ToPolityId ||
 					!Defined((byte)r.Band, 6) || r.ChangedTick < 0L ||
 					!SortedSemanticRefs(r.SourceRefs, MaxRefs, r.Band !=
-						KingdomPolityRelationBand.Unspecified))
+						KingdomPolityRelationBand.Unspecified) || !ValidRelationProvenance(r))
 					return Fail("relation record is invalid or noncanonical", out Failure);
 				previous = r.RelationId;
 				for (int j = 0; j < i; j++)
@@ -89,17 +89,43 @@ namespace ThousandAndFirst
 				if (p == null || !TypedId(p.ProfileId, "taf:polity-profile:") ||
 					p.Revision < 1 || !ProfileAfter(previousId, previousRevision,
 					p.ProfileId, p.Revision) || !SemanticId(p.PolityId) ||
-					p.EffectiveTick < 0L || p.RulesVersion < 1 ||
+					p.EffectiveTick < 0L || (p.RulesVersion !=
+						KingdomPolityProfileRules.LegacyRulesVersion && p.RulesVersion !=
+						KingdomPolityProfileRules.PriorExpressionRulesVersion &&
+						p.RulesVersion != KingdomPolityProfileRules.RulesVersion) ||
 					!SortedSemanticRefs(p.DerivedFromFactIds, MaxRefs, true) ||
 					!Digest(p.FactsDigest) || p.TechnologyBand < 0 || p.TechnologyBand > 10 ||
 					!SortedText(p.PracticeTags, 8, false) ||
 					!SortedText(p.BodyKeys, MaxRefs, true) ||
 					!SortedText(p.RoleKeys, MaxRefs, true) ||
-					!SortedText(p.GearKeys, MaxRefs, false) || !ValidLoadout(p.Loadout))
+					!SortedText(p.GearKeys, MaxRefs, false) || !ValidLoadout(p.Loadout) ||
+					!ValidExpressionCues(p))
 					return Fail("profile revision is invalid or noncanonical", out Failure);
 				previousId = p.ProfileId; previousRevision = p.Revision;
 			}
 			return true;
+		}
+
+		private static bool ValidExpressionCues(KingdomPolityProfileRevision Profile)
+		{
+			IList<KingdomPolityExpressionCue> values = Profile.ExpressionCues;
+			if (values == null || values.Count > KingdomPolityProfileExpressionCatalogue.MaxCues)
+				return false;
+			if (Profile.RulesVersion == KingdomPolityProfileRules.LegacyRulesVersion)
+				return values.Count == 0;
+			KingdomPolityExpressionKind first = KingdomPolityExpressionKind.None;
+			bool independent = false;
+			for (int i = 0; i < values.Count; i++)
+			{
+				if (!KingdomPolityProfileExpressionCatalogue.ValidCue(values[i]) ||
+					(Profile.RulesVersion == KingdomPolityProfileRules.RulesVersion &&
+					 !KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(values[i])) ||
+					(i > 0 && KingdomPolityProfileExpressionCatalogue.Compare(
+						values[i - 1], values[i]) >= 0)) return false;
+				if (first == KingdomPolityExpressionKind.None) first = values[i].Kind;
+				else if (values[i].Kind != first) independent = true;
+			}
+			return independent;
 		}
 
 		private static bool ValidLoadout(KingdomPolityLoadoutPolicy P)

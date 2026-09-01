@@ -78,14 +78,22 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string PathStateProperty = "KingdomPath";
 
-		/// <summary>Vanilla's packed dirt floor, laid where the grass has gone
-		/// (<c>ZoneTerrain.xml:932</c>).</summary>
-		public const string TroddenBlueprint = "DirtFloor";
+		/// <summary>Open route-role key frozen on each settlement-owned road floor.</summary>
+		public const string PathRoleProperty = "r_TAF_RoadRole_v1";
 
-		/// <summary>Vanilla's dirt path, laid where a way has become a way
-		/// (<c>ZoneTerrain.xml:937</c>) &mdash; the same floor <c>PlaceHut</c> lays inside a
-		/// vanilla village hut.</summary>
-		public const string PathBlueprint = "DirtPath";
+		/// <summary>Actual occupied route width (one or two cells) frozen on each road floor.</summary>
+		public const string PathWidthProperty = "r_TAF_RoadWidth_v1";
+
+		/// <summary>A faint, fixed native ground-dot treatment: the first readable scar of traffic,
+		/// without implying that anybody has constructed a road.</summary>
+		public const string WornBlueprint = "r_KingdomGroundWornTrack";
+
+		/// <summary>A denser fixed native ground-dot treatment for earth packed by repeated feet.</summary>
+		public const string TroddenBlueprint = "r_KingdomGroundTroddenTrack";
+
+		/// <summary>A stable native arena-floor tread for a route that the settlement now recognises
+		/// as a path. It remains earth-coloured and is still distinct from material paving.</summary>
+		public const string PathBlueprint = "r_KingdomGroundTroddenPath";
 
 		/// <summary>Whether ground wears at all. Its own toggle, because a player who likes the
 		/// grass exactly as the world generator drew it should be able to keep it (STANDARDS 3).
@@ -106,17 +114,28 @@ namespace ThousandAndFirst
 
 			public KingdomRoadRules.RouteKind Kind;
 
+			public KingdomRoadFrontage Frontage;
+
 			/// <summary>Frozen authored intermediates for a DoorToLane route. Null alone means the
 			/// receipt-less geometric compatibility path may search live walkable ground.</summary>
 			public List<ArchitecturePoint> ExactRoute;
 
 			public Errand(int FromX, int FromY, int ToX, int ToY, KingdomRoadRules.RouteKind Kind)
-				: this(FromX, FromY, ToX, ToY, Kind, null)
+				: this(FromX, FromY, ToX, ToY, Kind, null,
+					KingdomRoadClearanceRules.ForRoute(Kind))
 			{
 			}
 
 			public Errand(int FromX, int FromY, int ToX, int ToY,
 				KingdomRoadRules.RouteKind Kind, IList<ArchitecturePoint> ExactRoute)
+				: this(FromX, FromY, ToX, ToY, Kind, ExactRoute,
+					KingdomRoadClearanceRules.ForRoute(Kind))
+			{
+			}
+
+			public Errand(int FromX, int FromY, int ToX, int ToY,
+				KingdomRoadRules.RouteKind Kind, IList<ArchitecturePoint> ExactRoute,
+				KingdomRoadFrontage Frontage)
 			{
 				this.FromX = FromX;
 				this.FromY = FromY;
@@ -124,6 +143,19 @@ namespace ThousandAndFirst
 				this.ToY = ToY;
 				this.Kind = Kind;
 				this.ExactRoute = ExactRoute == null ? null : new List<ArchitecturePoint>(ExactRoute);
+				this.Frontage = Frontage;
+			}
+		}
+
+		private struct RoadSemantic
+		{
+			public string Role;
+			public int Width;
+
+			public RoadSemantic(string Role, int Width)
+			{
+				this.Role = Role;
+				this.Width = Width;
 			}
 		}
 

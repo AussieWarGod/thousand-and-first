@@ -18,7 +18,7 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Owner) || Z == null
 				|| string.IsNullOrEmpty(Owner.IDIfAssigned)
 				|| !TryReadOwner(Owner, out Intent, out Snapshot, out Lot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot))
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot))
 				return Failure != null ? false : Fail(
 					"exact layout owner needs a current receipt", out Failure);
 			if (KingdomConstruction.FindExactId(Z, Owner.IDIfAssigned, out exactOwner)
@@ -64,6 +64,51 @@ namespace ThousandAndFirst
 				&& Exact.CurrentCell != null && intent.Rect.Contains(
 					Exact.CurrentCell.X, Exact.CurrentCell.Y))
 				|| Fail("anchored component stands outside its frozen lot", out Failure);
+		}
+
+		/// <summary>Proves that Candidate is one exact settled output of Owner's frozen layout.
+		/// Used by systems which care about physical custody but do not care which authored role
+		/// placed the component. A copied receipt, moved fixture, duplicate slot, or old layout hash
+		/// fails through the ordinary output verifier.</summary>
+		internal static bool IsExactComponentOf(GameObject Owner, Zone Z, GameObject Candidate)
+		{
+			if (!GameObject.Validate(Candidate)
+				|| !TryExactLayoutOwner(Owner, Z, out KingdomArchitectureIntent intent,
+					out ArchitectureLayoutSnapshot snapshot, out string lot, out _)) return false;
+			string slot = Candidate.GetStringProperty(ComponentSlotProperty);
+			if (string.IsNullOrEmpty(slot)) return false;
+			ArchitecturePlacement found = null;
+			for (int i = 0; i < snapshot.Placements.Count; i++)
+			{
+				if (snapshot.Placements[i].Slot != slot) continue;
+				if (found != null) return false;
+				found = snapshot.Placements[i];
+			}
+			GameObject exact;
+			return found != null && TryExactOutput(Owner, Z, intent, lot, found,
+				out exact, out _) && ReferenceEquals(exact, Candidate);
+		}
+
+		/// <summary>Re-proves only installed shell pieces. Missing furniture must not erase the
+		/// designation; missing shell makes its covered/habitable cells unavailable.</summary>
+		internal static bool TryVerifyBenefitShell(GameObject Owner, Zone Z, out string Failure)
+		{
+			Failure = null;
+			if (!TryExactLayoutOwner(Owner, Z, out KingdomArchitectureIntent intent,
+				out ArchitectureLayoutSnapshot snapshot, out string lot, out Failure)) return false;
+			for (int i = 0; i < snapshot.Placements.Count; i++)
+			{
+				ArchitecturePlacement placement = snapshot.Placements[i];
+				if (placement.Layer != ArchitectureLayer.Structure) continue;
+				string id = Owner.GetStringProperty(OutputId(placement));
+				GameObject exact;
+				if (Owner.GetIntProperty(OutputState(placement)) != 2
+					|| KingdomConstruction.FindExactId(Z, id, out exact)
+						!= KingdomPhysicalLookupState.Exact
+					|| !ExactComponent(Owner, exact, Z, intent, lot, placement, id))
+					return Fail("authored shell component is absent, moved, or changed", out Failure);
+			}
+			return true;
 		}
 
 		private static string AnchorRoleOf(string Key)

@@ -1,0 +1,6 @@
+# Certain light-carpet defect repaired statically; this case accepts its resulting native contrast.
+DESCRIPTION=becoming annexe stages for native lighting and circulation review
+REQUEST=arch-endgame-becomingannexe;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame,taste

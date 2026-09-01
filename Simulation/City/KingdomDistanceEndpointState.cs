@@ -30,6 +30,30 @@ namespace ThousandAndFirst.Simulation.City
 
 		internal byte FoodTargetEdges;
 
+		/// <summary>Freezes one measured endpoint through the production cache-row seam.</summary>
+		internal static KingdomDistanceEndpointState Capture(int EndpointId, string ObjectId,
+			short X, short Y, int DedicationOrdinal, long WaterAmount, long FoodAmount,
+			long WaterRoom, long FoodRoom, byte WaterHolderEdges, byte FoodHolderEdges,
+			byte WaterTargetEdges, byte FoodTargetEdges)
+		{
+			return new KingdomDistanceEndpointState
+			{
+				EndpointId = EndpointId,
+				ObjectId = ObjectId,
+				X = X,
+				Y = Y,
+				DedicationOrdinal = DedicationOrdinal,
+				WaterAmount = WaterAmount,
+				FoodAmount = FoodAmount,
+				WaterRoom = WaterRoom,
+				FoodRoom = FoodRoom,
+				WaterHolderEdges = WaterHolderEdges,
+				FoodHolderEdges = FoodHolderEdges,
+				WaterTargetEdges = WaterTargetEdges,
+				FoodTargetEdges = FoodTargetEdges
+			};
+		}
+
 		internal long Amount(KingdomStockKind kind)
 		{
 			return (kind == KingdomStockKind.Water) ? WaterAmount

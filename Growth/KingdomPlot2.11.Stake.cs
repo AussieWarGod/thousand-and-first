@@ -31,6 +31,34 @@ namespace ThousandAndFirst
 			}
 			KingdomFoundingHeartStakeTruth heartTruth = Heart?.Context?.Stake;
 			if (Heart != null && !KingdomFoundingHeartStakeRules.Valid(heartTruth)) return null;
+			KingdomPlotRules.PlotRect frozenFootprint = default(KingdomPlotRules.PlotRect);
+			KingdomPlotRules.RoofState frozenRoof = KingdomPlotRules.RoofState.Open;
+			if (Heart != null)
+			{
+				frozenFootprint = new KingdomPlotRules.PlotRect(
+					heartTruth.FootprintX1, heartTruth.FootprintY1,
+					heartTruth.FootprintX2, heartTruth.FootprintY2);
+				frozenRoof = (KingdomPlotRules.RoofState)heartTruth.Roof;
+				if (KingdomArchitectureRules.IsLatestSnapshotEncoding(
+					Architecture.EncodedSnapshot)
+					&& (!KingdomArchitectureRuntime.TryWorldFootprint(Architecture,
+						out KingdomPlotRules.PlotRect authoredFootprint, out _)
+						|| !SameRect(authoredFootprint, frozenFootprint)
+						|| !KingdomArchitectureRuntime.TryRoofOnGround(Architecture, Carved,
+							out KingdomPlotRules.RoofState authoredRoof, out _)
+						|| authoredRoof != frozenRoof)) return null;
+			}
+			else if (!LegacyArchitecture
+				&& (!KingdomArchitectureRuntime.TryWorldFootprint(Architecture,
+						out frozenFootprint, out string footprintFailure)
+					|| !KingdomArchitectureRuntime.TryRoofOnGround(Architecture, Carved,
+						out frozenRoof, out footprintFailure)))
+			{
+				if (Job != null) KingdomConstruction.Quarantine(ref Job,
+					"The paid plot has no exact frozen building footprint: "
+					+ footprintFailure);
+				return null;
+			}
 			Cell cell = LegacyArchitecture ? Z.GetCell(Rect.CenterX, Rect.CenterY)
 				: Z.GetCell(Architecture.MainWorldX, Architecture.MainWorldY);
 			if (cell == null)
@@ -84,12 +112,12 @@ namespace ThousandAndFirst
 			if (Heart == null) HeartFor(Z, Rect, out heartX, out heartY);
 			else { heartX = Heart.Context.Plan.RiteX; heartY = Heart.Context.Plan.RiteY; }
 			KingdomPlotRules.RoofState roof = Heart == null
-				? KingdomPlotRules.RoofOnGround(Spec.Roof, Carved)
-				: (KingdomPlotRules.RoofState)heartTruth.Roof;
+				? LegacyArchitecture
+					? KingdomPlotRules.RoofOnGround(Spec.Roof, Carved) : frozenRoof
+				: frozenRoof;
 			bool heartRung = KingdomPlotRules.HeartRungOf(Entry.Key) > 0;
-			KingdomPlotRules.PlotRect footprint = Heart != null
-				? new KingdomPlotRules.PlotRect(heartTruth.FootprintX1, heartTruth.FootprintY1,
-					heartTruth.FootprintX2, heartTruth.FootprintY2)
+			KingdomPlotRules.PlotRect footprint = Heart != null || !LegacyArchitecture
+				? frozenFootprint
 				: heartRung
 				? HeartFootprintFor(Z, Rect, Spec)
 				: FootprintFor(Rect, Spec, heartX, heartY);
@@ -232,62 +260,9 @@ namespace ThousandAndFirst
 				}
 				KingdomConstruction.Bind(works, Job);
 			}
-			if (Heart != null && (!PreparedFoundingHeartWorksShape(works, Heart.Context)
-				|| !StageFoundingHeartIdentity(works,
-				Heart.Context.Plan, Heart.Slot)
-				|| !PrepareFoundingHeartWorksAdd(Heart, works))) return null;
-			GameObject accepted = null;
-			bool callbackThrew = false;
-			try
-			{
-				accepted = cell.AddObject(works, NoStack: Heart != null);
+				return CompleteStakeAdd(System, Z, cell, works, part, Entry, Rect,
+					footprint, roof, Architecture, LegacyArchitecture, ref Job, Heart);
 			}
-			catch (System.Exception ex)
-			{
-				callbackThrew = true;
-				if (Heart != null)
-				{
-					KingdomLog.Log("founding heart: plot-works AddObject callback cut: " + ex.Message);
-				}
-				else
-				{
-				bool cleaned = RemoveCreatedWorks(works, Z);
-				if (Job != null) KingdomConstruction.Quarantine(ref Job,
-					(cleaned ? "Plot-works AddObject threw after identity publication: "
-						: "Plot-works AddObject threw and exact cleanup failed: ") + ex.Message);
-				}
-			}
-			finally { KingdomSurvey.ObserveAddResultInActive(Z, works, accepted); }
-			if (Heart != null)
-				return SettleFoundingHeartWorksAdd(Heart, works, accepted, callbackThrew)
-					? works : null;
-			if (callbackThrew) return null;
-			GameObject exactWorks;
-			if (!ReferenceEquals(accepted, works)
-				|| KingdomConstruction.FindExactId(Z, works.ID, out exactWorks)
-					!= KingdomPhysicalLookupState.Exact
-				|| !ReferenceEquals(exactWorks, works)
-				|| works.CurrentCell != cell || works.CurrentZone != Z
-				|| works.Blueprint != WorksBlueprint
-				|| works.GetPart<r_KingdomPlotWorks>() != part || part.DesignKey != Entry.Key
-				|| works.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Entry.Key
-				|| !ExpectedWorks(works, cell, Entry.Key, Architecture, LegacyArchitecture, Job)
-				|| (Job != null && (!KingdomConstruction.Owns(System, Z, Job)
-					|| works.ID != Job.OutputId
-					|| !KingdomConstruction.HasReceipt(works, Job)
-					|| !KingdomConstruction.IsCurrent(Job))))
-			{
-				bool cleaned = Heart == null && RemoveCreatedWorks(works, Z);
-				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
-					? "Plot works changed during AddObject; frozen identity was retired."
-					: "Plot works changed during AddObject and exact cleanup failed.");
-				return null;
-			}
-			KingdomLog.Log("plot staked: " + Entry.Key + " " + Rect.X1 + "," + Rect.Y1 + " to " + Rect.X2 + "," + Rect.Y2
-				+ " footprint " + footprint.X1 + "," + footprint.Y1 + " to " + footprint.X2 + "," + footprint.Y2
-				+ " " + roof.ToString().ToLowerInvariant() + " over " + part.TotalTicks + " ticks");
-			return works;
-		}
 
 	}
 }

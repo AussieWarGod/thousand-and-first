@@ -85,7 +85,7 @@ namespace ThousandAndFirst
 			{
 			case OwnKindPrefix + "thirst":
 				return 0;
-			case OwnKindPrefix + "hunger":
+			case OwnKindPrefix + "meal":
 				return 1;
 			case OwnKindPrefix + "shelter":
 				return 2;
@@ -161,10 +161,10 @@ namespace ThousandAndFirst
 			}
 			if (city.Food.Capacity > 0L && city.Food.Level <= 0L && city.LivingCount > 0)
 			{
-				asks.Add(new KingdomAsk(OwnKindPrefix + "hunger",
-					"The larders are bare.",
-					"Bring food to a dedicated larder, or put hands back on the fields.",
-					null, KingdomAskWeight.Grave));
+				asks.Add(new KingdomAsk(OwnKindPrefix + "meal",
+					"No shared meal is available from the pantry.",
+					"Bring physical ingredients to a dedicated larder. Nothing is spent while it is empty.",
+					null, KingdomAskWeight.Passing));
 			}
 		}
 

@@ -69,7 +69,6 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(105, KingdomWaterRiteRules.MaxCountedDays);
 			Assert.AreEqual(4, KingdomWaterRiteRules.DistancePerDram);
 			Assert.AreEqual(3, KingdomWaterRiteRules.RefusalsBeforeAskingCloses);
-			Assert.AreEqual(12, KingdomWaterRiteRules.QuarterRadiusCells);
 		}
 
 		private static WaterRiteFacts Facts(int Hostility = 0, int SharedDays = 0, bool HoldsACreed = true, bool RivalShrine = false, bool Devout = false, bool Steadfast = false, string RealmCreed = Realm)
@@ -377,7 +376,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomWaterRiteRules.StampFor(Facts(Steadfast: true), WaterRiteAnswer.Steadfast).Absolute);
 		}
 
-		// --- Creed names: null and empty are one belief, which is none.
+		// --- Creed keys: null and empty both mean no affiliation or belief.
 
 		[TestCase(null, null, true)]
 		[TestCase(null, "", true)]
@@ -496,21 +495,6 @@ namespace ThousandAndFirst.Tests
 				refusals = KingdomWaterRiteRules.RefusalsAfter(refusals);
 			}
 			Assert.IsTrue(KingdomWaterRiteRules.AskedTooOften(refusals));
-		}
-
-		// --- The quarter: the ground within sight of their own door.
-
-		[TestCase(0, 0, true)]
-		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells, 0, true)]
-		[TestCase(0, -KingdomWaterRiteRules.QuarterRadiusCells, true)]
-		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells, KingdomWaterRiteRules.QuarterRadiusCells, true)]
-		[TestCase(KingdomWaterRiteRules.QuarterRadiusCells + 1, 0, false)]
-		[TestCase(0, KingdomWaterRiteRules.QuarterRadiusCells + 1, false)]
-		[TestCase(-40, 3, false)]
-		public void WithinQuarter_IsChebyshevAndSymmetricInBothSigns(int dx, int dy, bool inside)
-		{
-			Assert.AreEqual(inside, KingdomWaterRiteRules.WithinQuarter(dx, dy));
-			Assert.AreEqual(inside, KingdomWaterRiteRules.WithinQuarter(-dx, -dy));
 		}
 
 		// --- Prose. Nothing stalls in silence, and a refusal is worth reading.

@@ -57,7 +57,7 @@ namespace ThousandAndFirst
 				Failure = "There is nothing there to strike.";
 				return false;
 			}
-			if (Building.GetIntProperty("KingdomBuilt") != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building))
 			{
 				Failure = "The settlement strikes what it raised. That is not one of its buildings.";
 				return false;
@@ -137,7 +137,7 @@ namespace ThousandAndFirst
 			{
 				if (!KingdomArchitectureRuntime.TryRead(Building, out authored, out Failure))
 					return false;
-				if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(authored.EncodedSnapshot)
+				if (KingdomArchitectureRules.IsManagedSnapshotEncoding(authored.EncodedSnapshot)
 					&& (!KingdomArchitectureStamper.TryPreflightStrike(Building, Z, out Failure)
 						|| !KingdomDelveLink.TryPreflightStrike(Building, Z, out Failure))) return false;
 			}

@@ -44,11 +44,11 @@ namespace ThousandAndFirst.Tests
 			Assert.AreNotEqual(sameSet, retype);
 		}
 
-		[TestCase(5, 4, KingdomPlotRules.PlotSize.Small)]
-		[TestCase(4, 5, KingdomPlotRules.PlotSize.Small)]
+		[TestCase(6, 4, KingdomPlotRules.PlotSize.Small)]
+		[TestCase(4, 6, KingdomPlotRules.PlotSize.Small)]
 		[TestCase(8, 6, KingdomPlotRules.PlotSize.Medium)]
-		[TestCase(9, 12, KingdomPlotRules.PlotSize.Large)]
-		[TestCase(20, 14, KingdomPlotRules.PlotSize.Huge)]
+		[TestCase(10, 12, KingdomPlotRules.PlotSize.Large)]
+		[TestCase(20, 18, KingdomPlotRules.PlotSize.Huge)]
 		public void ActualSizeComesFromStakedRectangleNotDesignMinimum(int width,
 			int height, KingdomPlotRules.PlotSize expected)
 		{

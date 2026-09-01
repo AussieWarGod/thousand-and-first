@@ -181,7 +181,7 @@ namespace ThousandAndFirst
 				string builderFailure;
 				bool exactLazy = HasOnlyOwnedBuilders(TargetZoneId, Legacy.LegacyId,
 					Reserved.TargetGameId,
-					KingdomInheritEngine.ReconstructionVersion, out builderFailure)
+					KingdomInheritEngine.ReconstructionVersionFor(Legacy), out builderFailure)
 					&& The.ZoneManager.CountPartsFor(TargetZoneId) == 0;
 				if (KingdomInheritanceStateRules.DecideCommittedRewind(LoadKind,
 					ReceiptAlreadyCommitted: true, DurableProof: false, TargetBuilt: false,

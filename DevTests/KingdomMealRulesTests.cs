@@ -127,7 +127,7 @@ namespace ThousandAndFirst.Tests
 			// Every crop KingdomCropRules.CropBlueprintForStyle can return must have a staple, or
 			// a settlement founded on that ground would raise a mill that grinds nothing and
 			// carry a food number it cannot pay.
-			string[] styles = new string[6] { "common", "verdant", "fungal", "gyre", "eater", "not-a-style" };
+			string[] styles = new string[6] { "common", "verdant", "fungal", "moonstair", "eater", "not-a-style" };
 			foreach (string style in styles)
 			{
 				string crop = KingdomCropRules.CropBlueprintForStyle(style);
@@ -136,7 +136,7 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
-		// --- What a day's eating was ------------------------------------------------------
+		// --- What one explicit shared-meal transaction cooked -----------------------------
 
 		[Test]
 		public void JudgeMeal_SaysNothingWhenNothingWasOwed()
@@ -152,29 +152,29 @@ namespace ThousandAndFirst.Tests
 			// a pot. A build that drops the kitchen term would let a settlement with no fire at
 			// all claim it ate its own dish.
 			Assert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(10, 10, 10, false, GrowthStage.Town));
+			Assert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(10, 10, 10, false, GrowthStage.Town));
 		}
 
 		[Test]
-		public void JudgeMeal_WantsHalfTheDayOffTheStaple()
+		public void JudgeMeal_WantsTheWholeDisclosedCostFromTheStaple()
 		{
-			Assert.AreEqual(KingdomRules.FavoredMealPercent, 50, "the share below is written against this number");
-			Assert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 5, 10, true, GrowthStage.Town));
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(10, 4, 10, true, GrowthStage.Town));
-			// And a crumb is not a dish.
+			Assert.AreEqual(100, KingdomRules.FavoredMealPercent);
+			Assert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
+			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(10, 9, 10, true, GrowthStage.Town));
 			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(100, 1, 100, true, GrowthStage.Town));
 		}
 
 		[Test]
-		public void JudgeMeal_DoesNotNagACampForLivingOffTheLand()
+		public void JudgeMeal_IncompleteOrMissingIngredientsWithholdTheActWithoutLoss()
 		{
-			// A camp that eats what its hands find is a camp working exactly as designed
-			// (KingdomRules.ForagedRations), and 7b must never nag a founder about a system
-			// working. The same reading at a Village is worth saying once.
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(4, 0, 0, true, GrowthStage.Camp));
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(4, 0, 0, true, GrowthStage.Steading));
-			Assert.AreEqual(KingdomRules.MealVerdict.Scraps, KingdomRules.JudgeMeal(20, 0, 0, true, GrowthStage.Village));
-			Assert.AreEqual(KingdomRules.MealVerdict.Scraps, KingdomRules.JudgeMeal(40, 0, 0, true, GrowthStage.City));
+			foreach (GrowthStage stage in new[] { GrowthStage.Camp, GrowthStage.Steading,
+				GrowthStage.Village, GrowthStage.Town, GrowthStage.City })
+			{
+				Assert.AreEqual(KingdomRules.MealVerdict.None,
+					KingdomRules.JudgeMeal(20, 0, 0, true, stage));
+				Assert.AreEqual(KingdomRules.MealVerdict.None,
+					KingdomRules.JudgeMeal(20, 0, 19, true, stage));
+			}
 		}
 
 		[Test]
@@ -184,29 +184,13 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void MealShade_IsWorthOneSettlerAndOnlyForAFavouredMeal()
+		public void MealsNeverAlterPopulationCapacity()
 		{
-			Assert.AreEqual(KingdomRules.FavoredMealShade, KingdomRules.MealShadeFor(KingdomRules.MealVerdict.Favored));
-			Assert.AreEqual(0, KingdomRules.MealShadeFor(KingdomRules.MealVerdict.Plain));
-			Assert.AreEqual(0, KingdomRules.MealShadeFor(KingdomRules.MealVerdict.Scraps));
-			Assert.AreEqual(0, KingdomRules.MealShadeFor(KingdomRules.MealVerdict.None));
-			// Never a penalty, at any reading. The brief rejects the penalty half outright, and
-			// KingdomCatalogueRules.Equilibrium floors each half before they meet precisely so a
-			// shade cannot cancel a shrine that is standing.
+			Assert.AreEqual(0, KingdomRules.FavoredMealShade);
 			foreach (KingdomRules.MealVerdict verdict in Enum.GetValues(typeof(KingdomRules.MealVerdict)))
 			{
-				Assert.GreaterOrEqual(KingdomRules.MealShadeFor(verdict), 0);
+				Assert.AreEqual(0, KingdomRules.MealShadeFor(verdict));
 			}
-		}
-
-		[Test]
-		public void MealShade_StaysSmallEnoughThatNobodyEatsTheirWayPastTheirOwnWater()
-		{
-			// The lift cap binds the meal shade with everything else riding the lift term. At the
-			// floor the whole cap is two settlers, so a camp cannot dine its way anywhere.
-			int cap = KingdomCatalogueRules.FloorLevel * KingdomCatalogueRules.LiftCapPercent / 100;
-			Assert.LessOrEqual(KingdomRules.FavoredMealShade, cap,
-				"a single meal must never be able to saturate the lift cap on its own");
 		}
 
 		[Test]
@@ -221,15 +205,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void DishStatusLine_MakesTheIngredientKitchenAndOneDayBonusInspectable()
+		public void DishStatusLine_MakesIngredientsAndKitchenInspectable()
 		{
 			string line = KingdomRules.DishStatusLine("vinewafer matz", "Vinewafer Sheaf", 7,
 				1, KingdomRules.MealVerdict.Favored);
 			StringAssert.Contains("vinewafer matz", line);
 			StringAssert.Contains("Vinewafer Sheaf: 7 stored", line);
 			StringAssert.Contains("kitchen ready", line);
-			StringAssert.Contains("at least half", line);
-			StringAssert.Contains("carries +1 today", line);
+			StringAssert.Contains("full disclosed cost", line);
+			StringAssert.Contains("Last shared meal: favorite dish", line);
 		}
 
 		[Test]
@@ -238,8 +222,8 @@ namespace ThousandAndFirst.Tests
 			string plain = KingdomRules.DishStatusLine("starapple porridge",
 				"Starapple Preserves", -4, 0, KingdomRules.MealVerdict.Plain);
 			StringAssert.Contains("0 stored", plain);
-			StringAssert.Contains("no kitchen", plain);
-			StringAssert.Contains("no dish bonus", plain);
+			StringAssert.Contains("no capable kitchen", plain);
+			StringAssert.Contains("Last shared meal: other ingredients", plain);
 			Assert.IsNull(KingdomRules.DishStatusLine(null, "Vinewafer Sheaf", 20, 1,
 				KingdomRules.MealVerdict.Favored));
 		}
@@ -301,23 +285,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheMillNeverEatsTheDayTheResidentsHaveNotEatenYet()
+		public void TheMillUsesOnlyPhysicalStockAndKeepsNoAbstractRationReserve()
 		{
-			// The reserve is a whole day's rations for everybody living here, kept back on top of
-			// the pass already having drawn the day's rations first. A build that drops it would
-			// let a well-stocked settlement wake up hungry because its mill was busy.
-			Assert.AreEqual(0, KingdomRules.MillableStock(10, 10));
-			Assert.AreEqual(0, KingdomRules.MillableStock(3, 10));
-			Assert.AreEqual(5, KingdomRules.MillableStock(15, 10));
+			Assert.AreEqual(10, KingdomRules.MillableStock(10, 10));
+			Assert.AreEqual(3, KingdomRules.MillableStock(3, 10));
+			Assert.AreEqual(15, KingdomRules.MillableStock(15, 10));
 			Assert.AreEqual(0, KingdomRules.MillableStock(0, 0));
 			for (int stored = 0; stored <= 40; stored++)
 			{
 				for (int pop = 0; pop <= 20; pop++)
 				{
 					int free = KingdomRules.MillableStock(stored, pop);
-					Assert.GreaterOrEqual(free, 0);
-					Assert.LessOrEqual(free + KingdomRules.RationsPerDay(pop), Math.Max(stored, KingdomRules.RationsPerDay(pop)),
-						"the mill may never be offered more than the larders hold above tomorrow's bill");
+					Assert.AreEqual(stored, free);
 				}
 			}
 		}

@@ -42,7 +42,7 @@ namespace ThousandAndFirst
 				Failure = "There is nothing there to re-dress.";
 				return false;
 			}
-			if (Building.GetIntProperty("KingdomBuilt") != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building))
 			{
 				Failure = "The settlement re-dresses what it stands behind. That is not one of its buildings.";
 				return false;
@@ -128,7 +128,7 @@ namespace ThousandAndFirst
 			Updated = Job;
 			Failure = null;
 			if (!GameObject.Validate(Building) || Building.CurrentCell == null
-				|| Building.GetIntProperty("KingdomBuilt") != 1 || Skin == null)
+				|| !KingdomUpgrade.IsFunctionallyBuilt(Building) || Skin == null)
 			{
 				Failure = "The paid building is no longer available to re-dress.";
 				KingdomConstruction.FinishProjection(ref Updated, false, false, Failure);

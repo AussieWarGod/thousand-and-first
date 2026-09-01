@@ -8,9 +8,9 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomGuestbook
 	{
-		private const string MarketHandoffIntentProperty = "TAFLocalMarketHandoffIntent";
-		private const string MarketHandoffPriorProperty = "TAFLocalMarketHandoffPrior";
-		private const string MarketTransferTargetProperty = "TAFLocalMarketTransferTarget";
+		internal const string MarketHandoffIntentProperty = "TAFLocalMarketHandoffIntent";
+		internal const string MarketHandoffPriorProperty = "TAFLocalMarketHandoffPrior";
+		internal const string MarketTransferTargetProperty = "TAFLocalMarketTransferTarget";
 
 		/// <summary>Moves only stamped, city-local finite stock. The old merchant remains canonical
 		/// until every move reads back. A failed move is rolled back; if rollback itself cannot finish,
@@ -20,100 +20,147 @@ namespace ThousandAndFirst
 			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
 			Zone zone = Trader?.CurrentZone;
 			GenericInventoryRestocker restocker = Trader?.GetPart<GenericInventoryRestocker>();
+			r_KingdomLegendaryMarketProjection heldProjection =
+				Trader?.GetPart<r_KingdomLegendaryMarketProjection>();
+			int marketTier = heldProjection?.HandoffPrepared == 1
+				? heldProjection.MarketTier : Tier;
 			if (!GameObject.Validate(Trader) || system == null || zone == null || restocker == null
-				|| Tier < KingdomGuestRules.LegendaryTraderMinimumShopTier) return false;
-
+				|| marketTier < KingdomGuestRules.LegendaryTraderMinimumShopTier
+				|| marketTier > KingdomShopStockRules.MaximumTier) return false;
+			if (CompletedDeadSourceHandoff(system, Trader)) return true;
 			GameObject prior = FindPriorMarketMerchant(system, zone, Trader, out int merchants);
 			bool canonical = Trader.GetIntProperty("VillageMerchant") == 1;
+			if (canonical && merchants == 1
+				&& CompleteCommittedSourceResidue(system, Trader, marketTier)) prior = null;
 			if (canonical && merchants == 1 && prior == null)
 			{
-				SealFiniteTrader(Trader, restocker, Tier);
-				ClearTransferMarkers(Trader);
-				ClearHandoffMarkers(Trader);
-				return true;
+				if (!system.HasShopkeeper || marketTier != system.ShopTier) return false;
+				SealFiniteTrader(Trader, restocker, marketTier);
+				if (!TryCommitLegendaryMarketProjection(system, Trader, marketTier)) return false;
+				return ExactLifecycleMarketSourceCheckpoint(system, Trader);
 			}
-			if ((canonical && (merchants < 1 || merchants > 2))
-				|| (!canonical && merchants != 1) || !GameObject.Validate(prior)) return false;
+			if (!GameObject.Validate(prior)) return false;
 			string priorId = prior.IDIfAssigned;
 			string traderId = Trader.IDIfAssigned;
 			if (string.IsNullOrEmpty(priorId) || string.IsNullOrEmpty(traderId)) return false;
 
 			string source = KingdomShopStockRules.SourceId(system.RealmId,
-				system.CurrentSettlementId, Tier);
+				system.CurrentSettlementId, marketTier);
 			string intent = source == null ? null : source + ":handoff:" + priorId + ":" + traderId;
 			string heldIntent = Trader.GetStringProperty(MarketHandoffIntentProperty);
 			string heldPrior = Trader.GetStringProperty(MarketHandoffPriorProperty);
 			if (intent == null || (!string.IsNullOrEmpty(heldIntent) && heldIntent != intent)
 				|| (!string.IsNullOrEmpty(heldPrior) && heldPrior != priorId)) return false;
+			r_KingdomLegendaryMarketProjection prepared = heldProjection;
+			bool resuming = heldIntent == intent && heldPrior == priorId && prepared != null
+				&& prepared.MatchesPreparedHandoff(system, Trader, marketTier, intent, priorId);
+			if (!resuming && !KingdomSuccession.MarketHandoffMayStart()) return false;
+			r_KingdomOfficeProjection priorOffice;
+			bool officeAuthority;
+			bool ownsPriorRestocker;
+			bool priorAlreadyRetired;
+			if (resuming)
+			{
+				if (!ReproveResumingHandoff(system, Trader, marketTier)) return false;
+				if (!TryPreparedPriorAuthority(system, zone, prior, Trader, marketTier,
+					out priorOffice, out officeAuthority, out ownsPriorRestocker,
+					out priorAlreadyRetired)) return false;
+			}
+			else
+			{
+				if ((canonical && (merchants < 1 || merchants > 2))
+					|| (!canonical && merchants != 1)
+					|| !system.HasShopkeeper || marketTier != system.ShopTier
+					|| !KingdomGrowth.TryAuthorizedMarketBody(system, zone, prior, marketTier,
+						out ownsPriorRestocker)) return false;
+				priorOffice = prior.GetPart<r_KingdomOfficeProjection>();
+				officeAuthority = priorOffice != null && priorOffice.MarketServicePhase == 2;
+				priorAlreadyRetired = false;
+				if (officeAuthority && !KingdomGrowth.CanCompleteTransferredMarketService(
+					system, prior, priorOffice, out _)) return false;
+			}
+			int traderResidentId = resuming ? prepared.HandoffResidentId
+				: Simulation.City.KingdomResidents.IdOf(Trader);
+			int priorResidentId = resuming ? prepared.PriorResidentId
+				: Simulation.City.KingdomResidents.IdOf(prior);
+			if (!PreflightHandoffGraph(system, prior, Trader, resuming)) return false;
+			if (!PrepareSourceHandoff(system, prior, Trader, marketTier, intent,
+				priorResidentId, traderResidentId)) return false;
 			Trader.SetStringProperty(MarketHandoffIntentProperty, intent);
 			Trader.SetStringProperty(MarketHandoffPriorProperty, priorId);
-			if (!TransferExactLocalMarketStock(system, prior, Trader)) return false;
-
-			ProtectFiniteTraderStock(Trader);
-			SealFiniteTrader(Trader, restocker, Tier);
+			SealFiniteTrader(Trader, restocker, marketTier);
+			if (!KingdomGrowth.SealedFiniteRestocker(restocker)
+				|| Trader.GetIntProperty("InventoryTier") != marketTier) return false;
+			if (!TryPrepareLegendaryMarketProjection(system, Trader, marketTier,
+				intent, priorId, traderResidentId, priorResidentId)) return false;
+			if (!TransferExactLocalMarketStock(system, prior, Trader, marketTier)) return false;
 			Trader.SetIntProperty("Merchant", 1);
 			Trader.SetIntProperty("VillageMerchant", 1);
-			ProtectFiniteTraderStock(prior);
-			GenericInventoryRestocker old = prior.GetPart<GenericInventoryRestocker>();
-			if (old != null) DisableAutomaticStock(old);
-			prior.SetIntProperty("VillageMerchant", 0);
-			prior.SetIntProperty("Merchant", 0);
-			ClearTransferMarkers(Trader);
-			ClearHandoffMarkers(Trader);
+			if (!TryCommitLegendaryMarketProjection(system, Trader, marketTier)) return false;
+			if (!TryRetirePriorMarketAuthority(system, prior, priorOffice,
+				officeAuthority, ownsPriorRestocker, priorAlreadyRetired)) return false;
+			if (!Trader.GetPart<r_KingdomLegendaryMarketProjection>().CompleteHandoff()) return false;
+			if (!CompleteCommittedSourceResidue(system, Trader, marketTier)) return false;
 			return Trader.GetIntProperty("VillageMerchant") == 1
-				&& prior.GetIntProperty("VillageMerchant") == 0;
-		}
-
-		private static GameObject FindPriorMarketMerchant(KingdomSystem System, Zone Zone,
-			GameObject Trader, out int Merchants)
-		{
-			Merchants = 0;
-			GameObject prior = null;
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Zone))
-			{
-				if (item.GetIntProperty("VillageMerchant") != 1
-					|| !KingdomCitizenship.BelongsTo(System, item)) continue;
-				Merchants++;
-				if (!ReferenceEquals(item, Trader)) prior = item;
-			}
-			string held = Trader.GetStringProperty(MarketHandoffPriorProperty);
-			if (!string.IsNullOrEmpty(held))
-			{
-				GameObject exact = GameObject.FindByID(held);
-				if (GameObject.Validate(exact) && exact.CurrentZone == Zone
-					&& KingdomCitizenship.BelongsTo(System, exact))
-				{
-					if (prior != null && !ReferenceEquals(prior, exact)) return null;
-					prior = exact;
-				}
-			}
-			return prior;
+				&& !prior.HasIntProperty("VillageMerchant")
+				&& (ownsPriorRestocker ? prior.IsMerchant()
+					: (!prior.HasIntProperty("InventoryTier") && !prior.IsMerchant()));
 		}
 
 		private static bool TransferExactLocalMarketStock(KingdomSystem System,
-			GameObject Prior, GameObject Trader)
+			GameObject Prior, GameObject Trader, int Tier)
 		{
 			if (Prior.Inventory == null || Trader.Inventory == null) return false;
 			List<GameObject> moved = new List<GameObject>();
 			foreach (GameObject item in Trader.Inventory.Objects)
 				if (item.GetStringProperty(MarketTransferTargetProperty) == Trader.IDIfAssigned)
 				{
+					if (!OurCurrentMarketReceipt(System, item))
+					{
+						TryRetireLegacyIntent(System, Prior, Trader, item, Tier);
+						return false;
+					}
+					if (OurCurrentMarketReceipt(System, item)
+						&& !KingdomMarketStockCustody.ExactHeld(System,
+							System.CurrentSettlementId, Trader, item)
+						&& item.GetStringProperty(KingdomShopStockRules.StockTransferTargetProperty)
+							!= Trader.IDIfAssigned) return false;
 					if (!KingdomConstructionInputLeaseAuthority
 						.TryObjectGraphAvailableForOrdinaryTransfer(item, out _)
-						|| !ExactTransferableStock(System, item)) return false;
+						|| !ExactTransferableStock(System, Prior, Trader, item, Tier)) return false;
 					moved.Add(item);
 				}
 			foreach (GameObject item in new List<GameObject>(Prior.Inventory.Objects))
 			{
 				string target = item.GetStringProperty(MarketTransferTargetProperty);
+				bool ours = OurCurrentMarketReceipt(System, item);
+				if (!ours && target == Trader.IDIfAssigned)
+				{
+					TryRetireLegacyIntent(System, Prior, Prior, item, Tier);
+					return false;
+				}
 				if (!KingdomConstructionInputLeaseAuthority
 					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
 				{
-					if (!string.IsNullOrEmpty(target)) return false;
+					if (ours || !string.IsNullOrEmpty(target)) return false;
 					continue;
 				}
-				if (!ExactTransferableStock(System, item)) continue;
+				if (!ExactTransferableStock(System, Prior, Prior, item, Tier))
+				{
+					if (ours) return false;
+					continue;
+				}
+				if (!ours && !EnsureHandoffReceipt(System, Prior, item)) return false;
 				if (!string.IsNullOrEmpty(target) && target != Trader.IDIfAssigned) return false;
+				if (OurCurrentMarketReceipt(System, item))
+				{
+					string stockTarget = item.GetStringProperty(
+						KingdomShopStockRules.StockTransferTargetProperty);
+					if (!string.IsNullOrEmpty(stockTarget) && stockTarget != Trader.IDIfAssigned)
+						return false;
+					item.SetStringProperty(KingdomShopStockRules.StockTransferTargetProperty,
+						Trader.IDIfAssigned);
+				}
 				item.SetStringProperty(MarketTransferTargetProperty, Trader.IDIfAssigned);
 				if (!KingdomConstructionInputLeaseAuthority
 					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _)) return false;
@@ -127,7 +174,7 @@ namespace ThousandAndFirst
 						.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))
 					{ moved.Add(item); continue; }
 				if (ReferenceEquals(item.InInventory, Trader) && !moved.Contains(item)) moved.Add(item);
-				if (!RollbackMarketTransfer(Prior, Trader, moved))
+				if (!RollbackMarketTransfer(System, Prior, Trader, moved))
 					KingdomLog.Log("local market transfer rollback remains open for exact recovery");
 				return false;
 			}
@@ -135,15 +182,29 @@ namespace ThousandAndFirst
 				if (!KingdomConstructionInputLeaseAuthority
 					.TryObjectGraphAvailableForOrdinaryTransfer(moved[i], out _))
 				{
-					if (!RollbackMarketTransfer(Prior, Trader, moved))
+					if (!RollbackMarketTransfer(System, Prior, Trader, moved))
 						KingdomLog.Log("local market transfer rollback remains open for exact recovery");
 					return false;
 				}
+			for (int i = 0; i < moved.Count; i++)
+			{
+				GameObject item = moved[i];
+				if (!item.HasStringProperty(KingdomShopStockRules.StockReceiptProperty)
+					|| KingdomMarketStockCustody.ExactHeld(System,
+						System.CurrentSettlementId, Trader, item)) continue;
+				if (!KingdomMarketStockCustody.TryCommitExternal(System,
+					System.CurrentSettlementId, Prior, Trader, item, out string failure))
+				{
+					KingdomLog.Log("local market receipt handoff waits ("
+						+ (failure ?? "divergent receipt") + ")");
+					return false;
+				}
+			}
 			return true;
 		}
 
-		private static bool RollbackMarketTransfer(GameObject Prior, GameObject Trader,
-			List<GameObject> Moved)
+		private static bool RollbackMarketTransfer(KingdomSystem System, GameObject Prior,
+			GameObject Trader, List<GameObject> Moved)
 		{
 			bool complete = true;
 			for (int i = Moved.Count - 1; i >= 0; i--)
@@ -161,6 +222,9 @@ namespace ThousandAndFirst
 					|| Trader.Inventory.Objects.Contains(item)
 					|| !KingdomConstructionInputLeaseAuthority
 						.TryObjectGraphAvailableForOrdinaryTransfer(item, out _)) complete = false;
+				if (OurCurrentMarketReceipt(System, item)
+					&& !KingdomMarketStockCustody.TryRebindPhysical(System,
+						System.CurrentSettlementId, Prior, item, out _)) complete = false;
 			}
 			if (complete)
 				for (int i = 0; i < Moved.Count; i++)
@@ -176,50 +240,49 @@ namespace ThousandAndFirst
 			return complete;
 		}
 
-		private static bool ExactTransferableStock(KingdomSystem System, GameObject Item)
+		private static bool OurCurrentMarketReceipt(KingdomSystem System, GameObject Item)
 		{
-			int tier = Item.GetIntProperty(KingdomShopStockRules.ItemTierProperty);
-			string source = KingdomShopStockRules.SourceId(System.RealmId,
-				System.CurrentSettlementId, tier);
-			return !Item.IsImportant() && KingdomConstructionInputLeaseAuthority
-				.TryObjectGraphAvailableForOrdinaryTransfer(Item, out _)
-				&& source != null && tier <= System.ShopTier
-				&& Item.GetStringProperty(KingdomShopStockRules.ItemSourceProperty) == source
-				&& Item.GetStringProperty(KingdomShopStockRules.ItemSettlementProperty)
+			return System != null && Item != null && KingdomShopStockRules.TryResolveStockRealm(
+				Item.GetStringProperty(KingdomShopStockRules.StockRealmProperty),
+				Item.GetStringProperty(KingdomShopStockRules.LegacyStockRealmProperty),
+				out string realm) && realm == System.RealmId
+				&& Item.GetStringProperty(KingdomShopStockRules.StockSettlementProperty)
 					== System.CurrentSettlementId;
 		}
 
-		private static void SealFiniteTrader(GameObject Trader,
-			GenericInventoryRestocker Restocker, int Tier)
+		private static bool TryCommitLegendaryMarketProjection(KingdomSystem System,
+			GameObject Trader, int Tier)
 		{
-			DisableAutomaticStock(Restocker);
-			Trader.SetIntProperty("InventoryTier", Tier);
+			string settlement = System?.SettlementIdForOwnedZone(Trader?.CurrentZone?.ZoneID);
+			if (string.IsNullOrEmpty(settlement) || settlement != System.CurrentSettlementId)
+				return false;
+			r_KingdomLegendaryMarketProjection marker =
+				Trader.RequirePart<r_KingdomLegendaryMarketProjection>();
+			bool blank = string.IsNullOrEmpty(marker.RealmId)
+				&& string.IsNullOrEmpty(marker.SettlementId)
+				&& string.IsNullOrEmpty(marker.BodyObjectId);
+			if (!blank && (marker.RealmId != System.RealmId
+				|| marker.SettlementId != settlement
+				|| marker.BodyObjectId != Trader.IDIfAssigned)) return false;
+			marker.Stamp(System, settlement, Trader);
+			if (!marker.Prepared(System, Trader, Tier)
+				|| !KingdomMarketStockCustody.TryAdmitHeld(
+					System, settlement, Trader, out _)) return false;
+			return true;
 		}
 
-		private static void DisableAutomaticStock(GenericInventoryRestocker Restocker)
+		private static bool TryPrepareLegendaryMarketProjection(KingdomSystem System,
+			GameObject Trader, int Tier, string Intent, string PriorId,
+			int ResidentId, int PriorResidentId)
 		{
-			Restocker.Clear(); Restocker.Chance = 0; Restocker.RestockFrequency = long.MaxValue;
-			Restocker.LastRestockTick = Math.Max(1L, The.Game.TimeTicks);
+			string settlement = System?.SettlementIdForOwnedZone(Trader?.CurrentZone?.ZoneID);
+			if (string.IsNullOrEmpty(settlement) || settlement != System.CurrentSettlementId)
+				return false;
+			r_KingdomLegendaryMarketProjection marker =
+				Trader.RequirePart<r_KingdomLegendaryMarketProjection>();
+			return marker.StampPrepared(System, settlement, Trader, Tier, Intent, PriorId,
+				ResidentId, PriorResidentId);
 		}
 
-		private static void ProtectFiniteTraderStock(GameObject Trader)
-		{
-			if (Trader?.Inventory == null) return;
-			foreach (GameObject item in Trader.Inventory.Objects)
-				if (item.HasProperty("_stock")) item.SetIntProperty("norestock", 1);
-		}
-
-		private static void ClearTransferMarkers(GameObject Trader)
-		{
-			foreach (GameObject item in Trader.Inventory.Objects)
-				if (item.GetStringProperty(MarketTransferTargetProperty) == Trader.IDIfAssigned)
-					item.SetStringProperty(MarketTransferTargetProperty, null, RemoveIfNull: true);
-		}
-
-		private static void ClearHandoffMarkers(GameObject Trader)
-		{
-			Trader.SetStringProperty(MarketHandoffIntentProperty, null, RemoveIfNull: true);
-			Trader.SetStringProperty(MarketHandoffPriorProperty, null, RemoveIfNull: true);
-		}
 	}
 }

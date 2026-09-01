@@ -13,7 +13,7 @@
 <KingdomArchitectures Schema="1">
 
   <palette Key="reopened-assent-arclight">
-    <slot Key="ground" Blueprint="DirtFloor" Role="far-gyre-approach" Material="mud" MinTech="hands" Natural="yes" />
+	<slot Key="ground" Blueprint="DirtFloor" Role="far-moonstair-approach" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="MarbleFloor" Role="open-rite-floor" Material="marble" MinTech="workshop" Natural="no" />
     <slot Key="path" Blueprint="SmallHexFloor" Role="assent-circuit" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureHalfStone" Role="open-moot-boundary" Material="stone" MinTech="hands" Natural="no" />
@@ -29,9 +29,10 @@
   <!--
     The moot is a congregation, not a norm-core room: six witness seats surround a walkable
     eighteen-cell assent circuit. Faceted marble chimes bracket the one inert focus. The public
-    procession enters two abreast; a separate service threshold reaches the register directly.
+    procession enters two abreast through a light-and-chime forecourt; a separate service
+    threshold reaches the register directly.
   -->
-  <map Key="reopened-assentingmoot-xl0" Width="20" Height="14" DefaultCover="open">
+  <map Key="reopened-assentingmoot-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="i" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="r" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="ward:boundary" />
@@ -59,12 +60,16 @@
     <row Cells="..#iiiirrrrrriiii#.." />
     <row Cells="..#iiiiRiiiiRiiii#.." />
     <row Cells="..#iSiiiLLiiiiiSi#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#iiiiRiiiiRiiii#.." />
+    <row Cells="..#iiiicLiiLciiii#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..######DD########.." />
     <row Cells="........++.........." />
   </map>
 
   <palette Key="reopened-stasis-arclight">
-    <slot Key="ground" Blueprint="DirtFloor" Role="vault-approach" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="ground" Blueprint="SaltPath" Role="retained-saltstone-vault-approach" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="SmallHexFloor" Role="clean-service-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureConcreteWall" Role="cast-vault-shell" Material="shapedstone" MinTech="foundry" Natural="no" />
     <slot Key="partition" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-bay-partition" Material="scrap" MinTech="salvage" Natural="no" />
@@ -79,17 +84,17 @@
 
   <!--
     Four physically separate bays share one clean transfer room, operator station, effects
-    locker, and disconnected projector. The plan never doubles as a grafting/cybernetics theatre:
-    the transfer table is custody ground, and all body work must happen after a live body exits.
+    locker, and disconnected projector. Two interlocked transfer vestibules preserve a clean
+    custody path. The plan never doubles as a grafting/cybernetics theatre: the transfer tables
+    are custody ground, and all body work must happen after a live body exits.
   -->
-  <map Key="reopened-stasisvault-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="reopened-stasisvault-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="p" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:service,service:loading" />
     <glyph Char="B" Ground="$floor" Object="$bay" Claim="building" Pass="adjacent" Cover="walled" Anchors="stasis:body-bay" Stateful="yes" />
     <glyph Char="P" Ground="$floor" Object="$projector" Claim="building" Pass="adjacent" Cover="walled" Anchors="stasis:power" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="stasis:operator" Stateful="yes" />
@@ -107,10 +112,16 @@
     <row Cells=".####D########D####." />
     <row Cells=".#Liii#ii@iii#iiiP#." />
     <row Cells=".#iiiiDiiTgiiDiiii#." />
-    <row Cells="==Egii#iiOiii#iiii#." />
+    <!-- One real loading door owns ingress; its two empty approach cells let the worn-road
+         runtime prove and optionally widen the service lane instead of treating width as doors. -->
+    <row Cells="..Egii#iiOiii#iiii#." />
     <row Cells=".#iiii#iiiiii#iiii#." />
     <row Cells=".####D########D####." />
     <row Cells=".#liiiiiiigiiiiiil#." />
+    <row Cells=".#iiii#iiiiii#iiii#." />
+    <row Cells=".####D########D####." />
+    <row Cells=".#tiiiDiiiiiiDiiit#." />
+    <row Cells=".#iiiiiiigiiiiiiii#." />
     <row Cells=".########DD########." />
     <row Cells=".........++........." />
   </map>
@@ -138,7 +149,7 @@
       <tier Key="stasisvault" BuildKey="stasisvault" Level="0" Map="reopened-stasisvault-xl0" Palette="reopened-stasis-arclight">
         <require Role="main" Min="1" Max="1" />
         <require Role="entrance:public" Min="2" />
-        <require Role="entrance:service" Min="2" />
+        <require Role="entrance:service" Min="1" Max="1" />
         <require Role="function:stasis-vault" Min="1" Max="1" />
         <require Role="stasis:body-bay" Min="4" Max="4" />
         <require Role="stasis:power" Min="1" Max="1" />

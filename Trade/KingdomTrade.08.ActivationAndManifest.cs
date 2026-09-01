@@ -159,12 +159,13 @@ namespace ThousandAndFirst
 				return false;
 			}
 			operation.ManifestId = KingdomTradeRules.ManifestId(operation.Id);
-			if (System.City == null || System.Away?.City == null
+			if (System.City == null ||
+				!System.TryFindNonSeatSettlementByName(DestinationName,
+					out KingdomSettlement destination) || destination.City == null
 				|| !string.Equals(OriginName, System.SeatName, StringComparison.Ordinal)
-				|| !string.Equals(DestinationName, System.Away.SettlementName,
-					StringComparison.Ordinal)
 				|| !KingdomTradeRules.IdentityContainsSettlement(book, System.City.SettlementId)
-				|| !KingdomTradeRules.IdentityContainsSettlement(book, System.Away.City.SettlementId))
+				|| !KingdomTradeRules.IdentityContainsSettlement(book,
+					destination.City.SettlementId))
 			{
 				Quarantine(operation,
 					"The manifest route could not bind both exact city identities.");
@@ -174,7 +175,7 @@ namespace ThousandAndFirst
 			}
 			operation.OriginId = System.City.SettlementId;
 			operation.OriginName = OriginName;
-			operation.DestinationId = System.Away.City.SettlementId;
+			operation.DestinationId = destination.City.SettlementId;
 			operation.DestinationName = DestinationName;
 			operation.ManifestLoadedTick = now;
 			operation.ManifestDeadlineTick = KingdomTradeRules.SaturatingAdd(now,

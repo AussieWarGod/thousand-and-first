@@ -17,6 +17,9 @@ namespace ThousandAndFirst
 			_styles = new List<string>();
 			_styleDrafts = new List<KingdomStyleDraft>();
 			_styleDefinitions = new List<KingdomStyleDefinition>();
+			_creedDrafts = new List<KingdomCreedDraft>();
+			_creedDefinitions = new List<KingdomCreedDefinition>();
+			LoadCreeds();
 			// Everything keyed by a building Key but held outside the entry is emptied here and
 			// refilled by HandleBuilding, in this one pass. A second pass over the same streams
 			// would read the same file twice and make the engine's own unused-attribute check warn

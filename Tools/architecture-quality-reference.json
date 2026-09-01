@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "benchmark": {
+    "game": "Caves of Qud",
+    "version": "2.0.211.51",
+    "version_evidence": "Player.log:58",
+    "assembly_sha256": "8c3b0fc371eaffc85e3dc971e8ffcb21dfc6b05fb25b92398fbd474260598000"
+  },
+  "authoritative_sources": [
+    {
+      "path": "PopulationTables.xml",
+      "sha256": "83b71b3bfc84d51127f829be45909cfadb7f9357be6e87cfe6b247d42746783e",
+      "evidence": [
+        "Village_InitialStructureSegmentation_*Default at line 14366",
+        "Village_StructureWall_*Default at line 14405",
+        "Village_VillageWallStyle_*Default at line 14417",
+        "Village_StructureTemplate_*Default at line 14435",
+        "Villages_BuildingContents_Dwelling_*Default at lines 14911-15010"
+      ]
+    },
+    {
+      "path": "ObjectBlueprints.xml",
+      "sha256": "c1ae78df5dd0ad49a06114b6433eb76af0a333c581722a20b29ef3953f31493f",
+      "evidence": [
+        "root object-blueprint merge and inheritance corpus",
+        "native Render, Physics, Door, Wall, PaintedWall, inventory, light, and furniture semantics"
+      ]
+    }
+  ],
+  "named_map_references": [
+    {"path": "Joppa.rpm", "sha256": "581053cd370dfee27bb855ccb5870de7a782898b05a0377d6b79ac28bf956951"},
+    {"path": "Kyakukya.rpm", "sha256": "c3214549bd2ca425a6c0c642645e1aeabbca98c535c86a9547bef02951f36d8c"},
+    {"path": "BeyLah.rpm", "sha256": "1c5ec16751d8bdb89cbe3e2c5ee71b01b03989061dee875323f8f7a926588805"},
+    {"path": "Ezra.rpm", "sha256": "d55e282ead611f35461a8666c4a964092a73c8651a2ce399bdde465d431bac25"},
+    {"path": "GritGate.rpm", "sha256": "790b86d22e19c7e337319043f7163daa3c8c2d43e43070a6b8400d99c61246cd"},
+    {
+      "path": "CrematoryMachineRoom.rpm",
+      "sha256": "e6bce3873093593e7074eef9abf97dbcba9658b2a080dabacf3fe1423ae5ed1a",
+      "taste_evidence": {
+        "blueprint": "Tomb Techlight2",
+        "count": 5,
+        "coordinates": [[32, 2], [38, 2], [31, 7], [34, 13], [34, 14]]
+      }
+    },
+    {"path": "YdFreehold-under.rpm", "sha256": "a54ddd9ac23ccc605ffdf9543aa88e729958b278cfad428f6075f25b5cddbc9a"},
+    {"path": "MopangoSettlement.rpm", "sha256": "43eb1782ee36d3634f1df2fbe9fc9ed7f0dbf6c5e84c772bc2645b0cdccf8b10"},
+    {"path": "ChavvahCrownLv1.rpm", "sha256": "6e6fb652d67b34978baf42fe1fc037b2bb0e72bed2479754ddb1bdf9703565c6"},
+    {"path": "StiltGroundFloor.rpm", "sha256": "639a9ebf03157db33fc13030f5daa85f803451da532e15dccc9f9d9304e0be83"}
+  ],
+  "decompiled_engine_evidence": [
+    {
+      "type": "XRL.World.ZoneBuilders.VillageMaker",
+      "law": "Huts choose a real perimeter door, are furnished from a population table, and are joined by RoadBuilder paths."
+    },
+    {
+      "type": "XRL.World.ZoneBuilders.VillageBase",
+      "law": "Village layouts use walls, doors, lights, inside/outside/along-wall furnishing zones, and carve cardinal paths to the town center before rebuilding reachability."
+    },
+    {
+      "type": "XRL.World.ZoneBuilders.Village",
+      "law": "Procedural villages admit varied structure templates and wall families, furnish dwellings by function, and prove cardinal pathing after construction."
+    },
+    {
+      "type": "XRL.World.ZoneBuilders.RoadBuilder",
+      "law": "Roads are pathfinder-connected surfaces; clearing and adjacency are deliberate topology choices, not decorative lines."
+    }
+  ],
+  "secondary_principles": [
+    "The public threshold must connect to every required use without crossing blocked fabric.",
+    "Plan form must reveal purpose at Qud's one-cell reading scale through silhouette, zoning, fixtures, and anchors.",
+    "Rooms, yards, service edges, storage, hazards, and circulation are distinct when the function needs them.",
+    "Material, technology, terrain, creed, body access, and upgrade mode must tell one coherent construction history.",
+    "A larger lot earns its area through added or renovated program; blank padding is not growth.",
+    "Rotation must preserve access and road frontage in every supported pose.",
+    "Static validity cannot sign tile adjacency, lighting, interaction affordance, or visual composition; those require native and human review."
+  ]
+}

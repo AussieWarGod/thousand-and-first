@@ -90,6 +90,9 @@ namespace ThousandAndFirst
 				{
 					frozen.HasPlot = true;
 					frozen.LotSize = size;
+					frozen.FootprintWidth = spec.FootprintWidth;
+					frozen.FootprintHeight = spec.FootprintHeight;
+					frozen.Roof = spec.Roof;
 				}
 				State.Buildings.Add(entry.Key, frozen);
 			}
@@ -150,6 +153,7 @@ namespace ThousandAndFirst
 				new Dictionary<string, Action<XmlDataHelper>>(StringComparer.Ordinal)
 				{
 					{ "palette", delegate(XmlDataHelper child) { HandlePalette(State, child); } },
+					{ "pose", delegate(XmlDataHelper child) { HandlePose(State, child); } },
 					{ "map", delegate(XmlDataHelper child) { HandleMap(State, child); } },
 					{ "plan", delegate(XmlDataHelper child) { HandlePlan(State, child); } }
 				};

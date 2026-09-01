@@ -13,7 +13,9 @@
                  this file.
     Trade        The trade itself, as a household is said to take it up. Optional; falls back
                  to DisplayName.
-    Shades       support:amount, KingdomCatalogueRules' own language. Capped small on purpose
+    Shades       support:amount ceiling, KingdomCatalogueRules' own language. It supplies
+                 nothing by itself. Non-food support needs the exact standing object's provider;
+                 vine food uses the dedicated exact-fixture physical flow. Capped small on purpose
                  (KingdomYardRules.MaxShadePerWork) — a household's sideline never competes
                  with a purpose-built work.
     Goods        Yes for a trade whose output is a caravan good rather than anything the

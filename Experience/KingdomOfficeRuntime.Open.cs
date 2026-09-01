@@ -47,7 +47,8 @@ namespace ThousandAndFirst
 			{
 				int pick = Popup.PickOption(Title: "The office of " + RoleFor(receipt),
 					Intro: KingdomPresentation.Rich(receipt.HolderName) + " holds this title at work "
-						+ receipt.WorkId + ". It grants no service, stock, capability, or succession claim.",
+						+ receipt.WorkId + ". The title grants no succession claim. If this city can "
+						+ "support stalls, its exact holder also runs the finite local market.",
 					Options: new string[] { "Keep the present holder", "Release the title" },
 					Hotkeys: new char[] { 'k', 'r' }, AllowEscape: true);
 				if (pick != 1) return;
@@ -63,8 +64,9 @@ namespace ThousandAndFirst
 			string title = KingdomOfficeRules.ChooseTitle(context.SettlementName)
 				+ " of " + context.SettlementName;
 			int choice = Popup.PickOption(Title: "Appoint " + title,
-				Intro: "Choose between two residents with identical mechanics, or leave the office "
-					+ "vacant indefinitely. The title grants no service or succession claim.",
+				Intro: "Choose between two exact residents, or leave the office vacant indefinitely. "
+					+ "The title grants no succession claim. At Steading or later, its exact holder "
+					+ "provides the city's finite local-market service.",
 				Options: new string[] { CandidateLine(first), CandidateLine(second),
 					"Leave the office vacant" }, Hotkeys: new char[] { '1', '2', 'v' },
 				AllowEscape: true);

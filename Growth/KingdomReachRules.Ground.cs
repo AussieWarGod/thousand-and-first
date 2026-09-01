@@ -31,8 +31,8 @@ namespace ThousandAndFirst
 		public static int QuarterRadius(int TierIndex)
 		{
 			int index = (TierIndex < 0) ? 0 : TierIndex;
-			int radius = QuarterBaseRadius + (QuarterRadiusPerTier * index);
-			return (radius > QuarterRadiusCap) ? QuarterRadiusCap : radius;
+			long radius = QuarterBaseRadius + ((long)QuarterRadiusPerTier * index);
+			return (radius > QuarterRadiusCap) ? QuarterRadiusCap : (int)radius;
 		}
 
 		/// <summary>
@@ -153,8 +153,12 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			int scaled = Amount * Percent / 100;
-			return (scaled < 1) ? 1 : scaled;
+			long scaled = (long)Amount * Percent / 100L;
+			if (scaled >= int.MaxValue)
+			{
+				return int.MaxValue;
+			}
+			return (scaled < 1L) ? 1 : (int)scaled;
 		}
 
 		/// <summary>
@@ -184,7 +188,8 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			int reached = (Reached > Homes) ? Homes : Reached;
-			return Scaled(Amount, reached * 100 / Homes);
+			int percent = (int)((long)reached * 100L / Homes);
+			return Scaled(Amount, percent);
 		}
 
 		/// <summary>The order kinds are listed and ties are broken in: the catalogue's own
@@ -226,14 +231,16 @@ namespace ThousandAndFirst
 				}
 				else
 				{
-					amounts[at] += lift.Amount;
+					amounts[at] = KingdomCatalogueRules.SaturatingCounterAdd(
+						amounts[at], lift.Amount);
 				}
 			}
 			int[] order = new int[kinds.Count];
 			for (int i = 0; i < kinds.Count; i++)
 			{
 				int rank = IndexIn(LiftOrder, kinds[i]);
-				order[i] = (rank < 0) ? (LiftOrder.Length + i) : rank;
+				order[i] = (rank < 0)
+					? KingdomCatalogueRules.SaturatingCounterAdd(LiftOrder.Length, i) : rank;
 			}
 			for (int i = 0; i < kinds.Count; i++)
 			{
@@ -250,7 +257,8 @@ namespace ThousandAndFirst
 					break;
 				}
 				character.Lifts.Add(new KindAmount(kinds[best], amounts[best]));
-				character.Total += amounts[best];
+				character.Total = KingdomCatalogueRules.SaturatingCounterAdd(
+					character.Total, amounts[best]);
 				if (amounts[best] > character.DominantAmount)
 				{
 					character.Dominant = kinds[best];

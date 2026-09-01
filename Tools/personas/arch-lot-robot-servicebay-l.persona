@@ -1,0 +1,6 @@
+# Same pose as the charge bay makes the generated campus renovation directly comparable.
+DESCRIPTION=large robot service-bay campus stages for workshop renovation and service review
+REQUEST=arch-lot-robot-servicebay-l;facing=south
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,robot,progression,taste

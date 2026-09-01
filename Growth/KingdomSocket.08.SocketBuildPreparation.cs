@@ -102,7 +102,7 @@ namespace ThousandAndFirst
 					+ ". Rebuild its exact type and size, or order a full re-type while a predecessor still stands.";
 				return false;
 			}
-			if (!KingdomRules.StyleAllows(entry.Styles, System.Style))
+			if (!KingdomRules.StyleAllows(entry.Styles, KingdomData.StyleKeys(System.Style)))
 			{
 				Failure = "The " + entry.Name + " is not built in this city's own style.";
 				return false;
@@ -149,7 +149,7 @@ namespace ThousandAndFirst
 				out KingdomArchitectureIntent architecture, out string payload, out Failure))
 				return false;
 			if (!SocketAcceptsArchitecture(Marker, architecture, out Failure)) return false;
-			if (!TrySocketBuildLabour(System, Z, rect, entry, spec,
+			if (!TrySocketBuildLabour(System, Z, rect, entry, architecture,
 				out long labourTicks, out Failure)) return false;
 			Prepared = new PreparedSocketBuild
 			{
@@ -161,24 +161,27 @@ namespace ThousandAndFirst
 
 		private static bool TrySocketBuildLabour(KingdomSystem System, Zone Z,
 			KingdomPlotRules.PlotRect Rect, KingdomRules.BuildEntry Entry,
-			KingdomPlotRules.PlotSpec Spec, out long LabourTicks, out string Failure)
+			KingdomArchitectureIntent Architecture, out long LabourTicks, out string Failure)
 		{
 			LabourTicks = 0L;
 			Failure = null;
-			if (System == null || Z == null || Entry == null || Spec == null)
+			if (System == null || Z == null || Entry == null || Architecture == null
+				|| Rect.X1 != Architecture.Rect.X1 || Rect.Y1 != Architecture.Rect.Y1
+				|| Rect.X2 != Architecture.Rect.X2 || Rect.Y2 != Architecture.Rect.Y2)
 			{
 				Failure = "The cleared lot has no exact labour context.";
 				return false;
 			}
 			KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Z);
-			KingdomPlots.HeartFor(Z, Rect, out int heartX, out int heartY);
-			KingdomPlotRules.PlotRect footprint = KingdomPlots.FootprintFor(Rect, Spec,
-				heartX, heartY);
 			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(Architecture,
+					out KingdomPlotRules.PlotRect footprint, out Failure)
+				|| !KingdomArchitectureRuntime.TryRoofOnGround(Architecture, carved,
+					out KingdomPlotRules.RoofState roof, out Failure)) return false;
 			LabourTicks = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks,
 					System.ZoneDistricts.Values), grid.CellsOf(Rect), footprint,
-				KingdomPlotRules.RoofOnGround(Spec.Roof, carved), carved);
+				roof, carved);
 			if (LabourTicks > 0L) return true;
 			Failure = "The cleared lot's exact labour quote is empty.";
 			return false;

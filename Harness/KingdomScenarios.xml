@@ -32,7 +32,480 @@
     <description Text="Dev game that drives the production architecture gallery staging path for one exact frozen case and pose, then measures the shared semantic key set off the staged owner and judges it against curated ordinary-play anchor evidence." />
     <param Name="facing" Domain="north|east|south|west" />
     <step Verb="ProveCatalogue" Catalogue="architecture" />
-    <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Variant="fallback" Facing="{facing}" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Type="housing" Size="s" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-tent-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-tent-m"
+            DisplayName="medium canvas-tent lot">
+    <description Text="Stages the medium tent realization as the first generated-lot baseline, exposing its exact small shelter, retained sleep and storage fixtures, public threshold, and reserved dooryard without treating yard as extra building." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Type="housing" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-hut-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-hut-m"
+            DisplayName="medium timber-hut lot">
+    <description Text="Stages the medium timber hut in the tent's comparison pose so native review can judge its truthful enclosed footprint, door, hearth, retained household fixtures, and return-court circulation as a material renovation rather than padded scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="hut" Type="housing" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-tentrow-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-tentrow-l"
+            DisplayName="large canvas tent-row lot">
+    <description Text="Stages the large tent-row realization to expose the mature canvas sleeping bay, exact storage and entrance custody, and the larger reserved court's circulation before a permanent-household renovation." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tentrow" Type="housing" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-hutyard-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-hutyard-l"
+            DisplayName="large timber hut-and-yard lot">
+    <description Text="Stages the large hut-and-yard successor in the tent-row pose, making its retained soft sleeping bay, timber shell, hearth, seat, storage, threshold, and useful court directly comparable at native scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="hutyard" Type="housing" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-tent-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-tent-xl"
+            DisplayName="huge canvas-tent lot">
+    <description Text="Stages the huge reserved tent lot as the maximum-scale taste canary: one exact household shelter and its stateful fixtures must remain legible while the dooryard and approach read as intentional outdoor space rather than algorithmic fill." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tent" Type="housing" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-tentrow-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-tentrow-xl"
+            DisplayName="huge canvas tent-row lot">
+    <description Text="Stages the huge tent-row lot beside the huge tent baseline, exposing whether the widened sleeping bay and unchanged fixture custody produce readable household growth without cloning shelters across the reserved yard." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="tentrow" Type="housing" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-blockhut-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-blockhut-xl"
+            DisplayName="huge salvage block-hut lot">
+    <description Text="Stages the huge salvage block hut in the canvas baseline's pose, exposing whether recovered stone and scrap form a credible permanent shelter while its large return court remains useful, traversable, and visually bounded." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="blockhut" Type="housing" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-housing-blockyard-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-housing-blockyard-xl"
+            DisplayName="huge salvage block-yard lot">
+    <description Text="Stages the mature huge salvage block-yard in the block-hut pose so native review can compare retained household fixtures, widened sleeping bay, swept seat, permanent shell, threshold, and maximum-scale court composition." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="blockyard" Type="housing" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-civic-hall-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-civic-hall-m"
+            DisplayName="medium civic moot hall">
+    <description Text="Stages the exact medium civic hall fallback so native review can judge its public threshold, moot floor, charter custody, archive, and seating as one legible first-stage governance programme." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="hall" Type="civic" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-civic-heartmoot-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-civic-heartmoot-l"
+            DisplayName="large settlement heart-moot">
+    <description Text="Stages the exact large heart-moot fallback so native review can judge the renovated settlement heart's retained basin, water queue, public entrances, moot seats, lighting, and civic circulation." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="heartmoot" Type="civic" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-faith-temple-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-faith-temple-l"
+            DisplayName="large teaching temple">
+    <description Text="Stages the exact large temple fallback so native review can judge its paired public thresholds, shrine, processional route, nave seating, teaching place, and faith programme at native scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="temple" Type="faith" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-joppa-seedhouse-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-joppa-seedhouse-l"
+            DisplayName="large Joppa seedhouse campus">
+    <description Text="Stages the exact large Joppa seedhouse campus, proving that a larger binding exists only where its authored practice yard adds a useful spatial programme." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="joppaseedhouse" Type="food" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-joppa-seedhouse-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-joppa-seedhouse-xl"
+            DisplayName="huge Joppa seedhouse campus">
+    <description Text="Stages the huge Joppa seedhouse as one member of the creed-campus comparison set, exposing its seed work, public threshold, yard circulation, and regional material identity at native scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="joppaseedhouse" Type="food" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-waterbarons-gaugehouse-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-waterbarons-gaugehouse-xl"
+            DisplayName="huge Water Barons gaugehouse campus">
+    <description Text="Stages the huge Water Barons gaugehouse beside the Joppa comparison case so native review can distinguish hydraulic custody, measured access, public threshold, and material identity rather than accept a shared template." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="waterbaronsgaugehouse" Type="storage" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-goatfolk-hornmoot-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-goatfolk-hornmoot-xl"
+            DisplayName="huge goatfolk horn-moot campus">
+    <description Text="Stages the huge goatfolk horn-moot to judge gathering geometry, public approach, hide-and-timber vocabulary, and a civic silhouette distinct from the agricultural creed campuses." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="goatfolkhornmoot" Type="civic" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-svardym-brinenursery-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-svardym-brinenursery-xl"
+            DisplayName="huge svardym brine-nursery campus">
+    <description Text="Stages the huge svardym brine nursery to judge wet circulation, nursery function, public threshold, and an amphibious material language against the other creed campuses." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="svardymbrinenursery" Type="food" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-snapjaw-trailden-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-snapjaw-trailden-xl"
+            DisplayName="huge snapjaw trail-den campus">
+    <description Text="Stages the huge snapjaw trail den as one side of the closest remaining campus-topology pair, exposing trail exits, low screens, watch fire, and muster circulation at native scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="snapjawtrailden" Type="defense" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-issachari-rifleporch-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-issachari-rifleporch-xl"
+            DisplayName="huge Issachari rifle-porch campus">
+    <description Text="Stages the huge Issachari rifle porch to judge its passable camp marker, screened rest, single road sightline, watch fire, and muster circulation in native rendering." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="issacharirifleporch" Type="defense" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-templar-purityarsenal-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-templar-purityarsenal-xl"
+            DisplayName="huge Templar purity-arsenal campus">
+    <description Text="Stages the huge Templar purity arsenal to judge its passable precinct marker, controlled inspection lane, interactive ordered storage, and inert practice-rack campus without cloned stock." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="templarpurityarsenal" Type="defense" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-wardens-watchlodge-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-wardens-watchlodge-xl"
+            DisplayName="huge Wardens' watch-lodge campus">
+    <description Text="Stages the huge Wardens watch lodge to judge its passable lodge marker, public bench, road-facing sightlines, watch fire, and unobstructed hospitality route." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="wardenswatchlodge" Type="defense" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-chavvah-boughschool-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-chavvah-boughschool-xl"
+            DisplayName="huge Chavvah bough-school campus">
+    <description Text="Stages the huge Chavvah bough school to prove solid living trunks read as canopy structure while desks, lessons, public threshold, and campus paths remain reachable around them." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="chavvahboughschool" Type="knowledge" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-baetyl-offeringframe-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-baetyl-offeringframe-xl"
+            DisplayName="huge baetyl offering-frame campus">
+    <description Text="Stages the huge baetyl offering frame beside the snapjaw comparison case so native review must distinguish measured offering courts and recovered gantry fabric from a trail muster." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="baetylofferingframe" Type="faith" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-grange-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-grange-l"
+            DisplayName="large renovated grange realization">
+    <description Text="Stages the exact large grange successor used by the field-to-grange renovate-and-expand route, including threshing, grain storage, and loading functions." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="grange" Type="food" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-defense-watchhouse-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-defense-watchhouse-m"
+            DisplayName="medium watchhouse">
+    <description Text="Stages the medium watchhouse so native review can judge whether a compact two-person garrison reads as lived-in defence work, with bunks, mess, stores, watch fire, and one clear muster threshold." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="watchhouse" Type="defense" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-defense-barracks-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-defense-barracks-l"
+            DisplayName="large barracks">
+    <description Text="Stages the large barracks in the same pose as the watchhouse, exposing the later garrison's larger bunk programme, internal division, mess, storage, lighting, public entrance, and service muster." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="barracks" Type="defense" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-production-smithy-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-production-smithy-m"
+            DisplayName="medium smithy">
+    <description Text="Stages the first medium smithing rung so native review can establish the retained stone striking block, salvaged heat shield, hot-zone clearance, loading face, and work-floor baseline." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="smithy" Type="craft" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-production-forgehall-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-production-forgehall-m"
+            DisplayName="medium forge-hall">
+    <description Text="Stages the foundry-era renovation in the smithy's pose, making retained fabric, dressed striking floor, banked forge, casting anvil, quench basin, output rack, light, and solid fire wall directly comparable." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="forgehall" Type="craft" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-deepend-vathouse-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-deepend-vathouse-m"
+            DisplayName="medium vat-house">
+    <description Text="Stages the workshop-era vat-house to review washable circulation, brine-vat clearance, offal handling, procedure storage, lighting, and the visual separation of wet work from its public threshold." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="vathouse" Type="craft" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-deepend-hallsurgery-m"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-deepend-hallsurgery-m"
+            DisplayName="medium hall surgery">
+    <description Text="Stages the hall surgery in the vat-house pose so native review can distinguish a practical procedure room through slab placement, brine vat, hook rail, waste gutter, cleanable surfaces, loading threshold, and bounded work light." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="hallsurgery" Type="craft" Size="m" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-robot-chargebay-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-robot-chargebay-l"
+            DisplayName="large robot charge-bay campus">
+    <description Text="Stages the large robot charge-bay campus as the open baseline: its public approach, three dry contacts, grounded rails, inspection paths, and machine-yard identity remain visible at settlement scale." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="robotchargebay" Type="power" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-lot-robot-servicebay-l"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-lot-robot-servicebay-l"
+            DisplayName="large robot service-bay campus">
+    <description Text="Stages the enclosed robot service-bay successor in the charge-bay pose, exposing whether its workshop shell, parts locker, inspection light, retained dry contacts, grounded rail, and charging function read as a genuine renovation." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="robotservicebay" Type="power" Size="l" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-purpose-deepbore-eater"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-purpose-deepbore-eater"
+            DisplayName="Eater deepbore precinct">
+    <description Text="Stages the exact Eater-style deepbore precinct, whose recovered machine fabric remains useful without granting borrowed active-power authority." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="deepbore" Type="craft" Size="xl" Variant="eater" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-purpose-greatfoundry-templar"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-purpose-greatfoundry-templar"
+            DisplayName="Templar great foundry">
+    <description Text="Stages the exact Templar great foundry to review its controlled industrial procession, material vocabulary, work faces, inputs, and outputs." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="greatfoundry" Type="craft" Size="xl" Variant="templar" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-purpose-realmgranary-chavvah"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-purpose-realmgranary-chavvah"
+            DisplayName="Chavvah realm granary">
+    <description Text="Stages the exact Chavvah realm granary to review tree-centred circulation, raised dry storage, food handling, and loading access." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="realmgranary" Type="food" Size="xl" Variant="chavvah" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-purpose-realmgranary-yd"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-purpose-realmgranary-yd"
+            DisplayName="Yd Freehold realm granary">
+    <description Text="Stages the exact Yd Freehold realm granary to decide in native tiles whether its vine-lattice density reads as living storage architecture or visual noise." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="realmgranary" Type="food" Size="xl" Variant="yd-freehold" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-endgame-becomingannexe"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-endgame-becomingannexe"
+            DisplayName="becoming annexe precinct">
+    <description Text="Stages the becoming annexe after its bounded lighting repair to review readable chambers, controlled technological emphasis, circulation, and contrast in native Qud rendering." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="becomingannexe" Type="craft" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-endgame-chimerictheatre"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-endgame-chimerictheatre"
+            DisplayName="chimeric theatre precinct">
+    <description Text="Stages the chimeric theatre to decide in native tiles whether its dense seating reads as a deliberate audience bowl with legible aisles rather than furniture noise." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="chimerictheatre" Type="craft" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-heartcourt-xl"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-heartcourt-xl"
+            DisplayName="current great heart-court">
+    <description Text="Stages the current huge heart-court through the production architecture stamper for final native review and reproducible Workshop-preview capture of its full 20-by-18 footprint, moot hall, public court, approaches, and civic hierarchy." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="heartcourt" Type="civic" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-endgame-arcology-atrium"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-endgame-arcology-atrium"
+            DisplayName="hosted arcology atrium">
+    <description Text="Stages the hosted arcology's exact atrium configuration for native review of density, service-rib repetition, central hierarchy, and internal circulation; multi-zone traversal remains a separate proof." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="arcology" Type="civic" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-endgame-mirrorgate-gyre"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-endgame-mirrorgate-gyre"
+			DisplayName="Moon Stair mirror gate precinct">
+	<description Text="Stages the exact Moon Stair mirror-gate precinct to review monumental approach, crystal-and-marble silhouette, and service circulation." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="mirrorgate" Type="craft" Size="xl" Variant="gyre" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-endgame-crownhall-verdant"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-endgame-crownhall-verdant"
+            DisplayName="verdant crown hall precinct">
+    <description Text="Stages the exact verdant crown-hall precinct to review procession, public witness, governance function, and a living-material identity." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="crownhall" Type="civic" Size="xl" Variant="verdant" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-exotic-assentingmoot"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-exotic-assentingmoot"
+            DisplayName="assenting moot precinct">
+    <description Text="Stages the exact assenting moot precinct to review its legible public forecourt, deliberative interior, light, and chime identity." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="assentingmoot" Type="knowledge" Size="xl" Variant="fallback" Facing="{facing}" />
+  </scenario>
+  <scenario Key="arch-exotic-stasisvault"
+            Family="architecture"
+            AuthorityClass="architecture-stamper"
+            Synthetic="false"
+            AnchorId="anchor-arch-exotic-stasisvault"
+            DisplayName="stasis vault precinct">
+    <description Text="Stages the exact stasis-vault precinct to review interlocked custody, transfer vestibules, restricted circulation, and recovered technology." />
+    <param Name="facing" Domain="north|east|south|west" />
+    <step Verb="ProveCatalogue" Catalogue="architecture" />
+    <step Verb="StageGalleryCase" Suite="architecture" Build="stasisvault" Type="craft" Size="xl" Variant="fallback" Facing="{facing}" />
   </scenario>
   <scenario Key="founding-first-city"
             Family="founding"

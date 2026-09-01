@@ -25,7 +25,22 @@ namespace ThousandAndFirst
 					if (!SettlePhase(system, zone, book, op)) return false;
 					if (op.Phase == KingdomLifecyclePhase.Terminal)
 					{
-						if (!KingdomLifecycleRules.Retire(book, op, The.Game.TimeTicks)) return false;
+						bool abandoned = KingdomLifecycleRules.LodgeAbandoned(op);
+						GameObject marketSource = null;
+						r_KingdomMarketHandoffSourceProjection marketMarker = null;
+						if (abandoned && !PrepareMarketTerminalClose(system, zone, op,
+							out marketSource, out marketMarker)) return false;
+						if (abandoned)
+						{
+							if (!KingdomLifecycleRules.TryReleaseAbandonedLodge(book, op,
+								The.Game.TimeTicks)
+								|| !CommitMarketTerminalClose(marketSource, marketMarker)) return false;
+							if (marketMarker != null && marketMarker.TargetTerminalDead != 1) return true;
+							if (!KingdomLifecycleRules.TryRemoveReleasedLodge(book, op,
+								The.Game.TimeTicks)) return false;
+						}
+						else if (!KingdomLifecycleRules.Retire(book, op, The.Game.TimeTicks))
+							return false;
 						return true;
 					}
 					KingdomLifecyclePhase next = Next(op);
@@ -131,6 +146,8 @@ namespace ThousandAndFirst
 			{
 				long current = Simulation.City.KingdomResidents.OnRollCount(system);
 				GameObject guest = FindExact(op.ObjectId);
+				if (!GameObject.Validate(guest) || !guest.IsAlive)
+					return TrySettleDeadLodge(system, book, op);
 				if (lease.State == KingdomLifecycleLeaseState.Intent)
 				{
 					if (current == lease.After)

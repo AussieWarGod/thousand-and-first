@@ -803,8 +803,9 @@ about the substrate, not permission to use it.
 
 ### 3.3 The rung ladder
 
-Four rungs. Each is a **building tier climbing within one plot** (improvements climb within a plot;
-sizes compete across plots), except rung 3, which competes for XL ground.
+Four rungs. Each is ordinarily a **building tier climbing within one plot** (sizes compete across
+plots); a later reviewed adjacent expansion edge may grow its proved envelope, while rung 3 still
+competes for fresh XL ground.
 
 **RUNG 0 — the butcher's slab.** *(S, craft, `MinTech="salvage"`)*
 Not the lab: the prerequisite. The work that turns what you drag home into *parts*. Rides vanilla

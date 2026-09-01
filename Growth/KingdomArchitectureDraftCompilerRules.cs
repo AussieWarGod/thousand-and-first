@@ -40,31 +40,72 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryValidateGlyph(ArchitectureGlyphDraft Glyph,
-			Dictionary<string, ArchitecturePaletteSlot> Slots, out string Failure)
+			Dictionary<string, ArchitecturePaletteSlot> Slots,
+			ArchitecturePoseRegistry Poses, out string Failure)
 		{
 			Failure = null;
 			HashSet<string> anchors = new HashSet<string>(StringComparer.Ordinal);
-			int statefulAnchors = 0;
 			for (int i = 0; i < Glyph.Anchors.Count; i++)
 			{
 				string anchor = Glyph.Anchors[i];
 				if (!ValidKey(anchor) || !anchors.Add(anchor))
 					return Fail("glyph has a malformed or duplicate anchor", out Failure);
-				if (anchor != "main" && !anchor.StartsWith("entrance:", StringComparison.Ordinal))
-					statefulAnchors++;
 			}
 			if (!ValidGlyphToken(Glyph.Ground, ArchitectureLayer.Ground, Slots)
 				|| !ValidGlyphToken(Glyph.Structure, ArchitectureLayer.Structure, Slots)
 				|| !ValidGlyphToken(Glyph.Object, ArchitectureLayer.Object, Slots))
 				return Fail("glyph has a malformed or unresolved placement token", out Failure);
+			if (!TryValidateGlyphPose(Glyph.Ground, Glyph.HasGroundOrientation,
+				Glyph.GroundOrientation, Slots, Poses, out Failure)
+				|| !TryValidateGlyphPose(Glyph.Structure, Glyph.HasStructureOrientation,
+					Glyph.StructureOrientation, Slots, Poses, out Failure)
+				|| !TryValidateGlyphPose(Glyph.Object, Glyph.HasObjectOrientation,
+					Glyph.ObjectOrientation, Slots, Poses, out Failure)) return false;
 			if (Glyph.Object == "$building" && !Glyph.StatefulObject)
 				return Fail("$building must be declared stateful", out Failure);
-			if (!string.IsNullOrEmpty(Glyph.Object) && Glyph.Object != "$building"
-				&& statefulAnchors > 0 && !Glyph.StatefulObject)
-				return Fail("functional object anchor must belong to a stateful fixture", out Failure);
-			if (Glyph.StatefulObject && (string.IsNullOrEmpty(Glyph.Object)
-				|| (Glyph.Object != "$building" && statefulAnchors != 1)))
-				return Fail("stateful fixture must own exactly one stable functional anchor", out Failure);
+			// A semantic anchor says what a cell is for; Stateful says the object carries custody
+			// that an upgrade may not discard. Seats, lamps and other replaceable fittings may be
+			// functional without becoming permanent merely because a plan names their role.
+			if (Glyph.StatefulObject && string.IsNullOrEmpty(Glyph.Object))
+				return Fail("stateful fixture has no object", out Failure);
+			if (Glyph.StatefulObject && Glyph.Object != "$building")
+				return TrySelectStatefulAnchor(Glyph.Anchors, out _, out Failure);
+			return true;
+		}
+
+		/// <summary>A benefit anchor is provider custody, not another topology role. When present it
+		/// is the sole protected identity and may coexist with functional anchors; an ordinary
+		/// stateful fixture instead needs one exact non-main, non-entrance functional identity.</summary>
+		private static bool TrySelectStatefulAnchor(IList<string> Anchors,
+			out string Anchor, out string Failure)
+		{
+			Anchor = null;
+			Failure = null;
+			string benefit = null;
+			string functional = null;
+			bool severalFunctional = false;
+			for (int i = 0; i < Anchors.Count; i++)
+			{
+				string key = Anchors[i];
+				if (key == "main" || key.StartsWith("entrance:",
+					StringComparison.Ordinal)) continue;
+				if (key.StartsWith("benefit:", StringComparison.Ordinal))
+				{
+					if (benefit != null)
+						return Fail("stateful benefit fixture must own exactly one benefit custody anchor", out Failure);
+					benefit = key;
+				}
+				else if (functional == null) functional = key;
+				else severalFunctional = true;
+			}
+			if (benefit != null)
+			{
+				Anchor = benefit;
+				return true;
+			}
+			if (functional == null || severalFunctional)
+				return Fail("stateful fixture without benefit custody must own exactly one stable functional anchor", out Failure);
+			Anchor = functional;
 			return true;
 		}
 
@@ -86,9 +127,11 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryAddPlacement(ArchitectureLayoutSnapshot Snapshot,
-			ArchitectureLayer Layer, int X, int Y, string Token, bool Stateful,
+			ArchitectureLayer Layer, int X, int Y, string Token, bool HasOrientation,
+			ArchitectureFacing Orientation, bool Stateful,
 			IList<ArchitectureAnchor> CellAnchors,
 			Dictionary<string, ArchitecturePaletteSlot> Slots,
+			ArchitecturePoseRegistry Poses,
 			ref bool HasBuilding, out string Failure)
 		{
 			Failure = null;
@@ -112,8 +155,8 @@ namespace ThousandAndFirst
 			ArchitecturePaletteSlot slot;
 			if (!ValidKey(key) || !Slots.TryGetValue(key, out slot))
 				return Fail("map references an unknown palette slot", out Failure);
-			string blueprint = slot.Blueprint;
-			if (!ValidBlueprint(blueprint)) return Fail("map placement blueprint is malformed", out Failure);
+			if (!TryResolvePose(Poses, slot.Blueprint, HasOrientation, Orientation,
+				Snapshot.Facing, out string blueprint, out Failure)) return false;
 			KingdomMaterial material;
 			int tech;
 			if (!KingdomMaterialRules.TryParseMaterial(slot.Material, out material)
@@ -122,17 +165,11 @@ namespace ThousandAndFirst
 			string statefulAnchor = null;
 			if (Stateful)
 			{
+				List<string> anchorKeys = new List<string>(CellAnchors.Count);
 				for (int i = 0; i < CellAnchors.Count; i++)
-				{
-					string anchorKey = CellAnchors[i].Key;
-					if (anchorKey == "main"
-						|| anchorKey.StartsWith("entrance:", StringComparison.Ordinal)) continue;
-					if (statefulAnchor != null)
-						return Fail("stateful fixture must own exactly one stable functional anchor", out Failure);
-					statefulAnchor = anchorKey;
-				}
-				if (statefulAnchor == null)
-					return Fail("stateful fixture has no stable functional anchor", out Failure);
+					anchorKeys.Add(CellAnchors[i].Key);
+				if (!TrySelectStatefulAnchor(anchorKeys, out statefulAnchor,
+					out Failure)) return false;
 			}
 			Snapshot.Placements.Add(new ArchitecturePlacement
 			{
@@ -162,13 +199,18 @@ namespace ThousandAndFirst
 				|| !ValidKey(Snapshot.BuildKey) || !ValidKey(Snapshot.TierKey)
 				|| !ValidKey(Snapshot.VariantKey) || !ValidKey(Snapshot.PaletteKey)
 				|| FoldType(Snapshot.LotType) == null || !KnownLotSize(Snapshot.LotSize)
+				|| !KingdomArchitectureTransitionRules.IsKnown(
+					Snapshot.IncomingTransitionMode)
 				|| !KnownFacing(Snapshot.Facing))
 				return Fail("snapshot metadata is malformed", out Failure);
 			if (!TryCanonicalDimensions(Snapshot.LotSize, out int lotWidth, out int lotHeight)
 				|| Snapshot.Width != lotWidth || Snapshot.Height != lotHeight
 				|| (long)Snapshot.Width * Snapshot.Height > MaxMapArea
 				|| Snapshot.MainX < 0 || Snapshot.MainX >= Snapshot.Width
-				|| Snapshot.MainY < 0 || Snapshot.MainY >= Snapshot.Height)
+				|| Snapshot.MainY < 0 || Snapshot.MainY >= Snapshot.Height
+				|| !ValidFootprint(Snapshot.Width, Snapshot.Height, Snapshot.FootprintX,
+					Snapshot.FootprintY, Snapshot.FootprintWidth, Snapshot.FootprintHeight)
+				|| !ContainsFootprintCell(Snapshot, Snapshot.MainX, Snapshot.MainY))
 				return Fail("snapshot dimensions or main coordinate are invalid", out Failure);
 			if (Snapshot.Cells == null || Snapshot.Cells.Count != Snapshot.Width * Snapshot.Height
 				|| Snapshot.Placements == null || Snapshot.Placements.Count > MaxPlacements
@@ -181,7 +223,10 @@ namespace ThousandAndFirst
 				ArchitectureCellState cell = Snapshot.Cells[i];
 				if (cell == null || cell.X < 0 || cell.X >= Snapshot.Width
 					|| cell.Y < 0 || cell.Y >= Snapshot.Height
-					|| !KnownPassability(cell.Passability) || !KnownCover(cell.Cover)
+					|| !KnownClaim(cell.Claim) || !KnownPassability(cell.Passability)
+					|| !KnownCover(cell.Cover)
+					|| (cell.Claim == ArchitectureClaim.Building
+						&& !ContainsFootprintCell(Snapshot, cell.X, cell.Y))
 					|| !cells.Add(CellKey(cell.X, cell.Y, Snapshot.Width)))
 					return Fail("snapshot has a malformed or duplicate cell", out Failure);
 			}
@@ -231,7 +276,8 @@ namespace ThousandAndFirst
 							!= (placement.Blueprint == "r_KingdomFirstBasin")
 						|| (placement.ExistingAuthority && placement.Natural)))
 					|| placement.Slot != SlotFor(placement.Layer, placement.X, placement.Y)
-					|| !placementCells[CellKey(placement.X, placement.Y, Snapshot.Width)].Claim
+					|| !IsClaimed(placementCells[CellKey(placement.X, placement.Y,
+						Snapshot.Width)].Claim)
 					|| !slots.Add(placement.Slot))
 					return Fail("snapshot has a malformed or duplicate placement", out Failure);
 				blueprints.Add(placement.Blueprint);

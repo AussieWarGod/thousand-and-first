@@ -127,9 +127,7 @@ namespace ThousandAndFirst
 			bool knownPhase = KnownPhase(Operation.Phase);
 			bool good = Operation.Lane == ExpectedLane
 					&& ActionAllowedInLane(Operation.Action, ExpectedLane)
-					&& IsExactSuccessor(Operation.Sequence,
-						GetRetiredThrough(Book, ExpectedLane))
-					&& Operation.Sequence < GetNextSequence(Book, ExpectedLane)
+					&& LaneSequenceValid(Book, ExpectedLane, Operation)
 				&& CanonicalOperationId(Operation)
 				&& string.Equals(Operation.SettlementId, Book.SettlementId, StringComparison.Ordinal)
 				&& knownPhase && PhaseAllowed(Operation.Action, Operation.Phase)

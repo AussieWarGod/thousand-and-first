@@ -68,8 +68,12 @@ namespace ThousandAndFirst
 				KingdomLifecycleResourceLease lease = operation.ResourceLeases[i];
 				KingdomLifecycleResourceRevision row = lease == null
 					? null : FindResource(book, lease.Key);
-				if (!LeaseStateAllowedAtPhase(operation, lease)
-					|| !ResourceWitnessMatches(row, lease)) return false;
+				if (!LeaseStateAllowedAtPhase(operation, lease)) return false;
+				if (LodgeAuthorityReleased(operation))
+				{
+					if (!ReleasedResourceWitnessMatches(row, lease)) return false;
+				}
+				else if (!ResourceWitnessMatches(row, lease)) return false;
 			}
 			return true;
 		}
@@ -81,7 +85,8 @@ namespace ThousandAndFirst
 				|| !string.Equals(row.ActiveOperationId, lease.OperationId,
 					StringComparison.Ordinal)) return false;
 			if (lease.State == KingdomLifecycleLeaseState.Prepared
-				|| lease.State == KingdomLifecycleLeaseState.Intent)
+				|| lease.State == KingdomLifecycleLeaseState.Intent
+				|| lease.State == KingdomLifecycleLeaseState.Skipped)
 				return row.Revision == lease.BeforeRevision
 					&& !string.Equals(row.LastOperationId, lease.OperationId,
 						StringComparison.Ordinal);

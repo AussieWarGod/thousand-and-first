@@ -197,7 +197,8 @@ namespace ThousandAndFirst
 			string marker = Zone == null ? ""
 				: Zone.GetZoneProperty(KingdomInheritEngine.ZoneMarkerProperty, "") ?? "";
 			if (!KingdomInheritanceStateRules.TryComposeApplicationMarker(Legacy, Reserved,
-					TargetZoneId, KingdomInheritEngine.ReconstructionVersion, out expected)
+					TargetZoneId, KingdomInheritEngine.ReconstructionVersionFor(Legacy),
+					out expected)
 				|| !KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
 					ApplyStatusValue, ApplyFaultValue, RetryAuthorized, ApplicationMarker,
 					marker, expected))

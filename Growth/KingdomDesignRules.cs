@@ -158,6 +158,20 @@ namespace ThousandAndFirst
 			return null;
 		}
 
+		/// <summary>Alias-aware suggested skin. Canonical key wins when a malformed external
+		/// design declares both a canonical and legacy skin.</summary>
+		public static SkinEntry ResolveDefaultSkinForKeys(IReadOnlyList<SkinEntry> Skins,
+			IList<string> CityStyleKeys)
+		{
+			if (Skins == null || CityStyleKeys == null) return null;
+			for (int k = 0; k < CityStyleKeys.Count; k++)
+			{
+				SkinEntry found = ResolveDefaultSkin(Skins, CityStyleKeys[k]);
+				if (found != null) return found;
+			}
+			return null;
+		}
+
 		/// <summary>One menu line for a skin choice. Pure presentation; <paramref
 		/// name="Suggested"/> marks the one <see cref="ResolveDefaultSkin"/> would pick.</summary>
 		public static string DescribeSkinOption(SkinEntry Skin, bool Suggested)

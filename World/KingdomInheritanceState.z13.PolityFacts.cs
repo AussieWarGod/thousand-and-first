@@ -31,6 +31,11 @@ namespace ThousandAndFirst
 				legacy.Population <= 0) return true;
 			KingdomPolityLegacySnapshot candidate = new KingdomPolityLegacySnapshot
 			{
+				ProfileSchema = legacy.ProfileSchema,
+				TechnologyBand = legacy.TechnologyBand,
+				CanonicalBodyKeys = Copy(legacy.CanonicalBodyKeys),
+				SourceProfileDigest = legacy.SourceProfileDigest,
+				ProfileProvenanceDigest = legacy.ProfileProvenanceDigest,
 				LegacyToken = legacy.LegacyId, LineageToken = legacy.LineageId,
 				FounderName = legacy.FounderName, RealmName = legacy.RealmName,
 				SettlementName = legacy.SettlementName, Vocation = legacy.Vocation,

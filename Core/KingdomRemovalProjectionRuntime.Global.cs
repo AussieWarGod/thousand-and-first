@@ -51,17 +51,21 @@ namespace ThousandAndFirst
 			if (!TryInspectGlobalStates(System, current, out List<string> _, out Failure)
 				|| !SameKeys(Plan.StringStates, current.StringStates)
 				|| !SameKeys(Plan.EmptyObjectStates, current.EmptyObjectStates)
-				|| !SameMap(Plan.HostedAuthorityStates, current.HostedAuthorityStates))
+				|| !SameMap(Plan.HostedAuthorityStates, current.HostedAuthorityStates)
+				|| !SameMap(Plan.HostedDepartureStates, current.HostedDepartureStates))
 				return Fail(Failure ?? "owned global keys changed after preview", out Failure);
 			foreach (KeyValuePair<string, string> row in Plan.HostedAuthorityStates)
 				if (The.Game.GetStringGameState(row.Key, null) != row.Value)
 					return Fail("hosted authority changed after exact preview", out Failure);
+			foreach (KeyValuePair<string, string> row in Plan.HostedDepartureStates)
+				if (The.Game.GetStringGameState(row.Key, null) != row.Value)
+					return Fail("hosted departure changed after exact preview", out Failure);
 			RemoveKeys(The.Game.StringGameState, Plan.StringStates);
 			RemoveKeys(The.Game.ObjectGameState, Plan.EmptyObjectStates);
-			foreach (KeyValuePair<string, string> row in Plan.HostedAuthorityStates)
-			{
+			foreach (KeyValuePair<string, string> row in Plan.HostedDepartureStates)
 				The.Game.RemoveStringGameState(row.Key);
-			}
+			foreach (KeyValuePair<string, string> row in Plan.HostedAuthorityStates)
+				The.Game.RemoveStringGameState(row.Key);
 			KingdomRealmRemovalFinalPlan empty = new KingdomRealmRemovalFinalPlan();
 			return TryInspectGlobalStates(System, empty, out List<string> rows, out Failure)
 				&& (rows.Count == 0 || Fail("TAF-owned global state remains", out Failure));
@@ -85,16 +89,30 @@ namespace ThousandAndFirst
 				{
 					Plan.StringStates.Add(row.Key); Rows.Add("empty-string\u001f" + row.Key); continue;
 				}
-				if (!KingdomHostedArcologyReceiptCodec.TryDecodeAuthority(row.Value,
-					out KingdomHostedArcologyAuthority authority))
-					return Fail("hosted authority slot is malformed and cannot be classified",
+				if (Array.IndexOf(KingdomRemovalCoverage.HostedArcologyAuthorityStates,
+					row.Key) >= 0)
+				{
+					if (!KingdomHostedArcologyReceiptCodec.TryDecodeAuthority(row.Value,
+						out KingdomHostedArcologyAuthority authority))
+						return Fail("hosted authority slot is malformed and cannot be classified",
+							out Failure);
+					if (authority.RealmId != System.RealmId) continue;
+					Plan.HostedAuthorityStates[row.Key] = row.Value;
+					Rows.Add("hosted-authority\u001f" + row.Key + "\u001f" + authority.ZoneId
+						+ "\u001f" + KingdomRetirementDigestRules.Evidence(
+							"hosted-authority-wire-v1", new List<string> { row.Value }));
+					continue;
+				}
+				if (!KingdomHostedDepartureCodec.TryDecode(row.Value,
+					out KingdomHostedDepartureState departure)
+					|| !KingdomHostedDepartureRules.SlotKeyMatches(row.Key, departure))
+					return Fail("hosted departure slot is malformed and cannot be classified",
 						out Failure);
-				if (authority.RealmId != System.RealmId) continue;
-				if (authority.Phase != KingdomHostedAuthorityPhase.Active)
-					return Fail("current-realm hosted authority is not safely active", out Failure);
-				Plan.HostedAuthorityStates[row.Key] = row.Value;
-				Rows.Add("hosted-authority\u001f" + row.Key + "\u001f" + authority.ZoneId
-					+ "\u001f" + KingdomRetirementDigestRules.Evidence("hosted-authority-wire-v1",
+				if (departure.RealmId != System.RealmId) continue;
+				Plan.HostedDepartureStates[row.Key] = row.Value;
+				Rows.Add("hosted-departure\u001f" + row.Key + "\u001f"
+					+ departure.ExteriorZoneId + "\u001f"
+					+ KingdomRetirementDigestRules.Evidence("hosted-departure-wire-v1",
 						new List<string> { row.Value }));
 			}
 			Plan.StringStates.Sort(StringComparer.Ordinal); return true;

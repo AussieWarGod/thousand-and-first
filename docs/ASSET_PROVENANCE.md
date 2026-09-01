@@ -2,7 +2,7 @@
 
 ## Current release boundary
 
-Current runtime asset trees contain zero project-authored bitmap sprites: all 84 shipped tile
+Current runtime asset trees contain zero project-authored bitmap sprites: all 125 shipped tile
 paths presently resolve to art supplied by Caves of Qud, and the game art is not copied into this
 repository or Workshop package. Objects may instead use an intentional text glyph. This is the
 current inventory, not a permanent ban. A project-authored runtime sprite may ship only through
@@ -78,13 +78,19 @@ dimensions, palette, contrast, function, and live in-game readability are indepe
 
 ## Workshop preview
 
+Current-candidate preview status: **OPEN**. The provenance record below is authentic for commit
+`e52270f`, but later heart-court geometry and content changes make it stale for the frozen source
+snapshot. Preserve it as prior native evidence; recapture the current full footprint and complete
+`final-native-preview-review` before any public upload. Do not edit the recorded bytes, crop, hashes,
+or procedure to imply current-candidate coverage.
+
 The committed root `preview.png` is presentation media captured from the tested mod running in
 Qud. It is not referenced by XML and is not a runtime sprite. It shows a mod-authored building —
 the civic heart-court (`heartcourt|civic|Huge|fallback|North`) — staged by the architecture
 gallery's production snapshot/stamper/rendering path in the harness's born-clean test zone.
 Generated art, a static gallery render, or a synthetic mock-up cannot stand here; this is a
-native game screenshot. Final human preview review (`final-native-preview-review`) is recorded
-in the release evidence at upload time.
+native game screenshot of the recorded older build. Final human preview review
+(`final-native-preview-review`) remains open and is recorded in release evidence at upload time.
 
 | Field | Record |
 |---|---|

@@ -13,6 +13,7 @@ namespace ThousandAndFirst
 		internal readonly string Text;
 		internal readonly bool Accomplishment;
 		internal readonly string MuralText;
+		internal readonly string AuthoredOutsiderText;
 		internal readonly string Fingerprint;
 		internal readonly string Official;
 		internal readonly string Outsider;
@@ -22,12 +23,14 @@ namespace ThousandAndFirst
 		internal readonly string OutsiderAfter;
 
 		internal KingdomChronicleDeclaration(string EventId, string Text,
-			bool Accomplishment, string MuralText, string Fingerprint, string Official,
+			bool Accomplishment, string MuralText, string AuthoredOutsiderText,
+			string Fingerprint, string Official,
 			string Outsider, string OfficialBefore, string OfficialAfter,
 			string OutsiderBefore, string OutsiderAfter)
 		{
 			this.EventId = EventId; this.Text = Text; this.Accomplishment = Accomplishment;
-			this.MuralText = MuralText; this.Fingerprint = Fingerprint;
+			this.MuralText = MuralText; this.AuthoredOutsiderText = AuthoredOutsiderText;
+			this.Fingerprint = Fingerprint;
 			this.Official = Official; this.Outsider = Outsider;
 			this.OfficialBefore = OfficialBefore; this.OfficialAfter = OfficialAfter;
 			this.OutsiderBefore = OutsiderBefore; this.OutsiderAfter = OutsiderAfter;
@@ -120,12 +123,34 @@ namespace ThousandAndFirst
 		internal static bool TryDeclareOnce(KingdomSystem System, string EventId, string Text,
 			bool Accomplishment, string MuralText, out KingdomChronicleDeclaration Declaration)
 		{
+			return TryDeclareCore(System, EventId, Text, null, Accomplishment, MuralText,
+				out Declaration);
+		}
+
+		/// <summary>Freezes an authored counter-account beside the official account. Both
+		/// rendered entries enter the terminal fingerprint; null is never treated as disputed.</summary>
+		internal static bool TryDeclareDisputedOnce(KingdomSystem System, string EventId,
+			string Text, string OutsiderText, bool Accomplishment, string MuralText,
+			out KingdomChronicleDeclaration Declaration)
+		{
+			return TryDeclareCore(System, EventId, Text, OutsiderText, Accomplishment, MuralText,
+				out Declaration);
+		}
+
+		private static bool TryDeclareCore(KingdomSystem System, string EventId, string Text,
+			string AuthoredOutsiderText, bool Accomplishment, string MuralText,
+			out KingdomChronicleDeclaration Declaration)
+		{
 			Declaration = null;
 			if (System == null || The.Game == null || System.ChronicleEntries == null ||
 				System.OutsiderEntries == null || System.ChronicleEntries.Count > MaxEntries ||
-				System.OutsiderEntries.Count > MaxEntries ||
-				!KingdomChronicleReceiptRules.TryFingerprint(EventId, Text, Accomplishment,
-					MuralText, out string fingerprint)) return false;
+				System.OutsiderEntries.Count > MaxEntries || string.IsNullOrEmpty(EventId) ||
+				EventId.Length > KingdomChronicleReceiptRules.MaxEventIdChars || Text == null ||
+				Text.Length > KingdomChronicleReceiptRules.MaxEventTextChars ||
+				(AuthoredOutsiderText != null && (AuthoredOutsiderText.Length == 0 ||
+				 AuthoredOutsiderText.Length > KingdomChronicleReceiptRules.MaxEventTextChars)) ||
+				(MuralText != null &&
+				 MuralText.Length > KingdomChronicleReceiptRules.MaxMuralTextChars)) return false;
 			string official;
 			string outsider;
 			try
@@ -133,14 +158,21 @@ namespace ThousandAndFirst
 				official = "On the " + XRL.World.Calendar.GetDay() + " of "
 					+ XRL.World.Calendar.GetMonth() + ", " + XRL.World.Calendar.GetYear()
 					+ " AR, " + Text + ".";
-				outsider = KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(Text,
-					FounderName()), DrawOutsiderRoll(System));
+				outsider = KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(
+					AuthoredOutsiderText ?? Text, FounderName()), DrawOutsiderRoll(System));
 			}
 			catch { return false; }
+			string fingerprint;
+			bool fingerprinted = AuthoredOutsiderText == null
+				? KingdomChronicleReceiptRules.TryFingerprint(EventId, Text, Accomplishment,
+					MuralText, out fingerprint)
+				: KingdomChronicleReceiptRules.TryDisputedFingerprint(EventId, official,
+					outsider, Accomplishment, MuralText, out fingerprint);
 			if (string.IsNullOrEmpty(official) ||
 				official.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
 				string.IsNullOrEmpty(outsider) ||
 				outsider.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
+				!fingerprinted ||
 				!KingdomChronicleReceiptRules.TryHashList("official", System.ChronicleEntries,
 					out string officialBefore) ||
 				!KingdomChronicleReceiptRules.TryHashAfter("official", System.ChronicleEntries,
@@ -150,7 +182,8 @@ namespace ThousandAndFirst
 				!KingdomChronicleReceiptRules.TryHashAfter("outsider", System.OutsiderEntries,
 					outsider, out string outsiderAfter)) return false;
 			Declaration = new KingdomChronicleDeclaration(EventId, Text, Accomplishment,
-				MuralText, fingerprint, official, outsider, officialBefore, officialAfter,
+				MuralText, AuthoredOutsiderText, fingerprint, official, outsider,
+				officialBefore, officialAfter,
 				outsiderBefore, outsiderAfter);
 			return true;
 		}

@@ -18,7 +18,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		/// <returns>The highest rung any cell was brought to this pass, for the ledger's one
 		/// line.</returns>
-		private static KingdomRoadRules.WearState Apply(Zone Z, IList<KingdomRoadRules.WornCell> Tally, IList<KingdomPlotRules.PlotRect> Plots)
+		private static KingdomRoadRules.WearState Apply(Zone Z,
+			IList<KingdomRoadRules.WornCell> Tally, IList<KingdomPlotRules.PlotRect> Plots,
+			IDictionary<int, RoadSemantic> Semantics)
 		{
 			KingdomRoadRules.WearState reached = KingdomRoadRules.WearState.Untouched;
 			int changes = 0;
@@ -30,7 +32,7 @@ namespace ThousandAndFirst
 				}
 				KingdomRoadRules.WornCell cell = Tally[i];
 				KingdomRoadRules.WearState wanted = KingdomRoadRules.WearAt(cell.Traffic);
-				if (wanted <= KingdomRoadRules.WearState.Worn)
+				if (wanted <= KingdomRoadRules.WearState.Untouched)
 				{
 					continue;
 				}
@@ -43,6 +45,7 @@ namespace ThousandAndFirst
 					: KingdomRoadRules.WearState.Untouched;
 				if (applied >= wanted)
 				{
+					StampRoadSemantic(exactFloor, cell.X, cell.Y, Z.Width, Semantics);
 					if (wanted == KingdomRoadRules.WearState.Path)
 					{
 						Tally.RemoveAt(i);
@@ -55,10 +58,11 @@ namespace ThousandAndFirst
 					// tally and waits; nothing is moved to make room for a floor.
 					continue;
 				}
-				if (!Lay(ground, wanted, null))
+				if (!Lay(ground, wanted, null, null, out exactFloor))
 				{
 					continue;
 				}
+				StampRoadSemantic(exactFloor, cell.X, cell.Y, Z.Width, Semantics);
 				changes++;
 				if (wanted > reached)
 				{
@@ -78,10 +82,10 @@ namespace ThousandAndFirst
 		/// (STANDARDS 7).
 		/// </summary>
 		/// <param name="C">The cell. Must already have passed <see cref="Wearable"/>.</param>
-		/// <param name="State">The rung to bring it to. <c>Untouched</c> and <c>Worn</c> lay
-		/// nothing, because neither is a floor.</param>
-		/// <param name="PavedBlueprint">The blueprint paving is laid as, from
-		/// <c>KingdomRoadRules.PavedFloorFor</c>. Ignored except when
+		/// <param name="State">The rung to bring it to. Only <c>Untouched</c> lays nothing;
+		/// each lived-in rung has its own restrained native ground treatment.</param>
+		/// <param name="PavedBlueprint">The exact blueprint frozen by the paving palette/order.
+		/// Ignored except when
 		/// <paramref name="State"/> is <c>Paved</c>.</param>
 		/// <returns>False when nothing was laid, including when the blueprint does not exist in
 		/// this install.</returns>
@@ -102,6 +106,9 @@ namespace ThousandAndFirst
 			string blueprint;
 			switch (State)
 			{
+				case KingdomRoadRules.WearState.Worn:
+					blueprint = WornBlueprint;
+					break;
 				case KingdomRoadRules.WearState.Trodden:
 					blueprint = TroddenBlueprint;
 					break;
@@ -163,6 +170,8 @@ namespace ThousandAndFirst
 				if (item.GetIntProperty(PathStateProperty) > 0) previous.Add(item);
 			}
 			floor.SetIntProperty(PathStateProperty, (int)State);
+			for (int i = 0; i < previous.Count; i++)
+				CopyRoadSemantic(previous[i], floor);
 			if (Job != null)
 			{
 				KingdomConstruction.Bind(floor, Job);

@@ -121,7 +121,7 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Carrier) || Survey == null || Carrier.CurrentCell == null
 				|| Carrier.CurrentZone == null
 				|| !ReferenceEquals(Survey.Ground, Carrier.CurrentZone)
-				|| Carrier.GetIntProperty("KingdomBuilt") != 1
+				|| !KingdomUpgrade.IsFunctionallyBuilt(Carrier)
 				|| !SupportsFixture(Carrier.Blueprint) || Carrier.Physics == null
 				|| Carrier.Physics.Takeable || Carrier.Count != 1
 				|| Carrier.GetPart<Description>() == null || !NativeCommerceSurface(Carrier)

@@ -9,7 +9,9 @@ namespace ThousandAndFirst.Tests
 		{
 			"Growth/KingdomSurvey.00.Declarations.cs",
 			"Growth/KingdomSurvey.01.Capture.cs",
+			"Growth/KingdomSurvey.01b.PendingUpgradeComponents.cs",
 			"Growth/KingdomSurvey.02.IndexMaintenance.cs",
+			"Growth/KingdomSurvey.Benefits.cs",
 			"Growth/KingdomSurvey.03.LookupAndWaterDebit.cs",
 			"Growth/KingdomSurvey.04.FoodConsumption.cs",
 			"Growth/KingdomSurvey.05.FoodStorage.cs",

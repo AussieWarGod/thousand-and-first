@@ -28,17 +28,19 @@ namespace ThousandAndFirst
 		{
 			RiteOffer offer = new RiteOffer();
 			string shrineCreed;
-			offer.Facts = FactsFor(Z, Resident, RealmCreed, out shrineCreed);
+			offer.Facts = FactsFor(System, Z, Resident, RealmCreed, out shrineCreed);
 			offer.ShrineCreed = shrineCreed;
 			offer.Drams = KingdomWaterRiteRules.Cost(KingdomWaterRiteRules.Distance(offer.Facts));
 			offer.Bar = BarFor(System, Resident, offer.Facts, offer.Drams, Stored);
 			return offer;
 		}
 
-		private static WaterRiteFacts FactsFor(Zone Z, GameObject Resident, string RealmCreed, out string ShrineCreed)
+		private static WaterRiteFacts FactsFor(KingdomSystem System, Zone Z,
+			GameObject Resident, string RealmCreed, out string ShrineCreed)
 		{
 			string theirs = Resident.GetStringProperty(KingdomCreed.CreedProperty);
 			QolProfile profile = KingdomQol.ProfileOf(Resident);
+			bool theological = KingdomData.CreedUsesTheology(RealmCreed);
 			// One vocabulary, and no new tag: a creature whose Refuses names the faith tag will not
 			// have belief put to them by anybody, exactly as an authored Refuses is absolute at
 			// every closeness rung; one whose Prefers names it is somebody for whom belief is a
@@ -46,14 +48,15 @@ namespace ThousandAndFirst
 			// unconvertible zealot by writing r_TAF_Refuses="taf:faith" on a blueprint, and needs
 			// nothing from this file to do it.
 			string faith = KingdomCeremonyRules.CategoryTag("faith");
-			ShrineCreed = RivalShrineNear(Z, Resident, RealmCreed);
+			ShrineCreed = theological
+				? RivalShrineNear(System, Z, Resident, RealmCreed) : null;
 			return new WaterRiteFacts(
 				KingdomCreed.HostilityBetween(theirs, RealmCreed),
 				SharedDaysOf(Resident),
 				!string.IsNullOrEmpty(theirs),
 				!string.IsNullOrEmpty(ShrineCreed),
-				KingdomQolRules.Has(profile.Prefers, faith),
-				KingdomQolRules.Has(profile.Refuses, faith),
+				theological && KingdomQolRules.Has(profile.Prefers, faith),
+				theological && KingdomQolRules.Has(profile.Refuses, faith),
 				RealmCreed);
 		}
 
@@ -103,30 +106,38 @@ namespace ThousandAndFirst
 			return System.Population > KingdomRules.LoyalCoreSettlers;
 		}
 
-		// A shrine consecrated to anything other than the realm's creed, standing within sight of
-		// this settler's own door. Read off KingdomFaith's own property rather than a second name
-		// for the same fact, so a settlement with the faith module switched off simply has no
-		// object carrying it and this reads false.
-		private static string RivalShrineNear(Zone Z, GameObject Resident, string RealmCreed)
+		// A live shrine capability consecrated to anything other than the realm's creed and whose
+		// exact designation reaches this settler's own door. Consecration metadata never supplies
+		// the shrine: its current physical fixture, scope, access and operation must all re-prove.
+		private static string RivalShrineNear(KingdomSystem System, Zone Z,
+			GameObject Resident, string RealmCreed)
 		{
 			Cell door = DoorOf(Z, Resident);
-			if (Z == null || door == null)
+			KingdomSurvey survey = Z == null ? null
+				: KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			if (Z == null || door == null || !KingdomCapabilityRuntime.TryIndex(
+				Z, survey, "water-rite rival shrine", out KingdomBenefitIndex benefits))
 			{
 				return null;
 			}
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
+			IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+			for (int i = 0; i < readings.Count; i++)
 			{
-				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
-				{
-					continue;
-				}
+				KingdomBenefitReading reading = readings[i];
+				if (!KingdomBenefitCapabilities.Has(reading,
+					KingdomBenefitCapabilities.Shrine)
+					|| !KingdomReach.TryRoot(Z, reading, out GameObject item)) continue;
+				bool ours = reading.Designation.ProviderId == "taf.architecture"
+					|| reading.Designation.ProviderId == "taf.adoption";
+				if (ours && !KingdomUpgrade.IsFunctionallyBuilt(item)) continue;
 				string consecrated = item.GetStringProperty(KingdomFaith.ShrineCreedProperty);
-				if (string.IsNullOrEmpty(consecrated) || KingdomWaterRiteRules.SameCreed(consecrated, RealmCreed))
+				if (string.IsNullOrEmpty(consecrated)
+					|| !KingdomData.CreedUsesTheology(consecrated)
+					|| KingdomWaterRiteRules.SameCreed(consecrated, RealmCreed))
 				{
 					continue;
 				}
-				Cell cell = item.CurrentCell;
-				if (cell != null && KingdomWaterRiteRules.WithinQuarter(cell.X - door.X, cell.Y - door.Y))
+				if (KingdomReach.ReachesCell(System, Z, item, Z, door.X, door.Y, benefits))
 				{
 					return consecrated;
 				}
@@ -149,7 +160,8 @@ namespace ThousandAndFirst
 			{
 				foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 				{
-					if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1 && item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId)
+					if (KingdomUpgrade.IsFunctionallyBuilt(item)
+						&& item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId)
 					{
 						Cell home = item.CurrentCell;
 						if (home != null)

@@ -52,7 +52,7 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Bench) || Part == null || !Part.AuthorityEnabled
 				|| System == null || !System.Founded || !KingdomMaster.AutomaticWorkAllowed(System)
 				|| NowTick < 0L || Part.ConfiguredTick < 0L || NowTick < Part.ConfiguredTick
-				|| Bench.Blueprint != BenchBlueprint || Bench.GetIntProperty("KingdomBuilt") != 1
+				|| Bench.Blueprint != BenchBlueprint || !KingdomUpgrade.IsFunctionallyBuilt(Bench)
 				|| Bench.GetIntProperty("KingdomStaffNeeded") != 1
 				|| Bench.GetIntProperty("KingdomStaffed") != 1 || Bench.CurrentCell == null
 				|| !Enabled || Options.GetOption(KingdomExperienceOptions.AmbientOptionId,

@@ -29,6 +29,23 @@ namespace ThousandAndFirst
 			return SettlementTopology?.FindById(SettlementId);
 		}
 
+		internal bool TryFindNonSeatSettlementByName(string SettlementName,
+			out KingdomSettlement Settlement)
+		{
+			Settlement = null;
+			return SettlementTopology != null &&
+				SettlementTopology.TryFindByName(SettlementName, out Settlement);
+		}
+
+		internal bool NonSeatClaimsZone(string ZoneId)
+		{
+			if (string.IsNullOrEmpty(ZoneId) || SettlementTopology == null) return false;
+			for (int i = 0; i < SettlementTopology.Count; i++)
+				if (SettlementTopology.Get(i)?.ClaimedZones?.Contains(ZoneId) == true)
+					return true;
+			return false;
+		}
+
 		internal KingdomSettlement FindNonSeatSettlementByBook(
 			Simulation.City.KingdomCityBook Book)
 		{

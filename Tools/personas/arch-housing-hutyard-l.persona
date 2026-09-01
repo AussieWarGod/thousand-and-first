@@ -1,0 +1,6 @@
+# Same-pose permanent successor for the large tent row: retained bay inside a functional timber court.
+DESCRIPTION=large timber hut-and-yard stages for transformative-renovation review
+REQUEST=arch-housing-hutyard-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

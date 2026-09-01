@@ -20,9 +20,14 @@ namespace ThousandAndFirst
 			bool Accomplishment, string MuralText, KingdomChronicleDeclaration Declaration)
 		{
 			string fingerprint;
-			if (System == null || The.Game == null
-				|| !KingdomChronicleReceiptRules.TryFingerprint(EventId, Text, Accomplishment,
-					MuralText, out fingerprint) || (Declaration != null &&
+			bool fingerprinted = Declaration != null &&
+				Declaration.AuthoredOutsiderText != null
+				? KingdomChronicleReceiptRules.TryDisputedFingerprint(EventId,
+					Declaration.Official, Declaration.Outsider, Accomplishment, MuralText,
+					out fingerprint)
+				: KingdomChronicleReceiptRules.TryFingerprint(EventId, Text, Accomplishment,
+					MuralText, out fingerprint);
+			if (System == null || The.Game == null || !fingerprinted || (Declaration != null &&
 					(!string.Equals(Declaration.EventId, EventId, StringComparison.Ordinal) ||
 					 !string.Equals(Declaration.Text, Text, StringComparison.Ordinal) ||
 					 Declaration.Accomplishment != Accomplishment ||

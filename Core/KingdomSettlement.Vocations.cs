@@ -70,7 +70,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Why a second founding may not proceed, or <see cref="SecondFoundingVerdict.Allowed"/>.
+		/// Why an additional-city founding may not proceed, or <see cref="SecondFoundingVerdict.Allowed"/>.
 		/// Pure so the rule is tabled rather than discovered in the field.
 		/// </summary>
 		public enum SecondFoundingVerdict
@@ -84,7 +84,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Judges whether the founding rite, performed on ground the founder is standing on,
-		/// founds the realm's second city.
+		/// founds the realm's next additional city before the three-city cap. The public verdict
+		/// name remains historical API vocabulary.
 		/// </summary>
 		/// <param name="Founded">Whether the realm exists at all.</param>
 		/// <param name="SettlementsHeld">Cities the realm already holds, seat included.</param>
@@ -148,10 +149,9 @@ namespace ThousandAndFirst
 			{
 				sb.Append(" [").Append(Vocation).Append("]");
 			}
-			sb.Append(" ").Append(Style).Append(" ").Append(Stage).Append(Withered ? " (withered)" : "").Append(Famished ? " (famished)" : "")
+			sb.Append(" ").Append(Style).Append(" ").Append(Stage).Append(Withered ? " (withered)" : "")
 				.Append(" pop=").Append(Population)
 				.Append(" dry=").Append(DryStreak)
-				.Append(" hunger=").Append(HungerStreak)
 				.Append(" claims=").Append(ClaimedZones.Count)
 				.Append(" founded=").Append(FoundedTick)
 				.Append(" semantic=").Append(LastSemanticTick)

@@ -74,6 +74,18 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<int> OutcomeCodes = new List<int>();
 
+		// ---- Final expedition publication receipt -----------------------------------------
+		// One additive envelope. All four columns are absent in historical saves; Normalize
+		// pads only that exact absence and refuses partially present current authority.
+
+		public List<int> ExpeditionDeedDispositions = new List<int>();
+
+		public List<string> ExpeditionDeedPolityIds = new List<string>();
+
+		public List<string> ExpeditionDeedCauseRefs = new List<string>();
+
+		public List<string> ExpeditionDeedFigureRefs = new List<string>();
+
 		// ---- Exact central-delivery payload --------------------------------------------
 		// Additive v4 named columns. Endpoint ids are stable hashes used by the sparse
 		// distance matrix; full engine object ids bind physical debit and receipt exactly.

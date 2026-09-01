@@ -160,7 +160,9 @@ namespace ThousandAndFirst
 				Popup.Show(KingdomMirrorGateRules.NotOurGroundLine);
 				return;
 			}
-			if (Gate.ParentObject.GetIntProperty("KingdomBuilt") != 1 && Gate.ParentObject.GetIntProperty("KingdomGrid") != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Gate.ParentObject)
+				&& (Gate.ParentObject.GetIntProperty("KingdomGrid") != 1
+					|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(Gate.ParentObject)))
 			{
 				Popup.Show(KingdomMirrorGateRules.NotOurWorkLine);
 				return;

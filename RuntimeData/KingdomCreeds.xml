@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kingdomcreeds Schema="1">
+  <!-- Semantic kinds follow installed Qud 2.0.211.51 Base/Factions.xml identity, not building
+       aesthetics or factionworshipattitudes. Settlement display names establish communities;
+       biological/ontological and tribal names establish peoples; named institutions establish
+       polities/orders. Only the two doctrine rows (Mechanimists and Seekers) and two cult rows
+       (Mamon and Resheph) are shipped as theological conversion targets; an order would require
+       an explicit Theology="yes" opt-in. Girsh, Gyre Wights, baetyls, and Naphtaali remain
+       beings/peoples even where Qud lets others worship them or TAF gives their practice an altar. -->
+  <creed Name="Joppa" Kind="community" />
+  <creed Name="Kyakukya" Kind="community" />
+  <creed Name="Ezra" Kind="community" />
+  <creed Name="Chavvah" Kind="community" />
+
+  <creed Name="Snapjaws" Kind="people" />
+  <creed Name="Cragmensch" Kind="people" />
+  <creed Name="Robots" Kind="people" />
+  <creed Name="Baetyls" Kind="people" />
+  <creed Name="Dromad" Kind="people" />
+  <creed Name="Entropic" Kind="people" />
+  <creed Name="Goatfolk" Kind="people" />
+  <creed Name="Svardym" Kind="people" />
+  <creed Name="Naphtaali" Kind="people" />
+  <creed Name="Trolls" Kind="people" />
+  <creed Name="Issachari" Kind="people" />
+  <creed Name="Strangers" Kind="people" />
+  <creed Name="Hindren" Kind="people" />
+  <creed Name="Mopango" Kind="people" />
+  <creed Name="Girsh" Kind="people" />
+
+  <creed Name="Water" Kind="polity" />
+  <creed Name="YdFreehold" Kind="polity" />
+
+  <creed Name="Barathrumites" Kind="order" />
+  <creed Name="Consortium" Kind="order" />
+  <creed Name="Templar" Kind="order" />
+  <creed Name="Wardens" Kind="order" />
+  <creed Name="Merchants" Kind="order" />
+  <creed Name="Farmers" Kind="order" />
+  <creed Name="Daughters" Kind="order" />
+
+  <creed Name="Gyre Wights" Kind="people" />
+  <creed Name="Mechanimists" Kind="doctrine" />
+  <creed Name="Seekers" Kind="doctrine" />
+
+  <creed Name="Mamon" Kind="cult" />
+  <creed Name="Resheph" Kind="cult" />
+</kingdomcreeds>

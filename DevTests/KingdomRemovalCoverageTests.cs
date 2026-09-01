@@ -66,6 +66,8 @@ namespace ThousandAndFirst.Tests
 				"global prefixes");
 			AssertSortedUnique(KingdomRemovalCoverage.HostedArcologyAuthorityStates,
 				"hosted authority states");
+			AssertSortedUnique(KingdomRemovalCoverage.HostedArcologyDepartureStates,
+				"hosted departure states");
 			AssertSortedUnique(KingdomRemovalCoverage.OwnedZoneProperties, "zone properties");
 			AssertSortedUnique(KingdomRemovalCoverage.OwnedObjectPropertyPrefixes,
 				"object prefixes");

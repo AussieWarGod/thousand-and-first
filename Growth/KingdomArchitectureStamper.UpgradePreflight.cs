@@ -14,6 +14,8 @@ namespace ThousandAndFirst
 		/// Pre-debit proof for an in-place authored tier. Only newly added placements claim current
 		/// materials/craft/knowledge. Retained and removed outputs must still be exact, and any
 		/// container, liquid, immutable relic, stateful anchor, or foreign occupant blocks removal.
+		/// A heart tier uses the same protection law: its static fabric may be renovated while its
+		/// immutable basin and state-bearing fixtures remain exact.
 		/// </summary>
 		public static bool TryPreflightUpgrade(KingdomSystem System, Zone Z, GameObject Owner,
 			KingdomArchitectureIntent Successor, KingdomMaterialDebitCost PaidClaim,
@@ -33,11 +35,15 @@ namespace ThousandAndFirst
 			Failure = null;
 			KingdomArchitectureIntent before;
 			ArchitectureLayoutSnapshot snapshot;
+			ArchitectureLayoutSnapshot successorSnapshot;
 			string lot;
 			if (!TryReadOwner(Owner, out before, out snapshot, out lot, out Failure) ||
 				!KingdomSocketTransitions.TryResolveCurrent(Transition, before.BuildKey,
 					Successor?.BuildKey, before.LotType, before.LotSize,
 					out KingdomSocketTransition declared)
+				|| !KingdomArchitectureRuntime.TryDecode(Successor, out successorSnapshot,
+					out Failure)
+				|| successorSnapshot.IncomingTransitionMode != declared.Mode
 				|| !ExactTransitionClaim(PaidClaim, declared.Materials))
 				return Failure != null ? false : Fail(
 					"same-set declaration or paid claim is not exactly current", out Failure);
@@ -71,6 +77,8 @@ namespace ThousandAndFirst
 			string lot;
 			if (System == null || !System.Founded || Z == null || PaidClaim == null
 				|| !TryReadOwner(Owner, out beforeIntent, out before, out lot, out Failure)
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(
+					beforeIntent.EncodedSnapshot)
 				|| Owner.GetIntProperty(NextLayerProperty) != 3)
 			{
 				if (Failure == null) Failure = "authored upgrade needs one complete frozen lot";
@@ -78,7 +86,9 @@ namespace ThousandAndFirst
 			}
 			ArchitectureLayoutSnapshot after;
 			if (!KingdomArchitectureRuntime.TryDecode(Successor, out after, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Successor.EncodedSnapshot))
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(Successor.EncodedSnapshot)
+				|| !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
+					Z, Successor.Rect, after, out Failure))
 				return false;
 			bool heartAccretion;
 			if (Owner.CurrentZone != Z || Owner.CurrentCell != Z.GetCell(beforeIntent.MainWorldX,
@@ -87,9 +97,27 @@ namespace ThousandAndFirst
 					AllowPlanChange, out heartAccretion, out Failure))
 				return Failure != null ? false : Fail(
 					"authored successor crosses, moves, or retypes its frozen lot", out Failure);
+			if (!SameRect(beforeIntent.Rect, Successor.Rect)
+				&& !TryProveEnvelopeGrowth(System, Z, Owner, null, Successor, false,
+					out Failure)) return false;
+			KingdomPlotRules.PlotRect expectedBeforeFootprint;
+			KingdomPlotRules.PlotRect standingFootprint;
+			KingdomPlotRules.RoofState expectedBeforeRoof;
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(beforeIntent,
+					out expectedBeforeFootprint, out Failure)
+				|| !KingdomArchitectureRuntime.TryRoofOnGround(beforeIntent,
+					KingdomPlotRules.IsUnderground(Z.Z), out expectedBeforeRoof, out Failure)
+				|| !KingdomPlots.TryReadFootprint(Owner, out standingFootprint)
+				|| !SameRect(expectedBeforeFootprint, standingFootprint)
+				|| KingdomPlots.RoofOf(Owner) != expectedBeforeRoof)
+				return Failure != null ? false : Fail(
+					"standing building no longer matches its frozen footprint or roof", out Failure);
 			ArchitectureLayoutDelta delta;
 			if (!KingdomArchitectureRules.TryBuildDelta(before, after, out delta, out Failure)
 				|| !TryBlueprintPassAudit(after, out Failure)) return false;
+			HashSet<int> impacted;
+			if (!TryUpgradeImpact(beforeIntent, Successor, delta, Z, out impacted,
+				out Failure)) return false;
 
 			TechLevel liveTech = KingdomZoning.Tech(System);
 			if (!KingdomZoningRules.IsKnownTechLevel(liveTech))
@@ -107,8 +135,6 @@ namespace ThousandAndFirst
 					out Failure)) return false;
 				owned.Add(exact);
 			}
-			if (heartAccretion && delta.Removed.Count != 0)
-				return Fail("founding-heart accretion may not remove prior fabric", out Failure);
 			for (int i = 0; i < delta.Removed.Count; i++)
 			{
 				ArchitecturePlacement placement = delta.Removed[i];
@@ -118,15 +144,10 @@ namespace ThousandAndFirst
 				owned.Add(exact);
 			}
 			HashSet<int> connections = ConnectionCells(Z);
-			for (int i = 0; i < after.Cells.Count; i++)
+			foreach (int packed in impacted)
 			{
-				ArchitectureCellState authored = after.Cells[i];
-				if (!authored.Claim) continue;
-				int x;
-				int y;
-				if (!KingdomArchitectureRuntime.TryWorldCell(after, Successor.Rect, authored,
-					out x, out y, out Failure)) return false;
-				int packed = y * Z.Width + x;
+				int x = packed % Z.Width;
+				int y = packed / Z.Width;
 				Cell cell = Z.GetCell(x, y);
 				if (cell == null || connections.Contains(packed) || cell.HasStairs()
 					|| cell.HasObjectWithPart("StairsUp") || cell.HasObjectWithPart("StairsDown"))

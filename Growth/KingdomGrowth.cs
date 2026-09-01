@@ -58,21 +58,16 @@ namespace ThousandAndFirst
 		public static bool Enabled => Options.GetOption("r_TAF_OptionGrowth") != "No";
 
 		/// <summary>
-		/// Whether the settlement's people consume what they need and can suffer for the want of
-		/// it. ONE switch for both binding goods, deliberately: water and food are the same
-		/// promise to the player ("this place has needs and can fail them"), and a founder who
-		/// turned scarcity off did not ask to keep half of it. The option ID is unchanged so no
-		/// save or settings file notices; only its display text moved.
+		/// Whether physical water upkeep and water scarcity run. Option ID stays unchanged for
+		/// settings compatibility. Food is physical optional economy, never scarcity.
 		/// </summary>
 		public static bool ScarcityEnabled => Options.GetOption("r_TAF_OptionThirst") != "No";
 
-		/// <summary>The water half of <see cref="ScarcityEnabled"/>, under the name every caller
-		/// written before food was a flow reads.</summary>
+		/// <summary>Compatibility alias for <see cref="ScarcityEnabled"/>.</summary>
 		public static bool ThirstEnabled => ScarcityEnabled;
 
-		/// <summary>The food half of <see cref="ScarcityEnabled"/>, named so a reader of the
-		/// hunger path is not left wondering whether it has a switch of its own.</summary>
-		public static bool HungerEnabled => ScarcityEnabled;
+		/// <summary>Legacy API projection. Passive hunger is permanently retired.</summary>
+		public static bool HungerEnabled => false;
 
 		public static long Interval(KingdomSystem System, Zone Z)
 		{

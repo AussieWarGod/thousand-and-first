@@ -1,9 +1,34 @@
 #!/usr/bin/env bash
-# One-command release-candidate verification.  This mutates neither the live mod nor git.
+# One-command release-candidate verification. This never changes live mod or Git state;
+# invoked checks may refresh ignored local build outputs and machine receipts.
 
 set -euo pipefail
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+usage() {
+	cat <<'EOF'
+Usage: Tools/release-check.sh --test|--alpha|--release
+
+  --test     private/bootstrap lane; workshop.json may be absent or must be private
+  --alpha    public v1.0 Alpha lane; workshop.json must be public
+  --release  evidence-complete public lane; workshop.json must be public
+
+Requires one clean Git worktree for the full run. Pins HEAD at entry and
+reproves both HEAD and worktree cleanliness before reporting success.
+EOF
+}
+
+[ "$#" -eq 1 ] || { usage >&2; exit 2; }
+case "$1" in
+	--test) MODE="test" ;;
+	--alpha) MODE="alpha" ;;
+	--release) MODE="release" ;;
+	-h|--help) usage; exit 0 ;;
+	*) usage >&2; exit 2 ;;
+esac
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+HEAD_GUARD="$REPO/Tools/release-head-guard.sh"
+HEAD_COMMIT="$(bash "$HEAD_GUARD" capture "$REPO")"
 QUD_ROOT_DEFAULT="/mnt/f/SteamLibrary/steamapps/common/Caves of Qud"
 if [ -n "${TAF_QUD_ROOT:-}" ]; then
 	QUD_ROOT="$(cd "$TAF_QUD_ROOT" && pwd)"
@@ -54,6 +79,9 @@ echo "Assembly-CSharp SHA-256: $(sha256sum "$ASSEMBLY_CSHARP_PATH" | cut -d' ' -
 
 cd "$REPO"
 
+echo "Release lane: $MODE"
+echo "Pinned HEAD: $HEAD_COMMIT"
+
 echo "[1/11] patch hygiene"
 git diff --check
 python3 Tools/check-doc-freshness.py
@@ -62,7 +90,7 @@ echo "[2/11] shipped IPart save ABI"
 ./Tools/check-ipart-abi.sh
 
 echo "[3/11] cold-install inventory"
-cmp <(./Tools/stage.sh list-head HEAD) <(./Tools/stage.sh list)
+cmp <(./Tools/stage.sh list-head "$HEAD_COMMIT") <(./Tools/stage.sh list)
 ./Tools/stage.sh verify
 
 echo "[4/11] exact staged compile"
@@ -212,7 +240,20 @@ echo "[9/11] Workshop metadata and package boundary"
 readarray -t workshop_fields < <(python3 Tools/workshop_metadata.py fields manifest.json)
 [ "${#workshop_fields[@]}" -eq 3 ]
 python3 Tools/workshop_metadata.py preview "${workshop_fields[2]}"
-python3 Tools/workshop_metadata.py workshop test manifest.json workshop.json
+python3 Tools/workshop_metadata.py workshop "$MODE" manifest.json workshop.json
+case "$MODE" in
+	alpha)
+		python3 Tools/workshop_metadata.py alpha-candidate \
+			manifest.json preview.png workshop.json docs/ALPHA_CANDIDATE.json \
+			README.md CHANGELOG.md >/dev/null
+		;;
+	release)
+		python3 Tools/workshop_metadata.py evidence \
+			manifest.json preview.png workshop.json docs/RELEASE_EVIDENCE.json \
+			README.md CHANGELOG.md --repository-root . --testing TESTING.md >/dev/null
+		;;
+esac
+./Tools/test-release-check.sh
 ./Tools/test-workshop-package.sh
 
 echo "[10/11] deployment boundary and dry run"
@@ -222,5 +263,6 @@ echo "[10/11] deployment boundary and dry run"
 echo "[11/11] Addendum 9 structural release contract"
 python3 Tools/check-structure.py --release
 
+bash "$HEAD_GUARD" verify "$REPO" "$HEAD_COMMIT"
 echo "AUTOMATED RELEASE PRECHECK CLEAN"
 echo "After the isolated in-game run: Tools/check-player-log.sh PLAYER_LOG"

@@ -119,10 +119,30 @@ namespace ThousandAndFirst
 			bool heirContinuationRegistrationsExact = false;
 			// Procession and shrine callbacks can advance world state after early preflight.
 			// Re-prove exact reversible citizenship immediately before irreversible body transfer.
+			if (KingdomGrowth.SuccessorMarketBlocked(heirBody,
+				KingdomSurvey.ActiveFor(heirBody.CurrentZone))
+				|| !KingdomResidentTransitionAuthority.CanAccede(system, heirBody,
+					chosen.Rule.ResidentId))
+			{
+				KingdomLog.Log("succession: exact heir acquired an open resident role before body transfer");
+				AbortPendingBeforeTransfer(founder, remains);
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
 			if (!KingdomCitizenship.CanRemove(system, heirBody, out citizenshipFailure))
 			{
 				KingdomLog.Log("succession: exact heir citizenship changed before body transfer ("
 					+ (citizenshipFailure ?? "unknown failure") + ")");
+				AbortPendingBeforeTransfer(founder, remains);
+				PublishFounderDeath(system, founderName, E);
+				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);
+				return;
+			}
+			if (!KingdomResidentTransitionAuthority.CanAccede(system, heirBody,
+				chosen.Rule.ResidentId))
+			{
+				KingdomLog.Log("succession: resident authority changed at the body-transfer boundary");
 				AbortPendingBeforeTransfer(founder, remains);
 				PublishFounderDeath(system, founderName, E);
 				EndDynasty(system, founderName, SuccessionVerdict.HeirUnreachable, E);

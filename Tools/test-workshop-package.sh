@@ -181,8 +181,76 @@ evidence = {
         "completedUtc": "2026-08-24T00:00:00Z",
     },
 }
+
 (root / "docs/RELEASE_EVIDENCE.json").write_text(
     json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
+)
+PY
+}
+
+prepare_alpha_identity() {
+	local repo="$1" version="${2:-1.0.0}"
+	python3 - "$repo/manifest.json" "$version" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["version"] = sys.argv[2]
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+	printf '%s\n' '# Fixture' '' \
+		"**Status: $version pre-release source; public Alpha playtest has not shipped.**" \
+		> "$repo/README.md"
+	printf '%s\n' '# Changes' '' "## [Unreleased] — $version Alpha candidate" \
+		> "$repo/CHANGELOG.md"
+	commit_all "$repo" "prepare $version private Alpha identity"
+}
+
+publish_alpha_claims() {
+	local repo="$1" version
+	version="$(python3 "$repo/Tools/workshop_metadata.py" fields "$repo/manifest.json" | sed -n '1p')"
+	printf '%s\n' '# Fixture' '' "**Status: $version public Alpha playtest.**" > "$repo/README.md"
+	printf '%s\n' '# Changes' '' "## [$version] — 2026-08-31 (Alpha)" '' \
+		'Initial public Alpha playtest.' > "$repo/CHANGELOG.md"
+}
+
+write_alpha_candidate() {
+	local repo="$1" candidate="$2"
+	mkdir -p "$repo/docs"
+	python3 - "$repo" "$candidate" <<'PY'
+import hashlib
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+candidate = sys.argv[2]
+spec = importlib.util.spec_from_file_location(
+    "workshop_metadata_alpha", root / "Tools/workshop_metadata.py"
+)
+module = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(module)
+workshop = module._load_json(root / "workshop.json")
+manifest = module._load_json(root / "manifest.json")
+record = {
+    "schemaVersion": module.ALPHA_CANDIDATE_SCHEMA,
+    "releaseChannel": module.ALPHA_RELEASE_CHANNEL,
+    "releaseVersion": manifest["version"],
+    "candidateCommit": candidate,
+    "gameMarketingVersion": module.GAME_MARKETING_VERSION,
+    "gameCoreBuild": module.GAME_CORE_BUILD,
+    "workshopId": workshop["WorkshopId"],
+    "previewSha256": hashlib.sha256((root / "preview.png").read_bytes()).hexdigest(),
+    "privatePackageReceiptSha256": hashlib.sha256(
+        (root / "docs/PRIVATE_PACKAGE_RECEIPT.sha256").read_bytes()
+    ).hexdigest(),
+}
+(root / "docs/ALPHA_CANDIDATE.json").write_text(
+    json.dumps(record, indent=2) + "\n", encoding="utf-8"
 )
 PY
 }
@@ -219,10 +287,11 @@ commit_all() {
 }
 
 freeze_private_candidate() {
-	local repo="$1" candidate package
+	local repo="$1" candidate package version
 	write_workshop "$repo" 0
 	commit_all "$repo" "frozen private package source"
-	package="$FIXTURE_ROOT/private-proof-$(basename -- "$repo")"
+	version="$(python3 "$repo/Tools/workshop_metadata.py" fields "$repo/manifest.json" | sed -n '1p')"
+	package="$FIXTURE_ROOT/private-proof-$(basename -- "$repo")-$version"
 	"$repo/Tools/workshop-package.sh" --test "$package" >/dev/null
 	mkdir -p -- "$repo/docs"
 	cp -- "$package.sha256" "$repo/docs/PRIVATE_PACKAGE_RECEIPT.sha256"
@@ -239,8 +308,8 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 text = path.read_text(encoding="utf-8")
-old = "ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)"
-new = "ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json Dormant.dat)"
+old = "ROOT_META=(README.md PLAYTESTING.md SUPPORT.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)"
+new = "ROOT_META=(README.md PLAYTESTING.md SUPPORT.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json Dormant.dat)"
 if text.count(old) != 1:
     raise SystemExit("stage-rule drift fixture could not find ROOT_META")
 path.write_text(text.replace(old, new), encoding="utf-8")
@@ -293,6 +362,8 @@ chmod +x "$BASE/Tools/stage.sh" "$BASE/Tools/workshop-package.sh" "$BASE/Tools/w
 printf '%s\n' '// fixture runtime' > "$BASE/Core/Test.cs"
 printf '%s\n' '<objects />' > "$BASE/ObjectBlueprints.xml"
 printf '%s\n' '# Fixture' '' '**Status: 0.2.0 public playtest release.**' > "$BASE/README.md"
+printf '%s\n' '# Fixture playtesting' > "$BASE/PLAYTESTING.md"
+printf '%s\n' '# Fixture support' > "$BASE/SUPPORT.md"
 printf '%s\n' 'fixture license' > "$BASE/LICENSE"
 printf '%s\n' '# Changes' '' '## [0.2.0] — 2026-08-24' > "$BASE/CHANGELOG.md"
 printf '%s\n' 'Ignored.cs' > "$BASE/.gitignore"
@@ -973,6 +1044,169 @@ commit_all "$trailing_json" "append workshop json newline"
 expect_fail "trailing workshop metadata" "canonical Windows serializer output" \
 	"$trailing_json/Tools/workshop-package.sh" --test "$FIXTURE_ROOT/trailing-json-package"
 
+# Public Alpha keeps immutable package, preview, structure, tag, and private-candidate proof while
+# deliberately carrying no final human RELEASE_EVIDENCE.json.
+alpha_missing_record="$(clone_case alpha-missing-record)"
+prepare_alpha_identity "$alpha_missing_record"
+freeze_private_candidate "$alpha_missing_record" >/dev/null
+write_workshop "$alpha_missing_record" 2
+publish_alpha_claims "$alpha_missing_record"
+commit_all "$alpha_missing_record" "public Alpha metadata without candidate record"
+git -C "$alpha_missing_record" tag -a v1.0.0 -m "fixture Alpha"
+expect_fail "missing Alpha candidate record" "ALPHA_CANDIDATE.json" \
+	"$alpha_missing_record/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-missing-record-package"
+
+alpha_untagged="$(clone_case alpha-untagged)"
+prepare_alpha_identity "$alpha_untagged"
+alpha_untagged_candidate="$(freeze_private_candidate "$alpha_untagged")"
+write_workshop "$alpha_untagged" 2
+publish_alpha_claims "$alpha_untagged"
+write_alpha_candidate "$alpha_untagged" "$alpha_untagged_candidate"
+commit_all "$alpha_untagged" "public Alpha metadata"
+expect_fail "untagged Alpha" "requires annotated tag" \
+	"$alpha_untagged/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-untagged-package"
+
+alpha_bad_receipt="$(clone_case alpha-bad-receipt)"
+prepare_alpha_identity "$alpha_bad_receipt"
+alpha_bad_receipt_candidate="$(freeze_private_candidate "$alpha_bad_receipt")"
+write_workshop "$alpha_bad_receipt" 2
+publish_alpha_claims "$alpha_bad_receipt"
+write_alpha_candidate "$alpha_bad_receipt" "$alpha_bad_receipt_candidate"
+python3 - "$alpha_bad_receipt/docs/ALPHA_CANDIDATE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["privatePackageReceiptSha256"] = "f" * 64
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$alpha_bad_receipt" "forge Alpha receipt binding"
+git -C "$alpha_bad_receipt" tag -a v1.0.0 -m "fixture Alpha"
+expect_fail "Alpha forged receipt binding" "does not match public candidate record" \
+	"$alpha_bad_receipt/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-bad-receipt-package"
+
+alpha_stale_structure="$(clone_case alpha-stale-structure)"
+prepare_alpha_identity "$alpha_stale_structure"
+alpha_stale_structure_candidate="$(freeze_private_candidate "$alpha_stale_structure")"
+write_workshop "$alpha_stale_structure" 2
+publish_alpha_claims "$alpha_stale_structure"
+write_alpha_candidate "$alpha_stale_structure" "$alpha_stale_structure_candidate"
+python3 - "$alpha_stale_structure/docs/STRUCTURE_REVIEW.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["inventorySha256"] = "0" * 64
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$alpha_stale_structure" "stale Alpha structural review"
+git -C "$alpha_stale_structure" tag -a v1.0.0 -m "fixture Alpha"
+expect_fail "stale Alpha structural review" \
+	"semantic review does not bind the current staged C# inventory" \
+	"$alpha_stale_structure/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-stale-structure-package"
+
+alpha_interim_preview="$(clone_case alpha-interim-preview)"
+prepare_alpha_identity "$alpha_interim_preview"
+python3 - "$alpha_interim_preview" <<'PY'
+import hashlib
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+digest = hashlib.sha256((root / "preview.png").read_bytes()).hexdigest()
+tool = root / "Tools" / "workshop_metadata.py"
+text = tool.read_text(encoding="utf-8")
+updated = re.sub(
+    r'INTERIM_PREVIEW_SHA256 = \(\n    "[0-9a-f]{64}"\n\)',
+    f'INTERIM_PREVIEW_SHA256 = (\n    "{digest}"\n)',
+    text,
+    count=1,
+)
+assert updated != text
+tool.write_text(updated, encoding="utf-8")
+PY
+commit_all "$alpha_interim_preview" "pin interim Alpha preview"
+alpha_interim_candidate="$(freeze_private_candidate "$alpha_interim_preview")"
+write_workshop "$alpha_interim_preview" 2
+publish_alpha_claims "$alpha_interim_preview"
+write_alpha_candidate "$alpha_interim_preview" "$alpha_interim_candidate"
+commit_all "$alpha_interim_preview" "public Alpha with interim preview"
+git -C "$alpha_interim_preview" tag -a v1.0.0 -m "fixture Alpha"
+expect_fail "interim Alpha preview" "refuses the known interim preview" \
+	"$alpha_interim_preview/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-interim-preview-package"
+
+alpha_release="$(clone_case positive-alpha)"
+prepare_alpha_identity "$alpha_release"
+alpha_candidate="$(freeze_private_candidate "$alpha_release")"
+write_workshop "$alpha_release" 2
+publish_alpha_claims "$alpha_release"
+write_alpha_candidate "$alpha_release" "$alpha_candidate"
+commit_all "$alpha_release" "public Alpha metadata"
+git -C "$alpha_release" tag -a v1.0.0 -m "fixture Alpha"
+alpha_dest="$FIXTURE_ROOT/alpha-package"
+"$alpha_release/Tools/workshop-package.sh" --alpha "$alpha_dest" >/dev/null
+(
+	cd "$alpha_dest"
+	sha256sum -c "$alpha_dest.sha256" >/dev/null
+)
+cmp -s "$alpha_release/workshop.json" "$alpha_dest/workshop.json"
+[ ! -e "$alpha_release/docs/RELEASE_EVIDENCE.json" ]
+
+# Recovery/update keeps the v1.0 Alpha listing but advances one patch, rebuilds the private proof,
+# and requires a new matching tag and candidate record. The first-release 1.0.0 tag stays immutable.
+alpha_patch_no_lineage="$(clone_case alpha-patch-without-first-release)"
+prepare_alpha_identity "$alpha_patch_no_lineage" "1.0.1"
+alpha_patch_no_lineage_candidate="$(freeze_private_candidate "$alpha_patch_no_lineage")"
+write_workshop "$alpha_patch_no_lineage" 2
+publish_alpha_claims "$alpha_patch_no_lineage"
+write_alpha_candidate "$alpha_patch_no_lineage" "$alpha_patch_no_lineage_candidate"
+commit_all "$alpha_patch_no_lineage" "public Alpha patch without first release"
+git -C "$alpha_patch_no_lineage" tag -a v1.0.1 -m "fixture orphan Alpha patch"
+expect_fail "Alpha patch without first release" "requires preserved annotated tag v1.0.0" \
+	"$alpha_patch_no_lineage/Tools/workshop-package.sh" --alpha \
+	"$FIXTURE_ROOT/alpha-patch-no-lineage-package"
+
+alpha_patch="$(clone_case positive-alpha-patch)"
+prepare_alpha_identity "$alpha_patch" "1.0.0"
+alpha_first_candidate="$(freeze_private_candidate "$alpha_patch")"
+write_workshop "$alpha_patch" 2
+publish_alpha_claims "$alpha_patch"
+write_alpha_candidate "$alpha_patch" "$alpha_first_candidate"
+commit_all "$alpha_patch" "first public Alpha metadata"
+git -C "$alpha_patch" tag -a v1.0.0 -m "prior fixture Alpha"
+prepare_alpha_identity "$alpha_patch" "1.0.1"
+alpha_patch_candidate="$(freeze_private_candidate "$alpha_patch")"
+write_workshop "$alpha_patch" 2
+publish_alpha_claims "$alpha_patch"
+write_alpha_candidate "$alpha_patch" "$alpha_patch_candidate"
+commit_all "$alpha_patch" "public Alpha patch metadata"
+git -C "$alpha_patch" tag -a v1.0.1 -m "fixture Alpha patch"
+alpha_patch_dest="$FIXTURE_ROOT/alpha-patch-package"
+"$alpha_patch/Tools/workshop-package.sh" --alpha "$alpha_patch_dest" >/dev/null
+(
+	cd "$alpha_patch_dest"
+	sha256sum -c "$alpha_patch_dest.sha256" >/dev/null
+)
+python3 - "$alpha_patch_dest/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert manifest["version"] == "1.0.1"
+PY
+[ ! -e "$alpha_patch/docs/RELEASE_EVIDENCE.json" ]
+
 pending_evidence="$(clone_case pending-release-evidence)"
 pending_candidate="$(freeze_private_candidate "$pending_evidence")"
 write_workshop "$pending_evidence" 2
@@ -1021,7 +1255,7 @@ git -C "$ignored_structure" tag -a v0.2.0 -m "fixture release"
 	'docs/STRUCTURE_REVIEW.json')" ]
 [ -z "$(git -C "$ignored_structure" status --porcelain=v1 --untracked-files=all)" ]
 expect_fail "ignored structural review" \
-	"release package requires exact-inventory semantic review in HEAD" \
+	"public package requires exact-inventory semantic review in HEAD" \
 	"$ignored_structure/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/ignored-structure-package"
 
@@ -1422,7 +1656,7 @@ rm -- "$missing_structure/docs/STRUCTURE_REVIEW.json"
 commit_all "$missing_structure" "remove structural review"
 git -C "$missing_structure" tag -a v0.2.0 -m "fixture release"
 expect_fail "missing structural review" \
-	"release package requires exact-inventory semantic review in HEAD" \
+	"public package requires exact-inventory semantic review in HEAD" \
 	"$missing_structure/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/missing-structure-package"
 

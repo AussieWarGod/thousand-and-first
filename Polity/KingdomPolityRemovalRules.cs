@@ -4,8 +4,14 @@ namespace ThousandAndFirst
 {
 	internal sealed class KingdomPolityRetirementGroundLocator
 	{
-		internal string ZoneId;
-		internal string SettlementId;
+		internal readonly string ZoneId;
+		internal readonly string SettlementId;
+
+		internal KingdomPolityRetirementGroundLocator(string ZoneId, string SettlementId)
+		{
+			this.ZoneId = ZoneId;
+			this.SettlementId = SettlementId;
+		}
 	}
 
 	/// <summary>Read-only realm-removal fence for polity-owned durable work.</summary>

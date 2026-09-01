@@ -1,0 +1,6 @@
+# Same pose as the smithy makes the foundry-era renovation directly comparable.
+DESCRIPTION=medium forge-hall stages for foundry renovation material and function review
+REQUEST=arch-production-forgehall-m;facing=east
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,industry,progression,taste

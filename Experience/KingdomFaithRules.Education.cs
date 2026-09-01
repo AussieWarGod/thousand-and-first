@@ -26,9 +26,12 @@ namespace ThousandAndFirst
 		/// carries a <c>Staff</c> requirement of its own &mdash; that presently has nobody at it:
 		/// a room of vellum, and honestly said to be one.
 		/// </summary>
-		public static string EducationLapsedLine(string BuildingName)
+		public static string EducationLapsedLine(string BuildingName,
+			bool StaffedButUnsupplied = false)
 		{
 			string building = string.IsNullOrEmpty(BuildingName) ? "The scriptorium" : ("The " + BuildingName);
+			if (StaffedButUnsupplied)
+				return "{{K|" + building + " has hands, but no usable desk, shelf, or place of instruction. Restore one inside its designated ground.}}";
 			return "{{K|" + building + " stands empty of hands: a room of vellum, and nothing more, until somebody keeps it.}}";
 		}
 	}

@@ -91,6 +91,10 @@ namespace ThousandAndFirst.Simulation.City
 			WaterCosts.RemoveAt(index);
 			ProvisionCosts.RemoveAt(index);
 			OutcomeCodes.RemoveAt(index);
+			ExpeditionDeedDispositions.RemoveAt(index);
+			ExpeditionDeedPolityIds.RemoveAt(index);
+			ExpeditionDeedCauseRefs.RemoveAt(index);
+			ExpeditionDeedFigureRefs.RemoveAt(index);
 			DeliverySourceEndpointIds.RemoveAt(index);
 			DeliverySourceObjectIds.RemoveAt(index);
 			DeliverySourceXs.RemoveAt(index);

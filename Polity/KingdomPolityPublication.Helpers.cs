@@ -21,10 +21,8 @@ namespace ThousandAndFirst
 		public static KingdomPolityFigureOrigin LegacyFigureOriginFor(
 			KingdomPolityRelationBand Band, bool Namesake, int InheritedState)
 		{
-			if (Band == KingdomPolityRelationBand.Rival ||
-				Band == KingdomPolityRelationBand.Hostile) return KingdomPolityFigureOrigin.Claimant;
 			if (Namesake) return KingdomPolityFigureOrigin.Namesake;
-			if (Band == KingdomPolityRelationBand.Pact && InheritedState == 0)
+			if (InheritedState == 0)
 				return KingdomPolityFigureOrigin.Successor;
 			return KingdomPolityFigureOrigin.LegacyEnvoy;
 		}
@@ -53,7 +51,9 @@ namespace ThousandAndFirst
 			{
 				RelationId = ActivationId("taf:relation:v1:", "polity-relation-id-v1", From, To),
 				FromPolityId = From, ToPolityId = To, Band = Band,
-				SourceRefs = new List<string> { Cause }, ChangedTick = Tick
+				SourceRefs = new List<string> { Cause }, ChangedTick = Tick,
+				FoundationState = KingdomPolityFoundationRelationState.Causal,
+				InitialBand = Band, FoundationOriginalCauseRef = Cause
 			};
 		}
 

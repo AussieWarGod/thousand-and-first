@@ -13,7 +13,7 @@ namespace ThousandAndFirst
 			Failure = null;
 			ArchitectureLayoutSnapshot before;
 			if (!TryValidateIntent(Before, out before, out Failure)) return false;
-			if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(Before.EncodedSnapshot))
+			if (!KingdomArchitectureRules.IsLatestSnapshotEncoding(Before.EncodedSnapshot))
 				return Fail("legacy architecture has no authored in-place tier transition", out Failure);
 			if (System == null || !System.Founded || Z == null || !ValidRectInZone(Before.Rect, Z))
 				return Fail("authored successor needs its founded settlement and exact loaded lot",
@@ -26,7 +26,8 @@ namespace ThousandAndFirst
 				before.BindingKey, before.LotType, before.LotSize, context, before.Facing,
 				out after, out Failure)) return false;
 			ArchitectureLayoutDelta delta;
-			if (!KingdomArchitectureRules.TryBuildDelta(before, after, out delta, out Failure))
+			if (!KingdomArchitectureRules.TryBuildDelta(before, after,
+				after.IncomingTransitionMode, out delta, out Failure))
 				return false;
 			KingdomPlotRules.PlotRect successorRect = Before.Rect;
 			int beforeRung = KingdomPlotRules.HeartRungOf(before.BuildKey);
@@ -79,13 +80,13 @@ namespace ThousandAndFirst
 			Failure = null;
 			ArchitectureLayoutSnapshot before;
 			if (!TryValidateIntent(Before, out before, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Before.EncodedSnapshot))
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(Before.EncodedSnapshot))
 				return Failure != null ? false : Fail(
 					"legacy architecture has no authored same-set transition", out Failure);
 			if (System == null || !System.Founded || Z == null ||
-				!KingdomSocketTransitionRules.MatchesRoute(Transition, before.BuildKey,
-					SuccessorBuildKey, before.LotType, before.LotSize) ||
-				!ValidRectInZone(Before.Rect, Z))
+				!KingdomSocketTransitions.TryResolveCurrent(Transition, before.BuildKey,
+					SuccessorBuildKey, before.LotType, before.LotSize,
+					out KingdomSocketTransition declared) || !ValidRectInZone(Before.Rect, Z))
 				return Fail("same-set transition declaration does not match the standing typed lot",
 					out Failure);
 			ArchitectureSelectionContext context;
@@ -96,8 +97,12 @@ namespace ThousandAndFirst
 			if (after.LotType != before.LotType || after.LotSize != before.LotSize
 				|| after.Facing != before.Facing)
 				return Fail("same-set transition changes the frozen lot binding or pose", out Failure);
+			// A socket route owns its incoming edge. Freeze that mode into the target snapshot so
+			// paid retries cannot reinterpret the physical work through later catalogue changes.
+			after.IncomingTransitionMode = declared.Mode;
 			ArchitectureLayoutDelta delta;
-			if (!KingdomArchitectureRules.TryBuildDelta(before, after, out delta, out Failure))
+			if (!KingdomArchitectureRules.TryBuildDelta(before, after, declared.Mode,
+				out delta, out Failure))
 				return false;
 			string encoded;
 			string hash;

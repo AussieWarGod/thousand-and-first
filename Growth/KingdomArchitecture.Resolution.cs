@@ -133,14 +133,18 @@ namespace ThousandAndFirst
 			string type = Fold(LotType);
 			Dictionary<string, ResolvedRecord> binding = null;
 			ResolvedRecord record = null;
+			ResolvedRecord ordinaryPredecessor = null;
 			int beforeRung = KingdomPlotRules.HeartRungOf(PredecessorBuildKey);
 			int afterRung = KingdomPlotRules.HeartRungOf(SuccessorBuildKey);
 			bool heartRequest = beforeRung > 0 || afterRung > 0;
-			bool ordinary = !heartRequest && ValidKey(SuccessorBuildKey) && ValidKey(PlanKey)
+			bool ordinary = !heartRequest && ValidKey(PredecessorBuildKey)
+				&& ValidKey(SuccessorBuildKey) && ValidKey(PlanKey)
 				&& ValidKey(BindingKey) && ValidKey(type) && KnownLotSize(ActualLotSize)
 				&& frozen.RecordsByBinding.TryGetValue(
 					BindingRecordKey(PlanKey, BindingKey, type, ActualLotSize), out binding)
-				&& binding.TryGetValue(SuccessorBuildKey, out record);
+				&& binding.TryGetValue(PredecessorBuildKey, out ordinaryPredecessor)
+				&& binding.TryGetValue(SuccessorBuildKey, out record)
+				&& record.Tier.Level == ordinaryPredecessor.Tier.Level + 1;
 			if (!ordinary)
 			{
 				ResolvedRecord predecessor;
@@ -160,12 +164,19 @@ namespace ThousandAndFirst
 						type, successorSize), out record)
 					|| record.View.PlanKey != "civic-heart"
 					|| Fold(record.View.TypeKey) != "civic"
-					|| record.View.LotSize != successorSize)
+					|| record.View.LotSize != successorSize
+					|| record.Tier.Level != predecessor.Tier.Level + 1)
 					return ResolveFault("no valid authored successor "
 						+ (SuccessorBuildKey ?? "<null>")
 						+ " exists in the frozen typed binding or adjacent civic-heart rung",
 						out Failure);
 			}
+			if (record.Tier.IncomingTransitionMode == ArchitectureTransitionMode.None
+				|| (record.View.LotSize != ActualLotSize
+					&& !KingdomArchitectureTransitionRules.AllowsLotExpansion(
+						record.Tier.IncomingTransitionMode)))
+				return ResolveFault("authored successor lacks a compatible incoming transition mode",
+					out Failure);
 			ArchitectureVariantDraft variant;
 			if (PredecessorVariantKey == null)
 			{
@@ -234,6 +245,10 @@ namespace ThousandAndFirst
 			{
 				PlanKey = Record.View.PlanKey, Binding = Record.Binding, Tier = Record.Tier,
 				Variant = Variant, Map = map, Palette = palette,
+				PoseRegistry = Frozen.PoseRegistry,
+				CatalogueFootprintWidth = Record.CatalogueFootprintWidth,
+				CatalogueFootprintHeight = Record.CatalogueFootprintHeight,
+				CatalogueRoof = Record.CatalogueRoof,
 				BuildingBlueprint = Record.View.BuildingBlueprint, Facing = Facing
 			};
 			ArchitectureLayoutSnapshot compiled;

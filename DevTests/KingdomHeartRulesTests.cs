@@ -367,7 +367,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Rect survey = Survey(40, 12);
 			string line = KingdomPlotRules.SurveyLine(survey);
-			StringAssert.Contains("20 by 14", line);
+			StringAssert.Contains("20 by 18", line);
 			StringAssert.Contains("Nothing is claimed and nothing is spent", line);
 			StringAssert.Contains("marked to yield", line);
 		}

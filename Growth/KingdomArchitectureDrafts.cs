@@ -22,13 +22,33 @@ namespace ThousandAndFirst
 		public List<ArchitecturePaletteSlot> Slots = new List<ArchitecturePaletteSlot>();
 	}
 
+	/// <summary>
+	/// One exact semantic fixture family. Cardinal siblings change presentation, not function;
+	/// connected and invariant families preserve the semantic base blueprint.
+	/// </summary>
+	public sealed class ArchitecturePoseDraft
+	{
+		public string Blueprint;
+		public ArchitecturePoseMode Mode;
+		public string North;
+		public string East;
+		public string South;
+		public string West;
+	}
+
 	public sealed class ArchitectureGlyphDraft
 	{
 		public char Character;
 		public string Ground;
 		public string Structure;
 		public string Object;
-		public bool Claim;
+		public bool HasGroundOrientation;
+		public ArchitectureFacing GroundOrientation;
+		public bool HasStructureOrientation;
+		public ArchitectureFacing StructureOrientation;
+		public bool HasObjectOrientation;
+		public ArchitectureFacing ObjectOrientation;
+		public ArchitectureClaim Claim;
 		public ArchitecturePassability Passability;
 		public ArchitectureCover Cover;
 		public bool HasCover;
@@ -42,6 +62,12 @@ namespace ThousandAndFirst
 		public int Width;
 		public int Height;
 		public ArchitectureCover DefaultCover;
+		/// <summary>True only when XML explicitly authored the canonical X,Y,WxH rectangle.</summary>
+		public bool HasFootprint;
+		public int FootprintX;
+		public int FootprintY;
+		public int FootprintWidth;
+		public int FootprintHeight;
 		public List<ArchitectureGlyphDraft> Glyphs = new List<ArchitectureGlyphDraft>();
 		public List<string> Rows = new List<string>();
 	}
@@ -79,6 +105,9 @@ namespace ThousandAndFirst
 	public sealed class ArchitectureSelectionContext
 	{
 		public string Style;
+		/// <summary>Canonical style key plus compatibility aliases. Empty falls back to
+		/// <see cref="Style"/> for external callers compiled before aliases existed.</summary>
+		public IList<string> StyleKeys = new List<string>();
 		public string Creed;
 		public IList<string> Cultures = new List<string>();
 		public IList<string> Species = new List<string>();
@@ -112,6 +141,8 @@ namespace ThousandAndFirst
 		public string Key;
 		public string BuildKey;
 		public int Level;
+		/// <summary>How this tier may be reached from its immediate authored predecessor.</summary>
+		public ArchitectureTransitionMode IncomingTransitionMode;
 		public string MapKey;
 		public string PaletteKey;
 		public List<ArchitectureAnchorRequirement> Requirements = new List<ArchitectureAnchorRequirement>();
@@ -143,10 +174,22 @@ namespace ThousandAndFirst
 		public ArchitectureMapDraft Map;
 		public ArchitecturePaletteDraft Palette;
 		/// <summary>
+		/// Legacy engine-free inspection input. The public compiler refuses nonempty raw pose drafts;
+		/// third-party cardinal families must enter through merged XML and the audited loader.
+		/// </summary>
+		public IList<ArchitecturePoseDraft> Poses;
+		/// <summary>Loader-owned, behavior-parity-audited pose authority.</summary>
+		internal ArchitecturePoseRegistry PoseRegistry;
+		/// <summary>
 		/// Runtime-owned behavior root placed at main. It is validated here but deliberately absent
 		/// from scenery placements, receipts, and deltas so runtime identity/state can survive growth.
 		/// </summary>
 		public string BuildingBlueprint;
+		/// <summary>Raw merged catalogue dimensions. Zero/zero means this tier fills its actual lot.</summary>
+		public int CatalogueFootprintWidth;
+		public int CatalogueFootprintHeight;
+		public KingdomPlotRules.RoofState CatalogueRoof =
+			(KingdomPlotRules.RoofState)byte.MaxValue;
 		public ArchitectureFacing Facing;
 	}
 }

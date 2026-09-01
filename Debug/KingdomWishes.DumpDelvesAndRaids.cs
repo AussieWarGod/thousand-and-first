@@ -32,17 +32,21 @@ namespace ThousandAndFirst
 			{
 				sb.Append("\n").Append(ExileReport(system));
 			}
-			sb.Append("\nStyle: ").Append(system.Style).Append(" (").Append(KingdomFounding.StyleGroundClause(system.Style)).Append(")").Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered).Append("  Famished: ").Append(system.Famished);
+			sb.Append("\nStyle: ").Append(system.Style).Append(" (").Append(KingdomFounding.StyleGroundClause(system.Style)).Append(")").Append("  Stage: ").Append(system.Stage).Append("  Withered: ").Append(system.Withered);
 			sb.Append("\nFounding terrain: blueprint=").Append(system.FoundingTerrainBlueprint ?? "(none)").Append(" region=").Append(system.FoundingRegionName ?? "(none)").Append(" z=").Append(system.FoundingZLevel);
 			Zone here = The.Player?.CurrentZone;
 			if (here != null && system.ClaimedZones.Contains(here.ZoneID))
 			{
 				KingdomSurvey survey = KingdomSurvey.Take(here, system);
+				string roof = survey.TryBenefits(out KingdomBenefitIndex benefits,
+					out string roofFailure) ? benefits.Total("roof").ToString()
+					: "unproved (" + roofFailure + ")";
 				sb.Append("\nHere: defence=").Append(survey.Defence()).Append(" (garrison ").Append(survey.DistrictDefenceBonus).Append(")")
 					.Append(" larder=").Append(survey.FoodAbundance).Append("/").Append(survey.FoodStored).Append(" of ").Append(survey.FoodCapacity)
-					.Append(" made=").Append(KingdomGrowth.FoodMadePerDay(survey)).Append(" eats=").Append(KingdomRules.RationsPerDay(system.Population))
-					.Append(" hunger=").Append(system.HungerStreak)
-					.Append(" beds=").Append(survey.Beds).Append(" citizens=").Append(survey.Citizens);
+					.Append(" passiveFoodRate=0")
+					.Append(" kitchens=").Append(KingdomCapabilityRuntime.Count(here, survey,
+						KingdomBenefitCapabilities.Cooking, "debug meal"))
+					.Append(" beds=").Append(roof).Append(" citizens=").Append(survey.Citizens);
 			}
 			sb.Append(KingdomLodging.DumpLine(system, here));
 			sb.Append(KingdomCreed.DumpLine(system));

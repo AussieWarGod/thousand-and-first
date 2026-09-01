@@ -37,9 +37,11 @@ namespace ThousandAndFirst.Tests
 			string runtime = Read("Growth/KingdomGreatArchive.cs");
 			StringAssert.Contains("HostRoot.CurrentZone != HostZone", runtime);
 			StringAssert.Contains("System.City.SettlementId !=", runtime);
-			StringAssert.Contains("KingdomHostedArcology.Operational(HostRoot)", runtime);
-			StringAssert.Contains("KingdomSurvey.Take(HostZone, System)", runtime);
-			Assert.AreEqual(1, Count(runtime, "KingdomSurvey.Take("));
+			StringAssert.Contains("KingdomHostedArcology.IsOperationalPure(HostRoot)", runtime);
+			StringAssert.DoesNotContain("KingdomHostedArcology.Operational(HostRoot)", runtime);
+			StringAssert.Contains("KingdomSurvey.TakeCustodyOnly(HostZone)", runtime);
+			Assert.AreEqual(1, Count(runtime, "KingdomSurvey.TakeCustodyOnly("));
+			StringAssert.DoesNotContain("KingdomSurvey.Take(", runtime);
 			StringAssert.Contains("== \"bookshelf\"", runtime);
 			StringAssert.Contains("== \"vellumpress\"", runtime);
 			StringAssert.DoesNotContain("GetZone(", runtime);

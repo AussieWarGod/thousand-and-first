@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using XRL;
 using XRL.Messages;
 using XRL.World;
@@ -23,38 +25,131 @@ namespace ThousandAndFirst
 		/// <param name="Survey">This pass's already-taken survey, for its <c>Settlers</c>.</param>
 		public static void OnZoneActivated(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			if (!KingdomOffices.Enabled || System == null || !System.Founded || Z == null || Survey == null
+			if (System == null || !System.Founded || Z == null || Survey == null
 				|| !System.ClaimedZones.Contains(Z.ZoneID))
 			{
 				return;
 			}
+			// Remove the earlier observation before any fallible physical callback. A save or
+			// exception in this pass therefore yields zero, never yesterday's now-disproved view.
+			if (!KingdomReachObservationRuntime.TryRevokeZone(Z.ZoneID, out string revokeFailure))
+			{
+				KingdomLog.Log("reach: observation revocation refused (" + revokeFailure + ")");
+				return;
+			}
+			if (!KingdomOffices.Enabled) return;
 			List<KindAmount> shaded = new List<KindAmount>();
 			List<KindAmount> realm = new List<KindAmount>();
-			for (int i = 0; i < Survey.Built.Count; i++)
+			List<string> authorityRows = new List<string>();
+			if (!TryActiveBenefits(Z, Survey, "great-work offices", out var benefits))
 			{
-				GameObject item = Survey.Built[i];
-				KingdomRules.BuildEntry entry;
-				string key = KingdomUpgrade.DesignKeyOf(item);
-				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
-				{
-					continue;
-				}
-				ReachBand band = BandOf(key);
-				if (!KingdomReachRules.RequiresSeat(band))
-				{
-					continue;
-				}
-				UpdateSeat(System, item, entry, Survey.Settlers);
-				if (IsHeaded(item))
-				{
-					Gather(shaded, entry, item);
-					if (EffectiveBandOf(item) == ReachBand.Realm)
-					{
-						Gather(realm, entry, item);
-					}
-				}
+				KingdomHostedArcology.RefreshActiveProjection(System, Z, null,
+					Survey.StoredWater > 0, out string ignored);
+				return;
 			}
-			Record(Z, shaded, realm);
+			if (!KingdomHostedArcology.RefreshActiveProjection(System, Z, benefits,
+				Survey.StoredWater > 0, out string overlayFailure))
+				KingdomLog.Log("hosted reach refresh refused ("
+					+ (overlayFailure ?? "invalid physical observation") + ")");
+			IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+			if (readings == null || readings.Count > KingdomReachObservationRules.MaxAuthorityRows)
+			{
+				KingdomLog.Log("reach: designation source exceeds the receipt bound"); return;
+			}
+			for (int i = 0; i < readings.Count; i++)
+			{
+				KingdomBenefitReading reading = readings[i];
+				if (reading?.Designation == null)
+				{
+					KingdomLog.Log("reach: designation authority is absent"); return;
+				}
+				bool found = TryRoot(Z, reading, out GameObject item);
+				bool ours = reading.Designation.ProviderId == "taf.architecture"
+					|| reading.Designation.ProviderId == "taf.adoption";
+				bool live = found && (!ours || KingdomUpgrade.IsFunctionallyBuilt(item));
+				KingdomRules.BuildEntry entry = null;
+				string key = reading.Designation.BuildingKey;
+				bool catalogued = live && !string.IsNullOrEmpty(key)
+					&& KingdomData.TryGetBuilding(key, out entry);
+				int bandValue = catalogued ? (int)BandOf(item, reading) : -1;
+				if (catalogued && KingdomReachRules.RequiresSeat((ReachBand)bandValue))
+					UpdateSeat(System, item, entry, Survey.Settlers);
+				if (!TryObservationSourceRow(Z, reading, item, found, live, bandValue,
+					out string authorityRow))
+				{
+					KingdomLog.Log("reach: designation authority could not be frozen");
+					return;
+				}
+				authorityRows.Add(authorityRow);
+				if (!catalogued || !KingdomReachRules.RequiresSeat((ReachBand)bandValue)
+					|| !IsHeaded(item)) continue;
+				GatherLive(shaded, reading);
+				if (EffectiveBandOf(item, reading) == ReachBand.Realm) GatherLive(realm, reading);
+			}
+			if (!KingdomReachObservationRuntime.TryWrite(System, Z, shaded, realm,
+				authorityRows, The.Game.TimeTicks, out string writeFailure))
+				KingdomLog.Log("reach: observation write refused (" + writeFailure + ")");
+		}
+
+		private static bool TryObservationSourceRow(Zone Z, KingdomBenefitReading Reading,
+			GameObject Root, bool RootFound, bool Live, int Band, out string Row)
+		{
+			Row = null; KingdomBenefitDesignation d = Reading?.Designation;
+			if (Z == null || d == null || d.ZoneId != Z.ZoneID || Reading.Carries == null
+				|| Reading.Provides == null || d.Caps == null || d.AcceptedTags == null
+				|| d.Cells == null || (RootFound && Root == null)) return false;
+			string rootObjectId = RootFound ? Root.IDIfAssigned : null;
+			string seatHolder = RootFound ? Root.GetStringProperty(SeatHolderProperty) : null;
+			if ((rootObjectId?.Length ?? 0) > KingdomZoneObservationRules.MaxIdentityChars
+				|| (seatHolder?.Length ?? 0) > KingdomZoneObservationRules.MaxIdentityChars)
+				return false;
+			StringBuilder text = new StringBuilder();
+			SourceFrame(text, "taf.reach.designation-source/v1");
+			SourceFrame(text, d.ProviderId); SourceFrame(text, d.ProviderVersion);
+			SourceFrame(text, d.Identity); SourceFrame(text, d.Revision);
+			SourceFrame(text, d.ZoneId); SourceFrame(text, d.RootId);
+			SourceFrame(text, d.BuildingKey); SourceFrame(text, d.LotId);
+			text.Append(RootFound ? '1' : '0').Append('|').Append(Live ? '1' : '0')
+				.Append('|').Append(Band.ToString(CultureInfo.InvariantCulture)).Append('|');
+			SourceFrame(text, rootObjectId); SourceFrame(text, seatHolder);
+			text.Append("caps|").Append(d.Caps.Count.ToString(CultureInfo.InvariantCulture))
+				.Append('|');
+			for (int i = 0; i < d.Caps.Count; i++) AppendAmount(text, d.Caps[i]);
+			text.Append("tags|").Append(d.AcceptedTags.Count.ToString(CultureInfo.InvariantCulture))
+				.Append('|');
+			for (int i = 0; i < d.AcceptedTags.Count; i++) SourceFrame(text, d.AcceptedTags[i]);
+			text.Append("cells|").Append(d.Cells.Count.ToString(CultureInfo.InvariantCulture))
+				.Append('|');
+			for (int i = 0; i < d.Cells.Count; i++)
+			{
+				KingdomBenefitCell cell = d.Cells[i];
+				text.Append(cell.X.ToString(CultureInfo.InvariantCulture)).Append(',')
+					.Append(cell.Y.ToString(CultureInfo.InvariantCulture)).Append(',')
+					.Append(((int)cell.Use).ToString(CultureInfo.InvariantCulture)).Append(',')
+					.Append(((int)cell.Cover).ToString(CultureInfo.InvariantCulture)).Append('|');
+				SourceFrame(text, cell.NetworkKey);
+			}
+			text.Append("carries|").Append(Reading.Carries.Count.ToString(
+				CultureInfo.InvariantCulture)).Append('|');
+			for (int i = 0; i < Reading.Carries.Count; i++) AppendAmount(text, Reading.Carries[i]);
+			text.Append("provides|").Append(Reading.Provides.Count.ToString(
+				CultureInfo.InvariantCulture)).Append('|');
+			for (int i = 0; i < Reading.Provides.Count; i++) SourceFrame(text, Reading.Provides[i]);
+			if (text.Length > KingdomReachObservationRules.MaxAuthorityRowChars) return false;
+			Row = text.ToString(); return true;
+		}
+
+		private static void AppendAmount(StringBuilder Text, KindAmount Amount)
+		{
+			SourceFrame(Text, Amount.Kind);
+			Text.Append(Amount.Amount.ToString(CultureInfo.InvariantCulture)).Append('|');
+		}
+
+		private static void SourceFrame(StringBuilder Text, string Value)
+		{
+			string value = Value ?? "";
+			Text.Append(value.Length.ToString(CultureInfo.InvariantCulture)).Append(':')
+				.Append(value).Append('|');
 		}
 
 		private static void UpdateSeat(KingdomSystem System, GameObject Work, KingdomRules.BuildEntry Entry, List<GameObject> Settlers)

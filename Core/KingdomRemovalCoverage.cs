@@ -11,18 +11,19 @@ namespace ThousandAndFirst
 	{
 		public static readonly string[] CustomSystems = new string[]
 		{
-			"KingdomCivicMemorySystem", "KingdomInheritanceLifecycle", "KingdomSeal",
-			"KingdomSuccession", "KingdomSystem"
+			"KingdomCivicMemorySystem", "KingdomInheritanceLifecycle",
+			"KingdomQuickstartLifecycle", "KingdomSeal", "KingdomSuccession", "KingdomSystem"
 		};
 
 		/// <summary>Every direct or inherited IPart carrier emitted by production source.</summary>
 		public static readonly string[] CustomParts = new string[]
 		{
-			"KingdomCharterPart", "r_FounderBasin", "r_KingdomArcology",
+			"KingdomCharterPart", "r_FounderBasin", "r_KingdomAdoptionRecovery", "r_KingdomArcology",
 			"r_KingdomArcologyZoneAnchor", "r_KingdomAssentingMoot",
 			"r_KingdomAssentingMootMember", "r_KingdomBecomingAnnexe",
-			"r_KingdomButcherSlab", "r_KingdomCarrySign", "r_KingdomChimericTheatre",
-			"r_KingdomCitizenLegacy", "r_KingdomCitizenship", "r_KingdomClearance",
+			"r_KingdomBenefitProvider", "r_KingdomButcherSlab", "r_KingdomCarrySign", "r_KingdomChimericTheatre",
+			"r_KingdomCitizenLegacy", "r_KingdomCitizenRiteProjection",
+			"r_KingdomCitizenship", "r_KingdomClearance",
 			"r_KingdomCrownHall", "r_KingdomEnrolled", "r_KingdomFirstGuestBody",
 			"r_KingdomFounderKnowledge",
 			"r_KingdomFounderRemains", "r_KingdomFounderShrine", "r_KingdomGatehouse",
@@ -31,17 +32,22 @@ namespace ThousandAndFirst
 			"r_KingdomImprovement",
 			"r_KingdomInheritedFabric", "r_KingdomInquiry", "r_KingdomLabCivicFriction",
 			"r_KingdomLabEffectLedger", "r_KingdomLabJob", "r_KingdomLabRecord", "r_KingdomLabRemovalJob",
+			"r_KingdomLegendaryMarketProjection",
 			"r_KingdomLiquidConduit", "r_KingdomLiquidCrossover", "r_KingdomLiquidTap",
-			"r_KingdomLocusAmbient", "r_KingdomMirrorGate", "r_KingdomNamedCook",
+			"r_KingdomLocusAmbient", "r_KingdomMarketHandoffSourceProjection",
+			"r_KingdomMarketStockProjection", "r_KingdomMirrorGate",
+			"r_KingdomNamedCook",
 			"r_KingdomNotableGuest", "r_KingdomNotice",
 			"r_KingdomOfficeProjection", "r_KingdomPactVessel", "r_KingdomPlanMarker",
 			"r_KingdomPlot", "r_KingdomPlotWorks",
 			"r_KingdomPolityCohortBody", "r_KingdomPolityEscrow", "r_KingdomPorter", "r_KingdomPowerStore",
 			"r_KingdomPowerWork", "r_KingdomProperty", "r_KingdomPurposeWork",
 			"r_KingdomRaidDemand", "r_KingdomRaiderObjective", "r_KingdomRegistryOffice",
-			"r_KingdomRelocationFrame", "r_KingdomRemembranceProjection", "r_KingdomScaffold", "r_KingdomSeed",
+			"r_KingdomRelocationFrame", "r_KingdomRemembranceProjection",
+			"r_KingdomResidentDeparture", "r_KingdomScaffold", "r_KingdomSeed",
 			"r_KingdomSocket", "r_KingdomStasisCustody", "r_KingdomStasisFieldAnchor",
-			"r_KingdomStasisProjection", "r_KingdomStasisVault", "r_KingdomStation",
+			"r_KingdomStasisProjection", "r_KingdomStasisVault", "r_KingdomStateBenefitProvider",
+			"r_KingdomStation",
 			"r_KingdomVatHouse", "r_KingdomVisualState", "r_KingdomWear",
 			"r_KingdomWildSeed", "r_KingdomWitnessWorkProjection", "r_KingdomYardTrade",
 			"r_KingdomYielding"
@@ -89,10 +95,14 @@ namespace ThousandAndFirst
 			"r_TAF_CityBrinkWarned", "r_TAF_ConstructionJobs", "r_TAF_Crown",
 			"r_TAF_FounderRites", "r_TAF_FoundingGlobalReservation_v1",
 			"r_TAF_HostedArcologyAuthorityV1:0", "r_TAF_HostedArcologyAuthorityV1:1",
+			"r_TAF_HostedDepartureV1:0:terrace", "r_TAF_HostedDepartureV1:0:ward",
+			"r_TAF_HostedDepartureV1:1:terrace", "r_TAF_HostedDepartureV1:1:ward",
 			"r_TAF_ImprovementNoticed", "r_TAF_Inheritance", "r_TAF_KeepersRoster",
 			"r_TAF_KingdomMode",
 			"r_TAF_LabCivicOwners_v1", "r_TAF_LabJobRegistry_v1", "r_TAF_LabReplayProof_v1",
 			"r_TAF_MirrorGates", "r_TAF_NextPlanOrder", "r_TAF_PurposePortfolioPair",
+			"r_TAF_QuickstartProfile_v1", "r_TAF_QuickstartReceipt_v1",
+			"r_TAF_QuickstartWorldReservation_v1",
 			"r_TAF_SaveSystemRoster_v1"
 		};
 
@@ -118,12 +128,20 @@ namespace ThousandAndFirst
 			"r_TAF_HostedArcologyAuthorityV1:0", "r_TAF_HostedArcologyAuthorityV1:1"
 		};
 
+		/// <summary>Realm-bound projections paired to one exact authority slot and paid floor.</summary>
+		public static readonly string[] HostedArcologyDepartureStates = new string[]
+		{
+			"r_TAF_HostedDepartureV1:0:terrace", "r_TAF_HostedDepartureV1:0:ward",
+			"r_TAF_HostedDepartureV1:1:terrace", "r_TAF_HostedDepartureV1:1:ward"
+		};
+
 		/// <summary>Exact zone properties written by TAF. Shared base keys are absent.</summary>
 		public static readonly string[] OwnedZoneProperties = new string[]
 		{
 			"ThousandAndFirst.Inherit.Application", "r_TAF_ClaimChronicleDisposition_v1",
 			"r_TAF_ClaimChronicleEvent_v1", "r_TAF_ClaimChronicleStage_v1",
-			"r_TAF_ClaimWasFounding_v1", "r_TAF_ExternalOwnerBindingAuthority_v1",
+			"r_TAF_ClaimWasFounding_v1", "r_TAF_EducationPostObservation_v1",
+			"r_TAF_ExternalOwnerBindingAuthority_v1",
 			"r_TAF_ExternalOwnerBinding_v1", "r_TAF_ExternalOwnerContestedTold_v1",
 			"r_TAF_ExternalOwnerContested_v1", "r_TAF_ExternalOwnerStageAuthority_v1",
 			"r_TAF_ExternalOwnerStage_v1", "r_TAF_FaithOptionOwner_v1",
@@ -134,7 +152,8 @@ namespace ThousandAndFirst
 			"r_TAF_FoundingSiteVocation_v1", "r_TAF_HeartRelocationFault",
 			"r_TAF_HeartRelocationLast", "r_TAF_HeartRelocationReceipt",
 			"r_TAF_HeartRung", "r_TAF_HeartSurveyX1", "r_TAF_HeartSurveyX2",
-			"r_TAF_HeartSurveyY1", "r_TAF_HeartSurveyY2", "r_TAF_RiteX", "r_TAF_RiteY",
+			"r_TAF_HeartSurveyY1", "r_TAF_HeartSurveyY2", "r_TAF_ReachObservation_v1",
+			"r_TAF_RiteX", "r_TAF_RiteY",
 			"r_TAF_Roads", "r_TAF_RoadsFull", "r_TAF_RoadsOptionOwner_v1",
 			"r_TAF_RoadsOption_v1", "r_TAF_RoadsSaid", "r_TAF_RoadsWalked",
 			"r_TAF_RuinRestorationTransaction_v1", "r_TAF_SecondFoundingChronicle",

@@ -179,7 +179,9 @@ namespace ThousandAndFirst
 			Cell cell = Hall.CurrentCell;
 			Zone zone = cell?.ParentZone;
 			string here = (system == null || zone == null) ? null : CityOf(system, zone.ZoneID);
-			bool ours = Hall.GetIntProperty("KingdomBuilt") == 1 || Hall.GetIntProperty("KingdomGrid") == 1;
+			bool pending = r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(Hall);
+			bool ours = KingdomUpgrade.IsFunctionallyBuilt(Hall)
+				|| (!pending && Hall.GetIntProperty("KingdomGrid") == 1);
 			string capital = (system == null) ? null : CapitalOf(system);
 			KingdomCrownVerdict verdict = KingdomCrownRules.JudgeTakeUp(
 				Founded: system != null && system.Founded,

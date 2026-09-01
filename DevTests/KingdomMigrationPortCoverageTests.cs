@@ -43,11 +43,22 @@ namespace ThousandAndFirst.Tests
 		/// counted even though one envelope fixture would close the enclosing port and the nested
 		/// one at once: the manifest says so on each row rather than netting the arithmetic down.
 		/// </para>
+		/// <para>
+		/// 111 until the zone-observation envelope landed. Its version is written into canonical
+		/// bytes stored under Reach and education zone-property keys, so it is a durable port with
+		/// one uncovered first version, not a non-durable exemption.
+		/// </para>
 		/// </summary>
-		private const int ExpectedHardGaps = 111;
+		/// <para>113 until founder memory moved from schema 1's vanilla-history insertion to
+		/// schema 2's TAF-local projection. Both readable versions lack independently retained
+		/// historical bytes, so the truthful uncovered-version count rose by one.</para>
+		/// <para>114 until the receipt-backed realm Chronicle intent became its own nested
+		/// archive port. Its current version is 3; no v1-v3 position has a provenance-backed
+		/// historical-writer fixture, so the conservative hard-gap census rises by three.</para>
+		private const int ExpectedHardGaps = 117;
 
-		/// <summary>19 audited ports plus the 30 the completeness census forced into the open.</summary>
-		private const int ExpectedPorts = 49;
+		/// <summary>Prior fifty ports plus one durable realm-Chronicle callback intent.</summary>
+		private const int ExpectedPorts = 51;
 
 		internal static JsonElement Manifest()
 		{
@@ -212,6 +223,40 @@ namespace ThousandAndFirst.Tests
 			Assert.IsEmpty(missing,
 				"a production wire-version constant is neither a migration port nor a declared "
 				+ "non-durable version site: " + string.Join(", ", missing));
+		}
+
+		[Test]
+		public void ZoneObservationEnvelopeIsOneDurableRefusingPortNotAnExemption()
+		{
+			int found = 0;
+			foreach (JsonElement port in Ports())
+			{
+				if (Text(port, "codec") != "KingdomZoneObservationCodec") continue;
+				found++;
+				Assert.AreEqual("Growth/KingdomZoneObservationCodec.cs", Text(port, "reader"));
+				Assert.AreEqual("CurrentVersion", Text(port, "versionConstantIdentifier"));
+				Assert.AreEqual(1, port.GetProperty("currentVersion").GetInt32());
+				Assert.AreEqual("refuse", Text(port, "opaqueFuturePolicy"));
+				Assert.IsNull(Text(port, "migrationAuthority"));
+				Assert.AreEqual(0, port.GetProperty("fixtures").GetArrayLength());
+			}
+			Assert.AreEqual(1, found, "zone observation must have one durable port row");
+			foreach (JsonElement exemption in Exemptions())
+				Assert.AreNotEqual("Growth/KingdomZoneObservationCodec.cs",
+					Text(exemption, "file"));
+
+			string codec = File.ReadAllText(Path.Combine(TestMain.RepositoryRoot,
+				"Growth", "KingdomZoneObservationCodec.cs"));
+			StringAssert.Contains("writer.Write(Receipt.Version)", codec);
+			StringAssert.Contains("Version = reader.ReadInt32()", codec);
+			foreach (string runtime in new[] { "Growth/KingdomReachObservationRuntime.cs",
+				"Experience/KingdomEducationPostObservationRuntime.cs" })
+			{
+				string source = File.ReadAllText(Path.Combine(TestMain.RepositoryRoot,
+					runtime.Replace('/', Path.DirectorySeparatorChar)));
+				StringAssert.Contains("KingdomZoneObservationCodec.TryEncode", source, runtime);
+				StringAssert.Contains("SetZoneProperty(PropertyName, wire)", source, runtime);
+			}
 		}
 
 		/// <summary>The marker names a wire-version-shaped constant declaration may carry.</summary>

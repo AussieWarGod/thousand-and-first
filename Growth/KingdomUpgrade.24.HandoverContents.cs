@@ -24,6 +24,13 @@ namespace ThousandAndFirst
 		{
 			carriedLiquid = 0;
 			carriedItems = 0;
+			if (!r_KingdomImprovement.TryPublishInventoryManifest(Predecessor, Successor,
+				cell, intent))
+			{
+				StopContentHandover(intent, ref job,
+					"The exact inventory manifest remains retryable.");
+				return false;
+			}
 			if (!r_KingdomImprovement.CarryLiquidDurable(Predecessor, Successor, intent,
 				out carriedLiquid))
 			{
@@ -34,6 +41,12 @@ namespace ThousandAndFirst
 					else KingdomConstruction.FinishProjection(ref job, false, false,
 						"The exact liquid handover was restored and remains retryable.");
 				}
+				return false;
+			}
+			if (!r_KingdomImprovement.TryPublishLiquidCustody(Predecessor, Successor, intent))
+			{
+				StopContentHandover(intent, ref job,
+					"The exact liquid-custody receipt remains retryable.");
 				return false;
 			}
 			if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
@@ -64,27 +77,64 @@ namespace ThousandAndFirst
 				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 				return false;
 			}
+			string custodyFailure;
+			if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor, Successor,
+				cell, intent, true, out custodyFailure))
+			{
+				r_KingdomImprovement.FailHandover(intent, custodyFailure);
+				if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+				return false;
+			}
 			if (!intent.HandoverEffectsDone)
 			{
 				// Authored plots settle their frozen scenery delta and metadata. Save-era plots retain
 				// their durable procedural growth receipt. CarryMarks is the final publication.
+				string layoutFailure = null;
+				bool settled = false;
 				try
 				{
-					string layoutFailure = null;
-					bool settled = authoredUpgrade
+					settled = authoredUpgrade
 						? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
 							Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
 							&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
 								authoredSuccessor, out layoutFailure)
 						: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
-					if (!settled)
-						throw new InvalidOperationException(layoutFailure
-							?? "The frozen plot-growth receipt did not settle exactly.");
 				}
 				catch (System.Exception ex)
 				{
+					layoutFailure = "Plot growth threw during handover: " + ex.Message;
+					if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
+						Successor, cell, intent, true, out custodyFailure))
+					{
+						r_KingdomImprovement.FailHandover(intent, custodyFailure);
+						if (job != null) KingdomConstruction.Quarantine(ref job,
+							intent.HandoverFailure);
+						return false;
+					}
+					if (authoredUpgrade)
+						return RetryOrQuarantineAuthoredLayout(Predecessor, intent, ref job,
+							layoutFailure);
 					r_KingdomImprovement.FailHandover(intent,
-						"Plot growth threw during handover: " + ex.Message);
+						layoutFailure);
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return false;
+				}
+				if (!settled)
+				{
+					if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
+						Successor, cell, intent, true, out custodyFailure))
+					{
+						r_KingdomImprovement.FailHandover(intent, custodyFailure);
+						if (job != null) KingdomConstruction.Quarantine(ref job,
+							intent.HandoverFailure);
+						return false;
+					}
+					layoutFailure = layoutFailure
+						?? "The frozen plot-growth receipt did not settle exactly.";
+					if (authoredUpgrade)
+						return RetryOrQuarantineAuthoredLayout(Predecessor, intent, ref job,
+							layoutFailure);
+					r_KingdomImprovement.FailHandover(intent, layoutFailure);
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return false;
 				}
@@ -96,11 +146,20 @@ namespace ThousandAndFirst
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return false;
 				}
+				if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
+					Successor, cell, intent, true, out custodyFailure))
+				{
+					r_KingdomImprovement.FailHandover(intent, custodyFailure);
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return false;
+				}
 				CarryMarks(Predecessor, Successor, SuccessorKey);
-				if (!ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
+				if (!ExactCarriedMarks(Predecessor, Successor, SuccessorKey)
+					|| !r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
+						Successor, cell, intent, true, out custodyFailure))
 				{
 					r_KingdomImprovement.FailHandover(intent,
-						"Founder marks did not settle exactly on the successor.");
+						custodyFailure ?? "Founder marks did not settle exactly on the successor.");
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return false;
 				}
@@ -109,14 +168,33 @@ namespace ThousandAndFirst
 			else
 			{
 				string layoutFailure = null;
-				bool settled = authoredUpgrade
-					? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
-						Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
-						&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
-							authoredSuccessor, out layoutFailure)
-					: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
+				bool settled = false;
+				try
+				{
+					settled = authoredUpgrade
+						? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
+							Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
+							&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
+								authoredSuccessor, out layoutFailure)
+						: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
+				}
+				catch (Exception exception)
+				{
+					layoutFailure = "Settled plot replay threw during handover: "
+						+ exception.Message;
+				}
+				if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
+					Successor, cell, intent, true, out custodyFailure))
+				{
+					r_KingdomImprovement.FailHandover(intent, custodyFailure);
+					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
+					return false;
+				}
 				if (!settled || !ExactCarriedMarks(Predecessor, Successor, SuccessorKey))
 				{
+					if (!settled && authoredUpgrade)
+						return RetryOrQuarantineAuthoredLayout(Predecessor, intent, ref job,
+							layoutFailure ?? "Settled authored plot state changed before removal.");
 					r_KingdomImprovement.FailHandover(intent, layoutFailure
 						?? "Settled founder marks changed before predecessor removal.");
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
@@ -124,6 +202,32 @@ namespace ThousandAndFirst
 				}
 			}
 			return true;
+		}
+
+		private static void StopContentHandover(r_KingdomImprovement Receipt,
+			ref KingdomConstructionJob Job, string RetryFailure)
+		{
+			if (Job == null) return;
+			if (Receipt.HandoverQuarantined)
+				KingdomConstruction.Quarantine(ref Job, Receipt.HandoverFailure);
+			else KingdomConstruction.FinishProjection(ref Job, false, false, RetryFailure);
+		}
+
+		private static bool RetryOrQuarantineAuthoredLayout(GameObject Owner,
+			r_KingdomImprovement Receipt, ref KingdomConstructionJob Job, string Failure)
+		{
+			if (KingdomArchitectureStamper.IsUpgradeQuarantined(Owner,
+				out string quarantine))
+			{
+				r_KingdomImprovement.FailHandover(Receipt, quarantine ?? Failure);
+				if (Job != null) KingdomConstruction.Quarantine(ref Job, Receipt.HandoverFailure);
+				return false;
+			}
+			Receipt.HandoverFailure = Failure != null && Failure.Length > 2048
+				? Failure.Substring(0, 2048) : Failure;
+			if (Job != null) KingdomConstruction.FinishProjection(ref Job, false, false,
+				Receipt.HandoverFailure ?? "The authored renovation remains retryable.");
+			return false;
 		}
 	}
 }

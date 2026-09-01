@@ -82,9 +82,16 @@ namespace ThousandAndFirst
 				}
 				return cache[index] == 1;
 			};
+			KingdomRoadRules.CellFilter clear = delegate(int x, int y)
+			{
+				return passable(x, y) && Wearable(Z.GetCell(x, y), plots);
+			};
 			int start = KingdomRoadRules.RotationStart(timeTicks, errands.Count);
 			int taken = (errands.Count < KingdomRoadRules.MaxRoutesPerPass) ? errands.Count : KingdomRoadRules.MaxRoutesPerPass;
 			List<int> route = new List<int>();
+			List<int> centreline = new List<int>();
+			List<int> occupied = new List<int>();
+			Dictionary<int, RoadSemantic> semantics = new Dictionary<int, RoadSemantic>();
 			bool full = false;
 			int laid = 0;
 			for (int i = 0; i < taken; i++)
@@ -107,10 +114,20 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				centreline.Clear();
 				for (int c = 0; c < route.Count; c++)
 				{
 					int x = KingdomRoadRules.UnpackX(route[c], Z.Width);
 					int y = KingdomRoadRules.UnpackY(route[c], Z.Width);
+					if (Wearable(Z.GetCell(x, y), plots)) centreline.Add(route[c]);
+				}
+				if (!KingdomRoadClearanceRules.TryExpand(clear, Z.Width, Z.Height,
+					errand.FromX, errand.FromY, errand.ToX, errand.ToY, centreline,
+					errand.Frontage, occupied, out int actualWidth)) continue;
+				for (int c = 0; c < occupied.Count; c++)
+				{
+					int x = KingdomRoadRules.UnpackX(occupied[c], Z.Width);
+					int y = KingdomRoadRules.UnpackY(occupied[c], Z.Width);
 					if (!Wearable(Z.GetCell(x, y), plots))
 					{
 						continue;
@@ -120,16 +137,18 @@ namespace ThousandAndFirst
 						full = true;
 						continue;
 					}
+					RecordSemantic(semantics, occupied[c], errand.Frontage.Role, actualWidth);
 					laid++;
 				}
 			}
-			KingdomRoadRules.WearState reached = Apply(Z, tally, plots);
+			KingdomRoadRules.WearState reached = Apply(Z, tally, plots, semantics);
 			WriteTally(Z, tally);
 			Announce(System, Z, reached, full, tally.Count);
 			if (KingdomLog.Enabled)
 			{
 				KingdomLog.Log("roads: days=" + days + " errands=" + errands.Count + " walked=" + taken
-					+ " cells=" + laid + " tracked=" + tally.Count + " reached=" + reached);
+					+ " cells=" + laid + " tracked=" + tally.Count + " reached=" + reached
+					+ " semantic=" + semantics.Count);
 			}
 		}
 

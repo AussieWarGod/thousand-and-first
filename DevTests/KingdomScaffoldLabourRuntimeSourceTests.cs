@@ -73,18 +73,51 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RemovalProofPrecedesRegistryReproofAfterDestroyCallback()
+		public void RemovalIntentPrecedesDestroyAndGlobalAftermathCommitsProof()
 		{
 			string durable = Read("Growth/KingdomScaffold.Durable.cs");
 			AssertOrdered(durable,
+				"TryPublishScaffoldRemovalIntent(successor, predecessorId)",
+				"ParentObject.Destroy(null, Silent: true)",
+				"KingdomSurvey.ObserveCurrentTopologyInActive(Z, ParentObject)",
+				"KingdomConstruction.FindGlobalLiveId(",
+				"KingdomConstructionRules.ScaffoldRemovalAftermath(",
+				"KingdomExactRemovalAction.InvokeOnce",
+				"KingdomExactRemovalAction.ProvedAbsent",
 				"KingdomSurvey.ObserveRemovedFromActive(Z, ParentObject)",
-				"predecessorState = KingdomConstruction.FindExactId(",
-				"successor.SetStringProperty(RemovalProofProperty, predecessorId)",
-				"successor.GetStringProperty(RemovalProofProperty) != predecessorId",
-				"KingdomConstruction.TryFind(current.Id, out refreshed)",
-				"SameFinalProjectionIdentity(current, refreshed)",
-				"KingdomConstruction.IsCurrent(refreshed)",
-				"current = refreshed");
+				"TryCommitScaffoldRemovalProof(");
+			StringAssert.Contains("originalValid", durable,
+				"changed-ID live reference must contradict old-ID absence");
+
+			string proof = Read("Growth/KingdomScaffold.RemovalProof.cs");
+			AssertOrdered(proof,
+				"ScaffoldRemovalIntentIdProperty =",
+				"ScaffoldRemovalIntentSchemaProperty =",
+				"TryPublishScaffoldRemovalIntent(",
+				"HasStringProperty(ScaffoldRemovalIntentSchemaProperty)",
+				"HasIntProperty(ScaffoldRemovalIntentIdProperty)",
+				"SetStringProperty(ScaffoldRemovalIntentIdProperty, ScaffoldId)",
+				"SetIntProperty(ScaffoldRemovalIntentSchemaProperty",
+				"HasExactScaffoldRemovalIntent(Successor, ScaffoldId)",
+				"TryCommitScaffoldRemovalProof(",
+				"KingdomConstruction.FindGlobalLiveId(",
+				"GameObject.Validate(ExpectedPredecessor)",
+				"ExactScaffoldReceiptClosure(Job, Successor, improvement, Z, cell)",
+				"Successor.SetStringProperty(RemovalProofProperty, ScaffoldId)",
+				"KingdomConstruction.TryFind(Job.Id, out refreshed)",
+				"SameFinalProjectionIdentity(Job, refreshed)");
+			StringAssert.Contains("FindGlobalLiveReceipt(Job.Id, Successor", proof);
+			StringAssert.Contains("FindGlobalLiveId(Job.SubjectId, out allowedSubject)", proof);
+			StringAssert.DoesNotContain(
+				"ScaffoldRemovalIntentIdProperty = RemovalProofProperty", proof);
+
+			string handover = Read("Growth/KingdomUpgrade.20.HandOver.cs");
+			AssertOrdered(handover, "TryCommitScaffoldRemovalProof(ownerSystem",
+				"ExactPendingRemovalProof(Successor, intent.Scaffold.IDIfAssigned");
+			StringAssert.Contains("TryCommitScaffoldRemovalProof(System, Z,",
+				Read("Growth/KingdomCommission.Recovery.cs"));
+			StringAssert.Contains("TryCommitScaffoldRemovalProof(System, Z,",
+				Read("Growth/KingdomPlanMarker.RecoveryAndInspection.cs"));
 		}
 
 		[Test]
@@ -152,6 +185,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomScaffold.LabourWindow.cs",
 				"Growth/KingdomScaffold.WorkInitialization.cs",
 				"Growth/KingdomScaffold.Durable.cs",
+				"Growth/KingdomScaffold.RemovalProof.cs",
 				"Growth/KingdomScaffold.SuccessorProof.cs",
 				"Growth/KingdomScaffold.CompletionAndLegacy.cs",
 				"Growth/KingdomScaffoldLabourRules.cs"

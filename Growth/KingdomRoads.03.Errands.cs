@@ -82,7 +82,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Adds every current authored public entrance to the road rotation. The immutable
+		/// Adds every current authored public and service entrance to the road rotation. The immutable
 		/// architecture receipt is authority for a finished current-schema building; inventing a
 		/// heart-facing door from its rectangle can aim the road at a wall. Receipt-less old plots
 		/// retain the deterministic geometric door as their compatibility path. A partial or corrupt
@@ -140,14 +140,12 @@ namespace ThousandAndFirst
 							|| !KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out failure))
 							continue;
 						exactReceipt = true;
-						bool currentSnapshot = KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+						bool currentSnapshot = KingdomArchitectureRules.IsManagedSnapshotEncoding(
 							intent.EncodedSnapshot);
 						for (int a = 0; a < snapshot.Anchors.Count; a++)
 						{
 							ArchitectureAnchor anchor = snapshot.Anchors[a];
-							if (anchor == null || !(anchor.Key == "entrance:public"
-								|| anchor.Key.StartsWith("entrance:public@",
-									System.StringComparison.Ordinal))) continue;
+							if (anchor == null || !RoadEntranceKey(anchor.Key)) continue;
 							if (!AddAuthoredEntranceErrand(Z, rect, snapshot, anchor,
 								routes, Errands) && !currentSnapshot) legacyReceiptFallback = true;
 						}
@@ -209,9 +207,19 @@ namespace ThousandAndFirst
 				if (!InZone(Z, exact[i].X, exact[i].Y)) return false;
 			string key = doorX + "," + doorY + ">" + laneX + "," + laneY;
 			if (!Routes.Add(key)) return true;
+			KingdomRoadFrontage frontage = KingdomRoadClearanceRules.ForArchitecture(
+				Snapshot.BuildKey, Snapshot, Entrance);
 			Errands.Add(new Errand(doorX, doorY, laneX, laneY,
-				KingdomRoadRules.RouteKind.DoorToLane, exact));
+				KingdomRoadRules.RouteKind.DoorToLane, exact, frontage));
 			return true;
+		}
+
+		private static bool RoadEntranceKey(string Key)
+		{
+			return Key == "entrance:public" || Key == "entrance:service"
+				|| (Key != null && (Key.StartsWith("entrance:public@",
+					System.StringComparison.Ordinal) || Key.StartsWith("entrance:service@",
+					System.StringComparison.Ordinal)));
 		}
 
 		private static bool InZone(Zone Z, int X, int Y)

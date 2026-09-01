@@ -11,11 +11,11 @@ namespace ThousandAndFirst.Tests
 		public void LogicalFamilyPreservesAuthorityNestedTypesAndInitializerOrder()
 		{
 			string source = KingdomSurveyLogicalSource.Read();
-			Assert.AreEqual(12, Count(source, "public partial class KingdomSurvey"));
+			Assert.AreEqual(14, Count(source, "public partial class KingdomSurvey"));
 			Assert.AreEqual(1, Count(source, "private sealed class ReferenceComparer"));
 			Assert.AreEqual(1, Count(source, "private sealed class IndexedRow"));
 			Assert.AreEqual(1, Count(source, "public sealed class PassScope"));
-			Assert.AreEqual(1, Count(source, "private sealed class SpoilFrame"));
+			Assert.AreEqual(1, Count(source, "private sealed class FoodDebitFrame"));
 			StringAssert.DoesNotContain("public class KingdomSurvey", source);
 
 			AssertOrdered(source,
@@ -63,8 +63,9 @@ namespace ThousandAndFirst.Tests
 				"public int StoreFood(",
 				"public int StoreFoodIn(",
 				"public int SpoilFrom(",
-				"private sealed class SpoilFrame",
+				"private sealed class FoodDebitFrame",
 				"public bool TrySpoilFromExact(",
+				"public bool TryDebitFoodFromExact(",
 				"public int LeakFrom(",
 				"public bool TryLeakFromExact(",
 				"public int Store(int Drams)",
@@ -104,6 +105,20 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("AvailableIn(larder, leases)", distance);
 			StringAssert.Contains("CapacityOf(larder) - physical", distance);
 			StringAssert.Contains("EffectiveCapacity(", city);
+		}
+
+		[Test]
+		public void DefenceUsesOneCurrentPhysicalObservationAndNeverScalarFallback()
+		{
+			string source = KingdomSurveyLogicalSource.Read();
+			string defence = Between(source, "public bool TryDefence(out int Amount",
+				"public int Consume(int Drams)");
+			StringAssert.Contains("TryBenefits(out KingdomBenefitIndex benefits", defence);
+			StringAssert.Contains("Benefits.Total(\"defence\")", defence);
+			StringAssert.Contains("DistrictDefenceBonus", defence);
+			StringAssert.Contains("physical observation failed", defence);
+			StringAssert.DoesNotContain("GetIntProperty(\"KingdomDefence\")", defence);
+			StringAssert.DoesNotContain("Defences[i]", defence);
 		}
 
 		private static string Between(string source, string startTerm, string endTerm)

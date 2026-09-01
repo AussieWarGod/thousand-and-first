@@ -13,6 +13,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomSealRecord.Writing.cs",
 			"Core/KingdomSealRecord.Reading.cs",
 			"Core/KingdomSealRecord.Validation.cs",
+			"Core/KingdomSealRecord.Profile.cs",
 			"Core/KingdomSealRecord.Utilities.cs",
 			"Core/KingdomSealRecord.Collections.cs"
 		};

@@ -76,6 +76,15 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>Frozen <c>KingdomExpeditionOutcome</c> ordinal. Never redrawn on retry.</summary>
 		internal readonly int OutcomeCode;
 
+		/// <summary>Exact final rich-find publication decision, frozen with the final outcome.</summary>
+		internal readonly KingdomExpeditionDeedDisposition ExpeditionDeedDisposition;
+
+		internal readonly string ExpeditionDeedPolityId;
+
+		internal readonly string ExpeditionDeedCauseRef;
+
+		internal readonly string ExpeditionDeedFigureRef;
+
 		/// <summary>Stable endpoint hash for the exact physical source container. This is not a
 		/// work-row id: it is <c>StableId(GameObject.ID)</c>, paired with the full object id below;
 		/// the live cache refuses collisions.</summary>
@@ -173,7 +182,12 @@ namespace ThousandAndFirst.Simulation.City
 			int deliveryManifestSourceCount = 0,
 			long deliveryTargetBeforeAmount = 0L,
 			KingdomDeliveryTargetReceiptState deliveryTargetReceiptState
-				= KingdomDeliveryTargetReceiptState.None)
+				= KingdomDeliveryTargetReceiptState.None,
+			KingdomExpeditionDeedDisposition expeditionDeedDisposition
+				= KingdomExpeditionDeedDisposition.Legacy,
+			string expeditionDeedPolityId = null,
+			string expeditionDeedCauseRef = null,
+			string expeditionDeedFigureRef = null)
 		{
 			JobId = jobId;
 			Kind = kind;
@@ -193,6 +207,10 @@ namespace ThousandAndFirst.Simulation.City
 			WaterCost = waterCost;
 			ProvisionCost = provisionCost;
 			OutcomeCode = outcomeCode;
+			ExpeditionDeedDisposition = expeditionDeedDisposition;
+			ExpeditionDeedPolityId = expeditionDeedPolityId;
+			ExpeditionDeedCauseRef = expeditionDeedCauseRef;
+			ExpeditionDeedFigureRef = expeditionDeedFigureRef;
 			DeliverySourceEndpointId = deliverySourceEndpointId;
 			DeliverySourceObjectId = deliverySourceObjectId;
 			DeliverySourceX = deliverySourceX;

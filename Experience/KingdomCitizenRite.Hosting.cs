@@ -47,15 +47,30 @@ namespace ThousandAndFirst
 				}
 				return verdict;
 			}
-			if (!Citizen.HasPart<GivesRep>())
+			if (!TryProjection(System, Citizen,
+				out r_KingdomCitizenRiteProjection projection, out string projectionFailure))
 			{
-				GivesRep rep = Citizen.AddPart<GivesRep>();
+				KingdomLog.Log("citizen rite: exact host provenance refused ("
+					+ (projectionFailure ?? "unknown failure") + ")");
+				return CitizenRiteVerdict.NoBody;
+			}
+			GivesRep rep = Citizen.GetPart<GivesRep>();
+			bool addedRep = rep == null;
+			if (addedRep)
+			{
+				rep = Citizen.AddPart<GivesRep>();
 				// The related-faction table is what carries the rite's secondary awards and its
 				// hates (D/XRL/World/Conversations/Parts/WaterRitual.cs:174-209). Filled the way
 				// the engine fills a village warden's (D/XRL/World/ZoneBuilders/VillageCoda.cs:558).
 				rep.FillInRelatedFactions(Initial: true);
 			}
-			Speak(System, Citizen);
+			if (!ObserveGivesRep(projection, rep, addedRep, out projectionFailure)
+				|| !Speak(System, Citizen, projection, out projectionFailure))
+			{
+				KingdomLog.Log("citizen rite: exact native host projection refused ("
+					+ (projectionFailure ?? "unknown failure") + ")");
+				return CitizenRiteVerdict.NoBody;
+			}
 			if (Citizen.GetIntProperty(HostProperty) != 1)
 			{
 				Citizen.SetIntProperty(HostProperty, 1);

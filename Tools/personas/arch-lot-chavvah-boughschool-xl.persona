@@ -1,0 +1,6 @@
+# Native taste proof for solid living trunks and the paths around the bough school.
+DESCRIPTION=Chavvah bough-school campus stages for native trunk and route review
+REQUEST=arch-lot-chavvah-boughschool-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

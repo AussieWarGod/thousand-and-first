@@ -455,48 +455,49 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposePairPhase phase, KingdomPurposeLandingCargoRecordShape record,
 			int marks)
 		{
-			return new KingdomPurposeLandingTransactionState
-			{
-				PairPhase = phase,
-				OperationPhase = KingdomPurposeOperationPhase.Delivered,
-				CargoRecord = record,
-				Attempt = KingdomPurposeLandingAttemptState.Clear,
-				EntryCustody = KingdomPurposeLandingCustodyProof.Complete,
-				Custody = KingdomPurposeLandingCustodyProof.Complete,
-				StoreRack = KingdomPurposeLandingStoreRackProof.Exact,
-				Cleanup = KingdomPurposeLandingCleanupStep.None,
-				PairRevision = 17,
-				OperationRevision = 12,
-				NextOperationOrdinal = phase == KingdomPurposePairPhase.SecondPending
+			return new KingdomPurposeLandingTransactionState(
+				PairPhase: phase,
+				ResumePhase: KingdomPurposePairPhase.Invalid,
+				OperationPhase: KingdomPurposeOperationPhase.Delivered,
+				CargoRecord: record,
+				Attempt: KingdomPurposeLandingAttemptState.Clear,
+				EntryCustody: KingdomPurposeLandingCustodyProof.Complete,
+				Custody: KingdomPurposeLandingCustodyProof.Complete,
+				StoreRack: KingdomPurposeLandingStoreRackProof.Exact,
+				Cleanup: KingdomPurposeLandingCleanupStep.None,
+				PairRevision: 17,
+				OperationRevision: 12,
+				NextOperationOrdinal: phase == KingdomPurposePairPhase.SecondPending
 					? 2 : phase == KingdomPurposePairPhase.CargoAwaitingActivation ? 3 : 4,
-				Carried = 6,
-				ExactServingMarks = marks,
-				RootPresent = true,
-				MeasuredRosterExact = true
-			};
+				Carried: 6,
+				ExactServingMarks: marks,
+				RootPresent: true,
+				MeasuredRosterExact: true,
+				MalformedCoResidentEvidence: false,
+				FaultPresent: false);
 		}
 
 		private static KingdomPurposeLandingTransactionState Landing()
 		{
-			return new KingdomPurposeLandingTransactionState
-			{
-				PairPhase = KingdomPurposePairPhase.OperationOutstanding,
-				ResumePhase = KingdomPurposePairPhase.Invalid,
-				OperationPhase = KingdomPurposeOperationPhase.LandingPending,
-				CargoRecord = KingdomPurposeLandingCargoRecordShape.WholeCurrent,
-				Attempt = KingdomPurposeLandingAttemptState.Clear,
-				EntryCustody = KingdomPurposeLandingCustodyProof.Complete,
-				Custody = KingdomPurposeLandingCustodyProof.Complete,
-				StoreRack = KingdomPurposeLandingStoreRackProof.Exact,
-				Cleanup = KingdomPurposeLandingCleanupStep.None,
-				PairRevision = 29,
-				OperationRevision = 23,
-				NextOperationOrdinal = 4,
-				Carried = 6,
-				ExactServingMarks = 6,
-				RootPresent = true,
-				MeasuredRosterExact = true
-			};
+			return new KingdomPurposeLandingTransactionState(
+				PairPhase: KingdomPurposePairPhase.OperationOutstanding,
+				ResumePhase: KingdomPurposePairPhase.Invalid,
+				OperationPhase: KingdomPurposeOperationPhase.LandingPending,
+				CargoRecord: KingdomPurposeLandingCargoRecordShape.WholeCurrent,
+				Attempt: KingdomPurposeLandingAttemptState.Clear,
+				EntryCustody: KingdomPurposeLandingCustodyProof.Complete,
+				Custody: KingdomPurposeLandingCustodyProof.Complete,
+				StoreRack: KingdomPurposeLandingStoreRackProof.Exact,
+				Cleanup: KingdomPurposeLandingCleanupStep.None,
+				PairRevision: 29,
+				OperationRevision: 23,
+				NextOperationOrdinal: 4,
+				Carried: 6,
+				ExactServingMarks: 6,
+				RootPresent: true,
+				MeasuredRosterExact: true,
+				MalformedCoResidentEvidence: false,
+				FaultPresent: false);
 		}
 
 		private static void AssertPublishedRetirement(

@@ -9,7 +9,7 @@ namespace ThousandAndFirst.Simulation.City
 		/// from saves, and rebuilt per dirty zone on render. A cold load starts with no trusted
 		/// distances rather than serializing a stale answer.</summary>
 		[NonSerialized]
-		internal KingdomDistanceCache DistanceCache;
+		internal KingdomDistanceCache DistanceCache = null;
 
 		public int SchemaVersion = KingdomCityRules.SchemaVersion;
 

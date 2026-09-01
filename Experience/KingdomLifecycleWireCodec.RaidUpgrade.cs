@@ -88,7 +88,9 @@ namespace ThousandAndFirst
 		internal static bool UpgradeArchivedRaidLedgerV1(KingdomLifecycleBook book)
 		{
 			if (book == null || book.RaidLedger == null) return false;
-			if (book.FormatVersion == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
+			if (book.FormatVersion == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+				|| book.FormatVersion == KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion
+				|| book.FormatVersion == KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion)
 				book.FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
 			else if (book.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion) return false;
 			if (book.RaidLedger.Version == KingdomRaidLedger.CurrentVersion)

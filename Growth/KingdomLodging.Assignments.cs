@@ -15,9 +15,14 @@ namespace ThousandAndFirst
 	{
 		public static string HomeDesignKeyOf(Zone Z, GameObject Resident)
 		{
-			GameObject home = HomeOf(Z, Resident);
-			KingdomRules.BuildEntry entry;
-			return (home != null && TryGetBuiltEntry(home, out entry)) ? entry.Key : null;
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string failure))
+			{
+				LogBenefitFailure(Z, "home-key reading", failure);
+				return null;
+			}
+			GameObject home = HomeOf(Z, Resident, benefits);
+			return home == null ? null : HomeBuildingKey(home, benefits);
 		}
 
 		/// <summary>
@@ -35,9 +40,15 @@ namespace ThousandAndFirst
 		/// anything.</param>
 		public static KingdomLodgingRules.Closeness QuartersOf(Zone Z, GameObject Resident)
 		{
-			GameObject home = HomeOf(Z, Resident);
-			KingdomRules.BuildEntry entry;
-			return (home != null && TryGetBuiltEntry(home, out entry)) ? QuartersOf(entry) : KingdomLodgingRules.Closeness.Packed;
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string failure))
+			{
+				LogBenefitFailure(Z, "quarters reading", failure);
+				return KingdomLodgingRules.Closeness.Packed;
+			}
+			GameObject home = HomeOf(Z, Resident, benefits);
+			return home == null ? KingdomLodgingRules.Closeness.Packed
+				: QuartersOf(home, benefits);
 		}
 
 		// --- The pass itself -------------------------------------------------------------
@@ -45,7 +56,8 @@ namespace ThousandAndFirst
 		// Returns the occupancy map it settled on, or null when the module has nothing to do here.
 		// RunBrink is false for the arrival gate, which asks the same question without charging
 		// anybody a pass of the grace Addendum 4b gives them.
-		private static Dictionary<string, List<GameObject>> Settle(KingdomSystem System, Zone Z, bool RunBrink)
+		private static Dictionary<string, List<GameObject>> Settle(KingdomSystem System, Zone Z,
+			bool RunBrink, KingdomSurvey Survey = null)
 		{
 			if (!Enabled || System == null || !System.Founded || Z == null)
 			{
@@ -60,7 +72,13 @@ namespace ThousandAndFirst
 				// is the rule that shipped before this module and is unchanged by it.
 				return new Dictionary<string, List<GameObject>>();
 			}
-			List<GameObject> homes = HousingIn(Z);
+			if (!TryBenefitIndex(Z, Survey, out KingdomBenefitIndex benefits,
+				out string failure))
+			{
+				LogBenefitFailure(Z, "settlement pass", failure);
+				return null;
+			}
+			List<GameObject> homes = HousingIn(Z, benefits);
 			Dictionary<string, GameObject> homeByPlot = new Dictionary<string, GameObject>();
 			for (int i = 0; i < homes.Count; i++)
 			{
@@ -76,7 +94,8 @@ namespace ThousandAndFirst
 			{
 				GameObject resident = residents[i];
 				string plotId = resident.GetStringProperty(HomePlotIdProperty);
-				if (!string.IsNullOrEmpty(plotId) && homeByPlot.ContainsKey(plotId))
+				if (!string.IsNullOrEmpty(plotId) && homeByPlot.TryGetValue(plotId,
+					out GameObject assignedHome) && !IsCondemned(assignedHome))
 				{
 					AddOccupant(occupancy, plotId, resident);
 					continue;
@@ -97,18 +116,20 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < unassigned.Count; i++)
 			{
-				AssignOne(System, Z, unassigned[i], homes, occupancy, RunBrink);
+				AssignOne(System, Z, unassigned[i], homes, occupancy, benefits, RunBrink);
 			}
 			return occupancy;
 		}
 
-		private static void AssignOne(KingdomSystem System, Zone Z, GameObject Resident, List<GameObject> Homes, Dictionary<string, List<GameObject>> Occupancy, bool RunBrink)
+		private static void AssignOne(KingdomSystem System, Zone Z, GameObject Resident,
+			List<GameObject> Homes, Dictionary<string, List<GameObject>> Occupancy,
+			KingdomBenefitIndex Benefits, bool RunBrink)
 		{
 			GameObject winningHome;
 			KingdomLodgingRules.UnhousedReason reason;
 			KingdomLodgingRules.Closeness roomiestRefused;
 			List<string> needs;
-			string winningPlotId = ChooseHome(Z, Resident, Homes, Occupancy,
+			string winningPlotId = ChooseHome(Z, Resident, Homes, Occupancy, Benefits,
 				out winningHome, out reason, out roomiestRefused, out needs);
 			string residentName = NameOf(Resident);
 			if (winningPlotId == null)
@@ -146,9 +167,10 @@ namespace ThousandAndFirst
 			KingdomLabCivicRuntime.ObserveRehoused(System, Z, Resident, winningPlotId);
 			if (wasUnhoused)
 			{
-				KingdomRules.BuildEntry winEntry;
-				TryGetBuiltEntry(winningHome, out winEntry);
-				string matched = KingdomLodgingRules.MatchedTag(needs, (winEntry == null) ? null : new List<string>(KingdomQol.OfferOf(winEntry.Key, Z)));
+					KingdomRules.BuildEntry winEntry;
+					TryGetBuiltEntry(winningHome, Benefits, out winEntry);
+					string matched = KingdomLodgingRules.MatchedTag(needs,
+						new List<string>(HomeTags(winningHome, Benefits)));
 				string line = KingdomPresentation.Rich(residentName) + " found shelter: "
 					+ KingdomLodgingRules.HomeSuffix((winEntry != null) ? winEntry.Name : null,
 						matched) + ".";
@@ -161,7 +183,8 @@ namespace ThousandAndFirst
 		/// roof without turning it into a hard vacancy lock; the durable legendary-trader marker
 		/// retains the prior generic choice law. All mutation remains in <see cref="AssignOne"/>.</summary>
 		private static string ChooseHome(Zone Z, GameObject Resident, List<GameObject> Homes,
-			Dictionary<string, List<GameObject>> Occupancy, out GameObject WinningHome,
+			Dictionary<string, List<GameObject>> Occupancy, KingdomBenefitIndex Benefits,
+			out GameObject WinningHome,
 			out KingdomLodgingRules.UnhousedReason Reason,
 			out KingdomLodgingRules.Closeness RoomiestRefused, out List<string> Needs)
 		{
@@ -186,19 +209,21 @@ namespace ThousandAndFirst
 			{
 				GameObject home = Homes[i];
 				string plotId = home.GetStringProperty(KingdomPlots.PlotIdProperty);
-				KingdomRules.BuildEntry entry;
-				if (string.IsNullOrEmpty(plotId) || !TryGetBuiltEntry(home, out entry)) continue;
-				int capacity = RoofCapacity(entry);
+				if (string.IsNullOrEmpty(plotId)
+					|| !TryHomeReading(home, Benefits, out KingdomBenefitReading reading,
+						out string exactPlot)
+					|| !string.Equals(plotId, exactPlot, StringComparison.Ordinal)) continue;
+				int capacity = RoofCapacity(home, Benefits);
 				if (capacity <= 0 || IsCondemned(home)) continue;
 				anyStanding = true;
-				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
+				List<string> provides = new List<string>(HomeTags(home, Benefits));
 				if (!KingdomLodgingRules.MeetsNeeds(Needs, provides)) continue;
 				anyMeetsNeeds = true;
 				if (KingdomLabCivicRuntime.RefusesHome(The.Game?.GetSystem<KingdomSystem>(),
 					Z, Resident, home, out string labRefusal))
 				{
 					RoomiestRefused = KingdomLodgingRules.Roomier(RoomiestRefused,
-						QuartersOf(entry));
+						QuartersOf(home, Benefits));
 					continue;
 				}
 				List<GameObject> occupants;
@@ -207,7 +232,7 @@ namespace ThousandAndFirst
 				if (!KingdomLodgingRules.HasFreeBed(capacity, occupantCount)) continue;
 				anyHasCapacity = true;
 				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(
-					Z, QuartersOf(entry), home);
+					Z, QuartersOf(home, Benefits), home);
 				if (occupants != null && AnyOccupantConflicts(refuses, selfTags, creed,
 					occupants, quarters))
 				{
@@ -218,7 +243,7 @@ namespace ThousandAndFirst
 				eligible.Add(new KingdomLodgingRules.LodgingCandidate(
 					plotId, capacity, occupantCount));
 				eligibleHomes.Add(home);
-				eligibleFineHouses.Add(string.Equals(entry.Key, "finehouse",
+				eligibleFineHouses.Add(string.Equals(reading.Designation.BuildingKey, "finehouse",
 					StringComparison.Ordinal));
 			}
 			bool luxuryResident = Resident != null && Resident.GetIntProperty(

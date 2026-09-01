@@ -50,8 +50,12 @@ namespace ThousandAndFirst
 						worstStanding = row.Value;
 						faction = row.Key;
 					}
+			if (!TryPhysicalRoof(survey, out int roof, out string roofFailure))
+			{
+				KingdomLog.Log("petition: " + roofFailure); return false;
+			}
 			KingdomRules.PetitionKind kind = KingdomRules.ChoosePetition(survey.StoredWater,
-				system.Population, survey.Beds, system.IdleWorks, worstStanding,
+				system.Population, roof, system.IdleWorks, worstStanding,
 				HasShrine(survey), system.Dead);
 			return kind != KingdomRules.PetitionKind.None
 				&& PublishOffer(system, zone, survey, book, kind, faction, null, now, false);
@@ -119,8 +123,15 @@ namespace ThousandAndFirst
 			{
 				int standing = string.IsNullOrEmpty(op.Faction) ? 0 :
 					system.GetRegardForRealm(op.Faction);
-				if (KingdomPetitionRules.CanResolve(state, (KingdomRules.PetitionKind)op.Kind,
-					op.Target, survey.StoredWater, survey.Beds, system.IdleWorks, standing,
+				KingdomRules.PetitionKind kind = (KingdomRules.PetitionKind)op.Kind;
+				int roof = 0;
+				string roofFailure = null;
+				bool roofProved = kind != KingdomRules.PetitionKind.Shelter
+					|| TryPhysicalRoof(survey, out roof, out roofFailure);
+				if (!roofProved)
+					KingdomLog.Log("petition: shelter evidence paused: " + roofFailure);
+				if (roofProved && KingdomPetitionRules.CanResolve(state, kind,
+					op.Target, survey.StoredWater, roof, system.IdleWorks, standing,
 					HasShrine(survey)))
 				{
 					PublishTransition(system, book, op, KingdomLifecycleAction.PetitionResolve,
@@ -132,6 +143,21 @@ namespace ThousandAndFirst
 				&& KingdomPetitionRules.IsExpired(now, op.DepartTick))
 				PublishTransition(system, book, op, KingdomLifecycleAction.PetitionExpire,
 					KingdomPetitionRules.ActiveClock, op.DepartTick, now, "expired");
+		}
+
+		private static bool TryPhysicalRoof(KingdomSurvey Survey, out int Roof,
+			out string Failure)
+		{
+			Roof = 0;
+			Failure = null;
+			if (Survey == null)
+			{
+				Failure = "The settlement survey is unavailable.";
+				return false;
+			}
+			if (!Survey.TryBenefits(out KingdomBenefitIndex benefits, out Failure)) return false;
+			Roof = benefits.Total("roof");
+			return true;
 		}
 
 		internal static PetitionLifecycle Status(KingdomSystem system)

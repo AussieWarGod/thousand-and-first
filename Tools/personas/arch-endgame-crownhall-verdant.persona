@@ -1,0 +1,6 @@
+# Endgame governance: public witness and a living-material silhouette, not a generic large room.
+DESCRIPTION=verdant crown hall precinct stages with exact civic and XL identity
+REQUEST=arch-endgame-crownhall-verdant;facing=south
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame

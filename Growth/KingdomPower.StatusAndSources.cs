@@ -56,7 +56,9 @@ namespace ThousandAndFirst
 				// The founder's designation is the whole of the grid's membership: what the
 				// settlement raised, plus anything explicitly dedicated to it. Nothing the
 				// player merely left lying about is ever charged, moved, or read.
-				if (item.GetIntProperty("KingdomBuilt") != 1 && item.GetIntProperty("KingdomGrid") != 1)
+				if (!KingdomUpgrade.IsFunctionallyBuilt(item)
+					&& (item.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)))
 				{
 					continue;
 				}

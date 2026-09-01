@@ -93,7 +93,8 @@ namespace XRL.World.Parts
 	{
 		public override bool WantEvent(int ID, int cascade)
 		{
-			if (!base.WantEvent(ID, cascade) && ID != GetInventoryActionsEvent.ID)
+			if (!base.WantEvent(ID, cascade) && ID != GetInventoryActionsEvent.ID
+				&& ID != BeforeDeathRemovalEvent.ID)
 			{
 				return ID == InventoryActionEvent.ID;
 			}
@@ -115,6 +116,12 @@ namespace XRL.World.Parts
 			{
 				ThousandAndFirst.KingdomGuestbook.TryLodge(ParentObject);
 			}
+			return base.HandleEvent(E);
+		}
+
+		public override bool HandleEvent(BeforeDeathRemovalEvent E)
+		{
+			ThousandAndFirst.KingdomGuestLifecycle.ObserveLodgeTargetDeath(ParentObject);
 			return base.HandleEvent(E);
 		}
 	}

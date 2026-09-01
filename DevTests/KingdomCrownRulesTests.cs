@@ -644,7 +644,7 @@ namespace ThousandAndFirst.Tests
 			// it never crowds the capital's ordinary economy. XL is as far as the shipped plot
 			// vocabulary reaches, so the arcology takes ALL of it -- and the zone-spanning the
 			// research describes is a carrier this wave deliberately did not build.
-			Assert.IsTrue(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 20, 14));
+			Assert.IsTrue(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 20, 18));
 			Assert.IsFalse(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 24, 16),
 				"a record wanting more ground than this needs machinery that does not exist yet");
 		}

@@ -16,9 +16,10 @@ namespace ThousandAndFirst.Simulation.City
 	/// settlement's whole elapsed off <c>KingdomGrowth</c>'s settlement-wide <c>LastWaterWorkTick</c>,
 	/// so a model that also credited them here would pay the same day twice. W6 does not add a
 	/// second accounting beside that one — it <b>moves</b> it. Every zone's per-day make is
-	/// measured onto its own row at the pass that reads it
-	/// (<c>KingdomZoneRow.WaterCarry</c> / <c>FoodCarry</c>), the model integrates all of them off
-	/// its ONE clock, and the settlement pass credits nothing. One accounting; two renderings —
+	/// measured onto its own row at the pass that reads it (<c>KingdomZoneRow.WaterCarry</c>),
+	/// the model integrates all of them off its ONE clock, and the settlement pass credits
+	/// nothing. <c>FoodCarry</c> remains a wire-compatible zero column because food is physical,
+	/// transaction-bound play rather than model production. One water accounting; two renderings —
 	/// unattended ground fills its book, and attended ground has the same drams poured into real
 	/// vessels by &sect;3.5's amortised reify.
 	/// </para>
@@ -101,7 +102,9 @@ namespace ThousandAndFirst.Simulation.City
 
 		internal long FoodRateOf(KingdomZoneRow row, int index)
 		{
-			return Methoded(RateOf(foodRatePerDay, index, row.FoodCarry));
+			// Legacy rows and hosted overrides may carry pre-ruling food rates. Food production is
+			// physical now, so no city slice may turn any such rate into item debt.
+			return 0L;
 		}
 
 		public int RowCount(KingdomCityState state)

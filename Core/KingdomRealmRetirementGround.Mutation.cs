@@ -23,6 +23,9 @@ namespace ThousandAndFirst
 				EvidenceDigest = current; return true;
 			}
 			if (Failure != null) return false;
+			if (!KingdomMarketRemoval.TryPrepareTransaction(System,
+				Plan.MarketStockRetirements, Plan.LegendaryMarketRetirements,
+				out KingdomMarketRemovalTransaction market, out Failure)) return false;
 			if (!KingdomRelocation.TryRetireForRealmRemoval(Plan.Relocation, out Failure))
 				return false;
 			for (int i = 0; i < Plan.StasisVaults.Count; i++)
@@ -35,7 +38,7 @@ namespace ThousandAndFirst
 			{
 				GameObject item = Plan.MutationObjects[i];
 				if (!GameObject.Validate(item)) continue;
-				if (!TryRemoveExperienceProjections(item, out Failure)) return false;
+				if (!TryRemoveExperienceProjections(System, item, out Failure)) return false;
 				if (Plan.Fallbacks.TryGetValue(item, out GameObjectBlueprint fallback))
 					item.SetBlueprint(fallback);
 				KingdomRemovalProjectionRuntime.StripCampfireRecipe(item);
@@ -45,7 +48,13 @@ namespace ThousandAndFirst
 				Plan.ExternalOwnership, out Failure))
 				return false;
 			if (!TryRetireWitnessWorks(System, Plan, out Failure)) return false;
-			return TryVerify(Plan, out EvidenceDigest, out Failure);
+			if (!KingdomMarketRemoval.TryCommitTransaction(System, market, out Failure)) return false;
+			if (TryVerify(Plan, out EvidenceDigest, out Failure)) return true;
+			string verifyFailure = Failure;
+			if (!KingdomMarketRemoval.TryRollback(market, out string rollbackFailure))
+				KingdomLog.Log("market removal rollback failed: " + rollbackFailure);
+			Failure = verifyFailure ?? "ground verification failed after market retirement";
+			return false;
 		}
 
 		private static bool TryVerify(KingdomRealmRemovalGroundPlan Plan,
@@ -63,7 +72,11 @@ namespace ThousandAndFirst
 					return Fail("owned blueprint remains after conversion", out Failure);
 				if (item.GetPart<r_KingdomOfficeProjection>() != null
 					|| item.GetPart<r_KingdomRemembranceProjection>() != null
-					|| item.GetPart<r_KingdomWitnessWorkProjection>() != null)
+					|| item.GetPart<r_KingdomWitnessWorkProjection>() != null
+					|| (Plan.MarketStockRetirements.Contains(item)
+						&& item.GetPart<r_KingdomMarketStockProjection>() != null)
+					|| (Plan.LegendaryMarketRetirements.Contains(item)
+						&& item.GetPart<r_KingdomLegendaryMarketProjection>() != null))
 					return Fail("an exact civic experience projection remains after restoration",
 						out Failure);
 				if (!KingdomRemovalProjectionRuntime.TryInspectCampfire(item,

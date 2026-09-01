@@ -8,10 +8,13 @@ usage() {
 	cat <<'EOF'
 Usage:
   Tools/workshop-package.sh --copy
-  Tools/workshop-package.sh [--test|--release] DESTINATION
+  Tools/workshop-package.sh [--test|--alpha|--release] DESTINATION
 
   --copy     print the canonical Qud Workshop fields; write nothing
   --test     build a private-test package (default); workshop.json may be absent
+  --alpha    build a tagged public v1.0.x Alpha package; require public metadata,
+             exact private-candidate binding, final preview, and structural review,
+             but no final human release-evidence record
   --release  require an annotated v<version> tag at HEAD, public workshop.json,
              release evidence, the committed private-package receipt copy, and
              the exact-inventory structural release review
@@ -25,6 +28,7 @@ MODE="test"
 case "${1:-}" in
 	--copy) MODE="copy"; shift ;;
 	--test) MODE="test"; shift ;;
+	--alpha) MODE="alpha"; shift ;;
 	--release) MODE="release"; shift ;;
 	-h|--help) usage; exit 0 ;;
 esac
@@ -89,11 +93,39 @@ require_clean_head
 require_release_tag() {
 	TAG_REF="refs/tags/v$VERSION"
 	git show-ref --verify --quiet "$TAG_REF" || {
-		echo "release package requires annotated tag v$VERSION" >&2; exit 3; }
+		echo "public package requires annotated tag v$VERSION" >&2; exit 3; }
 	[ "$(git cat-file -t "$TAG_REF")" = "tag" ] || {
-		echo "release tag v$VERSION must be annotated, not lightweight" >&2; exit 3; }
+		echo "public tag v$VERSION must be annotated, not lightweight" >&2; exit 3; }
 	[ "$(git rev-parse "$TAG_REF^{commit}")" = "$HEAD_COMMIT" ] || {
-		echo "release package requires annotated tag v$VERSION at HEAD" >&2; exit 3; }
+		echo "public package requires annotated tag v$VERSION at HEAD" >&2; exit 3; }
+}
+
+require_alpha_lineage() {
+	[ "$VERSION" != "1.0.0" ] || return 0
+	local first_ref="refs/tags/v1.0.0" first_commit first_version
+	git show-ref --verify --quiet "$first_ref" || {
+		echo "later v1.0 Alpha patch requires preserved annotated tag v1.0.0" >&2
+		return 1
+	}
+	[ "$(git cat-file -t "$first_ref")" = "tag" ] || {
+		echo "first Alpha tag v1.0.0 must be annotated, not lightweight" >&2
+		return 1
+	}
+	first_commit="$(git rev-parse "$first_ref^{commit}")"
+	[ "$first_commit" != "$HEAD_COMMIT" ] \
+		&& git merge-base --is-ancestor "$first_commit" "$HEAD_COMMIT" || {
+		echo "later v1.0 Alpha patch requires v1.0.0 on an earlier ancestor" >&2
+		return 1
+	}
+	first_version="$(git show "$first_ref:manifest.json" | python3 -c \
+		'import json, sys; print(json.load(sys.stdin).get("version", ""))')" || {
+		echo "cannot read manifest version from first Alpha tag v1.0.0" >&2
+		return 1
+	}
+	[ "$first_version" = "1.0.0" ] || {
+		echo "first Alpha tag v1.0.0 does not bind manifest version 1.0.0" >&2
+		return 1
+	}
 }
 
 extract_head_blob() {
@@ -101,7 +133,7 @@ extract_head_blob() {
 	local entry metadata tracked_path mode kind blob
 	entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- ":(literal)$path")"
 	[ -n "$entry" ] || {
-		echo "release package requires $label in HEAD: $path" >&2; return 1; }
+		echo "public package requires $label in HEAD: $path" >&2; return 1; }
 	metadata="${entry%%$'\t'*}"
 	tracked_path="${entry#*$'\t'}"
 	read -r mode kind blob <<< "$metadata"
@@ -144,6 +176,7 @@ CURRENT_LIST=""
 PROOF_FILE=""
 ACTUAL_LIST=""
 EVIDENCE_FILE=""
+ALPHA_CANDIDATE_FILE=""
 CANDIDATE_RECEIPT_FILE=""
 CANDIDATE_LIST=""
 CANDIDATE_PROOF_FILE=""
@@ -155,6 +188,7 @@ EVIDENCE_ROOT=""
 STRUCTURE_GATE_FILE=""
 STRUCTURE_LEDGER_FILE=""
 STRUCTURE_INVENTORY_FILE=""
+PRIVATE_COMMIT=""
 PUBLISHED_DEST_ID=""
 PUBLISHED_RECEIPT_ID=""
 RECEIPT_PAYLOAD_SHA=""
@@ -527,10 +561,7 @@ new_scratch_file LIST_FILE list
 new_scratch_file CURRENT_LIST current-list
 new_scratch_file PROOF_FILE proof
 new_scratch_file ACTUAL_LIST actual-list
-if [ "$MODE" = "release" ]; then
-	new_scratch_file EVIDENCE_FILE evidence
-	new_scratch_file ARTIFACT_LIST artifact-list
-	new_scratch_file TESTING_FILE testing
+if [ "$MODE" = "alpha" ] || [ "$MODE" = "release" ]; then
 	new_scratch_file STRUCTURE_GATE_FILE structure-gate
 	new_scratch_file STRUCTURE_LEDGER_FILE structure-ledger
 	new_scratch_file STRUCTURE_INVENTORY_FILE structure-inventory
@@ -539,6 +570,14 @@ if [ "$MODE" = "release" ]; then
 	new_scratch_file CANDIDATE_PROOF_FILE candidate-proof
 	new_scratch_file CANDIDATE_MANIFEST candidate-manifest
 	new_scratch_file CANDIDATE_WORKSHOP candidate-workshop
+fi
+if [ "$MODE" = "alpha" ]; then
+	new_scratch_file ALPHA_CANDIDATE_FILE alpha-candidate
+fi
+if [ "$MODE" = "release" ]; then
+	new_scratch_file EVIDENCE_FILE evidence
+	new_scratch_file ARTIFACT_LIST artifact-list
+	new_scratch_file TESTING_FILE testing
 	EVIDENCE_ROOT="$SCRATCH_DIR/evidence-root"
 	mkdir -- "$EVIDENCE_ROOT"
 	chmod 700 -- "$EVIDENCE_ROOT"
@@ -546,9 +585,10 @@ fi
 assert_scratch_workspace "after private workspace creation"
 
 require_candidate_binding() {
+	local expected_receipt_sha="$1"
 	local path candidate_sha candidate_entry head_entry candidate_metadata head_metadata
 	local candidate_path head_path candidate_mode candidate_kind candidate_blob
-	local head_mode head_kind head_blob candidate_blob_sha evidence_receipt_sha
+	local head_mode head_kind head_blob candidate_blob_sha
 	local receipt_path candidate_receipt_entry candidate_receipt_metadata
 	local candidate_receipt_path candidate_receipt_mode candidate_receipt_kind candidate_receipt_blob
 	local head_receipt_entry head_receipt_metadata head_receipt_path head_receipt_mode
@@ -559,7 +599,7 @@ require_candidate_binding() {
 	local head_testing_kind head_testing_blob
 	assert_scratch_workspace "before candidate receipt binding"
 	path="TESTING.md"
-	candidate_testing_entry="$(git -c core.quotePath=false ls-tree "$EVIDENCE_COMMIT" -- \
+	candidate_testing_entry="$(git -c core.quotePath=false ls-tree "$PRIVATE_COMMIT" -- \
 		":(literal)$path")"
 	head_testing_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- \
 		":(literal)$path")"
@@ -587,7 +627,7 @@ require_candidate_binding() {
 		return 1
 	}
 	receipt_path="docs/PRIVATE_PACKAGE_RECEIPT.sha256"
-	candidate_receipt_entry="$(git -c core.quotePath=false ls-tree "$EVIDENCE_COMMIT" -- \
+	candidate_receipt_entry="$(git -c core.quotePath=false ls-tree "$PRIVATE_COMMIT" -- \
 		":(literal)$receipt_path")"
 	[ -n "$candidate_receipt_entry" ] || {
 		echo "private candidate commit does not contain $receipt_path" >&2; return 1; }
@@ -621,18 +661,11 @@ require_candidate_binding() {
 	assert_scratch_workspace "before candidate receipt extraction"
 	git cat-file blob "$candidate_receipt_blob" > "$CANDIDATE_RECEIPT_FILE"
 	assert_scratch_workspace "after candidate receipt extraction"
-	evidence_receipt_sha="$(python3 - "$EVIDENCE_FILE" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["privatePackageReceiptSha256"])
-PY
-)"
-	assert_scratch_workspace "after candidate evidence receipt read"
 	[ "$(sha256sum "$CANDIDATE_RECEIPT_FILE" | cut -d' ' -f1)" = \
-		"$evidence_receipt_sha" ] || {
-		echo "committed private package receipt does not match release evidence" >&2; return 1; }
+		"$expected_receipt_sha" ] || {
+		echo "committed private package receipt does not match public candidate record" >&2
+		return 1
+	}
 	assert_scratch_workspace "before candidate receipt parsing"
 	python3 - "$CANDIDATE_RECEIPT_FILE" "$CANDIDATE_LIST" "$CANDIDATE_PROOF_FILE" <<'PY'
 import posixpath
@@ -702,7 +735,7 @@ PY
 		return 1
 	}
 	while IFS=$'\t' read -r path candidate_sha; do
-		candidate_entry="$(git -c core.quotePath=false ls-tree "$EVIDENCE_COMMIT" -- \
+		candidate_entry="$(git -c core.quotePath=false ls-tree "$PRIVATE_COMMIT" -- \
 			":(literal)$path")"
 		head_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- \
 			":(literal)$path")"
@@ -745,9 +778,9 @@ PY
 	done < "$CANDIDATE_PROOF_FILE"
 	assert_scratch_workspace "after candidate blob proof"
 	assert_scratch_workspace "before candidate manifest extraction"
-	git cat-file blob "$EVIDENCE_COMMIT:manifest.json" > "$CANDIDATE_MANIFEST"
+	git cat-file blob "$PRIVATE_COMMIT:manifest.json" > "$CANDIDATE_MANIFEST"
 	assert_scratch_workspace "after candidate manifest extraction"
-	git cat-file blob "$EVIDENCE_COMMIT:workshop.json" > "$CANDIDATE_WORKSHOP"
+	git cat-file blob "$PRIVATE_COMMIT:workshop.json" > "$CANDIDATE_WORKSHOP"
 	assert_scratch_workspace "after candidate Workshop extraction"
 	python3 "$METADATA" workshop test "$CANDIDATE_MANIFEST" "$CANDIDATE_WORKSHOP"
 	[ "$(python3 "$METADATA" workshop-id "$CANDIDATE_WORKSHOP")" = \
@@ -824,7 +857,7 @@ while IFS=$'\t' read -r path head_blob _head_mode; do
 done < "$PROOF_FILE"
 assert_scratch_workspace "after materialised blob proof"
 
-[ "$MODE" != "release" ] || require_release_structure
+[ "$MODE" = "test" ] || require_release_structure
 
 for forbidden in .git .github _notes DevTests Art docs Tools; do
 	[ ! -e "$BUILD_DIR/$forbidden" ] && [ ! -L "$BUILD_DIR/$forbidden" ] || {
@@ -883,6 +916,33 @@ python3 "$METADATA" workshop "$MODE" "$BUILD_DIR/manifest.json" \
 	"$BUILD_DIR/workshop.json"
 assert_scratch_workspace "after package metadata validation"
 
+if [ "$MODE" = "alpha" ]; then
+	alpha_path="docs/ALPHA_CANDIDATE.json"
+	assert_scratch_workspace "before Alpha candidate extraction"
+	extract_head_blob "$alpha_path" "$ALPHA_CANDIDATE_FILE" \
+		"Alpha candidate record" nonexec
+	assert_scratch_workspace "after Alpha candidate extraction"
+	ALPHA_OUTPUT="$(python3 "$METADATA" alpha-candidate \
+		"$BUILD_DIR/manifest.json" "$BUILD_DIR/$PREVIEW" \
+		"$BUILD_DIR/workshop.json" "$ALPHA_CANDIDATE_FILE" \
+		"$BUILD_DIR/README.md" "$BUILD_DIR/CHANGELOG.md")"
+	readarray -t ALPHA_FIELDS <<< "$ALPHA_OUTPUT"
+	[ "${#ALPHA_FIELDS[@]}" -eq 2 ] || {
+		echo "Alpha metadata helper returned an incomplete result" >&2; exit 3; }
+	PRIVATE_COMMIT="${ALPHA_FIELDS[0]}"
+	CANDIDATE_RECEIPT_SHA="${ALPHA_FIELDS[1]}"
+	assert_scratch_workspace "after Alpha candidate validation"
+	require_alpha_lineage
+	[ "$PRIVATE_COMMIT" != "$HEAD_COMMIT" ] \
+		&& git cat-file -e "$PRIVATE_COMMIT^{commit}" 2>/dev/null \
+		&& git merge-base --is-ancestor "$PRIVATE_COMMIT" "$HEAD_COMMIT" || {
+		echo "Alpha candidateCommit must be a private-candidate ancestor of HEAD" >&2
+		exit 3
+	}
+	require_candidate_binding "$CANDIDATE_RECEIPT_SHA"
+	require_release_tag
+fi
+
 if [ "$MODE" = "release" ]; then
 	evidence_path="docs/RELEASE_EVIDENCE.json"
 	assert_scratch_workspace "before release evidence extraction"
@@ -914,18 +974,26 @@ if [ "$MODE" = "release" ]; then
 		chmod 600 -- "$artifact_output"
 	done < "$ARTIFACT_LIST"
 	assert_scratch_workspace "after immutable release artifact extraction"
-	EVIDENCE_COMMIT="$(python3 "$METADATA" evidence "$BUILD_DIR/manifest.json" \
+	PRIVATE_COMMIT="$(python3 "$METADATA" evidence "$BUILD_DIR/manifest.json" \
 		"$BUILD_DIR/$PREVIEW" "$BUILD_DIR/workshop.json" "$EVIDENCE_FILE" \
 		"$BUILD_DIR/README.md" "$BUILD_DIR/CHANGELOG.md" \
 		--repository-root "$EVIDENCE_ROOT" --testing "$TESTING_FILE")"
 	assert_scratch_workspace "after release evidence validation"
-	[ "$EVIDENCE_COMMIT" != "$HEAD_COMMIT" ] \
-		&& git cat-file -e "$EVIDENCE_COMMIT^{commit}" 2>/dev/null \
-		&& git merge-base --is-ancestor "$EVIDENCE_COMMIT" "$HEAD_COMMIT" || {
+	[ "$PRIVATE_COMMIT" != "$HEAD_COMMIT" ] \
+		&& git cat-file -e "$PRIVATE_COMMIT^{commit}" 2>/dev/null \
+		&& git merge-base --is-ancestor "$PRIVATE_COMMIT" "$HEAD_COMMIT" || {
 		echo "release evidence candidateCommit must be a pre-evidence ancestor of HEAD" >&2
 		exit 3
 	}
-	require_candidate_binding
+	CANDIDATE_RECEIPT_SHA="$(python3 - "$EVIDENCE_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["privatePackageReceiptSha256"])
+PY
+)"
+	require_candidate_binding "$CANDIDATE_RECEIPT_SHA"
 	require_release_tag
 fi
 
@@ -937,7 +1005,7 @@ assert_scratch_workspace "before package receipt capture"
 assert_scratch_workspace "after package receipt capture"
 [ -s "$RECEIPT_TMP" ] || { echo "package receipt is empty" >&2; exit 4; }
 require_clean_head
-[ "$MODE" != "release" ] || require_release_tag
+[ "$MODE" = "test" ] || require_release_tag
 
 # Rebuild the inventory and mode/blob proof after all validators and immediately before the
 # physical boundary check. This catches any late change inside the private temporary directory.
@@ -1010,6 +1078,7 @@ echo "WORKSHOP PACKAGE CLEAN"
 echo "mode:    $MODE"
 echo "version: $VERSION"
 echo "title:   $TITLE"
+[ "$MODE" != "alpha" ] || echo "channel: v1.0 Alpha (final human release evidence deferred)"
 echo "root:    $DEST"
 echo "files:   $(find -P "$DEST" -type f | wc -l)"
 echo "hashes:  $RECEIPT"

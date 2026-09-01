@@ -81,7 +81,7 @@ namespace ThousandAndFirst.Tests
 		public void CurrentRecordIsExternalSchemaNotSaveAbiAppend()
 		{
 			string record = KingdomSealRecordLogicalSource.Read();
-			StringAssert.Contains("CurrentSchema = 5", record);
+			StringAssert.Contains("CurrentSchema = 6", record);
 			StringAssert.Contains("KeyWorkSnapshot", record);
 			StringAssert.Contains("KeyStreetX", record);
 			string system = KingdomSystemLogicalSource.Read();
@@ -90,6 +90,42 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("WorkSnapshots", settlement);
 			StringAssert.DoesNotContain("SpatialVersion", system);
 			StringAssert.DoesNotContain("SpatialVersion", settlement);
+		}
+
+		[Test]
+		public void LegacyProxyMarkerVersionIsBoundToImmutableShapeCompatibility()
+		{
+			string engine = KingdomInheritEngineLogicalSource.Read();
+			StringAssert.Contains("LegacyProxyShapeVersion = 1", engine);
+			StringAssert.Contains("LegacyReconstructionVersion = 1", engine);
+			StringAssert.Contains("ReconstructionVersionFor(canonical)", engine);
+			StringAssert.Contains("TryValidateLegacyProxyShape(Legacy.WorkKeys", engine);
+			StringAssert.Contains("case \"heartbasin\": Width = 3; Height = 3", engine);
+			AssertOrdered(engine, "int reconstruction = ReconstructionVersionFor(canonical);",
+				"KingdomInheritRules.TryPrepare(canonical,",
+				"TryComposeApplicationMarker(canonical, Receipt,");
+		}
+
+		[Test]
+		public void PersistedInheritanceArtifactsDeriveTheExactRecordsShapeVersion()
+		{
+			string state = KingdomInheritanceStateLogicalSource.Read();
+			StringAssert.Contains("ReconstructionVersionForText(", state);
+			StringAssert.Contains("ReconstructionVersionFor(legacy)", state);
+			StringAssert.Contains("ReconstructionVersionFor(Legacy)", state);
+			StringAssert.DoesNotContain("KingdomInheritEngine.ReconstructionVersion,", state);
+			StringAssert.DoesNotContain("KingdomInheritEngine.ReconstructionVersion)", state);
+		}
+
+		private static void AssertOrdered(string Source, params string[] Terms)
+		{
+			int offset = 0;
+			for (int i = 0; i < Terms.Length; i++)
+			{
+				int found = Source.IndexOf(Terms[i], offset, System.StringComparison.Ordinal);
+				Assert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
+				offset = found + Terms[i].Length;
+			}
 		}
 	}
 }

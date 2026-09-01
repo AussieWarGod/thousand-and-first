@@ -189,7 +189,7 @@ namespace ThousandAndFirst
 				{
 					KingdomArchitectureIntent standing;
 					if (!KingdomArchitectureRuntime.TryRead(Work, out standing, out Failure)) return false;
-					if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					if (KingdomArchitectureRules.IsManagedSnapshotEncoding(
 						standing.EncodedSnapshot))
 					{
 						Failure = "Current authored predecessor lacks its frozen successor payload.";
@@ -204,7 +204,7 @@ namespace ThousandAndFirst
 			bool legacy;
 			if (!KingdomPlots.TryDecodePlotPayload(Job.Payload, out rect, out skin,
 				out Intent, out legacy, out Failure) || legacy || Intent == null
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot)
 				|| Intent.BuildKey != Job.TargetKey || Job.X != Intent.MainWorldX
 				|| Job.Y != Intent.MainWorldY || Work.CurrentZone == null
 				|| !schemaMarker)

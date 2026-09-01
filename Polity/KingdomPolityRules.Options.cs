@@ -195,7 +195,9 @@ namespace ThousandAndFirst
 					A[i].SettlementId != B[i].SettlementId || A[i].Purpose != B[i].Purpose ||
 					A[i].WindowOrdinal != B[i].WindowOrdinal || A[i].CauseTick != B[i].CauseTick ||
 					A[i].EndpointVerb != B[i].EndpointVerb ||
-					A[i].AcknowledgedTick != B[i].AcknowledgedTick) return false;
+					A[i].AcknowledgedTick != B[i].AcknowledgedTick ||
+					!KingdomPolityAmbientTransactionRules.Same(
+						A[i].AmbientTransaction, B[i].AmbientTransaction)) return false;
 			return true;
 		}
 

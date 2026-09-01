@@ -132,6 +132,7 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < Survey.PlotRoots.Count; i++)
 			{
 				GameObject item = Survey.PlotRoots[i];
+				if (!KingdomUpgrade.IsFunctionallyBuilt(item)) continue;
 				string plotId = item.GetStringProperty(KingdomPlots.PlotIdProperty);
 				if (!string.IsNullOrEmpty(plotId) && !homes.ContainsKey(plotId))
 				{

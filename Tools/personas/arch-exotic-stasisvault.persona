@@ -1,0 +1,6 @@
+# Reopened exotic: restricted custody and interlocked transfer circulation need native scrutiny.
+DESCRIPTION=stasis vault precinct stages with exact craft and XL identity
+REQUEST=arch-exotic-stasisvault;facing=west
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,exotic

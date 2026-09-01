@@ -42,8 +42,9 @@ namespace ThousandAndFirst
 			Cell sourceCell = sourceObject?.CurrentCell;
 			string sourceCity = CityOf(System, sourceZone?.ZoneID);
 			if (sourceZone == null || sourceCell == null || sourceCity == null
-				|| (sourceObject.GetIntProperty("KingdomBuilt") != 1
-					&& sourceObject.GetIntProperty("KingdomGrid") != 1))
+				|| (!KingdomUpgrade.IsFunctionallyBuilt(sourceObject)
+					&& (sourceObject.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(sourceObject))))
 				return PurposeConnectionFailure("Stand at a finished mirror-gate on this city's own ground.", out Failure);
 			Anchor(Gate);
 			KingdomGateRow[] rows = Register(null);
@@ -80,8 +81,9 @@ namespace ThousandAndFirst
 			GameObject destinationObject = destinationGate?.ParentObject;
 			string destinationCity = CityOf(System, destinationZoneId);
 			if (destinationGate == null || destinationObject == null || destinationCity == null
-				|| (destinationObject.GetIntProperty("KingdomBuilt") != 1
-					&& destinationObject.GetIntProperty("KingdomGrid") != 1))
+				|| (!KingdomUpgrade.IsFunctionallyBuilt(destinationObject)
+					&& (destinationObject.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(destinationObject))))
 				return PurposeConnectionFailure("Visit the other city and repair or re-key the exact mirror-gate standing there.", out Failure);
 			Anchor(destinationGate);
 			if (Gate.DestinationKey != destinationKey

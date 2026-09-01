@@ -172,7 +172,7 @@ namespace ThousandAndFirst.Tests
 		public void GuestLifecycleLogicalAuthorityKeepsNestedIdentityAndMutationOrder()
 		{
 			string source = KingdomGuestLifecycleLogicalSource.Read();
-			Assert.AreEqual(6, Count(source,
+			Assert.AreEqual(7, Count(source,
 				"internal static partial class KingdomGuestLifecycle"));
 			Assert.AreEqual(1, Count(source,
 				"private sealed class GuestWorld : IKingdomLifecycleTrustedWorld"));
@@ -233,6 +233,49 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(source,
 				"internal long Value;", "internal long Revision;",
 				"internal string LastOperationId;");
+		}
+
+		[Test]
+		public void DeadLodgeRecovery_ReleasesAuthorityBeforeMarketCloseAndNeverMintsSuccess()
+		{
+			string source = KingdomGuestLifecycleLogicalSource.Read();
+			AssertOrdered(source,
+				"PrepareMarketTerminalClose(system, zone, op",
+				"TryReleaseAbandonedLodge(book, op",
+				"CommitMarketTerminalClose(marketSource, marketMarker)",
+				"TryRemoveReleasedLodge(book, op");
+			StringAssert.Contains("MarketSourcePrepared", source);
+			StringAssert.Contains("MarketNone", source);
+			StringAssert.Contains("KingdomMarketHandoffGlobalIndex.TryLoaded", source);
+			StringAssert.Contains("The.ZoneManager.CachedZones", source);
+			StringAssert.Contains("The.ZoneManager.Graveyard", source);
+			StringAssert.Contains("The.Game.ObjectGameState", source);
+			StringAssert.DoesNotContain("KingdomSurvey.ObjectsFor(zone)", source);
+			StringAssert.Contains("marker.LifecycleTerminalClosed == 1", source);
+			StringAssert.Contains("marker.TargetTerminalDead == 1", source);
+			StringAssert.Contains("marker.LifecycleSequence == op.Sequence", source);
+			StringAssert.Contains(
+				"if (marketMarker != null && marketMarker.TargetTerminalDead != 1) return true;",
+				source);
+			StringAssert.Contains("if (receipt == null || !TryResolveMarketSource", source);
+			StringAssert.Contains("if (receipts > 1) return false", source);
+			StringAssert.Contains("MarketPrepared", source);
+			StringAssert.Contains("receipts == 0 || receipts == 1", source);
+			StringAssert.Contains("TryUniqueResident(system, op.SettlementId, residentId", source);
+			StringAssert.Contains("KingdomResidents.IdOf(body)", source);
+			StringAssert.Contains("TryFreezeLodgeResident(system.LifecycleBook, op", source);
+			StringAssert.Contains("TryFreezeLodgeMarketSource(system.LifecycleBook, op", source);
+			StringAssert.Contains("standing = (byte)row.Standing; cause = (byte)row.Cause;", source);
+			string terminal = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestLifecycle.LodgeTerminal.cs");
+			StringAssert.DoesNotContain("GameObject.Create", terminal);
+			StringAssert.DoesNotContain("PrepareOutbox", terminal);
+			StringAssert.DoesNotContain("WaterOutstanding", terminal);
+
+			string part = TestMain.ReadRepositoryText(
+				"Experience/KingdomGuestbook.z04.CarryHaulAndParts.cs");
+			StringAssert.Contains("BeforeDeathRemovalEvent.ID", part);
+			StringAssert.Contains("ObserveLodgeTargetDeath(ParentObject)", part);
 		}
 
 		private static void AssertOrdered(string source, params string[] terms)

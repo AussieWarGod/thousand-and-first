@@ -9,7 +9,7 @@ namespace ThousandAndFirst
 	/// renderer consumes the same canonical snapshot the stamper consumes; it never invents a shell,
 	/// resolves a second variant, or reads the live map to guess what might be placed.
 	/// </summary>
-	public static class KingdomArchitecturePreview
+	public static partial class KingdomArchitecturePreview
 	{
 		public const int MaxPreviewChars = 4096;
 
@@ -68,12 +68,14 @@ namespace ThousandAndFirst
 			ArchitectureLayoutSnapshot snapshot;
 			if (Entry == null || LabourTicks < 1L
 				|| !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(Intent.EncodedSnapshot)
 				|| snapshot.BuildKey != Entry.Key)
 			{
 				if (Failure == null) Failure = "The building preview has no exact frozen production map.";
 				return false;
 			}
+			string frontage;
+			if (!TryFrontage(snapshot, out frontage, out Failure)) return false;
 			int width;
 			int height;
 			if (!KingdomArchitectureRules.TryWorldDimensions(snapshot.Width, snapshot.Height,
@@ -89,7 +91,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < snapshot.Cells.Count; i++)
 			{
 				ArchitectureCellState cell = snapshot.Cells[i];
-				if (!cell.Claim) continue;
+				if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
 				if (!TryRelative(snapshot, cell.X, cell.Y, out int x, out int y))
 				{
 					Failure = "The building preview contains a cell outside its posed lot.";
@@ -149,7 +151,8 @@ namespace ThousandAndFirst
 			text.Append(Entry.Name).Append("\n")
 				.Append(snapshot.LotType).Append(' ').Append(SizeName(snapshot.LotSize))
 				.Append(" lot, ").Append(width).Append('x').Append(height)
-				.Append(", faces ").Append(snapshot.Facing.ToString().ToLowerInvariant())
+				.Append(", ").Append(frontage).Append(", faces ")
+				.Append(snapshot.Facing.ToString().ToLowerInvariant())
 				.Append(" (north is up)\n");
 			text.Append('+').Append(new string('-', width)).Append("+\n");
 			for (int y = 0; y < height; y++)
@@ -169,6 +172,16 @@ namespace ThousandAndFirst
 			AppendCost(text, BitCost);
 			AppendCost(text, ExoticCost);
 			text.Append(". Labour: ").Append(LabourTicks).Append(" crew-ticks.\n");
+			List<KindAmount> declared;
+			if (KingdomCatalogueRules.TryParseTally(Entry.Carries, out declared, out _))
+			{
+				int roof = KingdomCatalogueRules.AmountOf(declared,
+					KingdomCatalogueRules.SupportRoof);
+				if (roof > 0)
+					text.Append("Sleeping places: ").Append(SleepingFixtures(snapshot))
+						.Append(" installed now; catalogue ceiling ").Append(roof)
+						.Append(". Missing or moved fixtures give no capacity.\n");
+			}
 			if (!string.IsNullOrEmpty(ReceiptLine)) text.Append(ReceiptLine).Append('\n');
 			if (Delta != null)
 				text.Append("Exact map delta: retain ").Append(Delta.Retained.Count)
@@ -222,6 +235,20 @@ namespace ThousandAndFirst
 		private static void AppendCost(StringBuilder Text, string Cost)
 		{
 			if (!string.IsNullOrEmpty(Cost)) Text.Append("; ").Append(Cost);
+		}
+
+		private static int SleepingFixtures(ArchitectureLayoutSnapshot Snapshot)
+		{
+			int count = 0;
+			HashSet<long> cells = new HashSet<long>();
+			for (int i = 0; i < Snapshot.Anchors.Count; i++)
+			{
+				ArchitectureAnchor anchor = Snapshot.Anchors[i];
+				if (anchor.Key != "fixture:sleep") continue;
+				long cell = ((long)anchor.X << 32) | (uint)anchor.Y;
+				if (cells.Add(cell)) count++;
+			}
+			return count;
 		}
 
 		private static string SizeName(ArchitectureLotSize Size)

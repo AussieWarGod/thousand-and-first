@@ -114,6 +114,14 @@ namespace ThousandAndFirst
 				return false;
 			}
 
+			int reconstruction = ReconstructionVersionFor(canonical);
+			if (reconstruction <= 0)
+			{
+				Failure = Failed(KingdomInheritApplyFault.PlanInvalid,
+					"the external seal's spatial shape is unsupported by this build", "");
+				return false;
+			}
+
 			KingdomInheritPlacement placement;
 			KingdomInheritFault inheritFault;
 			if (!KingdomInheritRules.TryPrepare(canonical,
@@ -190,9 +198,6 @@ namespace ThousandAndFirst
 			}
 
 			string marker;
-			int reconstruction = placement.SpatialVersion ==
-				KingdomInheritanceSpatialRules.SpatialVersion ? ReconstructionVersion
-				: LegacyReconstructionVersion;
 			if (!KingdomInheritanceStateRules.TryComposeApplicationMarker(canonical, Receipt,
 				TargetZoneId, reconstruction, out marker))
 			{

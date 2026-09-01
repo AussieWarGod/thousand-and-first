@@ -53,8 +53,10 @@ namespace ThousandAndFirst
 			// was already held to, so teaching this build what section 9 means can only narrow what
 			// a payload there may be. A later revision that outgrows that headroom is a decision,
 			// not something this authority may absorb.
-			if (KingdomCivicMemoryLimits.MaxVillageCovenantBytes
-				> KingdomCivicMemoryLimits.MaxTreatyBytes)
+			// Keep the comparison behind a method boundary. Both operands are constants, so a direct
+			// comparison is erased by the compiler instead of remaining executable verification.
+			if (!AtMost(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,
+				KingdomCivicMemoryLimits.MaxTreatyBytes))
 			{
 				Failure = "the village-covenant archive now caps at "
 					+ KingdomCivicMemoryLimits.MaxVillageCovenantBytes
@@ -65,6 +67,11 @@ namespace ThousandAndFirst
 			}
 			Failure = "";
 			return true;
+		}
+
+		private static bool AtMost(int Value, int Ceiling)
+		{
+			return Value <= Ceiling;
 		}
 
 		private static bool Same(string Family, int Mirror, int Frozen, out string Failure)

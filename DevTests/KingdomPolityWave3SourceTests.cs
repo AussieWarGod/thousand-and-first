@@ -56,14 +56,19 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Decision", models); StringAssert.Contains("Creed", models);
 			StringAssert.Contains("Style", models); StringAssert.Contains("Technology", models);
 			StringAssert.Contains("Alliance", models); StringAssert.Contains("Relationship", models);
+			StringAssert.Contains("Population", models);
 			StringAssert.Contains("Legacy", models);
 			StringAssert.DoesNotContain("Species", models);
 			StringAssert.DoesNotContain("Culture", models);
-			StringAssert.Contains("new List<string>(Prior.BodyKeys)", rules);
+			StringAssert.Contains("PopulationBodies(F.Facts, Prior.BodyKeys)", rules);
 			StringAssert.Contains("new List<string>(Prior.RoleKeys)", rules);
 			StringAssert.Contains("Ledger.Revision != ExpectedLedgerRevision", rules);
 			StringAssert.Contains("S.DeclaredCreed", runtime);
 			StringAssert.Contains("S.NonSeatSettlements()", runtime);
+			StringAssert.Contains("KingdomZoningRules.TechPoints(roster)", runtime);
+			StringAssert.Contains("KingdomPolityProfileFactKind.Population", runtime);
+			StringAssert.Contains("KingdomPolityProfileRules.CurrentBodyKeys", runtime);
+			StringAssert.DoesNotContain("Stage * 2", runtime);
 			StringAssert.Contains("AddRelations", runtime);
 			StringAssert.Contains("Profile.Revision == 1", compact);
 		}

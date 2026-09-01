@@ -401,7 +401,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactPromotedReservationBuildsFreshEmptyAllowlistedObjectsAndCairn()
 		{
-			KingdomSealRecord record = Promoted("tent", "palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("tent", "palisade", "house");
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
 
@@ -412,6 +412,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(result.FreshEmptyVerified);
 			Assert.AreEqual(record.WorkKeys.Count + 1, result.PlacedCount, "founder cairn is unconditional");
 			Assert.AreEqual(result.ApplicationMarker, host.Marker);
+			StringAssert.StartsWith("taf-inherit-v1|", result.ApplicationMarker);
 			StringAssert.Contains("|reserved|200|", result.ApplicationMarker,
 				"the idempotence key binds the exact reserved receipt, including its written tick");
 			Assert.AreEqual(result.PlacedCount, host.Objects.Count);
@@ -431,9 +432,27 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ChangedLegacyProxyShapeFailsClosedBeforeMutation()
+		{
+			KingdomSealRecord record = Promoted("heartbasin");
+			KingdomSealReceipt receipt = Receipt(record);
+			FakeHost host = Host(record);
+			Assert.AreEqual(0, KingdomInheritEngine.ReconstructionVersionFor(record));
+
+			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, receipt,
+				host.ZoneId, host);
+
+			Assert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
+			Assert.AreEqual(KingdomInheritApplyFault.PlanInvalid, result.Fault);
+			StringAssert.Contains("spatial shape is unsupported", result.Detail);
+			Assert.AreEqual("", result.ApplicationMarker);
+			Assert.AreEqual(0, host.MutationCalls);
+		}
+
+		[Test]
 		public void ExactMarkerAndRowsAreIdempotentWithoutFurtherMutation()
 		{
-			KingdomSealRecord record = Promoted("palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("palisade", "house");
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);
@@ -451,7 +470,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PlacementSideEffectThatAddsStateIsRejectedAndRolledBack()
 		{
-			KingdomSealRecord record = Promoted("palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("palisade", "house");
 			FakeHost host = Host(record);
 			host.DirtyAfterPlaceIndex = 1;
 
@@ -506,7 +525,7 @@ namespace ThousandAndFirst.Tests
 		public void AllFourSealedStatesPlaceTheExactRuleTransform(int State)
 		{
 			KingdomSealRecord record = PromotedForState(State,
-				"palisade", "rampart", "heartbasin", "tent");
+				"palisade", "rampart", "house", "tent");
 			KingdomInheritPlacement expected = Placement(record);
 			FakeHost host = Host(record);
 
@@ -658,7 +677,7 @@ namespace ThousandAndFirst.Tests
 			bool FailMarker, int FaultValue)
 		{
 			KingdomInheritApplyFault Fault = (KingdomInheritApplyFault)FaultValue;
-			KingdomSealRecord record = Promoted("palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("palisade", "house");
 			FakeHost host = Host(record);
 			host.FailPlaceIndex = FailPlacement ? 1 : -1;
 			host.FailMarkerWrite = FailMarker;
@@ -674,7 +693,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FailedRollbackIsReportedAsPartialAndKeepsReservationUnresolved()
 		{
-			KingdomSealRecord record = Promoted("palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("palisade", "house");
 			FakeHost host = Host(record);
 			host.FailPlaceIndex = 1;
 			host.DiscardFails = true;
@@ -690,7 +709,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TornExactApplicationFailsWithoutRebuilding()
 		{
-			KingdomSealRecord record = Promoted("palisade", "heartbasin");
+			KingdomSealRecord record = Promoted("palisade", "house");
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);

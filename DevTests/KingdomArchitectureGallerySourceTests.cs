@@ -78,10 +78,13 @@ namespace ThousandAndFirst.Tests
 		public void GalleryRefusesLiveGroundAndProtectsExactCleanup()
 		{
 			string source = Read();
+			StringAssert.Contains("ReviewClearance = KingdomPlotRules.RoadMargin + 1", source);
+			StringAssert.Contains("KingdomPlotRules.TryInsetOriginBounds", source);
+			StringAssert.Contains("KingdomRoads.Walkable(cell)", source);
 			StringAssert.Contains("KingdomPlots.ReadGround(cell, out blocker)", source);
 			StringAssert.Contains("KingdomPlotRules.GroundKind.Bare", source);
 			StringAssert.Contains("ConnectionCells(Zone)", source);
-			StringAssert.Contains("cell.HasOpenLiquidVolume()", source);
+			StringAssert.Contains("The.Game?.GetSystem<KingdomSystem>()", source);
 			StringAssert.Contains("KingdomConstruction.HasActiveAt(system, Zone, cell)", source);
 			AssertOrdered(source, "KingdomArchitectureStamper.TryVerifyComplete(Owner, Zone",
 				"components.Count != snapshot.Placements.Count", "FrozenContents(Owner)",

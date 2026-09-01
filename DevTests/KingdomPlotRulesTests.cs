@@ -64,15 +64,17 @@ namespace ThousandAndFirst.Tests
 
 		// --- Tiers: vanilla's own size bands, named ---------------------------------------
 
-		[TestCase(Size.Small, 5, 4)]
+		[TestCase(Size.Small, 6, 4)]
 		[TestCase(Size.Medium, 8, 6)]
-		[TestCase(Size.Large, 12, 9)]
-		[TestCase(Size.Huge, 20, 14)]
+		[TestCase(Size.Large, 12, 10)]
+		[TestCase(Size.Huge, 20, 18)]
 		public void TierHasItsDimensions(Size Size, int ExpectedWidth, int ExpectedHeight)
 		{
 			Assert.IsTrue(KingdomPlotRules.TryDimensions(Size, out var width, out var height));
 			Assert.AreEqual(ExpectedWidth, width, "width");
 			Assert.AreEqual(ExpectedHeight, height, "height");
+			Assert.AreEqual(0, width % 2, "every horizontal axis uses the same even seam law");
+			Assert.AreEqual(0, height % 2, "every vertical axis uses the same even seam law");
 		}
 
 		[Test]
@@ -116,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		public void CentreIsBiasedToTheLowCornerOnAnEvenSpan()
 		{
 			Rect rect = At(10, 10, Size.Small);
-			Assert.AreEqual(12, rect.CenterX, "5 wide");
+			Assert.AreEqual(12, rect.CenterX, "6 wide, low centre");
 			Assert.AreEqual(11, rect.CenterY, "4 tall");
 		}
 
@@ -132,6 +134,19 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(rect.IsBorder(9, 9));
 			Assert.IsTrue(rect.Contains(4, 3));
 			Assert.IsFalse(rect.Contains(5, 3));
+		}
+
+		[Test]
+		public void PersistedZoneRectsRejectTornInvertedAndOutOfZoneGeometry()
+		{
+			Assert.IsTrue(KingdomPlotRules.ValidZoneRect(R(0, 0, W - 1, H - 1), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 2, 3, 8), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 8, 9, 7), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(-1, 0, 4, 3), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, W, 3), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 3, H), W, H));
+			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 0, 0), 0, H));
+			Assert.IsFalse(KingdomPlotRules.Fits(R(4, 2, 3, 8), R(0, 0, 10, 10)));
 		}
 
 		// --- Stage gating: the city builds bigger as it grows ------------------------------
@@ -205,6 +220,39 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void InsetOriginBoundsKeepTheTrueExteriorLaneInsideASurfaceZone()
+		{
+			int clearance = KingdomPlotRules.RoadMargin + 1;
+			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10,
+				clearance, out var large));
+			Assert.AreEqual(R(2, 2, 66, 13), large);
+			Rect southmost = new Rect(large.X1, large.Y2,
+				large.X1 + 11, large.Y2 + 9);
+			Assert.AreEqual(22, southmost.Y2);
+			Assert.LessOrEqual(southmost.Y2 + clearance, H - 1);
+
+			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 20, 18,
+				clearance, out var huge));
+			Assert.AreEqual(R(2, 2, 58, 5), huge);
+			Assert.LessOrEqual(huge.Y2 + 17 + clearance, H - 1);
+
+			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 18, 20,
+				clearance, out var rotatedHuge));
+			Assert.AreEqual(R(2, 2, 60, 3), rotatedHuge);
+			Assert.LessOrEqual(rotatedHuge.Y2 + 19 + clearance, H - 1);
+		}
+
+		[Test]
+		public void InsetOriginBoundsRefuseMalformedOrImpossibleGeometry()
+		{
+			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 0, 10, 2, out _));
+			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10, -1, out _));
+			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(12, 10, 12, 10, 1, out _));
+			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(int.MaxValue, H,
+				int.MaxValue, 10, int.MaxValue, out _));
+		}
+
+		[Test]
 		public void EveryTierFitsASurfaceZonesInterior()
 		{
 			Assert.IsTrue(KingdomPlotRules.TryInterior(W, H, out var interior));
@@ -253,16 +301,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheBriefsMatureLayoutFitsAndOneMoreLargeDoesNot()
+		public void TheBriefsMinimumMatureLayoutFitsButFillsThePlotBudget()
 		{
-			// One XL, three L, four M, six S -- the middle of the brief's mature budget.
+			// One XL, two L, four M, six S is the brief's minimum mature mix. It fits under
+			// the 957-cell cap, but the 21-cell remainder cannot admit even one 24-cell S lot.
 			List<Rect> laid = Rects(
-				R(0, 0, 19, 13),
-				R(0, 0, 11, 8), R(0, 0, 11, 8), R(0, 0, 11, 8),
+				R(0, 0, 19, 17),
+				R(0, 0, 11, 9), R(0, 0, 11, 9),
 				R(0, 0, 7, 5), R(0, 0, 7, 5), R(0, 0, 7, 5), R(0, 0, 7, 5),
-				R(0, 0, 4, 3), R(0, 0, 4, 3), R(0, 0, 4, 3), R(0, 0, 4, 3), R(0, 0, 4, 3), R(0, 0, 4, 3));
-			Assert.AreEqual(916, KingdomPlotRules.LaidArea(laid));
-			Assert.IsFalse(KingdomPlotRules.WouldExceedBudget(laid, Size.Small, W, H), "a hut still fits");
+				R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3));
+			Assert.AreEqual(936, KingdomPlotRules.LaidArea(laid));
+			Assert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Small, W, H), "the minimum mix leaves less than one S lot");
 			Assert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Large, W, H), "another hall does not");
 		}
 
@@ -439,7 +488,7 @@ namespace ThousandAndFirst.Tests
 			List<Rect> candidates = Rects(At(42, 11, Size.Small), At(46, 11, Size.Small));
 			// The founder is standing in the second rect, which scores exactly one tolerance
 			// worse than the plan's best. Intent wins.
-			Assert.AreEqual(Outcome.Founder, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 49, 12, false, 0, 0, out var index));
+			Assert.AreEqual(Outcome.Founder, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 50, 12, false, 0, 0, out var index));
 			Assert.AreEqual(1, index);
 		}
 
@@ -698,7 +747,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("common", "Limestone")]
 		[TestCase("verdant", "BrinestalkWall")]
 		[TestCase("fungal", "Fulcrete")]
-		[TestCase("gyre", "Marble")]
+		[TestCase("moonstair", "Black Marble")]
+		[TestCase("gyre", "Black Marble")]
 		[TestCase("eater", "Verdigris")]
 		[TestCase("somebody-elses-style", "Limestone")]
 		[TestCase(null, "Limestone")]
@@ -720,7 +770,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Vanilla's own Village_StructureWall_*Default list. A style that resolved to
 			// anything else would raise walls out of a blueprint that does not exist.
-			string[] styles = new string[6] { "common", "verdant", "fungal", "gyre", "eater", "unknown" };
+			string[] styles = new string[6] { "common", "verdant", "fungal", "moonstair", "eater", "unknown" };
 			for (int i = 0; i < styles.Length; i++)
 			{
 				CollectionAssert.Contains(KingdomPlotRules.WallMaterials, KingdomPlotRules.WallBlueprintFor(styles[i], null));

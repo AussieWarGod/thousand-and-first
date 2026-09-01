@@ -209,7 +209,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeFirstGuestV15ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV16ForTests(Value, FirstGuestVersion,
+			return TryEncodeHistoricalV8ToV17ForTests(Value, FirstGuestVersion,
 				"v15", out Payload, out Failure);
 		}
 
@@ -217,8 +217,16 @@ namespace ThousandAndFirst
 		internal static bool TryEncodePhysicalFirstGuestV16ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV16ForTests(Value, PhysicalFirstGuestVersion,
+			return TryEncodeHistoricalV8ToV17ForTests(Value, PhysicalFirstGuestVersion,
 				"v16", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v17, before archived expedition results.</summary>
+		internal static bool TryEncodeArrivalCadenceV17ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV17ForTests(Value, ArrivalCadenceVersion,
+				"v17", out Payload, out Failure);
 		}
 
 #endif

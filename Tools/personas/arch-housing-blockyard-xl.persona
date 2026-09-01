@@ -1,0 +1,6 @@
+# Mature maximum-scale salvage court: same-pose proof of widened bay, seat, threshold, and retained use.
+DESCRIPTION=huge salvage block-yard stages for mature household-court review
+REQUEST=arch-housing-blockyard-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

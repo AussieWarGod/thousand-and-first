@@ -1,0 +1,6 @@
+# Mature canvas baseline for a large lot: widened sleeping bay with exact fixture custody.
+DESCRIPTION=large tent-row lot stages for sleeping-bay and reserved-court review
+REQUEST=arch-housing-tentrow-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

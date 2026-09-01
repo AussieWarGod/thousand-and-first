@@ -13,7 +13,43 @@ namespace ThousandAndFirst
 		Technology = 4,
 		Alliance = 5,
 		Relationship = 6,
-		Legacy = 7
+		Legacy = 7,
+		// Append-only causal sources. These are deliberately distinct from style/origin prose:
+		// body and transformation surfaces may only read a fact that actually proves them.
+		Population = 8,
+		Practice = 9,
+		Transformation = 10,
+		Covenant = 11,
+		Work = 12,
+		Cargo = 13
+	}
+
+	/// <summary>Closed, portable expression surfaces. Values are append-only wire ordinals.</summary>
+	public enum KingdomPolityExpressionKind : byte
+	{
+		None = 0,
+		Body = 1,
+		Role = 2,
+		Skill = 3,
+		Mutation = 4,
+		Cybernetic = 5,
+		Gear = 6,
+		Signature = 7,
+		Cargo = 8,
+		Dialogue = 9
+	}
+
+	/// <summary>One legal weighted expression and the exact fact that justified it.</summary>
+	[Serializable]
+	public sealed class KingdomPolityExpressionCue
+	{
+		public KingdomPolityExpressionKind Kind;
+		public string ExpressionKey;
+		public int Weight;
+		public KingdomPolityProfileFactKind SourceKind;
+		public string SourceValueKey;
+		public string SourceRef;
+		public string ReasonFactId;
 	}
 
 	/// <summary>

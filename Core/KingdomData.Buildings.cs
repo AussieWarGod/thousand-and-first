@@ -26,6 +26,7 @@ namespace ThousandAndFirst
 			declared.Set(KingdomMergeRules.AttrStaff, xml.GetAttribute("Staff"));
 			declared.Set(KingdomMergeRules.AttrManning, xml.GetAttribute("Manning"));
 			declared.Set(KingdomMergeRules.AttrDefence, xml.GetAttribute("Defence"));
+			declared.Set(KingdomMergeRules.AttrAdoptable, xml.GetAttribute("Adoptable"));
 			declared.Set(KingdomMergeRules.AttrCarries, xml.GetAttribute("Carries"));
 			declared.Set(KingdomMergeRules.AttrMaterials, xml.GetAttribute("Materials"));
 			declared.Set(KingdomMergeRules.AttrDistricts, xml.GetAttribute("Districts"));
@@ -96,6 +97,32 @@ namespace ThousandAndFirst
 				return;
 			}
 			entry.Carries = design.Get(KingdomMergeRules.AttrCarries);
+			if (!KingdomAdoptRules.TryParseAdoptable(design.Get(KingdomMergeRules.AttrAdoptable),
+				out entry.Adoptable, out string adoptableError))
+			{
+				MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + design.Key
+					+ " " + adoptableError);
+				SkipChildren(xml);
+				return;
+			}
+			if (entry.Adoptable)
+			{
+				KingdomPlotRules.PlotSpec adoptionSpec;
+				string adoptionError;
+				if (!KingdomPlotRules.TryParsePlotAttributes(design.Key,
+					design.Get(KingdomMergeRules.AttrPlot), design.Get(KingdomMergeRules.AttrOpen),
+					design.Get(KingdomMergeRules.AttrSky), design.Get(KingdomMergeRules.AttrContents),
+					design.Get(KingdomMergeRules.AttrFootprint), design.Get(KingdomMergeRules.AttrRoof),
+					out adoptionSpec, out adoptionError)
+					|| !KingdomAdoptabilityRules.TryClassify(design.Key, entry.Category,
+						adoptionSpec.Size, adoptionSpec.Open, out _, out adoptionError))
+				{
+					MetricsManager.LogError("ThousandAndFirst KingdomBuildings: building " + design.Key
+						+ " has unsafe Adoptable declaration (" + adoptionError + ")");
+					SkipChildren(xml);
+					return;
+				}
+			}
 			entry.Materials = design.Get(KingdomMergeRules.AttrMaterials);
 			entry.Skins = design.Skins;
 			entry.CovenantFaction = covenant.Faction;

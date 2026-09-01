@@ -8,7 +8,7 @@ namespace ThousandAndFirst.DevTests
 	public sealed class KingdomPolityRivalTrafficTests
 	{
 		[Test]
-		public void ExactRelationBacksFreshExternalTrafficWithoutMutatingAuthority()
+		public void ExternalTrafficFailsClosedWithoutAnExactSourceSettlement()
 		{
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			EnableExternalFaction(ledger);
@@ -17,10 +17,10 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityTestData.Settlement, 2);
 			Assert.IsTrue(KingdomPolityRivalTrafficRules.TryAssign(ledger, due,
 				out KingdomPolityTrafficAssignment first, out string failure), failure);
-			Assert.IsTrue(first.External); Assert.AreEqual(KingdomPolityTestData.Rival,
+			Assert.IsFalse(first.External); Assert.AreEqual(KingdomPolityTestData.Realm,
 				first.PolityId);
-			Assert.AreEqual("taf:relation:rival-current", first.RelationId);
-			Assert.AreNotEqual(due.CohortId, first.Work.CohortId);
+			Assert.IsNull(first.RelationId);
+			Assert.AreEqual(due.CohortId, first.Work.CohortId);
 			StringAssert.StartsWith("taf:cohort:polity-due:v1:", first.Work.CohortId);
 			StringAssert.StartsWith("taf:stream:polity-due:v1:", first.Work.EventStreamId);
 			StringAssert.StartsWith("taf:event:polity-due:v1:", first.Work.SourceRef);
@@ -28,8 +28,14 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsTrue(KingdomPolityRivalTrafficRules.TryAssign(ledger, due,
 				out KingdomPolityTrafficAssignment retry, out failure), failure);
 			Assert.AreEqual(first.Work.CohortId, retry.Work.CohortId);
-			Assert.AreEqual(first.CauseDigest, retry.CauseDigest);
+			Assert.IsNull(first.CauseDigest); Assert.IsNull(retry.CauseDigest);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
+			first.External = true;
+			first.PolityId = KingdomPolityTestData.Rival;
+			first.RelationId = "taf:relation:rival-current";
+			first.CauseDigest = KingdomPolityRules.ActivationDigest(
+				"forged-external-traffic", first.Work.SourceRef);
+			Assert.IsFalse(KingdomPolityRivalTrafficRules.ValidAssignment(first));
 		}
 
 		[Test]
@@ -50,7 +56,7 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityTestData.Settlement, 2);
 			Assert.IsTrue(KingdomPolityRivalTrafficRules.TryAssign(ledger, patrol,
 				out KingdomPolityTrafficAssignment assignment, out failure), failure);
-			Assert.IsTrue(assignment.External);
+			Assert.IsFalse(assignment.External);
 			Assert.AreEqual(KingdomPolityCohortPurpose.Patrol, assignment.Work.Purpose);
 		}
 
@@ -88,7 +94,7 @@ namespace ThousandAndFirst.DevTests
 					(ulong)(1 + i), i, settlements[i], 3);
 				Assert.IsTrue(KingdomPolityRivalTrafficRules.TryAssign(ledger, due,
 					out KingdomPolityTrafficAssignment assignment, out string failure), failure);
-				Assert.IsTrue(assignment.External);
+				Assert.IsFalse(assignment.External);
 				Assert.AreEqual(settlements[i], assignment.Work.SettlementId);
 				Assert.IsTrue(ids.Add(assignment.Work.CohortId));
 			}

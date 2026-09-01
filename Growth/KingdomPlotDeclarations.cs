@@ -13,13 +13,13 @@ namespace ThousandAndFirst
 			/// <summary>Not a plot at all &mdash; a single-cell design, which keeps the old
 			/// one-object-one-cell path untouched.</summary>
 			None = 0,
-			/// <summary>About 5x4. A hut, a yard, a cask shed.</summary>
+			/// <summary>Exactly 6x4. A hut, a yard, a cask shed.</summary>
 			Small = 1,
 			/// <summary>About 8x6. A house, a workshop, a field.</summary>
 			Medium = 2,
-			/// <summary>About 12x9. A hall, a market, a reservoir.</summary>
+			/// <summary>Exactly 12x10. A hall, a market, a reservoir.</summary>
 			Large = 3,
-			/// <summary>About 20x14. One to a city, and it wants the heart.</summary>
+			/// <summary>Exactly 20x18. One to a city, and it wants the heart.</summary>
 			Huge = 4
 		}
 
@@ -179,8 +179,8 @@ namespace ThousandAndFirst
 			/// underground by name rather than silently sited somewhere useless.</summary>
 			public bool RequiresSky;
 
-			/// <summary>Population table the finished interior is furnished from, the way vanilla
-			/// huts populate. Null furnishes nothing, which is correct for an open plot.</summary>
+			/// <summary>Legacy/third-party deterministic furnishing fallback. Current authored maps
+			/// place exact fixtures and skip it; null means no fallback.</summary>
 			public string Contents;
 
 			/// <summary>

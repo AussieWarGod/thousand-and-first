@@ -7,31 +7,8 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomAdopt
 	{
-		/// <summary>
-		/// Sets the same staffing, manning, hand-cranked, and defence marks
-		/// <c>r_KingdomScaffold.Complete</c> applies to a commissioned building, from the same
-		/// registry entry, so an adopted work behaves exactly like a built one to every system
-		/// that reads those properties (crew assignment, the defence tally, the growth survey).
-		/// </summary>
-		private static void ApplyRoleFixtures(GameObject Target, KingdomRules.BuildEntry Entry)
-		{
-			if (Entry.Staff > 0)
-			{
-				Target.SetIntProperty(StaffNeededProperty, Entry.Staff);
-				if (KingdomRules.IsThresholdManning(Entry.Manning))
-				{
-					Target.SetIntProperty(ThresholdManningProperty, 1);
-				}
-				if (Target.GetPart<Capacitor>() != null)
-				{
-					Target.SetIntProperty(HandCrankedProperty, 1);
-				}
-			}
-			if (Entry.Defence > 0)
-			{
-				Target.SetIntProperty(DefenceProperty, Entry.Defence);
-			}
-		}
+		// Qud's ordinary navigable-adjacent ceiling; mines and pull-down hazards exceed it.
+		private const int MaxUsableNavigationWeight = 5;
 
 		private static void AnnounceAdoption(KingdomSystem System, KingdomRules.BuildEntry Entry, GameObject Target)
 		{
@@ -59,32 +36,67 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		/// <summary>
-		/// Reads a real cell into the pure enclosure test's vocabulary. A door reads as
-		/// <see cref="KingdomAdoptRules.CellKind.Door"/> before a wall is even checked, because
-		/// <c>Cell.HasWall()</c> only asks whether anything here is a wall and a door on a wall
-		/// tile would otherwise be read as one; ground off the edge of the zone reads as a wall,
-		/// so a room can never claim the map's own boundary as one of its own.
-		/// </summary>
-		private static KingdomAdoptRules.CellKind CellKindAt(Zone Z, int X, int Y)
+		/// <summary>Reads structural membership independently from live usable floor. Occupants,
+		/// dropped items, and furniture cannot rewrite a room's signed cells. Permanent solids,
+		/// pits, gas/no-autowalk hazards, and open liquid only remove current usable floor.</summary>
+		private static KingdomAdoptRules.CellObservation CellObservationAt(Zone Z, int X, int Y)
 		{
 			Cell cell = Z.GetCell(X, Y);
 			if (cell == null)
-			{
-				return KingdomAdoptRules.CellKind.Wall;
-			}
+				return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Outside);
+			bool door = false;
 			foreach (GameObject item in cell.GetObjects())
-			{
-				if (item.IsDoor())
-				{
-					return KingdomAdoptRules.CellKind.Door;
-				}
-			}
+				if (GameObject.Validate(item) && item.IsDoor()) door = true;
+			if (door)
+				return new KingdomAdoptRules.CellObservation(
+					UsableCell(cell, true) ? KingdomAdoptRules.EnclosureRegion.Ingress
+						: KingdomAdoptRules.EnclosureRegion.Shell);
 			if (cell.HasWall())
+				return new KingdomAdoptRules.CellObservation(
+					KingdomAdoptRules.EnclosureRegion.Shell);
+			return new KingdomAdoptRules.CellObservation(
+				KingdomAdoptRules.EnclosureRegion.Membership, UsableCell(cell));
+		}
+
+		private static bool UsableCell(Cell Cell, bool Doorway = false)
+		{
+			if (Cell == null || Cell.HasOpenLiquidVolume()) return false;
+			bool permanentBlocker = false;
+			foreach (GameObject item in Cell.GetObjects())
 			{
-				return KingdomAdoptRules.CellKind.Wall;
+				if (!GameObject.Validate(item) || item.IsPlayer() || item.IsCreature) continue;
+				StairsDown down = item.GetPart<StairsDown>();
+				Tinkering_Mine mine = item.GetPart<Tinkering_Mine>();
+				if ((down != null && down.PullDown) || (mine != null && mine.Armed)
+					|| item.HasPart("Gas")
+					|| item.HasTagOrProperty("Pit") || item.HasTagOrProperty("NoAutowalk"))
+					return false;
+				Door door = item.GetPart<Door>();
+				if (door != null && door.Locked) permanentBlocker = true;
+				if (item.Physics != null && item.Physics.Takeable && door == null) continue;
+				if (item.ConsiderSolid() && (door == null || door.Locked))
+					permanentBlocker = true;
 			}
-			return KingdomAdoptRules.CellKind.Open;
+			// The native answer handles safely openable doors. A false answer caused solely by a
+			// resident or dropped item is deliberately overridden by the proof above.
+			bool passable = Cell.IsPassable(null, false);
+			if (!passable) return !permanentBlocker;
+			return Doorway || Cell.NavigationWeight(null, Smart: true,
+				IgnoreCreatures: true) <= MaxUsableNavigationWeight;
+		}
+
+		internal static KingdomAdoptRules.CellObservation ReadCellObservation(
+			Zone Z, int X, int Y)
+		{
+			return CellObservationAt(Z, X, Y);
+		}
+
+		internal static KingdomAdoptRules.EnclosureMeasurement MeasureExactRoom(
+			Zone Z, int X, int Y)
+		{
+			return KingdomAdoptRules.MeasureExactEnclosure(X, Y,
+				(a, b) => CellObservationAt(Z, a, b));
 		}
 
 		/// <summary>Composes the player-facing sentence for a refusal, in the settlement's own
@@ -98,8 +110,6 @@ namespace ThousandAndFirst
 				return ((Candidate != null) ? Candidate.ShortDisplayName : "Something here") + " already stands for " + KingdomPresentation.Rich(System.SeatName) + ". Release it before adopting it again.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage:
 				return KingdomPresentation.Rich(System.SeatName) + " hasn't grown enough yet to keep a " + name + " standing. Come back once it has.";
-			case KingdomAdoptRules.AdoptionVerdict.RefusedNoBed:
-				return "It wants a bed, and there is none here.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedNotStorageCapable:
 				return "It wants something that can hold water or food, and this isn't it.";
 			case KingdomAdoptRules.AdoptionVerdict.RefusedUnbounded:

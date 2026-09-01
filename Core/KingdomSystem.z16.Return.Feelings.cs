@@ -192,10 +192,13 @@ namespace ThousandAndFirst
 			out string Refusal)
 		{
 			string eventId = "taf:realm:return:v1:" + Archive.RealmId;
+			string realm = KingdomPresentation.Rich(Archive.DisplayName);
 			string telling = KingdomExileRules.ReturnTelling(
-				KingdomPresentation.Rich(Archive.DisplayName));
+				realm);
+			string outsider = KingdomExileRules.ReturnRumour(realm,
+				KingdomPresentation.Rich(KingdomChronicle.FounderName()));
 			return DispatchRealmChronicle(Archive, Archive.ReturnChronicle, eventId, telling,
-				"return", out Refusal);
+				outsider, "return", out Refusal);
 		}
 
 		private static bool ChronicleDeclarationMatchesArchive(KingdomRealmArchive Archive,

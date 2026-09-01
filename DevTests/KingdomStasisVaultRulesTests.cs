@@ -168,7 +168,8 @@ namespace ThousandAndFirst.Tests
 			string stasis = Read("Growth", "KingdomReopenedExoticActivation.Stasis.cs");
 			StringAssert.Contains("StasisVaultEligible", shared + stasis);
 			StringAssert.Contains("node:chimerism", stasis);
-			StringAssert.Contains("KingdomBuilt", stasis);
+			StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt(work)", stasis);
+			StringAssert.DoesNotContain("GetIntProperty(\"KingdomBuilt\")", stasis);
 			StringAssert.DoesNotContain("Learn(", shared + stasis);
 		}
 

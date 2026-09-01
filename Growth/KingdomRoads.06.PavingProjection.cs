@@ -178,6 +178,7 @@ namespace ThousandAndFirst
 					floor.ID = row.NewId;
 					floor.SetIntProperty(PathStateProperty,
 						(int)KingdomRoadRules.WearState.Paved);
+					CopyRoadSemantic(old, floor);
 					KingdomConstruction.Bind(floor, Updated);
 					if (!KingdomConstruction.UpdatePhysical(ref Updated,
 						KingdomPhysicalPhase.RoadOutputPending, i, 0, 0,

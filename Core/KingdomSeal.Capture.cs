@@ -51,6 +51,11 @@ namespace ThousandAndFirst
 					Kingdom.OutsiderEntries, WrittenTick);
 					Record.WriterVersion = VersionOf(typeof(KingdomSeal).Assembly);
 					Record.EngineVersion = VersionOf(typeof(XRLGame).Assembly);
+					if (!KingdomSealProfileCaptureRules.TryCapture(Kingdom.PolityLedger,
+						identity.RealmId, Record, out long polityRevision, out Failure))
+					{
+						Record = null; return false;
+					}
 					KingdomInheritanceSpatialCaptureResult spatial =
 						KingdomInheritanceSpatial.TryCapture(seat.City, Record,
 							The.ZoneManager?.ActiveZone, out string spatialFailure);
@@ -69,9 +74,12 @@ namespace ThousandAndFirst
 						if (SameSpatialBasis(prior, Record))
 							KingdomInheritanceSpatial.CopyEvidence(prior, Record);
 					}
-					if (!Kingdom.SealIdentityStillMatches(identity))
+					if (!Kingdom.SealIdentityStillMatches(identity) ||
+						!KingdomSealProfileCaptureRules.StillMatches(Kingdom.PolityLedger,
+							identity.RealmId, Record, polityRevision, out Failure))
 					{
-						Failure = "the immutable realm topology changed before seal storage";
+						Failure = Failure ??
+							"the immutable realm topology changed before seal storage";
 						Record = null;
 						return false;
 					}

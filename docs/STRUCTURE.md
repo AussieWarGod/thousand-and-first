@@ -20,19 +20,14 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2637 staged production C# files and 383,416
-physical lines. Of those, 4 exceed 300 lines, 0 are exactly 300, and therefore 4 fail the strict
+`Tools/check-structure.py --json` currently reports 2915 staged production C# files and 419,872
+physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`afc4955625dbe18f4f89ba2815d047a984db26ef76cc7907f155805e4345e4de`. The census reports
-1204 files with direct `XRL` imports; 3 of those exceed the line limit.
+`a633813831a166a0b294e74885a7e5a61052a869752d496db7c3d438bf8976be`. The census reports
+1358 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The four breaching files are the Gatehouse family — `Growth/KingdomGatehouseRules.cs` (682),
-`Growth/KingdomGatehouse.ProjectionEvidence.cs` (522), `Growth/KingdomGatehouse.cs` (517), and
-`Growth/KingdomGatehouse.Projection.cs` (326) — docketed and adjudicated by the R3 registration
-sweep. Docketed is not exempted: the release gate still fails on them, and this file states that
-failure honestly rather than reporting a stale zero. The socket-transition pair that previously
-also breached (`Growth/KingdomSocketTransitions.cs`, `Growth/KingdomSocketTransitionRules.cs`) was
-split under the size law by repair shard S2 and no longer appears in the over-cap list.
+No staged production source breaches the strict physical-line cap. This clears the mechanical
+line debt; it does not supply the exact-inventory human semantic review required for release.
 
 The current hardening sequence semantically decomposed 144 additional oversized authorities,
 bringing the cumulative total to 154. That is 25 more decompositions since checkpoint `2cb97fc`,
@@ -41,10 +36,10 @@ checkpoint `1c2d619`.
 [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 4 line-cap
-failures and missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still
-block release. Any staged source change invalidates this digest and requires a new census and
-review binding.
+do not create a second authority. This is measurable progress, not release signoff: 0 line-cap
+failures remain, but missing `docs/STRUCTURE_REVIEW.json` exact-inventory human review still blocks
+release. Any staged source change invalidates this digest and requires a new census and review
+binding.
 
 Automation cannot decide whether a type owns one coherent responsibility or whether its engine,
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore

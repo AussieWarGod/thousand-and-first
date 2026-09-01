@@ -9,12 +9,6 @@ namespace ThousandAndFirst
 			// Defence is an output, not a siting override. A plotted watch-lodge keeps its whole
 			// authored lot and contributes its base rating; only a defensive design with no plot is
 			// a frontier work. KingdomRules.IsFrontierWork is the shared runtime law.
-			if (Entry.Open && !string.IsNullOrEmpty(Entry.Contents))
-			{
-				// An open plot has no interior, so the table would furnish the weather.
-				Findings.Add(new CatalogueFinding(Entry.Key, "Contents", CatalogueSeverity.Note,
-					"building " + Entry.Key + " is an open plot and names furnishings; there is no interior to put them in"));
-			}
 			if (Entry.MinStage < KingdomPlotRules.StageForSize(Entry.Plot))
 			{
 				Findings.Add(new CatalogueFinding(Entry.Key, "MinStage", CatalogueSeverity.Note,

@@ -68,16 +68,22 @@ namespace ThousandAndFirst
 			}
 			system.KingdomFactionName = null;
 			system.KingdomDisplayName = null;
-			// Both cities at once: seating a blank settlement clears every per-settlement field
-			// there is, so a field added later cannot be forgotten here, and Away goes with it.
+			List<KingdomSettlement> nonSeat = system.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
+				if (!system.TryRemoveNonSeatSettlement(nonSeat[i], out string topologyFailure))
+				{
+					Popup.Show("Reset stopped at an inexact non-seat topology: " + topologyFailure);
+					return;
+				}
+			// Seating a blank settlement clears every carried per-settlement field; removing each
+			// exact non-seat row above clears the rest without treating a wire projection as authority.
 			system.Restore(new KingdomSettlement());
-			system.Away = null;
 			// The exile slot is state too, and a reset that left a remembered realm behind would
 			// have the next founding start with a door already shut.
 			system.ExiledFactionName = null;
 			system.ExiledDisplayName = null;
 			system.ExiledSeat = null;
-			system.ExiledAway = null;
+			system.ExiledSettlementTopology = new KingdomSettlementTopology();
 			system.ExiledDeed = null;
 			system.ExiledTick = 0L;
 			system.ExiledStandings.Clear();
@@ -98,7 +104,7 @@ namespace ThousandAndFirst
 			system.RegardSpilloverObservedReputation.Clear();
 			system.DirectionalStandingSchemaVersion = 0;
 			system.SynchronizeLegacyManifestProjection();
-			Popup.Show("Both cities are dissolved. The ground forgets; the chronicle does not survive it.");
+			Popup.Show("All cities are dissolved. The ground forgets; the chronicle does not survive it.");
 		}
 
 		[WishCommand("kingdom:citizen", null)]

@@ -20,6 +20,11 @@ SPEC.loader.exec_module(CHECKER)
 
 
 class DocumentationFreshnessTests(unittest.TestCase):
+    def test_current_research_disposition_is_machine_guarded(self) -> None:
+        problems = []
+        CHECKER.audit_research_alignment_contract(problems)
+        self.assertEqual([], problems)
+
     def test_archive_contract_tracks_current_v17_and_frozen_v1_to_v16(self) -> None:
         problems = []
         CHECKER.audit_archive_contract(problems)
@@ -126,6 +131,10 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 CHECKER.ROOT = original_root
 
     def test_read_only_audit_snapshots_keep_pinned_source_citations(self) -> None:
+        self.assertIn(
+            "_notes/ARCOLOGY-AUTHORED-INTERIOR-PLAN.md",
+            CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
+        )
         self.assertIn(
             "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
             CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,

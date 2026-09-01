@@ -51,7 +51,8 @@ namespace ThousandAndFirst
 			}
 			string creed = Resident.GetStringProperty(KingdomCreed.CreedProperty);
 			string majority = KingdomConversionRules.HouseholdMajority(CreedCounts(household), household.Count);
-			if (string.IsNullOrEmpty(majority) || majority == creed)
+			if (string.IsNullOrEmpty(majority) || majority == creed
+				|| !KingdomData.CreedUsesTheology(majority))
 			{
 				return;
 			}
@@ -104,7 +105,9 @@ namespace ThousandAndFirst
 		/// <param name="NowTick">Now, for the honest elapsed and for the window's anchor.</param>
 		public static bool NoteRoadsEnd(KingdomSystem System, Zone Z, GameObject Resident, string Roll, string TowardCreed, ConversionChannel Channel, long ReachedTick, long NowTick)
 		{
-			if (!Enabled || System == null || !System.Founded || Resident == null || string.IsNullOrEmpty(Roll) || string.IsNullOrEmpty(TowardCreed))
+			if (!Enabled || System == null || !System.Founded || Resident == null
+				|| string.IsNullOrEmpty(Roll) || string.IsNullOrEmpty(TowardCreed)
+				|| !KingdomData.CreedUsesTheology(TowardCreed))
 			{
 				return false;
 			}
@@ -138,6 +141,12 @@ namespace ThousandAndFirst
 			BrinkRecord brink = KingdomBrink.Of(Resident, BrinkKind.Creed);
 			if (!brink.Stands || brink.Channel == (int)ConversionChannel.Shrine)
 			{
+				return;
+			}
+			if (!KingdomData.CreedUsesTheology(brink.Cause))
+			{
+				KingdomBrink.Lift(Resident, BrinkKind.Creed);
+				SetProgress(System, roll, ConversionProgress.None);
 				return;
 			}
 			if (LiftIfArrested(System, Z, Resident, roll))

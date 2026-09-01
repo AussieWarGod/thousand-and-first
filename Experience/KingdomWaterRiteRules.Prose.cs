@@ -29,7 +29,7 @@ namespace ThousandAndFirst
 			case WaterRiteBar.NotOnOurGround:
 				return "Water is shared on the settlement's own ground, in front of the people who live on it.";
 			case WaterRiteBar.RealmBelievesNothing:
-				return "Your realm holds with nothing in particular, and nobody can be asked to drink to that. Let one creed become the city's, or say one out loud, and then ask.";
+				return "Your realm holds with nothing in particular, and nobody can be asked to drink to that. Let one covenant or allegiance become the city's, or say one out loud, and then ask.";
 			case WaterRiteBar.NothingBetweenYou:
 				return name + " already holds with " + creed + ". You have shared water with " + name + " a hundred times over a cookfire; there is nothing here that wants a ceremony.";
 			case WaterRiteBar.TheirOffice:
@@ -41,7 +41,7 @@ namespace ThousandAndFirst
 			case WaterRiteBar.AlreadyAnswered:
 				return name + " has answered, and nothing has changed since. Asking the same question twice is not asking twice.";
 			case WaterRiteBar.PouredTooRecently:
-				return "You poured for one of your own too recently. A rite held whenever it occurs to you is a round of drinks, and a round of drinks converts nobody.";
+				return "You poured for one of your own too recently. A rite held whenever it occurs to you is a round of drinks, and a round of drinks changes nobody's allegiance.";
 			case WaterRiteBar.StoresCannotBear:
 				return "The rite would take {{C|" + Drams + " drams}} from the stores, and the stores hold {{C|" + Stored + "}}. Fill the casks first; this is not a thing to do by halves.";
 			default:
@@ -181,8 +181,8 @@ namespace ThousandAndFirst
 		/// <summary>The refusal as the founder's own book records it: the same dignity in the record
 		/// that was in the room. Lower-case clause, no trailing period.</summary>
 		/// <param name="Answer">The answer given. <see cref="WaterRiteAnswer.Accepted"/> returns
-		/// empty &mdash; an acceptance is chronicled by <c>KingdomConversion.Convert</c>, which is
-		/// the one path every conversion in the mod takes.</param>
+		/// empty &mdash; an acceptance is chronicled by the shared transition custody behind
+		/// <c>KingdomConversion.Convert</c> or <c>KingdomConversion.AdoptAffiliation</c>.</param>
 		/// <param name="Name">The settler's own name.</param>
 		/// <param name="Settlement">The city's name.</param>
 		public static string RefusalTelling(WaterRiteAnswer Answer, string Name, string Settlement)
@@ -261,7 +261,7 @@ namespace ThousandAndFirst
 			string name = Named(Name);
 			string where = string.IsNullOrEmpty(Settlement) ? "that city" : Settlement;
 			string founder = string.IsNullOrEmpty(FounderName) ? "the founder" : FounderName;
-			return "in " + where + " they ask a settler what a settler believes, and then they ask again, and " + name + " is the one who counted the askings out loud — which " + founder + " tells as a misunderstanding over a bowl";
+			return "in " + where + " they ask where a settler's allegiance lies, and then they ask again, and " + name + " is the one who counted the askings out loud — which " + founder + " tells as a misunderstanding over a bowl";
 		}
 
 		/// <summary>The founder-facing note for the same night, in the ledger's voice: what can

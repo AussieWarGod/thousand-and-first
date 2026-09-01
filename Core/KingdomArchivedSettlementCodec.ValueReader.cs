@@ -168,12 +168,20 @@ namespace ThousandAndFirst
 					KingdomGrowthFirstGuestTerminalReceipt.LegacyVersion)
 				throw new InvalidDataException(
 					"Archived settlement historical first-guest terminal version is unknown.");
+			if (Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& SchemaVersion < ExpeditionResultVersion)
+				((Simulation.City.KingdomJobRegistry)result).Normalize();
 			if (SchemaVersion >= ExactLogisticsVersion
 				&& Type == typeof(Simulation.City.KingdomJobRegistry)
 				&& !ValidDeliveryDomain(
 					(Simulation.City.KingdomJobRegistry)result, SchemaVersion))
 				throw new InvalidDataException(
 					"Archived settlement delivery enum domain is invalid for its version.");
+			if (Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& !ValidExpeditionResultDomain(
+					(Simulation.City.KingdomJobRegistry)result))
+				throw new InvalidDataException(
+					"Archived settlement expedition-result domain is invalid for its version.");
 			if (SchemaVersion >= CivicAuthorityVersion
 				&& Type == typeof(Simulation.City.KingdomCityBook)
 				&& !ValidCivicAuthority((Simulation.City.KingdomCityBook)result))

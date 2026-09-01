@@ -17,6 +17,14 @@ namespace ThousandAndFirst
 			for (int i = 0; i < intents.Count; i++)
 			{
 				int ordinal = (int)(-intents[i].AcknowledgedTick - 1L);
+				if (intents[i].AmbientTransaction == null)
+				{
+					// A crash cut before semantic freezing cannot become a prose claim.
+					State.DirectRecords.Remove(intents[i]);
+					if (ordinal >= 0 && ordinal < State.EndpointCount)
+						State.CompletedMask |= 1 << ordinal;
+					continue;
+				}
 				if (!AddDetailed(State, intents[i], out KingdomPolityDirectRecord _, out Failure))
 					return false;
 				State.DirectRecords.Remove(intents[i]);
@@ -47,9 +55,14 @@ namespace ThousandAndFirst
 			{
 				SourceRef = Intent.SourceRef, SettlementId = Intent.SettlementId,
 				Purpose = Intent.Purpose, WindowOrdinal = Intent.WindowOrdinal,
-				CauseTick = Intent.CauseTick, EndpointVerb = Intent.EndpointVerb
+				CauseTick = Intent.CauseTick, EndpointVerb = Intent.EndpointVerb,
+				AmbientTransaction = KingdomPolityAmbientTransactionRules.Copy(
+					Intent.AmbientTransaction)
 			};
-			row.RecordId = StoredId(DirectPrefix, "polity-direct-record-v2", row);
+			if (row.AmbientTransaction != null && !KingdomPolityAmbientTransactionRules.Valid(
+				row.AmbientTransaction, row.SourceRef, out Failure)) return false;
+			row.RecordId = StoredId(DirectPrefix, "polity-direct-record-v2", row,
+				row.AmbientTransaction?.FrozenDigest);
 			KingdomPolityDirectRecord existing = FindRecord(State.DirectRecords, row.RecordId);
 			if (existing != null)
 			{
@@ -68,9 +81,12 @@ namespace ThousandAndFirst
 			{
 				SourceRef = Work.CohortId, SettlementId = Work.SettlementId,
 				Purpose = Work.Purpose, WindowOrdinal = Work.WindowOrdinal,
-				CauseTick = Work.CauseTick, EndpointVerb = Work.DueFacts
+				CauseTick = Work.CauseTick, EndpointVerb = Work.DueFacts,
+				AmbientTransaction = KingdomPolityAmbientTransactionRules.Copy(
+					Work.AmbientTransaction)
 			};
-			row.RecordId = StoredId(DirectPrefix, "polity-direct-record-v2", row); return row;
+			row.RecordId = StoredId(DirectPrefix, "polity-direct-record-v2", row,
+				row.AmbientTransaction?.FrozenDigest); return row;
 		}
 
 		private static int DetailedCount(IList<KingdomPolityDirectRecord> Rows)
@@ -158,7 +174,8 @@ namespace ThousandAndFirst
 					((byte)r.Purpose).ToString(CultureInfo.InvariantCulture),
 					r.WindowOrdinal.ToString(CultureInfo.InvariantCulture),
 					r.CauseTick.ToString(CultureInfo.InvariantCulture), r.EndpointVerb ?? "",
-					r.AcknowledgedTick.ToString(CultureInfo.InvariantCulture)));
+					r.AcknowledgedTick.ToString(CultureInfo.InvariantCulture),
+					r.AmbientTransaction?.FrozenDigest ?? ""));
 			}
 			rows.Sort(StringComparer.Ordinal);
 			return KingdomPolityRules.ActivationDigest("polity-direct-authority-v1", rows);
@@ -178,6 +195,8 @@ namespace ThousandAndFirst
 				&& A.SettlementId == B.SettlementId && A.Purpose == B.Purpose
 				&& A.WindowOrdinal == B.WindowOrdinal && A.CauseTick == B.CauseTick
 				&& A.EndpointVerb == B.EndpointVerb
+				&& KingdomPolityAmbientTransactionRules.Same(
+					A.AmbientTransaction, B.AmbientTransaction)
 				&& (!IncludeAcknowledgement || A.AcknowledgedTick == B.AcknowledgedTick);
 		}
 

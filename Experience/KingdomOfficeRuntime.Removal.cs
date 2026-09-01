@@ -6,7 +6,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomOfficeRuntime
 	{
 		/// <summary>Read-only mod-removal preflight for one exact title projection.</summary>
-		internal static bool CanRemoveForRealmRemoval(GameObject Body,
+		internal static bool CanRemoveForRealmRemoval(KingdomSystem System, GameObject Body,
 			r_KingdomOfficeProjection Marker, out string Failure)
 		{
 			Failure = null;
@@ -20,15 +20,19 @@ namespace ThousandAndFirst
 			{
 				Failure = "Civic-office projection identity is divergent."; return false;
 			}
+			if (!KingdomGrowth.CanRemoveMarketServiceForRealmRemoval(System,
+				Body, Marker, out Failure)) return false;
 			return true;
 		}
 
 		/// <summary>Removes only the exact role owned by this marker, then the marker itself.
 		/// Foreign pre-existing same-text roles have OwnsRole=false and are preserved.</summary>
-		internal static bool TryRemoveForRealmRemoval(GameObject Body,
+		internal static bool TryRemoveForRealmRemoval(KingdomSystem System, GameObject Body,
 			r_KingdomOfficeProjection Marker, out string Failure)
 		{
-			if (!CanRemoveForRealmRemoval(Body, Marker, out Failure)) return false;
+			if (!CanRemoveForRealmRemoval(System, Body, Marker, out Failure)) return false;
+			if (!KingdomGrowth.TryRemoveMarketServiceForRealmRemoval(System,
+				Body, Marker, out Failure)) return false;
 			SocialRoles roles = Body.GetPart<SocialRoles>();
 			if (Marker.OwnsRole && HasRole(roles, Marker.RoleText))
 				roles.RemoveRole(Marker.RoleText);

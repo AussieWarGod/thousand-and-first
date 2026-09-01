@@ -20,22 +20,20 @@ namespace ThousandAndFirst
 	/// </para>
 	/// <para>
 	/// <b>The great work is an office.</b> An XL's citywide effect is live only while a named
-	/// notable heads it. Nobody is appointed: the seat is filled by the office machinery from the
-	/// settlers who are actually here, scored on the attributes they already have
-	/// (<see cref="KingdomReachRules.SeatFitness"/>), the way
-	/// <c>KingdomOffices.UpdateOffice</c> fills the settlement's own office from whoever has
-	/// served longest. An unheaded great work is not a broken one: it keeps its own zone and says
-	/// so once (STANDARDS 7b).
+	/// notable heads it. This work-local seat is not the settlement's civic office: Reach scores
+	/// currently posted settlers on attributes they already have
+	/// (<see cref="KingdomReachRules.SeatFitness"/>), while the civic office always requires its
+	/// explicit two-name Charter choice. An unheaded great work is not a broken one: it keeps its
+	/// own zone and says so once (STANDARDS 7b).
 	/// </para>
 	/// <para>
 	/// <b>State.</b> Almost none. Bands are registry data, recomputed from the merged catalogue
 	/// every load, so a save carries none of it. A seat is two string properties on the work
 	/// itself, which is the object that would be destroyed if the work were struck. The one
 	/// realm-level record &mdash; what a claimed zone's headed great works shade the city with
-	/// &mdash; lives in the game's own already-serialized state slots under
-	/// <see cref="CityStatePrefix"/>, exactly as <c>KingdomPlots.MaterialStatePrefix</c> does, so
-	/// no positionally-reflected field layout on <c>KingdomSystem</c> is touched and there is no
-	/// seat-carry field to keep symmetric.
+	/// &mdash; is one typed, bounded zone-property receipt. It binds exact realm, settlement,
+	/// zone, owner, designation-source digest, payload and observation tick. No positional field
+	/// on <c>KingdomSystem</c> or city-book/archive codec is involved.
 	/// </para>
 	/// </summary>
 	public static partial class KingdomReach
@@ -147,36 +145,6 @@ namespace ThousandAndFirst
 			ReachBand band = KingdomReachRules.Derive(size, place.Index, place.Count);
 			BandCache[Key] = band;
 			return band;
-		}
-
-		/// <summary>The band the design a standing work was raised under carries, before any seat
-		/// is considered.</summary>
-		public static ReachBand BandOf(GameObject Work)
-		{
-			return (Work == null) ? ReachBand.Plot : BandOf(KingdomUpgrade.DesignKeyOf(Work));
-		}
-
-		/// <summary>
-		/// What a standing work actually reaches right now: its band, dropped to the zone it
-		/// stands in while a great work has nobody heading it
-		/// (<see cref="KingdomReachRules.Unheaded"/>).
-		/// </summary>
-		public static ReachBand EffectiveBandOf(GameObject Work)
-		{
-			ReachBand band = BandOf(Work);
-			if (!KingdomReachRules.RequiresSeat(band) || IsHeaded(Work))
-			{
-				return band;
-			}
-			return KingdomReachRules.Unheaded(band);
-		}
-
-		/// <summary>How far into its quarter a standing work shades, which is where tier moves
-		/// the edge inside the band.</summary>
-		public static int QuarterRadiusOf(GameObject Work)
-		{
-			string key = (Work == null) ? null : KingdomUpgrade.DesignKeyOf(Work);
-			return KingdomReachRules.QuarterRadius(string.IsNullOrEmpty(key) ? 0 : PlaceOf(key).Index);
 		}
 
 		// A design's place in its own chain: how many designs improve INTO it, and how many links

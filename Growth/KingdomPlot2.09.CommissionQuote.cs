@@ -72,6 +72,10 @@ namespace ThousandAndFirst
 			if (!TryPreparePlotPayload(System, Z, rect, Entry.Key, Entry.Category, SkinKey,
 				out KingdomArchitectureIntent architecture, out string payload, out Failure))
 				return false;
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+				out KingdomPlotRules.PlotRect footprint, out Failure)) return false;
+			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
+				out KingdomPlotRules.RoofState roof, out Failure)) return false;
 			Cell main = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
 			if (main == null || KingdomConstruction.HasActiveAt(System, Z, main))
 			{
@@ -82,8 +86,7 @@ namespace ThousandAndFirst
 			}
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-				grid.CellsOf(rect), PlannedFootprint(Z, rect, spec),
-				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
+				grid.CellsOf(rect), footprint, roof, carved);
 			if (total < 1L)
 			{
 				Failure = "The exact plot labour quote is empty.";

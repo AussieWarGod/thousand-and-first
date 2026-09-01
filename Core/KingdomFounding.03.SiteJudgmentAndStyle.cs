@@ -47,10 +47,11 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Founds the realm's second city on ground the founder is standing on: same faction,
+		/// Founds the realm's next additional city on ground the founder is standing on: same faction,
 		/// same standings, same chronicle, a new place with a purpose of its own. The city that
-		/// was seated becomes <see cref="KingdomSystem.Away"/> and keeps its own clocks; the new
-		/// one takes the seat and starts them from now.
+		/// was seated enters the authoritative non-seat topology and keeps its own clocks; the new
+		/// one takes the seat and starts them from now. The historic method name remains save/API
+		/// vocabulary; it admits either the second or third city while a slot remains.
 		/// </summary>
 		/// <param name="Name">The new city's name. Empty is rejected.</param>
 		/// <param name="Vocation">What the city is for, from
@@ -58,7 +59,7 @@ namespace ThousandAndFirst
 		/// rather than being refused &mdash; a founder is never told their answer was invalid.</param>
 		/// <param name="Site">The zone to found on. Null is rejected.</param>
 		/// <param name="Force">True to found on ground that borders the realm (debug only, so a
-		/// tester need not walk past the horizon). The two-city cap and the refusal to found on
+		/// tester need not walk past the horizon). The three-city cap and the refusal to found on
 		/// ground the realm already holds stand regardless &mdash; forcing either would leave two
 		/// cities claiming one zone.</param>
 		/// <returns>True only after claim, seat, Charter ability, rite placement, and seal are all

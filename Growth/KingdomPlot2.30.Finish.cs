@@ -11,9 +11,9 @@ namespace ThousandAndFirst
 	public static partial class KingdomPlots
 	{
 		/// <summary>
-		/// Finishes the plot: furnishes the interior from the design's own contents table the way
-		/// vanilla huts furnish, raises the object that stands for the building, hands it every
-		/// property the rest of the settlement reads a work by, and takes the works down.
+		/// Finishes the plot: verifies current authored fixtures or applies the bounded legacy
+		/// contents fallback, raises the object that stands for the building, hands it every property
+		/// the rest of the settlement reads a work by, and takes the works down.
 		/// </summary>
 		private static bool Finish(r_KingdomPlotWorks Works, Zone Z,
 			KingdomPlotRules.PlotRect Rect, KingdomPlotRules.PlotRect Footprint,
@@ -44,8 +44,22 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool currentAuthored = architecture != null
-				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+				&& KingdomArchitectureRules.IsManagedSnapshotEncoding(
 					architecture.EncodedSnapshot);
+			if (architecture != null
+				&& KingdomArchitectureRules.IsLatestSnapshotEncoding(
+					architecture.EncodedSnapshot)
+				&& (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+					out KingdomPlotRules.PlotRect authoredFootprint, out _)
+					|| !SameRect(authoredFootprint, Footprint)
+					|| !KingdomArchitectureRuntime.TryRoofOnGround(architecture,
+						KingdomPlotRules.IsUnderground(Z.Z),
+						out KingdomPlotRules.RoofState authoredRoof, out _)
+					|| authoredRoof != Roof))
+			{
+				KingdomLog.Log("architecture: completed plot footprint disagrees with its receipt");
+				return false;
+			}
 			if (currentAuthored && !KingdomArchitectureStamper.TryVerifyComplete(parent, Z,
 				out string layoutFailure))
 			{

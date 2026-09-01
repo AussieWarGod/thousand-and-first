@@ -38,13 +38,13 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The unhappier of the realm's two cities leaves it.
+		/// The unhappier member of the realm's exact dissent pair leaves it.
 		/// <para>
-		/// Preconditions: the realm holds two cities whose creeds clash, and dissent has reached
+		/// Preconditions: the realm has an exact pair of cities whose creeds clash, and dissent has reached
 		/// <see cref="KingdomCreedRules.DissentBreaking"/> — or <paramref name="Forced"/> is set,
 		/// which is the debug path and skips the dissent requirement and nothing else. Side
-		/// effects: the leaving city moves whole into <c>KingdomSystem.Seceded</c>, the realm keeps
-		/// the other as its seat, dissent is cleared, both chronicle registers record the day in
+		/// effects: the leaving city moves whole into <c>KingdomSystem.Seceded</c>, the realm seats
+		/// the other pair member while any third city remains owned, dissent is cleared, both registers record the day in
 		/// their own words, and a modal states what has changed. Failure mode: returns false with a
 		/// founder-facing refusal and changes nothing.
 		/// </para>
@@ -88,6 +88,15 @@ namespace ThousandAndFirst
 			string leaverName = leaving.Name;
 			string leaverCreed = CreedName(leaving.Creed);
 			int leaverPopulation = leaving.Population;
+			IList<string> leavingClaims = leaving.Seated
+				? System.ClaimedZones : leaving.Settlement?.ClaimedZones;
+			if (!KingdomZoneObservationRevocation.TryRevokeZones(leavingClaims,
+				out string observationFailure))
+			{
+				Refusal = "The leaving city's ground observations could not retire exactly: "
+					+ observationFailure + ".";
+				return false;
+			}
 			KingdomRelocation.BeforeOwnershipLoss(System, leaving.Seated
 				? System.ClaimedZones : leaving.Settlement?.ClaimedZones,
 				"The city seceded while the heart's ring was called.");
@@ -136,7 +145,7 @@ namespace ThousandAndFirst
 		/// own ground, the clash that split them is no longer live, and the realm's standing with
 		/// the city's creed is not contemptible — see
 		/// <see cref="KingdomCreedRules.JudgeRejoin"/>. Side effects: the city returns as the
-		/// realm's second, the seat moves into it because the founder is standing there, dissent is
+		/// realm's next open topology slot, the seat moves into it because the founder is standing there, dissent is
 		/// cleared, both registers record the day, and a modal states it. Failure mode: returns
 		/// false with a founder-facing refusal and changes nothing.
 		/// </para>
@@ -196,7 +205,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>The realm's temper between its two cities. Concord for anything else.</summary>
+		/// <summary>The realm's temper on its exact dissent pair. Concord with fewer than two cities.</summary>
 		public static CityTemper Temper(KingdomSystem System)
 		{
 			if (System == null || !System.Founded || System.SettlementCount < 2)

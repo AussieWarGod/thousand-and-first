@@ -42,10 +42,12 @@ namespace ThousandAndFirst.Harness
 					break;
 				case KingdomScenarioVerb.StageGalleryCase:
 					specs.Add(Spec("Suite", KingdomScenarioArgumentKind.Token, true));
-					// The exact expected case is frozen in authored data and compared field by
-					// field after staging, so the pose selects a known case rather than whatever
-					// a positional index happens to land on.
+					// Build keys repeat across generated plot envelopes. Type and size therefore
+					// belong to the frozen identity too; without them a live review that asked for
+					// an XL realization could silently stage the first small record instead.
 					specs.Add(Spec("Build", KingdomScenarioArgumentKind.Token, true));
+					specs.Add(Spec("Type", KingdomScenarioArgumentKind.Token, true));
+					specs.Add(Spec("Size", KingdomScenarioArgumentKind.Token, true));
 					specs.Add(Spec("Variant", KingdomScenarioArgumentKind.Token, true));
 					specs.Add(Spec("Facing", KingdomScenarioArgumentKind.Token, true));
 					break;

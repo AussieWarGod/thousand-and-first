@@ -57,6 +57,7 @@
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="benefit-finehouse-main" Blueprint="r_KingdomFineHouseAmenity" Role="physical-benefit-finehouse-main" Material="marble" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="housing-fungal-hands">
@@ -69,6 +70,7 @@
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="benefit-caproof-main" Blueprint="r_KingdomLivingCapCondensate" Role="physical-benefit-caproof-main" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="housing-mud-hands">
@@ -115,6 +117,29 @@
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairTimber" Role="seating" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <slot Key="benefit-finehouse-main" Blueprint="r_KingdomFineHouseAmenity" Role="physical-benefit-finehouse-main" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="benefit-manor-main" Blueprint="r_KingdomManorAmenity" Role="physical-benefit-manor-main" Material="marble" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="housing-masonry-workshop">
@@ -127,6 +152,7 @@
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairTimber" Role="seating" Material="timber" MinTech="workshop" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="workshop" Natural="no" />
+    <slot Key="benefit-court-main" Blueprint="r_KingdomCourtAmenity" Role="physical-benefit-court-main" Material="shapedstone" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="housing-terrace-workshop">
@@ -160,6 +186,7 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="benefit-stiltrow-main" Blueprint="r_KingdomWetUnderfloor" Role="physical-benefit-stiltrow-main" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="housing-arclight">
@@ -172,6 +199,7 @@
     <slot Key="light" Blueprint="Techlight1" Role="light" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairMetal" Role="seating" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="core" Blueprint="r_KingdomStructureMetalWall" Role="service-core" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-arcologyward-main" Blueprint="r_KingdomArcologyWardAmenity" Role="physical-benefit-arcologyward-main" Material="workedmetal" MinTech="arclight" Natural="no" />
   </palette>
 
   <!-- Water palettes. -->
@@ -207,6 +235,7 @@
     <slot Key="dome" Blueprint="Rubble" Role="dome" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="trim" Blueprint="r_KingdomStructureRustedMetalWall" Role="recovered-trim" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFixtureBasinScrap" Role="water-storage" Material="scrap" MinTech="salvage" Natural="no" />
+    <slot Key="readout" Blueprint="Techlight1" Role="retained-machine-light" Material="scrap" MinTech="salvage" Natural="no" />
   </palette>
 
   <palette Key="water-weep-hands">
@@ -227,6 +256,7 @@
     <slot Key="rim" Blueprint="r_KingdomStructureHalfStone" Role="basin-rim" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFixtureBasinStone" Role="water-access" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="benefit-reservoir-main" Blueprint="r_KingdomReservoirAmenity" Role="physical-benefit-reservoir-main" Material="stone" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="water-works-workshop">
@@ -237,6 +267,7 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorStriped" Role="door" Material="workedmetal" MinTech="workshop" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFixtureBasinMetal" Role="water-access" Material="workedmetal" MinTech="workshop" Natural="no" />
     <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="light" Material="workedmetal" MinTech="workshop" Natural="no" />
+    <slot Key="benefit-waterworks-main" Blueprint="r_KingdomWaterworksGauge" Role="physical-benefit-waterworks-main" Material="shapedstone" MinTech="workshop" Natural="no" />
   </palette>
 
   <palette Key="water-foundry">
@@ -248,13 +279,16 @@
     <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="door" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="basin" Blueprint="r_KingdomFixtureBasinMetal" Role="water-access" Material="workedmetal" MinTech="foundry" Natural="no" />
     <slot Key="light" Blueprint="Techlight1" Role="light" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-condensery-main" Blueprint="r_KingdomCondenseryFinish" Role="physical-benefit-condensery-main" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="housing-bone-hands">
     <slot Key="lotpath" Blueprint="r_KingdomGroundTroddenPath" Role="trodden-mud-lot-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
-    <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="hide-screen" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="sill" Blueprint="BlackMarbleWalkway" Role="black-marble-sill" Material="marble" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="tensioned-canvas-screen" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="rib" Blueprint="r_KingdomStructureMoonStairCrystalRib" Role="retained-crystal-rib" Material="marble" MinTech="hands" Natural="yes" />
     <slot Key="rim" Blueprint="r_KingdomStructureHalfStone" Role="stone-sill" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
@@ -272,146 +306,168 @@
   </palette>
 
   <!-- Small housing maps. -->
-  <map Key="housing-tent-s0" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-tent-s0" Width="6" Height="4" Footprint="1,0,3x2" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="p" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iii#" />
-    <row Cells="##+##" />
+    <row Cells=".###.." />
+    <row Cells=".#b@.." />
+    <row Cells="...p.." />
+    <row Cells="..s+.." />
   </map>
 
-  <map Key="housing-tentrow-s1" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-tentrow-s1" Width="6" Height="4" Footprint="0,0,5x2" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+	<glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+	<glyph Char="p" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bii#" />
-    <row Cells="##+##" />
+	<row Cells="#####." />
+	<row Cells="bbb@#." />
+	<row Cells="...p.." />
+	<row Cells="..s+.." />
   </map>
 
-  <map Key="housing-hut-s0" Width="5" Height="4" DefaultCover="walled">
+  <map Key="housing-hut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iih#" />
-    <row Cells="##+##" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".##d#." />
+    <row Cells="..s+h." />
   </map>
 
-  <map Key="housing-hutyard-s1" Width="5" Height="4" DefaultCover="walled">
+
+
+  <map Key="housing-hutyard-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="c" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:yard-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bih#" />
-    <row Cells="c+###" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="###d#." />
+    <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-mudhut-s0" Width="5" Height="4" DefaultCover="walled">
+  <map Key="housing-mudhut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <!-- A hand-built mud shell has a canvas threshold, not an unpaid stone or timber door. -->
-    <glyph Char="+" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="door:house" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iii#" />
-    <row Cells="##+##" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".##d#." />
+    <row Cells="..s+.." />
   </map>
 
-  <map Key="housing-mudcourt-s1" Width="5" Height="4" DefaultCover="walled">
+
+
+  <map Key="housing-mudcourt-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="soft" Anchors="fixture:shade-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bii#" />
-    <row Cells="q+###" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="###d#." />
+    <row Cells="q,s+,." />
   </map>
 
-  <map Key="housing-blockhut-s0" Width="5" Height="4" DefaultCover="walled">
+  <map Key="housing-blockhut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iii#" />
-    <row Cells="##+##" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".##d#." />
+    <row Cells="..s+.." />
   </map>
 
-  <map Key="housing-blockyard-s1" Width="5" Height="4" DefaultCover="walled">
+
+
+  <map Key="housing-blockyard-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:swept-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bii#" />
-    <row Cells="q+###" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="###d#." />
+    <row Cells="q,s+,." />
   </map>
 
-  <map Key="housing-caproof-s0" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-caproof-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-caproof-main" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage,benefit:caproof-main" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells=".###." />
-    <row Cells="#b@#." />
-    <row Cells="#sid+" />
-    <row Cells=".###." />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#sid+" />
+    <row Cells=".yyyy." />
   </map>
 
-  <map Key="housing-bonefold-s0" Width="5" Height="4" DefaultCover="soft">
+
+
+  <map Key="housing-bonefold-s0" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="R" Ground="$floor" Structure="$rib" Claim="building" Pass="adjacent" Cover="soft" Anchors="structure:crystal-rib" />
     <glyph Char="m" Ground="$ground" Structure="$rim" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="M" Ground="$sill" Claim="yard" Pass="walk" Cover="open" Anchors="surface:marble-sill" />
     <glyph Char="d" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="mmmmm" />
-    <row Cells="m#b#m" />
-    <row Cells="m#@dm" />
-    <row Cells="m,s,+" />
+    <row Cells="mmmmmm" />
+    <row Cells="mRdbRm" />
+    <row Cells="m#d@dm" />
+    <row Cells="mMMs,+" />
   </map>
 
-  <map Key="housing-ydroofline-s0" Width="5" Height="4" DefaultCover="walled">
+  <map Key="housing-ydroofline-s0" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
@@ -419,23 +475,25 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells=".###." />
-    <row Cells="#bih#" />
-    <row Cells="#s@i#" />
-    <row Cells=".##+." />
+    <row Cells=".####." />
+    <row Cells="#biih#" />
+    <row Cells="#si@i#" />
+    <row Cells=".###+." />
   </map>
 
-  <map Key="housing-carvedcell-s0" Width="5" Height="4" DefaultCover="natural">
+  <map Key="housing-carvedcell-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="natural">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="natural" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="natural" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="natural" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="natural" Anchors="fixture:sleep" Stateful="yes" />
     <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="natural" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#bii#" />
-    <row Cells="#@is#" />
-    <row Cells="###+#" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#sid+" />
+    <row Cells=".yyyy." />
   </map>
 
   <!-- Medium and large housing maps. -->
@@ -504,15 +562,15 @@
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling,threshold:household" Stateful="yes" />
     <row Cells="........" />
     <row Cells=".######." />
-    <row Cells=".#bBBb#." />
+    <row Cells=".#bbBb#." />
     <row Cells=".#sBBh#." />
     <row Cells=".#@ddd#." />
     <row Cells=".##+,,#." />
   </map>
 
-  <map Key="housing-terrace-l0" Width="12" Height="9" DefaultCover="walled">
+  <map Key="housing-terrace-l0" Width="12" Height="10" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="threshold:household" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
@@ -520,15 +578,17 @@
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="............" />
-    <row Cells=".##########." />
-    <row Cells=".#@#b#b#h##." />
-    <row Cells=".#s#i#i#i##." />
-    <row Cells=".#d#d#d#d##." />
-    <row Cells=".,,,,,+,,,,." />
-    <row Cells="............" />
-    <row Cells="............" />
-    <row Cells="............" />
+    <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=",,,,,p,,,,,," />
+    <row Cells=",##########," />
+    <row Cells=",#@#b#b#h##," />
+    <row Cells=",#s#i#i#b##," />
+    <row Cells=",#b#i#i#i##," />
+    <row Cells=",#d#d#d#d##," />
+    <row Cells=",,,,,,+,,,,," />
+    <row Cells=",ppppp.ppp,," />
+    <row Cells=",p,,,p.,,p,," />
+    <row Cells=",p,,,p.,,p,," />
   </map>
 
   <map Key="housing-finehouse-m0" Width="8" Height="6" DefaultCover="walled">
@@ -537,7 +597,7 @@
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-finehouse-main" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage,benefit:finehouse-main" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:table" Stateful="yes" />
@@ -556,7 +616,7 @@
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="B" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="circulation:broad-turn" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-finehouse-main" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage,benefit:finehouse-main" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:table" Stateful="yes" />
@@ -569,54 +629,66 @@
     <row Cells=".##++##." />
   </map>
 
-  <map Key="housing-manor-l0" Width="12" Height="9" DefaultCover="walled">
+  <map Key="housing-manor-l0" Width="12" Height="10" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-manor-main" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage,benefit:manor-main" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="c" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="............" />
-    <row Cells=".##########." />
-    <row Cells=".#b#....#h#." />
-    <row Cells=".#s#....#b#." />
-    <row Cells=".#d#.....d#." />
-    <row Cells=".#,,,,@,,,#." />
-    <row Cells=".#,,,ct,,.#." />
-    <row Cells=".####d+####." />
-    <row Cells="....,,......" />
+    <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="y" Ground="$ground" Structure="$door" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=",,,,,p,,,,,," />
+    <row Cells=",#d########," />
+    <row Cells=",#b#,p,,#h#," />
+    <row Cells=",#s#,p,,db#," />
+    <row Cells=",###pp,pp##," />
+    <row Cells=",###pppppd#," />
+    <row Cells=",#,,,,@,,,#," />
+    <row Cells=",#,,,ct,,p#," />
+    <row Cells=",####d+####," />
+    <row Cells=",p,,,,.,,p,," />
   </map>
 
-  <map Key="housing-court-xl0" Width="20" Height="14" DefaultCover="walled">
+
+
+  <map Key="housing-court-xl0" Width="20" Height="18" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-court-main" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage,benefit:court-main" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="c" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:table" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="...................." />
-    <row Cells=".##################." />
-    <row Cells=".#b#b#........#b#h#." />
-    <row Cells=".#s#i#........#i#i#." />
-    <row Cells=".#d#d#........#d#d#." />
-    <row Cells=".#,,,,,,@,,,,,,,,,#." />
-    <row Cells=".#,,,,c,t,,,,,,,,,#." />
-    <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells=".#d#d#..,,,,..#d#d#." />
-    <row Cells=".#b#i#..,,,,..#i#b#." />
-    <row Cells=".#b#i#..,,,,..#b#b#." />
-    <row Cells=".#######d++d#######." />
-    <row Cells="...................." />
-    <row Cells="...................." />
+    <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="w" Ground="$ground" Structure="$door" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=",,,,,,,,,,,p,,,,,,,," />
+    <row Cells=",##################," />
+    <row Cells=",#b#b#,,,,,p,,#b#h#," />
+    <row Cells=",#i#i#,,,,,p,,#i#i#," />
+    <row Cells=",#s#i#,,,,,p,,#i#i#," />
+    <row Cells=",#d#d#,,,,,ppp#d#d#," />
+    <row Cells=",#,,,,,,@,,,,,,,,,#," />
+    <row Cells=",#,,,,c,t,,,,,,,,,#," />
+    <row Cells=",#,,,,,,,,,,,,,,,,#," />
+    <row Cells=",#,,,,,,,,,,,,,,,,#," />
+    <row Cells=",#d#d#,p,,,,,,#d#d#," />
+    <row Cells=",#b#i#,,,,,,,,#i#b#," />
+    <row Cells=",#b#i####,,ddd#b#b#," />
+    <row Cells=",#i#i#iiiddiii#i#i#," />
+    <row Cells=",#######d++d#######," />
+    <row Cells=",,,,,p,,,..p,,,,,p,," />
+    <row Cells=",,,,,p,,,..p,,,,,p,," />
+    <row Cells=",,,,,p,,,..p,,,,,p,," />
   </map>
 
   <map Key="housing-stiltrow-m0" Width="8" Height="6" DefaultCover="open">
@@ -625,7 +697,7 @@
     <glyph Char="=" Ground="$walk" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="+" Ground="$walk" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-stiltrow-main" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage,benefit:stiltrow-main" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <row Cells="........" />
     <row Cells=".##..##." />
@@ -651,20 +723,21 @@
     <row Cells="####+###" />
   </map>
 
-  <map Key="housing-arcologyward-l0" Width="12" Height="9" DefaultCover="walled">
+  <map Key="housing-arcologyward-l0" Width="12" Height="10" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="," Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="^" Ground="$floor" Structure="$core" Claim="building" Pass="blocked" Cover="walled" Anchors="fixture:service-core" />
+    <glyph Char="^" Ground="$floor" Structure="$core" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:service-core" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-arcologyward-main" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:storage,benefit:arcologyward-main" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
     <row Cells=".##########." />
     <row Cells=".#b#b##b#b#." />
     <row Cells=".#i#i,,i#i#." />
     <row Cells=".#d#d,,d#d#." />
+    <row Cells=".#,,,,,,,,#." />
     <row Cells=".#,,^@,,s,#." />
     <row Cells=".#,,,,,,,,#." />
     <row Cells=".#d#d,,d#d#." />
@@ -674,44 +747,49 @@
 
 
   <!-- Water maps. -->
-  <map Key="water-saltpan-s0" Width="5" Height="4" DefaultCover="open">
+  <map Key="water-saltpan-s0" Width="6" Height="4" DefaultCover="open">
     <glyph Char="r" Ground="$ground" Structure="$rim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="rrr.." />
-    <row Cells="r@+.." />
-    <row Cells="rb,.." />
-    <row Cells=",,,.." />
+    <glyph Char="p" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="rrrr.," />
+    <row Cells="r@p+.," />
+    <row Cells="rb,,,," />
+    <row Cells=",,,,p," />
   </map>
 
-  <map Key="water-saltterrace-s1" Width="5" Height="4" DefaultCover="open">
+  <map Key="water-saltterrace-s1" Width="6" Height="4" DefaultCover="open">
     <glyph Char="r" Ground="$ground" Structure="$rim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-source" Stateful="yes" />
-    <row Cells="rrr.." />
-    <row Cells="r@+.." />
-    <row Cells="rb,r." />
-    <row Cells="..b+." />
+    <glyph Char="p" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="rrrr.r" />
+    <row Cells="r@p+.r" />
+    <row Cells="rb,,rr" />
+    <row Cells="pp,b+." />
   </map>
 
-  <map Key="water-catchment-s0" Width="5" Height="4" DefaultCover="open">
+
+
+  <map Key="water-catchment-s0" Width="6" Height="4" DefaultCover="open">
     <glyph Char="A" Ground="$ground" Structure="$awning" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="F" Ground="$ground" Structure="$frame" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="AAA.." />
-    <row Cells="F@,.." />
-    <row Cells="Fb+.." />
-    <row Cells=",,,.." />
+    <glyph Char="u" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="AAAAAA" />
+    <row Cells="F@,,,," />
+    <row Cells="Fbu+.." />
+    <row Cells=",,,,,," />
   </map>
 
-  <map Key="water-catchmentbank-s1" Width="5" Height="4" DefaultCover="open">
+  <map Key="water-catchmentbank-s1" Width="6" Height="4" DefaultCover="open">
     <glyph Char="A" Ground="$ground" Structure="$awning" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="F" Ground="$ground" Structure="$frame" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="d" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
@@ -719,10 +797,11 @@
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="A.A.A" />
-    <row Cells="F@,d+" />
-    <row Cells="Ab+,A" />
-    <row Cells="...,," />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="A,,A.A" />
+    <row Cells="F@,,.+" />
+    <row Cells="Abd+,A" />
+    <row Cells="ppp.,," />
   </map>
 
   <map Key="water-airwellcourt-m0" Width="8" Height="6" DefaultCover="open">
@@ -740,34 +819,38 @@
     <row Cells="........" />
   </map>
 
-  <map Key="water-airwellfield-l0" Width="12" Height="9" DefaultCover="open">
+  <map Key="water-airwellfield-l0" Width="12" Height="10" DefaultCover="open">
     <glyph Char="o" Ground="$ground" Structure="$dome" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="t" Ground="$ground" Structure="$trim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$path" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="............" />
-    <row Cells=".ooo.ooo.oo." />
-    <row Cells=".o@o.obo.oo." />
-    <row Cells=".,,,,t,,,,,." />
-    <row Cells=".ooo,ooo,oo." />
-    <row Cells=".o.o,o.o,oo." />
-    <row Cells=".,,,,,,,,,,+" />
-    <row Cells="............" />
-    <row Cells="............" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yypyyyyyyyyy" />
+    <row Cells="yoooyoooyooy" />
+    <row Cells="yo@oyoboyooy" />
+    <row Cells="y,,,,t,,,,,y" />
+    <row Cells="p,,,,t,,,,,y" />
+    <row Cells="yooo,ooo,ooy" />
+    <row Cells="popo,opo,oo." />
+    <row Cells="p,,,,,,,,,,+" />
+    <row Cells="pypypyyyyyyy" />
+    <row Cells="pypypyyyyyyy" />
   </map>
 
-  <map Key="water-weeptap-s0" Width="5" Height="4" DefaultCover="natural">
+  <map Key="water-weeptap-s0" Width="6" Height="4" DefaultCover="natural">
     <glyph Char="#" Ground="$path" Structure="$rock" Claim="building" Pass="blocked" Cover="natural" />
     <glyph Char="+" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="natural" Anchors="entrance:public" />
     <glyph Char="i" Ground="$path" Claim="building" Pass="walk" Cover="natural" Anchors="function:drain" />
     <glyph Char="b" Ground="$path" Object="$basin" Claim="building" Pass="adjacent" Cover="natural" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$path" Object="$building" Claim="building" Pass="walk" Cover="natural" Anchors="main,function:water-source" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#@bi#" />
-    <row Cells="#iii#" />
-    <row Cells="###+#" />
+    <glyph Char="u" Ground="$path" Claim="building" Pass="walk" Cover="natural" />
+    <row Cells="######" />
+    <row Cells="#@ubi#" />
+    <row Cells="#iuii#" />
+    <row Cells="####+#" />
   </map>
 
   <map Key="water-weepgallery-m0" Width="8" Height="6" DefaultCover="natural">
@@ -815,44 +898,55 @@
     <row Cells="###+####" />
   </map>
 
-  <map Key="water-reservoir-l0" Width="12" Height="9" DefaultCover="open">
+  <map Key="water-reservoir-l0" Width="12" Height="10" DefaultCover="open">
     <glyph Char="r" Ground="$ground" Structure="$rim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
-    <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:tap" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$benefit-reservoir-main" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:tap,benefit:reservoir-main" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-storage" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="............" />
-    <row Cells=".rrrrrrrrrr." />
-    <row Cells=".r,,,,,,,,r." />
-    <row Cells=".r,,,,,,,,r." />
-    <row Cells=".r,,,@b,,,r." />
-    <row Cells=".r,,,,,,,,r." />
-    <row Cells=".r,,,,,,,,r." />
-    <row Cells=".rrrrr+rrrr." />
-    <row Cells="............" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="u" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="rrrrrrrrrrrr" />
+    <row Cells="rrrrrrrrrrrr" />
+    <row Cells="rr,,,,,,,,rr" />
+    <row Cells="rr,,,,,,,,rr" />
+    <row Cells="rr,,,,,,,,rr" />
+    <row Cells="rr,,,@b,,,rr" />
+    <row Cells="rr,,,,,,,,rr" />
+    <row Cells="rr,,,,,,,,rr" />
+    <row Cells="rrrrrr+rrrrr" />
+    <row Cells="rrrrrr.rrrrr" />
   </map>
+
+
+
 
   <!-- Wet-bodied service layout: several exterior approaches and a continuous water-edge aisle.
        It places no liquid and mints no drams; reservoir behavior remains water authority. -->
-  <map Key="water-reservoir-wet-l0" Width="12" Height="9" DefaultCover="open">
+  <map Key="water-reservoir-wet-l0" Width="12" Height="10" DefaultCover="open">
     <glyph Char="r" Ground="$ground" Structure="$rim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="~" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="circulation:water-edge" />
-    <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:tap" Stateful="yes" />
+    <glyph Char="b" Ground="$ground" Object="$benefit-reservoir-main" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:tap,benefit:reservoir-main" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-storage" Stateful="yes" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="............" />
-    <row Cells=".rrrrrrrrrr." />
-    <row Cells=".r~~~~~~~~r." />
-    <row Cells=".r~,,,,,,~r." />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="u" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=",pppp,,,,,,," />
+    <row Cells=",rrrrrrrrrr," />
+    <row Cells=",r~~~~~~~~r," />
+    <row Cells=",r~,,,,,,~r," />
+    <row Cells="uuu,,,,,,uuu" />
     <row Cells="+~~,,@b,,~~+" />
     <row Cells=".r~,,,,,,~r." />
-    <row Cells=".r~~~~~~~~r." />
-    <row Cells=".rrrr,,rrrr." />
+    <row Cells="rr~~~~~~~~rr" />
+    <row Cells="rrrrr,,rrrrr" />
     <row Cells=".....++....." />
   </map>
 
-  <map Key="water-waterworks-xl0" Width="20" Height="14" DefaultCover="walled">
+
+
+  <map Key="water-waterworks-xl0" Width="20" Height="18" DefaultCover="walled">
     <glyph Char="#" Ground="$path" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
@@ -861,188 +955,213 @@
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:tap" Stateful="yes" />
     <glyph Char="l" Ground="$path" Object="$light" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$path" Object="$benefit-waterworks-main" Claim="building" Pass="walk" Cover="walled" Stateful="yes" Anchors="benefit:waterworks-main,service:waterworks-gauge" />
     <glyph Char="@" Ground="$path" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:waterworks" Stateful="yes" />
-    <row Cells="...................." />
-    <row Cells=".##################." />
-    <row Cells=".#l#............#l#." />
-    <row Cells=".#i#..rrrrrrrr..#i#." />
-    <row Cells=".#d#..r,,,,,,r..#d#." />
-    <row Cells=".#@#..r,,b,,,r..#i#." />
-    <row Cells=".#i#..r,,,,,,r..#i#." />
-    <row Cells=".#d#..rrr,,rrr..#d#." />
-    <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells=".#,,,,,,,,,,,,,,,,#." />
-    <row Cells=".########d#########." />
-    <row Cells=".........,,........." />
-    <row Cells=".........,.........." />
-    <row Cells=".........+.........." />
+    <glyph Char="p" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="rrrrrrrrrrrrrrrrrrrr" />
+    <row Cells="r##################r" />
+    <row Cells="r#0#,,,,,p,,,,,,#l#r" />
+    <row Cells="r#i#,,,,,p,,,,,,#i#r" />
+    <row Cells="r#i#,,rrrrrrrr,,#i#r" />
+    <row Cells="r#d#,,r,,,,,,r,,#d#r" />
+    <row Cells="r#@#,,r,,b,,,r,,#i#r" />
+    <row Cells="r#i#,,r,,,,,,r,,#i#r" />
+    <row Cells="r#i#,,r,,,,,,r,,#i#r" />
+    <row Cells="r#d#p,rrr,,rrrp,#d#r" />
+    <row Cells="r#,,,,,,,,,,,,,,,,#r" />
+    <row Cells="r#,,,,,,,,,,,,,,,,#r" />
+    <row Cells="r########d#########r" />
+    <row Cells=",,,,,,,p,,,p,pp,,,,r" />
+    <row Cells=",,,,,,,p,,,p,,,,,,,," />
+    <row Cells=",,,,,,,p,,,pp,,,,,,," />
+    <row Cells=",,,,,,,p,+,p,,,,,,,," />
+    <row Cells="r,,,,r,p,.rp,,,r,,,," />
   </map>
 
-  <map Key="water-condensery-xl0" Width="20" Height="14" DefaultCover="walled">
+
+
+  <map Key="water-condensery-xl0" Width="20" Height="18" DefaultCover="walled">
     <glyph Char="K" Ground="$path" Structure="$cold" Claim="building" Pass="blocked" Cover="walled" />
-    <glyph Char="C" Ground="$path" Structure="$cold" Claim="building" Pass="blocked" Cover="walled" Anchors="function:cold-face" />
+    <glyph Char="C" Ground="$path" Structure="$cold" Claim="building" Pass="adjacent" Cover="walled" Anchors="function:cold-face" />
     <glyph Char="#" Ground="$path" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$path" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="," Ground="$path" Claim="building" Pass="walk" Cover="walled" />
-    <glyph Char="b" Ground="$path" Object="$basin" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:tap" Stateful="yes" />
+    <glyph Char="b" Ground="$path" Object="$benefit-condensery-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:tap,benefit:condensery-main" Stateful="yes" />
     <glyph Char="l" Ground="$path" Object="$light" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="@" Ground="$path" Object="$building" Claim="building" Pass="walk" Cover="walled" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="o" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="...................." />
-    <row Cells=".KKKKKKKKKKKKKKKKKK." />
-    <row Cells=".#liiiiiiiiiiiiiil#." />
-    <row Cells=".#iiii#CCCCCC#iiii#." />
-    <row Cells=".#iiii#,,,,,,#iiii#." />
-    <row Cells=".#@iii#,ibii,#iiii#." />
-    <row Cells=".#iiii#,,,,,,#iiii#." />
-    <row Cells=".#iiii####d###iiii#." />
-    <row Cells=".#iiiiiiiiiiiiiiii#." />
-    <row Cells=".#liiiiiiiiiiiiiil#." />
-    <row Cells=".########+#########." />
-    <row Cells=".........o.........." />
-    <row Cells="........ooo........." />
-    <row Cells="........oEo........." />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="yyyyyyyyyyyoyyyyyyyy" />
+    <row Cells="yKKKKKKKKKKKKKKKKKKy" />
+    <row Cells="y#liiiiiiiiiiiiiil#y" />
+    <row Cells="y#iiiiiiiiiiiiiiii#y" />
+    <row Cells="y#iiii#CCCCCC#iiii#y" />
+    <row Cells="y#iiii#,,,,,,#iiii#y" />
+    <row Cells="y#@iii#,ibii,#iiii#y" />
+    <row Cells="y#iiii#,,,,,,#iiii#y" />
+    <row Cells="y#iiii#,,,,,,#iiii#y" />
+    <row Cells="y#iiii####d###iiii#y" />
+    <row Cells="y#iiiiiiiiiiiiiiii#y" />
+    <row Cells="y#liiiiiiiiiiiiiil#y" />
+    <row Cells="y########+#########y" />
+    <row Cells="yyyyyyyyyoyoyoyyyyyy" />
+    <row Cells="yyyyyyyyyoyoyoyyyyyy" />
+    <row Cells="yyyyyyyyooooyoyyyyyy" />
+    <row Cells="yyyyyyyyoEooyoyyyyyy" />
+    <row Cells="yyyyyyyyy.yoyoyyyyyy" />
   </map>
 
   <!-- Selector-authored housing maps. Topology and semantic circulation are part of each style. -->
-  <map Key="housing-hut-verdant-s0" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hut-verdant-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="=" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="circulation:raised" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="crop:court" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#i=h#" />
-    <row Cells="##+##" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#i=#." />
+    <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-hut-fungal-s0" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hut-fungal-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="~" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="circulation:damp-run" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#i~h#" />
-    <row Cells="##+##" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#i~#." />
+    <row Cells="u,s+h." />
   </map>
 
-  <map Key="housing-hut-hindren-s0" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hut-hindren-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="C" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="function:communal-court" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iCh#" />
-    <row Cells="##+##" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#i,#." />
+    <row Cells="C,s+h." />
   </map>
 
-  <map Key="housing-hut-kyakukya-s0" Width="5" Height="4" DefaultCover="open">
+  <map Key="housing-hut-kyakukya-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="M" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="market:stall" />
+    <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#iMh#" />
-    <row Cells="##+##" />
+    <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells=".####." />
+    <row Cells=".#b@#." />
+    <row Cells=".#iu#." />
+    <row Cells="M,s+h." />
   </map>
 
-  <map Key="housing-hutyard-verdant-s1" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hutyard-verdant-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="=" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="circulation:raised" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="crop:court" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,circulation:raised" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:yard-table" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:yard-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#b=h#" />
-    <row Cells="q+###" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="#iu=#." />
+    <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-hutyard-fungal-s1" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hutyard-fungal-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="~" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="circulation:damp-run" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="E" Ground="$floor" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,circulation:damp-run" />
     <glyph Char="t" Ground="$floor" Object="$table" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:yard-table" Stateful="yes" />
     <glyph Char="q" Ground="$floor" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:yard-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#b~h#" />
-    <row Cells="q+###" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="y" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="#iu~#." />
+    <row Cells="q,s+h." />
   </map>
 
-  <map Key="housing-hutyard-hindren-s1" Width="5" Height="4" DefaultCover="soft">
+  <map Key="housing-hutyard-hindren-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="C" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="function:communal-court" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="E" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,function:communal-court" />
     <glyph Char="q" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:court-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bCh#" />
-    <row Cells="q+###" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="#i,C#." />
+    <row Cells="q,s+h." />
   </map>
 
-  <map Key="housing-hutyard-kyakukya-s1" Width="5" Height="4" DefaultCover="open">
+  <map Key="housing-hutyard-kyakukya-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
-    <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
     <glyph Char="M" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="market:stall" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$storage" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="h" Ground="$ground" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
     <glyph Char="E" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,market:stall" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:spice-table" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:market-seat" Stateful="yes" />
-    <row Cells="#####" />
-    <row Cells="#b@s#" />
-    <row Cells="#bMh#" />
-    <row Cells="q+###" />
+    <glyph Char="u" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="#####." />
+    <row Cells="bbb@#." />
+    <row Cells="#i,M#." />
+    <row Cells="q,s+h." />
   </map>
 
   <map Key="housing-house-verdant-m0" Width="8" Height="6" DefaultCover="soft">
@@ -1200,7 +1319,7 @@
     <glyph Char="C" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="function:communal-court" />
     <glyph Char="," Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
-    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$benefit-finehouse-main" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage,benefit:finehouse-main" Stateful="yes" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="c" Ground="$ground" Object="$seat" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="t" Ground="$ground" Object="$table" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:table" Stateful="yes" />
@@ -1219,6 +1338,7 @@
     <glyph Char="t" Ground="$ground" Structure="$trim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="S" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:retained-layer" />
+    <glyph Char="L" Ground="$path" Object="$readout" Claim="building" Pass="adjacent" Cover="open" Anchors="light:retained-machine" Stateful="yes" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$path" Claim="yard" Pass="walk" Cover="open" />
@@ -1226,27 +1346,31 @@
     <row Cells="o@o..obo" />
     <row Cells="o,,,,t,o" />
     <row Cells=".,,,,,,+" />
-    <row Cells="....oS.." />
+    <row Cells="....oSL." />
     <row Cells="........" />
   </map>
 
-  <map Key="water-airwellfield-eater-l0" Width="12" Height="9" DefaultCover="open">
+  <map Key="water-airwellfield-eater-l0" Width="12" Height="10" DefaultCover="open">
     <glyph Char="o" Ground="$ground" Structure="$dome" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="t" Ground="$ground" Structure="$trim" Claim="building" Pass="blocked" Cover="open" />
     <glyph Char="+" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="S" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="service:retained-layer" />
+    <glyph Char="L" Ground="$path" Object="$readout" Claim="building" Pass="adjacent" Cover="open" Anchors="light:retained-machine" Stateful="yes" />
     <glyph Char="b" Ground="$ground" Object="$basin" Claim="building" Pass="adjacent" Cover="open" Anchors="fixture:basin" Stateful="yes" />
     <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="walk" Cover="open" Anchors="main,function:water-source" Stateful="yes" />
     <glyph Char="," Ground="$path" Claim="yard" Pass="walk" Cover="open" />
-    <row Cells="oooo........" />
-    <row Cells="o@oo..ooooo." />
-    <row Cells="o,,,t,o...o." />
-    <row Cells="o,oo,,oo,,o." />
-    <row Cells=".,,,,,,,,,,+" />
-    <row Cells=".ooo,,obooo." />
-    <row Cells="....oS......" />
-    <row Cells="....,,......" />
-    <row Cells="............" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <row Cells="ooooyyyyyyyy" />
+    <row Cells="o@ooyyoooooy" />
+    <row Cells="o,,,t,oyyyoy" />
+    <row Cells="o,oo,,oo,,oy" />
+    <row Cells="p,,,,,,,,,,," />
+    <row Cells="y,,,,,,,,,,+" />
+    <row Cells="pooo,,obooo." />
+    <row Cells="pypyoSLyyyyy" />
+    <row Cells="pypy,,yyyyyy" />
+    <row Cells="pypypyyyyyyy" />
   </map>
 
   <!-- Housing plan bindings. Each catalogue BuildKey appears in one tier only. -->
@@ -1260,7 +1384,7 @@
         <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="tentrow" BuildKey="tentrow" Level="1" Map="housing-tentrow-s1" Palette="housing-canvas-hands">
+      <tier Key="tentrow" BuildKey="tentrow" Level="1" Transition="renovate" Map="housing-tentrow-s1" Palette="housing-canvas-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
@@ -1287,7 +1411,7 @@
         <variant Key="hindren-body" Priority="39" Species="hindren" Map="housing-hut-hindren-s0" Palette="housing-hindren-hands" />
         <variant Key="kyakukya" Priority="50" Creeds="Kyakukya" Map="housing-hut-kyakukya-s0" Palette="housing-fungal-hands" />
       </tier>
-      <tier Key="hutyard" BuildKey="hutyard" Level="1" Map="housing-hutyard-s1" Palette="housing-timber-hands">
+      <tier Key="hutyard" BuildKey="hutyard" Level="1" Transition="renovate" Map="housing-hutyard-s1" Palette="housing-timber-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
@@ -1314,7 +1438,7 @@
         <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="mudhutcourt" BuildKey="mudhutcourt" Level="1" Map="housing-mudcourt-s1" Palette="housing-mud-hands">
+      <tier Key="mudhutcourt" BuildKey="mudhutcourt" Level="1" Transition="renovate" Map="housing-mudcourt-s1" Palette="housing-mud-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
@@ -1335,7 +1459,7 @@
         <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="blockyard" BuildKey="blockyard" Level="1" Map="housing-blockyard-s1" Palette="housing-rubble-hands">
+      <tier Key="blockyard" BuildKey="blockyard" Level="1" Transition="renovate" Map="housing-blockyard-s1" Palette="housing-rubble-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
@@ -1367,6 +1491,8 @@
         <require Role="function:dwelling" Min="1" />
         <require Role="fixture:sleep" Min="1" />
         <require Role="fixture:storage" Min="1" />
+        <require Role="structure:crystal-rib" Min="2" />
+        <require Role="surface:marble-sill" Min="2" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -1416,7 +1542,7 @@
         <variant Key="hindren-body" Priority="39" Species="hindren" Map="housing-house-hindren-m0" Palette="housing-hindren-hands" />
         <variant Key="kyakukya" Priority="50" Creeds="Kyakukya" Map="housing-house-kyakukya-m0" Palette="housing-fungal-hands" />
       </tier>
-      <tier Key="housecourt" BuildKey="housecourt" Level="1" Map="housing-housecourt-m1" Palette="housing-stone-hands">
+      <tier Key="housecourt" BuildKey="housecourt" Level="1" Transition="renovate" Map="housing-housecourt-m1" Palette="housing-stone-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
@@ -1439,7 +1565,8 @@
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:dwelling" Min="1" />
-        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:sleep" Min="4" Max="4" />
+        <require Role="threshold:household" Min="4" Max="4" />
         <require Role="fixture:storage" Min="1" />
         <require Role="fixture:hearth" Min="1" />
         <variant Key="fallback" Priority="0" />
@@ -1545,7 +1672,7 @@
         <require Role="fixture:basin" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="saltterrace" BuildKey="saltterrace" Level="1" Map="water-saltterrace-s1" Palette="water-salt-hands">
+      <tier Key="saltterrace" BuildKey="saltterrace" Level="1" Transition="renovate" Map="water-saltterrace-s1" Palette="water-salt-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:water-source" Min="1" />
@@ -1564,7 +1691,7 @@
         <require Role="fixture:basin" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="catchmentbank" BuildKey="catchmentbank" Level="1" Map="water-catchmentbank-s1" Palette="water-catchment-hands">
+      <tier Key="catchmentbank" BuildKey="catchmentbank" Level="1" Transition="renovate" Map="water-catchmentbank-s1" Palette="water-catchment-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:water-source" Min="1" />
@@ -1635,7 +1762,7 @@
         <require Role="fixture:basin" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
-      <tier Key="cisternvault" BuildKey="cisternvault" Level="1" Map="water-cisternvault-m1" Palette="water-cistern-hands">
+      <tier Key="cisternvault" BuildKey="cisternvault" Level="1" Transition="renovate" Map="water-cisternvault-m1" Palette="water-cistern-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
         <require Role="function:water-storage" Min="1" />

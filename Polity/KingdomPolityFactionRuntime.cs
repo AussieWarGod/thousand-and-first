@@ -1,6 +1,5 @@
 using System;
 using XRL.World;
-using XRL.World.ZoneBuilders;
 
 namespace ThousandAndFirst
 {
@@ -86,10 +85,13 @@ namespace ThousandAndFirst
 				NegativeSound = "Sounds/Reputation/sfx_reputation_village_negative",
 				WaterRitualLiquid = "water"
 			};
+			if (!KingdomFactionEmblemPresentation.TryApply(candidate, candidate.Name))
+			{
+				Failure = "faction emblem projection could not be prepared"; return false;
+			}
 			try
 			{
 				Stamp(candidate, RealmId, View);
-				VillageBase.SetVillageFactionEmblem(candidate, candidate.Name);
 				Factions.AddNewFaction(candidate);
 			}
 			catch (Exception ex)
@@ -141,7 +143,8 @@ namespace ThousandAndFirst
 
 		private static bool ReapplyPresentation(Faction F, KingdomPolityRecord P, bool Hidden)
 		{
-			if (F == null || P == null) return false;
+			if (F == null || P == null ||
+				!KingdomFactionEmblemPresentation.TryApply(F, F.Name)) return false;
 			F.DisplayName = P.DisplayName; F.Visible = !Hidden; F.Old = false;
 			F.ExtradimensionalVersions = false; F.WaterRitualLiquid = Hidden ? null : "water";
 			F.SetProperty(TombstoneProperty, Hidden ? 1 : 0); return true;

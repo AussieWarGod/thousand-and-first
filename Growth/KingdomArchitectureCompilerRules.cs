@@ -21,6 +21,8 @@ namespace ThousandAndFirst
 				|| Request.Palette == null || !ValidBlueprint(Request.BuildingBlueprint)
 				|| !KnownFacing(Request.Facing))
 				return Fail("compile request is incomplete or malformed", out Failure);
+			if (Request.Poses != null && Request.Poses.Count != 0)
+				return Fail("public compile refuses unaudited raw fixture pose declarations", out Failure);
 			ArchitectureBindingDraft binding = Request.Binding;
 			ArchitectureTierDraft tier = Request.Tier;
 			ArchitectureVariantDraft variant = Request.Variant;
@@ -29,6 +31,8 @@ namespace ThousandAndFirst
 			string type = FoldType(binding.TypeKey);
 			if (!ValidKey(binding.Key) || type == null || !KnownLotSize(binding.Size)
 				|| !KnownFrontage(binding.Frontage) || !ValidKey(tier.Key) || !ValidKey(tier.BuildKey)
+				|| !KingdomArchitectureTransitionRules.ValidTierMode(tier.Level,
+					tier.IncomingTransitionMode)
 				|| !ValidKey(tier.MapKey) || !ValidKey(tier.PaletteKey)
 				|| !ValidKey(variant.Key) || !ValidSelector(variant.Selector, out Failure)
 				|| !ValidKey(map.Key) || !ValidKey(palette.Key))
@@ -45,19 +49,30 @@ namespace ThousandAndFirst
 				|| map.Glyphs == null || map.Glyphs.Count > MaxGlyphs
 				|| !KnownCover(map.DefaultCover))
 				return Fail("map dimensions, rows, glyph count, or default cover are invalid", out Failure);
+			if (!TryResolveFootprint(map, Request.CatalogueFootprintWidth,
+				Request.CatalogueFootprintHeight, out int footprintX, out int footprintY,
+				out int footprintWidth, out int footprintHeight, out Failure)) return false;
 			if (!TryPalette(palette, out Dictionary<string, ArchitecturePaletteSlot> slots,
 				out Failure)) return false;
+			ArchitecturePoseRegistry poses = Request.PoseRegistry
+				?? ArchitecturePoseRegistry.Empty;
+			foreach (ArchitecturePaletteSlot slot in slots.Values)
+				if (poses.IsPoisoned(slot.Blueprint))
+					return Fail("selected palette references a malformed fixture pose declaration",
+						out Failure);
 			Dictionary<char, ArchitectureGlyphDraft> glyphs = new Dictionary<char, ArchitectureGlyphDraft>();
 			for (int i = 0; i < map.Glyphs.Count; i++)
 			{
 				ArchitectureGlyphDraft glyph = map.Glyphs[i];
 				if (glyph == null || glyph.Character < '!' || glyph.Character > '~'
 					|| glyph.Character == '.' || glyphs.ContainsKey(glyph.Character)
+					|| (glyph.Claim != ArchitectureClaim.Building
+						&& glyph.Claim != ArchitectureClaim.Yard)
 					|| !KnownPassability(glyph.Passability)
 					|| (glyph.HasCover && !KnownCover(glyph.Cover))
 					|| glyph.Anchors == null || glyph.Anchors.Count > MaxAnchors)
 					return Fail("map has a malformed, reserved, or duplicate glyph", out Failure);
-				if (!TryValidateGlyph(glyph, slots, out Failure)) return false;
+				if (!TryValidateGlyph(glyph, slots, poses, out Failure)) return false;
 				glyphs.Add(glyph.Character, glyph);
 			}
 
@@ -71,11 +86,17 @@ namespace ThousandAndFirst
 				PaletteKey = palette.Key,
 				LotType = type,
 				LotSize = binding.Size,
+				IncomingTransitionMode = tier.IncomingTransitionMode,
 				Facing = Request.Facing,
 				Width = map.Width,
 				Height = map.Height,
 				MainX = -1,
-				MainY = -1
+				MainY = -1,
+				FootprintX = footprintX,
+				FootprintY = footprintY,
+				FootprintWidth = footprintWidth,
+				FootprintHeight = footprintHeight,
+				BaseRoof = Request.CatalogueRoof
 			};
 			HashSet<string> anchorKeys = new HashSet<string>(StringComparer.Ordinal);
 			int buildingCount = 0;
@@ -94,14 +115,14 @@ namespace ThousandAndFirst
 					{
 						X = x,
 						Y = y,
-						Claim = glyph != null && glyph.Claim,
+						Claim = glyph == null ? ArchitectureClaim.Unclaimed : glyph.Claim,
 						Passability = glyph == null ? ArchitecturePassability.Walkable : glyph.Passability,
 						Cover = glyph == null ? ArchitectureCover.Open
 							: (glyph.HasCover ? glyph.Cover : map.DefaultCover)
 					};
 					snapshot.Cells.Add(cell);
 					if (glyph == null) continue;
-					if (!cell.Claim && (HasSceneryToken(glyph.Ground)
+					if (!IsClaimed(cell.Claim) && (HasSceneryToken(glyph.Ground)
 						|| HasSceneryToken(glyph.Structure) || HasSceneryToken(glyph.Object)))
 						return Fail("map places scenery on an unclaimed cell", out Failure);
 
@@ -126,11 +147,14 @@ namespace ThousandAndFirst
 
 					bool hasBuilding = false;
 					if (!TryAddPlacement(snapshot, ArchitectureLayer.Ground, x, y, glyph.Ground,
-						false, cellAnchors, slots, ref hasBuilding, out Failure)
+						glyph.HasGroundOrientation, glyph.GroundOrientation, false, cellAnchors,
+						slots, poses, ref hasBuilding, out Failure)
 						|| !TryAddPlacement(snapshot, ArchitectureLayer.Structure, x, y, glyph.Structure,
-						false, cellAnchors, slots, ref hasBuilding, out Failure)
+							glyph.HasStructureOrientation, glyph.StructureOrientation, false, cellAnchors,
+							slots, poses, ref hasBuilding, out Failure)
 						|| !TryAddPlacement(snapshot, ArchitectureLayer.Object, x, y, glyph.Object,
-						glyph.StatefulObject, cellAnchors, slots, ref hasBuilding, out Failure))
+							glyph.HasObjectOrientation, glyph.ObjectOrientation, glyph.StatefulObject,
+							cellAnchors, slots, poses, ref hasBuilding, out Failure))
 						return false;
 					if (hasBuilding)
 					{
@@ -147,6 +171,7 @@ namespace ThousandAndFirst
 			if (buildingCount != 1) return Fail("map must place exactly one $building", out Failure);
 			if (snapshot.Placements.Count > MaxPlacements || snapshot.Anchors.Count > MaxAnchors)
 				return Fail("compiled placements or anchors exceed the bound", out Failure);
+			if (!TryValidateCurrentFootprint(snapshot, out Failure)) return false;
 			SortSnapshot(snapshot);
 			if (!TryValidateTopology(snapshot, tier.Requirements, out Failure)) return false;
 			if (!TryValidateEnclosure(snapshot, out Failure)) return false;
@@ -182,7 +207,7 @@ namespace ThousandAndFirst
 			{
 				ArchitectureAnchor entrance = entrances[i];
 				ArchitectureCellState cell = cells[CellKey(entrance.X, entrance.Y, Snapshot.Width)];
-				if (!cell.Claim || cell.Passability != ArchitecturePassability.Walkable
+				if (!IsClaimed(cell.Claim) || cell.Passability != ArchitecturePassability.Walkable
 					|| !ClaimBoundary(cells, Snapshot.Width, Snapshot.Height, entrance.X, entrance.Y))
 					return Fail("public entrance is not a walkable claimed boundary cell", out Failure);
 				// New receipts must name a real way through unclaimed authored ground to the lot
@@ -207,7 +232,7 @@ namespace ThousandAndFirst
 					if (x < 0 || x >= Snapshot.Width || y < 0 || y >= Snapshot.Height) continue;
 					int key = CellKey(x, y, Snapshot.Width);
 					ArchitectureCellState cell = cells[key];
-					if (cell.Claim && cell.Passability == ArchitecturePassability.Walkable
+					if (IsClaimed(cell.Claim) && cell.Passability == ArchitecturePassability.Walkable
 						&& reached.Add(key)) frontier.Enqueue(new ArchitecturePoint(x, y));
 				}
 			}

@@ -16,17 +16,34 @@ namespace ThousandAndFirst
 		public static bool TryReadRect(GameObject Object, out KingdomPlotRules.PlotRect Rect)
 		{
 			Rect = default(KingdomPlotRules.PlotRect);
-			if (Object == null)
+			Zone zone = Object == null ? null : Object.CurrentZone;
+			if (zone == null)
 			{
 				return false;
 			}
+			bool x1 = Object.HasIntProperty(PlotX1Property);
+			bool y1 = Object.HasIntProperty(PlotY1Property);
+			bool x2 = Object.HasIntProperty(PlotX2Property);
+			bool y2 = Object.HasIntProperty(PlotY2Property);
+			bool mistyped = Object.HasStringProperty(PlotX1Property)
+				|| Object.HasStringProperty(PlotY1Property)
+				|| Object.HasStringProperty(PlotX2Property)
+				|| Object.HasStringProperty(PlotY2Property);
+			if (mistyped) return false;
+			bool anyProperties = x1 || y1 || x2 || y2;
+			bool allProperties = x1 && y1 && x2 && y2;
 			r_KingdomPlotWorks works = Object.GetPart<r_KingdomPlotWorks>();
 			if (works != null)
 			{
 				Rect = works.Rect();
-				return true;
+				if (anyProperties && (!allProperties
+					|| Object.GetIntProperty(PlotX1Property) != Rect.X1
+					|| Object.GetIntProperty(PlotY1Property) != Rect.Y1
+					|| Object.GetIntProperty(PlotX2Property) != Rect.X2
+					|| Object.GetIntProperty(PlotY2Property) != Rect.Y2)) return false;
+				return KingdomPlotRules.ValidZoneRect(Rect, zone.Width, zone.Height);
 			}
-			if (!Object.HasIntProperty(PlotX2Property))
+			if (!allProperties)
 			{
 				return false;
 			}
@@ -35,7 +52,22 @@ namespace ThousandAndFirst
 				Object.GetIntProperty(PlotY1Property),
 				Object.GetIntProperty(PlotX2Property),
 				Object.GetIntProperty(PlotY2Property));
-			return true;
+			return KingdomPlotRules.ValidZoneRect(Rect, zone.Width, zone.Height);
+		}
+
+		/// <summary>Any persisted plot-coordinate prefix. Used to fail closed when a torn root no
+		/// longer qualifies for the survey's valid-plot index.</summary>
+		internal static bool HasRectEvidence(GameObject Object)
+		{
+			return Object != null && (Object.GetPart<r_KingdomPlotWorks>() != null
+				|| Object.HasIntProperty(PlotX1Property)
+				|| Object.HasIntProperty(PlotY1Property)
+				|| Object.HasIntProperty(PlotX2Property)
+				|| Object.HasIntProperty(PlotY2Property)
+				|| Object.HasStringProperty(PlotX1Property)
+				|| Object.HasStringProperty(PlotY1Property)
+				|| Object.HasStringProperty(PlotX2Property)
+				|| Object.HasStringProperty(PlotY2Property));
 		}
 
 		/// <summary>Every plot already laid out in a zone, finished or still rising. The road
@@ -48,14 +80,11 @@ namespace ThousandAndFirst
 				return plots;
 			}
 			KingdomSurvey survey = KingdomSurvey.Take(Z);
-			for (int i = 0; i < survey.PlotRoots.Count; i++)
-			{
-				GameObject item = survey.PlotRoots[i];
-				if (TryReadRect(item, out var rect))
-				{
-					plots.Add(rect);
-				}
-			}
+			if (TryReadReservedPlots(Z, survey, out plots)) return plots;
+			// Ambiguous handoff geometry is a temporary closed reservation, not free ground. A
+			// full-zone sentinel makes budget, siting, and road wear all refuse until recovery.
+			plots.Clear();
+			plots.Add(new KingdomPlotRules.PlotRect(0, 0, Z.Width - 1, Z.Height - 1));
 			return plots;
 		}
 
@@ -102,14 +131,24 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
-			if (Object.HasIntProperty(FootX2Property))
+			bool x1 = Object.HasIntProperty(FootX1Property);
+			bool y1 = Object.HasIntProperty(FootY1Property);
+			bool x2 = Object.HasIntProperty(FootX2Property);
+			bool y2 = Object.HasIntProperty(FootY2Property);
+			if (Object.HasStringProperty(FootX1Property)
+				|| Object.HasStringProperty(FootY1Property)
+				|| Object.HasStringProperty(FootX2Property)
+				|| Object.HasStringProperty(FootY2Property)) return false;
+			if (x1 || y1 || x2 || y2)
 			{
+				Zone zone = Object.CurrentZone;
+				if (zone == null || !x1 || !y1 || !x2 || !y2) return false;
 				Footprint = new KingdomPlotRules.PlotRect(
 					Object.GetIntProperty(FootX1Property),
 					Object.GetIntProperty(FootY1Property),
 					Object.GetIntProperty(FootX2Property),
 					Object.GetIntProperty(FootY2Property));
-				return true;
+				return KingdomPlotRules.ValidZoneRect(Footprint, zone.Width, zone.Height);
 			}
 			return TryReadRect(Object, out Footprint);
 		}

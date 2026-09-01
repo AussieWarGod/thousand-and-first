@@ -74,6 +74,14 @@ namespace ThousandAndFirst
 			for (int i = 0; i < n; i++)
 			{
 				GameObject work = Works[i];
+				KingdomAdoptionOperationReceipt adopted = null;
+				if ((work.GetIntProperty(KingdomAdopt.AdoptedProperty) == 1
+						|| work.Blueprint == KingdomAdopt.WorkMarkerBlueprint)
+					&& !KingdomAdoptionOperation.TryRead(work, out adopted, out _))
+				{
+					demands[i] = new KingdomCrewRules.CrewDemand(0, false, null, 0, null);
+					continue;
+				}
 				List<KindAmount> needs = NeedsOf(work);
 				string kind = null;
 				int threshold = 0;
@@ -86,13 +94,14 @@ namespace ThousandAndFirst
 					threshold = wanted;
 					break;
 				}
-				string workKind = null;
-				string buildKey = work.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-				if (KingdomData.TryGetBuilding(buildKey, out KingdomRules.BuildEntry entry))
-					workKind = entry.Category;
+				string workKind = adopted?.Category;
+				if (workKind == null && KingdomData.TryGetBuilding(
+					work.GetStringProperty(KingdomUpgrade.BuildKeyProperty),
+					out KingdomRules.BuildEntry entry)) workKind = entry.Category;
 				demands[i] = new KingdomCrewRules.CrewDemand(
-					work.GetIntProperty("KingdomStaffNeeded"),
-					work.GetIntProperty("KingdomThresholdManning") == 1,
+					adopted?.StaffNeeded ?? work.GetIntProperty("KingdomStaffNeeded"),
+					adopted?.ThresholdManning
+						?? work.GetIntProperty("KingdomThresholdManning") == 1,
 					kind, threshold, workKind);
 			}
 			return demands;

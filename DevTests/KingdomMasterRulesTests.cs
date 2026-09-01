@@ -149,7 +149,9 @@ namespace ThousandAndFirst.Tests
 				KingdomCharterAction.CivicKnowledge,
 				KingdomCharterAction.BodyHistory,
 				KingdomCharterAction.GuestFeastRecord,
-				KingdomCharterAction.CivicCommitments
+				KingdomCharterAction.CivicCommitments,
+				KingdomCharterAction.InspectBuildingBenefits,
+				KingdomCharterAction.TrafficRecords
 			};
 			foreach (KingdomCharterAction action in Enum.GetValues(typeof(KingdomCharterAction)))
 				Assert.AreEqual(expected.Contains(action),

@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using XRL;
-using XRL.Language;
 using XRL.Rules;
 using XRL.World;
-using XRL.World.ZoneBuilders;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst
 {
@@ -80,6 +79,11 @@ namespace ThousandAndFirst
 			if (system.Founded)
 			{
 				Faction current = Factions.GetIfExists(system.KingdomFactionName);
+				if (current != null &&
+					!KingdomFactionEmblemPresentation.TryApply(current, current.Name))
+				{
+					return null;
+				}
 				// Ordinary repeated debug calls keep their old idempotent meaning. The sole exception
 				// is an interrupted first founding, whose faction is deliberately marked until the
 				// basin has verified claim, ability, placement, and seal.
@@ -96,8 +100,8 @@ namespace ThousandAndFirst
 				{
 					return null;
 				}
-					return CompleteFirstPublication(system, current, factionId, Name,
-						FoundingZone, RiteCell, TransactionID, Authority);
+				return CompleteFirstPublication(system, current, factionId, Name,
+					FoundingZone, RiteCell, TransactionID, Authority);
 			}
 			if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(TransactionID))
 			{
@@ -127,6 +131,10 @@ namespace ThousandAndFirst
 							KingdomFoundingKind.FirstCity, TransactionID, "chronicle") ||
 					!KingdomFoundingTransaction.RepairPendingFactionRegistry(factionId,
 						TransactionID, Authority))
+				{
+					return null;
+				}
+				if (!KingdomFactionEmblemPresentation.TryApply(faction, faction.Name))
 				{
 					return null;
 				}
@@ -163,7 +171,10 @@ namespace ThousandAndFirst
 				faction.SetProperty(FoundingChronicleDispositionProperty,
 					(int)KingdomChronicleDisposition.None);
 				faction.WaterRitualLiquid = "water";
-				VillageBase.SetVillageFactionEmblem(faction, faction.Name);
+				if (!KingdomFactionEmblemPresentation.TryApply(faction, faction.Name))
+				{
+					return null;
+				}
 				faction.SetFactionFeeling("Player", 100);
 				Factions.AddNewFaction(faction);
 				if (!system.FirstIdentityMatches(TransactionID, FoundingZone.ZoneID) ||
@@ -201,5 +212,33 @@ namespace ThousandAndFirst
 				(!System.Founded || System.KingdomFactionName == Faction.Name);
 		}
 
+	}
+
+	/// <summary>Deterministic TAF faction mark. Qud's village helper always paints Joppa's
+	/// terrain tile; a glyph-only emblem stays visible in tile and text UI without borrowing a
+	/// particular settlement's identity.</summary>
+	internal static class KingdomFactionEmblemPresentation
+	{
+		internal const string Glyph = "Ø";
+
+		internal static bool TryApply(Faction Faction, string Seed)
+		{
+			if (Faction == null || string.IsNullOrEmpty(Seed)) return false;
+			Random random = Stat.GetSeededRandomGenerator(Seed);
+			string foreground = Crayons.GetRandomColorAll(random);
+			if (string.IsNullOrEmpty(foreground)) return false;
+			string detail = Crayons.GetRandomColorExcept(candidate =>
+				string.IsNullOrEmpty(candidate) || candidate[0] == foreground[0], random);
+			if (string.IsNullOrEmpty(detail)) return false;
+
+			FactionEmblem emblem = Faction.Emblem ?? new FactionEmblem();
+			emblem.Tile = null;
+			emblem.RenderString = Glyph;
+			emblem.ColorString = "&" + foreground;
+			emblem.TileColor = emblem.ColorString;
+			emblem.DetailColor = detail[0];
+			Faction.Emblem = emblem;
+			return true;
+		}
 	}
 }

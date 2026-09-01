@@ -31,8 +31,10 @@ namespace ThousandAndFirst
 			Zone zone = cell?.ParentZone;
 			if (system == null || !system.Founded || zone == null
 				|| !ReferenceEquals(gateObject.GetPart<r_KingdomMirrorGate>(), Gate)
-				|| (gateObject.GetIntProperty("KingdomBuilt") != 1
-					&& gateObject.GetIntProperty("KingdomGrid") != 1)) return false;
+				|| (!KingdomUpgrade.IsFunctionallyBuilt(gateObject)
+					&& (gateObject.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(gateObject))))
+				return false;
 			string city = CityOf(system, zone.ZoneID);
 			if (string.IsNullOrEmpty(city) || !KingdomCrown.CrownedHere(system, city)) return false;
 			string key = KingdomMirrorGateRules.ComposeLocationKey(zone.ZoneID, cell.X, cell.Y);
@@ -63,8 +65,9 @@ namespace ThousandAndFirst
 			if (system == null || !system.Founded || zone == null
 				|| !GameObject.Validate(gateObject)
 				|| !ReferenceEquals(gateObject.GetPart<r_KingdomMirrorGate>(), Gate)
-				|| (gateObject.GetIntProperty("KingdomBuilt") != 1
-					&& gateObject.GetIntProperty("KingdomGrid") != 1)
+				|| (!KingdomUpgrade.IsFunctionallyBuilt(gateObject)
+					&& (gateObject.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(gateObject)))
 				|| !GameObject.Validate(Actor) || !Actor.IsPlayer()
 				|| !ReferenceEquals(Actor, The.Player)) return false;
 			string hubCity = CityOf(system, zone.ZoneID);
@@ -117,8 +120,9 @@ namespace ThousandAndFirst
 				|| !GameObject.Validate(gateObject)
 				|| !ReferenceEquals(Gate.ParentObject, gateObject)
 				|| !ReferenceEquals(gateObject.GetPart<r_KingdomMirrorGate>(), Gate)
-				|| (gateObject.GetIntProperty("KingdomBuilt") != 1
-					&& gateObject.GetIntProperty("KingdomGrid") != 1)
+				|| (!KingdomUpgrade.IsFunctionallyBuilt(gateObject)
+					&& (gateObject.GetIntProperty("KingdomGrid") != 1
+						|| r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(gateObject)))
 				|| !ReferenceEquals(currentCell, frozenCell)
 				|| !string.Equals(CityOf(system, currentCell?.ParentZone?.ZoneID), hubCity,
 					StringComparison.OrdinalIgnoreCase)

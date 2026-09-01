@@ -137,11 +137,25 @@ namespace ThousandAndFirst
 		private static bool ValidEndpoint(KingdomPolityEndpointFacts E)
 		{
 			return E != null && KingdomPolityRules.TypedId(E.SettlementId, "taf:settlement:v1:")
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.SettlementName, false)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.ZoneId, false)
 				&& E.Population >= 0 && E.Population <= 10000 && E.Stage >= 0 && E.Stage <= 4
 				&& E.ShopTier >= 0 && E.ShopTier <= 8 && E.KnownStorageSpace >= 0
 				&& Optional(E.GuardCauseRef) && Optional(E.PatrolCauseRef)
 				&& Optional(E.CourierCauseRef) && Optional(E.TraderCauseRef)
-				&& Optional(E.MigrantCauseRef);
+				&& Optional(E.MigrantCauseRef) && Optional(E.PopulationFactRef)
+				&& Optional(E.DeedFactRef) && KingdomPolityAmbientTransactionRules.SafeText(
+					E.DeedSummary, false) && Optional(E.MarketFactRef)
+				&& Optional(E.CapacityFactRef) && OptionalSettlement(E.CourierSourceSettlementId)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.CourierSourceZoneId, false)
+				&& OptionalSettlement(E.TraderSourceSettlementId)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.TraderSourceZoneId, false)
+				&& OptionalSettlement(E.MigrantSourceSettlementId)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.MigrantSourceZoneId, false)
+				&& Optional(E.GuardProtectedLocusRef)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.GuardWitnessDetail, false)
+				&& Optional(E.PatrolConditionLocusRef)
+				&& KingdomPolityAmbientTransactionRules.SafeText(E.PatrolConditionDetail, false);
 		}
 
 		private static bool Eligible(KingdomPolityEndpointFacts E, int Count,
@@ -195,7 +209,14 @@ namespace ThousandAndFirst
 				E.ShopTier.ToString(CultureInfo.InvariantCulture),
 				E.KnownStorageSpace.ToString(CultureInfo.InvariantCulture), E.GuardCauseRef ?? "",
 				E.PatrolCauseRef ?? "", E.CourierCauseRef ?? "", E.TraderCauseRef ?? "",
-				E.MigrantCauseRef ?? "");
+				E.MigrantCauseRef ?? "", E.SettlementName ?? "", E.ZoneId ?? "",
+				E.PopulationFactRef ?? "", E.DeedFactRef ?? "", E.DeedSummary ?? "",
+				E.MarketFactRef ?? "", E.CapacityFactRef ?? "",
+				E.CourierSourceSettlementId ?? "", E.CourierSourceZoneId ?? "",
+				E.TraderSourceSettlementId ?? "", E.TraderSourceZoneId ?? "",
+				E.MigrantSourceSettlementId ?? "", E.MigrantSourceZoneId ?? "",
+				E.GuardProtectedLocusRef ?? "", E.GuardWitnessDetail ?? "",
+				E.PatrolConditionLocusRef ?? "", E.PatrolConditionDetail ?? "");
 		}
 
 		internal static string StoredId(string Prefix, string Domain,
@@ -218,6 +239,12 @@ namespace ThousandAndFirst
 		private static bool Optional(string Value)
 		{
 			return string.IsNullOrEmpty(Value) || KingdomPolityRules.SemanticId(Value);
+		}
+
+		private static bool OptionalSettlement(string Value)
+		{
+			return string.IsNullOrEmpty(Value) || KingdomPolityRules.TypedId(
+				Value, "taf:settlement:v1:");
 		}
 	}
 }

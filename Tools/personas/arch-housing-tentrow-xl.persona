@@ -1,0 +1,6 @@
+# Same-pose canvas growth at maximum scale: wider bay, no cloned shelters or stateful fixtures.
+DESCRIPTION=huge tent-row lot stages for household-growth and yard-composition review
+REQUEST=arch-housing-tentrow-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

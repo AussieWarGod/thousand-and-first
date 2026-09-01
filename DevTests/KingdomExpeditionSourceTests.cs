@@ -72,7 +72,7 @@ namespace ThousandAndFirst.Tests
 		public void ExpeditionLogicalAuthorityKeepsNestedAbiAndMutationOrder()
 		{
 			string source = KingdomExpeditionsLogicalSource.Read();
-			Assert.AreEqual(9, Occurrences(source,
+			Assert.AreEqual(10, Occurrences(source,
 				"public static partial class KingdomExpeditions"));
 			Assert.AreEqual(1, Occurrences(source, "private sealed class ResidentChoice"));
 			Assert.AreEqual(1, Occurrences(source, "private sealed class TargetChoice"));
@@ -324,6 +324,34 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomOrdinaryFoodAuthority.CanSpend(leases, item)", source);
 			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TrySpendNow(item,", source);
 			StringAssert.Contains("ProvisionJobProperty, JobId, out Failure", source);
+		}
+
+		[Test]
+		public void RichFindPublishesExactDeedBeforeJobEviction()
+		{
+			string source = KingdomExpeditionsLogicalSource.Read();
+			int telling = source.IndexOf("private static bool TellAndClose(",
+				StringComparison.Ordinal);
+			int next = source.IndexOf("private static bool TryRecordExpeditionDeed(",
+				telling, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(telling, 0);
+			Assert.Greater(next, telling);
+			string body = source.Substring(telling, next - telling);
+			AssertOrdered(body, "KingdomChronicle.RecordOnce(System, eventId",
+				"TryRecordExpeditionDeed(System, Row, Resolution, eventId",
+				"ledger.NoteExpedition(line);", "current.TryClose(Row.JobId",
+				"System.Jobs.TryPublish(next");
+			StringAssert.Contains("Resolution != KingdomExpeditionOutcome.RichFind", source);
+			StringAssert.Contains("System.SettlementIdForOwnedZone(Row.SourceZoneId)", source);
+			AssertOrdered(source.Substring(next), "TryFindExistingDeedReceipt(ledger",
+				"if (exactRetry) return true;", "TryReadExactDeedResident(System");
+			StringAssert.Contains("matches == 1 && correctBook", source);
+			StringAssert.Contains("book.SettlementId, SettlementId", source);
+			StringAssert.Contains("resident.Standing != KingdomResidentStanding.Resident", source);
+			StringAssert.Contains("resident.BoundZoneId, Row.SourceZoneId", source);
+			StringAssert.Contains("KingdomPolityRules.TryPromoteNamedFigure", source);
+			StringAssert.Contains("KingdomPolityAttentionRules.MaximumActiveNamedFigures", source);
+			StringAssert.DoesNotContain("GameObject.Create", source.Substring(next));
 		}
 
 		private static int Occurrences(string text, string value)

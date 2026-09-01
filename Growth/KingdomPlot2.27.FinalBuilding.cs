@@ -76,7 +76,7 @@ namespace ThousandAndFirst
 				|| !ExpectedArchitectureReceipt(Building, Cell, Entry.Key,
 					Architecture, LegacyArchitecture)) return false;
 			if (Architecture != null
-				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+				&& KingdomArchitectureRules.IsManagedSnapshotEncoding(
 					Architecture.EncodedSnapshot)
 				&& !KingdomArchitectureStamper.TryVerifyComplete(Building, Z, out _)) return false;
 			GameObject exact;

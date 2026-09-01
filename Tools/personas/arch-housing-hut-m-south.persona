@@ -1,0 +1,6 @@
+# Cardinal companion to the North baseline; stages the same exact hut case facing South.
+DESCRIPTION=medium timber hut stages facing south for rotation and circulation review
+REQUEST=arch-housing-hut-m;facing=south
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

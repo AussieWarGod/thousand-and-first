@@ -187,7 +187,6 @@ namespace ThousandAndFirst
 
 		private static bool GrowthScarcitySnapshotShape(KingdomGrowthScarcitySnapshot x)
 		{
-			int provedRations;
 			if (x == null || x.DryStreak < 0 || x.HungerStreak < 0
 				|| !Enum.IsDefined(typeof(KingdomRules.MealVerdict), x.LastMeal)
 				|| x.MealShade < 0
@@ -201,9 +200,6 @@ namespace ThousandAndFirst
 				|| x.RequestedWater < 0 || x.ProvedWater < 0
 				|| x.RequestedRations < 0 || x.ProvedRations < 0
 				|| x.ProvedWater > x.RequestedWater || x.ProvedRations > x.RequestedRations
-				|| x.Foraged > x.RequestedRations
-				|| !CheckedAdd(x.Foraged, x.Eaten, out provedRations)
-				|| x.ProvedRations != Math.Min(x.RequestedRations, provedRations)
 				|| !Enum.IsDefined(typeof(KingdomRules.StoresPolicy), x.StoresPolicy)
 				|| x.DistrictPercent < 0 || x.DistrictPercent > 100
 				|| !Enum.IsDefined(typeof(KingdomGrowthComposedBite), x.ComposedBite)
@@ -211,15 +207,15 @@ namespace ThousandAndFirst
 				|| !Enum.IsDefined(typeof(KingdomGrowthHungerOutcome), x.HungerOutcome))
 				return false;
 			bool thirsting = x.ThirstOutcome != KingdomGrowthThirstOutcome.Sustained;
-			bool starving = x.HungerOutcome != KingdomGrowthHungerOutcome.Fed;
 			bool withering = x.ThirstOutcome == KingdomGrowthThirstOutcome.Withering;
-			bool famishing = x.HungerOutcome == KingdomGrowthHungerOutcome.Famine;
-			KingdomGrowthComposedBite bite = (KingdomGrowthComposedBite)Math.Max(
-				GrowthThirstBite(x.ThirstOutcome), GrowthHungerBite(x.HungerOutcome));
-			bool healthy = !thirsting && !starving;
-			return x.Thirsting == thirsting && x.Starving == starving
-				&& x.Withering == withering && x.Famishing == famishing
-				&& x.Healthy == healthy && x.ComposedBite == bite;
+			KingdomGrowthComposedBite bite = (KingdomGrowthComposedBite)
+				GrowthThirstBite(x.ThirstOutcome);
+			return x.HungerStreak == 0 && !x.Famished && x.MealShade == 0
+				&& !x.ScrapsAnnounced && x.RationsAvailable == 0 && x.Foraged == 0
+				&& x.Eaten == 0 && x.FromDish == 0 && x.RequestedRations == 0
+				&& x.ProvedRations == 0 && x.HungerOutcome == KingdomGrowthHungerOutcome.Fed
+				&& x.Thirsting == thirsting && !x.Starving && x.Withering == withering
+				&& !x.Famishing && x.Healthy == !thirsting && x.ComposedBite == bite;
 		}
 
 		private static bool GrowthScarcityTransitionShape(KingdomGrowthOperation operation,
@@ -250,39 +246,28 @@ namespace ThousandAndFirst
 				int upkeep = KingdomRules.PolicyUpkeepForElapsed(after.Population,
 					after.ElapsedTicks, (KingdomRules.StoresPolicy)after.StoresPolicy, stage);
 				long districtUpkeep = (long)upkeep * after.DistrictPercent / 100L;
-				int rations = KingdomRules.RationsForElapsed(after.Population, after.ElapsedTicks);
 				if (districtUpkeep < 0L || districtUpkeep > int.MaxValue
 					|| after.UpkeepRequested != (int)districtUpkeep
 					|| after.RequestedWater != after.UpkeepRequested
-					|| after.RequestedRations != rations
+					|| after.RequestedRations != 0
 					|| after.ProvedWater > after.WaterAvailable
-					|| after.Eaten > after.RationsAvailable
-					|| after.Eaten > after.RequestedRations - after.Foraged) return false;
+					|| after.Eaten != 0 || after.Foraged != 0) return false;
 			}
 			if (after.Days != KingdomRules.ElapsedDays(after.ElapsedTicks)) return false;
 			bool waterPaid = after.ProvedWater == after.RequestedWater;
-			bool foodPaid = after.ProvedRations == after.RequestedRations;
 			int dryAfter = waterPaid ? 0 : before.DryStreak + 1;
-			int hungerAfter = foodPaid ? 0 : before.HungerStreak + 1;
-			if (dryAfter < 0 || hungerAfter < 0) return false;
+			if (dryAfter < 0) return false;
 			KingdomGrowthThirstOutcome thirst = waterPaid
 				? KingdomGrowthThirstOutcome.Sustained
 				: (KingdomGrowthThirstOutcome)KingdomRules.ResolveThirst(dryAfter,
 					(GrowthStage)after.Stage, after.Population);
-			KingdomGrowthHungerOutcome hunger = foodPaid
-				? KingdomGrowthHungerOutcome.Fed
-				: (KingdomGrowthHungerOutcome)KingdomRules.ResolveHunger(hungerAfter,
-					(GrowthStage)after.Stage, after.Population);
-			KingdomRules.MealVerdict meal = KingdomRules.JudgeMeal(after.RequestedRations,
-				after.FromDish, after.Eaten, after.Kitchens > 0, (GrowthStage)after.Stage);
-			return after.DryStreak == dryAfter && after.HungerStreak == hungerAfter
+			return food == 0 && after.DryStreak == dryAfter && after.HungerStreak == 0
 				&& after.Withered == (!waterPaid && (before.Withered
 					|| thirst == KingdomGrowthThirstOutcome.Withering))
-				&& after.Famished == (!foodPaid && (before.Famished
-					|| hunger == KingdomGrowthHungerOutcome.Famine))
-				&& after.ThirstOutcome == thirst && after.HungerOutcome == hunger
-				&& after.LastMeal == meal && after.MealShade == KingdomRules.MealShadeFor(meal)
-				&& after.ScrapsAnnounced == (meal == KingdomRules.MealVerdict.Scraps);
+				&& !after.Famished && after.ThirstOutcome == thirst
+				&& after.HungerOutcome == KingdomGrowthHungerOutcome.Fed
+				&& after.LastMeal == before.LastMeal && after.MealShade == 0
+				&& !after.ScrapsAnnounced;
 		}
 
 	}

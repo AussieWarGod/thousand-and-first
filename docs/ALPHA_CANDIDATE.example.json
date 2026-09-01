@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "releaseChannel": "v1.0 Alpha",
+  "releaseVersion": "1.0.0",
+  "candidateCommit": "REPLACE_WITH_FULL_PRIVATE_CANDIDATE_COMMIT",
+  "gameMarketingVersion": "1.0.5",
+  "gameCoreBuild": "2.0.211.51",
+  "workshopId": 0,
+  "previewSha256": "REPLACE_WITH_PREVIEW_SHA256",
+  "privatePackageReceiptSha256": "REPLACE_WITH_PRIVATE_PACKAGE_RECEIPT_SHA256"
+}

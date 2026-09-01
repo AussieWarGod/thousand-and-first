@@ -213,7 +213,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("HashSet<int> reservedCrew", freeze);
 			StringAssert.Contains("TryDecodeDefenceReservations", revalidate);
 			StringAssert.Contains("SameDefenceReservations", revalidate);
-			StringAssert.Contains("DefenceOf(work) != frozen.FrozenScore", revalidate);
+			StringAssert.Contains("DefenceOf(work, benefits) != frozen.FrozenScore", revalidate);
+			StringAssert.Contains("survey.TryBenefits(out KingdomBenefitIndex benefits", freeze);
+			StringAssert.Contains("Benefits.AmountForRoot(work.IDIfAssigned, \"defence\")",
+				source);
+			StringAssert.DoesNotContain("work.GetIntProperty(\"KingdomDefence\")", source);
 			StringAssert.Contains("!SameIds(liveCrew, frozen.CrewSemanticIds)", revalidate);
 
 			string crew = Slice(source, "private static bool TryExactDefenceCrew(",

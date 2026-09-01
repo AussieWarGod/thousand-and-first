@@ -194,6 +194,7 @@ namespace ThousandAndFirst
 			{
 				Style = "common";
 			}
+			Style = KingdomStyleRules.MigrateLegacyKey(Style);
 			if (!string.IsNullOrEmpty(Vocation) && !IsKnownVocation(Vocation))
 			{
 				Vocation = NeutralVocation;
@@ -211,21 +212,16 @@ namespace ThousandAndFirst
 			// Read the old field for ABI compatibility, then retire its economy unconditionally.
 			// Optional civic titles cannot grant hidden capacity, including off-seat legacy rows.
 			NotableShade = 0;
-			// The meal shade fails closed the same way and for the same reason: a day's
-			// eating is never a tax, so the worst a bad supper can be worth is nothing.
-			if (MealShade < 0)
-			{
-				MealShade = 0;
-			}
-			// The two scarcity streaks fail closed the same way, and for the same reason: a
-			// negative streak is a corrupt reading, and a ladder cannot owe a settlement rungs.
+			// Retire pre-ruling passive-food state. Fields stay serialized for archive/seat ABI;
+			// values never survive normalization into live behavior.
+			HungerStreak = 0;
+			Famished = false;
+			ScrapsAnnounced = false;
+			MealShade = 0;
+			// Water scarcity remains live; corrupt negative water streaks fail closed.
 			if (DryStreak < 0)
 			{
 				DryStreak = 0;
-			}
-			if (HungerStreak < 0)
-			{
-				HungerStreak = 0;
 			}
 			if (LastFoodWorkTick < 0L)
 			{

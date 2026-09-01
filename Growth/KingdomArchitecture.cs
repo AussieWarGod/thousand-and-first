@@ -59,6 +59,11 @@ namespace ThousandAndFirst
 			public RawMap(string Key, string Origin) : base(Key, Origin) { }
 		}
 
+		private sealed class RawPose : RawRecord
+		{
+			public RawPose(string Blueprint, string Origin) : base(Blueprint, Origin) { }
+		}
+
 		private sealed class RawTier : RawRecord
 		{
 			public readonly Dictionary<string, RawRecord> Requirements =
@@ -89,6 +94,9 @@ namespace ThousandAndFirst
 			public string Category;
 			public bool HasPlot;
 			public ArchitectureLotSize LotSize;
+			public int FootprintWidth;
+			public int FootprintHeight;
+			public KingdomPlotRules.RoofState Roof;
 		}
 
 		private sealed class ResolvedRecord
@@ -96,6 +104,9 @@ namespace ThousandAndFirst
 			public KingdomArchitectureMapping View;
 			public ArchitectureBindingDraft Binding;
 			public ArchitectureTierDraft Tier;
+			public int CatalogueFootprintWidth;
+			public int CatalogueFootprintHeight;
+			public KingdomPlotRules.RoofState CatalogueRoof;
 		}
 
 		private sealed class LoadState
@@ -105,12 +116,15 @@ namespace ThousandAndFirst
 				new Dictionary<string, RawPalette>(StringComparer.Ordinal);
 			public readonly Dictionary<string, RawMap> RawMaps =
 				new Dictionary<string, RawMap>(StringComparer.Ordinal);
+			public readonly Dictionary<string, RawPose> RawPoses =
+				new Dictionary<string, RawPose>(StringComparer.Ordinal);
 			public readonly Dictionary<string, RawPlan> RawPlans =
 				new Dictionary<string, RawPlan>(StringComparer.Ordinal);
 			public readonly Dictionary<string, ArchitecturePaletteDraft> Palettes =
 				new Dictionary<string, ArchitecturePaletteDraft>(StringComparer.Ordinal);
 			public readonly Dictionary<string, ArchitectureMapDraft> Maps =
 				new Dictionary<string, ArchitectureMapDraft>(StringComparer.Ordinal);
+			public ArchitecturePoseRegistry PoseRegistry = ArchitecturePoseRegistry.Empty;
 			public readonly Dictionary<string, ArchitecturePlanDraft> Plans =
 				new Dictionary<string, ArchitecturePlanDraft>(StringComparer.Ordinal);
 			public readonly Dictionary<string, FrozenBuilding> Buildings =

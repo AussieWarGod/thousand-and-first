@@ -67,6 +67,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairHeirName = PendingAccessionRepairHeirName ?? "";
 			PendingAccessionRepairSettlementId = PendingAccessionRepairSettlementId ?? "";
 			PendingAccessionRepairKeptCreeds = PendingAccessionRepairKeptCreeds ?? "";
+			bool legacyRepairSeated = ReadLegacyAccessionRepairSeated();
 			if (PendingAccessionRepairResidentId < 0
 				|| PendingAccessionRepairFounderName.Length > KingdomSealRecord.MaxNameChars
 				|| PendingAccessionRepairHeirName.Length > KingdomSealRecord.MaxNameChars
@@ -74,7 +75,7 @@ namespace ThousandAndFirst
 				|| (PendingAccessionRepairSettlementId.Length != 0 &&
 					!KingdomIdentityRules.IsSettlementId(PendingAccessionRepairSettlementId))
 				|| (PendingAccessionRepairSettlementId.Length != 0 &&
-					PendingAccessionRepairSeated)
+					legacyRepairSeated)
 				|| PendingAccessionRepairArrivedTick < 0L
 				|| (PendingAccessionRepairResidentId != 0
 					&& (string.IsNullOrEmpty(PendingDeathToken)
@@ -88,7 +89,7 @@ namespace ThousandAndFirst
 				PendingAccessionRepairFounderName = "";
 				PendingAccessionRepairHeirName = "";
 				PendingAccessionRepairSettlementId = "";
-				PendingAccessionRepairSeated = false;
+				ClearLegacyAccessionRepairSeated();
 				PendingAccessionRepairArrivedTick = 0L;
 				PendingAccessionRepairKeptCreeds = "";
 			}

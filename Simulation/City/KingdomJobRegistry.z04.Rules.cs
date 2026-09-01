@@ -97,14 +97,45 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		/// <summary>Expedition result grammar is phase-sensitive. Ordinary open work retains its
-		/// frozen salvage draw; only terminal-resolution authority may carry a body-loss outcome.</summary>
+		/// frozen salvage draw; a prepared result may carry any final answer, including recall.</summary>
 		internal static bool ValidExpeditionOutcomeForPhase(int phase, int outcome)
 		{
 			if (phase == (int)KingdomExpeditionPhase.ResolutionPrepared)
-				return outcome >= (int)KingdomExpeditionOutcome.ResidentDiedOnGround
+				return outcome >= (int)KingdomExpeditionOutcome.PickedClean
 					&& outcome <= (int)KingdomExpeditionOutcome.ResidentJoinedFounder;
 			return outcome >= (int)KingdomExpeditionOutcome.PickedClean
 				&& outcome <= (int)KingdomExpeditionOutcome.RichFind;
+		}
+
+		internal static bool ValidExpeditionResultReceipt(KingdomJobRow row)
+		{
+			return ValidExpeditionResultReceipt(row.Kind, row.OriginCode, row.OutcomeCode,
+				row.ExpeditionDeedDisposition, row.ExpeditionDeedPolityId,
+				row.ExpeditionDeedCauseRef, row.ExpeditionDeedFigureRef);
+		}
+
+		internal static bool ValidExpeditionResultReceipt(KingdomJobKind kind, int phase,
+			int outcome, KingdomExpeditionDeedDisposition disposition, string polityId,
+			string causeRef, string figureRef)
+		{
+			bool empty = string.IsNullOrEmpty(polityId) && string.IsNullOrEmpty(causeRef)
+				&& string.IsNullOrEmpty(figureRef);
+			if (kind != KingdomJobKind.Expedition)
+				return disposition == KingdomExpeditionDeedDisposition.Legacy
+					&& empty;
+			if (phase != (int)KingdomExpeditionPhase.ResolutionPrepared)
+				return disposition == KingdomExpeditionDeedDisposition.Legacy
+					&& empty;
+			if (disposition == KingdomExpeditionDeedDisposition.Legacy)
+				return empty && outcome >=
+					(int)KingdomExpeditionOutcome.ResidentDiedOnGround;
+			if (disposition == KingdomExpeditionDeedDisposition.NotApplicable)
+				return empty;
+			return outcome == (int)KingdomExpeditionOutcome.RichFind
+				&& (disposition == KingdomExpeditionDeedDisposition.Promote
+					|| disposition == KingdomExpeditionDeedDisposition.Skip)
+				&& !string.IsNullOrEmpty(polityId) && !string.IsNullOrEmpty(causeRef)
+				&& !string.IsNullOrEmpty(figureRef);
 		}
 
 		internal static bool IsDeliveryPhase(int stored)

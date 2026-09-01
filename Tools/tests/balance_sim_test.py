@@ -24,7 +24,35 @@ class BalanceSimulationTests(unittest.TestCase):
         )
         self.assertEqual(0, completed.returncode, completed.stderr or completed.stdout)
         self.assertIn("Constants read from source:", completed.stdout)
-        self.assertIn("THE MILL CONSERVES", completed.stdout)
+        self.assertIn(
+            "F1  Physical food and explicit-provider acts (author ruling 2026-09-01)",
+            completed.stdout,
+        )
+        self.assertIn("passive ration/forage/hunger rate = 0", completed.stdout)
+        self.assertIn(
+            "population equilibrium/binding = water + roof only; food cannot cause subsidence",
+            completed.stdout,
+        )
+        self.assertIn(
+            "mill conversion = 2 crops x3 -> net 4, matching food:4",
+            completed.stdout,
+        )
+        self.assertIn(
+            "market: current physical provider + exact held office; first service Village/tier 3",
+            completed.stdout,
+        )
+        self.assertIn(
+            "market stock: native TradeUI physical _stock only; generated output/restock = 0",
+            completed.stdout,
+        )
+        self.assertIn(
+            "market custody: detached/personal/foreign goods stay physical; TAF marks retire only",
+            completed.stdout,
+        )
+        self.assertIn(
+            "market succession: only an open prepared handoff endpoint is temporarily unavailable",
+            completed.stdout,
+        )
         self.assertIn("C3  Fully-grafted founder structural stress case", completed.stdout)
         self.assertIn("total bill: 305 drams, 66 staffed days, 12 kept parts", completed.stdout)
         self.assertIn("structural verdict: PASS", completed.stdout)
@@ -98,7 +126,7 @@ class BalanceSimulationTests(unittest.TestCase):
         self.assertIn("uncompressed UTF-8 structural content + conservative per-note framing",
                       completed.stdout)
         self.assertIn("covenant authors <=4094 and accepts <=4096", completed.stdout)
-        self.assertIn("periodic restock rate = 0", completed.stdout)
+        self.assertIn("generated output/restock = 0", completed.stdout)
         self.assertIn("native save size/p50/p95/max: UNSIGNED -- no native distribution is inferred",
                       completed.stdout)
 

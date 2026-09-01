@@ -13,11 +13,10 @@ namespace ThousandAndFirst.Simulation.City
 	public static partial class KingdomCity
 	{
 		/// <summary>
-		/// Consumption anywhere draws on the same rows (&sect;1.2(a)), but a dram is drunk out of a
-		/// particular urn (&sect;3.9). So when the seated zone cannot cover the day the settlement
-		/// is about to be billed for, the city's own water and food are carried in from the zones
-		/// that hold them, oldest dedication first, and those zones owe their vessels the
-		/// difference the next time anybody opens them.
+		/// Water consumption anywhere draws on the same rows (&sect;1.2(a)), but a dram is drunk out
+		/// of a particular urn (&sect;3.9). When the seated zone cannot cover water upkeep, the city's
+		/// own water is carried in from holding zones, oldest dedication first, and those zones owe
+		/// their vessels the difference next time anybody opens them.
 		/// <para>
 		/// Nothing is created here and nothing is destroyed: what leaves a row arrives on another
 		/// row as a debt against real containers, which is exactly what makes I1 hold across the
@@ -36,10 +35,9 @@ namespace ThousandAndFirst.Simulation.City
 				KingdomRules.PolicyUpkeepForElapsed(System.Population, elapsed, System.Stores, System.Stage) - Survey.StoredWater,
 				Survey.StorageSpace,
 				TimeTicks);
-			current = CarryKind(System, Z, current, KingdomStockKind.Food,
-				KingdomRules.RationsForElapsed(System.Population, elapsed) - Survey.FoodAvailable,
-				Survey.FoodSpace,
-				TimeTicks);
+			// Food has no passive elapsed-time demand. Explicit meal, industry, and trade operations
+			// move physical food through their own quoted receipt lanes; city carry must not invent a
+			// destination demand or an owed-container debit for them.
 			return current;
 		}
 

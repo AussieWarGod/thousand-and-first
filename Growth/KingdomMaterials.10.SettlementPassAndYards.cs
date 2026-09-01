@@ -52,7 +52,8 @@ namespace ThousandAndFirst
 				{
 					strike = item;
 				}
-				if (item.GetIntProperty("KingdomBuilt") == 1 && TryRefineryOf(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out _))
+				if (KingdomUpgrade.IsFunctionallyBuilt(item)
+					&& TryRefineryOf(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty), out _))
 				{
 					yards.Add(item);
 				}

@@ -22,7 +22,7 @@ namespace ThousandAndFirst
 			ArchitectureLayoutSnapshot snapshot;
 			string lot;
 			if (Z == null || !TryReadOwner(Owner, out intent, out snapshot, out lot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(intent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(intent.EncodedSnapshot)
 				|| Owner.CurrentZone != Z || Owner.GetIntProperty(NextLayerProperty) != 3)
 			{
 				if (Failure == null) Failure = "authored strike needs one complete exact layout owner";
@@ -85,7 +85,7 @@ namespace ThousandAndFirst
 			string lot;
 			if (!TryReadOwner(Owner, out oldIntent, out oldSnapshot, out lot, out Failure)
 				|| !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot))
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(Intent.EncodedSnapshot))
 				return false;
 			// A true retype is an ordinary fresh siting. Its behavior root is expected to move;
 			// the old owner exists here only to prove the strike set and protected state.

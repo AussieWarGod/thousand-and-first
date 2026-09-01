@@ -81,7 +81,7 @@ namespace ThousandAndFirst
 		/// Draws one arriving settler's creed.
 		/// <para>
 		/// The ordinary settler sits at the bottom of the range, so a roll below
-		/// <see cref="OrdinaryWeight"/> always means "believes nothing in particular" whatever the
+		/// <see cref="OrdinaryWeight"/> always means "holds with nobody in particular" whatever the
 		/// candidates are. Non-positive weights are skipped rather than treated as tiny: a faction
 		/// that dislikes the realm sends nobody, not somebody rarely.
 		/// </para>

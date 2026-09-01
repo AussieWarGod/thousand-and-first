@@ -57,6 +57,14 @@ namespace ThousandAndFirst
 				ExactList(Archived.WaterCosts, Current.WaterCosts) &&
 				ExactList(Archived.ProvisionCosts, Current.ProvisionCosts) &&
 				ExactList(Archived.OutcomeCodes, Current.OutcomeCodes) &&
+				ExactList(Archived.ExpeditionDeedDispositions,
+					Current.ExpeditionDeedDispositions) &&
+				ExactList(Archived.ExpeditionDeedPolityIds,
+					Current.ExpeditionDeedPolityIds) &&
+				ExactList(Archived.ExpeditionDeedCauseRefs,
+					Current.ExpeditionDeedCauseRefs) &&
+				ExactList(Archived.ExpeditionDeedFigureRefs,
+					Current.ExpeditionDeedFigureRefs) &&
 				ExactList(Archived.DeliverySourceEndpointIds,
 					Current.DeliverySourceEndpointIds) &&
 				ExactList(Archived.DeliverySourceObjectIds,
@@ -227,6 +235,10 @@ namespace ThousandAndFirst
 				WriteGraphString(Writer, Value.TargetNames[i]); Writer.Write(Value.DueTicks[i]);
 				Writer.Write(Value.WaterCosts[i]); Writer.Write(Value.ProvisionCosts[i]);
 				Writer.Write(Value.OutcomeCodes[i]);
+				WriteDigestString(Writer, Value.ExpeditionDeedPolityIds[i]);
+				WriteDigestString(Writer, Value.ExpeditionDeedCauseRefs[i]);
+				WriteDigestString(Writer, Value.ExpeditionDeedFigureRefs[i]);
+				Writer.Write(Value.ExpeditionDeedDispositions[i]);
 				Writer.Write(Value.DeliverySourceEndpointIds[i]);
 				WriteGraphString(Writer, Value.DeliverySourceObjectIds[i]);
 				Writer.Write(Value.DeliverySourceXs[i]); Writer.Write(Value.DeliverySourceYs[i]);

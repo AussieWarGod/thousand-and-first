@@ -15,6 +15,8 @@ namespace ThousandAndFirst
 		public string CauseRef;
 		public string ChronicleRef;
 		public string ConclusionRef;
+		/// <summary>Optional bounded player-safe account of the deed behind this figure.</summary>
+		public string DeedSummary;
 		/// <summary>
 		/// Exact bridge to current-realm resident authority. Zero/null means no resident bridge;
 		/// runtime object ids are deliberately not polity authority.

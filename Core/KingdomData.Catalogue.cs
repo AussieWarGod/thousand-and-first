@@ -25,6 +25,9 @@ namespace ThousandAndFirst
 				KingdomUpgrade.TryGetChain(entry.Key, out chain);
 				KingdomPlotRules.PlotSpec spec;
 				KingdomPlots.TryGetSpec(entry.Key, out spec);
+				KingdomPlotRules.PlotSpec successorSpec = null;
+				if (chain != null && !string.IsNullOrEmpty(chain.SuccessorKey))
+					KingdomPlots.TryGetSpec(chain.SuccessorKey, out successorSpec);
 				int declarations = KingdomMergeRules.DeclarationsOf(entry.Key);
 				BuildingDraft design;
 				KingdomMergeRules.TryGetDraft(entry.Key, out design);
@@ -50,6 +53,10 @@ namespace ThousandAndFirst
 					Manning = entry.Manning,
 					Defence = entry.Defence,
 					SuccessorKey = (chain == null) ? null : chain.SuccessorKey,
+					SuccessorEnvelopeGrowth = chain != null && spec != null
+						&& successorSpec != null
+						&& KingdomArchitecture.HasAuthorizedEnvelopeSuccessor(entry.Key,
+							chain.SuccessorKey, entry.Category, spec.Size, successorSpec.Size),
 					// How many files this design is the merge of, so a fault in a layered design says
 					// so and the author knows to look past their own file.
 					Declarations = (declarations < 1) ? 1 : declarations,

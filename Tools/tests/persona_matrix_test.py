@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 import unittest
+import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location(
@@ -29,6 +30,49 @@ GREEN = (
     "SCRIPT=flatten;realize;status\n"
     "EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE\n"
 )
+
+P0_HOUSING_PERSONAS = {
+    "arch-housing-tent-m.persona": "arch-housing-tent-m;facing=north",
+    "arch-housing-hut-m.persona": "arch-housing-hut-m;facing=north",
+    "arch-housing-tentrow-l.persona": "arch-housing-tentrow-l;facing=north",
+    "arch-housing-hutyard-l.persona": "arch-housing-hutyard-l;facing=north",
+    "arch-housing-tent-xl.persona": "arch-housing-tent-xl;facing=north",
+    "arch-housing-tentrow-xl.persona": "arch-housing-tentrow-xl;facing=north",
+    "arch-housing-blockhut-xl.persona": "arch-housing-blockhut-xl;facing=north",
+    "arch-housing-blockyard-xl.persona": "arch-housing-blockyard-xl;facing=north",
+}
+P0_HOUSING_SCRIPT = "flatten;realize;advance 300;frame;status"
+P0_HOUSING_EXPECT = (
+    "flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE"
+)
+
+HUT_CARDINAL_PERSONAS = {
+    "arch-housing-hut-m.persona": "arch-housing-hut-m;facing=north",
+    "arch-housing-hut-m-east.persona": "arch-housing-hut-m;facing=east",
+    "arch-housing-hut-m-south.persona": "arch-housing-hut-m;facing=south",
+    "arch-housing-hut-m-west.persona": "arch-housing-hut-m;facing=west",
+}
+
+NATIVE_GALLERY_PERSONAS = {
+    "arch-civic-hall-m.persona": (
+        "arch-civic-hall-m;facing=north",
+        "architecture,visual,civic,progression,taste",
+    ),
+    "arch-civic-heartmoot-l.persona": (
+        "arch-civic-heartmoot-l;facing=north",
+        "architecture,visual,civic,progression,taste",
+    ),
+    "arch-faith-temple-l.persona": (
+        "arch-faith-temple-l;facing=north",
+        "architecture,visual,faith,progression,taste",
+    ),
+}
+
+NATIVE_GALLERY_CASES = {
+    "arch-civic-hall-m": ("hall", "civic", "m", "fallback"),
+    "arch-civic-heartmoot-l": ("heartmoot", "civic", "l", "fallback"),
+    "arch-faith-temple-l": ("temple", "faith", "l", "fallback"),
+}
 
 
 def row(verb: str, outcome: str, message: str = "-") -> str:
@@ -104,7 +148,15 @@ class ScriptGrammarTest(unittest.TestCase):
         )
 
     def test_unsealable_verb_is_refused(self):
-        for bad in ("capture", "help", "nonsense", "advance", "advance 0", "advance x"):
+        for bad in (
+            "arcology entry",
+            "capture",
+            "help",
+            "nonsense",
+            "advance",
+            "advance 0",
+            "advance x",
+        ):
             with self.assertRaises(SystemExit):
                 matrix.script_words("flatten;" + bad, "x")
 
@@ -117,6 +169,16 @@ class ScriptGrammarTest(unittest.TestCase):
         self.assertEqual(tuple(profile.SCRIPT_VERBS), matrix.SCRIPT_VERBS)
         self.assertEqual(tuple(profile.RESERVED_VERBS), matrix.RESERVED_VERBS)
         self.assertEqual(profile.COUNTED_VERB, matrix.COUNTED_VERB)
+
+    def test_frame_is_a_sealed_argument_free_builtin(self):
+        self.assertEqual(
+            ["flatten", "realize", "advance", "300", "frame", "status"],
+            matrix.script_words(
+                "flatten;realize;advance 300;frame;status", "visual.persona"
+            ),
+        )
+        self.assertIn("frame", profile.SCRIPT_VERBS)
+        self.assertIn("frame", profile.RESERVED_VERBS)
 
 
 class ExtraVerbTest(unittest.TestCase):
@@ -143,6 +205,7 @@ class ExtraVerbTest(unittest.TestCase):
     def test_reserved_and_malformed_names_are_refused(self):
         for bad in (
             "realize",
+            "arcology",
             "capture",
             "Status",
             "my verb",
@@ -157,7 +220,7 @@ class ExtraVerbTest(unittest.TestCase):
         self.assertEqual((), matrix.parse_verbs("", "x"))
 
     def test_profile_tool_refuses_the_same_names(self):
-        for bad in ("realize", "capture", "Status", "my_verb"):
+        for bad in ("realize", "arcology", "capture", "Status", "my_verb"):
             with self.assertRaises(SystemExit):
                 profile.parse_extra_verbs(bad)
         self.assertEqual(("myverb",), profile.parse_extra_verbs("myverb"))
@@ -341,12 +404,111 @@ class ShippedPersonaTest(unittest.TestCase):
     def personas(self):
         return sorted((ROOT / "Tools" / "personas").glob("*.persona"))
 
+    def architecture_scenarios(self):
+        roster = ET.parse(ROOT / "Harness" / "KingdomScenarios.xml").getroot()
+        return {
+            scenario.attrib["Key"]
+            for scenario in roster.findall("scenario")
+            if scenario.attrib.get("Family") == "architecture"
+        }
+
+    def architecture_cases(self):
+        cases = set()
+        for path in sorted((ROOT / "Architecture").glob("KingdomArchitectures-*.xml")):
+            root = ET.parse(path).getroot()
+            for binding in root.findall("./plan/binding"):
+                lot_type = binding.attrib.get("Type", "").lower()
+                lot_size = binding.attrib.get("Size", "").lower()
+                for tier in binding.findall("tier"):
+                    build = tier.attrib.get("BuildKey", "")
+                    for variant in tier.findall("variant"):
+                        cases.add(
+                            (build, lot_type, lot_size, variant.attrib.get("Key", ""))
+                        )
+        return cases
+
     def test_every_persona_parses(self):
-        self.assertGreaterEqual(len(self.personas()), 6)
+        self.assertEqual(56, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
             self.assertTrue(found["SCRIPT_WORDS"])
+
+    def test_p0_housing_personas_freeze_exact_north_cases_and_full_visual_script(self):
+        self.assertEqual(8, len(P0_HOUSING_PERSONAS))
+        self.assertTrue(
+            {request.split(";", 1)[0] for request in P0_HOUSING_PERSONAS.values()}
+            <= self.architecture_scenarios()
+        )
+        for name, request in P0_HOUSING_PERSONAS.items():
+            path = ROOT / "Tools" / "personas" / name
+            self.assertTrue(path.is_file(), name)
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), name)
+            self.assertEqual(request, found["REQUEST"], name)
+            self.assertEqual(P0_HOUSING_SCRIPT, found["SCRIPT"], name)
+            self.assertEqual(P0_HOUSING_EXPECT, found["EXPECT"], name)
+            self.assertEqual(
+                "architecture,visual,housing,progression,taste",
+                found["SET"],
+                name,
+            )
+
+    def test_medium_hut_has_one_exact_persona_per_cardinal_pose(self):
+        self.assertEqual(
+            {"north", "east", "south", "west"},
+            {request.rsplit("=", 1)[1] for request in HUT_CARDINAL_PERSONAS.values()},
+        )
+        for name, request in HUT_CARDINAL_PERSONAS.items():
+            path = ROOT / "Tools" / "personas" / name
+            self.assertTrue(path.is_file(), name)
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), name)
+            self.assertEqual(request, found["REQUEST"], name)
+            self.assertEqual(P0_HOUSING_SCRIPT, found["SCRIPT"], name)
+            self.assertEqual(P0_HOUSING_EXPECT, found["EXPECT"], name)
+            self.assertEqual(
+                "architecture,visual,housing,progression,taste",
+                found["SET"],
+                name,
+            )
+
+    def test_native_gallery_additions_freeze_exact_north_cases(self):
+        self.assertEqual(3, len(NATIVE_GALLERY_PERSONAS))
+        roster = self.architecture_scenarios()
+        for name, (request, tags) in NATIVE_GALLERY_PERSONAS.items():
+            path = ROOT / "Tools" / "personas" / name
+            self.assertTrue(path.is_file(), name)
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), name)
+            self.assertIn(request.split(";", 1)[0], roster, name)
+            self.assertEqual(request, found["REQUEST"], name)
+            self.assertEqual(P0_HOUSING_SCRIPT, found["SCRIPT"], name)
+            self.assertEqual(P0_HOUSING_EXPECT, found["EXPECT"], name)
+            self.assertEqual(tags, found["SET"], name)
+
+    def test_native_gallery_additions_keep_exact_case_and_trust_contracts(self):
+        roster = ET.parse(ROOT / "Harness" / "KingdomScenarios.xml").getroot()
+        for key, expected_case in NATIVE_GALLERY_CASES.items():
+            scenario = roster.find("scenario[@Key='%s']" % key)
+            self.assertIsNotNone(scenario, key)
+            self.assertEqual("architecture", scenario.attrib.get("Family"), key)
+            self.assertEqual(
+                "architecture-stamper", scenario.attrib.get("AuthorityClass"), key
+            )
+            self.assertEqual("false", scenario.attrib.get("Synthetic"), key)
+            self.assertEqual("anchor-" + key, scenario.attrib.get("AnchorId"), key)
+            parameter = scenario.find("param")
+            self.assertIsNotNone(parameter, key)
+            self.assertEqual(
+                {"Name": "facing", "Domain": "north|east|south|west"},
+                parameter.attrib,
+                key,
+            )
+            stage = scenario.find("step[@Verb='StageGalleryCase']")
+            self.assertIsNotNone(stage, key)
+            actual_case = tuple(
+                stage.attrib[name] for name in ("Build", "Type", "Size", "Variant")
+            )
+            self.assertEqual(expected_case, actual_case, key)
+            self.assertEqual("{facing}", stage.attrib.get("Facing"), key)
 
     def test_every_persona_script_is_sealable_by_the_profile_tool(self):
         for path in self.personas():
@@ -375,6 +537,44 @@ class ShippedPersonaTest(unittest.TestCase):
             # sealed verbs - never a different list, and never longer.
             self.assertLessEqual(len(expected), len(sealed), path.name)
             self.assertEqual(sealed[: len(expected)], expected, path.name)
+
+    def test_every_architecture_persona_names_a_roster_scenario(self):
+        roster = self.architecture_scenarios()
+        for path in self.personas():
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+            if "architecture" not in found["SET"].split(","):
+                continue
+            scenario = found["REQUEST"].split(";", 1)[0]
+            self.assertIn(scenario, roster, path.name)
+
+    def test_every_architecture_scenario_has_native_visual_coverage(self):
+        covered = set()
+        for path in self.personas():
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+            tags = found["SET"].split(",")
+            if "architecture" in tags and "visual" in tags:
+                covered.add(found["REQUEST"].split(";", 1)[0])
+        # The generic tent slice predates visual tagging but its four cardinal personas are still
+        # native captures; every dossier-specific scenario must opt into the visual set directly.
+        covered.add("arch-gallery-slice")
+        self.assertEqual(set(), self.architecture_scenarios() - covered)
+
+    def test_every_architecture_scenario_freezes_a_real_gallery_case(self):
+        catalogue = self.architecture_cases()
+        roster = ET.parse(ROOT / "Harness" / "KingdomScenarios.xml").getroot()
+        for scenario in roster.findall("scenario"):
+            if scenario.attrib.get("Family") != "architecture":
+                continue
+            stage = scenario.find("step[@Verb='StageGalleryCase']")
+            self.assertIsNotNone(stage, scenario.attrib["Key"])
+            case = (
+                stage.attrib.get("Build", ""),
+                stage.attrib.get("Type", "").lower(),
+                stage.attrib.get("Size", "").lower(),
+                stage.attrib.get("Variant", ""),
+            )
+            self.assertIn(case, catalogue, scenario.attrib["Key"])
+            self.assertEqual("{facing}", stage.attrib.get("Facing"))
 
 
 if __name__ == "__main__":

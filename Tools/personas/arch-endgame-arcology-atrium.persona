@@ -1,0 +1,6 @@
+# Atrium taste proof. Multi-zone traversal is separate; this capture judges hierarchy and density.
+DESCRIPTION=hosted arcology atrium stages for native density and hierarchy review
+REQUEST=arch-endgame-arcology-atrium;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame,taste

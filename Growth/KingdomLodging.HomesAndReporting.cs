@@ -13,32 +13,84 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomLodging
 	{
-		private static List<GameObject> HousingIn(Zone Z)
+		private static bool TryBenefitIndex(Zone Z, KingdomSurvey Survey,
+			out KingdomBenefitIndex Benefits, out string Failure)
+		{
+			Benefits = null;
+			Failure = null;
+			if (Z == null)
+			{
+				Failure = "lodging has no loaded ground";
+				return false;
+			}
+			Survey = Survey ?? KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			if (Survey == null || !ReferenceEquals(Survey.Ground, Z))
+			{
+				Failure = "lodging has no exact current-ground survey";
+				return false;
+			}
+			return Survey.TryBenefits(out Benefits, out Failure);
+		}
+
+		private static void LogBenefitFailure(Zone Z, string Context, string Failure)
+		{
+			KingdomLog.Log("Lodging " + Context + " refused physical benefits in "
+				+ (Z?.ZoneID ?? "<no-zone>") + ": " + (Failure ?? "unknown failure"));
+		}
+
+		internal static bool TryHomeReading(GameObject Home, KingdomBenefitIndex Benefits,
+			out KingdomBenefitReading Reading, out string PlotId)
+		{
+			Reading = null;
+			PlotId = null;
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Home) || Benefits == null
+				|| string.IsNullOrEmpty(Home.IDIfAssigned)) return false;
+			Reading = Benefits.ReadingForRoot(Home.IDIfAssigned);
+			PlotId = Home.GetStringProperty(KingdomPlots.PlotIdProperty);
+			return Reading?.Designation != null
+				&& string.Equals(Reading.Designation.RootId, Home.IDIfAssigned,
+					StringComparison.Ordinal)
+				&& string.Equals(Reading.Designation.ZoneId, Home.CurrentZone?.ZoneID,
+					StringComparison.Ordinal)
+				&& !string.IsNullOrEmpty(Reading.Designation.Identity)
+				&& !string.IsNullOrEmpty(PlotId)
+				&& string.Equals(Reading.Designation.LotId, PlotId, StringComparison.Ordinal)
+				&& Reading.Designation.Cells.Count > 0;
+		}
+
+		internal static int RoofCapacity(GameObject Home, KingdomBenefitIndex Benefits)
+		{
+			return TryHomeReading(Home, Benefits, out _, out _)
+				? Benefits.AmountForRoot(Home.IDIfAssigned, "roof") : 0;
+		}
+
+		private static string[] HomeTags(GameObject Home, KingdomBenefitIndex Benefits)
+		{
+			return TryHomeReading(Home, Benefits, out _, out _)
+				? Benefits.TagsForRoot(Home.IDIfAssigned) : new string[0];
+		}
+
+		private static string HomeBuildingKey(GameObject Home, KingdomBenefitIndex Benefits)
+		{
+			return TryHomeReading(Home, Benefits, out KingdomBenefitReading reading, out _)
+				? reading.Designation.BuildingKey : null;
+		}
+
+		private static List<GameObject> HousingIn(Zone Z, KingdomBenefitIndex Benefits)
 		{
 			List<GameObject> list = new List<GameObject>();
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
-				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
-				{
-					continue;
-				}
-				if (string.IsNullOrEmpty(item.GetStringProperty(KingdomPlots.PlotIdProperty)))
-				{
-					continue;
-				}
-				KingdomRules.BuildEntry entry;
-				if (!TryGetBuiltEntry(item, out entry) || RoofCapacity(entry) <= 0)
-				{
-					continue;
-				}
+				if (RoofCapacity(item, Benefits) <= 0) continue;
 				list.Add(item);
 			}
 			return list;
 		}
 
-		private static bool TryGetBuiltEntry(GameObject Work, out KingdomRules.BuildEntry Entry)
+		private static bool TryGetBuiltEntry(GameObject Work, KingdomBenefitIndex Benefits,
+			out KingdomRules.BuildEntry Entry)
 		{
-			string key = KingdomUpgrade.DesignKeyOf(Work);
+			string key = HomeBuildingKey(Work, Benefits);
 			if (string.IsNullOrEmpty(key))
 			{
 				Entry = null;
@@ -47,40 +99,28 @@ namespace ThousandAndFirst
 			return KingdomData.TryGetBuilding(key, out Entry);
 		}
 
-		// The rung this design's own arithmetic puts it on, or the one its author declared. The
-		// footprint is the ground the TIER stands on -- KingdomPlotRules.TryFootprint answers with
-		// the whole plot for a tier that declares no footprint of its own, which is exactly right:
-		// the stone house fills its plot and the tent does not. A design with no plot spec at all is
-		// a single-cell work with a bunk in it, and reads Packed, which is what one cell is.
-		private static KingdomLodgingRules.Closeness QuartersOf(KingdomRules.BuildEntry Entry)
+		// Trusted architecture may declare a rung. Every adopted or foreign designation instead
+		// derives it from exact designated plot cells and this root's live physical roof capacity;
+		// an identity string or borrowed catalogue key never grants authored geometry.
+		private static KingdomLodgingRules.Closeness QuartersOf(GameObject Home,
+			KingdomBenefitIndex Benefits)
 		{
-			if (Entry == null)
+			if (!TryHomeReading(Home, Benefits, out KingdomBenefitReading reading, out _))
 			{
 				return KingdomLodgingRules.Closeness.Packed;
 			}
 			KingdomLodgingRules.Closeness declared;
-			if (Declared.TryGetValue(Entry.Key, out declared))
+			if (string.Equals(reading.Designation.ProviderId, "taf.architecture",
+				StringComparison.Ordinal)
+				&& Declared.TryGetValue(reading.Designation.BuildingKey, out declared))
 			{
 				return declared;
 			}
-			KingdomPlotRules.PlotSpec spec;
-			int width;
-			int height;
-			int cells = (KingdomPlots.TryGetSpec(Entry.Key, out spec) && KingdomPlotRules.TryFootprint(spec, out width, out height))
-				? (width * height)
-				: 0;
-			return KingdomLodgingRules.ClosenessFromDensity(cells, RoofCapacity(Entry));
-		}
-
-		private static int RoofCapacity(KingdomRules.BuildEntry Entry)
-		{
-			if (Entry == null)
-			{
-				return 0;
-			}
-			List<KindAmount> carries;
-			KingdomCatalogueRules.TryParseTally(Entry.Carries, out carries, out _);
-			return KingdomCatalogueRules.AmountOf(carries, KingdomCatalogueRules.SupportRoof);
+			int cells = 0;
+			for (int i = 0; i < reading.Designation.Cells.Count; i++)
+				if ((reading.Designation.Cells[i].Use & KingdomBenefitCellUse.Plot) != 0) cells++;
+			return KingdomLodgingRules.ClosenessFromDensity(cells,
+				Benefits.AmountForRoot(Home.IDIfAssigned, "roof"));
 		}
 
 		private static GameObject FindResidentByName(Zone Z, string ResidentName)
@@ -101,7 +141,8 @@ namespace ThousandAndFirst
 			return null;
 		}
 
-		private static GameObject HomeOf(Zone Z, GameObject Resident)
+		private static GameObject HomeOf(Zone Z, GameObject Resident,
+			KingdomBenefitIndex Benefits)
 		{
 			if (Z == null || Resident == null)
 			{
@@ -112,9 +153,10 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
+			foreach (GameObject item in HousingIn(Z, Benefits))
 			{
-				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId && item.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1)
+				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == plotId
+					&& !IsCondemned(item))
 				{
 					return item;
 				}
@@ -133,15 +175,22 @@ namespace ThousandAndFirst
 			{
 				return "";
 			}
-			GameObject home = HomeOf(Z, resident);
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string failure))
+			{
+				LogBenefitFailure(Z, "roll", failure);
+				return " {{r|(lodging evidence unavailable)}}";
+			}
+			GameObject home = HomeOf(Z, resident, benefits);
 			if (home == null)
 			{
 				return (resident.GetIntProperty(UnhousedAnnouncedProperty) == 1) ? " {{r|(sleeps in the open)}}" : "";
 			}
 			KingdomRules.BuildEntry entry;
-			TryGetBuiltEntry(home, out entry);
+			TryGetBuiltEntry(home, benefits, out entry);
 			List<string> needs = new List<string>(KingdomQol.ProfileOf(resident).Needs);
-			string matched = KingdomLodgingRules.MatchedTag(needs, (entry == null) ? null : new List<string>(KingdomQol.OfferOf(entry.Key, Z)));
+			string matched = KingdomLodgingRules.MatchedTag(needs,
+				new List<string>(HomeTags(home, benefits)));
 			return " {{K|(" + KingdomLodgingRules.HomeSuffix((entry != null) ? entry.Name : null, matched) + ")}}";
 		}
 
@@ -160,12 +209,18 @@ namespace ThousandAndFirst
 			{
 				return "";
 			}
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string failure))
+			{
+				LogBenefitFailure(Z, "dump", failure);
+				return "\nLodging: physical evidence unavailable (" + failure + ")";
+			}
 			int housed = 0;
 			List<string> sleepingOpen = new List<string>();
 			for (int i = 0; i < residents.Count; i++)
 			{
 				GameObject resident = residents[i];
-				if (!string.IsNullOrEmpty(resident.GetStringProperty(HomePlotIdProperty)))
+				if (HomeOf(Z, resident, benefits) != null)
 				{
 					housed++;
 					continue;

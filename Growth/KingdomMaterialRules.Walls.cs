@@ -53,7 +53,8 @@ namespace ThousandAndFirst
 			case "fungal":
 				Material = KingdomMaterial.Timber;
 				return true;
-			case "gyre":
+			case "moonstair":
+			case "gyre": // pre-v1 save/mod alias
 				Material = KingdomMaterial.Marble;
 				return true;
 			case "eater":

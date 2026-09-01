@@ -26,6 +26,7 @@ namespace ThousandAndFirst
 					!Defined((byte)f.Origin, 7) || f.Origin == KingdomPolityFigureOrigin.None ||
 					!Defined((byte)f.Phase, 5) || !SemanticId(f.CauseRef) ||
 					!OptionalId(f.ChronicleRef) || !OptionalId(f.ConclusionRef) ||
+					!KingdomPolityAmbientTransactionRules.SafeText(f.DeedSummary, false) ||
 					!ValidResidentBridge(f))
 					return Fail("named figure is invalid or noncanonical", out Failure);
 				previous = f.FigureId;

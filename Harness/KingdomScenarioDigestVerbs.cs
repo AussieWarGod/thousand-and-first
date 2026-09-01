@@ -52,7 +52,7 @@ namespace ThousandAndFirst.Harness
 
 		/// <summary>
 		/// Water and food state. The settlement-wide streaks and population come from the system;
-		/// the stored/open water and daily food figures are read from the ground under the player,
+		/// stored/open water and physical pantry figures are read from ground under player,
 		/// exactly as <c>kingdom:dump</c> reads them, because water sits in real vessels in a real
 		/// zone. With no player zone those three figures cover no ground and honestly read zero.
 		/// </summary>
@@ -65,19 +65,23 @@ namespace ThousandAndFirst.Harness
 			Zone zone = player == null ? null : player.CurrentZone;
 			int stored = zone == null ? 0 : KingdomGrowth.CountStoredWater(zone);
 			int open = zone == null ? 0 : KingdomGrowth.CountOpenWater(zone);
-			int made = zone == null
-				? 0 : KingdomGrowth.FoodMadePerDay(KingdomSurvey.Take(zone, system));
+			KingdomSurvey survey = zone == null ? null : KingdomSurvey.Take(zone, system);
+			int food = survey == null ? 0 : survey.FoodStored;
+			int foodCapacity = survey == null ? 0 : survey.FoodCapacity;
+			int kitchens = survey == null ? 0 : KingdomCapabilityRuntime.Count(zone, survey,
+				KingdomBenefitCapabilities.Cooking, "scenario meal");
 			StringBuilder sb = new StringBuilder(Header("resource"));
 			sb.Append("\nfounded=true")
 				.Append("\nstoredwater=").Append(stored)
 				.Append("\nopenwater=").Append(open)
-				.Append("\nfoodperday=").Append(made)
-				.Append("\nhungerstreak=").Append(system.HungerStreak)
+				.Append("\nfoodstored=").Append(food)
+				.Append("\nfoodcapacity=").Append(foodCapacity)
+				.Append("\ncookingproviders=").Append(kitchens)
 				.Append("\ndrystreak=").Append(system.DryStreak)
 				.Append("\npopulation=").Append(system.Population);
 			sb.Append(zone == null
-				? "\nNo player zone; the water and food figures above cover no ground."
-				: "\nWater and food figures read from " + zone.ZoneID + ".");
+				? "\nNo player zone; resource figures above cover no ground."
+				: "\nWater and physical pantry figures read from " + zone.ZoneID + ".");
 			return sb.ToString();
 		}
 

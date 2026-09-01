@@ -13,7 +13,7 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// Whether a staffed knowledge building stands in this zone right now. The one fact the
+		/// Whether a live staffed education provider stands in a correct designation right now. The one fact the
 		/// cohabitation and osmosis ladders need; neither is told which building or which creed,
 		/// because education softens the whole zone's grudge rather than taking a side in it.
 		/// </summary>
@@ -24,23 +24,8 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
-			foreach (GameObject item in survey.Built)
-			{
-				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1 || item.GetIntProperty(StaffedProperty) != 1)
-				{
-					continue;
-				}
-				string key = item.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out KingdomRules.BuildEntry entry))
-				{
-					continue;
-				}
-				if (KingdomFaithRules.IsEducationCategory(entry.Category))
-				{
-					return true;
-				}
-			}
-			return false;
+			return KingdomCapabilityRuntime.Roots(Z, survey,
+				KingdomBenefitCapabilities.Education, "education").Count > 0;
 		}
 
 		/// <summary>
@@ -116,6 +101,10 @@ namespace ThousandAndFirst
 				return;
 			}
 			List<string> candidates = KingdomCreed.Candidates(System);
+			candidates.RemoveAll(delegate(string creed)
+			{
+				return !KingdomData.CreedUsesTheology(creed);
+			});
 			if (candidates.Count == 0)
 			{
 				Popup.Show("The realm has dealt with nobody yet that it could consecrate a shrine to. Standings come first.");
@@ -155,25 +144,9 @@ namespace ThousandAndFirst
 
 		private static List<GameObject> FaithBuildingsIn(Zone Z)
 		{
-			List<GameObject> found = new List<GameObject>();
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
-			foreach (GameObject item in survey.Built)
-			{
-				if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
-				{
-					continue;
-				}
-				string key = item.GetStringProperty(KingdomUpgrade.BuildKeyProperty);
-				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out KingdomRules.BuildEntry entry))
-				{
-					continue;
-				}
-				if (KingdomFaithRules.CanConsecrate(entry.Category))
-				{
-					found.Add(item);
-				}
-			}
-			return found;
+			return KingdomCapabilityRuntime.Roots(Z, survey,
+				KingdomBenefitCapabilities.Shrine, "consecration");
 		}
 	}
 }

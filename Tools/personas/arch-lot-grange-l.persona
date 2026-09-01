@@ -1,0 +1,7 @@
+# Representative transformative successor: the field becomes a functional grange by the authored
+# renovate-and-expand route; this stages the exact large successor map for native review.
+DESCRIPTION=large grange successor stages with threshing storage and loading functions
+REQUEST=arch-lot-grange-l;facing=east
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,progression

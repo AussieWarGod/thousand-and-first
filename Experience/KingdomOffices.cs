@@ -54,8 +54,16 @@ namespace ThousandAndFirst
 				Simulation.City.KingdomStandingCause standingCause =
 					(Simulation.City.KingdomStandingCause)((int)cause
 						+ (int)Simulation.City.KingdomStandingCause.Unwitnessed);
-				if (!Simulation.City.KingdomResidents.TryMarkDead(system, Citizen, standingCause,
-					out Simulation.City.KingdomResidentRow former)) return;
+				bool marked = Simulation.City.KingdomResidents.TryMarkDead(system, Citizen,
+					standingCause, out Simulation.City.KingdomResidentRow former);
+				if (!marked && former.Standing !=
+					Simulation.City.KingdomResidentStanding.Dead) return;
+				if (!KingdomPolityResidentTransition.TryConclude(system, Citizen,
+					former.ResidentId, KingdomPolityResidentTransitionCause.Death,
+					out KingdomPolityResidentTransitionPreparation _, out string polityFailure))
+					KingdomLog.Log("polity: dead deed-figure conclusion waits ("
+						+ (polityFailure ?? "unknown failure") + ")");
+				if (!marked) return;
 				if (!witnessed || !TryRecordRemembranceEligibility(system, witness, former, tick,
 					out witnessFailure)) ReportRemembranceWitnessFailure(witnessFailure);
 					if (!KingdomOfficeRuntime.ObserveHolderLoss(system, Citizen,

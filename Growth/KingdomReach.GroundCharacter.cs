@@ -25,26 +25,30 @@ namespace ThousandAndFirst
 		public static GroundCharacter CharacterAt(KingdomSystem System, Zone Z, int X, int Y)
 		{
 			List<KindAmount> lifts = new List<KindAmount>();
-			if (Z != null)
+			KingdomSurvey survey = Z == null ? null
+				: KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			if (TryActiveBenefits(Z, survey, "ground character", out var benefits))
 			{
 				List<KingdomLayoutRules.LayoutMark> marks = MarksOf(Z);
-				foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
+				IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+				for (int i = 0; i < readings.Count; i++)
 				{
-					if (item.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
+					KingdomBenefitReading reading = readings[i];
+					if (!TryRoot(Z, reading, out GameObject item))
 					{
 						continue;
 					}
-					KingdomRules.BuildEntry entry;
-					string key = KingdomUpgrade.DesignKeyOf(item);
-					if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
+					bool ours = reading.Designation.ProviderId == "taf.architecture"
+						|| reading.Designation.ProviderId == "taf.adoption";
+					if (ours && !KingdomUpgrade.IsFunctionallyBuilt(item))
 					{
 						continue;
 					}
-					if (!CoversWithin(item, marks, X, Y))
+					if (!CoversWithin(item, reading, marks, X, Y))
 					{
 						continue;
 					}
-					Gather(lifts, entry, item);
+					Gather(lifts, item, reading);
 				}
 			}
 			// Everything standing HERE has just been counted from the ground itself, so the
@@ -64,15 +68,15 @@ namespace ThousandAndFirst
 
 		// The same-zone half of RelationOf, kept separate so a whole-zone sweep reads the marks
 		// once instead of once per work.
-		private static bool CoversWithin(GameObject Work, List<KingdomLayoutRules.LayoutMark> Marks, int X, int Y)
+		private static bool CoversWithin(GameObject Work, KingdomBenefitReading Reading,
+			List<KingdomLayoutRules.LayoutMark> Marks, int X, int Y)
 		{
-			ReachBand band = EffectiveBandOf(Work);
+			ReachBand band = EffectiveBandOf(Work, Reading);
 			if (band >= ReachBand.Zone)
 			{
 				return true;
 			}
-			KingdomPlotRules.PlotRect footprint;
-			if (KingdomPlots.TryReadFootprint(Work, out footprint) && footprint.Contains(X, Y))
+			if (KingdomReachRules.ContainsPlotCell(Reading.Designation.Cells, X, Y))
 			{
 				return true;
 			}
@@ -81,8 +85,12 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Cell cell = Work.CurrentCell;
-			return cell != null && KingdomReachRules.InQuarter(Marks, cell.X, cell.Y, X, Y,
-				KingdomReachRules.QuarterLinkCells, QuarterRadiusOf(Work));
+			int preferredX = cell == null ? int.MinValue : cell.X;
+			int preferredY = cell == null ? int.MinValue : cell.Y;
+			return KingdomReachRules.TryDesignationAnchor(Reading.Designation.Cells,
+				preferredX, preferredY, out int anchorX, out int anchorY)
+				&& KingdomReachRules.InQuarter(Marks, anchorX, anchorY, X, Y,
+					KingdomReachRules.QuarterLinkCells, QuarterRadiusOf(Work, Reading));
 		}
 
 		/// <summary>
@@ -103,13 +111,24 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		/// <summary>Whether a staffed knowledge work reaches this home &mdash; the re-based form
+		/// <summary>Whether a live education provider in its exact designation reaches this home &mdash; the re-based form
 		/// of <c>KingdomFaith.ZoneEducated</c>. A home standing nowhere is reached by
 		/// nothing.</summary>
 		public static bool EducatedAt(KingdomSystem System, Zone Z, GameObject Home)
 		{
 			Cell cell = (Home == null) ? null : Home.CurrentCell;
-			return cell != null && ShadedAt(System, Z, cell.X, cell.Y, LearningSupport);
+			if (cell == null || !TryActiveBenefits(Z, null, "education reach",
+				out KingdomBenefitIndex benefits)) return false;
+			IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+			for (int i = 0; i < readings.Count; i++)
+			{
+				KingdomBenefitReading reading = readings[i];
+				if (KingdomBenefitCapabilities.Has(reading,
+					KingdomBenefitCapabilities.Education)
+					&& TryRoot(Z, reading, out GameObject root)
+					&& ReachesCell(System, Z, root, reading, Z, cell.X, cell.Y)) return true;
+			}
+			return false;
 		}
 
 		/// <summary>One line for the status report naming what shades the ground the founder is
@@ -126,15 +145,11 @@ namespace ThousandAndFirst
 
 		// --- The citywide record -----------------------------------------------------------------
 
-		/// <summary>Game-state key prefix a claimed zone's headed city-band lift is recorded
-		/// under, per kind. A generic, already-serialized slot on the game rather than a new field
-		/// on <c>KingdomSystem</c>, exactly as <c>KingdomPlots.MaterialStatePrefix</c> is &mdash;
-		/// so a citywide effect can be read from a zone that is not loaded without touching any
-		/// positionally-reflected field layout.</summary>
+		/// <summary>Retired pre-release key prefix. Old saves are zeroed on the next explicit
+		/// observation or ownership transition; these unbound integers are never read as authority.</summary>
 		public const string CityStatePrefix = "r_TAF_ReachCity_";
 
-		/// <summary>The same, for a great work whose reach is the whole realm and which therefore
-		/// carries into the realm's other city.</summary>
+		/// <summary>Retired realm-band sibling of <see cref="CityStatePrefix"/>.</summary>
 		public const string RealmStatePrefix = "r_TAF_ReachRealm_";
 
 		/// <summary>
@@ -154,30 +169,45 @@ namespace ThousandAndFirst
 		/// counted that zone's ground for itself and must not count it twice.</summary>
 		public static int CityShadeExcept(KingdomSystem System, string Kind, string ExceptZoneID)
 		{
-			if (System == null || string.IsNullOrEmpty(Kind) || The.Game == null)
+			// A report is a nominal query: it never cleans malformed state. Disabled or invalid
+			// authority simply contributes zero; activation owns explicit revocation.
+			if (!KingdomOffices.Enabled || System == null || string.IsNullOrEmpty(Kind)
+				|| The.Game == null)
 			{
 				return 0;
 			}
-			int total = 0;
-			for (int i = 0; i < System.ClaimedZones.Count; i++)
+			int total = 0; long tick = The.Game.TimeTicks;
+			for (int i = 0; i < (System.ClaimedZones?.Count ?? 0); i++)
 			{
 				if (System.ClaimedZones[i] != ExceptZoneID)
 				{
-					total += The.Game.GetIntGameState(CityStatePrefix + System.ClaimedZones[i] + "_" + Kind);
+					total = KingdomCatalogueRules.SaturatingCounterAdd(total,
+						KingdomReachObservationRuntime.Amount(System,
+							System.ClaimedZones[i], System.City?.SettlementId,
+							Kind, RealmBand: false, CurrentTick: tick));
 				}
 			}
 			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();
 			for (int s = 0; s < nonSeat.Count; s++)
 			{
-				for (int i = 0; i < nonSeat[s].ClaimedZones.Count; i++)
+				for (int i = 0; i < (nonSeat[s]?.ClaimedZones?.Count ?? 0); i++)
 				{
 					if (nonSeat[s].ClaimedZones[i] != ExceptZoneID)
 					{
-						total += The.Game.GetIntGameState(RealmStatePrefix +
-							nonSeat[s].ClaimedZones[i] + "_" + Kind);
+						total = KingdomCatalogueRules.SaturatingCounterAdd(total,
+							KingdomReachObservationRuntime.Amount(System,
+								nonSeat[s].ClaimedZones[i], nonSeat[s].City?.SettlementId,
+								Kind, RealmBand: true, CurrentTick: tick));
 					}
 				}
 			}
+			string settlement = string.IsNullOrEmpty(ExceptZoneID)
+				? System.SettlementIdForOwnedZone(The.ZoneManager?.ActiveZone?.ZoneID)
+				: System.SettlementIdForOwnedZone(ExceptZoneID);
+			if (string.IsNullOrEmpty(settlement)) settlement = System.City?.SettlementId;
+			total = KingdomCatalogueRules.SaturatingCounterAdd(total,
+				KingdomHostedArcology.ReachOverlay(
+					System, Kind, settlement, ExceptZoneID));
 			return total;
 		}
 
@@ -188,65 +218,38 @@ namespace ThousandAndFirst
 			return CityShade(System, Kind) > 0;
 		}
 
-		// Rewrites this zone's own record from what is standing here now, including to zero: a
-		// great work that was struck, or whose seat emptied, stops shading the city the pass the
-		// founder sees it, and never before.
-		private static void Record(Zone Z, List<KindAmount> Shaded, List<KindAmount> Realm)
+		// What one exact designation physically contributes. Provider operation, staffing, wear,
+		// power, scope, and the catalogue cap have already been resolved by the benefit index.
+		private static void Gather(List<KindAmount> Into, GameObject Root,
+			KingdomBenefitReading Reading)
 		{
-			if (The.Game == null || Z == null)
+			if (!KingdomObservedBenefitProjection.TryCarries(Root, Reading,
+				out List<KindAmount> carries, out string failure))
 			{
+				KingdomLog.Log("reach: observed benefits failed closed ("
+					+ (failure ?? "unknown physical evidence") + ")");
 				return;
 			}
-			// The realm-band half is written from its own filter rather than derived from the
-			// city half: only a work that reaches the whole realm carries into the other city, so
-			// a city-band cathedral never shades a city it cannot see.
-			GroundCharacter cityCharacter = KingdomReachRules.Character(Shaded);
-			GroundCharacter realmCharacter = KingdomReachRules.Character(Realm);
-			for (int i = 0; i < KingdomReachRules.LiftOrder.Length; i++)
-			{
-				string kind = KingdomReachRules.LiftOrder[i];
-				The.Game.SetIntGameState(CityStatePrefix + Z.ZoneID + "_" + kind, AmountIn(cityCharacter, kind));
-				The.Game.SetIntGameState(RealmStatePrefix + Z.ZoneID + "_" + kind, AmountIn(realmCharacter, kind));
-			}
-		}
-
-		private static int AmountIn(GroundCharacter Character, string Kind)
-		{
-			for (int i = 0; i < Character.Lifts.Count; i++)
-			{
-				if (Character.Lifts[i].Kind == Kind)
-				{
-					return Character.Lifts[i].Amount;
-				}
-			}
-			return 0;
-		}
-
-		// What one standing work actually contributes: its declared lifts, scaled by how well it
-		// is running. A work that declares no crew runs at full; a crewed work runs at whatever
-		// the staffing pass gave it, so an idle shrine shades nothing and says nothing new.
-		private static void Gather(List<KindAmount> Into, KingdomRules.BuildEntry Entry, GameObject Work)
-		{
-			// A malformed Carries is already reported by the catalogue validator, and whatever
-			// parsed before the bad pair still counts, so the verdict is deliberately unread.
-			List<KindAmount> carries;
-			KingdomCatalogueRules.TryParseTally(Entry.Carries, out carries, out _);
-			// Crewed or not, a work shades its ground by what it is actually managing (Addendum
-			// 10(b)). KingdomWear no longer folds condition back into KingdomEffectiveness - that
-			// property is the staffing pass's crew stretch and nothing else - so this asks for the
-			// combined figure directly, the way KingdomSubsidence and KingdomPower do.
-			int percent = KingdomWear.EffectivenessOf(Work);
 			for (int i = 0; i < carries.Count; i++)
 			{
-				if (!KingdomReachRules.ScopedByReach(carries[i].Kind))
+				KindAmount carry = carries[i];
+				if (!KingdomReachRules.IsPhysicalLift(carry.Kind) || carry.Amount <= 0)
 				{
 					continue;
 				}
-				int amount = KingdomReachRules.Scaled(carries[i].Amount, percent);
-				if (amount > 0)
-				{
-					Into.Add(new KindAmount(carries[i].Kind, amount));
-				}
+				Into.Add(new KindAmount(carry.Kind, carry.Amount));
 			}
-		}	}
+		}
+
+		private static void GatherLive(List<KindAmount> Into, KingdomBenefitReading Reading)
+		{
+			IReadOnlyList<KindAmount> carries = Reading?.Carries;
+			for (int i = 0; carries != null && i < carries.Count; i++)
+			{
+				KindAmount carry = carries[i];
+				if (KingdomReachRules.IsPhysicalLift(carry.Kind) && carry.Amount > 0)
+					Into.Add(new KindAmount(carry.Kind, carry.Amount));
+			}
+		}
+	}
 }

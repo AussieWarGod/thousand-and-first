@@ -6,6 +6,10 @@ namespace ThousandAndFirst
 {
 	internal sealed partial class KingdomSealRecord
 	{
+		// Parsed records retain their exact envelope schema so saved inheritance authority can
+		// reprove its canonical bytes across upgrades. New records always begin at CurrentSchema.
+		private int WireSchema = CurrentSchema;
+
 		/// <summary>
 		/// The whole record as one canonical seal file.
 		/// <para>
@@ -18,7 +22,7 @@ namespace ThousandAndFirst
 		/// <exception cref="InvalidOperationException">No digest provider is available.</exception>
 		public string Compose()
 		{
-			return KingdomSealFormat.Compose(CurrentSchema, WriteBody());
+			return KingdomSealFormat.Compose(WireSchema, WriteBody(WireSchema));
 		}
 
 		/// <summary>
@@ -52,6 +56,11 @@ namespace ThousandAndFirst
 		}
 
 		internal KingdomSealBody WriteBody()
+		{
+			return WriteBody(CurrentSchema);
+		}
+
+		private KingdomSealBody WriteBody(int Schema)
 		{
 			KingdomSealBody body = new KingdomSealBody();
 			body.Put(KeyKind, "record");
@@ -107,16 +116,19 @@ namespace ThousandAndFirst
 			body.PutList(KeyWorkX, Widen(WorkX));
 			body.PutList(KeyWorkY, Widen(WorkY));
 			body.PutList(KeyWorkCondition, Widen(WorkConditions));
-			body.Put(KeySpatialVersion, SpatialVersion);
-			body.Put(KeySpatialWidth, SpatialWidth);
-			body.Put(KeySpatialHeight, SpatialHeight);
-			body.Put(KeySpatialEntrySide, SpatialEntrySide);
-			body.Put(KeySpatialEntryX, SpatialEntryX);
-			body.Put(KeySpatialEntryY, SpatialEntryY);
-			body.PutList(KeyWorkSnapshot, WorkSnapshots);
-			body.PutList(KeyWorkSnapshotHash, WorkSnapshotHashes);
-			body.PutList(KeyStreetX, Widen(StreetX));
-			body.PutList(KeyStreetY, Widen(StreetY));
+			if (Schema >= 5)
+			{
+				body.Put(KeySpatialVersion, SpatialVersion);
+				body.Put(KeySpatialWidth, SpatialWidth);
+				body.Put(KeySpatialHeight, SpatialHeight);
+				body.Put(KeySpatialEntrySide, SpatialEntrySide);
+				body.Put(KeySpatialEntryX, SpatialEntryX);
+				body.Put(KeySpatialEntryY, SpatialEntryY);
+				body.PutList(KeyWorkSnapshot, WorkSnapshots);
+				body.PutList(KeyWorkSnapshotHash, WorkSnapshotHashes);
+				body.PutList(KeyStreetX, Widen(StreetX));
+				body.PutList(KeyStreetY, Widen(StreetY));
+			}
 			body.PutList(KeyRollName, RollNames);
 			body.PutList(KeyRollOrigin, RollOrigins);
 			body.PutList(KeyRollArrived, RollArrived);
@@ -128,6 +140,14 @@ namespace ThousandAndFirst
 			body.PutList(KeyOutsider, Outsider);
 			body.PutList(KeyDeadName, DeadNames);
 			body.PutList(KeyDeadCause, DeadCauses);
+			if (Schema >= 6)
+			{
+				body.Put(KeyProfileSchema, ProfileSchema);
+				body.Put(KeyTechnologyBand, TechnologyBand);
+				body.PutList(KeyCanonicalBody, CanonicalBodyKeys);
+				body.Put(KeySourceProfileDigest, SourceProfileDigest);
+				body.Put(KeyProfileProvenanceDigest, ProfileProvenanceDigest);
+			}
 			return body;
 		}
 

@@ -44,7 +44,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("bad", finding.Message);
 
 			Assert.AreEqual("ThousandAndFirst.CatalogueEntry", typeof(CatalogueEntry).FullName);
-			Assert.AreEqual("Key|DisplayName|Category|Styles|MinStage|Plot|Open|Contents|CostDrams|Materials|Carries|Staff|Manning|Defence|SuccessorKey|FootprintWidth|FootprintHeight|Roof|RoofDeclared|RequiresSky|Declarations|Origin",
+			Assert.AreEqual("Key|DisplayName|Category|Styles|MinStage|Plot|Open|Contents|CostDrams|Materials|Carries|Staff|Manning|Defence|SuccessorKey|SuccessorEnvelopeGrowth|FootprintWidth|FootprintHeight|Roof|RoofDeclared|RequiresSky|Declarations|Origin",
 				DeclaredFieldNames(typeof(CatalogueEntry)));
 			CatalogueEntry entry = new CatalogueEntry();
 			Assert.AreEqual("civic", entry.Category);
@@ -70,7 +70,8 @@ namespace ThousandAndFirst.Tests
 			KingdomPlotRules.PlotSize Plot = KingdomPlotRules.PlotSize.Small,
 			GrowthStage MinStage = GrowthStage.Camp, string Category = "housing", string Carries = "roof:2",
 			int Cost = 4, int Staff = 0, int Defence = 0, string Successor = null, string Materials = null,
-			string Styles = "all", string Manning = "scaled", bool Open = false, string Contents = null)
+			string Styles = "all", string Manning = "scaled", bool Open = false,
+			string Contents = null, bool EnvelopeGrowth = false)
 		{
 			return new CatalogueEntry
 			{
@@ -88,7 +89,8 @@ namespace ThousandAndFirst.Tests
 				Defence = Defence,
 				Materials = Materials,
 				Carries = Carries,
-				SuccessorKey = Successor
+				SuccessorKey = Successor,
+				SuccessorEnvelopeGrowth = EnvelopeGrowth
 			};
 		}
 
@@ -164,6 +166,7 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("water", true)]
 		[TestCase("luxury", true)]
+		[TestCase("wealth", true)]
 		[TestCase("moonlight", false)]
 		[TestCase("", false)]
 		public void IsKnownSupport_CoversBothHalvesAndNothingElse(string kind, bool expected)
@@ -172,11 +175,34 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LiftingSupports_FreezeDocumentedReachOrderWithWealthLast()
+		{
+			CollectionAssert.AreEqual(new[]
+			{
+				"craft", "spirit", "learning", "order", "luxury", "wealth"
+			}, KingdomCatalogueRules.LiftingSupports);
+		}
+
+		[Test]
 		public void Equilibrium_IsTheLeastOfTheThreeBindingSupports()
 		{
+			// Frozen five-argument compatibility arithmetic. Live population calls the two-axis
+			// PopulationEquilibrium below.
 			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 30, 40, 0, 0));
 			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(40, 20, 30, 0, 0));
 			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(30, 40, 20, 0, 0));
+		}
+
+		[Test]
+		public void PopulationEquilibrium_BindsOnlyWaterAndRoof()
+		{
+			Assert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 0, 0));
+			Assert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(40, 20, 0, 0));
+			Assert.AreEqual(30, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 10, 0));
+			CollectionAssert.AreEqual(new[] { "water", "roof" },
+				KingdomCatalogueRules.PopulationBindingSupports);
+			Assert.AreEqual("water", KingdomCatalogueRules.PopulationBindingSupport(20, 20));
+			Assert.AreEqual("roof", KingdomCatalogueRules.PopulationBindingSupport(30, 20));
 		}
 
 		[Test]
@@ -251,8 +277,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FoldShade_LandsAYardTradesShadesWithoutCountingASecondThingStanding()
 		{
-			// The vine lattice's own line: food:1 is a binding good and reaches the pool, and the
-			// house it stands behind is still one work rather than two.
+			// The vine lattice's food:1 remains measurable physical-lane metadata, while live
+			// population equilibrium ignores it. The house is still one work rather than two.
 			KingdomCatalogueRules.SupportTally house = KingdomCatalogueRules.FoldWork(
 				default(KingdomCatalogueRules.SupportTally), Parse("roof:4"), 100);
 			Assert.AreEqual(1, house.Works);
@@ -484,8 +510,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Validate_FaultsAnImprovementOntoALargerPlot()
 		{
-			// Upgrades climb within a plot; sizes compete across plots. An S design that became an
-			// M one in place would be standing on ground nobody ever cleared.
+			// Upgrades ordinarily climb within a plot. An S design cannot become M in place merely
+			// because its catalogue link names one; exact architecture and live envelope authority
+			// are both required.
 			List<CatalogueEntry> entries = new List<CatalogueEntry>
 			{
 				Entry("hut", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:3", 6, Successor: "house"),
@@ -493,6 +520,34 @@ namespace ThousandAndFirst.Tests
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
 			Assert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
+		}
+
+		[Test]
+		public void Validate_AcceptsAdjacentExpansionProvedByFrozenArchitecture()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry>
+			{
+				Entry("fieldrows", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading,
+					"food", "food:6", 22, Successor: "grange", EnvelopeGrowth: true),
+				Entry("grange", KingdomPlotRules.PlotSize.Large, GrowthStage.Town,
+					"food", "food:9", 46)
+			};
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
+			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
+		}
+
+		[Test]
+		public void Validate_ExpansionProofCannotWaiveASizeSkip()
+		{
+			List<CatalogueEntry> entries = new List<CatalogueEntry>
+			{
+				Entry("fieldrows", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading,
+					"food", "food:6", 22, Successor: "homefarm", EnvelopeGrowth: true),
+				Entry("homefarm", KingdomPlotRules.PlotSize.Huge, GrowthStage.City,
+					"food", "food:12", 80)
+			};
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
+			Assert.IsTrue(Has(findings, "fieldrows", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -592,7 +647,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void Validate_NotesFurnishingsOnAPlotWithNoInterior()
+		public void Validate_AllowsLegacyFurnishingMetadataOnAnOpenAuthoredPlot()
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry>
 			{
@@ -600,7 +655,8 @@ namespace ThousandAndFirst.Tests
 					Open: true, Contents: "r_KingdomFurnishings_Civic")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "yard", "Contents", CatalogueSeverity.Note));
+			Assert.IsFalse(Has(findings, "yard", "Contents", CatalogueSeverity.Note));
+			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -659,6 +715,16 @@ namespace ThousandAndFirst.Tests
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Carries: "roof:3,moonlight:2") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
 			Assert.IsTrue(Has(findings, "hut", "Carries", CatalogueSeverity.Note));
+			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+		}
+
+		[Test]
+		public void Validate_AcceptsDocumentedWealthAsALift()
+		{
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
+				new List<CatalogueEntry> { Entry("colossus", Category: "craft",
+					Carries: "craft:8,wealth:3") }, null);
+			Assert.IsFalse(Has(findings, "colossus", "Carries", CatalogueSeverity.Note));
 			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
@@ -781,7 +847,7 @@ namespace ThousandAndFirst.Tests
 		public void Validate_NotesAStyleNoDesignIsOfferedTo()
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "common") };
-			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "gyre" });
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "moonstair" });
 			Assert.IsTrue(Has(findings, null, "style", CatalogueSeverity.Note));
 		}
 
@@ -793,7 +859,7 @@ namespace ThousandAndFirst.Tests
 				Entry("hut", Styles: "common"),
 				Entry("fire", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "civic", "spirit:1", 2, Styles: "all")
 			};
-			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "gyre" });
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "moonstair" });
 			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
 		}
 
@@ -818,7 +884,7 @@ namespace ThousandAndFirst.Tests
 		public void Validate_TreatsAPureRefusalListAsAnOfferToEveryOtherStyle()
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "!eater") };
-			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater", "gyre" });
+			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater", "moonstair" });
 			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
 			Assert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note), "eater IS referred to, by being refused");
 		}

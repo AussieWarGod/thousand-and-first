@@ -6,6 +6,27 @@ namespace ThousandAndFirst
 	/// <summary>Pure pricing and exact-evidence law for <c>Goods="Yes"</c> yard trades.</summary>
 	public static class KingdomYardGoodsRules
 	{
+		public sealed class FoodHouseholdEvidence
+		{
+			public string PlotId;
+			public string YardKey;
+			public string ExpectedBlueprint;
+			public int FoodCap;
+			public bool Built;
+			public bool Eligible;
+			public bool Registered;
+		}
+
+		public sealed class FoodFixtureEvidence
+		{
+			public string PlotId;
+			public string YardKey;
+			public string Blueprint;
+			public bool Standing;
+			public bool InYard;
+			public bool Unbroken;
+		}
+
 		/// <summary>One household sideline exchanges one bundle for one dram on each due cycle.</summary>
 		public const int DramsPerHousehold = 1;
 
@@ -99,6 +120,31 @@ namespace ThousandAndFirst
 				if (exact == MaxHouseholdsPerCaravan) break;
 			}
 			return exact;
+		}
+
+		/// <summary>One registered food sideline needs exactly one matching live fixture.</summary>
+		public static int ExactPhysicalFood(FoodHouseholdEvidence House,
+			IList<FoodFixtureEvidence> Fixtures)
+		{
+			if (House == null || Fixtures == null || !House.Built || !House.Eligible
+				|| !House.Registered || House.FoodCap <= 0
+				|| House.FoodCap > KingdomYardRules.MaxShadePerWork
+				|| string.IsNullOrEmpty(House.PlotId) || string.IsNullOrEmpty(House.YardKey)
+				|| string.IsNullOrEmpty(House.ExpectedBlueprint)) return 0;
+			FoodFixtureEvidence exact = null;
+			int matches = 0;
+			for (int i = 0; i < Fixtures.Count; i++)
+			{
+				FoodFixtureEvidence row = Fixtures[i];
+				if (row == null || !string.Equals(row.PlotId, House.PlotId,
+					StringComparison.Ordinal) || !string.Equals(row.YardKey, House.YardKey,
+					StringComparison.Ordinal)) continue;
+				matches++;
+				if (matches == 1) exact = row;
+			}
+			return matches == 1 && exact.Standing && exact.InYard && exact.Unbroken
+				&& string.Equals(exact.Blueprint, House.ExpectedBlueprint,
+					StringComparison.Ordinal) ? House.FoodCap : 0;
 		}
 
 		/// <summary>Freezes adjusted per-cycle charter income without overflow.</summary>

@@ -23,10 +23,18 @@ namespace ThousandAndFirst
 			Encoded = null;
 			Failure = null;
 			bool legacy = Schema == LegacySnapshotSchema;
-			if ((!legacy && Schema != SnapshotSchema)
+			bool supported = Schema >= LegacySnapshotSchema && Schema <= SnapshotSchema;
+			if (!supported
 				|| !TryValidateTopologyCore(Snapshot, null, legacy, out Failure)) return false;
 			if (legacy && !LegacyPlacementTruthOnly(Snapshot))
 				return Fail("legacy snapshot placement truth is not empty", out Failure);
+			if (Schema < TransitionSnapshotSchema
+				&& Snapshot.IncomingTransitionMode != ArchitectureTransitionMode.None)
+				return Fail("legacy snapshot cannot carry transition mode", out Failure);
+			if (Schema < SnapshotSchema && !LegacyClaimTruthOnly(Snapshot))
+				return Fail("legacy snapshot cannot distinguish building and yard claims", out Failure);
+			if (Schema == SnapshotSchema && !TryValidateCurrentFootprint(Snapshot, out Failure))
+				return false;
 			List<ArchitectureCellState> cells = new List<ArchitectureCellState>(Snapshot.Cells);
 			List<ArchitectureAnchor> anchors = new List<ArchitectureAnchor>(Snapshot.Anchors);
 			List<ArchitecturePlacement> placements = new List<ArchitecturePlacement>(Snapshot.Placements);
@@ -76,6 +84,16 @@ namespace ThousandAndFirst
 					writer.Write((byte)Snapshot.Height);
 					writer.Write((byte)Snapshot.MainX);
 					writer.Write((byte)Snapshot.MainY);
+					if (Schema >= TransitionSnapshotSchema)
+						writer.Write((byte)Snapshot.IncomingTransitionMode);
+					if (Schema == SnapshotSchema)
+					{
+						writer.Write((byte)Snapshot.FootprintX);
+						writer.Write((byte)Snapshot.FootprintY);
+						writer.Write((byte)Snapshot.FootprintWidth);
+						writer.Write((byte)Snapshot.FootprintHeight);
+						writer.Write((byte)Snapshot.BaseRoof);
+					}
 					writer.Write((byte)blueprints.Count);
 					for (int i = 0; i < blueprints.Count; i++)
 						WriteText(writer, blueprints[i], MaxBlueprintChars);
@@ -100,8 +118,11 @@ namespace ThousandAndFirst
 						ArchitectureCellState cell = cells[i];
 						writer.Write((byte)cell.X);
 						writer.Write((byte)cell.Y);
-						int flags = (cell.Claim ? 1 : 0)
-							| ((int)cell.Passability << 1) | ((int)cell.Cover << 3);
+						int flags = Schema == SnapshotSchema
+							? (int)cell.Claim | ((int)cell.Passability << 2)
+								| ((int)cell.Cover << 4)
+							: (IsClaimed(cell.Claim) ? 1 : 0)
+								| ((int)cell.Passability << 1) | ((int)cell.Cover << 3);
 						writer.Write((byte)flags);
 					}
 					writer.Write((byte)anchors.Count);
@@ -192,6 +213,18 @@ namespace ThousandAndFirst
 					|| !string.IsNullOrEmpty(placement.Knowledge) || placement.Natural
 					|| !string.IsNullOrEmpty(placement.Power)
 					|| placement.ExistingAuthority) return false;
+			}
+			return true;
+		}
+
+		private static bool LegacyClaimTruthOnly(ArchitectureLayoutSnapshot Snapshot)
+		{
+			if (Snapshot == null || Snapshot.Cells == null) return false;
+			for (int i = 0; i < Snapshot.Cells.Count; i++)
+			{
+				ArchitectureCellState cell = Snapshot.Cells[i];
+				if (cell == null || (cell.Claim != ArchitectureClaim.Unclaimed
+					&& cell.Claim != ArchitectureClaim.LegacyClaimed)) return false;
 			}
 			return true;
 		}

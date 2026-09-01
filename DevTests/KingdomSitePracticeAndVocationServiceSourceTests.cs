@@ -55,7 +55,8 @@ namespace ThousandAndFirst.DevTests
 		{
 			string context = Read("Core/KingdomCurrentCityEvidenceRuntime.cs");
 			string site = Read("Core/KingdomSitePracticeRuntime.cs");
-			string service = Read("Core/KingdomVocationServiceRuntime.cs");
+			string service = Read("Core/KingdomVocationServiceRuntime.cs")
+				+ Read("Core/KingdomVocationServiceRuntime.Benefits.cs");
 			string all = context + site + service;
 			StringAssert.Contains("TryGetCurrentIdentity", context);
 			StringAssert.Contains("SettlementIdForOwnedZone", context);
@@ -76,7 +77,11 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("KingdomCivicArtifactsStore.TryValidateIdentity", service);
 			StringAssert.Contains("artifacts.IdentityBound", service);
 			StringAssert.Contains("artifacts.RealmId, exactRealmId", service);
-			StringAssert.Contains("SupportRoof", service);
+			StringAssert.Contains("survey.TryBenefits", service);
+			StringAssert.Contains("Benefits.AmountForRoot(root.IDIfAssigned, \"roof\")", service);
+			StringAssert.Contains("reading.Designation.BuildingKey, Evidence.DesignKey", service);
+			StringAssert.DoesNotContain("SupportRoof", service);
+			StringAssert.DoesNotContain("entry.Carries", service);
 			int direct = context.IndexOf("internal static bool TryBuiltWorksReadOnly(",
 				StringComparison.Ordinal);
 			int common = context.IndexOf("private static bool TryBuiltWorksFrom(", direct,
@@ -355,6 +360,7 @@ namespace ThousandAndFirst.DevTests
 				"Core/KingdomVocationServiceRules.Transaction.cs",
 				"Core/KingdomVocationServiceRules.Legacy.cs",
 				"Core/KingdomVocationServiceRuntime.cs",
+				"Core/KingdomVocationServiceRuntime.Benefits.cs",
 				"Core/KingdomVocationServiceRuntime.Sources.cs",
 				"Core/KingdomVocationServiceRuntime.Transaction.cs",
 				"Core/KingdomVocationServiceTransactions.cs",

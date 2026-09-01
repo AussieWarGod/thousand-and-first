@@ -53,6 +53,7 @@ namespace ThousandAndFirst
 							&& version != CivicAuthorityVersion
 							&& version != FirstGuestVersion
 							&& version != PhysicalFirstGuestVersion
+							&& version != ArrivalCadenceVersion
 							&& version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);
@@ -103,7 +104,14 @@ namespace ThousandAndFirst
 					// All archive versions can carry the pre-v1 notable economy field. Keep its
 					// serialized position, but never return a clone whose optional civic title grants
 					// capacity before normal load/seat normalization gets another chance to run.
-					if (Value != null) Value.NotableShade = 0;
+					if (Value != null)
+					{
+						Value.NotableShade = 0;
+						Value.HungerStreak = 0;
+						Value.Famished = false;
+						Value.ScrapsAnnounced = false;
+						Value.MealShade = 0;
+					}
 					return true;
 				}
 			}

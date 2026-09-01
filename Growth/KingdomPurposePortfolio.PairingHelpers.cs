@@ -183,7 +183,7 @@ namespace ThousandAndFirst
 			Failure = null;
 			List<GameObject> found = new List<GameObject>();
 			foreach (GameObject candidate in Zone?.GetObjects() ?? new List<GameObject>())
-				if (GameObject.Validate(candidate) && candidate.GetIntProperty("KingdomBuilt") == 1
+				if (KingdomUpgrade.IsFunctionallyBuilt(candidate)
 					&& KingdomPurposePortfolioRules.TryBuildKind(
 						KingdomUpgrade.DesignKeyOf(candidate), out _))
 				{

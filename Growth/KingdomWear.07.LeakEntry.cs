@@ -14,7 +14,8 @@ namespace ThousandAndFirst
 	public static partial class KingdomWear
 	{
 		// ==================================================================================
-		// The kind-appropriate consequence (Addendum 10(b)): a damaged STORE loses what it holds.
+		// The kind-appropriate consequence (Addendum 10(b)): damaged water and charge stores lose
+		// contents. A larder never does; food is opt-in positive play and stays physically stable.
 		//
 		// The clock is the P1 substrate and nothing else: KingdomRules.ElapsedDays over a stamp
 		// that lives on the work's own part, planted on the first pass that looks at it and never
@@ -26,6 +27,7 @@ namespace ThousandAndFirst
 
 		private static void Leak(KingdomSystem System, KingdomSurvey Survey, GameObject Work, r_KingdomWear Wear, long TimeTicks)
 		{
+			RetireFoodLeakReceipt(Work, Wear);
 			if (Wear.LifecycleQuarantined)
 			{
 				TellWearQuarantine(System, Work, Wear);
@@ -45,16 +47,10 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			// The third kind, and the one Addendum 10(b) deferred until food was a flow: a
-			// holed granary lets the damp in and the harvest goes over. Same clock, same
-			// day-banking, same announce-once, and the same loss-not-transfer reading - this
-			// food rots where it stands and is not a pile somebody can walk up to.
+			// A damaged larder can provide less effective work until repaired, but its exact items
+			// remain the player's. Never plant or advance a passive food-loss clock here.
 			if (Work.GetIntProperty(LarderProperty) == 1)
 			{
-				if (Work.Inventory != null)
-				{
-					SpoilFood(System, Survey, Work, Wear, TimeTicks);
-				}
 				return;
 			}
 			if (Work.GetPart<r_KingdomPowerStore>() != null)
@@ -67,48 +63,14 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private static void SpoilFood(KingdomSystem System, KingdomSurvey Survey, GameObject Work, r_KingdomWear Wear, long TimeTicks)
-		{
-			int days;
-			long checkpoint;
-			if (!TryLeakWindow(System, Work, Wear, TimeTicks, out days, out checkpoint)) return;
-			int held = KingdomSurvey.HeldIn(Work);
-			KingdomConstructionInputLeaseSnapshot leases;
-			string authorityFailure;
-			if (!KingdomOrdinaryFoodAuthority.TryCapture(out leases, out authorityFailure))
-			{
-				QuarantineWear(System, Work, "Its spoilage cannot prove the durable food leases.");
-				return;
-			}
-			int available = KingdomOrdinaryFoodAuthority.AvailableIn(Work, leases);
-			int wanted = KingdomWearRules.Leaked(KingdomSurvey.CapacityOf(Work), available,
-				Wear.Wear, days);
-			if (wanted <= 0)
-			{
-				if (held <= 0) Wear.LastLeakTick = checkpoint;
-				return;
-			}
-			string ids;
-			string originals;
-			string allocations;
-			if (!TryFoodPlan(Work, wanted, out ids, out originals, out allocations))
-			{
-				QuarantineWear(System, Work, "Its spoilage could not bind exact food identities.");
-				return;
-			}
-			BindLeak(Work, Wear, KingdomWearRules.LeakKind.Food, Wear.LastLeakTick,
-				checkpoint, held, held - wanted, wanted, KingdomSurvey.CapacityOf(Work),
-				ids, originals, allocations);
-			ContinueBoundLeak(System, Survey, Work, Wear);
-		}
-
 		private static void LeakWater(KingdomSystem System, KingdomSurvey Survey, GameObject Work, r_KingdomWear Wear,
 			LiquidVolume Vessel, long TimeTicks)
 		{
 			int days;
 			long checkpoint;
 			if (!TryLeakWindow(System, Work, Wear, TimeTicks, out days, out checkpoint)) return;
-			int wanted = KingdomWearRules.Leaked(Vessel.MaxVolume, Vessel.Volume, Wear.Wear, days);
+			int wanted = KingdomWearRules.Leaked(KingdomWearRules.LeakKind.Water,
+				Vessel.MaxVolume, Vessel.Volume, Wear.Wear, days);
 			if (wanted <= 0)
 			{
 				if (Vessel.Volume <= 0) Wear.LastLeakTick = checkpoint;
@@ -125,7 +87,8 @@ namespace ThousandAndFirst
 			int days;
 			long checkpoint;
 			if (!TryLeakWindow(System, Work, Wear, TimeTicks, out days, out checkpoint)) return;
-			int wanted = KingdomWearRules.Leaked(Bed.MaxCharge, Bed.Charge, Wear.Wear, days);
+			int wanted = KingdomWearRules.Leaked(KingdomWearRules.LeakKind.Charge,
+				Bed.MaxCharge, Bed.Charge, Wear.Wear, days);
 			if (wanted <= 0)
 			{
 				if (Bed.Charge <= 0) Wear.LastLeakTick = checkpoint;

@@ -125,7 +125,7 @@ namespace ThousandAndFirst.Tests
 			string[] actions = new string[cases.Count];
 			for (int i = 0; i < cases.Count; i++) actions[i] = cases[i].Groups[1].Value;
 			Assert.AreEqual(
-				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition,DesignateProperty,ManageNamedCook,ManageCivicOffice,DedicateRemembrance,FirstGuestCorrespondence,FirstFeastPractice,PracticeAndVocation,CivicKnowledge,BodyHistory,GuestFeastRecord,CivicCommitments,RecognizeArtifact,FixedWitnessWorks",
+				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition,DesignateProperty,ManageNamedCook,ManageCivicOffice,DedicateRemembrance,FirstGuestCorrespondence,FirstFeastPractice,PracticeAndVocation,CivicKnowledge,BodyHistory,GuestFeastRecord,CivicCommitments,RecognizeArtifact,FixedWitnessWorks,InspectBuildingBenefits,TrafficRecords",
 				string.Join(",", actions));
 		}
 
@@ -159,7 +159,7 @@ namespace ThousandAndFirst.Tests
 			}
 
 			Array actions = Enum.GetValues(typeof(KingdomCharterAction));
-			Assert.AreEqual(49, actions.Length, "the routing contract must account for every shipped verb");
+			Assert.AreEqual(51, actions.Length, "the routing contract must account for every shipped verb");
 			Assert.AreEqual(actions.Length, counts.Count);
 			foreach (KingdomCharterAction action in actions)
 			{
@@ -226,6 +226,11 @@ namespace ThousandAndFirst.Tests
 			AssertChapterAction(KingdomCharterChapter.CityReadings,
 				KingdomCharterAction.CivicCommitments,
 				"Read civic commitments together", 'c');
+			AssertChapterAction(KingdomCharterChapter.CityReadings,
+				KingdomCharterAction.InspectBuildingBenefits,
+				"Inspect physical building benefits", 'i');
+			AssertChapterAction(KingdomCharterChapter.StoresAndRoutes,
+				KingdomCharterAction.TrafficRecords, "Read traffic records", 'r');
 		}
 
 		[Test]
@@ -324,7 +329,9 @@ namespace ThousandAndFirst.Tests
 				{ "GuestFeastRecord", "KingdomGuestFeastRuntime.OpenRecord(System, ParentObject);" },
 				{ "CivicCommitments", "OpenCivicCommitments(System);" },
 				{ "RecognizeArtifact", "KingdomArtifactRecognitionCharterRuntime.Open(System, ParentObject);" },
-				{ "FixedWitnessWorks", "KingdomWitnessWorkCharterRuntime.Open(System, ParentObject);" }
+				{ "FixedWitnessWorks", "KingdomWitnessWorkCharterRuntime.Open(System, ParentObject);" },
+				{ "InspectBuildingBenefits", "InspectBuildingBenefits(System);" },
+				{ "TrafficRecords", "OpenPolityTrafficRecords(System);" }
 			};
 
 			string source = KingdomCharterPartLogicalSource.Read();
@@ -333,7 +340,7 @@ namespace ThousandAndFirst.Tests
 			MatchCollection cases = Regex.Matches(run,
 				@"case\s+KingdomCharterAction\.(\w+)\s*:\s*(.*?)\s*break\s*;",
 				RegexOptions.Singleline);
-			Assert.AreEqual(49, expected.Count);
+			Assert.AreEqual(51, expected.Count);
 			Assert.AreEqual(expected.Count, cases.Count, "RunAction case count");
 
 			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
@@ -367,7 +374,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = innerCases.Count - 1; i >= 0; i--)
 				switchInner = switchInner.Remove(innerCases[i].Index, innerCases[i].Length);
 			Assert.AreEqual("", Normalize(switchInner),
-				"switch may contain only the 49 pinned case bodies");
+				"switch may contain only the 51 pinned case bodies");
 
 			string skeleton = run.Remove(switchOpen, switchBlock.Length)
 				.Insert(switchOpen, "{ CASES }");
@@ -480,7 +487,7 @@ namespace ThousandAndFirst.Tests
 			string reports = Method(external,
 				"private static bool IsOwnershipReport(KingdomCharterAction Action)");
 			foreach (string action in new string[] { "BodyHistory", "GuestFeastRecord",
-				"CivicCommitments" })
+				"CivicCommitments", "InspectBuildingBenefits", "TrafficRecords" })
 				StringAssert.Contains("case KingdomCharterAction." + action + ":", reports);
 			StringAssert.DoesNotContain("case KingdomCharterAction.CivicKnowledge:", reports,
 				"civic knowledge choices can mutate and must obey the external-owner gate");

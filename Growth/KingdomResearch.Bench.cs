@@ -30,7 +30,8 @@ namespace ThousandAndFirst
 				|| Actor == null || !Actor.IsPlayer() || Actor.CurrentZone != zone
 				|| system.ClaimedZones == null || !system.ClaimedZones.Contains(zone.ZoneID)
 				|| !GameObject.Validate(Bench)
-				|| !Bench.HasPart<XRL.World.Parts.r_KingdomInquiry>())
+				|| !Bench.HasPart<XRL.World.Parts.r_KingdomInquiry>()
+				|| !LiveBench(Bench))
 			{
 				Popup.Show("Research is set at a staffed inquiry bench on the seated city's own ground.");
 				return;

@@ -47,7 +47,8 @@ namespace ThousandAndFirst
 		/// <summary>Upkeep under an agrarian district, as a percent of the ordinary bill.</summary>
 		public const int DistrictAgrarianUpkeepPercent = 90;
 
-		/// <summary>Stock tiers a market district adds to what the growth stage already carries.</summary>
+		/// <summary>Market-service standing a designated market district can add, within the
+		/// physical fixture, craft-knowledge, and growth ceilings.</summary>
 		public const int DistrictMarketShopTier = 1;
 
 		/// <summary>Arrival interval under a market district, as a percent of the ordinary wait.</summary>
@@ -102,7 +103,8 @@ namespace ThousandAndFirst
 			return DistrictNeutralPercent;
 		}
 
-		/// <summary>Stock tiers the bazaar adds on top of the growth stage's own tier.</summary>
+		/// <summary>Market-service standing a designated market district can add. It never
+		/// creates wares or bypasses the physical market and growth ceilings.</summary>
 		/// <param name="District">A district key, or any unknown string. Null is tolerated.</param>
 		/// <returns><see cref="DistrictMarketShopTier"/> for "market", otherwise 0.</returns>
 		public static int DistrictShopTierBonus(string District)
@@ -225,8 +227,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Stock tiers the realm's bazaars add. Best-wins like the percent effects: a second
-		/// market is a second place to shop, not deeper stock in both.
+		/// Market-service standing the realm's designated bazaars can add. Best-wins like the
+		/// percent effects: a second market broadens place, not service depth or physical stock.
 		/// </summary>
 		/// <param name="Districts">District key of every claimed zone; nulls and unknowns ignored.</param>
 		/// <returns>0 for a null or empty sequence.</returns>

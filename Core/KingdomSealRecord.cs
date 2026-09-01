@@ -29,8 +29,9 @@ namespace ThousandAndFirst
 	/// </summary>
 	internal sealed partial class KingdomSealRecord
 	{
-		/// <summary>The only schema this build writes.</summary>
-		public const int CurrentSchema = 5;
+		/// <summary>Schema assigned to new records. Parsed records retain their older canonical
+		/// envelope until a transition creates a current-schema copy.</summary>
+		public const int CurrentSchema = 6;
 
 		/// <summary>The oldest schema this build reads. Pre-release schemas through 3 lacked
 		/// per-member immutable topology provenance and are deliberately refused.</summary>
@@ -141,6 +142,11 @@ namespace ThousandAndFirst
 		private const string KeyOutsider = "outsider";
 		private const string KeyDeadName = "dead_name";
 		private const string KeyDeadCause = "dead_cause";
+		private const string KeyProfileSchema = "profile_schema";
+		private const string KeyTechnologyBand = "technology_band";
+		private const string KeyCanonicalBody = "canonical_body";
+		private const string KeySourceProfileDigest = "source_profile_digest";
+		private const string KeyProfileProvenanceDigest = "profile_provenance_digest";
 
 		/// <summary>Every key this schema defines, in canonical order. A payload carrying anything
 		/// else is refused rather than partly understood.</summary>
@@ -185,7 +191,7 @@ namespace ThousandAndFirst
 			KeyOutsider, KeyDeadName, KeyDeadCause
 		};
 
-		private static readonly string[] CanonicalKeys = new string[]
+		private static readonly string[] CanonicalKeysV5 = new string[]
 		{
 			KeyKind, KeyWriter, KeyEngine, KeyStatus, KeyLineage, KeyLegacy, KeyOrigin,
 			KeyGeneration, KeyRevision, KeyWritten, KeyFounder, KeyCause, KeyCauseKind,
@@ -205,6 +211,20 @@ namespace ThousandAndFirst
 			KeyRollName, KeyRollOrigin, KeyRollArrived, KeyOriginKey, KeyOriginCount,
 			KeyCreedKey, KeyCreedCount, KeyChronicle, KeyOutsider, KeyDeadName, KeyDeadCause
 		};
+
+		private static readonly string[] CanonicalKeys = WithProfileKeys(CanonicalKeysV5);
+
+		private static string[] WithProfileKeys(string[] Prior)
+		{
+			string[] result = new string[Prior.Length + 5];
+			Array.Copy(Prior, result, Prior.Length);
+			result[Prior.Length] = KeyProfileSchema;
+			result[Prior.Length + 1] = KeyTechnologyBand;
+			result[Prior.Length + 2] = KeyCanonicalBody;
+			result[Prior.Length + 3] = KeySourceProfileDigest;
+			result[Prior.Length + 4] = KeyProfileProvenanceDigest;
+			return result;
+		}
 
 		private static readonly string[] StatusNames = new string[4] { "living", "terminal", "retired", "promoted" };
 

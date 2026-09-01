@@ -152,5 +152,14 @@ namespace ThousandAndFirst
 		/// permanent crew for. Somebody does the work; nobody does it for nothing.</summary>
 		public const int MinimumCrew = 1;
 
+		/// <summary>These two durable cuts prove a final improvement removal is in flight.
+		/// An observed successor must resume that transaction; it may not use legacy direct
+		/// completion and leave its pending-state marker economically inert forever.</summary>
+		public static bool RequiresAbsentHandoverRecovery(KingdomPhysicalPhase Phase)
+		{
+			return Phase == KingdomPhysicalPhase.FinalRemovalPending
+				|| Phase == KingdomPhysicalPhase.FinalRemoved;
+		}
+
 	}
 }

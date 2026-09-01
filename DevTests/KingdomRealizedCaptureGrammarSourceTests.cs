@@ -103,6 +103,21 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		[Test]
+		public void RenderStringAloneUsesTheControlGlyphGrammar()
+		{
+			string rules = Read("Core/KingdomRealizedCaptureRules.cs");
+			string row = Section(rules, "private static string ObjectRow(",
+				"private static bool Append(");
+			StringAssert.Contains("RenderText(Item.RenderString)", row);
+			StringAssert.DoesNotContain("!Append(sb, Text(Item.RenderString))", row);
+			string render = Section(rules, "private static string RenderText(",
+				"private static string FramedText(");
+			StringAssert.Contains("FramedText(Value, AllowControls: true)", render);
+			StringAssert.Contains("FramedText(Value, AllowControls: false)", rules);
+			StringAssert.Contains("!AllowControls &&", rules);
+		}
+
 		/// <summary>
 		/// Anchor absence and an explicitly stored empty anchor are different states, and a default
 		/// getter compares them equal.

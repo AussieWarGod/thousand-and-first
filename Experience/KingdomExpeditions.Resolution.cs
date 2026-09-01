@@ -121,7 +121,8 @@ namespace ThousandAndFirst.Simulation.City
 				frozenTick = current.StartTick + 1L;
 			}
 			KingdomJobRow receipt = current.WithExpeditionResolution((int)Resolution, frozenTick,
-				ResolutionZoneId);
+				ResolutionZoneId, KingdomExpeditionDeedDisposition.NotApplicable, null, null,
+				null);
 			KingdomJobTable next;
 			if (!jobs.TryReplace(receipt, out next, out fault)
 				|| !System.Jobs.TryPublish(next, out fault))
@@ -250,6 +251,8 @@ namespace ThousandAndFirst.Simulation.City
 			string eventId = "taf:expedition:" + Row.JobId + ":" + (int)Resolution;
 			if (!KingdomChronicle.RecordOnce(System, eventId, ChronicleLine(Row, Resolution, Tick)))
 				return Refuse("The result is physically settled, but its Chronicle receipt is not. The job remains open for a safe retry.", out Failure);
+			if (!TryRecordExpeditionDeed(System, Row, Resolution, eventId, out Failure))
+				return false;
 			KingdomLedger ledger = LedgerFor(System, Row.SourceZoneId);
 			if (ledger == null)
 				return Refuse("The result is settled, but its home city's ledger cannot be found. The job remains open.", out Failure);

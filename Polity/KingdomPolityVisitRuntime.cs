@@ -97,15 +97,26 @@ namespace ThousandAndFirst
 		{
 			KingdomPolityLedger L = System.PolityLedger; Manifest = null;
 			Ready = false; Failure = null;
+			if (!KingdomPolityCohortRules.TryResolverContract(L, P.Visitor.PolityId,
+				KingdomPolityCohortPurpose.Envoy, out int resolverRulesVersion,
+				out int minimumLevel,
+				out int maximumLevel, out Failure)) return false;
 			KingdomPolityCohortPlanRequest request = new KingdomPolityCohortPlanRequest
 			{
 				CohortId = P.EnvoyCohortId, Purpose = KingdomPolityCohortPurpose.Envoy,
 				SourceRef = P.RouteId, PolityId = P.Visitor.PolityId, SurfaceRef = P.SurfaceId,
-				MemberCount = 2, NamedFigureId = P.Representative?.FigureId,
-				EventStreamId = P.StreamId, RulesVersion = KingdomPolityNpcRules.RulesVersion,
+				MemberCount = 2, MinimumLevel = minimumLevel, MaximumLevel = maximumLevel,
+				NamedFigureId = P.Representative?.FigureId,
+				EventStreamId = P.StreamId, RulesVersion = resolverRulesVersion,
 				EventOrdinal = 0UL
 			};
 			KingdomPolityCohortPlan existing = KingdomPolityAuthority.Cohort(L, P.EnvoyCohortId);
+			if (existing != null)
+			{
+				request.RulesVersion = existing.RulesVersion;
+				request.MinimumLevel = existing.MinimumLevel;
+				request.MaximumLevel = existing.MaximumLevel;
+			}
 			bool terminal = existing != null && (existing.Phase == KingdomPolityCohortPhase.Cleaned ||
 				existing.Phase == KingdomPolityCohortPhase.Cancelled ||
 				existing.Phase == KingdomPolityCohortPhase.Abandoned ||

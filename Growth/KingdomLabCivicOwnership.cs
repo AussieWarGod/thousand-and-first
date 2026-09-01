@@ -77,7 +77,7 @@ namespace ThousandAndFirst
 			for (int i = 0; Survey != null && i < Survey.Built.Count; i++)
 			{
 				GameObject work = Survey.Built[i];
-				if (!GameObject.Validate(work) || work.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+				if (!KingdomUpgrade.IsFunctionallyBuilt(work)
 					|| work.GetPart<r_KingdomGraftingHall>() == null
 					&& work.GetPart<r_KingdomChimericTheatre>() == null) continue;
 				if (!string.IsNullOrEmpty(work.IDIfAssigned)) result.Add(work);

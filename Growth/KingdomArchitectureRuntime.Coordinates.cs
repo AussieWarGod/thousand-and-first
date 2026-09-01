@@ -146,7 +146,8 @@ namespace ThousandAndFirst
 			return Snapshot != null && Mapping != null && Snapshot.BuildKey == Mapping.BuildKey
 				&& Snapshot.PlanKey == Mapping.PlanKey && Snapshot.BindingKey == Mapping.BindingKey
 				&& Snapshot.TierKey == Mapping.TierKey && Snapshot.LotType == Mapping.TypeKey
-				&& Snapshot.LotSize == Mapping.LotSize;
+				&& Snapshot.LotSize == Mapping.LotSize
+				&& Snapshot.IncomingTransitionMode == Mapping.IncomingTransitionMode;
 		}
 
 		private static bool ValidRectInZone(KingdomPlotRules.PlotRect Rect, Zone Z)

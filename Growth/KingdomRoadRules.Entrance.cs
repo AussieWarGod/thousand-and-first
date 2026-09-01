@@ -10,12 +10,12 @@ namespace ThousandAndFirst
 		private static readonly int[] EntranceStepY = new int[4] { -1, 0, 1, 0 };
 
 		/// <summary>
-		/// Finds the exact authored way from a public entrance to the lot exterior. Claimed cells
+		/// Finds the exact authored way from a public or service entrance to the lot exterior. Claimed cells
 		/// other than the entrance are never crossed: the way may use only unclaimed walk cells,
 		/// then leave the first map edge reached by the fixed N/E/S/W breadth-first tie law.
 		/// </summary>
 		/// <param name="Snapshot">A complete frozen architecture snapshot.</param>
-		/// <param name="Entrance">An exact public-entrance member of that snapshot.</param>
+		/// <param name="Entrance">An exact road-entrance member of that snapshot.</param>
 		/// <param name="Route">Receives canonical cells after the entrance through the map edge.</param>
 		/// <param name="ExitX">Canonical outward x step at the chosen edge.</param>
 		/// <param name="ExitY">Canonical outward y step at the chosen edge.</param>
@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 				|| Snapshot.Cells.Count != Snapshot.Width * Snapshot.Height
 				|| Entrance.X < 0 || Entrance.X >= Snapshot.Width
 				|| Entrance.Y < 0 || Entrance.Y >= Snapshot.Height
-				|| !IsExactPublicEntrance(Snapshot, Entrance)) return false;
+				|| !IsExactRoadEntrance(Snapshot, Entrance)) return false;
 
 			ArchitectureCellState[] cells = new ArchitectureCellState[Snapshot.Cells.Count];
 			for (int i = 0; i < Snapshot.Cells.Count; i++)
@@ -47,7 +47,7 @@ namespace ThousandAndFirst
 			}
 			int entranceKey = Entrance.Y * Snapshot.Width + Entrance.X;
 			ArchitectureCellState entranceCell = cells[entranceKey];
-			if (entranceCell == null || !entranceCell.Claim
+			if (entranceCell == null || !KingdomArchitectureRules.IsClaimed(entranceCell.Claim)
 				|| entranceCell.Passability != ArchitecturePassability.Walkable) return false;
 			if (TryOutwardStep(Entrance.X, Entrance.Y, Snapshot.Width, Snapshot.Height,
 				out ExitX, out ExitY)) return true;
@@ -72,7 +72,8 @@ namespace ThousandAndFirst
 					if (nx < 0 || nx >= Snapshot.Width || ny < 0 || ny >= Snapshot.Height) continue;
 					int next = ny * Snapshot.Width + nx;
 					ArchitectureCellState cell = cells[next];
-					if (parent[next] >= 0 || cell == null || cell.Claim
+					if (parent[next] >= 0 || cell == null
+						|| KingdomArchitectureRules.IsClaimed(cell.Claim)
 						|| cell.Passability != ArchitecturePassability.Walkable) continue;
 					parent[next] = current;
 					queue[tail++] = next;
@@ -153,12 +154,13 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool IsExactPublicEntrance(ArchitectureLayoutSnapshot Snapshot,
+		private static bool IsExactRoadEntrance(ArchitectureLayoutSnapshot Snapshot,
 			ArchitectureAnchor Entrance)
 		{
-			if (!(Entrance.Key == "entrance:public"
-				|| (Entrance.Key != null && Entrance.Key.StartsWith("entrance:public@",
-					System.StringComparison.Ordinal)))) return false;
+			if (!(Entrance.Key == "entrance:public" || Entrance.Key == "entrance:service"
+				|| (Entrance.Key != null && (Entrance.Key.StartsWith("entrance:public@",
+					System.StringComparison.Ordinal) || Entrance.Key.StartsWith("entrance:service@",
+					System.StringComparison.Ordinal))))) return false;
 			for (int i = 0; i < Snapshot.Anchors.Count; i++)
 			{
 				ArchitectureAnchor item = Snapshot.Anchors[i];

@@ -926,6 +926,278 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LodgeDeadResident_RequiresExactFrozenRowAndSurvivesEveryReleaseCut()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-dead-row");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(book);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
+			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 17,
+				null, null, null, 0L, null, 0, 0, 5L), "absence is not death proof");
+			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 2, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L),
+				"duplicate resident coordinates are ambiguous");
+			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 0, 0, 5L),
+				"a live row cannot be reinterpreted as Dead");
+			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L));
+
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
+				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueBefore));
+			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
+				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueBefore),
+				"an Intent crash before the scalar mutation retries once");
+			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			Assert.AreEqual(KingdomLifecycleMutationAction.ConfirmAfter,
+				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueAfter));
+			Assert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
+			AssertAbandonedLodgeHasNoSuccessOrRefund(op);
+
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, op, 7L));
+			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+				op.Id, op.PlanHash));
+			Assert.IsTrue(op.ResourceLeases.TrueForAll(l => book.Resources.Find(r =>
+				r.Key == l.Key).ActiveOperationId == null));
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.AreEqual(KingdomLifecycleLodgeTerminalState.AuthorityReleased,
+				op.LodgeTerminal.State, "release-before-marker survives a save cut");
+			Assert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, op, 8L));
+			Assert.IsNull(book.NotableGuest);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(RoundTrip(book)));
+		}
+
+		[Test]
+		public void LodgeMarketSource_FreezesExactReceiptAndRejectsAliasOrLateRewrite()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-market-source");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(book, market: true);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeNoLodgeMarketSource(book, op));
+			string intent = "market-receipt:handoff:exact-source:" + op.ObjectId;
+			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				op.ObjectId, 18, op.PlunderRequested, intent), "target cannot alias source");
+			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"exact-source", 17, op.PlunderRequested, intent), "resident cannot alias target row");
+			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"exact-source", 18, op.PlunderRequested + 1, intent), "tier is frozen by plan");
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"exact-source", 18, op.PlunderRequested, intent));
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"exact-source", 18, op.PlunderRequested, intent), "exact replay is idempotent");
+			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"other-source", 18, op.PlunderRequested, intent), "prepared identity is immutable");
+
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.AreEqual(1, op.LodgeTerminal.MarketSourcePrepared);
+			Assert.AreEqual("exact-source", op.LodgeTerminal.MarketSourceBodyObjectId);
+			Assert.AreEqual(18, op.LodgeTerminal.MarketSourceResidentId);
+			Assert.IsNotEmpty(op.LodgeTerminal.MarketSourceProofId);
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+				"exact-source", 18, op.PlunderRequested, intent, false));
+			Assert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketCommitted,
+				op.LodgeTerminal.MarketSourcePrepared);
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+				"exact-source", 18, op.PlunderRequested, intent, false),
+				"committed checkpoint replay is idempotent");
+			foreach (int forged in new[] { 0, 1, 3 })
+			{
+				KingdomLifecycleBook tampered = RoundTrip(book);
+				tampered.NotableGuest.LodgeTerminal.MarketSourcePrepared = forged;
+				Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered),
+					"market outcome phase " + forged + " cannot reuse committed proof");
+			}
+			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L));
+			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"other-source", 19, op.PlunderRequested, intent), "death proof seals source receipt");
+		}
+
+		[Test]
+		public void LodgeMarketSource_DeadSourceOutcomeIsDistinctAndRoundTrips()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-market-source-dead");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(book, market: true);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
+			string intent = "market-receipt:handoff:dead-source:" + op.ObjectId;
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+				"dead-source", 18, op.PlunderRequested, intent));
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+				"dead-source", 18, op.PlunderRequested, intent, true));
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketSourceDead,
+				op.LodgeTerminal.MarketSourcePrepared);
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+				"dead-source", 18, op.PlunderRequested, intent, true));
+			Assert.IsFalse(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+				"dead-source", 18, op.PlunderRequested, intent, false));
+			foreach (int forged in new[] { 0, 1, 2 })
+			{
+				KingdomLifecycleBook tampered = RoundTrip(book);
+				tampered.NotableGuest.LodgeTerminal.MarketSourcePrepared = forged;
+				Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered));
+			}
+		}
+
+		[Test]
+		public void LodgeBodyDeathCallback_IsOnlyPreEnrollmentTerminalEvidence()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-body-death");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(book);
+			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
+				null, null, null, 0L, null, 0, 0, 5L));
+			Assert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+				"wrong-body", op.Blueprint, op.ZoneId, 5L));
+			Assert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+				op.ObjectId, "wrong-blueprint", op.ZoneId, 5L));
+			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+				op.ObjectId, op.Blueprint, op.ZoneId, 5L));
+			book = RoundTrip(book); op = book.NotableGuest;
+			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
+				null, null, null, 0L, null, 0, 0, 6L));
+			SettleLodgeAbandonSchedule(book, op);
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 7L));
+			KingdomLifecycleResourceLease roster = op.ResourceLeases.Find(l =>
+				l.Kind == KingdomLifecycleResourceKind.Roster);
+			Assert.AreEqual(KingdomLifecycleLeaseState.Skipped, roster.State);
+			AssertAbandonedLodgeHasNoSuccessOrRefund(op);
+			Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, 8L));
+			Assert.IsNull(book.NotableGuest);
+		}
+
+		[Test]
+		public void LodgeReleasedAuthority_PinsExactRetirementProofUntilMarkerAck()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-proof-pin");
+			KingdomLifecycleOperation lodge = ReadyLodgeDomain(book);
+			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, lodge,
+				lodge.ObjectId, lodge.Blueprint, lodge.ZoneId, 5L));
+			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, lodge, 0, 0,
+				null, null, null, 0L, null, 0, 0, 6L));
+			SettleLodgeAbandonSchedule(book, lodge);
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, lodge, 7L));
+			Assert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, lodge, 8L));
+
+			for (int i = 0; i < KingdomLifecycleRules.MaxRecentProofs + 8; i++)
+			{
+				long tick = 100L + i * 10L;
+				KingdomLifecycleOperation passage = Build(book,
+					KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Passages, tick, i);
+				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, passage), "publish " + i);
+				Settle(book, passage, tick + 1L);
+				Assert.IsTrue(KingdomLifecycleRules.Retire(book, passage, tick + 8L), "retire " + i);
+			}
+			Assert.AreEqual(KingdomLifecycleRules.MaxRecentProofs, book.RecentProofs.Count);
+			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+				lodge.Id, lodge.PlanHash));
+			book = RoundTrip(book); lodge = book.NotableGuest;
+			Assert.IsFalse(book.Quarantined);
+			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+				lodge.Id, lodge.PlanHash));
+			Assert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, lodge, 2000L));
+		}
+
+		[Test]
+		public void LodgeDeadRow_AfterCommittedEnrollmentDoesNotApplyAnotherRosterDelta()
+		{
+			KingdomLifecycleBook book = Book("city-lodge-proved-row");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(book);
+			KingdomLifecycleResourceLease roster = op.ResourceLeases.Find(l =>
+				l.Kind == KingdomLifecycleResourceKind.Roster);
+			SettleLease(book, roster);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 19,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
+			long revision = book.Resources.Find(r => r.Key == roster.Key).Revision;
+			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 19,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 4, 5L));
+			SettleLodgeAbandonSchedule(book, op);
+			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
+			Assert.AreEqual(KingdomLifecycleLeaseState.Proved, roster.State);
+			Assert.AreEqual(revision, book.Resources.Find(r => r.Key == roster.Key).Revision,
+				"terminal recovery neither reapplies nor rolls back enrollment");
+		}
+
+		[Test]
+		public void LodgeTerminalReceipt_V10RoundTripsV9AndV8RejectsTampering()
+		{
+			KingdomLifecycleBook legacy = Book("city-lodge-v8");
+			ReadyLodgeDomain(legacy);
+			byte[] v8;
+			using (MemoryStream stream = new MemoryStream())
+			{
+				KingdomLifecycleWireCodec.WriteLifecycleV8Fixture(new BinaryWriter(stream), legacy);
+				v8 = stream.ToArray();
+			}
+			KingdomLifecycleBook loaded = new KingdomLifecycleBook();
+			using (MemoryStream stream = new MemoryStream(v8, false))
+				KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), loaded);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
+			Assert.IsFalse(loaded.Quarantined);
+			Assert.IsNull(loaded.NotableGuest.LodgeTerminal);
+
+			KingdomLifecycleBook v9Book = Book("city-lodge-v9");
+			KingdomLifecycleOperation v9Op = ReadyLodgeDomain(v9Book);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(v9Book, v9Op, 21,
+				v9Op.ObjectName, v9Op.Origin, v9Op.Faction, 1L, v9Op.ZoneId));
+			byte[] v9;
+			using (MemoryStream stream = new MemoryStream())
+			{
+				KingdomLifecycleWireCodec.WriteLifecycleV9Fixture(new BinaryWriter(stream), v9Book);
+				v9 = stream.ToArray();
+			}
+			KingdomLifecycleBook v9Loaded = new KingdomLifecycleBook();
+			using (MemoryStream stream = new MemoryStream(v9, false))
+				KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), v9Loaded);
+			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, v9Loaded.FormatVersion);
+			Assert.AreEqual(0, v9Loaded.NotableGuest.LodgeTerminal.MarketSourcePrepared);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(v9Loaded));
+			KingdomLifecycleBook v9DeathBook = Book("city-lodge-v9-death");
+			KingdomLifecycleOperation v9Death = ReadyLodgeDomain(v9DeathBook);
+			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(v9DeathBook, v9Death,
+				v9Death.ObjectId, v9Death.Blueprint, v9Death.ZoneId, 5L));
+			using (MemoryStream stream = new MemoryStream())
+			{
+				KingdomLifecycleWireCodec.WriteLifecycleV9Fixture(new BinaryWriter(stream), v9DeathBook);
+				KingdomLifecycleBook upgraded = new KingdomLifecycleBook();
+				using (MemoryStream input = new MemoryStream(stream.ToArray(), false))
+					KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(input), upgraded);
+				Assert.AreEqual(KingdomLifecycleLodgeTerminalState.BodyDeathProved,
+					upgraded.NotableGuest.LodgeTerminal.State);
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(upgraded));
+			}
+
+			KingdomLifecycleBook current = Book("city-lodge-v9");
+			KingdomLifecycleOperation op = ReadyLodgeDomain(current, market: true);
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(current, op, 23,
+				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
+			using (MemoryStream stream = new MemoryStream())
+				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec
+					.WriteLifecycleV8Fixture(new BinaryWriter(stream), current));
+			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(current, op,
+				"v10-market-source", 24, op.PlunderRequested,
+				"market-receipt:handoff:v10-market-source:" + op.ObjectId));
+			using (MemoryStream stream = new MemoryStream())
+				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec
+					.WriteLifecycleV9Fixture(new BinaryWriter(stream), current));
+			current = RoundTrip(current); op = current.NotableGuest;
+			Assert.AreEqual(23, op.LodgeTerminal.ResidentId);
+			op.LodgeTerminal.MarketSourceProofId = "sha256:forged";
+			KingdomLifecycleBook poisoned = RoundTrip(current);
+			Assert.IsTrue(poisoned.Quarantined);
+			Assert.IsTrue(poisoned.NotableGuest != null
+				&& poisoned.NotableGuest.Phase == KingdomLifecyclePhase.Quarantined);
+		}
+
+		[Test]
 		public void ChronicleIntentRetriesByReceipt_MessageIntentBecomesLost()
 		{
 			KingdomLifecycleBook book = Book();
@@ -1930,6 +2202,53 @@ namespace ThousandAndFirst.Tests
 				LifecycleBytesWithHostileArrayWriter(lifecycle));
 			CollectionAssert.AreEqual(CarryBytes(carry),
 				CarryBytesWithHostileArrayWriter(carry));
+		}
+
+		private static KingdomLifecycleOperation ReadyLodgeDomain(KingdomLifecycleBook book,
+			bool market = false)
+		{
+			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.NotableGuest,
+				KingdomLifecycleAction.Lodge, 1L, 10L);
+			op.ObjectId = "exact-lodge-body";
+			op.Blueprint = "r_KingdomNotableGuest";
+			op.ObjectName = "Mara of the Glass Road";
+			op.Origin = "the glass road";
+			op.Faction = "1 of Nivvun Ut, 1002 AR";
+			if (market) { op.Target = 1; op.PlunderRequested = 3; }
+			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+				KingdomLifecyclePhase.WaterIntent, 2L));
+			SettleCurrentPhase(book, op);
+			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+				KingdomLifecyclePhase.WaterSettled, 3L));
+			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+				KingdomLifecyclePhase.DomainIntent, 4L));
+			return op;
+		}
+
+		private static void SettleLodgeAbandonSchedule(KingdomLifecycleBook book,
+			KingdomLifecycleOperation op)
+		{
+			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			Assert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
+			Assert.AreEqual(KingdomLifecycleMutationAction.Settled,
+				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueAfter));
+		}
+
+		private static void AssertAbandonedLodgeHasNoSuccessOrRefund(
+			KingdomLifecycleOperation op)
+		{
+			Assert.AreEqual(KingdomLifecyclePhase.Terminal, op.Phase);
+			Assert.AreEqual(1, op.WaterRequested);
+			Assert.AreEqual(1, op.WaterProved);
+			Assert.AreEqual(0, op.WaterOutstanding);
+			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.ChronicleState);
+			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.LedgerState);
+			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.MessageState);
+			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.DeedState);
+			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.GuestbookState);
+			Assert.IsFalse(op.ResourceLeases.Exists(l =>
+				l.Kind == KingdomLifecycleResourceKind.Population));
 		}
 
 		private static KingdomLifecycleOperation Build(KingdomLifecycleBook book,

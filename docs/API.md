@@ -82,27 +82,80 @@ The shipped `Integrations/Hearthpyre223` provider implements this protocol only 
 Hearthpyre 2.2.3 loaded first. Other versions do not load the shard. Qud Industry 0.3 has no typed
 API in the audited release and remains resolved-capability based.
 
+## Foreign exact-footprint provider protocol
+
+`ThousandAndFirst.Api.IKingdomForeignFootprintProvider` and
+`KingdomForeignFootprintProviderAttribute` expose spatial evidence to explicit player adoption.
+A footprint is never a civic designation: by itself it grants no building key, accepted kind, cap,
+tag, or benefit. The founder must still adopt the exact room for a lawful TAF role, and live
+furniture or technology must still supply every effective benefit.
+
+`TryObserve` receives only the exact active loaded zone. It returns bounded
+`KingdomForeignFootprint` rows with exact `ProviderId`, `ProviderVersion`, stable `Identity`, stable
+`Revision`, `ZoneId`, optional `SectorId`, `DeclaredCount`, origin, and the complete unique in-zone
+cell set. A revision must change whenever membership or its trusted foreign evidence changes.
+Providers must not load a zone, mint an identity while observing, or mutate either system. A false
+result with no failure means no footprint is present; a provider-wide failure quarantines only
+that provider's current evidence. It does not erase healthy siblings from another provider or
+block an ordinary disjoint TAF room. A provider's returned array is an ordered protocol surface:
+use a stable canonical identity order. A roster above 512 rows, or bounded row cell counts whose
+sum exceeds 65,536, is a provider-wide protocol fault proved from array/count metadata before any
+exact cell is enumerated. Null, empty, or individually over-row cell arrays remain row-local and do
+not enter that sum. Once every provider is independently bounded, TAF applies the global row/cell
+limits by stable provider-and-row round robin so an early provider cannot consume the complete
+observation budget.
+
+Rows normalize independently. When exact cells are known but metadata is malformed or ambiguous,
+TAF retains those cells as bounded refused evidence and preserves independent healthy sibling
+rows. A row with no bounded unique in-zone cells cannot supply or quarantine ground; its bounded
+diagnostic remains local to that provider. Providers should therefore return known cells with a
+bounded nonempty `Refusal` whenever possible. Duplicate identities and same-provider overlaps
+refuse only their implicated rows; cross-provider overlaps likewise refuse only known intersecting
+rows. Registration, callback, row, and budget faults are sanitized and bounded.
+
+When an explicit adoption's measured room exactly equals one accepted row, its durable receipt
+binds provider, version, identity, revision, and cells. Every later active read re-observes and
+re-proves all of them. Missing/disabled providers, version changes, moved cells, changed revision,
+duplicate identity, or ambiguous overlap pause that designation. A fault in an unrelated provider
+or disjoint sibling does not invalidate an already bound exact row. TAF never guesses a rectangle
+or loads remote ground to keep it active.
+
+The exact-2.2.3 Hearthpyre shard implements this seam from `Home.ID`, `Home.Sector`,
+`Sector.Homes`, `RealmSystem.Homes`, `Home.Count`, `Home.Origin`, and the enumerated
+`Location2D` membership. It cross-proves the global, zone, sector, and Home registries by reference
+and calls no Hearthpyre constructor, mutator, lifecycle, or zone-loading API. Sector identity,
+the bounded sector-list snapshot, or before/after roster churn remains a provider-wide failure
+because no coherent snapshot exists. The snapshot also includes every globally indexed Home whose
+backlink names that sector, even when `Sector.Homes` omits it. A single Home's global-key,
+backlink, duplicate-custody, or membership failure is row-local: proved cells return refused
+evidence, an unprovable cell set returns a no-cell diagnostic, and independent Homes remain
+observable. Home overlap is normalized by the host's ordinary row-local ambiguity rule. Every
+registry, reverse-registry, backlink, and cell-enumeration read across both proof passes spends one
+shared 1,048,576-entry callback work budget. Exhaustion is a deterministic provider-wide fault and
+publishes no partial Home array, so separately bounded registries cannot multiply into a hang.
+
 ## `KingdomSystem` — the game system
 
 | Member | Contract |
 |---|---|
 | `bool Founded` | True once a kingdom exists. Guard every other use with this. |
 | `string SeatName` | The seated city's own name; falls back to the realm's display name for saves written before cities had names apart from their realm. |
-| `int SettlementCount` | Cities the realm holds, 0–2. |
-| `KingdomSettlement Away` | The city the founder is not standing in, or null. |
+| `int SettlementCount` | Cities the realm holds, 0–3: one seat plus at most two non-seat cities. |
+| `KingdomSettlementTopology SettlementTopology`; `NonSeatSettlements()` / `NonSeatSettlementAt(int)` | Authoritative immutable-id-ordered collection/API for up to two cities not occupying the active seat. |
+| `KingdomSettlement Away` | Obsolete save/integration projection of the first immutable-id-ordered non-seat city. Runtime code must use the topology API. |
 | `KingdomSettlement Capture()` / `void Restore(KingdomSettlement)` / `bool TrySeat(Zone)` | Move the seat. `TrySeat` runs from `ZoneActivatedEvent`; the others are for tools and tests. |
 | `string KingdomFactionName` / `KingdomDisplayName` | The runtime faction's name and display name; null when unfounded. |
-| `string Style` | City style key (`common`, `verdant`, `fungal`, `gyre`, `eater`, or one your mod declares). Drives which building designs are offered. |
+| `string Style` | Canonical city style key (`common`, `verdant`, `fungal`, `moonstair`, `eater`, or one your mod declares). The frozen pre-v1 key `gyre` is accepted as an alias and normalized in live settlement state; it never implies Gyre Wight or Girsh allegiance. Drives which building designs are offered. |
 | `GrowthStage Stage` | `Camp`, `Steading`, `Village`, `Town`, `City`. **Moves in both directions.** `KingdomSubsidenceRules.StageWithHysteresis` is the only writer: it climbs on the reading and falls only on a clear shortfall (20% benefit of the doubt on both of `StageFor`'s inputs), one rung per reckoning, with `Camp` an absolute floor. Read it, never assume it — and never assume a rung already reached is kept. |
 | `int SupportedLevel` | Settlers the settlement's finished works honestly carry, from `KingdomSubsidenceRules.SupportedLevel`. **Knowledge, not truth**: it is as fresh as the last pass that measured it, and `0` means no pass ever has. Consumers that refuse something on it must check for that. |
 | `int NotableShade` | What the settlement's named notable is worth to that level (`KingdomCeremonyRules.NotableShade`: met tastes, the virtue net of the flaw, and met `Prefers`). Written when the office is filled or passes, so it is as stale as the last time it changed hands; `0` for a settlement that has named nobody. Never negative, and bound again by `KingdomCatalogueRules.LiftCapPercent` when the level reads it. |
-| `string SubsidenceBinding` | Which of `water` / `food` / `roof` is the least of the three and therefore what holds the level down, or null before a measurement. |
+| `string SubsidenceBinding` | Live binding is `water` or `roof`, or null before a measurement. Legacy `food` values remain wire-readable but normalize to no live cause and cannot drive subsidence prose or consequence. |
 | `long LastWaterWorkTick` | **W6: the published mirror of the city model's `ProcessedThroughTick`, written by `KingdomCity.Stamp` and by nothing else.** It used to be the settlement pass's own checkpoint for water-works production; that arithmetic moved onto the model, per zone, off one clock, so that no day can be billed by two owners. What it still records is what it always said — the tick through which the settlement's works have been paid — and it is still what makes a catalogue `Carries="water:N"` a **flow** as well as a level. |
-| `long LastFoodWorkTick` | **W6: this one is now the MILLS' stamp, and the model deliberately does not touch it.** The fields' clocked make moved onto the model with the water works'; the mills did not, because a mill makes nothing out of the day — it takes real crops off real shelves and puts real staples back, on the ground where the shelves are, and `KingdomCrops.MilledFoodPerDay` is subtracted out of the model's rate precisely so the two can never both be paid. Advanced by the settlement pass with `KingdomRules.AdvanceCheckpoint`, as it always was. Writing it from the reckon would read *now* on every check-in and no mill would ever grind again. |
+| `long LastFoodWorkTick` | The attended mills' checkpoint; the city model deliberately does not touch it. Fields own their crop-cycle stamps and mills take real crops from real shelves and put real staples back. Advancing this from the city reckon would suppress the next physical mill operation. |
 | `int Population` | Living settler count. |
 | `bool Withered` | True while a sustained thirst has suspended prosperity. Recoverable. |
-| `int DryStreak` / `int HungerStreak` | Heartbeat resolves in a row the water bill and the ration bill went unpaid. Separate counters: both ladders run at once and each keeps its own memory. What stops them costing double is `KingdomRules.ComposeScarcity`. |
-| `bool Famished` | The food mirror of `Withered`. **Both marks may stand at once** — a mark is a state, not a cost, and only the cost is capped. |
+| `int DryStreak` | Heartbeats in a row whose physical water bill went unpaid. Water alone owns the live scarcity ladder. |
+| `int HungerStreak` / `bool Famished` | **Legacy save/wire compatibility only.** Normalization and every heartbeat clear these fields; new code never advances or acts on them. |
 | `List<string> ClaimedZones` | Zone IDs the kingdom holds. |
 | `Dictionary<string,string> ZoneDistricts` | Zone ID → district key. |
 | `List<string> ChronicleEntries` / `OutsiderEntries` | The two registers, oldest first, capped. |
@@ -160,7 +213,7 @@ receipts; they never become semantic authority by existing.
 | `KingdomPolityRules.TrySetEmptyImportPolicy(...)` / `TryPublishFoundation(...)` / `TryObserveCurrentFoundation(...)` | Typed compare-and-swap foundation lane. It freezes import consent, publishes the current realm plus zero/one bounded legacy snapshot atomically, and later observes the frozen authority without re-reading mutable live facts. |
 | `KingdomPolityRules.TryPrepareLegacyFaction(...)` / `TryCommitLegacyFaction(...)` / `TryPrepareLegacyFactionTombstone(...)` / `TryCommitLegacyFactionTombstone(...)` | Semantic half of owned faction projection and retirement. The Qud adapter must prove the exact prepared id/digest; it may recover missing owned state but never reuse an old faction id or overwrite divergent/foreign state. |
 | `KingdomPolityRules.TryPrepareRealmExile(...)` / `TryMarkRealmExileTombstoned(...)` / `TryDetachRealmExile(...)` / `TryRestoreRealmReturn(...)` / `TryCommitRealmRefound(...)` / `TryCompleteRealmReturn(...)` | Typed current→legacy transaction. One CAS ends current/imported polities at the archive close tick; owned physical factions then tombstone before detach. Exact return restores the byte-identical source ledger. Refound requires fresh realm/polity/faction ids and destroys rollback escrow. Retry acknowledges only exact state; divergence refuses or quarantines. |
-| `KingdomPolityProfileRules.TryCreateCurrent(...)` / `TryCreateLegacy(...)`; `KingdomPolityNpcRules.TryResolve(...)` | Pure immutable profile and NPC expression. The resolver deterministically returns blueprint, level/stats, skills, bounded mutations, role gear, technology band, and digest for one ordinal; it creates or places no actor. |
+| `KingdomPolityProfileRules.TryCreateCurrent(...)` / `TryCreateLegacy(...)`; `KingdomPolityProfileExpressionCatalogue.Resolve(...)` / `TryMerge(...)`; `KingdomPolityNpcRules.TryResolve(...)` | Pure immutable profile and NPC expression. Current rules-v3 foundation bodies come only from exact positive species plus audited identity/body facts; later revisions rebuild from exact population-body facts. Unknown bodies freeze as `unresolved`, which current cohort resolution refuses cleanly. Origin, culture, style, creed, and architecture cannot manufacture biology. Technology comes from current zoning knowledge (`KingdomZoning.Tech` at foundation; sorted roster `TechPoints` later), never growth stage. Wire-v7 profiles carry canonical weighted cues with source/reason facts. Resolver pins a bounded level, preserves stock stats and natural mutations, then adds only admitted role skills and technology/role gear—no current direct ability-score package. Additive catalogues merge only through collision/bound validation. Older profile/resolver rules remain frozen compatibility lanes. |
 | `KingdomPolityRules.CanEmitOptionalProjection(ledger, causeTick)` | Presentation option gate. Enabling starts at its recorded future-cause floor; disabled time never creates a backlog. Semantic causes remain recorded even when optional rendering is off. |
 | `KingdomPolityManifestRules.TryCreateErrandProof(...)` / `TryCreateCargoProof(...)`; `KingdomPolityRouteRules.TryPlan(...)` / `TryDepart(...)` / `TryAdvance(...)` / `TryDeliverEntitlement(...)` / `TryReturn(...)` | Conserved route protocol. Errands prove zero cargo; cargo proofs bind the external custody owner and digest. Semantic travel changes endpoint phase only and never loads a zone or creates a walking actor. |
 | `KingdomPolityCorrespondenceRules.TryCreateProof(...)` / `TryDescribe(...)` | Binds one message to an exact route/counterparty/digest and exposes a bounded phase/verb view without inventing a courier body. |
@@ -209,7 +262,7 @@ veto `ApplyAmbientRealityStabilized`; no NormCore or global faction mutation is 
 | `static bool ClaimZone(Zone z, bool force = false)` | Claims a zone; requires adjacency to existing ground unless forced. Adjacency includes the stratum directly above or below (`ZonesAdjacent`), so a cellar or a tower is a claim now, not only a founding-day accident. |
 | `static bool EnrollCitizen(GameObject citizen)` | Makes a creature a citizen. Enrolled creatures are protected from kingdom-driven removal. |
 | `static SecondFoundingVerdict JudgeSite(KingdomSystem, Zone)` | What the rite would do on this ground. |
-| `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Founds the realm's second city. `force` waives only the not-adjacent requirement. |
+| `static bool FoundSecond(string name, string vocation, Zone site, bool force = false)` | Historically named compatibility entry point that founds the next additional city: second or third, while a non-seat slot remains. `force` waives only the not-adjacent requirement. |
 | `static KingdomZoningRules.ClaimVerdict JudgeClaim(KingdomSystem, Zone)` | What the founder's own claim on this ground would do — gathers the facts off the world (ours, the other city's, an exiled realm's, foreign, adjacent) and hands them to the pure verdict below. The engine-coupled half of `KingdomZoningRules` § *The claim*, below. |
 | `static string StyleGroundClause(string style)` | Lower-case founder-facing clause naming what the ground promises for a city style ("common ground", "ground green enough to root a verdant city"). Presentation only — `KingdomData.StyleForSite` owns which style a site resolves to. |
 
@@ -248,16 +301,17 @@ manifest may be in flight at a time; a lapsed window is written off once, in the
 ## `KingdomCropRules` / `KingdomCrops` / `KingdomPlot` — seeds, rows, and the harvest cycle
 
 A field starts as bare ground and produces nothing until the founder puts seed in it. That is
-Addendum 11(b)'s gate, and it is one rule read in one place: an unsown field carries **no `food`
-at all** — not to the level, not to the day — because `KingdomCrops.WithoutUnsownFood` strips the
-`food` entry out of its parsed `Carries` inside `KingdomSubsidence.Supports`. Everything else the
+Addendum 11(b)'s gate, and it is one rule read in one place: an unsown field reports **no `food`
+capacity at all** because `KingdomCrops.WithoutUnsownFood` strips the `food` entry out of its parsed
+`Carries` inside `KingdomSubsidence.Supports`. Food never enters live population level either way.
+Everything else the
 design carries is untouched; a home farm's mill is built whether or not a row is in the ground.
 An unsown field also drops out of `KingdomSurvey.Works`, so the staffing pass never sends anybody
 to stand in it.
 
 **The seed items.** Five, one per style's crop family, in `ObjectBlueprints.xml`. They are
-ordinary items rather than `Food` — a seed the ration draw can eat is a seed corn that quietly
-disappears. Three honest sources: the tier-1/tier-2 wares tables (`PopulationTables.xml`), a
+ordinary items rather than `Food` — an edible seed could otherwise be spent by an explicit food
+transaction instead of planted. Three honest sources: the tier-1/tier-2 wares tables (`PopulationTables.xml`), a
 harvest returning its own on a counter-based draw (`KingdomCropRules.RollSeedReturn`), and
 stripping a wild plant of the same species, once per plant, where vanilla ships one
 (`r_KingdomWildSeed`, merged onto `Watervine`, `Starapple Tree`, `Godshroom` and `Dreadroot` with
@@ -300,72 +354,47 @@ reckoning, and a season of harvests tells **once, with a count** (`HarvestChroni
 | `KingdomCropRules.AssessSow` / `SowRefusal` / `SowConfirm` / `WantNote` / `FieldWant` | The gate and everything it says. STANDARDS §7b: no field stalls in silence. |
 | `KingdomCropRules.RollSeedReturn` / `SeedReturned` | Whether a gathering hands back sowable seed. Counter-based on settlement, field and that cycle's own ordinal, so a reload never re-rolls it. |
 | `KingdomCrops.RowsTag` (`r_KingdomCropRows`) | How many rows a design stands, declared on the **blueprint** for the reason a pantry's capacity is. |
-| `KingdomCrops.WithoutUnsownFood` / `CycledFoodPerDay` | The gate, and the subtraction that keeps a sown field from being paid twice. |
+| `KingdomCrops.WithoutUnsownFood` / `CycledFoodPerDay` | The support gate and the crop cycle's average-yield equivalence used for catalogue validation. `CycledFoodPerDay` is not an away-time item credit. |
 | `KingdomCrops.AttemptSow` / `Withdraw` / `TakeWildSeed` / `LayRows` / `ClearRows` / `RowsOf` / `SetRipe` | The engine-coupled half. Only rows this file created and marked are ever destroyed. |
 | `KingdomCrops.RecordLarders(KingdomSystem, Zone, KingdomSurvey, long)` / `LarderRoomElsewhere` / `DeliverPending` / `Deposit` | Cross-zone delivery. Both records now read and write the seated settlement's city book (`KingdomSettlement.City`) rather than the retired `r_TAF_Larders_*` game-state pair; the numbers are the same, the home is one. |
 | `KingdomSystem.PendingCrop` / `PendingCropBlueprint` | One city's harvest still on the road, carried by the seat swap on its own name. |
 
-## Food as a flow — what the fields make and the people eat
+## Food as a physical, positive transaction chain
 
-Food is physical, opt-in, and denominated in people, exactly as water is physical, opt-in and
-denominated in drams. The two lanes are mirrors, and the three places they deliberately part
-company are the interesting part.
+Food and water share physical custody, but they are not mirrored upkeep systems. Water retains
+its live physical bill and scarcity ladder. Food moves seed → crop row → physical harvest →
+dedicated larder → explicit meal, recipe, industry, or trade transaction. Time and population
+create no food debit.
 
 | Member | Contract |
 |---|---|
-| `KingdomRules.RationsPerDay(int population)` | What the settlement eats in a day: **one ration a settler, at every rung**. No stage term — see the divergences below. |
-| `KingdomRules.RationsForElapsed(int population, long elapsedTicks)` | The same over whole elapsed days. Uncapped and saturating, exactly like `PolicyUpkeepForElapsed`. A bill, never a debt. |
-| `KingdomRules.ForagedRations(int hands, int days)` / `ForageRationsPerHand` / `MaxForagedRationsPerDay` | What free hands bring in off the land. Two a hand a day under a flat daily ceiling of four; the ceiling is applied to the **rate**, before the days multiply out. |
-| `KingdomRules.ResolveHunger(int streak, GrowthStage, int population)` → `HungerOutcome` | The hunger ladder: `Fed` / `Warned` / `Emigration` / `Famine`. Rung for rung the same shape as `ResolveThirst`, with the same two floors — a Camp is never marked, and `LoyalCoreSettlers` never leave. |
-| `KingdomRules.ComposeScarcity(ThirstOutcome, HungerOutcome)` → `ScarcityVerdict` | **The composition rule.** See below. |
-| `KingdomRules.ScarcityDepartureClause(bool, bool)` / `ScarcityDepartureNote(bool, bool)` | The chronicle's and the ledger's words for a departure, naming whichever scarcities are actually true. |
+| `KingdomRules.RationsPerDay` / `RationsForElapsed` / `ForagedRations` | Legacy source-compatible projections. All return `0`; abstract ration billing and foraging are retired. |
+| `KingdomRules.ResolveHunger(...)` / `HungerOutcome` | Legacy wire vocabulary. Every input projects `Fed`; no food state can warn, depart, mark, or kill. |
+| `KingdomRules.ComposeScarcity(ThirstOutcome, HungerOutcome)` → `ScarcityVerdict` | Water-only composition. The legacy hunger argument is ignored; bite, health, withering, and departure come only from thirst. |
+| `KingdomRules.ScarcityDepartureClause(bool, bool)` / `ScarcityDepartureNote(bool, bool)` | Water-departure wording. The legacy food flag is ignored. |
 | `KingdomRules.LarderCapacityTag` / `DefaultLarderCapacity` / `LarderCapacity(int declared)` | How much a dedicated container holds. Declared on the **blueprint**, never in the catalogue. |
 | `KingdomRules.CivicLarderBlueprints` / `IsCivicLarderBlueprint(string)` | Which commissioned designs auto-dedicate as pantries (STANDARDS §7's "commissioned storage auto-flags"). |
 | `KingdomSurvey.FoodStored` / `FoodCapacity` / `FoodSpace` | The food side of `StoredWater` / `StorageCapacity` / `StorageSpace`. `FoodSpace` is **derived** from the other two, so a caller that puts food in by another road cannot leave it stale. |
-| `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `ConsumeFood(int, string preferred, out int fromPreferred)` / `ConsumeCrop(string, int)` / `SpoilFrom(GameObject, int)` / `AdoptLarder(GameObject)` | The food mirrors of `Store` / `Consume` / `LeakFrom`, plus the dedication of a commissioned pantry. All keep the survey's counters in step; all return what actually moved rather than what was asked for. The three-argument `ConsumeFood` is the **meal-shaped** draw (below); `ConsumeCrop` is the mill's input half — one named blueprint only, so a mill never grinds the staple it just made. |
-| `KingdomSurvey.Kitchens` | Finished works here carrying vanilla's `Campfire` — the communal fire, and the oven above it. A settlement with none cannot cook, however full its larders are. |
-| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | What the settlement's works bring in in a day *without growing it and without grinding it* — `KingdomSubsidence.Supports(survey).Food` less `KingdomCrops.CycledFoodPerDay(survey)` less `KingdomCrops.MilledFoodPerDay(survey)`, at exactly the effectiveness the level is summed at. A sown field's food is delivered physically by its own cycle and a mill's by its own grinding, so each feeds the settlement exactly once; an unsown field is already zero here, and not by subtraction. |
-| `KingdomGrowth.ScarcityEnabled` / `ThirstEnabled` / `HungerEnabled` | One switch (`r_TAF_OptionThirst`) for both binding goods. A founder who turned scarcity off did not ask to keep half of it. |
+| `KingdomSurvey.StoreFood(int, string blueprint)` / `ConsumeFood(int)` / `ConsumeFood(int, string preferred, out int fromPreferred)` / `ConsumeCrop(string, int)` / `AdoptLarder(GameObject)` | Explicit physical food transactions plus pantry dedication. They keep survey counters in step and return what actually moved. The three-argument `ConsumeFood` is the **meal-shaped** draw (below); `ConsumeCrop` is the mill's input half — one named blueprint only, so a mill never grinds the staple it just made. |
+| `KingdomSurvey.TryDebitFoodFromExact(GameObject, int, out int)` | Exact destructive source debit for an explicit receipt-backed transfer. It reproves container, inventory/list, item identities/counts, spendable custody, topology, and counters around each callback. Wear, hunger, and elapsed catch-up never call it. |
+| `KingdomSurvey.SpoilFrom(...)` / `TrySpoilFromExact(...)` | Obsolete source-compatible projections for retired passive spoilage. They return `0` / `false`, never inspect the container, and never mutate stock. |
+| `KingdomCapabilityRuntime.Count(..., "taf:cooking", ...)` | Number of exact designations whose current physical snapshot credits cooking. Native `Campfire` is one generic Plot-scoped provider; an accepted tag, catalogue category, or finished root alone supplies nothing. |
+| `KingdomGrowth.FoodMadePerDay(KingdomSurvey)` | Legacy city-rate seam; always `0`. Fields create physical crop objects through their harvest cycle and mills transform exact physical inputs, so away-time support rows cannot mint food. |
+| `KingdomGrowth.ScarcityEnabled` / `ThirstEnabled` / `HungerEnabled` | `ScarcityEnabled` and `ThirstEnabled` read the water option. `HungerEnabled` is a legacy alias that returns `false`. |
 
-**The identity the lane is built on.** One point of `food` is one settler fed for one day, and
-`RationsPerDay` charges one ration a settler a day, so *a settlement standing at its own supported
-level makes exactly the rations it eats*. That only holds because **every** food work is counted
-in the flow at exactly the effectiveness it is counted at for the level — a design counted for
-one and not the other would be a level a settlement could reach and then starve at. Since Wave G2
-the growing designs are counted through their **cycle** rather than through the day, and the
-identity survives because the cycle pays exactly what the `Carries` promised over one crop's days:
-`rows × YieldPerRow == food × CropDays`, asserted per design in `_notes/balance-sim.py` §G2.
-
-**Where food is not water's mirror, and why.**
-
-1. **No stage rate.** Water is billed 100/120/150/180/220 per hundred by stage and its `Carries`
-   are divided back out by the same percentage (`KingdomSubsidenceRules.LevelFromWater`). Food is
-   billed flat and handed to `Equilibrium` undivided, because a dinner is counted in people. This
-   is what makes the identity above true; a stage term here would invalidate every food figure in
-   `KingdomBuildings.xml`.
-2. **No stores policy, no district discount.** Thrift's own blurb says what it is ("the
-   water-keepers ration"), and the agrarian district's upkeep discount is already spent on the
-   water side. Neither is applied twice.
-3. **Foraging is a ceiling, not a pool.** The water detail's haul is bounded by how much open
-   water is actually standing there; foraging is bounded by a flat four a day whoever walks the
-   ground. And foraged food is eaten hand to mouth rather than stored, so a settlement that has
-   dedicated no larder still eats — which is why a Camp self-sustains with nothing commissioned,
-   the same promise the water lane makes when half a camp is on the detail.
-
-**The composition rule — no death spirals.** Both ladders run; each keeps its own streak, says its
-own sentence, sets its own mark. What a failed resolve *costs* is
-`ComposeScarcity`'s **maximum of the two, never their sum**: at most one departure per resolve
-however many things are wrong, so a settlement that is dry *and* starving empties no faster than
-the worse of the two alone would. A city may be `Withered` and `Famished` at once and still lose
-exactly one settler for it. Subsidence is untouched underneath both — it is the *structural*
-consequence of standing above what the works carry, and these are the *immediate* one.
+**The conservation identity.** Catalogue `food` remains useful support/capacity metadata, but it
+is not an away-time item rate and never becomes a household bill. Crop cycles create physical
+objects; mills consume and replace exact physical objects; explicit consumers debit exact
+spendable custody. A heartbeat and the city carry/reify model neither mint nor remove food.
+Consequently no elapsed-time split, absence, load, or old hunger ordinal can change pantry stock,
+population, or settlement state. Water scarcity remains unchanged and `ComposeScarcity` ignores
+the legacy hunger argument rather than combining two ladders.
 
 ### Meals, not ticks — the favoured dish (Addendum 11(b))
 
-The day's rations are the same servings they always were; what changed is that they are now a
-**meal**, drawn in a stated order and worth something afterwards. The whole chain is one thing:
-the fields grow the crop, the mill binds it into the **staple**, the staple is the first
-component of the settlement's own **dish**, and the ration draw reaches for it first.
+The shared meal is an explicit Charter action, not a heartbeat. The whole chain is one thing:
+fields grow the crop, the mill binds it into the staple, a currently capable physical kitchen
+proves somewhere to cook it, and one confirmed transaction debits its disclosed ingredients.
 
 | Member | Contract |
 |---|---|
@@ -375,20 +404,15 @@ component of the settlement's own **dish**, and the ration draw reaches for it f
 | `KingdomRules.DishRecipeType` | `"r_KingdomFavoredDish"` — the one `CookingRecipe` subclass every realm's dish resolves to, in `XRL.World.Skills.Cooking`. It reads its display name and components off `KingdomSystem`, so one class serves every settlement. |
 | `KingdomDish.Ensure(KingdomSystem, bool announce)` | Derives and stamps the dish onto the realm's **`Faction`** (`WaterRitualRecipe`, `WaterRitualRecipeText`) and onto `KingdomSystem`. Idempotent; called at founding and on every settlement pass, so a city whose creed drifts changes what it is known for and says so once. `RecipeGenotype` is deliberately never set — both gates it drives refuse somebody dinner. |
 | `KingdomSystem.DishName` / `DishText` / `DishStaple` / `DishSource` | Realm state, not city state: a realm has one faction however many cities it holds. |
-| `KingdomRules.JudgeMeal(int owed, int fromDish, int fromStores, bool hasKitchen, GrowthStage)` → `MealVerdict` | `None` / `Scraps` / `Plain` / `Favored`. Favoured wants a kitchen standing **and** `FavoredMealPercent` (50%) of the day off the staple. `Scraps` — the larders gave nothing — is only spoken from `ScrapsSpokenFrom` (Village) up, because living off the land *is* what a camp does. |
-| `KingdomRules.MealShadeFor(MealVerdict)` / `FavoredMealShade` | One settler, for exactly one day. Never a penalty at any reading. |
-| `KingdomSystem.MealShade` / `LastMeal` / `ScrapsAnnounced` | Carried by the seat swap like every other city field. `MealShade` is **re-drawn every heartbeat**, never accumulated. |
-| `KingdomSystem.Shade` | What the level actually reads: `NotableShade + MealShade`, each floored. `KingdomSubsidence` reads this rather than either half, so the two can never disagree about which shades count. |
+| `KingdomRules.JudgeMeal(int owed, int fromDish, int fromStores, bool hasKitchen, GrowthStage)` → `MealVerdict` | A complete exact debit plus kitchen yields `Plain`; when the entire disclosed cost came from the named staple it yields `Favored`. Missing kitchen or incomplete debit yields `None`. `Scraps` remains a legacy ordinal and is never produced. |
+| `KingdomRules.CanHoldSharedMeal(food, population, cookingProviders)` | Runtime gate: residents, spendable physical ingredients, and at least one current `taf:cooking` provider are all required. |
+| `KingdomRules.MealShadeFor(MealVerdict)` / `FavoredMealShade` | Legacy population-capacity projection; always `0`. Shared meals instead apply their existing bounded creed easing and cohabitation progress after exact completion. |
+| `KingdomSystem.MealShade` / `ScrapsAnnounced` | Legacy save/wire fields, normalized to zero/false. `LastMeal` remains harmless historical evidence. |
+| `KingdomSystem.Shade` | Returns `0`; food history never changes population support or later causes subsidence. |
 
-**Why one settler and why one day** — both are vanilla's arithmetic rather than dials. A
-non-player eater's `ProceduralCookingEffect` expires at `StartTick + 1200` ticks and
-`KingdomRules.TicksPerDay` is 1200; only one meal effect stands at a time. So a settlement is
-well fed for the day it ate and no longer, and the lift rides the same term as a notable's shade
-and a shrine's spirit — `KingdomCatalogueRules.LiftCapPercent` binds it again on top.
-
-Food in storage creates no indefinite passive aura. Availability matters when the daily ration and
-meal transaction actually consumes it; the bounded positive `MealShade` is re-earned for that day
-and never becomes a penalty for an empty larder.
+Food in storage creates no indefinite passive aura. Empty stock or a missing kitchen reports that
+the optional act is unavailable and spends nothing; it creates no hunger, penalty, catch-up, or
+departure. A completed meal's positive effects are bounded by their own existing rules.
 
 **The draw order, stated once.** Larder by larder in survey order, item by item in inventory
 order: the staple first, then everything else that is food. Nothing is random, so the same
@@ -400,10 +424,10 @@ asks of any draw that lands on containers a founder can open.
 | Member | Contract |
 |---|---|
 | `KingdomCrops.IsMill(GameObject)` | Asked of the **object**, off vanilla's own `Mill` part, so a third party's millstone counts the moment it declares one. |
-| `KingdomCrops.MilledFoodPerDay(KingdomSurvey)` | What the mills are counted for by the level, at the effectiveness the level counts them at. Subtracted from `FoodMadePerDay` for the same reason a sown field's is: the mill delivers its food physically. |
+| `KingdomCrops.MilledFoodPerDay(KingdomSurvey)` | Bounded physical mill throughput requested by the attended settlement pass. It is never an away-time item credit. |
 | `KingdomCrops.StapleFor(string crop)` | The stated staple, else the crop's own `PreservableItem.Result`, read off a sample. |
 | `KingdomRules.PreserveMultiple` / `MillCropsPerDay` / `MilledGain(int)` / `CropsForGain(int)` | The conversion. **Two crops in, six staples back, a net of four** — which is exactly the grinding mill's declared `Carries="food:4"`. `_notes/balance-sim.py` §G3 asserts that identity against the catalogue XML. |
-| `KingdomRules.MillableStock(int foodStored, int population)` | Everything above one day's rations for everybody living here. **Industry never eats before the residents do**: the grinding runs after the heartbeat has drawn the day, and even then only on the surplus. |
+| `KingdomRules.MillableStock(int foodStored, int population)` | The nonnegative physical stock; population is retained only for source compatibility. `ConsumeCrop` narrows the actual debit to the exact raw-crop blueprint, and the operating mill bounds the request. There is no hidden household reserve or bill. |
 | `KingdomLedger.Milled` | The gain only. The crops themselves were counted when they were gathered. |
 
 ×3 is vanilla's `Vinewafer` → `Vinewafer Sheaf` figure and the **least** of the three numbers this
@@ -427,12 +451,11 @@ authored, direct vanilla-component recipe. Its resident/body/recipe receipts, re
 save recovery, and water-rite resolution are active v1 work; display-name substitution and random
 procedural recipe generation remain forbidden.
 
-**Spoilage.** `KingdomWearRules.LeakKind.Food` is Addendum 10(b)'s formerly postponed third kind
-("food spoilage waits until food is a flow"). That prerequisite is now satisfied: a damaged larder loses servings on world
-days exactly as a damaged cistern loses drams, through the same `Leaked` arithmetic, announced
-once by name and unsaid when it is mended. Spoilage runs *after* the ration draw in the pass, so
-it can never be the reason a settlement goes hungry — only the reason it has no cushion when
-something else is.
+**No passive spoilage.** `KingdomWearRules.LeakKind.Food` keeps its persisted ordinal only to read
+old saves. Food is opt-in positive play, so larder damage never destroys ingredients and no world-
+day absence accrues a food loss. A valid old open food-loss receipt clears before validation or
+continuation without inspecting inventory; obsolete `SpoilFrom` projections are inert. Water and
+charge leaks remain live. Repair still restores a larder's reduced work effectiveness.
 
 ## Acting on its own judgment
 
@@ -455,9 +478,27 @@ physical or domain mutation; release or registry changes cannot reprice an open 
 The luxury arrival is a distinct, inspectable path rather than a large-bed alias. A blueprint
 tagged `r_TAF_LegendaryTrader` requires one sound, wholly vacant exact `finehouse` root on an M-or-
 larger LotId plus a live staffed shop tier of at least 3. Success stores that exact LotId in the
-ordinary `KingdomLodgingPlotId`, marks a real `VillageMerchant`, and stocks the trader from the
-city's current tier. Manors, terraces, aggregate spare beds, and unstaffed shop numbers do not
-substitute.
+ordinary `KingdomLodgingPlotId` and marks a finite native personal `VillageMerchant`. The required
+`GenericInventoryRestocker` is sealed—empty tables, zero chance, effectively disabled frequency—and
+exists only as Qud's empty-trade adapter. It does not generate or restock wares. The current
+`ShopTier` is service standing/reach, never ware quality. Manors, terraces, aggregate spare beds,
+and unstaffed shop numbers do not substitute.
+
+The ordinary civic market has the same physical law. One accepted staffed `taf:market` provider on
+designated ground plus its exact held office may open at Village/current standing 3 and may open
+empty. Native TradeUI sale is the sole ordinary ingress: the exact sold item enters direct merchant
+inventory with native `_stock`; purchase is the sole ordinary sink. TAF never population-rolls,
+mints, consigns, replaces, remotely debits, or periodically restocks wares. `ShopTier` may rise or
+fall to zero with current service; Chronicle receipts own historical reach. Exact office/legendary
+handoff moves only receipted direct stock. Personal inventory is never stock by proximity.
+
+If an item is bought, stolen, dropped, carried, container-held, foreign-held, or left on a corpse,
+TAF retires only its receipt and owned protection. It does not reclaim, delete, move, recount, clear
+native `_stock`, or alter foreign state. Unloaded ground may retain stale TAF marks until an exact
+item event or attended observation. Completed or dormant legendary/native traders remain finite
+personal merchants through civic loss and accession, while only the civic projection/marks retire;
+an open prepared handoff endpoint alone is temporarily unavailable to succession. Vanilla assumed
+trader water and pricing remain TradeUI conventions, never TAF stock, water, or resource output.
 
 Both guest tracks run their arrival clock on real elapsed time (`KingdomRules.PassagesThrough`)
 and report a run that came and went unwitnessed as one dated line rather than a queue standing
@@ -478,7 +519,18 @@ on one cell through `KingdomReach.CharacterAt` / `ShadedAt`, and on the settleme
 through `KingdomReachRules.Landed(amount, reached, homes)`, which lands a work's lift in
 proportion to the roofs it covers and lands nothing at all for a work that reaches no home;
 quarters are measured (ground within six cells of ground); an XL's city effect is live only while
-the office machinery has named a head. `KingdomMaterials` gains the refined tier (shaped timber /
+the office machinery has named a head.
+
+An attended zone stores city/realm Reach memory as one canonical
+`r_TAF_ReachObservation_v1` zone-property receipt. It binds purpose, realm, settlement, zone,
+faction owner, designation authority digest, fixed lift payload, source revision, and observation
+tick. Every consumer re-proves the current identity/topology and raw string receipt; malformed,
+future, foreign, disabled, or pre-receipt legacy state contributes zero. Receipt age is otherwise
+unbounded until that exact zone is attended again. Disabling the option, secession, and exile
+explicitly remove affected receipts and zero the retired `r_TAF_ReachCity_*` /
+`r_TAF_ReachRealm_*` integers. Old saves are deliberately not promoted from those unbound values.
+
+`KingdomMaterials` gains the refined tier (shaped timber /
 shaped stone / worked metal via staffed yards), vanilla bits (`Bits=`) and exotic finds
 (`Exotics=`) as high-craft prices, and the yard gates on L/XL construction. `KingdomCrews` /
 `KingdomCrewRules`: capability from settler stats (`CrewNeeds="strength:16"`) or exact vanilla
@@ -492,11 +544,10 @@ mending auto-queued and holdable, costed from the chain. Hard running is counted
 **activity-days** (`KingdomRules.ActivityDays`), so a work that ran hard through an absence wore
 for it and a work standing idle did not. `WorkEffectiveness` (Addendum 10(b)) is what ANY
 finished work is worth this pass, crewed or not — a work that wants a crew runs at its crew
-stretch reduced again by condition, a staffless one at its condition alone, so ruin now reaches
-the water and roof lanes too and not the food lane only. The one exception to "never from the
-calendar": what an already-damaged STORE goes on losing runs on **world days**
-(`Leaked` / `LeakKind` / `LeakDaysToEmptyAtCeiling`) until it is mended — the damage is still an
-event, only its consequence is a clock, and mending unsays it.
+stretch reduced again by condition, a staffless one at its condition alone. The one exception to
+"never from the calendar" is limited to already-damaged water and charge stores: their loss runs
+on **world days** (`Leaked` / `LeakKind` / `LeakDaysToEmptyAtCeiling`) until mended. The frozen Food
+kind always prices zero and old Food receipts retire inert.
 
 ### Construction presence and visual-state readings
 
@@ -516,9 +567,10 @@ render indicator and appends examine text; it creates no object and owns no save
 `kingdom:visuallegend` prints the canonical receipt. `kingdom:visualaudit` reports actual current
 ground rows in deterministic ground order for screenshot/human acceptance.
 
-## How belief moves
+## How belief and affiliation move
 
-`KingdomConversion` / `KingdomConversionRules`: osmosis (shared living under one roof, scaled by
+`KingdomConversion` / `KingdomConversionRules` applies only where the merged creed definition is
+theological: doctrine, cult, or an order with explicit opt-in. It provides osmosis (shared living under one roof, scaled by
 closeness, accrued in **cohabitation-days** of real shared living rather than in visits), culture
 (shared meals, capped), and the resented-pressure exit (warned once and pushed to the founder,
 its window spent in world-days, emigrating through the ordinary machinery). A conversion about to
@@ -528,20 +580,28 @@ one path a conversion may take** — it alone keeps the creed tallies, pressure 
 two-register dispute honest. `KingdomFaith` (consecration; staffed shrines converting the neutral
 of their zone; staffed scriptoria softening the grudge one band) and `KingdomWaterRite` (the rite
 turned inward: consented, priced, refusal-with-reasons, the fourth asking shutting the question)
-both route through it.
+both route theological changes through it. `AdoptAffiliation` is the explicit, consented water-rite
+lane for communities, peoples, polities, non-theological orders, and unknown third-party keys; it
+shares tally/history custody but emits adoption/allegiance prose and is unreachable from passive
+shrines, meals, osmosis, or pressure sources.
 
 ## The quality-of-life vocabulary, and lodging
 
-`KingdomQolRules` / `KingdomQol`: one namespaced tag vocabulary — buildings declare `Provides`
-(catalogue attribute, merged like every other; roofs contribute their own — sky on the surface
-only, shade everywhere underground), residents carry
+`KingdomQolRules` / `KingdomQol`: one namespaced tag vocabulary. A building's merged catalogue
+`Provides` attribute is only its accepted-tag ceiling; it never supplies a live tag. Current
+furniture, equipment, liquid/state providers, and exact structural cover inside one proved
+designation supply the effective tags. `KingdomQol.CatalogueOfferOf(key, ...)` is explicitly a
+catalogue-preview/authoring query, while `KingdomQol.TryPhysicalOfferOf(root, survey/index, ...)`
+is the live API and never mints identity. Structural sky/darkness follows exact designated cover
+and stratum, not a promised roof string. Residents carry
 Needs / Prefers / Refuses, derived first from vanilla parts (Robot, aquatic brains, LiveFungus,
 PhotosyntheticSkin, Inorganic) and refined by `r_TAF_*` blueprint tags, with `-tag` removing a
 derived entry. Unknown tags are inert. `KingdomLodging` / `KingdomLodgingRules` assign every
 settler an address: Needs gate the home; housemates are gated by the closeness ladder — Packed shares only without
 quarrel, Close refuses the ambient grudge, Roomed tolerates it, and open hostility (≥100, the
 named fault lines) refuses any shared roof at every tier. `Refuses` tags are absolute. Closeness
-derives from beds-per-footprint density, `Closeness` attribute overriding. Arrivals join only if a
+derives from effective physical beds per exact designation extent; authored TAF architecture may
+retain its explicit `Closeness` override, while adopted/external rooms cannot borrow one. Arrivals join only if a
 home they would accept exists. Among those eligible homes, an ordinary/non-luxury resident takes
 any non-`finehouse` before a fine house; only then does the ordinary fewest-free-beds/ordinal-plot
 tiebreak run. This is a last-resort preference, not a hard reservation: when a fine house is the
@@ -569,22 +629,106 @@ new source cannot compile against it. `KingdomLodgingRules.RefusalHostility` / `
 explicit closeness rung, are the supported contract.
 Tastes and displacement tolerance query this same vocabulary.
 
+The Charter's **The city in full → Inspect physical building benefits** browser is the player-facing
+view of that same live index. It takes one non-migrating active-zone survey, lists every exact
+authored, adopted, or extension-provided designation, and then lists the physical provider rows
+inside it. The building view distinguishes active supply from catalogue caps and states explicitly
+that an empty designation provides zero; it also names each still-unfilled amount and missing
+accepted quality. Provider views expose nominal offer, current operating percentage, credited
+amount/qualities, wrong-role supply, true cap saturation, and exact fault. Physical cover has its
+own provider row rather than silently adding sky/dark. Unassigned providers and
+designation-source faults remain visible in a separate fault list. The browser never loads remote
+ground, mints an object identity, changes a designation, or commits governance work.
+
+`KingdomBenefitInspection.Offered` / `Tags` are nominal declarations;
+`Credited` / `CreditedTags` are the portion counted in this immutable reading.
+`OperationPercent` records current operation. `OutsideDesignationContract` identifies a live offer
+that does not fit this building role; `SaturatedByDesignation` identifies accepted supply whose
+amount ceiling or singleton quality is already full. `LimitedByDesignation` remains their combined
+compatibility projection. A provider that bound to a designation but then failed access, cover, or
+operation stays attached to that building's inspection rows; only genuinely unassigned/source
+faults appear globally.
+
+The active-zone scan admits at most 4,096 provider evidence rows deterministically. Exact assigned
+identities are considered before anonymous furniture; equal anonymous object anchors stay atomic,
+so mutable part order cannot choose a winner. A tied group that cannot fit is quarantined while
+later stable groups are still considered, and canonical native declarations may fill a remaining
+prefix. Refused excess produces one visible `ObservationLimit` row. Crossing the bound therefore
+never erases already proved providers or lets one oversized anonymous tie disable every building.
+
+### Physical provider and adoption operation contract
+
+`IKingdomBenefitProvider` declares bounded nominal supply. Optional
+`IKingdomQuantitativeBenefitProvider.TryKingdomBenefitOperationPercent` returns current operation
+from 0 through 100; the original boolean callback remains the compatibility fallback. Provider
+condition, designation-root condition, staffing/power/sowing/custom operation, scope, access, and
+caps are independent gates. Percent gates compose multiplicatively. Every description and custom
+operation callback is contractually deterministic and observation-only for one benefit epoch: it
+must not mutate its item, root, survey, zone, another provider, a designation source, or hidden
+state. Descriptions may be called more than once and must normalize identically. The runtime
+re-proves declarations, exact designation authority, roots, custody, assignment, routes, shells,
+condition, and non-custom operation after callbacks and refuses detectable mutation.
+A custom callback's arbitrary hidden state cannot be re-proved by a finite callback-free pass and
+therefore is not supported authority; violating this contract is extension corruption, not a
+credited state.
+`Filled` is rejected because no typed relevant-contents contract ships yet.
+
+Generated semantic fixtures carry optional `r_KingdomProviderBuildKey`. When present it must equal
+the exact designation's `BuildingKey`; a forge fixture cannot satisfy a smithy merely because both
+offer `craft`. An absent tag means a generic native capability such as `Bed`, `Shrine`,
+`MarkovBookshelf`, `UniversalCharger`, or real fresh liquid, still bounded by scope and caps.
+
+`KingdomAdoptabilityRules` is the shared load/menu/transaction proof boundary. Shipped adoption
+currently exposes 51 curated roles: enclosed ordinary housing and work rooms, ordinary open
+yards/grounds with exact catalogue-sized rectangles, plus `larder` on one exact dry container.
+Every exposed benefit role has a stocked takeable provider route. A spatial target publishes an
+exact signed cell receipt; staffed non-storage work additionally publishes a signed build key,
+category, staff need, and manning rule. Neither receipt copies catalogue `Carries` or `Provides`.
+Furniture supplies benefits; the catalogue only caps them. Housing and staffless targets publish
+no staffing authority. Other storage works retain their typed authored production/capacity roots
+rather than accepting an arbitrary vessel.
+
+Room adoption has one live geometry authority. Its structural flood records exact membership,
+shell, and safely openable door ingress separately; the signed d2 receipt stores canonical
+membership plus whether the target is an open plot. Residents, creatures, dropped items, and
+ordinary/provider furniture never change that membership. A second ingress-seeded flood derives current usable floor from native
+passability: permanent solids, pits and unsafe navigation objects, and open liquid do not count.
+The room must retain 4/12/24/40 reachable usable cells for S/M/L/XL housing or work at admission,
+pre-commit, and every later benefit read. Falling below that role/tier minimum, losing safe
+ingress, or changing membership pauses the designation without rewriting its receipt; restoring
+the same ground resumes it. Collision tests walk only exact membership cells, never a room's
+bounding rectangle, so concave gaps remain available to another lawful designation.
+
+Open ordinary yards and grounds are supported; their full rectangle is Plot/Yard authority and
+has no invented shell. Single-cell/network shapes, crop fields, power plants, mills, labs, fixed
+creed installations, remote endpoints, civic Heart works, purpose/crown works, and hosted arcology
+roles remain authored where their meaningful operation still belongs to root parts or exact
+topology. These are current proof boundaries, not permanent category bans. Extensions may expose
+a new ordinary room or open role with `Adoptable="yes"`; load still rejects unsafe geometry and
+reserved authored roles. Release preflights designation authority, then clears signed designation,
+operation, plot, staffing, and owned larder state without erasing pre-existing dedication.
+
 ## Layering, reserved lots, plans, and the trigger law
 
 Catalogue files **layer** (`KingdomMergeRules`): merge-by-key on raw attributes inside the single
 XML pass — named overrides, omitted survives, blank erases, skins append (same key replaces),
-chains extend across files; the post-merge design is what the validator sees. `Plot`, `Footprint`,
-and `Roof` describe catalogue capacity and eligibility; they do not generate geometry. Exact
-geometry comes from the selected architecture map and palette. `KingdomSocket` keeps a struck lot
-as a rebuildable reservation. Three lanes remain distinct. An `UpgradesTo` tier automatically
-resolves only inside the standing receipt's same exact plan/binding/type/actual-size route (the
-adjacent civic-heart rung is the sole exception), resolves the successor's exact frozen
-`VariantKey` rather than current demographic selectors, and preserves `LotId`. A missing matching
+chains extend across files; the post-merge design is what the validator sees. `Plot` declares lot
+eligibility, catalogue `Footprint="WxH"` declares exact physical building dimensions, and `Roof`
+declares the shelter authority later frozen as `BaseRoof`; none generates geometry. Exact
+geometry and the footprint's canonical origin come from the selected architecture map and palette.
+`KingdomSocket` keeps a struck lot
+as a rebuildable reservation. Three lanes remain distinct. An `UpgradesTo` tier ordinarily
+resolves inside the standing receipt's same exact plan/binding/type/actual-size route. The two
+bounded cross-size lanes are an adjacent civic-heart rung and an adjacent ordinary authored
+`additive-expand`/`renovate-expand` lineage whose larger containing envelope passes live ground,
+road, occupancy, ingress, and custody proofs. Both resolve the successor's exact frozen
+`VariantKey` rather than current demographic selectors and preserve `LotId`; a missing matching
 successor variant refuses before debit. A founder-selected plan
 change exists only when `KingdomArchitectureTransitions` declares the exact directional
 `(from, to, type, actual size)` delta. Same-set transitions preserve `LotId` only through an explicit
-transition receipt. Retype or resize performs fresh
-siting/restaking and mints a new lot identity. Skins change presentation metadata, not topology.
+transition receipt. Retype or any resize without that exact adjacent expansion authority performs
+fresh siting/restaking and mints a new lot identity. Skins change presentation metadata, not
+topology.
 The real automatic trigger gates are stage, style, holds, exact `Knowledge`/`MinTech`, free hands,
 contents fit, water price plus reserve, `UpgradeMaterials`, one-work-at-a-time pacing, and frozen-lot
 room. The predecessor stays live throughout construction; no temporary lodging, output outage,
@@ -597,8 +741,55 @@ S/M/L/XL rectangles. An occupied current-path lot freezes two related identities
 
 | Layer | Frozen authority |
 |---|---|
-| Lot | `LotId`, type/category, actual size, rectangle, and pose/frontage. |
-| Occupied plan | Build key, plan, exact binding, tier, variant, palette, canonical snapshot/hash, main cell, authored claimed cells, entrances, fixtures, and stateful anchors. |
+| Lot | `LotId`, type/category, actual size, rectangle, exact binding, and cardinal pose selected by that binding's semantic frontage. |
+| Occupied plan | Build key, plan, exact binding, tier, variant, palette, canonical snapshot/hash, physical footprint, `BaseRoof`, main cell, authored claimed cells, entrances, fixtures, and stateful anchors. |
+
+Every architecture map is the exact canonical lot-sized map in north-facing coordinates. If its
+catalogue tier declares `Footprint="WxH"`, the selected map must declare
+`Footprint="X,Y,WxH"` with the same dimensions wholly inside the map. Without a catalogue
+footprint, the resolved physical footprint is the full map; an optional map attribute can only
+restate that full rectangle. Pose rotates the map, placements, and all four footprint corners as
+one authority; east/west transpose the world extents. Authors provide one canonical map per real
+architectural variant, not four directional copies. Heart- or road-frontage resolution freezes the
+cardinal pose before payment, and the exact preview names both that semantic frontage and facing.
+The semantic rule is not duplicated as a second mutable receipt field: the exact binding is frozen,
+and its resolved cardinal pose is the durable spatial authority. Author separate directional
+maps only when direction changes the architecture rather than its pose.
+
+Fixture pose is an optional schema-1 registry extension, not a requirement on ordinary Qud
+scenery. A palette blueprint with no `<pose>` record is invariant, matching vanilla single-cell
+screen-space furniture. A cardinal record names one semantic base plus existing north/east/south/
+west concrete siblings; a map glyph then supplies the local orientation on the matching Ground,
+Structure, or Object layer. Compilation composes local orientation with lot facing and writes only
+the concrete blueprint into the existing `a4` placement. Cardinal use without local orientation,
+local orientation without cardinal authority, unknown siblings, and siblings outside the semantic
+base inheritance family fail closed. Cardinal siblings also pass a bounded effective-blueprint
+parity audit: only tile/glyph/color/H/V-flip Render fields may differ; parts, all nonvisual Render
+truth, builders, mutations, skills, stats, properties, tags, extended tags, and inventory remain
+identical. Malformed final pose rows poison a selected palette reference instead of degrading to
+undeclared invariant behavior. Omission inherits merged optional fields; an exact empty sibling or
+layer-orientation attribute clears it, while whitespace remains malformed. Exact-name basin and
+stair fixtures cannot declare cardinal families because their blueprint is runtime identity. More
+generally, every `r_Kingdom*` semantic base is prohibited unless explicitly admitted by the
+source-reviewed visual-only identity allowlist (empty in the shipped corpus); vanilla stairs remain
+prohibited. This protects exact-name gameplay consumers that are outside the blueprint parity
+surface. Extension authors own the same exact-name audit for their non-TAF semantic bases.
+`connected` and explicit `invariant` records reject local orientation and preserve the base
+blueprint. The public compiler accepts no raw pose list; only the loader's bounded audited registry
+can authorize concrete siblings. See
+[MODDING.md](../MODDING.md#plots-reserved-lots-and-authored-buildings) for XML.
+
+Cell claim and physical-footprint membership are separate axes. `Building`, `Yard`, and
+`Unclaimed` record managed use/custody, while the rectangle records physical building ground. A
+`Building` cell, `$building`, and `main` must be inside the rectangle. `Yard` and `Unclaimed` may
+occur inside or outside it, including covered courts and service areas. The geometric yard remains
+the lot minus the physical footprint.
+
+Current compilation emits canonical `a4`, which freezes that rectangle, the three-state claims,
+and catalogue `BaseRoof`. The decoder retains canonical `a1`-`a3` compatibility, but those wire
+formats cannot provide all current claim/footprint/roof truth. They stay read-only architecture
+authority except for named already-paid completion and legacy lanes: no new stamp or in-place
+transition may infer or silently upgrade their missing state.
 
 Preview freezes this authority before debit; commit re-proves the same snapshot rather than drawing
 a variant twice. The stamper applies ordered ground, structure, and object layers. No current
@@ -607,8 +798,21 @@ furnishings. Missing exact bindings are filtered from the picker and refuse dire
 mutation. Automatic same-binding tiers preserve the standing variant identity; explicit
 same-type/same-size transition receipts may select the target's current lawful variant only when
 every declared target variant retains the source's stateful fabric. Both lanes
-preserve `LotId`; retype/resize is a fresh lot. Already-standing legacy work remains on its frozen
-compatibility path and is never silently converted.
+preserve `LotId`; retype, shrink, relocation, or resize without an exact adjacent expansion is a
+fresh lot. Already-standing legacy work remains on its frozen compatibility path and is never
+silently converted.
+
+For a stateful non-root Object, the compiler freezes the sole `benefit:*` anchor as custody when
+one is present; functional roles may coexist on that glyph. Without a benefit anchor, exactly one
+non-main, non-entrance functional anchor supplies custody. A stateless provider is still physical
+and inspectable, but an authored renovation may replace that empty fitting; protected contents or
+foreign/live state still refuse removal in preflight.
+
+All in-place additive and renovate deltas obey the same monotonic footprint rule in a common
+main-relative frame: the successor rectangle must retain or contain the predecessor rectangle and
+may not shrink or shift it. Only `additive-expand` and `renovate-expand` may also enlarge the lot
+envelope. Shrink, recentering, or relocation requires strike and fresh siting/restake;
+`replacement` refuses as an in-place delta and requires a fresh commission after strike.
 
 Materials (`KingdomMaterials` / `KingdomMaterialRules`) come from clearance—never minted—and live
 in dedicated stockpiles; building costs are water plus materials, and condemning returns half.
@@ -655,10 +859,11 @@ last, and stop at the first refusal — the founder is told one thing to fix, no
 ## Hosted-lot registration and read-only views
 
 `KingdomHostedArcologyRules` owns a process-bounded, copy-on-read registry (maximum 16 definitions).
-`RegisterHostedLot(KingdomHostedLotDefinition, out string)` accepts either paid work with an exact
-material key, duration, crew, and support receipt, or a read-only definition with none of those
-mutation fields and one `KnowledgeView` key. Duplicate/malformed keys refuse; registration never
-commissions work.
+Paid v1 floors are a closed two-entry manifest: ward and terrace each require a fixed topology slot,
+programme, and exact fixture plan, so no public API pretends a definition alone can create one.
+`RegisterReadOnlyHostedLot(KingdomHostedLotDefinition, out string)` accepts only a read-only
+definition with no material, duration, crew, support, water, or physical-producer mutation fields
+and one `KnowledgeView` key. Duplicate/malformed keys refuse; paid input explicitly refuses.
 
 `KingdomHostedArcology.RegisterKnowledgeView(string,
 KingdomHostedReadOnlyEligibility, KingdomHostedKnowledgeView, out string)` binds a read-only key to:
@@ -682,6 +887,46 @@ reserved hosted-shell carrier for the realm and capital; ambiguous evidence is q
 adopted or destroyed. `AuthoritySlotForWrite(first, second, currentRealm, retainedRealm)` is the
 engine-free selection law for two fixed save slots: it updates the current row, preserves the one
 exact exiled archive row, and only replaces authority outside both retained identities.
+
+`KingdomHostedArcologyTopology` is the engine-free physical authority for schema `TAFArcology`:
+`AllCoordinates()` enumerates its 27 local zones; `ProgrammeAt`/`ProgrammeName` select one distinct
+district programme per coordinate; `TryHorizontalNeighbour`, `HasStairsUp`, and `HasStairsDown`
+define its bounded connected graph; `HostedLotAt` fixes terrace `(1,1,9)` and ward `(0,1,11)`; and
+`StableRole` namespaces every threshold, stair, anchor, programme fixture, and paid fixture by the
+surface root plus coordinate and semantic role.
+
+`KingdomHostedArcologyProgrammeBuilder` is the internal physical plan authority. `FloorFor` and
+`MaterialHistoryFor` select the three storey histories; `Build` selects one of nine route-safe
+archetypes, stamps the inspectable plan signature, places four inert programme cues and six real
+vanilla arc sconces, and refuses a coordinate/programme mismatch. `TryPaidFixtures(lotKey,
+programme, ...)` exposes only the matching Hydroponic Terrace and Lodging Ward exact plans to
+`KingdomHostedArcologyVisual`, keeping paid receipt realization and room architecture on one
+auditable placement authority. Visual realization reproves physical-producer count, every stable
+identity and destination, all obstructions, and every constructible output before its first zone
+mutation. A failed placement rolls back only newly prepared fixtures and quarantines if exact
+rollback cannot be proved.
+
+`KingdomHostedArcologyDesignationProvider` exposes only an active, already-loaded paid floor. Its
+exact stable zone anchor is the designation root; the receipt digest is the revision; and the one
+80x25 programme zone is the bounded interior/covered cell set. It cross-proves exterior root ID,
+native interior instance/zone ID, topology slot, programme property/name, active canonical lot
+receipt, anchor, and realized fixture manifest. It never opens an interior or mints an ID on read.
+
+At final `SuspendingEvent`, an anchor marked by an attended activation is consumed once. The
+still-loaded event zone is visually reconciled and evaluated through an isolated exact designation
+and `KingdomBenefitIndex`. Ward `roof` and `luxury` come only from current working providers and are
+capped by the lot contract. Terrace food does not enter generic benefit projection: exact stable-ID
+growbeds contribute current `r_TAF_HostedCropRows`, row/yield/day arithmetic is capped at the lot
+contract, and exterior consumption still requires current fresh water in ordinary stores.
+
+`r_KingdomArcology.LotObservations` persists at most one canonical copy-on-read row per paid lot:
+exterior root ID, lot key, active receipt revision, canonical interior zone ID, exact anchor ID,
+observed tick, physical amounts, and optional bounded fault. Copying a carrier clears the slate;
+reload validates bounds and canonical rows. Duplicate, malformed, future-dated, over-cap,
+wrong-lane, foreign-root, receipt-changed, zone-changed, or anchor-changed evidence fails closed
+without loading remote ground. Shell inspection reports active amount/cap/missing state,
+unobserved/fault state, and observation age. Catalogue `Supports` remains only the ceiling and work
+contract; it is never projected as live hosted supply.
 
 ### Where knowledge lives, and the research work (`KingdomResearch` / `KingdomResearchRules`)
 
@@ -711,6 +956,17 @@ contract (`r_KingdomInquiry` rides it at rung 100; the lab wave's benches raise 
 discovery is `JournalObservation.Revealed` under `taf:node:<key>` (founder-held), and
 `KnowledgeGateHeardOf` is the single visibility filter every menu, map row, and refusal funnels
 through. `Train` writes `BaseValue` only — never `Statistic.Max`.
+
+Grooming's maximum study proof is physical and city-local. `schooling` remains the city's tech
+gate; the resident's `JobWorkId` must also resolve to exactly one current work row. On active
+ground that exact work must resolve to one root at its recorded zone, anchor, and blueprint and
+its exact designation must currently credit live `taf:education`. Unloaded ground contributes
+only through the canonical dated `r_TAF_EducationPostObservation_v1` zone receipt, which binds
+realm, settlement, zone, faction owner, work/root/designation identity and revision, anchor,
+blueprint, source revision, and observation tick. Attended passes revoke before observing and
+publish last; malformed, duplicate, ambiguous, foreign, future, or authority-mismatched bindings
+contribute zero. Receipt age alone does not expire an otherwise exact observation.
+Catalogue category and declared `Provides` values are never education evidence.
 
 ### The lab (`KingdomProcedureRules` / `KingdomLabRules` / `KingdomProcedures` / `KingdomLab`)
 
@@ -842,10 +1098,13 @@ ties broken north then west, so the same settlement puts its gatehouse in the sa
 time it's asked, reload included. Null (and the ordinary plan) for every other design, for a
 zone with no frontier left, and for a settlement with no heart yet to aim from.
 
-## `KingdomCreed` — what a city believes, and what that costs a realm
+## `KingdomCreed` — covenant, affiliation, and belief
 
-A settler may carry a creed: a real Qud faction, drawn from factions the realm has dealt with and
-weighted by its standings. A city's creed is the one its residents share; a mixed city has none.
+A settler may carry `Creed`: the preserved public/save property for a real Qud faction, drawn from
+factions the realm has dealt with and weighted by standings. It is an umbrella affiliation, not
+necessarily theology. `KingdomCreeds.xml` assigns one typed semantic kind: `community`, `people`,
+`polity`, `order`, `doctrine`, or `cult`. Unknown keys remain neutral/non-theological and are not
+written back into old saves.
 
 Dissent between two cities of one realm is read from **the engine's own faction feeling**
 (`Faction.GetFeelingTowardsFaction`, which falls through to the faction's `"*"` wildcard) rather
@@ -854,9 +1113,12 @@ that dislike strangers by default are exactly the ones that make a realm hard to
 
 | Member | Contract |
 |---|---|
+| `KingdomCreedKind`; `KingdomCreedDraft`; `KingdomCreedDefinition` | Stable typed kind and merge DTOs. Same-name layers inherit omitted attributes; blank `Theology` clears an order opt-in; kind changes, malformed tokens, incoherent theology, and the 128-definition cap fail closed. |
+| `KingdomData.TryGetCreedDefinition` / `CreedUsesTheology` | Runtime merged lookup and sole theological behavior gate. Missing definition returns false; no fallback fabricates belief. |
 | `CreedOf` / `SeatCreed` / `AwayCreed` | The creed a city holds, or null. |
 | `Draw` / `Record` / `Forget` | Creed at arrival, and its removal on death or departure. `Forget` takes the **whole person** out of both tallies — what they hold and what they have held before. |
-| `const string CreedPastProperty` / `PastOf` / `Aligns` / `RememberPast` | **Creed history.** A settler's once-held creeds, stamped on the settler (so a seat swap, a secession and a save carry it without any map remembering to), bounded to `KingdomCreedRules.MaxKeptCreeds`. `RememberPast` is called from `KingdomConversion.Convert` and nowhere else: the one conversion path is the one place a creed is ever *left*. `Aligns(settler, creed)` is "holds it, or has held it". |
+| `const string CreedProperty = "KingdomCreed"`; `CreedPastProperty`; `PastOf` / `Aligns` / `RememberPast` | Save/API compatibility remains exact. History stores raw faction keys only; kind is resolved, never persisted. Both theological conversion and explicit affiliation adoption retain old alignment without inventing migration state. |
+| `KingdomConversion.Convert` / `AdoptAffiliation` | `Convert` refuses every non-theological or unknown target. `AdoptAffiliation` refuses theological targets and is only called by explicit consent. Both use one private transition custody path for exact tallies/history/governance; their prose and mechanics stay distinct. |
 | `RiteAvailable` / `HoldRite` / `EaseForMeal` | The founder's levers against dissent. `HoldRite` publishes water, rite tick, and dissent under one compensated governance reservation; false/exception restores exact snapshots before the action can commit. |
 | `DeclarableCreeds` / `Declare` | Name the realm's creed: decisive, and costly across the world. Declaration snapshots both standing/carry roots, creed, and dissent, then compensates every injected or engine failure before governance commit. |
 | `SecededHolds` / `Secede` / `TryRejoin` | A city may leave, keeping its ground, people and buildings. It can be asked back once the cause is gone. |
@@ -889,16 +1151,17 @@ what the larders buy is a cushion rather than a licence.
 ## `KingdomSettlement` — one city's state
 
 The realm is the faction; a settlement is one of its cities. One is *seated* at a time — its
-state lives in `KingdomSystem`'s own fields, which is what every consumer reads — and the other
-waits in `KingdomSystem.Away` until the founder walks into its ground.
+state lives in `KingdomSystem`'s own fields, which is what every consumer reads. Up to two other
+cities wait in authoritative `KingdomSettlementTopology` until the founder walks into their
+ground. `Away` is only the first-row compatibility projection.
 
 | Member | Contract |
 |---|---|
 | `string SettlementName` / `string Vocation` | The city's own name and what it was founded for. A null vocation is the realm's first city, founded before there was a second to tell it from. |
-| `const int MaxSettlements` | 2. A realm holds no more. |
+| `const int MaxSettlements` | 3: one active seat plus at most two non-seat cities. |
 | `static string[] Vocations` / `VocationBlurbs` | The fixed vocation set and its menu prose. |
 | `static bool IsKnownVocation(string)` / `VocationClause` / `VocationSuffix` / `VocationBlurb` | Vocation validation and presentation; an unknown vocation degrades to the neutral one. |
-| `static SecondFoundingVerdict JudgeSecondFounding(bool founded, int settlementsHeld, bool groundIsClaimed, bool groundIsAdjacent)` | Pure rule for whether the rite founds a second city. |
+| `static SecondFoundingVerdict JudgeSecondFounding(bool founded, int settlementsHeld, bool groundIsClaimed, bool groundIsAdjacent)` | Historically named pure rule for whether the rite may found the next additional city before the three-city cap. |
 | `static string SecondFoundingRefusal(SecondFoundingVerdict, string realmName)` | Founder-facing refusal text; empty when the rite is allowed. |
 | `void ReadFrom(object seat)` / `void WriteTo(object seat)` | Carry a city into or out of a seat by field name. Throws `KingdomSeatMismatchException` **before writing anything** if the seat cannot carry a field. |
 | `static FieldInfo[] CarriedFields()` / `static List<string> SeatMismatches(Type)` | What a city holds, and what a seat cannot hold. |
@@ -940,21 +1203,19 @@ reconciles against the ground either way.
 
 **The signed counter, and what makes a deficit real.** Each zone row carries what it owes its own
 containers, *per stock kind and signed*: positive lands, negative draws. One net figure is not
-enough — a granary zone the city has been drinking out of owes a food landing and a water draw at
-once — so the row carries three signed figures and the weighted `owed` §3.5 reports is derived from
+enough — a zone may still carry historical or explicit transfer evidence beside a water draw — so
+the row retains three signed figures and the weighted `owed` §3.5 reports is derived from
 them. A draw is spread across the zone's dedicated vessels **oldest dedication first**
 (`KingdomCity.DedicationOrderProperty`, minted the first pass that counts a container as the
 city's), which is deterministic without a draw and stable across a reload. What the containers
 could not cover stays on the row and is told; it is never silently forgiven.
 
-**Every zone's works produce, and the day is billed once (W6).** A zone row's `WaterCarry` and
-`FoodCarry` are what its works make in a day, measured by the pass that read that ground —
-`KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay(Survey)`, the same two
-figures the level and the whole catalogue ladder are derived from. The model integrates them for
-every zone off its **one** `ProcessedThroughTick`, in world-day boundaries so that splitting a span
-at a breakpoint pays exactly the days running it whole would; the settlement pass credits nothing,
-and `KingdomCity.Stamp` writes `LastWaterWorkTick`/`LastFoodWorkTick` **from** the model's tick, so
-two owners of one day is not a bug to avoid but a state that cannot be reached.
+**Water works produce, and the day is billed once (W6).** A zone row's `WaterCarry` is what its
+works make in a day, measured by the pass that read that ground. The model integrates it off its
+one `ProcessedThroughTick`, in world-day boundaries so splitting a span pays the same days as one
+whole run. `FoodCarry` remains a frozen row column but is ignored and normalized to zero: fields
+and mills alone own physical food creation. Old row food credit/debt is grounded to the currently
+observed containers before reify, so upgrading cannot mint or drain pantry stock.
 
 Production raises the row's **level and its signed debt by the same amount**, which is invariant
 I1 in one line: the ground has not changed, so `level − owed` — what the model says the ground
@@ -1210,10 +1471,11 @@ figure that crosses a §0.0 budget is prefixed `BUDGET` and names the budget it 
 **What remains deliberately narrow.** Central routing, nearest-holder proofs, and exact itineraries
 are shared substrate. Existing food, water, carry, and purpose authorities mint their own receipts;
 ordinary construction still lacks its one routed-input adapter and therefore may spend only exact
-local custody. Per-zone production rates are live: when runtime passes null override arrays,
-`KingdomCityAdvanceable` reads each row's measured `WaterCarry` and `FoodCarry`, then applies the
-realm's method factor. Growth no longer credits those same production days; TESTING step 90r guards
-against double billing. Capacity-bound batching remains an owning logistics decision where many
+local custody. Per-zone water production rates are live: when runtime passes a null water override
+array, `KingdomCityAdvanceable` reads each row's measured `WaterCarry`, then applies the realm's
+method factor. `FoodRateOf` always returns zero; frozen food arrays/columns cannot mint stock.
+Growth no longer credits those same water-production days; TESTING step 90r guards against double
+billing. Capacity-bound batching remains an owning logistics decision where many
 jobs compete over many holders; it does not grant another subsystem cargo authority.
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
@@ -1400,17 +1662,20 @@ world), gate the work on a labour term, spend the budget, and advance with `Adva
 ## `KingdomSubsidenceRules` / `KingdomSubsidence` — the level, and settling back to it
 
 Pure rules plus one engine-facing caller. `KingdomSubsidence.Supports(survey)` sums the
-catalogue's `Carries` over every `KingdomBuilt` work in the zone — every work scaled by
+physically embodied benefit reading over every `KingdomBuilt` work in the zone — each reading
+clamped by the catalogue's `Carries` ceiling and scaled by
 `KingdomWearRules.WorkEffectiveness` (Addendum 10(b): a crewed work by its crew stretch reduced
 again by condition, a staffless one by condition alone), plus the `Shades` of whatever yard trade
-each household has taken up — and `SupportedLevel(tally, stage, shade)` hands that to the frozen
-`KingdomCatalogueRules.Equilibrium`.
+each household has taken up. `SupportedLevel(tally, stage, shade)` hands only water, roof, and
+bounded lift to `KingdomCatalogueRules.PopulationEquilibrium`. Food remains visible physical-lane
+metadata but never changes population support, binding cause, or subsidence.
 
 `KingdomSubsidence.ScopedSupports(system, zone, survey)` is the same tally with **one** difference
 and it is the one the level reads: `SupportTally.Lift` is scoped by reach (Addendum 6). Each
 work's lift lands in proportion to the settlement's roofs it covers
 (`KingdomReachRules.Landed`), the headed great works of the realm's other claimed zones arrive
-whole out of `KingdomReach.CityShadeExcept`, and the binding three are untouched citywide pools.
+whole out of `KingdomReach.CityShadeExcept`, and water/roof remain untouched citywide pools. Food
+may still aggregate as compatibility/informational metadata, but it is not a live binding.
 `Supports` remains the right call for a caller asking what the works make rather than what the
 settlement holds — the water-works production pass is one.
 
@@ -1418,7 +1683,8 @@ settlement holds — the water-works production pass is one.
 `RecordZone`, into the seated settlement's city book, dated in whole days (`SeenStamp`) — and then folds
 in every OTHER zone the seated city claims **as it was last seen** (`OtherZones`), never simulated
 forward: a granary zone the founder hasn't walked into since spring goes on reporting spring's
-granary until they walk back in. `CityTally` sums the three BINDING goods this way (`Lift` passes
+granary until they walk back in. `CityTally` sums water, roof, and compatibility food metadata this
+way (`Lift` passes
 through unchanged — `ScopedSupports` has already summed it across the city through
 `KingdomReach.CityShadeExcept`, Addendum 6); `CityStorage`/`CityStorageCapacity` does the same for
 dedicated storage, which is what the stage ladder reads, so a city whose casks stand in the zone
@@ -1445,10 +1711,11 @@ it 6 days ago}}".
 
 | Member | Contract |
 |---|---|
-| `static int Equilibrium(int water, int food, int roof, int lift, int shade)` (on `KingdomCatalogueRules`) | The frozen arithmetic. The level is the least of the three binding goods, lifted by `lift + shade` up to `LiftCapPercent` of that least, floored at `FloorLevel`. Each of `lift` and `shade` is floored at zero on its own, so neither can eat the other and an unmet taste is never a penalty. |
+| `SupportWater` / `SupportFood` / `SupportRoof` / `SupportWealth`; `BindingSupports` / `PopulationBindingSupports` / `LiftingSupports` (on `KingdomCatalogueRules`) | Frozen authoring vocabulary and stable presentation order retain `BindingSupports = water, food, roof` for source/XML compatibility. Live `PopulationBindingSupports = water, roof`; food is physical-lane metadata and cannot author pressure or subsidence. Lifts are `craft`, `spirit`, `learning`, `order`, `luxury`, `wealth`. A third-party unknown support is still accepted as a lift after these known kinds. Naming `wealth` changes diagnostics/order only: it enters the same capped lift arithmetic it already used as an unknown kind and never keys threats. |
+| `static int Equilibrium(int water, int food, int roof, int lift, int shade)` / `PopulationEquilibrium(int water, int roof, int lift, int shade)` (on `KingdomCatalogueRules`) | `Equilibrium` is the frozen three-axis arithmetic retained for compatible callers. Live population calls `PopulationEquilibrium`, which reuses the same floor/lift-cap/overflow law with food held non-binding. Its base is the least of water and roof; `lift + shade` is capped at `LiftCapPercent` of that least. Each lift half is floored at zero before addition, so neither can eat the other and an unmet taste is never a penalty. |
 | `static SupportTally FoldShade(SupportTally, List<KindAmount>, int percent)` (on `KingdomCatalogueRules`) | `FoldWork` without the work count, for a contribution that stands in somebody else's plot — a household's yard trade. |
 | `static int LevelFromWater(int water, GrowthStage stage)` | Declared `water` is denominated at **camp rates**; this divides by `StageUpkeepPercent` before the equilibrium sees it. A design carrying eight in a camp carries three in a city. Since Addendum 11(a) only *producers* declare `water` — a cistern, a reservoir and the waterworks hold and carry nothing, because the same figure is also banked as a real daily flow (`LastWaterWorkTick`, above) and a vessel declaring it would be conjuring what it claims to store. A producer's figure is `KingdomRules.TicksPerDay / mean(VariableRate)` of the vanilla `LiquidProducer` on its own blueprint. |
-| `static int SupportedLevel(SupportTally, GrowthStage, int shade = 0)` / `BindingSupportFor(...)` | The level, and which of `water` / `food` / `roof` is holding it down. `shade` is `KingdomSystem.NotableShade`; it defaults to none because a settlement that has named nobody honestly has none. |
+| `static int SupportedLevel(SupportTally, GrowthStage, int shade = 0)` / `BindingSupportFor(...)` | Live population level from stage-adjusted water, roofs, and bounded lift; its binding answer is only `water` or `roof`. `SupportTally.Food` is ignored here. `shade` is `KingdomSystem.NotableShade`; it defaults to none because a settlement that has named nobody honestly has none. |
 | `static Trajectory Slide(..., bool alreadySliding, int shade = 0)` | Carries the same shade through every step, so a slide converges on the level the founder was actually told. |
 | `const int StartMarginPercent` / `static int SlideBeginsAbove(int level)` / `IsSubsiding` / `HasArrived` | The 20% band. A settlement inside it never moves; the slide stops the moment it arrives. |
 | `const int StageFallMarginPercent` / `static GrowthStage StageWithHysteresis(...)` / `SettledStage(...)` | The ratchet, both ways. One rung per reckoning down, on a clear shortfall only, `Camp` an absolute floor. |
@@ -1537,7 +1804,7 @@ Deterministic, side-effect-free, and fully unit-tested; safe to call from anywhe
 including your own tests. Notable members: `SpilloverDelta`, `UpkeepForElapsed`,
 `ElapsedDays`, `AdvanceCheckpoint`, `ActivityDays`, `LabouredTicks`,
 `StageFor`, `FetchableDrams`, `ResolveThirst`, `RationsPerDay`, `RationsForElapsed`,
-`ForagedRations`, `ResolveHunger`, `ComposeScarcity`, `RaidSize`, `StyleAllows`, `DistrictName`,
+legacy-neutral `ForagedRations`/`ResolveHunger`, water-only `ComposeScarcity`, `RaidSize`, `StyleAllows`, `DistrictName`,
 `ZonesAdjacent`, `ComposeOutsider`, `ToThirdPerson`, plus the `BuildEntry` / `DealEntry`
 records and their `TryParse*` validators.
 

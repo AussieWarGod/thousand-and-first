@@ -120,34 +120,32 @@ namespace ThousandAndFirst
 			bool hasFounder = founderCell != null && founderCell.ParentZone == Z;
 			int founderX = hasFounder ? founderCell.X : 0;
 			int founderY = hasFounder ? founderCell.Y : 0;
-			List<KingdomPlotRules.PlotRect> candidates = new List<KingdomPlotRules.PlotRect>();
+			List<KingdomPlotRules.PlotRect> groundCandidates =
+				new List<KingdomPlotRules.PlotRect>();
 			bool sawBlocked = false;
 			KingdomPlotRules.PlotRect nearestBlocked = default(KingdomPlotRules.PlotRect);
 			int nearestBlockedReach = 0;
-			for (int y = interior.Y1; y + plotHeight - 1 <= interior.Y2; y++)
+			List<KingdomPlotPoseCandidate> posed = KingdomPlotPoseSitingRules.Enumerate(
+				interior, plotWidth, plotHeight);
+			for (int i = 0; i < posed.Count; i++)
 			{
-				for (int x = interior.X1; x + plotWidth - 1 <= interior.X2; x++)
+				KingdomPlotRules.PlotRect rect = posed[i].Rect;
+				if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;
+				if (Grid.AnyRefusal(rect))
 				{
-					KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(x, y, x + plotWidth - 1, y + plotHeight - 1);
-					if (KingdomPlotRules.CrowdsExisting(rect, laid))
+					int reach = hasFounder ? KingdomPlotRules.Reach(rect, founderX, founderY) : 0;
+					if (!sawBlocked || KingdomPlotRules.Beats(0, reach, rect,
+						0, nearestBlockedReach, nearestBlocked))
 					{
-						continue;
+						sawBlocked = true;
+						nearestBlocked = rect;
+						nearestBlockedReach = reach;
 					}
-					if (Grid.AnyRefusal(rect))
-					{
-						int reach = hasFounder ? KingdomPlotRules.Reach(rect, founderX, founderY) : 0;
-						if (!sawBlocked || reach < nearestBlockedReach)
-						{
-							sawBlocked = true;
-							nearestBlocked = rect;
-							nearestBlockedReach = reach;
-						}
-						continue;
-					}
-					candidates.Add(rect);
+					continue;
 				}
+				groundCandidates.Add(rect);
 			}
-			if (candidates.Count == 0)
+			if (groundCandidates.Count == 0)
 			{
 				// The ground that came closest is the one the founder is told about: naming a
 				// refusal on the far side of the zone would be true and useless.
@@ -161,6 +159,42 @@ namespace ThousandAndFirst
 				{
 					Refusal = KingdomPlotRules.RefuseRoom(staked);
 				}
+				return false;
+			}
+
+			// A rectangle is not buildable merely because its cells are clear. Resolve the exact
+			// typed architecture and authored frontage against every pose before the layout grammar
+			// scores anything. This keeps a valid transposed entrance from losing to a canonical
+			// rectangle which the road cannot actually reach.
+			KingdomArchitectureRuntime.SitingProbe probe;
+			if (!KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z,
+				groundCandidates[0], Entry.Key, Entry.Category, out probe, out Refusal))
+				return false;
+			List<KingdomPlotRules.PlotRect> candidates =
+				new List<KingdomPlotRules.PlotRect>();
+			List<KingdomPlotRules.PlotRect> architectureRejected =
+				new List<KingdomPlotRules.PlotRect>();
+			List<string> architectureFailures = new List<string>();
+			for (int i = 0; i < groundCandidates.Count; i++)
+			{
+				KingdomPlotRules.PlotRect candidate = groundCandidates[i];
+				string architectureFailure;
+				if (probe.TryAccept(candidate, out architectureFailure)) candidates.Add(candidate);
+				else
+				{
+					architectureRejected.Add(candidate);
+					architectureFailures.Add(architectureFailure);
+				}
+			}
+			if (candidates.Count == 0)
+			{
+				int nearest = NearestIndex(architectureRejected,
+					hasFounder, founderX, founderY);
+				string architectureRefusal = nearest >= 0
+					? architectureFailures[nearest] : null;
+				Refusal = string.IsNullOrEmpty(architectureRefusal)
+					? "No authored architecture fits any clear pose of that exact plot."
+					: architectureRefusal;
 				return false;
 			}
 			KingdomLayoutRules.LayoutPurpose purpose = KingdomLayout.PurposeOfEntry(Entry);

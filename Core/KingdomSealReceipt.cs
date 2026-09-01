@@ -12,6 +12,10 @@ namespace ThousandAndFirst
 
 		private static readonly string[] StateNames = new string[3] { "reserved", "committed", "declined" };
 
+		// Same law as KingdomSealRecord: parsed receipts preserve their canonical wire envelope,
+		// while every newly-created receipt starts at the current schema.
+		private int WireSchema = KingdomSealRecord.CurrentSchema;
+
 		public string LineageId = "";
 
 		public string LegacyId = "";
@@ -31,7 +35,7 @@ namespace ThousandAndFirst
 			body.Put("target", TargetGameId);
 			body.Put("state", StateName(State));
 			body.Put("written", WrittenTick);
-			return KingdomSealFormat.Compose(KingdomSealRecord.CurrentSchema, body);
+			return KingdomSealFormat.Compose(WireSchema, body);
 		}
 
 		internal static bool TryParse(string FileText, out KingdomSealReceipt Receipt)
@@ -81,7 +85,8 @@ namespace ThousandAndFirst
 					LegacyId = legacy,
 					TargetGameId = target,
 					State = (KingdomSealReceiptState)state,
-					WrittenTick = written
+					WrittenTick = written,
+					WireSchema = schema
 				};
 				return true;
 			}

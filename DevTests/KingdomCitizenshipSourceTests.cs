@@ -85,7 +85,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomCitizenshipRemovalReason.Accession", residents);
 			StringAssert.Contains("KingdomCitizenship.BelongsTo(System, Leaver)", growth);
 			StringAssert.Contains("KingdomCitizenshipRemovalReason.Emigration", growth);
-			StringAssert.Contains("TryRestoreEmigrationAfterCleanRefusal", growth);
+			StringAssert.Contains("ExactRemovedCitizenship", growth);
+			StringAssert.Contains("TryRecoverPending", growth);
 			StringAssert.Contains("receipt.RemovalReason != (int)KingdomCitizenshipRemovalReason.Emigration", runtime);
 			StringAssert.Contains("KingdomResidents.TryLocate(System, Citizen", runtime);
 		}

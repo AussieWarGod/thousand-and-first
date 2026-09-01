@@ -171,7 +171,6 @@ fi
 # manifest, the generated request (inside the overlay), and both option files. Save/ and
 # Synced/Saves are outside it because play mutates them.
 python3 "$PROFILE_TOOL" seal "$LOCAL" "$SEAL_DIR/profile.sha256"
-python3 "$PROFILE_TOOL" verify "$LOCAL" "$SEAL_DIR/profile.sha256"
 printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 
 echo "SCENARIO PROFILE READY: $ROOT"

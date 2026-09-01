@@ -1,317 +1,280 @@
 # Release and Steam Workshop Procedure
 
-This repository can build and verify a Workshop-shaped directory, but it never authenticates to
-Steam, creates an item, accepts agreements, uploads content, or changes item visibility. Those
-steps stay in Caves of Qud's signed-in Workshop UI.
+This repository can build and verify Workshop-shaped directories. It never authenticates to
+Steam, creates an item, accepts agreements, uploads, or changes visibility. Those actions remain
+explicit, attended steps in Caves of Qud's signed-in Workshop UI.
 
-The supported release target is Caves of Qud v1.0.5, core build 2.0.211.51. Re-run the licensed
-integration checks against any newer game build before claiming compatibility.
+Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
+claiming compatibility with another build.
 
-## Release boundary
+## Two public package lanes
 
-The Workshop content root is the mod root. `Tools/stage.sh` defines its exact inventory. Source
-tests, tools, design notes, contributor documents, the developer scenario harness (`Harness/`),
-local game files, logs, saves, and generated assemblies are excluded. The optional root
-`modconfig.json` is runtime metadata and is included.
-Every selected path must also have one unambiguous Windows spelling: the stage gate rejects NTFS
-reserved names, invalid Win32 characters, trailing dots/spaces, and case-fold collisions before
-copying or packaging anything.
+`Tools/workshop-package.sh` has three mutually distinct modes:
 
-Current content uses verified vanilla tile paths or intentional text glyphs and presently contains
-no project-authored runtime raster. Original runtime art is permitted only through the exact
-allowlist, editable-source, rights, fallback, wiring, hash, package, and native-review contract in
-[ASSET_PROVENANCE.md](ASSET_PROVENANCE.md). `preview.png` is presentation media, not a runtime
-sprite; it needs its own rights/review record. Packaging accepts only that preview and exact
-allowlisted runtime raster paths, case-insensitively rejecting every other image.
+| Mode | Purpose | Public proof required |
+|---|---|---|
+| `--test` | Private bootstrap/candidate; `workshop.json` may be absent | Clean committed package only |
+| `--alpha` | Public `1.0.x`, labelled **v1.0 Alpha**; first version is exactly `1.0.0` | Private receipt binding, final preview, structure review, public metadata, annotated tag |
+| `--release` | Evidence-complete later lane | Every Alpha gate plus `docs/RELEASE_EVIDENCE.json` and retained human/native artifacts |
 
-## 1. Build the private bootstrap
+Alpha deliberately does not invent final human evidence. It uses the machine-only
+`docs/ALPHA_CANDIDATE.json` record instead. Beta and production Release are separate Workshop
+listings and must restore the full evidence lane. Current metadata constants are intentionally
+Alpha-specific; changing channel requires a reviewed metadata/tool/test change, not an ad-hoc UI
+edit.
 
-1. Update `manifest.json`, `CHANGELOG.md`, `README.md`, and `TESTING.md` together. Keep the manifest
-   ID `r_ThousandAndFirst`; use numeric `major.minor.patch` versioning.
-2. Supply `preview.png`: exactly 512 by 512 pixels, 8-bit RGB/RGBA non-interlaced PNG,
-   under 1,000,000 bytes. Add the exact manifest field `"PreviewImage": "preview.png"`. Use a
-   clean final-build in-game screenshot that shows representative authored settlement architecture
-   and remains legible at Workshop thumbnail scale; a founding popup over empty ground, debug
-   overlay, or synthetic mock-up is not final preview evidence. Record capture date, game build,
-   source save, crop/edit steps, and author in the release issue. Do not use AI-generated or
-   generative-image-assisted material, copied/extracted game assets, or unlicensed art.
-3. Run the portable checks on a clean checkout, then the licensed Windows/Qud checks:
+Follow [ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md) before the first version bump.
+
+## Package boundary
+
+`Tools/stage.sh` defines the exact Workshop inventory. The package includes runtime source/XML,
+allowlisted runtime assets, `README.md`, `PLAYTESTING.md`, `SUPPORT.md`, `LICENSE`, `NOTICE`,
+`CHANGELOG.md`, `manifest.json`, optional `modconfig.json`, `preview.png`, and `workshop.json` when
+present. It excludes `.git`,
+`.github`, `_notes`, `DevTests`, `Harness`, `Tools`, `Art`, `docs`, saves, logs, assemblies, project
+files, and contributor-only material.
+
+The packager:
+
+- refuses dirty/untracked input, mutable destinations, symlinks, special files, unsafe ancestors,
+  repository overlap, Windows-invalid names, and case-fold collisions;
+- materializes exact ordinary blobs from `HEAD`, not mutable worktree bytes;
+- validates manifest, preview, Workshop serializer bytes, package inventory, modes, raster allowlist,
+  and SHA-256 receipt;
+- never overwrites an existing destination or receipt; and
+- creates a folder because Qud's uploader consumes a folder, not an archive.
+
+`preview.png` must be a 512×512, 8-bit RGB/RGBA, non-interlaced PNG below 1,000,000 bytes. Final
+source/capture/rights/edit history belongs in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md). A debug
+overlay, founding popup over empty ground, synthetic mock-up, known interim image, copied asset, or
+unlicensed image cannot sign a public package.
+
+Runtime image packaging permits only `preview.png` and exact allowlisted runtime raster paths.
+
+## 1. Pre-freeze checks
+
+Finish implementation fan-in. On a clean checkout, run serially:
+
+```bash
+./Tools/portable-check.sh
+./Tools/release-check.sh --test
+```
+
+Public CI is portability evidence only. Its exact installed-data skip allowlist does not sign a
+release. `release-check.sh` requires licensed installed Qud data, zero release skips, exact native
+compile/test, asset/reference checks, smoke/deploy checks, package harness, and the structural
+release contract. Every staged production C# file must be below 300 physical lines, and
+`docs/STRUCTURE_REVIEW.json` must bind human responsibility/protocol review to the exact staged C#
+inventory.
+Missing or stale structural review is a failed release, including Alpha.
+
+Run relevant [TESTING.md](../TESTING.md) live passes. Record failure as failure. Automation, a
+source test, and an old native receipt are never a substitute for the current behavior they do not
+exercise.
+
+For first Alpha, perform the one-time private-candidate identity freeze from
+[ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md): manifest `1.0.0`, Alpha title, honest pre-release
+README/CHANGELOG wording, current preview, and synchronized tests/docs. Do not write public status or
+a dated release heading until the subscribed private candidate passes section 4.
+
+## 2. Build private bootstrap
+
+Commit frozen source. Build into a new absolute destination outside the repository:
+
+```bash
+VERSION="$(python3 Tools/workshop_metadata.py fields manifest.json | sed -n '1p')"
+./Tools/workshop-package.sh --test "/absolute/path/TAF-${VERSION}-bootstrap"
+```
+
+Normal `/tmp` is acceptable when its sticky/ownership protection is intact. The command creates a
+sibling `.sha256` receipt. A first bootstrap may omit `workshop.json`; it exists only to create the
+private Steam item and cannot be the later subscription receipt.
+
+Move/copy the folder to one unique direct child of Qud's local Mods root. Before launching Qud:
+
+```bash
+./Tools/stage.sh verify "/absolute/path/to/Qud/Mods/TAF-${VERSION}-bootstrap"
+cd "/absolute/path/to/Qud/Mods/TAF-${VERSION}-bootstrap"
+sha256sum -c "/absolute/path/TAF-${VERSION}-bootstrap.sha256"
+```
+
+Remove every other local or subscribed copy with ID `r_ThousandAndFirst`. Qud can prefer a local
+copy and skip a later duplicate, making source proof meaningless.
+
+## 3. Create or update private Steam item
+
+In Qud, open **Modding Toolkit** → **Workshop**, select `r_ThousandAndFirst`, and create/update the
+item. Keep visibility **Private**. Use canonical fields printed by:
+
+```bash
+./Tools/workshop-package.sh --copy
+```
+
+Use an external byte-identical copy when Qud asks for a preview source; selecting the destination
+`preview.png` as its own source can fail. Compare hashes before and after. Enable **Upload hidden
+files** so Qud submits the already-audited folder rather than an unreceipted filtered copy. Accept
+Steam's agreement only through Steam's UI.
+
+After successful private submission, preserve Qud's `workshop.json`. It carries the published-file
+ID and public metadata, not a credential. Item creation alone does not prove an upload or load.
+
+## 4. Freeze subscribed private candidate
+
+Copy Qud's completed visibility-`"0"` `workshop.json` into repository root. Canonicalize it while
+preserving its item ID:
+
+```bash
+python3 Tools/workshop_metadata.py canonicalize test manifest.json workshop.json
+python3 Tools/workshop_metadata.py workshop test manifest.json workshop.json
+git diff --check
+git add workshop.json
+git commit -m "Freeze private Workshop metadata"
+./Tools/release-check.sh --test
+./Tools/workshop-package.sh --test "/absolute/path/TAF-${VERSION}-private"
+```
+
+Upload that exact folder to the private item with **Upload hidden files** enabled. Then close Qud,
+remove local copies, subscribe through Steam, and launch fresh. Confirm Steam-installed manifest
+version, exact inventory/receipt, loader, new game, save → desktop → reload, representative Alpha
+flow, and redacted `Player.log`. A local duplicate invalidates this proof.
+
+Copy the frozen package receipt byte-for-byte into the repository and commit it:
+
+```bash
+cp "/absolute/path/TAF-${VERSION}-private.sha256" docs/PRIVATE_PACKAGE_RECEIPT.sha256
+cmp "/absolute/path/TAF-${VERSION}-private.sha256" docs/PRIVATE_PACKAGE_RECEIPT.sha256
+git add docs/PRIVATE_PACKAGE_RECEIPT.sha256
+git commit -m "Bind private package receipt for ${VERSION}"
+git rev-parse HEAD
+```
+
+That full receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so the
+staged candidate remains byte-identical to the subscribed package.
+
+## 5A. Public v1.0 Alpha
+
+Do not create `docs/RELEASE_EVIDENCE.json` for Alpha. It would falsely imply completed final human
+release passes. Instead:
+
+1. Change root Workshop metadata from private to public:
+
+   ```bash
+   python3 Tools/workshop_metadata.py canonicalize alpha manifest.json workshop.json
+   python3 Tools/workshop_metadata.py workshop alpha manifest.json workshop.json
+   ```
+
+2. Replace pre-release README/CHANGELOG status with exact final Alpha claims:
+
+   - `**Status: 1.0.0 public Alpha playtest.**`
+   - `## [1.0.0] — YYYY-MM-DD (Alpha)` as first changelog version heading.
+
+3. Copy [ALPHA_CANDIDATE.example.json](ALPHA_CANDIDATE.example.json) to exact path
+   `docs/ALPHA_CANDIDATE.json`. Replace every sentinel with observed values:
+
+   ```bash
+   git rev-parse HEAD
+   python3 Tools/workshop_metadata.py workshop-id workshop.json
+   sha256sum preview.png docs/PRIVATE_PACKAGE_RECEIPT.sha256
+   ```
+
+   `candidateCommit` is the receipt-binding commit from section 4, not the later public commit.
+
+4. Validate before commit:
+
+   ```bash
+   python3 Tools/workshop_metadata.py alpha-candidate \
+     manifest.json preview.png workshop.json docs/ALPHA_CANDIDATE.json \
+     README.md CHANGELOG.md
+   ```
+
+   Success prints candidate commit and private-receipt SHA-256. The record contains no human
+   approval or manual-pass claim.
+
+5. Commit public metadata/record, rerun clean gates, tag, and package at a new destination:
 
    ```bash
    ./Tools/portable-check.sh
-   ./Tools/release-check.sh
-   ```
-
-   Hosted/public CI may skip exactly three named installed-data-only cases when licensed Qud data
-   is absent. The workflow binds the labels; any extra or missing skip, or an explicitly configured
-   incomplete base, fails. That is portability evidence, not release evidence. `release-check.sh`
-   injects the exact installed `TAF_QUD_BASE` into the Windows test process, and canonical
-   `DevTests/test.ps1` forbids every skip. Any skipped release case fails the run.
-
-   The portable lane reports structural debt without blocking incremental work. The release lane
-   ends with the binding [structural release contract](STRUCTURE.md): every staged production C#
-   file must be strictly under 300 physical lines, and `docs/STRUCTURE_REVIEW.json` must bind a
-   completed human responsibility/protocol review to the exact inventory. Missing or stale review
-   evidence is a failed release, not a waivable warning.
-
-4. Complete the applicable live passes in [TESTING.md](../TESTING.md), including save, quit,
-   reload, and current/old-save cases. Record failures as failures; automation is not a manual
-   playtest.
-   Intermediate automated native results belong in `TESTING.md` and `docs/STATUS.md` with the
-   exact commit and game build. They never substitute for retained human or subscribed-package
-   evidence.
-5. Commit the bootstrap candidate. Build a new, non-existing private-test directory outside the
-   repository. Every existing destination ancestor must be owned by the current user or root;
-   group/world-writable ancestors must also be sticky (a normal `/tmp` qualifies). Prefer a
-   private Linux/WSL build parent, then verify before copying to a Windows Mods directory:
-
-   ```bash
-   ./Tools/workshop-package.sh --test /absolute/path/TAF-0.2.0-private
-   ```
-
-The script refuses a dirty tree, materialises only committed blobs, then validates the manifest,
-preview, and Workshop metadata from those HEAD-derived bytes. In release mode it also extracts
-the evidence record from `HEAD` and validates it against the materialised release documents. It
-   rejects development files, links, Windows-ambiguous paths, and unlisted runtime rasters, and
-   writes a sibling `.sha256` inventory. The canonical title must be under 129 UTF-8 bytes and the canonical
-description under 8000 even when a private bootstrap has no `workshop.json`. It does not make an
-archive because Qud's uploader consumes a folder. This first package is only a bootstrap: it
-intentionally has no `workshop.json` yet and therefore cannot be the receipt used to prove the
-later subscribed item.
-
-## 2. Create the Steam item privately
-
-This is a one-time, account-authorized operation.
-
-1. Copy or move the verified bootstrap package to a uniquely named direct child under Qud's local
-   `Mods` directory. Before opening Qud, prove the transfer has no changed or extra files:
-
-   ```bash
-   ./Tools/stage.sh verify /absolute/path/to/Qud/Mods/TAF-0.2.0-bootstrap
-   cd /absolute/path/to/Qud/Mods/TAF-0.2.0-bootstrap
-   sha256sum -c /absolute/path/TAF-0.2.0-private.sha256
-   ```
-
-   Launch Qud fresh through Steam only after both checks pass.
-2. Open **Modding Toolkit**, then **Workshop**. Select `r_ThousandAndFirst` and create the Workshop
-   item. Steam returns a published-file ID; Qud writes it to `workshop.json` in that local mod
-   folder. Accept the Steam Workshop legal agreement if Steam requests it.
-3. Keep visibility **Private**. Set:
-
-   - title: `The Thousand and First`
-   - description: exactly the canonical text printed by `Tools/workshop-package.sh --copy`
-   - tags: `Beta`, `Faction`, `Settlement`, `Script`
-   - preview: an external, byte-identical copy of the reviewed source image
-
-   Do not select the `preview.png` already inside the mod folder. Qud's selector copies the chosen
-   file onto `<mod>/preview.png`; selecting the destination as its own source fails.
-
-   Compare the external copy's SHA-256 with the committed `preview.png` before selecting it. Qud's
-   selector must leave the destination byte-identical.
-4. Set Qud's **Upload hidden files** toggle **On** and record that state. The verified package
-   contains no hidden development material or links; On makes Qud hand Steam this exact directory
-   instead of silently constructing an unreceipted filtered temporary copy.
-5. Submit the bootstrap privately. Wait for Qud's success result; once submission begins Steam does not
-   provide a cancellation operation.
-6. Keep Qud's completed `workshop.json`. It must contain the intended
-   published-file ID, title, canonical description, exact tags, visibility `"0"`, and image path
-   `preview.png`. The file contains public Workshop metadata, not a credential.
-
-Creating the item and submitting content are separate Steam operations. A returned item ID does
-not prove that content uploaded or loads. The bootstrap receipt is now obsolete because Qud added
-`workshop.json`; do not compare a subscription against it or call these bytes frozen.
-
-## 3. Freeze and verify the private candidate
-
-1. Copy Qud's completed visibility-`"0"` `workshop.json` into the repository root without changing
-   its bytes. Confirm the external preview copy and repository `preview.png` are byte-identical.
-   Atomically regenerate Qud's exact private fields while preserving its item ID, then validate:
-
-   ```bash
-   python3 Tools/workshop_metadata.py canonicalize test manifest.json workshop.json
-   python3 Tools/workshop_metadata.py workshop test manifest.json workshop.json
-   git diff --check
-   ```
-
-   Commit this private artifact, then build a fresh package and receipt at a new destination:
-
-   ```bash
-   ./Tools/workshop-package.sh --test /absolute/path/TAF-0.2.0-private-frozen
-   ```
-
-2. Move that exact package into exactly one direct child of a Qud local Mods root. Remove the
-   bootstrap and every other local copy with manifest ID `r_ThousandAndFirst`. Before opening Qud,
-   run both the exact-inventory check and receipt check shown in section 2 against this new path
-   and the `private-frozen.sha256` receipt.
-3. Open Qud's Workshop screen. Verify title, canonical description, tags, private visibility, and
-   preview without editing them. Verify version `0.2.0` separately from the mod manifest. Enter and
-   record a truthful private-validation changelist; Qud does not store or pre-populate this field
-   in `workshop.json`. Keep **Upload hidden files** On. Submit the private item again.
-4. After Qud reports success, rerun both the exact-inventory check and receipt check on the local
-   source directory. Any byte change, extra file, parse error, or hash mismatch is a failed
-   provenance check; do not continue from that upload.
-5. Move the local package out of both local Mods directories (`%USERPROFILE%\AppData\LocalLow\Freehold Games\CavesOfQud\Mods`
-   and `%USERPROFILE%\AppData\LocalLow\Freehold Games\CavesOfQud\Local\Mods` on a default
-   Windows install; launch-path overrides can relocate them), subscribe to the private item, and
-   let Steam install it. Qud registers local mods before subscriptions and skips a later mod with
-   the same manifest ID, so leaving a local copy present would test the wrong source.
-6. Launch fresh. Confirm the mod manager reports version 0.2.0 from Steam, then repeat the loader,
-   new-game, save/reload, and representative feature passes. Check `Player.log` with:
-
-   ```bash
-   ./Tools/check-player-log.sh /absolute/path/to/Player.log
-   ```
-
-7. Run the exact-inventory and receipt checks against the installed Workshop folder. Record the item
-   URL, package receipt hash, game build, platform, mod load order, log result, and completed live
-   passes in the release issue.
-8. Copy the frozen private package's sibling receipt byte-for-byte to
-   `docs/PRIVATE_PACKAGE_RECEIPT.sha256`; do not regenerate or edit it. Compare it with the source,
-   then commit the receipt before creating the evidence record or making any release-only change:
-
-   ```bash
-   cp /absolute/path/TAF-0.2.0-private-frozen.sha256 \
-     docs/PRIVATE_PACKAGE_RECEIPT.sha256
-   cmp /absolute/path/TAF-0.2.0-private-frozen.sha256 \
-     docs/PRIVATE_PACKAGE_RECEIPT.sha256
-   git add docs/PRIVATE_PACKAGE_RECEIPT.sha256
-   git commit -m "Bind private package receipt for 0.2.0"
-   git rev-parse HEAD
-   ```
-
-   This receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so runtime
-   staged paths, bytes, and Git modes remain identical to the package-source parent commit.
-
-9. Only the human who performed the subscribed-item passes may create the structured release
-   record. Copy `docs/RELEASE_EVIDENCE.example.json` to the exact path
-   `docs/RELEASE_EVIDENCE.json`; replace every placeholder with observed values. Set
-   `candidateCommit` to the full receipt-binding commit printed above and
-   `privatePackageReceiptSha256` to the SHA-256 of its committed receipt. Set
-   `gameAssemblySha256` to the SHA-256 of the exact licensed
-   `CoQ_Data/Managed/Assembly-CSharp.dll` used for every native/private pass; core versions can
-   remain unchanged across different binaries, so the DLL receipt is load-bearing. The retained
-   `nativeCompileLoad` transcript must contain exactly one line in the machine receipt form
-   `Assembly-CSharp SHA-256: <64 lowercase hex characters>` and the evidence validator requires it
-   to equal `gameAssemblySha256`; a plausible-looking standalone hash is refused. Retain each
-   verification transcript, screenshot bundle, performance receipt, survey receipt, and matrix
-   under `docs/release-evidence/`; every `artifactRef` is an exact safe repo-relative path below
-   that directory and every `artifactSha256` must match the referenced regular non-link file.
-   `previewReview` must bind the final `preview.png` hash to a retained human provenance/review
-   artifact naming capture date, game build, source save, crop/edit steps, author, and native
-   thumbnail review. The known interim preview is rejected mechanically; synthetic preview proof
-   is not accepted. `numberedProtocols.passIds` must contain every unique row printed by the
-   authoritative parser, in file order:
-
-   ```bash
-   python3 Tools/workshop_metadata.py testing-pass-ids TESTING.md
-   ```
-
-   A row may be absent from `passIds` only when `waivers` contains one exact object with that
-   `passId`, a specific 20–500 character reason, human reviewer, and real second-precision UTC
-   completion time. Passed and waived IDs cannot overlap; duplicates, ranges, unknown IDs,
-   malformed/ambiguous TESTING rows, reordered lists, or uncovered omissions fail. Placeholder,
-   sentinel, example, TODO, TBD, UNKNOWN, and N/A human fields fail.
-   Commit those artifacts with the evidence record; they remain outside the runtime package, while
-   the release packager's clean-HEAD boundary proves the validator read committed bytes. Update
-   README/CHANGELOG so they no longer say live evidence is pending, then run:
-
-   ```bash
-   sha256sum docs/PRIVATE_PACKAGE_RECEIPT.sha256
-   python3 Tools/workshop_metadata.py evidence manifest.json preview.png workshop.json \
-     docs/RELEASE_EVIDENCE.json README.md CHANGELOG.md
-   ```
-
-   The command must print the receipt-binding candidate commit. The public package extracts this
-   evidence record from `HEAD`, validates it against the HEAD-materialised runtime and release
-   documents, and proves that commit is a real ancestor of the tagged release. Release packaging
-   extracts the authoritative receipt from `candidateCommit`, requires `HEAD` to carry the same
-   receipt blob and mode, verifies every recorded hash against the candidate commit, and requires
-   matching release paths and Git modes. This remains valid if `Tools/stage.sh` changes after the
-   private test. Do not create this record from automated tests or mark a live/manual field passed
-   when a person did not perform it.
-
-Do not reuse a save made while both local and subscribed copies were visible until the active
-source has been proven.
-
-The private candidate is not the final Git tag: its `workshop.json` truthfully says visibility
-`"0"`. Final content differs only by reviewed release documentation and that field.
-
-## 4. Freeze and publish the public artifact
-
-Only after the subscribed private-item pass:
-
-1. Update the release documents with the evidence just collected. Atomically regenerate the
-   tracked public metadata while preserving its item ID, then validate it:
-
-   ```bash
-   python3 Tools/workshop_metadata.py canonicalize release manifest.json workshop.json
-   python3 Tools/workshop_metadata.py workshop release manifest.json workshop.json
-   ```
-
-   This avoids editor newline/BOM drift and Qud's non-truncating rewrite edge. The validator
-   requires Qud's exact field order/format and public visibility so its pre-upload save does not
-   change the tagged bytes. It also requires README's exact version-bound status
-   `**Status: <manifest version> public playtest release.**` and CHANGELOG's first version heading
-   `## [<manifest version>] — YYYY-MM-DD`; pending or Unreleased claims cannot package.
-2. Commit the frozen public artifact. Create an annotated tag and build it at a new destination:
-
-   ```bash
+   ./Tools/release-check.sh --alpha
    git status --short
-   git tag -a v0.2.0 -m "The Thousand and First 0.2.0"
-   ./Tools/workshop-package.sh --release /absolute/path/TAF-0.2.0-release
+   git tag -a v1.0.0 -m "The Thousand and First v1.0 Alpha"
+   ./Tools/workshop-package.sh --alpha /absolute/path/TAF-1.0.0-alpha
    ```
 
-3. Move the verified release directory into exactly one of Qud's two local Mods roots
-   (`%USERPROFILE%\AppData\LocalLow\Freehold Games\CavesOfQud\Mods` or
-   `%USERPROFILE%\AppData\LocalLow\Freehold Games\CavesOfQud\Local\Mods` by default on
-   Windows; launch-path overrides can relocate them) as one direct child. Remove or move every
-   other local copy with manifest ID `r_ThousandAndFirst`; Qud does not
-   enumerate arbitrary directories and duplicate IDs make source proof ambiguous. Before opening
-   Qud, run `Tools/stage.sh verify` and `sha256sum -c` against the moved directory and release
-   receipt, exactly as in section 2.
-4. Launch Qud through Steam and open **Modding Toolkit** → **Workshop**. Verify the populated title,
-   canonical description, tags, preview, and **Public** visibility without editing them. Verify
-   manifest version `0.2.0` separately. Enter, review, and record a truthful release changelist;
-   that field is manual submission metadata, not part of `workshop.json`. If a populated field or
-   manifest version differs, exit and fix/re-tag before submitting. Keep **Upload hidden files**
-   On so Steam receives the verified directory rather than Qud's filtered temporary copy.
-5. Submit once. Qud saves `workshop.json` before handing the folder to Steam; the release validator
-   has already proved that save should be byte-stable. After success, rerun both exact-inventory
-   and receipt checks on the local source directory, then verify the public page while signed out
-   or with a second account. Any mismatch is a failed provenance check even though an in-progress
-   Steam submission cannot be cancelled.
-6. Subscribe to the public item with no local duplicate present. Run `Tools/stage.sh verify` and
-   `sha256sum -c` against the public Steam install and release receipt, then repeat a short
-   loader/save smoke. Together these verify the publicly installed bytes, not merely the earlier
-   private candidate.
-7. Announce it as a playtest release. Link [TESTING.md](../TESTING.md), the issue tracker, known
-   limitations, save-backup advice, and exact supported game build. Do not describe unperformed
-   playtest passes as complete.
+`--alpha` requires a canonical `1.0.x` version, public Alpha metadata, final non-interim preview,
+current structural review, committed candidate record and receipt, unchanged staged runtime/modes
+since the private candidate, matching Workshop ID, a matching annotated `v<version>` tag at `HEAD`,
+and a clean tree. The one-time plan fixes the first version at exactly `1.0.0`; later proved recovery
+or update builds use a new patch version. This lane does not accept or silently fall back to full
+release evidence.
 
-## Updating an existing item
+## 5B. Evidence-complete later release
 
-Use the same bootstrap-free frozen-private then public-tag sequence. Update the manifest first,
-then run `workshop_metadata.py canonicalize test` on the existing `workshop.json`: it preserves
-the item ID while replacing every title/description/tag/visibility/image field with the new
-canonical private bytes. Do not shorten metadata through an ad-hoc Qud UI save; this Qud build
-opens the JSON without truncating it and can leave trailing bytes. Validate, commit, rebuild,
-submit/test privately, then use `canonicalize release` before the public commit/tag. Never replace
-`workshop.json` with another item's ID. Increment the manifest version before upload; Qud writes
-`manifest_id` and `manifest_version` key-value tags when it submits the item.
+Use this lane only after metadata/tool constants are intentionally changed for the separate Beta or
+Release listing and a human has performed every claimed pass.
 
-Steam's current UGC flow is documented in the
-[Workshop implementation guide](https://partner.steamgames.com/doc/features/workshop/implementation)
-and [ISteamUGC reference](https://partner.steamgames.com/doc/api/isteamugc). The installed Qud
-build remains authoritative for its own uploader UI and metadata shape.
+Copy `docs/RELEASE_EVIDENCE.example.json` to `docs/RELEASE_EVIDENCE.json`. Bind exact release
+version, pre-evidence candidate commit, Qud marketing/core build, `Assembly-CSharp.dll` SHA-256,
+Workshop ID, preview hash, private receipt hash, subscription results, every numbered TESTING pass
+or reviewed waiver, and retained artifacts below `docs/release-evidence/`. Human names/times must be
+real; placeholders, automation-authored human claims, missing artifacts, hash drift, unknown pass
+IDs, duplicate IDs, reordered IDs, or stale `TESTING.md` fail.
+
+Validate:
+
+```bash
+python3 Tools/workshop_metadata.py testing-pass-ids TESTING.md
+python3 Tools/workshop_metadata.py evidence \
+  manifest.json preview.png workshop.json docs/RELEASE_EVIDENCE.json \
+  README.md CHANGELOG.md
+```
+
+Only then run clean gates, create the annotated version tag, and package:
+
+```bash
+./Tools/portable-check.sh
+./Tools/release-check.sh --release
+git status --short
+git tag -a "v${VERSION}" -m "The Thousand and First ${VERSION}"
+./Tools/workshop-package.sh --release "/absolute/path/TAF-${VERSION}-release"
+```
+
+## 6. Upload and verify public bytes
+
+Move the verified public folder into exactly one Qud Mods root. Verify `Tools/stage.sh verify` and
+its `.sha256` receipt before opening Qud. In Workshop UI, confirm title, description, tags, preview,
+manifest version, and **Public** visibility without editing package fields. Enter a truthful manual
+changelist, keep **Upload hidden files** enabled, and submit once.
+
+After success:
+
+1. rerun inventory and receipt checks on upload source;
+2. inspect public page while signed out or from another account;
+3. remove local copy, subscribe to public item, and verify Steam-installed bytes/receipt;
+4. repeat loader and save/reload smoke; and
+5. announce exact supported build, Alpha status, backup warning,
+   [PLAYTESTING.md](PLAYTESTING.md), known limitations, and issue tracker.
+
+An in-progress Steam submission cannot be cancelled. Never describe unperformed tests as passed.
+
+## Updating Alpha
+
+Increment semantic version before upload. Repeat private canonicalization, immutable package,
+private subscription, receipt binding, public Alpha record, tag, and public verification. Never
+reuse another item's ID, rewrite an existing tag, merge package folders, or treat a prior receipt as
+proof of changed bytes.
 
 ## Recovery
 
-- Package creation never overwrites its destination. Remove a rejected package manually only
+- Package creation never overwrites its destination. Remove a rejected artifact manually only
   after resolving its exact path.
-- `Tools/stage.sh deploy --apply` backs up the existing live local mod before mirroring. The
-  Workshop packaging command does not modify the live mod.
-- If Steam submission fails, keep the same published-file ID and retry only after reviewing the
-  local `workshop.json`, package receipt, connectivity, and Steam result. Do not create a second
-  item merely to escape a failed update.
-- If a public build is bad, set the item Private while investigating, preserve the failed receipt
-  and tag, then publish a new patch version. Do not move or rewrite an existing release tag.
+- If upload fails, preserve item ID and receipts. Review local `workshop.json`, connectivity, Qud's
+  result, and exact package before retrying; do not create a second item to escape failure.
+- If a public build is unsafe, make the item Private, preserve failed tag/receipt, investigate on a
+  copy, and publish a new patch version after repeating proof.
+- `Tools/stage.sh deploy --apply` backs up an existing live local mod before mirroring. Workshop
+  packaging does not touch live mods.
+
+Steam's general UGC flow is documented by Valve's
+[Workshop implementation guide](https://partner.steamgames.com/doc/features/workshop/implementation)
+and [ISteamUGC reference](https://partner.steamgames.com/doc/api/isteamugc). Installed Qud remains
+authoritative for its uploader UI and metadata serializer.

@@ -80,11 +80,13 @@ namespace ThousandAndFirst.Tests
 				+ "InterregnumRoll,InheritedState,WorkKeys,WorkX,WorkY,WorkConditions,SpatialVersion,"
 				+ "SpatialWidth,SpatialHeight,SpatialEntrySide,SpatialEntryX,SpatialEntryY,"
 				+ "WorkSnapshots,WorkSnapshotHashes,StreetX,StreetY,RollNames,RollOrigins,RollArrived,"
-				+ "OriginKeys,OriginCounts,CreedKeys,CreedCounts,Chronicle,Outsider,DeadNames,DeadCauses",
+				+ "OriginKeys,OriginCounts,CreedKeys,CreedCounts,Chronicle,Outsider,DeadNames,DeadCauses,"
+				+ "ProfileSchema,TechnologyBand,CanonicalBodyKeys,SourceProfileDigest,"
+				+ "ProfileProvenanceDigest",
 				string.Join(",", Array.ConvertAll(fields, field => field.Name)));
 
 			KingdomSealRecord record = new KingdomSealRecord();
-			Assert.AreEqual(5, KingdomSealRecord.CurrentSchema);
+			Assert.AreEqual(6, KingdomSealRecord.CurrentSchema);
 			Assert.AreEqual(4, KingdomSealRecord.FirstSchema);
 			Assert.AreEqual(KingdomSealStatus.Living, record.Status);
 			Assert.AreEqual(-1, record.InterregnumRoll);
@@ -238,7 +240,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(ExactSettlementId, bound.SettlementId);
 		}
 
-		private static KingdomSealRecord SampleCapturedRecord(string lineageId, string legacyId, string originId, int generation, int revision)
+		internal static KingdomSealRecord SampleCapturedRecord(string lineageId, string legacyId, string originId, int generation, int revision)
 		{
 			KingdomSettlement seat = SampleSettlement();
 			return KingdomSealRules.Capture(
@@ -249,6 +251,34 @@ namespace ThousandAndFirst.Tests
 				new List<string> { "founded", "grew" },
 				new List<string> { "rumor" },
 				100L);
+		}
+
+		[Test]
+		public void CurrentSealRoundTripReprovesExactPolityProfileAndRejectsTamper()
+		{
+			KingdomSealRecord record = SampleCapturedRecord(
+				"profile-lineage", "profile-legacy", "profile-origin", 0, 1);
+			record.ProfileSchema = KingdomPolityProfileRules.CurrentLegacyProfileSchema;
+			record.TechnologyBand = 6;
+			record.CanonicalBodyKeys = new List<string> { "goatfolk", "human" };
+			record.SourceProfileDigest = new string('a', 64);
+			record.ProfileProvenanceDigest =
+				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(record.ProfileSchema,
+					record.TechnologyBand, record.CanonicalBodyKeys, record.SourceProfileDigest);
+
+			Assert.IsTrue(KingdomSealRecord.TryParse(record.Compose(),
+				out KingdomSealRecord read, out KingdomSealFault fault, out string detail),
+				fault + ": " + detail);
+			Assert.AreEqual(6, read.TechnologyBand);
+			CollectionAssert.AreEqual(new[] { "goatfolk", "human" }, read.CanonicalBodyKeys);
+			Assert.AreEqual(record.SourceProfileDigest, read.SourceProfileDigest);
+			Assert.AreEqual(record.ProfileProvenanceDigest, read.ProfileProvenanceDigest);
+
+			record.TechnologyBand++;
+			Assert.IsFalse(KingdomSealRecord.TryParse(record.Compose(),
+				out read, out fault, out detail));
+			Assert.AreEqual(KingdomSealFault.OutOfBounds, fault);
+			StringAssert.Contains("profile provenance", detail);
 		}
 
 		[Test]

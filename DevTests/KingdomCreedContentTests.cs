@@ -53,7 +53,12 @@ namespace ThousandAndFirst.Tests
 			string[] covered = creedWorks.Select(e => (string)e.Attribute("Creed"))
 				.Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
 			CollectionAssert.AreEqual(ShippedCreeds, covered);
-			Assert.AreEqual(33, creedWorks.Length, "one bespoke built-in design per admitted creed");
+			Assert.AreEqual(34, creedWorks.Length,
+				"33 admitted creeds plus the reviewed robot service-bay successor");
+			CollectionAssert.AreEquivalent(new string[] { "robotchargebay", "robotservicebay" },
+				creedWorks.Where(e => (string)e.Attribute("Creed") == "Robots")
+					.Select(e => (string)e.Attribute("Key")).ToArray(),
+				"Robots alone carry the second built-in creed tier");
 			foreach (XElement work in creedWorks)
 			{
 				string creed = (string)work.Attribute("Creed");
@@ -89,7 +94,7 @@ namespace ThousandAndFirst.Tests
 			AssertFoodMechanism(objects, "r_KingdomKyakukyaSpiceHearth",
 				"r_KingdomLarder", "r_KingdomLarderCapacity", 96);
 			AssertFoodMechanism(objects, "r_KingdomSnapjawTrailDen",
-				"r_KingdomRampartFurnitureProfile", "r_KingdomLarderCapacity", 64);
+				"r_KingdomOpenCreedFurnitureProfile", "r_KingdomLarderCapacity", 64);
 			XElement trailDen = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomSnapjawTrailDen");
 			CollectionAssert.IsSupersetOf(trailDen.Elements("part")
@@ -144,12 +149,18 @@ namespace ThousandAndFirst.Tests
 
 			XDocument authored = XDocument.Parse(TestMain.ReadRepositoryText(
 				Path.Combine("Architecture", "KingdomArchitectures-Creeds.xml")));
-			string[] topology = authored.Descendants("map")
+			XElement[] maps = authored.Descendants("map").ToArray();
+			string[] topology = maps
 				.Select(m => string.Join("/", m.Elements("row").Select(r => (string)r.Attribute("Cells"))))
 				.ToArray();
-			Assert.AreEqual(30, topology.Length);
-			Assert.AreEqual(30, topology.Distinct(StringComparer.Ordinal).Count(),
+			Assert.AreEqual(31, topology.Length,
+				"30 base creed maps plus the reviewed robot renovation map");
+			Assert.AreEqual(31, topology.Distinct(StringComparer.Ordinal).Count(),
 				"a renamed or recoloured proxy map is not creed architecture");
+			Assert.IsTrue(maps.Any(m =>
+				(string)m.Attribute("Key") == "creed-robot-chargebay-s0"));
+			Assert.IsTrue(maps.Any(m =>
+				(string)m.Attribute("Key") == "creed-robot-servicebay-s1"));
 		}
 
 		[Test]
@@ -167,16 +178,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CreedAndTempleVisualFixturesAreSemanticInertAndFunctional()
+		public void CreedAndTempleVisualFixturesKeepTheirDeclaredFunction()
 		{
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			var fixtures = new Dictionary<string, string>
 			{
 				{ "r_KingdomCreedSpindleWheel", "Items/sw_waterwheel_1.bmp" },
-				{ "r_KingdomCreedDryContact", "Items/sw_induction_station.bmp" },
+				{ "r_KingdomCreedDryContact", "Items/sw_copper_wire.bmp" },
 				{ "r_KingdomCreedHornPost", "Terrain/sw_monument1.bmp" },
 				{ "r_KingdomCreedScrapAltar", "Terrain/sw_monument7.bmp" },
-				{ "r_KingdomCreedWeaponRack", "Items/sw_weapons_rack.bmp" },
 				{ "r_KingdomCreedColdBrazier", "Items/sw_firepan.bmp" },
 				{ "r_KingdomCreedVineTrellis", "Tiles/sw_watervine2.bmp" },
 				{ "r_KingdomCreedLivingTrunk", "Terrain/sw_bigtree1.bmp" }
@@ -192,11 +202,24 @@ namespace ThousandAndFirst.Tests
 					(string)e.Attribute("Name")).ToArray(),
 					new string[] { "Render", "Description", "Physics", "Metal" }, fixture.Key);
 			}
+			XElement armsRack = objects.Descendants("object").Single(e =>
+				(string)e.Attribute("Name") == "r_KingdomCreedWeaponRack");
+			Assert.AreEqual("Furniture", (string)armsRack.Attribute("Inherits"));
+			Assert.AreEqual("Items/sw_weapons_rack.bmp", (string)armsRack.Elements("part")
+				.Single(e => (string)e.Attribute("Name") == "Render").Attribute("Tile"));
+			CollectionAssert.AreEquivalent(
+				new string[] { "Render", "Description", "Physics", "Container", "Inventory" },
+				armsRack.Elements("part").Select(e => (string)e.Attribute("Name")).ToArray(),
+				"the ordered rack is paid empty storage, not an inert practice silhouette");
+			Assert.AreEqual("true", (string)armsRack.Elements("property").Single(e =>
+				(string)e.Attribute("Name") == "DontWarnOnOpen").Attribute("Value"));
+			Assert.IsFalse(armsRack.Elements().Any(e => e.Name.LocalName == "inventoryobject"),
+				"construction must not mint rack contents");
 
 			string creed = TestMain.ReadRepositoryText(Path.Combine("Architecture",
 				"KingdomArchitectures-Creeds.xml"));
 			foreach (string slot in new string[] { "$spindle", "$contact", "$hornpost", "$altar",
-				"$drain", "$armsrack", "$brazier", "$trellis", "$trunk" })
+				"$drain", "$orderedarmsrack", "$brazier", "$trellis", "$trunk" })
 				StringAssert.Contains(slot, creed);
 			XElement creedPalette = XDocument.Parse(creed).Descendants("palette").Single(e =>
 				(string)e.Attribute("Key") == "creed-practice-hands");
@@ -206,7 +229,7 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("yes", (string)trunkSlot.Attribute("Natural"));
 			XElement path = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomGroundTroddenPath");
-			Assert.AreEqual("DirtPath", (string)path.Attribute("Inherits"));
+			Assert.AreEqual("ArenaFloor", (string)path.Attribute("Inherits"));
 			Assert.IsNull(path.Elements("part").Single(e =>
 				(string)e.Attribute("Name") == "Render").Attribute("Tile"));
 

@@ -150,7 +150,7 @@ namespace ThousandAndFirst
 			}
 			foreach (GameObject item in C.GetObjects())
 			{
-				if (item.GetIntProperty("KingdomBuilt") == 1 && !Into.Contains(item))
+				if (KingdomUpgrade.IsFunctionallyBuilt(item) && !Into.Contains(item))
 				{
 					Into.Add(item);
 				}

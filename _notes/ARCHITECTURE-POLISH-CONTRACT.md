@@ -1,10 +1,9 @@
 # Architecture polish contract
 
-> **Status supersession banner — 2026-08-28.** The architecture/product laws below remain accepted;
-> chronological implementation-status claims do not override the live ledgers. Static non-arcology
-> architecture targets and the named semantic repairs are complete at code/content/checker scope,
-> with native/human proof open. Prior hosted-arcology implementation claims are superseded under
-> active AMENDED 19+ review; production, XML/fabric, and tests are held. See `../docs/STATUS.md`,
+> **Status supersession banner — 2026-09-01.** The architecture/product laws below remain accepted;
+> chronological implementation-status claims do not override the live ledgers. The authored-lot
+> corpus, hosted arcology, and named semantic repairs are implemented at code/content/checker scope;
+> frozen automated fan-in is green; native and human proof remains open. See `../docs/STATUS.md`,
 > `../docs/V1-UNDEFERRAL.md`, and `BRIEF-IMPLEMENTATION-AUDIT.md` for current status.
 
 **Status:** implementation authority for the first full visual/architectural polish pass.
@@ -29,8 +28,10 @@ The following direct rulings are controlling:
 2. A typed lot may hold different authored plans from the same declared type-by-size set.
 3. A building is behavior-bearing and has authored tier maps. It can grow as labour, materials,
    skills, knowledge, technology, and other declared triggers permit.
-4. Same-set replacement keeps the lot. A different type or size is a real strike and fresh
-   restake, not a relabelled build on the old rectangle.
+4. A reviewed same-set in-place transition keeps the lot. Replacement, retyping, arbitrary
+   resizing, and any resize without an exact adjacent authored expansion receipt require a real
+   strike and fresh restake. A reviewed additive-expand or renovate-expand edge may annex the next
+   envelope only after live ground, road, ingress, occupancy, and custody proofs pass.
 5. Buildings, plots, roads, utilities, vertical works, landmarks, and megastructures must look and
    feel good in Qud, use plausible materials, place functional furniture, and remain traversable.
 6. Architecture varies where appropriate by function, tier, technology, terrain, style, creed,
@@ -79,14 +80,18 @@ An occupied lot freezes:
 
 ### 2.3 Plan changes
 
-- **Tier upgrade:** same plan/binding/lot/rect/pose and exact frozen `VariantKey`. Apply an exact
-  authored delta after the existing material, knowledge, labour, displacement, and output-reserve
-  gates pass. Current population, creed, or body facts may shape new commissions but never restyle
-  occupied fabric; a successor missing that variant refuses before debit.
+- **Tier upgrade:** same plan lineage, LotId, main root, pose, and exact frozen `VariantKey`.
+  Fixed-envelope edges retain binding and rect. An explicit adjacent additive-expand or
+  renovate-expand edge may freeze a larger exact-size binding and containing rect only after the
+  envelope proof passes. Apply the exact authored delta after material, knowledge, labour,
+  displacement, and output-reserve gates. Current population, creed, or body facts may shape new
+  commissions but never restyle occupied fabric; a successor missing that variant refuses before
+  debit.
 - **Same-set plan change:** same type and actual size. Keep LotId/rect/pose; require an explicit
   cheap conversion quote and a preflighted map delta. Absence of a declared transition refuses.
-- **Retype or resize:** full strike and fresh siting/restake with a new LotId. Never reuse the old
-  rectangle under a renamed operation.
+- **Retype or unproved resize:** full strike and fresh siting/restake with a new LotId. Never reuse
+  the old rectangle under a renamed operation or skip a size rung. The sole resize exception is the
+  proved adjacent tier-growth route above.
 - **Redress:** visual treatment only; it never changes function, plan topology, set, or paid
   material receipt.
 
@@ -97,21 +102,66 @@ maps, plans, exact bindings, tiers, variants, glyph recipes, anchor requirements
 
 Every map declares or compiles these facts:
 
-- canonical width and height, north-facing authoring pose, allowed rotations/mirroring;
+- canonical width and height in the north-facing authoring pose;
+- one exact physical building rectangle. If the catalogue tier declares `Footprint="WxH"`, its
+  selected map must declare canonical `Footprint="X,Y,WxH"` with the same dimensions and wholly
+  inside the map. Without a catalogue footprint, the resolved rectangle is the full map; an
+  optional map attribute may only restate that full-map rectangle;
 - Ground, Structure, and Object layers, at most one placement per layer and cell;
-- claim mask, cover state, passability, and adjacent-use requirements;
+- independent `Building`, `Yard`, and `Unclaimed` cell claims, plus cover state, passability, and
+  adjacent-use requirements;
 - exactly one `main` anchor and at least one `entrance:public` where the plan is entered;
 - stable functional anchors such as `bed:1`, `work:forge`, `storage:grain`, `power:input`,
   `liquid:fresh-in`, `crop:row1`, `service:loading`, or `shrine:altar`;
+- an optional single `benefit:*` physical-provider anchor. It grants no benefit; only a live
+  provider part on that object may supply. With `Stateful="yes"`, the compiler selects this as
+  the one protected custody anchor and permits it beside functional topology roles. Without
+  `Stateful`, an authored renovation may replace the empty fixture, but ordinary preflight still
+  refuses live contents, foreign ownership, or other protected state;
 - required anchor counts and clearance widths for the plan's function and likely bodies;
 - palette slots with concrete blueprint, material class, craft rung, and any knowledge gate;
 - explicit selector context and a mandatory eligible fallback;
-- an exact, bounded, canonical snapshot and hash.
+- an exact, bounded, canonical snapshot and hash. Current `a4` receipts freeze the canonical
+  footprint and catalogue `BaseRoof` as well as the selected layout truth.
 
-Maps are authored footprint/claim masks, not implicit shells. Courts and service yards may be
-claimed open cells. Unclaimed lot cells are the yard. A carved structure uses retained natural
-rock explicitly. Temporary frames are compiled construction operations and do not enter the
-standing snapshot.
+The lot, physical building footprint, and claim mask answer different questions. The geometric
+yard is the reserved lot minus the physical footprint. `Claim="building"` marks managed building
+fabric and must lie inside that footprint; `$building` and `main` must also lie inside. `Yard`
+marks managed court, service, or exterior use and may lie inside or outside the rectangle;
+`Unclaimed` may likewise occur on either side. Claims therefore cannot be inferred from the
+rectangle, nor the rectangle from claims. Covered yards are lawful. A carved structure uses
+retained natural rock explicitly. Temporary frames are compiled construction operations and do
+not enter the standing snapshot.
+
+For benefit embodiment, authored Interior is a covered `Building` cell whose authored passability
+is `Walkable` or `Adjacent`, never `Blocked`. Thus furniture cells qualify without reclassifying the
+blocked structural shell; blocked covered shell continues to contribute physical defence.
+
+Pose applies to the whole authority. The runtime rotates the canonical map, all placements, and
+all four footprint corners together for north/east/south/west facing; east and west transpose the
+world extents. It never rotates a shell independently of its contents. `BaseRoof` remains the
+catalogue roof frozen when `a4` is compiled; local cover still records the cell-scale fabric.
+Authors supply one north-facing canonical map per real architectural variant, not four routine
+directional copies. Heart- or road-frontage resolution freezes the exact cardinal pose before
+payment and the player-facing preview names both semantic frontage and facing. The frozen binding
+retains the selection rule; the pose is durable spatial authority, so no redundant frontage field
+can drift from it. A separate directional map is justified only when direction
+changes the architecture itself; an asymmetric directional sprite may instead need a posed asset.
+
+Fixture pose follows vanilla evidence, not a blanket rotation rule. Ordinary one-cell Qud beds,
+shelves, chairs, tables, benches, and machines keep fixed screen-space art and need no declaration;
+an undeclared palette blueprint is invariant. Proven directional/custom families may declare an
+optional exact-key `cardinal` pose record and layer-local glyph orientation. Compilation composes
+local plus lot facing and freezes the concrete inherited sibling in the unchanged `a4` placement.
+All four cardinal fields are required but symmetric axes may reuse a sibling. Connected and
+invariant families reject local orientation. No fixture pose rule justifies four copies of a map or
+bulk synthetic sprite generation.
+
+Because a concrete sibling has a different exact blueprint name, every `r_Kingdom*` semantic base
+is cardinal-prohibited unless a source-reviewed visual-only identity allowlist explicitly admits
+it; that allowlist is empty at v1 freeze. Vanilla stair identities are also prohibited. Effective
+blueprint parity proves behavior inheritance but cannot prove that every exact-name consumer in
+TAF or another mod treats descendants semantically, so this is a separate required safety gate.
 
 The loader merges keyed records after every `KingdomArchitectures` stream. Omitted attributes
 survive; map row blocks replace atomically and never splice by row. All validation occurs after
@@ -141,14 +191,38 @@ through vanilla pathing. Completion, reassignment, or disappearance releases the
 a home anchor; construction never mints, clones, or teleports a body. Save state lives on named
 object properties, not appended positional part fields.
 
-Legacy in-flight plot works without the new schema finish through the old codec and clock. Legacy
+New authored commissions emit `a4`. Canonical `a1`, `a2`, and `a3` receipts remain decodable for
+bounded compatibility, but their one-bit claims cannot prove building versus yard and they do not
+carry frozen footprint or `BaseRoof` authority. They remain read-only architecture authority:
+apart from their named already-paid completion/legacy lanes, they cannot stamp new scenery or
+authorize an in-place transition, and are never silently promoted by inventing missing truth.
+Legacy in-flight plot works without the new schema finish through their named old path. Legacy
 standing generic plots are not background-rewritten. On their first normal upgrade/strike, the
 runtime inventories the actual owned pieces into a bounded legacy snapshot or refuses by name if
 identity is ambiguous.
 
-## 5. Tier deltas and state protection
+## 5. Authored transitions and state protection
 
-Both old and successor snapshots transform through the same frozen pose. The delta:
+Both old and successor snapshots transform through one frozen pose unless an explicit lot-growth
+receipt proves a larger adjacent envelope first. Every transition has one reviewed intent:
+
+- **additive** adds fixtures or fabric inside unused room while retaining all standing fabric;
+- **additive-expand** retains the complete standing design and adds an authored wing, court, yard,
+  or service band in a proved larger envelope;
+- **renovate** rebuilds stateless internal fabric in the same envelope to improve purpose,
+  circulation, materials, or technology;
+- **renovate-expand** deliberately combines internal rebuilding with an authored larger envelope;
+- **replacement** changes function only through an explicit strike-and-fresh-commission route; it
+  is never disguised as an in-place delta.
+
+Every in-place footprint is monotonic in the common main-relative frame: the successor may retain
+or contain the predecessor rectangle, but may never surrender an edge or shift the rectangle away
+from the standing root. This applies equally to additive and renovate work. Only
+`additive-expand` and `renovate-expand` may grow the reserved lot envelope. Any footprint shrink,
+recentring, or relocation requires strike and fresh siting/restake; `replacement` likewise refuses
+as an in-place delta and requires a fresh commission after strike.
+
+These are design laws, not three different custody shortcuts. Every delta:
 
 1. retains a placement only when world cell, layer, concrete blueprint, and stateful anchor agree;
 2. removes old-only pieces in object -> structure -> ground order;
@@ -156,16 +230,24 @@ Both old and successor snapshots transform through the same frozen pose. The del
 4. updates claim, cover, anchors, and frontage only after exact placement succeeds;
 5. preserves the same behavior root unless an explicitly reviewed handover applies.
 
-Every adjacent tier exposes the same variant-key set. Each same-key successor keeps the main cell
-and every prior stateful placement's coordinate, anchor role, concrete blueprint, material,
-technology, knowledge, power, and natural/artificial fact. Static checking enforces this before the
-catalogue can ship.
+Every adjacent tier exposes the same variant-key set. The behavior root and immutable relics keep
+their exact authority. A protected/state-bearing fixture keeps exact identity and state; it may
+move only through a registered, interruption-safe handover. Static walls, floors, paths, room
+partitions, and empty stateless furnishings may be removed or rebuilt by an authored renovation.
+Static checking enforces the declared transition kind, envelope authority, and protected-state
+result before the catalogue can ship.
 
 Non-empty containers, liquids, residents, wear, names, player additions, and third-party state are
 never silently deleted or rerolled. A changed stateful anchor needs a registered handover. A new
 claimed cell occupied by a yard work or protected object refuses before debit. Main-anchor movement
-turns an automatic upgrade into a manual rebuild unless the plan has a reviewed exception. The
-evolving heart is the explicit accretion exception around its fixed rite anchor.
+requires its own reviewed handover. The evolving heart keeps its fixed rite basin but follows this
+same typed transition law; it is not a blanket accretion exception.
+
+A plot-envelope upgrade enumerates both rectangular poses, proves every newly reserved cell,
+preserves the road budget and exact ingress, and commits the new reservation before the successor
+uses it. Failure leaves the old lot and building byte-for-byte authoritative. Larger-lot generation
+must select a purpose/family transition; byte-identical core plus generic padding is not a universal
+fallback.
 
 ## 6. Qud architecture doctrine
 
@@ -180,8 +262,10 @@ retained fabrics. One settlement-wide wall blueprint is not Qud architecture.
   rubble, worn wood, or limited salvaged plate rather than replacing the site.
 - Cave/Barathrumite work exposes pipes, wire, hydraulics, lockers, benches, rock, and practical
   circulation.
-- Gyre work may use chitin, bone, transported stone accents, wind, ritual asymmetry, and hard
-  survival spaces; it is not blanket marble.
+- Moon Stair ground uses black marble, living crystal, exposed sky, noisegrass, and warm-static
+  weather without assigning a creed. Gyre Wight work is a separate affiliation/people-gated,
+  explicitly non-theological overlay that may use chitin, bone, transported stone accents, wind,
+  ritual asymmetry, and hard survival spaces; neither vocabulary may be inferred from the other.
 - Monumental and ancient materials such as named Sultan fabrics, CatacombWall, Chavvah growth,
   Burnished Azzurum, Grit Gate fabric, and Yd fabric are retained-site/recovered materials, not
   ordinary manufacture.
@@ -287,14 +371,15 @@ and reopening gates. Inherited site/history, current causal raids, bounded parti
 three-city manifests, successor/namesake people, one bounded legacy rival, diplomats/emissaries,
 generalized visible traffic/correspondence, witnessed polity clashes, the third owned city, and
 heart relocation are complete at their bounded code scope; their named integrated/native gates
-remain open. Hosted-arcology ground remains an accepted design target, but its prior implementation
-claim is superseded under active AMENDED 19+ review with production, XML/fabric, and tests held.
+remain open. Hosted-arcology ground is implemented at code/content scope as a bounded 27-zone
+complex; its current-revision native traversal, interruption, save, and human appearance verdicts
+remain open.
 Exact old actors,
 automatic ideological war, persistent unloaded parties, mass background simulation, and offscreen
 conquest/loss are `REJECTED`. Arcology and inheritance surfaces must still be named and rendered
 honestly; active design prose cannot make absent runtime look present.
 
-The reopened assenting moot and stasis vault now carry truthful 20×14 physical prerequisites in
+The reopened assenting moot and stasis vault now carry truthful 20×18 physical prerequisites in
 `Architecture/KingdomArchitectures-ReopenedExotics.xml`. The moot is an open Chavvah-derived
 congregational circuit; the vault is a sealed four-bay custody plan distinct from the lab. Both use
 inert-safe vanilla-art wrappers and exact runtime anchors. The moot now has its behavior owner: a
@@ -311,7 +396,7 @@ Release-candidate status cannot return until all applicable gates pass:
 1. Every loaded commissionable catalogue key resolves to a behavior-bearing authored tier or an explicitly typed
    network piece. No shipped plot uses a generic shell fallback.
 2. Every reachable type x size binding has a plan; every plan/tier/variant compiles within caps.
-   The external gate mirrors the a2 binary codec rather than estimating XML text: the live
+   The external gate mirrors the a4 binary codec rather than estimating XML text: the live
    maximum is whatever `Tools/check-architecture.py` prints as `largest-snapshot` (the
    heart-chain map has held it throughout), under the bounded 8,192 / 11,264 envelopes — the
    checker fails any map that crosses them, so no figure is pinned here to rot.

@@ -21,8 +21,9 @@ namespace ThousandAndFirst
 				{
 					Popup.Show("{{C|Native non-plot and road gallery}}\nMod " + ModVersion
 						+ ", Qud " + XRLGame.CoreVersion + "\n" + cases.Count
-						+ " isolated cases: every ten non-plot catalogue families plus worn, "
-						+ "trodden, path, and paved road states.\n\nUse {{W|kingdom:visualgallery NUMBER}}, "
+						+ " isolated cases: every ten non-plot catalogue families, four hosted "
+						+ "yard works, plus worn, trodden, path, and paved road states.\n\nUse "
+						+ "{{W|kingdom:visualgallery NUMBER}}, "
 						+ "{{W|list}}, {{W|status}}, {{W|next}}, {{W|resume}}, or {{W|checkpoint}}. "
 						+ "Capture the prescribed filename, then use {{W|kingdom:visualverdict "
 						+ "pass|SCREENSHOT|NOTE}} or fail. Clear only with "

@@ -31,6 +31,8 @@ namespace ThousandAndFirst
 				return Fail("polity dispatch revision is exhausted", out Failure);
 			KingdomPolityDispatchState candidate = CloneState(State);
 			KingdomPolityDirectRecord intent = FindIntent(candidate, Work.EndpointOrdinal);
+			if (intent != null) intent.AmbientTransaction =
+				KingdomPolityAmbientTransactionRules.Copy(Work.AmbientTransaction);
 			if (intent == null || !AddDetailed(candidate, intent, out Record, out Failure)) return false;
 			candidate.DirectRecords.Remove(intent);
 			candidate.CompletedMask |= 1 << Work.EndpointOrdinal; candidate.Revision++;
@@ -171,9 +173,13 @@ namespace ThousandAndFirst
 				else if (IsKind(r, DirectPrefix))
 				{
 					detailed++; if (!ExactEndpointRow(State, r, out DueFactParts _)
+						|| r.AmbientTransaction != null &&
+							!KingdomPolityAmbientTransactionRules.Valid(
+								r.AmbientTransaction, r.SourceRef, out _)
 						|| r.AcknowledgedTick < 0L
 						|| r.AcknowledgedTick != 0L && r.AcknowledgedTick < r.CauseTick
-						|| r.RecordId != StoredId(DirectPrefix, "polity-direct-record-v2", r))
+						|| r.RecordId != StoredId(DirectPrefix, "polity-direct-record-v2", r,
+							r.AmbientTransaction?.FrozenDigest))
 						return Fail("direct polity fact is forged", out Failure);
 				}
 				else if (IsKind(r, AggregatePrefix))

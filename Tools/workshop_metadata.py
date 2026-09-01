@@ -26,6 +26,11 @@ PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
 RELEASE_EVIDENCE_SCHEMA = 4
+ALPHA_CANDIDATE_SCHEMA = 1
+FIRST_ALPHA_RELEASE_VERSION = "1.0.0"
+ALPHA_RELEASE_VERSION_PATTERN = re.compile(r"^1\.0\.(?:0|[1-9][0-9]*)$")
+ALPHA_RELEASE_CHANNEL = "v1.0 Alpha"
+RELEASE_MODES = ("test", "alpha", "release")
 VERIFICATION_PASS_IDS = {
     "nativeCompileLoad": "native-compile-load",
     "architectureGallery": "architecture-gallery",
@@ -58,6 +63,11 @@ HUMAN_SENTINEL = re.compile(
 
 class ValidationError(ValueError):
     pass
+
+
+def _require_release_mode(mode: str) -> None:
+    if mode not in RELEASE_MODES:
+        raise ValidationError("release mode must be test, alpha, or release")
 
 
 def _qud_text_error(value: str) -> str | None:
@@ -222,6 +232,7 @@ def _workshop_id(data: dict) -> int:
 
 def canonicalize_workshop(path: Path, manifest: dict, mode: str) -> None:
     """Atomically rewrite Qud's public fields while preserving its published-file ID."""
+    _require_release_mode(mode)
     if path.is_symlink() or not path.is_file():
         raise ValidationError(
             "workshop.json canonicalization requires an existing regular non-link file"
@@ -430,6 +441,177 @@ def validate_release_claims(
                 errors.append(f"{label} current release claim still says {description}")
     if errors:
         raise ValidationError("release evidence is still pending; " + "; ".join(errors))
+
+
+def validate_alpha_claims(
+    manifest: dict, readme_path: Path, changelog_path: Path
+) -> None:
+    """Require public-Alpha wording without claiming final human release evidence."""
+    version = manifest.get("version")
+    if not isinstance(version, str):
+        raise ValidationError("Alpha claims require a valid manifest version")
+    errors: list[str] = []
+    documents: dict[Path, str] = {}
+    for path in (readme_path, changelog_path):
+        try:
+            documents[path] = path.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError) as error:
+            raise ValidationError(
+                f"cannot read Alpha candidate document {path.name}: {error}"
+            ) from error
+
+    expected_status = f"**Status: {version} public Alpha playtest.**"
+    status_lines = [
+        line.strip()
+        for line in documents[readme_path].splitlines()
+        if line.strip().casefold().startswith("**status:")
+    ]
+    if status_lines != [expected_status]:
+        errors.append(
+            f"{readme_path.name} must contain exactly one Alpha-bound status: "
+            + expected_status
+        )
+
+    changelog_lines = documents[changelog_path].splitlines()
+    heading_indexes = [
+        index
+        for index, line in enumerate(changelog_lines)
+        if line.startswith("## ") and not line.startswith("### ")
+    ]
+    headings = [changelog_lines[index].strip() for index in heading_indexes]
+    expected_heading = re.compile(
+        rf"^## \[{re.escape(version)}\] — ([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}) \(Alpha\)$"
+    )
+    if not headings or (match := expected_heading.fullmatch(headings[0])) is None:
+        errors.append(
+            f"{changelog_path.name} first version heading must bind {version} to an Alpha release date"
+        )
+    else:
+        try:
+            datetime.strptime(match.group(1), "%Y-%m-%d")
+        except ValueError:
+            errors.append(
+                f"{changelog_path.name} Alpha heading contains an invalid date"
+            )
+
+    current_start = heading_indexes[0] if heading_indexes else 0
+    current_end = (
+        heading_indexes[1] if len(heading_indexes) > 1 else len(changelog_lines)
+    )
+    current_claim = " ".join(
+        line.strip()
+        for line in changelog_lines[current_start:current_end]
+    )
+    for pattern, description in (
+        (r"\bwork in progress\b", "work in progress"),
+        (r"\bno Alpha has shipped\b", "Alpha has not shipped"),
+        (r"\bnot release-ready\b", "not release-ready"),
+        (r"\bnot a release candidate\b", "not a release candidate"),
+    ):
+        if re.search(pattern, current_claim, re.IGNORECASE):
+            errors.append(
+                f"{changelog_path.name} current Alpha claim still says {description}"
+            )
+    if errors:
+        raise ValidationError("Alpha candidate claims are invalid; " + "; ".join(errors))
+
+
+def validate_alpha_candidate(
+    manifest: dict,
+    preview_path: Path,
+    workshop_path: Path,
+    record_path: Path,
+    readme_path: Path,
+    changelog_path: Path,
+) -> tuple[str, str]:
+    """Validate machine provenance for public Alpha without inventing human receipts."""
+    validate_alpha_claims(manifest, readme_path, changelog_path)
+    validate_preview(preview_path)
+    validate_workshop(workshop_path, manifest, "alpha")
+    record = _load_json(record_path)
+    keys = {
+        "schemaVersion",
+        "releaseChannel",
+        "releaseVersion",
+        "candidateCommit",
+        "gameMarketingVersion",
+        "gameCoreBuild",
+        "workshopId",
+        "previewSha256",
+        "privatePackageReceiptSha256",
+    }
+    errors: list[str] = []
+    if set(record) != keys:
+        errors.append(
+            f"Alpha candidate fields must exactly match schema version {ALPHA_CANDIDATE_SCHEMA}"
+        )
+    if record.get("schemaVersion") != ALPHA_CANDIDATE_SCHEMA or type(
+        record.get("schemaVersion")
+    ) is not int:
+        errors.append(
+            f"Alpha candidate schemaVersion must be {ALPHA_CANDIDATE_SCHEMA}"
+        )
+    alpha_version = manifest.get("version")
+    if (
+        not isinstance(alpha_version, str)
+        or ALPHA_RELEASE_VERSION_PATTERN.fullmatch(alpha_version) is None
+    ):
+        errors.append(
+            f"Alpha package manifest version must be {FIRST_ALPHA_RELEASE_VERSION} "
+            "or a later canonical 1.0.x patch"
+        )
+    if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
+        errors.append(
+            f"Alpha candidate releaseChannel must be {ALPHA_RELEASE_CHANNEL!r}"
+        )
+    if record.get("releaseVersion") != manifest.get("version"):
+        errors.append("Alpha candidate version must match manifest version")
+    candidate = record.get("candidateCommit")
+    if (
+        not isinstance(candidate, str)
+        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
+    ):
+        errors.append("Alpha candidateCommit must be a lowercase full Git commit")
+        candidate = ""
+    if record.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
+        errors.append(
+            f"Alpha candidate gameMarketingVersion must be {GAME_MARKETING_VERSION}"
+        )
+    if record.get("gameCoreBuild") != GAME_CORE_BUILD:
+        errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
+    try:
+        workshop_id = _workshop_id(_load_json(workshop_path))
+    except ValidationError as error:
+        errors.append(str(error))
+        workshop_id = None
+    if (
+        type(record.get("workshopId")) is not int
+        or record.get("workshopId") != workshop_id
+    ):
+        errors.append("Alpha candidate workshopId must match workshop.json")
+    try:
+        preview_hash = hashlib.sha256(preview_path.read_bytes()).hexdigest()
+    except OSError as error:
+        raise ValidationError(f"cannot hash Alpha preview: {error}") from error
+    if record.get("previewSha256") != preview_hash:
+        errors.append("Alpha candidate previewSha256 must match preview.png")
+    if preview_hash == INTERIM_PREVIEW_SHA256:
+        errors.append(
+            "Alpha candidate refuses the known interim preview; capture the final native preview"
+        )
+    receipt_hash = record.get("privatePackageReceiptSha256")
+    if (
+        not isinstance(receipt_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", receipt_hash) is None
+        or receipt_hash == "0" * 64
+    ):
+        errors.append(
+            "Alpha candidate privatePackageReceiptSha256 must be a nonzero lowercase SHA-256"
+        )
+        receipt_hash = ""
+    if errors:
+        raise ValidationError("Alpha candidate is invalid; " + "; ".join(errors))
+    return candidate, receipt_hash
 
 
 def validate_release_evidence(
@@ -1021,6 +1203,7 @@ def release_evidence_artifact_refs(path: Path) -> tuple[str, ...]:
 
 
 def validate_workshop(path: Path, manifest: dict, mode: str) -> dict | None:
+    _require_release_mode(mode)
     if not path.exists():
         if mode == "test":
             return None
@@ -1192,11 +1375,11 @@ def main(argv: list[str] | None = None) -> int:
     preview = subparsers.add_parser("preview")
     preview.add_argument("path", type=Path)
     workshop = subparsers.add_parser("workshop")
-    workshop.add_argument("mode", choices=("test", "release"))
+    workshop.add_argument("mode", choices=RELEASE_MODES)
     workshop.add_argument("manifest", type=Path)
     workshop.add_argument("path", type=Path)
     canonicalize = subparsers.add_parser("canonicalize")
-    canonicalize.add_argument("mode", choices=("test", "release"))
+    canonicalize.add_argument("mode", choices=RELEASE_MODES)
     canonicalize.add_argument("manifest", type=Path)
     canonicalize.add_argument("path", type=Path)
     evidence = subparsers.add_parser("evidence")
@@ -1208,6 +1391,13 @@ def main(argv: list[str] | None = None) -> int:
     evidence.add_argument("changelog", type=Path)
     evidence.add_argument("--repository-root", type=Path)
     evidence.add_argument("--testing", type=Path)
+    alpha_candidate = subparsers.add_parser("alpha-candidate")
+    alpha_candidate.add_argument("manifest", type=Path)
+    alpha_candidate.add_argument("preview", type=Path)
+    alpha_candidate.add_argument("workshop", type=Path)
+    alpha_candidate.add_argument("record", type=Path)
+    alpha_candidate.add_argument("readme", type=Path)
+    alpha_candidate.add_argument("changelog", type=Path)
     artifact_refs = subparsers.add_parser("evidence-artifact-refs")
     artifact_refs.add_argument("record", type=Path)
     workshop_id = subparsers.add_parser("workshop-id")
@@ -1249,6 +1439,17 @@ def main(argv: list[str] | None = None) -> int:
                     testing_path=args.testing,
                 )
             )
+        elif args.command == "alpha-candidate":
+            manifest = load_manifest(args.manifest, require_preview=True)
+            for value in validate_alpha_candidate(
+                manifest,
+                args.preview,
+                args.workshop,
+                args.record,
+                args.readme,
+                args.changelog,
+            ):
+                print(value)
         elif args.command == "evidence-artifact-refs":
             for artifact_ref in release_evidence_artifact_refs(args.record):
                 print(artifact_ref)

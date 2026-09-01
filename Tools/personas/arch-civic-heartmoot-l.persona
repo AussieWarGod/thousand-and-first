@@ -1,0 +1,6 @@
+# Renovated settlement heart: retained basin, public water queue, moot seating, and lights.
+DESCRIPTION=large settlement heart-moot stages for civic renovation and circulation review
+REQUEST=arch-civic-heartmoot-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,civic,progression,taste

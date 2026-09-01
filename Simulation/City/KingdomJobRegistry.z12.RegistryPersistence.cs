@@ -71,7 +71,10 @@ namespace ThousandAndFirst.Simulation.City
 					DeliveryOwnerManifestDigests[i], DeliveryOwnerManifestRevisions[i],
 					DeliveryManifestSourceStarts[i], DeliveryManifestSourceCounts[i],
 					DeliveryTargetBeforeAmounts[i],
-					(KingdomDeliveryTargetReceiptState)DeliveryTargetReceiptStates[i]);
+					(KingdomDeliveryTargetReceiptState)DeliveryTargetReceiptStates[i],
+					(KingdomExpeditionDeedDisposition)ExpeditionDeedDispositions[i],
+					ExpeditionDeedPolityIds[i], ExpeditionDeedCauseRefs[i],
+					ExpeditionDeedFigureRefs[i]);
 			}
 			return KingdomJobTable.TryCreate(rows, out table, out fault);
 		}
@@ -106,6 +109,8 @@ namespace ThousandAndFirst.Simulation.City
 			DeliveryOwnerManifestRevisions.Clear(); DeliveryManifestSourceStarts.Clear();
 			DeliveryManifestSourceCounts.Clear(); DeliveryTargetBeforeAmounts.Clear();
 			DeliveryTargetReceiptStates.Clear();
+			ExpeditionDeedDispositions.Clear(); ExpeditionDeedPolityIds.Clear();
+			ExpeditionDeedCauseRefs.Clear(); ExpeditionDeedFigureRefs.Clear();
 			LegZoneIds.Clear(); LegEnterX.Clear(); LegEnterY.Clear(); LegExitX.Clear();
 			LegExitY.Clear(); LegLengths.Clear(); LegDepartTicks.Clear(); LegArriveTicks.Clear();
 			for (int i = 0; i < table.Count; i++)
@@ -130,6 +135,10 @@ namespace ThousandAndFirst.Simulation.City
 				WaterCosts.Add(row.WaterCost);
 				ProvisionCosts.Add(row.ProvisionCost);
 				OutcomeCodes.Add(row.OutcomeCode);
+				ExpeditionDeedDispositions.Add((int)row.ExpeditionDeedDisposition);
+				ExpeditionDeedPolityIds.Add(row.ExpeditionDeedPolityId ?? "");
+				ExpeditionDeedCauseRefs.Add(row.ExpeditionDeedCauseRef ?? "");
+				ExpeditionDeedFigureRefs.Add(row.ExpeditionDeedFigureRef ?? "");
 				DeliverySourceEndpointIds.Add(row.DeliverySourceEndpointId);
 				DeliverySourceObjectIds.Add(row.DeliverySourceObjectId ?? "");
 				DeliverySourceXs.Add(row.DeliverySourceX);

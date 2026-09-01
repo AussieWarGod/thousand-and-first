@@ -55,6 +55,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomScenarioStep { Verb = KingdomScenarioVerb.StageGalleryCase };
 			step.Arguments["Suite"] = "architecture";
 			step.Arguments["Build"] = "tent";
+			step.Arguments["Type"] = "housing";
+			step.Arguments["Size"] = "s";
 			step.Arguments["Variant"] = "fallback";
 			step.Arguments["Facing"] = facing;
 			return step;

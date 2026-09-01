@@ -478,7 +478,7 @@ namespace ThousandAndFirst.Tests
 		/// row, measured by the pass that read the ground.
 		/// </summary>
 		[Test]
-		public void AZoneProducesAtTheRateItsOwnRowCarriesWithNoArrayHandedIn()
+		public void AZoneProducesWaterButLegacyFoodRatesCannotMintItems()
 		{
 			KingdomCityState state = City(
 				Making("a", 0L, 1000L, 0L, 1000L, 12, 3),
@@ -489,9 +489,10 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(outcome.State.TryZone(0, out a));
 			Assert.IsTrue(outcome.State.TryZone(1, out b));
 			Assert.AreEqual(120L, a.Stocks.Water.Level);
-			Assert.AreEqual(30L, a.Stocks.Food.Level);
+			Assert.AreEqual(0L, a.Stocks.Food.Level,
+				"fields and mills own physical food; an old row rate cannot mint it");
 			Assert.AreEqual(0L, b.Stocks.Water.Level, "a zone with no water works makes no water");
-			Assert.AreEqual(70L, b.Stocks.Food.Level);
+			Assert.AreEqual(0L, b.Stocks.Food.Level);
 		}
 
 		// ---- The third factor: the keepers' method on the book's own rates (§8.2) -------------
@@ -537,15 +538,15 @@ namespace ThousandAndFirst.Tests
 		/// supported level is a fact about buildings, and no amount of knowledge adds a cistern.
 		/// </summary>
 		[Test]
-		public void TheKeepersMethodLiftsWhatAZoneMakesAndNeverWhatItHolds()
+		public void TheKeepersMethodLiftsWaterMakingAndCannotMintFood()
 		{
 			KingdomCityState state = City(Making("a", 0L, 1000L, 0L, 1000L, 12, 3));
 			KingdomZoneRow row;
 			Assert.IsTrue(RunMethoded(state, null, 0L, 10L * KingdomRules.TicksPerDay, 150).State.TryZone(0, out row));
-			// Twelve drams a day becomes eighteen; three servings becomes four, because a percent
-			// of a small integer truncates and is never rounded up into food nobody grew.
+			// Twelve drams a day becomes eighteen. Food remains zero because physical field and
+			// mill transactions are the only production authority.
 			Assert.AreEqual(180L, row.Stocks.Water.Level);
-			Assert.AreEqual(40L, row.Stocks.Food.Level);
+			Assert.AreEqual(0L, row.Stocks.Food.Level);
 			Assert.AreEqual(1000L, row.Stocks.Water.Capacity, "method is a rate and never a vessel");
 			Assert.AreEqual(1000L, row.Stocks.Food.Capacity);
 		}

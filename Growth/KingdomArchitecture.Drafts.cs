@@ -68,12 +68,22 @@ namespace ThousandAndFirst
 			int height;
 			string coverText;
 			ArchitectureCover defaultCover;
+			string footprintText;
+			int footprintX = 0;
+			int footprintY = 0;
+			int footprintWidth = 0;
+			int footprintHeight = 0;
 			if (!RequiredInt(State, Raw, "Width", 1, 255, out width)
 				|| !RequiredInt(State, Raw, "Height", 1, 255, out height)
 				|| (long)width * height > KingdomArchitectureRules.MaxMapArea
 				|| !Required(State, Raw, "DefaultCover", out coverText)
 				|| !TryCover(coverText, out defaultCover))
 				return Fault(State, "map " + Raw.Key, "dimensions or DefaultCover are malformed");
+			footprintText = Optional(Raw, "Footprint");
+			if (footprintText != null && !TryFootprint(footprintText, width, height,
+				out footprintX, out footprintY, out footprintWidth, out footprintHeight))
+				return Fault(State, "map " + Raw.Key,
+					"Footprint must be canonical X,Y,WxH wholly inside the map");
 			if (Raw.Overflow || Raw.RowsOverflow || !Raw.RowsDeclared || Raw.Rows == null
 				|| Raw.Rows.Count != height)
 				return Fault(State, "map " + Raw.Key, "atomic row block is absent, oversized, or the wrong height");
@@ -85,6 +95,9 @@ namespace ThousandAndFirst
 			ArchitectureMapDraft draft = new ArchitectureMapDraft
 			{
 				Key = Raw.Key, Width = width, Height = height, DefaultCover = defaultCover,
+				HasFootprint = footprintText != null, FootprintX = footprintX,
+				FootprintY = footprintY, FootprintWidth = footprintWidth,
+				FootprintHeight = footprintHeight,
 				Rows = new List<string>(Raw.Rows)
 			};
 			List<string> glyphKeys = OrderedKeys(Raw.Glyphs);
@@ -101,8 +114,9 @@ namespace ThousandAndFirst
 					Character = raw.Key[0], Ground = Optional(raw, "Ground"),
 					Structure = Optional(raw, "Structure"), Object = Optional(raw, "Object")
 				};
-				if (!OptionalClaim(State, raw, out glyph.Claim)
+				if (!RequiredClaim(State, raw, out glyph.Claim)
 					|| !OptionalPassability(State, raw, out glyph.Passability)
+					|| !TryGlyphOrientations(State, raw, glyph)
 					|| !OptionalBoolean(State, raw, "Stateful", false, out glyph.StatefulObject))
 					return false;
 				string cover = Optional(raw, "Cover");
@@ -187,6 +201,7 @@ namespace ThousandAndFirst
 			string buildKey;
 			string map;
 			string palette;
+			string transitionText;
 			int level;
 			if (Raw.BadAttributes.Count > 0 || Raw.Overflow || !Required(State, Raw, "BuildKey", out buildKey)
 				|| !ValidKey(buildKey) || !RequiredInt(State, Raw, "Level", 0, int.MaxValue, out level)
@@ -196,8 +211,20 @@ namespace ThousandAndFirst
 				|| Raw.Variants.Count == 0
 				|| Raw.Variants.Count > KingdomArchitectureRules.MaxVariantsPerTier)
 				return Fault(State, "tier " + Raw.Key, "identity, references, or child bounds are malformed");
+			transitionText = Optional(Raw, "Transition");
+			ArchitectureTransitionMode transitionMode = ArchitectureTransitionMode.None;
+			if ((transitionText == null && level != 0)
+				|| (transitionText != null && !KingdomArchitectureTransitionRules.TryParseMode(
+					transitionText, out transitionMode))
+				|| !KingdomArchitectureTransitionRules.ValidTierMode(level, transitionMode))
+				return Fault(State, "tier " + Raw.Key,
+					"base tiers use none; later tiers require additive, additive-expand, "
+					+ "renovate, renovate-expand, or replacement");
 			ArchitectureTierDraft draft = new ArchitectureTierDraft
-				{ Key = Raw.Key, BuildKey = buildKey, Level = level, MapKey = map, PaletteKey = palette };
+				{
+					Key = Raw.Key, BuildKey = buildKey, Level = level,
+					IncomingTransitionMode = transitionMode, MapKey = map, PaletteKey = palette
+				};
 			List<string> requirements = OrderedKeys(Raw.Requirements);
 			for (int i = 0; i < requirements.Count; i++)
 			{

@@ -147,7 +147,7 @@ namespace ThousandAndFirst.Tests
 			int releaseAdoption = adopt.IndexOf("public static bool Release(");
 			int clearPlot = adopt.IndexOf("KingdomPlots.ReleaseAdoptedPlot(Adopted);",
 				releaseAdoption);
-			int clearAdoption = adopt.IndexOf("Adopted.SetIntProperty(AdoptedProperty, 0);",
+			int clearAdoption = adopt.IndexOf("ClearTyped(Adopted, AdoptedProperty);",
 				releaseAdoption);
 			Assert.Greater(clearPlot, releaseAdoption);
 			Assert.Greater(clearAdoption, clearPlot,

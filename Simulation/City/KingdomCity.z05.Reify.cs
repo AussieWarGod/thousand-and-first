@@ -38,6 +38,27 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return state;
 			}
+			// Retire any pre-ruling virtual food before container settlement can materialize it.
+			// Ground is authoritative: preserve exactly the currently spendable physical pantry,
+			// clear its virtual debt/rate, and leave water/material obligations untouched.
+			if (row.OwedFood != 0 || row.FoodCarry != 0)
+			{
+				int foodLevel = Survey.FoodAvailable < 0 ? 0 : Survey.FoodAvailable;
+				int foodCapacity = Survey.FoodCapacity < foodLevel ? foodLevel : Survey.FoodCapacity;
+				KingdomStocks grounded = new KingdomStocks(row.Stocks.Water,
+					new KingdomStockPair(foodLevel, foodCapacity), row.Stocks.Materials);
+				KingdomZoneRow neutral = row.WithReading(row.LastReadTick, grounded, row.Roofs,
+					row.Defence, row.WaterCarry, 0).WithOwed(row.OwedWater, 0, row.OwedMaterials);
+				KingdomCityState retired;
+				KingdomCityFault retirementFault;
+				if (!state.TryWithZone(index, neutral, out retired, out retirementFault))
+				{
+					Refuse("retire virtual food", retirementFault);
+					return state;
+				}
+				state = retired;
+				row = neutral;
+			}
 			ContainerGround ground = ContainerGround.Take(Survey);
 			KingdomContainerDemandReceipt measured;
 			KingdomCityFault fault;

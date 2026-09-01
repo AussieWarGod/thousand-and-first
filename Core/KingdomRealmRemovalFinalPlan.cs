@@ -20,6 +20,8 @@ namespace ThousandAndFirst
 		internal List<string> PlayerRows = new List<string>();
 		internal Dictionary<string, string> HostedAuthorityStates =
 			new Dictionary<string, string>();
+		internal Dictionary<string, string> HostedDepartureStates =
+			new Dictionary<string, string>();
 		internal int QuestCount;
 		internal int RecipeCount;
 		internal int JournalCount;

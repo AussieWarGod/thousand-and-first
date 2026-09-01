@@ -61,7 +61,9 @@ namespace ThousandAndFirst
 		/// <summary>First archive surface carrying fixed-rate arrival epochs, compressed semantic
 		/// debt, one frozen opportunity, and exact candidate/operation opportunity bindings.</summary>
 		public const int ArrivalCadenceVersion = 17;
-		public const int CurrentVersion = ArrivalCadenceVersion;
+		/// <summary>First archive surface carrying exact final expedition/deed outbox receipts.</summary>
+		public const int ExpeditionResultVersion = 18;
+		public const int CurrentVersion = ExpeditionResultVersion;
 		public const int MaxPayloadBytes = 2 * 1024 * 1024;
 		public const int MaxStringBytes = 16 * 1024;
 		public const int MaxByteArrayBytes = 512 * 1024;

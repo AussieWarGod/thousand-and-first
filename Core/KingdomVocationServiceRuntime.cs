@@ -143,6 +143,15 @@ namespace ThousandAndFirst
 		{
 			offer = null;
 			failure = null;
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(context.Zone)
+				?? KingdomSurvey.Take(context.Zone, context.System);
+			KingdomBenefitIndex benefits = null;
+			string benefitFailure = null;
+			if (survey == null || !survey.TryBenefits(out benefits, out benefitFailure))
+				return Missing(context, "Physical shelter evidence is unavailable: "
+					+ (benefitFailure ?? "no exact current-ground reading"),
+					"Restore the exact room designation and its physical bed providers.",
+					out offer, out failure);
 			if (!KingdomCurrentCityEvidenceRuntime.TryBuiltWorksReadOnly(context,
 				out List<KingdomCurrentCityEvidenceRuntime.BuiltWorkSnapshot> works,
 				out string sourceFailure))
@@ -155,7 +164,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < works.Count; i++)
 			{
 				KingdomCurrentCityEvidenceRuntime.BuiltWorkSnapshot candidate = works[i];
-				if (!IsShelter(candidate)) continue;
+				if (!IsShelter(context, candidate, benefits)) continue;
 				if (shelter == null || candidate.CompletedTick > shelter.CompletedTick ||
 					candidate.CompletedTick == shelter.CompletedTick && string.CompareOrdinal(
 						candidate.WorkReceiptId, shelter.WorkReceiptId) > 0) shelter = candidate;
@@ -237,17 +246,6 @@ namespace ThousandAndFirst
 				"exact artifact-recognition authority on this city's loaded ground", result);
 			return KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 				out offer, out failure);
-		}
-
-		private static bool IsShelter(
-			KingdomCurrentCityEvidenceRuntime.BuiltWorkSnapshot evidence)
-		{
-			if (evidence == null || !KingdomData.TryGetBuilding(evidence.DesignKey,
-				out KingdomRules.BuildEntry entry) ||
-				!KingdomCatalogueRules.TryParseTally(entry.Carries,
-					out List<KindAmount> carries, out string _)) return false;
-			return KingdomCatalogueRules.AmountOf(carries,
-				KingdomCatalogueRules.SupportRoof) > 0;
 		}
 
 		private static bool TryLocationZone(string locationId, out string zoneId)

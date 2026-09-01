@@ -39,6 +39,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("legacy.SettlementId", source);
 			StringAssert.DoesNotContain("legacy.OriginGameId", source);
 			StringAssert.DoesNotContain("RealmIdentityLegacyFaction", source);
+			StringAssert.Contains("ProfileSchema = legacy.ProfileSchema", source);
+			StringAssert.Contains("TechnologyBand = legacy.TechnologyBand", source);
+			StringAssert.Contains("CanonicalBodyKeys = Copy(legacy.CanonicalBodyKeys)", source);
+			StringAssert.Contains("SourceProfileDigest = legacy.SourceProfileDigest", source);
+			StringAssert.Contains("ProfileProvenanceDigest = legacy.ProfileProvenanceDigest", source);
+			StringAssert.DoesNotContain("TechnologyBand = legacy.Stage", source);
 			string model = Read("Polity/KingdomPolityActivationModels.cs");
 			StringAssert.DoesNotContain("public string ActorId", model);
 			StringAssert.DoesNotContain("public string FactionId;", SliceLegacy(model));
@@ -70,6 +76,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("GetInventoryDirectAndEquipment", runtime);
 			StringAssert.Contains("item.IsNatural()", runtime);
 			StringAssert.Contains("GearOwnerProperty", runtime);
+			StringAssert.Contains("created.Brain.Allegiance.Hostile = false;", runtime);
+			StringAssert.DoesNotContain("created.Brain.Hostile", runtime);
 			StringAssert.DoesNotContain("AddObject(", runtime);
 			StringAssert.DoesNotContain("GetZone(", runtime);
 			StringAssert.DoesNotContain("DeepCopy", runtime);
@@ -134,6 +142,22 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FoundationProfileReadsCraftAndNeverInfersBodiesFromPlaceProse()
+		{
+			string runtime = Read("Polity/KingdomPolityRuntime.cs");
+			StringAssert.Contains("TechnologyBand = (int)KingdomZoning.Tech(S) * 2", runtime);
+			StringAssert.DoesNotContain("TechnologyBand = (int)S.Stage", runtime);
+			string rules = Read("Polity/KingdomPolityProfileRules.cs");
+			StringAssert.Contains("CurrentBodyKeys(Facts.SpeciesKeys, Facts.IdentityKeys", rules);
+			StringAssert.DoesNotContain("Merge(Facts.OriginKeys, Facts.CultureKeys", rules);
+			StringAssert.DoesNotContain("Math.Min(10, Facts.Stage * 2)", rules);
+			string revisions = Read("Polity/KingdomPolityProfileRuntime.cs");
+			StringAssert.Contains("KingdomZoningRules.TechPoints(roster)", revisions);
+			StringAssert.Contains("KingdomPolityProfileFactKind.Population", revisions);
+			StringAssert.DoesNotContain("Stage * 2", revisions);
+		}
+
+		[Test]
 		public void ExileTransformEndsPolitiesWithoutContinuingActorsOrInferringCasualties()
 		{
 			string rules = Read("Polity/KingdomPolityFactionTransitions.cs");
@@ -162,6 +186,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("ResidentIds", facts);
 			StringAssert.DoesNotContain("GameObject", facts);
 			StringAssert.DoesNotContain("Factions.", facts);
+			StringAssert.Contains("TryCaptureLegacyProfile(legacy, profile", facts);
+			string profile = Read("Polity/KingdomPolityProfileRules.Legacy.cs");
+			StringAssert.Contains("CurrentLegacyProfileSchema", profile);
+			StringAssert.Contains("new List<string> { \"unresolved\" }", profile);
+			StringAssert.DoesNotContain("Facts.Stage * 2", profile);
+			StringAssert.DoesNotContain("LegacyBodyKeys", profile);
+			string transitions = Read("Polity/KingdomPolityFactionTransitions.cs") +
+				Read("Polity/KingdomPolityFactionTransitions.Helpers.cs");
+			StringAssert.Contains("MatchesLegacyProfileSource", transitions);
 			string model = Read("Polity/KingdomPolityActivationModels.cs");
 			string legacy = SliceLegacy(model);
 			StringAssert.DoesNotContain("public string RealmId", legacy);

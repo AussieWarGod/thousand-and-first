@@ -137,6 +137,9 @@ namespace ThousandAndFirst
 			}
 			System.AssignedCrew = crewed + System.WaterCrew;
 			KingdomConstructionPresence.Assign(System, Survey);
+			// Staffing, affinity, hand-cranked charge, and adopted-operation state all feed the
+			// physical benefit evaluator without changing survey topology.
+			Survey.InvalidateBenefits();
 			if (idle > 0 && !System.IdleWorksAnnounced)
 			{
 				System.IdleWorksAnnounced = true;

@@ -58,7 +58,54 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			return (EffectivenessPercent >= 100) ? Amount : (Amount * EffectivenessPercent / 100);
+			if (EffectivenessPercent >= 100)
+			{
+				return Amount;
+			}
+			long carried = (long)Amount * EffectivenessPercent / 100L;
+			return (carried >= int.MaxValue) ? int.MaxValue : (int)carried;
+		}
+
+		/// <summary>Adds two non-negative counters without allowing malformed negative input or
+		/// a large catalogue to wrap the answer below zero.</summary>
+		internal static int SaturatingCounterAdd(int Left, int Right)
+		{
+			long left = (Left < 0) ? 0L : Left;
+			long right = (Right < 0) ? 0L : Right;
+			long total = left + right;
+			return (total >= int.MaxValue) ? int.MaxValue : (int)total;
+		}
+
+		/// <summary>Subtracts a non-negative counter without allowing malformed input or two
+		/// deductions to wrap a spent counter back above zero.</summary>
+		internal static int SaturatingCounterSubtract(int Left, int Right)
+		{
+			long left = (Left < 0) ? 0L : Left;
+			long right = (Right < 0) ? 0L : Right;
+			long remainder = left - right;
+			return (remainder <= 0L) ? 0 : (int)remainder;
+		}
+
+		/// <summary>Multiplies two non-negative counters through a widened intermediate and
+		/// saturates the public counter at its representable ceiling.</summary>
+		internal static int SaturatingCounterMultiply(int Left, int Right)
+		{
+			if (Left <= 0 || Right <= 0)
+			{
+				return 0;
+			}
+			long product = (long)Left * Right;
+			return (product >= int.MaxValue) ? int.MaxValue : (int)product;
+		}
+
+		private static SupportTally Bounded(SupportTally Tally)
+		{
+			Tally.Water = SaturatingCounterAdd(Tally.Water, 0);
+			Tally.Food = SaturatingCounterAdd(Tally.Food, 0);
+			Tally.Roof = SaturatingCounterAdd(Tally.Roof, 0);
+			Tally.Lift = SaturatingCounterAdd(Tally.Lift, 0);
+			Tally.Works = SaturatingCounterAdd(Tally.Works, 0);
+			return Tally;
 		}
 
 		/// <summary>
@@ -80,7 +127,7 @@ namespace ThousandAndFirst
 		public static SupportTally FoldWork(SupportTally Running, List<KindAmount> Carries, int EffectivenessPercent)
 		{
 			SupportTally folded = FoldShade(Running, Carries, EffectivenessPercent);
-			folded.Works = Running.Works + 1;
+			folded.Works = SaturatingCounterAdd(folded.Works, 1);
 			return folded;
 		}
 
@@ -102,7 +149,7 @@ namespace ThousandAndFirst
 		/// the house is (Addendum 10(b)).</param>
 		public static SupportTally FoldShade(SupportTally Running, List<KindAmount> Shades, int EffectivenessPercent)
 		{
-			SupportTally folded = Running;
+			SupportTally folded = Bounded(Running);
 			if (Shades == null)
 			{
 				return folded;
@@ -117,18 +164,18 @@ namespace ThousandAndFirst
 				switch (Fold(Shades[i].Kind))
 				{
 				case SupportWater:
-					folded.Water += amount;
+					folded.Water = SaturatingCounterAdd(folded.Water, amount);
 					break;
 				case SupportFood:
-					folded.Food += amount;
+					folded.Food = SaturatingCounterAdd(folded.Food, amount);
 					break;
 				case SupportRoof:
-					folded.Roof += amount;
+					folded.Roof = SaturatingCounterAdd(folded.Roof, amount);
 					break;
 				default:
 					// Everything else lifts, including a kind this build has never heard of -
 					// IsKnownSupport's own rule, applied to the sum rather than to the validator.
-					folded.Lift += amount;
+					folded.Lift = SaturatingCounterAdd(folded.Lift, amount);
 					break;
 				}
 			}

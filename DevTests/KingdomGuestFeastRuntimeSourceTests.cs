@@ -128,7 +128,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Source("Experience/KingdomGuestFeastRuntime.Observations.cs");
 			StringAssert.Contains("KingdomLocusRules.SelectLocusWork", source);
-			StringAssert.Contains("item.GetIntProperty(\"KingdomBuilt\") == 1", source);
+			StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt(item)", source);
+			StringAssert.DoesNotContain("item.GetIntProperty(\"KingdomBuilt\")", source);
 			StringAssert.Contains("bench.GetIntProperty(\"KingdomStaffed\") != 1", source);
 			StringAssert.Contains("KingdomStations.PostOf(body) == workId", source);
 			StringAssert.Contains("keepers == 1", source);

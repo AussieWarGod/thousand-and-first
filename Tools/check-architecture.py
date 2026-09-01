@@ -25,10 +25,10 @@ ARCHITECTURE_ROOT = "KingdomArchitectures"
 BUILDING_ROOT = "kingdombuildings"
 
 LOT_DIMENSIONS: Mapping[str, Tuple[int, int]] = {
-    "S": (5, 4),
+    "S": (6, 4),
     "M": (8, 6),
-    "L": (12, 9),
-    "XL": (20, 14),
+    "L": (12, 10),
+    "XL": (20, 18),
 }
 LOT_ORDER = tuple(LOT_DIMENSIONS)
 TECH_ORDER: Mapping[str, int] = {
@@ -64,6 +64,15 @@ COVERS = {"open", "soft", "walled", "natural"}
 CLAIMS = {"building", "yard"}
 PASS_MODES = {"walk", "blocked", "adjacent"}
 YES_NO = {"yes", "no"}
+TRANSITION_MODES = {
+    "none",
+    "additive",
+    "additive-expand",
+    "renovate",
+    "renovate-expand",
+    "replacement",
+}
+EXPANDING_TRANSITION_MODES = {"additive-expand", "renovate-expand"}
 
 MAX_KEY_CHARS = 128
 MAX_BLUEPRINT_CHARS = 256
@@ -71,8 +80,8 @@ MAX_SELECTOR_CHARS = 256
 MAX_SELECTOR_TOKENS = 16
 MAX_PALETTE_SLOTS = 128
 MAX_GLYPHS = 96
-MAX_MAP_AREA = 280
-MAX_PLACEMENTS = 512
+MAX_MAP_AREA = 360
+MAX_PLACEMENTS = 720
 MAX_ANCHORS = 64
 MAX_ROUTE_CELLS = 48
 ROAD_MARGIN = 1
@@ -80,9 +89,9 @@ MAX_BINDINGS_PER_PLAN = 16
 MAX_TIERS_PER_BINDING = 16
 MAX_VARIANTS_PER_TIER = 32
 MAX_REQUIREMENTS_PER_TIER = 32
-MAX_SNAPSHOT_PAYLOAD_BYTES = 8192
-MAX_SNAPSHOT_CHARS = 11264
-SNAPSHOT_TEXT_OVERHEAD = len("a2||") + 64  # version, separators, SHA-256
+MAX_SNAPSHOT_PAYLOAD_BYTES = 12288
+MAX_SNAPSHOT_CHARS = 16456
+SNAPSHOT_TEXT_OVERHEAD = len("a4||") + 64  # version, separators, SHA-256
 
 # External-input bounds.  The schema bounds above remain the product contract; these stop a
 # malformed checkout or caller path from turning the checker itself into an unbounded parser.
@@ -125,8 +134,25 @@ VERTICAL_BLUEPRINT_PAIRS: Mapping[str, Tuple[str, str]] = {
     "r_KingdomDelveDown": ("down", "r_KingdomDelveUp"),
 }
 RAW_VERTICAL_BLUEPRINTS = ("StairsUp", "StairsDown")
-VERTICAL_ROLE_TERMS = ("vertical", "stair", "travel", "elevator", "lift")
+VERTICAL_ROLE_TERMS = ("vertical", "stair", "stairs", "travel", "elevator", "lift")
 POSES = ("north", "east", "south", "west")
+POSE_MODES = {"cardinal", "connected", "invariant"}
+MAX_POSE_RECORDS = 1024
+MAX_POSE_AUDIT_ROWS = 4096
+MAX_POSE_AUDIT_TEXT = 4096
+MAX_POSE_AUDIT_BYTES = 1024 * 1024
+MAX_POSE_INHERITANCE_DEPTH = 256
+POSE_VISUAL_RENDER_FIELDS = {
+    "Tile",
+    "RenderString",
+    "ColorString",
+    "DetailColor",
+    "TileColor",
+    "HFlip",
+    "VFlip",
+}
+POSE_CARDINAL_KINGDOM_ALLOWLIST: Set[str] = set()
+POSE_EXACT_IDENTITY_BLUEPRINTS = {"StairsDown", "StairsUp"}
 HEART_BUILD_KEYS = (
     "heartbasin",
     "heartwaterstone",
@@ -233,6 +259,7 @@ REOPENED_EXACT_ANCHORS: Mapping[str, Tuple[str, ...]] = {
     ),
     "stasisvault": (
         "main",
+        "entrance:service",
         "function:stasis-vault",
         "stasis:power",
         "stasis:operator",
@@ -249,7 +276,6 @@ REOPENED_MIN_ANCHORS: Mapping[str, Mapping[str, int]] = {
     },
     "stasisvault": {
         "entrance:public": 2,
-        "entrance:service": 2,
         "stasis:body-bay": 4,
     },
 }
@@ -306,15 +332,50 @@ UNSAFE_AUTHORED_BLUEPRINTS: Mapping[str, str] = {
     "Woven Basket": "raw shared container does not freeze empty architecture authority",
 }
 
+def _roof_ceiling(building: "Building") -> int:
+    carries = building.attributes.get("Carries", "")
+    for pair in carries.split(","):
+        name, separator, amount = pair.partition(":")
+        if separator and name.strip().lower() == "roof" and amount.strip().isdigit():
+            return int(amount.strip())
+    return 0
+
+
+def _sleep_provider_cells(
+    architecture_map: "ArchitectureMap", palette: "Palette"
+) -> List[Tuple[int, int, "Glyph"]]:
+    result: List[Tuple[int, int, Glyph]] = []
+    for x, y, glyph in _cells(architecture_map):
+        reference = glyph.object
+        if not reference.startswith("$") or reference == "$building":
+            continue
+        slot = palette.slots.get(reference[1:])
+        if slot is not None and slot.role == "sleep":
+            result.append((x, y, glyph))
+    return result
+
 
 @dataclass
 class BlueprintRecord:
-    """The two pieces of ObjectBlueprint inheritance needed to prove map movement truth."""
+    """Merged ObjectBlueprint inheritance, movement, and semantic operations."""
 
     name: str
     parent: str = ""
     solid: Optional[bool] = None
     door: Optional[bool] = None
+    operations: List["BlueprintOperation"] = field(default_factory=list)
+    object_attributes: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class BlueprintOperation:
+    """One ordered ObjectBlueprint child merge/removal operation."""
+
+    action: str
+    tag: str
+    name: str
+    attributes: Tuple[Tuple[str, str], ...]
+    content: str
 
 
 @dataclass(frozen=True)
@@ -361,6 +422,10 @@ class Building:
     def blueprint(self) -> str:
         return self.attributes.get("Blueprint", "").strip()
 
+    @property
+    def footprint(self) -> str:
+        return self.attributes.get("Footprint", "").strip()
+
 
 @dataclass
 class Slot:
@@ -388,6 +453,9 @@ class Glyph:
     ground: str
     structure: str
     object: str
+    ground_orientation: Optional[str]
+    structure_orientation: Optional[str]
+    object_orientation: Optional[str]
     claim: str
     pass_mode: str
     cover: str
@@ -406,12 +474,48 @@ class Glyph:
             if value
         )
 
+    def orientation(self, layer: str) -> Optional[str]:
+        return {
+            "Ground": self.ground_orientation,
+            "Structure": self.structure_orientation,
+            "Object": self.object_orientation,
+        }[layer]
+
+
+@dataclass(frozen=True)
+class Pose:
+    blueprint: str
+    mode: str
+    north: Optional[str]
+    east: Optional[str]
+    south: Optional[str]
+    west: Optional[str]
+    location: str
+
+    def sibling(self, facing: str) -> Optional[str]:
+        return {
+            "north": self.north,
+            "east": self.east,
+            "south": self.south,
+            "west": self.west,
+        }[facing]
+
+
+@dataclass
+class _RawPose:
+    blueprint: str
+    values: Dict[str, str]
+    bad_attributes: Set[str]
+    locations: Dict[str, str]
+    location: str
+
 
 @dataclass
 class ArchitectureMap:
     key: str
     width: int
     height: int
+    footprint: Optional[Tuple[int, int, int, int]]
     default_cover: str
     glyphs: Dict[str, Glyph]
     rows: Tuple[str, ...]
@@ -451,6 +555,7 @@ class Tier:
     key: str
     build_key: str
     level: int
+    transition: str
     map_key: str
     palette_key: str
     requirements: List[Requirement]
@@ -479,6 +584,7 @@ class Plan:
 
 @dataclass
 class ArchitectureModel:
+    poses: Dict[str, Pose] = field(default_factory=dict)
     palettes: Dict[str, Palette] = field(default_factory=dict)
     maps: Dict[str, ArchitectureMap] = field(default_factory=dict)
     plans: Dict[str, Plan] = field(default_factory=dict)
@@ -529,6 +635,7 @@ class CheckResult:
             f"architecture-files: {len(self.architecture_files)}",
             f"buildings: {len(self.buildings)}",
             f"plot-buildings: {plot_count}",
+            f"poses: {len(self.model.poses)}",
             f"palettes: {len(self.model.palettes)}",
             f"maps: {len(self.model.maps)} ({source_maps} source / "
             f"{generated_maps} generated)",
@@ -895,6 +1002,17 @@ def _parse_slot(
                 "Material must name a settlement material, including on retained natural fabric",
             )
         )
+    if (
+        VISUAL_BLUEPRINT_EQUIVALENTS.get(blueprint) == "vanilla-random-dirt"
+        and _canonical_material(material) == "stone"
+    ):
+        issues.append(
+            Issue(
+                location,
+                "palette.material-render-mismatch",
+                f"{blueprint} renders as packed dirt in supported Qud and cannot claim stone",
+            )
+        )
     if min_tech not in TECH_ORDER:
         issues.append(Issue(location, "palette.tech", f"unknown MinTech {min_tech!r}"))
     if knowledge:
@@ -992,6 +1110,41 @@ def _layer_reference(
     return value
 
 
+def _orientation_attribute(
+    element: ET.Element,
+    name: str,
+    location: str,
+    issues: List[Issue],
+) -> Optional[str]:
+    """Parse one layer-local direction; an explicit zero-length value is a clear."""
+
+    if name not in element.attrib:
+        return None
+    raw = element.get(name, "")
+    if raw == "":
+        return None
+    folded = raw.lower()
+    if raw != raw.strip() or any(ord(character) < 32 for character in raw):
+        issues.append(
+            Issue(
+                location,
+                "glyph.orientation",
+                f"{name} must be north, east, south, west, or an explicit empty clear",
+            )
+        )
+        return None
+    if folded not in POSES:
+        issues.append(
+            Issue(
+                location,
+                "glyph.orientation",
+                f"{name} must be north, east, south, west, or an explicit empty clear",
+            )
+        )
+        return None
+    return folded
+
+
 def _parse_glyph(
     element: ET.Element,
     location: str,
@@ -1004,6 +1157,9 @@ def _parse_glyph(
             "Ground",
             "Structure",
             "Object",
+            "GroundOrientation",
+            "StructureOrientation",
+            "ObjectOrientation",
             "Claim",
             "Pass",
             "Cover",
@@ -1028,6 +1184,28 @@ def _parse_glyph(
         element.get("Structure", ""), "Structure", location, issues
     )
     object_ref = _layer_reference(element.get("Object", ""), "Object", location, issues)
+    ground_orientation = _orientation_attribute(
+        element, "GroundOrientation", location, issues
+    )
+    structure_orientation = _orientation_attribute(
+        element, "StructureOrientation", location, issues
+    )
+    object_orientation = _orientation_attribute(
+        element, "ObjectOrientation", location, issues
+    )
+    for layer, reference, orientation in (
+        ("Ground", ground, ground_orientation),
+        ("Structure", structure, structure_orientation),
+        ("Object", object_ref, object_orientation),
+    ):
+        if orientation is not None and not reference:
+            issues.append(
+                Issue(
+                    location,
+                    "glyph.orientation-layer",
+                    f"{layer}Orientation requires scenery on the same layer",
+                )
+            )
     if not any((ground, structure, object_ref)):
         issues.append(
             Issue(
@@ -1070,25 +1248,34 @@ def _parse_glyph(
         issues.append(
             Issue(location, "stateful.object", "Stateful=yes requires an Object layer")
         )
+    custody = [anchor for anchor in anchors if anchor.startswith("benefit:")]
     stable = [
         anchor
         for anchor in anchors
-        if anchor != "main" and not anchor.startswith("entrance:")
+        if anchor != "main"
+        and not anchor.startswith("entrance:")
+        and not anchor.startswith("benefit:")
     ]
     if object_ref == "$building" and not stateful:
         issues.append(
             Issue(location, "stateful.building", "$building must be Stateful=yes")
         )
-    if object_ref and object_ref != "$building" and stable and not stateful:
-        issues.append(
-            Issue(
-                location,
-                "stateful.functional-object",
-                "an Object with a functional anchor must be Stateful=yes",
-            )
-        )
+    # Anchors describe function and topology. Stateful=yes is the narrower custody promise:
+    # it prevents an upgrade from replacing the object. Replaceable seats, lights and other
+    # fittings may therefore carry semantic anchors without becoming protected state.
     if stateful and object_ref != "$building":
-        if len(stable) != 1:
+        # A benefit token is provider-fixture custody metadata, never a source of supply.  It
+        # intentionally coexists with the fixture's functional topology roles.  Without that
+        # explicit custody token, retain the older exactly-one semantic-anchor contract.
+        if custody and len(custody) != 1:
+            issues.append(
+                Issue(
+                    location,
+                    "stateful.anchor",
+                    "a stateful benefit fixture needs exactly one benefit custody anchor",
+                )
+            )
+        elif not custody and len(stable) != 1:
             issues.append(
                 Issue(
                     location,
@@ -1101,6 +1288,9 @@ def _parse_glyph(
         ground,
         structure,
         object_ref,
+        ground_orientation,
+        structure_orientation,
+        object_orientation,
         claim,
         pass_mode,
         cover,
@@ -1119,7 +1309,10 @@ def _parse_map(
 ) -> Optional[ArchitectureMap]:
     base_location = _location(path, repo_root, f"map[{index}]")
     _unknown_attributes(
-        element, {"Key", "Width", "Height", "DefaultCover"}, base_location, issues
+        element,
+        {"Key", "Width", "Height", "Footprint", "DefaultCover"},
+        base_location,
+        issues,
     )
     key = _required_attribute(element, "Key", base_location, issues)
     if not _valid_key(key, base_location, "map Key", issues):
@@ -1143,6 +1336,32 @@ def _parse_map(
                 f"map area {width * height} exceeds cap {MAX_MAP_AREA}",
             )
         )
+    footprint: Optional[Tuple[int, int, int, int]] = None
+    footprint_text = element.get("Footprint")
+    if footprint_text is not None:
+        match = re.fullmatch(
+            r"(0|[1-9][0-9]*),(0|[1-9][0-9]*),([1-9][0-9]*)x([1-9][0-9]*)",
+            footprint_text,
+        )
+        if match is None:
+            issues.append(
+                Issue(
+                    location,
+                    "footprint.map-format",
+                    "Footprint must be canonical X,Y,WxH with non-negative origin and positive dimensions",
+                )
+            )
+        else:
+            footprint = tuple(int(value, 10) for value in match.groups())
+            foot_x, foot_y, foot_width, foot_height = footprint
+            if foot_x + foot_width > width or foot_y + foot_height > height:
+                issues.append(
+                    Issue(
+                        location,
+                        "footprint.map-bounds",
+                        f"Footprint {footprint_text!r} lies outside map {width}x{height}",
+                    )
+                )
     default_cover = _required_attribute(element, "DefaultCover", location, issues)
     if default_cover not in COVERS:
         issues.append(
@@ -1225,7 +1444,7 @@ def _parse_map(
                     )
                 )
     architecture_map = ArchitectureMap(
-        key, width, height, default_cover, glyphs, tuple(rows), location
+        key, width, height, footprint, default_cover, glyphs, tuple(rows), location
     )
     _validate_map_topology(architecture_map, issues)
     return architecture_map
@@ -1252,10 +1471,14 @@ def _neighbors(x: int, y: int, width: int, height: int) -> Iterable[Tuple[int, i
             yield nx, ny
 
 
-def _entrance_egress(
-    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+def _bounded_egress_route(
+    architecture_map: ArchitectureMap,
+    entrance_x: int,
+    entrance_y: int,
+    *,
+    claimed: bool,
 ) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
-    """Mirror the runtime's bounded canonical N/E/S/W unclaimed-walk route law."""
+    """Find one bounded canonical N/E/S/W route through claimed walk or empty ground."""
 
     steps = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
@@ -1274,6 +1497,12 @@ def _entrance_egress(
     if direct is not None:
         return (), direct
     entrance = (entrance_x, entrance_y)
+    if claimed:
+        entrance_glyph = architecture_map.glyph_at(entrance_x, entrance_y)
+        if entrance_glyph is None or not (
+            entrance_glyph.pass_mode == "walk" and entrance_glyph.claim in CLAIMS
+        ):
+            return None
     parent: Dict[Tuple[int, int], Optional[Tuple[int, int]]] = {entrance: None}
     queue: deque[Tuple[int, int]] = deque((entrance,))
     boundary: Optional[Tuple[int, int]] = None
@@ -1283,13 +1512,26 @@ def _entrance_egress(
         for dx, dy in steps:
             neighbor = (x + dx, y + dy)
             nx, ny = neighbor
+            glyph = (
+                architecture_map.glyph_at(nx, ny)
+                if 0 <= nx < architecture_map.width
+                and 0 <= ny < architecture_map.height
+                else None
+            )
+            traversable = (
+                glyph is not None
+                and glyph.pass_mode == "walk"
+                and glyph.claim in CLAIMS
+                if claimed
+                else glyph is None
+            )
             if (
                 neighbor in parent
                 or not (
                     0 <= nx < architecture_map.width
                     and 0 <= ny < architecture_map.height
                 )
-                or architecture_map.glyph_at(nx, ny) is not None
+                or not traversable
             ):
                 continue
             parent[neighbor] = (x, y)
@@ -1311,6 +1553,109 @@ def _entrance_egress(
     if step != entrance:
         return None
     return tuple(reversed(reversed_path)), exit_step
+
+
+def _claimed_entrance_egress(
+    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
+    return _bounded_egress_route(
+        architecture_map, entrance_x, entrance_y, claimed=True
+    )
+
+
+def _legacy_unclaimed_entrance_egress(
+    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
+    return _bounded_egress_route(
+        architecture_map, entrance_x, entrance_y, claimed=False
+    )
+
+
+def _entrance_egress(
+    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
+    """Mirror KingdomRoadRules.TryCanonicalEntranceEgress exactly.
+
+    The compiled route may start on a claimed public/service threshold, then crosses only
+    unclaimed walk cells to the first lot edge under canonical N/E/S/W breadth-first order.
+    """
+
+    return _legacy_unclaimed_entrance_egress(
+        architecture_map, entrance_x, entrance_y
+    )
+
+
+def _authored_lane(
+    architecture_map: ArchitectureMap, entrance_x: int, entrance_y: int
+) -> Optional[Tuple[Tuple[Tuple[int, int], ...], Tuple[int, int]]]:
+    """Mirror KingdomRoadRules.TryAuthoredLane in canonical coordinates.
+
+    The returned intermediates include the snapshot egress and reserved road margin.  The
+    separate endpoint is the actual lane, one further cardinal cell away; evidence at the margin
+    is therefore never accepted as road ingress.
+    """
+
+    egress = _entrance_egress(architecture_map, entrance_x, entrance_y)
+    if egress is None:
+        return None
+    route, exit_step = egress
+    edge = route[-1] if route else (entrance_x, entrance_y)
+    intermediates = list(route)
+    for distance in range(1, ROAD_MARGIN + 1):
+        intermediates.append(
+            (
+                edge[0] + exit_step[0] * distance,
+                edge[1] + exit_step[1] * distance,
+            )
+        )
+    lane = (
+        edge[0] + exit_step[0] * (ROAD_MARGIN + 1),
+        edge[1] + exit_step[1] * (ROAD_MARGIN + 1),
+    )
+    if len(intermediates) > MAX_ROUTE_CELLS:
+        return None
+    return tuple(intermediates), lane
+
+
+def _claimed_walk_reach(
+    architecture_map: ArchitectureMap, entrances: Sequence[Tuple[int, int]]
+) -> Set[Tuple[int, int]]:
+    walkable = {
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if glyph.pass_mode == "walk" and glyph.claim in CLAIMS
+    }
+    reached = {position for position in entrances if position in walkable}
+    queue: deque[Tuple[int, int]] = deque(reached)
+    while queue:
+        x, y = queue.popleft()
+        for neighbor in _neighbors(
+            x, y, architecture_map.width, architecture_map.height
+        ):
+            if neighbor in walkable and neighbor not in reached:
+                reached.add(neighbor)
+                queue.append(neighbor)
+    return reached
+
+
+def _public_circulation(
+    architecture_map: ArchitectureMap,
+) -> Tuple[Set[Tuple[int, int]], bool]:
+    """Return claimed public reach and exact threshold-to-edge egress proof."""
+
+    entrances = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if "entrance:public" in glyph.anchors
+        and glyph.pass_mode == "walk"
+        and glyph.claim in CLAIMS
+    ]
+    reached = _claimed_walk_reach(architecture_map, entrances)
+    egress = any(
+        _entrance_egress(architecture_map, x, y) is not None
+        for x, y in entrances
+    )
+    return reached, egress
 
 
 def _pose_point(x: int, y: int, width: int, height: int, pose: str) -> Tuple[int, int]:
@@ -1343,11 +1688,10 @@ def _access_ok(
 def _physical_walk_reach(
     architecture_map: ArchitectureMap, entrances: Sequence[Tuple[int, int]]
 ) -> Set[Tuple[int, int]]:
-    """Player walk over claimed paths plus each entrance's exact unclaimed egress route.
+    """Player walk over claimed paths plus each entrance's exact runtime egress route.
 
-    Runtime anchor authority remains the stricter claimed-cell graph below. Generated neutral yard
-    has no anchor and may sit across the explicit frontage route feet use in-world. Other ``.``
-    cells—including declared intentional-open scenery—cannot mask a disconnected claimed yard.
+    Runtime anchor authority remains the stricter claimed-cell graph below. Only the canonical
+    unclaimed route is admitted; claimed decorative strips cannot fake road connectivity.
     """
 
     allowed_open: Set[Tuple[int, int]] = set()
@@ -1480,6 +1824,11 @@ def _validate_map_topology(
     entrance_cells = [
         (x, y, glyph) for name, x, y, glyph in anchors if name == "entrance:public"
     ]
+    road_entrance_cells = [
+        (name, x, y, glyph)
+        for name, x, y, glyph in anchors
+        if name in {"entrance:public", "entrance:service"}
+    ]
     if len(main_cells) != 1:
         issues.append(
             Issue(
@@ -1519,32 +1868,13 @@ def _validate_map_topology(
         )
         return
     valid_entrances: List[Tuple[int, int]] = []
-    for entrance_x, entrance_y, entrance_glyph in entrance_cells:
+    for entrance_name, entrance_x, entrance_y, entrance_glyph in road_entrance_cells:
         if entrance_glyph.pass_mode != "walk" or entrance_glyph.claim not in CLAIMS:
             issues.append(
                 Issue(
                     architecture_map.location,
                     "entrance.walk",
-                    f"entrance:public at {entrance_x},{entrance_y} must be claimed and Pass=walk",
-                )
-            )
-            continue
-        boundary = entrance_x in {0, architecture_map.width - 1} or entrance_y in {
-            0,
-            architecture_map.height - 1,
-        }
-        for nx, ny in _neighbors(
-            entrance_x, entrance_y, architecture_map.width, architecture_map.height
-        ):
-            neighbor = architecture_map.glyph_at(nx, ny)
-            if neighbor is None:
-                boundary = True
-        if not boundary:
-            issues.append(
-                Issue(
-                    architecture_map.location,
-                    "entrance.boundary",
-                    f"entrance:public at {entrance_x},{entrance_y} must stand on a map edge or claim boundary",
+                    f"{entrance_name} at {entrance_x},{entrance_y} must be claimed and Pass=walk",
                 )
             )
             continue
@@ -1553,31 +1883,19 @@ def _validate_map_topology(
                 Issue(
                     architecture_map.location,
                     "entrance.road-route",
-                    f"entrance:public at {entrance_x},{entrance_y} has no bounded "
-                    "unclaimed walk to the lot exterior",
+                    f"{entrance_name} at {entrance_x},{entrance_y} has no bounded unclaimed "
+                    "runtime approach to lot exterior",
                 )
             )
             continue
-        valid_entrances.append((entrance_x, entrance_y))
+        if entrance_name == "entrance:public":
+            valid_entrances.append((entrance_x, entrance_y))
     walkable = {
         (x, y)
         for x, y, glyph in _cells(architecture_map)
         if glyph.pass_mode == "walk" and glyph.claim in CLAIMS
     }
-    reachable: Set[Tuple[int, int]] = set()
-    queue: deque[Tuple[int, int]] = deque()
-    for entrance_position in valid_entrances:
-        if entrance_position in walkable and entrance_position not in reachable:
-            reachable.add(entrance_position)
-            queue.append(entrance_position)
-    while queue:
-        x, y = queue.popleft()
-        for neighbor in _neighbors(
-            x, y, architecture_map.width, architecture_map.height
-        ):
-            if neighbor in walkable and neighbor not in reachable:
-                reachable.add(neighbor)
-                queue.append(neighbor)
+    reachable = _claimed_walk_reach(architecture_map, valid_entrances)
     walk_reach = (
         _physical_walk_reach(architecture_map, valid_entrances)
         if _is_generated_map(architecture_map)
@@ -1899,7 +2217,10 @@ def _parse_tier(
     issues: List[Issue],
 ) -> Optional[Tier]:
     _unknown_attributes(
-        element, {"Key", "BuildKey", "Level", "Map", "Palette"}, location, issues
+        element,
+        {"Key", "BuildKey", "Level", "Transition", "TransitionMode", "Map", "Palette"},
+        location,
+        issues,
     )
     key = _required_attribute(element, "Key", location, issues)
     build_key = _required_attribute(element, "BuildKey", location, issues)
@@ -1914,6 +2235,48 @@ def _parse_tier(
     level = _canonical_int(
         level_text, location, "Level", issues, 0, MAX_TIERS_PER_BINDING - 1
     )
+    transition_value = element.get("Transition")
+    transition_alias = element.get("TransitionMode")
+    if transition_value is not None and transition_alias is not None:
+        issues.append(
+            Issue(
+                location,
+                "tier.transition-alias",
+                "tier must not declare both Transition and legacy alias TransitionMode",
+            )
+        )
+    transition_text = (
+        transition_value if transition_value is not None else transition_alias
+    )
+    transition = "none" if transition_text is None else transition_text.strip().lower()
+    if transition not in TRANSITION_MODES:
+        issues.append(
+            Issue(
+                location,
+                "tier.transition",
+                f"unknown Transition {transition_text!r}",
+            )
+        )
+    elif level == 0 and transition != "none":
+        issues.append(
+            Issue(location, "tier.transition", "Level 0 must use Transition='none'")
+        )
+    elif level is not None and level > 0 and transition_text is None:
+        issues.append(
+            Issue(
+                location,
+                "tier.transition",
+                "every Level above 0 must explicitly declare Transition",
+            )
+        )
+    elif level is not None and level > 0 and transition == "none":
+        issues.append(
+            Issue(
+                location,
+                "tier.transition",
+                "a Level above 0 cannot use Transition='none'",
+            )
+        )
     requirements: List[Requirement] = []
     variants: List[Variant] = []
     saw_variant = False
@@ -1997,6 +2360,7 @@ def _parse_tier(
         key,
         build_key,
         level if level is not None else 0,
+        transition,
         map_key,
         palette_key,
         requirements,
@@ -2143,10 +2507,208 @@ def _parse_plan(
     return plan
 
 
+def _valid_pose_blueprint(
+    value: str,
+    location: str,
+    label: str,
+    issues: List[Issue],
+) -> bool:
+    valid = True
+    if not value:
+        issues.append(Issue(location, "pose.blueprint", f"{label} must be non-empty"))
+        return False
+    if len(value) > MAX_BLUEPRINT_CHARS:
+        issues.append(
+            Issue(
+                location,
+                "cap.blueprint",
+                f"{label} is {len(value)} characters; cap is {MAX_BLUEPRINT_CHARS}",
+            )
+        )
+        valid = False
+    if value != value.strip() or any(ord(character) < 32 for character in value):
+        issues.append(
+            Issue(
+                location,
+                "pose.blueprint",
+                f"{label} must be exact printable blueprint text without outer whitespace",
+            )
+        )
+        valid = False
+    if value.startswith("$"):
+        issues.append(
+            Issue(location, "pose.blueprint", f"{label} must be a concrete blueprint")
+        )
+        valid = False
+    return valid
+
+
+def _merge_pose(
+    element: ET.Element,
+    path: Path,
+    repo_root: Path,
+    index: int,
+    raw_poses: Dict[str, _RawPose],
+    issues: List[Issue],
+) -> None:
+    location = _location(path, repo_root, f"pose[{index}]")
+    _unknown_attributes(
+        element,
+        {"Blueprint", "Mode", "North", "East", "South", "West"},
+        location,
+        issues,
+    )
+    if list(element):
+        for child_index, child in enumerate(element):
+            issues.append(
+                Issue(
+                    f"{location}/{child.tag}[{child_index}]",
+                    "schema.element",
+                    "pose declarations cannot contain child elements",
+                )
+            )
+    raw_blueprint = element.get("Blueprint")
+    if raw_blueprint is None:
+        issues.append(
+            Issue(location, "schema.required", "missing non-empty Blueprint")
+        )
+        return
+    if not _valid_pose_blueprint(
+        raw_blueprint, location, "pose Blueprint", issues
+    ):
+        return
+    raw = raw_poses.get(raw_blueprint)
+    if raw is None:
+        if len(raw_poses) >= MAX_POSE_RECORDS:
+            issues.append(
+                Issue(
+                    location,
+                    "cap.poses",
+                    f"pose catalogue exceeds cap {MAX_POSE_RECORDS}",
+                )
+            )
+            return
+        raw = _RawPose(raw_blueprint, {}, set(), {}, location)
+        raw_poses[raw_blueprint] = raw
+    raw.location = location
+    for name in ("Mode", "North", "East", "South", "West"):
+        if name not in element.attrib:
+            continue
+        value = element.get(name, "")
+        raw.locations[name] = location
+        if any(ord(character) < 32 for character in value) or len(value) > 4096:
+            raw.values.pop(name, None)
+            raw.bad_attributes.add(name)
+            continue
+        raw.bad_attributes.discard(name)
+        if name != "Mode" and value == "":
+            raw.values.pop(name, None)
+        else:
+            raw.values[name] = value
+
+
+def _materialize_poses(
+    raw_poses: Mapping[str, _RawPose], issues: List[Issue]
+) -> Dict[str, Pose]:
+    result: Dict[str, Pose] = {}
+    for blueprint in sorted(raw_poses):
+        raw = raw_poses[blueprint]
+        mode_text = raw.values.get("Mode")
+        mode_location = raw.locations.get("Mode", raw.location)
+        mode = "" if mode_text is None else mode_text.lower()
+        valid = True
+        if "Mode" in raw.bad_attributes or mode_text is None or not mode_text:
+            issues.append(
+                Issue(
+                    mode_location,
+                    "pose.mode",
+                    "Mode must be exactly cardinal, connected, or invariant",
+                )
+            )
+            valid = False
+        elif mode_text != mode_text.strip() or mode not in POSE_MODES:
+            issues.append(
+                Issue(
+                    mode_location,
+                    "pose.mode",
+                    "Mode must be exactly cardinal, connected, or invariant",
+                )
+            )
+            valid = False
+        siblings: Dict[str, Optional[str]] = {}
+        for name in ("North", "East", "South", "West"):
+            value = raw.values.get(name)
+            sibling_location = raw.locations.get(name, raw.location)
+            if name in raw.bad_attributes:
+                issues.append(
+                    Issue(
+                        sibling_location,
+                        "pose.sibling",
+                        f"{name} is explicitly malformed",
+                    )
+                )
+                valid = False
+                siblings[name] = None
+                continue
+            if value is not None and not _valid_pose_blueprint(
+                value, sibling_location, f"pose {name}", issues
+            ):
+                valid = False
+            siblings[name] = value
+        present = [name for name, value in siblings.items() if value is not None]
+        if mode == "cardinal" and len(present) != 4:
+            missing = ", ".join(name for name in siblings if name not in present)
+            issues.append(
+                Issue(
+                    raw.location,
+                    "pose.cardinal",
+                    "cardinal mode requires four concrete siblings"
+                    + (f"; missing {missing}" if missing else ""),
+                )
+            )
+            valid = False
+        elif mode == "cardinal" and (
+            blueprint in POSE_EXACT_IDENTITY_BLUEPRINTS
+            or (
+                blueprint.startswith("r_Kingdom")
+                and blueprint not in POSE_CARDINAL_KINGDOM_ALLOWLIST
+            )
+        ):
+            issues.append(
+                Issue(
+                    raw.location,
+                    "pose.semantic-identity",
+                    f"cardinal mode is prohibited for exact-identity fixture {blueprint!r}",
+                )
+            )
+            valid = False
+        elif mode in {"connected", "invariant"} and present:
+            issues.append(
+                Issue(
+                    raw.location,
+                    "pose.incoherent",
+                    f"{mode} mode rejects directional siblings: {', '.join(present)}",
+                )
+            )
+            valid = False
+        if valid:
+            result[blueprint] = Pose(
+                blueprint,
+                mode,
+                siblings["North"],
+                siblings["East"],
+                siblings["South"],
+                siblings["West"],
+                raw.location,
+            )
+    return result
+
+
 def load_architectures(
     paths: Sequence[Path], repo_root: Path, issues: List[Issue]
 ) -> ArchitectureModel:
     model = ArchitectureModel()
+    raw_poses: Dict[str, _RawPose] = {}
     record_count = 0
     binding_keys: Set[str] = set()
     for path in paths:
@@ -2174,7 +2736,9 @@ def load_architectures(
             )
         for index, element in enumerate(xml):
             record_count += 1
-            if element.tag == "palette":
+            if element.tag == "pose":
+                _merge_pose(element, path, repo_root, index, raw_poses, issues)
+            elif element.tag == "palette":
                 palette = _parse_palette(element, path, repo_root, index, issues)
                 if palette is None:
                     continue
@@ -2231,7 +2795,7 @@ def load_architectures(
                     Issue(
                         _location(path, repo_root, f"{element.tag}[{index}]"),
                         "schema.element",
-                        f"root child must be <palette>, <map>, or <plan>; found <{element.tag}>",
+                        f"root child must be <pose>, <palette>, <map>, or <plan>; found <{element.tag}>",
                     )
                 )
     if record_count > MAX_ARCHITECTURE_RECORDS:
@@ -2242,6 +2806,7 @@ def load_architectures(
                 f"{record_count} top-level records exceed cap {MAX_ARCHITECTURE_RECORDS}",
             )
         )
+    model.poses = _materialize_poses(raw_poses, issues)
     return model
 
 
@@ -2261,6 +2826,108 @@ def _resolve_reference(reference: str, palette: Palette, building: Building) -> 
         slot = palette.slots.get(reference[1:])
         return "" if slot is None else slot.blueprint
     return reference
+
+
+def _resolve_pose_blueprint(
+    semantic: str,
+    local_orientation: Optional[str],
+    lot_pose: str,
+    poses: Mapping[str, Pose],
+) -> str:
+    pose = poses.get(semantic)
+    if pose is None or pose.mode != "cardinal":
+        return semantic
+    if local_orientation not in POSES or lot_pose not in POSES:
+        return semantic
+    world = POSES[(POSES.index(local_orientation) + POSES.index(lot_pose)) & 3]
+    return pose.sibling(world) or semantic
+
+
+def _resolve_layer_pose(
+    reference: str,
+    layer: str,
+    glyph: Glyph,
+    palette: Palette,
+    building: Building,
+    poses: Mapping[str, Pose],
+    lot_pose: str,
+) -> str:
+    semantic = _resolve_reference(reference, palette, building)
+    if not semantic or reference == "$building":
+        return semantic
+    return _resolve_pose_blueprint(
+        semantic, glyph.orientation(layer), lot_pose, poses
+    )
+
+
+def _validate_glyph_poses(
+    architecture_map: ArchitectureMap,
+    palette: Palette,
+    poses: Mapping[str, Pose],
+    issues: List[Issue],
+) -> None:
+    """Mirror compiler pose law for every declared glyph under its effective palette."""
+
+    for glyph in architecture_map.glyphs.values():
+        for layer, reference in (
+            ("Ground", glyph.ground),
+            ("Structure", glyph.structure),
+            ("Object", glyph.object),
+        ):
+            orientation = glyph.orientation(layer)
+            if not reference or reference == "$building":
+                if orientation is not None:
+                    issues.append(
+                        Issue(
+                            glyph.location,
+                            "glyph.orientation-layer",
+                            f"{layer}Orientation requires palette scenery on the same layer",
+                        )
+                    )
+                continue
+            if not reference.startswith("$"):
+                if orientation is not None:
+                    issues.append(
+                        Issue(
+                            glyph.location,
+                            "glyph.orientation-slot",
+                            f"{layer}Orientation requires an exact palette slot",
+                        )
+                    )
+                continue
+            slot = palette.slots.get(reference[1:])
+            if slot is None:
+                continue
+            pose = poses.get(slot.blueprint)
+            if pose is None:
+                if orientation is not None:
+                    issues.append(
+                        Issue(
+                            glyph.location,
+                            "glyph.orientation-undeclared",
+                            f"{layer}Orientation requires an exact cardinal pose for "
+                            f"{slot.blueprint!r}",
+                        )
+                    )
+            elif pose.mode == "cardinal":
+                if orientation is None:
+                    issues.append(
+                        Issue(
+                            glyph.location,
+                            "glyph.orientation-required",
+                            f"cardinal {layer} scenery {slot.blueprint!r} requires "
+                            f"{layer}Orientation",
+                        )
+                    )
+            elif orientation is not None:
+                issues.append(
+                    Issue(
+                        glyph.location,
+                        "glyph.orientation-incoherent",
+                        f"{pose.mode} {layer} scenery {slot.blueprint!r} rejects "
+                        f"{layer}Orientation",
+                    )
+                )
 
 
 def _used_palette_slots(
@@ -2287,14 +2954,36 @@ def _binary_text_size(value: str) -> int:
     return 2 + len(value.encode("utf-8", errors="strict"))
 
 
+def _stateful_custody_role(glyph: Glyph) -> Optional[str]:
+    """Mirror the runtime compiler's exact stateful-anchor selection law."""
+
+    if not glyph.stateful or not glyph.object or glyph.object == "$building":
+        return None
+    benefits = [role for role in glyph.anchors if role.startswith("benefit:")]
+    if len(benefits) == 1:
+        return benefits[0]
+    if benefits:
+        return None
+    functional = [
+        role
+        for role in glyph.anchors
+        if role != "main"
+        and not role.startswith("entrance:")
+        and not role.startswith("benefit:")
+    ]
+    return functional[0] if len(functional) == 1 else None
+
+
 def _compiled_snapshot_size(
     tier: Tier,
     variant: Variant,
     building: Building,
     architecture_map: ArchitectureMap,
     palette: Palette,
+    poses: Optional[Mapping[str, Pose]] = None,
+    lot_pose: str = "north",
 ) -> Optional[Tuple[int, int]]:
-    """Reproduce the a2 runtime codec's exact byte and outer-string size without importing it.
+    """Reproduce the a4 runtime codec's exact byte and outer-string size without importing it.
 
     Invalid references return None because their own schema/reference findings are the primary
     fault. Valid content must fit both bounds here; otherwise the runtime loader would discard the
@@ -2308,6 +2997,7 @@ def _compiled_snapshot_size(
         or any(len(row) != architecture_map.width for row in architecture_map.rows)
     ):
         return None
+    pose_catalogue = {} if poses is None else poses
     anchors: List[str] = []
     placements: List[Tuple[str, str, str, str, str, str]] = []
     for x, y, glyph in _cells(architecture_map):
@@ -2324,19 +3014,18 @@ def _compiled_snapshot_size(
             material = None if slot is None else _canonical_material(slot.material)
             if slot is None or material is None or slot.min_tech not in TECH_ORDER:
                 return None
+            blueprint = _resolve_pose_blueprint(
+                slot.blueprint, glyph.orientation(layer), lot_pose, pose_catalogue
+            )
             stateful_anchor = ""
             if layer == "Object" and glyph.stateful:
-                stable = [
-                    key
-                    for key in cell_anchors
-                    if key != "main" and not key.startswith("entrance:")
-                ]
-                if len(stable) != 1:
+                custody = _stateful_custody_role(glyph)
+                if custody is None:
                     return None
-                stateful_anchor = stable[0]
+                stateful_anchor = f"{custody}@{x},{y}"
             placements.append(
                 (
-                    slot.blueprint,
+                    blueprint,
                     material,
                     slot.min_tech,
                     stateful_anchor,
@@ -2361,7 +3050,9 @@ def _compiled_snapshot_size(
     )
     payload = 4  # TAF + schema
     payload += sum(_binary_text_size(value) for value in metadata)
-    payload += 6  # lot, facing, dimensions, main coordinate
+    # lot, facing, dimensions, main coordinate, incoming transition mode, canonical footprint,
+    # and catalogue roof. a4 always freezes all five new footprint/roof bytes.
+    payload += 12
     for table in (blueprints, materials, techs, knowledge, powers):
         payload += 1 + sum(_binary_text_size(value) for value in table)
     payload += 2 + architecture_map.width * architecture_map.height * 3
@@ -2401,13 +3092,21 @@ def _snapshot_maximum(
             palette = model.palettes.get(variant.palette_key or tier.palette_key)
             if architecture_map is None or palette is None:
                 continue
-            size = _compiled_snapshot_size(
-                tier, variant, building, architecture_map, palette
-            )
-            if size is not None:
+            for lot_pose in POSES:
+                size = _compiled_snapshot_size(
+                    tier,
+                    variant,
+                    building,
+                    architecture_map,
+                    palette,
+                    model.poses,
+                    lot_pose,
+                )
+                if size is None:
+                    continue
                 key = (
                     f"{tier.build_key}/{tier.binding.type_key}-{tier.binding.size.lower()}/"
-                    f"{variant.key}/{architecture_map.key}+{palette.key}"
+                    f"{variant.key}/{architecture_map.key}+{palette.key}/{lot_pose}"
                 )
                 if (
                     size[0] > maximum_payload
@@ -2425,11 +3124,17 @@ def _snapshot_maximum(
 
 
 def _looks_like_vertical_travel(value: str) -> bool:
-    folded = value.lower()
-    if "stair" in folded or "elevator" in folded:
+    # Tokenize CamelCase as well as separators. A raw substring test makes the Moon Stair
+    # biome, MoonStair blueprints, and roles such as far-moonstair-approach look like stairs.
+    expanded = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
+    tokens = re.findall(r"[a-z]+", expanded.lower())
+    for index, token in enumerate(tokens):
+        if token not in VERTICAL_ROLE_TERMS:
+            continue
+        if token in ("stair", "stairs") and index > 0 and tokens[index - 1] == "moon":
+            continue
         return True
-    tokens = re.findall(r"[a-z]+", folded)
-    return any(token in VERTICAL_ROLE_TERMS for token in tokens)
+    return False
 
 
 def _validate_vertical_evidence(
@@ -2540,13 +3245,21 @@ def _effective_architecture_snapshot(
     architecture_map: ArchitectureMap,
     palette: Palette,
     building: Building,
+    poses: Optional[Mapping[str, Pose]] = None,
 ) -> str:
     """Canonical compiled visual/topology identity, excluding the BuildKey root blueprint."""
 
+    footprint = architecture_map.footprint or (
+        0,
+        0,
+        architecture_map.width,
+        architecture_map.height,
+    )
     fields = [
-        "effective-a1",
+        "effective-a2",
         str(architecture_map.width),
         str(architecture_map.height),
+        *(str(value) for value in footprint),
     ]
     for y, row in enumerate(architecture_map.rows):
         for x, char in enumerate(row):
@@ -2557,10 +3270,23 @@ def _effective_architecture_snapshot(
                 )
                 continue
 
-            def resolved(reference: str) -> str:
+            def resolved(layer: str, reference: str) -> str:
                 if reference == "$building":
                     return "$building"
-                return _resolve_reference(reference, palette, building)
+                semantic = _resolve_reference(reference, palette, building)
+                pose_catalogue = {} if poses is None else poses
+                pose = pose_catalogue.get(semantic)
+                if pose is None or pose.mode != "cardinal":
+                    return semantic
+                return "|".join(
+                    _resolve_pose_blueprint(
+                        semantic,
+                        glyph.orientation(layer),
+                        lot_pose,
+                        pose_catalogue,
+                    )
+                    for lot_pose in POSES
+                )
 
             fields.extend(
                 (
@@ -2569,9 +3295,9 @@ def _effective_architecture_snapshot(
                     glyph.claim,
                     glyph.pass_mode,
                     glyph.cover or architecture_map.default_cover,
-                    resolved(glyph.ground),
-                    resolved(glyph.structure),
-                    resolved(glyph.object),
+                    resolved("Ground", glyph.ground),
+                    resolved("Structure", glyph.structure),
+                    resolved("Object", glyph.object),
                     "yes" if glyph.stateful else "no",
                     *sorted(glyph.anchors),
                 )
@@ -2669,6 +3395,131 @@ def _has_procedural_shell_signature(
     )
 
 
+def _catalogue_footprint(
+    building: Building, issues: List[Issue]
+) -> Optional[Tuple[int, int]]:
+    raw = building.footprint
+    if not raw:
+        return None
+    match = re.fullmatch(r"([1-9][0-9]*)x([1-9][0-9]*)", raw)
+    if match is None:
+        issues.append(
+            Issue(
+                building.location,
+                "footprint.catalogue-format",
+                "catalogue Footprint must be canonical WxH with positive dimensions",
+            )
+        )
+        return None
+    return int(match.group(1), 10), int(match.group(2), 10)
+
+
+def _validate_effective_footprint(
+    tier: Tier,
+    variant: Variant,
+    building: Building,
+    architecture_map: ArchitectureMap,
+    issues: List[Issue],
+) -> None:
+    """Prove one effective BuildKey/variant map against explicit catalogue authority."""
+
+    expected = _catalogue_footprint(building, issues)
+    actual = architecture_map.footprint
+    map_key = architecture_map.key
+    location = variant.location
+    if not building.footprint:
+        if actual is not None:
+            issues.append(
+                Issue(
+                    location,
+                    "footprint.unexpected",
+                    f"map {map_key!r} declares a canonical footprint but BuildKey "
+                    f"{building.key!r} has no catalogue Footprint",
+                )
+            )
+        return
+    if expected is None:
+        return  # catalogue-format issue is primary
+    if actual is None:
+        issues.append(
+            Issue(
+                location,
+                "footprint.missing",
+                f"map {map_key!r} realizing explicit-footprint BuildKey {building.key!r} "
+                f"must declare Footprint='X,Y,{expected[0]}x{expected[1]}'",
+            )
+        )
+        return
+    foot_x, foot_y, foot_width, foot_height = actual
+    if (foot_width, foot_height) != expected:
+        issues.append(
+            Issue(
+                location,
+                "footprint.dimensions",
+                f"map {map_key!r} declares {foot_width}x{foot_height}; BuildKey "
+                f"{building.key!r} requires exact {expected[0]}x{expected[1]}",
+            )
+        )
+
+    def inside(x: int, y: int) -> bool:
+        return (
+            foot_x <= x < foot_x + foot_width
+            and foot_y <= y < foot_y + foot_height
+        )
+
+    claimed_outside = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if glyph.claim == "building" and not inside(x, y)
+    ]
+    if claimed_outside:
+        preview = ", ".join(f"{x},{y}" for x, y in claimed_outside[:8])
+        tail = (
+            ""
+            if len(claimed_outside) <= 8
+            else f" (+{len(claimed_outside) - 8} more)"
+        )
+        issues.append(
+            Issue(
+                location,
+                "footprint.building-scope",
+                f"map {map_key!r} has Claim=building outside canonical footprint "
+                f"{foot_x},{foot_y},{foot_width}x{foot_height}: {preview}{tail}",
+            )
+        )
+    root_outside = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if (glyph.object == "$building" or "main" in glyph.anchors)
+        and not inside(x, y)
+    ]
+    if root_outside:
+        issues.append(
+            Issue(
+                location,
+                "footprint.main",
+                f"map {map_key!r} places $building/main outside canonical footprint at "
+                + ", ".join(f"{x},{y}" for x, y in root_outside),
+            )
+        )
+    covered_outside = [
+        (x, y)
+        for x, y, glyph in _cells(architecture_map)
+        if glyph.claim == "building"
+        and (glyph.cover or architecture_map.default_cover) != "open"
+        and not inside(x, y)
+    ]
+    if covered_outside:
+        issues.append(
+            Issue(
+                location,
+                "footprint.building-cover",
+                f"map {map_key!r} has non-open building cover outside canonical footprint at "
+                + ", ".join(f"{x},{y}" for x, y in covered_outside[:8]),
+            )
+        )
+
+
 def _validate_tier_variant(
     tier: Tier,
     variant: Variant,
@@ -2689,6 +3540,33 @@ def _validate_tier_variant(
         )
     if architecture_map is None or palette is None:
         return
+    _validate_glyph_poses(architecture_map, palette, model.poses, issues)
+    _validate_effective_footprint(
+        tier, variant, building, architecture_map, issues
+    )
+    roof_ceiling = _roof_ceiling(building)
+    sleep_cells = _sleep_provider_cells(architecture_map, palette)
+    if roof_ceiling > 0 and roof_ceiling != len(sleep_cells):
+        issues.append(
+            Issue(
+                location,
+                "benefit.roof-embodiment",
+                f"building {building.key!r} caps roof at {roof_ceiling} but effective map "
+                f"{map_key!r} installs {len(sleep_cells)} eligible sleeping fixtures; "
+                "all four poses must preserve exact physical capacity",
+            )
+        )
+    for x, y, glyph in sleep_cells:
+        cover = glyph.cover or architecture_map.default_cover
+        if glyph.claim != "building" or cover == "open":
+            issues.append(
+                Issue(
+                    location,
+                    "benefit.roof-scope",
+                    f"sleeping fixture at {x},{y} in map {map_key!r} is not inside "
+                    "non-open Building/Covered authority",
+                )
+            )
     paid = _material_cost(building, issues)
     used_slots = _used_palette_slots(architecture_map, palette)
     concrete_scenery = sorted(
@@ -2771,13 +3649,13 @@ def _validate_tier_variant(
             if "entrance:public" in glyph.anchors
         ]
         for entrance_x, entrance_y in entrances:
-            egress = _entrance_egress(architecture_map, entrance_x, entrance_y)
-            if egress is None:
+            authored_lane = _authored_lane(
+                architecture_map, entrance_x, entrance_y
+            )
+            if authored_lane is None:
                 continue  # topology emits the primary canonical-route fault
-            route, exit_step = egress
-            edge_x, edge_y = route[-1] if route else (entrance_x, entrance_y)
-            outside_x = edge_x + exit_step[0]
-            outside_y = edge_y + exit_step[1]
+            route, lane = authored_lane
+            margin = route[-1]
             for pose in POSES:
                 posed_width = (
                     architecture_map.height
@@ -2789,36 +3667,36 @@ def _validate_tier_variant(
                     if pose in {"east", "west"}
                     else architecture_map.height
                 )
-                world_edge = _pose_point(
-                    edge_x,
-                    edge_y,
+                world_margin = _pose_point(
+                    margin[0],
+                    margin[1],
                     architecture_map.width,
                     architecture_map.height,
                     pose,
                 )
-                world_outside = _pose_point(
-                    outside_x,
-                    outside_y,
+                world_lane = _pose_point(
+                    lane[0],
+                    lane[1],
                     architecture_map.width,
                     architecture_map.height,
                     pose,
                 )
-                outside_bounds = not (
-                    0 <= world_outside[0] < posed_width
-                    and 0 <= world_outside[1] < posed_height
+                beyond_reserved = not (
+                    -ROAD_MARGIN <= world_lane[0] < posed_width + ROAD_MARGIN
+                    and -ROAD_MARGIN <= world_lane[1] < posed_height + ROAD_MARGIN
                 )
                 cardinal = (
-                    abs(world_outside[0] - world_edge[0])
-                    + abs(world_outside[1] - world_edge[1])
+                    abs(world_lane[0] - world_margin[0])
+                    + abs(world_lane[1] - world_margin[1])
                     == 1
                 )
-                if not outside_bounds or not cardinal:
+                if not beyond_reserved or not cardinal:
                     issues.append(
                         Issue(
                             location,
                             "frontage.road-route",
                             f"road-facing entrance:public at canonical {entrance_x},{entrance_y} "
-                            f"does not rotate to one exact exterior step in {pose} pose",
+                            f"does not rotate through its exact margin to a lane in {pose} pose",
                         )
                     )
     for glyph in architecture_map.glyphs.values():
@@ -2855,17 +3733,30 @@ def _validate_tier_variant(
                     ),
                 )
             )
-    snapshot_size = _compiled_snapshot_size(
-        tier, variant, building, architecture_map, palette
-    )
-    if snapshot_size is not None:
-        payload_bytes, encoded_chars = snapshot_size
+    snapshot_sizes = [
+        size
+        for lot_pose in POSES
+        if (
+            size := _compiled_snapshot_size(
+                tier,
+                variant,
+                building,
+                architecture_map,
+                palette,
+                model.poses,
+                lot_pose,
+            )
+        )
+        is not None
+    ]
+    if snapshot_sizes:
+        payload_bytes, encoded_chars = max(snapshot_sizes)
         if payload_bytes > MAX_SNAPSHOT_PAYLOAD_BYTES:
             issues.append(
                 Issue(
                     location,
                     "cap.snapshot-payload",
-                    f"compiled a2 snapshot is {payload_bytes} bytes; runtime cap is "
+                    f"compiled a4 snapshot is {payload_bytes} bytes; runtime cap is "
                     f"{MAX_SNAPSHOT_PAYLOAD_BYTES}",
                 )
             )
@@ -2874,16 +3765,16 @@ def _validate_tier_variant(
                 Issue(
                     location,
                     "cap.snapshot-encoding",
-                    f"compiled a2 snapshot is {encoded_chars} characters; runtime cap is "
+                    f"compiled a4 snapshot is {encoded_chars} characters; runtime cap is "
                     f"{MAX_SNAPSHOT_CHARS}",
                 )
             )
 
 
-def _validate_heart_accretion(
+def _validate_heart_transformation(
     buildings: Dict[str, Building], model: ArchitectureModel, issues: List[Issue]
 ) -> None:
-    """All five civic-heart snapshots must be one nested monument, not five rebuilds."""
+    """All five heart rungs keep rite/root custody while permitting authored renovation."""
 
     plan = model.plans.get("civic-heart")
     if plan is None:
@@ -2944,14 +3835,7 @@ def _validate_heart_accretion(
             Tuple[str, int, int], Tuple[str, str, str, str, str, str, str]
         ] = {}
         for x, y, glyph in _cells(architecture_map):
-            stable_anchors = [
-                anchor
-                for anchor in glyph.anchors
-                if anchor != "main" and not anchor.startswith("entrance:")
-            ]
-            stateful_anchor = (
-                stable_anchors[0] if glyph.stateful and len(stable_anchors) == 1 else ""
-            )
+            stateful_anchor = _stateful_custody_role(glyph) or ""
             for layer, reference in glyph.layers():
                 if reference == "$building":
                     continue
@@ -3040,15 +3924,20 @@ def _validate_heart_accretion(
         before = snapshots[index]
         after = snapshots[index + 1]
         for coordinate, identity in sorted(before[5].items()):
+            # Ordinary authored fabric is deliberately replaceable. Only the immutable basin
+            # (existing authority) and explicitly stateful placements carry cross-rung custody.
+            if identity[0] != "r_KingdomFirstBasin" and not identity[6]:
+                continue
             next_identity = after[5].get(coordinate)
             if next_identity != identity:
                 layer, dx, dy = coordinate
                 issues.append(
                     Issue(
                         after[0].location,
-                        "heart.fabric-replaced",
+                        "heart.protected-state-replaced",
                         f"{before[0].build_key!r}->{after[0].build_key!r} does not retain "
-                        f"{layer} fabric at main-relative {dx},{dy}: {identity[0]!r} becomes "
+                        f"protected {layer} state at main-relative {dx},{dy}: "
+                        f"{identity[0]!r} becomes "
                         + (
                             "absent"
                             if next_identity is None
@@ -3259,19 +4148,15 @@ def _stateful_fixtures(
     for x, y, glyph in _cells(architecture_map):
         if not glyph.stateful or not glyph.object or glyph.object == "$building":
             continue
-        anchors = [
-            anchor
-            for anchor in glyph.anchors
-            if anchor != "main" and not anchor.startswith("entrance:")
-        ]
-        if len(anchors) != 1:
+        custody = _stateful_custody_role(glyph)
+        if custody is None:
             continue  # glyph schema emits the primary stateful-anchor fault
         slot = (
             palette.slots.get(glyph.object[1:])
             if glyph.object.startswith("$")
             else None
         )
-        result[(anchors[0], x, y)] = (
+        result[(custody, x, y)] = (
             _resolve_reference(glyph.object, palette, building),
             "" if slot is None else (_canonical_material(slot.material) or ""),
             "" if slot is None else slot.min_tech,
@@ -3389,7 +4274,7 @@ def _catalogue_selector_set(building: Building, name: str) -> Set[str]:
 def _validate_upgrade_routes(
     buildings: Mapping[str, Building], model: ArchitectureModel, issues: List[Issue]
 ) -> None:
-    """Prove every declared tier successor inside every concrete frozen exact binding."""
+    """Prove every declared same-envelope or authored larger-envelope successor."""
 
     by_build: Dict[str, List[Tier]] = {}
     for tier in model.tiers:
@@ -3438,8 +4323,11 @@ def _validate_upgrade_routes(
                     )
                 )
             continue
+        source_plot_index = LOT_ORDER.index(source.plot) if source.plot in LOT_ORDER else -1
+        target_plot_index = LOT_ORDER.index(target.plot) if target.plot in LOT_ORDER else -1
+        grows_minimum_envelope = target_plot_index > source_plot_index >= 0
         if (
-            target.plot != source.plot
+            (target.plot != source.plot and not grows_minimum_envelope)
             or target.category != source.category
             or _catalogue_selector_set(target, "Styles")
             != _catalogue_selector_set(source, "Styles")
@@ -3450,8 +4338,8 @@ def _validate_upgrade_routes(
                 Issue(
                     source.location,
                     "upgrade.catalogue-shape",
-                    f"ordinary UpgradesTo {source_key!r} -> {target_key!r} must keep minimum "
-                    "plot size, category, Styles, and Strata",
+                    f"ordinary UpgradesTo {source_key!r} -> {target_key!r} must keep category, "
+                    "Styles, and Strata, and may only keep or increase its minimum plot size",
                 )
             )
         source_tiers = by_build.get(source_key, [])
@@ -3467,6 +4355,28 @@ def _validate_upgrade_routes(
             afters = [
                 item for item in before.binding.tiers if item.build_key == target_key
             ]
+            expanding = False
+            if not afters and grows_minimum_envelope:
+                before_size_index = LOT_ORDER.index(before.binding.size)
+                larger = [
+                    item
+                    for item in by_build.get(target_key, ())
+                    if item.binding.plan.key == before.binding.plan.key
+                    and item.binding.type_key.strip().lower()
+                    == before.binding.type_key.strip().lower()
+                    and LOT_ORDER.index(item.binding.size) > before_size_index
+                    and item.level == before.level + 1
+                ]
+                if larger:
+                    nearest_size_index = min(
+                        LOT_ORDER.index(item.binding.size) for item in larger
+                    )
+                    afters = [
+                        item
+                        for item in larger
+                        if LOT_ORDER.index(item.binding.size) == nearest_size_index
+                    ]
+                    expanding = True
             route = (
                 f"{before.binding.plan.key}/{before.binding.key}/"
                 f"{before.binding.type_key}/{before.binding.size}"
@@ -3482,6 +4392,16 @@ def _validate_upgrade_routes(
                 )
                 continue
             after = afters[0]
+            if expanding and after.transition not in EXPANDING_TRANSITION_MODES:
+                issues.append(
+                    Issue(
+                        after.location,
+                        "upgrade.transition-mode",
+                        f"cross-size {source_key!r} -> {target_key!r} from {route} needs "
+                        "Transition='additive-expand' or 'renovate-expand'; found "
+                        f"{after.transition!r}",
+                    )
+                )
             if after.level != before.level + 1:
                 issues.append(
                     Issue(
@@ -3516,13 +4436,25 @@ def _validate_upgrade_routes(
             for key in sorted(before_variants):
                 before_main = _main_coordinate(before, before_variants[key], model)
                 after_main = _main_coordinate(after, after_variants[key], model)
-                if before_main != after_main:
+                if expanding and before_main is not None and after_main is not None:
+                    before_width, before_height = LOT_DIMENSIONS[before.binding.size]
+                    after_width, after_height = LOT_DIMENSIONS[after.binding.size]
+                    delta_x = after_main[0] - before_main[0]
+                    delta_y = after_main[1] - before_main[1]
+                    aligned = (
+                        0 <= delta_x <= after_width - before_width
+                        and 0 <= delta_y <= after_height - before_height
+                    )
+                else:
+                    aligned = before_main == after_main
+                if not aligned:
                     issues.append(
                         Issue(
                             after_variants[key].location,
                             "upgrade.main-coordinate",
                             f"{source_key!r} -> {target_key!r} variant {key!r} in {route} "
-                            f"moves main from {before_main} to {after_main}",
+                            f"cannot keep main rooted while moving from {before_main} to "
+                            f"{after_main}{' across its containing envelope' if expanding else ''}",
                         )
                     )
 
@@ -3750,7 +4682,7 @@ def validate_model(
                     architecture_map, palette, building, variant.location, issues
                 )
                 identity = _effective_architecture_snapshot(
-                    architecture_map, palette, building
+                    architecture_map, palette, building, model.poses
                 )
                 compiled_identities.setdefault(identity, []).append(
                     (
@@ -3765,30 +4697,35 @@ def validate_model(
                     procedural_shells.setdefault(
                         (tier.build_key, effective_pair[0], effective_pair[1]), []
                     ).append((variant.key, variant.location))
+    for (build_key, type_key, size), count in sorted(build_counts.items()):
+        counted_building = plot_buildings.get(build_key)
+        if count > 1 and counted_building is not None:
+            issues.append(
+                Issue(
+                    counted_building.location,
+                    "coverage.exact-lot",
+                    f"plot BuildKey {build_key!r} typed lot {type_key!r}/{size} must "
+                    f"appear at most once as a plan tier; found {count}",
+                )
+            )
     for key, building in sorted(plot_buildings.items()):
         if building.plot not in LOT_DIMENSIONS:
             continue
-        # Civic-heart rungs are internal rite successors, not stakeable commission choices.
-        # Every other plot size at or above the declared minimum is UI-reachable and therefore
-        # needs its own exact typed binding. A missing larger map must never be hidden by nearest
-        # or minimum-size fallback.
-        sizes = (
-            (building.plot,)
-            if key in HEART_BUILD_KEYS
-            else LOT_ORDER[LOT_ORDER.index(building.plot) :]
-        )
-        for size in sizes:
-            count = build_counts[(key, building.category, size)]
-            if count != 1:
-                issues.append(
-                    Issue(
-                        building.location,
-                        "coverage.exact-lot",
-                        f"plot BuildKey {key!r} typed lot {building.category!r}/{size} must "
-                        f"appear exactly once as a plan tier; found {count}",
-                    )
+        # Plot is the minimum footprint. The commission picker exposes a larger size only when an
+        # exact record exists, so absent larger bindings are lawful non-offers. The declared
+        # minimum must always exist and every optional exact size remains unique above.
+        count = build_counts[(key, building.category, building.plot)]
+        if count != 1:
+            issues.append(
+                Issue(
+                    building.location,
+                    "coverage.exact-lot",
+                    f"plot BuildKey {key!r} declared minimum typed lot "
+                    f"{building.category!r}/{building.plot} must appear exactly once as a "
+                    f"plan tier; found {count}",
                 )
-    _validate_heart_accretion(buildings, model, issues)
+            )
+    _validate_heart_transformation(buildings, model, issues)
     _validate_adjacent_tier_upgrades(buildings, model, issues)
     _validate_upgrade_routes(buildings, model, issues)
     _validate_purpose_architecture(buildings, model, issues)
@@ -3998,6 +4935,15 @@ def _bool_attribute(value: str) -> Optional[bool]:
     return None
 
 
+def _canonical_blueprint_content(element: ET.Element) -> str:
+    fields = [element.tag, (element.text or "").strip()]
+    for name, value in sorted(element.attrib.items()):
+        fields.extend((name, value))
+    for child in element:
+        fields.append(_canonical_blueprint_content(child))
+    return "".join(_framed(value) for value in fields)
+
+
 def _merge_blueprint_record(
     records: Dict[str, BlueprintRecord], element: ET.Element
 ) -> None:
@@ -4010,6 +4956,13 @@ def _merge_blueprint_record(
         records[name] = record
     if "Inherits" in element.attrib:
         record.parent = element.get("Inherits", "").strip()
+    for attribute, value in element.attrib.items():
+        if attribute in {"Name", "Inherits"}:
+            continue
+        if value == "*delete":
+            record.object_attributes.pop(attribute, None)
+        else:
+            record.object_attributes[attribute] = value
     for child in element:
         part_name = child.get("Name", "").strip()
         if child.tag == "removepart":
@@ -4024,6 +4977,221 @@ def _merge_blueprint_record(
                     record.solid = solid
             elif part_name == "Door":
                 record.door = True
+        raw_tag = child.tag
+        action = "merge"
+        semantic_tag = raw_tag
+        if raw_tag.startswith("remove") and len(raw_tag) > len("remove"):
+            action = "remove"
+            semantic_tag = raw_tag[len("remove") :]
+        attributes = tuple(
+            sorted(
+                (key, value)
+                for key, value in child.attrib.items()
+                if key != "Name"
+            )
+        )
+        operation_name = part_name
+        if not operation_name and action == "merge":
+            # Effective Qud inventory is ordered and can repeat one Blueprint. Treat every
+            # unnamed declaration as a distinct, provenance-stable row instead of collapsing it.
+            operation_name = f"@{record.name}:{len(record.operations)}"
+        record.operations.append(
+            BlueprintOperation(
+                action,
+                semantic_tag,
+                operation_name,
+                attributes,
+                _canonical_blueprint_content(child)
+                if list(child) or (child.text or "").strip()
+                else "",
+            )
+        )
+
+
+def _resolve_blueprint_fingerprints(
+    records: Mapping[str, BlueprintRecord],
+) -> Tuple[Dict[str, Optional[Tuple[object, ...]]], Dict[str, str]]:
+    """Resolve effective state while excluding only the audited Render visual parameters."""
+
+    cache: Dict[
+        str,
+        Optional[
+            Tuple[
+                Dict[str, str],
+                Dict[Tuple[str, str], Tuple[Dict[str, str], str]],
+            ]
+        ],
+    ] = {}
+    failures: Dict[str, str] = {}
+    visiting: List[str] = []
+
+    def resolve(
+        name: str,
+    ) -> Optional[
+        Tuple[
+            Dict[str, str],
+            Dict[Tuple[str, str], Tuple[Dict[str, str], str]],
+        ]
+    ]:
+        if name in cache:
+            cached = cache[name]
+            if cached is None:
+                return None
+            return (
+                dict(cached[0]),
+                {
+                    key: (dict(value[0]), value[1])
+                    for key, value in cached[1].items()
+                },
+            )
+        if name in visiting:
+            cycle = " -> ".join(visiting[visiting.index(name) :] + [name])
+            for member in visiting[visiting.index(name) :]:
+                failures[member] = f"inheritance cycle {cycle}"
+                cache[member] = None
+            return None
+        if len(visiting) >= MAX_POSE_INHERITANCE_DEPTH:
+            failures[name] = (
+                f"inheritance exceeds depth cap {MAX_POSE_INHERITANCE_DEPTH}"
+            )
+            cache[name] = None
+            return None
+        record = records.get(name)
+        if record is None:
+            # A local-only portable check can still prove a wrapper relative to the same external
+            # ancestor. The marker is never accepted by a complete installed-data check because
+            # validate_pose_blueprints separately requires every named record to be inspectable.
+            state = ({"#external-parent": name}, {})
+            cache[name] = state
+            return (dict(state[0]), {})
+        visiting.append(name)
+        if record.parent:
+            inherited = resolve(record.parent)
+            if inherited is None:
+                failures[name] = failures.get(
+                    record.parent, f"cannot resolve parent {record.parent!r}"
+                )
+                cache[name] = None
+                visiting.pop()
+                return None
+            object_attributes, children = inherited
+        else:
+            object_attributes, children = {}, {}
+        object_attributes.update(record.object_attributes)
+        for operation in record.operations:
+            key = (operation.tag, operation.name)
+            if operation.action == "remove":
+                children.pop(key, None)
+                if operation.tag == "part":
+                    children[("#removedpart", operation.name)] = ({}, "")
+                continue
+            attributes = dict(operation.attributes)
+            if attributes.get("Value") == "*delete":
+                children.pop(key, None)
+                continue
+            previous = children.get(key)
+            merged = {} if previous is None else dict(previous[0])
+            for attribute, value in attributes.items():
+                if value == "*delete":
+                    merged.pop(attribute, None)
+                else:
+                    merged[attribute] = value
+            content = (
+                operation.content
+                if operation.content
+                else "" if previous is None else previous[1]
+            )
+            children[key] = (merged, content)
+        visiting.pop()
+        state = (
+            dict(object_attributes),
+            {key: (dict(value[0]), value[1]) for key, value in children.items()},
+        )
+        cache[name] = state
+        return (
+            dict(state[0]),
+            {key: (dict(value[0]), value[1]) for key, value in state[1].items()},
+        )
+
+    def freeze(
+        name: str,
+        state: Tuple[
+            Dict[str, str],
+            Dict[Tuple[str, str], Tuple[Dict[str, str], str]],
+        ],
+    ) -> Optional[Tuple[object, ...]]:
+        object_attributes = dict(state[0])
+        children = {
+            key: (dict(value[0]), value[1]) for key, value in state[1].items()
+        }
+        render = children.get(("part", "Render"))
+        if render is not None:
+            children[("part", "Render")] = (
+                {
+                    key: value
+                    for key, value in render[0].items()
+                    if key not in POSE_VISUAL_RENDER_FIELDS
+                },
+                render[1],
+            )
+        texts = list(object_attributes) + list(object_attributes.values())
+        rows = len(object_attributes)
+        for (tag, child_name), (attributes, content) in children.items():
+            rows += 1 + len(attributes)
+            texts.extend((tag, child_name, content))
+            texts.extend(attributes)
+            texts.extend(attributes.values())
+        if (
+            rows > MAX_POSE_AUDIT_ROWS
+            or any(len(value) > MAX_POSE_AUDIT_TEXT for value in texts)
+            or sum(len(value.encode("utf-8")) + 2 for value in texts)
+            > MAX_POSE_AUDIT_BYTES
+        ):
+            failures[name] = "effective blueprint exceeds the bounded audit surface"
+            return None
+        return (
+            tuple(sorted(object_attributes.items())),
+            tuple(
+                (
+                    tag,
+                    child_name,
+                    tuple(sorted(attributes.items())),
+                    content,
+                )
+                for (tag, child_name), (attributes, content) in sorted(
+                    children.items()
+                )
+            ),
+        )
+
+    fingerprints: Dict[str, Optional[Tuple[object, ...]]] = {}
+    for name in sorted(records):
+        state = resolve(name)
+        fingerprints[name] = None if state is None else freeze(name, state)
+    for name in sorted(set(cache) - set(fingerprints)):
+        state = cache[name]
+        fingerprints[name] = None if state is None else freeze(name, state)
+    return fingerprints, failures
+
+
+def _inherits_exactly(
+    records: Mapping[str, BlueprintRecord], candidate: str, semantic: str
+) -> Tuple[bool, str]:
+    if candidate == semantic:
+        return True, ""
+    seen: Set[str] = set()
+    current = candidate
+    while current and current not in seen:
+        seen.add(current)
+        record = records.get(current)
+        if record is None:
+            return False, f"cannot inspect inheritance at {current!r}"
+        current = record.parent
+        if current == semantic:
+            return True, ""
+    if current in seen:
+        return False, f"inheritance cycle reaches {current!r}"
+    return False, f"inheritance chain does not reach {semantic!r}"
 
 
 def _resolve_blueprint_shapes(
@@ -4064,7 +5232,7 @@ def load_blueprints(
     qud_base: Path,
     issues: List[Issue],
     notices: List[Notice],
-) -> Tuple[Set[str], int, Dict[str, BlueprintShape]]:
+) -> Tuple[Set[str], int, Dict[str, BlueprintShape], Dict[str, BlueprintRecord]]:
     base_root = _find_base_root(qud_base)
     if base_root is None:
         issues.append(
@@ -4074,7 +5242,7 @@ def load_blueprints(
                 "path does not resolve to Base/ObjectBlueprints.xml and Base/ObjectBlueprints/",
             )
         )
-        return set(), 0, {}
+        return set(), 0, {}, {}
     local_files = _discover(repo_root, "ObjectBlueprints*.xml")
     base_files = _blueprint_files(base_root)
     all_files = local_files + base_files
@@ -4086,7 +5254,7 @@ def load_blueprints(
                 f"{len(all_files)} blueprint XML files exceed cap {MAX_BLUEPRINT_FILES}",
             )
         )
-        return set(), len(all_files), {}
+        return set(), len(all_files), {}, {}
     names: Set[str] = set()
     records: Dict[str, BlueprintRecord] = {}
     # Base declarations establish inheritance; local mod declarations then add or override it.
@@ -4107,8 +5275,49 @@ def load_blueprints(
                     f"blueprint count exceeds cap {MAX_BLUEPRINTS}",
                 )
             )
-            return names, len(all_files), _resolve_blueprint_shapes(records, names)
-    return names, len(all_files), _resolve_blueprint_shapes(records, names)
+            return (
+                names,
+                len(all_files),
+                _resolve_blueprint_shapes(records, names),
+                records,
+            )
+    return names, len(all_files), _resolve_blueprint_shapes(records, names), records
+
+
+def load_local_blueprints(
+    repo_root: Path,
+    issues: List[Issue],
+    notices: List[Notice],
+) -> Tuple[Set[str], Dict[str, BlueprintRecord]]:
+    names: Set[str] = set()
+    records: Dict[str, BlueprintRecord] = {}
+    local_files = _discover(repo_root, "ObjectBlueprints*.xml")
+    if len(local_files) > MAX_BLUEPRINT_FILES:
+        issues.append(
+            Issue(
+                "ObjectBlueprints*.xml",
+                "cap.blueprint-files",
+                f"{len(local_files)} local blueprint XML files exceed cap {MAX_BLUEPRINT_FILES}",
+            )
+        )
+        return names, records
+    for path in local_files:
+        file_names, elements = _blueprint_data_from_file(
+            path, repo_root, issues, notices
+        )
+        names.update(file_names)
+        for element in elements:
+            _merge_blueprint_record(records, element)
+        if len(names) > MAX_BLUEPRINTS:
+            issues.append(
+                Issue(
+                    "ObjectBlueprints*.xml",
+                    "cap.blueprints",
+                    f"local blueprint count exceeds cap {MAX_BLUEPRINTS}",
+                )
+            )
+            break
+    return names, records
 
 
 def validate_blueprints(
@@ -4135,6 +5344,11 @@ def validate_blueprints(
         building = buildings.get(tier.build_key)
         if building is not None:
             note(building.blueprint, tier.location)
+    for pose in model.poses.values():
+        note(pose.blueprint, pose.location)
+        for sibling in (pose.north, pose.east, pose.south, pose.west):
+            if sibling is not None:
+                note(sibling, pose.location)
     for blueprint in sorted(references):
         if blueprint not in known:
             locations = sorted(references[blueprint])
@@ -4147,6 +5361,150 @@ def validate_blueprints(
             )
 
 
+def _inspectable_ancestry(
+    records: Mapping[str, BlueprintRecord], name: str
+) -> Tuple[bool, str]:
+    seen: Set[str] = set()
+    current = name
+    while current:
+        if current in seen:
+            return False, f"inheritance cycle reaches {current!r}"
+        seen.add(current)
+        record = records.get(current)
+        if record is None:
+            return False, f"cannot inspect blueprint {current!r}"
+        current = record.parent
+    return True, ""
+
+
+def validate_pose_blueprints(
+    model: ArchitectureModel,
+    known: Set[str],
+    records: Mapping[str, BlueprintRecord],
+    complete: bool,
+    issues: List[Issue],
+    notices: List[Notice],
+) -> None:
+    """Prove inheritance and allowlisted-Render-only variance for pose families."""
+
+    fingerprints, fingerprint_failures = _resolve_blueprint_fingerprints(records)
+    for pose in model.poses.values():
+        named = [pose.blueprint]
+        if pose.mode == "cardinal":
+            named.extend(
+                sibling
+                for sibling in (
+                    pose.north,
+                    pose.east,
+                    pose.south,
+                    pose.west,
+                )
+                if sibling is not None
+            )
+        missing = sorted({name for name in named if name not in known})
+        if complete and missing:
+            issues.append(
+                Issue(
+                    pose.location,
+                    "pose.blueprint-missing",
+                    "pose blueprint does not exist in local plus target Base/ObjectBlueprints: "
+                    + ", ".join(repr(name) for name in missing),
+                )
+            )
+            continue
+        if not complete and missing:
+            notices.append(
+                Notice(
+                    pose.location,
+                    "pose.blueprint-unverified",
+                    "portable check cannot inspect external pose blueprint(s): "
+                    + ", ".join(repr(name) for name in missing),
+                )
+            )
+        if pose.mode != "cardinal":
+            continue
+        semantic_fingerprint = fingerprints.get(pose.blueprint)
+        parity_available = semantic_fingerprint is not None and (
+            complete or pose.blueprint in records
+        )
+        if complete:
+            inspectable, reason = _inspectable_ancestry(records, pose.blueprint)
+            if not inspectable or semantic_fingerprint is None:
+                issues.append(
+                    Issue(
+                        pose.location,
+                        "pose.semantic-uninspectable",
+                        f"cannot prove effective semantics for {pose.blueprint!r}: "
+                        + fingerprint_failures.get(pose.blueprint, reason),
+                    )
+                )
+                continue
+        for facing in POSES:
+            sibling = pose.sibling(facing)
+            if sibling is None:
+                continue
+            if not complete and sibling not in records and sibling != pose.blueprint:
+                continue
+            inherits, reason = _inherits_exactly(records, sibling, pose.blueprint)
+            if not inherits:
+                if (
+                    not complete
+                    and pose.blueprint not in records
+                    and sibling in records
+                    and not records[sibling].parent
+                ):
+                    notices.append(
+                        Notice(
+                            pose.location,
+                            "pose.blueprint-unverified",
+                            f"portable check cannot reconstruct the external base declaration "
+                            f"under patched sibling {sibling!r}",
+                        )
+                    )
+                    continue
+                issues.append(
+                    Issue(
+                        pose.location,
+                        "pose.sibling-inheritance",
+                        f"{facing} sibling {sibling!r} must equal or inherit exact semantic "
+                        f"base {pose.blueprint!r}: {reason}",
+                    )
+                )
+                continue
+            if not parity_available:
+                continue
+            if complete:
+                inspectable, reason = _inspectable_ancestry(records, sibling)
+                if not inspectable:
+                    issues.append(
+                        Issue(
+                            pose.location,
+                            "pose.sibling-uninspectable",
+                            f"cannot prove {facing} sibling {sibling!r}: {reason}",
+                        )
+                    )
+                    continue
+            sibling_fingerprint = fingerprints.get(sibling)
+            if sibling_fingerprint is None:
+                issues.append(
+                    Issue(
+                        pose.location,
+                        "pose.sibling-uninspectable",
+                        f"cannot prove effective semantics for {facing} sibling {sibling!r}: "
+                        + fingerprint_failures.get(sibling, "blueprint record unavailable"),
+                    )
+                )
+            elif sibling_fingerprint != semantic_fingerprint:
+                issues.append(
+                    Issue(
+                        pose.location,
+                        "pose.semantic-parity",
+                        f"{facing} sibling {sibling!r} changes effective nonvisual blueprint "
+                        f"semantics from {pose.blueprint!r}; only audited Render visual fields may differ",
+                    )
+                )
+
+
 def validate_passability(
     buildings: Dict[str, Building],
     model: ArchitectureModel,
@@ -4155,7 +5513,7 @@ def validate_passability(
 ) -> None:
     """Prove authored Pass labels against effective ObjectBlueprint inheritance."""
 
-    checked_layouts: Set[Tuple[str, str, str]] = set()
+    checked_layouts: Set[Tuple[str, str, str, str]] = set()
     for tier in model.tiers:
         building = buildings.get(tier.build_key)
         if building is None:
@@ -4167,98 +5525,115 @@ def validate_passability(
             palette = model.palettes.get(palette_key)
             if architecture_map is None or palette is None:
                 continue
-            identity = (map_key, palette_key, building.blueprint)
-            if identity in checked_layouts:
-                continue
-            checked_layouts.add(identity)
-            checked_glyphs: Set[str] = set()
-            for x, y, glyph in _cells(architecture_map):
-                if glyph.char in checked_glyphs or glyph.pass_mode == "adjacent":
+            for lot_pose in POSES:
+                identity = (map_key, palette_key, building.blueprint, lot_pose)
+                if identity in checked_layouts:
                     continue
-                checked_glyphs.add(glyph.char)
-                resolved: List[Tuple[str, str, BlueprintShape]] = []
-                for layer, reference in glyph.layers():
-                    blueprint = _resolve_reference(reference, palette, building)
-                    if blueprint:
-                        resolved.append(
-                            (
-                                layer,
-                                blueprint,
-                                shapes.get(blueprint, BlueprintShape(None, None)),
-                            )
-                        )
-                if not resolved:
-                    continue
-                any_door = any(shape.door is True for _layer, _name, shape in resolved)
-                any_solid = any(
-                    shape.solid is True for _layer, _name, shape in resolved
-                )
-                unknown_solid = [
-                    name for _layer, name, shape in resolved if shape.solid is None
-                ]
-                unknown_door = [
-                    name for _layer, name, shape in resolved if shape.door is None
-                ]
-                rendered = ", ".join(
-                    f"{layer}={name!r}" for layer, name, _shape in resolved
-                )
-                prefix = (
-                    f"map {map_key!r} glyph {glyph.char!r} at first cell {x},{y} "
-                    f"({rendered})"
-                )
-                if glyph.pass_mode == "walk":
-                    if any_door:
+                checked_layouts.add(identity)
+                checked_glyphs: Set[str] = set()
+                for x, y, glyph in _cells(architecture_map):
+                    if glyph.char in checked_glyphs or glyph.pass_mode == "adjacent":
                         continue
-                    if unknown_solid or (any_solid and unknown_door):
-                        unknown = sorted(set(unknown_solid + unknown_door))
-                        issues.append(
-                            Issue(
-                                variant.location,
-                                "passability.unknown",
-                                prefix
-                                + " cannot resolve inherited Physics.Solid/Door truth for "
-                                + ", ".join(repr(name) for name in unknown),
-                            )
+                    checked_glyphs.add(glyph.char)
+                    resolved: List[Tuple[str, str, BlueprintShape]] = []
+                    for layer, reference in glyph.layers():
+                        blueprint = _resolve_layer_pose(
+                            reference,
+                            layer,
+                            glyph,
+                            palette,
+                            building,
+                            model.poses,
+                            lot_pose,
                         )
-                    elif any_solid:
-                        issues.append(
-                            Issue(
-                                variant.location,
-                                "passability.walk-solid",
-                                prefix
-                                + " declares Pass=walk but contains a solid non-door",
+                        if blueprint:
+                            resolved.append(
+                                (
+                                    layer,
+                                    blueprint,
+                                    shapes.get(
+                                        blueprint, BlueprintShape(None, None)
+                                    ),
+                                )
                             )
-                        )
-                elif glyph.pass_mode == "blocked":
-                    if any_door:
-                        issues.append(
-                            Issue(
-                                variant.location,
-                                "passability.blocked-door",
-                                prefix
-                                + " declares Pass=blocked but contains an authored Door",
+                    if not resolved:
+                        continue
+                    any_door = any(
+                        shape.door is True for _layer, _name, shape in resolved
+                    )
+                    any_solid = any(
+                        shape.solid is True for _layer, _name, shape in resolved
+                    )
+                    unknown_solid = [
+                        name
+                        for _layer, name, shape in resolved
+                        if shape.solid is None
+                    ]
+                    unknown_door = [
+                        name
+                        for _layer, name, shape in resolved
+                        if shape.door is None
+                    ]
+                    rendered = ", ".join(
+                        f"{layer}={name!r}" for layer, name, _shape in resolved
+                    )
+                    prefix = (
+                        f"map {map_key!r} {lot_pose} pose glyph {glyph.char!r} "
+                        f"at first cell {x},{y} ({rendered})"
+                    )
+                    if glyph.pass_mode == "walk":
+                        if any_door:
+                            continue
+                        if unknown_solid or (any_solid and unknown_door):
+                            unknown = sorted(set(unknown_solid + unknown_door))
+                            issues.append(
+                                Issue(
+                                    variant.location,
+                                    "passability.unknown",
+                                    prefix
+                                    + " cannot resolve inherited Physics.Solid/Door truth for "
+                                    + ", ".join(repr(name) for name in unknown),
+                                )
                             )
-                        )
-                    elif unknown_solid or unknown_door:
-                        unknown = sorted(set(unknown_solid + unknown_door))
-                        issues.append(
-                            Issue(
-                                variant.location,
-                                "passability.unknown",
-                                prefix
-                                + " cannot resolve inherited Physics.Solid/Door truth for "
-                                + ", ".join(repr(name) for name in unknown),
+                        elif any_solid:
+                            issues.append(
+                                Issue(
+                                    variant.location,
+                                    "passability.walk-solid",
+                                    prefix
+                                    + " declares Pass=walk but contains a solid non-door",
+                                )
                             )
-                        )
-                    elif not any_solid:
-                        issues.append(
-                            Issue(
-                                variant.location,
-                                "passability.blocked-open",
-                                prefix
-                                + " declares Pass=blocked but every layer is physically open",
+                    elif glyph.pass_mode == "blocked":
+                        if any_door:
+                            issues.append(
+                                Issue(
+                                    variant.location,
+                                    "passability.blocked-door",
+                                    prefix
+                                    + " declares Pass=blocked but contains an authored Door",
+                                )
                             )
-                        )
+                        elif unknown_solid or unknown_door:
+                            unknown = sorted(set(unknown_solid + unknown_door))
+                            issues.append(
+                                Issue(
+                                    variant.location,
+                                    "passability.unknown",
+                                    prefix
+                                    + " cannot resolve inherited Physics.Solid/Door truth for "
+                                    + ", ".join(repr(name) for name in unknown),
+                                )
+                            )
+                        elif not any_solid:
+                            issues.append(
+                                Issue(
+                                    variant.location,
+                                    "passability.blocked-open",
+                                    prefix
+                                    + " declares Pass=blocked but every layer is physically open",
+                                )
+                            )
 
 
 def _golden_name(tier: Tier, variant: Variant, pose: str) -> str:
@@ -4292,8 +5667,18 @@ def _posed_rows(architecture_map: ArchitectureMap, pose: str) -> Tuple[str, ...]
     return tuple("".join(row) for row in result)
 
 
-def _resolved_layer(reference: str, palette: Palette, building: Building) -> str:
-    resolved = _resolve_reference(reference, palette, building)
+def _resolved_layer(
+    reference: str,
+    layer: str,
+    glyph: Glyph,
+    palette: Palette,
+    building: Building,
+    poses: Mapping[str, Pose],
+    lot_pose: str,
+) -> str:
+    resolved = _resolve_layer_pose(
+        reference, layer, glyph, palette, building, poses, lot_pose
+    )
     return resolved if resolved else "-"
 
 
@@ -4303,9 +5688,16 @@ def _render_golden(
     building: Building,
     architecture_map: ArchitectureMap,
     palette: Palette,
+    poses: Mapping[str, Pose],
     pose: str,
 ) -> str:
     posed_rows = _posed_rows(architecture_map, pose)
+    footprint = architecture_map.footprint or (
+        0,
+        0,
+        architecture_map.width,
+        architecture_map.height,
+    )
     lines = [
         "architecture-golden-v2",
         f"plan: {tier.binding.plan.key}",
@@ -4323,6 +5715,7 @@ def _render_golden(
         f"map: {architecture_map.key}",
         f"palette: {palette.key}",
         f"canonical-dimensions: {architecture_map.width}x{architecture_map.height}",
+        f"canonical-footprint: {footprint[0]},{footprint[1]},{footprint[2]}x{footprint[3]}",
         f"posed-dimensions: {len(posed_rows[0])}x{len(posed_rows)}",
         f"default-cover: {architecture_map.default_cover}",
         "rows:",
@@ -4337,9 +5730,9 @@ def _render_golden(
         anchors = ",".join(glyph.anchors) or "-"
         lines.append(
             f"{char} "
-            f"ground={_resolved_layer(glyph.ground, palette, building)} "
-            f"structure={_resolved_layer(glyph.structure, palette, building)} "
-            f"object={_resolved_layer(glyph.object, palette, building)} "
+            f"ground={_resolved_layer(glyph.ground, 'Ground', glyph, palette, building, poses, pose)} "
+            f"structure={_resolved_layer(glyph.structure, 'Structure', glyph, palette, building, poses, pose)} "
+            f"object={_resolved_layer(glyph.object, 'Object', glyph, palette, building, poses, pose)} "
             f"claim={glyph.claim} pass={glyph.pass_mode} cover={glyph.cover} "
             f"anchors={anchors} stateful={'yes' if glyph.stateful else 'no'}"
         )
@@ -4402,7 +5795,13 @@ def make_goldens(
                     )
                     continue
                 content = _render_golden(
-                    tier, variant, building, architecture_map, palette, pose
+                    tier,
+                    variant,
+                    building,
+                    architecture_map,
+                    palette,
+                    model.poses,
+                    pose,
                 )
                 result[name] = content
                 total_bytes += len(content.encode("utf-8"))
@@ -4525,14 +5924,34 @@ def run_check(
     blueprint_resolution = "skipped"
     blueprint_count = 0
     if qud_base is not None:
-        known_blueprints, _file_count, blueprint_shapes = load_blueprints(
+        known_blueprints, _file_count, blueprint_shapes, blueprint_records = load_blueprints(
             repo_root, qud_base, issues, notices
         )
         blueprint_count = len(known_blueprints)
         blueprint_resolution = "checked"
+        validate_pose_blueprints(
+            model,
+            known_blueprints,
+            blueprint_records,
+            True,
+            issues,
+            notices,
+        )
         if known_blueprints:
             validate_blueprints(buildings, model, known_blueprints, issues)
             validate_passability(buildings, model, blueprint_shapes, issues)
+    elif model.poses:
+        local_blueprints, local_records = load_local_blueprints(
+            repo_root, issues, notices
+        )
+        validate_pose_blueprints(
+            model,
+            local_blueprints,
+            local_records,
+            False,
+            issues,
+            notices,
+        )
     goldens = make_goldens(buildings, model, issues)
     issues = sorted(set(issues))
     written = False

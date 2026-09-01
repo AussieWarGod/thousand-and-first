@@ -64,7 +64,8 @@ namespace ThousandAndFirst
 
 		private static bool HasShrine(KingdomSurvey survey)
 		{
-			return survey != null && survey.Shrines.Count > 0;
+			return survey != null && KingdomCapabilityRuntime.Count(survey.Ground, survey,
+				KingdomBenefitCapabilities.Shrine, "petition shrine") > 0;
 		}
 
 		private static string DisplayFaction(string faction)

@@ -50,7 +50,7 @@ namespace XRL.World.Parts
 		{
 			if(e.Command!="TAF_BreakPact")return base.HandleEvent(e);if(e.Actor==null||!e.Actor.IsPlayer())return false;
 			if(Popup.ShowYesNo("Break this covenant deliberately? This is the only action that records a deliberate breach.")!=DialogResult.Yes)return false;
-			string actor=e.Actor.id,eventId="taf:pact-break:"+PactId+":"+ProjectionId;
+			string actor=e.Actor.ID,eventId="taf:pact-break:"+PactId+":"+ProjectionId;
 			ThousandAndFirst.Treaty.KingdomPactVesselBridge.Observe?.Invoke(PactId,ProjectionId,
 				ThousandAndFirst.Treaty.PactWitnessEventKind.DeliberateBreach,eventId,actor,
 				"player-confirmed covenant break",The.Game?.TimeTicks??0L,true);e.RequestInterfaceExit();return false;

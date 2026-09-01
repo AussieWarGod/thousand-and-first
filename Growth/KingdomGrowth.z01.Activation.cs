@@ -38,13 +38,13 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			// The Growth option owns arrivals only. Support, food/water, staffing, plots,
+			// The Growth option owns arrivals only. Support, food and water, staffing, plots,
 			// lodging, power, materials, and roads remain independent modules and must still
 			// reconcile when arrivals are disabled.
 			bool arrivalsEnabled = Enabled;
 			if (KingdomLog.Enabled)
 			{
-				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " hunger=" + System.HungerStreak + " famished=" + System.Famished);
+				KingdomLog.Log("growth pass " + Z.ZoneID + " tick=" + timeTicks + " next=" + System.NextArrivalTick + " pop=" + System.Population + " stage=" + System.Stage + " stored=" + survey.StoredWater + " open=" + survey.OpenWater + " space=" + survey.StorageSpace + " cap=" + survey.StorageCapacity + " dry=" + System.DryStreak + " withered=" + System.Withered + " food=" + survey.FoodStored + "/" + survey.FoodCapacity);
 			}
 			// Fetch is charged per day, from the same checkpoint idiom upkeep uses, and only by
 			// citizens who are not already crewing a work. Before this it ran once per zone
@@ -119,20 +119,17 @@ namespace ThousandAndFirst
 			// before the first count for the reason LastFetchTick's is - unplanted, an uncapped
 			// read is the whole age of the world, and the granaries would fill on the founding
 			// day.
-			// W6: the FIELDS' clocked make moved onto the model with the water works' (see above).
-			// What is left on this stamp is the MILLS, which are a different kind of thing: a mill
+			// Fields deliver physical crops on their own plot cycle. This stamp belongs to mills: a mill
 			// does not make food out of the day, it takes real crops off real shelves and puts real
 			// staples back, on the seated ground, where the shelves are. That is why it was never
-			// in the model's rate to begin with - KingdomCrops.MilledFoodPerDay is subtracted out
-			// of FoodMadePerDay - and it is why it keeps a stamp of its own. One clock each, and
+			// in an abstract city rate, and it is why it keeps a stamp of its own. One clock each, and
 			// neither can spend the other's days.
 			// W7 repair, the second leg of the same defect. This stamp is SETTLEMENT-wide and the
 			// mills it pays for stand in a ZONE, so a founder walking through a mill-less quarter
 			// used to advance it and spend the mill quarter's days on nothing: the crops were
 			// never ground and the days were gone. Gated on the seat actually holding a millstone.
-			// Nothing accrues without bound - GrindHarvest is capped by KingdomRules.MillableStock,
-			// the larders' own spare above a day's rations - so a long absence buys milling only as
-			// far as there are crops to grind, which is the bound Addendum 8 clause 2 asks for.
+			// Nothing accrues without bound: GrindHarvest can take only exact crop objects currently
+			// held in the larders, so a long absence cannot invent an input.
 			int milling = KingdomCrops.MilledFoodPerDay(survey);
 			int grownDays = (milling > 0) ? KingdomRules.ElapsedDays(timeTicks - System.LastFoodWorkTick) : 0;
 			if (System.LastFoodWorkTick <= 0)
@@ -151,11 +148,8 @@ namespace ThousandAndFirst
 			bool heartbeatHealthy = ResolveHeartbeat(System, Z, survey, timeTicks);
 			if (!PublishArrivalHealth(System, Z, timeTicks, heartbeatHealthy)) return;
 			if (!AdvanceArrivalCadence(System, Z, timeTicks)) return;
-			// AFTER the day is eaten, and never before it: industry consumes foodstuffs
-			// (Addendum 11(b)) and residents eat first. The order is the whole guarantee - a
-			// settlement cannot go hungry because its mill was busy - and KingdomRules.MillableStock
-			// keeps a day's rations back on top of it. Same elapsed days the fields were paid for,
-			// off the same checkpoint, which is why grownDays is read once and used twice.
+			// Industry is a physical transformation independent of water heartbeat. Exact input
+			// stock and an operating mill bound the elapsed work.
 			GrindHarvest(System, survey, grownDays);
 			int arrivals = reconciledOpen && reconciledResult != ArrivalResult.Deferred ? 1 : 0;
 			while (arrivalsEnabled && heartbeatHealthy
@@ -227,7 +221,7 @@ namespace ThousandAndFirst
 			// after the plot and the plan so that a building raised this pass is already somewhere
 			// the settlement has a reason to go.
 			KingdomRoads.OnSettlementPass(System, Z);
-			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " hunger=" + System.HungerStreak + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " next=" + System.NextArrivalTick);
+			if (KingdomLog.Enabled) KingdomLog.Log("growth pass done: pop=" + System.Population + " stage=" + System.Stage + " arrivals=" + arrivals + " dry=" + System.DryStreak + " food=" + survey.FoodStored + "/" + survey.FoodCapacity + " next=" + System.NextArrivalTick);
 		}
 	}
 }

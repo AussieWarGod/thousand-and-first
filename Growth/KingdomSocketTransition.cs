@@ -10,6 +10,7 @@ namespace ThousandAndFirst
 		public string ToBuildKey { get; private set; }
 		public string LotType { get; private set; }
 		public ArchitectureLotSize LotSize { get; private set; }
+		public ArchitectureTransitionMode Mode { get; private set; }
 		public int WaterDrams { get; private set; }
 		public long WorkTicks { get; private set; }
 
@@ -20,7 +21,7 @@ namespace ThousandAndFirst
 		}
 
 		internal KingdomSocketTransition(string Key, string FromBuildKey, string ToBuildKey,
-			string LotType, ArchitectureLotSize LotSize, int WaterDrams,
+			string LotType, ArchitectureLotSize LotSize, ArchitectureTransitionMode Mode, int WaterDrams,
 			KingdomMaterialTally Materials, long WorkTicks)
 		{
 			this.Key = Key;
@@ -28,6 +29,7 @@ namespace ThousandAndFirst
 			this.ToBuildKey = ToBuildKey;
 			this.LotType = LotType;
 			this.LotSize = LotSize;
+			this.Mode = Mode;
 			this.WaterDrams = WaterDrams;
 			this.materials = Materials == null ? null : Materials.Copy();
 			this.WorkTicks = WorkTicks;

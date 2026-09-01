@@ -1,17 +1,22 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-> **Supersession banner — 2026-08-28.** This is a dated chronological reconciliation, not the live
+> **Supersession banner — 2026-09-01.** This is a dated chronological reconciliation, not the live
 > status ledger. Current runtime holds one seat plus two non-seat cities; third founding succeeds,
-> fourth refuses, and the manifest offers both non-seat destinations. The narrow physical-food
-> landing is code-complete with integrated/native proof open. Prior hosted-arcology implementation
-> claims are superseded under active AMENDED 19+ review; production, XML/fabric, and tests are held.
+> fourth refuses, and the manifest offers both non-seat destinations. All accepted code/content
+> lanes, including hosted arcology, are integrated at the frozen source snapshot. Native/human,
+> current-preview, exact-inventory semantic-review, package, and Steam evidence remain open.
 > `VISION.md`, `docs/STATUS.md`, `docs/V1-UNDEFERRAL.md`, and
 > `BRIEF-IMPLEMENTATION-AUDIT.md` control current status where this dated body conflicts.
 
-> **S6 current-truth addendum — 2026-08-29.** The historical checks below are the frozen 2026-08-25 snapshot, kept verbatim for the record; they are not live status.
-> The current live census is 2637 production C# files, of which 4 exceed 300 physical lines, 0 are exactly 300, so 4 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
-> The last retained integrated pure/source checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, and the cold-install inventory holds 2,664 cold-install files.
-> See `docs/STATUS.md` and `docs/STRUCTURE.md` for the signed current receipts.
+> **Current-truth addendum — 2026-09-01.** The historical checks below are the frozen 2026-08-25 snapshot, kept verbatim for the record; they are not live status.
+> The current frozen census is 2915 production C# files and 2,945 cold-install files; 0 exceed 300 physical lines, 0 are exactly 300, so 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
+> Latest retained managed evidence is 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable, both predating the final market fan-in and requiring rerun; current documentation/static evidence is 296/296 Tools and 28/28 Art. The historical checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, only for its old bytes.
+> See `docs/STATUS.md` and `docs/STRUCTURE.md` for the current receipts and open human gates.
+> Historical generated-market/restock claims are superseded: current civic service requires one
+> accepted staffed provider plus exact held office, opens empty, and uses physical native TradeUI
+> `_stock` only. `ShopTier` is current standing/reach; automatic output/restock is zero. Personal
+> completed/dormant traders survive civic loss/accession; prepared handoff endpoints alone pause
+> succession.
 
 Status: adversarial static pass, reconciled through the 2026-08-28 code-scope fan-in. This is not
 release evidence.
@@ -47,7 +52,7 @@ before release; P2 is a truthful-documentation defect repaired in this pass.
 | P1 code-scope fixed, native proof open | Reopened polity/world presence must provide fresh profile-shaped people, bounded current/rival traffic, caused diplomacy, real custody, and witnessed conflict without unloaded actors, ideology-only war, strategic armies, or offscreen loss. | Typed immutable profile revisions, causal promotion, all seven cohort schedulers, three-city/current-rival dispatch, Trade consignments, loaded hospitality, grievance/terms/truce/intervention, witnessed death/aftermath, consented escrow, W0 capacity, direct records/aggregates/fairness, and exile/return/refound are implemented. Physical endpoints require distinct route-reachable placement and own exact recursive custody, gear/foreign transfer, removal witnesses, fail-closed moved/copied-body handling, `EarlyBeforeDeathRemoval` → `BeforeDestroy` → `OnDestroy` visible-death gates, and cleanup before the sole W0 release. Transaction closure is frozen at 61/61 focused tests and physical narrow checks are green. | Run final integrated tests and TESTING Pass 39 native every-cut custody/death/UI/accessibility/performance/compatibility proof. |
 | P1 code-scope fixed, native proof open | A player may prepare visited TAF ground and owned obligations for removal while the mod is still active, but no document may promise cleanup after absent-mod load. | `KingdomRealmRetirement*` freezes exact locators/owners, fences new work, previews and cleans only loaded visited ground plus proved global projections/quests/factions, reports outstanding locators, preserves foreign/player custody, writes an identity fence last, and enforces fresh-incarnation high water. | Run final coverage/integration then TESTING 139m-139o every-phase native cleanup/retry/reinstall proof. Keep mod enabled until successful terminal report; unvisited ground is never remotely loaded. |
 | P1 | A released durable schema requires a frozen prior writer/fixture and cold-load round trip. | The engine-owned root currently begins and remains at named version 8 (`Core/KingdomSystem.cs`, serialization constants; `Core/KingdomSystem.z19.PersistenceAndCallbacks.cs`, `Write`/`Read`). TESTING's save-migration harness section accurately records that a frozen native v8 save is required before the first post-public bump. | Freeze the v8 native fixture at release, then require v8→next cold-load/save/reload evidence before any bump. This is an open release-process gate, not permission to synthesize a migration today. |
-| P1 line-cap fixed, semantic review open | The catalogue's approved pre-release engineering pass requires services under 300 lines, one responsibility, and protocols at boundaries (`_notes/BUILDING-CATALOGUE-BRIEF.md:417-421`). | Current snapshot has 2480 production C# files / 357,421 physical lines: 0 exceed 300 physical lines and 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct XRL imports occur in 1115 files, none over the limit; snapshot digest is `c74b259a9b4c26e045cd8eb265872507bfbe5968655ea362a415d472bd52d46d`. Recompute after final source registration. Line count cannot prove responsibility/protocol quality; `Tools/check-structure.py --release` still requires exact-inventory human evidence and `docs/STRUCTURE_REVIEW.json` is absent. | Freeze and rerun the final staged census/release gate, then complete human semantic review against its exact digest. Full current-revision native, human, compatibility, performance, and Steam proof remains open. No enterprise-grade or v1.0 claim may bypass either gate. |
+| P1 line-cap fixed, semantic review open | The catalogue's approved pre-release engineering pass requires services under 300 lines, one responsibility, and protocols at boundaries (`_notes/BUILDING-CATALOGUE-BRIEF.md:417-421`). | Frozen snapshot has 2827 production C# files / 410,378 physical lines: 0 exceed 300 physical lines and 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct XRL imports occur in 1319 files, none over the limit; snapshot digest is `d6c4449c089627a538a7454bedb8e9150e0b3460ed8ec289fe9c19bc03432adc`. Line count cannot prove responsibility/protocol quality; `Tools/check-structure.py --release` still requires exact-inventory human evidence and `docs/STRUCTURE_REVIEW.json` is absent. | Complete human semantic review against this exact digest. Full current-revision native, human, compatibility, performance, and Steam proof remains open. No enterprise-grade or v1.0 claim may bypass either gate. |
 | P1 | Architecture release gates require current deterministic goldens plus native gallery, tile-scale overlay review, controller/accessibility, cold-save interruptions, dense-city performance, compatibility, and subscribed-install evidence (`_notes/ARCHITECTURE-POLISH-CONTRACT.md:271-300`). | README and TESTING record the latest retained `19fb8ee` single-city/single-gallery persistence sample and historical two-city smoke. Complete gallery, visual, accessibility, compatibility, dense-performance, numbered-protocol, and subscribed-install evidence remain unsigned. | Retain that sample as a bounded result, then execute the complete native protocol and retain versioned screenshots/logs/save/package evidence. Source/static automation and one native sample cannot sign visual/usability/compatibility claims. |
 | P1 fixed, native proof open | Paid construction consumes frozen authored truth; later catalogue merges may shape future work but may not reprice or reclassify a published receipt (`_notes/ARCHITECTURE-POLISH-CONTRACT.md:70-72,118-125`). | Construction registry v4 freezes authenticated `hasPlot`, `frontier`, and final defence truth before any funding for commission, plan, plot, socket-conversion, and improvement routes. Projection, reload, handover, and exact-result checks consume only that receipt. Explicit v1-v3 readers preserve old rows and proof hashes: already-projected legacy work resumes only from exact durable object marks, while an unprojected affected legacy receipt quarantines before another debit or destructive strike because its original catalogue/player-skill truth cannot be reconstructed. Current compact proofs include the immutable fields; contradiction, tampering, override/removal, malformed input, and route coverage are pinned by pure/source tests. | Run the corresponding TESTING construction interruption cuts in Qud, including a paid outstanding defensive plot/frontier work across save/cold-load and a catalogue override/removal. Verify one unchanged classification/defence score, no duplicate debit or projection, and named quarantine for unreconstructable legacy work. |
 | P2 fixed | Acceptance must cover the merged catalogue, not a stale numeric subset. | Architecture acceptance and its audit plan pinned 106 entries while TESTING already required the merged data-driven view. | Reworded `_notes/ARCHITECTURE-POLISH-CONTRACT.md:275-276` to every loaded commissionable key and `_notes/BRIEF-IMPLEMENTATION-AUDIT.md:202-204` to the full merged catalogue. |
@@ -75,32 +80,25 @@ overlay, elapsed option latches, master pause, civic wrappers, physical happenin
 authored architecture, and the maintained survey indexes described in their rows. Each repair is
 still judged independently: code/content and portable proof do not close its named native gate.
 
-Checks on the shared tree at handoff:
+Current checks at the 2026-09-01 source freeze:
 
-- `python3 Tools/generate-lot-realizations.py --check`: current, 337 maps / 242 bindings / 277 tiers.
-- Staging/ABI inventories: the current working-tree snapshot has 2480 production C# files and
-  2,507 cold-install files. Its 357,421 physical lines have 0 exceed 300 physical lines, none exactly
+- `python3 Tools/generate-lot-realizations.py --check`: current, 146 maps / 107 bindings / 122 tiers
+  and 527 creed fixtures.
+- Staging/ABI inventories: the frozen source snapshot has 2827 production C# files and
+  2,857 cold-install files. Its 410,378 physical lines have 0 exceed 300 physical lines, none exactly
   300, therefore 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct XRL
-  imports occur in 1115 files, none over the limit; snapshot SHA-256 is
-  `c74b259a9b4c26e045cd8eb265872507bfbe5968655ea362a415d472bd52d46d`. Recompute after final source
-  registration: this snapshot does not replace the final frozen digest or missing
-  `docs/STRUCTURE_REVIEW.json` human review. Art policy has 0 local allowlisted tiles / 65 verified
+  imports occur in 1319 files, none over the limit; snapshot SHA-256 is
+  `d6c4449c089627a538a7454bedb8e9150e0b3460ed8ec289fe9c19bc03432adc`. Any source change invalidates
+  this digest; `docs/STRUCTURE_REVIEW.json` human review remains missing. Art policy has 0 local allowlisted tiles / 125 verified
   vanilla paths.
-- `python3 Tools/check-architecture.py`: PASS, 141 buildings, 131 plot buildings, 86 palettes,
-  514 maps, 356 plans, 359 bindings, 408 tiers, 530 variants, 2,120 goldens, zero issues plus three expected
-  installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML. Installed
-  blueprint resolution is a separate licensed run and remains required after final content changes.
-- `Tools/gate.sh`: the last retained checkpoint compiled baseline and compatibility clean; the
-  current final integrated gate remains pending.
-- The last retained integrated pure/source checkpoint passes 7,743 / 7,743 cases locally, including
-  the nine focused survey cases and then-current source-family additions. Latest retained hosted checkpoint `d285129` has green repository-audit,
-  Ubuntu source-suite, and Windows source-suite jobs for its exact bytes; later working-tree changes
-  remain unsigned. At that checkpoint, the portable suite passed 173 / 173 with zero skipped and all
-  35 Python tool tests passed. Current focused art coverage passes 20 / 20. Hosted Ubuntu exposed a legacy-publication no-replace race; an exclusive
-  legacy-folder publication lock and deterministic contention test repair it. Public CI has an exact three-label installed-data
-  skip allowlist for an
-  absent base; extra/missing skips and any explicitly configured invalid base fail. Release
-  execution forbids all skips and passes the exact licensed base explicitly.
+- `python3 Tools/check-architecture.py`: PASS, 144 buildings, 134 plot buildings, 89 palettes,
+  333 maps (187 source / 146 generated), 220 plans, 226 bindings, 262 tiers, 344 variants, and
+  1,376 goldens, zero issues or warnings. Benefit-provider content is clean at 114 catalogue rows,
+  187 authored variants, and 105 unique fixtures.
+- `Tools/gate.sh`: baseline, compatibility, and development lanes are clean.
+- Last retained managed suites pass 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable but require a final current-source rerun;
+  current documentation/static suites pass 296/296 Tools and 28/28 Art. Historical
+  7,743/173/35/23 receipts remain bound only to their old bytes.
 - Native evidence remains frozen at clean commit `19fb8ee`: founding, one of 2,064 gallery cases,
   save/cold-load, repeated self-tests, and clean log. Later structural revisions need a native
   compile/load/log rerun against their exact final commit. Full native, human, compatibility, dense-performance,

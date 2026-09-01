@@ -55,8 +55,10 @@ namespace ThousandAndFirst.Tests
 				(string)Blueprint(document, "r_KingdomPalisade").Attribute("Inherits"));
 			Assert.AreEqual("r_KingdomStructureRockWall",
 				(string)Blueprint(document, "r_KingdomRampart").Attribute("Inherits"));
-			Assert.AreEqual("r_KingdomRampart",
+			Assert.AreEqual("Rubble",
 				(string)Blueprint(document, "r_KingdomRubbleWall").Attribute("Inherits"));
+			Assert.IsTrue(Child(Blueprint(document, "r_KingdomRubbleWall"),
+				"removebuilder", "RandomTile"));
 		}
 
 		[Test]
@@ -83,6 +85,10 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("3000", Attribute(rubble, "part", "Physics", "Weight"));
 			Assert.AreEqual("220", Attribute(rubble, "stat", "Hitpoints", "Value"));
 			Assert.AreEqual("5", Attribute(rubble, "stat", "AV", "Value"));
+			Assert.AreEqual("Tiles2/sw_rubble_2.bmp",
+				Attribute(rubble, "part", "Render", "Tile"));
+			Assert.AreNotEqual(Attribute(rampart, "part", "Render", "Tile"),
+				Attribute(rubble, "part", "Render", "Tile"));
 			StringAssert.Contains("already here", Attribute(rubble, "part", "Description", "Short"));
 		}
 
@@ -90,14 +96,26 @@ namespace ThousandAndFirst.Tests
 		public void NonWallWorksDoNotAccidentallyAcquirePaintedWallRendering()
 		{
 			XDocument document = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
-			XElement profile = Blueprint(document, "r_KingdomRampartFurnitureProfile");
+			XElement profile = Blueprint(document, "r_KingdomOpenCreedFurnitureProfile");
 			Assert.AreEqual("Furniture", (string)profile.Attribute("Inherits"));
 			Assert.IsTrue(Child(profile, "removepart", "Graffitied"));
+			Assert.AreEqual("false", Attribute(profile, "part", "Physics", "Solid"));
+			Assert.IsFalse(profile.Elements("part").Any(part =>
+				(string)part.Attribute("Name") == "Render"));
 			foreach (string name in new string[] { "r_KingdomSnapjawTrailDen",
 				"r_KingdomIssachariRiflePorch", "r_KingdomTemplarPurityArsenal",
 				"r_KingdomWardensWatchLodge" })
-				Assert.AreEqual("r_KingdomRampartFurnitureProfile",
-					(string)Blueprint(document, name).Attribute("Inherits"), name);
+			{
+				XElement work = Blueprint(document, name);
+				Assert.AreEqual("r_KingdomOpenCreedFurnitureProfile",
+					(string)work.Attribute("Inherits"), name);
+				Assert.AreEqual("false", Attribute(work, "part", "Physics", "Solid"), name);
+				XElement render = work.Elements("part").Single(part =>
+					(string)part.Attribute("Name") == "Render");
+				Assert.IsFalse(string.IsNullOrWhiteSpace((string)render.Attribute("RenderString")),
+					name);
+				Assert.IsNull(render.Attribute("Tile"), name + " inherited a wall tile");
+			}
 		}
 
 		[Test]

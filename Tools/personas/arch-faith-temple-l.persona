@@ -1,0 +1,6 @@
+# Large faith programme: paired thresholds, procession, nave, shrine, and teaching place.
+DESCRIPTION=large teaching temple stages for faith programme and circulation review
+REQUEST=arch-faith-temple-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,faith,progression,taste

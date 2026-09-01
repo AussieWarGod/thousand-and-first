@@ -12,6 +12,7 @@ namespace ThousandAndFirst
 			KingdomStyleDraft declared = new KingdomStyleDraft
 			{
 				Name = xml.GetAttribute("Name"),
+				Aliases = xml.GetAttribute("Aliases"),
 				Terrain = xml.GetAttribute("Terrain"),
 				Region = xml.GetAttribute("Region"),
 				Strata = xml.GetAttribute("Strata"),
@@ -33,8 +34,7 @@ namespace ThousandAndFirst
 			int found = -1;
 			for (int i = 0; i < _styleDrafts.Count; i++)
 			{
-				if (string.Equals(_styleDrafts[i].Name, declared.Name,
-					StringComparison.OrdinalIgnoreCase))
+				if (KingdomStyleRules.MatchesName(_styleDefinitions[i], declared.Name))
 				{
 					found = i;
 					break;

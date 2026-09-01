@@ -99,8 +99,8 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>How many rolls of a design's contents table furnish a finished plot. A hut
-		/// gets one thing worth walking in for; a great hall gets six.</summary>
+		/// <summary>How many deterministic fallback rolls furnish a legacy/third-party plot without
+		/// a current authored realization. Current authored maps place exact fixtures instead.</summary>
 		public static int ContentsRolls(PlotSize Size)
 		{
 			switch (Size)
@@ -128,7 +128,7 @@ namespace ThousandAndFirst
 		// Every blueprint WallBlueprint can actually return, so the guard test that walks this
 		// list covers what the code does rather than what it did when the list was written.
 		// MetalWall and WoodWall joined when the material chain gave them paving and a price.
-		public static readonly string[] WallMaterials = new string[8] { "Limestone", "BrinestalkWall", "Fulcrete", "Marble", "Verdigris", "Foamcrete", "MetalWall", "WoodWall" };
+		public static readonly string[] WallMaterials = new string[9] { "Limestone", "BrinestalkWall", "Fulcrete", "Marble", "Black Marble", "Verdigris", "Foamcrete", "MetalWall", "WoodWall" };
 
 		/// <summary>
 		/// The wall a settlement builds in: its style's own material, unless it was founded in
@@ -151,8 +151,9 @@ namespace ThousandAndFirst
 					return "BrinestalkWall";
 				case "fungal":
 					return "Fulcrete";
-				case "gyre":
-					return "Marble";
+				case "moonstair":
+				case "gyre": // pre-v1 save/mod alias
+					return "Black Marble";
 				case "eater":
 					return "Verdigris";
 				default:

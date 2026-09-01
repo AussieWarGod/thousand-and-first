@@ -58,6 +58,7 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; i < source.Length; i++)
 			{
 				if (source[i].JobId <= 0 || !ValidDeliveryEnvelope(source[i])
+					|| !KingdomJobRules.ValidExpeditionResultReceipt(source[i])
 					|| (source[i].Kind == KingdomJobKind.Expedition
 					&& (source[i].SubjectId <= 0
 						|| !KingdomJobRules.IsExpeditionPhase(source[i].OriginCode)

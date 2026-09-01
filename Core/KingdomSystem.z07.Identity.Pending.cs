@@ -215,7 +215,9 @@ namespace ThousandAndFirst
 				SettlementIdentityFoundedTick == 0L &&
 				string.IsNullOrEmpty(SettlementIdentityFirstClaimedZone) &&
 				string.IsNullOrEmpty(SettlementIdentityLegacyId) &&
-				(City == null || string.IsNullOrEmpty(City.SettlementId)) && Away == null;
+				(City == null || string.IsNullOrEmpty(City.SettlementId)) &&
+				SettlementTopology != null && SettlementTopology.Count == 0 &&
+				!SettlementTopology.HasOpaqueEvidence;
 		}
 
 		internal void QuarantineIdentity(string Failure)

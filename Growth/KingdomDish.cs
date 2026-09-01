@@ -52,7 +52,7 @@ namespace XRL.World.Skills.Cooking
 			DisplayName = (system != null && !string.IsNullOrEmpty(system.DishName)) ? system.DishName : UnnamedDish;
 			// The components are what the settlement actually eats: the preserved staple its mill
 			// binds the harvest into, and the harvest itself. Listing the staple FIRST is not
-			// cosmetic - it is the same order the ration draw reaches in
+			// cosmetic - it is the same order an explicit shared-meal debit reaches in
 			// (KingdomSurvey.ConsumeFood), so the recipe a founder reads and the meal the
 			// settlement eats name the same thing in the same order.
 			AddComponent(system?.DishStaple);

@@ -128,7 +128,7 @@ namespace ThousandAndFirst
 		/// <returns>A registry key, or null when no design matches.</returns>
 		public static string DesignKeyOf(GameObject Work)
 		{
-			if (Work == null)
+			if (!IsFunctionallyBuilt(Work))
 			{
 				return null;
 			}
@@ -155,6 +155,17 @@ namespace ThousandAndFirst
 			}
 			int chosen = KingdomUpgradeRules.ChooseDesignIndex(chained.ToArray());
 			return (chosen < 0) ? null : keys[chosen];
+		}
+
+		/// <summary>
+		/// One semantic gate for finished works. Improvement successors retain KingdomBuilt for exact
+		/// construction recovery, but provide no civic, economic, network, or interaction benefit until
+		/// predecessor absence is durably committed and their pending marker is cleared.
+		/// </summary>
+		public static bool IsFunctionallyBuilt(GameObject Work)
+		{
+			return GameObject.Validate(Work) && Work.GetIntProperty(BuiltProperty) == 1
+				&& !r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(Work);
 		}
 
 		/// <summary>What a design is called, for a sentence. Falls back to the key so a

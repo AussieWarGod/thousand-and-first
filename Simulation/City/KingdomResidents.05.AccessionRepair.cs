@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 using XRL;
 using XRL.World;
 
@@ -31,7 +30,10 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
-
+			if (KingdomGrowth.SuccessorMarketBlocked(Body,
+				KingdomSurvey.ActiveFor(Body.CurrentZone))
+				|| !KingdomResidentTransitionAuthority.CanAccede(System, Body, ResidentId))
+				return KingdomAccessionOutcome.RepairRequired;
 			int rowIndex;
 			bool hasRow = city.TryResidentIndex(ResidentId, out rowIndex);
 			if (hasRow)
@@ -113,6 +115,21 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return KingdomAccessionOutcome.RepairRequired;
 			}
+			if (!KingdomOfficeRuntime.TryObserveAccessionLoss(System, Body,
+				out string officeFailure))
+			{
+				KingdomLog.Log("binding: accession repair still awaits office cleanup ("
+					+ (officeFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
+			if (!KingdomPolityResidentTransition.TryConclude(System, Body, ResidentId,
+				KingdomPolityResidentTransitionCause.Accession,
+				out KingdomPolityResidentTransitionPreparation _, out string polityFailure))
+			{
+				KingdomLog.Log("binding: accession repair awaits deed-figure conclusion ("
+					+ (polityFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			if (seated)
 			{
 				System.CreedCounts = nextCreedCounts;
@@ -129,6 +146,13 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				KingdomLog.Log("binding: accession repair left citizenship pending ("
 					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
+			if (!KingdomCitizenRite.TryRetireAccedingHost(System, Body,
+				out string riteFailure))
+			{
+				KingdomLog.Log("binding: accession repair awaits citizen-host cleanup ("
+					+ (riteFailure ?? "unknown failure") + ")");
 				return KingdomAccessionOutcome.RepairRequired;
 			}
 			FinishAccessionBody(Body, FormerRow, ResidentId);
@@ -237,7 +261,6 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			return false;
 		}
-
 		private static void FinishAccessionBody(GameObject Body, KingdomResidentRow FormerRow,
 			int ResidentId)
 		{
@@ -259,35 +282,5 @@ namespace ThousandAndFirst.Simulation.City
 			}
 		}
 
-		private static bool SameBindings(KingdomBindingTable A, KingdomBindingTable B)
-		{
-			if (A == null || B == null || A.Count != B.Count) return false;
-			for (int i = 0; i < A.Count; i++)
-			{
-				KingdomBinding a;
-				KingdomBinding b;
-				if (!A.TryAt(i, out a) || !B.TryAt(i, out b)
-					|| a.BindingKey != b.BindingKey || a.Kind != b.Kind || a.ZoneId != b.ZoneId
-					|| a.ObjectId != b.ObjectId || a.MintedTick != b.MintedTick) return false;
-			}
-			return true;
-		}
-
-		/// <summary>Removes one person from a per-city tally without leaving zero rows behind.</summary>
-		private static void DropCount(Dictionary<string, int> Counts, string Key)
-		{
-			if (Counts == null || Key == null || !Counts.TryGetValue(Key, out int count))
-			{
-				return;
-			}
-			if (count > 1)
-			{
-				Counts[Key] = count - 1;
-			}
-			else
-			{
-				Counts.Remove(Key);
-			}
-		}
 	}
 }

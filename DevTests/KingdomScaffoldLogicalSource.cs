@@ -12,6 +12,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomScaffold.LabourWindow.cs",
 			"Growth/KingdomScaffold.WorkInitialization.cs",
 			"Growth/KingdomScaffold.Durable.cs",
+			"Growth/KingdomScaffold.RemovalProof.cs",
 			"Growth/KingdomScaffold.SuccessorProof.cs",
 			"Growth/KingdomScaffold.CompletionAndLegacy.cs"
 		};

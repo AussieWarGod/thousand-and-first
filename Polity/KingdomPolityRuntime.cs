@@ -90,7 +90,8 @@ namespace ThousandAndFirst
 				DisplayName = string.IsNullOrEmpty(S.KingdomDisplayName) ? F.DisplayName : S.KingdomDisplayName,
 				FounderName = The.Player?.BaseDisplayNameStripped, SettlementId = S.City?.SettlementId,
 				Vocation = S.Vocation, Style = S.Style, Creed = S.DeclaredCreed,
-				Stage = (int)S.Stage, Population = Math.Max(0, S.Population),
+				Stage = (int)S.Stage, TechnologyBand = (int)KingdomZoning.Tech(S) * 2,
+				Population = Math.Max(0, S.Population),
 				FoundedTick = Math.Max(0L, S.FoundedTick), OriginKeys = TopKeys(S.OriginCounts),
 				CultureKeys = TopKeys(S.CultureCounts), SpeciesKeys = TopKeys(S.SpeciesCounts),
 				IdentityKeys = TopKeys(S.IdentityCounts)

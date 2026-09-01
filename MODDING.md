@@ -60,10 +60,11 @@ compatibility mechanism inside one readable schema.
   attributes your file names win, attributes it omits keep whatever the earlier file said. Load
   order applies, so styles can retheme the base catalog. See
   [Layering](#layering-what-happens-when-two-mods-name-the-same-building).
-- `Blueprint` — any object blueprint, yours or vanilla. Buildings are real objects: give
-  them vanilla parts (`LiquidVolume` for storage, `Bed`, `Shrine`, `Campfire`...) and the
-  kingdom's systems and the ambient AI use them with zero extra wiring. Storage capacity,
-  for example, is literally `LiquidVolume MaxVolume`.
+- `Blueprint` — any object blueprint, yours or vanilla. Buildings are real objects, so vanilla
+  parts still govern player interaction and ambient AI. Settlement benefits have one extra
+  proof: the object must be a live provider inside one exact designation that accepts its amount
+  or capability. Storage capacity, for example, is literally `LiquidVolume MaxVolume`; a bed or
+  campfire outside an accepting designation remains useful to the player but grants no civic cap.
 - `Cost` — drams of water drawn from the settlement's physical stores.
 - `Ticks` — build time (1200 = one day).
 - `Styles` — **a tag list.** Which city styles this design belongs to. The default city style is
@@ -145,20 +146,23 @@ compatibility mechanism inside one readable schema.
   still asks the plan for defensive ground because of its category, but it remains a plot.
 - `MinStage` — earliest growth stage the design appears at: `Camp` (default), `Steading`,
   `Village`, `Town`, `City`.
-- `Carries` — **what this design adds to the settlement's sustainable level**, as a comma list of
-  `support:settlers`. This is the denomination of the whole catalogue and it is *not* output per
-  day: it is how many more people the place honestly carries once nobody is hauling anything in.
-  Three supports **bind** — `water`, `food`, `roof` — and the level is the *least* of the three,
-  because a town with water for ninety and bread for nine is a town of nine. Five **lift** —
-  `craft`, `spirit`, `learning`, `order`, `luxury` — and are summed and then capped at half the
+- `Carries` — **the maximum authored civic contribution this design accepts**, as a comma list of
+  `support:amount`. Exact physical providers decide the current amount and the catalogue clamps it;
+  `Carries` never invents a missing fixture. Water and roof bind live sustainable population, whose
+  base is the least of those two. Food is compatibility/physical-lane metadata: it describes crop,
+  pantry, meal, or industry capacity but never raises or lowers population and never causes
+  subsidence. `KingdomCatalogueRules.BindingSupports` retains `water,food,roof` for source/XML
+  compatibility; live code uses `PopulationBindingSupports = water,roof`. Six supports **lift** —
+  `craft`, `spirit`, `learning`, `order`, `luxury`, `wealth` — and are summed and then capped at half the
   binding level, so no quantity of shrines outruns the cistern. One point of `water` is one dram a
-  day sustained, which is one settler's thirst at camp rates. **The binding three are citywide
-  pools; a lift only lifts the people its work actually reaches** (`Reach`, below, and
+  day sustained, which is one settler's thirst at camp rates. **Water and roof are citywide
+  population pools; a lift only lifts the people its work actually reaches** (`Reach`, below, and
   `KingdomReachRules.Landed`): a design lands the share of the settlement's roofs it covers, so
   the same shrine is worth its whole amount among the houses and a fraction of it out past the
   fields, and an `S` design — which shades its own plot — lifts the settlement's level by nothing
-  while still shading the ground it stands on. A support name this mod does not know
-  is accepted and lifts; a new *binding* good would make every catalogue that predates it
+  while still shading the ground it stands on. `wealth` is prosperity made physically legible by
+  a productive great work; it is a lift only and never selects threats. A support name this mod does not know
+  is accepted and lifts; a new *population-binding* good would make every catalogue that predates it
   unbuildable, so there will never be a sixth. Omitting the attribute adds nothing to the level,
   which is correct for a wall.
 
@@ -184,6 +188,35 @@ compatibility mechanism inside one readable schema.
   divided by `KingdomWearRules.LeakDaysToEmptyAtCeiling` (50) stays under the daily drinking
   bill of the rung it opens at — a holed store leaks at exactly that rate, and one that
   out-leaks its rung makes a single lost rung fatal.
+
+- `Provides` — **capabilities or qualities this designation accepts**, as a comma list. It is a
+  ceiling, never supply. A current physical provider in the exact designation must emit the same tag.
+  Built-in generic adapters include `Campfire` → `taf:cooking`, `Shrine` → `taf:shrine`, and
+  `MarkovBookshelf` → `taf:education`; inquiry deliberately has no generic native adapter. Unknown
+  namespaced tags remain open to extensions. Category, a finished root, and `Provides` by itself
+  each grant zero.
+
+  An XML object may emit a capability or capped amount through the public declarative part:
+
+  ```xml
+  <part Name="r_KingdomBenefitProvider" ProviderKey="mymod:copy-desk"
+        Carries="learning:2" Provides="mymod:archives"
+        Scope="Interior" Operation="Staffed" />
+  ```
+
+  `ProviderKey` is stable per declaration. Scope is `Building`, `Covered`, `Interior`, `Plot`,
+  `Yard`, `Container`, `Network`, or `Habitable`; network scope also needs `NetworkKey`.
+  Declarative operation may be `Present`, `Staffed`, `Powered`, or `Sown`. `Filled` is rejected
+  until a typed relevant-contents contract exists, and XML `Custom` fails closed because XML has
+  no callback. Code providers implement `IKingdomBenefitProvider` and pass the same bounds and
+  normalization. Code may additionally implement `IKingdomQuantitativeBenefitProvider` to return
+  an operating percentage from 0 through 100. Both description and custom-operation callbacks are
+  deterministic, observation-only functions for one benefit epoch: never mutate the item, root,
+  survey, zone, another provider, a designation source, or hidden state. Descriptions may be called
+  repeatedly and must normalize identically; detectable mutation refuses the whole snapshot.
+  A fixture carrying `r_KingdomProviderBuildKey` is accepted only by that exact designation
+  `BuildingKey`; omit it only for genuinely generic furniture. Food and water never use this part:
+  their real inventory/flow contracts own them.
 
 The whole merged catalogue is validated once, on load: a dangling `UpgradesTo`, a chain that rings,
 an improvement onto a larger plot, a footprint larger than the plot it stands on, housing or roof
@@ -434,8 +467,30 @@ a wall before the founder has learned what a district is.
 
 ### Creed-gated designs: the whole stack (all optional)
 
+`Creed` is the stable save/catalogue/API name for any faction affiliation. It does **not** mean
+every faction is a religion. To declare semantics, add mergeable `KingdomCreeds.xml` data:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<kingdomcreeds Schema="1">
+  <creed Name="MyVillage" Kind="community" />
+  <creed Name="MyFaith" Kind="doctrine" />
+  <creed Name="MyReligiousOrder" Kind="order" Theology="yes" />
+</kingdomcreeds>
+```
+
+Kinds are exactly `community|people|polity|order|doctrine|cult`. Doctrine and cult are
+theological. Order is non-theological unless it says `Theology="yes"`; no other kind may opt in.
+Same-name layers merge: omission inherits, blank `Theology` clears an order opt-in, and changing
+an established kind is refused as load-order-dependent reclassification. Bad/duplicate tokens,
+incoherent theology, or excess definitions log and retain the last valid row. Unknown factions
+remain lawful neutral affiliations: arrival, declaration, architecture, history, and explicit
+water-rite adoption work, but passive conversion, shrine consecration, belief prose, and shrine
+pressure do not. Existing saves are not stamped or rewritten. Evidence behind built-in mapping is
+kept in `_notes/CREED-KIND-EVIDENCE.md`.
+
 Three more attributes, on top of the four above, and together with them they are the contract for
-a design that belongs to a *people* rather than to a place. Every one is optional, an absent
+a design that belongs to an *affiliation* rather than to a place. Every one is optional, an absent
 attribute gates nothing, and a malformed one is logged and ignored — same bargain as the rest.
 
 | Attribute | What it wants |
@@ -452,8 +507,9 @@ nobody living there ever has — **does not appear in the commission list, the p
 settlement's own choices, or the keepers' map at all.** Every other gate in this file leaves the
 design in the list wearing a tag that says which key it wants, because a list that silently
 shortens teaches nothing; this one is the only gate with no key anywhere, so naming it would be
-noise dressed as guidance. The moment one person aligns — by arriving, by converting, or by having
-converted *away* years ago — the design appears, tagged with whatever is still in its way. Every
+noise dressed as guidance. The moment one person aligns — by arriving, converting, explicitly
+adopting, or by having left that affiliation years ago — the design appears, tagged with whatever
+is still in its way. Every
 other refusal in the stack is spoken out loud and names what would lift it.
 
 **A worked example.** A third-party mod adding a creed-work for a creed the base mod never
@@ -508,8 +564,9 @@ exactly 33 shipped factions:
 `Seekers`, `Snapjaws`, `Strangers`, `Svardym`, `Templar`, `Trolls`, `Wardens`, `Water`, and
 `YdFreehold`.
 
-Each owns one built-in, behavior-bearing `Creed` design with its own lore, bill, blueprint, and
-authored topology; **128** exact records cover every applicable S/M/L/XL lot. The runtime wish
+Together they own **34** built-in, behavior-bearing `Creed` designs with their own lore, bills,
+blueprints, and authored topology; Robots deliberately owns the two-step charge-bay/service-bay
+line. **132** exact records cover every applicable S/M/L/XL lot. The runtime wish
 `kingdom:creedcontent` derives this census from loaded factions and walks loaded catalogue and
 architecture records. Chiliad's shipped faction file admits none under the same rule. This count
 is a compatibility receipt, not a whitelist: a third-party faction whose own ordinary facts make
@@ -553,14 +610,37 @@ The predecessor remains standing, staffed, and productive for the entire scaffol
 residents, marks, wear, and protected state move only at successful handover. There is no guessed
 water outage, temporary-lodging displacement, held offer, or force-through-harm branch.
 
+### Player-built room adoption
+
+`Adoptable="yes"` exposes only a role that already passes `KingdomAdoptabilityRules`; it does not
+turn an authored topology or machine into a generic room. Housing and ordinary enclosed work use
+one exact live enclosure model. Ordinary open roles use the exact catalogue-sized rectangle around
+the founder's chosen civic marker. The structural flood separates room membership, wall shell, and
+safely openable door ingress. Furniture, providers, dropped items, and occupants stay inside the
+signed d2 designation without changing its exact cells. The d2 wire adds only the open-plot target
+bit and remains byte-canonical when reading legacy d1 room/container receipts. Usable room floor is
+derived separately by a safe flood from ingress; permanent solids, pits/unsafe native navigation
+objects, and open liquid do not count. S/M/L/XL room roles need 4/12/24/40 currently reachable
+usable cells.
+
+Admission, pre-commit, and every later benefit read repeat that same role-and-tier proof. Blocking
+too much floor, locking the last door, or adding a real dividing wall pauses the designation and
+its furniture benefits; restoring the receipted room resumes them. Do not encode shell, ingress,
+or usable counts in an extension receipt: they are deliberately current physical observations.
+Overlap is exact-cell membership, not bounding-box occupancy, so a concave room does not reserve
+its holes. An open plot reserves its complete rectangle but supplies nothing by itself; real
+furniture or machinery inside it must satisfy the same provider caps as authored construction.
+Larder adoption remains one exact dry container and does not use room geometry.
+
 ### Plots: reserved lots and authored buildings
 
 A `Plot` declaration reserves a typed rectangle. It is **not** a generated building recipe. New
 construction first freezes a `LotId`, actual S/M/L/XL size, type/category, rectangle, and pose;
 then an exact `KingdomArchitectures` binding selects an authored map, palette, tier, and variant.
-That snapshot owns every claimed ground/structure/object cell, entrance, functional fixture, and
-stateful anchor. The runtime never stretches a smaller map, invents a rectangle shell, cuts a
-guessed door, or scatters row-major furnishings for a current authored commission.
+That snapshot owns the physical building footprint separately from every claimed
+ground/structure/object cell, entrance, functional fixture, and stateful anchor. The runtime never
+stretches a smaller map, invents a rectangle shell, cuts a guessed door, or scatters row-major
+furnishings for a current authored commission.
 
 A design with no `Plot` remains on the single-cell path. A design with `Plot` but no exact
 `(BuildKey, Category, actual Size)` architecture binding is not offered at that size and direct
@@ -576,27 +656,97 @@ that migration behavior is not an authoring fallback.
 
 | Attribute | Default when absent |
 |---|---|
-| `Plot` | Not a plot. `S` (5x4), `M` (8x6), `L` (12x9), `XL` (20x14); long spellings `small`, `medium`, `large`, `huge` are accepted. This is the design's minimum reservable envelope, not its map. |
-| `Footprint` | Fills the minimum plot for catalogue capacity/upgrade reasoning. `WxH` records how much of the lot this tier functionally occupies; the authored map remains exact authority over claimed cells. Larger than the minimum plot is an error. |
-| `Roof` | `Walled`, or `Open` when `Open="yes"`. Catalogue-level shelter/sky/capacity semantics; authored map cover and palette must agree. `Open`, `Soft`, `Walled`, and `Carved` never generate walls themselves. |
+| `Plot` | Not a plot. `S` (6x4), `M` (8x6), `L` (12x10), `XL` (20x18); long spellings `small`, `medium`, `large`, `huge` are accepted. This is the design's minimum reservable envelope, not its map. |
+| `Footprint` | The full authored map. When present, catalogue `WxH` declares the exact physical building dimensions and every selected map must declare canonical `Footprint="X,Y,WxH"` with exactly those dimensions, wholly inside the map. It does not resize the lot or map. With no catalogue value, the resolved physical footprint is the full map; a map attribute may only restate that rectangle. |
+| `Roof` | `Walled`, or `Open` when `Open="yes"`. This catalogue shelter authority is frozen as `BaseRoof` in the current receipt; authored map cover and palette must agree. `Open`, `Soft`, `Walled`, and `Carved` never generate walls themselves. |
 | `Open` | `No`. `Yes` declares an unroofed use such as a field, yard, salt-pan, or reservoir. The authored map still supplies its exact ground, paths, fixtures, and entrances. |
 | `Sky` | `No`. `Yes` means the design needs weather, and it is refused underground by name rather than sited somewhere useless — tagged **[wants open sky]** right in the commission list, the same tag every other blocked gate wears, before the founder has even picked it. |
-| `Contents` | Nothing. Legacy semantic furnishing metadata only. Current authored maps place exact fixtures through palette slots; do not use `Contents` as a substitute for a map. |
+| `Contents` | Nothing. Legacy semantic furnishing metadata only. Current authored maps place exact fixtures through palette slots; do not use `Contents` as a substitute for a map. A standing legacy or compatible third-party plot without a current realization may use the deterministic table fallback, including an open plot. |
+
+The physical footprint and cell claims are independent. The geometric yard is the lot minus the
+physical footprint. `Claim="building"` is managed building fabric and must stay inside the
+rectangle; the `$building` placement and `main` anchor must also be inside. `Claim="yard"` marks a
+managed court, service, or exterior cell and can occur inside or outside it. An omitted claim is
+not valid on a declared glyph; `Unclaimed` cells (normally `.` cells with no glyph) can occur on
+either side. Covered yards are valid; do not derive claims from the rectangle or use claims to
+approximate it.
+
+Maps are authored north-facing. The frozen pose rotates the entire map and its footprint together;
+east and west transpose their world dimensions. Always write `X,Y,WxH` in canonical map
+coordinates, never pre-rotated world coordinates.
+
+Single-cell Qud scenery normally keeps one screen-space tile in every building pose. An
+undeclared palette blueprint therefore defaults to `invariant`; authors do not need pose records
+for ordinary beds, shelves, chairs, tables, benches, or machines. Opt into fixture pose only when
+the asset has a proven directional face or axis:
+
+```xml
+<pose Blueprint="MyMod_Workbench" Mode="cardinal"
+      North="MyMod_Workbench N" East="MyMod_Workbench E"
+      South="MyMod_Workbench S" West="MyMod_Workbench W" />
+
+<glyph Char="w" Ground="$floor" Object="$workbench"
+       ObjectOrientation="north" Claim="building" Pass="adjacent"
+       Cover="walled" Anchors="work:bench" />
+```
+
+`GroundOrientation`, `StructureOrientation`, and `ObjectOrientation` are layer-local directions in
+the canonical north-facing map. Runtime adds that local direction to lot facing and freezes the
+resolved concrete blueprint in the existing `a4` placement. Cardinal records require all four
+existing concrete blueprints; values may repeat for a symmetric axis. Each concrete blueprint must
+equal or inherit the semantic `Blueprint`. The loader then fingerprints the effective inherited
+blueprint: parts and nonvisual part parameters, builders, mutations, skills, stats, properties,
+tags, extended tags, and inventory must be identical to the semantic base. Only `Render`'s `Tile`,
+`RenderString`, color fields, `HFlip`, and `VFlip` may differ. `DisplayName`, render layer/visibility,
+occlusion, physics, providers, contents, tags, or any other behavior difference poisons that exact
+pose key. An unrecognized future Qud blueprint field also refuses until the audit is reviewed.
+`Mode="connected"` and `Mode="invariant"` preserve the semantic base and reject local orientation;
+connected structures continue to choose their appearance through Qud adjacency behavior. A local
+orientation without an exact cardinal record refuses, as does a cardinal family used by a glyph
+without orientation. This changes fixture presentation, never map count: keep one canonical map.
+
+Concrete siblings also change exact blueprint identity. Every `r_Kingdom*` semantic fixture is
+therefore prohibited from cardinal mode unless it is added to the source-reviewed visual-only
+identity allowlist; the shipped allowlist is empty. This conservative boundary covers exact-name
+consumers outside the architecture compiler (for example activity and fixture semantics), not just
+parts/providers visible to the parity fingerprint. Vanilla `StairsDown` and `StairsUp` are likewise
+prohibited. Third-party authors must make their own gameplay consumers semantic-family-aware before
+opting a non-TAF blueprint into cardinal mode.
+
+Merged pose data uses exact-key inheritance. Omission inherits an earlier optional sibling or glyph
+orientation; an explicit empty `North=""` (or East/South/West) clears that sibling, and an explicit
+empty `GroundOrientation=""`, `StructureOrientation=""`, or `ObjectOrientation=""` clears that
+layer orientation. Whitespace is not empty and remains malformed. `Mode` is required and cannot be
+cleared. A final malformed pose declaration is not treated as undeclared invariant scenery: every
+selected palette containing that semantic blueprint refuses, even when the affected slot is unused.
+
+The portable architecture gate fully audits pose families declared in local ObjectBlueprint XML
+and reports any external family it cannot inspect. The installed release gate repeats the audit
+against the selected Qud Base XML plus local overrides; runtime then re-proves the fully merged
+engine view, including other installed mods. Public `TryCompile` deliberately refuses a nonempty
+raw `ArchitectureCompileRequest.Poses` list, so callers cannot bypass that frozen registry.
 
 Plot size is gated by stage: a Camp lays S, a Steading and a Village M, a Town L, a City XL.
-**Upgrades climb within a plot; sizes compete across plots** — there is no in-place S-to-M
-metamorphosis, and small plots never obsolete.
+Sizes normally compete across plots. An upgrade crosses into a larger envelope only when the
+catalogue authors an adjacent exact successor with an expansion transition; no size is inferred.
 
 Keep these three lanes separate:
 
-1. An `UpgradesTo` improvement is automatic settlement growth. It resolves the successor only in
-   the standing receipt's same declared plan set, binding, type, and actual size, then preserves `LotId`,
-   rectangle, pose, residents, wear, and protected state. The founding civic heart alone may move
-   to its adjacent authored rung.
+1. An `UpgradesTo` improvement is automatic settlement growth. It resolves only an authored
+   adjacent successor in the standing receipt's declared plan/type lineage. Same-envelope work
+   preserves binding and rectangle; an explicit expansion transition may select its exact larger
+   binding and preserve receipt identity while the envelope grows. Missing successors fail closed.
 2. A `KingdomArchitectureTransitions` record is an explicit founder-selected plan change. It must
    be directional, same type, and same actual size; its previewed delta also preserves `LotId`.
-3. Retype or resize is neither of those. It strikes the occupation, performs fresh siting/restake
-   with a new `LotId` after preview and consent.
+3. Retype, shrink, relocation, or resize without the exact adjacent expansion in lane 1 is neither
+   of those. It strikes the occupation, performs fresh siting/restake with a new `LotId` after
+   preview and consent.
+
+In-place footprint change is monotonic around the same main root. An additive or renovate edge may
+keep the rectangle or grow it to contain the whole predecessor; it may not shrink, recenter, or
+relocate it. Only `additive-expand` and `renovate-expand` may also enlarge the lot envelope.
+Shrink or relocation requires strike and fresh siting/restake. `replacement` also refuses as an
+in-place delta and requires a fresh commission after strike.
 
 Clearing and paid material are reckoned from the frozen lot and authored claimed cells. A wider lot
 may preserve intentional yard, but never stretches the structure. A design that needs weather
@@ -609,19 +759,19 @@ wall, powered fixture, filled vessel, free contents, or later-tech door.
 `Plot` is a design's minimum envelope, not permission to stretch its map at runtime. Every size you
 intend the picker to offer needs its own exact `(BuildKey, Category, Size)` `<binding>` in
 `<KingdomArchitectures Schema="1">`. Missing sizes are filtered and direct calls refuse; preview
-and commit never choose a nearest, smaller, or generic shell. Shipped content supplies every
-reachable size from each minimum through XL. Third-party content may start with one exact size,
-but only that bound size can be commissioned until larger bindings are added.
+and commit never choose a nearest, smaller, or generic shell. Shipped and third-party content may
+start with one exact size. Only exact bound sizes are offered; a missing larger binding is a lawful
+non-offer until a useful authored spatial programme exists.
 
-A larger binding must contain every predecessor tier needed for growth in that same plot. Its map
-is the canonical lot's exact dimensions. The shipped generator preserves the complete source-map
-coordinate block byte-for-byte, then classifies every added cell as palette-lawful yard, path,
-sparse boundary, bounded frontage route, or an explicitly declared intentional opening. Category
-chooses the court/service/crop grammar; plan, building, palette/style, and size seed its
-deterministic phase. It never introduces a paid material or technology absent from the selected
-palette. Heart-facing plans keep the source block against the canonical heart side. Road-facing
-plans inset it by one frontage cell so every `entrance:public` has one exact authored unclaimed
-route to an exterior cardinal step; rotation carries that same route through all four poses.
+A larger binding's map has the canonical lot's exact dimensions and must add a measurable useful
+programme, not stretched fabric or generic padding. The shipped generator expands 30 reviewed
+creed-campus programmes; housing/site renovations for `canvas-shelter`, `timber-hut`, `mud-hut`,
+and `ruin-block-hut`; and deep-end compositions for `deepend-underbench`, `deepend-reliquary`, and
+`deepend-factorhouse`. Each family has its own grammar and preserves exact state-bearing fixtures.
+Unsupported programmes remain unavailable until reviewed geometry exists. Generation never
+introduces material or technology absent from the selected palette. Every `entrance:public` has
+the bounded unclaimed route consumed by the runtime road compiler; rotation carries it through all
+four poses.
 
 The shipped larger bindings are checked-in concrete XML, not runtime generation. After changing a
 shipped source map or binding, refresh and prove them with:
@@ -639,10 +789,10 @@ variant/pose golden with type and size in its identity, and rejects missing pair
 dimensions, inaccessible functions, material/technology mismatches, and absent or unbounded road
 routes. Its report separates source from generated maps and names the largest compiled snapshot
 with its byte and encoded-character counts. Every generated-map comment accounts for its yard,
-path, boundary, route, and intentional-open cells. Hosted arcology ward/terrace realizations remain
-explicitly held, unchanged, for their separate authored-floor redesign. The five civic-heart
-records are rite-owned internal rungs, not commission sets, and therefore do not receive synthetic
-larger choices.
+path, boundary, route, and intentional-open cells. Hosted arcology wards, terraces, and multi-zone
+programmes are explicitly authored rather than synthetic generator output; native traversal and
+human visual acceptance remain release evidence. The five civic-heart records are rite-owned
+internal rungs, not commission sets, and therefore do not receive synthetic larger choices.
 
 Generated neutral yard carries no functional anchor. Its physical reach proof may cross only the
 exact unclaimed cells selected by `entrance:public`'s bounded egress route. That route joins the
@@ -685,7 +835,8 @@ Only S is offered because only S is bound; add authored M/L/XL maps and bindings
           Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 
-  <map Key="mymod-reed-hut-s0" Width="5" Height="4" DefaultCover="walled">
+  <map Key="mymod-reed-hut-s0" Width="6" Height="4" Footprint="1,1,3x3"
+       DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building"
            Pass="blocked" Cover="walled" />
     <glyph Char="+" Ground="$floor" Structure="$door" Claim="yard"
@@ -697,10 +848,10 @@ Only S is offered because only S is bound; add authored M/L/XL maps and bindings
            Pass="walk" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building"
            Pass="walk" Cover="walled" Anchors="main,function:dwelling" Stateful="yes" />
-    <row Cells="..+.." />
-    <row Cells=".#i#." />
-    <row Cells=".b@s." />
-    <row Cells=".###." />
+    <row Cells="..+..." />
+    <row Cells=".#i#.." />
+    <row Cells=".b@s.." />
+    <row Cells=".###.." />
   </map>
 
   <plan Key="mymod-reed-hut">
@@ -721,8 +872,20 @@ Only S is offered because only S is bound; add authored M/L/XL maps and bindings
 
 The `MyMod_*` blueprints must exist and obey their declared passability, material, technology,
 container, and takeability contracts. A palette is not cosmetic: changing it can change what a
-wall blocks or what a fixture does. Run the generator only for this repository's checked-in base
-content; third-party maps should be authored directly and tested in Qud.
+wall blocks or what a fixture does. Current commissions encode canonical `a4` receipts, freezing
+the physical footprint and `BaseRoof`. Canonical `a1`-`a3` receipts remain readable only for their
+bounded compatibility lanes; they lack current claim/footprint/roof truth and cannot become new
+stamping or in-place-transition authority. Do not emit or rewrite them. Run the generator only for
+this repository's checked-in base content; third-party maps should be authored directly and tested
+in Qud.
+
+`Stateful="yes"` is an upgrade-custody promise, not a synonym for “functional”. A non-root
+stateful object with one `benefit:*` anchor uses that anchor as its protected identity and may also
+carry any needed functional topology roles. Without a benefit anchor, it must have exactly one
+non-main, non-entrance functional anchor. A physical provider may omit `Stateful` only when an
+authored renovation intentionally replaces that empty fitting; the `benefit:*` anchor still names
+the real provider but grants nothing by itself. Containers, liquids, immutable fixtures, foreign
+objects, and other live state continue to refuse removal before debit.
 
 ### Identity-aware architecture variants
 
@@ -794,6 +957,39 @@ explicit settlement-owned topology; every authored public entrance must reach ex
 evidence in every pose. An interior entrance therefore needs a bounded, authored unclaimed route;
 generic negative space and a nearest-road search are not frontage contracts.
 
+### Road frontage, width, and paving palettes
+
+Both `entrance:public` and `entrance:service` join the settlement's road rotation. Co-locate
+`service:loading` or `market:stall` with the appropriate threshold when that exact entrance is a
+loading or market frontage. The frozen architecture receipt remains route authority; the road
+runtime never invents an exit through a wall or searches around a current-schema map.
+
+The plot's one-cell reserved lane remains the stable siting/persistence contract. Optional road
+width is a separate use-of-ground decision: local errands remain one cell; shipped market,
+caravan, gate, service-loading, and monumental profiles prefer two cells, choose a canonical
+parallel side, and fall back whole to one when the second cell is blocked. A registered profile
+may require two, in which case failure leaves the entire route unchanged. Creatures do not block
+clearance; plots, ownership, liquid, solid obstructions, and unsafe/non-wearable ground do.
+
+Road role is an open lowercase capability key, not a persisted enum. Shipped keys are `local`,
+`service`, `market`, `caravan`, `gate`, and `monumental`; a third-party key falls back to its
+terrain palette until a matching rule is registered. Every settlement-owned wear floor saves its
+resolved role and actual width. Old untagged paths read as one-cell `local` paths. Paving then
+resolves three independent facts: current terrain (`deep`, `ruins`, or city style), the path's
+saved route role, and the city's current `TechLevel`. One paid order contains only cells resolving
+to the same exact blueprint/material pair, and the construction receipt freezes that result across
+reload. Existing paid jobs and already paved floors never reprice or redress.
+
+`KingdomRoadPaletteRules.RegisterSurfaceRule` and
+`KingdomRoadClearanceRules.RegisterFrontageRule` are the bounded behavior-lane seams. Registration
+keys are collision-safe and idempotent; priority, selector specificity, minimum technology, then
+ordinal key form the deterministic palette tie law. Use verified vanilla floor blueprints and a
+real `KingdomMaterial`; mud/brush paving, unknown craft rungs, overlong capability keys, duplicate
+conflicts, and more than 64 third-party rows are refused. The shipped material law keeps metal and
+salvaged concrete out of Hands roads: fungal/verdant early ways are timber, Eater tiling begins at
+Salvage, worked-metal Eater paving begins at Foundry, and workshop service fabric spends shaped
+material.
+
 Specs are keyed by building `Key` like every other registry: re-declaring an entry replaces its
 whole plot spec, and re-declaring it **without** `Plot` returns that design to the single-cell path.
 Declaring `Open`, `Sky`, or `Contents` without a `Plot` size is an error rather than a silent no-op.
@@ -850,7 +1046,7 @@ same `<style>` row. A mod adding a style declares `Crop`, `Seed`, and `CropRow` 
 ordinary object inheriting vanilla `Plant` with a vanilla `Harvestable` on it, and
 `Art/check_xml_refs.py` walks every one of those names in both directions. A seed item is any
 object carrying `<part Name="r_KingdomSeed" />` whose blueprint the crop map names; it should
-**not** be `Food`, because the settlement's ration draw eats anything that is.
+**not** be `Food`, because explicit meal/industry debits may spend edible stock.
 
 **A wild plant can carry seed.** Merge one part onto a vanilla blueprint and it gives up its seed
 once, to anybody who does not have to steal it:
@@ -873,9 +1069,17 @@ another of the city's zones, or is lost for want of room, and says which.
 
 ### Kitchens, the settlement's dish, and mills (all optional)
 
-**A kitchen is any finished work carrying vanilla's `Campfire` part.** That is not a new
-mechanism — `Campfire` *is* the whole cooking system in Qud, and the communal fire has always
-been one. Merge the part onto your own design and the settlement counts it:
+**A kitchen is one exact designation that accepts `taf:cooking` and currently contains a live
+cooking provider.** Vanilla `Campfire` is the built-in generic Plot-scoped provider, so no custom
+C# is needed, but the designation still owns the boundary and the anti-spam cap. Declare the
+accepted capability on the catalogue row and place the real fire inside its authored or adopted
+plot:
+
+```xml
+<building Key="mymod_cookhouse" DisplayName="cookhouse"
+          Blueprint="MyMod_Cookhouse" Category="food" Plot="S"
+          Provides="taf:cooking" />
+```
 
 ```xml
 <object Name="MyMod_Cookhouse" Inherits="Furniture">
@@ -883,10 +1087,11 @@ been one. Merge the part onto your own design and the settlement counts it:
 </object>
 ```
 
-`PresetMeals` naming `r_KingdomFavoredDish` is what lets the founder eat *this realm's own dish*
-at your building, exactly the way every named settlement's oven in vanilla carries its own signature
-meal. Leave `PresetMeals` off and it is still a kitchen for the settlement's purposes and still a
-full cooking site for the player.
+`PresetMeals` naming `r_KingdomFavoredDish` lets the founder eat *this realm's own dish* there,
+exactly as a named vanilla settlement oven carries its signature meal. Leave it off and the object
+remains a full vanilla cooking site and still emits `taf:cooking`; omit catalogue `Provides`, move
+the fire outside the designation, or make its required operation fail, and it grants no settlement
+meal capability.
 
 **The dish itself is derived, never authored.** The realm's dominant creed picks the *form*
 (borrowed from that faction's own vanilla `WaterRitualRecipe`) and the founding ground picks the
@@ -928,8 +1133,9 @@ Two things worth knowing before you build one:
 - **The part and the settlement grind different stock.** The `Mill` part works the mill's *own*
   inventory while a player is present, at vanilla's per-crop numbers. The settlement pass grinds
   the *larders*, on the settlement's clock, at the flat mod ratio. Neither counts the other's work.
-- **Industry never eats first.** The grinding runs after the day's rations are drawn and only
-  touches stock above one more day's bill, so a mill can never starve the people who built it.
+- **Industry spends only its named physical input.** There is no hidden household reserve or
+  per-capita food bill. `ConsumeCrop` narrows the bounded mill request to the exact raw-crop
+  blueprint and never consumes preserves, protected cargo, or unrelated edible items.
 
 ### Yard trades: a house's own sideline (all optional)
 
@@ -1020,16 +1226,29 @@ design of that category meets that taste by exactly the rule a `Provides` meets 
 `r_TAF_LegendaryTrader` is a stricter guest blueprint tag. It opts that guest into the shipped
 luxury contract: an exact, sound, wholly vacant `finehouse` on at least an M lot and a live staffed
 shop tier of 3. The settled body is bound through ordinary `KingdomLodgingPlotId` and must carry a
-`GenericInventoryRestocker`; a manor or generic large roof never aliases the named fine-house
-good.
+sealed `GenericInventoryRestocker`; a manor or generic large roof never aliases the named
+fine-house good. “Sealed” means empty tables, `Chance=0`, and effectively disabled frequency. It is
+only Qud's adapter for opening an empty native trade screen, never a restock authority.
 
 Plain and notable visitors share the settlement's serialized lifecycle book. Population-table
 entries provide bodies only; they do not own clocks, passage catch-up, placement, water, removal,
 lodging, Chronicle, or guestbook writes. Extensions must not write `NextGuestTick`,
 `GuestDepartTick`, `NextNotableGuestTick`, `NotableGuestDepartTick`, or the private lifecycle slots.
-The tagged legendary route freezes the exact fine-house object and warranted shop tier before any
-water or roster mutation, so replacing its blueprint must retain `GenericInventoryRestocker` and
-the tag's fine-house contract.
+The tagged legendary route freezes the exact fine-house object and current market standing before
+any water or roster mutation, so replacing its blueprint must retain the sealed
+`GenericInventoryRestocker` and the tag's fine-house contract. `ShopTier` is current civic
+standing/reach, can fall to zero, and never means ware tier or quality. A civic market additionally
+requires one accepted staffed `taf:market` provider on designated ground plus the exact held office;
+stage, population, district, or the adapter alone cannot open it.
+
+Do not add population tables, output tables, generated consignments, automatic replacement, or a
+restock schedule to this lane. The market may open empty. Native TradeUI sale/purchase is the only
+ordinary stock ingress/sink, and exact direct merchant inventory is the custody boundary. Handoffs
+may move only receipted direct stock; personal inventory remains personal. Bought, stolen, dropped,
+corpse-, player-, container-, or foreign-held goods keep their physical object, count, location,
+native `_stock`, and foreign state; TAF may remove only its own receipt/guards. Completed/dormant
+legendary or native personal traders survive civic loss and accession. Only an open prepared
+handoff endpoint is temporarily unavailable to succession.
 
 Settler, plain-guest, notable-guest, and legacy furnishing tables are semantic catalogues. They must
 use `Style="pickone"` and may contain only direct `<object>` rows with a real blueprint,
@@ -1056,8 +1275,8 @@ How two people feel about each other always bears on whether they can live toget
 bears is the quarters**. You cannot jam five different believers into one bunkhouse and have it be
 fine, and the same five in a street of stone houses are neighbours who nod. So cohabitation is not
 one threshold but a ladder of four rungs, and a design's rung is normally **measured** rather than
-declared: the beds in its `Carries` against the ground its **tier** stands on (its `Footprint`, or
-the whole `Plot` for a tier that declares none).
+declared: the beds in its `Carries` against the ground its **tier** stands on (its physical
+`Footprint`, or the full authored lot map for a tier that declares none).
 
 | Rung | Measured at | Refuses a creed hostility of | Shipped designs |
 |---|---|---|---|
@@ -1087,9 +1306,10 @@ city — or the whole realm, if it is the last link of its own `UpgradesTo` chai
 the edge inside the band: each step along a chain carries two cells further into its quarter, to a
 cap.
 
-Only **lifts** are scoped. `water`, `food` and `roof` are drawn and carried, so they stay citywide
-pools whatever supplies them; `craft`, `spirit`, `learning`, `order`, `luxury` and any good another
-mod invents shade only what their work reaches.
+Only **lifts** are scoped for population. `water` and `roof` stay citywide population pools whatever
+supplies them; `food` may still aggregate in the compatibility tally, but positive food acts use
+exact physical custody and it never enters the level. `craft`, `spirit`, `learning`, `order`,
+`luxury`, `wealth` and any good another mod invents shade only what their work reaches.
 
 Scoped in two places, and both matter to an author. What the ground *feels like* — the quarter's
 name in the status report, whether a shrine reaches a home for creed conversion, whether a
@@ -1259,8 +1479,8 @@ variant selector roster, and keeps every variant's `main` coordinate fixed:
 | Actual size | Plan / binding to extend | Successor map size |
 |---|---|---|
 | M | `fine-house` / `housing-m-fine-house` | 8×6 |
-| L | `lot-l-fine-house-housing-m-fine-house` / `lot-l-housing-m-fine-house` | 12×9 |
-| XL | `lot-xl-fine-house-housing-m-fine-house` / `lot-xl-housing-m-fine-house` | 20×14 |
+| L | `lot-l-fine-house-housing-m-fine-house` / `lot-l-housing-m-fine-house` | 12×10 |
+| XL | `lot-xl-fine-house-housing-m-fine-house` / `lot-xl-housing-m-fine-house` | 20×18 |
 
 For example, the M merge starts with this real tier shape; the L and XL merges use the corresponding
 plan/binding/map keys from the table:
@@ -1286,8 +1506,9 @@ plan/binding/map keys from the table:
 </plan>
 ```
 
-A catalogue-only link, an L-sized successor, or a successor tier in only one of the three bindings
-is not an improvement route. The exact-route checker rejects it instead of allowing runtime to
+A catalogue-only link, an L-sized successor, or a successor tier in only one of the three frozen
+`water` / `food` / `roof` support families is not an improvement route. The exact-route checker
+rejects it instead of allowing runtime to
 rebind, resize, or guess a map.
 
 A merge that names a key **nothing** declares is not an error: it simply becomes that key's first
@@ -1300,16 +1521,17 @@ settlement already spent (`Cost`, `Ticks`, `Materials`), what it cut into the gr
 `Plot`, `Footprint`, `Roof`, `Open`, `Contents`), and its plot/frontier classification and final
 `Defence` belong to the receipt accepted before the first debit. Your update does not refund,
 re-charge, move, resize, or reclassify it—even when projection is still waiting across save/load.
-Everything intentionally read as current policy does follow the merge: the name, `Carries`,
+Everything intentionally read as current policy does follow the merge: the name, `Carries` ceiling,
 `Staff`, gates, chain, and skins. Thus an operating rebalance can land on standing works and a skin
 added today can dress a house raised a year ago, while a changed defensive score applies only to a
 future commission. That split is enforced by `KingdomMergeRules` and construction-registry v4;
 unreconstructable unprojected v1-v3 defensive receipts quarantine rather than guess.
 
 The same receipt law governs cross-run inheritance. A current seal made while its seat is loaded
-copies each standing authored work's exact frozen `a2` snapshot — selected map, facing, anchors,
-palette and placement blueprints — plus the connected zone-relative street graph. Reconstruction
-does not ask the now-merged building or architecture catalogue what that old work should look like.
+copies each standing authored work's exact frozen `a4` snapshot — selected map, facing, physical
+footprint, `BaseRoof`, claims, anchors, palette, and placement blueprints — plus the connected
+zone-relative street graph. Reconstruction does not ask the now-merged building or architecture
+catalogue what that old work should look like.
 If one blueprint named by a third-party frozen snapshot is no longer installed, that whole work
 becomes one empty, receipted cairn on its old main cell; the importer does not invent substitute
 walls or discard the rest of the street. Contents, creatures, liquids and charge never cross. An
@@ -1342,7 +1564,7 @@ counted, and a hand-written ordinal only lies about when the city learned of it.
 
 **How much a pantry holds is declared on the blueprint**, not in `KingdomBuildings.xml`, for the
 same reason a cistern's capacity is its `LiquidVolume MaxVolume` rather than a catalogue
-attribute: `Carries` says what a design adds to the settlement's sustainable *level*, and how much
+attribute: `Carries` caps what proved physical providers add to the settlement's sustainable *level*, and how much
 its vessel holds is a fact about the vessel.
 
 ```xml
@@ -1367,12 +1589,12 @@ anywhere to explain it. Which *commissioned* designs dedicate themselves is the 
 `KingdomRules.CivicLarderBlueprints`; anything else waits for the player's own dedicate action,
 which is the protection law working exactly as intended.
 
-Food is denominated in **people**, not in a per-day flow: one point of `food` in `Carries` is one
-settler fed for one day, and the settlement eats one ration a settler a day at every rung. Unlike
-`water`, food is **not** divided by the stage rate — a dinner is counted in people the way a bed
-is. That is what makes the arithmetic check out on its face: a settlement standing at its own
-supported level makes exactly what it eats, so a `food` figure you author is a promise about how
-many more people the place feeds, not a number that means different things at different rungs.
+Food `Carries` is catalogue support/capacity metadata, not an away-time item rate or household
+bill. Physical food exists only when a crop cycle creates an item, a mill transforms exact inputs,
+or another explicit custody operation lands it. Meals, recipes, industry, and trade then debit
+proved physical stock. Population and elapsed time never consume or mint food; missing ingredients
+or providers withhold only their positive act. Author `food` as a truthful claim about the
+building's physical growing, keeping, or transforming function, never as passive rations.
 
 ## Power
 
@@ -1880,8 +2102,9 @@ the same cargo, body, choice, or cleanup lifecycle.
 - Deeper integration (typed references to `KingdomSystem`) works the same way any mod
   references another's assembly: the game chain-loads mod assemblies in load order.
 
-More registries (settler origins and districts) are migrating to the same
-XML pattern; anything still hardcoded is a defect by our own standards — file an issue.
+Settler-origin and district choices are not public XML extension points in the current release
+surface. Treat their current C# tables as internal implementation, not a registry contract. Propose
+a bounded public registry before depending on or replacing those choices.
 
 ## Same-set architecture transitions
 

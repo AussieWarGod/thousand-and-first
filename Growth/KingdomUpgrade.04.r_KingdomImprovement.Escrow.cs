@@ -19,6 +19,16 @@ namespace XRL.World.Parts
 			return !string.IsNullOrEmpty(Value) && Value.Length <= 128;
 		}
 
+		internal static bool ExactHandoverControlTypes(r_KingdomImprovement Receipt)
+		{
+			GameObject owner = Receipt?.ParentObject;
+			if (owner == null) return false;
+			string[] flags = { "Quarantined", "InventoryDone", "EffectsDone" };
+			for (int i = 0; i < flags.Length; i++)
+				if (owner.HasStringProperty(HandoverPrefix + flags[i])) return false;
+			return true;
+		}
+
 		private static string EscrowKeyFor(GameObject Source, GameObject Item, int MovedBefore)
 		{
 			return EscrowKeyFor(Source?.ID, Item?.ID, MovedBefore);
@@ -265,34 +275,21 @@ namespace XRL.World.Parts
 
 		private static bool RetirePendingItem(r_KingdomImprovement Receipt, GameObject Item)
 		{
-			string key = Receipt?.HandoverItemEscrowKey;
-			object rooted;
-			if (The.Game == null || !BoundedEscrowKey(key)
-				|| !The.Game.ObjectGameState.TryGetValue(key, out rooted)
-				|| !ReferenceEquals(rooted, Item))
-				return FailHandover(Receipt,
-					"The exact inventory escrow root changed before receipt cleanup.");
-			The.Game.ObjectGameState.Remove(key);
-			if (The.Game.ObjectGameState.ContainsKey(key))
-				return FailHandover(Receipt,
-					"The exact inventory escrow root could not be retired after settlement.");
-			ClearPendingItem(Receipt);
-			return true;
+			return BeginPendingItemCleanup(Receipt, Item);
 		}
 
 		private static void ClearPendingItem(r_KingdomImprovement Receipt)
 		{
-			// Phase zero is the commit marker. Stale identity properties are harmless if a save lands
-			// between these property writes; no later callback consults them while phase is zero.
+			GameObject owner = Receipt.ParentObject;
+			owner.RemoveStringProperty(HandoverPrefix + "ItemId");
+			owner.RemoveStringProperty(HandoverPrefix + "ItemBlueprint");
+			owner.RemoveStringProperty(HandoverPrefix + "ItemDestinationId");
+			owner.RemoveIntProperty(HandoverPrefix + "ItemCount");
+			owner.RemoveIntProperty(HandoverPrefix + "ItemDestinationKind");
+			owner.RemoveIntProperty(HandoverPrefix + "ItemMovedBefore");
+			owner.RemoveIntProperty(HandoverPrefix + "ItemMovedAfter");
 			Receipt.HandoverItemPhase = 0;
-			Receipt.HandoverItemId = null;
-			Receipt.HandoverItemBlueprint = null;
-			Receipt.HandoverItemDestinationId = null;
-			Receipt.HandoverItemEscrowKey = null;
-			Receipt.HandoverItemCount = 0;
-			Receipt.HandoverItemDestinationKind = 0;
-			Receipt.HandoverItemMovedBefore = 0;
-			Receipt.HandoverItemMovedAfter = 0;
+			owner.RemoveStringProperty(HandoverPrefix + "ItemEscrowKey");
 		}
 
 	}

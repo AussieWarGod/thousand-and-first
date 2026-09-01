@@ -44,6 +44,43 @@ REQUIRED_ASSET_FIELDS = (
     "fallback", "review",
 )
 
+# These aliases once reused three same-named portable/body-item images: a beak mutation called
+# "rostrum", the spiral-borer satchel, and a cybernetic implant. Keep the replacements exact.
+# Wrappers copy only Render metadata, never the vanilla object's behavior.
+SEMANTIC_RENDER_ALIASES = {
+    "r_KingdomMootCharterStandSemantic":
+        ("Items/sw_table_low_drawers.bmp", "227"),
+    "r_KingdomMootRostrumSemantic":
+        ("Items/sw_table_low_drawers.bmp", "227"),
+    "r_KingdomGreatCourtRostrumSemantic":
+        ("Items/sw_table_ornate_1.bmp", "227"),
+    "r_KingdomTempleSanctumSemantic":
+        ("Items/sw_table_cylinder.bmp", "227"),
+    "r_KingdomPurposeBoreHead":
+        ("Creatures/natural-weapon-drill.bmp", "004"),
+    "r_KingdomDeepBore":
+        ("Creatures/natural-weapon-drill.bmp", "004"),
+    "r_KingdomDeepBoreHeadSemantic":
+        ("Creatures/natural-weapon-drill.bmp", "004"),
+    "r_KingdomStasisVault":
+        ("Items/sw_forceprojector.bmp", "239"),
+    "r_KingdomStasisProjectorFixture":
+        ("Items/sw_forceprojector.bmp", "239"),
+    "r_KingdomHindrenLoomSemantic":
+        ("Items/sw_sewing_machine.bmp", "247"),
+    "r_KingdomCreedSnapjawMeatCache":
+        ("Items/sw_basket.bmp", "229"),
+    "r_KingdomCreedPracticeMeatCache":
+        ("Items/sw_basket.bmp", "229"),
+}
+FORBIDDEN_SEMANTIC_TILES = {
+    "furniture/chiliad-basket.png",
+    "furniture/chiliad-nacham-loom.png",
+    "items/sw_rostrum.bmp",
+    "items/sw_spiral_borer.bmp",
+    "items/sw_stasis_projector.bmp",
+}
+
 
 def read(path):
     with io.open(path, encoding="utf-8-sig") as handle:
@@ -319,6 +356,44 @@ def fixed_farmer_tile_problems(blueprint_path="RuntimeData/ObjectBlueprints.xml"
     return problems
 
 
+def semantic_render_alias_problems(blueprint_path="RuntimeData/ObjectBlueprints.xml"):
+    """Keep TAF fixtures off named, regional, portable, and biological foreign art."""
+    if not os.path.isfile(blueprint_path):
+        return ["required runtime XML is missing: %s" % blueprint_path]
+    objects = {
+        element.get("Name"): element
+        for element in ET.parse(blueprint_path).getroot().iter("object")
+        if element.get("Name")
+    }
+    problems = []
+    for name, expected in sorted(SEMANTIC_RENDER_ALIASES.items()):
+        element = objects.get(name)
+        render = None if element is None else next(
+            (part for part in element.findall("part") if part.get("Name") == "Render"),
+            None,
+        )
+        actual = None if render is None else (
+            render.get("Tile"), render.get("RenderString")
+        )
+        if actual != expected:
+            problems.append(
+                "%s semantic Render must be %s/%s, found %r"
+                % (name, expected[0], expected[1], actual)
+            )
+    for name, element in sorted(objects.items()):
+        if not name.startswith("r_Kingdom"):
+            continue
+        for render in (
+            part for part in element.findall("part") if part.get("Name") == "Render"
+        ):
+            tile = (render.get("Tile") or "").casefold()
+            if tile in FORBIDDEN_SEMANTIC_TILES:
+                problems.append(
+                    "%s still renders as semantically foreign art %s" % (name, tile)
+                )
+    return problems
+
+
 def bundled_rasters():
     found = []
     if not os.path.isdir("Textures"):
@@ -420,17 +495,29 @@ def vanilla_tiles(base):
     if not os.path.isdir(folder):
         return None
     paths = set()
-    for name in sorted(os.listdir(folder)):
-        if name.endswith(".xml"):
-            text = re.sub(r"<!--.*?-->", "", read(os.path.join(folder, name)), flags=re.S)
-            for value in re.findall(r'["\']([^"\']+\.(?:bmp|png)(?:,[^"\']*)?)["\']',
-                    text, flags=re.I):
-                for token in value.split(","):
-                    token = token.strip()
-                    if "=" in token:
-                        token = token.split("=", 1)[1].strip()
-                    if token.lower().endswith((".bmp", ".png")):
-                        paths.add(token)
+    xml_paths = [
+        os.path.join(folder, name)
+        for name in sorted(os.listdir(folder))
+        if name.endswith(".xml")
+    ]
+    # Chargen grids and mode icons are vanilla art contracts too. They live in root-level
+    # EmbarkModules.xml rather than ObjectBlueprints, so restricting provenance to the latter
+    # rejects exact vanilla-derived location cards even when packed-asset proof succeeds.
+    xml_paths.extend(
+        os.path.join(base, name)
+        for name in sorted(os.listdir(base))
+        if name.endswith(".xml")
+    )
+    for path in xml_paths:
+        text = re.sub(r"<!--.*?-->", "", read(path), flags=re.S)
+        for value in re.findall(r'["\']([^"\']+\.(?:bmp|png)(?:,[^"\']*)?)["\']',
+                text, flags=re.I):
+            for token in value.split(","):
+                token = token.strip()
+                if "=" in token:
+                    token = token.split("=", 1)[1].strip()
+                if token.lower().endswith((".bmp", ".png")):
+                    paths.add(token)
     return paths
 
 
@@ -508,6 +595,7 @@ def main():
     problems.extend(asset_problems)
 
     problems.extend(fixed_farmer_tile_problems())
+    problems.extend(semantic_render_alias_problems())
 
     for tile, owners in sorted(references.items()):
         if tile.startswith(LOCAL_PREFIX) and tile not in local_assets:

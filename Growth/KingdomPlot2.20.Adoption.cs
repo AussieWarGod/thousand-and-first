@@ -55,6 +55,45 @@ namespace ThousandAndFirst
 			return exact;
 		}
 
+		/// <summary>Reserves only the measured player-built room/container bounds. The exact-cell
+		/// designation receipt remains spatial authority; this rectangle serves siting only.</summary>
+		public static bool StampAdoptedExact(GameObject Adopted, KingdomRules.BuildEntry Entry,
+			IReadOnlyList<ArchitecturePoint> Cells)
+		{
+			if (Adopted == null || Entry == null || Cells == null || Cells.Count < 1
+				|| Adopted.CurrentCell == null) return false;
+			int x1 = int.MaxValue; int y1 = int.MaxValue;
+			int x2 = int.MinValue; int y2 = int.MinValue;
+			for (int i = 0; i < Cells.Count; i++)
+			{
+				if (Cells[i].X < x1) x1 = Cells[i].X;
+				if (Cells[i].Y < y1) y1 = Cells[i].Y;
+				if (Cells[i].X > x2) x2 = Cells[i].X;
+				if (Cells[i].Y > y2) y2 = Cells[i].Y;
+			}
+			return StampAdoptedRect(Adopted,
+				new KingdomPlotRules.PlotRect(x1, y1, x2, y2));
+		}
+
+		private static bool StampAdoptedRect(GameObject Adopted,
+			KingdomPlotRules.PlotRect Rect)
+		{
+			string plotId = "adopted:" + Adopted.ID;
+			try
+			{
+				Adopted.RemoveIntProperty(AdoptedPlotProperty);
+				StampRect(Adopted, Rect);
+				Adopted.SetStringProperty(PlotIdProperty, plotId);
+				Adopted.SetIntProperty(AdoptedPlotProperty, 1);
+			}
+			catch { ReleaseAdoptedPlot(Adopted); return false; }
+			bool exact = Adopted.GetIntProperty(AdoptedPlotProperty) == 1
+				&& Adopted.GetStringProperty(PlotIdProperty) == plotId
+				&& TryReadRect(Adopted, out var observed) && SameRect(observed, Rect);
+			if (!exact) ReleaseAdoptedPlot(Adopted);
+			return exact;
+		}
+
 		/// <summary>Releases only plot geometry minted by <see cref="StampAdopted"/>. The positive
 		/// ownership marker prevents release from erasing coordinates another system or mod owns.
 		/// The rect's presence field is removed first and the ownership marker last, so partial

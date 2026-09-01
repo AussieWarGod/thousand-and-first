@@ -80,7 +80,7 @@ namespace ThousandAndFirst
 			int pick = Popup.PickOption(
 				Title: Groomed ? "Who should the realm prepare?" : "Who carries the next life?",
 				Intro: Groomed
-					? "Identity is the resident number. Service is proved by a month on the roll or office; schooling by the city's schooling knowledge and this resident's knowledge post."
+					? "Identity is the resident number. Service is proved by a month on the roll or office; study by the city's schooling knowledge and this resident's exact education post."
 					: "Identity is the resident number, not the name. Homes, cities, and tenure are shown for recognition.",
 				Options: labels, AllowEscape: true);
 			if (pick < 0 || pick >= residents.Length) return;

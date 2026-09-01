@@ -18,15 +18,11 @@ namespace ThousandAndFirst
 	/// city changed. <see cref="KingdomLodgingRules"/> owns every decision that has one right
 	/// answer given the facts; this file only gathers the facts (real settlers, real buildings,
 	/// the engine's own creed feelings) and writes down what got decided.
-	/// <para>
-	/// <b>One vocabulary.</b> What a resident needs, prefers and refuses is
+	/// <para><b>One vocabulary.</b> What a resident needs, prefers and refuses is
 	/// <c>KingdomQol.ProfileOf</c> &mdash; derived from vanilla truth first (a robot needs charge
 	/// whether or not anybody authored it) and then refined by the blueprint's own
-	/// <c>r_TAF_*</c> tags. What a home offers is <c>KingdomQol.OfferOf</c>, which is the design's
-	/// declared <c>Provides</c> plus what its roof gives <em>on the ground it stands on</em>
-	/// &mdash; the zone goes with the key at every call here, because an open plot in the deep
-	/// offers shade and not sky. This file reads no tag off an object itself: there is one
-	/// vocabulary and one place it is assembled.
+	/// <c>r_TAF_*</c> tags. A home's effective tags come only from its exact physical-benefit
+	/// reading: fixtures, operation, ground and accepted designation caps are observed together.
 	/// </para>
 	/// <para>
 	/// <b>Where a design lives.</b> Storing "who lives where" needs an identity for the specific
@@ -37,11 +33,10 @@ namespace ThousandAndFirst
 	/// resolves is exactly a resident whose home is gone &mdash; reassigned honestly, not
 	/// silently kept pointing at nothing.
 	/// </para>
-	/// <para>
-	/// <b>Feelings scale with closeness (Addendum 4c).</b> How much of a quarrel a roof will hold
+	/// <para><b>Feelings scale with closeness (Addendum 4c).</b> How much of a quarrel a roof will hold
 	/// is a property of the roof. This file derives every home's closeness rung from what the
-	/// registry already declares &mdash; the beds in its <c>Carries</c> against the ground its tier
-	/// stands on, from <c>KingdomPlots</c> &mdash; and lets a design's own <c>Closeness</c>
+	/// physical reading proves &mdash; effective bed providers against exact designated cells &mdash;
+	/// and lets a design's own <c>Closeness</c>
 	/// attribute override that arithmetic where it reads the ground wrong. Nothing about closeness
 	/// is serialized: it is registry data, recomputed from the merged catalogue every load, so a
 	/// rebalance moves it for a house raised a year ago and a save carries none of it.
@@ -144,7 +139,7 @@ namespace ThousandAndFirst
 		public static void OnSettlementPass(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
 			if (Survey == null) return;
-			Settle(System, Z, RunBrink: true);
+			Settle(System, Z, RunBrink: true, Survey: Survey);
 		}
 
 		/// <summary>
@@ -197,12 +192,25 @@ namespace ThousandAndFirst
 				});
 				return true;
 			}
-			Dictionary<string, List<GameObject>> occupancy = ProjectedOccupancy(Z);
+			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
+				out string benefitFailure))
+			{
+				LogBenefitFailure(Z, "arrival observation", benefitFailure);
+				Reason = KingdomLodgingRules.UnhousedReason.NoRoofAtAll;
+				ObservationHash = ArrivalObservationHash(delegate(BinaryWriter writer)
+				{
+					WriteObservationString(writer, "benefit-reading-refused");
+					WriteObservationString(writer, Z.ZoneID);
+					WriteObservationString(writer, benefitFailure);
+				});
+				return false;
+			}
+			Dictionary<string, List<GameObject>> occupancy = ProjectedOccupancy(Z, benefits);
 			QolProfile profile = KingdomQol.ProfileOf(Newcomer);
 			List<string> needs = new List<string>(profile.Needs);
 			List<string> refuses = new List<string>(profile.Refuses);
 			List<string> selfTags = SelfTagsOf(profile);
-			List<GameObject> homes = HousingIn(Z);
+			List<GameObject> homes = HousingIn(Z, benefits);
 			List<KingdomLodgingRules.ArrivalHome> offers = new List<KingdomLodgingRules.ArrivalHome>();
 			List<string> homeEvidence = new List<string>();
 			bool anyCondemned = false;
@@ -210,12 +218,14 @@ namespace ThousandAndFirst
 			{
 				GameObject home = homes[i];
 				string plotId = home.GetStringProperty(KingdomPlots.PlotIdProperty);
-				KingdomRules.BuildEntry entry;
-				if (string.IsNullOrEmpty(plotId) || !TryGetBuiltEntry(home, out entry))
+				if (string.IsNullOrEmpty(plotId)
+					|| !TryHomeReading(home, benefits, out KingdomBenefitReading reading,
+						out string exactPlot)
+					|| !string.Equals(plotId, exactPlot, StringComparison.Ordinal))
 				{
 					continue;
 				}
-				int capacity = RoofCapacity(entry);
+				int capacity = RoofCapacity(home, benefits);
 				if (capacity <= 0)
 				{
 					continue;
@@ -231,7 +241,7 @@ namespace ThousandAndFirst
 						WriteObservationString(writer, home.IDIfAssigned);
 						WriteObservationString(writer, home.Blueprint);
 						WriteObservationString(writer, plotId);
-						WriteObservationString(writer, entry.Key);
+						WriteObservationString(writer, reading.Designation.BuildingKey);
 						writer.Write(capacity); writer.Write(true);
 					}));
 					continue;
@@ -240,10 +250,10 @@ namespace ThousandAndFirst
 				occupancy.TryGetValue(plotId, out occupants);
 				List<string> occupantEvidence;
 				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(
-					Z, QuartersOf(entry), home);
+					Z, QuartersOf(home, benefits), home);
 				bool conflict = ObserveOccupantConflicts(refuses, selfTags, creed,
 					occupants, quarters, out occupantEvidence);
-				List<string> provides = new List<string>(KingdomQol.OfferOf(entry.Key, Z));
+				List<string> provides = new List<string>(HomeTags(home, benefits));
 				offers.Add(new KingdomLodgingRules.ArrivalHome(
 					provides, capacity, (occupants == null) ? 0 : occupants.Count, conflict));
 				provides.Sort(StringComparer.Ordinal);
@@ -253,7 +263,7 @@ namespace ThousandAndFirst
 					WriteObservationString(writer, home.IDIfAssigned);
 					WriteObservationString(writer, home.Blueprint);
 					WriteObservationString(writer, plotId);
-					WriteObservationString(writer, entry.Key);
+					WriteObservationString(writer, reading.Designation.BuildingKey);
 					writer.Write(capacity); writer.Write(false); writer.Write((int)quarters);
 					WriteObservationList(writer, provides);
 					WriteObservationList(writer, occupantEvidence);

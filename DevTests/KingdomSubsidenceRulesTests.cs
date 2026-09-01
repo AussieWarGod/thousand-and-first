@@ -397,13 +397,26 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SupportedLevel_IsTheFrozenEquilibriumWithTheWaterConverted()
+		public void SupportedLevel_UsesThePopulationEquilibriumWithWaterConverted()
 		{
 			KingdomCatalogueRules.SupportTally tally = Tally(Water: 44, Food: 30, Roof: 30);
-			// 44 drams at Town rates is 24 settlers, which is then the least of the three.
+			// 44 drams at Town rates is 24 settlers, then water and roof alone bind.
 			Assert.AreEqual(24, KingdomSubsidenceRules.LevelFromWater(44, GrowthStage.Town));
-			Assert.AreEqual(KingdomCatalogueRules.Equilibrium(24, 30, 30, 0, 0),
+			Assert.AreEqual(KingdomCatalogueRules.PopulationEquilibrium(24, 30, 0, 0),
 				KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Town));
+		}
+
+		[Test]
+		public void FoodSupportCannotBindRaiseOrLowerPopulation()
+		{
+			KingdomCatalogueRules.SupportTally empty = Tally(Water: 44, Food: 0, Roof: 30);
+			KingdomCatalogueRules.SupportTally abundant = Tally(Water: 44, Food: int.MaxValue, Roof: 30);
+			Assert.AreEqual(24, KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town));
+			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town),
+				KingdomSubsidenceRules.SupportedLevel(abundant, GrowthStage.Town));
+			Assert.AreEqual(0, KingdomSubsidenceRules.Slide(24, GrowthStage.Town, 400,
+				empty, 400, AlreadySliding: false).Departed,
+				"zero food with adequate water and roofs must create no subsidence or departure");
 		}
 
 		[Test]
@@ -477,19 +490,19 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void BindingSupportFor_NamesTheWaterOnlyOnceTheCityRateIsApplied()
+		public void BindingSupportFor_NamesOnlyWaterOrRoofAfterTheCityRateIsApplied()
 		{
-			// Twenty-six drams is ample at camp rates and thin in a city. Asking the frozen
-			// arithmetic without converting would tell a city founder to sow when they should dig.
+			// Twenty-six drams is ample at camp rates and thin in a city. Food is deliberately
+			// ignored at both stages: the advice changes from roofs to water, never to sowing.
 			KingdomCatalogueRules.SupportTally tally = Tally(Water: 26, Food: 20, Roof: 20);
-			Assert.AreEqual(KingdomCatalogueRules.SupportFood,
+			Assert.AreEqual(KingdomCatalogueRules.SupportRoof,
 				KingdomSubsidenceRules.BindingSupportFor(tally, GrowthStage.Camp));
 			Assert.AreEqual(KingdomCatalogueRules.SupportWater,
 				KingdomSubsidenceRules.BindingSupportFor(tally, GrowthStage.City));
 		}
 
 		[TestCase("water", "water")]
-		[TestCase("FOOD", "food")]
+		[TestCase("FOOD", null)]
 		[TestCase(" roof ", "roof")]
 		[TestCase("luxury", null)]
 		[TestCase("moonlight", null)]
@@ -1044,14 +1057,12 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void BeganNote_ReadsDifferentlyForEachBindingGood()
+		public void BeganNote_HasDistinctLiveWaterAndRoofReadings()
 		{
 			string water = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportWater, 12, 19);
-			string food = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportFood, 12, 19);
 			string roof = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportRoof, 12, 19);
-			Assert.AreNotEqual(water, food);
-			Assert.AreNotEqual(food, roof);
 			Assert.AreNotEqual(water, roof);
+			StringAssert.DoesNotContain("harvest", water + roof);
 		}
 
 		[Test]
@@ -1081,12 +1092,13 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void BeganChronicle_NamesWhereItIsHeadedAndWhy()
+		public void BeganChronicle_RetiresLegacyFoodAsAnUnnamedCause()
 		{
 			string line = KingdomSubsidenceRules.BeganChronicle("Ashmarch", KingdomCatalogueRules.SupportFood, 12);
 			StringAssert.Contains("Ashmarch", line);
 			StringAssert.Contains("12", line);
-			StringAssert.Contains("harvest", line);
+			StringAssert.DoesNotContain("harvest", line);
+			StringAssert.DoesNotContain("fed", line);
 		}
 
 		[TestCase(0, "today")]
@@ -1103,15 +1115,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void DepartureCause_ReadsDifferentlyForEachBindingGood()
+		public void DepartureCause_NamesOnlyTheTwoLiveBindingGoods()
 		{
 			string water = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportWater);
 			string food = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportFood);
 			string roof = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportRoof);
-			Assert.AreNotEqual(water, food);
-			Assert.AreNotEqual(food, roof);
 			Assert.AreNotEqual(water, roof);
-			foreach (string clause in new string[3] { water, food, roof })
+			Assert.AreEqual(KingdomSubsidenceRules.DepartureCause("moonlight"), food,
+				"legacy food binding must normalize to the neutral compatibility clause");
+			StringAssert.DoesNotContain("food", food);
+			StringAssert.DoesNotContain("fed", food);
+			StringAssert.DoesNotContain("field", food);
+			foreach (string clause in new string[2] { water, roof })
 			{
 				Assert.IsFalse(clause.EndsWith("."), "a cause clause is spliced into a sentence, not ended");
 			}
@@ -1308,7 +1323,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SlideDepartureSummary_SaysNothingWhenTheSampleNamedThemAll()
 		{
-			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportFood);
+			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportRoof);
 			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 3, 3, cause));
 			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 0, 0, cause));
 			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 2, 5, cause));

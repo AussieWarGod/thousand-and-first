@@ -36,31 +36,33 @@ namespace ThousandAndFirst
 			string id = Owner.GetStringProperty(OutputId(Placement));
 			KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(Z, id, out Exact);
 			if (state != KingdomPhysicalLookupState.Exact
-				|| !ExactComponent(Exact, Z, Intent, Lot, Placement, id))
+				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id))
 				return Quarantine(Owner, "settled layout slot " + Placement.Slot
 					+ " is absent, moved, duplicated, or changed", out Failure);
 			return true;
 		}
 
-		private static bool ExactComponent(GameObject Item, Zone Z,
+		private static bool ExactComponent(GameObject Owner, GameObject Item, Zone Z,
 			KingdomArchitectureIntent Intent, string Lot, ArchitecturePlacement Placement,
 			string ExpectedId)
 		{
 			if (!GameObject.Validate(Item) || Item.ID != ExpectedId || Item.CurrentZone != Z
 				|| Item.Blueprint != Placement.Blueprint
-				|| Item.GetIntProperty(ComponentSchemaProperty) != ComponentSchema
-				|| Item.GetStringProperty(KingdomPlots.PlotIdProperty) != Lot
-				|| Item.GetStringProperty(ComponentSlotProperty) != Placement.Slot
-				|| Item.GetIntProperty(ComponentLayerProperty) != (int)Placement.Layer
-				|| Item.GetStringProperty(ComponentHashProperty) != Intent.SnapshotHash
-				|| Item.GetStringProperty(ComponentTokenProperty)
-					!= ComponentToken(Lot, Intent.SnapshotHash, Placement)
-				|| Item.GetIntProperty(ComponentExistingProperty)
-					!= (Placement.ExistingAuthority ? 1 : 0)
-				|| Item.GetIntProperty(KingdomPlots.PlotPartProperty)
-					!= (Placement.ExistingAuthority ? 0 : 1)) return false;
-			string anchor = Item.GetStringProperty(ComponentAnchorProperty);
-			if ((Placement.StatefulAnchor ?? "") != (anchor ?? "")) return false;
+				|| !ExactComponentInt(Item, ComponentSchemaProperty, ComponentSchema)
+				|| !ExactComponentString(Item, KingdomPlots.PlotIdProperty, Lot)
+				|| !ExactComponentString(Item, ComponentSlotProperty, Placement.Slot)
+				|| !ExactComponentInt(Item, ComponentLayerProperty, (int)Placement.Layer)
+				|| !ExactComponentString(Item, ComponentHashProperty, Intent.SnapshotHash)
+				|| !ExactComponentString(Item, ComponentTokenProperty,
+					ComponentToken(Lot, Intent.SnapshotHash, Placement))
+				|| !ExactComponentInt(Item, ComponentExistingProperty,
+					Placement.ExistingAuthority ? 1 : 0)
+				|| !ExactComponentInt(Item, KingdomPlots.PlotPartProperty,
+					Placement.ExistingAuthority ? 0 : 1)
+				|| !ExactOptionalComponentString(Item, ComponentAnchorProperty,
+					Placement.StatefulAnchor)
+				|| !ExactOptionalComponentInt(Item, ComponentCarriedProperty, 1)
+				|| !ExactPendingComponentState(Owner, Item, Intent)) return false;
 			ArchitectureLayoutSnapshot snapshot;
 			if (!KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out _)) return false;
 			int x;
@@ -74,6 +76,37 @@ namespace ThousandAndFirst
 					&& candidate.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& candidate.GetStringProperty(ComponentSlotProperty) == Placement.Slot) count++;
 			return count == 1;
+		}
+
+		private static bool ExactComponentInt(GameObject Item, string Property, int Expected)
+		{
+			return KingdomArchitectureReceiptPrefixRules.ExactInt(
+				Item.HasIntProperty(Property), Item.GetIntProperty(Property),
+				Item.HasStringProperty(Property), Expected);
+		}
+
+		private static bool ExactComponentString(GameObject Item, string Property,
+			string Expected)
+		{
+			return KingdomArchitectureReceiptPrefixRules.ExactString(
+				Item.HasStringProperty(Property), Item.GetStringProperty(Property),
+				Item.HasIntProperty(Property), Expected);
+		}
+
+		private static bool ExactOptionalComponentInt(GameObject Item, string Property,
+			int Expected)
+		{
+			return KingdomArchitectureReceiptPrefixRules.ExactOptionalInt(
+				Item.HasIntProperty(Property), Item.GetIntProperty(Property),
+				Item.HasStringProperty(Property), Expected);
+		}
+
+		private static bool ExactOptionalComponentString(GameObject Item, string Property,
+			string Expected)
+		{
+			return KingdomArchitectureReceiptPrefixRules.ExactOptionalString(
+				Item.HasStringProperty(Property), Item.GetStringProperty(Property),
+				Item.HasIntProperty(Property), Expected);
 		}
 
 		private static bool CanInsert(GameObject Owner, Zone Z, Cell Cell, string Lot,
@@ -100,7 +133,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static void StampComponent(GameObject Item, string Lot, string Hash,
+		private static void StampComponent(GameObject Owner, GameObject Item, string Lot, string Hash,
 			ArchitecturePlacement Placement)
 		{
 			Item.SetIntProperty(KingdomPlots.PlotPartProperty,
@@ -114,6 +147,7 @@ namespace ThousandAndFirst
 			Item.SetStringProperty(ComponentTokenProperty, ComponentToken(Lot, Hash, Placement));
 			Item.SetIntProperty(ComponentExistingProperty, Placement.ExistingAuthority ? 1 : 0);
 			Item.RemoveIntProperty(ComponentCarriedProperty);
+			StampPendingComponentState(Owner, Item);
 			Item.SetIntProperty(ComponentSchemaProperty, ComponentSchema);
 		}
 

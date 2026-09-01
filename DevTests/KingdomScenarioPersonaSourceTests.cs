@@ -136,9 +136,29 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("RESERVED_VERBS", matrix);
 		}
 
+		[Test]
+		public void ArcologyNavigationIsAttendedReservedAndCannotBecomeAPersonaVerb()
+		{
+			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
+			StringAssert.Contains("KingdomScenarioHostedArcology.Run(", verbs);
+			StringAssert.Contains("arcology <entry|teaching|terrace|ward>", verbs);
+			Assert.IsTrue(KingdomScenarioVerbApi.IsReserved("arcology"));
+			string profile = Read("Tools/scenario_profile.py");
+			string matrix = Read("Tools/personas/persona_matrix.py");
+			StringAssert.Contains("\"arcology\"", profile);
+			StringAssert.Contains("\"arcology\"", matrix);
+			int script = profile.IndexOf("SCRIPT_VERBS = (", StringComparison.Ordinal);
+			int counted = profile.IndexOf("COUNTED_VERB", script, StringComparison.Ordinal);
+			Assert.Greater(script, -1);
+			Assert.Greater(counted, script);
+			StringAssert.DoesNotContain("\"arcology\"", profile.Substring(script,
+				counted - script), "production-only navigation must remain attended");
+		}
+
 		/// <summary>
-		/// The matrix runner's own invariants: it stops the game, wipes every scenario root, runs
-		/// one persona at a time, and exits nonzero on any non-PASS verdict.
+		/// The matrix runner's own invariants: it starts from a stopped clean profile, archives and
+		/// asserts immutable evidence while the game is live, publishes images only for PASS, then
+		/// stops before the next persona and exits nonzero on any non-PASS verdict.
 		/// </summary>
 		[Test]
 		public void TheMatrixRunnerIsSerialIdempotentAndFailsLoudly()
@@ -149,9 +169,37 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TAF_SCENARIO_EXTRA_VERBS", runner);
 			StringAssert.Contains("exit \"$failed\"", runner);
 			int stop = runner.IndexOf("\tstop_game\n\twipe_profiles", StringComparison.Ordinal);
-			int prepare = runner.IndexOf("\"$PREPARE\" \"$root\"", StringComparison.Ordinal);
+			int prepare = runner.IndexOf("\"$PREPARE\" \"${prepare_args[@]}\"",
+				StringComparison.Ordinal);
 			Assert.Greater(stop, -1, "a persona must kill the game and wipe profiles first");
 			Assert.Greater(prepare, stop);
+			StringAssert.Contains("prepare_args+=(\"$TAF_PERSONA_SEED\")", runner);
+			StringAssert.Contains("capture_temp=\"$CAPTURE_DIR/.$artifact.$$.png\"", runner);
+			StringAssert.Contains("mv -f -- \"$capture_temp\" \"$capture_target\"", runner);
+			int archived = runner.IndexOf("archive_file \"$journal\" \"$archived_journal\"",
+				StringComparison.Ordinal);
+			int logChecked = runner.IndexOf("\"$LOG_CHECK\" \"$archived_player_log\"",
+				archived, StringComparison.Ordinal);
+			int asserted = runner.IndexOf("$MATRIX\" assert", StringComparison.Ordinal);
+			int captureGate = runner.IndexOf("if [ \"$VERDICT\" = PASS ]", asserted,
+				StringComparison.Ordinal);
+			int published = runner.IndexOf("mv -f -- \"$capture_temp\" \"$capture_target\"",
+				captureGate, StringComparison.Ordinal);
+			int captureFault = runner.IndexOf("if [ -n \"$capture_problem\" ]", published,
+				StringComparison.Ordinal);
+			Assert.Greater(archived, -1, "the journal must be archived before any diagnosis returns");
+			Assert.Greater(logChecked, archived,
+				"the archived Player.log must pass TAF diagnostics before journal assertion");
+			Assert.Greater(asserted, logChecked, "journal assertion follows clean durable evidence");
+			Assert.Greater(captureGate, asserted, "capture is gated on the asserted verdict");
+			Assert.Greater(published, captureGate, "only a validated PASS image is published");
+			Assert.Greater(captureFault, asserted,
+				"capture failure is appended only after journal assertion");
+			StringAssert.Contains("$MATRIX\" assert \"$(persona_path \"$persona\")\" \\",
+				runner);
+			StringAssert.Contains("\"$archived_journal\" 2>&1", runner);
+			StringAssert.Contains("live Player.log is absent", runner);
+			StringAssert.Contains("Player.log rejected:", runner);
 		}
 
 		/// <summary>

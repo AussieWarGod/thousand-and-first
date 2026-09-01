@@ -3,6 +3,6 @@
 # the gallery resolver enumerates mapping, then variant, then the four poses in that order.
 DESCRIPTION=tent/fallback staged in the West pose
 REQUEST=arch-gallery-slice;facing=west
-SCRIPT=flatten;realize;status
-EXPECT=flatten:OK,realize:OK,status:OK,COMPLETE
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
 SET=architecture

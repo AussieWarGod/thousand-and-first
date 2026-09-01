@@ -131,6 +131,8 @@ namespace ThousandAndFirst
 				return "mushroom";
 			case "Godshroom Cap":
 				return "godshroom";
+			case "Bundle of Noisegrass":
+				return "noisegrass";
 			case "Dreadroot Tuber":
 				return "dreadroot";
 			default:
@@ -142,9 +144,9 @@ namespace ThousandAndFirst
 		/// What a crop becomes when it is bound to keep: the preserved staple the grinding mill
 		/// makes out of it, and the first component of the settlement's own dish.
 		/// <para>
-		/// Three of the five are vanilla's own answer, read straight off the crop's
-		/// <c>PreservableItem Result</c> (<c>B/ObjectBlueprints/Foods.xml:424,441,457</c>). Two
-		/// crops &mdash; <c>Godshroom Cap</c> and <c>Dreadroot Tuber</c> &mdash; declare no
+		/// Four of the five terrain crops are vanilla's own answer, read straight off the crop's
+		/// <c>PreservableItem Result</c> (<c>B/ObjectBlueprints/Foods.xml:424,441,457,598</c>).
+		/// <c>Dreadroot Tuber</c> and the optional <c>Godshroom Cap</c> cult crop declare no
 		/// <c>PreservableItem</c> at all, so vanilla's mill can do nothing with them; those two
 		/// are Addendum 11(c)'s third clause, filled in in vanilla's idiom by inheriting the
 		/// nearest shipped preserve of the same family (<c>ObjectBlueprints.xml</c>).
@@ -167,6 +169,8 @@ namespace ThousandAndFirst
 				return "Pickled Mushrooms";
 			case "Godshroom Cap":
 				return "r_KingdomGodshroomPickle";
+			case "Bundle of Noisegrass":
+				return "Wild Rice";
 			case "Dreadroot Tuber":
 				return "r_KingdomDreadrootMash";
 			default:

@@ -1,4 +1,5 @@
 using System;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst
 {
@@ -91,7 +92,58 @@ namespace ThousandAndFirst
 			if (row.Phase == KingdomCivicOfficePhase.Vacant) return true;
 			if (row.Phase != KingdomCivicOfficePhase.VacancyPrepared)
 				return Fail("civic office is not awaiting title removal", out Failure);
-			row = CopyOffice(row); row.Phase = KingdomCivicOfficePhase.Vacant;
+			if (row.VacancyCause == KingdomCivicOfficeVacancyCause.Death)
+				return Fail("civic office death requires its exact terminal resident row",
+					out Failure);
+			return CompleteOfficeVacancy(Ledger, ExpectedRevision, row, out Failure);
+		}
+
+		/// <summary>Authorizes a witnessed death vacancy independently of physical title cleanup.
+		/// The exact same-settlement resident row is mandatory; body absence, an <c>Abroad</c> row,
+		/// or any non-death vacancy cause can never become death evidence.</summary>
+		internal static bool CanCompleteOfficeDeathVacancy(KingdomExperienceLedger Ledger,
+			long ExpectedRevision, string SettlementId, int Generation, KingdomCityState State,
+			out string Failure)
+		{
+			Failure = null;
+			if (!TryValidate(Ledger, out Failure)) return false;
+			int index = OfficeIndex(Ledger, SettlementId);
+			if (index < 0 || Ledger.Offices[index].Generation != Generation)
+				return Fail("prepared civic office death vacancy is absent", out Failure);
+			KingdomCivicOfficeReceipt row = Ledger.Offices[index];
+			int residentId = row.Phase == KingdomCivicOfficePhase.Vacant
+				? row.PredecessorResidentId : row.HolderResidentId;
+			if (State == null || State.SettlementId != SettlementId
+				|| !State.TryResidentIndex(residentId, out int residentIndex)
+				|| !State.TryResident(residentIndex, out KingdomResidentRow resident)
+				|| resident.ResidentId != residentId
+				|| resident.Standing != KingdomResidentStanding.Dead
+				|| row.VacancyCause != KingdomCivicOfficeVacancyCause.Death)
+				return Fail("civic office death lacks its exact terminal resident row", out Failure);
+			if (row.Phase == KingdomCivicOfficePhase.Vacant) return true;
+			if (row.Phase != KingdomCivicOfficePhase.VacancyPrepared
+				|| row.PredecessorResidentId != resident.ResidentId
+				|| ExpectedRevision != Ledger.Revision)
+				return Fail("civic office is not awaiting exact death closure", out Failure);
+			return true;
+		}
+
+		internal static bool TryCompleteOfficeDeathVacancy(KingdomExperienceLedger Ledger,
+			long ExpectedRevision, string SettlementId, int Generation, KingdomCityState State,
+			out string Failure)
+		{
+			if (!CanCompleteOfficeDeathVacancy(Ledger, ExpectedRevision, SettlementId,
+				Generation, State, out Failure)) return false;
+			KingdomCivicOfficeReceipt row = Ledger.Offices[OfficeIndex(Ledger, SettlementId)];
+			if (row.Phase == KingdomCivicOfficePhase.Vacant) return true;
+			return CompleteOfficeVacancy(Ledger, ExpectedRevision, row, out Failure);
+		}
+
+		private static bool CompleteOfficeVacancy(KingdomExperienceLedger Ledger,
+			long ExpectedRevision, KingdomCivicOfficeReceipt Row, out string Failure)
+		{
+			KingdomCivicOfficeReceipt row = CopyOffice(Row);
+			row.Phase = KingdomCivicOfficePhase.Vacant;
 			row.HolderResidentId = 0; row.HolderName = null; row.HolderObjectId = null;
 			row.OwnsRole = false;
 			return PublishOffice(Ledger, ExpectedRevision, row, out Failure);

@@ -90,13 +90,6 @@ namespace ThousandAndFirst
 			}
 		}
 
-		/// <summary>
-		/// Settlers to a commissioned bunk. One apiece made the City stage arithmetically
-		/// impossible: fifty settlers needed fifty bunks plus four cisterns, against a
-		/// forty-building cap, so the top of the ladder could never be reached at all.
-		/// </summary>
-		public const int BedsPerBunk = 4;
-
 		public const int MaxCharters = 8;
 
 		public const int MaxDedicatedVessels = 24;
@@ -210,6 +203,13 @@ namespace ThousandAndFirst
 		public static bool CanHoldSharedMeal(int FoodStored, int Population)
 		{
 			return Population > 0 && ClassifyPantry(FoodStored) != PantryTier.Empty;
+		}
+
+		/// <summary>Complete shared-meal gate: people, physical ingredients, and at least one
+		/// currently capable cooking provider must all be present.</summary>
+		public static bool CanHoldSharedMeal(int FoodStored, int Population, int CookingProviders)
+		{
+			return CookingProviders > 0 && CanHoldSharedMeal(FoodStored, Population);
 		}
 
 		/// <summary>

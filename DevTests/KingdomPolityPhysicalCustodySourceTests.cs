@@ -107,9 +107,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("claimed road boundary", ambient);
 			StringAssert.DoesNotContain("market route", ambient);
 			StringAssert.DoesNotContain("prepares to depart", ambient);
-			StringAssert.Contains("No road condition", ambient);
-			StringAssert.Contains("proves no transport or route", ambient);
-			StringAssert.Contains("No departure or journey is inferred", ambient);
+			StringAssert.Contains("No unseen safety, road, journey, or offscreen outcome", ambient);
+			StringAssert.Contains("No journey or offscreen result is inferred", ambient);
+			StringAssert.Contains("No resident, citizenship, row, or body binding", ambient);
 		}
 
 		private static string Read(string name) =>

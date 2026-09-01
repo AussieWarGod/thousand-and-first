@@ -18,12 +18,13 @@ namespace ThousandAndFirst
 	/// ritual machinery &mdash; no <c>WaterRitualRecord</c>, no reputation award, no Sifrah board.
 	/// Those exist to move the player's standing with a faction through whichever stranger is
 	/// standing there. Our settlers are the realm's own roll, not vanilla ritualists; what moves
-	/// here is one person's belief, and it moves because the founder filled a bowl from the city's
+	/// here is one person's covenant, allegiance, or belief, and it moves because the founder filled a bowl from the city's
 	/// stores, set it on the ground, and waited.
 	/// </para>
 	/// <para>
-	/// <b>It builds nothing that already exists.</b> A conversion goes through
-	/// <c>KingdomConversion.Convert</c> &mdash; the one path every channel's conversion takes, so
+	/// <b>It builds nothing that already exists.</b> Theology goes through
+	/// <c>KingdomConversion.Convert</c>; neutral affiliation through <c>AdoptAffiliation</c>. Both
+	/// share one exact transition-custody path, so
 	/// the tally, both registers and the ledger cannot drift apart. A settler pressed past bearing
 	/// goes to <c>KingdomConversion</c>'s pressure surface through
 	/// <see cref="IConversionPressure"/>, so there is one exit in this mod, with one set of words
@@ -126,7 +127,8 @@ namespace ThousandAndFirst
 					return null;
 				}
 				string closed = Settler.GetStringProperty(AskedTooOftenCreedProperty);
-				if (string.IsNullOrEmpty(closed))
+				if (string.IsNullOrEmpty(closed)
+					|| !KingdomData.CreedUsesTheology(closed))
 				{
 					return null;
 				}
@@ -157,7 +159,7 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Preconditions: a founded realm, the founder standing on its own claimed ground, and a
 		/// creed the realm actually holds. Side effects: on a rite held, drams leave the dedicated
-		/// stores, the settler's creed may change through <c>KingdomConversion.Convert</c>, the
+		/// stores, the settler's stored Creed may change through conversion or explicit adoption, the
 		/// registers record the night, and the realm's rite cadence is stamped. Failure mode: every
 		/// refusal to offer is a founder-facing line naming what would have to be different, and
 		/// nothing is spent.

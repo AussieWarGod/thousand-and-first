@@ -118,6 +118,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void RefusalCauseUsesCurrentPhysicalProvidersNotCataloguePromises()
+		{
+			string civic = CivicRuntime();
+			StringAssert.Contains("Survey.TryBenefits(out KingdomBenefitIndex benefits",
+				civic);
+			StringAssert.Contains("benefits.TagsForRoot(Owner.IDIfAssigned)", civic);
+			StringAssert.Contains("unresolved physical laboratory benefit", civic);
+			StringAssert.DoesNotContain("KingdomQol.OfferOf(", civic);
+		}
+
+		[Test]
 		public void ReceiptsAreVisibleRetryableAndNeverReofferedOrRewarded()
 		{
 			string runtime = Source("Growth/KingdomLab.CivicRuntime.cs");

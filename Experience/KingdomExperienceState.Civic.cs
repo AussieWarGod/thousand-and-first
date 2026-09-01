@@ -21,8 +21,9 @@ namespace ThousandAndFirst
 		AuthorityLost = 4
 	}
 
-	/// <summary>One title-only office. The exact role string is a projection receipt, never a
-	/// service, job, stock, capability, or succession appointment.</summary>
+	/// <summary>One explicit civic office. The exact role remains title-only; a separate optional
+	/// market projection may use this same holder after physical growth prerequisites are met.
+	/// Neither the title nor market service grants succession authority.</summary>
 	[Serializable]
 	public sealed class KingdomCivicOfficeReceipt
 	{

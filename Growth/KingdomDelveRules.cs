@@ -42,10 +42,11 @@ namespace ThousandAndFirst
 		/// <para>
 		/// A key, not a blueprint and not a footprint &mdash; the same one hardcoded thing, and
 		/// for the same reason, as <see cref="KingdomRoadRules.GatehouseKey"/>: an author who
-		/// re-keys the design keeps every other property and loses only the shaft-awareness, and
-		/// swapping this for an authored attribute is a one-line change to <see cref="IsDelve"/>
-		/// when the schema grows one. QB-16 ruled that attribute's own wave not yet earned; a
-		/// second design that opens ground is what earns it.
+		/// re-keys the design keeps every other property and loses only the shaft-awareness. The
+		/// single v1 shaft role is deliberately a named public key, like the gatehouse role: an
+		/// extension can merge, retheme, or replace that design without a private blueprint test.
+		/// Multiple simultaneous shaft roles would be a different registry contract and require a
+		/// versioned schema rather than an undocumented alias list.
 		/// </para>
 		/// </summary>
 		public const string DelveKey = "delve";

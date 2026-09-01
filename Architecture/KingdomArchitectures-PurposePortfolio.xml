@@ -27,10 +27,11 @@
     <slot Key="drain" Blueprint="r_KingdomStructureStoneGutter" Role="dry-drainage-run" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="spoil" Blueprint="Rubble" Role="sorted-stone-spoil" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="light" Blueprint="Techlight1" Role="bore-service-light" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-deepbore-main" Blueprint="r_KingdomDeepBoreHead" Role="physical-benefit-deepbore-main" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="purpose-forge-foundry">
-    <slot Key="ground" Blueprint="DirtFloor" Role="levelled-quench-ground" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="ground" Blueprint="SaltPath" Role="laid-saltstone-quench-yard" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="floor" Blueprint="BrickWalkway" Role="casting-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-fire-hall-shell" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="partition" Blueprint="r_KingdomStructureBrickWall" Role="dressed-fire-partition" Material="shapedstone" MinTech="workshop" Natural="no" />
@@ -48,11 +49,56 @@
     <slot Key="gutter" Blueprint="r_KingdomStructureStoneGutter" Role="dry-slag-gutter" Material="shapedstone" MinTech="workshop" Natural="no" />
     <slot Key="slag" Blueprint="Rubble" Role="cold-sorted-slag" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="light" Blueprint="Techlight1" Role="casting-light" Material="workedmetal" MinTech="foundry" Natural="no" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <slot Key="benefit-greatfoundry-forge" Blueprint="r_KingdomGreatFoundryForge" Role="physical-benefit-greatfoundry-forge" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-greatfoundry-anvil" Blueprint="r_KingdomGreatFoundryAnvil" Role="physical-benefit-greatfoundry-anvil" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-greatfoundry-wealth" Blueprint="r_KingdomGreatFoundryFurnace" Role="physical-benefit-greatfoundry-wealth" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <palette Key="purpose-harvest-foundry">
     <slot Key="soil" Blueprint="DirtFloor" Role="crop-court-soil" Material="mud" MinTech="hands" Natural="yes" />
-    <slot Key="path" Blueprint="DirtPath" Role="inert-irrigation-path" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="dry-earth-irrigation-path" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="WoodFloor" Role="raised-threshing-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
     <slot Key="wall" Blueprint="r_KingdomStructureWornWoodWall" Role="raised-timber-store-wall" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="stone" Blueprint="r_KingdomStructureSandstone" Role="stone-staddle-wall" Material="stone" MinTech="hands" Natural="no" />
@@ -67,20 +113,22 @@
     <slot Key="trellis" Blueprint="r_KingdomVineLattice" Role="fruiting-trellis" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="trunk" Blueprint="r_KingdomStructureWornWoodWall" Role="living-bough-column" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="light" Blueprint="Techlight1" Role="mill-light" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-realmgranary-main" Blueprint="r_KingdomGranaryColossusLedger" Role="physical-benefit-realmgranary-main" Material="workedmetal" MinTech="foundry" Natural="no" />
   </palette>
 
   <!-- Deep-Bore fallback: protected head, transverse drainage, repair wall, two exits. -->
-  <map Key="purpose-deepbore-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-deepbore-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-deepbore-main" Stateful="yes" Anchors="benefit:deepbore-main,work:bore-spare-head" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="M" Ground="$floor" Object="$bore" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
+    <glyph Char="M" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$bore" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
     <glyph Char="b" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:deep-bore" Stateful="yes" />
@@ -88,7 +136,7 @@
     <glyph Char="s" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:spoil-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#iIiiiiiiiiiiOi#.." />
+    <row Cells="..#0IiiiiiiiiiiOi#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#siiiiiiiiiiiis#.." />
     <row Cells="..#iiiiiiMLiiiiii#.." />
@@ -97,31 +145,36 @@
     <row Cells="..#bbbbiiiiiiiiss#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
+    <row Cells="..#iisiiiiiiiisii#.." />
+    <row Cells="..#iiiiibbbbiiiii#.." />
+    <row Cells="..#siiiiiiiiiiiis#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#iiiiiLiiiiiiii#.." />
     <row Cells="..######DD########.." />
     <row Cells="........++.........." />
   </map>
 
   <!-- Barathrumites: broad machine court with open repair bays and an offset service route. -->
-  <map Key="purpose-deepbore-barathrumites-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-deepbore-barathrumites-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:repair-bay" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-deepbore-main" Stateful="yes" Anchors="benefit:deepbore-main,work:bore-spare-head" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="M" Ground="$floor" Object="$bore" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
+    <glyph Char="M" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$bore" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:deep-bore" Stateful="yes" />
     <glyph Char="d" Ground="$floor" Structure="$drain" Claim="building" Pass="adjacent" Cover="walled" Anchors="drainage:dry" />
     <glyph Char="s" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:spoil-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells=".#################.." />
-    <row Cells=".#Iiiiiiiiiiiiiii#.." />
+    <row Cells=".#I0iiiiiiiiiiiii#.." />
     <row Cells=".#iiRRiiiiiiRRiii#.." />
     <row Cells=".#iiiiiiiiiiiiiii#.." />
     <row Cells=".#iiMLiiiiiiioiii#.." />
@@ -130,31 +183,36 @@
     <row Cells=".#siidiiidiiiiOii#.." />
     <row Cells=".#iiiiiiiiiiiiiii#.." />
     <row Cells=".#ddddddiiiiidddd#.." />
+    <row Cells=".#iiRRiiiiiiRRiii#.." />
+    <row Cells=".#siiiiiiiiiiiiis#.." />
+    <row Cells=".#iiiiRRRRiiiiiii#.." />
+    <row Cells=".#iiiiiiiiiiiiiii#.." />
     <row Cells=".#iiiiiiLiiiiiiiiE==" />
     <row Cells=".######DDD########.." />
     <row Cells=".......+++.........." />
   </map>
 
   <!-- Daughters: receipt enters left, crosses repair/bore stations, exits right. -->
-  <map Key="purpose-deepbore-daughters-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-deepbore-daughters-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="p" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-deepbore-main" Stateful="yes" Anchors="benefit:deepbore-main,work:bore-spare-head" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="M" Ground="$floor" Object="$bore" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
+    <glyph Char="M" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$bore" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:deep-bore" Stateful="yes" />
     <glyph Char="d" Ground="$floor" Structure="$drain" Claim="building" Pass="adjacent" Cover="walled" Anchors="drainage:dry" />
     <glyph Char="s" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:spoil-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#Iiii#iiii#iiiO#.." />
+    <row Cells="..#I0ii#iiii#iiiO#.." />
     <row Cells="..#iiii#ioii#iiii#.." />
     <row Cells="..#iiii#iiii#iiii#.." />
     <row Cells="..#iiiiDiLiiDiiii#.." />
@@ -163,31 +221,36 @@
     <row Cells="..#pppiiiiiiiippp#.." />
     <row Cells="..#iiiisiiiiiiiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
+    <row Cells="..#pppiiiDDiiippp#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#ppiiiiiiiiippp#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#iiiiiiLiiiiiii#.." />
     <row Cells="..#######DD#######.." />
     <row Cells=".........++........." />
   </map>
 
   <!-- Cragmensch: broad low ring, warm stone pauses, and a centred ground-listening head. -->
-  <map Key="purpose-deepbore-cragmensch-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-deepbore-cragmensch-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="l" Ground="$floor" Structure="$partition" Claim="building" Pass="adjacent" Cover="walled" Anchors="rest:warm-stone" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-deepbore-main" Stateful="yes" Anchors="benefit:deepbore-main,work:bore-spare-head" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="M" Ground="$floor" Object="$bore" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
+    <glyph Char="M" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$bore" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
     <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:deep-bore" Stateful="yes" />
     <glyph Char="d" Ground="$floor" Structure="$drain" Claim="building" Pass="adjacent" Cover="walled" Anchors="drainage:dry" />
     <glyph Char="s" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:spoil-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#liIiiiiiiiiOlil.." />
+    <row Cells="..#l0IiiiiiiiiOlil.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
     <row Cells="..#liiiiiiiiiiiil#.." />
     <row Cells="..#iiiiiiMLiiiiii#.." />
@@ -196,17 +259,62 @@
     <row Cells="..#liiiiiiiiiiiil#.." />
     <row Cells="..#iisiiiiiiisiii#.." />
     <row Cells="..#ddddddiiiidddd#.." />
+    <row Cells="..#liiiiiiiiiiiil#.." />
+    <row Cells="..#iisiiiiiiisiii#.." />
+    <row Cells="..#liiiiiiiiiiiil#.." />
+    <row Cells="..#iiiiiiLiiiiiii#.." />
     <row Cells="..#liiiiiLiiiiiil#.." />
     <row Cells="..#######DD#######.." />
     <row Cells=".........++........." />
   </map>
 
+  <!-- Eater: a retained machine shell makes the old service banks part of the bore's ritual
+       approach. The new head is still disconnected, paid foundry work; the recovered fabric is
+       enclosure and witness, never a borrowed power source. -->
+  <map Key="purpose-deepbore-eater-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:service" Stateful="yes" />
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="style:retained-machine" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-deepbore-main" Stateful="yes" Anchors="benefit:deepbore-main,work:bore-spare-head" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
+    <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
+    <glyph Char="M" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$bore" Stateful="yes" />
+    <glyph Char="o" Ground="$floor" Object="$bench" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:deep-bore" Stateful="yes" />
+    <glyph Char="d" Ground="$floor" Structure="$drain" Claim="building" Pass="adjacent" Cover="walled" Anchors="drainage:dry" />
+    <glyph Char="s" Ground="$floor" Object="$spoil" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:spoil-lane" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="..################.." />
+    <row Cells="..#R0IiiiiiiiiOiR#.." />
+    <row Cells="..#RiiiiiiiiiiiiR#.." />
+    <row Cells="..#iiRRiiiiiiRRii#.." />
+    <row Cells="..#iiiiiiMLiiiiii#.." />
+    <row Cells="..#iiRiii@oiiiRii#.." />
+    <row Cells="==EiiiiiiiiiiiiiiE==" />
+    <row Cells="..#iiRRiiiiiiRRii#.." />
+    <row Cells="..#siiiiiiiiiiiis#.." />
+    <row Cells="..#ddddddiiiidddd#.." />
+    <row Cells="..#iRiiiiiiiiiiRi#.." />
+    <row Cells="..#iiRRiiiiiiRRii#.." />
+    <row Cells="..#iiiiiiLiiiiiii#.." />
+    <row Cells="..#RiiiiiiiiiiiiR#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#######DD#######.." />
+    <row Cells=".........++........." />
+  </map>
+
   <!-- Great Foundry fallback: stone fire hall above an empty, drained quench court. -->
-  <map Key="purpose-greatfoundry-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-greatfoundry-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="H" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="heat:screen" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-greatfoundry-wealth" Stateful="yes" Anchors="benefit:greatfoundry-wealth,work:casting-furnace" />
     <glyph Char="k" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:casting-floor" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="water:quench-court" />
@@ -216,9 +324,9 @@
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="F" Ground="$floor" Object="$furnace" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
-    <glyph Char="g" Ground="$floor" Object="$forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge" Stateful="yes" />
-    <glyph Char="a" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="F" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$furnace" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$benefit-greatfoundry-forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge,benefit:greatfoundry-forge" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$benefit-greatfoundry-anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil,benefit:greatfoundry-anvil" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Object="$press" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:press" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$quench" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:empty-quench" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
@@ -227,7 +335,7 @@
     <glyph Char="s" Ground="$ground" Object="$slag" Claim="yard" Pass="adjacent" Cover="open" Anchors="waste:slag-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#iIiiFiiiiiiiOi#.." />
+    <row Cells="..#0IiiFiiiiiiiOi#.." />
     <row Cells="..#iiiiikLiiiiiii#.." />
     <row Cells="..#iiiigiiiaiiiii#.." />
     <row Cells="..#iiiiiiiiiiiiii#.." />
@@ -237,16 +345,21 @@
     <row Cells="..#ccqcccccccccccE==" />
     <row Cells="..#cccccccccccccc#.." />
     <row Cells="..#swwwDDDDDDwwww#.." />
+    <row Cells="..#cccccccccccccc#.." />
+    <row Cells="..#ccqccccccccccc#.." />
+    <row Cells="..#ccccccsccccccc#.." />
+    <row Cells="..#wwwwDDDDDDwwww#.." />
     <row Cells="..######DDDD######.." />
     <row Cells="........++++........" />
   </map>
 
   <!-- Mechanimists: a processional machine ring keeps furnace and receipts in one circuit. -->
-  <map Key="purpose-greatfoundry-mechanimists-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-greatfoundry-mechanimists-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="ritual:recovered-machine" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-greatfoundry-wealth" Stateful="yes" Anchors="benefit:greatfoundry-wealth,work:casting-furnace" />
     <glyph Char="k" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:casting-floor" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="water:quench-court" />
@@ -256,9 +369,9 @@
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="F" Ground="$floor" Object="$furnace" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
-    <glyph Char="g" Ground="$floor" Object="$forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge" Stateful="yes" />
-    <glyph Char="a" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="F" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$furnace" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$benefit-greatfoundry-forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge,benefit:greatfoundry-forge" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$benefit-greatfoundry-anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil,benefit:greatfoundry-anvil" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Object="$press" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:press" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$quench" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:empty-quench" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
@@ -266,7 +379,7 @@
     <glyph Char="s" Ground="$ground" Object="$slag" Claim="yard" Pass="adjacent" Cover="open" Anchors="waste:slag-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#IiiiiiiiiiiiiO#.." />
+    <row Cells="..#I0iiiiiiiiiiiO#.." />
     <row Cells="..#iiRiiiiiiiiRii#.." />
     <row Cells="..#iRiiFiiiiiiRii#.." />
     <row Cells="..#RiiigLiiiaiiRi#.." />
@@ -276,16 +389,21 @@
     <row Cells="..#ccRucccccRccqcE==" />
     <row Cells="..#cccccccccccccc#.." />
     <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#ccRucccccRccqc#.." />
+    <row Cells="..#ccccRccccRcccc#.." />
+    <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#RRRRDDDDDDRRRR#.." />
     <row Cells="..######DDDD######.." />
     <row Cells="........++++........" />
   </map>
 
   <!-- Barathrumites: separated hot bays around one generous maintenance aisle. -->
-  <map Key="purpose-greatfoundry-barathrumites-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-greatfoundry-barathrumites-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="P" Ground="$floor" Structure="$partition" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-greatfoundry-wealth" Stateful="yes" Anchors="benefit:greatfoundry-wealth,work:casting-furnace" />
     <glyph Char="k" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:casting-floor" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="water:quench-court" />
@@ -295,9 +413,9 @@
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="F" Ground="$floor" Object="$furnace" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
-    <glyph Char="g" Ground="$floor" Object="$forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge" Stateful="yes" />
-    <glyph Char="a" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="F" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$furnace" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$benefit-greatfoundry-forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge,benefit:greatfoundry-forge" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$benefit-greatfoundry-anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil,benefit:greatfoundry-anvil" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Object="$press" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:press" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$quench" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:empty-quench" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
@@ -305,7 +423,7 @@
     <glyph Char="s" Ground="$ground" Object="$slag" Claim="yard" Pass="adjacent" Cover="open" Anchors="waste:slag-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#Iiii#iiii#iiiO#.." />
+    <row Cells="..#I0ii#iiii#iiiO#.." />
     <row Cells="..#iFii#iiii#iiai#.." />
     <row Cells="..#iiiiDiiiiDiiii#.." />
     <row Cells="..#iiiiikLiiiiiii#.." />
@@ -315,16 +433,21 @@
     <row Cells="..#ccqcccccccccccE==" />
     <row Cells="..#ccccuccccccccc#.." />
     <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#cccPccccccPccc#.." />
+    <row Cells="..#ccqPccucccPccc#.." />
+    <row Cells="..#cccPccscccPccc#.." />
+    <row Cells="..#PPPPDDDDDDPPPP#.." />
     <row Cells="..######DDDD######.." />
     <row Cells="........++++........" />
   </map>
 
   <!-- Templar: narrow inspection lane; receipts and hot work never share a side aisle. -->
-  <map Key="purpose-greatfoundry-templar-xl0" Width="20" Height="14" DefaultCover="walled">
+  <map Key="purpose-greatfoundry-templar-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="M" Ground="$floor" Structure="$metal" Claim="building" Pass="adjacent" Cover="walled" Anchors="inspection:whitewashed-screen" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-greatfoundry-wealth" Stateful="yes" Anchors="benefit:greatfoundry-wealth,work:casting-furnace" />
     <glyph Char="k" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:casting-floor" />
     <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="water:quench-court" />
@@ -334,9 +457,9 @@
     <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
-    <glyph Char="F" Ground="$floor" Object="$furnace" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Stateful="yes" />
-    <glyph Char="g" Ground="$floor" Object="$forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge" Stateful="yes" />
-    <glyph Char="a" Ground="$floor" Object="$anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil" Stateful="yes" />
+    <glyph Char="F" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$furnace" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$benefit-greatfoundry-forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge,benefit:greatfoundry-forge" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$benefit-greatfoundry-anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil,benefit:greatfoundry-anvil" Stateful="yes" />
     <glyph Char="p" Ground="$floor" Object="$press" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:press" Stateful="yes" />
     <glyph Char="q" Ground="$ground" Object="$quench" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:empty-quench" Stateful="yes" />
     <glyph Char="o" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
@@ -344,7 +467,7 @@
     <glyph Char="s" Ground="$ground" Object="$slag" Claim="yard" Pass="adjacent" Cover="open" Anchors="waste:slag-lane" Stateful="yes" />
     <row Cells="...................." />
     <row Cells="..################.." />
-    <row Cells="..#IiiMiiiiiiMiiO#.." />
+    <row Cells="..#I0iMiiiiiiMiiO#.." />
     <row Cells="..#iFiMiiiiiiMiai#.." />
     <row Cells="..#iiiMiiLkiiMiii#.." />
     <row Cells="..#igiMii@oiiMipi#.." />
@@ -354,12 +477,61 @@
     <row Cells="..#ccqMccccccMcccE==" />
     <row Cells="..#cccMccccccMccc#.." />
     <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#cccMccccccMccc#.." />
+    <row Cells="..#ccqMccucccMccc#.." />
+    <row Cells="..#cccMccscccMccc#.." />
+    <row Cells="..#MMMMDDDDDDMMMM#.." />
+    <row Cells="..######DDDD######.." />
+    <row Cells="........++++........" />
+  </map>
+
+  <!-- Eater: retained banks divide casting from quench work and make a ceremonial machine aisle.
+       The furnaces and press remain the exact inert purpose fixtures paid by this commission. -->
+  <map Key="purpose-greatfoundry-eater-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:casting" Stateful="yes" />
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="R" Ground="$floor" Structure="$scrap" Claim="building" Pass="adjacent" Cover="walled" Anchors="style:retained-machine" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="0" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Object="$benefit-greatfoundry-wealth" Stateful="yes" Anchors="benefit:greatfoundry-wealth,work:casting-furnace" />
+    <glyph Char="k" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="work:casting-floor" />
+    <glyph Char="c" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="u" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="water:quench-court" />
+    <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="=" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:service" />
+    <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
+    <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
+    <glyph Char="F" Ground="$floor" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:machine" Object="$furnace" Stateful="yes" />
+    <glyph Char="g" Ground="$floor" Object="$benefit-greatfoundry-forge" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:forge,benefit:greatfoundry-forge" Stateful="yes" />
+    <glyph Char="a" Ground="$floor" Object="$benefit-greatfoundry-anvil" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:anvil,benefit:greatfoundry-anvil" Stateful="yes" />
+    <glyph Char="p" Ground="$floor" Object="$press" Claim="building" Pass="adjacent" Cover="walled" Anchors="work:press" Stateful="yes" />
+    <glyph Char="q" Ground="$ground" Object="$quench" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:empty-quench" Stateful="yes" />
+    <glyph Char="o" Ground="$floor" Object="$operator" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:great-foundry" Stateful="yes" />
+    <glyph Char="s" Ground="$ground" Object="$slag" Claim="yard" Pass="adjacent" Cover="open" Anchors="waste:slag-lane" Stateful="yes" />
+    <row Cells="...................." />
+    <row Cells="..################.." />
+    <row Cells="..#R0IiiFiiiiiOiR#.." />
+    <row Cells="..#RiiiikLiiiiiiR#.." />
+    <row Cells="..#RiiigiiiaiiiiR#.." />
+    <row Cells="..#iiiiiiiiiiiiii#.." />
+    <row Cells="..#Riii@oipiLiiiR#.." />
+    <row Cells="..#RRRRDDDDDDRRRR#.." />
+    <row Cells="..#ccccuccccccccc#.." />
+    <row Cells="..#ccqcccccccccccE==" />
+    <row Cells="..#ccccRccccRcccc#.." />
+    <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#ccRucccccRccqc#.." />
+    <row Cells="..#ccccRccccRcccc#.." />
+    <row Cells="..#cccccscccccccc#.." />
+    <row Cells="..#RRRRDDDDDDRRRR#.." />
     <row Cells="..######DDDD######.." />
     <row Cells="........++++........" />
   </map>
 
   <!-- Granary fallback: a rectilinear field-and-road half beside raised stores and mill floor. -->
-  <map Key="purpose-realmgranary-xl0" Width="20" Height="14" DefaultCover="open">
+  <map Key="purpose-realmgranary-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="open">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
@@ -374,7 +546,7 @@
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
     <glyph Char="b" Ground="$floor" Object="$basket" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:raised-dry" Stateful="yes" />
-    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$benefit-realmgranary-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator,benefit:realmgranary-main" Stateful="yes" />
     <glyph Char="c" Ground="$path" Object="$cistern" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:fresh-cistern" Stateful="yes" />
     <glyph Char="v" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" />
     <glyph Char="V" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" Anchors="irrigation:inert" />
@@ -392,12 +564,16 @@
     <row Cells="FrrrrrrrrrrpVVvvvcpp" />
     <row Cells="Frrrrrrrrrrppppppppp" />
     <row Cells="Fpppppppppppppppppp=" />
+    <row Cells="FrrRrrrrRrrppRrrrrrF" />
+    <row Cells="FppppppppppppppppppF" />
+    <row Cells="FrrrrRrrrrppRrrrrrrF" />
+    <row Cells="pppppppppppppppppppp" />
     <row Cells="pppppppppppppppppppp" />
     <row Cells="......+++...pp......" />
   </map>
 
   <!-- Farmers: a common threshing square opens directly onto four communal crop courts. -->
-  <map Key="purpose-realmgranary-farmers-xl0" Width="20" Height="14" DefaultCover="open">
+  <map Key="purpose-realmgranary-farmers-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="open">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
@@ -412,7 +588,7 @@
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
     <glyph Char="b" Ground="$floor" Object="$basket" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:raised-dry" Stateful="yes" />
-    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$benefit-realmgranary-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator,benefit:realmgranary-main" Stateful="yes" />
     <glyph Char="c" Ground="$path" Object="$cistern" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:fresh-cistern" Stateful="yes" />
     <glyph Char="v" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" />
     <glyph Char="V" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" Anchors="irrigation:inert" />
@@ -430,12 +606,16 @@
     <row Cells="pRrrppppppppppRrrrr=" />
     <row Cells="FrrrppppppppppprrrrF" />
     <row Cells="ppppppppppppppppppp=" />
+    <row Cells="pRrrppRrrrrRppRrrrrp" />
+    <row Cells="prrrppVVvvvcppRrrrrp" />
+    <row Cells="pRrrppppppppppRrrrrp" />
+    <row Cells="pppppppppppppppppppp" />
     <row Cells="pppppppppppppppppppp" />
     <row Cells="........++++........" />
   </map>
 
   <!-- Yd Freehold: long bower lanes keep the public road open between field and raised hall. -->
-  <map Key="purpose-realmgranary-yd-xl0" Width="20" Height="14" DefaultCover="open">
+  <map Key="purpose-realmgranary-yd-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="open">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="soft" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
@@ -450,7 +630,7 @@
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
     <glyph Char="b" Ground="$floor" Object="$basket" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:raised-dry" Stateful="yes" />
-    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$benefit-realmgranary-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator,benefit:realmgranary-main" Stateful="yes" />
     <glyph Char="c" Ground="$path" Object="$cistern" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:fresh-cistern" Stateful="yes" />
     <glyph Char="v" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" />
     <glyph Char="V" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" Anchors="irrigation:inert" />
@@ -470,12 +650,16 @@
     <row Cells="rrrrpppppppppprrrrr=" />
     <row Cells="TTTTpppppppppppTTTTT" />
     <row Cells="rrrrpppppppppprrrrr=" />
+    <row Cells="TTTTppRrrrrRppTTTTTT" />
+    <row Cells="rrrrpppppppppprrrrrr" />
+    <row Cells="UTTTppVVvvvcppTTTTTU" />
+    <row Cells="pppppppppppppppppppp" />
     <row Cells="pppppppppppppppppppp" />
     <row Cells="........++++........" />
   </map>
 
   <!-- Chavvah: crop and irrigation spiral around a living timber column and central mill. -->
-  <map Key="purpose-realmgranary-chavvah-xl0" Width="20" Height="14" DefaultCover="open">
+  <map Key="purpose-realmgranary-chavvah-xl0" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="open">
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:mill" Stateful="yes" />
     <glyph Char="F" Ground="$soil" Structure="$wall" Claim="yard" Pass="blocked" Cover="soft" />
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
@@ -491,7 +675,7 @@
     <glyph Char="I" Ground="$floor" Object="$input" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:input" Stateful="yes" />
     <glyph Char="O" Ground="$floor" Object="$output" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:output" Stateful="yes" />
     <glyph Char="b" Ground="$floor" Object="$basket" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:raised-dry" Stateful="yes" />
-    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$benefit-realmgranary-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="purpose:operator,benefit:realmgranary-main" Stateful="yes" />
     <glyph Char="c" Ground="$path" Object="$cistern" Claim="yard" Pass="adjacent" Cover="open" Anchors="water:fresh-cistern" Stateful="yes" />
     <glyph Char="v" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" />
     <glyph Char="V" Ground="$path" Structure="$curb" Claim="yard" Pass="adjacent" Cover="open" Anchors="irrigation:inert" />
@@ -508,6 +692,10 @@
     <row Cells="pVVvppRrrrrRppvvvcpp" />
     <row Cells="prxrpppppppppprxrpp=" />
     <row Cells="prrrpppppppppprrrpp=" />
+    <row Cells="FrrpppppppppppprrrrF" />
+    <row Cells="pVVvppRrrrrRppvvvcpp" />
+    <row Cells="prxrpppppppppprxrppp" />
+    <row Cells="prrrppRrrrrRppprrrrp" />
     <row Cells="pppppppppppppppppppp" />
     <row Cells="pppppppppppppppppppp" />
     <row Cells="........++++........" />
@@ -530,6 +718,7 @@
         <variant Key="barathrumites" Priority="80" Creeds="Barathrumites" Map="purpose-deepbore-barathrumites-xl0" />
         <variant Key="daughters" Priority="80" Creeds="Daughters" Map="purpose-deepbore-daughters-xl0" />
         <variant Key="cragmensch" Priority="80" Creeds="Cragmensch" Map="purpose-deepbore-cragmensch-xl0" />
+        <variant Key="eater" Priority="80" Styles="eater" Map="purpose-deepbore-eater-xl0" />
       </tier>
     </binding>
   </plan>
@@ -556,6 +745,7 @@
         <variant Key="mechanimists" Priority="80" Creeds="Mechanimists" Map="purpose-greatfoundry-mechanimists-xl0" />
         <variant Key="barathrumites" Priority="80" Creeds="Barathrumites" Map="purpose-greatfoundry-barathrumites-xl0" />
         <variant Key="templar" Priority="80" Creeds="Templar" Map="purpose-greatfoundry-templar-xl0" />
+        <variant Key="eater" Priority="80" Styles="eater" Map="purpose-greatfoundry-eater-xl0" />
       </tier>
     </binding>
   </plan>

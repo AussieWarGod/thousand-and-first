@@ -31,7 +31,7 @@ namespace ThousandAndFirst
 	{
 		// --- Tier dimensions -------------------------------------------------------------
 
-		public const int SmallWidth = 5;
+		public const int SmallWidth = 6;
 
 		public const int SmallHeight = 4;
 
@@ -41,11 +41,11 @@ namespace ThousandAndFirst
 
 		public const int LargeWidth = 12;
 
-		public const int LargeHeight = 9;
+		public const int LargeHeight = 10;
 
 		public const int HugeWidth = 20;
 
-		public const int HugeHeight = 14;
+		public const int HugeHeight = 18;
 
 		/// <summary>The cells a plot of this tier occupies.</summary>
 		/// <returns>False for <see cref="PlotSize.None"/> and for any value outside the tiers,

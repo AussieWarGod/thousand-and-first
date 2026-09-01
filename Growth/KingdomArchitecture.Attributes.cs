@@ -70,26 +70,41 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool OptionalClaim(LoadState State, RawRecord Raw, out bool Value)
+		private static bool RequiredClaim(LoadState State, RawRecord Raw,
+			out ArchitectureClaim Value)
 		{
-			Value = false;
+			Value = ArchitectureClaim.Unclaimed;
 			if (Raw.BadAttributes.Contains("Claim"))
 				return Fault(State, Raw.Key + " Claim", "claim attribute is malformed");
 			string text;
-			if (!Raw.Values.TryGetValue("Claim", out text)) return true;
+			if (!Raw.Values.TryGetValue("Claim", out text) || string.IsNullOrEmpty(text))
+				return Fault(State, Raw.Key + " Claim", "building or yard claim is required");
 			string folded = Fold(text);
-			if (folded == "building" || folded == "yard" || folded == "claimed")
-			{
-				Value = true;
-				return true;
-			}
-			if (folded == "none" || folded == "unclaimed")
-			{
-				Value = false;
-				return true;
-			}
-			if (TryBoolean(text, out Value)) return true;
-			return Fault(State, Raw.Key + " Claim", "expected building, yard, claimed, or a boolean");
+			if (folded == "building") Value = ArchitectureClaim.Building;
+			else if (folded == "yard") Value = ArchitectureClaim.Yard;
+			else return Fault(State, Raw.Key + " Claim", "expected exactly building or yard");
+			return true;
+		}
+
+		private static bool TryFootprint(string Text, int MapWidth, int MapHeight,
+			out int X, out int Y, out int Width, out int Height)
+		{
+			X = 0; Y = 0; Width = 0; Height = 0;
+			if (string.IsNullOrEmpty(Text)) return false;
+			string[] terms = Text.Split(',');
+			string[] size = terms.Length == 3 ? terms[2].Split('x') : new string[0];
+			if (terms.Length != 3 || size.Length != 2
+				|| !int.TryParse(terms[0], NumberStyles.None, CultureInfo.InvariantCulture, out X)
+				|| !int.TryParse(terms[1], NumberStyles.None, CultureInfo.InvariantCulture, out Y)
+				|| !int.TryParse(size[0], NumberStyles.None, CultureInfo.InvariantCulture, out Width)
+				|| !int.TryParse(size[1], NumberStyles.None, CultureInfo.InvariantCulture, out Height)
+				|| X < 0 || Y < 0 || Width < 1 || Height < 1
+				|| (long)X + Width > MapWidth || (long)Y + Height > MapHeight)
+				return false;
+			return Text == X.ToString(CultureInfo.InvariantCulture) + ","
+				+ Y.ToString(CultureInfo.InvariantCulture) + ","
+				+ Width.ToString(CultureInfo.InvariantCulture) + "x"
+				+ Height.ToString(CultureInfo.InvariantCulture);
 		}
 
 		private static bool OptionalPassability(LoadState State, RawRecord Raw,

@@ -130,15 +130,20 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>What a work standing on the ground needs, read off the design key it was
-		/// raised under (<c>KingdomUpgrade.BuildKeyProperty</c>), the same read
-		/// <c>KingdomQol.OfferOf(GameObject)</c> already performs. A work with no key on it needs
+		/// raised under (<c>KingdomUpgrade.BuildKeyProperty</c>). This is an authored crew contract,
+		/// not a physical-benefit read. A work with no key on it needs
 		/// nothing in particular.</summary>
 		public static List<KindAmount> NeedsOf(GameObject Work)
 		{
-			if (Work == null)
+			if (!GameObject.Validate(Work))
 			{
 				return EmptyNeeds;
 			}
+			if (Work.GetIntProperty(KingdomAdopt.AdoptedProperty) == 1
+				|| Work.Blueprint == KingdomAdopt.WorkMarkerBlueprint)
+				return KingdomAdoptionOperation.TryRead(Work,
+					out KingdomAdoptionOperationReceipt adopted, out _)
+					? NeedsOf(adopted.BuildingKey) : EmptyNeeds;
 			return NeedsOf(Work.GetStringProperty(KingdomUpgrade.BuildKeyProperty));
 		}
 

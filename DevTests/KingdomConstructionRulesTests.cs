@@ -1120,6 +1120,84 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void GlobalRemovalAftermathRequiresAbsenceOrSameStandingReference()
+		{
+			Assert.AreEqual(KingdomExactRemovalAction.ProvedAbsent,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Absent, false, false));
+			Assert.AreEqual(KingdomExactRemovalAction.InvokeOnce,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Exact, true, true));
+			Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Exact, true, false),
+				"a moved exact reference is divergent after veto or throw");
+			Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Exact, false, true),
+				"a same-ID replacement is not the offered reference");
+			Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Ambiguous, false, false),
+				"a remote duplicate defeats global absence");
+			Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+				KingdomConstructionRules.GlobalRemovalAftermath(
+					KingdomPhysicalLookupState.Absent, true, false),
+				"contradictory absence evidence fails closed");
+		}
+
+		[Test]
+		public void ImprovementRemovalRejectsChangedIdentityAfterFalseOrThrow()
+		{
+			foreach (bool callbackThrew in new[] { false, true })
+			{
+				Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+					KingdomConstructionRules.ImprovementRemovalAftermath(
+						KingdomPhysicalLookupState.Exact, true, true, false, true),
+					callbackThrew ? "changed-ID throw" : "changed-ID false return");
+				Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+					KingdomConstructionRules.ImprovementRemovalAftermath(
+						KingdomPhysicalLookupState.Absent, true, false, false, true),
+					callbackThrew ? "cleared-ID throw" : "cleared-ID false return");
+			}
+			Assert.AreEqual(KingdomExactRemovalAction.InvokeOnce,
+				KingdomConstructionRules.ImprovementRemovalAftermath(
+					KingdomPhysicalLookupState.Exact, true, true, true, true));
+			Assert.AreEqual(KingdomExactRemovalAction.ProvedAbsent,
+				KingdomConstructionRules.ImprovementRemovalAftermath(
+					KingdomPhysicalLookupState.Absent, false, false, false, false));
+		}
+
+		[Test]
+		public void ReloadReceiptAndFrozenSourceRemainPredecessorAuthority()
+		{
+			const string job = "00000000000000000000000000000001";
+			const string subject = "old-building";
+			Assert.IsTrue(KingdomConstructionRules.ImprovementPredecessorAuthority(
+				"renamed-building", job, null, null, job, subject, subject),
+				"construction receipt survives ID mutation and reload");
+			Assert.IsTrue(KingdomConstructionRules.ImprovementPredecessorAuthority(
+				"renamed-building", null, subject, job, job, subject, subject),
+				"frozen handover source survives receipt mutation and reload");
+			Assert.IsFalse(KingdomConstructionRules.ImprovementPredecessorAuthority(
+				"unrelated", null, null, null, job, subject, subject));
+		}
+
+		[Test]
+		public void ScaffoldRemovalAftermathRejectsChangedIdOnStillLiveOfferedObject()
+		{
+			Assert.AreEqual(KingdomExactRemovalAction.Quarantine,
+				KingdomConstructionRules.ScaffoldRemovalAftermath(
+					KingdomPhysicalLookupState.Absent, false, false, true));
+			Assert.AreEqual(KingdomExactRemovalAction.ProvedAbsent,
+				KingdomConstructionRules.ScaffoldRemovalAftermath(
+					KingdomPhysicalLookupState.Absent, false, false, false));
+			Assert.AreEqual(KingdomExactRemovalAction.InvokeOnce,
+				KingdomConstructionRules.ScaffoldRemovalAftermath(
+					KingdomPhysicalLookupState.Exact, true, true, true));
+		}
+
+		[Test]
 		public void PlotOutputsAndFurnishingsPublishExactIdsBeforeAddCallbacks()
 		{
 			string root = LocateRepository();
@@ -1460,20 +1538,23 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("HandoverItemMovedBefore", source);
 			StringAssert.Contains("HandoverItemMovedAfter", source);
 			StringAssert.Contains("HandoverItemDestinationKind < 1", source);
-			StringAssert.Contains("HandoverItemMovedBefore == int.MaxValue", source);
+			StringAssert.Contains("HandoverItemMovedBefore >= MaxHandoverTopologyObjects", source);
 			StringAssert.Contains("Inventory moved count has a third value", source);
 			StringAssert.Contains("Inventory removal changed an endpoint before throwing", source);
 			StringAssert.Contains("ExactLiquidReceiptShape", source);
-			StringAssert.Contains("Exact compensation could not be proved", source);
+			StringAssert.Contains("LiquidIntentDigest", source);
+			StringAssert.Contains("ReconcileLiquidPhase", source);
 
 			int liquid = source.IndexOf("internal static bool CarryLiquidDurable",
 				StringComparison.Ordinal);
 			int inventory = source.IndexOf("internal static bool CarryInventoryDurable",
 				liquid, StringComparison.Ordinal);
 			string liquidBody = source.Substring(liquid, inventory - liquid);
-			AssertOrdered(liquidBody, "HandoverPhase = 1", "KingdomLiquids.Drain",
-				"HandoverPhase = 2", "Target.MixWith", "HandoverPhase = 3");
-			StringAssert.Contains("CompensateLiquid", liquidBody);
+			StringAssert.Contains("KingdomLiquids.Drain", liquidBody);
+			StringAssert.Contains("Target.MixWith", liquidBody);
+			AssertOrdered(liquidBody, "Receipt.HandoverTargetCompositionAfter = expectedText",
+				"Receipt.HandoverPhase = 3");
+			StringAssert.DoesNotContain("CompensateLiquid", liquidBody);
 
 			int handover = source.IndexOf("public static void HandOver", StringComparison.Ordinal);
 			int carryLiquid = source.IndexOf("CarryLiquidDurable", handover,
@@ -1483,9 +1564,11 @@ namespace ThousandAndFirst.Tests
 			int grow = source.IndexOf("KingdomPlots.GrowInPlace", carryInventory,
 				StringComparison.Ordinal);
 			int marks = source.IndexOf("CarryMarks(Predecessor", grow, StringComparison.Ordinal);
-			int removalIntent = source.IndexOf("KingdomPhysicalPhase.FinalRemovalPending", marks,
+			int removalIntent = source.IndexOf("TryPublishRemovalIntent(ref job", marks,
 				StringComparison.Ordinal);
-			int destroy = source.IndexOf("Predecessor.Destroy", removalIntent,
+			int removalProof = source.IndexOf("Successor.SetStringProperty", removalIntent,
+				StringComparison.Ordinal);
+			int destroy = source.IndexOf("Predecessor.Destroy", removalProof,
 				StringComparison.Ordinal);
 			int removed = source.IndexOf("KingdomPhysicalPhase.FinalRemoved", destroy,
 				StringComparison.Ordinal);
@@ -1494,7 +1577,8 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(grow, carryInventory);
 			Assert.Greater(marks, grow, "plot state must be read before marks publish closure");
 			Assert.Greater(removalIntent, marks);
-			Assert.Greater(destroy, removalIntent);
+			Assert.Greater(removalProof, removalIntent);
+			Assert.Greater(destroy, removalProof);
 			Assert.Greater(removed, destroy);
 			StringAssert.Contains("FailHandover(intent,", source.Substring(handover));
 			StringAssert.DoesNotContain("FinishProjection(ref job, false, false,\n"
@@ -1615,8 +1699,13 @@ namespace ThousandAndFirst.Tests
 			int resume = source.IndexOf("private static bool ResumePendingItem", carry,
 				StringComparison.Ordinal);
 			string carryBody = source.Substring(carry, resume - carry);
-			AssertOrdered(carryBody, "HandoverItemEscrowKey = EscrowKeyFor",
-				"RootEscrowItem", "HandoverItemPhase = 1", "RemoveObjectFromInventory");
+			AssertOrdered(carryBody, "TryPublishPendingItem(", "RemoveObjectFromInventory");
+			int publishItem = source.IndexOf("private static bool TryPublishPendingItem",
+				StringComparison.Ordinal);
+			int beginCleanup = source.IndexOf("private static bool BeginPendingItemCleanup",
+				publishItem, StringComparison.Ordinal);
+			AssertOrdered(source.Substring(publishItem, beginCleanup - publishItem),
+				"HandoverItemEscrowKey = escrow", "RootEscrowItem", "HandoverItemPhase = 1");
 
 			int rootEscrow = source.IndexOf("private static bool RootEscrowItem",
 				StringComparison.Ordinal);
@@ -1633,8 +1722,10 @@ namespace ThousandAndFirst.Tests
 			string placeBody = source.Substring(place, restore - place);
 			StringAssert.Contains("destination.AddObject(Item", placeBody);
 			StringAssert.Contains("Where.AddObject(Item, NoStack: true", placeBody);
-			StringAssert.Contains("ReproveEscrowItem", placeBody);
+			StringAssert.Contains("ReproveManifestAfterCallback", placeBody);
 			StringAssert.Contains("ReferenceEquals(accepted, Item)", placeBody);
+			AssertOrdered(placeBody, "if (ExactDestination(Item",
+				"accepted == null", "ReferenceEquals(accepted, Item)");
 
 			int settle = source.IndexOf("private static bool SettlePendingItem",
 				StringComparison.Ordinal);
@@ -1645,8 +1736,15 @@ namespace ThousandAndFirst.Tests
 				"HandoverItemPhase = 4", "RetirePendingItem");
 			int clear = source.IndexOf("private static void ClearPendingItem", retire,
 				StringComparison.Ordinal);
-			AssertOrdered(source.Substring(retire, clear - retire),
-				"ObjectGameState.Remove", "ClearPendingItem");
+			StringAssert.Contains("BeginPendingItemCleanup(Receipt, Item)",
+				source.Substring(retire, clear - retire));
+			int cleanup = source.IndexOf("private static bool BeginPendingItemCleanup",
+				StringComparison.Ordinal);
+			AssertOrdered(source.Substring(cleanup, source.IndexOf(
+				"private static bool ResumePendingItem", cleanup, StringComparison.Ordinal) - cleanup),
+				"ItemCleanupKey", "ItemCleanupId", "ItemCleanupMovedBefore",
+				"ItemCleanupPhase\", 1", "ObjectGameState.Remove", "ItemCleanupPhase\", 2",
+				"ItemCleanupPhase\", 3", "ClearPendingItem");
 
 			string restoreBody = source.Substring(restore, source.IndexOf(
 				"private static bool ExactHandoverObjects", restore, StringComparison.Ordinal) - restore);

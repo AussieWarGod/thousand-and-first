@@ -73,7 +73,8 @@ namespace ThousandAndFirst
 		/// independent extension-happening cursors; v12 predates the expanded construction-delivery
 		/// authority and phase domain; v13 predates city-local cook and moot authority; v14 predates
 		/// first-guest correspondence authority; v15 predates physical first-guest evidence; v16
-		/// predates fixed-rate arrival cadence authority. Historical readers retain exactly those surfaces
+		/// predates fixed-rate arrival cadence authority; v17 predates exact expedition-result outboxes.
+		/// Historical readers retain exactly those surfaces
 		/// rather than interpreting new default fields.</summary>
 		private static bool SchemaField(Type Type, string Name, int SchemaVersion)
 		{
@@ -230,6 +231,12 @@ namespace ThousandAndFirst
 					|| string.Equals(Name, "DeliveryManifestSourceCounts", StringComparison.Ordinal)
 					|| string.Equals(Name, "DeliveryTargetBeforeAmounts", StringComparison.Ordinal)
 					|| string.Equals(Name, "DeliveryTargetReceiptStates", StringComparison.Ordinal))) return false;
+			if (SchemaVersion < ExpeditionResultVersion
+				&& Type == typeof(Simulation.City.KingdomJobRegistry)
+				&& (string.Equals(Name, "ExpeditionDeedDispositions", StringComparison.Ordinal)
+					|| string.Equals(Name, "ExpeditionDeedPolityIds", StringComparison.Ordinal)
+					|| string.Equals(Name, "ExpeditionDeedCauseRefs", StringComparison.Ordinal)
+					|| string.Equals(Name, "ExpeditionDeedFigureRefs", StringComparison.Ordinal))) return false;
 			return true;
 		}
 

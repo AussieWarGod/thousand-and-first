@@ -19,12 +19,15 @@ namespace ThousandAndFirst
 			// Asked before anything is eaten. The food is the founder's - dedicating a larder is
 			// consent to it being counted, not consent to it being spent without a word.
 			KingdomSurvey survey = (zone != null) ? KingdomSurvey.Take(zone, System) : null;
-			if (survey != null && survey.FoodAbundance != KingdomRules.PantryTier.Empty)
+			int kitchens = (survey == null) ? 0 : KingdomCapabilityRuntime.Count(zone, survey,
+				KingdomBenefitCapabilities.Cooking, "shared meal preview");
+			if (survey != null && KingdomRules.CanHoldSharedMeal(
+				survey.FoodStored, System.Population, kitchens))
 			{
 				int cost = KingdomRules.MealCost(survey.FoodAbundance);
 				if (Popup.ShowYesNo("Call " + KingdomRules.MealSizeName(survey.FoodAbundance) + " for " + KingdomPresentation.Rich(System.SeatName)
 					+ "?\n\nIt will take {{C|" + cost + "}} of the " + survey.FoodStored
-					+ " the larders hold.") != DialogResult.Yes)
+					+ " the larders hold. A currently capable kitchen will cook it.") != DialogResult.Yes)
 				{
 					return;
 				}
@@ -122,7 +125,18 @@ namespace ThousandAndFirst
 				Popup.Show("A building is adopted on the kingdom's own ground, not in other people's houses.");
 				return;
 			}
-			System.Collections.Generic.List<KingdomRules.BuildEntry> buildings = KingdomData.Buildings;
+			System.Collections.Generic.List<KingdomRules.BuildEntry> buildings =
+				new System.Collections.Generic.List<KingdomRules.BuildEntry>();
+			System.Collections.Generic.List<KingdomAdoptionTargetKind> targets =
+				new System.Collections.Generic.List<KingdomAdoptionTargetKind>();
+			foreach (KingdomRules.BuildEntry buildCandidate in KingdomData.Buildings)
+			{
+				if (!buildCandidate.Adoptable
+					|| !KingdomPlots.TryGetSpec(buildCandidate.Key, out KingdomPlotRules.PlotSpec spec)
+					|| !KingdomAdoptabilityRules.TryClassify(buildCandidate.Key, buildCandidate.Category,
+						spec.Size, spec.Open, out KingdomAdoptionTargetKind target, out _)) continue;
+				buildings.Add(buildCandidate); targets.Add(target);
+			}
 			if (buildings.Count == 0)
 			{
 				Popup.Show("There is nothing in the plan to adopt a building as.");
@@ -131,7 +145,11 @@ namespace ThousandAndFirst
 			string[] designOptions = new string[buildings.Count];
 			for (int i = 0; i < buildings.Count; i++)
 			{
-				designOptions[i] = buildings[i].Name + " {{K|(" + buildings[i].Category + ")}}";
+				string shape = targets[i] == KingdomAdoptionTargetKind.Room ? "room"
+					: targets[i] == KingdomAdoptionTargetKind.OpenPlot ? "open plot"
+					: "container";
+				designOptions[i] = buildings[i].Name + " {{K|(" + buildings[i].Category
+					+ "; " + shape + ")}}";
 			}
 			int designIndex = Popup.PickOption(Title: "Adopt a building as...", Intro: "Choose what kind of building this counts as. The settlement checks the space, not who built it.", Options: designOptions, AllowEscape: true);
 			if (designIndex < 0)
@@ -139,10 +157,36 @@ namespace ThousandAndFirst
 				return;
 			}
 			KingdomRules.BuildEntry entry = buildings[designIndex];
-			KingdomAdoptRules.RoleKind role = KingdomAdoptRules.ClassifyRole(entry.Category);
-			if (role == KingdomAdoptRules.RoleKind.Work)
+			KingdomAdoptionTargetKind targetKind = targets[designIndex];
+			if (targetKind == KingdomAdoptionTargetKind.OpenPlot)
 			{
-				if (Popup.ShowYesNo("Adopt this room as " + XRL.Language.Grammar.A(entry.Name) + "? A small marker is set down where you stand; nothing you built is touched.") != DialogResult.Yes)
+				Cell center = ParentObject.Physics.PickDestinationCell(9999,
+					AllowVis.OnlyExplored, Locked: false, IgnoreSolid: true, IgnoreLOS: true,
+						RequireCombat: false, PickTarget.PickStyle.EmptyCell,
+						"Centre the " + entry.Name + " plot where?");
+				if (center == null) return;
+				string plotFailure = null;
+				if (center.ParentZone != zone
+					|| !KingdomPlots.TryGetSpec(entry.Key, out KingdomPlotRules.PlotSpec spec)
+					|| !KingdomAdoptionPlotRules.TryCenteredCells(center.X, center.Y, spec.Size,
+						zone.Width, zone.Height, out KingdomPlotRules.PlotRect rect, out _,
+						out plotFailure))
+				{
+					Popup.Show(plotFailure ?? "Choose a centre on this settlement's ground.");
+					return;
+				}
+				string dimensions = (rect.X2 - rect.X1 + 1) + "×" + (rect.Y2 - rect.Y1 + 1);
+				if (Popup.ShowYesNo("Designate this exact " + dimensions + " open plot as "
+					+ XRL.Language.Grammar.A(entry.Name) + "? Its civic marker reserves the shown"
+					+ " ground; only real qualifying furniture or machinery supplies benefits.")
+					!= DialogResult.Yes) return;
+				if (!KingdomAdopt.AdoptOpenPlot(System, zone, center, entry.Key,
+					out string openFailure)) Popup.Show(openFailure);
+				return;
+			}
+			if (targetKind == KingdomAdoptionTargetKind.Room)
+			{
+				if (Popup.ShowYesNo("Designate this exact bounded room as " + XRL.Language.Grammar.A(entry.Name) + "? A small civic marker records its cells. The room grants nothing until real qualifying furniture or technology stands inside it.") != DialogResult.Yes)
 				{
 					return;
 				}
@@ -162,16 +206,11 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					if (role == KingdomAdoptRules.RoleKind.Housing && item.HasPart("Bed"))
-					{
-						candidates.Add(item);
-					}
-					else if (role == KingdomAdoptRules.RoleKind.Storage)
+					if (targetKind == KingdomAdoptionTargetKind.Larder)
 					{
 						XRL.World.Parts.LiquidVolume lv = item.GetPart<XRL.World.Parts.LiquidVolume>();
-						bool isVessel = lv != null && lv.MaxVolume > 0;
-						bool isLarder = lv == null && item.Inventory != null;
-						if (isVessel || isLarder)
+						if (KingdomAdoptabilityRules.CandidateMatches(targetKind, lv != null,
+							item.Inventory != null))
 						{
 							candidates.Add(item);
 						}
@@ -180,7 +219,7 @@ namespace ThousandAndFirst
 			}
 			if (candidates.Count == 0)
 			{
-				Popup.Show((role == KingdomAdoptRules.RoleKind.Housing) ? "Stand beside a bed to adopt it. Nothing here is one." : "Stand beside a vessel or a store to adopt it. Nothing here is one.");
+				Popup.Show("Stand beside a dry container to designate it as a larder.");
 				return;
 			}
 			string[] candidateOptions = new string[candidates.Count];

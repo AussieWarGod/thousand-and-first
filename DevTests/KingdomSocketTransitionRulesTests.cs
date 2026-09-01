@@ -123,15 +123,52 @@ namespace ThousandAndFirst.Tests
 		public void ParseFreezesDirectionalTypedDelta()
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("shed-to-post", "toolshed",
-				"chargingpost", " CRAFT ", "M", "12", "scrap:2", "900",
+				"chargingpost", " CRAFT ", "M", "renovate", "12", "scrap:2", "900",
 				out KingdomSocketTransition transition, out string failure), failure);
 			Assert.AreEqual("toolshed", transition.FromBuildKey);
 			Assert.AreEqual("chargingpost", transition.ToBuildKey);
 			Assert.AreEqual("craft", transition.LotType);
 			Assert.AreEqual(ArchitectureLotSize.Medium, transition.LotSize);
+			Assert.AreEqual(ArchitectureTransitionMode.Renovate, transition.Mode);
 			Assert.AreEqual(12, transition.WaterDrams);
 			Assert.AreEqual(900L, transition.WorkTicks);
 			Assert.AreEqual(2, transition.Materials.Get(KingdomMaterial.Scrap));
+		}
+
+		[Test]
+		public void TransitionModeVocabularyIsClosedAndReplacementIsExplicit()
+		{
+			string[] keys = { "none", "additive", "additive-expand", "renovate",
+				"renovate-expand", "replacement" };
+			ArchitectureTransitionMode[] modes =
+			{
+				ArchitectureTransitionMode.None, ArchitectureTransitionMode.Additive,
+				ArchitectureTransitionMode.AdditiveExpand,
+				ArchitectureTransitionMode.Renovate,
+				ArchitectureTransitionMode.RenovateExpand,
+				ArchitectureTransitionMode.Replacement
+			};
+			for (int i = 0; i < keys.Length; i++)
+			{
+				Assert.IsTrue(KingdomArchitectureTransitionRules.TryParseMode(keys[i],
+					out ArchitectureTransitionMode parsed));
+				Assert.AreEqual(modes[i], parsed);
+				Assert.AreEqual(keys[i], KingdomArchitectureTransitionRules.ModeKey(parsed));
+			}
+			Assert.IsFalse(KingdomArchitectureTransitionRules.TryParseMode("expand", out _));
+			Assert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(0,
+				ArchitectureTransitionMode.Renovate));
+			Assert.IsTrue(KingdomArchitectureTransitionRules.ValidTierMode(0,
+				ArchitectureTransitionMode.None));
+			Assert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(1,
+				ArchitectureTransitionMode.None));
+
+			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("replace", "a", "b",
+				"craft", "S", "replacement", "1", "scrap:1", "1",
+				out KingdomSocketTransition replacement, out string failure), failure);
+			Assert.AreEqual(ArchitectureTransitionMode.Replacement, replacement.Mode);
+			Assert.IsFalse(KingdomSocketTransitionRules.TryParse("none", "a", "b",
+				"craft", "S", "none", "1", "scrap:1", "1", out _, out failure));
 		}
 
 		[Test]
@@ -196,7 +233,7 @@ namespace ThousandAndFirst.Tests
 		public void RouteMatchRefusesWrongDeclarationTypeOrSize()
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("tent-to-hut-s", "tent",
-				"hut", "housing", "S", "4", "timber:4,mud:2", "1350",
+				"hut", "housing", "S", "renovate", "4", "timber:4,mud:2", "1350",
 				out KingdomSocketTransition route, out string failure), failure);
 			Assert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
 				"housing", ArchitectureLotSize.Small));
@@ -216,7 +253,7 @@ namespace ThousandAndFirst.Tests
 			Type declarationType = typeof(KingdomSocketTransition);
 			Assert.AreEqual(0, declarationType.GetFields(System.Reflection.BindingFlags.Public
 				| System.Reflection.BindingFlags.Instance).Length);
-			string[] immutable = { "Key", "FromBuildKey", "ToBuildKey", "LotType", "LotSize",
+			string[] immutable = { "Key", "FromBuildKey", "ToBuildKey", "LotType", "LotSize", "Mode",
 				"WaterDrams", "Materials", "WorkTicks" };
 			for (int i = 0; i < immutable.Length; i++)
 			{
@@ -227,7 +264,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSocketTransition original = ParsedRoute();
 			Assert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(original,
 				out string originalDigest));
-			string[] names = { "key", "from", "to", "type", "size", "water", "materials", "ticks" };
+			string[] names = { "key", "from", "to", "type", "size", "mode", "water", "materials", "ticks" };
 			KingdomSocketTransition[] changed =
 			{
 				ParsedRoute(Key: "other-key"),
@@ -235,6 +272,7 @@ namespace ThousandAndFirst.Tests
 				ParsedRoute(To: "mudhut"),
 				ParsedRoute(Type: "craft"),
 				ParsedRoute(Size: "M"),
+				ParsedRoute(Mode: "additive"),
 				ParsedRoute(Water: "5"),
 				ParsedRoute(Materials: "timber:99,mud:2"),
 				ParsedRoute(Ticks: "1351")
@@ -324,7 +362,7 @@ namespace ThousandAndFirst.Tests
 			string size, string water, string materials, string ticks)
 		{
 			Assert.IsFalse(KingdomSocketTransitionRules.TryParse("route", from, to, type,
-				size, water, materials, ticks, out _, out string failure));
+				size, "renovate", water, materials, ticks, out _, out string failure));
 			Assert.IsFalse(string.IsNullOrEmpty(failure));
 		}
 
@@ -342,7 +380,7 @@ namespace ThousandAndFirst.Tests
 		public void PlanQuoteUsesOnlyDeclaredDeltaAndNoStrike()
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("quote", "a", "b", "craft",
-				"S", "7", "scrap:3", "450", out KingdomSocketTransition transition,
+				"S", "renovate", "7", "scrap:3", "450", out KingdomSocketTransition transition,
 				out string failure), failure);
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessPlanChange(
 				transition);
@@ -434,6 +472,7 @@ namespace ThousandAndFirst.Tests
 				Assert.IsTrue(KingdomSocketTransitionRules.TryParse(route.GetAttribute("Key"),
 					route.GetAttribute("From"), route.GetAttribute("To"),
 					route.GetAttribute("Type"), route.GetAttribute("Size"),
+					route.GetAttribute("Mode"),
 					route.GetAttribute("Water"), route.GetAttribute("Materials"),
 					route.GetAttribute("Ticks"), out KingdomSocketTransition parsed,
 					out string failure), failure);
@@ -575,11 +614,11 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSocketTransition ParsedRoute(string Key = ReceiptKey,
 			string From = "tent", string To = "hut", string Type = "housing",
-			string Size = "S", string Water = "4", string Materials = "timber:4,mud:2",
+			string Size = "S", string Mode = "renovate", string Water = "4", string Materials = "timber:4,mud:2",
 			string Ticks = "1350")
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
-				Water, Materials, Ticks,
+				Mode, Water, Materials, Ticks,
 				out KingdomSocketTransition route, out string failure), failure);
 			return route;
 		}

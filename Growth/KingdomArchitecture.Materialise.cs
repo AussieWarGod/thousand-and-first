@@ -12,6 +12,27 @@ namespace ThousandAndFirst
 
 		private static void Materialise(LoadState State)
 		{
+			List<string> poseKeys = OrderedKeys(State.RawPoses);
+			List<ArchitecturePoseDraft> poseDrafts = new List<ArchitecturePoseDraft>();
+			HashSet<string> poisonedPoses = new HashSet<string>(StringComparer.Ordinal);
+			for (int i = 0; i < poseKeys.Count; i++)
+			{
+				RawPose raw = State.RawPoses[poseKeys[i]];
+				if (TryPose(State, raw, out ArchitecturePoseDraft pose))
+					poseDrafts.Add(pose);
+				else if (ValidBlueprint(raw.Key) && raw.Key[0] != '$')
+					poisonedPoses.Add(raw.Key);
+			}
+			if (!KingdomArchitectureRules.TryCreatePoseRegistry(poseDrafts, poisonedPoses,
+				out State.PoseRegistry, out string poseFailure))
+			{
+				AddFault(State, "poses", poseFailure);
+				poisonedPoses.UnionWith(poseKeys);
+				KingdomArchitectureRules.TryCreatePoseRegistry(
+					new List<ArchitecturePoseDraft>(), poisonedPoses,
+					out State.PoseRegistry, out poseFailure);
+			}
+
 			List<string> paletteKeys = OrderedKeys(State.RawPalettes);
 			for (int i = 0; i < paletteKeys.Count; i++)
 			{
@@ -113,16 +134,14 @@ namespace ThousandAndFirst
 					AddFault(State, "building " + building.Key,
 						"plot design has no valid authored architecture mapping");
 				if (!building.HasPlot || KingdomPlotRules.HeartRungOf(building.Key) > 0) continue;
-				for (int value = (int)building.LotSize;
-					value <= (int)ArchitectureLotSize.Huge; value++)
-				{
-					ArchitectureLotSize actualSize = (ArchitectureLotSize)value;
-					if (!State.Records.ContainsKey(ExactRecordKey(
-						building.Key, Fold(building.Category), actualSize)))
-						AddFault(State, "building " + building.Key + " typed lot "
-							+ Fold(building.Category) + "/" + actualSize,
-							"commissionable actual lot has no exact valid authored architecture mapping");
-				}
+				// Plot is the minimum footprint, not authority to synthesize every larger size.
+				// The picker already exposes only exact records. Require the minimum mapping so the
+				// design remains commissionable; any authored larger records are optional exact offers.
+				if (!State.Records.ContainsKey(ExactRecordKey(
+					building.Key, Fold(building.Category), building.LotSize)))
+					AddFault(State, "building " + building.Key + " typed lot "
+						+ Fold(building.Category) + "/" + building.LotSize,
+						"declared minimum lot has no exact valid authored architecture mapping");
 			}
 		}
 

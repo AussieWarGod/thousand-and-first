@@ -111,7 +111,8 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("517-532", source);
 			StringAssert.Contains("8945-8952", source);
 			StringAssert.Contains("Physics.cs 136-146", source);
-			StringAssert.Contains("GetIntProperty(\"KingdomBuilt\") != 1", source);
+			StringAssert.Contains("!KingdomUpgrade.IsFunctionallyBuilt(Carrier)", source);
+			StringAssert.DoesNotContain("GetIntProperty(\"KingdomBuilt\")", source);
 			StringAssert.Contains("r_KingdomCairn", source);
 			StringAssert.Contains("r_KingdomGraveGrove", source);
 			StringAssert.Contains("r_KingdomNicheTomb", source);

@@ -62,6 +62,27 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement invalid = new KingdomSettlement();
 			Assert.That(topology.TryAdd(invalid, out failure), Is.False);
 		}
+
+		[Test]
+		public void NameLookupSupportsMultipleCitiesAndRefusesAmbiguity()
+		{
+			KingdomSettlementTopology topology = new KingdomSettlementTopology();
+			KingdomSettlement b = Row('b', "zone-b");
+			KingdomSettlement c = Row('c', "zone-c");
+			b.SettlementName = "Basin";
+			c.SettlementName = "Cairn";
+			Assert.That(topology.TryAdd(c, out string failure), Is.True, failure);
+			Assert.That(topology.TryAdd(b, out failure), Is.True, failure);
+			Assert.That(topology.TryFindByName("Cairn", out KingdomSettlement found),
+				Is.True);
+			Assert.That(found, Is.SameAs(c));
+			Assert.That(topology.TryFindByName("Missing", out found), Is.False);
+			Assert.That(found, Is.Null);
+
+			b.SettlementName = c.SettlementName;
+			Assert.That(topology.TryFindByName("Cairn", out found), Is.False);
+			Assert.That(found, Is.Null);
+		}
 	}
 }
 #endif

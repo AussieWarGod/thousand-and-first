@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using XRL;
 using XRL.World;
 using XRL.World.Parts;
@@ -9,6 +10,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomHostedArcology
 	{
 		public const string ArcologyKey = "arcology";
+		private const int MaxReconciliationObjects = 16384;
 		private static readonly string[] AuthoritySlotKeys = new string[] {
 			"r_TAF_HostedArcologyAuthorityV1:0",
 			"r_TAF_HostedArcologyAuthorityV1:1"
@@ -94,6 +96,7 @@ namespace ThousandAndFirst
 				return Fail("The hosted shell lacks its exact improvement handover.", out Failure);
 			KingdomHostedArcologyAuthority row;
 			if (!TryReadAuthority(System, out row, out Failure) || row == null
+				|| row.Phase != KingdomHostedAuthorityPhase.Reserved
 				|| row.RealmId != System.RealmId || row.ZoneId != Z.ZoneID
 				|| row.CarrierId != Job.SubjectId || row.ConstructionJobId != Job.Id)
 				return Fail("The hosted shell reservation no longer names this handover.", out Failure);
@@ -117,13 +120,23 @@ namespace ThousandAndFirst
 			if (!TryReadAuthority(system, out row, out Failure)) return false;
 			if (row != null && row.Phase == KingdomHostedAuthorityPhase.Active
 				&& row.RealmId == system.RealmId && row.ZoneId == zone.ZoneID
-				&& row.CarrierId == Root.IDIfAssigned) return true;
+				&& row.CarrierId == Root.IDIfAssigned)
+			{
+				r_KingdomArcology hosted = Root.GetPart<r_KingdomArcology>();
+				if (hosted == null || !string.IsNullOrEmpty(hosted.QuarantineReason))
+				{
+					if (hosted != null) Quarantine(hosted, hosted.QuarantineReason);
+					return Fail("The hosted shell carries quarantined local state.", out Failure);
+				}
+				return true;
+			}
 			string receipt = Root.GetStringProperty(KingdomConstruction.ReceiptProperty);
 			KingdomConstructionJob job;
 			if (row != null && KingdomConstruction.TryFind(receipt, out job)
 				&& BindAuthority(system, zone, job, Root, out Failure)) return true;
 			KingdomConstructionJob legacy;
 			if (row == null && KingdomUpgrade.DesignKeyOf(Root) == ArcologyKey
+				&& string.IsNullOrEmpty(Root.GetPart<r_KingdomArcology>()?.QuarantineReason)
 				&& !string.IsNullOrEmpty(receipt)
 				&& KingdomConstruction.TryFind(receipt, out legacy)
 				&& legacy.Route == KingdomConstructionRoute.Improvement
@@ -140,12 +153,53 @@ namespace ThousandAndFirst
 			return Fail("Another carrier or malformed receipt owns the hosted-shell authority.", out Failure);
 		}
 
-		internal static bool Operational(GameObject Root)
+		/// <summary>Pure authority proof for reports and automatic passes. It never binds,
+		/// migrates, quarantines, writes game state, or creates the kingdom system.</summary>
+		internal static bool IsOperationalPure(GameObject Root)
 		{
+			r_KingdomArcology hosted = Root?.GetPart<r_KingdomArcology>();
+			Zone zone = Root?.CurrentZone;
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			if (!GameObject.Validate(Root) || hosted == null || zone == null
+				|| !string.IsNullOrEmpty(hosted.QuarantineReason) || system == null
+				|| !system.Founded || string.IsNullOrEmpty(system.RealmId)
+				|| system.ClaimedZones == null || !system.ClaimedZones.Contains(zone.ZoneID)
+				|| !KingdomCrown.CrownedOn(system, zone.ZoneID)) return false;
+			string settlement = system.SettlementIdForOwnedZone(zone.ZoneID);
+			KingdomHostedArcologyAuthority authority;
 			string failure;
-			if (!ReconcileRoot(Root, out failure)) return false;
-			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
-			return system != null && KingdomCrown.CrownedOn(system, Root.CurrentZone.ZoneID);
+			return !string.IsNullOrEmpty(settlement)
+				&& TryReadAuthority(system, out authority, out failure) && authority != null
+				&& authority.Phase == KingdomHostedAuthorityPhase.Active
+				&& authority.RealmId == system.RealmId
+				&& authority.SettlementId == settlement
+				&& authority.ZoneId == zone.ZoneID
+				&& authority.CarrierId == Root.IDIfAssigned;
+		}
+
+		/// <summary>Finds the sole loaded shell candidate for the ordered system guards.
+		/// It is a bounded, read-only scan and never chooses between ambiguous carriers.</summary>
+		internal static bool TryReconciliationRoot(Zone Z, out GameObject Root,
+			out r_KingdomArcology Part, out string Failure)
+		{
+			Root = null; Part = null; Failure = null;
+			if (Z == null) return true;
+			List<GameObject> objects = Z.GetObjects();
+			if (objects == null || objects.Count > MaxReconciliationObjects)
+				return Fail("The hosted-shell reconciliation scan is unbounded.", out Failure);
+			for (int i = 0; i < objects.Count; i++)
+			{
+				GameObject item = objects[i];
+				r_KingdomArcology hosted = item?.GetPart<r_KingdomArcology>();
+				if (!GameObject.Validate(item) || item.CurrentZone != Z || hosted == null) continue;
+				if (Root != null)
+				{
+					Root = null; Part = null;
+					return Fail("Hosted-shell reconciliation found ambiguous carriers.", out Failure);
+				}
+				Root = item; Part = hosted;
+			}
+			return true;
 		}
 
 		private static bool TryReadAuthority(KingdomSystem System,

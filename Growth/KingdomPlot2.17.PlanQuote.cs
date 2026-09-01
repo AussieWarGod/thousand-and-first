@@ -68,6 +68,10 @@ namespace ThousandAndFirst
 			if (!TryPreparePlotPayload(System, Z, rect, Entry.Key, Entry.Category, SkinKey,
 				out KingdomArchitectureIntent architecture, out string payload, out Failure))
 				return false;
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+				out KingdomPlotRules.PlotRect footprint, out Failure)) return false;
+			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
+				out KingdomPlotRules.RoofState roof, out Failure)) return false;
 			Cell main = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
 			if (main == null || KingdomConstruction.HasActiveAt(System, Z, main))
 			{
@@ -78,8 +82,7 @@ namespace ThousandAndFirst
 			}
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-				grid.CellsOf(rect), PlannedFootprint(Z, rect, spec),
-				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
+				grid.CellsOf(rect), footprint, roof, carved);
 			if (total < 1L)
 			{
 				Failure = "The exact plan labour quote is empty.";
@@ -163,7 +166,7 @@ namespace ThousandAndFirst
 			if (!TryDecodePlotPayload(Payload, out KingdomPlotRules.PlotRect decoded, out _,
 				out KingdomArchitectureIntent architecture, out bool legacy, out Failure)
 				|| legacy || architecture.BuildKey != Entry.Key || !SameRect(decoded, Rect)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(architecture.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(architecture.EncodedSnapshot)
 				|| !long.TryParse(Marker.GetStringProperty(PlanLabourProperty),
 					global::System.Globalization.NumberStyles.None,
 					global::System.Globalization.CultureInfo.InvariantCulture, out LabourTicks)

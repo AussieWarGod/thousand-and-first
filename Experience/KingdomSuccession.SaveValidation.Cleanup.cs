@@ -24,7 +24,7 @@ namespace ThousandAndFirst
 			PendingSealAccessionToken = ""; PendingSealRiteChronicle = "";
 			PendingSealAccessionReady = false; PendingAccessionRepairResidentId = 0;
 			PendingAccessionRepairFounderName = ""; PendingAccessionRepairHeirName = "";
-			PendingAccessionRepairSettlementId = ""; PendingAccessionRepairSeated = false;
+			PendingAccessionRepairSettlementId = ""; ClearLegacyAccessionRepairSeated();
 			PendingAccessionRepairArrivedTick = 0L; PendingAccessionRepairKeptCreeds = "";
 			ClearPendingRiteIdentity();
 			if (!KingdomSuccessionRules.TryReadDeathToken(CompletedShrineToken,

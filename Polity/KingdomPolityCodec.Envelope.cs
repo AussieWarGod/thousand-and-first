@@ -7,7 +7,10 @@ namespace ThousandAndFirst
 	public static partial class KingdomPolityCodec
 	{
 		private const int Magic = 0x54415032; // TAP2
-		public const int CurrentWireVersion = 6;
+		public const int CurrentWireVersion = 9;
+		public const int AdmissionPriorWireVersion = 8;
+		public const int AmbientPriorWireVersion = 7;
+		public const int PreviousWireVersion = 6;
 		public const int ImmediatePriorWireVersion = 5;
 		public const int PriorWireVersion = 4;
 		public const int OlderWireVersion = 3;
@@ -31,7 +34,7 @@ namespace ThousandAndFirst
 			else
 			{
 				RequireEncodable(Ledger);
-				payload = EncodePayloadV6(Ledger);
+				payload = EncodePayloadV9(Ledger);
 			}
 			return Frame(wire, payload);
 		}
@@ -62,7 +65,10 @@ namespace ThousandAndFirst
 				if (wire == OlderWireVersion) return DecodePayloadV3(payload);
 				if (wire == PriorWireVersion) return DecodePayloadV4(payload);
 				if (wire == ImmediatePriorWireVersion) return DecodePayloadV5(payload);
-				if (wire == CurrentWireVersion) return DecodePayloadV6(payload);
+				if (wire == PreviousWireVersion) return DecodePayloadV6(payload);
+				if (wire == AmbientPriorWireVersion) return DecodePayloadV7(payload);
+				if (wire == AdmissionPriorWireVersion) return DecodePayloadV8(payload);
+				if (wire == CurrentWireVersion) return DecodePayloadV9(payload);
 				if (wire <= 0) throw new InvalidDataException("Polity wire version is invalid.");
 				return new KingdomPolityLedger
 				{
@@ -126,6 +132,27 @@ namespace ThousandAndFirst
 			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
 				throw new InvalidDataException(failure);
 			return Frame(ImmediatePriorWireVersion, EncodePayloadV5(Ledger));
+		}
+
+		public static byte[] EncodeEnvelopeV6Fixture(KingdomPolityLedger Ledger)
+		{
+			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
+				throw new InvalidDataException(failure);
+			for (int i = 0; i < Ledger.Profiles.Count; i++)
+				if (Ledger.Profiles[i].RulesVersion != KingdomPolityProfileRules.LegacyRulesVersion ||
+					Ledger.Profiles[i].ExpressionCues.Count != 0)
+					throw new InvalidDataException("Wire-v6 fixture cannot carry typed expression cues.");
+			return Frame(PreviousWireVersion, EncodePayloadV6(Ledger));
+		}
+
+		public static byte[] EncodeEnvelopeV7Fixture(KingdomPolityLedger Ledger)
+		{
+			if (!KingdomPolityRules.TryValidate(Ledger, out string failure))
+				throw new InvalidDataException(failure);
+			for (int i = 0; i < Ledger.NamedFigures.Count; i++)
+				if (!string.IsNullOrEmpty(Ledger.NamedFigures[i].DeedSummary))
+					throw new InvalidDataException("Wire-v7 fixture cannot carry deed summaries.");
+			return Frame(AmbientPriorWireVersion, EncodePayloadV7(Ledger));
 		}
 
 		// Runs before TryValidate, so it must tolerate a shape validation has not refused yet:

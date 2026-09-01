@@ -78,15 +78,16 @@ namespace ThousandAndFirst
 
 		private static GameObject UnconsecratedShrine(KingdomSurvey Survey)
 		{
-			List<GameObject> candidates = new List<GameObject>();
-			for (int i = 0; Survey != null && i < Survey.Shrines.Count; i++)
+			List<GameObject> candidates = Survey == null ? new List<GameObject>()
+				: KingdomCapabilityRuntime.Roots(Survey.Ground, Survey,
+					KingdomBenefitCapabilities.Shrine, "lab shrine request");
+			for (int i = candidates.Count - 1; i >= 0; i--)
 			{
-				GameObject shrine = Survey.Shrines[i];
-				if (!GameObject.Validate(shrine)
-					|| shrine.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1
+				GameObject shrine = candidates[i];
+				if (!KingdomUpgrade.IsFunctionallyBuilt(shrine)
 					|| !string.IsNullOrEmpty(shrine.GetStringProperty(
-						KingdomFaith.ShrineCreedProperty))) continue;
-				if (!string.IsNullOrEmpty(shrine.IDIfAssigned)) candidates.Add(shrine);
+						KingdomFaith.ShrineCreedProperty))
+					|| string.IsNullOrEmpty(shrine.IDIfAssigned)) candidates.RemoveAt(i);
 			}
 			candidates.Sort((a, b) => string.CompareOrdinal(a.IDIfAssigned, b.IDIfAssigned));
 			return candidates.Count == 0 ? null : candidates[0];
@@ -123,8 +124,10 @@ namespace ThousandAndFirst
 		private static KingdomLabCivicReceipt PrepareRefusalDeparture(KingdomSystem System,
 			Zone Z, KingdomSurvey Survey, GameObject Owner)
 		{
-			string design = KingdomUpgrade.DesignKeyOf(Owner);
-			string[] offer = KingdomQol.OfferOf(design, Z);
+			if (!TryPhysicalOffer(Survey, Owner, out string[] offer, out string benefitFailure))
+			{
+				KingdomLog.Log("lab civic: " + benefitFailure); return null;
+			}
 			List<GameObject> residents = new List<GameObject>(Survey.Settlers);
 			residents.Sort((a, b) =>
 			{

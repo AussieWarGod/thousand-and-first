@@ -65,8 +65,24 @@ function Get-NormalizedKey {
     return $Relative.Replace('\', '/').Normalize([Text.NormalizationForm]::FormC).ToLowerInvariant()
 }
 
+# Compiled once, then called in process for every exact Windows file handle.
+$trustSource = Join-Path $PSScriptRoot 'ScenarioFileTrust.cs'
+if (-not (Test-Path -LiteralPath $trustSource -PathType Leaf)) {
+    throw "Scenario file-trust helper is missing: $trustSource"
+}
+Add-Type -Path $trustSource
+
 function Get-ProfileInventory {
     param([Parameter(Mandatory = $true)][string]$TreeRoot)
+    # Get-ChildItem reports descendants, not its starting item. Refuse a Local/ junction here or
+    # every descendant could hash correctly while the whole sealed tree lives outside the profile.
+    $tree = Get-Item -LiteralPath $TreeRoot -Force
+    if (($tree.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw "Profile tree root is a reparse point: $TreeRoot"
+    }
+    if (-not ($tree -is [IO.DirectoryInfo])) {
+        throw "Profile tree root is not a directory: $TreeRoot"
+    }
     $found = @{}
     $spellings = @{}
     $prefix = $TreeRoot.TrimEnd([char[]]@('\', '/')) + '\'
@@ -78,14 +94,6 @@ function Get-ProfileInventory {
         if (-not ($item -is [IO.FileInfo])) {
             throw "Profile tree contains a non-regular file: $($item.FullName)"
         }
-        # .NET exposes no direct hard-link-count accessor; fsutil is the simplest robust source on
-        # Windows. A hard link is a second name for the same sealed inode, so it carries the same
-        # attributes and hash as the original and passes every other check in this loop - only the
-        # link count catches it, mirroring Tools/scenario_profile.py's refuse_links (st_nlink != 1).
-        $hardLinkNames = @(& fsutil hardlink list $item.FullName)
-        if ($hardLinkNames.Count -gt 1) {
-            throw "Profile tree contains a hard-linked file with $($hardLinkNames.Count) names: $($item.FullName)"
-        }
         if (-not $item.FullName.StartsWith($prefix, [StringComparison]::Ordinal)) {
             throw "Profile tree escaped its root: $($item.FullName)"
         }
@@ -95,7 +103,31 @@ function Get-ProfileInventory {
             throw "Two profile paths normalize to one name: $($spellings[$key]) and $relative"
         }
         $spellings[$key] = $relative
-        $found[$key] = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+        # Read sharing admits the hasher and other readers but denies writers/deletion. Both link
+        # counts and the digest use this one open identity; no path-only fsutil result is trusted.
+        $stream = [IO.File]::Open($item.FullName, [IO.FileMode]::Open,
+            [IO.FileAccess]::Read, [IO.FileShare]::Read)
+        try {
+            $hardLinkCount = [ThousandAndFirst.Tools.ScenarioFileTrust]::GetLinkCount(
+                $stream.SafeFileHandle)
+            if ($hardLinkCount -ne 1) {
+                throw "Profile tree contains a hard-linked file with $hardLinkCount names: $($item.FullName)"
+            }
+            $sha256 = [Security.Cryptography.SHA256]::Create()
+            try {
+                $digest = $sha256.ComputeHash($stream)
+            } finally {
+                $sha256.Dispose()
+            }
+            $hardLinkCountAfterHash = [ThousandAndFirst.Tools.ScenarioFileTrust]::GetLinkCount(
+                $stream.SafeFileHandle)
+            if ($hardLinkCountAfterHash -ne 1) {
+                throw "Profile file gained hard links while hashing ($hardLinkCountAfterHash names): $($item.FullName)"
+            }
+            $found[$key] = ([BitConverter]::ToString($digest)).Replace('-', '').ToLowerInvariant()
+        } finally {
+            $stream.Dispose()
+        }
     }
     if ($found.Count -eq 0) { throw "Profile tree holds no files: $TreeRoot" }
     return $found

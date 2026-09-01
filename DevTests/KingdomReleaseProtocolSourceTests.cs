@@ -255,7 +255,7 @@ namespace ThousandAndFirst.Tests
 				@"<option\s+ID=""r_TAF_OptionPrefetch""[^>]+>").Value);
 			Assert.IsFalse(protocol.Contains("there is no checkbox for it yet"));
 			Assert.IsFalse(api.Contains("with no line for it in `Options.xml`"));
-			StringAssert.Contains("Per-zone production rates are live", api);
+			StringAssert.Contains("Per-zone water production rates are live", api);
 			Assert.IsFalse(api.Contains("production **rates** stay unwired"));
 		}
 	}

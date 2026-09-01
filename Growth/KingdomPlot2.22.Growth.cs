@@ -96,7 +96,7 @@ namespace ThousandAndFirst
 			}
 			KingdomArchitectureIntent authored;
 			if (KingdomArchitectureRuntime.TryRead(Predecessor, out authored, out _)
-				&& KingdomArchitectureRules.IsCurrentSnapshotEncoding(authored.EncodedSnapshot))
+				&& KingdomArchitectureRules.IsManagedSnapshotEncoding(authored.EncodedSnapshot))
 			{
 				// Current authored plots may only change through the exact frozen layout delta.
 				return false;

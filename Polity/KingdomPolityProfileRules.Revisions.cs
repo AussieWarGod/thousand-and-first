@@ -45,6 +45,9 @@ namespace ThousandAndFirst
 			if (Ledger.Revision != ExpectedLedgerRevision)
 				return KingdomPolityAuthority.Conflict(Result, out Failure);
 			KingdomPolityProfileRevision next = BuildRevision(prior, Facts, digest);
+			if (!HasIndependentExpression(next.ExpressionCues))
+				return KingdomPolityAuthority.Refuse(Result,
+					"profile facts do not yield two independent legal expression cues", out Failure);
 			KingdomPolityLedger candidate = KingdomPolityRules.Clone(Ledger);
 			InsertRevision(candidate.Profiles, next);
 			KingdomPolityRecord changed = KingdomPolityAuthority.Polity(candidate, polity.PolityId);
@@ -69,7 +72,8 @@ namespace ThousandAndFirst
 				KingdomPolityProfileFact fact = F.Facts[i];
 				if (fact == null || !KingdomPolityRules.TypedId(fact.FactId, "taf:fact:profile:") ||
 					(previous != null && string.CompareOrdinal(previous, fact.FactId) >= 0) ||
-					fact.Kind == KingdomPolityProfileFactKind.None || (byte)fact.Kind > 7 ||
+					fact.Kind == KingdomPolityProfileFactKind.None ||
+					(byte)fact.Kind > (byte)KingdomPolityProfileFactKind.Cargo ||
 					!KingdomPolityRules.Text(fact.ValueKey, true) ||
 					!KingdomPolityRules.SemanticId(fact.SourceRef))
 					return KingdomPolityRules.Fail("profile revision fact is noncanonical", out Failure);
@@ -100,13 +104,17 @@ namespace ThousandAndFirst
 			for (int i = 0; i < F.Facts.Count; i++)
 			{
 				KingdomPolityProfileFact fact = F.Facts[i]; factIds.Add(fact.FactId);
-				if (fact.Kind == KingdomPolityProfileFactKind.Decision ||
-					fact.Kind == KingdomPolityProfileFactKind.Creed ||
-					fact.Kind == KingdomPolityProfileFactKind.Style)
+				if (fact.Kind == KingdomPolityProfileFactKind.Practice ||
+					fact.Kind == KingdomPolityProfileFactKind.Transformation ||
+					fact.Kind == KingdomPolityProfileFactKind.Covenant ||
+					fact.Kind == KingdomPolityProfileFactKind.Work)
 					AddPractice(practices, fact.Kind.ToString().ToLowerInvariant() + "-" +
 						Token(fact.ValueKey));
 			}
 			List<string> gear = GearKeys(F.TechnologyBand);
+			List<string> bodies = PopulationBodies(F.Facts, Prior.BodyKeys);
+			List<KingdomPolityExpressionCue> cues =
+				KingdomPolityProfileExpressionCatalogue.Resolve(F.Facts, F.TechnologyBand);
 			KingdomPolityLoadoutPolicy loadout = new KingdomPolityLoadoutPolicy
 			{
 				Kind = KingdomPolityLoadoutPolicyKind.OwnedReplace,
@@ -121,15 +129,43 @@ namespace ThousandAndFirst
 				PolityId = Prior.PolityId, EffectiveTick = F.EffectiveTick,
 				RulesVersion = RulesVersion, DerivedFromFactIds = factIds, FactsDigest = Digest,
 				TechnologyBand = F.TechnologyBand, PracticeTags = practices,
-				BodyKeys = new List<string>(Prior.BodyKeys),
-				RoleKeys = new List<string>(Prior.RoleKeys), GearKeys = gear, Loadout = loadout
+				BodyKeys = bodies,
+				RoleKeys = new List<string>(Prior.RoleKeys), GearKeys = gear, Loadout = loadout,
+				ExpressionCues = cues
 			};
+		}
+
+		private static List<string> PopulationBodies(IList<KingdomPolityProfileFact> Facts,
+			IList<string> Prior)
+		{
+			bool observed = false; List<string> species = new List<string>();
+			for (int i = 0; Facts != null && i < Facts.Count; i++)
+			{
+				KingdomPolityProfileFact fact = Facts[i];
+				if (fact.Kind != KingdomPolityProfileFactKind.Population) continue;
+				observed = true;
+				if (fact.ValueKey.StartsWith("body=", StringComparison.Ordinal))
+					species.Add(fact.ValueKey.Substring(5));
+			}
+			return observed ? CurrentBodyKeys(species, null, true) : new List<string>(Prior);
+		}
+
+		private static bool HasIndependentExpression(IList<KingdomPolityExpressionCue> Cues)
+		{
+			KingdomPolityExpressionKind first = KingdomPolityExpressionKind.None;
+			for (int i = 0; Cues != null && i < Cues.Count; i++)
+			{
+				if (first == KingdomPolityExpressionKind.None) first = Cues[i].Kind;
+				else if (Cues[i].Kind != first) return true;
+			}
+			return false;
 		}
 
 		private static bool ExactFactRevision(KingdomPolityProfileRevision P,
 			KingdomPolityProfileFactSet F, string Digest)
 		{
-			if (P.FactsDigest != Digest || P.TechnologyBand != F.TechnologyBand ||
+			if (P.RulesVersion != RulesVersion || P.FactsDigest != Digest ||
+				P.TechnologyBand != F.TechnologyBand ||
 				P.DerivedFromFactIds.Count != F.Facts.Count) return false;
 			for (int i = 0; i < F.Facts.Count; i++)
 				if (P.DerivedFromFactIds[i] != F.Facts[i].FactId) return false;

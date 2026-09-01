@@ -55,13 +55,11 @@ namespace ThousandAndFirst
 
 		public const string LarderProperty = "KingdomLarder";
 
+		// Shared work-state literals retained here for existing lab/research/visual consumers.
+		// Adoption never writes either property; an inert designation marker grants no work state.
 		public const string StaffNeededProperty = "KingdomStaffNeeded";
 
-		public const string ThresholdManningProperty = "KingdomThresholdManning";
-
 		public const string HandCrankedProperty = "KingdomHandCranked";
-
-		public const string DefenceProperty = "KingdomDefence";
 
 		/// <summary>
 		/// The marker a <see cref="KingdomAdoptRules.RoleKind.Work"/> adoption sets down. A work
@@ -75,11 +73,10 @@ namespace ThousandAndFirst
 		public const string WorkMarkerBlueprint = "r_KingdomAdoptionMarker";
 
 		/// <summary>
-		/// Adopts an existing object &mdash; a bed the founder built, a vessel or larder they
-		/// stocked &mdash; into a <see cref="KingdomAdoptRules.RoleKind.Housing"/> or
-		/// <see cref="KingdomAdoptRules.RoleKind.Storage"/> role. Refuses outright for any other
-		/// role: a work has no single object to mark, and guessing at one would be marking the
-		/// wrong thing. See <see cref="AdoptWork"/> for that case.
+		/// Adopts one exact vessel or larder into a
+		/// <see cref="KingdomAdoptRules.RoleKind.Storage"/> role. Housing and work are spatial
+		/// designations, independent of any one furnishing, and therefore use
+		/// <see cref="AdoptWork"/> instead.
 		/// </summary>
 		/// <param name="System">The kingdom; must be founded.</param>
 		/// <param name="Z">Zone the candidate stands in; must be the kingdom's own claimed
@@ -103,7 +100,9 @@ namespace ThousandAndFirst
 				Failure = "A building is adopted on the kingdom's own ground, not in other people's houses.";
 				return false;
 			}
-			if (Candidate == null || !GameObject.Validate(Candidate) || Candidate.CurrentZone == null || Candidate.CurrentZone.ZoneID != Z.ZoneID)
+			if (Candidate == null || !GameObject.Validate(Candidate) || Candidate.IsCreature
+				|| Candidate.IsPlayer() || Candidate.CurrentZone == null
+				|| Candidate.CurrentCell == null || Candidate.CurrentZone.ZoneID != Z.ZoneID)
 			{
 				Failure = "There is nothing here to adopt.";
 				return false;
@@ -114,46 +113,99 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomAdoptRules.RoleKind role = KingdomAdoptRules.ClassifyRole(entry.Category);
-			if (role == KingdomAdoptRules.RoleKind.Work)
+			if (!entry.Adoptable)
 			{
-				Failure = "A " + entry.Name + " is adopted as the room around you, not as a single thing standing in it.";
+				Failure = "A " + entry.Name + " needs its authored construction and cannot be assigned to a player-built object.";
 				return false;
+			}
+			if (!KingdomPlots.TryGetSpec(entry.Key, out KingdomPlotRules.PlotSpec spec)
+				|| !KingdomAdoptabilityRules.TryClassify(entry.Key, entry.Category,
+					spec.Size, spec.Open, out KingdomAdoptionTargetKind target, out Failure))
+			{
+				if (Failure == null) Failure = "That design has no exact adoption geometry.";
+				return false;
+			}
+			if (!KingdomZoning.Permits(System, Z.ZoneID, entry, out Failure)) return false;
+			if (target != KingdomAdoptionTargetKind.Larder
+				|| role != KingdomAdoptRules.RoleKind.Storage)
+			{
+				Failure = "A " + entry.Name + " is adopted as the exact room around you, not as one piece of furniture.";
+				return false;
+			}
+			RecoverPending(Candidate);
+			if (!GameObject.Validate(Candidate))
+			{
+				Failure = "The candidate disappeared during adoption recovery."; return false;
 			}
 			bool alreadyServing = Candidate.GetIntProperty(BuiltProperty) == 1;
 			bool belowStage = System.Stage < entry.MinStage;
-			bool hasBed = Candidate.HasPart("Bed");
 			LiquidVolume liquidVolume = Candidate.GetPart<LiquidVolume>();
-			bool isVessel = liquidVolume != null && liquidVolume.MaxVolume > 0;
 			bool isLarder = liquidVolume == null && Candidate.Inventory != null;
-			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(role, alreadyServing, belowStage, hasBed, isVessel || isLarder, default);
+			if (!KingdomAdoptabilityRules.CandidateMatches(target, liquidVolume != null,
+				Candidate.Inventory != null))
+			{
+				Failure = "A larder designation needs one exact dry container."; return false;
+			}
+			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(role,
+				alreadyServing, belowStage, isLarder, default);
 			if (verdict != KingdomAdoptRules.AdoptionVerdict.Adopted)
 			{
 				Failure = RefusalMessage(verdict, entry, Candidate, System);
 				return false;
 			}
-			Candidate.SetIntProperty(BuiltProperty, 1);
-			KingdomGovernanceScope.Commit("adopt building");
-			Candidate.SetIntProperty(AdoptedProperty, 1);
-			Candidate.SetStringProperty(AdoptedKeyProperty, Key);
+			if (!ContainerIsUnclaimed(Z, Candidate.CurrentCell, out Failure)) return false;
+			if (!BeginPending(Candidate, Key, false, out Failure)) return false;
+			KingdomAdoptionDesignationReceipt receipt;
+			ArchitecturePoint[] cell = { new ArchitecturePoint(Candidate.CurrentCell.X,
+				Candidate.CurrentCell.Y) };
+			if (!KingdomAdoptionDesignation.TryStampContainer(Candidate, Z, Key,
+				out receipt, out Failure)
+				|| !AdvancePending(Candidate, Key, 2, out Failure)
+				|| !KingdomPlots.StampAdoptedExact(Candidate, entry, cell)
+				|| !AdvancePending(Candidate, Key, 3, out Failure)
+				|| !KingdomZoning.Permits(System, Z.ZoneID, entry, out Failure)
+				|| !ContainerIsUnclaimed(Z, Candidate.CurrentCell, out Failure)
+				|| !AdvancePending(Candidate, Key, 4, out Failure))
+			{
+				RollbackPending(Candidate);
+				if (Failure == null) Failure = "The container's exact designation could not be recorded.";
+				return false;
+			}
 			string mark = "";
 			if (role == KingdomAdoptRules.RoleKind.Storage)
 			{
-				string storageProperty = isVessel ? StoresProperty : LarderProperty;
+				string storageProperty = LarderProperty;
 				if (Candidate.GetIntProperty(storageProperty) != 1)
 				{
 					// Only track it as ours to undo if it was not already set - a vessel the
 					// founder dedicated through the Charter before adopting it keeps that
 					// dedication when the adoption is later released.
-					Candidate.SetIntProperty(storageProperty, 1);
 					mark = storageProperty;
 				}
 			}
-			Candidate.SetStringProperty(AdoptedMarkProperty, mark);
-			ApplyRoleFixtures(Candidate, entry);
+			if (!PrepareStorageMark(Candidate, Key, mark, out Failure)
+				|| !FinalizePending(Candidate, Key, mark, out Failure))
+			{
+				RollbackPending(Candidate); return false;
+			}
 			AnnounceAdoption(System, entry, Candidate);
-			// A plot-sized design speaks for a rect of ground, not one cell. Nothing the founder
-			// built is touched; the settlement only learns how much ground is spoken for.
-			KingdomPlots.StampAdopted(Candidate, entry);
+			return true;
+		}
+
+		private static bool ContainerIsUnclaimed(Zone Z, Cell Cell, out string Failure)
+		{
+			Failure = null;
+			if (Z == null || Cell == null || Cell.ParentZone != Z)
+			{
+				Failure = "The storage candidate has no exact ground."; return false;
+			}
+			if (!KingdomDesignationIndex.TryActiveZone(Z, out KingdomDesignationIndex index,
+				out Failure)) return false;
+			if (index.Containing(Cell.X, Cell.Y, KingdomBenefitScope.Plot).Count > 0)
+			{
+				Failure = "This storage facility overlaps another exact building designation.";
+				return false;
+			}
 			return true;
 		}
 	}

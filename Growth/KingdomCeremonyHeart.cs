@@ -10,16 +10,16 @@ namespace ThousandAndFirst
 	/// stood there is named (<c>KingdomCeremony.OnBuildingRaised</c>) &mdash; and then this adds
 	/// the one sentence that ceremony cannot: what the GROUND has become.
 	/// <para>
-	/// The heart's rungs ACCRETE. The basin is never taken up; the kerb is never lifted; the hall
-	/// stands inside the court with its beams still in it. So the sentence each rung earns is not
-	/// "a building was finished" but "the ground now carries one more layer", and the chronicle
-	/// says so in the register Qud's own great places are described in &mdash; the Yd Freehold
-	/// built over hundreds of years, Ezra grown out of the Tomb.
+	/// The heart grows by authored building work, not one universal construction trick. A rung may
+	/// retain a useful layer, renovate cramped rooms, add into newly proved ground, or combine both.
+	/// The first basin and every live custody record survive. The sentence each rung earns therefore
+	/// names what the ground has become, in the register Qud's great places use: old authority held
+	/// inside a place repeatedly adapted to new lives.
 	/// </para>
 	/// <para>
 	/// Deliberately NOT in <c>Experience/KingdomCeremony.cs</c>: that file owns the one grammar
 	/// every building rises by, and the heart must not fork it. This is an addition on top of it,
-	/// and it fires only for the four designs on the ladder.
+	/// and it fires only for the designs on the ladder.
 	/// </para>
 	/// </summary>
 	public static class KingdomCeremonyHeart

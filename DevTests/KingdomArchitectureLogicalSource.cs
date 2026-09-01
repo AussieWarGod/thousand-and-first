@@ -15,6 +15,8 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomArchitecture.RawMerge.cs",
 			"Growth/KingdomArchitecture.Materialise.cs",
 			"Growth/KingdomArchitecture.Drafts.cs",
+			"Growth/KingdomArchitecture.Poses.cs",
+			"Growth/KingdomArchitecturePoseParity.cs",
 			"Growth/KingdomArchitecture.Records.cs",
 			"Growth/KingdomArchitecture.Resolution.cs",
 			"Growth/KingdomArchitecture.Attributes.cs",

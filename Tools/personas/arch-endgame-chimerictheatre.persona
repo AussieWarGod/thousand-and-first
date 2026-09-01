@@ -1,0 +1,6 @@
+# Repetition risk: seating must read as audience geometry with aisles, not a chair carpet.
+DESCRIPTION=chimeric theatre stages for native seating-density review
+REQUEST=arch-endgame-chimerictheatre;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame,taste

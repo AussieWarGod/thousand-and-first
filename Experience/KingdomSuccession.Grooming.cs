@@ -50,8 +50,8 @@ namespace ThousandAndFirst
 				+ (!exactNominee ? "The exact identity is no longer uniquely eligible; seniority will answer."
 					: (grooming.Ready ? "Preparation is complete; this resident inherits the next life and Charter."
 						: "Preparation is incomplete; seniority answers if the founder dies now. "
-							+ "Service needs a month on the roll or office; schooling needs this city "
-							+ "to hold schooling and this resident to hold a knowledge post."));
+							+ "Service needs a month on the roll or office; study needs this city "
+							+ "to hold schooling and this resident's exact post to prove education."));
 			return true;
 		}
 

@@ -1,0 +1,6 @@
+# Open charge-yard baseline for the enclosed service-bay renovation.
+DESCRIPTION=large robot charge-bay campus stages for clearance and machine-yard review
+REQUEST=arch-lot-robot-chargebay-l;facing=south
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,robot,progression,taste

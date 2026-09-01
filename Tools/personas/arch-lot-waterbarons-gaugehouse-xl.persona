@@ -1,0 +1,6 @@
+# Creed comparison: hydraulic custody and measured access must not read as a recoloured seedhouse.
+DESCRIPTION=huge Water Barons gaugehouse stages for native creed-campus comparison
+REQUEST=arch-lot-waterbarons-gaugehouse-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

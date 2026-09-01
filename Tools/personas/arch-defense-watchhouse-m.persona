@@ -1,0 +1,6 @@
+# Direct comparison with the later barracks uses one pose and the same daylight settle window.
+DESCRIPTION=medium watchhouse stages for compact garrison furnishing and threshold review
+REQUEST=arch-defense-watchhouse-m;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,defense,progression,taste

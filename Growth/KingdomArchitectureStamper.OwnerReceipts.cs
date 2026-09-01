@@ -17,15 +17,29 @@ namespace ThousandAndFirst
 			Failure = null;
 			ArchitectureLayoutSnapshot snapshot;
 			if (Owner == null || !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot)
 				|| !ValidLotId(LotId))
 			{
 				if (Failure == null) Failure = "layout owner, current snapshot, or lot identity is malformed";
 				return false;
 			}
+			KingdomArchitectureIntent frozen;
+			if (!KingdomArchitectureRuntime.TryRead(Owner, out frozen, out Failure)
+				|| !SameOwnerIntent(frozen, Intent))
+				return Failure != null ? false : Fail(
+					"layout owner carries another frozen architecture receipt", out Failure);
+			if (Owner.HasIntProperty(SchemaProperty))
+			{
+				KingdomArchitectureIntent observed;
+				ArchitectureLayoutSnapshot observedSnapshot;
+				string observedLot;
+				return TryReadOwner(Owner, out observed, out observedSnapshot, out observedLot,
+					out Failure) && observedLot == LotId && SameOwnerIntent(observed, Intent);
+			}
+			if (!TryAcceptNewOwnerPrefix(Owner, Intent, snapshot, LotId, 0, false, null,
+				out Failure)) return false;
 			try
 			{
-				Owner.RemoveIntProperty(SchemaProperty);
 				Owner.SetStringProperty(LotIdProperty, LotId);
 				Owner.SetStringProperty(HashProperty, Intent.SnapshotHash);
 				Owner.SetIntProperty(NextLayerProperty, 0);
@@ -39,8 +53,13 @@ namespace ThousandAndFirst
 			}
 			catch (Exception exception)
 			{
-				try { Owner.RemoveIntProperty(SchemaProperty); } catch { }
-				return Fail("layout owner receipt write failed: " + exception.Message, out Failure);
+				KingdomArchitectureIntent caughtIntent;
+				ArchitectureLayoutSnapshot caughtSnapshot;
+				string caughtLot;
+				if (TryReadOwner(Owner, out caughtIntent, out caughtSnapshot, out caughtLot,
+					out _) && caughtLot == LotId && SameOwnerIntent(caughtIntent, Intent)) return true;
+				return Fail("layout owner receipt publication remains retryable: "
+					+ exception.Message, out Failure);
 			}
 			KingdomArchitectureIntent readIntent;
 			ArchitectureLayoutSnapshot readSnapshot;
@@ -56,37 +75,23 @@ namespace ThousandAndFirst
 			Snapshot = null;
 			LotId = null;
 			Failure = null;
-			if (Owner == null || !Owner.HasIntProperty(SchemaProperty)
-				|| Owner.HasStringProperty(SchemaProperty)
-				|| Owner.GetIntProperty(SchemaProperty) != LayoutSchema)
-				return Fail("layout owner receipt is absent, partial, or unknown", out Failure);
-			string fault = Owner.GetStringProperty(FaultProperty);
-			if (!string.IsNullOrEmpty(fault))
-				return Fail("layout owner is quarantined: " + Bounded(fault), out Failure);
-			string lot = Owner.GetStringProperty(LotIdProperty);
-			string hash = Owner.GetStringProperty(HashProperty);
-			if (!ValidLotId(lot) || hash == null || hash.Length != 64
-				|| !KingdomArchitectureRuntime.TryRead(Owner, out Intent, out Failure)
-				|| !KingdomArchitectureRuntime.TryDecode(Intent, out Snapshot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
-				|| hash != Intent.SnapshotHash)
-				return Failure != null ? false : Fail("layout owner scalars disagree with its snapshot",
-					out Failure);
+			if (!TryReadOwnerHeader(Owner, out Intent, out Snapshot, out LotId, out Failure))
+				return false;
 			int next = Owner.GetIntProperty(NextLayerProperty);
-			if (!Owner.HasIntProperty(NextLayerProperty) || next < 0 || next > 3)
-				return Fail("layout owner stage is absent or malformed", out Failure);
 			for (int i = 0; i < Snapshot.Placements.Count; i++)
 			{
 				ArchitecturePlacement placement = Snapshot.Placements[i];
+				ArchitectureOutputPrefix prefix = OwnerOutputPrefix(Owner, placement, null);
 				int state = Owner.GetIntProperty(OutputState(placement));
 				string id = Owner.GetStringProperty(OutputId(placement));
-				if (state < 0 || state > 2 || (state == 0 && !string.IsNullOrEmpty(id))
-					|| (state > 0 && (string.IsNullOrEmpty(id)
-						|| id.Length > KingdomConstructionRules.MaxSubjectChars))
+				if ((prefix != ArchitectureOutputPrefix.Empty
+						&& prefix != ArchitectureOutputPrefix.Published
+						&& prefix != ArchitectureOutputPrefix.Settled)
+					|| (!string.IsNullOrEmpty(id)
+						&& id.Length > KingdomConstructionRules.MaxSubjectChars)
 					|| ((int)placement.Layer < next && state != 2))
 					return Fail("layout slot receipt " + placement.Slot + " is malformed", out Failure);
 			}
-			LotId = lot;
 			return true;
 		}
 
@@ -103,10 +108,13 @@ namespace ThousandAndFirst
 				if (Failure == null) Failure = "only a complete layout owner may become a final root";
 				return false;
 			}
+			if (Target.HasIntProperty(SchemaProperty))
+				return ExactCopiedOwner(Target, Source, intent, snapshot, lot, out Failure);
+			if (!TryAcceptNewOwnerPrefix(Target, intent, snapshot, lot, 3, true, Source,
+				out Failure)) return false;
 			if (!KingdomArchitectureRuntime.TryCopyFrozen(Source, Target, out Failure)) return false;
 			try
 			{
-				Target.RemoveIntProperty(SchemaProperty);
 				Target.SetStringProperty(LotIdProperty, lot);
 				Target.SetStringProperty(HashProperty, intent.SnapshotHash);
 				Target.SetIntProperty(NextLayerProperty, 3);
@@ -122,14 +130,11 @@ namespace ThousandAndFirst
 			}
 			catch (Exception exception)
 			{
-				try { Target.RemoveIntProperty(SchemaProperty); } catch { }
-				return Fail("layout owner copy failed: " + exception.Message, out Failure);
+				string ignored;
+				if (ExactCopiedOwner(Target, Source, intent, snapshot, lot, out ignored)) return true;
+				return Fail("layout owner copy remains retryable: " + exception.Message, out Failure);
 			}
-			KingdomArchitectureIntent ignoredIntent;
-			ArchitectureLayoutSnapshot ignoredSnapshot;
-			string checkedLot;
-			return TryReadOwner(Target, out ignoredIntent, out ignoredSnapshot, out checkedLot,
-				out Failure) && checkedLot == lot;
+			return ExactCopiedOwner(Target, Source, intent, snapshot, lot, out Failure);
 		}
 
 		public static bool TryManagedCells(KingdomArchitectureIntent Intent, Zone Z,
@@ -144,7 +149,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < snapshot.Cells.Count; i++)
 			{
 				ArchitectureCellState cell = snapshot.Cells[i];
-				if (!cell.Claim) continue;
+				if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
 				int x;
 				int y;
 				if (!KingdomArchitectureRuntime.TryWorldCell(snapshot, Intent.Rect, cell,

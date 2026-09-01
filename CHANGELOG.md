@@ -2,20 +2,26 @@
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](docs/API.md).
+[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
 
 Historical entries preserve the claim made at that point. `[Unreleased]`, `VISION.md`, and
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [Unreleased] — 0.2.0 work in progress
+## [Unreleased] — 0.2.0 ALPHA work in progress
 
-Clean commit `19fb8ee` passed a narrow loader/founding/single-gallery/save/cold-load smoke against
-Qud 1.0.5/core 2.0.211.51 with repeat 17/17 self-tests and a clean log. The later structural
-hardening tree has source/compile evidence but no replacement native receipt yet. An earlier
-revision's two-city loader/persistence smoke remains historical evidence only. The complete
-native/human protocol and gallery, compatibility testing, structural release gate, and private
-Steam subscription/install pass remain gates before any release-candidate claim is restored.
+The public-Alpha identity and its evidence carve-out are accepted, but no Alpha has shipped.
+The architecture, transition, hosted-arcology, quickstart, and scenario code/content lanes are
+integrated at the frozen source snapshot. The tree is still not release-ready: exact-inventory human
+review, native behavior and visual acceptance, a current preview, package evidence, and private/public
+Steam subscription proof remain open. Historical green counts below describe their exact earlier
+checkpoints only; they do not sign current bytes.
+
+> **Hosted-arcology code/content is integrated; native and human acceptance remains open.** One
+> exact capital root owns the 27-zone topology, nine route-safe strata programmes, paid ward and
+> terrace anchors, dated provider observations, water-gated cultivation, dark-shell recovery, and
+> read-only hosted views. This is a source/static boundary only: TESTING 136j–136j.5 still requires
+> native traversal/save/labour/water/provider-loss proof and human inspection of every zone.
 
 ### Added
 - **A modder-extensible scenario harness: third-party verb providers, a merged multi-mod scenario
@@ -54,7 +60,46 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   new-game gate (`bad-param-refusal`), and an anchor-ineligibility verdict on a scenario-built game
   (`ordinary-anchor-eligibility`).
 
+### Changed
+- **Markets now trade only physical goods through native Qud TradeUI.** A civic market requires one
+  accepted staffed `taf:market` provider plus its exact held office and may open empty. `ShopTier`
+  is current standing/reach and can fall to zero; it never grades wares. TAF generates no market
+  inventory, consignments, periodic restock, passive output, or remote debit. The sealed
+  `GenericInventoryRestocker` is an empty-screen adapter only. Exact direct stock survives lawful
+  handoff, while bought, stolen, dropped, corpse-, player-, container-, and foreign-held goods keep
+  their physical/native state and lose only TAF-owned marks. Completed/dormant legendary personal
+  traders survive civic loss and accession; only open prepared handoff endpoints pause succession.
+- **Food is now wholly opt-in physical positive play, never a passive population-support axis.**
+  Seeds, crop cycles, real harvest items, dedicated larders, mills, exact capable-kitchen meals,
+  industry, and trade remain. Abstract ration/foraging rates, hunger/famine/catch-up/departure,
+  passive city food credit/debt, and meal capacity are retired. Live supported level, binding, and
+  subsidence use water plus roofs only; zero food cannot shrink a settlement and additional food
+  cannot raise its base population. Frozen food/support/save fields remain inert compatibility
+  projections so old saves and integrations cannot trigger a punitive catch-up after upgrade.
+  Passive larder spoilage is also retired: damage may reduce provider effectiveness, but arbitrary
+  absence preserves exact pantry identities/counts and old open Food leak receipts clear inert.
+
 ### Fixed
+- **Founder memory no longer enters Qud's shared Sultan-history or journal pools.** Installed
+  2.0.211.51 includes unfiltered `sultanHistory.entities` consumers in relic and Sultan-dungeon
+  generation, so a non-candidate custom entity was not presentation-only. Schema 2 reconstructs a
+  TAF-local read-only view from its durable receipt while the existing Charter Chronicle remains
+  player-visible. Exact schema-1 entities/events/notes are removed with whole-graph preflight and
+  rollback; altered, duplicate, shared, unknown, or future evidence is left inert and quarantined.
+  The redundant public-history option is retired.
+- **The hosted terrace no longer sends loader-ignored producer attributes through Qud's building
+  parser.** `HostedProducerBlueprint`/`HostedProducerCount` are removed from
+  `KingdomBuildings.xml`; the paid-lot runtime definition is now the sole producer contract and
+  the spatial programme remains its physical evidence. Art and balance gates derive that contract
+  directly, count exactly 14 growbeds, resolve 2 rows per growbed, and reconcile the resulting
+  `food:14` with both runtime support and catalogue support.
+- **Catalogue diagnostics now match authored architecture and the complete lifting vocabulary.**
+  Current authored maps deliberately ignore legacy `Contents` population metadata, while legacy
+  and compatible third-party plots retain the deterministic furnishing fallback; open plots naming
+  that metadata therefore no longer emit false notes. `wealth` is now the documented sixth lifting
+  support. Reach observations write six-kind `rp2` receipts and read exact five-kind `rp1` receipts
+  only under their matching source revision, migrating the missing wealth position to zero without
+  reinterpreting any old value. Equilibrium arithmetic is unchanged.
 - **Engine `Widget` blueprints now read as bare ground instead of refusing every plot that touches
   one.** `KingdomPlotRules.ReadObject` (`Growth/KingdomPlot2.04.Ground.cs`) previously read invisible
   engine bookkeeping objects — spawn managers, ambient markers, terrain notes — as held ground, so
@@ -68,8 +113,8 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   old 512 cap was never a static-checker concern, since no static gate replays the loader's own
   record limit, so only launching the game surfaced the refusal. Separately, `housing-arcology-xl0`
   (deferred arcology content with no reachable binding) is removed: the runtime enforces exact
-  catalogue consumption, so an unbound map is dead weight, not a harmless spare. The authored census
-  is now 513 maps (176 source, 337 generated).
+  catalogue consumption, so an unbound map is dead weight, not a harmless spare. At that checkpoint
+  the authored census was 513 maps (176 source, 337 generated); the current census appears below.
 - **The scenario launcher now uses the same modern path arguments as the smoke launcher.**
   `Tools/run-scenario.ps1` passed `-savelocation`, which redirects saves only: the game still loaded
   mods from the default AppData profile, so the sealed profile's `Harness` overlay never reached the
@@ -167,10 +212,11 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   displaced. Save/load, thaw, destroyed frames, every partial row, duplicate IDs, secession, and
   callback divergence recover, roll back, or quarantine without cloning, striking, or double cost.
   Temporary frame/stake art reuses verified vanilla tiles. Native TESTING 136j.6–136j.10 remains open.
-- **Hosted-arcology implementation status is superseded; its accepted vision remains.** The earlier
-  code/content closure claim is withdrawn under active AMENDED 19+ review. Production, XML/fabric,
-  and tests are held; the proposed capital authority, persistent interiors, paid lots, water gate,
-  dark shell, and native Pass 37 protocol are design/review scope, not current runtime evidence.
+- **Hosted arcology now has one integrated 27-zone code/content authority.** One exact capital root,
+  persistent bounded interiors, nine route-safe archetypes, paid ward/terrace lots, exact dated
+  provider observations, water-gated terrace support, dark-shell recovery, and read-only hosted
+  views pass frozen automated gates. Native traversal/save/labour/water and human visual acceptance
+  remain open; static topology is not that evidence.
 - **The assenting moot now owns the ward its authored floor promises.** Its hidden commission key
   is derived only for the current seated city from assent research, the founder's Chavvah rite,
   claimed surface ground cardinally beside the Moon Stair, and the shipped owner contract; it is
@@ -189,8 +235,8 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   operations invoke their selected existing procedure/enrolment engines and their own quoted cost.
   Ordered dual-object construction funding, lease-safe local debit, explicit pickup/landing
   checkpoints, CAS retry/orphan handling, and twelve authored XL fallback/creed maps close the
-  former implementation gap. Its narrow physical-food landing transaction is code-complete;
-  integrated adversarial fan-in and native custody/UI/appearance proof remain open. Native Pass 37
+  former implementation gap. Its narrow physical-food landing transaction is code-complete and
+  frozen adversarial fan-in is green; native custody/UI/appearance proof remains open. Native Pass 37
   remains the human behavior/appearance acceptance gate.
 - **Hosted cross-platform source gates are green at checkpoint `d285129`.** Repository audit,
   Ubuntu source suite, and Windows source suite pass for those exact bytes. The later working-tree
@@ -239,7 +285,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   canonical `test.ps1` release runner rejects ambient filters, forbids every skip, and runs locked
   restores plus both suites; `release-check.sh` injects the exact Qud base. The recorded licensed
   hardening run passes 7,743 / 7,743 full cases and 173 / 173 portable cases with zero skipped.
-- **Addendum 9 structural debt is now an executable release blocker instead of a stale census.**
+- **Addendum 9 line-cap debt is cleared; semantic review remains an executable release blocker.**
   `Tools/check-structure.py` reads the exact staged production C# inventory, reports strict
   under-300 line debt and direct engine-coupling signals during incremental CI, and fails release
   on any file at or over 300. Because line counts cannot prove ownership or dependency quality,
@@ -255,13 +301,13 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2637-file census remains red: 383,416 physical lines; 4 files exceed
-  300, 0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000 — the four are the
-  adjudicated Gatehouse family, docketed by the R3 registration sweep. Direct `XRL`
-  imports occur in 1204 files, 3 of them over the line limit. Its
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2915-file census is line-cap green: 419,872 physical lines; 0 files exceed 300,
+  0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
+  imports occur in 1358 files, 0 of them over the line limit. Its
   exact inventory digest is
-  `afc4955625dbe18f4f89ba2815d047a984db26ef76cc7907f155805e4345e4de`;
-  the corresponding cold-install inventory contains 2664 files. The
+  `a633813831a166a0b294e74885a7e5a61052a869752d496db7c3d438bf8976be`;
+  the corresponding cold-install inventory contains 2945 files. The
+  exact-inventory human semantic review remains a release blocker:
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
   material-rule source family instead of one obsolete monolith path, and a repository test now
@@ -272,10 +318,11 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   stockpiles, construction, layout, crops, networks, lab jobs, and visual roots, and observes
   committed additions/removals. Residents, construction presence, lab, networks, roads, crops,
   upgrades, visual state, and porters consume the bound index instead of hiding another whole-zone
-  walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract
-  cases pass; the retained integrated pure/source checkpoint's record says it passes 7,743 / 7,743
-  cases. The final working-tree integrated run remains pending. Dense native scan instrumentation
-  remains a release gate.
+  walk. Duplicate physical/semantic identity fails closed. Nine focused survey source-contract cases
+  pass at the retained historical checkpoint, which passes 7,743 / 7,743 cases for its exact old
+  bytes. The current frozen integrated
+  suite's last retained pre-market receipt is green at 10,624 / 10,624 and the focused survey class now has fourteen cases. Dense native
+  scan instrumentation remains a release gate.
 - **The canonical vision now classifies every newly audited boundary and one hidden v1 gap.**
   This earlier pass preserved existing objects' native ownership/theft law and initially placed
   external food charters, public `sultanHistory` founder rendering, and groomed designees outside
@@ -301,7 +348,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   open work, not current runtime. Exact old-actor continuation, war from ideology alone,
   persistent unloaded actors, unwitnessed conquest/casualties, and mass world simulation remain
   `REJECTED`. All positive polity/world-presence scope is activated as v1 scope, but this
-  v2/adapter-boundary checkpoint is superseded by the current v5 code-scope closure and its
+  v2/adapter-boundary checkpoint is superseded by the current v6 code-scope closure and its
   remaining integrated/native gates in `docs/STATUS.md`.
 - **The realm master option is now a reversible, backlog-free pause.** Automatic system wakes,
   independently ticking civic parts, and public trade/petition/growth/guest/research producers gate
@@ -324,7 +371,7 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   option is disabled; re-enable restamps instead of inventing disabled-time backlog; foreign seats
   cannot spend the receipt. Pilgrims carry exact cause/name/place/sequence in the PlainGuest
   operation, and malformed legacy evidence is retained under quarantine. Legendary lodging also
-  freezes and rechecks the exact vacant fine house and merchant tier, with an idempotent body/roster
+  freezes and rechecks the exact vacant fine house and current market standing, with an idempotent body/roster
   receipt across interruption.
 - **Plot conversion now obeys typed-lot identity.** Explicit same-set plan changes keep the exact
   lot, rectangle, pose, and architecture-owned fabric while charging only their declared delta;
@@ -360,7 +407,12 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   every vanilla tile and animation frame against the installed base corpus, while
   `Art/runtime-assets.json` makes any original runtime raster an exact rights/source/fallback/hash
   allowlist with bidirectional wiring and package checks. This also prevents
-  `BaseFarmer.RandomTile` from silently replacing fixed settler and guest silhouettes.
+  `BaseFarmer.RandomTile` from silently replacing fixed settler and guest silhouettes. The latest
+  semantic pass also replaces Chiliad-specific basket art on Snapjaw caches with an ordinary Woven
+  Basket, replaces Nacham's unique charged wire-extruder art on Hindren textile works with an
+  ordinary Sewing Machine presented as a treadle stitcher, and replaces the fixed-Joppa-tile
+  faction helper with a deterministic TAF-owned glyph-only emblem. No custom raster or architecture
+  map was added by those corrections; native original-scale taste remains an explicit gate.
 - **New worlds no longer silently import a prior kingdom.** Cross-run realm import now defaults
   off, and its option says it must be enabled before world creation. Off exits before any legacy
   reservation and writes no decline, so latest eligible seal remains available for a later opted-in
@@ -377,14 +429,14 @@ Steam subscription/install pass remain gates before any release-candidate claim 
   shade-taste all thread the ground through. Surface behaviour is unchanged, and the test
   that would have caught the defect lands with the fix.
 - **Every offered plot size now has an exact authored realization.** The merged catalogue currently
-  contains 131 plotted plans over 513 inspectable authored maps (176 source / 337 generated);
-  larger-lot data adds 242 exact bindings and 277 predecessor tiers. Larger stakes preserve the
+  contains 134 plotted plans over 333 inspectable authored maps (187 source / 146 generated);
+  larger-lot data adds 107 exact bindings and 122 predecessor tiers. Larger stakes preserve the
   complete source block, then realize added space as category-appropriate courts, service aprons,
   crop/tending ground, paths, sparse boundaries, or an explicitly reasoned opening using only the
   frozen lawful palette. Every road-facing entrance carries its exact bounded unclaimed route to
   exterior road evidence through all four poses. Civic-heart rungs remain rite-owned growth and no
-  longer leak into the commission list; three hosted-arcology maps remain held for their separate
-  authored-floor redesign.
+  longer leak into the commission list; hosted-arcology programmes are integrated at code/content
+  scope while native traversal and human visual acceptance remain open.
 - **Architecture identity now uses identity facts, not faction-name proxies.** Hindren housing
   selects from live `GetCulture()`/`GetSpecies()` tallies rather than pretending Hindren is a
   creed; Kyakukya remains a creed. Existing architecture variants also accept bounded live
@@ -468,8 +520,9 @@ abstract brinks; current absence and physical-witness boundaries are controlled 
 - **Legendary dromad traders now cash out the luxury lane.** One can appear through the mergeable
   notable table, receives Qud's own merchant title without HeroMaker's combat/mutation side
   effects, and settles only into an exact wholly vacant M-or-larger fine house when a staffed
-  tier-3 shop warrants the move. Success binds the resident to that LotId and creates a real
-  current-tier merchant; manors, generic large roofs, and aggregate spare beds do not substitute.
+  current-standing-3 market warrants the move. Success binds the resident to that LotId as a
+  finite native merchant with a sealed empty-screen adapter; it does not generate tiered wares.
+  Manors, generic large roofs, and aggregate spare beds do not substitute.
 - **Identity extension API v2.** Mods can now answer extra live roster keys and bounded 70–130
   work affinity from a frozen culture/species/creed/genotype reading. Calls cross the existing
   executor independently, faults fail closed to no keys or neutral affinity, foreign namespaces
@@ -1113,11 +1166,9 @@ be inferred.
 - **A harvest with nowhere to go is said once, by name** (7b), and unsaid the moment there is
   room — with different words for "no larder at all" and "the larders are full", and the figure
   in the homecoming ledger either way.
-- **Food spoils in a damaged larder.** `LeakKind.Food` is Addendum 10(b)'s explicitly deferred
-  third kind — "food spoilage waits until food is a flow" — and the deferral is spent: same
-  `Leaked` arithmetic, same day-banking, same announce-once and unsay-on-mending. It is drawn
-  after the day's eating, so it can never be the reason a settlement goes hungry, only the reason
-  it has no cushion when something else is.
+- **Superseded 2026-09-01: damaged-larder food spoilage.** This historical release introduced the
+  frozen `LeakKind.Food` ordinal. The current positive-food ruling keeps that ordinal only for save
+  compatibility; it prices zero, resumes no callback, and never changes pantry stock.
 - The homecoming ledger carries the food side beside the water side in servings rather than
   drams, and says so; the Status report names the larder against its capacity, what the fields
   make against what the people eat, and the hunger streak beside the thirst streak.
@@ -1280,8 +1331,8 @@ only pure water — so the fix mints not one dram.
 
 ### Changed
 - Districts are no longer flavour. Each of the six now changes something a player can measure:
-  garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds a
-  shop tier (keeping its faster arrivals), craft builds at 80% time, shrine shortens the petition
+  garrison adds defence across every claimed zone, agrarian bills upkeep at 90%, market adds one
+  current service-standing contribution (never stock), craft builds at 80% time, shrine shortens the petition
   interval, academy halves how far the outsider register drifts from the true record. Percent
   effects are best-wins and never stack; only garrison defence is additive.
 - City style is chosen from the ground the rite was poured on. `StyleForSite` maps real terrain

@@ -155,6 +155,15 @@ namespace ThousandAndFirst
 					return;
 				}
 				string heirCreed = heir.GetStringProperty(KingdomCreed.CreedProperty);
+				if (KingdomGrowth.SuccessorMarketBlocked(heir,
+					KingdomSurvey.ActiveFor(heir.CurrentZone))
+					|| !KingdomResidentTransitionAuthority.CanAccede(system, heir,
+						PendingHeirResidentId))
+				{
+					QuarantinePendingRite(Context,
+						"the frozen heir carries an open resident-scoped authority");
+					return;
+				}
 				if (!alreadyCrossed)
 				{
 					string citizenshipFailure;
@@ -162,6 +171,13 @@ namespace ThousandAndFirst
 					{
 						QuarantinePendingRite(Context,
 							"citizenship preflight failed: " + citizenshipFailure);
+						return;
+					}
+					if (!KingdomResidentTransitionAuthority.CanAccede(system, heir,
+						PendingHeirResidentId))
+					{
+						QuarantinePendingRite(Context,
+							"resident authority changed at the cold-load transfer boundary");
 						return;
 					}
 					KingdomPlayerBodyTransfer transfer = SetPlayerBodyAndRebindAll(game, founder,

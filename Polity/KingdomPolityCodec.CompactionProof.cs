@@ -11,8 +11,8 @@ namespace ThousandAndFirst
 			using (MemoryStream stream = new MemoryStream())
 			using (BinaryWriter writer = new BinaryWriter(stream))
 			{
-				writer.Write(0x54505031); // TPP1
-				WriteList(writer, Profiles, KingdomPolityRules.MaxProfiles, WriteProfile);
+				writer.Write(0x54505032); // TPP2 includes typed expression cues
+				WriteList(writer, Profiles, KingdomPolityRules.MaxProfiles, WriteProfileV7);
 				writer.Flush(); return stream.ToArray();
 			}
 		}

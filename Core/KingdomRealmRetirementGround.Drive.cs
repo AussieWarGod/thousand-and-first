@@ -42,6 +42,10 @@ namespace ThousandAndFirst
 						out Failure)) return false;
 				if (plan.ProjectedEvidenceDigest == State.Locators[at].EvidenceDigest)
 				{
+					// Older receipts may have the aggregate v2 rows but not the two reserved
+					// prior-unknown disclosures. Revisit publishes only those idempotent previews.
+					if (!PublishPreMutationDisclosures(System, ref State, plan, tick,
+						out Failure)) return false;
 					Report = FromState(State); return true;
 				}
 			}

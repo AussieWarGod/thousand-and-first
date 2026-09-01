@@ -80,8 +80,9 @@ namespace ThousandAndFirst
 			string snapshot = Intent.EncodedSnapshot;
 			string[] snapshotFields = snapshot == null ? null : snapshot.Split('|');
 			if (snapshotFields == null || snapshotFields.Length != 3
-				|| (snapshotFields[0] != "a1" && snapshotFields[0] != "a2")
-				|| (RequireCurrentSnapshot && snapshotFields[0] != "a2")
+				|| (snapshotFields[0] != "a1" && snapshotFields[0] != "a2"
+					&& snapshotFields[0] != "a3" && snapshotFields[0] != "a4")
+				|| (RequireCurrentSnapshot && snapshotFields[0] != "a4")
 				|| snapshotFields[2] != Intent.SnapshotHash)
 			{
 				Failure = "The authored plot snapshot is not canonical.";
@@ -139,7 +140,8 @@ namespace ThousandAndFirst
 				|| !TryPlotCoordinate(fields[1], out x1) || !TryPlotCoordinate(fields[2], out y1)
 				|| !TryPlotCoordinate(fields[3], out x2) || !TryPlotCoordinate(fields[4], out y2)
 				|| x2 < x1 || y2 < y1
-				|| (fields[6] != "a1" && fields[6] != "a2")
+				|| (fields[6] != "a1" && fields[6] != "a2" && fields[6] != "a3"
+					&& fields[6] != "a4")
 				|| !CanonicalPlotHash(fields[9]))
 			{
 				Failure = "The authored plot payload shape is malformed or unknown.";

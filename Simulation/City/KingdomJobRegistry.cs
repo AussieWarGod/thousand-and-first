@@ -70,6 +70,17 @@ namespace ThousandAndFirst.Simulation.City
 		ResolutionPrepared = 13
 	}
 
+	/// <summary>Frozen rich-find publication decision. The open job is the outbox receipt: retry
+	/// applies this exact decision and never reclassifies it from later name or attention state.</summary>
+	internal enum KingdomExpeditionDeedDisposition : int
+	{
+		/// <summary>Pre-receipt job, or a legacy terminal receipt written before this column.</summary>
+		Legacy = 0,
+		NotApplicable = 1,
+		Promote = 2,
+		Skip = 3
+	}
+
 	/// <summary>Durable exact-delivery transaction phase. A source debit is bracketed by a
 	/// persisted before-receipt so reload can distinguish "not debited" from "already debited"
 	/// without guessing from a zone-row proxy.</summary>

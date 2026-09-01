@@ -78,7 +78,8 @@ namespace ThousandAndFirst.Tests
 			string crews = TestMain.ReadRepositoryText("Growth/KingdomCrews.Availability.cs");
 			StringAssert.Contains("KingdomResidents.RollRows(System, true)", crews);
 			StringAssert.Contains("KingdomResidents.TryEnsureRow(system, settler", growth);
-			StringAssert.Contains("KingdomResidents.TryDepart(System, leaver", growth);
+			StringAssert.Contains("KingdomResidents.TryCompleteDepartureCarriers(System, Body",
+				growth);
 			StringAssert.DoesNotContain("System.Population - System.WaterCrew", growth);
 
 			string guests = KingdomGuestbookLogicalSource.Read();

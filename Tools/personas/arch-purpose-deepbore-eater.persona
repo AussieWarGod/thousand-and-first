@@ -1,0 +1,6 @@
+# High-tier retained technology: useful Eater fabric, but no invented live-power authority.
+DESCRIPTION=Eater deepbore precinct stages through the production gallery path
+REQUEST=arch-purpose-deepbore-eater;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,endgame

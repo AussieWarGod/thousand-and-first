@@ -141,11 +141,26 @@ namespace ThousandAndFirst
 				return Fail("The exact reached roof no longer stands.", out Failure);
 			string[] authored = KingdomQolRules.ParseTags(Resident.GetPropertyOrTag(
 				KingdomQolRules.RefusesTagName, ""));
-			string[] offer = KingdomQol.OfferOf(KingdomUpgrade.DesignKeyOf(Owner), Z);
+			if (!TryPhysicalOffer(Survey, Owner, out string[] offer,
+				out string benefitFailure))
+				return Fail("The exact work benefit cannot be proved: " + benefitFailure,
+					out Failure);
 			return (KingdomQolRules.Has(authored, Receipt.RefusedTag)
 				&& KingdomQolRules.Has(offer, Receipt.RefusedTag)
 				&& KingdomReach.Reaches(System, Z, Owner, SourceHome))
 				|| Fail("The authored Refuses/work/reach cause no longer stands.", out Failure);
+		}
+
+		private static bool TryPhysicalOffer(KingdomSurvey Survey, GameObject Owner,
+			out string[] Offer, out string Failure)
+		{
+			Offer = new string[0]; Failure = null;
+			if (!GameObject.Validate(Owner) || string.IsNullOrEmpty(Owner.IDIfAssigned))
+				return Fail("the exact work root has no stable identity", out Failure);
+			if (Survey == null || !Survey.TryBenefits(out KingdomBenefitIndex benefits,
+				out Failure)) return false;
+			Offer = benefits.TagsForRoot(Owner.IDIfAssigned);
+			return true;
 		}
 
 		private static bool TryResidentRow(KingdomSystem System, int ResidentId,

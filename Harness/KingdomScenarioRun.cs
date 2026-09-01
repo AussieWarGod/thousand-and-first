@@ -61,18 +61,9 @@ namespace ThousandAndFirst.Harness
 				if (mutation.Verb == KingdomScenarioVerb.FoundFirstCity)
 					return TryRealizeFounding(plan, stamp, mutation, zone, log, out Report,
 						out Failure);
-				string facing;
-				string build;
-				string variant;
-				if (!mutation.Arguments.TryGetValue("Facing", out facing)
-					|| !mutation.Arguments.TryGetValue("Build", out build)
-					|| !mutation.Arguments.TryGetValue("Variant", out variant))
-					return Refuse("the resolved transaction is missing a frozen case argument",
-						out Failure);
 				KingdomScenarioGallerySlice.Case expected;
-				if (!KingdomScenarioGallerySlice.TryResolveCase(build, variant, facing,
-						out expected, out Failure)
-					|| !KingdomScenarioGallerySlice.TryProvePreconditions(zone, out Failure))
+				if (!TryExpectedGalleryCase(plan, out expected, out Failure)
+					|| !KingdomScenarioGallerySlice.TryProvePreconditions(zone, expected, out Failure))
 					return Refuse("refused before mutation: " + Failure, out Failure);
 				// Everything above is a precondition and refuses BEFORE the attempt is recorded.
 				// From here the ground may change, so the attempt is durable first.
@@ -92,8 +83,10 @@ namespace ThousandAndFirst.Harness
 				if (!KingdomScenarioTransactionMarker.TryCommit(out commitFailure))
 					return Refuse("the production transaction committed but its marker did not: "
 						+ commitFailure, out Failure);
-				log.Add("  stagegallerycase: " + expected.BuildKey + "/" + expected.VariantKey
-					+ " pose " + facing + " (case " + expected.Number + ") receipt "
+				log.Add("  stagegallerycase: " + expected.BuildKey + "/" + expected.TypeKey
+					+ "/" + expected.LotSize + "/" + expected.VariantKey
+					+ " pose " + expected.Facing.ToString().ToLowerInvariant()
+					+ " (case " + expected.Number + ") receipt "
 					+ (KingdomScenarioGallerySlice.Receipt(owner) ?? "-"));
 				Report = Conclude(plan, stamp, owner, log);
 				return true;
@@ -102,6 +95,37 @@ namespace ThousandAndFirst.Harness
 			{
 				Stat.PopState();
 			}
+		}
+
+		/// <summary>Resolves the exact gallery case frozen by a bound plan's sole mutation.</summary>
+		internal static bool TryExpectedGalleryCase(KingdomScenarioPlan Plan,
+			out KingdomScenarioGallerySlice.Case Expected, out string Failure)
+		{
+			Expected = null;
+			Failure = null;
+			for (int i = 0; Plan != null && i < Plan.Steps.Count; i++)
+			{
+				KingdomScenarioResolvedStep step = Plan.Steps[i];
+				if (!KingdomScenarioVerbSchema.Mutates(step.Verb)) continue;
+				if (step.Verb != KingdomScenarioVerb.StageGalleryCase)
+					return Refuse("this scenario's production transaction is not architecture staging",
+						out Failure);
+				string facing;
+				string build;
+				string type;
+				string size;
+				string variant;
+				if (!step.Arguments.TryGetValue("Facing", out facing)
+					|| !step.Arguments.TryGetValue("Build", out build)
+					|| !step.Arguments.TryGetValue("Type", out type)
+					|| !step.Arguments.TryGetValue("Size", out size)
+					|| !step.Arguments.TryGetValue("Variant", out variant))
+					return Refuse("the resolved transaction is missing a frozen case argument",
+						out Failure);
+				return KingdomScenarioGallerySlice.TryResolveCase(build, type, size, variant, facing,
+					out Expected, out Failure);
+			}
+			return Refuse("this scenario declares no production transaction", out Failure);
 		}
 
 		private static bool TryObserve(KingdomScenarioResolvedStep Step, IList<string> Log,

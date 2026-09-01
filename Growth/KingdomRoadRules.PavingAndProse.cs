@@ -5,20 +5,22 @@ namespace ThousandAndFirst
 		// --- Paving ----------------------------------------------------------------------
 
 		/// <summary>
-		/// The floor a settlement's paving is laid as, by the wall it builds in
+		/// Legacy compatibility mapping from a settlement wall to its old paving surface.
 		/// (<c>KingdomPlotRules.WallBlueprintFor</c>). Every one of these is a vanilla floor
 		/// blueprint that already exists in <c>ZoneTerrain.xml</c>; the mod ships no path art of
-		/// its own, because the game already has six kinds of paved ground and a seventh would
-		/// only be ours.
+		/// its own because each supported material already has a readable vanilla surface.
 		/// </summary>
-		/// <param name="WallBlueprint">The settlement's wall blueprint. Unknown and null fall
-		/// back to the dirt path, which is what an unpaved path already is.</param>
+		/// <param name="WallBlueprint">New runtime orders use
+		/// <see cref="KingdomRoadPaletteRules"/>; this public method remains stable for integrations
+		/// and old callers. Unknown/null values fall back to the dirt path.</param>
 		public static string PavedFloorFor(string WallBlueprint)
 		{
 			switch (WallBlueprint)
 			{
 				case "Marble":
 					return "MarbleFloor";
+				case "Black Marble":
+					return "BlackMarbleWalkway";
 				case "Limestone":
 					return "SaltPath";
 				case "BrinestalkWall":
@@ -41,7 +43,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// What the settlement spends to pave in its own material. Tied to the same wall
+		/// Legacy compatibility mapping from a settlement wall to old paving cost material.
+		/// New runtime orders use <see cref="KingdomRoadPaletteRules"/>. Tied to the same wall
 		/// blueprint the paving is laid as, so the cost is legible off the thing it buys: a
 		/// marble city pays in marble, and a city of dressed limestone pays in cut stone.
 		/// </summary>
@@ -54,6 +57,7 @@ namespace ThousandAndFirst
 			switch (WallBlueprint)
 			{
 				case "Marble":
+				case "Black Marble":
 					return KingdomMaterial.Marble;
 				case "Limestone":
 				case "Foamcrete":

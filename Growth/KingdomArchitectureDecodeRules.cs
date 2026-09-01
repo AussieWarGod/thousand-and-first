@@ -18,7 +18,9 @@ namespace ThousandAndFirst
 				return Fail("snapshot is empty or over the character bound", out Failure);
 			string[] terms = Encoded.Split('|');
 			int schema = terms.Length == 3 && terms[0] == "a1" ? LegacySnapshotSchema
-				: (terms.Length == 3 && terms[0] == "a2" ? SnapshotSchema : 0);
+				: (terms.Length == 3 && terms[0] == "a2" ? PlacementTruthSnapshotSchema
+					: (terms.Length == 3 && terms[0] == "a3" ? TransitionSnapshotSchema
+						: (terms.Length == 3 && terms[0] == "a4" ? SnapshotSchema : 0)));
 			if (schema == 0)
 				return Fail("snapshot version is unsupported", out Failure);
 			if (!CanonicalHash(terms[2])) return Fail("snapshot hash is malformed", out Failure);
@@ -53,6 +55,23 @@ namespace ThousandAndFirst
 						MainX = reader.ReadByte(),
 						MainY = reader.ReadByte()
 					};
+					parsed.IncomingTransitionMode = schema >= TransitionSnapshotSchema
+						? (ArchitectureTransitionMode)reader.ReadByte()
+						: ArchitectureTransitionMode.None;
+					if (schema == SnapshotSchema)
+					{
+						parsed.FootprintX = reader.ReadByte();
+						parsed.FootprintY = reader.ReadByte();
+						parsed.FootprintWidth = reader.ReadByte();
+						parsed.FootprintHeight = reader.ReadByte();
+						parsed.BaseRoof = (KingdomPlotRules.RoofState)reader.ReadByte();
+					}
+					else
+					{
+						parsed.FootprintWidth = parsed.Width;
+						parsed.FootprintHeight = parsed.Height;
+						parsed.BaseRoof = (KingdomPlotRules.RoofState)byte.MaxValue;
+					}
 					int blueprintCount = reader.ReadByte();
 					if (blueprintCount > MaxPaletteSlots) throw new InvalidDataException("blueprint table bound");
 					List<string> blueprints = new List<string>();
@@ -62,7 +81,7 @@ namespace ThousandAndFirst
 					List<string> techs = new List<string>();
 					List<string> knowledge = new List<string>();
 					List<string> powers = new List<string>();
-					if (schema == SnapshotSchema)
+					if (schema >= PlacementTruthSnapshotSchema)
 					{
 						int materialCount = reader.ReadByte();
 						if (materialCount > MaxPaletteSlots)
@@ -92,14 +111,23 @@ namespace ThousandAndFirst
 						int x = reader.ReadByte();
 						int y = reader.ReadByte();
 						int flags = reader.ReadByte();
-						if ((flags & ~31) != 0) throw new InvalidDataException("cell flags");
+						if ((flags & ~(schema == SnapshotSchema ? 63 : 31)) != 0)
+							throw new InvalidDataException("cell flags");
+						ArchitectureClaim claim = schema == SnapshotSchema
+							? (ArchitectureClaim)(flags & 3)
+							: ((flags & 1) == 0 ? ArchitectureClaim.Unclaimed
+								: ArchitectureClaim.LegacyClaimed);
+						if (schema == SnapshotSchema && claim == ArchitectureClaim.LegacyClaimed)
+							throw new InvalidDataException("legacy claim in current snapshot");
 						parsed.Cells.Add(new ArchitectureCellState
 						{
 							X = x,
 							Y = y,
-							Claim = (flags & 1) != 0,
-							Passability = (ArchitecturePassability)((flags >> 1) & 3),
-							Cover = (ArchitectureCover)((flags >> 3) & 3)
+							Claim = claim,
+							Passability = (ArchitecturePassability)((flags
+								>> (schema == SnapshotSchema ? 2 : 1)) & 3),
+							Cover = (ArchitectureCover)((flags
+								>> (schema == SnapshotSchema ? 4 : 3)) & 3)
 						});
 					}
 					int anchorCount = reader.ReadByte();
@@ -131,7 +159,7 @@ namespace ThousandAndFirst
 						bool existing = false;
 						int knowledgeIndex = NoKnowledgeIndex;
 						int powerIndex = NoPowerIndex;
-						if (schema == SnapshotSchema)
+						if (schema >= PlacementTruthSnapshotSchema)
 						{
 							material = reader.ReadByte();
 							tech = reader.ReadByte();
@@ -155,11 +183,11 @@ namespace ThousandAndFirst
 							Y = y,
 							Blueprint = blueprints[blueprint],
 							Slot = SlotFor(layer, x, y),
-							Material = schema == SnapshotSchema ? materials[material] : null,
-							MinTech = schema == SnapshotSchema ? techs[tech] : null,
-							Knowledge = schema == SnapshotSchema && knowledgeIndex != NoKnowledgeIndex
+							Material = schema >= PlacementTruthSnapshotSchema ? materials[material] : null,
+							MinTech = schema >= PlacementTruthSnapshotSchema ? techs[tech] : null,
+							Knowledge = schema >= PlacementTruthSnapshotSchema && knowledgeIndex != NoKnowledgeIndex
 								? knowledge[knowledgeIndex] : null,
-							Power = schema == SnapshotSchema && powerIndex != NoPowerIndex
+							Power = schema >= PlacementTruthSnapshotSchema && powerIndex != NoPowerIndex
 								? powers[powerIndex] : null,
 							Natural = natural,
 							ExistingAuthority = existing,
@@ -200,9 +228,20 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		public static bool IsLatestSnapshotEncoding(string Encoded)
+		{
+			return Encoded != null && Encoded.StartsWith("a4|", StringComparison.Ordinal);
+		}
+
+		public static bool IsManagedSnapshotEncoding(string Encoded)
+		{
+			return Encoded != null && (Encoded.StartsWith("a3|", StringComparison.Ordinal)
+				|| Encoded.StartsWith("a4|", StringComparison.Ordinal));
+		}
+
 		public static bool IsCurrentSnapshotEncoding(string Encoded)
 		{
-			return Encoded != null && Encoded.StartsWith("a2|", StringComparison.Ordinal);
+			return IsLatestSnapshotEncoding(Encoded);
 		}
 
 	}

@@ -12,21 +12,23 @@ namespace ThousandAndFirst
 	/// <para>
 	/// One reckoning per attended pass, run from <c>KingdomGrowth.UpdateStage</c> after the
 	/// staffing pass has said which works are actually running. It does four things in order:
-	/// sums what the finished works carry, converts that to a level at this settlement's own
+	/// reads what the finished works physically provide, converts that to a level at this settlement's own
 	/// stage (<see cref="KingdomSubsidenceRules.SupportedLevel"/>), runs the slide forward over
 	/// however much world time has passed, and tells the founder about it once.
 	/// </para>
 	/// <para>
-	/// <b>What the sum is made of.</b> Three things, and only the first is a building's
-	/// <c>Carries</c>. A household's yard trade shades the same pools beside the house it belongs
-	/// to (<see cref="Supports"/>); a work's LIFT lands only in proportion to the settlement's
+	/// <b>What the sum is made of.</b> Water and roof are the live population constraints. Food
+	/// remains a separately measured physical production/storage lane, but it never binds this
+	/// slide: absent food can withhold a chosen meal or industry act and cannot make anyone leave.
+	/// Roof and lift come only from live providers inside an exact designation; catalogue
+	/// <c>Carries</c> caps those providers and never supplies them. A work's lift lands in
+	/// proportion to the settlement's
 	/// roofs it reaches (<see cref="ScopedSupports"/>, Addendum 6); and the settlement's named
 	/// settlement is worth a small shade of its own (<c>KingdomSystem.Shade</c>) &mdash; its named
-	/// notable's met tastes, virtue net of flaw and met <c>Prefers</c>, plus whatever the last
-	/// day's eating left behind (<c>KingdomRules.MealShadeFor</c>, Addendum 11(b): a settlement
-	/// that ate its own favourite dish is well fed for exactly one day). All of them ride the
-	/// one lift term inside <c>KingdomCatalogueRules.LiftCapPercent</c>, so none of them can carry
-	/// a settlement past its own water.
+	/// notable's met tastes, virtue net of flaw and met <c>Prefers</c>. Meal shade is a retired
+	/// wire field and contributes zero. All live lifts ride the one term inside
+	/// <c>KingdomCatalogueRules.LiftCapPercent</c>, so none can carry a settlement past its own
+	/// water or roofs.
 	/// </para>
 	/// <para>
 	/// <b>The clock.</b> World time, uncapped, through <c>KingdomRules.ElapsedDays</c> and a
@@ -102,7 +104,7 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// What this settlement's finished works carry between them.
+		/// What this settlement's finished works physically supply between them.
 		/// <para>
 		/// A work that asks for crew carries at what the staffing pass gave it, reduced again by
 		/// its own condition, so an unmanned field feeds nobody. That is Addendum 8 clause 2
@@ -112,7 +114,7 @@ namespace ThousandAndFirst
 		/// <b>And a work that asks for nobody carries at its CONDITION</b> (Addendum 10(b)). This
 		/// used to be a flat 100 &mdash; wear reached the level only through the
 		/// <c>KingdomStaffNeeded</c> gate, so a half-wrecked reservoir carried its full
-		/// twenty-six drams and only the food lane, which never automates, could be hurt by ruin
+		/// twenty-six drams and only a staffed work could be hurt by ruin
 		/// at all. The ruling overturned it: a ruined reservoir does not carry its full drams.
 		/// Both arms are <see cref="KingdomWearRules.WorkEffectiveness"/>, which is also what
 		/// <c>KingdomPower</c> asks, so the rule lives in exactly one place.
@@ -121,28 +123,37 @@ namespace ThousandAndFirst
 		/// <b>Why the condition is read off the work rather than off the stamp.</b>
 		/// <c>KingdomEffectiveness</c> is the staffing pass's own crew stretch and nothing else;
 		/// nobody folds wear into it any more. This function is called twice per pass from two
-		/// different points in <c>KingdomGrowth</c> (the water works' daily make, at the top, and
-		/// the level, after <c>AssignWork</c>), and reading condition from the part rather than
+		/// different consumers (the water works' daily make and the supported level after
+		/// <c>AssignWork</c>), and reading condition from the part rather than
 		/// from a property somebody else may or may not have already folded is what makes both
 		/// answers the same arithmetic.
 		/// </para>
 		/// </summary>
-		/// <para>
-		/// <b>And a household's yard trade carries with the house it belongs to.</b> A
-		/// <c>&lt;yardwork&gt;</c>'s <c>Shades</c> is denominated in exactly the same
-		/// <c>support:amount</c> language a design's <c>Carries</c> is, and is capped small
-		/// (<c>KingdomYardRules.MaxShadePerWork</c>) precisely because it lands here. It is folded
-		/// through <c>KingdomCatalogueRules.FoldShade</c> rather than <c>FoldWork</c>, so a vine
-		/// lattice feeds the settlement without pretending to be a second thing standing.
-		/// </para>
 		/// <param name="Survey">The pass's survey. Null carries nothing.</param>
 		public static KingdomCatalogueRules.SupportTally Supports(KingdomSurvey Survey)
 		{
+			if (Survey == null || Survey.Ground == null)
+				return default(KingdomCatalogueRules.SupportTally);
+			KingdomBenefitIndex benefits = null;
+			KingdomReach.TryActiveBenefits(Survey.Ground, Survey, "subsidence", out benefits);
+			return Supports(Survey, benefits, true);
+		}
+
+		internal static KingdomCatalogueRules.SupportTally OrdinarySupports(KingdomSurvey Survey)
+		{
+			if (Survey == null || Survey.Ground == null)
+				return default(KingdomCatalogueRules.SupportTally);
+			KingdomBenefitIndex benefits = null;
+			KingdomReach.TryActiveBenefits(Survey.Ground, Survey,
+				"ordinary subsidence projection", out benefits);
+			return Supports(Survey, benefits, false);
+		}
+
+		private static KingdomCatalogueRules.SupportTally Supports(KingdomSurvey Survey,
+			KingdomBenefitIndex Benefits, bool IncludeHosted)
+		{
 			KingdomCatalogueRules.SupportTally tally = default(KingdomCatalogueRules.SupportTally);
-			if (Survey == null)
-			{
-				return tally;
-			}
+			if (Survey == null || Survey.Ground == null) return tally;
 			for (int i = 0; i < Survey.Built.Count; i++)
 			{
 				GameObject work = Survey.Built[i];
@@ -156,49 +167,68 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				// A malformed Carries is already reported by the catalogue validator, and whatever
-				// parsed before the bad pair still counts, so the verdict is deliberately unread.
-				List<KindAmount> carries;
-				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
-				carries = KingdomHostedArcology.HostedCarries(work, carries,
-					Survey.StoredWater > 0);
-				// Addendum 11(b): a farm starts producing only once seeds are committed, so a field
-				// nobody has sown carries no food - to the level or to the day. Everything else the
-				// design carries is untouched, because a home farm's mill and its yard are built and
-				// real whether or not a row is in the ground. The rule lives in KingdomCrops so the
-				// level and KingdomGrowth.FoodMadePerDay cannot disagree about which fields count.
-				carries = KingdomCrops.WithoutUnsownFood(work, carries);
 				int effectiveness = KingdomWear.EffectivenessOf(work);
-				tally = KingdomCatalogueRules.FoldWork(tally, carries, effectiveness);
-				tally = KingdomCatalogueRules.FoldShade(tally, YardShadesOf(work), effectiveness);
+				if (!work.HasStringProperty(KingdomAdopt.AdoptedKeyProperty))
+					tally = KingdomCatalogueRules.FoldWork(tally,
+						PhysicalFlowContract(work, entry), effectiveness);
+				int yardFood = KingdomYardBenefits.PhysicalFoodForHouse(Survey, work);
+				if (yardFood > 0)
+					tally.Food = KingdomCatalogueRules.SaturatingCounterAdd(tally.Food,
+						KingdomCatalogueRules.Carried(yardFood, effectiveness));
+				if (IncludeHosted && work.GetPart<r_KingdomArcology>() != null)
+				{
+					if (KingdomHostedArcology.TryTerracePhysicalFood(work,
+						Survey.StoredWater > 0, out int food, out string failure))
+						tally.Food = KingdomCatalogueRules.SaturatingCounterAdd(tally.Food,
+							KingdomCatalogueRules.Carried(food, effectiveness));
+					else KingdomLog.Log("subsidence: hosted terrace failed closed ("
+						+ (failure ?? "unknown physical evidence") + ")");
+				}
+			}
+			if (Benefits != null)
+			{
+				IReadOnlyList<KingdomBenefitReading> readings = Benefits.Readings;
+				for (int i = 0; i < readings.Count; i++)
+				{
+					KingdomBenefitReading reading = readings[i];
+					if (!KingdomReach.TryRoot(Survey.Ground, reading, out GameObject work)) continue;
+					bool hosted = work.GetPart<r_KingdomArcology>() != null;
+					List<KindAmount> carries;
+					string failure = null;
+					if (hosted && !IncludeHosted)
+						carries = new List<KindAmount>(reading.Carries);
+					else if (!KingdomObservedBenefitProjection.TryCarries(work, reading,
+						out carries, out failure))
+					{
+						KingdomLog.Log("subsidence: observed benefits failed closed ("
+							+ (failure ?? "unknown physical evidence") + ")");
+						continue;
+					}
+					tally.Roof = KingdomCatalogueRules.SaturatingCounterAdd(tally.Roof,
+						KingdomObservedBenefitProjectionRules.Amount(carries,
+							KingdomCatalogueRules.SupportRoof));
+					tally.Lift = KingdomCatalogueRules.SaturatingCounterAdd(tally.Lift,
+						KingdomObservedBenefitProjectionRules.PhysicalLift(carries));
+				}
 			}
 			return tally;
 		}
 
-		/// <summary>What the household living in this work has turned its yard to, or null for a
-		/// house that has taken up no trade and for every work that is not a house.</summary>
-		private static List<KindAmount> YardShadesOf(GameObject Work)
+		// Food and water are the two exceptional flow contracts. Their existing crop, staffing,
+		// wear, container, and landing systems establish live supply; every other catalogue number
+		// is only a designation cap and is deliberately removed here.
+		private static List<KindAmount> PhysicalFlowContract(GameObject Work,
+			KingdomRules.BuildEntry Entry)
 		{
-			string key = Work.GetStringProperty(KingdomYards.YardKeyProperty);
-			KingdomYardRules.YardWorkSpec spec;
-			return (!string.IsNullOrEmpty(key) && KingdomYards.TryGetSpec(key, out spec)) ? spec.Shades : null;
-		}
-
-		/// <summary>The lifting half of one parsed <c>support:amount</c> list, scaled the way a
-		/// lift is scaled (<c>KingdomReachRules.Scaled</c>, which keeps a point of anything still
-		/// being worked). The binding half is left to <see cref="Supports"/>, which has already
-		/// folded it into the citywide pools.</summary>
-		private static int LiftOf(List<KindAmount> Shades, int EffectivenessPercent)
-		{
-			int lift = 0;
-			for (int i = 0; (Shades != null) && i < Shades.Count; i++)
-			{
-				if (!KingdomCatalogueRules.IsBindingSupport(Shades[i].Kind))
-				{
-					lift += KingdomReachRules.Scaled(Shades[i].Amount, EffectivenessPercent);
-				}
-			}
-			return lift;
+			List<KindAmount> declared;
+			KingdomCatalogueRules.TryParseTally(Entry.Carries, out declared, out _);
+			declared = KingdomCrops.WithoutUnsownFood(Work, declared);
+			List<KindAmount> flows = new List<KindAmount>();
+			for (int i = 0; declared != null && i < declared.Count; i++)
+				if (declared[i].Kind == KingdomCatalogueRules.SupportWater
+					|| declared[i].Kind == KingdomCatalogueRules.SupportFood)
+					flows.Add(declared[i]);
+			return flows;
 		}
 
 	}

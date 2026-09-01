@@ -41,6 +41,153 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BoundBenefitObservationIsOneImmutableSnapshotPerMutationEpoch()
+		{
+			string survey = KingdomSurveyLogicalSource.Read();
+			StringAssert.Contains("BenefitSnapshotAttempted && BenefitSnapshotEpoch == BenefitEpoch",
+				survey);
+			StringAssert.Contains("BenefitSnapshotFailure = Failure", survey);
+			StringAssert.Contains("ReferenceEquals(BoundSurvey, this)", survey);
+			foreach (string mutation in new[] { "AddedMutations++; InvalidateBenefits()",
+				"ChangedMutations++; InvalidateBenefits()",
+				"RemovedMutations++; InvalidateBenefits()" })
+				StringAssert.Contains(mutation, survey);
+			string system = KingdomSystemLogicalSource.Read();
+			string step = Between(system, "private bool TrySemanticStep(long Bit",
+				"}\n\n\t}\n}");
+			Assert.Less(step.IndexOf("KingdomSurvey.BeginBenefitEpochInActive()",
+				StringComparison.Ordinal), step.IndexOf("Action();", StringComparison.Ordinal));
+			string staffing = Source("Growth", "KingdomGrowth.z15.WorkAssignment.cs");
+			StringAssert.Contains("Survey.InvalidateBenefits();", staffing);
+		}
+
+		[Test]
+		public void PendingImprovementSuccessorIsVisibleButEconomicallyInert()
+		{
+			string survey = KingdomSurveyLogicalSource.Read();
+			string capture = Between(survey, "private IndexedRow Capture(GameObject Item",
+				"return row;");
+			Assert.That(System.Text.RegularExpressions.Regex.IsMatch(capture,
+				@"r_KingdomScaffold\s*\.\s*HasPendingImprovementSuccessorAuthority\(Item\)"),
+				Is.True, "pending-successor authority must feed the one inertness flag");
+			StringAssert.Contains("IsPendingUpgradeComponent(Item)", capture);
+			StringAssert.Contains("row.Built = !pendingImprovement", capture);
+			StringAssert.Contains("row.Larder = !pendingImprovement", capture);
+			StringAssert.Contains("row.Store = !pendingImprovement", capture);
+			StringAssert.Contains("row.NetworkPiece = !pendingImprovement", capture);
+			StringAssert.Contains("row.MaterialStockpile = !pendingImprovement", capture);
+
+			string scaffold = KingdomScaffoldLogicalSource.Read();
+			Assert.Less(scaffold.IndexOf(
+				"Successor.SetIntProperty(PendingImprovementSuccessorProperty, 1)",
+				StringComparison.Ordinal), scaffold.IndexOf(
+				"Successor.SetIntProperty(\"KingdomBuilt\", 1)", StringComparison.Ordinal));
+			StringAssert.Contains("IsExactPendingImprovementSuccessor", scaffold);
+
+			string upgrade = KingdomUpgradeLogicalSource.Read();
+			string design = Between(upgrade, "public static string DesignKeyOf(",
+				"public static string DisplayNameOf(");
+			StringAssert.Contains("!IsFunctionallyBuilt(Work)", design);
+			StringAssert.Contains("public static bool IsFunctionallyBuilt(GameObject Work)",
+				upgrade);
+
+				foreach (string consumer in new[]
+				{
+					Source("Core", "KingdomCharterPart.GroundWork.cs"),
+					Source("Core", "KingdomCurrentCityEvidenceRuntime.cs"),
+					Source("Core", "KingdomRealmRetirementGround.WitnessWork.cs"),
+					Source("Experience", "KingdomCeremony.z03.NotableAndPatternBook.cs"),
+					Source("Experience", "KingdomCivicKnowledgeRuntime.Presentation.cs"),
+					Source("Experience", "KingdomEducationPostObservationRuntime.cs"),
+					Source("Experience", "KingdomGuestFeastRuntime.Observations.cs"),
+					Source("Experience", "KingdomGuestbook.z01.LodgingAndHousing.cs"),
+					Source("Experience", "KingdomLocus.z00.Keeper.cs"),
+					Source("Experience", "KingdomLocus.z00b.Ambient.cs"),
+					Source("Experience", "KingdomWaterRite.z03.OfferAndGates.cs"),
+					Source("Experience", "KingdomWitnessWorkProjectionRuntime.cs"),
+					Source("Growth", "KingdomAssentingMoot.Context.cs"),
+					Source("Growth", "KingdomAssentingMoot.ReadOnly.cs"),
+					Source("Growth", "KingdomAssentingMoot.Transactions.cs"),
+					Source("Growth", "KingdomCrops.00.FieldStateAndFoodCredit.cs"),
+					Source("Growth", "KingdomSocket.10.Redress.cs"),
+					Source("Growth", "KingdomSocket.12.RedressMenu.cs"),
+					Source("Growth", "KingdomCrops.01.Milling.cs"),
+					Source("Growth", "KingdomCrown.cs"),
+					Source("Growth", "KingdomCrownDiscovery.cs"),
+					Source("Growth", "KingdomDelveLink.02b.LoadedCompletionProof.cs"),
+					Source("Growth", "KingdomDesign.cs"),
+					Source("Growth", "KingdomLab.CivicSelection.cs"),
+					Source("Growth", "KingdomLabCivicOwnership.cs"),
+					Source("Growth", "KingdomLayout.cs"),
+					Source("Growth", "KingdomLodging.HomesAndReporting.cs"),
+					Source("Growth", "KingdomMaterials.06.InfrastructureAndDelivery.cs"),
+					Source("Growth", "KingdomMaterials.08.StrikeOrdering.cs"),
+					Source("Growth", "KingdomMaterials.10.SettlementPassAndYards.cs"),
+					Source("Growth", "KingdomMirrorGate.Destination.cs"),
+					Source("Growth", "KingdomMirrorGate.Purpose.cs"),
+					Source("Growth", "KingdomMirrorGate.Runtime.cs"),
+					Source("Growth", "KingdomPower.StatusAndSources.cs"),
+					Source("Growth", "KingdomPurpose.03.CargoIdentityAndEscrow.cs"),
+					Source("Growth", "KingdomPurposePortfolio.Open.cs"),
+					Source("Growth", "KingdomPurposePortfolio.OperationControl.cs"),
+					Source("Growth", "KingdomPurposePortfolio.PairingHelpers.cs"),
+					Source("Growth", "KingdomPurposePortfolio.RuntimeLookup.cs"),
+					Source("Growth", "KingdomReach.GroundCharacter.cs"),
+					Source("Growth", "KingdomRelocation.Evidence.cs"),
+					Source("Growth", "KingdomReopenedExoticActivation.Stasis.cs"),
+					Source("Growth", "KingdomZoning.04.GroundJudgmentAndMegastructure.cs"),
+					Source("Growth", "KingdomSatellite.cs"),
+					Source("Growth", "KingdomStasisVault.Entry.cs"),
+					Source("Growth", "KingdomSocket.04.ConversionDeclarationsAndValidation.cs"),
+					Source("Growth", "KingdomSocket.11.ConvertMenu.cs"),
+					Source("Growth", "KingdomYardGoods.cs"),
+					Source("Growth", "KingdomYards.cs"),
+					Source("Simulation/City", "KingdomNetworks.GraphComposition.cs"),
+					Source("Simulation/City", "KingdomPhysicalHappenings.04.FixturesCellsAndPathing.cs"),
+					Source("Simulation/City", "KingdomResidents.06.Helpers.cs")
+				})
+				{
+					StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt", consumer);
+					StringAssert.DoesNotContain("GetIntProperty(\"KingdomBuilt\")", consumer);
+					StringAssert.DoesNotContain(
+						"GetIntProperty(KingdomUpgrade.BuiltProperty)", consumer);
+				}
+
+				string faith = Source("Experience",
+					"KingdomFaith.z03.EducationAndConsecration.cs");
+				Assert.AreEqual(2, Count(faith, "KingdomCapabilityRuntime.Roots("));
+				StringAssert.DoesNotContain("KingdomCapabilityRuntime.Count(", faith);
+				string capabilities = Source("Growth", "KingdomCapabilityRuntime.cs");
+				StringAssert.Contains("if (!ours || KingdomUpgrade.IsFunctionallyBuilt(root))",
+					capabilities);
+
+				string plots = Source("Growth", "KingdomPlot2.06.Geometry.cs");
+				string reservations = Source("Growth",
+					"KingdomPlot2.06b.PendingReservations.cs");
+				StringAssert.Contains("TryReadReservedPlots(Z, survey, out plots)", plots);
+				StringAssert.Contains("full-zone sentinel", plots);
+				StringAssert.Contains("UpgradeTargetProperty", reservations);
+				StringAssert.Contains("FindGlobalLiveId(targetId", reservations);
+				StringAssert.Contains("After = afterIntent.Rect", reservations);
+				string growth = Source("Growth", "KingdomPlot2.21.GrowthRules.cs");
+				StringAssert.Contains("!r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)",
+					growth);
+				string water = Source("Growth", "KingdomGrowth.z17.WaterAndCapacity.cs");
+				Assert.AreEqual(6, Count(water,
+					"r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)"));
+				StringAssert.Contains("public static bool TryCountBeds", water);
+				StringAssert.Contains("survey.TryBenefits", water);
+				StringAssert.Contains("benefits.Total(\"roof\")", water);
+				StringAssert.DoesNotContain("HasPart(\"Bed\")", water);
+				StringAssert.DoesNotContain("BedsPerBunk", water);
+				string people = Source("Core", "KingdomReportsPeople.cs");
+				StringAssert.Contains("KingdomGrowth.TryCountBeds", people);
+				StringAssert.Contains("Lodging evidence is unavailable", people);
+				string layout = Source("Growth", "KingdomLayout.cs");
+				StringAssert.Contains("HasPendingImprovementSuccessorAuthority(Object)", layout);
+			}
+
+		[Test]
 		public void ActiveConsumersUseSharedIndexesInsteadOfSecondZoneWalks()
 		{
 			string offices = Source("Experience", "KingdomOffices.cs") + "\n"

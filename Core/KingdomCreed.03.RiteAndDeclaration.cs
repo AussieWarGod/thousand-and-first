@@ -22,7 +22,7 @@ namespace ThousandAndFirst
 		/// The rite of shared water: the seated city pours for the other city's people and drinks
 		/// with them.
 		/// <para>
-		/// Preconditions: the realm holds two cities at odds, the founder is on the seated city's
+		/// Preconditions: the realm has an exact pair of cities at odds, the founder is on the seated city's
 		/// ground, its dedicated stores can bear
 		/// <see cref="KingdomCreedRules.RiteCost"/>, and the rite is off cooldown. Side effects:
 		/// drams are drained from the dedicated stores, dissent eases, and the day is chronicled.
@@ -61,7 +61,7 @@ namespace ThousandAndFirst
 			int cost = KingdomCreedRules.RiteCost(temper);
 			if (cost <= 0)
 			{
-				Failure = "There is nothing between your two cities that a basin of water would mend. Do not go looking for one.";
+				Failure = "There is nothing between the realm's city pair that a basin of water would mend. Do not go looking for one.";
 				return false;
 			}
 			if (!KingdomCreedRules.RiteReady(System.LastRiteTick, The.Game.TimeTicks))

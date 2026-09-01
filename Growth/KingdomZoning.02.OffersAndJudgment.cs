@@ -61,12 +61,13 @@ namespace ThousandAndFirst
 			}
 			if (KingdomHostedArcologyRules.IsHostedLotKey(Entry.Key)) return false;
 			// The five civic-heart records are rite-owned internal growth rungs. They are never
-			// commissions: the founding rite lays the basin and improvement accretes the rest.
+			// independent commissions: successor work renovates and/or expands the same heart identity.
 			if (KingdomPlotRules.HeartRungOf(Entry.Key) > 0)
 			{
 				return false;
 			}
-			if (!KingdomRules.StyleAllows(Entry.Styles, System.Style) || System.Stage < Entry.MinStage)
+			if (!KingdomRules.StyleAllows(Entry.Styles, KingdomData.StyleKeys(System.Style))
+				|| System.Stage < Entry.MinStage)
 			{
 				return false;
 			}

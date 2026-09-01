@@ -516,6 +516,10 @@ namespace ThousandAndFirst.Tests
 			string derivation = Source("Core/KingdomCivicMemoryDerivation.cs");
 			StringAssert.Contains("KingdomVillageCovenantCodec.MaxEnvelopeBytes", derivation);
 			StringAssert.Contains("KingdomCivicMemoryLimits.MaxTreatyBytes", derivation);
+			StringAssert.Contains("if (!AtMost(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,",
+				derivation);
+			StringAssert.Contains("private static bool AtMost(int Value, int Ceiling)", derivation);
+			StringAssert.Contains("return Value <= Ceiling;", derivation);
 			StringAssert.Contains("must never widen what a payload there may be", derivation);
 
 			string inspection = Source("Core/KingdomVillageCovenantInspection.cs");

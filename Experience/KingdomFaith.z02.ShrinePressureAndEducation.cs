@@ -35,6 +35,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		private static void AdvancePull(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, string BuildingName)
 		{
+			if (!KingdomData.CreedUsesTheology(ShrineCreed)) return;
 			long now = (The.Game != null) ? The.Game.TimeTicks : 0L;
 			BrinkRecord brink = KingdomBrink.Of(Settler, BrinkKind.Creed);
 			if (brink.Stands)
@@ -81,6 +82,11 @@ namespace ThousandAndFirst
 		// and still finds neutral -- so reaching here at all is the pressure still standing.
 		private static void SpendShrineWindow(KingdomSystem System, Zone Z, GameObject Settler, string ShrineCreed, BrinkRecord Brink)
 		{
+			if (!KingdomData.CreedUsesTheology(ShrineCreed))
+			{
+				LiftShrineBrink(System, Z, Settler);
+				return;
+			}
 			if (Brink.Cause != ShrineCreed)
 			{
 				// A different shrine has claimed them, or this one was reconsecrated. The creed at
@@ -160,10 +166,10 @@ namespace ThousandAndFirst
 			KingdomConversion.NotePressure(System, Z, Resident, ConversionChannel.Shrine, ShrineCreed);
 		}
 
-		private static void RunEducationLapse(GameObject Scriptorium, KingdomRules.BuildEntry Entry)
+		private static void RunEducationLapse(GameObject Scriptorium,
+			KingdomRules.BuildEntry Entry, bool Active)
 		{
-			bool staffed = Scriptorium.GetIntProperty(StaffedProperty) == 1;
-			if (staffed)
+			if (Active)
 			{
 				Scriptorium.SetIntProperty(EducationLapsedAnnouncedProperty, 0);
 				return;
@@ -173,7 +179,8 @@ namespace ThousandAndFirst
 				return;
 			}
 			Scriptorium.SetIntProperty(EducationLapsedAnnouncedProperty, 1);
-			MessageQueue.AddPlayerMessage(KingdomFaithRules.EducationLapsedLine(Entry.Name));
+			MessageQueue.AddPlayerMessage(KingdomFaithRules.EducationLapsedLine(Entry.Name,
+				Scriptorium.GetIntProperty(StaffedProperty) == 1));
 		}
 
 		private static string NameOf(GameObject Resident)

@@ -126,6 +126,48 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("4 drams", summary);
 			StringAssert.Contains("charter", summary);
 		}
+
+		[Test]
+		public void VineFoodNeedsOneExactLiveFixture()
+		{
+			var house = new KingdomYardGoodsRules.FoodHouseholdEvidence {
+				PlotId = "lot-1", YardKey = "vinelattice",
+				ExpectedBlueprint = "r_KingdomVineLattice", FoodCap = 1,
+				Built = true, Eligible = true, Registered = true };
+			var fixture = new KingdomYardGoodsRules.FoodFixtureEvidence {
+				PlotId = "lot-1", YardKey = "vinelattice",
+				Blueprint = "r_KingdomVineLattice", Standing = true,
+				InYard = true, Unbroken = true };
+			Assert.AreEqual(1, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }));
+			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence>()), "removed fixture");
+			fixture.Unbroken = false;
+			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "broken fixture");
+		}
+
+		[Test]
+		public void VineFoodFailsClosedOnWrongYardDuplicateAndOverCap()
+		{
+			var house = new KingdomYardGoodsRules.FoodHouseholdEvidence {
+				PlotId = "lot-1", YardKey = "vinelattice",
+				ExpectedBlueprint = "r_KingdomVineLattice", FoodCap = 1,
+				Built = true, Eligible = true, Registered = true };
+			var fixture = new KingdomYardGoodsRules.FoodFixtureEvidence {
+				PlotId = "lot-1", YardKey = "vinelattice",
+				Blueprint = "r_KingdomVineLattice", Standing = true,
+				InYard = false, Unbroken = true };
+			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "wrong yard");
+			fixture.InYard = true;
+			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture, fixture }),
+				"duplicate authority");
+			house.FoodCap = KingdomYardRules.MaxShadePerWork + 1;
+			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "over-cap spec");
+		}
 	}
 
 	[TestFixture]

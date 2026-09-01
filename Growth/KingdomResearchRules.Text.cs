@@ -56,6 +56,13 @@ namespace ThousandAndFirst
 				+ " stands over nothing. Nobody has been set anything to work out.";
 		}
 
+		public static string UnavailableBenchLine(string LabName)
+		{
+			string bench = string.IsNullOrWhiteSpace(LabName) ? "The inquiry place"
+				: "The " + LabName.Trim();
+			return bench + " has no working desk, shelf, or instrument inside its designated ground. Restore one before its inquiry can continue.";
+		}
+
 		/// <summary>A subject that has become inadmissible after it was taken up. Deliberately
 		/// does not name the hidden/forbidding fact: the research visibility law still applies
 		/// while the saved labour waits on the shelf.</summary>

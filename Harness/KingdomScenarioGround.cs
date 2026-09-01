@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using XRL;
+using ThousandAndFirst.Harness;
 using XRL.World;
 
 namespace ThousandAndFirst
@@ -9,20 +10,12 @@ namespace ThousandAndFirst
 	/// <summary>
 	/// Dev-only ground scout for scenario staging. The gallery deliberately refuses to clear live
 	/// terrain, so a populated arrival zone can never stage a case; this verb walks nearby surface
-	/// zones, asks the gallery's own canvas preflight whether a case-plus-margin rectangle fits,
-	/// and teleports the operator to the first zone that answers yes. It reuses the exact preflight
-	/// the staging path runs, so a zone it approves is a zone staging will accept, and it mutates
-	/// nothing: movement only, no terrain edits, no object clears.
+	/// zones, asks the gallery's own canvas preflight whether the stamped case's exact posed rectangle
+	/// fits, and teleports the operator to a proved landing outside that rectangle and its complete
+	/// review clearance. It mutates nothing but movement: no terrain edits and no object clears.
 	/// </summary>
 	public static class KingdomScenarioGround
 	{
-		/// <summary>
-		/// Probe footprint: the phase-1 staged case is a small tent, and real wilderness never
-		/// offers a barren XL rectangle (grass, dunes, and pools all lawfully refuse), so the
-		/// probe covers the small case plus generous margin rather than the widest authored map.
-		/// </summary>
-		private const int ProbeWidth = 8;
-		private const int ProbeHeight = 6;
 		private const int SearchRadius = 3;
 
 		public static string Scout()
@@ -43,6 +36,11 @@ namespace ThousandAndFirst
 			Zone here = player?.CurrentZone;
 			if (player == null || here == null)
 				return "No player zone; the ground scout runs only inside a live game.";
+			int probeWidth;
+			int probeHeight;
+			string exactFailure;
+			if (!TryExactDimensions(out probeWidth, out probeHeight, out exactFailure))
+				return "Ground scout refused: " + KingdomScenarioRules.Bounded(exactFailure);
 			string zoneId = here.ZoneID;
 			string[] parts = zoneId.Split('.');
 			int wx;
@@ -74,8 +72,8 @@ namespace ThousandAndFirst
 						if (zone == null) { tried.Add(candidateId + " (null)"); continue; }
 						KingdomPlotRules.PlotRect rect;
 						string failure;
-						if (!KingdomArchitectureGalleryWishes.TryFindCanvas(zone, ProbeWidth,
-							ProbeHeight, out rect, out failure))
+						if (!KingdomArchitectureGalleryWishes.TryFindCanvas(zone, probeWidth,
+							probeHeight, out rect, out failure))
 						{
 							tried.Add(candidateId + " (no canvas)");
 							continue;
@@ -85,18 +83,89 @@ namespace ThousandAndFirst
 							Ok = true;
 							return "This zone already fits a staged case; no move was needed.";
 						}
-						Cell target = zone.GetCell(rect.CenterX, rect.CenterY);
-						if (target == null) { tried.Add(candidateId + " (no cell)"); continue; }
+						HashSet<int> connections =
+							KingdomArchitectureGalleryWishes.ConnectionCells(zone);
+						Cell target = FindParkingCell(zone, rect, connections);
+						if (target == null
+							|| !KingdomArchitectureGalleryWishes.SafeCanvas(zone, rect, connections,
+								target))
+						{
+							tried.Add(candidateId + " (no safe exterior landing)");
+							continue;
+						}
 						player.CurrentCell.RemoveObject(player);
 						target.AddObject(player);
 						The.ZoneManager.SetActiveZone(zone);
 						The.ZoneManager.ProcessGoToPartyLeader();
+						if (!ReferenceEquals(player.CurrentZone, zone)
+							|| !ReferenceEquals(player.CurrentCell, target))
+							return "Ground scout moved the tester but could not prove its exact landing.";
 						Ok = true;
-						return "Moved to " + candidateId + "; a case-plus-margin canvas fits here. "
+						return "Moved to " + candidateId + "; the exact " + probeWidth + "x"
+							+ probeHeight + " posed case and an exterior landing fit here. "
 							+ "Run {{W|kingdom:scenario realize}}.";
 					}
 			return "No stageable ground within " + SearchRadius + " parasangs. Tried: "
 				+ string.Join(", ", tried.ToArray());
+		}
+
+		/// <summary>The exact world dimensions frozen by this stamped gallery scenario.</summary>
+		internal static bool TryExactDimensions(out int Width, out int Height, out string Failure)
+		{
+			Width = 0;
+			Height = 0;
+			KingdomScenarioPlan plan;
+			KingdomScenarioProvenance stamp;
+			KingdomScenarioGallerySlice.Case expected;
+			ArchitectureLayoutSnapshot snapshot;
+			if (!KingdomScenarioRealizer.TryBindStampedPlan(out plan, out stamp, out Failure)
+				|| !KingdomScenarioRun.TryExpectedGalleryCase(plan, out expected, out Failure)
+				|| !KingdomArchitecture.TryResolveVariant(expected.BuildKey, expected.TypeKey,
+					expected.LotSize, expected.VariantKey, expected.Facing, out snapshot, out Failure))
+				return false;
+			if (!KingdomArchitectureRules.TryWorldDimensions(snapshot.Width, snapshot.Height,
+				snapshot.Facing, out Width, out Height))
+			{
+				Failure = "the exact requested pose has impossible world dimensions";
+				return false;
+			}
+			return true;
+		}
+
+		/// <summary>Nearest deterministic walkable cell outside an exact canvas's full clearance.</summary>
+		internal static Cell FindParkingCell(Zone Zone, KingdomPlotRules.PlotRect Canvas,
+			HashSet<int> Connections)
+		{
+			if (Zone == null || Connections == null) return null;
+			int reach = KingdomArchitectureGalleryWishes.ReviewClearance;
+			KingdomPlotRules.PlotRect clearance = new KingdomPlotRules.PlotRect(
+				Canvas.X1 - reach, Canvas.Y1 - reach, Canvas.X2 + reach, Canvas.Y2 + reach);
+			Cell best = null;
+			int bestDistance = int.MaxValue;
+			for (int y = 0; y < Zone.Height; y++)
+				for (int x = 0; x < Zone.Width; x++)
+				{
+					if (clearance.Contains(x, y)) continue;
+					Cell cell = Zone.GetCell(x, y);
+					if (!SafeParking(cell, Zone, Connections)) continue;
+					int distance = Math.Abs(x - Canvas.CenterX) + Math.Abs(y - Canvas.CenterY);
+					if (distance >= bestDistance) continue;
+					best = cell;
+					bestDistance = distance;
+				}
+			return best;
+		}
+
+		private static bool SafeParking(Cell Cell, Zone Zone, HashSet<int> Connections)
+		{
+			if (Cell == null || Connections.Contains(Cell.Y * Zone.Width + Cell.X)
+				|| Cell.HasStairs() || Cell.HasObjectWithPart("StairsUp")
+				|| Cell.HasObjectWithPart("StairsDown") || !KingdomRoads.Walkable(Cell)
+				|| !Cell.IsEmptyOfSolid()) return false;
+			List<GameObject> objects = Cell.GetObjects();
+			for (int i = 0; i < objects.Count; i++)
+				if (GameObject.Validate(objects[i]) && objects[i].IsCreature) return false;
+			return true;
 		}
 	}
 }

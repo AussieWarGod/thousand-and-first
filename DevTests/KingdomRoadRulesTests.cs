@@ -581,6 +581,64 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ABorderThresholdNamesMarginThenTheTrueLaneTwoCellsBeyondTheLot()
+		{
+			ArchitectureLayoutSnapshot snapshot = InteriorEntranceSnapshot();
+			snapshot.Anchors[0].Key = "entrance:public@2,3";
+			snapshot.Anchors[0].X = 2;
+			snapshot.Anchors[0].Y = 3;
+			snapshot.Cells.Find(cell => cell.X == 3 && cell.Y == 2).Passability =
+				ArchitecturePassability.Blocked;
+			ArchitectureCellState threshold = snapshot.Cells.Find(
+				cell => cell.X == 2 && cell.Y == 3);
+			threshold.Claim = ArchitectureClaim.Building;
+			threshold.Passability = ArchitecturePassability.Walkable;
+			snapshot.Facing = ArchitectureFacing.North;
+			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 14, 13);
+			List<ArchitecturePoint> route = new List<ArchitecturePoint>();
+
+			Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
+				snapshot.Anchors[0], route, out int doorX, out int doorY,
+				out int laneX, out int laneY));
+			Assert.AreEqual(12, doorX);
+			Assert.AreEqual(13, doorY);
+			Assert.AreEqual(1, route.Count);
+			Assert.AreEqual(12, route[0].X);
+			Assert.AreEqual(14, route[0].Y, "the first exterior cell is reserved margin");
+			Assert.AreEqual(12, laneX);
+			Assert.AreEqual(15, laneY, "road evidence belongs at the lane, not its margin");
+			Assert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
+		}
+
+		[Test]
+		public void InteriorEgressRefusesClaimedBlockedAndMalformedApproaches()
+		{
+			ArchitectureLayoutSnapshot snapshot = InteriorEntranceSnapshot();
+			List<ArchitecturePoint> route = new List<ArchitecturePoint>();
+			ArchitectureCellState approach = snapshot.Cells.Find(
+				cell => cell.X == 4 && cell.Y == 2);
+
+			approach.Claim = ArchitectureClaim.Building;
+			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
+				route, out _, out _, out _, out _));
+			approach.Claim = ArchitectureClaim.Unclaimed;
+			approach.Passability = ArchitecturePassability.Blocked;
+			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
+				route, out _, out _, out _, out _));
+			approach.Passability = ArchitecturePassability.Walkable;
+			snapshot.Cells.Add(new ArchitectureCellState
+			{
+				X = 4, Y = 2, Claim = ArchitectureClaim.Unclaimed,
+				Passability = ArchitecturePassability.Walkable
+			});
+			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
+				route, out _, out _, out _, out _));
+		}
+
+		[Test]
 		public void ExactAuthoredTraceRefusesBlockedDuplicateAndDiagonalIntermediatesWhole()
 		{
 			List<int> packed = new List<int> { 99 };
@@ -615,14 +673,14 @@ namespace ThousandAndFirst.Tests
 				for (int x = 0; x < snapshot.Width; x++)
 					snapshot.Cells.Add(new ArchitectureCellState
 					{
-						X = x, Y = y, Claim = true,
+						X = x, Y = y, Claim = ArchitectureClaim.Building,
 						Passability = ArchitecturePassability.Blocked,
 						Cover = ArchitectureCover.Walled
 					});
 			ArchitectureCellState entrance = snapshot.Cells.Find(cell => cell.X == 3 && cell.Y == 2);
 			entrance.Passability = ArchitecturePassability.Walkable;
 			ArchitectureCellState exterior = snapshot.Cells.Find(cell => cell.X == 4 && cell.Y == 2);
-			exterior.Claim = false;
+			exterior.Claim = ArchitectureClaim.Unclaimed;
 			exterior.Passability = ArchitecturePassability.Walkable;
 			exterior.Cover = ArchitectureCover.Open;
 			snapshot.Anchors.Add(new ArchitectureAnchor
@@ -829,6 +887,7 @@ namespace ThousandAndFirst.Tests
 		// --- Paving ----------------------------------------------------------------------
 
 		[TestCase("Marble", "MarbleFloor")]
+		[TestCase("Black Marble", "BlackMarbleWalkway")]
 		[TestCase("Limestone", "SaltPath")]
 		[TestCase("BrinestalkWall", "WoodFloor")]
 		[TestCase("Verdigris", "GreenTile")]
@@ -857,6 +916,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase("Marble", KingdomMaterial.Marble)]
+		[TestCase("Black Marble", KingdomMaterial.Marble)]
 		[TestCase("Limestone", KingdomMaterial.Stone)]
 		// Fulcrete is what KingdomMaterials.WallBlueprint raises out of ShapedStone and nothing
 		// else, so paving beside a Fulcrete wall is priced in dressed stone, not raw (Addendum 7).

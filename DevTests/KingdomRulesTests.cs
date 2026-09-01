@@ -1105,23 +1105,23 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MaxBuildingsForStage_LeavesRoomForACityToActuallyBeBuilt()
 		{
-			// A City wants 50 settlers and 1024 storage: 13 bunks plus 4 great cisterns before a
-			// single civic building, a shop, a work or a wall. The old flat forty could not even
-			// house it.
-			int bunks = (50 + KingdomRules.BedsPerBunk - 1) / KingdomRules.BedsPerBunk;
+			// Worst case: one visible single-place bed fixture per settler plus four great
+			// cisterns. Housing plots normally embody several fixtures, so this stays conservative.
+			int sleepPlaces = 50;
 			int cisterns = 1024 / 256;
-			Assert.Greater(KingdomRules.MaxBuildingsForStage(GrowthStage.City), (bunks + cisterns) * 3,
+			Assert.Greater(KingdomRules.MaxBuildingsForStage(GrowthStage.City),
+				(sleepPlaces + cisterns) * 3,
 				"a City has no room left over for being a city");
 		}
 
 		[Test]
-		public void BedsPerBunk_MakesTheCityStageReachableAtAll()
+		public void LiteralSleepPlacesKeepTheCityStageReachable()
 		{
-			// City wants 50 settlers and 1024 storage. Four to a bunk leaves its staged plot budget
-			// mostly free for the works that make it a city.
-			int bunks = (50 + KingdomRules.BedsPerBunk - 1) / KingdomRules.BedsPerBunk;
+			// One ordinary Bed means one person. A future visibly multi-berth blueprint may declare
+			// more, but no global multiplier can turn a single prop into invisible households.
+			int sleepPlaces = 50;
 			int cisterns = 1024 / 256;
-			Assert.LessOrEqual(bunks + cisterns,
+			Assert.LessOrEqual(sleepPlaces + cisterns,
 				KingdomRules.MaxBuildingsForStage(GrowthStage.City),
 				"a City still cannot be built within the building cap");
 		}

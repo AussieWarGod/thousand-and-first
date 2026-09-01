@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using XRL.UI;
 using XRL.World;
 
@@ -11,11 +10,11 @@ namespace ThousandAndFirst
 		{
 			switch (Purpose)
 			{
-			case KingdomPolityCohortPurpose.Guard: return "Ask about the watch";
-			case KingdomPolityCohortPurpose.Patrol: return "Hear the local report";
-			case KingdomPolityCohortPurpose.Courier: return "Hear the current deed";
-			case KingdomPolityCohortPurpose.Trader: return "Inspect the market fact";
-			case KingdomPolityCohortPurpose.Migrant: return "Hear the request";
+			case KingdomPolityCohortPurpose.Guard: return "Hear the witnessed watch report";
+			case KingdomPolityCohortPurpose.Patrol: return "Hear the condition report";
+			case KingdomPolityCohortPurpose.Courier: return "Receive the frozen message";
+			case KingdomPolityCohortPurpose.Trader: return "Hear the market notice";
+			case KingdomPolityCohortPurpose.Migrant: return "Answer the petition";
 			case KingdomPolityCohortPurpose.Warband: return "Address confrontation";
 			default: return "Hear delegation";
 			}
@@ -25,11 +24,11 @@ namespace ThousandAndFirst
 		{
 			switch (Purpose)
 			{
-			case KingdomPolityCohortPurpose.Guard: return "ask about the watch";
-			case KingdomPolityCohortPurpose.Patrol: return "hear the local report";
-			case KingdomPolityCohortPurpose.Courier: return "hear the current deed";
-			case KingdomPolityCohortPurpose.Trader: return "inspect the market fact";
-			case KingdomPolityCohortPurpose.Migrant: return "hear the request";
+			case KingdomPolityCohortPurpose.Guard: return "hear the witnessed watch report";
+			case KingdomPolityCohortPurpose.Patrol: return "hear the condition report";
+			case KingdomPolityCohortPurpose.Courier: return "receive the frozen message";
+			case KingdomPolityCohortPurpose.Trader: return "hear the market notice";
+			case KingdomPolityCohortPurpose.Migrant: return "answer the petition";
 			case KingdomPolityCohortPurpose.Warband: return "address the confrontation";
 			default: return "hear the delegation";
 			}
@@ -38,140 +37,118 @@ namespace ThousandAndFirst
 		private static bool CanAnswerAmbient(KingdomSystem System,
 			KingdomPolityCohortPlan Cohort)
 		{
-			if (!IsAmbient(Cohort?.Purpose ?? KingdomPolityCohortPurpose.None) ||
+			if (System == null || !IsAmbient(Cohort?.Purpose ??
+				KingdomPolityCohortPurpose.None) ||
 				(Cohort.Phase != KingdomPolityCohortPhase.Materialized &&
 				 Cohort.Phase != KingdomPolityCohortPhase.Concluded) ||
 				KingdomPolityDispatchRules.Expired(Cohort, Now())) return false;
-			return TryCurrentAmbientFacts(System, Cohort,
-				out KingdomPolityEndpointFacts _, out string _);
+			return KingdomPolityAmbientTransactionRules.Valid(Cohort.AmbientTransaction,
+				Cohort.CohortId, out _);
 		}
 
 		private static void AnswerAmbient(KingdomSystem System, GameObject Body,
 			KingdomPolityCohortPlan Cohort)
 		{
-			if (!TryCurrentAmbientFacts(System, Cohort,
-				out KingdomPolityEndpointFacts facts, out string failure))
+			KingdomPolityAmbientTransaction transaction = Cohort.AmbientTransaction;
+			if (!KingdomPolityAmbientTransactionRules.Valid(transaction, Cohort.CohortId,
+				out string failure))
 			{
-				Popup.Show("This company no longer matches the current settlement facts. " + failure);
+				Popup.Show("This pre-schema visit has no exact semantic transaction. Nothing changes.");
 				return;
 			}
-			string report = AmbientReport(System, Cohort, facts);
-			bool acknowledge = Cohort.Purpose == KingdomPolityCohortPurpose.Courier ||
-				Cohort.Purpose == KingdomPolityCohortPurpose.Migrant;
-			if (!acknowledge)
+			string report = AmbientReport(transaction);
+			if (transaction.TerminalChoice != KingdomPolityAmbientTerminalChoice.None)
 			{
-				Popup.Show(report); return;
+				Popup.Show(report + "\n\nThe exact answer is already recorded: " +
+					TerminalLabel(transaction.TerminalChoice) + "."); return;
 			}
-			if (Cohort.Phase == KingdomPolityCohortPhase.Concluded)
-			{
-				Popup.Show(report + "\n\nYour acknowledgement is already recorded."); return;
-			}
-			string accept = Cohort.Purpose == KingdomPolityCohortPurpose.Courier
-				? "Acknowledge the message" : "Acknowledge the request (admit no resident)";
-			int picked = Popup.PickOption(Title: ActionLabel(Cohort.Purpose), Intro: report,
-				Options: new[] { accept, "Answer later" }, AllowEscape: true);
-			if (picked != 0) return;
-			// Cancellation is free. Pause is checked only after explicit choice and before CAS.
+			string[] options = Options(transaction.Purpose);
+			int picked = Popup.PickOption(Title: ActionLabel(transaction.Purpose),
+				Intro: report, Options: options, AllowEscape: true);
+			if (picked < 0 || picked >= options.Length - 1) return;
 			if (!KingdomMaster.NewWorkAllowed(System))
 			{
-				Popup.Show("Settlement simulation is paused. Nothing is acknowledged."); return;
+				Popup.Show("Settlement simulation is paused. No answer is recorded."); return;
 			}
-			string witnessed = AmbientAcknowledgement(Cohort);
-			if (!KingdomPolityCohortRules.TryConcludeEndpointCohort(System.PolityLedger,
-				System.PolityLedger.Revision, Cohort.CohortId, witnessed,
+			long tick = Now(); KingdomPolityAdmissionHandoff handoff = null;
+			KingdomPolityAmbientTerminalChoice choice = Choice(transaction.Purpose, picked);
+			if (transaction.Purpose == KingdomPolityCohortPurpose.Migrant &&
+				!KingdomPolityAmbientTransactionRules.TryPrepareAdmissionHandoff(System.RealmId,
+					Cohort, Cohort.ResolvedMembers[0].MemberKey, Body.ID, Body.CurrentZone.ZoneID,
+					Body.BaseDisplayNameStripped, tick, out handoff, out failure))
+			{
+				Popup.Show("The petition handoff cannot be prepared: " + failure); return;
+			}
+			if (!KingdomPolityAmbientTransactionRules.TryRecordTerminal(System.PolityLedger,
+				System.PolityLedger.Revision, Cohort.CohortId, choice, tick, handoff,
 				out KingdomPolityPublicationResult _, out failure))
 			{
-				Popup.Show("The acknowledgement is not recorded: " + failure); return;
+				Popup.Show("The answer is not recorded: " + failure); return;
 			}
-			Popup.Show(Cohort.Purpose == KingdomPolityCohortPurpose.Courier
-				? "The exact local statement is acknowledged. No departure or journey is inferred."
-				: "The request is acknowledged without admitting a resident. No departure is inferred.");
+			Popup.Show(TerminalResult(choice));
 		}
 
-		private static bool TryCurrentAmbientFacts(KingdomSystem System,
-			KingdomPolityCohortPlan Cohort, out KingdomPolityEndpointFacts Facts,
-			out string Failure)
+		private static string AmbientReport(KingdomPolityAmbientTransaction T)
 		{
-			Facts = null; Failure = null;
-			long tick = Now();
-			if (System == null || Cohort == null || Cohort.PresentationOptionKind !=
-				KingdomExperienceOptionKind.AmbientUse ||
-				!KingdomPolityEndpointFactRuntime.TryOffer(System, tick,
-					out KingdomPolityDispatchOffer offer, out Failure)) return false;
-			for (int i = 0; i < offer.Endpoints.Count; i++)
-				if (offer.Endpoints[i].SettlementId == Cohort.SurfaceRef) Facts = offer.Endpoints[i];
-			if (Facts == null)
-			{
-				Failure = "the frozen endpoint is absent from current topology"; return false;
-			}
-			long cause = Cohort.EventOrdinal > (ulong)(long.MaxValue /
-				KingdomPolityDispatchRules.PeriodTicks) ? long.MaxValue :
-				(long)Cohort.EventOrdinal * KingdomPolityDispatchRules.PeriodTicks;
-			if (!KingdomPolityDispatchRules.TryCreateForPurpose(System.RealmId, Facts,
-				offer.Endpoints.Count, Cohort.EventOrdinal, cause, Cohort.Purpose,
-				out KingdomPolityDueWork exact, out Failure)) return false;
-			if (exact.CohortId != Cohort.CohortId || exact.EventStreamId != Cohort.EventStreamId ||
-				exact.SourceRef != Cohort.SourceRef || exact.SettlementId != Cohort.SurfaceRef ||
-				exact.MemberCount != Cohort.ScaleBudget)
-			{
-				Failure = "current facts differ from the frozen cohort cause"; return false;
-			}
-			return true;
-		}
-
-		private static string AmbientReport(KingdomSystem System, KingdomPolityCohortPlan Cohort,
-			KingdomPolityEndpointFacts Facts)
-		{
-			switch (Cohort.Purpose)
+			string from = KingdomPresentation.Rich(T.SourceSettlementName);
+			string to = KingdomPresentation.Rich(T.DestinationSettlementName);
+			string detail = KingdomPresentation.Rich(T.SafeDetail);
+			switch (T.Purpose)
 			{
 			case KingdomPolityCohortPurpose.Guard:
-				return "The watch reports " + Facts.Population.ToString(CultureInfo.InvariantCulture) +
-					" people under the current gate order. This is a report, not a new guard posting.";
+				return "At " + to + ", the watch reports one witnessed local matter:\n\n" + detail;
 			case KingdomPolityCohortPurpose.Patrol:
-				return "The patrol speaks at this exact loaded settlement. No road condition, " +
-					"journey, or offscreen result is inferred.";
+				return "At " + to + ", the patrol reports one caused local condition:\n\n" + detail +
+					"\n\nNo unseen safety, road, journey, or offscreen outcome is claimed.";
 			case KingdomPolityCohortPurpose.Courier:
-				return "The courier repeats the current local deed, " + KingdomPresentation.Rich(
-					CurrentDeed(System, Cohort.SurfaceRef)) +
-					". Acknowledgement proves no transport or route.";
+				return "A message frozen at " + from + " is delivered to " + to + ":\n\n" + detail;
 			case KingdomPolityCohortPurpose.Trader:
-				return "The current settlement has tier " + Facts.ShopTier.ToString(
-					CultureInfo.InvariantCulture) + " market standing. This proves no route, " +
-					"wares, shop, trade, or entitlement.";
+				return "A market visit from " + from + " addresses " + to + ":\n\n" + detail;
 			default:
-				return "The company asks after " + Facts.KnownStorageSpace.ToString(
-					CultureInfo.InvariantCulture) +
-					" known room. Acknowledgement does not admit a resident or promise housing.";
+				return "A petitioner from " + from + " asks to enter " + to + ":\n\n" + detail;
 			}
 		}
 
-		private static string CurrentDeed(KingdomSystem System, string SettlementId)
+		private static string[] Options(KingdomPolityCohortPurpose Purpose)
 		{
-			if (System?.City?.SettlementId == SettlementId)
-				return string.IsNullOrEmpty(System.LastDeed) ? "the settlement's current deed" :
-					System.LastDeed;
-			if (System != null && System.TryFindSettlement(SettlementId, out bool seated,
-				out KingdomSettlement settlement) && !seated && !string.IsNullOrEmpty(
-					settlement?.LastDeed)) return settlement.LastDeed;
-			return "the settlement's current deed";
+			if (Purpose == KingdomPolityCohortPurpose.Migrant)
+				return new[] { "Accept the petition", "Reject the petition", "Answer later" };
+			return new[] { Purpose == KingdomPolityCohortPurpose.Trader
+				? "Acknowledge the no-trade visit" : "Acknowledge the report", "Answer later" };
 		}
 
-		private static string AmbientAcknowledgement(KingdomPolityCohortPlan Cohort)
+		private static KingdomPolityAmbientTerminalChoice Choice(
+			KingdomPolityCohortPurpose Purpose, int Pick)
 		{
-			return KingdomPolityRules.ActivationId(
-				"taf:event:polity-ambient-acknowledgement:v1:",
-				"polity-ambient-acknowledgement-v1", Cohort.CohortId, Cohort.SourceRef,
-				((byte)Cohort.Purpose).ToString(CultureInfo.InvariantCulture),
-				Cohort.EventOrdinal.ToString(CultureInfo.InvariantCulture));
+			if (Purpose == KingdomPolityCohortPurpose.Migrant) return Pick == 0
+				? KingdomPolityAmbientTerminalChoice.PetitionAccepted
+				: KingdomPolityAmbientTerminalChoice.PetitionRejected;
+			return Purpose == KingdomPolityCohortPurpose.Trader
+				? KingdomPolityAmbientTerminalChoice.AcknowledgedNoTrade
+				: KingdomPolityAmbientTerminalChoice.Acknowledged;
+		}
+
+		private static string TerminalResult(KingdomPolityAmbientTerminalChoice Choice)
+		{
+			if (Choice == KingdomPolityAmbientTerminalChoice.PetitionAccepted)
+				return "The petition is accepted and handed to resident-arrival authority. No resident, " +
+					"citizenship, row, or body binding is created by this answer.";
+			if (Choice == KingdomPolityAmbientTerminalChoice.PetitionRejected)
+				return "The petition is rejected. No resident authority changes.";
+			return "The exact frozen matter is acknowledged. No journey or offscreen result is inferred.";
+		}
+
+		private static string TerminalLabel(KingdomPolityAmbientTerminalChoice Choice)
+		{
+			return Choice == KingdomPolityAmbientTerminalChoice.PetitionAccepted ? "accepted" :
+				Choice == KingdomPolityAmbientTerminalChoice.PetitionRejected ? "rejected" :
+				Choice == KingdomPolityAmbientTerminalChoice.AcknowledgedNoTrade ?
+				"acknowledged without trade" : "acknowledged";
 		}
 
 		private static bool IsAmbient(KingdomPolityCohortPurpose Purpose)
 		{
-			return Purpose == KingdomPolityCohortPurpose.Guard ||
-				Purpose == KingdomPolityCohortPurpose.Patrol ||
-				Purpose == KingdomPolityCohortPurpose.Courier ||
-				Purpose == KingdomPolityCohortPurpose.Trader ||
-				Purpose == KingdomPolityCohortPurpose.Migrant;
+			return KingdomPolityDispatchRules.AmbientPurpose(Purpose);
 		}
 	}
 }

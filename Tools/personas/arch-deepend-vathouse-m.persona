@@ -1,0 +1,6 @@
+# Workshop-era wet procedure room, paired with hall surgery at one pose.
+DESCRIPTION=medium vat-house stages for wet-work zoning lighting and service review
+REQUEST=arch-deepend-vathouse-m;facing=west
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,medical,progression,taste

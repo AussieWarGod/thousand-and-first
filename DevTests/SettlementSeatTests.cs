@@ -7,6 +7,23 @@ using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
 {
+	/// <summary>Deliberate old-save seam. Tests below must seed and inspect obsolete projection
+	/// columns to prove their migration; ordinary tests and production code stay warning-clean.</summary>
+	internal static class KingdomLegacyRosterProjectionTestAccess
+	{
+#pragma warning disable CS0618 // Intentional coverage of serialized compatibility projections.
+		internal static List<string> Names(KingdomSettlement Value) => Value.RosterNames;
+		internal static void SetNames(KingdomSettlement Value, List<string> Rows) =>
+			Value.RosterNames = Rows;
+		internal static List<string> Origins(KingdomSettlement Value) => Value.RosterOrigins;
+		internal static void SetOrigins(KingdomSettlement Value, List<string> Rows) =>
+			Value.RosterOrigins = Rows;
+		internal static List<string> Arrivals(KingdomSettlement Value) => Value.RosterArrived;
+		internal static void SetArrivals(KingdomSettlement Value, List<string> Rows) =>
+			Value.RosterArrived = Rows;
+#pragma warning restore CS0618
+	}
+
 	/// <summary>
 	/// The seat swap is where a city can be lost without a message: a capture that drops one
 	/// field drops it every time the founder walks between cities, and nothing in the game says
@@ -53,6 +70,18 @@ namespace ThousandAndFirst.Tests
 			{
 				object expected = written[field.Name];
 				object actual = field.GetValue(restored);
+				// These names remain in the carried wire shape, but the 2026-09-01 food ruling
+				// deliberately normalizes every pre-ruling consequence to its inert projection.
+				if (field.Name == "HungerStreak" || field.Name == "MealShade")
+				{
+					Assert.AreEqual(0, actual, "retired field " + field.Name + " was reanimated");
+					continue;
+				}
+				if (field.Name == "Famished" || field.Name == "ScrapsAnnounced")
+				{
+					Assert.AreEqual(false, actual, "retired field " + field.Name + " was reanimated");
+					continue;
+				}
 				if (field.FieldType.IsValueType)
 				{
 					Assert.AreEqual(expected, actual, "field " + field.Name + " was not carried through capture and restore");
@@ -71,10 +100,11 @@ namespace ThousandAndFirst.Tests
 			// the rosters and the ledger move by reference rather than being copied every time
 			// the founder crosses a zone line.
 			KingdomSettlement seat = new KingdomSettlement();
-			seat.RosterNames.Add("Ptoh");
+			KingdomLegacyRosterProjectionTestAccess.Names(seat).Add("Ptoh");
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(seat);
-			Assert.AreSame(seat.RosterNames, captured.RosterNames);
+			Assert.AreSame(KingdomLegacyRosterProjectionTestAccess.Names(seat),
+				KingdomLegacyRosterProjectionTestAccess.Names(captured));
 			Assert.AreSame(seat.Ledger, captured.Ledger);
 		}
 
@@ -264,18 +294,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void NormalizeRetiresLegacyNotableEconomyButPreservesMealEvidence()
+		public void NormalizeRetiresLegacyNotableAndPassiveFoodEconomy()
 		{
 			KingdomSettlement legacy = new KingdomSettlement
 			{
 				NotableShade = 17,
-				MealShade = 1
+				MealShade = 1,
+				HungerStreak = 4,
+				Famished = true,
+				ScrapsAnnounced = true
 			};
 			legacy.Normalize();
 			Assert.AreEqual(0, legacy.NotableShade,
 				"title-only civic offices cannot retain a hidden legacy capacity modifier");
-			Assert.AreEqual(1, legacy.MealShade,
-				"retiring notable economy must not erase attended food evidence");
+			Assert.AreEqual(0, legacy.MealShade);
+			Assert.AreEqual(0, legacy.HungerStreak);
+			Assert.IsFalse(legacy.Famished);
+			Assert.IsFalse(legacy.ScrapsAnnounced);
 		}
 
 		[Test]
@@ -284,7 +319,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement legacySeat = new KingdomSettlement
 			{
 				NotableShade = 17,
-				MealShade = 1
+				MealShade = 1,
+				HungerStreak = 4,
+				Famished = true
 			};
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(legacySeat);
@@ -292,7 +329,9 @@ namespace ThousandAndFirst.Tests
 			captured.WriteTo(restored);
 			Assert.AreEqual(0, captured.NotableShade);
 			Assert.AreEqual(0, restored.NotableShade);
-			Assert.AreEqual(1, restored.MealShade);
+			Assert.AreEqual(0, restored.MealShade);
+			Assert.AreEqual(0, restored.HungerStreak);
+			Assert.IsFalse(restored.Famished);
 		}
 
 		[Test]
@@ -327,23 +366,29 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSettlement settlement = new KingdomSettlement
 			{
-				RosterNames = new List<string> { "Ptoh", "Ptoh", "A third" },
-				RosterOrigins = new List<string> { "salt", "reef" },
-				RosterArrived = new List<string> { "one", "two", "stale", "staler" },
 				DeadNames = new List<string> { "Eresh", "Eresh", "A third" },
 				DeadOrigins = new List<string> { "dune", "reef", "salt" },
 				DeadArrived = new List<string> { "first" },
 				DeadCauses = new List<string> { "age", "stale" }
 			};
+			KingdomLegacyRosterProjectionTestAccess.SetNames(settlement,
+				new List<string> { "Ptoh", "Ptoh", "A third" });
+			KingdomLegacyRosterProjectionTestAccess.SetOrigins(settlement,
+				new List<string> { "salt", "reef" });
+			KingdomLegacyRosterProjectionTestAccess.SetArrivals(settlement,
+				new List<string> { "one", "two", "stale", "staler" });
 			settlement.Normalize();
-			Assert.AreEqual(3, settlement.RosterNames.Count);
-			Assert.AreEqual(2, settlement.RosterOrigins.Count);
-			Assert.AreEqual(4, settlement.RosterArrived.Count);
-			Assert.AreEqual("Ptoh", settlement.RosterNames[0]);
-			Assert.AreEqual("Ptoh", settlement.RosterNames[1],
+			List<string> names = KingdomLegacyRosterProjectionTestAccess.Names(settlement);
+			List<string> origins = KingdomLegacyRosterProjectionTestAccess.Origins(settlement);
+			List<string> arrivals = KingdomLegacyRosterProjectionTestAccess.Arrivals(settlement);
+			Assert.AreEqual(3, names.Count);
+			Assert.AreEqual(2, origins.Count);
+			Assert.AreEqual(4, arrivals.Count);
+			Assert.AreEqual("Ptoh", names[0]);
+			Assert.AreEqual("Ptoh", names[1],
 				"duplicate names are legitimate rows, not a normalization key");
-			Assert.AreEqual("reef", settlement.RosterOrigins[1]);
-			Assert.AreEqual("staler", settlement.RosterArrived[3],
+			Assert.AreEqual("reef", origins[1]);
+			Assert.AreEqual("staler", arrivals[3],
 				"settlement normalization cannot destroy unresolved old-save evidence; realm migration owns it");
 			Assert.AreEqual(1, settlement.DeadNames.Count);
 			Assert.AreEqual(1, settlement.DeadOrigins.Count);
@@ -359,12 +404,12 @@ namespace ThousandAndFirst.Tests
 		public void ReadFromRepairsWhatItReads()
 		{
 			KingdomSettlement seat = new KingdomSettlement();
-			seat.RosterNames = null;
+			KingdomLegacyRosterProjectionTestAccess.SetNames(seat, null);
 			seat.Ledger = null;
 			seat.Style = null;
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(seat);
-			Assert.IsNotNull(captured.RosterNames);
+			Assert.IsNotNull(KingdomLegacyRosterProjectionTestAccess.Names(captured));
 			Assert.IsNotNull(captured.Ledger);
 			Assert.AreEqual("common", captured.Style);
 		}

@@ -134,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			XDocument document = XDocument.Parse(Read(
 				"Architecture/KingdomArchitectures-PurposePortfolio.xml"));
 			List<XElement> maps = document.Root.Elements("map").ToList();
-			Assert.AreEqual(12, maps.Count);
+			Assert.AreEqual(14, maps.Count);
 			int poseCases = 0;
 			foreach (XElement map in maps)
 			{
@@ -164,7 +164,7 @@ namespace ThousandAndFirst.Tests
 					poseCases++;
 				}
 			}
-			Assert.AreEqual(48, poseCases);
+			Assert.AreEqual(56, poseCases);
 		}
 
 		[Test]

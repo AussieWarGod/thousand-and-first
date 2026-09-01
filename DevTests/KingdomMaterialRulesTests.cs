@@ -151,6 +151,7 @@ namespace ThousandAndFirst.Tests
 			document.LoadXml(TestMain.ReadRepositoryText("KingdomBuildings.xml"));
 			Dictionary<string, XmlElement> buildings = new Dictionary<string, XmlElement>(
 				StringComparer.OrdinalIgnoreCase);
+			HashSet<string> routes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			foreach (XmlElement building in document.GetElementsByTagName("building"))
 			{
 				string key = building.GetAttribute("Key");
@@ -162,6 +163,7 @@ namespace ThousandAndFirst.Tests
 				string successorKey = pair.Value.GetAttribute("UpgradesTo");
 				if (string.IsNullOrEmpty(successorKey)) continue;
 				transitions++;
+				routes.Add(pair.Key + "->" + successorKey);
 				Assert.IsTrue(buildings.TryGetValue(successorKey, out XmlElement successor),
 					pair.Key + " names a missing successor");
 				string authored = pair.Value.GetAttribute("UpgradeMaterials");
@@ -185,7 +187,12 @@ namespace ThousandAndFirst.Tests
 						+ KingdomMaterialRules.MaterialKey(material));
 				}
 			}
-			Assert.AreEqual(19, transitions,
+			CollectionAssert.IsSubsetOf(new string[]
+			{
+				"fieldrows->grange", "forge->forgehall",
+				"robotchargebay->robotservicebay", "watchhouse->barracks"
+			}, routes, "the reviewed food, craft, robot, and garrison progressions must remain explicit");
+			Assert.AreEqual(23, transitions,
 				"new upgrade chains need an authored addition bill and an explicit census review");
 		}
 
@@ -545,7 +552,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.AreEqual(0, KingdomMaterialRules.WallMaterialThreshold[(int)KingdomMaterial.Mud]);
 			Assert.AreEqual(KingdomMaterial.Mud, KingdomMaterialRules.WallMaterialFor(new KingdomMaterialTally(), null));
-			Assert.AreEqual(KingdomMaterial.Mud, KingdomMaterialRules.WallMaterialFor(null, "gyre"));
+			Assert.AreEqual(KingdomMaterial.Mud, KingdomMaterialRules.WallMaterialFor(null, "moonstair"));
 			Assert.IsTrue(KingdomMaterialRules.HasWallMaterial(new KingdomMaterialTally(), KingdomMaterial.Mud));
 		}
 
@@ -596,6 +603,7 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("verdant", KingdomMaterial.Timber)]
 		[TestCase("fungal", KingdomMaterial.Timber)]
+		[TestCase("moonstair", KingdomMaterial.Marble)]
 		[TestCase("gyre", KingdomMaterial.Marble)]
 		[TestCase("eater", KingdomMaterial.Scrap)]
 		public void TryStylePreference_KnowsTheStylesThatHaveATaste(string style, KingdomMaterial expected)

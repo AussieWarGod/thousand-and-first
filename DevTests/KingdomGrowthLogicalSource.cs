@@ -32,7 +32,16 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomGrowth.z15.WorkAssignment.cs",
 			"Growth/KingdomGrowth.z16.Emigration.cs",
 			"Growth/KingdomGrowth.z17.WaterAndCapacity.cs",
-			"Growth/KingdomGrowth.z18.StageAndShops.cs"
+			"Growth/KingdomGrowth.z18.StageAndShops.cs",
+			"Growth/KingdomGrowth.z18b.MarketOffice.cs",
+			"Growth/KingdomGrowth.z18c.MarketProjection.cs",
+			"Growth/KingdomResidentDepartureOperation.cs",
+			"Growth/KingdomResidentDepartureRules.cs",
+			"Growth/KingdomResidentDepartureRuntime.Authority.cs",
+			"Growth/KingdomResidentDepartureRuntime.Begin.cs",
+			"Growth/KingdomResidentDepartureRuntime.Effects.cs",
+			"Growth/KingdomResidentDepartureRuntime.Recovery.cs",
+			"Growth/KingdomResidentDepartureRuntime.Rollback.cs"
 		};
 
 		internal static string Read()

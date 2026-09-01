@@ -1085,6 +1085,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FrontierExcludesClaimsFromEveryAuthoritativeNonSeatCity()
+		{
+			string frontier = ReadRepoSource("Quests/KingdomBounty.ReadingGround.cs");
+			string topology = ReadRepoSource("Core/KingdomSystem.z08.SettlementTopology.cs");
+			StringAssert.Contains("System.NonSeatClaimsZone(id)", frontier);
+			Assert.IsFalse(frontier.Contains("System.Away"));
+			StringAssert.Contains("for (int i = 0; i < SettlementTopology.Count; i++)",
+				topology);
+			StringAssert.Contains(
+				"SettlementTopology.Get(i)?.ClaimedZones?.Contains(ZoneId) == true",
+				topology);
+		}
+
+		[Test]
 		public void BoundFetchTransfer_ReprovesPurposeCargoBeforeRemovalMoveAndCredit()
 		{
 			string transfer = ReadRepoSource("Quests/KingdomBounty.Transfer.cs");

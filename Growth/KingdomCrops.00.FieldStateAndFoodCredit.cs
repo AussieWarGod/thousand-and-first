@@ -65,7 +65,7 @@ namespace ThousandAndFirst
 		/// <summary>The field part of a finished work, or null for anything that is not a field.</summary>
 		public static r_KingdomPlot FieldOf(GameObject Work)
 		{
-			if (!GameObject.Validate(Work) || Work.GetIntProperty("KingdomBuilt") != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Work))
 			{
 				return null;
 			}
@@ -214,8 +214,9 @@ namespace ThousandAndFirst
 					continue;
 				}
 				int effectiveness = KingdomWear.EffectivenessOf(work);
-				cycled += KingdomCatalogueRules.Carried(
-					KingdomCatalogueRules.AmountOf(carries, KingdomCatalogueRules.SupportFood), effectiveness);
+				cycled = KingdomCatalogueRules.SaturatingCounterAdd(cycled,
+					KingdomCatalogueRules.Carried(KingdomCatalogueRules.AmountOf(carries,
+						KingdomCatalogueRules.SupportFood), effectiveness));
 			}
 			return cycled;
 		}

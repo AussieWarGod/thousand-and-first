@@ -45,6 +45,9 @@ echo "dev profile: $DEV"
 
 "$REPO/Tools/stage.sh" copy "$STAGE"
 python3 "$REPO/Tools/generate-removal-coverage.py" --check
+python3 "$REPO/Tools/generate-benefit-providers.py" --check
+python3 "$REPO/Tools/generate-lot-realizations.py" --check
+python3 "$REPO/Tools/check-benefit-provider-content.py"
 python3 "$REPO/Tools/check-manifest-directories.py"
 HEARTHPYRE_SOURCE="${TAF_HEARTHPYRE_223_ROOT:-/mnt/f/SteamLibrary/steamapps/workshop/content/333640/1683847053}"
 if [ -d "$HEARTHPYRE_SOURCE" ]; then

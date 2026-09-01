@@ -8,6 +8,21 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomArchitecture
 	{
+		private static void HandlePose(LoadState State, XmlDataHelper Xml)
+		{
+			string blueprint = Xml.GetAttribute("Blueprint");
+			RawPose pose = GetPose(State, blueprint, Source(Xml));
+			if (pose != null)
+			{
+				Set(State, pose, "Mode", Xml.GetAttribute("Mode"));
+				SetOptionalClear(State, pose, "North", Xml.GetAttribute("North"));
+				SetOptionalClear(State, pose, "East", Xml.GetAttribute("East"));
+				SetOptionalClear(State, pose, "South", Xml.GetAttribute("South"));
+				SetOptionalClear(State, pose, "West", Xml.GetAttribute("West"));
+			}
+			Xml.DoneWithElement();
+		}
+
 		private static void HandlePalette(LoadState State, XmlDataHelper Xml)
 		{
 			string key = Xml.GetAttribute("Key");
@@ -48,6 +63,7 @@ namespace ThousandAndFirst
 			Set(State, map, "Width", Xml.GetAttribute("Width"));
 			Set(State, map, "Height", Xml.GetAttribute("Height"));
 			Set(State, map, "DefaultCover", Xml.GetAttribute("DefaultCover"));
+			Set(State, map, "Footprint", Xml.GetAttribute("Footprint"));
 			List<string> rows = new List<string>();
 			bool rowBlock = false;
 			bool rowOverflow = false;
@@ -91,6 +107,12 @@ namespace ThousandAndFirst
 				Set(State, glyph, "Ground", Xml.GetAttribute("Ground"));
 				Set(State, glyph, "Structure", Xml.GetAttribute("Structure"));
 				Set(State, glyph, "Object", Xml.GetAttribute("Object"));
+				SetOptionalClear(State, glyph, "GroundOrientation",
+					Xml.GetAttribute("GroundOrientation"));
+				SetOptionalClear(State, glyph, "StructureOrientation",
+					Xml.GetAttribute("StructureOrientation"));
+				SetOptionalClear(State, glyph, "ObjectOrientation",
+					Xml.GetAttribute("ObjectOrientation"));
 				Set(State, glyph, "Claim", Xml.GetAttribute("Claim"));
 				SetAlias(State, glyph, "Pass", Xml.GetAttribute("Pass"),
 					Xml.GetAttribute("Passability"), "Passability");
@@ -139,6 +161,8 @@ namespace ThousandAndFirst
 			if (tier == null) { Skip(Xml); return; }
 			Set(State, tier, "BuildKey", Xml.GetAttribute("BuildKey"));
 			Set(State, tier, "Level", Xml.GetAttribute("Level"));
+			SetAlias(State, tier, "Transition", Xml.GetAttribute("Transition"),
+				Xml.GetAttribute("TransitionMode"), "TransitionMode");
 			SetAlias(State, tier, "Map", Xml.GetAttribute("Map"), Xml.GetAttribute("MapKey"), "MapKey");
 			SetAlias(State, tier, "Palette", Xml.GetAttribute("Palette"),
 				Xml.GetAttribute("PaletteKey"), "PaletteKey");

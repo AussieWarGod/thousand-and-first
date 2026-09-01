@@ -24,6 +24,9 @@ namespace ThousandAndFirst
 			int afterRung = KingdomPlotRules.HeartRungOf(After.BuildKey);
 			if (beforeRung == 0 && afterRung == 0)
 			{
+				if (!SameRect(BeforeIntent.Rect, AfterIntent.Rect))
+					return TryAuthorizedEnvelopeExpansion(Owner, Z, BeforeIntent, Before,
+						AfterIntent, After, out Failure);
 				bool samePlan = Before.PlanKey == After.PlanKey;
 				bool sameBinding = Before.BindingKey == After.BindingKey;
 				bool needsRouteAuthority = !samePlan || !sameBinding;

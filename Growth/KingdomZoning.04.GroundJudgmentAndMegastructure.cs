@@ -133,7 +133,7 @@ namespace ThousandAndFirst
 					for (int i = 0; i < survey.Built.Count; i++)
 					{
 						GameObject work = survey.Built[i];
-						if (work == null || work.GetIntProperty("KingdomBuilt") != 1)
+						if (!KingdomUpgrade.IsFunctionallyBuilt(work))
 						{
 							continue;
 						}

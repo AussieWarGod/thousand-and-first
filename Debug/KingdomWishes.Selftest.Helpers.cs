@@ -86,7 +86,7 @@ namespace ThousandAndFirst
 			bool disjoint = true;
 			foreach (string zoneID in ExiledClaims(System))
 			{
-				if (System.ClaimedZones.Contains(zoneID) || (System.Away != null && System.Away.ClaimedZones.Contains(zoneID)))
+				if (System.OwnedZone(zoneID))
 				{
 					disjoint = false;
 					Report.Append("\n    the realm you hold also claims ").Append(zoneID);
@@ -105,7 +105,7 @@ namespace ThousandAndFirst
 			Check(Report, ref Passed, ref Failed, "the return verdict here is reachable prose", !string.IsNullOrEmpty(KingdomExileRules.ReturnRefusal(ReturnVerdict.RegardTooLow, System.ExiledDisplayName, System.KingdomDisplayName)));
 		}
 
-		/// <summary>Every zone the expelled-from realm holds, across both of its cities.</summary>
+		/// <summary>Every zone the expelled-from realm holds, across its exact city topology.</summary>
 		private static IEnumerable<string> ExiledClaims(KingdomSystem System)
 		{
 			if (System.ExiledSeat != null)
@@ -115,9 +115,11 @@ namespace ThousandAndFirst
 					yield return zoneID;
 				}
 			}
-			if (System.ExiledAway != null)
+			List<KingdomSettlement> rows = System.ExiledSettlementTopology?.Snapshot()
+				?? new List<KingdomSettlement>();
+			for (int i = 0; i < rows.Count; i++)
 			{
-				foreach (string zoneID in System.ExiledAway.ClaimedZones)
+				foreach (string zoneID in rows[i].ClaimedZones)
 				{
 					yield return zoneID;
 				}

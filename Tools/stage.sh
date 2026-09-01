@@ -60,7 +60,7 @@ resolve_live_mod() {
 # live folder or the Workshop.
 EXCLUDE_DIRS=(.git .nuget _notes DevTests Harness Art docs Tools .ruff_cache __pycache__ .agent-handoff)
 # Metadata that is harmless in a mod folder and wanted on the Workshop.
-ROOT_META=(README.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)
+ROOT_META=(README.md PLAYTESTING.md SUPPORT.md LICENSE NOTICE CHANGELOG.md manifest.json modconfig.json preview.png workshop.json)
 # Asset trees copied whole.
 ASSET_DIRS=(Textures)
 

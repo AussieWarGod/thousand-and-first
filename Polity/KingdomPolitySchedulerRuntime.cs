@@ -31,18 +31,41 @@ namespace ThousandAndFirst
 				KingdomPolityDueWork row = work[i];
 				if (!KingdomPolityRivalTrafficRules.TryAssign(System.PolityLedger, row,
 					out KingdomPolityTrafficAssignment assignment, out Failure)) return false;
+				if (!KingdomPolityAmbientTransactionRules.TryFreeze(System.RealmId,
+					assignment.PolityId, assignment.Work, offer.Endpoints,
+					out KingdomPolityAmbientTransaction ambient, out Failure))
+				{
+					// The due label is not authority. Unsupported semantic proof consumes this
+					// window without a body, direct visit claim, or fabricated route.
+					Failure = null;
+					if (!KingdomPolityDispatchRules.TryComplete(state, state.Revision,
+						row.WindowOrdinal, row.EndpointOrdinal, out Failure)) return false;
+					continue;
+				}
+				row.AmbientTransaction = ambient;
 				// Assignment selects the semantic owner only. Dispatch owns the already-frozen
 				// cohort/source identity used by W0, direct fallback, and crash adoption.
+				if (!KingdomPolityCohortRules.TryResolverContract(System.PolityLedger,
+					assignment.PolityId, row.Purpose, out int resolverRulesVersion,
+					out int minimumLevel,
+					out int maximumLevel, out Failure)) return false;
 				KingdomPolityCohortPlanRequest request = new KingdomPolityCohortPlanRequest
 				{
 					CohortId = row.CohortId, Purpose = row.Purpose, SourceRef = row.SourceRef,
 					PolityId = assignment.PolityId, SurfaceRef = row.SettlementId,
-					MemberCount = row.MemberCount, EventStreamId = row.EventStreamId,
-					RulesVersion = KingdomPolityNpcRules.RulesVersion,
-					EventOrdinal = row.WindowOrdinal
+					MemberCount = row.MemberCount, MinimumLevel = minimumLevel,
+					MaximumLevel = maximumLevel, EventStreamId = row.EventStreamId,
+					RulesVersion = resolverRulesVersion,
+					EventOrdinal = row.WindowOrdinal, AmbientTransaction = ambient
 				};
 				KingdomPolityCohortPlan existing = KingdomPolityAuthority.Cohort(
 					System.PolityLedger, row.CohortId);
+				if (existing != null)
+				{
+					request.RulesVersion = existing.RulesVersion;
+					request.MinimumLevel = existing.MinimumLevel;
+					request.MaximumLevel = existing.MaximumLevel;
+				}
 				if (existing != null && (existing.Phase == KingdomPolityCohortPhase.Cancelled ||
 					existing.Phase == KingdomPolityCohortPhase.Cleaned ||
 					existing.Phase == KingdomPolityCohortPhase.Abandoned ||
@@ -222,17 +245,16 @@ namespace ThousandAndFirst
 		private static void Present(KingdomSystem S, KingdomPolityCohortPlan Cohort,
 			string LoadedSettlementId)
 		{
-			string verb = KingdomPolityDispatchRules.EndpointVerb(Cohort.Purpose);
-			if (string.IsNullOrEmpty(verb)) return;
-			KingdomPolityRecord polity = KingdomPolityAuthority.Polity(S.PolityLedger,
-				Cohort.PolityId);
-			bool external = polity != null && polity.Source != KingdomPolitySource.CurrentRealm;
-			string company = external ? "a company of {{C|" +
-				KingdomPresentation.Rich(polity.DisplayName) + "}} " : "the realm's company ";
-			if (external && Cohort.Purpose == KingdomPolityCohortPurpose.Patrol)
-				verb = "is sighted at the boundary";
+			KingdomPolityAmbientTransaction t = Cohort.AmbientTransaction;
+			if (!KingdomPolityAmbientTransactionRules.Valid(t, Cohort.CohortId, out _)) return;
+			string purpose = Cohort.Purpose == KingdomPolityCohortPurpose.Courier ? "message" :
+				Cohort.Purpose == KingdomPolityCohortPurpose.Trader ? "no-stock market notice" :
+				Cohort.Purpose == KingdomPolityCohortPurpose.Migrant ? "petition" :
+				Cohort.Purpose == KingdomPolityCohortPurpose.Guard ? "witnessed watch report" :
+				"caused condition report";
 			XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomPresentation.Rich(
-				EndpointName(S, LoadedSettlementId)) + "}}: " + company + verb + ".");
+				t.DestinationSettlementName) + "}} receives a " + purpose + " from {{C|" +
+				KingdomPresentation.Rich(t.SourceSettlementName) + "}}.");
 		}
 
 		private static string EndpointName(KingdomSystem S, string SettlementId)

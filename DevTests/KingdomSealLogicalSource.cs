@@ -14,6 +14,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomSeal.Succession.cs",
 			"Core/KingdomSeal.Synchronization.cs",
 			"Core/KingdomSeal.Capture.cs",
+			"Core/KingdomSealProfileCaptureRules.cs",
 			"Core/KingdomSeal.Reconciliation.cs",
 			"Core/KingdomSeal.SavedState.cs",
 			"Core/KingdomSeal.Utilities.cs"

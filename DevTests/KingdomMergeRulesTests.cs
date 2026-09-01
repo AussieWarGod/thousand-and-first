@@ -604,7 +604,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(Has(findings, "hall", "Footprint", CatalogueSeverity.Fault));
 			string message = MessageFor(findings, "hall", "Footprint");
 			Assert.IsTrue(message.Contains("12"));
-			Assert.IsTrue(message.Contains("5"));
+			Assert.IsTrue(message.Contains("6"));
 			Assert.IsTrue(message.Contains("merge of 2 declarations"));
 		}
 
@@ -613,7 +613,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry>
 			{
-				Entry("hut", KingdomPlotRules.PlotSize.Small, 5, 4),
+				Entry("hut", KingdomPlotRules.PlotSize.Small, 6, 4),
 				Entry("shed", KingdomPlotRules.PlotSize.Medium, 3, 2)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);

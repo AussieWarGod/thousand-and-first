@@ -94,7 +94,7 @@ namespace ThousandAndFirst.Harness
 		/// own <c>XmlDataHelper.modInfo.ID</c>, never asserted by the row, so a row cannot claim
 		/// another mod's name. Empty for a base-game stream, which is not a case that occurs today.
 		/// </summary>
-		internal string Owner;
+		internal string Owner = "";
 
 		internal IList<KingdomScenarioParameter> Parameters = new List<KingdomScenarioParameter>();
 		internal IList<KingdomScenarioStep> Steps = new List<KingdomScenarioStep>();

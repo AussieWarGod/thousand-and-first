@@ -23,6 +23,8 @@ namespace ThousandAndFirst
 				int version = Reader.ReadInt32();
 				Target.FormatVersion = version;
 				if (version != KingdomLifecycleRules.CurrentFormatVersion &&
+					version != KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion &&
+					version != KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion &&
 					version != KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion &&
 					version != KingdomLifecycleRules.PreviousLifecycleFormatVersion &&
 					version != KingdomLifecycleRules.LegacyLifecycleFormatVersion)
@@ -88,7 +90,9 @@ namespace ThousandAndFirst
 								throw new InvalidDataException(
 									"lifecycle v6 raid migration was rejected");
 						}
-						else if (version == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
+						else if (version == KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+							|| version == KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion
+							|| version == KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion)
 							value.FormatVersion = KingdomLifecycleRules.CurrentFormatVersion;
 					}
 				KingdomLifecycleRules.Normalize(value);

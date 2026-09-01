@@ -66,7 +66,8 @@ namespace ThousandAndFirst
 				Failure = "Commissions are issued on the kingdom's own ground.";
 				return false;
 			}
-			if (!KingdomData.TryGetBuilding(Key, out var entry) || !KingdomRules.StyleAllows(entry.Styles, System.Style))
+			if (!KingdomData.TryGetBuilding(Key, out var entry)
+				|| !KingdomRules.StyleAllows(entry.Styles, KingdomData.StyleKeys(System.Style)))
 			{
 				Failure = "No such design.";
 				return false;

@@ -55,6 +55,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomScenarioStep { Verb = KingdomScenarioVerb.StageGalleryCase };
 			step.Arguments["Suite"] = "architecture";
 			step.Arguments["Build"] = "tent";
+			step.Arguments["Type"] = "housing";
+			step.Arguments["Size"] = "s";
 			step.Arguments["Variant"] = "fallback";
 			step.Arguments["Facing"] = facing;
 			return step;
@@ -95,6 +97,21 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.IsEmpty(KingdomScenarioRules.Validate(
 				new List<KingdomScenarioDefinition> { Sound() }));
+		}
+
+		[TestCase("Type")]
+		[TestCase("Size")]
+		public void GalleryTransactionRequiresTheCompleteLotIdentity(string missing)
+		{
+			KingdomScenarioDefinition definition = Sound();
+			definition.Steps[1].Arguments.Remove(missing);
+			string findings = string.Join("; ", KingdomScenarioRules.Validate(
+				new List<KingdomScenarioDefinition> { definition }));
+			StringAssert.Contains("argument '" + missing + "' is required", findings);
+			KingdomScenarioPlan plan;
+			string failure;
+			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+				out plan, out failure));
 		}
 
 		// ----- Synthetic must never fail open -----------------------------------------------

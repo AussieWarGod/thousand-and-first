@@ -23,9 +23,13 @@ namespace ThousandAndFirst
 		internal const string GearMemberOrdinalProperty = "r_TAF_PolityGearMember_v1";
 		internal const string GearOrdinalProperty = "r_TAF_PolityGearOrdinal_v1";
 		internal const string ContestedProperty = "r_TAF_PolityPhysicalContested_v1";
+		internal const string SignatureCueProperty = "r_TAF_PolitySignatureCues_v1";
+		internal const string DialogueCueProperty = "r_TAF_PolityDialogueCues_v1";
+		internal const string ExpressionReasonProperty = "r_TAF_PolityExpressionReasons_v1";
 
 		public static bool TryCreate(KingdomPolityProfileRevision Profile, string RoleKey,
-			int Ordinal, string FactionId, string FigureId, string DisplayName, string RealmId,
+			int Ordinal, int ResolverRulesVersion, int MinimumLevel, int MaximumLevel,
+			string FactionId, string FigureId, string DisplayName, string RealmId,
 			string CohortId, string ProjectionId, string BodyId, Action<GameObject> FreezeBody,
 			out GameObject Body, out string Failure)
 		{
@@ -39,7 +43,8 @@ namespace ThousandAndFirst
 				 !KingdomPolityRules.TypedId(FigureId, "taf:figure:")) ||
 				(!string.IsNullOrEmpty(FigureId) &&
 				 !KingdomPolityRules.Text(DisplayName, true)) ||
-				!KingdomPolityNpcRules.TryResolve(Profile, RoleKey, Ordinal,
+				!KingdomPolityNpcRules.TryResolvePinned(Profile, RoleKey, Ordinal,
+					ResolverRulesVersion, MinimumLevel, MaximumLevel,
 					out KingdomPolityNpcSpec spec, out Failure))
 			{
 				if (Failure == null) Failure = "regenerated actor input is invalid"; return false;
@@ -69,13 +74,19 @@ namespace ThousandAndFirst
 				Commerce bodyCommerce = created.GetPart<Commerce>();
 				if (bodyCommerce != null) bodyCommerce.Value = 0.0;
 				created.Brain.Factions = FactionId + "-100";
-				created.Brain.Hostile = false;
+				created.Brain.Allegiance.Hostile = false;
 				created.RequirePart<NoXPGain>();
 				created.SetStringProperty(PolityProperty, Profile.PolityId);
 				created.SetStringProperty(ProfileProperty, Profile.ProfileId + ":" +
 					Profile.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture));
 				created.SetStringProperty(ResolverProperty, spec.ResolverDigest);
 				created.SetStringProperty(RoleProperty, spec.RoleKey);
+				if (spec.SignatureCues.Count > 0) created.SetStringProperty(
+					SignatureCueProperty, string.Join("|", spec.SignatureCues.ToArray()));
+				if (spec.DialogueCues.Count > 0) created.SetStringProperty(
+					DialogueCueProperty, string.Join("|", spec.DialogueCues.ToArray()));
+				if (spec.ReasonFactIds.Count > 0) created.SetStringProperty(
+					ExpressionReasonProperty, string.Join("|", spec.ReasonFactIds.ToArray()));
 				if (!string.IsNullOrEmpty(FigureId))
 				{
 					created.SetStringProperty(FigureProperty, FigureId);
@@ -101,6 +112,9 @@ namespace ThousandAndFirst
 		private static bool ApplyStats(GameObject Body, KingdomPolityNpcSpec S, out string Failure)
 		{
 			Failure = null;
+			if (S.ProfileRulesVersion == KingdomPolityProfileRules.RulesVersion)
+				return SetStat(Body, "Level", S.Level) ||
+					KingdomPolityRules.Fail("regenerated actor lacks a level statistic", out Failure);
 			return SetStat(Body, "Level", S.Level) && SetStat(Body, "Strength", S.Strength) &&
 				SetStat(Body, "Agility", S.Agility) && SetStat(Body, "Toughness", S.Toughness) &&
 				SetStat(Body, "Intelligence", S.Intelligence) &&
@@ -120,15 +134,22 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			for (int i = 0; i < S.Skills.Count; i++)
-				if (!Body.HasPart(S.Skills[i]) && Body.AddSkill(S.Skills[i]) == null)
+			{
+				string skill = S.ProfileRulesVersion == KingdomPolityProfileRules.LegacyRulesVersion &&
+					S.Skills[i] == "Tactics_Run" ? "Tactics_Hurdle" : S.Skills[i];
+				if (!Body.HasPart(skill) && Body.AddSkill(skill) == null)
 					return KingdomPolityRules.Fail("regenerated actor skill was unavailable", out Failure);
+			}
 			Mutations mutations = S.Mutations.Count == 0 ? Body.GetPart<Mutations>() :
 				Body.RequirePart<Mutations>();
 			for (int i = 0; i < S.Mutations.Count; i++)
 			{
 				KingdomPolityMutationSpec mutation = S.Mutations[i];
-				if (mutations.HasMutation(mutation.ClassName)) continue;
-				if (mutations.AddMutation(mutation.ClassName, mutation.Level) < 0)
+				string className = S.ProfileRulesVersion ==
+					KingdomPolityProfileRules.LegacyRulesVersion && mutation.ClassName ==
+					"NightVision" ? "DarkVision" : mutation.ClassName;
+				if (mutations.HasMutation(className)) continue;
+				if (mutations.AddMutation(className, mutation.Level) < 0)
 					return KingdomPolityRules.Fail("regenerated actor mutation was unavailable", out Failure);
 			}
 			return true;

@@ -96,6 +96,10 @@ namespace ThousandAndFirst
 				Failure = architectureFailure ?? "No authored architecture fits that exact plot.";
 				return false;
 			}
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+				out KingdomPlotRules.PlotRect footprint, out Failure)) return false;
+			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
+				out KingdomPlotRules.RoofState roof, out Failure)) return false;
 			Cell mainCell = Z.GetCell(architecture.MainWorldX, architecture.MainWorldY);
 			if (mainCell == null)
 			{
@@ -108,8 +112,6 @@ namespace ThousandAndFirst
 				return false;
 			}
 			long start = The.Game.TimeTicks;
-			KingdomPlotRules.PlotRect footprint = PlannedFootprint(Z, rect, spec);
-			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofOnGround(spec.Roof, carved);
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
 				grid.CellsOf(rect), footprint, roof, carved);
@@ -197,15 +199,6 @@ namespace ThousandAndFirst
 				+ ((clause == null) ? "" : (" " + clause)) + ".}}");
 			SayYielding(System, works.GetIntProperty(YieldingProperty) == 1, Entry.Name);
 			return true;
-		}
-
-		private static KingdomPlotRules.PlotRect PlannedFootprint(Zone Z,
-			KingdomPlotRules.PlotRect Rect, KingdomPlotRules.PlotSpec Spec)
-		{
-			HeartFor(Z, Rect, out var heartX, out var heartY);
-			return KingdomPlotRules.HeartRungOf(Spec.Key) > 0
-				? HeartFootprintFor(Z, Rect, Spec)
-				: FootprintFor(Rect, Spec, heartX, heartY);
 		}
 
 		/// <summary>

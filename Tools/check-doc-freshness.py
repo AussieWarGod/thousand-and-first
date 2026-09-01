@@ -17,7 +17,12 @@ TOOLS_TEST_CASES = "35"
 ART_TEST_CASES = "23"
 HARDENING_DECOMPOSITIONS = "144"
 CUMULATIVE_DECOMPOSITIONS = "154"
-FOCUSED_SURVEY_CASES = 9
+CURRENT_TAF_CASES = "10,624"
+CURRENT_PORTABLE_CASES = "2,325"
+CURRENT_TOOLS_CASES = "296"
+CURRENT_ART_CASES = "28"
+CURRENT_FOCUSED_SURVEY_CASES = 14
+CURRENT_VANILLA_TILE_PATHS = 125
 
 # These notes are immutable attack/research snapshots whose local line citations belong to the
 # pinned tree named in each document. Current authorities remain audited below. Repointing frozen
@@ -25,6 +30,7 @@ FOCUSED_SURVEY_CASES = 9
 FROZEN_SOURCE_CITATION_DOCUMENTS = frozenset(
     {
         "_notes/ASSIGNMENT-LOG.md",
+        "_notes/ARCOLOGY-AUTHORED-INTERIOR-PLAN.md",
         "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
         "_notes/CLOCK-REWORK-CHANGE-MAP.md",
         "_notes/CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md",
@@ -241,7 +247,8 @@ def audit_archive_contract(problems):
         "public const int FirstGuestVersion = 15;",
         "public const int PhysicalFirstGuestVersion = 16;",
         "public const int ArrivalCadenceVersion = 17;",
-        "public const int CurrentVersion = ArrivalCadenceVersion;",
+        "public const int ExpeditionResultVersion = 18;",
+        "public const int CurrentVersion = ExpeditionResultVersion;",
         "TryEncodeLegacyV1ForTests",
         "TryEncodePreviousV2ForTests",
         "TryEncodeRaidV3ForTests",
@@ -258,11 +265,12 @@ def audit_archive_contract(problems):
         "TryEncodeCivicAuthorityV14ForTests",
         "TryEncodeFirstGuestV15ForTests",
         "TryEncodePhysicalFirstGuestV16ForTests",
+        "TryEncodeArrivalCadenceV17ForTests",
     )
     for term in expected:
         if term not in source:
             problems.append(
-                f"archive source no longer proves documented v1-v16 -> v17 contract: {term}"
+                f"archive source no longer proves documented v1-v17 -> v18 contract: {term}"
             )
     require(
         problems,
@@ -328,6 +336,232 @@ def audit_archive_contract(problems):
         )
 
 
+def audit_research_alignment_contract(problems):
+    """Keep current product truth aligned with the completed research disposition."""
+    require(
+        problems,
+        "VISION.md",
+        "Sim Settlements supplies one useful, narrower comparator lesson",
+        "It does not prove a popularity superlative",
+        "Resheph's harborage contributes poetic and cosmopolitan resonance as a cosmic port, not proof of sanctuary",
+        "the histories of Abram and Resheph remain contested",
+        "Where a history is deliberately authored as disputed",
+        "ordinary events keep one owning record and are not mechanically duplicated",
+        "Disputed history can have two registers",
+        "there is no universal pair generator",
+        "No renewal covenant",
+        "every supported covenant, creed, and founding outcome remains playable",
+        "Growth-1B/schema-5 oracle is not deferred runtime scope",
+        "Installing it beside current cadence would create a parallel authority",
+    )
+    require(
+        problems,
+        "docs/STATUS.md",
+        "Research disposition coverage",
+        "4 community, 16 people, 2 polity, 7 order, 2 doctrine, 2 cult",
+        "rejected as parallel architecture—not deferred v1 debt",
+        "official/outsider entries",
+        "reference-grounded quality audit 1,376 / 1,376 static pass, 0 fail",
+    )
+    require_if_present(
+        problems,
+        "_notes/DECISIONS.md",
+        "survivor/graveyard ranking and “twenty games deep” causal-confidence claim are superseded",
+        "Resheph's harborage is poetic and cosmopolitan cosmic-port resonance, not sanctuary proof",
+    )
+    require_if_present(
+        problems,
+        "_notes/AGENT-PLAYBOOK.md",
+        "Comparator correction, 2026-09-01",
+        "different audiences and cannot be treated as one natural experiment",
+        "Lore correction, 2026-09-01",
+        "Qud does not tell every history twice",
+        "No renewal covenant is mandatory",
+        "Resheph's harborage is cosmic-port resonance rather than",
+        "sanctuary proof. See `LORE-SPIRIT-AUDIT.md`",
+    )
+    require_if_present(
+        problems,
+        "_notes/POSITIVE-FIRST-COMPARABLES.md",
+        "Current-use correction, 2026-09-01",
+        "Later factchecking and reconciliation reject its popularity, market-success, and",
+        "causal-preference claims.",
+        "typed plots, authored plans, and delegated growth",
+        "it does not prove a \u201cmost-loved\u201d Fallout",
+    )
+    require_if_present(
+        problems,
+        "_notes/GENERATIVE-COMPARABLES-CLAUDE.md",
+        "Current-use correction, 2026-09-01",
+        "do not treat its popularity or success-causality language as evidence",
+        "only typed plots, authored plans, and delegated growth survive",
+        "\u201cmost-loved\u201d claim or inferred player preference survives",
+    )
+    require(
+        problems,
+        "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
+        "No generated record remains held",
+        "4 community / 16 people / 2 polity / 7 order / 2 doctrine / 2 cult",
+        "water plus roof only",
+        "Neseva Cask-Hand's Uru Ux 1000 AR copy",
+        "full Art suite passes 28/28",
+        "1,376/1,376 static pose passes and 0 fails",
+    )
+    require_if_present(
+        problems,
+        "_notes/ARCHITECTURE-POLISH-CONTRACT.md",
+        "Gyre Wight work is a separate affiliation/people-gated, explicitly non-theological overlay",
+    )
+    forbid(
+        problems,
+        "_notes/ARCHITECTURE-POLISH-CONTRACT.md",
+        "Gyre Wight work is a separate doctrine-gated overlay",
+    )
+    require_if_present(
+        problems,
+        "_notes/RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md",
+        "Source-complete disposition crosswalk",
+        "GENERATIVE-COMPARABLES-{CLAUDE,CODEX}.md",
+        "FOOD-WATER-DISCOVERY-CLAUDE.md",
+        "QUD-AFFORDANCE-CHALLENGE.md",
+        "POLITY-EXPANSION-RECONCILIATION*",
+        "Growth-1B/schema-5 oracle and cross-review chain",
+        "rejected as a parallel arrival authority",
+        "4 community / 16 people / 2 polity / 7 order / 2 doctrine / 2 cult",
+        "Neseva Cask-Hand's Uru Ux 1000 AR Open Basin copy",
+        "exact official/outsider rendered pair",
+        "no passive rot/debit/support remains",
+        "full Art suite now passes 28/28",
+        "1,376/1,376 static pose pass, 0 fail",
+    )
+    require_if_present(
+        problems,
+        "_notes/FIXTURE-POSE-CENSUS-2026-09-01.md",
+        "ordinary `Woven Basket` silhouette",
+        "Hindren fixture is an honest treadle stitcher",
+        "glyph-only `Ø` emblem",
+        "Full `Art.test_check_wiring`: 28/28 passing",
+        "Installed-Qud `Tools/audit-architecture-quality.py`: 1,376/1,376 static pose passes",
+        "installed-Qud scan has zero issues plus three expected tolerant-recovery warnings",
+        "Native capture remains the acceptance boundary for visual taste",
+    )
+    for relative in (
+        "VISION.md",
+        "docs/STATUS.md",
+        "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
+    ):
+        forbid(
+            problems,
+            relative,
+            "Three hosted-arcology maps remain explicit holds",
+            "except one narrow visual use",
+            "full Art suite passes 27/28",
+            "full Art suite remains blocked",
+        )
+
+
+def audit_market_contract(problems):
+    """Keep the physical native-TradeUI market law from regressing into generated stock."""
+    require(
+        problems,
+        "VISION.md",
+        "accepted, staffed `taf:market` provider",
+        "may honestly open empty",
+        "current operational standing and reach",
+        "Only ordinary Qud TradeUI exchange creates or removes its physical `_stock`",
+        "TAF generates no wares, consignments, periodic restock, passive output, or remote debit",
+        "Completed or dormant legendary traders remain finite personal native merchants",
+        "Succession excludes only an open prepared market handoff endpoint",
+    )
+    require(
+        problems,
+        "docs/STATUS.md",
+        "accepted staffed `taf:market` provider",
+        "may open empty",
+        "`ShopTier` is current operational standing/reach and may fall to zero",
+        "Native TradeUI sale/purchase is the only ordinary stock ingress/sink",
+        "The sealed `GenericInventoryRestocker` is only an empty-trade adapter",
+        "only open prepared handoff endpoints are temporarily succession-ineligible",
+    )
+    require(
+        problems,
+        "TESTING.md",
+        "Native TradeUI opens honestly empty",
+        "native TradeUI physical `_stock`",
+        "Automatic output, population-generated wares, consignments, tier replacements, and periodic restock remain zero",
+        "TAF retires only its own receipt/guards",
+        "Only an open prepared handoff endpoint is temporarily succession-ineligible",
+    )
+    require(
+        problems,
+        "docs/API.md",
+        "The ordinary civic market has the same physical law",
+        "Native TradeUI sale is the sole ordinary ingress",
+        "TAF never population-rolls, mints, consigns, replaces, remotely debits, or periodically restocks wares",
+        "Completed or dormant legendary/native traders remain finite personal merchants",
+    )
+    require(
+        problems,
+        "MODDING.md",
+        "It is only Qud's adapter for opening an empty native trade screen",
+        "Do not add population tables, output tables, generated consignments, automatic replacement, or a restock schedule",
+        "Completed/dormant legendary or native personal traders survive civic loss and accession",
+    )
+    require(
+        problems,
+        "CHANGELOG.md",
+        "Markets now trade only physical goods through native Qud TradeUI",
+        "TAF generates no market inventory, consignments, periodic restock, passive output, or remote debit",
+    )
+    require_if_present(
+        problems,
+        "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
+        "opens honestly empty",
+        "No tiered ware generation or restock exists",
+        "only TAF marks retire",
+        "prepared handoff endpoints pause succession",
+    )
+    require_if_present(
+        problems,
+        "_notes/RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md",
+        "Native TradeUI `_stock` is sole ordinary ware authority",
+        "`ShopTier` is current reach and may fall to zero",
+        "Completed/dormant legendary merchants survive civic loss/accession without civic authority",
+    )
+    require_if_present(
+        problems,
+        "_notes/AGENT-PLAYBOOK.md",
+        "current operational standing/reach seam",
+        "sealed `GenericInventoryRestocker` is only an empty-screen adapter",
+    )
+    require_if_present(
+        problems,
+        "_notes/balance-sim-output.txt",
+        "market stock: native TradeUI physical _stock only; generated output/restock = 0",
+        "market custody: detached/personal/foreign goods stay physical; TAF marks retire only",
+        "market succession: only an open prepared handoff endpoint is temporarily unavailable",
+    )
+    for relative in (
+        "VISION.md",
+        "docs/STATUS.md",
+        "TESTING.md",
+        "docs/API.md",
+        "MODDING.md",
+        "_notes/BRIEF-IMPLEMENTATION-AUDIT.md",
+        "_notes/RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md",
+    ):
+        forbid(
+            problems,
+            relative,
+            "stock tier rises with the settlement",
+            "shops carry one tier above",
+            "trade with them shows tier-1 stock",
+            "stocks the trader from the city's current tier",
+            "current-tier wares",
+            "8 one-shot tier consignments",
+        )
+
+
 def audit_public(problems):
     buildings, plots, maps, variants = catalogue_counts()
     report = structure_report()
@@ -351,8 +585,13 @@ def audit_public(problems):
         f"{maps} maps",
         f"{variants} variants",
         "zero issues",
-        "3 expected installed-base tolerant-recovery warnings",
-        f"{FOCUSED_SURVEY_CASES} focused source-contract cases",
+        "three expected installed-base tolerant-recovery warnings",
+        f"{CURRENT_FOCUSED_SURVEY_CASES} focused source-contract cases",
+        f"{CURRENT_TAF_CASES} / {CURRENT_TAF_CASES} cases",
+        f"{CURRENT_PORTABLE_CASES} / {CURRENT_PORTABLE_CASES} cases",
+        f"{CURRENT_TOOLS_CASES} / {CURRENT_TOOLS_CASES} tests",
+        f"{CURRENT_ART_CASES} / {CURRENT_ART_CASES} tests",
+        f"{CURRENT_VANILLA_TILE_PATHS} verified vanilla tile references",
         "PASS",
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
         "Native Caves of Qud behavior",
@@ -372,7 +611,7 @@ def audit_public(problems):
         f"{TOOLS_TEST_CASES} tests",
         f"{ART_TEST_CASES} tests",
         "structural release gate",
-        "stock never grants an indefinite passive bonus",
+        "never binds population",
         "VISION.md",
         "reopened every positive polity/world-presence direction",
         "REJECTED",
@@ -428,22 +667,19 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "Nine focused one-survey cases",
-        f"final {FINAL_SUITE_CASES}-case",
-        f"{PORTABLE_SUITE_CASES}-case portable suite",
-        f"stages {files} production C# sources",
-        f"{cold_install_files}-file cold-install inventory",
-        f"decomposed {CUMULATIVE_DECOMPOSITIONS} oversized authorities",
-        f"{at_or_over} files still breach",
-        "not a release candidate",
-        "Plots are reservations, not buildings",
-        "LotId",
-        "MODDING.md#plots-reserved-lots-and-authored-buildings",
+        "pre-release source",
+        "v1.0 Alpha public playtest has not shipped",
+        "not an installable release candidate",
+        "plots: lots reserve typed space",
+        "r_ThousandAndFirst",
+        "PLAYTESTING.md",
+        "SUPPORT.md",
+        "ALPHA-RELEASE-PLAN.md",
         "CONTRIBUTING.md",
-        "issue tracker",
+        "GitHub issue forms",
         "docs/STATUS.md",
-        "docs/STRUCTURE.md",
-        "structural release gate",
+        "docs/RELEASING.md",
+        "private security advisory",
     )
     forbid(
         problems,
@@ -466,10 +702,10 @@ def audit_public(problems):
         "It is **not** a generated building recipe",
         "LotId",
         "(BuildKey, Category, actual Size)",
-        "same declared plan set",
+        "declared plan/type lineage",
         "fresh siting/restake with a new `LotId`",
         "Complete minimal authored-plot extension",
-        "only that bound size can be commissioned",
+        "missing larger binding is a lawful",
     )
     forbid(
         problems,
@@ -493,6 +729,10 @@ def audit_public(problems):
     require(
         problems,
         "TESTING.md",
+        f"{CURRENT_TAF_CASES} / {CURRENT_TAF_CASES} Qud-referenced/source cases",
+        f"{CURRENT_PORTABLE_CASES} / {CURRENT_PORTABLE_CASES} portable cases",
+        f"{CURRENT_TOOLS_CASES} / {CURRENT_TOOLS_CASES} Tools tests",
+        f"{CURRENT_ART_CASES} / {CURRENT_ART_CASES} Art tests",
         "Nine focused one-survey source-contract cases pass",
         f"{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES} cases",
         f"{PORTABLE_SUITE_CASES} / {PORTABLE_SUITE_CASES}",
@@ -521,6 +761,12 @@ def audit_public(problems):
         "across 1307 production C# sources",
         "cold-install inventory contains 1331 files",
         "52 staged sources breach",
+    )
+    require(
+        problems,
+        "docs/ASSET_PROVENANCE.md",
+        f"all {CURRENT_VANILLA_TILE_PATHS} shipped tile paths",
+        "Current-candidate preview status: **OPEN**",
     )
     audit_testing_labels(problems)
 
@@ -890,7 +1136,7 @@ def audit_private(problems):
         f"**{FINAL_SUITE_CASES} / {FINAL_SUITE_CASES}** cases",
         "nine focused survey cases",
         "Food and water are separate physical civic flows",
-        "one positive settler-equivalent for one day",
+        "water plus roof only",
         "Canonical disposition and evidence owner: `VISION.md`",
     )
     forbid(
@@ -943,6 +1189,8 @@ def main():
     audit_public(problems)
     audit_private(problems)
     audit_archive_contract(problems)
+    audit_research_alignment_contract(problems)
+    audit_market_contract(problems)
     audit_source_citations(problems)
     if problems:
         print("DOCUMENTATION FRESHNESS FAILED")

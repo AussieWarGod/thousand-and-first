@@ -30,13 +30,13 @@ refuse a retry safely.
 | `Simulation/City/` | City state/rules, semantic clocks, execution, bindings, residents, jobs, logistics, networks, production, happenings, and engine-facing city parts/systems. |
 | `Experience/` | Rites, belief, offices, notables, succession, and persisted lifecycle/carry/growth transaction books and wire codec. |
 | `Chronicle/` | Realm history and receipt rules. |
-| `Polity/` | Realm-scoped semantic polity authority plus narrow Qud projection adapters: foundation/faction recovery, immutable NPC resolution, finite loaded-endpoint cohorts, first-contact diplomacy, and visible witnessed clash cleanup. Semantic rules remain separate from engine-facing `*Runtime`/part shards. |
+| `Polity/` | Realm-scoped semantic polity authority plus narrow Qud projection adapters: foundation/faction recovery, immutable NPC resolution, all seven finite loaded-endpoint cohort purposes, three-city traffic, Trade correspondence, loaded hospitality, caused diplomacy/conflict, and witnessed death/cleanup. Semantic rules remain separate from engine-facing `*Runtime`/part shards. |
 | `Trade/`, `Quests/`, `Raids/` | Trade manifests/routes, asks/petitions/bounties, and witnessed raid behavior. |
 | `World/` | Explicit opt-in cross-run inheritance world hooks and inherited-site builders. |
 | `Api/` | Versioned third-party extension contracts, immutable readings, admission, and clamping. Public contract is documented in [API.md](API.md). |
 | `Debug/` | Wishes and reversible diagnostic probes; never ordinary-save behavior. |
 | `RuntimeData/` | Mergeable content registries, blueprints, options, books, procedures, research, and population data. Keeping runtime XML off the recursive root makes optional typed shards isolatable. |
-| `Integrations/Hearthpyre223/` | Exact Hearthpyre 2.2.3 typed, read-only ownership translator. The manifest omits it unless that exact enabled dependency loaded first. |
+| `Integrations/Hearthpyre223/` | Exact Hearthpyre 2.2.3 typed, read-only ownership and `Home`-footprint translators. The manifest omits them unless that exact enabled dependency loaded first. |
 | `DevTests/` | Engine-free rule/source-contract NUnit runner. It is excluded from runtime staging. |
 | `Tools/` | Canonical staging, compile/ABI/release gates, isolated smoke profile, and log checks. |
 | `Art/` | Runtime tile/reference policy and XML cross-reference audits; excluded from staging. |
@@ -62,11 +62,19 @@ only absent or exact halves; claim retry retains any partial TAF publication. Ac
 activation, thaw, suspension, stationary work, semantic work, and mutating Charter entry all gate
 before civic mutation. This is claim evidence, not foreign lifecycle or construction authority.
 
+The same gated shard separately translates Hearthpyre `Home` rows into evidence-only exact-cell
+footprints. It accepts only the player's current loaded zone and cross-proves the zone/sector maps,
+global Home GUID map, `home.Sector`, exactly one sector-list reference, nonempty GUID/origin,
+declared count, bounded unique enumeration, and non-overlap. A player adoption binds one exact
+matching row into its own role receipt; each active read re-proves provider/version/identity/
+revision/cells. A foreign Home never supplies civic role or capacity on its own, and missing,
+disabled, upgraded, divergent, or ambiguous evidence pauses only the affected designation.
+
 `Tools/check-manifest-directories.py` models the engine's directory predicate and emits exact
 cold-install hashes for absent, exact-present, wrong-version, disabled, failed, and bad-load-order
 states. `Tools/check-hearthpyre-abi.py` pins the reviewed 2.2.3 manifest/source hashes, checks the
-tracked non-shipping compile stub, rejects foreign type references in core, and bans lifecycle,
-catalog, and remote-zone APIs from the typed shard. `Tools/gate.sh` runs both proofs, compiles core
+tracked non-shipping compile stub (including the exact `Home`/registry surface), rejects foreign
+type references in core, and bans lifecycle, Home mutation, catalog, and remote-zone APIs from the typed shard. `Tools/gate.sh` runs both proofs, compiles core
 alone, then compiles the one optional shard against that ABI assembly.
 
 ### Split-authority map
@@ -80,7 +88,8 @@ split by responsibility. Search these families instead of assuming one monolithi
 | Lifecycle rules | `Experience/KingdomLifecycleRules.cs`, `Experience/KingdomLifecycle*Rules.cs`, and `Experience/KingdomGrowthLifecycle*Rules.cs` | Validation, normalization, conservation, transitions, recovery, callbacks, and trusted physical observations. |
 | Realm archive | `Core/KingdomRealmArchive.*.cs` plus `Core/KingdomRealmArchivePhase.cs` and `Core/KingdomRealmCallback*.cs` | Capture, authority hash, bounded validation, graph matching, exact clone, callback/job/delivery evidence, and wire registry. |
 | Semantic polity authority | `Polity/KingdomPolityLedger.cs`, `Polity/KingdomPolity*State.cs`, `Polity/KingdomPolityRules.*.cs`, and `Polity/KingdomPolityCodec.*.cs` | Bounded polity/relation/profile/route/front/cohort/figure/incident meaning, whole-graph validation, independent options, strict current/prior/future wire behavior, and declared compaction. |
-| Polity projection adapters | `Polity/KingdomPolityRuntime.cs`, `Polity/KingdomPolityFactionRuntime.cs`, `Polity/KingdomPolityNpcRuntime.cs`, `Polity/KingdomPolityEndpointRuntime*.cs`, `Polity/KingdomPolityVisit*.cs`, `Polity/KingdomPolityResidentRuntime.cs`, and `Polity/r_KingdomPolityCohortBody.cs` | Exact foundation/faction reconciliation, fresh profile-derived bodies, loaded-endpoint prepare/commit/cleanup, one bounded imported-polity visit, player terms, visible clash witness, and exact groomed-resident successor bridge. |
+| Polity projection adapters | `Polity/KingdomPolity*Runtime*.cs`, `Polity/KingdomPolityVisit*.cs`, `Polity/KingdomPolityCorrespondence*.cs`, and `Polity/r_KingdomPolityCohortBody.cs` | Exact foundation/faction reconciliation, fresh profile-derived bodies, all seven finite cohort schedulers, three-city/current-rival traffic, loaded-endpoint prepare/commit/death/cleanup, bounded visits, Trade correspondence, hospitality, player terms, caused witnessed conflict, and exact groomed-resident successor bridge. |
+| Purpose-separated zone observations | `Growth/KingdomZoneObservationReceipt.cs`, `Growth/KingdomZoneObservationCodec.cs`, `Growth/KingdomReachObservation*.cs`, and `Experience/KingdomEducationPostObservation*.cs` | Canonical bounded per-zone evidence for unloaded Reach and exact education-post reads. Receipts bind purpose, realm, settlement, zone, owner, source revision/digest, payload, and observation tick; active-zone reads still require current physical proof. |
 | Founding transaction | `Core/KingdomFoundingTransaction.*.cs` | Reservation, staging, first/second-city publication, receipt recovery, faction/chronicle projection, and engine projection. |
 | Laboratory runtime | `Growth/KingdomLab.cs`, `Growth/KingdomLab.*.cs`, and the moved `Growth/r_Kingdom*.cs` laboratory IParts | Candidate selection, funding, commission/application/removal state, vats, governance, recovery, and XML-resolved part identities. |
 | Plot rules | `Growth/KingdomPlotRules.cs`, `Growth/KingdomPlot*Rules.cs`, and `Growth/KingdomPlotDeclarations.cs` | Typed-lot bounds, siting, ground/roof/heart evidence, stages, refusal, transition chain, and codec. |
@@ -139,6 +148,16 @@ invisible engine bookkeeping was previously unfoundable.
 
 ### World geometry
 
+Roads preserve four separate authorities. Frozen architecture snapshots name exact public/service
+egress; open-string frontage profiles assign route role and optional one/two-cell clearance; worn
+floor properties persist the resolved role/actual width; and paving combines terrain, that role,
+and live city craft into one exact vanilla surface/material pair. The paid construction job freezes
+the pair and its exact cells. Existing untagged paths default to one-cell local behavior, existing
+paved floors never redress, and the `RouteKind`/worn-tally wire remains unchanged. Plot
+`RoadMargin=1` is still stable circulation/siting space, not a width declaration. See the
+[road-frontage contract](../MODDING.md#road-frontage-width-and-paving-palettes) for registry and
+tie-law details.
+
 `JoppaWorld` is 80×25 parasangs (`World/KingdomInheritanceWorldIndex.cs` sizes its per-parasang fact
 table `[80, 25]`); the engine's own zone-grid arrays are sized to exactly 3× that per axis — 240×75
 zones — so a world or zone coordinate outside those bounds crashes zone build rather than refusing
@@ -153,8 +172,9 @@ in [TESTING.md](../TESTING.md)).
 
 ### Hosted arcology authority
 
-**Caveat:** the authored-interior hosted-arcology replacement is design-complete but deferred
-post-v1; the legacy hosted arcology described below is functional and ships in v1.
+**Evidence boundary:** the 27-zone replacement, authored-programme taste audit, and frozen staged
+compile pass. Native traversal, cold-load, and human appearance inspection of all 27 zones remain
+release evidence, not inferred completion.
 
 The arcology is the fifth and final rite-owned heart rung, not a second surface commission. A
 `KingdomHostedArcologyAuthority` row reserves the exact great-court predecessor and improvement
@@ -170,17 +190,61 @@ quarantined merely because another realm is current.
 `r_KingdomArcology` owns a bounded list of versioned hosted-lot receipts. Paid lots use the shared
 construction registry's append-only `HostedArcology` route, composite water/material/bit/exotic
 debit, pre-callback projection states, exact root receipt, prior-pass staffing, and 36,000-tick
-loaded-ground catch-up cap. Active supports fold into the root only while it remains the current
-capital; terrace food additionally requires current stored fresh water. No actor, liquid, food, or
-material is created inside an unloaded floor.
+loaded-ground catch-up cap. Catalogue supports are caps/contracts, never live output. Active hosted
+output folds into the root only from a canonical dated observation of its exact current receipt and
+only while the shell remains the current capital. Terrace food additionally requires current stored
+fresh water. No actor, liquid, food, or material is created inside an unloaded floor. V1 paid lots
+are deliberately closed to the two authored topology/fixture manifests; only read-only knowledge
+views have a public registration seam.
 
-Vanilla `Interior` parts own the persistent atrium, ward, and terrace zones. Nested lift hosts
-resolve back to the exact exterior root without loading a remote zone. Paid furnishings reconcile
-additively by deterministic root/role IDs; displacement or duplication quarantines and nothing is
-deleted speculatively. The atrium preserves the old court/basin as architecture. Read-only hosted
-views use a separate eligibility/render seam supplied the exact already-loaded host zone/root; it
-cannot enqueue research or mutate the knowledge graph. The caller snapshots realm/root/zone
-identity and rechecks it after eligibility and rendering before showing the result.
+Each paid interior has one stable `r_KingdomArcologyZoneAnchor`. While its zone is active, a
+designation provider exposes the complete bounded 80x25 programme as covered interior ground with
+that anchor as root. It cross-proves native `InteriorZone`, exterior carrier and authority,
+topology/programme, active receipt digest, anchor, and exact realized fixture manifest. At true final
+`SuspendingEvent`, prior attendance is consumed, visual evidence is reconciled, and the still-loaded
+zone is scanned with an isolated designation. The ward records provider-backed roof/luxury through
+`KingdomBenefitIndex`; the terrace separately records exact live growbed rows. Nothing loads or
+mutates another zone.
+
+The exterior carrier holds at most one canonical observation per paid lot, keyed by carrier, lot,
+receipt revision, interior zone, anchor, and tick. Consumers validate all keys without opening the
+interior. Malformed, duplicate, copied, stale-receipt, wrong-zone, future, or over-cap rows supply
+nothing. A broken provider lowers the next attended reading; missing/displaced manifest evidence
+quarantines and writes a zero fault reading. Status discloses observed amount/cap/missing state and
+age. Terrace water remains a current exterior flow condition, not a stored observation or aura.
+
+One vanilla `Interior` part enters schema `TAFArcology` at `(1,1,10)`. That schema owns local
+`x/y=0..2` at `z=9..11`: 27 lazily built ordinary zones sharing the surface root's exact instance
+ID. Paired stable thresholds connect cardinal neighbours, sealed shell walls close every outer
+edge, and matched stable stairs connect all nine coordinate columns. Only civic centre has the
+surface portal and inherited-court basin reading. Upper, civic, and lower storeys select 27
+deterministic purpose programmes. Nine sparse spatial archetypes occur once per storey: cellular
+wards, a nave, comb service runs, four courts, terraces, workbays, aisles, branches, and a
+lightwell. Each leaves the `x=34..45` / `y=9..15` circulation cruciform clear. Six real vanilla
+arc sconces light that route; inert programme props have no inventory, liquid, crop, power, or
+civic-support component.
+
+Material records storey history rather than applying one universal room kit. Upper cultivation
+ground uses foamcrete with low-concrete and repaired-stone divisions; the civic level preserves
+grey marble inside concrete/stone ribs; lower service ground retains small-hex flooring, open metal
+screens, and rusted Eater steel. Programme, archetype, material history, and the combined plan
+signature are zone properties for inspection. Shell fabric, partitions, thresholds, lights,
+stairs, anchors, and props all use coordinate-scoped stable IDs. A repeated build accepts the one
+exact object in its exact cell and otherwise fails closed instead of stacking a replacement.
+
+The terrace is fixed at `(1,1,9)` and the ward at `(0,1,11)`. Their bounded paid fixture plans
+live beside the corresponding Hydroponic Terrace and Lodging Ward spatial programmes, not in a
+second visual map. A stable zone anchor realizes those paid exact-ID fixtures once an active root
+receipt exists. Before first realization an exact
+partial set may resume safely; afterward a missing, duplicated, mistyped, or displaced exact ID
+quarantines instead of respawning. On each first realization, the complete lot/programme pairing,
+physical-producer count, stable identities, destinations, solid/liquid obstructions, and all
+constructible outputs preflight before the first `AddObject`; a later detected conflict therefore
+cannot create a new partial floor. Unexpected placement failure rolls back only newly prepared
+fixtures and quarantines if cleanup is not exact. Read-only hosted views use a separate
+eligibility/render seam supplied the exact already-loaded host zone/root; it cannot enqueue
+research or mutate the knowledge graph. The caller snapshots realm/root/zone identity and rechecks
+it after eligibility and rendering before showing the result.
 
 ### Heart ring-call relocation authority
 
@@ -232,14 +296,14 @@ opaque and inert, while invalid current state quarantines whole and remains insp
 
 The implemented gameplay consumer is deliberately finite. Foundation publishes the current realm
 and at most one opted-in legacy-derived partner/rival with fresh ids; owned faction projection then
-activates it. One semantic delegation route freezes one owned-settlement endpoint. After its due
-tick, optional presentation may create a two-body envoy only on that loaded claimed ground. A
-rival's exact claim can lead through terms to a three-body refusal warband; only a visible loaded
-body event can conclude that clash. Exact cleanup removes cohort-owned bodies/gear, returns foreign
-objects to the loaded cell, and never resurrects a missing committed body. Presentation disabling
-does not stop semantic time and re-enable cannot backlog old causes. General Trade cargo,
-correspondence UI, other cohort schedulers, multi-city traffic, and physical hospitality remain
-separate consumers, not behavior inferred from this vertical.
+activates it. Seven purpose-separated cohort schedulers share bounded capacity and drive exact
+delegation, guard, patrol, trader, courier, migrant, and warband work across current/rival and all
+three owned-city endpoints. Loaded presentation may materialize only the exact due cohort on proved
+claimed ground. Trade remains sole consignment/custody authority; visits expose correspondence and
+loaded hospitality without inventing unloaded cargo. Only caused, visible, witnessed incidents may
+conclude conflict or death. Exact intent/witness/replay removes cohort-owned bodies and gear,
+returns foreign objects to the loaded cell, and never resurrects a missing committed body.
+Presentation disabling does not stop semantic time and re-enable cannot backlog old causes.
 
 ### Resident authority
 
@@ -286,8 +350,9 @@ citizens/resident bodies, stores, larders, works, plots, construction roots, lay
 rows, network pieces, laboratory jobs, visual roots, bindings, and transient job bodies. Consumers
 must ask those indexes, not call `Zone.GetObjects()` through a private helper.
 
-Physical commits keep the snapshot coherent through `ObserveAddedToActive` and
-`ObserveRemovedFromActive`. A lane may re-prove one exact object, binding, or cell immediately
+Physical commits keep the snapshot coherent through `ObserveAddedToActive`,
+`ObserveChangedInActive`, `ObserveCurrentTopologyInActive`, and `ObserveRemovedFromActive`.
+A lane may re-prove one exact object, binding, or cell immediately
 before mutation; it may not perform a second whole-zone classification. Duplicate semantic or
 physical identity is ambiguity and fails closed rather than selecting by enumeration order.
 Reports, wishes, heartbeat recovery, and explicit actions outside the bound pass may take a fresh
@@ -330,12 +395,12 @@ live in [MODDING.md](../MODDING.md).
 
 `KingdomArchitecture` loads `KingdomArchitectures-*.xml` into an in-memory catalogue capped at
 `MaxTopRecords`/`MaxMappings` (`Growth/KingdomArchitecture.cs`, currently 1024). The cap was raised
-from 512 after the authored census reached 514 maps and started being refused at live engine load —
+from 512 after an earlier authored census reached 514 maps and started being refused at live engine load —
 no static checker enforces this cap, so a census growing past it is caught only by launching the game
-and reading `Player.log` for the refusal. The census currently totals 513 maps (176 source, 337
-generated); one orphaned map (`housing-arcology-xl0`, deferred arcology content with no reachable
-binding) was removed because the runtime enforces exact catalogue consumption — an unbound map is
-dead weight, not a harmless spare.
+and reading `Player.log` for the refusal. The current frozen census totals 333 maps (187 source, 146
+generated). Generated larger bindings are limited to families with an explicit useful spatial
+programme; absence at other larger sizes is a lawful non-offer, while every declared minimum still
+requires one exact typed mapping. An unbound map remains dead weight, not a harmless spare.
 
 The catalogue also loads **lazily**: `KingdomArchitecture.Healthy` reads `false` until the first
 production ask (`KingdomData.Buildings` or equivalent) triggers the load. A health check taken
@@ -424,7 +489,8 @@ documentation and compatibility tests in the same change; do not silently reinte
    DevTests/PortableTests.csproj --no-restore -v q --nologo`. Neither engine-free lane is a
    runtime compile or live-game gate.
 4. Exact staged compile, base-game XML/tile verification, ABI, release harness, and the binding
-   [structural release contract](STRUCTURE.md): `./Tools/release-check.sh`. Current scripts require
+   [structural release contract](STRUCTURE.md): `./Tools/release-check.sh --test` for a private
+   candidate, then the explicit public lane from [RELEASING.md](RELEASING.md). Current scripts require
    a locally owned Qud install, WSL/Windows PowerShell, and configured Windows paths. Incremental
    CI runs the structural census in report mode; only release mode fails on the unresolved cap or
    missing exact-inventory semantic review.

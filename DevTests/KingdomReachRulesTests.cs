@@ -80,6 +80,15 @@ namespace ThousandAndFirst.Tests
 			return lifts;
 		}
 
+		private static List<KingdomBenefitCell> PlotCells(int Count)
+		{
+			List<KingdomBenefitCell> cells = new List<KingdomBenefitCell>();
+			for (int i = 0; i < Count; i++)
+				cells.Add(new KingdomBenefitCell(i, i / 20,
+					KingdomBenefitCellUse.Plot));
+			return cells;
+		}
+
 		// --- The ladder: size sets the band -----------------------------------------------------
 
 		[TestCase(Size.None, ReachBand.Plot)]
@@ -121,6 +130,106 @@ namespace ThousandAndFirst.Tests
 		public void Derive_ANegativeTierIndexReadsAsTheFirstLink()
 		{
 			Assert.AreEqual(ReachBand.City, KingdomReachRules.Derive(Size.Huge, -4, 3));
+		}
+
+		[TestCase(0, Size.None)]
+		[TestCase(24, Size.Small)]
+		[TestCase(25, Size.Medium)]
+		[TestCase(48, Size.Medium)]
+		[TestCase(49, Size.Large)]
+		[TestCase(120, Size.Large)]
+		[TestCase(121, Size.Huge)]
+		public void SizeForDesignation_UsesExactPhysicalArea(int cells, Size expected)
+		{
+			Assert.AreEqual(expected,
+				KingdomReachRules.SizeForDesignation(PlotCells(cells)));
+		}
+
+		[Test]
+		public void ExactDesignationGeometry_DoesNotFillAnIrregularRoomsGap()
+		{
+			List<KingdomBenefitCell> cells = new List<KingdomBenefitCell>
+			{
+				new KingdomBenefitCell(4, 4, KingdomBenefitCellUse.Plot),
+				new KingdomBenefitCell(6, 4, KingdomBenefitCellUse.Plot),
+				new KingdomBenefitCell(5, 4, KingdomBenefitCellUse.Network, "road")
+			};
+			Assert.IsTrue(KingdomReachRules.ContainsPlotCell(cells, 4, 4));
+			Assert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 5, 4));
+			Assert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 7, 4));
+		}
+
+		[Test]
+		public void DesignationAnchor_PrefersAProvedRootAndOtherwiseUsesExactGround()
+		{
+			List<KingdomBenefitCell> cells = new List<KingdomBenefitCell>
+			{
+				new KingdomBenefitCell(3, 2, KingdomBenefitCellUse.Plot),
+				new KingdomBenefitCell(4, 2, KingdomBenefitCellUse.Plot)
+			};
+			Assert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 4, 2,
+				out int x, out int y));
+			Assert.AreEqual(4, x); Assert.AreEqual(2, y);
+			Assert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 99, 99,
+				out x, out y));
+			Assert.AreEqual(3, x); Assert.AreEqual(2, y);
+			Assert.IsFalse(KingdomReachRules.TryDesignationAnchor(null, 0, 0,
+				out _, out _));
+		}
+
+		[TestCase("craft", true)]
+		[TestCase("wealth", true)]
+		[TestCase("third-party-support", true)]
+		[TestCase("roof", false)]
+		[TestCase("defence", false)]
+		[TestCase(" Defence ", false)]
+		public void PhysicalLift_ExcludesBindingGoodsAndStructuralDefence(
+			string kind, bool expected)
+		{
+			Assert.AreEqual(expected, KingdomReachRules.IsPhysicalLift(kind));
+		}
+
+		[Test]
+		public void RuntimeReachAndSubsidenceConsumePhysicalReadingsWithoutCatalogueFallbacks()
+		{
+			string subsidence = KingdomSubsidenceLogicalSource.Read();
+			string ground = TestMain.ReadRepositoryText(
+				"Growth/KingdomReach.GroundCharacter.cs");
+			string offices = TestMain.ReadRepositoryText("Growth/KingdomReach.Offices.cs");
+			string relations = TestMain.ReadRepositoryText("Growth/KingdomReach.Relations.cs");
+			string physical = TestMain.ReadRepositoryText("Growth/KingdomReach.Benefits.cs");
+
+			StringAssert.Contains("TryActiveBenefits", subsidence);
+			StringAssert.Contains("IReadOnlyList<KingdomBenefitReading> readings = Benefits.Readings",
+				subsidence);
+			StringAssert.Contains("KingdomReach.TryRoot(Survey.Ground, reading", subsidence);
+			StringAssert.Contains("KingdomObservedBenefitProjection.TryCarries(work, reading",
+				subsidence);
+			StringAssert.Contains("KingdomObservedBenefitProjectionRules.Amount(carries",
+				subsidence);
+			StringAssert.Contains("KingdomObservedBenefitProjectionRules.PhysicalLift(carries)",
+				subsidence);
+			StringAssert.Contains("PhysicalFlowContract", subsidence);
+			StringAssert.DoesNotContain("HostedCarries", subsidence);
+			StringAssert.DoesNotContain("YardShadesOf", subsidence);
+			StringAssert.DoesNotContain("FoldShade", subsidence);
+
+			StringAssert.Contains("benefits.Readings", ground);
+			StringAssert.Contains("Gather(lifts, item, reading)", ground);
+			StringAssert.Contains("KingdomObservedBenefitProjection.TryCarries(Root, Reading",
+				ground);
+			StringAssert.Contains("IsPhysicalLift", ground);
+			StringAssert.DoesNotContain("Entry.Carries", ground);
+			StringAssert.DoesNotContain("TryReadFootprint", ground);
+			StringAssert.Contains("TryActiveBenefits", offices);
+			StringAssert.Contains("GatherLive(shaded, reading)", offices);
+			StringAssert.Contains("GatherLive(realm, reading)", offices);
+			StringAssert.Contains("KingdomReachObservationRuntime.TryWrite(System, Z, shaded, realm,",
+				offices);
+			StringAssert.Contains("ContainsPlotCell", relations);
+			StringAssert.DoesNotContain("TryReadFootprint", relations);
+			StringAssert.Contains("SizeForDesignation", physical);
+			StringAssert.Contains("ProviderId == \"taf.architecture\"", physical);
 		}
 
 		// --- The Reach attribute ----------------------------------------------------------------
@@ -428,6 +537,7 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomReachRules.ScopedByReach("craft"));
 			Assert.IsTrue(KingdomReachRules.ScopedByReach("order"));
 			Assert.IsTrue(KingdomReachRules.ScopedByReach("luxury"));
+			Assert.IsTrue(KingdomReachRules.ScopedByReach("wealth"));
 		}
 
 		// --- The ground's character ----------------------------------------------------------------
@@ -454,10 +564,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Character_ListsInTheCataloguesOwnLiftOrder()
 		{
-			GroundCharacter character = KingdomReachRules.Character(Lifts("luxury", 1, "spirit", 1, "craft", 1));
+			GroundCharacter character = KingdomReachRules.Character(Lifts(
+				"wealth", 1, "luxury", 1, "spirit", 1, "craft", 1));
 			Assert.AreEqual("craft", character.Lifts[0].Kind);
 			Assert.AreEqual("spirit", character.Lifts[1].Kind);
 			Assert.AreEqual("luxury", character.Lifts[2].Kind);
+			Assert.AreEqual("wealth", character.Lifts[3].Kind);
 		}
 
 		[Test]

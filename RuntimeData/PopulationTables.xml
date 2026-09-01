@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <populations>
   <!--
     Who actually turns up. A settlement of identical figures reads as a barracks,
@@ -122,6 +122,18 @@
     <object Blueprint="Catchbasin" Number="1" Weight="30" />
     <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="15" />
   </population>
+  <!--
+    Food furnishings are empty work and storage surfaces, never provisions and never producers.
+    Current authored architecture places its own purpose-specific fixtures and deliberately skips
+    Contents; this table is the deterministic fallback for legacy and third-party plots that do
+    not carry an authored realization. It therefore improves their legibility without minting a
+    harvest, duplicating a hearth, or changing the catalogue's food accounting.
+  -->
+  <population Name="r_KingdomFurnishings_Food" Style="pickone">
+    <object Blueprint="r_KingdomFixtureBasketEmpty" Number="1" Weight="40" />
+    <object Blueprint="r_KingdomFixtureShelfTimber" Number="1" Weight="35" />
+    <object Blueprint="r_KingdomFixtureTableTimber" Number="1" Weight="25" />
+  </population>
   <population Name="r_KingdomFurnishings_Civic" Style="pickone">
     <object Blueprint="r_KingdomBench" Number="1" Weight="55" />
     <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="30" />
@@ -137,4 +149,69 @@
     <object Blueprint="r_KingdomBench" Number="1" Weight="25" />
     <object Blueprint="r_KingdomCivicTorchpost" Number="1" Weight="15" />
   </population>
+  <!-- BENEFIT-PROVIDER-ACQUISITION:BEGIN (generated) -->
+  <!-- Ordinary provider furniture is independently rare merchant stock. Dropping one
+       inside an exact designation is the placement route; catalogue identity grants zero. -->
+  <population Name="Tier1Wares" Load="Merge">
+    <object Blueprint="r_KingdomArgumentBenchPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomCairnMemorialPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomCaravanseraiCounterPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomCrankMillMachinePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomDeepCutFacePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomFactorLedgerPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomFineHouseAmenityPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomGarthOfferingPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomGrindingMillstonePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomGuestScreenAmenityPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomHideRackPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomLivingCapCondensatePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomManorAmenityPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomMarketCounterPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomMasonBankerPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomMootCharterStandPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableBedroll" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableShrine" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomReservoirAmenityPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomRiteFirePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomRiteOvenPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomSawyerTrestlePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomScriptoriumCopyDeskPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomShrineOfferingPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomSmithyAnvilPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomToolCareBenchPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomVellumPressPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWetUnderfloorPortable" Number="1" Chance="1" />
+  </population>
+  <population Name="Tier2Wares" Load="Merge">
+    <object Blueprint="r_KingdomButcherWorkSlabPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomChargingCrankPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomHindrenLoomPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableChronicleShelf" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableTimberBed" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomSailvaneMachinePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomSmeltingFurnacePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWatchMusterPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWaterWheelMachinePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWorkshopBenchPortable" Number="1" Chance="1" />
+  </population>
+  <population Name="Tier3Wares" Load="Merge">
+    <object Blueprint="r_KingdomBarracksMusterPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomCourtAmenityPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomForgeAnvilPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableChargingCradle" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPreservationTablePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomSaltAccumulatorPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomTempleSanctumPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomUnderBenchWorkfacePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWaterworksGaugePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomWorkingBathPortable" Number="1" Chance="1" />
+  </population>
+  <population Name="Tier4Wares" Load="Merge">
+    <object Blueprint="r_KingdomCondenseryFinishPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomForgeHallBankedForgePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomForgeHallCastingAnvilPortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomHomeFarmGradingTablePortable" Number="1" Chance="1" />
+    <object Blueprint="r_KingdomPortableMetalBed" Number="1" Chance="1" />
+  </population>
+  <!-- BENEFIT-PROVIDER-ACQUISITION:END -->
 </populations>

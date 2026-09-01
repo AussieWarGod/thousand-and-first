@@ -1,0 +1,6 @@
+# Food/water settlement identity: Chavvah circulation and dry-storage workflow at realm scale.
+DESCRIPTION=Chavvah realm granary stages with exact food culture and XL identity
+REQUEST=arch-purpose-realmgranary-chavvah;facing=south
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,food

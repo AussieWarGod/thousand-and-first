@@ -19,8 +19,8 @@ Constants read from source:
     SeedReturnChancePercent  = 20
     PreserveMultiple         = 3
     MillCropsPerDay          = 2
-    FavoredMealShade         = 1
-    FavoredMealPercent       = 50
+    FavoredMealShade         = 0
+    FavoredMealPercent       = 100
     MaxCyclesPerVisit        = 120
     EffortPerHandPerDay      = 10
     StrikeBaseEffort         = 20
@@ -40,8 +40,8 @@ Constants read from source:
     LeakDaysToEmptyAtCeiling = 50
     RuinStandingFloorPercent = 25
     RuinStandingCeilingPercent = 60
-    ForageRationsPerHand     = 2
-    MaxForagedRationsPerDay  = 4
+    ForageRationsPerHand     = 0
+    MaxForagedRationsPerDay  = 0
     HungryIntervalsToEmigrate = 2
     HungryIntervalsToFamine  = 3
     DefaultLarderCapacity    = 32
@@ -215,8 +215,8 @@ catalogue is Staff="2", so this is that yard:
 
     The third factor, for the record and for nothing else. The keepers' method
     (RESEARCH-SYSTEM-DESIGN 8.2) now rides this same effort percent, and reaches the city
-    book's water and food rates and the crop harvest besides. A realm that has researched
-    nothing carries 100%, 100% is a no-op through Methoded, and NO table in this file moved
+    book's water rate and the physical crop harvest besides; the legacy city food rate stays
+    zero. A realm that has researched nothing carries 100%, 100% is a no-op through Methoded, and NO table in this file moved
     for it - they are all baseline tables and they are meant to stay that way. What the
     ceiling would be worth if a realm reached it: a sound two-hand yard shapes 60 units in
     a month at 150% against 40 at the baseline. A factor on the effort, never on the days,
@@ -241,8 +241,8 @@ mirrorgate              120     12.0        116       36         72        188  
 crownhall               110     11.0        106       36         72        178          11         36
 arcologyward             70      8.0         48       30         60        108          11         30
 
-    Bits, the third cost. 17 of 141 designs ask for vanilla tinkering bits at all,
-    and they are exactly the high-craft ones: arcology, arcologyward, assentingmoot, becomingannexe, chargingpost, chimerictheatre, condensery, crownhall, graftinghall, hallsurgery, heartcourt, mirrorgate, robotchargebay, stasisvault, underbench, vathouse, waterworks.
+    Bits, the third cost. 19 of 144 designs ask for vanilla tinkering bits at all,
+    and they are exactly the high-craft ones: arcology, arcologyward, assentingmoot, becomingannexe, chargingpost, chimerictheatre, condensery, crownhall, forgehall, graftinghall, hallsurgery, heartcourt, mirrorgate, robotchargebay, robotservicebay, stasisvault, underbench, vathouse, waterworks.
     Nobody in the settlement makes a bit; they come off salvage and out of caravans, so a
     design that names them is gated on the founder's own scavenging rather than on any yard.
     That is the intended shape (the catalogue's header says so) and it means the bit line is
@@ -319,9 +319,9 @@ Q6  Level: what it takes to HOLD each rung, now that something reads Carries
 The denomination, restated because everything below turns on it: one point of `water` is one
 dram a day sustained, which is one settler's thirst AT CAMP RATES.
 `KingdomRules.UpkeepDrams` then bills (100, 120, 150, 180, 220) per hundred by stage, so
-`KingdomSubsidenceRules.LevelFromWater` divides the declared water by that percentage before
-the frozen `Equilibrium` sees it. Food and roof are already denominated in people and are not
-converted: a roof is a roof at any rung.
+`KingdomSubsidenceRules.LevelFromWater` divides declared water by that percentage before
+`PopulationEquilibrium` sees it. Roof is already denominated in people. Food is deliberately
+outside population equilibrium; F1 audits its physical positive transactions separately.
 
 The cross-check, first: the drams a rung's own population drinks, converted back, must carry
 that population. If these two columns disagree the catalogue and the upkeep table are
@@ -340,17 +340,17 @@ must be plausible, because both are things players do.
 
   --- cheapest ---
   rung       works   drams  staff  level   plan
-  Steading       7      35      2      6   saltterracex2 | plotx2 | tentx3  holds
-  Village        7     102      0     12   airwellcourtx2 | plotx4 | housecourtx1  holds
-  Town          13     183      0     27   airwellfieldx2 | plotx9 | housecourtx2  holds
-  City          23     429      0     51   condenseryx3 | plotx17 | housecourtx3  holds
+  Steading       4      30      2      6   saltterracex2 | tentrowx2  holds
+  Village        6      84      0     12   airwellcourtx2 | tentrowx4  holds
+  Town          11     149      0     27   airwellfieldx2 | tentrowx9  holds
+  City          20     385      0     51   condenseryx3 | tentrowx17  holds
 
   --- grandest ---
   rung       works   drams  staff  level   plan
-  Steading       4      58      2      8   catchmentbankx2 | fieldx1 | housex1  holds
-  Village        4     114      3     18   airwellcourtx2 | fieldrowsx1 | housecourtx1  holds
-  Town           4     184      3     26   airwellfieldx2 | grangex1 | terracex1  holds
-  City           6     674     12     60   condenseryx3 | homefarmx2 | arcologyx1  holds
+  Steading       4      38      0      6   catchmentbankx2 | tentrowx2  holds
+  Village        6      84      0     12   airwellcourtx2 | tentrowx4  holds
+  Town           9     384      0     27   airwellfieldx2 | terracex7  holds
+  City          10     972      0     56   condenseryx3 | courtx7  holds
 
 
 Reading. Every rung is holdable both ways. That is now a stronger statement than it was,
@@ -379,27 +379,18 @@ WHAT IT BOUGHT is the rung below the table. Nothing in the water lane opens at C
 no `saltpan`, no `catchment` - so a camp drinks the founder's stock, what the detail hauls out
 of the site's own finite pools, and what a charter pays. Q7 is that curve.
 
-The food asymmetry this table used to expose stays closed. `grange` (L, Town) and `homefarm`
-(XL, City) fill the two rungs that used to be missing at 26 and 40, the same two figures the
-ROOF lane climbs, because a dinner and a bed are both counted in people and neither is divided
-by the stage rate the way a dram is.
-
-What did NOT change, deliberately: food still wants hands at every rung above the kitchen
-garden, and it is the only binding good that does. Water and roof automate to Staff=0 at
-their large and grand designs; food never automates, it only improves its rate - four
-settlers fed per hand at a field, six at ploughed fields, nearly nine at a grange, ten at
-the home farm. What automation buys is a discharge from the LABOUR term, and (since Addendum
-10(b)) never a discharge from the CONDITION term: an air-well field still needs nobody and
-still runs down when it is ruined. Q9 is what that costs when a season goes badly.
+Food designs do not appear in this holding-cost table. They remain meaningful physical crop,
+storage, milling, meal, industry, feast, and trade infrastructure, audited in F1. Adding or
+removing one cannot raise or lower the population level and cannot start this slide.
 
 Comfort is not in these tables. `LiftCapPercent` = 50 lets craft, spirit, learning, order and
-luxury add up to half the binding level on top, and a settlement that has built its civic
+luxury add up to half the water/roof level on top, and a settlement that has built its civic
 works among its houses still reaches that cap easily - so a real City holds about 1.5x what
 the table above says. That is authored (the frozen arithmetic's own doc) and it is why these
 numbers are the FLOOR of what a rung costs rather than the expectation. What is new is that
 reaching the cap is no longer automatic: a lift now lands in proportion to the roofs its work
-covers. A civic-office title contributes zero; the only settlement-wide transient shade is
-the last attended meal. Q10 is the authored reach reckoning.
+covers. Civic-office and meal shade both contribute zero. Q10 is the authored reach
+reckoning.
 
 ======================================================================================
 Q12 Styles: what each of the five cities may raise, and that every one can still stand
@@ -423,11 +414,11 @@ The third is not a balance rule, it is a design rule, and it is here because it 
 pass silently breaks. A style is a place, not a penalty.
 
   style      offered  refused   own   categories missing
-  common         127        5     3   none
-  verdant        125        6     2   none
-  fungal         127        4     2   none
-  gyre           126        5     2   none
-  eater          126        6     3   none
+  common         130        5     3   none
+  verdant        128        6     2   none
+  fungal         130        4     2   none
+  moonstair      131        3     2   none
+  eater          129        6     3   none
 
   common   is refused hut, hutyard, sawyeryard, palisade, waterwheel
            and raises mudhut, mudhutcourt, caravanserai
@@ -435,39 +426,39 @@ pass silently breaks. A style is a place, not a penalty.
            and raises stiltrow, gravegrove
   fungal   is refused saltpan, saltterrace, granary, sailvane
            and raises sporecellar, caproof
-  gyre     is refused saltpan, saltterrace, bazaar, bathhouse, waterwheel
+  moonstairis refused saltpan, saltterrace, waterwheel
            and raises bonefold, sacramentcourt
   eater    is refused hut, hutyard, weeptap, weepgallery, sawyeryard, palisade
            and raises blockhut, blockyard, rubblewall
 
-NOW THE RUNGS, which is Q6 run five times. Same arithmetic, same cheapest-first plan, but the
-catalogue narrowed to what each style is offered. `common` is the control: it is refused nothing
-in the binding lanes, so its column is Q6's own answer and every other column is read against it.
+NOW THE RUNGS, which is Q6 run five times. Same water/roof population arithmetic, same
+cheapest-first plan, but the catalogue narrowed to what each style is offered. Food-family parity
+was already checked above and F1 checks its physical truth; it is not priced as population support.
 
   rung     style      works   drams  level   plan
-  Steading common         7      35      6   saltterracex2 | plotx2 | tentx3
-           verdant        7      35      6   saltterracex2 | plotx2 | tentx3
-           fungal         7      35      6   weeptapx2 | plotx2 | tentx3
-           gyre           7      35      6   weeptapx2 | plotx2 | tentx3
-           eater          7      35      6   saltterracex2 | plotx2 | tentx3
+  Steading common         4      30      6   saltterracex2 | tentrowx2
+           verdant        4      30      6   saltterracex2 | tentrowx2
+           fungal         4      30      6   weeptapx2 | tentrowx2
+           moonstair      4      30      6   weeptapx2 | tentrowx2
+           eater          4      30      6   saltterracex2 | tentrowx2
 
-  Village  common         7     102     12   airwellcourtx2 | plotx4 | housecourtx1
-           verdant        7      90     12   weepgalleryx2 | plotx4 | housecourtx1
-           fungal         7     102     12   airwellcourtx2 | plotx4 | housecourtx1
-           gyre           7     102     12   airwellcourtx2 | plotx4 | housecourtx1
-           eater          7     102     12   airwellcourtx2 | plotx4 | housecourtx1
+  Village  common         6      84     12   airwellcourtx2 | tentrowx4
+           verdant        6      72     12   weepgalleryx2 | tentrowx4
+           fungal         6      84     12   airwellcourtx2 | tentrowx4
+           moonstair      6      84     12   airwellcourtx2 | tentrowx4
+           eater          6      84     12   airwellcourtx2 | tentrowx4
 
-  Town     common        13     183     27   airwellfieldx2 | plotx9 | housecourtx2
-           verdant       15     183     26   weepgalleryx4 | plotx9 | housecourtx2
-           fungal        13     183     27   airwellfieldx2 | plotx9 | housecourtx2
-           gyre          13     183     27   airwellfieldx2 | plotx9 | housecourtx2
-           eater         13     183     27   airwellfieldx2 | plotx9 | housecourtx2
+  Town     common        11     149     27   airwellfieldx2 | tentrowx9
+           verdant       13     149     26   weepgalleryx4 | tentrowx9
+           fungal        11     149     27   airwellfieldx2 | tentrowx9
+           moonstair     11     149     27   airwellfieldx2 | tentrowx9
+           eater         11     149     27   airwellfieldx2 | tentrowx9
 
-  City     common        23     429     51   condenseryx3 | plotx17 | housecourtx3
-           verdant       23     429     51   condenseryx3 | plotx17 | housecourtx3
-           fungal        23     429     51   condenseryx3 | plotx17 | housecourtx3
-           gyre          23     429     51   condenseryx3 | plotx17 | housecourtx3
-           eater         23     429     51   condenseryx3 | plotx17 | housecourtx3
+  City     common        20     385     51   condenseryx3 | tentrowx17
+           verdant       20     385     51   condenseryx3 | tentrowx17
+           fungal        20     385     51   condenseryx3 | tentrowx17
+           moonstair     20     385     51   condenseryx3 | tentrowx17
+           eater         20     385     51   condenseryx3 | tentrowx17
 
 
   Costliest style's cheapest plan, against common's at the same rung: 100% (ceiling 150%).
@@ -542,15 +533,12 @@ a day is one settler at camp rates, so `airwellfield` x2 both raises a Town's le
 puts 50 drams a day in its casks against a bill of 45 - and it does it out of a LiquidProducer
 whose mean rate is 48 turns a dram, which is 1200/48 = 25, the catalogue number.
 
-FOOD IS NO LONGER THE HALF NOT WIRED, but it has two physical lanes rather than water's one.
-The city model integrates `KingdomGrowth.FoodMadePerDay` off `ProcessedThroughTick`; that
-figure deliberately subtracts sown fields and mills. Sown fields catch up their absolute
-six-day crop cycles through `KingdomPlot`, and mills transform real larder stock through
-`GrindHarvest` on the attended pass. `ResolveHeartbeat` bills
-`KingdomRules.RationsForElapsed` against the real larders before the mill runs.
-`LastFoodWorkTick` belongs to mills only, never to the fields or the city model. Q11 is the
-food half of this table, and its handover reads differently on purpose: water hands over from
-hauling to works and food never does.
+FOOD HAS NO POPULATION HANDOVER OR MODEL RATE. Sown fields catch up absolute six-day crop
+cycles into real crop objects; mills transform exact larder stock through `GrindHarvest`; meals,
+recipes, industry, trade, and hospitality debit their own exact physical transactions. Both
+`KingdomGrowth.FoodMadePerDay` and the city FoodCarry rate return zero, while
+`LastFoodWorkTick` belongs to mills only. `ResolveHeartbeat` bills water and never food. F1
+proves that separation and the no-subsidence boundary.
 
 ======================================================================================
 Q8  What a slide actually costs, in days and in people
@@ -618,26 +606,26 @@ grandest staffless water design is a PRODUCER rather than a vessel, so what a lo
 is condensing capacity, and the settlement feels it as drams that stop arriving rather than as
 a level that quietly re-reads lower.
 
-Which means the loop no longer bottoms out in the food lane alone. Water and roof automate to
-Staff=0 at their large and grand rungs and USED to be immune for exactly that reason; they are
-not now. Here is each rung's grandest plan with every work run to the ceiling - the worst the
-loop can do, by construction:
+Water and roof automate to Staff=0 at their large and grand rungs and USED to be immune for
+exactly that reason; they are not now. Food is absent from this population loop by ruling. Here
+is each rung's grandest habitable plan with every work run to the ceiling - the worst the loop
+can do, by construction:
 
   rung      staff  sound  wrecked  floor   binds when wrecked
-  Steading      2      8        4      4   water
-  Village       3     18        7      4   food
-  Town          3     26       10      4   food
-  City         12     75       26      4   roof
+  Steading      0      6        4      4   roof
+  Village       0     12        4      4   roof
+  Town          0     27        7      4   roof
+  City          0     73       21      4   roof
 
 And the cheapest plan - the many-small-plots build, which at every rung above Steading is
 entirely staffless. Under the old ternary its wrecked column EQUALLED its sound one, which was
 the seam: a city built out of staffless designs took no level damage from ruin at all.
 
   rung      staff  sound  wrecked   plan
-  Steading      2      6        4   saltterracex2 | plotx2 | tentx3
-  Village       0     12        4   airwellcourtx2 | plotx4 | housecourtx1
-  Town          0     27        9   airwellfieldx2 | plotx9 | housecourtx2
-  City          0     54       17   condenseryx3 | plotx17 | housecourtx3
+  Steading      2      6        4   saltterracex2 | tentrowx2
+  Village       0     12        4   airwellcourtx2 | tentrowx4
+  Town          0     27        9   airwellfieldx2 | tentrowx9
+  City          0     54       17   condenseryx3 | tentrowx17
 
 Now the slide itself, run with the loop closed. Same shape as Q8, but the level is
 recomputed from the works' actual condition every step, and every lost rung asks every
@@ -647,11 +635,11 @@ be adversarial about (the reach "does not depend on which work happened to be ra
 for the difference.
 
 case                           static  fair  worst   static ends  worst ends    hits
-City 50, a Town's grand works      24    24     24   Town 26      Town 23        2.0
-City 50, a Town's small works      20    32     32   Town 27      Village 18     9.1
-City 50, a Village's works         32    36     36   Village 18   Village 14     2.8
-Town 25, a Steading's works        20    24     24   Steading 8   Steading 6     2.3
-Town 25, nothing but gardens       24    28     28   Steading 6   Camp 4         4.6
+City 50, a Town's grand works      20    28     28   Town 27      Town 21        4.5
+City 50, a Town's small works      20    32     32   Town 27      Village 18     7.7
+City 50, a Village's works         40    44     44   Village 12   Steading 8     4.7
+Town 25, a Steading's works        24    28     28   Steading 6   Camp 4         2.7
+Town 25, nothing but gardens       24    28     28   Steading 6   Camp 4         2.7
 
 Reading. Three things, and the third is the one worth keeping.
 
@@ -669,8 +657,8 @@ Reading. Three things, and the third is the one worth keeping.
 
 3. THE DOOR OUT OF THE LEVEL IS CLOSED. Under the old ternary a city built entirely out of
    staffless designs took NO level damage from ruin - its wrecked column equalled its sound
-   one - and the whole of the loop's surface was the food lane, which never automates. Addendum
-   10(b) shut that door: the cheapest plan's wrecked column above is now well under its sound
+   one. Addendum 10(b) shut that door: the cheapest water/roof plan's wrecked column above is
+   now well under its sound
    one at every rung, and the automation lanes pay for their ruin like everything else. That is
    the delta this pass was for, and it costs the adversarial cases roughly one further rung.
 
@@ -764,9 +752,9 @@ Both are capped by `LiftCapPercent` = 50, so neither outruns the water.
   the reach            a work's lift now lands in proportion to the settlement's roofs it
                        covers (`KingdomReachRules.Landed`). Binding goods are untouched.
 
-THE TITLE-ONLY FENCE. `KingdomSystem.Shade` reads MealShade only, and seat plus off-seat
-normalization force the serialized legacy NotableShade field to zero. An office therefore
-changes identity and fiction, never capacity, even before the player revisits an old save.
+THE TITLE-AND-MEAL FENCE. `KingdomSystem.Shade` returns zero, and normalization retires both
+serialized NotableShade and MealShade. Offices and meals can change identity, fiction, and their
+bounded explicit act; neither changes population capacity, including on old saves.
 
 
 THE REACH, which is the half that TAKES. Before this wave every lifting work counted citywide
@@ -780,9 +768,9 @@ roofs and a plot band reaches nobody who lives anywhere.
 rung      declared gathered scattered   cap   was gathered scattered
 Camp            15        0         0     2     6        4         4
 Steading        71       16         7     2     7        7         7
-Village        190       78        22     6    18       18        18
-Town           257      145        90    12    37       37        37
-City           364      252       197    25    75       75        75
+Village        193       81        23     6    18       18        18
+Town           274      158        94    12    37       37        37
+City           381      265       201    25    75       75        75
 
 Reading. Those columns say something worth saying plainly: with one of EVERY lifting design a
 rung can reach standing, the declared lift overruns the cap so far that scoping changes the
@@ -811,172 +799,6 @@ a camp the whole 2 settlers of headroom it used to get for free. It is not a sta
 floored at `FloorLevel` = 4 regardless, every rung stays holdable on its binding goods, and
 an office cannot put that headroom back. If Camp needs softening, the lever is a `Reach`
 attribute on an authored design, not a hidden reward attached to a named resident.
-
-
-======================================================================================
-Q11 Food, now that it is a flow: what a rung grows against what it eats
-======================================================================================
-
-THE DENOMINATION, and the one place it deliberately does not mirror water. One point of
-`food` is ONE SETTLER FED FOR ONE DAY, at every rung. Water is billed (100, 120, 150, 180, 220) per
-hundred by stage and its Carries are divided back out by the same percentage; food is billed
-flat and its Carries are handed to `Equilibrium` undivided, because (the catalogue's own
-words) "a dinner and a bed are both counted in people, and neither is divided by the
-settlement's own thirst the way a dram is".
-
-That flatness buys the whole lane its central property, and it is worth stating as an
-identity rather than a table:
-
-    a settlement standing at its own supported level makes exactly the rations it eats.
-
-`Supports.Food` is what the fields make in a day; `RationsPerDay(pop)` is what the people eat
-in a day; the food arm of `Equilibrium` is `Supports.Food`. So food binds at exactly the
-population it feeds, with nothing left over and nothing owed - and every column below is a
-measure of the CUSHION around that identity, not of whether it holds.
-
-THE CUSHION HAS TWO PARTS. Foraging (2 a hand a day, ceiling
-4 a day whoever walks the ground) and the larders. Foraging is
-food's answer to the water detail, with one difference that matters: hauled water goes into a
-cask and foraged food goes straight into a mouth, so a settlement that has dedicated NO larder
-still eats. What stops that being an answer above a Camp is the ceiling, and the ceiling is
-chosen: 4 is `FloorLevel`, and it is also the population ceiling
-of the Camp rung (Steading opens at 5). The wild feeds a camp and nothing
-larger.
-
-rung       people  eats/d  hauling  free  forage   verdict
-Camp            4       4        2     2       4   FEEDS ITSELF off the land, with no field standing
-Steading        5       5        3     2       4   the wild covers 80%; the rest must be grown
-Village        12      12        9     3       4   the wild covers 33%; the rest must be grown
-Town           25      25       23     2       4   the wild covers 16%; the rest must be grown
-City           50      50       50     0       0   every hand is on the water; nothing is foraged and everything must be grown
-
-CAMP SELF-SUSTAINS, which is the floor this lane had to clear. A camp of four with two of them
-on the water detail has two hands left, and two hands forage exactly the four rations four
-people eat. That is the same promise the water lane makes at the same rung - Q7's "Camp wants
-half its people on water" - said in food's voice, and it is why a founder who has commissioned
-nothing is never starved by this system.
-
-Now the two ways a founder actually feeds a rung, on Q6's own terms. `staff` is what the food
-plan takes off the free hands, which is why the forage column shrinks as the plan grows: hands
-are spent once, and a settler in a field is not also out on the ridge.
-
-  --- cheapest ---
-  rung       people  eats/d  made/d  forage  spare   plan
-  Camp            4       4       6       4      6   plotx2 (0 hands)
-  Steading        5       5       6       4      5   plotx2 (0 hands)
-  Village        12      12      12       4      4   plotx4 (0 hands)
-  Town           25      25      27       4      6   plotx9 (0 hands)
-  City           50      50      51       4      5   plotx17 (0 hands)
-
-  --- grandest ---
-  rung       people  eats/d  made/d  forage  spare   plan
-  Camp            4       4       5       4      5   plotrowsx1 (0 hands)
-  Steading        5       5       8       4      7   fieldx1 (2 hands)
-  Village        12      12      18       4     10   fieldrowsx1 (3 hands)
-  Town           25      25      26       4      5   grangex1 (3 hands)
-  City           50      50      80       4     34   homefarmx2 (8 hands)
-
-
-Every rung feeds itself both ways, with spare on top of the identity - the plans overshoot
-because a whole number of fields rarely lands exactly on the bill, and the overshoot is where
-the larders fill from. What did NOT change from Q6's reading: food never automates. Every rung
-above the kitchen garden wants hands and the grand ones want them still; what scale buys is a
-better rate, never a discharge.
-
-
-======================================================================================
-Q11b How deep the larders are, and what a bad year costs before the founder sees it
-======================================================================================
-
-Food storage is declared on the blueprint (`r_KingdomLarderCapacity`) and never in the
-catalogue, for the same reason a cistern's `MaxVolume` is: what a design adds to the LEVEL is a
-catalogue fact and how much its vessel holds is a fact about the vessel. The ratio is the
-cistern's own - a store holds about 32 days of what it carries - so the larder shed holds
-64 against `food:2` and the granary
-288 against `food:9`. A container the
-founder dedicated by hand and that declares nothing gets 32.
-
-"blackout" below is the honest question: the fields stop entirely (ruined, unstaffed, a bad
-season), foraging is all that is left, and this is how long the larders cover the difference.
-
-rung       people  pantry plan        held   blackout   against water
-Camp            4  larderx1             64     no gap   0 d of water
-Steading        5  joppaseedhousex1    288      288 d   53 d of water
-Village        12  granaryx1           288       36 d   35 d of water
-Town           25  granaryx2           576       27 d   34 d of water
-City           50  realmgranaryx2      768       16 d   43 d of water
-
-READING. The two cushions CROSS, and they cross at Town. Below it food is the safer of the two
-- a camp cannot have a food blackout at all, because the wild already covers it, and a village
-holds about as many days of bread as of water. Above it the lines part hard: a Town holds 27
-days of food against 71 of water, and a City 18 against 109. So the food lane gets steadily
-LESS forgiving as the settlement grows, which is exactly the shape the catalogue asks for -
-"Food is the good that notices staffing. It is meant to be." A ruined reservoir costs a city
-its cushion; a ruined home farm costs it dinners inside the month.
-
-That crossing is not an accident of the numbers, it is the two bounds meeting. Foraging is
-flat (4 a day forever) so it is everything at a Camp and
-nothing at a City, while water storage climbs faster than the water bill does because the
-grand water designs are stores as much as makers. Food has no grand STORE - the granary is a
-middling plot and the ladder stops there - so a city keeps its bread in several of the same
-building rather than in one big one.
-
-What bounds the IMMEDIATE hunger ladder is the RESOLVE, not the number of days one resolve
-bills. A long span with no attended claimed ground advances it once when physical stores next
-reconcile; while the founder remains on claimed ground, the stationary scheduler supplies one
-resolve at each absolute daily boundary. Either way one resolve removes at most one settler
-and `Emigrate` floors at 2. Subsidence remains the independent
-structural clock and can cash multiple elapsed steps in that same homecoming pass.
-
-
-======================================================================================
-Q11c The two ladders together: the composition rule, exhaustively
-======================================================================================
-
-Both ladders run. Each keeps its own streak (2 failed resolves to
-a departure, 3 to a mark, and the food ladder is the same shape at
-2 and 3), each says its own
-sentence, each sets its own mark. `KingdomRules.ComposeScarcity` decides what the resolve
-actually costs, and the rule is:
-
-    THE BITE IS THE WORSE OF THE TWO LADDERS, NEVER THEIR SUM.
-
-Below is every pairing, with the departures each ladder would cost alone and what the pair
-actually costs. The property that must hold in every row is `both <= max(alone, alone)`, which
-is the "no death spiral" requirement: a dry AND starving city must never empty faster than the
-worse of the two alone would.
-
-  thirst      hunger        alone  alone  together   marks
-  Sustained   Fed               0      0         0   -
-  Sustained   Warned            0      0         0   -
-  Sustained   Emigration        0      1         1   -
-  Sustained   Famine            0      1         1   famished
-  Warned      Fed               0      0         0   -
-  Warned      Warned            0      0         0   -
-  Warned      Emigration        0      1         1   -
-  Warned      Famine            0      1         1   famished
-  Emigration  Fed               1      0         1   -
-  Emigration  Warned            1      0         1   -
-  Emigration  Emigration        1      1         1   -
-  Emigration  Famine            1      1         1   famished
-  Withering   Fed               1      0         1   withered
-  Withering   Warned            1      0         1   withered
-  Withering   Emigration        1      1         1   withered
-  Withering   Famine            1      1         1   withered + famished
-
-Sixteen rows, and the most any single resolve costs is 1 settler. The bottom-right row is
-the one the rule exists for: a city that is Withering AND Famishing loses ONE person and wears
-BOTH marks - because a mark is a state and a departure is a cost, and only the cost is capped.
-
-WHAT IS DELIBERATELY NOT COMPOSED. Subsidence runs underneath both of these and is not touched
-by either. It is the STRUCTURAL consequence - a settlement standing above what its works carry
-settles back toward them, on its own 4-day step - and this is the IMMEDIATE
-one. A bad year is both sentences about the same year rather than one sentence counted twice:
-the fields fail, people go hungry NOW and leave one at a time, and over the season the place
-settles to the size the surviving fields honestly carry. The two are already composed in the
-only way that matters, which is that the hunger ladder can never remove a settler the slide
-was going to remove anyway - both go through `Emigrate`, both floor at
-2, and neither mints a departure the population cannot pay for.
 
 
 ======================================================================================
@@ -1031,251 +853,80 @@ G1  The water lane's invariants, re-derived from the XML
   equilibrium(0, 0, 0) at every stage = 4  (checked)
 
 ======================================================================================
-G2  The food lane's invariants, re-derived from the XML
+F1  Physical food and explicit-provider acts (author ruling 2026-09-01)
 ======================================================================================
-
-1. EVERY DECLARED SERVING IS A ROW'S SERVING. A crop stands 6 days
-   (`KingdomCropRules.CropDays`) and one row yields 3 servings when it is
-   gathered (`YieldPerRow`), so a design standing R rows honestly makes
-   R x 3 / 6 servings a day. Addendum 11(b) asks that the farm
-   BE the thing it is counted for; this re-derives every growing design's `Carries="food:N"` from
-   the `r_KingdomCropRows` tag on its own blueprint rather than trusting the catalogue's comment.
-
-  design      blueprint                 rows  derived  declared   plot cells
-  plot        r_KingdomPlot                6        3         3   6/20 (30%)
-  ydvinebower r_KingdomYdVineBower         6        3         3   6/20 (30%)
-  svardymbrinenurseryr_KingdomSvardymBrineNursery     8        4         4   8/20 (40%)
-  plotrows    r_KingdomPlotRows           10        5         5   10/20 (50%)
-  fungalvault r_KingdomFungalVault        12        6         6   12/48 (25%)
-  field       r_KingdomField              16        8         8   16/48 (33%)
-  arcologyterracer_KingdomArcologyTerrace    28       14        14   28/48 (58%)
-  fieldrows   r_KingdomFieldRows          36       18        18   36/48 (75%)
-  vaultgalleriesr_KingdomVaultGalleries     36       18        18   36/108 (33%)
-  grange      r_KingdomGrange             52       26        26   52/108 (48%)
-  homefarm    r_KingdomHomeFarm           80       40        40   80/280 (29%)
-
-2. NOTHING CARRIES FOOD IT NEITHER GROWS NOR KEEPS. The food half of "storage stores, producers
-   produce". A design may declare `food` for exactly three reasons, and each is checkable off its
-   own blueprint: it GROWS (a rows tag), it KEEPS (a larder-capacity tag - a granary makes a good
-   year last, which is a real contribution and a cheaper one than growing), or it MAKES something
-   that keeps out of what came in (it carries `craft` beside its `food`, which is the mill). A
-   fourth reason would be a number nobody can derive.
-
-  larder      food:2   keeps (64 servings)
-  snapjawtraildenfood:2   keeps (64 servings)
-  plot        food:3   grows (6 rows)
-  kyakukyaspicehearthfood:3   keeps (96 servings)
-  ydvinebower food:3   grows (6 rows)
-  grindmill   food:4   makes (a mill, and it carries craft to say so)
-  joppaseedhousefood:4   keeps (288 servings)
-  svardymbrinenurseryfood:4   grows (8 rows)
-  mopangorefugekitchenfood:4   keeps (128 servings)
-  plotrows    food:5   grows (10 rows)
-  farmersseedcommonsfood:5   keeps (288 servings)
-  fungalvault food:6   grows (12 rows)
-  field       food:8   grows (16 rows)
-  granary     food:9   keeps (288 servings)
-  sporecellar food:9   keeps (288 servings)
-  realmgranaryfood:12  keeps (384 servings)
-  arcologyterracefood:14  grows (28 rows)
-  fieldrows   food:18  grows (36 rows)
-  vaultgalleriesfood:18  grows (36 rows)
-  grange      food:26  grows (52 rows)
-  homefarm    food:40  grows (80 rows)
-
-3. THE SEED GATE DOES NOT WALL THE EARLY RUNGS. Addendum 11(b) makes a farm produce nothing
-   until seed is committed, so an unsown field carries no food to the level and makes none in a
-   day (`KingdomCrops.WithoutUnsownFood`, folded inside `KingdomSubsidence.Supports`). The price
-   of that ruling would be unacceptable if a founder could be starved while hunting for seed - so
-   the check is that the two rungs a founder reaches BEFORE they can plausibly have traded for any
-   are held by the wild PLUS the designs that need no seed at all. Nothing that grows counts here;
-   only foraging (unchanged by this wave) and the keepers, which make a good year last rather than
-   making a year.
-
-  Camp     4 people eat 4/d; 2 hands forage 4/d; the wild alone
-  Steading 5 people eat 5/d; 2 hands forage 2/d; joppaseedhousex1 (needs no seed) for 4
-
-  Foraging is UNCHANGED by this wave: 2 a hand a day, ceiling
-  4, and the ceiling is still `FloorLevel`. The gate binds where it
-  should - a Village and up must actually farm - and nowhere a founder cannot answer it.
-
-4. THE CYCLE PAYS WHAT THE CARRIES PROMISED, OVER A WHOLE CYCLE. The runtime does not add the
-   two: a SOWN field's `food` is subtracted from the clocked daily make
-   (`KingdomGrowth.FoodMadePerDay` less `KingdomCrops.CycledFoodPerDay`) and delivered physically
-   by the gathering instead, so one field feeds the settlement exactly once. Below is that
-   identity for every growing design: what the ledger would have credited over one crop's days
-   against what the rows actually put in the larder.
-
-  design        rows  carries/d   over 6d  one gathering
-  plot             6          3        18             18
-  ydvinebower      6          3        18             18
-  svardymbrinenursery     8          4        24             24
-  plotrows        10          5        30             30
-  fungalvault     12          6        36             36
-  field           16          8        48             48
-  arcologyterrace    28         14        84             84
-  fieldrows       36         18       108            108
-  vaultgalleries    36         18       108            108
-  grange          52         26       156            156
-  homefarm        80         40       240            240
-
-5. AND EVERY RUNG IS STILL FOOD-HOLDABLE, WITH THE GATE ON. Section 7's water sibling asks
-   whether a cheap plan and a grand one both clear the floor; this asks the same of food, with
-   every field counted only if it is sown - which is what it is, because a founder who has
-   committed seed is the only founder whose fields are in this plan at all.
-
-  Camp     bill   4 servings/day; cheapest and grandest plans both clear it
-  Steading bill   5 servings/day; cheapest and grandest plans both clear it
-  Village  bill  12 servings/day; cheapest and grandest plans both clear it
-  Town     bill  25 servings/day; cheapest and grandest plans both clear it
-  City     bill  50 servings/day; cheapest and grandest plans both clear it
-
-======================================================================================
-G3  Meals and industry, re-derived from the source and the XML
-======================================================================================
-
-1. THE DISH IS DERIVED, NOT AUTHORED, AND IT IS TOTAL. Addendum 11(b) asks that residents eat
-   FAVOURED MEALS. Vanilla's own home for that is the faction: `<waterritual Recipe=... RecipeText=...
-   RecipeGenotype=.../>` parses onto `Faction.WaterRitualRecipe` and friends, which the Faction's
-   own serializer writes and reads - so the runtime faction this mod already mints carries its
-   favourite dish across save and load with no persistence of ours. Eight vanilla factions ship
-   one; the realm makes nine.
-
-   The derivation is two switches and a join: the CREED picks the form (borrowed from that
-   faction's own dish), the GROUND picks the body (the crop the style grows), and every form word
-   is one of `CookingRecipe.ingredientTileTypes` so vanilla's recipe-tile generator draws it.
-
-  creed dish          form        vanilla tile word?
-  AppleMatz           matz        yes
-  BoneBabka           pastry      yes
-  GoatAndSweetLeaf    roast       yes
-  HotandSpiny         goulash     yes
-  MahLahSoup          soup        yes
-  MushroomCider       compote     yes
-  ThePorridge         porridge    yes
-  TongueAndCheek      brisket     yes
-  (nobody / unknown)  stew        yes
-
-   And the body, per founding ground. Every style must reach a staple, or a settlement founded
-   on that ground would raise a mill that grinds nothing while carrying a food number for it.
-
-  style     crop              ingredient word   preserved staple          source
-  common    Starapple         starapple         Starapple Preserves       vanilla PreservableItem
-  verdant   Vinewafer         vinewafer         Vinewafer Sheaf           vanilla PreservableItem
-  fungal    Plump Mushroom    mushroom          Pickled Mushrooms         vanilla PreservableItem
-  gyre      Godshroom Cap     godshroom         r_KingdomGodshroomPickle  ours, inherits Pickled Mushrooms
-  eater     Dreadroot Tuber   dreadroot         r_KingdomDreadrootMash    ours, inherits Mashed Lag
-
-   Two worked examples, in the register the rest of the game writes recipes in:
-     - people who hold with Joppa (`AppleMatz`), founded in a marsh  ->  vinewafer matz
-     - people who hold with the Barathrumites (`ThePorridge`), on flower fields  ->  starapple porridge
-
-2. THE MEAL IS A RENDERING OF THE RATION, NOT A SECOND BILL. The daily draw spends the same
-   servings it always did; what changed is the ORDER it reaches in and what the day is worth
-   afterwards. The order, stated once and deterministic:
-
-     1. the settlement's own staple, larder by larder in survey order, item by item in inventory
-        order - the thing the fields grew and the mill bound, which is the dish's first component;
-     2. everything else that is food, same walk.
-
-   Nothing is random, so the same larders drained in the same sequence give the same answer on
-   every reload - Addendum 12(d)'s requirement of any draw that lands on real containers.
-
-   A day counts as the settlement having eaten its own dish when a kitchen stands and at least
-   50% of the bill came off that staple. "Kitchen" is asked of the OBJECT: any finished work
-   carrying vanilla's `Campfire`, which the communal fire has done since the day it shipped.
-
-
-3. WHAT A FAVOURED MEAL IS WORTH, AND WHY IT CANNOT RUN AWAY. One settler, for exactly one day,
-   re-earned every day - which is vanilla's own arithmetic, not a dial: a non-player eater's meal
-   effect expires at StartTick + 1200 ticks (`ProceduralCookingEffect`), and `KingdomRules.TicksPerDay`
-   is 1200. It rides the same capped lift term as authored spirit works, so
-   `LiftCapPercent` = 50% binds it again on top of that.
-
-   Below: the level a settlement holds at each rung with its binding supports level-pegged and no
-   other lift standing, plain and then well fed. The delta is the whole of what this wave adds to
-   the level, and it is one settler wherever the cap has room for it.
-
-  rung       binding least   plain  well fed  delta   capped by
-  Camp                   4       4         5      1   nothing (room to spare)
-  Steading               5       5         6      1   nothing (room to spare)
-  Village               12      12        13      1   nothing (room to spare)
-  Town                  25      25        26      1   nothing (room to spare)
-  City                  50      50        51      1   nothing (room to spare)
-
-4. THE MILL CONSERVES. Addendum 11(b)'s other half is food "used by industry to produce things",
-   and per the survey the entire transformation surface in Qud is four parts. The one that fits a
-   harvest is `Mill`, whose blank-target path runs `Campfire.PerformPreserve` - which is what
-   vanilla's own `Millstone` does: a vinewafer becomes three vinewafer sheaves.
-
-   Our mill books that same ratio, flat across styles for the same reason `CropDaysForStyle` is
-   flat. The conservation law is one line and it is asserted here against the catalogue itself:
-   what comes back is what went in TIMES the multiple, and the GAIN is the difference.
-
-  in (crops/day)      multiple  out (staples)  net gain  declared food
-  2                         x3              6         4              4
-
-   x3 is the LEAST of the three vanilla numbers this mod's crops carry (starapple gives five,
-   plump mushroom ten), so the settlement never books more than the thinnest preserve in the game
-   actually gives. The physical machine is real either way: r_KingdomGrindMill carries `Mill`,
-   `Container`, `Inventory` and a mechanical-power consumer, which is `Millstone`'s own
-   configuration at `Millstone`'s own tier.
-
-
-5. AND THE MILL IS PAID EXACTLY ONCE, AFTER THE RESIDENTS HAVE EATEN. Two source facts, both
-   checked here rather than trusted:
-
-     - the mill's `Carries` is SUBTRACTED from the clocked daily make, exactly as a sown field's
-       is, because it now delivers its food physically instead of as a ledger credit. Without the
-       subtraction a settlement would be fed twice out of one millstone.
-     - the grinding runs AFTER the heartbeat has drawn the day's rations, and even then only on
-       what stands above one more day's bill (`MillableStock`). Industry never eats before the
-       residents do.
-
-  subtraction present: yes    grinding runs after the ration draw: yes
-  reserve kept back:  one day's rations for the whole population, on top of that
+  larder         food:2   <- 64-unit larder
+  snapjawtrailden food:2   <- 64-unit larder
+  kyakukyaspicehearth food:3   <- 96-unit larder
+  plot           food:3   <- 6 crop rows
+  ydvinebower    food:3   <- 6 crop rows
+  grindmill      food:4   <- physical mill/refiner
+  joppaseedhouse food:4   <- 288-unit larder
+  mopangorefugekitchen food:4   <- 128-unit larder
+  svardymbrinenursery food:4   <- 8 crop rows
+  farmersseedcommons food:5   <- 288-unit larder
+  plotrows       food:5   <- 10 crop rows
+  fungalvault    food:6   <- 12 crop rows
+  field          food:8   <- 16 crop rows
+  granary        food:9   <- 288-unit larder
+  sporecellar    food:9   <- 288-unit larder
+  realmgranary   food:12  <- 384-unit larder
+  arcologyterrace food:14  <- 28 crop rows
+  fieldrows      food:18  <- 36 crop rows
+  vaultgalleries food:18  <- 36 crop rows
+  grange         food:26  <- 52 crop rows
+  homefarm       food:40  <- 80 crop rows
+  passive ration/forage/hunger rate = 0
+  population equilibrium/binding = water + roof only; food cannot cause subsidence
+  city food rate/carry = 0; old debt grounds to observed containers
+  shared meal = capable kitchen + spendable custody + exact disclosed debit
+  empty pantry/missing provider = no debit, no effect, no departure
+  damaged larder + longest absence = exact identities/counts conserved; old receipt inert
+  mill conversion = 2 crops x3 -> net 4, matching food:4
 
 ======================================================================================
 W6  Production on the model, and logistics that never look stupid
 ======================================================================================
 
 1. NO DAY IS BILLED TWICE, AND IT IS STRUCTURAL RATHER THAN CAREFUL. Two owners of one day is a
-   day paid twice, so W6 leaves exactly one owner. The settlement pass no longer credits the
-   water works or the fields at all; the model integrates every zone's carry off its own
-   `ProcessedThroughTick`; and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so
-   the settlement's stamp is a published mirror of the model's clock rather than a second clock
-   beside it. `LastFoodWorkTick` is left alone on purpose - see 3.
+   day paid twice, so W6 leaves exactly one water owner. The settlement pass no longer credits
+   water works; the model integrates every zone's water carry off its own `ProcessedThroughTick`;
+   and `KingdomCity.Stamp` writes `LastWaterWorkTick` FROM that tick, so the settlement's stamp is
+   a published mirror of the model's clock rather than a second clock beside it. Fields were
+   removed from the abstract city model entirely: their exact crop-cycle/item path owns harvest.
+   `LastFoodWorkTick` remains only the attended physical mill's checkpoint - see 3.
 
    settlement pass credits water works:  no
    settlement pass credits fields:       no
    model stamps LastWaterWorkTick:       yes  (KingdomCity.Stamp)
    model stamps LastFoodWorkTick:        no   (it is the MILLS' stamp - see 3)
 
-2. AND IT IS THE SAME NUMBER. The model's per-zone rate is not a new figure invented for the
-   model: it is `KingdomSubsidence.Supports(Survey).Water` and `KingdomGrowth.FoodMadePerDay`,
-   the exact two the level and every rung above are derived from. If those ever became two
-   answers, a reservoir would be worth one thing to the ladder and another to the casks.
+2. WATER IS THE SAME NUMBER; FOOD IS DELIBERATELY NO NUMBER. The model's per-zone water rate is
+   not invented for the model: it begins at `KingdomSubsidence.OrdinarySupports(Survey)`, the
+   same tally the level uses. Food remains measurable physical-lane metadata, but it is neither
+   a population constraint nor an item rate: both rate seams return zero.
 
-   water rate  = KingdomSubsidence.Supports(Survey).Water    (the ladder's own tally)
-   food rate   = KingdomGrowth.FoodMadePerDay(Survey)        (fields and mills already out)
+   water rate  = KingdomSubsidence.OrdinarySupports(Survey).Water (ordinary physical tally)
+   food rate   = 0 (physical fields, crops, containers, and mills only)
 
 3. THE MILL KEPT ITS OWN CLOCK, AND HAD TO. A mill does not make food out of the day - it takes
-   real crops off real shelves and puts real staples back, where the shelves are. It was never in
-   the model's rate (`MilledFoodPerDay` is subtracted out of `FoodMadePerDay`), so it keeps
-   `LastFoodWorkTick`'s elapsed for itself. One clock each; neither can spend the other's days.
+   real crops off real shelves and puts real staples back, where the shelves are. It is not in
+   the model's rate, so it keeps `LastFoodWorkTick`'s elapsed for itself. One clock each; neither
+   can spend the other's days or mint an abstract food balance.
 
 
-4. THE BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow an
-   unbounded claim, because production is clamped by the room the model believes the zone has and
-   the overflow is SPILLED - the same loss a harvest with a full larder has always taken. That is
-   what makes the amortised landing finite: the worst debt a quarter can present is its own
-   capacity, and §0.0(b) prices draining a full backlog inside the 40-turn grace window.
+4. THE WATER BACKLOG IS BOUNDED BY THE CONTAINERS, NEVER BY THE ABSENCE. A season away cannot grow
+   an unbounded water claim, because production is clamped by the room the model believes the zone
+   has and overflow is spilled. Food rate/debt remain zero; physical harvest landing separately
+   stops at actual larder room. That makes amortised city-book landing finite: the worst debt a
+   quarter can present is its own water capacity, and §0.0(b) prices draining a full backlog
+   inside the 40-turn grace window.
 
    reify budget:      8 units a turn
    worst backlog:     312 units
    turns to drain:    39   (§0.0(b) warns above 40)
 
-5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every column in Q1-Q11 above is a
+5. WHAT THE MOVE ACTUALLY CHANGED FOR A PLAYER, RE-DERIVED. Every water column above is a
    ONE-QUARTER balance and none of them moves: the same works make the same drams on the same
    day. What changes is that the city's OTHER quarters now make theirs too. Before W6 a work in a
    zone the founder was not standing in produced nothing at all, whatever it was built to do; the
@@ -1436,6 +1087,8 @@ Q13 Purpose portfolio: five pairs, ten exact directions, one live operation
   local claim less dispatched material objects: food remains 24, materials=brush:7,stone:10,scrap:10,shapedtimber:2,shapedstone:2,workedmetal:7
   food conservation: 24 debited = 12 landed + 4 carriage loss + 8 local process sink
   active Harvest edge: 8 debited = 6 landed + 2 carriage loss; landed food becomes physical servings via the purpose-food landing lane
+  bounded refine effects: 8 raw debited = 4 refined credited + 4 process loss
+  bounded Harvest effects: 6 crops = 2 seed corn + 4 ground -> 12 preserved measures; net +6 servings and +2 seeds
   bootstrap -> reciprocal return -> activation (construction is a Q4 lookup):
   orientation            build   days   recipe   cheap+body   dear+body   steady water
   Flesh->Chrome            280     28       48          268         588       232..392
@@ -1472,16 +1125,16 @@ Q14 Hosted arcology: one shell, bounded lots, physical water-gated food
   bits: tier0:2,tier3:1,tier4:1; exotics: none
   state            roof   food   order   luxury
   dark shell          0      0       0        0
-  bare shell         60      0       4        4
-  ward active        86      0       4        6
-  both, dry          86      0       4        6
-  both, fresh        86     14       4        6
+  bare shell          0      0       4        4
+  ward active         8      0       4        6
+  both, dry           8      0       4        6
+  both, fresh         8     14       4        6
   both paid lots active; exact shell-effectiveness sensitivity:
   effectiveness    dry food  fresh roof  fresh food   order    luxury
   0                       0           0           0       0         0
-  40                      0          34           5       1         2
-  60                      0          51           8       2         3
-  100                     0          86          14       4         6
+  40                      0           3           5       1         2
+  60                      0           4           8       2         3
+  100                     0           8          14       4         6
   terrace proof: 14 growbeds x 2 rows = 28 rows -> food:14
   water boundary: StoredWater=0 -> food:0; StoredWater>0 -> food:14
   registry cap: 2 paid + 1 read-only + 13 extension slots = 16; slot 17 refuses before publication
@@ -1579,7 +1232,10 @@ Native retirement archive, charged concurrently before carrier removal:
   rows: witness 8, recognition 8, practice 8, vocation-service 48 (16/city), body-history 8,
         curiosity 3, leads 8, treaties 16, rites 3, feasts 3, covenants 48
   row wire: witness/recognition accept <=4096 bytes; covenant authors <=4094 and accepts <=4096
-  market stock: 8 one-shot tier consignments; periodic restock rate = 0
+  market: current physical provider + exact held office; first service Village/tier 3
+  market stock: native TradeUI physical _stock only; generated output/restock = 0
+  market custody: detached/personal/foreign goods stay physical; TAF marks retire only
+  market succession: only an open prepared handoff endpoint is temporarily unavailable
   cap+1 law: refuse before publication; no eviction, truncation, backlog, or catch-up
   native save size/p50/p95/max: UNSIGNED -- no native distribution is inferred
 
@@ -1632,28 +1288,20 @@ Where this model is too crude to decide anything
    sinks omitted here; they are lumpy events, and averaging them per day would flatter the
    model.
 
-5. FOOD IS A CYCLE NOW (Q11, G2), AND THREE THINGS ABOUT IT ARE STILL UNMODELLED HERE. The
-   ripening cycle is no longer one of them: G2 proves the cycle pays exactly what the Carries
-   promised over one crop's 6 days and the runtime subtracts a sown field from the
-   clocked make so it is paid once, which is why Q11's Carries-denominated columns are now the
-   whole truth for a sown settlement rather than a lower bound. What is NOT modelled:
-     - THE SEED GATE'S TIMING. G2's check 3 proves Camp and Steading are held without any seed at
-       all, and Q11 proves every rung is holdable once seed is in the ground. What neither answers
-       is how long a founder actually spends between the two - that is a play question about how
-       often a trader carries seed and how near the nearest watervine is, and it is a playtest
-       reading rather than an arithmetic one.
+5. FOOD IS PHYSICAL POSITIVE PLAY, NOT A POPULATION BALANCE. F1 proves passive rate, ration,
+   hunger, city credit, and population binding are all zero; it also proves the crop-cycle,
+   larder, mill, kitchen/provider, and exact meal debit chain. What remains playtest evidence:
+     - THE SEED GATE'S TIMING. The arithmetic proves conservation after sowing, not how long a
+       founder spends finding the first lawful seed or whether that search feels good.
      - THE FOUNDER'S OWN HAND-HARVEST. A ripe row carries vanilla `Harvestable` for one day before
        the settlement's hands gather it, so a founder standing in a field can take up to
        `Rows x OnSuccessAmount` crop items into their own pack instead. That is a TRANSFER out of
        the settlement's yield and not an addition to it (the gathering counts rows still standing
        RIPE), so it cannot inflate any column here; what it can do is make a founder personally
        rich in vinewafers, which is not an economy this file models.
-     - TRADE. The two shipped deal records declare water income only. The trade operation also
-       has a keyed material-cargo lane, but neither current deal declares materials and neither
-       lane carries food. The only ways into a larder are therefore the fields, the wild and the
-       founder's own hands. Seed moves on the wares tables; food does not. This model assigns
-       trade food zero as the current scope boundary, rather than pretending a future food deal
-       already ships.
+     - EXACT EXTERNAL TRANSACTIONS. Trade consignments, hospitality, expeditions, purpose-pair
+       operations, and the founder's own transfers can move or debit physical food. They are
+       lumpy, identity-bound acts and are intentionally not averaged into a passive daily rate.
 
 6. THE ARRIVAL TIMER, NOT WATER, IS STILL THE GROWTH GATE above about eight settlers:
    3 + pop/2 days per arrival means pop 50 waits 28 days for one. No water tuning touches

@@ -48,8 +48,9 @@ namespace ThousandAndFirst
 				return "Vinewafer";
 			case "fungal":
 				return "Plump Mushroom";
-			case "gyre":
-				return "Godshroom Cap";
+			case "moonstair":
+			case "gyre": // pre-v1 save/mod alias
+				return "Bundle of Noisegrass";
 			case "eater":
 				return "Dreadroot Tuber";
 			default:
@@ -78,6 +79,7 @@ namespace ThousandAndFirst
 			{
 			case "verdant":
 			case "fungal":
+			case "moonstair":
 			case "gyre":
 			case "eater":
 			default:
@@ -105,6 +107,8 @@ namespace ThousandAndFirst
 				return "r_KingdomSeedMushroom";
 			case "Godshroom Cap":
 				return "r_KingdomSeedGodshroom";
+			case "Bundle of Noisegrass":
+				return "r_KingdomSeedNoisegrass";
 			case "Dreadroot Tuber":
 				return "r_KingdomSeedDreadroot";
 			default:
@@ -126,6 +130,8 @@ namespace ThousandAndFirst
 				return "Plump Mushroom";
 			case "r_KingdomSeedGodshroom":
 				return "Godshroom Cap";
+			case "r_KingdomSeedNoisegrass":
+				return "Bundle of Noisegrass";
 			case "r_KingdomSeedDreadroot":
 				return "Dreadroot Tuber";
 			default:
@@ -156,6 +162,8 @@ namespace ThousandAndFirst
 				return "r_KingdomRowMushroom";
 			case "Godshroom Cap":
 				return "r_KingdomRowGodshroom";
+			case "Bundle of Noisegrass":
+				return "r_KingdomRowNoisegrass";
 			case "Dreadroot Tuber":
 				return "r_KingdomRowDreadroot";
 			default:
@@ -171,7 +179,7 @@ namespace ThousandAndFirst
 			"r_KingdomSeedStarapple",
 			"r_KingdomSeedVinewafer",
 			"r_KingdomSeedMushroom",
-			"r_KingdomSeedGodshroom",
+			"r_KingdomSeedNoisegrass",
 			"r_KingdomSeedDreadroot"
 		};
 

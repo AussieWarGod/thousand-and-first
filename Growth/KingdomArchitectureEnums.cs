@@ -20,11 +20,29 @@ namespace ThousandAndFirst
 		West = 3
 	}
 
+	/// <summary>How one semantic scenery blueprint responds to lot pose.</summary>
+	public enum ArchitecturePoseMode : byte
+	{
+		Invariant = 0,
+		Connected = 1,
+		Cardinal = 2
+	}
+
 	/// <summary>Semantic frontage resolved by the runtime into a fixed world facing.</summary>
 	public enum ArchitectureFrontage : byte
 	{
 		Heart = 0,
 		Road = 1
+	}
+
+	/// <summary>Authored use of one canonical lot cell. LegacyClaimed exists only when decoding
+	/// schema a1-a3, whose one-bit wire format cannot distinguish building from yard.</summary>
+	public enum ArchitectureClaim : byte
+	{
+		Unclaimed = 0,
+		Yard = 1,
+		Building = 2,
+		LegacyClaimed = 3
 	}
 
 	/// <summary>One of the three permanent object layers an authored map may place.</summary>
@@ -64,6 +82,21 @@ namespace ThousandAndFirst
 	{
 		SameSet = 0,
 		Restake = 1
+	}
+
+	/// <summary>
+	/// Authored physical contract for one incoming building tier or explicit plan route.
+	/// None is valid only for a fresh commission. Replacement is a named refusal: strike the
+	/// standing work and commission the successor fresh rather than pretending to preserve it.
+	/// </summary>
+	public enum ArchitectureTransitionMode : byte
+	{
+		None = 0,
+		Additive = 1,
+		Renovate = 2,
+		RenovateExpand = 3,
+		Replacement = 4,
+		AdditiveExpand = 5
 	}
 
 	/// <summary>One immutable point in canonical or world coordinates.</summary>

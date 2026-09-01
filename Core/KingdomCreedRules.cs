@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// What a city believes, where that belief came from, and what happens when a realm holds two
-	/// cities that do not believe the same thing.
+	/// What a city holds with, where that affiliation came from, and what happens when one realm's
+	/// cities carry opposed covenants or allegiances.
 	/// <para>
 	/// A creed is a <b>vanilla faction name</b> — never a name this mod invents. Qud already knows
 	/// which creeds hate each other: <c>Factions.xml</c> gives every faction its
@@ -18,7 +18,7 @@ namespace ThousandAndFirst
 	/// Which factions can walk into your city is decided by your realm's own standings ledger,
 	/// not by a catalogue. A young realm that has met nobody receives only ordinary settlers; a
 	/// creed enters the roll only once the founder's deeds have put that faction on the realm's
-	/// books. Belief arrives through what you did, which is the only door this mod wants it to
+	/// books. Affiliation arrives through what you did, which is the only door this mod wants it to
 	/// come through.
 	/// </para>
 	/// <para>
@@ -35,8 +35,8 @@ namespace ThousandAndFirst
 	public static partial class KingdomCreedRules
 	{
 		/// <summary>
-		/// The weight of "this settler believes nothing in particular", against which every creed
-		/// competes. Deliberately larger than any single creed's opening weight: a creed is a
+		/// The weight of "this settler holds with nobody in particular", against which every creed
+		/// key competes. Deliberately larger than any single creed's opening weight: a creed is a
 		/// minority colour that accumulates, never a badge every arrival wears.
 		/// </summary>
 		public const int OrdinaryWeight = 100;
@@ -56,8 +56,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Residents of one creed below which a city has no creed at all, whatever the
-		/// proportions. Three, so a camp of two cannot be doctrinaire and a single zealot is a
-		/// person rather than a faction.
+		/// proportions. Three, so a camp of two has no dominant allegiance and one aligned person
+		/// remains a person rather than a faction.
 		/// </summary>
 		public const int MinBelievers = 3;
 

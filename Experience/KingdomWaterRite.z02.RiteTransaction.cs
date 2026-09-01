@@ -16,7 +16,8 @@ namespace ThousandAndFirst
 			string name = NameOf(Resident);
 			string shownName = KingdomPresentation.Rich(name);
 			bool closing = KingdomWaterRiteRules.AskedTooOften(Resident.GetIntProperty(RefusalsProperty));
-			bool takesTheRoad = KingdomConversionRules.Resents(Offer.Facts.Hostility);
+			bool takesTheRoad = KingdomData.CreedUsesTheology(RealmCreed)
+				&& KingdomConversionRules.Resents(Offer.Facts.Hostility);
 			string prompt = KingdomWaterRiteRules.OfferPrompt(
 				shownName,
 				KingdomCreed.CreedName(Resident.GetStringProperty(KingdomCreed.CreedProperty)),
@@ -66,7 +67,7 @@ namespace ThousandAndFirst
 					bool returned = debit.Rollback();
 					if (!returned)
 					{
-						MetricsManager.LogError("ThousandAndFirst water rite: conversion failed and the exact "
+						MetricsManager.LogError("ThousandAndFirst water rite: affiliation transition failed and the exact "
 							+ Offer.Drams + "-dram debit could not be restored: " + (debit.Failure ?? "unknown failure"));
 					}
 					Popup.Show(returned
@@ -93,11 +94,15 @@ namespace ThousandAndFirst
 
 		private static bool Accept(KingdomSystem System, Zone Z, GameObject Resident, string RealmCreed, string Name)
 		{
-			// One path for every conversion in the mod: the tally moves, both registers are
-			// written in this channel's own words, and the ledger is noted -- all of it there, none
-			// of it here, so no two channels can ever tell a conversion differently.
-			if (!KingdomConversion.Convert(System, Z, Resident, RealmCreed,
-				ConversionChannel.Diplomacy, "share water rite"))
+			// One custody path for every belief conversion or affiliation adoption: the tally moves,
+			// both registers are written in this channel's own words, and the ledger is noted -- all
+			// of it there, none of it here, so no two channels can tell a transition differently.
+			bool changed = KingdomData.CreedUsesTheology(RealmCreed)
+				? KingdomConversion.Convert(System, Z, Resident, RealmCreed,
+					ConversionChannel.Diplomacy, "share water rite")
+				: KingdomConversion.AdoptAffiliation(System, Z, Resident, RealmCreed,
+					ConversionChannel.Diplomacy, "share water rite");
+			if (!changed)
 			{
 				return false;
 			}

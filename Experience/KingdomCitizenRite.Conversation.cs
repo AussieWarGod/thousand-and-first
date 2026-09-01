@@ -44,20 +44,41 @@ namespace ThousandAndFirst
 		/// into a different one rebuilds OUR conversation, and only ever ours.
 		/// </para>
 		/// </summary>
-		private static void Speak(KingdomSystem system, GameObject citizen)
+		private static bool Speak(KingdomSystem system, GameObject citizen,
+			r_KingdomCitizenRiteProjection projection, out string Failure)
 		{
+			Failure = null;
 			int band = KingdomCitizenRiteRules.Band(KingdomWaterRite.SharedDaysOf(citizen));
-			bool ours = citizen.GetIntProperty(ConversationProperty) == 1;
-			bool none = !citizen.HasPart<ConversationScript>();
-			if (!none && (!ours || citizen.GetIntProperty(GreetingBandProperty) == band + 1))
+			ConversationScript current = citizen.GetPart<ConversationScript>();
+			if (current != null && !projection.AddedConversation)
 			{
-				return;
+				return true;
+			}
+			if (current != null)
+			{
+				if (!KingdomCitizenRiteProjectionRules.TryConversationDigest(current,
+					out string currentDigest))
+				{
+					Failure = "owned citizen greeting is not exactly representable"; return false;
+				}
+				if (currentDigest != projection.ConversationDigest)
+				{
+					projection.Fault = "TAF-added conversation changed; native graph is preserved";
+					return true;
+				}
+				if (projection.GreetingBand == band + 1)
+				{
+					citizen.SetIntProperty(ConversationProperty, 1);
+					citizen.SetIntProperty(GreetingBandProperty, band + 1); return true;
+				}
 			}
 			ConversationsAPI.addSimpleConversationToObject(citizen,
 				KingdomCitizenRiteRules.Greeting(KingdomPresentation.Rich(system.SeatName), KingdomWaterRite.SharedDaysOf(citizen)),
 				KingdomCitizenRiteRules.Farewell());
 			citizen.SetIntProperty(ConversationProperty, 1);
 			citizen.SetIntProperty(GreetingBandProperty, band + 1);
+			return ObserveConversation(projection, citizen.GetPart<ConversationScript>(),
+				band + 1, Added: true, out Failure);
 		}
 	}
 }

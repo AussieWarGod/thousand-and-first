@@ -58,8 +58,14 @@ namespace ThousandAndFirst
 			if (!marker) return true; // save-era plot or single-cell work retains its legacy path.
 			KingdomArchitectureIntent before;
 			if (!KingdomArchitectureRuntime.TryRead(Work, out before, out Failure)) return false;
-			if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(before.EncodedSnapshot))
-				return true; // a1 remains read-only legacy compatibility.
+			if (!KingdomArchitectureRules.IsLatestSnapshotEncoding(before.EncodedSnapshot))
+			{
+				if (!KingdomArchitectureRules.IsManagedSnapshotEncoding(before.EncodedSnapshot))
+					return true; // a1/a2 retain their older read-only compatibility lane.
+				Failure = "This save-era authored plot cannot invent the building/yard scope "
+					+ "needed for a new renovation. Strike it and commission the successor fresh.";
+				return false;
+			}
 			Legacy = false;
 			ArchitectureLayoutSnapshot ignoredBefore;
 			string lot;
@@ -73,8 +79,8 @@ namespace ThousandAndFirst
 			KingdomArchitectureIntent successor;
 			if (transition == null)
 			{
-				if (!KingdomArchitectureRuntime.TryPrepareSuccessor(System, Z, before,
-					A.SuccessorKey, out successor, out Failure)) return false;
+				if (!KingdomArchitectureRuntime.TryPrepareSuccessorForUpgrade(System, Z, Work,
+					before, A.SuccessorKey, out successor, out Failure)) return false;
 			}
 			else if (!KingdomArchitectureRuntime.TryPreparePlanTransition(System, Z, before,
 				A.SuccessorKey, transition, out successor, out Failure)) return false;

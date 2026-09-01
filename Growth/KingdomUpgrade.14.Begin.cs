@@ -89,6 +89,11 @@ namespace ThousandAndFirst
 				A.BuildTicks = transition.WorkTicks;
 				A.Transition = transition;
 			}
+			if (!ContentsWouldFit(Work, A.Successor.Blueprint))
+			{
+				System.Ledger.Note("{{r|The improvement waits. Its exact contents are no longer safe to hand over.}}");
+				return false;
+			}
 			KingdomWaterDebit water = Survey.ReserveExactWater(A.CostDrams);
 			bool hostedAuthority = A.SuccessorKey == KingdomHostedArcology.ArcologyKey;
 			KingdomMaterialTally transitionMaterials = transition == null

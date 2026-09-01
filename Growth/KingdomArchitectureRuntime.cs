@@ -161,7 +161,8 @@ namespace ThousandAndFirst
 				if (!TryHeartFacing(mapping, Z, Rect, out facing, out Failure)
 					|| !KingdomArchitecture.TryResolve(BuildKey, mapping.TypeKey,
 						mapping.LotSize, context, facing,
-						out snapshot, out Failure)) return false;
+						out snapshot, out Failure)
+					|| !TryVerifyPhysicalIngressRoutes(Z, Rect, snapshot, out Failure)) return false;
 			}
 			if (!MatchesMapping(snapshot, mapping))
 				return Fail("resolved architecture disagrees with its frozen building mapping", out Failure);
@@ -183,9 +184,11 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Resolves an improvement only inside the predecessor's frozen plan, binding, exact typed
-		/// lot, and cardinal pose. The sole exception is one adjacent founding-heart rung, whose
-		/// authored rect accretes around the immutable rite basin. This is a pre-debit catalogue read;
+		/// Resolves an improvement inside the predecessor's frozen plan, type, variant, and cardinal
+		/// pose. Fixed-envelope work remains in the exact binding. Cross-size work is bounded to one
+		/// adjacent authored expansion binding or one adjacent founding-heart rung; each returned rect
+		/// must contain the standing lot and separately prove its new ground before debit. This is a
+		/// pre-debit catalogue read;
 		/// the returned canonical intent becomes the sole authority after funding.
 		/// </summary>
 	}

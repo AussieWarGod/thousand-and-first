@@ -1,0 +1,6 @@
+# Maximum-scale material transformation: recovered block shelter inside its authored return court.
+DESCRIPTION=huge salvage block hut stages for permanent-shell and court review
+REQUEST=arch-housing-blockhut-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

@@ -62,6 +62,8 @@ namespace ThousandAndFirst
 			};
 			CopyCounts(origins, legacy.OriginKeys, legacy.OriginCounts);
 			CopyCounts(creeds, legacy.CreedKeys, legacy.CreedCounts);
+			if (!KingdomPolityProfileRules.TryCaptureLegacyProfile(legacy, profile, out Failure))
+				return false;
 			if (!KingdomPolityProfileRules.ValidLegacy(legacy, out Failure)) return false;
 			Facts = new KingdomPolityRealmExileFacts
 			{

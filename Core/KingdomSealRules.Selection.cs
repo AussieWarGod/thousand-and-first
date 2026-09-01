@@ -185,6 +185,11 @@ namespace ThousandAndFirst
 			copy.Outsider = new List<string>(Record.Outsider);
 			copy.DeadNames = new List<string>(Record.DeadNames);
 			copy.DeadCauses = new List<string>(Record.DeadCauses);
+			copy.ProfileSchema = Record.ProfileSchema;
+			copy.TechnologyBand = Record.TechnologyBand;
+			copy.CanonicalBodyKeys = new List<string>(Record.CanonicalBodyKeys);
+			copy.SourceProfileDigest = Record.SourceProfileDigest;
+			copy.ProfileProvenanceDigest = Record.ProfileProvenanceDigest;
 			return copy;
 		}
 	}

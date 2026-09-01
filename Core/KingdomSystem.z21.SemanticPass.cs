@@ -17,6 +17,15 @@ namespace ThousandAndFirst
 			}
 			if (!ClaimedZones.Contains(Z.ZoneID))
 				return AttendFormerClaimCustody(Z);
+			// A committed resident departure is realm-singular. Recover it on its exact ground
+			// before check-in or any later subsystem can observe and mutate a torn identity.
+			if (!KingdomResidentDepartureRuntime.TryRecoverPending(this, Z,
+				out string departureFailure))
+			{
+				KingdomLog.Log("departure: semantic pass waits ("
+					+ (departureFailure ?? "exact source ground is not active") + ")");
+				return false;
+			}
 			KingdomExternalOwnershipBindingRuntime.FinishPublishedClaimStage(Z);
 			if (!KingdomExternalOwnershipBindingRuntime.CanOperate(Z,
 				out string externalFailure)) return false;
@@ -137,6 +146,7 @@ namespace ThousandAndFirst
 			// first and the faith pass below can already ask what reaches whom.
 			if (!TrySemanticStep(SemanticStepReach, "reach", delegate
 			{
+				KingdomEducationPostObservationRuntime.OnSemanticPass(this, Z, survey);
 				KingdomReach.OnZoneActivated(this, Z, survey);
 			})) return false;
 			if (!TrySemanticStep(SemanticStepLocus, "locus", delegate
@@ -264,6 +274,7 @@ namespace ThousandAndFirst
 			SemanticPassStartedMask |= Bit;
 			try
 			{
+				KingdomSurvey.BeginBenefitEpochInActive();
 				Action();
 				SemanticPassCompletedMask |= Bit;
 				return true;

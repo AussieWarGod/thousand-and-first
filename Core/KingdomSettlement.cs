@@ -90,12 +90,10 @@ namespace ThousandAndFirst
 
 		public bool Withered;
 
-		/// <summary>Resolves in a row this city's ration bill went unpaid. Carried, so a city
-		/// left hungry is still hungry when the founder walks back into it.</summary>
+		/// <summary>Legacy serialized carrier. Normalization always clears it.</summary>
 		public int HungerStreak;
 
-		/// <summary>Whether this city stands marked by a long hunger. Carried beside
-		/// <see cref="Withered"/>; both can be true at once.</summary>
+		/// <summary>Legacy serialized carrier. Normalization always clears it.</summary>
 		public bool Famished;
 
 		public bool HasShopkeeper;
@@ -182,24 +180,15 @@ namespace ThousandAndFirst
 
 
 		/// <summary>
-		/// What this settlement's last day's eating was worth to the level, for exactly the day
-		/// it was earned (<c>KingdomRules.MealShadeFor</c>). Re-drawn every heartbeat: a
-		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. It is
-		/// capped by <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats past their own
-		/// water. Carried, so a city left mid-feast is still well fed when the founder walks back
-		/// into it.
+		/// Legacy serialized capacity carrier. Normalization clears it; explicit meals keep only
+		/// their harmless <see cref="LastMeal"/> evidence.
 		/// </summary>
 		public int MealShade;
 
-		/// <summary>What the settlement's last drawn day of rations actually was
-		/// (<c>KingdomRules.JudgeMeal</c>). Knowledge for the report and the once-flag below;
-		/// <see cref="KingdomRules.MealVerdict.None"/> on a settlement no heartbeat has billed
-		/// yet.</summary>
+		/// <summary>Last completed explicit shared-meal kind.</summary>
 		public KingdomRules.MealVerdict LastMeal = KingdomRules.MealVerdict.None;
 
-		/// <summary>STANDARDS 7b's once-flag for a settlement whose larders gave nothing. Set
-		/// when the sentence is said, cleared the moment the settlement eats out of its own
-		/// stores again, so walking away and back does not re-say it.</summary>
+		/// <summary>Legacy empty-ration announcement latch. Normalization always clears it.</summary>
 		public bool ScrapsAnnounced;
 
 		public int ShopTier;

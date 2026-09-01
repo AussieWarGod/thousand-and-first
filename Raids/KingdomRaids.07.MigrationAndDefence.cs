@@ -79,7 +79,15 @@ namespace ThousandAndFirst
 				|| survey.Settlers == null) return false;
 			Dictionary<int, KingdomResidentRow> residentRows;
 			Dictionary<int, GameObject> residentBodies;
-			if (!TryDefenceResidents(system, survey, out residentRows, out residentBodies)) return false;
+			if (!TryDefenceResidents(system, survey, out residentRows, out residentBodies))
+				return false;
+			if (!survey.TryBenefits(out KingdomBenefitIndex benefits,
+				out string benefitFailure))
+			{
+				if (!string.IsNullOrEmpty(benefitFailure))
+					KingdomLog.Log("raid defence: " + benefitFailure);
+				return false;
+			}
 			List<KingdomRaidDefenceReservation> rows =
 				new List<KingdomRaidDefenceReservation>();
 			HashSet<int> works = new HashSet<int>();
@@ -87,7 +95,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < survey.Defences.Count; i++)
 			{
 				GameObject work = survey.Defences[i];
-				int score = DefenceOf(work);
+				int score = DefenceOf(work, benefits);
 				if (!GameObject.Validate(work) || score <= 0) continue;
 				int workId = KingdomCityRules.StableId(work.ID);
 				if (workId <= 0 || !works.Add(workId)
@@ -121,12 +129,13 @@ namespace ThousandAndFirst
 				|| !SameDefenceReservations(decoded, incident.DefenceReservations)) return 0;
 			Dictionary<int, KingdomResidentRow> residentRows;
 			Dictionary<int, GameObject> residentBodies;
-			if (!TryDefenceResidents(system, survey, out residentRows, out residentBodies)) return 0;
+			if (!TryDefenceResidents(system, survey, out residentRows, out residentBodies)
+				|| !survey.TryBenefits(out KingdomBenefitIndex benefits, out _)) return 0;
 			Dictionary<int, GameObject> current = new Dictionary<int, GameObject>();
 			for (int i = 0; i < survey.Defences.Count; i++)
 			{
 				GameObject work = survey.Defences[i];
-				int score = DefenceOf(work);
+				int score = DefenceOf(work, benefits);
 				if (!GameObject.Validate(work) || score <= 0) continue;
 				int workId = KingdomCityRules.StableId(work.ID);
 				if (workId <= 0 || current.ContainsKey(workId)) return 0;
@@ -139,7 +148,7 @@ namespace ThousandAndFirst
 				KingdomRaidDefenceReservation frozen = decoded[i];
 				GameObject work;
 				if (!current.TryGetValue(frozen.WorkId, out work)
-					|| DefenceOf(work) != frozen.FrozenScore) return 0;
+					|| DefenceOf(work, benefits) != frozen.FrozenScore) return 0;
 				List<int> liveCrew;
 				if (!TryExactDefenceCrew(system, survey, work, frozen.WorkId, residentRows,
 					residentBodies, reservedCrew, out liveCrew)
@@ -221,16 +230,12 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static int DefenceOf(GameObject work)
+		private static int DefenceOf(GameObject work, KingdomBenefitIndex Benefits)
 		{
-			if (!GameObject.Validate(work)) return 0;
-			int need = work.GetIntProperty("KingdomStaffNeeded");
-			int effectiveness = need > 0 ? work.GetIntProperty("KingdomEffectiveness") : 100;
-			effectiveness = KingdomCrews.ApplyAffinity(work, effectiveness);
-			int defence = work.GetIntProperty("KingdomDefence");
-			if (defence <= 0 || effectiveness <= 0) return 0;
-			long score = (long)defence * effectiveness / 100L;
-			return (int)Math.Min(KingdomLifecycleRules.MaxPhysicalCount, score);
+			if (!GameObject.Validate(work) || Benefits == null
+				|| string.IsNullOrEmpty(work.IDIfAssigned)) return 0;
+			return Math.Min(KingdomLifecycleRules.MaxPhysicalCount,
+				Benefits.AmountForRoot(work.IDIfAssigned, "defence"));
 		}
 
 		private static GameObject ExactStore(KingdomSurvey survey, long seed)

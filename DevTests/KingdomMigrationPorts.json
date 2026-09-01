@@ -36,7 +36,12 @@
     "completion lane is green. The census sweep that follows the polity lane completed the",
     "manifest: 29 production files declaring a wire-version-shaped constant sat outside it,",
     "28 carrying durable wire and one carrying none. The working total is now 49 ports and",
-    "111 hard gaps."
+    "111 hard gaps.",
+    "",
+    "Founder-memory and zone-observation revisions brought the census to 50 ports / 114 hard",
+    "gaps. The receipt-backed realm Chronicle intent adds port 51. Its v2 legacy payload and v3",
+    "current payload have no provenance-backed historical writer fixtures, and no surviving v1",
+    "bytes may be invented; the deliberately conservative numbered gap total is therefore 117."
   ],
   "ports": [
     {
@@ -57,7 +62,7 @@
       "reader": "Polity/KingdomPolityCodec.Envelope.cs",
       "versionConstant": "Polity/KingdomPolityCodec.Envelope.cs:10",
       "versionConstantIdentifier": "CurrentWireVersion",
-      "currentVersion": 6,
+      "currentVersion": 7,
       "migrationAuthority": "Polity/KingdomPolityCodec.Envelope.cs:60-65",
       "opaqueFuturePolicy": "preserve-and-reemit",
       "opaqueFutureSite": "Polity/KingdomPolityCodec.Envelope.cs:67-74",
@@ -395,7 +400,7 @@
     {
       "codec": "KingdomPolityRealmTransition",
       "reader": "Polity/KingdomPolityFactionTransitions.Helpers.cs",
-      "versionConstant": "Polity/KingdomPolityActivationModels.cs:145",
+      "versionConstant": "Polity/KingdomPolityActivationModels.cs:147",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Polity/KingdomPolityActivationModels.cs:179 IComposite Write, rooted on KingdomSystem.PolityTransition at Core/KingdomSystem.z02c.State.PolityTransition.cs:6",
@@ -557,16 +562,16 @@
       "reader": "Core/KingdomFounderHistoryRules.cs",
       "versionConstant": "Core/KingdomFounderHistoryRules.cs:12",
       "versionConstantIdentifier": "CurrentVersion",
-      "currentVersion": 1,
+      "currentVersion": 2,
       "durableSite": "Core/KingdomFounderHistoryReceipt.cs:43 IComposite Write, rooted on KingdomSystem.FounderHistory at Core/KingdomSystem.z02b.State.FounderHistory.cs:9",
-      "migrationAuthority": null,
+      "migrationAuthority": "Core/KingdomFounderHistoryRules.Migration.cs:9 TryMigrateV1 validates exact schema-1 identity, preserves only provably TAF-owned cleanup ids, and projects schema 2",
       "opaqueFuturePolicy": "refuse",
       "opaqueFutureSite": null,
       "refusalSite": "Core/KingdomFounderHistoryRules.cs:82",
       "physicalShellAxis": null,
-      "retirementRule": "first version; nothing to migrate yet",
+      "retirementRule": "schema 1 migrates only exact TAF-owned entity/event/note evidence; unknown or malformed state is quarantined and never reinterpreted",
       "fixtures": [],
-      "gapReason": "no provenance-backed historical fixture is checked in"
+      "gapReason": "no provenance-backed historical fixture is checked in for either version"
     },
     {
       "codec": "KingdomArtifactRecognitionReceiptRow",
@@ -701,7 +706,7 @@
     {
       "codec": "KingdomCivicOfficeReceiptRow",
       "reader": "Experience/KingdomExperienceCodec.Civic.cs",
-      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:29",
+      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:30",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Experience/KingdomExperienceCodec.Civic.cs:9 writes R.Version and Experience/KingdomExperienceCodec.Civic.cs:22 reads it back, inside the experience envelope",
@@ -718,7 +723,7 @@
     {
       "codec": "KingdomRemembranceReceiptRow",
       "reader": "Experience/KingdomExperienceCodec.Civic.cs",
-      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:66",
+      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:67",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Experience/KingdomExperienceCodec.Civic.cs:35 writes R.Version and Experience/KingdomExperienceCodec.Civic.cs:47 reads it back, inside the experience envelope",
@@ -815,6 +820,38 @@
       "retirementRule": "first version; a marker whose ProjectionVersion is not current is treated as unrecognised rather than migrated",
       "fixtures": [],
       "gapReason": "no provenance-backed historical fixture is checked in"
+    },
+    {
+      "codec": "KingdomZoneObservationCodec",
+      "reader": "Growth/KingdomZoneObservationCodec.cs",
+      "versionConstant": "Growth/KingdomZoneObservationCodec.cs:11",
+      "versionConstantIdentifier": "CurrentVersion",
+      "currentVersion": 1,
+      "durableSite": "Growth/KingdomZoneObservationCodec.cs:151-159 writes the envelope version and canonical wire; Growth/KingdomReachObservationRuntime.cs and Experience/KingdomEducationPostObservationRuntime.cs persist that wire under exact zone-property keys",
+      "migrationAuthority": null,
+      "opaqueFuturePolicy": "refuse",
+      "opaqueFutureSite": "Growth/KingdomZoneObservationCodec.cs:186-193",
+      "refusalSite": "Growth/KingdomZoneObservationCodec.cs:39-42",
+      "physicalShellAxis": null,
+      "retirementRule": "first version; any non-current envelope is refused and no migration exists yet",
+      "fixtures": [],
+      "gapReason": "no provenance-backed historical fixture is checked in"
+    },
+    {
+      "codec": "KingdomRealmChronicleIntentRules",
+      "reader": "Core/KingdomRealmChronicleIntentRules.cs",
+      "versionConstant": "Core/KingdomRealmChronicleIntentRules.cs:30-33",
+      "versionConstantIdentifier": "CurrentVersion",
+      "currentVersion": 3,
+      "durableSite": "Core/KingdomSystem.z17.Return.Chronicle.cs:108-132 encodes the intent into KingdomRealmCallbackReceipt.BeforeEffect; Core/KingdomRealmArchive.11WirePrimitives.cs:137 and :154 persist and restore that callback field inside the realm archive",
+      "nestedWithin": "KingdomRealmArchive",
+      "migrationAuthority": "Core/KingdomRealmChronicleIntentRules.cs:79-98 admits exact chronicle-v2 content only against its old official fingerprint; Core/KingdomSystem.z17.Return.Chronicle.cs:134-158 retains that legacy disposition without upgrading it",
+      "opaqueFuturePolicy": "refuse-and-quarantine",
+      "opaqueFutureSite": "Core/KingdomSystem.z09b.Exile.ChronicleDispatch.cs:36-43",
+      "physicalShellAxis": null,
+      "retirementRule": "chronicle-v2 and chronicle-v3 remain exact; no chronicle-v1 authority may be reconstructed without independently retained historical bytes",
+      "fixtures": [],
+      "gapReason": "the checked-in v2 migration literal proves exact bounded decoding but lacks historical-writer commit/SHA provenance; no provenance-backed v1-v3 fixture may be invented from today's writer"
     }
   ],
   "nonDurableVersionSites": [

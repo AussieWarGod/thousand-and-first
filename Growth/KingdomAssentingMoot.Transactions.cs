@@ -28,7 +28,7 @@ namespace ThousandAndFirst
 			string lot = Building.GetStringProperty(KingdomPlots.PlotIdProperty);
 			string id = Building.IDIfAssigned;
 			int hp = Building.HasStat("Hitpoints") ? Building.baseHitpoints : 0;
-			if (Building.GetIntProperty("KingdomBuilt") != 1 || string.IsNullOrEmpty(lot)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building) || string.IsNullOrEmpty(lot)
 				|| string.IsNullOrEmpty(id) || hp <= 0)
 				return Fail("Only one finished, stamped assenting moot can own a ward.", out Failure);
 			if (receipt.Phase == KingdomAssentingMootPhase.None)

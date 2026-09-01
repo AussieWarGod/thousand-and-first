@@ -57,7 +57,8 @@ namespace ThousandAndFirst
 			foreach (KeyValuePair<int, ArchitectureCellState> pair in cells)
 			{
 				ArchitectureCellState cell = pair.Value;
-				if (!cell.Claim || cell.Cover != ArchitectureCover.Walled
+				if (cell.Claim != ArchitectureClaim.Building
+					|| cell.Cover != ArchitectureCover.Walled
 					|| structures.Contains(pair.Key) || openings.Contains(pair.Key)) continue;
 				for (int direction = 0; direction < 4; direction++)
 				{
@@ -67,7 +68,8 @@ namespace ThousandAndFirst
 						return BareLeak(cell.X, cell.Y, x, y, out Failure);
 					int neighborKey = CellKey(x, y, Snapshot.Width);
 					ArchitectureCellState neighbor = cells[neighborKey];
-					bool exterior = !neighbor.Claim || (neighbor.Cover != ArchitectureCover.Walled
+					bool exterior = neighbor.Claim != ArchitectureClaim.Building
+						|| (neighbor.Cover != ArchitectureCover.Walled
 						&& !structures.Contains(neighborKey) && !openings.Contains(neighborKey));
 					if (exterior)
 						return BareLeak(cell.X, cell.Y, x, y, out Failure);

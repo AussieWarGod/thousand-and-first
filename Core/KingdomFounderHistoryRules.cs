@@ -6,18 +6,24 @@ using System.Text;
 
 namespace ThousandAndFirst
 {
-	/// <summary>Pure identity, text, phase, and receipt law for public founder memory.</summary>
-	public static class KingdomFounderHistoryRules
+	/// <summary>Pure identity, text, migration, phase, and receipt law for TAF founder memory.</summary>
+	public static partial class KingdomFounderHistoryRules
 	{
-		public const int CurrentVersion = 1;
+		public const int CurrentVersion = 2;
 		public const int MaxIdentityChars = 1024;
 		public const int MaxNameChars = 192;
 		public const int MaxCauseChars = 768;
 		public const int MaxGospelChars = 1536;
 		public const int MaxFaultChars = 512;
+		/// <summary>Schema-1 only. Retained to prove and remove exact legacy entities.</summary>
 		public const string EntityType = "taf-founder-memory";
 		public const string EventMarker = "taf:founder-memory:v1";
 		public const string JournalAttribute = "taf-founder-memory";
+		public const string ProjectionPrefix = "taf:founder-memory:v2:projection:";
+		public const string ProjectionProofPrefix = "taf:founder-memory:v2:proof:";
+		public const string LegacyEntityPrefix = "taf:founder-memory:v1:entity:";
+		public const string LegacyNotePrefix = "taf:founder-memory:v1:note:";
+		public const string LegacyProofPrefix = "taf:founder-memory:v1:proof:";
 
 		public static bool TryPrepare(string RealmId, string DeathToken, long DeathTick,
 			long PreparedTick, long HistoricYear, string FounderName, string CityName,
@@ -66,9 +72,13 @@ namespace ThousandAndFirst
 				RegionName = region,
 				Cause = cause,
 				Gospel = gospel,
-				EntityId = "taf:founder-memory:v1:entity:" + digest,
-				NoteId = "taf:founder-memory:v1:note:" + digest,
-				ProofId = "taf:founder-memory:v1:proof:" + digest,
+				ProjectionId = ProjectionPrefix + digest,
+				ProjectionProofId = ProjectionProofPrefix + digest,
+				LegacyCleanupState = KingdomFounderHistoryLegacyCleanupState.None,
+				LegacyPhase = KingdomFounderHistoryPhase.None,
+				EntityId = "",
+				NoteId = "",
+				ProofId = "",
 				EventId = 0L,
 				Fault = ""
 			};
@@ -84,6 +94,9 @@ namespace ThousandAndFirst
 				return Fail("unknown founder-memory receipt version or phase", out Failure);
 			if (Receipt.Phase == KingdomFounderHistoryPhase.None)
 				return Empty(Receipt) || Fail("idle founder-memory receipt carries residue", out Failure);
+			if (Receipt.Phase == KingdomFounderHistoryPhase.Quarantined)
+				return (CanonicalQuarantine(Receipt) || OwnedQuarantine(Receipt))
+					|| Fail("quarantined founder-memory receipt is not canonical", out Failure);
 			if (!Bounded(Receipt.RealmId, MaxIdentityChars)
 				|| !Bounded(Receipt.DeathToken, MaxIdentityChars)
 				|| !Bounded(Receipt.FounderName, MaxNameChars)
@@ -91,34 +104,34 @@ namespace ThousandAndFirst
 				|| !Bounded(Receipt.RegionName, MaxNameChars)
 				|| !Bounded(Receipt.Cause, MaxCauseChars)
 				|| !Bounded(Receipt.Gospel, MaxGospelChars)
-				|| !Bounded(Receipt.EntityId, MaxIdentityChars)
-				|| !Bounded(Receipt.NoteId, MaxIdentityChars)
-				|| !Bounded(Receipt.ProofId, MaxIdentityChars)
+				|| !Bounded(Receipt.ProjectionId, MaxIdentityChars)
+				|| !Bounded(Receipt.ProjectionProofId, MaxIdentityChars)
 				|| Receipt.DeathTick < 0L || Receipt.PreparedTick < Receipt.DeathTick
-				|| Receipt.HistoricYear == long.MinValue)
+				|| Receipt.HistoricYear == long.MinValue
+				|| !Enum.IsDefined(typeof(KingdomFounderHistoryLegacyCleanupState),
+					Receipt.LegacyCleanupState)
+				|| !Enum.IsDefined(typeof(KingdomFounderHistoryPhase), Receipt.LegacyPhase))
 				return Fail("founder-memory receipt has malformed bounded evidence", out Failure);
 			string digest = Digest(Receipt.RealmId, Receipt.DeathToken);
 			if (string.IsNullOrEmpty(digest)
-				|| Receipt.EntityId != "taf:founder-memory:v1:entity:" + digest
-				|| Receipt.NoteId != "taf:founder-memory:v1:note:" + digest
-				|| Receipt.ProofId != "taf:founder-memory:v1:proof:" + digest
+				|| Receipt.ProjectionId != ProjectionPrefix + digest
+				|| Receipt.ProjectionProofId != ProjectionProofPrefix + digest
 				|| Receipt.Gospel != Gospel(Receipt.FounderName, Receipt.CityName,
 					Receipt.RegionName, Receipt.Cause))
 				return Fail("founder-memory receipt identity or telling diverged", out Failure);
+			if (!LegacyEvidenceValid(Receipt, digest))
+				return Fail("founder-memory legacy cleanup evidence diverged", out Failure);
 			if (Receipt.Phase == KingdomFounderHistoryPhase.Suppressed)
-				return !Receipt.PublicationEnabled && Receipt.EventId == 0L
+				return !Receipt.PublicationEnabled
 					&& Receipt.CommittedTick >= Receipt.PreparedTick
 					&& string.IsNullOrEmpty(Receipt.Fault)
 					|| Fail("suppressed founder-memory receipt carries publication residue", out Failure);
-			if (Receipt.Phase == KingdomFounderHistoryPhase.Quarantined)
-				return Receipt.PublicationEnabled && Receipt.CommittedTick == 0L
-					&& Bounded(Receipt.Fault, MaxFaultChars)
-					|| Fail("quarantined founder-memory receipt lacks a bounded fault", out Failure);
 			if (!Receipt.PublicationEnabled || !string.IsNullOrEmpty(Receipt.Fault))
 				return Fail("active founder-memory receipt has inconsistent option or fault", out Failure);
-			bool eventPhase = Receipt.Phase >= KingdomFounderHistoryPhase.EventPublished;
-			if (eventPhase != (Receipt.EventId > 0L))
-				return Fail("founder-memory event identity disagrees with its phase", out Failure);
+			if (Receipt.Phase != KingdomFounderHistoryPhase.Prepared
+				&& Receipt.Phase != KingdomFounderHistoryPhase.Committed)
+				return Fail("schema-2 founder-memory receipt uses a legacy publication phase",
+					out Failure);
 			if (Receipt.Phase == KingdomFounderHistoryPhase.Committed)
 				return Receipt.CommittedTick >= Receipt.PreparedTick
 					|| Fail("committed founder-memory receipt lacks its tick", out Failure);
@@ -143,7 +156,7 @@ namespace ThousandAndFirst
 		public static string QuarantineReason(string Reason)
 		{
 			string value = SingleLine(Reason, MaxFaultChars);
-			return string.IsNullOrEmpty(value) ? "public founder-memory evidence diverged" : value;
+			return string.IsNullOrEmpty(value) ? "founder-memory evidence diverged" : value;
 		}
 
 		private static string Gospel(string Founder, string City, string Region, string Cause)
@@ -212,6 +225,10 @@ namespace ThousandAndFirst
 				&& R.CommittedTick == 0L && string.IsNullOrEmpty(R.FounderName)
 				&& string.IsNullOrEmpty(R.CityName) && string.IsNullOrEmpty(R.RegionName)
 				&& string.IsNullOrEmpty(R.Cause) && string.IsNullOrEmpty(R.Gospel)
+				&& string.IsNullOrEmpty(R.ProjectionId)
+				&& string.IsNullOrEmpty(R.ProjectionProofId)
+				&& R.LegacyCleanupState == KingdomFounderHistoryLegacyCleanupState.None
+				&& R.LegacyPhase == KingdomFounderHistoryPhase.None
 				&& string.IsNullOrEmpty(R.EntityId) && string.IsNullOrEmpty(R.NoteId)
 				&& string.IsNullOrEmpty(R.ProofId) && R.EventId == 0L
 				&& string.IsNullOrEmpty(R.Fault);

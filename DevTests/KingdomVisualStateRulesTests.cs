@@ -50,15 +50,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void DeprivationAppearsOnlyOnTheHeartAndBothMarksCompose()
+		public void WaterDeprivationAppearsOnlyOnTheHeartAndLegacyFoodMarksAreIgnored()
 		{
 			Assert.AreEqual(KingdomVisualStateKind.Sound,
 				KingdomVisualStateRules.Resolve(F(withered: true, famished: true)));
 			Assert.AreEqual(KingdomVisualStateKind.Withered,
 				KingdomVisualStateRules.Resolve(F(heart: true, withered: true)));
-			Assert.AreEqual(KingdomVisualStateKind.Famished,
+			Assert.AreEqual(KingdomVisualStateKind.Sound,
 				KingdomVisualStateRules.Resolve(F(heart: true, famished: true)));
-			Assert.AreEqual(KingdomVisualStateKind.WitheredAndFamished,
+			Assert.AreEqual(KingdomVisualStateKind.Withered,
 				KingdomVisualStateRules.Resolve(F(heart: true, withered: true, famished: true)));
 		}
 
@@ -98,7 +98,7 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.StartsWith(KingdomVisualStateRules.GalleryVersion + "\n",
 				KingdomVisualStateRules.GalleryReceipt());
-			Assert.AreEqual("6da3ef1c709709f3c611dce719316c96244d2ae68fb1f016410fe12619836c07",
+			Assert.AreEqual("b8ad67bef7430f2f4007781991db0c2f23aade99a5b0962e15a72be9c41e3504",
 				KingdomVisualStateRules.GalleryHash(),
 				"change the gallery version and acceptance receipt with any cue change");
 		}

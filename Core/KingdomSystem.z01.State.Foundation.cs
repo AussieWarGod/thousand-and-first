@@ -90,35 +90,25 @@ namespace ThousandAndFirst
 		/// this value to zero and no live formula reads it. Keep the field for save/seat ABI.</summary>
 		public int NotableShade;
 
-		/// <summary>The settlement's live subsistence lift. Only its last attended meal contributes;
-		/// an optional civic title never grants population, service, capability, or economy.</summary>
+		/// <summary>Legacy capacity projection. Food acts never grant population capacity.</summary>
 		public int Shade
 		{
 			get
 			{
-				return (MealShade < 0) ? 0 : MealShade;
+				return 0;
 			}
 		}
 
 		/// <summary>
-		/// What this settlement's last day's eating was worth to the level, for exactly the day
-		/// it was earned (<c>KingdomRules.MealShadeFor</c>). Re-drawn every heartbeat: a
-		/// settlement that ate its own dish yesterday and scraps today is worth the scraps. It is
-		/// capped by <c>KingdomCatalogueRules.LiftCapPercent</c>, so nobody eats past their own
-		/// water. Carried, so a city left mid-feast is still well fed when the founder walks back
-		/// into it.
+		/// Legacy read-compatible carrier. Earlier builds priced a daily meal into capacity;
+		/// normalization always clears it and <see cref="Shade"/> never reads it.
 		/// </summary>
 		public int MealShade;
 
-		/// <summary>What the settlement's last drawn day of rations actually was
-		/// (<c>KingdomRules.JudgeMeal</c>). Knowledge for the report and the once-flag below;
-		/// <see cref="KingdomRules.MealVerdict.None"/> on a settlement no heartbeat has billed
-		/// yet.</summary>
+		/// <summary>Last completed explicit shared-meal kind. Harmless report evidence.</summary>
 		public KingdomRules.MealVerdict LastMeal = KingdomRules.MealVerdict.None;
 
-		/// <summary>STANDARDS 7b's once-flag for a settlement whose larders gave nothing. Set
-		/// when the sentence is said, cleared the moment the settlement eats out of its own
-		/// stores again, so walking away and back does not re-say it.</summary>
+		/// <summary>Legacy empty-ration announcement latch. Normalization always clears it.</summary>
 		public bool ScrapsAnnounced;
 
 		public int ShopTier;

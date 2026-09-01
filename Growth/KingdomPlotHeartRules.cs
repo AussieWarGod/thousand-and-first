@@ -146,7 +146,8 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// One rung's plot: a rect of that rung's tier, centred on the rite ground and slid whole
 		/// until it lies inside the surveyed ground. The basin's own ground therefore stays inside
-		/// every rung above it, which is what makes the rungs accrete rather than replace.
+		/// every rung above it. That preserves the rite anchor while each authored successor remains
+		/// free to renovate the standing interior, expand into proved ground, or do both.
 		/// </summary>
 		/// <returns>False when the tier does not fit the surveyed ground at all.</returns>
 		public static bool TryHeartRect(PlotRect Survey, int RiteX, int RiteY, PlotSize Size, out PlotRect Rect)

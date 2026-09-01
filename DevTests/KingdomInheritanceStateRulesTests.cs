@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -245,6 +246,111 @@ namespace ThousandAndFirst.Tests
 			};
 		}
 
+		private static string PriorRecordText(KingdomSealRecord Record, int Schema)
+		{
+			KingdomSealBody source = Record.WriteBody();
+			KingdomSealBody body = new KingdomSealBody();
+			HashSet<string> omitted = new HashSet<string>(StringComparer.Ordinal)
+			{
+				"profile_schema", "technology_band", "canonical_body",
+				"source_profile_digest", "profile_provenance_digest"
+			};
+			if (Schema == 4) omitted.UnionWith(new[] { "spatial_version", "spatial_width",
+				"spatial_height", "spatial_entry_side", "spatial_entry_x", "spatial_entry_y",
+				"work_snapshot", "work_snapshot_hash", "street_x", "street_y" });
+			for (int i = 0; i < source.Keys.Count; i++)
+			{
+				string key = source.Keys[i];
+				if (omitted.Contains(key)) continue;
+				switch (source.KindOf(key))
+				{
+				case KingdomSealKind.Text: body.Put(key, source.Text(key)); break;
+				case KingdomSealKind.Number: body.Put(key, source.Number(key)); break;
+				case KingdomSealKind.TextList: body.PutList(key, source.TextList(key)); break;
+				case KingdomSealKind.NumberList: body.PutList(key, source.NumberList(key)); break;
+				}
+			}
+			return KingdomSealFormat.Compose(Schema, body);
+		}
+
+		private static string PriorReceiptText(KingdomSealReceipt Receipt, int Schema)
+		{
+			Assert.IsTrue(KingdomSealFormat.TryParse(Receipt.Compose(),
+				KingdomSealRecord.FirstSchema, KingdomSealRecord.CurrentSchema, out int _,
+				out KingdomSealBody body, out KingdomSealFault fault, out string detail),
+				fault + ": " + detail);
+			return KingdomSealFormat.Compose(Schema, body);
+		}
+
+		private static KingdomInheritanceSavedShape PriorSchemaShape(int LegacySchema,
+			int ReceiptSchema, int CommittedSchema, KingdomInheritancePhase Phase)
+		{
+			KingdomSealRecord legacy = CanonicalLegacy();
+			KingdomSealReceipt reserved = Receipt(legacy);
+			KingdomInheritanceSavedShape shape = new KingdomInheritanceSavedShape
+			{
+				PhaseValue = (int)Phase,
+				LegacyText = PriorRecordText(legacy, LegacySchema),
+				ReceiptText = PriorReceiptText(reserved, ReceiptSchema)
+			};
+			if (Phase == KingdomInheritancePhase.Reserved ||
+				Phase == KingdomInheritancePhase.Refused ||
+				Phase == KingdomInheritancePhase.RepairRequired) return shape;
+			shape.TargetZoneId = "JoppaWorld.4.5.1.2.10";
+			shape.TargetTerrainBlueprint = "TerrainSaltMarsh";
+			shape.TargetTerrainRank = 0;
+			if (Phase == KingdomInheritancePhase.SiteSelected ||
+				Phase == KingdomInheritancePhase.WorldValidated) return shape;
+			shape.SecretId = "taf.inherit." + legacy.LegacyId;
+			shape.SiteName = KingdomInheritanceStateRules.ComposeSiteName(legacy);
+			shape.OwnsSkipTerrainBuilders = true;
+			shape.OwnsNoBiomes = true;
+			shape.OwnsZoneName = true;
+			if (Phase == KingdomInheritancePhase.Installed) return shape;
+			shape.ApplyStatus = (int)KingdomInheritApplyStatus.Applied;
+			shape.ApplyFault = (int)KingdomInheritApplyFault.None;
+			Assert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+				reserved, shape.TargetZoneId, 1, out shape.ApplicationMarker));
+			if (Phase == KingdomInheritancePhase.Committed)
+			{
+				KingdomSealReceipt committed = new KingdomSealReceipt
+				{
+					LineageId = legacy.LineageId, LegacyId = legacy.LegacyId,
+					TargetGameId = reserved.TargetGameId,
+					State = KingdomSealReceiptState.Committed, WrittenTick = 400L
+				};
+				shape.CommittedReceiptText = PriorReceiptText(committed, CommittedSchema);
+			}
+			return shape;
+		}
+
+		private static void AssertPriorSchemaShape(int LegacySchema, int ReceiptSchema,
+			int CommittedSchema, KingdomInheritancePhase Phase)
+		{
+			string label = LegacySchema + "/" + ReceiptSchema + "/" +
+				CommittedSchema + "/" + Phase;
+			KingdomInheritanceSavedShape shape = PriorSchemaShape(LegacySchema,
+				ReceiptSchema, CommittedSchema, Phase);
+			Assert.IsTrue(KingdomSealRecord.TryParse(shape.LegacyText,
+				out KingdomSealRecord legacy, out KingdomSealFault fault,
+				out string detail), label + ": " + fault + ": " + detail);
+			Assert.AreEqual(shape.LegacyText, legacy.Compose(), label + " legacy replay");
+			Assert.IsTrue(KingdomSealReceipt.TryParse(shape.ReceiptText,
+				out KingdomSealReceipt reserved));
+			Assert.AreEqual(shape.ReceiptText, reserved.Compose(), label + " reservation replay");
+			if (!string.IsNullOrEmpty(shape.CommittedReceiptText))
+			{
+				Assert.IsTrue(KingdomSealReceipt.TryParse(shape.CommittedReceiptText,
+					out KingdomSealReceipt committed));
+				Assert.AreEqual(shape.CommittedReceiptText, committed.Compose(),
+					label + " committed replay");
+			}
+			Assert.Greater(KingdomInheritEngine.ReconstructionVersionForText(
+				shape.LegacyText), 0, label + " reconstruction");
+			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+				"target-game", 1, out string failure), label + ": " + failure);
+		}
+
 		[Test]
 		public void MarkerFormatHasOneCanonicalImplementation()
 		{
@@ -450,6 +556,31 @@ namespace ThousandAndFirst.Tests
 			pending.CommittedReceiptText = committed.Compose();
 			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(pending,
 				"target-game", 1, out failure), failure);
+		}
+
+		[Test]
+		public void SchemaFourAndFiveAuthorityReplaysThroughEveryPersistedPhase()
+		{
+			KingdomInheritancePhase[] phases =
+			{
+				KingdomInheritancePhase.Reserved, KingdomInheritancePhase.SiteSelected,
+				KingdomInheritancePhase.WorldValidated, KingdomInheritancePhase.Installed,
+				KingdomInheritancePhase.AppliedPendingDurability,
+				KingdomInheritancePhase.Committed, KingdomInheritancePhase.Refused,
+				KingdomInheritancePhase.RepairRequired
+			};
+			for (int legacySchema = 4; legacySchema <= 5; legacySchema++)
+				for (int receiptSchema = 4; receiptSchema <= 6; receiptSchema++)
+					for (int i = 0; i < phases.Length; i++)
+					{
+						if (phases[i] == KingdomInheritancePhase.Committed)
+						{
+							for (int committedSchema = 4; committedSchema <= 6; committedSchema++)
+								AssertPriorSchemaShape(legacySchema, receiptSchema,
+									committedSchema, phases[i]);
+						}
+						else AssertPriorSchemaShape(legacySchema, receiptSchema, 6, phases[i]);
+					}
 		}
 
 		[Test]

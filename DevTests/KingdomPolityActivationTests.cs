@@ -174,6 +174,43 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
+		public void CurrentBodyAndEquipmentUseOnlyAdmittedBodyAndExactCraftFacts()
+		{
+			KingdomPolityFoundationFacts facts = Current();
+			facts.OriginKeys = new List<string> { "goatfolk" };
+			facts.CultureKeys = new List<string> { "dromad" };
+			facts.SpeciesKeys = new List<string> { "human" };
+			facts.IdentityKeys = new List<string> { "body:wet-bodied" };
+			facts.Stage = 5; facts.TechnologyBand = 2;
+			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(facts,
+				out KingdomPolityProfileRevision profile, out string failure), failure);
+			CollectionAssert.AreEqual(new[] { "human" }, profile.BodyKeys);
+			Assert.AreEqual(2, profile.TechnologyBand);
+			CollectionAssert.Contains(profile.GearKeys, "bronze-sword");
+			CollectionAssert.DoesNotContain(profile.BodyKeys, "goatfolk");
+			CollectionAssert.DoesNotContain(profile.BodyKeys, "dromad");
+
+			facts.Stage = 0; facts.TechnologyBand = 6;
+			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(facts,
+				out profile, out failure), failure);
+			Assert.AreEqual(6, profile.TechnologyBand);
+			CollectionAssert.Contains(profile.GearKeys, "steel-sword");
+
+			facts.SpeciesKeys.Clear(); facts.IdentityKeys = new List<string> { "body:robot" };
+			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(facts,
+				out profile, out failure), failure);
+			CollectionAssert.AreEqual(new[] { "mechanical" }, profile.BodyKeys);
+
+			facts.IdentityKeys = new List<string> { "extension:unproved-body" };
+			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(facts,
+				out profile, out failure), failure);
+			CollectionAssert.AreEqual(new[] { "unresolved" }, profile.BodyKeys);
+			Assert.IsFalse(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 1, 4,
+				out KingdomPolityNpcSpec _, out failure));
+			StringAssert.Contains("no admissible manifested body", failure);
+		}
+
+		[Test]
 		public void HeldPartnerCreatesInstitutionalSuccessorNotOldActor()
 		{
 			KingdomPolityFoundationFacts facts = Current();
@@ -238,6 +275,34 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
+		public void NewExilePreparationRefusesUnresolvedOrForeignProfileSeal()
+		{
+			KingdomPolityLedger ledger = ActivePublished();
+			KingdomPolityRealmExileFacts unresolved = ExileFacts();
+			unresolved.Legacy.ProfileSchema =
+				KingdomPolityProfileRules.UnresolvedLegacyProfileSchema;
+			unresolved.Legacy.TechnologyBand = 0;
+			unresolved.Legacy.CanonicalBodyKeys.Clear();
+			unresolved.Legacy.SourceProfileDigest = null;
+			unresolved.Legacy.ProfileProvenanceDigest = null;
+			Assert.IsFalse(KingdomPolityRules.TryPrepareRealmExile(ledger, ledger.Revision,
+				unresolved, out KingdomPolityRealmTransition _,
+				out KingdomPolityPublicationResult refused, out string failure));
+			Assert.AreEqual(KingdomPolityCasOutcome.Refused, refused.Outcome);
+			StringAssert.Contains("lacks exact current profile provenance", failure);
+
+			KingdomPolityRealmExileFacts foreign = ExileFacts();
+			foreign.Legacy.SourceProfileDigest = KingdomPolityTestData.DigestB;
+			foreign.Legacy.ProfileProvenanceDigest =
+				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(
+					foreign.Legacy.ProfileSchema, foreign.Legacy.TechnologyBand,
+					foreign.Legacy.CanonicalBodyKeys, foreign.Legacy.SourceProfileDigest);
+			Assert.IsFalse(KingdomPolityRules.TryPrepareRealmExile(ledger, ledger.Revision,
+				foreign, out _, out refused, out failure));
+			StringAssert.Contains("lacks exact current profile provenance", failure);
+		}
+
+		[Test]
 		public void DetachedExileCanRestoreExactOldAuthority()
 		{
 			KingdomPolityLedger ledger = ActivePublished();
@@ -296,6 +361,17 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityPublicationResult _, out string failure), failure);
 			facts.Legacy.RollNames[0] = "changed outside receipt";
 			Assert.AreNotEqual(facts.Legacy.RollNames[0], transition.Legacy.RollNames[0]);
+			transition.Legacy.TechnologyBand++;
+			transition.Legacy.ProfileProvenanceDigest =
+				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(
+					transition.Legacy.ProfileSchema, transition.Legacy.TechnologyBand,
+					transition.Legacy.CanonicalBodyKeys, transition.Legacy.SourceProfileDigest);
+			Assert.IsFalse(KingdomPolityRules.TryValidateRealmTransition(transition, out failure));
+			transition.Legacy.TechnologyBand--;
+			transition.Legacy.ProfileProvenanceDigest =
+				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(
+					transition.Legacy.ProfileSchema, transition.Legacy.TechnologyBand,
+					transition.Legacy.CanonicalBodyKeys, transition.Legacy.SourceProfileDigest);
 			transition.OldImportedWasVisible = false;
 			Assert.IsFalse(KingdomPolityRules.TryValidateRealmTransition(transition, out failure));
 			transition.OldImportedWasVisible = true;
@@ -391,6 +467,10 @@ namespace ThousandAndFirst.DevTests
 		private static KingdomPolityRealmExileFacts ExileFacts()
 		{
 			KingdomPolityLegacySnapshot legacy = Legacy();
+			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(Current(),
+				out KingdomPolityProfileRevision source, out string failure), failure);
+			Assert.IsTrue(KingdomPolityProfileRules.TryCaptureLegacyProfile(legacy, source,
+				out failure), failure);
 			legacy.LegacyToken = "lgc-exile";
 			legacy.LineageToken = "lin-exile";
 			legacy.RealmName = "The Water Compact"; legacy.SettlementName = "New Ux";
@@ -421,7 +501,7 @@ namespace ThousandAndFirst.DevTests
 				RealmId = Realm, FactionId = Realm, DisplayName = "The Water Compact",
 				FounderName = "Ari", SettlementId = Settlement, Vocation = "holding",
 				Style = "salt dunes", Creed = "the covenant", Stage = 1, Population = 7,
-				FoundedTick = 30L, OriginKeys = new List<string> { "human" },
+				TechnologyBand = 2, FoundedTick = 30L, OriginKeys = new List<string> { "human" },
 				CultureKeys = new List<string> { "Joppa" },
 				SpeciesKeys = new List<string> { "human" }
 			};
@@ -429,8 +509,11 @@ namespace ThousandAndFirst.DevTests
 
 		private static KingdomPolityLegacySnapshot Legacy()
 		{
-			return new KingdomPolityLegacySnapshot
+			KingdomPolityLegacySnapshot result = new KingdomPolityLegacySnapshot
 			{
+				ProfileSchema = KingdomPolityProfileRules.CurrentLegacyProfileSchema,
+				TechnologyBand = 4, CanonicalBodyKeys = new List<string> { "goatfolk" },
+				SourceProfileDigest = KingdomPolityTestData.DigestA,
 				LegacyToken = "lgc-a-0001", LineageToken = "lin-a-0001",
 				FounderName = "Nara", RealmName = "The Returned Brass",
 				SettlementName = "Old Ux", Vocation = "foundry", Style = "deep caves",
@@ -439,6 +522,10 @@ namespace ThousandAndFirst.DevTests
 				OriginKeys = new List<string> { "goatfolk" }, OriginCounts = new List<int> { 12 },
 				CreedKeys = new List<string> { "brass oath" }, CreedCounts = new List<int> { 12 }
 			};
+			result.ProfileProvenanceDigest =
+				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(result.ProfileSchema,
+					result.TechnologyBand, result.CanonicalBodyKeys, result.SourceProfileDigest);
+			return result;
 		}
 
 		private static KingdomPolityRecord Imported(KingdomPolityLedger L)

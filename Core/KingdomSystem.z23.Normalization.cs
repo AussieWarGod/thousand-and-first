@@ -85,6 +85,10 @@ namespace ThousandAndFirst
 				City = new Simulation.City.KingdomCityBook();
 			}
 			City.Normalize();
+			// Old saves have no field and decode to null/default. Preserve any non-empty receipt
+			// byte-for-byte: recovery validates it and never guesses through corruption.
+			ResidentDeparture = KingdomResidentDepartureRules.NormalizeOldDefault(
+				ResidentDeparture);
 			StageLegacySettlementTopology();
 			if (LifecycleBook == null)
 			{
@@ -142,6 +146,8 @@ namespace ThousandAndFirst
 			{
 				Vocation = KingdomSettlement.NeutralVocation;
 			}
+			if (string.IsNullOrEmpty(Style)) Style = "common";
+			Style = KingdomStyleRules.MigrateLegacyKey(Style);
 			// A stored level or stamp below zero is a corrupt reading, not a settlement in
 			// debt: subsidence mints nothing, so both fail closed to "nothing measured yet".
 			if (LastSubsidenceTick < 0L)
@@ -182,12 +188,12 @@ namespace ThousandAndFirst
 			// Read the old field for ABI compatibility, then retire its economy unconditionally.
 			// Optional civic titles cannot grant hidden capacity, including on legacy saves.
 			NotableShade = 0;
-			// The meal shade fails closed the same way and for the same reason: a day's
-			// eating is never a tax, so the worst a bad supper can be worth is nothing.
-			if (MealShade < 0)
-			{
-				MealShade = 0;
-			}
+			// Retire pre-ruling passive-food state unconditionally. Named fields stay serialized,
+			// but no loaded value may create capacity, catch-up, departure, or a famine mark.
+			HungerStreak = 0;
+			Famished = false;
+			ScrapsAnnounced = false;
+			MealShade = 0;
 			Seceded?.Normalize();
 			if (Dissent < 0 || Dissent > KingdomCreedRules.DissentBreaking)
 			{

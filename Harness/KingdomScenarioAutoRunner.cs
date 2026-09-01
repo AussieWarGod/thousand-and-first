@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-
 using XRL;
 using XRL.UI;
 using XRL.World;
@@ -44,7 +43,8 @@ namespace ThousandAndFirst
 	/// auto-acknowledge, and exactly the key an operator was pressing. Nothing is lost: every
 	/// suppressed message is in the player's message log. It is raised ONLY when a sealed script is
 	/// present, so the attended path keeps every popup, and it is lowered again the moment the run
-	/// ends by any route - completion, refusal, or fault.
+	/// ends by any route. The later vanilla opening-story popup has its own narrow, exception-safe
+	/// sealed-profile bracket in <c>KingdomScenarioOpeningStoryPatch</c>.
 	/// </para>
 	/// <para>
 	/// SUSPENDS AND RESUMES. <c>advance</c> makes a script span turns, so the verb list and a cursor

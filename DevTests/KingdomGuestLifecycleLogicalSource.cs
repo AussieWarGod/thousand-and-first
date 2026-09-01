@@ -10,6 +10,8 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomGuestLifecycle.cs",
 			"Experience/KingdomGuestLifecycle.RemovalAndLodge.cs",
 			"Experience/KingdomGuestLifecycle.Settlement.cs",
+			"Experience/KingdomGuestLifecycle.LodgeTerminal.cs",
+			"Growth/KingdomMarketHandoffGlobalIndex.cs",
 			"Experience/KingdomGuestLifecycle.SinksScheduleAndAuthority.cs",
 			"Experience/KingdomGuestLifecycle.TrustedWorld.cs",
 			"Experience/KingdomGuestLifecycle.WorldModels.cs"

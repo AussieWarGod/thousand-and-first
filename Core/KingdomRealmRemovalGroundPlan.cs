@@ -16,6 +16,8 @@ namespace ThousandAndFirst
 			new Dictionary<GameObject, GameObjectBlueprint>();
 		internal List<GameObject> ExactForeignCitizens = new List<GameObject>();
 		internal HashSet<GameObject> RemovedObjects = new HashSet<GameObject>();
+		internal HashSet<GameObject> MarketStockRetirements = new HashSet<GameObject>();
+		internal HashSet<GameObject> LegendaryMarketRetirements = new HashSet<GameObject>();
 		internal List<KingdomStasisVaultRemovalPlan> StasisVaults =
 			new List<KingdomStasisVaultRemovalPlan>();
 		internal List<KingdomWitnessWorkRemovalPlan> WitnessWorks =

@@ -16,8 +16,19 @@ namespace ThousandAndFirst
 			string receiptFailure = null;
 			KingdomHostedLotReceipt prior = null;
 			if (System == null || Z == null || !GameObject.Validate(shell) || shell.CurrentZone != Z
-				|| Lot == null || Lot.ReadOnly || !Operational(shell)
-				|| !TryReceipt(Root, Lot.Key, out prior, out receiptFailure) || prior != null
+				|| Lot == null || Lot.ReadOnly)
+			{
+				Popup.Show("The hosted lot cannot be commissioned from this shell.");
+				return false;
+			}
+			if (!ReconcileRoot(shell, out string authorityFailure)
+				|| !IsOperationalPure(shell))
+			{
+				Popup.Show(authorityFailure
+					?? "The hosted shell has no exact operational authority.");
+				return false;
+			}
+			if (!TryReceipt(Root, Lot.Key, out prior, out receiptFailure) || prior != null
 				|| !KingdomData.TryGetBuilding(Lot.MaterialKey, out entry)
 				|| KingdomConstruction.HasActiveSubject(System, Z,
 					KingdomConstructionRoute.HostedArcology, shell))
@@ -207,7 +218,7 @@ namespace ThousandAndFirst
 			KingdomHostedLotReceipt Receipt, ref KingdomConstructionJob Job)
 		{
 			long nextTick; long now = The.Game.TimeTicks;
-			bool operational = Operational(Root.ParentObject);
+			bool operational = IsOperationalPure(Root.ParentObject);
 			int remaining = operational
 				? KingdomHostedArcologyRules.AdvanceLaborAfterMasterEdge(Receipt.Remaining,
 					Receipt.LastTick, System.MasterOptionTick, now, Receipt.StaffingBasis,

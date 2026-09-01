@@ -123,9 +123,10 @@ namespace ThousandAndFirst
 			// live on the seat is dropped on every swap.
 			Check(report, ref passed, ref failed, "seat carries all " + KingdomSettlement.CarriedFields().Length + " settlement fields" + ((seatMismatches.Count > 0) ? (" (" + string.Join("; ", seatMismatches.ToArray()) + ")") : ""), seatMismatches.Count == 0);
 			bool claimsDisjoint = true;
-			if (system.Away != null)
+			List<KingdomSettlement> nonSeat = system.NonSeatSettlements();
+			for (int i = 0; i < nonSeat.Count; i++)
 			{
-				foreach (string zoneID in system.Away.ClaimedZones)
+				foreach (string zoneID in nonSeat[i].ClaimedZones)
 				{
 					if (system.ClaimedZones.Contains(zoneID))
 					{
@@ -134,7 +135,8 @@ namespace ThousandAndFirst
 					}
 				}
 			}
-			Check(report, ref passed, ref failed, "the two cities claim no ground in common", claimsDisjoint);
+			Check(report, ref passed, ref failed,
+				"the seated and non-seat cities claim no ground in common", claimsDisjoint);
 			Check(report, ref passed, ref failed, "the realm holds no more than " + KingdomSettlement.MaxSettlements + " cities", system.SettlementCount <= KingdomSettlement.MaxSettlements);
 			Check(report, ref passed, ref failed, "deal lists coherent (" + system.ActiveDealKeys.Count + " deals)", system.ActiveDealKeys.Count == system.ActiveDealFactions.Count && system.ActiveDealKeys.Count == system.DealNextTicks.Count);
 			LiquidVolume fresh = new LiquidVolume { Volume = 10 };

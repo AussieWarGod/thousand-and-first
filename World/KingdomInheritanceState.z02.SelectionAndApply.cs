@@ -119,7 +119,8 @@ namespace ThousandAndFirst
 				if (!TryGetReservation(out legacy, out reserved)
 					|| Zone == null || Zone.ZoneID != TargetZoneId
 					|| !KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy, reserved,
-						TargetZoneId, KingdomInheritEngine.ReconstructionVersion, out expected)
+						TargetZoneId, KingdomInheritEngine.ReconstructionVersionFor(legacy),
+						out expected)
 					|| !KingdomInheritanceStateRules.RetainsDurableApplicationCandidate(
 						ApplyStatusValue, ApplyFaultValue, ApplicationMarker)
 					|| ApplicationMarker != expected || marker != expected)
@@ -163,8 +164,9 @@ namespace ThousandAndFirst
 					&& Phase != KingdomInheritancePhase.AppliedPendingDurability
 					&& Phase != KingdomInheritancePhase.Committed
 					&& Phase != KingdomInheritancePhase.RepairRequired)
-				|| ReconstructionVersion != KingdomInheritEngine.ReconstructionVersion
 				|| ZoneId != TargetZoneId || !TryGetReservation(out Legacy, out Receipt)
+				|| ReconstructionVersion <= 0
+				|| ReconstructionVersion != KingdomInheritEngine.ReconstructionVersionFor(Legacy)
 				|| Legacy.LegacyId != LegacyId || Receipt.TargetGameId != TargetGameId)
 			{
 				Failure = "the persisted builder does not name this exact inherited target";

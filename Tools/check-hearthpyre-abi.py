@@ -20,13 +20,21 @@ DEFAULT_SOURCE = Path(
 )
 BANNED_BRIDGE_MARKERS = (
     "AddLiminal",
+    "NewHome(",
+    "RemoveHome(",
     "NewSettlement",
     "PartyLeader",
-    "ZoneManager",
     "GetZone(",
     "RequireZone",
     "Notitia",
     "Catalog",
+)
+BANNED_BRIDGE_PATTERNS = (
+    r"\bZoneManager\b(?!\s*\.\s*ActiveZone\b)",
+    r"\b(?:Sector|sector|Home|home)\s*\.\s*(?:Add|Remove|Flush)\s*\(",
+    r"RealmSystem\s*\.\s*Homes\s*\[[^\]]+\]\s*=",
+    r"RealmSystem\s*\.\s*Homes\s*\.\s*(?:Add|Remove|Clear)\s*\(",
+    r"(?:Sector|sector)\s*\.\s*Homes\s*\.\s*(?:Add|Remove|Clear)\s*\(",
 )
 SURFACES = {
     "CS/RealmSystem.cs": (
@@ -34,6 +42,7 @@ SURFACES = {
         r"public static Dictionary<string, Settlement> SettlementsByCellID\s*=",
         r"public static Dictionary<Guid, Sector> Sectors\s*=",
         r"public static Dictionary<string, Sector> SectorsByZoneID\s*=",
+        r"public static Dictionary<Guid, Home> Homes\s*=",
     ),
     "CS/Realm/Settlement.cs": (
         r"public Guid ID \{ get; private set; \}",
@@ -43,6 +52,15 @@ SURFACES = {
         r"public Guid ID \{ get; private set; \}",
         r"public Settlement Settlement \{ get; \}",
         r"public string ZoneID => Lattice\.ZoneID;",
+        r"public List<Home> Homes \{ get; \}",
+    ),
+    "CS/Realm/Home.cs": (
+        r"public class Home : ICogentArea, IEnumerable<Location2D>",
+        r"public Guid ID \{ get; private set; \}",
+        r"public Sector Sector \{ get; set; \}",
+        r"public int Count => Locations\.Count;",
+        r"public Location2D Origin;",
+        r"public IEnumerator<Location2D> GetEnumerator\(\) => Locations\.GetEnumerator\(\);",
     ),
 }
 
@@ -75,11 +93,21 @@ def prove_bridge_boundary() -> None:
     for marker in BANNED_BRIDGE_MARKERS:
         if marker in body:
             fail("bridge contains forbidden lifecycle/mutation marker: " + marker)
+    for pattern in BANNED_BRIDGE_PATTERNS:
+        if re.search(pattern, body):
+            fail("bridge contains forbidden Hearthpyre mutation: " + pattern)
     required = (
         "RealmSystem.Settlements",
         "RealmSystem.SettlementsByCellID",
         "RealmSystem.Sectors",
         "RealmSystem.SectorsByZoneID",
+        "RealmSystem.Homes.TryGetValue",
+        "Sector.Homes",
+        "Home.Count",
+        "Home.Origin",
+        "foreach (Location2D location in Home)",
+        "[KingdomForeignFootprintProvider]",
+        "ReferenceEquals(The.ZoneManager.ActiveZone, ActiveZone)",
         'ProviderVersion => "2.2.3"',
     )
     for proof in required:

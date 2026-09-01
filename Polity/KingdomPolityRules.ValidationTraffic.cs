@@ -128,8 +128,9 @@ namespace ThousandAndFirst
 					c.ScaleBudget > MaxCohortMembers || !SortedText(c.RoleSlots,
 						MaxCohortMembers, true) || !ValidMembers(c.ResolvedMembers) ||
 					c.NamedRepresentativeAllowance < 0 || c.NamedRepresentativeAllowance > 1 ||
-					!TypedId(c.EventStreamId, "taf:stream:") || c.RulesVersion < 1 ||
+					!TypedId(c.EventStreamId, "taf:stream:") || !ValidCohortResolver(Ledger, c) ||
 					!ValidPresentationAuthority(c, Ledger.MigratedFromVersion > 0) ||
+					!ValidAmbientTransaction(c, Ledger.MigratedFromVersion > 0) ||
 					!Defined((byte)c.Phase, 6) || !OptionalId(c.ManifestationReceiptId) ||
 					!OptionalId(c.RewardEventId))
 					return Fail("cohort plan is invalid or noncanonical", out Failure);

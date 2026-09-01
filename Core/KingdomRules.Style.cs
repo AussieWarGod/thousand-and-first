@@ -7,7 +7,7 @@ namespace ThousandAndFirst
 		/// The live open registry is <c>KingdomData.Styles</c>; founding uses its data-driven
 		/// selector before this compatibility surface, so third-party styles are not closed out.
 		/// </summary>
-		public static readonly string[] Styles = new string[5] { "common", "verdant", "fungal", "gyre", "eater" };
+		public static readonly string[] Styles = new string[5] { "common", "verdant", "fungal", "moonstair", "eater" };
 
 		/// <summary>Whether a string names one of the five built-in compatibility styles. Engine
 		/// callers that need the open registry use <c>KingdomData.TryGetStyle</c>.</summary>
@@ -46,8 +46,9 @@ namespace ThousandAndFirst
 		// would read as the ancients' own chrome.
 		private static readonly string[] EaterGround = new string[4] { "Ruins", "BethesdaSusa", "GritGate", "TheSpindle" };
 
-		// The Moon Stair climbs to Brightsheol, where the Girsh are: chitin, bone, and sacrament.
-		private static readonly string[] GyreGround = new string[2] { "Brightsheol", "MoonStair" };
+		// The Moon Stair is its own crystal-and-warm-static biome. Gyre Wights and Girsh may live
+		// there, but faction presence is creed evidence and never terrain identity.
+		private static readonly string[] MoonStairGround = new string[2] { "Brightsheol", "MoonStair" };
 
 		// TerrainWatervine and TerrainJoppaRuins both carry Terrain="Saltmarsh"; "Jungle" catches
 		// TerrainJungle, TerrainDeepJungle, and Kyakukya, which carries Terrain="Jungle".
@@ -110,9 +111,9 @@ namespace ThousandAndFirst
 			{
 				return "eater";
 			}
-			if (ContainsAny(Ground, GyreGround))
+			if (ContainsAny(Ground, MoonStairGround))
 			{
-				return "gyre";
+				return "moonstair";
 			}
 			if (ContainsAny(Ground, VerdantGround))
 			{

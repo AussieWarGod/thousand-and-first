@@ -57,6 +57,15 @@ namespace ThousandAndFirst
 				&& (byte)o.Action > (byte)KingdomLifecycleAction.PetitionExpire)
 				throw new InvalidDataException(
 					"historical lifecycle wire cannot encode appended raid action");
+			if (wireVersion < KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion
+				&& o.LodgeTerminal != null)
+				throw new InvalidDataException(
+					"historical lifecycle wire cannot encode Lodge terminal evidence");
+			if (wireVersion < KingdomLifecycleRules.LodgeMarketSourceLifecycleFormatVersion
+				&& o.LodgeTerminal?.MarketSourcePrepared
+					!= KingdomLifecycleLodgeTerminalReceipt.MarketNone)
+				throw new InvalidDataException(
+					"historical lifecycle wire cannot encode Lodge market-source evidence");
 			EnsureCount(o.WaterLegs, KingdomLifecycleRules.MaxWaterLegs, "water legs");
 			EnsureCount(o.Projections, KingdomLifecycleRules.MaxProjections, "projections");
 			EnsureCount(o.ResourceLeases, KingdomLifecycleRules.MaxResourceLeases, "resource leases");
@@ -85,6 +94,8 @@ namespace ThousandAndFirst
 			w.Write(o.Defence); w.Write(o.PartySize); w.Write(o.Spawned);
 			w.Write(o.PlunderRequested); w.Write(o.PlunderProved);
 			S(w, o.ArrivalText, false, true); WriteOutbox(w, o.Outbox); S(w, o.Fault, false, true);
+			if (wireVersion >= KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion)
+				WriteLodgeTerminal(w, o, o.LodgeTerminal, wireVersion);
 		}
 
 		private static KingdomLifecycleOperation ReadOperation(BinaryReader r)
@@ -134,6 +145,13 @@ namespace ThousandAndFirst
 			o.Defence = r.ReadInt32(); o.PartySize = r.ReadInt32(); o.Spawned = r.ReadInt32();
 			o.PlunderRequested = r.ReadInt32(); o.PlunderProved = r.ReadInt32();
 			o.ArrivalText = S(r, false, true); o.Outbox = ReadOutbox(r); o.Fault = S(r, false, true);
+			if (wireVersion >= KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion)
+			{
+				o.LodgeTerminal = ReadLodgeTerminal(r, wireVersion);
+				if (wireVersion == KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion
+					&& !KingdomLifecycleRules.TryUpgradeV9LodgeTerminal(o))
+					throw new InvalidDataException("lifecycle v9 Lodge receipt is malformed");
+			}
 			return o;
 		}
 

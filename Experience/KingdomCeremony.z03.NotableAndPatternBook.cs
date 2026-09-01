@@ -18,10 +18,9 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Ceremony for a settling notable: states one or two tastes in prose and carries one
-		/// virtue and one flaw, drawn once and never rerolled. Call from the office's own
-		/// transition check (<c>KingdomOffices.UpdateOffice</c>) whenever a holder is newly
-		/// named or the office passes to someone else &mdash; never on vacancy, which names
-		/// nobody to settle in.
+		/// virtue and one flaw, drawn once and never rerolled. A caller may use it only after the
+		/// explicit office appointment has named its exact holder &mdash; never on vacancy, which
+		/// names nobody to settle in.
 		/// </summary>
 		/// <param name="System">The realm.</param>
 		/// <param name="Z">The zone the new holder was found standing in, read for which
@@ -88,7 +87,7 @@ namespace ThousandAndFirst
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			foreach (GameObject item in survey.Built)
 			{
-				if (item.GetIntProperty("KingdomBuilt") != 1)
+				if (!KingdomUpgrade.IsFunctionallyBuilt(item))
 				{
 					continue;
 				}

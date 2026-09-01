@@ -108,6 +108,10 @@ namespace ThousandAndFirst
 				Writer.Write(Value.DeliveryManifestSourceCounts[i]);
 				Writer.Write(Value.DeliveryTargetBeforeAmounts[i]);
 				Writer.Write(Value.DeliveryTargetReceiptStates[i]);
+				Writer.Write(Value.ExpeditionDeedDispositions[i]);
+				WriteString(Writer, Value.ExpeditionDeedPolityIds[i], 512);
+				WriteString(Writer, Value.ExpeditionDeedCauseRefs[i], 512);
+				WriteString(Writer, Value.ExpeditionDeedFigureRefs[i], 512);
 				Writer.Write(Value.LegCounts[i]);
 			}
 			Writer.Write(Value.LegZoneIds.Count);
@@ -169,6 +173,13 @@ namespace ThousandAndFirst
 					value.DeliveryTargetBeforeAmounts.Add(Reader.ReadInt64());
 					value.DeliveryTargetReceiptStates.Add(Reader.ReadInt32());
 				}
+				if (WireVersion >= ExpeditionResultJobVersion)
+				{
+					value.ExpeditionDeedDispositions.Add(Reader.ReadInt32());
+					value.ExpeditionDeedPolityIds.Add(ReadString(Reader, 512));
+					value.ExpeditionDeedCauseRefs.Add(ReadString(Reader, 512));
+					value.ExpeditionDeedFigureRefs.Add(ReadString(Reader, 512));
+				}
 				value.LegCounts.Add(Reader.ReadInt32());
 			}
 			int legs = Reader.ReadInt32();
@@ -188,7 +199,7 @@ namespace ThousandAndFirst
 							> (int)Simulation.City.KingdomDeliveryPhase.Quarantined)
 						throw new InvalidDataException(
 							"Realm archive v4 contains a future delivery enum value.");
-			if (WireVersion < ExactDeliveryJobVersion) value.Normalize();
+			if (WireVersion < ExpeditionResultJobVersion) value.Normalize();
 			if (!ValidJobs(value)) throw new InvalidDataException("Archived job columns are inconsistent.");
 			return value;
 		}

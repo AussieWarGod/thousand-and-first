@@ -204,6 +204,11 @@ namespace ThousandAndFirst
 		public static bool Retire(KingdomLifecycleBook Book,
 			KingdomLifecycleOperation Operation, long Tick)
 		{
+			if (LodgeAuthorityReleased(Operation))
+				return TryRemoveReleasedLodge(Book, Operation, Tick);
+			if (LodgeAbandoned(Operation))
+				return TryReleaseAbandonedLodge(Book, Operation, Tick)
+					&& TryRemoveReleasedLodge(Book, Operation, Tick);
 			if (!ExactOperationAuthority(Book, Operation) || Tick < Operation.UpdatedTick
 				|| Operation.Phase != KingdomLifecyclePhase.Terminal
 				|| !IsExactSuccessor(Operation.Sequence,
@@ -224,7 +229,7 @@ namespace ThousandAndFirst
 				FindResource(Book, Operation.ResourceLeases[i].Key).ActiveOperationId = null;
 			Operation.UpdatedTick = Tick;
 			SetRetiredThrough(Book, Operation.Lane, Operation.Sequence);
-			AppendProof(Book.RecentProofs, new KingdomLifecycleProof
+			AppendLifecycleProof(Book, new KingdomLifecycleProof
 			{
 				Sequence = Operation.Sequence,
 				Id = Operation.Id,

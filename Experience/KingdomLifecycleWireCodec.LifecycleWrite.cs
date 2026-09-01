@@ -35,6 +35,20 @@ namespace ThousandAndFirst
 				KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion, IncludeGrowth: true);
 		}
 
+		internal static void WriteLifecycleV8Fixture(BinaryWriter Writer,
+			KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book,
+				KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion, IncludeGrowth: true);
+		}
+
+		internal static void WriteLifecycleV9Fixture(BinaryWriter Writer,
+			KingdomLifecycleBook Book)
+		{
+			WriteLifecycleCore(Writer, Book,
+				KingdomLifecycleRules.LodgeTerminalLifecycleFormatVersion, IncludeGrowth: true);
+		}
+
 		internal static byte[] WriteRaidLedgerV1Fixture(KingdomRaidLedger ledger)
 		{
 			if (!KingdomRaidIncidentRules.ValidLedger(ledger))
@@ -123,7 +137,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Book.Resources.Count; i++) WriteResource(Writer, Book.Resources[i]);
 			Writer.Write(Book.RecentProofs.Count);
 			for (int i = 0; i < Book.RecentProofs.Count; i++) WriteProof(Writer, Book.RecentProofs[i]);
-			if (WireVersion >= KingdomLifecycleRules.CurrentFormatVersion)
+			if (WireVersion >= KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion)
 				WriteRaidLedger(Writer, Book.RaidLedger);
 			else if (WireVersion >= KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion)
 				WriteRaidLedgerV2(Writer, Book.RaidLedger);

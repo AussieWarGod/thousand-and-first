@@ -19,7 +19,7 @@ namespace ThousandAndFirst
 			}
 			Dictionary<string, int> counts = CreedCounts(attendees);
 			string majority = KingdomCreedRules.DominantCreed(counts, attendees.Count);
-			if (string.IsNullOrEmpty(majority))
+			if (string.IsNullOrEmpty(majority) || !KingdomData.CreedUsesTheology(majority))
 			{
 				return;
 			}
@@ -70,7 +70,9 @@ namespace ThousandAndFirst
 		/// not resent it, which is most people.</returns>
 		public static bool NotePressure(KingdomSystem System, Zone Z, GameObject Settler, ConversionChannel Channel, string PressingCreed)
 		{
-			if (!Enabled || System == null || !System.Founded || Settler == null || string.IsNullOrEmpty(PressingCreed))
+			if (!Enabled || System == null || !System.Founded || Settler == null
+				|| string.IsNullOrEmpty(PressingCreed)
+				|| !KingdomData.CreedUsesTheology(PressingCreed))
 			{
 				return false;
 			}
@@ -117,63 +119,24 @@ namespace ThousandAndFirst
 		public static bool Convert(KingdomSystem System, Zone Z, GameObject Settler, string Creed,
 			ConversionChannel Channel, string GovernanceVerb = null)
 		{
-			if (!Enabled || System == null || !System.Founded || Settler == null || string.IsNullOrEmpty(Creed))
+			if (!Enabled || System == null || !System.Founded || Settler == null
+				|| string.IsNullOrEmpty(Creed) || !KingdomData.CreedUsesTheology(Creed))
 			{
 				return false;
 			}
-			string was = Settler.GetStringProperty(KingdomCreed.CreedProperty);
-			if (was == Creed)
-			{
-				return false;
-			}
-			string roll = RollNameOf(Settler);
-			string named = string.IsNullOrEmpty(roll) ? Settler.BaseDisplayNameStripped : roll;
-			int hostility = KingdomCreed.HostilityBetween(was, Creed);
-			// The existing surfaces, in the only order that keeps the tally honest: the old creed
-			// is read off the settler by Forget, so it must go before Record overwrites it.
-			KingdomCreed.Forget(System, Settler);
-			if (!string.IsNullOrEmpty(GovernanceVerb) && !KingdomGovernanceScope.HasCommitted)
-			{
-				// Forget is the first durable tally/person mutation. Mark before Record or any
-				// telling callback can fail, so a partially completed conversion is never free.
-				KingdomGovernanceScope.Commit(GovernanceVerb);
-			}
-			KingdomCreed.Record(System, Settler, Creed);
-			// And the history. THIS is the one place a creed is ever LEFT, which is why Addendum
-			// 16's recorded fact is written here and nowhere else: every other path either gives a
-			// settler their first creed (nothing left behind) or takes the whole person out of the
-			// city (nothing to remember them by). Forget, a line above, took this settler's whole
-			// history out of the city's tally along with their present creed, because its other two
-			// callers are a death and a departure; RememberPast puts it back with one more name in
-			// it. The record is bounded at KingdomCreedRules.MaxKeptCreeds and never rewrites
-			// itself, so a design this city could see yesterday cannot vanish today.
-			KingdomCreed.RememberPast(System, Settler, was);
-			if (roll != null)
-			{
-				System.ConversionShared.Remove(roll);
-				System.ConversionToward.Remove(roll);
-				System.ConversionResented.Remove(roll);
-			}
-			// And the brink they were standing at, if any. Cleared HERE rather than at each call
-			// site because this is the one path a conversion may take: a person who has taken the
-			// creed is not one window away from taking it, and a record left standing would be
-			// unsaid on the next pass -- telling the founder that somebody who converted last
-			// night "holds what they held".
-			KingdomBrink.Lift(Settler, BrinkKind.Creed);
-			string creedName = KingdomCreed.CreedName(Creed);
-			string shownName = KingdomPresentation.Rich(named);
-			string telling = KingdomConversionRules.ConversionTelling(Channel, shownName, creedName);
-			if (KingdomConversionRules.Contested(hostility))
-			{
-				KingdomChronicle.RecordDisputed(System, telling, KingdomConversionRules.ConversionRumour(Channel, shownName, creedName));
-			}
-			else
-			{
-				KingdomChronicle.Record(System, telling);
-			}
-			System.Ledger.Note("{{G|" + KingdomConversionRules.ConversionNote(shownName, creedName) + "}}");
-			KingdomLog.Log("conversion: " + named + " " + (string.IsNullOrEmpty(was) ? "(none)" : was) + " -> " + Creed + " via " + Channel + " hostility=" + hostility);
-			return true;
+			return Transition(System, Z, Settler, Creed, Channel, GovernanceVerb,
+				theological: true);
+		}
+
+		/// <summary>Changes a non-theological affiliation through an explicit, consensual action.
+		/// Unknown third-party keys use this conservative lane. Passive callers cannot reach it.</summary>
+		public static bool AdoptAffiliation(KingdomSystem System, Zone Z, GameObject Settler,
+			string Creed, ConversionChannel Channel, string GovernanceVerb = null)
+		{
+			if (!Enabled || System == null || !System.Founded || Settler == null
+				|| string.IsNullOrEmpty(Creed) || KingdomData.CreedUsesTheology(Creed)) return false;
+			return Transition(System, Z, Settler, Creed, Channel, GovernanceVerb,
+				theological: false);
 		}
 
 		/// <summary>The conversion line <c>kingdom:dump</c> appends for the zone the founder is

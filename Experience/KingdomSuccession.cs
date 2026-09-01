@@ -69,6 +69,22 @@ namespace ThousandAndFirst
 		private bool LegacyPhysicalRiteUnavailable;
 		private bool SuccessionDisabled;
 
+		// This named field belongs to older save blocks. Only migration and exact legacy-state
+		// validation may inspect it; current repair authority is the immutable settlement id.
+		private bool ReadLegacyAccessionRepairSeated()
+		{
+#pragma warning disable 618
+			return PendingAccessionRepairSeated;
+#pragma warning restore 618
+		}
+
+		private void ClearLegacyAccessionRepairSeated()
+		{
+#pragma warning disable 618
+			PendingAccessionRepairSeated = false;
+#pragma warning restore 618
+		}
+
 		[NonSerialized]
 		private bool LoadFailed;
 
@@ -77,6 +93,8 @@ namespace ThousandAndFirst
 
 		[NonSerialized]
 		private bool AccessionOwnershipCommitted;
+
+		private static bool DeathSelectionInProgress;
 
 		/// <summary>Native-test seam: a harness may snapshot/save at an exact durable checkpoint.
 		/// It must not mutate runtime authority; production leaves it null.</summary>
@@ -104,6 +122,7 @@ namespace ThousandAndFirst
 			}
 			DeathChroniclePublished = false;
 			AccessionOwnershipCommitted = false;
+			DeathSelectionInProgress = true;
 			try
 			{
 				HandleFounderDeath(E);
@@ -126,6 +145,7 @@ namespace ThousandAndFirst
 			}
 			finally
 			{
+				DeathSelectionInProgress = false;
 				DeathChroniclePublished = false;
 				AccessionOwnershipCommitted = false;
 			}

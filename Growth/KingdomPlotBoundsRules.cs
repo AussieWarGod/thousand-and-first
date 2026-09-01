@@ -43,10 +43,40 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// Returns every low-corner origin at which an exact rectangle and an equal inset on all
+		/// four sides fit inside a bounded grid. The returned rectangle is a domain of origins,
+		/// not occupied ground. Long intermediates make hostile dimensions refuse without wrapping.
+		/// </summary>
+		public static bool TryInsetOriginBounds(int Width, int Height, int RectWidth,
+			int RectHeight, int Inset, out PlotRect Origins)
+		{
+			Origins = default(PlotRect);
+			if (Width < 1 || Height < 1 || RectWidth < 1 || RectHeight < 1 || Inset < 0)
+				return false;
+			long maxX = (long)Width - RectWidth - Inset;
+			long maxY = (long)Height - RectHeight - Inset;
+			if (maxX < Inset || maxY < Inset || maxX > int.MaxValue || maxY > int.MaxValue)
+				return false;
+			Origins = new PlotRect(Inset, Inset, (int)maxX, (int)maxY);
+			return true;
+		}
+
 		/// <summary>Whether <paramref name="Rect"/> lies wholly inside <paramref name="Bounds"/>.</summary>
 		public static bool Fits(PlotRect Rect, PlotRect Bounds)
 		{
-			return Rect.X1 >= Bounds.X1 && Rect.Y1 >= Bounds.Y1 && Rect.X2 <= Bounds.X2 && Rect.Y2 <= Bounds.Y2;
+			return Rect.X1 <= Rect.X2 && Rect.Y1 <= Rect.Y2
+				&& Bounds.X1 <= Bounds.X2 && Bounds.Y1 <= Bounds.Y2
+				&& Rect.X1 >= Bounds.X1 && Rect.Y1 >= Bounds.Y1
+				&& Rect.X2 <= Bounds.X2 && Rect.Y2 <= Bounds.Y2;
+		}
+
+		/// <summary>Whether an inclusive persisted rect is ordered and wholly inside one zone.</summary>
+		public static bool ValidZoneRect(PlotRect Rect, int Width, int Height)
+		{
+			return Width > 0 && Height > 0 && Rect.X1 >= 0 && Rect.Y1 >= 0
+				&& Rect.X1 <= Rect.X2 && Rect.Y1 <= Rect.Y2
+				&& Rect.X2 < Width && Rect.Y2 < Height;
 		}
 
 		/// <summary>The rect plus its reserved lane. Two plots may not overlap each other's

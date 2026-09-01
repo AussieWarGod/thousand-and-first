@@ -16,8 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="TestMain.cs" />
+	<Compile Include="TestMain.cs" />
+	<Compile Include="ColorUtilityStub.cs" />
+	<Compile Include="KingdomZoneObservationReceiptTests.cs" />
+	<Compile Include="KingdomReachObservationSourceTests.cs" />
+	<Compile Include="KingdomEducationPostObservationTests.cs" />
+	<Compile Include="KingdomEducationPostObservationSourceTests.cs" />
+	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomGlobalIdentityResolverTests.cs" />
+	<Compile Include="KingdomGatehouseLogicalSource.cs" />
+	<Compile Include="KingdomArchitectureReceiptPrefixRulesTests.cs" />
     <Compile Include="PortableRepositoryRootTests.cs" />
 	<Compile Include="KingdomVisualProofRulesTests.cs" />
 	<Compile Include="KingdomLiquidRuntimeSourceTests.cs" />
@@ -84,7 +92,10 @@
 	<Compile Include="KingdomPolityLedgerTests.cs" />
 	<Compile Include="KingdomPolityAdversarialTests.cs" />
 	<Compile Include="KingdomPolityActivationTests.cs" />
+	<Compile Include="KingdomPolityLegacyProfileTests.cs" />
 	<Compile Include="KingdomPolityNpcRulesTests.cs" />
+	<Compile Include="KingdomPolityExpressionStyleTests.cs" />
+	<Compile Include="KingdomPolityExpressionNativeTests.cs" />
 	<Compile Include="KingdomPolityJourneyTests.cs" />
 	<Compile Include="KingdomPolityHospitalitySourceTests.cs" />
 	<Compile Include="KingdomPolityConflictSourceTests.cs" />
@@ -98,6 +109,9 @@
 	<Compile Include="KingdomPolityClosureRulesTests.cs" />
 	<Compile Include="KingdomPolityClosureSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
+	<Compile Include="KingdomPolityAmbientTransactionTests.cs" />
+	<Compile Include="KingdomPolityEndpointObservationRulesTests.cs" />
+	<Compile Include="KingdomPolityExpeditionDeedRulesTests.cs" />
 	<Compile Include="KingdomPolityWave3SourceTests.cs" />
 	<Compile Include="KingdomPolityConsignmentTests.cs" />
 	<Compile Include="KingdomPolityConsignmentSourceTests.cs" />
@@ -106,6 +120,7 @@
 	<Compile Include="KingdomSocketLogicalSource.cs" />
 	<Compile Include="KingdomSocketTransitionPortableTests.cs" />
 	<Compile Include="KingdomCharterMenuRulesTests.cs" />
+	<Compile Include="KingdomPolityDirectRecordPresentationTests.cs" />
 	<Compile Include="KingdomPolityGapTestData.cs" />
 	<Compile Include="KingdomPolityGrievanceIngestionTests.cs" />
 	<Compile Include="KingdomPolityWitnessedHarmTests.cs" />
@@ -147,6 +162,7 @@
 	<Compile Include="..\Core\KingdomFounderHistoryPhase.cs" />
 	<Compile Include="..\Core\KingdomFounderHistoryReceipt.cs" />
 	<Compile Include="..\Core\KingdomFounderHistoryRules.cs" />
+	<Compile Include="KingdomCreedKindRulesTests.cs" />
 	<Compile Include="..\Core\KingdomNamedCookPhase.cs" />
 	<Compile Include="..\Core\KingdomNamedCookReceipt.cs" />
 	<Compile Include="..\Core\KingdomNamedCookRules.cs" />
@@ -418,10 +434,11 @@
 	<Compile Include="..\Experience\KingdomFirstFeastRules.cs" />
 	<Compile Include="..\Experience\KingdomFirstFeastRules.Transitions.cs" />
 	<Compile Include="..\Experience\KingdomFirstFeastRules.Prose.cs" />
-	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.cs" />
-	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.RegistryRead.cs" />
+		<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.cs" />
+			<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.RegistryRead.cs" />
 	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.RowParsing.cs" />
-	<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.RegistryWrite.cs" />
+		<Compile Include="..\Chronicle\KingdomChronicleReceiptRules.RegistryWrite.cs" />
+			<Compile Include="KingdomRealmChronicleIntentRulesTests.cs" />
 	<Compile Include="..\Experience\KingdomCivicVoiceModels.cs" />
 	<Compile Include="..\Experience\KingdomCivicVoiceRules.cs" />
 	<Compile Include="..\Experience\KingdomExperienceRules.Validation.cs" />
@@ -500,6 +517,9 @@
 		<Compile Include="KingdomSaveSystemRosterRuntimeSourceTests.cs" />
 	<Compile Include="KingdomShopStockRulesTests.cs" />
 	<Compile Include="KingdomShopStockSourceTests.cs" />
+	<Compile Include="KingdomMarketHandoffIntentRulesTests.cs" />
+	<Compile Include="KingdomResidentTransitionRulesTests.cs" />
+	<Compile Include="KingdomResidentTransitionAuthoritySourceTests.cs" />
 	<Compile Include="KingdomSitePracticeAndVocationServiceSourceTests.cs" />
 	<Compile Include="KingdomSitePracticeAndVocationServiceTests.cs" />
 	<Compile Include="KingdomVocationServiceClosureTests.cs" />

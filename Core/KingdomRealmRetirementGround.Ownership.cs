@@ -86,13 +86,16 @@ namespace ThousandAndFirst
 
 		private static bool RealmMember(string Name)
 		{
-			return !string.IsNullOrEmpty(Name) && Name.IndexOf("RealmId",
-				StringComparison.OrdinalIgnoreCase) >= 0;
+			return Name == KingdomShopStockRules.LegacyStockRealmProperty
+				|| (!string.IsNullOrEmpty(Name) && Name.IndexOf("RealmId",
+					StringComparison.OrdinalIgnoreCase) >= 0);
 		}
 
 		private static string ObjectRosterRow(GameObject Item,
 			string BlueprintOverride = null, bool ExcludeCampfire = false,
-			bool ExcludeExperienceProjections = false)
+			bool ExcludeExperienceProjections = false,
+			bool ExcludeMarketStockProjection = false,
+			bool ExcludeLegendaryMarketProjection = false)
 		{
 			List<string> rows = new List<string>();
 			rows.Add("id=" + (Item.IDIfAssigned ?? ""));
@@ -103,14 +106,26 @@ namespace ThousandAndFirst
 				if (ExcludeExperienceProjections && (name == "r_KingdomOfficeProjection"
 					|| name == "r_KingdomRemembranceProjection"
 					|| name == "r_KingdomWitnessWorkProjection")) continue;
+				if (ExcludeMarketStockProjection
+					&& name == "r_KingdomMarketStockProjection") continue;
+				if (ExcludeLegendaryMarketProjection
+					&& name == "r_KingdomLegendaryMarketProjection") continue;
 				if (KingdomRemovalCoverage.IsCustomPart(name)) rows.Add("part=" + name);
 			}
 			if (Item.Property != null) foreach (KeyValuePair<string, string> row in Item.Property)
 				if (KingdomRemovalCoverage.IsOwnedObjectProperty(row.Key))
+				{
+					if (ExcludeMarketStockProjection
+						&& KingdomMarketRemoval.IsStockProjectionProperty(row.Key)) continue;
 					rows.Add("string=" + row.Key + "=" + (row.Value ?? ""));
+				}
 			if (Item.IntProperty != null) foreach (KeyValuePair<string, int> row in Item.IntProperty)
 				if (KingdomRemovalCoverage.IsOwnedObjectProperty(row.Key))
+				{
+					if (ExcludeMarketStockProjection
+						&& KingdomMarketRemoval.IsStockProjectionProperty(row.Key)) continue;
 					rows.Add("int=" + row.Key + "=" + row.Value);
+				}
 			if (!ExcludeCampfire && KingdomRemovalProjectionRuntime.TryInspectCampfire(Item,
 				out List<string> campfire, out string _))
 				for (int i = 0; i < campfire.Count; i++) rows.Add("campfire=" + campfire[i]);

@@ -38,88 +38,69 @@ namespace ThousandAndFirst
 		/// <param name="Survey">The pass's survey.</param>
 		public static KingdomCatalogueRules.SupportTally ScopedSupports(KingdomSystem System, Zone Z, KingdomSurvey Survey)
 		{
-			KingdomCatalogueRules.SupportTally tally = Supports(Survey);
-			if (System == null || Z == null || Survey == null)
+			if (Survey == null || Z == null || !ReferenceEquals(Survey.Ground, Z))
+				return default(KingdomCatalogueRules.SupportTally);
+			KingdomBenefitIndex benefits = null;
+			KingdomReach.TryActiveBenefits(Z, Survey, "scoped subsidence", out benefits);
+			KingdomCatalogueRules.SupportTally tally = Supports(Survey, benefits, true);
+			if (System == null || benefits == null)
 			{
 				return tally;
 			}
-			List<Cell> homes = new List<Cell>();
+			List<KingdomBenefitReading> homes = new List<KingdomBenefitReading>();
 			List<int> housed = new List<int>();
 			List<GameObject> lifters = new List<GameObject>();
+			List<KingdomBenefitReading> liftReadings = new List<KingdomBenefitReading>();
 			List<int> lifted = new List<int>();
-			int roofs = 0;
-			int trades = 0;
-			for (int i = 0; i < Survey.Built.Count; i++)
+			IReadOnlyList<KingdomBenefitReading> readings = benefits.Readings;
+			for (int i = 0; i < readings.Count; i++)
 			{
-				GameObject work = Survey.Built[i];
-				if (!GameObject.Validate(work))
+				KingdomBenefitReading reading = readings[i];
+				if (!KingdomReach.TryRoot(Z, reading, out GameObject work)) continue;
+				if (!KingdomObservedBenefitProjection.TryCarries(work, reading,
+					out List<KindAmount> carries, out string failure))
 				{
+					KingdomLog.Log("scoped subsidence: observed benefits failed closed ("
+						+ (failure ?? "unknown physical evidence") + ")");
 					continue;
 				}
-				string key = KingdomUpgrade.DesignKeyOf(work);
-				KingdomRules.BuildEntry entry;
-				if (string.IsNullOrEmpty(key) || !KingdomData.TryGetBuilding(key, out entry))
+				int roof = KingdomObservedBenefitProjectionRules.Amount(carries,
+					KingdomCatalogueRules.SupportRoof);
+				int lift = KingdomObservedBenefitProjectionRules.PhysicalLift(carries);
+				if (roof > 0)
 				{
-					continue;
-				}
-				List<KindAmount> carries;
-				KingdomCatalogueRules.TryParseTally(entry.Carries, out carries, out _);
-				carries = KingdomHostedArcology.HostedCarries(work, carries,
-					Survey.StoredWater > 0);
-				int effectiveness = KingdomWear.EffectivenessOf(work);
-				int lift = 0;
-				for (int c = 0; c < carries.Count; c++)
-				{
-					// The kinds come out of TryParseTally already folded, so the comparison
-					// against the catalogue's own constant is the whole test.
-					if (carries[c].Kind == KingdomCatalogueRules.SupportRoof)
-					{
-						int people = KingdomCatalogueRules.Carried(carries[c].Amount, effectiveness);
-						Cell cell = work.CurrentCell;
-						if (people > 0 && cell != null)
-						{
-							homes.Add(cell);
-							housed.Add(people);
-							roofs += people;
-						}
-						continue;
-					}
-					if (KingdomCatalogueRules.IsBindingSupport(carries[c].Kind))
-					{
-						continue;
-					}
-					lift += KingdomReachRules.Scaled(carries[c].Amount, effectiveness);
+					homes.Add(reading);
+					housed.Add(roof);
 				}
 				if (lift > 0)
 				{
 					lifters.Add(work);
+					liftReadings.Add(reading);
 					lifted.Add(lift);
 				}
-				// A household's trade is not a work with ground of its own, so it has no band to
-				// be scoped by: what it makes goes to the settlement, and its whole ceiling is
-				// KingdomYardRules.MaxShadePerWork. Carried straight across, exactly as Supports
-				// folded it, so the scoped tally does not quietly lose the yard.
-				trades += LiftOf(YardShadesOf(work), effectiveness);
 			}
-			int scoped = trades;
+			int scoped = 0;
 			for (int i = 0; i < lifters.Count; i++)
 			{
 				int reached = 0;
 				for (int h = 0; h < homes.Count; h++)
 				{
-					if (KingdomReach.ReachesCell(System, Z, lifters[i], Z, homes[h].X, homes[h].Y))
+					if (KingdomReach.ReachesDesignation(System, Z, lifters[i],
+						liftReadings[i], homes[h]))
 					{
-						reached += housed[h];
+						reached = KingdomCatalogueRules.SaturatingCounterAdd(
+							reached, housed[h]);
 					}
 				}
-				scoped += KingdomReachRules.Landed(lifted[i], reached, roofs);
+				scoped = KingdomCatalogueRules.SaturatingCounterAdd(scoped,
+					KingdomReachRules.Landed(lifted[i], reached, tally.Roof));
 			}
 			for (int i = 0; i < KingdomReachRules.LiftOrder.Length; i++)
 			{
 				int city = KingdomReach.CityShadeExcept(System, KingdomReachRules.LiftOrder[i], Z.ZoneID);
 				if (city > 0)
 				{
-					scoped += city;
+					scoped = KingdomCatalogueRules.SaturatingCounterAdd(scoped, city);
 				}
 			}
 			tally.Lift = scoped;
@@ -148,13 +129,11 @@ namespace ThousandAndFirst
 		/// <param name="TimeTicks">Now, which is what dates the sighting.</param>
 		public static void RecordZone(KingdomSystem System, Zone Z, KingdomSurvey Survey, KingdomCatalogueRules.SupportTally Supports, int StorageCapacity, long TimeTicks)
 		{
-			// W7 repair: the RATES are no longer handed over. `Supports.Food` is the raw tally and
-			// the model's food carry is KingdomGrowth.FoodMadePerDay, which subtracts the sown
-			// fields and the mills because those two deliver physically; passing the raw figure
-			// here was the one writer that disagreed with the other two. The survey goes across
-			// instead and KingdomCity reads both rates off it through the same expressions every
-			// other writer uses.
-			Simulation.City.KingdomCity.RecordSupports(System, Z, Survey, Supports.Roof, StorageCapacity, TimeTicks);
+			// Food is retained in the catalogue tally for physical-lane reporting, but it is neither
+			// a city production rate nor a population constraint. Fields and mills own exact items.
+			int food = 0;
+			Simulation.City.KingdomCity.RecordSupports(System, Z, Survey, Supports.Roof,
+				Supports.Water, food, StorageCapacity, TimeTicks);
 		}
 
 		/// <summary>The stamp a sighting tick is dated in: whole DAYS, not ticks, because a day is

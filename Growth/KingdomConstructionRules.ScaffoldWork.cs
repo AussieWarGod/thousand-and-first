@@ -64,5 +64,16 @@ namespace ThousandAndFirst
 				&& LastWorkedTick >= Job.StartedTick && CompleteTick == Job.DueTick;
 			return complete || working;
 		}
+
+		/// <summary>Scaffold-specific destructive aftermath also retains direct-reference
+		/// evidence, so changing the offered object's ID cannot masquerade as old-ID absence.</summary>
+		public static KingdomExactRemovalAction ScaffoldRemovalAftermath(
+			KingdomPhysicalLookupState State, bool ExactReference, bool ExactShape,
+			bool OriginalReferenceValid)
+		{
+			if (State == KingdomPhysicalLookupState.Absent && OriginalReferenceValid)
+				return KingdomExactRemovalAction.Quarantine;
+			return GlobalRemovalAftermath(State, ExactReference, ExactShape);
+		}
 	}
 }

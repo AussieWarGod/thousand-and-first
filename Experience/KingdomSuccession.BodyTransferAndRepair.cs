@@ -62,9 +62,29 @@ namespace ThousandAndFirst
 			PendingAccessionRepairFounderName = BoundPendingName(FounderName);
 			PendingAccessionRepairHeirName = BoundPendingName(Heir.Name);
 			PendingAccessionRepairSettlementId = SettlementId;
-			PendingAccessionRepairSeated = false;
+			ClearLegacyAccessionRepairSeated();
 			PendingAccessionRepairArrivedTick = Heir.ArrivedTick;
 			PendingAccessionRepairKeptCreeds = BoundPendingCreeds(Heir.KeptCreeds);
+		}
+
+		private bool TryMigrateLegacyAccessionRepairSettlement(KingdomSystem System,
+			string Context)
+		{
+			if (PendingAccessionRepairResidentId == 0 ||
+				!string.IsNullOrEmpty(PendingAccessionRepairSettlementId)) return true;
+			bool seated = ReadLegacyAccessionRepairSeated();
+			string settlementId = seated ? System?.City?.SettlementId :
+				(System?.NonSeatSettlementCount == 1
+					? System.NonSeatSettlementAt(0)?.City?.SettlementId : null);
+			if (!KingdomIdentityRules.IsSettlementId(settlementId))
+			{
+				KingdomLog.Log("succession: legacy accession repair cannot resolve its exact " +
+					"settlement during " + Context);
+				return false;
+			}
+			PendingAccessionRepairSettlementId = settlementId;
+			ClearLegacyAccessionRepairSeated();
+			return true;
 		}
 
 		private void TryCompletePendingAccessionRepair(string Context)
@@ -85,13 +105,8 @@ namespace ThousandAndFirst
 						+ Context);
 					return;
 				}
+				if (!TryMigrateLegacyAccessionRepairSettlement(system, Context)) return;
 				string settlementId = PendingAccessionRepairSettlementId;
-				if (string.IsNullOrEmpty(settlementId))
-				{
-					settlementId = PendingAccessionRepairSeated ? system.City?.SettlementId :
-						(system.NonSeatSettlementCount == 1
-							? system.NonSeatSettlementAt(0)?.City?.SettlementId : null);
-				}
 				KingdomResidentRow formerRow = default(KingdomResidentRow);
 				KingdomAccessionOutcome outcome = KingdomResidents.TryRepairAccession(system,
 					heir, PendingAccessionRepairResidentId, settlementId,

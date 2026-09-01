@@ -2,7 +2,7 @@
 <options>
   <option ID="r_TAF_OptionMaster" DisplayText="The Thousand and First: enable settlement simulation and new civic work" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionGrowth" DisplayText="The Thousand and First: settlers arrive at claimed zones over time" Category="Mods" Type="Checkbox" Default="Yes" />
-  <option ID="r_TAF_OptionThirst" DisplayText="The Thousand and First: settlements consume water and food, and can wither or famish without them" Category="Mods" Type="Checkbox" Default="Yes" />
+  <option ID="r_TAF_OptionThirst" DisplayText="The Thousand and First: settlements consume stored water and can wither without it" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionRaids" DisplayText="The Thousand and First: provoked factions may raid your settlements" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionTrade" DisplayText="The Thousand and First: trade charters bring caravans to your settlements" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionChronicle" DisplayText="The Thousand and First: record settlement history as journal accomplishments" Category="Mods" Type="Checkbox" Default="Yes" />
@@ -33,8 +33,8 @@
   <option ID="r_TAF_OptionCitizenRite" DisplayText="The Thousand and First: your own settlers will share water with you, on Qud's own terms" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionSeal" DisplayText="The Thousand and First: seal a founded realm when its line ends so its history may survive into a later world" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionLegacyImport" DisplayText="The Thousand and First: import the latest eligible sealed realm (off by default; enable before creating a new world; never imports items)" Category="Mods" Type="Checkbox" Default="No" />
+  <option ID="r_TAF_OptionQuickstartAdvisor" DisplayText="The Thousand and First: place a benefit-free camp guide in new Kingdom Quickstart worlds (read during world creation)" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionPolityPresentation" DisplayText="The Thousand and First: show future polity delegations and witnessed confrontations (changing this never backlogs old visits)" Category="Mods" Type="Checkbox" Default="Yes" />
-  <option ID="r_TAF_OptionFounderHistory" DisplayText="The Thousand and First: place the first completed founder rite in Qud's public history (presentation only; never a Sultan or cult)" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionCivicStory" DisplayText="The Thousand and First: offer future optional civic stories through their named people and places (no catch-up backlog)" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionCivicKnowledge" DisplayText="The Thousand and First: let future civic knowledge scenes point to facts you already know (read-only; no catch-up backlog)" Category="Mods" Type="Checkbox" Default="Yes" />
   <option ID="r_TAF_OptionAmbientCivicUse" DisplayText="The Thousand and First: show cosmetic nearby civic activity (direct conversations remain available when off)" Category="Mods" Type="Checkbox" Default="Yes" />

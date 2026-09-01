@@ -46,7 +46,7 @@ namespace ThousandAndFirst.Tests
 				"public const string SchemaProperty = \"r_TAF_LayoutSchema\";",
 				"public const string OutputStatePrefix = \"r_TAF_LayoutOutputState_\";",
 				"public const string ComponentSchemaProperty = \"r_TAF_LayoutComponentSchema\";",
-				"public const int UpgradeSchema = 1;",
+				"public const int UpgradeSchema = 2;",
 				"public const string UpgradeRetainPrefix = \"r_TAF_LayoutUpgradeRetain_\";");
 			AssertOrdered(source, "public static bool TryPreflight(",
 				"public static bool TryPreflightUpgrade(",
@@ -70,7 +70,7 @@ namespace ThousandAndFirst.Tests
 			string preflight = Between(source, "public static bool TryPreflight(",
 				"public static bool TryPreflightUpgrade(");
 			AssertOrdered(preflight, "KingdomArchitectureRuntime.TryDecode(Intent",
-				"KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)",
+				"KingdomArchitectureRules.IsLatestSnapshotEncoding(Intent.EncodedSnapshot)",
 				"GameObjectFactory.Factory.HasBlueprint(placement.Blueprint)",
 				"KingdomArchitectureRules.TryParseTech(placement.MinTech",
 				"KingdomZoningRules.MissingKnowledge(roster, placement.Knowledge)",
@@ -103,8 +103,8 @@ namespace ThousandAndFirst.Tests
 			string initialize = Between(source, "public static bool TryInitializeOwner(",
 				"public static bool TryReadOwner(");
 			AssertOrdered(initialize, "KingdomArchitectureRuntime.TryDecode(Intent",
-				"KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)",
-				"Owner.RemoveIntProperty(SchemaProperty)",
+				"KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot)",
+				"TryAcceptNewOwnerPrefix(Owner, Intent, snapshot, LotId, 0, false, null",
 				"Owner.SetStringProperty(LotIdProperty, LotId)",
 				"Owner.SetStringProperty(HashProperty, Intent.SnapshotHash)",
 				"Owner.SetIntProperty(NextLayerProperty, 0)",
@@ -117,23 +117,25 @@ namespace ThousandAndFirst.Tests
 
 			string read = Between(source, "public static bool TryReadOwner(",
 				"public static bool TryCopyFrozenOwner(");
-			StringAssert.Contains("receipt is absent, partial, or unknown", read);
-			StringAssert.Contains("layout owner is quarantined", read);
-			StringAssert.Contains("KingdomArchitectureRuntime.TryRead(Owner", read);
-			StringAssert.Contains("KingdomArchitectureRuntime.TryDecode(Intent", read);
-			StringAssert.Contains("KingdomArchitectureRules.IsCurrentSnapshotEncoding", read);
-			StringAssert.Contains("hash != Intent.SnapshotHash", read);
+			string header = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.OwnerReceiptPrefixes.cs");
+			StringAssert.Contains("receipt is absent, partial, or unknown", header);
+			StringAssert.Contains("layout owner is quarantined", header);
+			StringAssert.Contains("KingdomArchitectureRuntime.TryRead(Owner", header);
+			StringAssert.Contains("KingdomArchitectureRuntime.TryDecode(Intent", header);
+			StringAssert.Contains("KingdomArchitectureRules.IsManagedSnapshotEncoding", header);
+			StringAssert.Contains("hash != Intent.SnapshotHash", header);
 			StringAssert.Contains("placement.Layer < next && state != 2", read);
 
 			string copy = Between(source, "public static bool TryCopyFrozenOwner(",
 				"public static bool TryManagedCells(");
 			AssertOrdered(copy, "Source.GetIntProperty(NextLayerProperty) != 3",
+				"TryAcceptNewOwnerPrefix(Target, intent, snapshot, lot, 3, true, Source",
 				"KingdomArchitectureRuntime.TryCopyFrozen(Source, Target",
-				"Target.RemoveIntProperty(SchemaProperty)",
 				"Target.SetStringProperty(OutputId(placement)",
 				"Target.SetIntProperty(OutputState(placement), 2)",
 				"Target.SetIntProperty(SchemaProperty, LayoutSchema)",
-				"TryReadOwner(Target");
+				"ExactCopiedOwner(Target, Source");
 
 			string durable = source.Substring(source.IndexOf(
 				"public static bool TryInitializeOwner(", StringComparison.Ordinal));
@@ -161,11 +163,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("lost its published output before settlement", settle);
 			StringAssert.Contains("changed after output publication", settle);
 			AssertOrdered(settle, "CanInsert(Owner, Z, cell", "GameObject.Create(Placement.Blueprint)",
-					"StampComponent(placed, Lot, Intent.SnapshotHash, Placement)",
+					"StampComponent(Owner, placed, Lot, Intent.SnapshotHash, Placement)",
 					"RootStagingOutput(placed)", "Owner.SetStringProperty(idProperty, placed.ID)",
 					"Owner.SetIntProperty(stateProperty, 1)",
 					"cell.AddObject(placed",
-				"bool exactEndpoint = ExactComponent(placed, Z, Intent, Lot, Placement",
+				"bool exactEndpoint = ExactComponent(Owner, placed, Z, Intent, Lot, Placement",
 				"bool exactCustody = Placement.ExistingAuthority",
 				"KingdomFoundingHeartTerminalRules.ExactAddCut(callbackReturned",
 				"Owner.SetIntProperty(stateProperty, 2)");
@@ -180,6 +182,27 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ComponentAnchorProperty", exact);
 			StringAssert.Contains("ComponentHashProperty", exact);
 			StringAssert.Contains("ComponentTokenProperty", exact);
+			StringAssert.Contains(
+				"ExactComponentInt(Item, ComponentSchemaProperty, ComponentSchema)", exact);
+			StringAssert.Contains(
+				"ExactComponentString(Item, KingdomPlots.PlotIdProperty, Lot)", exact);
+			StringAssert.Contains(
+				"ExactComponentString(Item, ComponentSlotProperty, Placement.Slot)", exact);
+			StringAssert.Contains(
+				"ExactComponentInt(Item, ComponentLayerProperty, (int)Placement.Layer)", exact);
+			StringAssert.Contains(
+				"ExactComponentString(Item, ComponentHashProperty, Intent.SnapshotHash)", exact);
+			StringAssert.Contains(
+				"ExactComponentString(Item, ComponentTokenProperty", exact);
+			StringAssert.Contains(
+				"ExactComponentInt(Item, ComponentExistingProperty", exact);
+			StringAssert.Contains(
+				"ExactComponentInt(Item, KingdomPlots.PlotPartProperty", exact);
+			StringAssert.Contains(
+				"ExactOptionalComponentString(Item, ComponentAnchorProperty", exact);
+			StringAssert.Contains(
+				"ExactOptionalComponentInt(Item, ComponentCarriedProperty, 1)", exact);
+			StringAssert.Contains("ExactPendingComponentState(Owner, Item, Intent)", exact);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryWorldPlacement", exact);
 			StringAssert.Contains("return count == 1", exact);
 			StringAssert.Contains("Owner.SetStringProperty(FaultProperty, Failure)", source);
@@ -257,7 +280,7 @@ namespace ThousandAndFirst.Tests
 			string prepare = Between(upgrade, "private static bool TryPrepareImprovementPayload(",
 				"private static bool TryReadImprovementArchitecture(");
 			AssertOrdered(prepare, "KingdomArchitectureRuntime.TryRead(Work",
-				"KingdomArchitectureRuntime.TryPrepareSuccessor(System, Z, before",
+				"KingdomArchitectureRuntime.TryPrepareSuccessorForUpgrade(System, Z, Work",
 				"KingdomArchitectureStamper.TryPreflightUpgrade(System, Z, Work, successor",
 				"KingdomPlots.TryEncodePlotPayload(successor.Rect");
 			Assert.IsFalse(prepare.Contains("Reserve"));
@@ -320,10 +343,134 @@ namespace ThousandAndFirst.Tests
 				"TryStageLayer(Target, Z, ArchitectureLayer.Ground");
 			string receipts = TestMain.ReadRepositoryText(
 				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
-			AssertOrdered(receipts, "Target.SetStringProperty(OutputId(AfterPlacement), id)",
-				"Owner.SetIntProperty(stateProperty, 1)",
-				"StampComponent(exact, Lot, After.SnapshotHash, AfterPlacement)",
-				"Owner.SetIntProperty(stateProperty, 2)");
+			AssertOrdered(receipts,
+				"KingdomArchitectureReceiptPrefixRules.LegalRetainedTarget(state",
+				"TrySetUpgradeInt(Target, OutputState(AfterPlacement), 1",
+				"TrySetUpgradeString(Target, OutputId(AfterPlacement), id",
+				"TrySetUpgradeInt(Owner, stateProperty, 1",
+				"TryRetagUpgradeComponent(Owner, exact, Z, Before, After, Lot",
+				"TrySetUpgradeInt(Target, OutputState(AfterPlacement), 2",
+				"TrySetUpgradeInt(Owner, stateProperty, 2");
+			string retag = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeRetag.cs");
+			AssertOrdered(retag, "Item.RemoveIntProperty(ComponentSchemaProperty)",
+				"Item.SetIntProperty(ComponentCarriedProperty, 1)",
+				"Item.SetIntProperty(r_KingdomScaffold.PendingImprovementSuccessorProperty, 1)",
+				"Item.SetIntProperty(ComponentSchemaProperty, ComponentSchema)");
+		}
+
+		[Test]
+		public void UpgradeComponentsRemainInertUntilSchemaLastRemovalRetirement()
+		{
+			string pending = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.PendingComponents.cs");
+			StringAssert.Contains("A bare carried flag is never activation authority", pending);
+			AssertOrdered(pending, "HasCommittedImprovementRemoval(Owner)",
+				"CommitPendingRetirement(Owner, 1", "item.RemoveIntProperty(",
+				"CommitPendingRetirement(Owner, 2", "RetirePendingRoot(Owner",
+				"TryVerifyComplete(Owner, Z");
+			StringAssert.Contains("phase == 0", pending);
+			StringAssert.Contains("phase == 2", pending);
+			StringAssert.Contains("IsExactPendingImprovementSuccessor(item)", pending);
+			StringAssert.DoesNotContain("if (carried)", pending);
+
+			string survey = TestMain.ReadRepositoryText(
+				"Growth/KingdomSurvey.01b.PendingUpgradeComponents.cs");
+			StringAssert.Contains("HasPendingImprovementSuccessorEvidence(Item)", survey);
+			StringAssert.Contains("pendingTarget", survey);
+			StringAssert.Contains("predecessorReceipt", survey);
+		}
+
+		[Test]
+		public void PaidEnvelopeRetriesAlwaysReproveCurrentGroundAndExactRetagPrefixes()
+		{
+			string application = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
+			string apply = Between(application, "public static bool TryApplyUpgrade(", "\n\t}\n}");
+			AssertOrdered(apply, "TryReadUpgradeReceipt(Owner, Target, Successor, lot, delta",
+				"TryProveEnvelopeGrowth(system, Z, Owner, Target, Successor, true",
+				"TryBeginUpgradeReceipt(Owner, Target, Successor");
+			StringAssert.DoesNotContain("standingPhase", apply);
+			StringAssert.DoesNotContain("TryAcceptFrozenEnvelope", apply);
+
+			string settled = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.EnvelopeSettledOutputs.cs");
+			AssertOrdered(settled, "LegalRetainedTarget(retain, target)",
+				"KingdomConstruction.FindExactId(Z, id", "target == ArchitectureOutputPrefix.Published",
+				"retain == 1", "TryExactRetagPrefix(exact, Z, BeforeIntent, Successor",
+				"Settled.Add(exact)");
+			StringAssert.Contains("UpgradeQuarantine(Owner", settled);
+			StringAssert.Contains("absent, duplicated", settled);
+
+			string receipts = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
+			string read = Between(receipts, "private static bool TryReadUpgradeReceipt(",
+				"private static bool ExactUpgradeState(");
+			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRemove", read);
+			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRetain", read);
+			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
+				"private static bool TryCarryUpgradeSlot(");
+			StringAssert.Contains("!Owner.HasIntProperty(stateProperty)", remove);
+			string carry = Between(receipts, "private static bool TryCarryUpgradeSlot(",
+				"\n\t\t}\n\n\t}");
+			StringAssert.Contains("!Owner.HasIntProperty(stateProperty)", carry);
+		}
+
+		[Test]
+		public void UpgradeRemovalSettlesOnlyAfterGlobalLiveIdAbsence()
+		{
+			string receipts = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
+			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
+				"private static bool TryCarryUpgradeSlot(");
+			Assert.AreEqual(4, remove.Split(new[] { "FindGlobalLiveId" },
+				StringSplitOptions.None).Length - 1);
+			Assert.AreEqual(2, remove.Split(new[] { "GlobalRemovalAftermath" },
+				StringSplitOptions.None).Length - 1);
+			StringAssert.DoesNotContain("FindExactId", remove);
+			AssertOrdered(remove, "FindGlobalLiveId(id, out exact)",
+				"TryRemovableComponent(exact", "Owner.SetIntProperty(stateProperty, 1)",
+				"exact.Destroy(");
+			string callback = remove.Substring(remove.IndexOf("exact.Destroy(",
+				StringComparison.Ordinal));
+			AssertOrdered(callback, "ObserveCurrentTopologyInActive", "FindGlobalLiveId",
+				"GlobalRemovalAftermath", "KingdomExactRemovalAction.ProvedAbsent");
+			StringAssert.Contains("threw after ambiguous physical change", callback);
+			StringAssert.Contains("changed ambiguously during callback", callback);
+		}
+
+		[Test]
+		public void OwnerAndUpgradeWritersRecoverOnlyTypeSafeExactPrefixes()
+		{
+			string owner = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.OwnerReceiptPrefixes.cs");
+			StringAssert.Contains("ExactOrAbsentString", owner);
+			StringAssert.Contains("ExactOrAbsentInt", owner);
+			StringAssert.Contains("ArchitectureOutputPrefix.IdOnly", owner);
+
+			string recovery = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.OutputRecovery.cs");
+			AssertOrdered(recovery, "prefix == ArchitectureOutputPrefix.IdOnly",
+				"TryProveIdFirstOutput(Owner, Z", "Owner.SetIntProperty(OutputState(placement), 1)",
+				"TryReadOwner(Owner, out Intent");
+			StringAssert.Contains("prefix == ArchitectureOutputPrefix.StateOnly", recovery);
+			StringAssert.Contains("Quarantine(Owner", recovery);
+
+			string upgrade = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeReceiptPrefixes.cs");
+			AssertOrdered(upgrade, "TryAcceptUpgradeHeaderPrefix(",
+				"Owner.HasStringProperty(UpgradeSchemaProperty)",
+				"UpgradeStringPrefix(Owner, UpgradeTargetProperty",
+				"UpgradeIntPrefix(Owner, UpgradePhaseProperty, 0)");
+			StringAssert.Contains("Owner.HasIntProperty(UpgradeFaultProperty)", upgrade);
+			string quarantine = Between(upgrade,
+				"internal static bool IsUpgradeQuarantined(",
+				"internal static bool TryQuarantineUpgrade(");
+			StringAssert.Contains("ClassifyUpgradeFault(", quarantine);
+			StringAssert.Contains("ArchitectureUpgradeFaultEvidence.Collision", quarantine);
+			StringAssert.Contains("ArchitectureUpgradeFaultEvidence.Integer", quarantine);
+			StringAssert.Contains("empty or malformed string evidence", quarantine);
+			StringAssert.Contains("return true", quarantine);
 		}
 
 		[Test]

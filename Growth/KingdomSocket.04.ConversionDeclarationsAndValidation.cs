@@ -93,7 +93,7 @@ namespace ThousandAndFirst
 				Failure = "There is nothing there to change.";
 				return false;
 			}
-			if (Building.GetIntProperty("KingdomBuilt") != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building))
 			{
 				Failure = "The settlement converts what it raised. That is not one of its buildings.";
 				return false;
@@ -158,7 +158,7 @@ namespace ThousandAndFirst
 				Failure = KingdomSocketRules.RefuseNotAPlot(newEntry.Name);
 				return false;
 			}
-			if (!KingdomRules.StyleAllows(newEntry.Styles, System.Style))
+			if (!KingdomRules.StyleAllows(newEntry.Styles, KingdomData.StyleKeys(System.Style)))
 			{
 				Failure = "The " + newEntry.Name + " is not built in this city's own style.";
 				return false;
@@ -189,7 +189,7 @@ namespace ThousandAndFirst
 				if (!KingdomWear.CanCarryStableState(Building, out Failure)) return false;
 				KingdomArchitectureIntent standing;
 				if (!KingdomArchitectureRuntime.TryRead(Building, out standing, out _)
-					|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(
 						standing.EncodedSnapshot))
 				{
 					Failure = "That save-era plot has no exact authored transition delta. Strike it and commission fresh.";

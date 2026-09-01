@@ -22,7 +22,9 @@ namespace ThousandAndFirst.Simulation.City
 		internal const int LegacyVersion = 2;
 		internal const int MissionVersion = 3;
 		internal const int ExactDeliveryVersion = 4;
-		internal const int CurrentVersion = 5;
+		internal const int ExpandedDeliveryVersion = 5;
+		internal const int ExpeditionResultVersion = 6;
+		internal const int CurrentVersion = ExpeditionResultVersion;
 		private const int MaxJobs = 16;
 		private const int MaxLegs = 96;
 		private const int MaxChars = 512;
@@ -32,7 +34,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			payload = null;
 			if (value == null || (version != LegacyVersion && version != MissionVersion
-				&& version != ExactDeliveryVersion && version != CurrentVersion)) return false;
+				&& version != ExactDeliveryVersion && version != ExpandedDeliveryVersion
+				&& version != CurrentVersion)) return false;
 			try
 			{
 				KingdomJobTable table;
@@ -59,6 +62,12 @@ namespace ThousandAndFirst.Simulation.City
 							|| canonical.DeliveryPhases[i]
 								> (int)KingdomDeliveryPhase.Quarantined) return false;
 				}
+				if (version < ExpeditionResultVersion)
+					for (int i = 0; i < canonical.Count; i++)
+						if (canonical.ExpeditionDeedDispositions[i] != 0
+							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedPolityIds[i])
+							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedCauseRefs[i])
+							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedFigureRefs[i])) return false;
 				using (MemoryStream stream = new MemoryStream())
 				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
 				{
@@ -106,6 +115,13 @@ namespace ThousandAndFirst.Simulation.City
 							writer.Write(canonical.DeliveryTargetBeforeAmounts[i]);
 							writer.Write(canonical.DeliveryTargetReceiptStates[i]);
 						}
+						if (version >= ExpeditionResultVersion)
+						{
+							writer.Write(canonical.ExpeditionDeedDispositions[i]);
+							WriteText(writer, canonical.ExpeditionDeedPolityIds[i]);
+							WriteText(writer, canonical.ExpeditionDeedCauseRefs[i]);
+							WriteText(writer, canonical.ExpeditionDeedFigureRefs[i]);
+						}
 						writer.Write(canonical.LegCounts[i]);
 					}
 					writer.Write(canonical.LegZoneIds.Count);
@@ -129,7 +145,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			value = null;
 			if (payload == null || (version != LegacyVersion && version != MissionVersion
-				&& version != ExactDeliveryVersion && version != CurrentVersion)) return false;
+				&& version != ExactDeliveryVersion && version != ExpandedDeliveryVersion
+				&& version != CurrentVersion)) return false;
 			try
 			{
 				KingdomJobRegistry read = new KingdomJobRegistry();
@@ -178,6 +195,13 @@ namespace ThousandAndFirst.Simulation.City
 							read.DeliveryTargetBeforeAmounts.Add(reader.ReadInt64());
 							read.DeliveryTargetReceiptStates.Add(reader.ReadInt32());
 						}
+						if (version >= ExpeditionResultVersion)
+						{
+							read.ExpeditionDeedDispositions.Add(reader.ReadInt32());
+							read.ExpeditionDeedPolityIds.Add(ReadText(reader));
+							read.ExpeditionDeedCauseRefs.Add(ReadText(reader));
+							read.ExpeditionDeedFigureRefs.Add(ReadText(reader));
+						}
 						read.LegCounts.Add(reader.ReadInt32());
 					}
 					int legs = reader.ReadInt32();
@@ -197,7 +221,7 @@ namespace ThousandAndFirst.Simulation.City
 								> (int)KingdomDeliveryCargoAuthority.CarryBookManifest
 							|| read.DeliveryPhases[i]
 								> (int)KingdomDeliveryPhase.Quarantined) return false;
-				if (version < ExactDeliveryVersion) read.Normalize();
+				if (version < ExpeditionResultVersion) read.Normalize();
 				KingdomJobTable table;
 				KingdomCityFault fault;
 				if (!read.TryRead(out table, out fault)) return false;

@@ -187,7 +187,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomUpgrade.BuildKeyProperty", "KingdomDelveRules.IsDelve(buildKey)",
 				"ReadState(Head.ZoneID)", "KingdomArchitectureRuntime.SchemaProperty",
 				"KingdomArchitectureRuntime.TryRead(Owner",
-				"KingdomArchitectureRules.IsCurrentSnapshotEncoding(architecture.EncodedSnapshot)");
+				"KingdomArchitectureRules.IsManagedSnapshotEncoding(architecture.EncodedSnapshot)");
 			StringAssert.Contains("Explicit read-only legacy architecture", managed);
 		}
 

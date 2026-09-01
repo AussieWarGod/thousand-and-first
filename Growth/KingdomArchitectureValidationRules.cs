@@ -69,6 +69,95 @@ namespace ThousandAndFirst
 			return Value == ArchitectureFrontage.Heart || Value == ArchitectureFrontage.Road;
 		}
 
+		private static bool KnownClaim(ArchitectureClaim Value)
+		{
+			return Value >= ArchitectureClaim.Unclaimed
+				&& Value <= ArchitectureClaim.LegacyClaimed;
+		}
+
+		private static bool CurrentClaim(ArchitectureClaim Value)
+		{
+			return Value == ArchitectureClaim.Unclaimed || Value == ArchitectureClaim.Yard
+				|| Value == ArchitectureClaim.Building;
+		}
+
+		/// <summary>True for either authored claim or legacy one-bit claimed truth.</summary>
+		public static bool IsClaimed(ArchitectureClaim Value)
+		{
+			return Value != ArchitectureClaim.Unclaimed && KnownClaim(Value);
+		}
+
+		/// <summary>Queries an already-frozen canonical footprint. Malformed rectangles fail closed.</summary>
+		public static bool ContainsFootprintCell(ArchitectureLayoutSnapshot Snapshot, int X, int Y)
+		{
+			return Snapshot != null && ValidFootprint(Snapshot.Width, Snapshot.Height,
+				Snapshot.FootprintX, Snapshot.FootprintY, Snapshot.FootprintWidth,
+				Snapshot.FootprintHeight) && X >= Snapshot.FootprintX && Y >= Snapshot.FootprintY
+				&& X < Snapshot.FootprintX + Snapshot.FootprintWidth
+				&& Y < Snapshot.FootprintY + Snapshot.FootprintHeight;
+		}
+
+		private static bool ValidFootprint(int MapWidth, int MapHeight, int X, int Y,
+			int Width, int Height)
+		{
+			return MapWidth > 0 && MapHeight > 0 && X >= 0 && Y >= 0
+				&& Width > 0 && Height > 0 && (long)X + Width <= MapWidth
+				&& (long)Y + Height <= MapHeight;
+		}
+
+		private static bool TryResolveFootprint(ArchitectureMapDraft Map, int CatalogueWidth,
+			int CatalogueHeight, out int X, out int Y, out int Width, out int Height,
+			out string Failure)
+		{
+			X = 0; Y = 0; Width = 0; Height = 0; Failure = null;
+			if (Map == null || CatalogueWidth < 0 || CatalogueHeight < 0
+				|| (CatalogueWidth == 0) != (CatalogueHeight == 0))
+				return Fail("catalogue footprint dimensions are malformed", out Failure);
+			if (Map.HasFootprint && !ValidFootprint(Map.Width, Map.Height, Map.FootprintX,
+				Map.FootprintY, Map.FootprintWidth, Map.FootprintHeight))
+				return Fail("map footprint is outside its canonical bounds", out Failure);
+			if (CatalogueWidth > 0)
+			{
+				if (!Map.HasFootprint || Map.FootprintWidth != CatalogueWidth
+					|| Map.FootprintHeight != CatalogueHeight)
+					return Fail("map footprint must explicitly match catalogue dimensions", out Failure);
+				X = Map.FootprintX; Y = Map.FootprintY;
+				Width = Map.FootprintWidth; Height = Map.FootprintHeight;
+				return true;
+			}
+			if (Map.HasFootprint && (Map.FootprintX != 0 || Map.FootprintY != 0
+				|| Map.FootprintWidth != Map.Width || Map.FootprintHeight != Map.Height))
+				return Fail("a fill-plot catalogue tier may only declare the exact full map footprint",
+					out Failure);
+			Width = Map.Width; Height = Map.Height;
+			return ValidFootprint(Map.Width, Map.Height, X, Y, Width, Height)
+				|| Fail("resolved footprint is malformed", out Failure);
+		}
+
+		private static bool TryValidateCurrentFootprint(ArchitectureLayoutSnapshot Snapshot,
+			out string Failure)
+		{
+			Failure = null;
+			if (Snapshot == null || Snapshot.Cells == null || !KnownRoof(Snapshot.BaseRoof)
+				|| !ValidFootprint(Snapshot.Width, Snapshot.Height,
+				Snapshot.FootprintX, Snapshot.FootprintY, Snapshot.FootprintWidth,
+				Snapshot.FootprintHeight))
+				return Fail("snapshot footprint or catalogue roof is malformed", out Failure);
+			if (!ContainsFootprintCell(Snapshot, Snapshot.MainX, Snapshot.MainY))
+				return Fail("$building and main must lie inside the frozen footprint", out Failure);
+			if (!TryValidateCurrentRoof(Snapshot, out Failure)) return false;
+			for (int i = 0; i < Snapshot.Cells.Count; i++)
+			{
+				ArchitectureCellState cell = Snapshot.Cells[i];
+				if (cell == null || !CurrentClaim(cell.Claim))
+					return Fail("current snapshot contains legacy or unknown claim truth", out Failure);
+				if (cell.Claim == ArchitectureClaim.Building
+					&& !ContainsFootprintCell(Snapshot, cell.X, cell.Y))
+					return Fail("building claim or cover lies outside the frozen footprint", out Failure);
+			}
+			return true;
+		}
+
 		private static bool KnownLayer(ArchitectureLayer Value)
 		{
 			return Value >= ArchitectureLayer.Ground && Value <= ArchitectureLayer.Object;
@@ -82,6 +171,12 @@ namespace ThousandAndFirst
 		private static bool KnownCover(ArchitectureCover Value)
 		{
 			return Value >= ArchitectureCover.Open && Value <= ArchitectureCover.Natural;
+		}
+
+		private static bool KnownRoof(KingdomPlotRules.RoofState Value)
+		{
+			return Value >= KingdomPlotRules.RoofState.Open
+				&& Value <= KingdomPlotRules.RoofState.Carved;
 		}
 
 		private static bool KnownAccess(ArchitectureAnchorAccess Value)
@@ -121,7 +216,7 @@ namespace ThousandAndFirst
 				int x = X + dx[i];
 				int y = Y + dy[i];
 				if (x < 0 || x >= Width || y < 0 || y >= Height) return true;
-				if (!Cells[CellKey(x, y, Width)].Claim) return true;
+				if (!IsClaimed(Cells[CellKey(x, y, Width)].Claim)) return true;
 			}
 			return false;
 		}

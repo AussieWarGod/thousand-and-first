@@ -208,18 +208,18 @@ namespace ThousandAndFirst
 		private static bool TryEncodeHistoricalV8ToV14ForTests(KingdomSettlement Value,
 			int Version, string Label, out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV16ForTests(Value, Version, Label,
+			return TryEncodeHistoricalV8ToV17ForTests(Value, Version, Label,
 				out Payload, out Failure);
 		}
 
-		private static bool TryEncodeHistoricalV8ToV16ForTests(KingdomSettlement Value,
+		private static bool TryEncodeHistoricalV8ToV17ForTests(KingdomSettlement Value,
 			int Version, string Label, out byte[] Payload, out string Failure)
 		{
 			Payload = null;
 			Failure = null;
 			try
 			{
-				if (Version < PhysicalHappeningVersion || Version > PhysicalFirstGuestVersion)
+				if (Version < PhysicalHappeningVersion || Version > ArrivalCadenceVersion)
 					throw new ArgumentOutOfRangeException(nameof(Version));
 				if (Value != null && (Value.LifecycleBook == null
 					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion

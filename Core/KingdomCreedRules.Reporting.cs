@@ -25,7 +25,8 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Founder-facing clause naming what a city believes. Lower-case, fit to follow a comma.
+		/// Founder-facing umbrella clause naming a city's covenant or allegiance. Lower-case,
+		/// fit to follow a comma and truthful for religious and non-religious kinds.
 		/// </summary>
 		/// <param name="CreedDisplayName">The creed faction's display name, or null for a city of
 		/// mixed people.</param>

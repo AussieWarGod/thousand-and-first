@@ -29,10 +29,10 @@ namespace ThousandAndFirst.Tests
 
 		// --- Yard geometry: inside the rect, outside the walls -----------------------------
 
-		[TestCase(Size.Small, 5, 4, 3, 2)]
+		[TestCase(Size.Small, 6, 4, 4, 2)]
 		[TestCase(Size.Medium, 8, 6, 6, 4)]
-		[TestCase(Size.Large, 12, 9, 10, 7)]
-		[TestCase(Size.Huge, 20, 14, 18, 12)]
+		[TestCase(Size.Large, 12, 10, 10, 8)]
+		[TestCase(Size.Huge, 20, 18, 18, 16)]
 		public void YardInteriorIsTheRectWithoutItsWalls(Size Size, int Width, int Height, int InteriorWidth, int InteriorHeight)
 		{
 			Rect rect = At(10, 10, Size);

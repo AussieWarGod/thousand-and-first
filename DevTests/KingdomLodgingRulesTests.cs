@@ -81,6 +81,45 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(false, arrivals[3].DefaultValue);
 		}
 
+		[Test]
+		public void RuntimeHousingUsesExactPhysicalBenefitsAndNeverCatalogueSupply()
+		{
+			string source = KingdomLodgingLogicalSource.Read();
+			StringAssert.Contains("Survey.TryBenefits", source);
+			StringAssert.Contains("Benefits.ReadingForRoot(Home.IDIfAssigned)", source);
+			StringAssert.Contains("Benefits.AmountForRoot(Home.IDIfAssigned, \"roof\")", source);
+			StringAssert.Contains("Benefits.TagsForRoot(Home.IDIfAssigned)", source);
+			StringAssert.Contains("reading.Designation.Cells", source);
+			StringAssert.Contains("reading.Designation.ProviderId, \"taf.architecture\"", source);
+			StringAssert.Contains("LogBenefitFailure", source);
+			StringAssert.DoesNotContain("KingdomQol.OfferOf", source);
+			StringAssert.DoesNotContain("KingdomUpgrade.DesignKeyOf", source);
+			StringAssert.DoesNotContain("HasPart(\"Bed\")", source);
+			StringAssert.DoesNotContain("TryParseTally", source);
+			StringAssert.DoesNotContain("BedsPerBunk", source);
+		}
+
+		[Test]
+		public void DeclaredClosenessCannotImpersonateAdoptedOrForeignRoomGeometry()
+		{
+			string source = TestMain.ReadRepositoryText(
+				"Growth/KingdomLodging.HomesAndReporting.cs");
+			int authored = source.IndexOf(
+				"reading.Designation.ProviderId, \"taf.architecture\"",
+				System.StringComparison.Ordinal);
+			int declared = source.IndexOf("Declared.TryGetValue", authored,
+				System.StringComparison.Ordinal);
+			int exactCells = source.IndexOf("reading.Designation.Cells.Count", declared,
+				System.StringComparison.Ordinal);
+			int physicalRoof = source.IndexOf(
+				"Benefits.AmountForRoot(Home.IDIfAssigned, \"roof\")", exactCells,
+				System.StringComparison.Ordinal);
+			Assert.GreaterOrEqual(authored, 0);
+			Assert.Greater(declared, authored);
+			Assert.Greater(exactCells, declared);
+			Assert.Greater(physicalRoof, exactCells);
+		}
+
 		// --- ParseTags: comma list -> trimmed, non-empty tokens ------------------------------
 
 		[Test]
@@ -668,7 +707,7 @@ namespace ThousandAndFirst.Tests
 		// --- The shipped catalogue, design by design ------------------------------------------
 
 		// Footprint cells and beds exactly as KingdomBuildings.xml declares them: a tier's own
-		// Footprint where it has one, and the whole plot (S 5x4, M 8x6, L 12x9, XL 20x14) where it
+		// Footprint where it has one, and the whole plot (S 6x4, M 8x6, L 12x10, XL 20x18) where it
 		// fills its plot. If a design's Carries or Footprint is rebalanced, this table is where the
 		// rung it lands on has to be re-agreed.
 		[TestCase("tent", 6, 2, Quarters.Packed)]
@@ -676,9 +715,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("hut", 12, 3, Quarters.Close)]
 		[TestCase("hutyard", 20, 5, Quarters.Close)]
 		[TestCase("house", 48, 8, Quarters.Roomed)]
-		[TestCase("court", 280, 40, Quarters.Roomed)]
+		[TestCase("court", 360, 40, Quarters.Roomed)]
 		[TestCase("finehouse", 48, 4, Quarters.Private)]
-		[TestCase("manor", 108, 6, Quarters.Private)]
+		[TestCase("manor", 120, 6, Quarters.Private)]
 		public void ClosenessFromDensity_TheShippedDesignsLandOnTheRungsTheRulingNames(string design, int cells, int beds, Quarters expected)
 		{
 			// Addendum 4c's own examples: tent and bunk row Packed, hut Close, stone house Roomed,
@@ -688,7 +727,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase("housecourt", 48, 18, Quarters.Packed)]
-		[TestCase("terrace", 108, 26, Quarters.Close)]
+		[TestCase("terrace", 120, 26, Quarters.Close)]
 		public void ClosenessFromDensity_TheTwoMultiDwellingDesignsAreExactlyWhereTheDerivationReadsWrong(string design, int cells, int beds, Quarters derived)
 		{
 			// Three households around a square and a whole terraced street put many beds on little

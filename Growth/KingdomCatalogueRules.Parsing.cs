@@ -75,7 +75,7 @@ namespace ThousandAndFirst
 			{
 				if (Tally[i].Kind == kind)
 				{
-					total += Tally[i].Amount;
+					total = SaturatingCounterAdd(total, Tally[i].Amount);
 				}
 			}
 			return total;
@@ -94,7 +94,7 @@ namespace ThousandAndFirst
 			{
 				if (!IsBindingSupport(Tally[i].Kind))
 				{
-					total += Tally[i].Amount;
+					total = SaturatingCounterAdd(total, Tally[i].Amount);
 				}
 			}
 			return total;

@@ -43,11 +43,13 @@ namespace ThousandAndFirst
 			}
 			if (option.Action != KingdomElapsedOptionAction.Run) return;
 			KingdomCatalogueRules.SupportTally here = ScopedSupports(System, Z, Survey);
+			KingdomCatalogueRules.SupportTally ordinary = OrdinarySupports(Survey);
 			// Written down before it is used, so this zone's own sighting is today's on every
 			// pass and the fold below never counts this ground out of a memory of it.
-			RecordZone(System, Z, Survey, here, Survey.StorageCapacity, TimeTicks);
+			RecordZone(System, Z, Survey, ordinary, Survey.StorageCapacity, TimeTicks);
 			List<KingdomSubsidenceRules.ZoneSighting> others = OtherZones(System, Z);
 			KingdomCatalogueRules.SupportTally supports = KingdomSubsidenceRules.CityTally(here, others);
+			KingdomHostedArcology.AddBindingProjection(System, Z, ref supports);
 			int storage = CityStorageCapacity(System, Z, Survey.StorageCapacity);
 			string binding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
 			int level = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);

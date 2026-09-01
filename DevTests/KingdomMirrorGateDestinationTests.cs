@@ -147,7 +147,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ReAnchorHere()", runtime);
 			StringAssert.Contains("GameObject.Validate(gateObject)", runtime);
 			StringAssert.Contains("ReferenceEquals(Actor, The.Player)", runtime);
-			StringAssert.Contains("KingdomBuilt", runtime);
+			StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt(gateObject)", runtime);
+			StringAssert.DoesNotContain("GetIntProperty(\"KingdomBuilt\")", runtime);
 			StringAssert.Contains("KingdomGrid", runtime);
 			StringAssert.DoesNotContain("GetZone(", runtime);
 			StringAssert.DoesNotContain("ZoneManager", runtime);

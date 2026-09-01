@@ -64,11 +64,55 @@ namespace ThousandAndFirst
 		}
 	}
 
+	/// <summary>One immutable attended reading of a paid interior. It contains observed output,
+	/// never a promise copied from the catalogue.</summary>
+	[Serializable]
+	public sealed class KingdomHostedObservation
+	{
+		public int Version = 1;
+		public string RootId;
+		public string LotKey;
+		public string ReceiptRevision;
+		public string InteriorZoneId;
+		public string AnchorId;
+		public long ObservedTick;
+		public int Roof;
+		public int Luxury;
+		public int Food;
+		public string Fault;
+
+		public bool Valid()
+		{
+			bool identity = Version == 1 && Bounded(RootId, 512) && Bounded(LotKey, 64)
+				&& Bounded(ReceiptRevision, 128) && Bounded(InteriorZoneId, 512)
+				&& Bounded(AnchorId, 512) && ObservedTick >= 0L
+				&& Roof >= 0 && Luxury >= 0 && Food >= 0 && Optional(Fault, 512);
+			return identity && (string.IsNullOrEmpty(Fault)
+				|| (Roof == 0 && Luxury == 0 && Food == 0));
+		}
+
+		public KingdomHostedObservation Copy()
+		{
+			return (KingdomHostedObservation)MemberwiseClone();
+		}
+
+		private static bool Bounded(string V, int Max)
+		{
+			return !string.IsNullOrEmpty(V) && V.Length <= Max && V.IndexOf('\0') < 0;
+		}
+
+		private static bool Optional(string V, int Max)
+		{
+			return string.IsNullOrEmpty(V) || (V.Length <= Max && V.IndexOf('\0') < 0);
+		}
+	}
+
 	/// <summary>Bounded versioned binary envelope; delimiters inside engine IDs stay harmless.</summary>
 	public static class KingdomHostedArcologyReceiptCodec
 	{
 		private const string AuthorityMagic = "TAF-HOSTED-AUTHORITY-V1";
 		private const string LotMagic = "TAF-HOSTED-LOT-V1";
+		private const string ObservationMagic = "TAF-HOSTED-OBSERVATION-V1";
 
 		public static string EncodeAuthority(KingdomHostedArcologyAuthority R)
 		{
@@ -101,6 +145,34 @@ namespace ThousandAndFirst
 					LotKey = G(b), JobId = G(b), RootId = G(b), Supports = G(b), Remaining = b.ReadInt32(),
 					LastTick = b.ReadInt64(), StaffingBasis = b.ReadInt32(), RequiresWater = b.ReadBoolean(), Fault = G(b) };
 				return End(b) && R.Valid(); } } catch { R = null; return false; }
+		}
+
+		public static string EncodeObservation(KingdomHostedObservation R)
+		{
+			if (R == null || !R.Valid()) return "";
+			return Write(delegate(BinaryWriter w) { w.Write(ObservationMagic); w.Write(R.Version);
+				S(w, R.RootId); S(w, R.LotKey); S(w, R.ReceiptRevision);
+				S(w, R.InteriorZoneId); S(w, R.AnchorId); w.Write(R.ObservedTick);
+				w.Write(R.Roof); w.Write(R.Luxury); w.Write(R.Food); S(w, R.Fault); });
+		}
+
+		public static bool TryDecodeObservation(string Encoded,
+			out KingdomHostedObservation R)
+		{
+			R = null;
+			try
+			{
+				using (BinaryReader b = Read(Encoded))
+				{
+					if (b == null || b.ReadString() != ObservationMagic) return false;
+					R = new KingdomHostedObservation { Version = b.ReadInt32(), RootId = G(b),
+						LotKey = G(b), ReceiptRevision = G(b), InteriorZoneId = G(b),
+						AnchorId = G(b), ObservedTick = b.ReadInt64(), Roof = b.ReadInt32(),
+						Luxury = b.ReadInt32(), Food = b.ReadInt32(), Fault = G(b) };
+					return End(b) && R.Valid();
+				}
+			}
+			catch { R = null; return false; }
 		}
 
 		private static string Write(Action<BinaryWriter> Body) { using (MemoryStream s = new MemoryStream())

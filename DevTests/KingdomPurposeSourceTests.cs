@@ -130,7 +130,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Name=\"r_KingdomRealmGranary\" Inherits=\"r_KingdomGranary\"", objects);
 			StringAssert.Contains("Name=\"r_KingdomLarderCapacity\" Value=\"384\"", objects);
 			StringAssert.Contains("DisplayName=\"hosted arcology\"", objects);
-			StringAssert.Contains("part Name=\"Interior\" Cell=\"TAFArcologyAtrium\"", objects);
+			StringAssert.Contains("part Name=\"Interior\" Cell=\"TAFArcology\" X=\"1\" Y=\"1\" Z=\"10\"", objects);
 			StringAssert.Contains("DisplayName=\"vertical lodging ward works\"", objects);
 			StringAssert.Contains("DisplayName=\"hydroponic terrace works\"", objects);
 			Assert.IsFalse(objects.Contains("it has weather of its own"));
@@ -139,7 +139,7 @@ namespace ThousandAndFirst.Tests
 			string testing = Source("TESTING.md");
 			string testingWords = string.Join(" ", testing.Split((char[])null,
 				StringSplitOptions.RemoveEmptyEntries));
-			StringAssert.Contains("Pass 37 — Purposeful cities and exact cargo; arcology review hold",
+			StringAssert.Contains("Pass 37 — Purposeful cities, exact cargo, and hosted-arcology native acceptance",
 				testingWords);
 			StringAssert.Contains("Returning the same object restores the exact preview", testingWords);
 			StringAssert.Contains("an ordinary worked-metal item cannot substitute", testingWords);
@@ -184,6 +184,25 @@ namespace ThousandAndFirst.Tests
 
 			string objects = Source("ObjectBlueprints.xml");
 			Assert.AreEqual(5, Occurrences(objects, "<part Name=\"r_KingdomPurposeWork\" />"));
+		}
+
+		[Test]
+		public void EaterPurposeWorksUseRetainedFabricWithoutBorrowingMachineAuthority()
+		{
+			string architecture = Source(Path.Combine("Architecture",
+				"KingdomArchitectures-PurposePortfolio.xml"));
+			StringAssert.Contains("Key=\"purpose-deepbore-eater-xl0\" Width=\"20\" Height=\"18\"",
+				architecture);
+			StringAssert.Contains("Key=\"purpose-greatfoundry-eater-xl0\" Width=\"20\" Height=\"18\"",
+				architecture);
+			Assert.AreEqual(2, Occurrences(architecture,
+				"Key=\"eater\" Priority=\"80\" Styles=\"eater\""));
+			Assert.GreaterOrEqual(Occurrences(architecture,
+				"Anchors=\"style:retained-machine\""), 2);
+			StringAssert.Contains("never a borrowed power source", architecture);
+			StringAssert.Contains("remain the exact inert purpose fixtures", architecture);
+			StringAssert.DoesNotContain("ElectricalPower", architecture);
+			StringAssert.DoesNotContain("NormCore", architecture);
 		}
 
 		private static int Occurrences(string source, string token)

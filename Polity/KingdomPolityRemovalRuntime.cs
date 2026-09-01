@@ -56,8 +56,7 @@ namespace ThousandAndFirst
 				{
 					Failure = "polity retirement ground ownership is ambiguous at " + row.Key; return false;
 				}
-				Locators.Add(new KingdomPolityRetirementGroundLocator
-					{ ZoneId = row.Key, SettlementId = row.Value });
+				Locators.Add(new KingdomPolityRetirementGroundLocator(row.Key, row.Value));
 			}
 			Locators.Sort((a, b) => string.CompareOrdinal(a.ZoneId, b.ZoneId)); return true;
 		}

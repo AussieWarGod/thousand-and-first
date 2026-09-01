@@ -45,8 +45,6 @@ namespace ThousandAndFirst
 			internal bool Settler;
 			internal bool TradePost;
 			internal bool Built;
-			internal bool Bed;
-			internal bool Kitchen;
 			internal bool Work;
 			internal bool Defence;
 			internal bool Larder;
@@ -57,7 +55,6 @@ namespace ThousandAndFirst
 			internal bool PlotWorks;
 			internal bool Improvement;
 			internal bool Notice;
-			internal bool Shrine;
 			internal bool Guest;
 			internal bool NotableGuest;
 			internal bool CausalPilgrim;
@@ -139,8 +136,6 @@ namespace ThousandAndFirst
 		public readonly List<GameObject> Improvements = new List<GameObject>();
 
 		public readonly List<GameObject> Notices = new List<GameObject>();
-
-		public readonly List<GameObject> Shrines = new List<GameObject>();
 
 		public readonly List<GameObject> Guests = new List<GameObject>();
 

@@ -15,6 +15,10 @@ namespace ThousandAndFirst
 
 		private static List<KingdomStyleDefinition> _styleDefinitions;
 
+		private static List<KingdomCreedDraft> _creedDrafts;
+
+		private static List<KingdomCreedDefinition> _creedDefinitions;
+
 		private static List<KingdomRules.DealEntry> _deals;
 
 		public static List<KingdomRules.DealEntry> Deals
@@ -57,6 +61,21 @@ namespace ThousandAndFirst
 				EnsureLoaded();
 				return _styles;
 			}
+		}
+
+		/// <summary>Finds authored semantics for a faction key. Unknown and old-save values return
+		/// false and therefore remain neutral, non-theological affiliations.</summary>
+		public static bool TryGetCreedDefinition(string Name, out KingdomCreedDefinition Definition)
+		{
+			EnsureLoaded();
+			return KingdomCreedKindRules.TryFind(_creedDefinitions, Name, out Definition);
+		}
+
+		/// <summary>The hard behavior gate for belief, conversion, and consecration.</summary>
+		public static bool CreedUsesTheology(string Name)
+		{
+			EnsureLoaded();
+			return KingdomCreedKindRules.UsesTheology(_creedDefinitions, Name);
 		}
 
 		/// <summary>Canonicalizes a style against the merged registry.</summary>
@@ -138,6 +157,8 @@ namespace ThousandAndFirst
 			_styles = null;
 			_styleDrafts = null;
 			_styleDefinitions = null;
+			_creedDrafts = null;
+			_creedDefinitions = null;
 			_deals = null;
 			EnsureLoaded();
 		}

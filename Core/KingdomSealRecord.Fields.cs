@@ -163,6 +163,22 @@ namespace ThousandAndFirst
 
 		public List<string> DeadCauses = new List<string>();
 
+		/// <summary>Zero means a schema-4/5 or otherwise unresolved institutional legacy.
+		/// Current records carry the exact bounded phenotype committed by the live polity profile.</summary>
+		public int ProfileSchema;
+
+		/// <summary>Exact craft-derived equipment band. Never inferred from growth stage.</summary>
+		public int TechnologyBand;
+
+		/// <summary>Canonical population body keys only; never actor or object identities.</summary>
+		public List<string> CanonicalBodyKeys = new List<string>();
+
+		/// <summary>Seal-safe commitment of projected technology and body phenotype only.</summary>
+		public string SourceProfileDigest = "";
+
+		/// <summary>Self-commitment over this bounded profile projection.</summary>
+		public string ProfileProvenanceDigest = "";
+
 		/// <summary>True once the interregnum has been drawn and the state fixed.</summary>
 		public bool IsResolved => InterregnumRoll >= 0 && KingdomRules.IsKnownState((KingdomRules.InheritedState)InheritedState);
 

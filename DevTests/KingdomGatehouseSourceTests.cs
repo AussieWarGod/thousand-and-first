@@ -95,8 +95,7 @@ namespace ThousandAndFirst.Tests
 				"Root.SetIntProperty(SchemaProperty, Schema)",
 				"TryExactSatellites(Root, Cell.ParentZone");
 
-			string drive = Source(Path.Combine("Growth",
-				"KingdomGatehouse.ProjectionEvidence.cs"));
+			string drive = KingdomGatehouseLogicalSource.ReadProjectionEvidence();
 			string driver = Slice(drive, "private static bool TryDriveProjectionSlot(",
 				"private static bool TryCreateStagedSatellite(");
 			Ordered(driver, "Root.SetStringProperty(idKey, expectedId)",
@@ -133,8 +132,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryCallbackBoundaryReprovesEnvelopeFootprintAndDerivedIdentities()
 		{
-			string projection = Source(Path.Combine("Growth",
-				"KingdomGatehouse.Projection.cs"));
+			string projection = KingdomGatehouseLogicalSource.ReadProjection();
 			string loop = Slice(projection, "for (int i = 0; i < KingdomGatehouseRules.SatelliteCount; i++)",
 				"Root.SetIntProperty(SchemaProperty, Schema)");
 			Ordered(loop, "bool driven = TryDriveProjectionSlot(",
@@ -157,8 +155,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("GameObject.FindByID", exact);
 			StringAssert.DoesNotContain("FindObjectByID", KingdomGatehouseLogicalSource.Read());
 
-			string callbacks = Source(Path.Combine("Growth",
-				"KingdomGatehouse.ProjectionEvidence.cs"));
+			string callbacks = KingdomGatehouseLogicalSource.ReadProjectionEvidence();
 			string create = Slice(callbacks, "private static bool TryCreateStagedSatellite(",
 				"private static bool TryPlaceStagedSatellite(");
 			Ordered(create, "GameObject.Create(Spec.Blueprint)",
@@ -228,7 +225,7 @@ namespace ThousandAndFirst.Tests
 				"public GameObject SatelliteCustody"
 			}, StringSplitOptions.None).Length - 1);
 
-			string runtime = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string runtime = KingdomGatehouseLogicalSource.ReadRuntime();
 			string apply = Slice(runtime, "internal static bool TryApplyRootForm(",
 				"private static bool TryAttachV2ProjectionCustody(");
 			Ordered(apply, "TryDecode(PlanReceipt", "plan.ReceiptVersion == 1",
@@ -299,7 +296,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LegacyAndV2MaterialDoctrineKeepSixOutputsAndOpenRoad()
 		{
-			string rules = Source(Path.Combine("Growth", "KingdomGatehouseRules.cs"));
+			string rules = KingdomGatehouseLogicalSource.ReadRules();
 			StringAssert.Contains("public const string StoneBlueprint = \"r_KingdomStructureSandstone\"",
 				rules);
 			StringAssert.Contains("public const string WatchBlueprint = \"r_KingdomFixtureBenchTimber\"",
@@ -333,8 +330,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(continuation, "PrepareSuccessor(successor, current)",
 				"cell.AddObject(successor)", "KingdomGatehouse.TryResumeProjection(successor, cell)");
 
-			string callbacks = Source(Path.Combine("Growth",
-				"KingdomGatehouse.ProjectionEvidence.cs"));
+			string callbacks = KingdomGatehouseLogicalSource.ReadProjectionEvidence();
 			string create = Slice(callbacks, "private static bool TryCreateStagedSatellite(",
 				"private static bool TryPlaceStagedSatellite(");
 			Ordered(create, "GameObject.Create(Spec.Blueprint)",
@@ -343,7 +339,7 @@ namespace ThousandAndFirst.Tests
 				"StampProjectionSatellite(item", "ExactProjectionMarks(item",
 				"SetProjectionCustody(Part, Index, item)");
 			StringAssert.Contains("TrySatelliteRender(Plan, Index", callbacks);
-			string gateRuntime = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string gateRuntime = KingdomGatehouseLogicalSource.ReadRuntime();
 			string rootPalette = Slice(gateRuntime,
 				"private static bool ExactRootPalette(",
 				"internal static bool TryApplyRootForm(");
@@ -367,7 +363,7 @@ namespace ThousandAndFirst.Tests
 			string scan = Source(Path.Combine("Growth",
 				"KingdomGatehouse.ProjectionEvidenceScan.cs"));
 			StringAssert.Contains("!ExactSatellitePalette(Item, Plan, Index)", scan);
-			string recovery = Source(Path.Combine("Growth", "KingdomGatehouse.Projection.cs"));
+			string recovery = KingdomGatehouseLogicalSource.ReadProjection();
 			StringAssert.Contains("MaterialClaimMatches(Plan", recovery);
 			StringAssert.Contains("ExactRootPalette(Root, Plan)", recovery);
 			string readPlan = Slice(gateRuntime, "public static bool TryReadPlan(",
@@ -406,7 +402,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("TryResolveForm", validation + strike);
 			StringAssert.DoesNotContain("CopyForm", validation + strike);
 
-			string runtime = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string runtime = KingdomGatehouseLogicalSource.ReadRuntime();
 			string read = Slice(runtime, "public static bool TryReadPlan(",
 				"public static bool TryFreezeStrikeTargets(");
 			// The stored receipt version decides which custody part may be present: a v2 form
@@ -417,8 +413,7 @@ namespace ThousandAndFirst.Tests
 				": Root.GetPart<r_KingdomGatehouseProjectionV2>() != null",
 				"|| Root.GetPart<r_KingdomGatehouseProjectionV1Pending>() != null)");
 			StringAssert.Contains("Root.GetPart<r_KingdomGatehouseProjectionV2>() != null", read);
-			string projection = Source(Path.Combine("Growth",
-				"KingdomGatehouse.Projection.cs"));
+			string projection = KingdomGatehouseLogicalSource.ReadProjection();
 			string state = Slice(projection,
 				"private static bool ProjectionStateReceiptExact(",
 				"private static bool TryProjectionContext(");
@@ -431,15 +426,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PaidPendingV1LandsStoredEngineIdsThenRetiresOnlyItsMigrationCarrier()
 		{
-			string runtime = Source(Path.Combine("Growth", "KingdomGatehouse.cs"));
+			string runtime = KingdomGatehouseLogicalSource.ReadRuntime();
 			string apply = Slice(runtime, "internal static bool TryApplyRootForm(",
 				"public static bool TryAudit(");
 			Ordered(apply, "plan.ReceiptVersion == 1",
 				"TryAttachV1PendingProjectionCustody(Root",
 				"new r_KingdomGatehouseProjectionV1Pending()", "Root.AddPart(staged)");
 
-			string projection = Source(Path.Combine("Growth",
-				"KingdomGatehouse.Projection.cs"));
+			string projection = KingdomGatehouseLogicalSource.ReadProjection();
 			string context = Slice(projection, "private static bool TryProjectionContext(",
 				"private static bool ProjectionAuthorityStillExact(");
 			Ordered(context, "TryDecode(Job.Payload, out Plan)",
@@ -447,8 +441,7 @@ namespace ThousandAndFirst.Tests
 				"MaterialClaimMatches(Plan", "ScaffoldMatches(Scaffold, Plan)");
 			StringAssert.DoesNotContain("Plan.ReceiptVersion != 2", context);
 
-			string evidence = Source(Path.Combine("Growth",
-				"KingdomGatehouse.ProjectionEvidence.cs"));
+			string evidence = KingdomGatehouseLogicalSource.ReadProjectionEvidence();
 			string legacyDriver = Slice(evidence,
 				"private static bool TryDriveLegacyProjectionSlot(",
 				"private static bool TryAdoptUnpublishedLegacyCustody(");

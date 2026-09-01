@@ -66,6 +66,36 @@ namespace ThousandAndFirst
 			};
 		}
 
+		private static void WriteProfileV7(BinaryWriter W, KingdomPolityProfileRevision V)
+		{
+			WriteProfile(W, V); WriteList(W, V.ExpressionCues,
+				KingdomPolityProfileExpressionCatalogue.MaxCues, WriteExpressionCue);
+		}
+
+		private static KingdomPolityProfileRevision ReadProfileV7(BinaryReader R)
+		{
+			KingdomPolityProfileRevision result = ReadProfile(R);
+			result.ExpressionCues = ReadList(R,
+				KingdomPolityProfileExpressionCatalogue.MaxCues, ReadExpressionCue);
+			return result;
+		}
+
+		private static void WriteExpressionCue(BinaryWriter W, KingdomPolityExpressionCue V)
+		{
+			W.Write((byte)V.Kind); WriteString(W, V.ExpressionKey); W.Write(V.Weight);
+			W.Write((byte)V.SourceKind); WriteString(W, V.SourceValueKey);
+			WriteString(W, V.SourceRef); WriteString(W, V.ReasonFactId);
+		}
+
+		private static KingdomPolityExpressionCue ReadExpressionCue(BinaryReader R)
+		{
+			return new KingdomPolityExpressionCue { Kind = (KingdomPolityExpressionKind)R.ReadByte(),
+				ExpressionKey = ReadString(R), Weight = R.ReadInt32(),
+				SourceKind = (KingdomPolityProfileFactKind)R.ReadByte(),
+				SourceValueKey = ReadString(R), SourceRef = ReadString(R),
+				ReasonFactId = ReadString(R) };
+		}
+
 		private static void WriteLoadout(BinaryWriter W, KingdomPolityLoadoutPolicy V)
 		{
 			if (V == null) throw new InvalidDataException("Polity loadout is null.");

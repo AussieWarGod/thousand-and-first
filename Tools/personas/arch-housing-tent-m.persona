@@ -1,0 +1,6 @@
+# First generated housing envelope: one truthful canvas shelter inside a medium reserved dooryard.
+DESCRIPTION=medium tent lot stages for shelter scale and dooryard circulation review
+REQUEST=arch-housing-tent-m;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

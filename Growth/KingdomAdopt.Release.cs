@@ -10,8 +10,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Releases a structure or marker previously accepted by <see cref="AdoptExisting"/> or
 		/// <see cref="AdoptWork"/>. Undoes exactly what adoption itself set &mdash; the built
-		/// mark, the adoption mark, any staffing/manning/hand-cranked/defence values adoption
-		/// applied, and (only if adoption itself was the one to set it)
+		/// mark, the adoption mark, and (only if adoption itself was the one to set it)
 		/// <see cref="StoresProperty"/> or <see cref="LarderProperty"/> &mdash; and destroys the
 		/// object only when it was <see cref="WorkMarkerBlueprint"/>, which existed solely to
 		/// carry the mark. Everything the founder actually built stands exactly where it stood.
@@ -44,25 +43,25 @@ namespace ThousandAndFirst
 				Failure = Adopted.ShortDisplayName + " was never adopted; there is nothing to release.";
 				return false;
 			}
+			if (!KingdomDesignationReleaseAuthority.TryCanRelease(System, Z, Adopted,
+				out Failure)) return false;
 			string key = Adopted.GetStringProperty(AdoptedKeyProperty);
 			string mark = Adopted.GetStringProperty(AdoptedMarkProperty);
 			string name = Adopted.ShortDisplayName;
-			Adopted.SetIntProperty(BuiltProperty, 0);
-			KingdomGovernanceScope.Commit("release adoption");
 			// Plot receipt owns several properties. Retire it while AdoptedProperty still makes
 			// an interrupted release retryable; only then publish the general adoption removal.
+			KingdomAdoptionDesignation.Clear(Adopted);
 			KingdomPlots.ReleaseAdoptedPlot(Adopted);
-			Adopted.SetIntProperty(AdoptedProperty, 0);
-			Adopted.SetStringProperty(AdoptedKeyProperty, null, RemoveIfNull: true);
-			Adopted.SetStringProperty(AdoptedMarkProperty, null, RemoveIfNull: true);
-			Adopted.SetIntProperty(StaffNeededProperty, 0);
-			Adopted.SetIntProperty(ThresholdManningProperty, 0);
-			Adopted.SetIntProperty(HandCrankedProperty, 0);
-			Adopted.SetIntProperty(DefenceProperty, 0);
 			if (mark == StoresProperty || mark == LarderProperty)
 			{
-				Adopted.SetIntProperty(mark, 0);
+				ClearTyped(Adopted, mark);
 			}
+			ClearTyped(Adopted, AdoptedKeyProperty);
+			ClearTyped(Adopted, AdoptedMarkProperty);
+			ClearTyped(Adopted, BuiltProperty);
+			// Positive ownership marker last: any interrupted earlier phase remains retryable.
+			ClearTyped(Adopted, AdoptedProperty);
+			KingdomGovernanceScope.Commit("release adoption");
 			bool wasMarker = Adopted.Blueprint == WorkMarkerBlueprint;
 			if (wasMarker)
 			{

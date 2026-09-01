@@ -44,7 +44,7 @@ namespace ThousandAndFirst
 					out newSecondOutput, out newRouteDigest, out adoptsSecondEndpoint,
 					out Failure)) return false;
 			}
-			if (Work.IDIfAssigned != expectedWork || Work.GetIntProperty("KingdomBuilt") != 1)
+			if (Work.IDIfAssigned != expectedWork || !KingdomUpgrade.IsFunctionallyBuilt(Work))
 				return Fail("Only the exact next-token purpose work may start this operation.",
 					out Failure);
 			if (!KingdomPurposePortfolioRules.CanStartOperationAtRevision(

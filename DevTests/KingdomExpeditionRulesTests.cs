@@ -175,7 +175,8 @@ namespace ThousandAndFirst.Tests
 				(int)KingdomExpeditionOutcome.PickedClean);
 			KingdomJobRow terminal = expedition.WithExpeditionResolution(
 				(int)KingdomExpeditionOutcome.ResidentMissingFromBoundGround, 2400L,
-				provedGround);
+				provedGround, KingdomExpeditionDeedDisposition.NotApplicable, null, null,
+				null);
 			KingdomJobTable table;
 			KingdomCityFault fault;
 			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { terminal }, out table, out fault));

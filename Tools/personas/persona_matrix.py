@@ -55,6 +55,7 @@ BOOKKEEPING = frozenset(
 SCRIPT_VERBS = (
     "anchor",
     "flatten",
+    "frame",
     "ground",
     "list",
     "realize",
@@ -71,8 +72,10 @@ MAX_ADVANCE_TURNS = 10000
 RESERVED_VERBS = (
     "advance",
     "anchor",
+    "arcology",
     "capture",
     "flatten",
+    "frame",
     "ground",
     "help",
     "list",

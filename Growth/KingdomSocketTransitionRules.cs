@@ -8,7 +8,7 @@ namespace ThousandAndFirst
 	/// <summary>Pure validation for the mergeable socket-transition schema.</summary>
 	public static class KingdomSocketTransitionRules
 	{
-		public const int Schema = 1;
+		public const int Schema = 2;
 		public const int MaxTransitions = 256;
 		public const int MaxKeyChars = 128;
 		public const long MaxWorkTicks = 100000000L;
@@ -16,7 +16,7 @@ namespace ThousandAndFirst
 		public const int ReceiptSchema = 2;
 
 		public static bool TryParse(string Key, string From, string To, string Type,
-			string Size, string Water, string Materials, string Ticks,
+			string Size, string Mode, string Water, string Materials, string Ticks,
 			out KingdomSocketTransition Transition, out string Failure)
 		{
 			Transition = null;
@@ -24,11 +24,14 @@ namespace ThousandAndFirst
 			int water;
 			long ticks;
 			ArchitectureLotSize size;
+			ArchitectureTransitionMode mode;
 			KingdomMaterialTally materials;
 			string materialFailure;
 			string type = Fold(Type);
 			if (!ValidKey(Key) || !ValidKey(From) || !ValidKey(To) || From == To
 				|| !ValidKey(type) || !TrySize(Size, out size)
+				|| !KingdomArchitectureTransitionRules.TryParseMode(Mode, out mode)
+				|| mode == ArchitectureTransitionMode.None
 				|| !int.TryParse(Water, NumberStyles.None, CultureInfo.InvariantCulture, out water)
 				|| water < 0
 				|| !long.TryParse(Ticks, NumberStyles.None, CultureInfo.InvariantCulture, out ticks)
@@ -40,7 +43,7 @@ namespace ThousandAndFirst
 					+ " has malformed identity, typed lot, water, materials, or work";
 				return false;
 			}
-			Transition = new KingdomSocketTransition(Key, From, To, type, size, water,
+			Transition = new KingdomSocketTransition(Key, From, To, type, size, mode, water,
 				materials, ticks);
 			return true;
 		}
@@ -52,7 +55,7 @@ namespace ThousandAndFirst
 			Snapshot = null;
 			if (!ValidDeclaration(Source)) return false;
 			Snapshot = new KingdomSocketTransition(Source.Key, Source.FromBuildKey,
-				Source.ToBuildKey, Source.LotType, Source.LotSize, Source.WaterDrams,
+				Source.ToBuildKey, Source.LotType, Source.LotSize, Source.Mode, Source.WaterDrams,
 				Source.Materials, Source.WorkTicks);
 			return true;
 		}
@@ -64,7 +67,8 @@ namespace ThousandAndFirst
 			if (!ValidDeclaration(Left) || !ValidDeclaration(Right)
 				|| Left.Key != Right.Key || Left.FromBuildKey != Right.FromBuildKey
 				|| Left.ToBuildKey != Right.ToBuildKey || Left.LotType != Right.LotType
-				|| Left.LotSize != Right.LotSize || Left.WaterDrams != Right.WaterDrams
+				|| Left.LotSize != Right.LotSize || Left.Mode != Right.Mode
+				|| Left.WaterDrams != Right.WaterDrams
 				|| Left.WorkTicks != Right.WorkTicks) return false;
 			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 				if (Left.MaterialUnits((KingdomMaterial)i)
@@ -78,13 +82,14 @@ namespace ThousandAndFirst
 		{
 			Digest = null;
 			if (!ValidDeclaration(Declaration)) return false;
-			StringBuilder canonical = new StringBuilder("socket-transition-v1");
+			StringBuilder canonical = new StringBuilder("socket-transition-v2");
 			AppendTerm(canonical, Declaration.Key);
 			AppendTerm(canonical, Declaration.FromBuildKey);
 			AppendTerm(canonical, Declaration.ToBuildKey);
 			AppendTerm(canonical, Declaration.LotType);
 			AppendTerm(canonical, ((int)Declaration.LotSize).ToString(
 				CultureInfo.InvariantCulture));
+			AppendTerm(canonical, KingdomArchitectureTransitionRules.ModeKey(Declaration.Mode));
 			AppendTerm(canonical, Declaration.WaterDrams.ToString(CultureInfo.InvariantCulture));
 			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 				AppendTerm(canonical, Declaration.MaterialUnits((KingdomMaterial)i).ToString(
@@ -221,6 +226,8 @@ namespace ThousandAndFirst
 				&& ValidKey(Declaration.LotType) && Fold(Declaration.LotType) == Declaration.LotType
 				&& (int)Declaration.LotSize >= (int)ArchitectureLotSize.Small
 				&& (int)Declaration.LotSize <= (int)ArchitectureLotSize.Huge
+				&& Declaration.Mode != ArchitectureTransitionMode.None
+				&& KingdomArchitectureTransitionRules.IsKnown(Declaration.Mode)
 				&& Declaration.WaterDrams >= 0 && Declaration.WorkTicks >= 1L
 				&& Declaration.WorkTicks <= MaxWorkTicks && Declaration.HasMaterials();
 		}

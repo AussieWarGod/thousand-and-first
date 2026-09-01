@@ -67,6 +67,15 @@ namespace ThousandAndFirst
 				Payload = null;
 				return false;
 			}
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+				out KingdomPlotRules.PlotRect footprint, out string footprintFailure))
+			{
+				AnnounceOnce(System, Marker, "The plan staked at "
+					+ KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. "
+					+ footprintFailure);
+				Payload = null;
+				return false;
+			}
 			MainX = architecture.MainWorldX;
 			MainY = architecture.MainWorldY;
 			Cell main = zone.GetCell(MainX, MainY);
@@ -78,10 +87,18 @@ namespace ThousandAndFirst
 				return false;
 			}
 			bool carved = KingdomPlotRules.IsUnderground(zone.Z);
+			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
+				out KingdomPlotRules.RoofState roof, out string roofFailure))
+			{
+				AnnounceOnce(System, Marker, "The plan staked at "
+					+ KingdomPresentation.Rich(System.KingdomDisplayName) + " waits. "
+					+ roofFailure);
+				Payload = null;
+				return false;
+			}
 			TotalTicks = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(Entry.BuildTicks, System.ZoneDistricts.Values),
-				grid.CellsOf(Rect), PlannedFootprint(zone, Rect, spec),
-				KingdomPlotRules.RoofOnGround(spec.Roof, carved), carved);
+				grid.CellsOf(Rect), footprint, roof, carved);
 			return TotalTicks > 0L;
 		}
 

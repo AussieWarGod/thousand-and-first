@@ -30,7 +30,8 @@ namespace ThousandAndFirst
 				Seat == null || Standings == null || RealmPolicyToward == null ||
 				RegardSpilloverRemainders == null ||
 				RegardSpilloverObservedReputation == null || SettlementTopology == null ||
-				!CanonicalTopologyReferences(Seat, SettlementTopology, Away, Seceded) ||
+				!CanonicalTopologyReferences(Seat, SettlementTopology,
+					ReadLegacyAwayProjection(), Seceded) ||
 				!ExactArchivedSettlements(RealmId, Seat, SettlementTopology, SettlementIds))
 				return Refuse("archived settlement graph is opaque, aliased, or lacks exact topology",
 					out Failure);

@@ -99,7 +99,7 @@ namespace ThousandAndFirst.Tests
 			0, 10, 34, 0, 0, 6)]
 		[TestCase("fungal", "r_KingdomStructureMushroomWall", "r_KingdomFixtureCushionCanvas",
 			24, 4, 16, 0, 0, 6)]
-		[TestCase("gyre", "r_KingdomStructureLimestone", "r_KingdomFixtureChairMarble",
+		[TestCase("moonstair", "Black Marble", "r_KingdomFixtureChairMarble",
 			0, 0, 0, 28, 16, 6)]
 		[TestCase("eater", "r_KingdomRubbleWall", "r_KingdomFixtureChairStone",
 			0, 0, 0, 34, 0, 16)]
@@ -149,7 +149,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("common", 0, 0, 0, 22, 0, 3)]
 		[TestCase("verdant", 0, 5, 17, 0, 0, 3)]
 		[TestCase("fungal", 12, 2, 8, 0, 0, 3)]
-		[TestCase("gyre", 0, 0, 0, 14, 8, 3)]
+		[TestCase("moonstair", 0, 0, 0, 14, 8, 3)]
 		[TestCase("eater", 0, 0, 0, 17, 0, 8)]
 		public void EveryV2RepairPricesFromItsFrozenPaidForm(string style,
 			int mud, int brush, int timber, int stone, int marble, int scrap)
@@ -176,7 +176,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryV2FormKeepsTopologyAcrossAllFourFrontiers()
 		{
-			string[] styles = new string[] { "common", "verdant", "fungal", "gyre", "eater" };
+			string[] styles = new string[] { "common", "verdant", "fungal", "moonstair", "eater" };
 			KingdomRules.Frontier[] edges = new KingdomRules.Frontier[]
 			{
 				KingdomRules.Frontier.North, KingdomRules.Frontier.East,
@@ -211,7 +211,7 @@ namespace ThousandAndFirst.Tests
 			"190", "&g", "&g", "G", "Items/sw_bench.bmp")]
 		[TestCase("fungal", "&m", "&m", "M", "007", "&y^Y", "&y", "Y",
 			"009", "&m", "&m", "M", "Items/sw_cushion1.bmp")]
-		[TestCase("gyre", "&c", "&W", "Y", "177", "&W^c", "&W", "Y",
+		[TestCase("moonstair", "&c", "&W", "Y", "176", "&y^K", "&K", "y",
 			"190", "&W", "&W", "Y", "Items/sw_bench.bmp")]
 		[TestCase("eater", "&r", "&y", "C", "178", "&r", "&w", "w",
 			"190", "&r", "&w", "C", "Items/sw_bench.bmp")]
@@ -507,7 +507,7 @@ namespace ThousandAndFirst.Tests
 		public void EveryV2FormBindsCallbackRecoveryAndStrikeIdentityToFrozenBytes()
 		{
 			const string legacy = "v1,1,40,1,39,1,41,3";
-			string[] styles = new string[] { "common", "verdant", "fungal", "gyre", "eater" };
+			string[] styles = new string[] { "common", "verdant", "fungal", "moonstair", "eater" };
 			for (int s = 0; s < styles.Length; s++)
 			{
 				Assert.IsTrue(KingdomGatehouseRules.TryPlan(80, 25,

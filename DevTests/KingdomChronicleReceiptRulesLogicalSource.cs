@@ -8,6 +8,7 @@ namespace ThousandAndFirst.Tests
 		private static readonly string[] Paths = new string[]
 		{
 			"Chronicle/KingdomChronicleReceiptRules.cs",
+			"Chronicle/KingdomChronicleReceiptRules.Disputed.cs",
 			"Chronicle/KingdomChronicleReceiptRules.RegistryRead.cs",
 			"Chronicle/KingdomChronicleReceiptRules.RowParsing.cs",
 			"Chronicle/KingdomChronicleReceiptRules.RegistryWrite.cs"

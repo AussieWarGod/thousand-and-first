@@ -8,7 +8,8 @@ namespace ThousandAndFirst
 	{
 		/// <summary>Builds the ordinary bounded physical index without legacy migration,
 		/// citizenship publication, ledger work, or economic simulation. Used only to recover
-		/// a durable custody receipt on an attended former claim.</summary>
+		/// a durable custody receipt on an attended former claim or to take an isolated
+		/// hosted-floor physical observation.</summary>
 		internal static KingdomSurvey TakeCustodyOnly(Zone zone)
 		{
 			KingdomSurvey survey = new KingdomSurvey { Ground = zone };

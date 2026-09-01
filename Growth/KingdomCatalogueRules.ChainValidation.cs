@@ -16,13 +16,15 @@ namespace ThousandAndFirst
 					"building " + Entry.Key + " improves into " + Entry.SuccessorKey + ", which no building declares" + Layered(Entry)));
 				return;
 			}
-			// Upgrades climb within a plot; sizes compete across plots. A design that improved into
-			// a larger one would be an in-place metamorphosis onto ground the settlement never
-			// cleared, and would quietly make the whole size-versus-stacking decision free.
-			if (successor.Plot != Entry.Plot && !IsHeartGrowth(Entry, successor))
+			// Upgrades ordinarily climb within one plot. The two bounded exceptions are surveyed
+			// founding-heart accretion and an adjacent ordinary envelope whose exact frozen
+			// architecture lineage carries explicit expansion authority. The runtime separately
+			// proves that every newly annexed cell is free before any payment or mutation.
+			if (successor.Plot != Entry.Plot && !IsHeartGrowth(Entry, successor)
+				&& !IsAuthoredEnvelopeGrowth(Entry, successor))
 			{
 				Findings.Add(new CatalogueFinding(Entry.Key, "UpgradesTo", CatalogueSeverity.Fault,
-					"building " + Entry.Key + " stands on " + PlotWord(Entry.Plot) + " and improves into " + successor.Key + ", which wants " + PlotWord(successor.Plot) + "; an improvement climbs within its own plot" + Layered(Entry) + Layered(successor)));
+					"building " + Entry.Key + " stands on " + PlotWord(Entry.Plot) + " and improves into " + successor.Key + ", which wants " + PlotWord(successor.Plot) + "; a cross-plot improvement needs an adjacent frozen architecture lineage with explicit expansion authority" + Layered(Entry) + Layered(successor)));
 			}
 			// Footprints climb within the plot. A successor that stands on LESS ground is not wrong,
 			// but it hands back walled ground as yard, which is worth an author seeing.
@@ -85,6 +87,20 @@ namespace ThousandAndFirst
 				&& Entry.SuccessorKey == Successor.Key
 				&& Entry.Plot == KingdomPlotRules.HeartSizeForRung(from)
 				&& Successor.Plot == KingdomPlotRules.HeartSizeForRung(to);
+		}
+
+		/// <summary>An ordinary catalogue link may annex only the next named plot size and only when
+		/// the already-materialised architecture catalogue proved this exact edge. This local shape
+		/// check prevents a mistaken true value from waiving non-plots, shrinking, or size skips.</summary>
+		private static bool IsAuthoredEnvelopeGrowth(CatalogueEntry Entry,
+			CatalogueEntry Successor)
+		{
+			return Entry != null && Successor != null && Entry.SuccessorEnvelopeGrowth
+				&& Entry.SuccessorKey == Successor.Key
+				&& KingdomPlotRules.HeartRungOf(Entry.Key) == 0
+				&& KingdomPlotRules.HeartRungOf(Successor.Key) == 0
+				&& Entry.Plot >= KingdomPlotRules.PlotSize.Small
+				&& (int)Successor.Plot == (int)Entry.Plot + 1;
 		}
 
 		/// <summary>

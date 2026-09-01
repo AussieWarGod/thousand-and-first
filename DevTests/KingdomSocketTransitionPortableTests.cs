@@ -95,11 +95,11 @@ namespace ThousandAndFirst.Tests
 		}
 
 		private static KingdomSocketTransition Route(string Key = ExpectedKey, string From = "tent",
-			string To = "hut", string Type = "housing", string Size = "S", string Water = "4",
+			string To = "hut", string Type = "housing", string Size = "S", string Mode = "renovate", string Water = "4",
 			string Materials = "timber:4,mud:2", string Ticks = "1350")
 		{
 			Assert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
-				Water, Materials, Ticks, out KingdomSocketTransition route, out string failure),
+				Mode, Water, Materials, Ticks, out KingdomSocketTransition route, out string failure),
 				failure);
 			return route;
 		}

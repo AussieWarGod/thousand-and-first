@@ -13,6 +13,7 @@ namespace ThousandAndFirst
 		public KingdomPolityFigureOrigin Origin;
 		public string CauseRef;
 		public string ChronicleRef;
+		public string DeedSummary;
 	}
 
 	public static partial class KingdomPolityRules
@@ -39,7 +40,8 @@ namespace ThousandAndFirst
 				FigureId = figureId, PolityId = Facts.PolityId, DisplayName = Facts.DisplayName,
 				RoleKey = Facts.RoleKey, Origin = Facts.Origin,
 				Phase = KingdomPolityFigurePhase.Active, CauseRef = Facts.CauseRef,
-				ChronicleRef = Facts.ChronicleRef, ResidentId = Facts.ResidentId,
+				ChronicleRef = Facts.ChronicleRef, DeedSummary = Facts.DeedSummary,
+				ResidentId = Facts.ResidentId,
 				ResidentSettlementId = Facts.SettlementId
 			};
 			KingdomPolityNamedFigureRecord existing = KingdomPolityAuthority.Figure(Ledger, figureId);
@@ -105,6 +107,7 @@ namespace ThousandAndFirst
 			if (F == null || !SemanticId(F.PolityId) ||
 				!TypedId(F.SettlementId, "taf:settlement:v1:") || F.ResidentId < 1 ||
 				!Text(F.DisplayName, true) || !role ||
+				!KingdomPolityAmbientTransactionRules.SafeText(F.DeedSummary, true) ||
 				!deed || !SemanticId(F.CauseRef) ||
 				(deed && !F.CauseRef.StartsWith("taf:fact:deed:", StringComparison.Ordinal)) ||
 				(!string.IsNullOrEmpty(F.ChronicleRef) && !SemanticId(F.ChronicleRef)))
@@ -115,7 +118,8 @@ namespace ThousandAndFirst
 		private static bool PromotionRole(string Role)
 		{
 			return Role == "guard" || Role == "patrol" || Role == "courier" ||
-				Role == "trader" || Role == "migrant" || Role == "envoy";
+				Role == "trader" || Role == "migrant" || Role == "envoy" ||
+				Role == "salvager";
 		}
 
 		private static bool ExactPromotion(KingdomPolityNamedFigureRecord A,
@@ -124,7 +128,8 @@ namespace ThousandAndFirst
 			return A.PolityId == E.PolityId && A.DisplayName == E.DisplayName &&
 				A.RoleKey == E.RoleKey && A.Origin == E.Origin &&
 				A.Phase == KingdomPolityFigurePhase.Active && A.CauseRef == E.CauseRef &&
-				A.ChronicleRef == E.ChronicleRef && string.IsNullOrEmpty(A.ConclusionRef) &&
+				A.ChronicleRef == E.ChronicleRef && A.DeedSummary == E.DeedSummary &&
+				string.IsNullOrEmpty(A.ConclusionRef) &&
 				A.ResidentId == E.ResidentId &&
 				A.ResidentSettlementId == E.ResidentSettlementId;
 		}

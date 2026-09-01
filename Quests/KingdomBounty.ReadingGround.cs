@@ -166,7 +166,7 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					if (System.Away != null && System.Away.ClaimedZones.Contains(id))
+					if (System.NonSeatClaimsZone(id))
 					{
 						continue;
 					}

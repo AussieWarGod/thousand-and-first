@@ -1,8 +1,14 @@
 {
   "OptionDisplayFullscreen": "No",
+  "OptionDisplayBrightness": "0",
+  "OptionDisplayContrast": "0",
+  "OptionDisplayScanlines": "Yes",
   "OptionMusicBackground": "No",
   "OptionAllowCSMods": "Yes",
   "OptionModernUI": "Yes",
+  "OptionPrereleaseStageScale": "auto",
+  "OptionPlayScale": "Cover",
+  "OptionTileScale": "1",
   "OptionShowAdvancedOptions": "Yes",
   "OptionShowQuickstart": "Yes",
   "r_TAF_OptionDevLog": "Yes"

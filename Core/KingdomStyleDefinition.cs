@@ -8,6 +8,7 @@ namespace ThousandAndFirst
 	public sealed class KingdomStyleDefinition
 	{
 		public string Name;
+		public string[] Aliases;
 		public string[] TerrainTokens;
 		public string[] RegionTokens;
 		public KingdomStyleStratum Stratum;

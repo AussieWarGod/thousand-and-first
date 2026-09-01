@@ -1,0 +1,6 @@
+# Direct comparison with the watchhouse distinguishes programme growth from empty floor growth.
+DESCRIPTION=large barracks stages for garrison programme and circulation review
+REQUEST=arch-defense-barracks-l;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,defense,progression,taste

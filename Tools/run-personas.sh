@@ -23,6 +23,9 @@
 #
 #   TAF_PERSONA_REPORT=<path>            default Tools/PortableOutput/personas-report.tsv
 #   TAF_PERSONA_TIMEOUT=<seconds>        overrides every persona's own TIMEOUT
+#   TAF_PERSONA_CAPTURE_DIR=<path>        publish one native PNG only after an asserted PASS;
+#                                         failed assertion/capture keeps the prior good PNG
+#   TAF_PERSONA_SEED=<#int>               optional exact seed reused by every selected persona
 #   TAF_QUD_ROOT=<path>                  another licensed install
 #
 # Exit status is nonzero when any persona is not PASS.
@@ -34,9 +37,13 @@ PERSONA_DIR="$REPO/Tools/personas"
 MATRIX="$PERSONA_DIR/persona_matrix.py"
 PREPARE="$REPO/Tools/prepare-scenario.sh"
 LAUNCHER="$REPO/Tools/run-scenario.ps1"
+CAPTURE="$REPO/Tools/capture-game-window.ps1"
+LOG_CHECK="$REPO/Tools/check-player-log.sh"
 REPORT="${TAF_PERSONA_REPORT:-$REPO/Tools/PortableOutput/personas-report.tsv}"
 REPORT_DIR="$(dirname "$REPORT")"
+CAPTURE_DIR="${TAF_PERSONA_CAPTURE_DIR:-}"
 mkdir -p "$REPORT_DIR"
+[ -z "$CAPTURE_DIR" ] || mkdir -p "$CAPTURE_DIR"
 POLL_SECONDS=5
 
 QUD_ROOT_DEFAULT="/mnt/f/SteamLibrary/steamapps/common/Caves of Qud"
@@ -171,38 +178,62 @@ wipe_profiles() {
 	done
 }
 
+# Copy a live output through a same-directory temporary name. A retry gets its own target name, so
+# its evidence cannot erase the first attempt that caused it. The caller decides whether absence is
+# lawful; a present file that cannot be archived is always a runner failure.
+archive_file() {
+	local source="$1" target="$2" temp="${2}.tmp.$$"
+	rm -f -- "$temp"
+	if ! cp -- "$source" "$temp" || ! mv -f -- "$temp" "$target"; then
+		rm -f -- "$temp"
+		return 1
+	fi
+}
+
 # ---- one persona ------------------------------------------------------------------------------
 
 # Sets VERDICT and DETAIL. Never exits: one persona's fault must not end the matrix.
 run_persona() {
-	local persona="$1" root journal timeout waited terminal problems warnings
+	local persona="$1" attempt="${2:-1}" root journal archived_journal player_log
+	local archived_player_log log_problem
+	local timeout waited terminal problems warnings capture_problem archive_problem artifact
+	local capture_temp capture_target prepare_log launch_log capture_log
+	local -a prepare_args
 	VERDICT=FAIL
 	DETAIL=""
 	load_persona "$persona"
 	timeout="${TAF_PERSONA_TIMEOUT:-${P_TIMEOUT:-300}}"
+	artifact="$persona"
+	[ "$attempt" -le 1 ] || artifact="$persona-retry$attempt"
+	prepare_log="$REPORT_DIR/prepare-$artifact.log"
+	launch_log="$REPORT_DIR/launch-$artifact.log"
+	capture_log="$REPORT_DIR/capture-$artifact.log"
 
 	stop_game
 	wipe_profiles
 	root="$(mktemp -d /mnt/c/taf-scenario.XXXXXX)" || { DETAIL="no scenario root"; return; }
 	journal="$root/scenario-journal.tsv"
+	player_log="$root/Player.log"
+	prepare_args=("$root")
+	[ -z "${TAF_PERSONA_SEED:-}" ] || prepare_args+=("$TAF_PERSONA_SEED")
 
 	if ! TAF_REQUEST="$P_REQUEST" \
 		TAF_SCENARIO_SCRIPT="$P_SCRIPT" \
 		TAF_SCENARIO_START="$P_START" \
 		TAF_SCENARIO_EXTRA_VERBS="$P_VERBS" \
 		TAF_QUD_ROOT="$QUD_ROOT" \
-		"$PREPARE" "$root" > "$REPORT_DIR/prepare-$persona.log" 2>&1
+		"$PREPARE" "${prepare_args[@]}" > "$prepare_log" 2>&1
 	then
-		DETAIL="prepare refused: $(tail -n 3 "$REPORT_DIR/prepare-$persona.log" | tr '\n\t' '  ')"
+		DETAIL="prepare refused: $(tail -n 3 "$prepare_log" | tr '\n\t' '  ')"
 		return
 	fi
 
 	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
 		-File "$(wslpath -w "$LAUNCHER")" \
 		-Root "$(wslpath -w "$root")" \
-		-Game "$(wslpath -w "$GAME")" > "$REPORT_DIR/launch-$persona.log" 2>&1
+		-Game "$(wslpath -w "$GAME")" > "$launch_log" 2>&1
 	then
-		DETAIL="launch refused: $(tail -n 3 "$REPORT_DIR/launch-$persona.log" | tr '\n\t' '  ')"
+		DETAIL="launch refused: $(tail -n 3 "$launch_log" | tr '\n\t' '  ')"
 		stop_game
 		return
 	fi
@@ -220,31 +251,102 @@ run_persona() {
 		sleep "$POLL_SECONDS"
 		waited=$((waited + POLL_SECONDS))
 	done
-	stop_game
 
+	# Freeze every available diagnostic while Qud is still alive. Assertion reads the archived
+	# terminal snapshot, not a mutable file that the next profile wipe will destroy. Player.log is
+	# especially important when the runner never armed and produced no journal.
+	archive_problem=""
+	archived_journal="$REPORT_DIR/journal-$artifact.tsv"
+	archived_player_log="$REPORT_DIR/player-$artifact.log"
+	if [ -f "$journal" ] && ! archive_file "$journal" "$archived_journal"; then
+		archive_problem="could not archive live journal: $archived_journal"
+	fi
+	if [ ! -f "$player_log" ]; then
+		[ -z "$archive_problem" ] || archive_problem="$archive_problem; "
+		archive_problem="${archive_problem}live Player.log is absent"
+	elif ! archive_file "$player_log" "$archived_player_log"; then
+		[ -z "$archive_problem" ] || archive_problem="$archive_problem; "
+		archive_problem="${archive_problem}could not archive live Player.log"
+	fi
+	if [ -n "$archive_problem" ]; then
+		DETAIL="$archive_problem"
+		stop_game
+		return
+	fi
+	if [ ! -x "$LOG_CHECK" ]; then
+		DETAIL="TAF Player.log checker is unavailable: $LOG_CHECK"
+		stop_game
+		return
+	fi
+	if ! log_problem="$("$LOG_CHECK" "$archived_player_log" 2>&1)"; then
+		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
+			| tr '\n\t' '  ')"
+		stop_game
+		return
+	fi
 	if [ ! -f "$journal" ]; then
 		VERDICT=TIMEOUT
 		DETAIL="no journal after ${timeout}s; the runner never armed"
+		stop_game
 		return
 	fi
 	if [ -z "$terminal" ]; then
 		VERDICT=TIMEOUT
-		DETAIL="no terminal row after ${timeout}s; last row: $(tail -n 1 "$journal" \
+		DETAIL="no terminal row after ${timeout}s; last row: $(tail -n 1 "$archived_journal" \
 			| cut -c1-160 | tr '\t' ' ')"
+		stop_game
 		return
 	fi
-
-	warnings="$(python3 "$MATRIX" warnings "$journal" 2>/dev/null)"
-	if problems="$(python3 "$MATRIX" assert "$(persona_path "$persona")" "$journal" 2>&1)"; then
+	if ! terminal="$(python3 "$MATRIX" terminal "$archived_journal" 2>/dev/null)" || \
+		[ -z "$terminal" ]
+	then
+		DETAIL="archived journal has no readable terminal row: $archived_journal"
+		stop_game
+		return
+	fi
+	warnings="$(python3 "$MATRIX" warnings "$archived_journal" 2>/dev/null)"
+	if problems="$(python3 "$MATRIX" assert "$(persona_path "$persona")" \
+		"$archived_journal" 2>&1)"
+	then
 		VERDICT=PASS
-		DETAIL="$terminal; $(grep -c . "$journal") journal row(s)"
+		DETAIL="$terminal; $(grep -c . "$archived_journal") journal row(s)"
 	else
 		DETAIL="$problems"
 	fi
 	[ -z "$warnings" ] || DETAIL="$DETAIL; verb providers refused: $warnings"
-	# The profile is wiped before the next persona, so the journal - the only evidence a
-	# failure leaves - is archived beside the report first.
-	[ ! -f "$journal" ] || cp -f "$journal" "$REPORT_DIR/journal-$persona.tsv" || true
+
+	# A PNG is evidence for this exact asserted run, not merely for a process that reached a terminal
+	# row. Keep the prior published image until both the assertion and new capture have succeeded.
+	capture_problem=""
+	if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]; then
+		capture_target="$CAPTURE_DIR/$persona.png"
+		capture_temp="$CAPTURE_DIR/.$artifact.$$.png"
+		rm -f -- "$capture_temp"
+		if [ ! -f "$CAPTURE" ]; then
+			capture_problem="capture helper is missing: $CAPTURE"
+		elif ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+			-File "$(wslpath -w "$CAPTURE")" \
+			-Output "$(wslpath -w "$capture_temp")" \
+			> "$capture_log" 2>&1
+		then
+			capture_problem="capture refused: $(tail -n 3 "$capture_log" | tr '\n\t' '  ')"
+			rm -f -- "$capture_temp"
+		elif [ "$(od -An -tx1 -N8 "$capture_temp" 2>/dev/null | tr -d ' \n')" != \
+			"89504e470d0a1a0a" ]
+		then
+			capture_problem="capture helper returned a non-PNG file"
+			rm -f -- "$capture_temp"
+		elif ! mv -f -- "$capture_temp" "$capture_target"; then
+			capture_problem="capture succeeded but atomic publication failed: $capture_target"
+			rm -f -- "$capture_temp"
+		fi
+	fi
+	if [ -n "$capture_problem" ]; then
+		[ -z "$DETAIL" ] || DETAIL="$DETAIL; "
+		DETAIL="$DETAIL$capture_problem"
+		VERDICT=FAIL
+	fi
+	stop_game
 }
 
 # ---- the matrix -------------------------------------------------------------------------------
@@ -254,11 +356,11 @@ printf 'persona\tverdict\tdetail\n' > "$REPORT"
 failed=0
 for persona in "${PERSONAS[@]}"; do
 	echo "=== $persona"
-	run_persona "$persona"
+	run_persona "$persona" 1
 	# One retry absorbs launch-level flakes (a Unity boot race killed one clean persona in
 	# eight live launches); a persona that fails twice is a real red, and the retry is named.
 	if [ "$VERDICT" = TIMEOUT ]; then
-		run_persona "$persona"
+		run_persona "$persona" 2
 		[ "$VERDICT" != PASS ] || DETAIL="$DETAIL (passed on retry after a launch flake)"
 	fi
 	printf '%s\t%s\t%s\n' "$persona" "$VERDICT" "$(printf '%s' "$DETAIL" | tr '\n\t' '  ')" \

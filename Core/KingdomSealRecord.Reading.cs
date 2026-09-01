@@ -12,7 +12,8 @@ namespace ThousandAndFirst
 			Fault = KingdomSealFault.None;
 			Detail = "";
 			string[] canonical = (Schema == 1) ? CanonicalKeysV1 :
-				(Schema == 2 ? CanonicalKeysV2 : (Schema == 4 ? CanonicalKeysV4 : CanonicalKeys));
+				(Schema == 2 ? CanonicalKeysV2 : (Schema == 4 ? CanonicalKeysV4 :
+				(Schema == 5 ? CanonicalKeysV5 : CanonicalKeys)));
 			HashSet<string> known = new HashSet<string>(canonical);
 			for (int i = 0; i < Body.Keys.Count; i++)
 			{
@@ -213,6 +214,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			record.Withered = withered == 1L;
+			if (!TryReadProfile(Schema, Body, record, ref Fault, ref Detail)) return false;
 			if ((record.Status == KingdomSealStatus.Living || record.Status == KingdomSealStatus.Retired)
 				&& (record.CauseText.Length > 0 || record.CauseKind.Length > 0 || record.CauseTurn > 0L))
 			{
@@ -233,6 +235,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 
+			record.WireSchema = Schema;
 			Record = record;
 			return true;
 		}

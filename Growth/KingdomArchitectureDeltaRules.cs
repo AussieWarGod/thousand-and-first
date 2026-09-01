@@ -12,142 +12,100 @@ namespace ThousandAndFirst
 		// --- Exact tier delta ---------------------------------------------------------------
 
 		/// <summary>
-		/// Builds exact scenery work while refusing a moved main or changed old stateful fixture.
-		/// Main behavior object is intentionally outside both snapshots and must survive in runtime.
+		/// Builds exact scenery work under the incoming mode frozen by the successor snapshot.
 		/// </summary>
 		public static bool TryBuildDelta(ArchitectureLayoutSnapshot Before,
 			ArchitectureLayoutSnapshot After, out ArchitectureLayoutDelta Delta, out string Failure)
 		{
+			return TryBuildDelta(Before, After, After == null
+				? ArchitectureTransitionMode.None : After.IncomingTransitionMode,
+				out Delta, out Failure);
+		}
+
+		/// <summary>
+		/// Mode-explicit form used by declared socket routes. Additive modes retain every
+		/// predecessor placement; AdditiveExpand also admits a larger envelope. Renovate may rebuild
+		/// stateless fabric in one envelope; RenovateExpand admits that rebuild while growing it.
+		/// Protected state remains the same physical placement; moving it needs a separately
+		/// registered handover not present here. Replacement is never disguised as in-place work.
+		/// </summary>
+		public static bool TryBuildDelta(ArchitectureLayoutSnapshot Before,
+			ArchitectureLayoutSnapshot After, ArchitectureTransitionMode Mode,
+			out ArchitectureLayoutDelta Delta, out string Failure)
+		{
 			Delta = null;
 			if (!TryValidateTopology(Before, null, out Failure)
 				|| !TryValidateTopology(After, null, out Failure)) return false;
-			bool heartAccretion = IsAdjacentHeartAccretion(Before, After);
+			if (Mode == ArchitectureTransitionMode.None)
+				return Fail("layout delta has no authored incoming transition mode", out Failure);
+			if (!KingdomArchitectureTransitionRules.IsKnown(Mode))
+				return Fail("layout delta has an unknown transition mode", out Failure);
+			if (After.IncomingTransitionMode != Mode)
+				return Fail("layout delta mode does not match frozen successor authority",
+					out Failure);
+			if (Mode == ArchitectureTransitionMode.Replacement)
+				return Fail("replacement is not an in-place upgrade; strike the standing work and "
+					+ "commission the successor fresh", out Failure);
+			if (!KingdomArchitectureTransitionRules.IsInPlace(Mode))
+				return Fail("layout delta mode is not an in-place transition", out Failure);
+			bool expanding = Before.LotSize != After.LotSize;
 			if (FoldType(Before.LotType) != FoldType(After.LotType)
-				|| Before.Facing != After.Facing
-				|| (!heartAccretion && Before.LotSize != After.LotSize))
-				return Fail("layout delta crosses a typed lot set or changes its pose", out Failure);
-			if (!heartAccretion && (Before.MainX != After.MainX || Before.MainY != After.MainY))
+				|| Before.Facing != After.Facing)
+				return Fail("layout delta crosses its typed lot or changes pose", out Failure);
+			if (expanding && (!KingdomArchitectureTransitionRules.AllowsLotExpansion(Mode)
+				|| (int)After.LotSize <= (int)Before.LotSize))
+				return Fail("layout delta changes envelope without additive-expand or "
+					+ "renovate-expand authority",
+					out Failure);
+			if (!expanding && (Before.MainX != After.MainX || Before.MainY != After.MainY))
 				return Fail("layout delta moves the main behavior anchor", out Failure);
-			if (heartAccretion)
-				return TryBuildHeartAccretionDelta(Before, After, out Delta, out Failure);
-			Dictionary<string, ArchitecturePlacement> oldBySlot = PlacementDictionary(Before.Placements);
-			Dictionary<string, ArchitecturePlacement> newBySlot = PlacementDictionary(After.Placements);
-			Dictionary<string, ArchitecturePlacement> oldState = StatefulDictionary(Before.Placements);
-			Dictionary<string, ArchitecturePlacement> newState = StatefulDictionary(After.Placements);
-			foreach (KeyValuePair<string, ArchitecturePlacement> pair in oldState)
-			{
-				if (!newState.TryGetValue(pair.Key, out ArchitecturePlacement next)
-					|| !SamePlacement(pair.Value, next))
-					return Fail("stateful anchor " + pair.Key + " would move, change, or disappear", out Failure);
-			}
-			ArchitectureLayoutDelta delta = new ArchitectureLayoutDelta { Before = Before, After = After };
-			foreach (KeyValuePair<string, ArchitecturePlacement> pair in oldBySlot)
-			{
-				if (newBySlot.TryGetValue(pair.Key, out ArchitecturePlacement next)
-					&& SamePlacement(pair.Value, next)) delta.Retained.Add(pair.Value);
-				else delta.Removed.Add(pair.Value);
-			}
-			foreach (KeyValuePair<string, ArchitecturePlacement> pair in newBySlot)
-			{
-				if (!oldBySlot.TryGetValue(pair.Key, out ArchitecturePlacement previous)
-					|| !SamePlacement(previous, pair.Value)) delta.Added.Add(pair.Value);
-			}
-			delta.Retained.Sort(ComparePlacements);
-			for (int i = 0; i < delta.Retained.Count; i++)
-				delta.RetainedAfter.Add(newBySlot[delta.Retained[i].Slot]);
-			delta.Removed.Sort(ComparePlacementsReverse);
-			delta.Added.Sort(ComparePlacements);
-			Dictionary<string, ArchitectureCellState> oldCells = CoordinateCells(Before.Cells);
-			Dictionary<string, ArchitectureCellState> newCells = CoordinateCells(After.Cells);
-			HashSet<string> coordinates = new HashSet<string>(oldCells.Keys, StringComparer.Ordinal);
-			coordinates.UnionWith(newCells.Keys);
-			List<string> orderedCoordinates = new List<string>(coordinates);
-			orderedCoordinates.Sort(StringComparer.Ordinal);
-			for (int i = 0; i < orderedCoordinates.Count; i++)
-			{
-				string coordinate = orderedCoordinates[i];
-				oldCells.TryGetValue(coordinate, out ArchitectureCellState before);
-				newCells.TryGetValue(coordinate, out ArchitectureCellState after);
-				if (!SameCell(before, after))
-				{
-					ArchitectureCellState source = before ?? after;
-					delta.Cells.Add(new ArchitectureCellDelta
-						{ X = source.X, Y = source.Y, Before = before, After = after });
-				}
-			}
-			Delta = delta;
-			return true;
-		}
+			if (!TryValidateFootprintTransition(Before, After, Mode, out Failure)) return false;
 
-		private static bool IsAdjacentHeartAccretion(ArchitectureLayoutSnapshot Before,
-			ArchitectureLayoutSnapshot After)
-		{
-			if (Before == null || After == null || Before.PlanKey != "civic-heart"
-				|| After.PlanKey != "civic-heart" || FoldType(Before.LotType) != "civic"
-				|| FoldType(After.LotType) != "civic") return false;
-			int beforeRung = KingdomPlotRules.HeartRungOf(Before.BuildKey);
-			int afterRung = KingdomPlotRules.HeartRungOf(After.BuildKey);
-			return beforeRung > 0 && afterRung == beforeRung + 1
-				&& After.LotSize == (ArchitectureLotSize)
-					KingdomPlotRules.HeartSizeForRung(afterRung)
-				&& Before.LotSize == (ArchitectureLotSize)
-					KingdomPlotRules.HeartSizeForRung(beforeRung);
-		}
-
-		private static bool TryBuildHeartAccretionDelta(ArchitectureLayoutSnapshot Before,
-			ArchitectureLayoutSnapshot After, out ArchitectureLayoutDelta Delta,
-			out string Failure)
-		{
-			Delta = null;
 			ArchitectureLayoutDelta delta = new ArchitectureLayoutDelta
 				{ Before = Before, After = After };
-			Dictionary<string, ArchitecturePlacement> afterByRelative =
-				RelativePlacements(After);
+			Dictionary<string, ArchitecturePlacement> afterByKey = expanding
+				? RelativePlacements(After) : PlacementDictionary(After.Placements);
 			HashSet<string> retainedAfterSlots = new HashSet<string>(StringComparer.Ordinal);
+			Dictionary<string, ArchitecturePlacement> retainedPartners =
+				new Dictionary<string, ArchitecturePlacement>(StringComparer.Ordinal);
 			for (int i = 0; i < Before.Placements.Count; i++)
 			{
 				ArchitecturePlacement oldPlacement = Before.Placements[i];
-				ArchitecturePlacement next;
-				if (afterByRelative.TryGetValue(RelativePlacementKey(Before, oldPlacement), out next)
-					&& SameHeartPlacement(oldPlacement, next))
+				string key = expanding ? RelativePlacementKey(Before, oldPlacement)
+					: oldPlacement.Slot;
+				if (afterByKey.TryGetValue(key, out ArchitecturePlacement next)
+					&& SamePlacementInFrame(oldPlacement, next, expanding))
 				{
 					delta.Retained.Add(oldPlacement);
-					delta.RetainedAfter.Add(next);
+					retainedPartners.Add(oldPlacement.Slot, next);
 					retainedAfterSlots.Add(next.Slot);
+				}
+				else if (ProtectedPlacement(oldPlacement))
+				{
+					return Fail("protected anchor "
+						+ (oldPlacement.StatefulAnchor ?? oldPlacement.Slot)
+						+ " would move, change, or disappear without a registered handover",
+						out Failure);
 				}
 				else delta.Removed.Add(oldPlacement);
 			}
 			for (int i = 0; i < After.Placements.Count; i++)
 				if (!retainedAfterSlots.Contains(After.Placements[i].Slot))
 					delta.Added.Add(After.Placements[i]);
-			if (delta.Removed.Count != 0)
-				return Fail("heart accretion would remove or replace existing authored fabric",
-					out Failure);
-			for (int stateful = 0; stateful < Before.Placements.Count; stateful++)
-			{
-				ArchitecturePlacement prior = Before.Placements[stateful];
-				if (string.IsNullOrEmpty(prior.StatefulAnchor)) continue;
-				int retained = delta.Retained.IndexOf(prior);
-				if (retained < 0 || retained >= delta.RetainedAfter.Count
-					|| AnchorRole(prior.StatefulAnchor)
-						!= AnchorRole(delta.RetainedAfter[retained].StatefulAnchor))
-					return Fail("heart stateful anchor " + prior.StatefulAnchor
-						+ " would move, change, or disappear", out Failure);
-			}
-			Dictionary<string, ArchitectureCellState> oldCells = RelativeCells(Before);
-			Dictionary<string, ArchitectureCellState> newCells = RelativeCells(After);
-			// Heart tiers accrete. Every old claimed-cell contract remains exactly where it was
-			// relative to the stable behavior root. A later tier may put a stronger authored roof
-			// over retained open/soft yard, but may never reopen it or change natural fabric.
-			foreach (KeyValuePair<string, ArchitectureCellState> pair in oldCells)
-			{
-				ArchitectureCellState next;
-				if (!newCells.TryGetValue(pair.Key, out next)
-					|| !SameHeartCell(Before, pair.Value, After, next))
-					return Fail("heart accretion would remove or alter existing authored cell fabric",
-						out Failure);
-			}
-			List<string> ordered = new List<string>(newCells.Keys);
+			delta.Retained.Sort(ComparePlacements);
+			for (int i = 0; i < delta.Retained.Count; i++)
+				delta.RetainedAfter.Add(retainedPartners[delta.Retained[i].Slot]);
+			delta.Removed.Sort(ComparePlacementsReverse);
+			delta.Added.Sort(ComparePlacements);
+
+			Dictionary<string, ArchitectureCellState> oldCells = expanding
+				? RelativeCells(Before) : CoordinateCells(Before.Cells);
+			Dictionary<string, ArchitectureCellState> newCells = expanding
+				? RelativeCells(After) : CoordinateCells(After.Cells);
+			HashSet<string> coordinates = new HashSet<string>(oldCells.Keys,
+				StringComparer.Ordinal);
+			coordinates.UnionWith(newCells.Keys);
+			List<string> ordered = new List<string>(coordinates);
 			ordered.Sort(StringComparer.Ordinal);
 			for (int i = 0; i < ordered.Count; i++)
 			{
@@ -155,17 +113,28 @@ namespace ThousandAndFirst
 				ArchitectureCellState newCell;
 				oldCells.TryGetValue(ordered[i], out oldCell);
 				newCells.TryGetValue(ordered[i], out newCell);
-				if (oldCell == null)
-				{
-					delta.Cells.Add(new ArchitectureCellDelta
-						{ X = newCell.X, Y = newCell.Y, Before = null, After = newCell });
-				}
-				else if (oldCell.Cover != newCell.Cover)
-				{
-					delta.Cells.Add(new ArchitectureCellDelta
-						{ X = newCell.X, Y = newCell.Y, Before = oldCell, After = newCell });
-				}
+				if (SameCellInFrame(oldCell, newCell, expanding)) continue;
+				ArchitectureCellState source = newCell ?? oldCell;
+				delta.Cells.Add(new ArchitectureCellDelta
+					{ X = source.X, Y = source.Y, Before = oldCell, After = newCell });
 			}
+			if (KingdomArchitectureTransitionRules.PreservesStandingFabric(Mode)
+				&& delta.Removed.Count != 0)
+				return Fail("additive transition would remove or replace standing fabric", out Failure);
+			if (KingdomArchitectureTransitionRules.PreservesStandingFabric(Mode))
+				for (int i = 0; i < delta.Cells.Count; i++)
+				{
+					ArchitectureCellDelta changed = delta.Cells[i];
+					// New envelope cells have no predecessor fabric to preserve. They may remain
+					// deliberately open/unclaimed; an expansion is a reservation as well as a build.
+					if (changed.Before == null) continue;
+					if (changed.After == null)
+						return Fail("additive transition crops standing cell fabric", out Failure);
+					if (!PermittedAdditiveCellTransition(changed.Before, changed.After)
+						|| !HasAddedPlacementAt(delta.Added, changed.After.X, changed.After.Y))
+						return Fail("additive transition weakens cell semantics or changes them "
+							+ "without new fabric", out Failure);
+				}
 			Delta = delta;
 			Failure = null;
 			return true;
@@ -204,9 +173,16 @@ namespace ThousandAndFirst
 			return result;
 		}
 
-		private static bool SameHeartPlacement(ArchitecturePlacement A,
-			ArchitecturePlacement B)
+		private static bool ProtectedPlacement(ArchitecturePlacement Placement)
 		{
+			return Placement != null && (Placement.ExistingAuthority
+				|| !string.IsNullOrEmpty(Placement.StatefulAnchor));
+		}
+
+		private static bool SamePlacementInFrame(ArchitecturePlacement A,
+			ArchitecturePlacement B, bool Relative)
+		{
+			if (!Relative) return SamePlacement(A, B);
 			return A != null && B != null && A.Layer == B.Layer && A.Blueprint == B.Blueprint
 				&& A.Material == B.Material && A.MinTech == B.MinTech
 				&& A.Knowledge == B.Knowledge && A.Power == B.Power
@@ -214,41 +190,51 @@ namespace ThousandAndFirst
 				&& AnchorRole(A.StatefulAnchor) == AnchorRole(B.StatefulAnchor);
 		}
 
-		private static bool SameHeartCell(ArchitectureLayoutSnapshot ALayout,
-			ArchitectureCellState A, ArchitectureLayoutSnapshot BLayout, ArchitectureCellState B)
+		private static bool SameCellInFrame(ArchitectureCellState A,
+			ArchitectureCellState B, bool Relative)
 		{
+			if (!Relative) return SameCell(A, B);
 			if (A == null || B == null) return A == B;
-			return A.X - ALayout.MainX == B.X - BLayout.MainX
-				&& A.Y - ALayout.MainY == B.Y - BLayout.MainY
-				&& A.Claim == B.Claim && A.Passability == B.Passability
-				&& PermittedHeartCoverTransition(A.Cover, B.Cover);
+			return A.Claim == B.Claim && A.Passability == B.Passability
+				&& A.Cover == B.Cover;
 		}
 
-		private static bool PermittedHeartCoverTransition(ArchitectureCover Before,
-			ArchitectureCover After)
+		private static bool HasAddedPlacementAt(IList<ArchitecturePlacement> Placements,
+			int X, int Y)
 		{
-			if (Before == After) return true;
-			return (Before == ArchitectureCover.Open
-				&& (After == ArchitectureCover.Soft || After == ArchitectureCover.Walled))
-				|| (Before == ArchitectureCover.Soft && After == ArchitectureCover.Walled);
+			for (int i = 0; i < Placements.Count; i++)
+				if (Placements[i].X == X && Placements[i].Y == Y) return true;
+			return false;
 		}
+
+		/// <summary>
+		/// An additive edge may claim, furnish, obstruct, or roof previously softer space, but
+		/// never unclaim it, reopen circulation, or weaken its weather/structural cover. Every
+		/// actual semantic change is separately required to carry newly paid fabric on that cell.
+		/// </summary>
+		private static bool PermittedAdditiveCellTransition(ArchitectureCellState Before,
+			ArchitectureCellState After)
+		{
+			if (Before == null || After == null) return false;
+			if (IsClaimed(Before.Claim) && !IsClaimed(After.Claim)) return false;
+			if (Before.Claim == ArchitectureClaim.Building
+				&& After.Claim != ArchitectureClaim.Building) return false;
+			if (Before.Passability != After.Passability
+				&& Before.Passability != ArchitecturePassability.Walkable) return false;
+			if (Before.Cover == After.Cover) return true;
+			return (Before.Cover == ArchitectureCover.Open
+					&& (After.Cover == ArchitectureCover.Soft
+						|| After.Cover == ArchitectureCover.Walled))
+				|| (Before.Cover == ArchitectureCover.Soft
+					&& After.Cover == ArchitectureCover.Walled);
+		}
+
 		private static Dictionary<string, ArchitecturePlacement> PlacementDictionary(
 			IList<ArchitecturePlacement> Placements)
 		{
 			Dictionary<string, ArchitecturePlacement> result =
 				new Dictionary<string, ArchitecturePlacement>(StringComparer.Ordinal);
 			for (int i = 0; i < Placements.Count; i++) result[Placements[i].Slot] = Placements[i];
-			return result;
-		}
-
-		private static Dictionary<string, ArchitecturePlacement> StatefulDictionary(
-			IList<ArchitecturePlacement> Placements)
-		{
-			Dictionary<string, ArchitecturePlacement> result =
-				new Dictionary<string, ArchitecturePlacement>(StringComparer.Ordinal);
-			for (int i = 0; i < Placements.Count; i++)
-				if (!string.IsNullOrEmpty(Placements[i].StatefulAnchor))
-					result[Placements[i].StatefulAnchor] = Placements[i];
 			return result;
 		}
 

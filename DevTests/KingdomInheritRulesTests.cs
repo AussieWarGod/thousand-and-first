@@ -69,9 +69,9 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase("tent", "r_KingdomTent", 3, 2)]
-		[TestCase("heartcourt", "r_KingdomGreatCourt", 16, 11)]
+		[TestCase("heartcourt", "r_KingdomGreatCourt", 20, 18)]
 		[TestCase("palisade", "r_KingdomPalisade", 1, 1)]
-		[TestCase("chimerictheatre", "r_KingdomChimericTheatre", 20, 14)]
+		[TestCase("chimerictheatre", "r_KingdomChimericTheatre", 20, 18)]
 		[TestCase("registryoffice", "r_KingdomRegistryOffice", 8, 6)]
 		[TestCase("inherit.rubble", "r_KingdomRubbleWall", 1, 1)]
 		[TestCase("inherit.memory", "r_KingdomCairn", 1, 1)]
@@ -133,7 +133,7 @@ namespace ThousandAndFirst.Tests
 				Assert.Greater(width, 0, key);
 				Assert.Greater(height, 0, key);
 				Assert.LessOrEqual(width, 20, key);
-				Assert.LessOrEqual(height, 14, key);
+				Assert.LessOrEqual(height, 18, key);
 				string resolved;
 				Assert.IsTrue(KingdomInheritRules.TryResolveBlueprint(key, out resolved), key);
 				Assert.AreEqual(blueprint, resolved, key);

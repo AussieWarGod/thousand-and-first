@@ -116,7 +116,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Revoke the nomination and restore seniority", ui);
 			StringAssert.Contains("GroomingLabel", ui);
 			StringAssert.Contains("KingdomResearch.HeldIn", heirs);
-			StringAssert.Contains("KnowledgePost(state, row.JobWorkId)", heirs);
+			StringAssert.Contains("SchoolingHeld && EducationPost(System, state, row.JobWorkId", heirs);
+			StringAssert.Contains("KingdomEducationPostObservationRuntime.Proves", heirs);
 			StringAssert.Contains("KingdomSuccessionRules.MonthsServed", heirs);
 			StringAssert.Contains("Record.ResidentId != config.ChosenResidentId", runtime);
 			StringAssert.Contains("if (CommitProgress) GroomingRecordWire = wire", runtime);

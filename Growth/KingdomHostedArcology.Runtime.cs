@@ -11,26 +11,28 @@ namespace ThousandAndFirst
 		internal static bool TryReceipt(r_KingdomArcology Root, string LotKey,
 			out KingdomHostedLotReceipt Receipt, out string Failure)
 		{
-			Receipt = null; Failure = null;
-			if (Root == null || Root.LotReceipts == null || Root.LotReceipts.Count >
-				KingdomHostedArcologyRules.MaxHostedLots)
-				return Fail("The hosted-lot slate is unbounded.", out Failure);
-			for (int i = 0; i < Root.LotReceipts.Count; i++)
+			Receipt = null;
+			List<KingdomHostedLotReceipt> rows;
+			if (!TryReceiptSlate(Root, out rows, out Failure)) return false;
+			for (int i = 0; i < rows.Count; i++)
 			{
-				KingdomHostedLotReceipt row;
-				if (!KingdomHostedArcologyReceiptCodec.TryDecodeLot(Root.LotReceipts[i], out row))
-					return Fail("A hosted-lot receipt cannot be read.", out Failure);
-				if (!KingdomHostedArcologyRules.TryHostedLot(row.LotKey,
-					out KingdomHostedLotDefinition definition) || definition.ReadOnly
-					|| row.Supports != definition.Supports
-					|| row.RequiresWater != definition.RequiresWater)
-					return Fail("A hosted-lot receipt diverges from its registered work contract.",
-						out Failure);
+				KingdomHostedLotReceipt row = rows[i];
 				if (row.LotKey != LotKey) continue;
-				if (Receipt != null) return Fail("A hosted lot has duplicate receipts.", out Failure);
 				Receipt = row;
 			}
 			return true;
+		}
+
+		private static bool TryReceiptSlate(r_KingdomArcology Root,
+			out List<KingdomHostedLotReceipt> Receipts, out string Failure)
+		{
+			Receipts = null;
+			Failure = null;
+			GameObject owner = Root?.ParentObject;
+			if (Root == null || Root.LotReceipts == null || !GameObject.Validate(owner))
+				return Fail("The hosted-lot slate has no exact shell authority.", out Failure);
+			return KingdomHostedArcologySlateRules.TryRead(Root.LotReceipts,
+				owner.IDIfAssigned, out Receipts, out Failure);
 		}
 
 		internal static bool SetReceipt(r_KingdomArcology Root, KingdomHostedLotReceipt Receipt,
@@ -38,17 +40,17 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			string encoded = KingdomHostedArcologyReceiptCodec.EncodeLot(Receipt);
-			if (Root == null || Root.LotReceipts == null || string.IsNullOrEmpty(encoded))
+			List<KingdomHostedLotReceipt> existing;
+			if (!TryReceiptSlate(Root, out existing, out Failure)) return false;
+			if (Receipt == null || Receipt.RootId != Root.ParentObject.IDIfAssigned
+				|| string.IsNullOrEmpty(encoded))
 				return Fail("The hosted-lot receipt is invalid.", out Failure);
 			List<string> next = new List<string>(); bool replaced = false;
-			for (int i = 0; i < Root.LotReceipts.Count; i++)
+			for (int i = 0; i < existing.Count; i++)
 			{
-				KingdomHostedLotReceipt row;
-				if (!KingdomHostedArcologyReceiptCodec.TryDecodeLot(Root.LotReceipts[i], out row))
-					return Fail("The hosted-lot slate cannot be changed safely.", out Failure);
+				KingdomHostedLotReceipt row = existing[i];
 				if (row.LotKey == Receipt.LotKey)
 				{
-					if (replaced) return Fail("The hosted-lot slate is duplicated.", out Failure);
 					next.Add(encoded); replaced = true;
 				}
 				else next.Add(Root.LotReceipts[i]);
@@ -70,56 +72,34 @@ namespace ThousandAndFirst
 				GameObject work = Survey.Built[i];
 				if (KingdomUpgrade.DesignKeyOf(work) != ArcologyKey) continue;
 				int need = 0; r_KingdomArcology root = work.GetPart<r_KingdomArcology>();
-				if (root != null && root.LotReceipts != null && Operational(work))
+				List<KingdomHostedLotReceipt> rows;
+				string failure = null;
+				if (root != null && IsOperationalPure(work)
+					&& TryReceiptSlate(root, out rows, out failure))
 				{
 					need = 4;
-					for (int j = 0; j < root.LotReceipts.Count; j++)
+					for (int j = 0; j < rows.Count; j++)
 					{
-						KingdomHostedLotReceipt receipt;
 						KingdomHostedLotDefinition lot;
-						if (KingdomHostedArcologyReceiptCodec.TryDecodeLot(root.LotReceipts[j], out receipt)
-							&& receipt.Phase == KingdomHostedLotPhase.Working
-							&& KingdomHostedArcologyRules.TryHostedLot(receipt.LotKey, out lot)) need += lot.Crew;
+						KingdomHostedLotReceipt receipt = rows[j];
+						if (KingdomHostedArcologyRules.TryHostedLot(receipt.LotKey, out lot)
+							&& receipt.Phase == KingdomHostedLotPhase.Working)
+							need += lot.Crew;
 					}
 				}
+				else if (root != null && !string.IsNullOrEmpty(failure)) Quarantine(root, failure);
 				work.SetIntProperty("KingdomStaffNeeded", need);
 			}
 		}
 
-		internal static List<KindAmount> HostedCarries(GameObject Work,
-			List<KindAmount> BaseCarries, bool FreshWaterAvailable)
-		{
-			if (KingdomUpgrade.DesignKeyOf(Work) != ArcologyKey) return BaseCarries;
-			List<KindAmount> answer = new List<KindAmount>();
-			if (!Operational(Work)) return answer;
-			if (BaseCarries != null) answer.AddRange(BaseCarries);
-			r_KingdomArcology root = Work.GetPart<r_KingdomArcology>();
-			if (root == null || root.LotReceipts == null) return answer;
-			for (int i = 0; i < root.LotReceipts.Count; i++)
-			{
-				KingdomHostedLotReceipt receipt;
-				if (!KingdomHostedArcologyReceiptCodec.TryDecodeLot(root.LotReceipts[i], out receipt)
-					|| receipt.Phase != KingdomHostedLotPhase.Active
-					|| (receipt.RequiresWater && !FreshWaterAvailable)) continue;
-				List<KindAmount> hosted;
-				KingdomCatalogueRules.TryParseTally(receipt.Supports, out hosted, out _);
-				if (hosted != null) answer.AddRange(hosted);
-			}
-			return answer;
-		}
-
 		internal static GameObject RootOf(Zone Zone)
 		{
-			Zone cursor = Zone;
-			for (int i = 0; i < 8; i++)
-			{
-				InteriorZone interior = cursor as InteriorZone;
-				GameObject host = interior?.ParentObject;
-				if (!GameObject.Validate(host)) return null;
-				if (host.GetPart<r_KingdomArcology>() != null) return host;
-				cursor = host.CurrentZone;
-			}
-			return null;
+			InteriorZone interior = Zone as InteriorZone;
+			if (interior == null || interior.Schema != KingdomHostedArcologyTopology.Schema
+				|| !KingdomHostedArcologyTopology.InBounds(interior.X, interior.Y, interior.Z))
+				return null;
+			return TryLoadedInteriorRoot(interior, out GameObject host, out string ignored)
+				? host : null;
 		}
 
 		internal static string Status(r_KingdomArcology Root)
@@ -136,7 +116,8 @@ namespace ThousandAndFirst
 					return "{{r|Quarantined: " + failure + "}}";
 				string state = lots[i].ReadOnly ? "read-only view"
 					: receipt == null ? "unbuilt" : receipt.Phase == KingdomHostedLotPhase.Active
-					? "active" : receipt.Phase == KingdomHostedLotPhase.Working
+					? ObservationStatus(Root.ParentObject, lots[i].Key)
+					: receipt.Phase == KingdomHostedLotPhase.Working
 					? (receipt.Remaining + " labour ticks remain") : "quarantined";
 				lines.Add("{{C|" + lots[i].DisplayName + "}} — " + state);
 			}
@@ -145,9 +126,10 @@ namespace ThousandAndFirst
 
 		internal static void Quarantine(r_KingdomArcology Root, string Reason)
 		{
-			if (Root != null && string.IsNullOrEmpty(Root.QuarantineReason))
-				Root.QuarantineReason = string.IsNullOrEmpty(Reason) ? "ambiguous hosted-shell evidence"
-					: Reason.Substring(0, Math.Min(512, Reason.Length));
+			if (Root == null) return;
+			if (!TryQuarantineAuthority(Root, Reason, out string failure))
+				KingdomLog.Log("hosted quarantine refused: "
+					+ (failure ?? "unproved exact authority"));
 		}
 	}
 }

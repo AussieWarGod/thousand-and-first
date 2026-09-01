@@ -109,7 +109,9 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomCatchUpCounter before = KingdomCityRules.CityCounter(state);
 			KingdomSliceJob job = new KingdomSliceJob(
 				string.IsNullOrEmpty(label) ? state.SettlementId : label,
-				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null, KingdomResearch.MethodPercent(System)));
+				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null,
+					KingdomHostedArcology.FoodRateOverrides(System, state),
+					KingdomResearch.MethodPercent(System)));
 			KingdomComputeResult<KingdomCityState> result = KingdomCity.Seam.Submit(new KingdomReckonInput(state, nowTick), job);
 			if (!result.Published)
 			{

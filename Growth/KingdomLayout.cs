@@ -102,6 +102,7 @@ namespace ThousandAndFirst
 			{
 				return false;
 			}
+			if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(Object)) return false;
 			KingdomLayoutRules.LayoutPurpose purpose;
 			r_KingdomScaffold scaffold = Object.GetPart<r_KingdomScaffold>();
 			if (scaffold != null)
@@ -122,7 +123,7 @@ namespace ThousandAndFirst
 				// whenever. This is the line that puts the casks where the water already is.
 				purpose = KingdomLayoutRules.LayoutPurpose.Storage;
 			}
-			else if (Object.GetIntProperty("KingdomBuilt") == 1 || Object.HasPart(PlanMarkerPart))
+			else if (KingdomUpgrade.IsFunctionallyBuilt(Object) || Object.HasPart(PlanMarkerPart))
 			{
 				// The design key a structure was adopted or planned under names the role it
 				// serves; the blueprint of a hall the founder laid by hand names nothing the

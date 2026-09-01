@@ -148,7 +148,7 @@ namespace ThousandAndFirst
 						Floor = item;
 						int state = item.GetIntProperty(PathStateProperty);
 						exactShape = GameObject.Validate(item) && item.CurrentCell == C
-							&& state >= (int)KingdomRoadRules.WearState.Trodden
+							&& state >= (int)KingdomRoadRules.WearState.Worn
 							&& state <= (int)KingdomRoadRules.WearState.Paved;
 					}
 				}

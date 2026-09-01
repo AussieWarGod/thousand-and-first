@@ -15,7 +15,7 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
-		private static bool Exact(KingdomJobRow A, KingdomJobRow B)
+		internal static bool Exact(KingdomJobRow A, KingdomJobRow B)
 		{
 			if (A.JobId != B.JobId || A.Kind != B.Kind || A.Cargo != B.Cargo
 				|| A.CargoAmount != B.CargoAmount || A.SourceZoneId != B.SourceZoneId
@@ -26,6 +26,10 @@ namespace ThousandAndFirst.Simulation.City
 				|| A.TargetName != B.TargetName || A.DueTick != B.DueTick
 				|| A.WaterCost != B.WaterCost || A.ProvisionCost != B.ProvisionCost
 				|| A.OutcomeCode != B.OutcomeCode
+				|| A.ExpeditionDeedDisposition != B.ExpeditionDeedDisposition
+				|| A.ExpeditionDeedPolityId != B.ExpeditionDeedPolityId
+				|| A.ExpeditionDeedCauseRef != B.ExpeditionDeedCauseRef
+				|| A.ExpeditionDeedFigureRef != B.ExpeditionDeedFigureRef
 				|| A.DeliverySourceEndpointId != B.DeliverySourceEndpointId
 				|| A.DeliverySourceObjectId != B.DeliverySourceObjectId
 				|| A.DeliverySourceX != B.DeliverySourceX

@@ -41,5 +41,31 @@ namespace ThousandAndFirst
 			return KingdomPlotRules.PlotSize.Huge;
 		}
 
+		/// <summary>Measures one normalized exact designation and refuses sparse geometry instead
+		/// of letting an irregular room borrow the tier of its bounding rectangle.</summary>
+		internal static bool TryExactPlotBounds(IReadOnlyList<KingdomBenefitCell> Cells,
+			out int Width, out int Height)
+		{
+			Width = 0;
+			Height = 0;
+			if (Cells == null) return false;
+			int minX = int.MaxValue, minY = int.MaxValue;
+			int maxX = int.MinValue, maxY = int.MinValue, occupied = 0;
+			for (int i = 0; i < Cells.Count; i++)
+			{
+				KingdomBenefitCell cell = Cells[i];
+				if ((cell.Use & KingdomBenefitCellUse.Plot) == 0) continue;
+				if (cell.X < minX) minX = cell.X;
+				if (cell.X > maxX) maxX = cell.X;
+				if (cell.Y < minY) minY = cell.Y;
+				if (cell.Y > maxY) maxY = cell.Y;
+				occupied++;
+			}
+			if (occupied == 0) return false;
+			Width = maxX - minX + 1;
+			Height = maxY - minY + 1;
+			return (long)Width * Height == occupied;
+		}
+
 	}
 }

@@ -1,0 +1,6 @@
+# Same pose and scale as the vat-house exposes whether this reads as a different medical room.
+DESCRIPTION=medium hall surgery stages for clinic zoning furnishing and bounded-light review
+REQUEST=arch-deepend-hallsurgery-m;facing=west
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,medical,progression,taste

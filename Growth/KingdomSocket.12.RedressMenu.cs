@@ -27,7 +27,7 @@ namespace ThousandAndFirst
 				return;
 			}
 			List<GameObject> candidates = new List<GameObject>();
-			Func<GameObject, bool> isBuilding = o => o.GetIntProperty("KingdomBuilt") == 1;
+			Func<GameObject, bool> isBuilding = KingdomUpgrade.IsFunctionallyBuilt;
 			CollectNearby(cell, candidates, isBuilding);
 			foreach (Cell adjacent in cell.GetLocalAdjacentCells())
 			{

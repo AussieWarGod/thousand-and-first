@@ -105,85 +105,63 @@ namespace ThousandAndFirst
 				TryHashTextPair(otherRegistry, null, out OtherRegistryHash);
 		}
 
-		private const string ChronicleIntentPrefix = "chronicle-v2";
-
 		private static bool TryCreateChronicleIntent(string EventId,
 			KingdomChronicleDeclaration Declaration, string RegistryHash,
 			string OtherRegistryHash, string RegistryFault, out string Intent)
 		{
 			Intent = null;
-			if (Declaration == null || !ValidProofHash(RegistryHash) ||
-				!ValidProofHash(OtherRegistryHash) ||
-				!ValidProofHash(Declaration.Fingerprint) ||
-				!ValidProofHash(Declaration.OfficialBefore) ||
-				!ValidProofHash(Declaration.OfficialAfter) ||
-				!ValidProofHash(Declaration.OutsiderBefore) ||
-				!ValidProofHash(Declaration.OutsiderAfter) || RegistryFault == null ||
-				RegistryFault.Length > 160 ||
+			if (Declaration == null || Declaration.AuthoredOutsiderText == null ||
 				!string.Equals(EventId, Declaration.EventId, StringComparison.Ordinal)) return false;
-			try
-			{
-				System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false, true);
-				Intent = ChronicleIntentPrefix + "|" +
-					Convert.ToBase64String(utf8.GetBytes(EventId)) + "|" +
-					Declaration.Fingerprint + "|" + RegistryHash + "|" + OtherRegistryHash + "|" +
-					Declaration.OfficialBefore + "|" + Declaration.OfficialAfter + "|" +
-					Declaration.OutsiderBefore + "|" + Declaration.OutsiderAfter + "|" +
-					Convert.ToBase64String(utf8.GetBytes(Declaration.Official)) + "|" +
-					Convert.ToBase64String(utf8.GetBytes(Declaration.Outsider)) + "|" +
-					Convert.ToBase64String(utf8.GetBytes(RegistryFault));
-				return Intent.Length <= KingdomRealmCallbackReceipt.MaxEffectChars;
-			}
-			catch { Intent = null; return false; }
+			return KingdomRealmChronicleIntentRules.TryEncode(
+				new KingdomRealmChronicleIntent
+				{
+					Version = KingdomRealmChronicleIntentRules.CurrentVersion,
+					EventId = EventId, OfficialText = Declaration.Text,
+					OutsiderText = Declaration.AuthoredOutsiderText,
+					Accomplishment = Declaration.Accomplishment,
+					MuralText = Declaration.MuralText,
+					Fingerprint = Declaration.Fingerprint, RegistryHash = RegistryHash,
+					OtherRegistryHash = OtherRegistryHash,
+					OfficialBefore = Declaration.OfficialBefore,
+					OfficialAfter = Declaration.OfficialAfter,
+					OutsiderBefore = Declaration.OutsiderBefore,
+					OutsiderAfter = Declaration.OutsiderAfter,
+					Official = Declaration.Official, Outsider = Declaration.Outsider,
+					RegistryFault = RegistryFault
+				}, out Intent);
 		}
 
 		private static bool TryParseChronicleIntent(string Intent, string ExpectedEventId,
-			string Text, bool Accomplishment, string MuralText,
+			string LegacyText, bool LegacyAccomplishment, string LegacyMuralText,
 			out KingdomChronicleDeclaration Declaration, out string RegistryHash,
-			out string OtherRegistryHash, out string RegistryFault)
+			out string OtherRegistryHash, out string RegistryFault, out bool Legacy)
 		{
 			Declaration = null; RegistryHash = null; OtherRegistryHash = null;
-			RegistryFault = null;
-			if (Intent == null || Intent.Length > KingdomRealmCallbackReceipt.MaxEffectChars)
-				return false;
-			string[] fields = Intent.Split('|');
-			if (fields.Length != 12 || fields[0] != ChronicleIntentPrefix ||
-				fields[1].Length > KingdomChronicleReceiptRules.MaxEventIdChars * 6 ||
-				fields[9].Length > KingdomChronicleReceiptRules.MaxEntryChars * 6 ||
-				fields[10].Length > KingdomChronicleReceiptRules.MaxEntryChars * 6 ||
-				fields[11].Length > 960 ||
-				!ValidProofHash(fields[2]) || !ValidProofHash(fields[3]) ||
-				!ValidProofHash(fields[4]) || !ValidProofHash(fields[5]) ||
-				!ValidProofHash(fields[6]) || !ValidProofHash(fields[7]) ||
-				!ValidProofHash(fields[8])) return false;
-			try
+			RegistryFault = null; Legacy = false;
+			KingdomRealmChronicleIntent value;
+			if (!KingdomRealmChronicleIntentRules.TryDecodeCurrent(Intent, ExpectedEventId,
+				out value))
 			{
-				System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false, true);
-				string eventId = utf8.GetString(Convert.FromBase64String(fields[1]));
-				string official = utf8.GetString(Convert.FromBase64String(fields[9]));
-				string outsider = utf8.GetString(Convert.FromBase64String(fields[10]));
-				string registryFault = utf8.GetString(Convert.FromBase64String(fields[11]));
-				if (!string.Equals(eventId, ExpectedEventId, StringComparison.Ordinal) ||
-					string.IsNullOrEmpty(official) || string.IsNullOrEmpty(outsider) ||
-					official.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
-					outsider.Length > KingdomChronicleReceiptRules.MaxEntryChars ||
-					registryFault.Length > 160 ||
-					!KingdomChronicleReceiptRules.TryFingerprint(eventId, Text, Accomplishment,
-						MuralText, out string fingerprint) || fingerprint != fields[2]) return false;
-				Declaration = new KingdomChronicleDeclaration(eventId, Text, Accomplishment,
-					MuralText, fields[2], official, outsider, fields[5], fields[6],
-					fields[7], fields[8]);
-				RegistryHash = fields[3]; OtherRegistryHash = fields[4];
-				RegistryFault = registryFault;
-				return true;
+				if (!KingdomRealmChronicleIntentRules.TryDecodeLegacy(Intent, ExpectedEventId,
+					LegacyText, LegacyAccomplishment, LegacyMuralText, out value)) return false;
+				Legacy = true;
 			}
-			catch { Declaration = null; RegistryFault = null; return false; }
+			Declaration = new KingdomChronicleDeclaration(value.EventId, value.OfficialText,
+				value.Accomplishment, value.MuralText, value.OutsiderText, value.Fingerprint,
+				value.Official, value.Outsider, value.OfficialBefore, value.OfficialAfter,
+				value.OutsiderBefore, value.OutsiderAfter);
+			RegistryHash = value.RegistryHash; OtherRegistryHash = value.OtherRegistryHash;
+			RegistryFault = value.RegistryFault;
+			return true;
 		}
 
 		private static string ChronicleObserved(string RegistryHash, string OtherRegistryHash,
-			string OfficialHash, string OutsiderHash, KingdomChronicleReceipt Receipt)
+			string OfficialHash, string OutsiderHash, KingdomChronicleReceipt Receipt,
+			bool Legacy)
 		{
-			return Receipt == null ? null : ChronicleIntentPrefix + "|observed|" + RegistryHash +
+			string prefix = Legacy ? KingdomRealmChronicleIntentRules.LegacyPrefix :
+				KingdomRealmChronicleIntentRules.CurrentPrefix;
+			return Receipt == null ? null : prefix + "|observed|" + RegistryHash +
 				"|" + OtherRegistryHash + "|" + OfficialHash + "|" + OutsiderHash + "|" +
 				((int)Receipt.OfficialState).ToString() + "|" +
 				((int)Receipt.OutsiderState).ToString() + "|" +

@@ -24,18 +24,16 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		private static int WaterMadePerDay(KingdomSurvey Survey)
 		{
-			return (Survey == null) ? 0 : KingdomSubsidence.Supports(Survey).Water;
+			return (Survey == null) ? 0 : KingdomSubsidence.OrdinarySupports(Survey).Water;
 		}
 
 		/// <summary>
-		/// The food half, and it is <c>KingdomGrowth.FoodMadePerDay</c> unchanged — which already
-		/// subtracts the sown fields and the mills, because those two deliver their food PHYSICALLY
-		/// (<c>KingdomPlot</c>, <c>GrindHarvest</c>) rather than as a credit. Reusing it rather
-		/// than restating it is what keeps one answer to "what does this ground grow".
+		/// Food has no city-rate credit. Fields harvest physical crops and mills transform physical
+		/// inputs, so away-time model production must remain zero.
 		/// </summary>
 		private static int FoodMadePerDay(KingdomSurvey Survey)
 		{
-			return (Survey == null) ? 0 : KingdomGrowth.FoodMadePerDay(Survey);
+			return 0;
 		}
 
 		/// <summary>

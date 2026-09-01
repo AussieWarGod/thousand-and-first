@@ -53,10 +53,13 @@ namespace ThousandAndFirst
 		public long CauseTick;
 		public string EndpointVerb;
 		public long AcknowledgedTick;
+		public KingdomPolityAmbientTransaction AmbientTransaction;
 
 		public KingdomPolityDirectRecord Copy()
 		{
-			return (KingdomPolityDirectRecord)MemberwiseClone();
+			KingdomPolityDirectRecord result = (KingdomPolityDirectRecord)MemberwiseClone();
+			result.AmbientTransaction = KingdomPolityAmbientTransactionRules.Copy(
+				AmbientTransaction); return result;
 		}
 	}
 
@@ -64,6 +67,8 @@ namespace ThousandAndFirst
 	public sealed class KingdomPolityEndpointFacts
 	{
 		public string SettlementId;
+		public string SettlementName;
+		public string ZoneId;
 		public bool IsSeat;
 		public int Population;
 		public int Stage;
@@ -74,6 +79,23 @@ namespace ThousandAndFirst
 		public string CourierCauseRef;
 		public string TraderCauseRef;
 		public string MigrantCauseRef;
+		public string PopulationFactRef;
+		public string DeedFactRef;
+		public string DeedSummary;
+		public string MarketFactRef;
+		public string CapacityFactRef;
+		public string CourierSourceSettlementId;
+		public string CourierSourceZoneId;
+		public string TraderSourceSettlementId;
+		public string TraderSourceZoneId;
+		public string MigrantSourceSettlementId;
+		public string MigrantSourceZoneId;
+		/// <summary>Exact persisted defence/work observations populate these; generic
+		/// gate, population, stage, and topology labels may not.</summary>
+		public string GuardProtectedLocusRef;
+		public string GuardWitnessDetail;
+		public string PatrolConditionLocusRef;
+		public string PatrolConditionDetail;
 	}
 
 	[Serializable]
@@ -95,6 +117,7 @@ namespace ThousandAndFirst
 		public long StayUntilTick;
 		public int MemberCount;
 		public string EndpointVerb;
+		public KingdomPolityAmbientTransaction AmbientTransaction;
 	}
 
 	[Serializable]

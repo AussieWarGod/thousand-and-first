@@ -1,0 +1,6 @@
+# Creed comparison: gathering geometry and hide-and-timber character need native scrutiny.
+DESCRIPTION=huge goatfolk horn-moot stages for native creed-campus comparison
+REQUEST=arch-lot-goatfolk-hornmoot-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

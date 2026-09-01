@@ -42,8 +42,10 @@ namespace ThousandAndFirst.Tests
 				new KingdomScenarioStep { Verb = KingdomScenarioVerb.StageGalleryCase };
 			stage.Arguments["Suite"] = "architecture";
 			// The exact expected case is frozen in authored data, so StageGalleryCase requires
-			// Build and Variant alongside Facing; a slice missing either is a malformed row.
+			// Build, type, size, variant, and pose are the complete gallery identity.
 			stage.Arguments["Build"] = "tent";
+			stage.Arguments["Type"] = "housing";
+			stage.Arguments["Size"] = "s";
 			stage.Arguments["Variant"] = "fallback";
 			stage.Arguments["Facing"] = referenced ? "{facing}" : "north";
 			definition.Steps.Add(prove);
@@ -86,6 +88,16 @@ namespace ThousandAndFirst.Tests
 			string literal = Plan(Sound(false), "north").PlanDigest;
 			string resolvedEast = Plan(Sound(true), "east").PlanDigest;
 			Assert.AreNotEqual(literal, resolvedEast);
+		}
+
+		[Test]
+		public void PlanDigestChangesWithTheExactLotEnvelope()
+		{
+			KingdomScenarioDefinition small = Sound(false);
+			KingdomScenarioDefinition large = Sound(false);
+			large.Steps[1].Arguments["Size"] = "l";
+			Assert.AreNotEqual(Plan(small, "north").PlanDigest,
+				Plan(large, "north").PlanDigest);
 		}
 
 		/// <summary>

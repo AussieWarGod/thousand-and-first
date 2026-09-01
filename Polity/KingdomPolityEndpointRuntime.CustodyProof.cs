@@ -47,7 +47,9 @@ namespace ThousandAndFirst
 			if (profile == null || member == null || member.Ordinal != Ordinal ||
 				!KingdomPolityCohortRules.TryParseSignature(member.SignatureKey,
 					out string role, out string resolver, out FigureId) ||
-				!KingdomPolityNpcRules.TryResolve(profile, role, Ordinal, out Spec, out Failure) ||
+				!KingdomPolityNpcRules.TryResolvePinned(profile, role, Ordinal,
+					Cohort.RulesVersion, Cohort.MinimumLevel, Cohort.MaximumLevel,
+					out Spec, out Failure) ||
 				Spec.ResolverDigest != resolver || Spec.ResolverDigest != member.LoadoutKey ||
 				Spec.BodyBlueprint != member.BlueprintKey)
 			{
@@ -86,6 +88,12 @@ namespace ThousandAndFirst
 				Body.GetStringProperty(KingdomPolityNpcRuntime.ProfileProperty) == profile &&
 				Body.GetStringProperty(KingdomPolityNpcRuntime.ResolverProperty) == Spec.ResolverDigest &&
 				Body.GetStringProperty(KingdomPolityNpcRuntime.RoleProperty) == Spec.RoleKey &&
+				(Body.GetStringProperty(KingdomPolityNpcRuntime.SignatureCueProperty) ?? "") ==
+					string.Join("|", Spec.SignatureCues.ToArray()) &&
+				(Body.GetStringProperty(KingdomPolityNpcRuntime.DialogueCueProperty) ?? "") ==
+					string.Join("|", Spec.DialogueCues.ToArray()) &&
+				(Body.GetStringProperty(KingdomPolityNpcRuntime.ExpressionReasonProperty) ?? "") ==
+					string.Join("|", Spec.ReasonFactIds.ToArray()) &&
 				(Body.GetStringProperty(KingdomPolityNpcRuntime.FigureProperty) ?? "") ==
 					(FigureId ?? "") && Body.GetIntProperty("SuppressCorpseDrops") == 1 &&
 				Body.GetIntProperty("NoXP") == 1 && Body.HasPart<NoXPGain>() && part != null &&

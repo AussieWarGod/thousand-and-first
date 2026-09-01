@@ -80,15 +80,23 @@ namespace ThousandAndFirst
 			IList<ZoneSighting> Others)
 		{
 			KingdomCatalogueRules.SupportTally tally = Here;
+			tally.Water = KingdomCatalogueRules.SaturatingCounterAdd(tally.Water, 0);
+			tally.Food = KingdomCatalogueRules.SaturatingCounterAdd(tally.Food, 0);
+			tally.Roof = KingdomCatalogueRules.SaturatingCounterAdd(tally.Roof, 0);
+			tally.Lift = KingdomCatalogueRules.SaturatingCounterAdd(tally.Lift, 0);
+			tally.Works = KingdomCatalogueRules.SaturatingCounterAdd(tally.Works, 0);
 			for (int i = 0; (Others != null) && i < Others.Count; i++)
 			{
 				if (!Others[i].Seen)
 				{
 					continue;
 				}
-				tally.Water += (Others[i].Water > 0) ? Others[i].Water : 0;
-				tally.Food += (Others[i].Food > 0) ? Others[i].Food : 0;
-				tally.Roof += (Others[i].Roof > 0) ? Others[i].Roof : 0;
+				tally.Water = KingdomCatalogueRules.SaturatingCounterAdd(
+					tally.Water, Others[i].Water);
+				tally.Food = KingdomCatalogueRules.SaturatingCounterAdd(
+					tally.Food, Others[i].Food);
+				tally.Roof = KingdomCatalogueRules.SaturatingCounterAdd(
+					tally.Roof, Others[i].Roof);
 			}
 			return tally;
 		}
@@ -106,7 +114,8 @@ namespace ThousandAndFirst
 			{
 				if (Others[i].Seen && Others[i].StorageCapacity > 0)
 				{
-					total += Others[i].StorageCapacity;
+					total = KingdomCatalogueRules.SaturatingCounterAdd(
+						total, Others[i].StorageCapacity);
 				}
 			}
 			return total;

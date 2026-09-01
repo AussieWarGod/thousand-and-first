@@ -189,7 +189,7 @@ namespace ThousandAndFirst
 					KingdomLog.Log("architecture: plot stage refused: " + receiptFailure);
 					return false;
 				}
-				currentAuthored = KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+				currentAuthored = KingdomArchitectureRules.IsManagedSnapshotEncoding(
 					authored.EncodedSnapshot);
 				if (currentAuthored && (!KingdomArchitectureStamper.TryReadOwner(parent,
 					out _, out _, out string lot, out receiptFailure)

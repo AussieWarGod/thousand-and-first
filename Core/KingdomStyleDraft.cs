@@ -8,6 +8,10 @@ namespace ThousandAndFirst
 	public sealed class KingdomStyleDraft
 	{
 		public string Name;
+		/// <summary>Former or alternate keys accepted for merge, save migration, catalogue tags,
+		/// skins, and architecture selectors. The first declaration's <see cref="Name"/> remains
+		/// canonical; aliases never become a second style.</summary>
+		public string Aliases;
 		public string Terrain;
 		public string Region;
 		public string Strata;
@@ -23,7 +27,7 @@ namespace ThousandAndFirst
 		{
 			return new KingdomStyleDraft
 			{
-				Name = Name, Terrain = Terrain, Region = Region, Strata = Strata,
+				Name = Name, Aliases = Aliases, Terrain = Terrain, Region = Region, Strata = Strata,
 				Priority = Priority, GroundClause = GroundClause, Crop = Crop,
 				Seed = Seed, CropRow = CropRow, WallMaterial = WallMaterial,
 				TimberWall = TimberWall

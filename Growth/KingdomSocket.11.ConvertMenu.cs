@@ -34,7 +34,8 @@ namespace ThousandAndFirst
 			}
 			List<GameObject> buildings = new List<GameObject>();
 			List<GameObject> sockets = new List<GameObject>();
-			Func<GameObject, bool> isBuilding = o => o.GetIntProperty("KingdomBuilt") == 1 && KingdomPlots.TryReadRect(o, out _);
+			Func<GameObject, bool> isBuilding = o => KingdomUpgrade.IsFunctionallyBuilt(o)
+				&& KingdomPlots.TryReadRect(o, out _);
 			Func<GameObject, bool> isSocket = o => o.GetPart<r_KingdomSocket>() != null;
 			CollectNearby(cell, buildings, isBuilding);
 			CollectNearby(cell, sockets, isSocket);

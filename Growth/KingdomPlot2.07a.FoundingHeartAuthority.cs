@@ -146,10 +146,10 @@ namespace ThousandAndFirst
 				return false;
 			GroundGrid grid = new GroundGrid(Z);
 			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
-			KingdomPlotRules.PlotRect footprint = rect;
-			if (!spec.FillsPlot && !KingdomPlotRules.TryCentred(rect, RiteX, RiteY,
-				spec.FootprintWidth, spec.FootprintHeight, out footprint)) return false;
-			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofOnGround(spec.Roof, carved);
+			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
+				out KingdomPlotRules.PlotRect footprint, out _)) return false;
+			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
+				out KingdomPlotRules.RoofState roof, out _)) return false;
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(entry.BuildTicks, System.ZoneDistricts.Values),
 				grid.CellsOf(rect), footprint, roof, carved);

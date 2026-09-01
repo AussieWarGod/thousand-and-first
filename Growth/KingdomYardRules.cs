@@ -49,7 +49,7 @@ namespace ThousandAndFirst
 			public string Trade;
 
 			/// <summary>
-			/// What the trade shades the settlement's equilibrium by
+			/// The ceiling the trade may physically supply to the settlement's equilibrium
 			/// (<c>KingdomCatalogueRules.Equilibrium</c>'s own <c>support:amount</c> language).
 			/// Never null; empty for a trade that shades nothing.
 			/// </summary>
@@ -164,7 +164,8 @@ namespace ThousandAndFirst
 			int total = 0;
 			for (int i = 0; i < shades.Count; i++)
 			{
-				total += shades[i].Amount;
+				total = KingdomCatalogueRules.SaturatingCounterAdd(
+					total, shades[i].Amount);
 			}
 			if (total > MaxShadePerWork)
 			{
@@ -203,7 +204,8 @@ namespace ThousandAndFirst
 			string summary = null;
 			for (int i = 0; i < Spec.Shades.Count; i++)
 			{
-				string piece = "shades " + Spec.Shades[i].Kind + " by " + Spec.Shades[i].Amount;
+				string piece = "can physically supply up to " + Spec.Shades[i].Amount
+					+ " " + Spec.Shades[i].Kind;
 				summary = (summary == null) ? piece : (summary + ", " + piece);
 			}
 			return summary;

@@ -77,5 +77,40 @@ namespace ThousandAndFirst
 		public bool MeasuredRosterExact;
 		public bool MalformedCoResidentEvidence;
 		public bool FaultPresent;
+
+		/// <summary>Builds one complete observed state. Every physical and semantic fact is explicit;
+		/// no proof silently inherits a value-type default because a caller omitted it.</summary>
+		public KingdomPurposeLandingTransactionState(
+			KingdomPurposePairPhase PairPhase, KingdomPurposePairPhase ResumePhase,
+			KingdomPurposeOperationPhase OperationPhase,
+			KingdomPurposeLandingCargoRecordShape CargoRecord,
+			KingdomPurposeLandingAttemptState Attempt,
+			KingdomPurposeLandingCustodyProof EntryCustody,
+			KingdomPurposeLandingCustodyProof Custody,
+			KingdomPurposeLandingStoreRackProof StoreRack,
+			KingdomPurposeLandingCleanupStep Cleanup, int PairRevision,
+			int OperationRevision, int NextOperationOrdinal, int Carried,
+			int ExactServingMarks, bool RootPresent, bool MeasuredRosterExact,
+			bool MalformedCoResidentEvidence, bool FaultPresent)
+		{
+			this.PairPhase = PairPhase;
+			this.ResumePhase = ResumePhase;
+			this.OperationPhase = OperationPhase;
+			this.CargoRecord = CargoRecord;
+			this.Attempt = Attempt;
+			this.EntryCustody = EntryCustody;
+			this.Custody = Custody;
+			this.StoreRack = StoreRack;
+			this.Cleanup = Cleanup;
+			this.PairRevision = PairRevision;
+			this.OperationRevision = OperationRevision;
+			this.NextOperationOrdinal = NextOperationOrdinal;
+			this.Carried = Carried;
+			this.ExactServingMarks = ExactServingMarks;
+			this.RootPresent = RootPresent;
+			this.MeasuredRosterExact = MeasuredRosterExact;
+			this.MalformedCoResidentEvidence = MalformedCoResidentEvidence;
+			this.FaultPresent = FaultPresent;
+		}
 	}
 }

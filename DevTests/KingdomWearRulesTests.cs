@@ -24,13 +24,37 @@ namespace ThousandAndFirst.Tests
 	public class KingdomWearRulesTests
 	{
 		[Test]
-		public void FoodLeakPlansOnlySpendableStacksButKeepsPhysicalCapacityOccupied()
+		public void FoodWearRetiresLegacyReceiptsWithoutInspectingOrMutatingPantryStock()
 		{
 			string source = KingdomWearLogicalSource.Read();
-			StringAssert.Contains("int held = KingdomSurvey.HeldIn(Work);", source);
-			StringAssert.Contains("AvailableIn(Work, leases)", source);
-			StringAssert.Contains("CanSpend(leases, food)", source);
-			StringAssert.Contains("TrySpoilFromExact", source);
+			StringAssert.Contains("KingdomWear.RetireFoodLeakReceipt(ParentObject, this);", source);
+			StringAssert.Contains("if (RetireFoodLeakReceipt(Work, Wear)) return;", source);
+			StringAssert.DoesNotContain("SpoilFood(", source);
+			StringAssert.DoesNotContain("TryFoodPlan(", source);
+			StringAssert.DoesNotContain("ObserveFoodPlan(", source);
+			StringAssert.DoesNotContain("TrySpoilFromExact", source);
+			StringAssert.DoesNotContain("TryDebitFoodFromExact", source);
+			int normalize = source.IndexOf("private void NormalizeSerializedFields()",
+				StringComparison.Ordinal);
+			int retire = source.IndexOf("KingdomWear.RetireFoodLeakReceipt", normalize,
+				StringComparison.Ordinal);
+			int validate = source.IndexOf("bool malformed = false", normalize,
+				StringComparison.Ordinal);
+			Assert.Greater(retire, normalize);
+			Assert.Greater(validate, retire,
+				"a retired food receipt must clear before old payload bounds can quarantine it");
+			int migration = source.IndexOf(
+				"internal static bool RetireFoodLeakReceipt", StringComparison.Ordinal);
+			int migrationEnd = source.IndexOf("private static void QuarantineWear", migration,
+				StringComparison.Ordinal);
+			Assert.GreaterOrEqual(migration, 0);
+			Assert.Greater(migrationEnd, migration);
+			string body = source.Substring(migration, migrationEnd - migration);
+			StringAssert.Contains("ClearLeakReceipt(Wear);", body);
+			StringAssert.Contains("Wear.LeakAnnounced = false;", body);
+			StringAssert.DoesNotContain(".Inventory", body);
+			StringAssert.DoesNotContain(".Destroy", body);
+			StringAssert.DoesNotContain("LastLeakTick", body);
 		}
 
 		private const string City = "taf:settlement:test-city";
@@ -338,11 +362,10 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LeakKind_CarriesFoodNowThatFoodIsAFlow()
+		public void LeakKind_KeepsTheRetiredFoodOrdinalForSaveAbi()
 		{
-			// Addendum 10(b) deferred food spoilage on one condition - "food spoilage waits until
-			// food is a flow" - and Wave B made it one. The values are frozen: a renumbering
-			// would repoint every saved leak at the wrong kind of sentence.
+			// The values are frozen: a renumbering would repoint every saved water, charge, or
+			// retired food receipt at the wrong migration/prose branch.
 			Assert.AreEqual(1, (int)KingdomWearRules.LeakKind.Water);
 			Assert.AreEqual(2, (int)KingdomWearRules.LeakKind.Charge);
 			Assert.AreEqual(3, (int)KingdomWearRules.LeakKind.Food);
@@ -381,16 +404,29 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void Leaked_PricesASpoilingGranaryAgainstTheRungItFeeds()
+		public void DamagedLarderAcrossTheLongestAbsencePreservesEveryIdentityAndCount()
 		{
-			// The granary's own declared capacity (ObjectBlueprints.xml, r_KingdomLarderCapacity
-			// = 288) at the wear ceiling, against the Village rung it opens at, which eats twelve
-			// a day. Spoilage must thin the cushion and never outrun the fields: a ruined granary
-			// losing more in a day than the settlement eats would make one bad roll fatal.
-			int lostInADay = KingdomWearRules.Leaked(288, 288, KingdomMaterialRules.MaxWearPercent, 1);
-			Assert.Greater(lostInADay, 0, "a granary at the ceiling must actually be losing something");
-			Assert.Less(lostInADay, KingdomRules.RationsPerDay(12),
-				"spoilage thins the cushion; it never outruns what the fields make");
+			string[] identities = { "food-a", "food-b", "food-c" };
+			int[] counts = { 144, 96, 48 };
+			string[] originalIdentities = (string[])identities.Clone();
+			int[] originalCounts = (int[])counts.Clone();
+			int lost = KingdomWearRules.Leaked(KingdomWearRules.LeakKind.Food,
+				288, 288, KingdomMaterialRules.MaxWearPercent, int.MaxValue);
+			Assert.AreEqual(0, lost);
+			CollectionAssert.AreEqual(originalIdentities, identities);
+			CollectionAssert.AreEqual(originalCounts, counts);
+
+			string source = KingdomWearLogicalSource.Read();
+			int larder = source.IndexOf(
+				"if (Work.GetIntProperty(LarderProperty) == 1)", StringComparison.Ordinal);
+			int power = source.IndexOf("if (Work.GetPart<r_KingdomPowerStore>() != null)",
+				larder, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(larder, 0);
+			Assert.Greater(power, larder);
+			string branch = source.Substring(larder, power - larder);
+			StringAssert.DoesNotContain("Inventory", branch);
+			StringAssert.DoesNotContain("Destroy", branch);
+			StringAssert.DoesNotContain("LastLeakTick", branch);
 		}
 
 		// --- Hard-running: a streak, re-eligible once per whole further streak ----------------
@@ -894,21 +930,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SurveySource_ProvesEveryLeakAndSpoilCallbackBeforePublishingCounters()
+		public void SurveySource_KeepsSpoilageInertAndProvesExplicitFoodDebitsBeforePublishing()
 		{
 			string survey = KingdomSurveyLogicalSource.Read();
 			int spoil = survey.IndexOf("public bool TrySpoilFromExact", StringComparison.Ordinal);
-			int spoilEnd = survey.IndexOf("private bool PublishSpoilCounters", spoil,
+			int debit = survey.IndexOf("public bool TryDebitFoodFromExact", spoil,
 				StringComparison.Ordinal);
-			string spoilBody = survey.Substring(spoil, spoilEnd - spoil);
-			Assert.AreEqual(1, Count(spoilBody, "food.Destroy(null, Silent: true)"));
-			int destroy = spoilBody.IndexOf("food.Destroy", StringComparison.Ordinal);
-			Assert.Greater(spoilBody.IndexOf("SpoilTopologyExact(frame, expected)", destroy,
+			string compatibility = survey.Substring(spoil, debit - spoil);
+			StringAssert.Contains("Lost = 0;", compatibility);
+			StringAssert.Contains("return false;", compatibility);
+			StringAssert.DoesNotContain("Destroy", compatibility);
+
+			int debitEnd = survey.IndexOf("private bool PublishFoodDebitCounters", debit,
+				StringComparison.Ordinal);
+			string debitBody = survey.Substring(debit, debitEnd - debit);
+			Assert.AreEqual(1, Count(debitBody, "food.Destroy(null, Silent: true)"));
+			int destroy = debitBody.IndexOf("food.Destroy", StringComparison.Ordinal);
+			Assert.Greater(debitBody.IndexOf("FoodDebitTopologyExact(frame, expected)", destroy,
 				StringComparison.Ordinal), destroy);
-			Assert.Greater(spoilBody.IndexOf("PublishSpoilCounters(frame, Lost)", destroy,
+			Assert.Greater(debitBody.IndexOf("PublishFoodDebitCounters(frame, Debited)", destroy,
 				StringComparison.Ordinal), destroy);
 			StringAssert.Contains("ReferenceEquals(Frame.Inventory.Objects, Frame.List)", survey);
 			StringAssert.Contains("item.IDIfAssigned != Frame.ItemIds[i]", survey);
+			string wear = KingdomWearLogicalSource.Read();
+			StringAssert.DoesNotContain("TryDebitFoodFromExact", wear);
+			string cityCatchUp = ReadRepoSource(
+				"Simulation/City/KingdomCity.z06.PlacementAndContainers.cs");
+			StringAssert.DoesNotContain("TryDebitFoodFromExact", cityCatchUp);
+			StringAssert.Contains("elapsed city catch-up never destroys pantry stock", cityCatchUp);
+			string logistics = ReadRepoSource(
+				"Simulation/City/KingdomCentralLogistics.08.ScalarCustodyAndReceiptHelpers.cs");
+			StringAssert.Contains("survey.TryDebitFoodFromExact(target, amount, out debited)",
+				logistics);
 			int leak = survey.IndexOf("public bool TryLeakFromExact", StringComparison.Ordinal);
 			int drain = survey.IndexOf("KingdomLiquids.Drain(Store, Drams)", leak,
 				StringComparison.Ordinal);

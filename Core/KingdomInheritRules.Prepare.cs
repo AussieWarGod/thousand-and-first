@@ -37,8 +37,17 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (Record.SpatialVersion == 0)
+			{
+				string legacyShapeFailure;
+				if (!TryValidateLegacyProxyShape(Record.WorkKeys, LegacyProxyShapeVersion,
+					out legacyShapeFailure))
+				{
+					Fault = KingdomInheritFault.Malformed;
+					return false;
+				}
 				return TryPrepare(Record.WorkKeys, Record.WorkX, Record.WorkY,
 					Record.WorkConditions, State, InterregnumRoll, out Placement, out Fault);
+			}
 			return TryPrepareSpatial(Record, State, InterregnumRoll, out Placement, out Fault);
 		}
 

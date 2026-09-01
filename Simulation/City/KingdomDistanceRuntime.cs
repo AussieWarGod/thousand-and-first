@@ -176,17 +176,20 @@ namespace ThousandAndFirst.Simulation.City
 				if (!selected[i]) continue;
 				Candidate row = candidates[i];
 				points[write] = new KingdomDistancePoint(row.Id, row.X, row.Y);
-				retained[write] = new KingdomDistanceEndpointState
-				{
-					EndpointId = row.Id, ObjectId = row.ObjectId, X = row.X, Y = row.Y,
-					DedicationOrdinal = row.Ordinal,
-					WaterAmount = row.WaterAmount < 0L ? 0L : row.WaterAmount,
-					FoodAmount = row.FoodAmount < 0L ? 0L : row.FoodAmount,
-					WaterRoom = row.WaterRoom < 0L ? 0L : row.WaterRoom,
-					FoodRoom = row.FoodRoom < 0L ? 0L : row.FoodRoom,
-					WaterHolderEdges = waterHolders[i], FoodHolderEdges = foodHolders[i],
-					WaterTargetEdges = waterTargets[i], FoodTargetEdges = foodTargets[i]
-				};
+				retained[write] = KingdomDistanceEndpointState.Capture(
+					EndpointId: row.Id,
+					ObjectId: row.ObjectId,
+					X: row.X,
+					Y: row.Y,
+					DedicationOrdinal: row.Ordinal,
+					WaterAmount: row.WaterAmount < 0L ? 0L : row.WaterAmount,
+					FoodAmount: row.FoodAmount < 0L ? 0L : row.FoodAmount,
+					WaterRoom: row.WaterRoom < 0L ? 0L : row.WaterRoom,
+					FoodRoom: row.FoodRoom < 0L ? 0L : row.FoodRoom,
+					WaterHolderEdges: waterHolders[i],
+					FoodHolderEdges: foodHolders[i],
+					WaterTargetEdges: waterTargets[i],
+					FoodTargetEdges: foodTargets[i]);
 				write++;
 			}
 			ushort[] edges;

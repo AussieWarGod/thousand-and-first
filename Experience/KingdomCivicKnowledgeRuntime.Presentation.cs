@@ -42,7 +42,7 @@ namespace ThousandAndFirst
 				GameObject item = objects[i];
 				if (GameObject.Validate(item) && ReferenceEquals(item.CurrentZone, zone)
 					&& item.CurrentCell != null && item.Blueprint == KingdomLocus.BenchBlueprint
-					&& item.GetIntProperty("KingdomBuilt") == 1
+					&& KingdomUpgrade.IsFunctionallyBuilt(item)
 					&& KingdomCityRules.StableId(item.IDIfAssigned) == workId)
 				{ bench = item; benches++; }
 			}

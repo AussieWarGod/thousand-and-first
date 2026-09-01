@@ -97,7 +97,7 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Puts the founder out of their own realm without waiting for the regard to fall there.
-		/// Everything else is the shipped path: the realm and both its cities are kept whole, the
+		/// Everything else is the shipped path: the realm and all its cities are kept whole, the
 		/// Charter is taken, both registers record it, and nothing physical is touched.
 		/// </summary>
 		/// <param name="Parameter">A deed clause to record, or empty for the unnamed-deed line.</param>
@@ -150,7 +150,15 @@ namespace ThousandAndFirst
 				.Append("  asked-at=").Append((System.ReturnAskedRegard == int.MinValue) ? "never" : System.ReturnAskedRegard.ToString())
 				.Append("  door-closed-told=").Append(System.DoorClosedTold);
 			sb.Append("\n{{C|Its seat}}: ").Append((System.ExiledSeat != null) ? System.ExiledSeat.Describe() : "(none)");
-			sb.Append("\n{{C|Its other city}}: ").Append((System.ExiledAway != null) ? System.ExiledAway.Describe() : "(none)");
+			List<KingdomSettlement> nonSeat = System.ExiledSettlementTopology?.Snapshot()
+				?? new List<KingdomSettlement>();
+			sb.Append("\n{{C|Its non-seat cities}}: ");
+			if (nonSeat.Count == 0) sb.Append("(none)");
+			for (int i = 0; i < nonSeat.Count; i++)
+			{
+				if (i > 0) sb.Append("\n");
+				sb.Append(nonSeat[i].Describe());
+			}
 			Zone here = The.Player?.CurrentZone;
 			sb.Append("\n{{C|Verdict here}}: ").Append(KingdomExileRules.JudgeReturn(System.Exiled, System.Founded, System.ExiledRealmKeptGround, here != null && System.ExiledRealmHolds(here.ZoneID), regard));
 			return sb.ToString();

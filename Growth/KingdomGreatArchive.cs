@@ -16,7 +16,7 @@ namespace ThousandAndFirst
 			if (registrationAttempted) return;
 			registrationAttempted = true;
 			string failure;
-			if (!KingdomHostedArcologyRules.RegisterHostedLot(
+			if (!KingdomHostedArcologyRules.RegisterReadOnlyHostedLot(
 				new KingdomHostedLotDefinition {
 					Key = LotKey, DisplayName = "great archive",
 					InteriorCell = "TAFGreatArchive", ReadOnly = true,
@@ -40,12 +40,15 @@ namespace ThousandAndFirst
 				|| KingdomUpgrade.DesignKeyOf(HostRoot) != KingdomHostedArcology.ArcologyKey
 				|| System.City == null || System.City.SettlementId !=
 					System.SettlementIdForOwnedZone(HostZone.ZoneID)
-				|| !KingdomHostedArcology.Operational(HostRoot))
+				|| !KingdomHostedArcology.IsOperationalPure(HostRoot))
 			{
 				Refusal = "The great archive opens only in the exact crowned arcology of the capital.";
 				return false;
 			}
-			KingdomSurvey survey = KingdomSurvey.Take(HostZone, System);
+			// Eligibility is a read-only view. Reuse the ordered pass when present; otherwise
+			// classify custody without legacy migration, citizenship writes, or messages.
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(HostZone)
+				?? KingdomSurvey.TakeCustodyOnly(HostZone);
 			bool shelf = false;
 			bool press = false;
 			for (int i = 0; i < survey.Built.Count; i++)

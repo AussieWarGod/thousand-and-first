@@ -78,10 +78,24 @@ namespace ThousandAndFirst
 						"More than one exact improvement successor carries this receipt.");
 					return;
 				}
-				if (results != 1 || !r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+				if (results != 1)
 				{
 					KingdomConstruction.Quarantine(ref complete,
-						"The improvement predecessor is not exact and no proved successor replaces it.");
+						"The improvement predecessor is not exact and no unique successor replaces it.");
+					return;
+				}
+				if (Job.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending
+					|| Job.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved)
+				{
+					if (!TryRecoverAbsentHandover(System, Z, result, ref complete,
+						out string recoveryFailure))
+						KingdomConstruction.Quarantine(ref complete, recoveryFailure);
+					return;
+				}
+				if (!r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+				{
+					KingdomConstruction.Quarantine(ref complete,
+						"The improvement predecessor is absent without exact removal proof.");
 					return;
 				}
 				if (KingdomConstruction.Complete(ref complete))

@@ -173,19 +173,13 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Food lost out of one damaged larder, keeping the survey's counters correct the same way
-		/// <see cref="ConsumeFood"/> does. The food mirror of <see cref="LeakFrom"/>, and loss
-		/// rather than transfer for the same reason: this is a harvest gone bad in a holed
-		/// granary, not a harvest moved somewhere the founder can walk up to (Addendum 10(b)).
+		/// Frozen source-compatibility projection for the retired passive spoilage mechanic.
+		/// Always returns zero and never inspects or mutates the container.
 		/// </summary>
-		/// <param name="Container">The damaged pantry. Must be one of <see cref="Larders"/>.</param>
-		/// <param name="Amount">Servings the spoilage is owed.</param>
-		/// <returns>Servings actually lost, measured from the container rather than assumed.</returns>
+		[Obsolete("Passive food spoilage is retired; use an explicit food transaction instead.", false)]
 		public int SpoilFrom(GameObject Container, int Amount)
 		{
-			int lost;
-			TrySpoilFromExact(Container, Amount, out lost);
-			return lost;
+			return 0;
 		}
 
 	}

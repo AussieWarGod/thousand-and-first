@@ -147,7 +147,8 @@ namespace ThousandAndFirst
 			}
 			string expected;
 			if (!KingdomInheritanceStateRules.TryComposeApplicationMarker(Legacy, Reserved,
-				TargetZoneId, KingdomInheritEngine.ReconstructionVersion, out expected))
+				TargetZoneId, KingdomInheritEngine.ReconstructionVersionFor(Legacy),
+				out expected))
 			{
 				Failure = "the canonical reservation could not recompute its application marker";
 				return false;

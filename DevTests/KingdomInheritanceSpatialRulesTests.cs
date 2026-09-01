@@ -47,7 +47,7 @@ namespace ThousandAndFirst.Tests
 				BindingFlags.Static | BindingFlags.NonPublic);
 			Assert.IsNotNull(compile);
 			return (ArchitectureLayoutSnapshot)compile.Invoke(null, new object[]
-				{ 1, ArchitectureLotSize.Small, 5, 4, 2, 0 });
+				{ 1, ArchitectureLotSize.Small, 6, 4, 2, 0 });
 		}
 
 		private static void Encode(ArchitectureLayoutSnapshot Snapshot, out string Encoded,
@@ -92,13 +92,38 @@ namespace ThousandAndFirst.Tests
 			{
 				"spatial_version", "spatial_width", "spatial_height", "spatial_entry_side",
 				"spatial_entry_x", "spatial_entry_y", "work_snapshot", "work_snapshot_hash",
-				"street_x", "street_y"
+				"street_x", "street_y", "profile_schema", "technology_band", "canonical_body",
+				"source_profile_digest", "profile_provenance_digest"
 			};
 			KingdomSealBody copy = new KingdomSealBody();
 			for (int i = 0; i < Source.Keys.Count; i++)
 			{
 				string key = Source.Keys[i];
 				if (spatial.Contains(key)) continue;
+				switch (Source.KindOf(key))
+				{
+					case KingdomSealKind.Text: copy.Put(key, Source.Text(key)); break;
+					case KingdomSealKind.Number: copy.Put(key, Source.Number(key)); break;
+					case KingdomSealKind.TextList: copy.PutList(key, Source.TextList(key)); break;
+					case KingdomSealKind.NumberList: copy.PutList(key, Source.NumberList(key)); break;
+					default: copy.PutList(key, new string[0]); break;
+				}
+			}
+			return copy;
+		}
+
+		private static KingdomSealBody WithoutProfileKeys(KingdomSealBody Source)
+		{
+			HashSet<string> profile = new HashSet<string>(StringComparer.Ordinal)
+			{
+				"profile_schema", "technology_band", "canonical_body",
+				"source_profile_digest", "profile_provenance_digest"
+			};
+			KingdomSealBody copy = new KingdomSealBody();
+			for (int i = 0; i < Source.Keys.Count; i++)
+			{
+				string key = Source.Keys[i];
+				if (profile.Contains(key)) continue;
 				switch (Source.KindOf(key))
 				{
 					case KingdomSealKind.Text: copy.Put(key, Source.Text(key)); break;
@@ -243,20 +268,44 @@ namespace ThousandAndFirst.Tests
 				out KingdomInheritFault fault), fault.ToString());
 			Assert.AreEqual(0, placement.SpatialVersion);
 			Assert.AreEqual(0, placement.StreetCount);
+			Assert.AreEqual(KingdomInheritEngine.LegacyReconstructionVersion,
+				KingdomInheritEngine.ReconstructionVersionFor(record));
 		}
 
 		[Test]
-		public void LegacyHeartProxyPreservesItsRecognizableGrammarIdentity()
+		public void LegacyProxyShapeHasAnExplicitVersionAndRefusesDimensionDrift()
+		{
+			Assert.AreEqual(1, KingdomInheritRules.LegacyProxyShapeVersion);
+			Assert.IsTrue(KingdomInheritRules.LegacyProxyShapeMatches(
+				"heartbasin", 3, 3, KingdomInheritRules.LegacyProxyShapeVersion));
+			Assert.IsFalse(KingdomInheritRules.LegacyProxyShapeMatches(
+				"heartbasin", 4, 4, KingdomInheritRules.LegacyProxyShapeVersion));
+			Assert.IsFalse(KingdomInheritRules.LegacyProxyShapeMatches(
+				"heartbasin", 3, 3, 2));
+			Assert.IsTrue(KingdomInheritRules.TryValidateLegacyProxyShape(
+				new List<string> { "tent", "palisade", "unknown-memory-token" },
+				KingdomInheritRules.LegacyProxyShapeVersion, out string failure), failure);
+			Assert.IsFalse(KingdomInheritRules.TryValidateLegacyProxyShape(
+				new List<string> { "heartbasin" },
+				KingdomInheritRules.LegacyProxyShapeVersion, out failure));
+			StringAssert.Contains("legacy proxy shape changed for heartbasin", failure);
+			Assert.IsFalse(KingdomInheritRules.TryValidateLegacyProxyShape(
+				new List<string> { "tent" }, 2, out failure));
+		}
+
+		[Test]
+		public void ChangedLegacyHeartProxyCannotBypassShapeMigrationGate()
 		{
 			KingdomSealRecord record = new KingdomSealRecord();
 			record.WorkKeys.Add("heartwaterstone");
 			record.WorkX.Add(10);
 			record.WorkY.Add(10);
 			record.WorkConditions.Add(100);
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(record,
+			Assert.IsFalse(KingdomInheritRules.TryPrepare(record,
 				KingdomRules.InheritedState.Held, 50, out KingdomInheritPlacement placement,
-				out KingdomInheritFault fault), fault.ToString());
-			Assert.AreEqual("heartwaterstone", placement.WorkAt(0).Key);
+				out KingdomInheritFault fault));
+			Assert.IsNull(placement);
+			Assert.AreEqual(KingdomInheritFault.Malformed, fault);
 		}
 
 		[Test]
@@ -271,13 +320,17 @@ namespace ThousandAndFirst.Tests
 				WithoutSpatialKeys(current.WriteBody()));
 			Assert.IsTrue(KingdomSealRecord.TryParse(oldText, out KingdomSealRecord old,
 				out KingdomSealFault fault, out string detail), fault + ": " + detail);
+			Assert.AreEqual(oldText, old.Compose(),
+				"parsed schema-four authority must retain its exact canonical envelope");
+			StringAssert.StartsWith("taf-seal 6\n", KingdomSealRules.Copy(old).Compose(),
+				"a new transition copy must use the current schema");
 			Assert.AreEqual(0, old.SpatialVersion);
 			Assert.AreEqual(0, old.WorkSnapshots.Count);
 			Assert.AreEqual(0, old.StreetX.Count);
 		}
 
 		[Test]
-		public void SchemaFiveRoundTripRetainsExactSnapshotAndStreetGraph()
+		public void SchemaFiveRoundTripRetainsSpatialGraphButPinsProfileUnresolved()
 		{
 			MethodInfo sample = typeof(KingdomSealRulesTests).GetMethod("SampleCapturedRecord",
 				BindingFlags.Static | BindingFlags.NonPublic);
@@ -299,13 +352,21 @@ namespace ThousandAndFirst.Tests
 			current.WorkSnapshotHashes = new List<string>(spatial.WorkSnapshotHashes);
 			current.StreetX = new List<int>(spatial.StreetX);
 			current.StreetY = new List<int>(spatial.StreetY);
-			Assert.IsTrue(KingdomSealRecord.TryParse(current.Compose(),
+			string schemaFive = KingdomSealFormat.Compose(5,
+				WithoutProfileKeys(current.WriteBody()));
+			Assert.IsTrue(KingdomSealRecord.TryParse(schemaFive,
 				out KingdomSealRecord read, out KingdomSealFault fault, out string detail),
 				fault + ": " + detail);
+			Assert.AreEqual(schemaFive, read.Compose(),
+				"parsed schema-five authority must retain its exact canonical envelope");
 			CollectionAssert.AreEqual(current.WorkSnapshots, read.WorkSnapshots);
 			CollectionAssert.AreEqual(current.WorkSnapshotHashes, read.WorkSnapshotHashes);
 			CollectionAssert.AreEqual(current.StreetX, read.StreetX);
 			CollectionAssert.AreEqual(current.StreetY, read.StreetY);
+			Assert.AreEqual(KingdomPolityProfileRules.UnresolvedLegacyProfileSchema,
+				read.ProfileSchema);
+			Assert.AreEqual(0, read.TechnologyBand);
+			CollectionAssert.IsEmpty(read.CanonicalBodyKeys);
 		}
 
 		[Test]

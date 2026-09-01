@@ -16,6 +16,7 @@ namespace ThousandAndFirst
 		private static void ContinueBoundLeak(KingdomSystem System, KingdomSurvey Survey,
 			GameObject Work, r_KingdomWear Wear)
 		{
+			if (RetireFoodLeakReceipt(Work, Wear)) return;
 			KingdomWearLeakPhase phase = (KingdomWearLeakPhase)Wear.LeakPhase;
 			if (phase == KingdomWearLeakPhase.Quarantined)
 			{
@@ -46,8 +47,6 @@ namespace ThousandAndFirst
 				return;
 			}
 			int current;
-			bool exactFood;
-			int foodProved;
 			LiquidVolume boundVessel = null;
 			Capacitor boundBed = null;
 			if ((KingdomWearRules.LeakKind)Wear.LeakKind == KingdomWearRules.LeakKind.Water)
@@ -63,8 +62,6 @@ namespace ThousandAndFirst
 					return;
 				}
 				current = boundVessel.Volume;
-				exactFood = true;
-				foodProved = (current == Wear.LeakAfter) ? Wear.LeakWanted : 0;
 			}
 			else if ((KingdomWearRules.LeakKind)Wear.LeakKind == KingdomWearRules.LeakKind.Charge)
 			{
@@ -78,33 +75,15 @@ namespace ThousandAndFirst
 					return;
 				}
 				current = boundBed.Charge;
-				exactFood = true;
-				foodProved = (current == Wear.LeakAfter) ? Wear.LeakWanted : 0;
 			}
 			else
 			{
-				if (Work.GetIntProperty(LarderProperty) != 1
-					|| KingdomSurvey.CapacityOf(Work) != Wear.LeakCapacity)
-				{
-					QuarantineLeak(System, Work, Wear, 0,
-						"Its bound larder dedication or capacity changed.");
-					return;
-				}
-				if (!ObserveFoodPlan(Work, Wear, out current, out exactFood, out foodProved))
-				{
-					QuarantineLeak(System, Work, Wear, 0,
-						"Its bound food identities no longer have one exact location and count.");
-					return;
-				}
+				QuarantineLeak(System, Work, Wear, 0,
+					"Its bound storage-loss kind is unknown.");
+				return;
 			}
 			KingdomWearMutationAction action = KingdomWearRules.LeakMutationAction(phase,
 				Wear.LeakBefore, current, Wear.LeakAfter);
-			if (!exactFood)
-			{
-				QuarantineLeak(System, Work, Wear, 0,
-					"Only part of a storage-loss incident can be proved.");
-				return;
-			}
 			if (action == KingdomWearMutationAction.Apply)
 			{
 				LeakWorkFrame frame;
@@ -145,36 +124,6 @@ namespace ThousandAndFirst
 					{
 						QuarantineLeak(System, Work, Wear, 0,
 							"The charge-loss mutation did not leave its exact bound bed and delta.");
-						return;
-					}
-				}
-				else
-				{
-					string ids;
-					string originals;
-					string allocations;
-					if (Survey == null || !TryFoodPlan(Work, Wear.LeakWanted, out ids,
-							out originals, out allocations)
-						|| ids != Wear.LeakItemIds || originals != Wear.LeakItemOriginalCounts
-						|| allocations != Wear.LeakItemAllocations)
-					{
-						QuarantineLeak(System, Work, Wear, 0,
-							"Its bound food plan changed before spoilage began.");
-						return;
-					}
-					int spoiled;
-					bool complete = Survey.TrySpoilFromExact(Work, Wear.LeakWanted, out spoiled);
-					if (!LeakWorkExact(frame, KingdomWearLeakPhase.MutationIntent))
-					{
-						QuarantineLeak(System, Work, Wear, 0,
-							"A spoilage callback changed the bound work, wear part, storage parts, cell, zone, or receipt.");
-						return;
-					}
-					if (!complete || spoiled != frame.Wanted
-						|| KingdomSurvey.HeldIn(Work) != frame.After)
-					{
-						QuarantineLeak(System, Work, Wear, spoiled,
-							"A spoilage callback was vetoed or changed an exact work, wear, Inventory/list, item, owner, count, cell, zone, survey-counter, or full-topology witness.");
 						return;
 					}
 				}

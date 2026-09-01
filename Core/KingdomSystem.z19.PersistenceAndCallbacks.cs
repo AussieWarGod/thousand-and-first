@@ -142,8 +142,8 @@ namespace ThousandAndFirst
 			NormalizeState(AllowLegacyIdentityMigration: false);
 			MigrateDirectionalStandingStateAfterLoad();
 			ValidateDirectionalFactionRegistryAfterLoad();
-			// Committed presentation recovery is not new simulation work and remains safe while
-			// the master option is off. It only re-proves or restores the exact namespaced view.
+			// Local-view reconstruction is not new simulation work and remains safe while the
+			// master option is off. Migrated schema-1 state also gets exact isolation cleanup.
 			KingdomFounderHistory.ReconcileBestEffort(this);
 			// AfterGameLoadedEvent owns option observation. Until then, configured master-off load is
 			// decode/validation only: do not continue an external/profile or physical transition.
@@ -169,10 +169,11 @@ namespace ThousandAndFirst
 			Registrar.Register(AfterReputationChangeEvent.ID);
 			Registrar.Register(AfterGameLoadedEvent.ID);
 			Registrar.Register(ZoneActivatedEvent.ID);
-			// The true last read (LIVING-CITY-ARCHITECTURE §3.4). ZoneDeactivatedEvent is only a
-			// hint: a deactivated zone goes on simulating for up to forty more turns, so a reading
-			// taken there would be wrong by whatever happened in the grace window. This fires from
-			// SuspendZone BEFORE Suspended is set, for any zone, while its objects are still in RAM.
+			// Deactivation immediately zeros attended hosted-floor credit. A deactivated zone can
+			// remain live for up to forty turns, so only SuspendingEvent may replace that zero with
+			// the true final reading after the grace window.
+			Registrar.Register(ZoneDeactivatedEvent.ID);
+			// This fires from SuspendZone BEFORE Suspended is set, while objects are still in RAM.
 			Registrar.Register(SuspendingEvent.ID);
 			// The pump, and the ONE per-turn cost this design adds anywhere (§0.0(e)). Game-level
 			// EndTurnEvent.Send(game) is a single dispatch immediately before ProcessSingleTurn

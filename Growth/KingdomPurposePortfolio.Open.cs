@@ -13,8 +13,7 @@ namespace ThousandAndFirst
 		internal static void OpenPortfolio(GameObject Work, GameObject Actor)
 		{
 			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
-			if (!GameObject.Validate(Work) || Actor == null || system == null
-				|| Work.GetIntProperty("KingdomBuilt") != 1
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Work) || Actor == null || system == null
 				|| !KingdomPurposePortfolioRules.TryBuildKind(
 					KingdomUpgrade.DesignKeyOf(Work), out KingdomPurposeKind kind))
 			{

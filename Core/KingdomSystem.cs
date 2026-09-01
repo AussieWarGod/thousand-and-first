@@ -77,10 +77,16 @@ namespace ThousandAndFirst
 		/// <para>Version 9 separates faction-to-realm regard from realm-to-faction policy and
 		/// preserves only provable explicit outbound edges from version 8. Missing or ambiguous
 		/// edges remain unspecified; signed spillover carry starts empty.</para>
+		/// <para>Version 10 is the final pre-Alpha physical-product break. It freezes the even-axis
+		/// S/M/L/XL plot law and authored renovate/expand/replace transition model. Versions 8 and
+		/// 9 can contain 5x4, 12x9, or 20x14 lot receipts whose geometry and transition meaning are
+		/// not safely recoverable under the new catalogue. No public build or release tag wrote
+		/// those saves, so the declared pre-release policy moves the named compatibility floor with
+		/// the writer and refuses them explicitly instead of manufacturing a false migration.</para>
 		/// </summary>
-		private const int CurrentSerializationVersion = 9;
+		private const int CurrentSerializationVersion = 10;
 
-		private const int FirstNamedSerializationVersion = 8;
+		private const int FirstNamedSerializationVersion = 10;
 
 		private const int LegacyReflectedSerializationVersion = 1;
 
@@ -203,22 +209,10 @@ namespace ThousandAndFirst
 
 		public bool Withered;
 
-		/// <summary>
-		/// Heartbeat resolves in a row the settlement's ration bill went unpaid. The food mirror
-		/// of <see cref="DryStreak"/>, and a SEPARATE counter on purpose: the two ladders run at
-		/// once and each keeps its own memory, so a settlement that fixes its water and not its
-		/// fields is not quietly forgiven the second thing.
-		/// <para>
-		/// What stops the two costing double is <c>KingdomRules.ComposeScarcity</c>, which takes
-		/// the WORSE of the two ladders and never their sum: one departure per resolve however
-		/// many things are wrong.
-		/// </para>
-		/// </summary>
+		/// <summary>Legacy named save field. Normalization and heartbeat always clear it.</summary>
 		public int HungerStreak;
 
-		/// <summary>The food mirror of <see cref="Withered"/>: the settlement has been hungry
-		/// long enough to be marked for it. Both marks can stand at once &mdash; they are states
-		/// and not costs.</summary>
+		/// <summary>Legacy named save field. Food no longer creates a famine mark.</summary>
 		public bool Famished;
 
 		public bool HasShopkeeper;

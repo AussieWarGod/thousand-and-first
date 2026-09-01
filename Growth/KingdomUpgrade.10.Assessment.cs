@@ -126,7 +126,8 @@ namespace ThousandAndFirst
 			assessment.Verdict = KingdomUpgradeRules.Assess(
 				HasSuccessor: true,
 				SuccessorKnown: known,
-				StyleAllowed: !known || KingdomRules.StyleAllows(successor.Styles, System.Style),
+				StyleAllowed: !known || KingdomRules.StyleAllows(successor.Styles,
+					KingdomData.StyleKeys(System.Style)),
 				OurWork: Work.GetIntProperty(BuiltProperty) == 1 && Work.GetIntProperty(AdoptedProperty) != 1,
 				AlreadyWorking: (improvement != null && improvement.Working)
 					|| HasActiveConstruction(Work),
@@ -147,16 +148,33 @@ namespace ThousandAndFirst
 				known ? successor.Name : null, assessment.StageNeeded, assessment.CrewNeeded,
 				assessment.Shortfall, assessment.Demand.CraftDetail,
 				assessment.Demand.KnowledgeMissing);
-			// An improvement climbs within the ground it was staked on. When the next tier wants more
-			// of the plot than the founder staked, or the ground it would grow onto is where a
-			// household's yard trade stands, the founder is told by name and chooses.
+			// Current authored layouts must reach the same exact preflight used by Begin. This admits
+			// declared a4 envelope growth and refuses occupied annexed ground before the menu calls a
+			// mutating path. Save-era layouts retain the narrower legacy footprint/yard check.
 			if (KingdomUpgradeRules.IsReady(assessment.Verdict)
-				&& KingdomPlots.GrowRefused(Work, assessment.SuccessorKey, out string groundRefusal))
+				&& ImprovementGroundRefused(System, Z, Work, assessment,
+					out string groundRefusal))
 			{
 				assessment.Verdict = KingdomUpgradeRules.UpgradeVerdict.NoGroundToGrow;
 				assessment.Reason = groundRefusal;
 			}
 			return assessment;
+		}
+
+		private static bool ImprovementGroundRefused(KingdomSystem System, Zone Z,
+			GameObject Work, Assessment A, out string Refusal)
+		{
+			Refusal = null;
+			if (!TryPrepareImprovementPayload(System, Z, Work, A, out string ignoredPayload,
+				out KingdomArchitectureIntent ignoredArchitecture,
+				out ArchitectureLayoutDelta ignoredDelta, out bool legacy, out string failure))
+			{
+				Refusal = string.IsNullOrEmpty(failure)
+					? "The authored improvement cannot prove safe ground."
+					: failure;
+				return true;
+			}
+			return legacy && KingdomPlots.GrowRefused(Work, A.SuccessorKey, out Refusal);
 		}
 
 		/// <summary>

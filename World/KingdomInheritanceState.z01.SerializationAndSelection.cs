@@ -150,9 +150,12 @@ namespace ThousandAndFirst
 					RecoveryDisabled = RecoveryDisabled,
 					RetryAuthorized = RetryAuthorized
 				};
-				invalid = !KingdomInheritanceStateRules.TryValidateSavedShape(shape,
-					The.Game == null ? "" : The.Game.GameID,
-					KingdomInheritEngine.ReconstructionVersion, out shapeFailure);
+				int reconstruction = KingdomInheritEngine.ReconstructionVersionForText(
+					shape.LegacyText);
+				invalid = reconstruction <= 0
+					|| !KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+						The.Game == null ? "" : The.Game.GameID,
+						reconstruction, out shapeFailure);
 			}
 			if (invalid)
 			{

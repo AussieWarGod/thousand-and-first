@@ -30,20 +30,30 @@ namespace ThousandAndFirst
 		/// food mirror of <see cref="Fetched"/>.</summary>
 		public int Harvested;
 
-		/// <summary>Servings the settlement's free hands brought in off the land, eaten hand to
-		/// mouth rather than stored. The food mirror of the hauling half of
-		/// <see cref="Fetched"/>.</summary>
+		/// <summary>Legacy passive-foraging history. Current code never increments it; the frozen
+		/// field remains readable so old archive bytes and harmless historical evidence survive.</summary>
 		public int Foraged;
 
-		/// <summary>Servings drawn out of the larders to feed the settlement. The food mirror of
-		/// <see cref="UpkeepDrawn"/>.</summary>
+		/// <summary>
+		/// Frozen serialized slot. Earlier builds counted passive ration draws here; current builds
+		/// count only physical ingredients spent by player-confirmed shared meals. The field name
+		/// remains unchanged so every historical archive writer keeps its exact byte shape.
+		/// </summary>
 		public int RationsDrawn;
+
+		/// <summary>Current semantic name for <see cref="RationsDrawn"/>. A property, deliberately,
+		/// so the reflection-based settlement archive schema gains no field.</summary>
+		public int MealIngredientsSpent
+		{
+			get { return RationsDrawn; }
+			set { RationsDrawn = value; }
+		}
 
 		/// <summary>Servings the settlement's mills ADDED this pass by binding a raw harvest into
 		/// something that keeps: what came back out of the millstone less what went into it
 		/// (<c>KingdomGrowth.GrindHarvest</c>). The gain only &mdash; the crops themselves were
-		/// already counted when they were gathered, and counting them twice is exactly the error
-		/// the subtraction in <c>FoodMadePerDay</c> exists to prevent.</summary>
+		/// already counted when they were gathered. No abstract <c>FoodMadePerDay</c> credit exists
+		/// in current builds.</summary>
 		public int Milled;
 
 		/// <summary>Servings the fields made with nowhere to keep them. Loss and not transfer:
@@ -114,7 +124,7 @@ namespace ThousandAndFirst
 			get
 			{
 				return Fetched > 0 || UpkeepDrawn > 0 || ArrivalCost > 0 || Delivered > 0 || Plundered > 0 || Arrivals > 0 || Departures > 0
-					|| Harvested > 0 || Foraged > 0 || RationsDrawn > 0 || HarvestLost > 0 || Milled > 0
+					|| Harvested > 0 || MealIngredientsSpent > 0 || HarvestLost > 0 || Milled > 0
 					|| Notes.Count > 0 || BrinkLines.Count > 0 || ExpeditionLines.Count > 0;
 			}
 		}
@@ -257,14 +267,10 @@ namespace ThousandAndFirst
 				sb.Append(wrote ? ", " : "").Append(Milled).Append(" more won out of the millstone");
 				wrote = true;
 			}
-			if (Foraged > 0)
+			if (MealIngredientsSpent > 0)
 			{
-				sb.Append(wrote ? ", " : "").Append(Foraged).Append(" foraged off the land");
-				wrote = true;
-			}
-			if (RationsDrawn > 0)
-			{
-				sb.Append(wrote ? ", " : "").Append(RationsDrawn).Append(" eaten out of the larders");
+				sb.Append(wrote ? ", " : "").Append(MealIngredientsSpent)
+					.Append(" meal ingredients used from the larders");
 				wrote = true;
 			}
 			if (HarvestLost > 0)

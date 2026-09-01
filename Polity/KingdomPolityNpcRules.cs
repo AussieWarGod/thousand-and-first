@@ -5,15 +5,16 @@ using System.Globalization;
 namespace ThousandAndFirst
 {
 	/// <summary>Pure regenerated phenotype resolver; no world time, runtime hash, or random draw.</summary>
-	public static class KingdomPolityNpcRules
+	public static partial class KingdomPolityNpcRules
 	{
-		public const int RulesVersion = 1;
+		public const int RulesVersion = 3;
 
+		/// <summary>Frozen resolver for schema-1 cohort plans only.</summary>
 		public static bool TryResolve(KingdomPolityProfileRevision Profile, string RoleKey,
 			int Ordinal, out KingdomPolityNpcSpec Spec, out string Failure)
 		{
 			Spec = null; Failure = null;
-			if (!ValidProfile(Profile) || !KingdomPolityRules.Text(RoleKey, true) ||
+			if (!ValidProfile(Profile, false) || !KingdomPolityRules.Text(RoleKey, true) ||
 				!Contains(Profile.RoleKeys, RoleKey) || Ordinal < 0 || Ordinal > 1023)
 			{
 				Failure = "polity NPC resolver input is invalid or outside the immutable profile";
@@ -26,36 +27,108 @@ namespace ThousandAndFirst
 			int draw = int.Parse(digest.Substring(0, 2), NumberStyles.HexNumber,
 				CultureInfo.InvariantCulture);
 			string bodyKey = Profile.BodyKeys[draw % Profile.BodyKeys.Count];
+			string bodyBlueprint = BodyBlueprint(bodyKey);
+			if (bodyBlueprint == null) { Failure =
+				"frozen polity profile has no admissible manifested body"; return false; }
 			int roleBonus = RoleBonus(RoleKey);
 			int level = Math.Min(40, 1 + Profile.TechnologyBand * 3 + roleBonus + draw % 4);
 			int baseline = Math.Min(28, 14 + Profile.TechnologyBand + level / 5);
 			KingdomPolityNpcSpec result = new KingdomPolityNpcSpec
 			{
 				ResolverDigest = digest, ProfileId = Profile.ProfileId,
-				ProfileRevision = Profile.Revision, RoleKey = RoleKey, Ordinal = Ordinal,
+					ProfileRevision = Profile.Revision, RoleKey = RoleKey, Ordinal = Ordinal,
+					ProfileRulesVersion = Profile.RulesVersion,
 				TechnologyBand = Profile.TechnologyBand,
-				BodyBlueprint = BodyBlueprint(bodyKey), Level = level,
+				BodyBlueprint = bodyBlueprint, Level = level,
 				Strength = baseline, Agility = baseline, Toughness = baseline,
 				Intelligence = baseline, Willpower = baseline, Ego = baseline,
 				Hitpoints = 10 + level * 3
 			};
 			ApplyBodyStats(result, bodyKey); ApplyRoleStats(result);
-			result.Skills = Skills(RoleKey, Profile.TechnologyBand);
-			result.Mutations = Mutations(bodyKey, Profile.TechnologyBand, digest);
+			bool legacy = Profile.RulesVersion == KingdomPolityProfileRules.LegacyRulesVersion;
+			result.Skills = Skills(RoleKey, Profile.TechnologyBand, legacy);
+			result.Mutations = Mutations(bodyKey, Profile.TechnologyBand, digest, legacy);
 			result.GearBlueprints = Gear(Profile.TechnologyBand, RoleKey, bodyKey);
+			if (Profile.RulesVersion == KingdomPolityProfileRules.PriorExpressionRulesVersion)
+				ApplyExpression(Profile, result, digest, true);
 			Spec = result; return true;
 		}
+		/// <summary>
+		/// Frozen resolver for version-2 cohort plans. The encounter band remains plan-owned.
+		/// </summary>
+		private static bool TryResolveV2(KingdomPolityProfileRevision Profile, string RoleKey,
+			int Ordinal, int MinimumLevel, int MaximumLevel,
+			out KingdomPolityNpcSpec Spec, out string Failure)
+		{
+			Spec = null; Failure = null;
+			if (!ValidProfile(Profile, true) || !KingdomPolityRules.Text(RoleKey, true) ||
+				!Contains(Profile.RoleKeys, RoleKey) || Ordinal < 0 || Ordinal > 1023 ||
+				MinimumLevel < 1 || MaximumLevel < MinimumLevel ||
+				MaximumLevel > KingdomPolityRules.MaxLevel)
+			{
+				Failure = "current polity NPC resolver lacks a legal pinned profile, role, or level band";
+				return false;
+			}
+			string expression = KingdomPolityRules.ProfileExpressionDigest(Profile);
+			string digest = KingdomPolityRules.ActivationDigest("polity-npc-spec-v2",
+				Profile.ProfileId, Profile.Revision.ToString(CultureInfo.InvariantCulture),
+				expression, RoleKey, Ordinal.ToString(CultureInfo.InvariantCulture),
+				MinimumLevel.ToString(CultureInfo.InvariantCulture),
+				MaximumLevel.ToString(CultureInfo.InvariantCulture));
+			int draw = int.Parse(digest.Substring(0, 2), NumberStyles.HexNumber,
+				CultureInfo.InvariantCulture);
+			string bodyKey = Profile.BodyKeys[draw % Profile.BodyKeys.Count];
+			string bodyBlueprint = BodyBlueprint(bodyKey);
+			if (bodyBlueprint == null) { Failure =
+				"frozen polity profile has no admissible manifested body"; return false; }
+			KingdomPolityNpcSpec result = new KingdomPolityNpcSpec
+			{
+				ResolverDigest = digest, ProfileId = Profile.ProfileId,
+				ProfileRevision = Profile.Revision, ProfileRulesVersion = Profile.RulesVersion,
+				RoleKey = RoleKey, Ordinal = Ordinal, TechnologyBand = Profile.TechnologyBand,
+				BodyBlueprint = bodyBlueprint,
+				Level = MinimumLevel + draw % (MaximumLevel - MinimumLevel + 1),
+				Skills = Skills(RoleKey, 0, false),
+				Mutations = new List<KingdomPolityMutationSpec>(),
+				GearBlueprints = Gear(Profile.TechnologyBand, RoleKey, bodyKey)
+			};
+			ApplyExpression(Profile, result, digest); Spec = result; return true;
+		}
 
-		private static bool ValidProfile(KingdomPolityProfileRevision P)
+		private static bool ValidProfile(KingdomPolityProfileRevision P, bool Current)
 		{
 			return P != null && KingdomPolityRules.TypedId(P.ProfileId, "taf:polity-profile:") &&
 				P.Revision > 0 && KingdomPolityRules.SemanticId(P.PolityId) &&
-				P.EffectiveTick >= 0L && P.RulesVersion == RulesVersion &&
+				P.EffectiveTick >= 0L && (Current ? P.RulesVersion ==
+					KingdomPolityProfileRules.RulesVersion : P.RulesVersion ==
+					KingdomPolityProfileRules.LegacyRulesVersion || P.RulesVersion ==
+					KingdomPolityProfileRules.PriorExpressionRulesVersion) &&
 				KingdomPolityRules.Digest(P.FactsDigest) && P.TechnologyBand >= 0 &&
 				P.TechnologyBand <= 10 && ValidList(P.DerivedFromFactIds, true, true) &&
 				ValidList(P.PracticeTags, false, false) && ValidBodies(P.BodyKeys) &&
 				ValidRoles(P.RoleKeys) && ValidList(P.GearKeys, false, false) &&
-				ValidLoadout(P.Loadout);
+				ValidLoadout(P.Loadout) && ValidCues(P, Current);
+		}
+
+		private static bool ValidCues(KingdomPolityProfileRevision P, bool Current)
+		{
+			if (P.ExpressionCues == null ||
+				P.ExpressionCues.Count > KingdomPolityProfileExpressionCatalogue.MaxCues) return false;
+			if (P.RulesVersion == KingdomPolityProfileRules.LegacyRulesVersion)
+				return P.ExpressionCues.Count == 0;
+			KingdomPolityExpressionKind first = KingdomPolityExpressionKind.None;
+			bool independent = false;
+			for (int i = 0; i < P.ExpressionCues.Count; i++)
+			{
+				KingdomPolityExpressionCue cue = P.ExpressionCues[i];
+				if (!KingdomPolityProfileExpressionCatalogue.ValidCue(cue) ||
+					(Current && !KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(cue)) ||
+					(i > 0 && KingdomPolityProfileExpressionCatalogue.Compare(
+						P.ExpressionCues[i - 1], cue) >= 0)) return false;
+				if (first == KingdomPolityExpressionKind.None) first = cue.Kind;
+				else if (cue.Kind != first) independent = true;
+			}
+			return independent;
 		}
 
 		private static string BodyBlueprint(string BodyKey)
@@ -65,7 +138,7 @@ namespace ThousandAndFirst
 			if (BodyKey == "dromad") return "Dromad";
 			if (BodyKey == "hindren") return "HindrenVillager";
 			if (BodyKey == "mechanical") return "Scrapbot";
-			return "WatervineFarmer";
+			return BodyKey == "human" ? "WatervineFarmer" : null;
 		}
 
 		private static void ApplyBodyStats(KingdomPolityNpcSpec S, string BodyKey)
@@ -108,7 +181,7 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private static List<string> Skills(string Role, int Technology)
+		private static List<string> Skills(string Role, int Technology, bool Legacy)
 		{
 			List<string> result = new List<string>();
 			switch (Role)
@@ -120,7 +193,7 @@ namespace ThousandAndFirst
 			case "trader": result.Add("Customs"); result.Add("Persuasion");
 				if (Technology >= 4) result.Add("Tinkering"); break;
 			case "courier": case "migrant": result.Add("Survival");
-				result.Add("Tactics_Run"); break;
+				result.Add(Legacy ? "Tactics_Run" : "Tactics_Hurdle"); break;
 			case "cook": result.Add("CookingAndGathering");
 				result.Add("CookingAndGathering_MealPreparation"); break;
 			}
@@ -128,7 +201,7 @@ namespace ThousandAndFirst
 		}
 
 		private static List<KingdomPolityMutationSpec> Mutations(string BodyKey,
-			int Technology, string Digest)
+			int Technology, string Digest, bool Legacy)
 		{
 			List<KingdomPolityMutationSpec> result = new List<KingdomPolityMutationSpec>();
 			if (BodyKey != "human") return result;
@@ -136,7 +209,8 @@ namespace ThousandAndFirst
 				CultureInfo.InvariantCulture);
 			result.Add(new KingdomPolityMutationSpec
 			{
-				ClassName = draw % 2 == 0 ? "HeightenedHearing" : "NightVision",
+				ClassName = draw % 2 == 0 ? "HeightenedHearing" :
+					(Legacy ? "NightVision" : "DarkVision"),
 				Level = Math.Min(5, 1 + Technology / 3)
 			});
 			return result;
@@ -164,7 +238,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Values.Count; i++)
 				if (Values[i] != "human" && Values[i] != "snapjaw" && Values[i] != "goatfolk" &&
 					Values[i] != "dromad" && Values[i] != "hindren" &&
-					Values[i] != "mechanical") return false;
+					Values[i] != "mechanical" && Values[i] != "unresolved") return false;
 			return true;
 		}
 

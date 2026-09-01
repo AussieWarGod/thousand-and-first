@@ -60,7 +60,10 @@ namespace ThousandAndFirst
 		public static bool Reaches(KingdomSystem System, Zone WorkZone, GameObject Work, GameObject At)
 		{
 			Cell cell = (At == null) ? null : At.CurrentCell;
-			return cell != null && ReachesCell(System, WorkZone, Work, cell.ParentZone, cell.X, cell.Y);
+			if (cell == null || !TryActiveBenefits(WorkZone, null, "reach", out var benefits))
+				return false;
+			return ReachesCell(System, WorkZone, Work, cell.ParentZone, cell.X, cell.Y,
+				benefits);
 		}
 
 		/// <summary>Whether a standing work reaches one cell of one zone.</summary>
@@ -72,14 +75,44 @@ namespace ThousandAndFirst
 		/// <param name="Y">The place.</param>
 		public static bool ReachesCell(KingdomSystem System, Zone WorkZone, GameObject Work, Zone AtZone, int X, int Y)
 		{
-			if (Work == null || WorkZone == null || AtZone == null)
-			{
-				return false;
-			}
-			return KingdomReachRules.Covers(EffectiveBandOf(Work), RelationOf(System, WorkZone, Work, AtZone, X, Y));
+			return TryActiveBenefits(WorkZone, null, "reach", out var benefits)
+				&& ReachesCell(System, WorkZone, Work, AtZone, X, Y, benefits);
 		}
 
-		private static ReachRelation RelationOf(KingdomSystem System, Zone WorkZone, GameObject Work, Zone AtZone, int X, int Y)
+		internal static bool ReachesCell(KingdomSystem System, Zone WorkZone,
+			GameObject Work, Zone AtZone, int X, int Y, KingdomBenefitIndex Benefits)
+		{
+			return WorkZone != null && AtZone != null && TryReading(Work, Benefits,
+				out var reading) && ReachesCell(System, WorkZone, Work, reading,
+				AtZone, X, Y);
+		}
+
+		internal static bool ReachesDesignation(KingdomSystem System, Zone WorkZone,
+			GameObject Work, KingdomBenefitReading WorkReading,
+			KingdomBenefitReading TargetReading)
+		{
+			if (WorkZone == null || TargetReading?.Designation?.Cells == null) return false;
+			for (int i = 0; i < TargetReading.Designation.Cells.Count; i++)
+			{
+				KingdomBenefitCell cell = TargetReading.Designation.Cells[i];
+				if ((cell.Use & KingdomBenefitCellUse.Plot) != 0
+					&& ReachesCell(System, WorkZone, Work, WorkReading, WorkZone,
+						cell.X, cell.Y)) return true;
+			}
+			return false;
+		}
+
+		private static bool ReachesCell(KingdomSystem System, Zone WorkZone,
+			GameObject Work, KingdomBenefitReading Reading, Zone AtZone, int X, int Y)
+		{
+			if (Work == null || WorkZone == null || AtZone == null || Reading == null)
+				return false;
+			return KingdomReachRules.Covers(EffectiveBandOf(Work, Reading),
+				RelationOf(System, WorkZone, Work, Reading, AtZone, X, Y));
+		}
+
+		private static ReachRelation RelationOf(KingdomSystem System, Zone WorkZone,
+			GameObject Work, KingdomBenefitReading Reading, Zone AtZone, int X, int Y)
 		{
 			bool sameZone = WorkZone.ZoneID == AtZone.ZoneID;
 			bool sameRealm = Holds(System, AtZone.ZoneID);
@@ -88,13 +121,19 @@ namespace ThousandAndFirst
 			bool inQuarter = false;
 			if (sameZone)
 			{
-				KingdomPlotRules.PlotRect footprint;
-				onFootprint = KingdomPlots.TryReadFootprint(Work, out footprint) && footprint.Contains(X, Y);
+				onFootprint = KingdomReachRules.ContainsPlotCell(
+					Reading.Designation.Cells, X, Y);
 				if (!onFootprint)
 				{
 					Cell cell = Work.CurrentCell;
-					inQuarter = cell != null && KingdomReachRules.InQuarter(MarksOf(WorkZone),
-						cell.X, cell.Y, X, Y, KingdomReachRules.QuarterLinkCells, QuarterRadiusOf(Work));
+					int preferredX = cell == null ? int.MinValue : cell.X;
+					int preferredY = cell == null ? int.MinValue : cell.Y;
+					inQuarter = KingdomReachRules.TryDesignationAnchor(
+						Reading.Designation.Cells, preferredX, preferredY,
+						out int anchorX, out int anchorY)
+						&& KingdomReachRules.InQuarter(MarksOf(WorkZone), anchorX, anchorY,
+							X, Y, KingdomReachRules.QuarterLinkCells,
+							QuarterRadiusOf(Work, Reading));
 				}
 			}
 			return KingdomReachRules.RelationAt(sameRealm, sameCity, sameZone, inQuarter, onFootprint);

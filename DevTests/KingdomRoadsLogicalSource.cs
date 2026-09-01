@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomRoadsLogicalSource
 	{
-		internal const int FileCount = 10;
+		internal const int FileCount = 11;
 
 		private static readonly string[] Paths =
 		{
@@ -14,6 +14,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomRoads.02.SettlementPass.cs",
 			"Growth/KingdomRoads.03.Errands.cs",
 			"Growth/KingdomRoads.04.WearAndPresentation.cs",
+			"Growth/KingdomRoads.04b.RoadSemantics.cs",
 			"Growth/KingdomRoads.05.PavingEntry.cs",
 			"Growth/KingdomRoads.06.PavingProjection.cs",
 			"Growth/KingdomRoads.07.RoadReceiptCodec.cs",

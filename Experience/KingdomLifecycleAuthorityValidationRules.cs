@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst
@@ -76,7 +75,12 @@ namespace ThousandAndFirst
 			switch (lease.Kind)
 			{
 			case KingdomLifecycleResourceKind.Schedule:
-				return operation.Phase == KingdomLifecyclePhase.ScheduleIntent;
+				return operation.Phase == KingdomLifecyclePhase.ScheduleIntent
+					|| operation.Action == KingdomLifecycleAction.Lodge
+						&& operation.Phase == KingdomLifecyclePhase.DomainIntent
+						&& operation.LodgeTerminal != null
+						&& operation.LodgeTerminal.State ==
+							KingdomLifecycleLodgeTerminalState.AbandonIntent;
 			case KingdomLifecycleResourceKind.WaterVessel:
 				return operation.Phase == KingdomLifecyclePhase.WaterIntent;
 			case KingdomLifecycleResourceKind.Projection:
@@ -121,6 +125,8 @@ namespace ThousandAndFirst
 		{
 			if (operation == null) return false;
 			if (operation.Phase == KingdomLifecyclePhase.Quarantined) return true;
+			if (LodgeAbandoned(operation)) return OutboxInitial(operation.Outbox)
+				&& WaterConserved(operation, true);
 			int current = PhaseOrdinal(operation.Action, operation.Phase);
 			int sinks = PhaseOrdinal(operation.Action, KingdomLifecyclePhase.Sinks);
 			if (current < 0 || sinks < 0) return false;
@@ -226,6 +232,28 @@ namespace ThousandAndFirst
 			KingdomLifecycleResourceLease lease)
 		{
 			if (operation == null || lease == null) return false;
+			if (LodgeAbandoned(operation))
+				return lease.Kind == KingdomLifecycleResourceKind.Roster
+					? lease.State == KingdomLifecycleLeaseState.Proved
+						|| lease.State == KingdomLifecycleLeaseState.Skipped
+					: lease.State == KingdomLifecycleLeaseState.Proved;
+			if (operation.Action == KingdomLifecycleAction.Lodge
+				&& operation.Phase == KingdomLifecyclePhase.DomainIntent
+				&& operation.LodgeTerminal != null
+				&& operation.LodgeTerminal.State == KingdomLifecycleLodgeTerminalState.AbandonIntent)
+			{
+				if (lease.Kind == KingdomLifecycleResourceKind.Schedule)
+					return lease.State == KingdomLifecycleLeaseState.Prepared
+						|| lease.State == KingdomLifecycleLeaseState.Intent
+						|| lease.State == KingdomLifecycleLeaseState.Proved;
+				if (lease.Kind == KingdomLifecycleResourceKind.Roster)
+					return lease.State == KingdomLifecycleLeaseState.Prepared
+						|| lease.State == KingdomLifecycleLeaseState.Intent
+						|| lease.State == KingdomLifecycleLeaseState.Proved
+						|| lease.State == KingdomLifecycleLeaseState.Skipped;
+				return lease.Kind == KingdomLifecycleResourceKind.WaterVessel
+					&& lease.State == KingdomLifecycleLeaseState.Proved;
+			}
 			if (operation.Phase == KingdomLifecyclePhase.Quarantined)
 				return lease.State == KingdomLifecycleLeaseState.Prepared
 					|| lease.State == KingdomLifecycleLeaseState.Intent

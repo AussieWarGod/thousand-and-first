@@ -46,6 +46,7 @@ namespace ThousandAndFirst
 				if (exact != null)
 					return Fail("more than one founding-heart pose binds the immutable basin",
 						out Failure);
+				if (!TryVerifyPhysicalIngressRoutes(Z, Rect, snapshot, out Failure)) return false;
 				if (!KingdomArchitectureRules.TryEncodeSnapshot(snapshot, out string encoded,
 					out Failure)
 					|| !KingdomArchitectureRules.TrySnapshotHash(snapshot, out string hash,

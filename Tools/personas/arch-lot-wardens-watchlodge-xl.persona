@@ -1,0 +1,6 @@
+# Native taste proof for the passable lodge marker, public bench, and road sightline.
+DESCRIPTION=Wardens watch-lodge campus stages for native hospitality and route review
+REQUEST=arch-lot-wardens-watchlodge-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,creed,taste

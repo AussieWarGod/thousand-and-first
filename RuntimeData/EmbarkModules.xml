@@ -13,6 +13,89 @@
              this element must therefore be empty/self-closing or the loader warns. -->
         <gamesystem Class="ThousandAndFirst.KingdomSuccession" />
       </mode>
+      <mode ID="KingdomQuickstart" Title="Kingdom Quickstart">
+        <icon Tile="Items/sw_book_1.bmp" Foreground="g" Detail="Y"></icon>
+        <description>
+          Begin on reviewed wilderness ground with a normally founded kingdom heart and modest physical provisions. Recommended for learning or testing The Thousand and First; the camp stores are finite and do not produce replacements.
+        </description>
+        <stringgamestate Name="GameMode" Value="KingdomQuickstart"></stringgamestate>
+        <boolgamestate Name="r_TAF_KingdomMode" Value="true"></boolgamestate>
+        <gamesystem Class="ThousandAndFirst.KingdomSuccession" />
+      </mode>
     </modes>
   </module>
+  <module Class="XRL.CharacterBuilds.Qud.QudChooseStartingLocationModule">
+    <locations>
+      <location ID="TAFQuickstartMarsh" Name="{{G|Reedwake}}&#10;salt marsh camp" Location="GlobalLocation:JoppaWorld.8.22.1.1.10@40,12" Set="TAFKingdomQuickstart" ExcludeFromDaily="Yes">
+        <description>
+          {{c|&#249;}} A low-tier salt marsh holding camp.
+          {{c|&#249;}} Starts with one founded heart and finite food, water, and simple materials.
+          {{c|&#249;}} The surrounding wilderness is not guaranteed safe.
+        </description>
+        <stringgamestate Name="r_TAF_QuickstartProfile_v1" Value="marsh"></stringgamestate>
+        <grid Position="00" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="b" Background="k"></grid>
+        <grid Position="10" Tile="Terrain/sw_marsh_worldmap_4.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="20" Tile="Terrain/sw_marsh_worldmap_1.bmp" Foreground="g" Detail="b" Background="k"></grid>
+        <grid Position="30" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="40" Tile="Terrain/sw_marsh_worldmap_2.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="01" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="11" Tile="Terrain/sw_marsh_worldmap_1.bmp" Foreground="g" Detail="b" Background="k"></grid>
+        <grid Position="21" Tile="Terrain/sw_joppa.bmp" Foreground="W" Detail="g" Background="k"></grid>
+        <grid Position="31" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="41" Tile="Terrain/sw_marsh_worldmap_1.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="02" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="12" Tile="Terrain/sw_marsh_worldmap_4.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="22" Tile="Terrain/sw_marsh_worldmap_1.bmp" Foreground="g" Detail="g" Background="k"></grid>
+        <grid Position="32" Tile="Terrain/sw_marsh_worldmap_4.bmp" Foreground="g" Detail="b" Background="k"></grid>
+        <grid Position="42" Tile="Terrain/sw_marsh_worldmap_3.bmp" Foreground="g" Detail="b" Background="k"></grid>
+      </location>
+      <location ID="TAFQuickstartCanyon" Name="{{W|Riftside}}&#10;canyon camp" Location="GlobalLocation:JoppaWorld.14.17.1.1.10@40,12" Set="TAFKingdomQuickstart" ExcludeFromDaily="Yes">
+        <description>
+          {{c|&#249;}} A low-tier camp among the desert canyons.
+          {{c|&#249;}} Starts with one founded heart and finite food, water, and simple materials.
+          {{c|&#249;}} The surrounding wilderness is not guaranteed safe.
+        </description>
+        <stringgamestate Name="r_TAF_QuickstartProfile_v1" Value="canyon"></stringgamestate>
+        <grid Position="00" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="10" Tile="Terrain/sw_hills2.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="20" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="30" Tile="Terrain/sw_hills2.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="40" Tile="Terrain/tile_flowers1.bmp" Foreground="r" Detail="M" Background="k"></grid>
+        <grid Position="01" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="11" Tile="Terrain/sw_hills2.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="21" Tile="Terrain/sw_joppa.bmp" Foreground="r" Detail="R" Background="k"></grid>
+        <grid Position="31" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="41" Tile="Terrain/sw_hills2.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="02" Tile="Terrain/sw_marsh_worldmap_2.bmp" Foreground="g" Detail="b" Background="k"></grid>
+        <grid Position="12" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="22" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="32" Tile="Terrain/sw_hills2.bmp" Foreground="w" Detail="w" Background="k"></grid>
+        <grid Position="42" Tile="Terrain/sw_canyon.bmp" Foreground="w" Detail="w" Background="k"></grid>
+      </location>
+      <location ID="TAFQuickstartDunes" Name="{{Y|Saltwake}}&#10;salt dune camp" Location="GlobalLocation:JoppaWorld.6.17.1.1.10@40,12" Set="TAFKingdomQuickstart" ExcludeFromDaily="Yes">
+        <description>
+          {{c|&#249;}} A low-tier holding camp in the salt dunes.
+          {{c|&#249;}} Starts with one founded heart and finite food, water, and simple materials.
+          {{c|&#249;}} The surrounding wilderness is not guaranteed safe.
+        </description>
+        <stringgamestate Name="r_TAF_QuickstartProfile_v1" Value="dunes"></stringgamestate>
+        <grid Position="00" Tile="Terrain/sw_ground_desert_11.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="10" Tile="Terrain/sw_ground_desert_2.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="20" Tile="Terrain/sw_ground_desert_11.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="30" Tile="Terrain/sw_ground_desert_7.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="40" Tile="Terrain/sw_ground_desert_9.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="01" Tile="Terrain/sw_ground_desert_4.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="11" Tile="Terrain/sw_ground_desert_6.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="21" Tile="Terrain/sw_joppa.bmp" Foreground="m" Detail="M" Background="k"></grid>
+        <grid Position="31" Tile="Terrain/sw_ground_desert_5.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="41" Tile="Terrain/sw_ground_desert_3.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="02" Tile="Terrain/sw_ground_desert_7.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="12" Tile="Terrain/sw_ground_desert_6.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="22" Tile="Terrain/sw_ground_desert_6.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="32" Tile="Terrain/sw_ground_desert_11.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+        <grid Position="42" Tile="Terrain/sw_ground_desert_9.bmp" Foreground="Y" Detail="Y" Background="k"></grid>
+      </location>
+    </locations>
+  </module>
+  <module Class="ThousandAndFirst.KingdomQuickstartEmbarkModule" />
 </embarkmodules>

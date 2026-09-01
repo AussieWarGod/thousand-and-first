@@ -153,6 +153,7 @@ namespace XRL.World.Parts
 
 		private void NormalizeSerializedFields()
 		{
+			KingdomWear.RetireFoodLeakReceipt(ParentObject, this);
 			bool malformed = false;
 			if (!SavedTextWithin(QuarantineReason, KingdomWearRules.MaxSavedTextChars)
 				|| !SavedTextWithin(IncidentId, KingdomWearRules.MaxSavedTextChars)

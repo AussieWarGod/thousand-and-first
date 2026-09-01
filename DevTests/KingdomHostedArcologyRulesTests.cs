@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ThousandAndFirst;
 
@@ -15,7 +16,12 @@ namespace ThousandAndFirst.Tests
 			Assert.IsTrue(KingdomHostedArcologyRules.TryHostedLot("arcologyward", out ward));
 			Assert.IsTrue(KingdomHostedArcologyRules.TryHostedLot("arcologyterrace", out terrace));
 			Assert.IsFalse(ward.ReadOnly);
-			Assert.AreEqual("roof:26,luxury:2", ward.Supports);
+			Assert.AreEqual(KingdomHostedArcologyTopology.Schema, ward.InteriorCell);
+			Assert.AreEqual(KingdomHostedArcologyTopology.Schema, terrace.InteriorCell);
+			Assert.AreEqual("roof:8,luxury:2", ward.Supports);
+			Assert.AreEqual(8, KingdomHostedArcologyRules.ContractCap(ward, "roof"));
+			Assert.AreEqual(2, KingdomHostedArcologyRules.ContractCap(ward, "luxury"));
+			Assert.AreEqual(0, KingdomHostedArcologyRules.ContractCap(ward, "food"));
 			Assert.IsTrue(terrace.RequiresWater);
 			Assert.AreEqual("r_KingdomArcologyGrowbed",
 				terrace.PhysicalProducerBlueprint);
@@ -26,22 +32,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void HostedFoodRequiresBoundedPhysicalProducerContract()
+		public void PaidHostedRegistrationIsClosedWithoutMutatingCatalogue()
 		{
-			KingdomHostedLotDefinition missing = new KingdomHostedLotDefinition {
-				Key = "test-food-missing-" + Guid.NewGuid().ToString("N"),
-				DisplayName = "unbacked food", InteriorCell = "TAFArcologyTerrace",
+			int before = KingdomHostedArcologyRules.RegisteredHostedLots().Count;
+			KingdomHostedLotDefinition paid = new KingdomHostedLotDefinition {
+				Key = "test-paid-" + Guid.NewGuid().ToString("N"),
+				DisplayName = "unsupported paid floor", InteriorCell = "TAFArcology",
 				MaterialKey = "arcologyterrace", BuildTicks = 1L, Crew = 1,
-				Supports = "food:1"
+				Supports = "food:1", PhysicalProducerBlueprint = "r_KingdomArcologyGrowbed",
+				PhysicalProducerCount = 1
 			};
-			Assert.IsFalse(KingdomHostedArcologyRules.RegisterHostedLot(missing,
+			Assert.IsFalse(KingdomHostedArcologyRules.RegisterReadOnlyHostedLot(paid,
 				out string failure));
-			StringAssert.Contains("physical producer", failure);
-			missing.Key = "test-food-ragged-" + Guid.NewGuid().ToString("N");
-			missing.PhysicalProducerBlueprint = "r_KingdomArcologyGrowbed";
-			Assert.IsFalse(KingdomHostedArcologyRules.RegisterHostedLot(missing,
-				out failure));
-			StringAssert.Contains("malformed", failure);
+			StringAssert.Contains("closed in v1", failure);
+			Assert.AreEqual(before, KingdomHostedArcologyRules.RegisteredHostedLots().Count);
 		}
 
 		[Test]
@@ -49,13 +53,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string key = "test-read-view-" + Guid.NewGuid().ToString("N");
 			KingdomHostedLotDefinition view = new KingdomHostedLotDefinition {
-				Key = key, DisplayName = "test archive", InteriorCell = "TAFArcologyAtrium",
+				Key = key, DisplayName = "test archive", InteriorCell = "TAFArcology",
 				ReadOnly = true, KnowledgeView = "test:realm-dag"
 			};
-			Assert.IsTrue(KingdomHostedArcologyRules.RegisterHostedLot(view, out string failure), failure);
-			Assert.IsFalse(KingdomHostedArcologyRules.RegisterHostedLot(view, out failure));
+			Assert.IsTrue(KingdomHostedArcologyRules.RegisterReadOnlyHostedLot(
+				view, out string failure), failure);
+			Assert.IsFalse(KingdomHostedArcologyRules.RegisterReadOnlyHostedLot(view, out failure));
 			view.Key += "-mutating"; view.MaterialKey = "arcologyward";
-			Assert.IsFalse(KingdomHostedArcologyRules.RegisterHostedLot(view, out failure));
+			Assert.IsFalse(KingdomHostedArcologyRules.RegisterReadOnlyHostedLot(view, out failure));
 		}
 
 		[Test]
@@ -134,6 +139,123 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CompleteSlateRejectsDuplicateForeignAndDivergentReceipts()
+		{
+			KingdomHostedLotReceipt ward = WorkingLot();
+			string encoded = KingdomHostedArcologyReceiptCodec.EncodeLot(ward);
+			Assert.IsTrue(KingdomHostedArcologySlateRules.TryRead(
+				new List<string> { encoded }, "root",
+				out List<KingdomHostedLotReceipt> rows, out string failure), failure);
+			Assert.AreEqual(1, rows.Count);
+
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryRead(
+				new List<string> { encoded, encoded }, "root", out rows, out failure));
+			StringAssert.Contains("duplicate", failure);
+
+			ward.RootId = "other-root";
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryRead(new List<string> {
+				KingdomHostedArcologyReceiptCodec.EncodeLot(ward) }, "root",
+				out rows, out failure));
+			StringAssert.Contains("another shell", failure);
+
+			ward.RootId = "root";
+			ward.Supports = "roof:999";
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryRead(new List<string> {
+				KingdomHostedArcologyReceiptCodec.EncodeLot(ward) }, "root",
+				out rows, out failure));
+			StringAssert.Contains("work contract", failure);
+		}
+
+		[Test]
+		public void FinalObservationRoundTripsCanonicallyAndCopiesOnRead()
+		{
+			KingdomHostedObservation row = Observation(
+				KingdomHostedArcologyTopology.WardLotKey);
+			string encoded = KingdomHostedArcologyReceiptCodec.EncodeObservation(row);
+			Assert.IsTrue(KingdomHostedArcologyReceiptCodec.TryDecodeObservation(
+				encoded, out KingdomHostedObservation decoded));
+			Assert.AreEqual(8, decoded.Roof);
+			Assert.AreEqual(row.ReceiptRevision, decoded.ReceiptRevision);
+			Assert.IsFalse(KingdomHostedArcologyReceiptCodec.TryDecodeObservation(
+				encoded + "AAAA", out decoded));
+
+			Assert.IsTrue(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { encoded }, "root",
+				out List<KingdomHostedObservation> rows, out string failure), failure);
+			rows[0].Roof = 0;
+			Assert.IsTrue(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { encoded }, "root", out rows, out failure), failure);
+			Assert.AreEqual(8, rows[0].Roof);
+		}
+
+		[Test]
+		public void ObservationSlateRejectsDuplicateForeignCrossLaneAndOverCapRows()
+		{
+			KingdomHostedObservation row = Observation(
+				KingdomHostedArcologyTopology.WardLotKey);
+			string encoded = KingdomHostedArcologyReceiptCodec.EncodeObservation(row);
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { encoded, encoded }, "root",
+				out List<KingdomHostedObservation> rows, out string failure));
+			StringAssert.Contains("duplicate", failure);
+
+			row.RootId = "foreign";
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { KingdomHostedArcologyReceiptCodec.EncodeObservation(row) },
+				"root", out rows, out failure));
+			StringAssert.Contains("another shell", failure);
+
+			row = Observation(KingdomHostedArcologyTopology.WardLotKey); row.Food = 1;
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { KingdomHostedArcologyReceiptCodec.EncodeObservation(row) },
+				"root", out rows, out failure));
+			StringAssert.Contains("physical work contract", failure);
+
+			row = Observation(KingdomHostedArcologyTopology.WardLotKey); row.Roof = 9;
+			Assert.IsFalse(KingdomHostedArcologySlateRules.TryReadObservations(
+				new List<string> { KingdomHostedArcologyReceiptCodec.EncodeObservation(row) },
+				"root", out rows, out failure));
+			StringAssert.Contains("physical work contract", failure);
+		}
+
+		[Test]
+		public void ObservationMatchBindsReceiptRootZoneAnchorAndTime()
+		{
+			KingdomHostedObservation row = Observation(
+				KingdomHostedArcologyTopology.WardLotKey);
+			Assert.IsTrue(KingdomHostedArcologySlateRules.Matches(row, "root",
+				row.LotKey, row.ReceiptRevision, row.InteriorZoneId, row.AnchorId,
+				100L, out string failure), failure);
+			Assert.IsFalse(KingdomHostedArcologySlateRules.Matches(row, "other",
+				row.LotKey, row.ReceiptRevision, row.InteriorZoneId, row.AnchorId,
+				100L, out failure));
+			Assert.IsFalse(KingdomHostedArcologySlateRules.Matches(row, "root",
+				row.LotKey, "changed", row.InteriorZoneId, row.AnchorId, 100L, out failure));
+			Assert.IsFalse(KingdomHostedArcologySlateRules.Matches(row, "root",
+				row.LotKey, row.ReceiptRevision, "other-zone", row.AnchorId, 100L, out failure));
+			Assert.IsFalse(KingdomHostedArcologySlateRules.Matches(row, "root",
+				row.LotKey, row.ReceiptRevision, row.InteriorZoneId, "other-anchor",
+				100L, out failure));
+			Assert.IsFalse(KingdomHostedArcologySlateRules.Matches(row, "root",
+				row.LotKey, row.ReceiptRevision, row.InteriorZoneId, row.AnchorId,
+				99L, out failure));
+		}
+
+		[Test]
+		public void PhysicalRowsAndObservationAgeAreBoundedPureArithmetic()
+		{
+			Assert.AreEqual(14, KingdomHostedArcologyRules.PhysicalFoodForRows(
+				28, 3, 6));
+			Assert.AreEqual(0, KingdomHostedArcologyRules.PhysicalFoodForRows(0, 3, 6));
+			Assert.AreEqual(int.MaxValue, KingdomHostedArcologyRules.PhysicalFoodForRows(
+				int.MaxValue, int.MaxValue, 1));
+			Assert.AreEqual(0, KingdomHostedArcologySlateRules.AgeDays(100L, 100L, 10L));
+			Assert.AreEqual(2, KingdomHostedArcologySlateRules.AgeDays(100L, 129L, 10L));
+			Assert.AreEqual(int.MaxValue, KingdomHostedArcologySlateRules.AgeDays(
+				0L, long.MaxValue, 1L));
+		}
+
+		[Test]
 		public void LabourUsesPriorStaffingAndBoundsElapsedCatchup()
 		{
 			long next;
@@ -175,9 +297,27 @@ namespace ThousandAndFirst.Tests
 		{
 			return new KingdomHostedLotReceipt {
 				Phase = KingdomHostedLotPhase.Working, LotKey = "arcologyward",
-				JobId = "job", RootId = "root", Supports = "roof:26,luxury:2",
+				JobId = "job", RootId = "root", Supports = "roof:8,luxury:2",
 				Remaining = 900, LastTick = 100L, StaffingBasis = 50
 			};
+		}
+
+		private static KingdomHostedObservation Observation(string LotKey)
+		{
+			KingdomHostedLotReceipt receipt = new KingdomHostedLotReceipt {
+				Phase = KingdomHostedLotPhase.Active, LotKey = LotKey, JobId = "job",
+				RootId = "root", Supports = LotKey == KingdomHostedArcologyTopology.WardLotKey
+					? "roof:8,luxury:2" : "food:14", Remaining = 0,
+				LastTick = 100L, StaffingBasis = 100,
+				RequiresWater = LotKey == KingdomHostedArcologyTopology.TerraceLotKey
+			};
+			return new KingdomHostedObservation { RootId = "root", LotKey = LotKey,
+				ReceiptRevision = KingdomHostedArcologyRules.ReceiptRevision(receipt),
+				InteriorZoneId = "Interior@TAFArcology@root.0.0.0.1.11",
+				AnchorId = "anchor", ObservedTick = 100L,
+				Roof = LotKey == KingdomHostedArcologyTopology.WardLotKey ? 8 : 0,
+				Luxury = LotKey == KingdomHostedArcologyTopology.WardLotKey ? 2 : 0,
+				Food = LotKey == KingdomHostedArcologyTopology.TerraceLotKey ? 14 : 0 };
 		}
 	}
 }

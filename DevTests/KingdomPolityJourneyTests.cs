@@ -82,7 +82,7 @@ namespace ThousandAndFirst.DevTests
 			for (int purpose = 1; purpose <= 7; purpose++)
 			{
 				string id = "taf:cohort:purpose-" + purpose;
-				KingdomPolityCohortPlanRequest request = CohortRequest(id,
+				KingdomPolityCohortPlanRequest request = CohortRequest(ledger, id,
 					(KingdomPolityCohortPurpose)purpose, "taf:event:purpose-" + purpose, 2);
 				if (purpose == (int)KingdomPolityCohortPurpose.Envoy)
 					request.NamedFigureId = "taf:figure:rival-envoy";
@@ -109,21 +109,21 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointCleanup(ledger,
 				ledger.Revision, guard.CohortId, receipt.ProjectionId, receipt.ObjectIds, out _,
 				out prepareFailure), prepareFailure);
-			KingdomPolityCohortPlanRequest resident = CohortRequest("taf:cohort:resident-face",
-				KingdomPolityCohortPurpose.Envoy, "taf:event:resident-face", 2);
-			resident.PolityId = KingdomPolityTestData.Realm;
+			KingdomPolityCohortPlanRequest resident = CohortRequest(ledger,
+				"taf:cohort:resident-face", KingdomPolityCohortPurpose.Envoy,
+				"taf:event:resident-face", 2, KingdomPolityTestData.Realm);
 			resident.NamedFigureId = "taf:figure:current-successor";
 			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, resident,
 				out _, out prepareFailure), "resident successor must never be regenerated");
-			KingdomPolityCohortPlanRequest single = CohortRequest("taf:cohort:single-courier",
+			KingdomPolityCohortPlanRequest single = CohortRequest(ledger, "taf:cohort:single-courier",
 				KingdomPolityCohortPurpose.Courier, "taf:event:single-courier", 1);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, single,
 				out _, out prepareFailure), prepareFailure);
-			KingdomPolityCohortPlanRequest seven = CohortRequest("taf:cohort:seven-migrants",
+			KingdomPolityCohortPlanRequest seven = CohortRequest(ledger, "taf:cohort:seven-migrants",
 				KingdomPolityCohortPurpose.Migrant, "taf:event:seven-migrants", 7);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, seven,
 				out _, out prepareFailure), prepareFailure);
-			KingdomPolityCohortPlanRequest eight = CohortRequest("taf:cohort:eight-migrants",
+			KingdomPolityCohortPlanRequest eight = CohortRequest(ledger, "taf:cohort:eight-migrants",
 				KingdomPolityCohortPurpose.Migrant, "taf:event:eight-migrants", 8);
 			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, eight,
 				out _, out prepareFailure), "eight bodies exceed the declared attention bound");
@@ -355,12 +355,12 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
 				100L, 100L, out _, out failure), failure);
 			EnvoyId = "taf:cohort:terms-envoy"; WarbandId = "taf:cohort:frozen-warband";
-			KingdomPolityCohortPlanRequest envoy = CohortRequest(EnvoyId,
+			KingdomPolityCohortPlanRequest envoy = CohortRequest(ledger, EnvoyId,
 				KingdomPolityCohortPurpose.Envoy, Route, 2);
 			envoy.NamedFigureId = "taf:figure:rival-envoy";
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, envoy,
 				out _, out failure), failure);
-			KingdomPolityCohortPlanRequest warband = CohortRequest(WarbandId,
+			KingdomPolityCohortPlanRequest warband = CohortRequest(ledger, WarbandId,
 				KingdomPolityCohortPurpose.Warband, "taf:event:warband-mustered", 2);
 			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, warband,
 				out _, out failure), failure);
@@ -437,16 +437,20 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityPublicationResult _, out failure), failure);
 		}
 
-		private static KingdomPolityCohortPlanRequest CohortRequest(string Id,
-			KingdomPolityCohortPurpose Purpose, string Source, int Count)
+		private static KingdomPolityCohortPlanRequest CohortRequest(KingdomPolityLedger Ledger,
+			string Id, KingdomPolityCohortPurpose Purpose, string Source, int Count,
+			string Polity = KingdomPolityTestData.Rival)
 		{
+			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, Polity, Purpose,
+				out int resolverRulesVersion, out int minimum, out int maximum,
+				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest
 			{
 				CohortId = Id, Purpose = Purpose, SourceRef = Source,
-				PolityId = KingdomPolityTestData.Rival,
-				SurfaceRef = KingdomPolityTestData.Settlement, MemberCount = Count,
+				PolityId = Polity, SurfaceRef = KingdomPolityTestData.Settlement,
+				MemberCount = Count, MinimumLevel = minimum, MaximumLevel = maximum,
 				EventStreamId = "taf:stream:" + Id.Substring("taf:cohort:".Length),
-				RulesVersion = KingdomPolityNpcRules.RulesVersion,
+				RulesVersion = resolverRulesVersion,
 				PresentationAuthority = Authority(Purpose, 100L)
 			};
 		}

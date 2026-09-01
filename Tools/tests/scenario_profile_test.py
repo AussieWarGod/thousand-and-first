@@ -138,6 +138,16 @@ class ProfileSealTest(unittest.TestCase):
             self.verify()
         self.assertIn("link", str(caught.exception))
 
+    def test_symlinked_tree_root_is_rejected(self):
+        linked_root = self.tmp / "linked-local"
+        try:
+            os.symlink(self.tree, linked_root, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("symlinks unavailable on this platform")
+        with self.assertRaises(SystemExit) as caught:
+            profile.inventory(str(linked_root))
+        self.assertIn("linked directory", str(caught.exception))
+
     def test_hard_linked_file_is_rejected(self):
         # os.path.islink is False for a hard link: it is a second NAME for the sealed inode, and
         # writing through the other name changes the sealed bytes from outside the profile.
@@ -193,6 +203,39 @@ class ProfileSealTest(unittest.TestCase):
             profile.inventory(str(empty))
 
 
+class LauncherTrustSourceTest(unittest.TestCase):
+    def test_prepare_hashes_once_and_launcher_rechecks_at_use(self):
+        prepare = (ROOT / "Tools" / "prepare-scenario.sh").read_text(encoding="utf-8")
+        launcher = (ROOT / "Tools" / "run-scenario.ps1").read_text(encoding="utf-8")
+        self.assertIn('seal "$LOCAL" "$SEAL_DIR/profile.sha256"', prepare)
+        self.assertNotIn('verify "$LOCAL"', prepare)
+        self.assertIn(
+            "Assert-ClosedSeal -TreeRoot $localRoot -SealPath $profileSeal", launcher
+        )
+
+    def test_windows_link_proof_is_in_process_and_brackets_the_hash(self):
+        launcher = (ROOT / "Tools" / "run-scenario.ps1").read_text(encoding="utf-8")
+        trust = (ROOT / "Tools" / "ScenarioFileTrust.cs").read_text(encoding="utf-8")
+        self.assertNotIn("fsutil hardlink list", launcher)
+        self.assertIn("Add-Type -Path $trustSource", launcher)
+        self.assertIn("Get-Item -LiteralPath $TreeRoot -Force", launcher)
+        self.assertIn("Profile tree root is a reparse point", launcher)
+        self.assertIn("GetFileInformationByHandleEx", trust)
+        self.assertIn("return information.NumberOfLinks", trust)
+        before = launcher.index(
+            "$hardLinkCount = [ThousandAndFirst.Tools.ScenarioFileTrust]::GetLinkCount"
+        )
+        digest = launcher.index("$digest = $sha256.ComputeHash($stream)", before)
+        after = launcher.index(
+            "$hardLinkCountAfterHash = [ThousandAndFirst.Tools.ScenarioFileTrust]::GetLinkCount",
+            digest,
+        )
+        self.assertLess(before, digest)
+        self.assertLess(digest, after)
+        self.assertIn("if ($hardLinkCount -ne 1)", launcher)
+        self.assertIn("if ($hardLinkCountAfterHash -ne 1)", launcher)
+
+
 class DerivedInputTest(unittest.TestCase):
     def setUp(self):
         self.tmp = pathlib.Path(tempfile.mkdtemp(prefix="taf-derived-test."))
@@ -217,14 +260,33 @@ class DerivedInputTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             profile.write_manifest(str(source), str(self.tmp / "out.json"))
 
-    def test_options_expose_the_native_seed_field(self):
+    def test_options_expose_seed_and_pin_native_capture_rendering(self):
         destination = self.tmp / "PlayerOptions.json"
         profile.write_options(
             str(ROOT / "Tools" / "smoke" / "PlayerOptions.json"), str(destination)
         )
+        options = json.loads(destination.read_text(encoding="utf-8"))
+        self.assertEqual("Yes", options["OptionEnableSeed"])
         self.assertEqual(
-            "Yes",
-            json.loads(destination.read_text(encoding="utf-8"))["OptionEnableSeed"],
+            {
+                "OptionPrereleaseStageScale": "auto",
+                "OptionPlayScale": "Cover",
+                "OptionTileScale": "1",
+                "OptionDisplayBrightness": "0",
+                "OptionDisplayContrast": "0",
+                "OptionDisplayScanlines": "Yes",
+            },
+            {
+                key: options[key]
+                for key in (
+                    "OptionPrereleaseStageScale",
+                    "OptionPlayScale",
+                    "OptionTileScale",
+                    "OptionDisplayBrightness",
+                    "OptionDisplayContrast",
+                    "OptionDisplayScanlines",
+                )
+            },
         )
 
     def test_request_requires_a_valid_frozen_seed(self):

@@ -99,7 +99,7 @@ namespace ThousandAndFirst
 					StringComparison.Ordinal)
 				|| !string.Equals(exact.GetStringProperty(KingdomPlots.PlotIdProperty),
 					Receipt.LotId, StringComparison.Ordinal)
-				|| exact.GetIntProperty("KingdomBuilt") != 1
+				|| !KingdomUpgrade.IsFunctionallyBuilt(exact)
 				|| exact.GetPart<r_KingdomAssentingMoot>() == null) return false;
 			Building = exact;
 			return true;

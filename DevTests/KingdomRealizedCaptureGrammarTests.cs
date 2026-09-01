@@ -136,6 +136,33 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// Qud initializes numeric RenderString declarations as one live CP437 character. Thus the
+		/// first basin's XML value 009 becomes U+0009, just as vanilla objects do. A length-prefixed
+		/// render field can encode those lawful glyphs without admitting controls to any other field.
+		/// </summary>
+		[Test]
+		public void LawfulCp437ControlGlyphsAreDistinctRenderValues()
+		{
+			string bore = Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "\u0004"; });
+			string basin = Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "\u0009"; });
+			string web = Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "\u000F"; });
+			string deleteGlyph = Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "\u007F"; });
+			string currencyGlyph = Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "\u009C"; });
+			Assert.IsNotNull(bore);
+			Assert.IsNotNull(basin);
+			Assert.IsNotNull(web);
+			Assert.AreEqual(5, new HashSet<string>
+				{ bore, basin, web, deleteGlyph, currencyGlyph }.Count);
+			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.Tile = "\u0009"; }), "controls remain forbidden outside RenderString");
+		}
+
+		/// <summary>
 		/// A lone surrogate is refused. UTF-8 encoding with the default fallback maps every one of
 		/// them to U+FFFD, which would hand two different lots one digest.
 		/// </summary>
@@ -146,6 +173,8 @@ namespace ThousandAndFirst.Tests
 				{ o.Tile = "a\uD800b"; }));
 			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "a\uDC00b"; }));
+			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+				{ o.RenderString = "a\uD800b"; }), "render glyphs still require strict UTF-16");
 			Assert.IsNotNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "a\uD83D\uDE00b"; }), "a well-formed pair is an ordinary value");
 			Assert.AreNotEqual(

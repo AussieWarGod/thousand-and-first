@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Install, update, or uninstall help
+    url: https://github.com/AussieWarGod/thousand-and-first/blob/main/PLAYTESTING.md
+    about: Check supported versions, duplicate-copy handling, backups, rollback, and first-world steps.
   - name: Private security or sensitive report
     url: https://github.com/AussieWarGod/thousand-and-first/security/advisories/new
     about: Report vulnerabilities, exposed private data, or sensitive conduct without publishing details.

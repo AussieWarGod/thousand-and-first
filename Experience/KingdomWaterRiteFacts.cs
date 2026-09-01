@@ -3,8 +3,9 @@ using System;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// Everything that actually stands between one settler and the realm's creed, gathered by
-	/// <c>KingdomWaterRite</c> off real people and real buildings and handed here as plain data.
+	/// Everything that actually stands between one settler and the realm's affiliation or belief,
+	/// gathered by <c>KingdomWaterRite</c> off real people and real buildings and handed here as
+	/// plain data.
 	/// Nothing in this struct is a meter and nothing in it decays; each field is a fact about
 	/// tonight.
 	/// </summary>
@@ -19,12 +20,13 @@ namespace ThousandAndFirst
 		/// <see cref="KingdomWaterRiteRules.SharedDaysAfter"/> for what it is denominated in.</summary>
 		public readonly int SharedDays;
 
-		/// <summary>Whether they hold a creed of their own, as against holding nothing in
-		/// particular. Crossing from a belief is further than crossing from none.</summary>
+		/// <summary>Whether they hold a creed key of their own, as against holding nothing in
+		/// particular. Crossing from an affiliation or belief is further than crossing from
+		/// none.</summary>
 		public readonly bool HoldsACreed;
 
-		/// <summary>Whether a shrine consecrated to something other than the realm's creed stands
-		/// within <see cref="KingdomWaterRiteRules.QuarterRadiusCells"/> of their own door.</summary>
+		/// <summary>Whether a live shrine capability consecrated to something other than the
+		/// realm's creed has an exact designation whose physical reach covers their own door.</summary>
 		public readonly bool RivalShrine;
 
 		/// <summary>Whether their quality-of-life profile <em>prefers</em> the faith tag &mdash;
@@ -36,7 +38,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public readonly bool Steadfast;
 
-		/// <summary>The realm's own creed, as a faction name. What they are being asked to take,
+		/// <summary>The realm's own creed key, as a faction name. What they are being asked to take,
 		/// and the thing whose changing re-opens every closed door here.</summary>
 		public readonly string RealmCreed;
 

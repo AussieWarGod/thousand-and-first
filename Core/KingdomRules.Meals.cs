@@ -2,104 +2,81 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomRules
 	{
-		// --- What a day's eating was, and what it was worth --------------------------------
+		// --- What one explicit shared meal was ---------------------------------------------
 
 		/// <summary>
-		/// What the settlement actually ate on a day the ration bill came due. A rendering of the
-		/// draw rather than a second draw: the servings are the same servings either way, and only
-		/// <see cref="MealVerdict.Favored"/> is worth anything on top (<see cref="MealShadeFor"/>).
+		/// What an attended, player-authorized shared-meal transaction cooked. Ordinals remain
+		/// stable because old saves and lifecycle receipts carry this enum.
 		/// </summary>
 		public enum MealVerdict
 		{
-			/// <summary>No bill came due, so nothing was eaten and nothing is said.</summary>
+			/// <summary>No complete meal transaction occurred.</summary>
 			None = 0,
 
-			/// <summary>The larders gave nothing and the settlement lived off the ridge. Said
-			/// once, and only by a settlement big enough that it should not have to.</summary>
+			/// <summary>Legacy value from passive ration builds. Never produced by new code.</summary>
 			Scraps = 1,
 
-			/// <summary>The settlement ate what it had. The ordinary day, and worth no
-			/// sentence.</summary>
+			/// <summary>A working kitchen cooked a complete meal from physical ingredients.</summary>
 			Plain = 2,
 
-			/// <summary>A kitchen stood, the staple was on the table, and the settlement ate its
-			/// own dish.</summary>
+			/// <summary>A working kitchen cooked the complete meal from its named recipe staple.</summary>
 			Favored = 3
 		}
 
 		/// <summary>
-		/// Share of a day's ration bill that must come off the dish's own staple before the
-		/// settlement can be said to have eaten its dish. Half: a table that is mostly the
-		/// settlement's own cooking is the settlement's own cooking.
+		/// Share of an explicit meal's disclosed ingredient cost that must come from the named
+		/// staple to call it the settlement's favored dish. Exact means the entire cost.
 		/// </summary>
-		public const int FavoredMealPercent = 50;
+		public const int FavoredMealPercent = 100;
 
 		/// <summary>
-		/// The stage at and above which a settlement drawing nothing from its own larders is
-		/// worth saying out loud. Below it, living off the land is what a camp IS
-		/// (<see cref="ForagedRations"/>), and 7b must not nag a founder about a system working.
+		/// Legacy API constant retained for source compatibility. Empty pantries now withhold the
+		/// optional meal and report availability without applying a penalty.
 		/// </summary>
 		public const GrowthStage ScrapsSpokenFrom = GrowthStage.Village;
 
 		/// <summary>
-		/// What a day's eating was. Pure, and the only place the four numbers are read together.
+		/// Judges one explicit meal debit. Incomplete payment or a missing kitchen means no act:
+		/// callers must not grant civic effects for a transaction that did not complete.
 		/// </summary>
-		/// <param name="Owed">The day's ration bill, from <see cref="RationsForElapsed"/>.</param>
-		/// <param name="FromDish">Servings drawn off the dish's own staple.</param>
-		/// <param name="FromStores">Servings drawn out of the larders in total, staple
-		/// included.</param>
-		/// <param name="HasKitchen">Whether a finished work carrying vanilla's <c>Campfire</c>
-		/// stands here. A settlement with nowhere to cook cannot cook, however full its larder
-		/// is &mdash; and the communal fire is already a real cooking site, which is the whole of
-		/// what Addendum 11(c) says about it.</param>
-		/// <param name="Stage">What the settlement is, for <see cref="ScrapsSpokenFrom"/>.</param>
+		/// <param name="Owed">Exact, disclosed ingredient cost for this meal.</param>
+		/// <param name="FromDish">Units drawn from the named staple.</param>
+		/// <param name="FromStores">Physical ingredient units debited in total.</param>
+		/// <param name="HasKitchen">Whether one exact designation currently credits a live
+		/// <c>taf:cooking</c> provider. A settlement with nowhere working to cook cannot cook,
+		/// however full its larder is.</param>
+		/// <param name="Stage">Legacy API parameter; settlement stage does not alter a recipe.</param>
 		public static MealVerdict JudgeMeal(int Owed, int FromDish, int FromStores, bool HasKitchen, GrowthStage Stage)
 		{
-			if (Owed <= 0)
+			if (Owed <= 0 || !HasKitchen || FromStores < Owed)
 			{
 				return MealVerdict.None;
 			}
-			if (HasKitchen && FromDish > 0 && FromDish * 100 / Owed >= FavoredMealPercent)
+			if (FromDish >= Owed)
 			{
 				return MealVerdict.Favored;
-			}
-			if (FromStores <= 0 && Stage >= ScrapsSpokenFrom)
-			{
-				return MealVerdict.Scraps;
 			}
 			return MealVerdict.Plain;
 		}
 
 		/// <summary>
-		/// What a settlement eating its own dish is worth to the level, for exactly one day.
+		/// Legacy capacity value. Earlier builds made a favored ration worth one resident for one
+		/// day, which could turn its expiry into food-caused subsidence or departure.
 		/// <para>
-		/// <b>One, and one day, and both are vanilla's numbers.</b> A cooked meal applies one
-		/// <c>ProceduralCookingEffect</c> at a time (<c>D/…/Campfire.cs:740,1005,1218</c>) and a
-		/// NON-PLAYER eater's meal effect expires on a real timer at <c>StartTick + 1200</c> ticks
-		/// (<c>D/…/ProceduralCookingEffect.cs:212-223</c>), which is exactly
-		/// <see cref="TicksPerDay"/>. So the settlement's well-fed day is one meal, worth one more
-		/// settler, held until tomorrow's meal re-earns it.
-		/// </para>
-		/// <para>
-		/// It rides the same lift term as a notable's shade and a shrine's spirit, so
-		/// <c>KingdomCatalogueRules.LiftCapPercent</c> binds it again on top of this: a camp at the
-		/// floor cannot dine its way past five people, and no settlement can ever eat its way past
-		/// its own water.
+		/// New shared meals instead grant bounded, explicit creed-easing and cohabitation progress
+		/// in <c>KingdomLarder</c>. This projection therefore remains zero for every verdict.
 		/// </para>
 		/// </summary>
-		public const int FavoredMealShade = 1;
+		public const int FavoredMealShade = 0;
 
-		/// <summary>The lift a day's eating leaves behind. Only a favoured meal is worth
-		/// anything; nothing here is ever a penalty.</summary>
+		/// <summary>Neutral compatibility projection. Meals never alter population capacity.</summary>
 		public static int MealShadeFor(MealVerdict Verdict)
 		{
-			return (Verdict == MealVerdict.Favored) ? FavoredMealShade : 0;
+			return 0;
 		}
 
 		/// <summary>
-		/// The one line a settlement that ate its own dish gets, for the ledger. Named, because a
-		/// lift nobody can see is a modifier and not a meal (STANDARDS 7b's posture applied to a
-		/// number that helps).
+		/// The ledger line for a completed meal cooked wholly from its named staple.
 		/// </summary>
 		/// <param name="Settlement">The settlement's display name.</param>
 		/// <param name="Dish">The dish's name, from <see cref="FavoredDish.Name"/>.</param>
@@ -110,21 +87,21 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			return "{{G|There was " + Dish + " on the table at " + Settlement + ", and the day went better for it.}}";
+			return "{{G|There was " + Dish + " on the table at " + Settlement + ", cooked from its own staple.}}";
 		}
 
 		/// <summary>
-		/// The one line a settlement whose larders gave nothing gets, said once
-		/// (STANDARDS 7b) and unsaid the moment it eats out of its own stores again.
+		/// Legacy helper retained for API compatibility. It reports a withheld optional act and
+		/// explicitly confirms that no stock or settlement state was lost.
 		/// </summary>
 		public static string ScrapsNote(string Settlement)
 		{
-			return "{{r|Nothing came out of the larders at " + Settlement + ". The settlement ate what it could find, and it noticed.}}";
+			return "{{K|No shared meal was available at " + Settlement + "; nothing was spent.}}";
 		}
 
 		/// <summary>
-		/// One inspectable line joining the realm's named dish to the physical chain that earns its
-		/// one-day lift. This reports a snapshot; it does not predict tomorrow's full ration draw.
+		/// One inspectable line joining the named dish to physical ingredients and an operational
+		/// cooking provider. This reports optional action availability, never passive upkeep.
 		/// </summary>
 		public static string DishStatusLine(string Dish, string Staple, int StapleStored,
 			int Kitchens, MealVerdict LastMeal)
@@ -138,25 +115,26 @@ namespace ThousandAndFirst
 				StapleStored = 0;
 			}
 			string staple = string.IsNullOrEmpty(Staple) ? "staple not yet named" : Staple;
-			string kitchen = (Kitchens > 0) ? "kitchen ready" : "{{r|no kitchen}}";
+			string kitchen = (Kitchens > 0) ? "kitchen ready" : "{{r|no capable kitchen}}";
 			string outcome;
 			switch (LastMeal)
 			{
 			case MealVerdict.Favored:
-				outcome = "{{G|Last ration: favorite dish; carries +1 today.}}";
+				outcome = "{{G|Last shared meal: favorite dish.}}";
 				break;
 			case MealVerdict.Scraps:
-				outcome = "{{r|Last ration: scraps; no dish bonus.}}";
+				outcome = "No shared meal has completed yet.";
 				break;
 			case MealVerdict.Plain:
-				outcome = "Last ration: ordinary; no dish bonus.";
+				outcome = "Last shared meal: other ingredients.";
 				break;
 			default:
-				outcome = "No ration day has resolved yet.";
+				outcome = "No shared meal has completed yet.";
 				break;
 			}
 			return "Dish: " + Dish + " — " + staple + ": " + StapleStored + " stored; "
-				+ kitchen + ". Its +1 day needs a kitchen and at least half the ration from that staple. "
+				+ kitchen + ". A shared meal needs real ingredients and this cooking provider; "
+				+ "the favorite dish needs its full disclosed cost from that staple. "
 				+ outcome;
 		}
 

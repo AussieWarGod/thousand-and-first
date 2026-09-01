@@ -1,0 +1,6 @@
+# Baseline for the same-envelope forge-hall renovation.
+DESCRIPTION=medium smithy stages for retained striking block and hot-zone baseline review
+REQUEST=arch-production-smithy-m;facing=east
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,industry,progression,taste

@@ -22,6 +22,7 @@ namespace ThousandAndFirst
 		public string BindingKey { get; private set; }
 		public string TierKey { get; private set; }
 		public int TierLevel { get; private set; }
+		public ArchitectureTransitionMode IncomingTransitionMode { get; private set; }
 		public string TypeKey { get; private set; }
 		public ArchitectureLotSize LotSize { get; private set; }
 		public ArchitectureFrontage Frontage { get; private set; }
@@ -45,6 +46,7 @@ namespace ThousandAndFirst
 			BindingKey = Binding.Key;
 			TierKey = Tier.Key;
 			TierLevel = Tier.Level;
+			IncomingTransitionMode = Tier.IncomingTransitionMode;
 			TypeKey = Binding.TypeKey;
 			LotSize = Binding.Size;
 			Frontage = Binding.Frontage;

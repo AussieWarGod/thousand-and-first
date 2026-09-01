@@ -101,7 +101,8 @@ namespace ThousandAndFirst.Tests
 			Ordered(place, "cell.AddObject(output, NoStack: true)", "ObserveAddResultInActive",
 				"ExactFoundingHeartMark(", "SettleFoundingHeartMark(");
 
-			string stake = Source("Growth/KingdomPlot2.11.Stake.cs");
+			string stake = Source("Growth/KingdomPlot2.11.Stake.cs") + "\n"
+				+ Source("Growth/KingdomPlot2.11a.StakeAdd.cs");
 			Ordered(stake, "HeartPlotProperty, 1",
 				"TryFreeze(\n\t\t\t\tworks, Architecture", "TryInitializeOwner(",
 				"PreparedFoundingHeartWorksShape(works", "StageFoundingHeartIdentity(works",
@@ -266,7 +267,8 @@ namespace ThousandAndFirst.Tests
 			string stamper = Source("Growth/KingdomArchitectureStamper.Staging.cs");
 			Ordered(stamper, "RootStagingOutput(placed)",
 				"Owner.SetIntProperty(stateProperty, 1)", "cell.AddObject(placed",
-				"ExactComponent(placed", "ExactAddCut(callbackReturned");
+				"ExactComponent(Owner, placed", "ExactAddCut(callbackReturned",
+				"Owner.SetIntProperty(stateProperty, 2)", "RetireStagingRoot(placed)");
 			StringAssert.Contains("TryLandStagingRoot", stamper);
 			StringAssert.Contains("RetireStagingRoot", stamper);
 			StringAssert.Contains("FindStagingRootForPlacement",

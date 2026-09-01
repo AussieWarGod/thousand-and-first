@@ -111,8 +111,8 @@ namespace ThousandAndFirst
 				out Failure)) return false;
 			Lot = Owner.GetStringProperty(LotIdProperty);
 			bool heartAccretion;
-			if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(BeforeIntent.EncodedSnapshot)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Successor.EncodedSnapshot)
+			if (!KingdomArchitectureRules.IsManagedSnapshotEncoding(BeforeIntent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(Successor.EncodedSnapshot)
 				|| !ValidLotId(Lot) || Owner.GetStringProperty(HashProperty) != BeforeIntent.SnapshotHash
 				|| !TryAuthorizedTransition(Owner, Z, BeforeIntent, Before, Successor, After,
 					false, out heartAccretion, out Failure))

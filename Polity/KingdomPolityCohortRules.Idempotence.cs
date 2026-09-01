@@ -10,6 +10,8 @@ namespace ThousandAndFirst
 				Existing.Purpose != Request.Purpose || Existing.SourceRef != Request.SourceRef ||
 				Existing.PolityId != Request.PolityId || Existing.SurfaceRef != Request.SurfaceRef ||
 				Existing.ScaleBudget != Request.MemberCount ||
+				Existing.MinimumLevel != Request.MinimumLevel ||
+				Existing.MaximumLevel != Request.MaximumLevel ||
 				Existing.EventStreamId != Request.EventStreamId ||
 				Existing.RulesVersion != Request.RulesVersion ||
 				Existing.EventOrdinal != Request.EventOrdinal ||
@@ -17,6 +19,8 @@ namespace ThousandAndFirst
 				Existing.PresentationOptionKind != Request.PresentationAuthority.OptionKind ||
 				Existing.PresentationEnableEpoch != Request.PresentationAuthority.EnableEpoch ||
 				Existing.PresentationReservedTick != Request.PresentationAuthority.ReservedTick ||
+				!KingdomPolityAmbientTransactionRules.Same(
+					Existing.AmbientTransaction, Request.AmbientTransaction) ||
 				Existing.ResolvedMembers.Count != Request.MemberCount) return false;
 			bool named = !string.IsNullOrEmpty(Request.NamedFigureId);
 			if (Existing.NamedRepresentativeAllowance != (named ? 1 : 0)) return false;

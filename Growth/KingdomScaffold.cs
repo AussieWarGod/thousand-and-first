@@ -72,6 +72,14 @@ namespace XRL.World.Parts
 		public bool ThresholdManning;
 
 		public const string RemovalProofProperty = "KingdomConstructionPredecessorRemoved";
+		/// <summary>
+		/// Durable fail-closed marker for an improvement successor which has landed but has not yet
+		/// replaced its predecessor. The object remains physically identifiable as KingdomBuilt for
+		/// construction recovery, while surveys and design lookup withhold every economic role until
+		/// exact predecessor absence is committed.
+		/// </summary>
+		public const string PendingImprovementSuccessorProperty =
+			"r_TAF_PendingImprovementSuccessor";
 		/// <summary>Named-object property holding exact retry identity for receiptless legacy
 		/// scaffolds. This must not become a reflected part field: shipped saves serialize the
 		/// public fields of this part positionally through <c>IComponent.Write</c>.</summary>

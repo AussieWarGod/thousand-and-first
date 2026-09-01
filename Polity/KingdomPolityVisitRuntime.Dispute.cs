@@ -45,15 +45,28 @@ namespace ThousandAndFirst
 				return RollBackPresentation(System, P.WarbandCohortId, existing == null, cause,
 					out Failure);
 			}
+			if (!KingdomPolityCohortRules.TryResolverContract(L, P.Visitor.PolityId,
+				KingdomPolityCohortPurpose.Warband, out int resolverRulesVersion,
+				out int minimumLevel,
+				out int maximumLevel, out Failure))
+				return RollBackPresentation(System, P.WarbandCohortId,
+					existing == null, Failure, out Failure);
 			KingdomPolityCohortPlanRequest warband = new KingdomPolityCohortPlanRequest
 			{
 				CohortId = P.WarbandCohortId, Purpose = KingdomPolityCohortPurpose.Warband,
 				SourceRef = P.ClaimEventId, PolityId = P.Visitor.PolityId,
 				SurfaceRef = P.SurfaceId, MemberCount = 3,
+				MinimumLevel = minimumLevel, MaximumLevel = maximumLevel,
 				NamedFigureId = P.Claimant?.FigureId, EventStreamId = P.StreamId,
-				RulesVersion = KingdomPolityNpcRules.RulesVersion, EventOrdinal = 1UL,
+				RulesVersion = resolverRulesVersion, EventOrdinal = 1UL,
 				PresentationAuthority = authority
 			};
+			if (existing != null)
+			{
+				warband.RulesVersion = existing.RulesVersion;
+				warband.MinimumLevel = existing.MinimumLevel;
+				warband.MaximumLevel = existing.MaximumLevel;
+			}
 			if (!KingdomPolityCohortRules.TryPlan(L, L.Revision, warband,
 				out KingdomPolityPublicationResult _, out Failure))
 			{

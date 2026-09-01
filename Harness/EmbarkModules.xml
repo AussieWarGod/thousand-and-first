@@ -14,8 +14,9 @@
   and Tools/run-scenario.ps1 re-proves the overlay still carries exactly the sealed request, so the
   seed the mode applies is the seed the gate later demands the engine generated under.
 
-  Phase 1 authors one scenario, so one mode carries it. A later phase replaces this with a
-  starting-location Set filter once the roster holds more than one row.
+  One mode carries one request sealed by Tools/prepare-scenario.sh. The authored roster already
+  contains many scenarios; TAF_REQUEST selects one before launch. Selection does not happen here
+  because changing it after the throwaway profile is sealed would invalidate the evidence chain.
 -->
 <embarkmodules>
   <module Class="XRL.CharacterBuilds.Qud.QudGamemodeModule">
@@ -35,9 +36,10 @@
           the same route the succession system above already takes. The runner is an IPlayerSystem
           that primes on ZoneActivatedEvent - raising the engine's own Popup.Suppress so the boot
           and arrival popups auto-acknowledge instead of waiting on a keypress - and then runs the
-          script ONCE, on the first player action opportunity in the built world. It is inert unless
-          the profile's sealed Local/scenario-script.txt exists, suppresses nothing without one, and
-          never quits the game.
+          script ONCE, on the first player action opportunity in the built world. OpeningStory's
+          later same-cycle call has its own exact harness-only suppression bracket, so it completes
+          normally without covering native evidence. The runner is inert unless the profile's
+          sealed Local/scenario-script.txt exists, suppresses nothing without one, and never quits.
         -->
         <gamesystem Class="ThousandAndFirst.KingdomScenarioAutoRunner" />
       </mode>

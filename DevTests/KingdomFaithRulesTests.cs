@@ -15,32 +15,6 @@ namespace ThousandAndFirst.Tests
 	/// </summary>
 	public class KingdomFaithRulesTests
 	{
-		// --- CanConsecrate / IsEducationCategory: category matching --------------------------
-
-		[TestCase("faith", true)]
-		[TestCase("Faith", true)]
-		[TestCase("FAITH", true)]
-		[TestCase(" faith ", true)]
-		[TestCase("knowledge", false)]
-		[TestCase("civic", false)]
-		[TestCase(null, false)]
-		[TestCase("", false)]
-		public void CanConsecrate_MatchesOnlyTheFaithCategory(string category, bool expected)
-		{
-			Assert.AreEqual(expected, KingdomFaithRules.CanConsecrate(category));
-		}
-
-		[TestCase("knowledge", true)]
-		[TestCase("Knowledge", true)]
-		[TestCase(" knowledge ", true)]
-		[TestCase("faith", false)]
-		[TestCase(null, false)]
-		[TestCase("", false)]
-		public void IsEducationCategory_MatchesOnlyTheKnowledgeCategory(string category, bool expected)
-		{
-			Assert.AreEqual(expected, KingdomFaithRules.IsEducationCategory(category));
-		}
-
 		// --- ClassifyStance: the guard against pulling the opposed ---------------------------
 
 		[Test]

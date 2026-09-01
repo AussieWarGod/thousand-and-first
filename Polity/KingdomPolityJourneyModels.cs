@@ -109,10 +109,14 @@ namespace ThousandAndFirst
 		public string PolityId;
 		public string SurfaceRef;
 		public int MemberCount;
+		// Current requests freeze a lawful encounter band before any body is resolved.
+		public int MinimumLevel;
+		public int MaximumLevel;
 		public string NamedFigureId;
 		public string EventStreamId;
 		public int RulesVersion;
 		public ulong EventOrdinal;
 		public KingdomPolityPresentationAuthorityProof PresentationAuthority;
+		public KingdomPolityAmbientTransaction AmbientTransaction;
 	}
 }

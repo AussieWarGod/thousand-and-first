@@ -98,7 +98,7 @@ namespace ThousandAndFirst.Tests
 		public void OrdinaryOutweighsAnyOneCreedAtTheOutset()
 		{
 			// The design promise: creed is a minority colour that accumulates. A faction the realm
-			// has merely met must not out-pull "believes nothing in particular" on day one.
+			// has merely met must not out-pull "holds with nobody in particular" on day one.
 			int fresh = KingdomCreedRules.CreedWeight(0, 0, Declared: false);
 			Assert.Less(fresh, KingdomCreedRules.OrdinaryWeight);
 			int beloved = KingdomCreedRules.CreedWeight(KingdomExileRules.RegardLoved, 0, Declared: false);

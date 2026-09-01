@@ -78,13 +78,18 @@ namespace ThousandAndFirst.Tests
 		{
 			string scheduler = Read("Polity", "KingdomPolitySchedulerRuntime.cs");
 			string view = Read("Polity", "KingdomPolitySchedulerRuntime.DirectRecords.cs");
+			string charter = Read("Core", "KingdomCharterPart.PolityTraffic.cs");
 			StringAssert.Contains("ReadDirectRecordsOnDemand", view);
 			StringAssert.Contains("TryAcknowledgeDirectRecordOnDemand", view);
+			StringAssert.Contains("ReadDirectRecordsOnDemand(", charter);
+			StringAssert.Contains("TryAcknowledgeDirectRecordOnDemand(", charter);
 			StringAssert.DoesNotContain("TryPresentDirectRecords", scheduler + view);
 			StringAssert.DoesNotContain("ReadDirectRecordsOnDemand(", scheduler);
 			StringAssert.DoesNotContain("TryAcknowledgeDirectRecordOnDemand(", scheduler);
 			StringAssert.DoesNotContain("MessageQueue", view);
 			StringAssert.DoesNotContain("AddPlayerMessage", view);
+			StringAssert.DoesNotContain("EndpointVerb", charter);
+			StringAssert.DoesNotContain("SourceRef", charter);
 		}
 
 		[Test]

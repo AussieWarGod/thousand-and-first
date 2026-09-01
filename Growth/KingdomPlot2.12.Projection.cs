@@ -167,7 +167,7 @@ namespace ThousandAndFirst
 				&& KingdomArchitectureRuntime.TryRead(Object,
 					out KingdomArchitectureIntent frozen, out _)
 				&& SameIntent(frozen, Intent)
-				&& (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				&& (!KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot)
 					|| (KingdomArchitectureStamper.TryReadOwner(Object, out _, out _,
 						out string lotId, out _)
 						&& lotId == Object.GetStringProperty(PlotIdProperty)));

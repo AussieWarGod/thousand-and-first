@@ -1,11 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using XRL;
-using XRL.Messages;
-using XRL.UI;
 using XRL.World;
 
 using ThousandAndFirst;
@@ -26,7 +20,7 @@ namespace XRL.World.Parts
 				|| Receipt.HandoverItemDestinationKind < 1
 				|| Receipt.HandoverItemDestinationKind > 2
 				|| Receipt.HandoverItemMovedBefore < 0
-				|| Receipt.HandoverItemMovedBefore == int.MaxValue
+				|| Receipt.HandoverItemMovedBefore >= MaxHandoverTopologyObjects
 				|| Receipt.HandoverItemMovedAfter != Receipt.HandoverItemMovedBefore + 1
 				|| (Receipt.HandoverMovedItems != Receipt.HandoverItemMovedBefore
 					&& Receipt.HandoverMovedItems != Receipt.HandoverItemMovedAfter))
@@ -78,7 +72,7 @@ namespace XRL.World.Parts
 				ObserveHandoverMutation(Source, Target, Where, Item);
 				KingdomSurvey.ObserveAddResultInActive(Source?.CurrentZone
 					?? Target?.CurrentZone ?? Where?.ParentZone, Item, accepted);
-				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
+				if (!ReproveManifestAfterCallback(Source, Target, Where, Receipt)) return false;
 				if (ExactHandoverObjects(Source, Target, Receipt)
 					&& (Receipt.HandoverItemDestinationKind != 1
 						|| ReferenceEquals(destination, Target.Inventory))
@@ -90,18 +84,20 @@ namespace XRL.World.Parts
 			ObserveHandoverMutation(Source, Target, Where, Item);
 			KingdomSurvey.ObserveAddResultInActive(Source?.CurrentZone
 				?? Target?.CurrentZone ?? Where?.ParentZone, Item, accepted);
-			if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
+			if (!ReproveManifestAfterCallback(Source, Target, Where, Receipt)) return false;
 			if (!ExactHandoverObjects(Source, Target, Receipt))
 				return FailHandover(Receipt, "Inventory endpoint changed during AddObject callback.");
-			if ((Receipt.HandoverItemDestinationKind == 1
-					&& !ReferenceEquals(destination, Target.Inventory))
-				|| !ReferenceEquals(accepted, Item))
+			if (Receipt.HandoverItemDestinationKind == 1
+				&& !ReferenceEquals(destination, Target.Inventory))
 				return FailHandover(Receipt,
-					"Inventory AddObject replaced its exact destination or return identity.");
+					"Inventory AddObject replaced its exact destination inventory.");
 			if (ExactDestination(Item, Target, Where, Receipt))
 				return SettlePendingItem(Target, Where, Receipt, Item);
 			return RestoreItem(Source, Target, Where, Receipt, Item,
-				"Inventory destination did not retain exact item ownership.");
+				accepted == null ? "Inventory AddObject returned null without an exact effect."
+					: ReferenceEquals(accepted, Item)
+						? "Inventory destination did not retain exact item ownership."
+						: "Inventory AddObject returned a foreign object without an exact effect.");
 		}
 
 		private static bool RestoreItem(GameObject Source, GameObject Target, Cell Where,
@@ -134,15 +130,12 @@ namespace XRL.World.Parts
 				{
 					ObserveHandoverMutation(Source, Target, Where, Item);
 					KingdomSurvey.ObserveAddResultInActive(Source.CurrentZone, Item, restored);
-					ReproveEscrowItem(Source, Target, Where, Receipt, Item);
+					if (!ReproveManifestAfterCallback(Source, Target, Where, Receipt)) return false;
 					return FailHandover(Receipt, Failure + " Recovery threw: " + ex.Message);
 				}
 				ObserveHandoverMutation(Source, Target, Where, Item);
 				KingdomSurvey.ObserveAddResultInActive(Source.CurrentZone, Item, restored);
-				if (!ReproveEscrowItem(Source, Target, Where, Receipt, Item)) return false;
-				if (!ReferenceEquals(restored, Item))
-					return FailHandover(Receipt,
-						Failure + " Recovery replaced the exact item identity.");
+				if (!ReproveManifestAfterCallback(Source, Target, Where, Receipt)) return false;
 			}
 			if (!ExactItemOwner(Item, Source, Receipt))
 				return FailHandover(Receipt, Failure + " Exact source recovery failed.");
@@ -157,19 +150,66 @@ namespace XRL.World.Parts
 			if (!GameObject.Validate(Source) || !GameObject.Validate(Target) || Receipt == null
 				|| Source.GetPart<r_KingdomImprovement>() != Receipt
 				|| Source.CurrentCell == null || Target.CurrentCell != Source.CurrentCell) return false;
-			if (Receipt.HandoverSourceId == null && Receipt.HandoverTargetId == null)
-			{
-				if (!BoundedIdentity(Source.ID) || !BoundedIdentity(Target.ID)) return false;
-				Receipt.HandoverSourceId = Source.ID;
-				Receipt.HandoverTargetId = Target.ID;
-			}
-			return BoundedIdentity(Receipt.HandoverSourceId)
-				&& BoundedIdentity(Receipt.HandoverTargetId)
-				&& Source.IDIfAssigned == Receipt.HandoverSourceId
-				&& Target.IDIfAssigned == Receipt.HandoverTargetId
+			return ExactHandoverEndpointReceipt(Source, Target, Receipt)
 				&& ExactHandoverAuthority(Source, Target, Receipt);
 		}
 
+		internal static bool TryPublishHandoverEndpoints(GameObject Source, GameObject Target,
+			r_KingdomImprovement Receipt, string ConstructionReceipt)
+		{
+			if (!GameObject.Validate(Source) || !GameObject.Validate(Target) || Receipt == null
+				|| !BoundedIdentity(Source.ID) || !BoundedIdentity(Target.ID)
+				|| !BoundedIdentity(ConstructionReceipt))
+				return FailHandover(Receipt, "Handover endpoint identity is absent or unbounded.");
+			GameObject owner = Receipt.ParentObject;
+			string schemaKey = HandoverPrefix + "EndpointSchema";
+			int schema = Receipt.HandoverInt("EndpointSchema");
+			bool exactPrefix = owner != null && !owner.HasStringProperty(schemaKey)
+				&& schema >= 0 && schema <= 1
+				&& ExactOrAbsentText(owner, HandoverPrefix + "SourceId", Source.ID)
+				&& ExactOrAbsentText(owner, HandoverPrefix + "TargetId", Target.ID)
+				&& ExactOrAbsentText(owner, HandoverPrefix + "ConstructionReceipt",
+					ConstructionReceipt);
+			if (!exactPrefix) return FailHandover(Receipt,
+				"Handover endpoint receipt carries a foreign or malformed value.");
+			if (schema == 0)
+			{
+				try
+				{
+					Receipt.HandoverSourceId = Source.ID;
+					Receipt.HandoverTargetId = Target.ID;
+					Receipt.HandoverConstructionReceipt = ConstructionReceipt;
+					Receipt.HandoverInt("EndpointSchema", 1);
+				}
+				catch (Exception exception)
+				{
+					Receipt.HandoverFailure = "Handover endpoint publication remains retryable: "
+						+ exception.Message;
+					return false;
+				}
+			}
+			return ExactHandoverEndpointReceipt(Source, Target, Receipt) || FailHandover(Receipt,
+				"Committed handover endpoint receipt is incomplete or changed.");
+		}
+		private static bool ExactHandoverEndpointReceipt(GameObject Source, GameObject Target,
+			r_KingdomImprovement Receipt)
+		{
+			GameObject owner = Receipt?.ParentObject;
+			return owner != null && owner.HasIntProperty(HandoverPrefix + "EndpointSchema")
+				&& Receipt.HandoverInt("EndpointSchema") == 1
+				&& !owner.HasStringProperty(HandoverPrefix + "EndpointSchema")
+				&& !owner.HasIntProperty(HandoverPrefix + "SourceId")
+				&& !owner.HasIntProperty(HandoverPrefix + "TargetId")
+				&& !owner.HasIntProperty(HandoverPrefix + "ConstructionReceipt")
+				&& Receipt.HandoverSourceId == Source.IDIfAssigned
+				&& Receipt.HandoverTargetId == Target.IDIfAssigned
+				&& BoundedIdentity(Receipt.HandoverConstructionReceipt);
+		}
+		private static bool ExactOrAbsentText(GameObject Owner, string Property, string Expected)
+		{
+			return !Owner.HasIntProperty(Property) && (!Owner.HasStringProperty(Property)
+				|| Owner.GetStringProperty(Property) == Expected);
+		}
 		/// <summary>Reclassifies only the exact roots touched by a durable handover. A loose or
 		/// callback-entering item is deliberately absent from the loaded index; a settled ground
 		/// item becomes its own root, while an inventory item is recovered through its owner branch.</summary>
@@ -189,7 +229,6 @@ namespace XRL.World.Parts
 				&& Target.CurrentZone == zone) survey.ObserveChanged(Target);
 			if (exactGround) survey.ObserveChanged(Item);
 		}
-
 		private static bool ExactHandoverAuthority(GameObject Source, GameObject Target,
 			r_KingdomImprovement Receipt)
 		{
@@ -231,6 +270,29 @@ namespace XRL.World.Parts
 					== KingdomPhysicalLookupState.Exact
 				&& ReferenceEquals(exactTarget, Target);
 		}
-
+		private static bool ExactCleanupItemState(r_KingdomImprovement Receipt)
+		{
+			GameObject source = Receipt?.ParentObject;
+			Zone zone = source?.CurrentZone;
+			GameObject target;
+			GameObject item;
+			if (source?.CurrentCell == null || zone == null || Receipt.HandoverItemPhase < 1
+				|| KingdomConstruction.FindExactId(zone, Receipt.HandoverTargetId, out target)
+					!= KingdomPhysicalLookupState.Exact
+				|| KingdomConstruction.FindExactId(zone, Receipt.HandoverItemId, out item)
+					!= KingdomPhysicalLookupState.Exact || !ExactHandoverObjects(source, target, Receipt)
+				|| !GameObject.Validate(item) || item.Physics == null
+				|| item.Blueprint != Receipt.HandoverItemBlueprint
+				|| item.Count != Receipt.HandoverItemCount) return false;
+			if (Receipt.HandoverItemPhase <= 2)
+				return item.Physics.InInventory == source
+					&& ReferenceCount(source.Inventory?.Objects, item) == 1;
+			if (Receipt.HandoverItemDestinationKind == 1)
+				return item.Physics.InInventory == target
+					&& ReferenceCount(target.Inventory?.Objects, item) == 1;
+			return Receipt.HandoverItemDestinationKind == 2 && item.Physics.InInventory == null
+				&& item.CurrentCell == source.CurrentCell
+				&& ReferenceCount(source.CurrentCell.GetObjects(), item) == 1;
+		}
 	}
 }

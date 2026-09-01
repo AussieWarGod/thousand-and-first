@@ -8,15 +8,15 @@ namespace ThousandAndFirst
 	/// a catalogue file read as a whole.
 	/// <para>
 	/// <b>The denomination.</b> A design's <c>Carries</c> number is not a flow. It is what the
-	/// building adds to the settlement's <em>sustainable level</em> &mdash; the population the
-	/// place holds when nobody is hauling anything in. Three supports bind
-	/// (<see cref="BindingSupports"/>) and the level is the least of them; everything else a work
-	/// gives lifts that level (<see cref="LiftingSupports"/>) and is capped, so no amount of
-	/// shrines outruns the water. One point of <c>water</c> is one dram a day sustained, which is
-	/// one settler's thirst at camp rates.
+	/// building's authored civic contribution. Water and roof bind the live sustainable
+	/// population; food describes the physical crop/storage/industry lane and never creates
+	/// population pressure. Everything else a work gives lifts the habitable level
+	/// (<see cref="LiftingSupports"/>) and is capped, so no amount of shrines outruns the water.
+	/// One point of <c>water</c> is one dram a day sustained, which is one settler's thirst at
+	/// camp rates.
 	/// </para>
 	/// <para>
-	/// <b>What this file does not own.</b> Plot geometry, stage-by-tier gating, contents rolls and
+	/// <b>What this file does not own.</b> Plot geometry, stage-by-tier gating, legacy contents rolls and
 	/// wall material are <see cref="KingdomPlotRules"/>. The material vocabulary and the cost
 	/// parser are <c>KingdomMaterialRules</c>. Gates are <see cref="KingdomZoningRules"/> and
 	/// chains are <see cref="KingdomUpgradeRules"/>. This file adds the denomination and the
@@ -69,25 +69,36 @@ namespace ThousandAndFirst
 
 		public const string SupportRoof = "roof";
 
+		/// <summary>Prosperity made physically legible by a productive great work. Wealth lifts;
+		/// it never binds, drives threats, or changes the equilibrium arithmetic.</summary>
+		public const string SupportWealth = "wealth";
+
 		/// <summary>
-		/// The three goods a settlement cannot go without, in the order a tie is broken. The
-		/// equilibrium level is the least of the three, so a work that supplies none of them can
-		/// never by itself let one more person live here &mdash; which is the whole reason the
-		/// catalogue is denominated this way rather than in output per day.
+		/// Frozen catalogue/API vocabulary. Food remains classified here so existing XML, extension
+		/// validation, and callers keep their shape; live population equilibrium uses
+		/// <see cref="PopulationBindingSupports"/> instead.
 		/// </summary>
 		public static readonly string[] BindingSupports = new string[3] { SupportWater, SupportFood, SupportRoof };
 
+		/// <summary>The two live population constraints. Food is deliberately absent: missing crops,
+		/// ingredients, or food works may withhold a positive act but never shrink a settlement.</summary>
+		public static readonly string[] PopulationBindingSupports = new string[2] { SupportWater, SupportRoof };
+
 		/// <summary>
-		/// What a smithy, a shrine, a scriptorium, a barracks, and a bathhouse give: not a reason
+		/// What a smithy, a shrine, a scriptorium, a barracks, a bathhouse, and a prosperous great
+		/// work give: not a reason
 		/// one more person can live here, but a reason one more person wants to. Lifting supports
 		/// are summed and then capped against the binding level by <see cref="LiftCapPercent"/>.
 		/// </summary>
-		public static readonly string[] LiftingSupports = new string[5] { "craft", "spirit", "learning", "order", "luxury" };
+		public static readonly string[] LiftingSupports = new string[6]
+		{
+			"craft", "spirit", "learning", "order", "luxury", SupportWealth
+		};
 
 		/// <summary>
 		/// How far past its binding supports a settlement's comfort, faith, learning, order, and
 		/// luxury can carry it, as a percentage of the binding level. Half: a well-loved town holds
-		/// half again the people its water and fields alone would, and not one more.
+		/// half again the people its water and roofs alone would, and not one more.
 		/// </summary>
 		public const int LiftCapPercent = 50;
 
@@ -98,7 +109,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const int FloorLevel = 4;
 
-		/// <summary>Whether a support kind is one the level is the least of.</summary>
+		/// <summary>Whether a support kind belongs to the frozen three-kind catalogue vocabulary.
+		/// This is an authoring/compatibility classification, not the live population calculation.</summary>
 		public static bool IsBindingSupport(string Kind)
 		{
 			return Contains(BindingSupports, Fold(Kind));
@@ -114,9 +126,10 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The sustainable level, in settlers. The least of the three binding supports, lifted by
-		/// the comfort of the place up to <see cref="LiftCapPercent"/> of that least figure, and
-		/// never below <see cref="FloorLevel"/>.
+		/// Frozen five-argument equilibrium, retained for source and wire compatibility. It takes
+		/// the least of the historical three support arguments, adds bounded lift, and never falls
+		/// below <see cref="FloorLevel"/>. Live population calls
+		/// <see cref="PopulationEquilibrium"/>, where food is deliberately non-binding.
 		/// </summary>
 		/// <param name="Water">Summed <c>water</c> contribution of every finished work.</param>
 		/// <param name="Food">Summed <c>food</c> contribution.</param>
@@ -143,24 +156,43 @@ namespace ThousandAndFirst
 			// Each half is floored before they meet, so neither can eat the other: an unmet taste
 			// is never a penalty (the brief rejects the penalty half outright), and a shade cannot
 			// cancel a shrine that is standing.
-			int lift = ((Lift < 0) ? 0 : Lift) + ((Shade < 0) ? 0 : Shade);
-			int cap = least * LiftCapPercent / 100;
+			long lift = ((Lift < 0) ? 0L : Lift) + ((Shade < 0) ? 0L : Shade);
+			long cap = (long)least * LiftCapPercent / 100L;
 			if (lift > cap)
 			{
 				lift = cap;
 			}
-			int level = least + lift;
-			return (level < FloorLevel) ? FloorLevel : level;
+			long level = (long)least + lift;
+			if (level >= int.MaxValue)
+			{
+				return int.MaxValue;
+			}
+			return (level < FloorLevel) ? FloorLevel : (int)level;
 		}
 
 		/// <summary>
-		/// Which of the three is holding the settlement where it is. Ties go to water, then food,
-		/// then roofs &mdash; water first because it is the spine of everything here, and because
-		/// telling a founder to dig when they should be sowing is worse than the reverse.
+		/// Live sustainable population. Reuses the frozen five-argument arithmetic with food held
+		/// non-binding, preserving its floor, lift cap, overflow behavior, and public compatibility.
+		/// </summary>
+		public static int PopulationEquilibrium(int Water, int Roof, int Lift, int Shade)
+		{
+			return Equilibrium(Water, int.MaxValue, Roof, Lift, Shade);
+		}
+
+		/// <summary>The live population constraint, with water winning a tie. Food can never be
+		/// returned and therefore can never author subsidence or departure prose.</summary>
+		public static string PopulationBindingSupport(int Water, int Roof)
+		{
+			return (Water <= Roof) ? SupportWater : SupportRoof;
+		}
+
+		/// <summary>
+		/// Frozen three-kind diagnostic retained for compatible catalogue consumers. Ties go to
+		/// water, then food, then roofs. Live population and subsidence call
+		/// <see cref="PopulationBindingSupport"/> and therefore never return food.
 		/// <para>
-		/// This exists so the level can always say why (STANDARDS 7b). A settlement that has
-		/// stopped growing and cannot name the reason is the single most common complaint made of
-		/// building systems of this shape.
+		/// This exists so older integrations can continue to interpret their own three-axis model;
+		/// it is not a live settlement-pressure authority.
 		/// </para>
 		/// </summary>
 		/// <returns>One of <see cref="BindingSupports"/>. Never null.</returns>

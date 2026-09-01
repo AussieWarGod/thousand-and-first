@@ -84,15 +84,13 @@ namespace ThousandAndFirst
 			{
 				fineHouse = string.IsNullOrEmpty(op.ObjectMarker)
 					? null : GameObject.FindByID(op.ObjectMarker);
-				if (!GameObject.Validate(fineHouse)
-					|| fineHouse.CurrentZone == null || fineHouse.CurrentZone != guest.CurrentZone
-					|| !string.Equals(KingdomUpgrade.DesignKeyOf(fineHouse), "finehouse",
-						StringComparison.Ordinal)
-					|| KingdomLodging.IsCondemned(fineHouse)
-					|| !KingdomPlots.TryReadRect(fineHouse, out KingdomPlotRules.PlotRect rect)
-					|| KingdomGuestRules.ClassifyRectTier(rect.Width, rect.Height)
-						< KingdomGuestRules.LegendaryTraderFineHouseTier
-					|| op.PlunderRequested < KingdomGuestRules.LegendaryTraderMinimumShopTier) return false;
+				if (!TryExactLifecycleFineHouse(guest, fineHouse, out string fineHouseFailure)
+					|| op.PlunderRequested < KingdomGuestRules.LegendaryTraderMinimumShopTier)
+				{
+					KingdomLog.Log("Legendary guest lodging reproof refused: "
+						+ (fineHouseFailure ?? "shop tier is below the exact minimum"));
+					return false;
+				}
 				List<GameObject> residents = KingdomLodging.ResidentsOf(fineHouse.CurrentZone, fineHouse);
 				for (int i = 0; i < residents.Count; i++)
 					if (residents[i] != guest) return false;
@@ -122,6 +120,14 @@ namespace ThousandAndFirst
 			guest.SetStringProperty("KingdomName", op.ObjectName);
 			guest.SetStringProperty("KingdomOrigin", op.Origin ?? "");
 			guest.SetIntProperty(NotableGuestProperty, 0);
+			// The market handoff freezes the exact resident row for terminal recovery. Enrol the
+			// already-adopted citizen before preparing that projection; retry recognizes the row.
+			Simulation.City.KingdomCityBook residentBook;
+			int residentId;
+			if (!Simulation.City.KingdomResidents.TryEnsureRow(system, guest, op.Origin,
+				op.Faction, op.CreatedTick, out residentBook, out residentId)) return false;
+			if (!KingdomGuestLifecycle.FreezeLifecycleLodgeSource(system, guest, residentBook,
+				residentId, op)) return false;
 			if (op.Target == 1)
 			{
 				guest.SetIntProperty(LegendaryTraderResidentProperty, 1);
@@ -129,10 +135,6 @@ namespace ThousandAndFirst
 					fineHouse.GetStringProperty(KingdomPlots.PlotIdProperty));
 				if (!ConfigureLegendaryTraderShop(guest, op.PlunderRequested)) return false;
 			}
-			Simulation.City.KingdomCityBook residentBook;
-			int residentId;
-			if (!Simulation.City.KingdomResidents.TryEnsureRow(system, guest, op.Origin,
-				op.Faction, op.CreatedTick, out residentBook, out residentId)) return false;
 			guest.SetStringProperty(LodgeReceiptProperty, op.Id);
 			// Lodging changes civic status, not the guest's native/owned conversation graph.
 			if (op.Outbox != null && op.Outbox.ChronicleAccomplishment)
@@ -145,6 +147,11 @@ namespace ThousandAndFirst
 		{
 			GameObject fineHouse = op == null || string.IsNullOrEmpty(op.ObjectMarker)
 				? null : GameObject.FindByID(op.ObjectMarker);
+			string fineHouseFailure = null;
+			bool exactFineHouse = op?.Target != 1
+				|| TryExactLifecycleFineHouse(guest, fineHouse, out fineHouseFailure);
+			if (!exactFineHouse)
+				KingdomLog.Log("Legendary guest completion reproof refused: " + fineHouseFailure);
 			Simulation.City.KingdomCityBook residentBook;
 			int residentId;
 			Simulation.City.KingdomCityState state;
@@ -161,17 +168,46 @@ namespace ThousandAndFirst
 				&& string.Equals(row.Name, op?.ObjectName, StringComparison.Ordinal)
 				&& string.Equals(row.Origin, op?.Origin ?? "", StringComparison.Ordinal)
 				&& string.Equals(row.Arrived, op?.Faction ?? "", StringComparison.Ordinal);
+			bool dormantDeadSource = op?.Target == 1
+				&& CompletedDeadSourceHandoff(system, guest);
 			return system != null && op != null && GameObject.Validate(guest)
 				&& guest.ID == op.ObjectId
 				&& guest.GetStringProperty(LodgeReceiptProperty) == op.Id
 				&& exactRow
 				&& Simulation.City.KingdomResidents.OnRollCount(system) == op.Defence + 1
+				&& exactFineHouse
 				&& (op.Target != 1 || (guest.GetIntProperty(LegendaryTraderResidentProperty) == 1
 					&& GameObject.Validate(fineHouse)
 					&& guest.GetStringProperty(KingdomLodging.HomePlotIdProperty)
 						== fineHouse.GetStringProperty(KingdomPlots.PlotIdProperty)
-					&& guest.GetIntProperty("VillageMerchant") == 1
+					&& (dormantDeadSource || guest.GetIntProperty("VillageMerchant") == 1)
 					&& guest.GetIntProperty("InventoryTier") == op.PlunderRequested));
+		}
+
+		private static bool TryExactLifecycleFineHouse(GameObject Guest, GameObject FineHouse,
+			out string Failure)
+		{
+			Failure = null;
+			Zone zone = Guest?.CurrentZone;
+			if (!GameObject.Validate(FineHouse) || zone == null
+				|| !ReferenceEquals(FineHouse.CurrentZone, zone))
+			{
+				Failure = "the exact fine-house root is absent from the guest's ground";
+				return false;
+			}
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone) ?? KingdomSurvey.Take(zone);
+			if (survey == null || !survey.TryBenefits(out KingdomBenefitIndex benefits,
+				out Failure)) return false;
+			if (!TryPhysicalHousingTier(FineHouse, benefits,
+				out KingdomBenefitReading reading, out KingdomPlotRules.PlotSize tier)
+				|| !string.Equals(reading.Designation.BuildingKey, "finehouse",
+					StringComparison.Ordinal)
+				|| tier < KingdomGuestRules.LegendaryTraderFineHouseTier)
+			{
+				Failure = "the designated fine house lacks exact cells or physical bed capacity";
+				return false;
+			}
+			return true;
 		}
 	}
 }

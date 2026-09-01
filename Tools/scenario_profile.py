@@ -191,12 +191,15 @@ def write_manifest(source: str, destination: str) -> None:
 #   - `capture` founds anchor evidence and is fail-closed on ORDINARY play, so inside a prepared
 #     scenario profile it can only ever refuse. Sealing it would seal a guaranteed stop. Curating an
 #     anchor stays a reviewer's deliberate act in an ordinary game, exactly as the ruling requires.
+#   - `arcology` needs an already-authorized production shell and active paid-floor receipts. Fresh
+#     scenario profiles cannot own those facts, so it remains attended and cannot self-stage them.
 #
 # The runtime verb set lives in Harness/KingdomScenarioVerbs.cs and stays the authority on what a
 # verb DOES; this list only decides what may be sealed into an unattended run.
 SCRIPT_VERBS = (
     "anchor",
     "flatten",
+    "frame",
     "ground",
     "list",
     "realize",
@@ -222,8 +225,10 @@ DEFAULT_SCRIPT = ("flatten", "realize", "status")
 RESERVED_VERBS = (
     "advance",
     "anchor",
+    "arcology",
     "capture",
     "flatten",
+    "frame",
     "ground",
     "help",
     "list",
@@ -388,6 +393,10 @@ def inventory(root: str) -> dict[str, str]:
     """
     if not os.path.isdir(root):
         fail("profile tree is missing: " + root)
+    # os.walk(..., followlinks=False) refuses linked descendants but still traverses a linked
+    # starting root. Prove the root itself before walking or a swapped Local/ junction could place
+    # every apparently sealed input outside the throwaway profile.
+    refuse_links(root, True)
     found: dict[str, str] = {}
     spellings: dict[str, str] = {}
     for current, directories, files in os.walk(root, followlinks=False):

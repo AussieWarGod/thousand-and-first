@@ -22,7 +22,7 @@ namespace ThousandAndFirst
 				|| Predecessor.CurrentZone == null
 				|| string.IsNullOrEmpty(plotId)
 				|| !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure)
-				|| !KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)
+				|| !KingdomArchitectureRules.IsManagedSnapshotEncoding(Intent.EncodedSnapshot)
 				|| !KingdomArchitectureRuntime.TryRead(Successor, out frozen, out Failure)
 				|| frozen.SnapshotHash != Intent.SnapshotHash
 				|| Successor.CurrentZone != Predecessor.CurrentZone
@@ -32,58 +32,82 @@ namespace ThousandAndFirst
 				if (Failure == null) Failure = "Authored plot growth lacks exact frozen endpoints.";
 				return false;
 			}
-			Zone zone = Successor.CurrentZone;
-			bool coveredOnly = false;
-			for (int i = 0; i < snapshot.Cells.Count; i++)
-				if (snapshot.Cells[i].Claim && snapshot.Cells[i].Cover != ArchitectureCover.Open)
+			Zone zone = Predecessor.CurrentZone;
+			bool latest = KingdomArchitectureRules.IsLatestSnapshotEncoding(
+				Intent.EncodedSnapshot);
+			KingdomPlotRules.PlotRect footprint;
+			KingdomPlotRules.RoofState roof;
+			if (latest)
+			{
+				KingdomArchitectureIntent beforeIntent;
+				KingdomPlotRules.PlotRect expectedBefore;
+				KingdomPlotRules.PlotRect standingBefore;
+				KingdomPlotRules.RoofState expectedBeforeRoof;
+				if (!KingdomArchitectureRuntime.TryRead(Predecessor, out beforeIntent, out Failure)
+					|| !KingdomArchitectureRules.IsLatestSnapshotEncoding(
+						beforeIntent.EncodedSnapshot)
+					|| !KingdomArchitectureRuntime.TryWorldFootprint(beforeIntent,
+						out expectedBefore, out Failure)
+					|| !KingdomArchitectureRuntime.TryRoofOnGround(beforeIntent,
+						KingdomPlotRules.IsUnderground(zone.Z), out expectedBeforeRoof,
+						out Failure)
+					|| !TryReadFootprint(Predecessor, out standingBefore)
+					|| !SameRect(expectedBefore, standingBefore)
+					|| RoofOf(Predecessor) != expectedBeforeRoof)
 				{
-					coveredOnly = true;
-					break;
+					if (Failure == null) Failure =
+						"Standing authored building no longer matches its frozen footprint or roof.";
+					return false;
 				}
-			int x1 = int.MaxValue;
-			int y1 = int.MaxValue;
-			int x2 = int.MinValue;
-			int y2 = int.MinValue;
-			KingdomPlotRules.RoofState roof = KingdomPlotRules.RoofState.Open;
-			for (int i = 0; i < snapshot.Cells.Count; i++)
-			{
-				ArchitectureCellState cell = snapshot.Cells[i];
-				if (!cell.Claim || (coveredOnly && cell.Cover == ArchitectureCover.Open)) continue;
-				int x;
-				int y;
-				if (!KingdomArchitectureRuntime.TryWorldCell(snapshot, Intent.Rect, cell,
-					out x, out y, out Failure)) return false;
-				if (x < x1) x1 = x;
-				if (y < y1) y1 = y;
-				if (x > x2) x2 = x;
-				if (y > y2) y2 = y;
-				if (cell.Cover == ArchitectureCover.Natural)
-					roof = KingdomPlotRules.RoofState.Carved;
-				else if (cell.Cover == ArchitectureCover.Walled
-					&& roof != KingdomPlotRules.RoofState.Carved)
-					roof = KingdomPlotRules.RoofState.Walled;
-				else if (cell.Cover == ArchitectureCover.Soft
-					&& roof == KingdomPlotRules.RoofState.Open)
-					roof = KingdomPlotRules.RoofState.Soft;
+				if (!KingdomArchitectureRuntime.TryWorldFootprint(Intent, out footprint,
+						out Failure)
+					|| !KingdomArchitectureRuntime.TryRoofOnGround(Intent,
+						KingdomPlotRules.IsUnderground(zone.Z), out roof, out Failure)) return false;
 			}
-			if (x1 == int.MaxValue)
+			else if (!TryLegacyManagedGrowthTruth(snapshot, Intent, out footprint,
+				out roof, out Failure)) return false;
+			if (!TryReserveAuthoredGrowthEnvelope(Predecessor, Successor, Intent,
+				out bool divergentEnvelope, out Failure))
 			{
-				Failure = "Authored successor has no claimed plot ground.";
+				if (divergentEnvelope)
+					KingdomArchitectureStamper.TryQuarantineUpgrade(Predecessor, Failure,
+						out Failure);
 				return false;
 			}
-			KingdomPlotRules.PlotRect footprint = new KingdomPlotRules.PlotRect(x1, y1, x2, y2);
-			StampRect(Successor, Intent.Rect);
-			StampFootprint(Successor, footprint, roof);
-			Successor.SetStringProperty(PlotIdProperty, plotId);
-			if (IsHeartPlot(Predecessor)) Successor.SetIntProperty(HeartPlotProperty, 1);
+			if (!ExactOrAbsentInt(Successor, FootX1Property, footprint.X1)
+				|| !ExactOrAbsentInt(Successor, FootY1Property, footprint.Y1)
+				|| !ExactOrAbsentInt(Successor, FootX2Property, footprint.X2)
+				|| !ExactOrAbsentInt(Successor, FootY2Property, footprint.Y2)
+				|| !ExactOrAbsentInt(Successor, PlotRoofProperty, (int)roof))
+			{
+				Failure = "Authored successor carries foreign or changed footprint state.";
+				KingdomArchitectureStamper.TryQuarantineUpgrade(Predecessor, Failure,
+					out Failure);
+				return false;
+			}
+			try
+			{
+				StampFootprint(Successor, footprint, roof);
+			}
+			catch (System.Exception exception)
+			{
+				Failure = "Authored footprint publication remains retryable: "
+					+ exception.Message;
+				return false;
+			}
 			KingdomPlotRules.PlotRect checkedRect;
 			KingdomPlotRules.PlotRect checkedFootprint;
-			return TryReadRect(Successor, out checkedRect) && SameRect(checkedRect, Intent.Rect)
+			bool exact = TryReadRect(Successor, out checkedRect)
+				&& SameRect(checkedRect, Intent.Rect)
 				&& TryReadFootprint(Successor, out checkedFootprint)
 				&& SameRect(checkedFootprint, footprint) && RoofOf(Successor) == roof
 				&& Successor.GetStringProperty(PlotIdProperty) == plotId
 				&& (!IsHeartPlot(Predecessor)
 					|| Successor.GetIntProperty(HeartPlotProperty) == 1);
+			if (!exact)
+				KingdomArchitectureStamper.TryQuarantineUpgrade(Predecessor,
+					"Authored plot-growth metadata did not settle exactly.", out Failure);
+			return exact;
 		}
 
 		/// <summary>
@@ -203,7 +227,8 @@ namespace ThousandAndFirst
 			for (int i = 0; i < survey.PlotRoots.Count; i++)
 			{
 				GameObject item = survey.PlotRoots[i];
-				if (IsYielding(item) && TryReadRect(item, out _))
+				if (!r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)
+					&& IsYielding(item) && TryReadRect(item, out _))
 				{
 					found.Add(item);
 				}

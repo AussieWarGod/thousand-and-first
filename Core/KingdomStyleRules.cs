@@ -36,6 +36,7 @@ namespace ThousandAndFirst
 			if (Earlier == null) return Later == null ? null : Later.Copy();
 			if (Later == null) return Earlier.Copy();
 			KingdomStyleDraft merged = Earlier.Copy();
+			if (Later.Aliases != null) merged.Aliases = Later.Aliases;
 			if (Later.Terrain != null) merged.Terrain = Later.Terrain;
 			if (Later.Region != null) merged.Region = Later.Region;
 			if (Later.Strata != null) merged.Strata = Later.Strata;
@@ -60,6 +61,20 @@ namespace ThousandAndFirst
 				return false;
 			}
 			string name = Draft.Name.Trim();
+			if (!TryTokens(Draft.Aliases, out string[] aliases, out string aliasError))
+			{
+				Error = "style " + name + " has bad Aliases: " + aliasError;
+				return false;
+			}
+			for (int i = 0; aliases != null && i < aliases.Length; i++)
+			{
+				if (!ValidName(aliases[i]) || string.Equals(name, aliases[i],
+					StringComparison.OrdinalIgnoreCase))
+				{
+					Error = "style " + name + " has an invalid or self-naming alias";
+					return false;
+				}
+			}
 			if (!TryTokens(Draft.Terrain, out string[] terrain, out string tokenError))
 			{
 				Error = "style " + name + " has bad Terrain selectors: " + tokenError;
@@ -127,7 +142,7 @@ namespace ThousandAndFirst
 			}
 			Definition = new KingdomStyleDefinition
 			{
-				Name = name, TerrainTokens = terrain, RegionTokens = region,
+				Name = name, Aliases = aliases, TerrainTokens = terrain, RegionTokens = region,
 				Stratum = stratum, Priority = priority, GroundClause = clause,
 				CropBlueprint = crop, SeedBlueprint = seed, CropRowBlueprint = cropRow,
 				HasWallMaterial = hasWallMaterial, WallMaterial = wallMaterial,
@@ -147,6 +162,19 @@ namespace ThousandAndFirst
 			{
 				Error = "style behavior has no definition";
 				return false;
+			}
+			if (Definitions != null)
+			{
+				for (int i = 0; i < Definitions.Count; i++)
+				{
+					if (i == ReplacingIndex || Definitions[i] == null) continue;
+					if (NamesOverlap(Candidate, Definitions[i]))
+					{
+						Error = "style " + Candidate.Name
+							+ " shares a canonical name or alias with style " + Definitions[i].Name;
+						return false;
+					}
+				}
 			}
 			bool crop = !string.IsNullOrEmpty(Candidate.CropBlueprint);
 			bool seed = !string.IsNullOrEmpty(Candidate.SeedBlueprint);
@@ -185,6 +213,25 @@ namespace ThousandAndFirst
 				}
 			}
 			return true;
+		}
+
+		private static bool NamesOverlap(KingdomStyleDefinition A, KingdomStyleDefinition B)
+		{
+			if (MatchesName(A, B.Name) || MatchesName(B, A.Name)) return true;
+			for (int i = 0; A.Aliases != null && i < A.Aliases.Length; i++)
+				if (MatchesName(B, A.Aliases[i])) return true;
+			return false;
+		}
+
+		internal static bool MatchesName(KingdomStyleDefinition Definition, string Name)
+		{
+			if (Definition == null || string.IsNullOrWhiteSpace(Name)) return false;
+			string wanted = Name.Trim();
+			if (string.Equals(Definition.Name, wanted, StringComparison.OrdinalIgnoreCase)) return true;
+			for (int i = 0; Definition.Aliases != null && i < Definition.Aliases.Length; i++)
+				if (string.Equals(Definition.Aliases[i], wanted,
+					StringComparison.OrdinalIgnoreCase)) return true;
+			return false;
 		}
 	}
 }

@@ -33,19 +33,16 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool IsMill(GameObject Work)
 		{
-			return GameObject.Validate(Work) && Work.GetIntProperty("KingdomBuilt") == 1 && Work.HasPart("Mill");
+			return KingdomUpgrade.IsFunctionallyBuilt(Work) && Work.HasPart("Mill");
 		}
 
 		/// <summary>
-		/// Servings a day the settlement's mills are counted for by the LEVEL, at exactly the
-		/// effectiveness the level counts them at. The mill's mirror of
-		/// <see cref="CycledFoodPerDay"/>, and it exists for the same reason: a mill delivers its
-		/// food PHYSICALLY, by taking real crops off the larder shelves and putting real preserves
-		/// back, so its <c>Carries</c> must be subtracted from the clocked daily make or the
-		/// settlement would be fed twice out of one millstone.
+		/// Servings a day the settlement's mills may transform at their current effectiveness.
+		/// A mill delivers food PHYSICALLY, by taking real crops off the larder shelves and putting
+		/// real preserves back. This figure budgets that positive operation; it is never population
+		/// support, a passive daily credit, or a ration offset.
 		/// <para>
-		/// Baseline, and no method factor, for <see cref="CycledFoodPerDay"/>'s reason exactly: a
-		/// subtraction that removes a CREDIT has to be the size of the credit.
+		/// Baseline, with no method factor, so the physical transformation has one bounded source.
 		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null makes nothing.</param>
@@ -76,8 +73,9 @@ namespace ThousandAndFirst
 					continue;
 				}
 				int effectiveness = KingdomWear.EffectivenessOf(work);
-				milled += KingdomCatalogueRules.Carried(
-					KingdomCatalogueRules.AmountOf(carries, KingdomCatalogueRules.SupportFood), effectiveness);
+				milled = KingdomCatalogueRules.SaturatingCounterAdd(milled,
+					KingdomCatalogueRules.Carried(KingdomCatalogueRules.AmountOf(carries,
+						KingdomCatalogueRules.SupportFood), effectiveness));
 			}
 			return milled;
 		}

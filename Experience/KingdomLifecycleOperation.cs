@@ -54,6 +54,7 @@ namespace ThousandAndFirst
 		public int Spawned;
 		public int PlunderRequested;
 		public int PlunderProved;
+		public KingdomLifecycleLodgeTerminalReceipt LodgeTerminal;
 		public string ArrivalText;
 		public KingdomLifecycleOutbox Outbox;
 		public string Fault;

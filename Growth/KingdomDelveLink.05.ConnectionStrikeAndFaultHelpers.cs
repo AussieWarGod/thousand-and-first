@@ -121,12 +121,12 @@ namespace ThousandAndFirst
 				|| Owner.HasStringProperty(KingdomArchitectureRuntime.SchemaProperty);
 			string encoded = Owner.GetStringProperty(KingdomArchitectureRuntime.SnapshotProperty);
 			if (!architectureMarker
-				&& !KingdomArchitectureRules.IsCurrentSnapshotEncoding(encoded)) return true;
+				&& !KingdomArchitectureRules.IsManagedSnapshotEncoding(encoded)) return true;
 			KingdomArchitectureIntent architecture;
 			if (!KingdomArchitectureRuntime.TryRead(Owner, out architecture, out Failure)) return false;
 			if (!KingdomDelveRules.IsDelve(architecture.BuildKey))
 				return Fail("delve strike identities disagree with frozen architecture", out Failure);
-			if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(architecture.EncodedSnapshot))
+			if (KingdomArchitectureRules.IsManagedSnapshotEncoding(architecture.EncodedSnapshot))
 				return Fail("current authored delve is missing its physical-link root", out Failure);
 			// Explicit read-only legacy architecture remains in the legacy strike lane.
 			return true;

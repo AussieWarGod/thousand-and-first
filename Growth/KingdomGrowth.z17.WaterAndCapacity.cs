@@ -25,6 +25,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && KingdomLiquids.HasFreshWater(part))
 				{
@@ -41,6 +42,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume < 0 && KingdomLiquids.HasFreshWater(part))
 				{
@@ -57,6 +59,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1 && part.Volume < part.MaxVolume && KingdomLiquids.CanReceiveFreshWater(part))
 				{
@@ -72,6 +75,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				if (item.GetIntProperty("KingdomStores") == 1)
 				{
 					total++;
@@ -86,6 +90,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				if (item.GetIntProperty("KingdomLarder") == 1)
 				{
 					total++;
@@ -94,20 +99,33 @@ namespace ThousandAndFirst
 			return total;
 		}
 
-		/// <summary>Counts beds the settlement built. These are the population ceiling.</summary>
+		/// <summary>Reads effective sleep places from physical providers in exact designations.</summary>
+		public static bool TryCountBeds(Zone Z, out int Beds, out string Failure)
+		{
+			Beds = 0;
+			Failure = null;
+			if (Z == null)
+			{
+				Failure = "roof capacity has no loaded ground";
+				return false;
+			}
+			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
+			if (survey == null)
+			{
+				Failure = "roof capacity has no exact current-ground survey";
+				return false;
+			}
+			if (!survey.TryBenefits(out KingdomBenefitIndex benefits, out Failure)) return false;
+			Beds = benefits.Total("roof");
+			return true;
+		}
+
 		public static int CountBeds(Zone Z)
 		{
-			KingdomSurvey active = KingdomSurvey.ActiveFor(Z);
-			if (active != null) return active.Beds * KingdomRules.BedsPerBunk;
-			int total = 0;
-			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
-			{
-				if (item.GetIntProperty("KingdomBuilt") == 1 && item.HasPart("Bed"))
-				{
-					total += KingdomRules.BedsPerBunk;
-				}
-			}
-			return total;
+			if (TryCountBeds(Z, out int beds, out string failure)) return beds;
+			KingdomLog.Log("Roof capacity refused physical benefits in "
+				+ (Z?.ZoneID ?? "<no-zone>") + ": " + (failure ?? "unknown failure"));
+			return 0;
 		}
 
 		public static int CountStorageCapacity(Zone Z)
@@ -117,6 +135,7 @@ namespace ThousandAndFirst
 			int total = 0;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
+				if (r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)) continue;
 				LiquidVolume part = item.GetPart<LiquidVolume>();
 				if (part != null && part.MaxVolume > 0 && item.GetIntProperty("KingdomStores") == 1)
 				{

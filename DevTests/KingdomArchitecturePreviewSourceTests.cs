@@ -17,12 +17,19 @@ namespace ThousandAndFirst.Tests
 		public void PreviewIsRenderedOnlyFromTheFrozenProductionSnapshot()
 		{
 			string source = Read("Growth", "KingdomArchitecturePreview.cs");
+			string frontage = Read("Growth", "KingdomArchitecturePreview.Frontage.cs");
 			AssertOrdered(source,
 				"KingdomArchitectureRuntime.TryDecode(Intent, out snapshot",
-				"KingdomArchitectureRules.IsCurrentSnapshotEncoding(Intent.EncodedSnapshot)",
+				"KingdomArchitectureRules.IsLatestSnapshotEncoding(Intent.EncodedSnapshot)",
 				"KingdomArchitectureRules.TryWorldDimensions",
 				"snapshot.Cells.Count", "snapshot.Placements.Count", "snapshot.Anchors.Count");
 			StringAssert.Contains("KingdomArchitectureRules.TryToWorld", source);
+			AssertOrdered(frontage,
+				"KingdomArchitecture.TryGetMapping(Snapshot.BuildKey, Snapshot.LotType",
+				"mapping.BindingKey != Snapshot.BindingKey",
+				"mapping.Frontage == ArchitectureFrontage.Heart ? \"heart-facing\"",
+				"mapping.Frontage == ArchitectureFrontage.Road ? \"road-facing\"");
+			StringAssert.Contains(".Append(\", \").Append(frontage).Append(\", faces \")", source);
 			StringAssert.Contains("@ building; + public door; # blocked; o fixture; ! use point", source);
 			StringAssert.Contains("KingdomMaterials.CostFor(Entry.Key)?.Describe()", source);
 			StringAssert.Contains("KingdomPlots.ChainOf(Entry)", source);
@@ -31,6 +38,15 @@ namespace ThousandAndFirst.Tests
 			Assert.IsFalse(source.Contains("GameObject.Create"));
 			Assert.IsFalse(source.Contains("SetIntProperty"));
 			Assert.IsFalse(source.Contains("SetStringProperty"));
+		}
+
+		[Test]
+		public void SleepingCapacityUsesTypedAuthoredRoleNotBlueprintNames()
+		{
+			string source = Read("Growth", "KingdomArchitecturePreview.cs");
+			StringAssert.Contains("anchor.Key != \"fixture:sleep\"", source);
+			StringAssert.Contains("catalogue ceiling", source);
+			StringAssert.DoesNotContain("r_KingdomFixtureBed", source);
 		}
 
 		[Test]

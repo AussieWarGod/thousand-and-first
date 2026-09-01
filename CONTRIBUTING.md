@@ -6,13 +6,26 @@ before changing behavior and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before
 changing state. [docs/STATUS.md](docs/STATUS.md) is the current evidence/gap boundary; do not infer
 release status from an older audit or test count.
 
+Players can contribute without building code. Use the [Alpha playtest form](https://github.com/AussieWarGod/thousand-and-first/issues/new/choose)
+for pacing, UI, architecture, balance, or session feedback; use bug/compatibility forms for a
+reproduction. [SUPPORT.md](SUPPORT.md) lists safe diagnostics. Good first code work includes docs,
+pure rule tests, and focused diagnostics; persistence and transaction changes require prior design
+review.
+
 ## Set up a checkout
 
+Fork the repository on GitHub, then clone your fork and retain this repository as `upstream`:
+
 ```bash
-git clone https://github.com/AussieWarGod/thousand-and-first.git
+git clone https://github.com/YOUR-ACCOUNT/thousand-and-first.git
 cd thousand-and-first
-git switch -c type/short-topic
+git remote add upstream https://github.com/AussieWarGod/thousand-and-first.git
+git fetch upstream
+git switch -c type/short-topic upstream/main
 ```
+
+Replace `YOUR-ACCOUNT` with your GitHub account. Never force-push another contributor's branch or
+rewrite shared release tags.
 
 No submodules or vendored game files are required for documentation and checkout-only checks.
 Python 3 is needed for XML/art audits. Code tests use the exact .NET SDK `9.0.306` pinned by
@@ -110,10 +123,12 @@ Full release-candidate check, including exact staged compile, test suite, asset/
 audits, smoke-launcher harness, deploy dry run, and structural release contract:
 
 ```bash
-./Tools/release-check.sh
+./Tools/release-check.sh --test
 ```
 
-This requires the configured licensed game files and WSL/Windows bridge. It does not replace
+`--test` is the private candidate lane; maintainers use explicit `--alpha` or `--release` only at
+the matching public metadata boundary. This requires the configured licensed game files and
+WSL/Windows bridge. It does not replace
 the controlled live-game passes in [TESTING.md](TESTING.md). Never report a manual pass you did
 not perform. Maintainers follow [docs/RELEASING.md](docs/RELEASING.md) for package, private
 subscription, and public Workshop transitions.

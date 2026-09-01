@@ -265,6 +265,8 @@ namespace ThousandAndFirst
 				case KingdomCharterAction.CivicCommitments: OpenCivicCommitments(System); break;
 				case KingdomCharterAction.RecognizeArtifact: KingdomArtifactRecognitionCharterRuntime.Open(System, ParentObject); break;
 				case KingdomCharterAction.FixedWitnessWorks: KingdomWitnessWorkCharterRuntime.Open(System, ParentObject); break;
+				case KingdomCharterAction.InspectBuildingBenefits: InspectBuildingBenefits(System); break;
+				case KingdomCharterAction.TrafficRecords: OpenPolityTrafficRecords(System); break;
 				}
 			}
 			finally

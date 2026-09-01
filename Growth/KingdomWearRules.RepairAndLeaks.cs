@@ -55,22 +55,16 @@ namespace ThousandAndFirst
 		}
 
 		// ==================================================================================
-		// Storage leaks (Addendum 10(b): "storage works leak their stored contents as wear
-		// climbs"). The kind-appropriate consequence sitting on top of the general effectiveness
-		// scale, and nothing here reads a clock either: the DAYS are handed in by the caller, the
-		// same way every other day-taking rule in this mod takes them. Loss, not transfer - water
-		// that runs out of a holed cistern goes into the ground and is gone, which is the honest
-		// reading and deliberately NOT the manifest's pour-on-ground pools (that water was moved
-		// somewhere a founder can walk up to; this water was lost).
+		// Storage leaks (Addendum 10(b)): damaged water and charge stores can lose their stored
+		// contents. Food is physical positive play, never an unattended-loss axis; its persisted
+		// enum ordinal remains below only so an old receipt can be recognized and retired inert.
+		// Nothing here reads a clock: DAYS are handed in by the caller.
 		// ==================================================================================
 
 		/// <summary>
-		/// What a leaking store is losing. THREE kinds because three things in this settlement
-		/// are physically stored: drams in a vessel, charge in a bed of salt, and servings in a
-		/// larder. Food was deliberately absent here until food became a flow, which is exactly
-		/// the condition Addendum 10(b) deferred it on ("the pattern extends per kind as kinds
-		/// become physical (food spoilage waits until food is a flow)"); Wave B made it one, so
-		/// the deferral is spent. Values are frozen: never zero, never renumbered.
+		/// What a persisted storage-loss receipt names. Water and charge are live kinds. Food is
+		/// a frozen compatibility ordinal only: loading one retires its receipt without touching
+		/// any pantry item. Values are frozen: never zero, never renumbered.
 		/// </summary>
 		public enum LeakKind
 		{
@@ -122,6 +116,15 @@ namespace ThousandAndFirst
 			long lost = (long)Capacity * wear * Days
 				/ ((long)KingdomMaterialRules.MaxWearPercent * LeakDaysToEmptyAtCeiling);
 			return (lost >= Held) ? Held : (int)lost;
+		}
+
+		/// <summary>
+		/// Kind-aware storage loss. The food ordinal is deliberately inert even across an
+		/// arbitrarily long absence; only water and charge opt into the loss arithmetic above.
+		/// </summary>
+		public static int Leaked(LeakKind Kind, int Capacity, int Held, int Wear, int Days)
+		{
+			return Kind == LeakKind.Food ? 0 : Leaked(Capacity, Held, Wear, Days);
 		}
 
 	}

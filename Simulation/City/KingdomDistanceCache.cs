@@ -7,11 +7,11 @@ namespace ThousandAndFirst.Simulation.City
 	/// than falling back to zone-row order and claiming locality.</summary>
 	internal sealed class KingdomDistanceCache
 	{
-		internal ulong GraphA;
+		internal ulong GraphA = 0UL;
 
-		internal ulong GraphB;
+		internal ulong GraphB = 0UL;
 
-		internal KingdomDistanceMatrix Matrix;
+		internal KingdomDistanceMatrix Matrix = null;
 
 		internal KingdomDistanceZoneCache[] Zones = new KingdomDistanceZoneCache[0];
 

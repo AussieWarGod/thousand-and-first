@@ -212,8 +212,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("common", true)]
 		[TestCase("verdant", true)]
 		[TestCase("fungal", true)]
-		[TestCase("gyre", true)]
+		[TestCase("moonstair", true)]
 		[TestCase("eater", true)]
+		[TestCase("gyre", false)]
 		[TestCase("Common", false)]
 		[TestCase("mechanimist", false)]
 		[TestCase("", false)]
@@ -240,8 +241,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("TerrainFungal", "Fungal", 10, "fungal")]
 		[TestCase("TerrainFungalOuterGw", "Fungal", 10, "fungal")]
 		[TestCase("TerrainFungalCenter", "Fungal", 10, "fungal")]
-		[TestCase("TerrainBrightsheol", "Brightsheol", 10, "gyre")]
-		[TestCase("TerrainMoonStair", "MoonStair", 10, "gyre")]
+		[TestCase("TerrainBrightsheol", "Brightsheol", 10, "moonstair")]
+		[TestCase("TerrainMoonStair", "MoonStair", 10, "moonstair")]
 		[TestCase("TerrainRuins", "Ruins", 10, "eater")]
 		[TestCase("TerrainBaroqueRuins", "BaroqueRuins", 10, "eater")]
 		[TestCase("TerrainGritGate", "Ruins", 10, "eater")]
@@ -276,7 +277,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("TerrainFungalCenter", "Fungal", 25, "fungal")]
 		[TestCase("TerrainBaroqueRuins", "BaroqueRuins", 45, "eater")]
 		[TestCase("TerrainSaltmarsh", "Saltmarsh", 10, "verdant")]
-		[TestCase("TerrainMoonStair", "MoonStair", 9, "gyre")]
+		[TestCase("TerrainMoonStair", "MoonStair", 9, "moonstair")]
 		public void StyleForSiteBelowTheSurface(string blueprint, string region, int zLevel, string expected)
 		{
 			Assert.AreEqual(expected, KingdomRules.StyleForSite(blueprint, region, zLevel));

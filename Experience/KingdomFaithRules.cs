@@ -31,39 +31,6 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static partial class KingdomFaithRules
 	{
-		private const string FaithCategory = "faith";
-
-		private const string KnowledgeCategory = "knowledge";
-
-		/// <summary>
-		/// Whether a design's <c>Category</c> names it a faith building &mdash; the only family
-		/// the Charter's consecration ceremony offers, and the only family
-		/// <see cref="KingdomFaith"/>'s shrine pass ever looks at. A rule rather than a name list,
-		/// so a third-party mod's own faith building is consecratable the moment it declares the
-		/// category, with no registration here.
-		/// </summary>
-		/// <param name="Category">A design's raw <c>Category</c> attribute. Case-insensitive;
-		/// null reads as no match.</param>
-		public static bool CanConsecrate(string Category)
-		{
-			return string.Equals(Trimmed(Category), FaithCategory, StringComparison.OrdinalIgnoreCase);
-		}
-
-		/// <summary>
-		/// Whether a design's <c>Category</c> names it a knowledge building &mdash; the family
-		/// education's softening looks at. Same shape as <see cref="CanConsecrate"/>, for the
-		/// same reason: a modded scriptorium works without a line of code here.
-		/// </summary>
-		public static bool IsEducationCategory(string Category)
-		{
-			return string.Equals(Trimmed(Category), KnowledgeCategory, StringComparison.OrdinalIgnoreCase);
-		}
-
-		private static string Trimmed(string Value)
-		{
-			return string.IsNullOrEmpty(Value) ? "" : Value.Trim();
-		}
-
 		// ==================================================================================
 		// Shrine conversion (Addendum 5, channel 2)
 		// ==================================================================================

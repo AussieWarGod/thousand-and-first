@@ -50,7 +50,8 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			KingdomDesignRules.SkinEntry suggested = KingdomDesignRules.ResolveDefaultSkin(Entry.Skins, CityStyle);
+			KingdomDesignRules.SkinEntry suggested = KingdomDesignRules.ResolveDefaultSkinForKeys(
+				Entry.Skins, KingdomData.StyleKeys(CityStyle));
 			string[] options = new string[Entry.Skins.Count + 1];
 			options[0] = "{{K|The design's own look}}" + ((suggested == null) ? " {{G|[suggested]}}" : "");
 			for (int i = 0; i < Entry.Skins.Count; i++)
@@ -281,7 +282,7 @@ namespace ThousandAndFirst
 			}
 			foreach (GameObject item in C.GetObjects())
 			{
-				if (item.GetIntProperty("KingdomBuilt") == 1 && !Into.Contains(item))
+				if (KingdomUpgrade.IsFunctionallyBuilt(item) && !Into.Contains(item))
 				{
 					Into.Add(item);
 				}

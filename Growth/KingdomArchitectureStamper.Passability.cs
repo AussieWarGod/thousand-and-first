@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 			for (int c = 0; c < Snapshot.Cells.Count; c++)
 			{
 				ArchitectureCellState cell = Snapshot.Cells[c];
-				if (!cell.Claim) continue;
+				if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
 				bool solid = false;
 				bool door = false;
 				for (int p = 0; p < Snapshot.Placements.Count; p++)
@@ -58,7 +58,8 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Snapshot.Cells.Count; i++)
 			{
 				ArchitectureCellState cell = Snapshot.Cells[i];
-				if (!cell.Claim || HighestLayerAt(Snapshot, cell.X, cell.Y) > (int)Through) continue;
+				if (!KingdomArchitectureRules.IsClaimed(cell.Claim)
+					|| HighestLayerAt(Snapshot, cell.X, cell.Y) > (int)Through) continue;
 				if (!TryVerifyPassabilityCell(Z, Intent, Snapshot, Lot, cell, out Failure))
 					return false;
 			}
@@ -145,7 +146,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < 4; i++)
 			{
 				ArchitectureCellState cell = FindCell(Snapshot, X + dx[i], Y + dy[i]);
-				if (cell != null && cell.Claim
+				if (cell != null && KingdomArchitectureRules.IsClaimed(cell.Claim)
 					&& cell.Passability == ArchitecturePassability.Walkable) return true;
 			}
 			return false;

@@ -39,7 +39,7 @@ namespace ThousandAndFirst
 					out DestinationInput) != KingdomPhysicalLookupState.Exact)
 				return Fail("The exact purpose work, zone, or dedicated store is unavailable.",
 					out Failure);
-			if (Work.GetIntProperty("KingdomBuilt") != 1
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Work)
 				|| Work.GetIntProperty("KingdomStaffed") != 1
 				|| Work.GetIntProperty("KingdomEffectiveness") <= 0
 				|| Work.GetIntProperty("KingdomBrownout") == 1
@@ -86,7 +86,7 @@ namespace ThousandAndFirst
 						out Failure);
 			if (FindExactKnown(Zone, Operation.DestinationWorkId, out GameObject work)
 					!= KingdomPhysicalLookupState.Exact
-				|| work.GetIntProperty("KingdomBuilt") != 1
+				|| !KingdomUpgrade.IsFunctionallyBuilt(work)
 				|| !KingdomPurposePortfolioRules.TryBuildKind(
 					KingdomUpgrade.DesignKeyOf(work), out KingdomPurposeKind kind)
 				|| kind != Operation.DestinationKind)

@@ -63,6 +63,23 @@ class ArtPolicyTests(unittest.TestCase):
         self.assertEqual(["xml", "code"], merged["Items/shared.bmp"])
         self.assertEqual(["code"], merged["Items/other.bmp"])
 
+    def test_vanilla_tile_census_includes_root_chargen_xml(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        base = temporary.name
+        blueprints = os.path.join(base, "ObjectBlueprints")
+        os.makedirs(blueprints)
+        with io.open(os.path.join(blueprints, "ZoneTerrain.xml"), "w",
+                encoding="utf-8") as stream:
+            stream.write('<part Name="Render" Tile="Terrain/ground.bmp" />')
+        with io.open(os.path.join(base, "EmbarkModules.xml"), "w",
+                encoding="utf-8") as stream:
+            stream.write('<grid Tile="Terrain/chargen-only.bmp" />')
+        self.assertEqual(
+            {"Terrain/ground.bmp", "Terrain/chargen-only.bmp"},
+            check_wiring.vanilla_tiles(base),
+        )
+
     def test_reference_checks_read_split_source_authorities(self):
         self.assertEqual(
             {"agrarian", "market", "craft", "shrine", "garrison", "academy"},
@@ -70,6 +87,20 @@ class ArtPolicyTests(unittest.TestCase):
         )
         self.assertEqual([], check_xml_refs.raising_ceremony_problems())
         self.assertEqual([], check_xml_refs.crop_chain_problems(None))
+        problems, lots, manifests = check_xml_refs.hosted_arcology_authority()
+        self.assertEqual([], problems)
+        self.assertEqual("r_KingdomArcologyGrowbed",
+                         lots["arcologyterrace"]["producer"])
+        self.assertEqual(14, lots["arcologyterrace"]["count"])
+        self.assertEqual("food:14", lots["arcologyterrace"]["supports"])
+        self.assertEqual("HydroponicTerrace",
+                         manifests["arcologyterrace"]["programme"])
+        self.assertEqual(14, manifests["arcologyterrace"]["blueprints"].count(
+            "r_KingdomArcologyGrowbed"))
+        routes = check_xml_refs.architecture_expansion_routes()
+        self.assertIn(("fieldrows", "grange", "Large"), routes)
+        self.assertNotIn(("fieldrows", "grange", "Medium"), routes)
+        self.assertEqual([], check_xml_refs.building_reference_problems())
 
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -125,6 +156,59 @@ class ArtPolicyTests(unittest.TestCase):
         records, problems = check_wiring.runtime_asset_records()
         self.assertEqual([], problems)
         self.assertEqual({}, records)
+
+    def test_repository_semantic_render_aliases_are_honest(self):
+        self.assertEqual([], check_wiring.semantic_render_alias_problems())
+        corpus = check_xml_refs.blueprint_corpus(check_wiring.DEFAULT_BASE)
+        glyph_only = {
+            "r_KingdomFounderStatue": "223",
+            "r_KingdomWatchtower": "024",
+            "r_KingdomHideRack": "209",
+            "r_KingdomMud": ",",
+            "r_KingdomSnapjawTrailDen": "127",
+            "r_KingdomIssachariRiflePorch": "239",
+            "r_KingdomTemplarPurityArsenal": "239",
+            "r_KingdomWardensWatchLodge": "127",
+        }
+        for name, glyph in glyph_only.items():
+            render = check_xml_refs.resolved_part(corpus, name, "Render")
+            self.assertEqual(glyph, render.get("RenderString"), name)
+            self.assertIsNone(render.get("Tile"), name)
+        lamp = check_xml_refs.resolved_part(
+            corpus, "r_KingdomArcologySpectrumLamp", "Render"
+        )
+        self.assertEqual("items/sw_hitech_lightsource1.bmp", lamp.get("Tile"))
+
+    def test_installed_fixture_cannot_regress_to_body_or_portable_item_art(self):
+        path = self.xml_file(
+            '<objects><object Name="r_KingdomStasisVault" Inherits="Furniture">'
+            '<part Name="Render" Tile="Items/sw_stasis_projector.bmp" '
+            'RenderString="230" /></object></objects>'
+        )
+        problems = check_wiring.semantic_render_alias_problems(path)
+        self.assertTrue(any("r_KingdomStasisVault" in row for row in problems))
+        self.assertTrue(any("semantically foreign art" in row for row in problems))
+
+    def test_hindren_fixture_cannot_claim_nachams_unique_machine(self):
+        path = self.xml_file(
+            '<objects><object Name="r_KingdomHindrenLoomSemantic" Inherits="Furniture">'
+            '<part Name="Render" Tile="Furniture/chiliad-nacham-loom.png" '
+            'RenderString="232" /></object></objects>'
+        )
+        problems = check_wiring.semantic_render_alias_problems(path)
+        self.assertTrue(any("r_KingdomHindrenLoomSemantic" in row for row in problems))
+        self.assertTrue(any("semantically foreign art" in row for row in problems))
+
+    def test_snapjaw_cache_cannot_claim_chiliads_regional_basket(self):
+        path = self.xml_file(
+            '<objects><object Name="r_KingdomCreedSnapjawMeatCache" '
+            'Inherits="Furniture"><part Name="Render" '
+            'Tile="Furniture/chiliad-basket.png" RenderString="229" />'
+            '</object></objects>'
+        )
+        problems = check_wiring.semantic_render_alias_problems(path)
+        self.assertTrue(any("r_KingdomCreedSnapjawMeatCache" in row for row in problems))
+        self.assertTrue(any("semantically foreign art" in row for row in problems))
 
     def test_original_runtime_asset_requires_exact_source_hash_and_metadata(self):
         temporary = tempfile.TemporaryDirectory()

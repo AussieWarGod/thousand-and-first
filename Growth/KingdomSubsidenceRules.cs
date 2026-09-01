@@ -5,11 +5,11 @@ using ThousandAndFirst.Simulation.Kernel;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// Hubris subsides (VISION.md: <i>"a city stands on what actually feeds it"</i>).
+	/// Hubris subsides (VISION.md: a city stands on water, roofs, and the civic works within them).
 	/// <para>
 	/// Three things live here and nothing else does. <b>The level</b>: what a settlement's finished
-	/// works carry between them, denominated against the stage the settlement has become, which is
-	/// the first thing anywhere to consume <c>KingdomCatalogueRules.Equilibrium</c>. <b>The
+	/// works carry between them, denominated against the stage the settlement has become, through
+	/// <c>KingdomCatalogueRules.PopulationEquilibrium</c>. <b>The
 	/// ladder</b>: the stage rule, hysteretic both ways, replacing the ratchet that only ever
 	/// climbed. <b>The slide</b>: how a settlement standing above its own level converges back
 	/// down to it as world time passes, in coarse per-stage steps, and where along the way that
@@ -21,8 +21,9 @@ namespace ThousandAndFirst
 	/// the founder is there or not, so the slide runs on world time and would run identically
 	/// under the founder's nose. It is not a punishment for building: a settlement whose works
 	/// carry its people never subsides however much it has raised. What it costs is the gap
-	/// between the two, and the gap is closed by raising works or by losing the people the works
-	/// were never feeding, whichever the founder chooses first.
+	/// between the two, and the gap is closed by raising water/roof/civic works or by losing the
+	/// people they could not house and supply with water, whichever the founder chooses first.
+	/// Food is not in this gap: crops and meals enable positive transactions only.
 	/// </para>
 	/// <para>
 	/// <b>The floor is Camp's own equilibrium</b> (<c>KingdomCatalogueRules.FloorLevel</c>), not a
@@ -71,7 +72,7 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			int percent = UpkeepPercent(Stage);
-			return (percent <= 100) ? Water : (Water * 100 / percent);
+			return (percent <= 100) ? Water : (int)((long)Water * 100L / percent);
 		}
 
 		/// <summary>What a settler costs a day at this stage, per hundred. Fails closed onto the
@@ -88,9 +89,9 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The population this settlement's works honestly carry: the frozen
-		/// <c>KingdomCatalogueRules.Equilibrium</c>, handed a water figure converted out of drams
-		/// into settlers at this stage's own rate.
+		/// The population this settlement's works honestly carry: water converted out of drams at
+		/// this stage's own rate, roof, and bounded lift. Food is intentionally absent; it enables
+		/// explicit physical acts and never creates population pressure.
 		/// </summary>
 		/// <param name="Supports">Every finished work's <c>Carries</c>, summed, with the lifting
 		/// half already scoped to what each work reaches (<c>KingdomSubsidence.Supports</c>).</param>
@@ -102,25 +103,25 @@ namespace ThousandAndFirst
 		/// <returns>Never below <c>KingdomCatalogueRules.FloorLevel</c>.</returns>
 		public static int SupportedLevel(KingdomCatalogueRules.SupportTally Supports, GrowthStage Stage, int Shade = 0)
 		{
-			return KingdomCatalogueRules.Equilibrium(
-				LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof, Supports.Lift, Shade);
+			return KingdomCatalogueRules.PopulationEquilibrium(
+				LevelFromWater(Supports.Water, Stage), Supports.Roof, Supports.Lift, Shade);
 		}
 
 		/// <summary>
-		/// Which of the three binding goods is holding the settlement where it is, asked with the
+		/// Which live population constraint is holding the settlement where it is, asked with the
 		/// water already converted &mdash; so a city whose cisterns would be ample at camp rates
 		/// is correctly told that it is the water, which is the whole point of the conversion.
 		/// </summary>
-		/// <returns>One of <c>KingdomCatalogueRules.BindingSupports</c>. Never null.</returns>
+		/// <returns><c>water</c> or <c>roof</c>. Never food or null.</returns>
 		public static string BindingSupportFor(KingdomCatalogueRules.SupportTally Supports, GrowthStage Stage)
 		{
-			return KingdomCatalogueRules.BindingSupport(
-				LevelFromWater(Supports.Water, Stage), Supports.Food, Supports.Roof);
+			return KingdomCatalogueRules.PopulationBindingSupport(
+				LevelFromWater(Supports.Water, Stage), Supports.Roof);
 		}
 
 		/// <summary>
-		/// A stored binding-support name, read back safely. Anything this build does not recognise
-		/// as one of <c>KingdomCatalogueRules.BindingSupports</c> comes back null.
+		/// A stored live population-binding name, read back safely. Legacy <c>food</c> and unknown
+		/// values come back null, so an old slide cannot blame food after migration.
 		/// <para>
 		/// Read-side rather than a repair in <c>Normalize</c>, deliberately. The seat swap's own
 		/// contract is that a field survives a round trip byte for byte
@@ -132,15 +133,13 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static string NormalizedBinding(string Stored)
 		{
-			if (string.IsNullOrEmpty(Stored) || !KingdomCatalogueRules.IsBindingSupport(Stored))
+			if (string.IsNullOrEmpty(Stored))
 			{
 				return null;
 			}
-			// Handed back as the canonical constant rather than as stored, so a name that only
-			// differed in case cannot reach a switch that compares against the constants.
-			for (int i = 0; i < KingdomCatalogueRules.BindingSupports.Length; i++)
+			for (int i = 0; i < KingdomCatalogueRules.PopulationBindingSupports.Length; i++)
 			{
-				string canonical = KingdomCatalogueRules.BindingSupports[i];
+				string canonical = KingdomCatalogueRules.PopulationBindingSupports[i];
 				if (string.Equals(Stored.Trim(), canonical, System.StringComparison.OrdinalIgnoreCase))
 				{
 					return canonical;

@@ -19,62 +19,24 @@ namespace ThousandAndFirst
 	{
 
 		// ==================================================================================
-		// What the fields make, and where it goes. The mirror of the water works' own daily
-		// make (the KingdomSubsidence.Supports(survey).Water line at the top of the pass), with
-		// the one subtraction that keeps it honest.
+		// What the fields physically make, and where it goes. Crop cycles own creation; dedicated
+		// containers own custody; explicit meal/industry transactions own consumption.
 		// ==================================================================================
 
 		/// <summary>
-		/// Servings the settlement's works bring in in a day: exactly the <c>food</c> Carries
-		/// <c>KingdomSubsidence</c> sums for the level, at exactly the effectiveness it sums them
-		/// at. The mirror of the water works' own daily make, one line above the call site.
+		/// Legacy city-rate seam. Food support remains physical-lane catalogue metadata, but it is
+		/// neither population support nor an abstract daily item producer.
 		/// <para>
-		/// <b>The invariant this exists to keep.</b> One point of <c>food</c> is one settler fed
-		/// for one day and <c>KingdomRules.RationsPerDay</c> charges one ration a settler a day,
-		/// so a settlement standing at its own supported level makes precisely the bill it is
-		/// charged. That only holds if EVERY food work is counted here, which is why nothing is
-		/// excluded &mdash; a design counted for the level and not for the flow would be a level
-		/// the settlement could reach and then starve at.
-		/// </para>
-		/// <para>
-		/// <b>And the fields that gather themselves are subtracted here, exactly once</b>
-		/// (Addendum 11(b-ii)). Every design that GROWS &mdash; the kitchen garden, the garden
-		/// rows, the field, the ploughed fields, the grange, the home farm &mdash; carries
-		/// <c>r_KingdomPlot</c>, stands real rows, and delivers its food physically on the crop's
-		/// own six-day cycle (<c>KingdomPlot.OnSettlementPass</c>). A sown one is therefore
-		/// removed from the clocked daily make by <c>KingdomCrops.CycledFoodPerDay</c>, folded at
-		/// the same effectiveness and through the same <c>KingdomCatalogueRules.Carried</c>, so
-		/// the subtraction cancels the addition to the unit. What is left in this figure is the
-		/// food a settlement makes without growing it.
-		/// </para>
-		/// <para>
-		/// <b>And so is every mill</b> (Addendum 11(b), Wave G3). A grinding mill now carries
-		/// vanilla's own <c>Mill</c> part and delivers its <c>food</c> the same physical way a
-		/// field does: <see cref="GrindHarvest"/> takes real crops off the larder shelves and puts
-		/// real preserved staples back. So it is subtracted here too, by
-		/// <c>KingdomCrops.MilledFoodPerDay</c>, at the same effectiveness and through the same
-		/// <c>Carried</c>. What is left in this figure after BOTH subtractions is the food a
-		/// settlement makes without growing it and without grinding it: the larder and the
-		/// granary, which refuse to waste what came in.
-		/// </para>
-		/// <para>
-		/// An UNSOWN field is already zero here, and not by subtraction: it carries no food at all
-		/// (<c>KingdomCrops.WithoutUnsownFood</c>, folded inside <c>KingdomSubsidence.Supports</c>),
-		/// so bare ground is worth nothing to the level and nothing to the day. That is Addendum
-		/// 11(b)'s gate, kept in one place so the level and the flow cannot disagree about it.
+		/// Fields already deliver real crop objects through their harvest cycle; mills transform
+		/// exact crop objects through <see cref="GrindHarvest"/>; larders and granaries store those
+		/// objects. Returning zero prevents any storage or support score from minting food while a
+		/// zone is away. Kept as an API method so callers and old tests have one explicit answer.
 		/// </para>
 		/// </summary>
 		/// <param name="Survey">The pass's survey. Null makes nothing.</param>
 		public static int FoodMadePerDay(KingdomSurvey Survey)
 		{
-			if (Survey == null)
-			{
-				return 0;
-			}
-			int made = KingdomSubsidence.Supports(Survey).Food
-				- KingdomCrops.CycledFoodPerDay(Survey)
-				- KingdomCrops.MilledFoodPerDay(Survey);
-			return (made > 0) ? made : 0;
+			return 0;
 		}
 
 		/// <summary>
@@ -82,11 +44,9 @@ namespace ThousandAndFirst
 		/// (STANDARDS 7b). Loss, not a queue: a harvest with nowhere to go is left in the field,
 		/// the same way water the casks cannot take runs into the ground.
 		/// <para>
-		/// W6 moved its CALLER, not its rule. The clocked daily make is the city model's now
-		/// (&sect;7.4), and it reaches real shelves through &sect;3.5's amortised reify - so this is
-		/// what that landing calls, rather than a second implementation of "put food away and say
-		/// what was lost" growing beside it in <c>KingdomCity</c>. The once-per-block flag and the
-		/// harvest ledger stay exactly where they were.
+		/// Called only by a physical harvest landing that already owns exact item creation. It does
+		/// not service the retired city-rate model. The once-per-block flag and harvest ledger remain
+		/// here so every caller gets one conservation and telling rule.
 		/// </para>
 		/// </summary>
 		/// <returns>What actually reached a larder.</returns>
@@ -106,7 +66,8 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			int stored = Survey.StoreFood(Amount, KingdomData.CropForStyle(System.Style));
-			System.Ledger.Harvested += stored;
+			System.Ledger.Harvested = KingdomCatalogueRules.SaturatingCounterAdd(
+				System.Ledger.Harvested, stored);
 			int lost = Amount - stored;
 			if (lost <= 0)
 			{
@@ -115,7 +76,8 @@ namespace ThousandAndFirst
 				System.HarvestUnstoredAnnounced = false;
 				return stored;
 			}
-			System.Ledger.HarvestLost += lost;
+			System.Ledger.HarvestLost = KingdomCatalogueRules.SaturatingCounterAdd(
+				System.Ledger.HarvestLost, lost);
 			if (System.HarvestUnstoredAnnounced)
 			{
 				return stored;
@@ -150,11 +112,9 @@ namespace ThousandAndFirst
 		/// of four servings, which is exactly the <c>food:4</c> the grinding mill declares.
 		/// </para>
 		/// <para>
-		/// <b>Residents eat first, and the reserve is kept on top of that.</b> This runs after
-		/// <see cref="ResolveHeartbeat"/> has drawn the day's rations, and even then it grinds
-		/// only what stands above one more day's bill
-		/// (<c>KingdomRules.MillableStock</c>). A settlement cannot be starved by its own
-		/// industry, on this pass or the next one.
+		/// <b>No hidden household reserve.</b> Food has no passive upkeep bill. This transformation
+		/// can only take named raw crops physically present in dedicated larders, and its operating
+		/// mill bounds the daily request.
 		/// </para>
 		/// <para>
 		/// <b>The visible machine and the accounting are different stock, on purpose.</b> The
@@ -174,7 +134,8 @@ namespace ThousandAndFirst
 			{
 				return;
 			}
-			int owed = KingdomCrops.MilledFoodPerDay(Survey) * Days;
+			int owed = KingdomCatalogueRules.SaturatingCounterMultiply(
+				KingdomCrops.MilledFoodPerDay(Survey), Days);
 			if (owed <= 0)
 			{
 				return;
@@ -189,7 +150,7 @@ namespace ThousandAndFirst
 				if (KingdomLog.Enabled) KingdomLog.Log("mill: " + crop + " has no staple to bind into; nothing ground");
 				return;
 			}
-			// The reserve, read off the larders AS THEY STAND after the day was eaten.
+			// Candidate stock is still narrowed to exact crop objects by ConsumeCrop below.
 			int spare = KingdomRules.MillableStock(Survey.FoodStored, System.Population);
 			int wanted = KingdomRules.CropsForGain(owed);
 			if (wanted > spare)
@@ -204,16 +165,19 @@ namespace ThousandAndFirst
 			// What came back: the crops themselves, bound, plus the gain. Conservation is stated
 			// here in one line so it cannot drift - out is IN TIMES the multiple, never a figure
 			// arrived at some other way.
-			int made = ground * KingdomRules.PreserveMultiple;
+			int made = KingdomCatalogueRules.SaturatingCounterMultiply(
+				ground, KingdomRules.PreserveMultiple);
 			int stored = Survey.StoreFood(made, staple);
-			System.Ledger.Milled += (stored > ground) ? (stored - ground) : 0;
+			System.Ledger.Milled = KingdomCatalogueRules.SaturatingCounterAdd(
+				System.Ledger.Milled, (stored > ground) ? (stored - ground) : 0);
 			int lost = made - stored;
 			if (lost > 0)
 			{
 				// Nowhere to put it, exactly as a harvest with a full larder has nowhere to go.
 				// The same once-flag speaks for both, because it is the same block: the pantries
 				// are full, and the settlement is losing what it made.
-				System.Ledger.HarvestLost += lost;
+				System.Ledger.HarvestLost = KingdomCatalogueRules.SaturatingCounterAdd(
+					System.Ledger.HarvestLost, lost);
 			}
 			if (KingdomLog.Enabled) KingdomLog.Log("mill: days=" + Days + " owed=" + owed + " spare=" + spare + " ground=" + ground + " " + crop + " -> " + made + " " + staple + " stored=" + stored);
 		}

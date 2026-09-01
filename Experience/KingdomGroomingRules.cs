@@ -24,11 +24,11 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>Schooling must be held in the nominee's own city. Full proof additionally
-		/// requires their exact resident row to be posted to authored knowledge work.</summary>
-		public static int StudyEvidence(bool SchoolingHeld, bool HasKnowledgePost)
+		/// requires exact current work backed by live education capability or its observation.</summary>
+		public static int StudyEvidence(bool SchoolingHeld, bool HasEducationPost)
 		{
 			if (!SchoolingHeld) return 0;
-			return HasKnowledgePost ? MaxStudyMarks : 1;
+			return HasEducationPost ? MaxStudyMarks : 1;
 		}
 
 		public static bool Ready(int ServiceMarks, int StudyMarks)
@@ -44,7 +44,7 @@ namespace ThousandAndFirst
 			string service = ServiceMarks >= RequiredServiceMarks ? "service proven"
 				: (ServiceMarks > 0 ? "service begun" : "service unproven");
 			string study = StudyMarks >= RequiredStudyMarks ? "schooling proven"
-				: (StudyMarks > 0 ? "schooling available; no knowledge post"
+				: (StudyMarks > 0 ? "schooling available; no proved education post"
 					: "schooling unavailable");
 			return service + "; " + study;
 		}

@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 				zone != null && system?.ClaimedZones != null
 					&& system.ClaimedZones.Contains(zone.ZoneID),
 				root != null && root.GetPart<r_KingdomStasisVault>() == Vault
-					&& root.GetIntProperty("KingdomBuilt") == 1
+					&& KingdomUpgrade.IsFunctionallyBuilt(root)
 					&& !string.IsNullOrEmpty(lot),
 				Subject != null && Subject.IsPlayer() && dominated != null,
 				body != null && body.IsCreature && body.CurrentZone == zone,

@@ -178,8 +178,14 @@ namespace XRL.World.Parts
 				ThousandAndFirst.KingdomPolityNpcRuntime.ResolverProperty);
 			ParentObject?.RemoveStringProperty(
 				ThousandAndFirst.KingdomPolityNpcRuntime.RoleProperty);
+				ParentObject?.RemoveStringProperty(
+					ThousandAndFirst.KingdomPolityNpcRuntime.FigureProperty);
 			ParentObject?.RemoveStringProperty(
-				ThousandAndFirst.KingdomPolityNpcRuntime.FigureProperty);
+				ThousandAndFirst.KingdomPolityNpcRuntime.SignatureCueProperty);
+			ParentObject?.RemoveStringProperty(
+				ThousandAndFirst.KingdomPolityNpcRuntime.DialogueCueProperty);
+			ParentObject?.RemoveStringProperty(
+				ThousandAndFirst.KingdomPolityNpcRuntime.ExpressionReasonProperty);
 			ParentObject?.RemoveIntProperty(
 				ThousandAndFirst.KingdomPolityNpcRuntime.ContestedProperty);
 			base.FinalizeCopy(Source, CopyEffects, CopyID, MapInv);

@@ -1,0 +1,6 @@
+# Maximum reserved-lot baseline: tiny truthful shelter must not disappear inside geometric yard fill.
+DESCRIPTION=huge tent lot stages for maximum-scale dooryard taste review
+REQUEST=arch-housing-tent-xl;facing=north
+SCRIPT=flatten;realize;advance 300;frame;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SET=architecture,visual,housing,progression,taste

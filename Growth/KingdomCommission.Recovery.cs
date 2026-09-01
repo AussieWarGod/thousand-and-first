@@ -144,10 +144,13 @@ namespace ThousandAndFirst
 			}
 			if (successors == 1)
 			{
-				if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId))
+				if (!r_KingdomScaffold.HasRemovalProof(successor, Job.SubjectId)
+					&& !r_KingdomScaffold.TryCommitScaffoldRemovalProof(System, Z,
+						successor, null, entry.Blueprint, Job.SubjectId, ref inspected,
+						out string proofFailure))
 				{
 					KingdomConstruction.Quarantine(ref inspected,
-						"The commissioned successor lacks exact scaffold-removal proof.");
+						proofFailure ?? "The commissioned successor lacks exact scaffold-removal proof.");
 					return;
 				}
 				if (KingdomConstruction.Complete(ref inspected))

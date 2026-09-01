@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 {
 	public partial class KingdomSurvey
 	{
-		private sealed class SpoilFrame
+		private sealed class FoodDebitFrame
 		{
 			internal GameObject Container;
 			internal string ContainerId;
@@ -33,15 +33,27 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Invokes each destructive food callback once. Every unit is counted only after the exact
-		/// same container, Inventory part/list, item ordering, identities, ownership, and counts prove
-		/// the one expected transition. A veto with no delta never counts.
+		/// Frozen source-compatibility seam for a retired passive spoilage callback. It is inert by
+		/// definition: old callers cannot turn elapsed time or wear into a hidden stock loss.
 		/// </summary>
+		[Obsolete("Passive food spoilage is retired; use an explicit food transaction instead.", false)]
 		public bool TrySpoilFromExact(GameObject Container, int Amount, out int Lost)
 		{
 			Lost = 0;
-			SpoilFrame frame;
-			if (!TryCaptureSpoilFrame(Container, Amount, out frame)) return false;
+			return false;
+		}
+
+		/// <summary>
+		/// Debits an exact food source for an explicit, receipt-backed transfer. Every unit is
+		/// counted only after the same container, Inventory part/list, item ordering, identities,
+		/// ownership, and counts prove the expected transition. This is never called by wear,
+		/// catch-up, hunger, or another elapsed-time path.
+		/// </summary>
+		public bool TryDebitFoodFromExact(GameObject Container, int Amount, out int Debited)
+		{
+			Debited = 0;
+			FoodDebitFrame frame;
+			if (!TryCaptureFoodDebitFrame(Container, Amount, out frame)) return false;
 			int[] expected = (int[])frame.Counts.Clone();
 			int remaining = Amount;
 			for (int i = 0; i < frame.Items.Length && remaining > 0; i++)
@@ -50,7 +62,7 @@ namespace ThousandAndFirst
 				GameObject food = frame.Items[i];
 				while (remaining > 0 && expected[i] > 0)
 				{
-					if (!SpoilTopologyExact(frame, expected)) return false;
+					if (!FoodDebitTopologyExact(frame, expected)) return false;
 					int before = expected[i];
 					string authorityFailure;
 					if (!KingdomOrdinaryFoodAuthority.TrySpendNow(food,
@@ -65,44 +77,44 @@ namespace ThousandAndFirst
 						// decides whether one physical unit was lost.
 					}
 					expected[i] = before - 1;
-					if (!SpoilTopologyExact(frame, expected))
+					if (!FoodDebitTopologyExact(frame, expected))
 					{
 						expected[i] = before;
-						if (SpoilTopologyExact(frame, expected))
+						if (FoodDebitTopologyExact(frame, expected))
 						{
-							if (!PublishSpoilCounters(frame, Lost)) Lost = 0;
+							if (!PublishFoodDebitCounters(frame, Debited)) Debited = 0;
 						}
-						else Lost = 0;
+						else Debited = 0;
 						return false;
 					}
-					Lost++;
+					Debited++;
 					remaining--;
 				}
 			}
-			if (!PublishSpoilCounters(frame, Lost))
+			if (!PublishFoodDebitCounters(frame, Debited))
 			{
-				Lost = 0;
+				Debited = 0;
 				return false;
 			}
-			return Lost == Amount;
+			return Debited == Amount;
 		}
 
-		private bool PublishSpoilCounters(SpoilFrame Frame, int Lost)
+		private bool PublishFoodDebitCounters(FoodDebitFrame Frame, int Debited)
 		{
-			if (Frame == null || Lost < 0 || Lost > Frame.FoodStored
+			if (Frame == null || Debited < 0 || Debited > Frame.FoodStored
 				|| FoodStored != Frame.FoodStored || FoodCapacity != Frame.FoodCapacity
 				|| FoodAbundance != Frame.FoodAbundance) return false;
-			if (Lost > 0)
+			if (Debited > 0)
 			{
-					FoodStored = Frame.FoodStored - Lost;
+					FoodStored = Frame.FoodStored - Debited;
 					FoodAbundance = KingdomRules.ClassifyPantry(FoodStored);
 					SynchronizeReceiptObject(Frame.Container);
 			}
 			return true;
 		}
 
-		private bool TryCaptureSpoilFrame(GameObject Container, int Amount,
-			out SpoilFrame Frame)
+		private bool TryCaptureFoodDebitFrame(GameObject Container, int Amount,
+			out FoodDebitFrame Frame)
 		{
 			Frame = null;
 			Inventory inventory = GameObject.Validate(Container) ? Container.Inventory : null;
@@ -136,7 +148,7 @@ namespace ThousandAndFirst
 				}
 			}
 			if (available < Amount) return false;
-			Frame = new SpoilFrame
+			Frame = new FoodDebitFrame
 			{
 				Container = Container,
 				ContainerId = Container.IDIfAssigned,
@@ -160,7 +172,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private bool SpoilTopologyExact(SpoilFrame Frame, int[] Expected)
+		private bool FoodDebitTopologyExact(FoodDebitFrame Frame, int[] Expected)
 		{
 			if (Frame == null || Expected == null || Expected.Length != Frame.Items.Length
 				|| !GameObject.Validate(Frame.Container) || Frame.Container.IDIfAssigned != Frame.ContainerId

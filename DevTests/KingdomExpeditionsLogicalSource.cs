@@ -12,6 +12,7 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomExpeditions.PassAndDeath.cs",
 			"Experience/KingdomExpeditions.DispatchRecovery.cs",
 			"Experience/KingdomExpeditions.Resolution.cs",
+			"Experience/KingdomExpeditions.Polity.cs",
 			"Experience/KingdomExpeditions.Discovery.cs",
 			"Experience/KingdomExpeditions.ResidentsAndBodies.cs",
 			"Experience/KingdomExpeditions.RewardsAndTelling.cs",

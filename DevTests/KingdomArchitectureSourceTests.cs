@@ -74,6 +74,50 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FixturePoseRegistryIsOptionalExactKeyAndCardinalDeclarationsAreSafe()
+		{
+			string loader = Loader();
+			string poseRules = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitecturePoseRules.cs");
+			string compiler = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureCompilerRules.cs")
+				+ TestMain.ReadRepositoryText("Growth/KingdomArchitectureDraftCompilerRules.cs");
+			StringAssert.Contains("{ \"pose\", delegate(XmlDataHelper child) { HandlePose(State, child); } }",
+				loader);
+			StringAssert.Contains("State.RawPoses.TryGetValue(Blueprint, out RawPose result)", loader);
+			StringAssert.Contains("SetOptionalClear(State, pose, \"North\"", loader);
+			StringAssert.Contains("SetOptionalClear(State, glyph, \"ObjectOrientation\"", loader);
+			StringAssert.Contains("if (Value.Length == 0)", loader);
+			StringAssert.Contains("if (Value == null) return;", loader);
+			StringAssert.Contains("blueprint.InheritsFrom(SemanticBase)", loader);
+			StringAssert.Contains("connected and invariant modes reject directional siblings", loader);
+			StringAssert.Contains("cardinal mode requires four existing directional blueprints", loader);
+			StringAssert.Contains("cardinal mode is prohibited for runtime fixtures with exact semantic identity",
+				loader);
+			StringAssert.Contains("CardinalPoseIdentityAllowed(pose.Blueprint)", loader);
+			StringAssert.Contains("CardinalPoseIdentityAllowlist", poseRules);
+			StringAssert.Contains("TryPoseParity(pose.Blueprint, siblings", loader);
+			StringAssert.Contains("KnownPoseAuditSurfaces()", loader);
+			StringAssert.Contains("PoseVisualRenderFields", loader);
+			StringAssert.Contains("directional blueprint changes effective nonvisual behavior", loader);
+			foreach (string layer in new[] { "Ground", "Structure", "Object" })
+				StringAssert.Contains("\"" + layer + "Orientation\"", loader);
+			StringAssert.Contains("if (Poses == null) { Catalogue = result; return true; }", poseRules);
+			StringAssert.Contains("ConcreteBlueprint = SemanticBlueprint;", poseRules);
+			StringAssert.Contains("ArchitecturePoseRegistry", poseRules);
+			StringAssert.Contains("Registry.IsPoisoned(SemanticBlueprint)", poseRules);
+			StringAssert.Contains("local orientation requires an exact cardinal fixture pose declaration",
+				poseRules);
+			StringAssert.Contains("((int)LocalOrientation + (int)LotFacing) & 3", poseRules);
+			StringAssert.Contains("poisonedPoses.Add(raw.Key);", loader);
+			StringAssert.Contains("PoseRegistry = State.PoseRegistry", loader);
+			StringAssert.Contains("PoseRegistry = Frozen.PoseRegistry", loader);
+			StringAssert.Contains("public compile refuses unaudited raw fixture pose declarations", compiler);
+			StringAssert.Contains("selected palette references a malformed fixture pose declaration", compiler);
+			StringAssert.Contains("Blueprint = blueprint", compiler);
+		}
+
+		[Test]
 		public void MergeKeepsOmissionsAndReplacesEachDeclaredRowBlockAtomically()
 		{
 			string source = Loader();
@@ -92,6 +136,22 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(replace, rowGuard);
 			Assert.IsFalse(source.Contains("map.Rows.AddRange"),
 				"later row blocks must never splice into an older declaration");
+		}
+
+		[Test]
+		public void LoaderFreezesExactFootprintRoofAndSemanticClaims()
+		{
+			string source = Loader();
+			StringAssert.Contains("Set(State, map, \"Footprint\", Xml.GetAttribute(\"Footprint\"));",
+				source);
+			StringAssert.Contains("Footprint must be canonical X,Y,WxH wholly inside the map", source);
+			StringAssert.Contains("expected exactly building or yard", source);
+			StringAssert.Contains("frozen.FootprintWidth = spec.FootprintWidth;", source);
+			StringAssert.Contains("frozen.FootprintHeight = spec.FootprintHeight;", source);
+			StringAssert.Contains("frozen.Roof = spec.Roof;", source);
+			StringAssert.Contains("CatalogueFootprintWidth = building.FootprintWidth", source);
+			StringAssert.Contains("CatalogueRoof = building.Roof", source);
+			Assert.IsFalse(source.Contains("expected building, yard, claimed, or a boolean"));
 		}
 
 		[Test]
@@ -160,19 +220,16 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void LoaderAuditsEveryCommissionableActualSizeAndExcludesRiteOwnedHeartRungs()
+		public void LoaderRequiresDeclaredMinimumAndTreatsMissingLargerBindingsAsLawfulNonOffers()
 		{
 			string source = Loader();
 			StringAssert.Contains(
 				"KingdomPlotRules.HeartRungOf(building.Key) > 0", source);
 			StringAssert.Contains(
-				"for (int value = (int)building.LotSize;", source);
-			StringAssert.Contains(
-				"value <= (int)ArchitectureLotSize.Huge; value++", source);
-			StringAssert.Contains(
 				"State.Records.ContainsKey(ExactRecordKey(", source);
 			StringAssert.Contains(
-				"commissionable actual lot has no exact valid authored architecture mapping", source);
+				"declared minimum lot has no exact valid authored architecture mapping", source);
+			Assert.IsFalse(source.Contains("for (int value = (int)building.LotSize;"));
 		}
 
 		[Test]

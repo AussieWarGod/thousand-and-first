@@ -107,7 +107,7 @@ namespace ThousandAndFirst
 			Entry = null;
 			Spec = null;
 			Rect = default(KingdomPlotRules.PlotRect);
-			if (Building == null || Building.GetIntProperty(KingdomUpgrade.BuiltProperty) != 1)
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building))
 			{
 				return false;
 			}

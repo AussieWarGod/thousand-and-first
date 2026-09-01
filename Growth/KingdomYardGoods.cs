@@ -27,7 +27,7 @@ namespace ThousandAndFirst
 				{
 					PlotId = house.GetStringProperty(KingdomPlots.PlotIdProperty),
 					YardKey = key,
-					Built = house.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1,
+					Built = KingdomUpgrade.IsFunctionallyBuilt(house),
 					Eligible = readable && KingdomYardRules.IsEligibleDesign(
 						plot.Size, plot.Open, entry.Category),
 					FeedsGoods = known && spec.FeedsGoods,
@@ -59,7 +59,7 @@ namespace ThousandAndFirst
 			return KingdomYardGoodsRules.ExactStandingHouseholds(houses, fixtures);
 		}
 
-		private static bool StandsInMatchingYard(GameObject Fixture, string PlotId,
+		internal static bool StandsInMatchingYard(GameObject Fixture, string PlotId,
 			string YardKey, List<GameObject> Houses)
 		{
 			if (Fixture?.CurrentCell == null || string.IsNullOrEmpty(PlotId)

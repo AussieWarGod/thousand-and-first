@@ -19,7 +19,7 @@ namespace ThousandAndFirst
 				|| !string.IsNullOrEmpty(PendingAccessionRepairFounderName)
 				|| !string.IsNullOrEmpty(PendingAccessionRepairHeirName)
 				|| !string.IsNullOrEmpty(PendingAccessionRepairSettlementId)
-				|| PendingAccessionRepairSeated || PendingAccessionRepairArrivedTick != 0L
+				|| ReadLegacyAccessionRepairSeated() || PendingAccessionRepairArrivedTick != 0L
 				|| !string.IsNullOrEmpty(PendingAccessionRepairKeptCreeds))
 			{
 				Detail = "an exact resident accession repair is pending or torn"; return true;

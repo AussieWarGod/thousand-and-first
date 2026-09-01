@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-08-29
+**Snapshot:** 2026-09-01
 **Target:** feature-complete v1.0 test candidate
 **Current public version:** 0.2.0 work in progress
 
@@ -14,18 +14,25 @@ are never inferred from source or static automation.
 | Layer | Latest result | Scope |
 |---|---|---|
 | Last clean release audit | **PARTIAL PASS** — 10 of 11 automated layers green at committed candidate `19fb8ee`; structural release layer red | Docs/hygiene, ABI, inventory, baseline/compatibility compile, 7,586-case full suite, 171-case portable suite, architecture/XML/art, balance, 43-case smoke harness, Workshop package, and deploy dry-run passed. This remains a bounded committed receipt, not proof for later structural revisions. |
-| Staged runtime compile | **CURRENT STAGING SNAPSHOT — 2637 sources; final integrated compile pending** | The current resolver selects 2637 sources, baseline and compatibility symbols. The retained checkpoint compiled clean, but later fan-in means only the final serialized run may sign current bytes. Compile success never closes native compatibility behavior. |
-| Cold-install inventory | **CURRENT SNAPSHOT — 2664 files; final frozen inventory pending** | Canonical staging currently enumerates 2664 files. Recompute after the last registered source and freeze the release candidate; package shape does not sign native load, behavior, appearance, or private Steam subscription. |
-| Optional ownership bridge | **FOCUSED STATIC PASS; final integrated compile/native open** | Manifest cold-list model proves absent/exact-2.2.3/wrong/disabled/failed/bad-load-order selection and no dropped runtime C#/XML. Installed Hearthpyre 2.2.3 manifest plus three used source files match pinned hashes and the tracked ABI fixture; core foreign-type and bridge mutation/lifecycle bans pass. Exact current-tree staged compile must be repeated after concurrent structural work, and no native overlap/save/re-enable case is signed. |
-| Architecture generator | **PASS** — 337 generated larger-lot maps, 242 larger-lot bindings, 277 copied predecessor tiers, 45,056 added cells exactly classified | Generated larger-lot XML is byte-current. Its 45,056 added cells comprise 33,753 yard (including 510 scaled creed work fixtures resolved through a closed inert-wrapper mapping), 8,984 path, 194 sparse-boundary, 1,524 frontage-route, and 601 explicitly reasoned open cells; 3 hosted-arcology maps remain declared holds for their separate authored redesign. These are the generated subset, not the complete registry counted below. |
-| Architecture checker | **PASS** — 141 buildings, 131 plotted buildings, 86 palettes, 513 maps (176 source / 337 generated), 356 plans, 359 bindings, 408 tiers, 530 variants, 2,120 variant/pose goldens, zero issues; largest exact a2 receipt 7,105 bytes / 9,544 characters (`arcology/civic-xl/fallback/civic-arcology-xl4+civic-heart-court`); 3 expected installed-base tolerant-recovery warnings | Static topology, exact bounded frontage routes in all poses, independent same-binding `UpgradesTo` route proofs, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, exact purpose/exotic runtime anchors, hidden activation gates, and an independent mirror of the runtime's 8,192-byte / 11,264-character codec envelope. The warnings are the named recovery path for malformed vanilla `Creatures.xml`, `Furniture.xml`, and `Items.xml`; it does not judge native appearance. One orphaned map (`housing-arcology-xl0`, deferred arcology content with no reachable binding) was removed from the census — the runtime enforces exact catalogue consumption, so an unbound map is dead weight rather than a harmless spare. |
-| One-survey focused tests | **PASS** — 9 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
-| Addendum 9 structural census | **CURRENT SNAPSHOT LINE-CAP RED — 4 ADJUDICATED FAILURES; FINAL DIGEST/REVIEW OPEN** | 2637 staged C# files / 383,416 physical lines: 4 exceed 300 physical lines, 0 are exactly 300, therefore 4 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. The four are the Gatehouse family (`Growth/KingdomGatehouseRules.cs`, `KingdomGatehouse.ProjectionEvidence.cs`, `KingdomGatehouse.cs`, `KingdomGatehouse.Projection.cs`), docketed by the R3 registration sweep — docketed, not exempted; the gate still fails. Direct `XRL` imports: 1204 files, 3 over the line limit. Inventory SHA-256: `afc4955625dbe18f4f89ba2815d047a984db26ef76cc7907f155805e4345e4de`. The hardening sequence decomposed 144 additional oversized authorities, 154 cumulative. This is the current working-tree snapshot, not the final release digest: rerun after freeze. `docs/STRUCTURE_REVIEW.json` is absent and must be completed by a human against that final exact digest; automation cannot sign one responsibility or protocol quality. |
-| Full Qud-referenced/source suite | **LAST RETAINED PASS** — 7,743 / 7,743 cases, 0 skipped; final working-tree run pending | Hosted checkpoint `d285129` has green repository-audit, Ubuntu source-suite, and Windows source-suite jobs for its exact bytes. Later un-deferral code remains unsigned until the serialized final run. This does not sign native Qud behavior. |
-| Portable suite | **LAST RETAINED PASS** — 173 / 173 cases, 0 skipped; final working-tree run pending | Repository-only checkpoint. Public CI has an exact three-label allowlist for installed-data-only skips when licensed Qud data is absent; extra/missing skips and an explicit invalid base fail. Canonical release `test.ps1` forbids skips. |
-| Tools tests | **PASS** — 35 tests | Repository tooling checks green. |
-| Art tests | **PASS** — 23 / 23 tests; 84 verified vanilla tile references, 0 custom runtime paths | Art policy, local-path prohibition/provenance, bidirectional wiring, and installed-base vanilla references are green. Native appearance review remains open. |
+| Staged runtime inventory | **STATIC CENSUS CURRENT; FINAL MANAGED RERUN REQUIRED** | The current resolver selects 2915 sources, baseline and compatibility symbols. The retained 10,624-case run predates the final market fan-in, so it is not attributed to these exact sources. Compile success would still not close native compatibility behavior. |
+| Cold-install inventory | **FROZEN SOURCE SNAPSHOT — 2945 files; release evidence still open** | Canonical staging enumerates 2857 files. Any source or package-inventory change invalidates this snapshot. Package shape does not sign native load, behavior, appearance, or private Steam subscription. |
+| Optional ownership bridge | **INTEGRATED STATIC PASS; native matrix open** | Manifest cold-list model proves absent/exact-2.2.3/wrong/disabled/failed/bad-load-order selection and no dropped runtime C#/XML. Installed Hearthpyre 2.2.3 manifest plus three used source files match pinned hashes and the tracked ABI fixture; core foreign-type and bridge mutation/lifecycle bans pass. No native overlap/save/re-enable case is signed. |
+| Architecture generator | **PASS** — 146 maps, 107 bindings, 122 tiers; 3,512 transformed fabric cells and 22,084 exterior site facts | Generated XML is byte-current. It composes 527 creed fixtures in 248 deliberate pairs across 744 programme regions, plus reviewed housing renovations and deep-end campuses. Unsupported spatial programmes remain absent instead of receiving stretched padding. These are the generated subset, not the complete registry counted below. |
+| Architecture checker | **PASS** — 144 buildings, 134 plotted buildings, 89 palettes, 333 maps (187 source / 146 generated), 220 plans, 226 bindings, 262 tiers, 344 variants, 1,376 variant/pose goldens, zero issues; three expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML; reference-grounded quality audit 1,376 / 1,376 static pass, 0 fail; largest exact a4 receipt 7,798 bytes / 10,468 characters (`greatfoundry/craft-xl/templar/purpose-greatfoundry-templar-xl0+purpose-forge-foundry`) | Static topology, exact footprint/roof authority, bounded frontage routes in all poses, required-use circulation, transition route and custody proofs, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, exact purpose/exotic runtime anchors, hidden activation gates, and the runtime codec envelope are checked. All 1,376 poses still require native/human appearance and function acceptance. |
+| Benefit-provider content | **PASS** — 114 catalogue rows, 187 authored variants, 105 unique explicit fixtures | Exact design/provider affinity, obtainable portable stock, fixed-installation reasons, caps, and absence of catalogue-as-supply fallbacks are checked. Native function and appearance remain separate evidence. |
+| One-survey focused tests | **PASS** — 14 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
+| Addendum 9 structural census | **FROZEN SOURCE SNAPSHOT LINE-CAP GREEN; FINAL HUMAN REVIEW OPEN** | 2915 staged C# files / 419,872 physical lines: 0 exceed 300 physical lines, 0 are exactly 300, therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL` imports: 1358 files, 0 over the line limit. Inventory SHA-256: `a633813831a166a0b294e74885a7e5a61052a869752d496db7c3d438bf8976be`. `docs/STRUCTURE_REVIEW.json` is absent and must be completed by a human against this exact digest; automation cannot sign one responsibility or protocol quality. |
+| Full Qud-referenced/source suite | **LAST RETAINED PASS; FINAL RERUN REQUIRED** — 10,624 / 10,624 cases, 0 skipped | This receipt predates final market sources and does not sign current bytes. The final serialized installed-Qud run remains required; even then it will not prove native play, appearance, compatibility, or Steam installation. |
+| Portable suite | **LAST RETAINED PASS; FINAL RERUN REQUIRED** — 2,325 / 2,325 cases, 0 skipped | This receipt predates final market sources and does not sign current bytes. Public CI keeps its installed-data skip allowlist; canonical release testing forbids skips when Qud data is present. |
+| Tools tests | **PASS** — 296 / 296 tests | Repository tooling, generators, gallery census, documentation contracts, and package helpers are green at this checkpoint. |
+| Art tests | **PASS** — 28 / 28 tests; semantic subset 4 / 4; 125 verified vanilla tile references; 0 custom runtime paths | Snapjaw caches now use ordinary Woven Basket art, Hindren textile works use the ordinary Sewing Machine as a treadle stitcher, and TAF faction emblems use a deterministic glyph-only projection instead of Joppa terrain art. Art policy, installed-path, reference, and architecture-declaration checks are green. Native original-scale appearance, emblem recognition, and a current preview remain open. |
 | Latest retained native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs only that commit's loader/founding/single-sample persistence smoke. Later structural revisions have no native compile/load/log receipt and are not covered by this row. |
+
+Historical checkpoint `d285129` passed 7,743 / 7,743 cases and 173 / 173 cases in its two
+managed suites; its then-current Tools suite passed 35 tests and its Art suite passed 23 tests.
+Those numbers identify that old receipt only. The preceding decomposition ledger also recorded
+144 additional oversized authorities, 154 cumulative, before the final plot-staking split above.
+Current evidence is the larger working-tree census in the table.
 
 Reproduce the current static results:
 
@@ -43,8 +50,8 @@ python3 Tools/check-structure.py --report
 
 Static authored-map, binding, material/style, frontage, road, delve, inheritance, and preview
 targets are complete at code/content/checker scope. Native gallery, accessibility, compatibility,
-and final frozen-digest evidence remain open; hosted-arcology production is excluded from this
-completion statement while AMENDED 19+ review is active.
+exact-inventory human review, and current preview evidence remain open. Hosted-arcology topology and authored programmes are
+implemented at this same static boundary; their native traversal and visual acceptance remain open.
 
 - Plots reserve typed lots. They do not stand in for buildings.
 - A building occupies a lot through a frozen authored map, exact size/type binding, pose,
@@ -53,8 +60,9 @@ completion statement while AMENDED 19+ review is active.
   segment. Defensive plotted buildings retain their authored lot, category, cap cost, and base
   defence rating.
 - Automatic `UpgradesTo` tiers keep lot identity only inside the frozen exact binding; explicit
-  directional same-type/same-size plan transitions also keep it. Retype/resize uses fresh siting
-  and a new lot identity. The civic heart's adjacent authored rung is the sole exception.
+  directional same-type/same-size transitions keep it, and reviewed `additive-expand` or
+  `renovate-expand` transitions may grow the envelope after proving adjacent ground and ingress.
+  Retype, shrink, relocation, and replacement use strike plus fresh siting and a new lot identity.
 - Gatehouses use a traversable road-bound topology. Delves use paired physical travel endpoints.
 - The assenting moot has a complete XL floor, inert-safe vanilla-art fixtures, and a current
   runtime owner. Its commission key is derived for the seated city only while assent research,
@@ -76,10 +84,49 @@ completion statement while AMENDED 19+ review is active.
   generative-assisted drafts only after pixel-level human revision—are permitted through the
   provenance, rights, editable-source, wiring, fallback, package, and independent native-review
   policy in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md).
-- Food and water are separate physical flows. Dedicated vessels, water details, seeds, authored
-  crop rows, bounded foraging, physical larders, daily rations, favoured meals, mills, and cross-zone
-  deliveries are implemented. A favoured meal supplies one bounded positive shade for one day;
-  stock never grants an indefinite passive bonus merely by existing.
+  The semantic fixture pass replaced Chiliad-specific basket art on Snapjaw caches with the
+  ordinary Woven Basket, replaced Nacham's unique charged wire-extruder art on Hindren textile
+  works with an ordinary Sewing Machine presented as a treadle stitcher, and replaced the
+  Joppa-tile faction helper with a deterministic TAF-owned glyph-only emblem. No raster or
+  architecture map was created or changed by that pass. Native tile-scale taste remains unsigned.
+- Food and water are separate physical flows. Water retains dedicated vessels, water details,
+  upkeep, and scarcity. Food runs seed → authored crop row → physical harvest → dedicated larder →
+  explicit meal, mill, industry, or trade debit. A shared meal requires spendable ingredients and
+  a currently capable physical cooking provider; completion grants bounded creed/cohabitation
+  progress, never population capacity. Empty pantries and missing kitchens withhold the act and
+  spend nothing. Abstract foraging, daily ration bills, hunger catch-up/marks/departure, passive
+  food-rate minting, and stock auras are retired; legacy save/wire fields normalize inert. Food
+  never binds population: live supported level and subsidence use water plus roofs, so zero food
+  cannot shrink a settlement and additional food cannot raise its base population level. Damaged
+  larders never passively spoil or debit pantry stock: identity and count survive arbitrary absence,
+  and an open legacy food-loss receipt clears inert before callbacks.
+- Archive-v17 fixed-rate arrival cadence and its lifecycle receipts are the sole current v1 arrival
+  authority. The historical Growth-1B/schema-5 oracle froze only a hostile parser and terminal
+  canonical validator; its own freeze receipt explicitly supplied no transitions, wire, C#, save
+  root, caller, materialization, tuning, or gameplay. Porting it beside the current cadence would
+  create a second arrival authority, so it is rejected as parallel architecture—not deferred v1
+  debt. Replacing cadence later would require a new ruling, migration, and full evidence owner.
+- Creed semantics now use a mergeable six-kind registry while preserving every public/save
+  `Creed` key. Installed 2.0.211.51 mapping covers 33/33 admitted factions (4 community, 16 people,
+  2 polity, 7 order, 2 doctrine, 2 cult). Only four shipped doctrine/cult keys can drive passive
+  conversion or shrine consecration. Gyre Wights are conservatively a non-theological people:
+  their exact affiliation still gates architecture and civic practice, but never shrine output.
+  Unknown modded keys remain neutral affiliations, and explicit water rites use
+  adoption/allegiance prose.
+- The founding handbook is situated rather than canonicalized: Neseva Cask-Hand's Uru Ux 1000 AR
+  copy belongs to the Open Basin fellowship and carries a marginal historical countervoice while
+  retaining every actionable instruction. Exile and return separately freeze exact authored
+  official/outsider entries, before/after list hashes, and a domain-separated pair fingerprint in
+  TAF-local Chronicle receipts. New disputed transitions never write Sultan/world history or
+  vanilla accomplishments/murals. Static content, migration, idempotence, and interruption
+  contracts exist; native presentation and every-cut save proof remain open.
+- Physical-building benefits separate exact designations from current providers. Catalogue values
+  are caps only; furniture and native capabilities supply them, optional semantic build-key tags
+  prevent cross-design substitution, and every operation scales with current root condition.
+  Fifty-one load-validated roles support player designation: enclosed ordinary housing/work rooms,
+  ordinary open yards/grounds with exact catalogue-sized rectangles, and one exact dry-container
+  larder. Network, crop, power, laboratory, fixed-creed, Heart, remote, purpose/crown, and hosted
+  machinery remain authored pending their own typed physical proof.
 - The purposeful-megastructure portfolio implements exactly five symmetric compatible edges and
   ten directed recipes across Deep-Bore, Great Foundry, Granary-Colossus, chimeric theatre, and
   becoming annexe. One exact bootstrap funds the second shell; one exact return is consumed by a
@@ -96,51 +143,97 @@ completion statement while AMENDED 19+ review is active.
 - `KingdomSystem.PolityLedger` is the realm-scoped semantic authority for bounded polities,
   directional relations, immutable profiles, routes/fronts/grievances, finite cohorts, scarce
   figures, witnessed incident plans/conclusions, projection receipts, options, and compaction
-  evidence. Its strict v5 envelope has independent v1-v4 migration fixtures, opaque inert future
-  preservation, canonical ordering, fail-closed quarantine, and hard capacities. Foundation now
+  evidence. Its strict v7 envelope carries bounded typed phenotype cues, reads v1-v6 without
+  inventing cues, and provides opaque inert future-payload preservation, canonical ordering,
+  fail-closed quarantine, and hard capacities. Foundation now
   publishes the current realm plus at most one opted-in legacy partner/rival by typed CAS; owned
-  faction projection/recovery, immutable profile→NPC resolution, exact resident-successor bridge,
+  faction projection/recovery, immutable profile→NPC resolution with exact source/reason
+  traceability and deterministic weighted body/role/skill/mutation-or-cybernetic/gear/signature/
+  cargo/dialogue expression, exact resident-successor bridge,
   finite endpoint bodies, no-backlog presentation, caused diplomacy, all seven cohort schedulers,
   three-city traffic, exact Trade consignments, loaded hospitality, witnessed intervention/death,
   consented escrow, deterministic direct records/aggregates, and shared W0 capacity are wired.
   Physical endpoints require distinct route-reachable cells, exact recursive custody and removal
   witnesses; visible death crosses `EarlyBeforeDeathRemoval` → `BeforeDestroy` → `OnDestroy`, and
   completed cleanup precedes the one W0 release.
+  Current foundation body pools consume only exact positive species counts plus audited
+  identity/body tags; subsequent revisions rebuild from exact per-city population-body facts.
+  Origin, culture, style, creed, and architecture never choose current bodies, and unrecognized
+  evidence stays `unresolved` so the current resolver refuses instead of inventing a human.
+  Foundation technology is `KingdomZoning.Tech(System) * 2`; later facts derive each city's band
+  from its sorted zoning roster through `TechPoints`/`LevelForPoints` and take the bounded maximum,
+  never `Stage * 2`. Existing legacy profile/resolver rules remain frozen rather than reinterpreted.
   Exile/refound causally ends old semantic authority, tombstones exact owned factions, restores
   byte-identical authority on return, or imports only bounded institutional facts under fresh ids.
-  Polity transaction closure is frozen at 61/61 focused cases; physical narrow checks are green.
-  Final integrated runners and Pass 39 native behavior remain open.
+  Polity transaction closure is frozen at 61/61 focused cases; integrated automated and physical
+  narrow checks are green. Pass 39 native behavior remains open.
 - Reopened civic-experience code scope is complete: two named voices, optional remembrance,
   explicit offices, staffed loci, fixed witness works, First Guest choice/hosting, First Feast
   practice, curiosity and civic leads, body history, non-custodial artifact recognition, manual
   communal rite, joint civic view, integrated three-return Guest's Feast, site practice, named-cook
-  vacancy/handoff, and bounded vocation services have separate exact owners. Focused evidence is
-  lane-local; final integration and the native/human promotion protocol remain open.
+  vacancy/handoff, and bounded vocation services have separate exact owners. Civic market service
+  now requires one accepted staffed `taf:market` provider on designated ground, the same exact held
+  office receipt, Village, and current standing 3 or better. It may open empty. `ShopTier` is
+  current operational standing/reach and may fall to zero; Chronicle receipts, not this field, own
+  history. Native TradeUI sale/purchase is the only ordinary stock ingress/sink: TAF generates no
+  wares, consignments, periodic restock, passive output, or remote debit. The sealed
+  `GenericInventoryRestocker` is only an empty-trade adapter. Sold, bought, stolen, dropped,
+  corpse-, player-, container-, or foreign-held goods retain physical identity, count, location,
+  native `_stock`, and foreign state while only TAF receipts/guards retire. Completed or dormant
+  legendary traders remain finite personal native merchants after civic loss/accession, but supply
+  no civic authority without provider plus office; only open prepared handoff endpoints are
+  temporarily succession-ineligible. Growth stage no longer promotes the first citizen, and
+  production contains no generic `TakeOnRoleEvent` office notification.
+  Integrated automated evidence is green; native office/service recovery and the human promotion
+  protocol remain open.
 - Explicit prepare-save-for-removal is implemented while the mod is present: it fences new work,
   plans exact visited-ground and global owned cleanup, reports unvisited locators, retires faction
   projections, persists an identity fence, and permits a fresh incarnation only through monotonic
   high water. It never promises that disabling/removing the mod first can clean a save.
 
-## Active v1 closure work
+## Remaining v1 evidence work
 
-- **Final serialized fan-in.** Production owners exist for every accepted non-arcology positive
-  row. The narrow physical-food landing transaction is complete at code scope; the final
-  Qud-referenced, portable, baseline/compatibility, package, and release-gate runs must execute
-  after project registration/source freeze. Lane-local green counts are not substituted for that
-  integrated receipt.
+- **Research-alignment P0 fan-in.** The profile-body, zoning-technology, merchant-office,
+  Gyre-kind, founding-book, and disputed-history/food findings in the
+  [2026-09-01 audit](../_notes/RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md) now close at their stated
+  code/content/static scopes. The audit's release-evidence P0 remains open: none of those repairs
+  supplies current native full-loop, complete gallery, 27-zone arcology, exact-inventory human
+  structure, current preview, compatibility, or cold Workshop-subscription proof.
+- **Research disposition coverage.** That audit now crosswalks the complete current comparator,
+  generative, early/system-design, succession/quest/lab/growth-oracle, polity, food/water,
+  Qud-affordance A1–A13/R1–R6, lore P0–P2, and ecosystem EC-01–EC-14/L1–L12 finding families.
+  Every row is either implemented at an explicitly narrow
+  code/content/static scope, superseded or rejected with a reason, or retained as an exact
+  native/human/release gate. Direct Landing Pads registration, Bethesda/Bethsaida or vanilla
+  historic-site ownership, global Coda/Sultan history, generic dynamic quests, synthetic gossip,
+  and original-artifact custody are not missing v1 owners: their unsafe proposed mechanisms are
+  rejected. Open research outcomes remain voluntary mature return, person/deed recall, cost of
+  presence, purpose/staff/state recognition, hauling/restoration/population tuning, Girsh/Nephilim
+  route coexistence, semantic tile taste, and representative mod-stack behavior; automation must
+  not claim those human/native results.
+- **Frozen automated fan-in.** Production owners exist for every accepted positive row. Current
+  baseline/compatibility/development compile, Qud-referenced, portable, tooling, provider,
+  architecture, and 28/28 Art evidence is recorded at its exact frozen snapshot. Package, native
+  persona/compatibility, human visual, exact-inventory semantic review, current preview, and Steam
+  evidence remain; no static green substitutes for those receipts.
 
 - **Routed construction-input evidence.** Ordinary construction now mints one centrally owned job
   for its exact water/material bill when lawful local custody is absent. The job freezes nearest
   holders, itinerary, carrier, landing, debit, rollback, recovery, and master-pause authority;
-  remote stock is never direct spending permission. Integrated interruption/conservation and
-  native traversal remain unsigned.
-- **Hosted arcology design and implementation review.** The accepted one-capital shell, fixed
-  current/exiled authority slots, persistent atrium/ward/terrace interiors, paid hosted lots,
-  water-gated terrace, dark foreign/exiled shell, and no-remote-simulation boundary remain the v1
-  target. The earlier implementation claim is superseded: implementation is under active AMENDED
-  19+ review, with production, XML/fabric, and tests held. TESTING 136j–136j.5 is a proposed native
-  acceptance protocol, not current runtime evidence. Yielding-lot relocation is separately
-  implemented and must not be inferred from this row.
+  remote stock is never direct spending permission. Integrated interruption/conservation is green;
+  native traversal remains unsigned.
+- **Hosted arcology native acceptance.** One exact root now owns schema `TAFArcology`: all 27 local
+  zones across `x/y=0..2`, `z=9..11`, 27 purpose programmes, reciprocal district thresholds,
+  matched stairs in every coordinate column, one civic surface exit, and designated paid
+  terrace/ward anchors. Nine route-safe archetypes across foamcrete cultivation, inherited-marble
+  civic, and rusted service strata now replace the former uniform floors; paid fixtures share that
+  programme authority. Paid-floor output now uses an exact active full-floor designation and one
+  canonical dated final-suspension observation: ward roof/luxury comes from current providers;
+  terrace food comes only from exact growbed rows and requires current exterior fresh water.
+  Receipt/root/zone/anchor mismatch and malformed/duplicate observations fail closed without remote
+  loading. Focused hosted contracts and the frozen staged compile are green. TESTING 136j–136j.5
+  still owns native traversal, save/cold-load, labour/water, provider loss, and human inspection of every zone.
+  Yielding-lot relocation is separate.
 - **Heart ring-call relocation native acceptance.** Runtime and automated contracts are implemented:
   only exact finished settlement-raised plots marked yielding can answer a Heart `NoGroundToGrow`
   offer; the founder sees and re-proves every source→destination before mutation; cost is labour and
@@ -179,12 +272,15 @@ completion statement while AMENDED 19+ review is active.
   compilation pass; native lived-day observation remains open.
 - Within-realm physical food routing is implemented. Trade-owned polity consignments and loaded
   food/water hospitality now have exact intent/debit/custody/conclusion authorities at code scope;
-  final integration and native conservation/UI proof remain open.
-- Public founder memory is implemented through the owned shrine, Chronicle, corpse-reading, and
-  one optional custom `sultanHistory` entity/event plus an exact non-tradable, non-forgettable
-  journal note. It is isolated from Sultan/cult/village/relic selection, capped at one per world,
-  recoverable from its receipt, and quarantines divergent evidence. Seven focused cases pass in
-  both runners; native journal/save/second-succession proof remains open.
+  integrated automation is green and native conservation/UI proof remains open.
+- Founder memory is implemented through the owned shrine, Chronicle, corpse-reading, and one
+  durable TAF-local read-only projection reconstructed from its save receipt. Schema 2 never
+  inserts an entity, event, or note into Qud's shared `sultanHistory`/journal pools. Exact schema-1
+  objects are removed only after list/index/back-reference/payload proof; ambiguous legacy state is
+  left inert and quarantined. The retired option is unnecessary because the existing Charter
+  Chronicle already owns the visible telling. Focused pure/source/native-consumer cases cover
+  migration, save reconstruction, no insertion, and fail-closed cleanup; live legacy-save cleanup
+  remains a native acceptance item.
 - The realm faction dish remains the realm authority and competing arbitrary `TeachesDish`
   overrides are `REJECTED`. One exact city-local named cook, separately authored alternate recipe,
   paid teaching, release, and recovery are implemented; native recipe/identity/save proof remains
@@ -228,11 +324,12 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 - Every current `SHIP` row in the v1 polity scope matrix remains truthful at its stated
   implementation/evidence boundary. Accepted-but-open design must not be presented as current
   runtime; semantic ledger proof does not sign any physical adapter.
-- Addendum 9 structural release gate green: every staged C# file strictly under 300 physical lines,
-  plus exact-inventory human evidence for one responsibility and protocols at boundaries. Fresh
-  working-tree line scan is green, but final exact staging census/digest is pending and
-  `docs/STRUCTURE_REVIEW.json` is missing; no enterprise-grade or v1.0 release-quality claim is
-  valid until both final requirements close.
+- Addendum 9 structural release gate remains human-blocked: the frozen census has every staged C#
+  file strictly under 300 physical lines and digest
+  `d6c4449c089627a538a7454bedb8e9150e0b3460ed8ec289fe9c19bc03432adc`, but exact-inventory human
+  evidence for one responsibility and protocols at boundaries is absent because
+  `docs/STRUCTURE_REVIEW.json` is missing. No enterprise-grade or v1.0 release-quality claim is
+  valid until that human requirement closes.
 
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in

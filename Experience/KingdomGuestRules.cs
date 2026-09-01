@@ -17,10 +17,9 @@ namespace ThousandAndFirst
 	/// </summary>
 	public static partial class KingdomGuestRules
 	{
-		/// <summary>Earliest real shop stock at which a legendary trader considers the city a
-		/// market rather than a camp stall. This is the Village rung returned by
-		/// <c>KingdomRules.ShopTierForStage</c>; a market district may improve it, but cannot replace
-		/// the exact vacant fine-house requirement.</summary>
+		/// <summary>Earliest current market-service standing at which a legendary trader considers
+		/// the city a market rather than a camp stall. A staffed capable fixture, exact office, and
+		/// vacant fine house remain required; this threshold never promises a ware tier.</summary>
 		public const int LegendaryTraderMinimumShopTier = 3;
 
 		/// <summary>The smallest actual lot a fine house may occupy for the luxury invitation.

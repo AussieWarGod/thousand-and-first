@@ -17,6 +17,7 @@ namespace ThousandAndFirst
 		public string ResolverDigest;
 		public string ProfileId;
 		public int ProfileRevision;
+		public int ProfileRulesVersion;
 		public string RoleKey;
 		public int Ordinal;
 		public int TechnologyBand;
@@ -33,5 +34,9 @@ namespace ThousandAndFirst
 		public List<KingdomPolityMutationSpec> Mutations =
 			new List<KingdomPolityMutationSpec>();
 		public List<string> GearBlueprints = new List<string>();
+		public List<string> CargoBlueprints = new List<string>();
+		public List<string> SignatureCues = new List<string>();
+		public List<string> DialogueCues = new List<string>();
+		public List<string> ReasonFactIds = new List<string>();
 	}
 }

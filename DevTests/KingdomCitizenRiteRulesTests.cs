@@ -41,7 +41,7 @@ namespace ThousandAndFirst.Tests
 				"public static CitizenRiteVerdict Host(",
 				"Citizen.AddPart<GivesRep>()",
 				"rep.FillInRelatedFactions(Initial: true);",
-				"Speak(System, Citizen);",
+				"Speak(System, Citizen, projection",
 				"Citizen.SetIntProperty(HostProperty, 1);",
 				"private static void Speak(",
 				"ConversationsAPI.addSimpleConversationToObject",
@@ -51,6 +51,38 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("internal int Citizens =", source);
 			StringAssert.DoesNotContain("internal CitizenRiteVerdict Worst =", source);
 			StringAssert.DoesNotContain("internal string Liquid =", source);
+		}
+
+		[Test]
+		public void HostProjectionRecordsExactNativeOwnershipAndSafeAccessionRetirement()
+		{
+			string source = KingdomCitizenRiteLogicalSource.Read();
+			StringAssert.Contains("bool addedRep = rep == null", source);
+			StringAssert.Contains("AddedGivesRep", source);
+			StringAssert.Contains("GivesRepDigest", source);
+			StringAssert.Contains("relatedFactions", source);
+			StringAssert.Contains("AddedConversation", source);
+			StringAssert.Contains("ConversationDigest", source);
+			StringAssert.Contains("WriteBlueprint", source);
+			StringAssert.Contains("digest == receipt.GivesRepDigest", source);
+			StringAssert.Contains("digest == receipt.ConversationDigest", source);
+			StringAssert.Contains("Body.RemovePart(rep)", source);
+			StringAssert.Contains("Body.RemovePart(conversation)", source);
+			StringAssert.Contains("TryRetireAccedingHost", source);
+			StringAssert.DoesNotContain("Body.RemovePart<GivesRep>()", source);
+			StringAssert.DoesNotContain("Body.RemovePart<ConversationScript>()", source);
+		}
+
+		[Test]
+		public void AccessionLeavesPersonalWaterRiteHistoryOutsideHostCleanup()
+		{
+			string projection = TestMain.ReadRepositoryText(
+				"Experience/KingdomCitizenRite.Projection.cs");
+			StringAssert.DoesNotContain("SharedDaysProperty", projection);
+			StringAssert.DoesNotContain("SharedDayTickProperty", projection);
+			StringAssert.DoesNotContain("AskedTooOftenCreedProperty", projection);
+			StringAssert.DoesNotContain("KingdomWaterRiteAnswer", projection);
+			StringAssert.DoesNotContain("KingdomWaterRiteRefusals", projection);
 		}
 
 		private static void Ordered(string source, params string[] terms)

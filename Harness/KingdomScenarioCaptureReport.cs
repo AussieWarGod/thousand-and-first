@@ -91,7 +91,8 @@ namespace ThousandAndFirst.Harness
 		{
 			Chosen = null;
 			KingdomScenarioGallerySlice.Case expected;
-			if (!TryExpectedCase(Plan, out expected, out Failure)) return false;
+			if (!KingdomScenarioRun.TryExpectedGalleryCase(Plan, out expected, out Failure))
+				return false;
 			bool hasCoordinate;
 			int x;
 			int y;
@@ -167,40 +168,6 @@ namespace ThousandAndFirst.Harness
 			GameObject[] ordered = new GameObject[Matches.Count];
 			for (int i = 0; i < Rows.Count; i++) ordered[i] = Matches[before.IndexOf(Rows[i])];
 			for (int i = 0; i < ordered.Length; i++) Matches[i] = ordered[i];
-		}
-
-		/// <summary>The exact case the plan's single mutating step froze.</summary>
-		private static bool TryExpectedCase(KingdomScenarioPlan Plan,
-			out KingdomScenarioGallerySlice.Case Expected, out string Failure)
-		{
-			Expected = null;
-			Failure = null;
-			for (int i = 0; i < Plan.Steps.Count; i++)
-			{
-				KingdomScenarioResolvedStep step = Plan.Steps[i];
-				if (!KingdomScenarioVerbSchema.Mutates(step.Verb)) continue;
-				// The ordinary capture route measures stamped architecture owners only. Refusing
-				// by name beats refusing over a missing case argument: an operator pointing this
-				// at the founding scenario should read "no capture route yet", not a shape fault.
-				if (step.Verb != KingdomScenarioVerb.StageGalleryCase)
-					return Refuse("this scenario's production transaction is not an architecture "
-						+ "staging; the ordinary capture route measures stamped architecture "
-						+ "owners only, and authority class '"
-						+ KingdomScenarioRules.Bounded(Plan.AuthorityClass)
-						+ "' has no capture route yet", out Failure);
-				string facing;
-				string build;
-				string variant;
-				if (!step.Arguments.TryGetValue("Facing", out facing)
-					|| !step.Arguments.TryGetValue("Build", out build)
-					|| !step.Arguments.TryGetValue("Variant", out variant))
-					return Refuse("the resolved transaction is missing a frozen case argument",
-						out Failure);
-				return KingdomScenarioGallerySlice.TryResolveCase(build, variant, facing,
-					out Expected, out Failure);
-			}
-			return Refuse("this scenario declares no production transaction, so it names no "
-				+ "building to anchor", out Failure);
 		}
 
 		private static string Report(string AnchorId, KingdomScenarioPlan Plan,

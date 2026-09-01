@@ -155,13 +155,19 @@ namespace ThousandAndFirst.Simulation.City
 				if (direction == KingdomUnitDirection.Land)
 				{
 					applied = Survey.StoreFoodIn(larder, offered, CropOf(System));
-					if (applied > 0) System.Ledger.Harvested += applied;
+					if (applied > 0) System.Ledger.Harvested =
+						KingdomCatalogueRules.SaturatingCounterAdd(
+							System.Ledger.Harvested, applied);
 					return applied == offered;
 				}
-				return Survey.TrySpoilFromExact(larder, offered, out applied);
+				// Retired legacy food draw: elapsed city catch-up never destroys pantry stock.
+				return false;
 			}
-			// Materials do not yet have a civic-container ground adapter. Their signed debt remains
-			// honest and measured as blocked rather than being silently cleared by a proxy.
+			// Deliberately no scalar material adapter. Materials retain an exact physical kind and
+			// move through typed items, stockpiles, yard output, and manifest custody; turning one
+			// aggregate `Materials` debt into an arbitrary item would destroy that identity. A legacy
+			// or malformed scalar debt therefore remains visibly blocked instead of being cleared by
+			// a proxy. Current production paths never create one.
 			return false;
 		}
 

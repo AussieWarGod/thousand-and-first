@@ -14,6 +14,39 @@ namespace ThousandAndFirst.Tests
 	internal class KingdomDistanceRulesTests
 	{
 		[Test]
+		public void CapturedEndpointFreezesEveryMeasuredColumnWithoutReordering()
+		{
+			KingdomDistanceEndpointState row = KingdomDistanceEndpointState.Capture(
+				EndpointId: 17,
+				ObjectId: "holder-17",
+				X: 3,
+				Y: 5,
+				DedicationOrdinal: 23,
+				WaterAmount: 29L,
+				FoodAmount: 31L,
+				WaterRoom: 37L,
+				FoodRoom: 41L,
+				WaterHolderEdges: 1 << (int)KingdomZoneStep.North,
+				FoodHolderEdges: 1 << (int)KingdomZoneStep.South,
+				WaterTargetEdges: 1 << (int)KingdomZoneStep.East,
+				FoodTargetEdges: 1 << (int)KingdomZoneStep.West);
+
+			Assert.AreEqual(17, row.EndpointId);
+			Assert.AreEqual("holder-17", row.ObjectId);
+			Assert.AreEqual(3, row.X);
+			Assert.AreEqual(5, row.Y);
+			Assert.AreEqual(23, row.DedicationOrdinal);
+			Assert.AreEqual(29L, row.Amount(KingdomStockKind.Water));
+			Assert.AreEqual(31L, row.Amount(KingdomStockKind.Food));
+			Assert.AreEqual(37L, row.Room(KingdomStockKind.Water));
+			Assert.AreEqual(41L, row.Room(KingdomStockKind.Food));
+			Assert.IsTrue(row.WinsHolder(KingdomStockKind.Water, KingdomZoneStep.North));
+			Assert.IsTrue(row.WinsHolder(KingdomStockKind.Food, KingdomZoneStep.South));
+			Assert.IsTrue(row.WinsTarget(KingdomStockKind.Water, KingdomZoneStep.East));
+			Assert.IsTrue(row.WinsTarget(KingdomStockKind.Food, KingdomZoneStep.West));
+		}
+
+		[Test]
 		public void SplitDeclarationsPreserveEnumValuesAndNodeFieldOrder()
 		{
 			Assert.AreEqual(0, (int)KingdomZoneStep.North);

@@ -59,6 +59,43 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void DestructiveGlobalLookupReusesBoundedLiveCustodyProof()
+		{
+			string physical = Source("Growth", "KingdomConstruction.Physical.cs");
+			string lookup = Between(physical,
+				"public static KingdomPhysicalLookupState FindGlobalLiveId(",
+				"private static bool TryLoadedZoneObjects(");
+			Assert.AreEqual(0, MintingReads(lookup));
+			StringAssert.Contains("KingdomPlots.FindGlobalFoundingHeartId(Id", lookup);
+			StringAssert.Contains("state == KingdomPhysicalLookupState.Exact && graveyard", lookup);
+			StringAssert.Contains("Exact = null", lookup);
+
+			string custody = Source("Growth", "KingdomPlot2.07b.FoundingHeartIdentity.cs");
+			foreach (string evidence in new[] { "ActiveZone", "CachedZones", "Graveyard",
+				"ObjectGameState", "GetInventoryDirectAndEquipment",
+				"MaximumFoundingHeartCustodyObjects" })
+				StringAssert.Contains(evidence, custody);
+		}
+
+		[Test]
+		public void ImprovementRemovalAuthorityCoversReloadCustodyAndIgnoresTombstones()
+		{
+			string authority = Source("Growth", "KingdomConstruction.RemovalAuthority.cs");
+			Assert.AreEqual(0, MintingReads(authority));
+			foreach (string evidence in new[] { "ActiveZone", "CachedZones", "Graveyard",
+				"The.Player", "ObjectGameState", "GetInventoryDirectAndEquipment",
+				"MaxGlobalRemovalAuthorityObjects", "graveyard.Contains(candidate)",
+				"ImprovementPredecessorAuthority" })
+				StringAssert.Contains(evidence, authority);
+			string removal = Source("Growth", "KingdomUpgrade.25.HandoverRemoval.cs");
+			string recovery = Between(removal, "internal static bool TryRecoverAbsentHandover(",
+				"private static bool TryPublishRemovalIntent(");
+			StringAssert.Contains(
+				"FindGlobalPredecessorAuthority(Job, Successor, out _)", recovery);
+			StringAssert.DoesNotContain("FindGlobalLiveId(Job.SubjectId", recovery);
+		}
+
+		[Test]
 		public void ObservationAndRaidResolversProveMarkersThenReadAssignedIdentity()
 		{
 			string polity = Between(Source("Polity", "KingdomPolityEndpointRuntime.Helpers.cs"),
@@ -123,7 +160,8 @@ namespace ThousandAndFirst.Tests
 				hostedInteraction }) Assert.AreEqual(0, MintingReads(preview));
 			Assert.AreEqual(1, MintingReads(hostedVisual),
 				"only explicit hosted child identity assignment may remain");
-			StringAssert.Contains("created.ID = id", hostedVisual);
+			StringAssert.Contains("Prepared[i].Output.ID = Prepared[i].Id", hostedVisual);
+			StringAssert.Contains("Prepared[i].Output.IDIfAssigned != Prepared[i].Id", hostedVisual);
 			StringAssert.Contains("item.IDIfAssigned == id", hostedVisual);
 			StringAssert.Contains("string workId = work?.IDIfAssigned", bountySelection);
 			StringAssert.Contains("string rootId = Root.IDIfAssigned", relocationEvidence);
@@ -177,7 +215,10 @@ namespace ThousandAndFirst.Tests
 				"anatomical BodyPart IDs are not GameObject identity reads");
 			string builder = Source("World", "KingdomHostedArcologyBuilder.cs");
 			Assert.AreEqual(1, MintingReads(builder));
-			StringAssert.Contains("item.ID = KingdomHostedArcologyRules.StableChildId", builder);
+			StringAssert.Contains(
+				"string id = KingdomHostedArcologyRules.StableChildId(RootId, Role)", builder);
+			StringAssert.Contains("item.ID = id", builder);
+			StringAssert.Contains("candidate.IDIfAssigned == id", builder);
 			string hosted = Source("Growth", "KingdomHostedArcology.Construction.cs");
 			Assert.AreEqual(1, MintingReads(hosted), "only consented hosted job publication");
 			string presence = Source("Growth", "KingdomConstructionPresence.cs");
@@ -185,7 +226,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void OwnershipSpoilageAndContinuationScansNeverMintIdentity()
+		public void OwnershipFoodDebitAndContinuationScansNeverMintIdentity()
 		{
 			string[] pure = {
 				Source("Growth", "KingdomProcedures.08.OwnershipClassification.cs"),
@@ -275,15 +316,19 @@ namespace ThousandAndFirst.Tests
 			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
 			Assert.AreEqual(2, MintingReads(Source("Growth", "KingdomLab.Slate.cs")),
 				"anatomical BodyPart IDs are not GameObject identity reads");
-			Assert.AreEqual(0, MintingReads(Source("Growth", "KingdomGatehouse.Projection.cs")),
+			Assert.AreEqual(0, MintingReads(KingdomGatehouseLogicalSource.ReadProjection()),
 				"gatehouse recovery observes only already-assigned root identity");
-			Assert.AreEqual(2, MintingReads(Source("Growth",
-				"KingdomGatehouse.ProjectionEvidence.cs")),
+			Assert.AreEqual(2, MintingReads(
+				KingdomGatehouseLogicalSource.ReadProjectionEvidence()),
 				"one legacy engine-assigned satellite identity read at creation, and one "
 					+ "explicit deterministic satellite identity setter");
 			Assert.AreEqual(1, MintingReads(Source("Growth", "KingdomSocket.06.ConversionProjection.cs")));
 			Assert.AreEqual(11, MintingReads(Source("Growth", "KingdomPurpose.01.Transport.cs")));
-			Assert.AreEqual(11, MintingReads(Source("Growth", "KingdomUpgrade.20.HandOver.cs")));
+			string handover = Source("Growth", "KingdomUpgrade.20.HandOver.cs");
+			Assert.AreEqual(2, MintingReads(handover),
+				"the committed predecessor identity is established once, then re-read for its job proof");
+			StringAssert.Contains("string predecessorId = Predecessor.ID", handover);
+			StringAssert.Contains("job.SubjectId != Predecessor.ID", handover);
 			Assert.AreEqual(5, MintingReads(Source("Growth", "KingdomPlot2.28.ClearPayout.cs")));
 		}
 
@@ -340,10 +385,17 @@ namespace ThousandAndFirst.Tests
 			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
 			Assert.AreEqual(2, MintingReads(Source("Growth",
 				"KingdomPurposePortfolio.OutputRuntime.cs")), "new cargo publication only");
-			Assert.AreEqual(4, MintingReads(Source("Growth",
-				"KingdomUpgrade.03.r_KingdomImprovement.PendingItems.cs")));
-			Assert.AreEqual(3, MintingReads(Source("Growth",
-				"KingdomUpgrade.02.r_KingdomImprovement.Inventory.cs")));
+			string handoverEndpoints = Source("Growth",
+				"KingdomUpgrade.03.r_KingdomImprovement.PendingItems.cs");
+			Assert.AreEqual(6, MintingReads(handoverEndpoints),
+				"only explicit durable handover endpoint publication may assign identity");
+			StringAssert.Contains("Receipt.HandoverSourceId = Source.ID", handoverEndpoints);
+			StringAssert.Contains("Receipt.HandoverTargetId = Target.ID", handoverEndpoints);
+			string pendingItem = Source("Growth",
+				"KingdomUpgrade.02.r_KingdomImprovement.Inventory.cs");
+			Assert.AreEqual(2, MintingReads(pendingItem),
+				"only explicit pending-item identity publication may assign identity");
+			StringAssert.Contains("Receipt.HandoverItemId = Item.ID", pendingItem);
 		}
 
 		[Test]

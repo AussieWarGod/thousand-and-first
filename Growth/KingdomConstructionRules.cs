@@ -230,5 +230,19 @@ namespace ThousandAndFirst
 				: KingdomExactRemovalAction.Quarantine;
 		}
 
+		/// <summary>Classifies globally observed aftermath of a destructive callback.
+		/// Exact unchanged ground remains retryable; only live-authority absence proves settlement.</summary>
+		public static KingdomExactRemovalAction GlobalRemovalAftermath(
+			KingdomPhysicalLookupState State, bool ExactReference, bool ExactShape)
+		{
+			if (State == KingdomPhysicalLookupState.Absent)
+				return !ExactReference && !ExactShape
+					? KingdomExactRemovalAction.ProvedAbsent
+					: KingdomExactRemovalAction.Quarantine;
+			return State == KingdomPhysicalLookupState.Exact && ExactReference && ExactShape
+				? KingdomExactRemovalAction.InvokeOnce
+				: KingdomExactRemovalAction.Quarantine;
+		}
+
 	}
 }

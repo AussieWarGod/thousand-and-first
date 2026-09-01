@@ -80,6 +80,23 @@ namespace ThousandAndFirst
 			{
 				KingdomGrowth.OnPhysicalFirstGuestZoneActivated(this, E.Zone);
 			});
+			Guard("hosted authority thaw", delegate
+			{
+				if (!KingdomHostedArcology.TryReconciliationRoot(E.Zone,
+					out GameObject root, out r_KingdomArcology hosted, out string failure)
+					|| (root != null && !KingdomHostedArcology.ReconcileRoot(root, out failure)))
+				{
+					KingdomHostedArcology.Quarantine(hosted, failure);
+					KingdomLog.Log("hosted authority: thaw reconciliation refused ("
+						+ (failure ?? "ambiguous loaded shell") + ")");
+				}
+			});
+			Guard("hosted interior thaw", delegate
+			{
+				if (!KingdomHostedArcology.ReconcileActiveInterior(E.Zone, out string failure))
+					KingdomLog.Log("hosted interior: thaw reconciliation refused ("
+						+ (failure ?? "unproved loaded authority") + ")");
+			});
 			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
 			if (!ExternalOwnershipAllows(E.Zone)) return base.HandleEvent(E);
@@ -99,6 +116,13 @@ namespace ThousandAndFirst
 			Guard("first guest suspend", delegate
 			{
 				KingdomGrowth.OnPhysicalFirstGuestSuspending(this, E.Zone);
+			});
+			// This is a final physical witness, not automatic work. It must run while the master
+			// switch is paused too, or removing a hosted bed before departure could leave an older
+			// exterior observation credited after work resumes elsewhere.
+			Guard("hosted final observation", delegate
+			{
+				KingdomHostedArcology.OnSuspending(this, E.Zone);
 			});
 			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);
@@ -122,6 +146,18 @@ namespace ThousandAndFirst
 			return base.HandleEvent(E);
 		}
 
+		public override bool HandleEvent(ZoneDeactivatedEvent E)
+		{
+			if (The.Game == null) return base.HandleEvent(E);
+			// Invalidate immediately; positive evidence waits for true suspension after Qud's
+			// live-zone grace window. This witness remains active while automatic work is paused.
+			Guard("hosted departure invalidation", delegate
+			{
+				KingdomHostedArcology.OnDeactivated(this, E.Zone);
+			});
+			return base.HandleEvent(E);
+		}
+
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
 			XRLGame game = The.Game;
@@ -139,6 +175,23 @@ namespace ThousandAndFirst
 			{
 				if (!KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone))
 					KingdomLog.Log("plot effects: active-zone legacy recovery refused");
+			});
+			Guard("hosted authority activation", delegate
+			{
+				if (!KingdomHostedArcology.TryReconciliationRoot(E.Zone,
+					out GameObject root, out r_KingdomArcology hosted, out string failure)
+					|| (root != null && !KingdomHostedArcology.ReconcileRoot(root, out failure)))
+				{
+					KingdomHostedArcology.Quarantine(hosted, failure);
+					KingdomLog.Log("hosted authority: activation reconciliation refused ("
+						+ (failure ?? "ambiguous loaded shell") + ")");
+				}
+			});
+			Guard("hosted interior activation", delegate
+			{
+				if (!KingdomHostedArcology.ReconcileActiveInterior(E.Zone, out string failure))
+					KingdomLog.Log("hosted interior: activation reconciliation refused ("
+						+ (failure ?? "unproved loaded authority") + ")");
 			});
 			if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))
 				return base.HandleEvent(E);

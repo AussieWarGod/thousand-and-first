@@ -83,6 +83,10 @@ namespace ThousandAndFirst
 
 		private void MigrateSavedState(int Version)
 		{
+			if (PendingAccessionRepairResidentId != 0 &&
+				string.IsNullOrEmpty(PendingAccessionRepairSettlementId))
+				TryMigrateLegacyAccessionRepairSettlement(
+					The.Game?.GetSystem<KingdomSystem>(), "save migration");
 			if (Version < 2)
 			{
 				LegacyPhysicalRiteUnavailable = true;

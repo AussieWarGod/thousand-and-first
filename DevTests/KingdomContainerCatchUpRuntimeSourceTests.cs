@@ -56,7 +56,7 @@ namespace ThousandAndFirst.Tests
 		public void ExactGroundCallbacksPublishOnlyMeasuredWaterAndFoodDeltas()
 		{
 			string survey = KingdomSurveyLogicalSource.Read();
-			string food = Slice(survey, "public int StoreFoodIn(", "private sealed class SpoilFrame");
+			string food = Slice(survey, "public int StoreFoodIn(", "private sealed class FoodDebitFrame");
 			string water = Slice(survey, "public int StoreIn(", "public int DrawFromPools(");
 			StringAssert.Contains("heldAfter != heldBefore + 1", food);
 			StringAssert.Contains("if (!exact) break;", food);

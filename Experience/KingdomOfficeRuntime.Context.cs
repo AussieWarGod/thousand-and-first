@@ -96,11 +96,21 @@ namespace ThousandAndFirst
 				bool loaded = GameObject.Validate(body) && body.IsAlive
 					&& ReferenceEquals(body.CurrentZone, Context.Zone)
 					&& !body.IsPlayer() && !body.IsPlayerLed();
+				bool marketOwner = loaded && MarketOfficeCandidateBlocked(body, Context.Survey);
 				rows.Add(new KingdomOfficeCandidate { ResidentId = row.ResidentId,
 					Name = row.Name, Origin = row.Origin, ArrivedTick = row.ArrivedTick,
-					Eligible = row.Standing == KingdomResidentStanding.Resident && loaded });
+					Eligible = row.Standing == KingdomResidentStanding.Resident && loaded
+						&& !marketOwner });
 			}
 			return KingdomOfficeOfferRules.TryOffer(rows.ToArray(), out First, out Second);
+		}
+
+		private static bool MarketOfficeCandidateBlocked(GameObject Body,
+			KingdomSurvey Survey)
+		{
+			return Body?.GetPart<r_KingdomLegendaryMarketProjection>() != null
+				|| Body?.GetPart<r_KingdomMarketHandoffSourceProjection>() != null
+				|| KingdomGrowth.PreparedMarketHandoffParty(Body, Survey);
 		}
 
 		private static bool ExactCandidate(KingdomSystem System, CityContext Context,
@@ -130,6 +140,25 @@ namespace ThousandAndFirst
 			for (int i = 0; State != null && i < State.WorkCount; i++)
 				if (State.TryWork(i, out KingdomWorkRow row) && row.WorkId == WorkId) return true;
 			return false;
+		}
+
+		private static bool TryOfficeCityState(KingdomSystem System, string SettlementId,
+			out KingdomCityState State, out string Failure)
+		{
+			State = null; Failure = null;
+			if (System == null || !System.TryFindSettlement(SettlementId,
+				out bool seated, out KingdomSettlement settlement))
+			{
+				Failure = "The office's exact owned city is absent."; return false;
+			}
+			KingdomCityBook book = seated ? System.City : settlement?.City;
+			KingdomCityFault fault = KingdomCityFault.None;
+			if (book == null || book.SettlementId != SettlementId
+				|| !book.TryRead(out State, out fault))
+			{
+				Failure = "The office's exact city book is unreadable: " + fault; return false;
+			}
+			return true;
 		}
 	}
 }

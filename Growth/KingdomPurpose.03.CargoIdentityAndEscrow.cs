@@ -27,7 +27,7 @@ namespace ThousandAndFirst
 			HashSet<string> keys = new HashSet<string>(StringComparer.Ordinal);
 			foreach (GameObject work in Z?.GetObjects() ?? new List<GameObject>())
 			{
-				if (!GameObject.Validate(work) || work.GetIntProperty("KingdomBuilt") != 1) continue;
+				if (!KingdomUpgrade.IsFunctionallyBuilt(work)) continue;
 				string key = KingdomUpgrade.DesignKeyOf(work);
 				if (!string.IsNullOrEmpty(key)) keys.Add(key);
 			}

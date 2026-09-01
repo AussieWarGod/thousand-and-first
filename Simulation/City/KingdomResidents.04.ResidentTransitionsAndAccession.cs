@@ -46,6 +46,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>Removes one exact emigrant by ResidentId. Same-name neighbours cannot be struck
 		/// accidentally.</summary>
 		internal static bool TryDepart(KingdomSystem System, GameObject Body,
+			KingdomResidentDestructionAuthorization Authorization,
+			KingdomResidentDepartureOperation Operation,
 			out KingdomResidentRow FormerRow)
 		{
 			FormerRow = default(KingdomResidentRow);
@@ -54,35 +56,16 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomCityState state;
 			KingdomCityState next;
 			KingdomCityFault fault;
-			if (!TryLocate(System, Body, out book, out residentId) || book == null
-				|| !book.TryRead(out state, out fault)
+			if (!TryLocate(System, Body, out book, out residentId) || book == null) return false;
+			// Generic departure destroys the body after this commit. Re-prove the exact row
+			// inside the mutation owner; outer candidate selection is never authority.
+			if (!KingdomResidentTransitionAuthority.CanContinueJournaledCarrierRemoval(
+				System, Body, Operation, Authorization)) return false;
+			if (!book.TryRead(out state, out fault)
 				|| !KingdomResidentRules.TryRemove(state, residentId, out next, out FormerRow,
 					out fault)) return false;
-			if (!KingdomNamedCook.PrepareCookLoss(System, Body,
-				KingdomNamedCookVacancyCause.Departure,
-				out KingdomNamedCookReceipt priorCook, out string prepareCookFailure))
-			{
-				KingdomLog.Log("named cook: departure preparation refused ("
-					+ (prepareCookFailure ?? "unknown failure") + ")"); return false;
-			}
 			if (!PublishRowAndUnbind(System, book, state, next, residentId,
-				KingdomUnbindCause.Abroad))
-			{
-				if (!KingdomNamedCook.CancelPreparedCookLoss(System, Body, priorCook,
-					KingdomNamedCookVacancyCause.Departure, out string rollbackCookFailure))
-					KingdomLog.Log("named cook: departure rollback refused ("
-						+ (rollbackCookFailure ?? "unknown failure") + ")");
-				return false;
-			}
-			if (!KingdomOfficeRuntime.ObserveHolderLoss(System, Body,
-				KingdomCivicOfficeVacancyCause.Departure, out string officeFailure))
-				KingdomLog.Log("office: departing holder title removal waits ("
-					+ (officeFailure ?? "unknown failure") + ")");
-			if (!KingdomNamedCook.ObserveCookLoss(System, Body,
-				KingdomNamedCookVacancyCause.Departure, out string cookFailure))
-				KingdomLog.Log("named cook: departing cook vacancy waits ("
-					+ (cookFailure ?? "unknown failure") + ")");
-			Body.RemoveIntProperty(ResidentIdProperty);
+				KingdomUnbindCause.Abroad)) return false;
 			ProjectCompatibility(System);
 			return true;
 		}
@@ -174,6 +157,13 @@ namespace ThousandAndFirst.Simulation.City
 				formerRow = default(KingdomResidentRow);
 				return KingdomAccessionOutcome.RefusedClean;
 			}
+			if (KingdomGrowth.SuccessorMarketBlocked(Body,
+				KingdomSurvey.ActiveFor(Body.CurrentZone))
+				|| !KingdomResidentTransitionAuthority.CanAccede(System, Body, residentId))
+			{
+				KingdomLog.Log("binding: accession waits for an exact resident-scoped authority");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			Dictionary<string, int> nextCreedCounts = new Dictionary<string, int>(creedCounts);
 			Dictionary<string, int> nextCreedPastCounts = new Dictionary<string, int>(creedPastCounts);
 			string rollName = Body.GetStringProperty("KingdomName");
@@ -226,6 +216,21 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				return outcome;
 			}
+			if (!KingdomOfficeRuntime.TryObserveAccessionLoss(System, Body,
+				out string officeFailure))
+			{
+				KingdomLog.Log("binding: accession office cleanup requires repair ("
+					+ (officeFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
+			if (!KingdomPolityResidentTransition.TryConclude(System, Body, residentId,
+				KingdomPolityResidentTransitionCause.Accession,
+				out KingdomPolityResidentTransitionPreparation _, out string polityFailure))
+			{
+				KingdomLog.Log("binding: accession deed-figure conclusion requires repair ("
+					+ (polityFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
 			if (seated)
 			{
 				System.CreedCounts = nextCreedCounts;
@@ -242,6 +247,13 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				KingdomLog.Log("binding: accession citizenship completion requires repair ("
 					+ (citizenshipFailure ?? "unknown failure") + ")");
+				return KingdomAccessionOutcome.RepairRequired;
+			}
+			if (!KingdomCitizenRite.TryRetireAccedingHost(System, Body,
+				out string riteFailure))
+			{
+				KingdomLog.Log("binding: accession citizen-host cleanup requires repair ("
+					+ (riteFailure ?? "unknown failure") + ")");
 				return KingdomAccessionOutcome.RepairRequired;
 			}
 			FinishAccessionBody(Body, formerRow, residentId);

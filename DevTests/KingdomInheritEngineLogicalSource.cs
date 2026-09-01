@@ -13,6 +13,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomInheritCellFacts.cs",
 			"Core/KingdomInheritBuildSpec.cs",
 			"Core/IKingdomInheritEngineHost.cs",
+			"Core/KingdomInheritRules.LegacyProxyShape.cs",
 			"Core/KingdomInheritEngine.cs",
 			"Core/KingdomInheritEngine.Preparation.cs",
 			"Core/KingdomInheritEngine.Preflight.cs",

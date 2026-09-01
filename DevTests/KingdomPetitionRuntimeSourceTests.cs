@@ -72,6 +72,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ShelterUsesCurrentPhysicalRoofEvidence()
+		{
+			string source = Runtime;
+			StringAssert.Contains("Survey.TryBenefits(out KingdomBenefitIndex benefits",
+				source);
+			StringAssert.Contains("benefits.Total(\"roof\")", source);
+			StringAssert.Contains("shelter evidence paused", source);
+			StringAssert.DoesNotContain("survey.Beds", source);
+		}
+
+		[Test]
 		public void OptionOff_ClosesOfferedPausesAcceptedAndResumesFutureClock()
 		{
 			string source = Runtime;

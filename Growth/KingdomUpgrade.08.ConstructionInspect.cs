@@ -35,13 +35,9 @@ namespace ThousandAndFirst
 				}
 				else if (completedCount == 1)
 				{
-					if (!r_KingdomScaffold.HasRemovalProof(completed, Job.SubjectId))
-					{
-						KingdomConstructionJob unproved = Job;
-						KingdomConstruction.Quarantine(ref unproved,
-							"The terminal improvement successor lacks predecessor-removal proof.");
-					}
-					else r_KingdomScaffold.TellCompletion(System, completed, Job);
+					KingdomConstructionJob terminal = Job;
+					FinishAbsentImprovement(System, Z, completed, ref terminal,
+						"The terminal improvement successor lacks predecessor-removal proof.");
 				}
 				return;
 			}
@@ -61,11 +57,10 @@ namespace ThousandAndFirst
 				GameObject completed;
 				int completedCount = r_KingdomScaffold.FindExactSuccessors(Z, Job,
 					successor.Blueprint, null, out completed);
-				if (completedCount == 1
-					&& r_KingdomScaffold.HasRemovalProof(completed, Job.SubjectId))
+				if (completedCount == 1)
 				{
-					if (KingdomConstruction.Complete(ref absent))
-						r_KingdomScaffold.TellCompletion(System, completed, absent);
+					FinishAbsentImprovement(System, Z, completed, ref absent,
+						"The improvement predecessor disappeared without exact removal proof.");
 				}
 				else
 				{
@@ -162,14 +157,8 @@ namespace ThousandAndFirst
 				&& work.GetStringProperty(BuildKeyProperty) == Job.TargetKey
 				&& work.IDIfAssigned != Job.SubjectId)
 			{
-				if (!r_KingdomScaffold.HasRemovalProof(work, Job.SubjectId))
-				{
-					KingdomConstruction.Quarantine(ref inspected,
-						"The improvement successor lacks predecessor-removal proof.");
-					return;
-				}
-				if (KingdomConstruction.Complete(ref inspected))
-					r_KingdomScaffold.TellCompletion(System, work, inspected);
+				FinishAbsentImprovement(System, Z, work, ref inspected,
+					"The improvement successor lacks predecessor-removal proof.");
 				return;
 			}
 			if (GameObject.Validate(work) && !string.IsNullOrEmpty(Job.SubjectId)
@@ -209,11 +198,10 @@ namespace ThousandAndFirst
 					return;
 				}
 				if (GameObject.Validate(result) && result.GetIntProperty(BuiltProperty) == 1
-					&& result.GetStringProperty(BuildKeyProperty) == Job.TargetKey
-					&& r_KingdomScaffold.HasRemovalProof(result, Job.SubjectId))
+					&& result.GetStringProperty(BuildKeyProperty) == Job.TargetKey)
 				{
-					if (KingdomConstruction.Complete(ref inspected))
-						r_KingdomScaffold.TellCompletion(System, result, inspected);
+					FinishAbsentImprovement(System, Z, result, ref inspected,
+						"The improvement successor lacks predecessor-removal proof.");
 				}
 				return;
 			}
@@ -227,6 +215,48 @@ namespace ThousandAndFirst
 			}
 			KingdomConstruction.Quarantine(ref inspected,
 				"The improvement projection has no safely identifiable scaffold or successor.");
+		}
+
+		private static void FinishAbsentImprovement(KingdomSystem System, Zone Z,
+			GameObject Successor, ref KingdomConstructionJob Job, string ProofFailure)
+		{
+			if (KingdomUpgradeRules.RequiresAbsentHandoverRecovery(Job.PhysicalPhase))
+			{
+				if (!TryRecoverAbsentHandover(System, Z, Successor, ref Job,
+					out string recoveryFailure))
+				{
+					// A historical buggy row may already be terminal. Terminal phases cannot be
+					// quarantined, so retain its exact inert evidence and publish the diagnostic.
+					if (Job.Phase == KingdomConstructionPhase.Complete)
+					{
+						KingdomConstructionJob current;
+						if (KingdomConstruction.TryFind(Job.Id, out current)) Job = current;
+						KingdomConstruction.Complete(ref Job, recoveryFailure);
+					}
+					else KingdomConstruction.Quarantine(ref Job, recoveryFailure);
+				}
+				return;
+			}
+			if (!r_KingdomScaffold.HasRemovalProof(Successor, Job.SubjectId))
+			{
+				if (Job.Phase == KingdomConstructionPhase.Complete)
+					KingdomConstruction.Complete(ref Job, ProofFailure);
+				else KingdomConstruction.Quarantine(ref Job, ProofFailure);
+				return;
+			}
+			bool completed = Job.Phase == KingdomConstructionPhase.Complete
+				|| KingdomConstruction.Complete(ref Job);
+			if (completed && r_KingdomScaffold.TellCompletion(System, Successor, Job)
+				&& !r_KingdomImprovement.TryRetireHandoverContentCustody(Successor, Job,
+					out string cleanupFailure))
+			{
+				KingdomConstructionJob current;
+				if (KingdomConstruction.TryFind(Job.Id, out current))
+				{
+					Job = current;
+					KingdomConstruction.Complete(ref Job, cleanupFailure);
+				}
+			}
 		}
 
 		private static bool HasActiveConstruction(GameObject Work)

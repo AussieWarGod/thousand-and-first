@@ -1,0 +1,89 @@
+name: Alpha playtest feedback
+description: Report pacing, usability, architecture, readability, balance, or a session-level observation.
+title: "[Playtest]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feedback does not need a proven bug. Describe what happened and what you understood as a player. Redact personal paths, accounts, and unrelated save data. Never upload a full save/profile, DLL, copied game asset, or decompiled source.
+  - type: input
+    id: taf_version_source
+    attributes:
+      label: TAF version and install source
+      description: Give the manifest version and say Steam Workshop or manual tagged package.
+      placeholder: "1.0.0 / Steam Workshop"
+    validations:
+      required: true
+  - type: input
+    id: qud_version
+    attributes:
+      label: Caves of Qud version
+      description: Give marketing version and core build when known.
+      placeholder: "1.0.5 / core 2.0.211.51"
+    validations:
+      required: true
+  - type: input
+    id: platform_store
+    attributes:
+      label: Platform and storefront
+      placeholder: "Windows 11 / Steam"
+    validations:
+      required: true
+  - type: dropdown
+    id: entry_path
+    attributes:
+      label: World entry path
+      options:
+        - Kingdom Quickstart / Reedwake
+        - Kingdom Quickstart / Riftside
+        - Kingdom Quickstart / Saltwake
+        - Ordinary world / founder's basin
+        - Existing TAF save
+        - Other or unknown
+    validations:
+      required: true
+  - type: textarea
+    id: mods
+    attributes:
+      label: Enabled mods and load order
+      description: List versions or Workshop IDs. Say "TAF only" if isolated.
+      placeholder: |
+        1. The Thousand and First 1.0.0
+        2. Other mod and version
+    validations:
+      required: true
+  - type: textarea
+    id: session
+    attributes:
+      label: What happened
+      description: Describe player goal, choices, elapsed in-game time, settlement stage, and outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What felt clear, unclear, good, or frustrating
+      description: Name UI text, controls, building/road readability, pacing, balance, or story effect where possible.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction or comparison
+      description: Give numbered steps if repeatable. Say whether save/reload or a fresh world changes it.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted evidence
+      description: Attach safe screenshots or redacted Player.log excerpts. State "not available" when none.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checks
+      options:
+        - label: I confirmed only one TAF copy was enabled, or disclosed that I could not confirm it.
+          required: true
+        - label: I removed personal data, secrets, and unrelated private material.
+          required: true
+        - label: This is not a vulnerability or sensitive report requiring private disclosure.
+          required: true

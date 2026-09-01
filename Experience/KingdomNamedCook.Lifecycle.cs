@@ -23,6 +23,9 @@ namespace ThousandAndFirst
 			if (book == null) return true;
 			KingdomNamedCookReceipt current = book.NamedCook;
 			if (current != null && KingdomNamedCookRules.IsVacant(current.Phase)) return true;
+			if (current != null
+				&& current.Phase == KingdomNamedCookPhase.DepartureVacancyPrepared)
+				return true;
 			if (!KingdomNamedCookRules.Validate(current, out Failure)
 				|| current.Phase != KingdomNamedCookPhase.Applied)
 			{

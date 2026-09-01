@@ -37,10 +37,10 @@ namespace ThousandAndFirst
 	/// </para>
 	/// <para>
 	/// <b>Where the tags come from.</b> Nothing here parses a creature: every list handed to these
-	/// functions is assembled by <see cref="KingdomLodging"/> out of <c>KingdomQol.ProfileOf</c>
-	/// and <c>KingdomQol.OfferOf</c> &mdash; the one vocabulary, derived from vanilla truth before
-	/// anything is authored, and refined by the blueprint's own <c>r_TAF_*</c> tags. A robot needs
-	/// charge here because the engine says it is a robot, not because anybody wrote a tag.
+	/// functions is assembled by <see cref="KingdomLodging"/> from resident profiles and the
+	/// benefit index's exact physical-provider reading for the assigned root. A designation or
+	/// catalogue row contributes no offer by itself. A robot needs charge here because the engine
+	/// says it is a robot; a home meets that need only while an actual provider supplies it.
 	/// </para>
 	/// <para>
 	/// <b>Determinism without dice.</b> Which of several eligible homes a resident is assigned to

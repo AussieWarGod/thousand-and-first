@@ -84,6 +84,7 @@ namespace ThousandAndFirst
 											Set(raw, "To", child.GetAttribute("To"));
 											Set(raw, "Type", child.GetAttribute("Type"));
 											Set(raw, "Size", child.GetAttribute("Size"));
+											Set(raw, "Mode", child.GetAttribute("Mode"));
 											Set(raw, "Water", child.GetAttribute("Water"));
 											Set(raw, "Materials", child.GetAttribute("Materials"));
 											Set(raw, "Ticks", child.GetAttribute("Ticks"));
@@ -99,7 +100,8 @@ namespace ThousandAndFirst
 				KingdomSocketTransition parsed;
 				string failure;
 				if (!KingdomSocketTransitionRules.TryParse(raw.Key, Get(raw, "From"),
-					Get(raw, "To"), Get(raw, "Type"), Get(raw, "Size"), Get(raw, "Water"),
+					Get(raw, "To"), Get(raw, "Type"), Get(raw, "Size"), Get(raw, "Mode"),
+					Get(raw, "Water"),
 					Get(raw, "Materials"), Get(raw, "Ticks"), out parsed, out failure))
 				{
 					MetricsManager.LogError("ThousandAndFirst transitions: " + failure);

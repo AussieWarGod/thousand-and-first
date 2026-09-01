@@ -10,9 +10,9 @@ namespace ThousandAndFirst
 	/// <b>The fiction, which is the design.</b> Qud's water ritual is the setting's central act:
 	/// you share your water with a stranger and are water-bonded to them and to everything they
 	/// belong to. This is that act turned inward. The founder fills the basin from the settlement's
-	/// own stores, sets it in front of one named settler who does not believe what the realm
-	/// believes, and pours. What follows is theirs to decide. The founder never orders a
-	/// conversion, never converts two people at once, and never gets the water back.
+	/// own stores, sets it in front of one named settler whose allegiance or belief differs from
+	/// the realm's, and pours. What follows is theirs to decide. The founder never orders a
+	/// transition, never changes two people at once, and never gets the water back.
 	/// </para>
 	/// <para>
 	/// <b>No dice, anywhere in this file.</b> The two passive channels
@@ -45,7 +45,7 @@ namespace ThousandAndFirst
 		// ==================================================================================
 
 		/// <summary>
-		/// What it costs to cross from any belief to any other, before anything particular is
+		/// What it costs to cross from any covenant, allegiance, or belief to another, before anything particular is
 		/// counted: twenty-four, which is six attended passes of shared living. Nobody changes what
 		/// they hold over one cup with somebody they met last week, however friendly the two creeds
 		/// are.
@@ -55,7 +55,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Added when the settler holds a creed of their own rather than nothing in particular.
 		/// Sixteen: leaving something is further than arriving from nowhere, and a settler who
-		/// believes nothing is the easiest person in the settlement to share water with, which is
+		/// holds nothing is the easiest person in the settlement to share water with, which is
 		/// as it should be.
 		/// </summary>
 		public const int CreedHeldDistance = 16;

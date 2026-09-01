@@ -68,7 +68,7 @@ namespace ThousandAndFirst
 			PendingAccessionRepairFounderName = "";
 			PendingAccessionRepairHeirName = "";
 			PendingAccessionRepairSettlementId = "";
-			PendingAccessionRepairSeated = false;
+			ClearLegacyAccessionRepairSeated();
 			PendingAccessionRepairArrivedTick = 0L;
 			PendingAccessionRepairKeptCreeds = "";
 			PendingRiteStage = MourningRiteStage.Complete;
@@ -199,6 +199,14 @@ namespace ThousandAndFirst
 			try
 			{
 				KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+				int residentId = KingdomResidents.IdOf(Heir);
+				if (residentId > 0 && !KingdomPolityResidentTransition.TryConclude(system,
+					Heir, residentId, KingdomPolityResidentTransitionCause.Accession,
+					out KingdomPolityResidentTransitionPreparation _, out string polityFailure))
+				{
+					KingdomLog.Log("succession: deed-figure conclusion remains pending ("
+						+ (polityFailure ?? "unknown failure") + ")"); return;
+				}
 				string citizenshipFailure;
 				if (!KingdomCitizenship.TryRemove(system, Heir,
 					KingdomCitizenshipRemovalReason.Accession, out citizenshipFailure))
@@ -206,6 +214,12 @@ namespace ThousandAndFirst
 					KingdomLog.Log("succession: exact citizenship cleanup remains pending ("
 						+ (citizenshipFailure ?? "unknown failure") + ")");
 					return;
+				}
+				if (!KingdomCitizenRite.TryRetireAccedingHost(system, Heir,
+					out string riteFailure))
+				{
+					KingdomLog.Log("succession: citizen-host cleanup remains pending ("
+						+ (riteFailure ?? "unknown failure") + ")"); return;
 				}
 				KingdomStations.Post(Heir, 0, KingdomWorkKind.Other);
 				Heir.RemoveIntProperty(KingdomResidents.ResidentIdProperty);

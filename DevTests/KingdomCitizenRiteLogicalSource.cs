@@ -10,7 +10,10 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomCitizenRite.cs",
 			"Experience/KingdomCitizenRite.Chronicle.cs",
 			"Experience/KingdomCitizenRite.Hosting.cs",
-			"Experience/KingdomCitizenRite.Conversation.cs"
+			"Experience/KingdomCitizenRite.Conversation.cs",
+			"Experience/KingdomCitizenRite.Projection.cs",
+			"Experience/KingdomCitizenRiteProjectionRules.cs",
+			"Experience/r_KingdomCitizenRiteProjection.cs"
 		};
 
 		internal static string Read()

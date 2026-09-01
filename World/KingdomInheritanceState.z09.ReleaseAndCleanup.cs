@@ -87,6 +87,12 @@ namespace ThousandAndFirst
 			}
 			try
 			{
+				int reconstruction = KingdomInheritEngine.ReconstructionVersionFor(legacy);
+				if (reconstruction <= 0)
+				{
+					Failure = "cleanup cannot identify the external seal's spatial shape";
+					return false;
+				}
 				The.ZoneManager.RemoveZoneBuilders(TargetZoneId, delegate(ZoneBuilderBlueprint builder)
 				{
 					if (builder == null)
@@ -99,14 +105,14 @@ namespace ThousandAndFirst
 						builder.GetParameter<string>("TargetZoneId", ""),
 						builder.GetParameter<int>("ReconstructionVersion", -1),
 						legacy.LegacyId, receipt.TargetGameId, TargetZoneId,
-						KingdomInheritEngine.ReconstructionVersion)
+						reconstruction)
 						|| KingdomInheritanceStateRules.IsExactLocationFinderBuilder(builder.Class,
 							builder.GetParameter<string>("LegacyId", ""),
 							builder.GetParameter<string>("TargetGameId", ""),
 							builder.GetParameter<string>("TargetZoneId", ""),
 							builder.GetParameter<int>("ReconstructionVersion", -1),
 							legacy.LegacyId, receipt.TargetGameId, TargetZoneId,
-							KingdomInheritEngine.ReconstructionVersion);
+							reconstruction);
 				});
 			}
 			catch (Exception ex)
@@ -171,6 +177,12 @@ namespace ThousandAndFirst
 			Failure = "";
 			try
 			{
+				int reconstruction = KingdomInheritEngine.ReconstructionVersionFor(Legacy);
+				if (reconstruction <= 0)
+				{
+					Failure = "cleanup proof cannot identify the external seal's spatial shape";
+					return false;
+				}
 				ZoneBuilderCollection collection = The.ZoneManager.GetBuilderCollection(TargetZoneId);
 				if (collection != null && collection.Members != null)
 				{
@@ -183,14 +195,14 @@ namespace ThousandAndFirst
 							builder.GetParameter<string>("TargetZoneId", ""),
 							builder.GetParameter<int>("ReconstructionVersion", -1),
 							Legacy.LegacyId, Receipt.TargetGameId, TargetZoneId,
-							KingdomInheritEngine.ReconstructionVersion)
+							reconstruction)
 							|| KingdomInheritanceStateRules.IsExactLocationFinderBuilder(
 								builder.Class, builder.GetParameter<string>("LegacyId", ""),
 								builder.GetParameter<string>("TargetGameId", ""),
 								builder.GetParameter<string>("TargetZoneId", ""),
 								builder.GetParameter<int>("ReconstructionVersion", -1),
 								Legacy.LegacyId, Receipt.TargetGameId, TargetZoneId,
-								KingdomInheritEngine.ReconstructionVersion)))
+								reconstruction)))
 						{
 							Failure = "an exact inherited persistent builder survived cleanup";
 							return false;

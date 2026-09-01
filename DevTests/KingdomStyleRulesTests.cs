@@ -1,6 +1,8 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -33,15 +35,15 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(0, (byte)KingdomStyleStratum.Any);
 			Assert.AreEqual(1, (byte)KingdomStyleStratum.Surface);
 			Assert.AreEqual(2, (byte)KingdomStyleStratum.Deep);
-			AssertPublicDto(typeof(KingdomStyleDraft), new string[] { "Name", "Terrain", "Region",
+			AssertPublicDto(typeof(KingdomStyleDraft), new string[] { "Name", "Aliases", "Terrain", "Region",
 				"Strata", "Priority", "GroundClause", "Crop", "Seed", "CropRow",
 				"WallMaterial", "TimberWall" }, new System.Type[] { typeof(string), typeof(string),
 				typeof(string), typeof(string), typeof(string), typeof(string), typeof(string),
-				typeof(string), typeof(string), typeof(string), typeof(string) });
-			AssertPublicDto(typeof(KingdomStyleDefinition), new string[] { "Name", "TerrainTokens",
+				typeof(string), typeof(string), typeof(string), typeof(string), typeof(string) });
+			AssertPublicDto(typeof(KingdomStyleDefinition), new string[] { "Name", "Aliases", "TerrainTokens",
 				"RegionTokens", "Stratum", "Priority", "GroundClause", "CropBlueprint",
 				"SeedBlueprint", "CropRowBlueprint", "HasWallMaterial", "WallMaterial",
-				"TimberWallBlueprint" }, new System.Type[] { typeof(string), typeof(string[]),
+				"TimberWallBlueprint" }, new System.Type[] { typeof(string), typeof(string[]), typeof(string[]),
 				typeof(string[]), typeof(KingdomStyleStratum), typeof(int), typeof(string),
 				typeof(string), typeof(string), typeof(string), typeof(bool),
 				typeof(KingdomMaterial), typeof(string) });
@@ -50,17 +52,40 @@ namespace ThousandAndFirst.Tests
 		private static KingdomStyleDefinition Style(string name, string terrain = null,
 			string region = null, string strata = null, string priority = null,
 			string clause = null, string crop = null, string seed = null, string row = null,
-			string wallMaterial = null, string timberWall = null)
+			string wallMaterial = null, string timberWall = null, string aliases = null)
 		{
 			KingdomStyleDraft draft = new KingdomStyleDraft
 			{
-				Name = name, Terrain = terrain, Region = region, Strata = strata,
+				Name = name, Aliases = aliases, Terrain = terrain, Region = region, Strata = strata,
 				Priority = priority, GroundClause = clause, Crop = crop, Seed = seed,
 				CropRow = row, WallMaterial = wallMaterial, TimberWall = timberWall
 			};
 			Assert.IsTrue(KingdomStyleRules.TryParse(draft, out KingdomStyleDefinition result,
 				out string error), error);
 			return result;
+		}
+
+		[Test]
+		public void AliasesCanonicalizeMergeTagsAndSaveMigrationWithoutCreatingASecondStyle()
+		{
+			List<KingdomStyleDefinition> definitions = new List<KingdomStyleDefinition>
+			{
+				Style("common"), Style("moonstair", aliases: "gyre,stair")
+			};
+			Assert.IsTrue(KingdomStyleRules.TryCanonical(definitions, "GYRE", out string canonical));
+			Assert.AreEqual("moonstair", canonical);
+			CollectionAssert.AreEqual(new string[] { "moonstair", "gyre", "stair" },
+				KingdomStyleRules.KeysFor(definitions, "gyre"));
+			Assert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "gyre", "moonstair"));
+			Assert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "moonstair", "gyre"));
+			Assert.IsFalse(KingdomStyleRules.TagAccepts(definitions, "all,!gyre", "moonstair"));
+			Assert.AreEqual("moonstair", KingdomStyleRules.MigrateLegacyKey("GYRE"));
+			Assert.AreEqual("third-party", KingdomStyleRules.MigrateLegacyKey("third-party"));
+
+			KingdomStyleDefinition collision = Style("other", aliases: "moonstair");
+			Assert.IsFalse(KingdomStyleRules.TryValidateBehavior(definitions, collision, -1,
+				out string collisionError));
+			StringAssert.Contains("canonical name or alias", collisionError);
 		}
 
 		[Test]
@@ -290,12 +315,81 @@ namespace ThousandAndFirst.Tests
 				"KingdomBuildings.xml"));
 			StringAssert.Contains("<style Name=\"verdant\" Terrain=", catalogue);
 			StringAssert.Contains("<style Name=\"fungal\" Terrain=", catalogue);
-			StringAssert.Contains("<style Name=\"gyre\" Terrain=", catalogue);
+			StringAssert.Contains("<style Name=\"moonstair\" Aliases=\"gyre\" Terrain=", catalogue);
 			StringAssert.Contains("<style Name=\"eater\" Terrain=", catalogue);
 			StringAssert.Contains("GroundClause=", catalogue);
 			StringAssert.Contains("Crop=\"Vinewafer\"", catalogue);
+			StringAssert.Contains("Crop=\"Bundle of Noisegrass\"", catalogue);
 			StringAssert.Contains("WallMaterial=\"marble\"", catalogue);
 			StringAssert.Contains("TimberWall=\"PlantWall\"", catalogue);
+		}
+
+		[Test]
+		public void MoonStairGroundNeverInventsGyreOrGirshAllegiance()
+		{
+			XDocument catalogue = XDocument.Parse(TestMain.ReadRepositoryText(
+				Path.Combine("RuntimeData", "KingdomBuildings.xml")));
+			XElement[] styles = catalogue.Root.Elements("style").ToArray();
+			CollectionAssert.AreEqual(new string[]
+			{
+				"common", "verdant", "fungal", "moonstair", "eater"
+			}, styles.Select(e => (string)e.Attribute("Name")).ToArray());
+			XElement stair = styles.Single(e => (string)e.Attribute("Name") == "moonstair");
+			Assert.AreEqual("gyre", (string)stair.Attribute("Aliases"));
+			Assert.AreEqual("Bundle of Noisegrass", (string)stair.Attribute("Crop"));
+			Assert.AreEqual("r_KingdomSeedNoisegrass", (string)stair.Attribute("Seed"));
+			Assert.AreEqual("r_KingdomRowNoisegrass", (string)stair.Attribute("CropRow"));
+			Assert.IsFalse(styles.Any(e => (string)e.Attribute("Crop") == "Godshroom Cap"));
+
+			XElement[] environmental = catalogue.Descendants("building")
+				.Where(e => (string)e.Attribute("Styles") == "moonstair").ToArray();
+			CollectionAssert.AreEquivalent(new string[] { "bonefold", "sacramentcourt" },
+				environmental.Select(e => (string)e.Attribute("Key")).ToArray());
+			XElement crystalCourt = environmental.Single(e =>
+				(string)e.Attribute("Key") == "sacramentcourt");
+			Assert.AreEqual("civic", (string)crystalCourt.Attribute("Category"));
+			Assert.AreEqual("market,none", (string)crystalCourt.Attribute("Districts"));
+			foreach (XElement building in environmental)
+			{
+				string display = ((string)building.Attribute("DisplayName") ?? "").ToLowerInvariant();
+				StringAssert.DoesNotContain("gyre", display);
+				StringAssert.DoesNotContain("girsh", display);
+				StringAssert.DoesNotContain("sacrament", display);
+				Assert.IsNull(building.Attribute("Creed"));
+				Assert.IsNull(building.Attribute("Builders"));
+			}
+			foreach (string key in new string[] { "girshrotchapel", "gyrewightashcourt" })
+			{
+				XElement creedWork = catalogue.Descendants("building").Single(e =>
+					(string)e.Attribute("Key") == key);
+				Assert.AreEqual("all", (string)creedWork.Attribute("Styles"));
+				StringAssert.StartsWith("creed:", (string)creedWork.Attribute("Builders"));
+				Assert.IsNotEmpty((string)creedWork.Attribute("Creed"));
+			}
+			Assert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
+				(string)e.Attribute("Key") == "bazaar").Attribute("Styles"));
+			Assert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
+				(string)e.Attribute("Key") == "bathhouse").Attribute("Styles"));
+
+			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText(
+				Path.Combine("RuntimeData", "ObjectBlueprints.xml")));
+			XElement mill = objects.Descendants("object").Single(e =>
+				(string)e.Attribute("Name") == "r_KingdomGrindMill");
+			Assert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
+				(string)e.Attribute("Name") == "r_KingdomMoonStairCrystalRoot"));
+			Assert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
+				(string)e.Attribute("Name") == "r_KingdomStructureMoonStairCrystalRib"));
+			string architecture = TestMain.ReadRepositoryText(Path.Combine(
+				"Architecture", "KingdomArchitectures-HousingWater.xml"));
+			StringAssert.Contains("structure:crystal-rib", architecture);
+			StringAssert.Contains("surface:marble-sill", architecture);
+			string[] transformations = ((string)mill.Elements("part").Single(e =>
+				(string)e.Attribute("Name") == "Mill").Attribute("Transformations")).Split(',');
+			CollectionAssert.Contains(transformations, "Bundle of Noisegrass");
+			CollectionAssert.Contains(transformations,
+				"Godshroom Cap:r_KingdomGodshroomPickle");
+			CollectionAssert.Contains(transformations,
+				"Dreadroot Tuber:r_KingdomDreadrootMash");
 		}
 
 		[Test]

@@ -1,5 +1,6 @@
 using System;
 using ThousandAndFirst;
+using XRL;
 using XRL.UI;
 using XRL.World;
 
@@ -10,6 +11,11 @@ namespace XRL.World.Parts
 	public sealed class r_KingdomArcologyZoneAnchor : IPart
 	{
 		public string LotKey;
+		public int ZoneX;
+		public int ZoneY;
+		public int ZoneZ;
+		public bool FixturesRealized;
+		public bool Attended;
 
 		public override bool WantEvent(int ID, int cascade)
 		{
@@ -20,14 +26,21 @@ namespace XRL.World.Parts
 
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
-			KingdomHostedArcologyVisual.Reconcile(ParentObject.CurrentZone, LotKey);
+			MarkAttended();
 			return base.HandleEvent(E);
 		}
 
 		public override bool HandleEvent(ZoneThawedEvent E)
 		{
-			KingdomHostedArcologyVisual.Reconcile(ParentObject.CurrentZone, LotKey);
+			MarkAttended();
 			return base.HandleEvent(E);
+		}
+
+		private void MarkAttended()
+		{
+			Zone zone = ParentObject?.CurrentZone;
+			if (zone != null && ReferenceEquals(The.ZoneManager?.ActiveZone, zone))
+				Attended = true;
 		}
 
 		public override bool HandleEvent(GetInventoryActionsEvent E)

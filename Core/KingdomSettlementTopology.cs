@@ -140,6 +140,26 @@ namespace ThousandAndFirst
 			return found;
 		}
 
+		internal bool TryFindByName(string SettlementName,
+			out KingdomSettlement Settlement)
+		{
+			Settlement = null;
+			if (string.IsNullOrEmpty(SettlementName) || HasOpaqueEvidence) return false;
+			for (int i = 0; i < settlements.Count; i++)
+			{
+				KingdomSettlement row = settlements[i];
+				if (!string.Equals(row?.SettlementName, SettlementName,
+					StringComparison.Ordinal)) continue;
+				if (Settlement != null)
+				{
+					Settlement = null;
+					return false;
+				}
+				Settlement = row;
+			}
+			return Settlement != null;
+		}
+
 		internal KingdomSettlement FindByZone(string ZoneId)
 		{
 			if (string.IsNullOrEmpty(ZoneId) || HasOpaqueEvidence) return null;

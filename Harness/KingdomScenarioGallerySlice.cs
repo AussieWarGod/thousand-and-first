@@ -64,17 +64,41 @@ namespace ThousandAndFirst.Harness
 				+ "' is not one of the four poses", out Failure);
 		}
 
+		/// <summary>Parses the closed lot-size vocabulary used by authored scenario rows.</summary>
+		private static bool TryParseLotSize(string Token, out ArchitectureLotSize LotSize,
+			out string Failure)
+		{
+			LotSize = ArchitectureLotSize.Small;
+			Failure = null;
+			switch (Token)
+			{
+				case "s":
+				case "small": LotSize = ArchitectureLotSize.Small; return true;
+				case "m":
+				case "medium": LotSize = ArchitectureLotSize.Medium; return true;
+				case "l":
+				case "large": LotSize = ArchitectureLotSize.Large; return true;
+				case "xl":
+				case "huge": LotSize = ArchitectureLotSize.Huge; return true;
+				default:
+					return Refuse("'" + KingdomScenarioRules.Bounded(Token)
+						+ "' is not a canonical lot size", out Failure);
+			}
+		}
+
 		/// <summary>
-		/// Finds the gallery ordinal of one exact (build, variant, pose) case by walking the
+		/// Finds one exact (build, type, size, variant, pose) gallery ordinal by walking the
 		/// catalogue in the same order the gallery enumerates it: mapping, then variant, then the
 		/// four poses. The pose therefore selects a known case rather than a positional guess.
 		/// </summary>
-		internal static bool TryResolveCase(string Build, string Variant, string FacingToken,
-			out Case Resolved, out string Failure)
+		internal static bool TryResolveCase(string Build, string Type, string SizeToken,
+			string Variant, string FacingToken, out Case Resolved, out string Failure)
 		{
 			Resolved = null;
 			ArchitectureFacing facing;
 			if (!TryParseFacing(FacingToken, out facing, out Failure)) return false;
+			ArchitectureLotSize lotSize;
+			if (!TryParseLotSize(SizeToken, out lotSize, out Failure)) return false;
 			if (!CatalogueHealthyAfterLoad())
 				return Refuse("the authored architecture catalogue is not healthy", out Failure);
 			IList<KingdomArchitectureMapping> mappings = KingdomArchitecture.InspectMappings();
@@ -88,6 +112,8 @@ namespace ThousandAndFirst.Harness
 					{
 						number++;
 						if (!string.Equals(mapping.BuildKey, Build, StringComparison.Ordinal)
+							|| !string.Equals(mapping.TypeKey, Type, StringComparison.Ordinal)
+							|| mapping.LotSize != lotSize
 							|| !string.Equals(variants[v], Variant, StringComparison.Ordinal)
 							|| f != (int)facing) continue;
 						Resolved = new Case
@@ -103,32 +129,39 @@ namespace ThousandAndFirst.Harness
 					}
 			}
 			return Refuse("the catalogue holds no case for build '"
-				+ KingdomScenarioRules.Bounded(Build) + "', variant '"
+				+ KingdomScenarioRules.Bounded(Build) + "', type '"
+				+ KingdomScenarioRules.Bounded(Type) + "', size '"
+				+ KingdomScenarioRules.Bounded(SizeToken) + "', variant '"
 				+ KingdomScenarioRules.Bounded(Variant) + "', pose '"
 				+ KingdomScenarioRules.Bounded(FacingToken) + "'", out Failure);
 		}
 
 		/// <summary>Read-only preconditions for the single production transaction.</summary>
-		internal static bool TryProvePreconditions(Zone Zone, out string Failure)
+		internal static bool TryProvePreconditions(Zone Zone, Case Expected, out string Failure)
 		{
 			Failure = null;
-			if (Zone == null) return Refuse("no loaded zone to stage into", out Failure);
+			if (Zone == null || Expected == null)
+				return Refuse("no loaded zone or exact case to stage", out Failure);
 			if (!CatalogueHealthyAfterLoad())
 				return Refuse("the authored architecture catalogue is not healthy", out Failure);
 			if (Existing(Zone) != null)
 				return Refuse("this zone already holds a staged gallery case; clear it first",
 					out Failure);
-			// A read-only canvas probe before the durable attempt marker: the production staging
-			// refuses without a fitting untouched rectangle anyway, but that refusal lands AFTER
-			// the marker and permanently spends the profile. Probing the same preflight here is a
-			// conservative pre-marker refusal, which the transaction law always permits. The probe
-			// dimensions cover the phase-1 case with margin; if a wider case ever stages, the
-			// production refusal (post-marker) still holds the line.
+			ArchitectureLayoutSnapshot snapshot;
+			if (!KingdomArchitecture.TryResolveVariant(Expected.BuildKey, Expected.TypeKey,
+				Expected.LotSize, Expected.VariantKey, Expected.Facing, out snapshot, out Failure))
+				return Refuse("the exact requested case cannot resolve before mutation: "
+					+ KingdomScenarioRules.Bounded(Failure), out Failure);
+			int width;
+			int height;
+			if (!KingdomArchitectureRules.TryWorldDimensions(snapshot.Width, snapshot.Height,
+				snapshot.Facing, out width, out height))
+				return Refuse("the exact requested pose has impossible dimensions", out Failure);
 			KingdomPlotRules.PlotRect probe;
 			string canvasFailure;
-			if (!KingdomArchitectureGalleryWishes.TryFindCanvas(Zone, 10, 8, out probe,
+			if (!KingdomArchitectureGalleryWishes.TryFindCanvas(Zone, width, height, out probe,
 					out canvasFailure))
-				return Refuse("no staging canvas fits before any attempt was recorded: "
+				return Refuse("no exact-case staging canvas fits before any attempt was recorded: "
 					+ canvasFailure + " Use {{W|kingdom:scenario ground}} or "
 					+ "{{W|kingdom:scenario flatten}}, step out of the flattened rectangle, and "
 					+ "run realize again - the profile is NOT spent", out Failure);

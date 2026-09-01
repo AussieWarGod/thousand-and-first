@@ -82,7 +82,7 @@ namespace ThousandAndFirst
 					string standingLot;
 					if (!KingdomArchitectureStamper.TryReadOwner(Building, out standing,
 						out standingSnapshot, out standingLot, out Failure)) return false;
-					if (KingdomArchitectureRules.IsCurrentSnapshotEncoding(
+					if (KingdomArchitectureRules.IsLatestSnapshotEncoding(
 						standing.EncodedSnapshot))
 					{
 						prepared.RequiresRestakePreflight = true;
@@ -93,6 +93,13 @@ namespace ThousandAndFirst
 								prepared.Architecture, claim, out Failure)
 							|| !KingdomPlots.TryEncodePlotPayload(context.TargetRect, NewSkinKey,
 								prepared.Architecture, out prepared.Payload, out Failure)) return false;
+					}
+					else if (KingdomArchitectureRules.IsManagedSnapshotEncoding(
+						standing.EncodedSnapshot))
+					{
+						Failure = "That save-era authored plot has no exact building/yard scope. "
+							+ "Strike it before commissioning a replacement.";
+						return false;
 					}
 					else if (!KingdomPlots.TryPreparePlotPayload(System, Z, context.TargetRect,
 						context.NewEntry.Key, context.NewEntry.Category, NewSkinKey,

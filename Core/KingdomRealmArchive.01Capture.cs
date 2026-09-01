@@ -73,7 +73,6 @@ namespace ThousandAndFirst
 					SimulationSeedLow = System.SimulationSeedLow,
 					Seat = frozenSeat,
 					SettlementTopology = frozenTopology,
-					Away = frozenTopology.Get(0),
 				Standings = CloneStandings(System.RegardForRealm),
 				RealmPolicyToward = CloneStandings(System.RealmPolicyToward),
 				RegardSpilloverRemainders = CloneStandings(
@@ -120,6 +119,7 @@ namespace ThousandAndFirst
 				Failure = "realm graph clone failed: " + Bound(ex.Message, 512);
 				return false;
 			}
+			candidate.WriteLegacyAwayProjection(frozenTopology.Get(0));
 			if (!candidate.TryRefreshDirectionalStandingDigest(out Failure) ||
 				!candidate.Validate(out Failure) ||
 				!candidate.CurrentGraphMatches(System, out Failure)) return false;

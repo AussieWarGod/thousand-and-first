@@ -91,6 +91,18 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(expected, KingdomRules.CanHoldSharedMeal(foodStored, population));
 		}
 
+		[TestCase(1, 1, 0, false)]
+		[TestCase(1, 1, 1, true)]
+		[TestCase(30, 5, 2, true)]
+		[TestCase(0, 5, 1, false)]
+		[TestCase(5, 0, 1, false)]
+		public void CanHoldSharedMeal_RuntimeGateAlsoRequiresACapableKitchen(
+			int foodStored, int population, int cookingProviders, bool expected)
+		{
+			Assert.AreEqual(expected,
+				KingdomRules.CanHoldSharedMeal(foodStored, population, cookingProviders));
+		}
+
 		// --- MealServingsSpent: never more than what the larders actually hold ---------------
 
 		[TestCase(0, 0)]

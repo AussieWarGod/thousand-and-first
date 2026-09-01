@@ -96,11 +96,9 @@ namespace ThousandAndFirst
 		/// no beds, because a home with no beds takes nobody.
 		/// </para>
 		/// </summary>
-		/// <param name="FootprintCells">Cells the design's current tier stands on, from
-		/// <c>KingdomPlotRules.TryFootprint</c> (which is the whole plot for a tier that declares
-		/// no footprint of its own).</param>
-		/// <param name="Beds">Beds the design carries, from its <c>Carries</c> roof support.
-		/// </param>
+		/// <param name="FootprintCells">Exact designated plot cells occupied by the physical
+		/// provider root.</param>
+		/// <param name="Beds">Current physical <c>roof</c> capacity supplied by that root.</param>
 		public static Closeness ClosenessFromDensity(int FootprintCells, int Beds)
 		{
 			if (FootprintCells < 1 || Beds < 1)

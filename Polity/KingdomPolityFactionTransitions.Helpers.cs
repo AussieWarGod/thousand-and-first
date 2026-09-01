@@ -220,8 +220,12 @@ namespace ThousandAndFirst
 			if (L.Revision != T.SourceRevision || L.RealmId != T.OldRealmId) return false;
 			KingdomPolityRecord current = FindPolity(L, T.OldCurrentPolityId);
 			KingdomPolityProjectionReceipt projection = FactionReceipt(L, T.OldCurrentPolityId);
+			KingdomPolityProfileRevision profile = current == null ? null :
+				FindProfile(L, current.ProfileId, current.ProfileRevision);
 			if (current == null || current.Source != KingdomPolitySource.CurrentRealm ||
-				projection == null || projection.ProjectionId != T.OldCurrentProjectionId ||
+				profile == null || !KingdomPolityProfileRules.MatchesLegacyProfileSource(
+					T.Legacy, profile) || projection == null ||
+				projection.ProjectionId != T.OldCurrentProjectionId ||
 				projection.AppliedDigest != T.OldCurrentProjectionDigest) return false;
 			KingdomPolityRecord imported = ImportedPolity(L);
 			if (imported == null) return string.IsNullOrEmpty(T.OldImportedPolityId);

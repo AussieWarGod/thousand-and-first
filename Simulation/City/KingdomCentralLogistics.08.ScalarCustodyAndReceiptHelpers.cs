@@ -83,7 +83,7 @@ namespace ThousandAndFirst.Simulation.City
 				out target, out water, out before) || before < amount) return false;
 			return row.Cargo == KingdomStockKind.Water
 				? survey.TryLeakFromExact(water, amount, out debited)
-				: survey.TrySpoilFromExact(target, amount, out debited);
+				: survey.TryDebitFoodFromExact(target, amount, out debited);
 		}
 
 		private static int AddMarkedFood(KingdomSurvey survey, GameObject target, int jobId,
