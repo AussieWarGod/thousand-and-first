@@ -22,8 +22,8 @@ namespace ThousandAndFirst
 		public int ResidentId;
 		public string ResidentName;
 		public string ResidentOrigin;
-		public string ResidentArrived;
-		public long ResidentArrivedTick;
+		public string ResidentArrival;
+		public long ResidentArrivalTick;
 		public string ResidentBoundZoneId;
 		public int MarketSourcePrepared;
 		public string MarketSourceBodyObjectId;

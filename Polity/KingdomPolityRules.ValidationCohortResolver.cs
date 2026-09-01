@@ -11,6 +11,9 @@ namespace ThousandAndFirst
 			KingdomPolityProfileRevision profile = KingdomPolityAuthority.Profile(L,
 				C.ProfileId, C.ProfileRevision);
 			if (profile == null || profile.PolityId != C.PolityId) return false;
+			// Legacy plans (resolver schemas 1 and 2) predate pinned regenerable member
+			// signatures; only current-resolver plans must regenerate byte-exactly.
+			if (C.RulesVersion != KingdomPolityNpcRules.RulesVersion) return true;
 			for (int i = 0; i < C.ResolvedMembers.Count; i++)
 			{
 				KingdomPolityCohortMember member = C.ResolvedMembers[i];

@@ -115,12 +115,19 @@ namespace ThousandAndFirst
 			List<string> bodies = PopulationBodies(F.Facts, Prior.BodyKeys);
 			List<KingdomPolityExpressionCue> cues =
 				KingdomPolityProfileExpressionCatalogue.Resolve(F.Facts, F.TechnologyBand);
+			List<string> excluded = new List<string>(Prior.Loadout.ExcludedKeys);
+			// A current-rules revision always carries the protected exclusions, even when
+			// its prior revision predates the owned-replace loadout contract.
+			foreach (string key in new[] { "natural-gear", "quest", "relic",
+				"trader-stock", "unique" })
+				if (!excluded.Contains(key)) excluded.Add(key);
+			excluded.Sort(StringComparer.Ordinal);
 			KingdomPolityLoadoutPolicy loadout = new KingdomPolityLoadoutPolicy
 			{
 				Kind = KingdomPolityLoadoutPolicyKind.OwnedReplace,
 				ExpectedValueBudget = Math.Min(KingdomPolityRules.MaxValueBudget,
 					50 + F.TechnologyBand * 125),
-				ExcludedKeys = new List<string>(Prior.Loadout.ExcludedKeys),
+				ExcludedKeys = excluded,
 				SelectedKeys = new List<string>(gear)
 			};
 			return new KingdomPolityProfileRevision

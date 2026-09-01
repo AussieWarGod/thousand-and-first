@@ -20,10 +20,10 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2915 staged production C# files and 419,872
+`Tools/check-structure.py --json` currently reports 2915 staged production C# files and 419,941
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`a633813831a166a0b294e74885a7e5a61052a869752d496db7c3d438bf8976be`. The census reports
+`6226163678b196ebe240156edddd5c856265200b6fd6c467abd757d801397268`. The census reports
 1358 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 No staged production source breaches the strict physical-line cap. This clears the mechanical

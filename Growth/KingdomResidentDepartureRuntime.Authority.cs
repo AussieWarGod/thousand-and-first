@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using XRL.World;
+using XRL.World.Parts;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst

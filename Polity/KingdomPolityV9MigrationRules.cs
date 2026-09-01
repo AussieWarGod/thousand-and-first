@@ -31,8 +31,10 @@ namespace ThousandAndFirst
 			if (current == null || imported == null) return true;
 			KingdomPolityRelation forward = Find(L, current.PolityId, imported.PolityId);
 			KingdomPolityRelation reverse = Find(L, imported.PolityId, current.PolityId);
+			// A pair that does not match the canonical foundation identity is not a
+			// foundation pair; migration preserves it as ordinary provenance untouched.
 			if (!ExactPairIdentity(forward, reverse, current.PolityId, imported.PolityId))
-				return Fail("v9 foundation relation pair has invalid reciprocal identity", out Failure);
+				return true;
 			if (Untouched(L, current, imported, forward, reverse,
 				out KingdomPolityNamedFigureRecord figure, out string oldCause))
 				return RewriteUntouched(L, current, imported, forward, reverse, figure, oldCause,

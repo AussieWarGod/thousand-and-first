@@ -197,12 +197,14 @@ namespace ThousandAndFirst
 				object fieldValue = fields[i].GetValue(Value);
 				if (Type == typeof(KingdomLifecycleBook)
 					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
-					&& SchemaVersion < DefensiveReservationVersion)
+					&& SchemaVersion < ExpeditionResultVersion)
 					fieldValue = SchemaVersion == LegacyVersion
 						? KingdomLifecycleRules.LegacyLifecycleFormatVersion
 						: SchemaVersion == PreviousVersion
 							? KingdomLifecycleRules.PreviousLifecycleFormatVersion
-							: KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion;
+							: SchemaVersion < DefensiveReservationVersion
+								? KingdomLifecycleRules.RaidLedgerLifecycleFormatVersion
+								: KingdomLifecycleRules.DefenceReservationLifecycleFormatVersion;
 				if (Type == typeof(KingdomRaidLedger)
 					&& string.Equals(fields[i].Name, "Version", StringComparison.Ordinal)
 					&& SchemaVersion < DefensiveReservationVersion)

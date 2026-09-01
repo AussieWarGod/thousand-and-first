@@ -118,12 +118,12 @@ namespace ThousandAndFirst
 					KingdomPolityLoadoutCatalogue.PriorResolverVersion &&
 				 R.RulesVersion != KingdomPolityNpcRules.RulesVersion) ||
 				!ValidPresentationAuthority(R.Purpose, R.PresentationAuthority) ||
-				(IsWeeklyAmbient(R) && !KingdomPolityAmbientTransactionRules.Valid(
-					R.AmbientTransaction, R.CohortId, out _)) ||
-				(IsWeeklyAmbient(R) && (R.AmbientTransaction.Purpose != R.Purpose ||
+				(R.AmbientTransaction != null && (!IsWeeklyAmbient(R) ||
+					!KingdomPolityAmbientTransactionRules.Valid(
+						R.AmbientTransaction, R.CohortId, out _) ||
+					R.AmbientTransaction.Purpose != R.Purpose ||
 					R.AmbientTransaction.SourcePolityId != R.PolityId ||
-					R.AmbientTransaction.DestinationSettlementId != R.SurfaceRef)) ||
-				(!IsWeeklyAmbient(R) && R.AmbientTransaction != null))
+					R.AmbientTransaction.DestinationSettlementId != R.SurfaceRef)))
 			{
 				Failure = "cohort plan request is invalid, unbounded, or standing-only"; return false;
 			}

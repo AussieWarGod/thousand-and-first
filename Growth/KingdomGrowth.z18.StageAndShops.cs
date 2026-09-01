@@ -178,7 +178,8 @@ namespace ThousandAndFirst
 			string receipt = KingdomShopStockRules.TierReceiptId(System?.RealmId,
 				SettlementId, Tier);
 			return receipt != null && KingdomChronicle.RecordOnce(System, receipt,
-				"the local market of " + System.KingdomDisplayName + " was acknowledged at service tier "
+				"the local market of " + KingdomPresentation.Rich(System.KingdomDisplayName)
+				+ " was acknowledged at service tier "
 				+ Tier + "; its wares remain only the physical goods brought to its keeper");
 		}
 

@@ -109,6 +109,8 @@ namespace ThousandAndFirst.Tests
 					Purpose == KingdomPolityCohortPurpose.Patrol ? "taf:locus:direct-test" : null,
 				SafeDetail = Purpose == KingdomPolityCohortPurpose.Trader
 					? "No exact physical stock accompanies this visit; no trade is offered."
+					: Purpose == KingdomPolityCohortPurpose.Migrant
+					? "A petitioner asks to enter this settlement; no resident is admitted by the visit."
 					: "A bounded player-safe detail.", PreparedTick = 1200L
 			};
 			if (Purpose == KingdomPolityCohortPurpose.Guard)

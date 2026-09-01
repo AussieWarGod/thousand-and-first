@@ -40,6 +40,7 @@ namespace ThousandAndFirst
 			"r_KingdomNotableGuest", "r_KingdomNotice",
 			"r_KingdomOfficeProjection", "r_KingdomPactVessel", "r_KingdomPlanMarker",
 			"r_KingdomPlot", "r_KingdomPlotWorks",
+			"r_KingdomPolityAdmissionBody",
 			"r_KingdomPolityCohortBody", "r_KingdomPolityEscrow", "r_KingdomPorter", "r_KingdomPowerStore",
 			"r_KingdomPowerWork", "r_KingdomProperty", "r_KingdomPurposeWork",
 			"r_KingdomRaidDemand", "r_KingdomRaiderObjective", "r_KingdomRegistryOffice",

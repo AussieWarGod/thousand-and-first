@@ -12,8 +12,8 @@ namespace ThousandAndFirst
 			w.Write(r.Version); S(w, r.OperationId, true); S(w, r.ReceiptId, true);
 			S(w, r.PlanHash, true); S(w, r.SettlementId, true); S(w, r.ObjectId, true);
 			S(w, r.Blueprint, false); w.Write(r.ResidentId); S(w, r.ResidentName, false);
-			S(w, r.ResidentOrigin, false); S(w, r.ResidentArrived, false);
-			w.Write(r.ResidentArrivedTick); S(w, r.ResidentBoundZoneId, false);
+			S(w, r.ResidentOrigin, false); S(w, r.ResidentArrival, false);
+			w.Write(r.ResidentArrivalTick); S(w, r.ResidentBoundZoneId, false);
 			if (wireVersion >= KingdomLifecycleRules.LodgeMarketSourceLifecycleFormatVersion)
 			{
 				w.Write(r.MarketSourcePrepared); S(w, r.MarketSourceBodyObjectId, false);
@@ -36,8 +36,8 @@ namespace ThousandAndFirst
 				Version = r.ReadInt32(), OperationId = S(r, true), ReceiptId = S(r, true),
 				PlanHash = S(r, true), SettlementId = S(r, true), ObjectId = S(r, true),
 				Blueprint = S(r, false), ResidentId = r.ReadInt32(), ResidentName = S(r, false),
-				ResidentOrigin = S(r, false), ResidentArrived = S(r, false),
-				ResidentArrivedTick = r.ReadInt64(), ResidentBoundZoneId = S(r, false)
+				ResidentOrigin = S(r, false), ResidentArrival = S(r, false),
+				ResidentArrivalTick = r.ReadInt64(), ResidentBoundZoneId = S(r, false)
 			};
 			if (wireVersion >= KingdomLifecycleRules.LodgeMarketSourceLifecycleFormatVersion)
 			{

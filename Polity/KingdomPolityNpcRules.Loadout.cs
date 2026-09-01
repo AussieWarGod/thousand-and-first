@@ -15,10 +15,9 @@ namespace ThousandAndFirst
 			if (!ValidProfile(Profile, true) || !KingdomPolityRules.Text(RoleKey, true) ||
 				!Contains(Profile.RoleKeys, RoleKey) || Ordinal < 0 || Ordinal > 1023 ||
 				MinimumLevel < 1 || MaximumLevel < MinimumLevel ||
-				MaximumLevel > KingdomPolityRules.MaxLevel ||
-				!KingdomPolityLoadoutCatalogue.ExactCurrentPolicy(Profile, out Failure))
+				MaximumLevel > KingdomPolityRules.MaxLevel)
 			{
-				Failure = Failure ??
+				Failure =
 					"current polity NPC resolver lacks a legal pinned profile, role, or level band";
 				return false;
 			}
@@ -38,6 +37,10 @@ namespace ThousandAndFirst
 			{
 				Failure = "frozen polity profile has no admissible manifested body"; return false;
 			}
+			// Body admissibility answers first; only a manifestable body ever consults
+			// the committed loadout catalogue.
+			if (!KingdomPolityLoadoutCatalogue.ExactCurrentPolicy(Profile, out Failure))
+				return false;
 			if (!TryPolicyGear(Profile, RoleKey, bodyKey,
 				out List<string> gear, out Failure)) return false;
 			KingdomPolityNpcSpec result = new KingdomPolityNpcSpec

@@ -40,25 +40,19 @@ namespace ThousandAndFirst
 			Item.SetStringProperty(MarketTransferTargetProperty, null, RemoveIfNull: true);
 			return !Item.HasStringProperty(MarketTransferTargetProperty);
 		}
-		private static bool ExactTransferableStock(KingdomSystem System, GameObject Prior,
-			GameObject Holder, GameObject Item, int MarketTier)
+		private static bool TryPrepareLegendaryMarketProjection(KingdomSystem System,
+			GameObject Trader, int Tier, string Intent, string PriorId,
+			int ResidentId, int PriorResidentId)
 		{
-			bool receipted = KingdomMarketStockCustody.ExactTransferable(System,
-				System.CurrentSettlementId, Prior, Item)
-				|| (!ReferenceEquals(Holder, Prior) && KingdomMarketStockCustody.ExactHeld(
-					System, System.CurrentSettlementId, Holder, Item));
-			int tier = Item.GetIntProperty(KingdomShopStockRules.ItemTierProperty);
-			string source = KingdomShopStockRules.SourceId(System.RealmId,
-				System.CurrentSettlementId, tier);
-			return !Item.IsImportant() && Item.Physics != null && Item.IsTakeable()
-				&& KingdomConstructionInputLeaseAuthority
-				.TryObjectGraphAvailableForOrdinaryTransfer(Item, out _)
-				&& Item.GetIntProperty("_stock") == 1 && (receipted || (source != null
-					&& tier <= MarketTier
-					&& Item.GetStringProperty(KingdomShopStockRules.ItemSourceProperty) == source
-					&& Item.GetStringProperty(KingdomShopStockRules.ItemSettlementProperty)
-						== System.CurrentSettlementId));
+			string settlement = System?.SettlementIdForOwnedZone(Trader?.CurrentZone?.ZoneID);
+			if (string.IsNullOrEmpty(settlement) || settlement != System.CurrentSettlementId)
+				return false;
+			r_KingdomLegendaryMarketProjection marker =
+				Trader.RequirePart<r_KingdomLegendaryMarketProjection>();
+			return marker.StampPrepared(System, settlement, Trader, Tier, Intent, PriorId,
+				ResidentId, PriorResidentId);
 		}
+
 		private static bool PrepareSourceHandoff(KingdomSystem System, GameObject Source,
 			GameObject Target, int Tier, string Intent, int SourceResident, int TargetResident)
 		{

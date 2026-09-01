@@ -41,9 +41,10 @@ namespace ThousandAndFirst.Tests
 		public void RealmArchiveV6RetainsV4DeliveryColumnsAndReadsV2()
 		{
 			string source = RealmArchiveSource();
-			StringAssert.Contains("public const int CurrentVersion = 7", source);
+			StringAssert.Contains("public const int CurrentVersion = 8", source);
 			StringAssert.Contains("internal const int SettlementTopologyVersion = 6", source);
 			StringAssert.Contains("internal const int DirectionalStandingVersion = 7", source);
+			StringAssert.Contains("internal const int ExpeditionResultJobVersion = 8", source);
 			StringAssert.Contains("internal const int LegacyJobVersion = 2", source);
 			StringAssert.Contains("internal const int MissionJobVersion = 3", source);
 			StringAssert.Contains("internal const int ExactDeliveryJobVersion = 4", source);

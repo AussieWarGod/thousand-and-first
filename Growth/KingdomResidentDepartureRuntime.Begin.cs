@@ -92,25 +92,25 @@ namespace ThousandAndFirst
 			return TryContinue(System, Body, out FormerRow, out Failure);
 		}
 
-		private static bool TryCapture(KingdomSystem System, GameObject Body, int ResidentId,
+		private static bool TryCapture(KingdomSystem System, GameObject leaver, int ResidentId,
 			string Cause, bool Chronicled, string Note,
 			KingdomResidentDestructionAuthorization Authorization,
-			out KingdomResidentDepartureOperation Operation, out KingdomResidentRow Row,
+			out KingdomResidentDepartureOperation Operation, out KingdomResidentRow former,
 			out string Failure)
 		{
-			Operation = null; Row = default(KingdomResidentRow); Failure = null;
-			if (!KingdomResidents.TryLocate(System, Body, out KingdomCityBook book,
+			Operation = null; former = default(KingdomResidentRow); Failure = null;
+			if (!KingdomResidents.TryLocate(System, leaver, out KingdomCityBook book,
 				out int foundId) || book == null || foundId != ResidentId
 				|| !book.TryRead(out KingdomCityState state, out KingdomCityFault _)
 				|| !state.TryResidentIndex(ResidentId, out int at)
-				|| !state.TryResident(at, out Row)) return false;
-			string settlement = System.SettlementIdForOwnedZone(Body.CurrentZone?.ZoneID);
-			if (Row.ResidentId != ResidentId
-				|| Row.Standing != KingdomResidentStanding.Resident
-				|| Row.BoundZoneId != Body.CurrentZone?.ZoneID
+				|| !state.TryResident(at, out former)) return false;
+			string settlement = System.SettlementIdForOwnedZone(leaver.CurrentZone?.ZoneID);
+			if (former.ResidentId != ResidentId
+				|| former.Standing != KingdomResidentStanding.Resident
+				|| former.BoundZoneId != leaver.CurrentZone?.ZoneID
 				|| settlement != book.SettlementId
-				|| Row.Name != Body.GetStringProperty("KingdomName")
-				|| !TryCaptureRoles(System, Body, ResidentId, settlement,
+				|| former.Name != leaver.GetStringProperty("KingdomName")
+				|| !TryCaptureRoles(System, leaver, ResidentId, settlement,
 					out KingdomNamedCookReceipt cook, out KingdomCivicOfficeReceipt office,
 					out KingdomPolityNamedFigureRecord polity, out string polityConclusion,
 					out Failure)) return false;
@@ -122,10 +122,12 @@ namespace ThousandAndFirst
 			string chronicle = "", ledger = "";
 			if (Chronicled)
 			{
+				string name = string.IsNullOrEmpty(former.Name)
+					? leaver.BaseDisplayNameStripped : former.Name;
 				string realm = KingdomPresentation.Rich(System.KingdomDisplayName);
-				string named = KingdomPresentation.Rich(XRL.Language.Grammar.A(Row.Name));
+				string named = KingdomPresentation.Rich(XRL.Language.Grammar.A(name));
 				string namedStart = KingdomPresentation.Rich(
-					XRL.Language.Grammar.A(Row.Name, Capitalize: true));
+					XRL.Language.Grammar.A(name, Capitalize: true));
 				chronicle = named + " left " + realm + " " + cause;
 				ledger = KingdomVoices.Say(System, VoiceOccasion.CitizenLost,
 					"{{R|" + namedStart + " left " + realm + " " + note + ".}}");
@@ -135,9 +137,9 @@ namespace ThousandAndFirst
 				Version = KingdomResidentDepartureOperation.CurrentVersion,
 				Phase = (int)KingdomResidentDeparturePhase.Prepared, Revision = 1L,
 				RealmId = System.CurrentRealmId, SettlementId = settlement,
-				ResidentId = ResidentId, BodyObjectId = Body.IDIfAssigned,
-				ZoneId = Body.CurrentZone.ZoneID, ResidentName = Row.Name,
-				Origin = Row.Origin ?? "", PreparedTick = tick,
+				ResidentId = ResidentId, BodyObjectId = leaver.IDIfAssigned,
+				ZoneId = leaver.CurrentZone.ZoneID, ResidentName = former.Name,
+				Origin = former.Origin ?? "", PreparedTick = tick,
 				DeparturesBefore = System.Ledger?.Departures ?? -1,
 				Chronicled = Chronicled, ChronicleLine = chronicle,
 				LedgerLine = ledger, Cause = cause, PriorCook = cook,

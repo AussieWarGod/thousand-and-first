@@ -124,7 +124,7 @@ namespace ThousandAndFirst.Tests
 			string wire = Source(Path.Combine("Core", "KingdomRealmArchive.10WireEnvelope.cs"));
 			string exile = Source(Path.Combine("Core", "KingdomSystem.z10.Exile.Mirrors.cs"));
 			string restore = Source(Path.Combine("Core", "KingdomSystem.z18.Return.Restore.cs"));
-			StringAssert.Contains("public const int CurrentVersion = 7", core);
+			StringAssert.Contains("public const int CurrentVersion = 8", core);
 			StringAssert.Contains("internal const int DirectionalStandingVersion = 7", core);
 			foreach (string name in new[] { "RealmPolicyToward", "RegardSpilloverRemainders",
 				"RegardSpilloverObservedReputation" })

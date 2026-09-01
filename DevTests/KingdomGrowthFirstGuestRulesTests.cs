@@ -633,18 +633,18 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1UL,
 				restoredV16.LifecycleBook.Growth.ArrivalOrdinalHighWater);
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(current,
-				out byte[] v17, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ArrivalCadenceVersion,
-				BitConverter.ToInt32(v17, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v17,
-				out KingdomSettlement restoredV17, out future, out failure), failure);
+				out byte[] v18, out failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+				BitConverter.ToInt32(v18, 4));
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
+				out KingdomSettlement restoredV18, out future, out failure), failure);
 			Assert.AreEqual(physical.ArrivalOpportunityOrdinal,
-				restoredV17.LifecycleBook.Growth.ArrivalCandidate.ArrivalOpportunityOrdinal);
+				restoredV18.LifecycleBook.Growth.ArrivalCandidate.ArrivalOpportunityOrdinal);
 			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				current, out byte[] _, out failure));
 			StringAssert.Contains("historical physical", failure);
 
-			byte[] futurePayload = (byte[])v17.Clone();
+			byte[] futurePayload = (byte[])v18.Clone();
 			Buffer.BlockCopy(BitConverter.GetBytes(
 				KingdomArchivedSettlementCodec.CurrentVersion + 1), 0, futurePayload, 4, 4);
 			Assert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(futurePayload,

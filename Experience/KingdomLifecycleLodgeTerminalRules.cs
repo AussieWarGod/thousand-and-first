@@ -15,8 +15,8 @@ namespace ThousandAndFirst
 				CanonicalString(w, receipt.ObjectId); CanonicalString(w, receipt.Blueprint);
 				w.Write(receipt.ResidentId); CanonicalString(w, receipt.ResidentName);
 				CanonicalString(w, receipt.ResidentOrigin);
-				CanonicalString(w, receipt.ResidentArrived);
-				w.Write(receipt.ResidentArrivedTick);
+				CanonicalString(w, receipt.ResidentArrival);
+				w.Write(receipt.ResidentArrivalTick);
 				CanonicalString(w, receipt.ResidentBoundZoneId);
 			});
 		}
@@ -99,17 +99,17 @@ namespace ThousandAndFirst
 				&& ValidName(r.Blueprint) && r.TerminalTick >= 0L
 				&& !TooLong(r.ResidentName, MaxNameChars)
 				&& !TooLong(r.ResidentOrigin, MaxNameChars)
-				&& !TooLong(r.ResidentArrived, MaxNameChars)
+				&& !TooLong(r.ResidentArrival, MaxNameChars)
 				&& !TooLong(r.ResidentBoundZoneId, MaxNameChars);
 			if (!common) return false;
 			bool resident = r.ResidentId > 0 && r.ResidentName == op.ObjectName
 				&& r.ResidentOrigin == (op.Origin ?? "")
-				&& r.ResidentArrived == (op.Faction ?? "")
-				&& r.ResidentArrivedTick >= 0L && r.ResidentBoundZoneId == op.ZoneId
+				&& r.ResidentArrival == (op.Faction ?? "")
+				&& r.ResidentArrivalTick >= 0L && r.ResidentBoundZoneId == op.ZoneId
 				&& r.SourceProofId == LodgeSourceProof(op, r);
 			bool body = r.ResidentId == 0 && r.ResidentName == null
-				&& r.ResidentOrigin == null && r.ResidentArrived == null
-				&& r.ResidentArrivedTick == 0L && r.ResidentBoundZoneId == op.ZoneId
+				&& r.ResidentOrigin == null && r.ResidentArrival == null
+				&& r.ResidentArrivalTick == 0L && r.ResidentBoundZoneId == op.ZoneId
 				&& r.SourceProofId == null;
 			if (!resident && !body) return false;
 			bool noMarket = r.MarketSourcePrepared == KingdomLifecycleLodgeTerminalReceipt.MarketNone
@@ -180,16 +180,16 @@ namespace ThousandAndFirst
 				&& op.LodgeTerminal.ResidentId == residentId
 				&& op.LodgeTerminal.ResidentName == name
 				&& op.LodgeTerminal.ResidentOrigin == (origin ?? "")
-				&& op.LodgeTerminal.ResidentArrived == (arrived ?? "")
-				&& op.LodgeTerminal.ResidentArrivedTick == arrivedTick
+				&& op.LodgeTerminal.ResidentArrival == (arrived ?? "")
+				&& op.LodgeTerminal.ResidentArrivalTick == arrivedTick
 				&& op.LodgeTerminal.ResidentBoundZoneId == boundZoneId;
 			KingdomLifecycleLodgeTerminalReceipt r = new KingdomLifecycleLodgeTerminalReceipt
 			{
 				OperationId = op.Id, ReceiptId = ChildId(op.Id, "lodge-terminal", 0),
 				PlanHash = op.PlanHash, SettlementId = op.SettlementId, ObjectId = op.ObjectId,
 				Blueprint = op.Blueprint, ResidentId = residentId, ResidentName = name,
-				ResidentOrigin = origin ?? "", ResidentArrived = arrived ?? "",
-				ResidentArrivedTick = arrivedTick, ResidentBoundZoneId = boundZoneId,
+				ResidentOrigin = origin ?? "", ResidentArrival = arrived ?? "",
+				ResidentArrivalTick = arrivedTick, ResidentBoundZoneId = boundZoneId,
 				State = KingdomLifecycleLodgeTerminalState.ResidentSourceProved
 			};
 			r.SourceProofId = LodgeSourceProof(op, r); op.LodgeTerminal = r;
@@ -269,8 +269,8 @@ namespace ThousandAndFirst
 				return exactMatches == 1 && standing == 2 && cause == r.DeathCause
 					&& residentId == r.ResidentId && name == r.ResidentName
 					&& (origin ?? "") == r.ResidentOrigin
-					&& (arrived ?? "") == r.ResidentArrived
-					&& arrivedTick == r.ResidentArrivedTick
+					&& (arrived ?? "") == r.ResidentArrival
+					&& arrivedTick == r.ResidentArrivalTick
 					&& boundZoneId == r.ResidentBoundZoneId && LodgeTerminalShape(op, false);
 			}
 			if (r.State == KingdomLifecycleLodgeTerminalState.BodyDeathProved)
@@ -283,8 +283,8 @@ namespace ThousandAndFirst
 			{
 				if (exactMatches != 1 || standing != 2 || cause < 1 || cause > 4
 					|| residentId != r.ResidentId || name != r.ResidentName
-					|| (origin ?? "") != r.ResidentOrigin || (arrived ?? "") != r.ResidentArrived
-					|| arrivedTick != r.ResidentArrivedTick || boundZoneId != r.ResidentBoundZoneId)
+					|| (origin ?? "") != r.ResidentOrigin || (arrived ?? "") != r.ResidentArrival
+					|| arrivedTick != r.ResidentArrivalTick || boundZoneId != r.ResidentBoundZoneId)
 					return false;
 				r.DeathCause = cause; r.TerminalTick = tick;
 				r.DeathProofId = LodgeDeathProof(op, r);

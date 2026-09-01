@@ -60,8 +60,11 @@ namespace ThousandAndFirst
 					string.IsNullOrEmpty(Row.ConclusionRef)
 				: Row.ResidentId == 0 && string.IsNullOrEmpty(Row.ResidentSettlementId) &&
 					KingdomPolityRules.SemanticId(Row.ConclusionRef);
+			// The deed identity is minted under the salvager role, but the promoted figure
+			// may present any legal promotion role.
 			return Row.FigureId == figure && Row.PolityId == PolityId &&
-				Row.DisplayName == DisplayName && Row.RoleKey == RoleKey &&
+				Row.DisplayName == DisplayName &&
+				KingdomPolityRules.DeedPromotionRole(Row.RoleKey) &&
 				Row.Origin == KingdomPolityFigureOrigin.PromotedByDeed &&
 				Row.CauseRef == cause && Row.ChronicleRef == ChronicleRef &&
 				Row.DeedSummary == Summary && bridge;

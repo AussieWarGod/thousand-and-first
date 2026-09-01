@@ -62,7 +62,8 @@ namespace ThousandAndFirst
 				throw new InvalidDataException(
 					"historical lifecycle wire cannot encode Lodge terminal evidence");
 			if (wireVersion < KingdomLifecycleRules.LodgeMarketSourceLifecycleFormatVersion
-				&& o.LodgeTerminal?.MarketSourcePrepared
+				&& o.LodgeTerminal != null
+				&& o.LodgeTerminal.MarketSourcePrepared
 					!= KingdomLifecycleLodgeTerminalReceipt.MarketNone)
 				throw new InvalidDataException(
 					"historical lifecycle wire cannot encode Lodge market-source evidence");

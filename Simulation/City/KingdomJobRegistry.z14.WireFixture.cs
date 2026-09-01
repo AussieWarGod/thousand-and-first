@@ -64,7 +64,8 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				if (version < ExpeditionResultVersion)
 					for (int i = 0; i < canonical.Count; i++)
-						if (canonical.ExpeditionDeedDispositions[i] != 0
+						if (canonical.ExpeditionDeedDispositions[i]
+								> (int)KingdomExpeditionDeedDisposition.NotApplicable
 							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedPolityIds[i])
 							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedCauseRefs[i])
 							|| !string.IsNullOrEmpty(canonical.ExpeditionDeedFigureRefs[i])) return false;

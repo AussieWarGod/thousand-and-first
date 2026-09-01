@@ -235,9 +235,9 @@ namespace ThousandAndFirst
 				WriteGraphString(Writer, Value.TargetNames[i]); Writer.Write(Value.DueTicks[i]);
 				Writer.Write(Value.WaterCosts[i]); Writer.Write(Value.ProvisionCosts[i]);
 				Writer.Write(Value.OutcomeCodes[i]);
-				WriteDigestString(Writer, Value.ExpeditionDeedPolityIds[i]);
-				WriteDigestString(Writer, Value.ExpeditionDeedCauseRefs[i]);
-				WriteDigestString(Writer, Value.ExpeditionDeedFigureRefs[i]);
+				WriteGraphString(Writer, Value.ExpeditionDeedPolityIds[i]);
+				WriteGraphString(Writer, Value.ExpeditionDeedCauseRefs[i]);
+				WriteGraphString(Writer, Value.ExpeditionDeedFigureRefs[i]);
 				Writer.Write(Value.ExpeditionDeedDispositions[i]);
 				Writer.Write(Value.DeliverySourceEndpointIds[i]);
 				WriteGraphString(Writer, Value.DeliverySourceObjectIds[i]);

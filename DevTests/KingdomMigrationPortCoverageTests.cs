@@ -55,10 +55,16 @@ namespace ThousandAndFirst.Tests
 		/// <para>114 until the receipt-backed realm Chronicle intent became its own nested
 		/// archive port. Its current version is 3; no v1-v3 position has a provenance-backed
 		/// historical-writer fixture, so the conservative hard-gap census rises by three.</para>
-		private const int ExpectedHardGaps = 117;
+		/// <para>117 until the Codex fan-in reconciliation. Eight new v1 nested/journal ports
+		/// (polity admission bridge, admission handoff/receipt, ambient transaction, resident
+		/// admission/departure journals, citizen-rite projection, Lodge terminal receipt) add
+		/// eight uncovered first versions, and the recorded realm-archive v8, polity v9, realm
+		/// job-segment v6, and archived-settlement v18 bumps add five more; no fixture was
+		/// invented, so the truthful total rises by thirteen.</para>
+		private const int ExpectedHardGaps = 130;
 
-		/// <summary>Prior fifty ports plus one durable realm-Chronicle callback intent.</summary>
-		private const int ExpectedPorts = 51;
+		/// <summary>Prior fifty-one ports plus the eight fan-in nested/journal ports.</summary>
+		private const int ExpectedPorts = 59;
 
 		internal static JsonElement Manifest()
 		{

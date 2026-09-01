@@ -268,6 +268,8 @@ namespace ThousandAndFirst.Tests
 				case KingdomSealKind.Number: body.Put(key, source.Number(key)); break;
 				case KingdomSealKind.TextList: body.PutList(key, source.TextList(key)); break;
 				case KingdomSealKind.NumberList: body.PutList(key, source.NumberList(key)); break;
+				case KingdomSealKind.EmptyList:
+					body.PutList(key, new List<string>()); break;
 				}
 			}
 			return KingdomSealFormat.Compose(Schema, body);

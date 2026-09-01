@@ -12,11 +12,11 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomExpeditions.PassAndDeath.cs",
 			"Experience/KingdomExpeditions.DispatchRecovery.cs",
 			"Experience/KingdomExpeditions.Resolution.cs",
-			"Experience/KingdomExpeditions.Polity.cs",
 			"Experience/KingdomExpeditions.Discovery.cs",
 			"Experience/KingdomExpeditions.ResidentsAndBodies.cs",
 			"Experience/KingdomExpeditions.RewardsAndTelling.cs",
-			"Experience/KingdomExpeditions.DebitReceipts.cs"
+			"Experience/KingdomExpeditions.DebitReceipts.cs",
+			"Experience/KingdomExpeditions.Polity.cs"
 		};
 
 		internal static string Read()

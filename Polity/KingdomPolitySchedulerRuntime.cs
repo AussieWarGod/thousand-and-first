@@ -246,7 +246,17 @@ namespace ThousandAndFirst
 			string LoadedSettlementId)
 		{
 			KingdomPolityAmbientTransaction t = Cohort.AmbientTransaction;
-			if (!KingdomPolityAmbientTransactionRules.Valid(t, Cohort.CohortId, out _)) return;
+			if (!KingdomPolityAmbientTransactionRules.Valid(t, Cohort.CohortId, out _))
+			{
+				// A weekly visit without a valid frozen transaction (pre-schema stub or
+				// transactionless plan) still announces its bodily arrival with the due verb.
+				string verb = KingdomPolityDispatchRules.EndpointVerb(Cohort.Purpose);
+				if (string.IsNullOrEmpty(verb)) return;
+				XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomPresentation.Rich(
+					EndpointName(S, LoadedSettlementId)) + "}}: the visiting company " +
+					verb + ".");
+				return;
+			}
 			string purpose = Cohort.Purpose == KingdomPolityCohortPurpose.Courier ? "message" :
 				Cohort.Purpose == KingdomPolityCohortPurpose.Trader ? "no-stock market notice" :
 				Cohort.Purpose == KingdomPolityCohortPurpose.Migrant ? "petition" :

@@ -23,8 +23,13 @@ namespace ThousandAndFirst
 					"taf:fact:legacy-contact:v2:", System.StringComparison.Ordinal) &&
 					string.IsNullOrEmpty(R.FoundationCorrectionReceiptId) &&
 					Contains(R.SourceRefs, R.FoundationOriginalCauseRef);
-			return !string.IsNullOrEmpty(R.FoundationCorrectionReceiptId) &&
-				Contains(R.SourceRefs, R.FoundationCorrectionReceiptId);
+			// A fresh causal foundation relation still carries its published band; only a
+			// corrected row (band rewritten away from its initial band) needs a receipt.
+			if (string.IsNullOrEmpty(R.FoundationCorrectionReceiptId))
+				return R.Band == R.InitialBand && R.FoundationOriginalCauseRef.StartsWith(
+					"taf:fact:legacy-relation:v1:", System.StringComparison.Ordinal) &&
+					Contains(R.SourceRefs, R.FoundationOriginalCauseRef);
+			return Contains(R.SourceRefs, R.FoundationCorrectionReceiptId);
 		}
 	}
 }

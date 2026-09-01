@@ -116,6 +116,7 @@ namespace ThousandAndFirst
 			KingdomLifecycleOperation op, out GameObject source,
 			out r_KingdomMarketHandoffSourceProjection marker)
 		{
+			source = null; marker = null;
 			if (zone == null || !TryResolveMarketSource(system, op, out source, out marker))
 				return false;
 			if (marker == null) return op.LodgeTerminal?.MarketSourcePrepared
@@ -198,7 +199,8 @@ namespace ThousandAndFirst
 				}
 				catch { return false; }
 			}
-			if (receipts > 1 || identities > 1 || targetIdentities > 1) return false;
+			if (receipts > 1) return false;
+			if (identities > 1 || targetIdentities > 1) return false;
 			if (receipt.MarketSourcePrepared == KingdomLifecycleLodgeTerminalReceipt.MarketNone)
 				return receipts <= 1;
 			if (receipt.MarketSourcePrepared == KingdomLifecycleLodgeTerminalReceipt.MarketPrepared)

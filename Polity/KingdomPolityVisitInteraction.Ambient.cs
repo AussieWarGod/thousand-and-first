@@ -131,8 +131,8 @@ namespace ThousandAndFirst
 		private static string TerminalResult(KingdomPolityAmbientTerminalChoice Choice)
 		{
 			if (Choice == KingdomPolityAmbientTerminalChoice.PetitionAccepted)
-				return "The petition is accepted and handed to resident-arrival authority. No resident, " +
-					"citizenship, row, or body binding is created by this answer.";
+				return "The petition is accepted and handed to resident-arrival authority. " +
+					"No resident, citizenship, row, or body binding is created by this answer.";
 			if (Choice == KingdomPolityAmbientTerminalChoice.PetitionRejected)
 				return "The petition is rejected. No resident authority changes.";
 			return "The exact frozen matter is acknowledged. No journey or offscreen result is inferred.";

@@ -1457,7 +1457,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ArchivedSettlementV8ToV13WritersMigrateToV17()
+		public void ArchivedSettlementV8ToV13WritersMigrateToV18()
 		{
 			KingdomSettlement settlement = new KingdomSettlement
 			{
@@ -1623,14 +1623,14 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(v12, repeatedV12,
 				"the frozen v12 producer must not adopt v13 interpretation");
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(migratedV12,
-				out byte[] v17, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ArrivalCadenceVersion,
-				BitConverter.ToInt32(v17, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v17,
-				out KingdomSettlement roundTripV17, out int futureV17, out failure), failure);
-			Assert.AreEqual(0, futureV17);
+				out byte[] v18, out failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+				BitConverter.ToInt32(v18, 4));
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
+				out KingdomSettlement roundTripV18, out int futureV18, out failure), failure);
+			Assert.AreEqual(0, futureV18);
 			Assert.AreEqual(migratedV12.City.ExtensionHappeningCursors,
-				roundTripV17.City.ExtensionHappeningCursors);
+				roundTripV18.City.ExtensionHappeningCursors);
 		}
 
 		[Test]

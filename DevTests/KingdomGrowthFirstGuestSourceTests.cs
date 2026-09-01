@@ -277,7 +277,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public const int FirstGuestVersion = 15;", codec);
 			StringAssert.Contains("public const int PhysicalFirstGuestVersion = 16;", codec);
 			StringAssert.Contains("public const int ArrivalCadenceVersion = 17;", codec);
-			StringAssert.Contains("public const int CurrentVersion = ArrivalCadenceVersion;",
+			StringAssert.Contains("public const int ExpeditionResultVersion = 18;", codec);
+			StringAssert.Contains("public const int CurrentVersion = ExpeditionResultVersion;",
 				codec);
 			StringAssert.Contains("TryEncodeFirstGuestV15ForTests", codec);
 			StringAssert.Contains("TryEncodePhysicalFirstGuestV16ForTests", codec);

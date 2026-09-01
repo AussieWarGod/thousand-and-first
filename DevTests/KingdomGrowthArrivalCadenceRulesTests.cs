@@ -165,10 +165,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement settlement = new KingdomSettlement();
 			settlement.LifecycleBook.Growth = book;
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(settlement,
-				out byte[] v17, out string failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ArrivalCadenceVersion,
-				BitConverter.ToInt32(v17, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v17,
+				out byte[] v18, out string failure), failure);
+			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+				BitConverter.ToInt32(v18, 4));
+			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement loaded, out int future, out failure), failure);
 			Assert.AreEqual(0, future);
 			CollectionAssert.AreEqual(WriteCadence(book),

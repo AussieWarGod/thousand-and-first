@@ -122,6 +122,12 @@ namespace ThousandAndFirst
 				Role == "salvager";
 		}
 
+		/// <summary>The deed-receipt law shares the promotion role set without widening it.</summary>
+		internal static bool DeedPromotionRole(string Role)
+		{
+			return PromotionRole(Role);
+		}
+
 		private static bool ExactPromotion(KingdomPolityNamedFigureRecord A,
 			KingdomPolityNamedFigureRecord E)
 		{

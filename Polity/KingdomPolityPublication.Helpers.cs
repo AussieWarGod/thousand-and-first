@@ -63,8 +63,9 @@ namespace ThousandAndFirst
 		{
 			bool namesake = Same(Current.FounderName, Legacy.FounderName) ||
 				ActivationContains(Legacy.RollNames, Current.FounderName);
-			KingdomPolityFigureOrigin origin = LegacyFigureOriginFor(Band, namesake,
-				Legacy.InheritedState);
+			KingdomPolityFigureOrigin origin = FigureOriginFor(Band, namesake);
+			if (origin == KingdomPolityFigureOrigin.LegacyEnvoy)
+				origin = LegacyFigureOriginFor(Band, namesake, Legacy.InheritedState);
 			string baseName = string.IsNullOrEmpty(Legacy.FounderName)
 				? (Legacy.RollNames.Count == 0 ? "the remembered one" : Legacy.RollNames[0])
 				: Legacy.FounderName;

@@ -182,6 +182,7 @@ namespace ThousandAndFirst
 			typeof(KingdomLedger),
 			typeof(KingdomLifecycleBook),
 			typeof(KingdomLifecycleOperation),
+			typeof(KingdomLifecycleLodgeTerminalReceipt),
 			typeof(KingdomLifecycleWaterLeg),
 			typeof(KingdomLifecycleProjection),
 			typeof(KingdomLifecycleOutbox),

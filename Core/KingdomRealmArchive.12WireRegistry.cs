@@ -180,6 +180,15 @@ namespace ThousandAndFirst
 					value.ExpeditionDeedCauseRefs.Add(ReadString(Reader, 512));
 					value.ExpeditionDeedFigureRefs.Add(ReadString(Reader, 512));
 				}
+				else
+				{
+					// Pre-v8 job wire predates deed receipts; every historical row reads as the
+					// exact legacy no-deed default rather than reinterpreting foreign bytes.
+					value.ExpeditionDeedDispositions.Add(0);
+					value.ExpeditionDeedPolityIds.Add("");
+					value.ExpeditionDeedCauseRefs.Add("");
+					value.ExpeditionDeedFigureRefs.Add("");
+				}
 				value.LegCounts.Add(Reader.ReadInt32());
 			}
 			int legs = Reader.ReadInt32();
@@ -199,7 +208,7 @@ namespace ThousandAndFirst
 							> (int)Simulation.City.KingdomDeliveryPhase.Quarantined)
 						throw new InvalidDataException(
 							"Realm archive v4 contains a future delivery enum value.");
-			if (WireVersion < ExpeditionResultJobVersion) value.Normalize();
+			if (WireVersion < ExactDeliveryJobVersion) value.Normalize();
 			if (!ValidJobs(value)) throw new InvalidDataException("Archived job columns are inconsistent.");
 			return value;
 		}

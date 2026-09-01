@@ -232,6 +232,9 @@ namespace ThousandAndFirst
 					|| string.Equals(Name, "DeliveryTargetBeforeAmounts", StringComparison.Ordinal)
 					|| string.Equals(Name, "DeliveryTargetReceiptStates", StringComparison.Ordinal))) return false;
 			if (SchemaVersion < ExpeditionResultVersion
+				&& Type == typeof(KingdomLifecycleOperation)
+				&& string.Equals(Name, "LodgeTerminal", StringComparison.Ordinal)) return false;
+			if (SchemaVersion < ExpeditionResultVersion
 				&& Type == typeof(Simulation.City.KingdomJobRegistry)
 				&& (string.Equals(Name, "ExpeditionDeedDispositions", StringComparison.Ordinal)
 					|| string.Equals(Name, "ExpeditionDeedPolityIds", StringComparison.Ordinal)

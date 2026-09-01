@@ -100,7 +100,8 @@ namespace ThousandAndFirst.Simulation.City
 			out string Failure)
 		{
 			Failure = null;
-			if (!TryReadResident(System, Row.SubjectId, out KingdomResidentRow resident)
+			if (!TryReadExactDeedResident(System, SettlementId, Row.SubjectId,
+					out KingdomResidentRow resident)
 				|| resident.Standing != KingdomResidentStanding.Dead) return true;
 			return KingdomPolityRules.TryConcludeDeedResident(Ledger, Ledger.Revision,
 				SettlementId, Row.SubjectId, Row.SubjectName, KingdomPolityFigurePhase.Dead,

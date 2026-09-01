@@ -95,11 +95,12 @@ namespace ThousandAndFirst.DevTests
 			foreach (KingdomPolityCohortPurpose purpose in new[]
 				{ KingdomPolityCohortPurpose.Guard, KingdomPolityCohortPurpose.Patrol })
 			{
+				string token = purpose.ToString().ToLowerInvariant();
 				KingdomPolityDueWork work = new KingdomPolityDueWork
 				{
-					CohortId = "taf:cohort:observation-" + purpose,
-					EventStreamId = "taf:stream:observation-" + purpose,
-					SourceRef = "taf:event:observation-" + purpose,
+					CohortId = "taf:cohort:observation-" + token,
+					EventStreamId = "taf:stream:observation-" + token,
+					SourceRef = "taf:event:observation-" + token,
 					SettlementId = Settlement, Purpose = purpose, CauseTick = 10L,
 					CauseRef = purpose == KingdomPolityCohortPurpose.Guard
 						? guard.CauseRef : patrol.CauseRef

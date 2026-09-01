@@ -161,18 +161,24 @@ namespace ThousandAndFirst.Tests
 			string transactions = Read("Experience", "KingdomNamedCook.Transactions.cs");
 			string menu = Read("Experience", "KingdomNamedCook.cs");
 			string death = Read("Experience", "KingdomOffices.cs");
-			string residents = Read("Simulation", "City",
-				"KingdomResidents.04.ResidentTransitionsAndAccession.cs");
+			// The journaled departure runtime owns the departing-cook transaction now: the
+			// write-ahead prepare (with rollback) happens before any carrier is removed, and the
+			// vacancy is observed in the effects phase.
+			string preparation = Read("Simulation", "City",
+				"KingdomResidentDeparturePreparation.cs");
+			string effects = Read("Growth", "KingdomResidentDepartureRuntime.Effects.cs");
+			string begin = Read("Growth", "KingdomResidentDepartureRuntime.Begin.cs");
 			StringAssert.Contains("ObserveCookLoss(system, Citizen", death);
 			StringAssert.Contains("KingdomNamedCookVacancyCause.Death", death);
-			StringAssert.Contains("ObserveCookLoss(System, Body", residents);
-			StringAssert.Contains("KingdomNamedCookVacancyCause.Departure", residents);
-			int prepare = residents.IndexOf("PrepareCookLoss(System, Body",
+			StringAssert.Contains("ObserveCookLoss(System, Body", effects);
+			StringAssert.Contains("KingdomNamedCookVacancyCause.Departure", effects);
+			int prepare = preparation.IndexOf("PrepareCookLoss(System, Body",
 				StringComparison.Ordinal);
 			Assert.Greater(prepare, 0);
-			Assert.Less(prepare, residents.IndexOf("PublishRowAndUnbind(System, book", prepare,
+			Assert.Less(begin.IndexOf("KingdomResidentDeparturePreparation.TryPrepare",
+				StringComparison.Ordinal), begin.IndexOf("TryContinue(System, Body",
 				StringComparison.Ordinal));
-			StringAssert.Contains("CancelPreparedCookLoss(System, Body, priorCook", residents);
+			StringAssert.Contains("CancelPreparedCookLoss(System, Body, PriorCook", preparation);
 			StringAssert.Contains("StandingResident(Book, row.ResidentId)", lifecycle);
 			StringAssert.Contains("KingdomNamedCookRules.CancelVacancy", lifecycle);
 			StringAssert.Contains("One exact body is claimed by two named-cook receipts", lifecycle);

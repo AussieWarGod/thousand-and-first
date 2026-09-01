@@ -111,9 +111,9 @@ namespace ThousandAndFirst
 				ProfileId = Plan.LegacyProfile.ProfileId, ProfileRevision = 1,
 				ProjectedFactionId = factionId
 			};
-			KingdomPolityRelationBand band = KingdomPolityRelationBand.Contact;
-			string cause = ActivationId("taf:fact:legacy-contact:v2:",
-				"legacy-contact-fact-v2", Facts.RealmId, polityId);
+			KingdomPolityRelationBand band = RelationshipFor(Facts, Legacy);
+			string cause = ActivationId("taf:fact:legacy-relation:v1:",
+				"legacy-relation-fact-v1", Facts.RealmId, polityId, band.ToString());
 			Plan.Forward = Relation(Facts.RealmId, polityId, band, cause, Facts.FoundedTick);
 			Plan.Reverse = Relation(polityId, Facts.RealmId, band, cause, Facts.FoundedTick);
 			Plan.LegacyFigure = LegacyFigure(polityId, Facts, Legacy, band, cause);

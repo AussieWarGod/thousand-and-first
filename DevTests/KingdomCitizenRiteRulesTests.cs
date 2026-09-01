@@ -43,7 +43,7 @@ namespace ThousandAndFirst.Tests
 				"rep.FillInRelatedFactions(Initial: true);",
 				"Speak(System, Citizen, projection",
 				"Citizen.SetIntProperty(HostProperty, 1);",
-				"private static void Speak(",
+				"private static bool Speak(",
 				"ConversationsAPI.addSimpleConversationToObject",
 				"citizen.SetIntProperty(ConversationProperty, 1);",
 				"citizen.SetIntProperty(GreetingBandProperty, band + 1);");

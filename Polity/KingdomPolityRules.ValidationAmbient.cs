@@ -8,6 +8,9 @@ namespace ThousandAndFirst
 			bool weekly = KingdomPolityDispatchRules.IsScheduled(C);
 			KingdomPolityAmbientTransaction t = C.AmbientTransaction;
 			if (!weekly) return t == null;
+			// A weekly visit with no frozen semantic transaction is legal and simply
+			// non-interactive; a carried transaction must be exact.
+			if (t == null) return true;
 			if (t != null && t.Version == 0)
 				return AllowsMigratedUnresolved && Text(t.Fault, true) &&
 					string.IsNullOrEmpty(t.TransactionId) &&

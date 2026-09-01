@@ -240,6 +240,25 @@ namespace ThousandAndFirst
 			return complete;
 		}
 
+		private static bool ExactTransferableStock(KingdomSystem System, GameObject Prior,
+			GameObject Holder, GameObject Item, int MarketTier)
+		{
+			bool receipted = KingdomMarketStockCustody.ExactTransferable(System,
+				System.CurrentSettlementId, Prior, Item)
+				|| (!ReferenceEquals(Holder, Prior) && KingdomMarketStockCustody.ExactHeld(
+					System, System.CurrentSettlementId, Holder, Item));
+			int tier = Item.GetIntProperty(KingdomShopStockRules.ItemTierProperty);
+			string source = KingdomShopStockRules.SourceId(System.RealmId,
+				System.CurrentSettlementId, tier);
+			return !Item.IsImportant() && Item.Physics != null && Item.IsTakeable()
+				&& KingdomConstructionInputLeaseAuthority
+				.TryObjectGraphAvailableForOrdinaryTransfer(Item, out _)
+				&& Item.GetIntProperty("_stock") == 1 && (receipted || (source != null
+					&& tier <= MarketTier
+					&& Item.GetStringProperty(KingdomShopStockRules.ItemSourceProperty) == source
+					&& Item.GetStringProperty(KingdomShopStockRules.ItemSettlementProperty)
+						== System.CurrentSettlementId));
+		}
 		private static bool OurCurrentMarketReceipt(KingdomSystem System, GameObject Item)
 		{
 			return System != null && Item != null && KingdomShopStockRules.TryResolveStockRealm(
@@ -269,19 +288,6 @@ namespace ThousandAndFirst
 				|| !KingdomMarketStockCustody.TryAdmitHeld(
 					System, settlement, Trader, out _)) return false;
 			return true;
-		}
-
-		private static bool TryPrepareLegendaryMarketProjection(KingdomSystem System,
-			GameObject Trader, int Tier, string Intent, string PriorId,
-			int ResidentId, int PriorResidentId)
-		{
-			string settlement = System?.SettlementIdForOwnedZone(Trader?.CurrentZone?.ZoneID);
-			if (string.IsNullOrEmpty(settlement) || settlement != System.CurrentSettlementId)
-				return false;
-			r_KingdomLegendaryMarketProjection marker =
-				Trader.RequirePart<r_KingdomLegendaryMarketProjection>();
-			return marker.StampPrepared(System, settlement, Trader, Tier, Intent, PriorId,
-				ResidentId, PriorResidentId);
 		}
 
 	}

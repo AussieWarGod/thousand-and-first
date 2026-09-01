@@ -217,6 +217,11 @@ checkpoints only; they do not sign current bytes.
   provider observations, water-gated terrace support, dark-shell recovery, and read-only hosted
   views pass frozen automated gates. Native traversal/save/labour/water and human visual acceptance
   remain open; static topology is not that evidence.
+- **Hosted-arcology implementation status is superseded; its accepted vision remains.** The earlier
+  code/content closure claim is withdrawn under active AMENDED 19+ review. Production, XML/fabric,
+  and tests are held; the proposed capital authority, persistent interiors, paid lots, water gate,
+  dark shell, and native Pass 37 protocol are design/review scope, not current runtime evidence.
+  (Historical record: that review hold has since closed into the integrated authority above.)
 - **The assenting moot now owns the ward its authored floor promises.** Its hidden commission key
   is derived only for the current seated city from assent research, the founder's Chavvah rite,
   claimed surface ground cardinally beside the Moon Stair, and the shipped owner contract; it is
@@ -301,11 +306,11 @@ checkpoints only; they do not sign current bytes.
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2915-file census is line-cap green: 419,872 physical lines; 0 files exceed 300,
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2915-file census is line-cap green: 419,941 physical lines; 0 files exceed 300,
   0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
   imports occur in 1358 files, 0 of them over the line limit. Its
   exact inventory digest is
-  `a633813831a166a0b294e74885a7e5a61052a869752d496db7c3d438bf8976be`;
+  `6226163678b196ebe240156edddd5c856265200b6fd6c467abd757d801397268`;
   the corresponding cold-install inventory contains 2945 files. The
   exact-inventory human semantic review remains a release blocker:
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.

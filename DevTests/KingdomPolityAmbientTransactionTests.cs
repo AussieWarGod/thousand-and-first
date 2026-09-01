@@ -64,7 +64,7 @@ namespace ThousandAndFirst.DevTests
 			ledger.NamedFigures[0].DeedSummary = "Held the cistern through the siege.";
 			byte[] first = KingdomPolityCodec.EncodeEnvelope(ledger);
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelope(first);
-			Assert.AreEqual(8, decoded.FormatVersion);
+			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, decoded.FormatVersion);
 			Assert.AreEqual("Held the cistern through the siege.",
 				decoded.NamedFigures[0].DeedSummary);
 			Assert.AreEqual(ledger.Cohorts[1].AmbientTransaction.FrozenDigest,
@@ -186,6 +186,7 @@ namespace ThousandAndFirst.DevTests
 		private static List<KingdomPolityEndpointFacts> CourierEndpoints()
 		{
 			KingdomPolityEndpointFacts source = Base(Source, "Alpha", SourceZone);
+			source.IsSeat = true;
 			source.DeedFactRef = "taf:fact:deed:alpha";
 			source.DeedSummary = "The northern cistern was reopened.";
 			KingdomPolityEndpointFacts destination = Base(Destination, "Beta", DestinationZone);
@@ -198,6 +199,7 @@ namespace ThousandAndFirst.DevTests
 		private static List<KingdomPolityEndpointFacts> MigrantEndpoints()
 		{
 			KingdomPolityEndpointFacts source = Base(Source, "Alpha", SourceZone);
+			source.IsSeat = true;
 			source.PopulationFactRef = "taf:fact:population:alpha";
 			KingdomPolityEndpointFacts destination = Base(Destination, "Beta", DestinationZone);
 			destination.CapacityFactRef = "taf:fact:room:beta";

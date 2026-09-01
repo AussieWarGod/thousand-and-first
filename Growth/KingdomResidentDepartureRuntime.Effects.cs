@@ -47,22 +47,22 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool TryDestroyBody(KingdomSystem System, GameObject Body,
+		private static bool TryDestroyBody(KingdomSystem System, GameObject leaver,
 			KingdomResidentDepartureOperation Operation, out string Failure)
 		{
 			Failure = null;
-			r_KingdomResidentDeparture marker = Body?.GetPart<r_KingdomResidentDeparture>();
-			if (marker?.Matches(Operation, Body) != true) return false;
-			KingdomSurvey survey = KingdomSurvey.ActiveFor(Body.CurrentZone);
+			r_KingdomResidentDeparture marker = leaver?.GetPart<r_KingdomResidentDeparture>();
+			if (marker?.Matches(Operation, leaver) != true) return false;
+			KingdomSurvey Survey = KingdomSurvey.ActiveFor(leaver.CurrentZone);
 			try
 			{
 				if (!marker.TalliesClosed)
 				{
-					KingdomResidentIdentity.Forget(System, Body);
-					KingdomCreed.Forget(System, Body);
+					KingdomResidentIdentity.Forget(System, leaver);
+					KingdomCreed.Forget(System, leaver);
 					marker.TalliesClosed = true;
 				}
-				Body.Obliterate();
+				leaver.Obliterate();
 			}
 			catch (Exception ex)
 			{
@@ -71,9 +71,9 @@ namespace ThousandAndFirst
 			}
 			finally
 			{
-				survey?.ObserveCurrentTopology(Body);
+				Survey?.ObserveCurrentTopology(leaver);
 			}
-			if (GameObject.Validate(Body))
+			if (GameObject.Validate(leaver))
 			{
 				Failure = "departure body remained valid after destruction"; return false;
 			}

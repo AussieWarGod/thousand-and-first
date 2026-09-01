@@ -108,12 +108,18 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomCivicOfficeVacancyCause.Departure", reconcile);
 			string residents = Read(
 				"Simulation/City/KingdomResidents.04.ResidentTransitionsAndAccession.cs");
-			int depart = residents.IndexOf("KingdomUnbindCause.Abroad", StringComparison.Ordinal);
-			int observe = residents.IndexOf("KingdomOfficeRuntime.ObserveHolderLoss",
+			StringAssert.Contains("KingdomUnbindCause.Abroad", residents);
+			// The journaled departure runtime owns the departing-holder ordering now: the office
+			// vacancy is observed before the resident identity is forgotten, and both before the
+			// body is destroyed.
+			string departure = Read("Growth/KingdomResidentDepartureRuntime.Effects.cs");
+			int observe = departure.IndexOf("KingdomOfficeRuntime.ObserveHolderLoss",
 				StringComparison.Ordinal);
-			int removeId = residents.IndexOf("Body.RemoveIntProperty(ResidentIdProperty)",
+			int forgetLeaver = departure.IndexOf("KingdomResidentIdentity.Forget",
 				StringComparison.Ordinal);
-			Assert.Greater(observe, depart); Assert.Greater(removeId, observe);
+			int destroyed = departure.IndexOf("leaver.Obliterate()", StringComparison.Ordinal);
+			Assert.Greater(observe, 0); Assert.Greater(forgetLeaver, observe);
+			Assert.Greater(destroyed, forgetLeaver);
 			StringAssert.Contains("Predecessor", Read("Experience/KingdomExperienceRules.Office.cs"));
 		}
 
