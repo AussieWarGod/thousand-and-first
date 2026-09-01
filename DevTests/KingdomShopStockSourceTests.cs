@@ -653,7 +653,9 @@ namespace ThousandAndFirst.Tests
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
 			string[] roots = new[] { supplied,
 				"/home/r/coq/qud_helper/game_base/decompiled/6000.0.41.4645959",
-				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1" };
+				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
+				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\6000.0.41.4645959",
+				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1" };
 			for (int i = 0; i < roots.Length; i++)
 			{
 				if (string.IsNullOrWhiteSpace(roots[i])) continue;

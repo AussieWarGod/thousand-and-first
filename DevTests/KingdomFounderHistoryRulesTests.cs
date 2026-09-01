@@ -292,7 +292,8 @@ namespace ThousandAndFirst.Tests
 			string[] candidates = new[]
 			{
 				supplied,
-				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1"
+				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
+				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1"
 			};
 			for (int i = 0; i < candidates.Length; i++)
 				if (!string.IsNullOrWhiteSpace(candidates[i])
