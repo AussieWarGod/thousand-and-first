@@ -199,7 +199,7 @@ class DefenseProgressionTests(unittest.TestCase):
                 truth(successor, target_palette),
             )
             retained += 1
-        self.assertEqual(4, retained)  # two slings, mess table, occupied locker
+        self.assertEqual(5, retained)  # two slings, mess table, occupied locker, hearth
 
         before_provider = next(
             (x, y, glyph) for x, y, glyph in cells(medium)

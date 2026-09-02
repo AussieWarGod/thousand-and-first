@@ -2,6 +2,6 @@
 # relying on a stale gallery number or a hand-built screenshot scene.
 DESCRIPTION=current great heart-court stages for native civic taste review and Workshop preview capture
 REQUEST=arch-heartcourt-xl;facing=north
-SCRIPT=flatten;realize;advance 300;frame;status
-EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE
+SCRIPT=flatten;realize;advance 300;frame;light;status
+EXPECT=flatten:OK,realize:OK,advance:OK,frame:OK,light:OK,status:OK,COMPLETE
 SET=architecture,visual,civic,endgame,taste

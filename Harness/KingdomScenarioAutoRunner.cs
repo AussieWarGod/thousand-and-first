@@ -4,7 +4,6 @@ using System.Reflection;
 using XRL;
 using XRL.UI;
 using XRL.World;
-
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst
@@ -204,6 +203,7 @@ namespace ThousandAndFirst
 				return false;
 			}
 			UnityEngine.Application.runInBackground = true; // in-world only; mid-boot crashed
+			XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder.Restrip(The.Player?.CurrentZone);
 			KingdomScenarioJournal.Append(ArmedRow, true, "armed by BeginTakeActionEvent; popups "
 				+ (SuppressedPopups ? "suppressed from " + PrimedSeam : "NOT suppressed - no primer "
 					+ "seam fired, so the boot and arrival popups still need a keypress"));

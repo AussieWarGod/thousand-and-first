@@ -26,8 +26,11 @@ fi
 # MODWARN, including obsolete APIs that can disappear in the next game build.
 # Stack frames are also fatal even when Unity printed the exception header before
 # the first line naming our namespace.
-awk '
+# TAF_LOG_ALLOW: one exact substring a controlled run EXPECTS in the log — the scenario gate's
+# own refusal line for a persona that asserts that refusal. Empty means nothing is allowed.
+awk -v allow="${TAF_LOG_ALLOW:-}" '
 	{
+		if (allow != "" && index($0, allow) > 0) next
 		lower = tolower($0)
 		if ($0 ~ /MOD(ERROR|WARN) \[The Thousand and First\]/ ||
 			(lower ~ /(\[taf\]|thousandandfirst|the thousand and first)/ &&

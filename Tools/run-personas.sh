@@ -105,7 +105,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""
+	P_SET=""; P_GATE=0
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -121,6 +121,11 @@ load_persona() {
 	done <<< "$fields"
 	[ -n "$P_REQUEST" ] || die "persona $1 declares no request"
 	[ -n "$P_SCRIPT" ] || die "persona $1 declares no script"
+	# A persona whose terminal is the new-game gate's refusal EXPECTS the gate to throw: the
+	# engine logs that throw as a boot ERROR, and the Player.log check must not read the very
+	# refusal the persona asserts as a mod defect. Only that one line is allowed, only here.
+	P_GATE=0
+	if grep -qE '^EXPECT=GATE-REFUSED' "$path"; then P_GATE=1; fi
 }
 
 # The --set slice: keep only personas whose SET tags intersect the requested tags. Runs after
@@ -278,7 +283,9 @@ run_persona() {
 		stop_game
 		return
 	fi
-	if ! log_problem="$("$LOG_CHECK" "$archived_player_log" 2>&1)"; then
+	local log_allow=""
+	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open"
+	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$archived_player_log" 2>&1)"; then
 		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
 			| tr '\n\t' '  ')"
 		stop_game

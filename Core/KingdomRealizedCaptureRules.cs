@@ -33,6 +33,42 @@ namespace ThousandAndFirst
 		private const string AbsentToken = "-";
 
 		/// <summary>SHA-256 over the canonical text, or null when the lot cannot be canonicalized.</summary>
+		/// <summary>
+		/// The same facts with the moment-of-capture look removed from what is expected to move: a
+		/// placement bound by a stateful anchor (a fire that flickers, a sling that is slept in) and
+		/// a door (open or shut). Identity, position, slot, layer, physics, and liquid still bind.
+		/// A framing verb compares two captures across a walk with this; the digest of record for a
+		/// realized lot is always the live one.
+		/// </summary>
+		public static List<KingdomRealizedObjectFact> Stabilized(
+			IList<KingdomRealizedObjectFact> Objects)
+		{
+			List<KingdomRealizedObjectFact> stable = new List<KingdomRealizedObjectFact>();
+			if (Objects == null) return stable;
+			for (int i = 0; i < Objects.Count; i++)
+			{
+				KingdomRealizedObjectFact fact = Objects[i];
+				if (fact == null) continue;
+				bool moves = fact.Anchor != null || fact.Door;
+				stable.Add(new KingdomRealizedObjectFact
+				{
+					X = fact.X, Y = fact.Y, Blueprint = fact.Blueprint, Slot = fact.Slot,
+					Layer = fact.Layer, Anchor = fact.Anchor, AuthorityProved = fact.AuthorityProved,
+					Existing = fact.Existing, Owner = fact.Owner, PhysicsPresent = fact.PhysicsPresent,
+					Solid = fact.Solid, BlueprintSolid = fact.BlueprintSolid, Door = fact.Door,
+					Liquid = fact.Liquid,
+					Tile = moves ? null : fact.Tile,
+					RenderString = moves ? null : fact.RenderString,
+					ColorString = moves ? null : fact.ColorString,
+					DetailColor = moves ? null : fact.DetailColor,
+					TileColor = moves ? null : fact.TileColor,
+					RenderLayer = moves ? 0 : fact.RenderLayer,
+					PathState = fact.PathState
+				});
+			}
+			return stable;
+		}
+
 		public static string Digest(int Width, int Height, IList<KingdomRealizedCellFact> Cells,
 			IList<KingdomRealizedObjectFact> Objects)
 		{

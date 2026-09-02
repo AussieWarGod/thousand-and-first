@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Harness
 			int beforeWidth;
 			int beforeHeight;
 			if (!KingdomRealizedArchitectureCapture.TryCapture(owner, out beforeDigest,
-				out beforeWidth, out beforeHeight, out failure))
+				out beforeWidth, out beforeHeight, out failure, Stable: true))
 				return Refused("the exact staged lot cannot be captured before framing: "
 					+ KingdomScenarioRules.Bounded(failure));
 			Cell target = FindTarget(zone, player, owner, intent.Rect, lot);
@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Harness
 			if (!SameLot(intent, observed))
 				return Changed("its frozen lot identity changed");
 			if (!KingdomRealizedArchitectureCapture.TryCapture(owner, out afterDigest,
-					out afterWidth, out afterHeight, out failure))
+					out afterWidth, out afterHeight, out failure, Stable: true))
 				return Changed("its realized architecture became unreadable: "
 					+ KingdomScenarioRules.Bounded(failure));
 			if (beforeWidth != afterWidth || beforeHeight != afterHeight)
@@ -177,17 +177,22 @@ namespace ThousandAndFirst.Harness
 			int y1 = Math.Max(0, Rect.Y1 - 1);
 			int x2 = Math.Min(Zone.Width - 1, Rect.X2 + 1);
 			int y2 = Math.Min(Zone.Height - 1, Rect.Y2 + 1);
-			for (int y = y1; y <= y2; y++)
-				for (int x = x1; x <= x2; x++)
-				{
-					Cell cell = Zone.GetCell(x, y);
-					if (!Safe(cell, Player, Owner, Lot)) continue;
-					int distance = Math.Max(Math.Abs(x - Rect.CenterX),
-						Math.Abs(y - Rect.CenterY));
-					if (distance >= bestDistance) continue;
-					best = cell;
-					bestDistance = distance;
-				}
+			// The ring beside the lot first: walking into a building opens its door, and a door
+			// swung by the tester is not a lot that changed. Inside cells only when no ring cell is
+			// safe (an open plot with nothing to walk around).
+			for (int pass = 0; pass < 2 && best == null; pass++)
+				for (int y = y1; y <= y2; y++)
+					for (int x = x1; x <= x2; x++)
+					{
+						if (Rect.Contains(x, y) == (pass == 0)) continue;
+						Cell cell = Zone.GetCell(x, y);
+						if (!Safe(cell, Player, Owner, Lot)) continue;
+						int distance = Math.Max(Math.Abs(x - Rect.CenterX),
+							Math.Abs(y - Rect.CenterY));
+						if (distance >= bestDistance) continue;
+						best = cell;
+						bestDistance = distance;
+					}
 			return best;
 		}
 

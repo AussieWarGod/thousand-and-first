@@ -38,6 +38,7 @@ BOOKKEEPING = frozenset(
     {
         "AUTOSTART",
         "TESTGROUND-BUILT",
+        "TESTGROUND-RESTRIP",
         "RUNNER-ARMED",
         "SCRIPT-BEGIN",
         "advance-progress",
@@ -57,6 +58,7 @@ SCRIPT_VERBS = (
     "flatten",
     "frame",
     "ground",
+    "light",
     "list",
     "realize",
     "resourcedigest",
@@ -78,6 +80,7 @@ RESERVED_VERBS = (
     "frame",
     "ground",
     "help",
+    "light",
     "list",
     "realize",
     "resourcedigest",

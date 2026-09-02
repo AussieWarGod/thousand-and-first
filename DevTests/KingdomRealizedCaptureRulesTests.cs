@@ -36,6 +36,32 @@ namespace ThousandAndFirst.Tests
 			return cells;
 		}
 
+		/// <summary>A framing comparison forgets only the look of what is expected to move: a
+		/// stateful-anchored fixture or a door. An anchorless, doorless component keeps its look.</summary>
+		[Test]
+		public void StabilizedForgetsTheLookOfStatefulAndDoorPlacementsOnly()
+		{
+			KingdomRealizedObjectFact stateful = Object(1, 1, "r_KingdomCivicCampfire");
+			KingdomRealizedObjectFact door = Object(2, 1, "r_KingdomFixtureDoorTimber");
+			door.Anchor = null; door.Door = true;
+			KingdomRealizedObjectFact plain = Object(3, 1, "r_KingdomStructureSandstone");
+			plain.Anchor = null;
+			List<KingdomRealizedObjectFact> stable = KingdomRealizedCaptureRules.Stabilized(
+				new List<KingdomRealizedObjectFact> { stateful, door, plain, null });
+			Assert.AreEqual(3, stable.Count);
+			Assert.IsNull(stable[0].Tile); Assert.IsNull(stable[0].TileColor);
+			Assert.IsNull(stable[0].ColorString); Assert.AreEqual(0, stable[0].RenderLayer);
+			Assert.AreEqual("north", stable[0].Anchor);
+			Assert.AreEqual("r_KingdomCivicCampfire", stable[0].Blueprint);
+			Assert.IsTrue(stable[0].Solid);
+			Assert.IsNull(stable[1].RenderString); Assert.IsTrue(stable[1].Door);
+			Assert.AreEqual("Terrain/sw_wall.bmp", stable[2].Tile);
+			Assert.AreEqual("&y", stable[2].TileColor);
+			Assert.AreEqual(5, stable[2].RenderLayer);
+			Assert.AreEqual("Terrain/sw_wall.bmp", stateful.Tile, "the source facts are untouched");
+			Assert.AreEqual(0, KingdomRealizedCaptureRules.Stabilized(null).Count);
+		}
+
 		private static KingdomRealizedObjectFact Object(int x, int y, string blueprint)
 		{
 			return new KingdomRealizedObjectFact

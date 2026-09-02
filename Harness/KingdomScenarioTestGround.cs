@@ -51,9 +51,33 @@ namespace XRL.World.ZoneBuilders
 		/// <summary>Journal verb column for the row this builder writes when it fires.</summary>
 		internal const string BuiltRow = "TESTGROUND-BUILT";
 
+		/// <summary>Journal verb column for the second strip, taken as the runner arms.</summary>
+		internal const string RestripRow = "TESTGROUND-RESTRIP";
+
 		public bool BuildZone(Zone Z)
 		{
 			if (Z == null) return false;
+			Strip(Z, out int removed, out int keptStairs, out int keptBare);
+			KingdomScenarioJournal.Append(BuiltRow, true, Describe(Z, removed, keptStairs, keptBare));
+			return true;
+		}
+
+		/// <summary>
+		/// The born-clean promise kept again at the moment the runner arms, not only at zone build.
+		/// Builders that run after this one and the first turns before the tester acts can seed
+		/// liquid pools and creatures the build-time strip never saw, and a flatten that then refuses
+		/// on a puddle is a fact about the profile, not about the case under test. Same predicates,
+		/// same journal shape, its own row, and the tester is never taken.
+		/// </summary>
+		internal static void Restrip(Zone Z)
+		{
+			if (Z == null) return;
+			Strip(Z, out int removed, out int keptStairs, out int keptBare);
+			KingdomScenarioJournal.Append(RestripRow, true, Describe(Z, removed, keptStairs, keptBare));
+		}
+
+		internal static void Strip(Zone Z, out int Removed, out int KeptStairs, out int KeptBare)
+		{
 			int removed = 0;
 			int keptStairs = 0;
 			int keptBare = 0;
@@ -68,7 +92,7 @@ namespace XRL.World.ZoneBuilders
 					for (int i = 0; i < objects.Count; i++)
 					{
 						GameObject item = objects[i];
-						if (item == null) continue;
+						if (item == null || item.IsPlayer()) continue;
 						if (item.HasPart("StairsUp") || item.HasPart("StairsDown"))
 						{
 							keptStairs++;
@@ -90,8 +114,9 @@ namespace XRL.World.ZoneBuilders
 						if (gone || !GameObject.Validate(item)) removed++;
 					}
 				}
-			KingdomScenarioJournal.Append(BuiltRow, true, Describe(Z, removed, keptStairs, keptBare));
-			return true;
+			Removed = removed;
+			KeptStairs = keptStairs;
+			KeptBare = keptBare;
 		}
 
 		/// <summary>

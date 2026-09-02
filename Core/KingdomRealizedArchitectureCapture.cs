@@ -33,7 +33,7 @@ namespace ThousandAndFirst
 		/// moved, duplicated, partial, foreign, or unreadable.
 		/// </summary>
 		public static bool TryCapture(GameObject Owner, out string Digest, out int Width,
-			out int Height, out string Failure)
+			out int Height, out string Failure, bool Stable = false)
 		{
 			Digest = null;
 			Width = 0;
@@ -69,6 +69,9 @@ namespace ThousandAndFirst
 			List<KingdomRealizedObjectFact> objects;
 			if (!TryObjects(zone, Owner, intent, snapshot, lot, x1, y1, Width, Height, out objects,
 				out Failure)) return false;
+			// Stable: a before/after comparison across a walk forgets the look of what is expected
+			// to move (stateful fixtures, doors); the digest of record stays the live one.
+			if (Stable) objects = KingdomRealizedCaptureRules.Stabilized(objects);
 			List<KingdomRealizedCellFact> cells = Cells(Width, Height, objects);
 			Digest = KingdomRealizedCaptureRules.Digest(Width, Height, cells, objects);
 			if (Digest == null) return Fail("the realized lot could not be digested", out Failure);

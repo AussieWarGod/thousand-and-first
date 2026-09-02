@@ -99,6 +99,7 @@ namespace ThousandAndFirst.Harness
 				case "ground": return KingdomScenarioGround.Scout(out Ok);
 				case "flatten": return KingdomScenarioFlatten.Flatten(out Ok);
 				case "frame": return KingdomScenarioFrame.Run(out Ok);
+				case KingdomScenarioLight.Verb: return KingdomScenarioLight.Run(out Ok);
 				case KingdomScenarioDigestVerbs.StageVerb:
 					return KingdomScenarioDigestVerbs.Stage(out Ok);
 				case KingdomScenarioDigestVerbs.ResourceVerb:
