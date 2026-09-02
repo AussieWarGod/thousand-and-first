@@ -4950,7 +4950,8 @@ def v1_authority_capacity():
     assert "MaxAuthoredRowBytes" in covenant_codec and "MaxRowBytes = 4096" in covenant_codec
     shop = read_source(os.path.join(ROOT, "Growth", "KingdomShopStockRules.cs"))
     shop_runtime = read_source(os.path.join(ROOT, "Growth", "KingdomGrowth.z18.StageAndShops.cs"))
-    shop_detachment = read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockDetachment.cs"))
+    shop_detachment = read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockDetachment.cs")) \
+        + read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockProtection.cs"))
     shop_accession = read_source(os.path.join(ROOT, "Growth", "KingdomMarketStockAccession.cs"))
     legendary_adapter = read_source(os.path.join(
         ROOT, "Experience", "KingdomGuestbook.z01c.MarketHandoffHelpers.cs"))
