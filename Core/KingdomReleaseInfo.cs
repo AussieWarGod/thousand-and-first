@@ -6,6 +6,6 @@ namespace ThousandAndFirst
 	/// </summary>
 	internal static class KingdomReleaseInfo
 	{
-		internal const string Version = "0.2.0";
+		internal const string Version = "1.0.0";
 	}
 }

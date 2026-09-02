@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "6cb3379dbfc837e11f60242ac1ed91893824be334bfdf840dc63ea6129f36d89",
+  "inventorySha256": "820a9560a3b0fc5f5b59bd91deedd0e1145a2d9fe3f82b623cd8dcd43fe3a409",
   "exceptions": [],
   "reviewedBy": "Claude Fable 5.1, AI reviewer under author ruling (R. Farrant)",
-  "completedUtc": "2026-09-02T19:15:30Z",
+  "completedUtc": "2026-09-02T19:16:56Z",
   "oneResponsibility": {
     "status": "passed",
     "notes": "Exact-inventory review of all 2944 staged production C# files by the AI reviewer under the author's explicit Addendum 9 ruling of 2026-09-02. Method: ten read-only reviewer passes over per-directory manifests (Growth x3, Core x2, Experience x2, Simulation, Polity+Chronicle+Founding+Treaty, Trade+Api+Quests+World+Debug+Raids+Integrations); every file's declarations were enumerated and 1,148 files (39%) were read whole by risk. Fourteen Required ownership faults were found and every one fixed before signing, each a verbatim relocation into a single-purpose shard with source-contract pins retargeted: the KingdomDesignationIndex anchor out of KingdomDesignationRules; the KingdomCommunalRiteRules recovery transition out of the Models file; the KingdomSuccession reign bridge out of Core body-history; KingdomMarketStockProtection and the r_KingdomLegendaryMarketProjection anchor into their own files; KingdomSystem exile regard/return callbacks out of the persistence-hook shard (z18a); the polity realm-transition CAS ladder consolidated into KingdomPolityRules.RealmTransition(+Validation), scheduler prose into pure KingdomPolityArrivalPresentationRules, the endpoint root collector into Locator.Roots; carry haul, notable-guest, carry-sign and guest IParts into standalone files; guest-feast opportunity/locus and lifecycle option/carry-sink rules into their own shards; KingdomInheritanceLifecycle split from its load-source classifier and lease owner; KingdomInheritanceState z10 split into reservation leases and discoverability; KingdomBounty publication split into publication/sinks/cleanup/schedule. 0 Required remain; Questions and Nits are recorded, not silently accepted. Re-bound after the live matrix closed three founding regressions (basin anchor role, zone-free stamped-rect reader, founder-first species) and added the 07n refusal-diagnostics shard; each single-purpose, self-reviewed."

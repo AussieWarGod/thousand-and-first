@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [Unreleased] — 0.2.0 ALPHA work in progress
+## [Unreleased] — 1.0.0 ALPHA candidate
 
 The public-Alpha identity and its evidence carve-out are accepted, but no Alpha has shipped.
 The architecture, transition, hosted-arcology, quickstart, and scenario code/content lanes are
@@ -310,7 +310,7 @@ checkpoints only; they do not sign current bytes.
   0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
   imports occur in 1373 files, 0 of them over the line limit. Its
   exact inventory digest is
-  `6cb3379dbfc837e11f60242ac1ed91893824be334bfdf840dc63ea6129f36d89`;
+  `820a9560a3b0fc5f5b59bd91deedd0e1145a2d9fe3f82b623cd8dcd43fe3a409`;
   the corresponding cold-install inventory contains 2975 files. The
   exact-inventory human semantic review remains a release blocker:
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
