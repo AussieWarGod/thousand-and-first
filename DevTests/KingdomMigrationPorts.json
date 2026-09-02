@@ -430,7 +430,7 @@
     },
     {
       "codec": "KingdomPolityRealmTransition",
-      "reader": "Polity/KingdomPolityFactionTransitions.Helpers.cs",
+      "reader": "Polity/KingdomPolityRules.ValidationRealmTransition.cs",
       "versionConstant": "Polity/KingdomPolityActivationModels.cs:165",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
@@ -438,7 +438,7 @@
       "migrationAuthority": null,
       "opaqueFuturePolicy": "refuse",
       "opaqueFutureSite": null,
-      "refusalSite": "Polity/KingdomPolityFactionTransitions.Helpers.cs:138",
+      "refusalSite": "Polity/KingdomPolityRules.ValidationRealmTransition.cs:19",
       "physicalShellAxis": null,
       "retirementRule": "first version; nothing to migrate yet",
       "fixtures": [],

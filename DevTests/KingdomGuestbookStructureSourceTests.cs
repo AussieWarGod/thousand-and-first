@@ -14,13 +14,15 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomGuestbook.z01b.MarketHandoff.cs",
 			"Experience/KingdomGuestbook.z02.Lifecycle.cs",
 			"Experience/KingdomGuestbook.z03.ReportingAndCarrySign.cs",
-			"Experience/KingdomGuestbook.z04.CarryHaulAndParts.cs"
+			"Experience/KingdomCarryHaul.cs",
+			"Experience/r_KingdomNotableGuest.cs",
+			"Experience/r_KingdomCarrySign.cs"
 		};
 
 		[Test]
 		public void LogicalAuthorityRetainsEveryDeclarationInOriginalOrder()
 		{
-			Assert.AreEqual(6, KingdomGuestbookLogicalSource.FileCount);
+			Assert.AreEqual(8, KingdomGuestbookLogicalSource.FileCount);
 			string source = KingdomGuestbookLogicalSource.Read();
 			AssertOrdered(source, "public static void OnZoneActivated(",
 				"public static void TryLodge(", "internal static void AppendGuestbookLine(",

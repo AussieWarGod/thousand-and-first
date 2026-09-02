@@ -17,6 +17,10 @@ namespace ThousandAndFirst
 	/// The engine-coupled half is <c>r_KingdomMirrorGate</c> and <c>KingdomMirrorGate</c>, in the
 	/// same folder, exactly as <c>KingdomPowerRules</c> sits beside <c>KingdomPower</c>.
 	/// </para>
+	/// <para>
+	/// The register's wire shape &mdash; version token, rows, and what an unknown version means
+	/// &mdash; is <c>KingdomMirrorGateRules.Register.cs</c>, beside this file.
+	/// </para>
 	/// </summary>
 	internal static partial class KingdomMirrorGateRules
 	{
@@ -133,89 +137,6 @@ namespace ThousandAndFirst
 			return !string.IsNullOrEmpty(text)
 				&& text.IndexOf(RowSeparator) < 0
 				&& text.IndexOf(FieldSeparator) < 0;
-		}
-
-		/// <summary>
-		/// Reads the register. Untrusted, because a save is untrusted and our own older writing is
-		/// untrusted with it.
-		/// <para>
-		/// An unreadable row is <b>dropped and counted</b> rather than taken as a reason to throw
-		/// the whole register away: one corrupt row must not cost the founder a crossing that is
-		/// standing perfectly well at the other end. The count is reported so the caller can say so
-		/// once (STANDARDS 7b) instead of losing it in silence.
-		/// </para>
-		/// </summary>
-		/// <param name="text">Register text; null and empty both read as no arches at all, which is
-		/// the ordinary state of a realm that has never keyed one.</param>
-		/// <param name="rows">Rows in register order. Never null.</param>
-		/// <param name="dropped">Rows that could not be read.</param>
-		/// <returns>True when nothing was dropped.</returns>
-		internal static bool TryParseRegister(string text, out KingdomGateRow[] rows, out int dropped)
-		{
-			dropped = 0;
-			if (string.IsNullOrEmpty(text))
-			{
-				rows = new KingdomGateRow[0];
-				return true;
-			}
-			string[] parts = text.Split(RowSeparator);
-			KingdomGateRow[] read = new KingdomGateRow[(parts.Length < MaxGates) ? parts.Length : MaxGates];
-			int kept = 0;
-			for (int i = 0; i < parts.Length; i++)
-			{
-				if (parts[i].Length == 0)
-				{
-					continue;
-				}
-				if (kept >= MaxGates)
-				{
-					dropped++;
-					continue;
-				}
-				string[] columns = parts[i].Split(FieldSeparator);
-				if (columns.Length != 3 || columns[0].Length == 0 || columns[1].Length == 0)
-				{
-					dropped++;
-					continue;
-				}
-				// A key twice over is a corrupt register, not two arches: the second reading would
-				// silently win every lookup below and the founder would never learn which is which.
-				if (IndexOfKey(read, kept, columns[0]) >= 0)
-				{
-					dropped++;
-					continue;
-				}
-				// One keyed arch per city is also save authority. A hostile duplicate city must
-				// not become a second destination merely because its key differs.
-				if (IndexOfCity(read, columns[1]) >= 0)
-				{
-					dropped++;
-					continue;
-				}
-				read[kept++] = new KingdomGateRow(columns[0], columns[1], columns[2]);
-			}
-			rows = new KingdomGateRow[kept];
-			Array.Copy(read, rows, kept);
-			return dropped == 0;
-		}
-
-		/// <summary>The register as one string, ready to be carried in game state.</summary>
-		internal static string FormatRegister(KingdomGateRow[] rows)
-		{
-			if (rows == null || rows.Length == 0)
-			{
-				return "";
-			}
-			System.Text.StringBuilder text = new System.Text.StringBuilder();
-			for (int i = 0; i < rows.Length; i++)
-			{
-				if (text.Length > 0)
-				{
-					text.Append(RowSeparator);
-				}
-				text.Append(rows[i].Key).Append(FieldSeparator).Append(rows[i].City).Append(FieldSeparator).Append(rows[i].Partner);
-			}
-			return text.ToString();
 		}
 
 		/// <summary>Index of an arch by key, or -1.</summary>

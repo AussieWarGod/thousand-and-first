@@ -289,7 +289,10 @@ namespace ThousandAndFirst.Tests
 				Source("Polity", "KingdomPolityHospitalityRuntime.Planning.cs"),
 				Source("Quests", "KingdomBounty.PaymentObservation.cs"),
 				Source("Quests", "KingdomBounty.PaymentPlanning.cs"),
-				Source("Quests", "KingdomBounty.PublicationAndRecovery.cs"),
+				Source("Quests", "KingdomBounty.Publication.cs"),
+				Source("Quests", "KingdomBounty.Sinks.cs"),
+				Source("Quests", "KingdomBounty.Cleanup.cs"),
+				Source("Quests", "KingdomBounty.Schedule.cs"),
 				Source("Quests", "KingdomBounty.ReadingGround.cs"),
 				Source("Trade", "KingdomTrade.15.MaterialRecovery.cs"),
 				Source("Trade", "KingdomTrade.17.ProjectionRecovery.cs")

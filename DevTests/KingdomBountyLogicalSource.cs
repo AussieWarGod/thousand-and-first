@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomBountyLogicalSource
 	{
-		internal const int FileCount = 19;
+		internal const int FileCount = 22;
 
 		private static readonly string[] Paths =
 		{
@@ -17,7 +17,10 @@ namespace ThousandAndFirst.Tests
 			"Quests/KingdomBounty.TargetSelection.cs",
 			"Quests/KingdomBounty.ManningSelection.cs",
 			"Quests/KingdomBounty.PassAndSchedule.cs",
-			"Quests/KingdomBounty.PublicationAndRecovery.cs",
+			"Quests/KingdomBounty.Publication.cs",
+			"Quests/KingdomBounty.Sinks.cs",
+			"Quests/KingdomBounty.Cleanup.cs",
+			"Quests/KingdomBounty.Schedule.cs",
 			"Quests/KingdomBounty.Take.cs",
 			"Quests/KingdomBounty.Manning.cs",
 			"Quests/KingdomBounty.ManningOption.cs",

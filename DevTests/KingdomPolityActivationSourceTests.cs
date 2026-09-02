@@ -160,7 +160,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExileTransformEndsPolitiesWithoutContinuingActorsOrInferringCasualties()
 		{
-			string rules = Read("Polity/KingdomPolityFactionTransitions.cs");
+			string rules = Read("Polity/KingdomPolityRules.RealmTransition.cs");
 			StringAssert.Contains("retiredCurrent.Lifecycle = KingdomPolityLifecycle.Ended", rules);
 			StringAssert.Contains("retiredImported.Lifecycle = KingdomPolityLifecycle.Ended", rules);
 			StringAssert.Contains("ReturnLedgerEnvelope = rollback", rules);
@@ -192,14 +192,14 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("new List<string> { \"unresolved\" }", profile);
 			StringAssert.DoesNotContain("Facts.Stage * 2", profile);
 			StringAssert.DoesNotContain("LegacyBodyKeys", profile);
-			string transitions = Read("Polity/KingdomPolityFactionTransitions.cs") +
-				Read("Polity/KingdomPolityFactionTransitions.Helpers.cs");
+			string transitions = Read("Polity/KingdomPolityRules.RealmTransition.cs") +
+				Read("Polity/KingdomPolityRules.ValidationRealmTransition.cs");
 			StringAssert.Contains("MatchesLegacyProfileSource", transitions);
 			string model = Read("Polity/KingdomPolityActivationModels.cs");
 			string legacy = SliceLegacy(model);
 			StringAssert.DoesNotContain("public string RealmId", legacy);
 			StringAssert.Contains("next.ReturnLedgerEnvelope = null",
-				Read("Polity/KingdomPolityFoundationAuthority.cs"));
+				Read("Polity/KingdomPolityRules.RealmTransition.cs"));
 		}
 
 		[Test]

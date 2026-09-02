@@ -155,7 +155,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 				ProviderId = "Hearthpyre", ProviderVersion = "2.2.3",
 				Identity = identity, ZoneId = ActiveZone.ZoneID, SectorId = sectorId,
 				Refusal = "", DeclaredCount = Cells.Count,
-				OriginX = Home.Origin.X, OriginY = Home.Origin.Y, Cells = Cells.ToArray(),
+				OriginX = Home.Origin.X, OriginY = Home.Origin.Y, Cells = ApiCells(Cells),
 				Revision = Digest(ActiveZone.ZoneID, sectorId, identity,
 					Home.Origin.X, Home.Origin.Y, Cells)
 			};
@@ -233,6 +233,15 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 		}
 
 		private static long Pack(int X, int Y) => ((long)X << 32) | (uint)Y;
+		/// <summary>Only Api cells cross the provider seam; the host translates them back.</summary>
+		private static KingdomApiCell[] ApiCells(List<ArchitecturePoint> Cells)
+		{
+			KingdomApiCell[] cells = new KingdomApiCell[Cells.Count];
+			for (int i = 0; i < cells.Length; i++)
+				cells[i] = new KingdomApiCell(Cells[i].X, Cells[i].Y);
+			return cells;
+		}
+
 		private static int Compare(ArchitecturePoint A, ArchitecturePoint B)
 		{
 			int y = A.Y.CompareTo(B.Y); return y != 0 ? y : A.X.CompareTo(B.X);

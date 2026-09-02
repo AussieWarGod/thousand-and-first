@@ -130,7 +130,8 @@ namespace ThousandAndFirst.Tests
 		public void LogicalSourceKeepsOneOrderedPartialAuthority()
 		{
 			string source = KingdomInheritanceStateLogicalSource.Read();
-			Assert.AreEqual(13, Occurrences(source,
+			// z10 split into z10a (reservation leases) and z10b (discoverability): one more shard.
+			Assert.AreEqual(14, Occurrences(source,
 				"public sealed partial class KingdomInheritanceState"));
 			Assert.AreEqual(1, Occurrences(source, "[GameStateSingleton(StateId)]"));
 			Assert.AreEqual(0, Occurrences(source,

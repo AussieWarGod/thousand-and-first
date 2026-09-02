@@ -176,6 +176,8 @@
     <Compile Include="..\Experience\KingdomLifecycleCarryExecutionRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCarryManifestShapeRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCarryPreparationRules.cs" />
+    <Compile Include="..\Experience\KingdomLifecycleCarrySinkRules.cs" />
+    <Compile Include="..\Experience\KingdomLifecycleOptionRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCarryReceiptRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleConservationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleDigestRules.cs" />
@@ -494,6 +496,7 @@
     <Compile Include="..\Polity\KingdomPolityAmbientTransactionRules.cs" />
     <Compile Include="..\Polity\KingdomPolityAmbientValidationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityDirectRecordPresentationRules.cs" />
+    <Compile Include="..\Polity\KingdomPolityArrivalPresentationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityEndpointObservationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityExpeditionDeedRules.cs" />
     <Compile Include="..\Polity\KingdomPolityLoadoutCatalogue.cs" />
@@ -745,6 +748,7 @@
 	<Compile Include="..\Growth\KingdomPowerRules.cs" />
 	<Compile Include="..\Growth\KingdomMirrorGateRules.Declarations.cs" />
 	<Compile Include="..\Growth\KingdomMirrorGateRules.cs" />
+	<Compile Include="..\Growth\KingdomMirrorGateRules.Register.cs" />
 	<Compile Include="..\Growth\KingdomMirrorGateRules.Pairing.cs" />
 	<Compile Include="..\Growth\KingdomMirrorGateRules.Destination.cs" />
 	<Compile Include="..\Growth\KingdomMirrorGateRules.HubAndRelease.cs" />
@@ -768,6 +772,8 @@
 	<Compile Include="..\Polity\KingdomPolityPublication.Helpers.cs" />
 	<Compile Include="..\Polity\KingdomPolityPublication.Exact.cs" />
 	<Compile Include="..\Polity\KingdomPolityFoundationAuthority.cs" />
+	<Compile Include="..\Polity\KingdomPolityRules.RealmTransition.cs" />
+	<Compile Include="..\Polity\KingdomPolityRules.ValidationRealmTransition.cs" />
 	<Compile Include="..\Polity\KingdomPolityFactionTransitions.cs" />
 	<Compile Include="..\Polity\KingdomPolityFactionTransitions.Helpers.cs" />
 	<Compile Include="..\Polity\KingdomPolityResidentFigures.cs" />
@@ -1117,12 +1123,15 @@
 	<Compile Include="..\Experience\KingdomGrowthFirstGuestIdentityRules.cs" />
 	<Compile Include="..\Experience\KingdomCommunalRiteModels.cs" />
 	<Compile Include="..\Experience\KingdomCommunalRiteRules.cs" />
+	<Compile Include="..\Experience\KingdomCommunalRiteRules.Recovery.cs" />
 	<Compile Include="..\Experience\KingdomCommunalRiteCodec.cs" />
 	<Compile Include="..\Experience\KingdomCommunalRiteCodec.Payload.cs" />
 	<Compile Include="..\Experience\KingdomCommunalRiteCodec.Primitives.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastModels.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastRules.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastRules.Copy.cs" />
+	<Compile Include="..\Experience\KingdomGuestFeastRules.Opportunity.cs" />
+	<Compile Include="..\Experience\KingdomGuestFeastRules.Locus.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastRules.Transitions.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastRules.Pointers.cs" />
 	<Compile Include="..\Experience\KingdomGuestFeastCodec.cs" />

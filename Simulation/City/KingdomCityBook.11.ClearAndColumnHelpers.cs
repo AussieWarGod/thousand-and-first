@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ThousandAndFirst.Simulation.City
@@ -101,6 +102,24 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				column.RemoveRange(0, drop);
 			}
+		}
+
+		/// <summary>
+		/// Whether a persisted column value names a member of a byte-backed vocabulary. Judged on
+		/// the <c>int</c> BEFORE any cast reads it: an unchecked cast into a byte-backed enum
+		/// truncates, so 256 would read as member 0 and 259 as member 3. The byte range is checked
+		/// first because <c>Enum.IsDefined</c> is only ever asked about the underlying width.
+		/// </summary>
+		private static bool DefinedIn(Type vocabulary, int value)
+		{
+			return value >= byte.MinValue && value <= byte.MaxValue
+				&& Enum.IsDefined(vocabulary, (byte)value);
+		}
+
+		/// <summary>Whether a persisted column value fits the narrow slot its row keeps it in.</summary>
+		private static bool Within(int value, int least, int most)
+		{
+			return value >= least && value <= most;
 		}
 	}
 }

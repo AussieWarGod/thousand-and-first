@@ -273,7 +273,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("WaterOutstanding", terminal);
 
 			string part = TestMain.ReadRepositoryText(
-				"Experience/KingdomGuestbook.z04.CarryHaulAndParts.cs");
+				"Experience/r_KingdomNotableGuest.cs");
 			StringAssert.Contains("BeforeDeathRemovalEvent.ID", part);
 			StringAssert.Contains("ObserveLodgeTargetDeath(ParentObject)", part);
 		}

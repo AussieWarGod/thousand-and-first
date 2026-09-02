@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomLocusLogicalSource
 	{
-		internal const int FileCount = 8;
+		internal const int FileCount = 9;
 
 		private static readonly string[] Paths =
 		{
@@ -16,6 +16,7 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomLocus.z01.GuestAndPilgrimPass.cs",
 			"Experience/KingdomLocus.z02.LifecycleGuestsAndHeart.cs",
 			"Experience/KingdomLocus.z03.WaterAndGuestPart.cs",
+			"Experience/r_KingdomGuest.cs",
 			"Experience/r_KingdomLocusAmbient.cs"
 		};
 

@@ -40,8 +40,12 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("IDIfAssigned", source);
 			StringAssert.Contains("kingdomMode && succession == null", source);
 			StringAssert.Contains("TryReadStableRulerOrdinal", source);
-			StringAssert.Contains("PendingDeathToken", source);
-			StringAssert.Contains("InterregnumPhase.RiteDue", source);
+			// The read-only reign bridge is a KingdomSuccession shard; it lives with its family in
+			// Experience/ so the Core runtime file resolves only the loaded body.
+			string bridge = Read("Experience/KingdomSuccession.RulerOrdinalBridge.cs");
+			StringAssert.Contains("TryReadStableRulerOrdinal", bridge);
+			StringAssert.Contains("PendingDeathToken", bridge);
+			StringAssert.Contains("InterregnumPhase.RiteDue", bridge);
 			Assert.That(source, Does.Not.Contain("RequireSystem"));
 			Assert.That(source, Does.Not.Contain("ZoneManager"));
 			Assert.That(source, Does.Not.Contain("FindByID"));
@@ -157,6 +161,7 @@ namespace ThousandAndFirst.DevTests
 			{
 				"Core/KingdomBodyHistoryRulerLife.cs",
 				"Core/KingdomBodyHistoryRulerLifeRuntime.cs",
+				"Experience/KingdomSuccession.RulerOrdinalBridge.cs",
 				"Core/KingdomBodyHistoryRules.NativeIdentity.cs",
 				"Core/KingdomLabBodyHistoryContractRules.cs",
 				"Core/KingdomBodyHistoryTransactions.cs",

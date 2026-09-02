@@ -5,7 +5,7 @@ namespace ThousandAndFirst.Tests
 {
 	internal static class KingdomGuestbookLogicalSource
 	{
-		internal const int FileCount = 6;
+		internal const int FileCount = 8;
 
 		private static readonly string[] Paths =
 		{
@@ -14,7 +14,9 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomGuestbook.z01b.MarketHandoff.cs",
 			"Experience/KingdomGuestbook.z02.Lifecycle.cs",
 			"Experience/KingdomGuestbook.z03.ReportingAndCarrySign.cs",
-			"Experience/KingdomGuestbook.z04.CarryHaulAndParts.cs"
+			"Experience/KingdomCarryHaul.cs",
+			"Experience/r_KingdomNotableGuest.cs",
+			"Experience/r_KingdomCarrySign.cs"
 		};
 
 		internal static string Read()

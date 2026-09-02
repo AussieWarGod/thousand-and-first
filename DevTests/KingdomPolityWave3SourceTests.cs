@@ -114,7 +114,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryPruneScheduledTerminals", schedule);
 			StringAssert.Contains("KingdomPolityAttentionRules.TryAdmitManifestation", manifestation);
 			StringAssert.Contains("KingdomPolityAttentionRules.TryAdmitManifestation", scheduler);
-			StringAssert.Contains("EndpointVerb", scheduler);
+			StringAssert.Contains("EndpointVerb",
+				Read("Polity/KingdomPolityArrivalPresentationRules.cs"));
 		}
 
 		[Test]

@@ -47,7 +47,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PresentationUsesFrozenEndpointNamesWithoutInventingOutcome()
 		{
-			string runtime = Read("KingdomPolitySchedulerRuntime.cs");
+			string runtime = Read("KingdomPolitySchedulerRuntime.cs") +
+				Read("KingdomPolityArrivalPresentationRules.cs");
 			StringAssert.Contains("t.SourceSettlementName", runtime);
 			StringAssert.Contains("t.DestinationSettlementName", runtime);
 			StringAssert.DoesNotContain("is sighted at the boundary", runtime);

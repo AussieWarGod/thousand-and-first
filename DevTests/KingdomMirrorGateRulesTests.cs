@@ -210,6 +210,158 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual("", KingdomMirrorGateRules.FormatRegister(new KingdomGateRow[0]));
 		}
 
+		// --- the register's wire: version token, pre-version saves, and newer builds -------------
+
+		private const string LegacyPair = KeyA + "^Kavvat^" + KeyB + "|" + KeyB + "^Ossuary Reach^" + KeyA;
+
+		[Test]
+		public void FormatRegister_OpensWithTheVersionTokenAndChangesNothingElse()
+		{
+			// Golden text: the exact bytes a v1 register carries. A mutation to the token, the
+			// separators, or the column order shows up here and nowhere subtler.
+			KingdomGateRow[] written = Register(
+				new KingdomGateRow(KeyA, "Kavvat", KeyB),
+				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
+			string text = KingdomMirrorGateRules.FormatRegister(written);
+			Assert.AreEqual("v1", KingdomMirrorGateRules.RegisterVersionToken);
+			StringAssert.StartsWith("v1|", text);
+			Assert.AreEqual("v1|" + LegacyPair, text);
+			Assert.AreEqual(LegacyPair, KingdomMirrorGateRules.LegacyRegisterText(written));
+			Assert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(null));
+			Assert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(new KingdomGateRow[0]));
+		}
+
+		[Test]
+		public void TryParseRegister_ReadsAPreVersionRegisterExactlyAsBefore()
+		{
+			// An existing save has no token. It must read with version-1 semantics, unchanged, and
+			// only a genuine write may ever carry it forward into the versioned shape.
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(LegacyPair, out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(0, dropped);
+			AssertPair(rows);
+			Assert.AreEqual("v1|" + LegacyPair, KingdomMirrorGateRules.FormatRegister(rows));
+		}
+
+		[Test]
+		public void TryParseRegister_RoundTripsAVersionedRegister()
+		{
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister("v1|" + LegacyPair, out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(0, dropped);
+			AssertPair(rows);
+		}
+
+		[TestCase("v1")]
+		[TestCase("v1|")]
+		public void TryParseRegister_AVersionTokenAloneIsNoArches(string text)
+		{
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(0, rows.Length);
+			Assert.AreEqual(0, dropped);
+		}
+
+		[TestCase("v2|")]
+		[TestCase("v10|")]
+		[TestCase("v2")]
+		public void TryParseRegister_RefusesANewerBuildsRegisterWholeRatherThanRepairingIt(string token)
+		{
+			// The whole point of the token: a later build's register is not corruption. Nothing is
+			// read, nothing is dropped, and the flag is distinct so no caller can mistake the
+			// refusal for a damaged row and rewrite the text.
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			string text = token.EndsWith("|") ? token + LegacyPair : token;
+			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
+			Assert.IsTrue(future);
+			Assert.AreEqual(0, rows.Length);
+			Assert.AreEqual(0, dropped);
+			// The two-count reading refuses the same way, with nothing to repair.
+			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped));
+			Assert.AreEqual(0, rows.Length);
+			Assert.AreEqual(0, dropped);
+		}
+
+		[TestCase("v|")]
+		[TestCase("V1|")]
+		[TestCase("v1x|")]
+		[TestCase("vv|")]
+		[TestCase("v123456789|")]
+		public void TryParseRegister_OnlyAWholeTokenIsATokenAndAnythingElseIsARow(string prefix)
+		{
+			// Something that is not quite a token is what it always was: an unreadable row of a
+			// pre-version register, dropped and counted, never a reason to refuse the whole thing.
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(prefix + LegacyPair, out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(1, dropped);
+			AssertPair(rows);
+		}
+
+		[Test]
+		public void TryParseRegister_StillDropsAndCountsAMalformedVersionedRow()
+		{
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister("v1|" + KeyA + "^Kavvat^|nonsense|" + KeyB + "^Ossuary Reach^", out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(1, dropped);
+			Assert.AreEqual(2, rows.Length);
+			Assert.AreEqual(KeyA, rows[0].Key);
+			Assert.AreEqual(KeyB, rows[1].Key);
+		}
+
+		[Test]
+		public void TryParseRegister_TheCapCountsRowsAndNotTheToken()
+		{
+			System.Text.StringBuilder text = new System.Text.StringBuilder("v1");
+			for (int i = 0; i <= KingdomMirrorGateRules.MaxGates; i++)
+			{
+				text.Append(KingdomMirrorGateRules.RowSeparator);
+				text.Append("key" + i).Append(KingdomMirrorGateRules.FieldSeparator).Append("city" + i).Append(KingdomMirrorGateRules.FieldSeparator);
+			}
+			KingdomGateRow[] rows;
+			int dropped;
+			bool future;
+			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text.ToString(), out rows, out dropped, out future));
+			Assert.IsFalse(future);
+			Assert.AreEqual(KingdomMirrorGateRules.MaxGates, rows.Length);
+			Assert.AreEqual("key0", rows[0].Key);
+			Assert.AreEqual(1, dropped);
+		}
+
+		[Test]
+		public void FutureVersionLine_SaysTheRegisterIsLeftAloneAndWhy()
+		{
+			StringAssert.Contains("newer version", KingdomMirrorGateRules.FutureVersionLine);
+			StringAssert.Contains("left exactly as it was", KingdomMirrorGateRules.FutureVersionLine);
+		}
+
+		private static void AssertPair(KingdomGateRow[] rows)
+		{
+			Assert.AreEqual(2, rows.Length);
+			Assert.AreEqual(KeyA, rows[0].Key);
+			Assert.AreEqual("Kavvat", rows[0].City);
+			Assert.AreEqual(KeyB, rows[0].Partner);
+			Assert.AreEqual(KeyB, rows[1].Key);
+			Assert.AreEqual("Ossuary Reach", rows[1].City);
+			Assert.AreEqual(KeyA, rows[1].Partner);
+		}
+
 		// --- lookups ---------------------------------------------------------------------------
 
 		[Test]

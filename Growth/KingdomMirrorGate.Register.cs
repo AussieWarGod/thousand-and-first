@@ -24,9 +24,17 @@ namespace ThousandAndFirst
 		/// founder is told once &mdash; which is once and only once because the repair makes the
 		/// condition non-recurring, so no latch is needed anywhere to hold it to that.
 		/// </para>
+		/// <para>
+		/// A register a newer build wrote is not damage and is not repaired: nothing is read from
+		/// it, nothing is written over it, and the stored text is left exactly as it was for the
+		/// build that owns it. Reads see no arches, and every write in this lane is refused at
+		/// <see cref="Write"/>, so an older build can never unkey a newer one's realm. A register
+		/// from before there was a version token reads as version 1 and is carried forward only by
+		/// a genuine write, never because it was read.
+		/// </para>
 		/// </summary>
-		/// <param name="System">Told when a row had to be dropped. Null asks nothing and says
-		/// nothing, which is what the read-only callers want.</param>
+		/// <param name="System">Told when a row had to be dropped, or when the register is a newer
+		/// build's. Null asks nothing and says nothing, which is what the read-only callers want.</param>
 		private static KingdomGateRow[] Register(KingdomSystem System)
 		{
 			if (The.Game == null)
@@ -35,7 +43,17 @@ namespace ThousandAndFirst
 			}
 			KingdomGateRow[] rows;
 			int dropped;
-			KingdomMirrorGateRules.TryParseRegister(The.Game.GetStringGameState(KingdomMirrorGateRules.RegisterStateKey, ""), out rows, out dropped);
+			bool future;
+			KingdomMirrorGateRules.TryParseRegister(The.Game.GetStringGameState(KingdomMirrorGateRules.RegisterStateKey, ""), out rows, out dropped, out future);
+			if (future)
+			{
+				KingdomLog.Log("mirror-gate: register carries a version this build does not know; left untouched");
+				if (System != null && System.Founded)
+				{
+					System.Ledger.Note("{{r|" + KingdomMirrorGateRules.FutureVersionLine + "}}");
+				}
+				return rows;
+			}
 			if (dropped <= 0)
 			{
 				return rows;
@@ -49,9 +67,26 @@ namespace ThousandAndFirst
 			return rows;
 		}
 
-		private static void Write(KingdomGateRow[] rows)
+		/// <summary>
+		/// Carries the register into game state in this build's own shape. Refused, and said so in
+		/// the log, when the text already there belongs to a newer build: that register is not ours
+		/// to overwrite, whatever a caller believes it read. Also refused with no game to hold it.
+		/// False means nothing changed, and nothing should be announced as having changed.
+		/// </summary>
+		private static bool Write(KingdomGateRow[] rows)
 		{
-			The.Game?.SetStringGameState(KingdomMirrorGateRules.RegisterStateKey, KingdomMirrorGateRules.FormatRegister(rows));
+			if (The.Game == null)
+			{
+				return false;
+			}
+			KingdomMirrorGateRules.TryParseRegister(The.Game.GetStringGameState(KingdomMirrorGateRules.RegisterStateKey, ""), out KingdomGateRow[] _, out int _, out bool future);
+			if (future)
+			{
+				KingdomLog.Log("mirror-gate: refused to overwrite a register of a version this build does not know");
+				return false;
+			}
+			The.Game.SetStringGameState(KingdomMirrorGateRules.RegisterStateKey, KingdomMirrorGateRules.FormatRegister(rows));
+			return true;
 		}
 
 		/// <summary>
@@ -100,7 +135,10 @@ namespace ThousandAndFirst
 				KingdomLog.Log("mirror-gate hub refused for " + Capital + ": " + verdict);
 				return;
 			}
-			Write(next);
+			if (!Write(next))
+			{
+				return;
+			}
 			ReAnchorHere();
 			if (rekeyed <= 0)
 			{
@@ -146,7 +184,11 @@ namespace ThousandAndFirst
 				Popup.Show(KingdomMirrorGateRules.RefusalLine(verdict, city));
 				return;
 			}
-			Write(next);
+			if (!Write(next))
+			{
+				Popup.Show("The arch register did not accept the change. Nothing is announced as changed; inspect the realm's arch record before trying again.");
+				return;
+			}
 			Anchor(Gate);
 			Gate.Dark = false;
 			System.Ledger.Note("{{y|" + KingdomMirrorGateRules.ReleasedLine(KingdomPresentation.Rich(city)) + "}}");

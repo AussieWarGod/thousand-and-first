@@ -86,7 +86,9 @@ namespace ThousandAndFirst
 			return "footprint origin is outside its exact membership";
 		}
 
-		private static bool TryNormalizeCells(IReadOnlyList<ArchitecturePoint> Source, Zone Z,
+		/// <summary>The Api seam: provider cells arrive as <see cref="KingdomApiCell"/> and become
+		/// internal geometry only after every one is proved inside the zone and unique.</summary>
+		private static bool TryNormalizeCells(IReadOnlyList<KingdomApiCell> Source, Zone Z,
 			out List<ArchitecturePoint> Result, out string Failure)
 		{
 			Result = new List<ArchitecturePoint>(); Failure = null;
@@ -96,11 +98,11 @@ namespace ThousandAndFirst
 			HashSet<long> seen = new HashSet<long>();
 			for (int i = 0; i < Source.Count; i++)
 			{
-				ArchitecturePoint cell = Source[i];
+				KingdomApiCell cell = Source[i];
 				if (cell.X < 0 || cell.Y < 0 || cell.X >= Z.Width || cell.Y >= Z.Height
 					|| !seen.Add(KingdomDesignationRules.Pack(cell.X, cell.Y)))
 					return Fail("foreign footprint cell is out of bounds or duplicated", out Failure);
-				Result.Add(cell);
+				Result.Add(new ArchitecturePoint(cell.X, cell.Y));
 			}
 			Result.Sort(Compare); return true;
 		}

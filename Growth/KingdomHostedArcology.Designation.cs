@@ -23,12 +23,26 @@ namespace ThousandAndFirst
 	/// <summary>Active-zone-only designation source for a paid hosted interior. The stable
 	/// interior slate, not its remote exterior shell, is the exact live designation root.</summary>
 	[KingdomDesignationProvider]
-	public sealed class KingdomHostedArcologyDesignationProvider : IKingdomDesignationProvider
+	public sealed class KingdomHostedArcologyDesignationProvider
+		: IKingdomDesignationProvider, IKingdomTrustedDesignationSource
 	{
 		public string ProviderId => "taf.hosted-arcology";
 		public string ProviderVersion => "1";
 
+		/// <summary>The Api face of the same observation: the trusted row carrying only Api types.</summary>
 		public bool TryObserve(Zone ActiveZone,
+			out KingdomApiDesignation[] Designations, out string Failure)
+		{
+			Designations = null;
+			if (!TryObserveTrusted(ActiveZone, out KingdomBenefitDesignation[] rows, out Failure))
+				return false;
+			Designations = new KingdomApiDesignation[rows.Length];
+			for (int i = 0; i < rows.Length; i++)
+				Designations[i] = KingdomDesignationRules.ToApi(rows[i]);
+			return true;
+		}
+
+		public bool TryObserveTrusted(Zone ActiveZone,
 			out KingdomBenefitDesignation[] Designations, out string Failure)
 		{
 			Designations = null; Failure = null;

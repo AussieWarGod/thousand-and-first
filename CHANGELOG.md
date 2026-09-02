@@ -306,12 +306,12 @@ checkpoints only; they do not sign current bytes.
   and delve-link custody;
   numeric lexical prefixes are used only where canonical compile order must retain declaration or
   reflection order. Nineteen more authorities have been decomposed since checkpoint `d3fc4b9`, sixteen
-  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2915-file census is line-cap green: 419,941 physical lines; 0 files exceed 300,
+  since checkpoint `b049c17`, and thirteen since hosted checkpoint `1c2d619`. Current 2944-file census is line-cap green: 420,612 physical lines; 0 files exceed 300,
   0 are exactly 300, 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL`
-  imports occur in 1358 files, 0 of them over the line limit. Its
+  imports occur in 1373 files, 0 of them over the line limit. Its
   exact inventory digest is
-  `6226163678b196ebe240156edddd5c856265200b6fd6c467abd757d801397268`;
-  the corresponding cold-install inventory contains 2945 files. The
+  `79d5be0222b22db9acc1ae0b36e9bea98e0b386c5f222c29e9b3b3b4a2a4bd3e`;
+  the corresponding cold-install inventory contains 2974 files. The
   exact-inventory human semantic review remains a release blocker:
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full

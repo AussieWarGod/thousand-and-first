@@ -373,7 +373,7 @@ namespace ThousandAndFirst.Tests
 		public void ResidentLookupEnumeratesEveryResidentAuthorityAndChecksNativeCacheLast()
 		{
 			string source = Read("Polity/KingdomPolityEndpointRuntime.Locator.cs");
-			string collect = Method(Read("Polity/KingdomPolityEndpointRuntime.DeathLegacy.cs"),
+			string collect = Method(Read("Polity/KingdomPolityEndpointRuntime.Locator.Roots.cs"),
 				"private static bool TryCollectResidentRoots");
 			string scan = Method(source, "private static bool TryScanResidentRoots");
 			string lookup = Method(source, "private static bool TryFindResidentObject");

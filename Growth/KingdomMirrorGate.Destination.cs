@@ -11,16 +11,30 @@ namespace ThousandAndFirst
 
 	internal static partial class KingdomMirrorGate
 	{
-		/// <summary>Reads one exact canonical register without repairing or rewriting it.</summary>
+		/// <summary>Reads one exact canonical register without repairing or rewriting it. Exact is
+		/// byte-for-byte what a build wrote: this build's versioned text, or a pre-version save's
+		/// unversioned text, which the one write below then carries forward in the current shape.
+		/// A newer build's register is refused whole, and <paramref name="Refusal"/> says so.</summary>
 		private static bool TryReadDestinationRegister(out string Raw,
-			out KingdomGateRow[] Rows)
+			out KingdomGateRow[] Rows, out string Refusal)
 		{
+			Refusal = null;
 			Raw = The.Game?.GetStringGameState(
 				KingdomMirrorGateRules.RegisterStateKey, "") ?? "";
-			if (!KingdomMirrorGateRules.TryParseRegister(Raw, out Rows, out int dropped)
-				|| dropped != 0) return false;
-			return string.Equals(Raw, KingdomMirrorGateRules.FormatRegister(Rows),
-				StringComparison.Ordinal);
+			bool read = KingdomMirrorGateRules.TryParseRegister(Raw, out Rows, out int dropped,
+				out bool future);
+			if (future)
+			{
+				Refusal = KingdomMirrorGateRules.FutureVersionLine;
+				return false;
+			}
+			if (read && dropped == 0
+				&& (string.Equals(Raw, KingdomMirrorGateRules.FormatRegister(Rows),
+						StringComparison.Ordinal)
+					|| string.Equals(Raw, KingdomMirrorGateRules.LegacyRegisterText(Rows),
+						StringComparison.Ordinal))) return true;
+			Refusal = "The realm's arch register is not an exact readable record. Repair or re-key its damaged arches before choosing a capital destination.";
+			return false;
 		}
 
 		internal static bool CanChooseDestination(r_KingdomMirrorGate Gate)
@@ -38,7 +52,8 @@ namespace ThousandAndFirst
 			string city = CityOf(system, zone.ZoneID);
 			if (string.IsNullOrEmpty(city) || !KingdomCrown.CrownedHere(system, city)) return false;
 			string key = KingdomMirrorGateRules.ComposeLocationKey(zone.ZoneID, cell.X, cell.Y);
-			return TryReadDestinationRegister(out string _, out KingdomGateRow[] rows)
+			return TryReadDestinationRegister(out string _, out KingdomGateRow[] rows,
+					out string _)
 				&& KingdomMirrorGateRules.HubSpokeIndices(rows, key).Length > 1;
 		}
 
@@ -78,9 +93,10 @@ namespace ThousandAndFirst
 			}
 			string locationKey = KingdomMirrorGateRules.ComposeLocationKey(
 				zone.ZoneID, frozenCell.X, frozenCell.Y);
-			if (!TryReadDestinationRegister(out string frozen, out KingdomGateRow[] rows))
+			if (!TryReadDestinationRegister(out string frozen, out KingdomGateRow[] rows,
+				out string refusal))
 			{
-				Popup.Show("The realm's arch register is not an exact readable record. Repair or re-key its damaged arches before choosing a capital destination.");
+				Popup.Show(refusal);
 				return false;
 			}
 			int hub = KingdomMirrorGateRules.IndexOfKey(rows, locationKey);

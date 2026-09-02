@@ -23,7 +23,8 @@ namespace ThousandAndFirst.Simulation.City
 					|| legCount > KingdomItineraryRules.MaxLegs
 					|| consumed + legCount > legs
 					|| SubjectIds[i] < 0
-					|| !Enum.IsDefined(typeof(KingdomJobKind), Kinds[i])) return false;
+					|| Kinds[i] < 0 || Kinds[i] > byte.MaxValue
+					|| !Enum.IsDefined(typeof(KingdomJobKind), (byte)Kinds[i])) return false;
 				consumed += legCount;
 				if ((KingdomJobKind)Kinds[i] == KingdomJobKind.Expedition
 					&& SubjectIds[i] == ResidentId) Expedition = true;

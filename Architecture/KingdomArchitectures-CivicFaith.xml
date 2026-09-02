@@ -253,6 +253,7 @@
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="mess-table" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureLockerScrap" Role="empty-watch-locker" Material="scrap" MinTech="salvage" Natural="no" />
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="watch-fire" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="watch-light" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="benefit-watchhouse-main" Blueprint="r_KingdomWatchMuster" Role="physical-benefit-watchhouse-main" Material="scrap" MinTech="salvage" Natural="no" />
   </palette>
 
@@ -732,11 +733,12 @@
     <glyph Char="E" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
     <glyph Char="l" Ground="$floor" Object="$benefit-barracks-main" Claim="building" Pass="walk" Cover="walled" Anchors="light:muster,benefit:barracks-main" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:watch-fire" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="p" Ground="$floor" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="SSSSSSSSSSSS" />
     <row Cells="SPPPB@TBPPPS" />
-    <row Cells="SPPPPPPPPPPS" />
+    <row Cells="SPPPPPLPPPPS" />
     <row Cells="SPBPhPlAPBPS" />
     <row Cells="SPPPWWPPPPPS" />
     <row Cells="SPPPDDPPPPPQ" />
@@ -756,12 +758,13 @@
     <glyph Char="m" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:mess" Stateful="yes" />
     <glyph Char="T" Ground="$floor" Object="$benefit-watchhouse-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:watch-roster,benefit:watchhouse-main" />
     <glyph Char="A" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:watch" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth,light:watch-fire" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:watch-fire" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:muster" />
     <row Cells=".SSSSSS." />
     <row Cells=".SB@mBS." />
-    <row Cells=".SPPPPS." />
+    <row Cells=".SPPLPS." />
     <row Cells=".ShPTAS." />
     <row Cells=".SSDSSS." />
     <row Cells="...E...." />
@@ -778,14 +781,15 @@
     <glyph Char="m" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:mess" Stateful="yes" />
     <glyph Char="T" Ground="$floor" Object="$benefit-watchhouse-main" Claim="building" Pass="adjacent" Cover="walled" Anchors="service:watch-roster,benefit:watchhouse-main" />
     <glyph Char="A" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="walled" Anchors="storage:watch" Stateful="yes" />
-    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth,light:watch-fire" />
+    <glyph Char="h" Ground="$floor" Object="$hearth" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:hearth" Stateful="yes" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:watch-fire" />
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="E" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public,service:muster" />
     <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
     <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
     <row Cells="...SSSSSS..." />
     <row Cells="...SB@mBS..." />
-    <row Cells="...SPPPPS..." />
+    <row Cells="...SPPLPS..." />
     <row Cells="...ShPTAS..." />
     <row Cells="...SSDSSS..." />
     <row Cells=".....E......" />

@@ -103,8 +103,12 @@ namespace ThousandAndFirst.Simulation.City
 				}
 				// A row whose standing and cause disagree is repaired toward the STANDING, because
 				// the standing is what every consumer branches on and a mismatched cause would let
-				// a living settler carry a death clause into a memorial.
-				if (!KingdomResidentRules.CauseFits((KingdomResidentStanding)ResidentStandings[i], (KingdomStandingCause)ResidentCauses[i]))
+				// a living settler carry a death clause into a memorial. A standing or cause this
+				// build has no member for is not read here at all: the cast would truncate it into
+				// a member it never was, and TryRead refuses the row rather than repairing it.
+				if (DefinedIn(typeof(KingdomResidentStanding), ResidentStandings[i])
+					&& DefinedIn(typeof(KingdomStandingCause), ResidentCauses[i])
+					&& !KingdomResidentRules.CauseFits((KingdomResidentStanding)ResidentStandings[i], (KingdomStandingCause)ResidentCauses[i]))
 				{
 					ResidentCauses[i] = (int)DefaultCauseFor((KingdomResidentStanding)ResidentStandings[i]);
 				}

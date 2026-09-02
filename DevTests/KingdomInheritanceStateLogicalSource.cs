@@ -17,7 +17,8 @@ namespace ThousandAndFirst.Tests
 			"World/KingdomInheritanceState.z07.LoadedRepairAndRewind.cs",
 			"World/KingdomInheritanceState.z08.ValidationAndInstall.cs",
 			"World/KingdomInheritanceState.z09.ReleaseAndCleanup.cs",
-			"World/KingdomInheritanceState.z10.LeasesAndDiscoverability.cs",
+			"World/KingdomInheritanceState.z10a.ReservationLeases.cs",
+			"World/KingdomInheritanceState.z10b.Discoverability.cs",
 			"World/KingdomInheritanceState.z11.QuarantineAndZoneNames.cs",
 			"World/KingdomInheritanceState.z12.ReservationAndState.cs"
 		};

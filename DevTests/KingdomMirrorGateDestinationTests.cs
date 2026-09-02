@@ -214,6 +214,56 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(condemned, release,
 				"an already-keyed condemned arch must remain releasable");
 		}
+
+		[Test]
+		public void RegisterReadersRefuseANewerBuildsRegisterWithoutRewritingIt()
+		{
+			// The engine side of the version token: a read never rewrites, the drop-and-rewrite
+			// repair is reached only for a version this build knows, and no write in the register
+			// lane can put this build's text over a newer build's.
+			string register = TestMain.ReadRepositoryText("Growth/KingdomMirrorGate.Register.cs");
+			StringAssert.Contains("out bool future", register);
+			int refused = register.IndexOf("if (future)", System.StringComparison.Ordinal);
+			int untouched = register.IndexOf("if (dropped <= 0)", System.StringComparison.Ordinal);
+			int repair = register.IndexOf("Write(rows);", System.StringComparison.Ordinal);
+			Assert.Greater(refused, 0);
+			Assert.Less(refused, untouched,
+				"a newer build's register is refused before anything is counted as damage");
+			Assert.Less(untouched, repair,
+				"a register with nothing dropped is returned before the rewrite");
+			StringAssert.Contains("KingdomMirrorGateRules.FutureVersionLine", register);
+			StringAssert.DoesNotContain("LegacyRegisterText", register,
+				"a pre-version register is carried forward only by a genuine write, never on read");
+			string write = register.Substring(register.IndexOf(
+				"private static bool Write(KingdomGateRow[] rows)", System.StringComparison.Ordinal));
+			write = write.Substring(0, write.IndexOf("SetStringGameState",
+				System.StringComparison.Ordinal));
+			StringAssert.Contains("out bool future", write);
+			StringAssert.Contains("return false;", write);
+			Assert.AreEqual(2, Count(register, "if (!Write(next))"),
+				"every write in the register lane is guarded and announces nothing when refused");
+
+			string destination = TestMain.ReadRepositoryText(
+				"Growth/KingdomMirrorGate.Destination.cs");
+			StringAssert.Contains("out bool future", destination);
+			StringAssert.Contains("Refusal = KingdomMirrorGateRules.FutureVersionLine", destination);
+			StringAssert.Contains("KingdomMirrorGateRules.LegacyRegisterText(Rows)", destination);
+			StringAssert.Contains("Popup.Show(refusal)", destination);
+			StringAssert.DoesNotContain("LegacyRegisterText(Next)", destination,
+				"the one write here carries a pre-version register forward in the current shape");
+		}
+
+		private static int Count(string source, string value)
+		{
+			int count = 0;
+			int at = 0;
+			while ((at = source.IndexOf(value, at, System.StringComparison.Ordinal)) >= 0)
+			{
+				count++;
+				at += value.Length;
+			}
+			return count;
+		}
 	}
 }
 #endif

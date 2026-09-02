@@ -93,7 +93,10 @@ furniture or technology must still supply every effective benefit.
 `TryObserve` receives only the exact active loaded zone. It returns bounded
 `KingdomForeignFootprint` rows with exact `ProviderId`, `ProviderVersion`, stable `Identity`, stable
 `Revision`, `ZoneId`, optional `SectorId`, `DeclaredCount`, origin, and the complete unique in-zone
-cell set. A revision must change whenever membership or its trusted foreign evidence changes.
+cell set as `KingdomApiCell` values. Only `ThousandAndFirst.Api` types cross this seam: the host
+translates every cell into its own geometry after proving it lies inside the zone and is unique,
+and refuses the row otherwise. (ALPHA, 2026-09-02: `Cells` changed from an internal point type to
+`KingdomApiCell`; no released provider predates the change.) A revision must change whenever membership or its trusted foreign evidence changes.
 Providers must not load a zone, mint an identity while observing, or mutate either system. A false
 result with no failure means no footprint is present; a provider-wide failure quarantines only
 that provider's current evidence. It does not erase healthy siblings from another provider or
@@ -133,6 +136,24 @@ observable. Home overlap is normalized by the host's ordinary row-local ambiguit
 registry, reverse-registry, backlink, and cell-enumeration read across both proof passes spends one
 shared 1,048,576-entry callback work budget. Exhaustion is a deterministic provider-wide fault and
 publishes no partial Home array, so separately bounded registries cannot multiply into a hang.
+
+## Exact-cell designation provider protocol
+
+`ThousandAndFirst.Api.IKingdomDesignationProvider` and `KingdomDesignationProviderAttribute` let
+another mod's persistent building system stand as a civic designation source. `TryObserve`
+receives only the exact active loaded zone and returns bounded `KingdomApiDesignation` rows: exact
+`ProviderId` and `ProviderVersion`, a stable `Identity` and `Revision`, `ZoneId`, the global id of
+the physical `RootId` object standing on that ground, a published catalogue `BuildingKey`, an
+optional `LotId`, and the complete unique in-zone cell set as `KingdomApiCell` values. The same
+known-absence and provider-wide-fault rules as footprints apply.
+
+Only Api types cross this seam. The host translates each row (`KingdomDesignationRules.TryTranslate`),
+refusing rather than repairing any row with a null, empty, over-bound, out-of-zone, or duplicated
+cell; it re-derives caps and accepted tags from `BuildingKey`, and it proves the root object exact
+on the active ground before the row can supply or quarantine anything. Every external cell is
+open-yard evidence — plot and building membership only; covered, interior, and ingress claims are
+never granted from a provider row. Designations this mod ships itself (the hosted arcology) travel
+an internal trusted path and keep their proved interior geometry.
 
 ## `KingdomSystem` — the game system
 

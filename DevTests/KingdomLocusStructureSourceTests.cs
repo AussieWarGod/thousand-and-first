@@ -16,13 +16,14 @@ namespace ThousandAndFirst.Tests
 			"Experience/KingdomLocus.z01.GuestAndPilgrimPass.cs",
 			"Experience/KingdomLocus.z02.LifecycleGuestsAndHeart.cs",
 			"Experience/KingdomLocus.z03.WaterAndGuestPart.cs",
+			"Experience/r_KingdomGuest.cs",
 			"Experience/r_KingdomLocusAmbient.cs"
 		};
 
 		[Test]
 		public void LogicalAuthorityRetainsEveryDeclarationInOriginalOrder()
 		{
-			Assert.AreEqual(8, KingdomLocusLogicalSource.FileCount);
+			Assert.AreEqual(9, KingdomLocusLogicalSource.FileCount);
 			string source = KingdomLocusLogicalSource.Read();
 			Assert.AreEqual(7, Count(source, "public static partial class KingdomLocus"));
 			Assert.AreEqual(1, Count(source, "public class r_KingdomGuest : IPart"));

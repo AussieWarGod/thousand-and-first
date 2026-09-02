@@ -15,7 +15,7 @@
 > candidate receipts below prove only their frozen bytes.
 
 > **Current-truth note — 2026-09-01.** The frozen handoff state below is the 2026-08-27 snapshot,
-> kept verbatim; the live frozen-source structural census is 2915 staged sources, 2857 cold-install
+> kept verbatim; the live frozen-source structural census is 2944 staged sources, 2857 cold-install
 > files, and 410,378 physical lines with 0 at or above the 300-line cap, per `../docs/STATUS.md` and
 > `../docs/STRUCTURE.md`. Current automated gates are green; native/human/Steam/preview evidence is open.
 

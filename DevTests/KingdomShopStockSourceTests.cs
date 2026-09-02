@@ -81,8 +81,8 @@ namespace ThousandAndFirst.Tests
 		public void CustodySurvivesOfficeAndLegendaryWhileDetachedGoodsRetireMarks()
 		{
 			string custody = Read("Growth/KingdomMarketStockCustody.cs");
-			string detachment = Read("Growth/KingdomMarketStockDetachment.cs");
-			string projection = Read("Growth/KingdomMarketStockProjection.cs");
+			string detachment = Read("Growth/KingdomMarketStockDetachment.cs") + Read("Growth/KingdomMarketStockProtection.cs");
+			string projection = Read("Growth/KingdomMarketStockProjection.cs") + Read("Growth/KingdomMarketLegendaryProjection.cs");
 			string admission = Read("Growth/KingdomMarketStockAdmission.cs");
 			string split = Read("Growth/KingdomMarketStockSplit.cs");
 			string handoff = Read("Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
@@ -143,7 +143,7 @@ namespace ThousandAndFirst.Tests
 		public void LegendaryHandoffAndRealmRemovalAreExplicitTransactions()
 		{
 			string handoff = Read("Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
-			string projection = Read("Growth/KingdomMarketStockProjection.cs");
+			string projection = Read("Growth/KingdomMarketStockProjection.cs") + Read("Growth/KingdomMarketLegendaryProjection.cs");
 			string removal = Read("Growth/KingdomMarketRemoval.Transaction.cs");
 			string mutation = Read("Core/KingdomRealmRetirementGround.Mutation.cs");
 			int seal = handoff.IndexOf("SealFiniteTrader(Trader, restocker, marketTier)",
@@ -174,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string lifecycle = Read("Experience/KingdomGuestbook.z02.Lifecycle.cs");
 			string handoff = Read("Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
-			string projection = Read("Growth/KingdomMarketStockProjection.cs");
+			string projection = Read("Growth/KingdomMarketStockProjection.cs") + Read("Growth/KingdomMarketLegendaryProjection.cs");
 			string terminal = Read("Growth/KingdomMarketLegendaryTerminal.cs");
 			string abort = Read("Growth/KingdomMarketLegendaryAbort.cs");
 			string emigration = Read("Growth/KingdomGrowth.z16.Emigration.cs");
@@ -399,7 +399,7 @@ namespace ThousandAndFirst.Tests
 			string recovery = Read("Growth/KingdomMarketHandoffRecovery.cs");
 			string handoff = Read("Experience/KingdomGuestbook.z01b.MarketHandoff.cs");
 			string split = Read("Growth/KingdomMarketStockSplit.cs");
-			string projection = Read("Growth/KingdomMarketStockProjection.cs");
+			string projection = Read("Growth/KingdomMarketStockProjection.cs") + Read("Growth/KingdomMarketLegendaryProjection.cs");
 			StringAssert.Contains("SourceBodyObjectId", source);
 			StringAssert.Contains("TargetResidentId", source);
 			StringAssert.Contains("LifecycleOperationId", source);
@@ -466,7 +466,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomMarketStockProtection.TryRetire(ParentObject)",
 				projection);
 			StringAssert.Contains("belongs to another or divergent realm",
-				Read("Growth/KingdomMarketStockDetachment.cs"));
+				Read("Growth/KingdomMarketStockDetachment.cs") + Read("Growth/KingdomMarketStockProtection.cs"));
 			StringAssert.Contains("Source.HasTag(\"AlwaysStack\")", split);
 			StringAssert.Contains("Source.Blueprint == Remainder.Blueprint", split);
 			StringAssert.Contains("!Remainder.HasIntProperty(\"_stock\")", split);
@@ -594,7 +594,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomResidentRules.OnTheRoll(found)", provider);
 			StringAssert.Contains("KingdomMarketProviderAuthority.LiveResident",
 				Read("Growth/KingdomMarketStockCustody.cs"));
-			string detachment = Read("Growth/KingdomMarketStockDetachment.cs");
+			string detachment = Read("Growth/KingdomMarketStockDetachment.cs") + Read("Growth/KingdomMarketStockProtection.cs");
 			Assert.AreEqual(2, Occurrences(detachment, "TryPrepareTransaction(System"));
 			Assert.AreEqual(2, Occurrences(detachment, "TryCommitTransaction(System"));
 			string rollback = Read("Growth/KingdomMarketRemoval.Rollback.cs");

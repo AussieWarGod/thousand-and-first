@@ -29,6 +29,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomSystem.z16.Return.Feelings.cs",
 			"Core/KingdomSystem.z17.Return.Chronicle.cs",
 			"Core/KingdomSystem.z18.Return.Restore.cs",
+			"Core/KingdomSystem.z18a.Return.RegardAndPrompt.cs",
 			"Core/KingdomSystem.z19.PersistenceAndCallbacks.cs",
 			"Core/KingdomSystem.z19a.Serialization.cs",
 			"Core/KingdomSystem.z19b.SaveGuard.cs",

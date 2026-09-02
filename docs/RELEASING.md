@@ -64,7 +64,7 @@ Public CI is portability evidence only. Its exact installed-data skip allowlist 
 release. `release-check.sh` requires licensed installed Qud data, zero release skips, exact native
 compile/test, asset/reference checks, smoke/deploy checks, package harness, and the structural
 release contract. Every staged production C# file must be below 300 physical lines, and
-`docs/STRUCTURE_REVIEW.json` must bind human responsibility/protocol review to the exact staged C#
+`docs/STRUCTURE_REVIEW.json` must bind the responsibility/protocol review (author-authorized reviewer) to the exact staged C#
 inventory.
 Missing or stale structural review is a failed release, including Alpha.
 

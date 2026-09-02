@@ -68,7 +68,7 @@ namespace ThousandAndFirst.Tests
 			string seat = Source("Experience/KingdomSuccession.SeatConsequence.cs");
 			string loader = Source("Core/KingdomLoader.cs");
 			string begin = Source("Core/KingdomSystem.z11.Return.Begin.cs");
-			string zone = Source("Core/KingdomSystem.z19.PersistenceAndCallbacks.cs");
+			string zone = Source("Core/KingdomSystem.z18a.Return.RegardAndPrompt.cs");
 			int active = seat.IndexOf("ActiveSeatClimbRealmId = receipt.RealmId",
 				StringComparison.Ordinal);
 			int exile = seat.IndexOf("System.Exile(ChosenSeatDeed, Forced: true", active,

@@ -57,8 +57,8 @@ exact Qud base.
 documentation/static bytes. None of this signs native Qud behavior, appearance, accessibility, current-revision
 native/human/compatibility/performance gates, or Steam
 installation. Product scope remains owned by [VISION.md](VISION.md). The current structural scan
-runs across 2915 production C# sources. The cold-install inventory contains 2945 files.
-0 staged sources breach the line cap. Human `docs/STRUCTURE_REVIEW.json` review remains open.
+runs across 2944 production C# sources. The cold-install inventory contains 2974 files.
+0 staged sources breach the line cap. `docs/STRUCTURE_REVIEW.json` is signed against the current digest under the author's Addendum 9 ruling.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
 

@@ -987,9 +987,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomBountyLogicalSource.Read();
 			string notice = ReadRepoSource("Quests/r_KingdomNotice.cs");
-			Assert.AreEqual(19, KingdomBountyLogicalSource.FileCount);
+			Assert.AreEqual(22, KingdomBountyLogicalSource.FileCount);
 			Assert.AreEqual(2, Count(source, "public partial class r_KingdomNotice"));
-			Assert.AreEqual(17, Count(source, "public static partial class KingdomBounty"));
+			Assert.AreEqual(20, Count(source, "public static partial class KingdomBounty"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class CleanupFrame"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class InventoryFrame"));
 			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class PaymentFrame"));

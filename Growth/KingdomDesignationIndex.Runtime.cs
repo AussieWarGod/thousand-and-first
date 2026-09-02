@@ -71,11 +71,22 @@ namespace ThousandAndFirst
 			for (int p = 0; p < providers.Count; p++)
 			{
 				if (counts[providers[p].Id] != 1) continue;
-				KingdomBenefitDesignation[] observed = null;
+				// The Api seam: an extension reports Api rows, translated below cell by cell; a
+				// source this build ships itself reports the full internal row on the trusted path.
+				bool trusted = providers[p].Provider is IKingdomTrustedDesignationSource;
+				KingdomBenefitDesignation[] trustedRows = null;
+				KingdomApiDesignation[] reported = null;
 				string providerFailure = null;
 				bool found = false;
-				try { found = providers[p].Provider.TryObserve(Z, out observed, out providerFailure); }
+				try
+				{
+					found = trusted
+						? ((IKingdomTrustedDesignationSource)providers[p].Provider).TryObserveTrusted(
+							Z, out trustedRows, out providerFailure)
+						: providers[p].Provider.TryObserve(Z, out reported, out providerFailure);
+				}
 				catch (Exception exception) { providerFailure = "threw " + exception.GetType().Name; }
+				int observed = trusted ? (trustedRows?.Length ?? -1) : (reported?.Length ?? -1);
 				if (!string.IsNullOrEmpty(providerFailure))
 				{
 					AddFault(Faults, providers[p].Id + " designation observation failed: "
@@ -83,17 +94,22 @@ namespace ThousandAndFirst
 				}
 				if (!found)
 				{
-					if (observed != null && observed.Length > 0)
+					if (observed > 0)
 						AddFault(Faults, providers[p].Id + " returned rows with a false result");
 					continue;
 				}
-				if (observed == null || observed.Length > KingdomDesignationRules.MaxDesignationsPerZone)
+				if (observed < 0 || observed > KingdomDesignationRules.MaxDesignationsPerZone)
 				{
 					AddFault(Faults, providers[p].Id + " returned an invalid row count"); continue;
 				}
-				for (int i = 0; i < observed.Length; i++)
+				for (int i = 0; i < observed; i++)
 				{
-					KingdomBenefitDesignation source = observed[i];
+					KingdomBenefitDesignation source = trusted ? trustedRows[i] : null;
+					if (!trusted && !KingdomDesignationRules.TryTranslate(reported[i], Z.Width,
+						Z.Height, out source, out string translation))
+					{
+						AddFault(Faults, providers[p].Id + " row refused: " + translation); continue;
+					}
 					if (source == null || source.ProviderId != providers[p].Id
 						|| source.ProviderVersion != providers[p].Version || source.ZoneId != Z.ZoneID)
 					{
@@ -110,8 +126,7 @@ namespace ThousandAndFirst
 							+ " exceeded the aggregate designation budget"); continue;
 					}
 					KingdomBenefitDesignation row = CopySource(source);
-					if (!(providers[p].Provider is KingdomHostedArcologyDesignationProvider))
-						RestrictExternalSpatialClaims(row);
+					if (!trusted) RestrictExternalSpatialClaims(row);
 					if (!CompleteCatalogueContract(row, Z, out string rowFailure))
 					{
 						AddFault(Faults, providers[p].Id + " row refused: " + rowFailure); continue;

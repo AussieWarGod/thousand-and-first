@@ -549,6 +549,186 @@ namespace ThousandAndFirst.Tests
 				"placement retry should keep the already-generated identity");
 			Assert.AreEqual(0, book.PilgrimGreeted);
 		}
+
+		// ---- The read seam refuses a value this build has no member for -----------------------
+
+		/// <summary>The persisted <c>int</c> column a corrupt-value case aims at, by name. A switch
+		/// and not reflection, so a renamed column fails here at compile time.</summary>
+		private static List<int> Column(KingdomCityBook book, string column)
+		{
+			switch (column)
+			{
+			case "WorkKinds": return book.WorkKinds;
+			case "WorkStages": return book.WorkStages;
+			case "WorkAnchorsX": return book.WorkAnchorsX;
+			case "WorkAnchorsY": return book.WorkAnchorsY;
+			case "ResidentJobRoles": return book.ResidentJobRoles;
+			case "ResidentDayShapes": return book.ResidentDayShapes;
+			case "ResidentStandings": return book.ResidentStandings;
+			case "ResidentCauses": return book.ResidentCauses;
+			case "ResidentCreedChannels": return book.ResidentCreedChannels;
+			case "ClockKinds": return book.ClockKinds;
+			case "ToldKinds": return book.ToldKinds;
+			default:
+				Assert.Fail("no such column: " + column);
+				return null;
+			}
+		}
+
+		private static void AssertReadRefused(string column, int value)
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			Column(book, column)[0] = value;
+			KingdomCityState state;
+			Assert.IsFalse(book.TryRead(out state, out fault), column + " = " + value + " must not read");
+			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			Assert.IsNull(state, "a refused read publishes nothing");
+		}
+
+		/// <summary>
+		/// A column value no member of this build's vocabulary answers to is refused at the seam,
+		/// never narrowed into one. An unchecked cast into a byte-backed enum truncates, so 256
+		/// reads as member 0 and 259 as <c>Expedition</c>: a corrupt save, or one written by a later
+		/// build, would load as a healthy city telling a different story. The doctrine is the
+		/// clock's own (<c>TryWithProcessedThroughTick</c>): refuse a reading rather than repair it.
+		/// </summary>
+		[TestCase("WorkKinds", (int)KingdomWorkKind.Construction + 1)]
+		[TestCase("WorkKinds", 256)]
+		[TestCase("WorkKinds", -1)]
+		[TestCase("ResidentDayShapes", (int)KingdomDayShape.Shrine + 1)]
+		[TestCase("ResidentDayShapes", 256)]
+		[TestCase("ResidentDayShapes", -1)]
+		[TestCase("ResidentStandings", (int)KingdomResidentStanding.Expedition + 1)]
+		[TestCase("ResidentStandings", 259)]
+		[TestCase("ResidentStandings", -1)]
+		[TestCase("ResidentCauses", (int)KingdomStandingCause.Astray + 1)]
+		[TestCase("ResidentCauses", 261)]
+		[TestCase("ResidentCauses", -1)]
+		[TestCase("ClockKinds", (int)KingdomClockKind.Raid + 1)]
+		[TestCase("ClockKinds", 256)]
+		[TestCase("ClockKinds", -1)]
+		[TestCase("ToldKinds", (int)KingdomToldKind.Brownout + 1)]
+		[TestCase("ToldKinds", 257)]
+		[TestCase("ToldKinds", -1)]
+		public void AValueNoVocabularyMemberAnswersToRefusesTheReadRatherThanTruncating(string column, int value)
+		{
+			AssertReadRefused(column, value);
+		}
+
+		/// <summary>A value that does not fit the slot its row keeps it in &mdash; a <c>byte</c>
+		/// stage, role or channel, a <c>short</c> anchor &mdash; is refused rather than wrapped:
+		/// <c>(byte)256</c> is 0 and <c>(short)32768</c> is <c>-32768</c>, and a work anchored off
+		/// the map by a wrapped coordinate is the same lie as a mislabelled standing.</summary>
+		[TestCase("WorkStages", 256)]
+		[TestCase("WorkStages", -1)]
+		[TestCase("ResidentJobRoles", 256)]
+		[TestCase("ResidentJobRoles", -1)]
+		[TestCase("ResidentCreedChannels", 256)]
+		[TestCase("ResidentCreedChannels", -1)]
+		[TestCase("WorkAnchorsX", (int)short.MaxValue + 1)]
+		[TestCase("WorkAnchorsX", (int)short.MinValue - 1)]
+		[TestCase("WorkAnchorsY", (int)short.MaxValue + 1)]
+		[TestCase("WorkAnchorsY", (int)short.MinValue - 1)]
+		public void AValueThatDoesNotFitItsNarrowSlotRefusesTheReadRatherThanWrapping(string column, int value)
+		{
+			AssertReadRefused(column, value);
+		}
+
+		/// <summary>The widest member every vocabulary defines, and the top and bottom of every
+		/// narrow slot, still read: the seam refuses only what has no meaning, and a value that
+		/// reads is left exactly as it was written.</summary>
+		[TestCase("WorkKinds", (int)KingdomWorkKind.Construction)]
+		[TestCase("WorkStages", (int)byte.MaxValue)]
+		[TestCase("WorkAnchorsX", (int)short.MaxValue)]
+		[TestCase("WorkAnchorsX", (int)short.MinValue)]
+		[TestCase("WorkAnchorsY", (int)short.MaxValue)]
+		[TestCase("WorkAnchorsY", (int)short.MinValue)]
+		[TestCase("ResidentJobRoles", (int)byte.MaxValue)]
+		[TestCase("ResidentDayShapes", (int)KingdomDayShape.Shrine)]
+		[TestCase("ResidentStandings", (int)KingdomResidentStanding.Expedition)]
+		[TestCase("ResidentCauses", (int)KingdomStandingCause.Astray)]
+		[TestCase("ResidentCreedChannels", (int)byte.MaxValue)]
+		[TestCase("ClockKinds", (int)KingdomClockKind.Raid)]
+		[TestCase("ToldKinds", (int)KingdomToldKind.Brownout)]
+		public void TheWidestValueAColumnDefinesStillReads(string column, int value)
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			Column(book, column)[0] = value;
+			KingdomCityState state;
+			Assert.IsTrue(book.TryRead(out state, out fault), column + " = " + value + ": " + fault);
+			Assert.AreEqual(KingdomCityFault.None, fault);
+			Assert.AreEqual(value, Column(book, column)[0], "a value that reads is left as it was written");
+		}
+
+		/// <summary>The boundary row, read back through the model. The check runs before the casts
+		/// and changes none of them: what was always narrowed still narrows to the same member.</summary>
+		[Test]
+		public void ABoundaryRowReadsBackThroughTheSameCasts()
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			book.WorkKinds[0] = (int)KingdomWorkKind.Construction;
+			book.WorkStages[0] = byte.MaxValue;
+			book.WorkAnchorsX[0] = short.MaxValue;
+			book.WorkAnchorsY[0] = short.MinValue;
+			book.ResidentJobRoles[0] = byte.MaxValue;
+			book.ResidentDayShapes[0] = (int)KingdomDayShape.Shrine;
+			book.ResidentStandings[0] = (int)KingdomResidentStanding.Expedition;
+			book.ResidentCauses[0] = (int)KingdomStandingCause.None;
+			book.ResidentCreedChannels[0] = byte.MaxValue;
+			book.ClockKinds[0] = (int)KingdomClockKind.Raid;
+			book.ToldKinds[0] = (int)KingdomToldKind.Brownout;
+			KingdomCityState state;
+			Assert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
+
+			KingdomWorkRow work;
+			Assert.IsTrue(state.TryWork(0, out work));
+			Assert.AreEqual(KingdomWorkKind.Construction, work.RunState.Kind);
+			Assert.AreEqual(byte.MaxValue, work.RunState.Stage);
+			Assert.AreEqual(short.MaxValue, work.AnchorX);
+			Assert.AreEqual(short.MinValue, work.AnchorY);
+			KingdomResidentRow person;
+			Assert.IsTrue(state.TryResident(0, out person));
+			Assert.AreEqual(byte.MaxValue, person.JobRole);
+			Assert.AreEqual(KingdomDayShape.Shrine, person.DayShape);
+			Assert.AreEqual(KingdomResidentStanding.Expedition, person.Standing);
+			Assert.AreEqual(KingdomStandingCause.None, person.Cause);
+			Assert.AreEqual(byte.MaxValue, person.CreedChannel);
+			KingdomClockRow clock;
+			Assert.IsTrue(state.TryClock(0, out clock));
+			Assert.AreEqual(KingdomClockKind.Raid, clock.Kind);
+			KingdomToldRow told;
+			Assert.IsTrue(state.TryTold(0, out told));
+			Assert.AreEqual(KingdomToldKind.Brownout, told.Kind);
+		}
+
+		/// <summary>The standing-toward-cause repair reads neither value it cannot name. Without
+		/// the guard, 258 would be narrowed to <c>Dead</c> on its way into <c>CauseFits</c> and the
+		/// row's honest cause rewritten toward a standing it never had &mdash; a repair made from a
+		/// truncated reading, before the read refused the row. Both columns stay as written.</summary>
+		[TestCase("ResidentStandings", 258)]
+		[TestCase("ResidentCauses", 300)]
+		public void NormalizeLeavesAStandingOrCauseItCannotNameForTheReadToRefuse(string column, int value)
+		{
+			KingdomCityBook book = new KingdomCityBook();
+			KingdomCityFault fault;
+			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			Column(book, column)[0] = value;
+			int standing = book.ResidentStandings[0];
+			int cause = book.ResidentCauses[0];
+			book.Normalize();
+			Assert.AreEqual(standing, book.ResidentStandings[0]);
+			Assert.AreEqual(cause, book.ResidentCauses[0],
+				"a cause must not be repaired toward a standing the build cannot name, nor a nameless cause narrowed into one");
+			KingdomCityState state;
+			Assert.IsFalse(book.TryRead(out state, out fault));
+			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+		}
 	}
 }
 #endif

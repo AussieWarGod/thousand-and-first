@@ -32,6 +32,10 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			state = null;
 			Normalize();
+			if (!TryValidateColumnDomains(out fault))
+			{
+				return false;
+			}
 			KingdomZoneRow[] zones = new KingdomZoneRow[ZoneIds.Count];
 			for (int i = 0; i < zones.Length; i++)
 			{
@@ -126,6 +130,65 @@ namespace ThousandAndFirst.Simulation.City
 				built = told;
 			}
 			state = built;
+			fault = KingdomCityFault.None;
+			return true;
+		}
+
+		/// <summary>
+		/// Refuses a column value this build has no member for, BEFORE any cast reads one.
+		/// <para>
+		/// <see cref="Normalize"/> repairs shape &mdash; a null, ragged or over-cap column &mdash;
+		/// and nothing else; a value is a different failure. The casts in <see cref="TryRead"/>
+		/// narrow an <c>int</c> column into a byte-backed enum, a <c>byte</c> or a <c>short</c>,
+		/// and an unchecked cast truncates: a standing of 259 would read as <c>Expedition</c> and
+		/// load as a healthy row. That is a corrupt save, or one written by a later build, looking
+		/// healthy &mdash; the very reading <c>KingdomCityState.TryWithProcessedThroughTick</c>
+		/// refuses for the clock, and the one the wire codec refuses for an undefined enum byte.
+		/// The fault is <see cref="KingdomCityFault.InvalidIndex"/>: the value indexes a
+		/// vocabulary, or a slot width, that has no such member.
+		/// </para>
+		/// </summary>
+		private bool TryValidateColumnDomains(out KingdomCityFault fault)
+		{
+			for (int i = 0; i < WorkIds.Count; i++)
+			{
+				if (!Within(WorkAnchorsX[i], short.MinValue, short.MaxValue)
+					|| !Within(WorkAnchorsY[i], short.MinValue, short.MaxValue)
+					|| !DefinedIn(typeof(KingdomWorkKind), WorkKinds[i])
+					|| !Within(WorkStages[i], byte.MinValue, byte.MaxValue))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+			}
+			for (int i = 0; i < ResidentIds.Count; i++)
+			{
+				if (!Within(ResidentJobRoles[i], byte.MinValue, byte.MaxValue)
+					|| !DefinedIn(typeof(KingdomDayShape), ResidentDayShapes[i])
+					|| !DefinedIn(typeof(KingdomResidentStanding), ResidentStandings[i])
+					|| !DefinedIn(typeof(KingdomStandingCause), ResidentCauses[i])
+					|| !Within(ResidentCreedChannels[i], byte.MinValue, byte.MaxValue))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+			}
+			for (int i = 0; i < ClockKinds.Count; i++)
+			{
+				if (!DefinedIn(typeof(KingdomClockKind), ClockKinds[i]))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+			}
+			for (int i = 0; i < ToldKinds.Count; i++)
+			{
+				if (!DefinedIn(typeof(KingdomToldKind), ToldKinds[i]))
+				{
+					fault = KingdomCityFault.InvalidIndex;
+					return false;
+				}
+			}
 			fault = KingdomCityFault.None;
 			return true;
 		}

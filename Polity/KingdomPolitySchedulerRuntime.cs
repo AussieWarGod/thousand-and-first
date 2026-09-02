@@ -245,26 +245,9 @@ namespace ThousandAndFirst
 		private static void Present(KingdomSystem S, KingdomPolityCohortPlan Cohort,
 			string LoadedSettlementId)
 		{
-			KingdomPolityAmbientTransaction t = Cohort.AmbientTransaction;
-			if (!KingdomPolityAmbientTransactionRules.Valid(t, Cohort.CohortId, out _))
-			{
-				// A weekly visit without a valid frozen transaction (pre-schema stub or
-				// transactionless plan) still announces its bodily arrival with the due verb.
-				string verb = KingdomPolityDispatchRules.EndpointVerb(Cohort.Purpose);
-				if (string.IsNullOrEmpty(verb)) return;
-				XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomPresentation.Rich(
-					EndpointName(S, LoadedSettlementId)) + "}}: the visiting company " +
-					verb + ".");
-				return;
-			}
-			string purpose = Cohort.Purpose == KingdomPolityCohortPurpose.Courier ? "message" :
-				Cohort.Purpose == KingdomPolityCohortPurpose.Trader ? "no-stock market notice" :
-				Cohort.Purpose == KingdomPolityCohortPurpose.Migrant ? "petition" :
-				Cohort.Purpose == KingdomPolityCohortPurpose.Guard ? "witnessed watch report" :
-				"caused condition report";
-			XRL.Messages.MessageQueue.AddPlayerMessage("{{C|" + KingdomPresentation.Rich(
-				t.DestinationSettlementName) + "}} receives a " + purpose + " from {{C|" +
-				KingdomPresentation.Rich(t.SourceSettlementName) + "}}.");
+			if (KingdomPolityArrivalPresentationRules.TryBuild(Cohort,
+				EndpointName(S, LoadedSettlementId), out string line))
+				XRL.Messages.MessageQueue.AddPlayerMessage(line);
 		}
 
 		private static string EndpointName(KingdomSystem S, string SettlementId)
