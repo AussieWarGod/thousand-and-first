@@ -55,6 +55,37 @@ namespace ThousandAndFirst
 			return KingdomPlotRules.ValidZoneRect(Rect, zone.Width, zone.Height);
 		}
 
+		/// <summary>
+		/// The stamped rect of a plot object that is not standing in any zone yet: a prepared
+		/// works object between creation and AddObject. Same part/property agreement as
+		/// <see cref="TryReadRect"/>, without the zone bounds that a placed object is held to; the
+		/// caller compares the rect with the plan it was stamped from.
+		/// </summary>
+		public static bool TryReadStampedRect(GameObject Object, out KingdomPlotRules.PlotRect Rect)
+		{
+			Rect = default(KingdomPlotRules.PlotRect);
+			if (Object == null) return false;
+			bool x1 = Object.HasIntProperty(PlotX1Property);
+			bool y1 = Object.HasIntProperty(PlotY1Property);
+			bool x2 = Object.HasIntProperty(PlotX2Property);
+			bool y2 = Object.HasIntProperty(PlotY2Property);
+			if (Object.HasStringProperty(PlotX1Property) || Object.HasStringProperty(PlotY1Property)
+				|| Object.HasStringProperty(PlotX2Property) || Object.HasStringProperty(PlotY2Property))
+				return false;
+			if (!(x1 && y1 && x2 && y2)) return false;
+			Rect = new KingdomPlotRules.PlotRect(
+				Object.GetIntProperty(PlotX1Property), Object.GetIntProperty(PlotY1Property),
+				Object.GetIntProperty(PlotX2Property), Object.GetIntProperty(PlotY2Property));
+			r_KingdomPlotWorks works = Object.GetPart<r_KingdomPlotWorks>();
+			if (works != null)
+			{
+				KingdomPlotRules.PlotRect part = works.Rect();
+				if (part.X1 != Rect.X1 || part.Y1 != Rect.Y1 || part.X2 != Rect.X2
+					|| part.Y2 != Rect.Y2) return false;
+			}
+			return Rect.X1 <= Rect.X2 && Rect.Y1 <= Rect.Y2;
+		}
+
 		/// <summary>Any persisted plot-coordinate prefix. Used to fail closed when a torn root no
 		/// longer qualifies for the survey's valid-plot index.</summary>
 		internal static bool HasRectEvidence(GameObject Object)

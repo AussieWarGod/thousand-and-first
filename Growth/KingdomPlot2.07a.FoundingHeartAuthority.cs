@@ -43,44 +43,44 @@ namespace ThousandAndFirst
 			int RiteX, int RiteY)
 		{
 			if (!TryFoundingHeartTransaction(System, Z, out string transaction)
-				|| Z.GetCell(RiteX, RiteY) == null) return false;
+				|| Z.GetCell(RiteX, RiteY) == null) return HeartRefused("transaction or rite cell");
 			string raw = Z.GetZoneProperty(FoundingHeartReceiptProperty, null);
 			FoundingHeartContext context;
 			bool newlyPublished = false;
 			if (string.IsNullOrEmpty(raw))
 			{
 				if (!TryDraftFoundingHeart(System, Z, transaction, RiteX, RiteY, out context))
-					return false;
+					return HeartRefused("draft");
 				FoundingHeartLegacyState legacy = ClassifyLegacyHeart(Z, context);
 				if (legacy == FoundingHeartLegacyState.Complete) return true;
 				if (legacy != FoundingHeartLegacyState.Empty
-					|| !NewHeartIdentitiesAreEmpty(context.Plan)) return false;
+					|| !NewHeartIdentitiesAreEmpty(context.Plan)) return HeartRefused("legacy ground or identities already standing");
 				newlyPublished = true;
 			}
 			else if (!KingdomFoundingHeartRules.TryDecode(raw,
 				out KingdomFoundingHeartPlan plan)
 				|| plan.TransactionId != transaction || plan.ZoneId != Z.ZoneID
 					|| plan.RiteX != RiteX || plan.RiteY != RiteY
-					|| !TryReadFoundingHeartContext(Z, plan, out context)) return false;
+					|| !TryReadFoundingHeartContext(Z, plan, out context)) return HeartRefused("receipt decode or context");
 			if (KingdomFoundingHeartRules.Complete(context.Plan)
 				&& ExactFoundingHeartSeal(Z, context.Plan))
 			{
-				if (!EnsureFoundingHeartReservations(context.Plan)) return false;
+				if (!EnsureFoundingHeartReservations(context.Plan)) return HeartRefused("sealed reservations");
 				return RecoverSealedFoundingHeart(System, Z, context);
 			}
-			if (!FoundingHeartSealAbsent(Z)) return false;
+			if (!FoundingHeartSealAbsent(Z)) return HeartRefused("a seal already stands");
 			if (!PreflightFoundingHeartWorld(Z, context)
-				|| newlyPublished && !PublishFoundingHeartPlan(Z, null, context.Plan)) return false;
+				|| newlyPublished && !PublishFoundingHeartPlan(Z, null, context.Plan)) return HeartRefused("preflight or publish");
 			context.Receipt = KingdomFoundingHeartRules.Encode(context.Plan);
 			if (!EnsureFoundingHeartZoneTruth(Z, context.Plan)
-				|| !EnsureFoundingHeartReservations(context.Plan)) return false;
+				|| !EnsureFoundingHeartReservations(context.Plan)) return HeartRefused("zone truth or reservations");
 			bool before = KingdomFoundingHeartRules.Complete(context.Plan);
 			for (int slot = 0; slot < KingdomFoundingHeartRules.WorksSlot; slot++)
-				if (!DriveFoundingHeartMark(Z, context, slot)) return false;
-			if (!DriveFoundingHeartWorks(System, Z, context)) return false;
+				if (!DriveFoundingHeartMark(Z, context, slot)) return HeartRefused("mark slot " + slot);
+			if (!DriveFoundingHeartWorks(System, Z, context)) return HeartRefused("works");
 			if (!KingdomFoundingHeartRules.Complete(context.Plan)
 				|| !ExactFoundingHeartWorld(Z, context)
-				|| !SealFoundingHeart(Z, context)) return false;
+				|| !SealFoundingHeart(Z, context)) return HeartRefused("completion, exact world, or seal");
 			if (!before || newlyPublished)
 			{
 				KingdomLog.Log("heart surveyed: " + context.Survey.X1 + "," + context.Survey.Y1
@@ -139,17 +139,17 @@ namespace ThousandAndFirst
 				// Generic plot preflight requires the immutable basin to stand already. Founding
 				// instead freezes the same authored intent and codec first; slot zero then places
 				// that exact basin, which the stamper binds as existing authority at completion.
-					|| !KingdomArchitectureRuntime.TryPrepareFoundingHeart(System, Z, rect, key,
+					|| (!KingdomArchitectureRuntime.TryPrepareFoundingHeart(System, Z, rect, key,
 						entry.Category, RiteX, RiteY, out KingdomArchitectureIntent architecture,
-						out _)
+						out string prepareFailure) && HeartNoted("prepare: " + prepareFailure))
 				|| !TryEncodePlotPayload(rect, null, architecture, out string payload, out _))
-				return false;
+				return HeartRefused("draft: survey, rect, catalogue, spec, zoning, liquid ground, or payload");
 			GroundGrid grid = new GroundGrid(Z);
 			bool carved = KingdomPlotRules.IsUnderground(Z.Z);
 			if (!KingdomArchitectureRuntime.TryWorldFootprint(architecture,
-				out KingdomPlotRules.PlotRect footprint, out _)) return false;
+				out KingdomPlotRules.PlotRect footprint, out string footprintFailure)) return HeartRefused("footprint: " + footprintFailure);
 			if (!KingdomArchitectureRuntime.TryRoofOnGround(architecture, carved,
-				out KingdomPlotRules.RoofState roof, out _)) return false;
+				out KingdomPlotRules.RoofState roof, out string roofFailure)) return HeartRefused("roof: " + roofFailure);
 			long total = KingdomPlotRules.RaiseTicks(
 				KingdomCommission.CraftBuildTicks(entry.BuildTicks, System.ZoneDistricts.Values),
 				grid.CellsOf(rect), footprint, roof, carved);
@@ -166,12 +166,12 @@ namespace ThousandAndFirst
 				carved, wall, spec.Contents, entry.Staff,
 				KingdomRules.IsThresholdManning(entry.Manning), defence, door, doorX, doorY,
 				KingdomPurpose.FoundingHeartPurposeIsLegacy(key),
-				out KingdomFoundingHeartStakeTruth stake)) return false;
+				out KingdomFoundingHeartStakeTruth stake)) return HeartRefused("stake truth");
 			string stakeTruth = KingdomFoundingHeartStakeRules.Encode(stake);
 			if (!KingdomFoundingHeartRules.TryCreate(Transaction, Z.ZoneID, RiteX, RiteY,
 				survey.X1, survey.Y1, survey.X2, survey.Y2, rect.X1, rect.Y1, rect.X2,
 				rect.Y2, The.Game.TimeTicks, total, payload, stakeTruth,
-				out KingdomFoundingHeartPlan plan)) return false;
+				out KingdomFoundingHeartPlan plan)) return HeartRefused("plan");
 			Context = new FoundingHeartContext { Plan = plan, Entry = entry, Spec = spec,
 				Survey = survey, Rect = rect, Architecture = architecture, Stake = stake };
 			return true;

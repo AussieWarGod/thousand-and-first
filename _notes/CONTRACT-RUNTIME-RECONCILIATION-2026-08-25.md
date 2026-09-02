@@ -9,7 +9,7 @@
 > `BRIEF-IMPLEMENTATION-AUDIT.md` control current status where this dated body conflicts.
 
 > **Current-truth addendum — 2026-09-01.** The historical checks below are the frozen 2026-08-25 snapshot, kept verbatim for the record; they are not live status.
-> The current frozen census is 2944 production C# files and 2,974 cold-install files; 0 exceed 300 physical lines, 0 are exactly 300, so 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
+> The current frozen census is 2945 production C# files and 2,975 cold-install files; 0 exceed 300 physical lines, 0 are exactly 300, so 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
 > Latest retained managed evidence is 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable, both predating the final market fan-in and requiring rerun; current documentation/static evidence is 296/296 Tools and 28/28 Art. The historical checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, only for its old bytes.
 > See `docs/STATUS.md` and `docs/STRUCTURE.md` for the current receipts and open human gates.
 > Historical generated-market/restock claims are superseded: current civic service requires one

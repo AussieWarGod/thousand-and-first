@@ -244,7 +244,7 @@ namespace ThousandAndFirst
 			return separator < 0 ? keyRole == Role : keyRole.Substring(0, separator) == Role;
 		}
 
-		private static string AnchorRole(string Key)
+		internal static string AnchorRole(string Key)
 		{
 			int identity = Key == null ? -1 : Key.LastIndexOf('@');
 			return identity < 0 ? Key : Key.Substring(0, identity);

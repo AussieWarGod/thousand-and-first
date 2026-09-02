@@ -29,6 +29,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomPlot2.07k.FoundingHeartTerminalSettlement.cs",
 			"Growth/KingdomPlot2.07l.FoundingHeartReservations.cs",
 			"Growth/KingdomPlot2.07m.FoundingHeartTombstones.cs",
+			"Growth/KingdomPlot2.07n.FoundingHeartDiagnostics.cs",
 			"Growth/KingdomPlot2.08.Siting.cs",
 			"Growth/KingdomPlot2.09.CommissionQuote.cs",
 			"Growth/KingdomPlot2.10.Commission.cs",

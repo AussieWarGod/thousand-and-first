@@ -198,6 +198,7 @@ def write_manifest(source: str, destination: str) -> None:
 # verb DOES; this list only decides what may be sealed into an unattended run.
 SCRIPT_VERBS = (
     "anchor",
+    "fit",
     "flatten",
     "frame",
     "ground",
@@ -228,6 +229,7 @@ RESERVED_VERBS = (
     "anchor",
     "arcology",
     "capture",
+    "fit",
     "flatten",
     "frame",
     "ground",

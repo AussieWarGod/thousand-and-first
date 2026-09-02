@@ -14,9 +14,16 @@ namespace ThousandAndFirst
 			bool LegacyArchitecture, ref KingdomConstructionJob Job,
 			FoundingHeartPlacement Heart)
 		{
-			if (Heart != null && (!PreparedFoundingHeartWorksShape(works, Heart.Context)
-				|| !StageFoundingHeartIdentity(works, Heart.Context.Plan, Heart.Slot)
-				|| !PrepareFoundingHeartWorksAdd(Heart, works))) return null;
+			if (Heart != null)
+			{
+				if (!PreparedFoundingHeartWorksShape(works, Heart.Context))
+					return HeartRefusedNull("add: prepared works shape: "
+						+ PreparedFoundingHeartWorksShapeFault(works, Heart.Context));
+				if (!StageFoundingHeartIdentity(works, Heart.Context.Plan, Heart.Slot))
+					return HeartRefusedNull("add: identity staging");
+				if (!PrepareFoundingHeartWorksAdd(Heart, works))
+					return HeartRefusedNull("add: prepare");
+			}
 			GameObject accepted = null;
 			bool callbackThrew = false;
 			try
@@ -42,7 +49,7 @@ namespace ThousandAndFirst
 			finally { KingdomSurvey.ObserveAddResultInActive(Z, works, accepted); }
 			if (Heart != null)
 				return SettleFoundingHeartWorksAdd(Heart, works, accepted, callbackThrew)
-					? works : null;
+					? works : HeartRefusedNull("add: settle");
 			if (callbackThrew) return null;
 			GameObject exactWorks;
 			if (!ReferenceEquals(accepted, works)

@@ -179,7 +179,9 @@ namespace ThousandAndFirst.Harness
 			int y2 = Math.Min(Zone.Height - 1, Rect.Y2 + 1);
 			// The ring beside the lot first: walking into a building opens its door, and a door
 			// swung by the tester is not a lot that changed. Inside cells only when no ring cell is
-			// safe (an open plot with nothing to walk around).
+			// safe (an open plot with nothing to walk around). Qud's letterbox camera follows the
+			// tester and a 25-row zone shows about twenty rows, so the tester stands level with the
+			// lot's middle row (its east or west side) and the whole XL footprint stays in frame.
 			for (int pass = 0; pass < 2 && best == null; pass++)
 				for (int y = y1; y <= y2; y++)
 					for (int x = x1; x <= x2; x++)
@@ -187,8 +189,8 @@ namespace ThousandAndFirst.Harness
 						if (Rect.Contains(x, y) == (pass == 0)) continue;
 						Cell cell = Zone.GetCell(x, y);
 						if (!Safe(cell, Player, Owner, Lot)) continue;
-						int distance = Math.Max(Math.Abs(x - Rect.CenterX),
-							Math.Abs(y - Rect.CenterY));
+						int distance = Math.Abs(y - Rect.CenterY) * 100
+							+ Math.Abs(x - Rect.CenterX);
 						if (distance >= bestDistance) continue;
 						best = cell;
 						bestDistance = distance;

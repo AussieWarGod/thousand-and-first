@@ -94,7 +94,7 @@ namespace ThousandAndFirst.Harness
 		/// </summary>
 		internal static readonly string[] Reserved =
 		{
-			"advance", "anchor", "arcology", "capture", "flatten", "frame", "ground", "help",
+			"advance", "anchor", "arcology", "capture", "fit", "flatten", "frame", "ground", "help",
 			"light", "list", "realize", "resourcedigest", "stagedigest", "standingdigest", "status"
 		};
 

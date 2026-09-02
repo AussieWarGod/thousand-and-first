@@ -55,6 +55,7 @@ BOOKKEEPING = frozenset(
 # the profile tool refuses would spend a whole prepare discovering it.
 SCRIPT_VERBS = (
     "anchor",
+    "fit",
     "flatten",
     "frame",
     "ground",
@@ -76,6 +77,7 @@ RESERVED_VERBS = (
     "anchor",
     "arcology",
     "capture",
+    "fit",
     "flatten",
     "frame",
     "ground",

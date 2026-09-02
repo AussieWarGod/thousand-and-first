@@ -41,8 +41,10 @@ namespace ThousandAndFirst
 		{
 			if (System == null || Z == null || Context == null || Placement?.Zone != Z
 				|| !ReferenceEquals(Context, Placement.Context)
-				|| Placement.Slot != KingdomFoundingHeartRules.WorksSlot
-				|| !FoundingHeartGroundAllows(Z, Context.Rect)) return null;
+				|| Placement.Slot != KingdomFoundingHeartRules.WorksSlot)
+				return HeartRefusedNull("stake: placement is not this zone's works slot");
+			if (!FoundingHeartGroundAllows(Z, Context.Rect))
+				return HeartRefusedNull("stake: liquid stands inside the rite ground");
 			GroundGrid grid = new GroundGrid(Z);
 			// The rite ground is not chosen by the plan; it is chosen by where the water was
 			// poured, and the heart is laid on it whatever else is standing there. That is safe

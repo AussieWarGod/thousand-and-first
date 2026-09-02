@@ -106,7 +106,8 @@ namespace ThousandAndFirst
 				ArchitecturePlacement placement = Snapshot.Placements[i];
 				if (!placement.ExistingAuthority) continue;
 				if (Basin != null || placement.Blueprint != KingdomPlots.HeartRelicBlueprint
-					|| placement.StatefulAnchor != "fixture:first-basin")
+					|| KingdomArchitectureRules.AnchorRole(placement.StatefulAnchor)
+						!= "fixture:first-basin")
 					return Fail("founding-heart snapshot has malformed existing authority", out Failure);
 				Basin = placement;
 			}

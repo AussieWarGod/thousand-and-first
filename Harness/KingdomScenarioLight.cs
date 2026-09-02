@@ -1,5 +1,6 @@
 using XRL;
 using XRL.World;
+using XRL.World.ZoneParts;
 
 namespace ThousandAndFirst.Harness
 {
@@ -14,6 +15,7 @@ namespace ThousandAndFirst.Harness
 	internal static class KingdomScenarioLight
 	{
 		internal const string Verb = "light";
+		private const int OmniscienceTurns = 50;
 
 		internal static string Run(out bool Ok)
 		{
@@ -22,12 +24,19 @@ namespace ThousandAndFirst.Harness
 			Zone zone = player?.CurrentZone;
 			if (!GameObject.Validate(player) || zone == null)
 				return "{{R|Light refused}}: light runs only with a live player in a loaded zone.";
+			// The engine's own persistent omniscience (what a map-reveal grants): re-applied on
+			// every render, so the lit look survives to the capture; it decays by turns and never
+			// touches architecture or receipts.
+			AmbientOmniscience omniscience = zone.RequirePart<AmbientOmniscience>();
+			omniscience.IsRealityDistortionBased = false;
+			omniscience.Duration = OmniscienceTurns;
+			zone.ExploreAll();
 			zone.LightAll();
 			zone.VisAll();
-			zone.ExploreAll();
 			Ok = true;
 			return "Lit, revealed, and explored " + zone.ZoneID + " for native evidence capture; "
-				+ "the engine recomputes light and sight on the next turn.";
+				+ "omniscient light holds for " + OmniscienceTurns + " turns, then the engine's own "
+				+ "sight returns.";
 		}
 	}
 }

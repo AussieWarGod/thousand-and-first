@@ -27,10 +27,10 @@ namespace ThousandAndFirst
 			{
 				if (Job != null) KingdomConstruction.Quarantine(ref Job,
 					"Plot staking lacks a valid frozen authored intent.");
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: intent, rect, or placement authority") : null;
 			}
 			KingdomFoundingHeartStakeTruth heartTruth = Heart?.Context?.Stake;
-			if (Heart != null && !KingdomFoundingHeartStakeRules.Valid(heartTruth)) return null;
+			if (Heart != null && !KingdomFoundingHeartStakeRules.Valid(heartTruth)) return HeartRefusedNull("stake: stake truth invalid");
 			KingdomPlotRules.PlotRect frozenFootprint = default(KingdomPlotRules.PlotRect);
 			KingdomPlotRules.RoofState frozenRoof = KingdomPlotRules.RoofState.Open;
 			if (Heart != null)
@@ -46,7 +46,7 @@ namespace ThousandAndFirst
 						|| !SameRect(authoredFootprint, frozenFootprint)
 						|| !KingdomArchitectureRuntime.TryRoofOnGround(Architecture, Carved,
 							out KingdomPlotRules.RoofState authoredRoof, out _)
-						|| authoredRoof != frozenRoof)) return null;
+						|| authoredRoof != frozenRoof)) return HeartRefusedNull("stake: authored footprint or roof differs from the frozen stake truth");
 			}
 			else if (!LegacyArchitecture
 				&& (!KingdomArchitectureRuntime.TryWorldFootprint(Architecture,
@@ -63,7 +63,8 @@ namespace ThousandAndFirst
 				: Z.GetCell(Architecture.MainWorldX, Architecture.MainWorldY);
 			if (cell == null)
 			{
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: main world cell "
+					+ Architecture.MainWorldX + "," + Architecture.MainWorldY + " is outside the zone") : null;
 			}
 			if (Job != null && !string.IsNullOrEmpty(Job.OutputId))
 			{
@@ -79,11 +80,11 @@ namespace ThousandAndFirst
 			{
 				if (Job != null) KingdomConstruction.Quarantine(ref Job,
 					"Plot-works creation threw: " + ex.Message);
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: works creation threw " + ex.Message) : null;
 			}
 			if (works == null)
 			{
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: no works object was created") : null;
 			}
 			if (Job != null && (!KingdomConstruction.Owns(System, Z, Job)
 				|| !KingdomConstruction.IsCurrent(Job)))
@@ -99,7 +100,7 @@ namespace ThousandAndFirst
 				bool cleaned = RemoveCreatedWorks(works, Z);
 				if (Job != null && !cleaned) KingdomConstruction.Quarantine(ref Job,
 					"Partless plot works could not be removed exactly.");
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: works carry no plot part") : null;
 			}
 			part.DesignKey = Entry.Key;
 			part.DisplayName = Heart == null ? Entry.Name : heartTruth.DisplayName;
@@ -224,7 +225,7 @@ namespace ThousandAndFirst
 				if (Job != null) KingdomConstruction.Quarantine(ref Job, cleaned
 					? "The plot could not freeze its exact city-purpose commitment."
 					: "The purpose commitment failed and exact cleanup was not possible.");
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: purpose commitment") : null;
 			}
 			if (!LegacyArchitecture && !KingdomArchitectureRuntime.TryFreeze(
 				works, Architecture, out string freezeFailure))
@@ -235,7 +236,7 @@ namespace ThousandAndFirst
 						+ freezeFailure
 					: "Authored plot receipt failed and exact cleanup was not possible: "
 						+ freezeFailure);
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: architecture freeze: " + freezeFailure) : null;
 			}
 			if (!LegacyArchitecture && !KingdomArchitectureStamper.TryInitializeOwner(
 				works, Architecture, plotId, out string layoutFailure))
@@ -246,7 +247,7 @@ namespace ThousandAndFirst
 						+ layoutFailure
 					: "Authored layout receipt failed and exact cleanup was not possible: "
 						+ layoutFailure);
-				return null;
+				return Heart != null ? HeartRefusedNull("stake: layout owner: " + layoutFailure) : null;
 			}
 			if (Job != null)
 			{

@@ -261,7 +261,10 @@ namespace ThousandAndFirst.Tests
 			string basin = Between(source, "private static bool TryHeartBasinInvariant(",
 				"private static bool SameRect(");
 			StringAssert.Contains("placement.Blueprint != \"r_KingdomFirstBasin\"", basin);
-			StringAssert.Contains("placement.StatefulAnchor != \"fixture:first-basin\"", basin);
+			// The compiler composes stateful anchors as role@x,y; the basin is bound by role.
+			StringAssert.Contains(
+				"KingdomArchitectureRules.AnchorRole(placement.StatefulAnchor)", basin);
+			StringAssert.Contains("!= \"fixture:first-basin\"", basin);
 			StringAssert.Contains("basinX != RiteX || basinY != RiteY", basin);
 			Assert.IsFalse(successor.Contains("GrowInPlace"));
 			Assert.IsFalse(successor.Contains("Generic"));

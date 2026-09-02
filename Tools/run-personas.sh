@@ -25,6 +25,8 @@
 #   TAF_PERSONA_TIMEOUT=<seconds>        overrides every persona's own TIMEOUT
 #   TAF_PERSONA_CAPTURE_DIR=<path>        publish one native PNG only after an asserted PASS;
 #                                         failed assertion/capture keeps the prior good PNG
+#   TAF_PERSONA_CAPTURE_WIDTH/HEIGHT      native capture window size (default 2560x1440); a
+#                                         taller window shows a taller lot at the same tile size
 #   TAF_PERSONA_SEED=<#int>               optional exact seed reused by every selected persona
 #   TAF_QUD_ROOT=<path>                  another licensed install
 #
@@ -284,7 +286,7 @@ run_persona() {
 		return
 	fi
 	local log_allow=""
-	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open"
+	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
 	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$archived_player_log" 2>&1)"; then
 		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
 			| tr '\n\t' '  ')"
@@ -334,6 +336,8 @@ run_persona() {
 		elif ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
 			-File "$(wslpath -w "$CAPTURE")" \
 			-Output "$(wslpath -w "$capture_temp")" \
+			-Width "${TAF_PERSONA_CAPTURE_WIDTH:-2560}" \
+			-Height "${TAF_PERSONA_CAPTURE_HEIGHT:-1440}" \
 			> "$capture_log" 2>&1
 		then
 			capture_problem="capture refused: $(tail -n 3 "$capture_log" | tr '\n\t' '  ')"

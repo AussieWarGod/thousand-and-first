@@ -16,7 +16,8 @@ namespace ThousandAndFirst.Tests
 		public void TopLevelAndNestedSerializedIdentitiesRemainExact()
 		{
 			string source = Plot();
-			Assert.AreEqual(56, Count(source, "public static partial class KingdomPlots"));
+			// 07n.FoundingHeartDiagnostics names the founding heart's refusals: one more shard.
+			Assert.AreEqual(57, Count(source, "public static partial class KingdomPlots"));
 			StringAssert.DoesNotContain("public static class KingdomPlots", source);
 			string yielding = Between(source, "[Serializable]\n\tpublic class r_KingdomYielding : IPart",
 				"[Serializable]\n\tpublic class r_KingdomPlotWorks : IPart");

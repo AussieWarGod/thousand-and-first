@@ -48,8 +48,11 @@ namespace ThousandAndFirst
 			{
 				ArchitecturePlacement placement = Snapshot.Placements[i];
 				if (!placement.ExistingAuthority) continue;
+				// The compiler binds a stateful anchor to its cell (role@x,y); the basin is
+				// named by its role, whatever cell the pose put it on.
 				if (basin != null || placement.Blueprint != "r_KingdomFirstBasin"
-					|| placement.StatefulAnchor != "fixture:first-basin")
+					|| KingdomArchitectureRules.AnchorRole(placement.StatefulAnchor)
+						!= "fixture:first-basin")
 					return Fail("founding-heart architecture must bind exactly one immutable first basin",
 						out Failure);
 				basin = placement;

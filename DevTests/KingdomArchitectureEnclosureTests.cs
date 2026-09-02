@@ -158,6 +158,11 @@ namespace ThousandAndFirst.Tests
 					out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
 				Assert.AreEqual(1, snapshot.Placements.Count(item => item.ExistingAuthority));
 				ArchitecturePlacement basin = snapshot.Placements.Single(item => item.ExistingAuthority);
+				// The compiler binds the stateful anchor to its cell; every consumer must compare
+				// the role, never the composed key (the founding refused on exactly that once).
+				StringAssert.StartsWith("fixture:first-basin@", basin.StatefulAnchor, facing.ToString());
+				Assert.AreEqual("fixture:first-basin",
+					KingdomArchitectureRules.AnchorRole(basin.StatefulAnchor));
 				ArchitectureCellState basinCell = Cell(snapshot, basin.X, basin.Y);
 				Assert.AreEqual(ArchitecturePassability.Walkable, basinCell.Passability);
 				List<ArchitectureAnchor> entrances = snapshot.Anchors.Where(item =>

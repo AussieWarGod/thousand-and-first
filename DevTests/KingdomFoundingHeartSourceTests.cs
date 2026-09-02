@@ -442,6 +442,23 @@ namespace ThousandAndFirst.Tests
 				Assert.Less(lines, 300, path + " has " + lines + " physical lines");
 			}
 		}
+		/// <summary>The founding heart binds its immutable basin by anchor ROLE. The draft compiler
+		/// composes every stateful anchor as role@x,y, so a literal compare refuses every founding.</summary>
+		[Test]
+		public void BasinBindingComparesTheAnchorRoleNotTheComposedKey()
+		{
+			foreach (string path in new[] { "Growth/KingdomArchitectureRuntime.HeartAndFacing.cs",
+				"Growth/KingdomArchitectureStamper.Transitions.cs" })
+			{
+				string source = Source(path);
+				StringAssert.Contains(
+					"KingdomArchitectureRules.AnchorRole(placement.StatefulAnchor)", source, path);
+				StringAssert.DoesNotContain("placement.StatefulAnchor != \"fixture:first-basin\"", source, path);
+			}
+			StringAssert.Contains("StatefulAnchor = statefulAnchor",
+				Source("Growth/KingdomArchitectureDraftCompilerRules.cs"));
+		}
+
 	}
 }
 #endif

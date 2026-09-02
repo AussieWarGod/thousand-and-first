@@ -146,6 +146,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string runtime = Read("Polity/KingdomPolityRuntime.cs");
 			StringAssert.Contains("TechnologyBand = (int)KingdomZoning.Tech(S) * 2", runtime);
+			// The founder is the realm's first body: a fresh realm's profile resolves from it,
+			// so the founding seal (which fails closed on an unresolved body pool) can capture.
+			StringAssert.Contains("FounderFirst(TopKeys(S.SpeciesCounts), The.Player?.GetSpecies())",
+				runtime);
 			StringAssert.DoesNotContain("TechnologyBand = (int)S.Stage", runtime);
 			string rules = Read("Polity/KingdomPolityProfileRules.cs");
 			StringAssert.Contains("CurrentBodyKeys(Facts.SpeciesKeys, Facts.IdentityKeys", rules);

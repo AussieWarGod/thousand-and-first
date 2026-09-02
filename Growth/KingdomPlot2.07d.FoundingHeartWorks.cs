@@ -13,33 +13,33 @@ namespace ThousandAndFirst
 			int slot = KingdomFoundingHeartRules.WorksSlot;
 			if (System == null || Z == null || !KingdomFoundingHeartRules.Valid(plan)
 				|| !ExactFoundingHeartMarkerRoster(Z, plan, false)
-				|| !ExactFoundingHeartWorksRoster(Z, Context, true)) return false;
+				|| !ExactFoundingHeartWorksRoster(Z, Context, true)) return HeartRefused("works: plan or rosters");
 			if (plan.States[slot] == 0)
 			{
 				if (TryFoundingHeartRoot(plan, slot, out GameObject rooted))
 				{
 					if (!PreparedFoundingHeartWorks(rooted, Context)
-						&& !ExactFoundingHeartWorks(rooted, Z, Context)) return false;
-					if (!AdvanceFoundingHeart(Z, Context, slot, 0, 1)) return false;
+						&& !ExactFoundingHeartWorks(rooted, Z, Context)) return HeartRefused("works: rooted output is neither prepared nor exact");
+					if (!AdvanceFoundingHeart(Z, Context, slot, 0, 1)) return HeartRefused("works: advance 0->1");
 				}
 				else
 				{
 					if (!FoundingHeartRootAbsent(plan, slot)
 						|| FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(plan, slot),
-							out _, out _) != KingdomPhysicalLookupState.Absent) return false;
+							out _, out _) != KingdomPhysicalLookupState.Absent) return HeartRefused("works: root or global id already present");
 					FoundingHeartPlacement placement = new FoundingHeartPlacement
 						{ Zone = Z, Context = Context, Slot = slot };
 					if (!GameObject.Validate(StakeFirstHeartPrepared(System, Z, Context,
-						placement))) return false;
+						placement))) return HeartRefused("works: stake prepared output");
 				}
 			}
 			if (plan.States[slot] == 1 && !PlaceOrSettleFoundingHeartWorks(Z, Context))
-				return false;
-			if (plan.States[slot] != 2) return false;
+				return HeartRefused("works: place or settle");
+			if (plan.States[slot] != 2) return HeartRefused("works: state " + plan.States[slot] + " after drive");
 			GameObject exact;
 			if (FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(plan, slot),
 				out exact, out bool graveyard) != KingdomPhysicalLookupState.Exact
-				|| graveyard || !ExactFoundingHeartWorks(exact, Z, Context)) return false;
+				|| graveyard || !ExactFoundingHeartWorks(exact, Z, Context)) return HeartRefused("works: settled output is not exact");
 			return RetireFoundingHeartRoot(plan, slot, exact)
 				&& ExactFoundingHeartWorksRoster(Z, Context, false);
 		}
@@ -51,10 +51,12 @@ namespace ThousandAndFirst
 			KingdomFoundingHeartPlan plan = context?.Plan;
 			int slot = Placement == null ? -1 : Placement.Slot;
 			if (Placement?.Zone == null || slot != KingdomFoundingHeartRules.WorksSlot
-				|| plan?.States == null || plan.States[slot] != 0
-				|| !PreparedFoundingHeartWorks(Works, context)
-				|| !RootFoundingHeartOutput(plan, slot, Works)) return false;
-			return AdvanceFoundingHeart(Placement.Zone, context, slot, 0, 1);
+				|| plan?.States == null) return HeartRefused("add: prepare: placement or plan");
+			if (plan.States[slot] != 0) return HeartRefused("add: prepare: slot state " + plan.States[slot]);
+			if (!PreparedFoundingHeartWorks(Works, context)) return HeartRefused("add: prepare: identity or shape");
+			if (!RootFoundingHeartOutput(plan, slot, Works)) return HeartRefused("add: prepare: root output");
+			return AdvanceFoundingHeart(Placement.Zone, context, slot, 0, 1)
+				|| HeartRefused("add: prepare: advance 0->1");
 		}
 
 		private static bool SettleFoundingHeartWorksAdd(FoundingHeartPlacement Placement,
@@ -63,9 +65,12 @@ namespace ThousandAndFirst
 			FoundingHeartContext context = Placement?.Context;
 			KingdomFoundingHeartPlan plan = context?.Plan;
 			int slot = KingdomFoundingHeartRules.WorksSlot;
-			if (Placement?.Zone == null || plan?.States == null
-				|| (!CallbackThrew && !ReferenceEquals(Accepted, Works))
-				|| !ExactFoundingHeartWorks(Works, Placement.Zone, context)) return false;
+			if (Placement?.Zone == null || plan?.States == null)
+				return HeartRefused("add: settle: placement or plan");
+			if (!CallbackThrew && !ReferenceEquals(Accepted, Works))
+				return HeartRefused("add: settle: AddObject returned a different object");
+			if (!ExactFoundingHeartWorks(Works, Placement.Zone, context))
+				return HeartRefused("add: settle: placed works are not exact");
 			if (plan.States[slot] == 1
 				&& !AdvanceFoundingHeart(Placement.Zone, context, slot, 1, 2)) return false;
 			return plan.States[slot] == 2 && RetireFoundingHeartRoot(plan, slot, Works);
@@ -104,25 +109,41 @@ namespace ThousandAndFirst
 		private static bool PreparedFoundingHeartWorksShape(GameObject Works,
 			FoundingHeartContext Context)
 		{
+			return PreparedFoundingHeartWorksShapeFault(Works, Context) == null;
+		}
+
+		/// <summary>The first thing wrong with an unplaced works object for this plan, named;
+		/// null when its shape is exactly the prepared one. The predicate above reads this so a
+		/// refusal on the add path can say which condition failed.</summary>
+		private static string PreparedFoundingHeartWorksShapeFault(GameObject Works,
+			FoundingHeartContext Context)
+		{
 			KingdomFoundingHeartPlan plan = Context?.Plan;
 			r_KingdomPlotWorks part = GameObject.Validate(Works)
 				? Works.GetPart<r_KingdomPlotWorks>() : null;
-				if (part == null || Works.CurrentCell != null
-					|| Works.CurrentZone != null || Works.Blueprint != WorksBlueprint
-					|| (Works.Physics != null && Works.Physics.InInventory != null)
-					|| FoundingHeartLoadedReferenceCount(Works) != 0
-				|| part.DesignKey != Context.Entry.Key || part.StartTick != plan.StartedTick
-				|| part.TotalTicks != plan.TotalTicks || Works.GetIntProperty(HeartPlotProperty) != 1
-				|| Works.GetStringProperty(PlotIdProperty) != plan.PlotId
-					|| Works.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Context.Entry.Key
-					|| !ExactFoundingHeartStakeTruth(Works, Context)
-					|| !TryReadRect(Works, out KingdomPlotRules.PlotRect rect)
-				|| !SameRect(rect, Context.Rect)
-				|| !KingdomArchitectureRuntime.TryRead(Works,
-					out KingdomArchitectureIntent frozen, out _)
-				|| !SameIntent(frozen, Context.Architecture)) return false;
-			return KingdomArchitectureStamper.TryReadOwner(Works, out _, out _,
-				out string lotId, out _) && lotId == plan.PlotId;
+			if (part == null) return "no valid works or plot part";
+			if (Works.CurrentCell != null || Works.CurrentZone != null) return "already placed";
+			if (Works.Blueprint != WorksBlueprint) return "blueprint " + Works.Blueprint;
+			if (Works.Physics != null && Works.Physics.InInventory != null) return "held in an inventory";
+			if (FoundingHeartLoadedReferenceCount(Works) != 0) return "loaded references";
+			if (part.DesignKey != Context.Entry.Key) return "design key " + part.DesignKey;
+			if (part.StartTick != plan.StartedTick) return "start tick";
+			if (part.TotalTicks != plan.TotalTicks) return "total ticks";
+			if (Works.GetIntProperty(HeartPlotProperty) != 1) return "heart plot flag";
+			if (Works.GetStringProperty(PlotIdProperty) != plan.PlotId) return "plot id";
+			if (Works.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Context.Entry.Key)
+				return "build key";
+			if (!ExactFoundingHeartStakeTruth(Works, Context)) return "stake truth";
+			// Unplaced by design (see the checks above), so the zone-bound reader cannot apply.
+			if (!TryReadStampedRect(Works, out KingdomPlotRules.PlotRect rect)) return "rect unreadable";
+			if (!SameRect(rect, Context.Rect)) return "rect differs";
+			if (!KingdomArchitectureRuntime.TryRead(Works,
+				out KingdomArchitectureIntent frozen, out string readFailure))
+				return "architecture unreadable: " + readFailure;
+			if (!SameIntent(frozen, Context.Architecture)) return "architecture intent differs";
+			if (!KingdomArchitectureStamper.TryReadOwner(Works, out _, out _,
+				out string lotId, out string ownerFailure)) return "layout owner unreadable: " + ownerFailure;
+			return lotId == plan.PlotId ? null : "layout lot id " + lotId;
 		}
 
 		private static bool ExactFoundingHeartWorks(GameObject Works, Zone Z,

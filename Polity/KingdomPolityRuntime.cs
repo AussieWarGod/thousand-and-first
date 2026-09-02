@@ -93,9 +93,27 @@ namespace ThousandAndFirst
 				Stage = (int)S.Stage, TechnologyBand = (int)KingdomZoning.Tech(S) * 2,
 				Population = Math.Max(0, S.Population),
 				FoundedTick = Math.Max(0L, S.FoundedTick), OriginKeys = TopKeys(S.OriginCounts),
-				CultureKeys = TopKeys(S.CultureCounts), SpeciesKeys = TopKeys(S.SpeciesCounts),
+				CultureKeys = TopKeys(S.CultureCounts),
+				SpeciesKeys = FounderFirst(TopKeys(S.SpeciesCounts), The.Player?.GetSpecies()),
 				IdentityKeys = TopKeys(S.IdentityCounts)
 			};
+		}
+
+		/// <summary>
+		/// The founder is the realm's first body. Resident censuses count only residents, so a
+		/// realm founded moments ago would otherwise present no species at all and its profile
+		/// phenotype could never resolve; the founding seal fails closed on an unresolved body
+		/// pool by law. The founder's species leads the list; it is a fact, not an inference.
+		/// </summary>
+		private static List<string> FounderFirst(List<string> Species, string FounderSpecies)
+		{
+			string founder = (FounderSpecies ?? "").Trim().ToLowerInvariant();
+			if (founder.Length == 0 || !KingdomPolityRules.Text(founder, true)) return Species;
+			List<string> result = new List<string> { founder };
+			for (int i = 0; Species != null && i < Species.Count; i++)
+				if (!string.Equals(Species[i], founder, StringComparison.Ordinal)
+					&& result.Count < KingdomPolityRules.MaxRefs) result.Add(Species[i]);
+			return result;
 		}
 
 		private static List<string> TopKeys(Dictionary<string, int> Source)
