@@ -14,7 +14,7 @@ claiming compatibility with another build.
 | Mode | Purpose | Public proof required |
 |---|---|---|
 | `--test` | Private bootstrap/candidate; `workshop.json` may be absent | Clean committed package only |
-| `--alpha` | Public `1.0.x`, labelled **v1.0 Alpha**; first version is exactly `1.0.0` | Private receipt binding, final preview, structure review, public metadata, annotated tag |
+| `--alpha` | Public `0.3.x`, labelled **v0.3 Alpha**; first version is exactly `0.3.0` | Private receipt binding, final preview, structure review, public metadata, annotated tag |
 | `--release` | Evidence-complete later lane | Every Alpha gate plus `docs/RELEASE_EVIDENCE.json` and retained human/native artifacts |
 
 Alpha deliberately does not invent final human evidence. It uses the machine-only
@@ -73,7 +73,7 @@ source test, and an old native receipt are never a substitute for the current be
 exercise.
 
 For first Alpha, perform the one-time private-candidate identity freeze from
-[ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md): manifest `1.0.0`, Alpha title, honest pre-release
+[ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md): manifest `0.3.0`, Alpha title, honest pre-release
 README/CHANGELOG wording, current preview, and synchronized tests/docs. Do not write public status or
 a dated release heading until the subscribed private candidate passes section 4.
 
@@ -151,7 +151,7 @@ git rev-parse HEAD
 That full receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so the
 staged candidate remains byte-identical to the subscribed package.
 
-## 5A. Public v1.0 Alpha
+## 5A. Public v0.3 Alpha
 
 Do not create `docs/RELEASE_EVIDENCE.json` for Alpha. It would falsely imply completed final human
 release passes. Instead:
@@ -165,8 +165,8 @@ release passes. Instead:
 
 2. Replace pre-release README/CHANGELOG status with exact final Alpha claims:
 
-   - `**Status: 1.0.0 public Alpha playtest.**`
-   - `## [1.0.0] — YYYY-MM-DD (Alpha)` as first changelog version heading.
+   - `**Status: 0.3.0 public Alpha playtest.**`
+   - `## [0.3.0] — YYYY-MM-DD (Alpha)` as first changelog version heading.
 
 3. Copy [ALPHA_CANDIDATE.example.json](ALPHA_CANDIDATE.example.json) to exact path
    `docs/ALPHA_CANDIDATE.json`. Replace every sentinel with observed values:
@@ -196,14 +196,14 @@ release passes. Instead:
    ./Tools/portable-check.sh
    ./Tools/release-check.sh --alpha
    git status --short
-   git tag -a v1.0.0 -m "The Thousand and First v1.0 Alpha"
-   ./Tools/workshop-package.sh --alpha /absolute/path/TAF-1.0.0-alpha
+   git tag -a v0.3.0 -m "The Thousand and First v0.3 Alpha"
+   ./Tools/workshop-package.sh --alpha /absolute/path/TAF-0.3.0-alpha
    ```
 
-`--alpha` requires a canonical `1.0.x` version, public Alpha metadata, final non-interim preview,
+`--alpha` requires a canonical `0.3.x` version, public Alpha metadata, final non-interim preview,
 current structural review, committed candidate record and receipt, unchanged staged runtime/modes
 since the private candidate, matching Workshop ID, a matching annotated `v<version>` tag at `HEAD`,
-and a clean tree. The one-time plan fixes the first version at exactly `1.0.0`; later proved recovery
+and a clean tree. The one-time plan fixes the first version at exactly `0.3.0`; later proved recovery
 or update builds use a new patch version. This lane does not accept or silently fall back to full
 release evidence.
 

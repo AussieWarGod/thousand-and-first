@@ -668,7 +668,7 @@ def audit_public(problems):
         problems,
         "README.md",
         "pre-release source",
-        "v1.0 Alpha public playtest has not shipped",
+        "v0.3 Alpha public playtest has not shipped",
         "not an installable release candidate",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",

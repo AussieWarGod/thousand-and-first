@@ -116,7 +116,7 @@ class WorkshopMetadataTests(unittest.TestCase):
                 "Found a faction, govern settlements, manage physical water and food, "
                 "and optionally leave a legacy across worlds."
             ),
-            "version": "1.0.0",
+            "version": "0.3.0",
             "author": METADATA.AUTHOR,
             "tags": ",".join(METADATA.TAGS),
             "PreviewImage": METADATA.PREVIEW,
@@ -131,11 +131,11 @@ class WorkshopMetadataTests(unittest.TestCase):
         readme = self.root / "README.md"
         changelog = self.root / "CHANGELOG.md"
         readme.write_text(
-            "# Fixture\n\n**Status: 1.0.0 public Alpha playtest.**\n",
+            "# Fixture\n\n**Status: 0.3.0 public Alpha playtest.**\n",
             encoding="utf-8",
         )
         changelog.write_text(
-            "# Changelog\n\n## [1.0.0] — 2026-08-31 (Alpha)\n\nInitial public test.\n",
+            "# Changelog\n\n## [0.3.0] — 2026-08-31 (Alpha)\n\nInitial public test.\n",
             encoding="utf-8",
         )
         receipt_hash = "a" * 64
@@ -144,7 +144,7 @@ class WorkshopMetadataTests(unittest.TestCase):
         payload = {
             "schemaVersion": METADATA.ALPHA_CANDIDATE_SCHEMA,
             "releaseChannel": METADATA.ALPHA_RELEASE_CHANNEL,
-            "releaseVersion": "1.0.0",
+            "releaseVersion": "0.3.0",
             "candidateCommit": candidate,
             "gameMarketingVersion": METADATA.GAME_MARKETING_VERSION,
             "gameCoreBuild": METADATA.GAME_CORE_BUILD,
@@ -171,7 +171,7 @@ class WorkshopMetadataTests(unittest.TestCase):
         payload["previewSha256"] = hashlib.sha256(preview.read_bytes()).hexdigest()
         record.write_text(json.dumps(payload) + "\n", encoding="utf-8")
         changelog.write_text(
-            "# Changelog\n\n## [Unreleased] — 1.0.0 work in progress\n",
+            "# Changelog\n\n## [Unreleased] — 0.3.0 work in progress\n",
             encoding="utf-8",
         )
         with self.assertRaisesRegex(METADATA.ValidationError, "Alpha release date"):
@@ -180,7 +180,7 @@ class WorkshopMetadataTests(unittest.TestCase):
             )
 
     def test_alpha_candidate_accepts_patch_update_and_keeps_exact_version_binding(self) -> None:
-        version = "1.0.1"
+        version = "0.3.1"
         manifest = {
             "id": METADATA.MOD_ID,
             "title": METADATA.TITLE,
@@ -243,18 +243,18 @@ class WorkshopMetadataTests(unittest.TestCase):
         )
 
         payload = json.loads(record.read_text(encoding="utf-8"))
-        payload["releaseVersion"] = "1.0.0"
+        payload["releaseVersion"] = "0.3.0"
         record.write_text(json.dumps(payload) + "\n", encoding="utf-8")
         with self.assertRaisesRegex(METADATA.ValidationError, "version must match manifest"):
             METADATA.validate_alpha_candidate(
                 manifest, preview, workshop, record, readme, changelog
             )
 
-        for invalid_version in ("1.0.01", "1.1.0", "2.0.0"):
+        for invalid_version in ("0.3.01", "0.4.0", "1.0.0"):
             with self.subTest(version=invalid_version):
                 write_version_bound_fixture(invalid_version)
                 with self.assertRaisesRegex(
-                    METADATA.ValidationError, "1.0.0 or a later canonical 1.0.x patch"
+                    METADATA.ValidationError, "0.3.0 or a later canonical 0.3.x patch"
                 ):
                     METADATA.validate_alpha_candidate(
                         manifest, preview, workshop, record, readme, changelog

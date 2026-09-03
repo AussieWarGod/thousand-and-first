@@ -20,7 +20,7 @@ This file says what the product is trying to be and which ideas belong. [Current
 evidence](docs/STATUS.md), the [executable acceptance protocol](TESTING.md), and the
 [brief-to-runtime audit](_notes/BRIEF-IMPLEMENTATION-AUDIT.md) say how much has been proved.
 
-The first public destination is **v1.0 Alpha**: a complete, coherent, playable feedback release,
+The first public destination is **v0.3 Alpha**: a complete, coherent, playable feedback release,
 not a perfection claim and not a knowingly broken vertical slice. It ships once the full player
 loop, architecture/function sense, saves, install, production persona matrix, representative native
 visual review, contributor path, and Workshop package are proved. Subjective refinements between

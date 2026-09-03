@@ -24,7 +24,7 @@ Once the public Alpha item exists:
 2. Remove any manually installed copy of The Thousand and First.
 3. Launch Qud, open **Mods**, enable the mod, and restart Qud when prompted.
 4. Confirm the Mods screen shows the expected manifest version. The first public Alpha must show
-   `1.0.0`.
+   `0.3.0`.
 
 If the item is subscribed but absent, restart Steam and Qud before reporting it. Include operating
 system, storefront, Qud marketing/core version, and whether any local copy remains.
@@ -52,7 +52,7 @@ Use a fresh, non-Tutorial, non-Daily world for the first report.
 
 ### Kingdom Quickstart
 
-The v1.0 Alpha target adds a separate **Kingdom Quickstart** game mode:
+The v0.3 Alpha target adds a separate **Kingdom Quickstart** game mode:
 
 1. Choose **New Game** → **Kingdom Quickstart**.
 2. Build or select a character through Qud's normal character flow.
@@ -67,7 +67,7 @@ An optional passive charter advisor is controlled by a Mods option before world 
 advisor grants no labour, civic support, defence, or loot. Changing that option later does not
 retroactively spawn or remove one. Kingdom Quickstart never imports a prior realm.
 
-If the tagged v1.0 Alpha does not show this mode after the required restart, report a loader or
+If the tagged v0.3 Alpha does not show this mode after the required restart, report a loader or
 package bug instead of using debug wishes to conceal it.
 
 ### Ordinary founding

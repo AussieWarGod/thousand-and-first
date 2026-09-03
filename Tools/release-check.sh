@@ -9,7 +9,7 @@ usage() {
 Usage: Tools/release-check.sh --test|--alpha|--release
 
   --test     private/bootstrap lane; workshop.json may be absent or must be private
-  --alpha    public v1.0 Alpha lane; workshop.json must be public
+  --alpha    public v0.3 Alpha lane; workshop.json must be public
   --release  evidence-complete public lane; workshop.json must be public
 
 Requires one clean Git worktree for the full run. Pins HEAD at entry and

@@ -189,7 +189,7 @@ PY
 }
 
 prepare_alpha_identity() {
-	local repo="$1" version="${2:-1.0.0}"
+	local repo="$1" version="${2:-0.3.0}"
 	python3 - "$repo/manifest.json" "$version" <<'PY'
 import json
 import sys
@@ -1052,7 +1052,7 @@ freeze_private_candidate "$alpha_missing_record" >/dev/null
 write_workshop "$alpha_missing_record" 2
 publish_alpha_claims "$alpha_missing_record"
 commit_all "$alpha_missing_record" "public Alpha metadata without candidate record"
-git -C "$alpha_missing_record" tag -a v1.0.0 -m "fixture Alpha"
+git -C "$alpha_missing_record" tag -a v0.3.0 -m "fixture Alpha"
 expect_fail "missing Alpha candidate record" "ALPHA_CANDIDATE.json" \
 	"$alpha_missing_record/Tools/workshop-package.sh" --alpha \
 	"$FIXTURE_ROOT/alpha-missing-record-package"
@@ -1085,7 +1085,7 @@ data["privatePackageReceiptSha256"] = "f" * 64
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$alpha_bad_receipt" "forge Alpha receipt binding"
-git -C "$alpha_bad_receipt" tag -a v1.0.0 -m "fixture Alpha"
+git -C "$alpha_bad_receipt" tag -a v0.3.0 -m "fixture Alpha"
 expect_fail "Alpha forged receipt binding" "does not match public candidate record" \
 	"$alpha_bad_receipt/Tools/workshop-package.sh" --alpha \
 	"$FIXTURE_ROOT/alpha-bad-receipt-package"
@@ -1107,7 +1107,7 @@ data["inventorySha256"] = "0" * 64
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$alpha_stale_structure" "stale Alpha structural review"
-git -C "$alpha_stale_structure" tag -a v1.0.0 -m "fixture Alpha"
+git -C "$alpha_stale_structure" tag -a v0.3.0 -m "fixture Alpha"
 expect_fail "stale Alpha structural review" \
 	"semantic review does not bind the current staged C# inventory" \
 	"$alpha_stale_structure/Tools/workshop-package.sh" --alpha \
@@ -1140,7 +1140,7 @@ write_workshop "$alpha_interim_preview" 2
 publish_alpha_claims "$alpha_interim_preview"
 write_alpha_candidate "$alpha_interim_preview" "$alpha_interim_candidate"
 commit_all "$alpha_interim_preview" "public Alpha with interim preview"
-git -C "$alpha_interim_preview" tag -a v1.0.0 -m "fixture Alpha"
+git -C "$alpha_interim_preview" tag -a v0.3.0 -m "fixture Alpha"
 expect_fail "interim Alpha preview" "refuses the known interim preview" \
 	"$alpha_interim_preview/Tools/workshop-package.sh" --alpha \
 	"$FIXTURE_ROOT/alpha-interim-preview-package"
@@ -1152,7 +1152,7 @@ write_workshop "$alpha_release" 2
 publish_alpha_claims "$alpha_release"
 write_alpha_candidate "$alpha_release" "$alpha_candidate"
 commit_all "$alpha_release" "public Alpha metadata"
-git -C "$alpha_release" tag -a v1.0.0 -m "fixture Alpha"
+git -C "$alpha_release" tag -a v0.3.0 -m "fixture Alpha"
 alpha_dest="$FIXTURE_ROOT/alpha-package"
 "$alpha_release/Tools/workshop-package.sh" --alpha "$alpha_dest" >/dev/null
 (
@@ -1162,35 +1162,35 @@ alpha_dest="$FIXTURE_ROOT/alpha-package"
 cmp -s "$alpha_release/workshop.json" "$alpha_dest/workshop.json"
 [ ! -e "$alpha_release/docs/RELEASE_EVIDENCE.json" ]
 
-# Recovery/update keeps the v1.0 Alpha listing but advances one patch, rebuilds the private proof,
-# and requires a new matching tag and candidate record. The first-release 1.0.0 tag stays immutable.
+# Recovery/update keeps the v0.3 Alpha listing but advances one patch, rebuilds the private proof,
+# and requires a new matching tag and candidate record. The first-release 0.3.0 tag stays immutable.
 alpha_patch_no_lineage="$(clone_case alpha-patch-without-first-release)"
-prepare_alpha_identity "$alpha_patch_no_lineage" "1.0.1"
+prepare_alpha_identity "$alpha_patch_no_lineage" "0.3.1"
 alpha_patch_no_lineage_candidate="$(freeze_private_candidate "$alpha_patch_no_lineage")"
 write_workshop "$alpha_patch_no_lineage" 2
 publish_alpha_claims "$alpha_patch_no_lineage"
 write_alpha_candidate "$alpha_patch_no_lineage" "$alpha_patch_no_lineage_candidate"
 commit_all "$alpha_patch_no_lineage" "public Alpha patch without first release"
-git -C "$alpha_patch_no_lineage" tag -a v1.0.1 -m "fixture orphan Alpha patch"
-expect_fail "Alpha patch without first release" "requires preserved annotated tag v1.0.0" \
+git -C "$alpha_patch_no_lineage" tag -a v0.3.1 -m "fixture orphan Alpha patch"
+expect_fail "Alpha patch without first release" "requires preserved annotated tag v0.3.0" \
 	"$alpha_patch_no_lineage/Tools/workshop-package.sh" --alpha \
 	"$FIXTURE_ROOT/alpha-patch-no-lineage-package"
 
 alpha_patch="$(clone_case positive-alpha-patch)"
-prepare_alpha_identity "$alpha_patch" "1.0.0"
+prepare_alpha_identity "$alpha_patch" "0.3.0"
 alpha_first_candidate="$(freeze_private_candidate "$alpha_patch")"
 write_workshop "$alpha_patch" 2
 publish_alpha_claims "$alpha_patch"
 write_alpha_candidate "$alpha_patch" "$alpha_first_candidate"
 commit_all "$alpha_patch" "first public Alpha metadata"
-git -C "$alpha_patch" tag -a v1.0.0 -m "prior fixture Alpha"
-prepare_alpha_identity "$alpha_patch" "1.0.1"
+git -C "$alpha_patch" tag -a v0.3.0 -m "prior fixture Alpha"
+prepare_alpha_identity "$alpha_patch" "0.3.1"
 alpha_patch_candidate="$(freeze_private_candidate "$alpha_patch")"
 write_workshop "$alpha_patch" 2
 publish_alpha_claims "$alpha_patch"
 write_alpha_candidate "$alpha_patch" "$alpha_patch_candidate"
 commit_all "$alpha_patch" "public Alpha patch metadata"
-git -C "$alpha_patch" tag -a v1.0.1 -m "fixture Alpha patch"
+git -C "$alpha_patch" tag -a v0.3.1 -m "fixture Alpha patch"
 alpha_patch_dest="$FIXTURE_ROOT/alpha-patch-package"
 "$alpha_patch/Tools/workshop-package.sh" --alpha "$alpha_patch_dest" >/dev/null
 (
@@ -1203,7 +1203,7 @@ import sys
 from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-assert manifest["version"] == "1.0.1"
+assert manifest["version"] == "0.3.1"
 PY
 [ ! -e "$alpha_patch/docs/RELEASE_EVIDENCE.json" ]
 

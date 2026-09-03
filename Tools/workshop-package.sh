@@ -12,7 +12,7 @@ Usage:
 
   --copy     print the canonical Qud Workshop fields; write nothing
   --test     build a private-test package (default); workshop.json may be absent
-  --alpha    build a tagged public v1.0.x Alpha package; require public metadata,
+  --alpha    build a tagged public v0.3.x Alpha package; require public metadata,
              exact private-candidate binding, final preview, and structural review,
              but no final human release-evidence record
   --release  require an annotated v<version> tag at HEAD, public workshop.json,
@@ -101,29 +101,29 @@ require_release_tag() {
 }
 
 require_alpha_lineage() {
-	[ "$VERSION" != "1.0.0" ] || return 0
-	local first_ref="refs/tags/v1.0.0" first_commit first_version
+	[ "$VERSION" != "0.3.0" ] || return 0
+	local first_ref="refs/tags/v0.3.0" first_commit first_version
 	git show-ref --verify --quiet "$first_ref" || {
-		echo "later v1.0 Alpha patch requires preserved annotated tag v1.0.0" >&2
+		echo "later v0.3 Alpha patch requires preserved annotated tag v0.3.0" >&2
 		return 1
 	}
 	[ "$(git cat-file -t "$first_ref")" = "tag" ] || {
-		echo "first Alpha tag v1.0.0 must be annotated, not lightweight" >&2
+		echo "first Alpha tag v0.3.0 must be annotated, not lightweight" >&2
 		return 1
 	}
 	first_commit="$(git rev-parse "$first_ref^{commit}")"
 	[ "$first_commit" != "$HEAD_COMMIT" ] \
 		&& git merge-base --is-ancestor "$first_commit" "$HEAD_COMMIT" || {
-		echo "later v1.0 Alpha patch requires v1.0.0 on an earlier ancestor" >&2
+		echo "later v0.3 Alpha patch requires v0.3.0 on an earlier ancestor" >&2
 		return 1
 	}
 	first_version="$(git show "$first_ref:manifest.json" | python3 -c \
 		'import json, sys; print(json.load(sys.stdin).get("version", ""))')" || {
-		echo "cannot read manifest version from first Alpha tag v1.0.0" >&2
+		echo "cannot read manifest version from first Alpha tag v0.3.0" >&2
 		return 1
 	}
-	[ "$first_version" = "1.0.0" ] || {
-		echo "first Alpha tag v1.0.0 does not bind manifest version 1.0.0" >&2
+	[ "$first_version" = "0.3.0" ] || {
+		echo "first Alpha tag v0.3.0 does not bind manifest version 0.3.0" >&2
 		return 1
 	}
 }
@@ -1078,7 +1078,7 @@ echo "WORKSHOP PACKAGE CLEAN"
 echo "mode:    $MODE"
 echo "version: $VERSION"
 echo "title:   $TITLE"
-[ "$MODE" != "alpha" ] || echo "channel: v1.0 Alpha (final human release evidence deferred)"
+[ "$MODE" != "alpha" ] || echo "channel: v0.3 Alpha (final human release evidence deferred)"
 echo "root:    $DEST"
 echo "files:   $(find -P "$DEST" -type f | wc -l)"
 echo "hashes:  $RECEIPT"

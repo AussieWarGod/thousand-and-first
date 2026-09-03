@@ -27,9 +27,9 @@ GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
 RELEASE_EVIDENCE_SCHEMA = 4
 ALPHA_CANDIDATE_SCHEMA = 1
-FIRST_ALPHA_RELEASE_VERSION = "1.0.0"
-ALPHA_RELEASE_VERSION_PATTERN = re.compile(r"^1\.0\.(?:0|[1-9][0-9]*)$")
-ALPHA_RELEASE_CHANNEL = "v1.0 Alpha"
+FIRST_ALPHA_RELEASE_VERSION = "0.3.0"
+ALPHA_RELEASE_VERSION_PATTERN = re.compile(r"^0\.3\.(?:0|[1-9][0-9]*)$")
+ALPHA_RELEASE_CHANNEL = "v0.3 Alpha"
 RELEASE_MODES = ("test", "alpha", "release")
 VERIFICATION_PASS_IDS = {
     "nativeCompileLoad": "native-compile-load",
@@ -558,7 +558,7 @@ def validate_alpha_candidate(
     ):
         errors.append(
             f"Alpha package manifest version must be {FIRST_ALPHA_RELEASE_VERSION} "
-            "or a later canonical 1.0.x patch"
+            "or a later canonical 0.3.x patch"
         )
     if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
         errors.append(

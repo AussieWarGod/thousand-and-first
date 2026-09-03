@@ -91,7 +91,7 @@ class ReleaseReadinessTests(unittest.TestCase):
             },
         )
         self.assertEqual(example["schemaVersion"], 1)
-        self.assertEqual(example["releaseChannel"], "v1.0 Alpha")
+        self.assertEqual(example["releaseChannel"], "v0.3 Alpha")
         forbidden = {"testedBy", "reviewedBy", "verification", "privateSubscription"}
         self.assertFalse(forbidden & set(example))
 

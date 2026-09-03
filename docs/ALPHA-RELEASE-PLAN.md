@@ -1,6 +1,6 @@
-# v1.0 Alpha Freeze Plan
+# v0.3 Alpha Freeze Plan
 
-Target: one public Steam Workshop playtest numbered `1.0.0` and labelled **v1.0 Alpha** everywhere.
+Target: one public Steam Workshop playtest numbered `0.3.0` and labelled **v0.3 Alpha** everywhere.
 This is not the production-final release. Do not bump `manifest.json`, create the public tag, or
 upload while this plan says pre-freeze.
 
@@ -9,7 +9,7 @@ upload while this plan says pre-freeze.
 - `manifest.json` remains `0.2.0` by design.
 - Working integration changes are not frozen or packageable.
 - `workshop.json`, `docs/PRIVATE_PACKAGE_RECEIPT.sha256`, `docs/ALPHA_CANDIDATE.json`, and the
-  annotated `v1.0.0` tag are expected to be absent before the Steam/private-candidate sequence.
+  annotated `v0.3.0` tag are expected to be absent before the Steam/private-candidate sequence.
 - `docs/STRUCTURE_REVIEW.json` must be authored against the final staged C# inventory; a missing or
   stale review blocks Alpha packaging.
 - `preview.png` has a native-capture provenance record in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md).
@@ -38,15 +38,15 @@ Freeze only when all conditions are true:
 
 At freeze, change together in one reviewed commit:
 
-- `manifest.json`: version `1.0.0`; keep title `The Thousand and First [ALPHA]`;
+- `manifest.json`: version `0.3.0`; keep title `The Thousand and First [ALPHA]`;
 - `README.md`: keep one honest pre-release status line stating that public Alpha has not shipped;
-- `CHANGELOG.md`: keep `1.0.0` under `[Unreleased]` without a dated release heading;
+- `CHANGELOG.md`: keep `0.3.0` under `[Unreleased]` without a dated release heading;
 - Workshop metadata: canonical Alpha text and private visibility first; and
 - any version-pinned tests/docs that intentionally bind current release identity.
 
 Do not perform this bump early. A later code/content change invalidates the private receipt and
-forces a new candidate. Write `**Status: 1.0.0 public Alpha playtest.**` and
-`## [1.0.0] — YYYY-MM-DD (Alpha)` only after subscribed private validation, when RELEASING section
+forces a new candidate. Write `**Status: 0.3.0 public Alpha playtest.**` and
+`## [0.3.0] — YYYY-MM-DD (Alpha)` only after subscribed private validation, when RELEASING section
 5A creates the public metadata/candidate commit.
 
 ## Required gates
@@ -82,8 +82,8 @@ runtime, inventory, mode, preview, Workshop ID, structure, tag, or receipt drift
 
 ## Go/no-go and recovery
 
-Go only when `--alpha` prints `WORKSHOP PACKAGE CLEAN`, mode `alpha`, version `1.0.0`, title with
-`[ALPHA]`, and channel `v1.0 Alpha`. The command never authenticates or uploads.
+Go only when `--alpha` prints `WORKSHOP PACKAGE CLEAN`, mode `alpha`, version `0.3.0`, title with
+`[ALPHA]`, and channel `v0.3 Alpha`. The command never authenticates or uploads.
 
 Immediately before tagging/package creation, rerun `./Tools/release-check.sh --alpha` from the clean
 public-candidate commit. `--test` is only the private lane; it cannot sign public visibility.

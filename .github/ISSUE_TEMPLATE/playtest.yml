@@ -11,7 +11,7 @@ body:
     attributes:
       label: TAF version and install source
       description: Give the manifest version and say Steam Workshop or manual tagged package.
-      placeholder: "1.0.0 / Steam Workshop"
+      placeholder: "0.3.0 / Steam Workshop"
     validations:
       required: true
   - type: input
@@ -48,7 +48,7 @@ body:
       label: Enabled mods and load order
       description: List versions or Workshop IDs. Say "TAF only" if isolated.
       placeholder: |
-        1. The Thousand and First 1.0.0
+        1. The Thousand and First 0.3.0
         2. Other mod and version
     validations:
       required: true

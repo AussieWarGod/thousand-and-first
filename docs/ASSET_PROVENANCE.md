@@ -79,7 +79,7 @@ dimensions, palette, contrast, function, and live in-game readability are indepe
 ## Workshop preview
 
 Current-candidate preview status: **OPEN** (the `final-native-preview-review` release gate is not
-yet satisfied). Current-candidate preview: CAPTURED for the 1.0.0 candidate (native, commit
+yet satisfied). Current-candidate preview: CAPTURED for the 0.3.0 candidate (native, commit
 `a42041222ad2064b233c0d6ba5d0dedcb0a17cc1`); final-native-preview-review remains open and belongs
 to the Beta/Release evidence lane, not Alpha. Do not edit the recorded bytes, crop, hashes, or
 procedure without re-deriving them from a fresh capture.
@@ -90,7 +90,7 @@ the civic heart-court (`heartcourt|civic|Huge|fallback|North`) — staged by the
 gallery's production snapshot/stamper/rendering path in the harness's born-clean test zone, then
 lit, revealed, and explored by the scenario's `light` verb (the `AmbientOmniscience` zone part) so
 the sanctum interior renders. Generated art, a static gallery render, or a synthetic mock-up
-cannot stand here; this is a native game screenshot of the current 1.0.0 candidate build. Final
+cannot stand here; this is a native game screenshot of the current 0.3.0 candidate build. Final
 human preview review (`final-native-preview-review`) remains open and is recorded in release
 evidence at upload time.
 
