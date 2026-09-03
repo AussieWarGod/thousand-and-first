@@ -313,7 +313,7 @@ checkpoints only; they do not sign current bytes.
   imports occur in 1373 files, 0 of them over the line limit. Its
   exact inventory digest is
   `bfd7b64e6e4c40c50dc782163156f9372528a51bfcf07ed0f9648b1157b340f2`;
-  the corresponding cold-install inventory contains 2975 files. The
+  the corresponding cold-install inventory contains 2976 files. The
   exact-inventory human semantic review remains a release blocker:
   `docs/STRUCTURE_REVIEW.json` is still missing, so this is not an enterprise-grade or v1.0 claim.
 - **The deterministic balance gate follows split rule authorities.** The simulator reads the full
