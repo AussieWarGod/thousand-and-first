@@ -1,0 +1,8 @@
+{
+  "WorkshopId": 3794797472,
+  "Title": "The Thousand and First [ALPHA]",
+  "Description": "ALPHA — pre-release playtest build for Caves of Qud v1.0.5 (core 2.0.211.51). Expect bugs, missing content, and rough edges. This listing stays ALPHA; BETA and RELEASE will ship as separate Workshop listings when they come.\n\nFound a faction through a water rite, plant and govern settlements, and build districts across ten typed plot categories in S/M/L/XL sizes, with buildings tiered by style, creed, materials, and technology. Grow food, manage water, trade between cities, answer threats, and optionally leave a legacy across worlds. Single-player only, so there is no multiplayer or user-moderation surface.\n\nSource, issue tracker, and full documentation: https://github.com/AussieWarGod/thousand-and-first\n\nOpen-source (MIT), with an in-game scenario test framework modders can reuse for their own additions — see the repo.\n\nArt and buildings wanted: if you enjoy drawing Qud-style tiles or laying out settlements, submissions are welcome on the repo — every building ships with a full design dossier to work from, and a paid artist/designer pass over the whole catalogue is planned for BETA.\n\nSave-format versioning: durable state carries an explicit version and a registered migration port. Updates only rarely need to change save-format; when one must, a save that a port cannot read is quarantined and reported to you, never silently corrupted.\n\nBack up your saves before testing. Report issues at https://github.com/AussieWarGod/thousand-and-first/issues. This is an unofficial community mod, not affiliated with or endorsed by Freehold Games.",
+  "Tags": "Beta,Faction,Settlement,Script",
+  "Visibility": "0",
+  "ImagePath": "preview.png"
+}
