@@ -17,7 +17,7 @@ trap 'rm -f -- "$TMP" "$BAD"' EXIT
 # Qud's log is CRLF on Windows.  Keep line numbers stable while normalising it.
 tr -d '\r' < "$LOG" > "$TMP"
 
-if ! grep -Eq '(\[TAF\]|\[The Thousand and First\]|[/\\]ThousandAndFirst[/\\])' "$TMP"; then
+if ! grep -Eq '(\[TAF\]|\[The Thousand and First\]|[/\\]ThousandAndFirst[/\\]|\[The Thousand and First( \[[A-Z]+\])?\]|workshop[/\\]content[/\\]333640[/\\][0-9]+[/\\])' "$TMP"; then
 	echo "SMOKE LOG INVALID: no Thousand and First load/runtime evidence" >&2
 	exit 1
 fi
