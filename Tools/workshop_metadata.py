@@ -21,7 +21,7 @@ from pathlib import Path
 MOD_ID = "r_ThousandAndFirst"
 TITLE = "The Thousand and First [ALPHA]"
 AUTHOR = "AussieWarGod"
-TAGS = ("Beta", "Faction", "Settlement", "Script")
+TAGS = ("Alpha", "Faction", "Settlement", "Script", "Kingdom", "Build")
 PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
@@ -499,8 +499,7 @@ def validate_alpha_claims(
         heading_indexes[1] if len(heading_indexes) > 1 else len(changelog_lines)
     )
     current_claim = " ".join(
-        line.strip()
-        for line in changelog_lines[current_start:current_end]
+        line.strip() for line in changelog_lines[current_start:current_end]
     )
     for pattern, description in (
         (r"\bwork in progress\b", "work in progress"),
@@ -513,7 +512,9 @@ def validate_alpha_claims(
                 f"{changelog_path.name} current Alpha claim still says {description}"
             )
     if errors:
-        raise ValidationError("Alpha candidate claims are invalid; " + "; ".join(errors))
+        raise ValidationError(
+            "Alpha candidate claims are invalid; " + "; ".join(errors)
+        )
 
 
 def validate_alpha_candidate(
@@ -545,12 +546,11 @@ def validate_alpha_candidate(
         errors.append(
             f"Alpha candidate fields must exactly match schema version {ALPHA_CANDIDATE_SCHEMA}"
         )
-    if record.get("schemaVersion") != ALPHA_CANDIDATE_SCHEMA or type(
-        record.get("schemaVersion")
-    ) is not int:
-        errors.append(
-            f"Alpha candidate schemaVersion must be {ALPHA_CANDIDATE_SCHEMA}"
-        )
+    if (
+        record.get("schemaVersion") != ALPHA_CANDIDATE_SCHEMA
+        or type(record.get("schemaVersion")) is not int
+    ):
+        errors.append(f"Alpha candidate schemaVersion must be {ALPHA_CANDIDATE_SCHEMA}")
     alpha_version = manifest.get("version")
     if (
         not isinstance(alpha_version, str)

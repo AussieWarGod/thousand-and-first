@@ -257,18 +257,19 @@ PY
 
 assert_public_workshop_golden() {
 	local path="$1/workshop.json"
-	# Golden republished 2026-08-30: canonical_description now wraps every manifest in the
-	# reviewed ALPHA/BETA pre-release frame (header, repo links, save-format note), so the
-	# fixture's canonical bytes grew from the prior 656-byte golden 99cd43c1....
+	# Golden republished 2026-09-03: TAGS grew from Beta,Faction,Settlement,Script to
+	# Alpha,Faction,Settlement,Script,Kingdom,Build (author's Workshop upload adopted as
+	# canonical), so the fixture's canonical bytes grew from the prior 1574-byte golden
+	# 20850c4f....
 	[ "$(sha256sum "$path" | cut -d' ' -f1)" = \
-		"20850c4f309fc9979f9bf4203839a6256b6251a49d10d5a8e7f39467d5693b0a" ] || {
+		"5613f193d767f28867f0b197519c42f6f6e70470b9f6350dfac6149737952a95" ] || {
 		echo "Qud workshop.json golden hash changed" >&2; exit 1; }
 	python3 - "$path" <<'PY'
 import sys
 from pathlib import Path
 
 payload = Path(sys.argv[1]).read_bytes()
-assert len(payload) == 1574
+assert len(payload) == 1589
 assert not payload.startswith(b"\xef\xbb\xbf")
 assert payload.startswith(b'{\r\n  "WorkshopId": 123456789,\r\n')
 assert payload.endswith(b'  "ImagePath": "preview.png"\r\n}')
@@ -386,7 +387,7 @@ manifest = {
     ),
     "version": "0.2.0",
     "author": "AussieWarGod",
-    "tags": "Beta,Faction,Settlement,Script",
+    "tags": "Alpha,Faction,Settlement,Script,Kingdom,Build",
     "PreviewImage": "preview.png",
 }
 (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
