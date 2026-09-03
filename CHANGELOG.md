@@ -8,16 +8,16 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [Unreleased] — 0.3.0 ALPHA candidate
+## [0.3.0] — 2026-09-03 (Alpha)
 
 Re-versioned from the unshipped 1.0.0 identity freeze (`ab61ae9`): Alpha ships as 0.x while saves/formats may still break, and 1.0.0 is reserved for the full release.
 
-The public-Alpha identity and its evidence carve-out are accepted, but no Alpha has shipped.
+The public-Alpha identity and its evidence carve-out are accepted, and this Alpha ships as v0.3.0.
 The architecture, transition, hosted-arcology, quickstart, and scenario code/content lanes are
-integrated at the frozen source snapshot. The tree is still not release-ready: exact-inventory human
-review, native behavior and visual acceptance, a current preview, package evidence, and private/public
-Steam subscription proof remain open. Historical green counts below describe their exact earlier
-checkpoints only; they do not sign current bytes.
+integrated at the frozen source snapshot. The tree remains open on full production release evidence:
+exact-inventory human review, native behavior and visual acceptance, a current preview, package
+evidence, and private/public Steam subscription proof remain open. Historical green counts below
+describe their exact earlier checkpoints only; they do not sign current bytes.
 
 > **Hosted-arcology code/content is integrated; native and human acceptance remains open.** One
 > exact capital root owns the 27-zone topology, nine route-safe strata programmes, paid ward and

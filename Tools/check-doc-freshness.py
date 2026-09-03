@@ -667,8 +667,7 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "pre-release source",
-        "v0.3 Alpha public playtest has not shipped",
+        "0.3.0 public Alpha playtest",
         "not an installable release candidate",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",
