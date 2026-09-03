@@ -99,7 +99,10 @@ sha256sum -c "/absolute/path/TAF-${VERSION}-bootstrap.sha256"
 ```
 
 Remove every other local or subscribed copy with ID `r_ThousandAndFirst`. Qud can prefer a local
-copy and skip a later duplicate, making source proof meaningless.
+copy and skip a later duplicate, making source proof meaningless. The live dev deploy (`Tools/stage.sh
+deploy`) must still exist for `Tools/release-check.sh --test`'s deployment boundary step; remove it
+only afterwards, immediately before this Workshop step, and restore it again before any later
+release-check.
 
 ## 3. Create or update private Steam item
 
