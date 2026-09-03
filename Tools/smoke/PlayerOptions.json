@@ -7,7 +7,7 @@
   "OptionAllowCSMods": "Yes",
   "OptionModernUI": "Yes",
   "OptionPrereleaseStageScale": "auto",
-  "OptionPlayScale": "Cover",
+  "OptionPlayScale": "Fit",
   "OptionTileScale": "1",
   "OptionShowAdvancedOptions": "Yes",
   "OptionShowQuickstart": "Yes",

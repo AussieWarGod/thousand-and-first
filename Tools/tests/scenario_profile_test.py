@@ -270,7 +270,7 @@ class DerivedInputTest(unittest.TestCase):
         self.assertEqual(
             {
                 "OptionPrereleaseStageScale": "auto",
-                "OptionPlayScale": "Cover",
+                "OptionPlayScale": "Fit",
                 "OptionTileScale": "1",
                 "OptionDisplayBrightness": "0",
                 "OptionDisplayContrast": "0",
