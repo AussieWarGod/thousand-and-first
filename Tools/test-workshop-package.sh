@@ -257,19 +257,18 @@ PY
 
 assert_public_workshop_golden() {
 	local path="$1/workshop.json"
-	# Golden republished 2026-09-03: TAGS grew from Beta,Faction,Settlement,Script to
-	# Alpha,Faction,Settlement,Script,Kingdom,Build (author's Workshop upload adopted as
-	# canonical), so the fixture's canonical bytes grew from the prior 1574-byte golden
-	# 20850c4f....
+	# Golden republished 2026-09-03: "What you can do" gained a bullet for starting the
+	# next character as a citizen of the built kingdom, so the fixture's canonical bytes
+	# grew from the prior 1764-byte golden 933df5bb....
 	[ "$(sha256sum "$path" | cut -d' ' -f1)" = \
-		"5613f193d767f28867f0b197519c42f6f6e70470b9f6350dfac6149737952a95" ] || {
+		"1960b4551f20afad71229e2ad16550cd484f6ee50e00fbc94f1dd55c215176a2" ] || {
 		echo "Qud workshop.json golden hash changed" >&2; exit 1; }
 	python3 - "$path" <<'PY'
 import sys
 from pathlib import Path
 
 payload = Path(sys.argv[1]).read_bytes()
-assert len(payload) == 1589
+assert len(payload) == 1831
 assert not payload.startswith(b"\xef\xbb\xbf")
 assert payload.startswith(b'{\r\n  "WorkshopId": 123456789,\r\n')
 assert payload.endswith(b'  "ImagePath": "preview.png"\r\n}')

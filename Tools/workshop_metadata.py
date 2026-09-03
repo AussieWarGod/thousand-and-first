@@ -144,27 +144,35 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
 
 
 def canonical_description(manifest: dict) -> str:
-    return (
-        f"ALPHA — pre-release playtest build for Caves of Qud "
-        f"v{GAME_MARKETING_VERSION} (core {GAME_CORE_BUILD}). Expect bugs, missing content, "
-        "and rough edges. This listing stays ALPHA; BETA and RELEASE will ship as separate "
-        "Workshop listings when they come.\n\n"
-        + manifest["description"]
-        + "\n\nSource, issue tracker, and full documentation: "
-        "https://github.com/AussieWarGod/thousand-and-first\n\n"
-        "Open-source (MIT), with an in-game scenario test framework modders can reuse for "
-        "their own additions — see the repo.\n\n"
-        "Art and buildings wanted: if you enjoy drawing Qud-style tiles or laying out "
-        "settlements, submissions are welcome on the repo — every building ships with a full "
-        "design dossier to work from, and a paid artist/designer pass over the whole catalogue "
-        "is planned for BETA.\n\n"
-        "Save-format versioning: durable state carries an explicit version and a registered "
-        "migration port. Updates only rarely need to change save-format; when one must, a save "
-        "that a port cannot read is quarantined and reported to you, never silently corrupted.\n\n"
-        "Back up your saves before testing. Report issues at "
-        "https://github.com/AussieWarGod/thousand-and-first/issues. "
-        "This is an unofficial community mod, not affiliated with or endorsed by Freehold Games."
+    paragraphs = (
+        "Build a kingdom in the salt, one settlement at a time.",
+        f"[b]Alpha playtest build.[/b] Expect bugs, missing content and rough edges. "
+        f"Built for Caves of Qud v{GAME_MARKETING_VERSION} (core {GAME_CORE_BUILD}). "
+        "This listing stays Alpha; Beta and Release will be separate Workshop items.",
+        manifest["description"],
+        "[b]What you can do[/b]\n"
+        "- Found a faction through a water rite and plant your first settlement\n"
+        "- Zone plots across ten typed categories in S, M, L and XL sizes\n"
+        "- Raise buildings tiered by style, creed, materials and technology\n"
+        "- Grow food, manage water and trade between your cities\n"
+        "- Answer threats as the kingdom grows\n"
+        "- Start your next character as a citizen of the kingdom you built\n"
+        "- Leave a legacy across worlds, if you choose",
+        "[b]Saves[/b]\n"
+        "Back up your saves before testing. Save data is versioned and migrated between "
+        "updates. If an update ever cannot read a save, the mod quarantines it and tells "
+        "you instead of corrupting it.",
+        "[b]Bugs and feedback[/b]\n"
+        "https://github.com/AussieWarGod/thousand-and-first/issues",
+        "[b]Contribute[/b]\n"
+        "Open source under MIT: https://github.com/AussieWarGod/thousand-and-first\n"
+        "Artists and builders welcome. If you enjoy drawing Qud-style tiles or laying out "
+        "settlements, every building has a design dossier to work from, and submissions go "
+        "through the repo. A paid art and design pass over the whole catalogue is planned "
+        "for Beta.\n"
+        "Modders can reuse the in-game scenario test framework for their own additions.",
     )
+    return "\n\n".join(paragraphs)
 
 
 def _text_limits(title: str, description: str, tags: tuple[str, ...]) -> list[str]:
