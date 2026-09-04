@@ -204,6 +204,33 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void LegacyJournalCarrierHasOneNarrowObsoleteIdentityRead()
+		{
+			string journal = Read("Experience", "KingdomFounderHistory.Note.cs");
+			string model = Read("Experience", "KingdomFounderHistoryNote.cs");
+			const string disable = "#pragma warning disable 618";
+			const string identity =
+				"bool exactLegacyCarrier = type == typeof(r_KingdomFounderHistoryNote);";
+			const string restore = "#pragma warning restore 618";
+			int disableAt = journal.IndexOf(disable, StringComparison.Ordinal);
+			int identityAt = journal.IndexOf(identity, StringComparison.Ordinal);
+			int restoreAt = journal.IndexOf(restore, StringComparison.Ordinal);
+
+			StringAssert.Contains(
+				"[Obsolete(\"Schema-1 founder-history save compatibility only; "
+				+ "never create or register.\")]", model);
+			Assert.Greater(disableAt, -1);
+			Assert.Greater(identityAt, disableAt);
+			Assert.Greater(restoreAt, identityAt);
+			Assert.AreEqual(journal.IndexOf("r_KingdomFounderHistoryNote",
+				StringComparison.Ordinal), journal.LastIndexOf("r_KingdomFounderHistoryNote",
+				StringComparison.Ordinal));
+			StringAssert.Contains(
+				"&& (exactLegacyCarrier || type == typeof(JournalSultanNote))", journal);
+			StringAssert.DoesNotContain("new r_KingdomFounderHistoryNote", journal);
+		}
+
+		[Test]
 		public void FounderRemainsVisibleThroughOwnedChronicleAndRebuildsOnLoad()
 		{
 			string accession = Read("Experience", "KingdomSuccession.Accession.cs");

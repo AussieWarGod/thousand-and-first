@@ -1,8 +1,9 @@
 ﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The manifest remains `0.2.0` while this protocol is unfinished. A v1.0 test-candidate claim requires
-the current working tree—not the historical 0.2 receipt—to pass every applicable automated,
-native, human, compatibility, structure, and subscribed-package gate named here.
+The current public Alpha manifest is `0.3.0`. Working-tree changes do not inherit that tagged
+release's receipts. A future v1.0 test-candidate claim requires its exact tree—not any historical
+Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
+subscribed-package gate named here.
 
 **Dev diagnostics are OFF by default** in the release build. Enable **The Thousand and First:
 write diagnostic lines to Player.log** in Options for a test session; the isolated smoke profile
@@ -41,7 +42,7 @@ file order; use the table as the top-level checklist.
 
 The last retained managed suites pass 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases, but both predate the final market source fan-in and require a final rerun. Current
-documentation/tooling passes 296 / 296 Tools tests and 28 / 28 Art tests. No current native or human sign-off
+documentation/tooling passes 300 / 300 Tools tests and 28 / 28 Art tests. No current native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.

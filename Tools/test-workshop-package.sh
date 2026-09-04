@@ -255,28 +255,39 @@ record = {
 PY
 }
 
-assert_public_workshop_golden() {
-	local path="$1/workshop.json"
-	# Golden republished 2026-09-03: "What you can do" gained a bullet for starting the
-	# next character as a citizen of the built kingdom, so the fixture's canonical bytes
-	# grew from the prior 1764-byte golden 933df5bb....
-	[ "$(sha256sum "$path" | cut -d' ' -f1)" = \
-		"1960b4551f20afad71229e2ad16550cd484f6ee50e00fbc94f1dd55c215176a2" ] || {
-		echo "Qud workshop.json golden hash changed" >&2; exit 1; }
-	python3 - "$path" <<'PY'
+assert_public_workshop_canonical() {
+	local repo="$1" path="$1/workshop.json"
+	python3 "$repo/Tools/workshop_metadata.py" workshop release \
+		"$repo/manifest.json" "$path"
+	python3 - "$repo" "$path" <<'PY'
+import json
 import sys
 from pathlib import Path
 
-payload = Path(sys.argv[1]).read_bytes()
-assert len(payload) == 1831
+root = Path(sys.argv[1])
+payload = Path(sys.argv[2]).read_bytes()
 assert not payload.startswith(b"\xef\xbb\xbf")
-assert payload.startswith(b'{\r\n  "WorkshopId": 123456789,\r\n')
-assert payload.endswith(b'  "ImagePath": "preview.png"\r\n}')
 assert b"\n" not in payload.replace(b"\r\n", b"")
 assert not payload.endswith((b"\n", b"\r"))
-ordered = [b'"WorkshopId"', b'"Title"', b'"Description"', b'"Tags"', b'"Visibility"', b'"ImagePath"']
-positions = [payload.index(field) for field in ordered]
-assert positions == sorted(positions)
+
+data = json.loads(payload.decode("utf-8"))
+manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8-sig"))
+expected_keys = (
+    "WorkshopId", "Title", "Description", "Tags", "Visibility", "ImagePath",
+)
+assert tuple(data) == expected_keys
+assert data["WorkshopId"] == 123456789
+assert data["Title"] == manifest["title"]
+assert data["Tags"] == manifest["tags"]
+assert data["Visibility"] == "2"
+assert data["ImagePath"] == manifest["PreviewImage"]
+assert data["Description"].count(manifest["description"]) == 1
+
+# Independent, copy-agnostic oracle for Qud's Newtonsoft Formatting.Indented bytes.
+canonical = json.dumps(
+    data, ensure_ascii=False, indent=2, separators=(",", ": ")
+).replace("\n", "\r\n").encode("utf-8")
+assert payload == canonical
 PY
 }
 
@@ -554,7 +565,7 @@ python3 "$canonicalize/Tools/workshop_metadata.py" workshop test \
 	"$canonicalize/manifest.json" "$canonicalize/workshop.json"
 python3 "$canonicalize/Tools/workshop_metadata.py" canonicalize release \
 	"$canonicalize/manifest.json" "$canonicalize/workshop.json"
-assert_public_workshop_golden "$canonicalize"
+assert_public_workshop_canonical "$canonicalize"
 printf '%s' '{"WorkshopId":123456789}' > "$FIXTURE_ROOT/canonicalize-target.json"
 ln -s "$FIXTURE_ROOT/canonicalize-target.json" "$FIXTURE_ROOT/canonicalize-link.json"
 expect_fail "linked canonicalization target" "regular non-link file" \
@@ -1703,7 +1714,7 @@ release="$(clone_case positive-release)"
 release_candidate="$(freeze_private_candidate "$release")"
 write_workshop "$release" 2
 write_evidence "$release" "$release_candidate"
-assert_public_workshop_golden "$release"
+assert_public_workshop_canonical "$release"
 commit_all "$release" "public metadata"
 git -C "$release" tag -a v0.2.0 -m "fixture release"
 release_dest="$FIXTURE_ROOT/release-package"

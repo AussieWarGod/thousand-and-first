@@ -47,7 +47,9 @@ Steam Workshop item when one exists, then follow [PLAYTESTING.md](PLAYTESTING.md
 - known Alpha limits; and
 - a useful bug-report checklist.
 
-Public Alpha is not published yet. Maintainers track its immutable version/package freeze in
+Public Alpha is published as
+[Steam Workshop item 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472).
+Maintainers track its immutable version/package freeze in
 [ALPHA-RELEASE-PLAN.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/ALPHA-RELEASE-PLAN.md).
 
 ## Save safety

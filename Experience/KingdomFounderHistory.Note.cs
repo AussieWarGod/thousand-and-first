@@ -164,9 +164,12 @@ namespace ThousandAndFirst
 			KingdomFounderHistoryReceipt Receipt)
 		{
 			Type type = Note?.GetType();
+			// Exact schema-1 carrier identity is the sole deliberate read of this obsolete type.
+#pragma warning disable 618
+			bool exactLegacyCarrier = type == typeof(r_KingdomFounderHistoryNote);
+#pragma warning restore 618
 			return Note != null
-				&& (type == typeof(r_KingdomFounderHistoryNote)
-					|| type == typeof(JournalSultanNote))
+				&& (exactLegacyCarrier || type == typeof(JournalSultanNote))
 				&& Note.ID == Receipt.NoteId && Note.Text == Receipt.Gospel
 				&& string.IsNullOrEmpty(Note.History)
 				&& Note.LearnedFrom == "the mourning rite in " + Receipt.CityName

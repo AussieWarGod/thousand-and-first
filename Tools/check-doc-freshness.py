@@ -19,10 +19,13 @@ HARDENING_DECOMPOSITIONS = "144"
 CUMULATIVE_DECOMPOSITIONS = "154"
 CURRENT_TAF_CASES = "10,624"
 CURRENT_PORTABLE_CASES = "2,325"
-CURRENT_TOOLS_CASES = "296"
+CURRENT_TOOLS_CASES = "300"
 CURRENT_ART_CASES = "28"
 CURRENT_FOCUSED_SURVEY_CASES = 14
 CURRENT_VANILLA_TILE_PATHS = 125
+PUBLIC_ALPHA_WORKSHOP_URL = (
+    "https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472"
+)
 
 # These notes are immutable attack/research snapshots whose local line citations belong to the
 # pinned tree named in each document. Current authorities remain audited below. Repointing frozen
@@ -562,6 +565,44 @@ def audit_market_contract(problems):
         )
 
 
+def audit_public_release_status(problems):
+    require(problems, "README.md", PUBLIC_ALPHA_WORKSHOP_URL)
+    forbid(problems, "README.md", "Public Alpha is not published yet")
+    require(
+        problems,
+        "docs/STATUS.md",
+        "0.3.0 public Alpha playtest",
+        PUBLIC_ALPHA_WORKSHOP_URL,
+        "old counts do not sign later bytes",
+    )
+    forbid(problems, "docs/STATUS.md", "0.2.0 work in progress")
+    require(
+        problems,
+        "docs/ALPHA-RELEASE-PLAN.md",
+        "annotated tag `v0.3.0`",
+        PUBLIC_ALPHA_WORKSHOP_URL,
+        "Completed state",
+    )
+    forbid(
+        problems,
+        "docs/ALPHA-RELEASE-PLAN.md",
+        "`manifest.json` remains `0.2.0`",
+        "public Alpha has not shipped",
+        "tag are expected to be absent",
+    )
+    require(problems, "PLAYTESTING.md", "public `0.3.0` Alpha", PUBLIC_ALPHA_WORKSHOP_URL)
+    forbid(
+        problems,
+        "PLAYTESTING.md",
+        "`0.2.0` working tree is not a release package",
+        "Once the public Alpha item exists",
+    )
+    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.0`")
+    forbid(problems, "TESTING.md", "manifest remains `0.2.0`")
+    require(problems, "MODDING.md", '"r_ThousandAndFirst": "0.3.0"')
+    forbid(problems, "MODDING.md", '"r_ThousandAndFirst": "0.2.0"')
+
+
 def audit_public(problems):
     buildings, plots, maps, variants = catalogue_counts()
     report = structure_report()
@@ -574,6 +615,7 @@ def audit_public(problems):
     large_direct_xrl = report["largeDirectXrlImports"]
     inventory_sha = report["inventorySha256"]
     changelog_structure_status = changelog_structure_status_terms(files, at_or_over)
+    audit_public_release_status(problems)
 
     require(
         problems,

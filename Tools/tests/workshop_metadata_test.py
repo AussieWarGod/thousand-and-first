@@ -10,6 +10,7 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest import mock
 
 from Tools import workshop_metadata as METADATA
 
@@ -27,6 +28,25 @@ class WorkshopMetadataTests(unittest.TestCase):
         body = ["| Step | Action | Expect |", "|---|---|---|"]
         body.extend(f"| {pass_id} | Do it | Passed |" for pass_id in rows)
         path.write_text("\n".join(body) + "\n", encoding="utf-8")
+        return path
+
+    def write_manifest(self, description: str) -> Path:
+        path = self.root / "manifest.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "id": METADATA.MOD_ID,
+                    "title": METADATA.TITLE,
+                    "description": description,
+                    "version": "0.3.0",
+                    "author": METADATA.AUTHOR,
+                    "tags": ",".join(METADATA.TAGS),
+                    "PreviewImage": METADATA.PREVIEW,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         return path
 
     def write_preview(self) -> Path:
@@ -48,6 +68,154 @@ class WorkshopMetadataTests(unittest.TestCase):
         path = self.root / "preview.png"
         path.write_bytes(payload)
         return path
+
+    def test_manifest_accepts_meaning_equivalent_optional_legacy_disclosures(self) -> None:
+        descriptions = (
+            "Found a faction, govern settlements, manage physical water and food, "
+            "and optionally a legacy across worlds.",
+            "Found a faction and govern settlements in Qud. Cross-world inheritance "
+            "is opt-in and begins only when enabled before world creation.",
+            "Found a faction and govern settlements in Qud. Carry your kingdom's layout "
+            "and history into the next world, if you choose.",
+            "Found a faction and govern settlements in Qud. You may choose whether your "
+            "kingdom's legacy carries between worlds.",
+            "Found a faction and govern settlements in Qud. Cross‑world inheritance "
+            "is optional and begins only when enabled before world creation.",
+            "Found a faction and govern settlements in Qud, with an opt-in legacy "
+            "across worlds that you enable before world creation.",
+            "Found a faction and govern settlements in Qud. Choose to carry your "
+            "kingdom's history into a later world.",
+            "Found a faction and govern settlements in Qud. Opt in to carry your "
+            "kingdom's layout into the next world.",
+            "Found a faction and govern settlements in Qud. Backups are not optional "
+            "in Alpha, but cross-world legacy is optional.",
+            "Found a faction and govern settlements in Qud. Save backups are never "
+            "optional; cross-world legacy is opt-in.",
+        )
+        for description in descriptions:
+            with self.subTest(description=description):
+                manifest = METADATA.load_manifest(self.write_manifest(description))
+                self.assertEqual(manifest["description"], description)
+
+    def test_manifest_rejects_missing_negated_or_unbound_optional_legacy(self) -> None:
+        descriptions = (
+            "Optional difficulty settings change founding. Your kingdom's legacy "
+            "carries across worlds without a separate player choice.",
+            "Optional difficulty settings change founding while your kingdom's legacy "
+            "carries across worlds without a separate player choice.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "not optional; it is mandatory.",
+            "Found a faction and govern settlements across Qud. An optional legacy "
+            "records events from this world only.",
+            "Found a faction and govern settlements across Qud. You may optionally "
+            "visit settlements across worlds.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It is always carried.",
+            "Found a faction and govern settlements across Qud. Do not carry your history "
+            "into the next world, if you choose.",
+            "Found a faction and govern settlements across Qud. Never carry your legacy "
+            "into a later world, if you choose.",
+            "Found a faction and govern settlements across Qud. Choose to delete history "
+            "rather than carry it into the next world.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "opt-in but cannot be disabled.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, with no opt-out.",
+            "Found a faction and govern settlements across Qud. Opt in to prevent your "
+            "history from carrying into the next world.",
+            "Found a faction and govern settlements across Qud. Opt in to delete your "
+            "legacy before it carries between worlds.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It has no opt-out.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It is always on.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It cannot be disabled.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, but mandatory.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional but required.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, without an opt-out.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional but has no off switch.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, but always enabled.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It is mandatory.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It is required.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It has no off switch.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. It is automatically enabled.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, but you cannot turn it off.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional, but there is no off switch.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. The legacy cannot be disabled.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. This feature is mandatory.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. You cannot turn it off.",
+            "Found a faction and govern settlements across Qud. Cross-world legacy is "
+            "optional. There is no off switch.",
+            "Found a faction and govern settlements across Qud. Mandatory cross-world "
+            "legacy is optional.",
+            "Found a faction and govern settlements across Qud. Required cross-world "
+            "legacy is optional.",
+            "Found a faction and govern settlements across Qud. Automatic cross-world "
+            "legacy is optional.",
+            "Found a faction and govern settlements across Qud. Always-on cross-world "
+            "legacy is optional.",
+            "Found a faction and govern settlements across Qud. Non-optional cross-world "
+            "legacy is optional.",
+        )
+        for description in descriptions:
+            with self.subTest(description=description):
+                with self.assertRaisesRegex(
+                    METADATA.ValidationError,
+                    "cross-world legacy is optional",
+                ):
+                    METADATA.load_manifest(self.write_manifest(description))
+
+        oversized = (
+            "Found a faction and govern settlements in Qud. Cross-world legacy is "
+            "optional. "
+            + "x" * 8000
+        )
+        with mock.patch.object(
+            METADATA,
+            "_discloses_optional_cross_world_legacy",
+            side_effect=AssertionError("semantic grammar must not scan oversized copy"),
+        ):
+            with self.assertRaisesRegex(
+                METADATA.ValidationError,
+                "under 8000 UTF-8 bytes",
+            ):
+                METADATA.load_manifest(self.write_manifest(oversized))
+
+    def test_canonical_workshop_bytes_match_qud_serializer_contract(self) -> None:
+        data = {
+            "WorkshopId": 7,
+            "Title": "Salt ☃",
+            "Description": 'line one\n"line two" \\ path',
+            "Tags": "Alpha,Script",
+            "Visibility": "2",
+            "ImagePath": "preview.png",
+        }
+        expected = (
+            "{\r\n"
+            '  "WorkshopId": 7,\r\n'
+            '  "Title": "Salt ☃",\r\n'
+            '  "Description": "line one\\n\\"line two\\" \\\\ path",\r\n'
+            '  "Tags": "Alpha,Script",\r\n'
+            '  "Visibility": "2",\r\n'
+            '  "ImagePath": "preview.png"\r\n'
+            "}"
+        ).encode("utf-8")
+        self.assertEqual(METADATA.canonical_workshop_bytes(data), expected)
 
     def test_testing_parser_accepts_one_optional_dotted_numeric_suffix(self) -> None:
         path = self.write_testing(["1", "16f1", "135a4h", "136j.1", "136j.10"])

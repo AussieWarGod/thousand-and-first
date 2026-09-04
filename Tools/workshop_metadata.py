@@ -60,6 +60,123 @@ HUMAN_SENTINEL = re.compile(
     re.IGNORECASE,
 )
 
+# Keep this grammar deliberately small and bounded. It admits equivalent ways to say that
+# durable state may cross a world boundary only by player choice, without treating three
+# unrelated appearances of "optional", "legacy", and "world" as a disclosure.
+_WORLD_SCOPE_TEXT = (
+    r"(?:(?:across|between)\s+worlds"
+    r"|into\s+(?:(?:the|your|a)\s+)?(?:next|new|later)\s+world)"
+)
+_LEGACY_TOPIC_TEXT = r"(?:legacy|inheritance|history|layout|chronicle)"
+_LEGACY_ACTION_TEXT = (
+    r"(?:leave|leaves|leaving|left|carry|carries|carried|carrying|"
+    r"preserve|preserves|preserved|preserving|import|imports|imported|importing)"
+)
+_LEGACY_CONTINUITY_TEXT = (
+    rf"(?:{_LEGACY_ACTION_TEXT}|persist|persists|persisted|"
+    r"pass|passes|passed|transfer|transfers|transferred)"
+)
+_CROSS_WORLD_LEGACY_NOUN_TEXT = (
+    r"(?:cross-world\s+(?:legacy|inheritance)"
+    r"|(?:legacy|inheritance)\s+(?:across|between)\s+worlds)"
+)
+_FORWARD_LEGACY_CARRY_TEXT = (
+    rf"(?:{_LEGACY_ACTION_TEXT}\b"
+    rf"[^.!?\n]{{0,80}}\b{_LEGACY_TOPIC_TEXT}\b"
+    rf"[^.!?\n]{{0,80}}\b{_WORLD_SCOPE_TEXT})"
+)
+_REVERSE_LEGACY_CARRY_TEXT = (
+    rf"(?:\b{_LEGACY_TOPIC_TEXT}\b"
+    rf"[^.!?\n]{{0,64}}\b{_LEGACY_CONTINUITY_TEXT}\b"
+    rf"[^.!?\n]{{0,64}}\b{_WORLD_SCOPE_TEXT})"
+)
+_CROSS_WORLD_LEGACY_PROPOSITION_TEXT = (
+    rf"(?:{_CROSS_WORLD_LEGACY_NOUN_TEXT}"
+    rf"|{_FORWARD_LEGACY_CARRY_TEXT}"
+    rf"|{_REVERSE_LEGACY_CARRY_TEXT})"
+)
+_OPTIONAL_CROSS_WORLD_LEGACY = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        rf"\boptional\s+{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b",
+        rf"\b(?:an?\s+)?opt[- ]in\s+{_CROSS_WORLD_LEGACY_NOUN_TEXT}\b",
+        rf"\boptionally\s+(?:a\s+)?{_CROSS_WORLD_LEGACY_NOUN_TEXT}\b",
+        rf"\boptionally\s+{_FORWARD_LEGACY_CARRY_TEXT}\b",
+        rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}[^.!?\n]{{0,32}}"
+        rf"\b(?:is|remains|stays)\s+(?:optional|opt[- ]in)\b",
+        rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}[^.!?\n]{{0,48}}"
+        rf"\b(?:if\s+you\s+choose|only\s+when\s+(?:you\s+)?enable(?:d)?)\b",
+        rf"\bchoose\s+whether\b"
+        rf"[^.!?\n]{{0,96}}{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b",
+        rf"\bchoose\s+to\s+{_FORWARD_LEGACY_CARRY_TEXT}\b",
+        rf"\bopt[- ]in\s+to\s+(?:{_CROSS_WORLD_LEGACY_NOUN_TEXT}"
+        rf"|{_FORWARD_LEGACY_CARRY_TEXT})\b",
+        rf"\b(?:only\s+)?when\s+(?:you\s+)?enable(?:d)?\b"
+        rf"[^.!?\n]{{0,96}}{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b",
+    )
+)
+_NEGATED_CROSS_WORLD_OPTIONALITY = re.compile(
+    rf"(?:{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}[^.!?;\n]{{0,32}}"
+    r"\b(?:(?:is|remains|stays)\s+(?:not|never)|isn't)\s+"
+    r"(?:optional|opt[- ]in)\b"
+    r"|\b(?:not|never)\s+(?:an?\s+)?(?:optional\s+|opt[- ]in\s+)?"
+    rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b)",
+    re.IGNORECASE,
+)
+_PREFIXED_LEGACY_CONTRADICTION = re.compile(
+    r"\b(?:mandatory|required|automatic|always[- ]on|non[- ]optional)\s+"
+    rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b",
+    re.IGNORECASE,
+)
+_MANDATORY_CROSS_WORLD_LEGACY = re.compile(
+    rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}[^.!?\n]{{0,32}}"
+    r"\b(?:is|remains|stays)\s+(?:automatic|mandatory|required)\b",
+    re.IGNORECASE,
+)
+_CONTRADICTORY_LEGACY_CARRY = re.compile(
+    r"\b(?:the\s+)?(?:cross-world\s+)?(?:legacy|inheritance)\s+"
+    r"(?:is\s+)?(?:not\s+optional|mandatory|required|"
+    r"(?:always|automatically)\s+(?:carried|preserved|imported|transferred))\b",
+    re.IGNORECASE,
+)
+_NEGATED_CROSS_WORLD_CARRY = re.compile(
+    rf"\b(?:do\s+not|don't|never|cannot|can't|will\s+not|choose\s+not\s+to)\s+"
+    rf"{_FORWARD_LEGACY_CARRY_TEXT}\b",
+    re.IGNORECASE,
+)
+_NEGATED_CROSS_WORLD_CHOICE = re.compile(
+    rf"\b(?:choose\s+(?:whether|to)|opt[- ]in\s+to)\b"
+    rf"[^.!?\n]{{0,80}}\b(?:prevent|delete|erase|avoid|stop)\b"
+    rf"[^.!?\n]{{0,128}}{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}\b",
+    re.IGNORECASE,
+)
+_LEGACY_CONTROL_CONTRADICTION = re.compile(
+    rf"{_CROSS_WORLD_LEGACY_PROPOSITION_TEXT}[^.!?\n]{{0,64}}(?:"
+    r"\b(?:cannot|can't|can\s+not)\s+be\s+(?:disabled|turned\s+off)\b|"
+    r"\b(?:has|allows?)\s+no\s+(?:opt[- ]out|off\s+switch)\b|"
+    r"\b(?:with\s+no|without(?:\s+an?)?)\s+"
+    r"(?:opt[- ]out|off\s+switch)\b|"
+    r"\byou\s+(?:cannot|can't|can\s+not)\s+turn\s+it\s+off\b|"
+    r"\bthere\s+is\s+no\s+(?:opt[- ]out|off\s+switch)\b|"
+    r"\b(?:but|yet)\s+(?:(?:it\s+)?is\s+)?"
+    r"(?:mandatory|required|(?:always|automatically)\s+enabled|always[- ]on)\b|"
+    r"\b(?:is|stays|remains)\s+(?:always[- ]on|"
+    r"(?:always|automatically)\s+enabled)\b)",
+    re.IGNORECASE,
+)
+_LATER_LEGACY_CONTRADICTION = re.compile(
+    r"(?:\b(?:it|the\s+legacy|this\s+(?:feature|option|legacy))\s+(?:"
+    r"(?:cannot|can't|can\s+not)\s+be\s+(?:disabled|turned\s+off)|"
+    r"(?:has|allows?)\s+no\s+(?:opt[- ]out|off\s+switch)|"
+    r"(?:is|stays|remains)\s+(?:always[- ]on|"
+    r"(?:always|automatically)\s+enabled)|"
+    r"(?:is\s+)?(?:not\s+optional|mandatory|required|"
+    r"(?:always|automatically)\s+(?:carried|preserved|imported|transferred)))\b"
+    r"|\byou\s+(?:cannot|can't|can\s+not)\s+turn\s+it\s+off\b"
+    r"|\bthere\s+is\s+no\s+(?:opt[- ]out|off\s+switch)\b)",
+    re.IGNORECASE,
+)
+
 
 class ValidationError(ValueError):
     pass
@@ -68,6 +185,36 @@ class ValidationError(ValueError):
 def _require_release_mode(mode: str) -> None:
     if mode not in RELEASE_MODES:
         raise ValidationError("release mode must be test, alpha, or release")
+
+
+def _discloses_optional_cross_world_legacy(value: str) -> bool:
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    normalized = normalized.translate(
+        str.maketrans({character: "-" for character in "‐‑‒–—―"})
+    )
+    normalized = normalized.translate(str.maketrans({"‘": "'", "’": "'"}))
+    normalized = re.sub(r"[ \t\f\v]+", " ", normalized)
+    if _NEGATED_CROSS_WORLD_OPTIONALITY.search(normalized):
+        return False
+    if _PREFIXED_LEGACY_CONTRADICTION.search(normalized):
+        return False
+    if _MANDATORY_CROSS_WORLD_LEGACY.search(normalized):
+        return False
+    if _CONTRADICTORY_LEGACY_CARRY.search(normalized):
+        return False
+    if _NEGATED_CROSS_WORLD_CARRY.search(normalized):
+        return False
+    if _NEGATED_CROSS_WORLD_CHOICE.search(normalized):
+        return False
+    if _LEGACY_CONTROL_CONTRADICTION.search(normalized):
+        return False
+    disclosed = False
+    for sentence in re.split(r"[.!?\r\n]+", normalized):
+        if disclosed and _LATER_LEGACY_CONTRADICTION.search(sentence):
+            return False
+        if any(pattern.search(sentence) for pattern in _OPTIONAL_CROSS_WORLD_LEGACY):
+            disclosed = True
+    return disclosed
 
 
 def _qud_text_error(value: str) -> str | None:
@@ -99,6 +246,7 @@ def _load_json(path: Path) -> dict:
 def load_manifest(path: Path, require_preview: bool = True) -> dict:
     data = _load_json(path)
     errors: list[str] = []
+    description_safe_for_canonical = False
     if data.get("id") != MOD_ID:
         errors.append(f"manifest id must be {MOD_ID}")
     if data.get("title") != TITLE:
@@ -110,17 +258,18 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
         or len(description) < 80
     ):
         errors.append("manifest description must be a trimmed, current feature summary")
-    elif "slice 0.1" in description.lower() or "debug wish" in description.lower():
-        errors.append("manifest description still describes the 0.1 debug slice")
-    elif (
-        "optionally" not in description.lower()
-        or "legacy across worlds" not in description.lower()
-    ):
-        errors.append(
-            "manifest description must disclose that cross-world legacy is optional"
-        )
     elif (reason := _qud_text_error(description)) is not None:
         errors.append(f"manifest description {reason}")
+    elif len(description.encode("utf-8")) >= 8000:
+        errors.append("Workshop Description must be nonempty and under 8000 UTF-8 bytes")
+    else:
+        description_safe_for_canonical = True
+        if "slice 0.1" in description.lower() or "debug wish" in description.lower():
+            errors.append("manifest description still describes the 0.1 debug slice")
+        elif not _discloses_optional_cross_world_legacy(description):
+            errors.append(
+                "manifest description must disclose that cross-world legacy is optional"
+            )
     version = data.get("version")
     if (
         not isinstance(version, str)
@@ -136,7 +285,7 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
         errors.append(f"manifest PreviewImage must be {PREVIEW}")
     if not require_preview and preview not in (None, PREVIEW):
         errors.append(f"manifest PreviewImage must be absent or {PREVIEW}")
-    if isinstance(description, str):
+    if description_safe_for_canonical:
         errors.extend(_text_limits(TITLE, canonical_description(data), TAGS))
     if errors:
         raise ValidationError("; ".join(errors))

@@ -1,13 +1,16 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-01
-**Target:** feature-complete v1.0 test candidate
-**Current public version:** 0.2.0 work in progress
+**Snapshot:** 2026-09-05
+**Target:** v0.3 Alpha maintenance and next patch candidate
+**Current public version:** 0.3.0 public Alpha playtest
 
-This file is the canonical short status. A green source, compile, or generator gate proves only
-that layer. Native Caves of Qud behavior is signed only for the exact exercised native cases;
-visual quality, accessibility, compatibility, and Steam subscription remain separate evidence and
-are never inferred from source or static automation.
+The public Alpha is [Steam Workshop item
+3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
+or frozen identify exact earlier checkpoints; their old counts do not sign later bytes. A green
+source, compile, or generator gate proves only that layer. Native Caves of Qud behavior is signed
+only for the exact exercised native cases; visual quality,
+accessibility, compatibility, and Steam subscription remain separate evidence and are never
+inferred from source or static automation.
 
 ## Current automated evidence
 
@@ -21,10 +24,10 @@ are never inferred from source or static automation.
 | Architecture checker | **PASS** — 144 buildings, 134 plotted buildings, 89 palettes, 333 maps (187 source / 146 generated), 220 plans, 226 bindings, 262 tiers, 344 variants, 1,376 variant/pose goldens, zero issues; three expected installed-base tolerant-recovery warnings for malformed vanilla Creatures/Furniture/Items XML; reference-grounded quality audit 1,376 / 1,376 static pass, 0 fail; largest exact a4 receipt 7,798 bytes / 10,468 characters (`greatfoundry/craft-xl/templar/purpose-greatfoundry-templar-xl0+purpose-forge-foundry`) | Static topology, exact footprint/roof authority, bounded frontage routes in all poses, required-use circulation, transition route and custody proofs, fixtures, palette/material/technology constraints, typed-lot coverage, deterministic snapshots, exact purpose/exotic runtime anchors, hidden activation gates, and the runtime codec envelope are checked. All 1,376 poses still require native/human appearance and function acceptance. |
 | Benefit-provider content | **PASS** — 114 catalogue rows, 187 authored variants, 105 unique explicit fixtures | Exact design/provider affinity, obtainable portable stock, fixed-installation reasons, caps, and absence of catalogue-as-supply fallbacks are checked. Native function and appearance remain separate evidence. |
 | One-survey focused tests | **PASS** — 14 focused source-contract cases | Maintained named indexes, active-pass consumers, mutation observation, and the absence of reachable second whole-zone scans. Dense native scan instrumentation remains open. |
-| Addendum 9 structural census | **FROZEN SOURCE SNAPSHOT LINE-CAP GREEN; EXACT-INVENTORY REVIEW SIGNED** | 2945 staged C# files / 420,767 physical lines: 0 exceed 300 physical lines, 0 are exactly 300, therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL` imports: 1373 files, 0 over the line limit. Inventory SHA-256: `bfd7b64e6e4c40c50dc782163156f9372528a51bfcf07ed0f9648b1157b340f2`. `docs/STRUCTURE_REVIEW.json` is signed against this exact digest by the AI reviewer under the author's Addendum 9 ruling of 2026-09-02 (see `docs/STRUCTURE.md`). |
+| Addendum 9 structural census | **CURRENT SOURCE SNAPSHOT LINE-CAP GREEN; EXACT-INVENTORY REVIEW SIGNED** | 2945 staged C# files / 420,770 physical lines: 0 exceed 300 physical lines, 0 are exactly 300, therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Direct `XRL` imports: 1373 files, 0 over the line limit. Inventory SHA-256: `dbcd95637ec3558fa00951c7dd69acc2efa4e9e55ec9d94283e7e68d5b25ce0e`. `docs/STRUCTURE_REVIEW.json` is signed against this exact digest by an independent AI reviewer under the author's Addendum 9 ruling of 2026-09-02 (see `docs/STRUCTURE.md`). |
 | Full Qud-referenced/source suite | **LAST RETAINED PASS; FINAL RERUN REQUIRED** — 10,624 / 10,624 cases, 0 skipped | This receipt predates final market sources and does not sign current bytes. The final serialized installed-Qud run remains required; even then it will not prove native play, appearance, compatibility, or Steam installation. |
 | Portable suite | **LAST RETAINED PASS; FINAL RERUN REQUIRED** — 2,325 / 2,325 cases, 0 skipped | This receipt predates final market sources and does not sign current bytes. Public CI keeps its installed-data skip allowlist; canonical release testing forbids skips when Qud data is present. |
-| Tools tests | **PASS** — 296 / 296 tests | Repository tooling, generators, gallery census, documentation contracts, and package helpers are green at this checkpoint. |
+| Tools tests | **PASS** — 300 / 300 tests | Repository tooling, generators, gallery census, documentation contracts, and package helpers are green at this checkpoint. |
 | Art tests | **PASS** — 28 / 28 tests; semantic subset 4 / 4; 125 verified vanilla tile references; 0 custom runtime paths | Snapjaw caches now use ordinary Woven Basket art, Hindren textile works use the ordinary Sewing Machine as a treadle stitcher, and TAF faction emblems use a deterministic glyph-only projection instead of Joppa terrain art. Art policy, installed-path, reference, and architecture-declaration checks are green. Native original-scale appearance, emblem recognition, and a current preview remain open. |
 | Latest retained native smoke | **PARTIAL PASS** — fresh profile, founding, 17/17 checks, one production gallery case, save/cold-load, repeat 17/17, clean log | Clean commit `19fb8ee` deployed against Qud 1.0.5/core 2.0.211.51. This signs only that commit's loader/founding/single-sample persistence smoke. Later structural revisions have no native compile/load/log receipt and are not covered by this row. |
 
@@ -327,7 +330,7 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 - Addendum 9 structural release gate is closed for the current digest: every staged C# file is
   strictly under 300 physical lines and `docs/STRUCTURE_REVIEW.json` binds the exact-inventory
   responsibility/protocol review to digest
-  `bfd7b64e6e4c40c50dc782163156f9372528a51bfcf07ed0f9648b1157b340f2`, signed by the AI reviewer
+  `dbcd95637ec3558fa00951c7dd69acc2efa4e9e55ec9d94283e7e68d5b25ce0e`, signed by an independent AI reviewer
   under the author's Addendum 9 ruling of 2026-09-02 (fourteen ownership and four protocol faults
   were fixed before signing). Any staged source change reopens it. This is an ALPHA claim, not an
   enterprise-grade or v1.0 release-quality claim.

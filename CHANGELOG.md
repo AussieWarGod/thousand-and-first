@@ -8,6 +8,12 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2945 staged
+> C# files / 420,770 physical lines, with 0 at or above the strict 300-line cap. Its exact-inventory
+> semantic review binds digest
+> `dbcd95637ec3558fa00951c7dd69acc2efa4e9e55ec9d94283e7e68d5b25ce0e`. This does not amend the
+> tagged v0.3.0 bytes or their historical evidence.
+
 ## [0.3.0] — 2026-09-03 (Alpha)
 
 Re-versioned from the unshipped 1.0.0 identity freeze (`ab61ae9`): Alpha ships as 0.x while saves/formats may still break, and 1.0.0 is reserved for the full release.

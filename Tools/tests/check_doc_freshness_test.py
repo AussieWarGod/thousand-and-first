@@ -20,6 +20,108 @@ SPEC.loader.exec_module(CHECKER)
 
 
 class DocumentationFreshnessTests(unittest.TestCase):
+    def test_public_alpha_status_rejects_the_pre_publication_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            original_root = CHECKER.ROOT
+            CHECKER.ROOT = Path(temporary)
+            try:
+                readme = CHECKER.ROOT / "README.md"
+                status = CHECKER.ROOT / "docs" / "STATUS.md"
+                alpha_plan = CHECKER.ROOT / "docs" / "ALPHA-RELEASE-PLAN.md"
+                playtesting = CHECKER.ROOT / "PLAYTESTING.md"
+                testing = CHECKER.ROOT / "TESTING.md"
+                modding = CHECKER.ROOT / "MODDING.md"
+                status.parent.mkdir(parents=True)
+                status.write_text(
+                    "0.3.0 public Alpha playtest. Its old counts do not sign later bytes. "
+                    f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
+                    encoding="utf-8",
+                )
+                readme.write_text(
+                    f"Public Alpha is published at {CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}.\n",
+                    encoding="utf-8",
+                )
+                alpha_plan.write_text(
+                    "Completed state. The annotated tag `v0.3.0` is published at "
+                    f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}.\n",
+                    encoding="utf-8",
+                )
+                playtesting.write_text(
+                    f"Install the public `0.3.0` Alpha at {CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}.\n",
+                    encoding="utf-8",
+                )
+                testing.write_text(
+                    "The current public Alpha manifest is `0.3.0`.\n",
+                    encoding="utf-8",
+                )
+                modding.write_text(
+                    'Fixture dependency: "r_ThousandAndFirst": "0.3.0".\n',
+                    encoding="utf-8",
+                )
+                problems = []
+                CHECKER.audit_public_release_status(problems)
+                self.assertEqual([], problems)
+
+                readme.write_text(
+                    f"Public Alpha is not published yet. {CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
+                    encoding="utf-8",
+                )
+                problems = []
+                CHECKER.audit_public_release_status(problems)
+                self.assertEqual(1, len(problems))
+                self.assertIn("Public Alpha is not published yet", problems[0])
+
+                readme.write_text(
+                    f"Public Alpha is published at {CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}.\n",
+                    encoding="utf-8",
+                )
+                status.write_text(
+                    "0.2.0 work in progress. Its old counts do not sign later bytes. "
+                    f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
+                    encoding="utf-8",
+                )
+                problems = []
+                CHECKER.audit_public_release_status(problems)
+                self.assertEqual(2, len(problems))
+                self.assertTrue(
+                    any("0.3.0 public Alpha playtest" in problem for problem in problems)
+                )
+                self.assertTrue(any("0.2.0 work in progress" in problem for problem in problems))
+
+                status.write_text(
+                    "0.3.0 public Alpha playtest. Its old counts do not sign later bytes. "
+                    f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
+                    encoding="utf-8",
+                )
+                stale_cases = (
+                    (
+                        alpha_plan,
+                        "`manifest.json` remains `0.2.0`",
+                    ),
+                    (
+                        playtesting,
+                        "Once the public Alpha item exists",
+                    ),
+                    (
+                        testing,
+                        "manifest remains `0.2.0`",
+                    ),
+                    (
+                        modding,
+                        '"r_ThousandAndFirst": "0.2.0"',
+                    ),
+                )
+                for path, stale_text in stale_cases:
+                    with self.subTest(path=path.name):
+                        current_text = path.read_text(encoding="utf-8")
+                        path.write_text(stale_text + "\n", encoding="utf-8")
+                        problems = []
+                        CHECKER.audit_public_release_status(problems)
+                        self.assertTrue(any(stale_text in problem for problem in problems))
+                        path.write_text(current_text, encoding="utf-8")
+            finally:
+                CHECKER.ROOT = original_root
+
     def test_current_research_disposition_is_machine_guarded(self) -> None:
         problems = []
         CHECKER.audit_research_alignment_contract(problems)

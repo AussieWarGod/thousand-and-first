@@ -1,8 +1,9 @@
 # Alpha Playtesting Guide
 
-This guide is for tagged release packages and the Steam Workshop build. The repository's current
-`0.2.0` working tree is not a release package. Supported target: Caves of Qud v1.0.5, core build
-2.0.211.51.
+This guide is for tagged release packages and the public `0.3.0` Alpha on
+[Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). A repository
+working tree may contain later changes and is not itself a release package. Supported target:
+Caves of Qud v1.0.5, core build 2.0.211.51.
 
 ## Before installing
 
@@ -18,13 +19,13 @@ Never upload a full save, profile, or unredacted log to a public issue.
 
 ## Steam Workshop install
 
-Once the public Alpha item exists:
+To install the public Alpha:
 
-1. Subscribe to **The Thousand and First [ALPHA]** in Steam Workshop.
+1. Subscribe to [**The Thousand and First [ALPHA]**](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472)
+   in Steam Workshop.
 2. Remove any manually installed copy of The Thousand and First.
 3. Launch Qud, open **Mods**, enable the mod, and restart Qud when prompted.
-4. Confirm the Mods screen shows the expected manifest version. The first public Alpha must show
-   `0.3.0`.
+4. Confirm the Mods screen shows manifest version `0.3.0` for the current public Alpha.
 
 If the item is subscribed but absent, restart Steam and Qud before reporting it. Include operating
 system, storefront, Qud marketing/core version, and whether any local copy remains.

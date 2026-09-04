@@ -1,26 +1,27 @@
-# v0.3 Alpha Freeze Plan
+# v0.3 Alpha Freeze Record
 
-Target: one public Steam Workshop playtest numbered `0.3.0` and labelled **v0.3 Alpha** everywhere.
-This is not the production-final release. Do not bump `manifest.json`, create the public tag, or
-upload while this plan says pre-freeze.
+The first public Steam Workshop playtest, `0.3.0` / **v0.3 Alpha**, completed on 2026-09-03 at
+commit `999b1e4` and annotated tag `v0.3.0`. It is published as
+[Workshop item 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472).
+This is a historical identity/package record, not production-final evidence and not instructions
+to retag `0.3.0`.
 
-## Current state
+## Completed state
 
-- `manifest.json` remains `0.2.0` by design.
-- Working integration changes are not frozen or packageable.
+- `manifest.json` is `0.3.0`; later beta-tree changes do not alter the tagged release bytes.
 - `workshop.json`, `docs/PRIVATE_PACKAGE_RECEIPT.sha256`, `docs/ALPHA_CANDIDATE.json`, and the
-  annotated `v0.3.0` tag are expected to be absent before the Steam/private-candidate sequence.
-- `docs/STRUCTURE_REVIEW.json` must be authored against the final staged C# inventory; a missing or
-  stale review blocks Alpha packaging.
+  annotated `v0.3.0` tag record the completed private-to-public sequence.
+- `docs/STRUCTURE_REVIEW.json` was bound to the tagged staged C# inventory; any later production
+  source change requires a new census and review binding before another package.
 - `preview.png` has a native-capture provenance record in [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md).
-  Its exact final bytes must survive private candidate, public Alpha commit, and package receipt.
+  Its recorded bytes survived private candidate, public Alpha commit, and package receipt.
 
 This list states protocol state, not implementation completeness. [STATUS.md](STATUS.md) remains
-the authority for feature/test gaps until freeze.
+the authority for current feature/test gaps.
 
-## Freeze decision
+## Historical freeze criteria
 
-Freeze only when all conditions are true:
+The one-time freeze was governed by these conditions:
 
 - architecture, quickstart, runtime, save-format, documentation, and package-boundary owners have
   fanned in;
@@ -34,20 +35,19 @@ Freeze only when all conditions are true:
   path needed by players, or unperformed-pass claim; and
 - `git status --short` is empty at each immutable package boundary.
 
-## One-time identity freeze
+## Completed one-time identity freeze
 
-At freeze, change together in one reviewed commit:
+The freeze changed these identities together through the reviewed private/public sequence:
 
-- `manifest.json`: version `0.3.0`; keep title `The Thousand and First [ALPHA]`;
-- `README.md`: keep one honest pre-release status line stating that public Alpha has not shipped;
-- `CHANGELOG.md`: keep `0.3.0` under `[Unreleased]` without a dated release heading;
-- Workshop metadata: canonical Alpha text and private visibility first; and
+- `manifest.json`: version `0.3.0`, title `The Thousand and First [ALPHA]`;
+- `README.md`: current public-Alpha status and Workshop link;
+- `CHANGELOG.md`: dated `0.3.0` Alpha release heading;
+- Workshop metadata: canonical Alpha text, Private candidate first, then Public; and
 - any version-pinned tests/docs that intentionally bind current release identity.
 
-Do not perform this bump early. A later code/content change invalidates the private receipt and
-forces a new candidate. Write `**Status: 0.3.0 public Alpha playtest.**` and
-`## [0.3.0] — YYYY-MM-DD (Alpha)` only after subscribed private validation, when RELEASING section
-5A creates the public metadata/candidate commit.
+That sequence is complete. A later code/content change does not inherit its receipt: use a new
+semantic patch version and repeat the current [RELEASING.md](RELEASING.md) update flow. Never move
+or recreate `v0.3.0`.
 
 ## Required gates
 

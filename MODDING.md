@@ -1860,7 +1860,7 @@ For the current installed manifest, the fixture manifest is:
     {
       "Path": "/Source/",
       "Dependencies": {
-        "r_ThousandAndFirst": "0.2.0"
+        "r_ThousandAndFirst": "0.3.0"
       }
     }
   ]

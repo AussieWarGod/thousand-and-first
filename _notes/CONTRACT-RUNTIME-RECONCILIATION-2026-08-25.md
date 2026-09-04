@@ -10,7 +10,7 @@
 
 > **Current-truth addendum — 2026-09-01.** The historical checks below are the frozen 2026-08-25 snapshot, kept verbatim for the record; they are not live status.
 > The current frozen census is 2945 production C# files and 2,976 cold-install files; 0 exceed 300 physical lines, 0 are exactly 300, so 0 fail strict; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
-> Latest retained managed evidence is 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable, both predating the final market fan-in and requiring rerun; current documentation/static evidence is 296/296 Tools and 28/28 Art. The historical checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, only for its old bytes.
+> Latest retained managed evidence is 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable, both predating the final market fan-in and requiring rerun; current documentation/static evidence is 300/300 Tools and 28/28 Art. The historical checkpoint passes 7,743 / 7,743 cases, including nine focused survey cases, only for its old bytes.
 > See `docs/STATUS.md` and `docs/STRUCTURE.md` for the current receipts and open human gates.
 > Historical generated-market/restock claims are superseded: current civic service requires one
 > accepted staffed provider plus exact held office, opens empty, and uses physical native TradeUI
@@ -97,7 +97,7 @@ Current checks at the 2026-09-01 source freeze:
   187 authored variants, and 105 unique fixtures.
 - `Tools/gate.sh`: baseline, compatibility, and development lanes are clean.
 - Last retained managed suites pass 10,624/10,624 Qud-referenced/source and 2,325/2,325 portable but require a final current-source rerun;
-  current documentation/static suites pass 296/296 Tools and 28/28 Art. Historical
+  current documentation/static suites pass 300/300 Tools and 28/28 Art. Historical
   7,743/173/35/23 receipts remain bound only to their old bytes.
 - Native evidence remains frozen at clean commit `19fb8ee`: founding, one of 2,064 gallery cases,
   save/cold-load, repeated self-tests, and clean log. Later structural revisions need a native
