@@ -1,0 +1,23 @@
+GitHub issue templates in this repo:
+
+1) bug.yml
+   - bug report for reproducible incorrect behavior
+   - includes required Qud/version/install context and redacted repro
+
+2) compatibility.yml
+   - compatibility matrix for mod stacking / builds / storefront
+   - requires mod order + world-state matrix
+
+3) feature.yml
+   - new player-facing feature proposal
+   - requires scope, fit, evidence plan, and risk review
+
+4) playtest.yml
+   - gameplay feedback without strict reproducible bug requirement
+   - includes world entry path and session outcomes
+
+5) config.yml
+   - issue chooser is limited to report forms
+   - security and install-help links included
+
+Use these files for contributor guidance and external mirrors when GitHub forms are unavailable.
