@@ -23,7 +23,8 @@ listings and must restore the full evidence lane. Current metadata constants are
 Alpha-specific; changing channel requires a reviewed metadata/tool/test change, not an ad-hoc UI
 edit.
 
-Follow [ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md) before the first version bump.
+[ALPHA-RELEASE-PLAN.md](ALPHA-RELEASE-PLAN.md) records the completed first `0.3.0` freeze. Use
+**Updating Alpha** below for every later patch; never rerun the literal `v0.3.0` commands.
 
 ## Package boundary
 
@@ -154,7 +155,10 @@ git rev-parse HEAD
 That full receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so the
 staged candidate remains byte-identical to the subscribed package.
 
-## 5A. Public v0.3 Alpha
+## 5A. First public v0.3 Alpha — completed `v0.3.0`
+
+This subsection records the one-time first-publication flow. Do not rerun it or recreate its tag;
+later Alpha patches use **Updating Alpha**.
 
 Do not create `docs/RELEASE_EVIDENCE.json` for Alpha. It would falsely imply completed final human
 release passes. Instead:
@@ -261,10 +265,162 @@ An in-progress Steam submission cannot be cancelled. Never describe unperformed 
 
 ## Updating Alpha
 
-Increment semantic version before upload. Repeat private canonicalization, immutable package,
-private subscription, receipt binding, public Alpha record, tag, and public verification. Never
-reuse another item's ID, rewrite an existing tag, merge package folders, or treat a prior receipt as
-proof of changed bytes.
+Do not reuse the first-publication same-item Private flow now that `3794797472` is public. Before
+the next patch, extend the receipt/tooling schema for a separately allowlisted Private staging item
+and the exact `WorkshopId`/visibility delta described below. Until that lands, no procedure here
+authorizes hiding production or exposing candidate bytes to subscribers.
+
+After that schema lands, increment the manifest to a new `0.3.x` patch before any candidate upload.
+Using the staging identity, repeat private canonicalization, immutable package, private
+subscription, and receipt binding. Then, in this
+order: canonicalize `workshop.json` to Public; replace the public status/changelog with
+`**Status: <version> public Alpha playtest.**` and
+`## [<version>] — YYYY-MM-DD (Alpha)`; create a fresh `docs/ALPHA_CANDIDATE.json` from those public
+fields; and validate it:
+
+```bash
+VERSION="$(python3 Tools/workshop_metadata.py fields manifest.json | sed -n '1p')"
+test "$VERSION" != "0.3.0"
+python3 Tools/workshop_metadata.py canonicalize alpha manifest.json workshop.json
+python3 Tools/workshop_metadata.py workshop alpha manifest.json workshop.json
+python3 Tools/workshop_metadata.py alpha-candidate \
+  manifest.json preview.png workshop.json docs/ALPHA_CANDIDATE.json \
+  README.md CHANGELOG.md
+```
+
+Commit only the exact reviewed public metadata, status, changelog, and candidate-record files.
+From that clean public-candidate commit, run the gates, create its new annotated tag, and package:
+
+```bash
+./Tools/portable-check.sh
+./Tools/release-check.sh --alpha
+git status --short
+git tag -a "v${VERSION}" -m "The Thousand and First v${VERSION} Alpha"
+./Tools/workshop-package.sh --alpha "/absolute/path/TAF-${VERSION}-alpha"
+```
+
+Upload only that new package, then repeat signed-out listing, subscribed-byte, and public-smoke
+verification. Never reuse another item's ID, rewrite an existing tag, merge package folders, or
+treat a prior receipt as proof of changed bytes.
+
+## Proposed development and automated-upload lane
+
+**Proposal only.** No uploader or privileged workflow is implemented, and the attended Qud UI
+procedure above remains authoritative. Adopt this lane only after the feasibility and security
+gates below pass on a private test item.
+
+### Branch model
+
+- Make `dev` the protected default integration branch. Feature branches and isolated worktrees
+  target `dev`; normal CI runs there and on pull requests.
+- Keep `main` protected and release-only. A release PR moves one frozen, reviewed `dev` tree to
+  `main` without squashing or changing package bytes. Direct pushes and force-pushes stay disabled.
+- Require the portable/test gates, metadata review, and protected-environment approval before
+  merge. Tag the exact resulting `main` commit with an annotated `v<version>` tag, then run the
+  exact tagged release-mode gate before any public upload.
+- Merge the tagged `main` commit back into `dev` before new integration work. A hotfix starts from
+  the affected `main` tag, follows the complete patch-release proof, then returns to `dev`.
+- Never treat a branch name, mutable artifact, or successful CI run as a release identity. Version,
+  candidate commit, annotated tag, package receipt, Workshop ID, and subscribed bytes must agree.
+
+Changing the repository default branch and protection rules is a maintainer-admin operation. Do it
+only after `dev` exists remotely, current CI targets both lanes, and links/scripts that assume
+`main` have been audited.
+
+### Uploader boundary
+
+Build a small pinned .NET command-line tool around Steamworks.NET. "Headless" here means no Qud
+UI; it does not mean Steam-free. Valve requires a running Steam client, a licensed signed-in user,
+the same operating-system user context, and successful `SteamAPI.Init`. The tool must pump
+`SteamAPI.RunCallbacks` until the asynchronous result arrives. Launch with an explicit runtime
+AppID of `333640` and refuse after initialization unless `SteamUtils.GetAppID()` returns exactly
+`333640`.
+
+The first version accepts only an existing item ID and a frozen package. It must refuse item
+creation, deletion, arbitrary paths, unknown fields, and identity mismatches. A Private job binds
+an exact protected `dev` commit SHA, test-package digest, and separately allowlisted Private staging
+item. A Public job binds the final annotated `main` tag, public-package digest, and production item
+`3794797472`. The two lanes must never share a target item. Its transaction is:
+
+1. Validate locally the exact commit/tag identity for the requested lane, release mode, immutable package
+   receipt, `manifest.json`, `workshop.json`, preview hash, existing Workshop ID, requested
+   visibility, and changelist.
+2. Before `StartItemUpdate`, query the remote item and refuse unless its ID is allowlisted for this
+   lane and its owner SteamID, consumer AppID `333640`, current visibility, expected title, and
+   `manifest_id` baseline all match frozen configuration. A locally consistent wrong item ID must
+   fail before any mutation.
+3. Map visibility semantically, never by numeric cast. Qud stores UI indices: JSON `"0"` means
+   Steam `k_ERemoteStoragePublishedFileVisibilityPrivate`, while JSON `"2"` means Steam
+   `k_ERemoteStoragePublishedFileVisibilityPublic`; the Steam enum assigns those numeric values in
+   the opposite direction. Refuse every value outside the requested lane.
+4. Call `StartItemUpdate`, then check every result from `SetItemTitle`, `SetItemDescription`,
+   `SetItemTags`, `SetItemVisibility`, `SetItemContent`, and `SetItemPreview`.
+5. Remove then add the exact searchable key-value tags
+   `manifest_id=r_ThousandAndFirst` and `manifest_version=<manifest version>`. Fail if either API
+   call fails; never append a second version value.
+6. Call `SubmitItemUpdate` once, pump callbacks with a bounded timeout, and require no I/O failure,
+   `EResult.OK`, the expected published-file ID, and no outstanding legal-agreement prompt. Valve
+   does not provide cancellation after submission begins.
+7. Query the item by ID with long description and key-value tags enabled. Verify owner/AppID, title,
+   description, normal tags, visibility, preview, `manifest_id`, and `manifest_version` against the
+   frozen inputs. Preserve a redacted machine receipt and Steam transfer logs.
+
+Private upload and public promotion remain two distinct, manually approved jobs. The Private job
+runs from the exact `dev` SHA against the staging item; its subscribed proof and receipt-binding
+commits precede the release PR. The Public job runs against production only from the final annotated
+`main` tag after a second approval. Tooling must prove runtime content identity while allowing only
+the frozen staging-to-production `WorkshopId` and visibility metadata delta, and record both package
+digests. Never hide or mutate the public item for routine candidate validation. If the receipt
+schema cannot express that separation safely, automate Public upload only and keep the attended Qud
+UI for sections 3 and 4. A successful API response does not replace the
+subscribed-byte receipt, native load/save/reload smoke, signed-out page inspection, or human media
+review in sections 4 and 6.
+
+### Self-hosted runner security
+
+The Steam session is a publication credential. A credentialed self-hosted runner must not be
+attached to this public source repository: another workflow can target its labels without declaring
+the protected environment. Environment approval alone is not isolation. GitHub warns that
+self-hosted runners are persistent and can be compromised by untrusted workflow code.
+
+- Prefer a private release-control repository. Restrict its runner group to that repository and the
+  exact allowlisted upload workflow at a pinned SHA where the GitHub plan supports workflow-scoped
+  access. Otherwise keep the Steam host offline/attended instead of registering it as an Actions
+  runner. The workflow still uses a protected environment with required human reviewers.
+- `workflow_dispatch` selects a branch or tag, not a raw SHA. Dispatch only the trusted protected
+  workflow ref, require a full candidate SHA as input, and verify that exact SHA/annotated tag and
+  artifact digest before privileged work. Never use `pull_request`, `pull_request_target`, or an
+  automatic tag trigger.
+- Run ordinary build/test/package work on an unprivileged hosted runner. The privileged job may
+  consume only an immutable, digest-verified package and a preinstalled, hash-pinned uploader; it
+  must not execute package content or arbitrary repository scripts under the Steam account.
+- Pin third-party actions by full commit SHA. Grant the workflow read-only repository permissions
+  unless an explicit narrower write is required. Do not expose the Steam host to fork artifacts.
+- Bootstrap Steam and Steam Guard interactively under a dedicated account that owns Qud and the
+  item. Do not put a Steam password or guard code in GitHub secrets, workflow arguments, logs, or
+  the repository. Expired login becomes a fail-closed attended maintenance event.
+- Snapshot/reimage the runner between release windows where practical, isolate it from developer
+  machines and private data, and retain only redacted receipts. Disable the runner outside release
+  windows.
+- Require a second approval for Public visibility. On any mismatch, keep/move the item Private and
+  follow Recovery; never retry by creating a new item.
+
+### Adoption gates
+
+1. Pin the Steamworks.NET and native Steamworks binaries, record their hashes and licences, and
+   reproduce the exact Steam API initialization on the isolated host.
+2. Prove the transaction against a sacrificial Private item, including timeout, rejected setter,
+   wrong owner, legal-agreement, network-loss, duplicate key-value-tag, and JSON/Steam visibility
+   inversion cases. A test that asks for Private and observes Public must fail before submission.
+   Prove the pre-mutation wrong-item/AppID/owner refusal too.
+3. Query and verify both key-value tags, then subscribe from a clean client and match package bytes.
+4. Threat-model workflow/ref/artifact substitution and have the privileged runner design reviewed.
+5. Run one attended private TAF update in parallel with the current Qud UI path. Compare metadata,
+   transfer logs, subscribed bytes, and native behavior.
+6. Add and manually establish the separately allowlisted Private staging item. Define and test the
+   only permitted staging-to-production metadata delta; never use production as the candidate item.
+7. Only after all gates pass, add the uploader/workflow, tests, rollback drill, and retained receipt
+   schema in a separate reviewed change. Then revise the opening statement of this document.
 
 ## Recovery
 
@@ -278,6 +434,11 @@ proof of changed bytes.
   packaging does not touch live mods.
 
 Steam's general UGC flow is documented by Valve's
-[Workshop implementation guide](https://partner.steamgames.com/doc/features/workshop/implementation)
-and [ISteamUGC reference](https://partner.steamgames.com/doc/api/isteamugc). Installed Qud remains
-authoritative for its uploader UI and metadata serializer.
+[Workshop implementation guide](https://partner.steamgames.com/doc/features/workshop/implementation),
+[Steamworks API initialization guide](https://partner.steamgames.com/doc/sdk/api), and
+[ISteamUGC reference](https://partner.steamgames.com/doc/api/isteamugc). Steamworks.NET requires a
+regular callback pump in its
+[getting-started guide](https://steamworks.github.io/gettingstarted/). GitHub documents the
+[risk of compromised runners](https://docs.github.com/en/actions/concepts/security/compromised-runners)
+and [self-hosted runner access controls](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access).
+Installed Qud remains authoritative for its uploader UI and metadata serializer.
