@@ -20,7 +20,13 @@ storage, five actual departures, exact summary-event fault and same-tick retry. 
 checkpoint are seeded; no breakpoint or world-turn claim. Native3/3 and fullrunnerPASS05:07:58UTC
 in freshkvjIzc; exactfourdiagnostics, ninejournalrows, ownedcapture, PID36172stop and idlePASS.
 Evidence /tmp/taf-native-subsidence.a9XJXf; STATUS.md owns final run boundaries.
-Tools333 passes exact literal/count diagnostics and actual-shell lifecycle regressions; raw logs
+Workshop uplift now in local canonical description/manifest/tags/serializer; independent factual
+and code reviews pass. Five new metadata regressions cover copy, caveats, exact tags, private/public
+identity preservation and absent-Workshop bootstrap. Isolated package harness passes with one
+explicit nested-namespace bind-alias environment skip; not zero-skip release acceptance.
+No new version, release tag, package receipt, Steam upload, or public-page change. Alpha update
+still needs separate private stagingID/schema and fresh subscribed/save-reload evidence.
+Tools338 passes exact literal/count diagnostics, actual-shell lifecycle and new Workshop regressions; raw logs
 are retained. Earlier nativeprofiles7f9diy/oA5XdS eachpassed3checks but overall log expectations
 remainRED. Finalrun uses four predeclared exact observed dev-title/DLC lines; no broadgate regex
 is inherited in exactmode. Earlier reports were not backdated green.

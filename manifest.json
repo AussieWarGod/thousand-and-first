@@ -1,10 +1,10 @@
 {
   "id": "r_ThousandAndFirst",
   "title": "The Thousand and First [ALPHA]",
-  "description": "Found a faction through a water rite and build it into a kingdom: settlements, districts, buildings, food, water, trade and threats, all inside a normal Qud run, and optionally a legacy across worlds.",
+  "description": "Found a faction through a water rite and raise up to three living settlements inside a normal Qud run. Govern physical water, food, labour, trade, raids, and succession; cross-world legacy is opt-in.",
   "version": "0.3.0",
   "author": "AussieWarGod",
-  "tags": "Alpha,Faction,Settlement,Script,Kingdom,Build",
+  "tags": "Building,Faction,Settlement,World,Script,Lore",
   "PreviewImage": "preview.png",
   "Directories": [
     {

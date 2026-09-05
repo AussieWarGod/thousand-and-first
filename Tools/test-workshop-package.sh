@@ -281,7 +281,23 @@ assert data["Title"] == manifest["title"]
 assert data["Tags"] == manifest["tags"]
 assert data["Visibility"] == "2"
 assert data["ImagePath"] == manifest["PreviewImage"]
-assert data["Description"].count(manifest["description"]) == 1
+assert 0 < len(manifest["description"].encode("utf-8")) < 8000
+assert 0 < len(data["Description"].encode("utf-8")) < 8000
+assert data["Description"].startswith(
+    "[b]Found a faction. Raise settlements. Leave a history behind.[/b]\n\n"
+)
+for anchor in (
+    "[b]Build a living realm[/b]",
+    "optional Kingdom Quickstart",
+    "[b]Shape each settlement[/b]",
+    "Cross-world legacy is opt-in and must be enabled before world creation.",
+    "It never carries items, liquids, charge, or old actor identity.",
+    "This listing stays Alpha; Beta and Release will be separate Workshop items.",
+    "Built for Caves of Qud v1.0.5, core build 2.0.211.51.",
+    "native compatibility remains unverified. Single-player only.",
+    "Back up saves before every Alpha install or update.",
+):
+    assert data["Description"].count(anchor) == 1, anchor
 
 # Independent, copy-agnostic oracle for Qud's Newtonsoft Formatting.Indented bytes.
 canonical = json.dumps(
@@ -397,7 +413,7 @@ manifest = {
     ),
     "version": "0.2.0",
     "author": "AussieWarGod",
-    "tags": "Alpha,Faction,Settlement,Script,Kingdom,Build",
+    "tags": "Building,Faction,Settlement,World,Script,Lore",
     "PreviewImage": "preview.png",
 }
 (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

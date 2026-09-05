@@ -47,7 +47,7 @@ restored byte-identically from the release workspace for the full run.
 
 Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases; those pre-market receipts are superseded by the beta run above. Current
-documentation/tooling passes 333 / 333 Tools tests. Retained art evidence is 28 / 28 Art tests. No complete native or human sign-off
+documentation/tooling passes 338 / 338 Tools tests. Retained art evidence is 28 / 28 Art tests. No complete native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.

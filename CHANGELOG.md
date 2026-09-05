@@ -19,6 +19,14 @@ below it.
 
 ## [Unreleased]
 
+### Changed
+
+- Prepared a stronger Workshop hook and grouped coverage of settlement gameplay,
+  customization, civic life, infrastructure, and late-game projects. Discovery tags are now
+  `Building,Faction,Settlement,World,Script,Lore` in local canonical metadata. Alpha, optional
+  legacy, compatibility limits, and save-backup warnings remain explicit. This copy is not yet
+  published; the next Alpha needs a new version and verified private/public package flow.
+
 ### Fixed
 
 - Raid launches now freeze their roster, projections, and leases and publish the operation

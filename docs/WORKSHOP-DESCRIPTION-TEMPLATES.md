@@ -3,15 +3,17 @@
 Use this file to review listing copy before changing `manifest.json`,
 `Tools/workshop_metadata.py`, or Steam. It is not the canonical live metadata source.
 
-## v0.3.x Alpha uplift proposal
+## v0.3.x Alpha uplift copy
 
-**State:** review-ready proposal; not yet copied into release metadata or published.
+**State:** approved copy synchronized into source metadata; not packaged or published as a new
+candidate. The source version remains `0.3.0`. This preparation does not replace the tagged
+package, update the live listing, or renew any package or upload receipt.
 
 Changing the description or tags changes `workshop.json` and package bytes. Land an approved
 version through a new `0.3.x` private-candidate and receipt flow; never edit the tagged `v0.3.0`
 package or live page ad hoc.
 
-**Recommended tags:**
+**Approved tags:**
 
 `Building,Faction,Settlement,World,Script,Lore`
 
@@ -57,7 +59,7 @@ Tune the experience with separate options for growth, water scarcity, raids, tra
 Cross-world legacy is opt-in and must be enabled before world creation. It may carry bounded layout and history into a later world. It never carries items, liquids, charge, or old actor identity.
 
 [b]Alpha, compatibility, and support[/b]
-This is a public Alpha playtest. Expect bugs, rough edges, balance changes, and incomplete visual or compatibility coverage.
+This is a public Alpha playtest. Expect bugs, rough edges, balance changes, and incomplete visual or compatibility coverage. This listing stays Alpha; Beta and Release will be separate Workshop items.
 
 Built for Caves of Qud v1.0.5, core build 2.0.211.51. Later game builds are unverified. No dependency is required. Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; native compatibility remains unverified. Single-player only.
 

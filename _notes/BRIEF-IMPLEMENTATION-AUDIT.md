@@ -9,12 +9,16 @@ Claude raid launch-order foundation publishes projections/leases before all fact
 five source/rule tests added. Per-actor create/place/activate interleave is an intentional change.
 Native launch and replacement/interrupted-placement custody remain OPEN; no save field changed.
 Subsidence summary-only completion boundary passes13/13 eachproject; full11231/2794,zero skips,
-including twelve additional native-fixture source contracts. Tools333 passes literal/count
+including twelve additional native-fixture source contracts. Tools338 passes literal/count
 diagnostic and actual-shell lifecycle regressions. The native fixture builds real residents and
 executes Reckon; its seeded stage/elapsed checkpoint does not prove ordinary progression.
 Partial-step debt, committed-but-pending departure recovery, inner-rung callbacks and native
 subsidence acceptance remain separately scoped in STATUS.md. No new save field, clock authority or full recovery claim.
 Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
+Workshop copy/tag uplift is canonical locally and independently reviewed, not published.
+Private/public/bootstrap metadata regressions added. Package harness has one explicit bind-alias
+environment skip. Next Alpha remains blocked on separate staging identity/schema and fresh
+subscribed candidate evidence; older 0.3.0 receipts are never reused for changed bytes.
 
 **Date:** 2026-08-28
 **Status:** current audit and acceptance contract; no implementation authority by itself

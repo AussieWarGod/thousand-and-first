@@ -21,7 +21,7 @@ from pathlib import Path
 MOD_ID = "r_ThousandAndFirst"
 TITLE = "The Thousand and First [ALPHA]"
 AUTHOR = "AussieWarGod"
-TAGS = ("Alpha", "Faction", "Settlement", "Script", "Kingdom", "Build")
+TAGS = ("Building", "Faction", "Settlement", "World", "Script", "Lore")
 PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
@@ -294,32 +294,64 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
 
 def canonical_description(manifest: dict) -> str:
     paragraphs = (
-        "Build a kingdom in the salt, one settlement at a time.",
-        f"[b]Alpha playtest build.[/b] Expect bugs, missing content and rough edges. "
-        f"Built for Caves of Qud v{GAME_MARKETING_VERSION} (core {GAME_CORE_BUILD}). "
-        "This listing stays Alpha; Beta and Release will be separate Workshop items.",
-        manifest["description"],
-        "[b]What you can do[/b]\n"
-        "- Found a faction through a water rite and plant your first settlement\n"
-        "- Zone plots across ten typed categories in S, M, L and XL sizes\n"
-        "- Raise buildings tiered by style, creed, materials and technology\n"
-        "- Grow food, manage water and trade between your cities\n"
-        "- Answer threats as the kingdom grows\n"
-        "- Start your next character as a citizen of the kingdom you built\n"
-        "- Leave a legacy across worlds, if you choose",
-        "[b]Saves[/b]\n"
-        "Back up your saves before testing. Save data is versioned and migrated between "
-        "updates. If an update ever cannot read a save, the mod quarantines it and tells "
-        "you instead of corrupting it.",
-        "[b]Bugs and feedback[/b]\n"
-        "https://github.com/AussieWarGod/thousand-and-first/issues",
-        "[b]Contribute[/b]\n"
-        "Open source under MIT: https://github.com/AussieWarGod/thousand-and-first\n"
-        "Artists and builders welcome. If you enjoy drawing Qud-style tiles or laying out "
-        "settlements, every building has a design dossier to work from, and submissions go "
-        "through the repo. A paid art and design pass over the whole catalogue is planned "
-        "for Beta.\n"
-        "Modders can reuse the in-game scenario test framework for their own additions.",
+        "[b]Found a faction. Raise settlements. Leave a history behind.[/b]",
+        "The Thousand and First turns settlement-building into part of a normal Caves of "
+        "Qud adventure. Pour fresh water into a founder's basin—or choose Kingdom "
+        "Quickstart—claim ground, raise a civic heart, and decide what kind of place grows "
+        "there. Leave to explore. When you return, your settlements report what happened "
+        "while you were away.",
+        "This is not a detached city-builder or a daily chore. Water sits in vessels, food "
+        "in larders, materials in stores, and citizens live on the ground. You set intent; "
+        "your people do the work.",
+        "[b]Build a living realm[/b]\n"
+        "- Found through a water rite or start quickly through the optional Kingdom Quickstart\n"
+        "- Establish a seat and up to two other cities across surface and underground claims\n"
+        "- Reserve typed plots in S, M, L, and XL sizes, then choose authored buildings that "
+        "renovate, expand, or give way as the settlement grows\n"
+        "- Join districts with roads, shafts, utilities, porters, construction routes, and trade\n"
+        "- Build homes, workshops, farms, larders, markets, offices, shrines, fortifications, "
+        "civic works, and late-game projects\n"
+        "- Manage physical fresh water, crops, meals, materials, power, wear, repair, and cargo\n"
+        "- Meet named settlers with origins, homes, work, creeds, conversations, petitions, "
+        "rites, and funerals\n"
+        "- Answer raids by paying, fighting, fortifying, or talking; face diplomacy, dissent, "
+        "rivals, exile, return, and succession\n"
+        "- Pursue research, certified machinery, laboratories, grafts, a becoming annexe, "
+        "a crown, mirror-gates, and a hosted arcology\n"
+        "- Read a dated Chronicle and homecoming reports that remember what your realm became",
+        "[b]Shape each settlement[/b]\n"
+        "Site and circumstance matter. Ground, materials, technology, culture, creed, skills, "
+        "staffing, and infrastructure affect which plans open and how the city looks and "
+        "works. Choose plots and plans, set civic policy and water detail, commission "
+        "upgrades, decide how to answer threats, and invest from hand-carried beginnings "
+        "toward carts, conduits, and advanced works.",
+        "Affiliations and optional covenants are not cosmetic labels. They can change "
+        "architecture, civic practices, relationships, and available projects without "
+        "forcing every city in one realm to look alike.",
+        "Tune the experience with separate options for growth, water scarcity, raids, trade, "
+        "research, civic stories, ambient activity, creed, roads, wear, and more.",
+        "Cross-world legacy is opt-in and must be enabled before world creation. It may "
+        "carry bounded layout and history into a later world. It never carries items, "
+        "liquids, charge, or old actor identity.",
+        "[b]Alpha, compatibility, and support[/b]\n"
+        "This is a public Alpha playtest. Expect bugs, rough edges, balance changes, and "
+        "incomplete visual or compatibility coverage. This listing stays Alpha; Beta and "
+        "Release will be separate Workshop items.",
+        f"Built for Caves of Qud v{GAME_MARKETING_VERSION}, core build {GAME_CORE_BUILD}. "
+        "Later game builds are unverified. No dependency is required. Optional exact-version "
+        "Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; native "
+        "compatibility remains unverified. Single-player only.",
+        "Back up saves before every Alpha install or update. Keep only one enabled copy of "
+        "the mod; a local install plus a Workshop subscription can load the wrong one.",
+        "Bugs and playtest feedback:\n"
+        "[url=https://github.com/AussieWarGod/thousand-and-first/issues/new/choose]"
+        "GitHub issue forms[/url]",
+        "Install, save, and test guidance:\n"
+        "[url=https://github.com/AussieWarGod/thousand-and-first/blob/main/PLAYTESTING.md]"
+        "Alpha Playtesting Guide[/url]",
+        "Open source under MIT:\n"
+        "[url=https://github.com/AussieWarGod/thousand-and-first]"
+        "Source and contributor docs[/url]",
     )
     return "\n\n".join(paragraphs)
 

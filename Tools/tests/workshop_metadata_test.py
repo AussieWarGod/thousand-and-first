@@ -97,6 +97,118 @@ class WorkshopMetadataTests(unittest.TestCase):
                 manifest = METADATA.load_manifest(self.write_manifest(description))
                 self.assertEqual(manifest["description"], description)
 
+    def test_alpha_listing_leads_with_hook_and_implemented_feature_groups(self) -> None:
+        description = METADATA.canonical_description({})
+        self.assertTrue(description.startswith(
+            "[b]Found a faction. Raise settlements. Leave a history behind.[/b]\n\n"
+        ))
+        for text in (
+            "[b]Build a living realm[/b]",
+            "optional Kingdom Quickstart",
+            "a seat and up to two other cities",
+            "typed plots in S, M, L, and XL sizes",
+            "roads, shafts, utilities, porters, construction routes, and trade",
+            "physical fresh water, crops, meals, materials, power, wear, repair, and cargo",
+            "paying, fighting, fortifying, or talking",
+            "research, certified machinery, laboratories, grafts, a becoming annexe",
+            "a crown, mirror-gates, and a hosted arcology",
+            "dated Chronicle and homecoming reports",
+            "[b]Shape each settlement[/b]",
+            "Affiliations and optional covenants are not cosmetic labels.",
+            "separate options for growth, water scarcity, raids, trade",
+        ):
+            with self.subTest(text=text):
+                self.assertIn(text, description)
+        self.assertLess(description.index("[b]Build a living realm[/b]"),
+                        description.index("[b]Shape each settlement[/b]"))
+        self.assertLess(description.index("[b]Shape each settlement[/b]"),
+                        description.index("[b]Alpha, compatibility, and support[/b]"))
+
+    def test_alpha_listing_preserves_legacy_compatibility_and_release_caveats(self) -> None:
+        description = METADATA.canonical_description({})
+        for text in (
+            "Cross-world legacy is opt-in and must be enabled before world creation.",
+            "It may carry bounded layout and history into a later world.",
+            "It never carries items, liquids, charge, or old actor identity.",
+            "Expect bugs, rough edges, balance changes, and incomplete visual or compatibility coverage.",
+            "This listing stays Alpha; Beta and Release will be separate Workshop items.",
+            "Built for Caves of Qud v1.0.5, core build 2.0.211.51.",
+            "Later game builds are unverified. No dependency is required.",
+            "Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; "
+            "native compatibility remains unverified.",
+            "Single-player only.",
+            "Back up saves before every Alpha install or update.",
+            "Keep only one enabled copy of the mod; a local install plus a Workshop subscription can load the wrong one.",
+            "[url=https://github.com/AussieWarGod/thousand-and-first/issues/new/choose]GitHub issue forms[/url]",
+            "[url=https://github.com/AussieWarGod/thousand-and-first/blob/main/PLAYTESTING.md]Alpha Playtesting Guide[/url]",
+        ):
+            with self.subTest(text=text):
+                self.assertIn(text, description)
+        self.assertTrue(METADATA._discloses_optional_cross_world_legacy(description))
+        self.assertNotIn("instead of corrupting it", description)
+        self.assertNotIn("paid art and design pass", description)
+
+    def assert_metadata_copy_sync(self, repository: Path) -> None:
+        manifest = METADATA.load_manifest(repository / "manifest.json")
+        workshop_path = repository / "workshop.json"
+        tags = ("Building", "Faction", "Settlement", "World", "Script", "Lore")
+        self.assertEqual(tags, METADATA.TAGS)
+        self.assertEqual(",".join(tags), manifest["tags"])
+        self.assertEqual("The Thousand and First [ALPHA]", manifest["title"])
+        proposal = (repository / "docs" / "WORKSHOP-DESCRIPTION-TEMPLATES.md").read_text(encoding="utf-8")
+        approved = proposal.split("```text\n", 1)[1].split("\n```", 1)[0]
+        self.assertEqual(approved, METADATA.canonical_description(manifest))
+        short_copy = proposal.split("**Manifest description:**\n\n", 1)[1].split("\n\n", 1)[0]
+        self.assertEqual(" ".join(line.removeprefix("> ") for line in short_copy.splitlines()),
+                         manifest["description"])
+        self.assertIn("not packaged or published as a new", proposal)
+        if not workshop_path.exists():
+            self.assertFalse(workshop_path.is_symlink())
+            self.assertIsNone(METADATA.validate_workshop(workshop_path, manifest, "test"))
+            return
+        visibility = json.loads(workshop_path.read_text(encoding="utf-8")).get("Visibility")
+        self.assertIn(visibility, ("0", "2"))
+        mode = "test" if visibility == "0" else "alpha"
+        workshop = METADATA.validate_workshop(workshop_path, manifest, mode)
+        self.assertEqual(manifest["tags"], workshop["Tags"])
+        self.assertEqual(manifest["title"], workshop["Title"])
+        self.assertEqual(approved, workshop["Description"])
+        self.assertEqual(METADATA.canonical_workshop_bytes(workshop), workshop_path.read_bytes())
+
+    def test_tracked_alpha_metadata_matches_approved_copy_and_exact_six_tags(self) -> None:
+        self.assert_metadata_copy_sync(Path(__file__).resolve().parents[2])
+
+    def test_bootstrap_without_workshop_still_requires_approved_manifest_and_copy(self) -> None:
+        repository = Path(__file__).resolve().parents[2]
+        (self.root / "docs").mkdir()
+        for relative in ("manifest.json", "docs/WORKSHOP-DESCRIPTION-TEMPLATES.md"):
+            (self.root / relative).write_bytes((repository / relative).read_bytes())
+        self.assertFalse((self.root / "workshop.json").exists())
+        self.assert_metadata_copy_sync(self.root)
+        manifest_path = self.root / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["description"] += " This unapproved sentence changes the short copy."
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaises(AssertionError):
+            self.assert_metadata_copy_sync(self.root)
+
+    def test_canonicalization_preserves_public_and_private_item_authority(self) -> None:
+        manifest = METADATA.load_manifest(self.write_manifest(
+            "Found a faction and govern settlements across Qud. Cross-world legacy is opt-in."
+        ))
+        path = self.root / "workshop.json"
+        for mode, item_id, visibility in (("alpha", 3794797472, "2"), ("test", 123456789, "0")):
+            with self.subTest(mode=mode):
+                original = METADATA.canonical_workshop_data(manifest, item_id, visibility)
+                original.update(Description="Previous listing copy", Tags="Alpha,Script")
+                path.write_bytes(METADATA.canonical_workshop_bytes(original))
+                METADATA.canonicalize_workshop(path, manifest, mode)
+                updated = METADATA.validate_workshop(path, manifest, mode)
+                self.assertEqual(original["WorkshopId"], updated["WorkshopId"])
+                self.assertEqual(original["Visibility"], updated["Visibility"])
+                self.assertEqual(METADATA.canonical_description(manifest), updated["Description"])
+                self.assertEqual(",".join(METADATA.TAGS), updated["Tags"])
+
     def test_manifest_rejects_missing_negated_or_unbound_optional_legacy(self) -> None:
         descriptions = (
             "Optional difficulty settings change founding. Your kingdom's legacy "

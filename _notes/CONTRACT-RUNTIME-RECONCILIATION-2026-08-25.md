@@ -10,11 +10,15 @@ full managed11231/portable2794,zero skips, including twelve native-fixture sourc
 and five Claude raid launch-order source/rule regressions. Raid projections/leases now publish
 before creation, followed by per-actor create/place/activate through existing ResumeOpen.
 Native multi-raider callback and replacement/interrupted-placement custody proof remain OPEN.
-Tools333 passes literal/count expected-diagnostic and actual-shell lifecycle regressions.
+Tools338 passes literal/count expected-diagnostic, actual-shell lifecycle and Workshop regressions.
 The new physical resident fixture executes actual Reckon; stage/elapsed checkpoint are seeded.
 Fractional-step debt, committed-but-pending departures, inner-rung interruptions and ordinary
 native/save-load proof remain open; this is not exactly-once recovery. STATUS.md owns final
 native fixture evidence, including any refused log expectation and fresh-profile rerun.
+Workshop uplift is canonical locally only: grouped player outcomes and accurate discovery tags,
+with explicit Alpha/legacy/compatibility/backup caveats. Independent review and metadata/package
+regressions cover both private/public identities and bootstrap absence. Package bind-alias
+environment skip remains explicit. No new Alpha receipt, tag, upload or public-page change.
 docs/STATUS.md owns current suite/compile/native evidence, not the dated audit.
 
 > **Supersession banner — 2026-09-01.** This is a dated chronological reconciliation, not the live
