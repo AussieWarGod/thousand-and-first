@@ -357,6 +357,7 @@
     <Compile Include="KingdomQuickstartTests.cs" />
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
+    <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />
     <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />

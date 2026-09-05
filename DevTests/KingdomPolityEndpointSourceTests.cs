@@ -19,7 +19,7 @@ namespace ThousandAndFirst.Tests
 			string runtime = Read("KingdomPolityEndpointRuntime.cs");
 			int prepare = runtime.IndexOf("TryPrepareEndpointManifestation", StringComparison.Ordinal);
 			int create = runtime.IndexOf("KingdomPolityNpcRuntime.TryCreate", StringComparison.Ordinal);
-			int assign = runtime.IndexOf("created.ID = objectId", StringComparison.Ordinal);
+			int assign = runtime.IndexOf("prepared.ID = objectId", StringComparison.Ordinal);
 			int place = runtime.IndexOf("cell.AddObject(created)", StringComparison.Ordinal);
 			Assert.GreaterOrEqual(prepare, 0); Assert.Greater(create, prepare);
 			Assert.Greater(assign, create); Assert.Greater(place, assign);

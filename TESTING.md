@@ -40,14 +40,14 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,187 / 11,187 full managed cases and 2,750 / 2,750 portable
+The 2026-09-05 beta suites pass 11,201 / 11,201 full managed cases and 2,764 / 2,764 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
 
 Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases; those pre-market receipts are superseded by the beta run above. Current
-documentation/tooling passes 316 / 316 Tools tests and 28 / 28 Art tests. No current native or human sign-off
+documentation/tooling passes 321 / 321 Tools tests and 28 / 28 Art tests. No complete native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.
@@ -84,9 +84,35 @@ before reading error text or logging, retains the exact sink Intent, blocks reco
 raid publication, and survives an exact lifecycle wire round trip. Ordinary false-return recovery
 is unchanged. No serialized fields or wire versions changed.
 
-This proves the engine-free protocol, not native Chronicle/Ledger/Message/Deed callbacks or game
-save/load. Ordinary raid acceptance remains open. A retained quarantine is deliberate fail-closed
-evidence; this patch does not introduce a raid finalizer or clear the slot to unblock new raids.
+Those managed tests prove the engine-free protocol. Separately, at **2026-09-05 03:18:46 UTC**,
+the [native raid-outbox persona](Tools/personas/raid-outbox-native-checks.persona) passed **6 / 6**
+cases on Qud core `2.0.211.51`, sealed profile `zTzq5k`, seed `#1012026`, marsh zone
+`JoppaWorld.8.22.1.1.10`. Both surrounding stage digests reported `founded=false`.
+
+- Actual dispatch delivers Chronicle, ledger, message, and deed once; repeated dispatch preserves
+  lifecycle bytes, and ordinary recovery retires the successful fixture operation.
+- An overbound fixture-local Chronicle refuses with exact retained fault evidence; repairing that
+  local list lets the actual recovery path deliver and retire.
+- Four real sink effects, each followed by a synthetic interruption, retain exact sink Intent and
+  quarantined operation bytes through attempted replay, recovery, scheduling, retirement, and new
+  publication. A hostile exception Message getter observes quarantine before itself throwing.
+
+The fixture uses unregistered local KingdomSystem instances. It removes only exact validated
+fixture Chronicle keys after proving their five-table shape. Altered, missing, or retyped owned
+evidence fails the case and is never overwritten to manufacture success. Native message text and
+UI-listener effects remain visible; the harness never rewinds the queue or claims those effects
+were undone. Fourteen source-contract tests run in both managed projects.
+
+Journal expectations, archived Player.log, native screenshot, and receipt-owned process stop all
+passed; subsequent idle check found no Qud process. Evidence is retained in
+`/tmp/taf-native-raid.XMFQ5q`, with profile `/mnt/c/taf-scenario.zTzq5k` and its sibling seal.
+The three new Harness sources and renamed Polity source matched the executed profile exactly.
+The screenshot proves native capture, not visual-quality acceptance.
+
+This is synthetic native seam evidence, not an ordinary raid reaching its outbox, founded outsider
+identity, an engine-raised exception, diagnostic delivery, or game save/load. Ordinary raid
+acceptance remains open. A retained quarantine is deliberate fail-closed evidence; this patch
+does not introduce a raid finalizer or clear the slot to unblock new raids.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 

@@ -196,16 +196,16 @@ namespace ThousandAndFirst
 				Cohort.RulesVersion, Cohort.MinimumLevel, Cohort.MaximumLevel,
 				Polity.ProjectedFactionId, figureId, figure == null ? null : figure.DisplayName,
 				Ledger.RealmId, Cohort.CohortId, Receipt.ProjectionId, objectId,
-				created =>
+				prepared =>
 				{
-					created.ID = objectId;
-					created.SetStringProperty(CohortOwnerProperty, Cohort.PolityId);
-					created.SetStringProperty(CohortProperty, Cohort.CohortId);
-					created.SetStringProperty(ProjectionProperty, Receipt.ProjectionId);
-					created.SetIntProperty(MemberOrdinalProperty, Ordinal);
-					created.SetIntProperty(CohortXProperty, cell.X);
-					created.SetIntProperty(CohortYProperty, cell.Y);
-					created.AddPart(new XRL.World.Parts.r_KingdomPolityCohortBody(Ledger.RealmId,
+					prepared.ID = objectId;
+					prepared.SetStringProperty(CohortOwnerProperty, Cohort.PolityId);
+					prepared.SetStringProperty(CohortProperty, Cohort.CohortId);
+					prepared.SetStringProperty(ProjectionProperty, Receipt.ProjectionId);
+					prepared.SetIntProperty(MemberOrdinalProperty, Ordinal);
+					prepared.SetIntProperty(CohortXProperty, cell.X);
+					prepared.SetIntProperty(CohortYProperty, cell.Y);
+					prepared.AddPart(new XRL.World.Parts.r_KingdomPolityCohortBody(Ledger.RealmId,
 						Cohort.CohortId, Cohort.Purpose, Ordinal == 0));
 				}, out GameObject created, out Failure);
 			if (!made)

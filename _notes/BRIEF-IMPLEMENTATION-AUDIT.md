@@ -3,7 +3,8 @@
 Beta evidence addendum 2026-09-05: **2950** production C# files, all strictly below 300 lines.
 Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggregate proofs,
 and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both
-projects, including wire persistence; these do not sign native callback or ordinary-play behavior.
+projects, including wire persistence. Separate native outbox persona passes6/6 actual sink cases
+with synthetic interruptions and retained native messages; ordinary play/save-load remain open.
 Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
 
 **Date:** 2026-08-28

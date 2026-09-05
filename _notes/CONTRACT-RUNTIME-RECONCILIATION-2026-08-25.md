@@ -3,7 +3,9 @@
 Beta addendum 2026-09-05: 2950 production C# files; 2,981 cold-install files. Current semantic
 review covers Quickstart exact custody, raid zone guards, canonical counts, and outbox quarantine
 before diagnostics. Focused actual-lifecycle outbox tests pass34/34 in both projects, including
-wire persistence. docs/STATUS.md owns current suite/compile/native evidence, not the dated audit.
+wire persistence. Separate native outbox persona passes6/6 actual sink cases with synthetic
+interruptions; no ordinary-play/save-load claim. C#7.3 shadowing fixed without behavior changes.
+docs/STATUS.md owns current suite/compile/native evidence, not the dated audit.
 
 > **Supersession banner — 2026-09-01.** This is a dated chronological reconciliation, not the live
 > status ledger. Current runtime holds one seat plus two non-seat cities; third founding succeeds,

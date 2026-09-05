@@ -12,7 +12,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "Core" / "KingdomRemovalCoverage.Generated.cs"
 OWNED_STARTS = ("Kingdom", "TAF", "r_TAF_", "ThousandAndFirst.")
-SKIP_DIRS = {".git", "DevTests", "Tools"}
+SKIP_DIRS = {".git", "DevTests", "Tools", "Harness"}
 CLASS_CENSUS_SKIP_DIRS = {"DevTests", "Tools", "Harness", "Integrations"}
 
 DECLARATION = re.compile(

@@ -14,13 +14,20 @@ below it.
 > Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2981 files.
 > Its exact-inventory
 > semantic review binds digest
-> `3d9a31b2f42890f325f24a0f1c568ab4bac9717d9ca09091a201dc94db0c8fbe`. This does not amend the
+> `39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence.
 
 ## [Unreleased]
 
 ### Fixed
 
+- The removal-coverage generator excludes development Harness sources from production object
+  inventories. Existing global-state cleanup coverage and generated runtime bytes are unchanged.
+- Polity endpoint creation now compiles under C# 7.3: a preparation lambda no longer shadows
+  the returned object variable. Runtime behavior and save formats are unchanged.
+- Six development-only native raid-outbox regressions cover actual notification effects,
+  refusal/retry, and synthetic post-effect interruptions. Fixture cleanup preserves altered
+  receipts and retains native messages; it never rewinds UI listeners or touches ordinary saves.
 - The custom test runner now rejects unsupported dynamic NUnit sources before filtering instead
   of silently omitting their cases. Separate executable poison probes verify fail-closed behavior.
 - A thrown raid notification callback now retains a quarantined operation instead of silently

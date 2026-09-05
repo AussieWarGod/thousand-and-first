@@ -1,0 +1,9 @@
+# Real notification effects in a disposable unfounded profile; injected interruptions only.
+# Native messages/UI effects remain visible; no ordinary raid progression or save/load claim.
+DESCRIPTION=actual raid outbox callbacks and retained interruptions pass six native regressions
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-outbox-check;stagedigest
+VERBS=raid-outbox-check
+EXPECT=stagedigest:OK~founded=false,raid-outbox-check:OK~cases=6 passed=6 failed=0,stagedigest:OK~founded=false,COMPLETE
+SET=raids,native-regression

@@ -4,7 +4,10 @@ Beta checkpoint 2026-09-05: 2950 staged sources; 2981 package files. Quickstart 
 rollback, raid-zone guards, canonical polity proof validation, and receipt-owned persona lifecycle.
 Raid outbox throws now quarantine before diagnostics; focused actual-lifecycle tests pass 34/34
 in both managed projects, including wire persistence. Exact-source review current; STATUS.md owns
-final suite/compile/native evidence. Spawn-custody revisions remain separate; main stays v0.3.0.
+final suite/compile/native evidence. Native outbox persona now passes 6/6 actual sink cases with
+synthetic interruptions; messages/UI effects retained, ordinary play and save/load unsigned.
+C#7.3 lambda shadowing fixed mechanically; generator excludes non-shipping Harness sources.
+Spawn-custody revisions remain separate; main stays v0.3.0.
 
 > **Supersession banner — 2026-09-01.** This is a chronological handoff snapshot; “current” below
 > means the snapshot date, not the working tree. Current runtime holds one seat plus two non-seat
