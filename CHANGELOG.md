@@ -8,19 +8,28 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2949 staged
-> C# files / 420,975 physical lines, with 0 at or above the strict 300-line cap.
-> Current 2949-file census is line-cap green.
-> Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2980 files.
+> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2950 staged
+> C# files / 420,999 physical lines, with 0 at or above the strict 300-line cap.
+> Current 2950-file census is line-cap green.
+> Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2981 files.
 > Its exact-inventory
 > semantic review binds digest
-> `9a85ea364957d6a98d8e1649f1a745a03df04f4a09c13441b6a8d94a8443e7c3`. This does not amend the
+> `3d9a31b2f42890f325f24a0f1c568ab4bac9717d9ca09091a201dc94db0c8fbe`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence.
 
 ## [Unreleased]
 
 ### Fixed
 
+- The custom test runner now rejects unsupported dynamic NUnit sources before filtering instead
+  of silently omitting their cases. Separate executable poison probes verify fail-closed behavior.
+- A thrown raid notification callback now retains a quarantined operation instead of silently
+  becoming a lost delivery on recovery. Quarantine precedes exception text and diagnostics; even
+  a broken logger cannot make an uncertain delivery retire as successful. Existing successful
+  delivery and explicit-false recovery behavior are unchanged.
+- Developer persona runs preserve prior profiles and refuse pre-existing games. Shutdown and
+  screenshots require an exact launch-ownership receipt; global game kills and profile wipes are
+  removed. Native process and real-shell lifecycle regressions cover the replacement.
 - Quickstart grants now own and clean up only exact objects allocated by the current attempt.
   Refused placement or verification rolls those allocations back; unknown custody preserves
   foreign contents and fences replacement grants. Fully verified grants still survive a failed

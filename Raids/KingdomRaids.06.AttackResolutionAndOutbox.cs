@@ -218,27 +218,8 @@ namespace ThousandAndFirst
 		private static bool Deliver(KingdomSystem system, KingdomLifecycleOperation op,
 			KingdomLifecycleSinkMask sink, Func<bool> callback)
 		{
-			KingdomLifecycleSinkState state = SinkState(op.Outbox, sink);
-			if (KingdomLifecycleRules.SinkSettled(state)) return true;
-			if (!KingdomLifecycleRules.RaidRuntimeAdapter.BeginSink(system.LifecycleBook, op, sink))
-				return false;
-			bool delivered = false;
-			try { delivered = callback(); } catch { }
-			return delivered && KingdomLifecycleRules.RaidRuntimeAdapter.CommitSink(
-				system.LifecycleBook, op, sink);
-		}
-
-		private static KingdomLifecycleSinkState SinkState(KingdomLifecycleOutbox box,
-			KingdomLifecycleSinkMask sink)
-		{
-			switch (sink)
-			{
-			case KingdomLifecycleSinkMask.Chronicle: return box.ChronicleState;
-			case KingdomLifecycleSinkMask.Ledger: return box.LedgerState;
-			case KingdomLifecycleSinkMask.Message: return box.MessageState;
-			case KingdomLifecycleSinkMask.Deed: return box.DeedState;
-			default: return box.GuestbookState;
-			}
+			return KingdomRaidOutboxRules.Deliver(system?.LifecycleBook, op, sink, callback,
+				KingdomLog.LogError);
 		}
 
 		private static void ObserveOption(KingdomLifecycleBook book, long now)

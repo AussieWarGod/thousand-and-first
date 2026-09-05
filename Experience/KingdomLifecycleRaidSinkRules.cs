@@ -13,13 +13,22 @@ namespace ThousandAndFirst
 	{
 		internal static partial class RaidRuntimeAdapter
 		{
+			internal static bool ReadSink(KingdomLifecycleBook book,
+				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink,
+				out KingdomLifecycleSinkState state)
+			{
+				state = KingdomLifecycleSinkState.None;
+				return operation != null && operation.Lane == KingdomLifecycleLane.Raid
+					&& ExactOperationAuthority(book, operation)
+					&& operation.Phase == KingdomLifecyclePhase.Sinks
+					&& SingleSink(sink) && GetSink(operation.Outbox, sink, out state);
+			}
+
 			internal static bool BeginSink(KingdomLifecycleBook book,
 				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
 			{
 				KingdomLifecycleSinkState state;
-				if (!ExactOperationAuthority(book, operation)
-					|| operation.Phase != KingdomLifecyclePhase.Sinks
-					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+				if (!ReadSink(book, operation, sink, out state)
 					|| state != KingdomLifecycleSinkState.Pending) return false;
 				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Intent);
 				return ExactOperationAuthority(book, operation);
@@ -29,9 +38,7 @@ namespace ThousandAndFirst
 				KingdomLifecycleOperation operation, KingdomLifecycleSinkMask sink)
 			{
 				KingdomLifecycleSinkState state;
-				if (!ExactOperationAuthority(book, operation)
-					|| operation.Phase != KingdomLifecyclePhase.Sinks
-					|| !SingleSink(sink) || !GetSink(operation.Outbox, sink, out state)
+				if (!ReadSink(book, operation, sink, out state)
 					|| state != KingdomLifecycleSinkState.Intent) return false;
 				SetSink(operation.Outbox, sink, KingdomLifecycleSinkState.Delivered);
 				return ExactOperationAuthority(book, operation);

@@ -20,17 +20,19 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2949 staged production C# files and 420,975
+`Tools/check-structure.py --json` currently reports 2950 staged production C# files and 420,999
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`9a85ea364957d6a98d8e1649f1a745a03df04f4a09c13441b6a8d94a8443e7c3`. The census reports
+`3d9a31b2f42890f325f24a0f1c568ab4bac9717d9ca09091a201dc94db0c8fbe`. The census reports
 1376 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The 2026-09-05 beta delta retains the reviewed `abec8a0` baseline and adds four coherent shards:
-an engine-free fresh-allocation scope, its Qud custody adapter, material grant creation, and stock
-verification. Independent reviews covered every changed production file, the canonical polity
-proof boundary, and the raid target-zone guards. A vanilla random-loot interaction found during
-review was fixed before signing. These are source/engine-contract reviews, not native playtests.
+The 2026-09-05 outbox delta retains the reviewed `76466a5` baseline, including its four Quickstart
+shards, canonical polity proof boundary, raid target-zone guards, and earlier `abec8a0` review.
+Codex and an independent reviewer inspected all four changed/added production files: the pure
+raid delivery protocol, exact lifecycle sink authority, native raid dispatch, and diagnostics.
+Thrown callbacks quarantine before exception text or logging; replay cannot retire uncertain
+delivery. No save fields or wire format changed. Claude's unresolved actor-custody patch remains
+separate. These are source/engine-contract reviews, not native playtests.
 
 No staged production source breaches the strict physical-line cap. This clears the mechanical
 line debt; the exact-inventory semantic review required for release is supplied by `docs/STRUCTURE_REVIEW.json`, bound to the digest below.

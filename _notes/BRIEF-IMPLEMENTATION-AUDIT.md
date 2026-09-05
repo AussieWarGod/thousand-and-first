@@ -1,8 +1,9 @@
 # Brief-to-implementation audit
 
-Beta evidence addendum 2026-09-05: **2949** production C# files, all strictly below 300 lines.
-Reviewed fresh-grant rollback/custody fencing, raid target-zone witnesses, and canonical aggregate
-proofs; current managed suites pass 11026 + 2601 cases. Native callbacks/play remain unsigned.
+Beta evidence addendum 2026-09-05: **2950** production C# files, all strictly below 300 lines.
+Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggregate proofs,
+and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both
+projects, including wire persistence; these do not sign native callback or ordinary-play behavior.
 Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
 
 **Date:** 2026-08-28

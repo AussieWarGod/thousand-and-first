@@ -25,6 +25,7 @@
 	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
+    <Compile Include="TestMainDiscoveryRulesTests.cs" />
     <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />
 	<Compile Include="KingdomGlobalIdentityResolverTests.cs" />
 	<Compile Include="KingdomGatehouseLogicalSource.cs" />
@@ -221,6 +222,9 @@
     <Compile Include="..\Raids\KingdomRaidIncidentRules.04.ResolutionAndIncidentShape.cs" />
     <Compile Include="..\Raids\KingdomRaidIncidentRules.05.LedgerChannelAndRecoveryShape.cs" />
     <Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
+    <Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
+    <Compile Include="KingdomRaidOutboxRulesTests.cs" />
+    <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />
     <Compile Include="..\Experience\KingdomCarryTransferKind.cs" />
     <Compile Include="..\Experience\KingdomCarryAuthorityKind.cs" />
     <Compile Include="..\Experience\KingdomCarrySource.cs" />

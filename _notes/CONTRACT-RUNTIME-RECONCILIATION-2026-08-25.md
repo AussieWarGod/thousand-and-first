@@ -1,9 +1,9 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-Beta addendum 2026-09-05: 2949 production C# files; 2,980 cold-install files. Current semantic
-delta review covers Quickstart exact allocation cleanup/quarantine, raid zone guards, and polity
-canonical counts. Full/portable managed suites pass 11026/2601, zero skips. Native cases remain
-unsigned; docs/STATUS.md owns current evidence, not the historical reconciliation below.
+Beta addendum 2026-09-05: 2950 production C# files; 2,981 cold-install files. Current semantic
+review covers Quickstart exact custody, raid zone guards, canonical counts, and outbox quarantine
+before diagnostics. Focused actual-lifecycle outbox tests pass34/34 in both projects, including
+wire persistence. docs/STATUS.md owns current suite/compile/native evidence, not the dated audit.
 
 > **Supersession banner — 2026-09-01.** This is a dated chronological reconciliation, not the live
 > status ledger. Current runtime holds one seat plus two non-seat cities; third founding succeeds,

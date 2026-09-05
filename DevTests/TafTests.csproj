@@ -358,6 +358,7 @@
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
+    <Compile Include="TestMainDiscoveryRulesTests.cs" />
     <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />
     <Compile Include="KingdomReachObservationSourceTests.cs" />
     <Compile Include="KingdomRealmChronicleIntentRulesTests.cs" />
@@ -596,6 +597,8 @@
     <Compile Include="KingdomExpeditionSourceTests.cs" />
 	<Compile Include="KingdomRaidIncidentRulesTests.cs" />
 	<Compile Include="KingdomRaidRuntimeSourceTests.cs" />
+	<Compile Include="KingdomRaidOutboxRulesTests.cs" />
+	<Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />
 	<Compile Include="KingdomLifecycleRulesTests.cs" />
 	<Compile Include="KingdomGrowthLifecycleRulesTests.cs" />
 	<Compile Include="KingdomGrowthArrivalCadenceRulesTests.cs" />
@@ -1248,6 +1251,7 @@
 	<Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleArithmeticHashRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
+	<Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.00.DefenceReservationsAndIdentity.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.01.PublicationValidation.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.02.Apply.cs" />

@@ -82,17 +82,45 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		internal static string UnsupportedDiscoveryAttribute(Attribute Attribute)
+		{
+			if (Attribute is TestCaseSourceAttribute) return "TestCaseSourceAttribute";
+			if (Attribute is TestFixtureSourceAttribute) return "TestFixtureSourceAttribute";
+			return null;
+		}
+
+		private static bool RejectUnsupportedDiscovery(MemberInfo Member)
+		{
+			bool rejected = false;
+			foreach (Type family in new[] { typeof(TestCaseSourceAttribute), typeof(TestFixtureSourceAttribute) })
+				foreach (Attribute attribute in Member.GetCustomAttributes(family, true))
+				{
+					string unsupported = UnsupportedDiscoveryAttribute(attribute);
+					if (unsupported == null) continue;
+					string label = Member is Type ? ((Type)Member).FullName
+						: Member.DeclaringType.FullName + "." + Member.Name;
+					Console.WriteLine("UNSUPPORTED TEST DISCOVERY " + label + ": [" + unsupported
+						+ "]; this runner does not execute dynamic NUnit sources");
+					rejected = true;
+				}
+			return rejected;
+		}
+
 		public static int Main()
+		{
+			return Run(Assembly.GetExecutingAssembly().GetTypes(),
+				Environment.GetEnvironmentVariable("TAF_TEST_FILTER"),
+				string.Equals(Environment.GetEnvironmentVariable("TAF_FORBID_SKIPS"), "1", StringComparison.Ordinal),
+				Environment.GetEnvironmentVariable("TAF_ALLOWED_SKIPS"));
+		}
+
+		internal static int Run(Type[] candidateTypes, string filter, bool forbidSkips, string allowedSkipText)
 		{
 			int passed = 0;
 			int failed = 0;
 			int skipped = 0;
 			int discovered = 0;
 			int selected = 0;
-			string filter = Environment.GetEnvironmentVariable("TAF_TEST_FILTER");
-			bool forbidSkips = string.Equals(Environment.GetEnvironmentVariable("TAF_FORBID_SKIPS"),
-				"1", StringComparison.Ordinal);
-			string allowedSkipText = Environment.GetEnvironmentVariable("TAF_ALLOWED_SKIPS");
 			HashSet<string> allowedSkips = new HashSet<string>(StringComparer.Ordinal);
 			if (!string.IsNullOrWhiteSpace(allowedSkipText))
 			{
@@ -114,7 +142,17 @@ namespace ThousandAndFirst.Tests
 			HashSet<string> observedSkips = new HashSet<string>(StringComparer.Ordinal);
 			const BindingFlags testFlags = BindingFlags.Public | BindingFlags.NonPublic
 				| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
-			foreach (Type type in Assembly.GetExecutingAssembly().GetTypes()
+			Type[] types = candidateTypes
+				.OrderBy(t => t.FullName, StringComparer.Ordinal).ToArray();
+			bool unsupportedDiscovery = false;
+			foreach (Type type in types)
+			{
+				unsupportedDiscovery |= RejectUnsupportedDiscovery(type);
+				foreach (MethodInfo method in type.GetMethods(testFlags))
+					unsupportedDiscovery |= RejectUnsupportedDiscovery(method);
+			}
+			if (unsupportedDiscovery) return 2;
+			foreach (Type type in types
 				.Where(t => t.GetMethods(testFlags).Any(m =>
 					m.GetCustomAttribute<TestAttribute>() != null
 					|| m.GetCustomAttributes<TestCaseAttribute>().Any()))

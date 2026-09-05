@@ -1,3 +1,4 @@
+using Qud.API;
 using XRL.UI;
 
 namespace ThousandAndFirst
@@ -5,6 +6,12 @@ namespace ThousandAndFirst
 	public static class KingdomLog
 	{
 		public static bool Enabled => Options.GetOption("r_TAF_OptionDevLog") != "No";
+
+		public static void LogError(string Text)
+		{
+			MetricsManager.LogError("ThousandAndFirst: " + Text);
+			Log(Text);
+		}
 
 		public static void Log(string Text)
 		{

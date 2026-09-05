@@ -56,6 +56,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void RuntimeOutboxUsesTheExecutableProtocolAndAlwaysOnErrorChannel()
+		{
+			string source = Source(Path.Combine("Raids", "KingdomRaids.06.AttackResolutionAndOutbox.cs"));
+			string deliver = Slice(source, "private static bool Deliver(",
+				"private static void ObserveOption(");
+			StringAssert.Contains("return KingdomRaidOutboxRules.Deliver(system?.LifecycleBook, op, sink, callback,",
+				deliver);
+			StringAssert.Contains("KingdomLog.LogError", deliver);
+			StringAssert.DoesNotContain("callback()", deliver);
+			StringAssert.DoesNotContain("catch", deliver);
+			string log = Source(Path.Combine("Core", "KingdomLog.cs"));
+			string error = Slice(log, "public static void LogError(", "public static void Log(");
+			StringAssert.Contains("MetricsManager.LogError(\"ThousandAndFirst: \" + Text)", error);
+			StringAssert.DoesNotContain("if (Enabled)", error);
+		}
+
+		[Test]
 		public void StandingIsOnlyDiplomaticLeverageAndNeverAProvocationEntrance()
 		{
 			string source = Source(Path.Combine("Raids", "KingdomRaids.cs"));

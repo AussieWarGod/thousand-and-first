@@ -40,7 +40,7 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,138 / 11,138 full managed cases and 2,702 / 2,702 portable
+The 2026-09-05 beta suites pass 11,187 / 11,187 full managed cases and 2,750 / 2,750 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
@@ -59,12 +59,34 @@ fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
 Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
 exact Qud base.
+Dynamic NUnit sources are not supported by this custom runner: `TestCaseSource` and
+`TestFixtureSource` now fail discovery with exit 2 before filtering, rather than silently omitting
+cases. Fourteen tests run in each project: seven metadata classifiers and seven actual-runner
+regressions using tiny separate dynamic assemblies. They prove each/both attribute families refuse
+before eligibility/filtering without invoking poisoned getters, constructors, or methods; unmatched
+ordinary controls refuse and matched Test/TestCase controls execute exactly once. Five isolated
+entry-point probes also pass on final TestMain, with earlier results retained separately; no source
+attribute poisons the real test assembly.
 `docs/STATUS.md` retains named checkpoint receipts; the beta managed runs above cover current
 source contracts. None of this signs native Qud behavior, appearance, accessibility, current-revision
 native/human/compatibility/performance gates, or Steam
 installation. Product scope remains owned by [VISION.md](VISION.md). The current structural scan
-runs across 2949 production C# sources. The cold-install inventory contains 2980 files.
+runs across 2950 production C# sources. The cold-install inventory contains 2981 files.
 0 staged sources breach the line cap. `docs/STRUCTURE_REVIEW.json` is signed against the current digest under the author's Addendum 9 ruling.
+
+## Beta raid outbox — protocol evidence and open acceptance
+
+The production outbox helper passes 34 / 34 focused cases in both managed projects. Fixtures
+publish actual raid lifecycle operations and exercise all five legal sinks with true, false, and
+throwing callbacks, exact authority refusal, successful retirement, skipped sinks, throwing
+diagnostics, and an exception whose Message getter itself throws. A callback throw quarantines
+before reading error text or logging, retains the exact sink Intent, blocks recovery/retirement/new
+raid publication, and survives an exact lifecycle wire round trip. Ordinary false-return recovery
+is unchanged. No serialized fields or wire versions changed.
+
+This proves the engine-free protocol, not native Chronicle/Ledger/Message/Deed callbacks or game
+save/load. Ordinary raid acceptance remains open. A retained quarantine is deliberate fail-closed
+evidence; this patch does not introduce a raid finalizer or clear the slot to unblock new raids.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 

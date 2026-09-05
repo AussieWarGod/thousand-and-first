@@ -1,9 +1,10 @@
 # Session handoff — current v1.0 test-candidate work
 
-Beta checkpoint 2026-09-05: 2949 staged sources; 2980 package files. Quickstart fresh-custody
-rollback, raid-zone guards, canonical polity proof validation; Taf 11026/11026 and Portable
-2601/2601, zero skips. Exact-source semantic review current; native cases unsigned. STATUS.md
-owns final compile/tool evidence. Release main remains untouched at v0.3.0.
+Beta checkpoint 2026-09-05: 2950 staged sources; 2981 package files. Quickstart fresh-custody
+rollback, raid-zone guards, canonical polity proof validation, and receipt-owned persona lifecycle.
+Raid outbox throws now quarantine before diagnostics; focused actual-lifecycle tests pass 34/34
+in both managed projects, including wire persistence. Exact-source review current; STATUS.md owns
+final suite/compile/native evidence. Spawn-custody revisions remain separate; main stays v0.3.0.
 
 > **Supersession banner — 2026-09-01.** This is a chronological handoff snapshot; “current” below
 > means the snapshot date, not the working tree. Current runtime holds one seat plus two non-seat
