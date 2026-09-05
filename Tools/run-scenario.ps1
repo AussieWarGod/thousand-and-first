@@ -255,6 +255,8 @@ $arguments = @(
     'GALAXY:NO'
 )
 Write-Host "Launching: $Game $($arguments -join ' ')"
+. (Join-Path $PSScriptRoot 'scenario-process.ps1')
+Assert-TafScenarioIdle -Game $Game
 # A scripted profile runs itself, so its window must never steal the operator's focus.
 # Minimizing is NOT safe - Unity may pause a minimized player and stall the runner - so the
 # window is instead launched detached and, once it exists, moved to the bottom-right screen
@@ -262,7 +264,9 @@ Write-Host "Launching: $Game $($arguments -join ' ')"
 # foreground window keeps the focus. Attended profiles (no sealed script) launch normally.
 $scriptPath = Join-Path $localRoot 'scenario-script.txt'
 if (Test-Path -LiteralPath $scriptPath) {
-    $process = Start-Process -FilePath $Game -ArgumentList $arguments -PassThru
+    $process = Start-TafOwnedScenarioProcess -Root $rootPath -Game $Game
+    $handedOff = $false
+    try {
     Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -287,7 +291,16 @@ public static class QuietWindow {
         Start-Sleep -Milliseconds 500
     }
     Write-Host "Scenario game launched quietly (PID $($process.Id)); it will not take focus."
+    Write-Host "Ownership receipt: $(Get-TafScenarioReceiptPath -Root $rootPath)"
+    $handedOff = $true
     exit 0
+    } finally {
+        if (-not $handedOff -and -not $process.HasExited) {
+            $process.Kill()
+            if (-not $process.WaitForExit(10000)) { throw 'Failed scenario launch did not exit.' }
+        }
+        $process.Dispose()
+    }
 }
 & $Game @arguments
 exit $LASTEXITCODE

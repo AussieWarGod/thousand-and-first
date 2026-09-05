@@ -10,9 +10,8 @@
 # start onto an existing journal for exactly the reason two runs' rows in one file cannot be told
 # apart. Personas therefore run one at a time, each in a fresh sealed profile.
 #
-# IDEMPOTENT. Every persona starts by killing any running game and wiping every
-# /mnt/c/taf-scenario.* root and seal, so a previous aborted run cannot lend this one a profile, a
-# journal, or a stamped save.
+# Every persona allocates a fresh profile. Prior profiles and seals are retained. Existing game
+# processes refuse launch; only this run's exact receipt-backed process may be stopped or captured.
 #
 #   Tools/run-personas.sh                run every persona
 #   Tools/run-personas.sh arch-tent-north realize-replay-poisoned
@@ -39,6 +38,7 @@ PERSONA_DIR="$REPO/Tools/personas"
 MATRIX="$PERSONA_DIR/persona_matrix.py"
 PREPARE="$REPO/Tools/prepare-scenario.sh"
 LAUNCHER="$REPO/Tools/run-scenario.ps1"
+PROCESS_CONTROL="$REPO/Tools/scenario-process-control.ps1"
 CAPTURE="$REPO/Tools/capture-game-window.ps1"
 LOG_CHECK="$REPO/Tools/check-player-log.sh"
 REPORT="${TAF_PERSONA_REPORT:-$REPO/Tools/PortableOutput/personas-report.tsv}"
@@ -160,30 +160,43 @@ fi
 
 [ -f "$GAME" ] || die "configured Caves of Qud executable not found: $GAME"
 [ -f "$LAUNCHER" ] || die "no scenario launcher: $LAUNCHER"
+[ -f "$PROCESS_CONTROL" ] || die "no scenario process controller: $PROCESS_CONTROL"
 
 # ---- the game, and the ground it runs on ------------------------------------------------------
 
-# Windows-side stop. The launcher starts CoQ.exe detached and never waits on it, so the matrix owns
-# ending it: a game left running would hold the previous profile's save open and its journal would
-# keep growing under the next persona's assertion.
-stop_game() {
-	powershell.exe -NoProfile -Command \
-		"Get-Process -Name CoQ -ErrorAction SilentlyContinue | Stop-Process -Force" \
-		> /dev/null 2>&1 || true
-	sleep 2
+ACTIVE_ROOT=""
+ACTIVE_LAUNCH=0
+ACTIVE_STOP_LOG=""
+LIFECYCLE_BROKEN=0
+
+stop_owned() {
+	[ -n "$ACTIVE_ROOT" ] && [ "$ACTIVE_LAUNCH" = 1 ] || return 0
+	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+		-File "$(wslpath -w "$PROCESS_CONTROL")" -Mode stop \
+		-Root "$(wslpath -w "$ACTIVE_ROOT")" -Game "$(wslpath -w "$GAME")" \
+		> "$ACTIVE_STOP_LOG" 2>&1
+	then
+		VERDICT=FAIL
+		DETAIL="${DETAIL:+$DETAIL; }owned shutdown refused; profile=$ACTIVE_ROOT; log=$ACTIVE_STOP_LOG"
+		LIFECYCLE_BROKEN=1
+		return 1
+	fi
+	ACTIVE_ROOT=""
+	ACTIVE_LAUNCH=0
 }
 
-# Every scenario root AND its sibling seal directory. Both are matched by exact pattern rather than
-# by a glob over /mnt/c: this removes only paths prepare-scenario.sh itself is allowed to allocate.
-wipe_profiles() {
-	local path
-	for path in /mnt/c/taf-scenario.*; do
-		[ -e "$path" ] || continue
-		case "$path" in
-			/mnt/c/taf-scenario.*) rm -rf -- "$path" ;;
-		esac
-	done
+on_exit() {
+	local code="$1"
+	trap - EXIT
+	if ! stop_owned; then
+		printf '%s\n' "$DETAIL" >&2
+		[ "$code" -ne 0 ] || code=1
+	fi
+	exit "$code"
 }
+trap 'on_exit $?' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Copy a live output through a same-directory temporary name. A retry gets its own target name, so
 # its evidence cannot erase the first attempt that caused it. The caller decides whether absence is
@@ -216,9 +229,19 @@ run_persona() {
 	launch_log="$REPORT_DIR/launch-$artifact.log"
 	capture_log="$REPORT_DIR/capture-$artifact.log"
 
-	stop_game
-	wipe_profiles
+	if [ "$LIFECYCLE_BROKEN" = 1 ]; then DETAIL="previous ownership failure requires inspection"; return; fi
+	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+		-File "$(wslpath -w "$PROCESS_CONTROL")" -Mode idle \
+		-Game "$(wslpath -w "$GAME")" > "$launch_log" 2>&1
+	then
+		DETAIL="launch preflight refused: $(tail -n 3 "$launch_log" | tr '\n\t' '  ')"
+		return
+	fi
 	root="$(mktemp -d /mnt/c/taf-scenario.XXXXXX)" || { DETAIL="no scenario root"; return; }
+	ACTIVE_ROOT="$root"
+	ACTIVE_LAUNCH=0
+	ACTIVE_STOP_LOG="$REPORT_DIR/stop-$artifact.log"
+	printf 'profile\t%s\n' "$root" > "$REPORT_DIR/profile-$artifact.tsv"
 	journal="$root/scenario-journal.tsv"
 	player_log="$root/Player.log"
 	prepare_args=("$root")
@@ -235,13 +258,14 @@ run_persona() {
 		return
 	fi
 
+	ACTIVE_LAUNCH=1
 	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
 		-File "$(wslpath -w "$LAUNCHER")" \
 		-Root "$(wslpath -w "$root")" \
 		-Game "$(wslpath -w "$GAME")" > "$launch_log" 2>&1
 	then
 		DETAIL="launch refused: $(tail -n 3 "$launch_log" | tr '\n\t' '  ')"
-		stop_game
+		stop_owned
 		return
 	fi
 
@@ -260,7 +284,7 @@ run_persona() {
 	done
 
 	# Freeze every available diagnostic while Qud is still alive. Assertion reads the archived
-	# terminal snapshot, not a mutable file that the next profile wipe will destroy. Player.log is
+	# terminal snapshot, not a mutable live journal. Player.log is
 	# especially important when the runner never armed and produced no journal.
 	archive_problem=""
 	archived_journal="$REPORT_DIR/journal-$artifact.tsv"
@@ -277,12 +301,12 @@ run_persona() {
 	fi
 	if [ -n "$archive_problem" ]; then
 		DETAIL="$archive_problem"
-		stop_game
+		stop_owned
 		return
 	fi
 	if [ ! -x "$LOG_CHECK" ]; then
 		DETAIL="TAF Player.log checker is unavailable: $LOG_CHECK"
-		stop_game
+		stop_owned
 		return
 	fi
 	local log_allow=""
@@ -290,27 +314,27 @@ run_persona() {
 	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$archived_player_log" 2>&1)"; then
 		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
 			| tr '\n\t' '  ')"
-		stop_game
+		stop_owned
 		return
 	fi
 	if [ ! -f "$journal" ]; then
 		VERDICT=TIMEOUT
 		DETAIL="no journal after ${timeout}s; the runner never armed"
-		stop_game
+		stop_owned
 		return
 	fi
 	if [ -z "$terminal" ]; then
 		VERDICT=TIMEOUT
 		DETAIL="no terminal row after ${timeout}s; last row: $(tail -n 1 "$archived_journal" \
 			| cut -c1-160 | tr '\t' ' ')"
-		stop_game
+		stop_owned
 		return
 	fi
 	if ! terminal="$(python3 "$MATRIX" terminal "$archived_journal" 2>/dev/null)" || \
 		[ -z "$terminal" ]
 	then
 		DETAIL="archived journal has no readable terminal row: $archived_journal"
-		stop_game
+		stop_owned
 		return
 	fi
 	warnings="$(python3 "$MATRIX" warnings "$archived_journal" 2>/dev/null)"
@@ -335,6 +359,7 @@ run_persona() {
 			capture_problem="capture helper is missing: $CAPTURE"
 		elif ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
 			-File "$(wslpath -w "$CAPTURE")" \
+			-ScenarioRoot "$(wslpath -w "$root")" -ScenarioGame "$(wslpath -w "$GAME")" \
 			-Output "$(wslpath -w "$capture_temp")" \
 			-Width "${TAF_PERSONA_CAPTURE_WIDTH:-2560}" \
 			-Height "${TAF_PERSONA_CAPTURE_HEIGHT:-1440}" \
@@ -357,7 +382,8 @@ run_persona() {
 		DETAIL="$DETAIL$capture_problem"
 		VERDICT=FAIL
 	fi
-	stop_game
+	DETAIL="${DETAIL:+$DETAIL; }profile=$root (retained)"
+	stop_owned
 }
 
 # ---- the matrix -------------------------------------------------------------------------------
@@ -378,8 +404,8 @@ for persona in "${PERSONAS[@]}"; do
 		>> "$REPORT"
 	echo "    $VERDICT  $DETAIL"
 	[ "$VERDICT" = PASS ] || failed=1
+	[ "$LIFECYCLE_BROKEN" != 1 ] || break
 done
-stop_game
 echo
 echo "persona matrix report: $REPORT"
 if [ "$failed" -eq 0 ]; then

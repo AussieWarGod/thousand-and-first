@@ -8,13 +8,15 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Output,
-    [string]$ProcessName = 'CoQ',
+    [Parameter(Mandatory = $true)][string]$ScenarioRoot,
+    [Parameter(Mandatory = $true)][string]$ScenarioGame,
     [int]$Width = 2560,
     [int]$Height = 1440,
     [int]$RedrawMilliseconds = 2500
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'scenario-process.ps1')
 if ($Width -lt 800 -or $Width -gt 7680 -or $Height -lt 600 -or $Height -gt 4320) {
     throw "Capture dimensions are outside the supported 800x600..7680x4320 range"
 }
@@ -47,6 +49,9 @@ public static class TafNativeCapture {
     public static extern bool PrintWindow(IntPtr handle, IntPtr target, uint flags);
 
     [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetWindowThreadProcessId(IntPtr handle, out uint processId);
+
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetWindowPos(IntPtr handle, IntPtr after,
         int x, int y, int width, int height, uint flags);
 }
@@ -54,18 +59,31 @@ public static class TafNativeCapture {
 
 $deadline = (Get-Date).AddSeconds(30)
 $process = $null
+try {
+$process = Get-TafOwnedScenarioProcess -Root $ScenarioRoot -Game $ScenarioGame
+if ($null -eq $process) { throw 'Owned scenario has already exited; capture refused.' }
 while ((Get-Date) -lt $deadline) {
-    $process = @(Get-Process -Name $ProcessName -ErrorAction SilentlyContinue |
-        Where-Object { $_.MainWindowHandle -ne 0 } |
-        Sort-Object StartTime | Select-Object -Last 1)
-    if ($null -ne $process -and $process.Count -gt 0) { break }
+    if ($process.HasExited) { throw 'Owned scenario exited before its window appeared.' }
+    $process.Refresh()
+    if ($null -ne $process -and $process.MainWindowHandle -ne 0) { break }
     Start-Sleep -Milliseconds 250
 }
-if ($null -eq $process -or $process.Count -eq 0) {
-    throw "No visible $ProcessName window appeared within 30 seconds"
+if ($null -eq $process -or $process.MainWindowHandle -eq 0) {
+    throw 'No visible owned scenario window appeared within 30 seconds.'
 }
-$process = $process[0]
-$handle = $process.MainWindowHandle
+$null = $process.Handle
+function Get-CaptureHandle {
+    $process.Refresh()
+    if ($process.HasExited) { throw 'Capture process exited.' }
+    $window = $process.MainWindowHandle
+    $windowOwner = [uint32]0
+    if ($window -eq 0 -or [TafNativeCapture]::GetWindowThreadProcessId(
+        $window, [ref]$windowOwner) -eq 0 -or $windowOwner -ne $process.Id) {
+        throw 'Capture window no longer belongs to the held process.'
+    }
+    return $window
+}
+$handle = Get-CaptureHandle
 
 $area = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $captureWidth = [Math]::Min($Width, $area.Width)
@@ -78,8 +96,7 @@ if (-not [TafNativeCapture]::SetWindowPos(
     throw "SetWindowPos failed with Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"
 }
 Start-Sleep -Milliseconds $RedrawMilliseconds
-$process.Refresh()
-$handle = $process.MainWindowHandle
+$handle = Get-CaptureHandle
 
 $rect = [TafNativeCapture+RECT]::new()
 if (-not [TafNativeCapture]::GetWindowRect($handle, [ref]$rect)) {
@@ -97,9 +114,11 @@ $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $target = $graphics.GetHdc()
 try {
     # PW_RENDERFULLCONTENT asks the owning application to render the complete native window.
+    if ((Get-CaptureHandle) -ne $handle) { throw 'Capture window changed during redraw.' }
     if (-not [TafNativeCapture]::PrintWindow($handle, $target, 2)) {
         throw "PrintWindow failed with Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"
     }
+    if ((Get-CaptureHandle) -ne $handle) { throw 'Capture window changed while rendering.' }
 } finally {
     $graphics.ReleaseHdc($target)
     $graphics.Dispose()
@@ -114,4 +133,7 @@ $saved = Get-Item -LiteralPath $Output
 if ($saved.Length -lt 1000) {
     throw "Captured PNG is unexpectedly small: $($saved.Length) bytes"
 }
-Write-Host "Captured native $ProcessName window: $($saved.FullName) (${bitmapWidth}x${bitmapHeight}, $($saved.Length) bytes)"
+Write-Host "Captured native owned PID $($process.Id) window: $($saved.FullName) (${bitmapWidth}x${bitmapHeight}, $($saved.Length) bytes)"
+} finally {
+    if ($null -ne $process) { $process.Dispose() }
+}

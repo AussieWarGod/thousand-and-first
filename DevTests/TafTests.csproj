@@ -357,6 +357,8 @@
     <Compile Include="KingdomQuickstartTests.cs" />
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
+    <Compile Include="ScenarioProcessPolicyTests.cs" />
+    <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />
     <Compile Include="KingdomReachObservationSourceTests.cs" />
     <Compile Include="KingdomRealmChronicleIntentRulesTests.cs" />
     <Compile Include="KingdomResidentTransitionAuthoritySourceTests.cs" />

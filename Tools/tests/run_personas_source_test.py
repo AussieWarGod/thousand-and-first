@@ -26,7 +26,7 @@ class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
             'if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]'
         )
         capture = RUN_PERSONA.index('-File "$(wslpath -w "$CAPTURE")"', pass_capture)
-        stop = RUN_PERSONA.index("\n\tstop_game", capture)
+        stop = RUN_PERSONA.index("\n\tstop_owned", capture)
         self.assertLess(archive, assertion)
         self.assertLess(archive, log_check)
         self.assertLess(log_check, assertion)

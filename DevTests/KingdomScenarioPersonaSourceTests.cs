@@ -156,7 +156,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// The matrix runner's own invariants: it starts from a stopped clean profile, archives and
+		/// The matrix runner's own invariants: it refuses existing games, creates a fresh profile, and
 		/// asserts immutable evidence while the game is live, publishes images only for PASS, then
 		/// stops before the next persona and exits nonzero on any non-PASS verdict.
 		/// </summary>
@@ -164,15 +164,19 @@ namespace ThousandAndFirst.Tests
 		public void TheMatrixRunnerIsSerialIdempotentAndFailsLoudly()
 		{
 			string runner = Read("Tools/run-personas.sh");
-			StringAssert.Contains("Get-Process -Name CoQ", runner);
-			StringAssert.Contains("/mnt/c/taf-scenario.*", runner);
+			StringAssert.DoesNotContain("Get-Process -Name CoQ", runner);
+			StringAssert.DoesNotContain("/mnt/c/taf-scenario.*", runner);
+			StringAssert.DoesNotContain("stop_game", runner);
+			StringAssert.DoesNotContain("wipe_profiles", runner);
 			StringAssert.Contains("TAF_SCENARIO_EXTRA_VERBS", runner);
 			StringAssert.Contains("exit \"$failed\"", runner);
-			int stop = runner.IndexOf("\tstop_game\n\twipe_profiles", StringComparison.Ordinal);
+			int idle = runner.IndexOf("-Mode idle", StringComparison.Ordinal);
+			int fresh = runner.IndexOf("mktemp -d /mnt/c/taf-scenario.XXXXXX", StringComparison.Ordinal);
 			int prepare = runner.IndexOf("\"$PREPARE\" \"${prepare_args[@]}\"",
 				StringComparison.Ordinal);
-			Assert.Greater(stop, -1, "a persona must kill the game and wipe profiles first");
-			Assert.Greater(prepare, stop);
+			Assert.Greater(idle, -1, "a persona must refuse a pre-existing game without killing it");
+			Assert.Greater(fresh, idle, "prior profiles must survive every fresh launch");
+			Assert.Greater(prepare, fresh);
 			StringAssert.Contains("prepare_args+=(\"$TAF_PERSONA_SEED\")", runner);
 			StringAssert.Contains("capture_temp=\"$CAPTURE_DIR/.$artifact.$$.png\"", runner);
 			StringAssert.Contains("mv -f -- \"$capture_temp\" \"$capture_target\"", runner);

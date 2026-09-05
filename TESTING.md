@@ -40,14 +40,14 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,037 / 11,037 full managed cases and 2,601 / 2,601 portable
+The 2026-09-05 beta suites pass 11,138 / 11,138 full managed cases and 2,702 / 2,702 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
 
 Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases; those pre-market receipts are superseded by the beta run above. Current
-documentation/tooling passes 300 / 300 Tools tests and 28 / 28 Art tests. No current native or human sign-off
+documentation/tooling passes 316 / 316 Tools tests and 28 / 28 Art tests. No current native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.
@@ -104,10 +104,31 @@ Reproduction uses `Tools/gate.sh`, then `Tools/prepare-scenario.sh` with
 existing Qud process is running. Archive the terminal journal and Player.log before validating
 them with `persona_matrix.py assert` and `check-player-log.sh`.
 
-**Runner safety:** Do not use the current `run-personas.sh` run mode for this procedure: its legacy
-lifecycle kills all CoQ processes and removes prior scenario profiles. Use the lower-level sealed
-launcher and stop only the exact owned PID after rechecking start time, executable, and all four
-profile-path arguments. Preserve prior profiles and seals. The run above used this scoped path.
+**Runner safety:** `run-personas.sh` now refuses pre-existing game processes, keeps every profile
+and seal, and records its fresh launch in `process-ownership.json` beside `Local/`. Shutdown and
+capture require its exact PID, UTC start ticks, canonical executable, and all twelve parsed
+command-line tokens. A held process handle prevents later PID reuse from changing the target.
+Missing, malformed, or mismatched ownership refuses without a name-based fallback; failed
+shutdown fails the matrix and blocks further launches. The earlier run above used a manual
+exact-identity check before this runner replacement existed.
+
+Run `Tools/test-scenario-process.ps1` with Windows PowerShell to exercise the shared policy against
+two harmless same-name, windowless probe processes. Its 17 native cases passed: tampered receipts
+refuse lookup/stop, the exact owned process stops, its unowned decoy survives, and fixture profiles,
+seals, and sentinel bytes remain. The same pure C# policy passes 101 tests in each managed project.
+This is Windows tooling evidence, not Qud gameplay or native screenshot evidence. For a direct
+sealed scripted launch, stop through `Tools/scenario-process-control.ps1 -Mode stop -Root <exact-root>
+-Game <exact-executable>`; never infer ownership from a process name or a profile-shaped argument.
+Eight additional portable tests execute the real shell runner, parser, and log checker with
+Windows boundaries mocked: serial scoped stops, existing-game refusal, prepare/launch/assertion
+failures, missing/malformed ownership refusal blocking subsequent launches, and TERM/EXIT cleanup.
+
+At 01:38 UTC the updated runner also passed `quickstart-native-checks` end to end in fresh sealed
+profile `CSxdek`, seed `#1012026`: 16/16 native cases, both digests unfounded, nine journal rows,
+clean archived Player.log, and a native PNG captured from receipt-owned PID 35464 before its
+verified shutdown. The profile and seal remain. This signs the runner's real launch/archive/
+assert/capture/stop path, not full-matrix, visual-quality, ordinary-play, or save/load acceptance.
+Retained evidence: `/tmp/taf-owned-persona.zjhpE6`; profile `/mnt/c/taf-scenario.CSxdek`.
 
 Full acceptance remains open below: the synthetic seam run does not complete any profile embark,
 save/reload, destruction-veto callback, ordinary-play anchor, or compatibility matrix.
@@ -537,8 +558,12 @@ one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TEST
 rows and fails if they differ or if the first carries none. Digests are data, not prose, so the
 comparison survives every rewording of the report around them.
 
-**Each persona is a fresh profile.** The runner stops any running `CoQ`, wipes every
-`/mnt/c/taf-scenario.*` root and seal, prepares, launches quietly, and waits for a terminal row.
+**Each persona is a fresh profile.** The runner refuses an existing game, allocates a new
+`/mnt/c/taf-scenario.<id>` root, prepares, launches quietly, and waits for a terminal row. It never
+deletes prior roots or seals. Each launch publishes a create-new ownership receipt outside sealed
+inputs; stop and capture share the exact-identity policy described above. Reports retain a profile
+path and a separate scoped-stop log. EXIT/INT/TERM cleanup attempts only the active owned root;
+ownership failure retains evidence, fails the run, and blocks subsequent launches.
 While that game is still live it archives the journal and `Player.log`, asserts the immutable
 journal copy, and only for an asserted `PASS` optionally captures the native window. A validated
 PNG replaces the prior image atomically from the same directory; a failed assertion, helper, PNG

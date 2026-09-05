@@ -24,6 +24,8 @@
 	<Compile Include="KingdomEducationPostObservationSourceTests.cs" />
 	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
+    <Compile Include="ScenarioProcessPolicyTests.cs" />
+    <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />
 	<Compile Include="KingdomGlobalIdentityResolverTests.cs" />
 	<Compile Include="KingdomGatehouseLogicalSource.cs" />
 	<Compile Include="KingdomArchitectureReceiptPrefixRulesTests.cs" />
