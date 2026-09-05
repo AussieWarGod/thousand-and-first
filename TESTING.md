@@ -40,14 +40,14 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,214 / 11,214 full managed cases and 2,777 / 2,777 portable
+The 2026-09-05 beta suites pass 11,226 / 11,226 full managed cases and 2,789 / 2,789 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
 
 Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases; those pre-market receipts are superseded by the beta run above. Current
-documentation/tooling passes 321 / 321 Tools tests and 28 / 28 Art tests. No complete native or human sign-off
+documentation/tooling passes 333 / 333 Tools tests. Retained art evidence is 28 / 28 Art tests. No complete native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.
@@ -116,19 +116,44 @@ does not introduce a raid finalizer or clear the slot to unblock new raids.
 
 ## Beta subsidence completion — bounded evidence and open recovery
 
-Thirteen new completion cases pass in both managed projects; full suites pass 11,214 / 11,214
-and 2,777 / 2,777, zero skips. Tests execute the production completion helper and check its
+Thirteen completion cases and twelve native-harness source contracts pass in both managed projects;
+full suites pass 11,226 / 11,226 and 2,789 / 2,789, zero skips. Completion tests execute the production helper and check its
 runtime wiring. An extracted old summary-first variant fails 12 of 13 cases. This is managed
 regression evidence, not an actual Qud reproduction.
 
 The bounded fix puts completion bookkeeping and rung processing before the guarded departure
 summary. It does not establish general callback isolation, exactly-once effects, or save/load
-recovery. Native acceptance remains **UNSIGNED**.
+recovery. Ordinary-play and recovery acceptance remain **UNSIGNED**.
 
-Required next native case: complete all five departures of one City step, then trigger a
-`GetDisplayNameEvent` failure during summary Chronicle construction. Repeating reckoning at the
-same time must not remove another five residents. Use a disposable profile and retain the exact
-before/after state and failure evidence.
+On 2026-09-05 at **05:07:58 UTC**, the bounded native fixture below passed **3 / 3** checks
+on Qud `2.0.211.51`, sealed profile `kvjIzc`, seed `#1012026`, marsh zone
+`JoppaWorld.8.22.1.1.10`. Journal expectations, all four exact diagnostic counts, strict
+remaining-log check, owned native capture, and exact PID 36172 shutdown passed. Post-run idle
+check passed; evidence is retained at `/tmp/taf-native-subsidence.a9XJXf`.
+Earlier profiles `7f9diy` and `oA5XdS` each passed the three gameplay checks but remain overall
+**RED** because their diagnostic lists were incomplete. Their raw logs, reports, profiles and
+seals are preserved; neither was retrospectively relabelled green.
+
+The new [subsidence persona](Tools/personas/subsidence-native-checks.persona) implements that
+native case with three sequential checks: real founding/enrollment of 50 physical residents and
+an empty dedicated 1,920-dram reservoir; five actual `Reckon` departures followed by an exact
+`GetDisplayNameEvent` summary failure; same-tick retry without another loss or summary. It verifies
+the five destroyed bodies, absent resident rows/bindings, 45 physical survivors, and terminal
+departure journal. The fault is armed by the exact official summary append, never an event ordinal.
+
+City stage and a four-day elapsed checkpoint are explicitly seeded test setup. The global clock
+does not change; the case does not exercise ordinary stage advancement or world-turn progression.
+It crosses no stage breakpoint. Founding, all surviving bodies, register/message effects, and the
+profile remain retained; only the exact temporary player fault handler is removed and verified.
+
+`LOG_EXPECT` declares 1–4 unique complete literal log lines as a JSON array. Every line must appear
+exactly once after CRLF normalization; missing/duplicate lines and undeclared `MODERROR`/`MODWARN`
+fail. The runner retains the raw archive and checks a separate derivative with only those exact
+lines removed. Other faults and unlisted stack frames still fail the ordinary strict checker;
+journal assertions and receipt-owned capture/shutdown remain mandatory. This persona expects
+the precise dev-title production summary diagnostic, its `[TAF]` debug echo, and the installed
+Qud 2.0.211.51 Pets of Harvest Dawn discovery and population-XML warnings, not a generally clean raw log. A different
+installed title/DLC set requires a separately reviewed expectation, never a regex relaxation.
 
 Partial 1-of-5 steps and carrier-committed departures whose pending operation returns false
 remain known **BUGS**, including their save/recover cases; this first fix does not sign them.

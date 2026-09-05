@@ -1759,6 +1759,11 @@ bookkeeping and rung failures are not caught as summary failures. This does not 
 exactly-once subsidence: partial-step rounding, a logically committed departure returning
 false during recovery, and interruptions inside rung execution remain known open defects.
 
+The development-only `subsidence-check` scenario provider and native summary-fault part are
+internal test instruments, not supported extension or save contracts. Their seeded elapsed
+checkpoint and measured resident fixture do not replace the ordinary progression contract;
+see [TESTING.md](../TESTING.md#beta-subsidence-completion--bounded-evidence-and-open-recovery).
+
 ## `KingdomBrinkRules` / `KingdomBrink` / `KingdomWord` — the last arrestable window
 
 One shape for every irreversible consequence in the mod: a settler with nowhere to live

@@ -9,9 +9,27 @@ synthetic interruptions; messages/UI effects retained, ordinary play and save/lo
 C#7.3 lambda shadowing fixed mechanically; generator excludes non-shipping Harness sources.
 Spawn-custody revisions remain separate; main stays v0.3.0.
 Subsidence summary-only completion fix passes13/13 focused cases in both projects; full
-managed11214/portable2777, zero skips. Existing accounting and reached-rung invocation precede
+managed11226/portable2789, zero skips; twelve additional native-fixture source contracts. Existing accounting and reached-rung invocation precede
 summary output. Fractional-step debt, pending departure accounting, inner-rung interruption,
-and native/save-load subsidence evidence remain open; no parallel clock was introduced.
+and ordinary/save-load subsidence evidence remain open; no parallel clock was introduced.
+New disposable native fixture uses real founding, 50 actual enrolled/bound residents, physical
+storage, five actual departures, exact summary-event fault and same-tick retry. Stage/elapsed
+checkpoint are seeded; no breakpoint or world-turn claim. Native3/3 and fullrunnerPASS05:07:58UTC
+in freshkvjIzc; exactfourdiagnostics, ninejournalrows, ownedcapture, PID36172stop and idlePASS.
+Evidence /tmp/taf-native-subsidence.a9XJXf; STATUS.md owns final run boundaries.
+Tools333 passes exact literal/count diagnostics and actual-shell lifecycle regressions; raw logs
+are retained. Earlier nativeprofiles7f9diy/oA5XdS eachpassed3checks but overall log expectations
+remainRED. Finalrun uses four predeclared exact observed dev-title/DLC lines; no broadgate regex
+is inherited in exactmode. Earlier reports were not backdated green.
+
+Next accounting work is a durable settlement-local step tied to the exact global resident-departure
+operation. Preserve inherited LastSubsidenceTick on prospective legacy admission; never invent
+historical fractional credit or reset elapsed time merely because the new sidecar is absent.
+Credit and operation acknowledgement must publish together and survive both journal-clear paths.
+Named CityBook storage still requires explicit old/current schema, archive, master-option and
+retirement integration. Reached rungs need per-work wear before/after proof and frozen resident
+brink recipients; a cursor or deterministic roll cannot make repeated AddWear idempotent.
+No part of that durable accounting protocol is implemented by this native-fixture checkpoint.
 
 > **Supersession banner — 2026-09-01.** This is a chronological handoff snapshot; “current” below
 > means the snapshot date, not the working tree. Current runtime holds one seat plus two non-seat

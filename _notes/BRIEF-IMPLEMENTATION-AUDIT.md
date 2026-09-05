@@ -5,9 +5,12 @@ Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggr
 and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both
 projects, including wire persistence. Separate native outbox persona passes6/6 actual sink cases
 with synthetic interruptions and retained native messages; ordinary play/save-load remain open.
-Subsidence summary-only completion boundary passes13/13 eachproject; full11214/2777,zero skips.
+Subsidence summary-only completion boundary passes13/13 eachproject; full11226/2789,zero skips,
+including twelve additional native-fixture source contracts. Tools333 passes literal/count
+diagnostic and actual-shell lifecycle regressions. The native fixture builds real residents and
+executes Reckon; its seeded stage/elapsed checkpoint does not prove ordinary progression.
 Partial-step debt, committed-but-pending departure recovery, inner-rung callbacks and native
-subsidence remain open. No new save field, clock authority or full recovery claim.
+subsidence acceptance remain separately scoped in STATUS.md. No new save field, clock authority or full recovery claim.
 Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
 
 **Date:** 2026-08-28

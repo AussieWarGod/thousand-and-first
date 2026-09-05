@@ -8,7 +8,12 @@ decides PASS or FAIL is here, so the matrix's judgement is testable without a li
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
 import pathlib
+import subprocess
+import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -138,6 +143,120 @@ class ManifestGrammarTest(unittest.TestCase):
     def test_unknown_check_is_refused(self):
         with self.assertRaises(SystemExit):
             matrix.parse_manifest(GREEN + "CHECK=whatever\n", "x.persona")
+
+
+class ExpectedLogTest(unittest.TestCase):
+    def manifest(self, lines):
+        return matrix.parse_manifest(
+            GREEN + "LOG_EXPECT=" + json.dumps(lines) + "\n", "x.persona"
+        )
+
+    def test_optional_field_is_disabled_or_canonical_json(self):
+        self.assertNotIn("LOG_EXPECT", matrix.parse_manifest(GREEN, "x"))
+        found = matrix.parse_manifest(
+            GREEN + 'LOG_EXPECT= [ "Error [.*]", "\\u5c3e" ]\n', "x"
+        )
+        self.assertEqual('["Error [.*]","尾"]', found["LOG_EXPECT"])
+        self.assertEqual(["Error [.*]", "尾"], json.loads(found["LOG_EXPECT"]))
+
+    def test_malformed_shapes_duplicates_and_nonprintable_lines_are_refused(self):
+        bad = ["", "null", "{}", "[]", '"line"', "[1]", "[null]", "[[]]",
+               '[""]', '["same","same"]', '["a",]']
+        bad.extend(json.dumps(["before" + char + "after"]) for char in (
+            "\n", "\r", "\t", "\0", "\x1f", "\x7f", "\x85", "\u2028", "\ud800", "\udfff"
+        ))
+        for value in bad:
+            with self.subTest(value=value), self.assertRaises(SystemExit):
+                matrix.parse_manifest(GREEN + "LOG_EXPECT=" + value + "\n", "x")
+
+    def test_line_count_length_and_total_input_bounds(self):
+        lines = [str(index) * 1024 for index in range(4)]
+        self.assertEqual(lines, json.loads(self.manifest(lines)["LOG_EXPECT"]))
+        for lines in (["x" * 1025], [str(index) for index in range(5)]):
+            with self.subTest(lines=lines), self.assertRaises(SystemExit):
+                self.manifest(lines)
+        with self.assertRaises(SystemExit):
+            matrix.parse_manifest(GREEN + 'LOG_EXPECT=["x",' + " " * 8192 + '"y"]\n', "x")
+
+    def test_matching_is_literal_and_requires_the_complete_line(self):
+        line = r"expected [a-z]+.* (x)? ^$ \\"
+        raw = ("prefix " + line + "\n" + line + " suffix\n" + line + "\nother\n").encode()
+        self.assertEqual(
+            ("prefix " + line + "\n" + line + " suffix\nother\n").encode(),
+            matrix.expected_log(self.manifest([line]), raw, "x"),
+        )
+        with self.assertRaises(SystemExit):
+            matrix.expected_log(self.manifest([line]), b"expected abc (x)\n", "x")
+
+    def test_only_crlf_and_exact_expected_records_change(self):
+        for raw, expected in (
+            (b"one\r\nEXPECTED\r\n\r\ntwo\rlone\xff\x00\n", b"one\n\ntwo\rlone\xff\x00\n"),
+            (b"one\nEXPECTED", b"one\n"),
+            (b"EXPECTED\none", b"one"),
+            (b"EXPECTED", b""),
+        ):
+            with self.subTest(raw=raw):
+                self.assertEqual(expected, matrix.expected_log(self.manifest(["EXPECTED"]), raw, "x"))
+
+    def test_cli_refuses_missing_duplicate_or_undeclared_expectations_without_stdout(self):
+        cases = (
+            (GREEN, b"EXPECTED\n"),
+            (GREEN + 'LOG_EXPECT=[]\n', b"EXPECTED\n"),
+            (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"other\n"),
+            (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"EXPECTED\r\nEXPECTED\n"),
+            (GREEN + 'LOG_EXPECT=["EXPECTED","SECOND"]\n', b"EXPECTED\n"),
+            (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"EXPECTED\nMODERROR [Foreign] new\n"),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            persona, log = pathlib.Path(directory) / "x.persona", pathlib.Path(directory) / "Player.log"
+            for text, raw in cases:
+                with self.subTest(text=text, raw=raw):
+                    persona.write_text(text, encoding="utf-8")
+                    log.write_bytes(raw)
+                    result = subprocess.run(
+                        [sys.executable, str(SPEC.origin), "expected-log", str(persona), str(log)],
+                        capture_output=True, check=False,
+                    )
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertEqual(b"", result.stdout)
+                    self.assertTrue(result.stderr.startswith(b"persona: "))
+                    self.assertEqual(raw, log.read_bytes())
+
+    def test_cli_exports_canonical_fields_preserves_raw_and_retains_unlisted_stack_frame(self):
+        with tempfile.TemporaryDirectory() as directory:
+            persona, log = pathlib.Path(directory) / "x.persona", pathlib.Path(directory) / "Player.log"
+            persona.write_text(GREEN + 'LOG_EXPECT= [ "MODERROR [The Thousand and First] expected" ]\n', encoding="utf-8")
+            raw = (b"[TAF] loaded\r\nMODERROR [The Thousand and First] expected\r\n"
+                   b"  at ThousandAndFirst.Unlisted.Call ()\r\nforeign exception\rlone\xff\n")
+            log.write_bytes(raw)
+            command = [sys.executable, str(SPEC.origin)]
+            fields = subprocess.run(command + ["fields", str(persona)], capture_output=True, check=True)
+            self.assertIn(b'log_expect\t["MODERROR [The Thousand and First] expected"]\n', fields.stdout)
+            result = subprocess.run(command + ["expected-log", str(persona), str(log)], capture_output=True, check=True)
+            self.assertEqual(b"[TAF] loaded\n  at ThousandAndFirst.Unlisted.Call ()\nforeign exception\rlone\xff\n", result.stdout)
+            self.assertEqual(raw, log.read_bytes())
+            derivative = pathlib.Path(directory) / "Player.checked.log"
+            derivative.write_bytes(result.stdout)
+            strict = subprocess.run(
+                ["bash", str(ROOT / "Tools" / "check-player-log.sh"), str(derivative)],
+                capture_output=True, check=False,
+                env={**os.environ, "TAF_LOG_ALLOW": "", "TMPDIR": directory},
+            )
+            self.assertNotEqual(0, strict.returncode)
+            self.assertIn(b"SMOKE LOG FAILED", strict.stderr)
+            self.assertIn(b"ThousandAndFirst.Unlisted.Call", strict.stderr)
+            persona.write_text(GREEN, encoding="utf-8")
+            fields = subprocess.run(command + ["fields", str(persona)], capture_output=True, check=True)
+            self.assertIn(b"log_expect\t\n", fields.stdout)
+
+    def test_expected_mode_refuses_every_unmatched_mod_error_or_warning(self):
+        manifest = self.manifest(["MODERROR [The Thousand and First] expected", "MODWARN [Fixture] expected"])
+        expected = b"MODERROR [The Thousand and First] expected\nMODWARN [Fixture] expected\n"
+        self.assertEqual(b"[TAF] loaded\n", matrix.expected_log(manifest, b"[TAF] loaded\n" + expected, "x"))
+        for marker in (b"MODERROR", b"MODWARN"):
+            for title in (b"The Thousand and First", b"Foreign Mod"):
+                with self.subTest(marker=marker, title=title), self.assertRaises(SystemExit):
+                    matrix.expected_log(manifest, expected + marker + b" [" + title + b"] unexpected\n", "x")
 
 
 class ScriptGrammarTest(unittest.TestCase):
@@ -428,7 +547,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(58, len(self.personas()))
+        self.assertEqual(59, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])

@@ -26,6 +26,18 @@ JOURNAL = (
 )
 PLAYER_LOG = "[TAF] fixture loaded cleanly\n"
 PERSONA = "REQUEST=lifecycle-{name}\nSCRIPT=status\nEXPECT=status:OK~fixture-observed,COMPLETE\n"
+EXPECTED_MOD_ERROR = (
+    "MODERROR [The Thousand and First] - ThousandAndFirst: subsidence: departure summary failed "
+    "(native subsidence summary interruption)"
+)
+EXPECTED_TAF_ERROR = (
+    "[TAF] subsidence: departure summary failed (native subsidence summary interruption)"
+)
+EXPECTED_DIAGNOSTICS = [
+    EXPECTED_MOD_ERROR,
+    EXPECTED_TAF_ERROR,
+]
+EXPECTED_PLAYER_LOG = PLAYER_LOG + EXPECTED_MOD_ERROR + "\n" + EXPECTED_TAF_ERROR + "\n"
 
 # Installed only inside the fixture. Unknown calls fail instead of falling through to real tools.
 EXTERNAL = r'''#!/usr/bin/env python3
@@ -197,6 +209,19 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
             for directory in (root / "Local", root / "Save", root / "Synced", pathlib.Path(str(root) + ".seal")):
                 self.assertEqual("retained fixture\n", (directory / "sentinel.txt").read_text(encoding="utf-8"))
 
+    def configure_expected_diagnostics(self, name, player_log):
+        manifest = PERSONA.format(name=name) + "LOG_EXPECT=" + json.dumps(EXPECTED_DIAGNOSTICS) + "\n"
+        (self.tools / "personas" / (name + ".persona")).write_text(manifest, encoding="utf-8")
+        self.env["LIFECYCLE_PLAYER_LOG"] = player_log
+
+    def assert_new_scoped_cycle(self, events_before):
+        events = self.events()[events_before:]
+        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop"],
+                         [entry["kind"] for entry in events])
+        self.assertEqual(events[3]["root"], events[4]["root"])
+        self.assert_scoped_calls()
+        self.assert_profiles_retained()
+
     def test_existing_game_refuses_before_allocating_preparing_or_stopping(self):
         result = self.run_cli("existing_game")
         self.assertEqual(1, result.returncode, result.stderr)
@@ -274,6 +299,80 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         self.assertEqual(1, len(self.events("stop")))
         self.assert_scoped_calls()
         self.assert_profiles_retained()
+
+    def test_expected_diagnostics_preserve_raw_archive_and_filter_only_derived_input(self):
+        self.configure_expected_diagnostics("alpha", EXPECTED_PLAYER_LOG)
+        result = self.run_cli()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("PASS", self.rows()[0]["verdict"])
+        raw = self.report.parent / "player-alpha.log"
+        checked = self.report.parent / "checked-alpha.Player.log"
+        self.assertEqual(EXPECTED_PLAYER_LOG, raw.read_text(encoding="utf-8"))
+        derived = checked.read_text(encoding="utf-8")
+        self.assertIn(PLAYER_LOG.strip(), derived)
+        self.assertNotIn(EXPECTED_MOD_ERROR, derived)
+        self.assertNotIn(EXPECTED_TAF_ERROR, derived)
+        self.assertEqual(JOURNAL, (self.report.parent / "journal-alpha.tsv").read_text())
+        self.assert_new_scoped_cycle(0)
+
+    def test_missing_or_duplicate_expected_diagnostics_fail_and_stop_owned_root(self):
+        variants = {
+            "missing-mod": PLAYER_LOG + EXPECTED_TAF_ERROR + "\n",
+            "missing-taf": PLAYER_LOG + EXPECTED_MOD_ERROR + "\n",
+            "duplicate-mod": EXPECTED_PLAYER_LOG + EXPECTED_MOD_ERROR + "\n",
+            "duplicate-taf": EXPECTED_PLAYER_LOG + EXPECTED_TAF_ERROR + "\n",
+        }
+        for name, player_log in variants.items():
+            with self.subTest(name=name):
+                self.configure_expected_diagnostics(name, player_log)
+                events_before = len(self.events())
+                result = self.run_cli(names=(name,))
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual("FAIL", self.rows()[0]["verdict"])
+                self.assertIn("expected diagnostic check refused", self.rows()[0]["detail"])
+                self.assertEqual(player_log, (self.report.parent / ("player-" + name + ".log")).read_text())
+                self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+                self.assert_new_scoped_cycle(events_before)
+
+    def test_unrelated_errors_remain_fatal_beside_exact_expected_diagnostics(self):
+        variants = {
+            "extra-taf": "[TAF] error: unrelated operation failed\n",
+            "extra-mod": "MODERROR [Unrelated Mod] - unexpected fixture diagnostic\n",
+            "extra-warning": "MODWARN [The Thousand and First] - unexpected compiler warning\n",
+            "gate-frame": "  at ThousandAndFirst.KingdomScenarioNewGameGate.mutate()\n",
+        }
+        for name, unexpected in variants.items():
+            with self.subTest(name=name):
+                player_log = EXPECTED_PLAYER_LOG + unexpected
+                self.configure_expected_diagnostics(name, player_log)
+                if name == "gate-frame":
+                    path = self.tools / "personas" / (name + ".persona")
+                    path.write_text(path.read_text().replace(
+                        "EXPECT=status:OK~fixture-observed,COMPLETE", "EXPECT=GATE-REFUSED"),
+                        encoding="utf-8")
+                    self.env["LIFECYCLE_JOURNAL"] = (
+                        "2026-09-05T00:00:01.000Z\tGATE-REFUSED\tREFUSED\tfixture gate\n")
+                events_before = len(self.events())
+                result = self.run_cli(names=(name,))
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual("FAIL", self.rows()[0]["verdict"])
+                self.assertTrue("Player.log rejected" in self.rows()[0]["detail"]
+                                or "expected diagnostic check refused" in self.rows()[0]["detail"],
+                                self.rows()[0]["detail"])
+                self.assertEqual(player_log, (self.report.parent / ("player-" + name + ".log")).read_text())
+                self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+                self.assert_new_scoped_cycle(events_before)
+
+    def test_matching_diagnostics_cannot_override_refused_journal(self):
+        self.configure_expected_diagnostics("alpha", EXPECTED_PLAYER_LOG)
+        result = self.run_cli("journal_refusal")
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("FAIL", self.rows()[0]["verdict"])
+        self.assertIn("REFUSED", self.rows()[0]["detail"])
+        self.assertEqual(EXPECTED_PLAYER_LOG, (self.report.parent / "player-alpha.log").read_text())
+        self.assertNotIn(EXPECTED_MOD_ERROR, (self.report.parent / "checked-alpha.Player.log").read_text())
+        self.assertIn("\tstatus\tREFUSED\t", (self.report.parent / "journal-alpha.tsv").read_text())
+        self.assert_new_scoped_cycle(0)
 
     def test_term_trap_stops_only_held_runner_root_and_preserves_profiles(self):
         self.env["LIFECYCLE_MODE"] = "term"

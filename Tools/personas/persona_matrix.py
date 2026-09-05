@@ -19,6 +19,7 @@ extra one. A matrix whose green means "at least this happened" is not a matrix.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -99,7 +100,7 @@ OUTCOMES = ("OK", "REFUSED")
 CHECKS = ("status-digest-stable",)
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
-OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET")
+OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
 
 # Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
 # Same alphabet as verbs: lowercase, digits, hyphen, dot. Order inside SET= is not significant.
@@ -158,7 +159,49 @@ def parse_manifest(text: str, name: str) -> dict:
         )
     found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
     found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
+    if "LOG_EXPECT" in found:
+        found["LOG_EXPECT"] = json.dumps(
+            parse_log_expect(found["LOG_EXPECT"], name),
+            ensure_ascii=False, separators=(",", ":"),
+        )
     return found
+
+
+def parse_log_expect(value: str, name: str) -> list[str]:
+    """A bounded list of complete literal lines, never a regex or substring allowance."""
+    if len(value) > 8192:
+        fail("%s LOG_EXPECT exceeds 8192 characters" % name)
+    try:
+        lines = json.loads(value)
+    except (ValueError, RecursionError):
+        fail("%s LOG_EXPECT must be a JSON array of literal lines" % name)
+    if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
+        fail("%s LOG_EXPECT must contain 1..4 literal lines" % name)
+    if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
+           or not line.isprintable() for line in lines):
+        fail("%s LOG_EXPECT lines must be 1..1024 printable characters" % name)
+    if len(set(lines)) != len(lines) or sum(map(len, lines)) > 8192:
+        fail("%s LOG_EXPECT lines must be unique and total at most 8192 characters" % name)
+    return lines
+
+
+def expected_log(manifest: dict, raw: bytes, name: str) -> bytes:
+    """Validate all expected diagnostics before returning a derivative; never alter raw input."""
+    if "LOG_EXPECT" not in manifest:
+        fail("%s requires LOG_EXPECT for expected-log" % name)
+    expected = {
+        line.encode("utf-8") for line in parse_log_expect(manifest["LOG_EXPECT"], name)
+    }
+    lines = raw.replace(b"\r\n", b"\n").split(b"\n")
+    if any(lines.count(line) != 1 for line in expected):
+        fail("%s LOG_EXPECT requires every declared line exactly once" % name)
+    if any(line not in expected and (b"MODERROR" in line or b"MODWARN" in line)
+           for line in lines):
+        fail("%s contains an undeclared MODERROR or MODWARN line" % name)
+    return b"".join(
+        line + (b"\n" if index < len(lines) - 1 else b"")
+        for index, line in enumerate(lines) if line not in expected
+    )
 
 
 def parse_set(value: str, name: str) -> tuple[str, ...]:
@@ -416,8 +459,8 @@ def load(path: str) -> tuple[dict, str]:
 def main(argv: list[str]) -> int:
     if len(argv) < 3:
         fail(
-            "usage: persona_matrix.py <fields|assert|terminal|warnings> <persona|journal>"
-            " [journal]"
+            "usage: persona_matrix.py <fields|assert|terminal|warnings|expected-log> <persona|journal>"
+            " [journal|Player.log]"
         )
     action = argv[1]
     if action == "fields" and len(argv) == 3:
@@ -431,8 +474,15 @@ def main(argv: list[str]) -> int:
             "VERBS",
             "DESCRIPTION",
             "SET",
+            "LOG_EXPECT",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
+        return 0
+    if action == "expected-log" and len(argv) == 4:
+        manifest, name = load(argv[2])
+        with open(argv[3], "rb") as handle:
+            filtered = expected_log(manifest, handle.read(), name)
+        sys.stdout.buffer.write(filtered)
         return 0
     if action == "terminal" and len(argv) == 3:
         with open(argv[2], encoding="utf-8") as handle:

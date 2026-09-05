@@ -21,6 +21,12 @@ below it.
 
 ### Fixed
 
+- A development-only subsidence persona now builds a real founded 50-resident fixture and
+  exercises five physical departures, an exact native summary callback interruption, and
+  same-tick replay prevention. Its elapsed checkpoint and City stage are synthetic setup;
+  partial departures, rung damage, ordinary progression, and save/load remain separate gates.
+  Persona diagnostic expectations are bounded literal lines required exactly once; raw logs
+  stay retained and every undeclared mod error or warning still fails the diagnostic check.
 - Completed subsidence departures now reach bookkeeping and reached-rung work before their
   summary is formatted or delivered. A broken summary or diagnostic callback cannot prevent
   that prior work. This is a summary-order fix only: partial-step debt, interrupted resident

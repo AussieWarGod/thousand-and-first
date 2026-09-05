@@ -20,7 +20,7 @@ RUN_PERSONA = SOURCE[START:END]
 class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
     def test_live_archive_and_assert_precede_capture_and_stop(self):
         archive = RUN_PERSONA.index('archive_file "$journal" "$archived_journal"')
-        log_check = RUN_PERSONA.index('"$LOG_CHECK" "$archived_player_log"')
+        log_check = RUN_PERSONA.index('"$LOG_CHECK" "$checked_player_log"')
         assertion = RUN_PERSONA.index('python3 "$MATRIX" assert')
         pass_capture = RUN_PERSONA.index(
             'if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]'
@@ -40,10 +40,16 @@ class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
 
     def test_every_persona_requires_an_archived_clean_taf_log(self):
         archive = RUN_PERSONA.index('archive_file "$player_log" "$archived_player_log"')
-        checker = RUN_PERSONA.index('"$LOG_CHECK" "$archived_player_log"', archive)
+        raw = RUN_PERSONA.index('checked_player_log="$archived_player_log"', archive)
+        expected = RUN_PERSONA.index('python3 "$MATRIX" expected-log', raw)
+        checker = RUN_PERSONA.index('"$LOG_CHECK" "$checked_player_log"', expected)
         assertion = RUN_PERSONA.index('python3 "$MATRIX" assert', checker)
-        self.assertLess(archive, checker)
+        self.assertLess(archive, raw)
+        self.assertLess(raw, expected)
+        self.assertLess(expected, checker)
         self.assertLess(checker, assertion)
+        self.assertIn('"$archived_player_log" \\\n\t\t\t> "$checked_player_log"', RUN_PERSONA)
+        self.assertIn('expected diagnostic check refused', RUN_PERSONA)
         self.assertIn('live Player.log is absent', RUN_PERSONA)
         self.assertIn('Player.log rejected:', RUN_PERSONA)
 

@@ -107,7 +107,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""; P_GATE=0
+	P_SET=""; P_GATE=0; P_LOG_EXPECT=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -119,6 +119,7 @@ load_persona() {
 			verbs) P_VERBS="$value" ;;
 			description) P_DESC="$value" ;;
 			set) P_SET="$value" ;;
+			log_expect) P_LOG_EXPECT="$value" ;;
 		esac
 	done <<< "$fields"
 	[ -n "$P_REQUEST" ] || die "persona $1 declares no request"
@@ -215,7 +216,7 @@ archive_file() {
 # Sets VERDICT and DETAIL. Never exits: one persona's fault must not end the matrix.
 run_persona() {
 	local persona="$1" attempt="${2:-1}" root journal archived_journal player_log
-	local archived_player_log log_problem
+	local archived_player_log checked_player_log log_problem
 	local timeout waited terminal problems warnings capture_problem archive_problem artifact
 	local capture_temp capture_target prepare_log launch_log capture_log
 	local -a prepare_args
@@ -311,7 +312,19 @@ run_persona() {
 	fi
 	local log_allow=""
 	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
-	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$archived_player_log" 2>&1)"; then
+	checked_player_log="$archived_player_log"
+	if [ -n "$P_LOG_EXPECT" ]; then
+		# Exact, counted diagnostic expectations affect only a derived check input. Raw evidence stays intact.
+		log_allow=""
+		checked_player_log="$REPORT_DIR/checked-$artifact.Player.log"
+		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
+			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
+			DETAIL="expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
+			stop_owned
+			return
+		fi
+	fi
+	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$checked_player_log" 2>&1)"; then
 		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
 			| tr '\n\t' '  ')"
 		stop_owned

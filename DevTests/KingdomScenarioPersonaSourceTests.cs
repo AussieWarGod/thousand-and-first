@@ -182,7 +182,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("mv -f -- \"$capture_temp\" \"$capture_target\"", runner);
 			int archived = runner.IndexOf("archive_file \"$journal\" \"$archived_journal\"",
 				StringComparison.Ordinal);
-			int logChecked = runner.IndexOf("\"$LOG_CHECK\" \"$archived_player_log\"",
+			int checkInput = runner.IndexOf("checked_player_log=\"$archived_player_log\"",
+				archived, StringComparison.Ordinal);
+			int expectedLog = runner.IndexOf("$MATRIX\" expected-log", checkInput, StringComparison.Ordinal);
+			StringAssert.Contains("\"$archived_player_log\" \\", runner);
+			int logChecked = runner.IndexOf("\"$LOG_CHECK\" \"$checked_player_log\"",
 				archived, StringComparison.Ordinal);
 			int asserted = runner.IndexOf("$MATRIX\" assert", StringComparison.Ordinal);
 			int captureGate = runner.IndexOf("if [ \"$VERDICT\" = PASS ]", asserted,
@@ -192,8 +196,10 @@ namespace ThousandAndFirst.Tests
 			int captureFault = runner.IndexOf("if [ -n \"$capture_problem\" ]", published,
 				StringComparison.Ordinal);
 			Assert.Greater(archived, -1, "the journal must be archived before any diagnosis returns");
-			Assert.Greater(logChecked, archived,
-				"the archived Player.log must pass TAF diagnostics before journal assertion");
+			Assert.Greater(checkInput, archived, "ordinary log checks use the retained raw archive");
+			Assert.Greater(expectedLog, checkInput, "declared literal diagnostics derive from the raw archive");
+			Assert.Greater(logChecked, expectedLog,
+				"raw or exact-diagnostic-filtered Player.log must pass TAF diagnostics before journal assertion");
 			Assert.Greater(asserted, logChecked, "journal assertion follows clean durable evidence");
 			Assert.Greater(captureGate, asserted, "capture is gated on the asserted verdict");
 			Assert.Greater(published, captureGate, "only a validated PASS image is published");

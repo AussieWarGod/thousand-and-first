@@ -6,8 +6,12 @@ before diagnostics. Focused actual-lifecycle outbox tests pass34/34 in both proj
 wire persistence. Separate native outbox persona passes6/6 actual sink cases with synthetic
 interruptions; no ordinary-play/save-load claim. C#7.3 shadowing fixed without behavior changes.
 Subsidence post-loop summary ordering is independently reviewed and passes13/13 eachproject;
-full managed11214/portable2777,zero skips. Fractional-step debt, committed-but-pending departures,
-inner-rung interruptions and native proof remain open; this is not exactly-once recovery.
+full managed11226/portable2789,zero skips, including twelve native-fixture source contracts.
+Tools333 passes literal/count expected-diagnostic and actual-shell lifecycle regressions.
+The new physical resident fixture executes actual Reckon; stage/elapsed checkpoint are seeded.
+Fractional-step debt, committed-but-pending departures, inner-rung interruptions and ordinary
+native/save-load proof remain open; this is not exactly-once recovery. STATUS.md owns final
+native fixture evidence, including any refused log expectation and fresh-profile rerun.
 docs/STATUS.md owns current suite/compile/native evidence, not the dated audit.
 
 > **Supersession banner — 2026-09-01.** This is a dated chronological reconciliation, not the live

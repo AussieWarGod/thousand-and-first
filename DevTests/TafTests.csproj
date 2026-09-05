@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomSubsidenceNativeHarnessSourceTests.cs" />
     <Compile Include="KingdomSubsidenceCompletionRulesTests.cs" />
     <Compile Include="..\Growth\KingdomSubsidenceCompletionRules.cs" />
     <Compile Include="..\Api\KingdomExtensionDraws.cs" />
