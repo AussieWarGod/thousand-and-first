@@ -9,18 +9,23 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 below it.
 
 > **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2951 staged
-> C# files / 421,022 physical lines, with 0 at or above the strict 300-line cap.
+> C# files / 420,997 physical lines, with 0 at or above the strict 300-line cap.
 > Current 2951-file census is line-cap green.
 > Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2982 files.
 > Its exact-inventory
 > semantic review binds digest
-> `261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9`. This does not amend the
+> `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence.
 
 ## [Unreleased]
 
 ### Fixed
 
+- Raid launches now freeze their roster, projections, and leases and publish the operation
+  before creating any raider. Creation, placement, and activation now interleave per actor;
+  later creation callbacks can observe earlier raiders and published authority. Creation or
+  placement refusal can quarantine that published operation. This is an ordering foundation,
+  not a fix for replacement-object custody or interrupted placement recovery.
 - A development-only subsidence persona now builds a real founded 50-resident fixture and
   exercises five physical departures, an exact native summary callback interruption, and
   same-tick replay prevention. Its elapsed checkpoint and City stage are synthetic setup;

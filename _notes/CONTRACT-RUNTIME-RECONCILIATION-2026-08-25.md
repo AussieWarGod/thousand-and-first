@@ -6,7 +6,10 @@ before diagnostics. Focused actual-lifecycle outbox tests pass34/34 in both proj
 wire persistence. Separate native outbox persona passes6/6 actual sink cases with synthetic
 interruptions; no ordinary-play/save-load claim. C#7.3 shadowing fixed without behavior changes.
 Subsidence post-loop summary ordering is independently reviewed and passes13/13 eachproject;
-full managed11226/portable2789,zero skips, including twelve native-fixture source contracts.
+full managed11231/portable2794,zero skips, including twelve native-fixture source contracts
+and five Claude raid launch-order source/rule regressions. Raid projections/leases now publish
+before creation, followed by per-actor create/place/activate through existing ResumeOpen.
+Native multi-raider callback and replacement/interrupted-placement custody proof remain OPEN.
 Tools333 passes literal/count expected-diagnostic and actual-shell lifecycle regressions.
 The new physical resident fixture executes actual Reckon; stage/elapsed checkpoint are seeded.
 Fractional-step debt, committed-but-pending departures, inner-rung interruptions and ordinary

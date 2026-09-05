@@ -20,13 +20,17 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2951 staged production C# files and 421,022
+`Tools/check-structure.py --json` currently reports 2951 staged production C# files and 420,997
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9`. The census reports
+`f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. The census reports
 1376 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The 2026-09-05 subsidence delta retains the reviewed `b572ede` baseline and its inherited
+The Claude launch-order foundation retains the reviewed `bf319c2` subsidence baseline. Its
+one-file production diff exactly matches the independently reviewed artifact: launch prepares
+and publishes; existing resume owns per-actor creation, placement, and activation. No new saved
+field or custody authority is introduced. Native launch and replacement/interrupted-placement
+custody remain open. The earlier 2026-09-05 subsidence delta retained `b572ede` and its inherited
 outbox, Quickstart, raid-zone, and polity reviews. Root and an independent reviewer inspected
 the two production changes: the engine-free completion boundary and its actual Reckoning
 callbacks. Existing bookkeeping and reached-rung work precede the guarded summary; required

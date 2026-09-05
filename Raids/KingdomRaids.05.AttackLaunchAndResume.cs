@@ -13,6 +13,14 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomRaids
 	{
+		// Plan-before-effect ordering: LaunchRaid now only builds/publishes ProjectionIntent
+		// (no mint, no place, no commit). The per-actor Create->Add->Activate interleave now
+		// happens entirely inside ResumeOpen -> ResumeAttackProjections (09.cs, unchanged).
+		// Later factory callbacks therefore observe published authority plus any raiders/RNG
+		// already placed in that same resume call, so a successful launch is no longer
+		// bit-equivalent to the old single-batch mint order, and entry cells can change synchronously. OPEN 09.cs
+		// custody defects, still unaddressed here: a same-blueprint replacement can still be ID/part-stamped, and
+		// a BeginProjection/AddObject refusal can leave a surviving body while a later zero/zero reset re-mints.
 		private static void LaunchRaid(KingdomSystem system, Zone zone,
 			KingdomSurvey survey, KingdomRaidIncident incident)
 		{
@@ -68,16 +76,6 @@ namespace ThousandAndFirst
 					"No exact entry cell could receive the warband; no raid loss was inferred.");
 				return;
 			}
-			List<GameObject> bodies = new List<GameObject>();
-			for (int i = 0; i < party; i++)
-			{
-				string blueprint = KingdomRaidProfiles.Blueprint(profile, frozenStage, incident.Seed, i);
-				GameObject body = null;
-				try { body = GameObject.Create(blueprint); } catch { }
-				if (!GameObject.Validate(body) || !string.Equals(body.Blueprint, blueprint,
-					StringComparison.Ordinal)) return;
-				bodies.Add(body);
-			}
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(
 				system.LifecycleBook, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidAttack, The.Game.TimeTicks);
@@ -98,12 +96,11 @@ namespace ThousandAndFirst
 			for (int i = 0; i < party; i++)
 			{
 				string objectId = KingdomLifecycleRules.ChildId(op.Id, "raider", i);
+				string blueprint = KingdomRaidProfiles.Blueprint(profile, frozenStage, incident.Seed, i);
 				KingdomLifecycleProjection projection = KingdomLifecycleRules.RaidRuntimeAdapter.PrepareProjection(
-					system.LifecycleBook, op, i, objectId, bodies[i].Blueprint,
+					system.LifecycleBook, op, i, objectId, blueprint,
 					zone.ZoneID, cells[i].X, cells[i].Y);
 				if (projection == null) return;
-					bodies[i].ID = projection.ObjectId;
-					PrepareRaiderBody(bodies[i], op, projection, incident.Id);
 			}
 			string display = op.DisplayFaction;
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op,
@@ -116,28 +113,6 @@ namespace ThousandAndFirst
 				|| !KingdomLifecycleRules.TryPublish(system.LifecycleBook, op)
 				|| !KingdomLifecycleRules.AdvancePhase(system.LifecycleBook, op,
 					KingdomLifecyclePhase.ProjectionIntent, The.Game.TimeTicks)) return;
-			for (int i = 0; i < party; i++)
-			{
-				KingdomLifecycleProjection projection = op.Projections[i];
-				GameObject ignored;
-				int idsBefore;
-				int markersBefore;
-				CountProjection(zone, projection, out idsBefore, out markersBefore, out ignored);
-				if (!KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(system.LifecycleBook,
-					op, projection, idsBefore, markersBefore)) return;
-				GameObject accepted = null;
-				try { accepted = cells[i].AddObject(bodies[i]); } catch { }
-				KingdomSurvey.ObserveAddResultInActive(zone, bodies[i], accepted);
-				GameObject exact;
-				int idsAfter;
-				int markersAfter;
-				CountProjection(zone, projection, out idsAfter, out markersAfter, out exact);
-				if (!ReferenceEquals(accepted, bodies[i]) || !ReferenceEquals(exact, bodies[i])
-					|| !KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(system.LifecycleBook,
-						op, projection, idsAfter, markersAfter, bodies[i].Blueprint,
-						zone.ZoneID, cells[i].X, cells[i].Y)) return;
-					ActivateRaiderBody(bodies[i], system, objective);
-			}
 			ResumeOpen(system, zone);
 		}
 

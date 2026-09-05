@@ -164,6 +164,21 @@ The current Growth lifecycle model contains a serialized subsidence branch, but 
 unwired in production. It is not a drop-in authority for this fix; introducing a parallel clock
 would not resolve the existing resident-departure ownership and recovery boundary.
 
+## Beta raid launch ordering — native acceptance still open
+
+Five managed regressions pin the production launch source and exercise the compiled lifecycle
+rules. They do not execute `LaunchRaid` or `ResumeOpen`. The launch now publishes frozen
+projections and leases before any factory call, then delegates to the existing resume path.
+Creation, placement, and activation interleave per actor; the old all-create-first ordering is
+not preserved. No serialized fields changed.
+
+Native acceptance must execute an actual multi-raider launch and observe the exact published
+operation during every creation callback, earlier placed actors during later callbacks, and
+final unique IDs/markers with the exact spawned count and proved projections. A second-mint
+wrong-blueprint replacement or exception must retain the prior actor and any substitute while
+holding the durable operation. Same-blueprint replacement and interrupted-placement custody
+remain known defects, not passing recovery cases. Ordinary raids and save/reload stay unsigned.
+
 ## Beta Quickstart cleanup — native seams and open acceptance
 
 Use disposable development profiles and controlled fault injection; never alter an ordinary save

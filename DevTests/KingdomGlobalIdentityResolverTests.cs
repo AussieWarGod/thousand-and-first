@@ -349,8 +349,13 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(1, MintingReads(Source("Growth",
 				"KingdomLab.PurposeRuntime.cs")),
 				"an anatomical BodyPart ID is not GameObject identity");
+			Assert.AreEqual(0, MintingReads(Source("Raids",
+				"KingdomRaids.05.AttackLaunchAndResume.cs")),
+				"publish-before-mint: the projected raider ID setter now lives only in "
+					+ "ResumeAttackProjections (09.cs), never in LaunchRaid");
 			Assert.AreEqual(1, MintingReads(Source("Raids",
-				"KingdomRaids.05.AttackLaunchAndResume.cs")), "explicit projected raider ID setter");
+				"KingdomRaids.09.AttackProjectionAndHelpers.cs")),
+				"the projected raider ID setter lives exactly once, in 09.cs");
 			Assert.AreEqual(2, MintingReads(Source("Growth", "KingdomCommission.Projection.cs")));
 			Assert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Preparation.cs")));
 			Assert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Commission.cs")));

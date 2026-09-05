@@ -7,9 +7,12 @@ in both managed projects, including wire persistence. Exact-source review curren
 final suite/compile/native evidence. Native outbox persona now passes 6/6 actual sink cases with
 synthetic interruptions; messages/UI effects retained, ordinary play and save/load unsigned.
 C#7.3 lambda shadowing fixed mechanically; generator excludes non-shipping Harness sources.
-Spawn-custody revisions remain separate; main stays v0.3.0.
+Claude launch-order foundation7e296d20 integrated: all projections/leases published before
+factory calls, then existing ResumeOpen. Five new rule/source tests; full11231/2794,zero skips.
+Native launch callbacks remain unsigned. Same-blueprint replacement and interrupted-placement
+custody remain OPEN; rejected custody revisions stay separate. Main stays v0.3.0.
 Subsidence summary-only completion fix passes13/13 focused cases in both projects; full
-managed11226/portable2789, zero skips; twelve additional native-fixture source contracts. Existing accounting and reached-rung invocation precede
+managed11231/portable2794, zero skips; twelve additional native-fixture source contracts. Existing accounting and reached-rung invocation precede
 summary output. Fractional-step debt, pending departure accounting, inner-rung interruption,
 and ordinary/save-load subsidence evidence remain open; no parallel clock was introduced.
 New disposable native fixture uses real founding, 50 actual enrolled/bound residents, physical

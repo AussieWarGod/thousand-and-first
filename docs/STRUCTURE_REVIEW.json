@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9",
+  "inventorySha256": "f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1",
   "exceptions": [],
   "reviewedBy": "Codex with independent AI reviews, under author ruling (R. Farrant)",
-  "completedUtc": "2026-09-05T03:55:39Z",
+  "completedUtc": "2026-09-05T05:31:59Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Retains the exact b572ede baseline review (runtime 39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88), including its inherited outbox, Quickstart, raid-zone and polity reviews. No claim unchanged files were reread. Root and an independent read-only reviewer inspected the two-file production delta: the engine-free KingdomSubsidenceCompletionRules owns only post-loop completion order, and Reckoning supplies its actual bookkeeping, reached-rung and deferred summary callbacks. Required work remains outside the presentation catch. The 13-case production-boundary suite and runtime wiring pin passed in both projects. All 2951 production sources remain strictly below 300 lines; total 421022 physical lines. Claude's separate raid-custody proposals remain rejected and excluded."
+    "notes": "Retains the exact bf319c2 baseline review (runtime 261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9), including inherited subsidence, outbox, Quickstart, raid-zone and polity reviews. No claim unchanged files were reread. Root verified the integrated one-file production delta is byte-identical to independently reviewed Claude foundation artifact 7e296d20ce2f555dbead5fe053dfd8373e2ebc2b61fbc5be7f65ac6807fc0745 (production diff 5f864b52030ac1261ac7a24dbdb3c5fd5698fcf0b2e3d285574a9b4464075cf4). LaunchRaid now owns only frozen operation preparation/publication; existing ResumeOpen owns physical execution. All 2951 production sources remain strictly below 300 lines; total 420997 physical lines. Five source/rule regressions pass within full managed11231/portable2794 zero-skip suites."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Completion now commits existing checkpoint/stage/support/binding assignments, invokes existing reached-rung work, then attempts summary formatting/ledger/Chronicle output. Only summary and diagnostic exceptions are contained; required-work exceptions propagate. No saved fields, wire layout, migration, new clock owner, public API member or physical authority was added. Partial-step proportional charging, committed-but-pending resident departures and callbacks inside reached-rung execution remain known OPEN defects. This review accepts a bounded summary-order fix, not exactly-once subsidence, native physical effects or save/load. Native subsidence acceptance remains unsigned."
+    "notes": "Every deterministic roster projection and lease is prepared and the exact raid operation published at ProjectionIntent before the first factory call. ResumeOpen now supplies per-actor Create/Add/Activate interleaving; later factory callbacks can see prior placed actors and published authority, so RNG/cells and success ordering are not bit-equivalent. Factory or placement refusal may quarantine published authority instead of pre-publication abort/retry. No saved field, wire layout, migration, marker, cleanup/destruction authority, or public API member changed. Existing .08/.09 same-blueprint replacement and surviving-body zero/zero remint custody defects remain OPEN. This signs the bounded plan-before-effect foundation only, not native launch behavior, custody recovery, or save/load. Prior partial subsidence/pending-departure/rung recovery defects remain OPEN."
   }
 }

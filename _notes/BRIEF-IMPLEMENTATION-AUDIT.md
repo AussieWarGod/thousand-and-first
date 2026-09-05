@@ -5,7 +5,10 @@ Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggr
 and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both
 projects, including wire persistence. Separate native outbox persona passes6/6 actual sink cases
 with synthetic interruptions and retained native messages; ordinary play/save-load remain open.
-Subsidence summary-only completion boundary passes13/13 eachproject; full11226/2789,zero skips,
+Claude raid launch-order foundation publishes projections/leases before all factory effects;
+five source/rule tests added. Per-actor create/place/activate interleave is an intentional change.
+Native launch and replacement/interrupted-placement custody remain OPEN; no save field changed.
+Subsidence summary-only completion boundary passes13/13 eachproject; full11231/2794,zero skips,
 including twelve additional native-fixture source contracts. Tools333 passes literal/count
 diagnostic and actual-shell lifecycle regressions. The native fixture builds real residents and
 executes Reckon; its seeded stage/elapsed checkpoint does not prove ordinary progression.
