@@ -1,10 +1,13 @@
 # Brief-to-implementation audit
 
-Beta evidence addendum 2026-09-05: **2950** production C# files, all strictly below 300 lines.
+Beta evidence addendum 2026-09-05: **2951** production C# files, all strictly below 300 lines.
 Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggregate proofs,
 and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both
 projects, including wire persistence. Separate native outbox persona passes6/6 actual sink cases
 with synthetic interruptions and retained native messages; ordinary play/save-load remain open.
+Subsidence summary-only completion boundary passes13/13 eachproject; full11214/2777,zero skips.
+Partial-step debt, committed-but-pending departure recovery, inner-rung callbacks and native
+subsidence remain open. No new save field, clock authority or full recovery claim.
 Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
 
 **Date:** 2026-08-28

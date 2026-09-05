@@ -40,7 +40,7 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,201 / 11,201 full managed cases and 2,764 / 2,764 portable
+The 2026-09-05 beta suites pass 11,214 / 11,214 full managed cases and 2,777 / 2,777 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
@@ -71,7 +71,7 @@ attribute poisons the real test assembly.
 source contracts. None of this signs native Qud behavior, appearance, accessibility, current-revision
 native/human/compatibility/performance gates, or Steam
 installation. Product scope remains owned by [VISION.md](VISION.md). The current structural scan
-runs across 2950 production C# sources. The cold-install inventory contains 2981 files.
+runs across 2951 production C# sources. The cold-install inventory contains 2982 files.
 0 staged sources breach the line cap. `docs/STRUCTURE_REVIEW.json` is signed against the current digest under the author's Addendum 9 ruling.
 
 ## Beta raid outbox — protocol evidence and open acceptance
@@ -113,6 +113,31 @@ This is synthetic native seam evidence, not an ordinary raid reaching its outbox
 identity, an engine-raised exception, diagnostic delivery, or game save/load. Ordinary raid
 acceptance remains open. A retained quarantine is deliberate fail-closed evidence; this patch
 does not introduce a raid finalizer or clear the slot to unblock new raids.
+
+## Beta subsidence completion — bounded evidence and open recovery
+
+Thirteen new completion cases pass in both managed projects; full suites pass 11,214 / 11,214
+and 2,777 / 2,777, zero skips. Tests execute the production completion helper and check its
+runtime wiring. An extracted old summary-first variant fails 12 of 13 cases. This is managed
+regression evidence, not an actual Qud reproduction.
+
+The bounded fix puts completion bookkeeping and rung processing before the guarded departure
+summary. It does not establish general callback isolation, exactly-once effects, or save/load
+recovery. Native acceptance remains **UNSIGNED**.
+
+Required next native case: complete all five departures of one City step, then trigger a
+`GetDisplayNameEvent` failure during summary Chronicle construction. Repeating reckoning at the
+same time must not remove another five residents. Use a disposable profile and retain the exact
+before/after state and failure evidence.
+
+Partial 1-of-5 steps and carrier-committed departures whose pending operation returns false
+remain known **BUGS**, including their save/recover cases; this first fix does not sign them.
+An interruption inside rung narration may still skip physical work damage. Those cuts require
+separate recovery evidence, not inference from the completion-helper tests.
+
+The current Growth lifecycle model contains a serialized subsidence branch, but that branch is
+unwired in production. It is not a drop-in authority for this fix; introducing a parallel clock
+would not resolve the existing resident-departure ownership and recovery boundary.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 

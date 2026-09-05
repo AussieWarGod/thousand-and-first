@@ -114,28 +114,27 @@ namespace ThousandAndFirst
 					named++;
 				}
 			}
-			string summary = KingdomSubsidenceRules.SlideDepartureSummary(KingdomPresentation.Rich(System.KingdomDisplayName), departed, named, cause);
-			if (summary != null)
-			{
-				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");
-				KingdomChronicle.Record(System, summary);
-			}
-			// Charged for exactly what was cashed. A settlement whose people are standing in
-			// another claimed zone loses fewer than the trajectory called for, and keeps the rest
-			// of the elapsed for the pass that can find them.
-			int steps = trajectory.Steps * departed / trajectory.Departed;
-			System.LastSubsidenceTick = Checkpoint(anchor, steps);
 			if (departed <= 0)
 			{
 				return;
 			}
-			System.Stage = KingdomSubsidenceRules.SettledStage(from, System.Population, storage);
-			// Re-recorded against the rung the slide left, not the one it started from: the water
-			// bill per head fell with the stage, so the level the founder is now looking at is a
-			// different (higher) number from the one the announcement quoted.
-			System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);
-			System.SubsidenceBinding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
-			Chronicle(System, Survey, anchor, TimeTicks, from, trajectory);
+			KingdomSubsidenceCompletionRules.Complete(() =>
+			{
+				// Partial-step debt and committed-but-pending departures need separate recovery.
+				int steps = trajectory.Steps * departed / trajectory.Departed;
+				System.LastSubsidenceTick = Checkpoint(anchor, steps);
+				System.Stage = KingdomSubsidenceRules.SettledStage(from, System.Population, storage);
+				System.SupportedLevel = KingdomSubsidenceRules.SupportedLevel(supports, System.Stage, System.Shade);
+				System.SubsidenceBinding = KingdomSubsidenceRules.BindingSupportFor(supports, System.Stage);
+			}, () => Chronicle(System, Survey, anchor, TimeTicks, from, trajectory), () =>
+			{
+				string summary = KingdomSubsidenceRules.SlideDepartureSummary(
+					KingdomPresentation.Rich(System.KingdomDisplayName), departed, named, cause);
+				if (summary == null) return;
+				System.Ledger.Note("{{r|" + XRL.Language.Grammar.InitCap(summary) + ".}}");
+				KingdomChronicle.Record(System, summary);
+			}, error => KingdomLog.LogError("subsidence: departure summary failed ("
+				+ error.Message + ")"));
 			if (KingdomLog.Enabled)
 			{
 				KingdomLog.Log("subsidence: level=" + level + "->" + System.SupportedLevel + " binding=" + binding

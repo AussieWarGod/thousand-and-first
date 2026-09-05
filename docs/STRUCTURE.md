@@ -20,19 +20,21 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2950 staged production C# files and 420,999
+`Tools/check-structure.py --json` currently reports 2951 staged production C# files and 421,022
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88`. The census reports
+`261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9`. The census reports
 1376 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The 2026-09-05 syntax delta retains the reviewed `5868c0c` outbox baseline and its inherited
-Quickstart, raid-zone, and polity reviews. Codex and an independent reviewer inspected the sole
-production change: `KingdomPolityEndpointRuntime` renames the lambda parameter `created` to
-`prepared`, preserving the separate `out GameObject created` and all behavior. This corrects
-C# 7.3 shadowing without changing protocols, save fields, or wire format. Development-only native
-outbox fixtures remain outside this production inventory. Claude's unresolved actor-custody patch
-remains separate. These are source/engine-contract reviews, not native playtests.
+The 2026-09-05 subsidence delta retains the reviewed `b572ede` baseline and its inherited
+outbox, Quickstart, raid-zone, and polity reviews. Root and an independent reviewer inspected
+the two production changes: the engine-free completion boundary and its actual Reckoning
+callbacks. Existing bookkeeping and reached-rung work precede the guarded summary; required
+work is never caught as presentation failure. No saved fields or wire layout changed.
+Partial-step debt, committed-but-pending departures, and failures inside rung execution remain
+open. Thirteen managed cases test this bounded completion contract, not native departure or
+ruin effects. Development-only fixtures remain excluded; Claude's raid-custody patch stays
+separate. These are source/engine-contract reviews, not native playtests.
 
 No staged production source breaches the strict physical-line cap. This clears the mechanical
 line debt; the exact-inventory semantic review required for release is supplied by `docs/STRUCTURE_REVIEW.json`, bound to the digest below.

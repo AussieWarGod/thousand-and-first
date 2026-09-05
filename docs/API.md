@@ -1751,6 +1751,14 @@ The slide runs on **world time** and would run identically under the founder's n
 homecoming changes is that somebody is told. Turn the whole of it off with
 `r_TAF_OptionSubsidence`.
 
+After the departure loop reports completed departures, `Reckon` commits its existing
+checkpoint/stage/support/binding values and invokes reached-rung work before formatting or
+delivering the aggregate departure summary. Summary failure is diagnosed best effort and is
+not retried by this boundary. Rung entries therefore precede the aggregate summary. Required
+bookkeeping and rung failures are not caught as summary failures. This does not guarantee
+exactly-once subsidence: partial-step rounding, a logically committed departure returning
+false during recovery, and interruptions inside rung execution remain known open defects.
+
 ## `KingdomBrinkRules` / `KingdomBrink` / `KingdomWord` — the last arrestable window
 
 One shape for every irreversible consequence in the mod: a settler with nowhere to live

@@ -17,6 +17,8 @@
 
   <ItemGroup>
 	<Compile Include="TestMain.cs" />
+    <Compile Include="KingdomSubsidenceCompletionRulesTests.cs" />
+    <Compile Include="..\Growth\KingdomSubsidenceCompletionRules.cs" />
 	<Compile Include="ColorUtilityStub.cs" />
 	<Compile Include="KingdomZoneObservationReceiptTests.cs" />
 	<Compile Include="KingdomReachObservationSourceTests.cs" />

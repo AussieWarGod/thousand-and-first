@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomSubsidenceCompletionRulesTests.cs" />
+    <Compile Include="..\Growth\KingdomSubsidenceCompletionRules.cs" />
     <Compile Include="..\Api\KingdomExtensionDraws.cs" />
     <Compile Include="..\Api\IWorkBehaviour.cs" />
     <Compile Include="..\Polity\KingdomPolityV9MigrationRules.Foundation.cs" />

@@ -8,19 +8,23 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2950 staged
-> C# files / 420,999 physical lines, with 0 at or above the strict 300-line cap.
-> Current 2950-file census is line-cap green.
-> Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2981 files.
+> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2951 staged
+> C# files / 421,022 physical lines, with 0 at or above the strict 300-line cap.
+> Current 2951-file census is line-cap green.
+> Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2982 files.
 > Its exact-inventory
 > semantic review binds digest
-> `39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88`. This does not amend the
+> `261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence.
 
 ## [Unreleased]
 
 ### Fixed
 
+- Completed subsidence departures now reach bookkeeping and reached-rung work before their
+  summary is formatted or delivered. A broken summary or diagnostic callback cannot prevent
+  that prior work. This is a summary-order fix only: partial-step debt, interrupted resident
+  departure recovery, and failures inside rung execution remain open.
 - The removal-coverage generator excludes development Harness sources from production object
   inventories. Existing global-state cleanup coverage and generated runtime bytes are unchanged.
 - Polity endpoint creation now compiles under C# 7.3: a preparation lambda no longer shadows

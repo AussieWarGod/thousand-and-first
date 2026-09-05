@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88",
+  "inventorySha256": "261e2b57d250359ac7ad1ea77a365aa1275360ac41b418523f5c5a138edf68d9",
   "exceptions": [],
   "reviewedBy": "Codex with independent AI reviews, under author ruling (R. Farrant)",
-  "completedUtc": "2026-09-05T03:03:00Z",
+  "completedUtc": "2026-09-05T03:55:39Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Retains the exact-inventory review at 5868c0c (digest 3d9a31b2f42890f325f24a0f1c568ab4bac9717d9ca09091a201dc94db0c8fbe), including its four-file outbox delta and inherited Quickstart/raid-zone/polity baseline. No claim that unchanged files were reread. Codex and an independent read-only AI reviewer inspected the sole production delta: KingdomPolityEndpointRuntime renames a local lambda parameter from created to prepared, leaving the out variable created unchanged. The rename corrects C# 7.3 shadowing without changing behavior, control flow, data flow, or responsibility. All 2950 production files remain strictly below 300 lines; total physical lines remain 420999. The three new development-only native outbox fixture shards are excluded from production. Claude's separate actor-custody patch is not included in this review."
+    "notes": "Retains the exact b572ede baseline review (runtime 39afb89cc8d7ea54454a2dc9991f6729496285541d32a4ad868e985a88d72b88), including its inherited outbox, Quickstart, raid-zone and polity reviews. No claim unchanged files were reread. Root and an independent read-only reviewer inspected the two-file production delta: the engine-free KingdomSubsidenceCompletionRules owns only post-loop completion order, and Reckoning supplies its actual bookkeeping, reached-rung and deferred summary callbacks. Required work remains outside the presentation catch. The 13-case production-boundary suite and runtime wiring pin passed in both projects. All 2951 production sources remain strictly below 300 lines; total 421022 physical lines. Claude's separate raid-custody proposals remain rejected and excluded."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Retains the boundary review at 5868c0c, including exact raid sink authority, quarantine-before-diagnostics, five-table presence, and prior native custody/canonical parser findings. The independently reviewed lambda-only rename leaves the existing endpoint creation protocol and all engine/public/serialization boundaries unchanged. No serialized fields, wire format, receipt identity, callback semantics, or quarantine-release authority changed. Development-only fixtures exercise the existing raid dispatch protocol without registering their temporary KingdomSystem. Their native evidence is recorded separately in STATUS and does not widen this structural sign-off to ordinary gameplay, game save/load, compatibility, or Claude's unresolved spawn-custody patch."
+    "notes": "Completion now commits existing checkpoint/stage/support/binding assignments, invokes existing reached-rung work, then attempts summary formatting/ledger/Chronicle output. Only summary and diagnostic exceptions are contained; required-work exceptions propagate. No saved fields, wire layout, migration, new clock owner, public API member or physical authority was added. Partial-step proportional charging, committed-but-pending resident departures and callbacks inside reached-rung execution remain known OPEN defects. This review accepts a bounded summary-order fix, not exactly-once subsidence, native physical effects or save/load. Native subsidence acceptance remains unsigned."
   }
 }
