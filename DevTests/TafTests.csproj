@@ -356,6 +356,7 @@
     <Compile Include="KingdomQolPhysicalSourceTests.cs" />
     <Compile Include="KingdomQuickstartTests.cs" />
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
+    <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
     <Compile Include="KingdomReachObservationSourceTests.cs" />
     <Compile Include="KingdomRealmChronicleIntentRulesTests.cs" />
     <Compile Include="KingdomResidentTransitionAuthoritySourceTests.cs" />

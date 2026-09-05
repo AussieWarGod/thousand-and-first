@@ -40,7 +40,7 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The 2026-09-05 beta suites pass 11,026 / 11,026 full managed cases and 2,601 / 2,601 portable
+The 2026-09-05 beta suites pass 11,037 / 11,037 full managed cases and 2,601 / 2,601 portable
 cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
 data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
 restored byte-identically from the release workspace for the full run.
@@ -66,11 +66,51 @@ installation. Product scope remains owned by [VISION.md](VISION.md). The current
 runs across 2949 production C# sources. The cold-install inventory contains 2980 files.
 0 staged sources breach the line cap. `docs/STRUCTURE_REVIEW.json` is signed against the current digest under the author's Addendum 9 ruling.
 
-## Beta Quickstart cleanup — native cases still unsigned
+## Beta Quickstart cleanup — native seams and open acceptance
 
 Use disposable development profiles and controlled fault injection; never alter an ordinary save
 to exercise cleanup failures. Engine-free tests execute the production allocation-scope protocol,
 but do not prove native object factories, placement callbacks, destruction, or save/reload.
+
+On 2026-09-05 at 00:52 UTC, the
+[native Quickstart persona](Tools/personas/quickstart-native-checks.persona) passed **16 / 16**
+cases on Qud core `2.0.211.51` in sealed profile `NEPzzV`, seed `#1012026`, zone
+`JoppaWorld.8.22.1.1.10`. Its journal
+expectations and archived Player.log passed; all four new harness shards matched the executed
+profile byte-for-byte. Both surrounding `stagedigest` observations reported `founded=false`.
+
+- Five creator cases: real water, larder, materials, and advisor creators recover the same object;
+  a foreign role-cell obstruction remains untouched.
+- Eight adapter rollback cases: verification refusal and successful retry, throws before/after
+  placement or inventory transfer, moved roots/children, and foreign returned references. These
+  inject delegates into the production allocation adapter while using real native objects and
+  custody APIs; they do not install failing native event handlers.
+- Three fail-closed cases: foreign contents, interrupted factory custody, and quarantine keys in
+  all five live state dictionaries. Unproved cleanup blocks allocation; fixture teardown removes
+  only its exact owned objects and authored state values.
+
+The test requires a bound `founding-first-city` stamp, the exact sealed three-verb script, an
+unspent scenario transaction, no Quickstart/result state, an unfounded realm, and clear fixture
+cells in the active marsh zone. The stamped plan's `Synthetic=false` describes its **unexecuted
+production founding transaction**, not the injected test fixtures. This provider's evidence is
+always labelled `synthetic=true; ordinary-acceptance=false; save-load=untested`. The earlier
+`WQRN8u` attempt refused before fixture mutation because the initial guard confused these flags;
+that profile and evidence were retained, not edited into a passing run.
+
+Reproduction uses `Tools/gate.sh`, then `Tools/prepare-scenario.sh` with
+`TAF_REQUEST=founding-first-city`, `TAF_SCENARIO_START=8.22@40,12`,
+`TAF_SCENARIO_SCRIPT="stagedigest quickstart-check stagedigest"`, and
+`TAF_SCENARIO_EXTRA_VERBS=quickstart-check`. Launch the printed command only after proving no
+existing Qud process is running. Archive the terminal journal and Player.log before validating
+them with `persona_matrix.py assert` and `check-player-log.sh`.
+
+**Runner safety:** Do not use the current `run-personas.sh` run mode for this procedure: its legacy
+lifecycle kills all CoQ processes and removes prior scenario profiles. Use the lower-level sealed
+launcher and stop only the exact owned PID after rechecking start time, executable, and all four
+profile-path arguments. Preserve prior profiles and seals. The run above used this scoped path.
+
+Full acceptance remains open below: the synthetic seam run does not complete any profile embark,
+save/reload, destruction-veto callback, ordinary-play anchor, or compatibility matrix.
 
 | Case | Action | Required result |
 |---|---|---|

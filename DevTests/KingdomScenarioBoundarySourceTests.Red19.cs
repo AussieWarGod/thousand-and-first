@@ -139,13 +139,14 @@ namespace ThousandAndFirst.Tests
 				string source = System.IO.File.ReadAllText(shard);
 				writes += Occurrences(source,
 					"SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState");
-				// The QUALIFIED call form: the unqualified name also matches the declaration in
-				// KingdomScenarioDurableState, which is the one place it is allowed to appear.
-				readbacks += Occurrences(source,
-					"KingdomScenarioDurableState.ProvesExactText(");
+				// Count this authority's key, not unrelated dev-only result receipts that use
+				// the same durable-state reader. The declaration cannot match a qualified call.
+				readbacks += System.Text.RegularExpressions.Regex.Matches(source,
+					@"KingdomScenarioDurableState\.ProvesExactText\(\s*"
+					+ @"KingdomScenarioProvenanceRules\.ProvenanceState\s*,").Count;
 			}
 			Assert.AreEqual(1, writes, "exactly one provenance write across the whole harness tree");
-			Assert.AreEqual(1, readbacks, "exactly one exact readback across the whole harness tree");
+			Assert.AreEqual(1, readbacks, "exactly one provenance readback across the whole harness tree");
 			string authority = Read("Harness/KingdomScenarioStampAuthority.cs");
 			string realizer = Read("Harness/KingdomScenarioRealizer.cs");
 			Assert.AreEqual(1, Occurrences(authority,
