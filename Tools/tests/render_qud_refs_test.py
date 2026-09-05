@@ -52,6 +52,21 @@ class RenderQudReferencesTests(unittest.TestCase):
             with self.assertRaisesRegex(MODULE.ReferenceError, "Another.dll"):
                 MODULE.render(template, managed, r"D:\Qud\Managed", "baseline")
 
+    def test_checked_in_warning_policy_survives_both_rendered_modes(self):
+        template = (ROOT / "DevTests" / "refs.rsp").read_text(encoding="utf-8-sig")
+        policy = [line for line in template.splitlines() if line.startswith(("-warn", "-nowarn"))]
+        self.assertEqual(["-warn:4", "-warnaserror+", "-warnaserror-:2023"], policy,
+                         "only the existing response-file /noconfig notice may remain a warning")
+        with tempfile.TemporaryDirectory() as raw:
+            fixture, managed = self.fixture(Path(raw))
+            for mode in ("baseline", "compatibility"):
+                with self.subTest(mode=mode):
+                    rendered = MODULE.render("\n".join(policy) + "\n" + fixture.lstrip("\ufeff"),
+                                             managed, r"D:\Qud\Managed", mode)
+                    actual = [line for line in rendered.splitlines()
+                              if line.startswith(("-warn", "-nowarn"))]
+                    self.assertEqual(policy, actual)
+
 
 if __name__ == "__main__":
     unittest.main()

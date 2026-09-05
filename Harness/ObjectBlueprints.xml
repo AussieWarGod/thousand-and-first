@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects>
+  <object Name="Snapjaw Scavenger 0" Load="Merge">
+    <part Name="r_TAF_RaidMintProbe" />
+  </object>
+  <object Name="Snapjaw Hunter 0" Load="Merge">
+    <part Name="r_TAF_RaidMintProbe" />
+  </object>
+</objects>

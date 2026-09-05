@@ -29,8 +29,12 @@ cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inv
 The Claude launch-order foundation retains the reviewed `bf319c2` subsidence baseline. Its
 one-file production diff exactly matches the independently reviewed artifact: launch prepares
 and publishes; existing resume owns per-actor creation, placement, and activation. No new saved
-field or custody authority is introduced. Native launch and replacement/interrupted-placement
-custody remain open. The earlier 2026-09-05 subsidence delta retained `b572ede` and its inherited
+field or custody authority is introduced. Two bounded native launch cases now prove multi-actor
+callback ordering and different-blueprint replacement quarantine with retained evidence; ordinary
+play, same-blueprint and interrupted-placement custody remain open. The roster XML correction and
+six development Harness files do not change this production C# census or its retained semantic
+review. Their separate source/native evidence is recorded in [STATUS.md](STATUS.md).
+The earlier 2026-09-05 subsidence delta retained `b572ede` and its inherited
 outbox, Quickstart, raid-zone, and polity reviews. Root and an independent reviewer inspected
 the two production changes: the engine-free completion boundary and its actual Reckoning
 callbacks. Existing bookkeeping and reached-rung work precede the guarded summary; required

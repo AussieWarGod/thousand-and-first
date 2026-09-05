@@ -1,0 +1,15 @@
+# Real founding and one real OnZoneActivated call; the probe substitutes a DIFFERENT, unprobed
+# blueprint on the second actual mint through the creation event's own ReplacementObject field.
+# The first raider, the substitute and the abandoned original are all retained; substitute custody
+# is reported unproved. Same-blueprint replacement stays OPEN; the B2 swallowed throw is a separate
+# unimplemented gate. No LOG_EXPECT: the fixed fault text is emitted by the caller at
+# Raids/KingdomRaids.09.AttackProjectionAndHelpers.cs; KingdomLifecycleRules.Quarantine itself
+# (Experience/KingdomLifecycleLeaseRules.cs:196-202) writes no diagnostic, so the fixed fault is
+# proved in the journal report row and the durable receipt, not in Player.log.
+DESCRIPTION=a second-mint different-blueprint replacement quarantines and preserves the prior raider
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-launch-native-b1;stagedigest
+VERBS=raid-launch-native-b1
+EXPECT=stagedigest:OK~founded=false,raid-launch-native-b1:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

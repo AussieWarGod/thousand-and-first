@@ -29,11 +29,26 @@ below it.
 
 ### Fixed
 
+- Native smoke diagnostics now recognize the exact Alpha and development-harness titles as
+  well as the base title. Raw logs remain intact; foreign-mod warnings retain their existing
+  scope. Compile gates now enforce warnings as errors except the response-file CS2023 notice.
+  Renamed the raid probe's static reset helper to avoid hiding `IPart.Reset`. Earlier A/B1
+  gameplay passes contained this missed warning and remain rejected as warning-clean acceptance.
+  Fresh A/B1 reruns passed the corrected checks against both raw logs; earlier archives remain
+  intact, and foreign DLC warnings remain visible outside the TAF-scoped verdict.
 - Raid launches now freeze their roster, projections, and leases and publish the operation
   before creating any raider. Creation, placement, and activation now interleave per actor;
   later creation callbacks can observe earlier raiders and published authority. Creation or
-  placement refusal can quarantine that published operation. This is an ordering foundation,
-  not a fix for replacement-object custody or interrupted placement recovery.
+  placement refusal can quarantine that published operation. Fresh warning-clean native A/B1
+  personas passed a three-actor launch and second-mint `Chest` replacement quarantine, retaining the prior actor,
+  original, and substitute without another mint on retry. These synthetic fixtures do not sign
+  ordinary raids, save/load, swallowed callback throws, same-blueprint replacement, interrupted
+  placement recovery, or the separate displacement cases. The wire roundtrip is model-only.
+- Corrected two shipped raid profiles that failed installed-blueprint eligibility: Snapjaws now
+  name the numbered `0` variants, and Cannibal Town/City bands replace `Missile Cannibal` with
+  a repeated `Juicing Cannibal`. All five profiles loaded in both bounded native runs. Snapjaw
+  gear still rolls at tier 0; later-stage balance remains unproved. Frozen old-plan references
+  may still safe-cancel if they no longer match the corrected profile.
 - A development-only subsidence persona now builds a real founded 50-resident fixture and
   exercises five physical departures, an exact native summary callback interruption, and
   same-tick replay prevention. Its elapsed checkpoint and City stage are synthetic setup;

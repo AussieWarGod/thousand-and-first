@@ -9,10 +9,10 @@
            Objective="stores" Demand="water" Recovery="watch-disarray"
            NaturalTrigger="guarded-gate" NaturalCause="snapjaw-guarded-gate-road-claim"
            NaturalEvidence="the guarded gate denied a local snapjaw foraging band its customary salt-road passage"
-           Steading="Snapjaw Scavenger,Snapjaw Scavenger,Snapjaw Hunter"
-           Village="Snapjaw Hunter,Snapjaw Warrior,Snapjaw Warrior"
-           Town="Snapjaw Warrior,Snapjaw Shotgunner,Snapjaw Brute"
-           City="Snapjaw Brute,Snapjaw Warrior,Snapjaw Warlord" />
+           Steading="Snapjaw Scavenger 0,Snapjaw Scavenger 0,Snapjaw Hunter 0"
+           Village="Snapjaw Hunter 0,Snapjaw Warrior 0,Snapjaw Warrior 0"
+           Town="Snapjaw Warrior 0,Snapjaw Shotgunner 0,Snapjaw Brute 0"
+           City="Snapjaw Brute 0,Snapjaw Warrior 0,Snapjaw Warlord 0" />
   <profile Key="baboon-troop" Faction="Baboons" Reach="troop spoor"
            Causes="creed-declaration-slight,debug-test-provocation"
            ChannelBlueprint="r_KingdomBaboonDemand"
@@ -38,8 +38,8 @@
            Objective="stores" Demand="water" Recovery="watch-disarray"
            Steading="Cannibal,Cannibal,Juicing Cannibal"
            Village="Cannibal,Juicing Cannibal"
-           Town="Juicing Cannibal,Missile Cannibal"
-           City="Juicing Cannibal,Missile Cannibal" />
+           Town="Juicing Cannibal,Juicing Cannibal"
+           City="Juicing Cannibal,Juicing Cannibal" />
   <profile Key="issachari-raiders" Faction="Issachari" Reach="desert riders"
            Causes="creed-declaration-slight,debug-test-provocation"
            ChannelBlueprint="r_KingdomIssachariDemand"

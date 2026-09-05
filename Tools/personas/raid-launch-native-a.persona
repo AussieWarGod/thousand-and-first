@@ -1,0 +1,10 @@
+# Real founding, one real OnZoneActivated call, real actor mints in a disposable profile.
+# Instrumentation only: the scene, every raider and the open operation are retained.
+# No ordinary raid progression, no save/load claim, no teardown verb.
+DESCRIPTION=an actual activation mints every frozen raider in published projection order
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-launch-native-a;stagedigest
+VERBS=raid-launch-native-a
+EXPECT=stagedigest:OK~founded=false,raid-launch-native-a:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

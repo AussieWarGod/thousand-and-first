@@ -38,6 +38,20 @@ EXPECTED_DIAGNOSTICS = [
     EXPECTED_TAF_ERROR,
 ]
 EXPECTED_PLAYER_LOG = PLAYER_LOG + EXPECTED_MOD_ERROR + "\n" + EXPECTED_TAF_ERROR + "\n"
+OWNED_TITLES = (
+    "The Thousand and First",
+    "The Thousand and First [ALPHA]",
+    "The Thousand and First [DEV SCENARIO HARNESS]",
+    "The Thousand and First [ALPHA] [DEV SCENARIO HARNESS]",
+)
+# Exact diagnostic retained in the 2026-09-05 native launch A Player.log, line 74.
+NATIVE_CS0114_WARNING = (
+    "MODWARN [The Thousand and First [ALPHA] [DEV SCENARIO HARNESS]] - "
+    "C:/taf-scenario.PLGFPB/Local/Mods/ThousandAndFirst/Harness/r_TAF_RaidMintProbe.cs(132,24): "
+    "warning CS0114: 'r_TAF_RaidMintProbe.Reset()' hides inherited member 'IPart.Reset()'. "
+    "To make the current member override that implementation, add the override keyword. "
+    "Otherwise add the new keyword."
+)
 
 # Installed only inside the fixture. Unknown calls fail instead of falling through to real tools.
 EXTERNAL = r'''#!/usr/bin/env python3
@@ -221,6 +235,90 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         self.assertEqual(events[3]["root"], events[4]["root"])
         self.assert_scoped_calls()
         self.assert_profiles_retained()
+
+    def assert_unexpected_log_refused(self, name, player_log):
+        manifest = PERSONA.format(name=name)
+        self.assertNotIn("LOG_EXPECT", manifest)
+        (self.tools / "personas" / (name + ".persona")).write_text(manifest, encoding="utf-8")
+        self.env["LIFECYCLE_PLAYER_LOG"] = player_log
+        events_before = len(self.events())
+        result = self.run_cli(names=(name,))
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("FAIL", self.rows()[0]["verdict"])
+        self.assertIn("Player.log rejected: SMOKE LOG FAILED", self.rows()[0]["detail"])
+        self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+        self.assertEqual(player_log.encode("utf-8"),
+                         (self.report.parent / ("player-" + name + ".log")).read_bytes())
+        self.assertEqual(JOURNAL, (self.report.parent / ("journal-" + name + ".tsv")).read_text())
+        self.assert_new_scoped_cycle(events_before)
+
+    def run_log_checker(self, player_log, allow=""):
+        path = self.base / "direct-check.Player.log"
+        path.write_text(player_log, encoding="utf-8")
+        return subprocess.run(["bash", str(self.tools / "check-player-log.sh"), str(path)],
+                              env={**self.env, "TAF_LOG_ALLOW": allow}, cwd=self.base,
+                              capture_output=True, text=True, timeout=10)
+
+    def test_unexpected_owned_warnings_and_errors_refuse_every_supported_title(self):
+        for index, title in enumerate(OWNED_TITLES):
+            for level in ("WARN", "ERROR"):
+                with self.subTest(title=title, level=level):
+                    # No separate TAF line: this also requires the exact title to prove load evidence.
+                    self.assert_unexpected_log_refused(
+                        "title-" + str(index) + "-" + level.lower(),
+                        "MOD" + level + " [" + title + "] - unexpected compiler diagnostic\n")
+
+    def test_actual_native_cs0114_warning_refuses_without_log_expect(self):
+        self.assert_unexpected_log_refused("native-cs0114", PLAYER_LOG + NATIVE_CS0114_WARNING + "\r\n")
+
+    def test_unexpected_taf_stack_frames_refuse_without_log_expect(self):
+        for index, frame in enumerate((
+                "  at ThousandAndFirst.UnknownCallback.Run()\n",
+                "--- ThousandAndFirst.UnknownCallback:Run()\n")):
+            with self.subTest(frame=frame):
+                self.assert_unexpected_log_refused("unknown-frame-" + str(index), PLAYER_LOG + frame)
+
+    def test_foreign_dlc_and_near_name_warnings_remain_outside_ordinary_scope(self):
+        player_log = PLAYER_LOG + (
+            "MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it "
+            "to use the Dependencies field.\n"
+            "MODWARN [The Thousand and First Helper] - fixture compiler warning CS0114\n"
+            "MODWARN [The Thousand and First [ALPHA] Helper] - fixture compiler warning CS0114\n"
+            "MODWARN [The Thousand and First [ALPHA] [DEV SCENARIO HARNESS] Helper] - fixture warning\n"
+        )
+        self.env["LIFECYCLE_PLAYER_LOG"] = player_log
+        result = self.run_cli()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("PASS", self.rows()[0]["verdict"])
+        self.assertIn("PERSONA MATRIX GREEN", result.stdout)
+        self.assertEqual(player_log, (self.report.parent / "player-alpha.log").read_text())
+        self.assert_new_scoped_cycle(0)
+
+    def test_load_evidence_requires_complete_supported_title(self):
+        for title in OWNED_TITLES:
+            with self.subTest(title=title):
+                result = self.run_log_checker("INFO - Loaded [" + title + "]\n")
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                self.assertIn("SMOKE LOG CLEAN", result.stdout)
+        for title in ("The Thousand and First Helper",
+                      "The Thousand and First [ALPHA] Helper",
+                      "The Thousand and First [ALPHA] [DEV SCENARIO HARNESS] Helper"):
+            with self.subTest(foreign_title=title):
+                result = self.run_log_checker("INFO - Loaded [" + title + "]\n")
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertIn("no Thousand and First load/runtime evidence", result.stderr)
+
+    def test_explicit_allow_regex_still_allows_only_matching_diagnostic(self):
+        expected = "MODWARN [The Thousand and First [ALPHA] [DEV SCENARIO HARNESS]] - expected diagnostic\n"
+        allow = (r"^MODWARN [[]The Thousand and First [[]ALPHA[]] [[]DEV SCENARIO HARNESS[]][]]"
+                 r" - expected diagnostic$")
+        result = self.run_log_checker(expected, allow)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        result = self.run_log_checker(expected + "  at ThousandAndFirst.UnknownCallback.Run()\n", allow)
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn("SMOKE LOG FAILED", result.stderr)
+        self.assertIn("UnknownCallback.Run", result.stderr)
+        self.assertNotIn(expected.strip(), result.stderr)
 
     def test_existing_game_refuses_before_allocating_preparing_or_stopping(self):
         result = self.run_cli("existing_game")

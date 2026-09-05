@@ -227,6 +227,7 @@
     <Compile Include="..\Raids\KingdomRaidIncidentRules.05.LedgerChannelAndRecoveryShape.cs" />
     <Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
     <Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
+    <Compile Include="KingdomRaidLaunchNativeContractTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />

@@ -47,7 +47,7 @@ restored byte-identically from the release workspace for the full run.
 
 Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
 portable cases; those pre-market receipts are superseded by the beta run above. Current
-documentation/tooling passes 338 / 338 Tools tests. Retained art evidence is 28 / 28 Art tests. No complete native or human sign-off
+documentation/tooling passes 345 / 345 Tools tests. Retained art evidence is 28 / 28 Art tests. No complete native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
 exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 173 portable cases.
@@ -164,7 +164,7 @@ The current Growth lifecycle model contains a serialized subsidence branch, but 
 unwired in production. It is not a drop-in authority for this fix; introducing a parallel clock
 would not resolve the existing resident-departure ownership and recovery boundary.
 
-## Beta raid launch ordering — native acceptance still open
+## Beta raid launch ordering — bounded native evidence and open acceptance
 
 Five managed regressions pin the production launch source and exercise the compiled lifecycle
 rules. They do not execute `LaunchRaid` or `ResumeOpen`. The launch now publishes frozen
@@ -172,12 +172,43 @@ projections and leases before any factory call, then delegates to the existing r
 Creation, placement, and activation interleave per actor; the old all-create-first ordering is
 not preserved. No serialized fields changed.
 
-Native acceptance must execute an actual multi-raider launch and observe the exact published
-operation during every creation callback, earlier placed actors during later callbacks, and
-final unique IDs/markers with the exact spawned count and proved projections. A second-mint
-wrong-blueprint replacement or exception must retain the prior actor and any substitute while
-holding the durable operation. Same-blueprint replacement and interrupted-placement custody
-remain known defects, not passing recovery cases. Ordinary raids and save/reload stay unsigned.
+On 2026-09-05, two fresh sealed development personas passed their bounded native cases and the
+corrected TAF diagnostic checker against both raw Player.logs. The report, journals, and raw logs
+are retained under `/tmp/taf-native-raid-warning-clean.zqlWbN`. The runs are warning-clean for TAF;
+foreign DLC warnings remain visible in the raw logs and outside that scoped verdict.
+
+- **A, 08:55:05.821 UTC, profile `X0BWSf`:** an actual three-actor launch exposed the published
+  operation and frozen projections in every creation callback. Later callbacks captured earlier
+  placed actors. All three final projections were proved, with unique actor IDs and exactly one
+  matching ID and marker per frozen cell; the operation remained open at `EffectIntent`.
+- **B1, 08:57:32.350 UTC, profile `ldZwJE`:** replacing the second mint with a different-blueprint
+  `Chest` quarantined the published operation after one proved actor. The prior actor, abandoned
+  correct-blueprint original, and substitute remained retained; another activation minted nothing.
+  The lifecycle wire roundtrip preserved the quarantine as **model-only** evidence. Substitute
+  custody remains unproved; this is not replacement cleanup or save/load acceptance.
+
+Both runs loaded all five shipped profiles and left the world clock unchanged. Each used a
+synthetic founded fixture with a seeded Steading raid incident and party size three, not ordinary
+settlement progression. Both explicitly report `ordinary-acceptance=false` and `save-load=untested`.
+Receipt-scoped stops completed for PIDs `38272` and `2740`; both profiles and seals were retained.
+
+Historical runs A at 08:22:54 UTC (`PLGFPB`) and B1 at 08:25:22 UTC (`U3QlVC`) remain archived
+unchanged under `/tmp/taf-native-raid-profiles.qoZCFq`. Their gameplay assertions passed, but final
+raw-log review found CS0114 on the probe's `Reset` method: the old checker missed the nested
+Alpha/dev title and the compile template had disabled warnings. The corrected checker rejects
+both old logs as warning-clean acceptance. The fresh runs above use `ResetProbe` and supersede
+that diagnostic evidence; the compile template now enforces warnings as errors except CS2023.
+
+The runtime data correction makes two previously refused shipped profiles eligible: Snapjaws
+now name the numbered `0` blueprint variants; Cannibals exclude `Missile Cannibal` and repeat
+`Juicing Cannibal` in Town and City bands. The Snapjaw variants use tier-0 rolled gear; this is
+not proof of later-stage equipment balance. Frozen old-plan references may still safe-cancel
+when they no longer match the current profile; the correction does not make that impossible.
+
+B2's swallowed callback throw remains unimplemented. Same-blueprint replacement and interrupted
+placement custody remain known open defects. Ordinary raids, save/load, and the separate raid
+displacement cases 28b.1 and 28b.2 remain unsigned. Earlier native evidence below retains its
+historical scope; neither bounded launch pass closes those gates.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 
