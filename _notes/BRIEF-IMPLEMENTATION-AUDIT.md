@@ -1,5 +1,10 @@
 # Brief-to-implementation audit
 
+Beta evidence addendum 2026-09-05: **2949** production C# files, all strictly below 300 lines.
+Reviewed fresh-grant rollback/custody fencing, raid target-zone witnesses, and canonical aggregate
+proofs; current managed suites pass 11026 + 2601 cases. Native callbacks/play remain unsigned.
+Current release evidence authority: docs/STATUS.md; dated audit below is otherwise unchanged.
+
 **Date:** 2026-08-28
 **Status:** current audit and acceptance contract; no implementation authority by itself
 **Scope:** the tracked ruling/research corpus, ignored independent audits, current runtime, tests,

@@ -78,14 +78,10 @@ namespace ThousandAndFirst.DevTests
 		[Test]
 		public void CapPlusOneCreatesExplicitAggregateAndNextWindowStillOpens()
 		{
-			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
-			for (int window = 0; window <= KingdomPolityDispatchRules.MaximumDirectRecords; window++)
-			{
-				Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(window),
-					out List<KingdomPolityDueWork> work, out string failure), failure);
-				Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
-					state.Revision, work[0], out _, out failure), failure);
-			}
+			KingdomPolityDispatchState state = AggregatedState();
+			string before = Snapshot(state);
+			Assert.IsTrue(KingdomPolityDispatchRules.ValidState(state, out string failure), failure);
+			Assert.AreEqual(before, Snapshot(state));
 			int detail = 0, aggregate = 0;
 			for (int i = 0; i < state.DirectRecords.Count; i++)
 			{
@@ -100,6 +96,47 @@ namespace ThousandAndFirst.DevTests
 				Offer(KingdomPolityDispatchRules.MaximumDirectRecords + 1),
 				out List<KingdomPolityDueWork> next, out string nextFailure), nextFailure);
 			Assert.AreEqual(1, next.Count);
+		}
+
+		[TestCase(null, "supersession")]
+		[TestCase(null, "supersession count=")]
+		[TestCase(null, "supersession count=1")]
+		[TestCase(null, "supersession count=1; prior=")]
+		[TestCase(null, "supersession count=1; folded=")]
+		[TestCase(null, "supersession count=1; authority=")]
+		[TestCase("count=1;", "count=01;")]
+		[TestCase("count=1;", "count=0001;")]
+		[TestCase("count=1;", "count=+1;")]
+		[TestCase("count=1;", "count=18446744073709551616;")]
+		[TestCase("; prior=", "; previous=")]
+		[TestCase("; folded=", "; detail=")]
+		[TestCase("; authority=", "; owner=")]
+		[TestCase("; prior=", "; folded=")]
+		[TestCase("; folded=", "; authority=")]
+		[TestCase("; authority=", "; prior=")]
+		[TestCase("; prior=", "; prior=; prior=")]
+		[TestCase("; folded=", "; folded=; folded=")]
+		[TestCase("; authority=", "; authority=; authority=")]
+		public void AggregateProofRejectsMalformedOrNoncanonicalTextWithoutMutation(
+			string Existing, string Replacement)
+		{
+			KingdomPolityDispatchState state = AggregatedState();
+			KingdomPolityDirectRecord aggregate = state.DirectRecords.Find(x =>
+				x.RecordId.StartsWith(KingdomPolityDispatchRules.AggregatePrefix,
+					StringComparison.Ordinal));
+			aggregate.EndpointVerb = Existing == null ? Replacement
+				: aggregate.EndpointVerb.Replace(Existing, Replacement);
+			// Rehash the malformed text so validation must check the proof itself.
+			aggregate.RecordId = KingdomPolityDispatchRules.StoredId(
+				KingdomPolityDispatchRules.AggregatePrefix, "polity-direct-aggregate-v1", aggregate);
+			KingdomPolityDispatchRules.SortRecords(state.DirectRecords);
+			List<KingdomPolityDirectRecord> rows = state.DirectRecords;
+			string before = Snapshot(state); bool valid = true; string failure = null;
+			Assert.DoesNotThrow(() => valid = KingdomPolityDispatchRules.ValidState(state,
+				out failure));
+			Assert.IsFalse(valid); Assert.IsNotEmpty(failure);
+			Assert.AreSame(rows, state.DirectRecords);
+			Assert.AreEqual(before, Snapshot(state));
 		}
 
 		[Test]
@@ -238,6 +275,19 @@ namespace ThousandAndFirst.DevTests
 			Assert.IsFalse(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
 				settled, "ffffffffffffffffffffffffffffffff", out result, out failure));
 			Assert.AreEqual(settled, ledger.Revision);
+		}
+
+		private static KingdomPolityDispatchState AggregatedState()
+		{
+			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
+			for (int window = 0; window <= KingdomPolityDispatchRules.MaximumDirectRecords; window++)
+			{
+				Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(window),
+					out List<KingdomPolityDueWork> work, out string failure), failure);
+				Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+					state.Revision, work[0], out _, out failure), failure);
+			}
+			return state;
 		}
 
 		private static List<KingdomExperienceAdmissionCandidate> FairRows(ulong Window)

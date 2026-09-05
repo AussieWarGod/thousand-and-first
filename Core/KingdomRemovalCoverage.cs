@@ -102,7 +102,8 @@ namespace ThousandAndFirst
 			"r_TAF_KingdomMode",
 			"r_TAF_LabCivicOwners_v1", "r_TAF_LabJobRegistry_v1", "r_TAF_LabReplayProof_v1",
 			"r_TAF_MirrorGates", "r_TAF_NextPlanOrder", "r_TAF_PurposePortfolioPair",
-			"r_TAF_QuickstartProfile_v1", "r_TAF_QuickstartReceipt_v1",
+			"r_TAF_QuickstartProfile_v1", "r_TAF_QuickstartQuarantine_v1",
+			"r_TAF_QuickstartReceipt_v1",
 			"r_TAF_QuickstartWorldReservation_v1",
 			"r_TAF_SaveSystemRoster_v1"
 		};

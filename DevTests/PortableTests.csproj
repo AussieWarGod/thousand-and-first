@@ -23,6 +23,7 @@
 	<Compile Include="KingdomEducationPostObservationTests.cs" />
 	<Compile Include="KingdomEducationPostObservationSourceTests.cs" />
 	<Compile Include="KingdomQuickstartTests.cs" />
+	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
 	<Compile Include="KingdomGlobalIdentityResolverTests.cs" />
 	<Compile Include="KingdomGatehouseLogicalSource.cs" />
 	<Compile Include="KingdomArchitectureReceiptPrefixRulesTests.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="..\Core\KingdomCreedKindRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartModels.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.cs" />
+    <Compile Include="..\Core\KingdomQuickstartGrantScope.cs" />
     <Compile Include="..\Core\KingdomRealmChronicleIntentRules.cs" />
     <Compile Include="..\Polity\KingdomPolityAmbientModels.cs" />
     <Compile Include="..\Core\KingdomCreedDraft.cs" />

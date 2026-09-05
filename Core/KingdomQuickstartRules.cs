@@ -12,6 +12,7 @@ namespace ThousandAndFirst
 		public const string LocationSet = "TAFKingdomQuickstart";
 		public const string ProfileState = "r_TAF_QuickstartProfile_v1";
 		public const string ReceiptState = "r_TAF_QuickstartReceipt_v1";
+		public const string QuarantineState = "r_TAF_QuickstartQuarantine_v1";
 		public const string WorldReservationState = "r_TAF_QuickstartWorldReservation_v1";
 		public const string AdvisorOption = "r_TAF_OptionQuickstartAdvisor";
 		public const string GrantMarkerProperty = "r_TAF_QuickstartGrant_v1";

@@ -148,6 +148,7 @@ namespace ThousandAndFirst
 			if (zone == null || system?.LifecycleBook == null) return;
 			if (op != null && op.Action == KingdomLifecycleAction.RaidAttack
 				&& op.Phase == KingdomLifecyclePhase.EffectIntent
+				&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
 				&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal)
 				&& CountLiveRaiders(zone, op.Id, actor) == 0)
 			{

@@ -88,18 +88,5 @@ namespace ThousandAndFirst
 				&& Object.CurrentZone == Zone && Object.CurrentCell == Zone.GetCell(X, Y)
 				&& !string.IsNullOrEmpty(Object.ID);
 		}
-
-		private static void ObliterateExact(GameObject Object)
-		{
-			if (!GameObject.Validate(Object)) return;
-			if (Object.Inventory != null)
-			{
-				List<GameObject> contents = new List<GameObject>(Object.Inventory.Objects);
-				for (int i = 0; i < contents.Count; i++)
-					if (GameObject.Validate(contents[i]))
-						contents[i].Obliterate(null, Silent: true);
-			}
-			if (GameObject.Validate(Object)) Object.Obliterate(null, Silent: true);
-		}
 	}
 }

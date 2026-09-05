@@ -69,6 +69,7 @@ namespace ThousandAndFirst
 		{
 			if (system == null || zone == null || op == null
 				|| op.Phase != KingdomLifecyclePhase.EffectIntent
+				|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
 				|| !string.Equals(op.Origin, targetId, StringComparison.Ordinal)
 				|| op.Target != x || op.Count != y) return;
 			GameObject target = FindExact(zone, targetId);

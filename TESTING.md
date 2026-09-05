@@ -40,8 +40,13 @@ file order; use the table as the top-level checklist.
 
 ## Current portable evidence boundary
 
-The last retained managed suites pass 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
-portable cases, but both predate the final market source fan-in and require a final rerun. Current
+The 2026-09-05 beta suites pass 11,026 / 11,026 full managed cases and 2,601 / 2,601 portable
+cases, zero skips, with the installed Qud base configured. Both projects are engine-free; installed
+data checks do not execute native gameplay. The existing ignored creed-kind evidence fixture was
+restored byte-identically from the release workspace for the full run.
+
+Earlier retained managed suites passed 10,624 / 10,624 Qud-referenced/source cases and 2,325 / 2,325
+portable cases; those pre-market receipts are superseded by the beta run above. Current
 documentation/tooling passes 300 / 300 Tools tests and 28 / 28 Art tests. No current native or human sign-off
 exists; these automated passes do not close appearance, accessibility, compatibility, performance,
 or Steam installation. Earlier hosted checkpoint `d285129` remains historical evidence for its
@@ -54,12 +59,28 @@ fabricating fixtures. TestMain rejects an unexpected or
 missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
 Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
 exact Qud base.
-`docs/STATUS.md` retains named checkpoint receipts; only the Tools and Art counts above sign current
-documentation/static bytes. None of this signs native Qud behavior, appearance, accessibility, current-revision
+`docs/STATUS.md` retains named checkpoint receipts; the beta managed runs above cover current
+source contracts. None of this signs native Qud behavior, appearance, accessibility, current-revision
 native/human/compatibility/performance gates, or Steam
 installation. Product scope remains owned by [VISION.md](VISION.md). The current structural scan
-runs across 2945 production C# sources. The cold-install inventory contains 2976 files.
+runs across 2949 production C# sources. The cold-install inventory contains 2980 files.
 0 staged sources breach the line cap. `docs/STRUCTURE_REVIEW.json` is signed against the current digest under the author's Addendum 9 ruling.
+
+## Beta Quickstart cleanup — native cases still unsigned
+
+Use disposable development profiles and controlled fault injection; never alter an ordinary save
+to exercise cleanup failures. Engine-free tests execute the production allocation-scope protocol,
+but do not prove native object factories, placement callbacks, destruction, or save/reload.
+
+| Case | Action | Required result |
+|---|---|---|
+| QSB1 | Complete each Quickstart profile, with advisor enabled and disabled; save and reload | One exact grant per role, unchanged opening quantities, no quarantine on the normal path |
+| QSB2 | Refuse post-placement verification (for example, reduce the starter casks' capacity below their contract), then retry after restoring valid content | Every fresh allocation from the refused attempt is gone; retry creates one grant, never a duplicate |
+| QSB3 | Reject or move a fresh food/material child during insertion; repeat with a callback throwing before and after placement | Known fresh roots and children are cleaned up by exact reference, including moved/rejected children; unknown factory custody fences retry |
+| QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
+| QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
+
+Raid displacement regressions are separate native cases 28b.1 and 28b.2 below.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
 
@@ -797,6 +818,8 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28 | Resolve any open test incident; enter `kingdom:raid`; Charter → **Answer a threat** → **Refuse and meet the warband**; remain here until its displayed due tick | The frozen profile spawns marked snapjaws only on passable zone-edge cells that have a path to the frozen named store. Spawn itself takes **no water** |
 | 28a | Watch the marked raiders approach; compare dedicated water before contact and after one reaches the named store | Water stays unchanged until physical adjacency. At contact, at most the frozen raid stake (up to 24 drams, reduced by proved defence) leaves that exact fresh-water store and the incident records the proved amount |
 | 28b | Repeat the fight and defeat every marked raider before any reaches the store | The death of the final marked raider resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
+| 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. The remaining target-zone band stays actionable and its last death resolves once with zero plunder. Repeat across save/load; this is a native gate, not signed by source-contract tests |
+| 28b.2 | In a native debugger/fault-injection fixture, move the exact named store and a marked raider to another zone at the original coordinates; invoke `StepRaider` there before the next target-zone inspection | This foreign-zone callback takes no water, records no plunder, and leaves the operation in `EffectIntent`, unquarantined. Restore the exact objects to the frozen zone and prove one normal contact resolution. Ordinary target-zone inspection may independently resolve a missing objective; isolate that separate event |
 | 28c | After a physically proved store plunder, Charter → raid recovery → **Accept** | One plain base-game quest appears with no custom manager, reward, reputation, or XP. The settlement watch is exactly one defence point weaker until recovery resolves |
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |

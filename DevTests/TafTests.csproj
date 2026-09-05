@@ -286,6 +286,7 @@
     <Compile Include="..\Core\KingdomStyleRules.Tags.cs" />
     <Compile Include="..\Chronicle\KingdomChronicleReceiptRules.Disputed.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.cs" />
+    <Compile Include="..\Core\KingdomQuickstartGrantScope.cs" />
     <Compile Include="..\Core\KingdomInheritRules.LegacyProxyShape.cs" />
     <Compile Include="..\Core\KingdomInheritRules.Prepare.cs" />
     <Compile Include="..\Core\KingdomFounderHistoryRules.Migration.cs" />
@@ -354,6 +355,7 @@
     <Compile Include="KingdomPoseAwareSitingTests.cs" />
     <Compile Include="KingdomQolPhysicalSourceTests.cs" />
     <Compile Include="KingdomQuickstartTests.cs" />
+    <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomReachObservationSourceTests.cs" />
     <Compile Include="KingdomRealmChronicleIntentRulesTests.cs" />
     <Compile Include="KingdomResidentTransitionAuthoritySourceTests.cs" />

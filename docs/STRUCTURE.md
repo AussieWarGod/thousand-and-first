@@ -20,11 +20,17 @@ python3 Tools/check-structure.py --release
 
 ## Current hardening checkpoint
 
-`Tools/check-structure.py --json` currently reports 2945 staged production C# files and 420,770
+`Tools/check-structure.py --json` currently reports 2949 staged production C# files and 420,975
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`dbcd95637ec3558fa00951c7dd69acc2efa4e9e55ec9d94283e7e68d5b25ce0e`. The census reports
-1373 files with direct `XRL` imports; 0 of those exceed the line limit.
+`9a85ea364957d6a98d8e1649f1a745a03df04f4a09c13441b6a8d94a8443e7c3`. The census reports
+1376 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The 2026-09-05 beta delta retains the reviewed `abec8a0` baseline and adds four coherent shards:
+an engine-free fresh-allocation scope, its Qud custody adapter, material grant creation, and stock
+verification. Independent reviews covered every changed production file, the canonical polity
+proof boundary, and the raid target-zone guards. A vanilla random-loot interaction found during
+review was fixed before signing. These are source/engine-contract reviews, not native playtests.
 
 No staged production source breaches the strict physical-line cap. This clears the mechanical
 line debt; the exact-inventory semantic review required for release is supplied by `docs/STRUCTURE_REVIEW.json`, bound to the digest below.

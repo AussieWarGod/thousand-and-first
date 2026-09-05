@@ -160,6 +160,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ForeignZoneDeathOrContactCannotSettleTheTargetZoneAttack()
+		{
+			string source = Source(Path.Combine("Raids", "KingdomRaids.cs"));
+			string death = Slice(source, "internal static void RaiderDying(",
+				"private static bool PublishSimple(");
+			string step = Slice(source, "internal static void StepRaider(",
+				"internal static void RaiderDying(");
+			string contact = Slice(source, "private static void ProveObjectiveContact(",
+				"private static bool TryDeriveAttackResult(");
+			StringAssert.Contains("Zone zone = actor.CurrentZone;", death);
+			StringAssert.Contains("ProveObjectiveContact(system, actor.CurrentZone, op,", step);
+			int deathZone = death.IndexOf(
+				"&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
+				StringComparison.Ordinal);
+			Assert.Greater(deathZone, 0);
+			Assert.Greater(death.IndexOf("CountLiveRaiders(zone, op.Id, actor)",
+				StringComparison.Ordinal), deathZone);
+			Assert.Greater(death.IndexOf("SkipEffectWithoutContact", StringComparison.Ordinal),
+				deathZone);
+			int contactZone = contact.IndexOf(
+				"|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
+				StringComparison.Ordinal);
+			Assert.Greater(contactZone, 0);
+			Assert.Greater(contact.IndexOf("FindExact(zone, targetId)", StringComparison.Ordinal),
+				contactZone);
+			foreach (string mutation in new[] { "ReserveExactWater(amount)", "BeginEffect(",
+				"CommitEffect(", "AdvancePhase(", "ResumeOpen(" })
+				Assert.Greater(contact.IndexOf(mutation, StringComparison.Ordinal), contactZone,
+					mutation + " must follow the exact zone guard");
+		}
+
+		[Test]
 		public void InterruptedProjectionIntentResumesOnlyFromExactPhysicalEvidence()
 		{
 			string raids = Source(Path.Combine("Raids", "KingdomRaids.cs"));

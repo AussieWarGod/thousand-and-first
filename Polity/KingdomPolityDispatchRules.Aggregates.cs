@@ -154,13 +154,15 @@ namespace ThousandAndFirst
 			string folded = value.Substring(foldedAt + foldedMark.Length,
 				authorityAt - foldedAt - foldedMark.Length);
 			string authority = value.Substring(authorityAt + authorityMark.Length);
+			string countText = count.ToString(CultureInfo.InvariantCulture);
 			string expected = KingdomPolityRules.ActivationId(
 				"taf:event:polity-direct-aggregate:v1:", "polity-direct-supersession-v1",
-				prior, folded, count.ToString(CultureInfo.InvariantCulture),
+				prior, folded, countText,
 				((byte)Record.Purpose).ToString(CultureInfo.InvariantCulture));
 			return KingdomPolityRules.SemanticId(prior)
 				&& KingdomPolityRules.TypedId(folded, DirectPrefix) && authority == expected
-				&& Record.SourceRef == expected;
+				&& Record.SourceRef == expected && value == start + countText + priorMark + prior
+					+ foldedMark + folded + authorityMark + authority;
 		}
 
 		internal static string DirectAuthorityDigest(KingdomPolityDispatchState State)

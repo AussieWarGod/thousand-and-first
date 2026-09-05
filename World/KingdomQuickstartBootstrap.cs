@@ -53,6 +53,11 @@ namespace ThousandAndFirst
 		{
 			CompletedNow = false;
 			Failure = "";
+			if (GrantQuarantined(Game))
+			{
+				Failure = "Quickstart grant custody is quarantined; replacement grants are forbidden.";
+				return false;
+			}
 			KingdomQuickstartProfile profile = null;
 			Zone zone = The.ZoneManager?.ActiveZone;
 			Cell playerCell = The.Player?.CurrentCell;
@@ -152,7 +157,8 @@ namespace ThousandAndFirst
 
 			if (receipt.Phase == KingdomQuickstartPhase.Founded)
 			{
-				GameObject water = CreateWater(zone, receipt, out Failure);
+				GameObject water = CreateWater(Game, zone, receipt, out Failure);
+				if (water == null) return false;
 				if (!VerifyWaterGrant(zone, water, receipt, true, out Failure)) return false;
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.WaterStocked,
 					water.IDIfAssigned, KingdomQuickstartAdvisorDisposition.Unresolved,
@@ -164,7 +170,8 @@ namespace ThousandAndFirst
 
 			if (receipt.Phase == KingdomQuickstartPhase.WaterStocked)
 			{
-				GameObject larder = CreateLarder(zone, receipt, out Failure);
+				GameObject larder = CreateLarder(Game, zone, receipt, out Failure);
+				if (larder == null) return false;
 				if (!VerifyLarderGrant(zone, larder, receipt, true, out Failure)) return false;
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.FoodStocked,
 					larder.IDIfAssigned, KingdomQuickstartAdvisorDisposition.Unresolved,
@@ -176,7 +183,8 @@ namespace ThousandAndFirst
 
 			if (receipt.Phase == KingdomQuickstartPhase.FoodStocked)
 			{
-				GameObject stockpile = CreateMaterials(zone, receipt, out Failure);
+				GameObject stockpile = CreateMaterials(Game, zone, receipt, out Failure);
+				if (stockpile == null) return false;
 				if (!VerifyMaterialsGrant(zone, stockpile, receipt, true,
 					out Failure)) return false;
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.MaterialsStocked,
@@ -189,7 +197,7 @@ namespace ThousandAndFirst
 
 			if (receipt.Phase == KingdomQuickstartPhase.MaterialsStocked)
 			{
-				if (!TryResolveAdvisor(zone, profile, receipt, out GameObject advisor,
+				if (!TryResolveAdvisor(Game, zone, profile, receipt, out GameObject advisor,
 					out KingdomQuickstartAdvisorDisposition disposition,
 					out Failure)) return false;
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.AdvisorResolved,

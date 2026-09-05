@@ -15,6 +15,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomQuickstartRules.ProfileState,
 			KingdomQuickstartRules.ReceiptState,
+			KingdomQuickstartRules.QuarantineState,
 			KingdomQuickstartRules.WorldReservationState
 		};
 
@@ -197,6 +198,8 @@ namespace ThousandAndFirst.Tests
 			string bootstrap = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Stock.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Materials.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.StockVerification.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Advisor.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Recovery.cs")
 				+ TestMain.ReadRepositoryText(
@@ -229,7 +232,8 @@ namespace ThousandAndFirst.Tests
 			string bootstrap = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.cs");
 			string stock = TestMain.ReadRepositoryText(
-				"World/KingdomQuickstartBootstrap.Stock.cs");
+				"World/KingdomQuickstartBootstrap.Stock.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Materials.cs");
 			string recovery = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Recovery.cs");
 			string lifecycle = TestMain.ReadRepositoryText(
@@ -266,7 +270,7 @@ namespace ThousandAndFirst.Tests
 			string verification = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Verification.cs");
 			string stock = TestMain.ReadRepositoryText(
-				"World/KingdomQuickstartBootstrap.Stock.cs");
+				"World/KingdomQuickstartBootstrap.StockVerification.cs");
 			StringAssert.Contains("Receipt, false, out Failure", verification);
 			Assert.That(Count(stock, "if (!InitialQuantity) return true;"), Is.EqualTo(2));
 			StringAssert.Contains("if (!InitialQuantity) return true;", stock);
