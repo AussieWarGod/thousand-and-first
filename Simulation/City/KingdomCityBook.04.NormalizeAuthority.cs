@@ -16,6 +16,18 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public void Normalize()
 		{
+			if (SubsidenceReadFailed) return;
+			if (!ThousandAndFirst.KingdomSubsidenceStepCodec.TryDecode(SubsidenceModel,
+				out ThousandAndFirst.KingdomSubsidenceStepBook subsidence))
+			{
+				SubsidenceReadFailed = true;
+				return;
+			}
+			if (HasFrozenRung(subsidence))
+			{
+				if (!HasValidSubsidenceStorage()) SubsidenceReadFailed = true;
+				return;
+			}
 			NormalizeSidecarFields();
 			NormalizeZoneColumns();
 			NormalizeWorkColumns();

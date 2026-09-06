@@ -26,7 +26,8 @@ PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
 RELEASE_EVIDENCE_SCHEMA = 4
-ALPHA_CANDIDATE_SCHEMA = 1
+ALPHA_CANDIDATE_SCHEMA = 2
+LEGACY_ALPHA_CANDIDATE_SCHEMA = 1
 FIRST_ALPHA_RELEASE_VERSION = "0.3.0"
 ALPHA_RELEASE_VERSION_PATTERN = re.compile(r"^0\.3\.(?:0|[1-9][0-9]*)$")
 ALPHA_RELEASE_CHANNEL = "v0.3 Alpha"
@@ -232,10 +233,20 @@ def _qud_text_error(value: str) -> str | None:
     return None
 
 
-def _load_json(path: Path) -> dict:
+def _load_json(path: Path, *, reject_duplicates: bool = False) -> dict:
+    def unique_fields(pairs: list[tuple[str, object]]) -> dict:
+        result: dict = {}
+        for key, item in pairs:
+            if key in result:
+                raise ValidationError(f"{path.name} contains duplicate JSON field {key!r}")
+            result[key] = item
+        return result
+
     try:
         with path.open(encoding="utf-8-sig") as stream:
-            value = json.load(stream)
+            value = json.load(
+                stream, object_pairs_hook=unique_fields if reject_duplicates else None
+            )
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
         raise ValidationError(f"cannot read {path.name}: {error}") from error
     if not isinstance(value, dict):
@@ -706,6 +717,99 @@ def validate_alpha_claims(
         )
 
 
+def _validated_alpha_record(record_path: Path) -> dict:
+    """Validate intrinsic provenance; external files and subscribed bytes remain separate proofs."""
+    record = _load_json(record_path, reject_duplicates=True)
+    schema = record.get("schemaVersion")
+    keys = {
+        "schemaVersion",
+        "releaseChannel",
+        "releaseVersion",
+        "candidateCommit",
+        "gameMarketingVersion",
+        "gameCoreBuild",
+        "workshopId",
+        "previewSha256",
+        "privatePackageReceiptSha256",
+    }
+    if schema == ALPHA_CANDIDATE_SCHEMA:
+        keys.add("privateWorkshopId")
+    errors: list[str] = []
+    if set(record) != keys:
+        errors.append(
+            f"Alpha candidate fields must exactly match schema version {schema}; "
+            f"missing={sorted(keys - set(record))}, extra={sorted(set(record) - keys)}"
+        )
+    if (
+        type(schema) is not int
+        or schema not in (LEGACY_ALPHA_CANDIDATE_SCHEMA, ALPHA_CANDIDATE_SCHEMA)
+    ):
+        errors.append("Alpha candidate schemaVersion must be 1 (historical 0.3.0 only) or 2")
+    alpha_version = record.get("releaseVersion")
+    if (
+        not isinstance(alpha_version, str)
+        or ALPHA_RELEASE_VERSION_PATTERN.fullmatch(alpha_version) is None
+    ):
+        errors.append(
+            f"Alpha candidate releaseVersion must be {FIRST_ALPHA_RELEASE_VERSION} "
+            "or a later canonical 0.3.x patch"
+        )
+    if schema == LEGACY_ALPHA_CANDIDATE_SCHEMA and alpha_version != FIRST_ALPHA_RELEASE_VERSION:
+        errors.append("Alpha candidate schema 1 is historical 0.3.0 only; later patches require schema 2")
+    if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
+        errors.append(
+            f"Alpha candidate releaseChannel must be {ALPHA_RELEASE_CHANNEL!r}"
+        )
+    candidate = record.get("candidateCommit")
+    if (
+        not isinstance(candidate, str)
+        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
+    ):
+        errors.append("Alpha candidateCommit must be a lowercase full Git commit")
+    if record.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
+        errors.append(
+            f"Alpha candidate gameMarketingVersion must be {GAME_MARKETING_VERSION}"
+        )
+    if record.get("gameCoreBuild") != GAME_CORE_BUILD:
+        errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
+    id_fields = ("workshopId", "privateWorkshopId") if schema == ALPHA_CANDIDATE_SCHEMA else ("workshopId",)
+    for field in id_fields:
+        try:
+            _workshop_id({"WorkshopId": record.get(field)})
+        except ValidationError as error:
+            errors.append(f"Alpha candidate {field}: {error}")
+    if schema == ALPHA_CANDIDATE_SCHEMA and record.get("privateWorkshopId") == record.get("workshopId"):
+        errors.append("Alpha candidate privateWorkshopId must differ from public workshopId")
+    for field in ("previewSha256", "privatePackageReceiptSha256"):
+        value = record.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None or value == "0" * 64:
+            errors.append(f"Alpha candidate {field} must be a nonzero lowercase SHA-256")
+    if record.get("previewSha256") == INTERIM_PREVIEW_SHA256:
+        errors.append("Alpha candidate refuses the known interim preview; capture the final native preview")
+    if errors:
+        raise ValidationError("Alpha candidate is invalid; " + "; ".join(errors))
+    return record
+
+
+def validate_alpha_workshop_binding(
+    record_path: Path, private_workshop_path: Path, public_workshop_path: Path
+) -> tuple[int, int]:
+    """Bind two item identities without writing either; full candidate/file validation is still required."""
+    record = _validated_alpha_record(record_path)
+    private = _load_json(private_workshop_path, reject_duplicates=True)
+    public = _load_json(public_workshop_path, reject_duplicates=True)
+    private_id, public_id = _workshop_id(private), _workshop_id(public)
+    expected_private = (
+        record["workshopId"] if record["schemaVersion"] == LEGACY_ALPHA_CANDIDATE_SCHEMA
+        else record["privateWorkshopId"]
+    )
+    if private.get("Visibility") != "0" or public.get("Visibility") != "2":
+        raise ValidationError("Alpha Workshop binding requires exact private Visibility '0' and public Visibility '2'")
+    if private_id != expected_private or public_id != record["workshopId"]:
+        raise ValidationError("Alpha Workshop binding IDs do not match the validated candidate record")
+    return private_id, public_id
+
+
 def validate_alpha_candidate(
     manifest: dict,
     preview_path: Path,
@@ -718,65 +822,12 @@ def validate_alpha_candidate(
     validate_alpha_claims(manifest, readme_path, changelog_path)
     validate_preview(preview_path)
     validate_workshop(workshop_path, manifest, "alpha")
-    record = _load_json(record_path)
-    keys = {
-        "schemaVersion",
-        "releaseChannel",
-        "releaseVersion",
-        "candidateCommit",
-        "gameMarketingVersion",
-        "gameCoreBuild",
-        "workshopId",
-        "previewSha256",
-        "privatePackageReceiptSha256",
-    }
+    record = _validated_alpha_record(record_path)
     errors: list[str] = []
-    if set(record) != keys:
-        errors.append(
-            f"Alpha candidate fields must exactly match schema version {ALPHA_CANDIDATE_SCHEMA}"
-        )
-    if (
-        record.get("schemaVersion") != ALPHA_CANDIDATE_SCHEMA
-        or type(record.get("schemaVersion")) is not int
-    ):
-        errors.append(f"Alpha candidate schemaVersion must be {ALPHA_CANDIDATE_SCHEMA}")
-    alpha_version = manifest.get("version")
-    if (
-        not isinstance(alpha_version, str)
-        or ALPHA_RELEASE_VERSION_PATTERN.fullmatch(alpha_version) is None
-    ):
-        errors.append(
-            f"Alpha package manifest version must be {FIRST_ALPHA_RELEASE_VERSION} "
-            "or a later canonical 0.3.x patch"
-        )
-    if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
-        errors.append(
-            f"Alpha candidate releaseChannel must be {ALPHA_RELEASE_CHANNEL!r}"
-        )
-    if record.get("releaseVersion") != manifest.get("version"):
+    if record["releaseVersion"] != manifest.get("version"):
         errors.append("Alpha candidate version must match manifest version")
-    candidate = record.get("candidateCommit")
-    if (
-        not isinstance(candidate, str)
-        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
-    ):
-        errors.append("Alpha candidateCommit must be a lowercase full Git commit")
-        candidate = ""
-    if record.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
-        errors.append(
-            f"Alpha candidate gameMarketingVersion must be {GAME_MARKETING_VERSION}"
-        )
-    if record.get("gameCoreBuild") != GAME_CORE_BUILD:
-        errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
-    try:
-        workshop_id = _workshop_id(_load_json(workshop_path))
-    except ValidationError as error:
-        errors.append(str(error))
-        workshop_id = None
-    if (
-        type(record.get("workshopId")) is not int
-        or record.get("workshopId") != workshop_id
-    ):
+    workshop_id = _workshop_id(_load_json(workshop_path, reject_duplicates=True))
+    if record["workshopId"] != workshop_id:
         errors.append("Alpha candidate workshopId must match workshop.json")
     try:
         preview_hash = hashlib.sha256(preview_path.read_bytes()).hexdigest()
@@ -788,19 +839,9 @@ def validate_alpha_candidate(
         errors.append(
             "Alpha candidate refuses the known interim preview; capture the final native preview"
         )
-    receipt_hash = record.get("privatePackageReceiptSha256")
-    if (
-        not isinstance(receipt_hash, str)
-        or re.fullmatch(r"[0-9a-f]{64}", receipt_hash) is None
-        or receipt_hash == "0" * 64
-    ):
-        errors.append(
-            "Alpha candidate privatePackageReceiptSha256 must be a nonzero lowercase SHA-256"
-        )
-        receipt_hash = ""
     if errors:
         raise ValidationError("Alpha candidate is invalid; " + "; ".join(errors))
-    return candidate, receipt_hash
+    return record["candidateCommit"], record["privatePackageReceiptSha256"]
 
 
 def validate_release_evidence(
@@ -1587,6 +1628,10 @@ def main(argv: list[str] | None = None) -> int:
     alpha_candidate.add_argument("record", type=Path)
     alpha_candidate.add_argument("readme", type=Path)
     alpha_candidate.add_argument("changelog", type=Path)
+    alpha_binding = subparsers.add_parser("alpha-workshop-binding")
+    alpha_binding.add_argument("record", type=Path)
+    alpha_binding.add_argument("private_workshop", type=Path)
+    alpha_binding.add_argument("public_workshop", type=Path)
     artifact_refs = subparsers.add_parser("evidence-artifact-refs")
     artifact_refs.add_argument("record", type=Path)
     workshop_id = subparsers.add_parser("workshop-id")
@@ -1642,6 +1687,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "evidence-artifact-refs":
             for artifact_ref in release_evidence_artifact_refs(args.record):
                 print(artifact_ref)
+        elif args.command == "alpha-workshop-binding":
+            validate_alpha_workshop_binding(args.record, args.private_workshop, args.public_workshop)
         elif args.command == "workshop-id":
             print(_workshop_id(_load_json(args.path)))
         elif args.command == "testing-pass-ids":

@@ -162,5 +162,130 @@ namespace ThousandAndFirst.Simulation.City
 			return true;
 		}
 
+		// Witnessed death is not inferred from a missing binding or body. The journal supplies
+		// the exact job before/prepared pair; only that pair can authorize this narrow bridge.
+		internal static bool TryCaptureWitnessedDeath(KingdomSystem system, int id, long tick,
+			string zone, out string before, out string prepared)
+		{
+			before = ""; prepared = "";
+			if (!ReadWitnessJobs(system, id, out var jobs, out var row, out bool found)) return false;
+			if (!found) return true;
+			if (tick <= row.StartTick || string.IsNullOrEmpty(zone)) return false;
+			if (KingdomExpeditionRules.IsResolutionPrepared(row.OriginCode))
+			{
+				if (!WitnessPrepared(row, tick)) return false;
+				// A later death does not replace an already-owned expedition result or its date.
+				before = prepared = WitnessJob(row); return true;
+			}
+			var next = row.WithExpeditionResolution((int)KingdomExpeditionOutcome.ResidentDiedOnGround,
+				tick, zone, KingdomExpeditionDeedDisposition.NotApplicable, null, null, null);
+			if (!jobs.TryReplace(next, out _, out _)) return false;
+			before = WitnessJob(row); prepared = WitnessJob(next); return true;
+		}
+		internal static bool TryPrepareWitnessedDeath(KingdomSystem system, int id, long tick,
+			string zone, string before, string prepared, GameObject body, Func<bool> exact)
+		{
+			if (exact == null || !exact() || !ReadWitnessJobs(system, id, out _, out var row, out bool found)) return false;
+			if (before == "" || prepared == "") return before == "" && prepared == "" && !found && exact();
+			if (!found) return false;
+			string current = WitnessJob(row);
+			if (current != before && current != prepared) return false;
+			if (before == prepared && !WitnessPrepared(row, tick)) return false;
+			if (current == before && before != prepared)
+			{
+				var expected = row.WithExpeditionResolution((int)KingdomExpeditionOutcome.ResidentDiedOnGround,
+					tick, zone, KingdomExpeditionDeedDisposition.NotApplicable, null, null, null);
+				if (tick <= row.StartTick || WitnessJob(expected) != prepared || !exact()
+					|| !TryPublishTerminalResolution(system, row, KingdomExpeditionOutcome.ResidentDiedOnGround,
+						tick, zone, out _, out _)) return false;
+			}
+			if (!exact() || !ReadWitnessJobs(system, id, out _, out var after, out found)
+				|| !found || WitnessJob(after) != prepared) return false;
+			if (body != null)
+			{
+				if (KingdomResidents.IdOf(body) != id || !exact()) return false;
+				body.RemoveIntProperty(ResidentJobProperty);
+				if (!exact()) return false;
+				body.SetStringProperty(DebitReceiptProperty, null, RemoveIfNull: true);
+			}
+			return exact();
+		}
+		private static bool WitnessPrepared(KingdomJobRow row, long tick)
+		{
+			return KingdomExpeditionRules.IsResolutionPrepared(row.OriginCode)
+				&& KingdomJobRules.ValidExpeditionOutcomeForPhase(row.OriginCode, row.OutcomeCode)
+				&& KingdomJobRules.ValidExpeditionResultReceipt(row) && row.DueTick > row.StartTick
+				&& row.DueTick <= tick && !string.IsNullOrEmpty(row.DestZoneId);
+		}
+		private static bool ReadWitnessJobs(KingdomSystem system, int id,
+			out KingdomJobTable table, out KingdomJobRow row, out bool found)
+		{
+			table = null; row = default(KingdomJobRow); found = false;
+			var source = system?.Jobs;
+			if (source == null || !source.TryProjectResidentTransition(id, out _)) return false;
+			try
+			{
+				string raw = WitnessJobs(source);
+				var copy = KingdomRealmArchive.CloneJobs(source);
+				if (!copy.TryRead(out table, out _) || WitnessJobs(copy) != raw
+					|| !ReferenceEquals(source, system.Jobs) || WitnessJobs(source) != raw) return false;
+				for (int i = 0; i < table.Count; i++)
+				{
+					if (!table.TryAt(i, out var candidate)) return false;
+					if (candidate.Kind != KingdomJobKind.Expedition || candidate.SubjectId != id) continue;
+					if (found) return false; row = candidate; found = true;
+				}
+				return true;
+			}
+			catch { table = null; return false; }
+		}
+		private static string WitnessJob(KingdomJobRow row)
+		{
+			if (!KingdomJobTable.TryCreate(new[] { row }, out var table, out _)) throw new InvalidOperationException();
+			var copy = new KingdomJobRegistry();
+			if (!copy.TryPublish(table, out _)) throw new InvalidOperationException();
+			return WitnessJobs(copy);
+		}
+		private static string WitnessJobs(KingdomJobRegistry x)
+		{
+			if (x.JobCounter < 0 || x.JobIds == null || x.JobIds.Count > KingdomJobRules.MaxOpenJobs)
+				throw new InvalidOperationException();
+			for (int i = 0; i < x.JobIds.Count; i++)
+				if (!Enum.IsDefined(typeof(KingdomJobKind), (byte)x.Kinds[i]) || x.Kinds[i] < 0 || x.Kinds[i] > 255
+					|| !Enum.IsDefined(typeof(KingdomStockKind), (byte)x.Cargos[i]) || x.Cargos[i] < 0 || x.Cargos[i] > 255
+					|| !Enum.IsDefined(typeof(KingdomJobStatus), (byte)x.Statuses[i]) || x.Statuses[i] < 0 || x.Statuses[i] > 255)
+					throw new InvalidOperationException();
+			object[] columns = { x.JobIds, x.Kinds, x.Cargos, x.CargoAmounts, x.SourceZoneIds, x.DestZoneIds,
+				x.StartTicks, x.WalkTicksPerCell, x.Statuses, x.OriginCodes, x.DepositLegIndexes, x.SubjectIds,
+				x.SubjectNames, x.TargetNames, x.DueTicks, x.WaterCosts, x.ProvisionCosts, x.OutcomeCodes,
+				x.ExpeditionDeedDispositions, x.ExpeditionDeedPolityIds, x.ExpeditionDeedCauseRefs, x.ExpeditionDeedFigureRefs,
+				x.DeliverySourceEndpointIds, x.DeliverySourceObjectIds, x.DeliverySourceXs, x.DeliverySourceYs,
+				x.DeliveryTargetEndpointIds, x.DeliveryTargetObjectIds, x.DeliveryTargetXs, x.DeliveryTargetYs,
+				x.DeliverySourceBeforeAmounts, x.DeliveryTripIds, x.DeliveryStopOrdinals, x.DeliveryPhases,
+				x.DeliveryCargoAuthorityKinds, x.DeliveryOwnerOperationIds, x.DeliveryOwnerManifestVersions,
+				x.DeliveryOwnerManifestDigests, x.DeliveryOwnerManifestRevisions, x.DeliveryManifestSourceStarts,
+				x.DeliveryManifestSourceCounts, x.DeliveryTargetBeforeAmounts, x.DeliveryTargetReceiptStates,
+				x.LegCounts, x.LegZoneIds, x.LegEnterX, x.LegEnterY, x.LegExitX, x.LegExitY, x.LegLengths,
+				x.LegDepartTicks, x.LegArriveTicks };
+			var values = new List<string> { x.JobCounter.ToString(global::System.Globalization.CultureInfo.InvariantCulture) };
+			foreach (object column in columns)
+			{
+				var items = column as global::System.Collections.IList;
+				if (items == null || items.Count > KingdomJobRules.MaxOpenJobs * KingdomItineraryRules.MaxLegs)
+					throw new InvalidOperationException();
+				var fields = new List<string>();
+				foreach (object item in items)
+				{
+					if (item == null) fields.Add(null);
+					else if (item is string text && KingdomResidentDeathRules.Text(text, 1024)) fields.Add(text);
+					else if (item is int number) fields.Add(number.ToString(global::System.Globalization.CultureInfo.InvariantCulture));
+					else if (item is long tick) fields.Add(tick.ToString(global::System.Globalization.CultureInfo.InvariantCulture));
+					else throw new InvalidOperationException();
+				}
+				values.Add(KingdomResidentDeathCodec.Fields(fields.ToArray()));
+			}
+			return KingdomResidentDeathCodec.Fields(values.ToArray());
+		}
+
 	}
 }

@@ -1175,15 +1175,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void NormalizeRepairsASubsidenceReadingNothingEverWrote()
+		public void NormalizePreservesCorruptSubsidenceClockAndRepairsOnlyTheDisplayedLevel()
 		{
-			// Subsidence mints nothing, so a stamp or a level below zero is a corrupt reading and
-			// not a settlement in debt. Both fail closed to "nothing measured yet".
+			// A corrupt clock is evidence for its owner's refusal, not authority to re-anchor.
 			KingdomSettlement settlement = new KingdomSettlement();
 			settlement.LastSubsidenceTick = -5000L;
 			settlement.SupportedLevel = -9;
 			settlement.Normalize();
-			Assert.AreEqual(0L, settlement.LastSubsidenceTick);
+			Assert.AreEqual(-5000L, settlement.LastSubsidenceTick);
 			Assert.AreEqual(0, settlement.SupportedLevel);
 		}
 

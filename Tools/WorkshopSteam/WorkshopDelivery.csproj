@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>TafWorkshopDelivery</AssemblyName>
+    <StartupObject>ThousandAndFirst.WorkshopSteam.SteamVerify</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="SteamVerify.cs" />
+    <Compile Include="SteamInstalledDelivery.cs" />
+    <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackage.Install.cs" />
+    <Compile Include="UploadProtocol.cs" />
+    <Compile Include="UploadCallbackRules.cs" />
+    <Compile Include="ReleaseSubmissionObservation.cs" />
+    <Compile Include="SteamUploadAuthority.cs" />
+    <Compile Include="UploadAttemptLease.cs" />
+    <Compile Include="UploadAttemptLease.Registry.cs" />
+    <Compile Include="WorkshopItemLock.cs" />
+    <Compile Include="WorkshopReleaseRegistry.cs" />
+    <Compile Include="../ScenarioFileTrust.cs" Link="ScenarioFileTrust.cs" />
+    <Reference Include="com.rlabrecque.steamworks.net">
+      <HintPath>$(QudManaged)/com.rlabrecque.steamworks.net.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <Target Name="RequireInstalledSteamworks" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(QudManaged)/com.rlabrecque.steamworks.net.dll')"
+      Text="Set QudManaged to the licensed installed Qud Managed directory." />
+  </Target>
+</Project>

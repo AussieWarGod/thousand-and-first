@@ -54,12 +54,13 @@ namespace ThousandAndFirst
 
 		private static bool EmigrateCore(KingdomSystem System, Zone Z, KingdomSurvey Survey,
 			GameObject Leaver, string Cause, bool Chronicled, string Note,
-			Simulation.City.KingdomResidentDestructionAuthorization Authorization)
+			Simulation.City.KingdomResidentDestructionAuthorization Authorization, string SubsidenceStepId = null)
 		{
 			if (!KingdomMaster.NewWorkAllowed(System)) return false;
 			if (Survey == null) Survey = KingdomSurvey.ActiveFor(Z);
-			if (Simulation.City.KingdomResidents.OnRollCount(System)
-				<= KingdomRules.LoyalCoreSettlers)
+			if (System.City == null || !System.City.TryReadExact(out Simulation.City.KingdomCityState city,
+				out Simulation.City.KingdomCityFault _) || !Simulation.City.KingdomResidentRules.TryProject(city,
+				out Simulation.City.KingdomResidentRollProjection roll) || roll.Population <= KingdomRules.LoyalCoreSettlers)
 			{
 				return false;
 			}
@@ -101,13 +102,21 @@ namespace ThousandAndFirst
 			}
 			if (!KingdomResidentDepartureRuntime.TryBegin(System, leaver, Cause,
 				Chronicled, Note, Authorization,
-				out Simulation.City.KingdomResidentRow _, out string failure))
+				out Simulation.City.KingdomResidentRow _, out string failure, SubsidenceStepId))
 			{
 				KingdomLog.Log("emigrate: exact resident departure refused ("
 					+ (failure ?? "unknown failure") + ")");
 				return false;
 			}
 			return true;
+		}
+
+		internal static bool EmigrateForSubsidence(KingdomSystem System, Zone Zone,
+			KingdomSurvey Survey, string StepId, string Cause, bool Chronicled)
+		{
+			return !string.IsNullOrEmpty(StepId) && EmigrateCore(System, Zone, Survey,
+				null, Cause, Chronicled, null,
+				default(Simulation.City.KingdomResidentDestructionAuthorization), StepId);
 		}
 
 		/// <summary>An exact open market handoff owns both bodies until commit or terminal abort.

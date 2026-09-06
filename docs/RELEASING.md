@@ -1,8 +1,11 @@
 # Release and Steam Workshop Procedure
 
-This repository can build and verify Workshop-shaped directories. It never authenticates to
-Steam, creates an item, accepts agreements, uploads, or changes visibility. Those actions remain
-explicit, attended steps in Caves of Qud's signed-in Workshop UI.
+The package builder remains offline: it never authenticates, creates an item, accepts agreements,
+uploads, or changes visibility. A separate local Steam-client publisher is implemented under the
+maintainer's authorization for autonomous, ready Alpha releases. Strict compilation and live
+read-only checks pass; publishing and subscriber delivery are not yet verified. Do not automate
+public releases until the private-item adoption gates below pass. Never automate authentication
+or legal acceptance.
 
 Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
 claiming compatibility with another build.
@@ -265,12 +268,14 @@ An in-progress Steam submission cannot be cancelled. Never describe unperformed 
 
 ## Updating Alpha
 
-Do not reuse the first-publication same-item Private flow now that `3794797472` is public. Before
-the next patch, extend the receipt/tooling schema for a separately allowlisted Private staging item
-and the exact `WorkshopId`/visibility delta described below. Until that lands, no procedure here
-authorizes hiding production or exposing candidate bytes to subscribers.
+Do not reuse the first-publication same-item Private flow now that `3794797472` is public.
+Candidate schema 2 now requires a positive `privateWorkshopId` distinct from public `workshopId`;
+the package gate verifies both IDs and the exact Private/Public visibility delta against committed
+metadata. Historical schema 1 remains readable only for `0.3.0`. A separate owned Private staging
+item still must be established and verified; no procedure authorizes hiding production or exposing
+unverified candidate bytes to subscribers.
 
-After that schema lands, increment the manifest to a new `0.3.x` patch before any candidate upload.
+Increment the manifest to a new `0.3.x` patch before any candidate upload.
 Using the staging identity, repeat private canonicalization, immutable package, private
 subscription, and receipt binding. Then, in this
 order: canonicalize `workshop.json` to Public; replace the public status/changelog with
@@ -303,11 +308,39 @@ Upload only that new package, then repeat signed-out listing, subscribed-byte, a
 verification. Never reuse another item's ID, rewrite an existing tag, merge package folders, or
 treat a prior receipt as proof of changed bytes.
 
-## Proposed development and automated-upload lane
+## Local automated-upload implementation and deployment design
 
-**Proposal only.** No uploader or privileged workflow is implemented, and the attended Qud UI
-procedure above remains authoritative. Adopt this lane only after the feasibility and security
-gates below pass on a private test item.
+**Implemented locally; private-upload validation pending.** No privileged CI workflow has been deployed.
+The branch/runner design below remains a proposal, not permission to change repository protection
+or attach a credentialed runner. Local Alpha automation is authorized once the exact candidate and
+private-item checks pass; it does not require an invented CI deployment first.
+
+Verified local pieces:
+
+- `workshop_metadata.py` and the actual package harness enforce the separate staging/public schema.
+- `workshop_upload_plan.py` checks a closed package receipt, canonical metadata, exact item/version,
+  no linked files, bounded inventory and Windows-safe paths. Its JSON is a plan, not release authority.
+- `workshop-steam-probe.ps1` builds the installed Steamworks.NET reference without redistributing it
+  and runs a read-only client probe. On 2026-09-05 it compiled with zero warnings/errors and confirmed
+  app `333640`, owned public item `3794797472`, `manifest_id=r_ThousandAndFirst` and
+  `manifest_version=0.3.0`. Evidence: `/mnt/c/taf-workshop-probe.ZNjYbg`.
+- The separate publisher compiles with zero warnings/errors. SDK-free Windows suites pass 30
+  protocol cases, 15 package groups and 9 active-attempt groups. Its default check mode queried
+  the real Alpha item and refused synthetic `0.3.0` as not newer, without creating an attempt or
+  submitting. Evidence: `/tmp/taf-workshop-automation.vgLRAO/README.md`. This is not a private
+  upload, subscriber receipt or release-candidate acceptance test.
+
+The publisher is separate from the packager. It defaults to checking only; explicit submission
+must bind a freshly gated package and digest, an existing allowlisted item, a truthful changelist,
+and a persistent attempt directory. One active attempt per item records the exact version and is
+created before Submit; an existing attempt blocks every version until reconciliation, not just a
+retry of the same bytes. A timeout is **uncertain**.
+Even a successful callback plus matching remote metadata is **submitted, unverified**, never proof
+that subscribers received the exact files. Steam-installed receipt verification remains mandatory.
+
+Qud's uploader sets Steam key-value tags `manifest_id` and `manifest_version` in addition to uploading
+`manifest.json`; its mod manager reads `manifest_version` for update indication. The local publisher
+must preserve that behavior. SteamCMD alone has not been verified for this Qud-specific contract.
 
 ### Branch model
 
@@ -365,14 +398,13 @@ item. A Public job binds the final annotated `main` tag, public-package digest, 
    description, normal tags, visibility, preview, `manifest_id`, and `manifest_version` against the
    frozen inputs. Preserve a redacted machine receipt and Steam transfer logs.
 
-Private upload and public promotion remain two distinct, manually approved jobs. The Private job
+Private upload and public promotion remain two distinct, independently gated jobs. The Private job
 runs from the exact `dev` SHA against the staging item; its subscribed proof and receipt-binding
 commits precede the release PR. The Public job runs against production only from the final annotated
-`main` tag after a second approval. Tooling must prove runtime content identity while allowing only
+`main` tag under the maintainer's Alpha-release authorization. Tooling must prove runtime content identity while allowing only
 the frozen staging-to-production `WorkshopId` and visibility metadata delta, and record both package
 digests. Never hide or mutate the public item for routine candidate validation. If the receipt
-schema cannot express that separation safely, automate Public upload only and keep the attended Qud
-UI for sections 3 and 4. A successful API response does not replace the
+schema cannot express that separation safely, stop promotion. A successful API response does not replace the
 subscribed-byte receipt, native load/save/reload smoke, signed-out page inspection, or human media
 review in sections 4 and 6.
 

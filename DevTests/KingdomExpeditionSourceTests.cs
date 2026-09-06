@@ -41,7 +41,7 @@ namespace ThousandAndFirst.Tests
 		public void RealmArchiveV6RetainsV4DeliveryColumnsAndReadsV2()
 		{
 			string source = RealmArchiveSource();
-			StringAssert.Contains("public const int CurrentVersion = 8", source);
+			StringAssert.Contains("public const int CurrentVersion = 9", source);
 			StringAssert.Contains("internal const int SettlementTopologyVersion = 6", source);
 			StringAssert.Contains("internal const int DirectionalStandingVersion = 7", source);
 			StringAssert.Contains("internal const int ExpeditionResultJobVersion = 8", source);
@@ -279,9 +279,11 @@ namespace ThousandAndFirst.Tests
 
 			string offices = TestMain.ReadRepositoryText(Path.Combine("Experience",
 				"KingdomOffices.cs"));
-			int deathReceipt = offices.IndexOf("KingdomExpeditions.TryPrepareResidentDeath(system, Citizen",
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", offices);
+			string witnessedDeath = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.cs");
+			int deathReceipt = witnessedDeath.IndexOf("PrepareExpedition(f, r, body)",
 				StringComparison.Ordinal);
-			int standingDeath = offices.IndexOf("KingdomResidents.TryMarkDead(system, Citizen",
+			int standingDeath = witnessedDeath.IndexOf("TryPublishWitnessedDeath",
 				StringComparison.Ordinal);
 			Assert.GreaterOrEqual(deathReceipt, 0);
 			Assert.Greater(standingDeath, deathReceipt);

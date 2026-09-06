@@ -1,4 +1,7 @@
 using System;
+#if !TAF_TESTS
+using XRL.World;
+#endif
 
 namespace ThousandAndFirst
 {
@@ -26,6 +29,9 @@ namespace ThousandAndFirst
 	/// Neither the title nor market service grants succession authority.</summary>
 	[Serializable]
 	public sealed class KingdomCivicOfficeReceipt
+#if !TAF_TESTS
+		: IComposite
+#endif
 	{
 		public const int CurrentVersion = 1;
 		public int Version = CurrentVersion;
@@ -43,6 +49,20 @@ namespace ThousandAndFirst
 		public string PredecessorName;
 		public long ChangedTick;
 		public string Fault;
+
+#if !TAF_TESTS
+		public bool WantFieldReflection => false;
+
+		public void Write(SerializationWriter Writer)
+		{
+			Writer.WriteNamedFields(this, typeof(KingdomCivicOfficeReceipt));
+		}
+
+		public void Read(SerializationReader Reader)
+		{
+			Reader.ReadNamedFields(this, typeof(KingdomCivicOfficeReceipt));
+		}
+#endif
 	}
 
 	public enum KingdomRemembrancePhase : byte

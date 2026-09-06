@@ -1,11 +1,11 @@
 # Real founding and 50 physical residents; seeded elapsed checkpoint, not simulated world turns.
-# Retains the created realm and effects. Does not sign ordinary subsidence, partial debt, ruin or save/load.
-DESCRIPTION=actual subsidence departures survive an exact native summary callback interruption
+# Retains the created realm and effects. Does not sign ordinary subsidence, interrupted carriers, ruin or save/load.
+DESCRIPTION=one-plus-four departures, summary retry, seeded terminal report loss and guarded homecoming reset recovery
 REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;subsidence-check;stagedigest
 VERBS=subsidence-check
-EXPECT=stagedigest:OK~founded=false,subsidence-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE
-# Exact Qud 2.0.211.51 dev title and installed DLC discovery warning; raw first-run evidence retained.
-LOG_EXPECT=["MODERROR [The Thousand and First [ALPHA] [DEV SCENARIO HARNESS]] - ThousandAndFirst: subsidence: departure summary failed (native subsidence summary interruption)","[TAF] subsidence: departure summary failed (native subsidence summary interruption)","MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+EXPECT=stagedigest:OK~founded=false,subsidence-check:OK~cases=8 passed=8 failed=0,stagedigest:OK~founded=true,COMPLETE
+# Source-derived one-shot declaration refusal, not native acceptance; exact installed Pets DLC warnings retained.
+LOG_EXPECT=["[TAF] chronicle v3 refused 8:receipt-declaration","MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
 SET=growth,native-regression

@@ -1,5 +1,17 @@
 # Brief-to-implementation audit
 
+Current isolated draft census — 2026-09-06: **3045** production C# files, all strictly below
+300 physical lines. This is a mechanical census, not a new semantic review or completion claim.
+`docs/STATUS.md` owns current compile and suite evidence. Integrated death correction passes13494/4881 full suites,
+438 retained Tools and strict4+ABI in k0DDMc. Death-journal native acceptance remains open; earlier archive103 real
+serializer cases remain retained for their own bytes. Clock-guard native
+save/cold-load tYyMoG is retained for its earlier bytes; ordinary/historical-save gates remain open.
+The retained earlier scoped 15/15 founding-heart lifecycle
+pass, including six native retirement conflicts and exact owned restoration. Retained earlier
+completed-heart cold load passes in47UPwt. Throwing-reader/direct-pooling coverage and release
+gates remain open. Earlier beta/audit addenda below
+retain their dated findings and exact source scope, not today's inventory or review authority.
+
 Beta evidence addendum 2026-09-05: **2951** production C# files, all strictly below 300 lines.
 Reviewed fresh-grant custody fencing, raid target-zone witnesses, canonical aggregate proofs,
 and outbox quarantine before diagnostics. Actual lifecycle outbox regressions pass34/34 in both

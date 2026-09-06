@@ -7,6 +7,17 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public sealed class KingdomFoundingHeartSourceTests
 	{
+		// Source contracts only; native callback, custody, and save/load behavior need separate evidence.
+		[Test]
+		public void ReservationsUseTheSameExecutableCodecForPublicationAndColdRead()
+		{
+			string source = Source("Growth/KingdomPlot2.07l.FoundingHeartReservations.cs");
+			StringAssert.Contains("FoundingHeartReservationPrefix = KingdomFoundingHeartReservationRules.Prefix", source);
+			StringAssert.Contains("return KingdomFoundingHeartReservationRules.Encode(Plan, Id, Role)", source);
+			StringAssert.Contains("return KingdomFoundingHeartReservationRules.TryRead(Key, Raw, out Transaction, out ZoneId, out Id)", source);
+			StringAssert.DoesNotContain("p[5].Length != 64", source);
+		}
+
 		private static string Source(string Path)
 		{
 			return TestMain.ReadRepositoryText(Path);
@@ -93,9 +104,12 @@ namespace ThousandAndFirst.Tests
 			string marks = Source("Growth/KingdomPlot2.07c.FoundingHeartMarks.cs");
 			string drive = Slice(marks, "private static bool DriveFoundingHeartMark(",
 				"private static bool PlaceOrSettleFoundingHeartMark(");
-			Ordered(drive, "GameObject.Create(", "SetIntProperty(FoundingHeartSlotMark",
+			Ordered(drive, "new FoundingHeartAllocationFence(Z, Context)", "if (!fence.Current)",
+				"fence.Create(", "UnplacedFoundingHeartOutput(created", "|| !fence.Current)",
+				"SetIntProperty(FoundingHeartSlotMark",
 				"PreparedFoundingHeartMarkShape(", "StageFoundingHeartIdentity(",
 				"RootFoundingHeartOutput(", "AdvanceFoundingHeart(Z, Context, Slot, 0, 1)");
+			StringAssert.DoesNotContain("GameObject.Create(", drive);
 			string place = Slice(marks, "private static bool PlaceOrSettleFoundingHeartMark(",
 				"private static bool SettleFoundingHeartMark(");
 			Ordered(place, "cell.AddObject(output, NoStack: true)", "ObserveAddResultInActive",
@@ -128,10 +142,13 @@ namespace ThousandAndFirst.Tests
 				"IDIfAssigned = KingdomFoundingHeartRules.SlotId" })
 				StringAssert.Contains(evidence, identity);
 			string reservations = Source("Growth/KingdomPlot2.07l.FoundingHeartReservations.cs");
-			foreach (string evidence in new[] { "SetStringGameState", "SlotCount",
+			foreach (string evidence in new[] { "Store.Ensure(key, expected)", "SlotCount",
 				"FoundingHeartFinalId", "AuditFoundingHeartReservations",
 				"ZoneActivated audits every", "never asks ZoneManager" })
 				StringAssert.Contains(evidence, reservations);
+			StringAssert.Contains("Strings.Add(Key, Expected)",
+				Source("Growth/KingdomPlot2.07o.FoundingHeartReservationStore.cs"));
+			StringAssert.DoesNotContain("SetStringGameState", reservations);
 			foreach (string thaw in new[] { "GetZone(", "LoadZone", "ZoneManager.Get",
 				"CachedZones[" }) StringAssert.DoesNotContain(thaw, reservations);
 			string activation = Source("Core/KingdomSystem.z20.Events.cs");
@@ -220,7 +237,8 @@ namespace ThousandAndFirst.Tests
 				"RootFoundingHeartFinal(plan, Final)", "PublishFoundingHeartTerminal(",
 				"Predecessor.SetStringProperty(FinalOutputIdProperty");
 			StringAssert.Contains("RepairFoundingHeartFinalIntent", drive);
-			StringAssert.Contains("if (!published && GameObject.Validate(Final))", begin);
+			StringAssert.Contains("if (!published && fence.Current && UnplacedFoundingHeartOutput(Final, Context.Stake.Blueprint)", begin);
+			StringAssert.Contains("&& Terminal != null && ExactPreparedFoundingHeartFinal(Final, Z, Context, Terminal)) RemoveCreatedWorks(Final, Z)", begin);
 		}
 
 		[Test]
@@ -303,7 +321,7 @@ namespace ThousandAndFirst.Tests
 			string graveyard = reload.Substring(reload.IndexOf(
 				"private static bool ExactGraveyardTombstone(string Id, GameObject Expected,",
 				StringComparison.Ordinal));
-			StringAssert.Contains("Graveyard.Objects", graveyard);
+			StringAssert.Contains("TryLoadedPlotTombstones(out List<GameObject> rows)", graveyard);
 			StringAssert.Contains("try { Id = Item.IDIfAssigned; return true; }", graveyard);
 			StringAssert.Contains("native graveyard identity is unreadable", graveyard);
 			StringAssert.DoesNotContain("GetInventoryDirectAndEquipment", graveyard);
@@ -335,14 +353,16 @@ namespace ThousandAndFirst.Tests
 		public void ActivationAuditsEveryReservedIdInResidentZoneWithoutThaw()
 		{
 			string custody = Source("Growth/KingdomPlot2.07g.FoundingHeartCustody.cs");
-			Ordered(custody, "HashSet<GameObject> graveyard", "Graveyard?.Objects",
+			Ordered(custody, "HashSet<GameObject> graveyard", "TryLoadedPlotTombstones(",
 				"graveyard.Contains(item)");
 			string reservations = Source(
 				"Growth/KingdomPlot2.07l.FoundingHeartReservations.cs");
-			foreach (string proof in new[] { "The.Game.StringGameState",
+			foreach (string proof in new[] { "store.TryAudit(out Dictionary<string, string> reservations)",
 				"FoundingHeartReservationPrefix", "TryReadFoundingHeartReservation",
 				"Z.GetObjects()", "reservations.TryGetValue(id", "owner != transaction",
 				"zone != Z.ZoneID" }) StringAssert.Contains(proof, reservations);
+			Ordered(reservations, "store.Retains(reservations, AllowAdditional: false)",
+				"RecoverFoundingHeart(System, Z)", "store.Retains(reservations, AllowAdditional: true)");
 			foreach (string thaw in new[] { "GetZone(", "LoadZone", "ZoneManager.Get",
 				"CachedZones[" }) StringAssert.DoesNotContain(thaw, reservations);
 		}
@@ -418,6 +438,8 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (string path in new[] { "Growth/KingdomFoundingHeartPlan.cs",
 				"Growth/KingdomFoundingHeartRules.cs",
+				"Growth/KingdomFoundingHeartReservationRules.cs",
+				"Growth/KingdomFoundingHeartReservationState.cs",
 				"Growth/KingdomFoundingHeartStakeRules.cs",
 				"Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs",
 				"Growth/KingdomPlot2.07b.FoundingHeartIdentity.cs",
@@ -432,6 +454,8 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomPlot2.07k.FoundingHeartTerminalSettlement.cs",
 				"Growth/KingdomPlot2.07l.FoundingHeartReservations.cs",
 				"Growth/KingdomPlot2.07m.FoundingHeartTombstones.cs",
+				"Growth/KingdomPlot2.07o.FoundingHeartReservationStore.cs",
+				"Growth/KingdomPlot2.07p.FoundingHeartAllocationFence.cs",
 				"Growth/KingdomFoundingHeartTerminalPlan.cs",
 				"Growth/KingdomFoundingHeartTerminalRules.cs",
 				"Growth/KingdomPlotLegacyEffectsPlan.cs",

@@ -696,6 +696,69 @@ namespace ThousandAndFirst.Tests
 				"target-game", 1, out failure));
 		}
 
+		[TestCase(0, false, true)]
+		[TestCase(0, true, false)]
+		[TestCase(1, false, false)]
+		[TestCase(2, false, false)]
+		[TestCase(3, false, false)]
+		[TestCase(4, false, false)]
+		[TestCase(5, false, false)]
+		[TestCase(6, false, false)]
+		[TestCase(7, false, false)]
+		[TestCase(8, false, true)]
+		[TestCase(8, true, true)]
+		public void EmptyLegacyNeedsNoReconstructionOnlyWhenEntireStateHasNoAuthority(
+			int phase, bool disabled, bool expected)
+		{
+			KingdomInheritanceSavedShape shape = new KingdomInheritanceSavedShape
+			{ PhaseValue = phase, RecoveryDisabled = disabled };
+			int reconstruction = KingdomInheritEngine.ReconstructionVersionForText(shape.LegacyText);
+			Assert.AreEqual(0, reconstruction, "actual empty-save route, not a fabricated fallback version");
+			Assert.AreEqual(expected, KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+				"target-game", reconstruction, out _));
+			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", -1, out _));
+		}
+
+		[TestCase("LegacyText")]
+		[TestCase("ReceiptText")]
+		[TestCase("CommittedReceiptText")]
+		[TestCase("TargetZoneId")]
+		[TestCase("TargetTerrainBlueprint")]
+		[TestCase("TargetTerrainRank")]
+		[TestCase("SecretId")]
+		[TestCase("SiteName")]
+		[TestCase("ApplyStatus")]
+		[TestCase("ApplyFault")]
+		[TestCase("ApplicationMarker")]
+		[TestCase("ReleasePending")]
+		[TestCase("OwnsSkipTerrainBuilders")]
+		[TestCase("OwnsNoBiomes")]
+		[TestCase("OwnsZoneName")]
+		[TestCase("RetryAuthorized")]
+		public void ZeroReconstructionCannotHideAnyRetainedAuthorityField(string fieldName)
+		{
+			foreach (int phase in new[] { 0, 8 })
+			{
+				KingdomInheritanceSavedShape shape = new KingdomInheritanceSavedShape { PhaseValue = phase };
+				System.Reflection.FieldInfo field = typeof(KingdomInheritanceSavedShape).GetField(fieldName,
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				Assert.IsNotNull(field);
+				object value = field.FieldType == typeof(string) ? (object)"retained"
+					: field.FieldType == typeof(bool) ? (object)true : 0;
+				field.SetValue(shape, value);
+				Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", 0, out _));
+			}
+		}
+
+		[Test]
+		public void PayloadStillRequiresReconstructionAndReaderDelegatesWholeEmptyStateValidation()
+		{
+			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(PendingShape(), "target-game", 0, out _));
+			string source = TestMain.ReadRepositoryText("World/KingdomInheritanceState.z01.SerializationAndSelection.cs");
+			StringAssert.Contains("invalid = !KingdomInheritanceStateRules.TryValidateSavedShape(shape,", source);
+			StringAssert.DoesNotContain("invalid = reconstruction <= 0", source);
+		}
+
 		[Test]
 		public void LoadClassifierAcceptsBothRootsAndTypedRollbackSources()
 		{

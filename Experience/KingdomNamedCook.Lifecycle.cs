@@ -107,7 +107,11 @@ namespace ThousandAndFirst
 				|| row.Phase == KingdomNamedCookPhase.Quarantined
 				|| KingdomNamedCookRules.IsVacant(row.Phase)) return true;
 			GameObject body = FindExactOnGround(Zone, row.BodyObjectId);
-			if (body == null) return true;
+			if (body == null)
+			{
+				if (!KingdomResidentDeathRuntime.TryWitness(System, Book, row.ResidentId, row.BodyObjectId, out var death)) return true;
+				return TryConcludeWitnessedDeath(System, Book, row.ResidentId, row.BodyObjectId, death.Tick, null, out Failure);
+			}
 			if (KingdomNamedCookRules.IsVacancyPrepared(row.Phase))
 			{
 				if (KingdomNamedCookRules.VacancyCause(row.Phase)
@@ -135,6 +139,49 @@ namespace ThousandAndFirst
 			}
 			if (!WitnessedDead(Book, row.ResidentId)) return true;
 			return ObserveCookLoss(System, body, KingdomNamedCookVacancyCause.Death, out Failure);
+		}
+
+		internal static bool TryConcludeWitnessedDeath(KingdomSystem system, KingdomCityBook book,
+			int residentId, string bodyId, long tick, GameObject body, out string failure)
+		{
+			failure = "The named cook lacks an exact witnessed-death receipt.";
+			if (!KingdomResidentDeathRuntime.TryWitness(system, book, residentId, bodyId, out var death)
+				|| death.Tick != tick || death.CookGeneration <= 0) return false;
+			var original = book.NamedCook;
+			var captured = KingdomResidentDeathRuntime.ReadCook(death.CookBefore);
+			var expectedPrepared = KingdomNamedCookRules.BeginVacancy(captured, KingdomNamedCookVacancyCause.Death);
+			var expectedAfter = KingdomNamedCookRules.CompleteVacancy(expectedPrepared, tick);
+			if (original == null || expectedAfter == null
+				|| KingdomResidentDeathRuntime.CookWire(original) != death.CookBefore
+				&& KingdomResidentDeathRuntime.CookWire(original) != KingdomResidentDeathRuntime.CookWire(expectedPrepared)
+				&& KingdomResidentDeathRuntime.CookWire(original) != KingdomResidentDeathRuntime.CookWire(expectedAfter)) return false;
+			if (!KingdomNamedCookRules.Validate(original, out _) || original.ResidentId != residentId
+				|| original.BodyObjectId != bodyId || original.Generation != death.CookGeneration) return false;
+			if (original.Phase == KingdomNamedCookPhase.DeathVacant) { failure = null; return true; }
+			var prepared = KingdomNamedCookRules.BeginVacancy(original, KingdomNamedCookVacancyCause.Death);
+			if (prepared == null) return false;
+			string held = KingdomResidentDeathRuntime.CookWire(original);
+			Func<bool> exact = () => ReferenceEquals(book.NamedCook, original)
+				&& KingdomResidentDeathRuntime.CookWire(original) == held
+				&& KingdomResidentDeathRuntime.TryWitness(system, book, residentId, bodyId, out var current)
+				&& current.Tick == tick && current.CookBefore == death.CookBefore;
+			if (body != null)
+			{
+				if (body.IDIfAssigned != bodyId || KingdomResidents.IdOf(body) != residentId) return false;
+				var marker = body.GetPart<r_KingdomNamedCook>(); var teaching = body.GetPart<XRL.World.Parts.TeachesDish>();
+				if (marker != null && !marker.Matches(original, body) || teaching != null && !ExactTeaching(teaching, original)) return false;
+				if (!exact()) return false;
+				if (teaching != null) body.RemovePart(teaching);
+				if (!exact()) return false;
+				if (marker != null) body.RemovePart(marker);
+				if (!exact() || body.GetPart<XRL.World.Parts.TeachesDish>() != null || body.GetPart<r_KingdomNamedCook>() != null) return false;
+			}
+			var vacant = KingdomNamedCookRules.CompleteVacancy(prepared, tick);
+			if (vacant == null || !exact()) return false;
+			book.NamedCook = vacant;
+			if (!KingdomResidentDeathRuntime.TryWitness(system, book, residentId, bodyId, out _)
+				|| !ReferenceEquals(book.NamedCook, vacant)) return false;
+			failure = null; return true;
 		}
 
 		private static bool TryFindCookBook(KingdomSystem System, string ObjectId,

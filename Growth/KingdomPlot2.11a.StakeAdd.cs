@@ -12,10 +12,11 @@ namespace ThousandAndFirst
 			KingdomPlotRules.PlotRect Rect, KingdomPlotRules.PlotRect footprint,
 			KingdomPlotRules.RoofState roof, KingdomArchitectureIntent Architecture,
 			bool LegacyArchitecture, ref KingdomConstructionJob Job,
-			FoundingHeartPlacement Heart)
+			FoundingHeartPlacement Heart, FoundingHeartAllocationFence HeartFence)
 		{
 			if (Heart != null)
 			{
+				if (HeartFence == null || !HeartFence.Current) return HeartRefusedNull("add: heart allocation authority changed");
 				if (!PreparedFoundingHeartWorksShape(works, Heart.Context))
 					return HeartRefusedNull("add: prepared works shape: "
 						+ PreparedFoundingHeartWorksShapeFault(works, Heart.Context));

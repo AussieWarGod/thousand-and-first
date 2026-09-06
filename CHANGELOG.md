@@ -8,19 +8,124 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Post-release development checkpoint — 2026-09-05.** The next-patch beta tree has 2951 staged
+> **Current isolated draft census — not release sign-off.** Current 3045-file census is line-cap green:
+> 431,086 physical lines, with 0 files at or above 300 lines. Direct `XRL`
+> imports occur in 1414 files, 0 of them over the line limit. Inventory SHA-256:
+> `ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`.
+> The current derived cold-install inventory contains 3076 files; this is not current installed
+> or subscribed content proof. Strict four-mode compilation and ABI checks pass against inputs
+> `987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`;
+> full suites pass13,498 Taf /4,885 Portable, zero skips;440 Tools tests pass.
+> Historical nested archive hash tests and103 retained real serializer cases pass; ordinary
+> gameplay, full historical-save acceptance and exact release gates stay open.
+> Exact structural semantic review now binds these bytes and its structure gate passes. This does
+> not sign the complete release gate; the earlier beta review below retains its own scope.
+> See `docs/STATUS.md` and `docs/STRUCTURE_REVIEW_0_3_1.md` for correction evidence and open limits.
+
+> **Retained beta checkpoint — 2026-09-05, `7d331fe8`.** This earlier tree has 2951 staged
 > C# files / 420,997 physical lines, with 0 at or above the strict 300-line cap.
-> Current 2951-file census is line-cap green.
+> Its retained verdict was: “Current 2951-file census is line-cap green.”
 > Direct XRL imports occur in 1376 files, 0 of them over the line limit; the cold-install inventory contains 2982 files.
 > Its exact-inventory
 > semantic review binds digest
 > `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. This does not amend the
-> tagged v0.3.0 bytes or their historical evidence.
+> tagged v0.3.0 bytes or their historical evidence. It does not sign the later isolated subsidence
+> draft; see `docs/STATUS.md` for that unfinished integration and its separate evidence.
 
 ## [Unreleased]
 
 ### Changed
 
+- Witnessed resident deaths now retain a bounded, owner-bound journal before changing resident,
+  role or tally state. Interrupted accounting can resume without a body; a missing body never
+  proves a frozen roof obligation. Existing expedition outcomes and frozen memory policy survive
+  recovery. Unconfirmed telling remains explicit rather than replaying automatically.
+- Begin/arrest announcements now save frozen text, tick and monotone transition identity before
+  their effects. Interrupted queue attempts are retained for explicit Homecoming acknowledgement,
+  not replayed blindly. The ss5 step wire retains canonical ss1–ss4 readers.
+- Named departures retain an owner-bound warning when Chronicle capacity prevents publication.
+  Homecoming acknowledges only the exact warnings shown; callback guards freeze full departure authority.
+- Subsidence reports can now settle with an explicit, retained warning when the Chronicle's
+  replay registry is full. No old receipt is evicted and no delivery is invented. The st3 report
+  format preserves canonical st1/st2 readers; pure protocol and codec regressions pass.
+  Current native gameplay acceptance remains separate open work.
+
+- Archive callback proofs preserve historical hash bases separately from newly captured state.
+  Realm archive v9 retains v2-v8 readers without rewriting old hashes. Nested composite readers
+  now match the historical type-token writer format and reject partial or wrong-type results.
+  The retained beta v18 fixture and real installed-engine archive serializer regressions cover
+  the correction; whole-save and ordinary-gameplay acceptance remain separate.
+- Subsidence executes only at the actual world tick, with saved checkpoints justified by retained
+  step/rung/option evidence. Malformed clocks retain their evidence and refuse before publication.
+  Fresh synthetic native clock-refusal, interrupted-save and cold-load checks pass without replay;
+  ordinary gameplay and historical-save compatibility remain separate release gates.
+- Failed wear loads now preserve surviving fields and quarantine their damage, leak and repair
+  continuations, with a one-attempt after-load warning. Callback guards retain interrupted
+  receipts. Four real installed-engine read-hook regressions and22 source cases pass. Seven
+  direct-part wire cases also pass; framed-load, visible-warning and ordinary-play
+  acceptance remain separate.
+- Homecoming retains unread news and counters while any departure receipt remains pending or
+  malformed. Exact-owner checks now include that receipt before display and ledger reset;
+  sixteen protocol/source regression cases added. Native callback-fault acceptance remains open.
+- CityBook ordinary and brink reads now refuse failed normalization and failed-load latches
+  before projecting state or indexing resident columns. Healthy square-column access stays fast;
+  named-load exact validation and frozen-rung ownership remain separate. Twenty-two new regression
+  cases added; no saved field or wire layout changed.
+- Completed subsidence works now retain durable receipt-release intent and acknowledgement.
+  Interrupted field clearing resumes only from exact saved prefixes; acknowledged works no longer
+  need their former carrier to remain present. Legacy plans stay readable without invented release,
+  and existing reports are preserved. Automated driver and migration coverage added; native and
+  cold-load acceptance for these changed bytes remains separate.
+- Expanded the developer founding-heart lifecycle to 15 native groups. Duplicate, missing-collection,
+  oversized, wrong-owner, wrong-slot and live-predecessor conflicts now execute against the real
+  retirement readers, with exact owned restoration and retained evidence. The final harness verdict
+  also preserves failures after the last case counter. Fresh `HWkU08` passed all 15 groups and
+  strict logs; its owned game stopped. This is observational fault coverage, not ordinary play,
+  throwing-reader or exhaustive persisted-witness testing. See `docs/STATUS.md` for exact inputs.
+
+- A valid recorded founding-heart `Removed` phase or later can now survive an absent tombstone
+  only with an exact final witness, matching typed terminal/removal proofs and live predecessor
+  absence. Ambiguous or conflicting tombstones refuse; fresh destruction still requires its
+  original exact proof. Retained profile `fktnsa` (evidence `A20gbZ`) passed all nine lifecycle groups in one process
+  (3096 staged C# / 3134 closed files); its owned PID 30176 is stopped. The v2 developer save
+  witness now proves and hashes completed-heart authority. Fresh `RdCle9` -> `vOeZAW` real
+  save/owned quit/cold-load passes exact preactivation authority and subsequent recovery,
+  alongside the partial subsidence step and its remaining four departures without replay.
+  Both owned games stopped; strict logs and source seals pass. This is scoped developer
+  evidence, not ordinary play, historical-save compatibility or release acceptance.
+
+- Corrected two founding-heart finalization checks: completion names now match the writer's
+  plain frozen name, and detached final objects use stamped geometry with explicit owner-zone
+  bounds. Destruction proofs now inspect global and already-loaded zone graveyards, retaining
+  exact-ID/reference checks and refusing absent or recycled witnesses. Added precise refusal
+  diagnostics without relaxing custody guards. A new native
+  lifecycle persona tests full founding recovery, callback substitutions/collisions, terminal
+  completion and no replay; earlier failed profiles are retained. Verification remains scoped
+  to exact candidate bytes; see `docs/STATUS.md` before claiming release or save compatibility.
+
+- Ordinary plot final outputs now validate detached rectangle and footprint stamps against
+  frozen geometry and their live predecessor's zone bounds. Placed geometry readers remain
+  unchanged. Documentation freshness skips only an absent ignored research note, while still
+  auditing it when present and requiring tracked public documents and notes.
+
+- In-progress developer save/load checks now preserve a real partially completed subsidence
+  step and import only its exact owned save into a second fresh, sealed profile. The first
+  native run exposed resident-record binary formatter fallbacks; four field-preserving adapters
+  now pass rich-record engine checks. Empty inheritance no longer enters recovery solely because
+  its authority-free reconstruction value is zero. Earlier cold loads restored exact partial-step
+  state and completed remaining departures but failed the strict log gate. The new fixture records
+  a normal species census and checks exact polity/heart authority across serialization and before
+  AfterGameLoaded handlers and zone activation. Its new save and exact imported cold load now pass
+  the strict diagnostic gate, with remaining-four production recovery and no replay. This covers
+  one synthetic partial-step boundary, not ordinary progression or historical-save compatibility.
+  No release acceptance yet; see `docs/STATUS.md`.
+
+- Added a separate native subsidence rung persona: fifteen real departures cross City→Town;
+  capture interruption and wear-after recovery prove one exact condemned roof, released wear
+  receipt, dated reports and no replay. Final checks reprove physical attachment and full roof
+  state after reporting, preserve register prefixes and check the exact departure summary.
+  Work/home/stage/checkpoint setup and the wear authority cut are explicitly synthetic.
+  This does not sign construction, ordinary progression, destroyed carriers or save/load.
 - Prepared a stronger Workshop hook and grouped coverage of settlement gameplay,
   customization, civic life, infrastructure, and late-game projects. Discovery tags are now
   `Building,Faction,Settlement,World,Script,Lore` in local canonical metadata. Alpha, optional
@@ -29,6 +134,32 @@ below it.
 
 ### Fixed
 
+- Founding-heart reservations now reject malformed UTF8, noncanonical slot spellings, stored-empty
+  values and wrong-table collisions. All seven keys are preflighted; missing values publish with
+  non-overwriting adds. Creation callbacks must return the exact newly allocated reference under
+  unchanged authority before it receives a reserved identity. Foreign substitutes remain untouched;
+  terminal cleanup refuses any object still rooted in save state. Developer checks separately cover
+  typed-state corruption and native callback substitutions; full terminal acceptance remains open.
+- Founding-heart reservations now read the same `hs1-` plus 64-hex completion seal that their
+  writer emits. Previously, the reader required bare 64 hex and rejected its own valid output.
+  Runtime shares one pure `hr1` codec with 89 focused regression cases. No saved seal format was
+  changed and malformed bare-hex records are not silently migrated. This fix is not yet released.
+- Isolated subsidence draft: terminal reporting loss no longer stands for unfinished physical
+  work. Failed ledger/Chronicle telling is retained separately until read in homecoming; it is
+  never labelled delivered. The guarded homecoming reset settles interrupted ledger intents
+  before clearing and preserves news changed during the popup. Missing completed works no longer
+  silently acknowledge wear-receipt release; exact moved live carriers can release only their own
+  completed receipt. `ss4`/`st2` add explicit failure evidence while preserving older canonical
+  readers. Native acceptance and save/load evidence are tracked in `docs/STATUS.md`; not released.
+- Isolated subsidence draft: saved option changes retain their original clock and exact prior/next
+  receipt through recovery; master resume preserves owed step time. Malformed or wrong-table
+  option state no longer silently reinitializes. The actual driver retains partial resident credits,
+  settles rung damage/roof obligations and dated reports, then atomically retires each step into
+  its frozen slide batch. The earlier `ss3` checkpoint migrated `ss1`/`ss2` records and retained option,
+  batch and report receipts. Five native checks now prove one-plus-four departures, summary
+  interruption/recovery and no replay at the same tick. The later six-case rung persona above
+  covers one selected live work and roof; general damaged-work/roof and option cuts,
+  ordinary progression, archive exchange and save/load remain open; no release claim.
 - Native smoke diagnostics now recognize the exact Alpha and development-harness titles as
   well as the base title. Raw logs remain intact; foreign-mod warnings retain their existing
   scope. Compile gates now enforce warnings as errors except the response-file CS2023 notice.
@@ -49,13 +180,14 @@ below it.
   a repeated `Juicing Cannibal`. All five profiles loaded in both bounded native runs. Snapjaw
   gear still rolls at tier 0; later-stage balance remains unproved. Frozen old-plan references
   may still safe-cancel if they no longer match the corrected profile.
-- A development-only subsidence persona now builds a real founded 50-resident fixture and
+- The earlier development-only subsidence persona built a real founded 50-resident fixture and
   exercises five physical departures, an exact native summary callback interruption, and
   same-tick replay prevention. Its elapsed checkpoint and City stage are synthetic setup;
-  partial departures, rung damage, ordinary progression, and save/load remain separate gates.
+  rung damage, ordinary progression, and save/load remain separate gates. Its three-case receipt
+  is historical; the current five-case one-plus-four proof is recorded in `docs/STATUS.md`.
   Persona diagnostic expectations are bounded literal lines required exactly once; raw logs
   stay retained and every undeclared mod error or warning still fails the diagnostic check.
-- Completed subsidence departures now reach bookkeeping and reached-rung work before their
+- The earlier summary-order fix made completed subsidence departures reach bookkeeping and reached-rung work before their
   summary is formatted or delivered. A broken summary or diagnostic callback cannot prevent
   that prior work. This is a summary-order fix only: partial-step debt, interrupted resident
   departure recovery, and failures inside rung execution remain open.

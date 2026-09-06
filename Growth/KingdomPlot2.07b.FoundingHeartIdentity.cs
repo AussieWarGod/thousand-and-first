@@ -17,12 +17,14 @@ namespace ThousandAndFirst
 				string id = KingdomFoundingHeartRules.SlotId(Plan, slot);
 				if (FindGlobalFoundingHeartId(id, out _, out _)
 					!= KingdomPhysicalLookupState.Absent
+					|| HasAnyFoundingHeartReservation(FoundingHeartReservationPrefix + id)
 					|| The.Game.ObjectGameState.ContainsKey(FoundingHeartRootKey(Plan, slot)))
 						return false;
 			}
 			string final = FoundingHeartFinalId(Plan);
 			return FindGlobalFoundingHeartId(final, out _, out _)
 				== KingdomPhysicalLookupState.Absent
+				&& !HasAnyFoundingHeartReservation(FoundingHeartReservationPrefix + final)
 				&& !The.Game.ObjectGameState.ContainsKey(FoundingHeartFinalRootKey(Plan));
 		}
 
@@ -76,7 +78,7 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryFoundingHeartCustodyRoots(List<GameObject> Pending,
-			HashSet<GameObject> Graveyard)
+			HashSet<GameObject> Graveyard, bool ReuseSurvey = false)
 		{
 			try
 			{
@@ -87,16 +89,20 @@ namespace ThousandAndFirst
 						if (zone != null) zones.Add(zone);
 				foreach (Zone zone in zones)
 				{
+					KingdomSurvey survey = ReuseSurvey ? KingdomSurvey.ActiveFor(zone) : null;
+					if (survey != null)
+					{
+						if (!survey.TryLoaded(out _)) return false;
+						foreach (GameObject root in KingdomSurvey.ObjectsFor(zone)) Pending.Add(root);
+						continue;
+					}
 					List<GameObject> roots = zone.GetObjects();
 					if (roots == null) return false;
 					for (int i = 0; i < roots.Count; i++) Pending.Add(roots[i]);
 				}
-				if (The.ZoneManager.Graveyard?.Objects != null)
-					for (int i = 0; i < The.ZoneManager.Graveyard.Objects.Count; i++)
-					{
-						GameObject item = The.ZoneManager.Graveyard.Objects[i];
-						if (item != null) { Pending.Add(item); Graveyard.Add(item); }
-					}
+				if (!TryLoadedPlotTombstones(out List<GameObject> tombstones)) return false;
+				foreach (GameObject item in tombstones)
+					if (item != null) { Pending.Add(item); Graveyard.Add(item); }
 				if (The.Player != null) Pending.Add(The.Player);
 				if (The.Game?.ObjectGameState == null
 					|| The.Game.ObjectGameState.Count > MaximumFoundingHeartCustodyObjects) return false;
@@ -161,11 +167,13 @@ namespace ThousandAndFirst
 		private static bool StageFoundingHeartIdentity(GameObject Object,
 			KingdomFoundingHeartPlan Plan, int Slot)
 		{
-			if (!GameObject.Validate(Object)) return false;
+			FoundingHeartReservationStore store = new FoundingHeartReservationStore();
+			if (!GameObject.Validate(Object) || !store.CheckPlan(Plan)) return false;
 			Object.SetStringProperty(FoundingHeartOwnerProperty, Plan.TransactionId);
 			Object.SetIntProperty(FoundingHeartSlotProperty, Slot + 1);
+			if (!GameObject.Validate(Object) || !store.CheckPlan(Plan)) return false;
 			Object.IDIfAssigned = KingdomFoundingHeartRules.SlotId(Plan, Slot);
-			return FoundingHeartIdentity(Object, Plan, Slot);
+			return store.CheckPlan(Plan) && FoundingHeartIdentity(Object, Plan, Slot);
 		}
 
 		private static bool FoundingHeartIdentity(GameObject Object,

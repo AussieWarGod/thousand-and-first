@@ -76,7 +76,8 @@ namespace ThousandAndFirst
 				BoundedUtf8(Value.AfterEffect, KingdomRealmCallbackReceipt.MaxEffectChars,
 					KingdomRealmCallbackReceipt.MaxEffectChars * 4) &&
 				BoundedUtf8(Value.ObservedEffect, KingdomRealmCallbackReceipt.MaxEffectChars,
-					KingdomRealmCallbackReceipt.MaxEffectChars * 4);
+					KingdomRealmCallbackReceipt.MaxEffectChars * 4) &&
+				ValidBasisShape(Value, out _);
 		}
 
 		private static bool ExactCarrySettlementIds(KingdomCarryBook Book,

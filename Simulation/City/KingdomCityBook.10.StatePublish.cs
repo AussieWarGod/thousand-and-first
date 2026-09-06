@@ -9,6 +9,11 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		internal bool TryPublish(KingdomCityState state, out KingdomCityFault fault)
 		{
+			if (!HasValidSubsidenceStorage() || KingdomSubsidenceRungRules.BlocksProjection(SubsidenceModel))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
 			if (state == null)
 			{
 				fault = KingdomCityFault.NullArgument;

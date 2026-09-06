@@ -32,7 +32,7 @@ namespace XRL.World.Parts
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public class r_KingdomWear : IPart
+	public partial class r_KingdomWear : IPart
 	{
 		private const int SerializationMagic = 1415009618;
 		private const int CurrentSerializationVersion = 1;
@@ -126,31 +126,6 @@ namespace XRL.World.Parts
 			Writer.WriteNamedFields(this, typeof(r_KingdomWear));
 		}
 
-		public override void Read(GameObject Basis, SerializationReader Reader)
-		{
-			object first = Reader.ReadObject();
-			if (first is int && (int)first == SerializationMagic)
-			{
-				object version = Reader.ReadObject();
-				if (!(version is int) || (int)version != CurrentSerializationVersion)
-				{
-					throw new InvalidOperationException("Unsupported ThousandAndFirst wear save version.");
-				}
-				Reader.ReadNamedFields(this, typeof(r_KingdomWear));
-			}
-			else
-			{
-				Wear = Convert.ToInt32(first);
-				LastCause = Convert.ToInt32(Reader.ReadObject());
-				Held = Convert.ToBoolean(Reader.ReadObject());
-				RepairEffortLeft = Convert.ToInt32(Reader.ReadObject());
-				LastLeakTick = Convert.ToInt64(Reader.ReadObject());
-				LeakAnnounced = Convert.ToBoolean(Reader.ReadObject());
-				AnnouncedBlock = Convert.ToInt32(Reader.ReadObject());
-			}
-			NormalizeSerializedFields();
-		}
-
 		private void NormalizeSerializedFields()
 		{
 			KingdomWear.RetireFoodLeakReceipt(ParentObject, this);
@@ -175,7 +150,7 @@ namespace XRL.World.Parts
 				malformed = true;
 			}
 			if (LastCause < (int)KingdomWearRules.WearCause.None
-				|| LastCause > (int)KingdomWearRules.WearCause.TemperamentalTech)
+				|| LastCause > (int)KingdomWearRules.WearCause.Subsidence)
 			{
 				LastCause = (int)KingdomWearRules.WearCause.None;
 				malformed = true;
@@ -200,7 +175,7 @@ namespace XRL.World.Parts
 				&& IncidentPhase != (int)KingdomWearIncidentPhase.Quarantined
 				&& (string.IsNullOrEmpty(IncidentId)
 					|| IncidentCause <= (int)KingdomWearRules.WearCause.None
-					|| IncidentCause > (int)KingdomWearRules.WearCause.TemperamentalTech
+					|| IncidentCause > (int)KingdomWearRules.WearCause.Subsidence
 					|| IncidentBeforeWear < 0 || IncidentAfterWear < IncidentBeforeWear
 					|| IncidentAfterWear > KingdomMaterialRules.MaxWearPercent))
 			{
@@ -247,7 +222,8 @@ namespace XRL.World.Parts
 
 		public override bool WantEvent(int ID, int cascade)
 		{
-			return base.WantEvent(ID, cascade) || ID == GetShortDescriptionEvent.ID || ID == GetDisplayNameEvent.ID;
+			return base.WantEvent(ID, cascade) || ID == AfterGameLoadedEvent.ID
+				|| ID == GetShortDescriptionEvent.ID || ID == GetDisplayNameEvent.ID;
 		}
 
 		/// <summary>

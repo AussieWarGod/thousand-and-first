@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "qudCoreBuild": "2.0.211.51",
+  "steamworksNetVersion": "2024.8.0",
+  "steamworksSdkVersion": "1.60",
+  "managedFile": "com.rlabrecque.steamworks.net.dll",
+  "managedSHA256": "c1c22715534c4cbfe5b847f435fc7bbb813013105f060b4353c80e605239a76e",
+  "nativeFile": "steam_api64.dll",
+  "nativeSHA256": "1add7f151fa644870a735ae86e68d1f019f296130d8e7c0a7ed3ecc7482dccbc"
+}

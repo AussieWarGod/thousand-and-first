@@ -9,7 +9,7 @@ namespace ThousandAndFirst
 	{
 		internal static bool TryBegin(KingdomSystem System, GameObject Body, string Cause,
 			bool Chronicled, string Note, KingdomResidentDestructionAuthorization Authorization,
-			out KingdomResidentRow FormerRow, out string Failure)
+			out KingdomResidentRow FormerRow, out string Failure, string SubsidenceStepId = null)
 		{
 			FormerRow = default(KingdomResidentRow); Failure = null;
 			if (System == null || !GameObject.Validate(Body)) return false;
@@ -23,6 +23,7 @@ namespace ThousandAndFirst
 					Failure = "another exact resident departure is still recovering"; return false;
 				}
 			}
+			if (!KingdomSubsidenceStepRuntime.TryRecoverOrphan(System, Body.CurrentZone, out Failure)) return false;
 			int residentId = KingdomResidents.IdOf(Body);
 			if (!KingdomResidentTransitionAuthority.CanPrepareResidentBodyDestruction(
 				System, Body, residentId, Authorization)
@@ -30,7 +31,14 @@ namespace ThousandAndFirst
 				|| !TryCapture(System, Body, residentId, Cause, Chronicled, Note,
 					Authorization, out KingdomResidentDepartureOperation operation,
 					out FormerRow, out Failure)) return false;
+			if (Chronicled && !KingdomResidentDepartureCapacityArchive.CanAdmit(
+				System.ResidentDepartureCapacityWarnings, operation))
+			{
+				Failure = "read retained departure warnings before another named departure; its warning archive has no safe room";
+				return false;
+			}
 
+			if (!KingdomSubsidenceStepRuntime.TryAssociate(System, SubsidenceStepId, operation, out Failure)) return false;
 			System.ResidentDeparture = operation;
 			r_KingdomResidentDeparture marker = new r_KingdomResidentDeparture
 			{
@@ -43,13 +51,13 @@ namespace ThousandAndFirst
 				// AddPart may throw after attaching. Retain write-ahead authority whenever any
 				// marker exists; recovery may remove an exact marker and refuses a foreign one.
 				if (Body.GetPart<r_KingdomResidentDeparture>() == null)
-					System.ResidentDeparture = KingdomResidentDepartureRules.Empty();
+					TryRollbackPrepared(System, Body, operation, out string _, RequireMarker: false);
 				Failure = "departure marker attachment threw " + ex.GetType().Name; return false;
 			}
 			if (Body.GetPart<r_KingdomResidentDeparture>() != marker)
 			{
 				if (Body.GetPart<r_KingdomResidentDeparture>() == null)
-					System.ResidentDeparture = KingdomResidentDepartureRules.Empty();
+					TryRollbackPrepared(System, Body, operation, out string _, RequireMarker: false);
 				Failure = "departure marker did not attach exactly"; return false;
 			}
 
@@ -101,7 +109,7 @@ namespace ThousandAndFirst
 			Operation = null; former = default(KingdomResidentRow); Failure = null;
 			if (!KingdomResidents.TryLocate(System, leaver, out KingdomCityBook book,
 				out int foundId) || book == null || foundId != ResidentId
-				|| !book.TryRead(out KingdomCityState state, out KingdomCityFault _)
+				|| !book.TryReadExact(out KingdomCityState state, out KingdomCityFault _)
 				|| !state.TryResidentIndex(ResidentId, out int at)
 				|| !state.TryResident(at, out former)) return false;
 			string settlement = System.SettlementIdForOwnedZone(leaver.CurrentZone?.ZoneID);

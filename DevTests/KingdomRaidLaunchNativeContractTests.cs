@@ -54,8 +54,8 @@ namespace ThousandAndFirst.Tests
 			XmlDocument document = new XmlDocument();
 			document.LoadXml(Read(Overlay));
 			Assert.AreEqual("objects", document.DocumentElement.Name, "overlay root element");
-			XmlNodeList objects = document.DocumentElement.SelectNodes("object");
-			Assert.AreEqual(2, objects.Count, "the overlay must merge exactly two blueprints");
+			XmlNodeList objects = document.DocumentElement.SelectNodes("object[part[@Name='r_TAF_RaidMintProbe']]");
+			Assert.AreEqual(2, objects.Count, "the raid probe must merge exactly two blueprints");
 			List<string> names = new List<string>();
 			for (int i = 0; i < objects.Count; i++)
 			{

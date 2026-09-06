@@ -1,0 +1,10 @@
+# Real founding/departures; synthetic work, home, elapsed checkpoint and wear-authority cut.
+# Retains profile/effects. Not ordinary construction, lodging assignment or save/load acceptance.
+DESCRIPTION=fifteen departures cross City to Town; interrupted rung capture and actual wear-after recovery date one condemned roof
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;subsidence-rung-check;stagedigest
+VERBS=subsidence-rung-check
+EXPECT=stagedigest:OK~founded=false,subsidence-rung-check:OK~cases=6 passed=6 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+SET=growth,native-regression

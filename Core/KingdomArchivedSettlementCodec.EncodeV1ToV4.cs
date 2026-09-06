@@ -19,6 +19,8 @@ namespace ThousandAndFirst
 			Failure = null;
 			try
 			{
+				if (Value != null && Value.City == null)
+					throw new InvalidDataException("Archived settlement is missing its subsidence carrier.");
 				if (Value != null && (Value.LifecycleBook == null
 					|| Value.LifecycleBook.FormatVersion != KingdomLifecycleRules.CurrentFormatVersion
 					|| !KingdomRaidIncidentRules.ValidLedger(Value.LifecycleBook.RaidLedger)))
@@ -209,7 +211,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeFirstGuestV15ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV17ForTests(Value, FirstGuestVersion,
+			return TryEncodeHistoricalV8ToV18ForTests(Value, FirstGuestVersion,
 				"v15", out Payload, out Failure);
 		}
 
@@ -217,7 +219,7 @@ namespace ThousandAndFirst
 		internal static bool TryEncodePhysicalFirstGuestV16ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV17ForTests(Value, PhysicalFirstGuestVersion,
+			return TryEncodeHistoricalV8ToV18ForTests(Value, PhysicalFirstGuestVersion,
 				"v16", out Payload, out Failure);
 		}
 
@@ -225,8 +227,16 @@ namespace ThousandAndFirst
 		internal static bool TryEncodeArrivalCadenceV17ForTests(KingdomSettlement Value,
 			out byte[] Payload, out string Failure)
 		{
-			return TryEncodeHistoricalV8ToV17ForTests(Value, ArrivalCadenceVersion,
+			return TryEncodeHistoricalV8ToV18ForTests(Value, ArrivalCadenceVersion,
 				"v17", out Payload, out Failure);
+		}
+
+		/// <summary>Test-only producer for archive v18, before durable subsidence storage.</summary>
+		internal static bool TryEncodeExpeditionResultV18ForTests(KingdomSettlement Value,
+			out byte[] Payload, out string Failure)
+		{
+			return TryEncodeHistoricalV8ToV18ForTests(Value, ExpeditionResultVersion,
+				"v18", out Payload, out Failure);
 		}
 
 #endif

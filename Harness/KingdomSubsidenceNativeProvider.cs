@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string Verb = "subsidence-check";
 		internal const string Receipt = "r_TAF_ScenarioSubsidenceChecks_v1";
-		internal const int ExpectedCases = 3;
+		internal const int ExpectedCases = 8;
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 		public IEnumerable<string> ScenarioVerbs { get { return new[] { Verb }; } }
 

@@ -1,5 +1,21 @@
 # Session handoff — current v1.0 test-candidate work
 
+Current isolated draft census — 2026-09-06: 3045 staged sources; 3076 generated package-inventory
+files. D5 release intent/acknowledgement and sr1 migration now implemented; production driver,
+codec and custody-source tests added. Strict four-mode compile and current suite evidence lives in
+`docs/STATUS.md`. Announcements/named capacity/death journal now pass13494 Taf/4881 Portable and438 Tools;
+strict4+ABI and exact hashes pass in k0DDMc. Death-journal recovery integrated; native acceptance open.
+Archive103 real serializer cases remain retained for OZvP3Z inputs. Clock-guard
+native save/cold-load pair tYyMoG is retained for its earlier bytes; ordinary and
+historical-save acceptance remain open. Retained earlier full
+founding-heart lifecycle passes 15/15 scoped developer cases in v6Kp54, including six native
+retirement conflicts with exact owned restoration. Retained earlier completed-heart cold load
+passes in47UPwt, with exact preactivation authority and later production recovery. Throwing-reader,
+direct-pooling and exhaustive fallback-mutation coverage remain open. The draft is not integrated, semantically signed off,
+installed or released. The new developer witness requires a completed heart; older staked-heart
+save/load receipts do not sign it. Realm archive is now v9; fresh Destroy proof is unchanged.
+The following beta addenda retain their earlier source/evidence scope, not today's inventory.
+
 Beta checkpoint 2026-09-05: 2951 staged sources; 2982 package files. Quickstart fresh-custody
 rollback, raid-zone guards, canonical polity proof validation, and receipt-owned persona lifecycle.
 Raid outbox throws now quarantine before diagnostics; focused actual-lifecycle tests pass 34/34

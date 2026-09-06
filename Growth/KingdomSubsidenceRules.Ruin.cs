@@ -74,7 +74,7 @@ namespace ThousandAndFirst
 		/// <returns>At least one, so a ruin is never a no-op that reads like one.</returns>
 		public static int RuinIncrement(int Roll)
 		{
-			int standing = KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, Roll);
+			int standing = KingdomRules.RuinedStandingPercent(Roll);
 			int increment = KingdomMaterialRules.MaxWearPercent * (100 - standing) / 200;
 			return (increment < 1) ? 1 : increment;
 		}

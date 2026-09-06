@@ -106,9 +106,11 @@ namespace ThousandAndFirst
 			if (!Present && !InvokeAuthorized)
 				return QuarantineReturn(Archive, Context +
 					" Chronicle callback was interrupted before receipt publication", out Refusal);
+			// The absent-Chronicle prestate hash is cut at the receipt's already resolved intent
+			// basis, never at today's CurrentVersion; an unresolvable stored 0 refuses here.
 			if (!Archive.CurrentGraphMatchesExceptChronicle(this, out string graphFailure) ||
-				(!Present && (!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph,
-				out graphFailure) || graph != Receipt.BeforeGraph)))
+				(!Present && !new KingdomRealmHashBasisRuntime.Binding(Archive, this, Receipt,
+					Receipt.Scope).ProveIntentGraph(out graphFailure)))
 				return QuarantineReturn(Archive, graphFailure ??
 					Context + " Chronicle Core graph changed before callback", out Refusal);
 			List<string> officialReference = ChronicleEntries;

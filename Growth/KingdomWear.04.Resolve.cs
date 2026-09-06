@@ -29,6 +29,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Survey.Built.Count; i++)
 			{
 				GameObject work = Survey.Built[i];
+				if (KingdomSubsidenceRungRuntime.BlocksWork(work)) continue;
 				if (!GameObject.Validate(work))
 				{
 					continue;

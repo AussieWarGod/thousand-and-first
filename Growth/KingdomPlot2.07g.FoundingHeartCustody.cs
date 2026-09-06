@@ -69,9 +69,8 @@ namespace ThousandAndFirst
 				for (int i = 0; i < roots.Count; i++)
 					if (ReferenceEquals(roots[i], The.Player)) playerRooted = true;
 				if (The.Player != null && !playerRooted) roots.Add(The.Player);
-				if (The.ZoneManager.Graveyard?.Objects != null)
-					for (int i = 0; i < The.ZoneManager.Graveyard.Objects.Count; i++)
-						roots.Add(The.ZoneManager.Graveyard.Objects[i]);
+				if (!TryLoadedPlotTombstones(out List<GameObject> tombstones)) return -1;
+				roots.AddRange(tombstones);
 				int count = 0;
 				int visited = 0;
 				for (int rootIndex = 0; rootIndex < roots.Count; rootIndex++)
@@ -162,7 +161,6 @@ namespace ThousandAndFirst
 			int works = KingdomFoundingHeartRules.WorksSlot;
 			string worksId = KingdomFoundingHeartRules.SlotId(Plan, works);
 			return ExactFoundingHeartLiveAbsence(worksId)
-				&& ExactFoundingHeartGraveyardTombstone(Plan, works, out _)
 				&& ExactFoundingHeartObjectGameState(Plan, works, null, false);
 		}
 
@@ -177,11 +175,11 @@ namespace ThousandAndFirst
 				if (FindGlobalFoundingHeartId(id, out _, out _)
 					!= KingdomPhysicalLookupState.Absent
 					|| The.Game?.ObjectGameState.ContainsKey(FoundingHeartRootPrefix + id) == true
-					|| The.Game?.HasStringGameState(FoundingHeartReservationPrefix + id) == true)
+					|| HasAnyFoundingHeartReservation(FoundingHeartReservationPrefix + id))
 					return true;
 			}
 			string final = KingdomFoundingHeartRules.StableId(Transaction, ZoneId, "final");
-			if (The.Game?.HasStringGameState(FoundingHeartReservationPrefix + final) == true
+			if (HasAnyFoundingHeartReservation(FoundingHeartReservationPrefix + final)
 				|| The.Game?.ObjectGameState.ContainsKey(FoundingHeartFinalRootPrefix + final) == true
 				|| FindGlobalFoundingHeartId(final, out _, out _)
 					!= KingdomPhysicalLookupState.Absent) return true;
@@ -196,14 +194,9 @@ namespace ThousandAndFirst
 			try
 			{
 				pending = Z.GetObjects();
-				if (The.ZoneManager?.Graveyard?.Objects != null)
-				{
-					if (The.ZoneManager.Graveyard.Objects.Count
-						> MaximumFoundingHeartCustodyObjects) return true;
-					for (int i = 0; i < The.ZoneManager.Graveyard.Objects.Count; i++)
-						if (The.ZoneManager.Graveyard.Objects[i] != null)
-							graveyard.Add(The.ZoneManager.Graveyard.Objects[i]);
-				}
+				if (!TryLoadedPlotTombstones(out List<GameObject> tombstones)) return true;
+				foreach (GameObject item in tombstones)
+					if (item != null) graveyard.Add(item);
 			}
 			catch { return true; }
 			if (pending == null) return true;

@@ -15,7 +15,8 @@ namespace ThousandAndFirst
 			System.ResidentDeparture = KingdomResidentDepartureRules.NormalizeOldDefault(
 				System.ResidentDeparture);
 			KingdomResidentDepartureOperation operation = System.ResidentDeparture;
-			if (KingdomResidentDepartureRules.IsEmpty(operation)) return true;
+			if (KingdomResidentDepartureRules.IsEmpty(operation))
+				return KingdomSubsidenceStepRuntime.TryRecoverOrphan(System, Zone, out Failure);
 			if (!KingdomResidentDepartureRules.Valid(operation))
 			{
 				Failure = "pending resident departure is malformed"; return false;
@@ -58,7 +59,7 @@ namespace ThousandAndFirst
 			if (bodies == 0 && markers == 0
 				&& operation.Phase == (int)KingdomResidentDeparturePhase.EffectsPublished)
 			{
-				System.ResidentDeparture = KingdomResidentDepartureRules.Empty(); return true;
+				return KingdomSubsidenceStepRuntime.TryRetireJournal(System, operation, false, out Failure);
 			}
 			if (bodies != 1 || !GameObject.Validate(body))
 			{
@@ -100,12 +101,29 @@ namespace ThousandAndFirst
 			KingdomResidentDestructionAuthorization authorization = AuthorizationOf(operation);
 			if (operation.Phase == (int)KingdomResidentDeparturePhase.CitizenshipRemoved)
 			{
-				if (!KingdomResidents.TryCompleteDepartureCarriers(System, Body, operation,
-					authorization, out FormerRow, out Failure)
+				try
+				{
+					KingdomResidents.TryCompleteDepartureCarriers(System, Body, operation,
+						authorization, out FormerRow, out Failure);
+				}
+				catch (Exception ex)
+				{
+					Failure = "departure carrier completion threw " + ex.GetType().Name;
+				}
+				// Publication may commit before returning false or throwing. Only the exact
+				// post-state licenses accounting and phase advancement.
+				bool credited = KingdomSubsidenceStepRuntime.TryCredit(System, Body, operation, out string creditFailure);
+				if (!credited) Failure = Failure ?? creditFailure;
+				if (Failure != null) try { KingdomLog.LogError(Failure); } catch { }
+				if (!credited || !ExactRemovedCitizenship(System, Body, operation)
+					|| !KingdomResidents.DepartureCarriersAbsent(System, operation)
+					|| !KingdomResidentTransitionAuthority.CanContinueJournaledCarrierRemoval(
+						System, Body, operation, authorization)
 					|| !KingdomResidentDepartureRules.Advance(operation,
 						KingdomResidentDeparturePhase.CitizenshipRemoved,
 						KingdomResidentDeparturePhase.CarriersRemoved)) return false;
 			}
+			if (!KingdomSubsidenceStepRuntime.TryCredit(System, Body, operation, out Failure)) return false;
 			if (operation.Phase == (int)KingdomResidentDeparturePhase.CarriersRemoved)
 			{
 				if (!TryCloseRoles(System, Body, operation, authorization, out Failure)
@@ -127,6 +145,22 @@ namespace ThousandAndFirst
 				|| !KingdomResidentTransitionAuthority.CanCompleteJournaledBodyDestruction(
 					System, Body, operation)) return false;
 			return TryDestroyBody(System, Body, operation, out Failure);
+		}
+
+		internal static bool ExactTerminalAbsence(KingdomSystem System,
+			KingdomResidentDepartureOperation Operation)
+		{
+			if (!KingdomResidents.DepartureCarriersAbsent(System, Operation)
+				|| !KingdomMarketHandoffGlobalIndex.TryLoaded(out IList<GameObject> objects)
+				|| objects == null) return false;
+			foreach (GameObject item in objects)
+			{
+				if (!GameObject.Validate(item)) continue;
+				r_KingdomResidentDeparture marker = item.GetPart<r_KingdomResidentDeparture>();
+				if (item.IDIfAssigned == Operation.BodyObjectId || marker != null
+					&& (marker.OperationId == Operation.OperationId || marker.RealmId == Operation.RealmId)) return false;
+			}
+			return true;
 		}
 	}
 }

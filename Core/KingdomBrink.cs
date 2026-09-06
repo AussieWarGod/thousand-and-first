@@ -108,6 +108,7 @@ namespace ThousandAndFirst
 		/// <returns>True when this call is the one that recorded it.</returns>
 		public static bool Record(GameObject Subject, BrinkKind Kind, long ReachedTick, string Cause, int Channel)
 		{
+			if (Kind == BrinkKind.Roof && KingdomSubsidenceRungRuntime.BlocksRoof(Subject)) return false;
 			KingdomCityBook book;
 			int id;
 			if (!KingdomResidents.TryEnsureRow(Realm(), Subject, out book, out id) || Stands(Subject, Kind))
@@ -128,6 +129,7 @@ namespace ThousandAndFirst
 		/// actually say it.</returns>
 		public static bool MarkWarned(GameObject Subject, BrinkKind Kind, long NowTick)
 		{
+			if (Kind == BrinkKind.Roof && KingdomSubsidenceRungRuntime.BlocksRoof(Subject)) return false;
 			BrinkRecord brink = Of(Subject, Kind);
 			if (!brink.Stands || brink.Warned)
 			{
@@ -153,6 +155,7 @@ namespace ThousandAndFirst
 		/// unsay it.</returns>
 		public static bool Lift(GameObject Subject, BrinkKind Kind)
 		{
+			if (Kind == BrinkKind.Roof && KingdomSubsidenceRungRuntime.BlocksRoof(Subject)) return false;
 			if (!Stands(Subject, Kind))
 			{
 				return false;

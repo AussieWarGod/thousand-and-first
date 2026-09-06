@@ -83,7 +83,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("mode = 4", ceremony);
 
 			string offices = Source(Path.Combine("Experience", "KingdomOffices.cs"));
-			StringAssert.Contains("KingdomHappenings.OwnDeathTelling", offices);
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", offices);
+			StringAssert.Contains("KingdomHappenings.OwnDeathTelling", Source("Growth/KingdomResidentDeathRuntime.Telling.cs"));
 			StringAssert.DoesNotContain("KingdomHappenings.FuneralClause(system", offices);
 
 			string physical = KingdomPhysicalHappeningsLogicalSource.Read();
@@ -156,8 +157,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public const int PhysicalFirstGuestVersion = 16;", codec);
 			StringAssert.Contains("public const int ArrivalCadenceVersion = 17;", codec);
 			StringAssert.Contains("public const int ExpeditionResultVersion = 18;", codec);
+			StringAssert.Contains("public const int SubsidenceStorageVersion = 19;", codec);
 			StringAssert.Contains(
-				"public const int CurrentVersion = ExpeditionResultVersion;", codec);
+				"public const int CurrentVersion = SubsidenceStorageVersion;", codec);
+			StringAssert.Contains("version != ExpeditionResultVersion", codec);
 			StringAssert.Contains("TryEncodeBehaviourV7ForTests", codec);
 			StringAssert.Contains("TryEncodeHappeningCursorV12ForTests", codec);
 			StringAssert.Contains("TryEncodeDeliveryDomainV13ForTests", codec);

@@ -27,13 +27,16 @@ namespace ThousandAndFirst
 					if (!FoundingHeartRootAbsent(plan, Slot)
 						|| FindGlobalFoundingHeartId(id, out _, out _)
 							!= KingdomPhysicalLookupState.Absent) return false;
+					FoundingHeartAllocationFence fence = new FoundingHeartAllocationFence(Z, Context);
+					if (!fence.Current) return false;
 					GameObject created;
-					try { created = GameObject.Create(FoundingHeartSlotBlueprint(Slot)); }
+					try { created = fence.Create(FoundingHeartSlotBlueprint(Slot)); }
 					catch { return false; }
-					if (!GameObject.Validate(created)) return false;
+					if (!UnplacedFoundingHeartOutput(created, FoundingHeartSlotBlueprint(Slot))
+						|| !fence.Current) return false;
 					created.SetIntProperty(FoundingHeartSlotMark(Slot), 1);
 					if (!PreparedFoundingHeartMarkShape(created, Slot)) return false;
-					if (!StageFoundingHeartIdentity(created, plan, Slot)
+					if (!fence.Current || !StageFoundingHeartIdentity(created, plan, Slot)
 						|| !PreparedFoundingHeartMark(created, plan, Slot)
 						|| !RootFoundingHeartOutput(plan, Slot, created)
 							|| !AdvanceFoundingHeart(Z, Context, Slot, 0, 1)) return false;

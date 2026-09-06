@@ -88,7 +88,7 @@ namespace ThousandAndFirst
 				|| Building.Blueprint != Truth.Blueprint) return false;
 			return ExactFoundingHeartInt(Building, "KingdomBuilt", 1)
 				&& ExactFoundingHeartString(Building,
-					r_KingdomScaffold.CompletionNameProperty, "plot: " + Truth.DisplayName)
+					r_KingdomScaffold.CompletionNameProperty, Truth.DisplayName)
 				&& ExactPositiveFoundingHeartInt(Building, "KingdomDefence", Truth.Defence)
 				&& ExactPositiveFoundingHeartInt(Building, "KingdomStaffNeeded", Truth.Staff)
 				&& (Truth.Staff > 0 && Truth.ThresholdManning

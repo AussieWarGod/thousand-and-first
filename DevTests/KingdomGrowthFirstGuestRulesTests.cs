@@ -634,7 +634,7 @@ namespace ThousandAndFirst.Tests
 				restoredV16.LifecycleBook.Growth.ArrivalOrdinalHighWater);
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(current,
 				out byte[] v18, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
 				BitConverter.ToInt32(v18, 4));
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement restoredV18, out future, out failure), failure);

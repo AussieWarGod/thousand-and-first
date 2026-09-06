@@ -169,22 +169,42 @@ namespace ThousandAndFirst
 		internal static bool TryCurrentGraphHash(KingdomSystem System, out string Hash,
 			out string Failure)
 		{
+			return TryCurrentGraphHash(System,
+				KingdomArchivedSettlementCodec.CurrentVersion, out Hash, out Failure);
+		}
+
+		/// <summary>Live-realm graph hash over an explicit settlement-wire schema, so a persisted
+		/// TAG1 hash can be re-proved against its own basis version. The schema is admitted before
+		/// any capture, seat, topology or seceded work, so an unsupported version is refused even
+		/// when the topology is empty; a projection failure at the asked schema is final, with no
+		/// retry at CurrentVersion. TAG1 framing, byte order, caps and failure strings are
+		/// unchanged, so the hash text of a current cut is identical.</summary>
+		internal static bool TryCurrentGraphHash(KingdomSystem System, int SettlementSchema,
+			out string Hash, out string Failure)
+		{
 			Hash = null;
 			Failure = null;
+			if (SettlementSchema < KingdomArchivedSettlementCodec.LegacyVersion ||
+				SettlementSchema > KingdomArchivedSettlementCodec.CurrentVersion)
+			{
+				Failure = UnacceptedSettlementSchemaFailure;
+				return false;
+			}
 			if (System == null) { Failure = "current realm is absent"; return false; }
 			try
 			{
 				KingdomSettlement seat = System.Capture();
-				if (!KingdomArchivedSettlementCodec.TryEncode(seat, out byte[] seatBytes, out Failure) ||
-					!KingdomArchivedSettlementCodec.TryEncode(System.Seceded, out byte[] secededBytes,
-						out Failure) ||
+				if (!KingdomArchivedSettlementCodec.TryEncodeVersion(seat, SettlementSchema,
+					out byte[] seatBytes, out Failure) ||
+					!KingdomArchivedSettlementCodec.TryEncodeVersion(System.Seceded,
+						SettlementSchema, out byte[] secededBytes, out Failure) ||
 					!TryCarryBytes(System.CarryBook, out byte[] carryBytes, out Failure)) return false;
 				using (MemoryStream stream = new MemoryStream())
 				using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))
 				{
 					writer.Write(0x54414731); // TAG1
 					WriteGraphBytes(writer, seatBytes); WriteTopologyGraph(writer,
-						System.SettlementTopology);
+						System.SettlementTopology, SettlementSchema);
 					WriteGraphBytes(writer, secededBytes); WriteGraphBytes(writer, carryBytes);
 					WriteGraphString(writer, System.RealmId); WriteGraphString(writer, System.KingdomFactionName);
 					WriteGraphString(writer, System.KingdomDisplayName);

@@ -164,7 +164,7 @@ namespace ThousandAndFirst
 			RealmIdentitySeedHigh = SimulationSeedHigh;
 			RealmIdentitySeedLow = SimulationSeedLow;
 			RealmIdentityFirstClaimedZone = seatZone;
-			if (City == null) City = new Simulation.City.KingdomCityBook();
+			if (City == null) City = new Simulation.City.KingdomCityBook { SubsidenceModel = null };
 			City.SettlementId = seatId;
 			SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
 			SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;
@@ -175,7 +175,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < nonSeat.Count; i++)
 			{
 				KingdomSettlement row = nonSeat[i];
-				if (row.City == null) row.City = new Simulation.City.KingdomCityBook();
+				if (row.City == null) row.City = new Simulation.City.KingdomCityBook { SubsidenceModel = null };
 				row.City.SettlementId = otherIds[i];
 				row.SettlementIdentityVersion = KingdomIdentityRules.RulesVersion;
 				row.SettlementIdentityOrigin = KingdomIdentityOrigin.LegacyMigration;

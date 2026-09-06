@@ -15,6 +15,9 @@ namespace ThousandAndFirst
 	{
 		private static void AdvanceRepair(KingdomSystem System, GameObject Work, r_KingdomWear WearPart, int Hands, long TimeTicks)
 		{
+			if (KingdomSubsidenceRungRuntime.BlocksWork(Work) || WearPart == null
+				|| WearPart.LoadFailed || WearPart.LifecycleQuarantined
+				|| WearPart.IncidentPhase != (int)KingdomWearIncidentPhase.None) return;
 			long worked = KingdomMaterials.ReadTick(Work, RepairWorkedProperty);
 			if (worked <= 0)
 			{
@@ -30,11 +33,14 @@ namespace ThousandAndFirst
 			{
 				if (WearPart.AnnouncedBlock != (int)KingdomWearRules.RepairVerdict.NoHands)
 				{
+					string blockName = DisplayName(Work);
+					if (WearPart.LoadFailed || WearPart.LifecycleQuarantined) return;
+					string blockLine = KingdomWearRules.ReasonLine(KingdomWearRules.RepairVerdict.NoHands, blockName);
 					WearPart.AnnouncedBlock = (int)KingdomWearRules.RepairVerdict.NoHands;
-					string blockLine = KingdomWearRules.ReasonLine(KingdomWearRules.RepairVerdict.NoHands, DisplayName(Work));
 					if (blockLine != null)
 					{
 						System.Ledger.Note("{{r|" + blockLine + "}}");
+						if (WearPart.LoadFailed || WearPart.LifecycleQuarantined) return;
 					}
 				}
 				KingdomMaterials.WriteTick(Work, RepairWorkedProperty, KingdomRules.AdvanceCheckpoint(worked, TimeTicks));
@@ -85,6 +91,11 @@ namespace ThousandAndFirst
 		{
 			Updated = Job;
 			Failure = null;
+			if (WearPart != null && (WearPart.LoadFailed || WearPart.LifecycleQuarantined))
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			Zone zone = Work?.CurrentZone;
 			if (!RepairSubjectExact(System, zone, Work, Job))
 			{
@@ -128,9 +139,20 @@ namespace ThousandAndFirst
 				return false;
 			}
 			string name = DisplayName(Work);
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			string leakStopped = WearPart.LeakAnnounced
 				? KingdomWearRules.LeakStoppedLine(name, LeakKindOf(Work)) : null;
-			if (!KingdomCeremony.PrepareWearRepaired(System, name, leakStopped, ref Updated)
+			bool prepared = KingdomCeremony.PrepareWearRepaired(System, name, leakStopped, ref Updated);
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
+			if (!prepared
 				|| !RepairTargetExact(frame, Updated.Id)
 				|| !KingdomConstruction.IsCurrent(Updated))
 			{
@@ -162,6 +184,11 @@ namespace ThousandAndFirst
 			{
 				callbackReturned = false;
 			}
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			bool exactRemoval = callbackReturned && GameObject.Validate(Work)
 				&& Work.ID == frame.Id && Work.CurrentZone == frame.Zone
 				&& Work.CurrentCell == frame.Cell && frame.Cell.ParentZone == frame.Zone
@@ -189,10 +216,30 @@ namespace ThousandAndFirst
 				MarkRepairRemovalLost(ref Updated, Failure);
 				return false;
 			}
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			if (!KingdomConstruction.Complete(ref Updated)) return false;
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			Work.RemoveStringProperty(RepairRemovalProofProperty);
 			bool dispatched = KingdomCeremony.DispatchPending(System, ref Updated);
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			KingdomLog.Log("wear: repair complete " + Work.Blueprint);
+			if (WearPart.LoadFailed || WearPart.LifecycleQuarantined)
+			{
+				Failure = "The wear record is quarantined; its repair will not be resumed.";
+				return false;
+			}
 			return dispatched;
 		}
 

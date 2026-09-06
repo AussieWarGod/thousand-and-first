@@ -1,5 +1,11 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+Current isolated draft census — 2026-09-06: 3045 production C# files; 3,076 cold-install files
+in the generated inventory. No candidate installation, subscription, semantic review or release
+is implied by those counts. `docs/STATUS.md` owns current verification and remaining gates.
+The beta and older addenda below are retained chronological evidence, not current-inventory
+signatures; their existing counts and reviewed hashes are deliberately unchanged.
+
 Beta addendum 2026-09-05: 2951 production C# files; 2,982 cold-install files. Current semantic
 review covers Quickstart exact custody, raid zone guards, canonical counts, and outbox quarantine
 before diagnostics. Focused actual-lifecycle outbox tests pass34/34 in both projects, including

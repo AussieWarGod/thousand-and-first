@@ -312,6 +312,22 @@ class ExtraVerbTest(unittest.TestCase):
         self.assertEqual("flatten myverb", found["SCRIPT_WORDS"])
         self.assertEqual("myverb", found["VERBS"])
 
+    def test_declared_native_rung_verbs_do_not_authorize_arguments(self):
+        for verb in ("subsidence-rung-check", "subsidence-rung-death-check"):
+            with self.subTest(verb=verb):
+                text = (
+                    "REQUEST=founding-first-city\n"
+                    "SCRIPT=stagedigest;%s death-prepared;stagedigest\n"
+                    "EXPECT=stagedigest:OK,%s:OK,stagedigest:OK,COMPLETE\n"
+                    "VERBS=%s\n"
+                ) % (verb, verb, verb)
+                with self.assertRaises(SystemExit):
+                    matrix.parse_manifest(text, "native-arguments.persona")
+                with self.assertRaises(SystemExit):
+                    profile.parse_script(
+                        ["stagedigest", verb, "death-prepared", "stagedigest"], (verb,)
+                    )
+
     def test_undeclared_third_party_verb_is_refused(self):
         with self.assertRaises(SystemExit):
             matrix.parse_manifest(
@@ -547,11 +563,56 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(61, len(self.personas()))
+        self.assertEqual(67, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
             self.assertTrue(found["SCRIPT_WORDS"])
+
+    def test_prepared_death_persona_declares_its_own_sealable_no_argument_verb(self):
+        directory = ROOT / "Tools" / "personas"
+        name = "subsidence-rung-death-native-checks.persona"
+        found = matrix.parse_manifest((directory / name).read_text(encoding="utf-8"), name)
+        wear = matrix.parse_manifest(
+            (directory / "subsidence-rung-native-checks.persona").read_text(encoding="utf-8"),
+            "subsidence-rung-native-checks.persona",
+        )
+        self.assertEqual("founding-first-city", found["REQUEST"])
+        self.assertEqual("8.22@40,12", found["START"])
+        self.assertEqual("subsidence-rung-death-check", found["VERBS"])
+        self.assertEqual("stagedigest;subsidence-rung-death-check;stagedigest", found["SCRIPT"])
+        self.assertEqual(
+            ["stagedigest", "subsidence-rung-death-check", "stagedigest"],
+            profile.parse_script(found["SCRIPT_WORDS"].split(), (found["VERBS"],)),
+        )
+        self.assertEqual(
+            "stagedigest:OK~founded=false,subsidence-rung-death-check:OK~cases=6 passed=6 failed=0,"
+            "stagedigest:OK~founded=true,COMPLETE", found["EXPECT"],
+        )
+        self.assertEqual("stagedigest;subsidence-rung-check;stagedigest", wear["SCRIPT"])
+        self.assertEqual("subsidence-rung-check", wear["VERBS"])
+        self.assertEqual(wear["LOG_EXPECT"], found["LOG_EXPECT"])
+        self.assertNotIn("TAF_LOG_ALLOW", found)
+
+    def test_rung_save_persona_is_a_separate_first_leg(self):
+        directory = ROOT / "Tools" / "personas"
+        name = "subsidence-rung-save-native-check.persona"
+        found = matrix.parse_manifest((directory / name).read_text(encoding="utf-8"), name)
+        older = matrix.parse_manifest(
+            (directory / "subsidence-save-native-check.persona").read_text(encoding="utf-8"),
+            "subsidence-save-native-check.persona",
+        )
+        self.assertEqual("founding-first-city", found["REQUEST"])
+        self.assertEqual("8.22@40,12", found["START"])
+        self.assertEqual("stagedigest;subsidence-rung-save-check;stagedigest", found["SCRIPT"])
+        self.assertEqual("subsidence-rung-save-check", found["VERBS"])
+        self.assertEqual(
+            "stagedigest:OK~founded=false,subsidence-rung-save-check:OK~cases=1 passed=1 failed=0,"
+            "stagedigest:OK~founded=true,COMPLETE", found["EXPECT"],
+        )
+        self.assertEqual("growth,native-regression,save-load", found["SET"])
+        self.assertEqual(older["LOG_EXPECT"], found["LOG_EXPECT"])
+        self.assertNotEqual(older["SCRIPT"], found["SCRIPT"])
 
     def test_p0_housing_personas_freeze_exact_north_cases_and_full_visual_script(self):
         self.assertEqual(8, len(P0_HOUSING_PERSONAS))

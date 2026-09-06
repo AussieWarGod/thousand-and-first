@@ -137,10 +137,6 @@ namespace ThousandAndFirst
 		/// The floor is what makes a ruin readable as a place rather than as rubble.
 		/// </para>
 		/// </summary>
-		public const int RuinStandingFloorPercent = 25;
-
-		public const int RuinStandingCeilingPercent = 60;
-
 		public static int StandingPercent(InheritedState State, int Roll)
 		{
 			if (!IsKnownState(State))
@@ -152,20 +148,7 @@ namespace ThousandAndFirst
 				return 100;
 			}
 
-			// Roll is adversity: a high draw is a hard interregnum. Standing must therefore fall
-			// as it rises. The first version ran the other way and left the worst-treated ruins
-			// the most intact, which is backwards on its face and was caught in review.
-			// Clamp rather than modulo - wrapping would turn an out-of-range 150 into a mild 50.
-			int roll = Roll;
-			if (roll < 0)
-			{
-				roll = 0;
-			}
-			if (roll > 99)
-			{
-				roll = 99;
-			}
-			return RuinStandingCeilingPercent - roll * (RuinStandingCeilingPercent - RuinStandingFloorPercent) / 99;
+			return RuinedStandingPercent(Roll);
 		}
 	}
 }

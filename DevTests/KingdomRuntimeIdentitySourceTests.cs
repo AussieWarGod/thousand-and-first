@@ -813,7 +813,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			string body = system.Substring(prepare, settle - prepare);
 			StringAssert.Contains("InvokeAuthorized = false", body);
-			StringAssert.Contains("Receipt.BeforeArchiveGraph = archiveGraph", body);
+			StringAssert.Contains(".CaptureIntent(BeforeEffect, AfterEffect, BeforeStamp, AfterStamp,", body);
+			string basisRuntime = TestMain.ReadRepositoryText("Core/KingdomRealmHashBasisRuntime.cs");
+			StringAssert.Contains("Receipt.BeforeArchiveGraph = archiveGraph", basisRuntime);
 			int intent = body.IndexOf("Receipt.Phase == KingdomRealmCallbackPhase.Intent",
 				StringComparison.Ordinal);
 			int attempting = body.IndexOf(
@@ -1624,7 +1626,7 @@ namespace ThousandAndFirst.Tests
 				"the frozen v12 producer must not adopt v13 interpretation");
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(migratedV12,
 				out byte[] v18, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
 				BitConverter.ToInt32(v18, 4));
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement roundTripV18, out int futureV18, out failure), failure);

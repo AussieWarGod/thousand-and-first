@@ -191,7 +191,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomResearch.ApplySources(this)", system);
 			string offices = TestMain.ReadRepositoryText(Path.Combine("Experience",
 				"KingdomOffices.cs"));
-			StringAssert.Contains("KingdomResidentIdentity.Forget(system, Citizen)", offices);
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", offices);
+			string death = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.cs");
+			StringAssert.Contains("Accounts(f, index, ref r)", death);
+			StringAssert.Contains("ClearCountedProperties(f, r, body)", death);
+			StringAssert.Contains("KingdomResidentIdentityRules.TransitionIdentityKeys", TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRules.cs"));
 			string growth = KingdomGrowthLogicalSource.Read();
 			StringAssert.Contains("KingdomResidentIdentity.Forget(System, leaver)", growth);
 		}

@@ -5,39 +5,6 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomLodgingRules
 	{
-		// --- Condemnation: when a house stops being a roof ---------------------------------
-
-		/// <summary>
-		/// Wear at which a home stops counting as a roof for anybody. Derived, not chosen:
-		/// <c>KingdomMaterialRules.ConditionPercent</c> says a work at wear W has <c>100 - W</c>
-		/// of itself left, and <c>KingdomRules.RuinStandingCeilingPercent</c> is the MOST of an
-		/// abandoned settlement that is ever still standing after a generation of nobody. So the
-		/// line is the wear at which a house somebody lives in has no more of itself left than
-		/// the best-preserved ruin &mdash; 40, which is also, and not by accident, exactly where
-		/// <c>KingdomMaterialRules.ConditionWord</c> starts calling a work half-wrecked.
-		/// <para>
-		/// Strictly below <c>KingdomMaterialRules.MaxWearPercent</c>, so condemnation is a state
-		/// a house can be in rather than a synonym for the wear ceiling: a home can be badly used
-		/// and still keep the rain off, and every point of the damage is mendable, so a
-		/// condemnation is arrested by putting the roof back on and never by waiting.
-		/// </para>
-		/// <para>
-		/// This is a LODGING rule and not a wear rule on purpose. Nothing about a condemned house
-		/// stops it working as whatever else it is; what it stops doing is housing people. The
-		/// protection law is untouched &mdash; nothing is cleared, nothing is destroyed, and the
-		/// building stands exactly where it stood.
-		/// </para>
-		/// </summary>
-		public const int CondemnedWearPercent = 100 - KingdomRules.RuinStandingCeilingPercent;
-
-		/// <summary>Whether a home this worn has stopped being a roof. At the threshold exactly,
-		/// it has: the constant names the first wear that is too much, not the last that is
-		/// tolerable.</summary>
-		public static bool IsCondemned(int Wear)
-		{
-			return Wear >= CondemnedWearPercent;
-		}
-
 		/// <summary>
 		/// The named, once-announced line STANDARDS 7b requires for an applicable-but-blocked
 		/// state: never a complaint, never a countdown, just what is true and why. Repeats the

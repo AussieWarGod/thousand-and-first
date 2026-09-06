@@ -25,9 +25,10 @@ namespace ThousandAndFirst.Simulation.City
 		/// Version 3 completes the resident identity row with exact origin and arrival-label
 		/// columns. The origin code and arrival tick remain the catalogue projection and sole clock;
 		/// neither can preserve open guest provenance or an unparseable legacy roll label.
+		/// Version 4 distinguishes absent legacy subsidence storage from damaged current authority.
 		/// </para>
 		/// </summary>
-		internal const int SchemaVersion = 3;
+		internal const int SchemaVersion = 4;
 
 		/// <summary>The rules revision the book was last advanced by. Separate from the schema:
 		/// a rules change that does not move a column still wants saying.</summary>

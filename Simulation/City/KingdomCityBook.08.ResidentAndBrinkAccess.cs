@@ -4,14 +4,37 @@ namespace ThousandAndFirst.Simulation.City
 {
 	public partial class KingdomCityBook
 	{
-		/// <summary>Repairs the resident columns only if they are ragged. Square columns are the
-		/// ordinary case and cost one length comparison per column to confirm.</summary>
-		private void EnsureResidentColumnsSquare()
+		/// <summary>
+		/// Whether the resident columns may be indexed, repairing them only if they are ragged.
+		/// Square columns are the ordinary case and cost one length comparison per column to confirm.
+		/// <para>
+		/// False is a refusal, not a fault. A book whose durable authority did not load carries the
+		/// sticky failed-read latch, and nothing repairs a book in that state: <see cref="Normalize"/>
+		/// returns having changed nothing, so a shape that was ragged before it ran is ragged after.
+		/// The caller answers false rather than indexing off the end of a column.
+		/// </para>
+		/// </summary>
+		private bool TryEnsureResidentColumnsSquare()
 		{
-			// A null column is an absent named field, which is ragged in the strongest sense; Rows
-			// answers -1 for one so the comparison below can never be true.
+			if (SubsidenceReadFailed)
+			{
+				return false;
+			}
+			if (ResidentColumnsSquare())
+			{
+				return true;
+			}
+			Normalize();
+			return !SubsidenceReadFailed && ResidentColumnsSquare();
+		}
+
+		/// <summary>One length comparison per column. A null column is an absent named field, which
+		/// is ragged in the strongest sense; Rows answers -1 for one so the comparison below can never
+		/// be true.</summary>
+		private bool ResidentColumnsSquare()
+		{
 			int count = Rows(ResidentIds);
-			if (count >= 0
+			return count >= 0
 				&& Rows(ResidentNames) == count && Rows(ResidentOrigins) == count
 				&& Rows(ResidentOriginCodes) == count && Rows(ResidentCreedCodes) == count
 				&& Rows(ResidentArrivedTicks) == count && Rows(ResidentArrived) == count
@@ -23,11 +46,7 @@ namespace ThousandAndFirst.Simulation.City
 				&& Rows(ResidentRoofWarnedTicks) == count && Rows(ResidentCreedStanding) == count
 				&& Rows(ResidentCreedTicks) == count && Rows(ResidentCreedWarnedTicks) == count
 				&& Rows(ResidentCreedToward) == count && Rows(ResidentCreedChannels) == count
-				&& Rows(ResidentKeptCreeds) == count)
-			{
-				return;
-			}
-			Normalize();
+				&& Rows(ResidentKeptCreeds) == count;
 		}
 
 		private static int Rows<T>(List<T> column)
@@ -94,7 +113,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// </para>
 		/// </summary>
 		/// <returns>False when this book holds no row for that id, which is the caller's signal
-		/// that the settler belongs to some other city or to none.</returns>
+		/// that the settler belongs to some other city or to none; and false when the columns
+		/// cannot be indexed at all, because a refused normalization repairs nothing.</returns>
 		public bool TryReadBrink(int residentId, BrinkKind kind, out bool stands, out long reachedTick, out long warnedTick, out string toward, out int channel)
 		{
 			stands = false;
@@ -102,7 +122,10 @@ namespace ThousandAndFirst.Simulation.City
 			warnedTick = 0L;
 			toward = null;
 			channel = 0;
-			EnsureResidentColumnsSquare();
+			if (!TryEnsureResidentColumnsSquare())
+			{
+				return false;
+			}
 			int index;
 			if (!TryResidentRow(residentId, out index) || (kind != BrinkKind.Roof && kind != BrinkKind.Creed))
 			{
@@ -131,12 +154,18 @@ namespace ThousandAndFirst.Simulation.City
 		/// consumers change one person's window and nothing else, and rebuilding the whole book
 		/// around each of those would make a fault in an unrelated row able to swallow a warning.
 		/// A lifted brink clears its own fields, so a forgotten brink leaves nothing behind for a
-		/// later read to half-believe.
+		/// later read to half-believe. A shape that cannot be indexed refuses before the first
+		/// assignment, so a refused write leaves every column byte-identical.
 		/// </para>
 		/// </summary>
 		public bool TryWriteBrink(int residentId, BrinkKind kind, bool stands, long reachedTick, long warnedTick, string toward, int channel)
 		{
-			EnsureResidentColumnsSquare();
+			if (kind == BrinkKind.Roof && (!HasValidSubsidenceStorage()
+				|| KingdomSubsidenceRungRules.BlocksRoof(SubsidenceModel, residentId))) return false;
+			if (!TryEnsureResidentColumnsSquare())
+			{
+				return false;
+			}
 			int index;
 			if (!TryResidentRow(residentId, out index) || (kind != BrinkKind.Roof && kind != BrinkKind.Creed))
 			{

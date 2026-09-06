@@ -8,6 +8,15 @@ The mod is a platform: its content registries load through the game's own mergea
 streams, so **any mod can add to them by shipping a file with the right root element** —
 no code, no dependency declaration, no patching.
 
+## Internal save records — development status
+
+Developer note: in-progress resident admission/departure records and nested civic-office and
+polity-figure snapshots now use the engine's named-field composite protocol. Existing stored
+field names, types, defaults and version constants remain unchanged; legacy binary-format
+reading remains an engine compatibility path, not a new extension API. These internal records
+are not third-party write surfaces. See `docs/STATUS.md` and `TESTING.md` for native verification
+and the distinction between generated legacy-format fixtures and historical-save evidence.
+
 ## Bridge an external ground owner
 
 Use the supported provider protocol only when another mod has a real typed ownership registry.
@@ -1716,11 +1725,57 @@ mod mean it failed or warned to compile; their absence means it loaded clean.
 These are live model contracts. Their resource levels, frozen in-flight jobs, latest network solves,
 work state, and owed physical outputs share one bounded sidecar in the city book. Check-in and
 heartbeat advance it. Settlement archive v7 is the first schema to carry that behavior sidecar;
-every schema from v7 through current v17 preserves it through exile and seat exchange, while frozen
+every schema from v7 onward preserves it through exile and seat exchange, while frozen
 v6 defaults it empty and v8–v16 add later sidecars independently. An attended pass lands owed work
 objects on the exact work cell. A malformed sidecar is retained and reported, never reinterpreted
 as empty. Disabling an owner prevents new proposals but does not stop the host from settling a job
 whose carrier, route, cargo, and completion were already frozen.
+
+The unshipped subsidence integration uses city-book schema 4 and settlement-archive schema 19.
+Realm archive schema9 appends two settlement hash-basis integers per callback receipt after
+the directional-standing digest. Intent and settled hashes have independent bases; zero means
+unresolved historical provenance, not permission to assume the current schema. Versions2-8
+retain their old receipt frames and default bases. Historical hash strings are never rewritten;
+an exact historical projection must prove the recorded hash. These fields are internal save
+authority, not extension APIs. Nested composite readers consume the existing type-token frames
+and require exact types with no newly recorded engine read errors.
+Its internal step sidecar preserves canonical older `ss1`–`ss4` records and writes admitted
+records as `ss5`, which embeds frozen option, slide-batch, rung-report, failed-report and announcement receipts. Migration
+retains owed reporting instead of inventing delivery proof. `ss1:new` and `ss1:legacy` remain
+explicit unadmitted markers; empty or malformed current state is not either marker. These are
+private recovery records, not extension APIs: third-party mods must not author or replace them.
+The `sa1` announcement record retains a per-city monotone transition ordinal, frozen text/tick,
+flag proof and queue-attempt phase. Returned means the call returned, not that the player saw it.
+Interrupted intent is retained for Homecoming acknowledgement, never blindly replayed.
+Named-departure capacity warnings use additive named System field `ResidentDepartureCapacityWarnings`:
+exact `dc1:none` default or at most eight owner-bound rows. Missing old named fields keep the default;
+explicit malformed values are not repaired. No departure operation wire changed. Only exact warnings
+shown at Homecoming are acknowledged; foreign realm/settlement rows remain retained.
+Witnessed deaths use a game-owned string-state journal keyed by realm and settlement,
+`r_TAF_ResidentDeaths_v1:<realm>:<settlement>`, with canonical `rd1` records. The actual
+`BeforeDeathRemovalEvent` witness freezes resident/body identity, roles, memory policy and
+pending roof evidence before accounting. Recovery accepts only exact saved before/after cuts;
+body absence never creates a witness or completes a roof. At most4096 retained records and
+8MiB of encoded text are admitted; capacity or malformed authority refuses without eviction
+and reports the unresolved accounting. No new engine-reflected field or archive layout is added.
+These records are private recovery authority, not an extension API or permission to edit game state.
+Report `st3` reads canonical `st1` and `st2`, distinguishing delivered, terminally lost and explicit
+capacity-refused telling. Capacity refusal stores the full-registry count/hash and dated event
+fingerprint; it never means a Chronicle sink was delivered or Lost. Exact current-owner/five-table
+observation precedes parent publication. No receipt is evicted to obtain capacity. The
+`sf1` archive retains full failed report witnesses (at most eight reports and 262,144 wire characters)
+until the founder reads homecoming. It never evicts unread evidence. A full archive pauses new
+retirement with a read-homecoming recovery instruction. Homecoming rechecks owner, all reset-cleared
+news and saved bytes across the popup, settles pending ledger intents before `Reset`, and only then
+acknowledges the exact displayed archive. This adds no serialized `KingdomLedger` field and changes
+no historical settlement-archive field layout. Loss never grants another physical effect or claims
+both Chronicle registers delivered.
+The developer-only rung fixture now checks a selected live work's wear-after recovery, one exact
+resident roof tuple, receipt release and dated telling after fifteen actual departures. Its hut,
+initial home and elapsed clock are synthetic; this is not construction or ordinary-play acceptance.
+Unknown missing/unloaded/pooled completed carriers still refuse release; a missing live-census row
+is not destruction proof. Native migration/save-load acceptance remains open;
+see [current status](docs/STATUS.md).
 
 ### How registration works
 

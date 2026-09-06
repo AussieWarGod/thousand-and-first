@@ -96,13 +96,32 @@ namespace ThousandAndFirst.Tests
 		public void HolderDeathBecomesVacancyBeforeIdentityIsForgotten()
 		{
 			string offices = Read("Experience/KingdomOffices.cs");
-			int death = offices.IndexOf("KingdomResidents.TryMarkDead", StringComparison.Ordinal);
-			int vacancy = offices.IndexOf("KingdomOfficeRuntime.ObserveHolderLoss",
-				StringComparison.Ordinal);
-			int forget = offices.IndexOf("KingdomResidentIdentity.Forget", StringComparison.Ordinal);
-			Assert.Greater(death, 0); Assert.Greater(vacancy, death); Assert.Greater(forget, vacancy);
-			StringAssert.DoesNotContain("HonourDead(", offices);
-			StringAssert.DoesNotContain("UpdateOffice(", offices);
+			string runtime = Read("Growth/KingdomResidentDeathRuntime.cs");
+			string roles = Read("Growth/KingdomResidentDeathRuntime.Roles.cs");
+			string accounts = Read("Growth/KingdomResidentDeathRuntime.Accounting.cs");
+			// Source ordering only; this does not execute native callbacks or bodyless recovery.
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", offices);
+			int capture = runtime.IndexOf("Capture(f, body, cause", StringComparison.Ordinal);
+			int persist = runtime.IndexOf("Save(f, next)", StringComparison.Ordinal);
+			int resume = runtime.IndexOf("Resume(f, index, body)", StringComparison.Ordinal);
+			Assert.Greater(capture, 0); Assert.Greater(persist, capture); Assert.Greater(resume, persist);
+			int death = runtime.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
+			int vacancy = runtime.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
+			int account = runtime.IndexOf("Accounts(f, index, ref r)", StringComparison.Ordinal);
+			int forget = runtime.IndexOf("ClearCountedProperties(f, r, body)", StringComparison.Ordinal);
+			Assert.Greater(death, 0); Assert.Greater(vacancy, death); Assert.Greater(account, vacancy);
+			Assert.Greater(forget, account);
+			StringAssert.Contains("!DeadExact(f, r) || !Office(f, r, body)", roles);
+			StringAssert.Contains("KingdomExperienceRules.TryPrepareOfficeVacancy", roles);
+			StringAssert.Contains("KingdomOfficeRuntime.TryConcludeWitnessedDeath", roles);
+			StringAssert.Contains("KingdomExperienceRules.TryCompleteOfficeDeathVacancy", roles);
+			StringAssert.Contains("KingdomResidentDeathPhase.RolesSettled", accounts);
+			int prepared = accounts.IndexOf("TryPrepareAccounts(r, before", StringComparison.Ordinal);
+			int saved = accounts.IndexOf("Save(f, index, prepared)", StringComparison.Ordinal);
+			int written = accounts.IndexOf("PutMap(f, i, next)", StringComparison.Ordinal);
+			Assert.Greater(prepared, 0); Assert.Greater(saved, prepared); Assert.Greater(written, saved);
+			StringAssert.DoesNotContain("HonourDead(", offices + runtime + roles);
+			StringAssert.DoesNotContain("UpdateOffice(", offices + runtime + roles);
 			string reconcile = Read("Experience/KingdomOfficeRuntime.Reconcile.cs");
 			StringAssert.Contains("KingdomCivicOfficeVacancyCause.AuthorityLost", reconcile);
 			StringAssert.Contains("KingdomCivicOfficeVacancyCause.Departure", reconcile);
@@ -203,22 +222,31 @@ namespace ThousandAndFirst.Tests
 		{
 			string context = Read("Experience/KingdomRemembranceRuntime.Context.cs");
 			string open = Read("Experience/KingdomRemembranceRuntime.Open.cs");
-			string death = Read("Experience/KingdomOffices.cs");
-			string witness = Read("Experience/KingdomOffices.RemembranceEligibility.cs");
+			string death = Read("Growth/KingdomResidentDeathRuntime.cs");
+			string capture = Read("Growth/KingdomResidentDeathRuntime.Capture.cs");
+			string witness = Read("Growth/KingdomResidentDeathRuntime.Roles.cs");
 			StringAssert.Contains("KingdomResidentStanding.Dead", context);
 			StringAssert.Contains("KingdomResidentStanding.Resident", context);
 			StringAssert.Contains("ReferenceEquals(body.CurrentZone, Context.Zone)", context);
 			StringAssert.Contains("receipt.SubjectResidentId", open);
 			StringAssert.DoesNotContain("Deaths(context.State)", open);
-			StringAssert.Contains("TryCaptureRemembranceWitness", death);
-			StringAssert.Contains("TryRecordRemembranceEligibility", death);
-			Assert.Less(death.IndexOf("TryCaptureRemembranceWitness", StringComparison.Ordinal),
-				death.IndexOf("KingdomResidents.TryMarkDead", StringComparison.Ordinal));
-			Assert.Greater(death.IndexOf("TryRecordRemembranceEligibility", StringComparison.Ordinal),
-				death.IndexOf("KingdomResidents.TryMarkDead", StringComparison.Ordinal));
+			StringAssert.Contains("Memory = KingdomOffices.Enabled", capture);
+			StringAssert.Contains("CaptureRoles(f, value)", capture);
+			StringAssert.Contains("r.Remembrance = r.Memory && experience.IdentityBound && remembrance == null", witness);
+			StringAssert.Contains("r.RemembranceUnavailable = r.Memory && !experience.IdentityBound", witness);
+			int captured = death.IndexOf("Capture(f, body, cause", StringComparison.Ordinal);
+			int saved = death.IndexOf("Save(f, next)", StringComparison.Ordinal);
+			int marked = death.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
+			int eligibility = death.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
+			Assert.Greater(captured, 0); Assert.Greater(saved, captured); Assert.Greater(marked, saved);
+			Assert.Greater(eligibility, marked);
+			StringAssert.Contains("if (r.Remembrance)", witness);
+			StringAssert.Contains("if (prior == null && !KingdomExperienceRules.TryCreateRemembranceEligibility", witness);
+			StringAssert.Contains("r.Settlement, r.SettlementName, r.Before.ResidentId, r.Before.Name, r.Tick", witness);
+			StringAssert.Contains("!DeadExact(f, r)", witness);
 			StringAssert.Contains("TryCreateRemembranceEligibility", witness);
-			StringAssert.DoesNotContain("TryObserveConfiguredOptions", witness);
-			StringAssert.Contains("System.TryFindSettlement(book", witness);
+			StringAssert.DoesNotContain("TryObserveConfiguredOptions", capture + witness + death);
+			StringAssert.Contains("f.System.TryFindSettlement(f.City", capture);
 			StringAssert.Contains("System.OwnedZone(Zone.ZoneID)", context);
 			StringAssert.Contains("FindNonSeatSettlementByZone", context);
 			StringAssert.Contains("Deferral never expires", open);

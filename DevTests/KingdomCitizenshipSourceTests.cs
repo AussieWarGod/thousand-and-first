@@ -53,10 +53,16 @@ namespace ThousandAndFirst.Tests
 			string offices = TestMain.ReadRepositoryText("Experience/KingdomOffices.cs");
 			string death = Slice(offices, "public static void RecordDeath(",
 				"private static void TagCitizens(");
-			Assert.That(death.IndexOf("KingdomResidents.TryMarkDead", StringComparison.Ordinal),
-				Is.LessThan(death.IndexOf("if (!Enabled)", StringComparison.Ordinal)));
-			Assert.That(death.IndexOf("KingdomCreed.Forget", StringComparison.Ordinal),
-				Is.LessThan(death.IndexOf("if (!Enabled)", StringComparison.Ordinal)));
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", death);
+			StringAssert.DoesNotContain("if (!Enabled)", death);
+			string journal = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.cs");
+			int standing = journal.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
+			int removal = journal.IndexOf("KingdomCitizenship.TryRemove", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(standing, 0); Assert.Greater(removal, standing);
+			string rules = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRules.cs");
+			int identity = rules.IndexOf("KingdomResidentIdentityRules.Transition(map", StringComparison.Ordinal);
+			int memory = rules.IndexOf("if (r.Memory)", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(identity, 0); Assert.Greater(memory, identity);
 		}
 
 		[Test]

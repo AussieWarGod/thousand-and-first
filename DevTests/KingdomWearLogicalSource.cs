@@ -8,6 +8,7 @@ namespace ThousandAndFirst.Tests
 		private static readonly string[] Paths = new string[]
 		{
 			"Growth/KingdomWear.00.r_KingdomWear.cs",
+			"Growth/KingdomWear.00a.LoadSafety.cs",
 			"Growth/KingdomWear.01.RepairRecovery.cs",
 			"Growth/KingdomWear.02.RepairTargetAndCarry.cs",
 			"Growth/KingdomWear.03.Activation.cs",

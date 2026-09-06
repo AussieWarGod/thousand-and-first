@@ -9,8 +9,7 @@ using ThousandAndFirst.Harness;
 namespace ThousandAndFirst
 {
 	/// <summary>
-	/// Unattended scenario execution: runs the sealed script once, hands-free, in the built world,
-	/// and journals every step.
+	/// Runs the sealed script once in the built world and journals every step.
 	/// <para>
 	/// SEAM. Registered from the scenario mode in <c>Harness/EmbarkModules.xml</c> as
 	/// <c>&lt;gamesystem Class="ThousandAndFirst.KingdomScenarioAutoRunner"/&gt;</c>, the same way
@@ -52,10 +51,8 @@ namespace ThousandAndFirst
 	/// by a save simply does not resume, and the journal's last row says where it stopped.
 	/// </para>
 	/// <para>
-	/// NEVER AUTO-QUITS and never prevents the player's action; it leaves the game exactly where the
-	/// operator can look at it. INERT WHEN THE SCRIPT IS ABSENT - a prepared profile with no sealed
-	/// script is an ordinary attended profile, and nothing here writes a row, suppresses a popup, or
-	/// spends a turn.
+	/// Never auto-quits or prevents player actions. Without a sealed script it writes no journal,
+	/// suppresses no popup, and spends no turn.
 	/// </para>
 	/// </summary>
 	[Serializable]
@@ -98,6 +95,8 @@ namespace ThousandAndFirst
 
 		[NonSerialized]
 		private int Cursor;
+
+		internal bool HasConsideredScript { get { return ScriptConsidered; } }
 
 		public override bool WantFieldReflection => false;
 

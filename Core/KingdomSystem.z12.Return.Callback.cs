@@ -25,21 +25,16 @@ namespace ThousandAndFirst
 				return QuarantineReturn(Archive, "callback intent is unbounded", out Refusal);
 			if (Receipt.Phase == KingdomRealmCallbackPhase.None)
 			{
+				// Scope, both graphs, the frozen effects, both stamps, the phase and the intent
+				// basis publish inside the runtime, and only after it reproves this receipt.
 				if (!Archive.CurrentGraphMatches(this, out string failure) ||
 					!ExactExileMirrors(Archive) ||
 					!TradeTransitionProofMatches(Archive,
 						RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
-					!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
-					!Archive.TryAuthorityHash(Receipt, Scope, out string archiveGraph, out failure))
+					!new KingdomRealmHashBasisRuntime.Binding(Archive, this, Receipt, Scope)
+						.CaptureIntent(BeforeEffect, AfterEffect, BeforeStamp, AfterStamp,
+							out failure))
 					return QuarantineReturn(Archive, failure, out Refusal);
-				Receipt.Scope = Scope;
-				Receipt.BeforeGraph = graph;
-				Receipt.BeforeArchiveGraph = archiveGraph;
-				Receipt.BeforeEffect = BeforeEffect;
-				Receipt.AfterEffect = AfterEffect;
-				Receipt.BeforeStamp = BeforeStamp;
-				Receipt.AfterStamp = AfterStamp;
-				Receipt.Phase = KingdomRealmCallbackPhase.Intent;
 			}
 			if (!Receipt.Validate() || Receipt.Scope != Scope || Receipt.BeforeEffect != BeforeEffect ||
 				Receipt.AfterEffect != AfterEffect || Receipt.BeforeStamp != BeforeStamp ||
@@ -48,15 +43,14 @@ namespace ThousandAndFirst
 					out Refusal);
 			if (Receipt.Phase == KingdomRealmCallbackPhase.Intent)
 			{
+				// Both frozen hashes reprove at this receipt's own intent basis; a receipt that
+				// carried none has the uniquely matched basis pinned there, never rewritten here.
 				if (!Archive.CurrentGraphMatches(this, out string failure) ||
 					!ExactExileMirrors(Archive) ||
 					!TradeTransitionProofMatches(Archive,
 						RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
-					!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
-					!Archive.TryAuthorityHash(Receipt, Scope, out string archiveGraph, out failure) ||
-					!string.Equals(graph, Receipt.BeforeGraph, StringComparison.Ordinal) ||
-					!string.Equals(archiveGraph, Receipt.BeforeArchiveGraph,
-						StringComparison.Ordinal))
+					!new KingdomRealmHashBasisRuntime.Binding(Archive, this, Receipt, Scope)
+						.ProveAttempting(out failure))
 					return QuarantineReturn(Archive,
 						failure ?? "callback graph changed before attempt", out Refusal);
 				Receipt.Phase = KingdomRealmCallbackPhase.Attempting;
@@ -71,8 +65,6 @@ namespace ThousandAndFirst
 		{
 			Refusal = "";
 			string failure = null;
-			string graph = null;
-			string archiveGraph = null;
 			if (Receipt == null || Receipt.Phase != KingdomRealmCallbackPhase.Attempting ||
 				Disposition == KingdomRealmCallbackDisposition.None ||
 				ObservedEffect == null ||
@@ -82,20 +74,13 @@ namespace ThousandAndFirst
 				!ExactExileMirrors(Archive) ||
 				!TradeTransitionProofMatches(Archive,
 					RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
-				!KingdomRealmArchive.TryCurrentGraphHash(this, out graph, out failure) ||
-				!Archive.TryAuthorityHash(Receipt, Receipt.Scope, out archiveGraph, out failure) ||
-				!string.Equals(archiveGraph, Receipt.BeforeArchiveGraph,
-					StringComparison.Ordinal) ||
-				((Receipt.Scope == KingdomRealmCallbackScope.Ability ||
-				  Receipt.Scope == KingdomRealmCallbackScope.Reputation) &&
-				 !string.Equals(graph, Receipt.BeforeGraph, StringComparison.Ordinal)))
+				// The frozen archive hash reproves at the intent basis and is copied forward, the
+				// Ability/Reputation live comparison is taken at that same basis, and only the new
+				// AfterGraph is cut at CurrentVersion and stamped as the settle basis.
+				!new KingdomRealmHashBasisRuntime.Binding(Archive, this, Receipt, Receipt.Scope)
+					.Settle(Disposition, ObservedEffect, out failure))
 				return QuarantineReturn(Archive, failure ?? "callback could not settle exact graph",
 					out Refusal);
-			Receipt.AfterGraph = graph;
-			Receipt.AfterArchiveGraph = archiveGraph;
-			Receipt.ObservedEffect = ObservedEffect;
-			Receipt.Disposition = Disposition;
-			Receipt.Phase = KingdomRealmCallbackPhase.Settled;
 			return Receipt.Validate();
 		}
 
@@ -111,11 +96,10 @@ namespace ThousandAndFirst
 				!ExactExileMirrors(Archive) ||
 				!TradeTransitionProofMatches(Archive,
 					RequireBound: ReturnCallbackTradeBound(Archive), out failure) ||
-				!KingdomRealmArchive.TryCurrentGraphHash(this, out string graph, out failure) ||
-				!Archive.TryAuthorityHash(Receipt, Receipt.Scope, out string archiveGraph, out failure) ||
-				!string.Equals(graph, Receipt.AfterGraph, StringComparison.Ordinal) ||
-				!string.Equals(archiveGraph, Receipt.AfterArchiveGraph,
-					StringComparison.Ordinal))
+				// AfterArchiveGraph must still be the one Before value proved under the intent
+				// basis, while AfterGraph resolves and reproves under its own settle basis.
+				!new KingdomRealmHashBasisRuntime.Binding(Archive, this, Receipt, Receipt.Scope)
+					.VerifySettled(out failure))
 				return QuarantineReturn(Archive, failure ??
 					"settled callback proof no longer matches exact poststate", out Refusal);
 			return true;

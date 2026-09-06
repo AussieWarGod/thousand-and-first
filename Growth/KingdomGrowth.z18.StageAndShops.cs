@@ -50,7 +50,8 @@ namespace ThousandAndFirst
 		{
 			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			int zoneCapacity = (Survey != null) ? Survey.StorageCapacity : CountStorageCapacity(Z);
-			KingdomSubsidence.Reckon(System, Z, Survey, The.Game.TimeTicks);
+			if (!KingdomSubsidence.TryReckon(System, Z, Survey, The.Game.TimeTicks, out _)) return;
+			if (!KingdomSubsidenceStepRuntime.CanStartReckoning(System)) return;
 			// Read AFTER Reckon, which writes this zone's own sighting. The ladder measures the
 			// city's casks, not the casks of whichever zone the founder walked in through.
 			int capacity = KingdomSubsidence.CityStorageCapacity(System, Z, zoneCapacity);

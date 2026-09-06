@@ -14,16 +14,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		public void ShowHomecoming(KingdomSystem System)
 		{
-			if (!System.Ledger.Any)
-			{
-				Popup.Show("Nothing has happened here since you last stood on this ground.");
-				return;
-			}
-			Popup.Show(System.Ledger.Digest(System.SeatName, System.HomecomingDays));
-			// A report remains durable until it has actually been shown. Reading it is
-			// bookkeeping, so this reset never marks the governance scope or costs a turn.
-			System.Ledger.Reset();
-			System.HomecomingDays = 0;
+			if (!KingdomSubsidenceStepRuntime.TryReadHomecoming(System,
+				text => Popup.Show(text), out string refusal)) Popup.Show(refusal);
 		}
 
 		/// <summary>Hears the settler who is waiting, and lets the founder decline.</summary>

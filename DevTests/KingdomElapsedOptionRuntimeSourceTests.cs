@@ -47,19 +47,16 @@ namespace ThousandAndFirst.Tests
 		public void SubsidenceUsesSettlementIdentityAndObservesBeforeSurveyWork()
 		{
 			string source = KingdomSubsidenceLogicalSource.Read();
-			StringAssert.Contains("OptionStatePrefix + settlementId", source);
-			StringAssert.Contains("KingdomIdentityRules.IsSettlementId(settlementId)", source);
-			StringAssert.Contains("System.MasterAppliedResumeToken", source);
-			AssertBefore(source, "public static void Reckon(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)",
-				"ObserveOption(System, TimeTicks)", "ScopedSupports(System, Z, Survey)",
+			StringAssert.DoesNotContain("private static KingdomElapsedOptionDecision ObserveOption(", source);
+			StringAssert.DoesNotContain("private static void CommitOption(", source);
+			AssertBefore(source, "internal static bool TryReckon(",
+				"KingdomSubsidenceStepRuntime.TryOption(system, Enabled, now,", "ScopedSupports(system, zone, survey)",
 				"subsidence option transition must precede support scans and due damage");
-			AssertBefore(source, "public static void Reckon(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)",
-				"System.LastSubsidenceTick = TimeTicks", "KingdomSubsidenceRules.Slide(",
-				"subsidence resume must anchor before slide calculation");
-			AssertBefore(source, "public static void Reckon(KingdomSystem System, Zone Z, KingdomSurvey Survey, long TimeTicks)",
-				"System.LastSubsidenceTick = TimeTicks", "CommitOption(System, option.Record)",
-				"subsidence clock must anchor before its option latch commits");
-			StringAssert.Contains("disabling is not an earned arrest, reward, chronicle event, or prompt", source);
+			string runtime = TestMain.ReadRepositoryText("Growth/KingdomSubsidenceStepRuntime.Options.cs");
+			AssertBefore(runtime, "private static bool TryOptionCore(", "TryFreezeOption(",
+				"KingdomSubsidenceOptionRuntime.TryPublish(", "durable intent precedes option publication");
+			AssertBefore(runtime, "private static bool TryOptionCore(", "system.LastSubsidenceTick = checkpoint",
+				"KingdomSubsidenceStepRules.TryFinishOption(", "intent clears only after exact checkpoint publication");
 		}
 
 		[Test]

@@ -126,7 +126,7 @@ namespace ThousandAndFirst
 		}
 
 		private static void WriteTopologyGraph(BinaryWriter Writer,
-			KingdomSettlementTopology Topology)
+			KingdomSettlementTopology Topology, int SettlementSchema)
 		{
 			if (Topology == null || Topology.HasOpaqueEvidence ||
 				Topology.Count > KingdomSettlementTopologyRules.MaxNonSeatSettlements)
@@ -134,8 +134,8 @@ namespace ThousandAndFirst
 			Writer.Write(Topology.Count);
 			for (int i = 0; i < Topology.Count; i++)
 			{
-				if (!KingdomArchivedSettlementCodec.TryEncode(Topology.Get(i),
-					out byte[] payload, out string failure))
+				if (!KingdomArchivedSettlementCodec.TryEncodeVersion(Topology.Get(i),
+					SettlementSchema, out byte[] payload, out string failure))
 					throw new InvalidDataException(failure);
 				WriteGraphBytes(Writer, payload);
 			}

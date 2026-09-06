@@ -26,6 +26,9 @@ namespace ThousandAndFirst
 
 			/// <summary>Certified salvage, acting up on use.</summary>
 			TemperamentalTech = 3,
+
+			/// <summary>A lost settlement rung; its frozen plan owns the measured increment.</summary>
+			Subsidence = 4,
 		}
 
 		/// <summary>The clause a damage line names the cause by.</summary>
@@ -39,6 +42,8 @@ namespace ThousandAndFirst
 				return "run past what it was built to bear, crewed at full stretch too long";
 			case WearCause.TemperamentalTech:
 				return "acted up under its own certified hands";
+			case WearCause.Subsidence:
+				return "fallen into disrepair as the settlement dwindled";
 			default:
 				return "damaged";
 			}

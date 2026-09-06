@@ -143,6 +143,7 @@ namespace ThousandAndFirst
 				if (Type == typeof(Simulation.City.KingdomCityBook)
 					&& (string.Equals(fields[i].Name, "ExtensionModel", StringComparison.Ordinal)
 						|| string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "SubsidenceModel", StringComparison.Ordinal)
 						|| string.Equals(fields[i].Name, "ExtensionHappeningCursors", StringComparison.Ordinal)))
 				{
 					int maximum = string.Equals(fields[i].Name, "ExtensionModel",
@@ -150,12 +151,27 @@ namespace ThousandAndFirst
 						? Simulation.City.KingdomCityBook.MaxExtensionModelChars
 						: string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
 							? Simulation.City.KingdomCityBook.MaxHappeningModelChars
-							: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
+							: string.Equals(fields[i].Name, "SubsidenceModel", StringComparison.Ordinal)
+								? KingdomSubsidenceStepCodec.MaxWireChars
+								: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
 					fields[i].SetValue(result, ReadString(Reader, maximum, Required: false));
 					continue;
 				}
 				fields[i].SetValue(result, ReadValue(Reader, fields[i].FieldType,
 					Depth + 1, Budget, SchemaVersion));
+			}
+			if (Type == typeof(Simulation.City.KingdomCityBook))
+			{
+				Simulation.City.KingdomCityBook city = (Simulation.City.KingdomCityBook)result;
+				if (SchemaVersion < SubsidenceStorageVersion)
+				{
+					city.SubsidenceModel = null;
+					if (!city.TryMigrateSubsidenceStorage())
+						throw new InvalidDataException("Archived city subsidence migration has invalid provenance.");
+					if (city.SchemaVersion == 3) city.SchemaVersion = Simulation.City.KingdomCityRules.SchemaVersion;
+				}
+				else if (!city.HasValidSubsidenceStorage())
+					throw new InvalidDataException("Archived city subsidence storage is invalid.");
 			}
 			if (Type == typeof(KingdomGrowthFirstGuestOpportunity)
 				&& !HistoricalPhysicalFirstGuestOpportunity(

@@ -88,8 +88,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomResidents.OnRollCount(system)", lifecycle);
 
 			string offices = TestMain.ReadRepositoryText("Experience/KingdomOffices.cs");
-			StringAssert.Contains("KingdomResidents.TryMarkDead(system, Citizen", offices);
-			StringAssert.Contains("KingdomOfficeRuntime.ObserveHolderLoss(system, Citizen", offices);
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", offices);
+			StringAssert.Contains("TryPublishWitnessedDeath", TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.cs"));
+			StringAssert.Contains("KingdomOfficeRuntime.TryConcludeWitnessedDeath", TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.Roles.cs"));
 			StringAssert.DoesNotContain("KingdomResidents.TryHead", offices);
 			string reports = TestMain.ReadRepositoryText("Core/KingdomReportsPeople.cs");
 			StringAssert.Contains("KingdomResidents.TryRoll(System", reports);

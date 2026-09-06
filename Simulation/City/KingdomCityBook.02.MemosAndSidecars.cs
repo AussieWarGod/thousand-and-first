@@ -125,6 +125,12 @@ namespace ThousandAndFirst.Simulation.City
 		/// </summary>
 		public string HappeningModel = "";
 
+		/// <summary>Versioned subsidence authority. Empty or missing data is never a fresh book.</summary>
+		public string SubsidenceModel = ThousandAndFirst.KingdomSubsidenceStepCodec.FreshWire;
+
+		[System.NonSerialized]
+		internal bool SubsidenceReadFailed;
+
 		/// <summary>Largest canonical base64 carrier for the physical-happening sidecar.</summary>
 		public const int MaxHappeningModelChars = KingdomHappeningLifecycleRules.MaxWireChars;
 

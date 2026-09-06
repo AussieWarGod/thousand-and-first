@@ -7,7 +7,8 @@ Architecture/KingdomArchitectures-LotRealizations.xml linguist-generated=true
 *.yml text eol=lf
 *.yaml text eol=lf
 *.json text eol=lf
-workshop.json -text
+# Qud requires canonical CRLF bytes; retain normal whitespace checks around that terminator.
+workshop.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 *.sh text eol=lf
 *.ps1 text eol=lf
 *.py text eol=lf

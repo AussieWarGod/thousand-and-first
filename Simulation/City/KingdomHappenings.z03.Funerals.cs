@@ -96,6 +96,7 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					continue;
 				}
+				if (KingdomResidentDeathRuntime.OwnsFuneral(System, book, row.ResidentId)) continue;
 				if (KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Funeral,
 					row.ResidentId, 0)
 					|| KingdomPhysicalHappenings.AlreadyCompleted(book,

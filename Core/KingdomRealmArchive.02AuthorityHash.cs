@@ -6,11 +6,36 @@ namespace ThousandAndFirst
 {
 	public sealed partial class KingdomRealmArchive
 	{
+		/// <summary>Fixed refusal for a settlement-wire schema outside the accepted set.</summary>
+		private const string UnacceptedSettlementSchemaFailure =
+			"archived settlement schema version is not accepted";
+
 		internal bool TryAuthorityHash(KingdomRealmCallbackReceipt ExcludedReceipt,
 			KingdomRealmCallbackScope Scope, out string Hash, out string Failure)
 		{
+			return TryAuthorityHash(ExcludedReceipt, Scope,
+				KingdomArchivedSettlementCodec.CurrentVersion, out Hash, out Failure);
+		}
+
+		/// <summary>Authority hash over an explicit settlement-wire schema, so a persisted hash
+		/// can be re-proved against its own basis version instead of today's CurrentVersion. The
+		/// schema is admitted before any seat, topology or seceded work, so an unsupported version
+		/// is refused even when the topology is empty. A projection failure at the asked schema is
+		/// the answer: there is no retry at CurrentVersion and no fallback to an older schema.
+		/// Framing, scope checks, receipt ownership, prior-receipt inclusion, caps and every
+		/// failure string are unchanged, so the hash text of a current cut is identical.</summary>
+		internal bool TryAuthorityHash(KingdomRealmCallbackReceipt ExcludedReceipt,
+			KingdomRealmCallbackScope Scope, int SettlementSchema, out string Hash,
+			out string Failure)
+		{
 			Hash = null;
 			Failure = null;
+			if (SettlementSchema < KingdomArchivedSettlementCodec.LegacyVersion ||
+				SettlementSchema > KingdomArchivedSettlementCodec.CurrentVersion)
+			{
+				Failure = UnacceptedSettlementSchemaFailure;
+				return false;
+			}
 			if (Scope == KingdomRealmCallbackScope.None ||
 				!Enum.IsDefined(typeof(KingdomRealmCallbackScope), Scope))
 			{
@@ -24,9 +49,9 @@ namespace ThousandAndFirst
 			}
 			try
 			{
-				if (!KingdomArchivedSettlementCodec.TryEncode(Seat, out byte[] seatBytes,
-					out Failure) ||
-					!KingdomArchivedSettlementCodec.TryEncode(Seceded,
+				if (!KingdomArchivedSettlementCodec.TryEncodeVersion(Seat, SettlementSchema,
+					out byte[] seatBytes, out Failure) ||
+					!KingdomArchivedSettlementCodec.TryEncodeVersion(Seceded, SettlementSchema,
 						out byte[] secededBytes, out Failure) ||
 					!TryCarryBytes(CarryBook, out byte[] carryBytes, out Failure)) return false;
 				using (MemoryStream stream = new MemoryStream())
@@ -35,7 +60,7 @@ namespace ThousandAndFirst
 					writer.Write(0x54414131); // TAA1
 					writer.Write((byte)Scope);
 					WriteGraphBytes(writer, seatBytes); WriteTopologyGraph(writer,
-						SettlementTopology);
+						SettlementTopology, SettlementSchema);
 					WriteGraphBytes(writer, secededBytes); WriteGraphBytes(writer, carryBytes);
 					WriteGraphString(writer, RealmId); WriteGraphString(writer, FactionName);
 					WriteGraphString(writer, DisplayName); WriteGraphString(writer, ExileDeed);

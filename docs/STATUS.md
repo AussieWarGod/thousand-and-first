@@ -1,8 +1,9 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-05
+**Snapshot:** 2026-09-06
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.0 public Alpha playtest
+**Working candidate manifest:** 0.3.1, unreleased
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -12,7 +13,692 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Current automated evidence
+## Current continuation — witnessed-death recovery integrated
+
+Begin/arrest notices now freeze their text and tick before changing the announced flag. A saved
+queue intent prevents blind replay after interruption; Homecoming explicitly acknowledges an
+unconfirmed attempt without claiming it was displayed. Current ss5 embeds monotone transition
+identity while canonical ss1–ss4 readers preserve historical bytes.
+
+Named departures now retain exact Chronicle-capacity warnings before retirement, with no receipt
+eviction or invented publication. The warning archive follows its owner across seat changes;
+Homecoming clears only the exact owner rows it showed. Callback barriers compare every frozen
+departure field and nested role snapshot. Independent bounded source reviews cleared both changes.
+
+Full suites pass **13498 Taf / 4885 Portable**, zero skips; **440 Python Tools** tests pass.
+Strict four-mode C#7.3 plus ABI pass. Current census:3045 staged C# files /431,086 physical lines /
+1414 direct `XRL` imports /zero line-cap failures. Ordinary inputs3041/3045, developer3146/3150
+with105 Harness shards. The resolver covers 3045 sources, baseline and compatibility symbols
+selecting the ordinary inputs above. Direct `XRL` imports: 1414 files, 0 over the line limit.
+Staging list:3076 files, not an installation. Inventory SHA-256: `ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`; compiler
+`987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`, exact before/after.
+[Integration evidence](/tmp/taf-031-owner-death.EsP03W/README.md).
+
+Current D5 envelope v2 and both native witness/verifier contracts require ss5. Historical D5
+v1/ss4 structural roundtrip remains covered; the current dispatcher refuses it before game loading.
+This change does not relabel old native evidence or claim current gameplay acceptance.
+
+Witnessed-death recovery now journals exact engine witnesses before row, role, tally and telling
+updates.118 additional cases pass. Review corrections retain existing expedition results and
+reject mismatched role/body claims. Final archive-owner correction passes46 compiled-code cases;
+the exact [structural semantic review](STRUCTURE_REVIEW_0_3_1.md) is now bound and its gate passes.
+A fresh ss5 save/cold-load pair passed at the preceding checkpoint, before the final owner/version
+corrections; it is not retroactively relabeled. Final version-aligned native Prepared-roof death
+smoke passes6/6: two actual engine deaths, exact accounting and unchanged roof/parent state,
+then two no-replay recoveries. All3150 C# launch inputs match; owned game stopped and independent
+idle verification passes. [Native evidence](/tmp/taf-031-death-native.mTKWRK/README.md).
+Clean private packaging and actual upload/subscribed-content verification still block0.3.1.
+Repeat-release finalization is a separate tooling lane;
+first-attempt publishing need not wait for it. No upload occurred; public remains0.3.0/private empty.
+
+## Retained Chronicle capacity refusal verification
+
+Historical callback hashes now retain their own settlement-schema basis; new settlement cuts
+record a separate basis. The outer realm archive is v9 with a fourteen-integer tail; v2-v8
+remain readable. Existing hash text is never rewritten. The real beta7d v18 fixture and fifteen
+authority/dependency regressions now run in the permanent Taf suite.
+
+Retained archive-wave installed-engine serialization exposed an existing mismatch: dynamic nested writers had
+generic readers. The reader now consumes the historical type token, requires the exact expected
+type and refuses newly recorded nested errors. Writer bytes stay unchanged. Initial full-control
+failure is retained; the corrected direct-archive probe passes **103/103**, including full v9,
+synthetic v8, tail atomicity and poison/reset/original rethrow. Fixtures are quarantined and
+codec-valid, not authoritative realm returns or historical whole saves.
+[Probe instructions](../DevTests/EngineArchiveWire/README.md).
+
+Full suites pass **13238 Taf / 4625 Portable**, zero skips. Strict four-mode C#7.3 and ABI pass;
+production/compiler inventories match before and after. Current census:3026 staged C# files,
+428,926 physical lines, zero line-cap failures. The resolver covers 3026 sources, baseline and compatibility symbols
+selecting3022/3026 ordinary inputs; developer3125/3129 with103 Harness shards.
+Direct `XRL` imports: 1407 files, 0 over the line limit. Generated package inventory:3057 files, not an
+installation. Inventory SHA-256: `8864f0b058665f47640f42fc423c5a11bdeca42f89b7b77776ac9888a0aaef48`;
+compiler `b7db683ae14e1c8b2ea5ff7647b3f78a0aecc358fd69495b2a89bc2a6b2256d1`.
+[Current capacity preflight](/tmp/taf-capacity-integration.WXd14l/README.md).
+
+A full canonical Chronicle registry now records explicit capacity refusal without evicting replay
+receipts or pretending delivery. Reports settle ledger work first and retain visible warning evidence.
+Current st3 report wire preserves canonical st1/st2 readers. New fixtures add95 cases; capacity-specific
+native gameplay was not exercised. Named-departure capacity was a separate open finding at this checkpoint.
+
+Installed-content verifier and fixed item lock are integrated in the tools tree; strict Windows
+builds and15 package/14 installed-file groups pass without Steam calls. Fixed-root publisher CLI
+now passes four strict project builds and all12 Windows suites, including14 CLI and real mutex/
+lease groups;436 Python Tools tests pass. No actual registry or SDK access occurred.
+[Publisher integration evidence](/tmp/taf-publisher-integration.w9HGSj/README.md).
+Safe repeat-release finalization and actual subscribed-content verification remain pending.
+[Delivery scope](/tmp/taf-delivery-integration-fixed.sj5Jfo/README.md).
+Remaining Required gameplay fixes, fresh ordinary play and exact-inventory semantic review still
+block release. Public Alpha remains0.3.0; private staging is unchanged. No upload occurred.
+
+## Retained execution-clock and native save/load checkpoint
+
+Subsidence execution now requires the actual world tick and a raw saved checkpoint justified by
+its retained step/rung/option evidence. Invalid clocks refuse before option, pass or checkpoint
+publication; structural Homecoming report acknowledgement remains separate. No saved field changed.
+Full suites pass **13005 Taf / 4527 Portable**, zero skips; strict C#7.3 four modes and Hearthpyre
+ABI pass. A Portable-only test dependency failure was corrected without production changes or
+removing any clock assertion. [Clock preflight](/tmp/taf-clock-integration-preflight.jXd2Oa/README.md).
+
+Fresh isolated native save and cold load pass against these exact inputs: four real clock-refusal
+probes preserve captured state,15 real departures reach35/Town, and a saved interrupted release
+recovers without replay. Recovery uses explicit production prepass, not native zone activation.
+Both receipt-owned games are stopped; strict logs and3121-C# source seals pass. This remains
+synthetic developer evidence, not ordinary or historical-save acceptance.
+[Native save/load evidence](/tmp/taf-clock-native.tYyMoG/README.md).
+
+At this clock checkpoint:3018 files /427,814 physical lines, zero line-cap failures.
+The resolver covers 3018 sources, baseline and compatibility symbols selecting3014/3018 ordinary
+inputs;103 Harness shards bring developer inputs to3117/3121. These are 3018 staged C# files.
+Direct `XRL` imports: 1404 files, 0 over the line limit. The freshly generated cold-install
+inventory contains 3049 files; this is not subscribed-content evidence.
+Inventory SHA-256: `5db84b29e025b4310beb9667b11c2062860210d96af33f877782bb2d2c4836d1`.
+Compiler inventory `6cda0d99191f58087151e53dc24f340d128cbb3997cd074c8836a2e0c40ae8f5` matches before/after.
+Historical archive migration, remaining Required review fixes, ordinary play and Workshop delivery
+still block release. The separate fixed-root registry prototype passes11 Windows groups, and its
+new file-lease seam passes12 plus9 existing groups; neither is integrated with the CLI or finalizer.
+[Registry scope](/tmp/taf-workshop-registry-fixed.A5kvkM/README.md). No Steam submission occurred.
+
+## Retained wear-load quarantine verification
+
+Wear now latches the entire custom read path and the engine's separate `ReadError` hook, retains
+surviving receipt fields, and refuses later damage, leaks and repair continuation. The after-load
+handler attempts one bounded player warning. Callback guards prevent later phase advancement
+after naming, telling or removal callbacks quarantine the held part. Existing named fields/types
+and the seven-field legacy reader order remain unchanged.
+
+Real installed-engine method probes reproduce four failures in the original build, then pass all
+four against both the corrected draft and integrated DLL, preserving all40 preset receipt fields.
+These execute `Read`/`ReadError`, not framed `IPart.Load` or the visible warning. A separate real
+direct-part wire probe now passes7/7: named v1, positional legacy, malformed versions/field type,
+and two payload truncations. Original baseline passes healthy2 and fails the5 quarantine cases.
+Original exceptions and assigned prefixes survive; failed parts refuse healthy retry bytes before
+consuming them. Truncations occur after token-table initialization, not at full-file admission.
+Framed-load, visible-warning and ordinary-play gates remain open. Twenty-two source cases also pass.
+Both executable probes are retained byte-exact in `DevTests/EngineWearRead` and
+`DevTests/EngineWearWire`; [rerun instructions](../DevTests/WEAR-ENGINE-PROBES.md).
+Full suites pass **12934 Taf / 4456 Portable**, zero skips; strict C#7.3 four modes and Hearthpyre
+ABI pass. The initial full run retained one stale logical-source helper failure. Its correction
+includes the new partial while retaining exact declaration, reader/writer and field-order checks.
+Evidence: [wear-load preflight](/tmp/taf-wear-load-preflight.IXP5Wr/README.md).
+Current census:3016 files /427,683 physical lines, zero line-cap failures.
+The resolver covers 3016 sources, baseline and compatibility symbols selecting3012/3016 ordinary
+inputs;101 Harness shards bring developer inputs to3113/3117. These are 3016 staged C# files.
+Direct `XRL` imports: 1403 files, 0 over the line limit. The freshly generated cold-install
+inventory contains 3047 files; this is a staging manifest, not installed/subscribed-byte evidence.
+Inventory SHA-256: `e294f7b7a205bdf37ce772a14ba800582ddcef2debbe28f8a039317d4d342666`.
+Compiler inventory `6c21e405be2bbd8430e4a719307b81757b9f0d9a9cdf0c6240b11b0ab550ac77`
+and source/project hashes match before/after. No game or Steam action in this wave.
+
+## Retained CityBook/Homecoming verification
+
+Homecoming now refuses a pending or malformed realm departure receipt at every existing exact-owner
+barrier, including before display and immediately before ledger reset. It preserves the receipt,
+counters and unread report instead of reconstructing completion. Its16 focused cases pass (14 real
+receipt-protocol cases and two explicit source contracts); the pre-fix baseline failed the missing
+guard source contract. Full suites pass **12912 Taf / 4434 Portable**, zero skips, with strict C#7.3
+four modes and Hearthpyre ABI. This does not execute the native display/reset fault cut.
+Evidence: [Homecoming preflight](/tmp/taf-homecoming-guard-preflight.jwORLY/README.md).
+That census:3015 files /427,543 physical lines, zero line-cap failures.
+That inventory SHA-256: `20cf5bda43e4171038916c99d6adc457939dcc228ba0ebe2d77d9025301e5ffd`.
+Compiler inventory `7d7431f8bf2af6fcc93d1e0446c44e02713deb1ac00bdc18ba983d67f92f65d3`
+and source/project hashes match before/after. No fresh native/game/Steam action in this wave.
+
+The preceding CityBook correction passes **91 focused cases**, then **12896 Taf / 4418 Portable**
+cases with zero skips, plus strict C#7.3 ordinary/developer baseline/compatibility and Hearthpyre ABI
+compilation. Twenty-two new regressions cover refused normalization, failed-load latches, frozen
+ragged columns, healthy fast paths and the separate named-load exact projection capability.
+Independent review found no further Required issue in the two-file correction. Source/project
+hashes and compiler inputs match before/after. That production digest is
+`6c22450b57745e28f421dce5e7df456347e2d91107039391099ce57dac3f95f2`;
+compiler digest is `537bbbd4b5be1c6e3bc135b2d7413d56778f11594ff831bdc8b9fcd28e3b6f9e`.
+Evidence: [CityBook preflight](/tmp/taf-citybook-guard-preflight.cNStwc/README.md).
+These are direct-source checks, not a committed candidate or new native acceptance. The older
+native pair below binds production `1e09f0b7…`, not these changed CityBook bytes.
+
+A historical archive compatibility regression is now executed: real beta `7d331fe8` version18
+code produced retained bytes; the version19 consumer fails three exact authority-hash preservation
+cases (Intent, Attempting, Settled), while three controls pass. This is the actual archive hash
+component, not a full engine callback or a native historical-save test. Migration repair remains
+open. Evidence: [historical archive regression](/tmp/taf-archive-authority-version.SI524N/README.md).
+
+Claude's separate versioned-projection and hash-basis selector helpers pass57 injected tests,
+with independent scoped review clear. Root additionally executes exact positive projection,
+current re-save and changed-field controls for all18 historical test-writer schemas, plus the
+actual beta7d-produced v18 payload:19 cases pass. The initial actual-artifact case mistakenly
+fed its outer fixture envelope to the settlement decoder; failed source/log are retained, and
+only fixture unpacking changed. These helpers remain scratch-only; runtime hashing, persisted
+basis provenance and complete historical callback recovery are not yet integrated or proved.
+Evidence: [archive basis seam](/tmp/taf-archive-basis-preflight.8A0BWO/README.md).
+
+Previous native pair `/tmp/taf-rung-forecast-native.kiQuK7` passed actual save, cold preactivation,
+exact recovery reports/remaining writes and same-tick no-replay. **Overall native gate FAIL**:
+strict logs caught `RunGame: InvalidOperationException` while enumerating faction heirlooms,
+before save import completed. Pinned engine source shows the harness bypassed vanilla's
+core-thread Continue wait and exposed a half-loaded running game. A harness-only correction
+routes through that Continue wait, retains a terminal task until owned shutdown, and leaves
+production factions, saved Running and serialization untouched. Final direct-source checks pass
+**12874 Taf / 4396 Portable**, zero skips, plus strict C#7.3 four modes and Hearthpyre ABI.
+Sixteen new concurrency cases and two dispatcher source cases cover this seam; exact journal
+format remains unchanged. Compiler digest `46addd06fe80c042e3db4180a143d196de798df36d4b6b10f702466cd9c089d8`
+matches before/after; 101 Harness sources, developer3112/3116. Evidence:
+[load-barrier preflight](/tmp/taf-load-barrier-sealed.4TZOfh/README.md).
+Fresh corrected native pair now **PASS**: actual save04:45:55.968 UTC and cold load05:04:51.358 UTC,
+same GameID65f23899-c2fb-4b93-a65f-7cf98f4b1a80, exact35 loaded bodies and interrupted release
+recovery/report/no-replay. Both strict journals and raw logs pass, including post-stop recheck.
+Recovery used the **explicit production prepass**, not native zone activation. Owned processes
+stopped, independent idle checks pass, and all3116 C# inputs match each launch seal. The cold
+profile contains3156 sealed input files. Evidence: [fresh native pair](/tmp/taf-load-barrier-native.KeMv91/README.md).
+This developer witness does not sign ordinary gameplay or historical-save compatibility.
+
+SDK-free publisher-launcher parser fixtures pass **109**; actual Windows guard fixtures now pass
+**26/26**, after reproducing and correcting evidence rename/reparse, input write and descendant-stop
+failures. Corrections are isolated outside this source tree; not integrated or release-ready.
+The separate upload-attempt directory lease defect is now reproduced by actual Windows access
+probes: original8/9 groups, corrected9/9 with exact sharing violations and before/after access.
+That fix, legal-before-I/O callback classification (**384** cases), and Claude's corrected
+submission-observation codec (**83** wire cases + **9** probes; independent8 +3 +6 checks) are
+now integrated into this source tree. Integrated Windows suites pass **30 protocol /15 package
+/9 attempt** groups plus all evidence cases above. Strict C#7.3/net9 publisher and test-project
+builds pass with **zero warnings/errors**, using the installed pinned Steamworks reference;
+the publisher was compiled, not executed. All test inputs match before/after hashes, and scoped
+independent integration review is clear. Evidence: [publisher regression and integration](/tmp/taf-attempt-lease-fix.mdgItU/README.md).
+The subsequent durable-record wave is now integrated and freshly verified on Windows. Claude's
+corrected single-attempt latch passes183 checks, including14 race aggregates; the unchanged root
+32-trial fixture now reports zero conflicting observations (original17/32 failure retained).
+Real Windows observation-write fixtures pass14 cases/9 groups; post-upload ordering41 and cleanup17
+cases pass. All earlier publisher suites pass again. Both strict C#7.3/net9/x64 test and publisher
+builds have zero warnings/errors. The exact34 publisher source/project/launcher inputs match before
+and after both runs; installed Steamworks hashes match the pinned lock. No SDK call was made.
+Evidence: [durable-record integration](/tmp/taf-submission-record-corrected.SaDhC8/README.md),
+native outputs `C:\taf-upload-integrated.W8DbXv`.
+
+The publisher durably records callback/outcome facts before later content and metadata checks,
+retains every active/partial receipt, and emits success only after cleanup. Review caught and fixed
+previously swallowed cleanup failures; all cleanup actions now run before aggregate failure escapes.
+This does not finalize a release. Fixed-registry enforcement is still required because the current
+CLI accepts an attempt-root argument. Harness bytes remain closed; CityBook, Homecoming and wear are
+the subsequent production corrections, recorded above.
+Private upload, subscribed-installed bytes, ordinary play and safe repeat-release finalization
+remain unsigned. No public update was made.
+
+Root reproduced a fresh hash-bound production review inventory: all3015 sources enumerated,
+64 new/75 modified/2876 byte-unchanged against beta7d331fe8, zero deletions. Six disjoint packets
+cover all139 changed files. Heart/graveyard packet01 found no Required defect in its19 files.
+Reports packet04 and serialization/CityBook packet05 each found two Required issues. Packet02 adds
+failed-read wear quarantine; packet03 adds Homecoming's pending-departure reset and executable raw
+checkpoint validation. Packet06 adds lost death accounting while a pending rung refuses CityBook
+publication. CityBook, Homecoming and wear guards are corrected above, with scoped native fault
+coverage still open; the other five source findings need correction. All six packets cover139 changed files at
+their recorded hashes, not approval of later edits. This is not whole-inventory approval. The existing structure ledger
+still binds the older inventory. Evidence: [review packets](/tmp/taf-production-review.mwV2fq/README.md).
+
+The retained pre-fix CityBook regression had2 passes/5 failures; the extended baseline had4 passes/
+11 failures. Those failed logs remain intact after the correction. Other source findings still
+need executable regression/correction: a full Chronicle receipt registry can strand a pending
+aggregate report; begin/arrest telling can lose one register across a display callback;
+negative/future checkpoint validation is absent
+from execution; a pending rung can prevent durable death accounting. The archive finding has
+the separately scoped executed component regression above.
+
+Separate Workshop staging item **3796495680** was created with user approval and independently
+verified Private. Public Alpha **3794797472 / 0.3.0** remains unchanged. No candidate content,
+preview or manifest tags have been uploaded to staging; no subscriber-delivery claim.
+The guarded client-API uploader preserves Qud's `manifest_id` and `manifest_version` tags,
+holds a durable per-item attempt fence, and refuses automatic retries after uncertain submission.
+Windows protocol/package/attempt checks pass **30 / 15 / 9** groups. The installed-byte checker
+proves only exact local package bytes, never subscription or fresh Steam transfer.
+Authority and remaining delivery gates: [publishing guide](../Tools/WorkshopSteam/PUBLISHING.md).
+
+The isolated draft adds a separate developer save/cold-load witness for the second actual
+release-receipt write. The previous witness checkpoint passed strict C#7.3 ordinary/developer
+baseline/compatibility and Hearthpyre ABI compilation, with independent codec review.
+Retained full suites: **12786 Taf / 4308 Portable**, zero skips; **436 Tools PASS**. The snapshot codec
+has 167 focused passing cases. An initial Harness line-cap failure was fixed by removing three
+comment lines; no behavior or test guard changed. First fresh native run reached the two-write
+cut but refused before saving: the witness incorrectly required nonnull incident text on a fresh
+receipt. The witness now compares exact nullable text and expects only unfinished writes;
+176 release-focused tests pass, including both null and retained-text cut/recovery traces.
+The second fresh native run also refused before saving, at its combined work-plan assertion.
+Source investigation found a one-work assumption despite the actual completed heart remaining
+eligible for production's independent ruin selection. The failed log does not expose the decoded
+plan, so the selected-heart explanation is code-derived rather than directly logged.
+Actual Claude's correction is now source-closed and independently reviewed: preserve both built
+objects and verify the exact selected set, typed designation/pose and frozen terminal authority.
+A new pure shape validator passes **47 focused cases**, covering selected and unselected hearts
+and refusing omitted, injected or changed rows. The passive release observer separately tracks
+the exact companion's writes and durable publications. The heart proof precedes the successful
+cold preactivation journal. Both new source-contract checks pass in the full suites below.
+
+Retained heart-witness preflight passes **12835 Taf / 4357 Portable**, zero skips, and **436 Tools**.
+Strict C#7.3 ordinary/developer baseline/compatibility plus Hearthpyre ABI compilation passes;
+only the retained CS2023 response-file warning appears. Managed runs also report NU1900 because
+the vulnerability-data service is unavailable; no tests were skipped. All compiler, ABI, reference
+and selected XML input digests match before/after. That Harness inventory: **99** sources;
+ordinary **3011/3015**, developer **3110/3114**. Compiler digest
+`95ae4279816b077a2a3ff81a4f04940917f87f2af79a8d907d8f31f83595478c`;
+production remains `1e09f0b742b7ceb5005af889e7cdd411dcdcfabf4aff6d83e7bb3123bbb845bf`.
+These are direct-source checks, not clean-candidate release receipts.
+Fresh native SAVE now passes, including the real completed heart and two-write durable release
+cut. Cold load passed preactivation but failed the exact report-text expectation before the
+recovery success row or same-tick retry. Root and actual Claude independently traced a harness
+expectation defect: the saved batch has 10 retired departures plus 5 in the active step; the
+helper expected the summary for only 10, while production reports the final 15. The correction
+forecasts the immutable closing batch without advancing release/report state or weakening exact
+report/no-replay checks. Its **21 focused cases pass**, zero skips; fresh full suites pass
+**12856 Taf / 4378 Portable**, zero skips. Strict C#7.3 four-mode and Hearthpyre ABI compilation
+also passes, with exact before/after input digests. The next native pair passed its journal but
+failed strict startup diagnostics as recorded above; the corrected-barrier native pair now passes
+with the exact scope recorded above. All earlier failed evidence remains
+retained. The older 49-survivor save scenario stays separate. Production and serialization layout
+are unchanged. Retained forecast inventory added one Harness source (100 total); current barrier
+adds one further source (101 total).
+Retained pre-correction Harness inventory: 96 sources; ordinary 3011/3015, developer 3107/3111. Compiler digest
+`caebc152eb6ddd3401ae222b2b83082841dd3ebcbe79247fad83ff5dafca2c57`, unchanged before/after;
+production digest remains `1e09f0b742b7ceb5005af889e7cdd411dcdcfabf4aff6d83e7bb3123bbb845bf`.
+Evidence: [latest heart preflight](/tmp/taf-rung-heart-preflight.obaVSD/README.md),
+[closing-forecast preflight](/tmp/taf-rung-forecast-preflight.TNiK48/README.md),
+[heart save and failed cold-load evidence](/tmp/taf-rung-heart-native.yEX7p4/README.md),
+[retained nullable-line preflight](/tmp/taf-rung-null-line-preflight.IAAoTC/README.md),
+[retained first native failure](/tmp/taf-rung-save-native.6xXqFV/README.md),
+[retained second native failure](/tmp/taf-rung-null-line-native.SbEMtw/README.md).
+Earlier compiler/native receipts below retain their exact older Harness scope; they do not sign
+this reopened slice. Clean integration, candidate gates, ordinary native acceptance and Steam delivery
+remain required before another Alpha release. Beta is not complete.
+
+## Isolated subsidence integration — not a release candidate
+
+### Retained D5 production checkpoint
+
+The resolver inventory covers 3015 sources, baseline and compatibility symbols selecting
+3011/3015 ordinary inputs; the 89 Harness shards bring developer inputs to 3100/3104.
+Frozen production census: 3015 staged C# files / 427,499 physical lines; no source reaches
+300 lines. Direct `XRL` imports: 1402 files, 0 over the line limit.
+Inventory SHA-256: `1e09f0b742b7ceb5005af889e7cdd411dcdcfabf4aff6d83e7bb3123bbb845bf`.
+The generated cold-install inventory contains 3046 files; this is not installed-package or
+Steam subscription proof. Authority: `/tmp/taf-rung-release-preflight.WsuyRe/census.json`.
+This line-cap result does not bind exact-inventory semantic review or sign a release. The
+matching compiler, suite and scoped developer-native evidence follows; historical snapshots
+below retain their original counts and hashes.
+
+Current D5 durable work-receipt release passes strict C#7.3 four modes plus compatibility ABI.
+Full suites pass **12614 Taf / 4136 Portable**, zero skips; **376 Tools** pass.
+Matched native rung regression passes **6/6**; release-specific cold-load coverage remains open.
+Compiler inventory before/after:
+`94935dedc4342a39cf12078a79233f1f33940e616b843844db700605695f04e3`.
+Evidence: [release preflight README](/tmp/taf-rung-release-preflight.WsuyRe/README.md).
+The production-used release driver persists Intent before four individually measured receipt
+writes, then Released. Only Released stops consulting the former carrier. Exact identity,
+designation, unique attachment and competing-job checks remain required before acknowledgement;
+movement after physical proof is permitted. Canonical sr1 loads as Pending, never Released.
+Already-published reports remain readable; new reporting and retirement require durable release.
+No wear-part save fields or version changed. These new bytes do not inherit older native receipts.
+
+Fresh `/mnt/c/taf-scenario.CQTr4p` passes the six-group rung persona at
+**2026-09-05 23:13:18.860 UTC**: fifteen real departures, interrupted capture and actual wear,
+production roof/release/report/retirement recovery, then same-tick no replay. Fixture work/home
+and elapsed checkpoint are synthetic; world time is unchanged. Nine journal rows, strict
+diagnostics, all3104 C# inputs matching the closed seal, owned PID18320 stopped and post-idle PASS.
+Evidence: [D5 native README](/tmp/taf-rung-release-native.khkfGl/README.md).
+This does not execute release-specific native write cuts, Released-carrier disappearance, ordinary
+play or sr2 release save/load. The full-suite/Tools counts above bind the D5 snapshot; subsequent
+Workshop automation tooling is under development and needs its own verification.
+
+Retained preceding strict four-mode/ABI PASS and full suites **12430 Taf / 3952 Portable**,
+zero skips; **376 Tools**. Compiler inventory before/after:
+`81831757aa11e06adbf920fb47868721e5703fcf62bd09846400bc52ecaa416c`.
+Evidence: [retirement-negative preflight README](/tmp/taf-retirement-negative-preflight.1xIHMU/README.md).
+Its production inventory was `79fd124abf8bd9b51486a78df905a9f59c104d7317b9667840d142b16748187b`.
+
+Retained preceding full suites passed **12420 Taf / 3942 Portable**, zero skips, with compiler
+`825b40adaf89d1c1dac25f1d37e98c61ec5f388006035f9a2dc8945716b762bf`.
+That final full-suite receipt superseded the earlier 12416-Taf run in the same directory.
+Evidence: [recorded-removal preflight README](/tmp/taf-heart-recorded-removal-preflight.ws81AS/README.md).
+
+Durable founding-heart retirement now distinguishes an absent native tombstone from conflicting,
+duplicate or unreadable evidence. Only exact canonical Removed-or-later terminal authority,
+placed final identity/shape, typed mirror and removal marker, phase-appropriate all-table roots,
+and live predecessor absence can substitute for an expired tombstone. The new `.07q` proof is
+observational: it does not invoke the full component validator, which may quarantine broken
+architecture. The later terminal driver still performs that audit. Fresh Destroy measurements
+and exact-reference tombstone proof are unchanged; existing same-binding zone/final mirror repair
+is also unchanged. This is not a universal no-repair claim.
+
+Retained earlier matched native `/mnt/c/taf-scenario.HWkU08` passed **15/15 lifecycle groups** at
+**2026-09-05 22:26:12.983 UTC**, with nine journal rows and strict diagnostics PASS. The prior nine
+real founding, callback-refusal, terminal-completion and no-replay groups are followed by six
+observational retirement negatives: duplicate tombstone, null collection, an actual 65,537-entry
+collection, wrong owner, wrong slot and live predecessor conflict. Full retired authority refused
+each fault; exact scoped restoration and restored authority passed. All 3099 C# inputs match the
+closed launch seal. Owned PID36372 stopped and post-idle PASS. Supplied completion tick 5727;
+world tick 5127 remained unchanged.
+Evidence: [retirement-negative native README](/tmp/taf-retirement-negative-native.v6Kp54/README.md).
+This does not prove ordinary turns, save/load, throwing readers, direct pooling, unloaded zones,
+generic plots or root-after-write refusal. A null collection is not a throwing reader; these six
+cases do not exhaust every mutation of the persisted fallback authority.
+
+Retained earlier native `/mnt/c/taf-scenario.fktnsa` passed **9/9 lifecycle groups** at
+**2026-09-05 21:34:28.389 UTC**, including actual terminal completion and recovery without replay.
+All 3096 C# inputs match the closed 3134-file launch seal; strict diagnostics PASS. Owned PID30176
+stopped and post-idle PASS. Supplied completion tick 196527; world tick 195927 remained unchanged.
+Evidence: [recorded-removal native README](/tmp/taf-heart-recorded-removal-native.A20gbZ/README.md).
+These synthetic-fault/future-tick groups do not prove tombstone pooling, cold load, ordinary turns,
+generic plot completion, root-after-write refusal, or release readiness.
+
+**Retained combined completed-heart and partial-step persistence PASS** in
+[save/load evidence](/tmp/taf-completed-heart-save-load.47UPwt/README.md).
+Source `/mnt/c/taf-scenario.RdCle9`, GameID `b62ba856-74ec-4886-b096-68776077437f`, completed the
+heart through production before synthetic 50-resident setup. Its real Primary save passed at
+**2026-09-05 21:41:31.493 UTC** after one of five departures, leaving 49 residents; eight rich-record
+roundtrips also passed. Owned PID39308 stopped and post-idle PASS before exact import into fresh
+`/mnt/c/taf-scenario.vOeZAW`.
+
+At **21:56:38.181 UTC**, the load witness matched v2 terminal/effects, final mirror/removal marker,
+final geometry, frozen architecture and absent saved roots, plus raw polity, seven typed heart
+reservations, ss4, clock, autoonce and all 49 body/row/binding identities. This is before
+AfterGameLoaded handlers and zone activation; engine AfterLoad callbacks had already run.
+The observational digest does not independently rerun architecture component simulation.
+At **21:56:40.342 UTC**, the production heart-reservation audit and explicit production prepass
+proved the remaining four departures, population 45, original-step retirement and no replay.
+All four journal rows and strict raw-load verifier PASS. Owned PID37172 stopped and post-idle
+PASS. Both profiles' 3096 C# inputs match their closed launch seals: source 3134 files, destination
+3136. These are the earlier `825b40ad` compiler bytes, not the current 3099-input developer tree.
+
+Developer authority v2's baseline remains inside externally hashed Primary; the external 49-body
+ss4 snapshot does not independently commit heart fields. Production save schema and exact
+stopped-source import protocol are unchanged. This signs one synthetic completed-heart/partial-step
+cold-load boundary, not ordinary or historical saves, mid-callback loads, generic plots, direct
+pooling faults, native negative fallback coverage or release readiness. Claude TASK31 found no
+Required production issue. The later six negative cases above separately exercise bounded parts
+of the [next-coverage design](/tmp/taf-heart-recorded-removal-artifact.mLWR4E/next-native-negative-coverage.md);
+they do not broaden this earlier cold-load receipt.
+Older staked-heart pairs remain retained and do not sign current bytes.
+
+Retained terminal-completion follow-up fixed source-proved blockers. The completion-name
+reader now agrees with the writer's plain frozen building name; the physical works object keeps
+its separate `plot:` label. A detached final object is validated with the existing stamped-rect
+reader, exact frozen plan rectangle and explicit owner-zone bounds, rather than a placed-object
+reader that necessarily refuses an object with no current zone. Precise terminal refusal logs
+identify the failing step without relaxing allocation, custody or publication guards.
+The next native run placed the final building but exposed global-only tombstone lookup: Qud
+routes placed-object destruction to the originating zone's graveyard. The correction inspects
+bounded global and already-loaded zone graveyards, retaining duplicate-ID and exact-reference
+proof. It neither loads remote zones nor infers destruction from absence or recycled objects.
+Ordinary plot outputs also had detached rectangle and footprint readers that required a current
+zone. Their pre-placement proof now checks frozen typed geometry and captured/reproved live
+predecessor-zone bounds. Placed-object reader contracts remain unchanged. Five regression source
+contracts cover each correction; these do not stand in for native ordinary-plot completion.
+
+The current fifteen-group lifecycle persona drives the full same-name/site founding transaction through
+four callback refusals, then clean founding and one scenario commit. It walks the founder clear
+using bounded native movement before real construction stages. The completion-time argument is
+explicitly synthetic; world time is unchanged. Two final-allocation fault cases must preserve
+original/foreign identities, and clean completion must prove terminal effects, the exact
+predecessor tombstone and no replay. Six subsequent observational retirement faults require refusal
+and exact restoration; no destructive pooling or unknown-evidence cleanup is performed.
+The fixture also re-resolves the live faction and requires
+its exact explicit integer-zero pending flag, not a missing-key default or stale captured object.
+
+Retained strict C#7.3 four modes plus compatibility ABI PASS: 3009 production files, 84 Harness
+shards; ordinary 3005/3009, developer 3089/3093. Full suites **12368 Taf / 3890 Portable**, zero
+skips; **376 Tools**. Production census: 426978 physical lines, 1400 direct XRL imports, none at
+or above 300 lines. Compiler `b7b2ae43c4173a26a86b5c381e9e1ecd6649603a979ead7e310d07c6b45b9ade`;
+production `c496acbfbd45fbc48928154d108a6346f313e5ddffd25fdf2b5e27bbd6718aa0`.
+Evidence: `/tmp/taf-heart-zone-tombstone-preflight.wNad0I/`. Initial main-suite stale source-pin
+failure is retained; full rerun passes. Matched native `/tmp/taf-heart-zone-tombstone-native.IysjGn/`
+passes **9/9 lifecycle groups**: full founding recovery, all six callback refusals, terminal
+completion with exact originating-zone tombstone, and real recovery/audit without replay.
+All 3093 C# inputs match the closed 3131-file launch seal; strict log gate PASS, owned process
+stopped and post-idle verified. Supplied completion tick 92127, unchanged world tick 91527.
+This is scoped developer evidence, not ordinary-turn, generic-plot, pooling or save/load proof.
+The documentation checker no longer crashes on a missing
+ignored research note; present local notes and required tracked documents remain audited.
+
+Retained staked-heart partial-step persistence passed real save/owned quit/import/cold load in
+`/tmp/taf-current-heart-save-load-retry.kMrxZ2/`: source Fu0nJD saves one-of-five departure plus
+eight rich-record roundtrips; fresh tNVSDb restores exact ss4/clock/autoonce, 49 body/row/bindings,
+raw polity and seven typed heart reservations before AfterGameLoaded handlers and zone activation.
+Explicit production prepass completes the remaining four and proves no replay. Both3093-C# seals,
+strict logs, owned stops and post-idle PASS. Setup remains synthetic, not ordinary progression or
+historical-save compatibility. Its heart remains staked, so this does not prove completed-heart
+persistence. Earlier pKRVmX preparation correctly refused a concurrent changelog edit before launch;
+all staged bytes were frozen before the successful fresh retry. Full suites rerun unchanged:
+12368 Taf /3890 Portable, zero skips;376 Tools. Documentation freshness was CLEAN at that checkpoint.
+
+The subsequent source-proved blocker was: after a completed heart's finite engine tombstone is
+pooled or omitted from a cold load, post-Removed recovery still demands it and aborts construction
+passes. The durable-retirement correction above addresses that dependency without accepting
+conflicting, missing or malformed authority. The separate current completed-heart cold-load pass
+is recorded above; this retained staked-heart pair itself does not establish that result.
+
+Retained strict C#7.3 four modes plus compatibility ABI PASS: 3008 production files,84 Harness
+shards; ordinary3004/3008, developer3088/3092. Full suites **12358 Taf /3880 Portable**, zero skips.
+Compiler inventory `92dadb768e145eb57fdb3e8965ea2443c9efbc88d86519b80999b500df9d839e`;
+production `940b6c6d808a6e2782bea8120021e4fec298aec5acf24084d19001aa4f20cfbc`.
+Evidence: `/tmp/taf-heart-detached-final-preflight.rAUh6I/`. Matched native completion validation
+in `/tmp/taf-heart-detached-final-native.imsSNV/` passed 7/9, then refused at RemovalAttempting.
+Its 3092 C# inputs matched the launch seal before the graveyard correction; owned process stopped
+and post-idle verified. These earlier receipts do not sign the later correction or its terminal pass.
+
+Earlier lifecycle attempts are retained: YFeK9A passed5/9 but the founder occupied the footprint;
+arMlNA and cl6mc6 passed7/9 but clean finalization failed. Em7zrZ also passed7/9 and its precise
+log identified the prepared-final-shape refusal, leading to the detached-rectangle fix. The
+separate arMlNA reservation regression passed7/7 on its pre-fix sealed bytes. Their owned games
+were stopped and post-idle verified. No old profile was reset or repaired to obtain a pass.
+Ordinary game-turn progression, mid-callback save/load, remaining native retirement fault cuts,
+root-after-write refusal and remaining semantic/release/subscription gates are still open.
+Public Alpha remains0.3.0.
+
+Retained checkpoint at **2026-09-05 19:18 UTC** hardens founding-heart reservations: strict UTF8,
+exact slot spellings, all five typed state tables, seven-key preflight and add-only publication.
+Malformed/null/empty, wrong-table and colliding rows refuse without being replaced. Factory guards
+pin the game, tables, transaction, plan and zone; only the exact pre-event factory reference may
+receive a heart ID. Foreign replacements are not adopted or cleaned up. Final-output cleanup also
+requires proof that no saved root exists, including after a rooting call returns false.
+
+The developer save observer now requires a canonical profile immediately before hashing and
+reproves that exact profile/revision afterward, without reconciliation in the observation path.
+Strict C#7.3 four modes plus compatibility ABI pass for 3008 production files and 80 Harness shards
+(ordinary 3004/3008, developer 3084/3088). Compiler inventory
+`e2593980a33b7ed381a81545f3681656077c82517fe6bd598b516cbd4130bff0`;
+production inventory `0200f24bec6290af2e55272af3bfabb230ecf577128a9455a7d84e8861231391`.
+Full suites: **12344 Taf / 3866 Portable**, zero skips; **373 Tools tests PASS**.
+Census: 426923 physical lines, 1399 direct XRL imports, no production shard reaches 300 lines.
+Evidence: `/tmp/taf-heart-reservation-probe-preflight.2acEzL/`.
+The first seven-group native attempt in `/tmp/taf-heart-reservation-native.rYy7v9/` failed: three
+probe XML merges ran before this mod's blueprint definitions and were discarded as MODERROR.
+Real founding completed, but groups2–7 did not execute; owned PID27048 stopped, post-idle passed.
+The corrected harness adds a probe part to three exact loaded blueprints, only after fresh-profile
+eligibility, preserving all original part-map references. The fresh retry **passed all seven
+groups** at 19:17:32.562 UTC in `/mnt/c/taf-scenario.99mr6S`, seed `#612726967`: nine journal rows
+and exact diagnostics passed; no diagnostic allowance was added. All 3088 C# inputs match the
+launcher-verified closed seal. Owned PID35900 stopped; authoritative post-idle passed. Evidence:
+`/tmp/taf-heart-reservation-retry-native.R2H1OK/`.
+The new persona's scope is real founding, 246 synthetic typed-state setups and direct shared-guard calls with
+native callbacks; it does not establish terminal completion, root-after-write refusal or ordinary-save compatibility.
+Earlier save/load and subsidence receipts below do not sign these changed bytes. No release claim.
+
+Retained checkpoint at **2026-09-05 18:25 UTC** fixes a concrete founding-heart reservation
+format mismatch: the writer emits `hs1-` plus 64 lowercase hex digits, but the reader demanded
+bare 64 hex digits. Runtime encoding and reading now share a pure, tested `hr1` codec; no bare-hex
+migration or completion-seal format change was introduced. Sixty-three focused executable cases
+cover writer/reader agreement, frozen bytes, roles, malformed seals and identity mismatches.
+
+The developer fixture now explicitly assigns human species and runs normal resident-identity
+reconciliation over its 50 surveyed residents. Survey alone did not persist species counts;
+the later profile reconciliation could therefore replace the fixture's valid human profile with
+unresolved provenance. A new observer hashes the raw polity envelope and all seven exact typed
+heart reservations, plus their zone/system identity. It checks that authority before save, after
+serialization and before AfterGameLoaded handlers and zone activation; its baseline lives inside the signed Primary, not an
+independent external commitment. Canonical profile and real heart audit checks remain mandatory.
+
+Fresh `/mnt/c/taf-scenario.WyO1pV` passed the save check and eight rich-record checks at
+17:57:36.936 UTC: nine journal rows, exact diagnostics, one of five departures completed and 49
+residents retained. Owned PID26088 exited. Its exact stopped save was imported into fresh
+`/mnt/c/taf-scenario.ZxmPxO`. **Cold-load PASS**, including strict raw-log verification:
+at 18:17:18.415 UTC, exact polity/heart authority, partial-step bytes, clock, autoonce and all 49
+resident identities matched before AfterGameLoaded handlers and zone activation. Canonical profile
+and real heart audit passed after return. An explicit production prepass completed the remaining
+four departures at 18:17:20.316 UTC and proved same-tick no replay. All four journal rows passed;
+no diagnostic allowance was added. Owned PID10080 stopped; authoritative post-idle PASS. Evidence:
+`/tmp/taf-save-load-authority-native.USnpdH/`. No ordinary player save was selected. This signs the
+synthetic partial-step boundary, not ordinary progression, archive exchange or historical saves.
+
+Read-only review at that checkpoint found follow-ups: malformed/null/empty or wrong-table reservations could
+be misclassified by runtime getters; alternate slot spellings and lossy UTF8 remained accepted. The
+developer canonical-profile check also needed repeating at capture, after departure; no intervening
+demotion was demonstrated. Current-byte native regression reruns passed below. These findings
+are addressed in the later continuation above, not covered by the old valid-state persistence case.
+
+Retained regression rerun: **14 / 14 native checks PASS**, seed `#612726967` in two fresh sealed
+profiles. Six rung cases passed at 18:22:14.848 UTC in `/mnt/c/taf-scenario.3w8yVi`; eight
+report-loss/homecoming cases passed at 18:24:41.887 UTC in `/mnt/c/taf-scenario.H0eaDH`. Both
+nine-row journals and exact diagnostics passed. All 3078 C# inputs match each launcher-verified
+closed seal; this is source-to-seal proof, not execution of every source file. Owned PID35584 and
+PID36596 stopped; authoritative post-idle PASS. Evidence:
+`/tmp/taf-subsidence-authority-native.PlZOr6/`. The earlier sandbox-only attempt in `t8q4ac`
+failed on WSL interop before any game launch and remains retained, not counted as native execution.
+Synthetic setup and case limitations are unchanged from the retained rung/report descriptions below.
+
+Retained full suites: **12240 Taf / 3762 Portable**, zero skips; **373 tool tests PASS**.
+Strict direct-source C#7.3 four-mode compilation plus compatibility ABI passes. Compiler inventory
+before/after `fd87ff7caf28406091436bfaedea325939c1aec3f7943196816b0664d4c476b6`;
+production inventory `35fbecce72bc3c145998a4fed27d16af550bd8e80fa4e087ad02785a638065df`.
+Ordinary 3001/3005, developer 3074/3078 sources, 73 Harness files. Census: 3005 production files,
+426653 physical lines, 1397 direct XRL imports, none at or above 300 lines. Evidence:
+`/tmp/taf-save-load-authority-preflight.RT5qTW/`. This is not a canonical release gate;
+exact-inventory semantic review remains unbound. Earlier native receipts do not sign these bytes.
+
+Retained save/load checkpoint at **2026-09-05 17:24 UTC**: four field-preserving named-record adapters
+remove the binary formatter fallbacks exposed by the first native save. Empty inheritance now
+accepts zero reconstruction only when its complete no-authority shape is valid; payload and
+negative-reconstruction states still refuse. Actual rich-record engine checks pass all eight
+named and trusted fixture-generated legacy-format cases. Historical-save compatibility is unproved.
+
+Corrected pair `/mnt/c/taf-scenario.nAELtC` → `/mnt/c/taf-scenario.J0IMnA` saved one-of-five and
+reloaded exact pending bytes, clock, autoonce and all 49 residents. The production prepass completed
+the remaining four credits without replay. **Overall load FAIL**: AfterGameLoaded raised an engine
+dispatch exception and skipped later activation. Four OK journal rows do not override that error.
+Both owned processes stopped; raw evidence `/tmp/taf-save-load-fixed-native.lFsf13/` is retained.
+
+The dev-only witness now observes the player's `GameRestored` event immediately before the
+unpatched singleton event dispatch, testing whether the previous Harmony hook caused the failure.
+Cause remains unproved. Fresh source `/mnt/c/taf-scenario.aEPDXT` passed save plus all eight record
+checks at 17:04:48 UTC; owned PID39220 stopped. Fresh identical-content load
+`/mnt/c/taf-scenario.lBgjFn` at 17:19:27 UTC restored the exact49 bodies and saved state, then
+completed the remaining four credits and no-replay retry through an explicit production prepass.
+The BCL dispatch exception did not recur. **Overall load still FAIL**: downstream seal loader
+reconciliation rejects canonical phenotype provenance; a founding-heart identity refusal is also
+logged. No diagnostic allowance was added. Owned PID34072 stopped; authoritative post-idle PASS.
+Production versus synthetic-fixture cause is under investigation. No ordinary player save was selected.
+
+Retained checkpoint suites: **12174 Taf / 3697 Portable**, zero skips; **373 tool tests PASS**.
+Strict direct-source C#7.3 four-mode
+compilation plus compatibility ABI passes; compiler inventory before/after
+`f29b0d3ee4e31ca36cdba64c7920288850392b8a155cb0364be42ddab6d4f5cf`, production inventory
+`604ed7bb6e49fb89c471c934ae7e6a0eb37d6da8a99fe6df360db2934c91f5a1`.
+Ordinary 3000/3004, developer 3072/3076 sources, 72 Harness files. Evidence:
+`/tmp/taf-save-load-hook-preflight.7TKAey/`, `/tmp/taf-save-load-hook-native.5H7Ksw/`.
+Earlier native rung/report-loss evidence below remains valid only for its frozen bytes.
+
+The current isolated draft is based on beta `7d331fe8`; it is not committed, packaged, or
+published. The old proportional batch loop has been replaced by a durable step driver. Actual
+resident-departure receipts retain partial credits; only completed/cancelled step retirement
+adds those credits to the frozen slide batch. Work/roof effects and dated ledger/Chronicle
+reporting must settle before the step retires. A saved option transition preserves its original
+checkpoint; malformed or wrong-table evidence is retained, not reinitialized.
+
+Retained rung evidence at **2026-09-05 15:00:26 UTC**: **6 / 6 native checks PASS** in fresh sealed
+`/mnt/c/taf-scenario.zlZnS7`. Fifteen actual departures cross City→Town; a native work-name callback
+interrupts capture before damage. Real capture freezes one pre-worn hut and its exact surviving
+resident. A synthetic parent wear intent and injected authority cut leave the real wear write at
+MutationIntent; production pre-pass recovery credits it once, dates the condemned-roof record,
+releases the wear receipt, tells the exact stage/work/departure lines and retires all three steps.
+Recovery and retry reprove full live identities, the unique attached wear part, the complete roof
+tuple and released receipt; both register prefixes survive. Owned PID37100 stopped; profile and
+effects retained. All **3068** executed C# files match the reviewed draft. Work, initial home,
+City stage and elapsed checkpoint are synthetic setup, not construction or lodging acceptance.
+Evidence: `/tmp/taf-subsidence-rung-final-native.QNwGKu/`.
+
+The same reviewed bytes also passed the existing **8 / 8 report-loss checks** at
+**2026-09-05 15:02:54 UTC** in separate fresh sealed `/mnt/c/taf-scenario.JgCcan`.
+Owned PID10096 stopped; all 3068 executed C# files match. Both personas completed nine journal
+rows and passed exact diagnostic checks. Combined retained result: **14 / 14**, two profiles.
+
+Retained report-loss evidence at **2026-09-05 14:07:16 UTC**: **8 / 8 native checks PASS** in fresh sealed
+`/mnt/c/taf-scenario.GxrgLc`. The earlier five departure/retry cases below were rerun; three added
+cases exercise seeded terminal Chronicle-loss recovery, a guarded empty-ledger reset with no
+reappend, and retention of news changed during the homecoming display callback. Full failed
+witnesses survive retirement until explicitly read. Terminal sink dispositions are synthetic
+cut inputs, not an actual sink callback interruption; the homecoming adapter uses a captured
+display callback, not attended UI. Owned PID14108 stopped; profile/effects retained. Exact expected
+logs pass, and all **3064** executed C# files match the draft. Native evidence:
+`/tmp/taf-subsidence-loss-native.3FcoM3/README.md`.
+
+Retained rung-checkpoint automated evidence: **12,001 / 12,001 managed**, **3,552 / 3,552 portable**, zero skips;
+53 persona-tool tests pass. Strict C#7.3 warning-enforced four-mode compilation and ABI fixture pass
+(ordinary **3000/3004**, developer **3064/3068** sources; 64 Harness shards). Compiler before/after:
+`74c216187f107535107fb702c1b029813b83912dfc75b4796da27247bd6d6d0d`.
+Runtime: `adfea8c109413395b349a43561a580185219ee06d4ad81794045e946c4397931`.
+Census **3004** production files / **426548** physical lines / **1393** direct XRL imports /
+zero at or above 300 lines. Direct-source preflight, not a canonical release gate; semantic review
+remains unbound. Evidence: `/tmp/taf-subsidence-rung-verified-preflight.apKn69/README.md`.
+
+At the earlier **2026-09-05 13:02:50 UTC** checkpoint, a fresh sealed native profile passed **5 / 5** checks:
+real founding and 50 residents; one departure with four still owed at the original anchor;
+the remaining four in the same step; an interrupted summary declaration; same-tick summary
+recovery and no replay. The script produced nine journal rows and passed exact expected-log
+checks (one injected Chronicle refusal and two installed Pets DLC warnings). Profile
+`/mnt/c/taf-scenario.oIvpEt`, its seal and all effects are retained; owned PID16308 stopped.
+Evidence: `/tmp/taf-subsidence-driver-native.xIYznZ/`.
+
+These checkpoints are synthetic native seam evidence with a seeded elapsed checkpoint and unchanged world
+time. They do **not** sign ordinary progression, interrupted resident carriers, general work/roof
+callback cuts, absent completed works, option/master callback cuts, archive exchange, or save/load
+at those rung/report boundaries. The newer partial-step save/load pair above does not close those
+distinct cases. They remain required before release; exact-inventory semantic review is still unbound.
+
+The current follow-up implements explicit terminal reporting loss, full failed-witness retention
+in `ss4`, canonical `st1`→`st2` report migration, and guarded homecoming acknowledgment. Physical
+retirement may proceed with retained failed telling, never a delivery claim. Reading homecoming
+settles an interrupted ledger intent before clearing, checks all news and owner state across the
+popup, and preserves newly arrived news. Missing works now refuse receipt release; moved live works
+require exact identity and unique own receipt proof. Unknown missing/unloaded/destroyed works still
+need native recovery work. The five-case receipt above signs none of these later changes.
+
+Earlier driver automated evidence: **11,947 / 11,947 managed** and **3,498 / 3,498 portable** cases,
+zero skips. Strict C#7.3, warning-enforced native-reference compilation passed all four modes:
+ordinary 2,997/3,001 and developer 3,056/3,060 (baseline/compatibility), plus the optional
+integration ABI fixture. Compiler before/after:
+`996be40fdd2af3febfee6e6c08ced25892a5d5cbfda0f07b2ee951cbff0e1c34`.
+Evidence: `/tmp/taf-subsidence-driver-native-preflight.DGKkMJ/README.md`.
+
+Census: 3,001 production C# files, 425,927 physical lines, 1,393 direct XRL imports, zero files
+at or above 300 lines. Runtime digest:
+`8d1d8983e64d373f1cbe9bd9654bbb7b65a9e47aa0a9ad63a6861941a654b3a0`.
+This is direct-source preflight, not a canonical release gate. The earlier 12:07 option-only
+checkpoint and the beta counts below remain historical evidence for their own bytes.
+
+## Retained beta automated evidence — `7d331fe8`
 
 Claude's reviewed raid launch-order foundation is integrated: frozen projections and leases publish
 before all factory effects, then the existing resume path creates, places, and activates each actor.

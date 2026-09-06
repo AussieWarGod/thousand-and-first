@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import struct
 import tempfile
 import unittest
 import zlib
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -68,6 +70,33 @@ class WorkshopMetadataTests(unittest.TestCase):
         path = self.root / "preview.png"
         path.write_bytes(payload)
         return path
+
+    def write_alpha_binding_fixture(self, version: str = "0.3.1", schema: int = 2) -> tuple[Path, Path, Path]:
+        manifest = {"version": version}
+        public_id = 3794797472
+        private_id = public_id if schema == 1 else 123456789
+        record = self.root / "ALPHA_CANDIDATE.json"
+        private = self.root / "private-workshop.json"
+        public = self.root / "public-workshop.json"
+        payload = {
+            "schemaVersion": schema,
+            "releaseChannel": METADATA.ALPHA_RELEASE_CHANNEL,
+            "releaseVersion": version,
+            "candidateCommit": "b" * 40,
+            "gameMarketingVersion": METADATA.GAME_MARKETING_VERSION,
+            "gameCoreBuild": METADATA.GAME_CORE_BUILD,
+            "workshopId": public_id,
+            "previewSha256": "c" * 64,
+            "privatePackageReceiptSha256": "d" * 64,
+        }
+        if schema == 2:
+            payload["privateWorkshopId"] = private_id
+        record.write_text(json.dumps(payload), encoding="utf-8")
+        private.write_bytes(METADATA.canonical_workshop_bytes(
+            METADATA.canonical_workshop_data(manifest, private_id, "0")))
+        public.write_bytes(METADATA.canonical_workshop_bytes(
+            METADATA.canonical_workshop_data(manifest, public_id, "2")))
+        return record, private, public
 
     def test_manifest_accepts_meaning_equivalent_optional_legacy_disclosures(self) -> None:
         descriptions = (
@@ -422,7 +451,7 @@ class WorkshopMetadataTests(unittest.TestCase):
         candidate = "b" * 40
         record = self.root / "ALPHA_CANDIDATE.json"
         payload = {
-            "schemaVersion": METADATA.ALPHA_CANDIDATE_SCHEMA,
+            "schemaVersion": METADATA.LEGACY_ALPHA_CANDIDATE_SCHEMA,
             "releaseChannel": METADATA.ALPHA_RELEASE_CHANNEL,
             "releaseVersion": "0.3.0",
             "candidateCommit": candidate,
@@ -458,6 +487,12 @@ class WorkshopMetadataTests(unittest.TestCase):
             METADATA.validate_alpha_candidate(
                 manifest, preview, workshop, record, readme, changelog
             )
+
+        manifest["version"] = "0.3.1"
+        readme.write_text("**Status: 0.3.1 public Alpha playtest.**\n", encoding="utf-8")
+        changelog.write_text("## [0.3.1] — 2026-09-01 (Alpha)\n", encoding="utf-8")
+        with self.assertRaisesRegex(METADATA.ValidationError, "version must match manifest"):
+            METADATA.validate_alpha_candidate(manifest, preview, workshop, record, readme, changelog)
 
     def test_alpha_candidate_accepts_patch_update_and_keeps_exact_version_binding(self) -> None:
         version = "0.3.1"
@@ -506,6 +541,7 @@ class WorkshopMetadataTests(unittest.TestCase):
                         "gameMarketingVersion": METADATA.GAME_MARKETING_VERSION,
                         "gameCoreBuild": METADATA.GAME_CORE_BUILD,
                         "workshopId": 123456789,
+                        "privateWorkshopId": 987654321,
                         "previewSha256": hashlib.sha256(preview.read_bytes()).hexdigest(),
                         "privatePackageReceiptSha256": receipt_hash,
                     }
@@ -521,6 +557,20 @@ class WorkshopMetadataTests(unittest.TestCase):
             ),
             (candidate, receipt_hash),
         )
+
+        good = json.loads(record.read_text(encoding="utf-8"))
+        for private_id in (None, 0, -1, True, False, 1.0, "123", METADATA.MAX_WORKSHOP_ID + 1, 123456789):
+            with self.subTest(private_id=private_id):
+                bad = dict(good, privateWorkshopId=private_id)
+                record.write_text(json.dumps(bad), encoding="utf-8")
+                with self.assertRaisesRegex(METADATA.ValidationError, "privateWorkshopId"):
+                    METADATA.validate_alpha_candidate(manifest, preview, workshop, record, readme, changelog)
+        legacy = dict(good, schemaVersion=1)
+        del legacy["privateWorkshopId"]
+        record.write_text(json.dumps(legacy), encoding="utf-8")
+        with self.assertRaisesRegex(METADATA.ValidationError, "historical 0.3.0 only"):
+            METADATA.validate_alpha_candidate(manifest, preview, workshop, record, readme, changelog)
+        record.write_text(json.dumps(good), encoding="utf-8")
 
         payload = json.loads(record.read_text(encoding="utf-8"))
         payload["releaseVersion"] = "0.3.0"
@@ -539,6 +589,132 @@ class WorkshopMetadataTests(unittest.TestCase):
                     METADATA.validate_alpha_candidate(
                         manifest, preview, workshop, record, readme, changelog
                     )
+
+    def test_alpha_workshop_binding_proves_two_distinct_items_and_preserves_every_input(self) -> None:
+        paths = self.write_alpha_binding_fixture()
+        before = [path.read_bytes() for path in paths]
+        self.assertEqual(METADATA.validate_alpha_workshop_binding(*paths), (123456789, 3794797472))
+        self.assertEqual([path.read_bytes() for path in paths], before)
+        public = json.loads(paths[2].read_text(encoding="utf-8"))
+        self.assertEqual(public["WorkshopId"], 3794797472)
+        self.assertEqual(public["Visibility"], "2")
+
+    def test_alpha_binding_accepts_exact_unsigned_id_bounds_without_float_coercion(self) -> None:
+        for private_id, public_id in ((1, METADATA.MAX_WORKSHOP_ID), (METADATA.MAX_WORKSHOP_ID, 1)):
+            with self.subTest(private_id=private_id):
+                paths = self.write_alpha_binding_fixture()
+                record, private, public = [json.loads(path.read_text(encoding="utf-8")) for path in paths]
+                record.update(privateWorkshopId=private_id, workshopId=public_id)
+                private["WorkshopId"], public["WorkshopId"] = private_id, public_id
+                for path, value in zip(paths, (record, private, public)):
+                    path.write_text(json.dumps(value), encoding="utf-8")
+                self.assertEqual(METADATA.validate_alpha_workshop_binding(*paths), (private_id, public_id))
+
+    def test_alpha_binding_refuses_missing_wrong_typed_out_of_range_and_forged_ids(self) -> None:
+        missing = object()
+        for index, field in ((0, "privateWorkshopId"), (0, "workshopId"), (1, "WorkshopId"), (2, "WorkshopId")):
+            for value in (missing, None, 0, -1, True, False, 1.0, "123", METADATA.MAX_WORKSHOP_ID + 1, 7654321):
+                with self.subTest(index=index, field=field, value=str(value)):
+                    paths = self.write_alpha_binding_fixture()
+                    changed = json.loads(paths[index].read_text(encoding="utf-8"))
+                    if value is missing:
+                        del changed[field]
+                    else:
+                        changed[field] = value
+                    paths[index].write_text(json.dumps(changed), encoding="utf-8")
+                    before = [path.read_bytes() for path in paths]
+                    with self.assertRaises(METADATA.ValidationError):
+                        METADATA.validate_alpha_workshop_binding(*paths)
+                    self.assertEqual([path.read_bytes() for path in paths], before)
+        paths = self.write_alpha_binding_fixture()
+        record = json.loads(paths[0].read_text(encoding="utf-8"))
+        record["privateWorkshopId"] = record["workshopId"]
+        paths[0].write_text(json.dumps(record), encoding="utf-8")
+        private = json.loads(paths[1].read_text(encoding="utf-8"))
+        private["WorkshopId"] = record["workshopId"]
+        paths[1].write_text(json.dumps(private), encoding="utf-8")
+        with self.assertRaisesRegex(METADATA.ValidationError, "must differ"):
+            METADATA.validate_alpha_workshop_binding(*paths)
+
+    def test_alpha_binding_requires_exact_private_and_public_visibility(self) -> None:
+        for index, values in ((1, (None, 0, False, "2", "1", "00")), (2, (None, 2, True, "0", "1", "02"))):
+            for value in values:
+                with self.subTest(index=index, value=value):
+                    paths = self.write_alpha_binding_fixture()
+                    payload = json.loads(paths[index].read_text(encoding="utf-8"))
+                    if value is None:
+                        del payload["Visibility"]
+                    else:
+                        payload["Visibility"] = value
+                    paths[index].write_text(json.dumps(payload), encoding="utf-8")
+                    with self.assertRaisesRegex(METADATA.ValidationError, "Visibility"):
+                        METADATA.validate_alpha_workshop_binding(*paths)
+
+    def test_alpha_binding_legacy_same_item_is_readable_only_for_historical_first_alpha(self) -> None:
+        paths = self.write_alpha_binding_fixture("0.3.0", 1)
+        original = [path.read_bytes() for path in paths]
+        self.assertEqual(METADATA.validate_alpha_workshop_binding(*paths), (3794797472, 3794797472))
+        self.assertEqual([path.read_bytes() for path in paths], original)
+        private = json.loads(paths[1].read_text(encoding="utf-8"))
+        private["WorkshopId"] = 123456789
+        paths[1].write_text(json.dumps(private), encoding="utf-8")
+        with self.assertRaisesRegex(METADATA.ValidationError, "IDs do not match"):
+            METADATA.validate_alpha_workshop_binding(*paths)
+        for version in ("0.3.1", "0.3.12", "0.3.01", "0.4.0"):
+            with self.subTest(version=version):
+                with self.assertRaises(METADATA.ValidationError):
+                    METADATA.validate_alpha_workshop_binding(*self.write_alpha_binding_fixture(version, 1))
+
+    def test_alpha_binding_validates_whole_record_schema_not_only_selected_ids(self) -> None:
+        corruptions = {
+            "schemaVersion": (None, True, 2.0, 0, 3),
+            "releaseVersion": (None, "0.3.01", "0.4.0"),
+            "releaseChannel": ("release",), "candidateCommit": ("not-a-commit",),
+            "gameMarketingVersion": ("unknown",), "gameCoreBuild": ("unknown",),
+            "previewSha256": ("0" * 64, METADATA.INTERIM_PREVIEW_SHA256),
+            "privatePackageReceiptSha256": (None, "0" * 64), "unexpected": (True,),
+        }
+        for field, values in corruptions.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    paths = self.write_alpha_binding_fixture()
+                    record = json.loads(paths[0].read_text(encoding="utf-8"))
+                    record[field] = value
+                    paths[0].write_text(json.dumps(record), encoding="utf-8")
+                    with self.assertRaises(METADATA.ValidationError):
+                        METADATA.validate_alpha_workshop_binding(*paths)
+
+    def test_alpha_binding_refuses_duplicate_authority_fields_and_missing_files(self) -> None:
+        for index, field, value in ((0, "privateWorkshopId", 123456789), (1, "WorkshopId", 123456789),
+                                    (2, "WorkshopId", 3794797472), (2, "Visibility", "2")):
+            with self.subTest(index=index, field=field):
+                paths = self.write_alpha_binding_fixture()
+                text = paths[index].read_text(encoding="utf-8").rstrip()
+                paths[index].write_text(text[:-1] + "," + json.dumps(field) + ":" + json.dumps(value) + "}", encoding="utf-8")
+                with self.assertRaisesRegex(METADATA.ValidationError, "duplicate JSON field"):
+                    METADATA.validate_alpha_workshop_binding(*paths)
+        for index in range(3):
+            with self.subTest(missing=index):
+                paths = list(self.write_alpha_binding_fixture())
+                paths[index] = self.root / "absent.json"
+                with self.assertRaisesRegex(METADATA.ValidationError, "cannot read"):
+                    METADATA.validate_alpha_workshop_binding(*paths)
+
+    def test_alpha_binding_cli_is_silent_on_success_and_diagnostic_on_refusal(self) -> None:
+        paths = self.write_alpha_binding_fixture()
+        arguments = ["alpha-workshop-binding", *(str(path) for path in paths)]
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(METADATA.main(arguments), 0)
+        self.assertEqual(stdout.getvalue(), ""); self.assertEqual(stderr.getvalue(), "")
+        public = paths[2].read_bytes()
+        bad = json.loads(paths[1].read_text(encoding="utf-8")); bad["Visibility"] = "2"
+        paths[1].write_text(json.dumps(bad), encoding="utf-8")
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            self.assertEqual(METADATA.main(arguments), 1)
+        self.assertEqual(stdout.getvalue(), ""); self.assertIn("Visibility", stderr.getvalue())
+        self.assertEqual(paths[2].read_bytes(), public)
 
     def test_workshop_lanes_enforce_absence_and_visibility(self) -> None:
         manifest = {

@@ -17,21 +17,37 @@ namespace ThousandAndFirst.Tests
 		private const string Persona = "Tools/personas/subsidence-native-checks.persona";
 
 		[Test]
-		public void SourceContract_PersonaRunsThreeNamedCasesAcrossRealFounding()
+		public void SourceContract_PersonaRunsFiveOriginalCasesAndThreeSyntheticReportCutsAcrossRealFounding()
 		{
 			string persona = Read(Persona);
 			Assert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
 			Assert.AreEqual("stagedigest;subsidence-check;stagedigest", Setting(persona, "SCRIPT"));
 			Assert.AreEqual("subsidence-check", Setting(persona, "VERBS"));
-			Assert.AreEqual("stagedigest:OK~founded=false,subsidence-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE",
+			Assert.AreEqual("stagedigest:OK~founded=false,subsidence-check:OK~cases=8 passed=8 failed=0,stagedigest:OK~founded=true,COMPLETE",
 				Setting(persona, "EXPECT"));
 			string[] cases = Regex.Matches(Read(Checks), @"\bcurrent\s*=\s*""([^""]+)""")
 				.Cast<Match>().Select(match => match.Groups[1].Value).ToArray();
-			CollectionAssert.AreEqual(new[] { "physical-city-fixture", "five-departures-summary-interruption",
-				"same-tick-no-replay" }, cases);
+			CollectionAssert.AreEqual(new[] { "physical-city-fixture", "partial-one-of-five",
+				"remaining-four-summary-interruption", "same-tick-summary-recovery", "same-tick-no-replay",
+				"synthetic-report-cut-recovery" }, cases);
 			Assert.AreEqual(cases.Length, cases.Distinct(StringComparer.Ordinal).Count());
-			ContainsAll(Read(Provider), "internal const int ExpectedCases = 3;",
+			ContainsAll(Read(Provider), "internal const int ExpectedCases = 8;",
 				"internal const string Verb = \"subsidence-check\";");
+		}
+
+		[Test]
+		public void SourceContract_AdditionalCasesDriveRealRecoveryAfterExplicitSyntheticCuts()
+		{
+			string loss = Read("Harness/KingdomSubsidenceNativeLossChecks.cs");
+			ContainsAll(loss, "synthetic-terminal-chronicle-loss=PASS; sink-dispositions=seeded",
+				"synthetic-empty-ledger-reset-aba=PASS; pending-intent-and-news-counter=seeded",
+				"synthetic-unseen-homecoming-news=PASS; callback-news=seeded",
+				"KingdomSubsidenceStepRuntime.TryBeforePass(", "KingdomSubsidenceStepRuntime.TryReadHomecoming(",
+				"KingdomSubsidenceReportRules.Settled(report) && !KingdomSubsidenceReportRules.Complete(report)",
+				"LedgerLossKind.HomecomingReset", "after.BeforeHash == before.BeforeHash",
+				"frame.Notes.Add(news)", "frame.Ledger.Fetched == 1", "frame.City.SubsidenceModel == wire");
+			StringAssert.DoesNotContain(".Reset(", loss);
+			StringAssert.Contains("passed += KingdomSubsidenceNativeLossChecks.Run(system, Zone, fixture.Survey, now, results);", Read(Checks));
 		}
 
 		[Test]
@@ -123,7 +139,7 @@ namespace ThousandAndFirst.Tests
 				"Ids.Add(id);", "Verify();");
 			string all = Read(Fixture) + Read(Checks) + Read(Fault);
 			Assert.IsFalse(Regex.IsMatch(all, @"\.(?:Population|Founded|LastSubsidenceTick|TimeTicks)\s*(?:=(?!=)|\+=|-=|\+\+|--)"),
-				"Fixture must use real enrollment/founding/Reckon, not writable compatibility or clock state.");
+				"These fixture files must not write population, founding or clock state; only the separate synthetic clock seed/probe may write its checkpoint.");
 			Assert.IsFalse(Regex.IsMatch(all, @"\.(?:Bindings|Residents)\.(?:Add|Clear|Remove)\s*\("),
 				"Resident authority must be published through its production APIs.");
 		}
@@ -150,34 +166,72 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SourceContract_RealReckonSeedsCheckpointThenExecutesFullStepWithExactSummaryFault()
+		public void SourceContract_RealReckonUsesBoundSurveyAndPreservesPartialStepCredit()
 		{
 			string body = Body(Checks, "internal static string Run(");
 			Ordered(body, "long now = Game.TimeTicks;", "KingdomSubsidenceNativeFixture.TryCreate(",
+				"scope = fixture.Survey.BindPass();",
 				"long anchor = now - KingdomSubsidenceRules.StepDays * KingdomRules.TicksPerDay;",
-				"KingdomSubsidence.Reckon(system, Zone, fixture.Survey, anchor);",
-				"KingdomSubsidence.Reckon(system, Zone, fixture.Survey, anchor + 1L);",
+				"KingdomSubsidenceNativeClockSeed.TrySeed(system, Zone, fixture.Survey, anchor, out failure)",
+				"KingdomSubsidenceNativeClockChecks.Verify(fixture, Zone, fixture.Survey, now)",
 				"system.LastSubsidenceTick == anchor && system.Population == 50", "Game.TimeTicks == now",
 				"system.ChronicleEntries.ToArray()", "KingdomSubsidenceRules.SlideDepartureSummary(",
 				"KingdomPresentation.Rich(system.KingdomDisplayName), 5, 3,",
 				"KingdomSubsidenceRules.DepartureCause(system.SubsidenceBinding)",
+				"current = \"partial-one-of-five\";", "for (int i = 1; i < fixture.Bodies.Count; i++)",
+				"GameObject body = fixture.Bodies[i];",
+				"GameObject.Validate(body) && body.Brain != null && body.Brain.PartyLeader == null",
+				"held.Add(body); body.Brain.PartyLeader = player;", "Check(body.IsPlayerLed(),",
+				"KingdomSubsidence.Reckon(system, Zone, fixture.Survey, now);",
+				"KingdomSubsidenceStepCodec.TryDecode(system.City.SubsidenceModel, out KingdomSubsidenceStepBook partial)",
+				"partial.Active != null && partial.Active.Completed == 1 && partial.Active.Quota == 5",
+				"partial.Active.AnchorTick == anchor && partial.Active.DueTick == now",
+				"partial.Active.PendingDepartureId == \"\" && system.Population == 49",
+				"KingdomResidents.OnRollCount(system) == 49 && system.LastSubsidenceTick == anchor",
+				"system.Ledger.Departures == priorDepartures + 1", "string stepId = partial.Active.Id;",
+				"long sequence = partial.Sequence;", "ReleaseHeld(held, player, Zone);",
+				"partial-one-of-five=PASS");
+			StringAssert.DoesNotContain("KingdomSubsidenceCompletionRules", Read(Checks));
+		}
+
+		[Test]
+		public void SourceContract_RemainingFourRetireSameSequenceBeforeSummaryDeclarationFault()
+		{
+			Ordered(Body(Checks, "internal static string Run("), "current = \"remaining-four-summary-interruption\";",
+				"player.GetPart<KingdomSubsidenceNativeSummaryFault>() == null",
 				"fault = new KingdomSubsidenceNativeSummaryFault", "ExpectedOfficial = official",
 				"ExpectedCount = officialPrefix.Length + 5", "ExpectedCheckpoint = now",
 				"ExpectedDepartures = priorDepartures + 5", "player.AddPart(fault);",
 				"ReferenceEquals(player.GetPart<KingdomSubsidenceNativeSummaryFault>(), fault)",
 				"ReferenceEquals(fault.ParentObject, player)", "KingdomSubsidence.Reckon(system, Zone, fixture.Survey, now);",
-				"Check(fault.Throws == 1 && fault.CommittedBeforeFault,");
-			StringAssert.DoesNotContain("KingdomSubsidenceCompletionRules", Read(Checks));
+				"Check(fault.Throws == 1 && fault.CommittedBeforeFault,",
+				"system.ChronicleEntries.Count == officialPrefix.Length + 4",
+				"system.OutsiderEntries.Count == outsiderPrefix.Length + 4",
+				"KingdomSubsidenceStepCodec.TryDecode(system.City.SubsidenceModel, out KingdomSubsidenceStepBook settled)",
+				"settled.Active == null && settled.Sequence == sequence && settled.LastRetiredTick == now",
+				"KingdomSubsidenceBatchCodec.TryDecode(settled.BatchModel, out KingdomSubsidenceBatch batch)",
+				"batch.Closing && batch.Departed == 5 && batch.FirstSequence == sequence",
+				"Prefix(system.ChronicleEntries, officialPrefix);", "Prefix(system.OutsiderEntries, outsiderPrefix);",
+				"VerifyDepartures(fixture, now, priorDepartures + 5);",
+				"!string.IsNullOrEmpty(stepId)", "remaining-four-summary-interruption=PASS");
 		}
 
 		[Test]
-		public void SourceContract_DisplayNameFaultIsOneShotAfterExactOfficialAppendAndCommittedState()
+		public void SourceContract_DisplayNameFaultIsOneShotBeforeExactFrozenSummaryAppend()
 		{
 			StringAssert.Contains("ID == GetDisplayNameEvent.ID", Body(Fault, "public override bool WantEvent("));
 			Ordered(Body(Fault, "public override bool HandleEvent(GetDisplayNameEvent E)"),
 				"if (Throws == 0 && ReferenceEquals(E.Object, ParentObject) && System != null",
-				"System.ChronicleEntries.Count == ExpectedCount",
-				"string.Equals(System.ChronicleEntries[ExpectedCount - 1], ExpectedOfficial, StringComparison.Ordinal)",
+				"System.ChronicleEntries.Count == ExpectedCount - 1",
+				"KingdomSubsidenceStepCodec.TryDecode(System.City.SubsidenceModel, out KingdomSubsidenceStepBook book)",
+				"book.Active == null",
+				"KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out KingdomSubsidenceBatch batch)",
+				"batch.Closing && batch.Departed == 5",
+				"KingdomSubsidenceReportCodec.TryDecode(batch.ReportModel, out KingdomSubsidenceReportPlan report)",
+				"report.Entries.Count == 1 && !report.Entries[0].ChronicleProved",
+				"report.Entries[0].LedgerPhase == ReportLedgerPhase.Proved",
+				"Calendar.GetDay(report.Entries[0].AtTick)", "Calendar.GetMonth(report.Entries[0].AtTick)",
+				"Calendar.GetYear(report.Entries[0].AtTick)", "report.Entries[0].Text + \".\", ExpectedOfficial, StringComparison.Ordinal)",
 				"Throws++;", "CommittedBeforeFault = System.LastSubsidenceTick == ExpectedCheckpoint",
 				"System.Population == 45 && System.Stage == GrowthStage.City",
 				"KingdomResidents.OnRollCount(System) == 45", "System.Ledger.Departures == ExpectedDepartures",
@@ -189,11 +243,16 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_SameTickRetryRechecksPhysicalDestructionAndUnchangedChroniclePrefixes()
 		{
 			Ordered(Body(Checks, "internal static string Run("),
+				"current = \"same-tick-summary-recovery\";",
+				"KingdomSubsidence.Reckon(system, Zone, fixture.Survey, now);",
+				"VerifyDepartures(fixture, now, priorDepartures + 5);",
 				"system.ChronicleEntries.Count == officialPrefix.Length + 5",
-				"system.OutsiderEntries.Count == outsiderPrefix.Length + 4",
+				"system.OutsiderEntries.Count == outsiderPrefix.Length + 5",
 				"system.ChronicleEntries[system.ChronicleEntries.Count - 1] == official",
-				"Prefix(system.ChronicleEntries, officialPrefix);", "Prefix(system.OutsiderEntries, outsiderPrefix);",
-				"VerifyDepartures(fixture, now, priorDepartures + 5);", "current = \"same-tick-no-replay\";",
+				"KingdomSubsidenceStepCodec.TryDecode(system.City.SubsidenceModel, out KingdomSubsidenceStepBook recovered)",
+				"recovered.Active == null && recovered.Sequence == sequence",
+				"recovered.BatchModel == KingdomSubsidenceBatchRules.None", "same-tick-summary-recovery=PASS",
+				"current = \"same-tick-no-replay\";",
 				"string[] afterOfficial = system.ChronicleEntries.ToArray();", "string[] afterOutsider = system.OutsiderEntries.ToArray();",
 				"KingdomSubsidence.Reckon(system, Zone, KingdomSurvey.Take(Zone, system), now);",
 				"VerifyDepartures(fixture, now, priorDepartures + 5);", "system.ChronicleEntries.Count == afterOfficial.Length",
@@ -213,13 +272,23 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_FixtureAndEffectsAreRetainedOnlyExactTemporaryHandlerIsRemoved()
 		{
 			string all = Read(Fixture) + Read(Checks) + Read(Fault) + Read(Provider);
-			Assert.IsFalse(Regex.IsMatch(all, @"\.(?:Obliterate|Destroy|Clear|RemoveObject|RemoveGameState)\s*\("),
+			Assert.AreEqual(1, Regex.Matches(all, @"\bHeld\.Clear\(\);").Count,
+				"Only the transient exact-reference party list may be cleared.");
+			Assert.IsFalse(Regex.IsMatch(all.Replace("Held.Clear();", ""),
+				@"\.(?:Obliterate|Destroy|Clear|RemoveObject|RemoveGameState)\s*\("),
 				"Native fixture must retain the realm, actors, receipts and presentation effects.");
 			Ordered(Body(Checks, "internal static string Run("), "finally", "if (fault != null)", "bool clean = false;",
 				"ReferenceEquals(fault.ParentObject, player)",
 				"ReferenceEquals(player.GetPart<KingdomSubsidenceNativeSummaryFault>(), fault)", "player.RemovePart(fault);",
 				"clean = fault.ParentObject == null && player.GetPart<KingdomSubsidenceNativeSummaryFault>() == null;",
-				"catch (Exception) { clean = false; }", "if (!clean)", "passed = Math.Min(passed, 2);");
+				"catch (Exception) { clean = false; }", "if (!clean)",
+				"passed = Math.Min(passed, KingdomSubsidenceNativeProvider.ExpectedCases - 1);",
+				"try { ReleaseHeld(held, player, Zone); }",
+				"catch (Exception) { passed = Math.Min(passed, 4);", "party-cleanup=FAIL unknown custody retained",
+				"scope?.Dispose();");
+			Ordered(Body(Checks, "private static void ReleaseHeld("), "foreach (GameObject body in Held)",
+				"GameObject.Validate(body) && body.CurrentZone == Zone && body.Brain != null",
+				"ReferenceEquals(body.Brain.PartyLeader, Player)", "body.Brain.PartyLeader = null;", "Held.Clear();");
 			StringAssert.DoesNotContain("LastAttempt = null", Read(Fixture));
 		}
 
@@ -227,11 +296,36 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_ReportExplicitlyLimitsNativeEvidence()
 		{
 			ContainsAll(Body(Checks, "internal static string Run("),
-				"Ok = passed == KingdomSubsidenceNativeProvider.ExpectedCases;", "native-subsidence cases=3 passed=",
+				"Ok = passed == KingdomSubsidenceNativeProvider.ExpectedCases;", "native-subsidence cases=8 passed=",
 				"synthetic=true", "elapsed=seeded-checkpoint", "world-turns=untested", "world-clock=",
 				"Game.TimeTicks == now ? \"unchanged\" : \"changed\"",
 				"ordinary-acceptance=false", "save-load=untested", "breakpoint=not-exercised",
-				"partial-departure=untested", "profile-and-effects-retained=true");
+				"partial-departure=one-plus-four", "profile-and-effects-retained=true");
+		}
+
+		[Test]
+		public void SourceContract_ExpectedDiagnosticIsExactDeclarationRefusalNotOldCompletionError()
+		{
+			string expected = Setting(Read(Persona), "LOG_EXPECT");
+			string[] lines = Regex.Matches(expected, @"""([^""]+)""")
+				.Cast<Match>().Select(match => match.Groups[1].Value).ToArray();
+			CollectionAssert.AreEqual(new[] {
+				"[TAF] chronicle v3 refused 8:receipt-declaration",
+				"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.",
+				"MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"
+			}, lines);
+			ContainsAll(Body("Chronicle/KingdomChronicle.cs", "private static bool TryDeclareCore("),
+				"FounderName()", "catch { return false; }");
+			ContainsAll(Body("Chronicle/KingdomChronicle.Publication.cs", "private static bool RecordOnceCore("),
+				"PublicationFault(KingdomChronicleRegistryFault.CryptoUnavailable, \"receipt-declaration\", true, OwnerExact)");
+			StringAssert.Contains("CryptoUnavailable = 8", Read("Chronicle/KingdomChronicleReceiptRules.cs"));
+			string report = Body("Chronicle/KingdomChronicle.Registry.cs", "private static void ReportFault(");
+			ContainsAll(report, "KingdomLog.Log(\"chronicle v3 refused \" + code)");
+			StringAssert.DoesNotContain("LogError", report);
+			ContainsAll(Body("Core/KingdomLog.cs", "public static void Log("),
+				"if (Enabled)", "UnityEngine.Debug.Log(\"[TAF] \" + Text)");
+			StringAssert.Contains("\"r_TAF_OptionDevLog\": \"Yes\"", Read("Tools/smoke/PlayerOptions.json"));
+			StringAssert.DoesNotContain("departure summary failed", Read(Persona));
 		}
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }

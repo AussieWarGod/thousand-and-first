@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 CHECKER_PATH = Path(__file__).resolve().parents[1] / "check-doc-freshness.py"
@@ -20,6 +21,69 @@ SPEC.loader.exec_module(CHECKER)
 
 
 class DocumentationFreshnessTests(unittest.TestCase):
+    MARKET_DOCUMENTS = (
+        "VISION.md", "docs/STATUS.md", "TESTING.md", "docs/API.md", "MODDING.md",
+        "CHANGELOG.md", "_notes/BRIEF-IMPLEMENTATION-AUDIT.md", "_notes/balance-sim-output.txt",
+    )
+    MARKET_LOCAL_NOTE = "_notes/RESEARCH-ALIGNMENT-AUDIT-2026-09-01.md"
+
+    def copy_market_documents(self, root: Path) -> None:
+        for relative in self.MARKET_DOCUMENTS:
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((CHECKER_PATH.parent.parent / relative).read_bytes())
+
+    def test_market_contract_accepts_absent_ignored_local_notes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_market_documents(root)
+            self.assertFalse((root / self.MARKET_LOCAL_NOTE).exists())
+            with mock.patch.object(CHECKER, "ROOT", root):
+                problems = []
+                CHECKER.audit_market_contract(problems)
+            self.assertEqual([], problems)
+
+    def test_market_contract_audits_present_local_note_requirements_and_forbidden_claims(self) -> None:
+        required = (
+            "Native TradeUI `_stock` is sole ordinary ware authority",
+            "`ShopTier` is current reach and may fall to zero",
+            "Completed/dormant legendary merchants survive civic loss/accession without civic authority",
+        )
+        current = "\n".join(required)
+        stale = "stock tier rises with the settlement"
+        cases = (
+            (current, []),
+            ("\n".join(required[:2]), [
+                f"{self.MARKET_LOCAL_NOTE} is missing current contract text: {required[2]}"
+            ]),
+            (current + "\n" + stale, [
+                f"{self.MARKET_LOCAL_NOTE} retains stale current-status text: {stale}"
+            ]),
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_market_documents(root)
+            for body, expected in cases:
+                with self.subTest(body=body), mock.patch.object(CHECKER, "ROOT", root):
+                    note = root / self.MARKET_LOCAL_NOTE
+                    note.write_text(body, encoding="utf-8")
+                    problems = []
+                    CHECKER.audit_market_contract(problems)
+                    self.assertEqual(expected, problems)
+                    self.assertEqual(body, note.read_text(encoding="utf-8"))
+
+    def test_market_contract_keeps_public_documents_and_tracked_note_mandatory(self) -> None:
+        for relative in self.MARKET_DOCUMENTS[:-1]:
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.copy_market_documents(root)
+                missing = root / relative
+                missing.unlink()
+                with mock.patch.object(CHECKER, "ROOT", root):
+                    with self.assertRaises(FileNotFoundError) as refused:
+                        CHECKER.audit_market_contract([])
+                self.assertEqual(str(missing), refused.exception.filename)
+
     def test_public_alpha_status_rejects_the_pre_publication_claim(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             original_root = CHECKER.ROOT
@@ -127,10 +191,51 @@ class DocumentationFreshnessTests(unittest.TestCase):
         CHECKER.audit_research_alignment_contract(problems)
         self.assertEqual([], problems)
 
-    def test_archive_contract_tracks_current_v17_and_frozen_v1_to_v16(self) -> None:
+    def test_archive_contract_tracks_current_v19_and_historical_v1_to_v18(self) -> None:
         problems = []
         CHECKER.audit_archive_contract(problems)
         self.assertEqual([], problems)
+
+    def test_archive_contract_rejects_stale_alias_reader_or_subsidence_payload(self) -> None:
+        mutations = (
+            ("Core/KingdomArchivedSettlementCodec.cs",
+             "public const int CurrentVersion = SubsidenceStorageVersion;",
+             "public const int CurrentVersion = ExpeditionResultVersion;"),
+            ("Core/KingdomArchivedSettlementCodec.cs",
+             "public const int SubsidenceStorageVersion = 19;",
+             "public const int SubsidenceStorageVersion = 18;"),
+            ("Core/KingdomArchivedSettlementCodec.EncodeV1ToV4.cs",
+             "TryEncodeExpeditionResultV18ForTests", "RemovedHistoricalWriter"),
+            ("Core/KingdomArchivedSettlementCodec.DecodeCloneHash.cs",
+             "&& version != ExpeditionResultVersion", "&& version != SubsidenceStorageVersion"),
+            ("Core/KingdomArchivedSettlementCodec.Schema.cs",
+             'string.Equals(Name, "SubsidenceModel", StringComparison.Ordinal)) return false;',
+             'string.Equals(Name, "UnprovedModel", StringComparison.Ordinal)) return false;'),
+            ("Core/KingdomArchivedSettlementCodec.ValueReader.cs",
+             "KingdomSubsidenceStepCodec.MaxWireChars", "MaxStringBytes"),
+            ("Core/KingdomArchivedSettlementCodec.ValueWriter.cs",
+             "KingdomSubsidenceStepCodec.MaxWireChars", "MaxStringBytes"),
+            ("Core/KingdomArchivedSettlementCodec.ValueReader.cs",
+             "if (!city.TryMigrateSubsidenceStorage())", "if (false)"),
+        )
+        read_text = Path.read_text
+        for relative, before, after in mutations:
+            with self.subTest(relative=relative, before=before):
+                target = CHECKER.ROOT / relative
+                self.assertIn(before, read_text(target, encoding="utf-8"))
+
+                def changed(path, *args, **kwargs):
+                    actual = read_text(path, *args, **kwargs)
+                    return actual.replace(before, after) if path == target else actual
+
+                # Overlay only this source read. All real document requirements still execute;
+                # no private notes are invented/copied and no source file is changed.
+                with mock.patch.object(Path, "read_text", changed):
+                    problems = []
+                    CHECKER.audit_archive_contract(problems)
+                self.assertTrue(problems, "stale archive contract escaped the audit")
+                self.assertTrue(any("archive source" in problem or relative in problem
+                                    for problem in problems), problems)
 
     def test_green_line_cap_keeps_human_structure_review_open(self) -> None:
         terms = CHECKER.changelog_structure_status_terms(2458, 0)

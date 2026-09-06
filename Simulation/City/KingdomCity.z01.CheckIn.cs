@@ -32,6 +32,12 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				return;
 			}
+			if (!KingdomResidentDeathRuntime.CanProceed(System, out string deathFailure))
+			{
+				KingdomLog.Log("witnessed death: check-in waits (" + deathFailure + ")"); return;
+			}
+			if (!System.City.HasValidSubsidenceStorage()
+				|| KingdomSubsidenceRungRules.BlocksProjection(System.City.SubsidenceModel)) return;
 			StampDedicationOrder(System, Survey);
 			KingdomCityState state;
 			KingdomCityFault fault;

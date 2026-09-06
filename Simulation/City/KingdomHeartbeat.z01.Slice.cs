@@ -96,7 +96,8 @@ namespace ThousandAndFirst.Simulation.City
 		/// (&sect;3.6).</summary>
 		private static int Advance(KingdomSystem System, KingdomCityBook book, string label, long nowTick, int alreadyTold)
 		{
-			if (book == null)
+			if (book == null || !book.HasValidSubsidenceStorage()
+				|| KingdomSubsidenceRungRules.BlocksProjection(book.SubsidenceModel))
 			{
 				return 0;
 			}

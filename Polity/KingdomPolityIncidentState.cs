@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
+#if !TAF_TESTS
+using XRL.World;
+#endif
 
 namespace ThousandAndFirst
 {
 	[Serializable]
 	public sealed class KingdomPolityNamedFigureRecord
+#if !TAF_TESTS
+		: IComposite
+#endif
 	{
 		public string FigureId;
 		public string PolityId;
@@ -23,6 +29,20 @@ namespace ThousandAndFirst
 		/// </summary>
 		public int ResidentId;
 		public string ResidentSettlementId;
+
+#if !TAF_TESTS
+		public bool WantFieldReflection => false;
+
+		public void Write(SerializationWriter Writer)
+		{
+			Writer.WriteNamedFields(this, typeof(KingdomPolityNamedFigureRecord));
+		}
+
+		public void Read(SerializationReader Reader)
+		{
+			Reader.ReadNamedFields(this, typeof(KingdomPolityNamedFigureRecord));
+		}
+#endif
 	}
 
 	[Serializable]

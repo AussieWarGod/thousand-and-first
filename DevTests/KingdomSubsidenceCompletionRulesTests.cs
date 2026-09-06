@@ -129,22 +129,22 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RuntimeWiresActualBookkeepingRungsAndDeferredSummaryIntoBoundary()
+		public void SourceContractRuntimeUsesDurableStepBeforeBatchSummary()
 		{
 			string source = TestMain.ReadRepositoryText("Growth/KingdomSubsidence.Reckoning.cs");
-			int call = source.IndexOf("KingdomSubsidenceCompletionRules.Complete(() =>",
-				StringComparison.Ordinal);
-			int checkpoint = source.IndexOf("System.LastSubsidenceTick = Checkpoint(anchor, steps);",
-				StringComparison.Ordinal);
-			int stage = source.IndexOf("System.Stage = KingdomSubsidenceRules.SettledStage(",
-				StringComparison.Ordinal);
-			int rungs = source.IndexOf("}, () => Chronicle(System, Survey, anchor, TimeTicks, from, trajectory), () =>",
-				StringComparison.Ordinal);
-			int summary = source.IndexOf("string summary = KingdomSubsidenceRules.SlideDepartureSummary(",
-				StringComparison.Ordinal);
-			Assert.IsTrue(call >= 0 && call < checkpoint && checkpoint < stage
-				&& stage < rungs && rungs < summary, "runtime delegates drifted from their tested roles");
-			StringAssert.Contains("error => KingdomLog.LogError", source.Substring(summary));
+			StringAssert.Contains("KingdomSubsidenceStepRuntime.TryDrive(", source);
+			StringAssert.DoesNotContain("KingdomSubsidenceCompletionRules.Complete(", source);
+			StringAssert.DoesNotContain("KingdomGrowth.Emigrate(", source);
+			string step = TestMain.ReadRepositoryText("Growth/KingdomSubsidenceStepRuntime.Step.cs");
+			int report = step.IndexOf("ResumeRungReport(frame, out refusal)", StringComparison.Ordinal);
+			int checkpoint = step.IndexOf("system.LastSubsidenceTick = checkpoint;", StringComparison.Ordinal);
+			int retire = step.IndexOf("KingdomSubsidenceStepRules.TryRetire(", StringComparison.Ordinal);
+			Assert.IsTrue(report >= 0 && checkpoint > report && retire > checkpoint,
+				"Source contract only: reporting precedes checkpoint and atomic retirement.");
+			string driver = TestMain.ReadRepositoryText("Growth/KingdomSubsidenceStepRuntime.Driver.cs");
+			int resume = driver.IndexOf("ResumeStep(frame, readSupports, out refusal)", StringComparison.Ordinal);
+			Assert.Greater(driver.IndexOf("ResumeBatchReport(frame, batch, out refusal)",
+				StringComparison.Ordinal), resume);
 		}
 
 		private sealed class HostileMessageException : Exception

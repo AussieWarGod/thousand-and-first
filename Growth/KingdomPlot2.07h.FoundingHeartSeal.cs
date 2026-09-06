@@ -110,8 +110,7 @@ namespace ThousandAndFirst
 					&& TryReadFoundingHeartContext(Z, plan, out Context)
 					&& ExactFoundingHeartMarkerRoster(Z, plan, false)
 					&& ExactFoundingHeartRetiredCustody(plan)
-					&& ExactFoundingHeartGraveyardTombstone(plan,
-						KingdomFoundingHeartRules.WorksSlot, out _);
+					&& ExactFoundingHeartRetirementProof(Z, Context, PredecessorId);
 		}
 	}
 }

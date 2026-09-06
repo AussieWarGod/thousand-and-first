@@ -1,0 +1,111 @@
+#if TAF_TESTS
+using System;
+using System.Text.RegularExpressions;
+using NUnit.Framework;
+
+namespace ThousandAndFirst.Tests
+{
+	/// <summary>Source-only clock ownership contracts; no master transition or native recovery is executed.</summary>
+	[TestFixture]
+	public sealed class KingdomSubsidenceMasterClockSourceTests
+	{
+		private const string Settlement = "Core/KingdomMasterSettlementPlan.cs";
+		private const string Recovery = "Core/KingdomMasterRecoveryPlans.cs";
+
+		[TestCase("KingdomSystem")]
+		[TestCase("KingdomSettlement")]
+		public void SourceContractSeatAndArchiveReadExistingSubsidenceCheckpoint(string ownerType)
+		{
+			string body = Method(Settlement, "internal static bool TryCreate(" + ownerType + " source,");
+			string[] arguments = Arguments(body, "return TryCreateCore(");
+			Assert.Greater(arguments.Length, 5);
+			Assert.AreEqual("source.LastSubsidenceTick", arguments[4]);
+			StringAssert.Contains("long oldFood, long oldSubsidence, bool semanticActive",
+				Code(Settlement));
+			Assert.IsFalse(Regex.IsMatch(body, @"\bsource\.LastSubsidenceTick\s*=(?!=)"),
+				"Capturing a resume plan must not replace the source checkpoint.");
+		}
+
+		[Test]
+		public void SourceContractPlanPreservesPendingCheckpointWithOrWithoutHeartbeat()
+		{
+			string body = Method(Settlement, "private static bool TryCreateCore(");
+			string[] arguments = Arguments(body, "plan = new SettlementPlan(");
+			Assert.Greater(arguments.Length, 6);
+			Assert.AreEqual("lifecycle?.Growth?.HeartbeatOp == null ? now : oldHeartbeat", arguments[1],
+				"Heartbeat retains its own existing lease policy.");
+			Assert.AreEqual("oldSubsidence", arguments[5],
+				"The pending-step anchor must be passed unchanged for both heartbeat states.");
+			Assert.IsFalse(Regex.IsMatch(body, @"\boldSubsidence\s*(?:=(?!=)|\+=|-=|\+\+|--)"),
+				"A direct constructor argument must not hide an earlier reanchor.");
+			StringAssert.Contains("long foodWork, long subsidence, long semantic", Code(Settlement));
+			Assert.AreEqual("subsidence", OnlyAssignment(
+				Method(Settlement, "private SettlementPlan("), "Subsidence"));
+		}
+
+		[TestCase("KingdomSystem")]
+		[TestCase("KingdomSettlement")]
+		public void SourceContractSeatAndArchivePublishCapturedCheckpointBeforeRecovery(string ownerType)
+		{
+			string body = Method(Settlement, "internal void Publish(" + ownerType + " target)");
+			Assert.AreEqual("Subsidence", OnlyAssignment(body, "target.LastSubsidenceTick"));
+			int checkpoint = body.IndexOf("target.LastSubsidenceTick = Subsidence;", StringComparison.Ordinal);
+			int recovery = body.IndexOf("Lifecycle?.Publish(target.LifecycleBook);", StringComparison.Ordinal);
+			Assert.GreaterOrEqual(checkpoint, 0);
+			Assert.Greater(recovery, checkpoint,
+				"The recovery publisher inspected below is reached after the preserved checkpoint write.");
+			Assert.AreEqual("Heartbeat", OnlyAssignment(body, "target.LastHeartbeatTick"));
+		}
+
+		[Test]
+		public void SourceContractLifecycleRecoveryHasNoSubsidenceReanchor()
+		{
+			string body = Method(Recovery, "internal void Publish(KingdomLifecycleBook book)");
+			StringAssert.Contains("KingdomGrowthBook growth = book.Growth;", body);
+			StringAssert.Contains("if (growth.HeartbeatOp == null) growth.LastHeartbeatTick = Now;", body);
+			StringAssert.Contains("if (growth.DepartureOp == null) growth.LastDepartureTick = Now;", body);
+			StringAssert.DoesNotContain("LastSubsidenceTick", Code(Recovery),
+				"No recovery-plan branch may independently reanchor the subsidence clock.");
+		}
+
+		private static string Code(string path)
+		{
+			string source = TestMain.ReadRepositoryText(path);
+			source = Regex.Replace(source, @"//[^\r\n]*|/\*[\s\S]*?\*/", " ");
+			return Regex.Replace(source, @"\s+", " ");
+		}
+
+		private static string Method(string path, string signature)
+		{
+			string source = Code(path);
+			int start = source.IndexOf(signature, StringComparison.Ordinal);
+			Assert.GreaterOrEqual(start, 0, path + ": " + signature);
+			int open = source.IndexOf('{', start), depth = 0;
+			Assert.GreaterOrEqual(open, 0, path);
+			for (int i = open; i < source.Length; i++)
+			{
+				if (source[i] == '{') depth++;
+				else if (source[i] == '}' && --depth == 0) return source.Substring(open, i - open + 1);
+			}
+			Assert.Fail("Unclosed method: " + path); return null;
+		}
+
+		private static string[] Arguments(string source, string call)
+		{
+			Match match = Regex.Match(source, Regex.Escape(call) + @"(?<arguments>[^;]*?)\);");
+			Assert.IsTrue(match.Success, call);
+			string[] arguments = match.Groups["arguments"].Value.Split(',');
+			for (int i = 0; i < arguments.Length; i++) arguments[i] = arguments[i].Trim();
+			return arguments;
+		}
+
+		private static string OnlyAssignment(string source, string target)
+		{
+			MatchCollection assignments = Regex.Matches(source,
+				@"\b" + Regex.Escape(target) + @"\s*=(?!=)\s*(?<value>[^;]+);");
+			Assert.AreEqual(1, assignments.Count, target + " must have one explicit publication.");
+			return assignments[0].Groups["value"].Value.Trim();
+		}
+	}
+}
+#endif

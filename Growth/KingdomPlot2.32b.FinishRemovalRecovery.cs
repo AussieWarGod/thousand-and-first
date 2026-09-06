@@ -92,27 +92,37 @@ namespace ThousandAndFirst
 		private static bool ExactGraveyardTombstone(string Id, GameObject Expected,
 			out GameObject Tombstone)
 		{
+			return FindGraveyardTombstone(Id, out Tombstone) == KingdomPhysicalLookupState.Exact
+				&& (Expected == null || object.ReferenceEquals(Expected, Tombstone));
+		}
+
+		private static KingdomPhysicalLookupState FindGraveyardTombstone(string Id,
+			out GameObject Tombstone)
+		{
 			Tombstone = null;
-			if (string.IsNullOrEmpty(Id) || XRL.The.ZoneManager?.Graveyard?.Objects == null)
-				return false;
+			if (string.IsNullOrEmpty(Id) || !TryLoadedPlotTombstones(out List<GameObject> rows))
+				return KingdomPhysicalLookupState.Ambiguous;
 			int count = 0;
-			if (XRL.The.ZoneManager.Graveyard.Objects.Count > 65536) return false;
 			try
 			{
-				for (int i = 0; i < XRL.The.ZoneManager.Graveyard.Objects.Count; i++)
+				for (int i = 0; i < rows.Count; i++)
 				{
-					GameObject item = XRL.The.ZoneManager.Graveyard.Objects[i];
+					GameObject item = rows[i];
 					if (item == null) continue;
-					if (!TryReadGraveyardId(item, out string itemId)) return false;
+					if (!TryReadGraveyardId(item, out string itemId))
+					{ Tombstone = null; return KingdomPhysicalLookupState.Ambiguous; }
 					if (itemId == Id) { count++; Tombstone = item; }
 				}
 			}
 			catch
 			{
 				KingdomLog.Log("plot removal: native graveyard identity is unreadable");
-				return false;
+				Tombstone = null;
+				return KingdomPhysicalLookupState.Ambiguous;
 			}
-			return count == 1 && (Expected == null || object.ReferenceEquals(Expected, Tombstone));
+			if (count == 1) return KingdomPhysicalLookupState.Exact;
+			Tombstone = null;
+			return count == 0 ? KingdomPhysicalLookupState.Absent : KingdomPhysicalLookupState.Ambiguous;
 		}
 
 		private static bool TryReadGraveyardId(GameObject Item, out string Id)

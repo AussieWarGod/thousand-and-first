@@ -1,4 +1,7 @@
 using System;
+#if !TAF_TESTS
+using XRL.World;
+#endif
 
 namespace ThousandAndFirst
 {
@@ -18,6 +21,9 @@ namespace ThousandAndFirst
 
 	[Serializable]
 	public sealed class KingdomResidentAdmissionOperation
+#if !TAF_TESTS
+		: IComposite
+#endif
 	{
 		public const int CurrentVersion = 1;
 		public int Version;
@@ -46,6 +52,20 @@ namespace ThousandAndFirst
 		public bool Rejected;
 		public int RejectionReason;
 		public string Fault = "";
+
+#if !TAF_TESTS
+		public bool WantFieldReflection => false;
+
+		public void Write(SerializationWriter Writer)
+		{
+			Writer.WriteNamedFields(this, typeof(KingdomResidentAdmissionOperation));
+		}
+
+		public void Read(SerializationReader Reader)
+		{
+			Reader.ReadNamedFields(this, typeof(KingdomResidentAdmissionOperation));
+		}
+#endif
 
 		public KingdomResidentAdmissionOperation Copy()
 		{

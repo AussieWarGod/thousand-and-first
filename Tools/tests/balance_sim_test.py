@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import unittest
@@ -10,9 +11,94 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SHARDS = {
+    "Growth/KingdomMaterialRules.WearMath.cs": ("MaxWearPercent", 60),
+    "Core/KingdomRules.RuinCondition.cs": ("RuinStandingFloorPercent", 25),
+}
+SOURCE_PROBE = r"""
+import builtins
+import contextlib
+import io
+import json
+import re
+import runpy
+import sys
+from pathlib import Path
+from unittest.mock import patch
+
+root, relative, mode, constant = sys.argv[1:]
+root = Path(root)
+target = root / relative
+original_open = builtins.open
+opened = set()
+
+def source_open(file, *args, **kwargs):
+    path = Path(file).resolve()
+    if path.suffix == ".cs":
+        opened.add(str(path.relative_to(root)))
+    if path == target and mode == "missing":
+        raise FileNotFoundError(2, "fixture source unavailable", str(target))
+    if path == target and mode == "malformed":
+        with original_open(file, *args, **kwargs) as stream:
+            body = stream.read()
+        body, changed = re.subn(r"(\b" + constant + r"\s*=\s*)[0-9]+;",
+                               r"\g<1>not_a_number;", body)
+        assert changed == 1, "malformed-source fixture did not replace one declaration"
+        return io.StringIO(body)
+    if path == target and mode == "initialized-bool":
+        with original_open(file, *args, **kwargs) as stream:
+            body = stream.read()
+        assert body.count("public bool WantFieldReflection => false;") == 1
+        assert body.count("public bool OwnsRole;") == 1
+        return io.StringIO(body.replace("public bool OwnsRole;", "public bool OwnsRole = true;"))
+    return original_open(file, *args, **kwargs)
+
+capacity = io.StringIO()
+with patch("builtins.open", side_effect=source_open):
+    model = runpy.run_path(str(root / "_notes" / "balance-sim.py"))
+    if mode == "initialized-bool":
+        with contextlib.redirect_stdout(capacity):
+            model["v1_authority_capacity"]()
+print(json.dumps({"opened": sorted(opened), "constants": model["SRC"],
+                  "capacity": capacity.getvalue()}))
+"""
 
 
 class BalanceSimulationTests(unittest.TestCase):
+    def source_probe(self, relative: str = "", mode: str = "", constant: str = "") -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, "-c", SOURCE_PROBE, str(ROOT), relative, mode, constant],
+            cwd=ROOT, capture_output=True, text=True, timeout=30, check=False,
+        )
+
+    def test_split_constant_shards_are_actually_read(self) -> None:
+        completed = self.source_probe()
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        observed = json.loads(completed.stdout)
+        for relative, (constant, expected) in SHARDS.items():
+            with self.subTest(source=relative):
+                self.assertIn(relative, observed["opened"])
+                self.assertEqual(expected, observed["constants"][constant])
+        self.assertEqual(60, observed["constants"]["RuinStandingCeilingPercent"])
+
+    def test_missing_or_malformed_split_constant_sources_refuse_without_fallback(self) -> None:
+        for relative, (constant, _) in SHARDS.items():
+            for mode in ("missing", "malformed"):
+                with self.subTest(source=relative, mode=mode):
+                    completed = self.source_probe(relative, mode, constant)
+                    self.assertNotEqual(0, completed.returncode)
+                    self.assertEqual("", completed.stdout)
+                    self.assertIn(relative, completed.stderr)
+                    self.assertIn("FileNotFoundError" if mode == "missing"
+                                  else f"constant {constant} not found", completed.stderr)
+
+    def test_expression_property_is_excluded_but_initialized_bool_field_is_counted(self) -> None:
+        completed = self.source_probe("Experience/KingdomExperienceState.Civic.cs", "initialized-bool")
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        capacity = json.loads(completed.stdout)["capacity"]
+        self.assertRegex(capacity, r"experience note total\s+86,811\b")
+        self.assertRegex(capacity, r"ACTIVE \+ RETIREMENT\s+2,093,340\b")
+
     def test_current_split_source_families_satisfy_every_balance_pin(self) -> None:
         completed = subprocess.run(
             [sys.executable, str(ROOT / "_notes" / "balance-sim.py")],

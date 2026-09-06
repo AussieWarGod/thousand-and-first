@@ -31,7 +31,7 @@ namespace ThousandAndFirst.Simulation.City
 			for (int i = 0; books != null && i < books.Count; i++)
 			{
 				KingdomCityBook book = books[i];
-				if (book == null || !book.TryRead(out KingdomCityState state,
+				if (book == null || !book.TryReadExact(out KingdomCityState state,
 					out KingdomCityFault _)) return false;
 				if (ReferenceEquals(book, intended)) intendedState = state;
 				if (!state.TryResidentIndex(Operation.ResidentId, out int at)) continue;
@@ -43,7 +43,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			if (rowMatches > 1 || intendedState == null) return false;
 
-			if (!System.Bindings.TryRead(out KingdomBindingTable bindings,
+			if (!System.Bindings.TryReadExact(out KingdomBindingTable bindings,
 				out KingdomCityFault _) || !bindings.TryAudit(out KingdomCityFault _)) return false;
 			bool hasBinding = bindings.TryGet(Operation.ResidentId,
 				KingdomBindingKind.Resident, out KingdomBinding held);
@@ -83,7 +83,7 @@ namespace ThousandAndFirst.Simulation.City
 					|| !SafePublish(System.Bindings, next,
 						"departure recovery registry")) return false;
 			}
-			ProjectCompatibility(System);
+			ProjectCompatibility(System, Exact: true);
 			return DepartureCarriersAbsent(System, intended, Operation.ResidentId);
 		}
 
@@ -108,15 +108,19 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		internal static bool DepartureCarriersAbsent(KingdomSystem System,
+			KingdomResidentDepartureOperation Operation)
+		{
+			return KingdomResidentDepartureRules.Valid(Operation) && System?.CurrentRealmId == Operation.RealmId
+				&& TryFindSettlementBook(System, Operation.SettlementId, out KingdomCityBook book)
+				&& DepartureCarriersAbsent(System, book, Operation.ResidentId);
+		}
+
+		internal static bool DepartureCarriersAbsent(KingdomSystem System,
 			KingdomCityBook Book, int ResidentId)
 		{
-			if (Book == null || System?.Bindings == null
-				|| !Book.TryRead(out KingdomCityState state, out KingdomCityFault _)
-				|| !System.Bindings.TryRead(out KingdomBindingTable bindings,
-					out KingdomCityFault _)) return false;
-			return !state.TryResidentIndex(ResidentId, out int _)
-				&& !bindings.TryGet(ResidentId, KingdomBindingKind.Resident,
-					out KingdomBinding _);
+			return System != null && KingdomIdentityRules.IsRealmId(System.CurrentRealmId)
+				&& KingdomResidentCarrierAbsenceRules.ProvesAbsent(Book, ResidentId, System.Bindings,
+					System.OwnedCityBooks(), 1 + System.NonSeatSettlementCount);
 		}
 	}
 }

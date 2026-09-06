@@ -7,35 +7,6 @@ namespace ThousandAndFirst
 	{
 		// --- Wear, and what mending it costs ---------------------------------------------------
 
-		/// <summary>
-		/// The most wear a work ever carries. Damage runs a work down and never stops it: a
-		/// settlement that comes home to a burnt mill finds it turning slowly, not gone. Nothing
-		/// here is ever reached by the calendar &mdash; wear comes from events (a raid, hard
-		/// running, temperamental certified tech) and from nothing else. Time is labour, never
-		/// decay.
-		/// </summary>
-		public const int MaxWearPercent = 60;
-
-		/// <summary>Wear a work carries after an event adds to what it already had, clamped both
-		/// ways. Nothing ever wears past <see cref="MaxWearPercent"/>.</summary>
-		public static int AddWear(int Wear, int Added)
-		{
-			int total = ((Wear > 0) ? Wear : 0) + ((Added > 0) ? Added : 0);
-			return (total > MaxWearPercent) ? MaxWearPercent : total;
-		}
-
-		/// <summary>How well a worn work runs, as a percentage of what it does whole. Never zero:
-		/// the floor is <c>100 - </c><see cref="MaxWearPercent"/>.</summary>
-		public static int ConditionPercent(int Wear)
-		{
-			int wear = (Wear > 0) ? Wear : 0;
-			if (wear > MaxWearPercent)
-			{
-				wear = MaxWearPercent;
-			}
-			return 100 - wear;
-		}
-
 		/// <summary>Wear at which a work stops being merely knocked about and starts being badly
 		/// used. Named because three things read the same ladder &mdash; the word, the adjective
 		/// the work wears in its own name, and the sentence its description carries &mdash; and

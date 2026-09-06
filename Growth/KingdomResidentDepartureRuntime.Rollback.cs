@@ -39,7 +39,8 @@ namespace ThousandAndFirst
 			}
 			if (marker == null && !RequireMarker)
 			{
-				System.ResidentDeparture = KingdomResidentDepartureRules.Empty(); return true;
+				if (!ExactRestoredAfterRemoval(System, Body, Operation)) return false;
+				return KingdomSubsidenceStepRuntime.TryRetireJournal(System, Operation, true, out Failure);
 			}
 			if (marker == null || !marker.Matches(Operation, Body))
 			{
@@ -55,7 +56,31 @@ namespace ThousandAndFirst
 			{
 				Failure = "departure rollback marker removal left residue"; return false;
 			}
-			System.ResidentDeparture = KingdomResidentDepartureRules.Empty(); return true;
+			if (!ExactRestoredAfterRemoval(System, Body, Operation))
+			{
+				Failure = "departure marker callback changed the restored resident"; return false;
+			}
+			return KingdomSubsidenceStepRuntime.TryRetireJournal(System, Operation, true, out Failure);
+		}
+
+		private static bool ExactRestoredAfterRemoval(KingdomSystem System, GameObject Body,
+			KingdomResidentDepartureOperation Operation)
+		{
+			return ReferenceEquals(System?.ResidentDeparture, Operation)
+				&& KingdomResidentDepartureRules.Valid(Operation) && GameObject.Validate(Body)
+				&& Body.IDIfAssigned == Operation.BodyObjectId && Body.CurrentZone?.ZoneID == Operation.ZoneId
+				&& Body.GetPart<r_KingdomResidentDeparture>() == null
+				&& System.CurrentRealmId == Operation.RealmId
+				&& System.SettlementIdForOwnedZone(Operation.ZoneId) == Operation.SettlementId
+				&& KingdomCitizenship.BelongsTo(System, Body)
+				&& KingdomResidentTransitionAuthority.CanPrepareResidentBodyDestruction(System,
+					Body, Operation.ResidentId, AuthorizationOf(Operation))
+				&& TryCaptureRoles(System, Body, Operation.ResidentId, Operation.SettlementId,
+					out KingdomNamedCookReceipt cook, out KingdomCivicOfficeReceipt office,
+					out KingdomPolityNamedFigureRecord polity, out string conclusion, out string _)
+				&& SameCook(Operation.PriorCook, cook) && SameOffice(Operation.PriorOffice, office)
+				&& SamePolity(Operation.PriorPolity, polity)
+				&& (Operation.PriorPolity == null || Operation.PolityConclusionRef == conclusion);
 		}
 
 		private static bool RollbackCook(KingdomSystem System, GameObject Body,

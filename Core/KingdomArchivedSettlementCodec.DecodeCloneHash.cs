@@ -48,13 +48,14 @@ namespace ThousandAndFirst
 						&& version != ExactLogisticsVersion
 						&& version != DefensiveReservationVersion
 						&& version != SemanticSelectionVersion
-							&& version != HappeningCursorVersion
-							&& version != DeliveryDomainVersion
-							&& version != CivicAuthorityVersion
-							&& version != FirstGuestVersion
-							&& version != PhysicalFirstGuestVersion
-							&& version != ArrivalCadenceVersion
-							&& version != CurrentVersion)
+						&& version != HappeningCursorVersion
+						&& version != DeliveryDomainVersion
+						&& version != CivicAuthorityVersion
+						&& version != FirstGuestVersion
+						&& version != PhysicalFirstGuestVersion
+						&& version != ArrivalCadenceVersion
+						&& version != ExpeditionResultVersion
+						&& version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);
 					if (!string.Equals(shape, Shape(typeof(KingdomSettlement), version),
@@ -65,6 +66,8 @@ namespace ThousandAndFirst
 					if (stream.Position != stream.Length)
 						throw new InvalidDataException("Archived settlement has trailing bytes.");
 					Value = (KingdomSettlement)decoded;
+					if (version >= SubsidenceStorageVersion && Value != null && Value.City == null)
+						throw new InvalidDataException("Archived settlement is missing its subsidence carrier.");
 					if (version < SemanticSelectionVersion)
 						StageHistoricalSemanticPlan(Value);
 					if (version < FirstGuestVersion
@@ -91,7 +94,7 @@ namespace ThousandAndFirst
 						&& !KingdomLifecycleRules.StageRaidMigrationFromV6(Value.LifecycleBook))
 						throw new InvalidDataException(
 							"Archived settlement v2 lifecycle could not stage raid migration.");
-					else if (version >= RaidVersion && version < CurrentVersion && Value != null
+					else if (version >= RaidVersion && version < ExpeditionResultVersion && Value != null
 						&& !KingdomLifecycleWireCodec.UpgradeArchivedRaidLedgerV1(
 							Value.LifecycleBook))
 						throw new InvalidDataException(

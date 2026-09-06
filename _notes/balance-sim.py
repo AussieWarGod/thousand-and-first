@@ -89,45 +89,9 @@ def source_family_paths(relative_directory: str, stem: str) -> tuple[str, ...]:
     return tuple(os.path.join(directory, name) for name in names)
 
 
-RULES_CS = tuple(
-    os.path.join(ROOT, "Core", name)
-    for name in (
-        "KingdomRules.cs",
-        "KingdomRules.Dish.cs",
-        "KingdomRules.Meals.cs",
-        "KingdomRules.FoodIndustry.cs",
-        "KingdomRules.Economy.cs",
-        "KingdomRules.Clock.cs",
-        "KingdomRules.Population.cs",
-        "KingdomRules.Policy.cs",
-        "KingdomRules.RaidsAndDefence.cs",
-        "KingdomRules.TradeAndGrowth.cs",
-        "KingdomRules.InheritanceSeal.cs",
-        "KingdomRules.InheritanceResolution.cs",
-        "KingdomRules.Scarcity.cs",
-        "KingdomRules.Districts.cs",
-        "KingdomRules.Catalogue.cs",
-        "KingdomRules.Style.cs",
-        "KingdomRules.RealmConflict.cs",
-        "KingdomRules.Spatial.cs",
-        "KingdomRules.Claims.cs",
-    )
-)
+RULES_CS = source_family_paths("Core", "KingdomRules")
 CROP_CS = source_family_paths("Growth", "KingdomCropRules")
-MAT_CS = tuple(
-    os.path.join(ROOT, "Growth", name)
-    for name in (
-        "KingdomMaterialRules.cs",
-        "KingdomMaterialRules.Clearance.cs",
-        "KingdomMaterialRules.Walls.cs",
-        "KingdomMaterialRules.Refining.cs",
-        "KingdomMaterialRules.Capability.cs",
-        "KingdomMaterialRules.Bits.cs",
-        "KingdomMaterialRules.Exotics.cs",
-        "KingdomMaterialRules.Infrastructure.cs",
-        "KingdomMaterialRules.Wear.cs",
-    )
-)
+MAT_CS = source_family_paths("Growth", "KingdomMaterialRules")
 # The engine-coupled half of the yard, read only to PIN it. The arithmetic this model
 # reproduces for refining is COMPOSED there rather than in the rules file, and QB-29 was
 # exactly a line in there silently disagreeing with the rule it was meant to obey.
@@ -5054,7 +5018,7 @@ def v1_authority_capacity():
         assert closing > opening, "experience retirement row class is malformed: " + class_name
         return tuple(re.findall(
             r"^\s*public\s+([A-Za-z_][A-Za-z0-9_]*)\s+([A-Za-z_][A-Za-z0-9_]*)"
-            r"(?:\s*=.*)?;", source[opening + 1:closing], re.MULTILINE))
+            r"(?:\s*=(?!>).*)?;", source[opening + 1:closing], re.MULTILINE))
 
     enum_sources = "\n".join(read_source(os.path.join(ROOT, relative)) for relative in (
         "Experience/KingdomExperienceState.Civic.cs",

@@ -783,9 +783,14 @@ PY
 	git cat-file blob "$PRIVATE_COMMIT:workshop.json" > "$CANDIDATE_WORKSHOP"
 	assert_scratch_workspace "after candidate Workshop extraction"
 	python3 "$METADATA" workshop test "$CANDIDATE_MANIFEST" "$CANDIDATE_WORKSHOP"
-	[ "$(python3 "$METADATA" workshop-id "$CANDIDATE_WORKSHOP")" = \
-		"$(python3 "$METADATA" workshop-id "$BUILD_DIR/workshop.json")" ] || {
-		echo "release Workshop ID differs from subscribed private candidate" >&2; return 1; }
+	if [ "$MODE" = "alpha" ]; then
+		python3 "$METADATA" alpha-workshop-binding "$ALPHA_CANDIDATE_FILE" \
+			"$CANDIDATE_WORKSHOP" "$BUILD_DIR/workshop.json"
+	else
+		[ "$(python3 "$METADATA" workshop-id "$CANDIDATE_WORKSHOP")" = \
+			"$(python3 "$METADATA" workshop-id "$BUILD_DIR/workshop.json")" ] || {
+			echo "release Workshop ID differs from subscribed private candidate" >&2; return 1; }
+	fi
 	assert_scratch_workspace "after candidate metadata validation"
 }
 

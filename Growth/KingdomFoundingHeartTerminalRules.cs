@@ -98,6 +98,15 @@ namespace ThousandAndFirst
 				&& ActiveIdAbsent && ExactIdentityTombstone;
 		}
 
+		public static bool CanUseRecordedRemoval(KingdomFoundingHeartTerminalPlan Plan,
+			bool ExactFinalWitness, bool LivePredecessorAbsent,
+			KingdomPhysicalLookupState TombstoneState)
+		{
+			return Valid(Plan) && Plan.Phase >= KingdomFoundingHeartTerminalPhase.Removed
+				&& ExactFinalWitness && LivePredecessorAbsent
+				&& TombstoneState == KingdomPhysicalLookupState.Absent;
+		}
+
 		/// <summary>Add return/throw is not authority; exact landed topology and custody are.</summary>
 		public static bool ExactAddCut(bool CallbackReturned, bool ReturnedExact,
 			bool ExactEndpoint, bool CanonicalRootPresent)

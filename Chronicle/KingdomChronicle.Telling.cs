@@ -73,13 +73,18 @@ namespace ThousandAndFirst
 		/// </summary>
 		private static int DrawOutsiderRoll(KingdomSystem System)
 		{
+			return DrawOutsiderRoll(System, The.Game.TimeTicks);
+		}
+
+		private static int DrawOutsiderRoll(KingdomSystem System, long AtTick)
+		{
 			int fullRange = KingdomRules.OutsiderLeads.Length * KingdomRules.OutsiderTails.Length;
 			// The ordinal is the tick the event happened on, not the entry count. The register
 			// is trimmed to MaxEntries, so its count stops rising at 200 and every later entry
 			// would key identically and drift identically. Ticks only ever go forward. Two
 			// events recorded on the same tick share a drift, which is a cosmetic tie and not
 			// the silent single-value collapse the count produced.
-			ulong ordinal = (ulong)The.Game.TimeTicks;
+			ulong ordinal = (ulong)AtTick;
 			string settlementId = SettlementId(System);
 			SemanticEventKey key;
 			KernelFaultCode fault;

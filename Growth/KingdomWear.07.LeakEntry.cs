@@ -27,12 +27,13 @@ namespace ThousandAndFirst
 
 		private static void Leak(KingdomSystem System, KingdomSurvey Survey, GameObject Work, r_KingdomWear Wear, long TimeTicks)
 		{
-			RetireFoodLeakReceipt(Work, Wear);
+			if (Wear == null || Wear.LoadFailed) return;
 			if (Wear.LifecycleQuarantined)
 			{
 				TellWearQuarantine(System, Work, Wear);
 				return;
 			}
+			RetireFoodLeakReceipt(Work, Wear);
 			if ((KingdomWearLeakPhase)Wear.LeakPhase != KingdomWearLeakPhase.None)
 			{
 				ContinueBoundLeak(System, Survey, Work, Wear);

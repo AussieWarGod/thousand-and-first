@@ -177,12 +177,17 @@ namespace ThousandAndFirst
 				&& !ValidCivicAuthority((Simulation.City.KingdomCityBook)Value))
 				throw new InvalidDataException(
 					"Archived settlement civic authority is invalid for its version.");
+			if (SchemaVersion >= SubsidenceStorageVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& !((Simulation.City.KingdomCityBook)Value).HasValidSubsidenceStorage())
+				throw new InvalidDataException("Archived city subsidence storage is invalid.");
 			FieldInfo[] fields = Fields(Type, SchemaVersion);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				if (Type == typeof(Simulation.City.KingdomCityBook)
 					&& (string.Equals(fields[i].Name, "ExtensionModel", StringComparison.Ordinal)
 						|| string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
+						|| string.Equals(fields[i].Name, "SubsidenceModel", StringComparison.Ordinal)
 						|| string.Equals(fields[i].Name, "ExtensionHappeningCursors", StringComparison.Ordinal)))
 				{
 					int maximum = string.Equals(fields[i].Name, "ExtensionModel",
@@ -190,7 +195,9 @@ namespace ThousandAndFirst
 						? Simulation.City.KingdomCityBook.MaxExtensionModelChars
 						: string.Equals(fields[i].Name, "HappeningModel", StringComparison.Ordinal)
 							? Simulation.City.KingdomCityBook.MaxHappeningModelChars
-							: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
+							: string.Equals(fields[i].Name, "SubsidenceModel", StringComparison.Ordinal)
+								? KingdomSubsidenceStepCodec.MaxWireChars
+								: Simulation.City.KingdomCityBook.MaxExtensionHappeningCursorChars;
 					WriteString(Writer, (string)fields[i].GetValue(Value), maximum);
 					continue;
 				}
@@ -211,8 +218,8 @@ namespace ThousandAndFirst
 					fieldValue = SchemaVersion < PhysicalHappeningVersion ? 1 : 2;
 				if (Type == typeof(Simulation.City.KingdomCityBook)
 					&& string.Equals(fields[i].Name, "SchemaVersion", StringComparison.Ordinal)
-					&& SchemaVersion < SemanticSelectionVersion)
-					fieldValue = 2;
+					&& SchemaVersion < SubsidenceStorageVersion)
+					fieldValue = SchemaVersion < SemanticSelectionVersion ? 2 : 3;
 				if (Type == typeof(KingdomGrowthBook)
 					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
 					&& SchemaVersion < PhysicalFirstGuestVersion)

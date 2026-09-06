@@ -61,7 +61,9 @@ namespace ThousandAndFirst.Tests
 		/// eight uncovered first versions, and the recorded realm-archive v8, polity v9, realm
 		/// job-segment v6, and archived-settlement v18 bumps add five more; no fixture was
 		/// invented, so the truthful total rises by thirteen.</para>
-		private const int ExpectedHardGaps = 130;
+		/// <para>Realm archive v9 adds one unproven historical full-envelope version. The
+		/// retained nested v18 authority artifact is not an outer-envelope fixture.</para>
+		private const int ExpectedHardGaps = 131;
 
 		/// <summary>Prior fifty-one ports plus the eight fan-in nested/journal ports.</summary>
 		private const int ExpectedPorts = 59;

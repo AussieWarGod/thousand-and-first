@@ -18,9 +18,25 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
-## Current hardening checkpoint
+## Current isolated draft census
 
-`Tools/check-structure.py --json` currently reports 2951 staged production C# files and 420,997
+The current isolated draft census reports 3045 staged production C# files and 431,086 physical lines,
+with 0 at or above the strict 300-line cap. It contains 1414 files with direct `XRL` imports;
+0 of those exceed the line limit. Exact staged source inventory digest:
+`ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`.
+The generated staging list contains 3076 files; it does not prove current
+installed or subscribed content. Strict four-mode compilation and ABI checks pass against inputs
+`987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`;
+full suites pass 13,498 Taf / 4,885 Portable cases with zero skips;440 Python Tools tests pass.
+Historical nested archive and103 retained real serializer cases pass;
+full historical-save and ordinary-gameplay acceptance remain open.
+The exact-inventory semantic review is now bound in `docs/STRUCTURE_REVIEW.json`; the structure
+release gate passes. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) retain earlier
+review provenance and open functional limits. This is not the complete release gate.
+
+## Retained beta hardening checkpoint — `7d331fe8`
+
+At this earlier checkpoint, `Tools/check-structure.py --json` reported 2951 staged production C# files and 420,997
 physical lines. Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
 `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. The census reports
@@ -44,20 +60,23 @@ open. Thirteen managed cases test this bounded completion contract, not native d
 ruin effects. Development-only fixtures remain excluded; Claude's raid-custody patch stays
 separate. These are source/engine-contract reviews, not native playtests.
 
-No staged production source breaches the strict physical-line cap. This clears the mechanical
-line debt; the exact-inventory semantic review required for release is supplied by `docs/STRUCTURE_REVIEW.json`, bound to the digest below.
+At that checkpoint, no staged production source breached the strict physical-line cap. This cleared
+its mechanical line debt; `docs/STRUCTURE_REVIEW.json` retains the exact-inventory semantic review
+bound to its `f9815fff…` digest above, not the current isolated draft.
 
-The current hardening sequence semantically decomposed 144 additional oversized authorities,
+That hardening sequence semantically decomposed 144 additional oversized authorities,
 bringing the cumulative total to 154. That is 25 more decompositions since checkpoint `2cb97fc`,
 19 more than checkpoint `d3fc4b9`, 16 more than checkpoint `b049c17`, and 13 more than hosted
 checkpoint `1c2d619`.
 [ARCHITECTURE.md](ARCHITECTURE.md#split-authority-map) maps the logical authorities to
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
-do not create a second authority. This is measurable progress, not release signoff: 0 line-cap
-failures remain, and `docs/STRUCTURE_REVIEW.json` binds the exact-inventory semantic review to this
-digest. Any staged source change invalidates this digest and requires a new census and review
+do not create a second authority. That checkpoint was measurable progress, not release signoff:
+0 line-cap failures remained, and `docs/STRUCTURE_REVIEW.json` binds its exact-inventory semantic
+review to that retained digest. Any staged source change invalidates the binding and requires a new census and review
 binding.
+
+## Release review contract
 
 Automation cannot decide whether a type owns one coherent responsibility or whether its engine,
 serialization, public-API, and third-party seams use suitable protocols. Release mode therefore

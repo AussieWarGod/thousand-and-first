@@ -133,40 +133,49 @@ namespace ThousandAndFirst
 				|| cell == null || FindGlobalFoundingHeartId(finalId, out _, out _)
 					!= KingdomPhysicalLookupState.Absent
 				|| The.Game?.ObjectGameState.ContainsKey(FoundingHeartFinalRootKey(plan)) == true)
-				return false;
-			try { Final = GameObject.Create(Context.Stake.Blueprint); }
-			catch { return false; }
-			if (!GameObject.Validate(Final)) return false;
+				return HeartRefused("terminal: predecessor or root preflight");
+			FoundingHeartAllocationFence fence = new FoundingHeartAllocationFence(Z, Context);
+			if (!fence.Current) return HeartRefused("terminal: allocation authority");
+			try { Final = fence.Create(Context.Stake.Blueprint); }
+			catch { return HeartRefused("terminal: final factory threw"); }
+			if (!UnplacedFoundingHeartOutput(Final, Context.Stake.Blueprint) || !fence.Current)
+				return HeartRefused("terminal: final factory or custody");
 			bool published = false;
 			try
 			{
 				Final.IDIfAssigned = finalId;
-				if (!KingdomArchitectureStamper.TryCopyFrozenOwner(Predecessor, Final, out _)
-					|| !KingdomPurpose.CopyCommit(Predecessor, Final)) return false;
+				if (!KingdomArchitectureStamper.TryCopyFrozenOwner(Predecessor, Final, out string copyFailure))
+					return HeartRefused("terminal: layout copy: " + copyFailure);
+				if (!KingdomPurpose.CopyCommit(Predecessor, Final)) return HeartRefused("terminal: purpose copy");
 				KingdomPlotRules.PlotRect foot = new KingdomPlotRules.PlotRect(Context.Stake.FootprintX1,
 					Context.Stake.FootprintY1, Context.Stake.FootprintX2, Context.Stake.FootprintY2);
 				PrepareFinalBuilding(Final, Context.Entry, null, plan.PlotId, Context.Rect, foot,
 					(KingdomPlotRules.RoofState)Context.Stake.Roof, null, null, null, null,
-					DisplayName ?? "plot: " + Context.Stake.DisplayName, CompleteTick, PlanQuote, true,
+					DisplayName ?? Context.Stake.DisplayName, CompleteTick, PlanQuote, true,
 					Yielding, Context.Stake.Defence, Context.Stake.Staff,
 					Context.Stake.ThresholdManning);
 				if (!KingdomFoundingHeartTerminalRules.TryCreate(plan.TransactionId,
 					KingdomFoundingHeartRules.CompletionSeal(plan), plan.ZoneId,
 					KingdomFoundingHeartRules.SlotId(plan, KingdomFoundingHeartRules.WorksSlot),
 					finalId, Context.Stake.Blueprint, Context.Stake.BuildKey, plan.PlotId,
-					cell.X, cell.Y, out Terminal)) return false;
+					cell.X, cell.Y, out Terminal)) return HeartRefused("terminal: authority plan");
 				string encoded = KingdomFoundingHeartTerminalRules.Encode(Terminal);
 				Final.SetStringProperty(FoundingHeartTerminalProperty, encoded);
-				if (!ExactPreparedFoundingHeartFinal(Final, Z, Context, Terminal)
-					|| !RootFoundingHeartFinal(plan, Final)) return false;
+				if (!fence.Current) return HeartRefused("terminal: prepared allocation authority");
+				if (!ExactPreparedFoundingHeartFinal(Final, Z, Context, Terminal))
+					return HeartRefused("terminal: prepared final shape");
+				if (!RootFoundingHeartFinal(plan, Final)) return HeartRefused("terminal: saved root");
 				published = true;
-				if (!PublishFoundingHeartTerminal(Z, Final, Context, Terminal, null)) return false;
+				if (!PublishFoundingHeartTerminal(Z, Final, Context, Terminal, null))
+					return HeartRefused("terminal: mirrored authority");
 				Predecessor.SetStringProperty(FinalOutputIdProperty, finalId);
 				return Predecessor.GetStringProperty(FinalOutputIdProperty) == finalId;
 			}
 			finally
 			{
-				if (!published && GameObject.Validate(Final)) RemoveCreatedWorks(Final, Z);
+				if (!published && fence.Current && UnplacedFoundingHeartOutput(Final, Context.Stake.Blueprint)
+					&& ExactFoundingHeartFinalObjectGameState(plan, Final, false)
+					&& Terminal != null && ExactPreparedFoundingHeartFinal(Final, Z, Context, Terminal)) RemoveCreatedWorks(Final, Z);
 			}
 		}
 
@@ -180,8 +189,9 @@ namespace ThousandAndFirst
 				|| !ExactFoundingHeartFinalShape(Final, Context.Stake)
 				|| Final.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Terminal.BuildKey
 				|| Final.GetStringProperty(PlotIdProperty) != Terminal.PlotId
-					|| !TryReadRect(Final, out KingdomPlotRules.PlotRect rect)
+					|| !TryReadStampedRect(Final, out KingdomPlotRules.PlotRect rect)
 					|| !SameRect(rect, Context.Rect)
+					|| !KingdomPlotRules.ValidZoneRect(rect, Z.Width, Z.Height)
 					|| !ExactFoundingHeartInt(Final, FootX1Property, Context.Stake.FootprintX1)
 					|| !ExactFoundingHeartInt(Final, FootY1Property, Context.Stake.FootprintY1)
 					|| !ExactFoundingHeartInt(Final, FootX2Property, Context.Stake.FootprintX2)

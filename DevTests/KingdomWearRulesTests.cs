@@ -69,7 +69,7 @@ namespace ThousandAndFirst.Tests
 			AssertEnum(typeof(KingdomWearLeakPhase), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 			AssertEnum(typeof(KingdomWearMutationAction), 0, 1, 2, 3);
 			AssertEnum(typeof(KingdomWearClockAction), 0, 1, 2, 3);
-			AssertEnum(typeof(KingdomWearRules.WearCause), 0, 1, 2, 3);
+			AssertEnum(typeof(KingdomWearRules.WearCause), 0, 1, 2, 3, 4);
 			AssertEnum(typeof(KingdomWearRules.WearChannel), 1, 2, 3);
 			AssertEnum(typeof(KingdomWearRules.RepairVerdict), 0, 1, 2, 3, 4);
 			AssertEnum(typeof(KingdomWearRules.LeakKind), 1, 2, 3);
@@ -96,6 +96,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Cause.Raid, KingdomWearRules.RaidDamageIncrement)]
 		[TestCase(Cause.HardRunning, KingdomWearRules.HardRunDamageIncrement)]
 		[TestCase(Cause.TemperamentalTech, KingdomWearRules.TemperamentalDamageIncrement)]
+		[TestCase(Cause.Subsidence, 0)] // Its frozen rung owns the measured increment.
 		public void IncrementFor_MatchesTheNamedConstantPerCause(Cause cause, int expected)
 		{
 			Assert.AreEqual(expected, KingdomWearRules.IncrementFor(cause));
@@ -110,6 +111,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Cause.Raid)]
 		[TestCase(Cause.HardRunning)]
 		[TestCase(Cause.TemperamentalTech)]
+		[TestCase(Cause.Subsidence)]
 		public void CauseVerb_NeverEmptyForARealCause(Cause cause)
 		{
 			Assert.IsFalse(string.IsNullOrEmpty(KingdomWearRules.CauseVerb(cause)));
@@ -1026,7 +1028,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomWearLogicalSource.Read();
 			Assert.AreEqual(1, Count(source, "[Serializable]"));
-			Assert.AreEqual(1, Count(source, "public class r_KingdomWear : IPart"));
+			Assert.AreEqual(1, Count(source, "public partial class r_KingdomWear : IPart"));
+			Assert.AreEqual(2, Count(source, "public partial class r_KingdomWear"));
 			Assert.AreEqual(1, Count(source,
 				"public override void Write(GameObject Basis, SerializationWriter Writer)"));
 			Assert.AreEqual(1, Count(source,

@@ -137,7 +137,7 @@ namespace ThousandAndFirst
 					lifecycle?.Growth?.HeartbeatOp == null ? now : oldHeartbeat,
 					lifecycle?.Growth?.FetchOp == null ? now : oldFetch,
 					now, lifecycle?.Growth?.MillOp == null ? now : oldFood,
-					lifecycle?.Growth?.HeartbeatOp == null ? now : oldSubsidence,
+					oldSubsidence, // Only the subsidence option/step lane may settle debt and reanchor.
 					semanticActive ? oldSemantic : now, now, arrival, guest, guestDepart,
 					notable, notableDepart, now, now, now, extensionHappeningCursors,
 					extensionModel, workRan, workNext, clockNext, lifecyclePlan);

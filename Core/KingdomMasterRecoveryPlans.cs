@@ -65,7 +65,7 @@ namespace ThousandAndFirst
 				if (growth.HeartbeatOp == null) growth.LastHeartbeatTick = Now;
 				if (growth.FetchOp == null) growth.LastFetchTick = Now;
 				if (growth.MillOp == null) growth.LastMillTick = Now;
-				if (growth.HeartbeatOp == null) growth.LastSubsidenceTick = Now;
+				// Subsidence owns its checkpoint across master resume, independently of heartbeat.
 				if (growth.DeliveryOp == null) growth.LastDeliveryTick = Now;
 				if (growth.DepartureOp == null) growth.LastDepartureTick = Now;
 				if (growth.ArrivalOp == null && growth.ArrivalCandidate == null)

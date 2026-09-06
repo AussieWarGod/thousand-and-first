@@ -114,6 +114,7 @@ namespace ThousandAndFirst.Harness
 		internal static void Autostart(MainMenu Menu)
 		{
 			if (AutostartConsumed || Menu == null) return;
+			if (KingdomScenarioLoadEntry.TryStart()) { AutostartConsumed = true; return; }
 			if (!KingdomScenarioScript.Present()) return;
 			AutostartConsumed = true;
 			KingdomScenarioJournal.Append("AUTOSTART", true,

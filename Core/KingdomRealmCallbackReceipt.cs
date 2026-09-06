@@ -19,6 +19,15 @@ namespace ThousandAndFirst
 		public string ObservedEffect;
 		public int BeforeStamp = int.MinValue;
 		public int AfterStamp = int.MinValue;
+		/// <summary>Settlement-wire version the intent cut (BeforeGraph, BeforeArchiveGraph, and
+		/// the AfterArchiveGraph copy of it) was hashed under. 0 means unresolved provenance and is
+		/// never promoted to a guess; a pinned value is 1..KingdomArchivedSettlementCodec.CurrentVersion.
+		/// Not part of any authority hash stream.</summary>
+		public int IntentSettlementSchema;
+		/// <summary>Settlement-wire version the settle cut (AfterGraph) was hashed under. 0 means
+		/// unresolved; receipts that never settled must leave it 0, and legacy 0 is preserved.
+		/// Not part of any authority hash stream.</summary>
+		public int SettledSettlementSchema;
 
 		public bool Validate()
 		{

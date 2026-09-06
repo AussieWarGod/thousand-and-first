@@ -10,38 +10,6 @@ namespace ThousandAndFirst
 		// 4. The slide.
 		// ==================================================================================
 
-		/// <summary>
-		/// World days between one step of a slide and the next. Coarse on purpose: the settlement
-		/// is not metering out a settler an hour, it is losing a household every few days, and a
-		/// founder who walks in mid-slide should be able to count what has gone.
-		/// </summary>
-		public const int StepDays = 4;
-
-		/// <summary>
-		/// How many settlers one step takes, by what the settlement is. A city sheds faster than a
-		/// steading because there are more people in it with nothing holding them: the step is the
-		/// rung's ordinal plus one, so a City loses five where a Camp loses one, and the slide
-		/// slows of its own accord as the place gets smaller.
-		/// </summary>
-		public static int SettlersPerStep(GrowthStage Stage)
-		{
-			int index = (int)Stage;
-			if (index < 0)
-			{
-				index = 0;
-			}
-			if (index > (int)GrowthStage.City)
-			{
-				index = (int)GrowthStage.City;
-			}
-			return index + 1;
-		}
-
-		/// <summary>Hard stop on the step loop. A slide can never need more steps than there are
-		/// settlers to lose plus rungs to fall, and this is comfortably past both; it exists so a
-		/// nonsense elapsed can never spin.</summary>
-		public const int MaxSteps = KingdomRules.MaxPopulation + 8;
-
 		/// <summary>One place along a slide where the settlement stopped being one thing and
 		/// became another. These are what the chronicle samples: the whole trajectory is a
 		/// hundred small departures, and the story in it is the four rungs.</summary>

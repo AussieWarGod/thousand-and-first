@@ -67,42 +67,6 @@ namespace ThousandAndFirst
 		/// boundary.</summary>
 		public const string OptionStatePrefix = "r_TAF_SubsidenceOption_v1:";
 
-		private static KingdomElapsedOptionDecision ObserveOption(KingdomSystem System,
-			long Now)
-		{
-			string settlementId = KingdomChronicle.SettlementId(System);
-			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId))
-			{
-				return KingdomElapsedOptionRules.Observe(
-					KingdomElapsedOptionRecord.Unobserved, Enabled,
-					System?.MasterAppliedResumeToken ?? 0L, Now);
-			}
-			string key = OptionStatePrefix + settlementId;
-			string encoded = The.Game.GetStringGameState(key, "");
-			KingdomElapsedOptionRecord prior;
-			bool decoded = KingdomElapsedOptionRules.TryDecode(encoded, out prior);
-			if (!decoded) prior = KingdomElapsedOptionRecord.Unobserved;
-			KingdomElapsedOptionDecision decision = KingdomElapsedOptionRules.Observe(prior,
-				Enabled, System.MasterAppliedResumeToken, Now);
-			if (!decision.Valid)
-			{
-				decision = KingdomElapsedOptionRules.Observe(
-					KingdomElapsedOptionRecord.Unobserved, Enabled,
-					System.MasterAppliedResumeToken, Now);
-			}
-			return decision;
-		}
-
-		private static void CommitOption(KingdomSystem System,
-			KingdomElapsedOptionRecord Record)
-		{
-			string settlementId = KingdomChronicle.SettlementId(System);
-			if (The.Game == null || !KingdomIdentityRules.IsSettlementId(settlementId)) return;
-			string next = KingdomElapsedOptionRules.Encode(Record);
-			if (next != null)
-				The.Game.SetStringGameState(OptionStatePrefix + settlementId, next);
-		}
-
 		/// <summary>
 		/// What this settlement's finished works physically supply between them.
 		/// <para>

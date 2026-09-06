@@ -210,7 +210,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryRetireAccedingHost", repair);
 			StringAssert.Contains("KingdomPolityResidentTransitionCause.Accession", repair);
 			StringAssert.Contains("TryRetireAccedingHost", succession);
-			StringAssert.Contains("KingdomPolityResidentTransitionCause.Death", death);
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", death);
+			string roles = Read("Growth/KingdomResidentDeathRuntime.Roles.cs");
+			StringAssert.Contains("TryConcludeDeedResident", roles);
+			StringAssert.Contains("KingdomPolityFigurePhase.Dead", roles);
+			StringAssert.Contains("figure.ConclusionRef != conclusion || figure.ResidentId != 0", roles);
 		}
 
 		[Test]
@@ -282,7 +286,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("DepartureCarriersAbsent", carriers);
 			StringAssert.Contains("System.Ledger.Departures == Operation.DeparturesBefore",
 				effects);
-			StringAssert.Contains("KingdomChronicle.RecordOnce", effects);
+			StringAssert.Contains("TrySettleChronicle(System, Operation)", effects);
+			StringAssert.Contains("KingdomChronicle.RecordOnce", Read("Growth/KingdomResidentDepartureRuntime.Capacity.cs"));
 			Assert.Greater(begin.IndexOf("System.ResidentDeparture = operation",
 				StringComparison.Ordinal), 0);
 			int recover = semantic.IndexOf("TryRecoverPending(this, Z",

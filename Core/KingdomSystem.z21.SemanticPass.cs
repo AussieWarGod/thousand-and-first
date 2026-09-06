@@ -17,6 +17,8 @@ namespace ThousandAndFirst
 			}
 			if (!ClaimedZones.Contains(Z.ZoneID))
 				return AttendFormerClaimCustody(Z);
+			if (!KingdomResidentDeathRuntime.TryRecoverPending(this, out string deathFailure))
+			{ KingdomLog.Log("witnessed death: semantic pass waits (" + deathFailure + ")"); return false; }
 			// A committed resident departure is realm-singular. Recover it on its exact ground
 			// before check-in or any later subsystem can observe and mutate a torn identity.
 			if (!KingdomResidentDepartureRuntime.TryRecoverPending(this, Z,
@@ -46,6 +48,11 @@ namespace ThousandAndFirst
 			}
 			using (KingdomSurvey.PassScope surveyScope = survey.BindPass())
 			{
+			if (!KingdomSubsidenceStepRuntime.TryBeforePass(this, Z, survey, out string rungFailure))
+			{
+				if (rungFailure != null) KingdomLog.Log("subsidence: recovery waits (" + rungFailure + ")");
+				return false;
+			}
 			// The ledger is an unread report, not one pass's scratch buffer. It is cleared only
 			// after the founder opens the report in the Charter; stationary daily reconciliation
 			// therefore appends instead of erasing yesterday's news.

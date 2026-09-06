@@ -25,6 +25,9 @@ namespace ThousandAndFirst
 				Failure = "current immutable realm identity cannot be proved";
 				return false;
 			}
+#if !TAF_TESTS
+			if (!KingdomResidentDeathRuntime.CanProceed(System, out Failure)) return false;
+#endif
 			if (ClosedTick < 0L || !BoundedText(ExileDeed))
 			{
 				Failure = "realm archive tick or deed is not bounded";
@@ -123,6 +126,9 @@ namespace ThousandAndFirst
 			if (!candidate.TryRefreshDirectionalStandingDigest(out Failure) ||
 				!candidate.Validate(out Failure) ||
 				!candidate.CurrentGraphMatches(System, out Failure)) return false;
+#if !TAF_TESTS
+			if (!KingdomResidentDeathRuntime.CanProceed(System, out Failure)) return false;
+#endif
 			Archive = candidate;
 			return true;
 		}

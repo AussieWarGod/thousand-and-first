@@ -139,7 +139,7 @@ namespace ThousandAndFirst
 
 		private static bool TryDeclareCore(KingdomSystem System, string EventId, string Text,
 			string AuthoredOutsiderText, bool Accomplishment, string MuralText,
-			out KingdomChronicleDeclaration Declaration)
+			out KingdomChronicleDeclaration Declaration, long? AtTick = null)
 		{
 			Declaration = null;
 			if (System == null || The.Game == null || System.ChronicleEntries == null ||
@@ -155,15 +155,22 @@ namespace ThousandAndFirst
 			string outsider;
 			try
 			{
-				official = "On the " + XRL.World.Calendar.GetDay() + " of "
-					+ XRL.World.Calendar.GetMonth() + ", " + XRL.World.Calendar.GetYear()
-					+ " AR, " + Text + ".";
+				official = AtTick.HasValue
+					? "On the " + XRL.World.Calendar.GetDay(AtTick.Value) + " of "
+						+ XRL.World.Calendar.GetMonth(AtTick.Value) + ", " + XRL.World.Calendar.GetYear(AtTick.Value)
+						+ " AR, " + Text + "."
+					: "On the " + XRL.World.Calendar.GetDay() + " of "
+						+ XRL.World.Calendar.GetMonth() + ", " + XRL.World.Calendar.GetYear()
+						+ " AR, " + Text + ".";
 				outsider = KingdomRules.ComposeOutsider(KingdomRules.ToThirdPerson(
-					AuthoredOutsiderText ?? Text, FounderName()), DrawOutsiderRoll(System));
+					AuthoredOutsiderText ?? Text, FounderName()), AtTick.HasValue
+						? DrawOutsiderRoll(System, AtTick.Value) : DrawOutsiderRoll(System));
 			}
 			catch { return false; }
 			string fingerprint;
-			bool fingerprinted = AuthoredOutsiderText == null
+			bool fingerprinted = AtTick.HasValue
+				? TryAtFingerprint(System, EventId, Text, AtTick.Value, out fingerprint)
+				: AuthoredOutsiderText == null
 				? KingdomChronicleReceiptRules.TryFingerprint(EventId, Text, Accomplishment,
 					MuralText, out fingerprint)
 				: KingdomChronicleReceiptRules.TryDisputedFingerprint(EventId, official,

@@ -73,11 +73,15 @@ namespace ThousandAndFirst
 		/// independent extension-happening cursors; v12 predates the expanded construction-delivery
 		/// authority and phase domain; v13 predates city-local cook and moot authority; v14 predates
 		/// first-guest correspondence authority; v15 predates physical first-guest evidence; v16
-		/// predates fixed-rate arrival cadence authority; v17 predates exact expedition-result outboxes.
+		/// predates fixed-rate arrival cadence authority; v17 predates exact expedition-result outboxes;
+		/// v18 predates the versioned subsidence carrier.
 		/// Historical readers retain exactly those surfaces
 		/// rather than interpreting new default fields.</summary>
 		private static bool SchemaField(Type Type, string Name, int SchemaVersion)
 		{
+			if (SchemaVersion < SubsidenceStorageVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& string.Equals(Name, "SubsidenceModel", StringComparison.Ordinal)) return false;
 			if (Type == typeof(KingdomLifecycleBook))
 			{
 				if (SchemaVersion == LegacyVersion
@@ -242,57 +246,6 @@ namespace ThousandAndFirst
 					|| string.Equals(Name, "ExpeditionDeedFigureRefs", StringComparison.Ordinal))) return false;
 			return true;
 		}
-
-		private static bool HistoricalPhysicalFirstGuestOpportunity(
-			KingdomGrowthFirstGuestOpportunity Value, int SchemaVersion)
-		{
-			return SchemaVersion >= PhysicalFirstGuestVersion || Value == null
-				|| Value.RulesVersion == 1
-					&& Value.GuestPhase == KingdomGrowthFirstGuestGuestPhase.None
-					&& Value.GuestTerminalState == KingdomGrowthFirstGuestTerminalState.None
-					&& Value.GuestActionTick == -1L && Value.GuestActionReceiptId == null
-					&& Value.GuestTerminalTick == -1L && Value.GuestTerminalReceiptId == null;
-		}
-
-		/// <summary>Versions v9-v12 carry these integer columns, but only v13 may interpret the
-		/// append-only construction authority and landed phase. Validate the paired column domain at
-		/// the reflected object boundary because their declared type is <c>List&lt;int&gt;</c>.</summary>
-		private static bool ValidDeliveryDomain(
-			Simulation.City.KingdomJobRegistry Value, int SchemaVersion)
-		{
-			if (Value == null || Value.JobIds == null || Value.DeliveryPhases == null
-				|| Value.DeliveryCargoAuthorityKinds == null
-				|| Value.DeliveryPhases.Count != Value.JobIds.Count
-				|| Value.DeliveryCargoAuthorityKinds.Count != Value.JobIds.Count) return false;
-			int maximumAuthority = SchemaVersion < DeliveryDomainVersion
-				? (int)Simulation.City.KingdomDeliveryCargoAuthority.CarryBookManifest
-				: (int)Simulation.City.KingdomDeliveryCargoAuthority.ConstructionInput;
-			int maximumPhase = SchemaVersion < DeliveryDomainVersion
-				? (int)Simulation.City.KingdomDeliveryPhase.Quarantined
-				: (int)Simulation.City.KingdomDeliveryPhase.LandedAwaitingOwner;
-			for (int i = 0; i < Value.JobIds.Count; i++)
-				if (Value.DeliveryCargoAuthorityKinds[i] < 0
-					|| Value.DeliveryCargoAuthorityKinds[i] > maximumAuthority
-					|| Value.DeliveryPhases[i] < 0
-					|| Value.DeliveryPhases[i] > maximumPhase) return false;
-			return true;
-		}
-
-		private static bool ValidCivicAuthority(
-			Simulation.City.KingdomCityBook Value)
-		{
-			return Value != null && Value.NamedCook != null && Value.AssentingMoot != null
-				&& KingdomNamedCookRules.Validate(Value.NamedCook, out string _)
-				&& KingdomAssentingMootRules.Validate(Value.AssentingMoot, out string _);
-		}
-
-#if TAF_TESTS
-		internal static bool ValidDeliveryDomainForTests(
-			Simulation.City.KingdomJobRegistry Value, int SchemaVersion)
-		{
-			return ValidDeliveryDomain(Value, SchemaVersion);
-		}
-#endif
 
 	}
 }

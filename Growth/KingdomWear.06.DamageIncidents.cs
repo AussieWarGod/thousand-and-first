@@ -73,26 +73,36 @@ namespace ThousandAndFirst
 		private static bool ApplyDamageIncident(KingdomSystem System, GameObject Work,
 			KingdomWearRules.WearCause Cause, string IncidentId)
 		{
+			if (Cause == KingdomWearRules.WearCause.Subsidence
+				|| KingdomSubsidenceRungRuntime.BlocksWork(Work)) return false;
 			r_KingdomWear wear = Work.RequirePart<r_KingdomWear>();
-			if ((KingdomWearIncidentPhase)wear.IncidentPhase == KingdomWearIncidentPhase.None
-				&& HasActiveRepair(Work, out _)) return true;
+			if (KingdomSubsidenceRungRuntime.BlocksWork(Work)
+				|| wear == null || wear.ParentObject != Work
+				|| !ReferenceEquals(Work.GetPart<r_KingdomWear>(), wear)) return false;
+			if (wear.LoadFailed) return false;
 			if (wear.LifecycleQuarantined)
 			{
 				TellWearQuarantine(System, Work, wear);
 				return false;
 			}
+			if ((KingdomWearIncidentPhase)wear.IncidentPhase == KingdomWearIncidentPhase.None
+				&& HasActiveRepair(Work, out _)) return !wear.LoadFailed && !wear.LifecycleQuarantined;
 			KingdomWearIncidentPhase phase = (KingdomWearIncidentPhase)wear.IncidentPhase;
 			if (phase == KingdomWearIncidentPhase.None)
 			{
 				if (string.Equals(wear.LastCompletedIncidentId, IncidentId,
 					StringComparison.Ordinal)) return true;
+				string name = DisplayName(Work);
+				if (wear.LoadFailed || wear.LifecycleQuarantined) return false;
+				int beforeWear = wear.Wear;
+				int afterWear = KingdomMaterialRules.AddWear(beforeWear,
+					KingdomWearRules.IncrementFor(Cause));
+				string line = KingdomWearRules.DamagedLine(name, Cause, afterWear);
 				wear.IncidentId = IncidentId;
 				wear.IncidentCause = (int)Cause;
-				wear.IncidentBeforeWear = wear.Wear;
-				wear.IncidentAfterWear = KingdomMaterialRules.AddWear(wear.Wear,
-					KingdomWearRules.IncrementFor(Cause));
-				wear.IncidentLine = KingdomWearRules.DamagedLine(DisplayName(Work), Cause,
-					wear.IncidentAfterWear);
+				wear.IncidentBeforeWear = beforeWear;
+				wear.IncidentAfterWear = afterWear;
+				wear.IncidentLine = line;
 				wear.IncidentMessageState = (int)KingdomWearSinkDisposition.None;
 				wear.IncidentPhase = (int)KingdomWearIncidentPhase.Bound;
 				phase = KingdomWearIncidentPhase.Bound;
@@ -136,8 +146,10 @@ namespace ThousandAndFirst
 			}
 			if (phase == KingdomWearIncidentPhase.Mutated)
 			{
-				if (!KingdomChronicle.RecordOnce(System, wear.IncidentId + ":chronicle",
-					wear.IncidentLine)) return false;
+				bool recorded = KingdomChronicle.RecordOnce(System, wear.IncidentId + ":chronicle",
+					wear.IncidentLine);
+				if (wear.LoadFailed || wear.LifecycleQuarantined) return false;
+				if (!recorded) return false;
 				wear.IncidentPhase = (int)KingdomWearIncidentPhase.ChronicleDone;
 				phase = KingdomWearIncidentPhase.ChronicleDone;
 			}
@@ -148,6 +160,7 @@ namespace ThousandAndFirst
 				wear.IncidentPhase = (int)KingdomWearIncidentPhase.MessageIntent;
 				DeliverWearMessage(ref wear.IncidentMessageState,
 					"{{r|" + wear.IncidentLine + "}}");
+				if (wear.LoadFailed || wear.LifecycleQuarantined) return false;
 				wear.IncidentPhase = (int)KingdomWearIncidentPhase.MessageDone;
 				phase = KingdomWearIncidentPhase.MessageDone;
 			}
@@ -167,6 +180,7 @@ namespace ThousandAndFirst
 				KingdomLog.Log("wear: damaged " + Work.Blueprint + " cause=" + Cause
 					+ " wear=" + wear.Wear + " incident=" + IncidentId);
 			}
+			if (wear.LoadFailed || wear.LifecycleQuarantined) return false;
 			if (phase != KingdomWearIncidentPhase.Complete) return false;
 			wear.LastCompletedIncidentId = IncidentId;
 			wear.IncidentPhase = (int)KingdomWearIncidentPhase.None;

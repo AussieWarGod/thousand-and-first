@@ -80,7 +80,13 @@ namespace ThousandAndFirst
 						"; this build reads named versions " + FirstNamedSerializationVersion +
 						" through " + CurrentSerializationVersion + ".");
 				LoadedSerializationVersion = version;
+				City = null;
+				int nestedErrorsBefore = Reader.Errors;
 				Reader.ReadNamedFields(this, typeof(KingdomSystem));
+				// Composite reads can log/skip a failed nested block and return its partial object.
+				if (Reader.Errors != nestedErrorsBefore)
+					throw new InvalidOperationException("ThousandAndFirst nested kingdom records could not be read.");
+				RequireReadableSubsidenceStorage();
 				SerializationVersion = CurrentSerializationVersion;
 				NormalizeState(AllowLegacyIdentityMigration: false);
 				LoadFailed = false;
@@ -91,6 +97,32 @@ namespace ThousandAndFirst
 				LoadFailed = true;
 				throw;
 			}
+		}
+
+		private void RequireReadableSubsidenceStorage()
+		{
+			if (City == null || !City.HasValidSubsidenceStorage())
+				throw new InvalidOperationException("ThousandAndFirst city subsidence storage could not be read.");
+			RequireReadableSubsidenceSettlement(ExiledSeat);
+			RequireReadableSubsidenceSettlement(Seceded);
+#pragma warning disable 618
+			if (Exiled && ExiledSeat == null && ExiledAway == null)
+				throw new InvalidOperationException("ThousandAndFirst exiled settlement carrier is missing.");
+			RequireReadableSubsidenceSettlement(Away);
+			RequireReadableSubsidenceSettlement(ExiledAway);
+#pragma warning restore 618
+			if (SettlementTopology != null)
+				for (int i = 0; i < SettlementTopology.Count; i++)
+					RequireReadableSubsidenceSettlement(SettlementTopology.Get(i));
+			if (ExiledSettlementTopology != null)
+				for (int i = 0; i < ExiledSettlementTopology.Count; i++)
+					RequireReadableSubsidenceSettlement(ExiledSettlementTopology.Get(i));
+		}
+
+		private static void RequireReadableSubsidenceSettlement(KingdomSettlement settlement)
+		{
+			if (settlement != null && (settlement.City == null || !settlement.City.HasValidSubsidenceStorage()))
+				throw new InvalidOperationException("ThousandAndFirst retained settlement subsidence storage could not be read.");
 		}
 
 		/// <summary>Marks a recovery object unsafe when the engine failed before calling

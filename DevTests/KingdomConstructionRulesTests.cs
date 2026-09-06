@@ -1202,7 +1202,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string root = LocateRepository();
 			string plot = KingdomPlot2LogicalSource.Read();
-			AssertOrdered(plot, "works = GameObject.Create", "UpdateOutput(ref Job, works.ID",
+			AssertOrdered(plot, "works = Heart == null ? GameObject.Create(WorksBlueprint) : heartFence.Create(WorksBlueprint)",
+				"UpdateOutput(ref Job, works.ID",
 				"cell.AddObject(works, NoStack: Heart != null)");
 			AssertOrdered(plot, "UpdateFinalOutput(ref construction", "FinalOutputPending",
 				"cell.AddObject(building)");

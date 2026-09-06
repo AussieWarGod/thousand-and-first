@@ -115,6 +115,24 @@ namespace ThousandAndFirst.Simulation.City
 			return KingdomBindingTable.TryCreate(rows, out table, out fault);
 		}
 
+		/// <summary>Reads exact raw carriers; never drops, repairs or coerces a binding.</summary>
+		internal bool TryReadExact(out KingdomBindingTable table, out KingdomCityFault fault)
+		{
+			table = null; fault = KingdomCityFault.InvalidIndex;
+			int count = Keys?.Count ?? -1;
+			if (count < 0 || count > KingdomBindingTable.MaxResidentBindings + KingdomBindingTable.MaxTransientBindings
+				|| Kinds?.Count != count || ZoneIds?.Count != count || ObjectIds?.Count != count
+				|| MintedTicks?.Count != count) return false;
+			KingdomBinding[] rows = new KingdomBinding[count];
+			for (int i = 0; i < count; i++)
+			{
+				if (Kinds[i] != (int)KingdomBindingKind.Resident && Kinds[i] != (int)KingdomBindingKind.Transient
+					|| ZoneIds[i] == null || ObjectIds[i] == null || MintedTicks[i] < 0) return false;
+				rows[i] = new KingdomBinding(Keys[i], (KingdomBindingKind)Kinds[i], ZoneIds[i], ObjectIds[i], MintedTicks[i]);
+			}
+			return KingdomBindingTable.TryCreate(rows, out table, out fault) && table.TryAudit(out fault);
+		}
+
 		/// <summary>Writes one frozen table into the columns, in one call and after the rules have
 		/// succeeded. The single publisher &sect;1.3 requires, applied to the registry &mdash; which
 		/// is what makes "the mint and the binding are published together or not at all" a fact

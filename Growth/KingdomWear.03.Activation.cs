@@ -167,6 +167,7 @@ namespace ThousandAndFirst
 		private static void ResolveSafeReceipts(KingdomSystem System, KingdomSurvey Survey,
 			GameObject Work)
 		{
+			if (KingdomSubsidenceRungRuntime.BlocksWork(Work)) return;
 			r_KingdomWear wear = Work.GetPart<r_KingdomWear>();
 			if (wear == null) return;
 			KingdomWearIncidentPhase incident = (KingdomWearIncidentPhase)wear.IncidentPhase;

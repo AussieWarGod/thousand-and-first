@@ -74,8 +74,11 @@ namespace ThousandAndFirst
 					"Frozen plot-works identity is absent; replacement creation is forbidden.");
 				return null;
 			}
+			FoundingHeartAllocationFence heartFence = Heart == null ? null
+				: new FoundingHeartAllocationFence(Z, Heart.Context);
+			if (Heart != null && !heartFence.Current) return HeartRefusedNull("stake: heart reservations changed before creation");
 			GameObject works;
-			try { works = GameObject.Create(WorksBlueprint); }
+			try { works = Heart == null ? GameObject.Create(WorksBlueprint) : heartFence.Create(WorksBlueprint); }
 			catch (System.Exception ex)
 			{
 				if (Job != null) KingdomConstruction.Quarantine(ref Job,
@@ -86,6 +89,8 @@ namespace ThousandAndFirst
 			{
 				return Heart != null ? HeartRefusedNull("stake: no works object was created") : null;
 			}
+			if (Heart != null && (!UnplacedFoundingHeartOutput(works, WorksBlueprint) || !heartFence.Current))
+				return HeartRefusedNull("stake: heart authority or custody changed during creation");
 			if (Job != null && (!KingdomConstruction.Owns(System, Z, Job)
 				|| !KingdomConstruction.IsCurrent(Job)))
 			{
@@ -262,7 +267,7 @@ namespace ThousandAndFirst
 				KingdomConstruction.Bind(works, Job);
 			}
 				return CompleteStakeAdd(System, Z, cell, works, part, Entry, Rect,
-					footprint, roof, Architecture, LegacyArchitecture, ref Job, Heart);
+					footprint, roof, Architecture, LegacyArchitecture, ref Job, Heart, heartFence);
 			}
 
 	}

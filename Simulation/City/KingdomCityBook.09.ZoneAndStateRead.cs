@@ -27,11 +27,31 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>
 		/// The book as the frozen model the rules layer works on. Refuses and publishes nothing
 		/// rather than handing back a half-built city.
+		/// <para>
+		/// The ordinary entry repairs before it reads, so a normalization that REFUSED is the one
+		/// state in which the projection below has no shape to trust: the columns are whatever the
+		/// save left, and an empty-but-malformed book would otherwise project as a healthy city out
+		/// of durable authority that never loaded. Refusing here changes nothing &mdash; the stored
+		/// bytes, the latch and every column are left exactly as they are, and no lane is cleared.
+		/// <see cref="TryReadExact"/> is the load-phase capability and is deliberately not gated on
+		/// the latch: named-field validation must still be able to project a book it is loading.
+		/// </para>
 		/// </summary>
 		internal bool TryRead(out KingdomCityState state, out KingdomCityFault fault)
 		{
-			state = null;
 			Normalize();
+			if (SubsidenceReadFailed)
+			{
+				state = null;
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
+			return TryReadProjected(out state, out fault);
+		}
+
+		private bool TryReadProjected(out KingdomCityState state, out KingdomCityFault fault)
+		{
+			state = null;
 			if (!TryValidateColumnDomains(out fault))
 			{
 				return false;

@@ -82,7 +82,8 @@ namespace ThousandAndFirst
 			}
 			if (City == null)
 			{
-				City = new Simulation.City.KingdomCityBook();
+				// Repair the container, not the missing serialized subsidence authority.
+				City = new Simulation.City.KingdomCityBook { SubsidenceModel = null };
 			}
 			City.Normalize();
 			// Old saves have no field and decode to null/default. Preserve any non-empty receipt
@@ -148,12 +149,7 @@ namespace ThousandAndFirst
 			}
 			if (string.IsNullOrEmpty(Style)) Style = "common";
 			Style = KingdomStyleRules.MigrateLegacyKey(Style);
-			// A stored level or stamp below zero is a corrupt reading, not a settlement in
-			// debt: subsidence mints nothing, so both fail closed to "nothing measured yet".
-			if (LastSubsidenceTick < 0L)
-			{
-				LastSubsidenceTick = 0L;
-			}
+			// Preserve a corrupt subsidence checkpoint so its owner can refuse, not reset elapsed time.
 			if (LastSemanticTick < 0L)
 			{
 				LastSemanticTick = 0L;

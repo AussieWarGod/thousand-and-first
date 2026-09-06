@@ -20,6 +20,7 @@ namespace ThousandAndFirst
 
 		public void Read(SerializationReader Reader)
 		{
+			City = null;
 			Reader.ReadNamedFields(this, typeof(KingdomSettlement));
 			Normalize();
 		}
@@ -182,7 +183,8 @@ namespace ThousandAndFirst
 			Ledger.Normalize();
 			if (City == null)
 			{
-				City = new Simulation.City.KingdomCityBook();
+				// Repair the container, not the missing serialized subsidence authority.
+				City = new Simulation.City.KingdomCityBook { SubsidenceModel = null };
 			}
 			City.Normalize();
 			if (LifecycleBook == null)
@@ -199,12 +201,7 @@ namespace ThousandAndFirst
 			{
 				Vocation = NeutralVocation;
 			}
-			// A stored level or stamp below zero is a corrupt reading, not a settlement in
-			// debt: subsidence mints nothing, so both fail closed to "nothing measured yet".
-			if (LastSubsidenceTick < 0L)
-			{
-				LastSubsidenceTick = 0L;
-			}
+			// Preserve a corrupt subsidence checkpoint so its owner can refuse, not reset elapsed time.
 			if (SupportedLevel < 0)
 			{
 				SupportedLevel = 0;

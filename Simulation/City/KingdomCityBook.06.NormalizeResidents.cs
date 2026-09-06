@@ -51,6 +51,7 @@ namespace ThousandAndFirst.Simulation.City
 				while (ResidentArrived.Count < oldRows) ResidentArrived.Add("");
 				SchemaVersion = KingdomCityRules.SchemaVersion;
 			}
+			if (SchemaVersion == 3) SchemaVersion = KingdomCityRules.SchemaVersion;
 			int residents = Shortest(new int[23]
 			{
 				ResidentIds.Count, ResidentNames.Count, ResidentOrigins.Count,

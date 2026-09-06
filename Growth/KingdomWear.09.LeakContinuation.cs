@@ -16,6 +16,7 @@ namespace ThousandAndFirst
 		private static void ContinueBoundLeak(KingdomSystem System, KingdomSurvey Survey,
 			GameObject Work, r_KingdomWear Wear)
 		{
+			if (Wear == null || Wear.LoadFailed || Wear.LifecycleQuarantined) return;
 			if (RetireFoodLeakReceipt(Work, Wear)) return;
 			KingdomWearLeakPhase phase = (KingdomWearLeakPhase)Wear.LeakPhase;
 			if (phase == KingdomWearLeakPhase.Quarantined)
@@ -93,6 +94,7 @@ namespace ThousandAndFirst
 						"The storage-loss live frame could not capture its exact work, wear part, cell, zone, and storage parts.");
 					return;
 				}
+				if (Wear.LoadFailed || Wear.LifecycleQuarantined) return;
 				Wear.LeakPhase = (int)KingdomWearLeakPhase.MutationIntent;
 				if ((KingdomWearRules.LeakKind)Wear.LeakKind == KingdomWearRules.LeakKind.Water)
 				{
@@ -103,6 +105,7 @@ namespace ThousandAndFirst
 					}
 					int removed;
 					bool exact = Survey.TryLeakFromExact(boundVessel, Wear.LeakWanted, out removed);
+					if (Wear.LoadFailed || Wear.LifecycleQuarantined) return;
 					if (!exact || removed != frame.Wanted
 						|| !LeakWorkExact(frame, KingdomWearLeakPhase.MutationIntent)
 						|| boundVessel.Volume != frame.After)
@@ -115,6 +118,7 @@ namespace ThousandAndFirst
 				else if ((KingdomWearRules.LeakKind)Wear.LeakKind == KingdomWearRules.LeakKind.Charge)
 				{
 					boundBed.UseCharge(Wear.LeakWanted);
+					if (Wear.LoadFailed || Wear.LifecycleQuarantined) return;
 					bool stillExact = LeakWorkExact(frame, KingdomWearLeakPhase.MutationIntent)
 						&& ReferenceEquals(Work.GetPart<Capacitor>(), boundBed)
 						&& boundBed.ParentObject == Work
@@ -127,6 +131,7 @@ namespace ThousandAndFirst
 						return;
 					}
 				}
+				if (Wear.LoadFailed || Wear.LifecycleQuarantined) return;
 				Wear.LeakActualLost = Wear.LeakWanted;
 				Wear.LastLeakTick = Wear.LeakToTick;
 				Wear.LeakClockInitialized = true;

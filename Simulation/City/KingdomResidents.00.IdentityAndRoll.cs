@@ -163,14 +163,14 @@ namespace ThousandAndFirst.Simulation.City
 		// The parallel roster fields are frozen save ABI, not live authority. This adapter is
 		// the sole deliberate internal user; keep its obsolete-warning scope narrow and visible.
 #pragma warning disable 618
-		internal static bool ProjectCompatibility(KingdomSystem System)
+		internal static bool ProjectCompatibility(KingdomSystem System, bool Exact = false)
 		{
 			if (System == null) return false;
 			bool unresolvedSeat = System.City != null && System.City.ResidentCount == 0
 				&& (System.RosterNames?.Count > 0 || System.RosterOrigins?.Count > 0
 					|| System.RosterArrived?.Count > 0);
 			KingdomResidentRollProjection seatRoll = null;
-			bool seat = !unresolvedSeat && ProjectCompatibility(System.City, out seatRoll);
+			bool seat = !unresolvedSeat && ProjectCompatibility(System.City, out seatRoll, Exact);
 			if (seat)
 			{
 				System.RosterNames = seatRoll.Names;
@@ -188,15 +188,15 @@ namespace ThousandAndFirst.Simulation.City
 				bool unresolved = row.City != null && row.City.ResidentCount == 0
 					&& (row.RosterNames?.Count > 0 || row.RosterOrigins?.Count > 0
 						|| row.RosterArrived?.Count > 0);
-				if (!unresolved) ProjectCompatibility(row);
+				if (!unresolved) ProjectCompatibility(row, Exact);
 			}
 			return seat;
 		}
 
-		internal static bool ProjectCompatibility(KingdomSettlement Settlement)
+		internal static bool ProjectCompatibility(KingdomSettlement Settlement, bool Exact = false)
 		{
 			if (Settlement == null || !ProjectCompatibility(Settlement.City,
-				out KingdomResidentRollProjection roll)) return false;
+				out KingdomResidentRollProjection roll, Exact)) return false;
 			Settlement.RosterNames = roll.Names;
 			Settlement.RosterOrigins = roll.Origins;
 			Settlement.RosterArrived = roll.Arrived;
@@ -208,12 +208,12 @@ namespace ThousandAndFirst.Simulation.City
 		}
 
 		internal static bool ProjectCompatibility(KingdomCityBook Book,
-			out KingdomResidentRollProjection Roll)
+			out KingdomResidentRollProjection Roll, bool Exact = false)
 		{
 			Roll = null;
 			KingdomCityState state;
 			KingdomCityFault fault;
-			return Book != null && Book.TryRead(out state, out fault)
+			return Book != null && (Exact ? Book.TryReadExact(out state, out fault) : Book.TryRead(out state, out fault))
 				&& KingdomResidentRules.TryProject(state, out Roll);
 		}
 

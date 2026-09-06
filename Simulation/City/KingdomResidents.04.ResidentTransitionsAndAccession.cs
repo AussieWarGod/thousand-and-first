@@ -61,12 +61,12 @@ namespace ThousandAndFirst.Simulation.City
 			// inside the mutation owner; outer candidate selection is never authority.
 			if (!KingdomResidentTransitionAuthority.CanContinueJournaledCarrierRemoval(
 				System, Body, Operation, Authorization)) return false;
-			if (!book.TryRead(out state, out fault)
+			if (!book.TryReadExact(out state, out fault)
 				|| !KingdomResidentRules.TryRemove(state, residentId, out next, out FormerRow,
 					out fault)) return false;
 			if (!PublishRowAndUnbind(System, book, state, next, residentId,
 				KingdomUnbindCause.Abroad)) return false;
-			ProjectCompatibility(System);
+			ProjectCompatibility(System, Exact: true);
 			return true;
 		}
 
@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			KingdomBindingTable bindings;
 			KingdomCityFault fault;
-			if (!TryTable(System, out bindings)) return false;
+			if (System?.Bindings == null || !System.Bindings.TryReadExact(out bindings, out fault)) return false;
 			KingdomBinding held;
 			if (!bindings.TryGet(ResidentId, KingdomBindingKind.Resident, out held))
 				return SafePublish(Book, Advanced, "resident row transition");

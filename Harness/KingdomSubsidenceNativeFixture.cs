@@ -34,7 +34,7 @@ namespace ThousandAndFirst.Harness
 		}
 
 		internal static bool TryCreate(Zone Zone, out KingdomSubsidenceNativeFixture Fixture,
-			out string Failure)
+			out string Failure, bool CompleteFoundingHeart = false)
 		{
 			Fixture = LastAttempt;
 			Failure = null;
@@ -70,6 +70,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomScenarioFoundingStep.TryFound(Zone, name, out line, out failure), failure);
 				Require(KingdomScenarioTransactionMarker.TryCommit(out failure), failure);
 				Fixture.System = game.GetSystem<KingdomSystem>();
+				if (CompleteFoundingHeart) KingdomScenarioCompletedHeart.Complete(game, Fixture.System, Zone);
 				Fixture.Build();
 				return true;
 			}
@@ -116,6 +117,10 @@ namespace ThousandAndFirst.Harness
 					&& body.GetIntProperty("KingdomCitizen") == 0
 					&& body.GetPart<r_KingdomCitizenship>() == null,
 					"fresh NPC lacks eligible physical citizenship shape");
+				// Explicit synthetic phenotype: NPC otherwise falls back to its display name.
+				// Set before enrollment/survey so production census sees truthful fixture species.
+				body.SetStringProperty("Species", "human");
+				Require(body.GetSpecies() == "human", "fixture species did not publish exactly");
 				string failure;
 				Require(KingdomCitizenship.TryEnroll(System, body,
 					KingdomCitizenshipEnrollmentReason.Arrival, tick, out failure), failure);

@@ -64,6 +64,8 @@ namespace ThousandAndFirst
 			Writer.Write(DirectionalStandingSchemaVersion);
 			Writer.Write(CallbackAuthoritySchemaVersion);
 			WriteString(Writer, DirectionalStandingDigest, 64);
+			WriteHashBasisTail(Writer, ExileChronicle, ExileAbility, ReturnChronicle,
+				ReturnReputation, ReturnFeelings, ReturnSeat, ReturnAbility);
 		}
 
 		public void Read(SerializationReader Reader)
@@ -91,7 +93,8 @@ namespace ThousandAndFirst
 			if (Version != LegacyJobVersion && Version != MissionJobVersion &&
 				Version != ExactDeliveryJobVersion &&
 				Version != ExpandedDeliveryJobVersion &&
-				Version != SettlementTopologyVersion && Version != DirectionalStandingVersion
+				Version != SettlementTopologyVersion && Version != DirectionalStandingVersion &&
+				Version != ExpeditionResultJobVersion
 				&& Version != CurrentVersion)
 				throw new InvalidDataException("Unknown realm archive version.");
 			int wireVersion = Version;
@@ -136,7 +139,7 @@ namespace ThousandAndFirst
 			Seceded = ReadArchivedSettlement(Reader, out SecededOpaque,
 				out SecededWireVersion); SecededTick = Reader.ReadInt64();
 			Haul = ReadHaul(Reader);
-			CarryBook = Reader.ReadComposite<KingdomCarryBook>();
+			CarryBook = ReadArchiveComposite<KingdomCarryBook>(Reader);
 			if (CarryBook == null || CarryBook.WireRejected)
 				throw new InvalidDataException("Archived carry payload was rejected.");
 			ReturnRegard = Reader.ReadInt32();
@@ -147,7 +150,7 @@ namespace ThousandAndFirst
 			if (wireVersion >= SettlementTopologyVersion)
 			{
 				KingdomSettlement legacyProjection = ReadLegacyAwayProjection();
-				SettlementTopology = Reader.ReadComposite<KingdomSettlementTopology>();
+				SettlementTopology = ReadArchiveComposite<KingdomSettlementTopology>(Reader);
 				if (SettlementTopology == null)
 					throw new InvalidDataException("Archived settlement topology is absent.");
 				if (SettlementTopology.HasOpaqueEvidence)
@@ -181,6 +184,10 @@ namespace ThousandAndFirst
 				DirectionalStandingSchemaVersion = Reader.ReadInt32();
 				CallbackAuthoritySchemaVersion = Reader.ReadInt32();
 				DirectionalStandingDigest = ReadString(Reader, 64);
+				if (!TryReadHashBasisTail(Reader, wireVersion, ExileChronicle, ExileAbility,
+					ReturnChronicle, ReturnReputation, ReturnFeelings, ReturnSeat, ReturnAbility,
+					out string basisFailure))
+					throw new InvalidDataException(basisFailure);
 			}
 			else
 			{
@@ -192,6 +199,7 @@ namespace ThousandAndFirst
 				DirectionalStandingSchemaVersion = 0;
 				CallbackAuthoritySchemaVersion = 1;
 				DirectionalStandingDigest = null;
+				ClearHashBasis();
 				RequiresDirectionalStandingMigration = true;
 			}
 			// v2 predates mission and delivery columns; v3 predates delivery columns. ReadJobs
@@ -250,6 +258,7 @@ namespace ThousandAndFirst
 			ReturnFeelings = new KingdomRealmCallbackReceipt();
 			ReturnSeat = new KingdomRealmCallbackReceipt();
 			ReturnAbility = new KingdomRealmCallbackReceipt();
+			ClearHashBasis();
 		}
 
 #endif

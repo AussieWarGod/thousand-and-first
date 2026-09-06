@@ -152,8 +152,7 @@ namespace ThousandAndFirst
 				};
 				int reconstruction = KingdomInheritEngine.ReconstructionVersionForText(
 					shape.LegacyText);
-				invalid = reconstruction <= 0
-					|| !KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+				invalid = !KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 						The.Game == null ? "" : The.Game.GameID,
 						reconstruction, out shapeFailure);
 			}

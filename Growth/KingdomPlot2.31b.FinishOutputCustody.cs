@@ -129,7 +129,11 @@ namespace ThousandAndFirst
 			KingdomPlotRules.RoofState Roof, string ExpectedId,
 			KingdomConstructionJob Job)
 		{
-			return GameObject.Validate(Building) && GameObject.Validate(Parent)
+			if (!GameObject.Validate(Parent)) return false;
+			Zone zone = Parent.CurrentZone;
+			if (zone == null) return false;
+			// The prepared output is detached; its predecessor owns the zone bounds.
+			return GameObject.Validate(Building)
 				&& Building.IDIfAssigned == ExpectedId && Building.Blueprint == Entry.Blueprint
 				&& Building.GetStringProperty(PlotFinalPredecessorProperty) == Parent.IDIfAssigned
 				&& Building.CurrentCell == null && Building.CurrentZone == null
@@ -138,12 +142,19 @@ namespace ThousandAndFirst
 				&& Building.GetStringProperty(PlotIdProperty) == PlotId
 				&& (string.IsNullOrEmpty(Receipt)
 					|| Building.GetStringProperty(KingdomConstruction.ReceiptProperty) == Receipt)
-				&& TryReadRect(Building, out KingdomPlotRules.PlotRect rect) && SameRect(rect, Rect)
-				&& TryReadFootprint(Building, out KingdomPlotRules.PlotRect foot)
-				&& SameRect(foot, Footprint) && RoofOf(Building) == Roof
+				&& TryReadStampedRect(Building, out KingdomPlotRules.PlotRect rect)
+				&& SameRect(rect, Rect)
+				&& ExactFoundingHeartInt(Building, FootX1Property, Footprint.X1)
+				&& ExactFoundingHeartInt(Building, FootY1Property, Footprint.Y1)
+				&& ExactFoundingHeartInt(Building, FootX2Property, Footprint.X2)
+				&& ExactFoundingHeartInt(Building, FootY2Property, Footprint.Y2)
+				&& RoofOf(Building) == Roof
 				&& (Job == null || KingdomConstruction.HasReceipt(Building, Job)
 					&& KingdomConstruction.PaidBuildMatches(Building, Job))
-				&& PlotPlanMarkerRemovalProofMatches(Parent, Building);
+				&& PlotPlanMarkerRemovalProofMatches(Parent, Building)
+				&& GameObject.Validate(Parent) && object.ReferenceEquals(Parent.CurrentZone, zone)
+				&& KingdomPlotRules.ValidZoneRect(rect, zone.Width, zone.Height)
+				&& KingdomPlotRules.ValidZoneRect(Footprint, zone.Width, zone.Height);
 		}
 	}
 }

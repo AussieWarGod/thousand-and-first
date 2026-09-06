@@ -70,8 +70,11 @@ as polished as the game's flagship features. These rules are binding for every s
   the Creature Control layout. `Debug` holds the wish harness; anything in `Debug` must be
   side-effect-free on ordinary saves (reversible probes only). `Harness` holds the developer
   scenario harness and is the one exception, which is why it is a sibling rather than more
-  `Debug`: scenarios are world-CREATING, never save-mutating, so they run only from a new-game
-  `[PlayerMutator]` and never touch an existing save. It is absent from `manifest.json`
+  `Debug`: scenarios normally run only from a new-game `[PlayerMutator]`. The sole save/load
+  exception imports an exact, sealed scenario-owned test save from a proved-stopped dedicated
+  profile into another fresh dedicated profile with identical sealed mod content. Its explicit
+  developer load route verifies ownership and hashes; it never selects ordinary player saves,
+  restores mods, or falls back to another save or a new game. It is absent from `manifest.json`
   `Directories` and listed in `Tools/stage.sh` `EXCLUDE_DIRS`, so an ordinary build never compiles
   it and no release artifact carries it; a scenario-built state is stamped and can never sign
   native acceptance without independently curated ordinary-play anchor evidence.

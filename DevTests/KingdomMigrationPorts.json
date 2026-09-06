@@ -544,17 +544,17 @@
     {
       "codec": "KingdomRealmArchive",
       "reader": "Core/KingdomRealmArchive.10WireEnvelope.cs",
-      "versionConstant": "Core/KingdomRealmArchive.00Core.cs:27",
+      "versionConstant": "Core/KingdomRealmArchive.00Core.cs:29",
       "versionConstantIdentifier": "CurrentVersion",
-      "currentVersion": 8,
+      "currentVersion": 9,
       "durableSite": "Core/KingdomRealmArchive.10WireEnvelope.cs:20 IComposite Write writes Magic then Version; Core/KingdomRealmArchive.10WireEnvelope.cs:87 reads it back",
       "migrationAuthority": "Core/KingdomRealmArchive.10WireEnvelope.cs:88-94",
       "opaqueFuturePolicy": "preserve",
       "opaqueFutureSite": "Core/KingdomRealmArchive.11WirePrimitives.cs:83",
       "physicalShellAxis": null,
-      "retirementRule": "version 1 is retired by explicit refusal (Core/KingdomRealmArchive.10WireEnvelope.cs:88): its pre-release reflected settlement wire is unsafe and is never partly interpreted. Versions 2-8 stay readable",
+      "retirementRule": "version 1 is retired by explicit refusal (Core/KingdomRealmArchive.10WireEnvelope.cs:93): its pre-release reflected settlement wire is unsafe and is never partly interpreted. Versions 2-8 stay readable; v9 adds the per-receipt hash-basis tail",
       "fixtures": [],
-      "gapReason": "no provenance-backed historical fixture is checked in for any version; all eight live versions are counted, including the deliberately refused v1, because no fixture proves the refusal against historical bytes either"
+      "gapReason": "no provenance-backed historical full-envelope fixture is checked in for any version; all nine versions are counted, including deliberately refused v1. The nested v18 settlement/authority fixture does not prove an outer archive envelope"
     },
     {
       "codec": "KingdomRealmRetirementState",
@@ -737,7 +737,7 @@
     {
       "codec": "KingdomCivicOfficeReceiptRow",
       "reader": "Experience/KingdomExperienceCodec.Civic.cs",
-      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:30",
+      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:36",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Experience/KingdomExperienceCodec.Civic.cs:9 writes R.Version and Experience/KingdomExperienceCodec.Civic.cs:22 reads it back, inside the experience envelope",
@@ -754,7 +754,7 @@
     {
       "codec": "KingdomRemembranceReceiptRow",
       "reader": "Experience/KingdomExperienceCodec.Civic.cs",
-      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:67",
+      "versionConstant": "Experience/KingdomExperienceState.Civic.cs:87",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Experience/KingdomExperienceCodec.Civic.cs:35 writes R.Version and Experience/KingdomExperienceCodec.Civic.cs:47 reads it back, inside the experience envelope",
@@ -954,7 +954,7 @@
     {
       "codec": "KingdomResidentAdmissionOperation",
       "reader": "Growth/KingdomResidentAdmissionRules.cs",
-      "versionConstant": "Growth/KingdomResidentAdmissionOperation.cs:22",
+      "versionConstant": "Growth/KingdomResidentAdmissionOperation.cs:28",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Serializable write-ahead journal rooted on KingdomSystem.ResidentAdmission at Core/KingdomSystem.z08b.ResidentAdmission.cs:7; rides the system into the engine save",
@@ -970,7 +970,7 @@
     {
       "codec": "KingdomResidentDepartureOperation",
       "reader": "Growth/KingdomResidentDepartureRules.cs",
-      "versionConstant": "Growth/KingdomResidentDepartureOperation.cs:21",
+      "versionConstant": "Growth/KingdomResidentDepartureOperation.cs:27",
       "versionConstantIdentifier": "CurrentVersion",
       "currentVersion": 1,
       "durableSite": "Serializable write-ahead journal rooted on KingdomSystem.ResidentDeparture at Core/KingdomSystem.z08a.ResidentDeparture.cs:7; rides the system into the engine save",

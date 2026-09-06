@@ -36,8 +36,7 @@ namespace ThousandAndFirst
 			}
 			if (Operation.Chronicled)
 			{
-				if (!KingdomChronicle.RecordOnce(System,
-					Operation.OperationId + ":chronicle", Operation.ChronicleLine))
+				if (!TrySettleChronicle(System, Operation))
 				{
 					Failure = "departure Chronicle receipt remains pending"; return false;
 				}
@@ -52,7 +51,8 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			r_KingdomResidentDeparture marker = leaver?.GetPart<r_KingdomResidentDeparture>();
-			if (marker?.Matches(Operation, leaver) != true) return false;
+			if (marker?.Matches(Operation, leaver) != true
+				|| !KingdomSubsidenceStepRuntime.CanRetire(System, Operation, false)) return false;
 			KingdomSurvey Survey = KingdomSurvey.ActiveFor(leaver.CurrentZone);
 			try
 			{
@@ -77,7 +77,7 @@ namespace ThousandAndFirst
 			{
 				Failure = "departure body remained valid after destruction"; return false;
 			}
-			System.ResidentDeparture = KingdomResidentDepartureRules.Empty();
+			if (!KingdomSubsidenceStepRuntime.TryRetireJournal(System, Operation, false, out Failure)) return false;
 			KingdomLog.Log("emigrate: pop now " + System.Population + " origin="
 				+ (Operation.Origin ?? "-") + " cause=" + (Operation.Cause ?? "drought"));
 			return true;

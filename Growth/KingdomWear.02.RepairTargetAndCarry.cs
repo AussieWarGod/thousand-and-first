@@ -35,6 +35,9 @@ namespace ThousandAndFirst
 			out RepairTargetFrame Frame)
 		{
 			Frame = null;
+			if (KingdomSubsidenceRungRuntime.BlocksWork(Work)
+				|| Wear == null || Wear.LoadFailed || Wear.LifecycleQuarantined
+				|| Wear.IncidentPhase != (int)KingdomWearIncidentPhase.None) return false;
 			if (!GameObject.Validate(Work) || Work.CurrentZone == null || Work.CurrentCell == null
 				|| Work.CurrentCell.ParentZone != Work.CurrentZone || Wear == null
 				|| Wear.ParentObject != Work
@@ -62,6 +65,9 @@ namespace ThousandAndFirst
 		private static bool RepairTargetExact(RepairTargetFrame Frame, string ExpectedReceipt)
 		{
 			return Frame != null && GameObject.Validate(Frame.Work) && Frame.Work.ID == Frame.Id
+				&& !KingdomSubsidenceRungRuntime.BlocksWork(Frame.Work)
+				&& Frame.WearPart != null && !Frame.WearPart.LoadFailed && !Frame.WearPart.LifecycleQuarantined
+				&& Frame.WearPart.IncidentPhase == (int)KingdomWearIncidentPhase.None
 				&& Frame.Work.CurrentZone == Frame.Zone && Frame.Work.CurrentCell == Frame.Cell
 				&& Frame.Cell != null && Frame.Cell.ParentZone == Frame.Zone
 				&& Frame.WearPart != null && Frame.WearPart.ParentObject == Frame.Work
@@ -96,6 +102,11 @@ namespace ThousandAndFirst
 		public static bool CanCarryStableState(GameObject Source, out string Failure)
 		{
 			Failure = null;
+			if (KingdomSubsidenceRungRuntime.BlocksWork(Source))
+			{
+				Failure = "That work still owes the people beneath it a record of the settlement's fall.";
+				return false;
+			}
 			r_KingdomWear wear = GameObject.Validate(Source)
 				? Source.GetPart<r_KingdomWear>() : null;
 			if (wear == null) return true;
@@ -114,10 +125,18 @@ namespace ThousandAndFirst
 		public static bool TryCarryStableState(GameObject Source, GameObject Target)
 		{
 			if (!GameObject.Validate(Source) || !GameObject.Validate(Target)
+				|| KingdomSubsidenceRungRuntime.BlocksWork(Target)
 				|| !CanCarryStableState(Source, out _)) return false;
+			r_KingdomWear targetWear = Target.GetPart<r_KingdomWear>();
+			if (targetWear != null && (targetWear.LoadFailed || targetWear.LifecycleQuarantined)) return false;
 			r_KingdomWear before = Source.GetPart<r_KingdomWear>();
 			if (before == null) return Target.GetPart<r_KingdomWear>() == null;
 			r_KingdomWear after = Target.RequirePart<r_KingdomWear>();
+			if (after == null || after.LoadFailed || after.LifecycleQuarantined
+				|| KingdomSubsidenceRungRuntime.BlocksWork(Target) || !CanCarryStableState(Source, out _)
+				|| !ReferenceEquals(Source.GetPart<r_KingdomWear>(), before)
+				|| !ReferenceEquals(Target.GetPart<r_KingdomWear>(), after)
+				|| before.ParentObject != Source || after.ParentObject != Target) return false;
 			after.Wear = before.Wear;
 			after.LastCause = before.LastCause;
 			after.Held = before.Held;

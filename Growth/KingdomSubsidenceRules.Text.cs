@@ -83,45 +83,6 @@ namespace ThousandAndFirst
 		// the summary tell between them.
 
 		/// <summary>
-		/// Departures of one slide that get a chronicle entry to themselves. Three: enough that a
-		/// short slide reads exactly as it always did (a handful of people leaving IS the story
-		/// at that size), few enough that a collapse spends three lines and not fifty.
-		/// </summary>
-		public const int NamedDeparturesPerSlide = 3;
-
-		/// <summary>
-		/// Whether the <paramref name="Index"/>-th departure of a slide is chronicled by name.
-		/// Keeps the FIRST and the LAST always: the first is when it started going, the last is
-		/// who turned the lights off, and a sample that dropped either would be a worse record
-		/// than a shorter one.
-		/// </summary>
-		/// <param name="Index">Which departure, from zero.</param>
-		/// <param name="Departed">How many are going in this slide.</param>
-		public static bool TellsDeparture(int Index, int Departed)
-		{
-			if (Index < 0 || Departed <= 0 || Index >= Departed)
-			{
-				return false;
-			}
-			if (Departed <= NamedDeparturesPerSlide)
-			{
-				return true;
-			}
-			return Index < NamedDeparturesPerSlide - 1 || Index == Departed - 1;
-		}
-
-		/// <summary>How many of a slide's departures are chronicled by name. Never more than
-		/// <see cref="NamedDeparturesPerSlide"/>, and never more than went.</summary>
-		public static int NamedDepartures(int Departed)
-		{
-			if (Departed <= 0)
-			{
-				return 0;
-			}
-			return (Departed < NamedDeparturesPerSlide) ? Departed : NamedDeparturesPerSlide;
-		}
-
-		/// <summary>
 		/// The one line that carries everybody the sample did not name. Null when the sample
 		/// named them all, which is the caller's signal to say nothing.
 		/// <para>

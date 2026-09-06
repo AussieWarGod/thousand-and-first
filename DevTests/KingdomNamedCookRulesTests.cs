@@ -161,6 +161,9 @@ namespace ThousandAndFirst.Tests
 			string transactions = Read("Experience", "KingdomNamedCook.Transactions.cs");
 			string menu = Read("Experience", "KingdomNamedCook.cs");
 			string death = Read("Experience", "KingdomOffices.cs");
+			string deathRuntime = Read("Growth", "KingdomResidentDeathRuntime.cs");
+			string deathCapture = Read("Growth", "KingdomResidentDeathRuntime.Capture.cs");
+			string deathRoles = Read("Growth", "KingdomResidentDeathRuntime.Roles.cs");
 			// The journaled departure runtime owns the departing-cook transaction now: the
 			// write-ahead prepare (with rollback) happens before any carrier is removed, and the
 			// vacancy is observed in the effects phase.
@@ -168,8 +171,22 @@ namespace ThousandAndFirst.Tests
 				"KingdomResidentDeparturePreparation.cs");
 			string effects = Read("Growth", "KingdomResidentDepartureRuntime.Effects.cs");
 			string begin = Read("Growth", "KingdomResidentDepartureRuntime.Begin.cs");
-			StringAssert.Contains("ObserveCookLoss(system, Citizen", death);
-			StringAssert.Contains("KingdomNamedCookVacancyCause.Death", death);
+			// Source contracts: the durable witness and exact cook graph precede death cleanup.
+			StringAssert.Contains("KingdomResidentDeathRuntime.Record(system, Citizen", death);
+			StringAssert.Contains("CaptureRoles(f, value)", deathCapture);
+			StringAssert.Contains("r.CookBefore = CookWire(cook)", deathRoles);
+			StringAssert.Contains("KingdomNamedCookRules.BeginVacancy(prior, KingdomNamedCookVacancyCause.Death)", deathRoles);
+			StringAssert.Contains("KingdomNamedCook.TryConcludeWitnessedDeath", deathRoles);
+			StringAssert.Contains("CookWire(f.City.NamedCook) != CookWire(after)", deathRoles);
+			int deathWrite = deathRuntime.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
+			int deathVacancy = deathRuntime.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
+			int deathAccounts = deathRuntime.IndexOf("Accounts(f, index, ref r)", StringComparison.Ordinal);
+			int clear = deathRuntime.IndexOf("ClearCountedProperties(f, r, body)", StringComparison.Ordinal);
+			Assert.Greater(deathWrite, 0); Assert.Greater(deathVacancy, deathWrite);
+			Assert.Greater(deathAccounts, deathVacancy); Assert.Greater(clear, deathAccounts);
+			StringAssert.Contains("KingdomResidentDeathRuntime.TryWitness", lifecycle);
+			StringAssert.Contains("KingdomResidentDeathRuntime.ReadCook(death.CookBefore)", lifecycle);
+			StringAssert.Contains("KingdomResidentDeathRuntime.CookWire(original) != death.CookBefore", lifecycle);
 			StringAssert.Contains("ObserveCookLoss(System, Body", effects);
 			StringAssert.Contains("KingdomNamedCookVacancyCause.Departure", effects);
 			int prepare = preparation.IndexOf("PrepareCookLoss(System, Body",

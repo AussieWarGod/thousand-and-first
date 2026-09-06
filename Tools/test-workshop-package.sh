@@ -57,7 +57,12 @@ module = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
 spec.loader.exec_module(module)
 manifest = module.load_manifest(root / "manifest.json", require_preview=True)
-data = module.canonical_workshop_data(manifest, 123456789, visibility)
+future_alpha = (
+    module.ALPHA_RELEASE_VERSION_PATTERN.fullmatch(manifest["version"]) is not None
+    and manifest["version"] != module.FIRST_ALPHA_RELEASE_VERSION
+)
+workshop_id = 987654321 if visibility == "0" and future_alpha else 123456789
+data = module.canonical_workshop_data(manifest, workshop_id, visibility)
 (root / "workshop.json").write_bytes(module.canonical_workshop_bytes(data))
 PY
 }
@@ -223,6 +228,7 @@ write_alpha_candidate() {
 import hashlib
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -236,8 +242,18 @@ assert spec.loader is not None
 spec.loader.exec_module(module)
 workshop = module._load_json(root / "workshop.json")
 manifest = module._load_json(root / "manifest.json")
+private_workshop = json.loads(subprocess.check_output(
+    ["git", "-C", str(root), "cat-file", "blob", candidate + ":workshop.json"]
+).decode("utf-8"))
+private_manifest = json.loads(subprocess.check_output(
+    ["git", "-C", str(root), "cat-file", "blob", candidate + ":manifest.json"]
+).decode("utf-8"))
+assert private_manifest["version"] == manifest["version"]
+assert private_workshop["Visibility"] == "0" and workshop["Visibility"] == "2"
+private_id = module._workshop_id(private_workshop)
+historical = manifest["version"] == module.FIRST_ALPHA_RELEASE_VERSION
 record = {
-    "schemaVersion": module.ALPHA_CANDIDATE_SCHEMA,
+    "schemaVersion": module.LEGACY_ALPHA_CANDIDATE_SCHEMA if historical else module.ALPHA_CANDIDATE_SCHEMA,
     "releaseChannel": module.ALPHA_RELEASE_CHANNEL,
     "releaseVersion": manifest["version"],
     "candidateCommit": candidate,
@@ -249,6 +265,10 @@ record = {
         (root / "docs/PRIVATE_PACKAGE_RECEIPT.sha256").read_bytes()
     ).hexdigest(),
 }
+if historical:
+    assert private_id == workshop["WorkshopId"]
+else:
+    record["privateWorkshopId"] = private_id
 (root / "docs/ALPHA_CANDIDATE.json").write_text(
     json.dumps(record, indent=2) + "\n", encoding="utf-8"
 )
@@ -1211,6 +1231,7 @@ publish_alpha_claims "$alpha_patch"
 write_alpha_candidate "$alpha_patch" "$alpha_first_candidate"
 commit_all "$alpha_patch" "first public Alpha metadata"
 git -C "$alpha_patch" tag -a v0.3.0 -m "prior fixture Alpha"
+alpha_first_public_commit="$(git -C "$alpha_patch" rev-parse 'v0.3.0^{commit}')"
 prepare_alpha_identity "$alpha_patch" "0.3.1"
 alpha_patch_candidate="$(freeze_private_candidate "$alpha_patch")"
 write_workshop "$alpha_patch" 2
@@ -1224,15 +1245,99 @@ alpha_patch_dest="$FIXTURE_ROOT/alpha-patch-package"
 	cd "$alpha_patch_dest"
 	sha256sum -c "$alpha_patch_dest.sha256" >/dev/null
 )
-python3 - "$alpha_patch_dest/manifest.json" <<'PY'
+python3 - "$alpha_patch" "$alpha_patch_candidate" "$alpha_patch_dest" \
+	"$FIXTURE_ROOT/private-proof-positive-alpha-patch-0.3.1" <<'PY'
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+root, candidate, public_package, private_package = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3]), Path(sys.argv[4])
+manifest = json.loads((public_package / "manifest.json").read_text(encoding="utf-8"))
+assert manifest["version"] == "0.3.1"
+record = json.loads((root / "docs/ALPHA_CANDIDATE.json").read_text(encoding="utf-8"))
+private_bytes = subprocess.check_output(["git", "-C", str(root), "cat-file", "blob", candidate + ":workshop.json"])
+assert private_bytes == (private_package / "workshop.json").read_bytes()
+private = json.loads(private_bytes)
+public = json.loads((public_package / "workshop.json").read_bytes())
+assert record["schemaVersion"] == 2
+assert record["privateWorkshopId"] == private["WorkshopId"] == 987654321
+assert record["workshopId"] == public["WorkshopId"] == 123456789
+assert private["Visibility"] == "0" and public["Visibility"] == "2"
+assert {key for key in private if private[key] != public[key]} == {"WorkshopId", "Visibility"}
+private_files = {path.relative_to(private_package).as_posix(): path.read_bytes()
+                 for path in private_package.rglob("*") if path.is_file()}
+public_files = {path.relative_to(public_package).as_posix(): path.read_bytes()
+                for path in public_package.rglob("*") if path.is_file()}
+assert private_files.keys() == public_files.keys()
+for relative, payload in private_files.items():
+    if relative not in ("README.md", "CHANGELOG.md", "workshop.json"):
+        assert public_files[relative] == payload, relative
+PY
+[ "$(git -C "$alpha_patch" rev-parse 'v0.3.0^{commit}')" = "$alpha_first_public_commit" ]
+[ ! -e "$alpha_patch/docs/RELEASE_EVIDENCE.json" ]
+
+# The future-patch same-item fault is real in the committed private fixture, not merely a
+# fabricated candidate field. Historical v0.3.0 remains the only permitted same-item binding.
+alpha_same_item="$FIXTURE_ROOT/alpha-future-same-item"
+git clone -q -- "$alpha_patch" "$alpha_same_item"
+git -C "$alpha_same_item" config user.name "TAF package harness"
+git -C "$alpha_same_item" config user.email "fixture@example.invalid"
+prepare_alpha_identity "$alpha_same_item" "0.3.2"
+write_workshop "$alpha_same_item" 0
+python3 - "$alpha_same_item/workshop.json" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-assert manifest["version"] == "0.3.1"
+path = Path(sys.argv[1])
+data = json.loads(path.read_bytes())
+assert data["WorkshopId"] == 987654321 and data["Visibility"] == "0"
+data["WorkshopId"] = 123456789
+path.write_bytes(json.dumps(data, ensure_ascii=False, indent=2, separators=(",", ": ")).replace("\n", "\r\n").encode("utf-8"))
 PY
-[ ! -e "$alpha_patch/docs/RELEASE_EVIDENCE.json" ]
+commit_all "$alpha_same_item" "freeze future private fixture with forbidden public identity"
+alpha_same_item_private="$FIXTURE_ROOT/alpha-future-same-item-private"
+"$alpha_same_item/Tools/workshop-package.sh" --test "$alpha_same_item_private" >/dev/null
+cp -- "$alpha_same_item_private.sha256" "$alpha_same_item/docs/PRIVATE_PACKAGE_RECEIPT.sha256"
+commit_all "$alpha_same_item" "bind same-item private fixture receipt"
+alpha_same_item_candidate="$(git -C "$alpha_same_item" rev-parse HEAD)"
+write_workshop "$alpha_same_item" 2
+publish_alpha_claims "$alpha_same_item"
+write_alpha_candidate "$alpha_same_item" "$alpha_same_item_candidate"
+commit_all "$alpha_same_item" "public future Alpha with same-item private authority"
+git -C "$alpha_same_item" tag -a v0.3.2 -m "fixture invalid same-item Alpha"
+expect_fail "future Alpha cannot reuse public item privately" "privateWorkshopId must differ" \
+	"$alpha_same_item/Tools/workshop-package.sh" --alpha "$FIXTURE_ROOT/alpha-future-same-item-package"
+[ ! -e "$FIXTURE_ROOT/alpha-future-same-item-package" ]
+[ ! -e "$FIXTURE_ROOT/alpha-future-same-item-package.sha256" ]
+
+alpha_wrong_private="$FIXTURE_ROOT/alpha-wrong-private-binding"
+git clone -q -- "$alpha_patch" "$alpha_wrong_private"
+git -C "$alpha_wrong_private" config user.name "TAF package harness"
+git -C "$alpha_wrong_private" config user.email "fixture@example.invalid"
+prepare_alpha_identity "$alpha_wrong_private" "0.3.2"
+alpha_wrong_private_candidate="$(freeze_private_candidate "$alpha_wrong_private")"
+write_workshop "$alpha_wrong_private" 2
+publish_alpha_claims "$alpha_wrong_private"
+write_alpha_candidate "$alpha_wrong_private" "$alpha_wrong_private_candidate"
+python3 - "$alpha_wrong_private/docs/ALPHA_CANDIDATE.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+assert data["schemaVersion"] == 2 and data["privateWorkshopId"] == 987654321
+data["privateWorkshopId"] = 111111111
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+commit_all "$alpha_wrong_private" "forge otherwise valid private Alpha item binding"
+git -C "$alpha_wrong_private" tag -a v0.3.2 -m "fixture wrong private Alpha identity"
+expect_fail "Alpha record must bind exact committed private item" "IDs do not match the validated candidate record" \
+	"$alpha_wrong_private/Tools/workshop-package.sh" --alpha "$FIXTURE_ROOT/alpha-wrong-private-package"
+[ ! -e "$FIXTURE_ROOT/alpha-wrong-private-package" ]
+[ ! -e "$FIXTURE_ROOT/alpha-wrong-private-package.sha256" ]
 
 pending_evidence="$(clone_case pending-release-evidence)"
 pending_candidate="$(freeze_private_candidate "$pending_evidence")"

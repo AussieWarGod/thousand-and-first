@@ -12,7 +12,8 @@ namespace ThousandAndFirst
 	/// exile mirrors:
 	/// the authoritative archive owns deep settlement and standings copies. Its manual reader
 	/// bounds every archive-owned row, string, and nested settlement payload before allocation.
-	/// Version 8 freezes exact expedition result/deed publication; archive v1's unsafe reflected settlement wire was a
+	/// Version 9 appends per-receipt authority-hash basis provenance; version 8 freezes exact
+	/// expedition result/deed publication; archive v1's unsafe reflected settlement wire was a
 	/// pre-release format and is deliberately refused rather than partly interpreted.
 	/// </summary>
 	[Serializable]
@@ -22,9 +23,10 @@ namespace ThousandAndFirst
 #endif
 	{
 		private const int Magic = 0x54415231; // TAR1
-		/// <summary>v8 appends expedition-result outbox authority; v7 appends directional policy,
-		/// signed spillover carry, and advisory observation.</summary>
-		public const int CurrentVersion = 8;
+		/// <summary>v9 appends the fourteen-integer per-receipt hash-basis tail; v8 appends
+		/// expedition-result outbox authority; v7 appends directional policy, signed spillover
+		/// carry, and advisory observation.</summary>
+		public const int CurrentVersion = 9;
 		internal const int LegacyJobVersion = 2;
 		internal const int MissionJobVersion = 3;
 		internal const int ExactDeliveryJobVersion = 4;
@@ -32,6 +34,9 @@ namespace ThousandAndFirst
 		internal const int SettlementTopologyVersion = 6;
 		internal const int DirectionalStandingVersion = 7;
 		internal const int ExpeditionResultJobVersion = 8;
+		/// <summary>Envelopes at or above this version carry the per-receipt hash-basis tail.
+		/// Envelopes 2-8 carry no tail and every basis stays 0 (unresolved).</summary>
+		internal const int HashBasisVersion = 9;
 		private const int MaxTextBytes = 8192;
 		private const int MaxBindings = 196;
 		private const int MaxJobs = 16;

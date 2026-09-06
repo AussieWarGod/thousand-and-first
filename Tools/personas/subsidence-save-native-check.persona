@@ -1,0 +1,9 @@
+# First leg only: actual save of real one-of-five partial departure. No reload claim.
+DESCRIPTION=save a real partially completed subsidence step for a separate fresh-profile reload
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;subsidence-save-check;stagedigest
+VERBS=subsidence-save-check
+EXPECT=stagedigest:OK~founded=false,subsidence-save-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+SET=growth,native-regression,save-load

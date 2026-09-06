@@ -12,7 +12,7 @@ namespace ThousandAndFirst
 		{
 			Failure = "";
 			if (Shape == null || !Enum.IsDefined(typeof(KingdomInheritancePhase), Shape.PhaseValue)
-				|| ReconstructionVersion <= 0)
+				|| ReconstructionVersion < 0)
 			{
 				Failure = "the phase or reconstruction version was invalid";
 				return false;
@@ -56,6 +56,12 @@ namespace ThousandAndFirst
 			if (phase == KingdomInheritancePhase.RepairRequired && noAuthority)
 			{
 				return true;
+			}
+
+			if (ReconstructionVersion == 0)
+			{
+				Failure = "inheritance payload lacked a valid reconstruction version";
+				return false;
 			}
 
 			KingdomSealRecord legacy;

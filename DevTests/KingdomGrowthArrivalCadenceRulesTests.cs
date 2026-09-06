@@ -166,7 +166,7 @@ namespace ThousandAndFirst.Tests
 			settlement.LifecycleBook.Growth = book;
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(settlement,
 				out byte[] v18, out string failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.ExpeditionResultVersion,
+			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
 				BitConverter.ToInt32(v18, 4));
 			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement loaded, out int future, out failure), failure);

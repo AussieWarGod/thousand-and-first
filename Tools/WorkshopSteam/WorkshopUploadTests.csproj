@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>TafWorkshopUploadTests</AssemblyName>
+    <StartupObject>ThousandAndFirst.WorkshopSteam.UploadTests</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="UploadProtocol.cs" />
+    <Compile Include="UploadProtocolTests.cs" />
+    <Compile Include="UploadCallbackRules.cs" />
+    <Compile Include="UploadCallbackRulesTests.cs" />
+    <Compile Include="ReleaseSubmissionObservation.cs" />
+    <Compile Include="ReleaseSubmissionObservationTests.cs" />
+    <Compile Include="ObservationAdversarialTests.cs" />
+    <Compile Include="ExtraObservationTests.cs" />
+    <Compile Include="UploadSubmissionRecord.cs" />
+    <Compile Include="UploadSubmissionRecordTests.cs" />
+    <Compile Include="UploadSubmissionRecordRaceTests.cs" />
+    <Compile Include="ObservationWriteTests.cs" />
+    <Compile Include="UploadAftermath.cs" />
+    <Compile Include="UploadAftermathTests.cs" />
+    <Compile Include="UploadCleanup.cs" />
+    <Compile Include="UploadCleanupTests.cs" />
+    <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackageTests.cs" />
+    <Compile Include="UploadAttemptLease.cs" />
+    <Compile Include="UploadAttemptLeaseTests.cs" />
+    <Compile Include="UploadAttemptLease.Registry.cs" />
+    <Compile Include="RegistryLeaseTests.cs" />
+    <Compile Include="WorkshopItemLock.cs" />
+    <Compile Include="WorkshopItemLockTests.cs" />
+    <Compile Include="WorkshopReleaseRegistry.cs" />
+    <Compile Include="WorkshopReleaseRegistryTests.cs" />
+    <Compile Include="WorkshopSteamCliTests.cs" />
+    <Compile Include="UploadTests.cs" />
+    <Compile Include="../ScenarioFileTrust.cs" Link="ScenarioFileTrust.cs" />
+  </ItemGroup>
+</Project>

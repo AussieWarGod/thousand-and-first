@@ -74,6 +74,9 @@ namespace ThousandAndFirst
 				return;
 			}
 			r_KingdomWear wear = work.GetPart<r_KingdomWear>();
+			if (wear != null && (wear.LoadFailed || wear.LifecycleQuarantined)) return;
+			if (KingdomSubsidenceRungRuntime.BlocksWork(work)
+				|| wear != null && wear.IncidentPhase != (int)KingdomWearIncidentPhase.None) return;
 			if (wear == null)
 			{
 				RecoverRemovedRepair(System, work, Job);
@@ -130,6 +133,7 @@ namespace ThousandAndFirst
 				|| !GameObject.Validate(work) || work.CurrentZone != Z) return;
 			KingdomConstructionJob inspected = Job;
 			r_KingdomWear wear = work.GetPart<r_KingdomWear>();
+			if (wear != null && (wear.LoadFailed || wear.LifecycleQuarantined)) return;
 			if (wear == null)
 			{
 				if (Job.Phase == KingdomConstructionPhase.Complete) return;

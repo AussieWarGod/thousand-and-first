@@ -57,8 +57,10 @@ namespace ThousandAndFirst.Tests
 				"KingdomChronicleReceiptRules.cs"));
 			StringAssert.Contains("public const int MaxReceipts = 4096;", rules);
 			StringAssert.Contains("rows.Count >= KingdomChronicleReceiptRules.MaxReceipts", shell);
-			StringAssert.Contains("ReportFault(KingdomChronicleRegistryFault.TooManyRows, \"capacity\", true)",
+			StringAssert.Contains("PublicationFault(KingdomChronicleRegistryFault.TooManyRows, \"capacity\", true, OwnerExact)",
 				shell);
+			StringAssert.Contains("if (PublicationAllowed(OwnerExact)) ReportFault(Fault, Context, PlayerVisible);",
+				TestMain.ReadRepositoryText("Chronicle/KingdomChronicle.At.cs"));
 			StringAssert.Contains("no replay receipt was discarded", shell);
 			Assert.IsFalse(shell.Contains("rows.RemoveAt("));
 			Assert.IsFalse(shell.Contains("Rows.RemoveAt("));

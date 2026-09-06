@@ -93,7 +93,8 @@ namespace ThousandAndFirst
 				.Append("  Population: ")
 				.Append(System.Population)
 				.Append(System.SupportedLevel > 0 ? ("  {{K|carries " + System.SupportedLevel + "}}") : "")
-				.Append((System.SupportedLevel > 0 && Z != null) ? Dated(KingdomSubsidence.SightingClause(System, Z, (The.Game != null) ? The.Game.TimeTicks : 0L)) : "");
+				.Append((System.SupportedLevel > 0 && Z != null) ? Dated(KingdomSubsidence.SightingClause(System, Z, (The.Game != null) ? The.Game.TimeTicks : 0L)) : "")
+				.Append(KingdomSubsidenceStepRuntime.Status(System));
 			// The realm is the faction; the cities are where its history happened. A founder
 			// standing in one should be told the other is still out there, keeping itself.
 			List<KingdomSettlement> nonSeat = System.NonSeatSettlements();

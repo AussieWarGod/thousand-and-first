@@ -4,7 +4,7 @@ using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {
-	/// <summary>Disposable native callback fault, armed by the exact appended summary, not event count.</summary>
+	/// <summary>Disposable native declaration fault, armed by the frozen report, not event count.</summary>
 	[Serializable]
 	public sealed class KingdomSubsidenceNativeSummaryFault : IPart
 	{
@@ -24,9 +24,17 @@ namespace ThousandAndFirst.Harness
 		public override bool HandleEvent(GetDisplayNameEvent E)
 		{
 			if (Throws == 0 && ReferenceEquals(E.Object, ParentObject) && System != null
-				&& System.ChronicleEntries.Count == ExpectedCount
-				&& string.Equals(System.ChronicleEntries[ExpectedCount - 1], ExpectedOfficial,
-					StringComparison.Ordinal))
+				&& System.ChronicleEntries.Count == ExpectedCount - 1
+				&& KingdomSubsidenceStepCodec.TryDecode(System.City.SubsidenceModel, out KingdomSubsidenceStepBook book)
+				&& book.Active == null
+				&& KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out KingdomSubsidenceBatch batch)
+				&& batch.Closing && batch.Departed == 5
+				&& KingdomSubsidenceReportCodec.TryDecode(batch.ReportModel, out KingdomSubsidenceReportPlan report)
+				&& report.Entries.Count == 1 && !report.Entries[0].ChronicleProved
+				&& report.Entries[0].LedgerPhase == ReportLedgerPhase.Proved
+				&& string.Equals("On the " + Calendar.GetDay(report.Entries[0].AtTick) + " of "
+					+ Calendar.GetMonth(report.Entries[0].AtTick) + ", " + Calendar.GetYear(report.Entries[0].AtTick)
+					+ " AR, " + report.Entries[0].Text + ".", ExpectedOfficial, StringComparison.Ordinal))
 			{
 				Throws++;
 				CommittedBeforeFault = System.LastSubsidenceTick == ExpectedCheckpoint

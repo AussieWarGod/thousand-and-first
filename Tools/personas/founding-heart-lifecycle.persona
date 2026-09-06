@@ -1,0 +1,10 @@
+# Real direct founding with scoped native callbacks, terminal recovery and same-state retry checks.
+# Retains profile and original/foreign objects. Not ordinary-save or historical-save acceptance.
+DESCRIPTION=founding lifecycle refuses callback-time substitutions and typed collisions before clean completion without replay
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;founding-heart-lifecycle;stagedigest
+VERBS=founding-heart-lifecycle
+EXPECT=stagedigest:OK~founded=false,founding-heart-lifecycle:OK~cases=15 passed=15 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+SET=growth,native-regression
