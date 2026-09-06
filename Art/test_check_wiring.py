@@ -6,8 +6,115 @@ import json
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from Art import check_wiring, check_xml_refs
+
+
+class RaisingCeremonyTests(unittest.TestCase):
+    """Source classification only; synthetic setup never proves a raising ceremony."""
+
+    FIXTURE = os.path.join("Harness", "KingdomSubsidenceRungNativeFixture.cs")
+    SYNTHETIC = (
+        "namespace ThousandAndFirst.Harness\n"
+        "// Synthetic initial work/home state, not construction, adoption, or lodging acceptance.\n"
+        "internal sealed class KingdomSubsidenceRungNativeFixture {\n"
+        'Work.SetIntProperty("KingdomBuilt", 1); }\n'
+    )
+    STAMP = 'Work.SetIntProperty("KingdomBuilt", 1);\n'
+    CEREMONY = "KingdomCeremony.OnBuildingRaised(work);\n"
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        prior = os.getcwd()
+        self.addCleanup(os.chdir, prior)
+        os.chdir(temporary.name)
+        self.write("Growth/KingdomScaffold.cs", self.STAMP + self.CEREMONY)
+        self.write("Growth/KingdomPlot2.cs", self.STAMP + self.CEREMONY + "PlanQuote(plot);\n")
+        self.write("Growth/KingdomPlanMarker.cs", "PlanQuote(plot);\n")
+        self.write("Core/KingdomFounding.cs", self.STAMP)
+        self.write(self.FIXTURE, self.SYNTHETIC)
+        self.write("manifest.json", json.dumps({"Directories": [{"Paths": ["/Core/", "/Growth/"]}]}))
+        patcher = mock.patch.object(
+            check_wiring, "runtime_paths",
+            return_value=["Core/KingdomFounding.cs", "Growth/KingdomScaffold.cs", "Growth/KingdomPlot2.cs"],
+        )
+        self.inventory = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def write(self, path, content):
+        parent = os.path.dirname(path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with io.open(path, "w", encoding="utf-8") as stream:
+            stream.write(content)
+
+    def test_exact_disclosed_developer_fixture_is_a_separate_category(self):
+        self.assertNotIn(self.FIXTURE, check_xml_refs.RAISING_PATHS + check_xml_refs.ADOPTING_PATHS)
+        self.assertEqual([], check_xml_refs.raising_ceremony_problems())
+        self.inventory.assert_called_once_with(".cs")
+
+    def test_unknown_harness_sibling_shard_and_production_stamper_still_refuse(self):
+        for path in (
+            "Harness/OtherFixture.cs",
+            "Harness/KingdomSubsidenceRungNativeFixture.Extra.cs",
+            "Growth/UnregisteredStamper.cs",
+        ):
+            with self.subTest(path=path):
+                self.write(path, self.SYNTHETIC)
+                problems = check_xml_refs.raising_ceremony_problems()
+                self.assertTrue(any(path in row and "neither a known raising path" in row for row in problems))
+                os.unlink(path)
+
+    def test_each_production_raiser_still_requires_its_ceremony(self):
+        for path in check_xml_refs.RAISING_PATHS:
+            with self.subTest(path=path):
+                original = check_xml_refs.read(path)
+                self.write(path, original.replace(self.CEREMONY, ""))
+                problems = check_xml_refs.raising_ceremony_problems()
+                self.assertTrue(any(path in row and "without calling KingdomCeremony.OnBuildingRaised" in row for row in problems))
+                self.write(path, original)
+
+    def test_fixture_must_keep_its_exact_synthetic_disclosure_and_namespace(self):
+        for token in (
+            "namespace ThousandAndFirst.Harness",
+            "internal sealed class KingdomSubsidenceRungNativeFixture",
+            "Synthetic initial work/home state, not construction, adoption, or lodging acceptance.",
+        ):
+            with self.subTest(token=token):
+                self.write(self.FIXTURE, self.SYNTHETIC.replace(token, ""))
+                self.assertTrue(any("lacks its synthetic developer disclosure" in row
+                                    for row in check_xml_refs.raising_ceremony_problems()))
+        self.write(self.FIXTURE, self.SYNTHETIC)
+
+    def test_ordinary_manifest_selection_or_staging_never_gets_fixture_exemption(self):
+        for group in ({"Paths": ["/Harness/"]}, {"Path": "/harness/"}, {"Paths": ["/"]}):
+            with self.subTest(group=group):
+                self.write("manifest.json", json.dumps({"Directories": [group]}))
+                self.assertTrue(any("selected by the ordinary manifest" in row
+                                    for row in check_xml_refs.raising_ceremony_problems()))
+        self.write("manifest.json", json.dumps({"Directories": [{"Paths": ["/Core/"]}]}))
+        self.inventory.return_value.append(self.FIXTURE)
+        self.assertTrue(any("leaked into ordinary staging" in row
+                            for row in check_xml_refs.raising_ceremony_problems()))
+
+    def test_unprovable_developer_containment_refuses(self):
+        self.inventory.side_effect = RuntimeError("inventory unavailable")
+        self.assertTrue(any("developer-only classification cannot be proved" in row
+                            for row in check_xml_refs.raising_ceremony_problems()))
+        self.inventory.side_effect = None
+        self.write("manifest.json", "{}")
+        self.assertTrue(any("developer-only classification cannot be proved" in row
+                            for row in check_xml_refs.raising_ceremony_problems()))
+        os.link(self.FIXTURE, self.FIXTURE + ".linked")
+        self.assertTrue(any("ordinary contained file" in row
+                            for row in check_xml_refs.raising_ceremony_problems()))
+        os.unlink(self.FIXTURE + ".linked")
+        os.rename(self.FIXTURE, self.FIXTURE + ".retained")
+        os.symlink(os.path.basename(self.FIXTURE) + ".retained", self.FIXTURE)
+        self.assertTrue(any("ordinary contained file" in row
+                            for row in check_xml_refs.raising_ceremony_problems()))
 
 
 class ArtPolicyTests(unittest.TestCase):

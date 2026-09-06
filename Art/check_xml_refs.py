@@ -51,10 +51,16 @@ available for local licensed checks.
 
 import glob
 import io
+import json
 import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+
+if __package__:
+    from . import check_wiring
+else:
+    import check_wiring
 
 TAF_XML = [
     "RuntimeData/Books.xml",
@@ -617,11 +623,15 @@ def building_reference_problems():
 # through the ceremony; the third only adopts what was already standing when the rite was
 # poured, which is not a raising and has nobody to gather. A file appearing here that this
 # list does not name is a new completion path, and the question it has to answer is the same.
+# Exact synthetic developer fixtures are a third category, never raising/adoption acceptance.
 RAISING_PATHS = (
     os.path.join("Growth", "KingdomScaffold.cs"),
     os.path.join("Growth", "KingdomPlot2.cs"),
 )
 ADOPTING_PATHS = (os.path.join("Core", "KingdomFounding.cs"),)
+SYNTHETIC_DEVELOPER_PATHS = (
+    os.path.join("Harness", "KingdomSubsidenceRungNativeFixture.cs"),
+)
 
 # Both files that realise a staked plan must carry the surveyor's words onto whatever finishes
 # the building, or the chronicle quotes a plan for a wall and never for a house.
@@ -629,6 +639,53 @@ PLAN_PATHS = (
     os.path.join("Growth", "KingdomPlanMarker.cs"),
     os.path.join("Growth", "KingdomPlot2.cs"),
 )
+
+
+def synthetic_developer_problems(path):
+    """An exact fixture exception requires source disclosure and ordinary-build exclusion."""
+    problems = []
+    if path not in SYNTHETIC_DEVELOPER_PATHS:
+        return ["%s is not an exact synthetic developer fixture" % path]
+    if (not os.path.isfile(path) or os.path.realpath(path) != os.path.abspath(path)
+            or os.stat(path).st_nlink != 1):
+        return ["%s synthetic developer fixture must be an ordinary contained file" % path]
+    source = read(path)
+    for token in (
+        "namespace ThousandAndFirst.Harness",
+        "internal sealed class KingdomSubsidenceRungNativeFixture",
+        "Synthetic initial work/home state, not construction, adoption, or lodging acceptance.",
+    ):
+        if token not in source:
+            problems.append("%s lacks its synthetic developer disclosure: %s" % (path, token))
+    try:
+        staged = check_wiring.runtime_paths(".cs")
+        if os.path.normpath(path).casefold() in {
+            os.path.normpath(row).casefold() for row in staged
+        }:
+            problems.append("%s synthetic developer fixture leaked into ordinary staging" % path)
+        manifest = json.loads(read("manifest.json"))
+        groups = manifest["Directories"]
+        if not isinstance(groups, list) or not groups:
+            raise ValueError("Directories must be a nonempty array")
+        for group in groups:
+            if not isinstance(group, dict):
+                raise ValueError("directory row must be an object")
+            paths = group.get("Paths", [])
+            if not isinstance(paths, list):
+                raise ValueError("Paths must be an array")
+            paths = paths + ([group["Path"]] if "Path" in group else [])
+            if not paths:
+                raise ValueError("directory row has no paths")
+            for folder in paths:
+                if not isinstance(folder, str) or not folder or ".." in folder.replace("\\", "/").split("/"):
+                    raise ValueError("ordinary directory path is malformed")
+                selected = os.path.normpath(folder.replace("\\", "/").strip("/")).replace(os.sep, "/").casefold()
+                fixture = path.replace(os.sep, "/").casefold()
+                if selected == "." or fixture == selected or fixture.startswith(selected + "/"):
+                    problems.append("%s synthetic developer fixture is selected by the ordinary manifest" % path)
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
+        problems.append("%s developer-only classification cannot be proved: %s" % (path, error))
+    return problems
 
 
 def raising_ceremony_problems():
@@ -652,10 +709,17 @@ def raising_ceremony_problems():
     known_paths = set()
     for path in RAISING_PATHS + ADOPTING_PATHS:
         known_paths.update(source_family_paths(path))
+    for path in SYNTHETIC_DEVELOPER_PATHS:
+        if path in stampers:
+            fixture_problems = synthetic_developer_problems(path)
+            problems.extend(fixture_problems)
+            if not fixture_problems:
+                known_paths.add(path)
     for path in sorted(stampers - known_paths):
         problems.append(
             "%s finishes a building but is neither a known raising path nor a known adoption "
-            "path; if it raises one it must call KingdomCeremony.OnBuildingRaised" % path
+            "path nor an exact synthetic developer fixture; if it raises one it must call "
+            "KingdomCeremony.OnBuildingRaised" % path
         )
     for path in RAISING_PATHS:
         paths = source_family_paths(path)
