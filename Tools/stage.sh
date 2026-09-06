@@ -200,22 +200,51 @@ cmd_list_head() { stage_list_head0 "${1:-HEAD}" | validate_sort_paths "commit st
 
 cmd_manifest() {
 	cd "$REPO"
-	sorted_list | while IFS= read -r f; do
-		printf '%s  %s\n' "$(sha256sum -- "$f" | cut -d' ' -f1)" "$f"
-	done
+	sorted_list | tree_manifest_from_inventory "$REPO"
 }
 
 tree_manifest_from_inventory() {
-	local tree="$1" inventory="${2:-}" f
-	if [ -n "$inventory" ]; then
-		while IFS= read -r f; do
-			printf '%s  %s\n' "$(sha256sum -- "$tree/$f" | cut -d' ' -f1)" "$f"
-		done < "$inventory"
-	else
-		while IFS= read -r f; do
-			printf '%s  %s\n' "$(sha256sum -- "$tree/$f" | cut -d' ' -f1)" "$f"
-		done
-	fi
+	local tree="$1" inventory="${2:-}"
+	python3 -c '
+import hashlib
+import os
+import stat
+import sys
+
+def fingerprint(status):
+    return (status.st_dev, status.st_ino, status.st_mode, status.st_nlink,
+            status.st_size, status.st_mtime_ns, status.st_ctime_ns)
+
+tree = os.fsencode(sys.argv[1])
+inventory = open(sys.argv[2], "rb") if sys.argv[2] else sys.stdin.buffer
+try:
+    for row in inventory:
+        if not row.endswith(b"\n") or row == b"\n":
+            raise ValueError("inventory has an empty or unterminated path record")
+        relative = row[:-1]
+        path = os.path.join(tree, relative)
+        descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            before = os.fstat(descriptor)
+            if not stat.S_ISREG(before.st_mode):
+                raise ValueError("manifest input is not a regular file: " + repr(relative))
+            digest = hashlib.sha256()
+            length = 0
+            while block := os.read(descriptor, 1024 * 1024):
+                digest.update(block)
+                length += len(block)
+            after = os.fstat(descriptor)
+            named = os.stat(path, follow_symlinks=False)
+            if (length != before.st_size or fingerprint(before) != fingerprint(after)
+                    or fingerprint(after) != fingerprint(named)):
+                raise ValueError("file changed while hashing: " + repr(relative))
+            sys.stdout.buffer.write(digest.hexdigest().encode("ascii") + b"  " + relative + b"\n")
+        finally:
+            os.close(descriptor)
+finally:
+    if inventory is not sys.stdin.buffer:
+        inventory.close()
+' "$tree" "$inventory"
 }
 
 identity() { stat -Lc '%d:%i' -- "$1"; }
