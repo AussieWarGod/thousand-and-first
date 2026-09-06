@@ -146,10 +146,11 @@ namespace ThousandAndFirst.Harness
 		internal static void Select(EmbarkBuilder Builder)
 		{
 			if (Builder == null) return;
+			string selectedMode = KingdomQuickstartBootTest.SelectMode(Builder);
 			QudGamemodeModule modes = Builder.GetModule<QudGamemodeModule>();
-			if (modes == null || modes.GameModes == null
-				|| !modes.GameModes.ContainsKey(KingdomScenarioFastEmbarkModule.ModeId)) return;
-			modes.SelectMode(KingdomScenarioFastEmbarkModule.ModeId);
+			if (selectedMode == null || modes == null || modes.GameModes == null
+				|| !modes.GameModes.ContainsKey(selectedMode)) return;
+			modes.SelectMode(selectedMode);
 		}
 	}
 

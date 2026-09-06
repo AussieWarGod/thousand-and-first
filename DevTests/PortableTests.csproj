@@ -136,6 +136,7 @@
 	<Compile Include="KingdomEducationPostObservationTests.cs" />
 	<Compile Include="KingdomEducationPostObservationSourceTests.cs" />
 	<Compile Include="KingdomQuickstartTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />

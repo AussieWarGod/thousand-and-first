@@ -33,6 +33,50 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomQuickstartRules.TryProfileForLocation("Joppa", out _), Is.False);
 		}
 
+		[TestCase("quickstart-boot marsh yes", "marsh", true)]
+		[TestCase("quickstart-boot marsh no", "marsh", false)]
+		[TestCase("quickstart-boot canyon yes", "canyon", true)]
+		[TestCase("quickstart-boot canyon no", "canyon", false)]
+		[TestCase("quickstart-boot dunes yes", "dunes", true)]
+		[TestCase("quickstart-boot dunes no", "dunes", false)]
+		public void BootRequestParsesSixExactNativeTestSelections(string Command, string Profile, bool Advisor)
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.True);
+			Assert.That(request.ProfileKey, Is.EqualTo(Profile));
+			Assert.That(request.Advisor, Is.EqualTo(Advisor));
+			Assert.That(request.Command, Is.EqualTo(Command));
+		}
+
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase("quickstart-boot")]
+		[TestCase("quickstart-boot marsh")]
+		[TestCase("quickstart-boot Marsh yes")]
+		[TestCase("quickstart-boot marsh Yes")]
+		[TestCase("quickstart-boot marsh 1")]
+		[TestCase("quickstart-boot unknown no")]
+		[TestCase("quickstart-boot  marsh yes")]
+		[TestCase("quickstart-boot\tmarsh yes")]
+		[TestCase("quickstart-boot marsh yes\n")]
+		[TestCase("quickstart-boot marsh yes status")]
+		[TestCase("status quickstart-boot marsh yes")]
+		[TestCase("quickstart-check")]
+		public void BootRequestRefusesNoncanonicalCommands(string Command)
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.False);
+			Assert.That(request, Is.Null);
+		}
+
+		[Test]
+		public void BootRequestRefusesMissingMixedAndOversizedScripts()
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(null, out _), Is.False);
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new string[0], out _), Is.False);
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(
+				new[] { "quickstart-boot marsh yes", "status" }, out _), Is.False);
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { new string('x', 97) }, out _), Is.False);
+		}
+
 		[Test]
 		public void ReceiptIsExactMonotoneAndTamperEvident()
 		{
@@ -224,6 +268,36 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("SystemLongDistanceMoveTo", camp);
 			StringAssert.Contains("if (!Required(x, y)) continue", camp);
 			StringAssert.DoesNotContain("ClearAll", camp);
+		}
+
+		[Test]
+		public void SourceContractUsesPlacedFounderReadinessBeforeReceiptPublication()
+		{
+			string source = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.cs");
+			StringAssert.Contains("GameObject founder = The.Player;", source);
+			int readiness = source.IndexOf("KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder)",
+				StringComparison.Ordinal);
+			Assert.That(readiness, Is.GreaterThanOrEqualTo(0));
+			Assert.That(readiness, Is.LessThan(source.IndexOf(
+				"KingdomQuickstartRules.TryCreateReceipt", StringComparison.Ordinal)));
+			StringAssert.DoesNotContain("KingdomQuickstartCampBuilder.Ready(zone)", source);
+			string camp = TestMain.ReadRepositoryText("World/KingdomQuickstartCampBuilder.cs");
+			StringAssert.Contains("return Ready(Z);", camp);
+			StringAssert.Contains("ReferenceEquals(item, Founder)", camp);
+		}
+
+		[Test]
+		public void SourceContractRequiresExactFoundedHeartWithoutInventingCompletedRung()
+		{
+			string source = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Verification.cs");
+			StringAssert.Contains("KingdomPlots.HasExactFoundedHeart", source);
+			StringAssert.DoesNotContain("KingdomPlots.HeartRung(Zone) < 1", source);
+			StringAssert.DoesNotContain("SetZoneProperty", source);
+			StringAssert.DoesNotContain("RecoverFoundingHeart", source);
+			string seal = TestMain.ReadRepositoryText("Growth/KingdomPlot2.07h.FoundingHeartSeal.cs");
+			StringAssert.Contains("TryReadFoundingHeartWorkAuthority(Z, works, out _, RawDisplayName: true)", seal);
+			string stake = TestMain.ReadRepositoryText("Growth/KingdomPlot2.07f.FoundingHeartStakeTruth.cs");
+			StringAssert.Contains("RawDisplayName ? Works.Render?.DisplayName : Works.DisplayName", stake);
 		}
 
 		[Test]

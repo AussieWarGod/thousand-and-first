@@ -20,16 +20,17 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The current isolated draft census reports 3045 staged production C# files and 431,086 physical lines,
+The current isolated draft census reports 3045 staged production C# files and 431,188 physical lines,
 with 0 at or above the strict 300-line cap. It contains 1414 files with direct `XRL` imports;
 0 of those exceed the line limit. Exact staged source inventory digest:
-`ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`.
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
 The generated staging list contains 3076 files; it does not prove current
-installed or subscribed content. Strict four-mode compilation and ABI checks pass against inputs
-`987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`;
-full suites pass 13,498 Taf / 4,885 Portable cases with zero skips;440 Python Tools tests pass.
+installed or subscribed content. Final strict four-mode compilation and ABI checks pass:
+ordinary3041/3045, developer3149/3153,108 Harness shards.
+Full suites pass 13,521 Taf / 4,908 Portable cases with zero skips;470 Python Tools tests pass.
 Historical nested archive and103 retained real serializer cases pass;
-full historical-save and ordinary-gameplay acceptance remain open.
+full historical-save and ordinary-gameplay acceptance remain open. The reported Quickstart
+startup failure is corrected in source but genuine boot and save/reload acceptance remain open.
 The exact-inventory semantic review is now bound in `docs/STRUCTURE_REVIEW.json`; the structure
 release gate passes. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) retain earlier
 review provenance and open functional limits. This is not the complete release gate.

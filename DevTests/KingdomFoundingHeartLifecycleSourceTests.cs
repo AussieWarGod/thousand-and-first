@@ -208,7 +208,8 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_CompletionNameMatchesPlainFrozenWorkNameNotItsPlotObjectLabel()
 		{
 			string truth = Read("Growth/KingdomPlot2.07f.FoundingHeartStakeTruth.cs");
-			Contains(truth, "part.DisplayName != truth.DisplayName", "Works.DisplayName != \"plot: \" + truth.DisplayName",
+			Contains(truth, "part.DisplayName != truth.DisplayName", "bool RequireStaked = true, bool RawDisplayName = false",
+				"(RawDisplayName ? Works.Render?.DisplayName : Works.DisplayName) != \"plot: \" + truth.DisplayName",
 				"r_KingdomScaffold.CompletionNameProperty, Truth.DisplayName)");
 			Contains(Read("Growth/KingdomPlot2.30.Finish.cs"), "string displayName = Works.DisplayName ?? entry.Name");
 			Contains(Read("Growth/KingdomPlot2.27.FinalBuilding.cs"), "SetStringProperty(r_KingdomScaffold.CompletionNameProperty, DisplayName)");

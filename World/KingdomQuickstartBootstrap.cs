@@ -60,7 +60,8 @@ namespace ThousandAndFirst
 			}
 			KingdomQuickstartProfile profile = null;
 			Zone zone = The.ZoneManager?.ActiveZone;
-			Cell playerCell = The.Player?.CurrentCell;
+			GameObject founder = The.Player;
+			Cell playerCell = founder?.CurrentCell;
 			string raw = Game?.GetStringGameState(KingdomQuickstartRules.ReceiptState, null);
 			bool continuation = KingdomQuickstartRules.TryDecode(raw,
 				out KingdomQuickstartReceipt observedReceipt)
@@ -102,7 +103,7 @@ namespace ThousandAndFirst
 					Failure = "A realm existed before the quickstart receipt reserved its first step.";
 					return false;
 				}
-				if (!KingdomQuickstartCampBuilder.Ready(zone))
+				if (!KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder))
 				{
 					Failure = "The bounded heart apron or supply path was not safely prepared.";
 					return false;

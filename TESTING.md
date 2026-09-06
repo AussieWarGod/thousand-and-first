@@ -6,7 +6,28 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current isolated draft census — not release signoff
+## Current Quickstart regression — native acceptance pending
+
+Private0.3.1 failed actual new-game startup: readiness rejects the placed founder, and a
+follow-on verification incorrectly requires an already completed heart. See
+[current status](docs/STATUS.md) for the isolated correction and release hold. Existing grant
+fixtures do not execute the complete boot path. The offline readiness diagnostic returned
+3 passed/42 BLOCKED because native Physics initialization requires Unity; it is not a passing
+founder regression. Two new source-contract assertions pin the intended calls only.
+QSB1 must cover all three genuine starts with advisor on/off and save/reload; do not preseed
+the founding/rung/receipt or use the scenario runner's ground-clearing step on that world.
+
+The [genuine boot route](DevTests/QUICKSTART-BOOT-TESTS.md) is implemented and compiled, not run.
+It observes the real world/camp/bootstrap hooks and checks exact heart, physical grants and
+receipt after all boot callbacks. Current corrected source passes all four C#7.3 modes+ABI,
+13,521 Taf /4,908 Portable cases with zero skips, and470 Tools tests. Production inventory:
+3045 sources /431,188 physical lines /1414 direct-XRL /zero line-cap failures, digest
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+Ordinary compiler inputs3041/3045; developer3149/3153,108 Harness shards. These component/source
+results do not close QSB1. The first sealed marsh/advisorYes profile is prepared, unlaunched;
+save/quit/reload is not yet automated by the new route.
+
+## Retained pre-upload census — not current correction signoff
 
 Strict four-mode C#7.3 compilation and compatibility ABI pass across 3045 production C# sources.
 Current census:431,086 physical lines/1414 direct-XRL imports/zero line-cap failures. Ordinary

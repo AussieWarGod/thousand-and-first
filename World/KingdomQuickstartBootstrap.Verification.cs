@@ -25,7 +25,7 @@ namespace ThousandAndFirst
 				|| !KingdomPlots.TrySurveyedHeart(Zone, out KingdomPlotRules.PlotRect survey)
 				|| survey.Width != KingdomPlotRules.HugeWidth
 				|| survey.Height != KingdomPlotRules.HugeHeight
-				|| KingdomPlots.HeartRung(Zone) < 1)
+				|| !KingdomPlots.HasExactFoundedHeart(System, Zone, riteX, riteY))
 			{
 				Failure = "The normal founding transaction did not leave one exact founded heart and city identity.";
 				return false;

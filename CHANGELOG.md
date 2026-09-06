@@ -9,13 +9,13 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 below it.
 
 > **Current isolated draft census — not release sign-off.** Current 3045-file census is line-cap green:
-> 431,086 physical lines, with 0 files at or above 300 lines. Direct `XRL`
+> 431,188 physical lines, with 0 files at or above 300 lines. Direct `XRL`
 > imports occur in 1414 files, 0 of them over the line limit. Inventory SHA-256:
-> `ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`.
+> `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
 > The current derived cold-install inventory contains 3076 files; this is not current installed
-> or subscribed content proof. Strict four-mode compilation and ABI checks pass against inputs
-> `987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`;
-> full suites pass13,498 Taf /4,885 Portable, zero skips;440 Tools tests pass.
+> or subscribed content proof. Final strict four-mode compilation and ABI checks pass:
+> ordinary3041/3045, developer3149/3153,108 Harness shards.
+> Full suites pass13,521 Taf /4,908 Portable, zero skips;470 Tools tests pass.
 > Historical nested archive hash tests and103 retained real serializer cases pass; ordinary
 > gameplay, full historical-save acceptance and exact release gates stay open.
 > Exact structural semantic review now binds these bytes and its structure gate passes. This does
@@ -36,6 +36,14 @@ below it.
 
 ### Changed
 
+- Corrected Quickstart's post-placement ground check to admit only the exact founder, and its
+  founding verification to accept exact sealed/staked heart authority without forcing completed
+  construction. The new heart check avoids display-name callbacks. Genuine boot regression
+  automation is authored and compiled; all three profiles, advisor on/off, and save/reload remain
+  unverified in-game. The existing private0.3.1 package still contains the reported failure.
+- Developer preparation now seals the explicit Quickstart advisor choice and rejects conflicting
+  scripts/options. Staging batches file hashing while retaining all three independent reads and
+  exact manifest bytes; atomic publication and source-change refusals remain intact.
 - Witnessed resident deaths now retain a bounded, owner-bound journal before changing resident,
   role or tally state. Interrupted accounting can resume without a body; a missing body never
   proves a frozen roof obligation. Existing expedition outcomes and frozen memory policy survive

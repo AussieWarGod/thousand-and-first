@@ -10,6 +10,10 @@ This checkout is under active integration and is not an installable release cand
 gates live in [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
 
+Private 0.3.1 playtesting exposed a Kingdom Quickstart startup failure: an empty site with an
+apron/path refusal. A correction is under validation; the uploaded private build must not be
+promoted unchanged. Passing component tests do not yet establish a working new-game start.
+
 ## What the mod adds
 
 - Founding by water rite, territorial claims, settlement stages, named citizens, homes, work,

@@ -5,6 +5,46 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomPlots
 	{
+		/// <summary>Reads exact first-founding custody on loaded ground without completing,
+		/// repairing, or quarantining construction. A sealed stake is already a founded heart;
+		/// its name is read from persisted render storage, never a display-name event.</summary>
+		internal static bool HasExactFoundedHeart(KingdomSystem System, Zone Z,
+			int RiteX, int RiteY)
+		{
+			if (System == null || !System.Founded || Z == null
+				|| !object.ReferenceEquals(The.Game?.GetSystem<KingdomSystem>(), System)
+				|| !TryFoundingHeartTransaction(System, Z, out string transaction)
+				|| !KingdomFoundingHeartRules.TryDecode(
+					Z.GetZoneProperty(FoundingHeartReceiptProperty, null), out var plan)
+				|| !KingdomFoundingHeartRules.Complete(plan)
+				|| plan.TransactionId != transaction || plan.ZoneId != Z.ZoneID
+				|| plan.RiteX != RiteX || plan.RiteY != RiteY
+				|| !ExactFoundingHeartSeal(Z, plan)
+				|| !ExactFoundingHeartReservations(plan)
+				|| !TryReadFoundingHeartContext(Z, plan, out FoundingHeartContext context)
+				|| !string.IsNullOrEmpty(Z.GetZoneProperty(FoundingHeartTerminalFailureProperty, null)))
+				return false;
+			if (!HasFoundingHeartTerminalEvidence(plan, Z))
+			{
+				FoundingHeartReservationStore store = new FoundingHeartReservationStore();
+				return KingdomScenarioStateShape.Classify(store.Observe(FoundingHeartFinalRootKey(plan)), out _)
+						== KingdomDurableKeyShape.Absent
+					&& FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(plan,
+						KingdomFoundingHeartRules.WorksSlot), out GameObject works, out bool graveyard)
+						== KingdomPhysicalLookupState.Exact && !graveyard
+					&& !works.HasIntProperty(FoundingHeartTerminalFailureProperty)
+					&& string.IsNullOrEmpty(works.GetStringProperty(FoundingHeartTerminalFailureProperty))
+					&& TryReadFoundingHeartWorkAuthority(Z, works, out _, RawDisplayName: true)
+					&& store.Current;
+			}
+			string raw = Z.GetZoneProperty(FoundingHeartTerminalProperty, null);
+			return KingdomFoundingHeartTerminalRules.TryDecode(raw, out var terminal)
+				&& terminal.Phase == KingdomFoundingHeartTerminalPhase.EffectsSettled
+				&& FoundingHeartTerminalBinding(context, terminal)
+				&& ExactFoundingHeartRetiredAuthority(Z, terminal.PredecessorId, out _)
+				&& ExactFoundingHeartRecordedFinal(Z, context, terminal, raw);
+		}
+
 		private static bool FoundingHeartSealAbsent(Zone Z)
 		{
 			return string.IsNullOrEmpty(Z?.GetZoneProperty(FoundingHeartSealProperty, null));
@@ -48,7 +88,7 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryReadFoundingHeartWorkAuthority(Zone Z, GameObject Work,
-			out FoundingHeartContext Context)
+			out FoundingHeartContext Context, bool RawDisplayName = false)
 		{
 			Context = null;
 			string raw = Z?.GetZoneProperty(FoundingHeartReceiptProperty, null);
@@ -60,7 +100,7 @@ namespace ThousandAndFirst
 				|| !ExactFoundingHeartFinalCustody(plan)
 				|| !ExactFoundingHeartMarkerRoster(Z, plan, false)
 				|| !FoundingHeartIdentity(Work, plan, KingdomFoundingHeartRules.WorksSlot)
-				|| !ExactFoundingHeartStakeTruth(Work, Context, false)
+				|| !ExactFoundingHeartStakeTruth(Work, Context, false, RawDisplayName)
 				|| !ExactFoundingHeartFinalIntent(Z, Context, Work)
 				|| Work.CurrentZone != Z
 				|| Work.CurrentCell != Z.GetCell(Context.Architecture.MainWorldX,

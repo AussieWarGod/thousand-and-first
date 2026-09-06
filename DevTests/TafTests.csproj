@@ -478,6 +478,7 @@
     <Compile Include="KingdomPoseAwareSitingTests.cs" />
     <Compile Include="KingdomQolPhysicalSourceTests.cs" />
     <Compile Include="KingdomQuickstartTests.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />

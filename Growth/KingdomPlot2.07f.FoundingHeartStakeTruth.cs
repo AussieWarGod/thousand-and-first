@@ -6,7 +6,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomPlots
 	{
 		private static bool ExactFoundingHeartStakeTruth(GameObject Works,
-			FoundingHeartContext Context, bool RequireStaked = true)
+			FoundingHeartContext Context, bool RequireStaked = true, bool RawDisplayName = false)
 		{
 			KingdomFoundingHeartPlan plan = Context?.Plan;
 			KingdomFoundingHeartStakeTruth truth = Context?.Stake;
@@ -27,7 +27,8 @@ namespace ThousandAndFirst
 				|| part.ThresholdManning != truth.ThresholdManning
 				|| part.DefencePending != truth.Defence || part.HasDoor != truth.HasDoor
 				|| part.DoorX != truth.DoorX || part.DoorY != truth.DoorY
-				|| Works.DisplayName != "plot: " + truth.DisplayName) return false;
+				|| (RawDisplayName ? Works.Render?.DisplayName : Works.DisplayName)
+					!= "plot: " + truth.DisplayName) return false;
 			return ExactFoundingHeartInt(Works, HeartPlotProperty, 1)
 				&& ExactFoundingHeartString(Works, PlotIdProperty, plan.PlotId)
 				&& ExactFoundingHeartString(Works, KingdomUpgrade.BuildKeyProperty, truth.BuildKey)

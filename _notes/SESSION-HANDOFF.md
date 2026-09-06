@@ -1,5 +1,23 @@
 # Session handoff — current v1.0 test-candidate work
 
+Quickstart hotfix supersedes the historical status below. Private0.3.1 reproduces empty ground
+and apron refusal after founder placement; unchanged build cannot be promoted. Exact-founder
+readiness and exact sealed/staked-heart proof are corrected without forcing rung1. Final
+compile92057 passes four modes+ABI; suites24348 pass13521 Taf/4908 Portable,zero skips;470 Tools
+tests pass. Production6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128,
+3045 sources/431188 lines/1414 direct-XRL/zero cap failures. Developer108 Harness shards.
+New genuine boot route compiled but NOT RUN; first profile /mnt/c/taf-scenario.YVP0Sf prepared
+for marsh/advisorYes,seed#43101,3191 sealed files. All six boots and save/reload remain required.
+Independent five-file production bridge clears source review and enumerates3040 unchanged
+sources. Exact-inventory structural binding and documentation freshness now pass. Local
+checkpoint only; do not substitute these gates for native acceptance or promote unchanged private bytes.
+Offline readiness probe3pass42BLOCKED at Physics Unity ECall; no real founder cases executed.
+Root owns `/tmp/taf-quickstart-founder-proof.3xBBuF/README.md`; STATUS.md is current authority.
+Current ordinary game remains untouched pending permission to close the failed disposable world
+and run fresh genuine Quickstart tests. No new upload/Steam mutation/source export.
+
+## Historical pre-upload handoff
+
 Current isolated draft census — 2026-09-06: 3045 staged sources; 3076 generated package-inventory
 files. D5 release intent/acknowledgement and sr1 migration now implemented; production driver,
 codec and custody-source tests added. Strict four-mode compile and current suite evidence lives in

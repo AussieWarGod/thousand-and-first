@@ -218,6 +218,13 @@ SCRIPT_VERBS = (
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
 
+# This boot-only command is not an AutoRunner/provider verb. It selects real production embark
+# options before generation and observes completion after GameStarting, without staging ground.
+QUICKSTART_BOOT_VERB = "quickstart-boot"
+QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
+QUICKSTART_ADVISOR_ENV = "TAF_SCENARIO_QUICKSTART_ADVISOR"
+QUICKSTART_ADVISOR_OPTION = "r_TAF_OptionQuickstartAdvisor"
+
 # The ordinary phase-1 run: prepare the ground, commit the single production transaction, then read
 # back the durable stamp and its differential verdict.
 DEFAULT_SCRIPT = ("flatten", "realize", "status")
@@ -252,6 +259,36 @@ SCRIPT_HEADER = (
     "# Written by Tools/prepare-scenario.sh BEFORE the profile seal, so this file is sealed content.\n"
 )
 
+QUICKSTART_SCRIPT_HEADER = (
+    "# Sealed developer Quickstart boot check, not an AutoRunner scenario script.\n"
+    "# Selects real Kingdom Quickstart before generation; observes production GameStarting.\n"
+    "# No staged founding, replacement grants, or ordinary-play/save-load acceptance claim.\n"
+    "# Written before the profile seal together with the matching PlayerOptions.json.\n"
+)
+
+
+def parse_quickstart_boot(tokens: list[str]) -> str:
+    """Require the sole exact boot command; return the native advisor option value."""
+    if (
+        len(tokens) != 3
+        or tokens[0] != QUICKSTART_BOOT_VERB
+        or tokens[1] not in QUICKSTART_PROFILES
+        or tokens[2] not in ("yes", "no")
+    ):
+        fail("Quickstart boot requires only 'quickstart-boot <marsh|canyon|dunes> <yes|no>'")
+    return "Yes" if tokens[2] == "yes" else "No"
+
+
+def quickstart_advisor(tokens: list[str]) -> str:
+    """Bind the explicit preparation override to the exact boot command."""
+    value = parse_quickstart_boot(tokens)
+    if os.environ.get(QUICKSTART_ADVISOR_ENV) != tokens[2]:
+        fail(QUICKSTART_ADVISOR_ENV + " must exactly match the boot command's yes/no")
+    raw = os.environ.get("TAF_SCENARIO_SCRIPT")
+    if raw is not None and raw != " ".join(tokens):
+        fail("TAF_SCENARIO_SCRIPT disagrees with the exact Quickstart boot command")
+    return value
+
 
 def parse_extra_verbs(raw: str) -> tuple[str, ...]:
     """Comma-separated verb names another mod's provider contributes to THIS profile.
@@ -276,7 +313,7 @@ def parse_extra_verbs(raw: str) -> tuple[str, ...]:
                 "extra scenario verb %r is not a lowercase SafeToken; the runtime would "
                 "refuse the provider that claimed it" % verb
             )
-        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS:
+        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS or verb == QUICKSTART_BOOT_VERB:
             fail("extra scenario verb %r is reserved by the harness" % verb)
         if verb in chosen:
             fail("extra scenario verb %r is named more than once" % verb)
@@ -285,12 +322,15 @@ def parse_extra_verbs(raw: str) -> tuple[str, ...]:
 
 
 def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
-    """Shell words to script LINES, closed on both the verb set and the one argument.
+    """Shell words to script lines, including one standalone developer boot command.
 
     The words arrive unquoted from prepare-scenario.sh, so `advance 1200` is two words that must
     become one line. The count is validated here rather than left to the runtime: a sealed profile
     is not retryable, and a malformed count discovered in game costs a whole run.
     """
+    if QUICKSTART_BOOT_VERB in tokens:
+        parse_quickstart_boot(tokens)
+        return [" ".join(tokens)]
     lines: list[str] = []
     index = 0
     while index < len(tokens):
@@ -336,12 +376,33 @@ def write_script(destination: str, verbs: list[str]) -> None:
     chosen = parse_script(list(verbs), extra) if verbs else list(DEFAULT_SCRIPT)
     if not chosen:
         fail("the scenario script would declare no verbs")
+    header = SCRIPT_HEADER
+    if verbs and verbs[0] == QUICKSTART_BOOT_VERB:
+        advisor = quickstart_advisor(verbs)
+        options_path = os.path.join(os.path.dirname(destination), "PlayerOptions.json")
+        try:
+            with open(options_path, encoding="utf-8") as handle:
+                options = json.load(handle)
+        except (OSError, ValueError) as error:
+            fail("Quickstart boot needs readable sibling PlayerOptions.json ("
+                 + type(error).__name__ + ")")
+        if not isinstance(options, dict) or options.get(QUICKSTART_ADVISOR_OPTION) != advisor:
+            fail("Quickstart boot advisor differs from sibling PlayerOptions.json")
+        header = QUICKSTART_SCRIPT_HEADER
+    elif (QUICKSTART_ADVISOR_ENV in os.environ
+          or QUICKSTART_BOOT_VERB in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()):
+        fail("Quickstart preparation is valid only for a standalone Quickstart boot command")
     with open(destination, "w", encoding="utf-8") as handle:
-        handle.write(SCRIPT_HEADER + "\n".join(chosen) + "\n")
+        handle.write(header + "\n".join(chosen) + "\n")
     print("sealed scenario script: " + ", ".join(chosen))
 
 
 def write_options(source: str, destination: str) -> None:
+    advisor = None
+    script = os.environ.get("TAF_SCENARIO_SCRIPT", "")
+    tokens = script.split()
+    if QUICKSTART_ADVISOR_ENV in os.environ or QUICKSTART_BOOT_VERB in tokens:
+        advisor = quickstart_advisor(tokens)
     with open(source, encoding="utf-8") as handle:
         options = json.loads(handle.read())
     if not isinstance(options, dict):
@@ -350,6 +411,8 @@ def write_options(source: str, destination: str) -> None:
     # exposes the native world-seed field; the OPERATOR enters the sealed seed. Qud offers no
     # launcher-side injection, so this is never automatic.
     options["OptionEnableSeed"] = "Yes"
+    if advisor is not None:
+        options[QUICKSTART_ADVISOR_OPTION] = advisor
     with open(destination, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(options, indent=2) + "\n")
     print("scenario profile exposes the native world-seed field for operator entry")

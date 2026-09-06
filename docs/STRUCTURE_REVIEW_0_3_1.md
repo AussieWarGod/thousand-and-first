@@ -1,11 +1,40 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Completed 2026-09-06T13:11:15Z. This records structural semantics, not release acceptance.
+Updated 2026-09-06T22:26:47Z. This records structural semantics, not release acceptance.
 
-## Exact scope and retained evidence
+## Current Quickstart correction
 
 Current production digest:
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+The [five-file bridge](/tmp/taf-quickstart-founder-proof.3xBBuF/production-bridge.md), report
+SHA256`7d2ba35c7c5aa7b51976f8e5456e9747558e56db5e9411e954727d2385892a9d`, enumerates all3045
+current paths/hashes and proves3040 unchanged,five modified,no additions or removals from
+frozen8687337. Census431,188 physical lines,1414 direct-XRL imports,zero files at or above300.
+Unchanged sources inherit the retained review below; they are not claimed freshly deep-read.
+
+Root and independent scoped reviewers inspected the complete five-file production delta.
+Bootstrap captures the exact placed founder; CampBuilder exempts only that founder once at40,12,
+preserving foreign obstruction checks and bounded owner/profile reproof. Verification delegates
+to the existing heart-seal boundary, which proves exact standing stake or recorded settled
+completion without repairing state or inventing a rung. The private raw-name read closes the
+reviewed display-event callback gap; older callers preserve their default behavior. No serialized
+field, reader version or public API changed. No Required source finding remains in this delta.
+
+Final compile92057 passes four modes+ABI (3041/3045 ordinary,3149/3153 developer). Root byte
+comparison96558 proves every listed compiler input matches current source. Full suites24348
+pass13,521 Taf/4,908 Portable,zero skipped;470 Tools cases pass separately. Harness registration
+records actual compilation, not execution. [Evidence](/tmp/taf-quickstart-founder-proof.3xBBuF/README.md).
+
+The user reported a real startup failure in the uploaded private0.3.1 build. These source
+corrections and new developer boot observations have not run through genuine startup or
+save/reload. The offline readiness probe's3 controls/42 blocked cases are not a founder regression
+pass. Unchanged private bytes must not be promoted. Developer Harness review and native evidence
+remain separate from this production binding; inherited unrelated raid defects remain open.
+
+## Retained pre-upload review — completed 2026-09-06T13:11:15Z
+
+Retained production digest:
 `ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`.
 All3045 staged C# paths are enumerated in the [final inventory bridge](/tmp/taf-final-inventory-bridge.j512Jj/final-inventory-bridge.md),
 report SHA256 `54f2d621e30f31c73f713abb37c778e8f74630a5adf9ee1367e5f68c7c293d15`.

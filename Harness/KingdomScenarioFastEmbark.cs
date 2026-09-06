@@ -8,8 +8,8 @@ using XRL.UI;
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
-	/// Dev-only fast embark for the scenario mode. Registered from <c>Harness/EmbarkModules.xml</c>,
-	/// which only ever loads inside a throwaway scenario profile, and inert for every other mode.
+	/// Dev-only fast embark for scenarios or an exact sealed production Quickstart boot test.
+	/// Registered only from <c>Harness/EmbarkModules.xml</c> in disposable developer profiles.
 	/// <para>
 	/// SEAMS. <c>QudGamemodeModule.SelectMode</c> calls <c>setData</c> before its own
 	/// <c>builder.advance()</c>, and <c>EmbarkBuilder.NotifyModuleChanges</c> hands that change to
@@ -31,10 +31,8 @@ namespace ThousandAndFirst.Harness
 	/// does not match.
 	/// </para>
 	/// <para>
-	/// FAIL-CLOSED. Any missing or malformed input - no request state, an unparseable request, a
-	/// request with no frozen seed, an absent pregen or starting location, a missing stock module -
-	/// surfaces one named popup and changes NOTHING. Ordinary character creation is left intact and
-	/// the operator can still walk it by hand. Nothing here runs for any mode but the scenario mode.
+	/// Missing request, seed, pregen, location, or stock modules refuse before pre-fill. The real
+	/// Quickstart route additionally requires its exact script and matching sealed advisor option.
 	/// </para>
 	/// </summary>
 	public sealed class KingdomScenarioFastEmbarkModule : AbstractEmbarkBuilderModule
@@ -99,12 +97,13 @@ namespace ThousandAndFirst.Harness
 			return null;
 		}
 
-		/// <summary>Active only under the scenario mode. Never touches any other mode's flow.</summary>
+		/// <summary>Active for scenarios or the exact selected developer Quickstart boot.</summary>
 		public override bool shouldBeEnabled()
 		{
 			QudGamemodeModule modes = GamemodeModule();
 			if (modes == null) return false;
-			return string.Equals(modes.GetMode(), ModeId, StringComparison.Ordinal);
+			return string.Equals(modes.GetMode(), ModeId, StringComparison.Ordinal)
+				|| KingdomQuickstartRules.IsMode(modes.GetMode()) && KingdomQuickstartBootTest.Selected(builder);
 		}
 
 		/// <summary>
@@ -140,7 +139,7 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>
-		/// The pre-fill trigger. Fires once, only for a change that selects the scenario mode.
+		/// The pre-fill trigger. Fires once for the scenario or exact selected Quickstart test.
 		/// </summary>
 		public override void handleModuleDataChange(AbstractEmbarkBuilderModule module,
 			AbstractEmbarkBuilderModuleData oldValues, AbstractEmbarkBuilderModuleData newValues)
@@ -148,7 +147,8 @@ namespace ThousandAndFirst.Harness
 			if (Applied) return;
 			if (!(module is QudGamemodeModule)) return;
 			QudGamemodeModuleData chosen = newValues as QudGamemodeModuleData;
-			if (chosen == null || !string.Equals(chosen.Mode, ModeId, StringComparison.Ordinal)) return;
+			if (chosen == null || !string.Equals(chosen.Mode, ModeId, StringComparison.Ordinal)
+				&& !(KingdomQuickstartRules.IsMode(chosen.Mode) && KingdomQuickstartBootTest.Selected(builder))) return;
 			// Raised before any setData, because each one re-enters this method.
 			Applied = true;
 			string failure;
@@ -171,6 +171,10 @@ namespace ThousandAndFirst.Harness
 			if (builder == null) return Refuse("there is no embark builder to fill", out Failure);
 			string seed;
 			if (!TryFrozenSeed(Modes, out seed, out Failure)) return false;
+			bool quickstart = KingdomQuickstartBootTest.Selected(builder);
+			if (quickstart && !KingdomQuickstartBootTest.Prepare(builder, seed))
+				return Refuse("the dedicated Quickstart script, advisor option or seed disagrees", out Failure);
+			string locationId = KingdomQuickstartBootTest.StartingLocation(builder);
 			QudChartypeModule chartype = builder.GetModule<QudChartypeModule>();
 			QudPregenModule pregens = builder.GetModule<QudPregenModule>();
 			QudChooseStartingLocationModule locations =
@@ -183,10 +187,9 @@ namespace ThousandAndFirst.Harness
 				|| string.IsNullOrEmpty(pregen.Code))
 				return Refuse("this build carries no pregen named '" + PregenName
 					+ "' with a build code", out Failure);
-			// The harness declares this location itself, so its absence means the overlay's
-			// EmbarkModules.xml did not reach the location module - not that the base game changed.
-			if (!locations.startingLocations.ContainsKey(StartingLocationId))
-				return Refuse("the harness starting location '" + StartingLocationId
+			// Scenarios use the overlay location; boot tests use the production Quickstart location.
+			if (!locations.startingLocations.ContainsKey(locationId))
+				return Refuse("the harness starting location '" + locationId
 					+ "' is not registered; the profile's Harness/EmbarkModules.xml did not load",
 					out Failure);
 			// Chartype first: QudPregenModule.shouldBeEnabled reads it, so the pregen module is not
@@ -205,7 +208,7 @@ namespace ThousandAndFirst.Harness
 			// QudChooseStartingLocationModuleWindow.BeforeShow REPLACES the module's data with a
 			// fresh one pinned to "Joppa". A location set before the walk is therefore discarded;
 			// only an assignment made once the walk has stopped ON that window survives into boot.
-			locations.setData(new QudChooseStartingLocationModuleData(StartingLocationId));
+			locations.setData(new QudChooseStartingLocationModuleData(locationId));
 			return true;
 		}
 

@@ -14,6 +14,7 @@ import pathlib
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location(
@@ -310,6 +311,206 @@ class DerivedInputTest(unittest.TestCase):
             embark.read_text(encoding="utf-8"),
         )
         del os.environ["TAF_REQUEST"]
+
+
+class QuickstartBootPreparationTest(unittest.TestCase):
+    """Execute profile preparation only; these tests do not boot or prove the native game."""
+
+    def setUp(self):
+        self.environment = mock.patch.dict(os.environ, {}, clear=True)
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
+        self.tmp = pathlib.Path(tempfile.mkdtemp(prefix="taf-quickstart-options-test."))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.source = self.tmp / "source.json"
+        self.original = {"OtherOption": "retained", profile.QUICKSTART_ADVISOR_OPTION: "old"}
+        self.source.write_text(json.dumps(self.original), encoding="utf-8")
+        self.local = self.tmp / "Local"
+        self.local.mkdir()
+        self.options = self.local / "PlayerOptions.json"
+        self.script = self.local / "scenario-script.txt"
+
+    def choose(self, terrain="marsh", advisor="yes"):
+        tokens = ["quickstart-boot", terrain, advisor]
+        os.environ["TAF_SCENARIO_SCRIPT"] = " ".join(tokens)
+        os.environ[profile.QUICKSTART_ADVISOR_ENV] = advisor
+        return tokens
+
+    def write_options(self):
+        profile.write_options(str(self.source), str(self.options))
+
+    def assert_options_refuse_unchanged(self):
+        self.options.write_text("retained destination", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            self.write_options()
+        self.assertEqual("retained destination", self.options.read_text(encoding="utf-8"))
+
+    def assert_script_refuse_unchanged(self, tokens):
+        self.script.write_text("retained script", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            profile.write_script(str(self.script), tokens)
+        self.assertEqual("retained script", self.script.read_text(encoding="utf-8"))
+
+    def test_six_exact_boot_commands_are_canonical_single_lines(self):
+        for terrain in ("marsh", "canyon", "dunes"):
+            for advisor in ("yes", "no"):
+                with self.subTest(terrain=terrain, advisor=advisor):
+                    tokens = ["quickstart-boot", terrain, advisor]
+                    self.assertEqual([" ".join(tokens)], profile.parse_script(tokens))
+
+    def test_invalid_boot_shape_refuses_even_when_claimed_as_extra(self):
+        for tokens in (
+            ["quickstart-boot"], ["quickstart-boot", "marsh"],
+            ["quickstart-boot", "marsh", "yes", "status"],
+            ["status", "quickstart-boot", "marsh", "yes"],
+            ["quickstart-boot", "marsh", "yes", "quickstart-boot", "dunes", "no"],
+            ["quickstart-boot marsh yes"],
+        ):
+            with self.subTest(tokens=tokens), self.assertRaises(SystemExit):
+                profile.parse_script(tokens, ("quickstart-boot",))
+
+    def test_profiles_and_advisor_values_are_exact(self):
+        for terrain in ("", "Marsh", "marsh ", "swamp", "canyon\n", "dunes\x00"):
+            with self.subTest(terrain=terrain), self.assertRaises(SystemExit):
+                profile.parse_script(["quickstart-boot", terrain, "yes"])
+        for advisor in ("", "Yes", "NO", "1", "true", " yes", "no\n", "yes\x00"):
+            with self.subTest(advisor=advisor), self.assertRaises(SystemExit):
+                profile.parse_script(["quickstart-boot", "marsh", advisor])
+
+    def test_boot_command_is_not_a_provider_or_ordinary_script_verb(self):
+        self.assertNotIn("quickstart-boot", profile.SCRIPT_VERBS)
+        self.assertNotIn("quickstart-boot", profile.RESERVED_VERBS)
+        with self.assertRaises(SystemExit):
+            profile.parse_extra_verbs("quickstart-boot")
+
+    def test_six_cli_preparations_change_only_advisor_and_seed_visibility(self):
+        original_bytes = self.source.read_bytes()
+        for terrain in ("marsh", "canyon", "dunes"):
+            for advisor in ("yes", "no"):
+                with self.subTest(terrain=terrain, advisor=advisor):
+                    tokens = self.choose(terrain, advisor)
+                    self.assertEqual(0, profile.main([
+                        "scenario_profile.py", "options", str(self.source), str(self.options)
+                    ]))
+                    self.assertEqual(0, profile.main([
+                        "scenario_profile.py", "script", str(self.script), *tokens
+                    ]))
+                    expected = dict(self.original, OptionEnableSeed="Yes")
+                    expected[profile.QUICKSTART_ADVISOR_OPTION] = advisor.title()
+                    self.assertEqual(expected, json.loads(self.options.read_text(encoding="utf-8")))
+                    text = self.script.read_text(encoding="utf-8")
+                    self.assertEqual(profile.QUICKSTART_SCRIPT_HEADER + " ".join(tokens) + "\n", text)
+                    self.assertEqual([" ".join(tokens)], [
+                        line for line in text.splitlines() if line and not line.startswith("#")
+                    ])
+                    self.assertEqual(original_bytes, self.source.read_bytes())
+
+    def test_ordinary_options_and_script_are_unchanged_without_override(self):
+        self.write_options()
+        self.assertEqual(dict(self.original, OptionEnableSeed="Yes"),
+                         json.loads(self.options.read_text(encoding="utf-8")))
+        profile.write_script(str(self.script), [])
+        self.assertEqual(profile.SCRIPT_HEADER + "flatten\nrealize\nstatus\n",
+                         self.script.read_text(encoding="utf-8"))
+        self.assertEqual(["status", "advance 12", "status"],
+                         profile.parse_script(["status", "advance", "0012", "status"]))
+
+    def test_ordinary_options_do_not_invent_advisor_key(self):
+        self.source.write_text('{"OtherOption":"retained"}', encoding="utf-8")
+        self.write_options()
+        self.assertNotIn(profile.QUICKSTART_ADVISOR_OPTION,
+                         json.loads(self.options.read_text(encoding="utf-8")))
+
+    def test_missing_advisor_override_refuses_before_options_write(self):
+        self.choose()
+        del os.environ[profile.QUICKSTART_ADVISOR_ENV]
+        self.assert_options_refuse_unchanged()
+
+    def test_mismatched_or_noncanonical_override_refuses_before_options_write(self):
+        self.choose()
+        for value in ("no", "Yes", "", " true", "yes\n", "1"):
+            with self.subTest(value=value):
+                os.environ[profile.QUICKSTART_ADVISOR_ENV] = value
+                self.assert_options_refuse_unchanged()
+
+    def test_override_without_exact_boot_script_refuses_before_options_write(self):
+        self.choose()
+        for script in (None, "", "none", "status", "flatten realize status",
+                       "quickstart-boot marsh yes status", "quickstart-boot  marsh yes",
+                       "quickstart-boot marsh yes\n", "quickstart-boot\tmarsh yes"):
+            with self.subTest(script=script):
+                if script is None:
+                    os.environ.pop("TAF_SCENARIO_SCRIPT", None)
+                else:
+                    os.environ["TAF_SCENARIO_SCRIPT"] = script
+                self.assert_options_refuse_unchanged()
+
+    def test_override_rejects_ordinary_script_before_writing(self):
+        self.choose()
+        self.assert_script_refuse_unchanged(["status"])
+        self.assert_script_refuse_unchanged([])
+        del os.environ[profile.QUICKSTART_ADVISOR_ENV]
+        self.assert_script_refuse_unchanged(["status"])
+        self.assert_script_refuse_unchanged([])
+
+    def test_script_requires_existing_matching_sibling_options(self):
+        tokens = self.choose()
+        self.assert_script_refuse_unchanged(tokens)
+        for raw in ("not json", "[]", "null", "{}", "true",
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "No"}),
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: True}),
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "yes"})):
+            with self.subTest(raw=raw):
+                self.options.write_text(raw, encoding="utf-8")
+                self.assert_script_refuse_unchanged(tokens)
+
+    def test_script_rejects_environment_or_argument_mismatch(self):
+        tokens = self.choose()
+        self.write_options()
+        self.assert_script_refuse_unchanged(["quickstart-boot", "dunes", "yes"])
+        os.environ[profile.QUICKSTART_ADVISOR_ENV] = "no"
+        self.assert_script_refuse_unchanged(tokens)
+        del os.environ[profile.QUICKSTART_ADVISOR_ENV]
+        self.assert_script_refuse_unchanged(tokens)
+
+    def test_explicit_script_cli_still_requires_override_and_matching_options(self):
+        tokens = self.choose("dunes", "no")
+        self.write_options()
+        del os.environ["TAF_SCENARIO_SCRIPT"]
+        profile.write_script(str(self.script), tokens)
+        self.assertTrue(self.script.read_text(encoding="utf-8").endswith("quickstart-boot dunes no\n"))
+
+    def test_seal_binds_both_script_and_advisor_option(self):
+        tokens = self.choose("canyon", "no")
+        self.write_options()
+        profile.write_script(str(self.script), tokens)
+        seal = self.tmp / "profile.sha256"
+        profile.seal(str(self.local), str(seal))
+        profile.verify(str(self.local), str(seal))
+        options_before, script_before = self.options.read_bytes(), self.script.read_bytes()
+        self.options.write_text(json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "Yes"}), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            profile.verify(str(self.local), str(seal))
+        self.options.write_bytes(options_before)
+        self.script.write_text("quickstart-boot canyon yes\n", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            profile.verify(str(self.local), str(seal))
+        self.script.write_bytes(script_before)
+        profile.verify(str(self.local), str(seal))
+
+    def test_frozen_descriptor_request_and_seed_are_not_rewritten(self):
+        embark = self.local / "EmbarkModules.xml"
+        original = (ROOT / "Harness" / "EmbarkModules.xml").read_bytes()
+        embark.write_bytes(original)
+        tokens = self.choose("marsh", "no")
+        os.environ["TAF_REQUEST"] = "arch-gallery-slice;facing=north;seed=#4242"
+        profile.write_request(str(embark))
+        frozen = embark.read_bytes()
+        self.write_options()
+        profile.write_script(str(self.script), tokens)
+        self.assertEqual(frozen, embark.read_bytes())
+        self.assertIn(b";seed=#4242", frozen)
+        self.assertEqual("#4242", profile.validate_seed("#4242"))
 
 
 if __name__ == "__main__":

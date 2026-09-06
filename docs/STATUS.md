@@ -3,7 +3,7 @@
 **Snapshot:** 2026-09-06
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.0 public Alpha playtest
-**Working candidate manifest:** 0.3.1, unreleased
+**Working candidate manifest:** 0.3.1, private staging only; public promotion blocked
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -13,7 +13,56 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Current continuation — witnessed-death recovery integrated
+## Current blocker — actual Quickstart startup failure
+
+The user reproduced an empty Quickstart site with the apron/path refusal in private item
+3796495680. Its subscribed 0.3.1 bytes were previously verified; this does not prove gameplay.
+Public item3794797472 remains last verified0.3.0. The unchanged private build must not be promoted.
+
+The old readiness check rejects the player it requires at (40,12), after ordinary boot places
+that player. An isolated correction exempts only the exact founder while retaining foreign
+obstruction checks. Follow-on source audit found a second mismatch: Quickstart expects completed
+heart rung1 immediately after normal founding, which only stakes/seals construction. The corrected
+verification proves that actual authority without inventing completion. Both changes pass the
+final combined compilation and managed suites; their in-game behavior remains unverified.
+
+Existing pure/source checks and native grant-component fixtures did not execute genuine
+Quickstart startup. A new offline engine-readiness diagnostic reports3 empty controls passed,
+42 object cases BLOCKED at Unity Physics initialization; no founder assertion ran and no
+red/green behavior proof is claimed. [Diagnostic scope](../DevTests/EngineQuickstartReady/README.md).
+Required acceptance: all three real profiles, advisor on/off, normal founding, single physical
+grants, and save/reload without replay. The current automated results below sign only their stated
+layers; older native receipts do not sign this correction.
+[Working proof](/tmp/taf-quickstart-founder-proof.3xBBuF/README.md).
+
+The developer-only [genuine boot route](../DevTests/QUICKSTART-BOOT-TESTS.md) is now authored:
+real mode/location selection, production hook observation, initial-quantity/unique-grant checks,
+and final reproof after all boot callbacks. It never attaches the scenario runner or seeds a
+receipt. Sealed advisor preparation adds16 tooling cases;21 managed parser cases are included
+in both projects. All pass within the final full suites. No game has run through this route yet.
+
+The heart proof now uses a raw render-name read for its new path, avoiding the engine's
+GetDisplayName callback; existing callers retain their default behavior. Current production
+census3045/431188/1414 direct-XRL/zero production cap failures; digest
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+Final compile92057 passes four modes+ABI (ordinary3041/3045, developer3149/3153,108 Harness).
+Earlier managed80195 completed13499 pass/1 fail
+because the isolated worktree lacked an ignored evidence fixture; its exact original was restored.
+Managed20146 completed13519pass/2fail: stale source assertion and FastEmbark at the strict300-line
+boundary. Both corrected afterward; comments now296lines. Final full suites24348 pass
+13,521 Taf /4,908 Portable, zero skipped. Integrated staging hash batching preserves all
+three independent reads and exact manifest bytes; full combined Tools pass470 tests. A single
+3076-row manifest comparison measured3.97s before/0.08s after, not whole-build timing.
+The first sealed marsh/advisorYes profile is prepared but unlaunched; current game closure still
+awaits user approval. Six actual boots, save/reload and release remain open.
+Current census:3045 staged C# files /431,188 physical lines. Inventory SHA-256:
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+
+The [current structural review](STRUCTURE_REVIEW_0_3_1.md) retains the frozen baseline and binds
+the exact five-source correction; structure release gate and documentation freshness pass.
+Every actual compiler-list source byte-matches this worktree. This is not native acceptance.
+
+## Retained pre-upload checkpoint — witnessed-death recovery integrated
 
 Begin/arrest notices now freeze their text and tick before changing the announced flag. A saved
 queue intent prevents blind replay after interruption; Homecoming explicitly acknowledges an

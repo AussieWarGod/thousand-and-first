@@ -103,6 +103,66 @@ namespace XRL.World.ZoneBuilders
 			return true;
 		}
 
+		/// <summary>Checks prepared ground with only the exact placed founder exempted from occupancy.</summary>
+		internal static bool ReadyForFounder(Zone Z, GameObject Founder)
+		{
+			const int maximumCells = 4096, maximumObjects = 65536;
+			XRLGame game = The.Game;
+			ZoneManager manager = The.ZoneManager;
+			if (Z == null || Z.Width <= 45 || Z.Height <= 18
+				|| (long)Z.Width * Z.Height > maximumCells) return false;
+			int width = Z.Width, height = Z.Height;
+			Cell start = Z.GetCell(KingdomQuickstartRules.StartCellX, KingdomQuickstartRules.StartCellY);
+			if (!ExactFounder(game, manager, Z, start, Founder)
+				|| !ExactGround(Z, out KingdomQuickstartProfile profile)) return false;
+			int references = 0, visited = 0;
+			for (int y = 0; y < height; y++)
+				for (int x = 0; x < width; x++)
+				{
+					Cell cell = Z.GetCell(x, y);
+					if (cell == null || !ReferenceEquals(cell.ParentZone, Z)
+						|| cell.Objects.Count > maximumObjects - visited) return false;
+					List<GameObject> objects = cell.GetObjects();
+					if (objects.Count > maximumObjects - visited) return false;
+					visited += objects.Count;
+					bool required = Required(x, y);
+					if (required && !ReferenceEquals(cell, start)
+						&& (cell.HasOpenLiquidVolume() || !cell.IsPassable())) return false;
+					for (int i = 0; i < objects.Count; i++)
+					{
+						GameObject item = objects[i];
+						if (ReferenceEquals(item, Founder))
+						{
+							if (!ReferenceEquals(cell, start) || ++references != 1) return false;
+							continue;
+						}
+						if (!required) continue;
+						if (!GameObject.Validate(item)) return false;
+						if (item.IsCreature || item.HasPart("StairsUp") || item.HasPart("StairsDown")
+							|| KingdomPlots.ReadObject(item) != KingdomPlotRules.GroundKind.Bare)
+							return false;
+						// Cell.IsPassable(Founder) still treats a solid founder as its own obstruction.
+						if (ReferenceEquals(cell, start)
+							&& (item.IsCombatObject() || item.ConsiderSolid() || item.IsOpenLiquidVolume()))
+							return false;
+					}
+				}
+			return references == 1 && Z.Width == width && Z.Height == height
+				&& ExactFounder(game, manager, Z, start, Founder)
+				&& ExactGround(Z, out KingdomQuickstartProfile current) && current.Key == profile.Key;
+		}
+
+		private static bool ExactFounder(XRLGame Game, ZoneManager Manager, Zone Z,
+			Cell Start, GameObject Founder)
+		{
+			return Game != null && ReferenceEquals(The.Game, Game) && Manager != null
+				&& ReferenceEquals(The.ZoneManager, Manager) && ReferenceEquals(Game.ZoneManager, Manager)
+				&& ReferenceEquals(Manager.ActiveZone, Z) && GameObject.Validate(Founder)
+				&& ReferenceEquals(The.Player, Founder) && Start != null
+				&& ReferenceEquals(Start.ParentZone, Z) && ReferenceEquals(Founder.CurrentCell, Start)
+				&& Start.X == KingdomQuickstartRules.StartCellX && Start.Y == KingdomQuickstartRules.StartCellY;
+		}
+
 		/// <summary>Small heart apron, one supply column, and a three-cell-wide approach.</summary>
 		internal static bool Required(int X, int Y)
 		{
