@@ -14,8 +14,9 @@ below it.
 > `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
 > The current derived cold-install inventory contains 3076 files; this is not current installed
 > or subscribed content proof. Final strict four-mode compilation and ABI checks pass:
-> ordinary3041/3045, developer3149/3153,108 Harness shards.
-> Full suites pass13,521 Taf /4,908 Portable, zero skips;470 Tools tests pass.
+> ordinary3041/3045, developer3154/3158,113 Harness shards.
+> Current managed and Tools results are tracked in `docs/STATUS.md`; older totals do not sign
+> the new developer-only Quickstart save/cold-load extension, which remains unexecuted in-game.
 > Historical nested archive hash tests and103 retained real serializer cases pass; ordinary
 > gameplay, full historical-save acceptance and exact release gates stay open.
 > Exact structural semantic review now binds these bytes and its structure gate passes. This does
@@ -39,7 +40,7 @@ below it.
 - Corrected Quickstart's post-placement ground check to admit only the exact founder, and its
   founding verification to accept exact sealed/staked heart authority without forcing completed
   construction. The new heart check avoids display-name callbacks. Genuine boot regression
-  automation is authored and compiled; all three profiles, advisor on/off, and save/reload remain
+  and real save/cold-load automation is authored and compiled; all three profiles, advisor on/off, and save/reload remain
   unverified in-game. The existing private0.3.1 package still contains the reported failure.
 - Developer preparation now seals the explicit Quickstart advisor choice and rejects conflicting
   scripts/options. Staging batches file hashing while retaining all three independent reads and

@@ -384,7 +384,9 @@ namespace ThousandAndFirst.Tests
 				"RungSnapshot.GameId == Request.GameId", "else",
 				"KingdomScenarioSaveSnapshotCodec.TryDecode(SnapshotWire, out Snapshot)",
 				"Armed = true", "XRLGame.LoadGame(");
-			Contains(source, "Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars, KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars)",
+			Contains(source, "Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars, "
+				+ "Math.Max(KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars, "
+				+ "KingdomQuickstartSaveSnapshotCodec.MaxWireChars))",
 				"string route = RungSnapshot == null ? KingdomScenarioLoadWitness.VerifyRecovered(loaded, Snapshot)",
 				": KingdomSubsidenceRungLoadWitness.VerifyRecovered(loaded, RungSnapshot)");
 			Ordered(source, "finally", "if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm()",

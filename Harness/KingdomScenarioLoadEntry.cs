@@ -21,6 +21,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomScenarioLoadRequest Request;
 		internal static KingdomScenarioSaveSnapshot Snapshot;
 		internal static KingdomSubsidenceRungSaveSnapshot RungSnapshot;
+		internal static KingdomQuickstartSaveSnapshot QuickstartSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
 
@@ -63,6 +64,7 @@ namespace ThousandAndFirst.Harness
 		private static async Task Load()
 		{
 			bool priorPopup = Popup.Suppress;
+			bool quickstartVerified = false;
 			try
 			{
 				await The.UiContext;
@@ -74,10 +76,14 @@ namespace ThousandAndFirst.Harness
 				Check(KingdomScenarioLoadRules.TryParse(text, out Request), "sealed load request is malformed");
 				SnapshotWire = KingdomScenarioSaveFiles.ReadText(Path.Combine(local,
 					KingdomScenarioSaveFiles.LoadedSnapshotFile), Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars,
-						KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars));
+						Math.Max(KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars,
+							KingdomQuickstartSaveSnapshotCodec.MaxWireChars)));
 				Check(KingdomScenarioSaveFiles.HashText(SnapshotWire) == Request.SnapshotSha256,
 					"sealed snapshot hash differs");
-				if (KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(SnapshotWire))
+				if (SnapshotWire.StartsWith(KingdomQuickstartSaveSnapshotCodec.Prefix, StringComparison.Ordinal))
+					Check(KingdomQuickstartSaveSnapshotCodec.TryDecode(SnapshotWire, out QuickstartSnapshot)
+						&& QuickstartSnapshot.GameId == Request.GameId, "sealed Quickstart snapshot does not bind selected save");
+				else if (KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(SnapshotWire))
 					Check(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(SnapshotWire)
 						&& KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(SnapshotWire, out RungSnapshot)
 						&& RungSnapshot.GameId == Request.GameId, "sealed rung snapshot does not bind the selected save");
@@ -103,6 +109,12 @@ namespace ThousandAndFirst.Harness
 					Session: false, ShowPopup: false));
 				Check(loaded != null && ReferenceEquals(The.Game, loaded) && loaded.GameID == Request.GameId,
 					"loader did not return the exact selected game");
+				if (QuickstartSnapshot != null)
+				{
+					KingdomQuickstartLoadTest.VerifyLoaded(loaded);
+					quickstartVerified = true;
+					return;
+				}
 				string route = RungSnapshot == null ? KingdomScenarioLoadWitness.VerifyRecovered(loaded, Snapshot)
 					: KingdomSubsidenceRungLoadWitness.VerifyRecovered(loaded, RungSnapshot);
 				Check(!KingdomScenarioLoadReaderWitness.HadErrors, "engine reported deserialization errors");
@@ -115,8 +127,9 @@ namespace ThousandAndFirst.Harness
 			finally
 			{
 				if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm();
-				Armed = false;
 				if (!priorPopup && Popup.Suppress) Popup.Suppress = false;
+				try { if (QuickstartSnapshot != null) KingdomQuickstartLoadTest.Finish(quickstartVerified); }
+				finally { Armed = false; }
 				// The Continue task stays parked until the bounded owned runner stops this terminal fixture.
 			}
 		}

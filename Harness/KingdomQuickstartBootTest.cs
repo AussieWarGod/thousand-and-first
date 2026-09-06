@@ -27,7 +27,7 @@ namespace ThousandAndFirst.Harness
 		internal static string SelectMode(EmbarkBuilder Selected)
 		{
 			if (!KingdomScenarioScript.TryRead(out IList<string> script, out _)
-				|| script.Count == 0 || !script[0].StartsWith(KingdomQuickstartBootRequest.Verb,
+				|| script.Count == 0 || !script[0].StartsWith("quickstart-",
 					StringComparison.Ordinal)) return KingdomScenarioFastEmbarkModule.ModeId;
 			if (Builder != null || Selected?.info == null
 				|| !KingdomQuickstartBootRequest.TryParse(script, out var request)
@@ -89,6 +89,8 @@ namespace ThousandAndFirst.Harness
 
 		internal static void BeforeRun(XRLGame Current)
 		{
+			KingdomQuickstartSaveTest.BootstrapCalled(Current);
+			KingdomQuickstartLoadTest.BootstrapCalled(Current);
 			if (!Active || !ReferenceEquals(Current, Game)) return;
 			RunCalls++;
 			Founder = The.Player; Zone = The.ZoneManager?.ActiveZone;
@@ -167,6 +169,25 @@ namespace ThousandAndFirst.Harness
 			return Request != null && KingdomScenarioScript.TryRead(out IList<string> script, out _)
 				&& KingdomQuickstartBootRequest.TryParse(script, out var observed)
 				&& observed.Command == Request.Command;
+		}
+
+		internal static bool ClaimsSave(XRLGame Current)
+		{
+			return Request?.Save == true && Begun && Ended && Game != null
+				&& ReferenceEquals(Game, Current) && ReferenceEquals(The.Game, Game);
+		}
+
+		internal static void VerifyForSave(XRLGame Current, out string FrozenSeed,
+			out KingdomQuickstartBootRequest SelectedRequest)
+		{
+			FrozenSeed = Seed; SelectedRequest = Request;
+			KingdomScenarioSaveFiles.Require(ClaimsSave(Current) && Failure == null && Verified
+				&& Observations == 1 && WorldCalls == 1 && CampCalls == 1 && RunCalls == 1
+				&& RunSucceeded && ExactScript() && ReferenceEquals(Info, Builder?.info)
+				&& Info.GameSeed == Seed && Game.GetStringGameState("OriginalWorldSeed", null) == Seed
+				&& Game.GetStringGameState(KingdomQuickstartRules.ReceiptState, null) == ObservedReceipt
+				&& ReferenceEquals(The.Player, Founder) && ReferenceEquals(The.ZoneManager?.ActiveZone, Zone),
+				"save lacks an exact successful genuine boot witness");
 		}
 		private static void Fail(string Reason) { if (Failure == null) Failure = Reason ?? "unspecified refusal"; }
 	}

@@ -35,32 +35,40 @@ grants, and save/reload without replay. The current automated results below sign
 layers; older native receipts do not sign this correction.
 [Working proof](/tmp/taf-quickstart-founder-proof.3xBBuF/README.md).
 
-The developer-only [genuine boot route](../DevTests/QUICKSTART-BOOT-TESTS.md) is now authored:
-real mode/location selection, production hook observation, initial-quantity/unique-grant checks,
-and final reproof after all boot callbacks. It never attaches the scenario runner or seeds a
-receipt. Sealed advisor preparation adds16 tooling cases;21 managed parser cases are included
-in both projects. All pass within the final full suites. No game has run through this route yet.
+The developer-only [genuine boot and save/cold-load route](../DevTests/QUICKSTART-BOOT-TESTS.md)
+is now implemented and compiled, but has not run. It selects the real mode/location, observes
+production hooks, and verifies the exact heart, unique grants and opening quantities after all
+boot callbacks. The save variant calls actual SaveGame, binds its artifacts to an external
+snapshot and parks only its owned game before turns. Its distinct cold-load witness checks
+unchanged authority/IDs/stock before player GameRestored, after LoadGame and after popup cleanup,
+with no bootstrap replay. It never attaches the scenario runner or seeds a receipt. Exact-owned
+process termination is Kill, not graceful in-game Quit; graceful Quit remains separate coverage.
 
 The heart proof now uses a raw render-name read for its new path, avoiding the engine's
 GetDisplayName callback; existing callers retain their default behavior. Current production
-census3045/431188/1414 direct-XRL/zero production cap failures; digest
-`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
-Final compile92057 passes four modes+ABI (ordinary3041/3045, developer3149/3153,108 Harness).
-Earlier managed80195 completed13499 pass/1 fail
-because the isolated worktree lacked an ignored evidence fixture; its exact original was restored.
-Managed20146 completed13519pass/2fail: stale source assertion and FastEmbark at the strict300-line
-boundary. Both corrected afterward; comments now296lines. Final full suites24348 pass
-13,521 Taf /4,908 Portable, zero skipped. Integrated staging hash batching preserves all
-three independent reads and exact manifest bytes; full combined Tools pass470 tests. A single
-3076-row manifest comparison measured3.97s before/0.08s after, not whole-build timing.
-The first sealed marsh/advisorYes profile is prepared but unlaunched; current game closure still
-awaits user approval. Six actual boots, save/reload and release remain open.
-Current census:3045 staged C# files /431,188 physical lines. Inventory SHA-256:
-`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+census3045 sources/431,188 physical lines/1414 direct-XRL/zero production cap failures.
+Inventory SHA-256: `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+Current compile30189 passes four modes+ABI (ordinary3041/3045, developer3154/3158,113 Harness).
+All actual compiler-list source bytes match this worktree and the freshly prepared save profile.
+Registration confirms122 shards,28 pure in both projects and94 engine-touching with a real
+compile receipt. Full managed84392 completed13,599 pass/1 stale snapshot-size source assertion;
+Portable was not reached. That assertion now includes all three snapshot codec bounds.
+Corrected unfiltered full rerun64122 passes13,600 Taf /4,987 Portable, zero skipped.
+Final Tools46388 passes496 tests, including17 result-checker fixtures. Its earlier full run
+retained one README link-to-unshipped-DevTests failure; the link now uses the repository URL.
+The result checker independently verifies sealed inputs, exact journal milestones, artifact
+hashes and unfiltered log checks. Root and independent source review are clear. Its synthetic
+fixtures cannot establish actual native execution. Checking the real unlaunched profile
+correctly refuses its missing save receipt instead of reporting success.
+Integrated staging hash batching preserves all three independent reads and exact manifest bytes.
+A single3076-row manifest comparison measured3.97s before/0.08s after, not whole-build timing.
+The fresh marsh/advisorYes save profile is prepared but unlaunched; current game closure still
+awaits user approval. Six actual boots, save/cold-load and release remain open.
+[Current extension proof](/tmp/taf-quickstart-roundtrip-proof.RUDnOR/README.md).
 
 The [current structural review](STRUCTURE_REVIEW_0_3_1.md) retains the frozen baseline and binds
 the exact five-source correction; structure release gate and documentation freshness pass.
-Every actual compiler-list source byte-matches this worktree. This is not native acceptance.
+This production review does not sign the new Harness behavior or native acceptance.
 
 ## Retained pre-upload checkpoint — witnessed-death recovery integrated
 

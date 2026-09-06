@@ -13,6 +13,8 @@ historical test counts do not sign later changes.
 Private 0.3.1 playtesting exposed a Kingdom Quickstart startup failure: an empty site with an
 apron/path refusal. A correction is under validation; the uploaded private build must not be
 promoted unchanged. Passing component tests do not yet establish a working new-game start.
+Genuine boot and save/cold-load automation is now compiled but has not run; see
+[test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/DevTests/QUICKSTART-BOOT-TESTS.md).
 
 ## What the mod adds
 

@@ -45,6 +45,22 @@ namespace ThousandAndFirst.Tests
 			Assert.That(request.ProfileKey, Is.EqualTo(Profile));
 			Assert.That(request.Advisor, Is.EqualTo(Advisor));
 			Assert.That(request.Command, Is.EqualTo(Command));
+			Assert.That(request.Save, Is.False);
+		}
+
+		[TestCase("quickstart-save marsh yes", "marsh", true)]
+		[TestCase("quickstart-save marsh no", "marsh", false)]
+		[TestCase("quickstart-save canyon yes", "canyon", true)]
+		[TestCase("quickstart-save canyon no", "canyon", false)]
+		[TestCase("quickstart-save dunes yes", "dunes", true)]
+		[TestCase("quickstart-save dunes no", "dunes", false)]
+		public void SaveRequestPreservesExactSelectionAndDoesNotChangeBootOnly(string Command, string Profile, bool Advisor)
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.True);
+			Assert.That(request.ProfileKey, Is.EqualTo(Profile));
+			Assert.That(request.Advisor, Is.EqualTo(Advisor));
+			Assert.That(request.Command, Is.EqualTo(Command));
+			Assert.That(request.Save, Is.True);
 		}
 
 		[TestCase(null)]
@@ -61,6 +77,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("quickstart-boot marsh yes status")]
 		[TestCase("status quickstart-boot marsh yes")]
 		[TestCase("quickstart-check")]
+		[TestCase("quickstart-save")]
+		[TestCase("quickstart-save marsh yes status")]
+		[TestCase("quickstart-save marsh 1")]
 		public void BootRequestRefusesNoncanonicalCommands(string Command)
 		{
 			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.False);

@@ -218,9 +218,11 @@ SCRIPT_VERBS = (
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
 
-# This boot-only command is not an AutoRunner/provider verb. It selects real production embark
-# options before generation and observes completion after GameStarting, without staging ground.
+# These commands are not AutoRunner/provider verbs. They select real production embark options
+# before generation; the save variant additionally requests a real save after the boot checks.
 QUICKSTART_BOOT_VERB = "quickstart-boot"
+QUICKSTART_SAVE_VERB = "quickstart-save"
+QUICKSTART_VERBS = (QUICKSTART_BOOT_VERB, QUICKSTART_SAVE_VERB)
 QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
 QUICKSTART_ADVISOR_ENV = "TAF_SCENARIO_QUICKSTART_ADVISOR"
 QUICKSTART_ADVISOR_OPTION = "r_TAF_OptionQuickstartAdvisor"
@@ -266,27 +268,41 @@ QUICKSTART_SCRIPT_HEADER = (
     "# Written before the profile seal together with the matching PlayerOptions.json.\n"
 )
 
+QUICKSTART_SAVE_SCRIPT_HEADER = (
+    "# Sealed developer Quickstart save check, not an AutoRunner scenario script.\n"
+    "# Selects real Kingdom Quickstart; requests a real save after production boot checks.\n"
+    "# No staged founding, replacement grants, or ordinary-play/reload acceptance claim.\n"
+    "# Written before the profile seal together with the matching PlayerOptions.json.\n"
+)
+
 
 def parse_quickstart_boot(tokens: list[str]) -> str:
     """Require the sole exact boot command; return the native advisor option value."""
+    if not tokens or tokens[0] != QUICKSTART_BOOT_VERB:
+        fail("Quickstart boot requires only 'quickstart-boot <marsh|canyon|dunes> <yes|no>'")
+    return parse_quickstart_command(tokens)
+
+
+def parse_quickstart_command(tokens: list[str]) -> str:
+    """Require one exact boot or save command; return the native advisor option value."""
     if (
         len(tokens) != 3
-        or tokens[0] != QUICKSTART_BOOT_VERB
+        or tokens[0] not in QUICKSTART_VERBS
         or tokens[1] not in QUICKSTART_PROFILES
         or tokens[2] not in ("yes", "no")
     ):
-        fail("Quickstart boot requires only 'quickstart-boot <marsh|canyon|dunes> <yes|no>'")
+        fail("Quickstart requires only '<quickstart-boot|quickstart-save> <marsh|canyon|dunes> <yes|no>'")
     return "Yes" if tokens[2] == "yes" else "No"
 
 
 def quickstart_advisor(tokens: list[str]) -> str:
-    """Bind the explicit preparation override to the exact boot command."""
-    value = parse_quickstart_boot(tokens)
+    """Bind the explicit preparation override to the exact Quickstart command."""
+    value = parse_quickstart_command(tokens)
     if os.environ.get(QUICKSTART_ADVISOR_ENV) != tokens[2]:
-        fail(QUICKSTART_ADVISOR_ENV + " must exactly match the boot command's yes/no")
+        fail(QUICKSTART_ADVISOR_ENV + " must exactly match the Quickstart command's yes/no")
     raw = os.environ.get("TAF_SCENARIO_SCRIPT")
     if raw is not None and raw != " ".join(tokens):
-        fail("TAF_SCENARIO_SCRIPT disagrees with the exact Quickstart boot command")
+        fail("TAF_SCENARIO_SCRIPT disagrees with the exact Quickstart command")
     return value
 
 
@@ -313,7 +329,7 @@ def parse_extra_verbs(raw: str) -> tuple[str, ...]:
                 "extra scenario verb %r is not a lowercase SafeToken; the runtime would "
                 "refuse the provider that claimed it" % verb
             )
-        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS or verb == QUICKSTART_BOOT_VERB:
+        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS or verb in QUICKSTART_VERBS:
             fail("extra scenario verb %r is reserved by the harness" % verb)
         if verb in chosen:
             fail("extra scenario verb %r is named more than once" % verb)
@@ -322,14 +338,14 @@ def parse_extra_verbs(raw: str) -> tuple[str, ...]:
 
 
 def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
-    """Shell words to script lines, including one standalone developer boot command.
+    """Shell words to script lines, including one standalone developer Quickstart command.
 
     The words arrive unquoted from prepare-scenario.sh, so `advance 1200` is two words that must
     become one line. The count is validated here rather than left to the runtime: a sealed profile
     is not retryable, and a malformed count discovered in game costs a whole run.
     """
-    if QUICKSTART_BOOT_VERB in tokens:
-        parse_quickstart_boot(tokens)
+    if any(verb in tokens for verb in QUICKSTART_VERBS):
+        parse_quickstart_command(tokens)
         return [" ".join(tokens)]
     lines: list[str] = []
     index = 0
@@ -377,21 +393,23 @@ def write_script(destination: str, verbs: list[str]) -> None:
     if not chosen:
         fail("the scenario script would declare no verbs")
     header = SCRIPT_HEADER
-    if verbs and verbs[0] == QUICKSTART_BOOT_VERB:
+    if verbs and verbs[0] in QUICKSTART_VERBS:
         advisor = quickstart_advisor(verbs)
         options_path = os.path.join(os.path.dirname(destination), "PlayerOptions.json")
         try:
             with open(options_path, encoding="utf-8") as handle:
                 options = json.load(handle)
         except (OSError, ValueError) as error:
-            fail("Quickstart boot needs readable sibling PlayerOptions.json ("
+            fail("Quickstart needs readable sibling PlayerOptions.json ("
                  + type(error).__name__ + ")")
         if not isinstance(options, dict) or options.get(QUICKSTART_ADVISOR_OPTION) != advisor:
-            fail("Quickstart boot advisor differs from sibling PlayerOptions.json")
-        header = QUICKSTART_SCRIPT_HEADER
+            fail("Quickstart advisor differs from sibling PlayerOptions.json")
+        header = (QUICKSTART_SAVE_SCRIPT_HEADER if verbs[0] == QUICKSTART_SAVE_VERB
+                  else QUICKSTART_SCRIPT_HEADER)
     elif (QUICKSTART_ADVISOR_ENV in os.environ
-          or QUICKSTART_BOOT_VERB in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()):
-        fail("Quickstart preparation is valid only for a standalone Quickstart boot command")
+          or any(verb in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()
+                 for verb in QUICKSTART_VERBS)):
+        fail("Quickstart preparation is valid only for a standalone Quickstart command")
     with open(destination, "w", encoding="utf-8") as handle:
         handle.write(header + "\n".join(chosen) + "\n")
     print("sealed scenario script: " + ", ".join(chosen))
@@ -401,7 +419,7 @@ def write_options(source: str, destination: str) -> None:
     advisor = None
     script = os.environ.get("TAF_SCENARIO_SCRIPT", "")
     tokens = script.split()
-    if QUICKSTART_ADVISOR_ENV in os.environ or QUICKSTART_BOOT_VERB in tokens:
+    if QUICKSTART_ADVISOR_ENV in os.environ or any(verb in tokens for verb in QUICKSTART_VERBS):
         advisor = quickstart_advisor(tokens)
     with open(source, encoding="utf-8") as handle:
         options = json.loads(handle.read())

@@ -26,8 +26,9 @@ with 0 at or above the strict 300-line cap. It contains 1414 files with direct `
 `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
 The generated staging list contains 3076 files; it does not prove current
 installed or subscribed content. Final strict four-mode compilation and ABI checks pass:
-ordinary3041/3045, developer3149/3153,108 Harness shards.
-Full suites pass 13,521 Taf / 4,908 Portable cases with zero skips;470 Python Tools tests pass.
+ordinary3041/3045, developer3154/3158,113 Harness shards.
+Current managed and Tools run results live in [STATUS](STATUS.md); older totals do not sign the
+new developer-only save/cold-load extension. Its native execution remains pending.
 Historical nested archive and103 retained real serializer cases pass;
 full historical-save and ordinary-gameplay acceptance remain open. The reported Quickstart
 startup failure is corrected in source but genuine boot and save/reload acceptance remain open.

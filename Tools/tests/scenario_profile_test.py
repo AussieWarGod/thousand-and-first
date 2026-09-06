@@ -330,8 +330,8 @@ class QuickstartBootPreparationTest(unittest.TestCase):
         self.options = self.local / "PlayerOptions.json"
         self.script = self.local / "scenario-script.txt"
 
-    def choose(self, terrain="marsh", advisor="yes"):
-        tokens = ["quickstart-boot", terrain, advisor]
+    def choose(self, terrain="marsh", advisor="yes", verb="quickstart-boot"):
+        tokens = [verb, terrain, advisor]
         os.environ["TAF_SCENARIO_SCRIPT"] = " ".join(tokens)
         os.environ[profile.QUICKSTART_ADVISOR_ENV] = advisor
         return tokens
@@ -511,6 +511,124 @@ class QuickstartBootPreparationTest(unittest.TestCase):
         self.assertEqual(frozen, embark.read_bytes())
         self.assertIn(b";seed=#4242", frozen)
         self.assertEqual("#4242", profile.validate_seed("#4242"))
+
+    def test_six_save_cli_selections_bind_exact_options_and_single_script_line(self):
+        original_bytes = self.source.read_bytes()
+        for terrain in ("marsh", "canyon", "dunes"):
+            for advisor in ("yes", "no"):
+                with self.subTest(terrain=terrain, advisor=advisor):
+                    tokens = self.choose(terrain, advisor, "quickstart-save")
+                    self.assertEqual([" ".join(tokens)], profile.parse_script(tokens))
+                    self.assertEqual(0, profile.main([
+                        "scenario_profile.py", "options", str(self.source), str(self.options)
+                    ]))
+                    self.assertEqual(0, profile.main([
+                        "scenario_profile.py", "script", str(self.script), *tokens
+                    ]))
+                    expected = dict(self.original, OptionEnableSeed="Yes")
+                    expected[profile.QUICKSTART_ADVISOR_OPTION] = advisor.title()
+                    self.assertEqual(expected, json.loads(self.options.read_text(encoding="utf-8")))
+                    self.assertEqual(profile.QUICKSTART_SAVE_SCRIPT_HEADER + " ".join(tokens) + "\n",
+                                     self.script.read_text(encoding="utf-8"))
+                    self.assertEqual(original_bytes, self.source.read_bytes())
+
+    def test_malformed_or_mixed_save_family_refuses_without_writing(self):
+        self.choose(verb="quickstart-save")
+        for tokens in (
+            ["quickstart-save"], ["quickstart-save", "marsh"],
+            ["quickstart-save", "marsh", "yes", "status"],
+            ["status", "quickstart-save", "marsh", "yes"],
+            ["quickstart-save", "marsh", "yes", "quickstart-boot", "marsh", "yes"],
+            ["quickstart-boot", "marsh", "yes", "quickstart-save", "marsh", "yes"],
+            ["quickstart-save", "marsh", "yes", "quickstart-save", "dunes", "no"],
+        ):
+            with self.subTest(tokens=tokens):
+                with self.assertRaises(SystemExit):
+                    profile.parse_script(tokens, ("quickstart-save", "quickstart-boot"))
+                os.environ["TAF_SCENARIO_SCRIPT"] = " ".join(tokens)
+                self.assert_options_refuse_unchanged()
+                self.assert_script_refuse_unchanged(tokens)
+        with self.assertRaises(SystemExit):
+            profile.parse_script(["quickstart-save marsh yes"])
+        self.assert_script_refuse_unchanged(["quickstart-save marsh yes"])
+
+    def test_save_fields_are_exact_and_cannot_be_provider_registered(self):
+        for terrain in ("", "Marsh", "marsh ", "swamp", "canyon\n", "dunes\x00"):
+            with self.subTest(terrain=terrain), self.assertRaises(SystemExit):
+                profile.parse_script(["quickstart-save", terrain, "yes"])
+        for advisor in ("", "Yes", "NO", "1", "true", " yes", "no\n", "yes\x00"):
+            with self.subTest(advisor=advisor), self.assertRaises(SystemExit):
+                profile.parse_script(["quickstart-save", "marsh", advisor])
+        self.assertNotIn("quickstart-save", profile.SCRIPT_VERBS)
+        self.assertNotIn("quickstart-save", profile.RESERVED_VERBS)
+        with self.assertRaises(SystemExit):
+            profile.parse_extra_verbs("quickstart-save")
+
+    def test_save_requires_exact_advisor_override_for_both_writers(self):
+        tokens = self.choose(verb="quickstart-save")
+        self.write_options()
+        for value in (None, "", "no", "Yes", "true", "yes\n"):
+            with self.subTest(value=value):
+                if value is None:
+                    os.environ.pop(profile.QUICKSTART_ADVISOR_ENV, None)
+                else:
+                    os.environ[profile.QUICKSTART_ADVISOR_ENV] = value
+                self.assert_options_refuse_unchanged()
+                self.assert_script_refuse_unchanged(tokens)
+
+    def test_save_script_requires_actual_matching_sibling_option(self):
+        tokens = self.choose("dunes", "no", "quickstart-save")
+        self.assert_script_refuse_unchanged(tokens)
+        for raw in ("bad json", "null", "[]", "{}",
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "Yes"}),
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "no"}),
+                    json.dumps({profile.QUICKSTART_ADVISOR_OPTION: False})):
+            with self.subTest(raw=raw):
+                self.options.write_text(raw, encoding="utf-8")
+                self.assert_script_refuse_unchanged(tokens)
+
+    def test_save_script_refuses_boot_environment_and_other_selection_mismatches(self):
+        tokens = self.choose(verb="quickstart-save")
+        self.write_options()
+        for script in ("quickstart-boot marsh yes", "quickstart-save dunes yes",
+                       "quickstart-save marsh no", "quickstart-save  marsh yes",
+                       "quickstart-save marsh yes\n", "quickstart-save\tmarsh yes"):
+            with self.subTest(script=script):
+                os.environ["TAF_SCENARIO_SCRIPT"] = script
+                self.assert_script_refuse_unchanged(tokens)
+        self.choose(verb="quickstart-save")
+        self.assert_script_refuse_unchanged(["quickstart-boot", "marsh", "yes"])
+
+    def test_save_environment_cannot_fall_back_to_ordinary_default_script(self):
+        self.choose(verb="quickstart-save")
+        for override_present in (True, False):
+            if not override_present:
+                del os.environ[profile.QUICKSTART_ADVISOR_ENV]
+            self.assert_script_refuse_unchanged([])
+            self.assert_script_refuse_unchanged(["status"])
+
+    def test_seal_detects_save_to_boot_change_and_advisor_change(self):
+        tokens = self.choose("canyon", "yes", "quickstart-save")
+        self.write_options()
+        profile.write_script(str(self.script), tokens)
+        seal = self.tmp / "save-profile.sha256"
+        profile.seal(str(self.local), str(seal))
+        profile.verify(str(self.local), str(seal))
+        original_script, original_options = self.script.read_bytes(), self.options.read_bytes()
+        self.script.write_bytes(original_script.replace(b"quickstart-save", b"quickstart-boot"))
+        with self.assertRaises(SystemExit):
+            profile.verify(str(self.local), str(seal))
+        self.script.write_bytes(original_script)
+        self.options.write_text(json.dumps({profile.QUICKSTART_ADVISOR_OPTION: "No"}), encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            profile.verify(str(self.local), str(seal))
+        self.options.write_bytes(original_options)
+        profile.verify(str(self.local), str(seal))
+
+    def test_existing_boot_only_parser_does_not_silently_request_save(self):
+        self.assertEqual("Yes", profile.parse_quickstart_boot(["quickstart-boot", "marsh", "yes"]))
+        with self.assertRaises(SystemExit):
+            profile.parse_quickstart_boot(["quickstart-save", "marsh", "yes"])
 
 
 if __name__ == "__main__":

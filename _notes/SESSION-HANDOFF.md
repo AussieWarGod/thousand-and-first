@@ -2,17 +2,19 @@
 
 Quickstart hotfix supersedes the historical status below. Private0.3.1 reproduces empty ground
 and apron refusal after founder placement; unchanged build cannot be promoted. Exact-founder
-readiness and exact sealed/staked-heart proof are corrected without forcing rung1. Final
-compile92057 passes four modes+ABI; suites24348 pass13521 Taf/4908 Portable,zero skips;470 Tools
-tests pass. Production6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128,
-3045 sources/431188 lines/1414 direct-XRL/zero cap failures. Developer108 Harness shards.
-New genuine boot route compiled but NOT RUN; first profile /mnt/c/taf-scenario.YVP0Sf prepared
-for marsh/advisorYes,seed#43101,3191 sealed files. All six boots and save/reload remain required.
+readiness and exact sealed/staked-heart proof are corrected without forcing rung1. Current
+compile30189 passes four modes+ABI, ordinary3041/3045 and developer3154/3158 with113 Harness.
+Production6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128,
+3045 sources/431188 lines/1414 direct-XRL/zero cap failures. Genuine boot/save/cold-load extension
+compiled but NOT RUN. Current suite states live in STATUS.md; old green counts do not sign it.
+Fresh save profile /mnt/c/taf-scenario.Vg5fz3:marsh/advisorYes,seed#43101,3196 sealed files,
+all3158C# match actual compiler inputs. Older YVP0Sf remains boot-only and unlaunched.
+All six boots and save/cold-load remain required; exact-owned Kill is not graceful Quit.
 Independent five-file production bridge clears source review and enumerates3040 unchanged
 sources. Exact-inventory structural binding and documentation freshness now pass. Local
 checkpoint only; do not substitute these gates for native acceptance or promote unchanged private bytes.
 Offline readiness probe3pass42BLOCKED at Physics Unity ECall; no real founder cases executed.
-Root owns `/tmp/taf-quickstart-founder-proof.3xBBuF/README.md`; STATUS.md is current authority.
+Root owns `/tmp/taf-quickstart-roundtrip-proof.RUDnOR/README.md`; STATUS.md is current authority.
 Current ordinary game remains untouched pending permission to close the failed disposable world
 and run fresh genuine Quickstart tests. No new upload/Steam mutation/source export.
 
