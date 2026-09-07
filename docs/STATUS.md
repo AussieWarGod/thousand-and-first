@@ -13,7 +13,66 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased native destruction-veto regression, case28b.3
+## Unreleased recovery absence correction, cases28d.1–28d.2
+
+Current candidate makes RaiderDying inert, moves automatic readiness to an unbound
+normal seat wake, and rechecks fresh complete physical absence before explicit turn-in.
+Response drafts precede that observation; exact game/system/book/recovery and quest
+reproofs precede publication. Any bound survey defers/refuses without a second classified
+scan. Explicit committed recovery remains available while automation is paused.
+No saved fields/public API changes; shared active-attack counting remains unchanged.
+
+Focused raid suites22822 passed124 main/95Portable cases, zero skips. Independent complete six-file delta review found no
+Required issue. Canonical comparison38299 passed:3047 current sources,3041 unchanged,
+five modified, one added, none removed;431,611 physical lines,1415 direct-XRL,zero cap debt.
+Digest `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Exact semantic review now binds this digest through the complete canonical comparison.
+Strict structural gate51073 passed for3047 staged C# files; its following documentation
+check found stale census text, now being corrected rather than waived.
+Direct `XRL` imports: 1415 files, 0 over the line limit.
+Inventory SHA-256: `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Canonical compile51408 TERMINAL0 passed 3047 sources, baseline and compatibility symbols,
+ordinary3043/3047 and developer3167/3171 with124 Harness shards, plus installed ABI.
+The generated cold-stage inventory contains 3078 files, not new subscribed-install evidence.
+Full licensed Windows27430 TERMINAL0 passed13,661 main and5,039 Portable cases, zero skips.
+Repository audit71541 TERMINAL0 passed501 tests in46.558s, exact3078-file cold-install
+inventory, current documentation, XML, architecture and Harness registration. Independent
+closeout review found no Required issue. Combined PR10 integration and hosted CI remain
+separate next gates; main PR6 still requires an eligible approving review.
+
+Baseline native92856 TERMINAL1 reproduced premature recovery readiness at
+2026-09-07T16:57:49.982Z, seed#1012031, fresh profile `/mnt/c/taf-scenario.3VC3J1`.
+Real contact earned StoresPlundered/Offered (240→216water,24plunder); actual acceptance
+earned Active. Two original deaths preserved Active. Final-original RaiderDying changed
+Active→Ready before destruction; a real BeforeDestroy veto retained that exact live
+original in the same cell and outside both graveyards. Assertion correctly failed:
+`expected recovery Active; observed Ready`. This retained baseline precedes the current fix.
+
+Evidence: `/mnt/c/taf-raid-recovery-red.uaan5G`. Strict raw log passed; the persona failed
+honestly. Only receipt-ownedPID44992 stopped. New Harness has independent source review;
+four source-wiring cases pass in each project, zero skips; all56 persona tests pass.
+Those source tests do not sign native behavior. The corrected native receipt below now
+covers retry, readiness and turn-in; ordinary turns and save/load remain open. Sealed-runner popup suppression
+also excludes rendered quest-popup acceptance. Public0.3.1 remains unchanged.
+
+Independent baseline29267 reproduced case28d.2 at17:13:51.390UTC, seed#1012032,
+profile `/mnt/c/taf-scenario.i78bCs`. Actual foreign absence earned Ready; the exact
+survivor returned alive. Immediate turn-in wrongly publishedResolved, finished its
+quest and cleared the wound while that original remained alive on the target tile.
+Exact assertion failed, raw log passed, only ownedPID34812 stopped. Evidence:
+`/mnt/c/taf-raid-recovery-return-red.z4lP7I`. No lifecycle state or body removal was forced.
+Corrected native51235 TERMINAL0 passed both cases at17:23:51.409UTC and17:26:18.640UTC,
+seed#1012033, fresh profiles `/mnt/c/taf-scenario.eTNGEi` and `/mnt/c/taf-scenario.UamLRQ`.
+The real final-destruction veto preserves Active and exact wire/quest state through another
+activation; disarmed actual removal then earns Ready and explicit turn-in resolves once.
+The returned exact live original refuses turn-in with Ready/quest/wound/wire unchanged;
+actual final removal then permits one completion. Both retain216drams,24plunder,three
+original mints and unchanged repeats. Both strict raw logs passed; receipt-ownedPIDs40344
+and8108 stopped, with profiles/seals retained. Evidence:
+`/mnt/c/taf-raid-recovery-fixed.FaVvXv`. This is synthetic component evidence only.
+Paused completion and same/foreign bound native refusal remain separate unsigned cases.
+
+## Retained unreleased native destruction-veto regression, case28b.3
 
 No further production changes. Dependency tree equals tested death fix87c4992, normally
 merged by PR9 into integration a4d61a9. Public0.3.1 remains unchanged; main PR6 still
@@ -43,7 +102,7 @@ cold-install verification, documentation and unchanged structural binding. Norma
 integration remains open. Current production bytes and exact structural binding are
 unchanged; neither native case signs full Beta acceptance.
 
-## Retained unreleased native raid-death correction, case28b.1
+## Retained unreleased raid-death correction, case28b.1
 
 Actual native death run12835 exposed final-raider quarantine: `RaiderDying` advanced
 the attack before engine removal, then terminal inspection counted that same still-present
@@ -57,7 +116,7 @@ absence and resolves afterward. Shared counting, recovery and saved fields are u
 The new native case explicitly requires unchanged pending state after final removal,
 then one `RaidersDefeated` result and unchanged repeat through real activation.
 
-Current strict structural census:3046 sources/431,474 physical lines/1414 direct-XRL/zero cap failures;
+Retained strict structural census:3046 sources/431,474 physical lines/1414 direct-XRL/zero cap failures;
 Inventory SHA-256: `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
 Exact semantic release binding passed through the complete canonical comparison:3045 unchanged
 production files inherit review, one modified file received scoped independent review.
@@ -1348,10 +1407,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 - Addendum 9 structural release gate is closed for the current digest: every staged C# file is
   strictly under 300 physical lines and `docs/STRUCTURE_REVIEW.json` binds the exact-inventory
   responsibility/protocol review to digest
-  `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`, signed by independent AI reviewers
-  under the author's Addendum 9 ruling of 2026-09-02 (fourteen ownership and four protocol faults
-  were fixed before signing). Any staged source change reopens it. This is an ALPHA claim, not an
-  enterprise-grade or v1.0 release-quality claim.
+  `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`, honestly signed by Codex
+  with independent AI reviews under the author's Addendum 9 ruling of 2026-09-02. Complete
+  canonical comparison enumerates every source; unchanged files inherit retained review and
+  the six changed sources received fresh scoped review. Any staged source change reopens it.
+  This structural verdict is not complete Beta or v1.0 functional acceptance.
 
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in

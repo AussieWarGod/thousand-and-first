@@ -359,6 +359,13 @@ Reports, wishes, heartbeat recovery, and explicit actions outside the bound pass
 survey because they have a separate wake and evidence boundary. Dense native instrumentation in
 `TESTING.md` is the final proof that no active branch smuggles in another full scan.
 
+Raid recovery uses `KingdomSurvey.TryTakeUnboundRecovery` only at those separate wake/action
+boundaries. It refuses any bound pass, takes the existing custody-only index without legacy
+migration, and requires a complete, non-deduplicated root capture. Automatic bound calls wait
+for the next ordinary unbound heartbeat; explicit bound turn-in requests a retry. The raid
+adapter re-proves exact owner and recovery fields after capture, and does not reuse a cached
+zero count as absence authority. Committed turn-in retains the master-pause exception below.
+
 ### Realm master pause
 
 `Core/KingdomMasterRules.cs` owns the engine-free three-state latch and exactly-once resume token;

@@ -1,9 +1,43 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T16:03:14Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T17:24:07Z. This records structural semantics, not release acceptance.
 
-## Current unreleased raid-death correction
+## Current unreleased recovery absence correction
+
+Production digest `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+The [complete canonical comparison](/tmp/taf-raid-recovery-canonical-audit.NToNIW/comparison.json)
+enumerates every3047 current source path/hash and every actual parent Git blob at
+`a4d61a9a50cd7f4993c36610a628e02c98b1ec37`; parent tree equals tested87c4992 and its
+production digest is the retained980afeb7 below. Current bytes and membership were reread.
+Delta:3041 unchanged,five modified,one added,no removals. Census:431,611 physical lines,
+1415 direct-XRL files,zero at or above300; canonical stage3078 files. Report SHA256
+`a4b3c75a8306b9bdcc49d78a4502f7cc2bb6048bf4929056c34e1de731ad89e1`.
+Unchanged sources inherit the retained review chain, not a fresh full-tree deep read.
+
+Root and independent Codex reviewer Parfit read all six changed sources and relevant engine,
+heartbeat, survey, quest and publication dependencies. New RecoverySeatAuthority owns one
+ephemeral synchronous decision, not saved authority. The existing survey service owns fresh,
+complete custody-only capture; any bound pass refuses rather than reusing cached absence or
+adding a second semantic classification. Automatic work retains master/transition/load fences;
+explicit committed turn-in remains available while paused. Draft preparation precedes final
+fresh absence; exact owner, recovery and quest reproofs precede publication. A returned live
+body refuses without demoting Ready or altering its quest/wound/sequence. Post-publication
+completion checks current resolved authority and the original quest. Death notifications now
+own no lifecycle work. No saved fields, wire format, public API, shared active-attack count or
+physical-contact behavior changed. No Required finding remains in this scoped source review.
+
+Actual baseline92856 proved premature Ready through a real destruction veto. Separate29267
+proved turn-in completed despite the returned original remaining alive. Corrected veto case
+passed at17:23:51UTC in serial run51235, profile `/mnt/c/taf-scenario.eTNGEi`, seed#1012033:
+Active survives veto/activation; real retry removal precedes one Ready and explicit completion.
+[Current verification](/mnt/c/taf-raid-recovery-fixed.FaVvXv/README.md) remains separate from
+structural semantics. Returned-survivor positive, full suites and four-mode compilation were
+pending at signing. Developer Harness is outside this production review; ordinary turns,
+paused completion, bound-refusal native cases, save/load and inherited custody limits remain
+unsigned. Public0.3.1 remains unchanged; no new release or broad Beta acceptance is claimed.
+
+## Retained unreleased raid-death correction
 
 Production digest `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
 The [complete canonical comparison](/tmp/taf-raid-death-canonical-audit.JTC5zN/comparison.json)

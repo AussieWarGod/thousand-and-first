@@ -1,0 +1,10 @@
+# Earn Ready through actual foreign-zone absence, then return the exact live original.
+# Public turn-in must refuse unchanged; genuine final removal permits one completion.
+# Same-process only; historical saves, ordinary turns and save/load remain unsigned.
+DESCRIPTION=earned Ready with returned live raider refuses turn-in; actual removal permits completion
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-recovery-return-native-check;stagedigest
+VERBS=raid-recovery-return-native-check
+EXPECT=stagedigest:OK~founded=false,raid-recovery-return-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

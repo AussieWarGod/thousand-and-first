@@ -141,30 +141,8 @@ namespace ThousandAndFirst
 
 		internal static void RaiderDying(GameObject actor, r_KingdomRaiderObjective part)
 		{
-			if (actor == null || part == null) return;
-			Zone zone = actor.CurrentZone;
-			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
-			KingdomLifecycleOperation op = system?.LifecycleBook?.Raid;
-			if (zone == null || system?.LifecycleBook == null) return;
-			if (op != null && op.Action == KingdomLifecycleAction.RaidAttack
-				&& op.Phase == KingdomLifecyclePhase.EffectIntent
-				&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
-				&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal))
-			{
-				// BeforeDeathRemoval precedes a still-vetoable Destroy. Active-zone inspection
-				// owns finalization after observing the body's actual removal.
-				return;
-			}
-			KingdomRaidIncident recovery = FindRecovery(system.LifecycleBook.RaidLedger,
-				system.LifecycleBook.SettlementId);
-			if (recovery == null || recovery.RecoveryState != KingdomRaidRecoveryState.Active
-				|| !string.Equals(recovery.AttackOperationId, part.OperationId,
-					StringComparison.Ordinal)
-				|| CountLiveRaiders(zone, part.OperationId, actor) != 0) return;
-			KingdomSystem.Guard("last recovery-marked raider died", delegate
-			{
-				ReconcileRecoveryAtSeat(system, zone, actor);
-			});
+			// BeforeDeathRemoval precedes a still-vetoable Destroy. This notification cannot
+			// prove absence for either attack resolution or recovery. Normal wakes own that proof.
 		}
 
 	}

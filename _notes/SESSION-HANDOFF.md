@@ -1,5 +1,16 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current unreleased recovery correction
+
+3047 staged sources;431,611 physical lines;1415 direct-XRL;zero cap failures;3078 generated
+cold-stage files. Exact inventory `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Complete canonical comparison retains3041 unchanged, five modified, one new source. Exact
+six-file semantic review and strict structure pass. Four-mode compile51408 passes; native51235
+passes real late-veto and returned-survivor cases with exact owned stops. Main suite27430
+passes13661 main/5039 Portable cases, zero skips; repository71541 passes501 tests plus
+inventory, documentation, XML, architecture and registration. Combined PR10/hosted gates remain.
+Public0.3.1 unchanged. See docs/STATUS.md and `/mnt/c/taf-raid-recovery-fixed.FaVvXv`.
+
 ## Current publisher handoff — public 0.3.1 published and finalized
 
 Public3794797472/version0.3.1/attempt0001: submit55498 TERMINAL0 at13:18 UTC reports
