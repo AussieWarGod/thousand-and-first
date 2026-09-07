@@ -141,37 +141,8 @@ namespace ThousandAndFirst
 
 		internal static void RaiderDying(GameObject actor, r_KingdomRaiderObjective part)
 		{
-			if (actor == null || part == null) return;
-			Zone zone = actor.CurrentZone;
-			KingdomSystem system = The.Game?.RequireSystem<KingdomSystem>();
-			KingdomLifecycleOperation op = system?.LifecycleBook?.Raid;
-			if (zone == null || system?.LifecycleBook == null) return;
-			if (op != null && op.Action == KingdomLifecycleAction.RaidAttack
-				&& op.Phase == KingdomLifecyclePhase.EffectIntent
-				&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
-				&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal)
-				&& CountLiveRaiders(zone, op.Id, actor) == 0)
-			{
-				KingdomSystem.Guard("last raid body died", delegate
-				{
-					if (!KingdomLifecycleRules.RaidRuntimeAdapter.SkipEffectWithoutContact(
-						system.LifecycleBook, op)
-							|| !KingdomLifecycleRules.AdvancePhase(system.LifecycleBook, op,
-								KingdomLifecyclePhase.EffectsSettled, The.Game.TimeTicks)) return;
-					ResumeOpen(system, zone);
-				});
-				return;
-			}
-			KingdomRaidIncident recovery = FindRecovery(system.LifecycleBook.RaidLedger,
-				system.LifecycleBook.SettlementId);
-			if (recovery == null || recovery.RecoveryState != KingdomRaidRecoveryState.Active
-				|| !string.Equals(recovery.AttackOperationId, part.OperationId,
-					StringComparison.Ordinal)
-				|| CountLiveRaiders(zone, part.OperationId, actor) != 0) return;
-			KingdomSystem.Guard("last recovery-marked raider died", delegate
-			{
-				ReconcileRecoveryAtSeat(system, zone, actor);
-			});
+			// BeforeDeathRemoval precedes a still-vetoable Destroy. This notification cannot
+			// prove absence for either attack resolution or recovery. Normal wakes own that proof.
 		}
 
 	}

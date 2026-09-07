@@ -20,13 +20,75 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The current isolated draft census reports 3046 staged production C# files and 431,441 physical lines,
+The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
+zero at or above300,and1415 direct-XRL files. Exact inventory:
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Complete canonical parent/current comparison enumerates3044 unchanged,three modified,
+two added,no removals. Root and independent AI reviewer read the complete five-file delta
+and affected boundaries. A detached growth-resume protocol validates coherent clocks and
+reproves exact source authority before the existing all-participant master publication.
+Original children, health, field work and already-published arrival work remain retained;
+no saved format or public API changes. [Review evidence](STRUCTURE_REVIEW_0_3_1.md)
+binds this exact digest; native, managed and compile evidence remain separate.
+
+## Retained recovery census
+
+The recovery absence correction reports3047 staged production C# files,431,611 physical
+lines,zero at or above300,and1415 files with direct `XRL` imports. Exact inventory:
+`6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+The complete canonical parent/current comparison enumerates3041 unchanged,five modified,
+one added,no removals. Unchanged sources inherit review; root and independent AI reviewer
+read the complete six-file delta and relevant boundaries. One ephemeral recovery decision
+authority coordinates the existing custody survey and publication/quest protocols; no saved
+fields or public API change. Any bound pass defers/refuses without a second classification.
+See [review evidence](STRUCTURE_REVIEW_0_3_1.md). The semantic ledger binds this exact digest;
+native/full-suite/compile evidence remains separately scoped in [STATUS](STATUS.md).
+
+## Retained raid-death census
+
+The preceding raid-death correction reports3046 staged production C# files,
+431,474 physical lines, zero at or above300, and1414 direct `XRL` imports. Exact inventory:
+`980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+One production file changes from the raid-contact checkpoint below. The exact semantic ledger
+now binds this inventory through a complete canonical parent/current comparison: 3045 unchanged,
+one modified, none added or removed. Unchanged sources inherit the retained review; root and an
+independent AI reviewer inspected the complete changed file and affected death/wake boundaries.
+Active attacks stay pending before cancellable removal; existing inspection owns finalization
+after actual absence. Shared counting, recovery, saved fields and public APIs are unchanged.
+See [review evidence](STRUCTURE_REVIEW_0_3_1.md). The strict structural release gate passed;
+separate canonical compilation1886 then passed ordinary3042/3046 and developer3162/3166 inputs,
+all120 Harness shards plus installed ABI. No native ordinary-turn, veto, recovery or save/load
+acceptance is inferred.
+Public0.3.1 installed content remains unchanged.
+
+## Retained raid-contact census
+
+The unreleased raid-contact checkpoint reports 3046 staged production C# files and 431,481 physical lines,
+with 0 at or above the strict 300-line cap. Direct `XRL` imports remain in 1414 files;
+none exceeds the line limit. Exact staged source inventory digest:
+`3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+The canonical stage still contains 3077 files; public 0.3.1 installed bytes remain unchanged.
+
+The [complete raid bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json)
+enumerates every current path/hash and compares every actual parent Git blob at `cd6dedc`:
+3044 unchanged, two modified, no additions or removals. Unchanged sources inherit the
+retained stock review below, not a fresh deep read. Root and an independent AI reviewer
+read both complete changed files and their affected debit/contact boundaries. The existing
+water receipt retains active-survey authority, settlement-wide reserves and full accounting;
+its internal exact-store selector cannot fall back to another vessel. Contact owns a real
+survey scope through commit and compensation, and refuses failed reservations before mutation.
+No saved fields, wire layout or public API changed. The current binding records this scoped
+review, not ordinary play, save/load or unrelated raid acceptance.
+
+## Retained initial-stock census
+
+The released stock correction reported 3046 staged production C# files and 431,441 physical lines,
 with 0 at or above the strict 300-line cap. It contains 1414 files with direct `XRL` imports;
 0 of those exceed the line limit. Exact staged source inventory digest:
 `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
 The generated staging list contains 3077 files; it does not prove installed or subscribed content.
 The [complete stock bridge](/tmp/taf-quickstart-stock-structure.E4chRX/stock-production-bridge.md)
-compares every current path against actual Git blobs from clean startup commit
+compares every then-current path against actual Git blobs from clean startup commit
 `1c1c2bc54b4d11f0912f210b39baa89e635c157d`:3044 unchanged,one modified,one added,no removals.
 Only the two stock production files received fresh scoped review; unchanged files inherit the
 retained review chain, not a fresh deep read. A callback-free physical-child identity rule now
@@ -41,8 +103,8 @@ correction validation. This review claims no complete current stock compile, man
 pass. See [STATUS](STATUS.md) and [retained native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
 Historical serializer evidence remains retained; ordinary rendered play, graceful Save-and-Quit
 and desktop Quit, corrected subscribed delivery, full historical saves and public release remain
-separate gates. `docs/STRUCTURE_REVIEW.json` binds the current structural review; root-run gates
-remain separate. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) preserve inherited
+separate gates. The old stock binding is retained in Git; `docs/STRUCTURE_REVIEW.json` now binds
+the raid correction above. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) preserve inherited
 review provenance and open functional limits. This is not the complete release gate.
 
 ## Retained beta hardening checkpoint — `7d331fe8`

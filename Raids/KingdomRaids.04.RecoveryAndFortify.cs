@@ -176,16 +176,16 @@ namespace ThousandAndFirst
 			}
 		}
 
-		private static void ReconcileRecoveryAtSeat(KingdomSystem system, Zone zone,
-			GameObject excluded = null)
+		private static void ReconcileRecoveryAtSeat(KingdomSystem system, Zone zone)
 		{
+			if (!Enabled || !KingdomMaster.AutomaticWorkAllowed(system) || KingdomSurvey.HasBoundPass) return;
 			KingdomLifecycleBook book = system?.LifecycleBook;
 			if (book == null || zone == null || book.Raid != null) return;
 			KingdomRaidIncident recovery = FindRecovery(book.RaidLedger, book.SettlementId);
 			if (recovery == null
 				|| recovery.RecoveryState != KingdomRaidRecoveryState.Active
 				|| !string.Equals(recovery.TargetZoneId, zone.ZoneID, StringComparison.Ordinal)
-				|| CountLiveRaiders(zone, recovery.AttackOperationId, excluded) != 0) return;
+				|| !RecoverySeatAuthority.TryCapture(system, zone, recovery, true, out var authority)) return;
 			KingdomLifecycleOperation op = ResponseOperation(system, recovery,
 				KingdomLifecycleAction.RaidRecoveryReady,
 				"proved the raiding band absent and made watch recovery ready for turn-in",
@@ -194,6 +194,7 @@ namespace ThousandAndFirst
 			if (op == null) return;
 			op.Origin = recovery.AttackOperationId;
 			op.ObjectMarker = recovery.RecoveryStepId;
+			if (!authority.DraftMatches(op) || !authority.ProvesFreshAbsence()) return;
 			PublishSimple(system, op);
 		}
 

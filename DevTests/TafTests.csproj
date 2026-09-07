@@ -739,6 +739,15 @@
     <Compile Include="KingdomExpeditionSourceTests.cs" />
 	<Compile Include="KingdomRaidIncidentRulesTests.cs" />
 	<Compile Include="KingdomRaidLaunchNativeContractTests.cs" />
+	<Compile Include="KingdomRaidContactNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidDeathNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidDeathVetoNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidRecoveryDeathNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidRecoveryReturnNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidRecoveryBoundarySourceTests.cs" />
+	<Compile Include="KingdomRaidRecoveryGuardsNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidRecoveryTurnNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidMasterTurnNativeSourceTests.cs" />
 	<Compile Include="KingdomRaidLaunchOrderTests.cs" />
 	<Compile Include="KingdomRaidRuntimeSourceTests.cs" />
 	<Compile Include="KingdomRaidOutboxRulesTests.cs" />
@@ -2000,6 +2009,10 @@
 	<Compile Include="..\Core\KingdomRealmRetirementReport.cs" />
 	<Compile Include="..\Core\KingdomIdentityFenceReceiptRules.cs" />
 	<Compile Include="..\Core\KingdomMasterPublicationGate.cs" />
+	<Compile Include="..\Experience\KingdomMasterGrowthResumePlan.cs" />
+	<Compile Include="..\Experience\KingdomMasterGrowthResumeRules.cs" />
+	<Compile Include="KingdomMasterGrowthResumeTests.cs" />
+	<Compile Include="KingdomMasterGrowthResumeTests.Advanced.cs" />
 	<Compile Include="..\Core\KingdomAssentingMootRules.Preview.cs" />
 	<Compile Include="..\Core\KingdomFoundingTransaction.Preview.cs" />
 	<Compile Include="..\Experience\KingdomExperienceEnums.cs" />

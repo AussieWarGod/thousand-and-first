@@ -1,0 +1,10 @@
+# Real engine EndTurn dispatch, not a direct heartbeat call or forced clock.
+# Requested advance 1 may legitimately elapse multiple turns; witness counts all of them.
+# Controlled synthetic world; ordinary input and save/load remain separate acceptance.
+DESCRIPTION=real engine turns earn recovery Ready once before explicit completion
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-recovery-turn-setup;advance 1;raid-recovery-turn-check;stagedigest
+VERBS=raid-recovery-turn-setup,raid-recovery-turn-check
+EXPECT=stagedigest:OK~founded=false,raid-recovery-turn-setup:OK~setup=Active originals-removed=3,advance:OK,raid-recovery-turn-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

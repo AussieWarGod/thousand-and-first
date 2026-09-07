@@ -85,18 +85,17 @@ namespace ThousandAndFirst
 				if (arrivalInterval <= 0L)
 					arrivalInterval = KingdomRules.PolicyInterval(
 						KingdomRules.ArrivalIntervalTicks(population), gate, stores);
-				long arrival = oldArrival;
-				bool openArrival = lifecycle?.Growth?.ArrivalOp != null
-					|| lifecycle?.Growth?.ArrivalCandidate != null;
-				if (!openArrival)
-				{
-					if (KingdomGrowth.Enabled)
-					{
-						if (!KingdomMasterRules.TryFutureDeadline(now, arrivalInterval,
-							out arrival)) return false;
-					}
-					else arrival = 0L;
-				}
+				// Resume the last measured rate; the normal growth owner observes site changes
+				// on its next wake. The deadline mirror comes only from coherent growth authority.
+				bool modern = lifecycle?.Growth != null && !lifecycle.Growth.ArrivalCadenceMigrationPending;
+				int cohort = modern ? lifecycle.Growth.ArrivalRateCohort : population;
+				int rulesVersion = modern ? lifecycle.Growth.ArrivalRulesVersion
+					: Simulation.Kernel.KingdomSemanticSelectionRules.RulesVersion;
+				LifecyclePlan lifecyclePlan;
+				if (!LifecyclePlan.TryCreate(lifecycle, now, disabledAt, arrivalInterval,
+					cohort, rulesVersion, out lifecyclePlan)) return false;
+				long arrival = lifecyclePlan != null && lifecyclePlan.HasArrivalAuthority
+					? lifecyclePlan.NextArrivalTick : oldArrival;
 
 				long guest = oldGuest;
 				if (KingdomLocus.Enabled && !KingdomMasterRules.TryFutureDeadline(now,
@@ -131,8 +130,6 @@ namespace ThousandAndFirst
 						out extensionHappeningCursors)
 					|| !Api.KingdomBehaviourRules.TryRebaseAfterPause(city?.ExtensionModel,
 						disabledAt, now, out extensionModel)) return false;
-				LifecyclePlan lifecyclePlan;
-				if (!LifecyclePlan.TryCreate(lifecycle, now, arrival, out lifecyclePlan)) return false;
 				plan = new SettlementPlan(now,
 					lifecycle?.Growth?.HeartbeatOp == null ? now : oldHeartbeat,
 					lifecycle?.Growth?.FetchOp == null ? now : oldFetch,
@@ -150,6 +147,11 @@ namespace ThousandAndFirst
 				long[] rows = new long[source.Count];
 				for (int i = 0; i < rows.Length; i++) rows[i] = value;
 				return rows;
+			}
+
+			internal bool CanPublish(KingdomLifecycleBook book)
+			{
+				return Lifecycle == null ? book == null : Lifecycle.CanPublish(book);
 			}
 
 			internal void Publish(KingdomSystem target)

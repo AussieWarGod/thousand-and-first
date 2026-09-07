@@ -1,5 +1,13 @@
 # Local Workshop publisher
 
+Public Alpha `0.3.1` is published to item `3794797472`: submit55498 TERMINAL0 at13:18 UTC
+reports `SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`, attempt `0001`.
+Finalizer55266 TERMINAL0 reports `SubscribedInstallationVerified`, `reason=null`,
+`attemptFinalized=true`. Strict Alpha package68272 and native copy54621 passed.
+One client only; `freshTransferVerified=false`, `releaseReady=false`. No ordinary gameplay or
+all-subscriber claim. [Public evidence](/mnt/c/taf-031-public-release.cfu8DL/README.md) and
+[exact bindings](../../docs/STATUS.md#public-031--published-and-finalized).
+
 Corrected private `0.3.1` is now installed and finalized for staging item `3796495680`.
 Submit63022 TERMINAL0 reports `SubmittedUnverified`, `metadataMatches=true`,
 `contentUnchanged=true`, attempt `0002`; finalize20925 TERMINAL0 reports
@@ -8,13 +16,13 @@ Submit63022 TERMINAL0 reports `SubmittedUnverified`, `metadataMatches=true`,
 [finalization](/mnt/c/taf-031-corrected-release.LpixRX/finalize/upload.stdout) bind the corrected
 package, not the earlier broken private build. Original `0001` records remain immutable.
 One client only: `freshTransferVerified=false`, `releaseReady=false`; no gameplay or all-subscriber
-claim. Public Alpha `3794797472` remains `0.3.0` pending its separately bound upload.
+claim. The separately bound public publication is recorded above.
 See [current status](../../docs/STATUS.md) for exact evidence and integration verification.
 Follow [the release gates](../../docs/RELEASING.md) before any submission.
 
 For this Alpha only, the user waived manual startup/save/reload. Root separately accepts the
 three named PACKAGE/COPY/BACKUP environment bind-alias test gaps, retaining their exclusions
-rather than claiming zero full-gate skips. Root reuses the exact completed frozen-runtime gate
+rather than claiming zero full-gate skips. Root reused the exact completed frozen-runtime gate
 with public-only delta checks and strict `--alpha` package binding, not another full `--alpha`
 release-check. These decisions do not weaken production guards or the permanent release procedure.
 [Decision and evidence limits](../../docs/STATUS.md#one-release-alpha-verification-decision).

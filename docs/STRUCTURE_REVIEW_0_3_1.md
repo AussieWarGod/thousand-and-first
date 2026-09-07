@@ -1,9 +1,149 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T11:37:12Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T19:17:56Z. This records structural semantics, not release acceptance.
 
-## Current initial-stock child identity correction
+## Current unreleased master-growth resume correction
+
+Production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+[Complete canonical comparison](/tmp/taf-master-growth-canonical.G5aKOw/comparison.json)
+enumerates every3049 current source and actual parent Git blob at
+`e65fb469600575851d7429f685eacd59820e4980`:3044 unchanged,three modified,two added,
+no removals;431893 physical lines,1415 direct-XRL imports,zero cap failures.
+Parent digest matches retained recovery review; current membership and bytes were reread.
+Comparison JSON SHA256 `66d6a7abd759fc2e07e4fac19c771f8435259b598e234b452ffb12320c3c5e6b`.
+Unchanged sources inherit review; no fresh full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit read all five complete changed sources and
+master/availability/cadence/wire boundaries. An ephemeral engine-free growth-resume plan
+prepares a canonical detached proposal and reproves exact parent, growth, child references,
+source bytes and scalar-publication equivalence. The existing master coordinator preflights
+seat and every away settlement before any participant writes. Existing graph references,
+health evidence, effective field work, subsidence checkpoint and already-published arrival
+debt/opportunities/open leases survive. Overlapping ongoing local/global pause counts once.
+Modern open arrivals defer cadence restart; historical open work retains its lease. Opaque,
+quarantined and staged children remain exact no-ops; pristine pre-founding lifecycle stays
+pristine. Deadline mirrors require proved growth authority. No saved fields, wire or public
+API change. No Required source-review finding remains.
+
+The normative master exception restarts future full intervals without creating unobserved
+backlog. This does not claim every elapsed pre-disable opportunity was materialized.
+Actual diagnostic36966 confirmed old interval0/positive-deadline corruption. Corrected
+native11624 passed two paused EndTurns, one resume token, later raid Ready, actual explicit
+completion and unchanged repeat. Exact comparison83480 matched all3181 production/Harness
+C# bytes to its isolated profile. [Native evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md)
+is synthetic and separate from ordinary play or saved-game acceptance. Full managed and
+four-mode compilation remained pending at signing. Public0.3.1 remains unchanged.
+
+## Retained unreleased recovery absence correction
+
+Production digest `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+The [complete canonical comparison](/tmp/taf-raid-recovery-canonical-audit.NToNIW/comparison.json)
+enumerates every3047 current source path/hash and every actual parent Git blob at
+`a4d61a9a50cd7f4993c36610a628e02c98b1ec37`; parent tree equals tested87c4992 and its
+production digest is the retained980afeb7 below. Current bytes and membership were reread.
+Delta:3041 unchanged,five modified,one added,no removals. Census:431,611 physical lines,
+1415 direct-XRL files,zero at or above300; canonical stage3078 files. Report SHA256
+`a4b3c75a8306b9bdcc49d78a4502f7cc2bb6048bf4929056c34e1de731ad89e1`.
+Unchanged sources inherit the retained review chain, not a fresh full-tree deep read.
+
+Root and independent Codex reviewer Parfit read all six changed sources and relevant engine,
+heartbeat, survey, quest and publication dependencies. New RecoverySeatAuthority owns one
+ephemeral synchronous decision, not saved authority. The existing survey service owns fresh,
+complete custody-only capture; any bound pass refuses rather than reusing cached absence or
+adding a second semantic classification. Automatic work retains master/transition/load fences;
+explicit committed turn-in remains available while paused. Draft preparation precedes final
+fresh absence; exact owner, recovery and quest reproofs precede publication. A returned live
+body refuses without demoting Ready or altering its quest/wound/sequence. Post-publication
+completion checks current resolved authority and the original quest. Death notifications now
+own no lifecycle work. No saved fields, wire format, public API, shared active-attack count or
+physical-contact behavior changed. No Required finding remains in this scoped source review.
+
+Actual baseline92856 proved premature Ready through a real destruction veto. Separate29267
+proved turn-in completed despite the returned original remaining alive. Corrected veto case
+passed at17:23:51UTC in serial run51235, profile `/mnt/c/taf-scenario.eTNGEi`, seed#1012033:
+Active survives veto/activation; real retry removal precedes one Ready and explicit completion.
+[Current verification](/mnt/c/taf-raid-recovery-fixed.FaVvXv/README.md) remains separate from
+structural semantics. Returned-survivor positive, full suites and four-mode compilation were
+pending at signing. Developer Harness is outside this production review; ordinary turns,
+paused completion, bound-refusal native cases, save/load and inherited custody limits remain
+unsigned. Public0.3.1 remains unchanged; no new release or broad Beta acceptance is claimed.
+
+## Retained unreleased raid-death correction
+
+Production digest `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+The [complete canonical comparison](/tmp/taf-raid-death-canonical-audit.JTC5zN/comparison.json)
+enumerates all 3046 paths and hashes: 431,474 physical lines, 1414 direct-XRL files, zero cap
+failures. Complete current/parent stage membership contains 3077 paths. Every actual parent
+`7b272de6a464d1a61fb4de18106a3b665586d1a8` Git blob was compared; its tree equals `186f050`
+and its production digest equals the retained contact review below. Current bytes and membership
+were reread. Delta: 3045 unchanged, one modified, none added or removed. Comparison JSON SHA256
+`91e270de6410dbfef5c4220df828a2b0905e1d419f508ab589f9bc0992d723f6`.
+Unchanged sources inherit that review chain; no fresh full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit inspected the complete changed production file and
+affected death, wake, attack inspection and terminal-result boundaries. Raid02 still owns actor
+callbacks and answer dispatch; its matching active-attack death branch now returns pending.
+The pinned engine sets `Dying` before a vetoable `BeforeDie` and sends `BeforeDeathRemoval`
+before a separately vetoable `Destroy`. `IsAlive` classifies organism kind, not completed removal.
+Pre-removal callbacks therefore cannot finalize active attacks. Existing normal heartbeat and
+zone-activation inspection observe actual absence, then use unchanged effect/phase/result
+protocols. No new service, durable authority, saved field, wire layout or public API was added.
+Shared counting, contact and inherited recovery behavior are unchanged. No Required finding
+remains in this bounded active-attack correction. Raid02 SHA256
+`ea0e3f8e3231742be480d7d2c9276bb38be9d816132c3b7ec93da06e06e4005d` (171 physical lines).
+
+Actual native run 12835 reproduced the old final-raider quarantine. Corrected run 90794 passed
+three actual deaths, six inert callback observations, pending authority through final removal,
+then one real activation defeat and unchanged repeat, 240 drams and zero plunder. Full licensed
+Windows runner 24858 passed 13,650 main and 5,028 Portable cases, zero skips.
+[Native and managed evidence](/mnt/c/taf-raid-death-fixed.nf0IMW/README.md).
+Four-mode compilation was pending at signing. Subsequent canonical runner1886 TERMINAL0 passed
+ordinary3042/3046 and developer3162/3166 inputs, all120 Harness shards plus installed ABI.
+Developer retention setup and Harness semantics are not approved through this production binding. Ordinary turn-driven
+play, veto injection, recovery, save/load and inherited raid custody limits remain unsigned.
+Public 0.3.1 remains unchanged; this is not a new package or broad Beta acceptance.
+
+## Retained unreleased raid-contact correction
+
+Production digest `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+The [complete bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json)
+enumerates all 3046 paths/hashes: 431,481 physical lines, 1414 direct-XRL files, zero cap
+failures. Canonical current/committed stage membership and every actual `cd6dedc` parent blob
+were compared, then reread by the bridge. Parent hashes match the retained
+stock inventory below: 3044 unchanged, two modified, no added or removed files. Report SHA256
+`401339a134eab730f43605777a00b913ac674c579d6feecebb803d5b75847aa2`.
+Unchanged files inherit that scoped review chain; no new full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit read both complete production changes and affected
+survey, reservation, commit, rollback and raid-effect dependencies. `Growth/KingdomWaterDebit.cs`
+owns the existing exact physical debit; its internal selector requires one unique vessel on
+the actual active survey's ground. It filters allocations without substituting a survey or
+borrowing other stores, retains full survey accounting/lease/floor checks, and freezes the
+selected vessel against the survey's ground. Default ordinary/carried allocation is unchanged.
+SHA256 `739e2a218e80cd3d609194fbcee2491948797c471bfc11a585e64286fa1e588c`.
+
+`Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs` retains contact as the only plunder entry.
+Exact operation/target/active-zone admission precedes survey classification. A real survey
+scope covers reservation, commit and every compensation path; game/system/book/master authority
+is rechecked after taking the survey. Non-Reserved receipts return before Commit, rather than
+triggering quarantine through a failed receipt that never drained water. Existing compensation
+and effect/terminal protocols remain. No saved field, public API, wire format or new durable
+authority was added. SHA256 `e7a38750020e2d4e2102d35451d89495a5e3bfce89d73ec07927d8b23e75db4a`.
+No Required finding remains in this bounded correction.
+
+Native runner 14492 passed actual foreign contact unchanged, restored 24-dram contact,
+unaffected second store and repeat idempotence. Its raw logs and prior failures remain in
+[contact evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md). Developer source formatting
+subsequently removed only three blank lines to satisfy the strict line cap; `diff -B` against
+the tested profile is empty. Four-mode compilation 52808 passed all current ordinary3042/3046
+and developer3160/3164 inputs, 118 Harness shards, plus installed Hearthpyre source/ABI checks.
+Final full managed and repository checks remain separate from this semantic review.
+Native evidence is synthetic; ordinary play, foreign-death case 28b.1, recovery, save/load,
+same-blueprint replacement and interrupted-placement custody remain open. Public 0.3.1 is
+unchanged; no new release or broad Beta acceptance is signed here.
+
+## Retained initial-stock child identity correction
 
 Current production digest:
 `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.

@@ -2,8 +2,8 @@
 
 **Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Current public version:** 0.3.0 public Alpha playtest
-**Working candidate manifest:** 0.3.1, corrected private installation verified; public upload pending
+**Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
+**Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -12,6 +12,277 @@ source, compile, or generator gate proves only that layer. Native Caves of Qud b
 only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
+
+## Unreleased master-growth resume correction, case28d.5
+
+Automated native diagnostic reproduced a real master-resume defect: fresh growth retained
+interval0 but received a positive arrival deadline, invalidating its enclosing lifecycle.
+Established cadence also required its deadline mirror to remain consistent with recorded
+debt/opportunities/open leases. A new detached engine-free resume protocol now validates
+the whole proposed state and exact original graph before all-participant publication.
+Health evidence, field work and subsidence checkpoints remain owned by their existing lanes.
+No saved fields or formats change; public0.3.1 is unchanged.
+
+Native11624 passed at19:15:56.180UTC, seed1012036, sealed profileLN1Xkb: two actual paused
+EndTurns/no raid wakes, one resume token at377129, then one Ready at377130; explicit quest
+completion once and unchanged repeat. Strict raw log/15journalrows and receipt-ownedPID35424
+stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
+engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
+
+Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
+cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
+Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+
+Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
+cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
+recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
+semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
+support the75th persona. Structural release gate passes exact3049-source digest
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Independent source/native/test review found no Required issue. Full licensed Windows1814
+passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
+Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness
+files,plus installed Hearthpyre source/ABI. Repository71120 passed501 tooling tests/48.083s
+and cold-install inventory,docs,structure,architecture,XML and registration checks.
+Hosted integration checks remain separate; no new public-release or broad Beta claim.
+[Evidence and retained failures](/mnt/c/taf-master-growth-native.sP00c6/README.md).
+
+## Retained real-turn recovery, case28d.4
+
+Development-only regression now exercises the existing sealed `advance 1` through the
+actual engine loop. Actual contact/acceptance and three original deaths retain Active;
+pass-through EndTurn/OnWorldWake observers prove the first heartbeat earns Ready once.
+Actual post-turn explicit completion finishes the quest, clears the wound, and refuses
+repeat without changing the observed clock or settled authority. Legitimate world effects
+are retained, not restored. No clock, energy, recovery state or master latch is forced.
+
+Native59966 TERMINAL0 passed at18:22:00.039UTC, seed#1012035, fresh sealed
+`/mnt/c/taf-scenario.Zt98Jg`: one dispatch/one wake, turns2->3, ticks103527->103528,
+actions37->51,216water/24plunder/three mints and original graves retained. Strict raw log
+and12journalrows pass; exact receipt-ownedPID44480 stopped. Comparison61572 proves all3177
+current production/Harness C# bytes match that profile. The observer permits bounded
+multi-dispatch overshoot and additional wakes, but this seed does not execute those variants.
+
+Full licensed Windows1901 TERMINAL0 passes13,673 main and5,051 Portable cases, zero skips;
+normal rebuilds have zero warnings/errors. Canonical7819 TERMINAL0 passes all four C#7.3
+modes: ordinary3043/3047, developer3173/3177,130 Harness files, plus installed Hearthpyre
+source/ABI. Production remains3047sources with the unchanged current6dbd structural binding.
+Four new source-wiring tests and74personas are registered;56persona parser tests pass.
+Final repository and hosted integration gates remain separate. This is controlled real-turn
+evidence, not ordinary rendered play, paused resume, save/load or full Beta acceptance.
+[Retained evidence](/mnt/c/taf-raid-recovery-turn-native.X0VMU8/README.md).
+
+## Retained native bound/paused recovery guards, case28d.3
+
+Recovery checkpoint25959e7 normally rebased to6d70a03 on integration1ce9960; only the
+already-reviewed PR10 test/doc delta was added, production digest6dbd remains unchanged.
+New developer-only guard provider/checks calibrate actual custody/GetObjects entry observers,
+exercise same/foreign bound refusals with finally-disposal, then request the actual master
+pause and attempt explicit completion. Four source-only wiring cases and a73rd persona are
+registered;56 persona tests pass. Combined compilation, full suites and scoped native cases
+pass as recorded below. Final repository/hosted checks are separate integration gates.
+No new public release is claimed.
+
+Subsequent actual guard case passed at17:52:27.241UTC, seed#1012034, fresh sealed
+`/mnt/c/taf-scenario.3lgp4w`. Each same/foreign positive control observed one custody capture
+and one native GetObjects entry; all four bound refusal windows observed zero. Actual
+bindings disposed with no residue and unchanged Ready/quest/wound/water. Real option pause
+and disabled wake observed zero captures; explicit paused completion observed one fresh
+capture, resolved once, removed the wound and left repeat unchanged. Strict raw log passed;
+receipt-ownedPID41892 stopped. Combined veto case also passed at17:54:57.244UTC in fresh
+`/mnt/c/taf-scenario.vnBL4b`: exact live veto/pending authority, actual retry removal, one
+RaidersDefeated result,240water/zero plunder/three mints and unchanged repeat/clock. Strict
+log and receipt-ownedPID43796 stop pass; native runner2155 TERMINAL0 covers both cases.
+Compile56568 TERMINAL0 passes ordinary3043/3047 and developer3171/3175 with128 Harness
+shards, all four C#7.3 modes plus installed source/ABI checks. Full licensed Windows93430
+TERMINAL0 passes13,669 main and5,047 Portable cases, zero skips. Exact source comparisons
+33144/61340 prove all3175 current production/Harness bytes match both sealed native profiles.
+Final repository audit65692 passed501tests/46.709s; all6hosted checks passed and PR11
+normally merged to integration2f6051c. Its full tree matches tested25d1f49. Main PR6's
+six checks also passed; it still requires an eligible approval. No bypass was used.
+Evidence `/mnt/c/taf-raid-recovery-guards-native.6Dnfup`. This signs controlled native API
+seams, not an ordinary heartbeat, rendered popup, resume, save/load or full Beta acceptance.
+
+## Unreleased recovery absence correction, cases28d.1–28d.2
+
+Current candidate makes RaiderDying inert, moves automatic readiness to an unbound
+normal seat wake, and rechecks fresh complete physical absence before explicit turn-in.
+Response drafts precede that observation; exact game/system/book/recovery and quest
+reproofs precede publication. Any bound survey defers/refuses without a second classified
+scan. Explicit committed recovery remains available while automation is paused.
+No saved fields/public API changes; shared active-attack counting remains unchanged.
+
+Focused raid suites22822 passed124 main/95Portable cases, zero skips. Independent complete six-file delta review found no
+Required issue. Canonical comparison38299 passed:3047 current sources,3041 unchanged,
+five modified, one added, none removed;431,611 physical lines,1415 direct-XRL,zero cap debt.
+Digest `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Exact semantic review now binds this digest through the complete canonical comparison.
+Strict structural gate51073 passed for3047 staged C# files; its following documentation
+check found stale census text, now being corrected rather than waived.
+Direct `XRL` imports: 1415 files, 0 over the line limit.
+Inventory SHA-256: `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Canonical compile51408 TERMINAL0 passed 3047 sources, baseline and compatibility symbols,
+ordinary3043/3047 and developer3167/3171 with124 Harness shards, plus installed ABI.
+The generated cold-stage inventory contains 3078 files, not new subscribed-install evidence.
+Full licensed Windows27430 TERMINAL0 passed13,661 main and5,039 Portable cases, zero skips.
+Repository audit71541 TERMINAL0 passed501 tests in46.558s, exact3078-file cold-install
+inventory, current documentation, XML, architecture and Harness registration. Independent
+closeout review found no Required issue. Combined PR10 integration and hosted CI remain
+separate next gates; main PR6 still requires an eligible approving review.
+
+Baseline native92856 TERMINAL1 reproduced premature recovery readiness at
+2026-09-07T16:57:49.982Z, seed#1012031, fresh profile `/mnt/c/taf-scenario.3VC3J1`.
+Real contact earned StoresPlundered/Offered (240→216water,24plunder); actual acceptance
+earned Active. Two original deaths preserved Active. Final-original RaiderDying changed
+Active→Ready before destruction; a real BeforeDestroy veto retained that exact live
+original in the same cell and outside both graveyards. Assertion correctly failed:
+`expected recovery Active; observed Ready`. This retained baseline precedes the current fix.
+
+Evidence: `/mnt/c/taf-raid-recovery-red.uaan5G`. Strict raw log passed; the persona failed
+honestly. Only receipt-ownedPID44992 stopped. New Harness has independent source review;
+four source-wiring cases pass in each project, zero skips; all56 persona tests pass.
+Those source tests do not sign native behavior. The corrected native receipt below now
+covers retry, readiness and turn-in; ordinary turns and save/load remain open. Sealed-runner popup suppression
+also excludes rendered quest-popup acceptance. Public0.3.1 remains unchanged.
+
+Independent baseline29267 reproduced case28d.2 at17:13:51.390UTC, seed#1012032,
+profile `/mnt/c/taf-scenario.i78bCs`. Actual foreign absence earned Ready; the exact
+survivor returned alive. Immediate turn-in wrongly publishedResolved, finished its
+quest and cleared the wound while that original remained alive on the target tile.
+Exact assertion failed, raw log passed, only ownedPID34812 stopped. Evidence:
+`/mnt/c/taf-raid-recovery-return-red.z4lP7I`. No lifecycle state or body removal was forced.
+Corrected native51235 TERMINAL0 passed both cases at17:23:51.409UTC and17:26:18.640UTC,
+seed#1012033, fresh profiles `/mnt/c/taf-scenario.eTNGEi` and `/mnt/c/taf-scenario.UamLRQ`.
+The real final-destruction veto preserves Active and exact wire/quest state through another
+activation; disarmed actual removal then earns Ready and explicit turn-in resolves once.
+The returned exact live original refuses turn-in with Ready/quest/wound/wire unchanged;
+actual final removal then permits one completion. Both retain216drams,24plunder,three
+original mints and unchanged repeats. Both strict raw logs passed; receipt-ownedPIDs40344
+and8108 stopped, with profiles/seals retained. Evidence:
+`/mnt/c/taf-raid-recovery-fixed.FaVvXv`. This is synthetic component evidence only.
+These two cases do not cover paused completion or bound refusal; case28d.3 above has its
+own later native receipt and is not inferred from this earlier two-case result.
+
+## Retained unreleased native destruction-veto regression, case28b.3
+
+No further production changes. Dependency tree equals tested death fix87c4992, normally
+merged by PR9 into integration a4d61a9. Public0.3.1 remains unchanged; main PR6 still
+requires an eligible approving review. New developer-only veto provider/checks and persona
+have independent source review and four source-wiring tests passing in each managed project;
+all56 persona tests pass. Full licensed Windows84737 TERMINAL0 then passed13,654 main
+and5,032 Portable cases with zero skips, after normal Windows rebuild of both projects.
+Canonical compile59060 TERMINAL0 passed ordinary3042/3046 and developer3164/3168 inputs,
+all122 Harness shards, plus installed Hearthpyre source/ABI checks.
+
+Native13639 TERMINAL0 passed at16:26:23UTC, seed#1012030, fresh profile
+`/mnt/c/taf-scenario.EWGCdc`. Two originals died normally. The final original's real
+BeforeDestroyObjectEvent was vetoed after observed RaiderDying entry/exit; exact body,
+cell, marker, IDs and pending authority remained, with no originating/global graveyard
+membership. Actual activation preserved the pending attack. After disarming the retained
+veto part, actual Die retry removed that original into its originating graveyard; actual
+activation produced one RaidersDefeated proof and repeat left authority unchanged.
+All four Die calls retained240drams, zero plunder, three total mints and unchanged clock.
+Strict raw log and nine expected journal rows passed; only ownedPID39884 was stopped.
+Evidence: `/mnt/c/taf-raid-veto-proof.iKyt6v`. Native profile hashes match frozen sources.
+
+This is controlled same-process developer evidence, with synthetic graveyard retention
+headroom256→272 and native drops/unequips retained. It does not prove ordinary turn-driven
+play, earlier BeforeDie veto paths, recovery, save/load or general scene immutability.
+Final repository audit11966 TERMINAL0 passed501 tests in47.967s, canonical3077-file
+cold-install verification, documentation and unchanged structural binding. Normal PR
+integration remains open. Current production bytes and exact structural binding are
+unchanged; neither native case signs full Beta acceptance.
+
+## Retained unreleased raid-death correction, case28b.1
+
+Actual native death run12835 exposed final-raider quarantine: `RaiderDying` advanced
+the attack before engine removal, then terminal inspection counted that same still-present
+body. Foreign-zone and first target-zone deaths preserved exact authority and240drams;
+all three real deaths and originating-graveyard removals were proved. Retained failure:
+`/mnt/c/taf-raid-death-retention.m1iKE0`.
+
+One production file now leaves the matching active attack pending during the cancellable
+pre-removal callback. Existing normal settlement wake/zone activation observes actual
+absence and resolves afterward. Shared counting, recovery and saved fields are unchanged.
+The new native case explicitly requires unchanged pending state after final removal,
+then one `RaidersDefeated` result and unchanged repeat through real activation.
+
+Retained strict structural census:3046 sources/431,474 physical lines/1414 direct-XRL/zero cap failures;
+Inventory SHA-256: `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+Exact semantic release binding passed through the complete canonical comparison:3045 unchanged
+production files inherit review, one modified file received scoped independent review.
+Canonical compile1886 TERMINAL0 passed ordinary3042/3046 and developer3162/3166 inputs,
+all120 Harness shards, plus installed Hearthpyre source/ABI checks. Older receipts below
+are not reassigned to this delta. Focused native source fixtures6/6 in both projects and runtime-source
+fixtures14/14 pass. Corrected native90794 TERMINAL0 passed at15:47:52UTC, seed#1012029,
+profile `/mnt/c/taf-scenario.T6OIGl`: all three real deaths/six callbacks, exact unchanged
+pending authority through final removal, one post-removal activation result,240drams,
+zero plunder, one attack proof and unchanged repeat. Strict raw Player.log passed;
+ownedPID34372 stopped, profile/seal retained. Full Windows24858 TERMINAL0 passed
+13,650 main and5,028 Portable cases with zero skips after normal generated-output rebuild.
+Evidence remains under `/mnt/c/taf-raid-death-fixed.nf0IMW`; final repository audit48595
+TERMINAL0 passed all501 tooling tests in47.005s plus inventory, XML, architecture, registration
+and documentation checks. Normal PR/CI integration remains pending. Main PR6 still requires
+an eligible approving review.
+The earlier missing-generated-DLL launch and both native
+failures are retained. No new version, package or Workshop update is claimed.
+This is synthetic developer evidence; ordinary play, recovery and save/load stay unsigned.
+
+## Retained unreleased raid-contact correction — native case28b.2
+
+Two production files change: `Growth/KingdomWaterDebit.cs` and
+`Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs`. Actual contact now takes or reuses the
+active survey and holds its scope through debit and compensation. Exact-store reservation
+cannot fall back to another vessel; settlement-wide counters, routed-water floors, custody
+and rollback guards remain intact. Failed reservations refuse before `Commit`, without the
+previous bogus quarantine over untouched water. No saved fields or public API change.
+
+Retained raid-contact census:3046 sources/431,481 physical lines/1414 direct-XRL/zero cap failures;
+Inventory SHA-256: `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+The exact bridge retains3044 unchanged production files, two modified, none added or removed.
+The derived cold-stage inventory remains3077 files, not new installed/subscribed evidence.
+[Production bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json).
+Canonical compile52808 has passed all four modes: ordinary3042/3046, developer3160/3164,
+with118 Harness shards. Focused Linux source contracts8/8 and adapter7/7 pass, zero skips.
+Full licensed Windows rerun88369 TERMINAL0 passes13644 main and5022 Portable cases, zero skips.
+Initial run35799 retains13641 passed/3 failed from stale source pins and a Harness line-count
+fixture; those failures were corrected without changing the native-tested runtime bytes.
+
+Native14492 TERMINAL0 proves foreign-zone contact leaves240 drams, zero plunder and exact wire
+unchanged; restored contact takes24 drams, leaves216, records StoresPlundered and one attack
+terminal proof, with no quarantine. The extra96-dram store and repeated-contact state remain
+unchanged. Exact nonfirst selection, null/insufficient-selector and anonymous-survey refusals
+also pass. Strict logs and exact-owned PID40412 shutdown pass. This is synthetic component
+evidence only; ordinary play and save/load remain untested. Earlier native failures remain
+retained. The receipt keeps its original Harness hash; later blank-line cleanup is not a
+second native run. [Native evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md).
+Public0.3.1 remains the separately published checkpoint below; this correction is unreleased.
+
+## Public 0.3.1 — published and finalized
+
+Public item3794797472 submission55498 TERMINAL0 at13:18 UTC on2026-09-07 reports
+`SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`, version0.3.1, attempt `0001`.
+Finalizer55266 TERMINAL0 then reports `SubscribedInstallationVerified`, `reason=null`,
+`attemptFinalized=true`. [Public evidence](/mnt/c/taf-031-public-release.cfu8DL/README.md).
+
+| Binding | SHA-256 |
+| --- | --- |
+| Public upload plan | `948657ea1e143117e56093bd3933f50deb44c6782dead877e49b27f94025efdc` |
+| Public package receipt | `7bdea6d07b6d2285ad2dbc28e2358c8ea1e7d690c1661cbbdbdef2b41153bd88` |
+| Installed canonical inventory | `56deb51aab223b5bbaf2c04d1581fe56b0508b305e586e1ab3e4561d13f30373` |
+| Public attempt `0001` finalization | `60f57049d906e8a7a5c038bcc2343326143ac8feaeb45d92951756d8263cbb46` |
+
+Annotated `v0.3.1` points to commit `a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`,
+tag object `ed91d97b6d5d1b515933d144adb01f89303c5496`. Strict Alpha package68272 TERMINAL0
+proved3077 files and exact private-candidate binding; native copy54621 TERMINAL0 retained the
+same receipt and inventory. One public subscribed client was verified;
+`freshTransferVerified=false` and `releaseReady=false` remain explicit, not gameplay acceptance.
+
+After the web tool failed to open the listing, a separate signed-out HTTPS fetch succeeded.
+Retained `public-page.html` SHA-256
+`eb0a134d1786066e1fe4f3ab99976dbcf4ca1bb2eb37fcb3d72aa57bc8e5dd38` exposes the Alpha title,
+new hook and all six tags. This is HTML inspection, not a pixel capture. The requested current
+Alpha publication is complete; broader Beta work and the evidence limits below are unchanged.
 
 ## Corrected private 0.3.1 — installed and finalized
 
@@ -32,7 +303,7 @@ The private receipt is bound at commit `47a055254f09c1ac72733a3198101a66d47babf6
 
 This proves one client's corrected subscribed bytes, not all subscribers or gameplay acceptance.
 `freshTransferVerified=false` and `releaseReady=false` remain explicit. Original attempt `0001`
-and its evidence remain immutable. Public item3794797472 remains0.3.0 until its separate upload.
+and its evidence remain immutable. The separately bound public0.3.1 publication is recorded above.
 
 ### One-release Alpha verification decision
 
@@ -45,12 +316,13 @@ user namespaces. Root accepts these three narrow environmental test gaps for thi
 they are not PASS and were not waived by the user. Production ownership/alias guards stay intact.
 
 The user explicitly waived manual startup/save/reload for this Alpha. Retained six genuine
-boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; current stock native16 and managed
+boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; retained stock native16 and managed
 checks retain their separate scopes. No ordinary subscriber play or graceful Quit PASS follows.
-Root will reuse the exact frozen-runtime gate, check only the public documentation/metadata
-delta, and require strict `--alpha` package lineage/receipt/tag/structure binding. No second full
+Root reused the exact frozen-runtime gate, checked the public-only delta, and required strict
+`--alpha` package lineage/receipt/tag/structure binding. The two stale README freshness assertions
+were updated; 501 Tools tests and final document checks passed. No second full
 `--alpha` release-check is claimed. This is a one-release verification decision, not a permanent
-gate relaxation or Beta/Release acceptance. Public packaging and upload remain pending.
+gate relaxation or Beta/Release acceptance. Public packaging, upload and finalization are complete.
 
 ## Publisher integration — original private attempt finalized
 
@@ -87,8 +359,8 @@ record is deleted or retried. [Publisher contract](../Tools/WorkshopSteam/PUBLIS
 
 The user reproduced an empty Quickstart site with the apron/path refusal in private item
 3796495680. Its subscribed 0.3.1 bytes were previously verified; this does not prove gameplay.
-Public item3794797472 remains last verified0.3.0. That failed private build was not promoted;
-the corrected private delivery and current Alpha decision are recorded above.
+That failed private build was not promoted; corrected private and public0.3.1 delivery and the
+current Alpha decision are recorded above.
 
 The old readiness check rejects the player it requires at (40,12), after ordinary boot places
 that player. An isolated correction exempts only the exact founder while retaining foreign
@@ -169,7 +441,7 @@ Retained startup oracle finding: repeated stock-child references could counterfe
 or material totals. Top-level absent heart/grants were refused; the separate stock correction
 below closes this gap. It was not the observed canyon failure.
 
-### Follow-on stock hardening — current snapshot, 2026-09-07
+### Retained stock-hardening checkpoint — 2026-09-07
 
 Startup evidence above is frozen at `1c1c2bc`, production digest `7e3fb752…`. Later stock
 hardening adds a callback-free reference-identity guard before both initial quantity loops.
@@ -178,7 +450,7 @@ and save formats. Independent review cleared the two production files and correc
 fixture safety gap: material classification can invoke contents callbacks, so exact captured
 authority is rechecked immediately before injecting the owned duplicate rows/raw count.
 
-Current canonical census:3046 sources/431,441 physical lines/1414 direct-XRL/zero cap failures;
+Retained canonical census:3046 sources/431,441 physical lines/1414 direct-XRL/zero cap failures;
 Inventory SHA-256: `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
 The generated staging inventory contains 3077 files, including 3046 staged C# files; this is
 not installed or subscribed-package evidence. Compile73169 TERMINAL0 passes all four C#7.3 modes
@@ -195,7 +467,7 @@ negatives inside the larder/material creator groups, actual verifier refusal and
 restoration. Exact-owned PID5068 stop and root idle check pass; canonical Player.log check passes
 without allowances. This closes the bounded stock correction, not a rerun of the six startup
 pairs against later bytes or current ordinary subscriber acceptance; component save/load remains
-untested. [Current validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
+untested. [Retained stock validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
 
 ## Retained pre-upload checkpoint — witnessed-death recovery integrated
 
@@ -1226,10 +1498,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 - Addendum 9 structural release gate is closed for the current digest: every staged C# file is
   strictly under 300 physical lines and `docs/STRUCTURE_REVIEW.json` binds the exact-inventory
   responsibility/protocol review to digest
-  `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`, signed by independent AI reviewers
-  under the author's Addendum 9 ruling of 2026-09-02 (fourteen ownership and four protocol faults
-  were fixed before signing). Any staged source change reopens it. This is an ALPHA claim, not an
-  enterprise-grade or v1.0 release-quality claim.
+  `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`, honestly signed by Codex
+  with independent AI reviews under the author's Addendum 9 ruling of 2026-09-02. Complete
+  canonical comparison enumerates every source; unchanged files inherit retained review and
+  the six changed sources received fresh scoped review. Any staged source change reopens it.
+  This structural verdict is not complete Beta or v1.0 functional acceptance.
 
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in

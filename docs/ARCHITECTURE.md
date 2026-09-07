@@ -359,6 +359,13 @@ Reports, wishes, heartbeat recovery, and explicit actions outside the bound pass
 survey because they have a separate wake and evidence boundary. Dense native instrumentation in
 `TESTING.md` is the final proof that no active branch smuggles in another full scan.
 
+Raid recovery uses `KingdomSurvey.TryTakeUnboundRecovery` only at those separate wake/action
+boundaries. It refuses any bound pass, takes the existing custody-only index without legacy
+migration, and requires a complete, non-deduplicated root capture. Automatic bound calls wait
+for the next ordinary unbound heartbeat; explicit bound turn-in requests a retry. The raid
+adapter re-proves exact owner and recovery fields after capture, and does not reuse a cached
+zero count as absence authority. Committed turn-in retains the master-pause exception below.
+
 ### Realm master pause
 
 `Core/KingdomMasterRules.cs` owns the engine-free three-state latch and exactly-once resume token;
@@ -368,6 +375,16 @@ or resume edge consumes that wake. Resume stages seated/away city, growth, lifec
 and renderer clocks before publishing the applied token. Object-local turn ticks independently
 gate before mutation and re-anchor their own rate stamp on their first enabled wake, so a loaded
 bench, vat, mirror gate, field, power work, or legacy scaffold cannot turn paused time into work.
+
+`Experience/KingdomMasterGrowthResumePlan.cs` stages growth through its canonical payload
+codec, then reproves exact owner/child references and source bytes at the master preflight.
+Its lifecycle-rules companion prepares a coherent interval/cadence/frontier tuple and excludes
+the union of ongoing local and global pause time. Scalar publication preserves health evidence,
+field clocks, subsidence, already-published arrival debt/opportunities and open leases. Open
+modern arrivals retain a deferred restart; historical open work finishes before cadence binding.
+Opaque/staged growth and pristine pre-founding lifecycle are not granted new authority.
+Seat and away mirrors use only the proved growth frontier. The master pause exception starts
+future full intervals; it does not materialize unobserved arrival backlog during resume.
 
 `NewWorkAllowed` is for explicit producer entry points. Reports and named committed-recovery
 surfaces use separate read/recovery paths. `AutomaticWorkAllowed` is stricter: an unobserved,

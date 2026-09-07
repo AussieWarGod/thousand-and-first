@@ -43,10 +43,24 @@ jobs:
           TAF_ALLOWED_SKIPS: >-
             KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone;
             KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology;
-            KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath
+            KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath;
+            KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud;
+            KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory;
+            KingdomFrontierWallSourceTests.InstalledVanillaParentsProvideExactPaintedWallVocabulary;
+            KingdomGatehouseNativeTests.V2FormsUseOnlyVerifiedWallsAndFunctionalWatchWrappers;
+            KingdomLiquidRuntimeSourceTests.InstalledEngineStillProvidesChosenRenderAndInteractionSeams;
+            KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
         run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
       - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
-      - run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
+      - name: run portable kernel with exact licensed-data skip allowlist
+        env:
+          TAF_ALLOWED_SKIPS: >-
+            KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud;
+            KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory;
+            KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
+        run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 
   repository-audit:
     runs-on: ubuntu-latest

@@ -1,6 +1,26 @@
 # Brief-to-implementation audit
 
-## Current stock-hardening census — 2026-09-07
+## Current master-growth resume census — 2026-09-07
+
+**3049** production C# files,431,893 physical lines,1415 direct-XRL,zero cap failures;
+3080 generated cold-install files. Exact digest
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Complete canonical comparison and five-source independent review bind strict structure.
+Actual native master resume/raid continuation and38 focused protocol cases pass. Full
+Windows1814 passes13715 main/5093 Portable,zero skips; four-mode53744 and repository71120
+pass all checks. Hosted integration,ordinary play/save-load/Beta remain separate.
+
+## Retained recovery census — 2026-09-07
+
+**3047** production C# files,431,611 physical lines,1415 direct-XRL imports,zero cap failures;
+3078 generated cold-install files. Exact production inventory:
+`6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Complete canonical comparison and scoped six-file semantic review bind the strict structural
+pass. Four-mode compile51408 and two native recovery cases51235 pass. Full main suite27430
+passes13661 main/5039 Portable cases, zero skips; repository71541 passes501 tests and audits. No fresh
+whole-tree deep read, ordinary play, save/load or new public release claim. STATUS.md owns limits.
+
+## Retained stock-hardening census — 2026-09-07
 
 **3046** production C# files,431,441 physical lines,1414 direct-XRL imports and zero
 production line-cap failures;3077 generated cold-install inventory files. Production digest:

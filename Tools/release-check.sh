@@ -39,7 +39,6 @@ else
 	QUD_ROOT="$QUD_ROOT_DEFAULT"
 fi
 BASE="$QUD_ROOT/CoQ_Data/StreamingAssets/Base"
-BASE_WIN="$(wslpath -w "$BASE")"
 GAME_EXE="$QUD_ROOT/CoQ.exe"
 ASSEMBLY_CSHARP_PATH="$QUD_ROOT/CoQ_Data/Managed/Assembly-CSharp.dll"
 [ -d "$BASE" ] || { echo "configured Qud root is incomplete: $BASE" >&2; exit 2; }
@@ -47,6 +46,7 @@ for required_file in "$GAME_EXE" "$ASSEMBLY_CSHARP_PATH"; do
 	[ -f "$required_file" ] || {
 		echo "configured Qud root is incomplete: $required_file" >&2; exit 2; }
 done
+BASE_WIN="$(wslpath -w "$BASE")"
 GAME_EXE_WIN="$(wslpath -w "$GAME_EXE")"
 ASSEMBLY_CSHARP_WIN="$(wslpath -w "$ASSEMBLY_CSHARP_PATH")"
 EXPECTED_CORE_BUILD="$(python3 - "$REPO" <<'PY'

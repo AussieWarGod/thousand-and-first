@@ -151,9 +151,11 @@ namespace ThousandAndFirst
 					int count = 0;
 					matches[count++] = Sources.JobsMatch(System, ConstructionRoutes);
 					matches[count++] = Construction.CanPublish(out string _);
-					matches[count++] = Sources.SeatMatches(System);
+					matches[count++] = Sources.SeatMatches(System)
+						&& Seat.CanPublish(System.LifecycleBook);
 					for (int i = 0; i < NonSeat.Count; i++)
-						matches[count++] = Sources.OtherMatches(currentNonSeat, i);
+						matches[count++] = Sources.OtherMatches(currentNonSeat, i)
+							&& NonSeatPlans[i].CanPublish(currentNonSeat[i].LifecycleBook);
 					matches[count++] = Trade == null ? System.TradeBook == null
 						: Trade.MatchesSource(System.TradeBook);
 					matches[count++] = Sources.CoreMatches(System);

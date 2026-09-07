@@ -335,22 +335,22 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade()
 		{
-			string trade = Native("XRL.UI/TradeUI.cs", "XRL/UI/TradeUI.cs");
-			string allow = Native("XRL.World/AllowTradeWithNoInventoryEvent.cs",
-				"XRL/World/AllowTradeWithNoInventoryEvent.cs");
-			string inventory = Native("XRL.World.Parts/Inventory.cs",
-				"XRL/World/Parts/Inventory.cs");
-			string stacker = Native("XRL.World.Parts/Stacker.cs",
-				"XRL/World/Parts/Stacker.cs");
-			string restocker = Native("XRL.World.Parts/GenericInventoryRestocker.cs",
-				"XRL/World/Parts/GenericInventoryRestocker.cs");
-			string gameObject = Native("XRL.World/GameObject.cs", "XRL/World/GameObject.cs");
-			if (trade == null || allow == null || inventory == null || stacker == null
-				|| restocker == null || gameObject == null)
+			string root = LocateDecompiledQud();
+			if (root == null)
 			{
 				Assert.Ignore("Installed/decompiled Qud source is unavailable for market proof.");
 				return;
 			}
+			string trade = Native(root, "XRL.UI/TradeUI.cs", "XRL/UI/TradeUI.cs");
+			string allow = Native(root, "XRL.World/AllowTradeWithNoInventoryEvent.cs",
+				"XRL/World/AllowTradeWithNoInventoryEvent.cs");
+			string inventory = Native(root, "XRL.World.Parts/Inventory.cs",
+				"XRL/World/Parts/Inventory.cs");
+			string stacker = Native(root, "XRL.World.Parts/Stacker.cs",
+				"XRL/World/Parts/Stacker.cs");
+			string restocker = Native(root, "XRL.World.Parts/GenericInventoryRestocker.cs",
+				"XRL/World/Parts/GenericInventoryRestocker.cs");
+			string gameObject = Native(root, "XRL.World/GameObject.cs", "XRL/World/GameObject.cs");
 			int stockIn = trade.IndexOf("gO2.SetIntProperty(\"_stock\", 1)",
 				StringComparison.Ordinal);
 			int saleSplit = trade.LastIndexOf("gO2.SplitStack", stockIn,
@@ -648,22 +648,32 @@ namespace ThousandAndFirst.Tests
 			return count;
 		}
 
-		private static string Native(string dotted, string nested)
+		private static string LocateDecompiledQud()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
-			string[] roots = new[] { supplied,
+			if (supplied != null)
+			{
+				if (string.IsNullOrWhiteSpace(supplied) || !Directory.Exists(supplied))
+					throw new InvalidOperationException("TAF_QUD_DECOMPILED is set but is not a source directory.");
+				return supplied;
+			}
+			string[] roots = new[] {
 				"/home/r/coq/qud_helper/game_base/decompiled/6000.0.41.4645959",
 				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
 				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\6000.0.41.4645959",
 				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1" };
 			for (int i = 0; i < roots.Length; i++)
-			{
-				if (string.IsNullOrWhiteSpace(roots[i])) continue;
-				string path = Path.Combine(roots[i], dotted);
-				if (!File.Exists(path)) path = Path.Combine(roots[i], nested);
-				if (File.Exists(path)) return File.ReadAllText(path);
-			}
+				if (Directory.Exists(roots[i])) return roots[i];
 			return null;
+		}
+
+		private static string Native(string root, string dotted, string nested)
+		{
+			string path = Path.Combine(root, dotted);
+			if (!File.Exists(path)) path = Path.Combine(root, nested);
+			if (!File.Exists(path))
+				throw new InvalidOperationException("Selected Qud source root lacks " + nested);
+			return File.ReadAllText(path);
 		}
 	}
 }

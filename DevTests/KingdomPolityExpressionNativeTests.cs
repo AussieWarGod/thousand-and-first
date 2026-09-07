@@ -40,8 +40,13 @@ namespace ThousandAndFirst.DevTests
 		private static string LocateBase()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_BASE");
-			if (!string.IsNullOrEmpty(supplied) && File.Exists(Path.Combine(supplied, "Skills.xml")))
+			if (supplied != null)
+			{
+				if (string.IsNullOrWhiteSpace(supplied)
+					|| !File.Exists(Path.Combine(supplied, "Skills.xml")))
+					throw new InvalidOperationException("TAF_QUD_BASE is set but lacks Skills.xml.");
 				return supplied;
+			}
 			string[] candidates = { @"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base",
 				"/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base" };
 			for (int i = 0; i < candidates.Length; i++)

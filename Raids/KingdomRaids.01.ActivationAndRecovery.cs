@@ -16,14 +16,13 @@ namespace ThousandAndFirst
 		public static void OnZoneActivated(KingdomSystem system, Zone zone,
 			KingdomSurvey shared = null)
 		{
-			if (system == null || !system.Founded || zone == null || system.LifecycleBook == null)
+			XRLGame game = The.Game;
+			if (game == null || system == null || !system.Founded || zone == null || system.LifecycleBook == null)
 				return;
-			long now = The.Game.TimeTicks;
+			long now = game.TimeTicks;
 			OnWorldWake(system, now, zone);
 			KingdomLifecycleBook book = system.LifecycleBook;
-			if (!KingdomLifecycleRules.CanOwnAuthority(book) || book.Raid != null) return;
-			ReconcileRecoveryAtSeat(system, zone);
-			if (book.Raid != null) return;
+			if (!CurrentRaidOwner(game, system, book) || book.Raid != null) return;
 			KingdomRaidIncident incident = KingdomRaidIncidentRules.Active(book.RaidLedger);
 			if (incident == null) return;
 			if (!Enabled) return;
@@ -153,18 +152,33 @@ namespace ThousandAndFirst
 				failure = "The exact recovery quest is absent or collides with foreign quest state.";
 				return false;
 			}
+			if (KingdomSurvey.HasBoundPass)
+			{
+				failure = "Settlement work is in progress. Retry turn-in after the current simulation pass.";
+				return false;
+			}
+			if (!RecoverySeatAuthority.TryCapture(system, zone, recovery, false, out var authority))
+			{
+				failure = "Recovery authority at this seat could not be proved. Nothing was turned in.";
+				return false;
+			}
 			KingdomLifecycleOperation op = ResponseOperation(system, recovery,
 				KingdomLifecycleAction.RaidRecoveryResolve,
 				"set the watch in order after the raid",
 				"{{G|The watch is in order again; its one-point service wound is removed.}}",
 				recovery.AttackOperationId);
+			if (!authority.DraftMatches(op) || !authority.ProvesFreshAbsence() || !authority.QuestStillExact(quest))
+			{
+				failure = "Marked raiders remain, or their absence cannot be proved at this seat. Nothing was turned in.";
+				return false;
+			}
 			if (!PublishSimple(system, op))
 			{
 				failure = "Recovery turn-in could not be recorded.";
 				return false;
 			}
-			if (!FinishRecoveryQuest(recovery, quest))
-				failure = "Recovery is semantically complete; the quest ledger will reconcile on the next safe wake.";
+			if (!authority.TryPublishedRecovery(quest, out var resolved) || !FinishRecoveryQuest(resolved, quest))
+				failure = "Recovery turn-in was recorded; its quest ledger will reconcile on the next safe wake.";
 			KingdomGovernanceScope.Commit("turn in raid recovery");
 			return true;
 		}

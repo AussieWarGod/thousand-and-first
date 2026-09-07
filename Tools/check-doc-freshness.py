@@ -610,7 +610,7 @@ def audit_public_release_status(problems):
     require(
         problems,
         "docs/STATUS.md",
-        "0.3.0 public Alpha playtest",
+        "0.3.1 public Alpha playtest",
         PUBLIC_ALPHA_WORKSHOP_URL,
         "old counts do not sign later bytes",
     )
@@ -636,8 +636,13 @@ def audit_public_release_status(problems):
         "`0.2.0` working tree is not a release package",
         "Once the public Alpha item exists",
     )
-    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.0`")
-    forbid(problems, "TESTING.md", "manifest remains `0.2.0`")
+    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.1`")
+    forbid(
+        problems,
+        "TESTING.md",
+        "current public Alpha manifest is `0.3.0`",
+        "manifest remains `0.2.0`",
+    )
     require(problems, "MODDING.md", '"r_ThousandAndFirst": "0.3.0"')
     forbid(problems, "MODDING.md", '"r_ThousandAndFirst": "0.2.0"')
 

@@ -1,0 +1,10 @@
+# Controlled last-raider destruction veto, then actual native death retry.
+# Preserve original bodies and native drops; no test-side removal or lifecycle repair.
+# Same-process only; ordinary turns, recovery and save/load remain unsigned.
+DESCRIPTION=last-raider destruction veto preserves attack; genuine retry resolves once
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-death-veto-native-check;stagedigest
+VERBS=raid-death-veto-native-check
+EXPECT=stagedigest:OK~founded=false,raid-death-veto-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

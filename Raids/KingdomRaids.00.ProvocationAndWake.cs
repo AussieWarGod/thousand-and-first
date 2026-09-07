@@ -85,23 +85,26 @@ namespace ThousandAndFirst
 			return PublishSimple(system, op);
 		}
 
-		/// <summary>Absolute-time raid wake. It may deliver/repair an exact channel or advance an
-		/// acknowledged clock to ConfrontationReady; it never surveys, debits, wounds, spawns, or
-		/// terminally resolves a raid.</summary>
+		/// <summary>Absolute-time raid wake. Resume owned operations first, then inspect recovery
+		/// at the active seat outside a bound semantic pass. New threats retain their own gates.</summary>
 		public static void OnWorldWake(KingdomSystem system, long now, Zone currentZone = null)
 		{
 			if (system == null || !system.Founded || The.Game == null
-				|| system.LifecycleBook == null) return;
+				|| system.LifecycleBook == null || system.LoadFailed || system.RealmRetirementBlocksWork) return;
+			XRLGame game = The.Game;
 			MigrateLegacyEvidence(system);
 			KingdomLifecycleBook book = system.LifecycleBook;
-			if (!KingdomLifecycleRules.CanOwnAuthority(book)) return;
+			if (!CurrentRaidOwner(game, system, book)) return;
 			ReconcileRecoveryQuestProjection(system);
+			if (!CurrentRaidOwner(game, system, book)) return;
 			ObserveOption(book, now);
 			if (book.Raid != null)
 			{
 				ResumeOpen(system, currentZone ?? The.Player?.CurrentZone);
-				if (book.Raid != null) return;
+				if (!CurrentRaidOwner(game, system, book) || book.Raid != null) return;
 			}
+			ReconcileRecoveryAtSeat(system, currentZone ?? The.Player?.CurrentZone);
+			if (!CurrentRaidOwner(game, system, book) || book.Raid != null) return;
 			KingdomRaidIncident incident = KingdomRaidIncidentRules.Active(book.RaidLedger);
 			if (incident == null)
 			{

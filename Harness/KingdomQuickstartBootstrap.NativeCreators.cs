@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ThousandAndFirst.Harness;
 using XRL.World;
 using XRL.World.Parts;
@@ -53,15 +54,80 @@ namespace ThousandAndFirst
 		private static void NativeWaterCreator(KingdomNativeRegressionContext Context)
 		{
 			KingdomQuickstartReceipt receipt = NativeReceipt(Context, KingdomQuickstartPhase.WaterStocked);
-			GameObject water = NativeTrackFresh(Context,
-				CreateWater(Context.Game, Context.Zone, receipt, out string failure));
-			Context.Check(VerifyWaterGrant(Context.Zone, water, receipt, true, out failure), failure);
-			Context.Check(water.GetPart<LiquidVolume>().Volume == 24, "water grant must contain 24 drams");
-			Context.Check(ReferenceEquals(water, CreateWater(Context.Game, Context.Zone, receipt,
-				out failure)), "unpublished water recovery must reuse the exact object");
-			Context.Check(ExactGrantMarker(water, receipt, KingdomQuickstartPhase.WaterStocked),
-				"recovery must leave exactly one water marker");
-			Context.Check(!GrantQuarantined(Context.Game), "successful water grant must not quarantine");
+			var before = new NativeWaterGround(Context);
+			using (var fault = new KingdomQuickstartCaskFault(Context, receipt))
+			{
+				GameObject refused = CreateWater(Context.Game, Context.Zone, receipt, out string refusal);
+				Context.Check(refused == null && refusal == "The starter water was not exactly 24 physical drams in its dedicated casks.",
+					"actual water creator must refuse its post-placement capacity fault");
+				fault.Check(1, 1);
+				NativeAbsent(Context, fault.First);
+				before.Check(null);
+				Context.Check(!GrantQuarantined(Context.Game), "proved creator rollback must release all quarantine tables");
+				GameObject water = NativeTrackFresh(Context,
+					CreateWater(Context.Game, Context.Zone, receipt, out string failure));
+				fault.Check(2, 2);
+				Context.Check(!ReferenceEquals(water, fault.First) && ReferenceEquals(water, fault.Second),
+					"retry must return exactly the second witnessed factory original");
+				Context.Check(VerifyWaterGrant(Context.Zone, water, receipt, true, out failure), failure);
+				Context.Check(water.GetPart<LiquidVolume>().Volume == 24
+					&& water.GetPart<LiquidVolume>().MaxVolume == 64, "retry must retain 24 drams and shipped capacity64");
+				before.Check(water);
+				Context.Check(ReferenceEquals(water, CreateWater(Context.Game, Context.Zone, receipt,
+					out failure)), "unpublished water recovery must reuse the exact object");
+				fault.Check(2, 2);
+				Context.Check(VerifyWaterGrant(Context.Zone, water, receipt, true, out failure), failure);
+				Context.Check(ExactGrantMarker(water, receipt, KingdomQuickstartPhase.WaterStocked),
+					"recovery must leave exactly one water marker without another mint or placement");
+				before.Check(water);
+				Context.Check(!GrantQuarantined(Context.Game), "successful water grant must not quarantine");
+			}
+		}
+
+		private sealed class NativeWaterGround
+		{
+			private readonly KingdomNativeRegressionContext Context;
+			private readonly Cell.ObjectRack[] Lists;
+			private readonly Cell[] Cells;
+			private readonly GameObject[][] Rows;
+			private readonly List<NativeStockBody> Bodies = new List<NativeStockBody>();
+			internal NativeWaterGround(KingdomNativeRegressionContext context)
+			{
+				Context = context;
+				context.Check(context.Zone.Width == 80 && context.Zone.Height == 25, "water fixture zone dimensions differ");
+				Lists = new Cell.ObjectRack[2000]; Rows = new GameObject[2000][]; Cells = new Cell[2000];
+				var seen = new List<GameObject>();
+				for (int x = 0; x < 80; x++) for (int y = 0; y < 25; y++)
+				{
+					int index = x * 25 + y;
+					Cells[index] = context.Zone.GetCell(x, y); Lists[index] = Cells[index].Objects;
+					Rows[index] = Lists[index].ToArray();
+					context.Check(Rows[index].Length <= 512 && seen.Count <= 20000, "water fixture observation exceeds bounds");
+					foreach (GameObject body in Rows[index])
+					{
+						context.Check(seen.Count < 20000 && GameObject.Validate(body) && !ContainsExact(seen, body),
+							"baseline cell custody is not unique or exceeds bounds");
+						seen.Add(body); Bodies.Add(new NativeStockBody(body));
+					}
+				}
+			}
+			internal void Check(GameObject Added)
+			{
+				for (int x = 0; x < 80; x++) for (int y = 0; y < 25; y++)
+				{
+					int index = x * 25 + y;
+					Cell.ObjectRack list = Context.Zone.GetCell(x, y).Objects;
+					bool extra = Added != null && x == KingdomQuickstartRules.WaterCellX && y == KingdomQuickstartRules.WaterCellY;
+					Context.Check(ReferenceEquals(Context.Zone.GetCell(x, y), Cells[index])
+						&& ReferenceEquals(list, Lists[index]) && list.Count == Rows[index].Length + (extra ? 1 : 0),
+						"water creator changed unrelated cell custody or retained a refused allocation");
+					for (int i = 0; i < Rows[index].Length; i++)
+						Context.Check(ReferenceEquals(list[i], Rows[index][i]), "water creator replaced or moved a baseline body");
+					if (extra) Context.Check(ReferenceEquals(list[list.Count - 1], Added), "retry is not the sole added water body");
+				}
+				foreach (NativeStockBody body in Bodies)
+					Context.Check(body.Exact(null, 0), "water creator changed captured baseline identity, stock or custody");
+			}
 		}
 
 		private static void NativeLarderCreator(KingdomNativeRegressionContext Context)

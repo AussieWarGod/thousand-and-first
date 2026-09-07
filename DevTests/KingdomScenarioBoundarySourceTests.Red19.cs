@@ -117,7 +117,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// ONE write path, proved by counting call sites across BOTH shards.
+		/// ONE write path across all shards, with ordered readback inside that writer.
 		/// <para>
 		/// The previous version read a single file and asserted the strings it expected to find
 		/// there, so two copies of encode/write/readback in two files passed as "one authority".
@@ -132,26 +132,32 @@ namespace ThousandAndFirst.Tests
 			// agreed. The tree is flat by construction - the inventory helper refuses a
 			// subdirectory - so this non-recursive listing IS the whole tree.
 			int writes = 0;
-			int readbacks = 0;
 			string tree = System.IO.Path.Combine(TestMain.RepositoryRoot, "Harness");
 			foreach (string shard in System.IO.Directory.GetFiles(tree, "*.cs"))
 			{
 				string source = System.IO.File.ReadAllText(shard);
 				writes += Occurrences(source,
 					"SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState");
-				// Count this authority's key, not unrelated dev-only result receipts that use
-				// the same durable-state reader. The declaration cannot match a qualified call.
-				readbacks += System.Text.RegularExpressions.Regex.Matches(source,
-					@"KingdomScenarioDurableState\.ProvesExactText\(\s*"
-					+ @"KingdomScenarioProvenanceRules\.ProvenanceState\s*,").Count;
 			}
 			Assert.AreEqual(1, writes, "exactly one provenance write across the whole harness tree");
-			Assert.AreEqual(1, readbacks, "exactly one provenance readback across the whole harness tree");
 			string authority = Read("Harness/KingdomScenarioStampAuthority.cs");
 			string realizer = Read("Harness/KingdomScenarioRealizer.cs");
 			Assert.AreEqual(1, Occurrences(authority,
 				"SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState"),
 				"the one write must live in the shared authority");
+			// Read-only fixture owner checks are not publishers. Require the shared writer's
+			// own ordered readback instead of forbidding safe readers elsewhere in the tree.
+			string writer = Section(authority, "internal static bool TryWriteProvenance(",
+				"/// <summary>Raw key-presence shape");
+			Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(writer,
+				@"KingdomScenarioDurableState\.ProvesExactText\(\s*"
+				+ @"KingdomScenarioProvenanceRules\.ProvenanceState\s*,\s*wire\s*\)").Count,
+				"the sole provenance writer must read back its exact value once");
+			AssertOrder(writer, "string wire = KingdomScenarioProvenanceRules.Encode(Record)",
+				"The.Game.SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState, wire)",
+				"if (!KingdomScenarioDurableState.ProvesExactText(",
+				"return Refuse(\"the scenario stamp did not read back exactly\", out Failure)",
+				"return true;");
 			// Both callers must actually route through it.
 			StringAssert.Contains("TryWriteProvenance(Record, out Failure)", realizer);
 			StringAssert.Contains("TryWriteProvenance(Measured, out Failure)", authority);

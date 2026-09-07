@@ -1,0 +1,10 @@
+# Actual earned Ready, actual same/foreign bound scopes, and real master-option pause.
+# Native method-entry positive controls precede four zero-scan refusal windows.
+# Explicit completion remains available while paused; no ordinary turn/save-load claim.
+DESCRIPTION=bound recovery refuses without scanning; paused explicit turn-in completes once
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-recovery-guards-native-check;stagedigest
+VERBS=raid-recovery-guards-native-check
+EXPECT=stagedigest:OK~founded=false,raid-recovery-guards-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

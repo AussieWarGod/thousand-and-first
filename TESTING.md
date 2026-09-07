@@ -1,12 +1,78 @@
 ﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The current public Alpha manifest is `0.3.0`. Working-tree changes do not inherit that tagged
-release's receipts. The unreleased working candidate manifest is `0.3.1`.
+The current public Alpha manifest is `0.3.1`, published with one subscribed installation
+verified. Working-tree changes do not inherit that tagged release's receipts. The unreleased
+working tree still carries `0.3.1`; any next public release requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current Quickstart regression — six native combinations exercised
+## Current master-growth resume validation
+
+`Tools/run-personas.sh raid-master-turn-native-check` seals actual setup, master No,
+`advance 1`, master Yes, `advance 2`, and post-turn verification. Diagnostic36966
+reproduced the old fresh-growth invalid interval/deadline tuple. Corrected native11624
+passed two paused dispatches, zero raid wakes, one resume token and a later Ready,
+then actual explicit completion and unchanged repeat. All3181 C# bytes match profileLN1Xkb;
+strict raw log,15journalrows and owned stop pass. It uses no clock or result forcing.
+
+Focused86313 passes38 engine-free growth-resume tests, zero skips. They preserve already-
+published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, candidate
+continuation and field-clock evidence; successful results round-trip canonically. Stale
+owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
+No fixture callback witness establishes actual physical creation, ordinary play or save/load.
+Current production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`
+passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
+zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
+132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+and all repository audits. Hosted integration checks remain separate.
+Canonical compilation runs across 3049 production C# sources; the generated
+cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
+[Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
+
+## Retained real-turn recovery validation
+
+Full licensed Windows1901 passes13,673 main/5,051 Portable cases, zero skips. Canonical7819
+passes ordinary3043/3047 and developer3173/3177,130 Harness files, all four C#7.3 modes
+plus installed Hearthpyre source/ABI. Production digest6dbd and its structural binding remain
+unchanged. Four source-only wiring cases support a74th persona;56parser tests pass.
+
+`Tools/run-personas.sh raid-recovery-turn-native-check` seals setup, actual `advance 1`,
+and post-turn checks between two stage digests. Native59966 passed one actual EndTurn and
+one enclosed raid wake: Active->Ready once, then explicit completion once/refused repeat.
+All3177source bytes match sealed profileZt98Jg; strict raw log,12journalrows and exact owned
+stop pass. This seed does not execute multi-turn overshoot or extra same-pass wakes.
+Repository/hosted integration gates remain separate. Ordinary rendered play, master resume
+and save/load are not signed by this controlled case.
+[Real-turn evidence](/mnt/c/taf-raid-recovery-turn-native.X0VMU8/README.md).
+
+## Retained combined recovery/guard validation
+
+Full licensed Windows93430 passes13,669 main and5,047 Portable cases, zero skips.
+Canonical compile56568 passes ordinary3043/3047 and developer3171/3175 with128 Harness
+shards, all four C#7.3 modes plus installed ABI. Native2155 passes the new bound/paused
+case28d.3 and combined destruction-veto case28b.3, with strict raw logs, exact owned stops
+and all3175 source bytes matching both sealed profiles. This is scoped component evidence,
+not ordinary heartbeat, rendered UI or save/load acceptance. Final repository/hosted checks
+remain separate. [Combined evidence](/mnt/c/taf-raid-recovery-guards-native.6Dnfup/README.md).
+
+## Retained recovery checkpoint — two native cases passed
+
+Canonical compile51408 passes all four C#7.3 modes plus installed ABI across 3047 production C# sources:
+ordinary3043/3047, developer3167/3171,124 Harness shards. The generated
+cold-install inventory contains 3078 files; this does not prove a new installation.
+Strict structural binding passes at `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Native51235 passes cases28d.1–28d.2 in separate sealed fresh profiles: actual late destruction
+veto preserves Active, returned live original refuses Ready turn-in, and actual final removal
+permits one completion with no repeat. Strict raw logs and exact owned stops pass.
+These two cases exclude paused/bound guards, ordinary turns and save/load.
+[Evidence](/mnt/c/taf-raid-recovery-fixed.FaVvXv/README.md).
+Separate case28d.3 now passes actual same/foreign bound zero-scan refusal and paused explicit
+completion at17:52:27UTC, seed#1012034, fresh3lgp4w, with strict log and owned stop. Positive
+controls calibrate both capture/GetObjects observers. Ordinary heartbeat, resume and save/load
+remain unsigned. [Guard evidence](/mnt/c/taf-raid-recovery-guards-native.6Dnfup/README.md).
+
+## Retained Quickstart regression — six native combinations exercised
 
 Private0.3.1 failed actual new-game startup: readiness rejects the placed founder, and a
 follow-on verification incorrectly requires an already completed heart. See
@@ -48,7 +114,7 @@ Steam delivery of the correction, or release acceptance.
 Retained stock-custody finding: repeated child references could inflate initial quantity totals;
 absent top-level heart/grants remained refused. The separate stock correction below closes this gap.
 
-### Current stock-hardening snapshot — 2026-09-07
+### Retained stock-hardening snapshot — 2026-09-07
 
 Follow-on reference-identity guards are now integrated separately, digest
 `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`;
@@ -332,9 +398,10 @@ exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 17
 Nine focused one-survey source-contract cases pass for that checkpoint's maintained-index proof.
 Tools suite passes 35 tests and Art suite passes 23 / 23 tests for those historical bytes; its
 repository-audit, Ubuntu-source, and Windows-source jobs were also green. Public CI
-without installed Qud data permits exactly three named installed-data-only skips instead of
-fabricating fixtures. TestMain rejects an unexpected or
-missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
+without installed Qud data permits exactly ten named installed-data-only skips in the full suite
+and four in the portable suite, instead of fabricating fixtures. TestMain rejects an unexpected
+or missing allowlisted skip; explicitly configured incomplete base or decompiled-source roots
+fail rather than skipping. Curated source rulings live in tracked `docs/CREED-KIND-EVIDENCE.md`.
 Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
 exact Qud base.
 Dynamic NUnit sources are not supported by this custom runner: `TestCaseSource` and
@@ -543,9 +610,10 @@ not proof of later-stage equipment balance. Frozen old-plan references may still
 when they no longer match the current profile; the correction does not make that impossible.
 
 B2's swallowed callback throw remains unimplemented. Same-blueprint replacement and interrupted
-placement custody remain known open defects. Ordinary raids, save/load, and the separate raid
-displacement cases 28b.1 and 28b.2 remain unsigned. Earlier native evidence below retains its
-historical scope; neither bounded launch pass closes those gates.
+placement custody remain known open defects. Case 28b.1's same-process death/activation
+sequence has the bounded native evidence below; ordinary raids and save/load repetition
+remain unsigned. Separate contact case 28b.2 also has bounded native evidence below;
+neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 
@@ -621,6 +689,14 @@ save/reload, destruction-veto callback, ordinary-play anchor, or compatibility m
 | QSB3 | Reject or move a fresh food/material child during insertion; repeat with a callback throwing before and after placement | Known fresh roots and children are cleaned up by exact reference, including moved/rejected children; unknown factory custody fences retry |
 | QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
 | QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
+
+QSB2 water-capacity case passed natively on 2026-09-07 at13:53UTC. The real `CreateWater`
+receives an entered-cell capacity64→32 fault, refuses verification and removes its original
+allocation before fixture cleanup. Retry mints one healthy24-dram cask; a third call reuses it.
+All16 native groups passed in isolated profile `/mnt/c/taf-scenario.b2I4Og` (seed#1012027),
+with strict Player.log checks, exact-owned stop and idle proof. Evidence:
+`/mnt/c/taf-qsb2-proof.g0jQbF/`. This is synthetic creator evidence, not ordinary startup,
+save/load or QSB3–5 acceptance; shipped production code is unchanged.
 
 Raid displacement regressions are separate native cases 28b.1 and 28b.2 below.
 
@@ -1363,13 +1439,71 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 27a | Mint another `kingdom:raid`; set `kingdom:standing Snapjaws:250`; Charter → **Answer a threat** → **Send an envoy** | No water changes hands. The incident resolves with an obligation; the next explicit snapjaw grievance demands 12 drams, then discharges that obligation |
 | 28 | Resolve any open test incident; enter `kingdom:raid`; Charter → **Answer a threat** → **Refuse and meet the warband**; remain here until its displayed due tick | The frozen profile spawns marked snapjaws only on passable zone-edge cells that have a path to the frozen named store. Spawn itself takes **no water** |
 | 28a | Watch the marked raiders approach; compare dedicated water before contact and after one reaches the named store | Water stays unchanged until physical adjacency. At contact, at most the frozen raid stake (up to 24 drams, reduced by proved defence) leaves that exact fresh-water store and the incident records the proved amount |
-| 28b | Repeat the fight and defeat every marked raider before any reaches the store | The death of the final marked raider resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
-| 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. The remaining target-zone band stays actionable and its last death resolves once with zero plunder. Repeat across save/load; this is a native gate, not signed by source-contract tests |
+| 28b | Repeat the fight and defeat every marked raider before any reaches the store | After final body removal, the next normal settlement wake resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
+| 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. Remaining target-zone band stays actionable; after its last body is removed, the next normal settlement wake resolves once with zero plunder. Pre-removal callbacks must not finalize a death that can still be vetoed. Repeat across save/load; this is a native gate, not signed by source-contract tests |
 | 28b.2 | In a native debugger/fault-injection fixture, move the exact named store and a marked raider to another zone at the original coordinates; invoke `StepRaider` there before the next target-zone inspection | This foreign-zone callback takes no water, records no plunder, and leaves the operation in `EffectIntent`, unquarantined. Restore the exact objects to the frozen zone and prove one normal contact resolution. Ordinary target-zone inspection may independently resolve a missing objective; isolate that separate event |
+| 28b.3 | In an isolated native fixture, kill two original raiders normally; veto the final original's real `BeforeDestroyObjectEvent` once, activate the zone, then disarm the retained veto and retry actual death | Veto preserves exact live custody and pending raid authority, including through activation. Successful retry proves actual graveyard removal; subsequent activation resolves once with zero plunder and repeat does not duplicate the result. Native drops/unequips may precede the veto and must be retained, not reset |
 | 28c | After a physically proved store plunder, Charter → raid recovery → **Accept** | One plain base-game quest appears with no custom manager, reward, reputation, or XP. The settlement watch is exactly one defence point weaker until recovery resolves |
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
+| 28d.1 | In an isolated native fixture, earn actual plunder and accept recovery; kill two originals and veto the final original's real destruction once | Recovery stays Active with no Ready proof while the exact last body remains. After disarming the veto and actual removal, a normal seat wake earns Ready; explicit turn-in resolves once. Baseline premature-Ready failure and corrected native PASS are retained separately; no ordinary-play or save/load claim |
+| 28d.2 | Earn Ready by physically displacing the final surviving original into a preloaded foreign zone and activating the target; return that same original alive and immediately attempt explicit turn-in | Turn-in refuses with Ready wire, quest and wound unchanged. Genuine final removal then permits one completion. Baseline accepted a live survivor; corrected native51235 proves refusal and final completion. This is not historical save/load evidence |
+| 28d.3 | Earn Ready through real contact, acceptance, three actual deaths and activation; bind actual same-zone and foreign-zone custody surveys separately, then dispose them and disable the real master option | Each bound turn-in and fresh-capture request refuses with unchanged Ready/quest/wound/water and zero actual custody/GetObjects entries, after calibrated positive controls. Every binding disposes without residue. Paused automatic wake refuses; unbound explicit completion succeeds once and repeat is unchanged. Native case passed17:52UTC; ordinary heartbeat and save/load remain separate |
+| 28d.4 | In a sealed synthetic world, earn Active recovery through actual contact/acceptance, remove all three originals through actual death, then use the existing real-engine `advance 1` | Every observed EndTurn is contiguous and agrees with both elapsed clocks. First unbound raid wake earns Ready once; subsequent observed boundaries retain that proof. Actual explicit completion resolves once, clears the wound and rejects repeat without advancing the post-turn clock. Native59966 passed one dispatch/one wake; overshoot, additional wakes, ordinary rendered play and save/load remain separately scoped |
+| 28d.5 | Earn Active recovery with three actual original deaths, set the real master option No, use `advance 1`, then Yes and `advance 2` | Paused actual EndTurns never enter raid work; resume applies one token and preserves valid lifecycle/growth authority without physical work. A later actual wake earns Ready once; explicit completion and repeat retain their observed clocks and world effects. Corrected native11624 passed two paused dispatches and two resumed dispatches; ordinary play, established-growth native variants and save/load remain separate |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
+
+Case28b.1's same-process death/activation sequence passed isolated `raid-death-native-check`
+on2026-09-07 at15:47UTC, seed#1012029, retained profile `/mnt/c/taf-scenario.T6OIGl`.
+All three real `Die(Force:true)` calls and six real pre-removal callback observations passed;
+each factory original reached its exact originating-zone graveyard. Foreign and first target
+deaths left exact authority pending. Final actual removal also left exact pending authority;
+one real zone activation then recorded `RaidersDefeated`,240drams unchanged, zero plunder and
+one attack proof. Repeated activation changed no serialized authority, minted no new raiders
+and left clock unchanged. Runner90794 and strict raw Player.log checks passed; only owned
+PID34372 stopped. Evidence: `/mnt/c/taf-raid-death-fixed.nf0IMW`.
+
+Earlier actual run12835 exposed pre-removal self-recount quarantine and remains retained.
+Earlier run68898 stopped before deaths because the synthetic test ground had filled its
+graveyard. The corrected fixture raises only bounded retention capacity before snapshots
+(target256→272, foreign256 unchanged), proves existing queue entries unchanged, never clears
+or pools them, and retains the higher limit. This is synthetic evidence retention, not an
+ordinary-scene guarantee. No fake death notification or test-side removal is used.
+The production correction deliberately moves resolution to normal inspection after removal;
+it does not clear quarantine or globally ignore `IsDying`, which precedes vetoable death.
+This case does not sign ordinary turn-driven play, veto injection, recovery or case28b.1's
+save/load repetition. Separate case28b.3 below covers one controlled destruction-veto/retry
+sequence; source/managed passes alone do not close native gates.
+
+Case28b.3 passed isolated `raid-death-veto-native-check` on2026-09-07 at16:26:23UTC,
+seed#1012030, retained profile `/mnt/c/taf-scenario.EWGCdc`. Four actual Die calls include
+two initial deaths, final-original destruction veto after observed RaiderDying, and a
+disarmed successful retry. Exact live custody/pending wire survives veto and activation;
+actual retry removal precedes one RaidersDefeated proof,240drams/zero plunder and unchanged
+repeat. No additional raiders were minted or clock advanced. Native outputs and the disarmed
+test part remain retained; bounded graveyard headroom is synthetic setup, not a scene-wide
+immutability guarantee. Runner13639, strict raw log and exact-owned PID39884 stop passed.
+Evidence: `/mnt/c/taf-raid-veto-proof.iKyt6v`. Earlier BeforeDie veto paths, ordinary turns,
+recovery and save/load remain unsigned. Separate full licensed suites84737 passed13,654 main
+and5,032 Portable cases, zero skips. Canonical compile59060 passed all four modes with122
+Harness shards; these broader mechanical gates do not expand the native scenario's scope.
+
+Case 28b.2 passed the isolated `raid-contact-native-check` persona on 2026-09-07 at 14:40 UTC,
+seed #1012028, retained profile `/mnt/c/taf-scenario.YWkFsy`. Actual foreign-zone `StepRaider`
+preserved 240 drams, zero plunder and exact serialized authority. Restoring the original store
+and raider proved one 24-dram debit, `StoresPlundered`, one exact attack terminal proof and an
+unchanged repeat. A second 96-dram store remained physically unchanged. Read-only native
+reservations also proved exact nonfirst selection, refusal of 241 drams from the 240-dram
+store despite 336 aggregate drams, and refusal of an unbound copied survey. Production
+contact owned its own real survey scope; the harness did not supply one around `StepRaider`.
+
+This test exposed and corrected a real groundless-survey defect: reservation returned a
+failed nonnull receipt, which contact mistook for a usable reservation and then quarantined
+untouched state. Contact now uses the active survey with an exact-store selector and refuses
+failed reservations before committing. Both earlier failing profiles and diagnostic receipts
+remain retained. Corrected runner 14492 exited 0 and receipt-scoped shutdown stopped PID 40412.
+Evidence is synthetic, `ordinary-acceptance=false`, `save-load=untested`; it does not sign
+ordinary raid play, foreign-death case 28b.1, recovery, or save/load.
 
 ## Pass 6b — Fortification
 

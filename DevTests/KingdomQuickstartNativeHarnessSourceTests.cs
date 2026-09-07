@@ -15,6 +15,43 @@ namespace ThousandAndFirst.Tests
 		private const string Faults = "Harness/KingdomQuickstartBootstrap.NativeFaults.cs";
 		private const string Provider = "Harness/KingdomQuickstartNativeProvider.cs";
 		private const string Context = "Harness/KingdomNativeRegressionContext.cs";
+		private const string CaskFault = "Harness/KingdomQuickstartCaskFault.cs";
+
+		[Test]
+		public void WaterFaultUsesRealCreatorBeforeCleanupRetryAndRecovery()
+		{
+			string body = Flat(Method(Read(Creators), "private static void NativeWaterCreator("));
+			Ordered(body, "new NativeWaterGround(Context)", "new KingdomQuickstartCaskFault(Context, receipt)",
+				"CreateWater(Context.Game, Context.Zone, receipt, out string refusal)",
+				"refused == null", "fault.Check(1, 1)", "NativeAbsent(Context, fault.First)",
+				"before.Check(null)", "!GrantQuarantined(Context.Game)",
+				"CreateWater(Context.Game, Context.Zone, receipt, out string failure)",
+				"fault.Check(2, 2)", "ReferenceEquals(water, fault.Second)",
+				"MaxVolume == 64", "before.Check(water)",
+				"ReferenceEquals(water, CreateWater(Context.Game, Context.Zone, receipt, out failure))",
+				"fault.Check(2, 2)", "ExactGrantMarker(water, receipt, KingdomQuickstartPhase.WaterStocked)",
+				"before.Check(water)");
+			StringAssert.DoesNotContain("TryCreateFreshGrant(", body);
+		}
+
+		[Test]
+		public void WaterProbeCapturesOriginalThenMutatesOnlyFirstEnteredCapacity()
+		{
+			string source = Read(CaskFault);
+			StringAssert.Contains("BeforeObjectCreatedEvent.ID", source);
+			StringAssert.Contains("EnteredCellEvent.ID", source);
+			Ordered(Flat(Method(source, "internal void Mint(")), "Owner(); BlueprintExact(true)",
+				"new Witness(body, part)", "Originals.Add(witness); Context.Track(body)");
+			Ordered(Flat(Method(source, "internal void Enter(")), "Owner(); BlueprintExact(true)",
+				"ReferenceEquals(entered.Object, body)", "ReferenceEquals(entered.Cell, cell)",
+				"witness.Exact()", "Count(cell.Objects, body) == 1", "witness.Volume.MaxVolume == 64",
+				"witness.Volume.Volume == 24", "Owner(); BlueprintExact(true); witness.Exact()",
+				"Entries++", "if (Entries == 1)", "Faults++; witness.Volume.MaxVolume = 32");
+			Ordered(Flat(Method(source, "public void Dispose(")), "Owner(); BlueprintExact(true)",
+				"catch (Exception error)", "ReferenceEquals(added, Probe)", "Parts.Remove(ProbeName)",
+				"BlueprintExact(false)", "finally", "Active = null");
+			StringAssert.DoesNotContain("GameObject.Create(", source);
+		}
 
 		[Test]
 		public void SixteenUniqueCaseIdsBindExactCreatorAndFaultCallbacks()

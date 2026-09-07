@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Settlement = "Core/KingdomMasterSettlementPlan.cs";
 		private const string Recovery = "Core/KingdomMasterRecoveryPlans.cs";
+		private const string GrowthResume = "Experience/KingdomMasterGrowthResumeRules.cs";
 
 		[TestCase("KingdomSystem")]
 		[TestCase("KingdomSettlement")]
@@ -61,9 +62,14 @@ namespace ThousandAndFirst.Tests
 		public void SourceContractLifecycleRecoveryHasNoSubsidenceReanchor()
 		{
 			string body = Method(Recovery, "internal void Publish(KingdomLifecycleBook book)");
-			StringAssert.Contains("KingdomGrowthBook growth = book.Growth;", body);
-			StringAssert.Contains("if (growth.HeartbeatOp == null) growth.LastHeartbeatTick = Now;", body);
-			StringAssert.Contains("if (growth.DepartureOp == null) growth.LastDepartureTick = Now;", body);
+			StringAssert.Contains("Growth.PublishPrevalidated();", body);
+			string preparation = Method(GrowthResume, "internal static bool PrepareMasterGrowthResume(");
+			StringAssert.Contains("if (book.HeartbeatOp == null) book.LastHeartbeatTick = now;", preparation);
+			StringAssert.Contains("if (book.DepartureOp == null) book.LastDepartureTick = now;", preparation);
+			string publication = Method(GrowthResume, "internal static void CopyMasterGrowthResumeScalars(");
+			StringAssert.Contains("to.LastHeartbeatTick = from.LastHeartbeatTick;", publication);
+			StringAssert.DoesNotContain("LastSubsidenceTick", publication,
+				"The detached scalar publisher must retain subsidence's independent checkpoint.");
 			StringAssert.DoesNotContain("LastSubsidenceTick", Code(Recovery),
 				"No recovery-plan branch may independently reanchor the subsidence clock.");
 		}
