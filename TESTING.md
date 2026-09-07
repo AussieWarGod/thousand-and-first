@@ -1376,6 +1376,7 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28b | Repeat the fight and defeat every marked raider before any reaches the store | After final body removal, the next normal settlement wake resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
 | 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. Remaining target-zone band stays actionable; after its last body is removed, the next normal settlement wake resolves once with zero plunder. Pre-removal callbacks must not finalize a death that can still be vetoed. Repeat across save/load; this is a native gate, not signed by source-contract tests |
 | 28b.2 | In a native debugger/fault-injection fixture, move the exact named store and a marked raider to another zone at the original coordinates; invoke `StepRaider` there before the next target-zone inspection | This foreign-zone callback takes no water, records no plunder, and leaves the operation in `EffectIntent`, unquarantined. Restore the exact objects to the frozen zone and prove one normal contact resolution. Ordinary target-zone inspection may independently resolve a missing objective; isolate that separate event |
+| 28b.3 | In an isolated native fixture, kill two original raiders normally; veto the final original's real `BeforeDestroyObjectEvent` once, activate the zone, then disarm the retained veto and retry actual death | Veto preserves exact live custody and pending raid authority, including through activation. Successful retry proves actual graveyard removal; subsequent activation resolves once with zero plunder and repeat does not duplicate the result. Native drops/unequips may precede the veto and must be retained, not reset |
 | 28c | After a physically proved store plunder, Charter → raid recovery → **Accept** | One plain base-game quest appears with no custom manager, reward, reputation, or XP. The settlement watch is exactly one defence point weaker until recovery resolves |
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
@@ -1399,8 +1400,22 @@ or pools them, and retains the higher limit. This is synthetic evidence retentio
 ordinary-scene guarantee. No fake death notification or test-side removal is used.
 The production correction deliberately moves resolution to normal inspection after removal;
 it does not clear quarantine or globally ignore `IsDying`, which precedes vetoable death.
-Ordinary turn-driven play, veto injection, recovery and case28b.1's save/load repetition remain
-unsigned. Source/managed passes do not close those native gates.
+This case does not sign ordinary turn-driven play, veto injection, recovery or case28b.1's
+save/load repetition. Separate case28b.3 below covers one controlled destruction-veto/retry
+sequence; source/managed passes alone do not close native gates.
+
+Case28b.3 passed isolated `raid-death-veto-native-check` on2026-09-07 at16:26:23UTC,
+seed#1012030, retained profile `/mnt/c/taf-scenario.EWGCdc`. Four actual Die calls include
+two initial deaths, final-original destruction veto after observed RaiderDying, and a
+disarmed successful retry. Exact live custody/pending wire survives veto and activation;
+actual retry removal precedes one RaidersDefeated proof,240drams/zero plunder and unchanged
+repeat. No additional raiders were minted or clock advanced. Native outputs and the disarmed
+test part remain retained; bounded graveyard headroom is synthetic setup, not a scene-wide
+immutability guarantee. Runner13639, strict raw log and exact-owned PID39884 stop passed.
+Evidence: `/mnt/c/taf-raid-veto-proof.iKyt6v`. Earlier BeforeDie veto paths, ordinary turns,
+recovery and save/load remain unsigned. Separate full licensed suites84737 passed13,654 main
+and5,032 Portable cases, zero skips. Canonical compile59060 passed all four modes with122
+Harness shards; these broader mechanical gates do not expand the native scenario's scope.
 
 Case 28b.2 passed the isolated `raid-contact-native-check` persona on 2026-09-07 at 14:40 UTC,
 seed #1012028, retained profile `/mnt/c/taf-scenario.YWkFsy`. Actual foreign-zone `StepRaider`

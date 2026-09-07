@@ -362,6 +362,7 @@
     <Compile Include="KingdomRaidLaunchNativeContractTests.cs" />
     <Compile Include="KingdomRaidContactNativeSourceTests.cs" />
     <Compile Include="KingdomRaidDeathNativeSourceTests.cs" />
+    <Compile Include="KingdomRaidDeathVetoNativeSourceTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />
