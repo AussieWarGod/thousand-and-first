@@ -159,8 +159,6 @@ namespace ThousandAndFirst.Tests
 				"private static bool AllProjectionsProved(");
 			string death = Slice(source, "internal static void RaiderDying(",
 				"private static bool PublishSimple(");
-			string active = Slice(death, "if (op != null && op.Action == KingdomLifecycleAction.RaidAttack",
-				"KingdomRaidIncident recovery =");
 			string inspect = Slice(source, "private static void InspectOpenAttack(",
 				"private static void ProveObjectiveContact(");
 			string resume = Slice(source, "private static void ResumeOpen(",
@@ -175,14 +173,10 @@ namespace ThousandAndFirst.Tests
 				"public override void TurnTick(");
 			StringAssert.Contains("RequirePart<NoXPGain>()", bodies);
 			StringAssert.Contains("Allegiance[system.KingdomFactionName] = -100", bodies);
-			StringAssert.Contains("op.Phase == KingdomLifecyclePhase.EffectIntent", active);
-			StringAssert.Contains("return;", active);
 			foreach (string premature in new[] { "CountLiveRaiders(", "SkipEffectWithoutContact", "AdvancePhase(",
-				"ResumeOpen(", "Retire(", "ResolveIncident(", "Quarantine(" })
-				StringAssert.DoesNotContain(premature, active, "pre-removal notification is not removal authority");
-			StringAssert.Contains("last recovery-marked raider died", death);
-			StringAssert.Contains("CountLiveRaiders(zone, part.OperationId, actor) != 0", death);
-			StringAssert.Contains("ReconcileRecoveryAtSeat(system, zone, actor)", death);
+				"ResumeOpen(", "Retire(", "ResolveIncident(", "Quarantine(", "RequireSystem<", "ReconcileRecoveryAtSeat(" })
+				StringAssert.DoesNotContain(premature, death, "pre-removal notification is not removal authority");
+			StringAssert.Contains("BeforeDeathRemoval precedes a still-vetoable Destroy", death);
 			StringAssert.Contains("OnWorldWake(system, now, zone)", activation);
 			StringAssert.Contains("ResumeOpen(system, currentZone ?? The.Player?.CurrentZone)", source);
 			string pending = Slice(resume, "case KingdomLifecyclePhase.EffectIntent:", "case KingdomLifecyclePhase.EffectsSettled:");
@@ -213,19 +207,9 @@ namespace ThousandAndFirst.Tests
 				"internal static void RaiderDying(");
 			string contact = Slice(source, "private static void ProveObjectiveContact(",
 				"private static bool TryDeriveAttackResult(");
-			StringAssert.Contains("Zone zone = actor.CurrentZone;", death);
 			StringAssert.Contains("ProveObjectiveContact(system, actor.CurrentZone, op,", step);
-			int deathZone = death.IndexOf(
-				"&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
-				StringComparison.Ordinal);
-			Assert.Greater(deathZone, 0);
-			Assert.Greater(death.IndexOf("&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal)",
-				StringComparison.Ordinal), deathZone);
-			string active = Slice(death, "if (op != null && op.Action == KingdomLifecycleAction.RaidAttack",
-				"KingdomRaidIncident recovery =");
-			StringAssert.Contains("return;", active);
-			StringAssert.DoesNotContain("SkipEffectWithoutContact", active);
-			StringAssert.DoesNotContain("ResumeOpen(", active);
+			foreach (string token in new[] { "actor.CurrentZone", "RequireSystem<", "CountLiveRaiders(",
+				"SkipEffectWithoutContact", "ResumeOpen(", "ReconcileRecoveryAtSeat(" }) StringAssert.DoesNotContain(token, death);
 			int contactZone = contact.IndexOf(
 				"|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
 				StringComparison.Ordinal);

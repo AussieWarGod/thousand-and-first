@@ -20,7 +20,20 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The work-in-progress raid-death correction reports3046 staged production C# files,
+The recovery absence correction reports3047 staged production C# files,431,611 physical
+lines,zero at or above300,and1415 files with direct `XRL` imports. Exact inventory:
+`6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+The complete canonical parent/current comparison enumerates3041 unchanged,five modified,
+one added,no removals. Unchanged sources inherit review; root and independent AI reviewer
+read the complete six-file delta and relevant boundaries. One ephemeral recovery decision
+authority coordinates the existing custody survey and publication/quest protocols; no saved
+fields or public API change. Any bound pass defers/refuses without a second classification.
+See [review evidence](STRUCTURE_REVIEW_0_3_1.md). The semantic ledger binds this exact digest;
+native/full-suite/compile evidence remains separately scoped in [STATUS](STATUS.md).
+
+## Retained raid-death census
+
+The preceding raid-death correction reports3046 staged production C# files,
 431,474 physical lines, zero at or above300, and1414 direct `XRL` imports. Exact inventory:
 `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
 One production file changes from the raid-contact checkpoint below. The exact semantic ledger

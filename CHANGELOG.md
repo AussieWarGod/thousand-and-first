@@ -8,7 +8,17 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Unreleased raid-death census — exact structural gate passed.** Current 3046-file census is line-cap green:
+> **Unreleased recovery correction — exact structural gate passed.** Current 3047-file census is line-cap green:
+> 431,611 physical lines, zero files at or above300. Direct `XRL`
+> imports occur in 1415 files, 0 of them over the line limit. Inventory SHA-256:
+> `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+> The generated cold-install inventory contains 3078 files; no new subscription claim.
+> All four compile modes plus ABI pass; two actual native regressions reproduce the old
+> defects and pass corrected behavior. Full licensed Windows suites pass13,661 main and
+> 5,039 Portable cases, zero skips; repository audit passes501 tests plus inventory/docs/XML.
+> Public0.3.1 stays unchanged.
+
+> **Retained unreleased raid-death census — exact structural gate passed.** Its3046-file census is line-cap green:
 > 431,474 physical lines, zero files at or above300,1414 direct `XRL` imports.
 > Inventory SHA-256: `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
 > Native final-death quarantine reproduced and corrected in an isolated real-death regression.
@@ -62,6 +72,12 @@ below it.
   unchanged water and no duplicate result. Native outputs are retained. This adds only
   developer tests; no production or save-format changes. Full licensed suites and all
   four compile modes pass; ordinary turn-driven play and save/load remain separate gates.
+- Raid recovery no longer becomes Ready during a still-vetoable death callback. Normal
+  unbound seat inspection proves actual absence. Explicit turn-in rechecks the exact live
+  band, owner and quest before publishing completion; a returned survivor leaves Ready,
+  quest and watch wound unchanged. Bound surveys refuse without a second classification;
+  explicit committed recovery remains available while automation is paused. No save-format
+  or public-API change. Two native regressions pass; broader coverage remains separate.
 - Defer active raid defeat resolution until normal inspection after actual body removal.
   Pre-removal death callbacks can still be vetoed and no longer advance or quarantine the
   attack. No save-format or shared recovery/counting change. Native reproduction retained;

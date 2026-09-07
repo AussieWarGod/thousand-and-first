@@ -1,6 +1,16 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current stock-hardening census — 2026-09-07
+## Current recovery census — 2026-09-07
+
+3047 production C# files; 3,078 cold-install files in the generated inventory;
+431,611 physical lines,1415 direct-XRL imports,zero cap failures. Exact inventory:
+`6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
+Complete canonical comparison and scoped six-file semantic review bind strict structure.
+Four-mode compile51408 and two native recovery cases51235 pass; full main suite27430
+passes13661 main/5039 Portable cases, zero skips. Repository71541 passes501 tests and audits. This
+does not sign ordinary play, save/load, paused/bound native guards or a new public release.
+
+## Retained stock-hardening census — 2026-09-07
 
 3046 production C# files; 3,077 cold-install files in the generated inventory;
 431,441 physical lines,1414 direct-XRL imports and zero production cap failures. Production

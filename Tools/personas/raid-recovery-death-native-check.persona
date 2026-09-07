@@ -1,0 +1,10 @@
+# Actual plunder and recovery acceptance, then last-original destruction veto/retry.
+# Retain original bodies, quest and native drops; no test-side lifecycle repair/removal.
+# Same-process only; ordinary turn-driven play and save/load remain unsigned.
+DESCRIPTION=recovery stays Active through destruction veto; actual absence permits Ready and turn-in once
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-recovery-death-native-check;stagedigest
+VERBS=raid-recovery-death-native-check
+EXPECT=stagedigest:OK~founded=false,raid-recovery-death-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

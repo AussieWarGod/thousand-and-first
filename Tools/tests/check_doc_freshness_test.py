@@ -115,7 +115,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 testing.write_text(
-                    "The current public Alpha manifest is `0.3.0`.\n",
+                    "The current public Alpha manifest is `0.3.1`.\n",
                     encoding="utf-8",
                 )
                 modding.write_text(
@@ -125,6 +125,28 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 problems = []
                 CHECKER.audit_public_release_status(problems)
                 self.assertEqual([], problems)
+
+                current_testing = testing.read_text(encoding="utf-8")
+                stale_manifest = "current public Alpha manifest is `0.3.0`"
+                for body, missing_current in (
+                    ("The " + stale_manifest + ".\n", True),
+                    (current_testing + "The " + stale_manifest + ".\n", False),
+                ):
+                    with self.subTest(testing_manifest=body):
+                        testing.write_text(body, encoding="utf-8")
+                        problems = []
+                        CHECKER.audit_public_release_status(problems)
+                        expected = []
+                        if missing_current:
+                            expected.append(
+                                "TESTING.md is missing current contract text: "
+                                "current public Alpha manifest is `0.3.1`"
+                            )
+                        expected.append(
+                            "TESTING.md retains stale current-status text: " + stale_manifest
+                        )
+                        self.assertEqual(expected, problems)
+                testing.write_text(current_testing, encoding="utf-8")
 
                 readme.write_text(
                     f"Public Alpha is not published yet. {CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
