@@ -623,6 +623,14 @@ save/reload, destruction-veto callback, ordinary-play anchor, or compatibility m
 | QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
 | QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
 
+QSB2 water-capacity case passed natively on 2026-09-07 at13:53UTC. The real `CreateWater`
+receives an entered-cell capacity64→32 fault, refuses verification and removes its original
+allocation before fixture cleanup. Retry mints one healthy24-dram cask; a third call reuses it.
+All16 native groups passed in isolated profile `/mnt/c/taf-scenario.b2I4Og` (seed#1012027),
+with strict Player.log checks, exact-owned stop and idle proof. Evidence:
+`/mnt/c/taf-qsb2-proof.g0jQbF/`. This is synthetic creator evidence, not ordinary startup,
+save/load or QSB3–5 acceptance; shipped production code is unchanged.
+
 Raid displacement regressions are separate native cases 28b.1 and 28b.2 below.
 
 ## Latest retained automated native smoke — partial evidence, not protocol signoff
