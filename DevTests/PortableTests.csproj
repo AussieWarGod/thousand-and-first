@@ -142,6 +142,8 @@
 	<Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
+    <Compile Include="KingdomQuickstartStockRulesTests.cs" />
+    <Compile Include="..\Core\KingdomQuickstartStockRules.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />

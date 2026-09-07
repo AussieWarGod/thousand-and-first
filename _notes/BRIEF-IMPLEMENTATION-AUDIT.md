@@ -1,6 +1,25 @@
 # Brief-to-implementation audit
 
-Current isolated draft census — 2026-09-06: **3045** production C# files, all strictly below
+## Current stock-hardening census — 2026-09-07
+
+**3046** production C# files,431,441 physical lines,1414 direct-XRL imports and zero
+production line-cap failures;3077 generated cold-install inventory files. Production digest:
+`9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+This complete mechanical census is not a new whole-tree semantic review, installation or
+release claim. The bounded stock correction review covers two production files. Compile73169
+TERMINAL0 passes all four C#7.3 modes+ABI: ordinary3042/3046, developer3156/3160 with114 Harness.
+Managed47358 TERMINAL0 passes13625 Taf/5012 Portable, zero skips. Tools73664 TERMINAL0 passes501
+tests and the exact structural `--release` gate passes. Native49420 TERMINAL0 passes16 synthetic
+creator/custody groups, including duplicate-child negatives inside both creator groups and healthy
+fixture restoration; exact-owned PID5068 stop, root idle and no-allowance log checks pass.
+This closes bounded stock proof, not component save/load or current ordinary acceptance. Six startup
+boot/save/cold-load pairs and twelve strict result checks are retained for `7e3fb752…`, not
+these later bytes. [Stock validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md)
+retains the prototype's missing-fixture failure; `docs/STATUS.md` owns remaining acceptance gates.
+
+## Retained pre-upload census — 2026-09-06
+
+Retained isolated draft census: **3045** production C# files, all strictly below
 300 physical lines. This is a mechanical census, not a new semantic review or completion claim.
 `docs/STATUS.md` owns current compile and suite evidence. Integrated death correction passes13494/4881 full suites,
 438 retained Tools and strict4+ABI in k0DDMc. Death-journal native acceptance remains open; earlier archive103 real

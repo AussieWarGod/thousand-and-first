@@ -1,5 +1,30 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current stock-hardening snapshot — 2026-09-07
+
+Current worktree `/tmp/taf-quickstart-founder.ZsbJsI` contains 3046 staged sources,
+431,441 physical lines,1414 direct-XRL imports and zero production cap failures. Its generated
+package inventory contains3077 files, not proof of an installation or subscription. Production
+digest: `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+The stock reference-identity correction is integrated after startup checkpoint `1c1c2bc`;
+bounded review covers its two production files, not a fresh whole-tree semantic review.
+Compile73169 TERMINAL0 passes all four C#7.3 modes+ABI: ordinary3042/3046,
+developer3156/3160 with114 Harness shards. Managed47358 TERMINAL0 passes13625 Taf/5012 Portable,
+zero skips. Tools73664 TERMINAL0 passes501 tests and the exact structural `--release` gate passes.
+Native49420 TERMINAL0 passes16 synthetic creator/custody groups, including duplicate-child
+negatives inside the two creator groups, actual verifier refusal and healthy fixture restoration.
+Exact-owned PID5068 stop, root idle check and canonical no-allowance Player.log check pass.
+Prototype compile53305 passed before the later two-line native-fixture authority guard.
+Isolated managed54638 ended with13624 pass/1 fail because ignored local
+`_notes/CREED-KIND-EVIDENCE.md` was absent; Portable did not run. Neither result signs current
+full validation. Current bounded stock correction is closed; component save/load is untested.
+The six actual startup boot/save/cold-load pairs and twelve strict result
+checks below remain evidence only for earlier `7e3fb752…` bytes. Ordinary play, graceful
+in-game Quit, subscribed delivery of the correction and public release remain open.
+Current validation: `/tmp/taf-quickstart-stock-validation.CM1dD9/README.md`.
+
+## Retained startup handoff — `1c1c2bc` / `7e3fb752…`
+
 Quickstart hotfix supersedes historical status below. User closed Qud; root now owns isolated
 native tests only. Private0.3.1 unchanged build still contains reported failure; do not promote.
 Worktree `/tmp/taf-quickstart-founder.ZsbJsI`; native execution baseline HEADdbad70c plus correction.
@@ -24,16 +49,17 @@ All6ownedloadstop+idlePASS; noQudrunning after54520 TERMINAL0 PID24732stop.
 Never patch/reuse any spent or superseded sealed profile. Root proof and all handles:
 `/tmp/taf-quickstart-native.sYl4Dz/README.md`; docs/STATUS.md owns acceptance scope.
 
-Required separate finding: duplicate stock-child references can counterfeit initial totals;
-top-level absent heart/grants are refused. Not observed canyon cause, not fixed by ingressdelta.
+Retained separate finding: duplicate stock-child references could counterfeit initial totals;
+top-level absent heart/grants were refused. Not observed canyon cause or fixed by ingressdelta;
+the later bounded stock correction and its current proof are closed above.
 QSB2–5, ordinary play, graceful in-game Quit,
 subscriber delivery and release gates remain open. Exact-owned Kill is not graceful Quit.
 No new upload, Steam mutation, release claim or source export. Root sole Windows/native operator.
-Stockalias isolatedpatch /tmp/taf-quickstart-stock-alias.O5C189/CORRECTION.patch,22pure+11source
-testsPASS. Rootfullcompile53305 andcanonicalmanaged54638 LIVE; notintegrated/noNativeproofyet.
-Managed54638 alreadyreports missing ignored_notes/CREED-KIND-EVIDENCE.md inisolatedclone;
-waitterminal, importexactrequiredlocalnotes thenretry. This is fixturedependency failure, not
-a passingfullsuite or production regression. Goalget11:25 nowACTIVE; Betaobjectiveunfinished.
+Retained stock prototype: /tmp/taf-quickstart-stock-alias.O5C189/CORRECTION.patch,22pure+11source
+testsPASS; compile53305 TERMINAL0 precedes the final native-fixture guard. Managed54638
+TERMINAL1 has13624 pass/1 missing ignored `_notes/CREED-KIND-EVIDENCE.md` failure in the clone;
+Portable did not run. Current active-worktree validation above supersedes this failed fixture run
+without waiving it. Beta objective remains unfinished.
 Publisher extension /tmp/taf-release-tooling.h5W29F being corrected for privateequalversion+
 unseen canonicalinventory; noactiveintegration/finalization. Old0001+submissionfreshreadback
 hashesmatchpriornotes; notleasedSDKauthority. ForegroundUI permission askedasynchronously;

@@ -47,6 +47,11 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (!InitialQuantity) return true;
+			if (!KingdomQuickstartStockRules.HasDistinctChildren(Larder.Inventory.Objects))
+			{
+				Failure = "The starter larder contained a missing or repeated physical meal.";
+				return false;
+			}
 			for (int i = 0; i < Larder.Inventory.Objects.Count; i++)
 			{
 				GameObject food = Larder.Inventory.Objects[i];
@@ -85,6 +90,11 @@ namespace ThousandAndFirst
 				return false;
 			}
 			if (!InitialQuantity) return true;
+			if (!KingdomQuickstartStockRules.HasDistinctChildren(Stockpile.Inventory.Objects))
+			{
+				Failure = "The starter materials chest contained a missing or repeated physical stack.";
+				return false;
+			}
 			int mud = 0, brush = 0, timber = 0;
 			for (int i = 0; i < Stockpile.Inventory.Objects.Count; i++)
 			{

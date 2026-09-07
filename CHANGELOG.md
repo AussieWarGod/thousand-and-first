@@ -8,19 +8,20 @@ Historical entries preserve the claim made at that point. `[Unreleased]`, `VISIO
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Current isolated draft census — not release sign-off.** Current 3045-file census is line-cap green:
-> 431,407 physical lines, with 0 files at or above 300 lines. Direct `XRL`
+> **Current isolated draft census — not release sign-off.** Current 3046-file census is line-cap green:
+> 431,441 physical lines, with 0 files at or above 300 lines. Direct `XRL`
 > imports occur in 1414 files, 0 of them over the line limit. Inventory SHA-256:
-> `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
-> The current derived cold-install inventory contains 3076 files; this is not current installed
-> or subscribed content proof. Final strict four-mode compilation and ABI checks pass:
-> ordinary3041/3045, developer3154/3158,113 Harness shards.
+> `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+> The current derived cold-install inventory contains 3077 files; this is not current installed
+> or subscribed content proof. Current strict four-mode compilation and ABI pass:
+> ordinary3042/3046, developer3156/3160,114 Harness shards. Managed suites pass
+> 13625 main and5012 Portable cases,zero skips;501 Tools tests pass.
 > Current managed and Tools results are tracked in `docs/STATUS.md`; older totals do not sign
-> the latest correction. Genuine Quickstart save/cold-load passed for earlier marsh sources;
-> canyon failures and the current correction's open matrix are tracked separately.
+> the latest correction. Startup checkpoint1c1c2bc passed six genuine boot/save/cold-load pairs
+> and all twelve strict result checks at seed43101; later stock hardening has separate evidence.
 > Historical nested archive hash tests and103 retained real serializer cases pass; ordinary
 > gameplay, full historical-save acceptance and exact release gates stay open.
-> Exact structural semantic review now binds these bytes and its structure gate passes. This does
+> Exact structural semantic review binds these stock-hardening bytes and its gate passes. This does
 > not sign the complete release gate; the earlier beta review below retains its own scope.
 > See `docs/STATUS.md` and `docs/STRUCTURE_REVIEW_0_3_1.md` for correction evidence and open limits.
 
@@ -44,9 +45,14 @@ below it.
   late zone generation and two missing heart-entrance endpoints. Preparation now runs once
   after full zone generation, before placement, refreshes native reachability, and includes
   only those two additional cells. Shipped-layout regressions bind the preparation footprint
-  to the authored entrance routes. Earlier marsh save/cold-load pairs passed; the combined
-  correction still requires all six fresh selections. The existing private0.3.1 package
+  to the authored entrance routes. The startup checkpoint passed all six profile/advisor
+  boot/save/cold-load combinations at seed43101 and their strict checks. The existing private0.3.1 package
   still contains the reported failure.
+- Initial Quickstart food and material verification now rejects repeated physical child
+  references before totaling stock. Normal stack quantities, consumed-stock continuation and
+  save formats remain unchanged. All sixteen synthetic native creator/custody groups pass,
+  including duplicate-child rejection and healthy fixture restoration. Ordinary subscriber
+  startup/save/desktop/reload acceptance remains separate and open.
 - Developer preparation now seals the explicit Quickstart advisor choice and rejects conflicting
   scripts/options. Staging batches file hashing while retaining all three independent reads and
   exact manifest bytes; atomic publication and source-change refusals remain intact.

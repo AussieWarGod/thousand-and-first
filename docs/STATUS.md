@@ -60,10 +60,12 @@ boot still refused: camp1/world1 succeeded, start reachability stayed true, but 
 rejected the authored ingress lane. Both required endpoints `(40,16)` and `(41,16)` lie outside
 the old prepared mask. Their actual blocking objects remain unobserved.
 
-The current correction adds only those two cells to one shared engine-free preparation mask;
+### Retained startup checkpoint — `1c1c2bc` / `7e3fb752…`
+
+The startup correction adds only those two cells to one shared engine-free preparation mask;
 preparation, readiness and relocation exclusion use it. Exhaustive mask tests and the actual
 shipped architecture compiler/entrance-route test cover the mismatch. Source review is clear.
-Current census3045 sources/431,407 physical lines/1414 direct-XRL/zero production cap failures;
+Retained census3045 sources/431,407 physical lines/1414 direct-XRL/zero production cap failures;
 Inventory SHA-256: `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
 Compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable, zero skips.
 Tools69769 passes501 tests. All six sealed profile/advisor combinations at seed `#43101`
@@ -76,7 +78,7 @@ the six source profiles match the actual developer compatibility compiler input 
 
 Earlier interrupted compile/managed jobs and the MSB3027/MSB3021 output-lock failure remain
 retained; they are not green results. No current native PASS is inferred from old marsh pairs.
-The current six-combination developer matrix is green. QSB2–5, ordinary play, graceful in-game Quit,
+The retained six-combination developer matrix is green. QSB2–5, ordinary play, graceful in-game Quit,
 Steam delivery of the correction and public release remain separate open gates. The developer
 route parks only its owned game before turns and uses exact-owned Kill, not the game's Quit.
 
@@ -92,9 +94,37 @@ comparison is not whole-build timing.
 
 The [tracked structural review](STRUCTURE_REVIEW_0_3_1.md) binds the current production bridge;
 its exact inventory gate passes. Structural approval is not native or release approval.
-Separate open oracle finding: repeated stock-child references can counterfeit initial food or
-material totals. Top-level absent heart/grants are refused; this custody gap is not fixed by
-the entrance change and was not the observed canyon failure.
+Retained startup oracle finding: repeated stock-child references could counterfeit initial food
+or material totals. Top-level absent heart/grants were refused; the separate stock correction
+below closes this gap. It was not the observed canyon failure.
+
+### Follow-on stock hardening — current snapshot, 2026-09-07
+
+Startup evidence above is frozen at `1c1c2bc`, production digest `7e3fb752…`. Later stock
+hardening adds a callback-free reference-identity guard before both initial quantity loops.
+It retains normal stack quantities, existing role/receipt/custody checks, noninitial continuation
+and save formats. Independent review cleared the two production files and corrected one native
+fixture safety gap: material classification can invoke contents callbacks, so exact captured
+authority is rechecked immediately before injecting the owned duplicate rows/raw count.
+
+Current canonical census:3046 sources/431,441 physical lines/1414 direct-XRL/zero cap failures;
+Inventory SHA-256: `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+The generated staging inventory contains 3077 files, including 3046 staged C# files; this is
+not installed or subscribed-package evidence. Compile73169 TERMINAL0 passes all four C#7.3 modes
+and ABI for 3046 sources, baseline and compatibility symbols: ordinary3042/3046,
+developer3156/3160 with114 Harness shards. Managed47358 TERMINAL0 passes13625 Taf/5012 Portable,
+zero skips. Tools73664 TERMINAL0 passes501 tests and the exact structural `--release` gate passes.
+Against the complete startup inventory,3044 production files are unchanged, one modified and one
+added. No earlier whole-game receipt is relabeled. Isolated prototype passed22 executable identity
+cases,11 source-wiring cases and all four compile modes+ABI (53305), but that compile preceded the
+two-line native-fixture guard. Prototype full suite54638 failed only missing local ignored
+`_notes/CREED-KIND-EVIDENCE.md`:13624 pass/1 fail, Portable not run. That failed run remains retained.
+Native49420 TERMINAL0 passes all16 synthetic creator/custody groups, including duplicate-child
+negatives inside the larder/material creator groups, actual verifier refusal and healthy fixture
+restoration. Exact-owned PID5068 stop and root idle check pass; canonical Player.log check passes
+without allowances. This closes the bounded stock correction, not a rerun of the six startup
+pairs against later bytes or current ordinary subscriber acceptance; component save/load remains
+untested. [Current validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
 
 ## Retained pre-upload checkpoint — witnessed-death recovery integrated
 

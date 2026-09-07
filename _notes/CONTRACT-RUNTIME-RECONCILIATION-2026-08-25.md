@@ -1,6 +1,25 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-Current isolated draft census — 2026-09-06: 3045 production C# files; 3,076 cold-install files
+## Current stock-hardening census — 2026-09-07
+
+3046 production C# files; 3,077 cold-install files in the generated inventory;
+431,441 physical lines,1414 direct-XRL imports and zero production cap failures. Production
+digest: `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+Compile73169 TERMINAL0 passes all four C#7.3 modes+ABI: ordinary3042/3046, developer3156/3160
+with114 Harness. Managed47358 TERMINAL0 passes13625 Taf/5012 Portable, zero skips. Tools73664
+TERMINAL0 passes501 tests and the exact structural `--release` gate passes. Native49420 TERMINAL0
+passes16 synthetic creator/custody groups, including duplicate-child negatives inside both creator
+groups and healthy fixture restoration; exact-owned PID5068 stop, root idle and no-allowance log
+checks pass. Bounded stock proof is closed; component save/load and ordinary acceptance are not. This
+is a mechanical inventory plus bounded two-production-file stock review, not a fresh
+whole-tree review, installation, subscription or release claim. The six startup boot/save/
+cold-load pairs and twelve strict result checks remain bound to earlier `7e3fb752…` bytes.
+[Stock validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md) retains the prototype's
+missing-fixture failure; `docs/STATUS.md` owns current verification and remaining gates.
+
+## Retained pre-upload census — 2026-09-06
+
+Retained isolated draft census: 3045 production C# files; 3,076 cold-install files
 in the generated inventory. No candidate installation, subscription, semantic review or release
 is implied by those counts. `docs/STATUS.md` owns current verification and remaining gates.
 The beta and older addenda below are retained chronological evidence, not current-inventory

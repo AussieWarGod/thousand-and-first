@@ -76,6 +76,7 @@ namespace ThousandAndFirst
 			Context.Check(larder.Inventory.Objects.Count == 12
 				&& ExactGrantMarker(larder, receipt, KingdomQuickstartPhase.FoodStocked),
 				"larder recovery must not mint a second container or additional meals");
+			NativeLarderChildAlias(Context, larder, receipt);
 		}
 
 		private static void NativeMaterialsCreator(KingdomNativeRegressionContext Context)
@@ -88,6 +89,7 @@ namespace ThousandAndFirst
 			Context.Check(ReferenceEquals(stockpile, CreateMaterials(Context.Game, Context.Zone, receipt,
 				out failure)), "unpublished material recovery must reuse the exact object");
 			Context.Check(VerifyMaterialsGrant(Context.Zone, stockpile, receipt, true, out failure), failure);
+			NativeMaterialChildAlias(Context, stockpile, receipt);
 		}
 
 		private static void NativeAdvisorCreator(KingdomNativeRegressionContext Context)

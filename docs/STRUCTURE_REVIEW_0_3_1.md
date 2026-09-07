@@ -1,9 +1,54 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T10:22:44Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T11:37:12Z. This records structural semantics, not release acceptance.
 
-## Current authored-ingress Quickstart correction
+## Current initial-stock child identity correction
+
+Current production digest:
+`9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+The [complete stock bridge](/tmp/taf-quickstart-stock-structure.E4chRX/stock-production-bridge.md)
+and its full JSON enumerate all3046 current paths/hashes:431,441 physical lines,1414 direct-XRL
+files,zero files at or above300. Canonical `stage.sh list/list-head` independently selects current
+and committed membership; actual `git cat-file --batch` reads all3045 predecessor blobs from
+`1c1c2bc54b4d11f0912f210b39baa89e635c157d`. Their complete hashes match the retained7e3fb752
+ingress inventory. Repeated complete discovery/census/blob reads prove3044 unchanged,one modified,
+one added,no removals. Whole generated stage membership3077 is not installed/subscribed proof.
+JSON SHA256`ef9162e0f04bf1d156f348bbe5e38a594082da3f50f9c2df98390b593b82f530`.
+Unchanged files inherit preceding scoped reviews; this is not a fresh3044-file deep read.
+
+The complete two-file production delta and affected creator/continuation dependencies were read.
+Added `Core/KingdomQuickstartStockRules.cs` owns one engine-free reference-identity list rule:
+null/repeated children refuse, overridden value equality/hash callbacks are bypassed, actual
+native BCL inventory lists and stack counts remain untouched. Modified
+`World/KingdomQuickstartBootstrap.StockVerification.cs` invokes that boundary before both initial
+quantity loops, preserving all role/receipt/marker/blueprint/custody checks, full per-stack totals,
+and the existing `!InitialQuantity` continuation. No saved field, wire, new durable authority or
+grant retry changes. Exact hashes respectively:
+`6eb6a58950ab12589869860e6b9ee4ab8a48bc0120cc6d8e3899805b8e86d2ed` and
+`02b6b068e22ff74bbf97a7c3f1ee2dadb5b61da80bed5380cdfe7d63f5b7cd81`.
+No remaining Required production source finding was identified within this stock-reference scope.
+
+Separate developer alias subfixtures retain old-verifier arithmetic:12 meal rows and timber2+2.
+Restored grants are reverified before asserting alias refusal. Root closed the reviewed material
+classification callback gap with exact snapshot reproof immediately before raw injection;
+integrated Harness SHA256`d3ceacc0cb05018a7894a2409b6cd25534e6293050d87ea7015b0e83a47ba988`.
+That guard delta was independently reread. Harness remains outside production inventory/signoff;
+native alias negatives and complete current stock compile/managed/native acceptance are not
+claimed by this review. Overflow and arbitrary callbacks during later verifier reads are outside
+the bounded correction, not silently approved.
+
+The clean startup1c1c2bc checkpoint retained production7e3fb752 throughout all six genuine
+profile/advisor boot/save/cold-load pairs, all twelve strict save/load checkers and exact owned
+stop/idle checks. Compile21734 four modes+ABI, managed21635 13603/4990 zero skips and Tools69769
+501 passes also belong to that prior source. See the11:25/11:30 entries in
+[native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md). None is reassigned to stock bytes.
+Ordinary rendered play, graceful Save-and-Quit/menu return and desktop Quit, corrected subscriber
+delivery and public release remain separate gates. Inherited Beta raid limits remain open.
+
+## Retained authored-ingress review — completed 2026-09-07T10:22:44Z
+
+The following review-time status is retained; its later six-pair startup result is recorded above.
 
 Current production digest:
 `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.

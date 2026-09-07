@@ -26,16 +26,18 @@ source, not an observed selection or proved cause. The first cold-load checker r
 unrecognized exact enabled-mod list token; that recognizer is corrected, diagnostics remain
 unfiltered, and the original failure is retained. [Native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
 
-The current replacement prepares one camp after full `GetZone` completion, before founder
+### Retained startup checkpoint — `1c1c2bc` / `7e3fb752…`
+
+The startup replacement prepares one camp after full `GetZone` completion, before founder
 placement, then refreshes only the native reachability cache. Physical readiness guards remain.
 The `e922…` checkpoint passed four compile modes+ABI,13602/4989 managed cases and501 Tools tests,
 but its actual canyon boot refused the heart's ingress lane after successful camp preparation.
 The current mask adds only missing endpoints `(40,16)` and `(41,16)` and keeps relocation out
 of them. An exhaustive mask test and the shipped architecture compiler/entrance-route test now
-cover this mismatch. Current census3045 /431,407 physical lines /1414 direct-XRL /zero cap
+cover this mismatch. Retained census3045 /431,407 physical lines /1414 direct-XRL /zero cap
 failures, digest `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
-Current compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable,
-zero skips, and Tools69769 passes501 tests. At seed `#43101`, all six current profile/advisor
+Retained compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable,
+zero skips, and Tools69769 passes501 tests. At seed `#43101`, all six profile/advisor
 combinations passed genuine boot/save/cold-load milestones, with exact heart/stock/IDs/clocks
 preserved and no replay. All six strict save checks and six strict load file checks pass by
 11:25UTC. All owned stops and idle checks pass. Earlier greens
@@ -43,8 +45,25 @@ are not relabeled. Full QSB1 ordinary-play acceptance and QSB2–5 remain requir
 The automated boundary is real save, exact-owned process Kill and cold load; graceful in-game
 Quit remains unautomated. Neither this developer route nor its checker signs ordinary play,
 Steam delivery of the correction, or release acceptance.
-Separate open stock-custody finding: repeated child references can inflate initial quantity
-totals; absent top-level heart/grants remain refused. The entrance fix does not close this gap.
+Retained stock-custody finding: repeated child references could inflate initial quantity totals;
+absent top-level heart/grants remained refused. The separate stock correction below closes this gap.
+
+### Current stock-hardening snapshot — 2026-09-07
+
+Follow-on reference-identity guards are now integrated separately, digest
+`9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`;
+two actual creator groups include duplicate-child negatives and exact fixture restoration.
+Independent review cleared the source after a pre-injection callback-owner reproof was added.
+Current compile73169 TERMINAL0 passes all four C#7.3 modes and ABI across 3046 production C# sources:
+ordinary3042/3046, developer3156/3160 with114 Harness shards. Managed47358 TERMINAL0 passes13625
+Taf/5012 Portable, zero skips. Census:431,441 physical lines/1414 direct-XRL imports/zero cap failures. The generated
+cold-install inventory contains 3077 files; it does not prove installation or subscription.
+Tools73664 TERMINAL0 passes501 tests and the exact structural `--release` gate passes.
+Native49420 TERMINAL0 passes16 synthetic creator/custody groups, including duplicate-child
+negatives inside both creator groups, actual verifier refusal and healthy fixture restoration.
+Exact-owned PID5068 stop, root idle check and canonical no-allowance Player.log check pass.
+This is component-native proof, not a new six-combination startup matrix, component save/load,
+or current ordinary subscriber acceptance. See [stock validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
 
 ## Retained pre-upload census — not current correction signoff
 

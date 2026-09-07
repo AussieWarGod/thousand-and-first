@@ -20,25 +20,29 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The current isolated draft census reports 3045 staged production C# files and 431,407 physical lines,
+The current isolated draft census reports 3046 staged production C# files and 431,441 physical lines,
 with 0 at or above the strict 300-line cap. It contains 1414 files with direct `XRL` imports;
 0 of those exceed the line limit. Exact staged source inventory digest:
-`7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
-The generated staging list contains 3076 files; it does not prove current
-installed or subscribed content. The latest two-file correction shares the original preparation
-mask and adds only the authored heart ingress endpoints (40,16) and (41,16). Current compilation,
-managed and native validation are pending; run results live in [STATUS](STATUS.md).
-Retained e922-source strict four-mode compilation99684 and ABI checks pass:
-ordinary3041/3045, developer3154/3158,113 Harness shards. Its full managed17349 passes13602/4989
-with zero skips; Tools92298 passes501. That source's canyon native boot refused first-heart
-public ingress despite one camp pass and a reachable start. These outcomes do not sign the new
-ingress mask. Earlier6010 marsh save/cold-load passes remain older-source evidence.
-Historical nested archive and103 retained real serializer cases pass;
-full historical-save, current Quickstart boot/save/reload and ordinary-gameplay acceptance remain
-open. The ingress fix is source-only until fresh native verification; structural signoff does
-not resolve the observed startup refusal.
-The exact-inventory semantic review is now bound in `docs/STRUCTURE_REVIEW.json`; the structure
-release gate passes. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) retain earlier
+`9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
+The generated staging list contains 3077 files; it does not prove installed or subscribed content.
+The [complete stock bridge](/tmp/taf-quickstart-stock-structure.E4chRX/stock-production-bridge.md)
+compares every current path against actual Git blobs from clean startup commit
+`1c1c2bc54b4d11f0912f210b39baa89e635c157d`:3044 unchanged,one modified,one added,no removals.
+Only the two stock production files received fresh scoped review; unchanged files inherit the
+retained review chain, not a fresh deep read. A callback-free physical-child identity rule now
+guards initial food/material totals; legitimate stacks, continuation and saved protocols remain
+unchanged. Developer alias-fixture review remains separate from this production binding.
+
+Retained startup digest `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`
+passed all six actual profile/advisor boot/save/cold-load pairs and all twelve strict save/load
+checkers, with exact owned stops and independent idle checks. Its four-mode/ABI compile21734,
+managed21635 13603/4990 zero skips and Tools69769 501 passes are prior-byte evidence, not stock
+correction validation. This review claims no complete current stock compile, managed or native
+pass. See [STATUS](STATUS.md) and [retained native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
+Historical serializer evidence remains retained; ordinary rendered play, graceful Save-and-Quit
+and desktop Quit, corrected subscribed delivery, full historical saves and public release remain
+separate gates. `docs/STRUCTURE_REVIEW.json` binds the current structural review; root-run gates
+remain separate. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) preserve inherited
 review provenance and open functional limits. This is not the complete release gate.
 
 ## Retained beta hardening checkpoint — `7d331fe8`
