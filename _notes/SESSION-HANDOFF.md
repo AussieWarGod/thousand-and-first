@@ -12,10 +12,11 @@ Repository71120 passes501 tooling tests and all repository audits. Hosted checks
 Evidence `/mnt/c/taf-master-growth-native.sP00c6/README.md`. Public0.3.1 unchanged.
 Main PR6 squash-merged to main as `be3f13a` at 2026-09-07T22:34:54Z; hosted run34167157170
 passed repository-audit and the full pure/portable lanes on ubuntu-latest and windows-latest.
-Main protection now has `enforce_admins` ON and no longer requires an approving review — the
-sole collaborator can never approve their own PR, so that rule was unsatisfiable. Required
-checks, linear history, no force-push, no deletion and conversation resolution remain; merges
-stay squash-only with delete-branch-on-merge, and no `dev` branch exists yet. Tag `v0.3.1`
+The pull-request review requirement was removed entirely (the sole collaborator can never
+approve their own PR); PR-based integration is now policy, enforced by the required status
+checks, linear history and `enforce_admins`, which is now ON. Required checks, linear history,
+no force-push, no deletion and conversation resolution remain; merges stay squash-only with
+delete-branch-on-merge, and no `dev` branch exists yet. Tag `v0.3.1`
 still targets `a46b5ad` and main is one squash commit ahead. Never direct-push main/tag or
 bypass required checks.
 

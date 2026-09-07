@@ -22,11 +22,12 @@ delete-branch-on-merge policy; merges remain squash-only and no rulesets exist. 
 34167157170 on `be3f13a` passed repository-audit and the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`.
 
-Main's branch protection changed the same day. The required approving review (1, code-owner) was
-removed because the sole collaborator can never approve their own pull request, leaving that rule
-unsatisfiable; `enforce_admins` is now ON. Required checks (repository-audit, plus the full pure
-and portable test lanes on `ubuntu-latest` and `windows-latest`, strict), linear history, no
-force-push, no deletion and required conversation resolution all remain. No `dev` branch exists
+Main's branch protection changed the same day. The pull-request review requirement was removed
+entirely (the sole collaborator can never approve their own PR); PR-based integration is now
+policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
+ON. Required checks (repository-audit, plus the full pure and portable test lanes on
+`ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
+required conversation resolution all remain. No `dev` branch exists
 yet, so the branch model in [RELEASING.md](RELEASING.md#branch-model) is still a proposal. Earlier
 sections below record the pre-merge state at their own checkpoints and are not restated here.
 
