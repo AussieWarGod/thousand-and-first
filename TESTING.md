@@ -7,7 +7,17 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current recovery correction — two native cases passed
+## Current combined recovery/guard validation
+
+Full licensed Windows93430 passes13,669 main and5,047 Portable cases, zero skips.
+Canonical compile56568 passes ordinary3043/3047 and developer3171/3175 with128 Harness
+shards, all four C#7.3 modes plus installed ABI. Native2155 passes the new bound/paused
+case28d.3 and combined destruction-veto case28b.3, with strict raw logs, exact owned stops
+and all3175 source bytes matching both sealed profiles. This is scoped component evidence,
+not ordinary heartbeat, rendered UI or save/load acceptance. Final repository/hosted checks
+remain separate. [Combined evidence](/mnt/c/taf-raid-recovery-guards-native.6Dnfup/README.md).
+
+## Retained recovery checkpoint — two native cases passed
 
 Canonical compile51408 passes all four C#7.3 modes plus installed ABI across 3047 production C# sources:
 ordinary3043/3047, developer3167/3171,124 Harness shards. The generated
@@ -16,8 +26,12 @@ Strict structural binding passes at `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702
 Native51235 passes cases28d.1–28d.2 in separate sealed fresh profiles: actual late destruction
 veto preserves Active, returned live original refuses Ready turn-in, and actual final removal
 permits one completion with no repeat. Strict raw logs and exact owned stops pass.
-Paused explicit completion, same/foreign bound refusal, ordinary turns and save/load remain
-separate coverage. [Evidence](/mnt/c/taf-raid-recovery-fixed.FaVvXv/README.md).
+These two cases exclude paused/bound guards, ordinary turns and save/load.
+[Evidence](/mnt/c/taf-raid-recovery-fixed.FaVvXv/README.md).
+Separate case28d.3 now passes actual same/foreign bound zero-scan refusal and paused explicit
+completion at17:52:27UTC, seed#1012034, fresh3lgp4w, with strict log and owned stop. Positive
+controls calibrate both capture/GetObjects observers. Ordinary heartbeat, resume and save/load
+remain unsigned. [Guard evidence](/mnt/c/taf-raid-recovery-guards-native.6Dnfup/README.md).
 
 ## Retained Quickstart regression — six native combinations exercised
 
@@ -1394,6 +1408,7 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
 | 28d.1 | In an isolated native fixture, earn actual plunder and accept recovery; kill two originals and veto the final original's real destruction once | Recovery stays Active with no Ready proof while the exact last body remains. After disarming the veto and actual removal, a normal seat wake earns Ready; explicit turn-in resolves once. Baseline premature-Ready failure and corrected native PASS are retained separately; no ordinary-play or save/load claim |
 | 28d.2 | Earn Ready by physically displacing the final surviving original into a preloaded foreign zone and activating the target; return that same original alive and immediately attempt explicit turn-in | Turn-in refuses with Ready wire, quest and wound unchanged. Genuine final removal then permits one completion. Baseline accepted a live survivor; corrected native51235 proves refusal and final completion. This is not historical save/load evidence |
+| 28d.3 | Earn Ready through real contact, acceptance, three actual deaths and activation; bind actual same-zone and foreign-zone custody surveys separately, then dispose them and disable the real master option | Each bound turn-in and fresh-capture request refuses with unchanged Ready/quest/wound/water and zero actual custody/GetObjects entries, after calibrated positive controls. Every binding disposes without residue. Paused automatic wake refuses; unbound explicit completion succeeds once and repeat is unchanged. Native case passed17:52UTC; ordinary heartbeat and save/load remain separate |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
 

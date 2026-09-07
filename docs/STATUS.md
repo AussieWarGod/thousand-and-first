@@ -13,6 +13,35 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased native bound/paused recovery guards, case28d.3
+
+Recovery checkpoint25959e7 normally rebased to6d70a03 on integration1ce9960; only the
+already-reviewed PR10 test/doc delta was added, production digest6dbd remains unchanged.
+New developer-only guard provider/checks calibrate actual custody/GetObjects entry observers,
+exercise same/foreign bound refusals with finally-disposal, then request the actual master
+pause and attempt explicit completion. Four source-only wiring cases and a73rd persona are
+registered;56 persona tests pass. Combined compilation, full suites and scoped native cases
+pass as recorded below. Final repository/hosted checks are separate integration gates.
+No new public release is claimed.
+
+Subsequent actual guard case passed at17:52:27.241UTC, seed#1012034, fresh sealed
+`/mnt/c/taf-scenario.3lgp4w`. Each same/foreign positive control observed one custody capture
+and one native GetObjects entry; all four bound refusal windows observed zero. Actual
+bindings disposed with no residue and unchanged Ready/quest/wound/water. Real option pause
+and disabled wake observed zero captures; explicit paused completion observed one fresh
+capture, resolved once, removed the wound and left repeat unchanged. Strict raw log passed;
+receipt-ownedPID41892 stopped. Combined veto case also passed at17:54:57.244UTC in fresh
+`/mnt/c/taf-scenario.vnBL4b`: exact live veto/pending authority, actual retry removal, one
+RaidersDefeated result,240water/zero plunder/three mints and unchanged repeat/clock. Strict
+log and receipt-ownedPID43796 stop pass; native runner2155 TERMINAL0 covers both cases.
+Compile56568 TERMINAL0 passes ordinary3043/3047 and developer3171/3175 with128 Harness
+shards, all four C#7.3 modes plus installed source/ABI checks. Full licensed Windows93430
+TERMINAL0 passes13,669 main and5,047 Portable cases, zero skips. Exact source comparisons
+33144/61340 prove all3175 current production/Harness bytes match both sealed native profiles.
+Final repository audit65692 is running; no pending check is treated as passed.
+Evidence `/mnt/c/taf-raid-recovery-guards-native.6Dnfup`. This signs controlled native API
+seams, not an ordinary heartbeat, rendered popup, resume, save/load or full Beta acceptance.
+
 ## Unreleased recovery absence correction, cases28d.1–28d.2
 
 Current candidate makes RaiderDying inert, moves automatic readiness to an unbound
@@ -70,7 +99,8 @@ actual final removal then permits one completion. Both retain216drams,24plunder,
 original mints and unchanged repeats. Both strict raw logs passed; receipt-ownedPIDs40344
 and8108 stopped, with profiles/seals retained. Evidence:
 `/mnt/c/taf-raid-recovery-fixed.FaVvXv`. This is synthetic component evidence only.
-Paused completion and same/foreign bound native refusal remain separate unsigned cases.
+These two cases do not cover paused completion or bound refusal; case28d.3 above has its
+own later native receipt and is not inferred from this earlier two-case result.
 
 ## Retained unreleased native destruction-veto regression, case28b.3
 

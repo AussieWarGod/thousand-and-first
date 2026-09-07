@@ -366,6 +366,7 @@
     <Compile Include="KingdomRaidRecoveryDeathNativeSourceTests.cs" />
     <Compile Include="KingdomRaidRecoveryReturnNativeSourceTests.cs" />
     <Compile Include="KingdomRaidRecoveryBoundarySourceTests.cs" />
+    <Compile Include="KingdomRaidRecoveryGuardsNativeSourceTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />
