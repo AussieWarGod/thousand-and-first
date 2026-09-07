@@ -57,6 +57,11 @@ below it.
 
 ## [Unreleased]
 
+- Add a real-engine last-raider destruction-veto regression: cancelled destruction and
+  zone activation preserve pending authority; genuine death retry resolves once with
+  unchanged water and no duplicate result. Native outputs are retained. This adds only
+  developer tests; no production or save-format changes. Full licensed suites and all
+  four compile modes pass; ordinary turn-driven play and save/load remain separate gates.
 - Defer active raid defeat resolution until normal inspection after actual body removal.
   Pre-removal death callbacks can still be vetoed and no longer advance or quarantine the
   attack. No save-format or shared recovery/counting change. Native reproduction retained;

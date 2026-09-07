@@ -13,7 +13,37 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased native raid-death correction, case28b.1
+## Unreleased native destruction-veto regression, case28b.3
+
+No further production changes. Dependency tree equals tested death fix87c4992, normally
+merged by PR9 into integration a4d61a9. Public0.3.1 remains unchanged; main PR6 still
+requires an eligible approving review. New developer-only veto provider/checks and persona
+have independent source review and four source-wiring tests passing in each managed project;
+all56 persona tests pass. Full licensed Windows84737 TERMINAL0 then passed13,654 main
+and5,032 Portable cases with zero skips, after normal Windows rebuild of both projects.
+Canonical compile59060 TERMINAL0 passed ordinary3042/3046 and developer3164/3168 inputs,
+all122 Harness shards, plus installed Hearthpyre source/ABI checks.
+
+Native13639 TERMINAL0 passed at16:26:23UTC, seed#1012030, fresh profile
+`/mnt/c/taf-scenario.EWGCdc`. Two originals died normally. The final original's real
+BeforeDestroyObjectEvent was vetoed after observed RaiderDying entry/exit; exact body,
+cell, marker, IDs and pending authority remained, with no originating/global graveyard
+membership. Actual activation preserved the pending attack. After disarming the retained
+veto part, actual Die retry removed that original into its originating graveyard; actual
+activation produced one RaidersDefeated proof and repeat left authority unchanged.
+All four Die calls retained240drams, zero plunder, three total mints and unchanged clock.
+Strict raw log and nine expected journal rows passed; only ownedPID39884 was stopped.
+Evidence: `/mnt/c/taf-raid-veto-proof.iKyt6v`. Native profile hashes match frozen sources.
+
+This is controlled same-process developer evidence, with synthetic graveyard retention
+headroom256→272 and native drops/unequips retained. It does not prove ordinary turn-driven
+play, earlier BeforeDie veto paths, recovery, save/load or general scene immutability.
+Final repository audit11966 TERMINAL0 passed501 tests in47.967s, canonical3077-file
+cold-install verification, documentation and unchanged structural binding. Normal PR
+integration remains open. Current production bytes and exact structural binding are
+unchanged; neither native case signs full Beta acceptance.
+
+## Retained unreleased native raid-death correction, case28b.1
 
 Actual native death run12835 exposed final-raider quarantine: `RaiderDying` advanced
 the attack before engine removal, then terminal inspection counted that same still-present
