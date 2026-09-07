@@ -7,7 +7,23 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current combined recovery/guard validation
+## Current real-turn recovery validation
+
+Full licensed Windows1901 passes13,673 main/5,051 Portable cases, zero skips. Canonical7819
+passes ordinary3043/3047 and developer3173/3177,130 Harness files, all four C#7.3 modes
+plus installed Hearthpyre source/ABI. Production digest6dbd and its structural binding remain
+unchanged. Four source-only wiring cases support a74th persona;56parser tests pass.
+
+`Tools/run-personas.sh raid-recovery-turn-native-check` seals setup, actual `advance 1`,
+and post-turn checks between two stage digests. Native59966 passed one actual EndTurn and
+one enclosed raid wake: Active->Ready once, then explicit completion once/refused repeat.
+All3177source bytes match sealed profileZt98Jg; strict raw log,12journalrows and exact owned
+stop pass. This seed does not execute multi-turn overshoot or extra same-pass wakes.
+Repository/hosted integration gates remain separate. Ordinary rendered play, master resume
+and save/load are not signed by this controlled case.
+[Real-turn evidence](/mnt/c/taf-raid-recovery-turn-native.X0VMU8/README.md).
+
+## Retained combined recovery/guard validation
 
 Full licensed Windows93430 passes13,669 main and5,047 Portable cases, zero skips.
 Canonical compile56568 passes ordinary3043/3047 and developer3171/3175 with128 Harness
@@ -1409,6 +1425,7 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28d.1 | In an isolated native fixture, earn actual plunder and accept recovery; kill two originals and veto the final original's real destruction once | Recovery stays Active with no Ready proof while the exact last body remains. After disarming the veto and actual removal, a normal seat wake earns Ready; explicit turn-in resolves once. Baseline premature-Ready failure and corrected native PASS are retained separately; no ordinary-play or save/load claim |
 | 28d.2 | Earn Ready by physically displacing the final surviving original into a preloaded foreign zone and activating the target; return that same original alive and immediately attempt explicit turn-in | Turn-in refuses with Ready wire, quest and wound unchanged. Genuine final removal then permits one completion. Baseline accepted a live survivor; corrected native51235 proves refusal and final completion. This is not historical save/load evidence |
 | 28d.3 | Earn Ready through real contact, acceptance, three actual deaths and activation; bind actual same-zone and foreign-zone custody surveys separately, then dispose them and disable the real master option | Each bound turn-in and fresh-capture request refuses with unchanged Ready/quest/wound/water and zero actual custody/GetObjects entries, after calibrated positive controls. Every binding disposes without residue. Paused automatic wake refuses; unbound explicit completion succeeds once and repeat is unchanged. Native case passed17:52UTC; ordinary heartbeat and save/load remain separate |
+| 28d.4 | In a sealed synthetic world, earn Active recovery through actual contact/acceptance, remove all three originals through actual death, then use the existing real-engine `advance 1` | Every observed EndTurn is contiguous and agrees with both elapsed clocks. First unbound raid wake earns Ready once; subsequent observed boundaries retain that proof. Actual explicit completion resolves once, clears the wound and rejects repeat without advancing the post-turn clock. Native59966 passed one dispatch/one wake; overshoot, additional wakes, ordinary rendered play and save/load remain separately scoped |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
 
