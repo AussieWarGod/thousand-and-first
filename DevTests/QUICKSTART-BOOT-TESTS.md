@@ -4,6 +4,44 @@ These developer-only checks select the real `KingdomQuickstart` mode and its pro
 location. They do not select `TAFScenario`, run `KingdomScenarioAutoRunner`, strip the zone,
 advance a synthetic receipt, invent a heart rung, or call the bootstrap a second time.
 
+## Recorded execution and current scope
+
+On 2026-09-07, retained6010 sources passed genuine `marsh yes` and `marsh no`, seed `#43101`,
+through boot, actual SaveGame and separate cold load. Strict result checks, exact-owned stops
+and idle checks pass. `canyon yes` refused before saving on valid `Garbage` at `(28,10)`.
+A post-builder Rusty population is a possible origin, not a witnessed selection or proved cause.
+The initial cold-load checker did not recognize the real exact enabled-mod list token; the
+narrow recognition fix preserves all diagnostic scans, and both load checks now pass. Earlier
+refusals remain retained. [Execution evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
+
+The current replacement runs one camp after full `GetZone` completion, before founder placement,
+and refreshes only the native reachability cache. That checkpoint passed four compile modes+ABI,
+13602/4989 managed cases and501 Tools tests, but canyon still refused normal founding's ingress
+lane. Current correction includes missing endpoints `(40,16)` and `(41,16)` in preparation,
+readiness and relocation exclusion; shipped-layout and exhaustive mask regressions are added.
+Current compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable,
+zero skips, and Tools69769 passes501 tests. All six current selections at seed `#43101` passed
+actual boot/save/cold-load milestones with unchanged heart/stock/IDs/clocks and no replay.
+All six strict save checks and six strict load file checks pass by11:25UTC. All owned stops and
+independent idle checks pass. Earlier native pairs are not
+reused to sign these bytes. Ordinary play, graceful Quit, Steam delivery and QSB2–5 are not
+closed. [Current status](../docs/STATUS.md).
+
+| Location / advisor | Boot and save profile | Separate cold-load profile | Strict save / load |
+|---|---|---|---|
+| canyon / yes | `vrVt20` | `xQForF` | PASS / PASS |
+| dunes / yes | `aQWw2S` | `qUJ2Qp` | PASS / PASS |
+| canyon / no | `ETnPK2` | `kU3dbE` | PASS / PASS |
+| dunes / no | `plhYgy` | `rgg8XJ` | PASS / PASS |
+| marsh / yes | `PuTS15` | `FisZj9` | PASS / PASS |
+| marsh / no | `n021IW` | `bUZ7Pr` | PASS / PASS |
+
+Each profile remains at `/mnt/c/taf-scenario.<suffix>`, with its separate seal. Exact journals,
+logs, save hashes, process-ownership/stop evidence and checker verdicts remain in the linked
+execution evidence. All3158 source-profile C# inputs match the actual developer compatibility
+compiler inputs. Later documentation edits are outside that C# proof: this is not an exact final
+Workshop-package receipt or a multiple-seed gameplay acceptance claim.
+
 ## Prepare and run
 
 First pass the canonical compile gate. Prepare a fresh dedicated profile for each combination of
@@ -20,8 +58,8 @@ The explicit advisor override must match the command and generated `PlayerOption
 are sealed before launch. The seed comes from the existing frozen descriptor, but that
 descriptor's scenario request is not published into the real Quickstart game. Use the launcher
 command printed by preparation only after the current game is safely stopped. Never close an
-unapproved user session or reuse an already spent profile. No profile has been launched for
-this new route yet.
+unapproved user session or reuse an already spent profile. Retain the executed profiles above;
+prepare new ones for changed source or observer bytes.
 
 The existing developer menu autostart selects the real mode, applies the ordinary pregen and
 frozen seed, and chooses the actual production location after the last creation window.
@@ -36,7 +74,10 @@ in the run. The observation occurs after the exact non-generic
 `EmbarkInfo.fireBootEvent(string, XRLGame)` has finished `GAMESTARTING`. Completion is rechecked
 after the rest of `EmbarkInfo.bootGame`, including later `EmbarkEvent("BootGame")` callbacks.
 
-Checks cover one real world-extension/camp/bootstrap invocation, the already placed founder and
+Checks cover one real world-extension/camp/bootstrap invocation: the camp sees the completed
+Built zone before player placement, then bootstrap sees that same zone and the actual founder
+at `(40,12)`. The observer records start-cell reachability before preparation and requires it
+afterward; this is not proof of safe escape or general traversal. Other checks require an
 initially absent Quickstart receipt, correct seed/profile/mode/options, exact founded heart,
 canonical Complete receipt, no quarantine, no scenario runner/request, single physical grant
 identities, and initial quantities:24 drams,12 meals,1 mud/3 brush/4 timber. Advisor decision must
@@ -48,7 +89,7 @@ separate command below; ordinary-play acceptance and subscriber-package checks r
 The offline [readiness diagnostic](EngineQuickstartReady/README.md) remains blocked by Unity
 initialization and is not substituted for this route.
 
-## Saved-world continuation — implemented and compiled, not run
+## Saved-world continuation — genuine six-combination matrix
 
 Prepare another fresh profile with `TAF_SCENARIO_SCRIPT='quickstart-save marsh yes'` and the same
 explicit matching advisor override. All six profile/advisor combinations remain required.
@@ -81,7 +122,7 @@ Any refusal, missing/duplicate/out-of-order milestone, changed sealed input or f
 hash is a failed or incomplete run, never native acceptance.
 
 The process-control tool stops its exact owned process by killing it, not by invoking the game's
-Quit command. A completed test would prove real save → owned process exit → cold reload;
+Quit command. The current matrix exercises real save → owned process exit → cold reload;
 graceful in-game Quit remains separate coverage. Any new observer requires fresh sealed source
 and load profiles. The already prepared boot-only profile must not be silently modified.
 

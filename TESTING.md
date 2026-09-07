@@ -6,7 +6,7 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current Quickstart regression — native acceptance pending
+## Current Quickstart regression — six native combinations exercised
 
 Private0.3.1 failed actual new-game startup: readiness rejects the placed founder, and a
 follow-on verification incorrectly requires an already completed heart. See
@@ -17,18 +17,34 @@ founder regression. Two new source-contract assertions pin the intended calls on
 QSB1 must cover all three genuine starts with advisor on/off and save/reload; do not preseed
 the founding/rung/receipt or use the scenario runner's ground-clearing step on that world.
 
-The [genuine boot/save/cold-load route](DevTests/QUICKSTART-BOOT-TESTS.md) is implemented and compiled, not run.
-It observes the real world/camp/bootstrap hooks and checks exact heart, physical grants and
-receipt after all boot callbacks, then optionally saves the actual game and verifies a separate
-cold load without bootstrap replay. Current source passes all four C#7.3 modes+ABI; the current
-managed/tool run state is recorded in [STATUS](docs/STATUS.md), not inferred from older totals.
-Production inventory:
-3045 sources /431,188 physical lines /1414 direct-XRL /zero line-cap failures, digest
-`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
-Ordinary compiler inputs3041/3045; developer3154/3158,113 Harness shards. These component/source
-results do not close QSB1. A fresh sealed marsh/advisorYes save profile is prepared, unlaunched.
+The [genuine boot/save/cold-load route](DevTests/QUICKSTART-BOOT-TESTS.md) has now executed.
+At the retained6010 scheduling checkpoint, `marsh yes` and `marsh no`, seed `#43101`, both pass
+real boot, SaveGame and separate cold load with unchanged state and no bootstrap replay. Exact
+owned stops, idle checks and strict result checks pass. `canyon yes` at the same seed refuses
+before saving: valid `Garbage` remains at `(28,10)`. A late Rusty-biome population is a possible
+source, not an observed selection or proved cause. The first cold-load checker refusal was an
+unrecognized exact enabled-mod list token; that recognizer is corrected, diagnostics remain
+unfiltered, and the original failure is retained. [Native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
+
+The current replacement prepares one camp after full `GetZone` completion, before founder
+placement, then refreshes only the native reachability cache. Physical readiness guards remain.
+The `e922…` checkpoint passed four compile modes+ABI,13602/4989 managed cases and501 Tools tests,
+but its actual canyon boot refused the heart's ingress lane after successful camp preparation.
+The current mask adds only missing endpoints `(40,16)` and `(41,16)` and keeps relocation out
+of them. An exhaustive mask test and the shipped architecture compiler/entrance-route test now
+cover this mismatch. Current census3045 /431,407 physical lines /1414 direct-XRL /zero cap
+failures, digest `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
+Current compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable,
+zero skips, and Tools69769 passes501 tests. At seed `#43101`, all six current profile/advisor
+combinations passed genuine boot/save/cold-load milestones, with exact heart/stock/IDs/clocks
+preserved and no replay. All six strict save checks and six strict load file checks pass by
+11:25UTC. All owned stops and idle checks pass. Earlier greens
+are not relabeled. Full QSB1 ordinary-play acceptance and QSB2–5 remain required.
 The automated boundary is real save, exact-owned process Kill and cold load; graceful in-game
-Quit remains unautomated. Neither this developer route nor its checker signs ordinary play.
+Quit remains unautomated. Neither this developer route nor its checker signs ordinary play,
+Steam delivery of the correction, or release acceptance.
+Separate open stock-custody finding: repeated child references can inflate initial quantity
+totals; absent top-level heart/grants remain refused. The entrance fix does not close this gap.
 
 ## Retained pre-upload census — not current correction signoff
 

@@ -103,9 +103,9 @@ namespace ThousandAndFirst
 					Failure = "A realm existed before the quickstart receipt reserved its first step.";
 					return false;
 				}
-				if (!KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder))
+				if (!KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder, out string groundFailure))
 				{
-					Failure = "The bounded heart apron or supply path was not safely prepared.";
+					Failure = "The bounded heart apron or supply path was not safely prepared: " + groundFailure + ".";
 					return false;
 				}
 				if (!KingdomQuickstartRules.TryCreateReceipt(profile.Key, zone.ZoneID,

@@ -1,15 +1,91 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-06T22:26:47Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T10:22:44Z. This records structural semantics, not release acceptance.
 
-## Current Quickstart correction
+## Current authored-ingress Quickstart correction
 
 Current production digest:
+`7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
+The [authored-ingress bridge](/tmp/taf-quickstart-native.sYl4Dz/ingress-production-bridge.md),
+report SHA256`a49e7ddaf8b7672f772e4f73b4a764997f0700103d494bcdebb01163baa0158a`, enumerates
+all3045 paths/hashes:431,407 physical lines,1414 direct-XRL files,zero files at or above300.
+Canonical complete inventories derive3043 unchanged/two modified against the reachable review,
+3041 unchanged/four modified against dbad70c,3038 unchanged/seven modified against frozen8687337;
+all three comparisons have zero additions/removals. Committed dbad70c blobs independently match
+all3045 prior hashes. Unchanged files inherit the preceding scoped reviews, not a fresh deep read.
+
+Root and independent scoped reviewers inspected the complete two-file delta. The internal pure
+Core mask retains the original apron, supply and approach comparisons and adds only (40,16) and
+(41,16). CampBuilder delegates its existing Required boundary: preparation, both readiness paths
+and relocation-destination exclusion therefore agree on those authored heart ingress endpoints.
+No move/clear policy, ownership guard, receipt, serialized field, callback guard, native custody
+authority or retry mechanism changes. Core SHA256`309146938a714652629dfc038a3f866a8ebceccb2859690b1e0a0acda4e3e225`;
+CampBuilder SHA256`273d593c2ca7d4e714ef3bb8fcb3f5d4e7d0fdd858ca4a7ea1a459566e66b70b`.
+The prior completed-zone seam, cache-only limits and exact first-heart protections retain their
+reviewed bytes. No remaining Required source finding identified within this bounded delta.
+
+Fresh current compilation, managed and native validation are pending at this update. Existing
+mask fixtures are not reported executed by this source review. The retained e922-source compile,
+test and native outcomes below do not sign this ingress correction. In particular, its canyon
+world1/camp1/reachable-start result still refused physical public ingress; it is not a corrected
+native pass. Older6010 marsh save/cold-load greens remain bound to their own sources. Current
+boot/save/reload, ordinary play, subscriber delivery and public release remain separate gates;
+unchanged uploaded private0.3.1 bytes must not be promoted. Developer Harness and inherited raid
+functional limits are outside this production structural signoff.
+
+## Retained completed-zone review — completed 2026-09-07T10:14:01Z
+
+Retained production digest:
+`e922d28283394fcb5d440c5436e9b4806524a55f93b9535ed151f8c7b13d3799`.
+The [completed-zone and reachability bridge](/tmp/taf-quickstart-native.sYl4Dz/reachable-production-bridge.md),
+report SHA256`6a326c4a7222a56503cd65911b4abac17ccba00053328dba814cc82169c83d5a`, enumerates
+all3045 then-current paths/hashes:431,399 physical lines,1414 direct-XRL files,zero files at or above300.
+Against committed dbad70c and the retained five-file review below:3042 unchanged,three modified,
+no additions or removals. Against frozen8687337:3039 unchanged,six modified,no additions or
+removals. All3045 prior inventory hashes were independently matched to committed dbad70c blobs.
+Unchanged files inherit review; neither this bridge nor this signature claims a fresh deep read
+of them. The first-heart seal, raw-name observation and verification delegation retain their
+exact earlier reviewed bytes.
+
+Root and scoped independent reviewers read the complete latest three-file production delta.
+Bootstrap forwards the first readiness refusal before receipt publication. CampBuilder retains
+the exact-founder exception, foreign-object restrictions and bounded raw diagnostics without
+relaxing admission. EmbarkModule replaces queued camp registration with one consumed transient
+attempt: exact game/manager/player/profile/reservation and unplaced-founder proofs surround
+GetZone and one existing camp pass after completed generation. Exact Built-zone/cache ownership
+is reproved. Duplicate or reentrant events cannot obtain another preparation. GAMESTARTING
+admits the existing bootstrap once only after the exact transient success proof; failure creates
+no receipt. No new serialized state, game-state key, wire protocol or second camp authority exists.
+
+The final native BuildReachableMap call preserves the bitmap, adds wall-connectivity bits, then
+requires a reachable start, physical readiness and exact owner/unplaced facts before success.
+It may update cache bits outside the apron within the bounded zone; it neither clears physical
+objects nor proves safe traversal or whole-zone liquid safety. Engine RNG-output equivalence is
+not claimed. EmbarkModule SHA256`34b743c4f99ef52f88a70ed272018bd509ef0e70ffef1cde3efc2c13e6519342`.
+No remaining Required source finding was identified within this three-file boundary review.
+
+Retained strict compile99684 passes all four modes+ABI:3041/3045 ordinary and3154/3158 developer
+inputs. Tools92298 passes501 cases. Full managed17349 subsequently completed terminal0 with
+13,602 main/4,989 Portable passes,zero skips. These results bind this e922 checkpoint, not the new
+ingress correction, and remain separate from native acceptance.
+
+The e922-source canyon native boot refused normal first-heart preparation with an authored public
+ingress lane physically blocked or outside the zone, despite one camp pass and a reachable start.
+Fresh verification of the source correction above remains open. Earlier6010-source marsh boot/save/cold-load passes are
+retained history, not evidence for this completed-zone/cache source. The bridge itself is
+source-only and predates that native result; see [native evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
+Current genuine boot/save/reload, ordinary play, subscriber delivery and public release remain
+separate gates. The unchanged uploaded private0.3.1 bytes must not be promoted. This binding does
+not approve developer Harness code or close inherited unrelated raid defects.
+
+## Retained five-file Quickstart review — completed 2026-09-06T22:26:47Z
+
+Retained production digest:
 `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
 The [five-file bridge](/tmp/taf-quickstart-founder-proof.3xBBuF/production-bridge.md), report
 SHA256`7d2ba35c7c5aa7b51976f8e5456e9747558e56db5e9411e954727d2385892a9d`, enumerates all3045
-current paths/hashes and proves3040 unchanged,five modified,no additions or removals from
+then-current paths/hashes and proves3040 unchanged,five modified,no additions or removals from
 frozen8687337. Census431,188 physical lines,1414 direct-XRL imports,zero files at or above300.
 Unchanged sources inherit the retained review below; they are not claimed freshly deep-read.
 
@@ -22,15 +98,16 @@ reviewed display-event callback gap; older callers preserve their default behavi
 field, reader version or public API changed. No Required source finding remains in this delta.
 
 Final compile92057 passes four modes+ABI (3041/3045 ordinary,3149/3153 developer). Root byte
-comparison96558 proves every listed compiler input matches current source. Full suites24348
+comparison96558 proves every listed compiler input matches that checkpoint. Full suites24348
 pass13,521 Taf/4,908 Portable,zero skipped;470 Tools cases pass separately. Harness registration
 records actual compilation, not execution. [Evidence](/tmp/taf-quickstart-founder-proof.3xBBuF/README.md).
 
-The user reported a real startup failure in the uploaded private0.3.1 build. These source
-corrections and new developer boot observations have not run through genuine startup or
-save/reload. The offline readiness probe's3 controls/42 blocked cases are not a founder regression
-pass. Unchanged private bytes must not be promoted. Developer Harness review and native evidence
-remain separate from this production binding; inherited unrelated raid defects remain open.
+The user reported a real startup failure in the uploaded private0.3.1 build. At this retained
+review checkpoint, these corrections and developer observations had not run through genuine
+startup or save/reload. The offline readiness probe's3 controls/42 blocked cases were not a
+founder regression pass. Later native findings and source changes are recorded above, not
+retroactively assigned here. Developer Harness review and native evidence remain separate from
+production binding; inherited unrelated raid defects remain open.
 
 ## Retained pre-upload review — completed 2026-09-06T13:11:15Z
 

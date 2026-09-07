@@ -1,22 +1,43 @@
 # Session handoff — current v1.0 test-candidate work
 
-Quickstart hotfix supersedes the historical status below. Private0.3.1 reproduces empty ground
-and apron refusal after founder placement; unchanged build cannot be promoted. Exact-founder
-readiness and exact sealed/staked-heart proof are corrected without forcing rung1. Current
-compile30189 passes four modes+ABI, ordinary3041/3045 and developer3154/3158 with113 Harness.
-Production6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128,
-3045 sources/431188 lines/1414 direct-XRL/zero cap failures. Genuine boot/save/cold-load extension
-compiled but NOT RUN. Current suite states live in STATUS.md; old green counts do not sign it.
-Fresh save profile /mnt/c/taf-scenario.Vg5fz3:marsh/advisorYes,seed#43101,3196 sealed files,
-all3158C# match actual compiler inputs. Older YVP0Sf remains boot-only and unlaunched.
-All six boots and save/cold-load remain required; exact-owned Kill is not graceful Quit.
-Independent five-file production bridge clears source review and enumerates3040 unchanged
-sources. Exact-inventory structural binding and documentation freshness now pass. Local
-checkpoint only; do not substitute these gates for native acceptance or promote unchanged private bytes.
-Offline readiness probe3pass42BLOCKED at Physics Unity ECall; no real founder cases executed.
-Root owns `/tmp/taf-quickstart-roundtrip-proof.RUDnOR/README.md`; STATUS.md is current authority.
-Current ordinary game remains untouched pending permission to close the failed disposable world
-and run fresh genuine Quickstart tests. No new upload/Steam mutation/source export.
+Quickstart hotfix supersedes historical status below. User closed Qud; root now owns isolated
+native tests only. Private0.3.1 unchanged build still contains reported failure; do not promote.
+Worktree `/tmp/taf-quickstart-founder.ZsbJsI`; native execution baseline HEADdbad70c plus correction.
+Current production digest7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651,
+3045 sources/431407 lines/1414 direct-XRL/zero cap failures. Exact-founder/staked-heart guards
+remain. One camp now runs after full GetZone/beforeplacement, refreshes native reachability,
+and prepares the two authored ingress endpoints40/41,16 missed by the original footprint.
+Root+independent review clear; actual shipped architecture-route and pure-mask regressions added.
+
+Retained6010 marshyes/no both passed actual boot/save/cold-load #43101, unchangedstate/no replay.
+Samecheckpoint canyon failed Garbage28,10; actual Rusty biome selection was not witnessed.
+Later e922 canyon jAvOVQ failed normal founding's physical ingress endpoint check after
+world1/camp1/reachabilitytrue. Exactownedstop/idle passed; failedprofile/logs retained.
+e922 compile99684 fourmodes+ABI and managed17349 13602/4989 passed; old greens not current.
+Currentcompile21734 PASS fourmodes+ABI(stage3qcBKR/devxny5Tf), managed21635 PASS13603/4990,
+zero skips; Tools69769 current501tests/104.836s PASS. All six current combinations atseed43101
+passed actual boot/save/coldload milestones, exactheart/stock/IDs/clocks andno replay.
+Sources vrVt20(canyonyes),aQWw2S(dunesyes),ETnPK2(canyonno),plhYgy(dunesno),PuTS15(marshyes),
+n021IW(marshno); coldroots xQForF,qUJ2Qp,kU3dbE,rgg8XJ,FisZj9,bUZ7Pr respectively.
+All6savecheckersPASS; loadcheckers88002/33964/31822/43934/15697/17465 TERMINAL0PASS by11:25UTC.
+All6ownedloadstop+idlePASS; noQudrunning after54520 TERMINAL0 PID24732stop.
+Never patch/reuse any spent or superseded sealed profile. Root proof and all handles:
+`/tmp/taf-quickstart-native.sYl4Dz/README.md`; docs/STATUS.md owns acceptance scope.
+
+Required separate finding: duplicate stock-child references can counterfeit initial totals;
+top-level absent heart/grants are refused. Not observed canyon cause, not fixed by ingressdelta.
+QSB2–5, ordinary play, graceful in-game Quit,
+subscriber delivery and release gates remain open. Exact-owned Kill is not graceful Quit.
+No new upload, Steam mutation, release claim or source export. Root sole Windows/native operator.
+Stockalias isolatedpatch /tmp/taf-quickstart-stock-alias.O5C189/CORRECTION.patch,22pure+11source
+testsPASS. Rootfullcompile53305 andcanonicalmanaged54638 LIVE; notintegrated/noNativeproofyet.
+Managed54638 alreadyreports missing ignored_notes/CREED-KIND-EVIDENCE.md inisolatedclone;
+waitterminal, importexactrequiredlocalnotes thenretry. This is fixturedependency failure, not
+a passingfullsuite or production regression. Goalget11:25 nowACTIVE; Betaobjectiveunfinished.
+Publisher extension /tmp/taf-release-tooling.h5W29F being corrected for privateequalversion+
+unseen canonicalinventory; noactiveintegration/finalization. Old0001+submissionfreshreadback
+hashesmatchpriornotes; notleasedSDKauthority. ForegroundUI permission askedasynchronously;
+noanswer/inputyet. Externalboundedinputhelper /tmp/taf-ordinary-foreground-input.dnwmse authored.
 
 ## Historical pre-upload handoff
 

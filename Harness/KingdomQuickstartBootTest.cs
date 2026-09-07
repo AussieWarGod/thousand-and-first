@@ -19,10 +19,11 @@ namespace ThousandAndFirst.Harness
 		private static KingdomQuickstartProfile Profile;
 		private static XRLGame Game;
 		private static GameObject Founder;
-		private static Zone Zone;
+		private static Zone Zone, PreparedZone;
 		private static string Seed, Failure, ObservedReceipt;
 		private static int WorldCalls, CampCalls, RunCalls, Observations;
 		private static bool Begun, Ended, OwnSuppression, RunSucceeded, Verified;
+		private static bool? StartReachableBefore;
 
 		internal static string SelectMode(EmbarkBuilder Selected)
 		{
@@ -80,11 +81,21 @@ namespace ThousandAndFirst.Harness
 		{
 			if (Active) WorldCalls++;
 		}
+		internal static void CampEntering(Zone Built)
+		{
+			if (!Active || Built?.ZoneID != Profile.ZoneId) return;
+			if (StartReachableBefore.HasValue) Fail("camp preparation entry repeated");
+			else StartReachableBefore = Built.IsReachable(
+				KingdomQuickstartRules.StartCellX, KingdomQuickstartRules.StartCellY);
+		}
 		internal static void CampBuilt(Zone Built, bool Success)
 		{
 			if (!Active || Built?.ZoneID != Profile.ZoneId) return;
 			CampCalls++;
 			if (!Success) Fail("production camp builder refused");
+			if (CampCalls != 1 || !Built.Built || The.Player != null)
+				Fail("camp did not run once after zone generation and before founder placement");
+			PreparedZone = Built;
 		}
 
 		internal static void BeforeRun(XRLGame Current)
@@ -94,6 +105,13 @@ namespace ThousandAndFirst.Harness
 			if (!Active || !ReferenceEquals(Current, Game)) return;
 			RunCalls++;
 			Founder = The.Player; Zone = The.ZoneManager?.ActiveZone;
+			if (CampCalls != 1 || !ReferenceEquals(PreparedZone, Zone))
+				Fail("bootstrap lacks its exact completed camp; world=" + WorldCalls + "; camp=" + CampCalls);
+			bool reachable = Zone?.IsReachable(KingdomQuickstartRules.StartCellX,
+				KingdomQuickstartRules.StartCellY) == true;
+			if (!StartReachableBefore.HasValue || !reachable) Fail("prepared founder cell is not engine-reachable");
+			MetricsManager.LogInfo("[TAF] quickstart camp reachability: before=" + StartReachableBefore
+				+ "; after=" + reachable);
 			if (RunCalls != 1 || !GameObject.Validate(Founder) || Founder.CurrentCell == null
 				|| !ReferenceEquals(Founder.CurrentZone, Zone) || Zone?.ZoneID != Profile.ZoneId
 				|| Founder.CurrentCell.X != KingdomQuickstartRules.StartCellX
@@ -108,7 +126,7 @@ namespace ThousandAndFirst.Harness
 		{
 			if (!Active || !ReferenceEquals(Current, Game)) return;
 			RunSucceeded = Success;
-			if (!Success) Fail("production bootstrap refused");
+			if (!Success) Fail("production bootstrap refused; world=" + WorldCalls + "; camp=" + CampCalls);
 		}
 
 		internal static void Observe(EmbarkInfo Candidate, string Id, XRLGame Current)
@@ -223,6 +241,8 @@ namespace ThousandAndFirst.Harness
 	[HarmonyPatch(typeof(KingdomQuickstartCampBuilder), "BuildZone")]
 	internal static class KingdomQuickstartCampObservationPatch
 	{
+		[HarmonyPrefix]
+		internal static void Prefix(Zone Z) { KingdomQuickstartBootTest.CampEntering(Z); }
 		[HarmonyPostfix]
 		internal static void Postfix(Zone Z, bool __result) { KingdomQuickstartBootTest.CampBuilt(Z, __result); }
 	}

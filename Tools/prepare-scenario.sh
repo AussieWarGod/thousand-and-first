@@ -128,7 +128,6 @@ TAF_REQUEST="$REQUEST" python3 "$PROFILE_TOOL" request "$MOD/Harness/EmbarkModul
 #     parasang does not make the engine refuse, it makes zone generation crash on biome arrays that
 #     are exactly 80x25. Unset asks for and echoes the shipped default.
 START_LINE="$(python3 "$PROFILE_TOOL" start "$MOD/Harness/EmbarkModules.xml" "${TAF_SCENARIO_START:-}")"
-printf '%s\n' "$START_LINE"
 START_ZONE="${START_LINE#start zone: }"
 START_ZONE="${START_ZONE%% (*}"
 
@@ -137,7 +136,7 @@ START_ZONE="${START_ZONE%% (*}"
 python3 "$PROFILE_TOOL" manifest "$REPO/manifest.json" "$MOD/manifest.json"
 
 # 5. Options. Diagnostics on, plus the native world-seed field exposed for OPERATOR entry.
-python3 "$PROFILE_TOOL" options "$REPO/Tools/smoke/PlayerOptions.json" "$LOCAL/PlayerOptions.json"
+OPTIONS_NOTE="$(python3 "$PROFILE_TOOL" options "$REPO/Tools/smoke/PlayerOptions.json" "$LOCAL/PlayerOptions.json")"
 cp "$REPO/Tools/smoke/ModSettings.json" "$LOCAL/ModSettings.json"
 
 # 6. The script the in-game auto-runner executes on the first player turn. Written HERE, inside
@@ -173,19 +172,54 @@ fi
 python3 "$PROFILE_TOOL" seal "$LOCAL" "$SEAL_DIR/profile.sha256"
 printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 
+QUICKSTART_BANNER=""
+BANNER_COMMANDS=0
+if [ -f "$LOCAL/scenario-script.txt" ]; then
+	while IFS= read -r BANNER_LINE; do
+		case "$BANNER_LINE" in ''|'#'*) continue ;; esac
+		BANNER_COMMANDS=$(( BANNER_COMMANDS + 1 ))
+		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
+			QUICKSTART_BANNER="${BASH_REMATCH[1]}"
+			QUICKSTART_PROFILE="${BASH_REMATCH[2]}"
+			QUICKSTART_ADVISOR="${BASH_REMATCH[3]}"
+		fi
+	done < "$LOCAL/scenario-script.txt"
+fi
+if [ "$BANNER_COMMANDS" -ne 1 ]; then QUICKSTART_BANNER=""; fi
+if [ -z "$QUICKSTART_BANNER" ]; then
+	printf '%s\n' "$START_LINE" "$OPTIONS_NOTE"
+fi
 echo "SCENARIO PROFILE READY: $ROOT"
 echo "Frozen seed:  $SEED"
-echo "Start zone:   $START_ZONE"
+if [ -n "$QUICKSTART_BANNER" ]; then
+	echo "Mode:         KingdomQuickstart (real production boot)"
+	echo "Profile:      $QUICKSTART_PROFILE; advisor=$QUICKSTART_ADVISOR"
+else
+	echo "Start zone:   $START_ZONE"
+fi
 echo "Request:      $REQUEST"
 echo "Profile seal: $SEAL_DIR/profile.sha256"
 echo "Launch: powershell.exe -NoProfile -ExecutionPolicy Bypass -File '$(wslpath -w "$REPO/Tools/run-scenario.ps1")' -Root '$(wslpath -w "$ROOT")' -Game '$(wslpath -w "$GAME")'"
 echo
-echo "In game: start a new game in the [Dev] TAF scenario mode and ENTER world seed $SEED"
-echo "yourself at character creation - Qud has no launcher-side seed injection. The gate refuses"
-echo "to stamp anything generated under another seed."
-if [ "$SCENARIO_SCRIPT" = none ]; then
-	echo "No script is sealed, so drive the harness by hand: kingdom:scenario realize."
+if [ -n "$QUICKSTART_BANNER" ]; then
+	echo "The sealed developer request selects the real Quickstart mode, location and frozen seed"
+	echo "before generation. No manual seed entry or other input is required; no AutoRunner is used."
+	if [ "$QUICKSTART_BANNER" = save ]; then
+		echo "Requests a real Primary save after genuine boot checks, then parks before the first turn."
+		echo "The exact owned process must be stopped separately; cold-load is a separate check."
+	else
+		echo "Boot-only observation of production founding and grants; no save/load proof."
+	fi
+	echo "Developer evidence only, not ordinary-play or release acceptance."
+	echo "Journal: $ROOT/scenario-journal.tsv"
 else
-	echo "The sealed script then runs itself on your first turn in the world; read the results in"
-	echo "$ROOT/scenario-journal.tsv. Every kingdom:scenario verb journals there, scripted or typed."
+	echo "In game: start a new game in the [Dev] TAF scenario mode and ENTER world seed $SEED"
+	echo "yourself at character creation - Qud has no launcher-side seed injection. The gate refuses"
+	echo "to stamp anything generated under another seed."
+	if [ "$SCENARIO_SCRIPT" = none ]; then
+		echo "No script is sealed, so drive the harness by hand: kingdom:scenario realize."
+	else
+		echo "The sealed script then runs itself on your first turn in the world; read the results in"
+		echo "$ROOT/scenario-journal.tsv. Every kingdom:scenario verb journals there, scripted or typed."
+	fi
 fi

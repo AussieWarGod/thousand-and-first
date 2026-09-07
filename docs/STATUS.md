@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-06
+**Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.0 public Alpha playtest
 **Working candidate manifest:** 0.3.1, private staging only; public promotion blocked
@@ -13,7 +13,7 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Current blocker — actual Quickstart startup failure
+## Quickstart startup correction — six native combinations exercised
 
 The user reproduced an empty Quickstart site with the apron/path refusal in private item
 3796495680. Its subscribed 0.3.1 bytes were previously verified; this does not prove gameplay.
@@ -23,8 +23,8 @@ The old readiness check rejects the player it requires at (40,12), after ordinar
 that player. An isolated correction exempts only the exact founder while retaining foreign
 obstruction checks. Follow-on source audit found a second mismatch: Quickstart expects completed
 heart rung1 immediately after normal founding, which only stakes/seals construction. The corrected
-verification proves that actual authority without inventing completion. Both changes pass the
-final combined compilation and managed suites; their in-game behavior remains unverified.
+verification proves that actual authority without inventing completion. Earlier combined compile
+and managed greens are retained; the native results below identify the later bytes actually run.
 
 Existing pure/source checks and native grant-component fixtures did not execute genuine
 Quickstart startup. A new offline engine-readiness diagnostic reports3 empty controls passed,
@@ -36,39 +36,65 @@ layers; older native receipts do not sign this correction.
 [Working proof](/tmp/taf-quickstart-founder-proof.3xBBuF/README.md).
 
 The developer-only [genuine boot and save/cold-load route](../DevTests/QUICKSTART-BOOT-TESTS.md)
-is now implemented and compiled, but has not run. It selects the real mode/location, observes
-production hooks, and verifies the exact heart, unique grants and opening quantities after all
-boot callbacks. The save variant calls actual SaveGame, binds its artifacts to an external
-snapshot and parks only its owned game before turns. Its distinct cold-load witness checks
-unchanged authority/IDs/stock before player GameRestored, after LoadGame and after popup cleanup,
-with no bootstrap replay. It never attaches the scenario runner or seeds a receipt. Exact-owned
-process termination is Kill, not graceful in-game Quit; graceful Quit remains separate coverage.
+has executed. The retained6010 scheduling checkpoint passes `marsh yes` and `marsh no`, both
+seed `#43101`: actual boot, SaveGame and separate cold load preserve heart/stock/IDs/clocks with
+zero bootstrap replay. Strict result checks, exact-owned stops and independent idle checks pass.
+`canyon yes` at the same checkpoint refuses before saving: `Garbage` at `(28,10)`, Physics present
+and not in the graveyard. Post-builder Rusty-biome population can create Garbage, but the actual
+biome selection and camp-call count were not witnessed; that origin remains unproved.
 
-The heart proof now uses a raw render-name read for its new path, avoiding the engine's
-GetDisplayName callback; existing callers retain their default behavior. Current production
-census3045 sources/431,188 physical lines/1414 direct-XRL/zero production cap failures.
-Inventory SHA-256: `6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
-Current compile30189 passes four modes+ABI (ordinary3041/3045, developer3154/3158,113 Harness).
-All actual compiler-list source bytes match this worktree and the freshly prepared save profile.
-Registration confirms122 shards,28 pure in both projects and94 engine-touching with a real
-compile receipt. Full managed84392 completed13,599 pass/1 stale snapshot-size source assertion;
-Portable was not reached. That assertion now includes all three snapshot codec bounds.
-Corrected unfiltered full rerun64122 passes13,600 Taf /4,987 Portable, zero skipped.
-Final Tools46388 passes496 tests, including17 result-checker fixtures. Its earlier full run
-retained one README link-to-unshipped-DevTests failure; the link now uses the repository URL.
-The result checker independently verifies sealed inputs, exact journal milestones, artifact
-hashes and unfiltered log checks. Root and independent source review are clear. Its synthetic
-fixtures cannot establish actual native execution. Checking the real unlaunched profile
-correctly refuses its missing save receipt instead of reporting success.
-Integrated staging hash batching preserves all three independent reads and exact manifest bytes.
-A single3076-row manifest comparison measured3.97s before/0.08s after, not whole-build timing.
-The fresh marsh/advisorYes save profile is prepared but unlaunched; current game closure still
-awaits user approval. Six actual boots, save/cold-load and release remain open.
-[Current extension proof](/tmp/taf-quickstart-roundtrip-proof.RUDnOR/README.md).
+The first marsh/yes cold-load checker rejected only missing recognized TAF evidence despite the
+real `INFO - Enabled mods: The Thousand and First [ALPHA] [DEV SCENARIO HARNESS], Pets of Harvest Dawn`
+line. Exact list-token recognition is corrected; diagnostic scans and no-allowance checks remain
+unchanged. Both cold-load results now pass the strict checker. Initial bootstrap refusals and
+the initial checker failure remain retained, not waived. These pairs sign only their frozen6010
+sources, not the replacement below. [Execution evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
 
-The [current structural review](STRUCTURE_REVIEW_0_3_1.md) retains the frozen baseline and binds
-the exact five-source correction; structure release gate and documentation freshness pass.
-This production review does not sign the new Harness behavior or native acceptance.
+Current source prepares one camp after full `GetZone` completion and before founder placement,
+reproves the exact completed zone/owner, then refreshes the native wall-connectivity/start-placement
+cache without clearing existing bits or changing physical terrain. Physical readiness remains
+separate; no safe-escape, unchanged RNG, or whole-zone clearance claim follows. Source review is
+clear for this bounded correction. That `e922…` checkpoint passed all four compile modes+ABI
+(99684), full managed13602/4989 with zero skips (17349), and501 Tools tests. Its genuine canyon
+boot still refused: camp1/world1 succeeded, start reachability stayed true, but normal founding
+rejected the authored ingress lane. Both required endpoints `(40,16)` and `(41,16)` lie outside
+the old prepared mask. Their actual blocking objects remain unobserved.
+
+The current correction adds only those two cells to one shared engine-free preparation mask;
+preparation, readiness and relocation exclusion use it. Exhaustive mask tests and the actual
+shipped architecture compiler/entrance-route test cover the mismatch. Source review is clear.
+Current census3045 sources/431,407 physical lines/1414 direct-XRL/zero production cap failures;
+Inventory SHA-256: `7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
+Compile21734 passes all four modes+ABI; managed21635 passes13603 Taf/4990 Portable, zero skips.
+Tools69769 passes501 tests. All six sealed profile/advisor combinations at seed `#43101`
+passed actual boot, SaveGame and separate cold-load milestones. Each retained the exact heart,
+stock, IDs and clocks with zero bootstrap replay. All six strict save checks and all six strict
+load file-verification checks passed by11:25UTC.
+All exact-owned game stops and independent idle checks passed. All3158 developer C# inputs in
+the six source profiles match the actual developer compatibility compiler input set.
+[Execution and source evidence](/tmp/taf-quickstart-native.sYl4Dz/README.md).
+
+Earlier interrupted compile/managed jobs and the MSB3027/MSB3021 output-lock failure remain
+retained; they are not green results. No current native PASS is inferred from old marsh pairs.
+The current six-combination developer matrix is green. QSB2–5, ordinary play, graceful in-game Quit,
+Steam delivery of the correction and public release remain separate open gates. The developer
+route parks only its owned game before turns and uses exact-owned Kill, not the game's Quit.
+
+Retained pre-native extension evidence: compile30189 passed four modes+ABI (ordinary3041/3045,
+developer3154/3158,113 Harness) at digest
+`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+After one stale source assertion, unfiltered rerun64122 passed13,600 Taf/4,987 Portable, zero
+skipped; Tools46388 passed496. [Retained extension proof](/tmp/taf-quickstart-roundtrip-proof.RUDnOR/README.md).
+The retained6010 compile25503 passed all four modes+ABI and managed95634 passed13,601 Taf/4,988
+Portable, zero skipped. None of these old greens signs current `7e3fb752…` bytes. Integrated staging
+hash batching retains all three independent reads; the measured3076-row manifest3.97s→0.08s
+comparison is not whole-build timing.
+
+The [tracked structural review](STRUCTURE_REVIEW_0_3_1.md) binds the current production bridge;
+its exact inventory gate passes. Structural approval is not native or release approval.
+Separate open oracle finding: repeated stock-child references can counterfeit initial food or
+material totals. Top-level absent heart/grants are refused; this custody gap is not fixed by
+the entrance change and was not the observed canyon failure.
 
 ## Retained pre-upload checkpoint — witnessed-death recovery integrated
 

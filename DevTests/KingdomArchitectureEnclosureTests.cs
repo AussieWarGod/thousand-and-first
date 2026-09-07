@@ -180,7 +180,26 @@ namespace ThousandAndFirst.Tests
 				Assert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
 					snapshot.Width, snapshot.Height, facing, basin.X, basin.Y,
 					out int basinX, out int basinY));
-				if (basinX == riteX && basinY == riteY) matchingPoses++;
+				if (basinX != riteX || basinY != riteY) continue;
+				matchingPoses++;
+				// Compile the shipped map and walk its real ingress law against the SAME mask
+				// used for preparation, readiness, and relocation exclusion. The old mask
+				// covered both doors and margins but missed the two lane endpoints at Y16.
+				HashSet<string> endpoints = new HashSet<string>(StringComparer.Ordinal);
+				foreach (ArchitectureAnchor entrance in entrances)
+				{
+					List<ArchitecturePoint> route = new List<ArchitecturePoint>();
+					Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, entrance,
+						route, out int doorX, out int doorY, out int laneX, out int laneY));
+					Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(doorX, doorY));
+					foreach (ArchitecturePoint point in route)
+						Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(point.X, point.Y),
+							"unprepared ingress at " + point.X + "," + point.Y);
+					Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(laneX, laneY),
+						"unprepared lane at " + laneX + "," + laneY);
+					endpoints.Add(laneX + "," + laneY);
+				}
+				CollectionAssert.AreEquivalent(new[] { "40,16", "41,16" }, endpoints);
 			}
 			Assert.AreEqual(1, matchingPoses);
 		}

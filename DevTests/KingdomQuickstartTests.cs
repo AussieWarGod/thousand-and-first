@@ -97,6 +97,29 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PreparedGroundAddsOnlyTheTwoMissingHeartIngressEndpoints()
+		{
+			int added = 0;
+			for (int y = -1; y <= 25; y++)
+				for (int x = -1; x <= 80; x++)
+				{
+					bool previous = (x >= 37 && x <= 44 && y >= 10 && y <= 15)
+						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
+						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
+					bool endpoint = (x == 40 || x == 41) && y == 16;
+					Assert.AreEqual(previous || endpoint,
+						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
+					if (endpoint && !previous) added++;
+				}
+			Assert.AreEqual(2, added);
+			foreach (int outside in new[] { int.MinValue, int.MaxValue })
+			{
+				Assert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
+				Assert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
+			}
+		}
+
+		[Test]
 		public void ReceiptIsExactMonotoneAndTamperEvident()
 		{
 			Assert.That(KingdomQuickstartRules.TryCreateReceipt("marsh",
@@ -286,6 +309,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomPlots.ReadObject", camp);
 			StringAssert.Contains("SystemLongDistanceMoveTo", camp);
 			StringAssert.Contains("if (!Required(x, y)) continue", camp);
+			StringAssert.Contains("return KingdomQuickstartRules.RequiresPreparedGround(X, Y);", camp);
+			StringAssert.Contains("if (Required(x, y)) continue;", camp);
 			StringAssert.DoesNotContain("ClearAll", camp);
 		}
 
@@ -294,7 +319,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.cs");
 			StringAssert.Contains("GameObject founder = The.Player;", source);
-			int readiness = source.IndexOf("KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder)",
+			int readiness = source.IndexOf("KingdomQuickstartCampBuilder.ReadyForFounder(zone, founder, out string groundFailure)",
 				StringComparison.Ordinal);
 			Assert.That(readiness, Is.GreaterThanOrEqualTo(0));
 			Assert.That(readiness, Is.LessThan(source.IndexOf(
@@ -303,6 +328,40 @@ namespace ThousandAndFirst.Tests
 			string camp = TestMain.ReadRepositoryText("World/KingdomQuickstartCampBuilder.cs");
 			StringAssert.Contains("return Ready(Z);", camp);
 			StringAssert.Contains("ReferenceEquals(item, Founder)", camp);
+			StringAssert.Contains("out string Failure", camp);
+			StringAssert.Contains("object fails engine validation", camp);
+			StringAssert.Contains("Object?.Blueprint", camp);
+			StringAssert.Contains("Object?.Physics != null", camp);
+			StringAssert.Contains("Object.IsInGraveyard()", camp);
+			StringAssert.Contains("+ groundFailure", source);
+		}
+
+		[Test]
+		public void SourceContractPreparesCompletedZoneBeforePlayerPlacement()
+		{
+			string source = TestMain.ReadRepositoryText("World/KingdomQuickstartEmbarkModule.cs");
+			StringAssert.DoesNotContain("AddZonePostBuilder", source);
+			StringAssert.Contains("BOOTEVENT_BOOTSTARTINGLOCATION", source);
+			StringAssert.Contains("BindCampBuilder(game, info, element as GlobalLocation)", source);
+			StringAssert.Contains("BOOTEVENT_AFTERBOOTPLAYEROBJECT", source);
+			StringAssert.Contains("PrepareCamp(game, info, element as GameObject)", source);
+			int resolve = source.IndexOf("attempt.Manager.GetZone(attempt.Profile.ZoneId)", StringComparison.Ordinal);
+			int prepare = source.IndexOf("new KingdomQuickstartCampBuilder().BuildZone(zone)", StringComparison.Ordinal);
+			Assert.That(resolve, Is.GreaterThanOrEqualTo(0));
+			Assert.That(prepare, Is.GreaterThan(resolve));
+			Assert.AreEqual(prepare, source.LastIndexOf("new KingdomQuickstartCampBuilder().BuildZone(zone)", StringComparison.Ordinal));
+			int reachability = source.IndexOf("zone.BuildReachableMap(", StringComparison.Ordinal);
+			Assert.That(reachability, Is.GreaterThan(prepare));
+			Assert.That(source.IndexOf("attempt.Prepared = true;", StringComparison.Ordinal), Is.GreaterThan(reachability));
+			StringAssert.Contains("KingdomQuickstartRules.StartCellY, bClearFirst: false)", source);
+			StringAssert.Contains("!KingdomQuickstartCampBuilder.Ready(zone)", source);
+			StringAssert.DoesNotContain("ReachableMap[", source);
+			StringAssert.Contains("Zone != null && Zone.Built", source);
+			StringAssert.Contains("ReferenceEquals(cached, Zone)", source);
+			StringAssert.Contains("Attempt.Player.Body == null && The.Player == null", source);
+			StringAssert.Contains("attempt.Consumed = true;", source);
+			StringAssert.Contains("if (!EnterBootstrap(game, info, out failure)", source);
+			StringAssert.DoesNotContain("SetStringGameState", source);
 		}
 
 		[Test]

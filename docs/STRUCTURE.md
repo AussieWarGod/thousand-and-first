@@ -20,18 +20,23 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The current isolated draft census reports 3045 staged production C# files and 431,188 physical lines,
+The current isolated draft census reports 3045 staged production C# files and 431,407 physical lines,
 with 0 at or above the strict 300-line cap. It contains 1414 files with direct `XRL` imports;
 0 of those exceed the line limit. Exact staged source inventory digest:
-`6cc05140593e77bebbe23c38ee4269b4b71ceb98c53d25187c81a611b6d9c128`.
+`7e3fb7521f445e16b0740329966e369fa51d91fd768237bdffb5291d3540c651`.
 The generated staging list contains 3076 files; it does not prove current
-installed or subscribed content. Final strict four-mode compilation and ABI checks pass:
-ordinary3041/3045, developer3154/3158,113 Harness shards.
-Current managed and Tools run results live in [STATUS](STATUS.md); older totals do not sign the
-new developer-only save/cold-load extension. Its native execution remains pending.
+installed or subscribed content. The latest two-file correction shares the original preparation
+mask and adds only the authored heart ingress endpoints (40,16) and (41,16). Current compilation,
+managed and native validation are pending; run results live in [STATUS](STATUS.md).
+Retained e922-source strict four-mode compilation99684 and ABI checks pass:
+ordinary3041/3045, developer3154/3158,113 Harness shards. Its full managed17349 passes13602/4989
+with zero skips; Tools92298 passes501. That source's canyon native boot refused first-heart
+public ingress despite one camp pass and a reachable start. These outcomes do not sign the new
+ingress mask. Earlier6010 marsh save/cold-load passes remain older-source evidence.
 Historical nested archive and103 retained real serializer cases pass;
-full historical-save and ordinary-gameplay acceptance remain open. The reported Quickstart
-startup failure is corrected in source but genuine boot and save/reload acceptance remain open.
+full historical-save, current Quickstart boot/save/reload and ordinary-gameplay acceptance remain
+open. The ingress fix is source-only until fresh native verification; structural signoff does
+not resolve the observed startup refusal.
 The exact-inventory semantic review is now bound in `docs/STRUCTURE_REVIEW.json`; the structure
 release gate passes. [Scope and correction evidence](STRUCTURE_REVIEW_0_3_1.md) retain earlier
 review provenance and open functional limits. This is not the complete release gate.
@@ -63,8 +68,8 @@ ruin effects. Development-only fixtures remain excluded; Claude's raid-custody p
 separate. These are source/engine-contract reviews, not native playtests.
 
 At that checkpoint, no staged production source breached the strict physical-line cap. This cleared
-its mechanical line debt; `docs/STRUCTURE_REVIEW.json` retains the exact-inventory semantic review
-bound to its `f9815fff…` digest above, not the current isolated draft.
+its mechanical line debt; the semantic ledger then bound the exact-inventory review to its
+`f9815fff…` digest above. That retained review is ancestry, not the current isolated draft binding.
 
 That hardening sequence semantically decomposed 144 additional oversized authorities,
 bringing the cumulative total to 154. That is 25 more decompositions since checkpoint `2cb97fc`,
@@ -74,8 +79,8 @@ checkpoint `1c2d619`.
 their current source families. Numeric lexical prefixes appear only where the canonical stage's
 filename order must preserve original declaration, reflection, or serialized-metadata order; they
 do not create a second authority. That checkpoint was measurable progress, not release signoff:
-0 line-cap failures remained, and `docs/STRUCTURE_REVIEW.json` binds its exact-inventory semantic
-review to that retained digest. Any staged source change invalidates the binding and requires a new census and review
+0 line-cap failures remained, and the semantic ledger then bound its exact-inventory review
+to that retained digest. Any staged source change invalidates the binding and requires a new census and review
 binding.
 
 ## Release review contract

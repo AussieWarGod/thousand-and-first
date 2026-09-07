@@ -320,6 +320,67 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         self.assertIn("UnknownCallback.Run", result.stderr)
         self.assertNotIn(expected.strip(), result.stderr)
 
+    def test_enabled_mod_list_accepts_only_complete_owned_tokens(self):
+        for title in OWNED_TITLES:
+            for names in (title, title + ", Pets of Harvest Dawn",
+                          "Pets of Harvest Dawn, " + title,
+                          "First Mod, " + title + ", Last Mod"):
+                for ending in ("\n", "\r\n"):
+                    with self.subTest(names=names, ending=repr(ending)):
+                        result = self.run_log_checker("INFO - Enabled mods: " + names + ending)
+                        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                        self.assertIn("SMOKE LOG CLEAN", result.stdout)
+
+    def test_enabled_mod_list_refuses_near_names_and_unsupported_suffixes(self):
+        names = [variant for title in OWNED_TITLES for variant in (
+            title + " Helper", "Helper " + title, title + "s", "Not " + title)]
+        names += ["The Thousand and First [BETA]", "The Thousand and First [alpha]",
+                  "The Thousand and First [DEV SCENARIO HARNESS] [ALPHA]",
+                  "The Thousand and First [ALPHA] [ALPHA]", "the Thousand and First"]
+        for name in names:
+            with self.subTest(name=name):
+                result = self.run_log_checker("INFO - Enabled mods: Pets of Harvest Dawn, " + name + "\n")
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertIn("no Thousand and First load/runtime evidence", result.stderr)
+
+    def test_enabled_mod_list_refuses_malformed_or_non_info_lines(self):
+        title = OWNED_TITLES[-1]
+        line = "INFO - Enabled mods: " + title
+        lines = ["WARN" + line[4:], "ERROR" + line[4:], "DEBUG" + line[4:],
+                 "info" + line[4:], "prefix " + line, " " + line,
+                 line.replace("Enabled mods:", "Enabled mods"),
+                 line.replace("mods: ", "mods:"), line.replace("mods: ", "mods:  "),
+                 "INFO - Enabled mods: ", line + " ", line + ",", line + ", ",
+                 line + ",, Pets", line + ",Pets", line + ",  Pets", line + ", Pets, ",
+                 "INFO - Enabled mods: , " + title, "INFO - Enabled mods: Pets,, " + title,
+                 "INFO - Enabled mods: Pets; " + title, line + ", Pets\tDLC",
+                 "INFO - Enabled mods: \tPets, " + title]
+        for malformed in lines:
+            with self.subTest(line=malformed):
+                result = self.run_log_checker(malformed + "\n")
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertIn("no Thousand and First load/runtime evidence", result.stderr)
+
+    def test_enabled_mod_presence_does_not_allow_owned_diagnostics(self):
+        presence = "INFO - Enabled mods: " + OWNED_TITLES[-1] + ", Pets of Harvest Dawn\n"
+        for diagnostic in (NATIVE_CS0114_WARNING, EXPECTED_MOD_ERROR,
+                           "[TAF] error: unexpected fixture diagnostic",
+                           "  at ThousandAndFirst.UnknownCallback.Run()"):
+            with self.subTest(diagnostic=diagnostic):
+                result = self.run_log_checker(presence + diagnostic + "\n", allow="")
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertIn("SMOKE LOG FAILED", result.stderr)
+                self.assertIn(diagnostic.strip(), result.stderr)
+
+    def test_cold_load_enabled_mod_list_passes_real_checker_lifecycle(self):
+        player_log = "INFO - Enabled mods: " + OWNED_TITLES[-1] + ", Pets of Harvest Dawn\n"
+        self.env["LIFECYCLE_PLAYER_LOG"] = player_log
+        result = self.run_cli()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("PASS", self.rows()[0]["verdict"])
+        self.assertEqual(player_log, (self.report.parent / "player-alpha.log").read_text())
+        self.assert_new_scoped_cycle(0)
+
     def test_existing_game_refuses_before_allocating_preparing_or_stopping(self):
         result = self.run_cli("existing_game")
         self.assertEqual(1, result.returncode, result.stderr)

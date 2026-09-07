@@ -52,6 +52,17 @@ namespace ThousandAndFirst
 			get { return Profiles.Length; }
 		}
 
+		internal static bool RequiresPreparedGround(int X, int Y)
+		{
+			bool apron = X >= 37 && X <= 44 && Y >= 10 && Y <= 15;
+			bool supply = X >= 27 && X <= 30 && Y >= 9 && Y <= 17;
+			bool approach = X >= 29 && X <= 37 && Y >= 11 && Y <= 13;
+			// North heartbasin: rite (40,12), rect (38,11)-(43,14), doors (40/41,14),
+			// margin Y=15 and authored lane endpoints Y=16.
+			bool heartLanes = X >= 40 && X <= 41 && Y == 16;
+			return apron || supply || approach || heartLanes;
+		}
+
 		public static bool IsMode(string GameMode)
 		{
 			return string.Equals(GameMode, ModeId, StringComparison.Ordinal);

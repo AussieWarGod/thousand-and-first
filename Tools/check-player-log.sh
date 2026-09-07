@@ -17,7 +17,25 @@ trap 'rm -f -- "$TMP" "$BAD"' EXIT
 # Qud's log is CRLF on Windows.  Keep line numbers stable while normalising it.
 tr -d '\r' < "$LOG" > "$TMP"
 
-if ! grep -Eq '(\[TAF\]|\[The Thousand and First( \[ALPHA\])?( \[DEV SCENARIO HARNESS\])?\]|[/\\]ThousandAndFirst[/\\]|workshop[/\\]content[/\\]333640[/\\][0-9]+[/\\])' "$TMP"; then
+# Cold loads may emit only the engine's enabled-mod list, without a TAF message.
+if ! grep -Eq '(\[TAF\]|\[The Thousand and First( \[ALPHA\])?( \[DEV SCENARIO HARNESS\])?\]|[/\\]ThousandAndFirst[/\\]|workshop[/\\]content[/\\]333640[/\\][0-9]+[/\\])' "$TMP" &&
+	! awk '
+		/^INFO - Enabled mods: / {
+			list = $0
+			sub(/^INFO - Enabled mods: /, "", list)
+			count = split(list, mods, ", ")
+			valid = count > 0
+			owned = 0
+			for (i = 1; i <= count; i++) {
+				if (mods[i] == "" || mods[i] ~ /(^[[:space:]]|[[:space:]]$|[,[:cntrl:]])/)
+					valid = 0
+				if (mods[i] ~ /^The Thousand and First( \[ALPHA\])?( \[DEV SCENARIO HARNESS\])?$/)
+					owned = 1
+			}
+			if (valid && owned) seen = 1
+		}
+		END { exit !seen }
+	' "$TMP"; then
 	echo "SMOKE LOG INVALID: no Thousand and First load/runtime evidence" >&2
 	exit 1
 fi

@@ -16,6 +16,18 @@ namespace ThousandAndFirst.Tests
 		private const string Boot = "Harness/KingdomQuickstartBootTest.cs";
 
 		[Test]
+		public void SourceContract_CampWitnessRequiresBuiltZoneBeforeFounderPlacement()
+		{
+			string source = Read(Boot);
+			Contains(Between(source, "internal static void CampBuilt(", "internal static void BeforeRun("),
+				"CampCalls != 1 || !Built.Built || The.Player != null", "PreparedZone = Built");
+			Contains(Between(source, "internal static void BeforeRun(", "internal static void AfterRun("),
+				"CampCalls != 1 || !ReferenceEquals(PreparedZone, Zone)", "bootstrap lacks its exact completed camp",
+				"!StartReachableBefore.HasValue || !reachable", "quickstart camp reachability: before=");
+			StringAssert.Contains("KingdomQuickstartBootTest.CampEntering(Z)", source);
+		}
+
+		[Test]
 		public void SourceContract_SaveRequiresAnObservedSuccessfulGenuineBoot()
 		{
 			string boot = Read(Boot);

@@ -204,23 +204,47 @@ if ($frozenSeed -notmatch '^#[0-9]+$' -or [int64]$seedDigits -lt 0 -or
 }
 Write-Host "Request and frozen seed match their seal (seed $frozenSeed)."
 
-Write-Host ''
-Write-Host 'SCENARIO PROFILE VERIFIED. This profile produces developer evidence only:'
-Write-Host '  - a scenario-built state never signs native acceptance on its own;'
-Write-Host '  - verdicts stay ineligible until curated ordinary-play anchor evidence exists.'
-Write-Host ''
-Write-Host "ENTER world seed $frozenSeed yourself at character creation. Qud exposes no launcher-side"
-Write-Host 'seed injection, so this is manual operator entry; the gate refuses any other world.'
-Write-Host ''
-
 $scriptPath = Join-Path $localRoot 'scenario-script.txt'
+$scriptVerbs = @()
 if (Test-Path -LiteralPath $scriptPath -PathType Leaf) {
     $scriptVerbs = @(Get-Content -LiteralPath $scriptPath |
         Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') })
-    Write-Host "Sealed auto-runner script ($($scriptVerbs.Count) verb(s)): $($scriptVerbs -join ', ')"
-    Write-Host 'It runs itself on your first turn in the world. No further keyboard input is needed.'
+}
+$quickstartBanner = $scriptVerbs.Count -eq 1 -and
+    $scriptVerbs[0] -cmatch '\Aquickstart-(boot|save) (marsh|canyon|dunes) (yes|no)\z'
+if ($quickstartBanner) {
+    $quickstartPhase = $Matches[1]; $quickstartProfile = $Matches[2]; $quickstartAdvisor = $Matches[3]
+}
+Write-Host ''
+if ($quickstartBanner) {
+    Write-Host 'QUICKSTART PROFILE VERIFIED. Developer evidence only, not ordinary-play or release acceptance.'
+    Write-Host "Mode: KingdomQuickstart; profile=$quickstartProfile; advisor=$quickstartAdvisor; frozen seed=$frozenSeed."
+    if (Test-Path -LiteralPath (Join-Path $localRoot 'scenario-load.txt') -PathType Leaf) {
+        Write-Host 'Sealed cold-load request present: the runtime loads its exact saved Quickstart; no new boot or AutoRunner.'
+        Write-Host 'No manual input is required; the exact owned process must be stopped separately after its verdict.'
+    } else {
+        Write-Host 'The sealed developer request selects the real mode, location and seed before generation; no manual input or AutoRunner.'
+        if ($quickstartPhase -ceq 'save') {
+            Write-Host 'Requests a real Primary save after genuine boot checks, then parks before the first turn.'
+            Write-Host 'The exact owned process must be stopped separately; cold-load is a separate check.'
+        } else {
+            Write-Host 'Boot-only observation of production founding and grants; no save/load proof.'
+        }
+    }
 } else {
-    Write-Host 'No sealed auto-runner script; drive kingdom:scenario by hand.'
+    Write-Host 'SCENARIO PROFILE VERIFIED. This profile produces developer evidence only:'
+    Write-Host '  - a scenario-built state never signs native acceptance on its own;'
+    Write-Host '  - verdicts stay ineligible until curated ordinary-play anchor evidence exists.'
+    Write-Host ''
+    Write-Host "ENTER world seed $frozenSeed yourself at character creation. Qud exposes no launcher-side"
+    Write-Host 'seed injection, so this is manual operator entry; the gate refuses any other world.'
+    Write-Host ''
+    if (Test-Path -LiteralPath $scriptPath -PathType Leaf) {
+        Write-Host "Sealed auto-runner script ($($scriptVerbs.Count) verb(s)): $($scriptVerbs -join ', ')"
+        Write-Host 'It runs itself on your first turn in the world. No further keyboard input is needed.'
+    } else {
+        Write-Host 'No sealed auto-runner script; drive kingdom:scenario by hand.'
+    }
 }
 Write-Host "Journal: $(Join-Path $rootPath 'scenario-journal.tsv')"
 Write-Host ''
