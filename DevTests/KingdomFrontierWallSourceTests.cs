@@ -203,9 +203,10 @@ namespace ThousandAndFirst.Tests
 		private static string LocateBase()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_BASE");
-			if (!string.IsNullOrWhiteSpace(supplied))
+			if (supplied != null)
 			{
-				if (File.Exists(Path.Combine(supplied, "ObjectBlueprints", "Walls.xml"))) return supplied;
+				if (!string.IsNullOrWhiteSpace(supplied)
+					&& File.Exists(Path.Combine(supplied, "ObjectBlueprints", "Walls.xml"))) return supplied;
 				throw new InvalidOperationException("TAF_QUD_BASE lacks ObjectBlueprints/Walls.xml: "
 					+ supplied);
 			}
@@ -214,7 +215,8 @@ namespace ThousandAndFirst.Tests
 				@"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base",
 				"/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/Base"
 			}) if (File.Exists(Path.Combine(candidate, "ObjectBlueprints", "Walls.xml"))) return candidate;
-			throw new InvalidOperationException("Set TAF_QUD_BASE to the installed Caves of Qud base.");
+			Assert.Ignore("Frontier wall native test requires TAF_QUD_BASE or installed Qud.");
+			return null;
 		}
 	}
 }

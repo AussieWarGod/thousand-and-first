@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
 using NUnit.Framework;
@@ -10,6 +11,88 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public class KingdomReleaseProtocolSourceTests
 	{
+		[TestCase("KingdomPolityExpressionNativeTests", "LocateBase", "TAF_QUD_BASE")]
+		[TestCase("KingdomFrontierWallSourceTests", "LocateBase", "TAF_QUD_BASE")]
+		[TestCase("KingdomLiquidRuntimeSourceTests", "LocateAssembly", "TAF_QUD_BASE")]
+		[TestCase("KingdomFounderHistoryRulesTests", "LocateDecompiledQud", "TAF_QUD_DECOMPILED")]
+		[TestCase("KingdomShopStockSourceTests", "LocateDecompiledQud", "TAF_QUD_DECOMPILED")]
+		public void ExplicitBrokenLicensedInputsFailWithoutFallback(string typeName,
+			string methodName, string variable)
+		{
+			Type type = Array.Find(typeof(KingdomReleaseProtocolSourceTests).Assembly.GetTypes(),
+				candidate => candidate.Name == typeName);
+			Assert.IsNotNull(type);
+			MethodInfo method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
+			Assert.IsNotNull(method);
+			string missing = Path.Combine(Path.GetTempPath(), "taf-absent-licensed-" + Guid.NewGuid().ToString("N"));
+			Assert.IsFalse(Directory.Exists(missing));
+			string previous = Environment.GetEnvironmentVariable(variable);
+			try
+			{
+				foreach (string value in new[] { " ", missing })
+				{
+					Environment.SetEnvironmentVariable(variable, value);
+					TargetInvocationException failure = Assert.Throws<TargetInvocationException>(
+						() => method.Invoke(null, null));
+					Assert.IsInstanceOf<InvalidOperationException>(failure.InnerException);
+				}
+			}
+			finally { Environment.SetEnvironmentVariable(variable, previous); }
+		}
+
+		[Test]
+		public void PartialMarketSourceDoesNotBorrowFilesFromDefaultRoots()
+		{
+			string root = Path.Combine(Path.GetTempPath(), "taf-market-source-" + Guid.NewGuid().ToString("N"));
+			Assert.IsFalse(Directory.Exists(root));
+			Directory.CreateDirectory(root);
+			string previous = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
+			try
+			{
+				Directory.CreateDirectory(Path.Combine(root, "XRL.UI"));
+				string path = Path.Combine(root, "XRL.UI", "TradeUI.cs");
+				File.WriteAllText(path, "owned partial source fixture");
+				Environment.SetEnvironmentVariable("TAF_QUD_DECOMPILED", root);
+				InvalidOperationException failure = Assert.Throws<InvalidOperationException>(() =>
+					new KingdomShopStockSourceTests().InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade());
+				StringAssert.Contains("AllowTradeWithNoInventoryEvent.cs", failure.Message);
+				Assert.AreEqual("owned partial source fixture", File.ReadAllText(path));
+			}
+			finally
+			{
+				Environment.SetEnvironmentVariable("TAF_QUD_DECOMPILED", previous);
+				Directory.Delete(root, true);
+			}
+		}
+
+		[Test]
+		public void HostedCiNamesExactLicensedExclusionsForEachSuite()
+		{
+			string[] portable = {
+				"KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud",
+				"KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory",
+				"KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract",
+				"KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade" };
+			string[] fullOnly = {
+				"KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone",
+				"KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology",
+				"KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath",
+				"KingdomFrontierWallSourceTests.InstalledVanillaParentsProvideExactPaintedWallVocabulary",
+				"KingdomGatehouseNativeTests.V2FormsUseOnlyVerifiedWallsAndFunctionalWatchWrappers",
+				"KingdomLiquidRuntimeSourceTests.InstalledEngineStillProvidesChosenRenderAndInteractionSeams" };
+			string[] full = new string[portable.Length + fullOnly.Length];
+			portable.CopyTo(full, 0); fullOnly.CopyTo(full, portable.Length);
+			MatchCollection blocks = Regex.Matches(Source(".github/workflows/portable.yml"),
+				@"TAF_ALLOWED_SKIPS: >-\r?\n((?:[ ]{12}[^\r\n]+\r?\n)+)");
+			Assert.AreEqual(2, blocks.Count);
+			for (int i = 0; i < blocks.Count; i++)
+			{
+				string[] labels = blocks[i].Groups[1].Value.Split(';');
+				for (int j = 0; j < labels.Length; j++) labels[j] = labels[j].Trim();
+				CollectionAssert.AreEquivalent(i == 0 ? full : portable, labels);
+			}
+		}
+
 		private static string Source(string relative)
 		{
 			return TestMain.ReadRepositoryText(relative);

@@ -316,9 +316,15 @@ namespace ThousandAndFirst.Tests
 		private static string LocateDecompiledQud()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
+			if (supplied != null)
+			{
+				if (string.IsNullOrWhiteSpace(supplied) || !File.Exists(Path.Combine(supplied,
+					"XRL", "World", "RelicGenerator.cs")))
+					throw new InvalidOperationException("TAF_QUD_DECOMPILED is set but lacks RelicGenerator.cs.");
+				return supplied;
+			}
 			string[] candidates = new[]
 			{
-				supplied,
 				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
 				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1"
 			};

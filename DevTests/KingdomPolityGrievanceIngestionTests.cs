@@ -104,7 +104,7 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityGapTestData.OpenClash(
 				KingdomPolityRelationBand.Contact);
 			KingdomPolityConsentedEscrowRequest escrow =
-				KingdomPolityGapTestData.EscrowRequest(ledger, "collateral", 
+				KingdomPolityGapTestData.EscrowRequest(ledger, "collateral",
 					KingdomPolityTestData.DigestA, 220L);
 			long before = ledger.Revision;
 			Assert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedTrespass(ledger,

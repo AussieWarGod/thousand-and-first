@@ -297,12 +297,12 @@ The table is the share of the settlement the water detail must be, at Camp, for 
 settlement to hold itself. Anything at or under 50% leaves half the people free for works.
 
   drink      carry 1     carry 2     carry 3     carry 4
-   0.50         50%         25%         17%         12% 
-   0.75         75%         38%         25%         19% 
-   1.00        100%         50%         33%         25% 
-   1.25        125%         62%         42%         31% 
-   1.50        150%         75%         50%         38% 
-   2.00        200%        100%         67%         50% 
+   0.50         50%         25%         17%         12%
+   0.75         75%         38%         25%         19%
+   1.00        100%         50%         33%         25%
+   1.25        125%         62%         42%         31%
+   1.50        150%         75%         50%         38%
+   2.00        200%        100%         67%         50%
 
 Shipped is drink=1.0, carry=2 -> 50% at Camp. That is the knife edge the design wants:
 half your people on water is a real cost and a survivable one. carry=3 makes water free
@@ -1044,12 +1044,12 @@ W7  Networks, the flow solve, and power on one accounting
    sits at amenity because a roof needs no charge to keep the rain off - whether a household
    keeps its home is the roof brink's question, and a brownout must not be able to answer it.
 
-   0  Industry  
-   1  Refining  
+   0  Industry
+   1  Refining
    2  Amenity   <- lodging, comfort, civic, faith, memorial
-   3  Food      
-   4  Water     
-   5  Watch     
+   3  Food
+   4  Water
+   5  Watch
 
 ======================================================================================
 C3  Fully-grafted founder structural stress case

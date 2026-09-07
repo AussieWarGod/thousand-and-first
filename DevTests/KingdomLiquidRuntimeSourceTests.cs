@@ -283,8 +283,10 @@ namespace ThousandAndFirst.Tests
 		private static string LocateAssembly()
 		{
 			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_BASE");
-			if (!string.IsNullOrWhiteSpace(supplied))
+			if (supplied != null)
 			{
+				if (string.IsNullOrWhiteSpace(supplied))
+					throw new InvalidOperationException("TAF_QUD_BASE is set but empty.");
 				string path = Path.GetFullPath(Path.Combine(supplied, "..", "..", "Managed",
 					"Assembly-CSharp.dll"));
 				if (File.Exists(path)) return path;
@@ -296,7 +298,8 @@ namespace ThousandAndFirst.Tests
 				@"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Assembly-CSharp.dll",
 				"/mnt/f/SteamLibrary/steamapps/common/Caves of Qud/CoQ_Data/Managed/Assembly-CSharp.dll"
 			}) if (File.Exists(path)) return path;
-			throw new InvalidOperationException("Set TAF_QUD_BASE to installed Caves of Qud Base.");
+			Assert.Ignore("Liquid runtime native test requires TAF_QUD_BASE or installed Qud.");
+			return null;
 		}
 		#endif
 	}

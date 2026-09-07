@@ -332,9 +332,10 @@ exact bytes: 7,743 / 7,743 cases in the Qud-referenced/source suite and 173 / 17
 Nine focused one-survey source-contract cases pass for that checkpoint's maintained-index proof.
 Tools suite passes 35 tests and Art suite passes 23 / 23 tests for those historical bytes; its
 repository-audit, Ubuntu-source, and Windows-source jobs were also green. Public CI
-without installed Qud data permits exactly three named installed-data-only skips instead of
-fabricating fixtures. TestMain rejects an unexpected or
-missing allowlisted skip, and an explicitly configured incomplete base fails rather than skipping.
+without installed Qud data permits exactly ten named installed-data-only skips in the full suite
+and four in the portable suite, instead of fabricating fixtures. TestMain rejects an unexpected
+or missing allowlisted skip; explicitly configured incomplete base or decompiled-source roots
+fail rather than skipping. Curated source rulings live in tracked `docs/CREED-KIND-EVIDENCE.md`.
 Canonical release `DevTests/test.ps1` forbids every skip, and `Tools/release-check.sh` injects the
 exact Qud base.
 Dynamic NUnit sources are not supported by this custom runner: `TestCaseSource` and

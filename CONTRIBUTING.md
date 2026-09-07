@@ -79,8 +79,9 @@ with the documented full-suite scripts. Keep each restore immediately beside its
 
 These suites prove engine-free rules and source contracts; they do not compile or execute the mod
 inside Qud. They use the locked NUnit package and .NET 9. When licensed installed data is absent,
-the three installed-data-only cases must match the exact workflow skip allowlist; an extra or
-missing skip fails, as does an explicitly configured incomplete `TAF_QUD_BASE`. Never replace them
+the full suite's ten and portable suite's four installed-data-only cases must match their exact
+workflow skip allowlists; an extra or missing skip fails, as does an explicitly configured
+incomplete `TAF_QUD_BASE` or `TAF_QUD_DECOMPILED`. Never replace them
 with guessed base content. A release run accepts no skips: `DevTests/test.ps1` sets the zero-skip
 policy, and `Tools/release-check.sh` supplies the exact base. Licensed runtime checks still require
 a local Caves of Qud installation:

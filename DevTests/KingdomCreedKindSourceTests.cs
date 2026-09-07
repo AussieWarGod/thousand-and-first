@@ -66,7 +66,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CuratedMappingLedgerPinsPrimarySourceRulings()
 		{
-			string evidence = TestMain.ReadRepositoryText("_notes/CREED-KIND-EVIDENCE.md");
+			string evidence = TestMain.ReadRepositoryText("docs/CREED-KIND-EVIDENCE.md");
 			foreach (string citation in new string[]
 			{
 				"Books.xml:768,1391", "Creatures.xml:3584,3587",

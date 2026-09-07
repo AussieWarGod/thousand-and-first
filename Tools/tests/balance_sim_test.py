@@ -109,6 +109,8 @@ class BalanceSimulationTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr or completed.stdout)
+        self.assertEqual([], [number for number, line in enumerate(completed.stdout.splitlines(), 1)
+                              if line != line.rstrip()], "generated report has trailing whitespace")
         self.assertIn("Constants read from source:", completed.stdout)
         self.assertIn(
             "F1  Physical food and explicit-provider acts (author ruling 2026-09-01)",

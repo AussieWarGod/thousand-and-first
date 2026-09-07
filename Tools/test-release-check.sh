@@ -88,9 +88,17 @@ RELEASE_CHECK="$FIXTURE_REPO/Tools/release-check.sh"
 expect_fail "missing lane" "Usage:" "$RELEASE_CHECK"
 expect_fail "unknown lane" "Usage:" "$RELEASE_CHECK" --unknown
 expect_fail "multiple lanes" "Usage:" "$RELEASE_CHECK" --test --alpha
-for lane in --test --alpha --release; do
-	expect_fail "$lane reaches post-guard Qud check" "configured Qud root is incomplete" \
-		env TAF_QUD_ROOT="$QUD_ROOT" "$RELEASE_CHECK" "$lane"
+wslpath() { echo "fixture forbids native conversion before input validation" >&2; return 97; }
+export -f wslpath
+for missing in base executable assembly; do
+	for lane in --test --alpha --release; do
+		expect_fail "$lane refuses missing $missing before native conversion" "configured Qud root is incomplete" \
+			env TAF_QUD_ROOT="$QUD_ROOT" "$RELEASE_CHECK" "$lane"
+	done
+	case "$missing" in
+		base) mkdir -p "$QUD_ROOT/CoQ_Data/StreamingAssets/Base" ;;
+		executable) touch "$QUD_ROOT/CoQ.exe" ;;
+	esac
 done
 
 echo "RELEASE CHECK HARNESS CLEAN"

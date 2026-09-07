@@ -1138,7 +1138,7 @@ settlement to hold itself. Anything at or under 50% leaves half the people free 
         row = f"{drink:>7.2f} "
         for carry in (1, 2, 3, 4):
             row += f"{drink / carry:>11.0%} "
-        print(row)
+        print(row.rstrip())
     print(f"""
 Shipped is drink=1.0, carry={SRC["FetchDramsPerSettler"]} -> 50% at Camp. That is the knife edge the design wants:
 half your people on water is a real cost and a survivable one. carry=3 makes water free
@@ -2896,7 +2896,7 @@ def w7_networks_and_power():
     housing_block = housing_block[: housing_block.index("return")]
     assert "civic" in housing_block, "lodging drifted off the amenity rung"
     for i, rung in enumerate(ladder):
-        print(f"   {i}  {rung:<9} {'<- lodging, comfort, civic, faith, memorial' if rung == 'Amenity' else ''}")
+        print(f"   {i}  {rung:<9} {'<- lodging, comfort, civic, faith, memorial' if rung == 'Amenity' else ''}".rstrip())
 
 
 @dataclass(frozen=True)
