@@ -748,8 +748,8 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "0.3.0 public Alpha playtest",
-        "not an installable release candidate",
+        "0.3.1 public Alpha playtest",
+        "Back up saves before updating",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",
         "PLAYTESTING.md",

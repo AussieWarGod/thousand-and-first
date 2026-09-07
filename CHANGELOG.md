@@ -4,11 +4,11 @@ All notable changes to The Thousand and First. Versions are semantic: patch for 
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
 
-Historical entries preserve the claim made at that point. `[Unreleased]`, `VISION.md`, and
+Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Current isolated draft census — not release sign-off.** Current 3046-file census is line-cap green:
+> **0.3.1 automated test census — not full gameplay sign-off.** Current 3046-file census is line-cap green:
 > 431,441 physical lines, with 0 files at or above 300 lines. Direct `XRL`
 > imports occur in 1414 files, 0 of them over the line limit. Inventory SHA-256:
 > `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
@@ -35,7 +35,10 @@ below it.
 > tagged v0.3.0 bytes or their historical evidence. It does not sign the later isolated subsidence
 > draft; see `docs/STATUS.md` for that unfinished integration and its separate evidence.
 
-## [Unreleased]
+## [0.3.1] — 2026-09-07 (Alpha)
+
+Automated evidence below retains its stated scope and does not establish ordinary play or
+full historical-save compatibility.
 
 ### Changed
 
@@ -46,8 +49,8 @@ below it.
   after full zone generation, before placement, refreshes native reachability, and includes
   only those two additional cells. Shipped-layout regressions bind the preparation footprint
   to the authored entrance routes. The startup checkpoint passed all six profile/advisor
-  boot/save/cold-load combinations at seed43101 and their strict checks. The existing private0.3.1 package
-  still contains the reported failure.
+  boot/save/cold-load combinations at seed43101 and their strict checks. This is the corrected
+  startup checkpoint, not evidence that ordinary subscriber play was exercised.
 - Initial Quickstart food and material verification now rejects repeated physical child
   references before totaling stock. Normal stack quantities, consumed-stock continuation and
   save formats remain unchanged. All sixteen synthetic native creator/custody groups pass,
@@ -138,7 +141,7 @@ below it.
   AfterGameLoaded handlers and zone activation. Its new save and exact imported cold load now pass
   the strict diagnostic gate, with remaining-four production recovery and no replay. This covers
   one synthetic partial-step boundary, not ordinary progression or historical-save compatibility.
-  No release acceptance yet; see `docs/STATUS.md`.
+  See `docs/STATUS.md` for the scoped evidence and remaining acceptance limits.
 
 - Added a separate native subsidence rung persona: fifteen real departures cross City→Town;
   capture interruption and wear-after recovery prove one exact condemned roof, released wear
@@ -149,8 +152,7 @@ below it.
 - Prepared a stronger Workshop hook and grouped coverage of settlement gameplay,
   customization, civic life, infrastructure, and late-game projects. Discovery tags are now
   `Building,Faction,Settlement,World,Script,Lore` in local canonical metadata. Alpha, optional
-  legacy, compatibility limits, and save-backup warnings remain explicit. This copy is not yet
-  published; the next Alpha needs a new version and verified private/public package flow.
+  legacy, compatibility limits, and save-backup warnings remain explicit.
 
 ### Fixed
 
@@ -163,14 +165,14 @@ below it.
 - Founding-heart reservations now read the same `hs1-` plus 64-hex completion seal that their
   writer emits. Previously, the reader required bare 64 hex and rejected its own valid output.
   Runtime shares one pure `hr1` codec with 89 focused regression cases. No saved seal format was
-  changed and malformed bare-hex records are not silently migrated. This fix is not yet released.
+  changed and malformed bare-hex records are not silently migrated.
 - Isolated subsidence draft: terminal reporting loss no longer stands for unfinished physical
   work. Failed ledger/Chronicle telling is retained separately until read in homecoming; it is
   never labelled delivered. The guarded homecoming reset settles interrupted ledger intents
   before clearing and preserves news changed during the popup. Missing completed works no longer
   silently acknowledge wear-receipt release; exact moved live carriers can release only their own
   completed receipt. `ss4`/`st2` add explicit failure evidence while preserving older canonical
-  readers. Native acceptance and save/load evidence are tracked in `docs/STATUS.md`; not released.
+  readers. Native acceptance and save/load evidence are tracked in `docs/STATUS.md`.
 - Isolated subsidence draft: saved option changes retain their original clock and exact prior/next
   receipt through recovery; master resume preserves owed step time. Malformed or wrong-table
   option state no longer silently reinitializes. The actual driver retains partial resident credits,
@@ -237,8 +239,8 @@ below it.
 - Polity aggregate validation rejects noncanonical count text, even when its outer record hash
   has been recomputed. Existing canonical wire records and their authority hashes are unchanged.
 
-These are working-tree fixes, not a Workshop update or native gameplay sign-off. Current automated
-evidence and remaining native cases are recorded in
+These changes do not constitute blanket native gameplay sign-off. Current automated evidence and
+remaining native cases are recorded in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md) and
 [TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/TESTING.md).
 

@@ -1,11 +1,12 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "releaseChannel": "v0.3 Alpha",
-  "releaseVersion": "0.3.0",
-  "candidateCommit": "567f9fbab08c8d8477cf2684aa5454c48cb3f881",
+  "releaseVersion": "0.3.1",
+  "candidateCommit": "47a055254f09c1ac72733a3198101a66d47babf6",
   "gameMarketingVersion": "1.0.5",
   "gameCoreBuild": "2.0.211.51",
   "workshopId": 3794797472,
+  "privateWorkshopId": 3796495680,
   "previewSha256": "256814997366e8aef034a8ecc5222781b5700e4354613b13a11e853742b2ba4d",
-  "privatePackageReceiptSha256": "125c467379c1037501f6e1099322f74f1566c462a6554b8538f2674e95ec0d7b"
+  "privatePackageReceiptSha256": "b12b6d31c7ea14ace123765199903114b5151f0d9405c2b6eef795fac8697359"
 }

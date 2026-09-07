@@ -3,7 +3,7 @@
 **Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.0 public Alpha playtest
-**Working candidate manifest:** 0.3.1, private staging only; public promotion blocked
+**Working candidate manifest:** 0.3.1, corrected private installation verified; public upload pending
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -13,9 +13,49 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Corrected private 0.3.1 — installed and finalized
+
+Corrected private item3796495680 submission63022 TERMINAL0 reports `SubmittedUnverified`,
+`metadataMatches=true`, `contentUnchanged=true`, attempt `0002`. Finalizer20925 TERMINAL0
+then reports `SubscribedInstallationVerified`, `reason=null`, `attemptFinalized=true`.
+[Submission](/mnt/c/taf-031-corrected-release.LpixRX/submit/upload.stdout),
+[finalization](/mnt/c/taf-031-corrected-release.LpixRX/finalize/upload.stdout),
+[retained chronology](/mnt/c/taf-031-corrected-release.LpixRX/README.md).
+The private receipt is bound at commit `47a055254f09c1ac72733a3198101a66d47babf6`.
+
+| Binding | SHA-256 |
+| --- | --- |
+| Upload plan | `0738dfdd55f06c91a3c39bc209b4f6db9cad9c674645ef501e3d0fd31fbab34d` |
+| Private package receipt | `b12b6d31c7ea14ace123765199903114b5151f0d9405c2b6eef795fac8697359` |
+| Installed canonical inventory | `7274d19086813b076bf499fe5f391facd7174587b909bf0539e8b91419eb9e5c` |
+| Attempt `0002` finalization | `913a47b7f3edf292a320e847abb8faeec5e7c05ac23e4944e3c61706a1f43e17` |
+
+This proves one client's corrected subscribed bytes, not all subscribers or gameplay acceptance.
+`freshTransferVerified=false` and `releaseReady=false` remain explicit. Original attempt `0001`
+and its evidence remain immutable. Public item3794797472 remains0.3.0 until its separate upload.
+
+### One-release Alpha verification decision
+
+Canonical release-check29200 TERMINAL0 completed all stages on clean
+`792270bd228973f22421b36c611af5599796246a`; log SHA-256
+`9d7eb43e64e61431a4336149034b369cc0f7bb70635508e43a612b4c7d07a3f9`.
+Managed13625 Taf/5012 Portable passed with zero skips. The full gate was **not zero-skip**:
+the PACKAGE, COPY and BACKUP bind-alias fixtures stopped at foreign-owned `/tmp` in nested
+user namespaces. Root accepts these three narrow environmental test gaps for this Alpha;
+they are not PASS and were not waived by the user. Production ownership/alias guards stay intact.
+
+The user explicitly waived manual startup/save/reload for this Alpha. Retained six genuine
+boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; current stock native16 and managed
+checks retain their separate scopes. No ordinary subscriber play or graceful Quit PASS follows.
+Root will reuse the exact frozen-runtime gate, check only the public documentation/metadata
+delta, and require strict `--alpha` package lineage/receipt/tag/structure binding. No second full
+`--alpha` release-check is claimed. This is a one-release verification decision, not a permanent
+gate relaxation or Beta/Release acceptance. Public packaging and upload remain pending.
+
 ## Publisher integration — original private attempt finalized
 
-The publisher extension is integrated over stock checkpoint `b4c2d2d`, without changing the
+Retained pre-correction-upload checkpoint, superseded by the current delivery record above.
+The publisher extension was integrated over stock checkpoint `b4c2d2d`, without then changing the
 subscribed private package. Active-worktree native run94540 TERMINAL0 passed47 launcher fixtures
 and all14 upload suites, including75 pure/source finalization groups,29 Windows history groups
 and17 package groups. Both production helpers and the installed-test project compiled; all14
@@ -36,11 +76,10 @@ unchanged. Exact SHA-256 identities:
 | Finalization | `d06be0a4fbf6e1a29a98f03e18840bf13be4539c813b7e41a3afdb8cd8b783ab` |
 | Installed canonical inventory | `6bf2e248aa834cf52272f61e566f65a8463bddffac6d0e3599958ab729d45d58` |
 
-`freshTransferVerified=false` and `releaseReady=false`. The old private `0.3.1` still contains
-the reported Quickstart failure; finalization neither replaced it nor approved promotion. Public
-Alpha remains0.3.0. A corrected private candidate still needs a clean release gate, immutable
-package/plan/receipt, separately admitted submission, fresh subscribed-byte proof and ordinary
-acceptance. Private same-version admission requires canonical inventory unseen across all prior
+`freshTransferVerified=false` and `releaseReady=false`. That old private `0.3.1` contained
+the reported Quickstart failure; its finalization neither replaced it nor approved promotion.
+Corrected attempt `0002` now supersedes those installed bytes, as recorded above.
+Private same-version admission requires canonical inventory unseen across all prior
 attempts; public versions must increase. Unknown/partial/failed histories remain fenced, and no
 record is deleted or retried. [Publisher contract](../Tools/WorkshopSteam/PUBLISHING.md).
 
@@ -48,7 +87,8 @@ record is deleted or retried. [Publisher contract](../Tools/WorkshopSteam/PUBLIS
 
 The user reproduced an empty Quickstart site with the apron/path refusal in private item
 3796495680. Its subscribed 0.3.1 bytes were previously verified; this does not prove gameplay.
-Public item3794797472 remains last verified0.3.0. The unchanged private build must not be promoted.
+Public item3794797472 remains last verified0.3.0. That failed private build was not promoted;
+the corrected private delivery and current Alpha decision are recorded above.
 
 The old readiness check rejects the player it requires at (40,12), after ordinary boot places
 that player. An isolated correction exempts only the exact founder while retaining foreign

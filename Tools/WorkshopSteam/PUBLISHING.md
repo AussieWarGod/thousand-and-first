@@ -1,17 +1,23 @@
 # Local Workshop publisher
 
-Private `0.3.1` was uploaded to staging item `3796495680` on 2026-09-06. Steam subscription and
-one client's exact installed inventory are verified. An ordinary Qud launch selected that private
-copy; Quickstart/save/desktop/reload acceptance remains open. Public Alpha `3794797472` remains
-`0.3.0`. The tooling below is now integrated in the active worktree, but is not part of that
-frozen subscribed package. Its delivery evidence does not sign the later Quickstart correction.
-That subscribed build still contains the reported Quickstart startup failure and must not be promoted.
-The integrated publisher passed its native test/compile gates, then explicit finalization of the
-original private attempt `0001` succeeded. That invocation verified one subscribed installation
-and retained immutable installation/finalization records without changing the original attempt or
-submission. It did not upload the correction, prove a fresh transfer or approve gameplay/release.
+Corrected private `0.3.1` is now installed and finalized for staging item `3796495680`.
+Submit63022 TERMINAL0 reports `SubmittedUnverified`, `metadataMatches=true`,
+`contentUnchanged=true`, attempt `0002`; finalize20925 TERMINAL0 reports
+`SubscribedInstallationVerified`, `reason=null`, `attemptFinalized=true`.
+[Submission](/mnt/c/taf-031-corrected-release.LpixRX/submit/upload.stdout) and
+[finalization](/mnt/c/taf-031-corrected-release.LpixRX/finalize/upload.stdout) bind the corrected
+package, not the earlier broken private build. Original `0001` records remain immutable.
+One client only: `freshTransferVerified=false`, `releaseReady=false`; no gameplay or all-subscriber
+claim. Public Alpha `3794797472` remains `0.3.0` pending its separately bound upload.
 See [current status](../../docs/STATUS.md) for exact evidence and integration verification.
 Follow [the release gates](../../docs/RELEASING.md) before any submission.
+
+For this Alpha only, the user waived manual startup/save/reload. Root separately accepts the
+three named PACKAGE/COPY/BACKUP environment bind-alias test gaps, retaining their exclusions
+rather than claiming zero full-gate skips. Root reuses the exact completed frozen-runtime gate
+with public-only delta checks and strict `--alpha` package binding, not another full `--alpha`
+release-check. These decisions do not weaken production guards or the permanent release procedure.
+[Decision and evidence limits](../../docs/STATUS.md#one-release-alpha-verification-decision).
 
 ## Boundaries
 
@@ -160,9 +166,9 @@ names** only - never a message, native path, SDK diagnostic or account id.
 
 ## Remaining limits
 
-- **No corrected-private-candidate acceptance.** The original private attempt is finalized, but
-  its known-broken `0.3.1` package remains unchanged. A corrected package needs fresh gates,
-  unseen-inventory admission, submission, subscribed-byte verification and ordinary acceptance.
+- **No ordinary-play or all-subscriber acceptance.** Corrected private attempt `0002` is finalized
+  with one exact installed inventory. The current Alpha manual-test waiver and bounded gate
+  decision above do not turn that delivery result into gameplay, fresh-transfer or Beta evidence.
 - **No uncertain-attempt reconciliation.** Partial or unsuccessful histories cannot admit a later
   attempt; an operator must investigate without deleting the fence or switching registry roots.
 - **No legacy import.** Receipts written under an older caller-selected root are not migrated, read

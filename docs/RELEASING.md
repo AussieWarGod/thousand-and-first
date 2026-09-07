@@ -2,14 +2,28 @@
 
 The package builder remains offline: it never authenticates, creates an item, accepts agreements,
 uploads, or changes visibility. A separate local Steam-client publisher is implemented under the
-maintainer's authorization for autonomous, ready Alpha releases. The earlier private0.3.1 upload
-and one exact Steam-subscribed installation are verified; those bytes do not sign the later
-Quickstart correction. Ordinary Quickstart/save/desktop/reload acceptance remains open.
-The integrated repeat-release finalizer has now completed the original private attempt `0001`
-with one fresh Steam-installed verification and immutable evidence. The old broken private
-package remains unchanged; neither a fresh transfer nor release readiness was claimed.
+maintainer's authorization for autonomous, ready Alpha releases. Corrected private0.3.1 attempt
+`0002` was submitted (63022 TERMINAL0) and finalized after exact subscribed-install verification
+(20925 TERMINAL0). Original attempt `0001` remains immutable. This proves one client only;
+`freshTransferVerified=false` and `releaseReady=false`. Public Alpha remains0.3.0 pending upload.
+Exact plan/receipt/inventory/finalization hashes and evidence are in
+[current status](STATUS.md#corrected-private-031--installed-and-finalized).
 Do not automate public releases until the private-item adoption gates below pass. Never automate authentication
 or legal acceptance.
+
+### Current 0.3.1 Alpha decision — not a standing gate change
+
+The user waived manual startup/save/reload for this Alpha; no ordinary-play or graceful-Quit PASS
+is claimed. Existing six genuine startup boot/save/cold-load pairs and current stock native16
+checks keep their distinct source scopes. Canonical release-check29200 completed all stages on
+clean792270b with13625/5012 managed cases and zero managed skips, but three explicit environmental
+bind-alias exclusions (PACKAGE/COPY/BACKUP). Root accepts those narrow gaps for this Alpha,
+not as a user waiver or zero-skip full-gate result; ownership and alias guards remain unchanged.
+Root's one-release plan reuses this exact frozen-runtime verification, checks the public-only
+documentation/metadata delta, and requires strict `--alpha` package lineage, receipt, tag and
+structure binding. It does not claim another complete `--alpha` release-check run. The permanent
+procedure below and Beta/Release evidence requirements remain unchanged.
+[Exact decision and gate log identity](STATUS.md#one-release-alpha-verification-decision).
 
 Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
 claiming compatibility with another build.
@@ -314,7 +328,7 @@ treat a prior receipt as proof of changed bytes.
 
 ## Local automated-upload implementation and deployment design
 
-**Original private upload/installation finalized; corrected-candidate acceptance pending.**
+**Corrected private upload/installation finalized; public upload pending.**
 No privileged CI workflow has been deployed. Exact current evidence: [STATUS.md](STATUS.md).
 The branch/runner design below remains a proposal, not permission to change repository protection
 or attach a credentialed runner. Local Alpha automation is authorized once the exact candidate and
@@ -322,12 +336,13 @@ private-item checks pass; it does not require an invented CI deployment first.
 
 Verified local pieces:
 
-- Current active-worktree run94540 passed47 launcher fixtures, all14 upload suites, both production
+- Retained active-worktree run94540 passed47 launcher fixtures, all14 upload suites, both production
   helper builds, the installed-test build and14 installed-package cases. Actual finalizer43652
   exited0 for private attempt `0001`: `SubscribedInstallationVerified`, `reason=null`,
   `attemptFinalized=true`, one client, `freshTransferVerified=false`, `releaseReady=false`.
-  Original attempt/submission bytes and the old broken private package remain unchanged.
-  [Current records and scope](STATUS.md#publisher-integration--original-private-attempt-finalized).
+  Original attempt/submission bytes remain unchanged. Corrected attempt `0002` has since been
+  submitted and finalized, replacing the installed private package without rewriting history.
+  [Current records and scope](STATUS.md#corrected-private-031--installed-and-finalized).
 - `workshop_metadata.py` and the actual package harness enforce the separate staging/public schema.
 - `workshop_upload_plan.py` checks a closed package receipt, canonical metadata, exact item/version,
   no linked files, bounded inventory and Windows-safe paths. Its JSON is a plan, not release authority.
@@ -353,8 +368,8 @@ attempt without changing the old one. Ordinary `-Verify` does not finalize. Pres
 plan/package/path and record; no attempt retry, history deletion or root switching is supported.
 A timeout is **uncertain**.
 The exact bounded history, five-argument delivery modes and result checks are documented in
-[PUBLISHING.md](../Tools/WorkshopSteam/PUBLISHING.md). Original-private-attempt finalization is
-proved; corrected-package delivery and ordinary acceptance remain separate requirements.
+[PUBLISHING.md](../Tools/WorkshopSteam/PUBLISHING.md). Corrected private delivery is now proved
+for one client; ordinary acceptance is unclaimed and its manual gate waived only as recorded above.
 Even a successful callback plus matching remote metadata is **submitted, unverified**, never proof
 that subscribers received the exact files. Steam-installed receipt verification remains mandatory.
 

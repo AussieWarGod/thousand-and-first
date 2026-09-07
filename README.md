@@ -4,18 +4,19 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.0 public Alpha playtest.**
-Working candidate version: **0.3.1**, not yet released.
-This checkout is under active integration and is not an installable release candidate. Current evidence and open
-gates live in [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
+**Status: 0.3.1 public Alpha playtest.**
+Alpha playtest. Back up saves before updating.
+Current evidence and remaining test limits live in
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
 
-Private 0.3.1 playtesting exposed a Kingdom Quickstart startup failure: an empty site with an
-apron/path refusal. The uploaded private build must not be promoted unchanged. Earlier component
-tests missed the complete startup path. The correction now passes genuine boot, save and cold-load
-automation across all three locations and both advisor choices at a fixed test seed. It handles
-late terrain changes and prepares two previously missed heart-entrance cells. Ordinary play,
-graceful Save and Quit, and delivery of the corrected package remain unverified; see
+This patch corrects the Kingdom Quickstart empty-site startup failure found during private
+playtesting. Earlier component tests missed the complete startup path. The corrected startup
+checkpoint passed genuine boot, save and cold-load automation across all three locations and
+both advisor choices at a fixed test seed. It prepares the bounded camp after terrain generation
+and includes two previously missed heart-entrance cells. Later stock hardening has separate
+synthetic native coverage. These checks do not establish ordinary play, graceful Save and Quit,
+or full historical-save compatibility; see
 [test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/DevTests/QUICKSTART-BOOT-TESTS.md).
 
 ## What the mod adds
