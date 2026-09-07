@@ -13,7 +13,32 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased native bound/paused recovery guards, case28d.3
+## Unreleased real-turn recovery, case28d.4
+
+Development-only regression now exercises the existing sealed `advance 1` through the
+actual engine loop. Actual contact/acceptance and three original deaths retain Active;
+pass-through EndTurn/OnWorldWake observers prove the first heartbeat earns Ready once.
+Actual post-turn explicit completion finishes the quest, clears the wound, and refuses
+repeat without changing the observed clock or settled authority. Legitimate world effects
+are retained, not restored. No clock, energy, recovery state or master latch is forced.
+
+Native59966 TERMINAL0 passed at18:22:00.039UTC, seed#1012035, fresh sealed
+`/mnt/c/taf-scenario.Zt98Jg`: one dispatch/one wake, turns2->3, ticks103527->103528,
+actions37->51,216water/24plunder/three mints and original graves retained. Strict raw log
+and12journalrows pass; exact receipt-ownedPID44480 stopped. Comparison61572 proves all3177
+current production/Harness C# bytes match that profile. The observer permits bounded
+multi-dispatch overshoot and additional wakes, but this seed does not execute those variants.
+
+Full licensed Windows1901 TERMINAL0 passes13,673 main and5,051 Portable cases, zero skips;
+normal rebuilds have zero warnings/errors. Canonical7819 TERMINAL0 passes all four C#7.3
+modes: ordinary3043/3047, developer3173/3177,130 Harness files, plus installed Hearthpyre
+source/ABI. Production remains3047sources with the unchanged current6dbd structural binding.
+Four new source-wiring tests and74personas are registered;56persona parser tests pass.
+Final repository and hosted integration gates remain separate. This is controlled real-turn
+evidence, not ordinary rendered play, paused resume, save/load or full Beta acceptance.
+[Retained evidence](/mnt/c/taf-raid-recovery-turn-native.X0VMU8/README.md).
+
+## Retained native bound/paused recovery guards, case28d.3
 
 Recovery checkpoint25959e7 normally rebased to6d70a03 on integration1ce9960; only the
 already-reviewed PR10 test/doc delta was added, production digest6dbd remains unchanged.
@@ -38,7 +63,9 @@ Compile56568 TERMINAL0 passes ordinary3043/3047 and developer3171/3175 with128 H
 shards, all four C#7.3 modes plus installed source/ABI checks. Full licensed Windows93430
 TERMINAL0 passes13,669 main and5,047 Portable cases, zero skips. Exact source comparisons
 33144/61340 prove all3175 current production/Harness bytes match both sealed native profiles.
-Final repository audit65692 is running; no pending check is treated as passed.
+Final repository audit65692 passed501tests/46.709s; all6hosted checks passed and PR11
+normally merged to integration2f6051c. Its full tree matches tested25d1f49. Main PR6's
+six checks also passed; it still requires an eligible approval. No bypass was used.
 Evidence `/mnt/c/taf-raid-recovery-guards-native.6Dnfup`. This signs controlled native API
 seams, not an ordinary heartbeat, rendered popup, resume, save/load or full Beta acceptance.
 
