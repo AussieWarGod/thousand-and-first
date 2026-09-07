@@ -149,17 +149,10 @@ namespace ThousandAndFirst
 			if (op != null && op.Action == KingdomLifecycleAction.RaidAttack
 				&& op.Phase == KingdomLifecyclePhase.EffectIntent
 				&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
-				&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal)
-				&& CountLiveRaiders(zone, op.Id, actor) == 0)
+				&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal))
 			{
-				KingdomSystem.Guard("last raid body died", delegate
-				{
-					if (!KingdomLifecycleRules.RaidRuntimeAdapter.SkipEffectWithoutContact(
-						system.LifecycleBook, op)
-							|| !KingdomLifecycleRules.AdvancePhase(system.LifecycleBook, op,
-								KingdomLifecyclePhase.EffectsSettled, The.Game.TimeTicks)) return;
-					ResumeOpen(system, zone);
-				});
+				// BeforeDeathRemoval precedes a still-vetoable Destroy. Active-zone inspection
+				// owns finalization after observing the body's actual removal.
 				return;
 			}
 			KingdomRaidIncident recovery = FindRecovery(system.LifecycleBook.RaidLedger,

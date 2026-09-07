@@ -20,7 +20,24 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The current unreleased raid-contact census reports 3046 staged production C# files and 431,481 physical lines,
+The work-in-progress raid-death correction reports3046 staged production C# files,
+431,474 physical lines, zero at or above300, and1414 direct `XRL` imports. Exact inventory:
+`980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+One production file changes from the raid-contact checkpoint below. The exact semantic ledger
+now binds this inventory through a complete canonical parent/current comparison: 3045 unchanged,
+one modified, none added or removed. Unchanged sources inherit the retained review; root and an
+independent AI reviewer inspected the complete changed file and affected death/wake boundaries.
+Active attacks stay pending before cancellable removal; existing inspection owns finalization
+after actual absence. Shared counting, recovery, saved fields and public APIs are unchanged.
+See [review evidence](STRUCTURE_REVIEW_0_3_1.md). The strict structural release gate passed;
+separate canonical compilation1886 then passed ordinary3042/3046 and developer3162/3166 inputs,
+all120 Harness shards plus installed ABI. No native ordinary-turn, veto, recovery or save/load
+acceptance is inferred.
+Public0.3.1 installed content remains unchanged.
+
+## Retained raid-contact census
+
+The unreleased raid-contact checkpoint reports 3046 staged production C# files and 431,481 physical lines,
 with 0 at or above the strict 300-line cap. Direct `XRL` imports remain in 1414 files;
 none exceeds the line limit. Exact staged source inventory digest:
 `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.

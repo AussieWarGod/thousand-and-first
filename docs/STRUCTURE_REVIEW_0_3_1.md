@@ -1,9 +1,44 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T14:57:27Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T16:03:14Z. This records structural semantics, not release acceptance.
 
-## Current unreleased raid-contact correction
+## Current unreleased raid-death correction
+
+Production digest `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+The [complete canonical comparison](/tmp/taf-raid-death-canonical-audit.JTC5zN/comparison.json)
+enumerates all 3046 paths and hashes: 431,474 physical lines, 1414 direct-XRL files, zero cap
+failures. Complete current/parent stage membership contains 3077 paths. Every actual parent
+`7b272de6a464d1a61fb4de18106a3b665586d1a8` Git blob was compared; its tree equals `186f050`
+and its production digest equals the retained contact review below. Current bytes and membership
+were reread. Delta: 3045 unchanged, one modified, none added or removed. Comparison JSON SHA256
+`91e270de6410dbfef5c4220df828a2b0905e1d419f508ab589f9bc0992d723f6`.
+Unchanged sources inherit that review chain; no fresh full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit inspected the complete changed production file and
+affected death, wake, attack inspection and terminal-result boundaries. Raid02 still owns actor
+callbacks and answer dispatch; its matching active-attack death branch now returns pending.
+The pinned engine sets `Dying` before a vetoable `BeforeDie` and sends `BeforeDeathRemoval`
+before a separately vetoable `Destroy`. `IsAlive` classifies organism kind, not completed removal.
+Pre-removal callbacks therefore cannot finalize active attacks. Existing normal heartbeat and
+zone-activation inspection observe actual absence, then use unchanged effect/phase/result
+protocols. No new service, durable authority, saved field, wire layout or public API was added.
+Shared counting, contact and inherited recovery behavior are unchanged. No Required finding
+remains in this bounded active-attack correction. Raid02 SHA256
+`ea0e3f8e3231742be480d7d2c9276bb38be9d816132c3b7ec93da06e06e4005d` (171 physical lines).
+
+Actual native run 12835 reproduced the old final-raider quarantine. Corrected run 90794 passed
+three actual deaths, six inert callback observations, pending authority through final removal,
+then one real activation defeat and unchanged repeat, 240 drams and zero plunder. Full licensed
+Windows runner 24858 passed 13,650 main and 5,028 Portable cases, zero skips.
+[Native and managed evidence](/mnt/c/taf-raid-death-fixed.nf0IMW/README.md).
+Four-mode compilation was pending at signing. Subsequent canonical runner1886 TERMINAL0 passed
+ordinary3042/3046 and developer3162/3166 inputs, all120 Harness shards plus installed ABI.
+Developer retention setup and Harness semantics are not approved through this production binding. Ordinary turn-driven
+play, veto injection, recovery, save/load and inherited raid custody limits remain unsigned.
+Public 0.3.1 remains unchanged; this is not a new package or broad Beta acceptance.
+
+## Retained unreleased raid-contact correction
 
 Production digest `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
 The [complete bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json)

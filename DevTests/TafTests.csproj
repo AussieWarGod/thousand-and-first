@@ -740,6 +740,7 @@
 	<Compile Include="KingdomRaidIncidentRulesTests.cs" />
 	<Compile Include="KingdomRaidLaunchNativeContractTests.cs" />
 	<Compile Include="KingdomRaidContactNativeSourceTests.cs" />
+	<Compile Include="KingdomRaidDeathNativeSourceTests.cs" />
 	<Compile Include="KingdomRaidLaunchOrderTests.cs" />
 	<Compile Include="KingdomRaidRuntimeSourceTests.cs" />
 	<Compile Include="KingdomRaidOutboxRulesTests.cs" />

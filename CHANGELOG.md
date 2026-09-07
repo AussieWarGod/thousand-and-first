@@ -8,7 +8,17 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Unreleased raid-contact census — not full gameplay sign-off.** Current 3046-file census is line-cap green:
+> **Unreleased raid-death census — exact structural gate passed.** Current 3046-file census is line-cap green:
+> 431,474 physical lines, zero files at or above300,1414 direct `XRL` imports.
+> Inventory SHA-256: `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+> Native final-death quarantine reproduced and corrected in an isolated real-death regression.
+> Full Windows suites pass13,650 main/5,028 Portable cases, zero skips. Canonical compile1886
+> passes all four modes: ordinary3042/3046, developer3162/3166,120 Harness shards plus ABI.
+> Final repository audit passes501 tooling tests plus inventory, XML, architecture and docs.
+> Normal PR/CI integration remains pending; ordinary play and save/load remain unsigned.
+> Previous receipts below are retained history. Public0.3.1 remains unchanged.
+
+> **Retained unreleased raid-contact census — not full gameplay sign-off.** Its3046-file census is line-cap green:
 > 431,481 physical lines, 0 files at or above 300 lines, and1414 direct `XRL` imports.
 > Inventory SHA-256: `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
 > The derived cold-stage inventory remains3077 files, not new installed/subscribed proof.
@@ -47,6 +57,11 @@ below it.
 
 ## [Unreleased]
 
+- Defer active raid defeat resolution until normal inspection after actual body removal.
+  Pre-removal death callbacks can still be vetoed and no longer advance or quarantine the
+  attack. No save-format or shared recovery/counting change. Native reproduction retained;
+  corrected native case proves one zero-plunder defeat and unchanged repeat. Full Windows
+  suites pass with zero skips; remaining release gates are separate in `docs/STATUS.md`.
 - Raid contact now reserves only its exact named store through the real active survey,
   preserving settlement-wide accounting, routed-water floors and existing rollback guards.
   Invalid reservations refuse before physical commit instead of quarantining untouched water;

@@ -13,7 +13,42 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased raid-contact correction — native case28b.2
+## Unreleased native raid-death correction, case28b.1
+
+Actual native death run12835 exposed final-raider quarantine: `RaiderDying` advanced
+the attack before engine removal, then terminal inspection counted that same still-present
+body. Foreign-zone and first target-zone deaths preserved exact authority and240drams;
+all three real deaths and originating-graveyard removals were proved. Retained failure:
+`/mnt/c/taf-raid-death-retention.m1iKE0`.
+
+One production file now leaves the matching active attack pending during the cancellable
+pre-removal callback. Existing normal settlement wake/zone activation observes actual
+absence and resolves afterward. Shared counting, recovery and saved fields are unchanged.
+The new native case explicitly requires unchanged pending state after final removal,
+then one `RaidersDefeated` result and unchanged repeat through real activation.
+
+Current strict structural census:3046 sources/431,474 physical lines/1414 direct-XRL/zero cap failures;
+Inventory SHA-256: `980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb`.
+Exact semantic release binding passed through the complete canonical comparison:3045 unchanged
+production files inherit review, one modified file received scoped independent review.
+Canonical compile1886 TERMINAL0 passed ordinary3042/3046 and developer3162/3166 inputs,
+all120 Harness shards, plus installed Hearthpyre source/ABI checks. Older receipts below
+are not reassigned to this delta. Focused native source fixtures6/6 in both projects and runtime-source
+fixtures14/14 pass. Corrected native90794 TERMINAL0 passed at15:47:52UTC, seed#1012029,
+profile `/mnt/c/taf-scenario.T6OIGl`: all three real deaths/six callbacks, exact unchanged
+pending authority through final removal, one post-removal activation result,240drams,
+zero plunder, one attack proof and unchanged repeat. Strict raw Player.log passed;
+ownedPID34372 stopped, profile/seal retained. Full Windows24858 TERMINAL0 passed
+13,650 main and5,028 Portable cases with zero skips after normal generated-output rebuild.
+Evidence remains under `/mnt/c/taf-raid-death-fixed.nf0IMW`; final repository audit48595
+TERMINAL0 passed all501 tooling tests in47.005s plus inventory, XML, architecture, registration
+and documentation checks. Normal PR/CI integration remains pending. Main PR6 still requires
+an eligible approving review.
+The earlier missing-generated-DLL launch and both native
+failures are retained. No new version, package or Workshop update is claimed.
+This is synthetic developer evidence; ordinary play, recovery and save/load stay unsigned.
+
+## Retained unreleased raid-contact correction — native case28b.2
 
 Two production files change: `Growth/KingdomWaterDebit.cs` and
 `Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs`. Actual contact now takes or reuses the
@@ -22,7 +57,7 @@ cannot fall back to another vessel; settlement-wide counters, routed-water floor
 and rollback guards remain intact. Failed reservations refuse before `Commit`, without the
 previous bogus quarantine over untouched water. No saved fields or public API change.
 
-Current canonical census:3046 sources/431,481 physical lines/1414 direct-XRL/zero cap failures;
+Retained raid-contact census:3046 sources/431,481 physical lines/1414 direct-XRL/zero cap failures;
 Inventory SHA-256: `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
 The exact bridge retains3044 unchanged production files, two modified, none added or removed.
 The derived cold-stage inventory remains3077 files, not new installed/subscribed evidence.
