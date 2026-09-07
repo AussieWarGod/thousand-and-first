@@ -151,8 +151,27 @@ namespace ThousandAndFirst
 			return Reserve(Survey, Amount, null);
 		}
 
+		/// <summary>Restricts allocation to one exact member of the active survey while retaining
+		/// that survey's settlement-wide water floor, custody checks and accounting.</summary>
+		internal static KingdomWaterDebit ReserveExactStore(KingdomSurvey survey,
+			LiquidVolume vessel, int amount)
+		{
+			int matches = 0;
+			if (survey != null && survey.Ground != null && vessel != null
+				&& ReferenceEquals(KingdomSurvey.ActiveFor(survey.Ground), survey)
+				&& ReferenceEquals(XRL.The.ZoneManager?.ActiveZone, survey.Ground)
+				&& OwnsVessel(vessel.ParentObject, vessel)
+				&& ReferenceEquals(vessel.ParentObject.Physics?._CurrentCell?.ParentZone, survey.Ground))
+				for (int i = 0; i < survey.Stores.Count; i++)
+					if (ReferenceEquals(survey.Stores[i], vessel)) matches++;
+			if (matches != 1)
+				return new KingdomWaterDebit(survey, amount).FailReservation(
+					KingdomWaterDebitFault.InvalidSurvey, "The exact store is not one unique active-ground survey member.");
+			return Reserve(survey, amount, null, vessel);
+		}
+
 		private static KingdomWaterDebit Reserve(KingdomSurvey Survey, int Amount,
-			GameObject Carrier)
+			GameObject Carrier, LiquidVolume ExactVessel = null)
 		{
 			KingdomWaterDebit debit = new KingdomWaterDebit(Survey, Amount);
 			if (Survey == null)
@@ -200,7 +219,8 @@ namespace ThousandAndFirst
 					owners[i] = owner;
 					volumes[i] = vessel.Volume;
 					pure[i] = KingdomLiquids.HasFreshWater(vessel);
-					dedicated[i] = OwnsVessel(owner, vessel) && (Carrier == null
+					dedicated[i] = (ExactVessel == null || ReferenceEquals(vessel, ExactVessel))
+						&& OwnsVessel(owner, vessel) && (Carrier == null
 						? owner.GetIntProperty("KingdomStores") == 1
 							&& !KingdomConstructionInputLeaseAuthority.IsLeased(leases, owner)
 						: DirectlyCarried(Carrier, owner) && !vessel.Sealed);
@@ -224,6 +244,8 @@ namespace ThousandAndFirst
 					LiquidVolume vessel = vessels[i];
 					GameObject owner = owners[i];
 					if (!OwnsVessel(owner, vessel)
+						|| (ExactVessel != null && (!ReferenceEquals(vessel, ExactVessel)
+							|| !ReferenceEquals(owner.Physics?._CurrentCell?.ParentZone, Survey.Ground)))
 						|| (Carrier == null ? owner.GetIntProperty("KingdomStores") != 1
 							: !DirectlyCarried(Carrier, owner) || vessel.Sealed) ||
 						vessel.Volume != volumes[i] || !KingdomLiquids.HasFreshWater(vessel) || vessel.MaxVolume < 0)
@@ -235,7 +257,8 @@ namespace ThousandAndFirst
 					{
 						Vessel = vessel,
 						Owner = owner,
-						OriginalZone = Carrier == null ? owner.CurrentZone : Carrier.CurrentZone,
+						OriginalZone = ExactVessel != null ? Survey.Ground
+							: Carrier == null ? owner.CurrentZone : Carrier.CurrentZone,
 						Carrier = Carrier, Dedicated = Carrier == null,
 						OriginalVolume = vessel.Volume,
 						OriginalMaxVolume = vessel.MaxVolume,

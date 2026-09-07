@@ -360,6 +360,7 @@
     <Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
     <Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
     <Compile Include="KingdomRaidLaunchNativeContractTests.cs" />
+    <Compile Include="KingdomRaidContactNativeSourceTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />

@@ -71,7 +71,29 @@ namespace ThousandAndFirst
 				|| op.Phase != KingdomLifecyclePhase.EffectIntent
 				|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)
 				|| !string.Equals(op.Origin, targetId, StringComparison.Ordinal)
-				|| op.Target != x || op.Count != y) return;
+				|| op.Target != x || op.Count != y
+				|| !ReferenceEquals(The.ZoneManager?.ActiveZone, zone)) return;
+			XRLGame game = The.Game;
+			KingdomLifecycleBook book = system.LifecycleBook;
+			if (game == null || !ReferenceEquals(game.GetSystem<KingdomSystem>(), system)
+				|| !ReferenceEquals(book?.Raid, op) || !KingdomLifecycleRules.CanOwnAuthority(book)) return;
+			KingdomSurvey survey = KingdomSurvey.Take(zone, system);
+			using (survey.BindPass())
+			{
+				if (!ReferenceEquals(The.Game, game) || !ReferenceEquals(game.GetSystem<KingdomSystem>(), system)
+					|| !ReferenceEquals(system.LifecycleBook, book) || !ReferenceEquals(book.Raid, op)
+					|| !ReferenceEquals(The.ZoneManager?.ActiveZone, zone)
+					|| !KingdomMaster.AutomaticWorkAllowed(system) || !Enabled
+					|| !KingdomLifecycleRules.CanOwnAuthority(book)) return;
+				ProveObjectiveContact(system, zone, op, targetId, x, y, survey);
+			}
+		}
+
+		private static void ProveObjectiveContact(KingdomSystem system, Zone zone,
+			KingdomLifecycleOperation op, string targetId, int x, int y, KingdomSurvey survey)
+		{
+			if (op.Phase != KingdomLifecyclePhase.EffectIntent || op.ZoneId != zone.ZoneID
+				|| op.Origin != targetId || op.Target != x || op.Count != y) return;
 			GameObject target = FindExact(zone, targetId);
 			LiquidVolume liquid = target?.GetPart<LiquidVolume>();
 			if (!GameObject.Validate(target) || target.CurrentCell == null
@@ -82,13 +104,8 @@ namespace ThousandAndFirst
 			KingdomWaterDebit debit = null;
 			if (amount > 0)
 			{
-				KingdomSurvey exact = new KingdomSurvey();
-				exact.Stores.Add(liquid);
-				exact.StoredWater = liquid.Volume;
-				exact.StorageCapacity = liquid.MaxVolume;
-				exact.StorageSpace = Math.Max(0, liquid.MaxVolume - liquid.Volume);
-				debit = exact.ReserveExactWater(amount);
-				if (debit == null) return;
+				debit = KingdomWaterDebit.ReserveExactStore(survey, liquid, amount);
+				if (debit == null || debit.State != KingdomWaterDebitState.Reserved) return;
 				if (!debit.Commit())
 				{
 					RestoreDebitOrQuarantine(system, op, debit,

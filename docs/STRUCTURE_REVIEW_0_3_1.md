@@ -1,9 +1,48 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T11:37:12Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T14:57:27Z. This records structural semantics, not release acceptance.
 
-## Current initial-stock child identity correction
+## Current unreleased raid-contact correction
+
+Production digest `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+The [complete bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json)
+enumerates all 3046 paths/hashes: 431,481 physical lines, 1414 direct-XRL files, zero cap
+failures. Canonical current/committed stage membership and every actual `cd6dedc` parent blob
+were compared, then reread by the bridge. Parent hashes match the retained
+stock inventory below: 3044 unchanged, two modified, no added or removed files. Report SHA256
+`401339a134eab730f43605777a00b913ac674c579d6feecebb803d5b75847aa2`.
+Unchanged files inherit that scoped review chain; no new full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit read both complete production changes and affected
+survey, reservation, commit, rollback and raid-effect dependencies. `Growth/KingdomWaterDebit.cs`
+owns the existing exact physical debit; its internal selector requires one unique vessel on
+the actual active survey's ground. It filters allocations without substituting a survey or
+borrowing other stores, retains full survey accounting/lease/floor checks, and freezes the
+selected vessel against the survey's ground. Default ordinary/carried allocation is unchanged.
+SHA256 `739e2a218e80cd3d609194fbcee2491948797c471bfc11a585e64286fa1e588c`.
+
+`Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs` retains contact as the only plunder entry.
+Exact operation/target/active-zone admission precedes survey classification. A real survey
+scope covers reservation, commit and every compensation path; game/system/book/master authority
+is rechecked after taking the survey. Non-Reserved receipts return before Commit, rather than
+triggering quarantine through a failed receipt that never drained water. Existing compensation
+and effect/terminal protocols remain. No saved field, public API, wire format or new durable
+authority was added. SHA256 `e7a38750020e2d4e2102d35451d89495a5e3bfce89d73ec07927d8b23e75db4a`.
+No Required finding remains in this bounded correction.
+
+Native runner 14492 passed actual foreign contact unchanged, restored 24-dram contact,
+unaffected second store and repeat idempotence. Its raw logs and prior failures remain in
+[contact evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md). Developer source formatting
+subsequently removed only three blank lines to satisfy the strict line cap; `diff -B` against
+the tested profile is empty. Four-mode compilation 52808 passed all current ordinary3042/3046
+and developer3160/3164 inputs, 118 Harness shards, plus installed Hearthpyre source/ABI checks.
+Final full managed and repository checks remain separate from this semantic review.
+Native evidence is synthetic; ordinary play, foreign-death case 28b.1, recovery, save/load,
+same-blueprint replacement and interrupted-placement custody remain open. Public 0.3.1 is
+unchanged; no new release or broad Beta acceptance is signed here.
+
+## Retained initial-stock child identity correction
 
 Current production digest:
 `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.

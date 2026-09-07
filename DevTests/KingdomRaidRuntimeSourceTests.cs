@@ -103,11 +103,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (distance > 1) return;", step);
 			StringAssert.Contains("ProveObjectiveContact", step);
 			Assert.IsFalse(launch.Contains("ReserveExactWater"));
+			Assert.IsFalse(launch.Contains("ReserveExactStore"));
 			Assert.IsFalse(launch.Contains("PlunderProved ="));
 			StringAssert.Contains("string.Equals(op.Origin, targetId", contact);
 			StringAssert.Contains("target.CurrentCell.X != x", contact);
 			StringAssert.Contains("target.GetIntProperty(\"KingdomStores\") != 1", contact);
-			int reserve = contact.IndexOf("ReserveExactWater(amount)", StringComparison.Ordinal);
+			int reserve = contact.IndexOf("ReserveExactStore(survey, liquid, amount)", StringComparison.Ordinal);
 			int proof = contact.IndexOf("RaidRuntimeAdapter.BeginEffect", StringComparison.Ordinal);
 			Assert.Greater(reserve, 0);
 			Assert.Greater(proof, reserve);
@@ -202,7 +203,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Greater(contactZone, 0);
 			Assert.Greater(contact.IndexOf("FindExact(zone, targetId)", StringComparison.Ordinal),
 				contactZone);
-			foreach (string mutation in new[] { "ReserveExactWater(amount)", "BeginEffect(",
+			foreach (string mutation in new[] { "ReserveExactStore(survey, liquid, amount)", "BeginEffect(",
 				"CommitEffect(", "AdvancePhase(", "ResumeOpen(" })
 				Assert.Greater(contact.IndexOf(mutation, StringComparison.Ordinal), contactZone,
 					mutation + " must follow the exact zone guard");
