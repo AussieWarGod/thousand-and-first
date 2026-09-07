@@ -544,8 +544,9 @@ not proof of later-stage equipment balance. Frozen old-plan references may still
 when they no longer match the current profile; the correction does not make that impossible.
 
 B2's swallowed callback throw remains unimplemented. Same-blueprint replacement and interrupted
-placement custody remain known open defects. Ordinary raids, save/load, and foreign-death
-case 28b.1 remain unsigned. Separate contact case 28b.2 has the bounded native evidence below;
+placement custody remain known open defects. Case 28b.1's same-process death/activation
+sequence has the bounded native evidence below; ordinary raids and save/load repetition
+remain unsigned. Separate contact case 28b.2 also has bounded native evidence below;
 neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
@@ -1372,13 +1373,34 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 27a | Mint another `kingdom:raid`; set `kingdom:standing Snapjaws:250`; Charter → **Answer a threat** → **Send an envoy** | No water changes hands. The incident resolves with an obligation; the next explicit snapjaw grievance demands 12 drams, then discharges that obligation |
 | 28 | Resolve any open test incident; enter `kingdom:raid`; Charter → **Answer a threat** → **Refuse and meet the warband**; remain here until its displayed due tick | The frozen profile spawns marked snapjaws only on passable zone-edge cells that have a path to the frozen named store. Spawn itself takes **no water** |
 | 28a | Watch the marked raiders approach; compare dedicated water before contact and after one reaches the named store | Water stays unchanged until physical adjacency. At contact, at most the frozen raid stake (up to 24 drams, reduced by proved defence) leaves that exact fresh-water store and the incident records the proved amount |
-| 28b | Repeat the fight and defeat every marked raider before any reaches the store | The death of the final marked raider resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
-| 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. The remaining target-zone band stays actionable and its last death resolves once with zero plunder. Repeat across save/load; this is a native gate, not signed by source-contract tests |
+| 28b | Repeat the fight and defeat every marked raider before any reaches the store | After final body removal, the next normal settlement wake resolves **RaidersDefeated** with zero plunder; raid bodies grant no XP |
+| 28b.1 | Before objective contact, displace one of at least two marked raiders into another zone and kill it there; return and defeat the remaining raiders at the target seat | The foreign-zone death neither skips the attack effect nor quarantines the raid. Remaining target-zone band stays actionable; after its last body is removed, the next normal settlement wake resolves once with zero plunder. Pre-removal callbacks must not finalize a death that can still be vetoed. Repeat across save/load; this is a native gate, not signed by source-contract tests |
 | 28b.2 | In a native debugger/fault-injection fixture, move the exact named store and a marked raider to another zone at the original coordinates; invoke `StepRaider` there before the next target-zone inspection | This foreign-zone callback takes no water, records no plunder, and leaves the operation in `EffectIntent`, unquarantined. Restore the exact objects to the frozen zone and prove one normal contact resolution. Ordinary target-zone inspection may independently resolve a missing objective; isolate that separate event |
 | 28c | After a physically proved store plunder, Charter → raid recovery → **Accept** | One plain base-game quest appears with no custom manager, reward, reputation, or XP. The settlement watch is exactly one defence point weaker until recovery resolves |
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
+
+Case28b.1's same-process death/activation sequence passed isolated `raid-death-native-check`
+on2026-09-07 at15:47UTC, seed#1012029, retained profile `/mnt/c/taf-scenario.T6OIGl`.
+All three real `Die(Force:true)` calls and six real pre-removal callback observations passed;
+each factory original reached its exact originating-zone graveyard. Foreign and first target
+deaths left exact authority pending. Final actual removal also left exact pending authority;
+one real zone activation then recorded `RaidersDefeated`,240drams unchanged, zero plunder and
+one attack proof. Repeated activation changed no serialized authority, minted no new raiders
+and left clock unchanged. Runner90794 and strict raw Player.log checks passed; only owned
+PID34372 stopped. Evidence: `/mnt/c/taf-raid-death-fixed.nf0IMW`.
+
+Earlier actual run12835 exposed pre-removal self-recount quarantine and remains retained.
+Earlier run68898 stopped before deaths because the synthetic test ground had filled its
+graveyard. The corrected fixture raises only bounded retention capacity before snapshots
+(target256→272, foreign256 unchanged), proves existing queue entries unchanged, never clears
+or pools them, and retains the higher limit. This is synthetic evidence retention, not an
+ordinary-scene guarantee. No fake death notification or test-side removal is used.
+The production correction deliberately moves resolution to normal inspection after removal;
+it does not clear quarantine or globally ignore `IsDying`, which precedes vetoable death.
+Ordinary turn-driven play, veto injection, recovery and case28b.1's save/load repetition remain
+unsigned. Source/managed passes do not close those native gates.
 
 Case 28b.2 passed the isolated `raid-contact-native-check` persona on 2026-09-07 at 14:40 UTC,
 seed #1012028, retained profile `/mnt/c/taf-scenario.YWkFsy`. Actual foreign-zone `StepRaider`

@@ -1,0 +1,12 @@
+# Real death callbacks in an isolated retained synthetic raid fixture.
+# Preload foreign zone before launch; no extra production recovery or clock advance.
+# Raw custody and authority checks remain between the actual death callbacks.
+# Engine removal and callback evidence are required, not a test-side death notification.
+# Same-process only; ordinary gameplay, recovery and save/load remain unsigned.
+DESCRIPTION=foreign death preserves attack; after final removal a production wake resolves once
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-death-native-check;stagedigest
+VERBS=raid-death-native-check
+EXPECT=stagedigest:OK~founded=false,raid-death-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

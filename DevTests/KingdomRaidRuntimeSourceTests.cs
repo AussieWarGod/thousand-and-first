@@ -150,7 +150,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RaiderBodiesResolveOnExactLastDeathAndCannotFarmExperience()
+		public void RaiderBodiesResolveAfterObservedRemovalAndCannotFarmExperience()
 		{
 			string source = Source(Path.Combine("Raids", "KingdomRaids.cs"));
 			string launch = Slice(source, "private static void LaunchRaid(",
@@ -159,6 +159,14 @@ namespace ThousandAndFirst.Tests
 				"private static bool AllProjectionsProved(");
 			string death = Slice(source, "internal static void RaiderDying(",
 				"private static bool PublishSimple(");
+			string active = Slice(death, "if (op != null && op.Action == KingdomLifecycleAction.RaidAttack",
+				"KingdomRaidIncident recovery =");
+			string inspect = Slice(source, "private static void InspectOpenAttack(",
+				"private static void ProveObjectiveContact(");
+			string resume = Slice(source, "private static void ResumeOpen(",
+				"private static KingdomLifecyclePhase NextAfterPrepared(");
+			string activation = Slice(source, "public static void OnZoneActivated(",
+				"public static string FindProvokedFaction(");
 			string result = Slice(source, "private static bool TryDeriveAttackResult(",
 				"private static bool ResolveIncident(");
 			string count = Slice(source, "private static int CountLiveRaiders(",
@@ -167,12 +175,30 @@ namespace ThousandAndFirst.Tests
 				"public override void TurnTick(");
 			StringAssert.Contains("RequirePart<NoXPGain>()", bodies);
 			StringAssert.Contains("Allegiance[system.KingdomFactionName] = -100", bodies);
-			StringAssert.Contains("CountLiveRaiders(zone, op.Id, actor) == 0", death);
-			StringAssert.Contains("SkipEffectWithoutContact", death);
+			StringAssert.Contains("op.Phase == KingdomLifecyclePhase.EffectIntent", active);
+			StringAssert.Contains("return;", active);
+			foreach (string premature in new[] { "CountLiveRaiders(", "SkipEffectWithoutContact", "AdvancePhase(",
+				"ResumeOpen(", "Retire(", "ResolveIncident(", "Quarantine(" })
+				StringAssert.DoesNotContain(premature, active, "pre-removal notification is not removal authority");
 			StringAssert.Contains("last recovery-marked raider died", death);
+			StringAssert.Contains("CountLiveRaiders(zone, part.OperationId, actor) != 0", death);
 			StringAssert.Contains("ReconcileRecoveryAtSeat(system, zone, actor)", death);
+			StringAssert.Contains("OnWorldWake(system, now, zone)", activation);
+			StringAssert.Contains("ResumeOpen(system, currentZone ?? The.Player?.CurrentZone)", source);
+			string pending = Slice(resume, "case KingdomLifecyclePhase.EffectIntent:", "case KingdomLifecyclePhase.EffectsSettled:");
+			StringAssert.Contains("InspectOpenAttack(system, zone, op);", pending);
+			StringAssert.Contains("return;", pending);
+			int inspectZone = inspect.IndexOf("string.Equals(zone.ZoneID, op.ZoneId", StringComparison.Ordinal);
+			Assert.Greater(inspectZone, 0);
+			int empty = inspect.IndexOf("if (CountLiveRaiders(zone, op.Id) == 0", StringComparison.Ordinal);
+			Assert.Greater(empty, inspectZone);
+			string gone = inspect.Substring(empty);
+			StringAssert.Contains("SkipEffectWithoutContact", gone);
+			StringAssert.Contains("AdvancePhase(system.LifecycleBook, op", gone);
+			StringAssert.Contains("ResumeOpen(system, zone)", gone);
 			StringAssert.Contains("KingdomRaidResolution.RaidersDefeated", result);
 			StringAssert.Contains("item.IsAlive", count);
+			StringAssert.DoesNotContain("IsDying", count, "a pre-removal death can still be vetoed");
 			StringAssert.Contains("BeforeDeathRemovalEvent.ID", part);
 			StringAssert.Contains("KingdomRaids.RaiderDying", part);
 		}
@@ -193,10 +219,13 @@ namespace ThousandAndFirst.Tests
 				"&& string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
 				StringComparison.Ordinal);
 			Assert.Greater(deathZone, 0);
-			Assert.Greater(death.IndexOf("CountLiveRaiders(zone, op.Id, actor)",
+			Assert.Greater(death.IndexOf("&& string.Equals(op.Id, part.OperationId, StringComparison.Ordinal)",
 				StringComparison.Ordinal), deathZone);
-			Assert.Greater(death.IndexOf("SkipEffectWithoutContact", StringComparison.Ordinal),
-				deathZone);
+			string active = Slice(death, "if (op != null && op.Action == KingdomLifecycleAction.RaidAttack",
+				"KingdomRaidIncident recovery =");
+			StringAssert.Contains("return;", active);
+			StringAssert.DoesNotContain("SkipEffectWithoutContact", active);
+			StringAssert.DoesNotContain("ResumeOpen(", active);
 			int contactZone = contact.IndexOf(
 				"|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
 				StringComparison.Ordinal);
