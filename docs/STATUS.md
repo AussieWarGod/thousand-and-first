@@ -13,7 +13,41 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased real-turn recovery, case28d.4
+## Unreleased master-growth resume correction, case28d.5
+
+Automated native diagnostic reproduced a real master-resume defect: fresh growth retained
+interval0 but received a positive arrival deadline, invalidating its enclosing lifecycle.
+Established cadence also required its deadline mirror to remain consistent with recorded
+debt/opportunities/open leases. A new detached engine-free resume protocol now validates
+the whole proposed state and exact original graph before all-participant publication.
+Health evidence, field work and subsidence checkpoints remain owned by their existing lanes.
+No saved fields or formats change; public0.3.1 is unchanged.
+
+Native11624 passed at19:15:56.180UTC, seed1012036, sealed profileLN1Xkb: two actual paused
+EndTurns/no raid wakes, one resume token at377129, then one Ready at377130; explicit quest
+completion once and unchanged repeat. Strict raw log/15journalrows and receipt-ownedPID35424
+stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
+engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
+
+Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
+cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
+Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+
+Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
+cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
+recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
+semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
+support the75th persona. Structural release gate passes exact3049-source digest
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Independent source/native/test review found no Required issue. Full licensed Windows1814
+passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
+Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness
+files,plus installed Hearthpyre source/ABI. Repository71120 passed501 tooling tests/48.083s
+and cold-install inventory,docs,structure,architecture,XML and registration checks.
+Hosted integration checks remain separate; no new public-release or broad Beta claim.
+[Evidence and retained failures](/mnt/c/taf-master-growth-native.sP00c6/README.md).
+
+## Retained real-turn recovery, case28d.4
 
 Development-only regression now exercises the existing sealed `advance 1` through the
 actual engine loop. Actual contact/acceptance and three original deaths retain Active;

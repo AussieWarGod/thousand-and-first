@@ -1,0 +1,10 @@
+# Actual option callbacks and engine EndTurns; no forced clocks/lifecycle/latches.
+# advance 2 after resume guarantees a later turn while permitting natural overshoot.
+# Focused master pause/resume; ordinary play, all due-clock cases and save/load untested.
+DESCRIPTION=paused turns preserve recovery; resume transition defers work before one Ready
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-recovery-pause-setup;advance 1;raid-recovery-pause-resume;advance 2;raid-recovery-pause-check;stagedigest
+VERBS=raid-recovery-pause-setup,raid-recovery-pause-resume,raid-recovery-pause-check
+EXPECT=stagedigest:OK~founded=false,raid-recovery-pause-setup:OK~step=raid-recovery-pause-setup ok=True,advance:OK,raid-recovery-pause-resume:OK~step=raid-recovery-pause-resume ok=True,advance:OK,raid-recovery-pause-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

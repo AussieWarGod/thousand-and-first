@@ -7,7 +7,30 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current real-turn recovery validation
+## Current master-growth resume validation
+
+`Tools/run-personas.sh raid-master-turn-native-check` seals actual setup, master No,
+`advance 1`, master Yes, `advance 2`, and post-turn verification. Diagnostic36966
+reproduced the old fresh-growth invalid interval/deadline tuple. Corrected native11624
+passed two paused dispatches, zero raid wakes, one resume token and a later Ready,
+then actual explicit completion and unchanged repeat. All3181 C# bytes match profileLN1Xkb;
+strict raw log,15journalrows and owned stop pass. It uses no clock or result forcing.
+
+Focused86313 passes38 engine-free growth-resume tests, zero skips. They preserve already-
+published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, candidate
+continuation and field-clock evidence; successful results round-trip canonically. Stale
+owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
+No fixture callback witness establishes actual physical creation, ordinary play or save/load.
+Current production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`
+passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
+zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
+132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+and all repository audits. Hosted integration checks remain separate.
+Canonical compilation runs across 3049 production C# sources; the generated
+cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
+[Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
+
+## Retained real-turn recovery validation
 
 Full licensed Windows1901 passes13,673 main/5,051 Portable cases, zero skips. Canonical7819
 passes ordinary3043/3047 and developer3173/3177,130 Harness files, all four C#7.3 modes
@@ -1426,6 +1449,7 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28d.2 | Earn Ready by physically displacing the final surviving original into a preloaded foreign zone and activating the target; return that same original alive and immediately attempt explicit turn-in | Turn-in refuses with Ready wire, quest and wound unchanged. Genuine final removal then permits one completion. Baseline accepted a live survivor; corrected native51235 proves refusal and final completion. This is not historical save/load evidence |
 | 28d.3 | Earn Ready through real contact, acceptance, three actual deaths and activation; bind actual same-zone and foreign-zone custody surveys separately, then dispose them and disable the real master option | Each bound turn-in and fresh-capture request refuses with unchanged Ready/quest/wound/water and zero actual custody/GetObjects entries, after calibrated positive controls. Every binding disposes without residue. Paused automatic wake refuses; unbound explicit completion succeeds once and repeat is unchanged. Native case passed17:52UTC; ordinary heartbeat and save/load remain separate |
 | 28d.4 | In a sealed synthetic world, earn Active recovery through actual contact/acceptance, remove all three originals through actual death, then use the existing real-engine `advance 1` | Every observed EndTurn is contiguous and agrees with both elapsed clocks. First unbound raid wake earns Ready once; subsequent observed boundaries retain that proof. Actual explicit completion resolves once, clears the wound and rejects repeat without advancing the post-turn clock. Native59966 passed one dispatch/one wake; overshoot, additional wakes, ordinary rendered play and save/load remain separately scoped |
+| 28d.5 | Earn Active recovery with three actual original deaths, set the real master option No, use `advance 1`, then Yes and `advance 2` | Paused actual EndTurns never enter raid work; resume applies one token and preserves valid lifecycle/growth authority without physical work. A later actual wake earns Ready once; explicit completion and repeat retain their observed clocks and world effects. Corrected native11624 passed two paused dispatches and two resumed dispatches; ordinary play, established-growth native variants and save/load remain separate |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
 
