@@ -132,7 +132,7 @@
   <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
             Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S" Adoptable="yes"
             Footprint="3x2" Roof="Soft"
-            Materials="canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            Materials="canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
             UpgradesTo="tentrow" UpgradeMaterials="canvas:1,timber:1">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />

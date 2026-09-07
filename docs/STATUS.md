@@ -13,7 +13,27 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Unreleased master-growth resume correction, case28d.5
+## Unreleased tent-storage data correction
+
+The canvas housing palette's storage slot is now an empty timber chest instead of a reed
+basket, and the tent's own bill pays for the timber it needs; tent-row already carried a
+brace. Binding is unchanged: an authored chest is furniture until a founder marks it with the
+Charter's dedication, and nothing counts it automatically. Architecture snapshots freeze per
+plot at stake time, so standing tents keep their basket and only new commissions receive the
+chest. The single production-source delta is the regenerated
+`Core/KingdomRemovalCoverage.Generated.cs` allowlist, which gains the one new owned blueprint
+name; no hand-written source, saved field, wire format or public API changed.
+
+Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
+cold-install inventory. Inventory SHA-256:
+`ea6fd5c8404865bae167a2462dd7e5eb7decfb8ba7362453c5fec31ff7e00330`.
+Documentation freshness, the report-mode structure census, the architecture check with and
+without the installed base, and the repository tooling suite pass on this tree. No semantic
+review binds this digest, so `Tools/check-structure.py --release` reports the exact-inventory
+human semantic review OPEN; that human review is a release blocker and this entry does not
+satisfy it. No native run, compile gate or licensed suite was executed for this change.
+
+## Retained master-growth resume correction, case28d.5
 
 Automated native diagnostic reproduced a real master-resume defect: fresh growth retained
 interval0 but received a positive arrival deadline, invalidating its enclosing lifecycle.

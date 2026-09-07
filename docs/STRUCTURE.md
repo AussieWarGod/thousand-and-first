@@ -20,6 +20,18 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The tent-storage data correction reports3049 staged production C# files,431,893 physical lines,
+zero at or above300,and1415 direct-XRL files. Exact inventory:
+`ea6fd5c8404865bae167a2462dd7e5eb7decfb8ba7362453c5fec31ff7e00330`.
+Its only production-source delta over the retained census below is the regenerated
+`Core/KingdomRemovalCoverage.Generated.cs` allowlist, which gains one owned blueprint name;
+`Tools/generate-removal-coverage.py --check` is clean and no hand-written source, saved format
+or public API changed. No semantic review binds this digest, so
+`python3 Tools/check-structure.py --release` reports the exact-inventory human semantic review
+OPEN. That review is a release blocker and this census does not satisfy it.
+
+## Retained master-growth resume census
+
 The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:
 `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.

@@ -8,6 +8,28 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — a chest in the tent
+
+- The canvas housing palette's storage slot is an empty timber chest instead of a reed basket,
+  and the settler's tent pays the one timber it needs (`canvas:2,timber:1`); the staked
+  tent-row already carried a brace. A founder who raises a tent now has somewhere to put what
+  they carried in.
+- The chest is furniture, not a civic account: it counts toward larder or stockpile only after
+  the Charter's dedication mark, exactly as any other vessel does. Nothing binds automatically
+  and founding gains no new requirement.
+- Data only. Architecture snapshots freeze per plot at stake time, so standing tents keep their
+  basket and only new commissions receive the chest. No saved field, wire format or public API
+  changes; the one production-source delta is the regenerated removal-coverage allowlist.
+
+> **Current unreleased census — line-cap green, human semantic review OPEN.** Current 3049-file census is line-cap green:
+> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
+> `ea6fd5c8404865bae167a2462dd7e5eb7decfb8ba7362453c5fec31ff7e00330`.
+> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> Its only production-source delta over the retained census below is the regenerated
+> `Core/KingdomRemovalCoverage.Generated.cs` allowlist. No semantic review binds this digest, so
+> exact-inventory human semantic review remains a release blocker and is now open; no native run,
+> compile gate or licensed suite was executed for this entry.
+
 ## Unreleased — master pause/resume correction
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
@@ -20,7 +42,7 @@ below it.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Retained unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

@@ -17,7 +17,11 @@
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="wall" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <!-- A tent gets a timber chest, not a reed basket: the first thing a founder wants under
+         canvas is somewhere to put what they carried in, and a chest is the container the
+         Charter's dedication mark already knows how to read. The timber is paid for in the
+         tent's own bill; tent-row already carried a brace. -->
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 

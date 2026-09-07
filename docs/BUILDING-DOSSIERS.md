@@ -68,7 +68,7 @@ breaking the designation root, or changing the room immediately scales or remove
 
 | Building (tier, size) | Purpose | Visitors | Materials @ rung | Furniture | Gaps |
 |---|---|---|---|---|---|
-| tent → tentrow (S footprint; S/M/L/XL reservation) | first-night shelter / widened canvas bay | household 1–3 | canvas, then one timber brace; no light | bedroll(s), basket | larger reservations keep the paid compact shelter and add only a restrained natural dooryard; they do not pretend to be larger buildings |
+| tent → tentrow (S footprint; S/M/L/XL reservation) | first-night shelter / widened canvas bay | household 1–3 | canvas and one timber for the chest, then more canvas for the bay; no light | bedroll(s), empty timber chest | larger reservations keep the paid compact shelter and add only a restrained natural dooryard; they do not pretend to be larger buildings |
 | hut → hutyard (S footprint; S/M/L/XL reservation) | first crewed household | 2–5 | brinestalk/timber, then stone edging | + hearth and terminal yard seat | larger reservations use a short return court; a fuller in-place estate would need a new paid successor |
 | house → housecourt (M) | settled household(s); court = 3 families | 8 → 18 | sandstone | bed×2, hearth, storage | court: 3 households share one hearth, no per-family storage |
 | terrace (L, workshop, Town) | a whole street raised at once | 4 households, 4 doors | wood floor + sandstone | 4 beds, shared storage + hearth | each household threshold now has its own sleep place; shared services remain deliberate |
