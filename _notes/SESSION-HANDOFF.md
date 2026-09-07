@@ -33,7 +33,7 @@ Evidence `/mnt/c/taf-031-public-release.cfu8DL`; exact bindings in
 Annotated `v0.3.1` target `a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`,
 tag object `ed91d97b6d5d1b515933d144adb01f89303c5496`. Strict Alpha package68272 TERMINAL0:
 3077 files/exact private binding; native copy54621 TERMINAL0. Signed-out HTML exposes title,
-new hook and six tags; no pixel capture. One client only, freshTransferVerifiedfalse/releaseReadyfalse.
+new hook and six tags; no pixel capture. One client only, `freshTransferVerified=false`, `releaseReady=false`.
 Current Alpha publication complete, broad Beta unfinished. Main and annotated tag were pushed;
 fresh remote refs match the exact release commit and tag object above.
 GitHub unexpectedly accepted that push while reporting bypassed PR/three-required-check rules.
@@ -87,7 +87,7 @@ item3796495680 attempt0001. Finalization SHA:
 installation SHA `871e28ce85f12b3388b64d72ff82dba8b891e1d9260a91f1a78b31aeea812446`;
 inventory SHA `6bf2e248aa834cf52272f61e566f65a8463bddffac6d0e3599958ab729d45d58`.
 Root freshly rechecked original attempt90011… and submission350bbb… unchanged; full hashes in
-`docs/STATUS.md`. One client installation verified; freshTransferfalse/releaseReadyfalse.
+`docs/STATUS.md`. One client installation verified; `freshTransferVerified=false`, `releaseReady=false`.
 No corrected-package upload occurred. The known-broken private0.3.1 remains unchanged; public0.3.0
 unchanged. Finalization is operational completion, not gameplay acceptance or public promotion.
 

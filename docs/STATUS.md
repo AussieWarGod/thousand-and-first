@@ -320,7 +320,7 @@ boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; retained stock nati
 checks retain their separate scopes. No ordinary subscriber play or graceful Quit PASS follows.
 Root reused the exact frozen-runtime gate, checked the public-only delta, and required strict
 `--alpha` package lineage/receipt/tag/structure binding. The two stale README freshness assertions
-were updated;501 Tools tests and final document checks passed. No second full
+were updated; 501 Tools tests and final document checks passed. No second full
 `--alpha` release-check is claimed. This is a one-release verification decision, not a permanent
 gate relaxation or Beta/Release acceptance. Public packaging, upload and finalization are complete.
 

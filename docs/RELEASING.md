@@ -29,7 +29,7 @@ bind-alias exclusions (PACKAGE/COPY/BACKUP). Root accepts those narrow gaps for 
 not as a user waiver or zero-skip full-gate result; ownership and alias guards remain unchanged.
 Root's one-release decision reused this exact frozen-runtime verification, checked the public-only
 delta, and required strict `--alpha` package lineage, receipt, tag and structure binding. The two
-README freshness assertions were updated;501 Tools tests and final document checks passed.
+README freshness assertions were updated; 501 Tools tests and final document checks passed.
 No additional complete `--alpha` release-check run is claimed. The permanent
 procedure below and Beta/Release evidence requirements remain unchanged.
 [Exact decision and gate log identity](STATUS.md#one-release-alpha-verification-decision).
