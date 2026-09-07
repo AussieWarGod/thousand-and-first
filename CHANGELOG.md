@@ -8,7 +8,26 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **Unreleased recovery correction — exact structural gate passed.** Current 3047-file census is line-cap green:
+## Unreleased — master pause/resume correction
+
+- Master resume now validates a complete growth schedule before publishing it. Fresh
+  growth no longer receives a positive deadline with a zero interval; established growth
+  retains consistent arrival debt, opportunities and open clock leases.
+- Preserve measured health, field work and independent subsidence clocks; overlapping
+  local/global pause time counts once. No save format changes. Public0.3.1 is unchanged.
+- Add a real-engine master off/on regression and38 engine-free cases covering continued
+  arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
+  Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
+  and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+
+> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
+> `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> Root and independent AI reviewer inspected the complete five-source delta. Native scope
+> and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
+
+> **Retained unreleased recovery correction — exact structural gate passed.** Its3047-file census is line-cap green:
 > 431,611 physical lines, zero files at or above300. Direct `XRL`
 > imports occur in 1415 files, 0 of them over the line limit. Inventory SHA-256:
 > `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.

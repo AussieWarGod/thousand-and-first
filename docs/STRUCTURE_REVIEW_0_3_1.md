@@ -1,9 +1,41 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T17:24:07Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T19:17:56Z. This records structural semantics, not release acceptance.
 
-## Current unreleased recovery absence correction
+## Current unreleased master-growth resume correction
+
+Production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+[Complete canonical comparison](/tmp/taf-master-growth-canonical.G5aKOw/comparison.json)
+enumerates every3049 current source and actual parent Git blob at
+`e65fb469600575851d7429f685eacd59820e4980`:3044 unchanged,three modified,two added,
+no removals;431893 physical lines,1415 direct-XRL imports,zero cap failures.
+Parent digest matches retained recovery review; current membership and bytes were reread.
+Comparison JSON SHA256 `66d6a7abd759fc2e07e4fac19c771f8435259b598e234b452ffb12320c3c5e6b`.
+Unchanged sources inherit review; no fresh full-tree deep read is claimed.
+
+Root and independent Codex reviewer Parfit read all five complete changed sources and
+master/availability/cadence/wire boundaries. An ephemeral engine-free growth-resume plan
+prepares a canonical detached proposal and reproves exact parent, growth, child references,
+source bytes and scalar-publication equivalence. The existing master coordinator preflights
+seat and every away settlement before any participant writes. Existing graph references,
+health evidence, effective field work, subsidence checkpoint and already-published arrival
+debt/opportunities/open leases survive. Overlapping ongoing local/global pause counts once.
+Modern open arrivals defer cadence restart; historical open work retains its lease. Opaque,
+quarantined and staged children remain exact no-ops; pristine pre-founding lifecycle stays
+pristine. Deadline mirrors require proved growth authority. No saved fields, wire or public
+API change. No Required source-review finding remains.
+
+The normative master exception restarts future full intervals without creating unobserved
+backlog. This does not claim every elapsed pre-disable opportunity was materialized.
+Actual diagnostic36966 confirmed old interval0/positive-deadline corruption. Corrected
+native11624 passed two paused EndTurns, one resume token, later raid Ready, actual explicit
+completion and unchanged repeat. Exact comparison83480 matched all3181 production/Harness
+C# bytes to its isolated profile. [Native evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md)
+is synthetic and separate from ordinary play or saved-game acceptance. Full managed and
+four-mode compilation remained pending at signing. Public0.3.1 remains unchanged.
+
+## Retained unreleased recovery absence correction
 
 Production digest `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
 The [complete canonical comparison](/tmp/taf-raid-recovery-canonical-audit.NToNIW/comparison.json)

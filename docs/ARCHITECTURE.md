@@ -376,6 +376,16 @@ and renderer clocks before publishing the applied token. Object-local turn ticks
 gate before mutation and re-anchor their own rate stamp on their first enabled wake, so a loaded
 bench, vat, mirror gate, field, power work, or legacy scaffold cannot turn paused time into work.
 
+`Experience/KingdomMasterGrowthResumePlan.cs` stages growth through its canonical payload
+codec, then reproves exact owner/child references and source bytes at the master preflight.
+Its lifecycle-rules companion prepares a coherent interval/cadence/frontier tuple and excludes
+the union of ongoing local and global pause time. Scalar publication preserves health evidence,
+field clocks, subsidence, already-published arrival debt/opportunities and open leases. Open
+modern arrivals retain a deferred restart; historical open work finishes before cadence binding.
+Opaque/staged growth and pristine pre-founding lifecycle are not granted new authority.
+Seat and away mirrors use only the proved growth frontier. The master pause exception starts
+future full intervals; it does not materialize unobserved arrival backlog during resume.
+
 `NewWorkAllowed` is for explicit producer entry points. Reports and named committed-recovery
 surfaces use separate read/recovery paths. `AutomaticWorkAllowed` is stricter: an unobserved,
 disabled, pending, or same-transition-tick latch cannot run. Add every new game-system event,

@@ -8,32 +8,45 @@ namespace ThousandAndFirst
 	{
 		private sealed class LifecyclePlan
 		{
+			private readonly KingdomLifecycleBook Source;
+			private readonly bool Pristine;
 			private readonly long Now;
 			private readonly KingdomLifecycleOptionState Locus;
 			private readonly KingdomLifecycleOptionState Notable;
 			private readonly KingdomLifecycleOptionState Raid;
 			private readonly KingdomLifecycleOptionState Petition;
-			private readonly long Arrival;
-			private readonly KingdomLifecycleOptionState Growth;
-			private readonly KingdomLifecycleOptionState Scarcity;
+			private readonly bool GrowthEnabled;
+			private readonly bool ScarcityEnabled;
+			private readonly KingdomMasterGrowthResumePlan Growth;
+			internal bool HasArrivalAuthority { get { return Growth != null && Growth.HasArrivalAuthority; } }
+			internal long NextArrivalTick { get { return Growth.NextArrivalTick; } }
 
-			private LifecyclePlan(long now, KingdomLifecycleOptionState locus,
+			private LifecyclePlan(KingdomLifecycleBook source, bool pristine, long now, KingdomLifecycleOptionState locus,
 				KingdomLifecycleOptionState notable, KingdomLifecycleOptionState raid,
-				KingdomLifecycleOptionState petition, long arrival,
-				KingdomLifecycleOptionState growth, KingdomLifecycleOptionState scarcity)
+				KingdomLifecycleOptionState petition, bool growthEnabled, bool scarcityEnabled,
+				KingdomMasterGrowthResumePlan growth)
 			{
+				Source = source; Pristine = pristine;
 				Now = now; Locus = locus; Notable = notable; Raid = raid;
-				Petition = petition; Arrival = arrival; Growth = growth; Scarcity = scarcity;
+				Petition = petition; GrowthEnabled = growthEnabled; ScarcityEnabled = scarcityEnabled;
+				Growth = growth;
 			}
 
-			internal static bool TryCreate(KingdomLifecycleBook book, long now, long arrival,
-				out LifecyclePlan plan)
+			internal static bool TryCreate(KingdomLifecycleBook book, long now, long disabledAt,
+				long interval, int cohort, int rulesVersion, out LifecyclePlan plan)
 			{
 				plan = null;
 				if (book == null) return true;
 				if (book.LocusOptionTick > now || book.NotableOptionTick > now
 					|| book.RaidOptionTick > now || book.PetitionOptionTick > now) return false;
-				plan = new LifecyclePlan(now,
+				bool pristine = KingdomLifecycleRules.IsPristineMasterResumeLifecycle(book);
+				bool growthEnabled = KingdomGrowth.Enabled;
+				bool scarcityEnabled = KingdomGrowth.ScarcityEnabled;
+				KingdomMasterGrowthResumePlan growth = null;
+				if (!pristine && !KingdomMasterGrowthResumePlan.TryCreate(book, disabledAt, now,
+					growthEnabled, scarcityEnabled, interval, cohort, rulesVersion, out growth,
+					out string _)) return false;
+				plan = new LifecyclePlan(book, pristine, now,
 					KingdomLocus.Enabled ? KingdomLifecycleOptionState.Enabled
 						: KingdomLifecycleOptionState.Disabled,
 					KingdomGuestbook.GuestsEnabled ? KingdomLifecycleOptionState.Enabled
@@ -41,35 +54,26 @@ namespace ThousandAndFirst
 					KingdomRaids.Enabled ? KingdomLifecycleOptionState.Enabled
 						: KingdomLifecycleOptionState.Disabled,
 					KingdomPetitions.Enabled ? KingdomLifecycleOptionState.Enabled
-						: KingdomLifecycleOptionState.Disabled, arrival,
-					KingdomGrowth.Enabled ? KingdomLifecycleOptionState.Enabled
-						: KingdomLifecycleOptionState.Disabled,
-					KingdomGrowth.ScarcityEnabled ? KingdomLifecycleOptionState.Enabled
-						: KingdomLifecycleOptionState.Disabled);
+						: KingdomLifecycleOptionState.Disabled, growthEnabled, scarcityEnabled, growth);
 				return true;
+			}
+
+			internal bool CanPublish(KingdomLifecycleBook book)
+			{
+				return ReferenceEquals(book, Source) && GrowthEnabled == KingdomGrowth.Enabled
+					&& ScarcityEnabled == KingdomGrowth.ScarcityEnabled
+					&& (Pristine ? KingdomLifecycleRules.IsPristineMasterResumeLifecycle(book)
+						: Growth != null && Growth.CanPublish(book, out string _));
 			}
 
 			internal void Publish(KingdomLifecycleBook book)
 			{
-				if (book == null) return;
+				if (Pristine) return;
+				Growth.PublishPrevalidated();
 				book.LocusOption = Locus; book.LocusOptionTick = Now;
 				book.NotableOption = Notable; book.NotableOptionTick = Now;
 				book.RaidOption = Raid; book.RaidOptionTick = Now;
 				book.PetitionOption = Petition; book.PetitionOptionTick = Now;
-				KingdomGrowthBook growth = book.Growth;
-				if (growth == null) return;
-				growth.OptionState = Growth;
-				growth.OptionTick = Now;
-				growth.ScarcityOptionState = Scarcity;
-				growth.ScarcityOptionTick = Now;
-				if (growth.HeartbeatOp == null) growth.LastHeartbeatTick = Now;
-				if (growth.FetchOp == null) growth.LastFetchTick = Now;
-				if (growth.MillOp == null) growth.LastMillTick = Now;
-				// Subsidence owns its checkpoint across master resume, independently of heartbeat.
-				if (growth.DeliveryOp == null) growth.LastDeliveryTick = Now;
-				if (growth.DepartureOp == null) growth.LastDepartureTick = Now;
-				if (growth.ArrivalOp == null && growth.ArrivalCandidate == null)
-					growth.NextArrivalTick = Arrival;
 			}
 		}
 

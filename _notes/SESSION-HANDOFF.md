@@ -1,6 +1,18 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased recovery correction
+## Current unreleased master-growth resume correction
+
+3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
+cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Complete five-source review and canonical comparison bind strict structure. Native11624
+passes actual master pause/resume and later raid recovery; all3181 C# bytes match its
+isolated profile. Focused38cases pass; full1814 passes13715 main/5093 Portable,zero skips;
+four-mode53744 passes ordinary3045/3049,developer3177/3181 plus installed ABI.
+Repository71120 passes501 tooling tests and all repository audits. Hosted checks remain.
+Evidence `/mnt/c/taf-master-growth-native.sP00c6/README.md`. Public0.3.1 unchanged.
+Main PR6 still REVIEW_REQUIRED; never direct-push main/tag, bypass, or self-approve it.
+
+## Retained unreleased recovery correction
 
 3047 staged sources;431,611 physical lines;1415 direct-XRL;zero cap failures;3078 generated
 cold-stage files. Exact inventory `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.

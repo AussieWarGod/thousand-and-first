@@ -1,6 +1,17 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current recovery census — 2026-09-07
+## Current master-growth resume census — 2026-09-07
+
+3049 production C# files;3,080 cold-install files in the generated inventory;
+431,893 physical lines,1415 direct-XRL,zero cap failures. Exact digest
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Complete canonical comparison and five-source review bind strict structure. Already-
+published arrival work and open leases survive validated master resume; no paused backlog
+is created. Native11624 and38 focused protocol cases pass. Full Windows1814 passes13715
+main/5093 Portable,zero skips; four-mode53744 and repository71120 pass. Hosted integration
+remains separate. No ordinary-play,save/load,new-public-release or broad Beta claim.
+
+## Retained recovery census — 2026-09-07
 
 3047 production C# files; 3,078 cold-install files in the generated inventory;
 431,611 physical lines,1415 direct-XRL imports,zero cap failures. Exact inventory:
