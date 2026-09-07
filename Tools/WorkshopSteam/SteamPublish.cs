@@ -45,7 +45,7 @@ namespace ThousandAndFirst.WorkshopSteam
                 // The mutex stays held until this registry is disposed, which cleanup does last.
                 registry = WorkshopReleaseRegistry.Open(item);
                 bool retained = registry.HasRetainedAttempt();
-                if (retained || args[0] == "inspect")
+                if (args[0] == "inspect")
                 {
                     // Inspection reuses the registry's exact proofs and creates no attempt.
                     report = Report(retained ? AttemptRetained : Inspected, args[3]);
@@ -55,13 +55,17 @@ namespace ThousandAndFirst.WorkshopSteam
                 }
                 else
                 {
+                    // Retained uncertainty refuses before package reads or SDK calls. Complete
+                    // history grants only admission to a separately approved unseen package.
+                    if (retained) registry.RequireFinalizedHistory();
                     package = UploadPackage.Open(args[1], args[2], args[3], note);
                     if (package.ReceiptSHA != args[6]) throw new InvalidDataException("Receipt approval mismatch.");
                     RefuseOverlappingContent(package.Request.ContentPath);
                     if (args[0] == "check")
                     {
                         // Named, never created: check proves readiness without an attempt.
-                        string planned = registry.PlannedAttemptPath();
+                        string planned = retained ? registry.PlannedAttemptPath(package)
+                            : registry.PlannedAttemptPath();
                         port = new SteamUploadPort(package, planned);
                         bool ready = port.Try(UploadOperation.Prepare, package.Request)
                             && port.Try(UploadOperation.Revalidate, package.Request);
@@ -79,7 +83,7 @@ namespace ThousandAndFirst.WorkshopSteam
                         submissionPossible = true;
                         // The durable attempt directory exists before the protocol can submit,
                         // and every failure below retains it. Nothing here deletes or moves it.
-                        attempt = registry.BeginFirstAttempt();
+                        attempt = retained ? registry.BeginAttempt(package) : registry.BeginFirstAttempt();
                         port = new SteamUploadPort(package, attempt);
                         UploadResult result = new UploadProtocol().Run(package.Request, port);
                         UploadAftermathResult aftermath = UploadAftermath.Run(result, package.Revalidate, port);

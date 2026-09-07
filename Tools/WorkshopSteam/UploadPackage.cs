@@ -139,7 +139,8 @@ namespace ThousandAndFirst.WorkshopSteam
 		}
 		private SafeFileHandle Handle(string path, bool directory)
 		{
-			SafeFileHandle handle = CreateFileW(path, directory ? 0x80u : 0x80000000u, 1, IntPtr.Zero, 3,
+			// Attribute-only directory handles do not enforce write/delete sharing denial.
+			SafeFileHandle handle = CreateFileW(path, 0x80000000u, 1, IntPtr.Zero, 3,
 				0x00200000u | (directory ? 0x02000000u : 0), IntPtr.Zero);
 			leases.Add(handle); Require(!handle.IsInvalid, "cannot lease input");
 			FileAttributes attributes = File.GetAttributes(path);

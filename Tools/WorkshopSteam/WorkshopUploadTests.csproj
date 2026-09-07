@@ -29,7 +29,9 @@
     <Compile Include="UploadCleanup.cs" />
     <Compile Include="UploadCleanupTests.cs" />
     <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackage.Inventory.cs" />
     <Compile Include="UploadPackageTests.cs" />
+    <Compile Include="UploadPackageDirectoryTests.cs" />
     <Compile Include="UploadAttemptLease.cs" />
     <Compile Include="UploadAttemptLeaseTests.cs" />
     <Compile Include="UploadAttemptLease.Registry.cs" />
@@ -37,6 +39,12 @@
     <Compile Include="WorkshopItemLock.cs" />
     <Compile Include="WorkshopItemLockTests.cs" />
     <Compile Include="WorkshopReleaseRegistry.cs" />
+    <Compile Include="ReleaseFinalizationRules.cs" />
+    <Compile Include="ReleaseInstallationObservation.cs" />
+    <Compile Include="WorkshopReleaseRegistry.Finalization.cs" />
+    <Compile Include="UploadAttemptLease.Installation.cs" />
+    <Compile Include="ReleaseFinalizationTests.cs" />
+    <Compile Include="ReleaseRecandidateTests.cs" />
     <Compile Include="WorkshopReleaseRegistryTests.cs" />
     <Compile Include="WorkshopSteamCliTests.cs" />
     <Compile Include="UploadTests.cs" />

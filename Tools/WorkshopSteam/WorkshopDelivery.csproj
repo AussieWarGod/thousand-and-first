@@ -15,6 +15,7 @@
     <Compile Include="SteamVerify.cs" />
     <Compile Include="SteamInstalledDelivery.cs" />
     <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackage.Inventory.cs" />
     <Compile Include="UploadPackage.Install.cs" />
     <Compile Include="UploadProtocol.cs" />
     <Compile Include="UploadCallbackRules.cs" />
@@ -24,6 +25,10 @@
     <Compile Include="UploadAttemptLease.Registry.cs" />
     <Compile Include="WorkshopItemLock.cs" />
     <Compile Include="WorkshopReleaseRegistry.cs" />
+    <Compile Include="ReleaseFinalizationRules.cs" />
+    <Compile Include="ReleaseInstallationObservation.cs" />
+    <Compile Include="WorkshopReleaseRegistry.Finalization.cs" />
+    <Compile Include="UploadAttemptLease.Installation.cs" />
     <Compile Include="../ScenarioFileTrust.cs" Link="ScenarioFileTrust.cs" />
     <Reference Include="com.rlabrecque.steamworks.net">
       <HintPath>$(QudManaged)/com.rlabrecque.steamworks.net.dll</HintPath>

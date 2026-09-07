@@ -2,9 +2,13 @@
 
 The package builder remains offline: it never authenticates, creates an item, accepts agreements,
 uploads, or changes visibility. A separate local Steam-client publisher is implemented under the
-maintainer's authorization for autonomous, ready Alpha releases. Strict compilation and live
-read-only checks pass; publishing and subscriber delivery are not yet verified. Do not automate
-public releases until the private-item adoption gates below pass. Never automate authentication
+maintainer's authorization for autonomous, ready Alpha releases. The earlier private0.3.1 upload
+and one exact Steam-subscribed installation are verified; those bytes do not sign the later
+Quickstart correction. Ordinary Quickstart/save/desktop/reload acceptance remains open.
+The integrated repeat-release finalizer has now completed the original private attempt `0001`
+with one fresh Steam-installed verification and immutable evidence. The old broken private
+package remains unchanged; neither a fresh transfer nor release readiness was claimed.
+Do not automate public releases until the private-item adoption gates below pass. Never automate authentication
 or legal acceptance.
 
 Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
@@ -310,13 +314,20 @@ treat a prior receipt as proof of changed bytes.
 
 ## Local automated-upload implementation and deployment design
 
-**Implemented locally; private-upload validation pending.** No privileged CI workflow has been deployed.
+**Original private upload/installation finalized; corrected-candidate acceptance pending.**
+No privileged CI workflow has been deployed. Exact current evidence: [STATUS.md](STATUS.md).
 The branch/runner design below remains a proposal, not permission to change repository protection
 or attach a credentialed runner. Local Alpha automation is authorized once the exact candidate and
 private-item checks pass; it does not require an invented CI deployment first.
 
 Verified local pieces:
 
+- Current active-worktree run94540 passed47 launcher fixtures, all14 upload suites, both production
+  helper builds, the installed-test build and14 installed-package cases. Actual finalizer43652
+  exited0 for private attempt `0001`: `SubscribedInstallationVerified`, `reason=null`,
+  `attemptFinalized=true`, one client, `freshTransferVerified=false`, `releaseReady=false`.
+  Original attempt/submission bytes and the old broken private package remain unchanged.
+  [Current records and scope](STATUS.md#publisher-integration--original-private-attempt-finalized).
 - `workshop_metadata.py` and the actual package harness enforce the separate staging/public schema.
 - `workshop_upload_plan.py` checks a closed package receipt, canonical metadata, exact item/version,
   no linked files, bounded inventory and Windows-safe paths. Its JSON is a plan, not release authority.
@@ -324,7 +335,7 @@ Verified local pieces:
   and runs a read-only client probe. On 2026-09-05 it compiled with zero warnings/errors and confirmed
   app `333640`, owned public item `3794797472`, `manifest_id=r_ThousandAndFirst` and
   `manifest_version=0.3.0`. Evidence: `/mnt/c/taf-workshop-probe.ZNjYbg`.
-- The separate publisher compiles with zero warnings/errors. SDK-free Windows suites pass 30
+- Retained initial publisher checkpoint: compilation passed with zero warnings/errors, as did30
   protocol cases, 15 package groups and 9 active-attempt groups. Its default check mode queried
   the real Alpha item and refused synthetic `0.3.0` as not newer, without creating an attempt or
   submitting. Evidence: `/tmp/taf-workshop-automation.vgLRAO/README.md`. This is not a private
@@ -332,9 +343,18 @@ Verified local pieces:
 
 The publisher is separate from the packager. It defaults to checking only; explicit submission
 must bind a freshly gated package and digest, an existing allowlisted item, a truthful changelist,
-and a persistent attempt directory. One active attempt per item records the exact version and is
-created before Submit; an existing attempt blocks every version until reconciliation, not just a
-retry of the same bytes. A timeout is **uncertain**.
+and a persistent attempt directory. One unresolved attempt per item records the exact version and
+is created before Submit. Explicit finalization can bind a clean successful submission to fresh
+installed bytes; only complete immutable history admits another package whose canonical file
+inventory is absent from all prior attempts. Private staging permits an equal or higher `0.3.x`
+patch; public Alpha requires a strictly higher patch. A same-version private recandidate must have
+different package bytes, not merely different plan paths or receipt spelling, and claims a new
+attempt without changing the old one. Ordinary `-Verify` does not finalize. Preserve every original
+plan/package/path and record; no attempt retry, history deletion or root switching is supported.
+A timeout is **uncertain**.
+The exact bounded history, five-argument delivery modes and result checks are documented in
+[PUBLISHING.md](../Tools/WorkshopSteam/PUBLISHING.md). Original-private-attempt finalization is
+proved; corrected-package delivery and ordinary acceptance remain separate requirements.
 Even a successful callback plus matching remote metadata is **submitted, unverified**, never proof
 that subscribers received the exact files. Steam-installed receipt verification remains mandatory.
 

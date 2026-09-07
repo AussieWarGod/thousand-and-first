@@ -1,5 +1,30 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current publisher handoff — original private attempt finalized
+
+Active worktree `/tmp/taf-quickstart-founder.ZsbJsI`, stock checkpoint `b4c2d2d`; publisher
+integration is now validated. Native94540 TERMINAL0 at
+`/mnt/c/taf-publisher-integrated-native.ubIZAB`:47 launcher fixtures, all14 upload suites
+(75 pure/source finalization,29 Windows history,17 package), both production helper builds,
+installed-test build and14 installed-package cases pass.
+
+Actual finalize43652 TERMINAL0 at `/mnt/c/taf-private-finalize.aix0Ji/upload.stdout` reports
+`SubscribedInstallationVerified`, `reason=null`, `attemptFinalized=true` for original private
+item3796495680 attempt0001. Finalization SHA:
+`d06be0a4fbf6e1a29a98f03e18840bf13be4539c813b7e41a3afdb8cd8b783ab`;
+installation SHA `871e28ce85f12b3388b64d72ff82dba8b891e1d9260a91f1a78b31aeea812446`;
+inventory SHA `6bf2e248aa834cf52272f61e566f65a8463bddffac6d0e3599958ab729d45d58`.
+Root freshly rechecked original attempt90011… and submission350bbb… unchanged; full hashes in
+`docs/STATUS.md`. One client installation verified; freshTransferfalse/releaseReadyfalse.
+No corrected-package upload occurred. The known-broken private0.3.1 remains unchanged; public0.3.0
+unchanged. Finalization is operational completion, not gameplay acceptance or public promotion.
+
+Next: close publisher checkpoint, run the clean private release gate, freeze the corrected
+private package/plan/receipt, then use exact unseen-inventory admission for a separate submission.
+Fresh subscribed bytes and ordinary acceptance remain required. Same-version private candidates
+are supported; public versions must increase. Never clear/rewrite old attempts or bypass unknown
+completion. Root remains sole native/Steam operator. [Current authority](../docs/STATUS.md).
+
 ## Current stock-hardening snapshot — 2026-09-07
 
 Current worktree `/tmp/taf-quickstart-founder.ZsbJsI` contains 3046 staged sources,
@@ -60,9 +85,10 @@ testsPASS; compile53305 TERMINAL0 precedes the final native-fixture guard. Manag
 TERMINAL1 has13624 pass/1 missing ignored `_notes/CREED-KIND-EVIDENCE.md` failure in the clone;
 Portable did not run. Current active-worktree validation above supersedes this failed fixture run
 without waiving it. Beta objective remains unfinished.
-Publisher extension /tmp/taf-release-tooling.h5W29F being corrected for privateequalversion+
-unseen canonicalinventory; noactiveintegration/finalization. Old0001+submissionfreshreadback
-hashesmatchpriornotes; notleasedSDKauthority. ForegroundUI permission askedasynchronously;
+Retained pre-integration publisher snapshot: /tmp/taf-release-tooling.h5W29F was being corrected
+for privateequalversion+unseen canonicalinventory; noactiveintegration/finalization had occurred.
+Old0001+submissionfreshreadback hashesmatchedpriornotes; notleasedSDKauthority. The current
+publisher handoff above supersedes that status. ForegroundUI permission askedasynchronously;
 noanswer/inputyet. Externalboundedinputhelper /tmp/taf-ordinary-foreground-input.dnwmse authored.
 
 ## Historical pre-upload handoff

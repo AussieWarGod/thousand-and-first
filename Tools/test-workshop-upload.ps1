@@ -14,6 +14,12 @@ while ($null -ne $Cursor) {
     if (($Cursor.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Linked evidence path.' }
     $Cursor = $Cursor.Parent
 }
+$Launcher = Join-Path $PSScriptRoot 'workshop-steam-upload.ps1'
+$LauncherSHA = (Get-FileHash -LiteralPath $Launcher -Algorithm SHA256).Hash.ToLowerInvariant()
+& (Get-Command powershell.exe -CommandType Application).Source -NoProfile -NonInteractive -ExecutionPolicy Bypass `
+    -File (Join-Path $PSScriptRoot 'test-workshop-release-launcher.ps1') `
+    -LauncherPath $Launcher -ExpectedSHA $LauncherSHA *> (Join-Path $Directory.FullName 'launcher.log')
+if ($LASTEXITCODE -ne 0) { throw 'Release launcher routing/refusal tests failed; see launcher.log.' }
 $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
 $OutputDirectory = Join-Path $Directory.FullName 'out'
 $IntermediateDirectory = (Join-Path $Directory.FullName 'obj') + '/'
@@ -24,7 +30,7 @@ $Project = Join-Path $PSScriptRoot 'WorkshopSteam\WorkshopUploadTests.csproj'
 if ($LASTEXITCODE -ne 0) { throw 'SDK-free test compilation failed; see build.log.' }
 $Assembly = Join-Path $OutputDirectory 'TafWorkshopUploadTests.dll'
 foreach ($Suite in @('protocol', 'package', 'attempt', 'evidence', 'record', 'observation', 'aftermath', 'cleanup',
-    'lock', 'lease', 'registry', 'cli')) {
+    'lock', 'lease', 'registry', 'finalization', 'finalization-windows', 'cli')) {
     & $Dotnet $Assembly $Suite *> (Join-Path $Directory.FullName ($Suite + '.log'))
     if ($LASTEXITCODE -ne 0) { throw "Workshop $Suite tests failed; see retained log." }
 }

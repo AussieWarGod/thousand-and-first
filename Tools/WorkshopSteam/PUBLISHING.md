@@ -1,19 +1,25 @@
 # Local Workshop publisher
 
-Implemented locally; validation incomplete. Native SDK access, strict publisher compilation,
-SDK-free protocol/package/attempt tests and a live read-only version-refusal check are verified.
-Private staging item `3796495680` was created with user approval on 2026-09-06 and verified Private
-through an uncached owner/app/item query. Only its staging title and visibility were submitted;
-it contains no uploaded mod content. Public Alpha remains `3794797472` at `0.3.0`.
-The publisher has not yet uploaded a private candidate. This is not release approval.
+Private `0.3.1` was uploaded to staging item `3796495680` on 2026-09-06. Steam subscription and
+one client's exact installed inventory are verified. An ordinary Qud launch selected that private
+copy; Quickstart/save/desktop/reload acceptance remains open. Public Alpha `3794797472` remains
+`0.3.0`. The tooling below is now integrated in the active worktree, but is not part of that
+frozen subscribed package. Its delivery evidence does not sign the later Quickstart correction.
+That subscribed build still contains the reported Quickstart startup failure and must not be promoted.
+The integrated publisher passed its native test/compile gates, then explicit finalization of the
+original private attempt `0001` succeeded. That invocation verified one subscribed installation
+and retained immutable installation/finalization records without changing the original attempt or
+submission. It did not upload the correction, prove a fresh transfer or approve gameplay/release.
+See [current status](../../docs/STATUS.md) for exact evidence and integration verification.
 Follow [the release gates](../../docs/RELEASING.md) before any submission.
 
 ## Boundaries
 
 - Windows, running signed-in Steam, licensed Qud, installed SDK matching `sdk.lock.json`.
 - Existing items only. Public Alpha is `3794797472`; private staging is `3796495680`.
-  Each invocation must freshly verify its exact lane/owner. No creation, login, subscription
-  or download calls in this publisher.
+  Remote operations freshly verify their exact lane/owner. No creation, login or subscription calls.
+  Upload modes do not download; verification/finalization request Steam installation verification
+  and may download the subscribed item. Neither changes subscription or edits `.acf` files.
 - The Python package planner validates exact receipt-bound bytes and canonical Qud metadata;
   the Windows helper rechecks and holds files read-only through completion. A plan is not proof
   of a clean commit, release tag, game behavior or private playtest.
@@ -37,20 +43,26 @@ ordinary native Windows paths; the plan's package paths use `/mnt/<drive>/...`. 
 fresh separate folder, outside package content and outside the registry root.
 Use a truthful UTF-8 changelist. Do not place credentials in any input.
 
-Without `-Submit`, the launcher only checks the leased package and remote authority. It does not
+Without an action switch, the launcher only checks the leased package and remote authority. It does not
 create an attempt, start an update or submit. After all release gates pass, `-Submit` explicitly
 enables one attempt. A per-item active receipt records the exact version and is flushed before
 submission, then retained through completion. The registry, not the caller, decides where that
 receipt lives, and the per-item kernel mutex - not `CreateNew` alone - is what makes one attempt
-exclusive. An existing receipt requires reconciliation, never an automatic retry. Preserve it as
-immutable history when delivery is verified; do not clear it merely because submission returned
-success.
+exclusive. An unresolved receipt requires reconciliation, never an automatic retry. Explicit
+`-Finalize` can retain fresh installed-delivery evidence for an exact successful submission;
+only a complete finalized chain admits a separately approved `0.3.x` package whose canonical
+file inventory is absent from every retained attempt. Private staging permits an equal or higher
+patch; public Alpha requires a strictly higher patch. An equal-version private recandidate is a
+new package and new attempt, never a retry of the old attempt. Changing only package/plan paths,
+receipt row order or equivalent receipt spelling cannot make unchanged content new.
+No record is cleared or overwritten. `-Submit`, `-Inspect`, `-Verify` and `-Finalize` are mutually
+exclusive. Shared launcher inputs, including `ChangeNotePath`, remain required in every mode.
 
 ## Fixed registry root
 
 The publisher admits exactly one release-state root, compiled into
 `WorkshopReleaseRegistry.StateRoot`: `C:\taf-workshop-state.dRBivM`. There is no caller-selected
-state root. `ATTEMPT_ROOT` (`args[5]`) survives only as the strict seventh-argument shape: the
+state root. `ATTEMPT_ROOT` (`args[5]`) survives only in the publisher's seven-argument shape: the
 helper compares it **byte-exactly** - ordinal, unnormalised, no filesystem probe - against that
 constant, and refuses `state_root_refused` before any SDK call, item mutex, marker initialization,
 attempt lease or file read. The launcher passes the compiled literal verbatim and refuses any other
@@ -86,15 +98,49 @@ in this tool deletes or moves an attempt.
 `inspect` (`-Inspect`) prints held marker SHA-256 and physical directory identities, plus at most
 64 immediate retained-entry names (each at most255 characters, strict UTF-8, no controls). Child
 entries are never opened or followed; names prove no per-file identity, content or evidence chain. It
-makes no SDK call and creates no attempt. It refuses `attempt_retained` when any attempt is
-retained, and a retained attempt refuses `check` and `submit` the same way, without creating
-anything.
+makes no SDK call and creates no attempt. It reports `attempt_retained`/exit7 whenever any attempt
+exists, including finalized history; inspection is not admission to another release. `check` and
+`submit` require every retained attempt to be finalized before applying that lane's version rule
+and the all-history unseen-inventory check. Admission derives the existing
+`taf-installed-inventory-v1` digest from the still-held closed package, not a caller-supplied digest.
 
 The canonical `<item>.active.attempt.json` filename and the receipt's historical
 `packagePath == contentPath` pairing are unchanged; only the directory holding them moved into the
-registry, at `<registry root>\registry\<item>\attempts\0001\`.
+registry, at `<registry root>\registry\<item>\attempts\0001\`. Later attempts use contiguous
+`0002` through `0064`; there is no eviction or rollover after the bound.
 
-## Statuses and exit codes
+## verify and finalize
+
+Both modes build `WorkshopDelivery.csproj` and invoke `TafWorkshopDelivery.dll` with exactly
+`verify|finalize PLAN PLAN_SHA ITEM RECEIPT_SHA`. They do not use the publisher's seven arguments.
+The launcher retains its fixed-root guard, SDK hashes, separate fresh evidence, child-only Steam
+environment, redacted logs and owned-child cleanup in all modes.
+
+`-Verify` observes one exact subscribed installation. It does not write installation or finalization
+records. Its null `finalizationSHA` and false `attemptFinalized` mean this invocation did not finalize
+or attest history, not that previously finalized history is absent.
+
+`-Finalize` selects the latest exact retained submission, verifies the original package/plan/receipt
+and content path, then performs fresh Steam-installed verification. Only after SDK/installed-file
+cleanup succeeds does it create immutable `.installation.json` and `.finalization.json` siblings.
+All original package files, plan, receipt and paths must remain available unchanged. Finalization
+binds the submission, registry marker, physical attempt directory, installed inventory and previous
+finalization hash. Already-finalized history is verified without replacing its records.
+
+No-history finalization is installation verification only. Successful finalization requires exit0,
+`status=SubscribedInstallationVerified`, `attemptFinalized=true` and a matching non-null
+`finalizationSHA`. A later cleanup refusal can retain that hash as a recorded fact; nonzero exit or
+`Refused` is never a successful invocation. Both modes report
+`operation`, one-client scope, `freshTransferVerified=false` and `releaseReady=false`; gameplay,
+all subscribers, public promotion and a new network transfer are not proved. Verification refusal
+returns2 or3. Neither operation can turn an unknown submission into a successful one.
+
+A timeout, unknown callback, I/O failure, legal prompt, rejected submission, partial record, changed
+identity, extra file, version regression or noncanonical history remains a fence. A crash between
+installation and finalization retains a partial fence for operator investigation. No repair, retry,
+deletion, alternate root, legacy import or automatic history cleanup is implemented.
+
+## Publisher statuses and exit codes
 
 | Exit | Status | Meaning |
 | --- | --- | --- |
@@ -112,14 +158,16 @@ Exit 9 stays the launcher's own "helper did not report" sentinel; the helper nev
 Every report carries `retryAuthorized: false` and `delivered: false`, and prints exception **type
 names** only - never a message, native path, SDK diagnostic or account id.
 
-## Not yet
+## Remaining limits
 
-- **No finalizer.** Nothing here advances an attempt to verified, installed, accepted or archived.
-- **No later attempt after a retained one.** `attempts/0001` is the only attempt this code creates;
-  a retained attempt is terminal for the tool and is resolved by an operator, not by a rerun.
+- **No corrected-private-candidate acceptance.** The original private attempt is finalized, but
+  its known-broken `0.3.1` package remains unchanged. A corrected package needs fresh gates,
+  unseen-inventory admission, submission, subscribed-byte verification and ordinary acceptance.
+- **No uncertain-attempt reconciliation.** Partial or unsuccessful histories cannot admit a later
+  attempt; an operator must investigate without deleting the fence or switching registry roots.
 - **No legacy import.** Receipts written under an older caller-selected root are not migrated, read
   or counted. Reconcile them by hand before trusting the registry's attempt count.
-- No durable abandoned-lock record, no subscribed-delivery proof, no acceptance claim, and no
+- No durable abandoned-lock record, no all-subscriber or gameplay acceptance claim, and no
   authority granted by parsing any observation.
 
 ## Outcomes and tests
@@ -130,18 +178,36 @@ as uncertain: it might already have succeeded. On a legal-agreement prompt, stop
 Never erase an attempt receipt to make a retry pass.
 
 Run `Tools/test-workshop-upload.ps1 -EvidenceRoot <fresh-native-directory>` for SDK-free Windows
-tests. The separate read-only `workshop-steam-probe.ps1` can inspect an existing item's ownership
+tests. It first runs47 launcher routing/refusal fixtures against the exact launcher source hash,
+then the registered C# suites. The separate read-only `workshop-steam-probe.ps1` can inspect an existing item's ownership
 and manifest tags without changing anything. Keep build/test evidence local; SDK binaries are
 copied only to local build output and are not distributed with the mod.
 
 The test launcher runs `protocol`, `package`, `attempt`, `evidence`, `record`, `observation`,
-`aftermath`, `cleanup`, `lock`, `lease`, `registry` and `cli` suites,
+`aftermath`, `cleanup`, `lock`, `lease`, `registry`, `cli`, `finalization` and `finalization-windows` suites,
 which are registered in `WorkshopUploadTests.csproj`, dispatched by `UploadTests.cs`, and runnable
 directly as `dotnet TafWorkshopUploadTests.dll <suite>`. These cover canonical hostile-input parsing, legal-before-I/O
 classification, concurrent callback/settlement latching, real Windows write-once file leases,
 persistence-before-verification and independent cleanup. No suite initializes Steam.
-Fresh integrated Windows tests and strict publisher compilation pass with zero warnings/errors;
-exact evidence and remaining gates are linked from [current status](../../docs/STATUS.md).
+On 2026-09-07, Windows run41807 exited0:47 launcher fixtures and all14 registered suites passed,
+including75 pure/source finalization cases,29 synthetic Windows history cases and17 package cases.
+The directory regression observed native write-open results0/32/0 before/held/after disposal;
+rename was blocked with sharing error32, so same-name directory replacement was not exercised
+on that run. The test project compiled successfully. These results bind the exact held tooling
+sources now copied into the active worktree; they are not an active-worktree rerun or an actual
+Steam finalization. [Retained Windows evidence](/mnt/c/taf-package-directory-green.iJDY7u/).
+Exact evidence and remaining gates are linked from [current status](../../docs/STATUS.md).
+
+The active-worktree rerun94540 subsequently exited0: all47 launcher fixtures and14 upload suites,
+both production helper builds, the installed-test build and14 installed-package cases passed.
+[Integrated native evidence](/mnt/c/taf-publisher-integrated-native.ubIZAB/).
+Actual `-Finalize` run43652 then exited0 with `status=SubscribedInstallationVerified`, `reason=null`
+and `attemptFinalized=true`; its finalization SHA is
+`d06be0a4fbf6e1a29a98f03e18840bf13be4539c813b7e41a3afdb8cd8b783ab`.
+[Finalizer output](/mnt/c/taf-private-finalize.aix0Ji/upload.stdout).
+This invocation verified one subscribed client installation; `freshTransferVerified=false` and
+`releaseReady=false`. Original attempt/submission readback and all record hashes are in
+[STATUS.md](../../docs/STATUS.md#publisher-integration--original-private-attempt-finalized).
 
 After the protocol returns, the publisher writes the frozen outcome to
 `<item>.active.attempt.json.submission.json`, bound to the exact held attempt bytes. It flushes,
@@ -151,12 +217,12 @@ and the active attempt; later failures never erase either. Final output is emitt
 port and package cleanup; each cleanup action is attempted even if an earlier action throws.
 These local tests do not prove an actual Steam callback or subscriber delivery.
 
-Fixed-registry enforcement passes strict four-project compilation and all twelve Windows suites,
+The retained first-attempt checkpoint passed strict four-project compilation and all twelve Windows suites,
 including14 CLI,11 item-lock,11 registry and12+9 lease groups. Delivery15package+14installed groups
 and436 Python Tools tests pass. [Exact evidence](/tmp/taf-publisher-integration.w9HGSj/README.md).
-No real registry or SDK access occurred in those tests. Finalization,
-subscribed delivery and ordinary acceptance remain incomplete. A parsed observation never clears an
-attempt or grants retry rights.
+No real registry or SDK access occurred in those tests; native finalization and ordinary
+acceptance were incomplete at that checkpoint. The later finalization above does not establish
+ordinary acceptance. A parsed observation never clears an attempt or grants retry rights.
 
 For a separate bytes-only check, run `Tools/workshop_installed_bytes.py` with `--installed-root`,
 `--receipt`, `--receipt-sha`, `--mode`, `--expected-item` and `--expected-version`. The selected

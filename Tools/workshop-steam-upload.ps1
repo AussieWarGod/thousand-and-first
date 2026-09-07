@@ -8,7 +8,9 @@ param(
     [Parameter(Mandatory = $true)][string]$ReceiptSHA,
     [Parameter(Mandatory = $true)][string]$EvidenceRoot,
     [switch]$Submit,
-    [switch]$Inspect
+    [switch]$Inspect,
+    [switch]$Verify,
+    [switch]$Finalize
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -19,7 +21,27 @@ $FixedStateRoot = 'C:\taf-workshop-state.dRBivM'
 if (!$StateRoot.Equals($FixedStateRoot, [StringComparison]::Ordinal)) {
     throw "Only the fixed registry root $FixedStateRoot is admitted; alternate state roots are refused."
 }
-if ($Submit -and $Inspect) { throw 'Choose one of -Submit or -Inspect.' }
+function Get-ReleaseInvocation {
+    param([switch]$Submit, [switch]$Inspect, [switch]$Verify, [switch]$Finalize,
+        [string]$PlanFile, [string]$PlanSHA, [string]$ItemId, [string]$NoteFile,
+        [string]$FixedStateRoot, [string]$ReceiptSHA)
+    if (([int][bool]$Submit + [int][bool]$Inspect + [int][bool]$Verify + [int][bool]$Finalize) -gt 1) {
+        throw 'Choose only one of -Submit, -Inspect, -Verify or -Finalize.'
+    }
+    $Mode = 'check'
+    if ($Submit) { $Mode = 'submit' }
+    elseif ($Inspect) { $Mode = 'inspect' }
+    elseif ($Verify) { $Mode = 'verify' }
+    elseif ($Finalize) { $Mode = 'finalize' }
+    $Project = 'WorkshopUpload.csproj'; $Assembly = 'TafWorkshopUpload.dll'
+    $Arguments = @($Mode, $PlanFile, $PlanSHA, $ItemId, $NoteFile, $FixedStateRoot, $ReceiptSHA)
+    if ($Verify -or $Finalize) {
+        $Project = 'WorkshopDelivery.csproj'; $Assembly = 'TafWorkshopDelivery.dll'
+        $Arguments = @($Mode, $PlanFile, $PlanSHA, $ItemId, $ReceiptSHA)
+    }
+    return [pscustomobject]@{ Mode = $Mode; Project = $Project; Assembly = $Assembly; Arguments = $Arguments }
+}
+$null = Get-ReleaseInvocation -Submit:$Submit -Inspect:$Inspect -Verify:$Verify -Finalize:$Finalize
 
 function Require-OrdinaryPath([string]$Path, [bool]$Directory) {
     if ($Path -cnotmatch '^[A-Za-z]:[\\/]' -or $Path -match '[\p{Cc}"]' -or
@@ -156,7 +178,10 @@ if ($ManagedHash -cne $Lock.managedSHA256 -or $NativeHash -cne $Lock.nativeSHA25
 $LockCopy = [IO.File]::Open((Join-Path $EvidenceDirectory 'sdk.lock.json'),
     [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::Read)
 try { $LockCopy.Write($LockBytes, 0, $LockBytes.Length) } finally { $LockCopy.Dispose() }
-$Project = Join-Path $PSScriptRoot 'WorkshopSteam\WorkshopUpload.csproj'
+$Invocation = Get-ReleaseInvocation -Submit:$Submit -Inspect:$Inspect -Verify:$Verify -Finalize:$Finalize `
+    -PlanFile $PlanFile -PlanSHA $PlanSHA -ItemId $ItemId -NoteFile $NoteFile `
+    -FixedStateRoot $FixedStateRoot -ReceiptSHA $ReceiptSHA
+$Project = Join-Path (Join-Path $PSScriptRoot 'WorkshopSteam') $Invocation.Project
 $OutputDirectory = Join-Path $EvidenceDirectory 'out'
 $IntermediateDirectory = (Join-Path $EvidenceDirectory 'obj') + '/'
 $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
@@ -165,12 +190,8 @@ $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
     --ignore-failed-sources *> (Join-Path $EvidenceDirectory 'build.log')
 if ($LASTEXITCODE -ne 0) { throw 'Upload helper compilation failed; retained build.log.' }
 
-$Mode = 'check'
-if ($Submit) { $Mode = 'submit' }
-elseif ($Inspect) { $Mode = 'inspect' }
-# The compiled literal is passed verbatim: the helper compares it byte-exactly before any work.
-$Arguments = @((Join-Path $OutputDirectory 'TafWorkshopUpload.dll'), $Mode, $PlanFile, $PlanSHA,
-    $ItemId, $NoteFile, $FixedStateRoot, $ReceiptSHA)
+# Publisher argv retains the fixed-root literal; delivery uses its compiled root directly.
+$Arguments = @((Join-Path $OutputDirectory $Invocation.Assembly)) + $Invocation.Arguments
 $Start = New-Object Diagnostics.ProcessStartInfo
 $Start.FileName = $Dotnet
 $Start.Arguments = ($Arguments | ForEach-Object { Quote-Argument $_ }) -join ' '

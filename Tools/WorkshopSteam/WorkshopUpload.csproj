@@ -18,10 +18,15 @@
     <Compile Include="UploadAftermath.cs" />
     <Compile Include="UploadCleanup.cs" />
     <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackage.Inventory.cs" />
     <Compile Include="UploadAttemptLease.cs" />
     <Compile Include="UploadAttemptLease.Registry.cs" />
     <Compile Include="WorkshopItemLock.cs" />
     <Compile Include="WorkshopReleaseRegistry.cs" />
+    <Compile Include="ReleaseFinalizationRules.cs" />
+    <Compile Include="ReleaseInstallationObservation.cs" />
+    <Compile Include="WorkshopReleaseRegistry.Finalization.cs" />
+    <Compile Include="UploadAttemptLease.Installation.cs" />
     <Compile Include="SteamUploadAuthority.cs" />
     <Compile Include="SteamUploadPort.cs" />
     <Compile Include="SteamUploadPort.Observation.cs" />

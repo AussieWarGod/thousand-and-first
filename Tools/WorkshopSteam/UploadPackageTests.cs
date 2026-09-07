@@ -39,6 +39,8 @@ namespace ThousandAndFirst.WorkshopSteam
 			Case("hard-linked input refuses and releases handles", HardLinks);
 			Case("junction/reparse child and content ancestor refuse before traversal", Reparse);
 			Case("culture-independent item and path validation", Culture);
+			Case("held empty package directory denies actual native write access", EmptyDirectoryWriter);
+			Case("held empty directory blocks rename or rejects same-name replacement", EmptyDirectoryReplacement);
 			Console.WriteLine("UploadPackage synthetic Windows fixtures: passed=" + passed + " failed=" + failed);
 			return failed == 0 ? 0 : 1;
 		}
@@ -295,20 +297,20 @@ namespace ThousandAndFirst.WorkshopSteam
 		{ try { body(); passed++; Console.WriteLine("PASS " + name); } catch (Exception error) { failed++; Console.WriteLine("FAIL " + name + ": " + error); } }
 		private static string Hash(string path)
 		{ using (SHA256 hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(File.ReadAllBytes(path))).Replace("-", "").ToLowerInvariant(); }
-		private sealed class Fixture : IDisposable
+		internal sealed class Fixture : IDisposable
 		{
 			internal readonly string Root, Content, Receipt, PlanPath, Payload, Item;
 			internal JsonObject Plan;
 			internal string Hash;
-			internal Fixture(bool alpha = false)
+			internal Fixture(bool alpha = false, string version = "0.3.7", string item = null)
 			{
 				Root = Path.Combine(Path.GetTempPath(), "taf-upload-package-test." + Guid.NewGuid().ToString("N"));
 				Content = Path.Combine(Root, "content"); Receipt = Path.Combine(Root, "receipt.sha256"); PlanPath = Path.Combine(Root, "plan.json");
-				Payload = Path.Combine(Content, "Core", "Payload.cs"); Item = alpha ? "3794797472" : "12345"; Directory.CreateDirectory(Path.GetDirectoryName(Payload));
+				Payload = Path.Combine(Content, "Core", "Payload.cs"); Item = item ?? (alpha ? "3794797472" : "12345"); Directory.CreateDirectory(Path.GetDirectoryName(Payload));
 				File.WriteAllText(Payload, "// synthetic package fixture\n", Utf8); File.WriteAllBytes(Path.Combine(Content, "preview.png"), Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII="));
-				File.WriteAllText(Path.Combine(Content, "manifest.json"), JsonSerializer.Serialize(new { id = "r_ThousandAndFirst", version = "0.3.7", PreviewImage = "preview.png", description = "Different manifest prose" }), Utf8);
+				File.WriteAllText(Path.Combine(Content, "manifest.json"), JsonSerializer.Serialize(new { id = "r_ThousandAndFirst", version = version, PreviewImage = "preview.png", description = "Different manifest prose" }), Utf8);
 				File.WriteAllText(Path.Combine(Content, "workshop.json"), JsonSerializer.Serialize(new { WorkshopId = ulong.Parse(Item, CultureInfo.InvariantCulture), Title = "Synthetic Workshop", Description = "Workshop rich description", Tags = "Building,Lore", Visibility = alpha ? "2" : "0", ImagePath = "preview.png" }), Utf8);
-				Plan = JsonSerializer.SerializeToNode(new { schema = "taf-workshop-upload-plan-v1", planOnly = true, appId = 333640, targetItem = Item, mode = alpha ? "alpha" : "test", manifestId = "r_ThousandAndFirst", version = "0.3.7", title = "Synthetic Workshop", description = "Workshop rich description", tags = new[] { "Building", "Lore" }, qudVisibility = alpha ? "2" : "0", steamVisibility = alpha ? 0 : 2, contentPath = Posix(Content), previewPath = Posix(Path.Combine(Content, "preview.png")), receiptPath = Posix(Receipt) }).AsObject(); Rebuild();
+				Plan = JsonSerializer.SerializeToNode(new { schema = "taf-workshop-upload-plan-v1", planOnly = true, appId = 333640, targetItem = Item, mode = alpha ? "alpha" : "test", manifestId = "r_ThousandAndFirst", version = version, title = "Synthetic Workshop", description = "Workshop rich description", tags = new[] { "Building", "Lore" }, qudVisibility = alpha ? "2" : "0", steamVisibility = alpha ? 0 : 2, contentPath = Posix(Content), previewPath = Posix(Path.Combine(Content, "preview.png")), receiptPath = Posix(Receipt) }).AsObject(); Rebuild();
 			}
 			internal void Rebuild()
 			{

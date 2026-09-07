@@ -27,6 +27,8 @@ namespace ThousandAndFirst.WorkshopSteam
                 case "lock": return WorkshopItemLockTests.Run();
                 case "lease": return Standalone(typeof(global::RegistryLeaseTests));
                 case "registry": return Standalone(typeof(global::WorkshopReleaseRegistryTests));
+                case "finalization": return ReleaseFinalizationTests.Run();
+                case "finalization-windows": return ReleaseFinalizationTests.RunWindows();
                 case "cli": return WorkshopSteamCliTests.Run();
                 default: Console.Error.WriteLine("Unknown Workshop upload test suite."); return 2;
             }

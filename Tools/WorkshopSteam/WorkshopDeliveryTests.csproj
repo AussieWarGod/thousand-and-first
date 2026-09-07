@@ -13,9 +13,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="UploadPackage.cs" />
+    <Compile Include="UploadPackage.Inventory.cs" />
     <Compile Include="UploadPackage.Install.cs" />
     <Compile Include="SteamInstalledDelivery.cs" />
     <Compile Include="UploadPackageTests.cs" />
+    <Compile Include="UploadPackageDirectoryTests.cs" />
     <Compile Include="UploadPackageInstalledTests.cs" />
     <Compile Include="DeliveryTests.cs" />
     <Compile Include="UploadProtocol.cs" />

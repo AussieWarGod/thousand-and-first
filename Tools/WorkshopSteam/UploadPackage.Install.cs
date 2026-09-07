@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 
@@ -100,38 +99,6 @@ namespace ThousandAndFirst.WorkshopSteam
                 && token == volume.ToString("D"), "held input volume GUID is noncanonical");
             Name(path.Substring(prefix.Length + 38).Replace('\\', '/'));
             return path;
-        }
-
-        private string InstallInventorySHA()
-        {
-            List<string> names = new List<string>(entries.Keys);
-            names.Sort(CompareUtf8);
-            using (MemoryStream bytes = new MemoryStream())
-            {
-                using (BinaryWriter writer = new BinaryWriter(bytes, Utf8, true))
-                {
-                    InstallFrame(writer, "taf-installed-inventory-v1");
-                    InstallFrame(writer, names.Count.ToString(CultureInfo.InvariantCulture));
-                    foreach (string name in names)
-                    {
-                        Entry row = entries[name];
-                        Verify(row);
-                        InstallFrame(writer, name);
-                        InstallFrame(writer, row.Hash);
-                        InstallFrame(writer, row.Size.ToString(CultureInfo.InvariantCulture));
-                    }
-                    writer.Flush();
-                }
-                bytes.Position = 0;
-                using (SHA256 sha = SHA256.Create()) return Hex(sha.ComputeHash(bytes));
-            }
-        }
-
-        private static void InstallFrame(BinaryWriter writer, string value)
-        {
-            byte[] bytes = Utf8.GetBytes(value);
-            writer.Write(bytes.Length);
-            writer.Write(bytes);
         }
 
         private sealed class InstalledEvidence : IInstalledDeliveryEvidence

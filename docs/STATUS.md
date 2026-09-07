@@ -13,6 +13,37 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Publisher integration — original private attempt finalized
+
+The publisher extension is integrated over stock checkpoint `b4c2d2d`, without changing the
+subscribed private package. Active-worktree native run94540 TERMINAL0 passed47 launcher fixtures
+and all14 upload suites, including75 pure/source finalization groups,29 Windows history groups
+and17 package groups. Both production helpers and the installed-test project compiled; all14
+installed-package cases passed. [Integrated evidence](/mnt/c/taf-publisher-integrated-native.ubIZAB/).
+
+Actual finalizer43652 TERMINAL0 completed original private item3796495680 attempt `0001`:
+`status=SubscribedInstallationVerified`, `reason=null`, `attemptFinalized=true`.
+[Exact output](/mnt/c/taf-private-finalize.aix0Ji/upload.stdout).
+This invocation verified one subscribed client installation. It retained immutable installation
+and finalization siblings; root's fresh readback confirmed the original attempt/submission bytes
+unchanged. Exact SHA-256 identities:
+
+| Record | SHA-256 |
+| --- | --- |
+| Original attempt `0001`, unchanged | `90011b42fffc6d570b87873392a5eb99aa781430407d9706b3c3e88f920794d1` |
+| Original submission, unchanged | `350bbb61eb1b601bf7882e42ffeed06c86800eb3a000dd18efea82994868e5bc` |
+| Installation observation | `871e28ce85f12b3388b64d72ff82dba8b891e1d9260a91f1a78b31aeea812446` |
+| Finalization | `d06be0a4fbf6e1a29a98f03e18840bf13be4539c813b7e41a3afdb8cd8b783ab` |
+| Installed canonical inventory | `6bf2e248aa834cf52272f61e566f65a8463bddffac6d0e3599958ab729d45d58` |
+
+`freshTransferVerified=false` and `releaseReady=false`. The old private `0.3.1` still contains
+the reported Quickstart failure; finalization neither replaced it nor approved promotion. Public
+Alpha remains0.3.0. A corrected private candidate still needs a clean release gate, immutable
+package/plan/receipt, separately admitted submission, fresh subscribed-byte proof and ordinary
+acceptance. Private same-version admission requires canonical inventory unseen across all prior
+attempts; public versions must increase. Unknown/partial/failed histories remain fenced, and no
+record is deleted or retried. [Publisher contract](../Tools/WorkshopSteam/PUBLISHING.md).
+
 ## Quickstart startup correction — six native combinations exercised
 
 The user reproduced an empty Quickstart site with the apron/path refusal in private item
@@ -198,7 +229,8 @@ builds and15 package/14 installed-file groups pass without Steam calls. Fixed-ro
 now passes four strict project builds and all12 Windows suites, including14 CLI and real mutex/
 lease groups;436 Python Tools tests pass. No actual registry or SDK access occurred.
 [Publisher integration evidence](/tmp/taf-publisher-integration.w9HGSj/README.md).
-Safe repeat-release finalization and actual subscribed-content verification remain pending.
+Safe repeat-release finalization and actual subscribed-content verification remained pending
+at this retained checkpoint; the current publisher section above records their later evidence.
 [Delivery scope](/tmp/taf-delivery-integration-fixed.sj5Jfo/README.md).
 Remaining Required gameplay fixes, fresh ordinary play and exact-inventory semantic review still
 block release. Public Alpha remains0.3.0; private staging is unchanged. No upload occurred.

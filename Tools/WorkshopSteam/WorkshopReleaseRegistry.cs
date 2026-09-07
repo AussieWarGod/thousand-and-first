@@ -7,15 +7,16 @@ using System.Text;
 
 namespace ThousandAndFirst.WorkshopSteam
 {
-    /// <summary>Fixed-root, item-locked custody for retained release evidence. This first-attempt
-    /// implementation grants no subsequent-attempt or finalization authority.</summary>
-    public sealed class WorkshopReleaseRegistry : IDisposable
+    /// <summary>Fixed-root, item-locked custody for immutable release evidence. Later releases
+    /// require the exact finalized history; uncertain submissions remain permanent fences.</summary>
+    public sealed partial class WorkshopReleaseRegistry : IDisposable
     {
         public const string StateRoot = @"C:\taf-workshop-state.dRBivM";
         private readonly ulong item;
         private readonly WorkshopItemLock itemLock;
         private readonly List<IDisposable> leases = new List<IDisposable>();
         private readonly List<UploadAttemptLease.DirectoryLease> directories = new List<UploadAttemptLease.DirectoryLease>();
+        private readonly List<UploadAttemptLease.DirectoryLease> registryDirectories = new List<UploadAttemptLease.DirectoryLease>();
         private UploadAttemptLease marker;
         private UploadAttemptLease.DirectoryLease itemDirectory;
         private UploadAttemptLease.DirectoryLease attempts;
@@ -27,8 +28,8 @@ namespace ThousandAndFirst.WorkshopSteam
         public sealed class AbandonedLock : IOException
         { internal AbandonedLock(string message) : base(message) { } }
 
-        /// <summary>A retained attempt directory blocks every later attempt for this item.
-        /// Only reconciliation clears it; inspection and parsing never do.</summary>
+        /// <summary>An incomplete or unrecognized retained attempt blocks later submissions.
+        /// Neither inspection nor a matching installed copy clears uncertainty.</summary>
         public sealed class RetainedAttempt : IOException
         { internal RetainedAttempt(string message) : base(message) { } }
 
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.WorkshopSteam
             {
                 held.RequireHeld(item);
                 if (held.Abandoned) throw new AbandonedLock("Abandoned item lock requires reconciliation.");
-                UploadAttemptLease.DirectoryLease parent = registry.Keep(UploadAttemptLease.DirectoryLease.Open(root));
+                UploadAttemptLease.DirectoryLease parent = registry.KeepRegistry(UploadAttemptLease.DirectoryLease.Open(root));
                 UploadAttemptLease.DirectoryLease common = registry.Child(parent, "registry");
                 UploadAttemptLease.DirectoryLease seat = registry.Child(common, item.ToString(CultureInfo.InvariantCulture));
                 registry.itemDirectory = seat;
@@ -77,6 +78,9 @@ namespace ThousandAndFirst.WorkshopSteam
         private UploadAttemptLease.DirectoryLease Keep(UploadAttemptLease.DirectoryLease lease)
         { directories.Add(lease); leases.Add(lease); return lease; }
 
+        private UploadAttemptLease.DirectoryLease KeepRegistry(UploadAttemptLease.DirectoryLease lease)
+        { Keep(lease); registryDirectories.Add(lease); return lease; }
+
         private UploadAttemptLease.DirectoryLease Child(UploadAttemptLease.DirectoryLease parent, string name)
         {
             itemLock.RequireHeld(item);
@@ -84,7 +88,7 @@ namespace ThousandAndFirst.WorkshopSteam
             string path = Path.Combine(parent.Path, name);
             UploadAttemptLease.DirectoryLease child = Directory.Exists(path)
                 ? UploadAttemptLease.DirectoryLease.Open(path) : parent.CreateChild(name);
-            return Keep(child);
+            return KeepRegistry(child);
         }
 
         /// <summary>Creates a durable empty attempt directory before the port creates its receipt.
@@ -96,6 +100,7 @@ namespace ThousandAndFirst.WorkshopSteam
                 throw new RetainedAttempt("Retained attempt requires reconciliation; no retry.");
             begun = true;
             UploadAttemptLease.DirectoryLease attempt = Keep(attempts.CreateChild("0001"));
+            if (historyNames != null) historyNames.Add("0001");
             RequireExact();
             return Path.Combine(attempt.Path, item.ToString(CultureInfo.InvariantCulture) + ".active.attempt.json");
         }
@@ -128,7 +133,7 @@ namespace ThousandAndFirst.WorkshopSteam
         /// implied by a name. Inspection grants no retry, finalization or publication authority.</summary>
         public string[] Inspect()
         {
-            RequireExact();
+            RequireRegistryExact();
             List<string> proofs = new List<string>();
             proofs.Add("registryRoot=" + Path.GetDirectoryName(Path.GetDirectoryName(itemDirectory.Path)));
             proofs.Add("item=" + item.ToString(CultureInfo.InvariantCulture));
@@ -152,7 +157,7 @@ namespace ThousandAndFirst.WorkshopSteam
             foreach (string name in names) proofs.Add("retainedEntry=" + name);
             proofs.Add("retainedEntries=" + names.Count.ToString(CultureInfo.InvariantCulture));
             proofs.Add("inspectionScope=held-registry-identities-and-immediate-entry-names-only");
-            RequireExact();
+            RequireRegistryExact();
             return proofs.ToArray();
         }
 
@@ -164,9 +169,17 @@ namespace ThousandAndFirst.WorkshopSteam
 
         public void RequireExact()
         {
+            RequireRegistryExact();
+            foreach (UploadAttemptLease.DirectoryLease directory in directories)
+                if (!directory.Revalidate()) throw new InvalidDataException("Registry directory identity changed.");
+            RequireHistoryExact();
+        }
+
+        private void RequireRegistryExact()
+        {
             if (disposed) throw new ObjectDisposedException(nameof(WorkshopReleaseRegistry));
             itemLock.RequireHeld(item);
-            foreach (UploadAttemptLease.DirectoryLease directory in directories)
+            foreach (UploadAttemptLease.DirectoryLease directory in registryDirectories)
                 if (!directory.Revalidate()) throw new InvalidDataException("Registry directory identity changed.");
             foreach (string entry in Directory.GetFileSystemEntries(itemDirectory.Path))
                 if (Path.GetFileName(entry) != "registry.marker.json" && Path.GetFileName(entry) != "attempts")
