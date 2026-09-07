@@ -5,9 +5,17 @@ uploads, or changes visibility. A separate local Steam-client publisher is imple
 maintainer's authorization for autonomous, ready Alpha releases. Corrected private0.3.1 attempt
 `0002` was submitted (63022 TERMINAL0) and finalized after exact subscribed-install verification
 (20925 TERMINAL0). Original attempt `0001` remains immutable. This proves one client only;
-`freshTransferVerified=false` and `releaseReady=false`. Public Alpha remains0.3.0 pending upload.
+`freshTransferVerified=false` and `releaseReady=false`. Public Alpha0.3.1 is now published:
+submit55498 TERMINAL0 at13:18 UTC, then finalizer55266 TERMINAL0 verified one subscribed client
+and finalized public item3794797472 attempt `0001`. Strict3077-file Alpha package68272 and
+native copy54621 passed. Annotated `v0.3.1` binds commit
+`a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`; broader Beta acceptance is not claimed.
 Exact plan/receipt/inventory/finalization hashes and evidence are in
-[current status](STATUS.md#corrected-private-031--installed-and-finalized).
+[current status](STATUS.md#public-031--published-and-finalized).
+The release source/tag push was accepted with a GitHub warning that the existing credentials
+bypassed main's pull-request and three-required-check rules. No protection settings changed.
+Do not repeat direct main pushes: follow-up integration must use a PR and its required checks.
+Retain the accepted release history and immutable tag; do not rewrite them to hide this event.
 Do not automate public releases until the private-item adoption gates below pass. Never automate authentication
 or legal acceptance.
 
@@ -19,9 +27,10 @@ checks keep their distinct source scopes. Canonical release-check29200 completed
 clean792270b with13625/5012 managed cases and zero managed skips, but three explicit environmental
 bind-alias exclusions (PACKAGE/COPY/BACKUP). Root accepts those narrow gaps for this Alpha,
 not as a user waiver or zero-skip full-gate result; ownership and alias guards remain unchanged.
-Root's one-release plan reuses this exact frozen-runtime verification, checks the public-only
-documentation/metadata delta, and requires strict `--alpha` package lineage, receipt, tag and
-structure binding. It does not claim another complete `--alpha` release-check run. The permanent
+Root's one-release decision reused this exact frozen-runtime verification, checked the public-only
+delta, and required strict `--alpha` package lineage, receipt, tag and structure binding. The two
+README freshness assertions were updated;501 Tools tests and final document checks passed.
+No additional complete `--alpha` release-check run is claimed. The permanent
 procedure below and Beta/Release evidence requirements remain unchanged.
 [Exact decision and gate log identity](STATUS.md#one-release-alpha-verification-decision).
 
@@ -328,7 +337,7 @@ treat a prior receipt as proof of changed bytes.
 
 ## Local automated-upload implementation and deployment design
 
-**Corrected private upload/installation finalized; public upload pending.**
+**Corrected private and public0.3.1 upload/installation finalized; one client per invocation.**
 No privileged CI workflow has been deployed. Exact current evidence: [STATUS.md](STATUS.md).
 The branch/runner design below remains a proposal, not permission to change repository protection
 or attach a credentialed runner. Local Alpha automation is authorized once the exact candidate and

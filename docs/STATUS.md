@@ -2,8 +2,8 @@
 
 **Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Current public version:** 0.3.0 public Alpha playtest
-**Working candidate manifest:** 0.3.1, corrected private installation verified; public upload pending
+**Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
+**Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -12,6 +12,32 @@ source, compile, or generator gate proves only that layer. Native Caves of Qud b
 only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
+
+## Public 0.3.1 — published and finalized
+
+Public item3794797472 submission55498 TERMINAL0 at13:18 UTC on2026-09-07 reports
+`SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`, version0.3.1, attempt `0001`.
+Finalizer55266 TERMINAL0 then reports `SubscribedInstallationVerified`, `reason=null`,
+`attemptFinalized=true`. [Public evidence](/mnt/c/taf-031-public-release.cfu8DL/README.md).
+
+| Binding | SHA-256 |
+| --- | --- |
+| Public upload plan | `948657ea1e143117e56093bd3933f50deb44c6782dead877e49b27f94025efdc` |
+| Public package receipt | `7bdea6d07b6d2285ad2dbc28e2358c8ea1e7d690c1661cbbdbdef2b41153bd88` |
+| Installed canonical inventory | `56deb51aab223b5bbaf2c04d1581fe56b0508b305e586e1ab3e4561d13f30373` |
+| Public attempt `0001` finalization | `60f57049d906e8a7a5c038bcc2343326143ac8feaeb45d92951756d8263cbb46` |
+
+Annotated `v0.3.1` points to commit `a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`,
+tag object `ed91d97b6d5d1b515933d144adb01f89303c5496`. Strict Alpha package68272 TERMINAL0
+proved3077 files and exact private-candidate binding; native copy54621 TERMINAL0 retained the
+same receipt and inventory. One public subscribed client was verified;
+`freshTransferVerified=false` and `releaseReady=false` remain explicit, not gameplay acceptance.
+
+After the web tool failed to open the listing, a separate signed-out HTTPS fetch succeeded.
+Retained `public-page.html` SHA-256
+`eb0a134d1786066e1fe4f3ab99976dbcf4ca1bb2eb37fcb3d72aa57bc8e5dd38` exposes the Alpha title,
+new hook and all six tags. This is HTML inspection, not a pixel capture. The requested current
+Alpha publication is complete; broader Beta work and the evidence limits below are unchanged.
 
 ## Corrected private 0.3.1 — installed and finalized
 
@@ -32,7 +58,7 @@ The private receipt is bound at commit `47a055254f09c1ac72733a3198101a66d47babf6
 
 This proves one client's corrected subscribed bytes, not all subscribers or gameplay acceptance.
 `freshTransferVerified=false` and `releaseReady=false` remain explicit. Original attempt `0001`
-and its evidence remain immutable. Public item3794797472 remains0.3.0 until its separate upload.
+and its evidence remain immutable. The separately bound public0.3.1 publication is recorded above.
 
 ### One-release Alpha verification decision
 
@@ -47,10 +73,11 @@ they are not PASS and were not waived by the user. Production ownership/alias gu
 The user explicitly waived manual startup/save/reload for this Alpha. Retained six genuine
 boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; current stock native16 and managed
 checks retain their separate scopes. No ordinary subscriber play or graceful Quit PASS follows.
-Root will reuse the exact frozen-runtime gate, check only the public documentation/metadata
-delta, and require strict `--alpha` package lineage/receipt/tag/structure binding. No second full
+Root reused the exact frozen-runtime gate, checked the public-only delta, and required strict
+`--alpha` package lineage/receipt/tag/structure binding. The two stale README freshness assertions
+were updated;501 Tools tests and final document checks passed. No second full
 `--alpha` release-check is claimed. This is a one-release verification decision, not a permanent
-gate relaxation or Beta/Release acceptance. Public packaging and upload remain pending.
+gate relaxation or Beta/Release acceptance. Public packaging, upload and finalization are complete.
 
 ## Publisher integration — original private attempt finalized
 
@@ -87,8 +114,8 @@ record is deleted or retried. [Publisher contract](../Tools/WorkshopSteam/PUBLIS
 
 The user reproduced an empty Quickstart site with the apron/path refusal in private item
 3796495680. Its subscribed 0.3.1 bytes were previously verified; this does not prove gameplay.
-Public item3794797472 remains last verified0.3.0. That failed private build was not promoted;
-the corrected private delivery and current Alpha decision are recorded above.
+That failed private build was not promoted; corrected private and public0.3.1 delivery and the
+current Alpha decision are recorded above.
 
 The old readiness check rejects the player it requires at (40,12), after ordinary boot places
 that player. An isolated correction exempts only the exact founder while retaining foreign

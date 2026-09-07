@@ -97,7 +97,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 modding = CHECKER.ROOT / "MODDING.md"
                 status.parent.mkdir(parents=True)
                 status.write_text(
-                    "0.3.0 public Alpha playtest. Its old counts do not sign later bytes. "
+                    "0.3.1 public Alpha playtest. Its old counts do not sign later bytes. "
                     f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
                     encoding="utf-8",
                 )
@@ -148,12 +148,12 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 CHECKER.audit_public_release_status(problems)
                 self.assertEqual(2, len(problems))
                 self.assertTrue(
-                    any("0.3.0 public Alpha playtest" in problem for problem in problems)
+                    any("0.3.1 public Alpha playtest" in problem for problem in problems)
                 )
                 self.assertTrue(any("0.2.0 work in progress" in problem for problem in problems))
 
                 status.write_text(
-                    "0.3.0 public Alpha playtest. Its old counts do not sign later bytes. "
+                    "0.3.1 public Alpha playtest. Its old counts do not sign later bytes. "
                     f"{CHECKER.PUBLIC_ALPHA_WORKSHOP_URL}\n",
                     encoding="utf-8",
                 )

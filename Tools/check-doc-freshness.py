@@ -610,7 +610,7 @@ def audit_public_release_status(problems):
     require(
         problems,
         "docs/STATUS.md",
-        "0.3.0 public Alpha playtest",
+        "0.3.1 public Alpha playtest",
         PUBLIC_ALPHA_WORKSHOP_URL,
         "old counts do not sign later bytes",
     )
