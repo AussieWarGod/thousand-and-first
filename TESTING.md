@@ -26,6 +26,11 @@ passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Porta
 zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
 132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
+"All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
+baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
+`-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
+only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
+below keep their original wording as written at their own checkpoints.
 Canonical compilation runs across 3049 production C# sources; the generated
 cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
