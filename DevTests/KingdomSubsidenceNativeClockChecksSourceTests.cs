@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,7 +23,7 @@ namespace ThousandAndFirst.Tests
 				"row.ObservedTick == original", "now, now - 1L, null, original, capture)",
 				"now, now + 1L, null, original, capture)", "now, now, -1L, original, capture)",
 				"now, now, now + 1L, original, capture)");
-			Assert.AreEqual(4, Regex.Matches(source, @"\bProbe\(fixture,").Count);
+			ClassicAssert.AreEqual(4, Regex.Matches(source, @"\bProbe\(fixture,").Count);
 			StringAssert.Contains("KingdomSubsidence.TryReckon(system, zone, survey, supplied, out string refusal)", source);
 			StringAssert.DoesNotContain("KingdomSubsidence.Reckon(", source);
 		}
@@ -37,9 +38,9 @@ namespace ThousandAndFirst.Tests
 				"system.LastSubsidenceTick == (injected ?? original)", "!accepted && !string.IsNullOrEmpty(refusal)",
 				"if (injected.HasValue) system.LastSubsidenceTick = original;",
 				"Owner(fixture, zone, survey, game, now); capture.Check();", "system.LastSubsidenceTick == original");
-			Assert.AreEqual(2, Regex.Matches(source, @"\.LastSubsidenceTick\s*=(?!=)").Count);
-			Assert.IsFalse(Regex.IsMatch(source, @"\bfinally\s*\{"));
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:TimeTicks|Population|Stage|SubsidenceModel)\s*=(?!=)"));
+			ClassicAssert.AreEqual(2, Regex.Matches(source, @"\.LastSubsidenceTick\s*=(?!=)").Count);
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bfinally\s*\{"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:TimeTicks|Population|Stage|SubsidenceModel)\s*=(?!=)"));
 			StringAssert.DoesNotContain(".SetValue(", source);
 		}
 
@@ -122,7 +123,7 @@ namespace ThousandAndFirst.Tests
 		private static string Body(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.IsTrue(start >= 0, signature); start = source.IndexOf('{', start);
+			ClassicAssert.IsTrue(start >= 0, signature); start = source.IndexOf('{', start);
 			int depth = 0;
 			for (int i = start; i < source.Length; i++)
 			{
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in expected)
 			{
 				int next = source.IndexOf(token, at, StringComparison.Ordinal);
-				Assert.IsTrue(next >= at, token); at = next + token.Length;
+				ClassicAssert.IsTrue(next >= at, token); at = next + token.Length;
 			}
 		}
 		private static void Contains(string source, params string[] expected)

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,43 +13,43 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ManualRecipesAreExactAndKindBound()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectRefine(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectRefine(
 				KingdomPurposeKind.Deep, out KingdomMaterial raw, out KingdomMaterial product));
-			Assert.AreEqual(KingdomMaterial.Stone, raw);
-			Assert.AreEqual(KingdomMaterial.ShapedStone, product);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectRefine(
+			ClassicAssert.AreEqual(KingdomMaterial.Stone, raw);
+			ClassicAssert.AreEqual(KingdomMaterial.ShapedStone, product);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectRefine(
 				KingdomPurposeKind.Forge, out raw, out product));
-			Assert.AreEqual(KingdomMaterial.Scrap, raw);
-			Assert.AreEqual(KingdomMaterial.WorkedMetal, product);
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryEffectRefine(
+			ClassicAssert.AreEqual(KingdomMaterial.Scrap, raw);
+			ClassicAssert.AreEqual(KingdomMaterial.WorkedMetal, product);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryEffectRefine(
 				KingdomPurposeKind.Harvest, out _, out _));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectHarvest(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectHarvest(
 				"crop", "seed", "staple", out int crops, out int seeds, out int staples));
-			Assert.AreEqual(3, crops);
-			Assert.AreEqual(1, seeds);
-			Assert.AreEqual(6, staples);
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryEffectHarvest(
+			ClassicAssert.AreEqual(3, crops);
+			ClassicAssert.AreEqual(1, seeds);
+			ClassicAssert.AreEqual(6, staples);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryEffectHarvest(
 				"", "seed", "staple", out _, out _, out _));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectRecipeConserves(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectRecipeConserves(
 				KingdomPurposeKind.Deep, 2, 1, 0));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectRecipeConserves(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectRecipeConserves(
 				KingdomPurposeKind.Harvest, 3, 1, 6));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectRecipeConserves(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectRecipeConserves(
 				KingdomPurposeKind.Harvest, 2, 1, 6));
 		}
 
 		[Test]
 		public void TypedLaddersRejectCrossKindValuesAndSkipEdges()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
 				KingdomPurposeKind.Deep, (int)KingdomPurposeEffectRefineStep.Made));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
 				KingdomPurposeKind.Deep, (int)KingdomPurposeEffectHarvestStep.SeedMade));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
 				KingdomPurposeKind.Harvest, (int)KingdomPurposeEffectHarvestStep.Milled));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
 				KingdomPurposeKind.Flesh, 1));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepIsLegalFor(
 				KingdomPurposeKind.Chrome, KingdomPurposePortfolioRules.PurposeEffectExempt));
 
 			KingdomPurposeOperationReceipt before = Step(KingdomPurposeKind.Deep,
@@ -56,45 +57,45 @@ namespace ThousandAndFirst.Tests
 				(int)KingdomPurposeEffectRefineStep.None);
 			KingdomPurposeOperationReceipt after = before.Copy();
 			after.EffectStep = (int)KingdomPurposeEffectRefineStep.FirstRawSpent;
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 			after.EffectStep = (int)KingdomPurposeEffectRefineStep.SecondRawSpent;
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 			after = before.Copy();
 			after.EffectStep = KingdomPurposePortfolioRules.PurposeEffectExempt;
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 			before.EffectStep = KingdomPurposePortfolioRules.PurposeEffectExempt;
 			after.EffectStep = KingdomPurposePortfolioRules.PurposeEffectExempt;
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 
 			before = Step(KingdomPurposeKind.Deep,
 				KingdomPurposeOperationPhase.EffectPending,
 				(int)KingdomPurposeEffectRefineStep.SecondRawSpent);
 			after = before.Copy();
 			after.EffectStep = (int)KingdomPurposeEffectRefineStep.Made;
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 			after.Phase = KingdomPurposeOperationPhase.EffectApplied;
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after));
 		}
 
 		[Test]
 		public void PhaseCoherenceRequiresWholeLadderAtAndAfterApplied()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Harvest, KingdomPurposeOperationPhase.EffectPending,
 				(int)KingdomPurposeEffectHarvestStep.SecondCropSpent)));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Harvest, KingdomPurposeOperationPhase.EffectApplied,
 				(int)KingdomPurposeEffectHarvestStep.SeedMade)));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Harvest, KingdomPurposeOperationPhase.EffectApplied,
 				(int)KingdomPurposeEffectHarvestStep.Milled)));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Harvest, KingdomPurposeOperationPhase.EffectPending,
 				(int)KingdomPurposeEffectHarvestStep.Milled)));
-			Assert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Deep, KingdomPurposeOperationPhase.Prepared,
 				(int)KingdomPurposeEffectRefineStep.FirstRawSpent)));
-			Assert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(Step(
 				KingdomPurposeKind.Deep, KingdomPurposeOperationPhase.Prepared,
 				KingdomPurposePortfolioRules.PurposeEffectExempt)));
 		}
@@ -103,15 +104,15 @@ namespace ThousandAndFirst.Tests
 		public void CurrentAndLegacyOperationWiresRoundTripWithoutReadMigration()
 		{
 			KingdomPurposePairReceipt pair = Pair();
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "operation", 1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "operation", 1,
 				KingdomPurposeKind.Deep, true, false, null, null, null, null, null,
 				out KingdomPurposeOperationReceipt operation, out _));
 			string current = KingdomPurposePortfolioRules.EncodeOperation(operation);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodeOperation(current,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodeOperation(current,
 				out KingdomPurposeOperationReceipt currentCopy));
-			Assert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectNone,
+			ClassicAssert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectNone,
 				currentCopy.EffectStep);
-			Assert.AreEqual(current, KingdomPurposePortfolioRules.EncodeOperation(currentCopy));
+			ClassicAssert.AreEqual(current, KingdomPurposePortfolioRules.EncodeOperation(currentCopy));
 
 			operation.EffectStep = KingdomPurposePortfolioRules.PurposeEffectExempt;
 			KingdomPurposePairReceipt running = pair.Copy();
@@ -121,45 +122,45 @@ namespace ThousandAndFirst.Tests
 			running.NextOperationOrdinal++;
 			running.Revision++;
 			string legacy = KingdomPurposePortfolioRules.EncodeLegacyPair(running);
-			Assert.IsNotNull(legacy);
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(legacy, out _));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(legacy,
+			ClassicAssert.IsNotNull(legacy);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(legacy, out _));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(legacy,
 				out KingdomPurposePairReceipt legacyCopy, out bool wasLegacy));
-			Assert.IsTrue(wasLegacy);
-			Assert.IsTrue(legacyCopy.LegacyWire);
-			Assert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
+			ClassicAssert.IsTrue(wasLegacy);
+			ClassicAssert.IsTrue(legacyCopy.LegacyWire);
+			ClassicAssert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
 				legacyCopy.Operation.EffectStep);
-			Assert.AreEqual(legacy, KingdomPurposePortfolioRules.EncodeLegacyPair(legacyCopy));
-			Assert.IsNotNull(KingdomPurposePortfolioRules.EncodePair(legacyCopy));
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryDecodePairAny(legacy + "x",
+			ClassicAssert.AreEqual(legacy, KingdomPurposePortfolioRules.EncodeLegacyPair(legacyCopy));
+			ClassicAssert.IsNotNull(KingdomPurposePortfolioRules.EncodePair(legacyCopy));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryDecodePairAny(legacy + "x",
 				out _, out _));
 		}
 
 		[Test]
 		public void EffectEvidenceCodecsAreCanonicalAndPresenceProtects()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectReceipt("pair", 2,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectReceipt("pair", 2,
 				"operation", KingdomPurposeKind.Harvest, out string receipt));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectAttempt(receipt, 4,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectAttempt(receipt, 4,
 				KingdomPurposeEffectCallbackKind.HarvestStaple, "object", 2, 4, 3,
 				D, E,
 				out string witness));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryReadEffectAttempt(witness, receipt,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryReadEffectAttempt(witness, receipt,
 				out KingdomPurposeEffectAttempt attempt));
-			Assert.AreEqual(witness, KingdomPurposePortfolioRules.EncodeEffectAttempt(attempt));
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryReadEffectAttempt(witness + "x",
+			ClassicAssert.AreEqual(witness, KingdomPurposePortfolioRules.EncodeEffectAttempt(attempt));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryReadEffectAttempt(witness + "x",
 				receipt, out _));
 			KingdomPurposeEffectProductRecord record = new KingdomPurposeEffectProductRecord
 				{ Seed = 1, Staple = 6 };
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectProductRecord(receipt, record,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectProductRecord(receipt, record,
 				out string encoded));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryReadEffectProductRecord(encoded,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryReadEffectProductRecord(encoded,
 				receipt, out KingdomPurposeEffectProductRecord copy));
-			Assert.AreEqual(1, copy.Seed);
-			Assert.AreEqual(6, copy.Staple);
+			ClassicAssert.AreEqual(1, copy.Seed);
+			ClassicAssert.AreEqual(6, copy.Staple);
 			KingdomPurposeCargoEvidence evidence = new KingdomPurposeCargoEvidence
 				{ EffectMark = true };
-			Assert.IsTrue(KingdomPurposePortfolioRules.PurposeCargoIsProtected(evidence));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.PurposeCargoIsProtected(evidence));
 		}
 
 		private static KingdomPurposeOperationReceipt Step(KingdomPurposeKind kind,
@@ -171,7 +172,7 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomPurposePairReceipt Pair()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
 				KingdomPurposeKind.Deep, KingdomPurposeKind.Forge, "city-a", "city-b",
 				"work-a", null, "zone-a", "zone-b", "input-a", "output-a", "input-b",
 				"output-b", "gate-a", "gate-b", D, out KingdomPurposePairReceipt pair,

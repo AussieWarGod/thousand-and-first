@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,12 +14,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IdentityEnumsKeepExactByteValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomIdentityFault)));
-			Assert.AreEqual("0:None,1:InvalidTransaction,2:InvalidRealm,3:InvalidEvidence,4:NullSet,5:TooManySettlements,6:InvalidSettlement,7:DuplicateSettlement,8:CryptographicFailure,9:InvalidOrigin,10:InvalidVersion,11:IdentityMismatch,12:EmptySettlementSet,13:RaggedSettlementNames,14:AmbiguousSettlementName",
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomIdentityFault)));
+			ClassicAssert.AreEqual("0:None,1:InvalidTransaction,2:InvalidRealm,3:InvalidEvidence,4:NullSet,5:TooManySettlements,6:InvalidSettlement,7:DuplicateSettlement,8:CryptographicFailure,9:InvalidOrigin,10:InvalidVersion,11:IdentityMismatch,12:EmptySettlementSet,13:RaggedSettlementNames,14:AmbiguousSettlementName",
 				string.Join(",", Array.ConvertAll((KingdomIdentityFault[])Enum.GetValues(
 					typeof(KingdomIdentityFault)), value => ((byte)value) + ":" + value)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomIdentityOrigin)));
-			Assert.AreEqual("0:None,1:FoundingTransaction,2:LegacyMigration,3:Quarantined",
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomIdentityOrigin)));
+			ClassicAssert.AreEqual("0:None,1:FoundingTransaction,2:LegacyMigration,3:Quarantined",
 				string.Join(",", Array.ConvertAll((KingdomIdentityOrigin[])Enum.GetValues(
 					typeof(KingdomIdentityOrigin)), value => ((byte)value) + ":" + value)));
 		}

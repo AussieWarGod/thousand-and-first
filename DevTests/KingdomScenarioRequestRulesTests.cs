@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -33,13 +34,13 @@ namespace ThousandAndFirst.Tests
 			IDictionary<string, string> selection;
 			string seed;
 			string failure;
-			Assert.IsFalse(Parse(request, out key, out selection, out seed, out failure),
+			ClassicAssert.IsFalse(Parse(request, out key, out selection, out seed, out failure),
 				"expected a refusal for " + (request ?? "<null>"));
-			Assert.IsNotNull(failure);
-			Assert.IsNotEmpty(failure);
-			Assert.IsNull(key);
-			Assert.IsNull(selection);
-			Assert.IsNull(seed);
+			ClassicAssert.IsNotNull(failure);
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.IsNull(key);
+			ClassicAssert.IsNull(selection);
+			ClassicAssert.IsNull(seed);
 			return failure;
 		}
 
@@ -50,12 +51,12 @@ namespace ThousandAndFirst.Tests
 			IDictionary<string, string> selection;
 			string seed;
 			string failure;
-			Assert.IsTrue(Parse("arch-gallery-slice;facing=north;seed=#4242", out key,
+			ClassicAssert.IsTrue(Parse("arch-gallery-slice;facing=north;seed=#4242", out key,
 				out selection, out seed, out failure), failure);
-			Assert.AreEqual("arch-gallery-slice", key);
-			Assert.AreEqual("north", selection["facing"]);
-			Assert.AreEqual(1, selection.Count);
-			Assert.AreEqual("#4242", seed);
+			ClassicAssert.AreEqual("arch-gallery-slice", key);
+			ClassicAssert.AreEqual("north", selection["facing"]);
+			ClassicAssert.AreEqual(1, selection.Count);
+			ClassicAssert.AreEqual("#4242", seed);
 		}
 
 		[Test]
@@ -65,10 +66,10 @@ namespace ThousandAndFirst.Tests
 			IDictionary<string, string> selection;
 			string seed;
 			string failure;
-			Assert.IsTrue(Parse("arch-gallery-slice", out key, out selection, out seed,
+			ClassicAssert.IsTrue(Parse("arch-gallery-slice", out key, out selection, out seed,
 				out failure), failure);
-			Assert.AreEqual(0, selection.Count);
-			Assert.IsNull(seed);
+			ClassicAssert.AreEqual(0, selection.Count);
+			ClassicAssert.IsNull(seed);
 		}
 
 		// ----- totality: the shapes that used to crash or launder ---------------------------------

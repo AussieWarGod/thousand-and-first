@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -16,12 +17,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicRecordTypes_KeepTheirPublishedTopLevelIdentities()
 		{
-			Assert.AreEqual("ThousandAndFirst.ResearchEffect", typeof(ResearchEffect).FullName);
-			Assert.AreEqual("ThousandAndFirst.ResearchNode", typeof(ResearchNode).FullName);
-			Assert.AreEqual("ThousandAndFirst.ResearchRow", typeof(ResearchRow).FullName);
-			Assert.IsFalse(typeof(ResearchEffect).IsNested);
-			Assert.IsFalse(typeof(ResearchNode).IsNested);
-			Assert.IsFalse(typeof(ResearchRow).IsNested);
+			ClassicAssert.AreEqual("ThousandAndFirst.ResearchEffect", typeof(ResearchEffect).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.ResearchNode", typeof(ResearchNode).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.ResearchRow", typeof(ResearchRow).FullName);
+			ClassicAssert.IsFalse(typeof(ResearchEffect).IsNested);
+			ClassicAssert.IsFalse(typeof(ResearchNode).IsNested);
+			ClassicAssert.IsFalse(typeof(ResearchRow).IsNested);
 		}
 
 		// --- The tier ladder: hard at the boundary, soft inside it -----------------------------
@@ -32,7 +33,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(4, 22)]
 		public void IntelligenceForTier_IsTheAuthoredLadder(int tier, int expected)
 		{
-			Assert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
 		}
 
 		[TestCase(0, 10)]
@@ -41,7 +42,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// An absent tier has always meant tier 1 here, and the parse refuses anything under 1
 			// outright, so this is only ever reached by a node somebody built by hand.
-			Assert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
 		}
 
 		[TestCase(5, 22)]
@@ -50,7 +51,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A tier this build does not know must be harder to reach, never easier: an unknown
 			// tier that read as tier 1 would be a free top of the tree for a typo.
-			Assert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.IntelligenceForTier(tier));
 		}
 
 		[TestCase(17, 3, false)]
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(21, 4, false)]
 		public void TierReached_IsTheThresholdAndNothingElse(int mind, int tier, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomResearchRules.TierReached(mind, tier));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.TierReached(mind, tier));
 		}
 
 		[Test]
@@ -67,8 +68,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole point of "a tier you cannot reach is not slow, it is shut": the bonus is a
 			// FACTOR, so zero here makes the product zero without a special case anywhere.
-			Assert.AreEqual(0, KingdomResearchRules.TierBonus(17, 3));
-			Assert.AreEqual(0, KingdomResearchRules.InquiryRate(100, 100, KingdomResearchRules.TierBonus(17, 3), 100));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.TierBonus(17, 3));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.InquiryRate(100, 100, KingdomResearchRules.TierBonus(17, 3), 100));
 		}
 
 		[TestCase(18, 3, 100)]
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(40, 3, 150)]
 		public void TierBonus_AboveTheThreshold_BuysSpeedAndIsCapped(int mind, int tier, int expected)
 		{
-			Assert.AreEqual(expected, KingdomResearchRules.TierBonus(mind, tier));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.TierBonus(mind, tier));
 		}
 
 		// --- The rate: every factor can shut the bench, by arithmetic --------------------------
@@ -88,30 +89,30 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 100, 100, 0)]
 		public void InquiryRate_AnyFactorAtZero_ProducesNothing(int crew, int wear, int bonus, int lab)
 		{
-			Assert.AreEqual(0, KingdomResearchRules.InquiryRate(crew, wear, bonus, lab));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.InquiryRate(crew, wear, bonus, lab));
 		}
 
 		[Test]
 		public void InquiryRate_FullyCrewedSoundScriptoriumAtTheThreshold_IsOneForOne()
 		{
-			Assert.AreEqual(100, KingdomResearchRules.InquiryRate(100, 100, 100,
+			ClassicAssert.AreEqual(100, KingdomResearchRules.InquiryRate(100, 100, 100,
 				KingdomResearchRules.ScriptoriumPercent));
 		}
 
 		[Test]
 		public void InquiryRate_HalfCrewedHalvesIt_AndABetterBenchMultipliesIt()
 		{
-			Assert.AreEqual(50, KingdomResearchRules.InquiryRate(50, 100, 100, KingdomResearchRules.ScriptoriumPercent));
-			Assert.AreEqual(150, KingdomResearchRules.InquiryRate(100, 100, 100, KingdomResearchRules.LaboratoryPercent));
-			Assert.AreEqual(200, KingdomResearchRules.InquiryRate(100, 100, 100, KingdomResearchRules.ArclightAnnexePercent));
+			ClassicAssert.AreEqual(50, KingdomResearchRules.InquiryRate(50, 100, 100, KingdomResearchRules.ScriptoriumPercent));
+			ClassicAssert.AreEqual(150, KingdomResearchRules.InquiryRate(100, 100, 100, KingdomResearchRules.LaboratoryPercent));
+			ClassicAssert.AreEqual(200, KingdomResearchRules.InquiryRate(100, 100, 100, KingdomResearchRules.ArclightAnnexePercent));
 		}
 
 		[Test]
 		public void Worked_IsNothingForNoElapsedTimeAndNothingForNoRate()
 		{
-			Assert.AreEqual(0, KingdomResearchRules.Worked(0L, 100));
-			Assert.AreEqual(0, KingdomResearchRules.Worked(-5L, 100));
-			Assert.AreEqual(0, KingdomResearchRules.Worked(1200L, 0));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Worked(0L, 100));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Worked(-5L, 100));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Worked(1200L, 0));
 		}
 
 		[Test]
@@ -122,16 +123,16 @@ namespace ThousandAndFirst.Tests
 			int first = KingdomResearchRules.Worked(9999L, 73);
 			for (int i = 0; i < 50; i++)
 			{
-				Assert.AreEqual(first, KingdomResearchRules.Worked(9999L, 73));
+				ClassicAssert.AreEqual(first, KingdomResearchRules.Worked(9999L, 73));
 			}
 		}
 
 		[Test]
 		public void EffortTicks_IsStaffDaysAtTheSettlementsOwnDay()
 		{
-			Assert.AreEqual((int)KingdomRules.TicksPerDay * 14, KingdomResearchRules.EffortTicks(14));
-			Assert.AreEqual((int)KingdomRules.TicksPerDay, KingdomResearchRules.EffortTicks(0));
-			Assert.AreEqual((int)KingdomRules.TicksPerDay, KingdomResearchRules.EffortTicks(-3));
+			ClassicAssert.AreEqual((int)KingdomRules.TicksPerDay * 14, KingdomResearchRules.EffortTicks(14));
+			ClassicAssert.AreEqual((int)KingdomRules.TicksPerDay, KingdomResearchRules.EffortTicks(0));
+			ClassicAssert.AreEqual((int)KingdomRules.TicksPerDay, KingdomResearchRules.EffortTicks(-3));
 		}
 
 		// --- Seeds: a door, never a room -------------------------------------------------------
@@ -140,7 +141,7 @@ namespace ThousandAndFirst.Tests
 		public void Seeded_FromNothing_IsAQuarterOfTheWalk()
 		{
 			int effort = KingdomResearchRules.EffortTicks(20);
-			Assert.AreEqual(effort * KingdomResearchRules.SeedPercent / 100, KingdomResearchRules.Seeded(20, 0));
+			ClassicAssert.AreEqual(effort * KingdomResearchRules.SeedPercent / 100, KingdomResearchRules.Seeded(20, 0));
 		}
 
 		[Test]
@@ -153,8 +154,8 @@ namespace ThousandAndFirst.Tests
 			{
 				standing = KingdomResearchRules.Seeded(20, standing);
 			}
-			Assert.AreEqual(ceiling, standing);
-			Assert.Less(standing, effort, "a seed must never be able to finish a node");
+			ClassicAssert.AreEqual(ceiling, standing);
+			ClassicAssert.Less(standing, effort, "a seed must never be able to finish a node");
 		}
 
 		[Test]
@@ -163,7 +164,7 @@ namespace ThousandAndFirst.Tests
 			int effort = KingdomResearchRules.EffortTicks(20);
 			// A city three quarters of the way through gets nothing from a rite, and loses nothing.
 			int standing = effort * 3 / 4;
-			Assert.AreEqual(standing, KingdomResearchRules.Seeded(20, standing));
+			ClassicAssert.AreEqual(standing, KingdomResearchRules.Seeded(20, standing));
 		}
 
 		[TestCase(0, 0)]
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		public void SeededBySources_IsARecoverableCappedFloor(int sources, int expectedPercent)
 		{
 			int effort = KingdomResearchRules.EffortTicks(20);
-			Assert.AreEqual(effort * expectedPercent / 100,
+			ClassicAssert.AreEqual(effort * expectedPercent / 100,
 				KingdomResearchRules.SeededBySources(20, 0, sources));
 		}
 
@@ -182,7 +183,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int effort = KingdomResearchRules.EffortTicks(20);
 			int standing = effort * 3 / 4;
-			Assert.AreEqual(standing, KingdomResearchRules.SeededBySources(20, standing, 2));
+			ClassicAssert.AreEqual(standing, KingdomResearchRules.SeededBySources(20, standing, 2));
 		}
 
 		// --- The shelf: memory, deterministic, and it says what it forgot ----------------------
@@ -195,8 +196,8 @@ namespace ThousandAndFirst.Tests
 			{
 				shelf["node" + i] = i * 10;
 			}
-			Assert.IsNull(KingdomResearchRules.Crowded(shelf));
-			Assert.IsNull(KingdomResearchRules.Crowded(null));
+			ClassicAssert.IsNull(KingdomResearchRules.Crowded(shelf));
+			ClassicAssert.IsNull(KingdomResearchRules.Crowded(null));
 		}
 
 		[Test]
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			{
 				shelf["node" + i] = 500 - i;
 			}
-			Assert.AreEqual("node" + (KingdomResearchRules.ShelfRows - 1), KingdomResearchRules.Crowded(shelf));
+			ClassicAssert.AreEqual("node" + (KingdomResearchRules.ShelfRows - 1), KingdomResearchRules.Crowded(shelf));
 		}
 
 		[Test]
@@ -218,7 +219,7 @@ namespace ThousandAndFirst.Tests
 			{
 				shelf["node" + i] = 100;
 			}
-			Assert.AreEqual("node0", KingdomResearchRules.Crowded(shelf));
+			ClassicAssert.AreEqual("node0", KingdomResearchRules.Crowded(shelf));
 		}
 
 		// --- The method lane -------------------------------------------------------------------
@@ -230,7 +231,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(500, 150)]
 		public void MethodPercent_IsNeverATaxAndIsCappedOnTheLane(int sum, int expected)
 		{
-			Assert.AreEqual(expected, KingdomResearchRules.MethodPercent(sum));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.MethodPercent(sum));
 		}
 
 		[Test]
@@ -243,7 +244,7 @@ namespace ThousandAndFirst.Tests
 				new ResearchEffect(KingdomResearchRules.EffectEfficiency, null, 10),
 				new ResearchEffect(KingdomResearchRules.EffectRecruitReveal, null, 1)
 			};
-			Assert.AreEqual(15, KingdomResearchRules.Efficiency(held));
+			ClassicAssert.AreEqual(15, KingdomResearchRules.Efficiency(held));
 		}
 
 		// --- The citizen ceiling: ours, and Intelligence never stacks (Addendum 22 E2) ---------
@@ -260,9 +261,9 @@ namespace ThousandAndFirst.Tests
 				new ResearchEffect(KingdomResearchRules.EffectStatCap, "intelligence", 1),
 				new ResearchEffect(KingdomResearchRules.EffectStatCap, KingdomResearchRules.StatAny, 1)
 			};
-			Assert.AreEqual(KingdomResearchRules.MaxHeadroomIntelligence,
+			ClassicAssert.AreEqual(KingdomResearchRules.MaxHeadroomIntelligence,
 				KingdomResearchRules.Headroom(held, "Intelligence"));
-			Assert.AreEqual(1, KingdomResearchRules.MaxHeadroomIntelligence);
+			ClassicAssert.AreEqual(1, KingdomResearchRules.MaxHeadroomIntelligence);
 		}
 
 		[Test]
@@ -273,7 +274,7 @@ namespace ThousandAndFirst.Tests
 				new ResearchEffect(KingdomResearchRules.EffectStatCap, "strength", 2),
 				new ResearchEffect(KingdomResearchRules.EffectStatCap, "strength", 5)
 			};
-			Assert.AreEqual(KingdomResearchRules.MaxHeadroomPerStat, KingdomResearchRules.Headroom(held, "Strength"));
+			ClassicAssert.AreEqual(KingdomResearchRules.MaxHeadroomPerStat, KingdomResearchRules.Headroom(held, "Strength"));
 		}
 
 		[Test]
@@ -283,42 +284,42 @@ namespace ThousandAndFirst.Tests
 			{
 				new ResearchEffect(KingdomResearchRules.EffectStatCap, KingdomResearchRules.StatAny, 1)
 			};
-			Assert.AreEqual(1, KingdomResearchRules.Headroom(held, "Strength"));
-			Assert.AreEqual(1, KingdomResearchRules.Headroom(held, "Toughness"));
-			Assert.AreEqual(1, KingdomResearchRules.Headroom(held, "Intelligence"));
+			ClassicAssert.AreEqual(1, KingdomResearchRules.Headroom(held, "Strength"));
+			ClassicAssert.AreEqual(1, KingdomResearchRules.Headroom(held, "Toughness"));
+			ClassicAssert.AreEqual(1, KingdomResearchRules.Headroom(held, "Intelligence"));
 		}
 
 		[Test]
 		public void Headroom_IsNothingWhenNothingIsHeld()
 		{
-			Assert.AreEqual(0, KingdomResearchRules.Headroom(null, "Strength"));
-			Assert.AreEqual(0, KingdomResearchRules.Headroom(new List<ResearchEffect>(), "Strength"));
-			Assert.AreEqual(0, KingdomResearchRules.Headroom(new List<ResearchEffect>(), null));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Headroom(null, "Strength"));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Headroom(new List<ResearchEffect>(), "Strength"));
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Headroom(new List<ResearchEffect>(), null));
 		}
 
 		[Test]
 		public void Ceiling_IsWhatTheyWalkedInWithPlusWhatTheCityTeaches()
 		{
-			Assert.AreEqual(17, KingdomResearchRules.Ceiling(16, 1));
-			Assert.AreEqual(16, KingdomResearchRules.Ceiling(16, 0));
-			Assert.AreEqual(16, KingdomResearchRules.Ceiling(16, -4));
+			ClassicAssert.AreEqual(17, KingdomResearchRules.Ceiling(16, 1));
+			ClassicAssert.AreEqual(16, KingdomResearchRules.Ceiling(16, 0));
+			ClassicAssert.AreEqual(16, KingdomResearchRules.Ceiling(16, -4));
 		}
 
 		[Test]
 		public void TrainedValue_StopsAtTheCeilingAndNeverTakesAPointAway()
 		{
-			Assert.AreEqual(17, KingdomResearchRules.TrainedValue(16, 16, 1));
-			Assert.AreEqual(17, KingdomResearchRules.TrainedValue(17, 16, 1));
+			ClassicAssert.AreEqual(17, KingdomResearchRules.TrainedValue(16, 16, 1));
+			ClassicAssert.AreEqual(17, KingdomResearchRules.TrainedValue(17, 16, 1));
 			// A citizen who walked in ABOVE what the city could teach keeps everything they brought.
-			Assert.AreEqual(25, KingdomResearchRules.TrainedValue(25, 16, 1));
+			ClassicAssert.AreEqual(25, KingdomResearchRules.TrainedValue(25, 16, 1));
 		}
 
 		[Test]
 		public void CanTrain_IsFalseOnceTheCeilingIsReached()
 		{
-			Assert.IsTrue(KingdomResearchRules.CanTrain(16, 16, 1));
-			Assert.IsFalse(KingdomResearchRules.CanTrain(17, 16, 1));
-			Assert.IsFalse(KingdomResearchRules.CanTrain(16, 16, 0));
+			ClassicAssert.IsTrue(KingdomResearchRules.CanTrain(16, 16, 1));
+			ClassicAssert.IsFalse(KingdomResearchRules.CanTrain(17, 16, 1));
+			ClassicAssert.IsFalse(KingdomResearchRules.CanTrain(16, 16, 0));
 		}
 
 		// --- Distance and prose: no percentage, no bar, no number for the WORK -----------------
@@ -328,15 +329,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, 2, 4)]
 		public void Distance_CountsTheThingsInTheWay(bool tierShort, bool techShort, int missing, int expected)
 		{
-			Assert.AreEqual(expected, KingdomResearchRules.Distance(tierShort, techShort, missing));
+			ClassicAssert.AreEqual(expected, KingdomResearchRules.Distance(tierShort, techShort, missing));
 		}
 
 		[Test]
 		public void Reach_BegunSitsBetweenWithinReachAndOneThingAway()
 		{
-			Assert.AreEqual("{{G|within reach}}", KingdomResearchRules.Reach(0, Begun: false));
-			Assert.AreEqual("{{W|begun}}", KingdomResearchRules.Reach(0, Begun: true));
-			Assert.AreEqual("{{W|one thing away}}", KingdomResearchRules.Reach(1, Begun: true));
+			ClassicAssert.AreEqual("{{G|within reach}}", KingdomResearchRules.Reach(0, Begun: false));
+			ClassicAssert.AreEqual("{{W|begun}}", KingdomResearchRules.Reach(0, Begun: true));
+			ClassicAssert.AreEqual("{{W|one thing away}}", KingdomResearchRules.Reach(1, Begun: true));
 			StringAssert.Contains("3", KingdomResearchRules.Reach(3, Begun: false));
 		}
 
@@ -357,15 +358,15 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsTrue(KingdomResearchRules.TryParseNodeAttributes("kilnheat", "kiln heat", "foundry", "2",
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseNodeAttributes("kilnheat", "kiln heat", "foundry", "2",
 				null, null, null, "10", null, null, null, null, null, null, out node, out error));
-			Assert.IsNull(error);
-			Assert.AreEqual("kilnheat", node.Key);
-			Assert.AreEqual("kiln heat", node.Named);
-			Assert.AreEqual(2, node.Tier);
-			Assert.AreEqual(10, node.Effort);
-			Assert.AreEqual("node:kilnheat", node.Grants);
-			Assert.AreEqual(TechLevel.Hands, node.MinTech);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("kilnheat", node.Key);
+			ClassicAssert.AreEqual("kiln heat", node.Named);
+			ClassicAssert.AreEqual(2, node.Tier);
+			ClassicAssert.AreEqual(10, node.Effort);
+			ClassicAssert.AreEqual("node:kilnheat", node.Grants);
+			ClassicAssert.AreEqual(TechLevel.Hands, node.MinTech);
 		}
 
 		[Test]
@@ -375,9 +376,9 @@ namespace ThousandAndFirst.Tests
 			// finish a node, so a rite in TaughtBy is a schema error and not a style preference.
 			ResearchNode node;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("arclight", null, "foundry", "4",
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("arclight", null, "foundry", "4",
 				null, null, null, "30", null, "rite:Barathrumites", null, null, null, null, out node, out error));
-			Assert.IsNull(node);
+			ClassicAssert.IsNull(node);
 			StringAssert.Contains("arclight", error);
 			// Folded, like every roster token the gate machinery reads, so the refusal names the
 			// same string the roster would have carried.
@@ -390,9 +391,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsTrue(KingdomResearchRules.TryParseNodeAttributes("arclight", null, "foundry", "4",
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseNodeAttributes("arclight", null, "foundry", "4",
 				null, null, null, "30", null, null, "rite:Barathrumites", null, null, null, out node, out error));
-			Assert.AreEqual("rite:Barathrumites", node.SeededBy);
+			ClassicAssert.AreEqual("rite:Barathrumites", node.SeededBy);
 		}
 
 		[TestCase("0")]
@@ -402,7 +403,7 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, tier,
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, tier,
 				null, null, null, "4", null, null, null, null, null, null, out node, out error));
 			StringAssert.Contains("Tier", error);
 		}
@@ -414,7 +415,7 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, "1",
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, "1",
 				null, null, null, effort, null, null, null, null, null, null, out node, out error));
 			StringAssert.Contains("Effort", error);
 		}
@@ -424,9 +425,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("node:kiln", null, null, "1",
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("node:kiln", null, null, "1",
 				null, null, null, "4", null, null, null, null, null, null, out node, out error));
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("kiln|heat", null, null, "1",
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("kiln|heat", null, null, "1",
 				null, null, null, "4", null, null, null, null, null, null, out node, out error));
 		}
 
@@ -435,7 +436,7 @@ namespace ThousandAndFirst.Tests
 		{
 			ResearchNode node;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, "1",
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseNodeAttributes("k", null, null, "1",
 				null, "99", null, "4", null, null, null, null, null, null, out node, out error));
 			StringAssert.Contains("MinTech", error);
 		}
@@ -445,15 +446,15 @@ namespace ThousandAndFirst.Tests
 		{
 			List<ResearchEffect> effects;
 			string error;
-			Assert.IsTrue(KingdomResearchRules.TryParseEffects("efficiency:10,statcap:Intelligence:1,recruitreveal:1",
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseEffects("efficiency:10,statcap:Intelligence:1,recruitreveal:1",
 				out effects, out error));
-			Assert.IsNull(error);
-			Assert.AreEqual(3, effects.Count);
-			Assert.AreEqual(KingdomResearchRules.EffectEfficiency, effects[0].Kind);
-			Assert.AreEqual(10, effects[0].Amount);
-			Assert.AreEqual("intelligence", effects[1].Stat);
-			Assert.AreEqual(1, effects[1].Amount);
-			Assert.AreEqual(KingdomResearchRules.EffectRecruitReveal, effects[2].Kind);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(3, effects.Count);
+			ClassicAssert.AreEqual(KingdomResearchRules.EffectEfficiency, effects[0].Kind);
+			ClassicAssert.AreEqual(10, effects[0].Amount);
+			ClassicAssert.AreEqual("intelligence", effects[1].Stat);
+			ClassicAssert.AreEqual(1, effects[1].Amount);
+			ClassicAssert.AreEqual(KingdomResearchRules.EffectRecruitReveal, effects[2].Kind);
 		}
 
 		[Test]
@@ -461,10 +462,10 @@ namespace ThousandAndFirst.Tests
 		{
 			List<ResearchEffect> effects;
 			string error;
-			Assert.IsTrue(KingdomResearchRules.TryParseEffects(null, out effects, out error));
-			Assert.AreEqual(0, effects.Count);
-			Assert.IsTrue(KingdomResearchRules.TryParseEffects("   ", out effects, out error));
-			Assert.AreEqual(0, effects.Count);
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseEffects(null, out effects, out error));
+			ClassicAssert.AreEqual(0, effects.Count);
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseEffects("   ", out effects, out error));
+			ClassicAssert.AreEqual(0, effects.Count);
 		}
 
 		[TestCase("efficiency")]
@@ -476,9 +477,9 @@ namespace ThousandAndFirst.Tests
 		{
 			List<ResearchEffect> effects;
 			string error;
-			Assert.IsFalse(KingdomResearchRules.TryParseEffects(source, out effects, out error));
-			Assert.AreEqual(0, effects.Count, "a refused Effect must leave nothing half-read behind");
-			Assert.IsNotNull(error);
+			ClassicAssert.IsFalse(KingdomResearchRules.TryParseEffects(source, out effects, out error));
+			ClassicAssert.AreEqual(0, effects.Count, "a refused Effect must leave nothing half-read behind");
+			ClassicAssert.IsNotNull(error);
 		}
 
 		[Test]
@@ -487,10 +488,10 @@ namespace ThousandAndFirst.Tests
 			// STANDARDS 9: an unrecognised vocabulary is somebody else's, logged and not refused.
 			List<ResearchEffect> effects;
 			string error;
-			Assert.IsTrue(KingdomResearchRules.TryParseEffects("theirmod_glow:3", out effects, out error));
-			Assert.AreEqual(1, effects.Count);
-			Assert.AreEqual("theirmod_glow", effects[0].Kind);
-			Assert.AreEqual(3, effects[0].Amount);
+			ClassicAssert.IsTrue(KingdomResearchRules.TryParseEffects("theirmod_glow:3", out effects, out error));
+			ClassicAssert.AreEqual(1, effects.Count);
+			ClassicAssert.AreEqual("theirmod_glow", effects[0].Kind);
+			ClassicAssert.AreEqual(3, effects[0].Amount);
 		}
 
 		// --- The visibility law -----------------------------------------------------------------
@@ -500,14 +501,14 @@ namespace ThousandAndFirst.Tests
 		{
 			// The law's whole bite: no greyed row, no silhouette, no count of the unseen. A design
 			// waiting on a node nobody has heard of is ABSENT.
-			Assert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string>()));
-			Assert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string> { "notes" }));
+			ClassicAssert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string>()));
+			ClassicAssert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string> { "notes" }));
 		}
 
 		[Test]
 		public void AnyRoadVisible_ANodeTheFounderHasHeardOf_IsARoad()
 		{
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string> { "cruciblesteel" }));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:cruciblesteel", new List<string> { "cruciblesteel" }));
 		}
 
 		[Test]
@@ -515,27 +516,27 @@ namespace ThousandAndFirst.Tests
 		{
 			// A disk to carry home, a machine to certify, people to take in: every one of those is
 			// a thing the founder could go and do, so the design stays on the list wearing its tag.
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("machine:Solar Still", new List<string>()));
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("origin:the salt marshes", new List<string>()));
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("pattern:something", new List<string>()));
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("theirmod:thing", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("machine:Solar Still", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("origin:the salt marshes", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("pattern:something", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("theirmod:thing", new List<string>()));
 		}
 
 		[Test]
 		public void AnyRoadVisible_OneSeenArmIsEnoughToKeepTheWholeTokenVisible()
 		{
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:vat|node:graft", new List<string> { "graft" }));
-			Assert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:vat|node:graft", new List<string> { "kiln" }));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:vat|node:graft", new List<string> { "graft" }));
+			ClassicAssert.IsFalse(KingdomResearchRules.AnyRoadVisible("node:vat|node:graft", new List<string> { "kiln" }));
 			// A mixed token always has a visible road, because the non-node arm is one.
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:vat|machine:Solar Still", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("node:vat|machine:Solar Still", new List<string>()));
 		}
 
 		[Test]
 		public void AnyRoadVisible_AnUngatedDesignIsAlwaysVisible()
 		{
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible(null, new List<string>()));
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("", new List<string>()));
-			Assert.IsTrue(KingdomResearchRules.AnyRoadVisible("machine:x", null));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible(null, new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("", new List<string>()));
+			ClassicAssert.IsTrue(KingdomResearchRules.AnyRoadVisible("machine:x", null));
 		}
 
 		// --- Registry validation ---------------------------------------------------------------
@@ -548,7 +549,7 @@ namespace ThousandAndFirst.Tests
 				Node("a", "node:a", null, "node:nowhere")
 			};
 			List<string> findings = KingdomResearchRules.Validate(nodes);
-			Assert.AreEqual(1, findings.Count);
+			ClassicAssert.AreEqual(1, findings.Count);
 			StringAssert.Contains("node:nowhere", findings[0]);
 		}
 
@@ -560,7 +561,7 @@ namespace ThousandAndFirst.Tests
 				Node("b", "node:b", "node:missing", null)
 			};
 			List<string> findings = KingdomResearchRules.Validate(nodes);
-			Assert.AreEqual(1, findings.Count);
+			ClassicAssert.AreEqual(1, findings.Count);
 			StringAssert.Contains("node:missing", findings[0]);
 		}
 
@@ -572,7 +573,7 @@ namespace ThousandAndFirst.Tests
 				Node("notekeeping", "node:notes", null, "node:kilnheat"),
 				Node("kilnheat", "node:kiln", "node:notes", null)
 			};
-			Assert.AreEqual(0, KingdomResearchRules.Validate(nodes).Count);
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Validate(nodes).Count);
 		}
 
 		[Test]
@@ -584,14 +585,14 @@ namespace ThousandAndFirst.Tests
 			{
 				Node("a", "node:a", "machine:Solar Still,creed:Barathrumites,theirmod:thing", null)
 			};
-			Assert.AreEqual(0, KingdomResearchRules.Validate(nodes).Count);
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Validate(nodes).Count);
 		}
 
 		[Test]
 		public void Validate_TolerantOfNothingAtAll()
 		{
-			Assert.AreEqual(0, KingdomResearchRules.Validate(null).Count);
-			Assert.AreEqual(0, KingdomResearchRules.Validate(new List<ResearchNode>()).Count);
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Validate(null).Count);
+			ClassicAssert.AreEqual(0, KingdomResearchRules.Validate(new List<ResearchNode>()).Count);
 		}
 
 		// --- The words -------------------------------------------------------------------------
@@ -663,9 +664,9 @@ namespace ThousandAndFirst.Tests
 				new ResearchRow("b", "butchery", 0, true, "")
 			};
 			KingdomTechMapRules.SortResearch(rows);
-			Assert.AreEqual("butchery", rows[0].Name, "a subject already begun is nearer than one untouched");
-			Assert.AreEqual("assent", rows[1].Name);
-			Assert.AreEqual("chimerism", rows[2].Name);
+			ClassicAssert.AreEqual("butchery", rows[0].Name, "a subject already begun is nearer than one untouched");
+			ClassicAssert.AreEqual("assent", rows[1].Name);
+			ClassicAssert.AreEqual("chimerism", rows[2].Name);
 		}
 
 		[Test]
@@ -676,7 +677,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("18", missing);
 			StringAssert.Contains("15", missing);
 			StringAssert.Contains("foundry", missing);
-			Assert.AreEqual("", KingdomTechMapRules.MissingForNode(new List<string>(), 0, 20, null, "salvage"));
+			ClassicAssert.AreEqual("", KingdomTechMapRules.MissingForNode(new List<string>(), 0, 20, null, "salvage"));
 		}
 
 		[Test]
@@ -698,14 +699,14 @@ namespace ThousandAndFirst.Tests
 			// The escape valve names a KIND of learning and never a node: the founder can tell
 			// there is more world and cannot tell what is in it.
 			StringAssert.DoesNotContain("node:", roads);
-			Assert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true, true));
+			ClassicAssert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true, true));
 		}
 
 		[Test]
 		public void RoadsNotTaken_TheOlderThreeArgumentFormIsUnchanged()
 		{
 			// Published shape: a caller that predates the rite road must read exactly what it read.
-			Assert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true));
+			ClassicAssert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true));
 			StringAssert.DoesNotContain("Share water", KingdomTechMapRules.RoadsNotTaken(false, true, true));
 		}
 

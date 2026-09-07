@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
 
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 		public void Pair_NoCeilingReadsAsNothingDedicated()
 		{
 			StringAssert.Contains("nothing dedicated", KingdomBookRules.Pair(new KingdomStockReading(0L, 0L)));
-			Assert.AreEqual("12 of 60", KingdomBookRules.Pair(new KingdomStockReading(12L, 60L)));
+			ClassicAssert.AreEqual("12 of 60", KingdomBookRules.Pair(new KingdomStockReading(12L, 60L)));
 		}
 
 		/// <summary>The signed debt keeps its sign in prose: what is owed TO the ground and what is
@@ -52,7 +53,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Owed_ASquaredZoneIsSilent()
 		{
-			Assert.AreEqual("", KingdomBookRules.Owed(new KingdomZoneReading(Here,
+			ClassicAssert.AreEqual("", KingdomBookRules.Owed(new KingdomZoneReading(Here,
 				default(KingdomStockReading), default(KingdomStockReading), default(KingdomStockReading), 0, 0, 0, 0, 0, 0L)));
 		}
 
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomWorkClass.Producer, 2, false)]
 		public void Waiting_AgreesWithTheBreakdownNews(KingdomWorkClass workClass, int crew, bool waiting)
 		{
-			Assert.AreEqual(waiting, !string.IsNullOrEmpty(KingdomBookRules.Waiting(Work(100, crew, workClass))));
+			ClassicAssert.AreEqual(waiting, !string.IsNullOrEmpty(KingdomBookRules.Waiting(Work(100, crew, workClass))));
 		}
 
 		/// <summary>Worn past the condemned line is waiting whatever its crew, and the line is the
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("mending", KingdomBookRules.Waiting(
 				Work(KingdomHappeningRules.BreakdownConditionFloor, 4, KingdomWorkClass.Producer)));
-			Assert.AreEqual("", KingdomBookRules.Waiting(
+			ClassicAssert.AreEqual("", KingdomBookRules.Waiting(
 				Work(KingdomHappeningRules.BreakdownConditionFloor + 1, 4, KingdomWorkClass.Producer)));
 		}
 
@@ -88,9 +89,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Condition_NamesSoundAndMarksTheCondemned()
 		{
-			Assert.AreEqual("sound", KingdomBookRules.Condition(100));
+			ClassicAssert.AreEqual("sound", KingdomBookRules.Condition(100));
 			StringAssert.Contains("{{r|", KingdomBookRules.Condition(KingdomHappeningRules.BreakdownConditionFloor));
-			Assert.AreEqual("worn to 70%", KingdomBookRules.Condition(70));
+			ClassicAssert.AreEqual("worn to 70%", KingdomBookRules.Condition(70));
 		}
 
 		/// <summary>Each work class says what it is doing off the one slot of run-state its kind
@@ -100,9 +101,9 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("stage 2", KingdomBookRules.Doing(Work(100, 1, KingdomWorkClass.Growing)));
 			StringAssert.Contains("44 charge", KingdomBookRules.Doing(Work(100, 1, KingdomWorkClass.Power)));
-			Assert.AreEqual("Idle.", KingdomBookRules.Doing(Work(100, 0, KingdomWorkClass.Producer)));
-			Assert.AreEqual("Making.", KingdomBookRules.Doing(Work(100, 2, KingdomWorkClass.Producer)));
-			Assert.AreEqual("Being raised.", KingdomBookRules.Doing(
+			ClassicAssert.AreEqual("Idle.", KingdomBookRules.Doing(Work(100, 0, KingdomWorkClass.Producer)));
+			ClassicAssert.AreEqual("Making.", KingdomBookRules.Doing(Work(100, 2, KingdomWorkClass.Producer)));
+			ClassicAssert.AreEqual("Being raised.", KingdomBookRules.Doing(
 				Work(100, 2, KingdomWorkClass.Construction)));
 		}
 
@@ -111,8 +112,8 @@ namespace ThousandAndFirst.Tests
 		public void Hands_CountsAndNamesNone()
 		{
 			StringAssert.Contains("no hands", KingdomBookRules.Hands(0));
-			Assert.AreEqual("1 hand", KingdomBookRules.Hands(1));
-			Assert.AreEqual("3 hands", KingdomBookRules.Hands(3));
+			ClassicAssert.AreEqual("1 hand", KingdomBookRules.Hands(1));
+			ClassicAssert.AreEqual("3 hands", KingdomBookRules.Hands(3));
 		}
 
 		/// <summary>An empty book says so instead of printing an empty frame.</summary>
@@ -147,7 +148,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, null, new KingdomResidentRow[3]
 				{
 					Settler(1, KingdomDayShape.Field, KingdomResidentStanding.Resident),
@@ -170,7 +171,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, null,
 				new KingdomResidentRow[1] { Settler(1, KingdomDayShape.Hearth, KingdomResidentStanding.Resident) },
 				null, out state, out fault), fault.ToString());
@@ -182,7 +183,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, works, null, null, out state, out fault), fault.ToString());
 			return KingdomReadingRules.Project("Kavvat", state);
 		}

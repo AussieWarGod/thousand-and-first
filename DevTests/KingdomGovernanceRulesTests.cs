@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,12 +17,12 @@ namespace ThousandAndFirst.Tests
 				KingdomGovernanceResult.Bookkeeping
 			})
 			{
-				Assert.IsFalse(KingdomGovernanceRules.Charges(result), result.ToString());
-				Assert.IsFalse(KingdomGovernanceRules.ClosesInterface(result), result.ToString());
+				ClassicAssert.IsFalse(KingdomGovernanceRules.Charges(result), result.ToString());
+				ClassicAssert.IsFalse(KingdomGovernanceRules.ClosesInterface(result), result.ToString());
 			}
-			Assert.IsTrue(KingdomGovernanceRules.Charges(KingdomGovernanceResult.Committed));
-			Assert.IsTrue(KingdomGovernanceRules.ClosesInterface(KingdomGovernanceResult.Committed));
-			Assert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
+			ClassicAssert.IsTrue(KingdomGovernanceRules.Charges(KingdomGovernanceResult.Committed));
+			ClassicAssert.IsTrue(KingdomGovernanceRules.ClosesInterface(KingdomGovernanceResult.Committed));
+			ClassicAssert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
 		}
 
 		[TestCase(null, "TAF Governance act")]
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("  claim ground  ", "TAF Governance claim ground")]
 		public void EnergyReasonIsStable(string verb, string expected)
 		{
-			Assert.AreEqual(expected, KingdomGovernanceRules.EnergyReason(verb));
+			ClassicAssert.AreEqual(expected, KingdomGovernanceRules.EnergyReason(verb));
 		}
 	}
 }

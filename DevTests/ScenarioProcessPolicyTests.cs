@@ -3,6 +3,7 @@ using System;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tools;
 
 namespace ThousandAndFirst.Tests
@@ -25,7 +26,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExpectedArgumentsAreTheExactTwelveParsedTokensIncludingArgvZero()
 		{
-			Assert.AreEqual("taf-scenario-process-v1", ScenarioProcessPolicy.Schema);
+			ClassicAssert.AreEqual("taf-scenario-process-v1", ScenarioProcessPolicy.Schema);
 			CollectionAssert.AreEqual(new[] { Executable, "-savepath", Root + @"\Save",
 				"-sharedpath", Root + @"\Local", "-syncedpath", Root + @"\Synced",
 				"-logFile", Root + @"\Player.log", "NOMETRICS", "STEAM:NO", "GALAXY:NO" },
@@ -35,11 +36,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactIdentityStopsAndOnlyAValidRecordedIdentityMayAlreadyBeExited()
 		{
-			Assert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, Identity()));
-			Assert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), Identity()));
-			Assert.AreEqual("ALREADY_EXITED", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), null));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, null, null));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, null, Identity()));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, Identity()));
+			ClassicAssert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), Identity()));
+			ClassicAssert.AreEqual("ALREADY_EXITED", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), null));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, null, null));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, null, Identity()));
 		}
 
 		[TestCase(0)]
@@ -67,9 +68,9 @@ namespace ThousandAndFirst.Tests
 			ScenarioProcessIdentity identity = Identity();
 			identity.Pid = int.MaxValue;
 			identity.StartTicks = 1;
-			Assert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, identity));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, identity));
 			identity.StartTicks = DateTime.MaxValue.Ticks;
-			Assert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, identity));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, identity));
 			identity.StartTicks++;
 			AssertRejectedOnEitherSide(identity);
 		}
@@ -79,11 +80,11 @@ namespace ThousandAndFirst.Tests
 		{
 			ScenarioProcessIdentity live = Identity();
 			live.StartTicks++;
-			Assert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, live));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Executable, live));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
 			live = Identity();
 			live.Pid++;
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
 		}
 
 		[TestCase(0)]
@@ -175,8 +176,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(@"c:\TAF-SCENARIO.X")]
 		public void ExactDriveRootWithAsciiAlphanumericSuffixIsAccepted(string Value)
 		{
-			Assert.IsTrue(ScenarioProcessPolicy.ValidRoot(Value));
-			Assert.IsNotNull(ScenarioProcessPolicy.ExpectedArguments(Value, Executable));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidRoot(Value));
+			ClassicAssert.IsNotNull(ScenarioProcessPolicy.ExpectedArguments(Value, Executable));
 		}
 
 		[TestCase(null)]
@@ -201,9 +202,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("C:\\taf-scenario.x\n")]
 		public void NoncanonicalOrBroaderRootsRefuseEvenWhenProcessIsAbsent(string Value)
 		{
-			Assert.IsFalse(ScenarioProcessPolicy.ValidRoot(Value));
-			Assert.IsNull(ScenarioProcessPolicy.ExpectedArguments(Value, Executable));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Value, Executable, Identity(), null));
+			ClassicAssert.IsFalse(ScenarioProcessPolicy.ValidRoot(Value));
+			ClassicAssert.IsNull(ScenarioProcessPolicy.ExpectedArguments(Value, Executable));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Value, Executable, Identity(), null));
 		}
 
 		[TestCase(@"C:\CoQ.exe")]
@@ -216,8 +217,8 @@ namespace ThousandAndFirst.Tests
 			ScenarioProcessIdentity identity = Identity();
 			identity.Executable = Value;
 			identity.Arguments = ScenarioProcessPolicy.ExpectedArguments(Root, Value);
-			Assert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Value, identity));
-			Assert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Value, identity, identity));
+			ClassicAssert.IsTrue(ScenarioProcessPolicy.ValidIdentity(Root, Value, identity));
+			ClassicAssert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Value, identity, identity));
 		}
 
 		[TestCase(null)]
@@ -261,8 +262,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("C:\\Games\\COM\u00b9.exe")]
 		public void ExecutableAliasesAndMalformedPathsNeverAuthorizeProcessOwnership(string Value)
 		{
-			Assert.IsNull(ScenarioProcessPolicy.ExpectedArguments(Root, Value));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Value, Identity(), null));
+			ClassicAssert.IsNull(ScenarioProcessPolicy.ExpectedArguments(Root, Value));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Value, Identity(), null));
 			ScenarioProcessIdentity bad = Identity();
 			bad.Executable = Value;
 			AssertRejectedOnEitherSide(bad);
@@ -271,9 +272,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CallerRootAndExecutableBindEvenAnAbsentProcessToItsOwnReceipt()
 		{
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(@"C:\taf-scenario.Other",
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(@"C:\taf-scenario.Other",
 				Executable, Identity(), null));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root,
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root,
 				@"D:\Other\CoQ.exe", Identity(), null));
 		}
 
@@ -289,10 +290,10 @@ namespace ThousandAndFirst.Tests
 				live.Executable = live.Executable.ToUpperInvariant();
 				foreach (int index in new[] { 0, 2, 4, 6, 8 })
 					live.Arguments[index] = live.Arguments[index].ToUpperInvariant();
-				Assert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root.ToUpperInvariant(),
+				ClassicAssert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root.ToUpperInvariant(),
 					Executable, Identity(), live));
 				live.Arguments[9] = "nometrics";
-				Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
+				ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), live));
 			}
 			finally { Thread.CurrentThread.CurrentCulture = previous; }
 		}
@@ -303,14 +304,14 @@ namespace ThousandAndFirst.Tests
 			ScenarioProcessIdentity recorded = Identity(), live = Identity();
 			string[] recordedArguments = recorded.Arguments, liveArguments = live.Arguments;
 			string[] snapshot = (string[])recordedArguments.Clone();
-			Assert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Executable, recorded, live));
+			ClassicAssert.AreEqual("STOP_EXACT", ScenarioProcessPolicy.Decide(Root, Executable, recorded, live));
 			live.StartTicks++;
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, recorded, live));
-			Assert.AreEqual(1234, recorded.Pid);
-			Assert.AreEqual(638900000000000000L, recorded.StartTicks);
-			Assert.AreEqual(Executable, recorded.Executable);
-			Assert.AreSame(recordedArguments, recorded.Arguments);
-			Assert.AreSame(liveArguments, live.Arguments);
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, recorded, live));
+			ClassicAssert.AreEqual(1234, recorded.Pid);
+			ClassicAssert.AreEqual(638900000000000000L, recorded.StartTicks);
+			ClassicAssert.AreEqual(Executable, recorded.Executable);
+			ClassicAssert.AreSame(recordedArguments, recorded.Arguments);
+			ClassicAssert.AreSame(liveArguments, live.Arguments);
 			CollectionAssert.AreEqual(snapshot, recorded.Arguments);
 			CollectionAssert.AreEqual(snapshot, live.Arguments);
 			live.Arguments[0] = "changed";
@@ -320,10 +321,10 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertRejectedOnEitherSide(ScenarioProcessIdentity Bad)
 		{
-			Assert.IsFalse(ScenarioProcessPolicy.ValidIdentity(Root, Executable, Bad));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Bad, null));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Bad, Identity()));
-			Assert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), Bad));
+			ClassicAssert.IsFalse(ScenarioProcessPolicy.ValidIdentity(Root, Executable, Bad));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Bad, null));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Bad, Identity()));
+			ClassicAssert.AreEqual("REFUSE", ScenarioProcessPolicy.Decide(Root, Executable, Identity(), Bad));
 		}
 	}
 }

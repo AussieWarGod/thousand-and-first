@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,13 +22,13 @@ namespace ThousandAndFirst.Tests
 				KingdomPolityDispatchRules.DirectPrefix, Purpose);
 			record.EndpointVerb = "SECRET-TOPOLOGY";
 
-			Assert.IsTrue(KingdomPolityDirectRecordPresentationRules.TryBuild(
+			ClassicAssert.IsTrue(KingdomPolityDirectRecordPresentationRules.TryBuild(
 				record, "1st of Nivvun Ut, 1001 AR", out KingdomPolityDirectRecordView view));
 			StringAssert.Contains(Expected, view.Label);
 			StringAssert.Contains("frozen matter", view.Body);
 			StringAssert.DoesNotContain("SECRET-TOPOLOGY", view.Label + view.Title + view.Body);
 			StringAssert.DoesNotContain(record.SourceRef, view.Label + view.Title + view.Body);
-			Assert.IsFalse(view.WasAcknowledged);
+			ClassicAssert.IsFalse(view.WasAcknowledged);
 		}
 
 		[Test]
@@ -39,21 +40,21 @@ namespace ThousandAndFirst.Tests
 			record.WindowOrdinal = 7UL;
 			record.AcknowledgedTick = 1201L;
 
-			Assert.IsTrue(KingdomPolityDirectRecordPresentationRules.TryBuild(
+			ClassicAssert.IsTrue(KingdomPolityDirectRecordPresentationRules.TryBuild(
 				record, "2nd of Nivvun Ut, 1001 AR", out KingdomPolityDirectRecordView view));
 			StringAssert.Contains("older traffic (7)", view.Label);
 			StringAssert.Contains("7 older traffic notices", view.Body);
 			StringAssert.Contains("a courier's word", view.Body);
-			Assert.IsTrue(view.WasAcknowledged);
+			ClassicAssert.IsTrue(view.WasAcknowledged);
 		}
 
 		[Test]
 		public void InternalIntentAndUnknownPurposeCannotBecomePlayerProse()
 		{
-			Assert.IsFalse(KingdomPolityDirectRecordPresentationRules.TryBuild(
+			ClassicAssert.IsFalse(KingdomPolityDirectRecordPresentationRules.TryBuild(
 				Record(KingdomPolityDispatchRules.IntentPrefix,
 					KingdomPolityCohortPurpose.Guard), "today", out _));
-			Assert.IsFalse(KingdomPolityDirectRecordPresentationRules.TryBuild(
+			ClassicAssert.IsFalse(KingdomPolityDirectRecordPresentationRules.TryBuild(
 				Record(KingdomPolityDispatchRules.DirectPrefix,
 					(KingdomPolityCohortPurpose)255), "today", out _));
 		}

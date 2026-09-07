@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -203,7 +204,7 @@ namespace ThousandAndFirst.Tests
 				"&& ExactFoundingHeartFinalObjectGameState(plan, Final, false)",
 				"&& Terminal != null && ExactPreparedFoundingHeartFinal(Final, Z, Context, Terminal))",
 				"RemoveCreatedWorks(Final, Z);");
-			Assert.AreEqual(1, begin.Split(new[] { "RemoveCreatedWorks(" }, StringSplitOptions.None).Length - 1);
+			ClassicAssert.AreEqual(1, begin.Split(new[] { "RemoveCreatedWorks(" }, StringSplitOptions.None).Length - 1);
 			StringAssert.DoesNotContain("if (!published && GameObject.Validate(Final))", begin);
 		}
 
@@ -217,9 +218,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, start);
+			ClassicAssert.GreaterOrEqual(first, 0, start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end);
+			ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 		private static void Ordered(string source, params string[] terms)
@@ -228,7 +229,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string term in terms)
 			{
 				int found = source.IndexOf(term, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, term);
+				ClassicAssert.GreaterOrEqual(found, 0, term);
 				cursor = found + term.Length;
 			}
 		}

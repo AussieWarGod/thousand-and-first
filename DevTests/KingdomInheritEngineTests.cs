@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -11,12 +12,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DeclarationsKeepExactInternalAbiOrdinalsAndFieldOrder()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyStatus)));
-			Assert.AreEqual("0:Applied,1:AlreadyApplied,2:Refused,3:Failed",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyStatus)));
+			ClassicAssert.AreEqual("0:Applied,1:AlreadyApplied,2:Refused,3:Failed",
 				string.Join(",", Array.ConvertAll((KingdomInheritApplyStatus[])Enum.GetValues(
 					typeof(KingdomInheritApplyStatus)), value => ((int)value) + ":" + value)));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyFault)));
-			Assert.AreEqual("0:None,1:NullInput,2:LegacyNotPromoted,3:ReceiptNotReserved,"
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritApplyFault)));
+			ClassicAssert.AreEqual("0:None,1:NullInput,2:LegacyNotPromoted,3:ReceiptNotReserved,"
 				+ "4:ReceiptMismatch,5:TargetGameMismatch,6:TargetZoneMismatch,7:PlanInvalid,"
 				+ "8:WrongZoneSize,9:ApplicationConflict,10:PartialApplication,11:BlueprintMissing,"
 				+ "12:InvalidCell,13:ConnectionCell,14:Terrain,15:Occupied,16:Stairs,"
@@ -28,38 +29,38 @@ namespace ThousandAndFirst.Tests
 			System.Reflection.BindingFlags fields = System.Reflection.BindingFlags.NonPublic |
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly;
 			Type result = typeof(KingdomInheritApplyResult);
-			Assert.IsTrue(result.IsNotPublic && result.IsSealed);
+			ClassicAssert.IsTrue(result.IsNotPublic && result.IsSealed);
 			System.Reflection.FieldInfo[] resultFields = result.GetFields(fields);
-			Assert.AreEqual("Status,Fault,Detail,ApplicationMarker,PlacedCount,FreshEmptyVerified",
+			ClassicAssert.AreEqual("Status,Fault,Detail,ApplicationMarker,PlacedCount,FreshEmptyVerified",
 				string.Join(",", Array.ConvertAll(resultFields, field => field.Name)));
-			for (int i = 0; i < resultFields.Length; i++) Assert.IsTrue(resultFields[i].IsInitOnly);
+			for (int i = 0; i < resultFields.Length; i++) ClassicAssert.IsTrue(resultFields[i].IsInitOnly);
 			KingdomInheritApplyResult empty = new KingdomInheritApplyResult(
 				KingdomInheritApplyStatus.Applied, KingdomInheritApplyFault.None, null, null, 0, false);
-			Assert.AreEqual("", empty.Detail);
-			Assert.AreEqual("", empty.ApplicationMarker);
+			ClassicAssert.AreEqual("", empty.Detail);
+			ClassicAssert.AreEqual("", empty.ApplicationMarker);
 
 			Type facts = typeof(KingdomInheritCellFacts);
-			Assert.IsTrue(facts.IsValueType && !facts.IsEnum);
-			Assert.AreEqual("Exists,Occupied,Terrain,Stairs,Connection,Walkable",
+			ClassicAssert.IsTrue(facts.IsValueType && !facts.IsEnum);
+			ClassicAssert.AreEqual("Exists,Occupied,Terrain,Stairs,Connection,Walkable",
 				string.Join(",", Array.ConvertAll(facts.GetFields(fields), field => field.Name)));
 			Type spec = typeof(KingdomInheritBuildSpec);
-			Assert.IsTrue(spec.IsNotPublic && spec.IsSealed);
-			Assert.AreEqual("Index,Key,Blueprint,X,Y,Condition,State,FootprintWidth,FootprintHeight,"
+			ClassicAssert.IsTrue(spec.IsNotPublic && spec.IsSealed);
+			ClassicAssert.AreEqual("Index,Key,Blueprint,X,Y,Condition,State,FootprintWidth,FootprintHeight,"
 				+ "FootprintX,FootprintY,IsArchitecture,IsStreet,ArchitectureSnapshot,ArchitectureHash",
 				string.Join(",", Array.ConvertAll(spec.GetFields(fields), field => field.Name)));
 
 			Type host = typeof(IKingdomInheritEngineHost);
-			Assert.IsTrue(host.IsNotPublic && host.IsInterface);
-			Assert.AreEqual("Width,Height,ZoneId,TargetGameId",
+			ClassicAssert.IsTrue(host.IsNotPublic && host.IsInterface);
+			ClassicAssert.AreEqual("Width,Height,ZoneId,TargetGameId",
 				string.Join(",", Array.ConvertAll(host.GetProperties(), property => property.Name)));
 			System.Reflection.MethodInfo[] hostMethods = Array.FindAll(host.GetMethods(),
 				method => !method.IsSpecialName);
-			Assert.AreEqual("ReadApplicationMarker,CountApplicationObjects,HasAnyApplicationObjects,"
+			ClassicAssert.AreEqual("ReadApplicationMarker,CountApplicationObjects,HasAnyApplicationObjects,"
 				+ "HasExactApplicationObject,HasBlueprint,TryReadCell,TryCreateFresh,IsFreshEmpty,"
 				+ "TryPlace,Discard,TryWriteApplicationMarker,TryRemoveApplicationMarker",
 				string.Join(",", Array.ConvertAll(hostMethods, method => method.Name)));
 			Type engine = typeof(KingdomInheritEngine);
-			Assert.IsTrue(engine.IsNotPublic && engine.IsAbstract && engine.IsSealed);
+			ClassicAssert.IsTrue(engine.IsNotPublic && engine.IsAbstract && engine.IsSealed);
 		}
 
 		private sealed class FakeObject
@@ -392,7 +393,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(Record.WorkKeys, Record.WorkX, Record.WorkY,
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(Record.WorkKeys, Record.WorkX, Record.WorkY,
 				Record.WorkConditions, (KingdomRules.InheritedState)Record.InheritedState,
 				Record.InterregnumRoll, out placement, out fault), fault.ToString());
 			return placement;
@@ -405,27 +406,27 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
 
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
-			Assert.AreEqual(KingdomInheritApplyFault.None, result.Fault);
-			Assert.IsTrue(result.ShouldCommit);
-			Assert.IsFalse(result.ShouldRelease);
-			Assert.IsTrue(result.FreshEmptyVerified);
-			Assert.AreEqual(record.WorkKeys.Count + 1, result.PlacedCount, "founder cairn is unconditional");
-			Assert.AreEqual(result.ApplicationMarker, host.Marker);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.None, result.Fault);
+			ClassicAssert.IsTrue(result.ShouldCommit);
+			ClassicAssert.IsFalse(result.ShouldRelease);
+			ClassicAssert.IsTrue(result.FreshEmptyVerified);
+			ClassicAssert.AreEqual(record.WorkKeys.Count + 1, result.PlacedCount, "founder cairn is unconditional");
+			ClassicAssert.AreEqual(result.ApplicationMarker, host.Marker);
 			StringAssert.StartsWith("taf-inherit-v1|", result.ApplicationMarker);
 			StringAssert.Contains("|reserved|200|", result.ApplicationMarker,
 				"the idempotence key binds the exact reserved receipt, including its written tick");
-			Assert.AreEqual(result.PlacedCount, host.Objects.Count);
+			ClassicAssert.AreEqual(result.PlacedCount, host.Objects.Count);
 			for (int i = 0; i < host.Objects.Count; i++)
 			{
-				Assert.IsTrue(host.Objects[i].Empty, host.Objects[i].Spec.Key);
+				ClassicAssert.IsTrue(host.Objects[i].Empty, host.Objects[i].Spec.Key);
 				StringAssert.StartsWith("r_Kingdom", host.Objects[i].Spec.Blueprint);
 			}
 			FakeObject cairn = host.Objects.Find(delegate(FakeObject o)
 			{
 				return o.Spec.Key == KingdomInheritRules.FounderCairnKey;
 			});
-			Assert.IsNotNull(cairn);
+			ClassicAssert.IsNotNull(cairn);
 			StringAssert.Contains("Abram", cairn.CairnText);
 			StringAssert.Contains("Chronicle of the old kingdom", cairn.CairnText);
 			StringAssert.Contains(record.Chronicle[0], cairn.CairnText);
@@ -437,16 +438,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord record = Promoted("heartbasin");
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost host = Host(record);
-			Assert.AreEqual(0, KingdomInheritEngine.ReconstructionVersionFor(record));
+			ClassicAssert.AreEqual(0, KingdomInheritEngine.ReconstructionVersionFor(record));
 
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, receipt,
 				host.ZoneId, host);
 
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
-			Assert.AreEqual(KingdomInheritApplyFault.PlanInvalid, result.Fault);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.PlanInvalid, result.Fault);
 			StringAssert.Contains("spatial shape is unsupported", result.Detail);
-			Assert.AreEqual("", result.ApplicationMarker);
-			Assert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual("", result.ApplicationMarker);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
 		}
 
 		[Test]
@@ -456,15 +457,15 @@ namespace ThousandAndFirst.Tests
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
 			int mutations = host.MutationCalls;
 
 			KingdomInheritApplyResult second = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.AlreadyApplied, second.Status, second.Detail);
-			Assert.AreEqual(first.ApplicationMarker, second.ApplicationMarker);
-			Assert.IsTrue(second.ShouldCommit);
-			Assert.AreEqual(mutations, host.MutationCalls);
-			Assert.AreEqual(first.PlacedCount, host.Objects.Count);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.AlreadyApplied, second.Status, second.Detail);
+			ClassicAssert.AreEqual(first.ApplicationMarker, second.ApplicationMarker);
+			ClassicAssert.IsTrue(second.ShouldCommit);
+			ClassicAssert.AreEqual(mutations, host.MutationCalls);
+			ClassicAssert.AreEqual(first.PlacedCount, host.Objects.Count);
 		}
 
 		[Test]
@@ -477,12 +478,12 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record),
 				host.ZoneId, host);
 
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
-			Assert.AreEqual(KingdomInheritApplyFault.ObjectNotEmpty, result.Fault);
-			Assert.IsFalse(result.ShouldCommit);
-			Assert.IsFalse(result.FreshEmptyVerified);
-			Assert.AreEqual(0, host.Objects.Count);
-			Assert.AreEqual("", host.Marker);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.ObjectNotEmpty, result.Fault);
+			ClassicAssert.IsFalse(result.ShouldCommit);
+			ClassicAssert.IsFalse(result.FreshEmptyVerified);
+			ClassicAssert.AreEqual(0, host.Objects.Count);
+			ClassicAssert.AreEqual("", host.Marker);
 		}
 
 		[Test]
@@ -493,16 +494,16 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt,
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
 			host.Objects[0].Empty = false;
 			int mutations = host.MutationCalls;
 
 			KingdomInheritApplyResult retry = KingdomInheritEngine.Apply(record, receipt,
 				host.ZoneId, host);
 
-			Assert.AreEqual(KingdomInheritApplyStatus.AlreadyApplied, retry.Status, retry.Detail);
-			Assert.IsTrue(retry.ShouldCommit);
-			Assert.AreEqual(mutations, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.AlreadyApplied, retry.Status, retry.Detail);
+			ClassicAssert.IsTrue(retry.ShouldCommit);
+			ClassicAssert.AreEqual(mutations, host.MutationCalls);
 		}
 
 		[Test]
@@ -512,9 +513,9 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record),
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
-			Assert.AreEqual(1, result.PlacedCount);
-			Assert.AreEqual(KingdomInheritRules.FounderCairnKey, host.Objects[0].Spec.Key);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
+			ClassicAssert.AreEqual(1, result.PlacedCount);
+			ClassicAssert.AreEqual(KingdomInheritRules.FounderCairnKey, host.Objects[0].Spec.Key);
 			StringAssert.Contains(record.Chronicle[0], host.Objects[0].CairnText);
 		}
 
@@ -530,18 +531,18 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
-			Assert.AreEqual(expected.Count, host.Objects.Count);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
+			ClassicAssert.AreEqual(expected.Count, host.Objects.Count);
 			for (int i = 0; i < expected.Count; i++)
 			{
 				KingdomInheritWork work = expected.WorkAt(i);
 				FakeObject actual = host.Objects.Find(delegate(FakeObject o) { return o.Spec.Index == i; });
-				Assert.IsNotNull(actual, i.ToString());
-				Assert.AreEqual(work.Key, actual.Spec.Key, i.ToString());
-				Assert.AreEqual(work.X, actual.Spec.X, work.Key);
-				Assert.AreEqual(work.Y, actual.Spec.Y, work.Key);
-				Assert.AreEqual(work.Condition, actual.Spec.Condition, work.Key);
-				Assert.AreEqual(work.State, actual.Spec.State, work.Key);
+				ClassicAssert.IsNotNull(actual, i.ToString());
+				ClassicAssert.AreEqual(work.Key, actual.Spec.Key, i.ToString());
+				ClassicAssert.AreEqual(work.X, actual.Spec.X, work.Key);
+				ClassicAssert.AreEqual(work.Y, actual.Spec.Y, work.Key);
+				ClassicAssert.AreEqual(work.Condition, actual.Spec.Condition, work.Key);
+				ClassicAssert.AreEqual(work.State, actual.Spec.State, work.Key);
 			}
 		}
 
@@ -564,12 +565,12 @@ namespace ThousandAndFirst.Tests
 			host.SetFacts(work.X, work.Y, facts);
 
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Refused, result.Status, result.Detail);
-			Assert.AreEqual(Fault, result.Fault);
-			Assert.IsTrue(result.ShouldRelease);
-			Assert.AreEqual(0, host.MutationCalls);
-			Assert.AreEqual(0, host.Objects.Count);
-			Assert.AreEqual("", host.Marker);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Refused, result.Status, result.Detail);
+			ClassicAssert.AreEqual(Fault, result.Fault);
+			ClassicAssert.IsTrue(result.ShouldRelease);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual(0, host.Objects.Count);
+			ClassicAssert.AreEqual("", host.Marker);
 		}
 
 		[Test]
@@ -600,9 +601,9 @@ namespace ThousandAndFirst.Tests
 			}
 
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Refused, result.Status, result.Detail);
-			Assert.AreEqual(KingdomInheritApplyFault.EntryToHeartPath, result.Fault);
-			Assert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Refused, result.Status, result.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.EntryToHeartPath, result.Fault);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
 		}
 
 		[Test]
@@ -612,16 +613,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost wrongSeat = new FakeHost("JoppaWorld.9.9.9.9.10", receipt.TargetGameId);
 			KingdomInheritApplyResult seat = KingdomInheritEngine.Apply(record, receipt, record.GroundZoneId, wrongSeat);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, seat.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.TargetZoneMismatch, seat.Fault);
-			Assert.IsFalse(seat.ShouldRelease, "a caller binding error must not spend the reservation");
-			Assert.AreEqual(0, wrongSeat.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, seat.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.TargetZoneMismatch, seat.Fault);
+			ClassicAssert.IsFalse(seat.ShouldRelease, "a caller binding error must not spend the reservation");
+			ClassicAssert.AreEqual(0, wrongSeat.MutationCalls);
 
 			FakeHost wrongGame = new FakeHost(record.GroundZoneId, "other-game");
 			KingdomInheritApplyResult game = KingdomInheritEngine.Apply(record, receipt, wrongGame.ZoneId, wrongGame);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, game.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.TargetGameMismatch, game.Fault);
-			Assert.AreEqual(0, wrongGame.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, game.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.TargetGameMismatch, game.Fault);
+			ClassicAssert.AreEqual(0, wrongGame.MutationCalls);
 		}
 
 		[Test]
@@ -629,11 +630,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSealRecord record = Promoted("palisade");
 			string targetZone = "JoppaWorld.4.5.1.1.10";
-			Assert.AreNotEqual(record.GroundZoneId, targetZone);
+			ClassicAssert.AreNotEqual(record.GroundZoneId, targetZone);
 			FakeHost host = new FakeHost(targetZone, "target-game");
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record),
 				targetZone, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
 			StringAssert.EndsWith("|" + targetZone, result.ApplicationMarker);
 			StringAssert.DoesNotContain("|" + record.GroundZoneId, result.ApplicationMarker);
 		}
@@ -644,10 +645,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord record = Promoted("campfire");
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
-			Assert.AreEqual(2, host.CreatedBlueprints.Count, "memory marker plus founder cairn");
-			Assert.AreEqual("r_KingdomCairn", host.CreatedBlueprints[0]);
-			Assert.AreEqual("r_KingdomCairn", host.CreatedBlueprints[1]);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, result.Status, result.Detail);
+			ClassicAssert.AreEqual(2, host.CreatedBlueprints.Count, "memory marker plus founder cairn");
+			ClassicAssert.AreEqual("r_KingdomCairn", host.CreatedBlueprints[0]);
+			ClassicAssert.AreEqual("r_KingdomCairn", host.CreatedBlueprints[1]);
 			CollectionAssert.DoesNotContain(host.CreatedBlueprints, "campfire");
 		}
 
@@ -658,17 +659,17 @@ namespace ThousandAndFirst.Tests
 			FakeHost missing = Host(record);
 			missing.MissingBlueprint = "r_KingdomPalisade";
 			KingdomInheritApplyResult missingResult = KingdomInheritEngine.Apply(record, Receipt(record), missing.ZoneId, missing);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, missingResult.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.BlueprintMissing, missingResult.Fault);
-			Assert.AreEqual(0, missing.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, missingResult.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.BlueprintMissing, missingResult.Fault);
+			ClassicAssert.AreEqual(0, missing.MutationCalls);
 
 			FakeHost nonempty = Host(record);
 			nonempty.CreateEmpty = false;
 			KingdomInheritApplyResult nonemptyResult = KingdomInheritEngine.Apply(record, Receipt(record), nonempty.ZoneId, nonempty);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, nonemptyResult.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.ObjectNotEmpty, nonemptyResult.Fault);
-			Assert.AreEqual(0, nonempty.Objects.Count, "off-zone object was discarded");
-			Assert.AreEqual("", nonempty.Marker);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, nonemptyResult.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.ObjectNotEmpty, nonemptyResult.Fault);
+			ClassicAssert.AreEqual(0, nonempty.Objects.Count, "off-zone object was discarded");
+			ClassicAssert.AreEqual("", nonempty.Marker);
 		}
 
 		[TestCase(true, false, 20)]
@@ -682,12 +683,12 @@ namespace ThousandAndFirst.Tests
 			host.FailPlaceIndex = FailPlacement ? 1 : -1;
 			host.FailMarkerWrite = FailMarker;
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
-			Assert.AreEqual(Fault, result.Fault);
-			Assert.IsFalse(result.ShouldCommit);
-			Assert.IsFalse(result.ShouldRelease);
-			Assert.AreEqual(0, host.Objects.Count);
-			Assert.AreEqual("", host.Marker);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status, result.Detail);
+			ClassicAssert.AreEqual(Fault, result.Fault);
+			ClassicAssert.IsFalse(result.ShouldCommit);
+			ClassicAssert.IsFalse(result.ShouldRelease);
+			ClassicAssert.AreEqual(0, host.Objects.Count);
+			ClassicAssert.AreEqual("", host.Marker);
 		}
 
 		[Test]
@@ -699,11 +700,11 @@ namespace ThousandAndFirst.Tests
 			host.DiscardFails = true;
 			KingdomInheritApplyResult result = KingdomInheritEngine.Apply(record, Receipt(record),
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.PartialApplication, result.Fault);
-			Assert.IsFalse(result.ShouldCommit);
-			Assert.IsFalse(result.ShouldRelease);
-			Assert.Greater(host.Objects.Count, 0, "failed cleanup remains visible for repair");
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, result.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.PartialApplication, result.Fault);
+			ClassicAssert.IsFalse(result.ShouldCommit);
+			ClassicAssert.IsFalse(result.ShouldRelease);
+			ClassicAssert.Greater(host.Objects.Count, 0, "failed cleanup remains visible for repair");
 		}
 
 		[Test]
@@ -713,16 +714,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSealReceipt receipt = Receipt(record);
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
 			host.Objects.RemoveAt(0);
 			int mutations = host.MutationCalls;
 
 			KingdomInheritApplyResult torn = KingdomInheritEngine.Apply(record, receipt, host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, torn.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.PartialApplication, torn.Fault);
-			Assert.AreEqual(mutations, host.MutationCalls);
-			Assert.IsFalse(torn.ShouldCommit);
-			Assert.IsFalse(torn.ShouldRelease);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, torn.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.PartialApplication, torn.Fault);
+			ClassicAssert.AreEqual(mutations, host.MutationCalls);
+			ClassicAssert.IsFalse(torn.ShouldCommit);
+			ClassicAssert.IsFalse(torn.ShouldRelease);
 		}
 
 		[Test]
@@ -733,7 +734,7 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 			KingdomInheritApplyResult first = KingdomInheritEngine.Apply(record, receipt,
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, first.Status, first.Detail);
 			FakeObject cairn = host.Objects.Find(delegate(FakeObject o)
 			{
 				return o.Spec.Key == KingdomInheritRules.FounderCairnKey;
@@ -742,9 +743,9 @@ namespace ThousandAndFirst.Tests
 			int mutations = host.MutationCalls;
 			KingdomInheritApplyResult retry = KingdomInheritEngine.Apply(record, receipt,
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, retry.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.PartialApplication, retry.Fault);
-			Assert.AreEqual(mutations, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, retry.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.PartialApplication, retry.Fault);
+			ClassicAssert.AreEqual(mutations, host.MutationCalls);
 		}
 
 		[Test]
@@ -755,19 +756,19 @@ namespace ThousandAndFirst.Tests
 			FakeHost conflict = Host(record);
 			conflict.Marker = "taf-inherit-v1|other";
 			KingdomInheritApplyResult conflictResult = KingdomInheritEngine.Apply(record, receipt, conflict.ZoneId, conflict);
-			Assert.AreEqual(KingdomInheritApplyStatus.Refused, conflictResult.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.ApplicationConflict, conflictResult.Fault);
-			Assert.AreEqual(0, conflict.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Refused, conflictResult.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.ApplicationConflict, conflictResult.Fault);
+			ClassicAssert.AreEqual(0, conflict.MutationCalls);
 
 			FakeHost orphan = Host(record);
 			KingdomInheritApplyResult applied = KingdomInheritEngine.Apply(record, receipt, orphan.ZoneId, orphan);
-			Assert.AreEqual(KingdomInheritApplyStatus.Applied, applied.Status, applied.Detail);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Applied, applied.Status, applied.Detail);
 			orphan.Marker = "";
 			int mutations = orphan.MutationCalls;
 			KingdomInheritApplyResult orphanResult = KingdomInheritEngine.Apply(record, receipt, orphan.ZoneId, orphan);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, orphanResult.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.PartialApplication, orphanResult.Fault);
-			Assert.AreEqual(mutations, orphan.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, orphanResult.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.PartialApplication, orphanResult.Fault);
+			ClassicAssert.AreEqual(mutations, orphan.MutationCalls);
 		}
 
 		[Test]
@@ -777,22 +778,22 @@ namespace ThousandAndFirst.Tests
 			FakeHost host = Host(record);
 			record.FounderName = "{{R|unsafe}}";
 			KingdomInheritApplyResult unsafeResult = KingdomInheritEngine.Apply(record, Receipt(record), host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyStatus.Failed, unsafeResult.Status);
-			Assert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, unsafeResult.Fault);
-			Assert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyStatus.Failed, unsafeResult.Status);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, unsafeResult.Fault);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
 
 			record = Promoted("palisade");
 			KingdomSealReceipt receipt = Receipt(record);
 			receipt.State = KingdomSealReceiptState.Committed;
 			KingdomInheritApplyResult committed = KingdomInheritEngine.Apply(record, receipt,
 				record.GroundZoneId, Host(record));
-			Assert.AreEqual(KingdomInheritApplyFault.ReceiptNotReserved, committed.Fault);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.ReceiptNotReserved, committed.Fault);
 
 			receipt = Receipt(record);
 			receipt.LegacyId = "legacy-other";
 			KingdomInheritApplyResult mismatch = KingdomInheritEngine.Apply(record, receipt,
 				record.GroundZoneId, Host(record));
-			Assert.AreEqual(KingdomInheritApplyFault.ReceiptMismatch, mismatch.Fault);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.ReceiptMismatch, mismatch.Fault);
 		}
 
 		[Test]
@@ -803,16 +804,16 @@ namespace ThousandAndFirst.Tests
 			record.InterregnumRoll = (record.InterregnumRoll + 1) % 100;
 			KingdomInheritApplyResult roll = KingdomInheritEngine.Apply(record, Receipt(record),
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, roll.Fault);
-			Assert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, roll.Fault);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
 
 			record = Promoted("palisade");
 			host = Host(record);
 			record.InheritedState = (record.InheritedState + 1) % 4;
 			KingdomInheritApplyResult state = KingdomInheritEngine.Apply(record, Receipt(record),
 				host.ZoneId, host);
-			Assert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, state.Fault);
-			Assert.AreEqual(0, host.MutationCalls);
+			ClassicAssert.AreEqual(KingdomInheritApplyFault.LegacyNotPromoted, state.Fault);
+			ClassicAssert.AreEqual(0, host.MutationCalls);
 		}
 
 		[Test]

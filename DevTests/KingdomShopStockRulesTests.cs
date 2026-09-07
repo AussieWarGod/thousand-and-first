@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,7 +17,7 @@ namespace ThousandAndFirst.Tests
 		public void IngressReproofRequiresOneExactLiveTier(bool live, int observed,
 			int projected, int recorded, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomMarketProviderRules.ExactLiveAuthority(
+			ClassicAssert.AreEqual(expected, KingdomMarketProviderRules.ExactLiveAuthority(
 				live, observed, projected, recorded));
 		}
 
@@ -26,7 +27,7 @@ namespace ThousandAndFirst.Tests
 		public void ReconciliationReproofDoesNotRequirePreviouslyRecordedTier(bool live,
 			int observed, int projected, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomMarketProviderRules.ExactLiveProjection(
+			ClassicAssert.AreEqual(expected, KingdomMarketProviderRules.ExactLiveProjection(
 				live, observed, projected));
 		}
 
@@ -35,22 +36,22 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 9, 1)]
 		public void MalformedTierRefuses(int acknowledged, int requested, int merchants)
 		{
-			Assert.AreEqual(KingdomShopStockVerdict.RefusedMalformed,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.RefusedMalformed,
 				KingdomShopStockRules.Classify(acknowledged, requested, merchants));
 		}
 
 		[Test]
 		public void OneMerchantNoMintAuthorityAndNewStandingAreRequired()
 		{
-			Assert.AreEqual(KingdomShopStockVerdict.RefusedNoMerchant,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.RefusedNoMerchant,
 				KingdomShopStockRules.Classify(0, 3, 0));
-			Assert.AreEqual(KingdomShopStockVerdict.RefusedAmbiguousMerchant,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.RefusedAmbiguousMerchant,
 				KingdomShopStockRules.Classify(0, 3, 2));
-			Assert.AreEqual(KingdomShopStockVerdict.RefusedActiveStockAuthority,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.RefusedActiveStockAuthority,
 				KingdomShopStockRules.Classify(0, 3, 1, false));
-			Assert.AreEqual(KingdomShopStockVerdict.Acknowledge,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.Acknowledge,
 				KingdomShopStockRules.Classify(0, 3, 1, true));
-			Assert.AreEqual(KingdomShopStockVerdict.AlreadyAcknowledged,
+			ClassicAssert.AreEqual(KingdomShopStockVerdict.AlreadyAcknowledged,
 				KingdomShopStockRules.Classify(3, 3, 1, true));
 		}
 
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicOfficePhase phase, bool holder, bool projection, bool capability,
 			int tier, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.OfficeServiceEligible(stage,
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.OfficeServiceEligible(stage,
 				phase, holder, projection, capability, tier));
 		}
 
@@ -82,17 +83,17 @@ namespace ThousandAndFirst.Tests
 		public void StandingNeedsCapabilityAndCannotOutrunCraftOrGrowth(GrowthStage stage,
 			int tech, bool capability, bool district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.EffectiveServiceTier(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.EffectiveServiceTier(
 				stage, tech, capability, district));
 		}
 
 		[Test]
 		public void FirstLateMarketAcknowledgesAttainedStandingDirectly()
 		{
-			Assert.AreEqual(3, KingdomShopStockRules.NextAcknowledgementTier(0, 3));
-			Assert.AreEqual(7, KingdomShopStockRules.NextAcknowledgementTier(0, 7));
-			Assert.AreEqual(7, KingdomShopStockRules.NextAcknowledgementTier(3, 7));
-			Assert.AreEqual(3, KingdomShopStockRules.NextAcknowledgementTier(7, 3));
+			ClassicAssert.AreEqual(3, KingdomShopStockRules.NextAcknowledgementTier(0, 3));
+			ClassicAssert.AreEqual(7, KingdomShopStockRules.NextAcknowledgementTier(0, 7));
+			ClassicAssert.AreEqual(7, KingdomShopStockRules.NextAcknowledgementTier(3, 7));
+			ClassicAssert.AreEqual(3, KingdomShopStockRules.NextAcknowledgementTier(7, 3));
 		}
 
 		[Test]
@@ -100,15 +101,15 @@ namespace ThousandAndFirst.Tests
 		{
 			string receipt = KingdomShopStockRules.StockReceiptId("realm-1", "city-2", "item-3");
 			StringAssert.StartsWith("taf:market-stock:v1:", receipt);
-			Assert.AreEqual(receipt,
+			ClassicAssert.AreEqual(receipt,
 				KingdomShopStockRules.StockReceiptId("realm-1", "city-2", "item-3"));
-			Assert.AreNotEqual(receipt,
+			ClassicAssert.AreNotEqual(receipt,
 				KingdomShopStockRules.StockReceiptId("realm-1", "city-2", "clone-3"));
-			Assert.IsTrue(KingdomShopStockRules.ExactStockCustody(receipt,
+			ClassicAssert.IsTrue(KingdomShopStockRules.ExactStockCustody(receipt,
 				"realm-1", "city-2", "keeper-4", "realm-1", "city-2", "keeper-4", "item-3"));
-			Assert.IsFalse(KingdomShopStockRules.ExactStockCustody(receipt,
+			ClassicAssert.IsFalse(KingdomShopStockRules.ExactStockCustody(receipt,
 				"realm-1", "city-2", "keeper-4", "realm-1", "city-2", "clone-4", "item-3"));
-			Assert.IsFalse(KingdomShopStockRules.ExactStockCustody(receipt,
+			ClassicAssert.IsFalse(KingdomShopStockRules.ExactStockCustody(receipt,
 				"realm-1", "city-2", "keeper-4", "realm-1", "city-2", "keeper-4", "clone-3"));
 		}
 
@@ -120,20 +121,20 @@ namespace ThousandAndFirst.Tests
 		public void CurrentAndLegacyRealmMarkersResolveOnlyWhenExact(string current,
 			string legacy, bool expected, string realm)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.TryResolveStockRealm(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.TryResolveStockRealm(
 				current, legacy, out string actual));
-			Assert.AreEqual(realm, actual);
+			ClassicAssert.AreEqual(realm, actual);
 		}
 
 		[Test]
 		public void ConservationUsesReferenceIdentityAndRejectsCloneOrDuplicate()
 		{
 			object a = new object(); object b = new object(); object clone = new object();
-			Assert.IsTrue(KingdomShopStockRules.SamePhysicalSet(
+			ClassicAssert.IsTrue(KingdomShopStockRules.SamePhysicalSet(
 				new List<object> { a, b }, new List<object> { b, a }));
-			Assert.IsFalse(KingdomShopStockRules.SamePhysicalSet(
+			ClassicAssert.IsFalse(KingdomShopStockRules.SamePhysicalSet(
 				new List<object> { a, b }, new List<object> { a, clone }));
-			Assert.IsFalse(KingdomShopStockRules.SamePhysicalSet(
+			ClassicAssert.IsFalse(KingdomShopStockRules.SamePhysicalSet(
 				new List<object> { a, b }, new List<object> { a, a }));
 		}
 
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.Tests
 		public void ProtectionOwnershipNeverClaimsForeignState(bool present,
 			bool alreadyOwned, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.ShouldOwnProtection(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.ShouldOwnProtection(
 				present, alreadyOwned));
 		}
 
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 			bool holder, bool custodian, bool transfer, bool observed,
 			KingdomMarketStockLocation expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.ClassifyLocation(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.ClassifyLocation(
 				ground, holder, custodian, transfer, observed));
 		}
 
@@ -188,7 +189,7 @@ namespace ThousandAndFirst.Tests
 		public void AccessionOwnerShapePreflightsBeforeMutation(bool legend, bool office,
 			bool receipt, bool stock, KingdomMarketAccessionAuthority expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.ClassifyAccessionAuthority(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.ClassifyAccessionAuthority(
 				legend, office, receipt, stock));
 		}
 
@@ -197,10 +198,10 @@ namespace ThousandAndFirst.Tests
 		public void LegendaryCivicAuthorityIsCurrentSettlementOnly(string current,
 			string marker, bool expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomShopStockRules.IsCurrentLegendaryCivicAuthority(true, true,
 					current, marker, 4, 4));
-			Assert.IsFalse(KingdomShopStockRules.IsCurrentLegendaryCivicAuthority(
+			ClassicAssert.IsFalse(KingdomShopStockRules.IsCurrentLegendaryCivicAuthority(
 				true, true, current, marker, 4, 3));
 		}
 
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 		public void HandoffStartWaitsForEverySuccessionAuthority(bool selecting,
 			bool pendingDeath, int repairResident, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomShopStockRules.MayStartMarketHandoff(
+			ClassicAssert.AreEqual(expected, KingdomShopStockRules.MayStartMarketHandoff(
 				selecting, pendingDeath, repairResident));
 		}
 
@@ -222,7 +223,7 @@ namespace ThousandAndFirst.Tests
 		public void ItemMovementRetiresOnlyCurrentExactRealm(string current,
 			string receipt, bool exact, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomMarketStockAuthorityRules.MayRetire(
+			ClassicAssert.AreEqual(expected, KingdomMarketStockAuthorityRules.MayRetire(
 				current, receipt, exact));
 		}
 	}

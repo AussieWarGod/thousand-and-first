@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
 
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-4, KingdomExtensionVerdict.RefusedNoVersion)]
 		public void Judge_AdmitsThePublishedCompatibilityWindow(int declared, KingdomExtensionVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.Judge(Mod, declared, true));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.Judge(Mod, declared, true));
 		}
 
 		/// <summary>The published version is 2 and this test says so out loud: a bump that forgets
@@ -37,23 +38,23 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Version_IsThreeAndOlderSourcesRemainSupported()
 		{
-			Assert.AreEqual(3, KingdomApiRules.Version);
-			Assert.AreEqual(1, KingdomApiRules.MinSupportedVersion);
-			Assert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, 1, true));
-			Assert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, KingdomApiRules.Version, true));
-			Assert.AreEqual(KingdomExtensionVerdict.RefusedAhead, KingdomApiRules.Judge(Mod, KingdomApiRules.Version + 1, true));
+			ClassicAssert.AreEqual(3, KingdomApiRules.Version);
+			ClassicAssert.AreEqual(1, KingdomApiRules.MinSupportedVersion);
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, 1, true));
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, KingdomApiRules.Version, true));
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.RefusedAhead, KingdomApiRules.Judge(Mod, KingdomApiRules.Version + 1, true));
 		}
 
 		[Test]
 		public void RulesAndVerdictKeepExactPublicAbi()
 		{
 			System.Type rules = typeof(KingdomApiRules);
-			Assert.AreEqual("ThousandAndFirst.Api.KingdomApiRules", rules.FullName);
-			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.Api.KingdomApiRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
 
 			System.Type verdict = typeof(KingdomExtensionVerdict);
-			Assert.AreEqual("ThousandAndFirst.Api.KingdomExtensionVerdict", verdict.FullName);
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(verdict));
+			ClassicAssert.AreEqual("ThousandAndFirst.Api.KingdomExtensionVerdict", verdict.FullName);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(verdict));
 			CollectionAssert.AreEqual(new string[]
 			{
 				"Accepted", "RefusedNoVersion", "RefusedAhead", "RefusedBehind",
@@ -63,7 +64,7 @@ namespace ThousandAndFirst.Tests
 			System.Array values = System.Enum.GetValues(verdict);
 			for (int i = 0; i < values.Length; i++)
 			{
-				Assert.AreEqual(i, (int)(KingdomExtensionVerdict)values.GetValue(i));
+				ClassicAssert.AreEqual(i, (int)(KingdomExtensionVerdict)values.GetValue(i));
 			}
 
 			System.Reflection.MethodInfo[] methods = rules.GetMethods(
@@ -113,19 +114,19 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Judge_AdmitsTheWholeSupportedWindow()
 		{
-			Assert.LessOrEqual(KingdomApiRules.MinSupportedVersion, KingdomApiRules.Version);
-			Assert.GreaterOrEqual(KingdomApiRules.MinSupportedVersion, 1);
+			ClassicAssert.LessOrEqual(KingdomApiRules.MinSupportedVersion, KingdomApiRules.Version);
+			ClassicAssert.GreaterOrEqual(KingdomApiRules.MinSupportedVersion, 1);
 			for (int version = KingdomApiRules.MinSupportedVersion; version <= KingdomApiRules.Version; version++)
 			{
-				Assert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, version, true),
+				ClassicAssert.AreEqual(KingdomExtensionVerdict.Accepted, KingdomApiRules.Judge(Mod, version, true),
 					"version " + version + " is inside the supported window");
 			}
 			// Below the window is always a refusal. WHICH refusal depends on where the window
 			// starts: while the floor is 1, one below it is zero, and zero is "declared none"
 			// rather than "too old" — a distinction the modder needs, because the fixes differ.
 			KingdomExtensionVerdict below = KingdomApiRules.Judge(Mod, KingdomApiRules.MinSupportedVersion - 1, true);
-			Assert.AreNotEqual(KingdomExtensionVerdict.Accepted, below);
-			Assert.AreEqual((KingdomApiRules.MinSupportedVersion > 1)
+			ClassicAssert.AreNotEqual(KingdomExtensionVerdict.Accepted, below);
+			ClassicAssert.AreEqual((KingdomApiRules.MinSupportedVersion > 1)
 				? KingdomExtensionVerdict.RefusedBehind
 				: KingdomExtensionVerdict.RefusedNoVersion, below);
 		}
@@ -151,9 +152,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Judge_OrderIsFrozen_NamelessOutranksEverything()
 		{
-			Assert.AreEqual(KingdomExtensionVerdict.RefusedUnnamed, KingdomApiRules.Judge("", 99, false));
-			Assert.AreEqual(KingdomExtensionVerdict.RefusedUnnamed, KingdomApiRules.Judge("   ", 1, true));
-			Assert.AreEqual(KingdomExtensionVerdict.RefusedNoContract, KingdomApiRules.Judge(Mod, 99, false));
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.RefusedUnnamed, KingdomApiRules.Judge("", 99, false));
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.RefusedUnnamed, KingdomApiRules.Judge("   ", 1, true));
+			ClassicAssert.AreEqual(KingdomExtensionVerdict.RefusedNoContract, KingdomApiRules.Judge(Mod, 99, false));
 		}
 
 		/// <summary>Every refusal line names the mod, and the version refusals name both versions.
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RefusalLine_IsEmptyForAnAcceptedExtension()
 		{
-			Assert.AreEqual("", KingdomApiRules.RefusalLine(KingdomExtensionVerdict.Accepted, Mod, 1));
+			ClassicAssert.AreEqual("", KingdomApiRules.RefusalLine(KingdomExtensionVerdict.Accepted, Mod, 1));
 		}
 
 		/// <summary>Slugging folds to the kernel identifier alphabet, collapses separator runs, and
@@ -186,7 +187,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Mod_9.1", "mod_9.1")]
 		public void Slug_FoldsToTheKernelAlphabet(string source, string expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.Slug(source));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.Slug(source));
 		}
 
 		/// <summary>Every extension stream begins with the shared prefix and carries both the mod
@@ -195,45 +196,45 @@ namespace ThousandAndFirst.Tests
 		public void TryStream_CarriesBothTheModAndTheLane()
 		{
 			string stream;
-			Assert.IsTrue(KingdomApiRules.TryStream("Their Mod", "weather", out stream));
-			Assert.AreEqual("taf:ext:their-mod:weather", stream);
+			ClassicAssert.IsTrue(KingdomApiRules.TryStream("Their Mod", "weather", out stream));
+			ClassicAssert.AreEqual("taf:ext:their-mod:weather", stream);
 
 			string firstKey, secondKey;
-			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
 				"their-manifest", "Their.Assembly", "Their.FirstSource", out firstKey));
-			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
 				"their-manifest", "Their.Assembly", "Their.SecondSource", out secondKey));
-			Assert.AreNotEqual(firstKey, secondKey);
+			ClassicAssert.AreNotEqual(firstKey, secondKey);
 			string otherAssemblyKey;
-			Assert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TrySourceKey(
 				"their-manifest", "Other.Assembly", "Their.FirstSource", out otherAssemblyKey));
-			Assert.AreNotEqual(firstKey, otherAssemblyKey,
+			ClassicAssert.AreNotEqual(firstKey, otherAssemblyKey,
 				"same full type name in two assemblies must own distinct receipts");
 			string cursors;
-			Assert.IsTrue(KingdomHappeningCursorRules.TryRetain("",
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TryRetain("",
 				new[] { firstKey, secondKey }, out cursors));
 			long since;
-			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 100L,
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 100L,
 				out since, out cursors));
-			Assert.AreEqual(0L, since, "the first exact source call must receive zero");
-			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, secondKey, 100L,
+			ClassicAssert.AreEqual(0L, since, "the first exact source call must receive zero");
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, secondKey, 100L,
 				out since, out cursors));
-			Assert.AreEqual(0L, since, "another source must not inherit the first source's cursor");
-			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 200L,
+			ClassicAssert.AreEqual(0L, since, "another source must not inherit the first source's cursor");
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 200L,
 				out since, out cursors));
-			Assert.AreEqual(100L, since, "cold wire must retain the exact source window");
-			Assert.IsFalse(KingdomHappeningCursorRules.TryAdvance("malformed", firstKey, 300L,
+			ClassicAssert.AreEqual(100L, since, "cold wire must retain the exact source window");
+			ClassicAssert.IsFalse(KingdomHappeningCursorRules.TryAdvance("malformed", firstKey, 300L,
 				out since, out cursors));
 
-			Assert.IsTrue(KingdomHappeningCursorRules.TrySeedLegacy(
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TrySeedLegacy(
 				new[] { firstKey, secondKey }, 250L, out cursors));
-			Assert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 300L,
+			ClassicAssert.IsTrue(KingdomHappeningCursorRules.TryAdvance(cursors, firstKey, 300L,
 				out since, out cursors));
-			Assert.AreEqual(250L, since,
+			ClassicAssert.AreEqual(250L, since,
 				"v11 global receipt must prevent replay from zero after cursor migration");
-			Assert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
+			ClassicAssert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
 				new[] { firstKey, firstKey }, 250L, out cursors));
-			Assert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
+			ClassicAssert.IsFalse(KingdomHappeningCursorRules.TrySeedLegacy(
 				new[] { firstKey }, 0L, out cursors));
 		}
 
@@ -244,10 +245,10 @@ namespace ThousandAndFirst.Tests
 		public void TryStream_RefusesRatherThanTruncating()
 		{
 			string stream;
-			Assert.IsFalse(KingdomApiRules.TryStream("mod", new string('a', 200), out stream));
-			Assert.AreEqual("", stream);
-			Assert.IsFalse(KingdomApiRules.TryStream("!!!", "lane", out stream));
-			Assert.IsFalse(KingdomApiRules.TryStream("mod", "", out stream));
+			ClassicAssert.IsFalse(KingdomApiRules.TryStream("mod", new string('a', 200), out stream));
+			ClassicAssert.AreEqual("", stream);
+			ClassicAssert.IsFalse(KingdomApiRules.TryStream("!!!", "lane", out stream));
+			ClassicAssert.IsFalse(KingdomApiRules.TryStream("mod", "", out stream));
 		}
 
 		/// <summary>Colour is taken away whole: an extension line that opened a span the report
@@ -256,8 +257,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Trim_StripsMarkupWholeAndCollapsesWhitespace()
 		{
-			Assert.AreEqual("a red line", KingdomApiRules.Trim("{{R|a  red\n\tline}}"));
-			Assert.AreEqual("plain", KingdomApiRules.Trim("{{rr|plain}}"));
+			ClassicAssert.AreEqual("a red line", KingdomApiRules.Trim("{{R|a  red\n\tline}}"));
+			ClassicAssert.AreEqual("plain", KingdomApiRules.Trim("{{rr|plain}}"));
 		}
 
 		/// <summary>Braces with no colour code behind them are just braces: only they are dropped,
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Trim_BracesWithoutACodeLoseOnlyTheBraces()
 		{
-			Assert.AreEqual("a longcode|line", KingdomApiRules.Trim("{{a longcode|line}}"));
+			ClassicAssert.AreEqual("a longcode|line", KingdomApiRules.Trim("{{a longcode|line}}"));
 		}
 
 		/// <summary>Over-long lines are cut at a word boundary with an ellipsis, never refused and
@@ -275,7 +276,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = new string('x', 40) + " " + new string('y', 40);
 			string trimmed = KingdomApiRules.Trim(source, 50);
-			Assert.AreEqual(new string('x', 40) + "…", trimmed);
+			ClassicAssert.AreEqual(new string('x', 40) + "…", trimmed);
 		}
 
 		/// <summary>The ellipsis counts against the limit. A method whose whole contract is a
@@ -285,8 +286,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(200)]
 		public void Trim_NeverExceedsItsLimit(int limit)
 		{
-			Assert.LessOrEqual(KingdomApiRules.Trim(new string('x', 500), limit).Length, limit);
-			Assert.LessOrEqual(KingdomApiRules.Trim(new string('y', 300) + " " + new string('z', 300), limit).Length, limit);
+			ClassicAssert.LessOrEqual(KingdomApiRules.Trim(new string('x', 500), limit).Length, limit);
+			ClassicAssert.LessOrEqual(KingdomApiRules.Trim(new string('y', 300) + " " + new string('z', 300), limit).Length, limit);
 		}
 
 		/// <summary>A filing key is a slug, and a slug of nothing is nothing — which the surfaces
@@ -295,7 +296,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", "")]
 		public void Kind_IsASlug(string source, string expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.Kind(source));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.Kind(source));
 		}
 
 		/// <summary>A kind longer than the cap is cut rather than refused, because the ask behind
@@ -303,7 +304,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Kind_ClampsRatherThanRefusing()
 		{
-			Assert.AreEqual(KingdomApiRules.MaxKindLength, KingdomApiRules.Kind(new string('k', 90)).Length);
+			ClassicAssert.AreEqual(KingdomApiRules.MaxKindLength, KingdomApiRules.Kind(new string('k', 90)).Length);
 		}
 
 		[TestCase("trade", "someone-else-s-mod:trade")]
@@ -314,13 +315,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase("bad|key", null)]
 		public void IdentityKey_FilesOnlyOwnedBoundedKeys(string source, string expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.IdentityKey(Mod, source));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.IdentityKey(Mod, source));
 		}
 
 		[Test]
 		public void IdentityKey_DropsInsteadOfTruncatingAtTheCollisionBoundary()
 		{
-			Assert.IsNull(KingdomApiRules.IdentityKey(Mod,
+			ClassicAssert.IsNull(KingdomApiRules.IdentityKey(Mod,
 				new string('x', KingdomApiRules.MaxIdentityKeyLength + 1)));
 		}
 
@@ -331,7 +332,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(900, 130)]
 		public void IdentityAffinity_ClampsToTheDoctrineBand(int offered, int expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.IdentityAffinity(offered));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.IdentityAffinity(offered));
 		}
 
 		[TestCase(0L, 100)]
@@ -342,7 +343,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-30L, 70)]
 		public void IdentityAffinityFromDelta_ClampsOnlyTheFinalSum(long delta, int expected)
 		{
-			Assert.AreEqual(expected, KingdomApiRules.IdentityAffinityFromDelta(delta));
+			ClassicAssert.AreEqual(expected, KingdomApiRules.IdentityAffinityFromDelta(delta));
 		}
 
 		[Test]
@@ -354,8 +355,8 @@ namespace ThousandAndFirst.Tests
 			long reverse = (KingdomApiRules.IdentityAffinity(70) - 100L)
 				+ (KingdomApiRules.IdentityAffinity(130) - 100L)
 				+ (KingdomApiRules.IdentityAffinity(130) - 100L);
-			Assert.AreEqual(130, KingdomApiRules.IdentityAffinityFromDelta(forward));
-			Assert.AreEqual(KingdomApiRules.IdentityAffinityFromDelta(forward),
+			ClassicAssert.AreEqual(130, KingdomApiRules.IdentityAffinityFromDelta(forward));
+			ClassicAssert.AreEqual(KingdomApiRules.IdentityAffinityFromDelta(forward),
 				KingdomApiRules.IdentityAffinityFromDelta(reverse));
 		}
 
@@ -364,10 +365,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomIdentityReading reading = new KingdomIdentityReading(
 				"  Mopango\nfolk  ", new string('s', 200), null, "Mutated Human");
-			Assert.AreEqual("Mopango folk", reading.Culture);
-			Assert.AreEqual(KingdomApiRules.MaxIdentityNameLength, reading.Species.Length);
-			Assert.AreEqual("", reading.Creed);
-			Assert.AreEqual("Mutated Human", reading.Genotype);
+			ClassicAssert.AreEqual("Mopango folk", reading.Culture);
+			ClassicAssert.AreEqual(KingdomApiRules.MaxIdentityNameLength, reading.Species.Length);
+			ClassicAssert.AreEqual("", reading.Creed);
+			ClassicAssert.AreEqual("Mutated Human", reading.Genotype);
 		}
 
 		[Test]
@@ -375,9 +376,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomComputeRefusal refusal;
 			string offender;
-			Assert.IsTrue(KingdomComputeSeam.TryValidateType(
+			ClassicAssert.IsTrue(KingdomComputeSeam.TryValidateType(
 				typeof(KingdomIdentityReading), out refusal, out offender), offender);
-			Assert.IsTrue(KingdomComputeSeam.TryValidateType(
+			ClassicAssert.IsTrue(KingdomComputeSeam.TryValidateType(
 				typeof(KingdomIdentityWorkReading), out refusal, out offender), offender);
 		}
 
@@ -385,7 +386,7 @@ namespace ThousandAndFirst.Tests
 		public void IdentityContractPublishesOnlyKeysAndAffinity()
 		{
 			System.Reflection.MethodInfo[] methods = typeof(IKingdomIdentitySource).GetMethods();
-			Assert.AreEqual(2, methods.Length);
+			ClassicAssert.AreEqual(2, methods.Length);
 			CollectionAssert.AreEquivalent(new string[2] { "Keys", "Affinity" },
 				new string[2] { methods[0].Name, methods[1].Name });
 		}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -25,35 +26,35 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void InheritanceDeclarationsKeepExactInternalAbiAndDefaults()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritancePhase)));
-			Assert.AreEqual("0:Empty,1:Reserved,2:SiteSelected,3:WorldValidated,4:Installed,"
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritancePhase)));
+			ClassicAssert.AreEqual("0:Empty,1:Reserved,2:SiteSelected,3:WorldValidated,4:Installed,"
 				+ "5:AppliedPendingDurability,6:Committed,7:Refused,8:RepairRequired",
 				EnumShape(typeof(KingdomInheritancePhase)));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceStartFault)));
-			Assert.AreEqual("0:None,1:MissingStart,2:AlternateWorld,3:TargetIsStart",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceStartFault)));
+			ClassicAssert.AreEqual("0:None,1:MissingStart,2:AlternateWorld,3:TargetIsStart",
 				EnumShape(typeof(KingdomInheritanceStartFault)));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomCommittedRewindAction)));
-			Assert.AreEqual("0:DeferUntilPrimary,1:AdoptDurable,2:AwaitLazyBuilder,"
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomCommittedRewindAction)));
+			ClassicAssert.AreEqual("0:DeferUntilPrimary,1:AdoptDurable,2:AwaitLazyBuilder,"
 				+ "3:ReapplyCleanBuiltTarget,4:RepairRequired",
 				EnumShape(typeof(KingdomCommittedRewindAction)));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceLoadKind)));
-			Assert.AreEqual("0:Unknown,1:Primary,2:SameGameRollback",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritanceLoadKind)));
+			ClassicAssert.AreEqual("0:Unknown,1:Primary,2:SameGameRollback",
 				EnumShape(typeof(KingdomInheritanceLoadKind)));
 
 			Type rules = typeof(KingdomInheritanceStateRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceStateRules", rules.FullName);
-			Assert.IsTrue(rules.IsNotPublic && rules.IsAbstract && rules.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritanceStateRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsNotPublic && rules.IsAbstract && rules.IsSealed);
 			Type flow = typeof(KingdomInheritanceLoadSourceFlow);
 			Type loadSource = flow.GetNestedType("LoadSource",
 				System.Reflection.BindingFlags.NonPublic);
-			Assert.IsNotNull(loadSource);
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceLoadSourceFlow+LoadSource",
+			ClassicAssert.IsNotNull(loadSource);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritanceLoadSourceFlow+LoadSource",
 				loadSource.FullName);
-			Assert.IsTrue(loadSource.IsNestedPrivate);
+			ClassicAssert.IsTrue(loadSource.IsNestedPrivate);
 
 			Type saved = typeof(KingdomInheritanceSavedShape);
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritanceSavedShape", saved.FullName);
-			Assert.IsTrue(saved.IsNotPublic && saved.IsClass && saved.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritanceSavedShape", saved.FullName);
+			ClassicAssert.IsTrue(saved.IsNotPublic && saved.IsClass && saved.IsSealed);
 			System.Reflection.FieldInfo[] fields = saved.GetFields(
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic |
 				System.Reflection.BindingFlags.DeclaredOnly);
@@ -62,26 +63,26 @@ namespace ThousandAndFirst.Tests
 				"TargetTerrainRank", "SecretId", "SiteName", "ApplyStatus", "ApplyFault",
 				"ApplicationMarker", "ReleasePending", "OwnsSkipTerrainBuilders", "OwnsNoBiomes",
 				"OwnsZoneName", "RecoveryDisabled", "RetryAuthorized" };
-			Assert.AreEqual(expected.Length, fields.Length);
+			ClassicAssert.AreEqual(expected.Length, fields.Length);
 			for (int i = 0; i < expected.Length; i++)
 			{
-				Assert.AreEqual(expected[i], fields[i].Name, "saved field order " + i);
+				ClassicAssert.AreEqual(expected[i], fields[i].Name, "saved field order " + i);
 			}
 
 			KingdomInheritanceSavedShape empty = new KingdomInheritanceSavedShape();
-			Assert.AreEqual(0, empty.PhaseValue);
-			Assert.AreEqual("", empty.LegacyText);
-			Assert.AreEqual("", empty.ReceiptText);
-			Assert.AreEqual("", empty.CommittedReceiptText);
-			Assert.AreEqual("", empty.TargetZoneId);
-			Assert.AreEqual("", empty.TargetTerrainBlueprint);
-			Assert.AreEqual(-1, empty.TargetTerrainRank);
-			Assert.AreEqual("", empty.SecretId);
-			Assert.AreEqual("", empty.SiteName);
-			Assert.AreEqual(-1, empty.ApplyStatus);
-			Assert.AreEqual(-1, empty.ApplyFault);
-			Assert.AreEqual("", empty.ApplicationMarker);
-			Assert.IsFalse(empty.ReleasePending || empty.OwnsSkipTerrainBuilders
+			ClassicAssert.AreEqual(0, empty.PhaseValue);
+			ClassicAssert.AreEqual("", empty.LegacyText);
+			ClassicAssert.AreEqual("", empty.ReceiptText);
+			ClassicAssert.AreEqual("", empty.CommittedReceiptText);
+			ClassicAssert.AreEqual("", empty.TargetZoneId);
+			ClassicAssert.AreEqual("", empty.TargetTerrainBlueprint);
+			ClassicAssert.AreEqual(-1, empty.TargetTerrainRank);
+			ClassicAssert.AreEqual("", empty.SecretId);
+			ClassicAssert.AreEqual("", empty.SiteName);
+			ClassicAssert.AreEqual(-1, empty.ApplyStatus);
+			ClassicAssert.AreEqual(-1, empty.ApplyFault);
+			ClassicAssert.AreEqual("", empty.ApplicationMarker);
+			ClassicAssert.IsFalse(empty.ReleasePending || empty.OwnsSkipTerrainBuilders
 				|| empty.OwnsNoBiomes || empty.OwnsZoneName || empty.RecoveryDisabled
 				|| empty.RetryAuthorized);
 		}
@@ -98,7 +99,7 @@ namespace ThousandAndFirst.Tests
 
 		private static int MatchingBrace(string source, int open)
 		{
-			Assert.GreaterOrEqual(open, 0);
+			ClassicAssert.GreaterOrEqual(open, 0);
 			int depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -112,7 +113,7 @@ namespace ThousandAndFirst.Tests
 		private static string MethodBody(string source, string signature)
 		{
 			int method = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(method, 0);
+			ClassicAssert.GreaterOrEqual(method, 0);
 			int open = source.IndexOf('{', method);
 			int close = MatchingBrace(source, open);
 			return source.Substring(open + 1, close - open - 1);
@@ -131,10 +132,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomInheritanceStateLogicalSource.Read();
 			// z10 split into z10a (reservation leases) and z10b (discoverability): one more shard.
-			Assert.AreEqual(14, Occurrences(source,
+			ClassicAssert.AreEqual(14, Occurrences(source,
 				"public sealed partial class KingdomInheritanceState"));
-			Assert.AreEqual(1, Occurrences(source, "[GameStateSingleton(StateId)]"));
-			Assert.AreEqual(0, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source, "[GameStateSingleton(StateId)]"));
+			ClassicAssert.AreEqual(0, Occurrences(source,
 				"public sealed class KingdomInheritanceState"));
 
 			string[] ordered = new[]
@@ -157,7 +158,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < ordered.Length; i++)
 			{
 				int current = source.IndexOf(ordered[i], StringComparison.Ordinal);
-				Assert.Greater(current, previous, "logical member order " + ordered[i]);
+				ClassicAssert.Greater(current, previous, "logical member order " + ordered[i]);
 				previous = current;
 			}
 		}
@@ -226,7 +227,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord legacy = CanonicalLegacy();
 			KingdomSealReceipt receipt = Receipt(legacy);
 			string marker;
-			Assert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
 				receipt, "JoppaWorld.4.5.1.2.10", 1, out marker));
 			return new KingdomInheritanceSavedShape
 			{
@@ -278,7 +279,7 @@ namespace ThousandAndFirst.Tests
 
 		private static string PriorReceiptText(KingdomSealReceipt Receipt, int Schema)
 		{
-			Assert.IsTrue(KingdomSealFormat.TryParse(Receipt.Compose(),
+			ClassicAssert.IsTrue(KingdomSealFormat.TryParse(Receipt.Compose(),
 				KingdomSealRecord.FirstSchema, KingdomSealRecord.CurrentSchema, out int _,
 				out KingdomSealBody body, out KingdomSealFault fault, out string detail),
 				fault + ": " + detail);
@@ -312,7 +313,7 @@ namespace ThousandAndFirst.Tests
 			if (Phase == KingdomInheritancePhase.Installed) return shape;
 			shape.ApplyStatus = (int)KingdomInheritApplyStatus.Applied;
 			shape.ApplyFault = (int)KingdomInheritApplyFault.None;
-			Assert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
 				reserved, shape.TargetZoneId, 1, out shape.ApplicationMarker));
 			if (Phase == KingdomInheritancePhase.Committed)
 			{
@@ -334,23 +335,23 @@ namespace ThousandAndFirst.Tests
 				CommittedSchema + "/" + Phase;
 			KingdomInheritanceSavedShape shape = PriorSchemaShape(LegacySchema,
 				ReceiptSchema, CommittedSchema, Phase);
-			Assert.IsTrue(KingdomSealRecord.TryParse(shape.LegacyText,
+			ClassicAssert.IsTrue(KingdomSealRecord.TryParse(shape.LegacyText,
 				out KingdomSealRecord legacy, out KingdomSealFault fault,
 				out string detail), label + ": " + fault + ": " + detail);
-			Assert.AreEqual(shape.LegacyText, legacy.Compose(), label + " legacy replay");
-			Assert.IsTrue(KingdomSealReceipt.TryParse(shape.ReceiptText,
+			ClassicAssert.AreEqual(shape.LegacyText, legacy.Compose(), label + " legacy replay");
+			ClassicAssert.IsTrue(KingdomSealReceipt.TryParse(shape.ReceiptText,
 				out KingdomSealReceipt reserved));
-			Assert.AreEqual(shape.ReceiptText, reserved.Compose(), label + " reservation replay");
+			ClassicAssert.AreEqual(shape.ReceiptText, reserved.Compose(), label + " reservation replay");
 			if (!string.IsNullOrEmpty(shape.CommittedReceiptText))
 			{
-				Assert.IsTrue(KingdomSealReceipt.TryParse(shape.CommittedReceiptText,
+				ClassicAssert.IsTrue(KingdomSealReceipt.TryParse(shape.CommittedReceiptText,
 					out KingdomSealReceipt committed));
-				Assert.AreEqual(shape.CommittedReceiptText, committed.Compose(),
+				ClassicAssert.AreEqual(shape.CommittedReceiptText, committed.Compose(),
 					label + " committed replay");
 			}
-			Assert.Greater(KingdomInheritEngine.ReconstructionVersionForText(
+			ClassicAssert.Greater(KingdomInheritEngine.ReconstructionVersionForText(
 				shape.LegacyText), 0, label + " reconstruction");
-			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out string failure), label + ": " + failure);
 		}
 
@@ -360,9 +361,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord legacy = Legacy();
 			KingdomSealReceipt receipt = Receipt(legacy);
 			string marker;
-			Assert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
 				receipt, "JoppaWorld.4.5.1.2.10", 1, out marker));
-			Assert.AreEqual("taf-inherit-v1|lineage-a|legacy-a|target-game|reserved|321|"
+			ClassicAssert.AreEqual("taf-inherit-v1|lineage-a|legacy-a|target-game|reserved|321|"
 				+ "JoppaWorld.4.5.1.2.10", marker);
 		}
 
@@ -375,9 +376,9 @@ namespace ThousandAndFirst.Tests
 			const string optionId = "r_TAF_OptionLegacyImport";
 			int option = options.IndexOf("<option ID=\"" + optionId + "\"",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(option, 0);
+			ClassicAssert.GreaterOrEqual(option, 0);
 			int optionEnd = options.IndexOf("/>", option, StringComparison.Ordinal);
-			Assert.Greater(optionEnd, option);
+			ClassicAssert.Greater(optionEnd, option);
 			string declaration = options.Substring(option, optionEnd - option);
 			StringAssert.Contains("Default=\"No\"", declaration);
 			StringAssert.Contains("enable before creating a new world", declaration);
@@ -385,18 +386,18 @@ namespace ThousandAndFirst.Tests
 			string initialize = MethodBody(state, "public void Initialize()");
 			int optionGate = initialize.IndexOf("!LegacyImportEnabled()",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(optionGate, 0);
+			ClassicAssert.GreaterOrEqual(optionGate, 0);
 			int gateOpen = initialize.IndexOf('{', optionGate);
 			int gateClose = MatchingBrace(initialize, gateOpen);
 			int reserve = initialize.IndexOf(".TryReserveImport(", optionGate,
 				StringComparison.Ordinal);
-			Assert.AreEqual("return;",
+			ClassicAssert.AreEqual("return;",
 				initialize.Substring(gateOpen + 1, gateClose - gateOpen - 1).Trim(),
 				"the disabled path must exit before acquiring the seal coordinator");
-			Assert.Greater(reserve, optionGate,
+			ClassicAssert.Greater(reserve, optionGate,
 				"option Off must return before any profile reservation attempt");
-			Assert.AreEqual(1, Occurrences(initialize, ".TryReserveImport("));
-			Assert.AreEqual(1, Occurrences(state, ".TryReserveImport("),
+			ClassicAssert.AreEqual(1, Occurrences(initialize, ".TryReserveImport("));
+			ClassicAssert.AreEqual(1, Occurrences(state, ".TryReserveImport("),
 				"no helper or alternate call path may reserve outside the consent gate");
 			int productionCalls = 0;
 			string productionCaller = null;
@@ -410,9 +411,9 @@ namespace ThousandAndFirst.Tests
 				if (calls > 0) productionCaller = path;
 				productionCalls += calls;
 			}
-			Assert.AreEqual(1, productionCalls,
+			ClassicAssert.AreEqual(1, productionCalls,
 				"the consent-gated new-world singleton must be the sole production caller");
-			Assert.AreEqual(Path.GetFullPath(Path.Combine(root, "World")),
+			ClassicAssert.AreEqual(Path.GetFullPath(Path.Combine(root, "World")),
 				Path.GetDirectoryName(Path.GetFullPath(productionCaller)));
 			StringAssert.StartsWith("KingdomInheritanceState",
 				Path.GetFileName(productionCaller));
@@ -423,7 +424,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"Options.GetOption(\"r_TAF_OptionLegacyImport\", \"No\") == \"Yes\"",
 				seal);
-			Assert.IsFalse(state.Contains("TryDeclineImport"),
+			ClassicAssert.IsFalse(state.Contains("TryDeclineImport"),
 				"global option Off is silence, not an explicit per-run decline");
 		}
 
@@ -431,15 +432,15 @@ namespace ThousandAndFirst.Tests
 		public void UnsupportedSerializationHeaderMustTakeThrowAndSkipBlockPath()
 		{
 			const int magic = 1413568073;
-			Assert.IsTrue(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
 				magic, 1, magic, 4));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
 				magic, 4, magic, 4));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
 				magic, 0, magic, 4));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
 				magic, 5, magic, 4));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsSupportedSerializationHeader(
 				magic + 1, 4, magic, 4));
 		}
 
@@ -450,11 +451,11 @@ namespace ThousandAndFirst.Tests
 			KingdomSealReceipt receipt = Receipt(legacy);
 			string marker;
 			receipt.State = KingdomSealReceiptState.Committed;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
 				receipt, "JoppaWorld.4.5.1.2.10", 1, out marker));
 			receipt.State = KingdomSealReceiptState.Reserved;
 			receipt.LegacyId = "another-legacy";
-			Assert.IsFalse(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryComposeApplicationMarker(legacy,
 				receipt, "JoppaWorld.4.5.1.2.10", 1, out marker));
 		}
 
@@ -462,10 +463,10 @@ namespace ThousandAndFirst.Tests
 		public void LaterLoadDurabilityUsesPhaseAndMarkersNotMutableObjects()
 		{
 			const string marker = "taf-inherit-v1|lineage-a|legacy-a|target-game|reserved|321|zone";
-			Assert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.AppliedPendingDurability,
 				(int)KingdomInheritApplyStatus.Applied, true, marker, marker, marker, false));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.RepairRequired,
 				(int)KingdomInheritApplyStatus.AlreadyApplied, true, marker, marker, marker, false));
 			// There is deliberately no live-object count or object-state argument: initial Apply owns
@@ -476,25 +477,25 @@ namespace ThousandAndFirst.Tests
 		public void TornOrUnownedMarkerProofFailsClosed()
 		{
 			const string marker = "expected";
-			Assert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.AppliedPendingDurability,
 				(int)KingdomInheritApplyStatus.Applied, false, marker, marker, marker, false));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.AppliedPendingDurability,
 				(int)KingdomInheritApplyStatus.Applied, true, marker, marker, "different", false));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.Installed,
 				(int)KingdomInheritApplyStatus.Applied, true, "", marker, marker, false));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.Installed,
 				(int)KingdomInheritApplyStatus.Applied, true, "", marker, marker, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.RepairRequired,
 				(int)KingdomInheritApplyStatus.Failed, true, marker, marker, marker, false));
-			Assert.IsTrue(KingdomInheritanceStateRules.RetainsDurableApplicationCandidate(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.RetainsDurableApplicationCandidate(
 				(int)KingdomInheritApplyStatus.Applied, (int)KingdomInheritApplyFault.None,
 				marker));
-			Assert.IsFalse(KingdomInheritanceStateRules.RetainsDurableApplicationCandidate(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.RetainsDurableApplicationCandidate(
 				(int)KingdomInheritApplyStatus.Failed,
 				(int)KingdomInheritApplyFault.PartialApplication, marker));
 		}
@@ -502,15 +503,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ControlledRetryRequiresFirstTryFailureAndExactCleanup()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.ShouldRetryBuild(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.ShouldRetryBuild(
 				KingdomInheritApplyStatus.Failed, 1, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
 				KingdomInheritApplyStatus.Failed, 1, false));
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
 				KingdomInheritApplyStatus.Failed, 2, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldRetryBuild(
 				KingdomInheritApplyStatus.Refused, 1, true));
-			Assert.IsTrue(KingdomInheritanceStateRules.CanTransition(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanTransition(
 				KingdomInheritancePhase.RepairRequired,
 				KingdomInheritancePhase.AppliedPendingDurability));
 		}
@@ -518,23 +519,23 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CleanupDescriptorPreservesForeignSameClassPayloads()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.IsExactSiteBuilder(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsExactSiteBuilder(
 				"KingdomInheritedSiteBuilder", "legacy", "target", "zone", 1,
 				"legacy", "target", "zone", 1));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactSiteBuilder(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactSiteBuilder(
 				"KingdomInheritedSiteBuilder", "foreign", "target", "zone", 1,
 				"legacy", "target", "zone", 1));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactSiteBuilder(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactSiteBuilder(
 				"KingdomInheritedSiteBuilder", "legacy", "target", "zone", 2,
 				"legacy", "target", "zone", 1));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsExactLocationFinder(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsExactLocationFinder(
 				"AddLocationFinder", "secret", 1, "secret"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactLocationFinder(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactLocationFinder(
 				"AddLocationFinder", "secret", 0, "secret"));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsExactLocationFinderBuilder(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsExactLocationFinderBuilder(
 				"KingdomInheritanceLocationFinderBuilder", "legacy", "target", "zone", 1,
 				"legacy", "target", "zone", 1));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactLocationFinderBuilder(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactLocationFinderBuilder(
 				"KingdomInheritanceLocationFinderBuilder", "foreign", "target", "zone", 1,
 				"legacy", "target", "zone", 1));
 		}
@@ -544,7 +545,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritanceSavedShape pending = PendingShape();
 			string failure;
-			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(pending,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(pending,
 				"target-game", 1, out failure), failure);
 
 			KingdomSealReceipt committed = new KingdomSealReceipt
@@ -557,7 +558,7 @@ namespace ThousandAndFirst.Tests
 			};
 			pending.PhaseValue = (int)KingdomInheritancePhase.Committed;
 			pending.CommittedReceiptText = committed.Compose();
-			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(pending,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(pending,
 				"target-game", 1, out failure), failure);
 		}
 
@@ -592,7 +593,7 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			KingdomInheritanceSavedShape shape = PendingShape();
 			shape.OwnsNoBiomes = false;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure));
 
 			shape = PendingShape();
@@ -602,23 +603,23 @@ namespace ThousandAndFirst.Tests
 			shape.ApplicationMarker = "";
 			shape.ReleasePending = true;
 			shape.SiteName = "Foreign Exact Name";
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure),
 				"saved cleanup authority cannot redefine the deterministic owned site name");
 
 			shape = PendingShape();
 			shape.OwnsZoneName = false;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure));
 
 			shape = PendingShape();
 			shape.ApplyStatus = 999;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure));
 
 			shape = PendingShape();
 			shape.ApplyFault = 999;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure));
 		}
 
@@ -632,12 +633,12 @@ namespace ThousandAndFirst.Tests
 			shape.ApplicationMarker = "";
 			shape.ReleasePending = true;
 			string failure;
-			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure), failure);
 
 			shape.ApplyStatus = (int)KingdomInheritApplyStatus.Applied;
 			shape.ApplyFault = (int)KingdomInheritApplyFault.None;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", 1, out failure),
 				"release intent can never coexist with successful application evidence");
 		}
@@ -645,17 +646,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FallbackNeverDropsRepairBuildersBeforeZoneQuarantine()
 		{
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
 				false, false), "unclean application retains its exact repair machinery");
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
 				true, true), "externally committed application can never enter release cleanup");
-			Assert.IsTrue(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.ShouldAttemptFallbackArtifactCleanup(
 				true, false));
-			Assert.IsTrue(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
 				true, false, false));
-			Assert.IsFalse(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
 				false, false, false));
-			Assert.IsFalse(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.MustPersistFallbackReleaseIntent(
 				true, true, false));
 		}
 
@@ -668,12 +669,12 @@ namespace ThousandAndFirst.Tests
 				PhaseValue = (int)KingdomInheritancePhase.RepairRequired,
 				RecoveryDisabled = true
 			};
-			Assert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(disabled,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.TryValidateSavedShape(disabled,
 				"target-game", 1, out failure), failure);
 			disabled.TargetZoneId = "JoppaWorld.4.5.1.2.10";
 			disabled.OwnsSkipTerrainBuilders = true;
 			disabled.OwnsNoBiomes = true;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(disabled,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(disabled,
 				"target-game", 1, out failure));
 
 			KingdomInheritanceSavedShape empty = new KingdomInheritanceSavedShape
@@ -682,17 +683,17 @@ namespace ThousandAndFirst.Tests
 				OwnsSkipTerrainBuilders = true,
 				OwnsNoBiomes = true
 			};
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(empty,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(empty,
 				"target-game", 1, out failure));
 
 			KingdomInheritanceSavedShape committed = PendingShape();
 			committed.PhaseValue = (int)KingdomInheritancePhase.Committed;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(committed,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(committed,
 				"target-game", 1, out failure));
 
 			KingdomInheritanceSavedShape refused = PendingShape();
 			refused.PhaseValue = (int)KingdomInheritancePhase.Refused;
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(refused,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(refused,
 				"target-game", 1, out failure));
 		}
 
@@ -713,10 +714,10 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritanceSavedShape shape = new KingdomInheritanceSavedShape
 			{ PhaseValue = phase, RecoveryDisabled = disabled };
 			int reconstruction = KingdomInheritEngine.ReconstructionVersionForText(shape.LegacyText);
-			Assert.AreEqual(0, reconstruction, "actual empty-save route, not a fabricated fallback version");
-			Assert.AreEqual(expected, KingdomInheritanceStateRules.TryValidateSavedShape(shape,
+			ClassicAssert.AreEqual(0, reconstruction, "actual empty-save route, not a fabricated fallback version");
+			ClassicAssert.AreEqual(expected, KingdomInheritanceStateRules.TryValidateSavedShape(shape,
 				"target-game", reconstruction, out _));
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", -1, out _));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", -1, out _));
 		}
 
 		[TestCase("LegacyText")]
@@ -742,18 +743,18 @@ namespace ThousandAndFirst.Tests
 				KingdomInheritanceSavedShape shape = new KingdomInheritanceSavedShape { PhaseValue = phase };
 				System.Reflection.FieldInfo field = typeof(KingdomInheritanceSavedShape).GetField(fieldName,
 					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-				Assert.IsNotNull(field);
+				ClassicAssert.IsNotNull(field);
 				object value = field.FieldType == typeof(string) ? (object)"retained"
 					: field.FieldType == typeof(bool) ? (object)true : 0;
 				field.SetValue(shape, value);
-				Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", 0, out _));
+				ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(shape, "target-game", 0, out _));
 			}
 		}
 
 		[Test]
 		public void PayloadStillRequiresReconstructionAndReaderDelegatesWholeEmptyStateValidation()
 		{
-			Assert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(PendingShape(), "target-game", 0, out _));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.TryValidateSavedShape(PendingShape(), "target-game", 0, out _));
 			string source = TestMain.ReadRepositoryText("World/KingdomInheritanceState.z01.SerializationAndSelection.cs");
 			StringAssert.Contains("invalid = !KingdomInheritanceStateRules.TryValidateSavedShape(shape,", source);
 			StringAssert.DoesNotContain("invalid = reconstruction <= 0", source);
@@ -768,60 +769,60 @@ namespace ThousandAndFirst.Tests
 			string synced = Path.Combine(syncedRoot, "target-game", "Primary");
 			string local = Path.Combine(localRoot, "target-game", "Primary");
 			string failure;
-			Assert.AreEqual(KingdomInheritanceLoadKind.Primary,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Primary,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(synced,
 				syncedRoot, "target-game", FileAttributes.Directory, FileAttributes.Directory,
 				true, FileAttributes.Normal, 1L, false, (FileAttributes)0, 0L,
 				out failure), failure);
-			Assert.AreEqual(KingdomInheritanceLoadKind.Primary,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Primary,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(local,
 				localRoot, "target-game", FileAttributes.Directory, FileAttributes.Directory,
 				true, FileAttributes.Normal, 1L, false, (FileAttributes)0, 0L,
 				out failure), failure);
-			Assert.AreEqual(KingdomInheritanceLoadKind.Primary,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Primary,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(local,
 				localRoot, "target-game", FileAttributes.Directory, FileAttributes.Directory,
 				false, (FileAttributes)0, 0L, true, FileAttributes.Normal, 1L,
 				out failure), failure);
-			Assert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 					Path.Combine(syncedRoot, "target-game", "Quick"), syncedRoot, "target-game",
 				FileAttributes.Directory, FileAttributes.Directory, true, FileAttributes.Normal,
 				1L, false, (FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 					Path.Combine(localRoot, "target-game", "Checkpoint"), localRoot,
 					"target-game", FileAttributes.Directory, FileAttributes.Directory,
 					false, (FileAttributes)0, 0L, true, FileAttributes.Normal, 1L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.SameGameRollback,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 					Path.Combine(localRoot, "target-game", "Precognition"), localRoot,
 					"target-game", FileAttributes.Directory, FileAttributes.Directory,
 					true, FileAttributes.Normal, 1L, false, (FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 				Path.Combine(syncedRoot, "target-game", "primary"), syncedRoot, "target-game",
 				FileAttributes.Directory, FileAttributes.Directory, true, FileAttributes.Normal,
 				1L, false, (FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 				Path.Combine(syncedRoot, "TARGET-GAME", "Primary"), syncedRoot, "target-game",
 				FileAttributes.Directory, FileAttributes.Directory, true, FileAttributes.Normal,
 				1L, false, (FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(synced + ".sav",
 				syncedRoot, "target-game", FileAttributes.Directory, FileAttributes.Directory,
 				true, FileAttributes.Normal, 1L, false, (FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(synced,
 				syncedRoot, "target-game", FileAttributes.Directory, FileAttributes.Directory,
 				true, FileAttributes.Normal, 0L, true, FileAttributes.Normal, 1L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(synced,
 				syncedRoot, "target-game", FileAttributes.Directory | FileAttributes.ReparsePoint,
 				FileAttributes.Directory, true, FileAttributes.Normal, 1L, false,
 				(FileAttributes)0, 0L, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown,
 				KingdomInheritanceStateRules.ClassifyExactLoadSource(
 					Path.Combine(syncedRoot, "target-game", "Coda"), syncedRoot, "target-game",
 					FileAttributes.Directory, FileAttributes.Directory, true,
@@ -834,9 +835,9 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritanceLoadSourceFlow.Clear();
 			KingdomInheritanceLoadSourceFlow.Record("one");
 			string path;
-			Assert.IsTrue(KingdomInheritanceLoadSourceFlow.TryConsume(out path));
-			Assert.AreEqual("one", path);
-			Assert.IsFalse(KingdomInheritanceLoadSourceFlow.TryConsume(out path));
+			ClassicAssert.IsTrue(KingdomInheritanceLoadSourceFlow.TryConsume(out path));
+			ClassicAssert.AreEqual("one", path);
+			ClassicAssert.IsFalse(KingdomInheritanceLoadSourceFlow.TryConsume(out path));
 
 			Task<string> first = Task.Run(async delegate
 			{
@@ -853,8 +854,8 @@ namespace ThousandAndFirst.Tests
 				return KingdomInheritanceLoadSourceFlow.TryConsume(out value) ? value : "missing";
 			});
 			Task.WaitAll(first, second);
-			Assert.AreEqual("first", first.Result);
-			Assert.AreEqual("second", second.Result);
+			ClassicAssert.AreEqual("first", first.Result);
+			ClassicAssert.AreEqual("second", second.Result);
 		}
 
 		[Test]
@@ -867,25 +868,25 @@ namespace ThousandAndFirst.Tests
 			KingdomMasterDecision staged = KingdomMasterRules.Observe(disabled.State,
 				disabled.ChangedAtTick, disabled.ResumeToken, disabled.AppliedResumeToken,
 				true, 20L);
-			Assert.IsFalse(KingdomInheritanceResumeRules.TryConsume(true,
+			ClassicAssert.IsFalse(KingdomInheritanceResumeRules.TryConsume(true,
 				(int)KingdomInheritanceLoadKind.Primary, "", staged.AutomaticWorkAllowed,
 				out kind, out failure),
 				"master-off and the transition wake must retain the serialized slot");
 			KingdomMasterDecision applied = KingdomMasterRules.ApplyResume(staged);
 			bool transitionBoundaryAllowed = applied.AutomaticWorkAllowed
 				&& applied.ChangedAtTick != 20L;
-			Assert.IsFalse(transitionBoundaryAllowed,
+			ClassicAssert.IsFalse(transitionBoundaryAllowed,
 				"publishing the resume token still consumes its equal-tick wake");
 			KingdomMasterDecision next = KingdomMasterRules.Observe(applied.State,
 				applied.ChangedAtTick, applied.ResumeToken, applied.AppliedResumeToken,
 				true, 21L);
-			Assert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true,
+			ClassicAssert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true,
 				(int)KingdomInheritanceLoadKind.Primary, "",
 				next.AutomaticWorkAllowed && next.ChangedAtTick != 21L,
 				out kind, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Primary, kind);
-			Assert.AreEqual("", failure);
-			Assert.IsFalse(KingdomInheritanceResumeRules.TryConsume(false,
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Primary, kind);
+			ClassicAssert.AreEqual("", failure);
+			ClassicAssert.IsFalse(KingdomInheritanceResumeRules.TryConsume(false,
 				(int)KingdomInheritanceLoadKind.Primary, "", true, out kind, out failure),
 				"a retired slot must not form a backlog or duplicate recovery");
 		}
@@ -895,26 +896,26 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritanceLoadKind kind;
 			string failure;
-			Assert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true, 99,
+			ClassicAssert.IsTrue(KingdomInheritanceResumeRules.TryConsume(true, 99,
 				"stale", true, out kind, out failure));
-			Assert.AreEqual(KingdomInheritanceLoadKind.Unknown, kind);
-			Assert.AreEqual("the saved deferred inheritance load kind was invalid", failure);
+			ClassicAssert.AreEqual(KingdomInheritanceLoadKind.Unknown, kind);
+			ClassicAssert.AreEqual("the saved deferred inheritance load kind was invalid", failure);
 		}
 
 		[Test]
 		public void ZoneNameAndReachabilityProofsAreExact()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
 				true, "", true, "", true, "", true, true, "Old Seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
 				true, "changed", true, "", true, "", true, true, "Old Seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsExactZoneNameFootprint("Old Seat",
 				true, "", true, "", true, "", false, true, "Old Seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.MeetsReachability(399));
-			Assert.IsTrue(KingdomInheritanceStateRules.MeetsReachability(400));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanTerminalizeHiddenFallback(399,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.MeetsReachability(399));
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.MeetsReachability(400));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanTerminalizeHiddenFallback(399,
 				1200), "an isolated large pocket cannot replace entry-rooted reachability");
-			Assert.IsTrue(KingdomInheritanceStateRules.CanTerminalizeHiddenFallback(400, 0));
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanTerminalizeHiddenFallback(400, 0));
 		}
 
 		[Test]
@@ -927,23 +928,23 @@ namespace ThousandAndFirst.Tests
 				bool hasProper = (mask & 4) != 0;
 				bool hasIndefinite = (mask & 8) != 0;
 				bool hasDefinite = (mask & 16) != 0;
-				Assert.IsTrue(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
+				ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
 					hasName, hasName ? "Old Seat" : null,
 					hasContext, hasContext ? "" : null,
 					hasIndefinite, hasIndefinite ? "" : null,
 					hasDefinite, hasDefinite ? "" : null,
 					hasProper, hasProper, "Old Seat"), "exact torn subset mask " + mask);
 			}
-			Assert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
 				true, "Foreign", false, null, false, null, false, null, false, false,
 				"Old Seat"));
-			Assert.IsTrue(KingdomInheritanceStateRules.CanClearZoneNameOwnership(false),
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanClearZoneNameOwnership(false),
 				"post-write callback failure cannot outweigh exact five-key absence");
-			Assert.IsFalse(KingdomInheritanceStateRules.CanClearZoneNameOwnership(true));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanClearZoneNameOwnership(true));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
 				false, null, true, "changed", false, null, false, null, false, false,
 				"Old Seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsCompatibleOwnedZoneNameSubset(
 				false, null, false, null, false, null, false, null, true, false,
 				"Old Seat"));
 		}
@@ -951,81 +952,81 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FinderRequiresCanonicalNonNullMapNoteCategoryAndText()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
 				"Settlements", "the old seat", "Settlements", "the old seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
 				null, "the old seat", "Settlements", "the old seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
 				"Lairs", "the old seat", "Settlements", "the old seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, true,
 				"Settlements", null, "Settlements", "the old seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, false, true,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, false, true,
 				"Settlements", "the old seat", "Settlements", "the old seat"));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, false,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsUsableOwnedMapNote(true, true, false,
 				"Settlements", "the old seat", "Settlements", "the old seat"));
 		}
 
 		[Test]
 		public void EmergencyCleanupRequiresExactOwnershipAndPropertiesBeforeBuildersLeave()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
 				1, 1, true, true, true));
-			Assert.IsTrue(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(3,
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(3,
 				1, 1, true, true, true),
 				"unrelated foreign builders do not erase exact ownership");
-			Assert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(3,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(3,
 				2, 1, true, true, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
 				1, 0, true, true, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
 				1, 1, false, true, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanClaimEmergencyOwnership(2,
 				1, 1, true, false, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
 				false, true, true), "builders must remain when cleanup tears");
-			Assert.IsFalse(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
 				true, false, true), "properties must be absent before builder removal completes");
-			Assert.IsTrue(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanRegenerateAfterEmergencyCleanup(
 				true, true, true));
 		}
 
 		[Test]
 		public void RepairAuthorityRequiresExactPreproof()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 0, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(false, 0, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 1, true));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 0, false));
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 0, true));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(false, 0, true));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 1, true));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanAuthorizeDirectRepair(true, 0, false));
 		}
 
 		[Test]
 		public void CommittedReceiptSurvivesOldCheckpointCopyAndReconcilesOnPrimary()
 		{
-			Assert.IsTrue(KingdomInheritanceStateRules.ProfileReceiptBlocksRelease(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.ProfileReceiptBlocksRelease(
 				KingdomSealReceiptState.Committed),
 				"Unknown source may defer target mutation but can never release a final receipt");
-			Assert.IsFalse(KingdomInheritanceStateRules.ProfileReceiptBlocksRelease(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ProfileReceiptBlocksRelease(
 				KingdomSealReceiptState.Reserved));
-			Assert.AreEqual(KingdomCommittedRewindAction.DeferUntilPrimary,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.DeferUntilPrimary,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.SameGameRollback, false, false, false, true,
 					true, false), "an uncommitted receipt still requires Primary");
-			Assert.AreEqual(KingdomCommittedRewindAction.DeferUntilPrimary,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.DeferUntilPrimary,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.Unknown, true, false, true, true, true, true));
-			Assert.AreEqual(KingdomCommittedRewindAction.AwaitLazyBuilder,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.AwaitLazyBuilder,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.SameGameRollback, true, false, false, true,
 					true, false));
-			Assert.AreEqual(KingdomCommittedRewindAction.ReapplyCleanBuiltTarget,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.ReapplyCleanBuiltTarget,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.SameGameRollback, true, false, true, true,
 					true, true), "the sole rollback event must reconstruct before archive copy");
-			Assert.AreEqual(KingdomCommittedRewindAction.AdoptDurable,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.AdoptDurable,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.SameGameRollback, true, true, true, false,
 					true, false), "external commit makes repeat rollback adoption idempotent");
-			Assert.AreEqual(KingdomCommittedRewindAction.RepairRequired,
+			ClassicAssert.AreEqual(KingdomCommittedRewindAction.RepairRequired,
 				KingdomInheritanceStateRules.DecideCommittedRewind(
 					KingdomInheritanceLoadKind.Primary, true, false, true, false, true, true));
 		}
@@ -1034,25 +1035,25 @@ namespace ThousandAndFirst.Tests
 		public void DiscoveryRepairPreservesSuccessfulDurableMarkerProof()
 		{
 			const string marker = "exact-marker";
-			Assert.IsTrue(
+			ClassicAssert.IsTrue(
 				KingdomInheritanceStateRules.PreservesApplicationProofDuringDiscoveryRepair(
 					KingdomInheritancePhase.AppliedPendingDurability,
 					(int)KingdomInheritApplyStatus.Applied,
 					(int)KingdomInheritApplyFault.None, marker));
-			Assert.IsTrue(
+			ClassicAssert.IsTrue(
 				KingdomInheritanceStateRules.PreservesApplicationProofDuringDiscoveryRepair(
 					KingdomInheritancePhase.Committed,
 					(int)KingdomInheritApplyStatus.AlreadyApplied,
 					(int)KingdomInheritApplyFault.None, marker));
-			Assert.IsFalse(
+			ClassicAssert.IsFalse(
 				KingdomInheritanceStateRules.PreservesApplicationProofDuringDiscoveryRepair(
 					KingdomInheritancePhase.RepairRequired,
 					(int)KingdomInheritApplyStatus.Applied,
 					(int)KingdomInheritApplyFault.None, marker));
-			Assert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.RepairRequired,
 				(int)KingdomInheritApplyStatus.Applied, true, marker, marker, marker, false));
-			Assert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.IsDurableMarkerProof(
 				KingdomInheritancePhase.RepairRequired,
 				(int)KingdomInheritApplyStatus.Failed, true, marker, marker, marker, false));
 		}
@@ -1061,16 +1062,16 @@ namespace ThousandAndFirst.Tests
 		public void ReachabilityThrowAfterApplyRetainsOnlyExactQuarantinableRetryProof()
 		{
 			const string marker = "exact-marker";
-			Assert.IsTrue(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
 				(int)KingdomInheritApplyStatus.Failed,
 				(int)KingdomInheritApplyFault.PartialApplication, true, marker, marker, marker));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
 				(int)KingdomInheritApplyStatus.Applied,
 				(int)KingdomInheritApplyFault.None, true, marker, marker, marker));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
 				(int)KingdomInheritApplyStatus.Failed,
 				(int)KingdomInheritApplyFault.PartialApplication, false, marker, marker, marker));
-			Assert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.CanRetryUnvalidatedApplication(
 				(int)KingdomInheritApplyStatus.Failed,
 				(int)KingdomInheritApplyFault.PartialApplication, true, marker, "other", marker));
 		}
@@ -1078,17 +1079,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GameAndStartGatesFailClosedWithoutRejectingJoppaAlternateVillages()
 		{
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Tutorial", false));
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Daily", false));
-			Assert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Classic", true));
-			Assert.IsTrue(KingdomInheritanceStateRules.ShouldOffer("Classic", false));
-			Assert.AreEqual(KingdomInheritanceStartFault.None,
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Tutorial", false));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Daily", false));
+			ClassicAssert.IsFalse(KingdomInheritanceStateRules.ShouldOffer("Classic", true));
+			ClassicAssert.IsTrue(KingdomInheritanceStateRules.ShouldOffer("Classic", false));
+			ClassicAssert.AreEqual(KingdomInheritanceStartFault.None,
 				KingdomInheritanceStateRules.ValidateStart("JoppaWorld.1.1.1.1.10",
 					"JoppaWorld", "JoppaWorld.2.2.1.1.10"));
-			Assert.AreEqual(KingdomInheritanceStartFault.AlternateWorld,
+			ClassicAssert.AreEqual(KingdomInheritanceStartFault.AlternateWorld,
 				KingdomInheritanceStateRules.ValidateStart("JoppaWorld.1.1.1.1.10",
 					"AnotherWorld", "AnotherWorld.2.2.1.1.10"));
-			Assert.AreEqual(KingdomInheritanceStartFault.TargetIsStart,
+			ClassicAssert.AreEqual(KingdomInheritanceStartFault.TargetIsStart,
 				KingdomInheritanceStateRules.ValidateStart("JoppaWorld.1.1.1.1.10",
 					"JoppaWorld", "JoppaWorld.1.1.1.1.10"));
 		}

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -25,18 +26,18 @@ namespace ThousandAndFirst.Tests
 			byte[] tradeBefore = KingdomTradeCodec.EncodeEnvelope(trade);
 			byte[] carryBefore = CarryBytes(carry);
 
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var plan, out var failure), failure);
-			Assert.AreSame(tradeRef, trade);
-			Assert.AreSame(carryRef, carry);
+			ClassicAssert.AreSame(tradeRef, trade);
+			ClassicAssert.AreSame(carryRef, carry);
 			CollectionAssert.AreEqual(tradeBefore, KingdomTradeCodec.EncodeEnvelope(trade));
 			CollectionAssert.AreEqual(carryBefore, CarryBytes(carry));
 
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure), failure);
-			Assert.AreNotSame(tradeRef, trade);
-			Assert.AreNotSame(carryRef, carry);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.ExactTopology(
+			ClassicAssert.AreNotSame(tradeRef, trade);
+			ClassicAssert.AreNotSame(carryRef, carry);
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.ExactTopology(
 				new[] { First, Second }, Realm, trade, carry));
 		}
 
@@ -45,22 +46,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTradeBook trade = Trade();
 			KingdomCarryBook carry = Carry();
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var first, out var failure), failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(first,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(first,
 				ref trade, ref carry, out failure), failure);
 			KingdomTradeBook tradeRef = trade;
 			KingdomCarryBook carryRef = carry;
 			byte[] tradeBytes = KingdomTradeCodec.EncodeEnvelope(trade);
 			byte[] carryBytes = CarryBytes(carry);
 
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First, Second }, Second, trade, carry, out var retry, out failure),
 				failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(retry,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(retry,
 				ref trade, ref carry, out failure), failure);
-			Assert.AreSame(tradeRef, trade);
-			Assert.AreSame(carryRef, carry);
+			ClassicAssert.AreSame(tradeRef, trade);
+			ClassicAssert.AreSame(carryRef, carry);
 			CollectionAssert.AreEqual(tradeBytes, KingdomTradeCodec.EncodeEnvelope(trade));
 			CollectionAssert.AreEqual(carryBytes, CarryBytes(carry));
 		}
@@ -74,21 +75,21 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryBook carry = Carry();
 			string failure;
 			if (TradeWonCut)
-				Assert.IsTrue(KingdomTradeRules.ExpandExactIdentity(trade, Realm,
+				ClassicAssert.IsTrue(KingdomTradeRules.ExpandExactIdentity(trade, Realm,
 					new[] { First, Second }, out failure), failure);
 			else
-				Assert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(carry, Realm,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(carry, Realm,
 					new[] { First, Second }, out failure), failure);
 			KingdomTradeBook tradeRef = trade;
 			KingdomCarryBook carryRef = carry;
 
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var plan, out failure), failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure), failure);
-			Assert.AreEqual(TradeWonCut, ReferenceEquals(tradeRef, trade));
-			Assert.AreEqual(!TradeWonCut, ReferenceEquals(carryRef, carry));
-			Assert.IsTrue(KingdomSecondCityPublicationRules.ExactTopology(
+			ClassicAssert.AreEqual(TradeWonCut, ReferenceEquals(tradeRef, trade));
+			ClassicAssert.AreEqual(!TradeWonCut, ReferenceEquals(carryRef, carry));
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.ExactTopology(
 				new[] { First, Second }, Realm, trade, carry));
 		}
 
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			tradeOpen.OpenOperation = new KingdomTradeOperation();
 			byte[] tradeOpenBefore = KingdomTradeCodec.EncodeEnvelope(tradeOpen);
 			byte[] carryBefore = CarryBytes(carry);
-			Assert.IsFalse(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, tradeOpen, carry, out var ignored, out var failure));
 			CollectionAssert.AreEqual(tradeOpenBefore,
 				KingdomTradeCodec.EncodeEnvelope(tradeOpen));
@@ -112,16 +113,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTradeBook trade = Trade();
 			KingdomCarryBook carry = Carry();
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var plan, out var failure), failure);
 			KingdomTradeBook tradeRef = trade;
 			KingdomCarryBook carryRef = carry;
 			trade.NextOperationSequence++;
-			Assert.IsFalse(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure));
-			Assert.AreSame(tradeRef, trade);
-			Assert.AreSame(carryRef, carry);
-			Assert.AreEqual(2L, trade.NextOperationSequence);
+			ClassicAssert.AreSame(tradeRef, trade);
+			ClassicAssert.AreSame(carryRef, carry);
+			ClassicAssert.AreEqual(2L, trade.NextOperationSequence);
 			CollectionAssert.AreEqual(new[] { First }, carry.SettlementIds);
 		}
 
@@ -130,22 +131,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTradeBook trade = Trade();
 			KingdomCarryBook carry = Carry();
-			Assert.IsTrue(KingdomSecondCityPublicationRules.CanAbort(
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.CanAbort(
 				new[] { First }, Second, Realm, trade, carry));
-			Assert.IsFalse(KingdomSecondCityPublicationRules.CanSettle(
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.CanSettle(
 				new[] { First }, Second, Realm, trade, carry));
 
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var plan, out var failure), failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure), failure);
-			Assert.IsFalse(KingdomSecondCityPublicationRules.CanAbort(
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.CanAbort(
 				new[] { First }, Second, Realm, trade, carry));
-			Assert.IsFalse(KingdomSecondCityPublicationRules.CanSettle(
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.CanSettle(
 				new[] { First }, Second, Realm, trade, carry));
-			Assert.IsTrue(KingdomSecondCityPublicationRules.CanSettle(
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.CanSettle(
 				new[] { First, Second }, Second, Realm, trade, carry));
-			Assert.IsFalse(KingdomSecondCityPublicationRules.CanAbort(
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.CanAbort(
 				new[] { First, Second }, Second, Realm, trade, carry));
 		}
 
@@ -154,21 +155,21 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTradeBook trade = Trade();
 			KingdomCarryBook carry = Carry();
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryPrepare(Realm,
 				new[] { First }, Second, trade, carry, out var plan, out var failure), failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure), failure);
-			Assert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsTrue(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure), failure);
 			trade.SettlementIds = new List<string> { First };
-			Assert.IsFalse(KingdomSecondCityPublicationRules.TryCommit(plan,
+			ClassicAssert.IsFalse(KingdomSecondCityPublicationRules.TryCommit(plan,
 				ref trade, ref carry, out failure));
 		}
 
 		private static KingdomTradeBook Trade()
 		{
 			KingdomTradeBook book = new KingdomTradeBook();
-			Assert.IsTrue(KingdomTradeRules.BindExactIdentity(book, Realm,
+			ClassicAssert.IsTrue(KingdomTradeRules.BindExactIdentity(book, Realm,
 				new[] { First }, out var failure), failure);
 			return book;
 		}
@@ -176,7 +177,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCarryBook Carry()
 		{
 			KingdomCarryBook book = new KingdomCarryBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, Realm,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, Realm,
 				new[] { First }, LegacyMigration: false, MigrationKey: null));
 			return book;
 		}

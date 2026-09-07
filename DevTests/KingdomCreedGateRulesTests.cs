@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("verdant", null, false)]
 		public void TagAccepts_ReadsAWelcomeList(string tags, string style, bool accepted)
 		{
-			Assert.AreEqual(accepted, KingdomZoningRules.TagAccepts(tags, style));
+			ClassicAssert.AreEqual(accepted, KingdomZoningRules.TagAccepts(tags, style));
 		}
 
 		/// <summary>Case is folded on both sides now. The shipped comparison was exact, so
@@ -41,8 +42,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("ALL", "eater")]
 		public void TagAccepts_FoldsCaseOnBothSides(string tags, string style)
 		{
-			Assert.IsTrue(KingdomZoningRules.TagAccepts(tags, style));
-			Assert.IsTrue(KingdomRules.StyleAllows(tags, style), "StyleAllows is the same rule");
+			ClassicAssert.IsTrue(KingdomZoningRules.TagAccepts(tags, style));
+			ClassicAssert.IsTrue(KingdomRules.StyleAllows(tags, style), "StyleAllows is the same rule");
 		}
 
 		[TestCase("all,!eater", "eater", false)]
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("!", "eater", true)]
 		public void TagAccepts_RefusesWhatItNegates(string tags, string style, bool accepted)
 		{
-			Assert.AreEqual(accepted, KingdomZoningRules.TagAccepts(tags, style));
+			ClassicAssert.AreEqual(accepted, KingdomZoningRules.TagAccepts(tags, style));
 		}
 
 		/// <summary>A refusal outranks a welcome for the same tag, in either order. Nobody writes
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("all,eater,!eater")]
 		public void TagAccepts_ARefusalOutranksAWelcomeWhicheverComesFirst(string tags)
 		{
-			Assert.IsFalse(KingdomZoningRules.TagAccepts(tags, "eater"));
+			ClassicAssert.IsFalse(KingdomZoningRules.TagAccepts(tags, "eater"));
 		}
 
 		/// <summary>A list of nothing but refusals is "everywhere except", never "nowhere". The
@@ -75,17 +76,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TagAccepts_APureRefusalListIsEverywhereExcept()
 		{
-			Assert.IsTrue(KingdomZoningRules.TagAccepts("!eater", "somebody_elses_style"));
-			Assert.IsFalse(KingdomZoningRules.TagAccepts("!eater", "eater"));
+			ClassicAssert.IsTrue(KingdomZoningRules.TagAccepts("!eater", "somebody_elses_style"));
+			ClassicAssert.IsFalse(KingdomZoningRules.TagAccepts("!eater", "eater"));
 		}
 
 		[Test]
 		public void DescribeTags_SaysWhichWayTheListReads()
 		{
-			Assert.IsNull(KingdomZoningRules.DescribeTags(null));
-			Assert.IsNull(KingdomZoningRules.DescribeTags("all"));
-			Assert.AreEqual("anything but eater", KingdomZoningRules.DescribeTags("all,!eater"));
-			Assert.AreEqual("verdant", KingdomZoningRules.DescribeTags("verdant"));
+			ClassicAssert.IsNull(KingdomZoningRules.DescribeTags(null));
+			ClassicAssert.IsNull(KingdomZoningRules.DescribeTags("all"));
+			ClassicAssert.AreEqual("anything but eater", KingdomZoningRules.DescribeTags("all,!eater"));
+			ClassicAssert.AreEqual("verdant", KingdomZoningRules.DescribeTags("verdant"));
 		}
 
 		// ==================================================================================
@@ -96,11 +97,11 @@ namespace ThousandAndFirst.Tests
 		public void ParseGateAttributes_TheCreedGatesAreAbsentUntilDeclared()
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("hut", null, null, null, null, out string error);
-			Assert.IsNull(error);
-			Assert.IsTrue(gate.IsOpen);
-			Assert.IsNull(gate.Builders);
-			Assert.IsNull(gate.Creed);
-			Assert.AreEqual(ZoneGate.ShareUnsaid, gate.CreedShare);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsTrue(gate.IsOpen);
+			ClassicAssert.IsNull(gate.Builders);
+			ClassicAssert.IsNull(gate.Creed);
+			ClassicAssert.AreEqual(ZoneGate.ShareUnsaid, gate.CreedShare);
 		}
 
 		[Test]
@@ -108,10 +109,10 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("reliquary", null, null, null, null,
 				null, "Mechanimists", null, out string error);
-			Assert.IsNull(error);
-			Assert.IsFalse(gate.IsOpen);
-			Assert.AreEqual("Mechanimists", gate.Creed, "a faction name is the game's to case, not ours");
-			Assert.AreEqual(KingdomCreedRules.DominantSharePercent, gate.EffectiveCreedShare);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsFalse(gate.IsOpen);
+			ClassicAssert.AreEqual("Mechanimists", gate.Creed, "a faction name is the game's to case, not ours");
+			ClassicAssert.AreEqual(KingdomCreedRules.DominantSharePercent, gate.EffectiveCreedShare);
 		}
 
 		[TestCase("0", 0)]
@@ -121,8 +122,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("underbench", null, null, null, null,
 				null, "Barathrumites", written, out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual(expected, gate.EffectiveCreedShare);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(expected, gate.EffectiveCreedShare);
 		}
 
 		/// <summary>A share outside 0..100 is not a stricter gate, it is a design nobody can ever
@@ -134,9 +135,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("underbench", null, null, null, null,
 				null, "Barathrumites", written, out string error);
-			Assert.IsNotNull(error);
+			ClassicAssert.IsNotNull(error);
 			StringAssert.Contains("CreedShare", error);
-			Assert.AreEqual(KingdomCreedRules.DominantSharePercent, gate.EffectiveCreedShare);
+			ClassicAssert.AreEqual(KingdomCreedRules.DominantSharePercent, gate.EffectiveCreedShare);
 		}
 
 		[Test]
@@ -144,9 +145,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("hut", null, null, null, null,
 				null, null, "50", out string error);
-			Assert.IsNotNull(error);
+			ClassicAssert.IsNotNull(error);
 			StringAssert.Contains("CreedShare", error);
-			Assert.IsNull(gate.Creed);
+			ClassicAssert.IsNull(gate.Creed);
 		}
 
 		[Test]
@@ -154,9 +155,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("hut", null, null, null, null,
 				"all", null, null, out string error);
-			Assert.IsNull(error);
-			Assert.IsNull(gate.Builders);
-			Assert.IsTrue(gate.IsOpen);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsNull(gate.Builders);
+			ClassicAssert.IsTrue(gate.IsOpen);
 		}
 
 		// ==================================================================================
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(3, 0, 33, false, "a city with nobody in it holds no share of anything")]
 		public void CreedShareMet_IsTheCityRuleWithoutTheRivalClause(int holding, int people, int percent, bool met, string why)
 		{
-			Assert.AreEqual(met, KingdomZoningRules.CreedShareMet(holding, people, percent), why ?? "");
+			ClassicAssert.AreEqual(met, KingdomZoningRules.CreedShareMet(holding, people, percent), why ?? "");
 		}
 
 		/// <summary>The dropped clause, stated as a test so the difference is deliberate rather
@@ -183,8 +184,8 @@ namespace ThousandAndFirst.Tests
 		public void CreedShareMet_DoesNotAskWhetherARivalIsLarger()
 		{
 			Dictionary<string, int> counts = new Dictionary<string, int> { { "Mechanimists", 4 }, { "Templar", 5 } };
-			Assert.AreNotEqual("Mechanimists", KingdomCreedRules.DominantCreed(counts, 10), "the CITY is not theirs");
-			Assert.IsTrue(KingdomZoningRules.CreedShareMet(4, 10, 33), "the reliquary is");
+			ClassicAssert.AreNotEqual("Mechanimists", KingdomCreedRules.DominantCreed(counts, 10), "the CITY is not theirs");
+			ClassicAssert.IsTrue(KingdomZoningRules.CreedShareMet(4, 10, 33), "the reliquary is");
 		}
 
 		[TestCase(0, 10, 0)]
@@ -193,7 +194,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(3, 0, 0)]
 		public void ShareHeld_ReadsBackWholePercent(int holding, int people, int expected)
 		{
-			Assert.AreEqual(expected, KingdomZoningRules.ShareHeld(holding, people));
+			ClassicAssert.AreEqual(expected, KingdomZoningRules.ShareHeld(holding, people));
 		}
 
 		// ==================================================================================
@@ -214,8 +215,8 @@ namespace ThousandAndFirst.Tests
 		public void Aligned_HoldingItNowCounts()
 		{
 			BuilderRoll roll = Roll(9, One("Barathrumites", 3), null);
-			Assert.IsTrue(KingdomZoningRules.Aligned(roll, "Barathrumites"));
-			Assert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Aligned(roll, "Barathrumites"));
+			ClassicAssert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"));
 		}
 
 		/// <summary>The whole reason a settler's creed history is recorded: somebody who LEFT the
@@ -224,23 +225,23 @@ namespace ThousandAndFirst.Tests
 		public void Aligned_HavingHeldItAndLeftItCountsToo()
 		{
 			BuilderRoll roll = Roll(9, null, One("Barathrumites", 1));
-			Assert.IsTrue(KingdomZoningRules.Aligned(roll, "Barathrumites"));
-			Assert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Aligned(roll, "Barathrumites"));
+			ClassicAssert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"));
 		}
 
 		[Test]
 		public void Aligned_NobodyHoldingAndNobodyEverHavingIsTheOneGateWithNoKey()
 		{
 			BuilderRoll roll = Roll(9, One("Templar", 5), One("Joppa", 2));
-			Assert.IsFalse(KingdomZoningRules.Aligned(roll, "Barathrumites"));
-			Assert.IsTrue(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"),
+			ClassicAssert.IsFalse(KingdomZoningRules.Aligned(roll, "Barathrumites"));
+			ClassicAssert.IsTrue(KingdomZoningRules.NoPathToCreed(roll, "Barathrumites"),
 				"and that is the design a menu does not show at all");
 		}
 
 		[Test]
 		public void Aligned_IsCaseInsensitiveBecauseTheNameIsWrittenTwiceInTwoFiles()
 		{
-			Assert.IsTrue(KingdomZoningRules.Aligned(Roll(9, One("barathrumites", 3), null), "Barathrumites"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Aligned(Roll(9, One("barathrumites", 3), null), "Barathrumites"));
 		}
 
 		/// <summary>A roll nobody supplied permits everything, and is not a path-less city. The
@@ -249,18 +250,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnknownRollPermitsAndHidesNothing()
 		{
-			Assert.IsTrue(KingdomZoningRules.Aligned(BuilderRoll.Unknown, "Barathrumites"));
-			Assert.IsFalse(KingdomZoningRules.NoPathToCreed(BuilderRoll.Unknown, "Barathrumites"));
-			Assert.IsTrue(KingdomZoningRules.HasBuilders(BuilderRoll.Unknown, "creed:Barathrumites:9"));
-			Assert.AreEqual(0, KingdomZoningRules.MissingBuilders(BuilderRoll.Unknown, "creed:Barathrumites:9").Count);
+			ClassicAssert.IsTrue(KingdomZoningRules.Aligned(BuilderRoll.Unknown, "Barathrumites"));
+			ClassicAssert.IsFalse(KingdomZoningRules.NoPathToCreed(BuilderRoll.Unknown, "Barathrumites"));
+			ClassicAssert.IsTrue(KingdomZoningRules.HasBuilders(BuilderRoll.Unknown, "creed:Barathrumites:9"));
+			ClassicAssert.AreEqual(0, KingdomZoningRules.MissingBuilders(BuilderRoll.Unknown, "creed:Barathrumites:9").Count);
 		}
 
 		[Test]
 		public void ADesignThatNamesNoCreedIsAlwaysAlignedAndAlwaysVisible()
 		{
 			BuilderRoll roll = Roll(9, null, null);
-			Assert.IsTrue(KingdomZoningRules.Aligned(roll, null));
-			Assert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, ""));
+			ClassicAssert.IsTrue(KingdomZoningRules.Aligned(roll, null));
+			ClassicAssert.IsFalse(KingdomZoningRules.NoPathToCreed(roll, ""));
 		}
 
 		// ==================================================================================
@@ -287,7 +288,7 @@ namespace ThousandAndFirst.Tests
 				new Dictionary<string, int> { { "the rust wells", 2 } },
 				new Dictionary<string, int> { { "Barathrumites", 3 } },
 				new Dictionary<string, int> { { "Mechanimists", 1 }, { "Barathrumites", 1 } });
-			Assert.AreEqual(met, KingdomZoningRules.HasBuilders(roll, requirement));
+			ClassicAssert.AreEqual(met, KingdomZoningRules.HasBuilders(roll, requirement));
 		}
 
 		[Test]
@@ -295,17 +296,17 @@ namespace ThousandAndFirst.Tests
 		{
 			BuilderRoll roll = Roll(9, One("Barathrumites", 1), null);
 			List<string> missing = KingdomZoningRules.MissingBuilders(roll, "creed:Barathrumites:3,origin:the hills,origin:the rust wells");
-			Assert.AreEqual(2, missing.Count);
-			Assert.AreEqual("creed:barathrumites:3", missing[0]);
-			Assert.AreEqual("origin:the hills", missing[1]);
+			ClassicAssert.AreEqual(2, missing.Count);
+			ClassicAssert.AreEqual("creed:barathrumites:3", missing[0]);
+			ClassicAssert.AreEqual("origin:the hills", missing[1]);
 		}
 
 		[Test]
 		public void DescribeBuilder_SaysItInTheFoundersWords()
 		{
-			Assert.AreEqual("somebody from the rust wells", KingdomZoningRules.DescribeBuilder("origin:the rust wells"));
-			Assert.AreEqual("3 people who hold with mechanimists", KingdomZoningRules.DescribeBuilder("creed:Mechanimists:3"));
-			Assert.AreEqual("somebody who holds with mechanimists", KingdomZoningRules.DescribeBuilder("creed:Mechanimists"));
+			ClassicAssert.AreEqual("somebody from the rust wells", KingdomZoningRules.DescribeBuilder("origin:the rust wells"));
+			ClassicAssert.AreEqual("3 people who hold with mechanimists", KingdomZoningRules.DescribeBuilder("creed:Mechanimists:3"));
+			ClassicAssert.AreEqual("somebody who holds with mechanimists", KingdomZoningRules.DescribeBuilder("creed:Mechanimists"));
 			StringAssert.Contains("has ever held", KingdomZoningRules.DescribeBuilder("kept:Mechanimists"));
 		}
 
@@ -328,9 +329,9 @@ namespace ThousandAndFirst.Tests
 				"origin:the hills", "Barathrumites", "25", out _);
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null, false, false,
 				Roll(9, One("Templar", 4), null));
-			Assert.AreEqual(ZoningVerdict.RefusedUnaligned, judgement.Verdict);
-			Assert.AreEqual("Barathrumites", judgement.Detail);
-			Assert.IsNotNull(judgement.Note);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUnaligned, judgement.Verdict);
+			ClassicAssert.AreEqual("Barathrumites", judgement.Detail);
+			ClassicAssert.IsNotNull(judgement.Note);
 		}
 
 		[Test]
@@ -339,7 +340,7 @@ namespace ThousandAndFirst.Tests
 			ZoneGate gate = CreedGate(null, "Barathrumites", "50");
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null, false, false,
 				Roll(10, One("Barathrumites", 3), null));
-			Assert.AreEqual(ZoningVerdict.RefusedCreedShare, judgement.Verdict);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedCreedShare, judgement.Verdict);
 			StringAssert.Contains("50", judgement.Note);
 		}
 
@@ -349,7 +350,7 @@ namespace ThousandAndFirst.Tests
 			ZoneGate gate = CreedGate("origin:the hills", "Barathrumites", "0");
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null, false, false,
 				Roll(10, One("Barathrumites", 1), null));
-			Assert.AreEqual(ZoningVerdict.RefusedBuilders, judgement.Verdict);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedBuilders, judgement.Verdict);
 			StringAssert.Contains("the hills", judgement.Detail);
 		}
 
@@ -360,7 +361,7 @@ namespace ThousandAndFirst.Tests
 				null, "Barathrumites", "0", out _);
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null, false, false,
 				Roll(10, One("Barathrumites", 1), null));
-			Assert.AreEqual(ZoningVerdict.RefusedUnlearned, judgement.Verdict);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUnlearned, judgement.Verdict);
 		}
 
 		[Test]
@@ -369,7 +370,7 @@ namespace ThousandAndFirst.Tests
 			ZoneGate gate = CreedGate("origin:the rust wells:2,kept:Barathrumites", "Barathrumites", "25");
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null, false, false,
 				Roll(12, One("Barathrumites", 3), One("Barathrumites", 1)));
-			Assert.IsTrue(judgement.Permitted, judgement.Detail);
+			ClassicAssert.IsTrue(judgement.Permitted, judgement.Detail);
 		}
 
 		/// <summary>The published four-gate overload has to answer exactly as it did before any of
@@ -378,8 +379,8 @@ namespace ThousandAndFirst.Tests
 		public void Judge_TheOlderOverloadIsUnchanged()
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("x", "craft", "0", null, null, out _);
-			Assert.IsTrue(KingdomZoningRules.Judge(gate, "craft", "craft", 0, null).Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedDistrict,
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(gate, "craft", "craft", 0, null).Permitted);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedDistrict,
 				KingdomZoningRules.Judge(gate, "shrine", "craft", 0, null).Verdict);
 		}
 
@@ -391,9 +392,9 @@ namespace ThousandAndFirst.Tests
 		public void RememberKept_WritesOneCreedAndReadsItBack()
 		{
 			string kept = KingdomCreedRules.RememberKept(null, "Barathrumites", out bool added);
-			Assert.IsTrue(added);
+			ClassicAssert.IsTrue(added);
 			CollectionAssert.AreEqual(new[] { "Barathrumites" }, KingdomCreedRules.DecodeKept(kept));
-			Assert.IsTrue(KingdomCreedRules.KeptHolds(kept, "barathrumites"));
+			ClassicAssert.IsTrue(KingdomCreedRules.KeptHolds(kept, "barathrumites"));
 		}
 
 		[TestCase(null)]
@@ -402,7 +403,7 @@ namespace ThousandAndFirst.Tests
 		public void RememberKept_ANonCreedRecordsNothing(string creed)
 		{
 			string kept = KingdomCreedRules.RememberKept("Joppa", creed, out bool added);
-			Assert.IsFalse(added);
+			ClassicAssert.IsFalse(added);
 			CollectionAssert.AreEqual(new[] { "Joppa" }, KingdomCreedRules.DecodeKept(kept));
 		}
 
@@ -410,8 +411,8 @@ namespace ThousandAndFirst.Tests
 		public void RememberKept_TheSameCreedTwiceIsOneMemory()
 		{
 			string kept = KingdomCreedRules.RememberKept("Joppa", "joppa", out bool added);
-			Assert.IsFalse(added);
-			Assert.AreEqual(1, KingdomCreedRules.DecodeKept(kept).Count);
+			ClassicAssert.IsFalse(added);
+			ClassicAssert.AreEqual(1, KingdomCreedRules.DecodeKept(kept).Count);
 		}
 
 		/// <summary>A name carrying the store's own separator is refused rather than corrupting
@@ -420,17 +421,17 @@ namespace ThousandAndFirst.Tests
 		public void RememberKept_ANameThatCannotSurviveTheStoreIsRefused()
 		{
 			string kept = KingdomCreedRules.RememberKept("", "Joppa" + KingdomCreedRules.KeptSeparator + "Ezra", out bool added);
-			Assert.IsFalse(added);
-			Assert.AreEqual(0, KingdomCreedRules.DecodeKept(kept).Count);
+			ClassicAssert.IsFalse(added);
+			ClassicAssert.AreEqual(0, KingdomCreedRules.DecodeKept(kept).Count);
 		}
 
 		[Test]
 		public void DecodeKept_SurvivesNonsenseWithoutThrowing()
 		{
-			Assert.AreEqual(0, KingdomCreedRules.DecodeKept(null).Count);
-			Assert.AreEqual(0, KingdomCreedRules.DecodeKept("").Count);
-			Assert.AreEqual(0, KingdomCreedRules.DecodeKept("||  ||").Count);
-			Assert.AreEqual(1, KingdomCreedRules.DecodeKept("|Joppa|").Count);
+			ClassicAssert.AreEqual(0, KingdomCreedRules.DecodeKept(null).Count);
+			ClassicAssert.AreEqual(0, KingdomCreedRules.DecodeKept("").Count);
+			ClassicAssert.AreEqual(0, KingdomCreedRules.DecodeKept("||  ||").Count);
+			ClassicAssert.AreEqual(1, KingdomCreedRules.DecodeKept("|Joppa|").Count);
 		}
 
 		[Test]
@@ -439,9 +440,9 @@ namespace ThousandAndFirst.Tests
 			List<string> names = new List<string> { "Joppa", " Joppa ", "Ezra", "", null, "Kyakukya", "Mopango" };
 			string kept = KingdomCreedRules.EncodeKept(names);
 			List<string> back = KingdomCreedRules.DecodeKept(kept);
-			Assert.AreEqual(KingdomCreedRules.MaxKeptCreeds, back.Count);
+			ClassicAssert.AreEqual(KingdomCreedRules.MaxKeptCreeds, back.Count);
 			CollectionAssert.AreEqual(new[] { "Joppa", "Ezra", "Kyakukya" }, back);
-			Assert.AreEqual(kept, KingdomCreedRules.EncodeKept(back), "the round trip is a fixed point");
+			ClassicAssert.AreEqual(kept, KingdomCreedRules.EncodeKept(back), "the round trip is a fixed point");
 		}
 	}
 }

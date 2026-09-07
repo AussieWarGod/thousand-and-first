@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 				"Current()", "Plan.RectX1 > 1", "while (Player.CurrentCell.X >= Plan.RectX1)", "++moves <= 32",
 				"Player.Move(\"W\", AllowDashing: false, DoConfirmations: false)", "Current(); Authority()",
 				"Player.CurrentCell.X == x - 1", "Player.CurrentCell.Y == y", "Player.CurrentCell.X < Plan.RectX1");
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:TimeTicks|CurrentCell|CurrentZone|X|Y)\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:TimeTicks|CurrentCell|CurrentZone|X|Y)\s*=(?!=)"));
 			foreach (string forbidden in new[] { "DirectMoveTo", ".AddObject(", ".RemoveObject(", "Forced: true", ".Destroy(", ".Obliterate(" })
 				StringAssert.DoesNotContain(forbidden, source);
 			Contains(source, "future calendar argument is synthetic", "clock, position and failed effects are never reset");
@@ -144,10 +145,10 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_CleanSetupCannotInventOrRepairGameObjectOrReceiptAuthority()
 		{
 			string source = Read(Helper);
-			Assert.IsFalse(Regex.IsMatch(source, @"\b(?:Set\w*GameState|Remove\w*GameState|Set\w*Property|Remove\w*Property|Create|TryFound|TryCommit|TryBegin)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:Clear|Reset|Destroy|Obliterate|AddPart|RemovePart|RequirePart)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(source, @"\b(?:Game|System|Zone|Player|Predecessor|Final|Plan|Works)\.[\w.]+\s*=(?!=)"));
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:ID|IDIfAssigned)\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:Set\w*GameState|Remove\w*GameState|Set\w*Property|Remove\w*Property|Create|TryFound|TryCommit|TryBegin)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:Clear|Reset|Destroy|Obliterate|AddPart|RemovePart|RequirePart)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:Game|System|Zone|Player|Predecessor|Final|Plan|Works)\.[\w.]+\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:ID|IDIfAssigned)\s*=(?!=)"));
 		}
 
 		private static string Read(string path) { return TestMain.ReadRepositoryText(path); }
@@ -155,9 +156,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, start);
+			ClassicAssert.GreaterOrEqual(first, 0, start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end);
+			ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 		private static void Contains(string source, params string[] tokens)
@@ -171,7 +172,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(Compact(token), cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token);
+				ClassicAssert.GreaterOrEqual(at, cursor, token);
 				cursor = at + Compact(token).Length;
 			}
 		}

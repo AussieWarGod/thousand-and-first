@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Capability = ThousandAndFirst.KingdomCrewRules.SettlerCapability;
 using Demand = ThousandAndFirst.KingdomCrewRules.CrewDemand;
@@ -28,43 +29,43 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ParsesOneKindAndAmount()
 		{
-			Assert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:16", out var needs, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(1, needs.Count);
-			Assert.AreEqual("strength", needs[0].Kind);
-			Assert.AreEqual(16, needs[0].Amount);
+			ClassicAssert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:16", out var needs, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(1, needs.Count);
+			ClassicAssert.AreEqual("strength", needs[0].Kind);
+			ClassicAssert.AreEqual(16, needs[0].Amount);
 		}
 
 		[Test]
 		public void ParsesMultipleKinds()
 		{
-			Assert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:16,intelligence:20", out var needs, out _));
-			Assert.AreEqual(2, needs.Count);
-			Assert.AreEqual(16, KingdomCrewRules.ThresholdOf(needs, "strength"));
-			Assert.AreEqual(20, KingdomCrewRules.ThresholdOf(needs, "intelligence"));
+			ClassicAssert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:16,intelligence:20", out var needs, out _));
+			ClassicAssert.AreEqual(2, needs.Count);
+			ClassicAssert.AreEqual(16, KingdomCrewRules.ThresholdOf(needs, "strength"));
+			ClassicAssert.AreEqual(20, KingdomCrewRules.ThresholdOf(needs, "intelligence"));
 		}
 
 		[Test]
 		public void BlankCrewNeedsIsAnEmptyListNotAFault()
 		{
-			Assert.IsTrue(KingdomCrewRules.TryParseCrewNeeds(null, out var needs, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(0, needs.Count);
-			Assert.AreEqual(0, KingdomCrewRules.ThresholdOf(needs, "strength"));
+			ClassicAssert.IsTrue(KingdomCrewRules.TryParseCrewNeeds(null, out var needs, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(0, needs.Count);
+			ClassicAssert.AreEqual(0, KingdomCrewRules.ThresholdOf(needs, "strength"));
 		}
 
 		[Test]
 		public void MalformedCrewNeedsFails()
 		{
-			Assert.IsFalse(KingdomCrewRules.TryParseCrewNeeds("strength", out _, out var error));
-			Assert.IsNotNull(error);
+			ClassicAssert.IsFalse(KingdomCrewRules.TryParseCrewNeeds("strength", out _, out var error));
+			ClassicAssert.IsNotNull(error);
 		}
 
 		[Test]
 		public void RepeatedKindsSumLikeCarriesDoes()
 		{
-			Assert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:10,strength:6", out var needs, out _));
-			Assert.AreEqual(16, KingdomCrewRules.ThresholdOf(needs, "strength"));
+			ClassicAssert.IsTrue(KingdomCrewRules.TryParseCrewNeeds("strength:10,strength:6", out var needs, out _));
+			ClassicAssert.AreEqual(16, KingdomCrewRules.ThresholdOf(needs, "strength"));
 		}
 
 		// --- SettlerCapability: derive before authoring -----------------------------------------
@@ -73,8 +74,8 @@ namespace ThousandAndFirst.Tests
 		public void OrdinarySettlerReadsExactlyTheirOwnStats()
 		{
 			Capability c = Cap(12, 9);
-			Assert.AreEqual(12, c.ValueOf(KingdomCrewRules.KindStrength));
-			Assert.AreEqual(9, c.ValueOf(KingdomCrewRules.KindIntelligence));
+			ClassicAssert.AreEqual(12, c.ValueOf(KingdomCrewRules.KindStrength));
+			ClassicAssert.AreEqual(9, c.ValueOf(KingdomCrewRules.KindIntelligence));
 		}
 
 		[Test]
@@ -86,14 +87,14 @@ namespace ThousandAndFirst.Tests
 			Capability tinker = new Capability(8, 12, false,
 				default(KingdomIdentityAffinityRules.WorkerIdentity), practiced);
 			Capability willing = Cap(18, 18);
-			Assert.AreEqual(1, tinker.ValueOf(KingdomCrewRules.KindTinkering));
-			Assert.AreEqual(0, willing.ValueOf(KingdomCrewRules.KindTinkering));
-			Assert.AreEqual(12, tinker.ValueOf(KingdomCrewRules.KindIntelligence));
+			ClassicAssert.AreEqual(1, tinker.ValueOf(KingdomCrewRules.KindTinkering));
+			ClassicAssert.AreEqual(0, willing.ValueOf(KingdomCrewRules.KindTinkering));
+			ClassicAssert.AreEqual(12, tinker.ValueOf(KingdomCrewRules.KindIntelligence));
 
 			Outcome[] outcome = KingdomCrewRules.AssignCrew(new[] { willing, tinker },
 				new[] { new Demand(1, false, KingdomCrewRules.KindTinkering, 1, "craft") });
-			Assert.AreEqual(1, outcome[0].SettlerIndices[0]);
-			Assert.AreEqual(1, outcome[0].BestCapability);
+			ClassicAssert.AreEqual(1, outcome[0].SettlerIndices[0]);
+			ClassicAssert.AreEqual(1, outcome[0].BestCapability);
 		}
 
 		[Test]
@@ -113,9 +114,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("CrewNeeds=\"skill.customs:1\"", catalogue);
 			StringAssert.Contains("CrewNeeds=\"skill.physic:1\"", catalogue);
 			int fieldrows = catalogue.IndexOf("<building Key=\"fieldrows\"");
-			Assert.GreaterOrEqual(fieldrows, 0);
+			ClassicAssert.GreaterOrEqual(fieldrows, 0);
 			int afterFieldrows = catalogue.IndexOf("<building", fieldrows + 1);
-			Assert.Greater(afterFieldrows, fieldrows);
+			ClassicAssert.Greater(afterFieldrows, fieldrows);
 			StringAssert.Contains("CrewNeeds=\"skill.harvestry:1\"",
 				catalogue.Substring(fieldrows, afterFieldrows - fieldrows));
 		}
@@ -124,9 +125,9 @@ namespace ThousandAndFirst.Tests
 		public void UnknownCapabilityKindReadsZero()
 		{
 			Capability c = Cap(30, 30);
-			Assert.AreEqual(0, c.ValueOf("agility"));
-			Assert.AreEqual(0, c.ValueOf(""));
-			Assert.AreEqual(0, c.ValueOf(null));
+			ClassicAssert.AreEqual(0, c.ValueOf("agility"));
+			ClassicAssert.AreEqual(0, c.ValueOf(""));
+			ClassicAssert.AreEqual(0, c.ValueOf(null));
 		}
 
 		[TestCase(1, KingdomCrewRules.TirelessStrengthFloor)]
@@ -136,21 +137,21 @@ namespace ThousandAndFirst.Tests
 		public void ARobotsStrengthNeverFallsUnderTheTirelessFloor(int RawStrength, int Expected)
 		{
 			Capability c = Cap(RawStrength, 10, Tireless: true);
-			Assert.AreEqual(Expected, c.ValueOf(KingdomCrewRules.KindStrength));
+			ClassicAssert.AreEqual(Expected, c.ValueOf(KingdomCrewRules.KindStrength));
 		}
 
 		[Test]
 		public void TirelessNeverBoostsIntelligence()
 		{
 			Capability c = Cap(5, 5, Tireless: true);
-			Assert.AreEqual(5, c.ValueOf(KingdomCrewRules.KindIntelligence), "being tireless says nothing about being certified");
+			ClassicAssert.AreEqual(5, c.ValueOf(KingdomCrewRules.KindIntelligence), "being tireless says nothing about being certified");
 		}
 
 		[Test]
 		public void ANonTirelessSettlerGetsNoFloor()
 		{
 			Capability c = Cap(3, 10, Tireless: false);
-			Assert.AreEqual(3, c.ValueOf(KingdomCrewRules.KindStrength));
+			ClassicAssert.AreEqual(3, c.ValueOf(KingdomCrewRules.KindStrength));
 		}
 
 		// --- CapabilityEffectiveness: slower, never stalled -------------------------------------
@@ -158,22 +159,22 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoThresholdIsAlwaysFullEffectiveness()
 		{
-			Assert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(0, 0));
-			Assert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(0, -1));
+			ClassicAssert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(0, 0));
+			ClassicAssert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(0, -1));
 		}
 
 		[Test]
 		public void MeetingOrExceedingTheThresholdIsFullEffectiveness()
 		{
-			Assert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(16, 16));
-			Assert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(30, 16));
+			ClassicAssert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(16, 16));
+			ClassicAssert.AreEqual(100, KingdomCrewRules.CapabilityEffectiveness(30, 16));
 		}
 
 		[Test]
 		public void PartialCapabilityScalesTowardTheThreshold()
 		{
 			// 8 of 16 scales to 50, well clear of the floor.
-			Assert.AreEqual(50, KingdomCrewRules.CapabilityEffectiveness(8, 16));
+			ClassicAssert.AreEqual(50, KingdomCrewRules.CapabilityEffectiveness(8, 16));
 		}
 
 		[Test]
@@ -181,15 +182,15 @@ namespace ThousandAndFirst.Tests
 		{
 			// The pure arithmetic case the brief names by name: no capable hands at all still
 			// never reads zero -- it floors, and never drops the work to idle by capability alone.
-			Assert.AreEqual(KingdomCrewRules.MinCapabilityEffectiveness, KingdomCrewRules.CapabilityEffectiveness(0, 16));
-			Assert.Greater(KingdomCrewRules.CapabilityEffectiveness(0, 16), 0);
+			ClassicAssert.AreEqual(KingdomCrewRules.MinCapabilityEffectiveness, KingdomCrewRules.CapabilityEffectiveness(0, 16));
+			ClassicAssert.Greater(KingdomCrewRules.CapabilityEffectiveness(0, 16), 0);
 		}
 
 		[Test]
 		public void ATinyShortfallFloorsRatherThanReadingNearZero()
 		{
 			// 1 of 16 scales to 6, under the floor -- floors up rather than crediting almost nothing.
-			Assert.AreEqual(KingdomCrewRules.MinCapabilityEffectiveness, KingdomCrewRules.CapabilityEffectiveness(1, 16));
+			ClassicAssert.AreEqual(KingdomCrewRules.MinCapabilityEffectiveness, KingdomCrewRules.CapabilityEffectiveness(1, 16));
 		}
 
 		[TestCase(0, 100)]
@@ -197,7 +198,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 100)]
 		public void CombinedEffectivenessIsTheLesserOfTheTwo(int Headcount, int CapabilityEff)
 		{
-			Assert.AreEqual(System.Math.Min(Headcount, CapabilityEff), KingdomCrewRules.CombinedEffectiveness(Headcount, CapabilityEff));
+			ClassicAssert.AreEqual(System.Math.Min(Headcount, CapabilityEff), KingdomCrewRules.CombinedEffectiveness(Headcount, CapabilityEff));
 		}
 
 		// --- AssignCrew: ablest-first, deterministic --------------------------------------------
@@ -208,9 +209,9 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = new Capability[] { Cap(5, 0), Cap(20, 0), Cap(10, 0) };
 			Demand[] demands = new Demand[] { new Demand(2, false, KingdomCrewRules.KindStrength, 16) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
-			Assert.AreEqual(2, outcomes[0].Assigned);
+			ClassicAssert.AreEqual(2, outcomes[0].Assigned);
 			CollectionAssert.AreEqual(new int[] { 1, 2 }, outcomes[0].SettlerIndices, "index 1 (20) and index 2 (10) are the two ablest, in that order");
-			Assert.AreEqual(20, outcomes[0].BestCapability);
+			ClassicAssert.AreEqual(20, outcomes[0].BestCapability);
 		}
 
 		[Test]
@@ -231,7 +232,7 @@ namespace ThousandAndFirst.Tests
 			Demand[] demands = new Demand[] { new Demand(2, false, null, 0) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
 			CollectionAssert.AreEqual(new int[] { 0, 1 }, outcomes[0].SettlerIndices, "no capability kind named -- plain arrival order, same as headcount-only allocation");
-			Assert.AreEqual(0, outcomes[0].BestCapability, "capability is never credited to a demand that never asked for it");
+			ClassicAssert.AreEqual(0, outcomes[0].BestCapability, "capability is never credited to a demand that never asked for it");
 		}
 
 		[Test]
@@ -246,7 +247,7 @@ namespace ThousandAndFirst.Tests
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
 			CollectionAssert.AreEqual(new int[] { 0, 1 }, outcomes[0].SettlerIndices, "the first, higher-priority demand gets the two ablest hands");
 			CollectionAssert.AreEqual(new int[] { 2 }, outcomes[1].SettlerIndices, "only the one hand nobody else has taken is left");
-			Assert.AreEqual(1, outcomes[1].Assigned, "a settler crewed elsewhere this pass is not double-booked");
+			ClassicAssert.AreEqual(1, outcomes[1].Assigned, "a settler crewed elsewhere this pass is not double-booked");
 		}
 
 		[Test]
@@ -255,8 +256,8 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = new Capability[] { Cap(99, 0) };
 			Demand[] demands = new Demand[] { new Demand(3, true, KingdomCrewRules.KindStrength, 5) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
-			Assert.AreEqual(0, outcomes[0].Assigned, "one able hand is still short of the three-strong threshold this work needs at all");
-			Assert.AreEqual(0, outcomes[0].BestCapability);
+			ClassicAssert.AreEqual(0, outcomes[0].Assigned, "one able hand is still short of the three-strong threshold this work needs at all");
+			ClassicAssert.AreEqual(0, outcomes[0].BestCapability);
 		}
 
 		[Test]
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = new Capability[] { Cap(1, 0) };
 			Demand[] demands = new Demand[] { new Demand(3, false, KingdomCrewRules.KindStrength, 5) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
-			Assert.AreEqual(1, outcomes[0].Assigned, "scaled work runs at whatever fraction it has hands for");
+			ClassicAssert.AreEqual(1, outcomes[0].Assigned, "scaled work runs at whatever fraction it has hands for");
 		}
 
 		[Test]
@@ -274,15 +275,15 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = new Capability[] { Cap(99, 99) };
 			Demand[] demands = new Demand[] { new Demand(0, false, KingdomCrewRules.KindStrength, 5) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
-			Assert.AreEqual(0, outcomes[0].Assigned);
-			Assert.AreEqual(0, outcomes[0].SettlerIndices.Length);
+			ClassicAssert.AreEqual(0, outcomes[0].Assigned);
+			ClassicAssert.AreEqual(0, outcomes[0].SettlerIndices.Length);
 		}
 
 		[Test]
 		public void NullPoolAndDemandsReadAsEmptyRatherThanThrowing()
 		{
-			Assert.AreEqual(0, KingdomCrewRules.AssignCrew(null, null).Length);
-			Assert.AreEqual(0, KingdomCrewRules.AssignCrew(null, new Demand[] { new Demand(1, false, null, 0) })[0].Assigned);
+			ClassicAssert.AreEqual(0, KingdomCrewRules.AssignCrew(null, null).Length);
+			ClassicAssert.AreEqual(0, KingdomCrewRules.AssignCrew(null, new Demand[] { new Demand(1, false, null, 0) })[0].Assigned);
 		}
 
 		[Test]
@@ -295,7 +296,7 @@ namespace ThousandAndFirst.Tests
 				new Demand(1, false, KingdomCrewRules.KindStrength, 1)
 			};
 			var reservations = new[] { new KingdomCrewRules.CrewReservation(0, 1) };
-			Assert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+			ClassicAssert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
 				reservations, out Outcome[] outcomes));
 			CollectionAssert.AreEqual(new[] { 1 }, outcomes[0].SettlerIndices);
 			CollectionAssert.AreEqual(new[] { 0 }, outcomes[1].SettlerIndices);
@@ -307,9 +308,9 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = { Cap(30, 0) };
 			Demand[] demands = { new Demand(2, true, null, 0) };
 			var reservations = new[] { new KingdomCrewRules.CrewReservation(0, 0) };
-			Assert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+			ClassicAssert.IsTrue(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
 				reservations, out Outcome[] outcomes));
-			Assert.AreEqual(0, outcomes[0].Assigned);
+			ClassicAssert.AreEqual(0, outcomes[0].Assigned);
 		}
 
 		[Test]
@@ -322,10 +323,10 @@ namespace ThousandAndFirst.Tests
 				new KingdomCrewRules.CrewReservation(0, 0),
 				new KingdomCrewRules.CrewReservation(0, 1)
 			};
-			Assert.IsFalse(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
+			ClassicAssert.IsFalse(KingdomCrewRules.TryAssignCrewReserved(pool, demands, null,
 				duplicate, out Outcome[] outcomes));
-			Assert.AreEqual(0, outcomes[0].Assigned);
-			Assert.AreEqual(0, outcomes[1].Assigned);
+			ClassicAssert.AreEqual(0, outcomes[0].Assigned);
+			ClassicAssert.AreEqual(0, outcomes[1].Assigned);
 		}
 
 		[Test]
@@ -334,11 +335,11 @@ namespace ThousandAndFirst.Tests
 			Capability[] pool = new Capability[] { Cap(8, 0) };
 			Demand[] demands = new Demand[] { new Demand(1, false, KingdomCrewRules.KindStrength, 16) };
 			Outcome[] outcomes = KingdomCrewRules.AssignCrew(pool, demands);
-			Assert.AreEqual(KingdomCrewRules.KindStrength, outcomes[0].CapabilityKind);
-			Assert.AreEqual(16, outcomes[0].CapabilityThreshold);
-			Assert.AreEqual(8, outcomes[0].BestCapability);
+			ClassicAssert.AreEqual(KingdomCrewRules.KindStrength, outcomes[0].CapabilityKind);
+			ClassicAssert.AreEqual(16, outcomes[0].CapabilityThreshold);
+			ClassicAssert.AreEqual(8, outcomes[0].BestCapability);
 			int effectiveness = KingdomCrewRules.CapabilityEffectiveness(outcomes[0].BestCapability, outcomes[0].CapabilityThreshold);
-			Assert.AreEqual(50, effectiveness);
+			ClassicAssert.AreEqual(50, effectiveness);
 		}
 
 		// --- Naming the shortfall (STANDARDS 7b) ------------------------------------------------
@@ -369,10 +370,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DisplayKindNamesTheTwoKnownKindsAndFallsBackForAnUnknownOne()
 		{
-			Assert.AreEqual("strength", KingdomCrewRules.DisplayKind(KingdomCrewRules.KindStrength));
-			Assert.AreEqual("a certified mind", KingdomCrewRules.DisplayKind(KingdomCrewRules.KindIntelligence));
-			Assert.AreEqual("theirmod:quickness", KingdomCrewRules.DisplayKind("theirmod:quickness"));
-			Assert.AreEqual("capability", KingdomCrewRules.DisplayKind(null));
+			ClassicAssert.AreEqual("strength", KingdomCrewRules.DisplayKind(KingdomCrewRules.KindStrength));
+			ClassicAssert.AreEqual("a certified mind", KingdomCrewRules.DisplayKind(KingdomCrewRules.KindIntelligence));
+			ClassicAssert.AreEqual("theirmod:quickness", KingdomCrewRules.DisplayKind("theirmod:quickness"));
+			ClassicAssert.AreEqual("capability", KingdomCrewRules.DisplayKind(null));
 		}
 
 		// --- Stat name mapping: what KingdomCrews reads off a real GameObject ------------------
@@ -380,9 +381,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StatNameForMapsTheTwoKnownKindsToVanillaStatNames()
 		{
-			Assert.AreEqual("Strength", KingdomCrewRules.StatNameFor(KingdomCrewRules.KindStrength));
-			Assert.AreEqual("Intelligence", KingdomCrewRules.StatNameFor(KingdomCrewRules.KindIntelligence));
-			Assert.IsNull(KingdomCrewRules.StatNameFor("theirmod:quickness"));
+			ClassicAssert.AreEqual("Strength", KingdomCrewRules.StatNameFor(KingdomCrewRules.KindStrength));
+			ClassicAssert.AreEqual("Intelligence", KingdomCrewRules.StatNameFor(KingdomCrewRules.KindIntelligence));
+			ClassicAssert.IsNull(KingdomCrewRules.StatNameFor("theirmod:quickness"));
 		}
 
 		[Test]

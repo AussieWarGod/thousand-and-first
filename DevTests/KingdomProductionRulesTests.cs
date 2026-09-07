@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -16,7 +17,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long days;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomProductionRules.TryDaysBetween(from, to, Day, out days, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomProductionRules.TryDaysBetween(from, to, Day, out days, out fault), fault.ToString());
 			return days;
 		}
 
@@ -24,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomProductionStep step;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomProductionRules.TryProduce(level, capacity, owed, rate, days, out step, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomProductionRules.TryProduce(level, capacity, owed, rate, days, out step, out fault), fault.ToString());
 			return step;
 		}
 
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 			long whole = Days(from, to);
 			for (long cut = from; cut <= to; cut += 137L)
 			{
-				Assert.AreEqual(whole, Days(from, cut) + Days(cut, to),
+				ClassicAssert.AreEqual(whole, Days(from, cut) + Days(cut, to),
 					"splitting the span at " + cut + " changed what it is worth");
 			}
 		}
@@ -54,16 +55,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AHorizonInsideADayPaysNothingAndTheNextOnePaysItAll()
 		{
-			Assert.AreEqual(0L, Days(0L, Day - 1L));
-			Assert.AreEqual(1L, Days(0L, Day));
-			Assert.AreEqual(1L, Days(Day - 1L, Day));
+			ClassicAssert.AreEqual(0L, Days(0L, Day - 1L));
+			ClassicAssert.AreEqual(1L, Days(0L, Day));
+			ClassicAssert.AreEqual(1L, Days(Day - 1L, Day));
 			// Twice a day for a week, and the week is still seven days.
 			long total = 0L;
 			for (int half = 0; half < 14; half++)
 			{
 				total += Days(half * (Day / 2L), (half + 1) * (Day / 2L));
 			}
-			Assert.AreEqual(7L, total, "a founder who walks in twice a day must not stop the fields");
+			ClassicAssert.AreEqual(7L, total, "a founder who walks in twice a day must not stop the fields");
 		}
 
 		[Test]
@@ -71,12 +72,12 @@ namespace ThousandAndFirst.Tests
 		{
 			long days;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomProductionRules.TryDaysBetween(2L * Day, Day, Day, out days, out fault));
-			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
-			Assert.IsFalse(KingdomProductionRules.TryDaysBetween(0L, Day, 0L, out days, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidInterval, fault);
-			Assert.IsFalse(KingdomProductionRules.TryDaysBetween(-1L, Day, Day, out days, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryDaysBetween(2L * Day, Day, Day, out days, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryDaysBetween(0L, Day, 0L, out days, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidInterval, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryDaysBetween(-1L, Day, Day, out days, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		// ---- The ledger: I1 ------------------------------------------------------------------
@@ -91,10 +92,10 @@ namespace ThousandAndFirst.Tests
 		public void ProductionMovesTheLevelAndTheDebtByTheSameAmount()
 		{
 			KingdomProductionStep step = Produce(40L, 400L, 0, 12L, 7L);
-			Assert.AreEqual(124L, step.NextLevel);
-			Assert.AreEqual(84, step.NextOwed);
-			Assert.AreEqual(84L, step.Landed);
-			Assert.AreEqual(40L - 0L, step.NextLevel - step.NextOwed, "the ground did not change, so level - owed may not");
+			ClassicAssert.AreEqual(124L, step.NextLevel);
+			ClassicAssert.AreEqual(84, step.NextOwed);
+			ClassicAssert.AreEqual(84L, step.Landed);
+			ClassicAssert.AreEqual(40L - 0L, step.NextLevel - step.NextOwed, "the ground did not change, so level - owed may not");
 		}
 
 		/// <summary>A lane that consumes drains the level and the debt together, so the identity
@@ -103,9 +104,9 @@ namespace ThousandAndFirst.Tests
 		public void ConsumptionMovesBothTheOtherWay()
 		{
 			KingdomProductionStep step = Produce(100L, 400L, 0, -15L, 4L);
-			Assert.AreEqual(40L, step.NextLevel);
-			Assert.AreEqual(-60, step.NextOwed);
-			Assert.AreEqual(100L, step.NextLevel - step.NextOwed);
+			ClassicAssert.AreEqual(40L, step.NextLevel);
+			ClassicAssert.AreEqual(-60, step.NextOwed);
+			ClassicAssert.AreEqual(100L, step.NextLevel - step.NextOwed);
 		}
 
 		/// <summary>
@@ -117,27 +118,27 @@ namespace ThousandAndFirst.Tests
 		public void AFullStoreTakesWhatFitsAndSpillsTheRest()
 		{
 			KingdomProductionStep step = Produce(90L, 100L, 0, 20L, 30L);
-			Assert.AreEqual(100L, step.NextLevel);
-			Assert.AreEqual(10, step.NextOwed);
-			Assert.AreEqual(590L, step.Spilled, "600 made, 10 fitted");
-			Assert.AreEqual(90L, step.NextLevel - step.NextOwed, "and the identity survives the spill");
+			ClassicAssert.AreEqual(100L, step.NextLevel);
+			ClassicAssert.AreEqual(10, step.NextOwed);
+			ClassicAssert.AreEqual(590L, step.Spilled, "600 made, 10 fitted");
+			ClassicAssert.AreEqual(90L, step.NextLevel - step.NextOwed, "and the identity survives the spill");
 		}
 
 		[Test]
 		public void AStoreWithNoRoomAtAllProducesNothingRatherThanRefusing()
 		{
 			KingdomProductionStep step = Produce(0L, 0L, 0, 30L, 90L);
-			Assert.AreEqual(0L, step.NextLevel);
-			Assert.AreEqual(0, step.NextOwed);
-			Assert.AreEqual(2700L, step.Spilled);
+			ClassicAssert.AreEqual(0L, step.NextLevel);
+			ClassicAssert.AreEqual(0, step.NextOwed);
+			ClassicAssert.AreEqual(2700L, step.Spilled);
 		}
 
 		[Test]
 		public void AZeroRateAndAZeroSpanAreBothNoOps()
 		{
-			Assert.AreEqual(0L, Produce(40L, 400L, 3, 0L, 90L).Landed);
-			Assert.AreEqual(3, Produce(40L, 400L, 3, 0L, 90L).NextOwed);
-			Assert.AreEqual(0L, Produce(40L, 400L, 3, 25L, 0L).Landed);
+			ClassicAssert.AreEqual(0L, Produce(40L, 400L, 3, 0L, 90L).Landed);
+			ClassicAssert.AreEqual(3, Produce(40L, 400L, 3, 0L, 90L).NextOwed);
+			ClassicAssert.AreEqual(0L, Produce(40L, 400L, 3, 25L, 0L).Landed);
 		}
 
 		[Test]
@@ -145,12 +146,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomProductionStep step;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomProductionRules.TryProduce(0L, long.MaxValue, 0, 1L, long.MaxValue, out step, out fault));
-			Assert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
-			Assert.IsFalse(KingdomProductionRules.TryProduce(0L, 10L, 0, 1L, -1L, out step, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
-			Assert.IsFalse(KingdomProductionRules.TryProduce(20L, 10L, 0, 1L, 1L, out step, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryProduce(0L, long.MaxValue, 0, 1L, long.MaxValue, out step, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryProduce(0L, 10L, 0, 1L, -1L, out step, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryProduce(20L, 10L, 0, 1L, 1L, out step, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
 		}
 
 		// ---- The reconcile: the audit made exact ---------------------------------------------
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomProductionStep step;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomProductionRules.TryReconcile(ground, capacity, owed, out step, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomProductionRules.TryReconcile(ground, capacity, owed, out step, out fault), fault.ToString());
 			return step;
 		}
 
@@ -179,9 +180,9 @@ namespace ThousandAndFirst.Tests
 					for (int owed = -120; owed <= 120; owed += 20)
 					{
 						KingdomProductionStep step = Trued(ground, capacity, owed);
-						Assert.AreEqual(ground, step.NextLevel - step.NextOwed,
+						ClassicAssert.AreEqual(ground, step.NextLevel - step.NextOwed,
 							"ground=" + ground + " cap=" + capacity + " owed=" + owed);
-						Assert.IsTrue(step.NextLevel >= 0L && step.NextLevel <= capacity,
+						ClassicAssert.IsTrue(step.NextLevel >= 0L && step.NextLevel <= capacity,
 							"a level outside its own capacity is not a level");
 					}
 				}
@@ -194,9 +195,9 @@ namespace ThousandAndFirst.Tests
 		public void TheGroundWinsAndTheStandingClaimSurvivesIt()
 		{
 			KingdomProductionStep step = Trued(70L, 400L, 30);
-			Assert.AreEqual(100L, step.NextLevel);
-			Assert.AreEqual(30, step.NextOwed, "what the works made and nobody poured is still owed");
-			Assert.AreEqual(0L, step.Spilled);
+			ClassicAssert.AreEqual(100L, step.NextLevel);
+			ClassicAssert.AreEqual(30, step.NextOwed, "what the works made and nobody poured is still owed");
+			ClassicAssert.AreEqual(0L, step.Spilled);
 		}
 
 		/// <summary>A claim bigger than the room left is dropped, not carried — the same rule a
@@ -205,10 +206,10 @@ namespace ThousandAndFirst.Tests
 		public void AClaimTheContainersCanNoLongerHoldIsDroppedAndNamed()
 		{
 			KingdomProductionStep step = Trued(95L, 100L, 40);
-			Assert.AreEqual(100L, step.NextLevel);
-			Assert.AreEqual(5, step.NextOwed);
-			Assert.AreEqual(35L, step.Spilled);
-			Assert.AreEqual(95L, step.NextLevel - step.NextOwed);
+			ClassicAssert.AreEqual(100L, step.NextLevel);
+			ClassicAssert.AreEqual(5, step.NextOwed);
+			ClassicAssert.AreEqual(35L, step.Spilled);
+			ClassicAssert.AreEqual(95L, step.NextLevel - step.NextOwed);
 		}
 
 		[Test]
@@ -216,8 +217,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomProductionStep step;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomProductionRules.TryReconcile(101L, 100L, 0, out step, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
+			ClassicAssert.IsFalse(KingdomProductionRules.TryReconcile(101L, 100L, 0, out step, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
 		}
 
 		/// <summary>
@@ -247,10 +248,10 @@ namespace ThousandAndFirst.Tests
 			long ceiling = (capacity < ground) ? ground : capacity;
 			KingdomProductionStep step;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomProductionRules.TryReconcile(ground, ceiling, 0, out step, out fault), fault.ToString());
-			Assert.AreEqual(ground, step.NextLevel, "the ground moved, and the ground is what wins");
-			Assert.AreEqual(0, step.NextOwed);
-			Assert.AreEqual(0L, step.Spilled, "nothing was destroyed to make the reading fit");
+			ClassicAssert.IsTrue(KingdomProductionRules.TryReconcile(ground, ceiling, 0, out step, out fault), fault.ToString());
+			ClassicAssert.AreEqual(ground, step.NextLevel, "the ground moved, and the ground is what wins");
+			ClassicAssert.AreEqual(0, step.NextOwed);
+			ClassicAssert.AreEqual(0L, step.Spilled, "nothing was destroyed to make the reading fit");
 		}
 
 		/// <summary>
@@ -268,17 +269,17 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 0L, default(KingdomStocks), zones,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 0L, default(KingdomStocks), zones,
 				new KingdomWorkRow[0], new KingdomResidentRow[0], new KingdomClockRow[0], out state, out fault), fault.ToString());
 			// Zone A's works make sixty drams a day for five days. The ground has not moved: the
 			// level and the debt rise together.
 			KingdomProductionStep made = Produce(200L, 1000L, 0, 60L, 5L);
-			Assert.AreEqual(500L, made.NextLevel);
-			Assert.AreEqual(300, made.NextOwed);
+			ClassicAssert.AreEqual(500L, made.NextLevel);
+			ClassicAssert.AreEqual(300, made.NextOwed);
 			KingdomZoneRow rowA;
-			Assert.IsTrue(state.TryZone(0, out rowA));
+			ClassicAssert.IsTrue(state.TryZone(0, out rowA));
 			KingdomCityState produced;
-			Assert.IsTrue(state.TryWithZone(0,
+			ClassicAssert.IsTrue(state.TryWithZone(0,
 				rowA.WithReading(rowA.LastReadTick,
 					new KingdomStocks(new KingdomStockPair(made.NextLevel, 1000L), rowA.Stocks.Food, rowA.Stocks.Materials),
 					0, 0, 60, 0).WithOwed(made.NextOwed, 0, 0),
@@ -286,19 +287,19 @@ namespace ThousandAndFirst.Tests
 			// Then a main runs a hundred of it to B. A transfer is a carry: level and debt again.
 			KingdomCityState carried;
 			long moved;
-			Assert.IsTrue(KingdomNetworkRules.TryPostTransfer(produced, KingdomStockKind.Water, 0, 1, 100L, out carried, out moved, out fault), fault.ToString());
-			Assert.AreEqual(100L, moved);
+			ClassicAssert.IsTrue(KingdomNetworkRules.TryPostTransfer(produced, KingdomStockKind.Water, 0, 1, 100L, out carried, out moved, out fault), fault.ToString());
+			ClassicAssert.AreEqual(100L, moved);
 			KingdomZoneRow a;
 			KingdomZoneRow b;
-			Assert.IsTrue(carried.TryZone(0, out a));
-			Assert.IsTrue(carried.TryZone(1, out b));
+			ClassicAssert.IsTrue(carried.TryZone(0, out a));
+			ClassicAssert.IsTrue(carried.TryZone(1, out b));
 			// I1, per row: level - owed is the GROUND, and no ground has been touched by either
 			// step, so both rows still read what they physically held at the start.
-			Assert.AreEqual(200L, a.Stocks.Water.Level - a.OwedWater);
-			Assert.AreEqual(0L, b.Stocks.Water.Level - b.OwedWater);
+			ClassicAssert.AreEqual(200L, a.Stocks.Water.Level - a.OwedWater);
+			ClassicAssert.AreEqual(0L, b.Stocks.Water.Level - b.OwedWater);
 			// And in total: three hundred made, none of it poured yet, none of it lost in transit.
-			Assert.AreEqual(500L, a.Stocks.Water.Level + b.Stocks.Water.Level);
-			Assert.AreEqual(300, a.OwedWater + b.OwedWater);
+			ClassicAssert.AreEqual(500L, a.Stocks.Water.Level + b.Stocks.Water.Level);
+			ClassicAssert.AreEqual(300, a.OwedWater + b.OwedWater);
 		}
 
 		// ---- The third factor (RESEARCH-SYSTEM-DESIGN §8.2) ------------------------------------
@@ -316,9 +317,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(int.MaxValue)]
 		public void ARealmThatResearchedNothingProducesExactlyWhatItAlwaysDid(int quantity)
 		{
-			Assert.AreEqual(KingdomProductionRules.BaselineMethodPercent, KingdomResearchRules.MethodPercent(0),
+			ClassicAssert.AreEqual(KingdomProductionRules.BaselineMethodPercent, KingdomResearchRules.MethodPercent(0),
 				"the baseline moved out from under the production seam");
-			Assert.AreEqual(quantity, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MethodPercent(0)));
+			ClassicAssert.AreEqual(quantity, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MethodPercent(0)));
 		}
 
 		/// <summary>
@@ -335,7 +336,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(99)]
 		public void NoMethodPercentAnywhereCanLowerWhatABenchMakes(int method)
 		{
-			Assert.AreEqual(100, KingdomProductionRules.Methoded(100, method));
+			ClassicAssert.AreEqual(100, KingdomProductionRules.Methoded(100, method));
 		}
 
 		/// <summary>The documented bonus: a realm holding the tree's efficiency grants works at
@@ -349,7 +350,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(20, 60, 72)]
 		public void AHeldMethodNodeIsWorthWhatTheDesignSaysItIs(int sumEfficiency, int capability, int expected)
 		{
-			Assert.AreEqual(expected, KingdomProductionRules.Methoded(capability, KingdomResearchRules.MethodPercent(sumEfficiency)));
+			ClassicAssert.AreEqual(expected, KingdomProductionRules.Methoded(capability, KingdomResearchRules.MethodPercent(sumEfficiency)));
 		}
 
 		/// <summary>
@@ -364,7 +365,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(int.MinValue, int.MinValue)]
 		public void MethodNeverStaffsABenchAndNeverChargesForKnowing(int quantity, int expected)
 		{
-			Assert.AreEqual(expected, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MaxMethodPercent));
+			ClassicAssert.AreEqual(expected, KingdomProductionRules.Methoded(quantity, KingdomResearchRules.MaxMethodPercent));
 		}
 
 		/// <summary>Total over representable input: the top of the int the caller carries is a
@@ -372,8 +373,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheFactorClampsAtTheIntTheCallerCarriesRatherThanWrapping()
 		{
-			Assert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue, KingdomResearchRules.MaxMethodPercent));
-			Assert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue - 1, KingdomResearchRules.MaxMethodPercent));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue, KingdomResearchRules.MaxMethodPercent));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomProductionRules.Methoded(int.MaxValue - 1, KingdomResearchRules.MaxMethodPercent));
 		}
 
 		/// <summary>Determinism: the same two numbers answer the same way every time, and the
@@ -384,8 +385,8 @@ namespace ThousandAndFirst.Tests
 			for (int method = 100; method <= KingdomResearchRules.MaxMethodPercent; method++)
 			{
 				int first = KingdomProductionRules.Methoded(97, method);
-				Assert.AreEqual(first, KingdomProductionRules.Methoded(97, method), "method " + method);
-				Assert.GreaterOrEqual(first, 97, "method " + method + " lowered the bench");
+				ClassicAssert.AreEqual(first, KingdomProductionRules.Methoded(97, method), "method " + method);
+				ClassicAssert.GreaterOrEqual(first, 97, "method " + method + " lowered the bench");
 			}
 		}
 	}

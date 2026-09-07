@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,10 +31,10 @@ namespace ThousandAndFirst.Tests
 		public void IntentConstantsAndNestedDerivationHaveOneOwner()
 		{
 			string source = KingdomDelveLinkLogicalSource.Read();
-			Assert.AreEqual(8, Count(source, "public static partial class KingdomDelveLink"));
-			Assert.AreEqual(1, Count(source, "public sealed class KingdomDelveLinkIntent"));
-			Assert.AreEqual(1, Count(source, "private sealed class Derived"));
-			Assert.AreEqual(1, Count(source, "public const int LinkSchema = 1"));
+			ClassicAssert.AreEqual(8, Count(source, "public static partial class KingdomDelveLink"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class KingdomDelveLinkIntent"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class Derived"));
+			ClassicAssert.AreEqual(1, Count(source, "public const int LinkSchema = 1"));
 			StringAssert.DoesNotContain("public static class KingdomDelveLink", source);
 		}
 
@@ -43,7 +44,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

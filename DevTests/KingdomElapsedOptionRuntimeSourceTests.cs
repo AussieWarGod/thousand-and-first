@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -11,12 +12,12 @@ namespace ThousandAndFirst.Tests
 			string second, string message)
 		{
 			int start = source.IndexOf(method, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, method);
+			ClassicAssert.GreaterOrEqual(start, 0, method);
 			int firstAt = source.IndexOf(first, start, StringComparison.Ordinal);
 			int secondAt = source.IndexOf(second, start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(firstAt, 0, first);
-			Assert.GreaterOrEqual(secondAt, 0, second);
-			Assert.Less(firstAt, secondAt, message);
+			ClassicAssert.GreaterOrEqual(firstAt, 0, first);
+			ClassicAssert.GreaterOrEqual(secondAt, 0, second);
+			ClassicAssert.Less(firstAt, secondAt, message);
 		}
 
 		[Test]

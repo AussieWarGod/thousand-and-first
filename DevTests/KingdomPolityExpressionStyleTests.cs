@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -9,14 +10,14 @@ namespace ThousandAndFirst.DevTests
 		public void FullProfileExpressionIsPinnedIntoResolverDigest()
 		{
 			KingdomPolityProfileRevision profile = ExpressionProfile("style=common", "band=2");
-			Assert.IsTrue(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
+			ClassicAssert.IsTrue(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
 				out KingdomPolityNpcSpec before, out string failure), failure);
 			profile.PracticeTags.Add("zz-new-practice");
-			Assert.IsTrue(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
+			ClassicAssert.IsTrue(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
 				out KingdomPolityNpcSpec after, out failure), failure);
-			Assert.AreNotEqual(before.ResolverDigest, after.ResolverDigest);
+			ClassicAssert.AreNotEqual(before.ResolverDigest, after.ResolverDigest);
 			profile.BodyKeys.Add("unknown-body");
-			Assert.IsFalse(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
+			ClassicAssert.IsFalse(KingdomPolityNpcRules.TryResolve(profile, "guard", 0, 8, 11,
 				out KingdomPolityNpcSpec _, out failure));
 		}
 
@@ -37,9 +38,9 @@ namespace ThousandAndFirst.DevTests
 			List<string> keys = cues.ConvertAll(cue => cue.ExpressionKey);
 			CollectionAssert.Contains(keys, "moon-stair-crystal");
 			CollectionAssert.Contains(keys, "warm-static-ground");
-			Assert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Skill));
-			Assert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Mutation));
-			Assert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body));
+			ClassicAssert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Skill));
+			ClassicAssert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Mutation));
+			ClassicAssert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body));
 			CollectionAssert.DoesNotContain(keys, "recovered-machine");
 			CollectionAssert.DoesNotContain(keys, "Tinkering");
 		}
@@ -60,7 +61,7 @@ namespace ThousandAndFirst.DevTests
 					};
 					List<KingdomPolityExpressionCue> cues =
 						KingdomPolityProfileExpressionCatalogue.Resolve(facts, band);
-					Assert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body ||
+					ClassicAssert.IsFalse(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body ||
 						c.Kind == KingdomPolityExpressionKind.Mutation ||
 						c.Kind == KingdomPolityExpressionKind.Skill ||
 						c.Kind == KingdomPolityExpressionKind.Cybernetic ||
@@ -82,11 +83,11 @@ namespace ThousandAndFirst.DevTests
 			};
 			List<KingdomPolityExpressionCue> cues =
 				KingdomPolityProfileExpressionCatalogue.Resolve(facts, 0);
-			Assert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body));
-			Assert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Mutation));
-			Assert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Skill));
+			ClassicAssert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Body));
+			ClassicAssert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Mutation));
+			ClassicAssert.IsTrue(cues.Exists(c => c.Kind == KingdomPolityExpressionKind.Skill));
 			for (int i = 0; i < cues.Count; i++)
-				Assert.IsTrue(KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(cues[i]));
+				ClassicAssert.IsTrue(KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(cues[i]));
 
 			KingdomPolityExpressionCue unproved = new KingdomPolityExpressionCue
 			{
@@ -96,8 +97,8 @@ namespace ThousandAndFirst.DevTests
 				SourceValueKey = "style=verdant", SourceRef = "taf:source:test:style",
 				ReasonFactId = "taf:fact:profile:test:unproved"
 			};
-			Assert.IsTrue(KingdomPolityProfileExpressionCatalogue.ValidCue(unproved));
-			Assert.IsFalse(KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(unproved));
+			ClassicAssert.IsTrue(KingdomPolityProfileExpressionCatalogue.ValidCue(unproved));
+			ClassicAssert.IsFalse(KingdomPolityProfileExpressionCatalogue.CausallyAdmitted(unproved));
 		}
 	}
 }

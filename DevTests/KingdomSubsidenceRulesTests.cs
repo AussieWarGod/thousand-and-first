@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -23,11 +24,11 @@ namespace ThousandAndFirst.Tests
 		private static void AssertPublicFields(System.Type type, string[] expectedNames, System.Type[] expectedTypes)
 		{
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-			Assert.AreEqual(expectedNames.Length, fields.Length, type.FullName + " field count changed");
+			ClassicAssert.AreEqual(expectedNames.Length, fields.Length, type.FullName + " field count changed");
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.AreEqual(expectedNames[i], fields[i].Name, type.FullName + " field order changed");
-				Assert.AreEqual(expectedTypes[i], fields[i].FieldType, type.FullName + "." + fields[i].Name + " type changed");
+				ClassicAssert.AreEqual(expectedNames[i], fields[i].Name, type.FullName + " field order changed");
+				ClassicAssert.AreEqual(expectedTypes[i], fields[i].FieldType, type.FullName + "." + fields[i].Name + " type changed");
 			}
 		}
 
@@ -35,18 +36,18 @@ namespace ThousandAndFirst.Tests
 		public void NestedSaveAndPublicShapesKeepTheirExactAbi()
 		{
 			System.Type rules = typeof(KingdomSubsidenceRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules", rules.FullName);
-			Assert.IsTrue(rules.IsAbstract && rules.IsSealed, "rules authority stopped being static");
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsAbstract && rules.IsSealed, "rules authority stopped being static");
 
 			System.Type sighting = typeof(KingdomSubsidenceRules.ZoneSighting);
 			System.Type breakpoint = typeof(KingdomSubsidenceRules.Breakpoint);
 			System.Type trajectory = typeof(KingdomSubsidenceRules.Trajectory);
 			System.Type channel = typeof(KingdomSubsidenceRules.SubsidenceChannel);
-			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+ZoneSighting", sighting.FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Breakpoint", breakpoint.FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Trajectory", trajectory.FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+SubsidenceChannel", channel.FullName);
-			Assert.IsTrue(sighting.IsNestedPublic && breakpoint.IsNestedPublic && trajectory.IsNestedPublic && channel.IsNestedPublic);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+ZoneSighting", sighting.FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Breakpoint", breakpoint.FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+Trajectory", trajectory.FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSubsidenceRules+SubsidenceChannel", channel.FullName);
+			ClassicAssert.IsTrue(sighting.IsNestedPublic && breakpoint.IsNestedPublic && trajectory.IsNestedPublic && channel.IsNestedPublic);
 
 			AssertPublicFields(sighting,
 				new[] { "Water", "Food", "Roof", "StorageCapacity", "SeenTick" },
@@ -58,8 +59,8 @@ namespace ThousandAndFirst.Tests
 				new[] { "Population", "Stage", "Departed", "Steps", "Arrived", "Breakpoints" },
 				new[] { typeof(int), typeof(GrowthStage), typeof(int), typeof(int), typeof(bool),
 					typeof(List<KingdomSubsidenceRules.Breakpoint>) });
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
-			Assert.AreEqual("1:Ruin,2:Severity", string.Join(",", System.Array.ConvertAll(
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
+			ClassicAssert.AreEqual("1:Ruin,2:Severity", string.Join(",", System.Array.ConvertAll(
 				(KingdomSubsidenceRules.SubsidenceChannel[])System.Enum.GetValues(channel),
 				value => ((int)value) + ":" + value)));
 		}
@@ -95,9 +96,9 @@ namespace ThousandAndFirst.Tests
 				Seen(20, 26, 12, 400, 5000L)
 			};
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(mine, granary);
-			Assert.AreEqual(26, city.Water);
-			Assert.AreEqual(26, city.Food);
-			Assert.AreEqual(16, city.Roof);
+			ClassicAssert.AreEqual(26, city.Water);
+			ClassicAssert.AreEqual(26, city.Food);
+			ClassicAssert.AreEqual(16, city.Roof);
 		}
 
 		[Test]
@@ -113,8 +114,8 @@ namespace ThousandAndFirst.Tests
 			int fromGranary = KingdomSubsidenceRules.SupportedLevel(
 				KingdomSubsidenceRules.CityTally(granary, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(6, 2, 4, 0, 5000L) }),
 				GrowthStage.Town);
-			Assert.AreEqual(fromMine, fromGranary);
-			Assert.IsTrue(fromMine > KingdomSubsidenceRules.SupportedLevel(mine, GrowthStage.Town),
+			ClassicAssert.AreEqual(fromMine, fromGranary);
+			ClassicAssert.IsTrue(fromMine > KingdomSubsidenceRules.SupportedLevel(mine, GrowthStage.Town),
 				"the city carries more than the zone the founder happened to walk in through");
 		}
 
@@ -127,8 +128,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally here = Tally(Water: 10, Food: 10, Roof: 10, Lift: 7);
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
 				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(5, 5, 5, 0, 900L) });
-			Assert.AreEqual(7, city.Lift);
-			Assert.AreEqual(here.Works, city.Works, "the works count belongs to the ground that was walked");
+			ClassicAssert.AreEqual(7, city.Lift);
+			ClassicAssert.AreEqual(here.Works, city.Works, "the works count belongs to the ground that was walked");
 		}
 
 		[Test]
@@ -139,19 +140,19 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally here = Tally(Water: 10, Food: 10, Roof: 10);
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
 				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(99, 99, 99, 999, 0L) });
-			Assert.AreEqual(here.Water, city.Water);
-			Assert.AreEqual(here.Food, city.Food);
-			Assert.AreEqual(here.Roof, city.Roof);
-			Assert.AreEqual(0, KingdomSubsidenceRules.SightedZones(new List<KingdomSubsidenceRules.ZoneSighting> { Seen(99, 99, 99, 999, 0L) }));
+			ClassicAssert.AreEqual(here.Water, city.Water);
+			ClassicAssert.AreEqual(here.Food, city.Food);
+			ClassicAssert.AreEqual(here.Roof, city.Roof);
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.SightedZones(new List<KingdomSubsidenceRules.ZoneSighting> { Seen(99, 99, 99, 999, 0L) }));
 		}
 
 		[Test]
 		public void AOneZoneCityIsMeasuredExactlyAsItAlwaysWas()
 		{
 			KingdomCatalogueRules.SupportTally here = Tally(Water: 30, Food: 20, Roof: 25, Lift: 3);
-			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
 				KingdomSubsidenceRules.SupportedLevel(KingdomSubsidenceRules.CityTally(here, null), GrowthStage.Town));
-			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.SupportedLevel(here, GrowthStage.Town),
 				KingdomSubsidenceRules.SupportedLevel(
 					KingdomSubsidenceRules.CityTally(here, new List<KingdomSubsidenceRules.ZoneSighting>()), GrowthStage.Town));
 		}
@@ -165,10 +166,10 @@ namespace ThousandAndFirst.Tests
 				Seen(0, 12, 0, 50, 3000L)
 			};
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(Tally(4, 4, 4), others);
-			Assert.AreEqual(14, city.Water, "both sightings count however old either is");
-			Assert.AreEqual(16, city.Food);
-			Assert.AreEqual(3000L, KingdomSubsidenceRules.OldestSighting(others), "the reading is only as fresh as its oldest part");
-			Assert.AreEqual(2, KingdomSubsidenceRules.SightedZones(others));
+			ClassicAssert.AreEqual(14, city.Water, "both sightings count however old either is");
+			ClassicAssert.AreEqual(16, city.Food);
+			ClassicAssert.AreEqual(3000L, KingdomSubsidenceRules.OldestSighting(others), "the reading is only as fresh as its oldest part");
+			ClassicAssert.AreEqual(2, KingdomSubsidenceRules.SightedZones(others));
 		}
 
 		[Test]
@@ -179,9 +180,9 @@ namespace ThousandAndFirst.Tests
 			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting> { Seen(26, 0, 8, 300, 12L) };
 			KingdomCatalogueRules.SupportTally first = KingdomSubsidenceRules.CityTally(Tally(2, 2, 2), others);
 			KingdomCatalogueRules.SupportTally second = KingdomSubsidenceRules.CityTally(Tally(2, 2, 2), others);
-			Assert.AreEqual(first.Water, second.Water);
-			Assert.AreEqual(first.Roof, second.Roof);
-			Assert.AreEqual(28, first.Water);
+			ClassicAssert.AreEqual(first.Water, second.Water);
+			ClassicAssert.AreEqual(first.Roof, second.Roof);
+			ClassicAssert.AreEqual(28, first.Water);
 		}
 
 		[Test]
@@ -197,11 +198,11 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomCatalogueRules.SupportTally a = KingdomSubsidenceRules.CityTally(Tally(1, 1, 1), forward);
 			KingdomCatalogueRules.SupportTally b = KingdomSubsidenceRules.CityTally(Tally(1, 1, 1), backward);
-			Assert.AreEqual(a.Water, b.Water);
-			Assert.AreEqual(a.Food, b.Food);
-			Assert.AreEqual(a.Roof, b.Roof);
-			Assert.AreEqual(KingdomSubsidenceRules.OldestSighting(forward), KingdomSubsidenceRules.OldestSighting(backward));
-			Assert.AreEqual(KingdomSubsidenceRules.CityStorage(5, forward), KingdomSubsidenceRules.CityStorage(5, backward));
+			ClassicAssert.AreEqual(a.Water, b.Water);
+			ClassicAssert.AreEqual(a.Food, b.Food);
+			ClassicAssert.AreEqual(a.Roof, b.Roof);
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.OldestSighting(forward), KingdomSubsidenceRules.OldestSighting(backward));
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.CityStorage(5, forward), KingdomSubsidenceRules.CityStorage(5, backward));
 		}
 
 		[Test]
@@ -212,10 +213,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally here = Tally(20, 20, 20);
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(here,
 				new List<KingdomSubsidenceRules.ZoneSighting> { Seen(-500, -500, -500, -500, 400L) });
-			Assert.AreEqual(20, city.Water);
-			Assert.AreEqual(20, city.Food);
-			Assert.AreEqual(20, city.Roof);
-			Assert.AreEqual(20, KingdomSubsidenceRules.CityStorage(20, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(0, 0, 0, -900, 400L) }));
+			ClassicAssert.AreEqual(20, city.Water);
+			ClassicAssert.AreEqual(20, city.Food);
+			ClassicAssert.AreEqual(20, city.Roof);
+			ClassicAssert.AreEqual(20, KingdomSubsidenceRules.CityStorage(20, new List<KingdomSubsidenceRules.ZoneSighting> { Seen(0, 0, 0, -900, 400L) }));
 		}
 
 		[Test]
@@ -225,9 +226,9 @@ namespace ThousandAndFirst.Tests
 			// door must be measured against all of them or it demotes itself the moment the
 			// founder walks in through the wrong side.
 			List<KingdomSubsidenceRules.ZoneSighting> others = new List<KingdomSubsidenceRules.ZoneSighting> { Seen(0, 0, 0, 900, 700L) };
-			Assert.AreEqual(1100, KingdomSubsidenceRules.CityStorage(200, others));
-			Assert.AreEqual(200, KingdomSubsidenceRules.CityStorage(200, null));
-			Assert.IsTrue(KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 40, KingdomSubsidenceRules.CityStorage(200, others))
+			ClassicAssert.AreEqual(1100, KingdomSubsidenceRules.CityStorage(200, others));
+			ClassicAssert.AreEqual(200, KingdomSubsidenceRules.CityStorage(200, null));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 40, KingdomSubsidenceRules.CityStorage(200, others))
 				>= KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 40, 200),
 				"the whole city's stores never read as less than one zone's");
 		}
@@ -235,18 +236,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AReadingWhollyOfThisPassIsNotDated()
 		{
-			Assert.IsNull(KingdomSubsidenceRules.SightingClause(0, 0), "a one-zone city has nothing to date");
-			Assert.IsNull(KingdomSubsidenceRules.SightingClause(0, 40));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.SightingClause(0, 0), "a one-zone city has nothing to date");
+			ClassicAssert.IsNull(KingdomSubsidenceRules.SightingClause(0, 40));
 		}
 
 		[Test]
 		public void AReadingPartlyOutOfMemorySaysHowOldTheMemoryIs()
 		{
-			Assert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 0).Contains("walked today"));
-			Assert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 1).Contains("a day ago"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 0).Contains("walked today"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.SightingClause(1, 1).Contains("a day ago"));
 			string old = KingdomSubsidenceRules.SightingClause(2, 40);
-			Assert.IsTrue(old.Contains("2 parasangs"), "how much of the reading is memory");
-			Assert.IsTrue(old.Contains("40 days ago"), "and how old the memory is");
+			ClassicAssert.IsTrue(old.Contains("2 parasangs"), "how much of the reading is memory");
+			ClassicAssert.IsTrue(old.Contains("40 days ago"), "and how old the memory is");
 		}
 
 		// ==================================================================================
@@ -262,7 +263,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 100, 0)]
 		public void Carried_ScalesADeclaredAmountByHowWellTheWorkRuns(int amount, int percent, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.Carried(amount, percent));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.Carried(amount, percent));
 		}
 
 		[Test]
@@ -271,8 +272,8 @@ namespace ThousandAndFirst.Tests
 			// KingdomReachRules.Scaled deliberately floors a positive contribution at one: a
 			// barely-tended shrine still shades the ground it stands on. A binding support may not
 			// do that, because "one settler fed" is a claim about a person who eats.
-			Assert.AreEqual(1, KingdomReachRules.Scaled(8, 10));
-			Assert.AreEqual(0, KingdomCatalogueRules.Carried(8, 10));
+			ClassicAssert.AreEqual(1, KingdomReachRules.Scaled(8, 10));
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Carried(8, 10));
 		}
 
 		[Test]
@@ -282,11 +283,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.TryParseTally("water:5,food:3,roof:9,craft:2", out carries, out _);
 			KingdomCatalogueRules.SupportTally folded =
 				KingdomCatalogueRules.FoldWork(default(KingdomCatalogueRules.SupportTally), carries, 100);
-			Assert.AreEqual(5, folded.Water);
-			Assert.AreEqual(3, folded.Food);
-			Assert.AreEqual(9, folded.Roof);
-			Assert.AreEqual(2, folded.Lift);
-			Assert.AreEqual(1, folded.Works);
+			ClassicAssert.AreEqual(5, folded.Water);
+			ClassicAssert.AreEqual(3, folded.Food);
+			ClassicAssert.AreEqual(9, folded.Roof);
+			ClassicAssert.AreEqual(2, folded.Lift);
+			ClassicAssert.AreEqual(1, folded.Works);
 		}
 
 		[Test]
@@ -298,8 +299,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.TryParseTally("moonlight:6", out carries, out _);
 			KingdomCatalogueRules.SupportTally folded =
 				KingdomCatalogueRules.FoldWork(default(KingdomCatalogueRules.SupportTally), carries, 100);
-			Assert.AreEqual(6, folded.Lift);
-			Assert.AreEqual(0, folded.Water);
+			ClassicAssert.AreEqual(6, folded.Lift);
+			ClassicAssert.AreEqual(0, folded.Water);
 		}
 
 		[Test]
@@ -309,8 +310,8 @@ namespace ThousandAndFirst.Tests
 			// caller tell "nothing stands here" from "everything here carries nothing".
 			KingdomCatalogueRules.SupportTally folded =
 				KingdomCatalogueRules.FoldWork(default(KingdomCatalogueRules.SupportTally), null, 100);
-			Assert.AreEqual(1, folded.Works);
-			Assert.AreEqual(0, folded.Water + folded.Food + folded.Roof + folded.Lift);
+			ClassicAssert.AreEqual(1, folded.Works);
+			ClassicAssert.AreEqual(0, folded.Water + folded.Food + folded.Roof + folded.Lift);
 		}
 
 		[Test]
@@ -320,7 +321,7 @@ namespace ThousandAndFirst.Tests
 			List<KindAmount> carries;
 			KingdomCatalogueRules.TryParseTally("water:10", out carries, out _);
 			KingdomCatalogueRules.FoldWork(running, carries, 100);
-			Assert.AreEqual(4, running.Water, "the tally handed in must not be mutated");
+			ClassicAssert.AreEqual(4, running.Water, "the tally handed in must not be mutated");
 		}
 
 		[Test]
@@ -330,10 +331,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.TryParseTally("water:8,food:8,roof:8,craft:8", out carries, out _);
 			KingdomCatalogueRules.SupportTally folded =
 				KingdomCatalogueRules.FoldWork(default(KingdomCatalogueRules.SupportTally), carries, 50);
-			Assert.AreEqual(4, folded.Water);
-			Assert.AreEqual(4, folded.Food);
-			Assert.AreEqual(4, folded.Roof);
-			Assert.AreEqual(4, folded.Lift);
+			ClassicAssert.AreEqual(4, folded.Water);
+			ClassicAssert.AreEqual(4, folded.Food);
+			ClassicAssert.AreEqual(4, folded.Roof);
+			ClassicAssert.AreEqual(4, folded.Lift);
 		}
 
 		[Test]
@@ -341,19 +342,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.SumCarries(
 				new string[4] { "water:8", "water:5,food:2", "roof:18", "spirit:3" });
-			Assert.AreEqual(13, tally.Water);
-			Assert.AreEqual(2, tally.Food);
-			Assert.AreEqual(18, tally.Roof);
-			Assert.AreEqual(3, tally.Lift);
-			Assert.AreEqual(4, tally.Works);
+			ClassicAssert.AreEqual(13, tally.Water);
+			ClassicAssert.AreEqual(2, tally.Food);
+			ClassicAssert.AreEqual(18, tally.Roof);
+			ClassicAssert.AreEqual(3, tally.Lift);
+			ClassicAssert.AreEqual(4, tally.Works);
 		}
 
 		[Test]
 		public void SumCarries_ReadsNullAsNoWorksAtAll()
 		{
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.SumCarries(null);
-			Assert.AreEqual(0, tally.Works);
-			Assert.AreEqual(0, tally.Water);
+			ClassicAssert.AreEqual(0, tally.Works);
+			ClassicAssert.AreEqual(0, tally.Water);
 		}
 
 		[Test]
@@ -362,7 +363,7 @@ namespace ThousandAndFirst.Tests
 			// TryParseTally's own contract, carried into the sum: a caller that logs and carries
 			// on is never silently credited with nothing.
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.SumCarries(new string[1] { "water:8,rubbish" });
-			Assert.AreEqual(8, tally.Water);
+			ClassicAssert.AreEqual(8, tally.Water);
 		}
 
 		// ==================================================================================
@@ -379,21 +380,21 @@ namespace ThousandAndFirst.Tests
 			// Twelve drams a day is twelve settlers at camp rates and five in a city, because
 			// KingdomRules.StageUpkeepPercent says a city drinks like a city. This conversion is
 			// the cross-check the catalogue and the upkeep table had never been put through.
-			Assert.AreEqual(expected, KingdomSubsidenceRules.LevelFromWater(12, stage));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.LevelFromWater(12, stage));
 		}
 
 		[Test]
 		public void LevelFromWater_CarriesNobodyOnNoWater()
 		{
-			Assert.AreEqual(0, KingdomSubsidenceRules.LevelFromWater(0, GrowthStage.Camp));
-			Assert.AreEqual(0, KingdomSubsidenceRules.LevelFromWater(-9, GrowthStage.City));
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.LevelFromWater(0, GrowthStage.Camp));
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.LevelFromWater(-9, GrowthStage.City));
 		}
 
 		[Test]
 		public void LevelFromWater_FailsClosedOntoTheCampRateForAStageThisBuildDoesNotDefine()
 		{
-			Assert.AreEqual(12, KingdomSubsidenceRules.LevelFromWater(12, (GrowthStage)99));
-			Assert.AreEqual(12, KingdomSubsidenceRules.LevelFromWater(12, (GrowthStage)(-3)));
+			ClassicAssert.AreEqual(12, KingdomSubsidenceRules.LevelFromWater(12, (GrowthStage)99));
+			ClassicAssert.AreEqual(12, KingdomSubsidenceRules.LevelFromWater(12, (GrowthStage)(-3)));
 		}
 
 		[Test]
@@ -401,8 +402,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCatalogueRules.SupportTally tally = Tally(Water: 44, Food: 30, Roof: 30);
 			// 44 drams at Town rates is 24 settlers, then water and roof alone bind.
-			Assert.AreEqual(24, KingdomSubsidenceRules.LevelFromWater(44, GrowthStage.Town));
-			Assert.AreEqual(KingdomCatalogueRules.PopulationEquilibrium(24, 30, 0, 0),
+			ClassicAssert.AreEqual(24, KingdomSubsidenceRules.LevelFromWater(44, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.PopulationEquilibrium(24, 30, 0, 0),
 				KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Town));
 		}
 
@@ -411,10 +412,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCatalogueRules.SupportTally empty = Tally(Water: 44, Food: 0, Roof: 30);
 			KingdomCatalogueRules.SupportTally abundant = Tally(Water: 44, Food: int.MaxValue, Roof: 30);
-			Assert.AreEqual(24, KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town));
-			Assert.AreEqual(KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town),
+			ClassicAssert.AreEqual(24, KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.SupportedLevel(empty, GrowthStage.Town),
 				KingdomSubsidenceRules.SupportedLevel(abundant, GrowthStage.Town));
-			Assert.AreEqual(0, KingdomSubsidenceRules.Slide(24, GrowthStage.Town, 400,
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.Slide(24, GrowthStage.Town, 400,
 				empty, 400, AlreadySliding: false).Departed,
 				"zero food with adequate water and roofs must create no subsidence or departure");
 		}
@@ -425,8 +426,8 @@ namespace ThousandAndFirst.Tests
 			// The seam the brief's notable tastes, leader traits and Addendum 4's Prefers all end
 			// at. A Village on works for twelve holds fifteen once its notable is worth three.
 			KingdomCatalogueRules.SupportTally tally = Tally(18, 99, 99);
-			Assert.AreEqual(12, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village));
-			Assert.AreEqual(15, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 3));
+			ClassicAssert.AreEqual(12, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village));
+			ClassicAssert.AreEqual(15, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 3));
 		}
 
 		[Test]
@@ -434,8 +435,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Half the binding level and no more, whichever half the comfort came from.
 			KingdomCatalogueRules.SupportTally tally = Tally(18, 99, 99);
-			Assert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 400));
-			Assert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(Tally(18, 99, 99, Lift: 4), GrowthStage.Village, 4));
+			ClassicAssert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village, 400));
+			ClassicAssert.AreEqual(18, KingdomSubsidenceRules.SupportedLevel(Tally(18, 99, 99, Lift: 4), GrowthStage.Village, 4));
 		}
 
 		[Test]
@@ -446,12 +447,12 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
 			KingdomSubsidenceRules.Trajectory shaded = KingdomSubsidenceRules.Slide(
 				20, GrowthStage.Village, 64, supports, 400, AlreadySliding: false, Shade: 3);
-			Assert.AreEqual(15, shaded.Population);
-			Assert.AreEqual(5, shaded.Departed);
+			ClassicAssert.AreEqual(15, shaded.Population);
+			ClassicAssert.AreEqual(5, shaded.Departed);
 			KingdomSubsidenceRules.Trajectory bare = KingdomSubsidenceRules.Slide(
 				20, GrowthStage.Village, 64, supports, 400, AlreadySliding: false);
-			Assert.AreEqual(12, bare.Population, "a settlement with nobody named settles to what its works carry");
-			Assert.Greater(shaded.Population, bare.Population);
+			ClassicAssert.AreEqual(12, bare.Population, "a settlement with nobody named settles to what its works carry");
+			ClassicAssert.Greater(shaded.Population, bare.Population);
 		}
 
 		[Test]
@@ -459,9 +460,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The arrest, reached by the shade rather than by a building: nothing here departs.
 			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
-			Assert.AreEqual(0, KingdomSubsidenceRules.Slide(
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.Slide(
 				15, GrowthStage.Village, 64, supports, 400, AlreadySliding: false, Shade: 3).Departed);
-			Assert.Greater(KingdomSubsidenceRules.Slide(
+			ClassicAssert.Greater(KingdomSubsidenceRules.Slide(
 				15, GrowthStage.Village, 64, supports, 400, AlreadySliding: false).Departed, 0);
 		}
 
@@ -471,7 +472,7 @@ namespace ThousandAndFirst.Tests
 			foreach (GrowthStage stage in new GrowthStage[5]
 				{ GrowthStage.Camp, GrowthStage.Steading, GrowthStage.Village, GrowthStage.Town, GrowthStage.City })
 			{
-				Assert.AreEqual(KingdomCatalogueRules.FloorLevel,
+				ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel,
 					KingdomSubsidenceRules.SupportedLevel(default(KingdomCatalogueRules.SupportTally), stage));
 			}
 		}
@@ -485,8 +486,8 @@ namespace ThousandAndFirst.Tests
 			int city = KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.City);
 			int town = KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Town);
 			int village = KingdomSubsidenceRules.SupportedLevel(tally, GrowthStage.Village);
-			Assert.Less(city, town);
-			Assert.Less(town, village);
+			ClassicAssert.Less(city, town);
+			ClassicAssert.Less(town, village);
 		}
 
 		[Test]
@@ -495,9 +496,9 @@ namespace ThousandAndFirst.Tests
 			// Twenty-six drams is ample at camp rates and thin in a city. Food is deliberately
 			// ignored at both stages: the advice changes from roofs to water, never to sowing.
 			KingdomCatalogueRules.SupportTally tally = Tally(Water: 26, Food: 20, Roof: 20);
-			Assert.AreEqual(KingdomCatalogueRules.SupportRoof,
+			ClassicAssert.AreEqual(KingdomCatalogueRules.SupportRoof,
 				KingdomSubsidenceRules.BindingSupportFor(tally, GrowthStage.Camp));
-			Assert.AreEqual(KingdomCatalogueRules.SupportWater,
+			ClassicAssert.AreEqual(KingdomCatalogueRules.SupportWater,
 				KingdomSubsidenceRules.BindingSupportFor(tally, GrowthStage.City));
 		}
 
@@ -510,7 +511,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, null)]
 		public void NormalizedBinding_RepairsAStoredNameToACanonicalOneOrToNothing(string stored, string expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.NormalizedBinding(stored));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.NormalizedBinding(stored));
 		}
 
 		// ==================================================================================
@@ -524,14 +525,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(42, 50)]
 		public void SlideBeginsAbove_KeepsABandThatNeverVanishes(int level, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.SlideBeginsAbove(level));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.SlideBeginsAbove(level));
 		}
 
 		[Test]
 		public void IsSubsiding_HoldsAtTheBandsEdgeAndSlidesOneAboveIt()
 		{
-			Assert.IsFalse(KingdomSubsidenceRules.IsSubsiding(14, 12));
-			Assert.IsTrue(KingdomSubsidenceRules.IsSubsiding(15, 12));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.IsSubsiding(14, 12));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.IsSubsiding(15, 12));
 		}
 
 		[Test]
@@ -539,9 +540,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The two thresholds differ on purpose: that difference IS the hysteresis. A slide
 			// begins above the band and then settles all the way to the level.
-			Assert.IsTrue(KingdomSubsidenceRules.HasArrived(12, 12));
-			Assert.IsFalse(KingdomSubsidenceRules.HasArrived(13, 12));
-			Assert.IsFalse(KingdomSubsidenceRules.IsSubsiding(13, 12));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.HasArrived(12, 12));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.HasArrived(13, 12));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.IsSubsiding(13, 12));
 		}
 
 		// ==================================================================================
@@ -557,8 +558,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Raising is unchanged: hauling can still carry a settlement to City. The pillar
 			// promises a hauled city SETTLES BACK, not that it could never be raised.
-			Assert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
-			Assert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, population, capacity));
+			ClassicAssert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, population, capacity));
 		}
 
 		[Test]
@@ -567,8 +568,8 @@ namespace ThousandAndFirst.Tests
 			// Ten people in a City is a Camp by StageFor's own reading, and it still only loses
 			// one rung: a city that empties has a story with four chapters, and telling all four
 			// at once tells none.
-			Assert.AreEqual(GrowthStage.Steading, KingdomRules.StageFor(10, Capacity));
-			Assert.AreEqual(GrowthStage.Town, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.City, 10, Capacity));
+			ClassicAssert.AreEqual(GrowthStage.Steading, KingdomRules.StageFor(10, Capacity));
+			ClassicAssert.AreEqual(GrowthStage.Town, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.City, 10, Capacity));
 		}
 
 		[TestCase(20, GrowthStage.Town)]
@@ -577,7 +578,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A Town's own threshold is 25. It keeps the rung down to twenty and loses it at
 			// nineteen, which is the fifth named at StageFallMarginPercent.
-			Assert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Town, population, Capacity));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Town, population, Capacity));
 		}
 
 		[TestCase(205, GrowthStage.Town)]
@@ -586,14 +587,14 @@ namespace ThousandAndFirst.Tests
 		{
 			// Undedicating the stores demotes a settlement exactly as losing its people does, and
 			// with the same band, so the two readings StageFor takes cannot disagree about it.
-			Assert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Town, 100, capacity));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Town, 100, capacity));
 		}
 
 		[Test]
 		public void StageWithHysteresis_NeverFallsBelowCamp()
 		{
-			Assert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 0, 0));
-			Assert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, -5, -5));
+			ClassicAssert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, 0, 0));
+			ClassicAssert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, -5, -5));
 		}
 
 		[Test]
@@ -602,7 +603,7 @@ namespace ThousandAndFirst.Tests
 			// Without this the fall margin holds the smallest rung one settler under its own
 			// threshold, and a collapsed city would end its slide as a four-person steading -
 			// the one outcome the pillar names in so many words.
-			Assert.AreEqual(GrowthStage.Camp,
+			ClassicAssert.AreEqual(GrowthStage.Camp,
 				KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Steading, KingdomCatalogueRules.FloorLevel, Capacity));
 		}
 
@@ -614,8 +615,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole point of a band: a settlement that has just been promoted may lose a cask
 			// without losing the rung again on the very next pass.
-			Assert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, population, capacity));
-			Assert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(stage, population, capacity - 1));
+			ClassicAssert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Camp, population, capacity));
+			ClassicAssert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(stage, population, capacity - 1));
 		}
 
 		[TestCase(GrowthStage.Village, 12, 64)]
@@ -623,7 +624,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 50, 1024)]
 		public void StageWithHysteresis_DoesNotFlapWhenOneSettlerLeavesTheRungItJustCrossed(GrowthStage stage, int population, int capacity)
 		{
-			Assert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(stage, population - 1, capacity));
+			ClassicAssert.AreEqual(stage, KingdomSubsidenceRules.StageWithHysteresis(stage, population - 1, capacity));
 		}
 
 		[Test]
@@ -633,9 +634,9 @@ namespace ThousandAndFirst.Tests
 			// Camp's own equilibrium, and the floor wins. This is the one rung where the two
 			// rules meet, and it is why a collapsed city ends as a camp rather than as a
 			// four-person steading.
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel + 1, 5);
-			Assert.AreEqual(GrowthStage.Steading, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Steading, 5, 16));
-			Assert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Steading, 4, 16));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel + 1, 5);
+			ClassicAssert.AreEqual(GrowthStage.Steading, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Steading, 5, 16));
+			ClassicAssert.AreEqual(GrowthStage.Camp, KingdomSubsidenceRules.StageWithHysteresis(GrowthStage.Steading, 4, 16));
 		}
 
 		[Test]
@@ -643,14 +644,14 @@ namespace ThousandAndFirst.Tests
 		{
 			// StageWithHysteresis is the pace of a slide being lived through; this is the
 			// settling-up after a whole trajectory resolved in one pass.
-			Assert.AreEqual(GrowthStage.Camp,
+			ClassicAssert.AreEqual(GrowthStage.Camp,
 				KingdomSubsidenceRules.SettledStage(GrowthStage.City, KingdomCatalogueRules.FloorLevel, Capacity));
 		}
 
 		[Test]
 		public void SettledStage_StillRisesWhenTheFiguresRose()
 		{
-			Assert.AreEqual(GrowthStage.Town, KingdomSubsidenceRules.SettledStage(GrowthStage.Village, 25, 256));
+			ClassicAssert.AreEqual(GrowthStage.Town, KingdomSubsidenceRules.SettledStage(GrowthStage.Village, 25, 256));
 		}
 
 		// ==================================================================================
@@ -662,10 +663,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				14, GrowthStage.Village, Capacity, Tally(18, 99, 99), 400, AlreadySliding: false);
-			Assert.AreEqual(0, trajectory.Departed);
-			Assert.AreEqual(0, trajectory.Steps);
-			Assert.AreEqual(14, trajectory.Population);
-			Assert.AreEqual(GrowthStage.Village, trajectory.Stage);
+			ClassicAssert.AreEqual(0, trajectory.Departed);
+			ClassicAssert.AreEqual(0, trajectory.Steps);
+			ClassicAssert.AreEqual(14, trajectory.Population);
+			ClassicAssert.AreEqual(GrowthStage.Village, trajectory.Stage);
 		}
 
 		[Test]
@@ -674,8 +675,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				50, GrowthStage.City, Capacity, default(KingdomCatalogueRules.SupportTally),
 				KingdomSubsidenceRules.StepDays - 1, AlreadySliding: false);
-			Assert.AreEqual(0, trajectory.Steps);
-			Assert.AreEqual(50, trajectory.Population);
+			ClassicAssert.AreEqual(0, trajectory.Steps);
+			ClassicAssert.AreEqual(50, trajectory.Population);
 		}
 
 		[Test]
@@ -684,8 +685,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				50, GrowthStage.City, Capacity, default(KingdomCatalogueRules.SupportTally),
 				KingdomSubsidenceRules.StepDays * 2, AlreadySliding: false);
-			Assert.AreEqual(2, trajectory.Steps);
-			Assert.AreEqual(2 * KingdomSubsidenceRules.SettlersPerStep(GrowthStage.City), trajectory.Departed);
+			ClassicAssert.AreEqual(2, trajectory.Steps);
+			ClassicAssert.AreEqual(2 * KingdomSubsidenceRules.SettlersPerStep(GrowthStage.City), trajectory.Departed);
 		}
 
 		[TestCase(GrowthStage.Camp, 1)]
@@ -695,14 +696,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 5)]
 		public void SettlersPerStep_ShedsFasterTheGranderThePlaceIs(GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.SettlersPerStep(stage));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.SettlersPerStep(stage));
 		}
 
 		[Test]
 		public void SettlersPerStep_ClampsAStageThisBuildDoesNotDefine()
 		{
-			Assert.AreEqual(1, KingdomSubsidenceRules.SettlersPerStep((GrowthStage)(-4)));
-			Assert.AreEqual(5, KingdomSubsidenceRules.SettlersPerStep((GrowthStage)99));
+			ClassicAssert.AreEqual(1, KingdomSubsidenceRules.SettlersPerStep((GrowthStage)(-4)));
+			ClassicAssert.AreEqual(5, KingdomSubsidenceRules.SettlersPerStep((GrowthStage)99));
 		}
 
 		[Test]
@@ -712,10 +713,10 @@ namespace ThousandAndFirst.Tests
 			// fourteen (the band's edge) and not to the floor.
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				20, GrowthStage.Village, 64, Tally(18, 99, 99), 400, AlreadySliding: false);
-			Assert.AreEqual(12, KingdomSubsidenceRules.SupportedLevel(Tally(18, 99, 99), GrowthStage.Village));
-			Assert.AreEqual(12, trajectory.Population);
-			Assert.AreEqual(8, trajectory.Departed);
-			Assert.IsTrue(trajectory.Arrived);
+			ClassicAssert.AreEqual(12, KingdomSubsidenceRules.SupportedLevel(Tally(18, 99, 99), GrowthStage.Village));
+			ClassicAssert.AreEqual(12, trajectory.Population);
+			ClassicAssert.AreEqual(8, trajectory.Departed);
+			ClassicAssert.IsTrue(trajectory.Arrived);
 		}
 
 		[TestCase(1)]
@@ -728,7 +729,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				40, GrowthStage.Village, 64, supports, days, AlreadySliding: false);
-			Assert.GreaterOrEqual(trajectory.Population,
+			ClassicAssert.GreaterOrEqual(trajectory.Population,
 				KingdomSubsidenceRules.SupportedLevel(supports, trajectory.Stage));
 		}
 
@@ -738,8 +739,8 @@ namespace ThousandAndFirst.Tests
 			// The hysteresis in one test. Thirteen people on works for twelve is inside the band,
 			// so nothing STARTS; a slide that has already been announced settles the last one.
 			KingdomCatalogueRules.SupportTally supports = Tally(18, 99, 99);
-			Assert.AreEqual(0, KingdomSubsidenceRules.Slide(13, GrowthStage.Village, 64, supports, 400, AlreadySliding: false).Departed);
-			Assert.AreEqual(1, KingdomSubsidenceRules.Slide(13, GrowthStage.Village, 64, supports, 400, AlreadySliding: true).Departed);
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.Slide(13, GrowthStage.Village, 64, supports, 400, AlreadySliding: false).Departed);
+			ClassicAssert.AreEqual(1, KingdomSubsidenceRules.Slide(13, GrowthStage.Village, 64, supports, 400, AlreadySliding: true).Departed);
 		}
 
 		[Test]
@@ -751,9 +752,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally raised = Tally(60, 99, 99);
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				30, GrowthStage.Village, 64, raised, 400, AlreadySliding: true);
-			Assert.AreEqual(0, trajectory.Departed);
-			Assert.AreEqual(30, trajectory.Population);
-			Assert.IsTrue(trajectory.Arrived);
+			ClassicAssert.AreEqual(0, trajectory.Departed);
+			ClassicAssert.AreEqual(30, trajectory.Population);
+			ClassicAssert.IsTrue(trajectory.Arrived);
 		}
 
 		[Test]
@@ -763,9 +764,9 @@ namespace ThousandAndFirst.Tests
 			// four, however long the absence.
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				50, GrowthStage.City, Capacity, default(KingdomCatalogueRules.SupportTally), 40000, AlreadySliding: false);
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, trajectory.Population);
-			Assert.AreEqual(GrowthStage.Camp, trajectory.Stage);
-			Assert.Greater(trajectory.Population, KingdomRules.LoyalCoreSettlers);
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, trajectory.Population);
+			ClassicAssert.AreEqual(GrowthStage.Camp, trajectory.Stage);
+			ClassicAssert.Greater(trajectory.Population, KingdomRules.LoyalCoreSettlers);
 		}
 
 		[Test]
@@ -775,10 +776,10 @@ namespace ThousandAndFirst.Tests
 			// SettlersPerStep cannot move it quietly.
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				50, GrowthStage.City, Capacity, default(KingdomCatalogueRules.SupportTally), 400, AlreadySliding: false);
-			Assert.AreEqual(13, trajectory.Steps);
-			Assert.AreEqual(52, trajectory.Steps * KingdomSubsidenceRules.StepDays);
-			Assert.AreEqual(46, trajectory.Departed);
-			Assert.AreEqual(4, trajectory.Breakpoints.Count);
+			ClassicAssert.AreEqual(13, trajectory.Steps);
+			ClassicAssert.AreEqual(52, trajectory.Steps * KingdomSubsidenceRules.StepDays);
+			ClassicAssert.AreEqual(46, trajectory.Departed);
+			ClassicAssert.AreEqual(4, trajectory.Breakpoints.Count);
 		}
 
 		[Test]
@@ -793,9 +794,9 @@ namespace ThousandAndFirst.Tests
 			int[] days = new int[4] { 12, 28, 44, 52 };
 			for (int i = 0; i < 4; i++)
 			{
-				Assert.AreEqual(from[i], trajectory.Breakpoints[i].From);
-				Assert.AreEqual(to[i], trajectory.Breakpoints[i].To);
-				Assert.AreEqual(days[i], trajectory.Breakpoints[i].Day);
+				ClassicAssert.AreEqual(from[i], trajectory.Breakpoints[i].From);
+				ClassicAssert.AreEqual(to[i], trajectory.Breakpoints[i].To);
+				ClassicAssert.AreEqual(days[i], trajectory.Breakpoints[i].Day);
 			}
 		}
 
@@ -808,10 +809,10 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < trajectory.Breakpoints.Count; i++)
 			{
 				int day = trajectory.Breakpoints[i].Day;
-				Assert.AreEqual(0, day % KingdomSubsidenceRules.StepDays, "a breakpoint must sit on the step lattice");
-				Assert.Greater(day, previous, "breakpoints must be dated in order");
+				ClassicAssert.AreEqual(0, day % KingdomSubsidenceRules.StepDays, "a breakpoint must sit on the step lattice");
+				ClassicAssert.Greater(day, previous, "breakpoints must be dated in order");
 				previous = day;
-				Assert.Greater(trajectory.Breakpoints[i].Population, 0);
+				ClassicAssert.Greater(trajectory.Breakpoints[i].Population, 0);
 			}
 		}
 
@@ -822,8 +823,8 @@ namespace ThousandAndFirst.Tests
 			// advances its checkpoint by these steps and no more.
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				20, GrowthStage.Village, 64, Tally(18, 99, 99), 4000, AlreadySliding: false);
-			Assert.Less(trajectory.Steps * KingdomSubsidenceRules.StepDays, 4000);
-			Assert.LessOrEqual(trajectory.Steps, KingdomSubsidenceRules.MaxSteps);
+			ClassicAssert.Less(trajectory.Steps * KingdomSubsidenceRules.StepDays, 4000);
+			ClassicAssert.LessOrEqual(trajectory.Steps, KingdomSubsidenceRules.MaxSteps);
 		}
 
 		[Test]
@@ -834,9 +835,9 @@ namespace ThousandAndFirst.Tests
 				40, GrowthStage.Village, 64, supports, 100, AlreadySliding: false);
 			KingdomSubsidenceRules.Trajectory thousand = KingdomSubsidenceRules.Slide(
 				40, GrowthStage.Village, 64, supports, 1000, AlreadySliding: false);
-			Assert.AreEqual(hundred.Population, thousand.Population);
-			Assert.AreEqual(hundred.Stage, thousand.Stage);
-			Assert.AreEqual(hundred.Steps, thousand.Steps, "arriving early must not keep charging");
+			ClassicAssert.AreEqual(hundred.Population, thousand.Population);
+			ClassicAssert.AreEqual(hundred.Stage, thousand.Stage);
+			ClassicAssert.AreEqual(hundred.Steps, thousand.Steps, "arriving early must not keep charging");
 		}
 
 		[Test]
@@ -847,22 +848,22 @@ namespace ThousandAndFirst.Tests
 				44, GrowthStage.City, Capacity, supports, 137, AlreadySliding: false);
 			KingdomSubsidenceRules.Trajectory second = KingdomSubsidenceRules.Slide(
 				44, GrowthStage.City, Capacity, supports, 137, AlreadySliding: false);
-			Assert.AreEqual(first.Population, second.Population);
-			Assert.AreEqual(first.Stage, second.Stage);
-			Assert.AreEqual(first.Departed, second.Departed);
-			Assert.AreEqual(first.Steps, second.Steps);
-			Assert.AreEqual(first.Breakpoints.Count, second.Breakpoints.Count);
+			ClassicAssert.AreEqual(first.Population, second.Population);
+			ClassicAssert.AreEqual(first.Stage, second.Stage);
+			ClassicAssert.AreEqual(first.Departed, second.Departed);
+			ClassicAssert.AreEqual(first.Steps, second.Steps);
+			ClassicAssert.AreEqual(first.Breakpoints.Count, second.Breakpoints.Count);
 			for (int i = 0; i < first.Breakpoints.Count; i++)
 			{
-				Assert.AreEqual(first.Breakpoints[i].Day, second.Breakpoints[i].Day);
-				Assert.AreEqual(first.Breakpoints[i].To, second.Breakpoints[i].To);
+				ClassicAssert.AreEqual(first.Breakpoints[i].Day, second.Breakpoints[i].Day);
+				ClassicAssert.AreEqual(first.Breakpoints[i].To, second.Breakpoints[i].To);
 			}
 		}
 
 		[Test]
 		public void Slide_NeverReturnsANullBreakpointList()
 		{
-			Assert.IsNotNull(KingdomSubsidenceRules.Slide(
+			ClassicAssert.IsNotNull(KingdomSubsidenceRules.Slide(
 				4, GrowthStage.Camp, 0, default(KingdomCatalogueRules.SupportTally), 0, AlreadySliding: false).Breakpoints);
 		}
 
@@ -874,13 +875,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(99, 22)]
 		public void RuinIncrement_IsTheComplementOfWhatStandsHalved(int roll, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.RuinIncrement(roll));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.RuinIncrement(roll));
 		}
 
 		[Test]
 		public void RuinIncrement_FallsHarderAsTheRollRises()
 		{
-			Assert.Less(KingdomSubsidenceRules.RuinIncrement(0), KingdomSubsidenceRules.RuinIncrement(99));
+			ClassicAssert.Less(KingdomSubsidenceRules.RuinIncrement(0), KingdomSubsidenceRules.RuinIncrement(99));
 		}
 
 		[TestCase(-50)]
@@ -891,8 +892,8 @@ namespace ThousandAndFirst.Tests
 		public void RuinIncrement_IsAlwaysARealButSurvivableAmountOfDamage(int roll)
 		{
 			int increment = KingdomSubsidenceRules.RuinIncrement(roll);
-			Assert.GreaterOrEqual(increment, 1, "a ruin that adds nothing reads like a bug");
-			Assert.Less(increment, KingdomMaterialRules.MaxWearPercent, "one rung may never ruin a work outright");
+			ClassicAssert.GreaterOrEqual(increment, 1, "a ruin that adds nothing reads like a bug");
+			ClassicAssert.Less(increment, KingdomMaterialRules.MaxWearPercent, "one rung may never ruin a work outright");
 		}
 
 		[TestCase(0)]
@@ -904,8 +905,8 @@ namespace ThousandAndFirst.Tests
 			// The protection law: kingdom systems damage what they built and never delete it. Wear
 			// is capped, a capped work still runs, and every point of it comes back on a mending.
 			int after = KingdomMaterialRules.AddWear(before, KingdomSubsidenceRules.RuinIncrement(99));
-			Assert.LessOrEqual(after, KingdomMaterialRules.MaxWearPercent);
-			Assert.Greater(KingdomMaterialRules.ConditionPercent(after), 0, "a damaged work stands");
+			ClassicAssert.LessOrEqual(after, KingdomMaterialRules.MaxWearPercent);
+			ClassicAssert.Greater(KingdomMaterialRules.ConditionPercent(after), 0, "a damaged work stands");
 		}
 
 		[TestCase(GrowthStage.Camp, 10)]
@@ -915,7 +916,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 50)]
 		public void RuinChanceFor_ReachesFurtherTheGranderTheRungThatWent(GrowthStage from, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.RuinChanceFor(from));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.RuinChanceFor(from));
 		}
 
 		[Test]
@@ -926,13 +927,13 @@ namespace ThousandAndFirst.Tests
 			// event, and the widest of them is the constant the file names.
 			for (int index = 0; index < (int)GrowthStage.City; index++)
 			{
-				Assert.Less(KingdomSubsidenceRules.RuinChanceFor((GrowthStage)index),
+				ClassicAssert.Less(KingdomSubsidenceRules.RuinChanceFor((GrowthStage)index),
 					KingdomSubsidenceRules.RuinChanceFor((GrowthStage)(index + 1)),
 					"a grander rung did not reach further than the one below it");
 			}
-			Assert.AreEqual(KingdomSubsidenceRules.RuinChancePercent,
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.RuinChancePercent,
 				KingdomSubsidenceRules.RuinChanceFor(GrowthStage.City));
-			Assert.Greater(KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp), 0,
+			ClassicAssert.Greater(KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp), 0,
 				"a rung that reaches nothing is not a rung");
 		}
 
@@ -941,8 +942,8 @@ namespace ThousandAndFirst.Tests
 		public void RuinChanceFor_ClampsAStageOffTheLadderRatherThanFaulting(int index)
 		{
 			int chance = KingdomSubsidenceRules.RuinChanceFor((GrowthStage)index);
-			Assert.GreaterOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp));
-			Assert.LessOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.City));
+			ClassicAssert.GreaterOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.Camp));
+			ClassicAssert.LessOrEqual(chance, KingdomSubsidenceRules.RuinChanceFor(GrowthStage.City));
 		}
 
 		[Test]
@@ -961,7 +962,7 @@ namespace ThousandAndFirst.Tests
 					reached++;
 				}
 			}
-			Assert.Greater(reached, KingdomWearRules.MaxWorksDamagedPerRaid,
+			ClassicAssert.Greater(reached, KingdomWearRules.MaxWorksDamagedPerRaid,
 				"one lost rung of a city still reached no more works than a raid");
 		}
 
@@ -970,7 +971,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int i = 0; i < 8; i++)
 			{
-				Assert.AreEqual(
+				ClassicAssert.AreEqual(
 					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town),
 					KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Town),
 					"a reload must not re-roll a collapse the chronicle already described");
@@ -993,7 +994,7 @@ namespace ThousandAndFirst.Tests
 					sawFalse = true;
 				}
 			}
-			Assert.IsTrue(sawTrue && sawFalse, "two works at one breakpoint must not share one answer");
+			ClassicAssert.IsTrue(sawTrue && sawFalse, "two works at one breakpoint must not share one answer");
 		}
 
 		[Test]
@@ -1008,15 +1009,15 @@ namespace ThousandAndFirst.Tests
 					differed = true;
 				}
 			}
-			Assert.IsTrue(differed, "a second rung must be an independent question");
+			ClassicAssert.IsTrue(differed, "a second rung must be an independent question");
 		}
 
 		[Test]
 		public void RollRuin_FailsClosedOnASettlementIdTheKernelWillNotTake()
 		{
-			Assert.IsFalse(KingdomSubsidenceRules.RollRuin(null, "work-1", 4800uL, GrowthStage.City));
-			Assert.IsFalse(KingdomSubsidenceRules.RollRuin("", "work-1", 4800uL, GrowthStage.City));
-			Assert.AreEqual(0, KingdomSubsidenceRules.RolledRuinIncrement("", "work-1", 4800uL));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.RollRuin(null, "work-1", 4800uL, GrowthStage.City));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.RollRuin("", "work-1", 4800uL, GrowthStage.City));
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.RolledRuinIncrement("", "work-1", 4800uL));
 		}
 
 		[Test]
@@ -1026,9 +1027,9 @@ namespace ThousandAndFirst.Tests
 			{
 				int first = KingdomSubsidenceRules.RolledRuinIncrement("taf:settlement:ashmarch", "work-" + i, 4800uL);
 				int second = KingdomSubsidenceRules.RolledRuinIncrement("taf:settlement:ashmarch", "work-" + i, 4800uL);
-				Assert.AreEqual(first, second);
-				Assert.GreaterOrEqual(first, KingdomSubsidenceRules.RuinIncrement(0));
-				Assert.LessOrEqual(first, KingdomSubsidenceRules.RuinIncrement(99));
+				ClassicAssert.AreEqual(first, second);
+				ClassicAssert.GreaterOrEqual(first, KingdomSubsidenceRules.RuinIncrement(0));
+				ClassicAssert.LessOrEqual(first, KingdomSubsidenceRules.RuinIncrement(99));
 			}
 		}
 
@@ -1036,10 +1037,10 @@ namespace ThousandAndFirst.Tests
 		public void WorkStream_FoldsToTheFrozenSemanticIdGrammarAndNamesItsOwnLane()
 		{
 			string stream = KingdomSubsidenceRules.WorkStream("Work Id/42");
-			Assert.IsTrue(stream.StartsWith("taf:subsidence:"), "a subsidence draw must not share the wear file's lane");
-			Assert.IsTrue(stream.EndsWith(":v1"));
+			ClassicAssert.IsTrue(stream.StartsWith("taf:subsidence:"), "a subsidence draw must not share the wear file's lane");
+			ClassicAssert.IsTrue(stream.EndsWith(":v1"));
 			StringAssert.Contains("work-id-42", stream);
-			Assert.IsTrue(KingdomSubsidenceRules.WorkStream(null).EndsWith("unidentified:v1"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.WorkStream(null).EndsWith("unidentified:v1"));
 		}
 
 		// ==================================================================================
@@ -1061,7 +1062,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string water = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportWater, 12, 19);
 			string roof = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportRoof, 12, 19);
-			Assert.AreNotEqual(water, roof);
+			ClassicAssert.AreNotEqual(water, roof);
 			StringAssert.DoesNotContain("harvest", water + roof);
 		}
 
@@ -1070,7 +1071,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string began = KingdomSubsidenceRules.BeganNote("Ashmarch", KingdomCatalogueRules.SupportWater, 12, 19);
 			string arrested = KingdomSubsidenceRules.ArrestedNote("Ashmarch", 12, 12);
-			Assert.AreNotEqual(began, arrested);
+			ClassicAssert.AreNotEqual(began, arrested);
 			StringAssert.Contains("Ashmarch", arrested);
 			StringAssert.Contains("12", arrested);
 		}
@@ -1080,7 +1081,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Both are arrests and both unsay the 7b line, but "it has stopped" and "it has
 			// settled" are different pieces of news and the founder is owed the difference.
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				KingdomSubsidenceRules.ArrestedNote("Ashmarch", 12, 9),
 				KingdomSubsidenceRules.ArrestedNote("Ashmarch", 12, 12));
 		}
@@ -1120,15 +1121,15 @@ namespace ThousandAndFirst.Tests
 			string water = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportWater);
 			string food = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportFood);
 			string roof = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportRoof);
-			Assert.AreNotEqual(water, roof);
-			Assert.AreEqual(KingdomSubsidenceRules.DepartureCause("moonlight"), food,
+			ClassicAssert.AreNotEqual(water, roof);
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.DepartureCause("moonlight"), food,
 				"legacy food binding must normalize to the neutral compatibility clause");
 			StringAssert.DoesNotContain("food", food);
 			StringAssert.DoesNotContain("fed", food);
 			StringAssert.DoesNotContain("field", food);
 			foreach (string clause in new string[2] { water, roof })
 			{
-				Assert.IsFalse(clause.EndsWith("."), "a cause clause is spliced into a sentence, not ended");
+				ClassicAssert.IsFalse(clause.EndsWith("."), "a cause clause is spliced into a sentence, not ended");
 			}
 		}
 
@@ -1138,15 +1139,15 @@ namespace ThousandAndFirst.Tests
 			// A settlement no pass has measured, or a saved name from a build with a different
 			// vocabulary, must not have the water blamed for it by default.
 			string unknown = KingdomSubsidenceRules.DepartureCause("moonlight");
-			Assert.AreEqual(unknown, KingdomSubsidenceRules.DepartureCause(null));
-			Assert.AreNotEqual(unknown, KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportWater));
-			Assert.IsTrue(unknown.Length > 0, "a departure still says why, even when it cannot say which good");
+			ClassicAssert.AreEqual(unknown, KingdomSubsidenceRules.DepartureCause(null));
+			ClassicAssert.AreNotEqual(unknown, KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportWater));
+			ClassicAssert.IsTrue(unknown.Length > 0, "a departure still says why, even when it cannot say which good");
 		}
 
 		[Test]
 		public void BeganNote_BlamesNoGoodItCannotName()
 		{
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				KingdomSubsidenceRules.BeganChronicle("Ashmarch", null, 12),
 				KingdomSubsidenceRules.BeganChronicle("Ashmarch", KingdomCatalogueRules.SupportWater, 12));
 			StringAssert.Contains("12", KingdomSubsidenceRules.BeganChronicle("Ashmarch", null, 12));
@@ -1170,7 +1171,7 @@ namespace ThousandAndFirst.Tests
 			}
 			foreach (string name in fields)
 			{
-				Assert.IsTrue(carried.Contains(name), name + " is per-city state and must travel with a city");
+				ClassicAssert.IsTrue(carried.Contains(name), name + " is per-city state and must travel with a city");
 			}
 		}
 
@@ -1182,8 +1183,8 @@ namespace ThousandAndFirst.Tests
 			settlement.LastSubsidenceTick = -5000L;
 			settlement.SupportedLevel = -9;
 			settlement.Normalize();
-			Assert.AreEqual(-5000L, settlement.LastSubsidenceTick);
-			Assert.AreEqual(0, settlement.SupportedLevel);
+			ClassicAssert.AreEqual(-5000L, settlement.LastSubsidenceTick);
+			ClassicAssert.AreEqual(0, settlement.SupportedLevel);
 		}
 
 		[Test]
@@ -1194,8 +1195,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement settlement = new KingdomSettlement();
 			settlement.SubsidenceBinding = "moonlight";
 			settlement.Normalize();
-			Assert.AreEqual("moonlight", settlement.SubsidenceBinding);
-			Assert.IsNull(KingdomSubsidenceRules.NormalizedBinding(settlement.SubsidenceBinding));
+			ClassicAssert.AreEqual("moonlight", settlement.SubsidenceBinding);
+			ClassicAssert.IsNull(KingdomSubsidenceRules.NormalizedBinding(settlement.SubsidenceBinding));
 		}
 
 		[Test]
@@ -1207,10 +1208,10 @@ namespace ThousandAndFirst.Tests
 			settlement.SubsidenceBinding = KingdomCatalogueRules.SupportRoof;
 			settlement.SubsidenceAnnounced = true;
 			settlement.Normalize();
-			Assert.AreEqual(4800L, settlement.LastSubsidenceTick);
-			Assert.AreEqual(12, settlement.SupportedLevel);
-			Assert.AreEqual(KingdomCatalogueRules.SupportRoof, settlement.SubsidenceBinding);
-			Assert.IsTrue(settlement.SubsidenceAnnounced);
+			ClassicAssert.AreEqual(4800L, settlement.LastSubsidenceTick);
+			ClassicAssert.AreEqual(12, settlement.SupportedLevel);
+			ClassicAssert.AreEqual(KingdomCatalogueRules.SupportRoof, settlement.SubsidenceBinding);
+			ClassicAssert.IsTrue(settlement.SubsidenceAnnounced);
 		}
 
 		// ==================================================================================
@@ -1228,9 +1229,9 @@ namespace ThousandAndFirst.Tests
 			// that carries it. This is the cross-check the audit says had never been made, and it
 			// is what makes "the works pay for the people" a true sentence rather than a hope.
 			int bill = KingdomRules.UpkeepDrams(threshold, stage);
-			Assert.GreaterOrEqual(KingdomSubsidenceRules.LevelFromWater(bill, stage), threshold - 1,
+			ClassicAssert.GreaterOrEqual(KingdomSubsidenceRules.LevelFromWater(bill, stage), threshold - 1,
 				"the drams a rung drinks must carry very nearly the people who drink them");
-			Assert.GreaterOrEqual(KingdomSubsidenceRules.LevelFromWater(bill + 1, stage), threshold,
+			ClassicAssert.GreaterOrEqual(KingdomSubsidenceRules.LevelFromWater(bill + 1, stage), threshold,
 				"one dram of slack must be enough to close the rounding");
 		}
 
@@ -1242,10 +1243,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				KingdomCatalogueRules.FloorLevel, GrowthStage.Camp, 0,
 				default(KingdomCatalogueRules.SupportTally), 40000, AlreadySliding: false);
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, trajectory.Population);
-			Assert.AreEqual(GrowthStage.Camp, trajectory.Stage);
-			Assert.AreEqual(0, trajectory.Departed);
-			Assert.IsTrue(trajectory.Arrived);
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, trajectory.Population);
+			ClassicAssert.AreEqual(GrowthStage.Camp, trajectory.Stage);
+			ClassicAssert.AreEqual(0, trajectory.Departed);
+			ClassicAssert.IsTrue(trajectory.Arrived);
 		}
 
 		// ==================================================================================
@@ -1260,7 +1261,7 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int i = 0; i < departed; i++)
 				{
-					Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(i, departed),
+					ClassicAssert.IsTrue(KingdomSubsidenceRules.TellsDeparture(i, departed),
 						"a short slide stopped naming everybody");
 				}
 			}
@@ -1273,8 +1274,8 @@ namespace ThousandAndFirst.Tests
 			// sample that dropped either would be a worse record than a shorter one.
 			for (int departed = KingdomSubsidenceRules.NamedDeparturesPerSlide + 1; departed <= 60; departed++)
 			{
-				Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(0, departed), "the first departure went untold");
-				Assert.IsTrue(KingdomSubsidenceRules.TellsDeparture(departed - 1, departed), "the last departure went untold");
+				ClassicAssert.IsTrue(KingdomSubsidenceRules.TellsDeparture(0, departed), "the first departure went untold");
+				ClassicAssert.IsTrue(KingdomSubsidenceRules.TellsDeparture(departed - 1, departed), "the last departure went untold");
 			}
 		}
 
@@ -1292,18 +1293,18 @@ namespace ThousandAndFirst.Tests
 						named++;
 					}
 				}
-				Assert.AreEqual(KingdomSubsidenceRules.NamedDepartures(departed), named,
+				ClassicAssert.AreEqual(KingdomSubsidenceRules.NamedDepartures(departed), named,
 					"the sample size drifted from what NamedDepartures promises");
-				Assert.LessOrEqual(named, KingdomSubsidenceRules.NamedDeparturesPerSlide);
+				ClassicAssert.LessOrEqual(named, KingdomSubsidenceRules.NamedDeparturesPerSlide);
 			}
 		}
 
 		[Test]
 		public void TellsDeparture_RefusesIndicesOutsideTheSlide()
 		{
-			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(-1, 10));
-			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(10, 10));
-			Assert.IsFalse(KingdomSubsidenceRules.TellsDeparture(0, 0));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.TellsDeparture(-1, 10));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.TellsDeparture(10, 10));
+			ClassicAssert.IsFalse(KingdomSubsidenceRules.TellsDeparture(0, 0));
 		}
 
 		[Test]
@@ -1323,9 +1324,9 @@ namespace ThousandAndFirst.Tests
 		public void SlideDepartureSummary_SaysNothingWhenTheSampleNamedThemAll()
 		{
 			string cause = KingdomSubsidenceRules.DepartureCause(KingdomCatalogueRules.SupportRoof);
-			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 3, 3, cause));
-			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 0, 0, cause));
-			Assert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 2, 5, cause));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 3, 3, cause));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 0, 0, cause));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.SlideDepartureSummary("Tamsketh", 2, 5, cause));
 		}
 
 		[Test]
@@ -1347,10 +1348,10 @@ namespace ThousandAndFirst.Tests
 			// event. Now it is the rungs, their ruins, and four lines about the people.
 			int rungs = (int)GrowthStage.City;
 			int spent = KingdomSubsidenceRules.ChronicleEntriesFor(46, rungs);
-			Assert.LessOrEqual(spent, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
+			ClassicAssert.LessOrEqual(spent, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
 				"a full collapse went over the budget this file promises");
-			Assert.Less(spent, 58 / 2, "the coarsening did not even halve the old spend");
-			Assert.Greater(spent, rungs, "the rungs themselves stopped being told");
+			ClassicAssert.Less(spent, 58 / 2, "the coarsening did not even halve the old spend");
+			ClassicAssert.Greater(spent, rungs, "the rungs themselves stopped being told");
 		}
 
 		[Test]
@@ -1361,16 +1362,16 @@ namespace ThousandAndFirst.Tests
 			// does, because a rung is a real change in what the place is.
 			int shortSlide = KingdomSubsidenceRules.ChronicleEntriesFor(10, 1);
 			int longSlide = KingdomSubsidenceRules.ChronicleEntriesFor(46, 1);
-			Assert.AreEqual(shortSlide, longSlide, "the register still paid by the settler");
-			Assert.Greater(KingdomSubsidenceRules.ChronicleEntriesFor(46, 4), longSlide,
+			ClassicAssert.AreEqual(shortSlide, longSlide, "the register still paid by the settler");
+			ClassicAssert.Greater(KingdomSubsidenceRules.ChronicleEntriesFor(46, 4), longSlide,
 				"a four-rung fall cost the same as a one-rung fall");
 		}
 
 		[Test]
 		public void ChronicleEntriesFor_ASlideThatTookNobodyWritesNothingButItsRungs()
 		{
-			Assert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(0, 0));
-			Assert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(-4, -1));
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(0, 0));
+			ClassicAssert.AreEqual(0, KingdomSubsidenceRules.ChronicleEntriesFor(-4, -1));
 		}
 
 		[Test]
@@ -1379,8 +1380,8 @@ namespace ThousandAndFirst.Tests
 			// KingdomChronicle.MaxEntries is 200 and is the chronicle's own constant; this file
 			// folds to fit it rather than reaching into it. One collapse may not spend more than
 			// a tenth of the record a settlement keeps of itself.
-			Assert.LessOrEqual(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 200 / 10);
-			Assert.Greater(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 0);
+			ClassicAssert.LessOrEqual(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 200 / 10);
+			ClassicAssert.Greater(KingdomSubsidenceRules.ChronicleBudgetPerSlide, 0);
 		}
 
 		[Test]
@@ -1392,13 +1393,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally supports = Tally(0, 0, 0);
 			KingdomSubsidenceRules.Trajectory trajectory = KingdomSubsidenceRules.Slide(
 				50, GrowthStage.City, 2048, supports, KingdomSubsidenceRules.StepDays * 200, AlreadySliding: false);
-			Assert.Greater(trajectory.Breakpoints.Count, 0, "a City with nothing standing did not fall");
-			Assert.AreEqual(GrowthStage.City, trajectory.Breakpoints[0].From, "the first rung was not the one it started on");
-			Assert.AreEqual(GrowthStage.Camp, trajectory.Breakpoints[trajectory.Breakpoints.Count - 1].To,
+			ClassicAssert.Greater(trajectory.Breakpoints.Count, 0, "a City with nothing standing did not fall");
+			ClassicAssert.AreEqual(GrowthStage.City, trajectory.Breakpoints[0].From, "the first rung was not the one it started on");
+			ClassicAssert.AreEqual(GrowthStage.Camp, trajectory.Breakpoints[trajectory.Breakpoints.Count - 1].To,
 				"the last rung was not the floor it arrived at");
-			Assert.LessOrEqual(trajectory.Breakpoints.Count, (int)GrowthStage.City,
+			ClassicAssert.LessOrEqual(trajectory.Breakpoints.Count, (int)GrowthStage.City,
 				"more rungs were told than the ladder has");
-			Assert.LessOrEqual(
+			ClassicAssert.LessOrEqual(
 				KingdomSubsidenceRules.ChronicleEntriesFor(trajectory.Departed, trajectory.Breakpoints.Count),
 				KingdomSubsidenceRules.ChronicleBudgetPerSlide,
 				"a real full collapse went over the budget");
@@ -1417,7 +1418,7 @@ namespace ThousandAndFirst.Tests
 			for (int roll = 0; roll < 100; roll++)
 			{
 				int afterOneRung = KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll));
-				Assert.IsFalse(KingdomLodgingRules.IsCondemned(afterOneRung),
+				ClassicAssert.IsFalse(KingdomLodgingRules.IsCondemned(afterOneRung),
 					"one rung of a slide emptied a house");
 			}
 		}
@@ -1441,8 +1442,8 @@ namespace ThousandAndFirst.Tests
 					crossings++;
 				}
 			}
-			Assert.IsTrue(KingdomLodgingRules.IsCondemned(wear), "a full collapse never condemned anything");
-			Assert.AreEqual(1, crossings, "the condemning crossing fired more than once");
+			ClassicAssert.IsTrue(KingdomLodgingRules.IsCondemned(wear), "a full collapse never condemned anything");
+			ClassicAssert.AreEqual(1, crossings, "the condemning crossing fired more than once");
 		}
 
 		[Test]
@@ -1453,8 +1454,8 @@ namespace ThousandAndFirst.Tests
 			// crossing and the people under it keep the honest tick they already had.
 			int ceiling = KingdomMaterialRules.MaxWearPercent;
 			int after = KingdomMaterialRules.AddWear(ceiling, KingdomSubsidenceRules.RuinIncrement(99));
-			Assert.AreEqual(ceiling, after, "the ceiling stopped being a ceiling");
-			Assert.IsTrue(KingdomLodgingRules.IsCondemned(ceiling) && KingdomLodgingRules.IsCondemned(after),
+			ClassicAssert.AreEqual(ceiling, after, "the ceiling stopped being a ceiling");
+			ClassicAssert.IsTrue(KingdomLodgingRules.IsCondemned(ceiling) && KingdomLodgingRules.IsCondemned(after),
 				"a work at the ceiling was not condemned");
 		}
 
@@ -1464,11 +1465,11 @@ namespace ThousandAndFirst.Tests
 			// The protection law and the arrest, together: nothing is cleared, the ceiling is
 			// above the condemnation line, and every point of the damage goes back through the
 			// ordinary mending. A condemnation is answered by acting, never by waiting.
-			Assert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
+			ClassicAssert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
 			for (int roll = 0; roll < 100; roll++)
 			{
-				Assert.Greater(KingdomSubsidenceRules.RuinIncrement(roll), 0, "a ruin was a no-op that read like one");
-				Assert.LessOrEqual(KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll)),
+				ClassicAssert.Greater(KingdomSubsidenceRules.RuinIncrement(roll), 0, "a ruin was a no-op that read like one");
+				ClassicAssert.LessOrEqual(KingdomMaterialRules.AddWear(0, KingdomSubsidenceRules.RuinIncrement(roll)),
 					KingdomMaterialRules.MaxWearPercent);
 			}
 		}
@@ -1570,18 +1571,18 @@ namespace ThousandAndFirst.Tests
 			// pristine however many dozen were standing.
 			const int works = 40;
 			FieldOfRuins field = Collapse("taf:settlement:ashmarch", works, GrowthStage.City, GrowthStage.Camp);
-			Assert.Greater(field.Ruined, works / 2, "a city fell all the way back and most of it was untouched");
-			Assert.Greater(field.Ruined, (int)GrowthStage.City * KingdomWearRules.MaxWorksDamagedPerRaid,
+			ClassicAssert.Greater(field.Ruined, works / 2, "a city fell all the way back and most of it was untouched");
+			ClassicAssert.Greater(field.Ruined, (int)GrowthStage.City * KingdomWearRules.MaxWorksDamagedPerRaid,
 				"the fall reached no more works than the retired flat allowance would have");
-			Assert.LessOrEqual(field.Ruined, works, "more works were ruined than were standing");
+			ClassicAssert.LessOrEqual(field.Ruined, works, "more works were ruined than were standing");
 			// The protection law, across the whole field: every plot still has its work on it,
 			// every one of them is still running, and every point of the damage is mendable.
 			// A collapse ruins; it never clears.
 			for (int i = 0; i < field.Wear.Length; i++)
 			{
-				Assert.LessOrEqual(field.Wear[i], KingdomMaterialRules.MaxWearPercent,
+				ClassicAssert.LessOrEqual(field.Wear[i], KingdomMaterialRules.MaxWearPercent,
 					"work " + i + " was run past the ceiling a mending has to undo");
-				Assert.Greater(KingdomMaterialRules.ConditionPercent(field.Wear[i]), 0,
+				ClassicAssert.Greater(KingdomMaterialRules.ConditionPercent(field.Wear[i]), 0,
 					"work " + i + " stopped standing");
 			}
 		}
@@ -1602,10 +1603,10 @@ namespace ThousandAndFirst.Tests
 					stages.Add(word);
 				}
 			}
-			Assert.IsTrue(stages.Contains("knocked about"), "nothing was merely knocked about");
-			Assert.IsTrue(stages.Contains("badly used"), "nothing was badly used");
-			Assert.IsTrue(stages.Contains("half-wrecked"), "nothing was left a ruin");
-			Assert.IsTrue(stages.Contains("sound"), "a fall that spared nothing at all is not a field of ruins");
+			ClassicAssert.IsTrue(stages.Contains("knocked about"), "nothing was merely knocked about");
+			ClassicAssert.IsTrue(stages.Contains("badly used"), "nothing was badly used");
+			ClassicAssert.IsTrue(stages.Contains("half-wrecked"), "nothing was left a ruin");
+			ClassicAssert.IsTrue(stages.Contains("sound"), "a fall that spared nothing at all is not a field of ruins");
 		}
 
 		[Test]
@@ -1615,9 +1616,9 @@ namespace ThousandAndFirst.Tests
 			// four rungs of the same settlement are not the same event.
 			FieldOfRuins shallow = Collapse("taf:settlement:ashmarch", 40, GrowthStage.Town, GrowthStage.Village);
 			FieldOfRuins full = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
-			Assert.Greater(shallow.Ruined, 0, "a lost rung scuffed nothing at all");
-			Assert.Less(shallow.Ruined, full.Ruined, "a one-rung slide cost as much as a whole collapse");
-			Assert.AreEqual(0, shallow.Crossings, "one rung emptied a house");
+			ClassicAssert.Greater(shallow.Ruined, 0, "a lost rung scuffed nothing at all");
+			ClassicAssert.Less(shallow.Ruined, full.Ruined, "a one-rung slide cost as much as a whole collapse");
+			ClassicAssert.AreEqual(0, shallow.Crossings, "one rung emptied a house");
 		}
 
 		[Test]
@@ -1627,11 +1628,11 @@ namespace ThousandAndFirst.Tests
 			// re-roll one. Same settlement, same works, same rungs, same lattice of ordinals.
 			FieldOfRuins first = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
 			FieldOfRuins second = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
-			Assert.AreEqual(first.Ruined, second.Ruined);
-			Assert.AreEqual(first.Crossings, second.Crossings);
+			ClassicAssert.AreEqual(first.Ruined, second.Ruined);
+			ClassicAssert.AreEqual(first.Crossings, second.Crossings);
 			for (int i = 0; i < first.Wear.Length; i++)
 			{
-				Assert.AreEqual(first.Wear[i], second.Wear[i], "work " + i + " was ruined differently the second time");
+				ClassicAssert.AreEqual(first.Wear[i], second.Wear[i], "work " + i + " was ruined differently the second time");
 			}
 		}
 
@@ -1648,7 +1649,7 @@ namespace ThousandAndFirst.Tests
 					differed = true;
 				}
 			}
-			Assert.IsTrue(differed, "two settlements were handed one collapse between them");
+			ClassicAssert.IsTrue(differed, "two settlements were handed one collapse between them");
 		}
 
 		[Test]
@@ -1667,9 +1668,9 @@ namespace ThousandAndFirst.Tests
 					condemned++;
 				}
 			}
-			Assert.Greater(condemned, 0, "a whole collapse condemned nothing");
-			Assert.AreEqual(condemned, field.Crossings, "a condemned home crossed the line more or less than once");
-			Assert.Greater(field.Crossings, (int)GrowthStage.City * KingdomSubsidenceRules.NamedRuinsPerBreakpoint,
+			ClassicAssert.Greater(condemned, 0, "a whole collapse condemned nothing");
+			ClassicAssert.AreEqual(condemned, field.Crossings, "a condemned home crossed the line more or less than once");
+			ClassicAssert.Greater(field.Crossings, (int)GrowthStage.City * KingdomSubsidenceRules.NamedRuinsPerBreakpoint,
 				"no more homes reached their brink than the chronicle happened to name");
 		}
 
@@ -1681,9 +1682,9 @@ namespace ThousandAndFirst.Tests
 			// the same number of entries.
 			FieldOfRuins small = Collapse("taf:settlement:ashmarch", 40, GrowthStage.City, GrowthStage.Camp);
 			FieldOfRuins large = Collapse("taf:settlement:ashmarch", 120, GrowthStage.City, GrowthStage.Camp);
-			Assert.Greater(large.Ruined, small.Ruined, "a bigger settlement lost no more works than a smaller one");
-			Assert.AreEqual(small.Entries, large.Entries, "the register still paid by the ruined work");
-			Assert.LessOrEqual(large.Entries, (int)GrowthStage.City * (KingdomSubsidenceRules.NamedRuinsPerBreakpoint + 1),
+			ClassicAssert.Greater(large.Ruined, small.Ruined, "a bigger settlement lost no more works than a smaller one");
+			ClassicAssert.AreEqual(small.Entries, large.Entries, "the register still paid by the ruined work");
+			ClassicAssert.LessOrEqual(large.Entries, (int)GrowthStage.City * (KingdomSubsidenceRules.NamedRuinsPerBreakpoint + 1),
 				"a rung spent more entries than its named ruins plus one summary");
 		}
 
@@ -1695,9 +1696,9 @@ namespace ThousandAndFirst.Tests
 			FieldOfRuins field = Collapse("taf:settlement:ashmarch", 120, GrowthStage.City, GrowthStage.Camp);
 			int rungs = (int)GrowthStage.City;
 			int departures = KingdomSubsidenceRules.NamedDepartures(46) + 1;
-			Assert.LessOrEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
+			ClassicAssert.LessOrEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleBudgetPerSlide,
 				"a real full collapse with a real field of ruins went over the budget");
-			Assert.AreEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleEntriesFor(46, rungs),
+			ClassicAssert.AreEqual(departures + rungs + field.Entries, KingdomSubsidenceRules.ChronicleEntriesFor(46, rungs),
 				"the promised arithmetic and what a real fall actually writes disagree");
 		}
 
@@ -1713,7 +1714,7 @@ namespace ThousandAndFirst.Tests
 			{
 				if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.Steading))
 				{
-					Assert.IsTrue(KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City),
+					ClassicAssert.IsTrue(KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City),
 						"a work a narrow rung took was spared by a wider one");
 				}
 				else if (KingdomSubsidenceRules.RollRuin("taf:settlement:ashmarch", "work-" + i, 4800uL, GrowthStage.City))
@@ -1721,7 +1722,7 @@ namespace ThousandAndFirst.Tests
 					sawGrowth = true;
 				}
 			}
-			Assert.IsTrue(sawGrowth, "the widest rung reached nothing the narrowest did not");
+			ClassicAssert.IsTrue(sawGrowth, "the widest rung reached nothing the narrowest did not");
 		}
 
 		// --- What a rung's ruins say ------------------------------------------------------
@@ -1731,7 +1732,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomSubsidenceRules.NamedRuinsPerBreakpoint, false)]
 		public void TellsRuin_NamesTheFirstFewAndNoMore(int index, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomSubsidenceRules.TellsRuin(index));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceRules.TellsRuin(index));
 		}
 
 		[Test]
@@ -1758,9 +1759,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuinSummary_SaysNothingWhenTheSampleNamedThemAll()
 		{
-			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 1, 1, 20));
-			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 0, 0, 0));
-			Assert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", -3, -1, 0));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 1, 1, 20));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", 0, 0, 0));
+			ClassicAssert.IsNull(KingdomSubsidenceRules.RuinSummary("Ashmarch", -3, -1, 0));
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 		public void AdmissionIsDerivedFromOpenFactionFacts(string name, bool visible,
 			bool hates, bool old, int significance, bool article, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedContentRules.CanBeCreed(
+			ClassicAssert.AreEqual(expected, KingdomCreedContentRules.CanBeCreed(
 				new CreedFactionFacts(name, visible, hates, old, significance, article), 3));
 		}
 
@@ -40,8 +41,8 @@ namespace ThousandAndFirst.Tests
 			string root = LocateBase();
 			string[] admitted = ReadAdmitted(Path.Combine(root, "Factions.xml"));
 			CollectionAssert.AreEqual(ShippedCreeds, admitted);
-			Assert.AreEqual(33, admitted.Length);
-			Assert.AreEqual(0, ReadAdmitted(Path.Combine(root, "ChiliadFactions.xml")).Length);
+			ClassicAssert.AreEqual(33, admitted.Length);
+			ClassicAssert.AreEqual(0, ReadAdmitted(Path.Combine(root, "ChiliadFactions.xml")).Length);
 		}
 
 		[Test]
@@ -53,7 +54,7 @@ namespace ThousandAndFirst.Tests
 			string[] covered = creedWorks.Select(e => (string)e.Attribute("Creed"))
 				.Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
 			CollectionAssert.AreEqual(ShippedCreeds, covered);
-			Assert.AreEqual(34, creedWorks.Length,
+			ClassicAssert.AreEqual(34, creedWorks.Length,
 				"33 admitted creeds plus the reviewed robot service-bay successor");
 			CollectionAssert.AreEquivalent(new string[] { "robotchargebay", "robotservicebay" },
 				creedWorks.Where(e => (string)e.Attribute("Creed") == "Robots")
@@ -62,12 +63,12 @@ namespace ThousandAndFirst.Tests
 			foreach (XElement work in creedWorks)
 			{
 				string creed = (string)work.Attribute("Creed");
-				Assert.IsFalse(string.IsNullOrWhiteSpace((string)work.Attribute("Builders")),
+				ClassicAssert.IsFalse(string.IsNullOrWhiteSpace((string)work.Attribute("Builders")),
 					creed + " must name its ordinary provenance gate");
-				Assert.IsTrue(work.Attribute("Carries") != null
+				ClassicAssert.IsTrue(work.Attribute("Carries") != null
 					|| Positive(work, "Defence"), creed + " content must change simulation");
-				Assert.IsNotNull(work.Attribute("Materials"), creed + " must pay a material-truth bill");
-				Assert.IsNotNull(work.Attribute("Plot"), creed + " must own spatial architecture");
+				ClassicAssert.IsNotNull(work.Attribute("Materials"), creed + " must pay a material-truth bill");
+				ClassicAssert.IsNotNull(work.Attribute("Plot"), creed + " must own spatial architecture");
 			}
 		}
 
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.Tests
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement blueprint = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomWaterBaronsGaugeHouse");
-			Assert.AreEqual("r_KingdomCaskRack", (string)blueprint.Attribute("Inherits"));
+			ClassicAssert.AreEqual("r_KingdomCaskRack", (string)blueprint.Attribute("Inherits"));
 		}
 
 		[Test]
@@ -112,7 +113,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Anchors=\"storage:trail-meat\"", architecture);
 			StringAssert.Contains("<require Role=\"storage:trail-meat\" Min=\"1\"/>", architecture);
 			StringAssert.Contains("Key=\"hearth\" Blueprint=\"r_KingdomCivicCampfire\"", architecture);
-			Assert.AreEqual(2, architecture.Split(new string[] { "Object=\"$hearth\"" },
+			ClassicAssert.AreEqual(2, architecture.Split(new string[] { "Object=\"$hearth\"" },
 				StringSplitOptions.None).Length - 1,
 				"spice and refuge kitchens must use real cookable hearth fixtures");
 		}
@@ -153,13 +154,13 @@ namespace ThousandAndFirst.Tests
 			string[] topology = maps
 				.Select(m => string.Join("/", m.Elements("row").Select(r => (string)r.Attribute("Cells"))))
 				.ToArray();
-			Assert.AreEqual(31, topology.Length,
+			ClassicAssert.AreEqual(31, topology.Length,
 				"30 base creed maps plus the reviewed robot renovation map");
-			Assert.AreEqual(31, topology.Distinct(StringComparer.Ordinal).Count(),
+			ClassicAssert.AreEqual(31, topology.Distinct(StringComparer.Ordinal).Count(),
 				"a renamed or recoloured proxy map is not creed architecture");
-			Assert.IsTrue(maps.Any(m =>
+			ClassicAssert.IsTrue(maps.Any(m =>
 				(string)m.Attribute("Key") == "creed-robot-chargebay-s0"));
-			Assert.IsTrue(maps.Any(m =>
+			ClassicAssert.IsTrue(maps.Any(m =>
 				(string)m.Attribute("Key") == "creed-robot-servicebay-s1"));
 		}
 
@@ -173,8 +174,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitecture.InspectMappings()", source);
 			StringAssert.Contains("KingdomZoning.GateFor(buildings[i].Key).Creed", source);
 			StringAssert.Contains("behavior-bearing mapped creed-work", source);
-			Assert.IsFalse(source.Contains("Joppa"));
-			Assert.IsFalse(source.Contains("Barathrumites"));
+			ClassicAssert.IsFalse(source.Contains("Joppa"));
+			ClassicAssert.IsFalse(source.Contains("Barathrumites"));
 		}
 
 		[Test]
@@ -195,8 +196,8 @@ namespace ThousandAndFirst.Tests
 			{
 				XElement blueprint = objects.Descendants("object").Single(e =>
 					(string)e.Attribute("Name") == fixture.Key);
-				Assert.AreEqual("Furniture", (string)blueprint.Attribute("Inherits"), fixture.Key);
-				Assert.AreEqual(fixture.Value, (string)blueprint.Elements("part").Single(e =>
+				ClassicAssert.AreEqual("Furniture", (string)blueprint.Attribute("Inherits"), fixture.Key);
+				ClassicAssert.AreEqual(fixture.Value, (string)blueprint.Elements("part").Single(e =>
 					(string)e.Attribute("Name") == "Render").Attribute("Tile"), fixture.Key);
 				CollectionAssert.IsSubsetOf(blueprint.Elements("part").Select(e =>
 					(string)e.Attribute("Name")).ToArray(),
@@ -204,16 +205,16 @@ namespace ThousandAndFirst.Tests
 			}
 			XElement armsRack = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomCreedWeaponRack");
-			Assert.AreEqual("Furniture", (string)armsRack.Attribute("Inherits"));
-			Assert.AreEqual("Items/sw_weapons_rack.bmp", (string)armsRack.Elements("part")
+			ClassicAssert.AreEqual("Furniture", (string)armsRack.Attribute("Inherits"));
+			ClassicAssert.AreEqual("Items/sw_weapons_rack.bmp", (string)armsRack.Elements("part")
 				.Single(e => (string)e.Attribute("Name") == "Render").Attribute("Tile"));
 			CollectionAssert.AreEquivalent(
 				new string[] { "Render", "Description", "Physics", "Container", "Inventory" },
 				armsRack.Elements("part").Select(e => (string)e.Attribute("Name")).ToArray(),
 				"the ordered rack is paid empty storage, not an inert practice silhouette");
-			Assert.AreEqual("true", (string)armsRack.Elements("property").Single(e =>
+			ClassicAssert.AreEqual("true", (string)armsRack.Elements("property").Single(e =>
 				(string)e.Attribute("Name") == "DontWarnOnOpen").Attribute("Value"));
-			Assert.IsFalse(armsRack.Elements().Any(e => e.Name.LocalName == "inventoryobject"),
+			ClassicAssert.IsFalse(armsRack.Elements().Any(e => e.Name.LocalName == "inventoryobject"),
 				"construction must not mint rack contents");
 
 			string creed = TestMain.ReadRepositoryText(Path.Combine("Architecture",
@@ -225,23 +226,23 @@ namespace ThousandAndFirst.Tests
 				(string)e.Attribute("Key") == "creed-practice-hands");
 			XElement trunkSlot = creedPalette.Elements("slot").Single(e =>
 				(string)e.Attribute("Key") == "trunk");
-			Assert.AreEqual("timber", (string)trunkSlot.Attribute("Material"));
-			Assert.AreEqual("yes", (string)trunkSlot.Attribute("Natural"));
+			ClassicAssert.AreEqual("timber", (string)trunkSlot.Attribute("Material"));
+			ClassicAssert.AreEqual("yes", (string)trunkSlot.Attribute("Natural"));
 			XElement path = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomGroundTroddenPath");
-			Assert.AreEqual("ArenaFloor", (string)path.Attribute("Inherits"));
-			Assert.IsNull(path.Elements("part").Single(e =>
+			ClassicAssert.AreEqual("ArenaFloor", (string)path.Attribute("Inherits"));
+			ClassicAssert.IsNull(path.Elements("part").Single(e =>
 				(string)e.Attribute("Name") == "Render").Attribute("Tile"));
 
 			XDocument faith = XDocument.Parse(TestMain.ReadRepositoryText(Path.Combine(
 				"Architecture", "KingdomArchitectures-CivicFaith.xml")));
-			Assert.AreEqual(2, faith.Descendants("slot").Count(e =>
+			ClassicAssert.AreEqual(2, faith.Descendants("slot").Count(e =>
 				(string)e.Attribute("Blueprint") == "r_KingdomFixtureChairStone"
 				&& (string)e.Attribute("Role") == "functional-stone-nave-seat"));
 			XElement[] seats = faith.Descendants("glyph").Where(e =>
 				(string)e.Attribute("Anchors") == "seat:nave").ToArray();
-			Assert.AreEqual(2, seats.Length);
-			Assert.IsTrue(seats.All(e => (string)e.Attribute("Object") == "$seat"
+			ClassicAssert.AreEqual(2, seats.Length);
+			ClassicAssert.IsTrue(seats.All(e => (string)e.Attribute("Object") == "$seat"
 				&& e.Attribute("Structure") == null && (string)e.Attribute("Pass") == "adjacent"));
 		}
 
@@ -255,10 +256,10 @@ namespace ThousandAndFirst.Tests
 			string[] glyphs = names.Select(name => (string)objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == name).Elements("part").Single(e =>
 				(string)e.Attribute("Name") == "Render").Attribute("RenderString")).ToArray();
-			Assert.AreEqual(names.Length, glyphs.Distinct(StringComparer.Ordinal).Count());
+			ClassicAssert.AreEqual(names.Length, glyphs.Distinct(StringComparer.Ordinal).Count());
 			XElement arcology = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomArcology");
-			Assert.AreEqual("Tiles/sw_arch.png", (string)arcology.Elements("part").Single(e =>
+			ClassicAssert.AreEqual("Tiles/sw_arch.png", (string)arcology.Elements("part").Single(e =>
 				(string)e.Attribute("Name") == "Render").Attribute("Tile"));
 		}
 
@@ -272,10 +273,10 @@ namespace ThousandAndFirst.Tests
 		{
 			XElement blueprint = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == name);
-			Assert.AreEqual(parent, (string)blueprint.Attribute("Inherits"), name);
+			ClassicAssert.AreEqual(parent, (string)blueprint.Attribute("Inherits"), name);
 			XElement mechanism = blueprint.Elements("tag").Single(e =>
 				(string)e.Attribute("Name") == tag);
-			Assert.AreEqual(value.ToString(), (string)mechanism.Attribute("Value"), name);
+			ClassicAssert.AreEqual(value.ToString(), (string)mechanism.Attribute("Value"), name);
 		}
 
 		private static string[] ReadAdmitted(string path)

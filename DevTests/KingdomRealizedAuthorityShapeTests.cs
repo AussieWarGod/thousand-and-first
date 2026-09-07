@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnmarkedBystanderIsUnrelated()
 		{
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(Bystander()));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(Bystander()));
 		}
 
 		/// <summary>
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void APlotPartOutsideTheLotRectIsUnrelated()
 		{
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(PlotNeighbour()));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(PlotNeighbour()));
 		}
 
 		[Test]
@@ -63,7 +64,7 @@ namespace ThousandAndFirst.Tests
 			KingdomRealizedMarkerObservation foreign = PlotNeighbour();
 			foreign.ClaimsLot = false;
 			foreign.InsideRect = true;
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(foreign));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.Unrelated, Judge(foreign));
 		}
 
 		// ----- the census: a partial marker is still a claim --------------------------------------
@@ -78,8 +79,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomRealizedMarkerObservation observed = PlotNeighbour();
 			observed.InsideRect = true;
-			Assert.IsTrue(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(observed));
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.Unreceipted, Judge(observed));
+			ClassicAssert.IsTrue(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.Unreceipted, Judge(observed));
 		}
 
 		[Test]
@@ -92,7 +93,7 @@ namespace ThousandAndFirst.Tests
 				ClaimsLot = true,
 				InsideRect = false
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.Unreceipted, Judge(observed),
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.Unreceipted, Judge(observed),
 				"a component marker is a claim wherever it stands");
 		}
 
@@ -105,7 +106,7 @@ namespace ThousandAndFirst.Tests
 				ClaimsLot = true,
 				CarriesLayoutOwnerSchema = true
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.SecondOwner, Judge(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.SecondOwner, Judge(observed));
 		}
 
 		[Test]
@@ -119,7 +120,7 @@ namespace ThousandAndFirst.Tests
 				CarriesThisSnapshotHash = true,
 				InsideRect = true
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.CopiedAuthority, Judge(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.CopiedAuthority, Judge(observed));
 		}
 
 		// ----- plot-part-only custody: no component marker smuggled in ---------------------------
@@ -143,8 +144,8 @@ namespace ThousandAndFirst.Tests
 				PlotIdString = false,
 				ClaimsLot = false
 			};
-			Assert.IsTrue(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(observed));
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
+			ClassicAssert.IsTrue(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
 		}
 
 		[Test]
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 				PlotIdString = true,
 				ClaimsLot = true
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
 		}
 
 		[Test]
@@ -174,7 +175,7 @@ namespace ThousandAndFirst.Tests
 				PlotIdString = false,
 				ClaimsLot = false
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed),
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed),
 				"plot-part authority with no custody key at all cannot be dismissed as another "
 					+ "lot's business");
 		}
@@ -193,7 +194,7 @@ namespace ThousandAndFirst.Tests
 				PlotIdInt = false,
 				InsideRect = false
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
 		}
 
 		// ----- plot custody type presence ---------------------------------------------------------
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 				PlotIdInt = true,
 				InsideRect = true
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed));
 		}
 
 		[Test]
@@ -225,15 +226,15 @@ namespace ThousandAndFirst.Tests
 				ClaimsLot = true,
 				InsideRect = true
 			};
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed),
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(observed),
 				"unreadable custody outranks the unreceipted verdict; it cannot be judged by value");
 		}
 
 		[Test]
 		public void AnUnobservedObjectIsUnreadableRatherThanUnrelated()
 		{
-			Assert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(null));
-			Assert.IsFalse(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(null));
+			ClassicAssert.AreEqual(KingdomRealizedAuthorityVerdict.UnreadableCustody, Judge(null));
+			ClassicAssert.IsFalse(KingdomRealizedAuthorityShape.ClaimsComponentAuthority(null));
 		}
 
 		// ----- every refusal names itself ---------------------------------------------------------
@@ -245,14 +246,14 @@ namespace ThousandAndFirst.Tests
 		public void EveryRefusalCarriesAnOperatorReason(KingdomRealizedAuthorityVerdict verdict)
 		{
 			string reason = KingdomRealizedAuthorityShape.Describe(verdict);
-			Assert.IsNotNull(reason, verdict.ToString());
-			Assert.IsNotEmpty(reason, verdict.ToString());
+			ClassicAssert.IsNotNull(reason, verdict.ToString());
+			ClassicAssert.IsNotEmpty(reason, verdict.ToString());
 		}
 
 		[Test]
 		public void AnUnrelatedObjectHasNoRefusalReason()
 		{
-			Assert.IsNull(KingdomRealizedAuthorityShape.Describe(
+			ClassicAssert.IsNull(KingdomRealizedAuthorityShape.Describe(
 				KingdomRealizedAuthorityVerdict.Unrelated));
 		}
 	}

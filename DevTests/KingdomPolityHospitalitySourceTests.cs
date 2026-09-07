@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -57,8 +58,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int first = Source.IndexOf(First, System.StringComparison.Ordinal);
 			int second = Source.IndexOf(Second, System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, First);
-			Assert.Greater(second, first, Second);
+			ClassicAssert.GreaterOrEqual(first, 0, First);
+			ClassicAssert.Greater(second, first, Second);
 		}
 	}
 }

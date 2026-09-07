@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 				"SaveRung(frame, intent)", "ApplyRungRoof(",
 				"ResumeRungRelease(frame, i, ref refusal)",
 				"KingdomSubsidenceRungRules.ReleasedComplete(frame.Plan)");
-			Assert.AreEqual(2, Regex.Matches(body, Regex.Escape(
+			ClassicAssert.AreEqual(2, Regex.Matches(body, Regex.Escape(
 				"ResumeRungRelease(frame, i, ref refusal)")).Count,
 				"Both already-proved and newly-proved physical paths must resume the same release driver.");
 			Ordered(Method(Release, "private static bool ResumeRungRelease("),
@@ -190,7 +191,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Method(Driver, "internal static bool Resume("), "KingdomSubsidenceRungRules.Valid(plan)",
 				"plan.Works[index].ReleasePhase == KingdomSubsidenceReleasePhase.Released",
 				"return Current(port, plan);", "if (!Observe(port, plan,");
-			Assert.AreEqual("public bool Current => RungOwnerExact(Frame);", Expression(Release, "public bool Current"));
+			ClassicAssert.AreEqual("public bool Current => RungOwnerExact(Frame);", Expression(Release, "public bool Current"));
 		}
 
 		[Test]
@@ -238,18 +239,18 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Regex.Replace(TestMain.ReadRepositoryText(path), @"\s+", " ");
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, path + ": " + signature);
+			ClassicAssert.GreaterOrEqual(start, 0, path + ": " + signature);
 			int end = source.IndexOf(';', start);
-			Assert.Greater(end, start, path + ": expression terminator");
+			ClassicAssert.Greater(end, start, path + ": expression terminator");
 			return source.Substring(start, end - start + 1);
 		}
 		private static string Method(string path, string signature)
 		{
 			string source = Regex.Replace(TestMain.ReadRepositoryText(path), @"\s+", " ");
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, path + ": " + signature);
+			ClassicAssert.GreaterOrEqual(start, 0, path + ": " + signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, path);
+			ClassicAssert.GreaterOrEqual(open, 0, path);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string needle in needles)
 			{
 				int current = source.IndexOf(needle, previous + 1, StringComparison.Ordinal);
-				Assert.Greater(current, previous, needle); previous = current;
+				ClassicAssert.Greater(current, previous, needle); previous = current;
 			}
 		}
 	}

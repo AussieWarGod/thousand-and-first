@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -28,19 +29,19 @@ namespace ThousandAndFirst.Tests
 		private static string Section(string source, string start, string end)
 		{
 			int begin = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.Greater(begin, -1, start);
+			ClassicAssert.Greater(begin, -1, start);
 			int stop = source.IndexOf(end, begin + start.Length, StringComparison.Ordinal);
 			if (stop < 0) stop = source.Length;
-			Assert.Greater(stop, begin, end);
+			ClassicAssert.Greater(stop, begin, end);
 			return source.Substring(begin, stop - begin);
 		}
 
 		private static string Statement(string source, string start)
 		{
 			int begin = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.Greater(begin, -1, start);
+			ClassicAssert.Greater(begin, -1, start);
 			int end = source.IndexOf(';', begin);
-			Assert.Greater(end, begin, start);
+			ClassicAssert.Greater(end, begin, start);
 			return source.Substring(begin, end - begin).Replace("\t", "").Replace("\r", "")
 				.Replace("\n", "").Replace(" ", "");
 		}
@@ -264,11 +265,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string production = Read("Growth/KingdomArchitectureStamper.Recovery.cs");
 			string mirror = Read("Core/KingdomRealizedArchitectureCapture.Authority.cs");
-			Assert.AreEqual(Statement(production, "string preimage ="),
+			ClassicAssert.AreEqual(Statement(production, "string preimage ="),
 				Statement(mirror, "string preimage ="),
 				"the component-token preimage drifted from the stamper's own");
 			string objects = Read("Core/KingdomRealizedArchitectureCapture.Objects.cs");
-			Assert.AreEqual(Statement(production, "return Slot == null ?"),
+			ClassicAssert.AreEqual(Statement(production, "return Slot == null ?"),
 				Statement(objects, "return Slot == null ?"),
 				"the per-slot property spelling drifted from the stamper's own");
 			StringAssert.Contains("KingdomArchitectureStamper.OutputIdPrefix", objects);

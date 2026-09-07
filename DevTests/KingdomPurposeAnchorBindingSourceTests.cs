@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,9 +19,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int first = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, Start);
+			ClassicAssert.GreaterOrEqual(first, 0, Start);
 			int last = Source.IndexOf(End, first + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, End);
+			ClassicAssert.Greater(last, first, End);
 			return Source.Substring(first, last - first);
 		}
 
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 			string endpoint = Read("Growth/KingdomPurposePortfolio.SecondEndpoint.cs");
 			string control = Read("Growth/KingdomPurposePortfolio.OperationControl.cs");
 			string interaction = Read("Growth/KingdomPurposePortfolio.Interaction.cs");
-			Assert.AreEqual(2, Count(all, "TryPrepareSecondEndpoint("),
+			ClassicAssert.AreEqual(2, Count(all, "TryPrepareSecondEndpoint("),
 				"one declaration and one authorized transition caller only");
 			StringAssert.DoesNotContain("TryPrepareSecondEndpoint(", interaction);
 			StringAssert.DoesNotContain("TryPrepareSecondEndpoint(",
@@ -93,9 +94,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int start = interaction.IndexOf("TryStartPortfolioOperation(Work, Pair",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(consent, 0);
-			Assert.GreaterOrEqual(start, 0);
-			Assert.Less(consent, start);
+			ClassicAssert.GreaterOrEqual(consent, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
+			ClassicAssert.Less(consent, start);
 			StringAssert.Contains("Pair?.Phase != KingdomPurposePairPhase.SecondPending", endpoint);
 			StringAssert.Contains("!string.IsNullOrEmpty(Pair.SecondWorkId)", endpoint);
 			StringAssert.Contains("KingdomConstructionPhase.Complete", endpoint);
@@ -121,7 +122,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int publish = control.IndexOf("TryPublishPortfolioPair(Pair, next",
 				StringComparison.Ordinal);
-			Assert.IsTrue(preflight >= 0 && retire > preflight && publish > retire);
+			ClassicAssert.IsTrue(preflight >= 0 && retire > preflight && publish > retire);
 			StringAssert.Contains("if (adoptsSecondEndpoint)", control);
 			StringAssert.Contains("next.SecondInputStoreId = newSecondInput", control);
 			StringAssert.Contains("next.SecondOutputStoreId = newSecondOutput", control);
@@ -134,7 +135,7 @@ namespace ThousandAndFirst.Tests
 			XDocument document = XDocument.Parse(Read(
 				"Architecture/KingdomArchitectures-PurposePortfolio.xml"));
 			List<XElement> maps = document.Root.Elements("map").ToList();
-			Assert.AreEqual(14, maps.Count);
+			ClassicAssert.AreEqual(14, maps.Count);
 			int poseCases = 0;
 			foreach (XElement map in maps)
 			{
@@ -142,29 +143,29 @@ namespace ThousandAndFirst.Tests
 				int height = (int)map.Attribute("Height");
 				List<string> rows = map.Elements("row")
 					.Select(row => (string)row.Attribute("Cells")).ToList();
-				Assert.AreEqual(height, rows.Count, (string)map.Attribute("Key"));
+				ClassicAssert.AreEqual(height, rows.Count, (string)map.Attribute("Key"));
 				(char Glyph, int X, int Y) input = RoleCell(map, rows, "purpose:input");
 				(char Glyph, int X, int Y) output = RoleCell(map, rows, "purpose:output");
-				Assert.AreNotEqual(input.Glyph, output.Glyph, (string)map.Attribute("Key"));
+				ClassicAssert.AreNotEqual(input.Glyph, output.Glyph, (string)map.Attribute("Key"));
 				foreach (ArchitectureFacing facing in Enum.GetValues(
 					typeof(ArchitectureFacing)))
 				{
-					Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(width, height,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(width, height,
 						facing, out int worldWidth, out int worldHeight));
-					Assert.IsTrue(KingdomArchitectureRules.TryToWorld(17, 23, width, height,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(17, 23, width, height,
 						facing, input.X, input.Y, out int inputX, out int inputY));
-					Assert.IsTrue(KingdomArchitectureRules.TryToWorld(17, 23, width, height,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(17, 23, width, height,
 						facing, output.X, output.Y, out int outputX, out int outputY));
-					Assert.IsTrue(inputX >= 17 && inputX < 17 + worldWidth
+					ClassicAssert.IsTrue(inputX >= 17 && inputX < 17 + worldWidth
 						&& inputY >= 23 && inputY < 23 + worldHeight);
-					Assert.IsTrue(outputX >= 17 && outputX < 17 + worldWidth
+					ClassicAssert.IsTrue(outputX >= 17 && outputX < 17 + worldWidth
 						&& outputY >= 23 && outputY < 23 + worldHeight);
-					Assert.IsTrue(inputX != outputX || inputY != outputY,
+					ClassicAssert.IsTrue(inputX != outputX || inputY != outputY,
 						(string)map.Attribute("Key") + "/" + facing);
 					poseCases++;
 				}
 			}
-			Assert.AreEqual(56, poseCases);
+			ClassicAssert.AreEqual(56, poseCases);
 		}
 
 		[Test]
@@ -181,7 +182,7 @@ namespace ThousandAndFirst.Tests
 			{
 				XElement map = document.Root.Elements("map").Single(m =>
 					(string)m.Attribute("Key") == keys[i]);
-				Assert.AreEqual(0, map.Elements("glyph").Count(g =>
+				ClassicAssert.AreEqual(0, map.Elements("glyph").Count(g =>
 					((string)g.Attribute("Anchors") ?? "").Split(',').Any(a =>
 						a == "purpose:input" || a == "purpose:output")), keys[i]);
 			}
@@ -192,15 +193,15 @@ namespace ThousandAndFirst.Tests
 		{
 			List<XElement> glyphs = Map.Elements("glyph").Where(g =>
 				((string)g.Attribute("Anchors") ?? "").Split(',').Contains(Role)).ToList();
-			Assert.AreEqual(1, glyphs.Count, (string)Map.Attribute("Key") + "/" + Role);
-			Assert.AreEqual("yes", (string)glyphs[0].Attribute("Stateful"));
-			Assert.IsNotEmpty((string)glyphs[0].Attribute("Object"));
+			ClassicAssert.AreEqual(1, glyphs.Count, (string)Map.Attribute("Key") + "/" + Role);
+			ClassicAssert.AreEqual("yes", (string)glyphs[0].Attribute("Stateful"));
+			ClassicAssert.IsNotEmpty((string)glyphs[0].Attribute("Object"));
 			char glyph = ((string)glyphs[0].Attribute("Char"))[0];
 			List<(int X, int Y)> cells = new List<(int X, int Y)>();
 			for (int y = 0; y < Rows.Count; y++)
 				for (int x = 0; x < Rows[y].Length; x++)
 					if (Rows[y][x] == glyph) cells.Add((x, y));
-			Assert.AreEqual(1, cells.Count, (string)Map.Attribute("Key") + "/" + Role);
+			ClassicAssert.AreEqual(1, cells.Count, (string)Map.Attribute("Key") + "/" + Role);
 			return (glyph, cells[0].X, cells[0].Y);
 		}
 	}

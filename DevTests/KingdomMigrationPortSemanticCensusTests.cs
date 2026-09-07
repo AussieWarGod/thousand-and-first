@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -83,7 +84,7 @@ namespace ThousandAndFirst.Tests
 					offenders.Add(codec + " declares version " + current + " while " + identifier
 						+ " at " + constant + " is declared " + bound);
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -168,8 +169,8 @@ namespace ThousandAndFirst.Tests
 					offenders.Add(codec + " declares " + claimed.Count + " hostile fixture hashes that "
 						+ "do not match the " + located.Count + " checked-in literals");
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
-			Assert.Greater(seen, 0, "the hostile fixture list must not be silently emptied");
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.Greater(seen, 0, "the hostile fixture list must not be silently emptied");
 		}
 
 		// Manifest access is owned by the coverage suite; these forward rather than duplicate it.

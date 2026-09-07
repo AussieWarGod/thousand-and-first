@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -15,26 +16,26 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Recorded(out string recognitionId);
 			byte[] recognition = Recognition(authority);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
 				out bool captured, out KingdomWitnessWorkReceipt row, out string failure), failure);
-			Assert.IsTrue(captured);
+			ClassicAssert.IsTrue(captured);
 			CollectionAssert.AreEqual(recognition, Recognition(authority));
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicArtifactsEnvelope held, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
 				"taf:object:surface", "taf:zone:seat", "taf:construction:surface",
 				4, 5, 20L, out KingdomWitnessWorkPlan plan, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryPreparePlanned(authority, lease, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryPreparePlanned(authority, lease, Realm,
 				plan, out KingdomWitnessWorkReceipt prepared, out bool recorded, out failure), failure);
-			Assert.IsTrue(recorded);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCommitCarrier(authority, Realm,
+			ClassicAssert.IsTrue(recorded);
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCommitCarrier(authority, Realm,
 				prepared.WorkId, prepared.CarrierReceiptId, 21L, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm,
 				prepared.WorkId, out KingdomWitnessWorkReceipt kept, out failure), failure);
-			Assert.AreEqual(KingdomWitnessWorkPhase.Projected, kept.Phase);
+			ClassicAssert.AreEqual(KingdomWitnessWorkPhase.Projected, kept.Phase);
 			CollectionAssert.AreEqual(recognition, Recognition(authority));
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
 				recognitionId, out _, out failure), failure);
 		}
 
@@ -43,30 +44,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Authority();
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
 				out _, out KingdomWitnessWorkReceipt row, out string failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease stale,
 				out KingdomCivicArtifactsEnvelope held, out failure), failure);
 			byte[] beforePlan = authority.Encode();
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
 				"taf:object:surface", "taf:zone:seat", "taf:construction:surface",
 				4, 5, 20L, out KingdomWitnessWorkPlan plan, out failure), failure);
 			CollectionAssert.AreEqual(beforePlan, authority.Encode(), "planning/cancel is read-only");
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease moved, out _, out failure), failure);
 			KingdomArtifactSnapshot race =
 				KingdomArtifactRecognitionServiceTests.Artifact("race", Tick: 22L);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, moved,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, moved,
 				Realm, race, KingdomArtifactRecognitionServiceTests.Kind,
 				7, "Eshkind", 22L, out _, out _,
 				out failure), failure);
 			byte[] afterRace = authority.Encode();
-			Assert.IsFalse(KingdomWitnessWorkCommit.TryDeclinePlanned(authority, stale,
+			ClassicAssert.IsFalse(KingdomWitnessWorkCommit.TryDeclinePlanned(authority, stale,
 				Realm, row.WorkId, 23L, out _, out failure));
 			StringAssert.Contains("revision", failure);
 			CollectionAssert.AreEqual(afterRace, authority.Encode());
-			Assert.IsFalse(KingdomWitnessWorkCommit.TryPreparePlanned(authority, stale, Realm,
+			ClassicAssert.IsFalse(KingdomWitnessWorkCommit.TryPreparePlanned(authority, stale, Realm,
 				plan, out _, out _, out failure));
 			StringAssert.Contains("revision", failure);
 			CollectionAssert.AreEqual(afterRace, authority.Encode());
@@ -77,29 +78,29 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Authority();
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
 				out bool first, out KingdomWitnessWorkReceipt row, out string failure), failure);
 			long revision = authority.Revision;
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
 				out bool retry, out _, out failure), failure);
-			Assert.IsTrue(first); Assert.IsFalse(retry); Assert.AreEqual(revision, authority.Revision);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(first); ClassicAssert.IsFalse(retry); ClassicAssert.AreEqual(revision, authority.Revision);
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicArtifactsEnvelope held, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryPlan(held, row.WorkId,
 				"taf:object:surface", "taf:zone:seat", "taf:construction:surface",
 				4, 5, 20L, out KingdomWitnessWorkPlan plan, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryPreparePlanned(authority, lease, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryPreparePlanned(authority, lease, Realm,
 				plan, out _, out _, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryReconcile(authority, Realm, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryReconcile(authority, Realm, row.WorkId,
 				false, false, 21L, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm, row.WorkId,
 				out KingdomWitnessWorkReceipt lost, out failure), failure);
-			Assert.AreEqual(KingdomWitnessWorkPhase.Lost, lost.Phase);
+			ClassicAssert.AreEqual(KingdomWitnessWorkPhase.Lost, lost.Phase);
 			long terminal = authority.Revision;
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryReconcile(authority, Realm, row.WorkId,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryReconcile(authority, Realm, row.WorkId,
 				false, false, 22L, out failure), failure);
-			Assert.AreEqual(terminal, authority.Revision);
+			ClassicAssert.AreEqual(terminal, authority.Revision);
 		}
 
 		[Test]
@@ -108,23 +109,23 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Recorded(out string recognitionId);
 			byte[] recognition = Recognition(authority);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryCaptureClosed(authority, Realm, Source(),
 				out _, out KingdomWitnessWorkReceipt row, out string failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease disclosure, out _, out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryDeclinePlanned(authority, disclosure,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryDeclinePlanned(authority, disclosure,
 				Realm, row.WorkId, 20L, out bool recorded, out failure), failure);
-			Assert.IsTrue(recorded);
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(recorded);
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadBackRow(authority, Realm,
 				row.WorkId, out KingdomWitnessWorkReceipt declined, out failure), failure);
-			Assert.AreEqual(KingdomWitnessWorkPhase.Declined, declined.Phase);
-			Assert.IsNull(declined.CarrierReceiptId);
+			ClassicAssert.AreEqual(KingdomWitnessWorkPhase.Declined, declined.Phase);
+			ClassicAssert.IsNull(declined.CarrierReceiptId);
 			long terminal = authority.Revision;
-			Assert.IsTrue(KingdomWitnessWorkCommit.TryDecline(authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkCommit.TryDecline(authority, Realm,
 				row.WorkId, 21L, out failure), failure);
-			Assert.AreEqual(terminal, authority.Revision);
+			ClassicAssert.AreEqual(terminal, authority.Revision);
 			CollectionAssert.AreEqual(recognition, Recognition(authority));
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
 				recognitionId, out _, out failure), failure);
 		}
 
@@ -143,7 +144,7 @@ namespace ThousandAndFirst.Tests
 
 		private static byte[] Recognition(IKingdomCivicMemoryAuthority Authority)
 		{
-			Assert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(Authority, Realm,
+			ClassicAssert.IsTrue(KingdomWitnessWorkLease.TryReadAuthority(Authority, Realm,
 				out _, out KingdomCivicArtifactsEnvelope held, out string failure), failure);
 			return KingdomArtifactRecognitionCodec.Encode(held.Recognitions);
 		}

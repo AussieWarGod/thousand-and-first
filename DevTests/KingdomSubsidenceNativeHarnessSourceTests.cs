@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,17 +21,17 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_PersonaRunsFiveOriginalCasesAndThreeSyntheticReportCutsAcrossRealFounding()
 		{
 			string persona = Read(Persona);
-			Assert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
-			Assert.AreEqual("stagedigest;subsidence-check;stagedigest", Setting(persona, "SCRIPT"));
-			Assert.AreEqual("subsidence-check", Setting(persona, "VERBS"));
-			Assert.AreEqual("stagedigest:OK~founded=false,subsidence-check:OK~cases=8 passed=8 failed=0,stagedigest:OK~founded=true,COMPLETE",
+			ClassicAssert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
+			ClassicAssert.AreEqual("stagedigest;subsidence-check;stagedigest", Setting(persona, "SCRIPT"));
+			ClassicAssert.AreEqual("subsidence-check", Setting(persona, "VERBS"));
+			ClassicAssert.AreEqual("stagedigest:OK~founded=false,subsidence-check:OK~cases=8 passed=8 failed=0,stagedigest:OK~founded=true,COMPLETE",
 				Setting(persona, "EXPECT"));
 			string[] cases = Regex.Matches(Read(Checks), @"\bcurrent\s*=\s*""([^""]+)""")
 				.Cast<Match>().Select(match => match.Groups[1].Value).ToArray();
 			CollectionAssert.AreEqual(new[] { "physical-city-fixture", "partial-one-of-five",
 				"remaining-four-summary-interruption", "same-tick-summary-recovery", "same-tick-no-replay",
 				"synthetic-report-cut-recovery" }, cases);
-			Assert.AreEqual(cases.Length, cases.Distinct(StringComparer.Ordinal).Count());
+			ClassicAssert.AreEqual(cases.Length, cases.Distinct(StringComparer.Ordinal).Count());
 			ContainsAll(Read(Provider), "internal const int ExpectedCases = 8;",
 				"internal const string Verb = \"subsidence-check\";");
 		}
@@ -138,9 +139,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomResidents.TryEnsureRow(System, body,", "ReferenceEquals(book, System.City) && id > 0",
 				"Ids.Add(id);", "Verify();");
 			string all = Read(Fixture) + Read(Checks) + Read(Fault);
-			Assert.IsFalse(Regex.IsMatch(all, @"\.(?:Population|Founded|LastSubsidenceTick|TimeTicks)\s*(?:=(?!=)|\+=|-=|\+\+|--)"),
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\.(?:Population|Founded|LastSubsidenceTick|TimeTicks)\s*(?:=(?!=)|\+=|-=|\+\+|--)"),
 				"These fixture files must not write population, founding or clock state; only the separate synthetic clock seed/probe may write its checkpoint.");
-			Assert.IsFalse(Regex.IsMatch(all, @"\.(?:Bindings|Residents)\.(?:Add|Clear|Remove)\s*\("),
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\.(?:Bindings|Residents)\.(?:Add|Clear|Remove)\s*\("),
 				"Resident authority must be published through its production APIs.");
 		}
 
@@ -272,9 +273,9 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_FixtureAndEffectsAreRetainedOnlyExactTemporaryHandlerIsRemoved()
 		{
 			string all = Read(Fixture) + Read(Checks) + Read(Fault) + Read(Provider);
-			Assert.AreEqual(1, Regex.Matches(all, @"\bHeld\.Clear\(\);").Count,
+			ClassicAssert.AreEqual(1, Regex.Matches(all, @"\bHeld\.Clear\(\);").Count,
 				"Only the transient exact-reference party list may be cleared.");
-			Assert.IsFalse(Regex.IsMatch(all.Replace("Held.Clear();", ""),
+			ClassicAssert.IsFalse(Regex.IsMatch(all.Replace("Held.Clear();", ""),
 				@"\.(?:Obliterate|Destroy|Clear|RemoveObject|RemoveGameState)\s*\("),
 				"Native fixture must retain the realm, actors, receipts and presentation effects.");
 			Ordered(Body(Checks, "internal static string Run("), "finally", "if (fault != null)", "bool clean = false;",
@@ -333,9 +334,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read(Path);
 			int start = source.IndexOf(Signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Signature);
+			ClassicAssert.GreaterOrEqual(start, 0, Signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, Signature);
+			ClassicAssert.GreaterOrEqual(open, 0, Signature);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;
@@ -355,7 +356,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in Tokens)
 			{
 				int at = Source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}
@@ -363,7 +364,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] rows = Source.Split('\n').Select(line => line.Trim())
 				.Where(line => line.StartsWith(Key + "=", StringComparison.Ordinal)).ToArray();
-			Assert.AreEqual(1, rows.Length, Key);
+			ClassicAssert.AreEqual(1, rows.Length, Key);
 			return rows[0].Substring(Key.Length + 1);
 		}
 	}

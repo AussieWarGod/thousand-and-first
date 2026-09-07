@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -28,10 +29,10 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] preimage;
 			KernelFaultCode fault;
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), drawIndex, blockIndex, out preimage, out fault));
 			byte[] digest;
-			Assert.IsTrue(KernelDigest.TryComputeSha256(preimage, out digest, out fault));
+			ClassicAssert.IsTrue(KernelDigest.TryComputeSha256(preimage, out digest, out fault));
 			return KernelDigest.ToLowercaseHex(digest);
 		}
 
@@ -41,7 +42,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(8u, Draw8)]
 		public void RandomBlockGoldens(uint drawIndex, string expected)
 		{
-			Assert.AreEqual(expected, BlockDigest(drawIndex, 0u));
+			ClassicAssert.AreEqual(expected, BlockDigest(drawIndex, 0u));
 		}
 
 		[Test]
@@ -49,8 +50,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ulong value;
 			KernelFaultCode fault;
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, out value, out fault));
-			Assert.AreEqual(Draw7Raw, value);
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, out value, out fault));
+			ClassicAssert.AreEqual(Draw7Raw, value);
 		}
 
 		/// <summary>
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 			for (uint i = 0; i < 16; i++)
 			{
 				ulong v;
-				Assert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, out v, out fault));
+				ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, out v, out fault));
 				forward[i] = v;
 			}
 
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 			{
 				ulong v;
 				CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), (uint)i, out v, out fault);
-				Assert.AreEqual(forward[(uint)i], v, "reverse order, index " + i);
+				ClassicAssert.AreEqual(forward[(uint)i], v, "reverse order, index " + i);
 			}
 
 			uint[] shuffled = { 9u, 2u, 15u, 0u, 7u, 7u, 3u, 11u, 2u, 14u };
@@ -81,19 +82,19 @@ namespace ThousandAndFirst.Tests
 			{
 				ulong v;
 				CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), index, out v, out fault);
-				Assert.AreEqual(forward[index], v, "shuffled/duplicated, index " + index);
+				ClassicAssert.AreEqual(forward[index], v, "shuffled/duplicated, index " + index);
 			}
 
 			// Interleaving a different event must not perturb this one.
 			SemanticEventKey other;
-			Assert.IsTrue(SemanticEventKey.TryCreate(3, "taf:settlement:test", "taf:stream:other", 1u, 42uL, out other, out fault));
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(3, "taf:settlement:test", "taf:stream:other", 1u, 42uL, out other, out fault));
 			for (uint i = 0; i < 16; i++)
 			{
 				ulong ignored;
 				CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), other, i, out ignored, out fault);
 				ulong v;
 				CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, out v, out fault);
-				Assert.AreEqual(forward[i], v, "interleaved, index " + i);
+				ClassicAssert.AreEqual(forward[i], v, "interleaved, index " + i);
 			}
 		}
 
@@ -101,8 +102,8 @@ namespace ThousandAndFirst.Tests
 		public void EveryPreimageFieldChangesTheDigest()
 		{
 			string baseline = BlockDigest(0u, 0u);
-			Assert.AreNotEqual(baseline, BlockDigest(1u, 0u), "draw index");
-			Assert.AreNotEqual(baseline, BlockDigest(0u, 1u), "block index");
+			ClassicAssert.AreNotEqual(baseline, BlockDigest(1u, 0u), "draw index");
+			ClassicAssert.AreNotEqual(baseline, BlockDigest(0u, 1u), "block index");
 
 			KernelFaultCode fault;
 			SemanticEventKey key;
@@ -110,26 +111,26 @@ namespace ThousandAndFirst.Tests
 
 			SemanticEventKey.TryCreate(4, "taf:settlement:test", "taf:stream:test", 1u, 42uL, out key, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), key, 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "rules version");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "rules version");
 
 			SemanticEventKey.TryCreate(3, "taf:settlement:other", "taf:stream:test", 1u, 42uL, out key, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), key, 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "settlement");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "settlement");
 
 			SemanticEventKey.TryCreate(3, "taf:settlement:test", "taf:stream:other", 1u, 42uL, out key, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), key, 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "event stream");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "event stream");
 
 			SemanticEventKey.TryCreate(3, "taf:settlement:test", "taf:stream:test", 2u, 42uL, out key, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), key, 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "kind");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "kind");
 
 			SemanticEventKey.TryCreate(3, "taf:settlement:test", "taf:stream:test", 1u, 43uL, out key, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), key, 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "ordinal");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "ordinal");
 
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(new KernelSeed128(1uL, 0uL), KernelCanonicalTests.GoldenKey(), 0u, 0u, out bytes, out fault);
-			Assert.AreNotEqual(baseline, DigestOf(bytes), "seed");
+			ClassicAssert.AreNotEqual(baseline, DigestOf(bytes), "seed");
 		}
 
 		[Test]
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.Tests
 			ulong b;
 			CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), alpha, 0u, out a, out fault);
 			CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), beta, 0u, out b, out fault);
-			Assert.AreNotEqual(a, b);
+			ClassicAssert.AreNotEqual(a, b);
 		}
 
 		[Test]
@@ -152,8 +153,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ulong value;
 			KernelFaultCode fault;
-			Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, 100uL, out value, out fault));
-			Assert.AreEqual(58uL, value);
+			ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, 100uL, out value, out fault));
+			ClassicAssert.AreEqual(58uL, value);
 		}
 
 		/// <summary>
@@ -164,19 +165,19 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RejectionGoldenWalksTheWorstCaseBound()
 		{
-			Assert.AreEqual(RejectionThreshold, unchecked(0uL - RejectionBound) % RejectionBound, "threshold identity");
+			ClassicAssert.AreEqual(RejectionThreshold, unchecked(0uL - RejectionBound) % RejectionBound, "threshold identity");
 
 			ulong block0;
 			ulong block1;
 			KernelFaultCode fault;
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, out block0, out fault));
-			Assert.AreEqual(RejectBlock0Sample, block0);
-			Assert.IsTrue(block0 < RejectionThreshold, "block 0 must reject");
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, out block0, out fault));
+			ClassicAssert.AreEqual(RejectBlock0Sample, block0);
+			ClassicAssert.IsTrue(block0 < RejectionThreshold, "block 0 must reject");
 
 			ulong ignored;
-			Assert.IsFalse(CounterRandom.TryAcceptBoundedSample(block0, RejectionBound, out ignored));
+			ClassicAssert.IsFalse(CounterRandom.TryAcceptBoundedSample(block0, RejectionBound, out ignored));
 
-			Assert.AreEqual("d266b30de499c16367f143feea3c08e6ef1c805b5689873c703effe4d28a57ef", BlockDigest(0u, 1u));
+			ClassicAssert.AreEqual("d266b30de499c16367f143feea3c08e6ef1c805b5689873c703effe4d28a57ef", BlockDigest(0u, 1u));
 
 			byte[] preimage;
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 1u, out preimage, out fault);
@@ -187,14 +188,14 @@ namespace ThousandAndFirst.Tests
 			{
 				sample1 = (sample1 << 8) | digest[i];
 			}
-			Assert.AreEqual(RejectBlock1Sample, sample1);
-			Assert.IsTrue(sample1 >= RejectionThreshold, "block 1 must accept");
-			Assert.AreEqual(block1 = sample1 % RejectionBound, RejectionResult);
+			ClassicAssert.AreEqual(RejectBlock1Sample, sample1);
+			ClassicAssert.IsTrue(sample1 >= RejectionThreshold, "block 1 must accept");
+			ClassicAssert.AreEqual(block1 = sample1 % RejectionBound, RejectionResult);
 
 			ulong drawn;
-			Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, RejectionBound, out drawn, out fault));
-			Assert.AreEqual(RejectionResult, drawn, "the loop must land on the block-1 result");
-			Assert.AreEqual(block1, drawn);
+			ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, RejectionBound, out drawn, out fault));
+			ClassicAssert.AreEqual(RejectionResult, drawn, "the loop must land on the block-1 result");
+			ClassicAssert.AreEqual(block1, drawn);
 		}
 
 		[Test]
@@ -202,13 +203,13 @@ namespace ThousandAndFirst.Tests
 		{
 			ulong value;
 			KernelFaultCode fault;
-			Assert.IsFalse(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidRandomBound, fault);
-			Assert.AreEqual(0uL, value);
+			ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidRandomBound, fault);
+			ClassicAssert.AreEqual(0uL, value);
 
 			ulong mapped;
-			Assert.IsFalse(CounterRandom.TryAcceptBoundedSample(123uL, 0uL, out mapped));
-			Assert.AreEqual(0uL, mapped);
+			ClassicAssert.IsFalse(CounterRandom.TryAcceptBoundedSample(123uL, 0uL, out mapped));
+			ClassicAssert.AreEqual(0uL, mapped);
 		}
 
 		[Test]
@@ -219,8 +220,8 @@ namespace ThousandAndFirst.Tests
 			{
 				ulong value;
 				KernelFaultCode fault;
-				Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, 1uL, out value, out fault));
-				Assert.AreEqual(0uL, value);
+				ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, 1uL, out value, out fault));
+				ClassicAssert.AreEqual(0uL, value);
 			}
 		}
 
@@ -229,17 +230,17 @@ namespace ThousandAndFirst.Tests
 		{
 			uint next;
 			KernelFaultCode fault;
-			Assert.IsTrue(CounterRandom.TryNextRejectionBlockIndex(0u, out next, out fault));
-			Assert.AreEqual(1u, next);
-			Assert.AreEqual(KernelFaultCode.None, fault);
+			ClassicAssert.IsTrue(CounterRandom.TryNextRejectionBlockIndex(0u, out next, out fault));
+			ClassicAssert.AreEqual(1u, next);
+			ClassicAssert.AreEqual(KernelFaultCode.None, fault);
 
-			Assert.IsTrue(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue - 1u, out next, out fault));
-			Assert.AreEqual(uint.MaxValue, next);
+			ClassicAssert.IsTrue(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue - 1u, out next, out fault));
+			ClassicAssert.AreEqual(uint.MaxValue, next);
 
 			// Never wraps to zero: wrapping would re-test samples already rejected, forever.
-			Assert.IsFalse(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue, out next, out fault));
-			Assert.AreEqual(0u, next);
-			Assert.AreEqual(KernelFaultCode.CounterExhausted, fault);
+			ClassicAssert.IsFalse(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue, out next, out fault));
+			ClassicAssert.AreEqual(0u, next);
+			ClassicAssert.AreEqual(KernelFaultCode.CounterExhausted, fault);
 		}
 
 		[Test]
@@ -247,9 +248,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ulong value;
 			KernelFaultCode fault;
-			Assert.IsFalse(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.AreEqual(0uL, value);
+			ClassicAssert.IsFalse(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.AreEqual(0uL, value);
 		}
 
 		[Test]
@@ -264,13 +265,13 @@ namespace ThousandAndFirst.Tests
 			for (uint i = 0; i < 3000; i++)
 			{
 				ulong value;
-				Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, bound, out value, out fault));
-				Assert.IsTrue(value < bound);
+				ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), i, bound, out value, out fault));
+				ClassicAssert.IsTrue(value < bound);
 				counts[(int)value]++;
 			}
 			for (int i = 0; i < counts.Length; i++)
 			{
-				Assert.IsTrue(counts[i] > 800 && counts[i] < 1200, "residue " + i + " appeared " + counts[i] + " times in 3000");
+				ClassicAssert.IsTrue(counts[i] > 800 && counts[i] < 1200, "residue " + i + " appeared " + counts[i] + " times in 3000");
 			}
 		}
 
@@ -287,35 +288,35 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode fault;
 			byte[] bytes;
 
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				baseline, KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
 			string baseHex = KernelDigest.ToLowercaseHex(bytes);
 
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				new KernelSeed128(baseline.High ^ 1uL, baseline.Low), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
 			string highHex = KernelDigest.ToLowercaseHex(bytes);
-			Assert.AreNotEqual(baseHex, highHex, "the high half must reach the random-block wire");
+			ClassicAssert.AreNotEqual(baseHex, highHex, "the high half must reach the random-block wire");
 
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				new KernelSeed128(baseline.High, baseline.Low ^ 1uL), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
 			string lowHex = KernelDigest.ToLowercaseHex(bytes);
-			Assert.AreNotEqual(baseHex, lowHex, "the low half must reach the random-block wire");
-			Assert.AreNotEqual(highHex, lowHex, "the halves must not be folded together");
+			ClassicAssert.AreNotEqual(baseHex, lowHex, "the low half must reach the random-block wire");
+			ClassicAssert.AreNotEqual(highHex, lowHex, "the halves must not be folded together");
 
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				new KernelSeed128(baseline.Low, baseline.High), KernelCanonicalTests.GoldenKey(), 3u, 1u, out bytes, out fault));
-			Assert.AreNotEqual(baseHex, KernelDigest.ToLowercaseHex(bytes), "swapping the halves must not collapse");
+			ClassicAssert.AreNotEqual(baseHex, KernelDigest.ToLowercaseHex(bytes), "swapping the halves must not collapse");
 
 			// And the drawn values must separate too, not merely the preimages.
 			ulong a;
 			ulong b;
 			ulong c;
 			ulong d;
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(baseline, KernelCanonicalTests.GoldenKey(), 3u, out a, out fault));
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), KernelCanonicalTests.GoldenKey(), 3u, out b, out fault));
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), KernelCanonicalTests.GoldenKey(), 3u, out c, out fault));
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.Low, baseline.High), KernelCanonicalTests.GoldenKey(), 3u, out d, out fault));
-			Assert.AreEqual(4, new HashSet<ulong> { a, b, c, d }.Count, "four seeds, four draws");
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(baseline, KernelCanonicalTests.GoldenKey(), 3u, out a, out fault));
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), KernelCanonicalTests.GoldenKey(), 3u, out b, out fault));
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), KernelCanonicalTests.GoldenKey(), 3u, out c, out fault));
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(new KernelSeed128(baseline.Low, baseline.High), KernelCanonicalTests.GoldenKey(), 3u, out d, out fault));
+			ClassicAssert.AreEqual(4, new HashSet<ulong> { a, b, c, d }.Count, "four seeds, four draws");
 		}
 
 		/// <summary>
@@ -335,14 +336,14 @@ namespace ThousandAndFirst.Tests
 				for (uint drawIndex = 0u; drawIndex < 64u; drawIndex++)
 				{
 					ulong value;
-					Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), drawIndex, bound, out value, out fault),
+					ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), drawIndex, bound, out value, out fault),
 						"bound " + bound + ", draw " + drawIndex + ", fault " + fault);
-					Assert.IsTrue(value < bound, "bound " + bound + ", draw " + drawIndex + " produced " + value);
+					ClassicAssert.IsTrue(value < bound, "bound " + bound + ", draw " + drawIndex + " produced " + value);
 
 					// Same question, same answer, every time it is asked.
 					ulong again;
-					Assert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), drawIndex, bound, out again, out fault));
-					Assert.AreEqual(value, again);
+					ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), drawIndex, bound, out again, out fault));
+					ClassicAssert.AreEqual(value, again);
 				}
 			}
 		}
@@ -366,16 +367,16 @@ namespace ThousandAndFirst.Tests
 					{
 						ulong below = threshold - offset - 1uL;
 						ulong ignored;
-						Assert.IsFalse(CounterRandom.TryAcceptBoundedSample(below, bound, out ignored),
+						ClassicAssert.IsFalse(CounterRandom.TryAcceptBoundedSample(below, bound, out ignored),
 							"bound " + bound + ": sample " + below + " is under threshold " + threshold + " and must be rejected");
-						Assert.AreEqual(0uL, ignored, "a rejected sample must publish nothing");
+						ClassicAssert.AreEqual(0uL, ignored, "a rejected sample must publish nothing");
 					}
 
 					ulong at = threshold + offset;
 					ulong value;
-					Assert.IsTrue(CounterRandom.TryAcceptBoundedSample(at, bound, out value),
+					ClassicAssert.IsTrue(CounterRandom.TryAcceptBoundedSample(at, bound, out value),
 						"bound " + bound + ": sample " + at + " is at or above threshold " + threshold + " and must be accepted");
-					Assert.AreEqual(at % bound, value, "an accepted sample maps by plain modulus");
+					ClassicAssert.AreEqual(at % bound, value, "an accepted sample maps by plain modulus");
 				}
 			}
 		}
@@ -417,19 +418,19 @@ namespace ThousandAndFirst.Tests
 
 				BigInteger expectedThreshold = twoToTheSixtyFour % bound;
 				bool expectedAccepted = (BigInteger)sample >= expectedThreshold;
-				Assert.AreEqual(expectedAccepted, accepted, "sample " + sample + ", bound " + bound);
+				ClassicAssert.AreEqual(expectedAccepted, accepted, "sample " + sample + ", bound " + bound);
 				if (expectedAccepted)
 				{
-					Assert.AreEqual((ulong)((BigInteger)sample % bound), value, "sample " + sample + ", bound " + bound);
-					Assert.IsTrue(value < bound);
+					ClassicAssert.AreEqual((ulong)((BigInteger)sample % bound), value, "sample " + sample + ", bound " + bound);
+					ClassicAssert.IsTrue(value < bound);
 				}
 				else
 				{
-					Assert.AreEqual(0uL, value);
+					ClassicAssert.AreEqual(0uL, value);
 				}
 				compared++;
 			}
-			Assert.AreEqual(100000, compared);
+			ClassicAssert.AreEqual(100000, compared);
 		}
 
 		/// <summary>
@@ -441,7 +442,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelFaultCode fault;
 			ulong before;
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 4u, out before, out fault));
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 4u, out before, out fault));
 
 			Random ambient = new Random(12345);
 			for (int i = 0; i < 1000; i++)
@@ -449,11 +450,11 @@ namespace ThousandAndFirst.Tests
 				ambient.Next();
 			}
 			string ignored = KernelDigest.ToLowercaseHex(new byte[] { 1, 2, 3 });
-			Assert.IsNotNull(ignored);
+			ClassicAssert.IsNotNull(ignored);
 
 			ulong after;
-			Assert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 4u, out after, out fault));
-			Assert.AreEqual(before, after, "an unrelated generator must not be able to move a kernel draw");
+			ClassicAssert.IsTrue(CounterRandom.TryDrawUInt64(KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 4u, out after, out fault));
+			ClassicAssert.AreEqual(before, after, "an unrelated generator must not be able to move a kernel draw");
 		}
 
 		/// <summary>
@@ -472,38 +473,38 @@ namespace ThousandAndFirst.Tests
 				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.Cryptographic;
 
 				// All three wrong at once: the key wins.
-				Assert.IsFalse(CounterRandom.TryDrawBelow(
+				ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out fault));
-				Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key outranks everything");
-				Assert.AreEqual(0uL, value);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key outranks everything");
+				ClassicAssert.AreEqual(0uL, value);
 
 				// Key fine, bound and provider both bad: the bound wins. This is the case that was
 				// wrong before, and it is the reason the key cannot be validated by drawing.
-				Assert.IsFalse(CounterRandom.TryDrawBelow(
+				ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
-				Assert.AreEqual(KernelFaultCode.InvalidRandomBound, fault, "a bound the caller can see is wrong outranks the provider");
-				Assert.AreEqual(0uL, value);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidRandomBound, fault, "a bound the caller can see is wrong outranks the provider");
+				ClassicAssert.AreEqual(0uL, value);
 
 				// Only the provider left to fail.
-				Assert.IsFalse(CounterRandom.TryDrawBelow(
+				ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 100uL, out value, out fault));
-				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
-				Assert.AreEqual(0uL, value);
+				ClassicAssert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+				ClassicAssert.AreEqual(0uL, value);
 
 				// The unbounded draw has no bound to compete, so key then provider.
-				Assert.IsFalse(CounterRandom.TryDrawUInt64(
+				ClassicAssert.IsFalse(CounterRandom.TryDrawUInt64(
 					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
-				Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-				Assert.IsFalse(CounterRandom.TryDrawUInt64(
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+				ClassicAssert.IsFalse(CounterRandom.TryDrawUInt64(
 					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, out value, out fault));
-				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+				ClassicAssert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
 
 				// A missing provider is the same disposition by a different route.
 				KernelDigest.InjectedFailure = KernelDigest.InjectedDigestFailure.PlatformUnsupported;
 				byte[] digest;
-				Assert.IsFalse(KernelDigest.TryComputeSha256(new byte[] { 1 }, out digest, out fault));
-				Assert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
-				Assert.IsNull(digest, "a failed digest publishes nothing");
+				ClassicAssert.IsFalse(KernelDigest.TryComputeSha256(new byte[] { 1 }, out digest, out fault));
+				ClassicAssert.AreEqual(KernelFaultCode.CryptographicFailure, fault);
+				ClassicAssert.IsNull(digest, "a failed digest publishes nothing");
 			}
 			finally
 			{
@@ -512,9 +513,9 @@ namespace ThousandAndFirst.Tests
 
 			// And the seam leaves nothing behind: the published golden still reproduces exactly.
 			ulong after;
-			Assert.IsTrue(CounterRandom.TryDrawBelow(
+			ClassicAssert.IsTrue(CounterRandom.TryDrawBelow(
 				KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 7u, 100uL, out after, out fault));
-			Assert.AreEqual(58uL, after, "the golden must be unchanged once the provider works again");
+			ClassicAssert.AreEqual(58uL, after, "the golden must be unchanged once the provider works again");
 		}
 
 		/// <summary>
@@ -560,12 +561,12 @@ namespace ThousandAndFirst.Tests
 
 				// But an invalid key still fails closed before anything can hash, so the earlier
 				// checks are genuinely earlier and not merely usually earlier.
-				Assert.IsFalse(CounterRandom.TryDrawBelow(
+				ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 					KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out drawFault));
-				Assert.AreEqual(KernelFaultCode.InvalidEventKey, drawFault);
-				Assert.IsFalse(CounterRandom.TryDrawBelow(
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, drawFault);
+				ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 					KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out drawFault));
-				Assert.AreEqual(KernelFaultCode.InvalidRandomBound, drawFault);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidRandomBound, drawFault);
 			}
 			finally
 			{
@@ -584,28 +585,28 @@ namespace ThousandAndFirst.Tests
 			ulong value;
 
 			// Both wrong at once: the key wins.
-			Assert.IsFalse(CounterRandom.TryDrawBelow(
+			ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0uL, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key is judged first");
-			Assert.AreEqual(0uL, value, "nothing partial is published");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault, "the key is judged first");
+			ClassicAssert.AreEqual(0uL, value, "nothing partial is published");
 
 			// The key alone.
-			Assert.IsFalse(CounterRandom.TryDrawBelow(
+			ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 100uL, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.AreEqual(0uL, value);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.AreEqual(0uL, value);
 
 			// The bound alone, with a key that is fine — this is the only way to see the bound fault.
-			Assert.IsFalse(CounterRandom.TryDrawBelow(
+			ClassicAssert.IsFalse(CounterRandom.TryDrawBelow(
 				KernelCanonicalTests.GoldenSeed(), KernelCanonicalTests.GoldenKey(), 0u, 0uL, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidRandomBound, fault);
-			Assert.AreEqual(0uL, value);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidRandomBound, fault);
+			ClassicAssert.AreEqual(0uL, value);
 
 			// The same ordering on the unbounded draw, which has no bound to compete with.
-			Assert.IsFalse(CounterRandom.TryDrawUInt64(
+			ClassicAssert.IsFalse(CounterRandom.TryDrawUInt64(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, out value, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.AreEqual(0uL, value);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.AreEqual(0uL, value);
 		}
 
 		/// <summary>
@@ -622,70 +623,70 @@ namespace ThousandAndFirst.Tests
 			// parameter is seeded with a real key first, so "publishes the default" is a claim
 			// about what the rule wrote rather than about what happened to be in the variable.
 			SemanticEventKey key = KernelCanonicalTests.GoldenKey();
-			Assert.IsFalse(SemanticEventKey.TryCreate(0, "NOPE", "ALSO BAD", 0u, 0uL, out key, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.AreEqual(default(SemanticEventKey), key, "a refused key must be the default, not the prior value");
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(0, "NOPE", "ALSO BAD", 0u, 0uL, out key, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.AreEqual(default(SemanticEventKey), key, "a refused key must be the default, not the prior value");
 
 			// Each condition on its own, so no single check masks the others.
 			key = KernelCanonicalTests.GoldenKey();
-			Assert.IsFalse(SemanticEventKey.TryCreate(0, "taf:a", "taf:b", 1u, 0uL, out key, out fault), "rules version");
-			Assert.AreEqual(default(SemanticEventKey), key);
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(0, "taf:a", "taf:b", 1u, 0uL, out key, out fault), "rules version");
+			ClassicAssert.AreEqual(default(SemanticEventKey), key);
 			key = KernelCanonicalTests.GoldenKey();
-			Assert.IsFalse(SemanticEventKey.TryCreate(3, "NOPE", "taf:b", 1u, 0uL, out key, out fault), "settlement id");
-			Assert.AreEqual(default(SemanticEventKey), key);
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(3, "NOPE", "taf:b", 1u, 0uL, out key, out fault), "settlement id");
+			ClassicAssert.AreEqual(default(SemanticEventKey), key);
 			key = KernelCanonicalTests.GoldenKey();
-			Assert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "NOPE", 1u, 0uL, out key, out fault), "stream id");
-			Assert.AreEqual(default(SemanticEventKey), key);
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "NOPE", 1u, 0uL, out key, out fault), "stream id");
+			ClassicAssert.AreEqual(default(SemanticEventKey), key);
 
 			// A zero event kind is invalid even when everything else is well formed.
 			key = KernelCanonicalTests.GoldenKey();
-			Assert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "taf:b", 0u, 0uL, out key, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.AreEqual(default(SemanticEventKey), key);
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(3, "taf:a", "taf:b", 0u, 0uL, out key, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.AreEqual(default(SemanticEventKey), key);
 
 			// Identity rendering from a default key.
 			string id;
-			Assert.IsFalse(SemanticEventIdentity.TryCreateId(
+			ClassicAssert.IsFalse(SemanticEventIdentity.TryCreateId(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), out id, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsNull(id, "no partial identity");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsNull(id, "no partial identity");
 
 			// Both encoders refuse a default key rather than encoding nulls.
 			byte[] bytes;
-			Assert.IsFalse(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+			ClassicAssert.IsFalse(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), out bytes, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsNull(bytes);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsNull(bytes);
 
-			Assert.IsFalse(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
+			ClassicAssert.IsFalse(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(
 				KernelCanonicalTests.GoldenSeed(), default(SemanticEventKey), 0u, 0u, out bytes, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsNull(bytes);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsNull(bytes);
 
 			// The digest refuses a null input rather than hashing the empty string, which would
 			// give absent data a real and reusable identity.
 			byte[] digest;
-			Assert.IsFalse(KernelDigest.TryComputeSha256(null, out digest, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsNull(digest);
+			ClassicAssert.IsFalse(KernelDigest.TryComputeSha256(null, out digest, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsNull(digest);
 
 			// Block-index exhaustion at the top of the counter, which cannot wrap.
 			uint next;
-			Assert.IsFalse(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue, out next, out fault));
-			Assert.AreEqual(KernelFaultCode.CounterExhausted, fault);
-			Assert.AreEqual(0u, next, "a refused advance publishes no index");
+			ClassicAssert.IsFalse(CounterRandom.TryNextRejectionBlockIndex(uint.MaxValue, out next, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.CounterExhausted, fault);
+			ClassicAssert.AreEqual(0u, next, "a refused advance publishes no index");
 
 			// The mapping helper has no fault channel, so its contract is the value it does not set.
 			ulong mapped;
-			Assert.IsFalse(CounterRandom.TryAcceptBoundedSample(0uL, 0uL, out mapped));
-			Assert.AreEqual(0uL, mapped);
+			ClassicAssert.IsFalse(CounterRandom.TryAcceptBoundedSample(0uL, 0uL, out mapped));
+			ClassicAssert.AreEqual(0uL, mapped);
 		}
 
 		private static string DigestOf(byte[] preimage)
 		{
 			byte[] digest;
 			KernelFaultCode fault;
-			Assert.IsTrue(KernelDigest.TryComputeSha256(preimage, out digest, out fault));
+			ClassicAssert.IsTrue(KernelDigest.TryComputeSha256(preimage, out digest, out fault));
 			return KernelDigest.ToLowercaseHex(digest);
 		}
 	}

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using CellKind = ThousandAndFirst.KingdomAdoptRules.CellKind;
 using Ground = ThousandAndFirst.KingdomPlotRules.GroundKind;
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Roof.Carved, 2)]
 		public void ShelterIsRankedAndRockSheltersLikeAWall(Roof Roof, int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.ShelterRank(Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ShelterRank(Roof));
 		}
 
 		[TestCase(Roof.Open, false)]
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Roof.Carved, true)]
 		public void ABedWantsCanvasAtLeast(Roof Roof, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.HoldsBeds(Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.HoldsBeds(Roof));
 		}
 
 		[TestCase(Roof.Open, true)]
@@ -74,7 +75,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Roof.Carved, false)]
 		public void OnlyWallAndRockKeepTheWeatherOut(Roof Roof, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.AdmitsSky(Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.AdmitsSky(Roof));
 		}
 
 		[TestCase(Roof.Open, false)]
@@ -85,7 +86,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Canvas is the design's own object and the rock is the hill's; only a walled tier
 			// costs the settlement a perimeter.
-			Assert.AreEqual(Expected, KingdomPlotRules.RaisesWalls(Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.RaisesWalls(Roof));
 		}
 
 		[TestCase(Roof.Open, false)]
@@ -94,23 +95,23 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Roof.Carved, true)]
 		public void SomethingStandsRoundAWalledOrCarvedTier(Roof Roof, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.Encloses(Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.Encloses(Roof));
 		}
 
 		[Test]
 		public void EveryRoofHasItsOwnWords()
 		{
-			Assert.AreEqual("open to the sky", KingdomPlotRules.RoofWord(Roof.Open));
-			Assert.AreEqual("under canvas", KingdomPlotRules.RoofWord(Roof.Soft));
-			Assert.AreEqual("walled", KingdomPlotRules.RoofWord(Roof.Walled));
-			Assert.AreEqual("carved from the rock", KingdomPlotRules.RoofWord(Roof.Carved));
+			ClassicAssert.AreEqual("open to the sky", KingdomPlotRules.RoofWord(Roof.Open));
+			ClassicAssert.AreEqual("under canvas", KingdomPlotRules.RoofWord(Roof.Soft));
+			ClassicAssert.AreEqual("walled", KingdomPlotRules.RoofWord(Roof.Walled));
+			ClassicAssert.AreEqual("carved from the rock", KingdomPlotRules.RoofWord(Roof.Carved));
 		}
 
 		[Test]
 		public void ADesignThatDeclaresNoRoofGetsTheOneItAlwaysGot()
 		{
-			Assert.AreEqual(Roof.Walled, KingdomPlotRules.DefaultRoof(false));
-			Assert.AreEqual(Roof.Open, KingdomPlotRules.DefaultRoof(true));
+			ClassicAssert.AreEqual(Roof.Walled, KingdomPlotRules.DefaultRoof(false));
+			ClassicAssert.AreEqual(Roof.Open, KingdomPlotRules.DefaultRoof(true));
 		}
 
 		[TestCase(Roof.Soft)]
@@ -118,8 +119,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Roof.Carved)]
 		public void UndergroundEverythingTheSettlementWouldEncloseIsCarved(Roof Declared)
 		{
-			Assert.AreEqual(Roof.Carved, KingdomPlotRules.RoofOnGround(Declared, Underground: true));
-			Assert.AreEqual(Declared, KingdomPlotRules.RoofOnGround(Declared, Underground: false));
+			ClassicAssert.AreEqual(Roof.Carved, KingdomPlotRules.RoofOnGround(Declared, Underground: true));
+			ClassicAssert.AreEqual(Declared, KingdomPlotRules.RoofOnGround(Declared, Underground: false));
 		}
 
 		[Test]
@@ -128,8 +129,8 @@ namespace ThousandAndFirst.Tests
 			// Carving replaces the enclosure a design would have raised; it does not roof ground
 			// the design deliberately left unroofed. A field, salt-pan, market square or
 			// reservoir cut into the rock is open ground with stone around it.
-			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: true));
-			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: false));
+			ClassicAssert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: true));
+			ClassicAssert.AreEqual(Roof.Open, KingdomPlotRules.RoofOnGround(Roof.Open, Underground: false));
 		}
 
 		[Test]
@@ -142,11 +143,11 @@ namespace ThousandAndFirst.Tests
 			{
 				return CellKind.Open;
 			});
-			Assert.AreEqual(KingdomPlotRules.RoofFromEnclosure(field, Underground: true),
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofFromEnclosure(field, Underground: true),
 				KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: true), Underground: true));
 
 			KingdomAdoptRules.EnclosureMeasurement room = KingdomAdoptRules.MeasureEnclosure(12, 12, Room(10, 10, 15, 14, 12, 10));
-			Assert.AreEqual(KingdomPlotRules.RoofFromEnclosure(room, Underground: true),
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofFromEnclosure(room, Underground: true),
 				KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: false), Underground: true));
 		}
 
@@ -157,10 +158,10 @@ namespace ThousandAndFirst.Tests
 			// underground field became a sealed rock chamber people could be housed in, floored
 			// across its whole rect with a door cut into it.
 			Roof underground = KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: true), Underground: true);
-			Assert.IsFalse(KingdomPlotRules.HoldsBeds(underground), "nobody sleeps in a field, above the rock or under it");
-			Assert.IsFalse(KingdomPlotRules.Encloses(underground), "an open plot has no enclosure to be carved out of");
-			Assert.IsFalse(KingdomPlotRules.RaisesWalls(underground), "the settlement raises nothing round an open plot");
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(new KingdomPlotRules.PlotRect(0, 0, 5, 5), underground),
+			ClassicAssert.IsFalse(KingdomPlotRules.HoldsBeds(underground), "nobody sleeps in a field, above the rock or under it");
+			ClassicAssert.IsFalse(KingdomPlotRules.Encloses(underground), "an open plot has no enclosure to be carved out of");
+			ClassicAssert.IsFalse(KingdomPlotRules.RaisesWalls(underground), "the settlement raises nothing round an open plot");
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(new KingdomPlotRules.PlotRect(0, 0, 5, 5), underground),
 				"an open plot costs no enclosure on any stratum");
 		}
 
@@ -192,17 +193,17 @@ namespace ThousandAndFirst.Tests
 			// Reusing the adoption fill rather than a second roofed test of our own is the whole
 			// point: a founder-built house and a commissioned one are judged by one measure.
 			KingdomAdoptRules.EnclosureMeasurement room = KingdomAdoptRules.MeasureEnclosure(12, 12, Room(10, 10, 15, 14, 12, 10));
-			Assert.IsTrue(room.Bounded, "a walled room is bounded");
-			Assert.AreEqual(Roof.Walled, KingdomPlotRules.RoofFromEnclosure(room, Underground: false));
-			Assert.AreEqual(Roof.Carved, KingdomPlotRules.RoofFromEnclosure(room, Underground: true));
+			ClassicAssert.IsTrue(room.Bounded, "a walled room is bounded");
+			ClassicAssert.AreEqual(Roof.Walled, KingdomPlotRules.RoofFromEnclosure(room, Underground: false));
+			ClassicAssert.AreEqual(Roof.Carved, KingdomPlotRules.RoofFromEnclosure(room, Underground: true));
 
 			KingdomAdoptRules.EnclosureMeasurement field = KingdomAdoptRules.MeasureEnclosure(12, 12, delegate(int x, int y)
 			{
 				return CellKind.Open;
 			});
-			Assert.IsFalse(field.Bounded, "open ground never closes");
-			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofFromEnclosure(field, Underground: false));
-			Assert.AreEqual(Roof.Open, KingdomPlotRules.RoofFromEnclosure(field, Underground: true),
+			ClassicAssert.IsFalse(field.Bounded, "open ground never closes");
+			ClassicAssert.AreEqual(Roof.Open, KingdomPlotRules.RoofFromEnclosure(field, Underground: false));
+			ClassicAssert.AreEqual(Roof.Open, KingdomPlotRules.RoofFromEnclosure(field, Underground: true),
 				"open ground underground is still open ground, not a carved room");
 		}
 
@@ -215,7 +216,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Role.Storage, Roof.Open, true)]
 		public void ARoleAsksTheRoofForExactlyWhatItNeeds(Role Role, Roof Roof, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.RoofMeetsRole(Role, Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.RoofMeetsRole(Role, Roof));
 		}
 
 		// --- The invariant: footprint fits plot ---------------------------------------------
@@ -232,7 +233,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.None, 1, 1, false)]
 		public void AFootprintFitsItsPlotOrItDoesNot(Size Plot, int Width, int Height, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.FootprintFits(Plot, Width, Height));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.FootprintFits(Plot, Width, Height));
 		}
 
 		[TestCase(0, 3)]
@@ -240,7 +241,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-1, 4)]
 		public void AFootprintWithNoGroundInItFitsNothing(int Width, int Height)
 		{
-			Assert.IsFalse(KingdomPlotRules.FootprintFits(Size.Huge, Width, Height));
+			ClassicAssert.IsFalse(KingdomPlotRules.FootprintFits(Size.Huge, Width, Height));
 		}
 
 		[TestCase(3, 3, Size.Small)]
@@ -255,32 +256,32 @@ namespace ThousandAndFirst.Tests
 		[TestCase(20, 19, Size.None)]
 		public void TheSmallestPlotThatHoldsAFootprintIsNamed(int Width, int Height, Size Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.SmallestPlotFor(Width, Height));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SmallestPlotFor(Width, Height));
 		}
 
 		[Test]
 		public void ATierThatDeclaresNoFootprintFillsItsPlot()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "M", null, null, null, null, null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.IsTrue(spec.FillsPlot);
-			Assert.IsTrue(KingdomPlotRules.TryFootprint(spec, out var width, out var height));
-			Assert.AreEqual(8, width, "an M plot is 8 across and a tier that declares nothing takes all of it");
-			Assert.AreEqual(6, height);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "M", null, null, null, null, null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsTrue(spec.FillsPlot);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprint(spec, out var width, out var height));
+			ClassicAssert.AreEqual(8, width, "an M plot is 8 across and a tier that declares nothing takes all of it");
+			ClassicAssert.AreEqual(6, height);
 		}
 
 		[Test]
 		public void ATierThatDeclaresAFootprintTakesExactlyThat()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("tent", "S", null, null, null, "3x2", "Soft", out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.IsFalse(spec.FillsPlot);
-			Assert.IsTrue(KingdomPlotRules.TryFootprint(spec, out var width, out var height));
-			Assert.AreEqual(3, width);
-			Assert.AreEqual(2, height);
-			Assert.AreEqual(Roof.Soft, spec.Roof);
-			Assert.IsTrue(spec.RoofDeclared);
-			Assert.IsFalse(spec.Open, "canvas is not an open plot: something is over it");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("tent", "S", null, null, null, "3x2", "Soft", out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsFalse(spec.FillsPlot);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprint(spec, out var width, out var height));
+			ClassicAssert.AreEqual(3, width);
+			ClassicAssert.AreEqual(2, height);
+			ClassicAssert.AreEqual(Roof.Soft, spec.Roof);
+			ClassicAssert.IsTrue(spec.RoofDeclared);
+			ClassicAssert.IsFalse(spec.Open, "canvas is not an open plot: something is over it");
 		}
 
 		// --- Where the building sits inside the plot ----------------------------------------
@@ -289,33 +290,33 @@ namespace ThousandAndFirst.Tests
 		public void TheBuildingFrontsTheHeartAndTheYardLiesBehindIt()
 		{
 			Rect plot = R(10, 10, 17, 15);
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 10, 5, out var north));
-			Assert.AreEqual(R(10, 10, 13, 12), north, "a heart to the north pulls the building to the north edge");
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 30, 12, out var east));
-			Assert.AreEqual(R(14, 10, 17, 12), east, "a heart to the east pulls it to the east edge");
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 13, 30, out var south));
-			Assert.AreEqual(R(10, 13, 13, 15), south, "a heart to the south pulls it to the south edge");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 10, 5, out var north));
+			ClassicAssert.AreEqual(R(10, 10, 13, 12), north, "a heart to the north pulls the building to the north edge");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 30, 12, out var east));
+			ClassicAssert.AreEqual(R(14, 10, 17, 12), east, "a heart to the east pulls it to the east edge");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 4, 3, 13, 30, out var south));
+			ClassicAssert.AreEqual(R(10, 13, 13, 15), south, "a heart to the south pulls it to the south edge");
 		}
 
 		[Test]
 		public void TiesBreakNorthThenWestSoOnePlotAlwaysLaysOutTheSameWay()
 		{
 			Rect plot = R(0, 0, 7, 5);
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 2, 2, 3, 2, out var first));
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 2, 2, 3, 2, out var again));
-			Assert.AreEqual(first, again, "the same question must always give the same ground");
-			Assert.LessOrEqual(first.Y1, 2);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 2, 2, 3, 2, out var first));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 2, 2, 3, 2, out var again));
+			ClassicAssert.AreEqual(first, again, "the same question must always give the same ground");
+			ClassicAssert.LessOrEqual(first.Y1, 2);
 		}
 
 		[Test]
 		public void AFootprintLargerThanItsPlotIsRefusedRatherThanTrimmed()
 		{
 			Rect plot = R(10, 10, 14, 13);
-			Assert.IsFalse(KingdomPlotRules.TryFootprintWithin(plot, 6, 4, 10, 10, out var wide));
-			Assert.AreEqual(R(0, 0, 0, 0), wide);
-			Assert.IsFalse(KingdomPlotRules.TryFootprintWithin(plot, 5, 5, 10, 10, out _));
-			Assert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 5, 4, 10, 10, out var exact));
-			Assert.AreEqual(plot, exact, "a footprint the size of its plot is the plot");
+			ClassicAssert.IsFalse(KingdomPlotRules.TryFootprintWithin(plot, 6, 4, 10, 10, out var wide));
+			ClassicAssert.AreEqual(R(0, 0, 0, 0), wide);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryFootprintWithin(plot, 5, 5, 10, 10, out _));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryFootprintWithin(plot, 5, 4, 10, 10, out var exact));
+			ClassicAssert.AreEqual(plot, exact, "a footprint the size of its plot is the plot");
 		}
 
 		// --- The yard -----------------------------------------------------------------------
@@ -326,11 +327,11 @@ namespace ThousandAndFirst.Tests
 			Rect plot = R(10, 10, 17, 15);
 			Rect footprint = R(10, 10, 13, 12);
 			List<Rect> bands = KingdomPlotRules.YardBands(plot, footprint);
-			Assert.AreEqual(2, bands.Count, "north and west bands are empty: the building is in that corner");
-			Assert.AreEqual(R(10, 13, 17, 15), bands[0], "the south band runs the full width");
-			Assert.AreEqual(R(14, 10, 17, 12), bands[1], "the east band only runs beside the building");
-			Assert.AreEqual(36, KingdomPlotRules.YardArea(plot, footprint));
-			Assert.AreEqual(plot.Area - footprint.Area, KingdomPlotRules.YardArea(plot, footprint),
+			ClassicAssert.AreEqual(2, bands.Count, "north and west bands are empty: the building is in that corner");
+			ClassicAssert.AreEqual(R(10, 13, 17, 15), bands[0], "the south band runs the full width");
+			ClassicAssert.AreEqual(R(14, 10, 17, 12), bands[1], "the east band only runs beside the building");
+			ClassicAssert.AreEqual(36, KingdomPlotRules.YardArea(plot, footprint));
+			ClassicAssert.AreEqual(plot.Area - footprint.Area, KingdomPlotRules.YardArea(plot, footprint),
 				"the yard and the building together are the whole plot, exactly once each");
 		}
 
@@ -340,21 +341,21 @@ namespace ThousandAndFirst.Tests
 			Rect plot = R(0, 0, 9, 9);
 			Rect footprint = R(3, 3, 6, 6);
 			List<Rect> bands = KingdomPlotRules.YardBands(plot, footprint);
-			Assert.AreEqual(4, bands.Count);
-			Assert.AreEqual(R(0, 0, 9, 2), bands[0]);
-			Assert.AreEqual(R(0, 7, 9, 9), bands[1]);
-			Assert.AreEqual(R(0, 3, 2, 6), bands[2]);
-			Assert.AreEqual(R(7, 3, 9, 6), bands[3]);
-			Assert.AreEqual(100 - 16, KingdomPlotRules.YardArea(plot, footprint));
+			ClassicAssert.AreEqual(4, bands.Count);
+			ClassicAssert.AreEqual(R(0, 0, 9, 2), bands[0]);
+			ClassicAssert.AreEqual(R(0, 7, 9, 9), bands[1]);
+			ClassicAssert.AreEqual(R(0, 3, 2, 6), bands[2]);
+			ClassicAssert.AreEqual(R(7, 3, 9, 6), bands[3]);
+			ClassicAssert.AreEqual(100 - 16, KingdomPlotRules.YardArea(plot, footprint));
 		}
 
 		[Test]
 		public void ATierThatFillsItsPlotHasNoYardAtAll()
 		{
 			Rect plot = R(10, 10, 17, 15);
-			Assert.AreEqual(0, KingdomPlotRules.YardBands(plot, plot).Count);
-			Assert.AreEqual(0, KingdomPlotRules.YardArea(plot, plot));
-			Assert.IsFalse(KingdomPlotRules.InYard(plot, plot, 12, 12));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.YardBands(plot, plot).Count);
+			ClassicAssert.AreEqual(0, KingdomPlotRules.YardArea(plot, plot));
+			ClassicAssert.IsFalse(KingdomPlotRules.InYard(plot, plot, 12, 12));
 		}
 
 		[Test]
@@ -362,10 +363,10 @@ namespace ThousandAndFirst.Tests
 		{
 			Rect plot = R(10, 10, 17, 15);
 			Rect footprint = R(10, 10, 13, 12);
-			Assert.IsTrue(KingdomPlotRules.InYard(plot, footprint, 15, 11));
-			Assert.IsFalse(KingdomPlotRules.InYard(plot, footprint, 11, 11), "under the building is not yard");
-			Assert.IsFalse(KingdomPlotRules.InYard(plot, footprint, 20, 11), "off the plot is not yard");
-			Assert.AreEqual(0, KingdomPlotRules.YardBands(plot, R(9, 9, 12, 12)).Count,
+			ClassicAssert.IsTrue(KingdomPlotRules.InYard(plot, footprint, 15, 11));
+			ClassicAssert.IsFalse(KingdomPlotRules.InYard(plot, footprint, 11, 11), "under the building is not yard");
+			ClassicAssert.IsFalse(KingdomPlotRules.InYard(plot, footprint, 20, 11), "off the plot is not yard");
+			ClassicAssert.AreEqual(0, KingdomPlotRules.YardBands(plot, R(9, 9, 12, 12)).Count,
 				"a footprint hanging off the plot has no yard anybody can name");
 		}
 
@@ -373,9 +374,9 @@ namespace ThousandAndFirst.Tests
 		public void GrowingIntoTheSameRectTakesNoNewGround()
 		{
 			Rect small = R(10, 10, 13, 12);
-			Assert.IsFalse(KingdomPlotRules.TakesNewGround(small, small));
-			Assert.IsTrue(KingdomPlotRules.TakesNewGround(small, R(10, 10, 14, 12)), "one more column is new ground");
-			Assert.IsFalse(KingdomPlotRules.TakesNewGround(R(10, 10, 17, 15), small), "shrinking takes nothing");
+			ClassicAssert.IsFalse(KingdomPlotRules.TakesNewGround(small, small));
+			ClassicAssert.IsTrue(KingdomPlotRules.TakesNewGround(small, R(10, 10, 14, 12)), "one more column is new ground");
+			ClassicAssert.IsFalse(KingdomPlotRules.TakesNewGround(R(10, 10, 17, 15), small), "shrinking takes nothing");
 		}
 
 		// --- Staking foresight ---------------------------------------------------------------
@@ -384,11 +385,11 @@ namespace ThousandAndFirst.Tests
 		public void AChainFitsUntilOneTierDoesNot()
 		{
 			List<Step> chain = Chain(S("tent", 3, 2), S("tentrow", 5, 4), S("hut", 7, 4));
-			Assert.IsFalse(KingdomPlotRules.ChainFits(Size.Small, chain, out var unfit));
-			Assert.AreEqual(2, unfit, "the first tier that will not fit is the one the founder is told about");
-			Assert.IsTrue(KingdomPlotRules.ChainFits(Size.Medium, chain, out var none));
-			Assert.AreEqual(-1, none);
-			Assert.AreEqual(Size.Medium, KingdomPlotRules.SmallestPlotForChain(chain));
+			ClassicAssert.IsFalse(KingdomPlotRules.ChainFits(Size.Small, chain, out var unfit));
+			ClassicAssert.AreEqual(2, unfit, "the first tier that will not fit is the one the founder is told about");
+			ClassicAssert.IsTrue(KingdomPlotRules.ChainFits(Size.Medium, chain, out var none));
+			ClassicAssert.AreEqual(-1, none);
+			ClassicAssert.AreEqual(Size.Medium, KingdomPlotRules.SmallestPlotForChain(chain));
 		}
 
 		[Test]
@@ -397,16 +398,16 @@ namespace ThousandAndFirst.Tests
 			// A chain of a wide-and-short tier and a narrow-and-tall one needs a plot that holds
 			// both spans, which is not either tier's own smallest plot.
 			List<Step> chain = Chain(S("wide", 11, 3), S("tall", 4, 8));
-			Assert.AreEqual(Size.Small, KingdomPlotRules.SmallestPlotFor(4, 4));
-			Assert.AreEqual(Size.Large, KingdomPlotRules.SmallestPlotForChain(chain));
+			ClassicAssert.AreEqual(Size.Small, KingdomPlotRules.SmallestPlotFor(4, 4));
+			ClassicAssert.AreEqual(Size.Large, KingdomPlotRules.SmallestPlotForChain(chain));
 		}
 
 		[Test]
 		public void AnEmptyChainFitsEverythingAndFitsNoPlot()
 		{
-			Assert.IsTrue(KingdomPlotRules.ChainFits(Size.Small, null, out var unfit));
-			Assert.AreEqual(-1, unfit);
-			Assert.AreEqual(Size.None, KingdomPlotRules.SmallestPlotForChain(new List<Step>()));
+			ClassicAssert.IsTrue(KingdomPlotRules.ChainFits(Size.Small, null, out var unfit));
+			ClassicAssert.AreEqual(-1, unfit);
+			ClassicAssert.AreEqual(Size.None, KingdomPlotRules.SmallestPlotForChain(new List<Step>()));
 		}
 
 		[Test]
@@ -426,14 +427,14 @@ namespace ThousandAndFirst.Tests
 			List<Step> chain = Chain(S("hall", 10, 7));
 			List<Size> sizes = KingdomPlotRules.StakeableSizes(Size.Small, GrowthStage.City, chain);
 			CollectionAssert.DoesNotContain(sizes, Size.Small);
-			Assert.AreEqual(Size.Large, sizes[0], "the floor is the ground the work itself stands on");
+			ClassicAssert.AreEqual(Size.Large, sizes[0], "the floor is the ground the work itself stands on");
 		}
 
 		[Test]
 		public void ADesignThatIsNotAPlotOffersNoStakeAtAll()
 		{
-			Assert.AreEqual(0, KingdomPlotRules.StakeableSizes(Size.None, GrowthStage.City, null).Count);
-			Assert.AreEqual(0, KingdomPlotRules.StakeableSizes(Size.Small, GrowthStage.City, Chain(S("vast", 40, 40))).Count);
+			ClassicAssert.AreEqual(0, KingdomPlotRules.StakeableSizes(Size.None, GrowthStage.City, null).Count);
+			ClassicAssert.AreEqual(0, KingdomPlotRules.StakeableSizes(Size.Small, GrowthStage.City, Chain(S("vast", 40, 40))).Count);
 		}
 
 		[Test]
@@ -453,7 +454,7 @@ namespace ThousandAndFirst.Tests
 			List<Step> chain = Chain(S("hut", 4, 3), S("hutyard", 5, 4));
 			string line = KingdomPlotRules.ForesightLine(Size.Small, chain);
 			StringAssert.Contains("Every tier", line);
-			Assert.IsFalse(line.Contains("struck"), "nothing has to be struck when everything fits");
+			ClassicAssert.IsFalse(line.Contains("struck"), "nothing has to be struck when everything fits");
 		}
 
 		[Test]
@@ -461,8 +462,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomPlotRules.ForesightLine(Size.Small, Chain(S("caskshed", 5, 4)));
 			StringAssert.Contains("never grows", line);
-			Assert.IsNull(KingdomPlotRules.ForesightLine(Size.Small, new List<Step>()));
-			Assert.IsNull(KingdomPlotRules.ForesightLine(Size.None, Chain(S("hut", 4, 3))));
+			ClassicAssert.IsNull(KingdomPlotRules.ForesightLine(Size.Small, new List<Step>()));
+			ClassicAssert.IsNull(KingdomPlotRules.ForesightLine(Size.None, Chain(S("hut", 4, 3))));
 		}
 
 		[Test]
@@ -483,15 +484,15 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomPlotRules.StakeOptionLine(Size.Small, Chain(S("hall", 10, 7)));
 			StringAssert.Contains("too little ground", line);
-			Assert.IsFalse(line.Contains("yard"));
+			ClassicAssert.IsFalse(line.Contains("yard"));
 		}
 
 		[Test]
 		public void TheChainLineReadsInTheOrderTheSettlementBuildsIt()
 		{
-			Assert.AreEqual("tent 3 by 2, then hut 5 by 4",
+			ClassicAssert.AreEqual("tent 3 by 2, then hut 5 by 4",
 				KingdomPlotRules.ChainFootprintLine(Chain(S("tent", 3, 2), S("hut", 5, 4))));
-			Assert.IsNull(KingdomPlotRules.ChainFootprintLine(null));
+			ClassicAssert.IsNull(KingdomPlotRules.ChainFootprintLine(null));
 		}
 
 		// --- Parsing ---------------------------------------------------------------------------
@@ -504,9 +505,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 0, 0)]
 		public void FootprintsParse(string Raw, int ExpectedWidth, int ExpectedHeight)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParseFootprint(Raw, out var width, out var height));
-			Assert.AreEqual(ExpectedWidth, width);
-			Assert.AreEqual(ExpectedHeight, height);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParseFootprint(Raw, out var width, out var height));
+			ClassicAssert.AreEqual(ExpectedWidth, width);
+			ClassicAssert.AreEqual(ExpectedHeight, height);
 		}
 
 		[TestCase("6")]
@@ -520,9 +521,9 @@ namespace ThousandAndFirst.Tests
 		public void ABadFootprintIsAnErrorAndNotSilentlyTheWholePlot(string Raw)
 		{
 			// Filling the plot on a typo would move a building's walls without saying so.
-			Assert.IsFalse(KingdomPlotRules.TryParseFootprint(Raw, out var width, out var height));
-			Assert.AreEqual(0, width);
-			Assert.AreEqual(0, height);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParseFootprint(Raw, out var width, out var height));
+			ClassicAssert.AreEqual(0, width);
+			ClassicAssert.AreEqual(0, height);
 		}
 
 		[TestCase("Open", Roof.Open)]
@@ -534,18 +535,18 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Carved", Roof.Carved)]
 		public void RoofsParse(string Raw, Roof Expected)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParseRoof(Raw, out var roof, out var declared));
-			Assert.AreEqual(Expected, roof);
-			Assert.IsTrue(declared);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParseRoof(Raw, out var roof, out var declared));
+			ClassicAssert.AreEqual(Expected, roof);
+			ClassicAssert.IsTrue(declared);
 		}
 
 		[TestCase("")]
 		[TestCase(null)]
 		public void AnAbsentRoofIsNoClaimRatherThanAWalledOne(string Raw)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParseRoof(Raw, out var roof, out var declared));
-			Assert.IsFalse(declared, "a design that said nothing about its roof has not claimed one");
-			Assert.AreEqual(Roof.Walled, roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParseRoof(Raw, out var roof, out var declared));
+			ClassicAssert.IsFalse(declared, "a design that said nothing about its roof has not claimed one");
+			ClassicAssert.AreEqual(Roof.Walled, roof);
 		}
 
 		[TestCase("thatched")]
@@ -553,15 +554,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase("2")]
 		public void AnUnknownRoofIsAnError(string Raw)
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParseRoof(Raw, out _, out var declared));
-			Assert.IsFalse(declared);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParseRoof(Raw, out _, out var declared));
+			ClassicAssert.IsFalse(declared);
 		}
 
 		[Test]
 		public void AFootprintLargerThanItsPlotIsRefusedAtLoadWithBothSpansNamed()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "S", null, null, null, "8x6", null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "S", null, null, null, "8x6", null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("hall", error);
 			StringAssert.Contains("8 by 6", error);
 			StringAssert.Contains("6 by 4", error);
@@ -571,31 +572,31 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AFootprintOrARoofWithoutAPlotSizeIsRefusedRatherThanIgnored()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, null, "3x3", null, out _, out var footprint));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, null, "3x3", null, out _, out var footprint));
 			StringAssert.Contains("without a Plot size", footprint);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, null, null, "Soft", out _, out var roof));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, null, null, "Soft", out _, out var roof));
 			StringAssert.Contains("without a Plot size", roof);
 		}
 
 		[Test]
 		public void OpenAndARoofThatDisagreeAreRefusedRatherThanOneWinningQuietly()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("pan", "S", "Yes", null, null, null, "Walled", out _, out var walled));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("pan", "S", "Yes", null, null, null, "Walled", out _, out var walled));
 			StringAssert.Contains("disagree", walled);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", null, null, null, "Open", out _, out var open));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", null, null, null, "Open", out _, out var open));
 			StringAssert.Contains("disagree", open);
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("pan", "S", "Yes", null, null, null, "Open", out var agreed, out _));
-			Assert.IsTrue(agreed.Open);
-			Assert.AreEqual(Roof.Open, agreed.Roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("pan", "S", "Yes", null, null, null, "Open", out var agreed, out _));
+			ClassicAssert.IsTrue(agreed.Open);
+			ClassicAssert.AreEqual(Roof.Open, agreed.Roof);
 		}
 
 		[Test]
 		public void ARoofOfOpenIsAnOpenPlotWithoutAlsoSayingSo()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("field", "M", null, null, null, null, "Open", out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.IsTrue(spec.Open, "one answer, not two that can drift apart");
-			Assert.AreEqual(Roof.Open, spec.Roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("field", "M", null, null, null, null, "Open", out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsTrue(spec.Open, "one answer, not two that can drift apart");
+			ClassicAssert.AreEqual(Roof.Open, spec.Roof);
 		}
 
 		[Test]
@@ -603,13 +604,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// The catchment case: Sky with no Roof at all is every entry written before roofs
 			// existed, and it must go on building exactly as it did.
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("catchment", "S", null, "Yes", null, null, null, out var quiet, out _));
-			Assert.IsFalse(KingdomPlotRules.RoofRefusesSky(quiet), "a design that claimed no roof has claimed nothing to contradict");
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("vane", "S", null, "Yes", null, null, "Walled", out var walled, out _));
-			Assert.IsTrue(KingdomPlotRules.RoofRefusesSky(walled));
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("vane", "S", null, "Yes", null, null, "Soft", out var canvas, out _));
-			Assert.IsFalse(KingdomPlotRules.RoofRefusesSky(canvas), "canvas rolls back, so the sky still reaches it");
-			Assert.IsFalse(KingdomPlotRules.RoofRefusesSky(null));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("catchment", "S", null, "Yes", null, null, null, out var quiet, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.RoofRefusesSky(quiet), "a design that claimed no roof has claimed nothing to contradict");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("vane", "S", null, "Yes", null, null, "Walled", out var walled, out _));
+			ClassicAssert.IsTrue(KingdomPlotRules.RoofRefusesSky(walled));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("vane", "S", null, "Yes", null, null, "Soft", out var canvas, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.RoofRefusesSky(canvas), "canvas rolls back, so the sky still reaches it");
+			ClassicAssert.IsFalse(KingdomPlotRules.RoofRefusesSky(null));
 		}
 
 		[Test]
@@ -617,15 +618,15 @@ namespace ThousandAndFirst.Tests
 		{
 			// The migration guarantee, asserted rather than asserted-about: the old five-argument
 			// call and the new one with both new attributes absent must agree in every field.
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "No", "SomeTable", out var before, out _));
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "No", "SomeTable", null, null, out var after, out _));
-			Assert.AreEqual(before.Size, after.Size);
-			Assert.AreEqual(before.Open, after.Open);
-			Assert.AreEqual(before.RequiresSky, after.RequiresSky);
-			Assert.AreEqual(before.Contents, after.Contents);
-			Assert.IsTrue(before.FillsPlot);
-			Assert.IsFalse(before.RoofDeclared);
-			Assert.AreEqual(Roof.Walled, before.Roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "No", "SomeTable", out var before, out _));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "No", "SomeTable", null, null, out var after, out _));
+			ClassicAssert.AreEqual(before.Size, after.Size);
+			ClassicAssert.AreEqual(before.Open, after.Open);
+			ClassicAssert.AreEqual(before.RequiresSky, after.RequiresSky);
+			ClassicAssert.AreEqual(before.Contents, after.Contents);
+			ClassicAssert.IsTrue(before.FillsPlot);
+			ClassicAssert.IsFalse(before.RoofDeclared);
+			ClassicAssert.AreEqual(Roof.Walled, before.Roof);
 		}
 
 		// --- Cost: clearing is the plot, walls are the building -------------------------------
@@ -637,7 +638,7 @@ namespace ThousandAndFirst.Tests
 		public void OnlyAWalledTierCostsAPerimeter(Roof Roof, long Expected)
 		{
 			// A 5x4 rect has 14 edge cells at 50 ticks each.
-			Assert.AreEqual(Expected, KingdomPlotRules.EnclosureTicks(R(0, 0, 4, 3), Roof));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.EnclosureTicks(R(0, 0, 4, 3), Roof));
 		}
 
 		[Test]
@@ -646,11 +647,11 @@ namespace ThousandAndFirst.Tests
 			// Three combinations are all the old two flags could say, and each must cost what it
 			// always cost or a settlement in flight would find its walls suddenly free.
 			Rect rect = R(0, 0, 7, 5);
-			Assert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false),
+			ClassicAssert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false),
 				KingdomPlotRules.EnclosureTicks(rect, Roof.Walled));
-			Assert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true),
+			ClassicAssert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true),
 				KingdomPlotRules.EnclosureTicks(rect, Roof.Open));
-			Assert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false),
+			ClassicAssert.AreEqual(KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false),
 				KingdomPlotRules.EnclosureTicks(rect, Roof.Carved));
 		}
 
@@ -662,15 +663,15 @@ namespace ThousandAndFirst.Tests
 			// at 50 ticks each.
 			Rect footprint = R(0, 0, 2, 1);
 			long ticks = KingdomPlotRules.RaiseTicks(1000L, Cells(48, Ground.Brush), footprint, Roof.Walled, Underground: false);
-			Assert.AreEqual(1000L + 4800L + 300L, ticks);
+			ClassicAssert.AreEqual(1000L + 4800L + 300L, ticks);
 			long open = KingdomPlotRules.RaiseTicks(1000L, Cells(48, Ground.Brush), footprint, Roof.Open, Underground: false);
-			Assert.AreEqual(1000L + 4800L, open);
+			ClassicAssert.AreEqual(1000L + 4800L, open);
 		}
 
 		[Test]
 		public void ARaisingNeverFinishesInTheInstantItIsStaked()
 		{
-			Assert.AreEqual(1L, KingdomPlotRules.RaiseTicks(0L, Cells(4, Ground.Bare), R(0, 0, 1, 1), Roof.Open, Underground: false));
+			ClassicAssert.AreEqual(1L, KingdomPlotRules.RaiseTicks(0L, Cells(4, Ground.Bare), R(0, 0, 1, 1), Roof.Open, Underground: false));
 		}
 
 		// --- Refusals: nothing stalls in silence (STANDARDS 7b) -------------------------------
@@ -692,7 +693,7 @@ namespace ThousandAndFirst.Tests
 			string refusal = KingdomPlotRules.RefuseRoofSky("sailvane", Roof.Walled);
 			StringAssert.Contains("sailvane", refusal);
 			StringAssert.Contains("walled", refusal);
-			Assert.AreNotEqual(KingdomPlotRules.RefuseSky("sailvane"), refusal,
+			ClassicAssert.AreNotEqual(KingdomPlotRules.RefuseSky("sailvane"), refusal,
 				"a design refused underground and a design refused by its own tier are different problems");
 		}
 

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -38,7 +39,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("JoppaWorld.0.0.0.0.255", false)]
 		public void EveryComponentIsHeldToItsRealRange(string locator, bool valid)
 		{
-			Assert.AreEqual(valid, KingdomCuriosityRules.TryFullLocator(locator), locator);
+			ClassicAssert.AreEqual(valid, KingdomCuriosityRules.TryFullLocator(locator), locator);
 		}
 
 		/// <summary>
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("JoppaWorld.0.27.0.2.10", true)]
 		public void TheResolvedCellIsCheckedAndNotJustEachComponent(string locator, bool valid)
 		{
-			Assert.AreEqual(valid, KingdomCuriosityRules.TryFullLocator(locator), locator);
+			ClassicAssert.AreEqual(valid, KingdomCuriosityRules.TryFullLocator(locator), locator);
 		}
 
 		/// <summary>
@@ -89,7 +90,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("the well below Joppa", TestName = "Locator_ProsePlace")]
 		public void NothingThatMerelyResemblesALocatorIsAccepted(string locator)
 		{
-			Assert.IsFalse(KingdomCuriosityRules.TryFullLocator(locator), locator ?? "<null>");
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator(locator), locator ?? "<null>");
 		}
 
 		/// <summary>A world segment may be long, but not unbounded, and the whole locator's
@@ -98,13 +99,13 @@ namespace ThousandAndFirst.Tests
 		public void TheWorldSegmentIsBoundedAndTheLocatorBoundFollowsFromIt()
 		{
 			string longest = new string('W', KingdomCuriosityRules.MaxWorldIdChars);
-			Assert.IsTrue(KingdomCuriosityRules.TryFullLocator(longest + ".83.28.0.0.49"));
-			Assert.IsFalse(KingdomCuriosityRules.TryFullLocator(longest + "W.83.28.0.0.49"));
-			Assert.AreEqual(KingdomCuriosityRules.MaxWorldIdChars
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryFullLocator(longest + ".83.28.0.0.49"));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator(longest + "W.83.28.0.0.49"));
+			ClassicAssert.AreEqual(KingdomCuriosityRules.MaxWorldIdChars
 				+ KingdomCuriosityRules.LocatorSeparators
 				+ KingdomCuriosityRules.MaxLocatorNumericChars,
 				KingdomCuriosityRules.MaxLocatorChars);
-			Assert.AreEqual((longest + ".83.28.0.0.49").Length,
+			ClassicAssert.AreEqual((longest + ".83.28.0.0.49").Length,
 				KingdomCuriosityRules.MaxLocatorChars);
 		}
 
@@ -113,12 +114,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AProvenLocatorHandsBackComponentsThatReassembleToItself()
 		{
-			Assert.IsTrue(KingdomCuriosityRules.TryFullLocator("JoppaWorld.10.20.1.2.11",
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryFullLocator("JoppaWorld.10.20.1.2.11",
 				out string world, out int px, out int py, out int zx, out int zy, out int zz));
-			Assert.AreEqual("JoppaWorld", world);
-			Assert.AreEqual(10, px); Assert.AreEqual(20, py);
-			Assert.AreEqual(1, zx); Assert.AreEqual(2, zy); Assert.AreEqual(11, zz);
-			Assert.AreEqual("JoppaWorld.10.20.1.2.11",
+			ClassicAssert.AreEqual("JoppaWorld", world);
+			ClassicAssert.AreEqual(10, px); ClassicAssert.AreEqual(20, py);
+			ClassicAssert.AreEqual(1, zx); ClassicAssert.AreEqual(2, zy); ClassicAssert.AreEqual(11, zz);
+			ClassicAssert.AreEqual("JoppaWorld.10.20.1.2.11",
 				KingdomCuriosityRules.Assemble(world, px, py, zx, zy, zz));
 		}
 
@@ -126,11 +127,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ARefusedLocatorNamesNoPlaceAtAll()
 		{
-			Assert.IsFalse(KingdomCuriosityRules.TryFullLocator("JoppaWorld.010.20.1.2.10",
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator("JoppaWorld.010.20.1.2.10",
 				out string world, out int px, out int py, out int zx, out int zy, out int zz));
-			Assert.IsNull(world);
-			Assert.AreEqual(-1, px); Assert.AreEqual(-1, py);
-			Assert.AreEqual(-1, zx); Assert.AreEqual(-1, zy); Assert.AreEqual(-1, zz);
+			ClassicAssert.IsNull(world);
+			ClassicAssert.AreEqual(-1, px); ClassicAssert.AreEqual(-1, py);
+			ClassicAssert.AreEqual(-1, zx); ClassicAssert.AreEqual(-1, zy); ClassicAssert.AreEqual(-1, zz);
 		}
 
 		/// <summary>
@@ -140,16 +141,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryRangeIsDerivedFromTheEnginesOwnGrid()
 		{
-			Assert.AreEqual(3, KingdomCuriosityRules.ZonesPerParasang);
-			Assert.AreEqual(2, KingdomCuriosityRules.MaxZoneX);
-			Assert.AreEqual(2, KingdomCuriosityRules.MaxZoneY);
-			Assert.AreEqual(50, KingdomCuriosityRules.LayerCount);
-			Assert.AreEqual(49, KingdomCuriosityRules.MaxZoneZ);
-			Assert.AreEqual(250, KingdomCuriosityRules.ResolvedWidth);
-			Assert.AreEqual(85, KingdomCuriosityRules.ResolvedHeight);
-			Assert.AreEqual(83, KingdomCuriosityRules.MaxParasangX);
-			Assert.AreEqual(28, KingdomCuriosityRules.MaxParasangY);
-			Assert.AreEqual(77, KingdomCuriosityRules.MaxLocatorChars);
+			ClassicAssert.AreEqual(3, KingdomCuriosityRules.ZonesPerParasang);
+			ClassicAssert.AreEqual(2, KingdomCuriosityRules.MaxZoneX);
+			ClassicAssert.AreEqual(2, KingdomCuriosityRules.MaxZoneY);
+			ClassicAssert.AreEqual(50, KingdomCuriosityRules.LayerCount);
+			ClassicAssert.AreEqual(49, KingdomCuriosityRules.MaxZoneZ);
+			ClassicAssert.AreEqual(250, KingdomCuriosityRules.ResolvedWidth);
+			ClassicAssert.AreEqual(85, KingdomCuriosityRules.ResolvedHeight);
+			ClassicAssert.AreEqual(83, KingdomCuriosityRules.MaxParasangX);
+			ClassicAssert.AreEqual(28, KingdomCuriosityRules.MaxParasangY);
+			ClassicAssert.AreEqual(77, KingdomCuriosityRules.MaxLocatorChars);
 		}
 
 		/// <summary>
@@ -169,8 +170,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("\u007F", TestName = "World_Delete")]
 		public void AWorldNameRefusesEveryInvisibleCharacterNotJustTheAsciiOnes(string intruder)
 		{
-			Assert.IsFalse(KingdomCuriosityRules.ValidWorldId("Joppa" + intruder + "World"));
-			Assert.IsFalse(KingdomCuriosityRules.TryFullLocator(
+			ClassicAssert.IsFalse(KingdomCuriosityRules.ValidWorldId("Joppa" + intruder + "World"));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator(
 				"Joppa" + intruder + "World.10.20.1.2.10"));
 		}
 
@@ -189,25 +190,25 @@ namespace ThousandAndFirst.Tests
 			foreach (char lone in new[] { '\uD800', '\uDBFF', '\uDC00', '\uDFFF' })
 			{
 				string world = "Joppa" + lone + "World";
-				Assert.IsFalse(KingdomCuriosityRules.ValidWorldId(world),
+				ClassicAssert.IsFalse(KingdomCuriosityRules.ValidWorldId(world),
 					"U+" + ((int)lone).ToString("X4"));
-				Assert.IsFalse(KingdomCuriosityRules.TryFullLocator(world + ".10.20.1.2.10"));
-				Assert.IsFalse(KingdomCuriosityRules.LegacyFullLocator(world + ".10.20.1.2.10"),
+				ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator(world + ".10.20.1.2.10"));
+				ClassicAssert.IsFalse(KingdomCuriosityRules.LegacyFullLocator(world + ".10.20.1.2.10"),
 					"the historical grammar was never a door for impossible text");
 			}
 			string trailing = "JoppaWorld" + '\uD83C';
-			Assert.IsFalse(KingdomCuriosityRules.ValidWorldId(trailing));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.ValidWorldId(trailing));
 		}
 
 		[Test]
 		public void APairedSurrogateIsOrdinaryTextAndALoneOneIsNot()
 		{
-			Assert.IsTrue(KingdomCuriosityRules.Utf8Encodable("a \U0001F300 b"));
-			Assert.IsTrue(KingdomCuriosityRules.Utf8Encodable(""));
-			Assert.IsFalse(KingdomCuriosityRules.Utf8Encodable("a \uD800 b"));
-			Assert.IsFalse(KingdomCuriosityRules.Utf8Encodable("a \uDC00 b"));
-			Assert.IsFalse(KingdomCuriosityRules.Utf8Encodable("trailing \uD83C"));
-			Assert.IsFalse(KingdomCuriosityRules.Utf8Encodable(null));
+			ClassicAssert.IsTrue(KingdomCuriosityRules.Utf8Encodable("a \U0001F300 b"));
+			ClassicAssert.IsTrue(KingdomCuriosityRules.Utf8Encodable(""));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.Utf8Encodable("a \uD800 b"));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.Utf8Encodable("a \uDC00 b"));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.Utf8Encodable("trailing \uD83C"));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.Utf8Encodable(null));
 		}
 
 		/// <summary>
@@ -230,7 +231,7 @@ namespace ThousandAndFirst.Tests
 		public void TheHistoricalGrammarIsWiderInTheOldPlacesAndNowhereElse(string locator,
 			bool valid)
 		{
-			Assert.AreEqual(valid, KingdomCuriosityRules.LegacyFullLocator(locator),
+			ClassicAssert.AreEqual(valid, KingdomCuriosityRules.LegacyFullLocator(locator),
 				locator ?? "<null>");
 		}
 
@@ -243,14 +244,14 @@ namespace ThousandAndFirst.Tests
 		public void OnlyAStoredRevisionOneRowMayCarryTheHistoricalGrammar()
 		{
 			const string legacy = "JoppaWorld.010.20.1.2.255";
-			Assert.IsFalse(KingdomCuriosityRules.TryFullLocator(legacy));
-			Assert.IsTrue(KingdomCuriosityRules.LegacyFullLocator(legacy));
-			Assert.IsTrue(KingdomCuriosityRules.StorableLocator(
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryFullLocator(legacy));
+			ClassicAssert.IsTrue(KingdomCuriosityRules.LegacyFullLocator(legacy));
+			ClassicAssert.IsTrue(KingdomCuriosityRules.StorableLocator(
 				KingdomCuriosityReceipt.FirstVersion, legacy));
-			Assert.IsFalse(KingdomCuriosityRules.StorableLocator(
+			ClassicAssert.IsFalse(KingdomCuriosityRules.StorableLocator(
 				KingdomCuriosityReceipt.CategoryVersion, legacy),
 				"a revision 2 row could only have been written after the grammar tightened");
-			Assert.IsFalse(KingdomCuriosityRules.StorableLocator(
+			ClassicAssert.IsFalse(KingdomCuriosityRules.StorableLocator(
 				KingdomCuriosityReceipt.FirstVersion, "the salt dunes"),
 				"prose was not a place under either grammar");
 
@@ -262,11 +263,11 @@ namespace ThousandAndFirst.Tests
 					new KingdomCuriosityNote("taf:note:legacy", legacy, "an old place",
 						"Historic Sites", true)
 				};
-			Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, LegacyCause(), notes,
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, LegacyCause(), notes,
 				out _, out _),
 				"a historical locator must not be accepted as new authorship");
-			Assert.AreEqual(0, book.Rows.Count);
-			Assert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one", legacy));
+			ClassicAssert.AreEqual(0, book.Rows.Count);
+			ClassicAssert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one", legacy));
 		}
 
 		private static KingdomCuriosityCause LegacyCause() => new KingdomCuriosityCause
@@ -283,15 +284,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ALeadIdentityRefusesEveryLocatorTheGrammarRefuses()
 		{
-			Assert.IsNotNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
+			ClassicAssert.IsNotNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
 				"JoppaWorld.10.20.1.2.10"));
-			Assert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one", "the salt dunes"));
-			Assert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
+			ClassicAssert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one", "the salt dunes"));
+			ClassicAssert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
 				"JoppaWorld.010.20.1.2.10"));
-			Assert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
+			ClassicAssert.IsNull(KingdomCivicLeadRules.LeadId("taf:delve:one",
 				"JoppaWorld.10.20.1.2.50"));
-			Assert.IsNull(KingdomCivicLeadRules.LeadId(null, "JoppaWorld.10.20.1.2.10"));
-			Assert.AreEqual(KingdomCivicLeadRules.LeadIdChars,
+			ClassicAssert.IsNull(KingdomCivicLeadRules.LeadId(null, "JoppaWorld.10.20.1.2.10"));
+			ClassicAssert.AreEqual(KingdomCivicLeadRules.LeadIdChars,
 				KingdomCivicLeadRules.LeadId("taf:delve:one", "JoppaWorld.10.20.1.2.10").Length);
 		}
 	}

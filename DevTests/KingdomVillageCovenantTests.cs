@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -66,7 +67,7 @@ namespace ThousandAndFirst.Tests
 		internal static KingdomVillageCovenantArchive Bound(string realm = Realm)
 		{
 			KingdomVillageCovenantArchive archive = new KingdomVillageCovenantArchive();
-			Assert.IsTrue(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, realm,
 				out string failure), failure);
 			return archive;
 		}
@@ -77,10 +78,10 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive = Bound();
 			for (int i = 0; i < rows.Length; i++)
 			{
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, rows[i], Realm,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, rows[i], Realm,
 					out archive, out KingdomVillageCovenantAppend outcome, out _, out string failure),
 					failure);
-				Assert.AreEqual(KingdomVillageCovenantAppend.Recorded, outcome);
+				ClassicAssert.AreEqual(KingdomVillageCovenantAppend.Recorded, outcome);
 			}
 			return archive;
 		}
@@ -91,12 +92,12 @@ namespace ThousandAndFirst.Tests
 		public void AWellFormedCovenantValidatesAndNamesItself()
 		{
 			KingdomVillageCovenantReceipt row = Row();
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
 				failure);
 			StringAssert.StartsWith(KingdomVillageCovenantRules.ReceiptPrefix, row.ReceiptId);
-			Assert.AreEqual(KingdomVillageCovenantRules.ReceiptPrefix.Length + 64,
+			ClassicAssert.AreEqual(KingdomVillageCovenantRules.ReceiptPrefix.Length + 64,
 				row.ReceiptId.Length);
-			Assert.AreEqual(row.ReceiptId, KingdomVillageCovenantRules.ReceiptId(row));
+			ClassicAssert.AreEqual(row.ReceiptId, KingdomVillageCovenantRules.ReceiptId(row));
 		}
 
 		[Test]
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantReceipt row = Row();
 			row.VillageDisplayName = "somewhere else entirely";
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("receipt id does not name", failure);
 		}
 
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantReceipt row = Row();
 			row.ReceiptId = Row(OtherTransaction).ReceiptId;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("receipt id does not name", failure);
 		}
 
@@ -127,7 +128,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = Row();
 			row.TransactionId = transaction;
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("founding transaction is not canonical", failure);
 		}
 
@@ -145,7 +146,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = Row();
 			row.SiteZoneId = zone;
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("site locator is not the canonical name", failure);
 		}
 
@@ -160,10 +161,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string lonely = "Joppa\ud800";
 			KingdomVillageCovenantReceipt faction = Row(factionId: lonely);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(faction, out string first));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(faction, out string first));
 			StringAssert.Contains("village faction key is unusable", first);
 			KingdomVillageCovenantReceipt display = Row(display: lonely);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(display, out string second));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(display, out string second));
 			StringAssert.Contains("display-name snapshot is unusable", second);
 		}
 
@@ -182,7 +183,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < hostile.Length; i++)
 			{
 				KingdomVillageCovenantReceipt row = Row(factionId: hostile[i]);
-				Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
+				ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
 					"a key carrying U+" + ((int)hostile[i][3]).ToString("X4") + " must be refused");
 				StringAssert.Contains("village faction key is unusable", failure);
 			}
@@ -194,14 +195,14 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt wrongTransaction = Row();
 			wrongTransaction.FoundingAuthority = Authority(OtherTransaction, Realm, Zone);
 			wrongTransaction.ReceiptId = KingdomVillageCovenantRules.ReceiptId(wrongTransaction);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(wrongTransaction,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(wrongTransaction,
 				out string first));
 			StringAssert.Contains("names another transaction", first);
 
 			KingdomVillageCovenantReceipt wrongSite = Row();
 			wrongSite.FoundingAuthority = Authority(Transaction, Realm, OtherZone);
 			wrongSite.ReceiptId = KingdomVillageCovenantRules.ReceiptId(wrongSite);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(wrongSite, out string second));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(wrongSite, out string second));
 			StringAssert.Contains("names another site", second);
 
 			KingdomVillageCovenantReceipt notACharter = Row();
@@ -219,7 +220,7 @@ namespace ThousandAndFirst.Tests
 					PayloadDigest = Digest
 				});
 			notACharter.ReceiptId = KingdomVillageCovenantRules.ReceiptId(notACharter);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(notACharter,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(notACharter,
 				out string third));
 			StringAssert.Contains("not a village charter", third);
 		}
@@ -247,9 +248,9 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = Row();
 			row.ChronicleEventId = identifier;
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("chronicle event id is not this rite's own", failure);
-			Assert.AreEqual("taf:founding:v1:3:" + Transaction + ":chronicle",
+			ClassicAssert.AreEqual("taf:founding:v1:3:" + Transaction + ":chronicle",
 				KingdomVillageCovenantRules.ChronicleEvent(Transaction));
 		}
 
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 		public void ASealedStandingBelowAnythingARiteCouldSealIsRefused(int standing)
 		{
 			KingdomVillageCovenantReceipt row = Row(sealedStanding: standing);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("sealed standing is below", failure);
 		}
 
@@ -279,18 +280,18 @@ namespace ThousandAndFirst.Tests
 		[TestCase(int.MaxValue, TestName = "as high as the field goes")]
 		public void AnySealedStandingAtOrAboveTheFrozenFloorIsAccepted(int standing)
 		{
-			Assert.AreEqual(600, KingdomVillageCovenantRules.MinimumSealedStandingV1);
+			ClassicAssert.AreEqual(600, KingdomVillageCovenantRules.MinimumSealedStandingV1);
 			KingdomVillageCovenantReceipt row = Row(sealedStanding: standing);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
 				failure);
-			Assert.AreEqual(standing, row.Copy().SealedStanding);
+			ClassicAssert.AreEqual(standing, row.Copy().SealedStanding);
 		}
 
 		[Test]
 		public void AReservationTickBeforeTheWorldBeganIsRefused()
 		{
 			KingdomVillageCovenantReceipt row = Row(tick: -1L);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("before the world began", failure);
 		}
 
@@ -302,12 +303,12 @@ namespace ThousandAndFirst.Tests
 		public void ACovenantFreezesTheRealmItBelongsTo()
 		{
 			KingdomVillageCovenantReceipt row = Row();
-			Assert.AreEqual(Realm, row.RealmId);
+			ClassicAssert.AreEqual(Realm, row.RealmId);
 			row.RealmId = OtherRealm;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string moved));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string moved));
 			StringAssert.Contains("receipt id does not name", moved,
 				"the realm is inside the digest, so moving it breaks the row's own name");
-			Assert.AreNotEqual(Row().ReceiptId, Row(realm: OtherRealm).ReceiptId,
+			ClassicAssert.AreNotEqual(Row().ReceiptId, Row(realm: OtherRealm).ReceiptId,
 				"two realms sealing the same rite are two different covenants");
 		}
 
@@ -328,20 +329,20 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantRules.Receipt(Realm,
 				Transaction, Authority(Transaction, legacyKey, Zone), FactionId, Display, Zone,
 				Event(Transaction), Sealed, Tick);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(row, out string failure),
 				failure);
-			Assert.AreEqual(Realm, row.RealmId);
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryParseAuthority(row.FoundingAuthority,
+			ClassicAssert.AreEqual(Realm, row.RealmId);
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryParseAuthority(row.FoundingAuthority,
 				out KingdomFoundingAuthority parsed));
-			Assert.AreEqual(legacyKey, parsed.RealmFaction);
-			Assert.AreNotEqual(row.RealmId, parsed.RealmFaction,
+			ClassicAssert.AreEqual(legacyKey, parsed.RealmFaction);
+			ClassicAssert.AreNotEqual(row.RealmId, parsed.RealmFaction,
 				"this is the migrated shape: two valid identities that differ");
 
 			KingdomVillageCovenantArchive archive = With(row);
-			Assert.AreEqual(1, archive.Rows.Count);
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.AreEqual(1, archive.Rows.Count);
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string encode), encode);
-			Assert.AreEqual(KingdomVillageCovenantState.Compatible,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Compatible,
 				KingdomVillageCovenantCodec.Decode(bytes).State);
 		}
 
@@ -355,7 +356,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = Row();
 			row.RealmId = realm;
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("realm id is not canonical", failure);
 		}
 
@@ -381,7 +382,7 @@ namespace ThousandAndFirst.Tests
 					PayloadDigest = Digest
 				});
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("not owned by the basin that poured", failure);
 		}
 
@@ -395,7 +396,7 @@ namespace ThousandAndFirst.Tests
 		public void ANameIsHeldToBothTheCharacterAndTheByteBound()
 		{
 			string tooManyCharacters = new string('w', KingdomVillageCovenantRules.MaxNameChars + 1);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(
 				Row(factionId: tooManyCharacters), out string characters));
 			StringAssert.Contains("village faction key is unusable", characters);
 
@@ -403,9 +404,9 @@ namespace ThousandAndFirst.Tests
 			// hundred and fifty-six of them is inside the character bound and exactly on the byte
 			// one, which is the pair the row was sized for.
 			string wideButLawful = new string('\u4e00', KingdomVillageCovenantRules.MaxNameChars);
-			Assert.AreEqual(KingdomVillageCovenantRules.MaxFactionIdBytes,
+			ClassicAssert.AreEqual(KingdomVillageCovenantRules.MaxFactionIdBytes,
 				new System.Text.UTF8Encoding(false, true).GetByteCount(wideButLawful));
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(
 				Row(factionId: wideButLawful, display: wideButLawful), out string lawful), lawful);
 		}
 
@@ -419,12 +420,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantReceipt row = Row();
 			KingdomVillageCovenantReceipt copy = row.Copy();
-			Assert.AreNotSame(row, copy);
-			Assert.IsTrue(KingdomVillageCovenantRules.Same(row, copy));
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(copy, out string failure),
+			ClassicAssert.AreNotSame(row, copy);
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.Same(row, copy));
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidateRow(copy, out string failure),
 				failure);
 			row.VillageDisplayName = "edited after the copy";
-			Assert.AreEqual(Display, copy.VillageDisplayName);
+			ClassicAssert.AreEqual(Display, copy.VillageDisplayName);
 		}
 
 		/// <summary>
@@ -445,10 +446,10 @@ namespace ThousandAndFirst.Tests
 				System.StringComparison.Ordinal);
 			int end = source.IndexOf("public sealed class KingdomVillageCovenantArchive", start,
 				System.StringComparison.Ordinal);
-			Assert.Greater(start, -1);
-			Assert.Greater(end, start);
+			ClassicAssert.Greater(start, -1);
+			ClassicAssert.Greater(end, start);
 			string copy = source.Substring(start, end - start);
-			Assert.AreEqual(11, fields.Length,
+			ClassicAssert.AreEqual(11, fields.Length,
 				"a covenant freezes eleven fields; changing that changes the wire and the digest");
 			for (int i = 0; i < fields.Length; i++)
 				StringAssert.Contains(fields[i].Name + " = " + fields[i].Name, copy,
@@ -467,23 +468,23 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantRules.Receipt(Realm,
 				Transaction, Authority(Transaction, legacyKey, Zone), FactionId, Display, Zone,
 				Event(Transaction), Sealed, Tick);
-			Assert.AreNotEqual(row.RealmId, legacyKey);
+			ClassicAssert.AreNotEqual(row.RealmId, legacyKey);
 
-			Assert.IsTrue(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
 				row.FoundingAuthority, legacyKey, out string migrated), migrated);
-			Assert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
 				row.FoundingAuthority, Realm, out string wrong),
 				"the row's realm id is not the faction key and must not be accepted as one");
 			StringAssert.Contains("minted under another realm", wrong);
-			Assert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
 				row.FoundingAuthority, null, out string absent));
 			StringAssert.Contains("minted under another realm", absent);
-			Assert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm("not an authority",
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm("not an authority",
 				legacyKey, out string malformed));
 			StringAssert.Contains("does not decode exactly", malformed);
 
 			// And the ordinary shape, where the two names happen to coincide, still passes.
-			Assert.IsTrue(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
 				Row().FoundingAuthority, Realm, out string ordinary), ordinary);
 		}
 
@@ -501,15 +502,15 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt elsewhere = KingdomVillageCovenantRules.Receipt(
 				OtherRealm, Transaction, shared, FactionId, Display, Zone, Event(Transaction),
 				Sealed, Tick);
-			Assert.AreEqual(here.FoundingAuthority, elsewhere.FoundingAuthority,
+			ClassicAssert.AreEqual(here.FoundingAuthority, elsewhere.FoundingAuthority,
 				"these two rows differ in the realm and in nothing else");
-			Assert.IsFalse(KingdomVillageCovenantRules.SameFrozenFacts(here, elsewhere),
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.SameFrozenFacts(here, elsewhere),
 				"the realm is one of the facts that cannot move");
 
-			Assert.IsTrue(KingdomVillageCovenantRules.SameFrozenFacts(Row(),
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.SameFrozenFacts(Row(),
 				Row(sealedStanding: 900, tick: 42L)),
 				"the standing and the tick are the two that can");
-			Assert.IsFalse(KingdomVillageCovenantRules.Same(Row(),
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.Same(Row(),
 				Row(sealedStanding: 900, tick: 42L)),
 				"a full comparison still notices them");
 		}
@@ -523,7 +524,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnAuthorityWithNoRealmCannotBeBuiltAndAnAbsentKeyMatchesNothing()
 		{
-			Assert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(
 				new KingdomFoundingAuthority
 				{
 					Kind = KingdomFoundingKind.VillageCharter,
@@ -538,7 +539,7 @@ namespace ThousandAndFirst.Tests
 				}), "the founding codec refuses to encode an authority with no realm");
 			foreach (string absent in new[] { null, "" })
 			{
-				Assert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
+				ClassicAssert.IsFalse(KingdomVillageCovenantRules.AuthorityBelongsToRealm(
 					Row().FoundingAuthority, absent, out string failure));
 				StringAssert.Contains("minted under another realm", failure);
 			}
@@ -550,7 +551,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt row = Row();
 			row.Version = KingdomVillageCovenantReceipt.CurrentVersion + 1;
 			row.ReceiptId = KingdomVillageCovenantRules.ReceiptId(row);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidateRow(row, out string failure));
 			StringAssert.Contains("which this build does not write", failure);
 		}
 	}

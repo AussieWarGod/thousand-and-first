@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -19,8 +20,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPendingPlan older = Plan(placedTick: 100, placedOrder: 50, cost: 1);
 			KingdomPendingPlan newer = Plan(placedTick: 200, placedOrder: 1, cost: 1);
-			Assert.Less(KingdomPlanRules.CompareOrder(older, newer), 0);
-			Assert.Greater(KingdomPlanRules.CompareOrder(newer, older), 0);
+			ClassicAssert.Less(KingdomPlanRules.CompareOrder(older, newer), 0);
+			ClassicAssert.Greater(KingdomPlanRules.CompareOrder(newer, older), 0);
 		}
 
 		[Test]
@@ -28,8 +29,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPendingPlan first = Plan(placedTick: 100, placedOrder: 1, cost: 1);
 			KingdomPendingPlan second = Plan(placedTick: 100, placedOrder: 2, cost: 1);
-			Assert.Less(KingdomPlanRules.CompareOrder(first, second), 0);
-			Assert.AreEqual(0, KingdomPlanRules.CompareOrder(first, first));
+			ClassicAssert.Less(KingdomPlanRules.CompareOrder(first, second), 0);
+			ClassicAssert.AreEqual(0, KingdomPlanRules.CompareOrder(first, first));
 		}
 
 		[Test]
@@ -45,11 +46,11 @@ namespace ThousandAndFirst.Tests
 				Plan(placedTick: 100, placedOrder: 1, cost: 1), // staked 2nd (same tick as 1st)
 			};
 			queue.Sort(KingdomPlanRules.CompareOrder);
-			Assert.AreEqual(100L, queue[0].PlacedTick);
-			Assert.AreEqual(0L, queue[0].PlacedOrder);
-			Assert.AreEqual(100L, queue[1].PlacedTick);
-			Assert.AreEqual(1L, queue[1].PlacedOrder);
-			Assert.AreEqual(300L, queue[2].PlacedTick);
+			ClassicAssert.AreEqual(100L, queue[0].PlacedTick);
+			ClassicAssert.AreEqual(0L, queue[0].PlacedOrder);
+			ClassicAssert.AreEqual(100L, queue[1].PlacedTick);
+			ClassicAssert.AreEqual(1L, queue[1].PlacedOrder);
+			ClassicAssert.AreEqual(300L, queue[2].PlacedTick);
 		}
 
 		// --- CanAfford: water in full, and room under the cap unless the design is defensive --
@@ -57,30 +58,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CanAfford_EnoughWaterAndRoomUnderCap()
 		{
-			Assert.IsTrue(KingdomPlanRules.CanAfford(Plan(0, 0, cost: 10), StoredWater: 10, BuiltCount: 5, CapForStage: 10));
+			ClassicAssert.IsTrue(KingdomPlanRules.CanAfford(Plan(0, 0, cost: 10), StoredWater: 10, BuiltCount: 5, CapForStage: 10));
 		}
 
 		[Test]
 		public void CanAfford_WaterOneShortRefuses()
 		{
-			Assert.IsFalse(KingdomPlanRules.CanAfford(Plan(0, 0, cost: 10), StoredWater: 9, BuiltCount: 0, CapForStage: 40));
+			ClassicAssert.IsFalse(KingdomPlanRules.CanAfford(Plan(0, 0, cost: 10), StoredWater: 9, BuiltCount: 0, CapForStage: 40));
 		}
 
 		[Test]
 		public void CanAfford_NeverPartial_ExactWaterSucceedsOneLessFails()
 		{
 			KingdomPendingPlan plan = Plan(0, 0, cost: 25);
-			Assert.IsTrue(KingdomPlanRules.CanAfford(plan, StoredWater: 25, BuiltCount: 0, CapForStage: 40));
-			Assert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 24, BuiltCount: 0, CapForStage: 40));
+			ClassicAssert.IsTrue(KingdomPlanRules.CanAfford(plan, StoredWater: 25, BuiltCount: 0, CapForStage: 40));
+			ClassicAssert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 24, BuiltCount: 0, CapForStage: 40));
 		}
 
 		[Test]
 		public void CanAfford_NonDefensiveBlockedAtOrAboveCap()
 		{
 			KingdomPendingPlan plan = Plan(0, 0, cost: 1);
-			Assert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 10, CapForStage: 10));
-			Assert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 11, CapForStage: 10));
-			Assert.IsTrue(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 9, CapForStage: 10));
+			ClassicAssert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 10, CapForStage: 10));
+			ClassicAssert.IsFalse(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 11, CapForStage: 10));
+			ClassicAssert.IsTrue(KingdomPlanRules.CanAfford(plan, StoredWater: 100, BuiltCount: 9, CapForStage: 10));
 		}
 
 		[Test]
@@ -90,7 +91,7 @@ namespace ThousandAndFirst.Tests
 			// one against it. A mutation that dropped the Defensive short-circuit would fail this
 			// even though the settlement is nowhere near its water limit.
 			KingdomPendingPlan wall = Plan(0, 0, cost: 1, defensive: true);
-			Assert.IsTrue(KingdomPlanRules.CanAfford(wall, StoredWater: 100, BuiltCount: 999, CapForStage: 10));
+			ClassicAssert.IsTrue(KingdomPlanRules.CanAfford(wall, StoredWater: 100, BuiltCount: 999, CapForStage: 10));
 		}
 
 		// --- PlansToRealize: the settlement's own scheduling pass --------------------------
@@ -218,12 +219,12 @@ namespace ThousandAndFirst.Tests
 				plans.Add(Plan(placedTick: i, placedOrder: 0, cost: 1));
 			}
 			List<int> realized = KingdomPlanRules.PlansToRealize(plans, StoredWater: 10000, BuiltCount: 0, CapForStage: 10000);
-			Assert.AreEqual(KingdomPlanRules.MaxPlansPerVisit, realized.Count);
+			ClassicAssert.AreEqual(KingdomPlanRules.MaxPlansPerVisit, realized.Count);
 			// And it is still the oldest ones, in order -- the cap on the batch never reaches
 			// into the middle of the queue to pick a different set.
 			for (int i = 0; i < realized.Count; i++)
 			{
-				Assert.AreEqual(i, realized[i]);
+				ClassicAssert.AreEqual(i, realized[i]);
 			}
 		}
 
@@ -243,7 +244,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MaxPlansPerVisit_IsPositive()
 		{
-			Assert.Greater(KingdomPlanRules.MaxPlansPerVisit, 0);
+			ClassicAssert.Greater(KingdomPlanRules.MaxPlansPerVisit, 0);
 		}
 	}
 }

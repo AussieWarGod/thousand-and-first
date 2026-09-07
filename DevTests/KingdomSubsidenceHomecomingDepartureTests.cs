@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -32,7 +33,7 @@ namespace ThousandAndFirst.Tests
 				if (field.FieldType == typeof(string)) field.SetValue(receipt, null);
 			AssertEmptyWithoutMutation(receipt, true);
 			foreach (FieldInfo field in Fields)
-				if (field.FieldType == typeof(string)) Assert.IsNull(field.GetValue(receipt), field.Name);
+				if (field.FieldType == typeof(string)) ClassicAssert.IsNull(field.GetValue(receipt), field.Name);
 		}
 
 		[TestCase((int)KingdomResidentDeparturePhase.Prepared)]
@@ -45,19 +46,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentDepartureOperation receipt = Prepared();
 			for (int current = receipt.Phase; current < phase; current++)
-				Assert.IsTrue(KingdomResidentDepartureRules.Advance(receipt,
+				ClassicAssert.IsTrue(KingdomResidentDepartureRules.Advance(receipt,
 					(KingdomResidentDeparturePhase)current, (KingdomResidentDeparturePhase)(current + 1)));
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
-			Assert.AreEqual(phase, receipt.Phase);
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
+			ClassicAssert.AreEqual(phase, receipt.Phase);
 			AssertEmptyWithoutMutation(receipt, false);
-			Assert.AreEqual(1, receipt.DeparturesBefore);
-			Assert.AreEqual("A named departure awaits its ledger.", receipt.LedgerLine);
+			ClassicAssert.AreEqual(1, receipt.DeparturesBefore);
+			ClassicAssert.AreEqual("A named departure awaits its ledger.", receipt.LedgerLine);
 		}
 
 		[Test]
 		public void AnyRetainedFieldMakesAnOtherwiseEmptyReceiptRefuseWithoutRepair()
 		{
-			Assert.Greater(Fields.Length, 0);
+			ClassicAssert.Greater(Fields.Length, 0);
 			foreach (FieldInfo field in Fields)
 			{
 				KingdomResidentDepartureOperation receipt = KingdomResidentDepartureRules.Empty();
@@ -80,7 +81,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentDepartureOperation receipt = KingdomResidentDepartureRules.Empty();
 			receipt.Phase = phase;
-			Assert.IsFalse(KingdomResidentDepartureRules.Valid(receipt));
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.Valid(receipt));
 			AssertEmptyWithoutMutation(receipt, false);
 		}
 
@@ -92,7 +93,7 @@ namespace ThousandAndFirst.Tests
 			else receipt.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('d', 64);
 			receipt.OperationId = KingdomResidentDepartureRules.Id(receipt.RealmId, receipt.SettlementId,
 				receipt.ResidentId, receipt.BodyObjectId, receipt.PreparedTick);
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
 			AssertEmptyWithoutMutation(receipt, false);
 		}
 
@@ -104,12 +105,12 @@ namespace ThousandAndFirst.Tests
 			Ordered(exact, "!OptionExact(frame.Owner)",
 				"!KingdomResidentDepartureRules.IsEmpty(frame.Owner.System.ResidentDeparture)",
 				"!ReferenceEquals(frame.Owner.System.Ledger, frame.Ledger)");
-			Assert.AreEqual(1, Regex.Matches(exact, @"\bResidentDeparture\b").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(exact, @"\bResidentDeparture\b").Count);
 			StringAssert.DoesNotContain("NormalizeOldDefault", source);
 			StringAssert.DoesNotContain("TryRecoverPending", exact);
 			StringAssert.DoesNotContain("KingdomResidentDepartureRuntime.TryRecoverPending", source);
-			Assert.IsFalse(Regex.IsMatch(source, @"\bResidentDeparture\s*=(?!=)"));
-			Assert.IsFalse(Regex.IsMatch(source, @"\bDeparturesBefore\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bResidentDeparture\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bDeparturesBefore\s*=(?!=)"));
 		}
 
 		[Test]
@@ -126,7 +127,7 @@ namespace ThousandAndFirst.Tests
 				"if (wire != owner.Owner.Wire && !SaveOption(owner, next)) return false;",
 				"if (!HomecomingExact(frame)) return false;", "ledger.Reset();",
 				"system.HomecomingDays = 0;", "refusal = null; return true;");
-			Assert.AreEqual(1, Regex.Matches(entry, @"\bledger\.Reset\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(entry, @"\bledger\.Reset\(").Count);
 		}
 
 		private static KingdomResidentDepartureOperation Prepared()
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.Tests
 			};
 			receipt.OperationId = KingdomResidentDepartureRules.Id(receipt.RealmId, receipt.SettlementId,
 				receipt.ResidentId, receipt.BodyObjectId, receipt.PreparedTick);
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(receipt));
 			return receipt;
 		}
 
@@ -152,18 +153,18 @@ namespace ThousandAndFirst.Tests
 			bool expected, string detail = "receipt")
 		{
 			object[] before = receipt == null ? null : Fields.Select(field => field.GetValue(receipt)).ToArray();
-			Assert.AreEqual(expected, KingdomResidentDepartureRules.IsEmpty(receipt), detail);
-			Assert.AreEqual(expected, KingdomResidentDepartureRules.IsEmpty(receipt), detail + " repeat");
+			ClassicAssert.AreEqual(expected, KingdomResidentDepartureRules.IsEmpty(receipt), detail);
+			ClassicAssert.AreEqual(expected, KingdomResidentDepartureRules.IsEmpty(receipt), detail + " repeat");
 			if (receipt == null) return;
 			for (int i = 0; i < Fields.Length; i++)
-				if (Fields[i].FieldType.IsValueType) Assert.AreEqual(before[i], Fields[i].GetValue(receipt), Fields[i].Name);
-				else Assert.AreSame(before[i], Fields[i].GetValue(receipt), Fields[i].Name);
+				if (Fields[i].FieldType.IsValueType) ClassicAssert.AreEqual(before[i], Fields[i].GetValue(receipt), Fields[i].Name);
+				else ClassicAssert.AreSame(before[i], Fields[i].GetValue(receipt), Fields[i].Name);
 		}
 
 		private static string Body(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start), depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -180,7 +181,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}

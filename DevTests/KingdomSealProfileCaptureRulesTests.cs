@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,20 +18,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPolityLedger ledger = Published(new List<string> { "goatfolk", "human" }, 6);
 			KingdomSealRecord record = new KingdomSealRecord();
-			Assert.IsTrue(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm, record,
+			ClassicAssert.IsTrue(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm, record,
 				out long revision, out string failure), failure);
-			Assert.AreEqual(ledger.Revision, revision);
-			Assert.AreEqual(KingdomPolityProfileRules.CurrentLegacyProfileSchema,
+			ClassicAssert.AreEqual(ledger.Revision, revision);
+			ClassicAssert.AreEqual(KingdomPolityProfileRules.CurrentLegacyProfileSchema,
 				record.ProfileSchema);
-			Assert.AreEqual(6, record.TechnologyBand);
+			ClassicAssert.AreEqual(6, record.TechnologyBand);
 			CollectionAssert.AreEqual(new[] { "goatfolk", "human" },
 				record.CanonicalBodyKeys);
-			Assert.IsTrue(KingdomPolityRules.Digest(record.SourceProfileDigest));
-			Assert.IsTrue(KingdomSealProfileCaptureRules.StillMatches(ledger, Realm,
+			ClassicAssert.IsTrue(KingdomPolityRules.Digest(record.SourceProfileDigest));
+			ClassicAssert.IsTrue(KingdomSealProfileCaptureRules.StillMatches(ledger, Realm,
 				record, revision, out failure), failure);
 
 			record.CanonicalBodyKeys[0] = "snapjaw";
-			Assert.IsFalse(KingdomSealProfileCaptureRules.StillMatches(ledger, Realm,
+			ClassicAssert.IsFalse(KingdomSealProfileCaptureRules.StillMatches(ledger, Realm,
 				record, revision, out failure));
 			StringAssert.Contains("changed during seal capture", failure);
 		}
@@ -45,21 +46,21 @@ namespace ThousandAndFirst.Tests
 				SourceProfileDigest = new string('a', 64),
 				ProfileProvenanceDigest = new string('b', 64)
 			};
-			Assert.IsTrue(KingdomSealProfileCaptureRules.TryCapture(null, Realm, record,
+			ClassicAssert.IsTrue(KingdomSealProfileCaptureRules.TryCapture(null, Realm, record,
 				out long revision, out string failure), failure);
-			Assert.AreEqual(-1L, revision);
-			Assert.AreEqual(0, record.ProfileSchema);
-			Assert.AreEqual(0, record.TechnologyBand);
+			ClassicAssert.AreEqual(-1L, revision);
+			ClassicAssert.AreEqual(0, record.ProfileSchema);
+			ClassicAssert.AreEqual(0, record.TechnologyBand);
 			CollectionAssert.IsEmpty(record.CanonicalBodyKeys);
-			Assert.AreEqual("", record.SourceProfileDigest);
-			Assert.AreEqual("", record.ProfileProvenanceDigest);
+			ClassicAssert.AreEqual("", record.SourceProfileDigest);
+			ClassicAssert.AreEqual("", record.ProfileProvenanceDigest);
 		}
 
 		[Test]
 		public void UnresolvedCurrentBodyFailsClosedInsteadOfGuessingFromStage()
 		{
 			KingdomPolityLedger ledger = Published(new List<string> { "unknown species" }, 8);
-			Assert.IsFalse(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm,
+			ClassicAssert.IsFalse(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm,
 				new KingdomSealRecord(), out long _, out string failure));
 			StringAssert.Contains("lacks canonical", failure);
 		}
@@ -74,22 +75,22 @@ namespace ThousandAndFirst.Tests
 				6);
 			second.DisplayName = "A Different Realm"; second.FounderName = "Otho";
 			second.FoundedTick = 900L; second.OriginKeys[0] = "unrelated-origin";
-			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(first,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(first,
 				out KingdomPolityProfileRevision a, out string failure), failure);
-			Assert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(second,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(second,
 				out KingdomPolityProfileRevision b, out failure), failure);
-			Assert.AreNotEqual(KingdomPolityRules.ProfileExpressionDigest(a),
+			ClassicAssert.AreNotEqual(KingdomPolityRules.ProfileExpressionDigest(a),
 				KingdomPolityRules.ProfileExpressionDigest(b));
-			Assert.AreEqual(KingdomPolityRules.LegacySealPhenotypeDigest(a),
+			ClassicAssert.AreEqual(KingdomPolityRules.LegacySealPhenotypeDigest(a),
 				KingdomPolityRules.LegacySealPhenotypeDigest(b));
 			b.TechnologyBand = 7;
-			Assert.AreNotEqual(KingdomPolityRules.LegacySealPhenotypeDigest(a),
+			ClassicAssert.AreNotEqual(KingdomPolityRules.LegacySealPhenotypeDigest(a),
 				KingdomPolityRules.LegacySealPhenotypeDigest(b));
 		}
 
 		private static KingdomPolityLedger Published(List<string> Species, int Technology)
 		{
-			Assert.IsTrue(KingdomPolityRules.TryCreate(Realm, KingdomPolityImportPolicy.Off,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryCreate(Realm, KingdomPolityImportPolicy.Off,
 				out KingdomPolityLedger ledger, out string failure), failure);
 			KingdomPolityFoundationFacts facts = new KingdomPolityFoundationFacts
 			{
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 				OriginKeys = new List<string> { "salt-born" },
 				CultureKeys = new List<string> { "Joppa" }, SpeciesKeys = Species
 			};
-			Assert.IsTrue(KingdomPolityRules.TryPublishFoundation(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPublishFoundation(ledger, ledger.Revision,
 				facts, null, out KingdomPolityPublicationResult _, out failure), failure);
 			return ledger;
 		}

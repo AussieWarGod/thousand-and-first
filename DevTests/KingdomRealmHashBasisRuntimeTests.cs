@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Codec = ThousandAndFirst.KingdomArchivedSettlementCodec;
 using Rules = ThousandAndFirst.KingdomRealmHashBasisRules;
 using Runtime = ThousandAndFirst.KingdomRealmHashBasisRuntime;
@@ -102,15 +103,15 @@ namespace ThousandAndFirst.Tests
 			Hasher authority = new Hasher(Only(18, archiveHash, 100));
 			Hasher graph = new Hasher(Only(18, graphHash, 300));
 			Owners owners = new Owners();
-			Assert.IsTrue(Runtime.TryProveAttempting(receipt, owners.Proof, graph.Compute,
+			ClassicAssert.IsTrue(Runtime.TryProveAttempting(receipt, owners.Proof, graph.Compute,
 				authority.Compute, out string failure), failure);
-			Assert.IsNull(failure);
-			Assert.AreEqual(18, receipt.IntentSettlementSchema, "the unique match is pinned here");
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
-			Assert.AreEqual(graphHash, receipt.BeforeGraph);
-			Assert.AreEqual(Rules.MaxVersion, authority.Order()[0], "search runs newest first");
-			Assert.AreEqual(Rules.MaxVersion - Rules.MinVersion + 2, authority.Order().Length,
+			ClassicAssert.IsNull(failure);
+			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema, "the unique match is pinned here");
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
+			ClassicAssert.AreEqual(graphHash, receipt.BeforeGraph);
+			ClassicAssert.AreEqual(Rules.MaxVersion, authority.Order()[0], "search runs newest first");
+			ClassicAssert.AreEqual(Rules.MaxVersion - Rules.MinVersion + 2, authority.Order().Length,
 				"a full search plus exactly one explicit re-proof");
 			CollectionAssert.AreEqual(new[] { 18 }, graph.Order(),
 				"the live graph is only ever cut at the resolved basis here");
@@ -126,19 +127,19 @@ namespace ThousandAndFirst.Tests
 			Hasher authority = new Hasher(Only(18, archiveHash, 100));
 			Dictionary<int, string> live = Only(18, graphHash, 300);
 			Hasher graph = new Hasher(live);
-			Assert.IsTrue(Runtime.TrySettle(receipt, new Owners().Proof,
+			ClassicAssert.IsTrue(Runtime.TrySettle(receipt, new Owners().Proof,
 				KingdomRealmCallbackDisposition.Delivered, "observed", graph.Compute,
 				authority.Compute, out string failure), failure);
-			Assert.AreEqual(live[Codec.CurrentVersion], receipt.AfterGraph,
+			ClassicAssert.AreEqual(live[Codec.CurrentVersion], receipt.AfterGraph,
 				"AfterGraph is an independent cut at today's CurrentVersion");
-			Assert.AreEqual(archiveHash, receipt.AfterArchiveGraph,
+			ClassicAssert.AreEqual(archiveHash, receipt.AfterArchiveGraph,
 				"AfterArchiveGraph copies the exactly re-proved Before value");
-			Assert.AreEqual(receipt.BeforeArchiveGraph, receipt.AfterArchiveGraph);
-			Assert.AreEqual(18, receipt.IntentSettlementSchema, "the intent basis is not rewritten");
-			Assert.AreEqual(Codec.CurrentVersion, receipt.SettledSettlementSchema);
-			Assert.AreEqual(KingdomRealmCallbackPhase.Settled, receipt.Phase);
-			Assert.AreEqual(KingdomRealmCallbackDisposition.Delivered, receipt.Disposition);
-			Assert.AreEqual("observed", receipt.ObservedEffect);
+			ClassicAssert.AreEqual(receipt.BeforeArchiveGraph, receipt.AfterArchiveGraph);
+			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema, "the intent basis is not rewritten");
+			ClassicAssert.AreEqual(Codec.CurrentVersion, receipt.SettledSettlementSchema);
+			ClassicAssert.AreEqual(KingdomRealmCallbackPhase.Settled, receipt.Phase);
+			ClassicAssert.AreEqual(KingdomRealmCallbackDisposition.Delivered, receipt.Disposition);
+			ClassicAssert.AreEqual("observed", receipt.ObservedEffect);
 			CollectionAssert.AreEqual(new[] { 18, Codec.CurrentVersion }, graph.Order(),
 				"the live comparison is taken at the intent basis, never at 19");
 			CollectionAssert.AreEqual(new[] { 18, 18 }, authority.Order());
@@ -151,11 +152,11 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Attempting,
 				KingdomRealmCallbackScope.Seat, 18, archiveHash, Digest(822));
 			Hasher graph = new Hasher(Only(-1, null, 300));
-			Assert.IsTrue(Runtime.TrySettle(receipt, new Owners().Proof,
+			ClassicAssert.IsTrue(Runtime.TrySettle(receipt, new Owners().Proof,
 				KingdomRealmCallbackDisposition.Delivered, "seated", graph.Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string _));
 			CollectionAssert.AreEqual(new[] { Codec.CurrentVersion }, graph.Order());
-			Assert.AreNotEqual(receipt.BeforeGraph, receipt.AfterGraph);
+			ClassicAssert.AreNotEqual(receipt.BeforeGraph, receipt.AfterGraph);
 		}
 
 		// ---- Group 2: pinned mismatch, legacy zero, failed proofs -------------------------
@@ -169,15 +170,15 @@ namespace ThousandAndFirst.Tests
 				Digest(832));
 			Hasher authority = new Hasher(Only(18, archiveHash, 100));
 			Hasher graph = new Hasher(Only(18, receipt.BeforeGraph, 300));
-			Assert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof, graph.Compute,
 				authority.Compute, out string failure));
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNotNull(failure);
 			CollectionAssert.AreEqual(new[] { Codec.CurrentVersion }, authority.Order(),
 				"a pinned slot is asked once and never widens into a search");
 			CollectionAssert.IsEmpty(graph.Order());
-			Assert.AreEqual(Codec.CurrentVersion, receipt.IntentSettlementSchema,
+			ClassicAssert.AreEqual(Codec.CurrentVersion, receipt.IntentSettlementSchema,
 				"the stored basis is left exactly as it was");
-			Assert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
+			ClassicAssert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
 		}
 
 		[Test]
@@ -186,12 +187,12 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Intent,
 				KingdomRealmCallbackScope.Chronicle, Rules.Unresolved, Digest(841), Digest(842));
 			Hasher authority = new Hasher(Only(-1, null, 100));
-			Assert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
 				new Hasher(Only(-1, null, 300)).Compute, authority.Compute, out string failure));
-			Assert.IsNotNull(failure);
-			Assert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema,
+			ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema,
 				"an unresolvable slot is never promoted to a guess");
-			Assert.AreEqual(Rules.MaxVersion - Rules.MinVersion + 1, authority.Order().Length);
+			ClassicAssert.AreEqual(Rules.MaxVersion - Rules.MinVersion + 1, authority.Order().Length);
 		}
 
 		[Test]
@@ -202,11 +203,11 @@ namespace ThousandAndFirst.Tests
 			answers[12] = archiveHash;
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Intent,
 				KingdomRealmCallbackScope.Chronicle, Rules.Unresolved, archiveHash, Digest(852));
-			Assert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
 				new Hasher(Only(18, receipt.BeforeGraph, 300)).Compute,
 				new Hasher(answers).Compute, out string failure));
-			Assert.IsNotNull(failure);
-			Assert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
+			ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
 		}
 
 		[Test]
@@ -216,16 +217,16 @@ namespace ThousandAndFirst.Tests
 			string graphHash = Digest(862);
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Intent,
 				KingdomRealmCallbackScope.Chronicle, Rules.Unresolved, archiveHash, graphHash);
-			Assert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof,
 				new Hasher(Only(18, Digest(863), 300)).Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure));
-			Assert.AreEqual(Runtime.GraphReproofFailure, failure);
-			Assert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
-			Assert.AreEqual(graphHash, receipt.BeforeGraph);
-			Assert.IsNull(receipt.AfterGraph);
-			Assert.IsNull(receipt.AfterArchiveGraph);
+			ClassicAssert.AreEqual(Runtime.GraphReproofFailure, failure);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
+			ClassicAssert.AreEqual(graphHash, receipt.BeforeGraph);
+			ClassicAssert.IsNull(receipt.AfterGraph);
+			ClassicAssert.IsNull(receipt.AfterArchiveGraph);
 		}
 
 		[Test]
@@ -237,15 +238,15 @@ namespace ThousandAndFirst.Tests
 				KingdomRealmCallbackScope.Reputation, 18, archiveHash, graphHash);
 			Dictionary<int, string> live = Only(18, graphHash, 300);
 			live.Remove(Codec.CurrentVersion);
-			Assert.IsFalse(Runtime.TrySettle(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TrySettle(receipt, new Owners().Proof,
 				KingdomRealmCallbackDisposition.Delivered, "observed", new Hasher(live).Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure));
-			Assert.IsNotNull(failure);
-			Assert.AreEqual(KingdomRealmCallbackPhase.Attempting, receipt.Phase);
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.IsNull(receipt.AfterGraph);
-			Assert.IsNull(receipt.AfterArchiveGraph);
-			Assert.IsNull(receipt.ObservedEffect);
+			ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(KingdomRealmCallbackPhase.Attempting, receipt.Phase);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.IsNull(receipt.AfterGraph);
+			ClassicAssert.IsNull(receipt.AfterArchiveGraph);
+			ClassicAssert.IsNull(receipt.ObservedEffect);
 		}
 
 		// ---- Group 3: mutation during hashing --------------------------------------------
@@ -260,11 +261,11 @@ namespace ThousandAndFirst.Tests
 			Hasher graph = new Hasher(Only(18, graphHash, 300));
 			graph.InterfereAtAsk = 1;
 			graph.Interfere = delegate { receipt.AfterEffect = "moved under the hash"; };
-			Assert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsFalse(Runtime.TryProveAttempting(receipt, new Owners().Proof, graph.Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure));
-			Assert.AreEqual(Runtime.MutatedFailure, failure);
-			Assert.AreEqual(18, receipt.IntentSettlementSchema);
-			Assert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
+			ClassicAssert.AreEqual(Runtime.MutatedFailure, failure);
+			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(archiveHash, receipt.BeforeArchiveGraph);
 		}
 
 		[Test]
@@ -277,12 +278,12 @@ namespace ThousandAndFirst.Tests
 			Hasher graph = new Hasher(Only(18, receipt.BeforeGraph, 300));
 			graph.InterfereAtAsk = 1;
 			graph.Interfere = delegate { owners.Intact = false; };
-			Assert.IsFalse(Runtime.TrySettle(receipt, owners.Proof,
+			ClassicAssert.IsFalse(Runtime.TrySettle(receipt, owners.Proof,
 				KingdomRealmCallbackDisposition.Delivered, "observed", graph.Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure));
-			Assert.AreEqual(Runtime.MutatedFailure, failure);
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.IsNull(receipt.AfterGraph);
+			ClassicAssert.AreEqual(Runtime.MutatedFailure, failure);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.IsNull(receipt.AfterGraph);
 		}
 
 		// ---- Group 4: the None -> Intent capture ------------------------------------------
@@ -295,19 +296,19 @@ namespace ThousandAndFirst.Tests
 			Dictionary<int, string> live = Only(-1, null, 300);
 			Hasher graph = new Hasher(live);
 			Hasher authority = new Hasher(archive);
-			Assert.IsTrue(Runtime.TryCaptureIntent(receipt, new Owners().Proof,
+			ClassicAssert.IsTrue(Runtime.TryCaptureIntent(receipt, new Owners().Proof,
 				KingdomRealmCallbackScope.Feelings, "before", "after", 1, 2, graph.Compute,
 				authority.Compute, out string failure), failure);
-			Assert.AreEqual(Codec.CurrentVersion, receipt.IntentSettlementSchema);
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.AreEqual(KingdomRealmCallbackPhase.Intent, receipt.Phase);
-			Assert.AreEqual(KingdomRealmCallbackScope.Feelings, receipt.Scope);
-			Assert.AreEqual(live[Codec.CurrentVersion], receipt.BeforeGraph);
-			Assert.AreEqual(archive[Codec.CurrentVersion], receipt.BeforeArchiveGraph);
-			Assert.AreEqual("before", receipt.BeforeEffect);
-			Assert.AreEqual("after", receipt.AfterEffect);
-			Assert.AreEqual(1, receipt.BeforeStamp);
-			Assert.AreEqual(2, receipt.AfterStamp);
+			ClassicAssert.AreEqual(Codec.CurrentVersion, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.AreEqual(KingdomRealmCallbackPhase.Intent, receipt.Phase);
+			ClassicAssert.AreEqual(KingdomRealmCallbackScope.Feelings, receipt.Scope);
+			ClassicAssert.AreEqual(live[Codec.CurrentVersion], receipt.BeforeGraph);
+			ClassicAssert.AreEqual(archive[Codec.CurrentVersion], receipt.BeforeArchiveGraph);
+			ClassicAssert.AreEqual("before", receipt.BeforeEffect);
+			ClassicAssert.AreEqual("after", receipt.AfterEffect);
+			ClassicAssert.AreEqual(1, receipt.BeforeStamp);
+			ClassicAssert.AreEqual(2, receipt.AfterStamp);
 			CollectionAssert.AreEqual(new[] { Codec.CurrentVersion }, graph.Order());
 			CollectionAssert.AreEqual(new[] { Codec.CurrentVersion }, authority.Order());
 		}
@@ -317,17 +318,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomRealmCallbackReceipt receipt = Blank();
 			Dictionary<int, string> archive = new Dictionary<int, string>();
-			Assert.IsFalse(Runtime.TryCaptureIntent(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TryCaptureIntent(receipt, new Owners().Proof,
 				KingdomRealmCallbackScope.Chronicle, "before", "after", int.MinValue,
 				int.MinValue, new Hasher(Only(-1, null, 300)).Compute,
 				new Hasher(archive).Compute, out string failure));
-			Assert.IsNotNull(failure);
-			Assert.AreEqual(KingdomRealmCallbackPhase.None, receipt.Phase);
-			Assert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
-			Assert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
-			Assert.IsNull(receipt.BeforeGraph);
-			Assert.IsNull(receipt.BeforeArchiveGraph);
-			Assert.IsTrue(KingdomRealmArchive.ValidBasisShape(receipt, out string _));
+			ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(KingdomRealmCallbackPhase.None, receipt.Phase);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.SettledSettlementSchema);
+			ClassicAssert.IsNull(receipt.BeforeGraph);
+			ClassicAssert.IsNull(receipt.BeforeArchiveGraph);
+			ClassicAssert.IsTrue(KingdomRealmArchive.ValidBasisShape(receipt, out string _));
 		}
 
 		// ---- Group 5: the settled verifier -----------------------------------------------
@@ -354,14 +355,14 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Settled(18, stored, archiveHash, afterHash);
 			Hasher authority = new Hasher(Only(18, archiveHash, 100));
 			Hasher graph = new Hasher(Only(Codec.CurrentVersion, afterHash, 300));
-			Assert.IsTrue(Runtime.TryVerifySettled(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsTrue(Runtime.TryVerifySettled(receipt, new Owners().Proof, graph.Compute,
 				authority.Compute, out string failure), failure);
 			CollectionAssert.AreEqual(new[] { 18, 18 }, authority.Order(),
 				"the archive half stays on the intent basis");
-			Assert.AreEqual(Codec.CurrentVersion, graph.Order()[graph.Order().Length - 1]);
-			Assert.AreEqual(stored, receipt.SettledSettlementSchema, "the verifier writes nothing");
-			Assert.AreEqual(18, receipt.IntentSettlementSchema);
-			Assert.AreEqual(afterHash, receipt.AfterGraph);
+			ClassicAssert.AreEqual(Codec.CurrentVersion, graph.Order()[graph.Order().Length - 1]);
+			ClassicAssert.AreEqual(stored, receipt.SettledSettlementSchema, "the verifier writes nothing");
+			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(afterHash, receipt.AfterGraph);
 		}
 
 		[Test]
@@ -370,10 +371,10 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Settled(18, 19, Digest(921), Digest(922));
 			receipt.AfterArchiveGraph = Digest(923);
 			Hasher authority = new Hasher(Only(18, receipt.BeforeArchiveGraph, 100));
-			Assert.IsFalse(Runtime.TryVerifySettled(receipt, new Owners().Proof,
+			ClassicAssert.IsFalse(Runtime.TryVerifySettled(receipt, new Owners().Proof,
 				new Hasher(Only(19, receipt.AfterGraph, 300)).Compute, authority.Compute,
 				out string failure));
-			Assert.AreEqual(Runtime.SettledCopyFailure, failure);
+			ClassicAssert.AreEqual(Runtime.SettledCopyFailure, failure);
 			CollectionAssert.IsEmpty(authority.Order(), "nothing is hashed once the copy is broken");
 		}
 
@@ -384,9 +385,9 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Settled(18, Codec.CurrentVersion, archiveHash,
 				Digest(932));
 			Hasher graph = new Hasher(Only(17, receipt.AfterGraph, 300));
-			Assert.IsFalse(Runtime.TryVerifySettled(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsFalse(Runtime.TryVerifySettled(receipt, new Owners().Proof, graph.Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure));
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNotNull(failure);
 			CollectionAssert.AreEqual(new[] { Codec.CurrentVersion }, graph.Order(),
 				"a pinned settle basis is asked once and never searches");
 		}
@@ -401,11 +402,11 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Attempting,
 				KingdomRealmCallbackScope.Chronicle, 18, archiveHash, graphHash);
 			Hasher graph = new Hasher(Only(18, graphHash, 300));
-			Assert.IsTrue(Runtime.TryProveIntentGraph(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsTrue(Runtime.TryProveIntentGraph(receipt, new Owners().Proof, graph.Compute,
 				new Hasher(Only(18, archiveHash, 100)).Compute, out string failure), failure);
 			CollectionAssert.AreEqual(new[] { 18 }, graph.Order(),
 				"the prestate cut takes the persisted basis, not CurrentVersion");
-			Assert.AreEqual(18, receipt.IntentSettlementSchema, "the prestate proof writes nothing");
+			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema, "the prestate proof writes nothing");
 		}
 
 		[Test]
@@ -414,11 +415,11 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackReceipt receipt = Begun(KingdomRealmCallbackPhase.Attempting,
 				KingdomRealmCallbackScope.Chronicle, Rules.Unresolved, Digest(951), Digest(952));
 			Hasher graph = new Hasher(Only(-1, null, 300));
-			Assert.IsFalse(Runtime.TryProveIntentGraph(receipt, new Owners().Proof, graph.Compute,
+			ClassicAssert.IsFalse(Runtime.TryProveIntentGraph(receipt, new Owners().Proof, graph.Compute,
 				new Hasher(Only(-1, null, 100)).Compute, out string failure));
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNotNull(failure);
 			CollectionAssert.IsEmpty(graph.Order(), "no live cut is taken without a basis");
-			Assert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
+			ClassicAssert.AreEqual(Rules.Unresolved, receipt.IntentSettlementSchema);
 		}
 
 		// ---- Group 7: SOURCE pins (the call sites need KingdomSystem) ----------------------

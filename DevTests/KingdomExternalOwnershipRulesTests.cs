@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 
 namespace ThousandAndFirst.Tests
@@ -27,16 +28,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomExternalOwnershipBinding none = KingdomExternalOwnershipRules.None();
 			string encodedNone = KingdomExternalOwnershipRules.Encode(none);
-			Assert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encodedNone, out var readNone));
-			Assert.AreEqual(KingdomExternalOwnershipMode.None, readNone.Mode);
-			Assert.IsNull(readNone.Observation);
+			ClassicAssert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encodedNone, out var readNone));
+			ClassicAssert.AreEqual(KingdomExternalOwnershipMode.None, readNone.Mode);
+			ClassicAssert.IsNull(readNone.Observation);
 
 			KingdomExternalOwnershipBinding bind =
 				KingdomExternalOwnershipRules.Bind(Observation());
 			string encodedBind = KingdomExternalOwnershipRules.Encode(bind);
-			Assert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encodedBind, out var readBind));
-			Assert.AreEqual(encodedBind, KingdomExternalOwnershipRules.Encode(readBind));
-			Assert.IsTrue(KingdomExternalOwnershipRules.SameObservation(
+			ClassicAssert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encodedBind, out var readBind));
+			ClassicAssert.AreEqual(encodedBind, KingdomExternalOwnershipRules.Encode(readBind));
+			ClassicAssert.IsTrue(KingdomExternalOwnershipRules.SameObservation(
 				bind.Observation, readBind.Observation));
 		}
 
@@ -47,7 +48,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", false)]
 		public void GuidEvidenceIsLowercaseNonEmptyDFormat(string value, bool valid)
 		{
-			Assert.AreEqual(valid, KingdomExternalOwnershipRules.ValidGuid(value));
+			ClassicAssert.AreEqual(valid, KingdomExternalOwnershipRules.ValidGuid(value));
 		}
 
 		[Test]
@@ -55,11 +56,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string encoded = KingdomExternalOwnershipRules.Encode(
 				KingdomExternalOwnershipRules.Bind(Observation()));
-			Assert.IsFalse(KingdomExternalOwnershipRules.TryDecode(encoded + ".", out var extra));
-			Assert.IsFalse(KingdomExternalOwnershipRules.TryDecode(
+			ClassicAssert.IsFalse(KingdomExternalOwnershipRules.TryDecode(encoded + ".", out var extra));
+			ClassicAssert.IsFalse(KingdomExternalOwnershipRules.TryDecode(
 				encoded.Substring(0, encoded.Length - 1), out var truncated));
-			Assert.IsFalse(KingdomExternalOwnershipRules.TryDecode("dGFm.!!!", out var invalid));
-			Assert.IsFalse(KingdomExternalOwnershipRules.TryDecode(
+			ClassicAssert.IsFalse(KingdomExternalOwnershipRules.TryDecode("dGFm.!!!", out var invalid));
+			ClassicAssert.IsFalse(KingdomExternalOwnershipRules.TryDecode(
 				new string('a', KingdomExternalOwnershipRules.MaximumEncodedLength + 1),
 				out var oversized));
 		}
@@ -74,13 +75,13 @@ namespace ThousandAndFirst.Tests
 				State = KingdomExternalOwnershipState.Owned,
 				Observation = Observation()
 			};
-			Assert.AreEqual(KingdomExternalBindingVerdict.Exact,
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.Exact,
 				KingdomExternalOwnershipRules.Judge(binding, exact));
 			exact.Observation.SectorGuid = "11111111-1111-1111-1111-111111111111";
-			Assert.AreEqual(KingdomExternalBindingVerdict.Diverged,
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.Diverged,
 				KingdomExternalOwnershipRules.Judge(binding, exact));
 			exact.State = KingdomExternalOwnershipState.ProviderFailed;
-			Assert.AreEqual(KingdomExternalBindingVerdict.ProviderUnavailable,
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.ProviderUnavailable,
 				KingdomExternalOwnershipRules.Judge(binding, exact));
 		}
 
@@ -92,11 +93,11 @@ namespace ThousandAndFirst.Tests
 			{
 				State = KingdomExternalOwnershipState.Unowned
 			};
-			Assert.AreEqual(KingdomExternalBindingVerdict.Open,
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.Open,
 				KingdomExternalOwnershipRules.Judge(binding, open));
 			open.State = KingdomExternalOwnershipState.Owned;
 			open.Observation = Observation();
-			Assert.AreEqual(KingdomExternalBindingVerdict.Diverged,
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.Diverged,
 				KingdomExternalOwnershipRules.Judge(binding, open));
 		}
 
@@ -108,9 +109,9 @@ namespace ThousandAndFirst.Tests
 			current.Evidence = "settlement";
 			string encoded = KingdomExternalOwnershipRules.Encode(
 				KingdomExternalOwnershipRules.Bind(current));
-			Assert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encoded, out var binding));
-			Assert.AreEqual("", binding.Observation.SectorGuid);
-			Assert.AreEqual(KingdomExternalBindingVerdict.Exact,
+			ClassicAssert.IsTrue(KingdomExternalOwnershipRules.TryDecode(encoded, out var binding));
+			ClassicAssert.AreEqual("", binding.Observation.SectorGuid);
+			ClassicAssert.AreEqual(KingdomExternalBindingVerdict.Exact,
 				KingdomExternalOwnershipRules.Judge(binding,
 					new KingdomExternalOwnershipReading
 					{
@@ -129,7 +130,7 @@ namespace ThousandAndFirst.Tests
 		public void ReceiptPairCasAdmitsOnlyAbsentOrExactHalves(string currentAuthority,
 			string currentBinding, bool requireEvidence, bool valid)
 		{
-			Assert.AreEqual(valid, KingdomExternalOwnershipRules.PairAbsentOrExact(
+			ClassicAssert.AreEqual(valid, KingdomExternalOwnershipRules.PairAbsentOrExact(
 				currentAuthority, currentBinding, "authority", "binding", requireEvidence));
 		}
 	}

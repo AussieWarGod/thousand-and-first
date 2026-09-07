@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -26,14 +27,14 @@ namespace ThousandAndFirst.Tests
 			// AppleMatz (B/Factions.xml:154), so a realm whose people hold with Joppa binds its
 			// harvest into matz; found that realm in a marsh and the matz is made of vinewafers.
 			KingdomRules.FavoredDish marsh = KingdomRules.DeriveDish("Ptoh", "AppleMatz", "Vinewafer");
-			Assert.AreEqual("vinewafer matz", marsh.Name);
-			Assert.AreEqual("Vinewafer Sheaf", marsh.Staple);
+			ClassicAssert.AreEqual("vinewafer matz", marsh.Name);
+			ClassicAssert.AreEqual("Vinewafer Sheaf", marsh.Staple);
 
 			// The Barathrumites' is ThePorridge (:1179). Found on ordinary ground, the crop is
 			// starapple, and the settlement is known for starapple porridge.
 			KingdomRules.FavoredDish hill = KingdomRules.DeriveDish("Kesil", "ThePorridge", "Starapple");
-			Assert.AreEqual("starapple porridge", hill.Name);
-			Assert.AreEqual("Starapple Preserves", hill.Staple);
+			ClassicAssert.AreEqual("starapple porridge", hill.Name);
+			ClassicAssert.AreEqual("Starapple Preserves", hill.Staple);
 		}
 
 		[Test]
@@ -43,13 +44,13 @@ namespace ThousandAndFirst.Tests
 			// name at all. None of those is an error: people who hold with nobody still eat, and
 			// what they eat is a stew.
 			KingdomRules.FavoredDish nobody = KingdomRules.DeriveDish(null, null, null);
-			Assert.AreEqual(KingdomRules.DefaultDishForm, nobody.Form);
-			Assert.IsFalse(string.IsNullOrEmpty(nobody.Name));
-			Assert.IsFalse(string.IsNullOrEmpty(nobody.Text));
+			ClassicAssert.AreEqual(KingdomRules.DefaultDishForm, nobody.Form);
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(nobody.Name));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(nobody.Text));
 
 			KingdomRules.FavoredDish stranger = KingdomRules.DeriveDish("Ptoh", "NoSuchRecipe", "Grit Gate Ration");
-			Assert.AreEqual("grit gate ration stew", stranger.Name);
-			Assert.IsNull(stranger.Staple, "a crop this build ships no staple for must say so rather than guess");
+			ClassicAssert.AreEqual("grit gate ration stew", stranger.Name);
+			ClassicAssert.IsNull(stranger.Staple, "a crop this build ships no staple for must say so rather than guess");
 		}
 
 		[Test]
@@ -57,10 +58,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomRules.FavoredDish first = KingdomRules.DeriveDish("Ptoh", "MahLahSoup", "Plump Mushroom");
 			KingdomRules.FavoredDish again = KingdomRules.DeriveDish("Ptoh", "MahLahSoup", "Plump Mushroom");
-			Assert.AreEqual(first.Name, again.Name);
-			Assert.AreEqual(first.Text, again.Text);
-			Assert.AreEqual(first.Staple, again.Staple);
-			Assert.AreEqual(first.Source, again.Source);
+			ClassicAssert.AreEqual(first.Name, again.Name);
+			ClassicAssert.AreEqual(first.Text, again.Text);
+			ClassicAssert.AreEqual(first.Staple, again.Staple);
+			ClassicAssert.AreEqual(first.Source, again.Source);
 		}
 
 		[TestCase("AppleMatz", "matz")]
@@ -75,7 +76,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", "stew")]
 		public void DishFormFor_CoversEveryVanillaFavouriteDishAndThenSome(string creedRecipe, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DishFormFor(creedRecipe));
+			ClassicAssert.AreEqual(expected, KingdomRules.DishFormFor(creedRecipe));
 		}
 
 		[Test]
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string creed in creeds)
 			{
 				string form = KingdomRules.DishFormFor(creed);
-				Assert.Contains(form, vanillaTileWords, "dish form '" + form + "' is not one of vanilla's own recipe tile words");
+				ClassicAssert.Contains(form, vanillaTileWords, "dish form '" + form + "' is not one of vanilla's own recipe tile words");
 			}
 		}
 
@@ -111,14 +112,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "")]
 		public void Possessive_WritesItTheWayQudDoes(string name, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.Possessive(name));
+			ClassicAssert.AreEqual(expected, KingdomRules.Possessive(name));
 		}
 
 		[Test]
 		public void DishText_IsVanillasOwnSentenceWithTheRealmInIt()
 		{
 			KingdomRules.FavoredDish dish = KingdomRules.DeriveDish("Ptoh", "AppleMatz", "Vinewafer");
-			Assert.AreEqual("Would you teach me to cook Ptoh's favorite dish?", dish.Text);
+			ClassicAssert.AreEqual("Would you teach me to cook Ptoh's favorite dish?", dish.Text);
 		}
 
 		[Test]
@@ -131,7 +132,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string style in styles)
 			{
 				string crop = KingdomCropRules.CropBlueprintForStyle(style);
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomRules.PreservedStapleFor(crop)),
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomRules.PreservedStapleFor(crop)),
 					"style '" + style + "' grows " + crop + ", which nothing can bind to keep");
 			}
 		}
@@ -141,8 +142,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void JudgeMeal_SaysNothingWhenNothingWasOwed()
 		{
-			Assert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(0, 0, 0, true, GrowthStage.City));
-			Assert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(-3, 9, 9, true, GrowthStage.City));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(0, 0, 0, true, GrowthStage.City));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(-3, 9, 9, true, GrowthStage.City));
 		}
 
 		[Test]
@@ -151,17 +152,17 @@ namespace ThousandAndFirst.Tests
 			// Same larder, same staple, same everything: the only difference is somewhere to put
 			// a pot. A build that drops the kitchen term would let a settlement with no fire at
 			// all claim it ate its own dish.
-			Assert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
-			Assert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(10, 10, 10, false, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.None, KingdomRules.JudgeMeal(10, 10, 10, false, GrowthStage.Town));
 		}
 
 		[Test]
 		public void JudgeMeal_WantsTheWholeDisclosedCostFromTheStaple()
 		{
-			Assert.AreEqual(100, KingdomRules.FavoredMealPercent);
-			Assert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(10, 9, 10, true, GrowthStage.Town));
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(100, 1, 100, true, GrowthStage.Town));
+			ClassicAssert.AreEqual(100, KingdomRules.FavoredMealPercent);
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.Favored, KingdomRules.JudgeMeal(10, 10, 10, true, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(10, 9, 10, true, GrowthStage.Town));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(100, 1, 100, true, GrowthStage.Town));
 		}
 
 		[Test]
@@ -170,9 +171,9 @@ namespace ThousandAndFirst.Tests
 			foreach (GrowthStage stage in new[] { GrowthStage.Camp, GrowthStage.Steading,
 				GrowthStage.Village, GrowthStage.Town, GrowthStage.City })
 			{
-				Assert.AreEqual(KingdomRules.MealVerdict.None,
+				ClassicAssert.AreEqual(KingdomRules.MealVerdict.None,
 					KingdomRules.JudgeMeal(20, 0, 0, true, stage));
-				Assert.AreEqual(KingdomRules.MealVerdict.None,
+				ClassicAssert.AreEqual(KingdomRules.MealVerdict.None,
 					KingdomRules.JudgeMeal(20, 0, 19, true, stage));
 			}
 		}
@@ -180,23 +181,23 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void JudgeMeal_IsPlainWhenTheLardersGaveSomethingButNotTheDish()
 		{
-			Assert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(20, 0, 20, true, GrowthStage.City));
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.Plain, KingdomRules.JudgeMeal(20, 0, 20, true, GrowthStage.City));
 		}
 
 		[Test]
 		public void MealsNeverAlterPopulationCapacity()
 		{
-			Assert.AreEqual(0, KingdomRules.FavoredMealShade);
+			ClassicAssert.AreEqual(0, KingdomRules.FavoredMealShade);
 			foreach (KingdomRules.MealVerdict verdict in Enum.GetValues(typeof(KingdomRules.MealVerdict)))
 			{
-				Assert.AreEqual(0, KingdomRules.MealShadeFor(verdict));
+				ClassicAssert.AreEqual(0, KingdomRules.MealShadeFor(verdict));
 			}
 		}
 
 		[Test]
 		public void MealNotes_SayTheDishByNameOrSayNothing()
 		{
-			Assert.IsNull(KingdomRules.FavoredMealNote("Ptoh", null),
+			ClassicAssert.IsNull(KingdomRules.FavoredMealNote("Ptoh", null),
 				"a lift with no dish to name is a modifier, and a sentence not worth writing");
 			string note = KingdomRules.FavoredMealNote("Ptoh", "vinewafer matz");
 			StringAssert.Contains("vinewafer matz", note);
@@ -224,7 +225,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("0 stored", plain);
 			StringAssert.Contains("no capable kitchen", plain);
 			StringAssert.Contains("Last shared meal: other ingredients", plain);
-			Assert.IsNull(KingdomRules.DishStatusLine(null, "Vinewafer Sheaf", 20, 1,
+			ClassicAssert.IsNull(KingdomRules.DishStatusLine(null, "Vinewafer Sheaf", 20, 1,
 				KingdomRules.MealVerdict.Favored));
 		}
 
@@ -253,7 +254,7 @@ namespace ThousandAndFirst.Tests
 			for (int crops = 0; crops <= 12; crops++)
 			{
 				int outp = crops * KingdomRules.PreserveMultiple;
-				Assert.AreEqual(outp - crops, KingdomRules.MilledGain(crops),
+				ClassicAssert.AreEqual(outp - crops, KingdomRules.MilledGain(crops),
 					"the mill's gain must be what came back less what went in");
 			}
 		}
@@ -265,21 +266,21 @@ namespace ThousandAndFirst.Tests
 			// Carries="food:4". _notes/balance-sim.py asserts the same identity against the
 			// catalogue XML itself; this asserts the arithmetic side of it, so a retune of either
 			// constant is caught in the suite as well as in the model.
-			Assert.AreEqual(4, KingdomRules.MilledGain(KingdomRules.MillCropsPerDay));
-			Assert.AreEqual(3, KingdomRules.PreserveMultiple, "vanilla's own Vinewafer -> Vinewafer Sheaf figure");
+			ClassicAssert.AreEqual(4, KingdomRules.MilledGain(KingdomRules.MillCropsPerDay));
+			ClassicAssert.AreEqual(3, KingdomRules.PreserveMultiple, "vanilla's own Vinewafer -> Vinewafer Sheaf figure");
 		}
 
 		[Test]
 		public void CropsForGain_IsTheInverseAndNeverQuietlyShort()
 		{
-			Assert.AreEqual(0, KingdomRules.CropsForGain(0));
-			Assert.AreEqual(0, KingdomRules.CropsForGain(-5));
+			ClassicAssert.AreEqual(0, KingdomRules.CropsForGain(0));
+			ClassicAssert.AreEqual(0, KingdomRules.CropsForGain(-5));
 			for (int gain = 1; gain <= 30; gain++)
 			{
 				int crops = KingdomRules.CropsForGain(gain);
-				Assert.GreaterOrEqual(KingdomRules.MilledGain(crops), gain,
+				ClassicAssert.GreaterOrEqual(KingdomRules.MilledGain(crops), gain,
 					"grinding " + crops + " crops must cover a gain of " + gain);
-				Assert.Less(KingdomRules.MilledGain(crops - 1), gain,
+				ClassicAssert.Less(KingdomRules.MilledGain(crops - 1), gain,
 					"and one fewer crop must not, or the mill is grinding more than it was asked for");
 			}
 		}
@@ -287,16 +288,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheMillUsesOnlyPhysicalStockAndKeepsNoAbstractRationReserve()
 		{
-			Assert.AreEqual(10, KingdomRules.MillableStock(10, 10));
-			Assert.AreEqual(3, KingdomRules.MillableStock(3, 10));
-			Assert.AreEqual(15, KingdomRules.MillableStock(15, 10));
-			Assert.AreEqual(0, KingdomRules.MillableStock(0, 0));
+			ClassicAssert.AreEqual(10, KingdomRules.MillableStock(10, 10));
+			ClassicAssert.AreEqual(3, KingdomRules.MillableStock(3, 10));
+			ClassicAssert.AreEqual(15, KingdomRules.MillableStock(15, 10));
+			ClassicAssert.AreEqual(0, KingdomRules.MillableStock(0, 0));
 			for (int stored = 0; stored <= 40; stored++)
 			{
 				for (int pop = 0; pop <= 20; pop++)
 				{
 					int free = KingdomRules.MillableStock(stored, pop);
-					Assert.AreEqual(stored, free);
+					ClassicAssert.AreEqual(stored, free);
 				}
 			}
 		}

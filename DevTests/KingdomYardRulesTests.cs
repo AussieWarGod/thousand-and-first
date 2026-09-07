@@ -1,6 +1,7 @@
 ﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Rect = ThousandAndFirst.KingdomPlotRules.PlotRect;
 using Size = ThousandAndFirst.KingdomPlotRules.PlotSize;
@@ -23,7 +24,7 @@ namespace ThousandAndFirst.Tests
 
 		private static Rect At(int X, int Y, Size Size)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryRectAt(X, Y, Size, out var rect), "expected a rect for " + Size);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryRectAt(X, Y, Size, out var rect), "expected a rect for " + Size);
 			return rect;
 		}
 
@@ -36,18 +37,18 @@ namespace ThousandAndFirst.Tests
 		public void YardInteriorIsTheRectWithoutItsWalls(Size Size, int Width, int Height, int InteriorWidth, int InteriorHeight)
 		{
 			Rect rect = At(10, 10, Size);
-			Assert.AreEqual(Width, rect.Width);
-			Assert.AreEqual(Height, rect.Height);
-			Assert.IsTrue(KingdomYardRules.TryYardInterior(rect, out var interior));
-			Assert.AreEqual(InteriorWidth, interior.Width);
-			Assert.AreEqual(InteriorHeight, interior.Height);
+			ClassicAssert.AreEqual(Width, rect.Width);
+			ClassicAssert.AreEqual(Height, rect.Height);
+			ClassicAssert.IsTrue(KingdomYardRules.TryYardInterior(rect, out var interior));
+			ClassicAssert.AreEqual(InteriorWidth, interior.Width);
+			ClassicAssert.AreEqual(InteriorHeight, interior.Height);
 			// Every interior cell is inside the rect and never one of its border (wall) cells.
 			for (int y = interior.Y1; y <= interior.Y2; y++)
 			{
 				for (int x = interior.X1; x <= interior.X2; x++)
 				{
-					Assert.IsTrue(rect.Contains(x, y));
-					Assert.IsFalse(rect.IsBorder(x, y));
+					ClassicAssert.IsTrue(rect.Contains(x, y));
+					ClassicAssert.IsFalse(rect.IsBorder(x, y));
 				}
 			}
 		}
@@ -55,16 +56,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ARectTooThinHasNoYardAtAll()
 		{
-			Assert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 1, 5), out _), "width 2 has no cell that is not a wall");
-			Assert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 5, 1), out _), "height 2 has no cell that is not a wall");
-			Assert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 0, 0), out _), "a single cell is all wall");
+			ClassicAssert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 1, 5), out _), "width 2 has no cell that is not a wall");
+			ClassicAssert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 5, 1), out _), "height 2 has no cell that is not a wall");
+			ClassicAssert.IsFalse(KingdomYardRules.TryYardInterior(R(0, 0, 0, 0), out _), "a single cell is all wall");
 		}
 
 		[Test]
 		public void ARectExactlyThreeWideHasOneYardColumn()
 		{
-			Assert.IsTrue(KingdomYardRules.TryYardInterior(R(0, 0, 2, 5), out var interior));
-			Assert.AreEqual(1, interior.Width);
+			ClassicAssert.IsTrue(KingdomYardRules.TryYardInterior(R(0, 0, 2, 5), out var interior));
+			ClassicAssert.AreEqual(1, interior.Width);
 		}
 
 		// --- Eligibility: only a small or middling roofed house ----------------------------
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Medium, false, null, false)]
 		public void OnlyASmallOrMiddlingRoofedHouseIsEligible(Size Size, bool Open, string Category, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomYardRules.IsEligibleDesign(Size, Open, Category));
+			ClassicAssert.AreEqual(Expected, KingdomYardRules.IsEligibleDesign(Size, Open, Category));
 		}
 
 		// --- Parsing: authorable from XML like everything else ------------------------------
@@ -90,40 +91,40 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ParsingRefusesAMissingKey()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(null, "vine lattice", "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(null, "vine lattice", "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("Key", error);
 		}
 
 		[Test]
 		public void ParsingRefusesAMissingDisplayName()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", null, "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", null, "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("DisplayName", error);
 		}
 
 		[Test]
 		public void ParsingRefusesAMissingBlueprint()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", "vine lattice", null, null, "food:1", null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", "vine lattice", null, null, "food:1", null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("Blueprint", error);
 		}
 
 		[Test]
 		public void ParsingRefusesABadGoodsFlag()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("dyevat", "dye vat", "r_KingdomDyeVat", null, null, "maybe", out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("dyevat", "dye vat", "r_KingdomDyeVat", null, null, "maybe", out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("Goods", error);
 		}
 
 		[Test]
 		public void ParsingRefusesABadShadesTally()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, "craft", null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, "craft", null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("Shades", error);
 		}
 
@@ -131,8 +132,8 @@ namespace ThousandAndFirst.Tests
 		public void ParsingRefusesShadingOverTheCap()
 		{
 			string shades = "craft:" + (KingdomYardRules.MaxShadePerWork + 1);
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, shades, null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, shades, null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("hiderack", error);
 		}
 
@@ -140,66 +141,66 @@ namespace ThousandAndFirst.Tests
 		public void ParsingAcceptsShadingExactlyAtTheCap()
 		{
 			string shades = "craft:" + KingdomYardRules.MaxShadePerWork;
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, shades, null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(KingdomYardRules.MaxShadePerWork, spec.Shades[0].Amount);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", null, shades, null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(KingdomYardRules.MaxShadePerWork, spec.Shades[0].Amount);
 		}
 
 		[Test]
 		public void ParsingSumsMultiplePairsAgainstTheCap()
 		{
 			// craft:1,food:1 sums to two, which is at the cap and must pass; three must not.
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("k1", "k1", "bp", null, "craft:1,food:1", null, out _, out var okError));
-			Assert.IsNull(okError);
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("k2", "k2", "bp", null, "craft:1,food:1,learning:1", null, out var spec, out var badError));
-			Assert.IsNull(spec);
-			Assert.IsNotNull(badError);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("k1", "k1", "bp", null, "craft:1,food:1", null, out _, out var okError));
+			ClassicAssert.IsNull(okError);
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("k2", "k2", "bp", null, "craft:1,food:1,learning:1", null, out var spec, out var badError));
+			ClassicAssert.IsNull(spec);
+			ClassicAssert.IsNotNull(badError);
 		}
 
 		[Test]
 		public void ParsingFallsBackTheTradeToTheDisplayNameWhenNoneIsGiven()
 		{
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", "vine lattice", "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual("vine lattice", spec.Trade);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("vinelattice", "vine lattice", "r_KingdomVineLattice", null, "food:1", null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("vine lattice", spec.Trade);
 		}
 
 		[Test]
 		public void ParsingKeepsAnExplicitTradeOverTheDisplayName()
 		{
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", "tanning", "craft:1", null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual("tanning", spec.Trade);
-			Assert.AreEqual("hide rack", spec.DisplayName);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("hiderack", "hide rack", "r_KingdomHideRack", "tanning", "craft:1", null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("tanning", spec.Trade);
+			ClassicAssert.AreEqual("hide rack", spec.DisplayName);
 		}
 
 		[Test]
 		public void ParsingAcceptsAWorkThatShadesNothingAtAll()
 		{
 			// Flavor-only third-party work: no Shades, no Goods. Legal, not an error.
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("kitchengarden", "kitchen garden", "r_KingdomKitchenGarden", null, null, null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.IsNotNull(spec.Shades);
-			Assert.AreEqual(0, spec.Shades.Count);
-			Assert.IsFalse(spec.FeedsGoods);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("kitchengarden", "kitchen garden", "r_KingdomKitchenGarden", null, null, null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsNotNull(spec.Shades);
+			ClassicAssert.AreEqual(0, spec.Shades.Count);
+			ClassicAssert.IsFalse(spec.FeedsGoods);
 		}
 
 		[Test]
 		public void ParsingReadsTheGoodsFlag()
 		{
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("dyevat", "dye vat", "r_KingdomDyeVat", "dyeing", null, "yes", out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.IsTrue(spec.FeedsGoods);
-			Assert.AreEqual(0, spec.Shades.Count);
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes("dyevat", "dye vat", "r_KingdomDyeVat", "dyeing", null, "yes", out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsTrue(spec.FeedsGoods);
+			ClassicAssert.AreEqual(0, spec.Shades.Count);
 		}
 
 		[Test]
 		public void GoodsAreInsteadOfEquilibriumSupportNotAlongsideIt()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("double",
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes("double",
 				"double work", "bp", "double dealing", "food:1", "yes",
 				out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("both Goods and Shades", error);
 		}
 
@@ -307,12 +308,12 @@ namespace ThousandAndFirst.Tests
 			// nothing.
 			Spec spec;
 			string error;
-            Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
+            ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
 				"vinelattice", "vine lattice", "r_KingdomVineLattice", "tending the vine", "food:1", null, out spec, out error), error);
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), spec.Shades, 100);
-			Assert.AreEqual(1, tally.Food);
-			Assert.AreEqual(0, tally.Works, "a household's sideline is not a second thing standing");
+			ClassicAssert.AreEqual(1, tally.Food);
+			ClassicAssert.AreEqual(0, tally.Works, "a household's sideline is not a second thing standing");
 		}
 
 		[Test]
@@ -322,11 +323,11 @@ namespace ThousandAndFirst.Tests
 			// trade is worth MaxShadePerWork and never competes with a purpose-built design.
 			Spec spec;
 			string error;
-			Assert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
+			ClassicAssert.IsTrue(KingdomYardRules.TryParseYardWorkAttributes(
 				"k", "k", "b", null, "craft:1,learning:1", null, out spec, out error), error);
-			Assert.AreEqual(KingdomYardRules.MaxShadePerWork, KingdomCatalogueRules.FoldShade(
+			ClassicAssert.AreEqual(KingdomYardRules.MaxShadePerWork, KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), spec.Shades, 100).Lift);
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(
 				"k", "k", "b", null, "craft:2,learning:1", null, out spec, out error),
 				"a file that shades past the cap is refused before anything can fold it");
 		}

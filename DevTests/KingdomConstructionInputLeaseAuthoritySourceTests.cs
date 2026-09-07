@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,7 +23,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("GetZone(", authority);
 			StringAssert.DoesNotContain("GetObjects(", authority);
 			StringAssert.DoesNotContain("KingdomSurvey.Take", authority);
-			Assert.LessOrEqual(authority.Split('\n').Length, 300);
+			ClassicAssert.LessOrEqual(authority.Split('\n').Length, 300);
 
 			string planner = Read("Growth/KingdomConstruction.InputPlannerAuthority.cs");
 			StringAssert.Contains("KingdomConstructionInputLeaseAuthority.TryCapture", planner);
@@ -89,7 +90,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, markers[i]);
+				ClassicAssert.Greater(next, at, markers[i]);
 				at = next;
 			}
 		}

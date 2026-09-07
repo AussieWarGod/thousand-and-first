@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -21,11 +22,11 @@ namespace ThousandAndFirst.Tests
 				"Resident " + id, 0, 0, 100L, 0, 0, 0, KingdomDayShape.Hearth,
 				KingdomResidentStanding.Resident, KingdomStandingCause.None, Zone,
 				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0)).ToArray();
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				KingdomIdentityRules.SettlementPrefix + new string(identity, 64), 100L,
 				default(KingdomStocks), null, null, rows, null, out KingdomCityState state, out KingdomCityFault fault), fault.ToString());
 			KingdomCityBook book = new KingdomCityBook();
-			Assert.IsTrue(book.TryPublish(state, out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(state, out fault), fault.ToString());
 			return book;
 		}
 
@@ -33,10 +34,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable table = KingdomBindingTable.Empty;
 			if (key != 0)
-				Assert.IsTrue(table.TryBind(key, kind, Zone, "exact-body-" + key, 100L,
+				ClassicAssert.IsTrue(table.TryBind(key, kind, Zone, "exact-body-" + key, 100L,
 					out table, out KingdomCityFault fault), fault.ToString());
 			KingdomBindingRegistry registry = new KingdomBindingRegistry();
-			Assert.IsTrue(registry.TryPublish(table, out KingdomCityFault published), published.ToString());
+			ClassicAssert.IsTrue(registry.TryPublish(table, out KingdomCityFault published), published.ToString());
 			return registry;
 		}
 
@@ -51,8 +52,8 @@ namespace ThousandAndFirst.Tests
 			{
 				object current = Field.GetValue(Owner);
 				if (Value == null || Field.FieldType.IsValueType || Value is string)
-					Assert.AreEqual(Value, current, Field.Name);
-				else Assert.AreSame(Value, current, Field.Name);
+					ClassicAssert.AreEqual(Value, current, Field.Name);
+				else ClassicAssert.AreSame(Value, current, Field.Name);
 				if (Items != null) CollectionAssert.AreEqual(Items, ((IList)current).Cast<object>().ToArray(), Field.Name);
 			}
 		}
@@ -76,15 +77,15 @@ namespace ThousandAndFirst.Tests
 			for (int attempt = 0; attempt < 2; attempt++)
 			{
 				if (exactReadBook != null)
-					Assert.AreEqual(exactReadExpected, exactReadBook.TryReadExact(
+					ClassicAssert.AreEqual(exactReadExpected, exactReadBook.TryReadExact(
 						out KingdomCityState _, out KingdomCityFault _));
-				Assert.AreEqual(expected, KingdomResidentCarrierAbsenceRules.ProvesAbsent(
+				ClassicAssert.AreEqual(expected, KingdomResidentCarrierAbsenceRules.ProvesAbsent(
 					intended, residentId, registry, books, expectedCount));
 				foreach (FieldSnapshot snapshot in before) snapshot.Check();
 				if (books != null)
 				{
-					Assert.AreEqual(priorBooks.Length, books.Count);
-					for (int i = 0; i < priorBooks.Length; i++) Assert.AreSame(priorBooks[i], books[i]);
+					ClassicAssert.AreEqual(priorBooks.Length, books.Count);
+					for (int i = 0; i < priorBooks.Length; i++) ClassicAssert.AreSame(priorBooks[i], books[i]);
 				}
 			}
 		}
@@ -219,11 +220,11 @@ namespace ThousandAndFirst.Tests
 			book.ResidentArrived[0] = ""; book.ResidentBoundZoneIds[0] = "";
 			book.ResidentCreedToward[0] = ""; book.ResidentKeptCreeds[0] = "";
 			CheckExactCity(true, book);
-			Assert.IsTrue(book.TryReadExact(out KingdomCityState state, out KingdomCityFault _));
-			Assert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
-			Assert.AreEqual("", row.Name); Assert.AreEqual("", row.Origin);
-			Assert.AreEqual("", row.Arrived); Assert.AreEqual("", row.BoundZoneId);
-			Assert.IsNull(row.CreedToward); Assert.IsNull(row.KeptCreeds);
+			ClassicAssert.IsTrue(book.TryReadExact(out KingdomCityState state, out KingdomCityFault _));
+			ClassicAssert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
+			ClassicAssert.AreEqual("", row.Name); ClassicAssert.AreEqual("", row.Origin);
+			ClassicAssert.AreEqual("", row.Arrived); ClassicAssert.AreEqual("", row.BoundZoneId);
+			ClassicAssert.IsNull(row.CreedToward); ClassicAssert.IsNull(row.KeptCreeds);
 		}
 
 		[TestCase(true)]
@@ -243,12 +244,12 @@ namespace ThousandAndFirst.Tests
 				book.ResidentRoofWarnedTicks[0] = KingdomBrinkRules.Unwarned;
 			}
 			CheckExactCity(true, book);
-			Assert.IsTrue(book.TryReadExact(out KingdomCityState state, out KingdomCityFault _));
-			Assert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
+			ClassicAssert.IsTrue(book.TryReadExact(out KingdomCityState state, out KingdomCityFault _));
+			ClassicAssert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
 			KingdomBrinkWindow brink = creed ? row.CreedBrink : row.RoofBrink;
-			Assert.IsTrue(brink.Stands); Assert.AreEqual(100L, brink.ReachedTick);
-			Assert.AreEqual(KingdomBrinkRules.Unwarned, brink.WarnedTick);
-			if (creed) { Assert.AreEqual("Mechanimists", row.CreedToward); Assert.AreEqual(1, row.CreedChannel); }
+			ClassicAssert.IsTrue(brink.Stands); ClassicAssert.AreEqual(100L, brink.ReachedTick);
+			ClassicAssert.AreEqual(KingdomBrinkRules.Unwarned, brink.WarnedTick);
+			if (creed) { ClassicAssert.AreEqual("Mechanimists", row.CreedToward); ClassicAssert.AreEqual(1, row.CreedChannel); }
 		}
 
 		[TestCase("duplicate-reference")]

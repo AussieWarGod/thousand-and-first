@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], offset, System.StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
 				offset = found + Terms[i].Length;
 			}
 		}

@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		{
 			var r = DeathFixture.Receipt(); r.RoleFault = "Exact role authority awaits native proof";
 			var copy = DeathFixture.RoundTrip(DeathFixture.Journal(r)).Entries[0];
-			Assert.AreEqual(r.RoleFault, copy.RoleFault); Assert.AreEqual(KingdomResidentDeathPhase.Witnessed, copy.Phase);
+			ClassicAssert.AreEqual(r.RoleFault, copy.RoleFault); ClassicAssert.AreEqual(KingdomResidentDeathPhase.Witnessed, copy.Phase);
 		}
 
 		[Test]
@@ -37,16 +38,16 @@ namespace ThousandAndFirst.Tests
 		{
 			var original = Full(); var journal = DeathFixture.Journal(original);
 			var loaded = DeathFixture.RoundTrip(journal); var copy = loaded.Entries[0];
-			Assert.AreNotSame(journal, loaded); Assert.AreNotSame(journal.Entries, loaded.Entries);
-			Assert.AreNotSame(original, copy); Assert.AreEqual(journal.Realm, loaded.Realm); Assert.AreEqual(journal.Settlement, loaded.Settlement);
+			ClassicAssert.AreNotSame(journal, loaded); ClassicAssert.AreNotSame(journal.Entries, loaded.Entries);
+			ClassicAssert.AreNotSame(original, copy); ClassicAssert.AreEqual(journal.Realm, loaded.Realm); ClassicAssert.AreEqual(journal.Settlement, loaded.Settlement);
 			foreach (var field in typeof(KingdomResidentDeathReceipt).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
 			{
 				object before = field.GetValue(original), after = field.GetValue(copy);
-				if (before is Array) { Assert.AreNotSame(before, after, field.Name); CollectionAssert.AreEqual((IEnumerable)before, (IEnumerable)after, field.Name); }
-				else Assert.AreEqual(before, after, field.Name);
+				if (before is Array) { ClassicAssert.AreNotSame(before, after, field.Name); CollectionAssert.AreEqual((IEnumerable)before, (IEnumerable)after, field.Name); }
+				else ClassicAssert.AreEqual(before, after, field.Name);
 			}
 			StringAssert.StartsWith("rd1:", DeathFixture.Wire(loaded));
-			Assert.AreEqual(KingdomResidentDeathCodec.Row(original.Before), KingdomResidentDeathCodec.Row(copy.Before));
+			ClassicAssert.AreEqual(KingdomResidentDeathCodec.Row(original.Before), KingdomResidentDeathCodec.Row(copy.Before));
 		}
 
 		[TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)] [TestCase(6)]
@@ -56,8 +57,8 @@ namespace ThousandAndFirst.Tests
 			r.Phase = (KingdomResidentDeathPhase)phase;
 			if (phase == 6) { r.Telling = KingdomResidentDeathTelling.Uncertain; r.BeforeAccounts = r.AfterAccounts = new string[0]; }
 			var loaded = DeathFixture.RoundTrip(DeathFixture.Journal(r)).Entries[0];
-			Assert.AreEqual(r.Phase, loaded.Phase); Assert.AreEqual(r.Telling, loaded.Telling);
-			Assert.AreEqual(phase == 4 || phase == 5 ? 6 : 0, loaded.BeforeAccounts.Length);
+			ClassicAssert.AreEqual(r.Phase, loaded.Phase); ClassicAssert.AreEqual(r.Telling, loaded.Telling);
+			ClassicAssert.AreEqual(phase == 4 || phase == 5 ? 6 : 0, loaded.BeforeAccounts.Length);
 		}
 
 		[TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
@@ -67,7 +68,7 @@ namespace ThousandAndFirst.Tests
 			r.Telling = (KingdomResidentDeathTelling)telling;
 			if (telling >= 2) { r.Phase = KingdomResidentDeathPhase.Settled; r.BeforeAccounts = r.AfterAccounts = new string[0]; }
 			var restored = DeathFixture.RoundTrip(DeathFixture.Journal(r)).Entries[0];
-			Assert.AreEqual(r.Telling, restored.Telling); Assert.AreEqual(r.Memory, restored.Memory);
+			ClassicAssert.AreEqual(r.Telling, restored.Telling); ClassicAssert.AreEqual(r.Memory, restored.Memory);
 		}
 
 		[Test]
@@ -78,7 +79,7 @@ namespace ThousandAndFirst.Tests
 			{
 				var cut = new byte[length]; Array.Copy(bytes, cut, length); Refuses(Wire(cut), "length=" + length);
 			}
-			Assert.IsTrue(KingdomResidentDeathCodec.TryDecode(wire, out _));
+			ClassicAssert.IsTrue(KingdomResidentDeathCodec.TryDecode(wire, out _));
 		}
 
 		[Test]
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			byte[] original = Bytes(DeathFixture.Wire(DeathFixture.Journal(DeathFixture.Receipt())));
 			byte[] changed = (byte[])original.Clone(); changed[0] ^= 1; Refuses(Wire(changed));
 			changed = new byte[original.Length + 1]; Array.Copy(original, changed, original.Length); Refuses(Wire(changed));
-			Assert.Less(original[4], 128, "first canonical realm length uses one byte");
+			ClassicAssert.Less(original[4], 128, "first canonical realm length uses one byte");
 			changed = new byte[original.Length + 1]; Array.Copy(original, changed, 4);
 			changed[4] = (byte)(original[4] | 128); changed[5] = 0;
 			Array.Copy(original, 5, changed, 6, original.Length - 5); Refuses(Wire(changed));
@@ -102,9 +103,9 @@ namespace ThousandAndFirst.Tests
 		public void EmptyJournalIsExplicitCanonicalAndDifferentFromAbsence()
 		{
 			var empty = DeathFixture.Journal(); string wire = DeathFixture.Wire(empty);
-			Assert.IsTrue(KingdomResidentDeathCodec.TryDecode(wire, out var loaded)); Assert.AreEqual(0, loaded.Entries.Count);
-			Assert.AreEqual(DeathFixture.Realm, loaded.Realm); Assert.AreEqual(DeathFixture.Settlement, loaded.Settlement);
-			Refuses(null); Refuses(""); Assert.IsFalse(KingdomResidentDeathCodec.TryEncode(null, out string missing)); Assert.IsNull(missing);
+			ClassicAssert.IsTrue(KingdomResidentDeathCodec.TryDecode(wire, out var loaded)); ClassicAssert.AreEqual(0, loaded.Entries.Count);
+			ClassicAssert.AreEqual(DeathFixture.Realm, loaded.Realm); ClassicAssert.AreEqual(DeathFixture.Settlement, loaded.Settlement);
+			Refuses(null); Refuses(""); ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(null, out string missing)); ClassicAssert.IsNull(missing);
 		}
 
 		[Test]
@@ -114,10 +115,10 @@ namespace ThousandAndFirst.Tests
 			Refuses(wire.Insert(4, " ")); Refuses(wire + "\r\n");
 			for (int i = 0; i < 3 && !wire.EndsWith("=", StringComparison.Ordinal); i++)
 			{ r.Body += "x"; wire = DeathFixture.Wire(DeathFixture.Journal(r)); }
-			Assert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
 			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			int at = wire.Length - 1; while (wire[at] == '=') at--;
-			int value = alphabet.IndexOf(wire[at]); Assert.AreEqual(0, value & 1);
+			int value = alphabet.IndexOf(wire[at]); ClassicAssert.AreEqual(0, value & 1);
 			string forged = wire.Substring(0, at) + alphabet[value | 1] + wire.Substring(at + 1);
 			CollectionAssert.AreEqual(Bytes(wire), Bytes(forged)); Refuses(forged);
 		}
@@ -134,8 +135,8 @@ namespace ThousandAndFirst.Tests
 		{
 			var r = DeathFixture.Receipt(); string before = DeathFixture.Wire(DeathFixture.Journal(r)); var bad = r.Copy();
 			bad.Body += new string((char)code, 1);
-			Assert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(bad), out string wire)); Assert.IsNull(wire);
-			Assert.AreEqual(before, DeathFixture.Wire(DeathFixture.Journal(r)));
+			ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(bad), out string wire)); ClassicAssert.IsNull(wire);
+			ClassicAssert.AreEqual(before, DeathFixture.Wire(DeathFixture.Journal(r)));
 		}
 
 		[TestCase(-1)] [TestCase(4097)] [TestCase(int.MaxValue)]
@@ -151,13 +152,13 @@ namespace ThousandAndFirst.Tests
 		public void ForgedUnknownPhaseOrNoncanonicalBooleanBytesRefuse(string field)
 		{
 			var r = DeathFixture.Accounted(DeathFixture.Receipt()); byte[] bytes = Bytes(DeathFixture.Wire(DeathFixture.Journal(r)));
-			int proof = FindOnce(bytes, Encoding.UTF8.GetBytes(r.AccountProof)); Assert.AreEqual(64, bytes[proof - 1]);
+			int proof = FindOnce(bytes, Encoding.UTF8.GetBytes(r.AccountProof)); ClassicAssert.AreEqual(64, bytes[proof - 1]);
 			if (field == "phase") bytes[proof - 3] = 255;
 			else if (field == "telling") bytes[proof - 2] = 255;
 			else
 			{
 				byte[] row = Convert.FromBase64String(KingdomResidentDeathCodec.Row(r.Before));
-				int at = FindOnce(bytes, row) + row.Length; Assert.AreEqual((byte)r.Cause, bytes[at]);
+				int at = FindOnce(bytes, row) + row.Length; ClassicAssert.AreEqual((byte)r.Cause, bytes[at]);
 				bytes[at + 1] = 2;
 			}
 			Refuses(Wire(bytes));
@@ -186,15 +187,15 @@ namespace ThousandAndFirst.Tests
 			case "both-remembrance": r.Remembrance = r.RemembranceUnavailable = true; break;
 			case "disabled-remembrance": r.Memory = false; r.Telling = KingdomResidentDeathTelling.Disabled; r.Remembrance = true; break;
 			}
-			Assert.IsFalse(KingdomResidentDeathRules.Valid(r)); Assert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out string wire)); Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomResidentDeathRules.Valid(r)); ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out string wire)); ClassicAssert.IsNull(wire);
 		}
 
 		[Test]
 		public void DuplicateRowsAndAggregateOrPerFieldBoundsRefuseWithoutEviction()
 		{
-			var r = DeathFixture.Receipt(); Assert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r, r.Copy()), out _));
-			r.Body = new string('x', 1025); Assert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out _));
-			r.Body = new string('x', 1024); Assert.IsTrue(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out _));
+			var r = DeathFixture.Receipt(); ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r, r.Copy()), out _));
+			r.Body = new string('x', 1025); ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out _));
+			r.Body = new string('x', 1024); ClassicAssert.IsTrue(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(r), out _));
 			Refuses("rd1:" + new string('A', KingdomResidentDeathCodec.MaxWire));
 		}
 
@@ -203,8 +204,8 @@ namespace ThousandAndFirst.Tests
 		{
 			var map = new Dictionary<string, int>(StringComparer.Ordinal) { { "z", 3 }, { "a", 2 } };
 			var reverse = new Dictionary<string, int>(StringComparer.Ordinal) { { "a", 2 }, { "z", 3 } };
-			Assert.AreEqual(KingdomResidentDeathCodec.Map(map), KingdomResidentDeathCodec.Map(reverse));
-			Assert.AreEqual(2, map.Count); Assert.AreEqual(3, map["z"]); Assert.AreEqual(2, map["a"]);
+			ClassicAssert.AreEqual(KingdomResidentDeathCodec.Map(map), KingdomResidentDeathCodec.Map(reverse));
+			ClassicAssert.AreEqual(2, map.Count); ClassicAssert.AreEqual(3, map["z"]); ClassicAssert.AreEqual(2, map["a"]);
 			using (var stream = new MemoryStream()) using (var write = new BinaryWriter(stream))
 			{
 				write.Write(2); write.Write("a"); write.Write(1); write.Write("a"); write.Write(2); write.Flush();
@@ -218,14 +219,14 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i <= data.Length - needle.Length; i++)
 			{
 				int j = 0; while (j < needle.Length && data[i + j] == needle[j]) j++;
-				if (j != needle.Length) continue; Assert.AreEqual(-1, found, "fixture pattern must be unique"); found = i;
+				if (j != needle.Length) continue; ClassicAssert.AreEqual(-1, found, "fixture pattern must be unique"); found = i;
 			}
-			Assert.GreaterOrEqual(found, 0); return found;
+			ClassicAssert.GreaterOrEqual(found, 0); return found;
 		}
 		private static byte[] Bytes(string wire) => Convert.FromBase64String(wire.Substring(4));
 		private static string Wire(byte[] bytes) => "rd1:" + Convert.ToBase64String(bytes);
 		private static void Refuses(string wire, string reason = null)
-		{ Assert.IsFalse(KingdomResidentDeathCodec.TryDecode(wire, out var result), reason); Assert.IsNull(result, reason); }
+		{ ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryDecode(wire, out var result), reason); ClassicAssert.IsNull(result, reason); }
 	}
 }
 #endif

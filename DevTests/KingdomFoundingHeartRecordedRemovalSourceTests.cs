@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -165,9 +166,9 @@ namespace ThousandAndFirst.Tests
 				+ Between(Read(Drive), "private static bool ExactPreparedFoundingHeartFinal(",
 					"private static bool ExactSettledFoundingHeartFinal(")
 				+ Tail(Read("Growth/KingdomPlot2.07f.FoundingHeartStakeTruth.cs"), "private static bool ExactFoundingHeartFinalTruth(");
-			Assert.IsFalse(Regex.IsMatch(proof,
+			ClassicAssert.IsFalse(Regex.IsMatch(proof,
 				@"\b(?:Set\w*Property|Set\w*GameState|Ensure\w*|Repair\w*|Recover\w*|Publish\w*|Destroy\w*|Obliterate\w*|Remove\w*|Clear|Pool\w*|Release\w*|Create\w*|TryReadFoundingHeartTerminal|ExactSettledFoundingHeartFinal|ExactFinalBuilding|TryVerifyComplete|TryExactOutput|Quarantine\w*)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(proof + absent + Read("Growth/KingdomPlot2.07b.FoundingHeartIdentity.cs")
+			ClassicAssert.IsFalse(Regex.IsMatch(proof + absent + Read("Growth/KingdomPlot2.07b.FoundingHeartIdentity.cs")
 				+ Read("Growth/KingdomPlot2.32c.LoadedGraveyards.cs"),
 				@"\b(?:GetZone|LoadZone|FetchZone|ThawZone|Warm\w*|Pool\w*|Release\w*)\s*\("));
 		}
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 			Contains(Between(Read(Rules), "public static bool ExactRemovalTombstone(", "public static bool CanUseRecordedRemoval("),
 				"return CallbackReturned && CallbackResult && !PredecessorValid && ActiveIdAbsent && ExactIdentityTombstone");
 			StringAssert.DoesNotContain("CanUseRecordedRemoval", fresh);
-			Assert.AreEqual(1, Regex.Matches(Read(Settlement), @"\.Destroy\s*\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(Read(Settlement), @"\.Destroy\s*\(").Count);
 		}
 
 		[Test]
@@ -219,10 +220,10 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			source = Compact(source); start = Compact(start);
-			int first = source.IndexOf(start, StringComparison.Ordinal); Assert.GreaterOrEqual(first, 0, start);
+			int first = source.IndexOf(start, StringComparison.Ordinal); ClassicAssert.GreaterOrEqual(first, 0, start);
 			if (end == null) return source.Substring(first);
 			int last = source.IndexOf(Compact(end), first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end); return source.Substring(first, last - first);
+			ClassicAssert.Greater(last, first, end); return source.Substring(first, last - first);
 		}
 		private static void Contains(string source, params string[] tokens)
 		{
@@ -234,7 +235,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				string expected = Compact(token); int at = compact.IndexOf(expected, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
 			}
 		}
 	}

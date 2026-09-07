@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -31,10 +32,10 @@ namespace ThousandAndFirst.Tests
 		public void ConstantsAndAuthorityDeclarationStayUnique()
 		{
 			string source = KingdomPortersLogicalSource.Read();
-			Assert.AreEqual(11, Count(source, "public static partial class KingdomPorters"));
-			Assert.AreEqual(1, Count(source, "public const int LoadPerTrip = 12"));
-			Assert.AreEqual(1, Count(source, "public const string StockProperty"));
-			Assert.AreEqual(1, Count(source, "private static void Handoff("));
+			ClassicAssert.AreEqual(11, Count(source, "public static partial class KingdomPorters"));
+			ClassicAssert.AreEqual(1, Count(source, "public const int LoadPerTrip = 12"));
+			ClassicAssert.AreEqual(1, Count(source, "public const string StockProperty"));
+			ClassicAssert.AreEqual(1, Count(source, "private static void Handoff("));
 			StringAssert.DoesNotContain("public static class KingdomPorters", source);
 		}
 
@@ -67,7 +68,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,54 +21,54 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = Admitted();
 			string before = Wire(book);
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name, binding,
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name, binding,
 				out KingdomSubsidenceBatch batch));
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name, binding,
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name, binding,
 				out KingdomSubsidenceBatch repeated));
-			Assert.AreEqual(BatchWire(batch), BatchWire(repeated));
-			Assert.IsTrue(batch.Id.StartsWith(KingdomSubsidenceBatchRules.Prefix, StringComparison.Ordinal));
-			Assert.AreEqual(Realm, batch.RealmId); Assert.AreEqual(Settlement, batch.SettlementId);
-			Assert.AreEqual(name, batch.Name); Assert.AreEqual(binding, batch.Binding);
-			Assert.AreEqual(1, batch.FirstSequence); Assert.AreEqual(Anchor, batch.AnchorTick);
-			Assert.AreEqual(Through, batch.ThroughTick); Assert.AreEqual(10, batch.Wanted);
-			Assert.AreEqual(0, batch.Departed); Assert.IsFalse(batch.Closing); Assert.AreEqual(0, batch.ClosedTick);
-			Assert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, batch.ReportModel);
-			Assert.AreEqual(before, Wire(book));
-			Assert.AreEqual(name, Batch(RoundTrip(book.WithBatch(BatchWire(batch)))).Name);
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name + "!", binding,
+			ClassicAssert.AreEqual(BatchWire(batch), BatchWire(repeated));
+			ClassicAssert.IsTrue(batch.Id.StartsWith(KingdomSubsidenceBatchRules.Prefix, StringComparison.Ordinal));
+			ClassicAssert.AreEqual(Realm, batch.RealmId); ClassicAssert.AreEqual(Settlement, batch.SettlementId);
+			ClassicAssert.AreEqual(name, batch.Name); ClassicAssert.AreEqual(binding, batch.Binding);
+			ClassicAssert.AreEqual(1, batch.FirstSequence); ClassicAssert.AreEqual(Anchor, batch.AnchorTick);
+			ClassicAssert.AreEqual(Through, batch.ThroughTick); ClassicAssert.AreEqual(10, batch.Wanted);
+			ClassicAssert.AreEqual(0, batch.Departed); ClassicAssert.IsFalse(batch.Closing); ClassicAssert.AreEqual(0, batch.ClosedTick);
+			ClassicAssert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, batch.ReportModel);
+			ClassicAssert.AreEqual(before, Wire(book));
+			ClassicAssert.AreEqual(name, Batch(RoundTrip(book.WithBatch(BatchWire(batch)))).Name);
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, name + "!", binding,
 				out KingdomSubsidenceBatch renamed));
-			Assert.AreNotEqual(batch.Id, renamed.Id);
+			ClassicAssert.AreNotEqual(batch.Id, renamed.Id);
 		}
 
 		[Test]
 		public void InclusiveNameCountSpanAndLastRepresentableDueBoundsRemainUsable()
 		{
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(Admitted(), 0,
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(Admitted(), 0,
 				KingdomSubsidenceRules.MaxSteps * Step, KingdomRules.MaxPopulation, new string('n', 512), "water",
 				out KingdomSubsidenceBatch largest));
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(BatchWire(largest), out _));
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(Admitted(), long.MaxValue - Step,
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(BatchWire(largest), out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(Admitted(), long.MaxValue - Step,
 				long.MaxValue, 1, "Last due tick", "roof", out KingdomSubsidenceBatch latest));
-			Assert.AreEqual(long.MaxValue, latest.ThroughTick);
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(BatchWire(latest), out _));
+			ClassicAssert.AreEqual(long.MaxValue, latest.ThroughTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(BatchWire(latest), out _));
 		}
 
 		[Test]
 		public void NewBatchMayStartAfterAnOlderRetiredReceiptWithoutRewritingThatReceipt()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due, GrowthStage.City,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due, GrowthStage.City,
 				5, out KingdomSubsidenceStepBook book, 0, "water"));
 			for (int id = 1; id <= 5; id++) Credit(ref book, id);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book));
 			string before = Wire(book); long anchor = Due + 200;
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, anchor, anchor + Step, 5,
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, anchor, anchor + Step, 5,
 				"Later batch", "water", out KingdomSubsidenceBatch batch));
-			Assert.AreEqual(2, batch.FirstSequence);
+			ClassicAssert.AreEqual(2, batch.FirstSequence);
 			KingdomSubsidenceStepBook attached = RoundTrip(book.WithBatch(BatchWire(batch)));
-			Assert.AreEqual(Due, attached.LastRetiredTick); Assert.AreEqual(before, Wire(book));
-			Assert.IsFalse(KingdomSubsidenceBatchRules.TryBegin(book, Due - 1, Due - 1 + Step, 5,
+			ClassicAssert.AreEqual(Due, attached.LastRetiredTick); ClassicAssert.AreEqual(before, Wire(book));
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchRules.TryBegin(book, Due - 1, Due - 1 + Step, 5,
 				"Before receipt", "water", out KingdomSubsidenceBatch refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 		}
 
 		[TestCase("null-name")] [TestCase("empty-name")] [TestCase("long-name")]
@@ -95,9 +96,9 @@ namespace ThousandAndFirst.Tests
 				default: wanted = KingdomRules.MaxPopulation + 1; break;
 			}
 			KingdomSubsidenceStepBook book = Admitted(); string before = Wire(book);
-			Assert.IsFalse(KingdomSubsidenceBatchRules.TryBegin(book, anchor, through, wanted, name, binding,
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchRules.TryBegin(book, anchor, through, wanted, name, binding,
 				out KingdomSubsidenceBatch refused));
-			Assert.IsNull(refused); Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsNull(refused); ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[Test]
@@ -106,21 +107,21 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceStepBook book = BeginStep(Attached());
 			string batchBefore = book.BatchModel;
 			Credit(ref book, 1);
-			Assert.AreEqual(1, book.Active.Completed); Assert.AreEqual(0, Batch(book).Departed);
-			Assert.AreEqual(batchBefore, RoundTrip(book).BatchModel);
+			ClassicAssert.AreEqual(1, book.Active.Completed); ClassicAssert.AreEqual(0, Batch(book).Departed);
+			ClassicAssert.AreEqual(batchBefore, RoundTrip(book).BatchModel);
 			for (int id = 2; id <= 5; id++)
 			{
 				Credit(ref book, id);
-				Assert.AreEqual(batchBefore, book.BatchModel);
+				ClassicAssert.AreEqual(batchBefore, book.BatchModel);
 			}
 			KingdomSubsidenceStepBook completed = book; string before = Wire(completed);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(completed, Due, out book));
-			Assert.AreEqual(5, Batch(book).Departed); Assert.IsNull(book.Active);
-			Assert.AreEqual(1, book.Sequence); Assert.AreEqual(Due, book.LastRetiredTick);
-			Assert.AreEqual(before, Wire(completed)); Assert.AreEqual(0, Batch(completed).Departed);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(completed, Due, out book));
+			ClassicAssert.AreEqual(5, Batch(book).Departed); ClassicAssert.IsNull(book.Active);
+			ClassicAssert.AreEqual(1, book.Sequence); ClassicAssert.AreEqual(Due, book.LastRetiredTick);
+			ClassicAssert.AreEqual(before, Wire(completed)); ClassicAssert.AreEqual(0, Batch(completed).Departed);
 			book = RoundTrip(book);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, Due, out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused); Assert.AreEqual(5, Batch(book).Departed);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, Due, out KingdomSubsidenceStepBook refused));
+			ClassicAssert.IsNull(refused); ClassicAssert.AreEqual(5, Batch(book).Departed);
 		}
 
 		[Test]
@@ -137,14 +138,14 @@ namespace ThousandAndFirst.Tests
 					if (KingdomSubsidenceRules.TellsDeparture(batch.Departed + book.Active.Completed, batch.Wanted)) named.Add(id);
 					Credit(ref book, id);
 				}
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Anchor + (step + 1) * Step, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Anchor + (step + 1) * Step, out book));
 				book = RoundTrip(book);
-				Assert.AreEqual(step == 0 ? 2 : 3, KingdomSubsidenceBatchRules.Named(Batch(book)));
+				ClassicAssert.AreEqual(step == 0 ? 2 : 3, KingdomSubsidenceBatchRules.Named(Batch(book)));
 			}
 			CollectionAssert.AreEqual(new[] { 1, 2, 10 }, named);
-			Assert.AreEqual(10, Batch(book).Departed); Assert.IsTrue(Batch(book).Closing);
-			Assert.AreEqual(Through, Batch(book).ClosedTick);
-			Assert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, Batch(book).ReportModel);
+			ClassicAssert.AreEqual(10, Batch(book).Departed); ClassicAssert.IsTrue(Batch(book).Closing);
+			ClassicAssert.AreEqual(Through, Batch(book).ClosedTick);
+			ClassicAssert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, Batch(book).ReportModel);
 		}
 
 		[Test]
@@ -152,22 +153,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = BeginStep(Attached()); Credit(ref book, 1); Credit(ref book, 2);
 			long cancelledAt = Due + 200;
-			Assert.IsTrue(KingdomSubsidenceOptionRules.Observe(new KingdomDurableKeyObservation
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.Observe(new KingdomDurableKeyObservation
 				{ HasString = true, String = "v1|E|100|2" }, false, 2, cancelledAt,
 				out KingdomSubsidenceOptionRules.Snapshot snapshot).Valid);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(book, Anchor, snapshot,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(book, Anchor, snapshot,
 				out KingdomSubsidenceOptionIntent intent));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryFreezeOption(book, intent, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, cancelledAt, 2, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryFreezeOption(book, intent, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, cancelledAt, 2, out book));
 			book = RoundTrip(book); string before = Wire(book), option = book.OptionModel;
-			Assert.AreEqual(0, Batch(book).Departed);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, cancelledAt + 1, out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused); Assert.AreEqual(before, Wire(book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, cancelledAt, out book));
+			ClassicAssert.AreEqual(0, Batch(book).Departed);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, cancelledAt + 1, out KingdomSubsidenceStepBook refused));
+			ClassicAssert.IsNull(refused); ClassicAssert.AreEqual(before, Wire(book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, cancelledAt, out book));
 			book = RoundTrip(book);
-			Assert.AreEqual(2, Batch(book).Departed); Assert.AreEqual(2, KingdomSubsidenceBatchRules.Named(Batch(book)));
-			Assert.IsTrue(Batch(book).Closing); Assert.AreEqual(cancelledAt, Batch(book).ClosedTick);
-			Assert.AreEqual(cancelledAt, book.LastRetiredTick); Assert.AreEqual(option, book.OptionModel);
+			ClassicAssert.AreEqual(2, Batch(book).Departed); ClassicAssert.AreEqual(2, KingdomSubsidenceBatchRules.Named(Batch(book)));
+			ClassicAssert.IsTrue(Batch(book).Closing); ClassicAssert.AreEqual(cancelledAt, Batch(book).ClosedTick);
+			ClassicAssert.AreEqual(cancelledAt, book.LastRetiredTick); ClassicAssert.AreEqual(option, book.OptionModel);
 		}
 
 		[TestCase(false)] [TestCase(true)]
@@ -178,15 +179,15 @@ namespace ThousandAndFirst.Tests
 			string before = Wire(book);
 			foreach (long wrong in new[] { checkpoint - 1, checkpoint + 1 })
 			{
-				Assert.IsFalse(KingdomSubsidenceBatchRules.TryClose(batch, book, wrong, out KingdomSubsidenceBatch refused));
-				Assert.IsNull(refused);
+				ClassicAssert.IsFalse(KingdomSubsidenceBatchRules.TryClose(batch, book, wrong, out KingdomSubsidenceBatch refused));
+				ClassicAssert.IsNull(refused);
 			}
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryClose(batch, book, checkpoint, out KingdomSubsidenceBatch closed));
-			Assert.IsTrue(closed.Closing); Assert.AreEqual(retired ? 5 : 0, closed.Departed);
-			Assert.AreEqual(checkpoint, closed.ClosedTick); Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryClose(batch, book, checkpoint, out KingdomSubsidenceBatch closed));
+			ClassicAssert.IsTrue(closed.Closing); ClassicAssert.AreEqual(retired ? 5 : 0, closed.Departed);
+			ClassicAssert.AreEqual(checkpoint, closed.ClosedTick); ClassicAssert.AreEqual(before, Wire(book));
 			book = RoundTrip(book.WithBatch(BatchWire(closed)));
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryClose(closed, book, checkpoint, out KingdomSubsidenceBatch repeated));
-			Assert.AreSame(closed, repeated);
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryClose(closed, book, checkpoint, out KingdomSubsidenceBatch repeated));
+			ClassicAssert.AreSame(closed, repeated);
 		}
 
 		[TestCase("offset")] [TestCase("binding")] [TestCase("beyond-through")] [TestCase("closed")]
@@ -198,13 +199,13 @@ namespace ThousandAndFirst.Tests
 			if (change == "beyond-through") anchor = Through;
 			if (change == "closed")
 			{
-				Assert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Anchor, out KingdomSubsidenceBatch closed));
+				ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Anchor, out KingdomSubsidenceBatch closed));
 				book = book.WithBatch(BatchWire(closed));
 			}
 			string before = Wire(book);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryBegin(book, anchor, anchor + Step, GrowthStage.City,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryBegin(book, anchor, anchor + Step, GrowthStage.City,
 				5, out KingdomSubsidenceStepBook refused, 0, binding));
-			Assert.IsNull(refused); Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsNull(refused); ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[TestCase("exact", true)] [TestCase("empty", false)] [TestCase("wrong-date", false)]
@@ -212,27 +213,27 @@ namespace ThousandAndFirst.Tests
 		public void ClosingUnnamedDeparturesRequireOneReportBoundToOwnerAndClosedTick(string change, bool expected)
 		{
 			KingdomSubsidenceStepBook book = RetiredOne();
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Due, out KingdomSubsidenceBatch closed));
-			Assert.AreEqual(5, closed.Departed); Assert.AreEqual(2, KingdomSubsidenceBatchRules.Named(closed));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Due, out KingdomSubsidenceBatch closed));
+			ClassicAssert.AreEqual(5, closed.Departed); ClassicAssert.AreEqual(2, KingdomSubsidenceBatchRules.Named(closed));
 			string before = BatchWire(closed);
 			string owner = change == "foreign-owner" ? KingdomSubsidenceBatchRules.Prefix + new string('c', 64) : closed.Id;
 			KingdomSubsidenceReportEntry entry = new KingdomSubsidenceReportEntry("Three more departed", "",
 				change == "wrong-date" ? closed.ClosedTick + 1 : closed.ClosedTick);
 			KingdomSubsidenceReportEntry[] entries = change == "empty" ? new KingdomSubsidenceReportEntry[0]
 				: change == "two-lines" ? new[] { entry, entry } : new[] { entry };
-			Assert.IsTrue(KingdomSubsidenceReportCodec.TryEncode(new KingdomSubsidenceReportPlan(owner, Realm,
+			ClassicAssert.IsTrue(KingdomSubsidenceReportCodec.TryEncode(new KingdomSubsidenceReportPlan(owner, Realm,
 				Settlement, entries), out string reportWire));
 			KingdomSubsidenceBatch changed = closed.Copy(reportModel: reportWire);
-			Assert.AreEqual(expected, KingdomSubsidenceBatchRules.Valid(changed));
-			Assert.AreEqual(expected, KingdomSubsidenceBatchCodec.TryEncode(changed, out string wire));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceBatchRules.Valid(changed));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceBatchCodec.TryEncode(changed, out string wire));
 			if (expected)
 			{
 				KingdomSubsidenceStepBook restored = RoundTrip(book.WithBatch(wire));
-				Assert.AreEqual(reportWire, Batch(restored).ReportModel);
-				Assert.IsNull(restored.Active); Assert.AreEqual(Due, restored.LastRetiredTick);
+				ClassicAssert.AreEqual(reportWire, Batch(restored).ReportModel);
+				ClassicAssert.IsNull(restored.Active); ClassicAssert.AreEqual(Due, restored.LastRetiredTick);
 			}
-			else Assert.IsNull(wire);
-			Assert.AreEqual(before, BatchWire(closed));
+			else ClassicAssert.IsNull(wire);
+			ClassicAssert.AreEqual(before, BatchWire(closed));
 		}
 
 		[TestCase(0, true)] [TestCase(1, true)] [TestCase(2, true)]
@@ -241,17 +242,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = BeginStep(Attached());
 			for (int id = 1; id <= departed; id++) Credit(ref book, id);
-			if (departed < 5) Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due, 2, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book));
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Due, out KingdomSubsidenceBatch closed));
-			Assert.AreEqual(departed, closed.Departed);
-			Assert.AreEqual(Math.Min(2, departed), KingdomSubsidenceBatchRules.Named(closed));
+			if (departed < 5) ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due, 2, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryClose(Batch(book), book, Due, out KingdomSubsidenceBatch closed));
+			ClassicAssert.AreEqual(departed, closed.Departed);
+			ClassicAssert.AreEqual(Math.Min(2, departed), KingdomSubsidenceBatchRules.Named(closed));
 			KingdomSubsidenceBatch omitted = closed.Copy(reportModel: KingdomSubsidenceBatchRules.NoReport);
-			Assert.AreEqual(expected, KingdomSubsidenceBatchRules.Valid(omitted));
-			Assert.AreEqual(expected, KingdomSubsidenceBatchCodec.TryEncode(omitted, out string wire));
-			if (expected) Assert.AreEqual(KingdomSubsidenceBatchRules.NoReport, Batch(RoundTrip(book.WithBatch(wire))).ReportModel);
-			else Assert.IsNull(wire);
-			Assert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, closed.ReportModel);
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceBatchRules.Valid(omitted));
+			ClassicAssert.AreEqual(expected, KingdomSubsidenceBatchCodec.TryEncode(omitted, out string wire));
+			if (expected) ClassicAssert.AreEqual(KingdomSubsidenceBatchRules.NoReport, Batch(RoundTrip(book.WithBatch(wire))).ReportModel);
+			else ClassicAssert.IsNull(wire);
+			ClassicAssert.AreEqual(KingdomSubsidenceBatchRules.PendingReport, closed.ReportModel);
 		}
 
 		[TestCase("realm")] [TestCase("settlement")] [TestCase("retired-clock")]
@@ -269,10 +270,10 @@ namespace ThousandAndFirst.Tests
 			if (change == "closed-clock") batch = batch.Copy(closing: true, closedTick: Due - 1);
 			KingdomSubsidenceStepBook forged = new KingdomSubsidenceStepBook(KingdomSubsidenceAdmission.Admitted,
 				realm, settlement, sequence, null, retired, batchModel: BatchWire(batch));
-			Assert.IsFalse(KingdomSubsidenceBatchRules.MatchesShape(batch, forged));
-			Assert.IsFalse(KingdomSubsidenceStepRules.Valid(forged));
-			Assert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(forged, out string refused)); Assert.IsNull(refused);
-			Assert.AreEqual(5, Batch(original).Departed);
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchRules.MatchesShape(batch, forged));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.Valid(forged));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(forged, out string refused)); ClassicAssert.IsNull(refused);
+			ClassicAssert.AreEqual(5, Batch(original).Departed);
 		}
 
 		[TestCase("negative")] [TestCase("over-wanted")] [TestCase("premature-close-tick")]
@@ -287,15 +288,15 @@ namespace ThousandAndFirst.Tests
 			if (change == "identity") batch = new KingdomSubsidenceBatch(batch.Id + "x", batch.RealmId,
 				batch.SettlementId, batch.Name, batch.Binding, batch.FirstSequence, batch.AnchorTick,
 				batch.ThroughTick, batch.Wanted, batch.Departed, batch.Closing, batch.ClosedTick, batch.ReportModel);
-			Assert.IsFalse(KingdomSubsidenceBatchRules.Valid(batch));
-			Assert.IsFalse(KingdomSubsidenceBatchCodec.TryEncode(batch, out string wire)); Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchRules.Valid(batch));
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchCodec.TryEncode(batch, out string wire)); ClassicAssert.IsNull(wire);
 		}
 
 		[Test]
 		public void BatchCodecRefusesTruncationTrailingBytesBadBooleanAndOversize()
 		{
 			string wire = BatchWire(Batch(Attached()));
-			Assert.IsTrue(wire.StartsWith("sb1:", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(wire.StartsWith("sb1:", StringComparison.Ordinal));
 			byte[] bytes = Convert.FromBase64String(wire.Substring(4));
 			for (int length = 0; length < bytes.Length; length++) Refuses("sb1:" + Convert.ToBase64String(bytes, 0, length));
 			byte[] trailing = new byte[bytes.Length + 1]; Array.Copy(bytes, trailing, bytes.Length);
@@ -314,26 +315,26 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSubsidenceStepBook Admitted()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book)); return book;
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book)); return book;
 		}
 		private static KingdomSubsidenceStepBook Attached()
 		{
 			KingdomSubsidenceStepBook book = Admitted();
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, "Fixture", "water",
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, Anchor, Through, 10, "Fixture", "water",
 				out KingdomSubsidenceBatch batch)); return RoundTrip(book.WithBatch(BatchWire(batch)));
 		}
 		private static KingdomSubsidenceStepBook BeginStep(KingdomSubsidenceStepBook book)
 		{
 			long anchor = book.Sequence < Batch(book).FirstSequence ? Anchor : book.LastRetiredTick;
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, anchor, anchor + Step, GrowthStage.City,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, anchor, anchor + Step, GrowthStage.City,
 				5, out book, 0, "water")); return book;
 		}
 		private static KingdomSubsidenceStepBook RetiredOne()
 		{
 			KingdomSubsidenceStepBook book = BeginStep(Attached());
 			for (int id = 1; id <= 5; id++) Credit(ref book, id);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book)); return RoundTrip(book);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, Due, out book)); return RoundTrip(book);
 		}
 		private static void Credit(ref KingdomSubsidenceStepBook book, int id)
 		{
@@ -346,35 +347,35 @@ namespace ThousandAndFirst.Tests
 				ResidentName = "Batch fixture", PreparedTick = tick,
 				OperationId = KingdomResidentDepartureRules.Id(Realm, Settlement, id, body, tick)
 			};
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(op));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, op, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City,
-				out KingdomSubsidenceStepBook duplicate)); Assert.AreSame(book, duplicate);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, op.OperationId, out book));
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City, out duplicate));
-			Assert.IsNull(duplicate); book = RoundTrip(book);
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(op));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, op, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City,
+				out KingdomSubsidenceStepBook duplicate)); ClassicAssert.AreSame(book, duplicate);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, op.OperationId, out book));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.City, out duplicate));
+			ClassicAssert.IsNull(duplicate); book = RoundTrip(book);
 		}
 		private static KingdomSubsidenceBatch Batch(KingdomSubsidenceStepBook book)
 		{
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out KingdomSubsidenceBatch batch)); return batch;
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out KingdomSubsidenceBatch batch)); return batch;
 		}
 		private static string BatchWire(KingdomSubsidenceBatch batch)
 		{
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch, out string wire)); return wire;
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch, out string wire)); return wire;
 		}
 		private static string Wire(KingdomSubsidenceStepBook book)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire)); return wire;
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire)); return wire;
 		}
 		private static KingdomSubsidenceStepBook RoundTrip(KingdomSubsidenceStepBook book)
 		{
-			string wire = Wire(book); Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out book));
-			Assert.AreEqual(wire, Wire(book)); return book;
+			string wire = Wire(book); ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out book));
+			ClassicAssert.AreEqual(wire, Wire(book)); return book;
 		}
 		private static void Refuses(string wire)
 		{
-			Assert.IsFalse(KingdomSubsidenceBatchCodec.TryDecode(wire, out KingdomSubsidenceBatch batch)); Assert.IsNull(batch);
+			ClassicAssert.IsFalse(KingdomSubsidenceBatchCodec.TryDecode(wire, out KingdomSubsidenceBatch batch)); ClassicAssert.IsNull(batch);
 		}
 	}
 }

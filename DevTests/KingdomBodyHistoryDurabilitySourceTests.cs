@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tests;
 
 namespace ThousandAndFirst.DevTests

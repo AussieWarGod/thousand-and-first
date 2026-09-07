@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,8 +22,8 @@ namespace ThousandAndFirst.Tests
 			int create = runtime.IndexOf("KingdomPolityNpcRuntime.TryCreate", StringComparison.Ordinal);
 			int assign = runtime.IndexOf("prepared.ID = objectId", StringComparison.Ordinal);
 			int place = runtime.IndexOf("cell.AddObject(created)", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(prepare, 0); Assert.Greater(create, prepare);
-			Assert.Greater(assign, create); Assert.Greater(place, assign);
+			ClassicAssert.GreaterOrEqual(prepare, 0); ClassicAssert.Greater(create, prepare);
+			ClassicAssert.Greater(assign, create); ClassicAssert.Greater(place, assign);
 			string authority = Read("KingdomPolityCohortRules.Manifestation.cs");
 			StringAssert.Contains("ObjectIds = objects", authority);
 			StringAssert.Contains("Phase = KingdomPolityProjectionPhase.Prepared", authority);
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 			int committed = runtime.IndexOf(
 				"receipt.Phase == KingdomPolityProjectionPhase.Committed", StringComparison.Ordinal);
 			int create = runtime.IndexOf("TryCreatePreparedMember", committed, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(committed, 0); Assert.Greater(create, committed);
+			ClassicAssert.GreaterOrEqual(committed, 0); ClassicAssert.Greater(create, committed);
 			StringAssert.Contains("cohort.Phase == KingdomPolityCohortPhase.Materialized",
 				runtime.Substring(committed,
 				create - committed));
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("CohortOwnerProperty", helpers);
 			int remove = runtime.IndexOf("TryRemoveExactBody", StringComparison.Ordinal);
 			int commit = runtime.IndexOf("TryCommitEndpointCleanup", remove, StringComparison.Ordinal);
-			Assert.Greater(remove, 0); Assert.Greater(commit, remove);
+			ClassicAssert.Greater(remove, 0); ClassicAssert.Greater(commit, remove);
 			StringAssert.Contains("TryReleaseFrozenCustody", runtime);
 			StringAssert.Contains("KingdomPolityNpcRuntime.ExactGear", custody);
 			StringAssert.Contains("TryMoveForeignObject", custody);

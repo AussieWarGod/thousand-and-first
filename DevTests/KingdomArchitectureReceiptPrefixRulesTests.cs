@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -28,7 +29,7 @@ namespace ThousandAndFirst.Tests
 			bool hasId, string id, bool intId, string expected,
 			ArchitectureOutputPrefix result)
 		{
-			Assert.AreEqual(result, KingdomArchitectureReceiptPrefixRules.ClassifyOutput(
+			ClassicAssert.AreEqual(result, KingdomArchitectureReceiptPrefixRules.ClassifyOutput(
 				hasState, state, stringState, hasId, id, intId, expected));
 		}
 
@@ -45,26 +46,26 @@ namespace ThousandAndFirst.Tests
 		public void RetainedPublicationCutTable(int ownerState,
 			ArchitectureOutputPrefix target, bool legal)
 		{
-			Assert.AreEqual(legal,
+			ClassicAssert.AreEqual(legal,
 				KingdomArchitectureReceiptPrefixRules.LegalRetainedTarget(ownerState, target));
 		}
 
 		[Test]
 		public void HeaderScalarsAreExactOrAbsentAndTypeSafe()
 		{
-			Assert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
+			ClassicAssert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
 				false, 0, false, 7));
-			Assert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
+			ClassicAssert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
 				true, 7, false, 7));
-			Assert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
+			ClassicAssert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
 				true, 8, false, 7));
-			Assert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
+			ClassicAssert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentInt(
 				false, 0, true, 7));
-			Assert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
+			ClassicAssert.IsTrue(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
 				true, "expected", false, "expected"));
-			Assert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
+			ClassicAssert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
 				true, "third", false, "expected"));
-			Assert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
+			ClassicAssert.IsFalse(KingdomArchitectureReceiptPrefixRules.ExactOrAbsentString(
 				false, null, true, "expected"));
 		}
 
@@ -75,7 +76,7 @@ namespace ThousandAndFirst.Tests
 		public void ExactIntegerRejectsAbsenceWrongValueAndDualTypeCollision(
 			bool hasInt, int observed, bool hasString, int expected, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactInt(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactInt(
 				hasInt, observed, hasString, expected));
 		}
 
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 		public void ExactStringRejectsAbsenceWrongValueAndDualTypeCollision(
 			bool hasString, string observed, bool hasInt, string expected, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactString(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactString(
 				hasString, observed, hasInt, expected));
 		}
 
@@ -97,7 +98,7 @@ namespace ThousandAndFirst.Tests
 		public void OptionalIntegerAllowsOnlyAbsenceOrExactTypedValue(
 			bool hasInt, int observed, bool hasString, int expected, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactOptionalInt(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactOptionalInt(
 				hasInt, observed, hasString, expected));
 		}
 
@@ -109,7 +110,7 @@ namespace ThousandAndFirst.Tests
 		public void OptionalStringHasExactIntentionalAbsenceTypeAndValue(
 			bool hasString, string observed, bool hasInt, string expected, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactOptionalString(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.ExactOptionalString(
 				hasString, observed, hasInt, expected));
 		}
 
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 			bool hasString, string observed, bool hasInt,
 			ArchitectureUpgradeFaultEvidence evidence)
 		{
-			Assert.AreEqual(evidence,
+			ClassicAssert.AreEqual(evidence,
 				KingdomArchitectureReceiptPrefixRules.ClassifyUpgradeFault(
 					hasString, observed, hasInt));
 		}
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 		public void RetagIntegerScalarCutTable(bool hasInt, int observed, bool hasString,
 			int oldValue, int nextValue, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.OldOrNewInt(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.OldOrNewInt(
 				hasInt, observed, hasString, oldValue, nextValue));
 		}
 
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 		public void RetagStringScalarCutTable(bool hasString, string observed, bool hasInt,
 			string oldValue, string nextValue, bool legal)
 		{
-			Assert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.OldOrNewString(
+			ClassicAssert.AreEqual(legal, KingdomArchitectureReceiptPrefixRules.OldOrNewString(
 				hasString, observed, hasInt, oldValue, nextValue));
 		}
 	}

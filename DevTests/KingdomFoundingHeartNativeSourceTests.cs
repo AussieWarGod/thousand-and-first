@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -48,9 +49,9 @@ namespace ThousandAndFirst.Tests
 		{
 			XmlDocument overlay = new XmlDocument();
 			overlay.LoadXml(Read("Harness/ObjectBlueprints.xml"));
-			Assert.AreEqual(2, overlay.DocumentElement.SelectNodes("object").Count);
+			ClassicAssert.AreEqual(2, overlay.DocumentElement.SelectNodes("object").Count);
 			XmlNodeList hearts = overlay.DocumentElement.SelectNodes("object[part[@Name='r_TAF_FoundingHeartMintProbe']]");
-			Assert.AreEqual(0, hearts.Count, "own blueprints are not defined when the Harness XML loads");
+			ClassicAssert.AreEqual(0, hearts.Count, "own blueprints are not defined when the Harness XML loads");
 			Ordered(Read(Checks), "KingdomFoundingHeartProbeBlueprints.Install()", "KingdomSubsidenceNativeFixture.TryCreate(",
 				"KingdomFoundingHeartAllocationNativeCases.ForeignReplacement(", "probes.Check()");
 			string binding = Read("Harness/KingdomFoundingHeartProbeBlueprints.cs");
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 				"frame.Inject(0, 0, frame.Canonical[0])", "frame.Inject(6, 1, \"hr1|native-synthetic-malformed-final\")",
 				"BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly",
 				"new[] { typeof(KingdomFoundingHeartPlan) }", "method.IsPrivate", "method.ReturnType == typeof(bool)");
-			Assert.AreEqual(3, Regex.Matches(cases, @"finally\s*\{\s*frame\.Restore\(\);\s*\}").Count);
+			ClassicAssert.AreEqual(3, Regex.Matches(cases, @"finally\s*\{\s*frame\.Restore\(\);\s*\}").Count);
 			Ordered(checks, "r_TAF_FoundingHeartMintProbe.Callback = (body, e) => { };",
 				"KingdomFoundingHeartReservationNativeCases.TypedStates(", "KingdomFoundingHeartReservationNativeCases.MalformedStrings(",
 				"KingdomFoundingHeartReservationNativeCases.PreflightAllSeven(", "r_TAF_FoundingHeartMintProbe.Callback = null;");
@@ -167,22 +168,22 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { "real-founding-allocation-and-seven-reservations", "typed-state-matrix-224-shapes",
 				"malformed-string-matrix-21-shapes", "all-seven-preflight-before-write", "shared-guard-genuine-factory-three-blueprints",
 				"shared-guard-native-typed-callback-three-blueprints", "shared-guard-native-foreign-replacement-three-blueprints" }, groups);
-			Assert.AreEqual(7, Regex.Matches(source, @"Pass\(rows,\s*current,\s*ref passed\);").Count);
+			ClassicAssert.AreEqual(7, Regex.Matches(source, @"Pass\(rows,\s*current,\s*ref passed\);").Count);
 			Contains(source, "ok = passed == KingdomFoundingHeartNativeProvider.ExpectedCases");
 			Dictionary<string, string> persona = new Dictionary<string, string>(StringComparer.Ordinal);
 			foreach (string line in Read("Tools/personas/founding-heart-native-checks.persona").Split('\n'))
 			{
 				if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.Ordinal)) continue;
 				string[] field = line.TrimEnd('\r').Split(new[] { '=' }, 2);
-				Assert.AreEqual(2, field.Length); Assert.IsFalse(persona.ContainsKey(field[0])); persona.Add(field[0], field[1]);
+				ClassicAssert.AreEqual(2, field.Length); ClassicAssert.IsFalse(persona.ContainsKey(field[0])); persona.Add(field[0], field[1]);
 			}
 			CollectionAssert.AreEquivalent(new[] { "DESCRIPTION", "REQUEST", "START", "SCRIPT", "VERBS", "EXPECT", "LOG_EXPECT", "SET" }, persona.Keys);
-			Assert.AreEqual("founding-first-city", persona["REQUEST"]);
-			Assert.AreEqual("8.22@40,12", persona["START"]);
-			Assert.AreEqual("stagedigest;founding-heart-check;stagedigest", persona["SCRIPT"]);
-			Assert.AreEqual("founding-heart-check", persona["VERBS"]);
-			Assert.AreEqual("stagedigest:OK~founded=false,founding-heart-check:OK~cases=7 passed=7 failed=0,stagedigest:OK~founded=true,COMPLETE", persona["EXPECT"]);
-			Assert.AreEqual("[\"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.\","
+			ClassicAssert.AreEqual("founding-first-city", persona["REQUEST"]);
+			ClassicAssert.AreEqual("8.22@40,12", persona["START"]);
+			ClassicAssert.AreEqual("stagedigest;founding-heart-check;stagedigest", persona["SCRIPT"]);
+			ClassicAssert.AreEqual("founding-heart-check", persona["VERBS"]);
+			ClassicAssert.AreEqual("stagedigest:OK~founded=false,founding-heart-check:OK~cases=7 passed=7 failed=0,stagedigest:OK~founded=true,COMPLETE", persona["EXPECT"]);
+			ClassicAssert.AreEqual("[\"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.\","
 				+ "\"MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6\"]", persona["LOG_EXPECT"]);
 		}
 
@@ -199,13 +200,13 @@ namespace ThousandAndFirst.Tests
 			foreach (string term in terms)
 			{
 				string needle = Flat(term); int found = source.IndexOf(needle, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, term); cursor = found + needle.Length;
+				ClassicAssert.GreaterOrEqual(found, 0, term); cursor = found + needle.Length;
 			}
 		}
 		private static string Between(string source, string start, string end)
 		{
-			int first = source.IndexOf(start, StringComparison.Ordinal); Assert.GreaterOrEqual(first, 0, start);
-			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal); Assert.Greater(last, first, end);
+			int first = source.IndexOf(start, StringComparison.Ordinal); ClassicAssert.GreaterOrEqual(first, 0, start);
+			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal); ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 	}

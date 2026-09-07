@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -21,17 +22,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EnrolVerdictAbiIsFrozen()
 		{
-			Assert.AreEqual("ThousandAndFirst.KingdomEnrolVerdict",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomEnrolVerdict",
 				typeof(KingdomEnrolVerdict).FullName);
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomEnrolVerdict)));
-			Assert.AreEqual(0, (byte)KingdomEnrolVerdict.Allowed);
-			Assert.AreEqual(1, (byte)KingdomEnrolVerdict.Unfounded);
-			Assert.AreEqual(2, (byte)KingdomEnrolVerdict.NoAnnexe);
-			Assert.AreEqual(3, (byte)KingdomEnrolVerdict.Unstaffed);
-			Assert.AreEqual(4, (byte)KingdomEnrolVerdict.NotOurs);
-			Assert.AreEqual(5, (byte)KingdomEnrolVerdict.Kin);
-			Assert.AreEqual(6, (byte)KingdomEnrolVerdict.Enrolled);
-			Assert.AreEqual(7, (byte)KingdomEnrolVerdict.Unpaid);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomEnrolVerdict)));
+			ClassicAssert.AreEqual(0, (byte)KingdomEnrolVerdict.Allowed);
+			ClassicAssert.AreEqual(1, (byte)KingdomEnrolVerdict.Unfounded);
+			ClassicAssert.AreEqual(2, (byte)KingdomEnrolVerdict.NoAnnexe);
+			ClassicAssert.AreEqual(3, (byte)KingdomEnrolVerdict.Unstaffed);
+			ClassicAssert.AreEqual(4, (byte)KingdomEnrolVerdict.NotOurs);
+			ClassicAssert.AreEqual(5, (byte)KingdomEnrolVerdict.Kin);
+			ClassicAssert.AreEqual(6, (byte)KingdomEnrolVerdict.Enrolled);
+			ClassicAssert.AreEqual(7, (byte)KingdomEnrolVerdict.Unpaid);
 		}
 
 		private const string Founder = "41";
@@ -60,10 +61,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ARollIsAnOrdinaryRosterKeyOfItsOwnKind()
 		{
-			Assert.AreEqual("enrolled:41", KingdomAnnexeRules.EnrolmentKey(Founder));
-			Assert.AreEqual(KingdomAnnexeRules.EnrolmentKind,
+			ClassicAssert.AreEqual("enrolled:41", KingdomAnnexeRules.EnrolmentKey(Founder));
+			ClassicAssert.AreEqual(KingdomAnnexeRules.EnrolmentKind,
 				KingdomZoningRules.KindOf(KingdomAnnexeRules.EnrolmentKey(Founder)));
-			Assert.AreEqual(Founder, KingdomZoningRules.NameOf(KingdomAnnexeRules.EnrolmentKey(Founder)));
+			ClassicAssert.AreEqual(Founder, KingdomZoningRules.NameOf(KingdomAnnexeRules.EnrolmentKey(Founder)));
 		}
 
 		[TestCase(null)]
@@ -75,8 +76,8 @@ namespace ThousandAndFirst.Tests
 			// Hostile-input discipline (STANDARDS 9): a bad identity disables one roll, never the
 			// city's whole roster. The pipe case is the one that matters -- it is the store's own
 			// separator, and a key carrying it would corrupt every roll after it.
-			Assert.IsNull(KingdomAnnexeRules.EnrolmentKey(id));
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(Rolls(Founder)), id));
+			ClassicAssert.IsNull(KingdomAnnexeRules.EnrolmentKey(id));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(Rolls(Founder)), id));
 		}
 
 		[Test]
@@ -84,10 +85,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string stored = Rolls(Founder, Citizen);
 			List<string> roster = Decoded(stored);
-			Assert.AreEqual(stored, KingdomZoningRules.EncodeRoster(roster));
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(roster, Founder));
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(roster, Citizen));
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(roster, Stranger));
+			ClassicAssert.AreEqual(stored, KingdomZoningRules.EncodeRoster(roster));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(roster, Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(roster, Citizen));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(roster, Stranger));
 		}
 
 		[Test]
@@ -97,7 +98,7 @@ namespace ThousandAndFirst.Tests
 			// requirement against any kind. Every read here is qualified, so a design gated on a
 			// bare name can never enrol anybody, whatever an author writes.
 			List<string> roster = Decoded("node:41|disk:41");
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(roster, Founder),
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(roster, Founder),
 				"a node and a disk that happen to share the id's spelling are not a roll");
 		}
 
@@ -106,16 +107,16 @@ namespace ThousandAndFirst.Tests
 		{
 			List<string> roster = Decoded("node:notes|" + Rolls(Founder, Citizen) + "|machine:solar still");
 			List<string> rolls = KingdomAnnexeRules.Rolls(roster);
-			Assert.AreEqual(2, rolls.Count);
-			Assert.AreEqual(Founder, rolls[0]);
-			Assert.AreEqual(Citizen, rolls[1]);
+			ClassicAssert.AreEqual(2, rolls.Count);
+			ClassicAssert.AreEqual(Founder, rolls[0]);
+			ClassicAssert.AreEqual(Citizen, rolls[1]);
 		}
 
 		[Test]
 		public void RollsIsEmptyRatherThanNullForACityThatKeepsNone()
 		{
-			Assert.AreEqual(0, KingdomAnnexeRules.Rolls(null).Count);
-			Assert.AreEqual(0, KingdomAnnexeRules.Rolls(Decoded("node:notes")).Count);
+			ClassicAssert.AreEqual(0, KingdomAnnexeRules.Rolls(null).Count);
+			ClassicAssert.AreEqual(0, KingdomAnnexeRules.Rolls(Decoded("node:notes")).Count);
 		}
 
 		// --- The rolls cost the city nothing it did not mean to spend ------------------------------
@@ -126,19 +127,19 @@ namespace ThousandAndFirst.Tests
 			// The rolls share the keepers' roster, which is what buys secession for free -- so they
 			// must not buy anything ELSE for free. A city that enrolled seven people must not read
 			// as a city that certified seven machines.
-			Assert.AreEqual(0, KingdomZoningRules.PointsForKind(KingdomAnnexeRules.EnrolmentKind));
+			ClassicAssert.AreEqual(0, KingdomZoningRules.PointsForKind(KingdomAnnexeRules.EnrolmentKind));
 			List<string> roster = Decoded(Rolls("1", "2", "3", "4", "5", "6", "7", "8"));
-			Assert.AreEqual(0, KingdomZoningRules.TechPoints(roster));
-			Assert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(roster)));
+			ClassicAssert.AreEqual(0, KingdomZoningRules.TechPoints(roster));
+			ClassicAssert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(roster)));
 		}
 
 		[Test]
 		public void ARollSatisfiesNoBuildingsKnowledgeGate()
 		{
 			List<string> roster = Decoded(Rolls(Founder, Citizen));
-			Assert.IsFalse(KingdomZoningRules.Knows(roster, "node:chimerism"));
-			Assert.IsFalse(KingdomZoningRules.Knows(roster, "machine:Solar Still"));
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(roster, "node:graft"));
+			ClassicAssert.IsFalse(KingdomZoningRules.Knows(roster, "node:chimerism"));
+			ClassicAssert.IsFalse(KingdomZoningRules.Knows(roster, "machine:Solar Still"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.KnowledgeMet(roster, "node:graft"));
 		}
 
 		// --- The answer to vanilla's own question (END-STATE §2.3) ---------------------------------
@@ -146,14 +147,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnEnrolledMutantReadsAsTrueKin()
 		{
-			Assert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: Decoded(Rolls(Founder)), Who: Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: Decoded(Rolls(Founder)), Who: Founder));
 		}
 
 		[Test]
 		public void AnUnenrolledMutantDoesNot()
 		{
-			Assert.IsFalse(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: Decoded(Rolls(Citizen)), Who: Founder));
-			Assert.IsFalse(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: null, Who: Founder));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: Decoded(Rolls(Citizen)), Who: Founder));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: false, Roster: null, Who: Founder));
 		}
 
 		[Test]
@@ -163,10 +164,10 @@ namespace ThousandAndFirst.Tests
 			// the running answer to REWRITE, so a handler that could write false would be able to
 			// un-Kin somebody born to it. Ours ORs, so it cannot -- and a True Kin carrying a
 			// LAPSED roll is the case that would catch a regression.
-			Assert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: true, Roster: null, Who: Founder));
-			Assert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: true, Roster: Decoded(""), Who: Founder));
-			Assert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(Seeded: true, Held: false));
-			Assert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(Seeded: true, Held: true));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: true, Roster: null, Who: Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(KinByBirth: true, Roster: Decoded(""), Who: Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(Seeded: true, Held: false));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.AnswersTrueKin(Seeded: true, Held: true));
 		}
 
 		[TestCase(false, false, false)]
@@ -175,7 +176,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, true)]
 		public void TheAnswerRaisesAndNeverLowers(bool seeded, bool held, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomAnnexeRules.AnswersTrueKin(seeded, held));
+			ClassicAssert.AreEqual(expected, KingdomAnnexeRules.AnswersTrueKin(seeded, held));
 		}
 
 		// --- The ceremony's judgment ---------------------------------------------------------------
@@ -189,7 +190,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AWholeCityAndAKeeperAndTheWaterMeansYes()
 		{
-			Assert.AreEqual(KingdomEnrolVerdict.Allowed, Judge());
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Allowed, Judge());
 		}
 
 		[Test]
@@ -197,13 +198,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// Each case turns off exactly one thing, with everything nearer the top already true,
 			// so a reordering of the frozen ladder fails here rather than in play.
-			Assert.AreEqual(KingdomEnrolVerdict.Unfounded, Judge(founded: false));
-			Assert.AreEqual(KingdomEnrolVerdict.NoAnnexe, Judge(annexe: false));
-			Assert.AreEqual(KingdomEnrolVerdict.Unstaffed, Judge(staffed: false));
-			Assert.AreEqual(KingdomEnrolVerdict.NotOurs, Judge(ours: false));
-			Assert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true));
-			Assert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true));
-			Assert.AreEqual(KingdomEnrolVerdict.Unpaid, Judge(water: KingdomAnnexeRules.EnrolmentDrams - 1));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unfounded, Judge(founded: false));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.NoAnnexe, Judge(annexe: false));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unstaffed, Judge(staffed: false));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.NotOurs, Judge(ours: false));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unpaid, Judge(water: KingdomAnnexeRules.EnrolmentDrams - 1));
 		}
 
 		[Test]
@@ -213,13 +214,13 @@ namespace ThousandAndFirst.Tests
 			// exactly where the earlier test cannot see it. Each pair below turns off two rungs and
 			// asserts the nearer one is what the founder is told about, so a reordering fails here
 			// rather than by telling somebody to fill their stores when they have no annexe.
-			Assert.AreEqual(KingdomEnrolVerdict.Unfounded, Judge(founded: false, annexe: false, staffed: false, ours: false, kin: true, enrolled: true, water: 0));
-			Assert.AreEqual(KingdomEnrolVerdict.NoAnnexe, Judge(annexe: false, staffed: false, ours: false, kin: true, enrolled: true, water: 0));
-			Assert.AreEqual(KingdomEnrolVerdict.Unstaffed, Judge(staffed: false, ours: false, kin: true, enrolled: true, water: 0));
-			Assert.AreEqual(KingdomEnrolVerdict.NotOurs, Judge(ours: false, kin: true, enrolled: true, water: 0));
-			Assert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true, enrolled: true, water: 0),
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unfounded, Judge(founded: false, annexe: false, staffed: false, ours: false, kin: true, enrolled: true, water: 0));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.NoAnnexe, Judge(annexe: false, staffed: false, ours: false, kin: true, enrolled: true, water: 0));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unstaffed, Judge(staffed: false, ours: false, kin: true, enrolled: true, water: 0));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.NotOurs, Judge(ours: false, kin: true, enrolled: true, water: 0));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true, enrolled: true, water: 0),
 				"born True Kin is the truer thing to say than 'already on the rolls', and it is said first");
-			Assert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true, water: 0),
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true, water: 0),
 				"a person already on the rolls is told so rather than told to fill the stores for a ceremony they do not need");
 		}
 
@@ -228,7 +229,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole of Addendum 22 A2's "once-ever ceremony" for this building: a person on
 			// the rolls is refused, and refused by name rather than by silence.
-			Assert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Enrolled, Judge(enrolled: true));
 			StringAssert.Contains("already on the rolls",
 				KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Enrolled, "Vaan", "Sotham's Rest", 999));
 		}
@@ -236,7 +237,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ABirthTrueKinIsRefusedBecauseThereIsNothingToGiveThem()
 		{
-			Assert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Kin, Judge(kin: true));
 		}
 
 		[Test]
@@ -244,8 +245,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The boundary, because an off-by-one here is a founder standing at a full store being
 			// told to fill it.
-			Assert.AreEqual(KingdomEnrolVerdict.Allowed, Judge(water: KingdomAnnexeRules.EnrolmentDrams));
-			Assert.AreEqual(KingdomEnrolVerdict.Unpaid, Judge(water: KingdomAnnexeRules.EnrolmentDrams - 1));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Allowed, Judge(water: KingdomAnnexeRules.EnrolmentDrams));
+			ClassicAssert.AreEqual(KingdomEnrolVerdict.Unpaid, Judge(water: KingdomAnnexeRules.EnrolmentDrams - 1));
 		}
 
 		// --- Megastructure cardinality is the LAB'S, consumed rather than forked --------------------
@@ -255,20 +256,20 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 22 A1, Design B: a chrome-city and a flesh-city are one doctrine's two
 			// answers, and the same city never stacks both.
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: KingdomLabRules.TheatreKey, Key: KingdomAnnexeRules.AnnexeKey));
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: KingdomAnnexeRules.AnnexeKey, Key: KingdomLabRules.TheatreKey));
 		}
 
 		[Test]
 		public void ACityWithNoPurposeYetMayRaiseTheAnnexeAndRekeyingItIsNotASecondPurpose()
 		{
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: null, Key: KingdomAnnexeRules.AnnexeKey));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: KingdomAnnexeRules.AnnexeKey, Key: KingdomAnnexeRules.AnnexeKey));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: "BecomingAnnexe", Key: KingdomAnnexeRules.AnnexeKey),
 				"the kept key is matched case-insensitively, as the registry writes it");
 		}
@@ -278,7 +279,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomLabRules.PurposeRefusalLine("the chimeric theatre");
 			StringAssert.Contains("the chimeric theatre", line);
-			Assert.IsFalse(line.Contains("megastructure"),
+			ClassicAssert.IsFalse(line.Contains("megastructure"),
 				"7b: a founder told a rule has learned a rule; one told what is standing in the way has learned what to do");
 		}
 
@@ -294,8 +295,8 @@ namespace ThousandAndFirst.Tests
 			seceded.ReadFrom(seat);
 			new KingdomSettlement().WriteTo(seat);
 
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seceded.KeepersRoster), Founder));
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder),
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seceded.KeepersRoster), Founder));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder),
 				"the realm no longer keeps a book it no longer has the city for");
 		}
 
@@ -312,9 +313,9 @@ namespace ThousandAndFirst.Tests
 
 			seceded.WriteTo(seat);
 
-			Assert.AreEqual(before, seat.KeepersRoster);
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Citizen));
+			ClassicAssert.AreEqual(before, seat.KeepersRoster);
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Citizen));
 		}
 
 		[Test]
@@ -329,7 +330,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomSettlement().WriteTo(seat);
 				away.WriteTo(seat);
 			}
-			Assert.AreEqual(before, seat.KeepersRoster);
+			ClassicAssert.AreEqual(before, seat.KeepersRoster);
 		}
 
 		[Test]
@@ -340,8 +341,8 @@ namespace ThousandAndFirst.Tests
 			exiled.ReadFrom(seat);
 			new KingdomSettlement().WriteTo(seat);
 
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(exiled.KeepersRoster), Founder));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(exiled.KeepersRoster), Founder));
 		}
 
 		[Test]
@@ -350,7 +351,7 @@ namespace ThousandAndFirst.Tests
 			// "Doors, never rooms" (B3): a blank city counts nobody, and a founder who walks away
 			// from their realm walks away from the claim it made about them.
 			KingdomSettlement refounded = new KingdomSettlement();
-			Assert.AreEqual(0, KingdomAnnexeRules.Rolls(Decoded(refounded.KeepersRoster)).Count);
+			ClassicAssert.AreEqual(0, KingdomAnnexeRules.Rolls(Decoded(refounded.KeepersRoster)).Count);
 		}
 
 		[Test]
@@ -363,9 +364,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement away = new KingdomSettlement();
 			away.SettlementName = "Kavvat";
 			away.KeepersRoster = Rolls(Stranger);
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
-			Assert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(away.KeepersRoster), Founder));
-			Assert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(away.KeepersRoster), Stranger));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(seat.KeepersRoster), Founder));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.Enrolled(Decoded(away.KeepersRoster), Founder));
+			ClassicAssert.IsTrue(KingdomAnnexeRules.Enrolled(Decoded(away.KeepersRoster), Stranger));
 		}
 
 		// --- The price (R4: cost, never refusal) ----------------------------------------------------
@@ -374,10 +375,10 @@ namespace ThousandAndFirst.Tests
 		public void TheCeremonyCostsStandingWithExactlyThePeopleItOffends()
 		{
 			List<KeyValuePair<string, int>> cost = KingdomAnnexeRules.StandingCost();
-			Assert.AreEqual(1, cost.Count);
-			Assert.AreEqual("Templar", cost[0].Key);
-			Assert.AreEqual(-KingdomAnnexeRules.StandingPerCreed, cost[0].Value);
-			Assert.Less(cost[0].Value, 0, "a cost is a cost; a positive delta here would be a reward");
+			ClassicAssert.AreEqual(1, cost.Count);
+			ClassicAssert.AreEqual("Templar", cost[0].Key);
+			ClassicAssert.AreEqual(-KingdomAnnexeRules.StandingPerCreed, cost[0].Value);
+			ClassicAssert.Less(cost[0].Value, 0, "a cost is a cost; a positive delta here would be a reward");
 		}
 
 		[Test]
@@ -386,8 +387,8 @@ namespace ThousandAndFirst.Tests
 			// §1.7 R-D: chrome exclusivity is the last standing reason to pick True Kin, so a rung
 			// of the annexe priced cheap deletes a genotype. This is the assertion that notices
 			// somebody quietly lowering it.
-			Assert.GreaterOrEqual(KingdomAnnexeRules.EnrolmentDrams, 180);
-			Assert.Greater(KingdomAnnexeRules.StandingPerCreed, KingdomLabRules.StandingPerCreed);
+			ClassicAssert.GreaterOrEqual(KingdomAnnexeRules.EnrolmentDrams, 180);
+			ClassicAssert.Greater(KingdomAnnexeRules.StandingPerCreed, KingdomLabRules.StandingPerCreed);
 		}
 
 		[Test]
@@ -395,8 +396,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Genotypes.xml:20 gives True Kin CyberneticsLicensePoints="2"; a caste adds its own on
 			// top. A city can put you on the rolls; it cannot make you an aristocrat.
-			Assert.AreEqual(2, KingdomAnnexeRules.EnrolmentLicenses);
-			Assert.Greater(KingdomAnnexeRules.EnrolmentLicenses, 0,
+			ClassicAssert.AreEqual(2, KingdomAnnexeRules.EnrolmentLicenses);
+			ClassicAssert.Greater(KingdomAnnexeRules.EnrolmentLicenses, 0,
 				"the event opens the door and the licenses are the room: zero here is an open door onto nothing");
 		}
 
@@ -415,7 +416,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryRefusalSaysSomethingAndAllowedSaysNothing()
 		{
-			Assert.IsNull(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Allowed, "Vaan", "Sotham's Rest", 999),
+			ClassicAssert.IsNull(KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Allowed, "Vaan", "Sotham's Rest", 999),
 				"7b forbids telling somebody about the absence of a problem");
 			foreach (KingdomEnrolVerdict verdict in System.Enum.GetValues(typeof(KingdomEnrolVerdict)))
 			{
@@ -424,8 +425,8 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string line = KingdomAnnexeRules.RefusalLine(verdict, "Vaan", "Sotham's Rest", 12);
-				Assert.IsFalse(string.IsNullOrEmpty(line), verdict + " refuses in silence");
-				Assert.Greater(line.Length, 40, verdict + " refuses without saying what would fix it");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line), verdict + " refuses in silence");
+				ClassicAssert.Greater(line.Length, 40, verdict + " refuses without saying what would fix it");
 			}
 		}
 
@@ -443,7 +444,7 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("nobody", KingdomAnnexeRules.RefusalLine(KingdomEnrolVerdict.Unstaffed, "Vaan", "Sotham's Rest", 999).ToLowerInvariant());
 			StringAssert.Contains("Nobody is at the register", KingdomAnnexeRules.RegisterIntro(null, 0));
-			Assert.IsFalse(KingdomAnnexeRules.RegisterIntro("Vaan", 3).Contains("Nobody is at the register"));
+			ClassicAssert.IsFalse(KingdomAnnexeRules.RegisterIntro("Vaan", 3).Contains("Nobody is at the register"));
 		}
 
 		[Test]
@@ -458,8 +459,8 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string line = KingdomAnnexeRules.RefusalLine(verdict, null, null, 0);
-				Assert.IsFalse(string.IsNullOrEmpty(line));
-				Assert.IsFalse(line.Contains("  is"), verdict + " leaves a hole where a name should be");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line));
+				ClassicAssert.IsFalse(line.Contains("  is"), verdict + " leaves a hole where a name should be");
 			}
 		}
 
@@ -486,7 +487,7 @@ namespace ThousandAndFirst.Tests
 		public void EveryDisclosedLineIsMarkedAsAConsequence()
 		{
 			string[] lines = KingdomAnnexeRules.DisclosureLines("Sotham's Rest").Split('\n');
-			Assert.AreEqual(4, lines.Length);
+			ClassicAssert.AreEqual(4, lines.Length);
 			for (int i = 0; i < lines.Length; i++)
 			{
 				StringAssert.StartsWith(KingdomAnnexeRules.EffectPrefix, lines[i]);
@@ -496,7 +497,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ConsentIsTwoAnswersAndTheFirstIsTheOneThatActs()
 		{
-			Assert.AreEqual(2, KingdomAnnexeRules.ConsentOptions.Length);
+			ClassicAssert.AreEqual(2, KingdomAnnexeRules.ConsentOptions.Length);
 			StringAssert.Contains("rolls", KingdomAnnexeRules.ConsentOptions[0]);
 			StringAssert.Contains("Not", KingdomAnnexeRules.ConsentOptions[1]);
 		}
@@ -572,8 +573,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCreditorsAreTheCreedThatActuallyHoldsChromeAsADebt()
 		{
-			Assert.AreEqual("Mechanimists", KingdomAnnexeRules.Creditors);
-			Assert.AreNotEqual(KingdomAnnexeRules.Creditors, "Templar",
+			ClassicAssert.AreEqual("Mechanimists", KingdomAnnexeRules.Creditors);
+			ClassicAssert.AreNotEqual(KingdomAnnexeRules.Creditors, "Templar",
 				"the people the ceremony offends and the people it owes are not the same people");
 		}
 
@@ -583,7 +584,7 @@ namespace ThousandAndFirst.Tests
 			string subject = KingdomAnnexeRules.SpokenAboutSubject();
 			string speech = KingdomAnnexeRules.SpokenAboutSpeech(KingdomAnnexeRules.Creditors);
 			string deed = KingdomAnnexeRules.SpokenAboutDeed("Sotham's Rest");
-			Assert.IsFalse(string.IsNullOrEmpty(subject));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(subject));
 			StringAssert.Contains("chrome", subject);
 			StringAssert.Contains(KingdomAnnexeRules.Creditors, speech);
 			StringAssert.StartsWith("\"", speech);
@@ -596,7 +597,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string speech = KingdomAnnexeRules.SpokenAboutSpeech(null);
 			StringAssert.Contains("my people", speech);
-			Assert.IsFalse(speech.Contains("  "), "a missing creed leaves a gap the founder can see");
+			ClassicAssert.IsFalse(speech.Contains("  "), "a missing creed leaves a gap the founder can see");
 		}
 
 		[Test]
@@ -604,14 +605,14 @@ namespace ThousandAndFirst.Tests
 		{
 			// Consumed rather than forked: the arithmetic is the lab's, so the two body-buildings
 			// cannot drift into two different ideas of what a petition threshold is.
-			Assert.IsTrue(KingdomLabRules.SpeaksAgainstHall(Offended: 2, People: 20, AlreadySpoken: false));
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 1, People: 20, AlreadySpoken: false),
+			ClassicAssert.IsTrue(KingdomLabRules.SpeaksAgainstHall(Offended: 2, People: 20, AlreadySpoken: false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 1, People: 20, AlreadySpoken: false),
 				"below a tenth is one person's objection, which is a conversation");
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 12, People: 20, AlreadySpoken: false),
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 12, People: 20, AlreadySpoken: false),
 				"a city where the creed is dominant never gets this petition");
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 2, People: 20, AlreadySpoken: true),
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 2, People: 20, AlreadySpoken: true),
 				"once is the whole of it");
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 0, People: 0, AlreadySpoken: false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 0, People: 0, AlreadySpoken: false));
 		}
 
 		// --- Fixtures ---------------------------------------------------------------------------------

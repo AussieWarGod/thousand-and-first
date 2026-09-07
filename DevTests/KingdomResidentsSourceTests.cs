@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,10 +31,10 @@ namespace ThousandAndFirst.Tests
 		public void OnePartialAuthorityOwnsEveryDeclarationOnce()
 		{
 			string source = KingdomResidentsLogicalSource.Read();
-			Assert.AreEqual(8, Count(source, "public static partial class KingdomResidents"));
-			Assert.AreEqual(1, Count(source, "public const string ResidentIdProperty"));
-			Assert.AreEqual(1, Count(source, "internal static bool TryResolveBoundBody("));
-			Assert.AreEqual(1, Count(source, "internal static KingdomCityState ReadRoster("));
+			ClassicAssert.AreEqual(8, Count(source, "public static partial class KingdomResidents"));
+			ClassicAssert.AreEqual(1, Count(source, "public const string ResidentIdProperty"));
+			ClassicAssert.AreEqual(1, Count(source, "internal static bool TryResolveBoundBody("));
+			ClassicAssert.AreEqual(1, Count(source, "internal static KingdomCityState ReadRoster("));
 			StringAssert.DoesNotContain("public static class KingdomResidents", source);
 		}
 
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

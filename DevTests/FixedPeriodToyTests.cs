@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -12,18 +13,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExtractedToyDeclarationsKeepExactTopLevelAbiAndDefaults()
 		{
-			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyPulseRange", typeof(ToyPulseRange).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyState", typeof(FixedPeriodToyState).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyAdvanceResult", typeof(ToyAdvanceResult).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyRules", typeof(FixedPeriodToyRules).FullName);
-			Assert.IsTrue(typeof(ToyPulseRange).IsValueType);
-			Assert.IsTrue(typeof(ToyAdvanceResult).IsValueType);
-			Assert.IsTrue(typeof(FixedPeriodToyState).IsClass && typeof(FixedPeriodToyState).IsSealed);
-			Assert.IsTrue(typeof(FixedPeriodToyRules).IsAbstract && typeof(FixedPeriodToyRules).IsSealed);
-			Assert.IsTrue(typeof(ToyPulseRange).IsNotPublic);
-			Assert.IsTrue(typeof(FixedPeriodToyState).IsNotPublic);
-			Assert.IsTrue(typeof(ToyAdvanceResult).IsNotPublic);
-			Assert.IsTrue(typeof(FixedPeriodToyRules).IsNotPublic);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyPulseRange", typeof(ToyPulseRange).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyState", typeof(FixedPeriodToyState).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.Kernel.ToyAdvanceResult", typeof(ToyAdvanceResult).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.Kernel.FixedPeriodToyRules", typeof(FixedPeriodToyRules).FullName);
+			ClassicAssert.IsTrue(typeof(ToyPulseRange).IsValueType);
+			ClassicAssert.IsTrue(typeof(ToyAdvanceResult).IsValueType);
+			ClassicAssert.IsTrue(typeof(FixedPeriodToyState).IsClass && typeof(FixedPeriodToyState).IsSealed);
+			ClassicAssert.IsTrue(typeof(FixedPeriodToyRules).IsAbstract && typeof(FixedPeriodToyRules).IsSealed);
+			ClassicAssert.IsTrue(typeof(ToyPulseRange).IsNotPublic);
+			ClassicAssert.IsTrue(typeof(FixedPeriodToyState).IsNotPublic);
+			ClassicAssert.IsTrue(typeof(ToyAdvanceResult).IsNotPublic);
+			ClassicAssert.IsTrue(typeof(FixedPeriodToyRules).IsNotPublic);
 
 			AssertFields(typeof(ToyPulseRange),
 				new[] { "RulesVersionAtCreation", "EventStreamId", "EventKindCode", "FirstOrdinal", "Count" },
@@ -40,37 +41,37 @@ namespace ThousandAndFirst.Tests
 				new[] { typeof(FixedPeriodToyState), typeof(OptionTransitionKind), typeof(KernelFaultCode) });
 
 			ToyPulseRange emptyRange = default(ToyPulseRange);
-			Assert.AreEqual(0, emptyRange.RulesVersionAtCreation);
-			Assert.IsNull(emptyRange.EventStreamId);
-			Assert.AreEqual(0u, emptyRange.EventKindCode);
-			Assert.AreEqual(0uL, emptyRange.FirstOrdinal);
-			Assert.AreEqual(0uL, emptyRange.Count);
+			ClassicAssert.AreEqual(0, emptyRange.RulesVersionAtCreation);
+			ClassicAssert.IsNull(emptyRange.EventStreamId);
+			ClassicAssert.AreEqual(0u, emptyRange.EventKindCode);
+			ClassicAssert.AreEqual(0uL, emptyRange.FirstOrdinal);
+			ClassicAssert.AreEqual(0uL, emptyRange.Count);
 			ToyAdvanceResult emptyResult = default(ToyAdvanceResult);
-			Assert.IsNull(emptyResult.State);
-			Assert.AreEqual(default(OptionTransitionKind), emptyResult.OptionTransition);
-			Assert.AreEqual(default(KernelFaultCode), emptyResult.Fault);
-			Assert.IsFalse(emptyResult.Succeeded);
+			ClassicAssert.IsNull(emptyResult.State);
+			ClassicAssert.AreEqual(default(OptionTransitionKind), emptyResult.OptionTransition);
+			ClassicAssert.AreEqual(default(KernelFaultCode), emptyResult.Fault);
+			ClassicAssert.IsFalse(emptyResult.Succeeded);
 		}
 
 		[Test]
 		public void LogicalSourceKeepsOneOrderedPartialAuthority()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(4, Count(source, "internal static partial class FixedPeriodToyRules"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct ToyPulseRange"));
-			Assert.AreEqual(1, Count(source, "internal sealed class FixedPeriodToyState"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct ToyAdvanceResult"));
-			Assert.Less(source.IndexOf("internal static ToyAdvanceResult Create", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(4, Count(source, "internal static partial class FixedPeriodToyRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct ToyPulseRange"));
+			ClassicAssert.AreEqual(1, Count(source, "internal sealed class FixedPeriodToyState"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct ToyAdvanceResult"));
+			ClassicAssert.Less(source.IndexOf("internal static ToyAdvanceResult Create", StringComparison.Ordinal),
 				source.IndexOf("internal static ToyAdvanceResult ObserveOptionOnLoad", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static ToyAdvanceResult ObserveOptionOnLoad", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static ToyAdvanceResult ObserveOptionOnLoad", StringComparison.Ordinal),
 				source.IndexOf("internal static ToyAdvanceResult AdvanceThrough", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static ToyAdvanceResult AdvanceThrough", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static ToyAdvanceResult AdvanceThrough", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryGetEventKey", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryGetEventKey", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryGetEventKey", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryEncodeCanonical", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryEncodeCanonical", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryEncodeCanonical", StringComparison.Ordinal),
 				source.IndexOf("private static bool TryFold", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("private static bool TryFold", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("private static bool TryFold", StringComparison.Ordinal),
 				source.IndexOf("private static bool IsCanonical", StringComparison.Ordinal));
 		}
 
@@ -94,9 +95,9 @@ namespace ThousandAndFirst.Tests
 		private static FixedPeriodToyState Fixture()
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 10L, true);
-			Assert.IsTrue(created.Succeeded, "create");
+			ClassicAssert.IsTrue(created.Succeeded, "create");
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(created.State, 25L, true);
-			Assert.IsTrue(advanced.Succeeded, "advance");
+			ClassicAssert.IsTrue(advanced.Succeeded, "advance");
 			return advanced.State;
 		}
 
@@ -149,7 +150,7 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(state, out bytes, out fault), "encode fault " + fault);
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(state, out bytes, out fault), "encode fault " + fault);
 			return KernelDigest.ToLowercaseHex(bytes);
 		}
 
@@ -157,18 +158,18 @@ namespace ThousandAndFirst.Tests
 		public void TheFixtureStateMatchesTheCardExactly()
 		{
 			FixedPeriodToyState state = Fixture();
-			Assert.AreEqual(25L, state.ProcessedThroughTick);
-			Assert.AreEqual(30L, state.NextDueTick);
-			Assert.AreEqual(2uL, state.NextOrdinal);
-			Assert.IsTrue(state.ClockScheduled);
-			Assert.AreEqual(OptionLatchValue.Enabled, state.OptionLatch.Value);
-			Assert.AreEqual(0L, state.OptionLatch.ChangedAtTick);
-			Assert.IsTrue(state.HasEmittedRange);
-			Assert.AreEqual(3, state.EmittedRange.RulesVersionAtCreation);
-			Assert.AreEqual(FixedPeriodToyRules.ToyPulseEventStreamId, state.EmittedRange.EventStreamId);
-			Assert.AreEqual(FixedPeriodToyRules.ToyPulseEventKind, state.EmittedRange.EventKindCode);
-			Assert.AreEqual(0uL, state.EmittedRange.FirstOrdinal);
-			Assert.AreEqual(2uL, state.EmittedRange.Count);
+			ClassicAssert.AreEqual(25L, state.ProcessedThroughTick);
+			ClassicAssert.AreEqual(30L, state.NextDueTick);
+			ClassicAssert.AreEqual(2uL, state.NextOrdinal);
+			ClassicAssert.IsTrue(state.ClockScheduled);
+			ClassicAssert.AreEqual(OptionLatchValue.Enabled, state.OptionLatch.Value);
+			ClassicAssert.AreEqual(0L, state.OptionLatch.ChangedAtTick);
+			ClassicAssert.IsTrue(state.HasEmittedRange);
+			ClassicAssert.AreEqual(3, state.EmittedRange.RulesVersionAtCreation);
+			ClassicAssert.AreEqual(FixedPeriodToyRules.ToyPulseEventStreamId, state.EmittedRange.EventStreamId);
+			ClassicAssert.AreEqual(FixedPeriodToyRules.ToyPulseEventKind, state.EmittedRange.EventKindCode);
+			ClassicAssert.AreEqual(0uL, state.EmittedRange.FirstOrdinal);
+			ClassicAssert.AreEqual(2uL, state.EmittedRange.Count);
 		}
 
 		[Test]
@@ -176,10 +177,10 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(Fixture(), out bytes, out fault));
-			Assert.AreEqual(183, bytes.Length);
-			Assert.AreEqual(FixtureHex, KernelDigest.ToLowercaseHex(bytes));
-			Assert.AreEqual(0x7E, bytes[bytes.Length - 1], "terminal marker");
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(Fixture(), out bytes, out fault));
+			ClassicAssert.AreEqual(183, bytes.Length);
+			ClassicAssert.AreEqual(FixtureHex, KernelDigest.ToLowercaseHex(bytes));
+			ClassicAssert.AreEqual(0x7E, bytes[bytes.Length - 1], "terminal marker");
 		}
 
 		[Test]
@@ -187,10 +188,10 @@ namespace ThousandAndFirst.Tests
 		{
 			SemanticEventKey key;
 			KernelFaultCode fault;
-			Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(Fixture(), 0uL, out key, out fault));
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(Fixture(), 0uL, out key, out fault));
 			string id;
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
-			Assert.AreEqual(ToyOrdinalZeroEventId, id);
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
+			ClassicAssert.AreEqual(ToyOrdinalZeroEventId, id);
 		}
 
 		[Test]
@@ -199,24 +200,24 @@ namespace ThousandAndFirst.Tests
 			FixedPeriodToyState state = Fixture();
 			SemanticEventKey key;
 			KernelFaultCode fault;
-			Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(state, 0uL, out key, out fault));
-			Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(state, 1uL, out key, out fault));
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(state, 0uL, out key, out fault));
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(state, 1uL, out key, out fault));
 			// Ordinal 2 is NextOrdinal: nothing has emitted it yet, so it has no identity.
-			Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(state, 2uL, out key, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(state, ulong.MaxValue, out key, out fault));
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(state, 2uL, out key, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(state, ulong.MaxValue, out key, out fault));
 		}
 
 		[Test]
 		public void CreateDisabledSchedulesNothing()
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 5L, 10L, false);
-			Assert.IsTrue(created.Succeeded);
-			Assert.IsFalse(created.State.ClockScheduled);
-			Assert.AreEqual(0L, created.State.NextDueTick);
-			Assert.AreEqual(OptionTransitionKind.InitializedDisabled, created.OptionTransition);
-			Assert.IsFalse(created.State.HasEmittedRange);
-			Assert.AreEqual(0uL, created.State.NextOrdinal);
+			ClassicAssert.IsTrue(created.Succeeded);
+			ClassicAssert.IsFalse(created.State.ClockScheduled);
+			ClassicAssert.AreEqual(0L, created.State.NextDueTick);
+			ClassicAssert.AreEqual(OptionTransitionKind.InitializedDisabled, created.OptionTransition);
+			ClassicAssert.IsFalse(created.State.HasEmittedRange);
+			ClassicAssert.AreEqual(0uL, created.State.NextOrdinal);
 		}
 
 		[TestCase(-1L, 10L, 1)]
@@ -226,17 +227,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelFaultCode expected = (KernelFaultCode)expectedCode;
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, now, interval, true);
-			Assert.IsFalse(created.Succeeded);
-			Assert.AreEqual(expected, created.Fault);
-			Assert.IsNull(created.State);
+			ClassicAssert.IsFalse(created.Succeeded);
+			ClassicAssert.AreEqual(expected, created.Fault);
+			ClassicAssert.IsNull(created.State);
 		}
 
 		[Test]
 		public void CreateRejectsABadSettlementOrRulesVersion()
 		{
-			Assert.AreEqual(KernelFaultCode.InvalidToyState,
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState,
 				FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 0, Settlement, 0L, 10L, true).Fault);
-			Assert.AreEqual(KernelFaultCode.InvalidToyState,
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState,
 				FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, "nope", 0L, 10L, true).Fault);
 		}
 
@@ -245,17 +246,17 @@ namespace ThousandAndFirst.Tests
 		{
 			FixedPeriodToyState state = Fixture();
 			ToyAdvanceResult unchanged = FixedPeriodToyRules.ObserveOptionOnLoad(state, 500L, true);
-			Assert.IsTrue(unchanged.Succeeded);
-			Assert.AreEqual(OptionTransitionKind.None, unchanged.OptionTransition);
-			Assert.AreSame(state, unchanged.State, "an unchanged load is a no-op");
+			ClassicAssert.IsTrue(unchanged.Succeeded);
+			ClassicAssert.AreEqual(OptionTransitionKind.None, unchanged.OptionTransition);
+			ClassicAssert.AreSame(state, unchanged.State, "an unchanged load is a no-op");
 
 			ToyAdvanceResult disabled = FixedPeriodToyRules.ObserveOptionOnLoad(state, 500L, false);
-			Assert.IsTrue(disabled.Succeeded);
-			Assert.AreEqual(OptionTransitionKind.Disabled, disabled.OptionTransition);
-			Assert.AreEqual(25L, disabled.State.ProcessedThroughTick, "load is an observation, not a simulation step");
-			Assert.AreEqual(2uL, disabled.State.NextOrdinal, "no pulse is emitted on load");
-			Assert.IsFalse(disabled.State.ClockScheduled);
-			Assert.AreEqual(0L, disabled.State.NextDueTick);
+			ClassicAssert.IsTrue(disabled.Succeeded);
+			ClassicAssert.AreEqual(OptionTransitionKind.Disabled, disabled.OptionTransition);
+			ClassicAssert.AreEqual(25L, disabled.State.ProcessedThroughTick, "load is an observation, not a simulation step");
+			ClassicAssert.AreEqual(2uL, disabled.State.NextOrdinal, "no pulse is emitted on load");
+			ClassicAssert.IsFalse(disabled.State.ClockScheduled);
+			ClassicAssert.AreEqual(0L, disabled.State.NextDueTick);
 		}
 
 		[Test]
@@ -265,11 +266,11 @@ namespace ThousandAndFirst.Tests
 			// process is not a backlog of activity that happened while nobody was playing.
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 10L, false);
 			ToyAdvanceResult resumed = FixedPeriodToyRules.ObserveOptionOnLoad(created.State, 1000L, true);
-			Assert.IsTrue(resumed.Succeeded);
-			Assert.AreEqual(OptionTransitionKind.Enabled, resumed.OptionTransition);
-			Assert.AreEqual(1010L, resumed.State.NextDueTick, "one full interval from load, not replayed history");
-			Assert.AreEqual(0uL, resumed.State.NextOrdinal);
-			Assert.AreEqual(0L, resumed.State.ProcessedThroughTick);
+			ClassicAssert.IsTrue(resumed.Succeeded);
+			ClassicAssert.AreEqual(OptionTransitionKind.Enabled, resumed.OptionTransition);
+			ClassicAssert.AreEqual(1010L, resumed.State.NextDueTick, "one full interval from load, not replayed history");
+			ClassicAssert.AreEqual(0uL, resumed.State.NextOrdinal);
+			ClassicAssert.AreEqual(0L, resumed.State.ProcessedThroughTick);
 		}
 
 		[Test]
@@ -280,10 +281,10 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < 100; i++)
 			{
 				ToyAdvanceResult step = FixedPeriodToyRules.ObserveOptionOnLoad(state, 100L + i, true);
-				Assert.IsTrue(step.Succeeded);
+				ClassicAssert.IsTrue(step.Succeeded);
 				state = step.State;
 			}
-			Assert.AreEqual(before, Encode(state), "loading repeatedly must not advance, materialize, reroll, or notify");
+			ClassicAssert.AreEqual(before, Encode(state), "loading repeatedly must not advance, materialize, reroll, or notify");
 		}
 
 		[Test]
@@ -291,11 +292,11 @@ namespace ThousandAndFirst.Tests
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 10L, false);
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(created.State, 999L, false);
-			Assert.IsTrue(advanced.Succeeded);
-			Assert.AreEqual(999L, advanced.State.ProcessedThroughTick);
-			Assert.AreEqual(0uL, advanced.State.NextOrdinal);
-			Assert.IsFalse(advanced.State.HasEmittedRange);
-			Assert.AreEqual(OptionTransitionKind.None, advanced.OptionTransition);
+			ClassicAssert.IsTrue(advanced.Succeeded);
+			ClassicAssert.AreEqual(999L, advanced.State.ProcessedThroughTick);
+			ClassicAssert.AreEqual(0uL, advanced.State.NextOrdinal);
+			ClassicAssert.IsFalse(advanced.State.HasEmittedRange);
+			ClassicAssert.AreEqual(OptionTransitionKind.None, advanced.OptionTransition);
 		}
 
 		[Test]
@@ -303,10 +304,10 @@ namespace ThousandAndFirst.Tests
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 10L, false);
 			ToyAdvanceResult resumed = FixedPeriodToyRules.AdvanceThrough(created.State, 100L, true);
-			Assert.IsTrue(resumed.Succeeded);
-			Assert.AreEqual(110L, resumed.State.NextDueTick);
-			Assert.AreEqual(0uL, resumed.State.NextOrdinal, "the disabled century produced nothing");
-			Assert.AreEqual(100L, resumed.State.ProcessedThroughTick);
+			ClassicAssert.IsTrue(resumed.Succeeded);
+			ClassicAssert.AreEqual(110L, resumed.State.NextDueTick);
+			ClassicAssert.AreEqual(0uL, resumed.State.NextOrdinal, "the disabled century produced nothing");
+			ClassicAssert.AreEqual(100L, resumed.State.ProcessedThroughTick);
 		}
 
 		[Test]
@@ -314,11 +315,11 @@ namespace ThousandAndFirst.Tests
 		{
 			FixedPeriodToyState state = Fixture();
 			ToyAdvanceResult disabled = FixedPeriodToyRules.AdvanceThrough(state, 26L, false);
-			Assert.IsTrue(disabled.Succeeded);
-			Assert.AreEqual(2uL, disabled.State.NextOrdinal);
-			Assert.IsTrue(disabled.State.HasEmittedRange, "history survives being switched off");
-			Assert.AreEqual(2uL, disabled.State.EmittedRange.Count);
-			Assert.IsFalse(disabled.State.ClockScheduled);
+			ClassicAssert.IsTrue(disabled.Succeeded);
+			ClassicAssert.AreEqual(2uL, disabled.State.NextOrdinal);
+			ClassicAssert.IsTrue(disabled.State.HasEmittedRange, "history survives being switched off");
+			ClassicAssert.AreEqual(2uL, disabled.State.EmittedRange.Count);
+			ClassicAssert.IsFalse(disabled.State.ClockScheduled);
 		}
 
 		[Test]
@@ -327,29 +328,29 @@ namespace ThousandAndFirst.Tests
 			FixedPeriodToyState state = Fixture();
 			string before = Encode(state);
 			ToyAdvanceResult regressed = FixedPeriodToyRules.AdvanceThrough(state, 24L, true);
-			Assert.IsFalse(regressed.Succeeded);
-			Assert.AreEqual(KernelFaultCode.ClockRegression, regressed.Fault);
-			Assert.AreSame(state, regressed.State, "the original reference comes back");
-			Assert.AreEqual(before, Encode(state), "caller state byte-identical after a fault");
+			ClassicAssert.IsFalse(regressed.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.ClockRegression, regressed.Fault);
+			ClassicAssert.AreSame(state, regressed.State, "the original reference comes back");
+			ClassicAssert.AreEqual(before, Encode(state), "caller state byte-identical after a fault");
 
 			ToyAdvanceResult negative = FixedPeriodToyRules.AdvanceThrough(state, -1L, true);
-			Assert.IsFalse(negative.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidTick, negative.Fault);
+			ClassicAssert.IsFalse(negative.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, negative.Fault);
 		}
 
 		[Test]
 		public void ANullOrMalformedStateIsRefused()
 		{
 			KernelFaultCode fault;
-			Assert.IsFalse(IsAccepted(null, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+			ClassicAssert.IsFalse(IsAccepted(null, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault);
 
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, FixedPeriodToyRules.AdvanceThrough(null, 0L, true).Fault);
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, FixedPeriodToyRules.ObserveOptionOnLoad(null, 0L, true).Fault);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, FixedPeriodToyRules.AdvanceThrough(null, 0L, true).Fault);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, FixedPeriodToyRules.ObserveOptionOnLoad(null, 0L, true).Fault);
 
 			byte[] bytes;
-			Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(null, out bytes, out fault));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(null, out bytes, out fault));
+			ClassicAssert.IsNull(bytes);
 		}
 
 		[Test]
@@ -361,33 +362,33 @@ namespace ThousandAndFirst.Tests
 			OptionLatchState disabled = new OptionLatchState(OptionLatchValue.Disabled, 0L);
 
 			// Enabled but unscheduled.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, enabled, false, default(ToyPulseRange)), out fault));
 
 			// Enabled with a deadline that is not strictly after processed-through.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 10L, true, 10L, 0uL, 10L, enabled, false, default(ToyPulseRange)), out fault));
 
 			// Disabled but carrying a schedule.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, true, 5L, 0uL, 10L, disabled, false, default(ToyPulseRange)), out fault));
 
 			// An unobserved latch is never valid on a live toy.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, new OptionLatchState(OptionLatchValue.Unobserved, 0L), false, default(ToyPulseRange)), out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
 
 			// Range present but its span disagrees with NextOrdinal.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 5uL, 10L, disabled, true,
 				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL)), out fault));
 
 			// Absent range but a nonzero ordinal.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 3uL, 10L, disabled, false, default(ToyPulseRange)), out fault));
 
 			// Range whose stream or kind is not the reserved toy constant.
-			Assert.IsFalse(IsAccepted(new FixedPeriodToyState(
+			ClassicAssert.IsFalse(IsAccepted(new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
 				new ToyPulseRange(3, "taf:stream:other", FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL)), out fault));
 		}
@@ -410,47 +411,47 @@ namespace ThousandAndFirst.Tests
 				{
 					ToyAdvanceResult created = FixedPeriodToyRules.Create(
 						KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, true);
-					Assert.IsTrue(created.Succeeded);
+					ClassicAssert.IsTrue(created.Succeeded);
 
 					ToyAdvanceResult folded = FixedPeriodToyRules.AdvanceThrough(created.State, end, true);
-					Assert.IsTrue(folded.Succeeded, "folded advance to " + end);
+					ClassicAssert.IsTrue(folded.Succeeded, "folded advance to " + end);
 
 					// The replay: wake at literally every tick, so each pulse is processed alone.
 					FixedPeriodToyState replayed = created.State;
 					for (long t = 1L; t <= end; t++)
 					{
 						ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(replayed, t, true);
-						Assert.IsTrue(step.Succeeded, "replay step " + t);
+						ClassicAssert.IsTrue(step.Succeeded, "replay step " + t);
 						replayed = step.State;
 					}
 
-					Assert.AreEqual(folded.State.NextOrdinal, replayed.NextOrdinal, "next ordinal, interval " + interval + ", end " + end);
-					Assert.AreEqual(folded.State.NextDueTick, replayed.NextDueTick, "following due, interval " + interval + ", end " + end);
-					Assert.AreEqual(folded.State.HasEmittedRange, replayed.HasEmittedRange);
+					ClassicAssert.AreEqual(folded.State.NextOrdinal, replayed.NextOrdinal, "next ordinal, interval " + interval + ", end " + end);
+					ClassicAssert.AreEqual(folded.State.NextDueTick, replayed.NextDueTick, "following due, interval " + interval + ", end " + end);
+					ClassicAssert.AreEqual(folded.State.HasEmittedRange, replayed.HasEmittedRange);
 					if (folded.State.HasEmittedRange)
 					{
-						Assert.AreEqual(folded.State.EmittedRange.FirstOrdinal, replayed.EmittedRange.FirstOrdinal, "first ordinal");
-						Assert.AreEqual(folded.State.EmittedRange.Count, replayed.EmittedRange.Count, "count");
+						ClassicAssert.AreEqual(folded.State.EmittedRange.FirstOrdinal, replayed.EmittedRange.FirstOrdinal, "first ordinal");
+						ClassicAssert.AreEqual(folded.State.EmittedRange.Count, replayed.EmittedRange.Count, "count");
 					}
-					Assert.AreEqual(Encode(folded.State), Encode(replayed), "complete canonical bytes, interval " + interval + ", end " + end);
+					ClassicAssert.AreEqual(Encode(folded.State), Encode(replayed), "complete canonical bytes, interval " + interval + ", end " + end);
 
 					// Every pulse expands to the same identity either way.
 					for (ulong ordinal = 0uL; ordinal < folded.State.NextOrdinal; ordinal++)
 					{
 						SemanticEventKey foldedKey;
 						SemanticEventKey replayedKey;
-						Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(folded.State, ordinal, out foldedKey, out fault));
-						Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(replayed, ordinal, out replayedKey, out fault));
+						ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(folded.State, ordinal, out foldedKey, out fault));
+						ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(replayed, ordinal, out replayedKey, out fault));
 						string foldedId;
 						string replayedId;
-						Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), foldedKey, out foldedId, out fault));
-						Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), replayedKey, out replayedId, out fault));
-						Assert.AreEqual(foldedId, replayedId, "event id for ordinal " + ordinal + ", interval " + interval + ", end " + end);
+						ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), foldedKey, out foldedId, out fault));
+						ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), replayedKey, out replayedId, out fault));
+						ClassicAssert.AreEqual(foldedId, replayedId, "event id for ordinal " + ordinal + ", interval " + interval + ", end " + end);
 					}
 					compared++;
 				}
 			}
-			Assert.AreEqual(6 * 41, compared);
+			ClassicAssert.AreEqual(6 * 41, compared);
 		}
 
 		/// <summary>
@@ -467,7 +468,7 @@ namespace ThousandAndFirst.Tests
 				ToyAdvanceResult created = FixedPeriodToyRules.Create(
 					KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, Interval, true);
 				ToyAdvanceResult upTo = FixedPeriodToyRules.AdvanceThrough(created.State, boundary, true);
-				Assert.IsTrue(upTo.Succeeded, "advance to " + boundary);
+				ClassicAssert.IsTrue(upTo.Succeeded, "advance to " + boundary);
 
 				// The reload: a genuinely distinct object carrying the same field values, which is
 				// what a load actually produces. Reusing the same reference here would have tested
@@ -475,20 +476,20 @@ namespace ThousandAndFirst.Tests
 				// reconstructed.
 				string saved = Encode(upTo.State);
 				FixedPeriodToyState reloaded = Clone(upTo.State);
-				Assert.IsFalse(ReferenceEquals(upTo.State, reloaded), "the reload fixture must be a distinct object");
-				Assert.AreEqual(saved, Encode(reloaded), "a reconstructed state must be byte-identical at " + boundary);
+				ClassicAssert.IsFalse(ReferenceEquals(upTo.State, reloaded), "the reload fixture must be a distinct object");
+				ClassicAssert.AreEqual(saved, Encode(reloaded), "a reconstructed state must be byte-identical at " + boundary);
 
 				ToyAdvanceResult continued = FixedPeriodToyRules.AdvanceThrough(reloaded, boundary + 25L, true);
-				Assert.IsTrue(continued.Succeeded);
+				ClassicAssert.IsTrue(continued.Succeeded);
 
 				// The control: never saved at all.
 				ToyAdvanceResult straight = FixedPeriodToyRules.AdvanceThrough(created.State, boundary + 25L, true);
-				Assert.IsTrue(straight.Succeeded);
+				ClassicAssert.IsTrue(straight.Succeeded);
 
-				Assert.AreEqual(Encode(straight.State), Encode(continued.State),
+				ClassicAssert.AreEqual(Encode(straight.State), Encode(continued.State),
 					"a reload at tick " + boundary + " changed the outcome");
-				Assert.AreEqual(0uL, continued.State.EmittedRange.FirstOrdinal, "the range must stay one span, not split at " + boundary);
-				Assert.AreEqual(continued.State.NextOrdinal, continued.State.EmittedRange.Count, "no ordinal duplicated or skipped");
+				ClassicAssert.AreEqual(0uL, continued.State.EmittedRange.FirstOrdinal, "the range must stay one span, not split at " + boundary);
+				ClassicAssert.AreEqual(continued.State.NextOrdinal, continued.State.EmittedRange.Count, "no ordinal duplicated or skipped");
 			}
 		}
 
@@ -506,16 +507,16 @@ namespace ThousandAndFirst.Tests
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(
 				KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, Interval, true);
 			ToyAdvanceResult actual = FixedPeriodToyRules.AdvanceThrough(created.State, Now, true);
-			Assert.IsTrue(actual.Succeeded);
-			Assert.AreEqual(2uL, actual.State.NextOrdinal, "deadlines at 10 and 20 have passed");
-			Assert.AreEqual(30L, actual.State.NextDueTick);
+			ClassicAssert.IsTrue(actual.Succeeded);
+			ClassicAssert.AreEqual(2uL, actual.State.NextOrdinal, "deadlines at 10 and 20 have passed");
+			ClassicAssert.AreEqual(30L, actual.State.NextDueTick);
 
 			// Banned oracle one: reanchor from now. Loses the five ticks already served toward the
 			// next deadline, so every wake quietly pushes the schedule further out and a settlement
 			// observed often runs slower than one observed rarely.
 			long reanchored = Now + Interval;
-			Assert.AreEqual(35L, reanchored);
-			Assert.AreNotEqual(actual.State.NextDueTick, reanchored,
+			ClassicAssert.AreEqual(35L, reanchored);
+			ClassicAssert.AreNotEqual(actual.State.NextDueTick, reanchored,
 				"reanchoring from now discards the partial period and makes the rate depend on observation");
 
 			// Banned oracle two: loop with a cap, then reset. Discards whatever debt exceeded the
@@ -528,8 +529,8 @@ namespace ThousandAndFirst.Tests
 				cappedCount++;
 				deadline += Interval;
 			}
-			Assert.AreEqual(1uL, cappedCount);
-			Assert.AreNotEqual(actual.State.NextOrdinal, cappedCount,
+			ClassicAssert.AreEqual(1uL, cappedCount);
+			ClassicAssert.AreNotEqual(actual.State.NextOrdinal, cappedCount,
 				"a capped loop drops real semantic debt instead of folding it");
 		}
 
@@ -548,8 +549,8 @@ namespace ThousandAndFirst.Tests
 					KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, Day, true);
 
 				ToyAdvanceResult jumped = FixedPeriodToyRules.AdvanceThrough(created.State, end, true);
-				Assert.IsTrue(jumped.Succeeded, days + "-day jump");
-				Assert.AreEqual((ulong)days, jumped.State.NextOrdinal, days + "-day jump ordinal");
+				ClassicAssert.IsTrue(jumped.Succeeded, days + "-day jump");
+				ClassicAssert.AreEqual((ulong)days, jumped.State.NextOrdinal, days + "-day jump ordinal");
 
 				// Fine-grained: one wake per day. Same answer, or absence means something different
 				// from presence and the whole model is broken.
@@ -557,10 +558,10 @@ namespace ThousandAndFirst.Tests
 				for (long d = 1L; d <= days; d++)
 				{
 					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(stepped, d * Day, true);
-					Assert.IsTrue(step.Succeeded);
+					ClassicAssert.IsTrue(step.Succeeded);
 					stepped = step.State;
 				}
-				Assert.AreEqual(Encode(jumped.State), Encode(stepped), days + "-day jump diverged from daily observation");
+				ClassicAssert.AreEqual(Encode(jumped.State), Encode(stepped), days + "-day jump diverged from daily observation");
 			}
 		}
 
@@ -576,29 +577,29 @@ namespace ThousandAndFirst.Tests
 
 			SemanticEventKey underN;
 			SemanticEventKey underNext;
-			Assert.IsTrue(SemanticEventKey.TryCreate(3, Settlement, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, out underN, out fault));
-			Assert.IsTrue(SemanticEventKey.TryCreate(4, Settlement, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, out underNext, out fault));
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(3, Settlement, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, out underN, out fault));
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(4, Settlement, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, out underNext, out fault));
 
 			string idN;
 			string idNext;
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), underN, out idN, out fault));
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), underNext, out idNext, out fault));
-			Assert.AreNotEqual(idN, idNext, "otherwise identical keys under versions N and N+1 must differ");
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), underN, out idN, out fault));
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), underNext, out idNext, out fault));
+			ClassicAssert.AreNotEqual(idN, idNext, "otherwise identical keys under versions N and N+1 must differ");
 
 			// An already-emitted range keeps the version it was emitted under.
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 10L, true);
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(created.State, 25L, true);
-			Assert.IsTrue(advanced.Succeeded);
-			Assert.AreEqual(3, advanced.State.EmittedRange.RulesVersionAtCreation, "the range owns its version");
+			ClassicAssert.IsTrue(advanced.Succeeded);
+			ClassicAssert.AreEqual(3, advanced.State.EmittedRange.RulesVersionAtCreation, "the range owns its version");
 
 			SemanticEventKey emitted;
-			Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(advanced.State, 0uL, out emitted, out fault));
-			Assert.AreEqual(3, emitted.RulesVersionAtCreation, "expanding an emitted ordinal must not adopt a newer version");
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(advanced.State, 0uL, out emitted, out fault));
+			ClassicAssert.AreEqual(3, emitted.RulesVersionAtCreation, "expanding an emitted ordinal must not adopt a newer version");
 
 			// And the lane continues: the next ordinal is 2, not a reset to 0.
-			Assert.AreEqual(2uL, advanced.State.NextOrdinal);
-			Assert.AreEqual(FixedPeriodToyRules.ToyPulseEventStreamId, advanced.State.EmittedRange.EventStreamId);
-			Assert.AreEqual(FixedPeriodToyRules.ToyPulseEventKind, advanced.State.EmittedRange.EventKindCode);
+			ClassicAssert.AreEqual(2uL, advanced.State.NextOrdinal);
+			ClassicAssert.AreEqual(FixedPeriodToyRules.ToyPulseEventStreamId, advanced.State.EmittedRange.EventStreamId);
+			ClassicAssert.AreEqual(FixedPeriodToyRules.ToyPulseEventKind, advanced.State.EmittedRange.EventKindCode);
 		}
 
 		/// <summary>
@@ -619,7 +620,7 @@ namespace ThousandAndFirst.Tests
 			FixedPeriodToyState deadlineAtLatchChange = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 5L, true, 20L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Enabled, 20L), false, default(ToyPulseRange));
-			Assert.IsFalse(IsAccepted(deadlineAtLatchChange, out fault),
+			ClassicAssert.IsFalse(IsAccepted(deadlineAtLatchChange, out fault),
 				"a deadline may not coincide with a later latch change");
 
 			// A present range claiming zero pulses. An emitted range with nothing in it is not a
@@ -628,14 +629,14 @@ namespace ThousandAndFirst.Tests
 				1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Disabled, 0L), true,
 				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 0uL));
-			Assert.IsFalse(IsAccepted(zeroCountRange, out fault), "an emitted range of zero pulses is a contradiction");
+			ClassicAssert.IsFalse(IsAccepted(zeroCountRange, out fault), "an emitted range of zero pulses is a contradiction");
 
 			// A range whose span wraps past the top of the ordinal space.
 			FixedPeriodToyState wrappingRange = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Disabled, 0L), true,
 				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, ulong.MaxValue, 2uL));
-			Assert.IsFalse(IsAccepted(wrappingRange, out fault), "a range may not wrap the ordinal space");
+			ClassicAssert.IsFalse(IsAccepted(wrappingRange, out fault), "a range may not wrap the ordinal space");
 
 			// Containment: every raw field of an invalid source survives an attempted advance, and
 			// the caller is handed back the identical object rather than a repaired copy.
@@ -654,22 +655,22 @@ namespace ThousandAndFirst.Tests
 			ulong count = source.EmittedRange.Count;
 
 			ToyAdvanceResult refused = FixedPeriodToyRules.AdvanceThrough(source, 500L, true);
-			Assert.IsFalse(refused.Succeeded, "an invalid source must not advance");
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, refused.Fault);
-			Assert.IsTrue(ReferenceEquals(source, refused.State), "the caller must get its own object back, not a repaired one");
+			ClassicAssert.IsFalse(refused.Succeeded, "an invalid source must not advance");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, refused.Fault);
+			ClassicAssert.IsTrue(ReferenceEquals(source, refused.State), "the caller must get its own object back, not a repaired one");
 
-			Assert.AreEqual(schemaVersion, source.SchemaVersion);
-			Assert.AreEqual(rulesVersion, source.RulesVersion);
-			Assert.AreEqual(processed, source.ProcessedThroughTick);
-			Assert.AreEqual(scheduled, source.ClockScheduled);
-			Assert.AreEqual(nextDue, source.NextDueTick);
-			Assert.AreEqual(nextOrdinal, source.NextOrdinal);
-			Assert.AreEqual(interval, source.IntervalTicks);
-			Assert.AreEqual(latchValue, source.OptionLatch.Value);
-			Assert.AreEqual(latchTick, source.OptionLatch.ChangedAtTick);
-			Assert.AreEqual(hasRange, source.HasEmittedRange);
-			Assert.AreEqual(firstOrdinal, source.EmittedRange.FirstOrdinal);
-			Assert.AreEqual(count, source.EmittedRange.Count);
+			ClassicAssert.AreEqual(schemaVersion, source.SchemaVersion);
+			ClassicAssert.AreEqual(rulesVersion, source.RulesVersion);
+			ClassicAssert.AreEqual(processed, source.ProcessedThroughTick);
+			ClassicAssert.AreEqual(scheduled, source.ClockScheduled);
+			ClassicAssert.AreEqual(nextDue, source.NextDueTick);
+			ClassicAssert.AreEqual(nextOrdinal, source.NextOrdinal);
+			ClassicAssert.AreEqual(interval, source.IntervalTicks);
+			ClassicAssert.AreEqual(latchValue, source.OptionLatch.Value);
+			ClassicAssert.AreEqual(latchTick, source.OptionLatch.ChangedAtTick);
+			ClassicAssert.AreEqual(hasRange, source.HasEmittedRange);
+			ClassicAssert.AreEqual(firstOrdinal, source.EmittedRange.FirstOrdinal);
+			ClassicAssert.AreEqual(count, source.EmittedRange.Count);
 		}
 
 		/// <summary>
@@ -685,9 +686,9 @@ namespace ThousandAndFirst.Tests
 
 			// Create: a bad tick and a bad interval together. The tick is checked first.
 			ToyAdvanceResult bothBad = FixedPeriodToyRules.Create(seed, 3, Settlement, -1L, -1L, true);
-			Assert.IsFalse(bothBad.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidTick, bothBad.Fault, "tick before interval");
-			Assert.IsNull(bothBad.State, "nothing partial is published");
+			ClassicAssert.IsFalse(bothBad.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, bothBad.Fault, "tick before interval");
+			ClassicAssert.IsNull(bothBad.State, "nothing partial is published");
 
 			// Create: a bad interval and a bad settlement identifier together. Create resolves this
 			// as interval-before-identity.
@@ -698,52 +699,52 @@ namespace ThousandAndFirst.Tests
 			// caller that branches on the code will meet it. Pinned here as observed behaviour and
 			// flagged for review rather than quietly matched.
 			ToyAdvanceResult badIdAndInterval = FixedPeriodToyRules.Create(seed, 3, "NOPE", 0L, 0L, true);
-			Assert.IsFalse(badIdAndInterval.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidInterval, badIdAndInterval.Fault, "Create resolves interval before identity");
+			ClassicAssert.IsFalse(badIdAndInterval.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidInterval, badIdAndInterval.Fault, "Create resolves interval before identity");
 
 			// With a valid interval, the identity fault does surface.
 			ToyAdvanceResult badIdOnly = FixedPeriodToyRules.Create(seed, 3, "NOPE", 0L, 10L, true);
-			Assert.IsFalse(badIdOnly.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, badIdOnly.Fault);
-			Assert.IsNull(badIdOnly.State);
+			ClassicAssert.IsFalse(badIdOnly.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, badIdOnly.Fault);
+			ClassicAssert.IsNull(badIdOnly.State);
 
 			// Advance: an invalid source and a regressed clock. The source is checked first,
 			// because a regression judged against nonsense is not a meaningful answer.
 			FixedPeriodToyState invalid = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 100L, true, 5L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Enabled, 0L), false, default(ToyPulseRange));
-			Assert.IsFalse(IsAccepted(invalid, out fault));
+			ClassicAssert.IsFalse(IsAccepted(invalid, out fault));
 			ToyAdvanceResult invalidAndRegressed = FixedPeriodToyRules.AdvanceThrough(invalid, 1L, true);
-			Assert.IsFalse(invalidAndRegressed.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, invalidAndRegressed.Fault, "source state before regression");
-			Assert.IsTrue(ReferenceEquals(invalid, invalidAndRegressed.State));
+			ClassicAssert.IsFalse(invalidAndRegressed.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, invalidAndRegressed.Fault, "source state before regression");
+			ClassicAssert.IsTrue(ReferenceEquals(invalid, invalidAndRegressed.State));
 
 			// Advance: a valid source with both a negative tick and a regression. Negative wins.
 			FixedPeriodToyState valid = Fixture();
 			ToyAdvanceResult negativeAndRegressed = FixedPeriodToyRules.AdvanceThrough(valid, -5L, true);
-			Assert.IsFalse(negativeAndRegressed.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidTick, negativeAndRegressed.Fault, "negative tick before regression");
-			Assert.IsTrue(ReferenceEquals(valid, negativeAndRegressed.State));
+			ClassicAssert.IsFalse(negativeAndRegressed.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, negativeAndRegressed.Fault, "negative tick before regression");
+			ClassicAssert.IsTrue(ReferenceEquals(valid, negativeAndRegressed.State));
 
 			// Load observation: an invalid latch on the source plus a regressed tick.
 			FixedPeriodToyState unobservedLatch = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 50L, false, 0L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Unobserved, 0L), false, default(ToyPulseRange));
 			ToyAdvanceResult loadRefused = FixedPeriodToyRules.ObserveOptionOnLoad(unobservedLatch, 1L, true);
-			Assert.IsFalse(loadRefused.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, loadRefused.Fault, "latch validity before regression");
-			Assert.IsTrue(ReferenceEquals(unobservedLatch, loadRefused.State));
+			ClassicAssert.IsFalse(loadRefused.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, loadRefused.Fault, "latch validity before regression");
+			ClassicAssert.IsTrue(ReferenceEquals(unobservedLatch, loadRefused.State));
 
 			// Event key expansion: an invalid source and an out-of-range ordinal.
 			SemanticEventKey key;
-			Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(invalid, ulong.MaxValue, out key, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, "source state before ordinal range");
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(invalid, ulong.MaxValue, out key, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, "source state before ordinal range");
 
 			// Encoding: an invalid source publishes no bytes at all.
 			byte[] bytes;
-			Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(invalid, out bytes, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
-			Assert.IsNull(bytes, "a refused encode must not hand back a partial buffer");
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(invalid, out bytes, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+			ClassicAssert.IsNull(bytes, "a refused encode must not hand back a partial buffer");
 		}
 
 		/// <summary>
@@ -810,7 +811,7 @@ namespace ThousandAndFirst.Tests
 						continue;
 					}
 					ulong nextOrdinal = first + count;
-					Assert.IsTrue(nextOrdinal >= count,
+					ClassicAssert.IsTrue(nextOrdinal >= count,
 						"NextOrdinal must dominate Count, else the two guards could fire independently: first "
 							+ first + ", count " + count);
 				}
@@ -824,23 +825,23 @@ namespace ThousandAndFirst.Tests
 			string before = sourceWasValid ? Encode(source) : null;
 
 			ToyAdvanceResult result = act();
-			Assert.IsFalse(result.Succeeded, label + " must fail closed");
-			Assert.IsTrue(ReferenceEquals(source, result.State), label + ": the caller keeps its own object");
+			ClassicAssert.IsFalse(result.Succeeded, label + " must fail closed");
+			ClassicAssert.IsTrue(ReferenceEquals(source, result.State), label + ": the caller keeps its own object");
 
 			if (sourceWasValid)
 			{
 				// The exact code, not merely a failure: an overflow reported as a bad state would
 				// send a reader looking for corruption that is not there.
-				Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, result.Fault, label + ": must report overflow exactly");
-				Assert.AreEqual(OptionTransitionKind.None, result.OptionTransition, label + ": a refusal transitions nothing");
-				Assert.AreEqual(before, Encode(source), label + ": the source bytes must be untouched");
-				Assert.AreEqual(before, Encode(result.State), label + ": the returned state is the untouched source");
+				ClassicAssert.AreEqual(KernelFaultCode.ArithmeticOverflow, result.Fault, label + ": must report overflow exactly");
+				ClassicAssert.AreEqual(OptionTransitionKind.None, result.OptionTransition, label + ": a refusal transitions nothing");
+				ClassicAssert.AreEqual(before, Encode(source), label + ": the source bytes must be untouched");
+				ClassicAssert.AreEqual(before, Encode(result.State), label + ": the returned state is the untouched source");
 			}
 			else
 			{
 				// A source the encoder itself refuses cannot be compared by bytes, so the
 				// reference identity above is the whole guarantee, and the fault must say so.
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, result.Fault, label + ": invalid source reports as such");
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, result.Fault, label + ": invalid source reports as such");
 			}
 		}
 
@@ -864,10 +865,10 @@ namespace ThousandAndFirst.Tests
 					{
 						ToyAdvanceResult created = FixedPeriodToyRules.Create(
 							KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, Interval, startEnabled);
-						Assert.IsTrue(created.Succeeded);
+						ClassicAssert.IsTrue(created.Succeeded);
 
 						ToyAdvanceResult direct = FixedPeriodToyRules.AdvanceThrough(created.State, wake, thenEnabled);
-						Assert.IsTrue(direct.Succeeded, "direct wake at " + wake);
+						ClassicAssert.IsTrue(direct.Succeeded, "direct wake at " + wake);
 
 						// The same input history, observed at every tick instead of once.
 						FixedPeriodToyState walked = created.State;
@@ -877,17 +878,17 @@ namespace ThousandAndFirst.Tests
 							// which is the whole point of the boundary.
 							bool valueNow = t < wake ? startEnabled : thenEnabled;
 							ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(walked, t, valueNow);
-							Assert.IsTrue(step.Succeeded, "tick " + t);
+							ClassicAssert.IsTrue(step.Succeeded, "tick " + t);
 							walked = step.State;
 						}
 
-						Assert.AreEqual(Encode(direct.State), Encode(walked),
+						ClassicAssert.AreEqual(Encode(direct.State), Encode(walked),
 							"start " + startEnabled + ", wake " + wake + ", then " + thenEnabled);
 						combinations++;
 					}
 				}
 			}
-			Assert.AreEqual(2 * 3 * 2, combinations);
+			ClassicAssert.AreEqual(2 * 3 * 2, combinations);
 		}
 
 		/// <summary>
@@ -905,14 +906,14 @@ namespace ThousandAndFirst.Tests
 			FixedPeriodToyState wrongKind = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
 				new ToyPulseRange(3, FixedPeriodToyRules.ToyPulseEventStreamId, 0x1234u, 0uL, 2uL));
-			Assert.IsFalse(IsAccepted(wrongKind, out fault), "a foreign event kind must be refused");
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+			ClassicAssert.IsFalse(IsAccepted(wrongKind, out fault), "a foreign event kind must be refused");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault);
 
 			FixedPeriodToyState wrongRules = new FixedPeriodToyState(
 				1, 3, seed, Settlement, 0L, false, 0L, 2uL, 10L, disabled, true,
 				new ToyPulseRange(4, FixedPeriodToyRules.ToyPulseEventStreamId, FixedPeriodToyRules.ToyPulseEventKind, 0uL, 2uL));
-			Assert.IsFalse(IsAccepted(wrongRules, out fault), "a range under another rules version must be refused");
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, fault);
+			ClassicAssert.IsFalse(IsAccepted(wrongRules, out fault), "a range under another rules version must be refused");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault);
 
 			// Malformed states survive being refused, field for field, with the same reference back.
 			foreach (FixedPeriodToyState bad in new FixedPeriodToyState[] { wrongKind, wrongRules })
@@ -924,19 +925,19 @@ namespace ThousandAndFirst.Tests
 				ulong count = bad.EmittedRange.Count;
 
 				ToyAdvanceResult refused = FixedPeriodToyRules.AdvanceThrough(bad, 500L, true);
-				Assert.IsFalse(refused.Succeeded);
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, refused.Fault);
-				Assert.IsTrue(ReferenceEquals(bad, refused.State));
+				ClassicAssert.IsFalse(refused.Succeeded);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, refused.Fault);
+				ClassicAssert.IsTrue(ReferenceEquals(bad, refused.State));
 
-				Assert.AreEqual(rules, bad.RulesVersion);
-				Assert.AreEqual(ordinal, bad.NextOrdinal);
-				Assert.AreEqual(kind, bad.EmittedRange.EventKindCode);
-				Assert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation);
-				Assert.AreEqual(count, bad.EmittedRange.Count);
+				ClassicAssert.AreEqual(rules, bad.RulesVersion);
+				ClassicAssert.AreEqual(ordinal, bad.NextOrdinal);
+				ClassicAssert.AreEqual(kind, bad.EmittedRange.EventKindCode);
+				ClassicAssert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation);
+				ClassicAssert.AreEqual(count, bad.EmittedRange.Count);
 
 				byte[] bytes;
-				Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault));
-				Assert.IsNull(bytes, "a refused encode publishes no buffer");
+				ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault));
+				ClassicAssert.IsNull(bytes, "a refused encode publishes no buffer");
 			}
 		}
 
@@ -1058,8 +1059,8 @@ namespace ThousandAndFirst.Tests
 				KernelFaultCode expected = (KernelFaultCode)entry[2];
 
 				KernelFaultCode fault;
-				Assert.IsFalse(IsAccepted(bad, out fault), label + " must be refused");
-				Assert.AreEqual(expected, fault, label + ": exact fault");
+				ClassicAssert.IsFalse(IsAccepted(bad, out fault), label + " must be refused");
+				ClassicAssert.AreEqual(expected, fault, label + ": exact fault");
 
 				AssertRefusedWithoutMutation(bad, label);
 			}
@@ -1079,9 +1080,9 @@ namespace ThousandAndFirst.Tests
 				FixedPeriodToyState absentButDirty = new FixedPeriodToyState(
 					1, 3, seed, Settlement, 0L, false, 0L, 0uL, 10L, disabled, false, nonDefaultFields[i]);
 				KernelFaultCode fault;
-				Assert.IsFalse(IsAccepted(absentButDirty, out fault),
+				ClassicAssert.IsFalse(IsAccepted(absentButDirty, out fault),
 					"an absent range carrying raw field " + i + " must be refused");
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, "raw field " + i);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, "raw field " + i);
 				AssertRefusedWithoutMutation(absentButDirty, "absent range, raw field " + i);
 			}
 		}
@@ -1169,23 +1170,23 @@ namespace ThousandAndFirst.Tests
 
 					// Every named entry point must agree on which fault wins.
 					ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(bad, 1000L, true);
-					Assert.IsFalse(advanced.Succeeded, label);
-					Assert.AreEqual(KernelFaultCode.InvalidToyState, advanced.Fault, label + ": advance");
+					ClassicAssert.IsFalse(advanced.Succeeded, label);
+					ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, advanced.Fault, label + ": advance");
 
 					ToyAdvanceResult observed = FixedPeriodToyRules.ObserveOptionOnLoad(bad, 1000L, false);
-					Assert.IsFalse(observed.Succeeded, label);
-					Assert.AreEqual(KernelFaultCode.InvalidToyState, observed.Fault, label + ": load");
+					ClassicAssert.IsFalse(observed.Succeeded, label);
+					ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, observed.Fault, label + ": load");
 
 					SemanticEventKey key = KernelCanonicalTests.GoldenKey();
 					KernelFaultCode fault;
-					Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label);
-					Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": key expansion");
-					Assert.AreEqual(default(SemanticEventKey), key, label + ": default key published");
+					ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label);
+					ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": key expansion");
+					ClassicAssert.AreEqual(default(SemanticEventKey), key, label + ": default key published");
 
 					byte[] bytes = new byte[] { 9 };
-					Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label);
-					Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": encode");
-					Assert.IsNull(bytes, label + ": no buffer published");
+					ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label);
+					ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": encode");
+					ClassicAssert.IsNull(bytes, label + ": no buffer published");
 
 					AssertRefusedWithoutMutation(bad, label);
 				}
@@ -1222,24 +1223,24 @@ namespace ThousandAndFirst.Tests
 				FixedPeriodToyState bad = (FixedPeriodToyState)entry[1];
 
 				ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(bad, 1000L, true);
-				Assert.IsFalse(advanced.Succeeded, label);
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, advanced.Fault,
+				ClassicAssert.IsFalse(advanced.Succeeded, label);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, advanced.Fault,
 					label + ": a readable latch value still selects a schedule rule, and the state loses first");
 
 				ToyAdvanceResult observed = FixedPeriodToyRules.ObserveOptionOnLoad(bad, 1000L, false);
-				Assert.IsFalse(observed.Succeeded, label);
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, observed.Fault, label + ": load");
+				ClassicAssert.IsFalse(observed.Succeeded, label);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, observed.Fault, label + ": load");
 
 				SemanticEventKey key = KernelCanonicalTests.GoldenKey();
 				KernelFaultCode fault;
-				Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label);
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": key expansion");
-				Assert.AreEqual(default(SemanticEventKey), key, label);
+				ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": key expansion");
+				ClassicAssert.AreEqual(default(SemanticEventKey), key, label);
 
 				byte[] bytes = new byte[] { 9 };
-				Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label);
-				Assert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": encode");
-				Assert.IsNull(bytes, label);
+				ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label);
+				ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, fault, label + ": encode");
+				ClassicAssert.IsNull(bytes, label);
 
 				AssertRefusedWithoutMutation(bad, label);
 			}
@@ -1251,8 +1252,8 @@ namespace ThousandAndFirst.Tests
 				1, 3, seed, Settlement, 0L, true, 5L, 0uL, 10L,
 				new OptionLatchState((OptionLatchValue)200, 0L), false, default(ToyPulseRange));
 			ToyAdvanceResult unreadableResult = FixedPeriodToyRules.AdvanceThrough(unreadable, 1000L, true);
-			Assert.IsFalse(unreadableResult.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, unreadableResult.Fault,
+			ClassicAssert.IsFalse(unreadableResult.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, unreadableResult.Fault,
 				"an unknown value selects no schedule rule, so there is nothing that could outrank it");
 			AssertRefusedWithoutMutation(unreadable, "unreadable latch + schedule");
 
@@ -1261,8 +1262,8 @@ namespace ThousandAndFirst.Tests
 				1, 3, seed, Settlement, 0L, true, 5L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Unobserved, 0L), false, default(ToyPulseRange));
 			ToyAdvanceResult unobservedResult = FixedPeriodToyRules.AdvanceThrough(unobserved, 1000L, true);
-			Assert.IsFalse(unobservedResult.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, unobservedResult.Fault);
+			ClassicAssert.IsFalse(unobservedResult.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, unobservedResult.Fault);
 			AssertRefusedWithoutMutation(unobserved, "unobserved latch + schedule");
 
 			// And the tick-reading half of the schedule rule still reports the state, once the
@@ -1271,8 +1272,8 @@ namespace ThousandAndFirst.Tests
 				1, 3, seed, Settlement, 0L, true, 5L, 0uL, 10L,
 				new OptionLatchState(OptionLatchValue.Enabled, 20L), false, default(ToyPulseRange));
 			ToyAdvanceResult deadlineResult = FixedPeriodToyRules.AdvanceThrough(deadlineBeforeChange, 1000L, true);
-			Assert.IsFalse(deadlineResult.Succeeded);
-			Assert.AreEqual(KernelFaultCode.InvalidToyState, deadlineResult.Fault,
+			ClassicAssert.IsFalse(deadlineResult.Succeeded);
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidToyState, deadlineResult.Fault,
 				"a deadline at or before the latch change is a state fault, not a latch fault");
 		}
 
@@ -1306,41 +1307,41 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode fault;
 
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(bad, long.MaxValue / 2L, true);
-			Assert.IsFalse(advanced.Succeeded, label + ": advance must refuse");
-			Assert.IsTrue(ReferenceEquals(bad, advanced.State), label + ": advance returns the caller's object");
-			Assert.AreEqual(OptionTransitionKind.None, advanced.OptionTransition, label + ": advance transitions nothing");
+			ClassicAssert.IsFalse(advanced.Succeeded, label + ": advance must refuse");
+			ClassicAssert.IsTrue(ReferenceEquals(bad, advanced.State), label + ": advance returns the caller's object");
+			ClassicAssert.AreEqual(OptionTransitionKind.None, advanced.OptionTransition, label + ": advance transitions nothing");
 
 			ToyAdvanceResult observed = FixedPeriodToyRules.ObserveOptionOnLoad(bad, long.MaxValue / 2L, false);
-			Assert.IsFalse(observed.Succeeded, label + ": load observation must refuse");
-			Assert.IsTrue(ReferenceEquals(bad, observed.State), label + ": load returns the caller's object");
-			Assert.AreEqual(OptionTransitionKind.None, observed.OptionTransition, label + ": load transitions nothing");
+			ClassicAssert.IsFalse(observed.Succeeded, label + ": load observation must refuse");
+			ClassicAssert.IsTrue(ReferenceEquals(bad, observed.State), label + ": load returns the caller's object");
+			ClassicAssert.AreEqual(OptionTransitionKind.None, observed.OptionTransition, label + ": load transitions nothing");
 
 			SemanticEventKey key;
-			Assert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label + ": key expansion must refuse");
-			Assert.AreEqual(default(SemanticEventKey), key, label + ": a refused expansion publishes the default key");
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryGetEventKey(bad, 0uL, out key, out fault), label + ": key expansion must refuse");
+			ClassicAssert.AreEqual(default(SemanticEventKey), key, label + ": a refused expansion publishes the default key");
 
 			byte[] bytes;
-			Assert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label + ": encode must refuse");
-			Assert.IsNull(bytes, label + ": a refused encode publishes no buffer");
+			ClassicAssert.IsFalse(FixedPeriodToyRules.TryEncodeCanonical(bad, out bytes, out fault), label + ": encode must refuse");
+			ClassicAssert.IsNull(bytes, label + ": a refused encode publishes no buffer");
 
-			Assert.AreEqual(schema, bad.SchemaVersion, label);
-			Assert.AreEqual(rules, bad.RulesVersion, label);
-			Assert.AreEqual(seedHigh, bad.SimulationSeed.High, label);
-			Assert.AreEqual(seedLow, bad.SimulationSeed.Low, label);
-			Assert.AreEqual(settlement, bad.SettlementId, label);
-			Assert.AreEqual(processed, bad.ProcessedThroughTick, label);
-			Assert.AreEqual(scheduled, bad.ClockScheduled, label);
-			Assert.AreEqual(nextDue, bad.NextDueTick, label);
-			Assert.AreEqual(nextOrdinal, bad.NextOrdinal, label);
-			Assert.AreEqual(interval, bad.IntervalTicks, label);
-			Assert.AreEqual(latchValue, bad.OptionLatch.Value, label);
-			Assert.AreEqual(latchTick, bad.OptionLatch.ChangedAtTick, label);
-			Assert.AreEqual(hasRange, bad.HasEmittedRange, label);
-			Assert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation, label);
-			Assert.AreEqual(rangeStream, bad.EmittedRange.EventStreamId, label);
-			Assert.AreEqual(rangeKind, bad.EmittedRange.EventKindCode, label);
-			Assert.AreEqual(rangeFirst, bad.EmittedRange.FirstOrdinal, label);
-			Assert.AreEqual(rangeCount, bad.EmittedRange.Count, label);
+			ClassicAssert.AreEqual(schema, bad.SchemaVersion, label);
+			ClassicAssert.AreEqual(rules, bad.RulesVersion, label);
+			ClassicAssert.AreEqual(seedHigh, bad.SimulationSeed.High, label);
+			ClassicAssert.AreEqual(seedLow, bad.SimulationSeed.Low, label);
+			ClassicAssert.AreEqual(settlement, bad.SettlementId, label);
+			ClassicAssert.AreEqual(processed, bad.ProcessedThroughTick, label);
+			ClassicAssert.AreEqual(scheduled, bad.ClockScheduled, label);
+			ClassicAssert.AreEqual(nextDue, bad.NextDueTick, label);
+			ClassicAssert.AreEqual(nextOrdinal, bad.NextOrdinal, label);
+			ClassicAssert.AreEqual(interval, bad.IntervalTicks, label);
+			ClassicAssert.AreEqual(latchValue, bad.OptionLatch.Value, label);
+			ClassicAssert.AreEqual(latchTick, bad.OptionLatch.ChangedAtTick, label);
+			ClassicAssert.AreEqual(hasRange, bad.HasEmittedRange, label);
+			ClassicAssert.AreEqual(rangeRules, bad.EmittedRange.RulesVersionAtCreation, label);
+			ClassicAssert.AreEqual(rangeStream, bad.EmittedRange.EventStreamId, label);
+			ClassicAssert.AreEqual(rangeKind, bad.EmittedRange.EventKindCode, label);
+			ClassicAssert.AreEqual(rangeFirst, bad.EmittedRange.FirstOrdinal, label);
+			ClassicAssert.AreEqual(rangeCount, bad.EmittedRange.Count, label);
 		}
 
 		[Test]
@@ -1350,10 +1351,10 @@ namespace ThousandAndFirst.Tests
 			// looped per occurrence this would not return.
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 1L, true);
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(created.State, 4000000000L, true);
-			Assert.IsTrue(advanced.Succeeded);
-			Assert.AreEqual(4000000000uL, advanced.State.NextOrdinal);
-			Assert.AreEqual(4000000000uL, advanced.State.EmittedRange.Count);
-			Assert.AreEqual(4000000001L, advanced.State.NextDueTick);
+			ClassicAssert.IsTrue(advanced.Succeeded);
+			ClassicAssert.AreEqual(4000000000uL, advanced.State.NextOrdinal);
+			ClassicAssert.AreEqual(4000000000uL, advanced.State.EmittedRange.Count);
+			ClassicAssert.AreEqual(4000000001L, advanced.State.NextDueTick);
 		}
 
 		private static void AssertFields(Type type, string[] names, Type[] types)
@@ -1364,7 +1365,7 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.Name);
 			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.Name);
 			foreach (FieldInfo field in fields)
-				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, type.Name + "." + field.Name);
+				ClassicAssert.IsTrue(field.IsAssembly && field.IsInitOnly, type.Name + "." + field.Name);
 		}
 
 		private static string LogicalSource()

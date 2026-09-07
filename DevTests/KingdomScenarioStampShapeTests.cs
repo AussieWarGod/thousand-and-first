@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -42,13 +43,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OnlyTotalAbsenceIsOrdinaryPlay()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.Absent, Stamp(Absent(), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.Absent, Stamp(Absent(), Absent()));
 		}
 
 		[Test]
 		public void ExactStringProvenanceWithTheExactMarkerIsReadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.Readable, Stamp(Text("sc1|k"), Int(1)));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.Readable, Stamp(Text("sc1|k"), Int(1)));
 		}
 
 		/// <summary>
@@ -58,42 +59,42 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnExplicitlyEmptyStampIsUnreadableNotAbsent()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text(""), Int(1)));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text(""), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text(""), Int(1)));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text(""), Absent()));
 		}
 
 		[Test]
 		public void EitherHalfAloneIsUnreadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
 				Stamp(Text("sc1|k"), Absent()));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Absent(), Int(1)));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Absent(), Int(1)));
 		}
 
 		[Test]
 		public void AZeroOrWrongTypedMarkerIsUnreadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
 				Stamp(Text("sc1|k"), Int(0)));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
 				Stamp(Text("sc1|k"), Int(2)));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
 				Stamp(Text("sc1|k"), Text("1")));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable,
 				Stamp(Text("sc1|k"), new KingdomDurableKeyObservation { HasBoolean = true }));
 		}
 
 		[Test]
 		public void ProvenanceUnderTheIntTableIsUnreadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Int(0), Int(1)));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Int(1), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Int(0), Int(1)));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Int(1), Absent()));
 		}
 
 		[Test]
 		public void ADualTypedStampPairIsUnreadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(
 				new KingdomDurableKeyObservation
 				{
 					HasString = true,
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 					HasInt = true,
 					Int = 1
 				}, Int(1)));
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text("sc1|k"),
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(Text("sc1|k"),
 				new KingdomDurableKeyObservation
 				{
 					HasInt = true,
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnobservedStampPairIsUnreadable()
 		{
-			Assert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(null, null));
+			ClassicAssert.AreEqual(KingdomScenarioStampShape.PresentUnreadable, Stamp(null, null));
 		}
 
 		// ----- other harness-owned authority keys -----------------------------------------------
@@ -124,11 +125,11 @@ namespace ThousandAndFirst.Tests
 			string value;
 			bool present;
 			string detail;
-			Assert.IsTrue(KingdomScenarioStateShape.TryAuthorityText(Absent(), out value,
+			ClassicAssert.IsTrue(KingdomScenarioStateShape.TryAuthorityText(Absent(), out value,
 				out present, out detail));
-			Assert.IsFalse(present);
-			Assert.IsNull(value);
-			Assert.IsNull(detail);
+			ClassicAssert.IsFalse(present);
+			ClassicAssert.IsNull(value);
+			ClassicAssert.IsNull(detail);
 		}
 
 		[Test]
@@ -137,10 +138,10 @@ namespace ThousandAndFirst.Tests
 			string value;
 			bool present;
 			string detail;
-			Assert.IsTrue(KingdomScenarioStateShape.TryAuthorityText(Text("arch;facing=north"),
+			ClassicAssert.IsTrue(KingdomScenarioStateShape.TryAuthorityText(Text("arch;facing=north"),
 				out value, out present, out detail));
-			Assert.IsTrue(present);
-			Assert.AreEqual("arch;facing=north", value);
+			ClassicAssert.IsTrue(present);
+			ClassicAssert.AreEqual("arch;facing=north", value);
 		}
 
 		[Test]
@@ -149,20 +150,20 @@ namespace ThousandAndFirst.Tests
 			string value;
 			bool present;
 			string detail;
-			Assert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(Text(""), out value,
+			ClassicAssert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(Text(""), out value,
 				out present, out detail), "an explicitly stored empty string is not absence");
-			Assert.IsTrue(present);
-			Assert.IsNotNull(detail);
-			Assert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(Int(0), out value,
+			ClassicAssert.IsTrue(present);
+			ClassicAssert.IsNotNull(detail);
+			ClassicAssert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(Int(0), out value,
 				out present, out detail));
-			Assert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(
+			ClassicAssert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(
 				new KingdomDurableKeyObservation
 				{
 					HasString = true,
 					String = "x",
 					HasInt64 = true
 				}, out value, out present, out detail));
-			Assert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(null, out value,
+			ClassicAssert.IsFalse(KingdomScenarioStateShape.TryAuthorityText(null, out value,
 				out present, out detail));
 		}
 	}

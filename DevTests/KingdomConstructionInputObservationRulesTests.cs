@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -15,28 +16,28 @@ namespace ThousandAndFirst.Tests
 			KingdomConstructionInputZoneObservation second = Zone("settlement-b", "zone-b", 20,
 				Water("water-b", 900));
 			KingdomConstructionInputObservationBook book = Book(first, second);
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(book,
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(book,
 				out string encoded));
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryDecode(encoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryDecode(encoded,
 				out KingdomConstructionInputObservationBook loaded));
-			Assert.AreEqual(2, loaded.ZoneCount);
-			Assert.AreEqual("item-a", Find(loaded, "zone-a").LineAt(0).SourceObjectId);
-			Assert.AreEqual("water-b", Find(loaded, "zone-b").LineAt(0).SourceObjectId);
+			ClassicAssert.AreEqual(2, loaded.ZoneCount);
+			ClassicAssert.AreEqual("item-a", Find(loaded, "zone-a").LineAt(0).SourceObjectId);
+			ClassicAssert.AreEqual("water-b", Find(loaded, "zone-b").LineAt(0).SourceObjectId);
 
 			KingdomConstructionInputZoneObservation revisited = Zone(
 				"settlement-a", "zone-a", 30, Material("holder-a", "item-a-2", 2));
 			KingdomConstructionInputObservationBook replaced = Book(revisited,
 				Find(loaded, "zone-b"));
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(replaced,
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(replaced,
 				out string replacement));
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryDecode(replacement,
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryDecode(replacement,
 				out KingdomConstructionInputObservationBook reloaded));
-			Assert.AreEqual(30L, Find(reloaded, "zone-a").ObservedTick);
-			Assert.AreEqual("item-a-2", Find(reloaded, "zone-a").LineAt(0).SourceObjectId);
-			Assert.AreEqual("water-b", Find(reloaded, "zone-b").LineAt(0).SourceObjectId);
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(reloaded,
+			ClassicAssert.AreEqual(30L, Find(reloaded, "zone-a").ObservedTick);
+			ClassicAssert.AreEqual("item-a-2", Find(reloaded, "zone-a").LineAt(0).SourceObjectId);
+			ClassicAssert.AreEqual("water-b", Find(reloaded, "zone-b").LineAt(0).SourceObjectId);
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(reloaded,
 				out string canonical));
-			Assert.AreEqual(replacement, canonical);
+			ClassicAssert.AreEqual(replacement, canonical);
 		}
 
 		[Test]
@@ -44,19 +45,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionInputZoneObservation zone = Zone("settlement", "zone", 1,
 				Material("holder", "item", 1));
-			Assert.IsFalse(KingdomConstructionInputObservationRules.Valid(Book(zone, zone)));
-			Assert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(Book(zone),
+			ClassicAssert.IsFalse(KingdomConstructionInputObservationRules.Valid(Book(zone, zone)));
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationCodec.TryEncode(Book(zone),
 				out string encoded));
-			Assert.IsFalse(KingdomConstructionInputObservationCodec.TryDecode(encoded + "\n",
+			ClassicAssert.IsFalse(KingdomConstructionInputObservationCodec.TryDecode(encoded + "\n",
 				out KingdomConstructionInputObservationBook _));
 			byte[] future = Convert.FromBase64String(encoded);
 			future[4] = 2; future[5] = future[6] = future[7] = 0;
-			Assert.IsFalse(KingdomConstructionInputObservationCodec.TryDecode(
+			ClassicAssert.IsFalse(KingdomConstructionInputObservationCodec.TryDecode(
 				Convert.ToBase64String(future), out _));
-			Assert.IsFalse(KingdomConstructionInputObservationRules.Valid(Zone(
+			ClassicAssert.IsFalse(KingdomConstructionInputObservationRules.Valid(Zone(
 				"settlement", "bad-grid", 1, new byte[] { 1, 1, 1, 0 },
 				new byte[] { 0, 0, 0, 1 }, Material("holder", "item", 1))));
-			Assert.IsFalse(KingdomConstructionInputObservationRules.Valid(Zone(
+			ClassicAssert.IsFalse(KingdomConstructionInputObservationRules.Valid(Zone(
 				"settlement", "bad-kind", 1, new KingdomConstructionInputObservationLine(
 					(KingdomConstructionInputKind)99, "unknown", "holder", "item",
 					KingdomConstructionInputTopology.ContainerInventory, 0, 0,
@@ -68,10 +69,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionInputObservationBook remote = Book(Zone(
 				"remote", "remote-zone", 4, Water("remote-water", 1000)));
-			Assert.IsTrue(KingdomConstructionInputObservationRules.Valid(remote));
-			Assert.IsTrue(KingdomConstructionInputLeaseRules.TryAvailableWater(
+			ClassicAssert.IsTrue(KingdomConstructionInputObservationRules.Valid(remote));
+			ClassicAssert.IsTrue(KingdomConstructionInputLeaseRules.TryAvailableWater(
 				2, 3, true, out int localAvailable));
-			Assert.AreEqual(0, localAvailable);
+			ClassicAssert.AreEqual(0, localAvailable);
 		}
 
 		private static KingdomConstructionInputObservationBook Book(

@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,10 +20,10 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string source, string signature, string nextSignature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int end = source.IndexOf(nextSignature, start + signature.Length,
 				StringComparison.Ordinal);
-			Assert.Greater(end, start, nextSignature);
+			ClassicAssert.Greater(end, start, nextSignature);
 			return source.Substring(start, end - start);
 		}
 
@@ -45,24 +46,24 @@ namespace ThousandAndFirst.Tests
 				hash = BitConverter.ToString(sha.ComputeHash(
 					Encoding.UTF8.GetBytes(shape.ToString()))).Replace("-", "").ToLowerInvariant();
 			}
-			Assert.AreEqual(194, fields.Count);
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(194, fields.Count);
+			ClassicAssert.AreEqual(
 				"2f05be43f2bad9b5f903a9e02a74100d41794e69b24f2670de6f9d315949f5b3",
 				hash, "public field names, types, defaults, and declaration order are save ABI");
 			// z18a.Return.RegardAndPrompt carries the exile regard/return callbacks out of z19.
-			Assert.AreEqual(35,
+			ClassicAssert.AreEqual(35,
 				Regex.Matches(source, "public partial class KingdomSystem").Count,
 				"the reviewed logical-source shard set is part of the save-ABI pin");
-			Assert.AreEqual(1, Regex.Matches(source, @"^\t\[Serializable\]$",
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"^\t\[Serializable\]$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(9, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
+			ClassicAssert.AreEqual(9, Regex.Matches(source, @"^\t\t\[NonSerialized\]$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(6, Regex.Matches(source, @"^\t\t\[Obsolete\(",
+			ClassicAssert.AreEqual(6, Regex.Matches(source, @"^\t\t\[Obsolete\(",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(1, Regex.Matches(source,
+			ClassicAssert.AreEqual(1, Regex.Matches(source,
 				@"^\t\tprivate sealed class CharterAbilityObservation$",
 				RegexOptions.Multiline).Count);
-			Assert.AreEqual(1, Regex.Matches(source,
+			ClassicAssert.AreEqual(1, Regex.Matches(source,
 				@"^\t\tprivate sealed class CharterReferenceSnapshot$",
 				RegexOptions.Multiline).Count);
 		}
@@ -76,9 +77,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int field = source.IndexOf("public KingdomManifest Manifest;", obsolete,
 				StringComparison.Ordinal);
-			Assert.Greater(obsolete, 0);
-			Assert.Greater(field, obsolete);
-			Assert.IsFalse(source.Contains("public KingdomManifest Manifest {"),
+			ClassicAssert.Greater(obsolete, 0);
+			ClassicAssert.Greater(field, obsolete);
+			ClassicAssert.IsFalse(source.Contains("public KingdomManifest Manifest {"),
 				"Replacing named serialized field with property breaks old save wire name.");
 			StringAssert.Contains("public override bool WantFieldReflection => false;", source);
 			StringAssert.Contains("public KingdomManifest LegacyManifestEvidence;", source);
@@ -89,8 +90,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int namedFields = write.IndexOf("Writer.WriteNamedFields(this, typeof(KingdomSystem))",
 				StringComparison.Ordinal);
-			Assert.Greater(synchronize, 0);
-			Assert.Greater(namedFields, synchronize);
+			ClassicAssert.Greater(synchronize, 0);
+			ClassicAssert.Greater(namedFields, synchronize);
 		}
 
 		[Test]
@@ -105,7 +106,7 @@ namespace ThousandAndFirst.Tests
 				"LegacyManifestEvidence = KingdomTrade.LegacyManifestSnapshot(Manifest);", normalize);
 			StringAssert.Contains("|| DealNextTicks.Count > 0 || LegacyManifestEvidence != null",
 				normalize);
-			Assert.IsFalse(normalize.Contains("|| DealNextTicks.Count > 0 || Manifest != null"),
+			ClassicAssert.IsFalse(normalize.Contains("|| DealNextTicks.Count > 0 || Manifest != null"),
 				"Exact saved projection must not quarantine authoritative TradeBook on load.");
 			StringAssert.Contains("finally", normalize);
 			StringAssert.Contains("SynchronizeLegacyManifestProjection();", normalize);
@@ -124,10 +125,10 @@ namespace ThousandAndFirst.Tests
 			int synchronize = lease.IndexOf("System?.SynchronizeLegacyManifestProjection();",
 				StringComparison.Ordinal);
 			int unlock = lease.IndexOf("InFlight = null;", StringComparison.Ordinal);
-			Assert.Greater(synchronize, 0);
-			Assert.Greater(unlock, synchronize);
-			Assert.IsFalse(source.Contains("System.Manifest ="));
-			Assert.IsFalse(source.Contains("system.Manifest ="));
+			ClassicAssert.Greater(synchronize, 0);
+			ClassicAssert.Greater(unlock, synchronize);
+			ClassicAssert.IsFalse(source.Contains("System.Manifest ="));
+			ClassicAssert.IsFalse(source.Contains("system.Manifest ="));
 		}
 
 		[Test]
@@ -165,8 +166,8 @@ namespace ThousandAndFirst.Tests
 			int refresh = domain.LastIndexOf("RefreshBookDomain(Frame);", StringComparison.Ordinal);
 			int synchronize = domain.IndexOf("System.SynchronizeLegacyManifestProjection();",
 				refresh, StringComparison.Ordinal);
-			Assert.Greater(refresh, 0);
-			Assert.Greater(synchronize, refresh);
+			ClassicAssert.Greater(refresh, 0);
+			ClassicAssert.Greater(synchronize, refresh);
 
 			string continuation = Method(source,
 				"private static void ContinueOperation(KingdomSystem System",
@@ -175,8 +176,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int retirementProjection = continuation.IndexOf(
 				"System.SynchronizeLegacyManifestProjection();", retire, StringComparison.Ordinal);
-			Assert.Greater(retire, 0);
-			Assert.Greater(retirementProjection, retire,
+			ClassicAssert.Greater(retire, 0);
+			ClassicAssert.Greater(retirementProjection, retire,
 				"Delivery and second-window lapse clear manifest during retirement.");
 		}
 
@@ -196,10 +197,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int afterCleanup = quarantine.IndexOf(
 				"System.SynchronizeLegacyManifestProjection();", retire, StringComparison.Ordinal);
-			Assert.Greater(beforeCallbacks, refresh);
-			Assert.Greater(dispatch, beforeCallbacks);
-			Assert.Greater(retire, dispatch);
-			Assert.Greater(afterCleanup, retire);
+			ClassicAssert.Greater(beforeCallbacks, refresh);
+			ClassicAssert.Greater(dispatch, beforeCallbacks);
+			ClassicAssert.Greater(retire, dispatch);
+			ClassicAssert.Greater(afterCleanup, retire);
 		}
 
 		[Test]

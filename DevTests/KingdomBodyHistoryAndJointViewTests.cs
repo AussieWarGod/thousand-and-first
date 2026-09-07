@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -19,54 +20,54 @@ namespace ThousandAndFirst.DevTests
 			KingdomBodyHistoryBook book = new KingdomBodyHistoryBook();
 			for (int i = 0; i < KingdomBodyHistoryRules.MaxRows; i++)
 			{
-				Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
+				ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
 					book.Revision, Evidence(i), out _, out string failure), failure);
 			}
 			KingdomBodyHistoryEnvelope envelope = new KingdomBodyHistoryEnvelope();
-			Assert.IsTrue(envelope.TryBindEmptyIdentity(Realm, out string bindFailure), bindFailure);
+			ClassicAssert.IsTrue(envelope.TryBindEmptyIdentity(Realm, out string bindFailure), bindFailure);
 			envelope.Book = book;
 			byte[] bytes = KingdomBodyHistoryCodec.Encode(envelope);
-			Assert.LessOrEqual(bytes.Length, KingdomBodyHistoryCodec.MaxEnvelopeBytes);
-			Assert.AreEqual(32946, KingdomBodyHistoryCodec.MaxEnvelopeBytes);
+			ClassicAssert.LessOrEqual(bytes.Length, KingdomBodyHistoryCodec.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(32946, KingdomBodyHistoryCodec.MaxEnvelopeBytes);
 			KingdomBodyHistoryEnvelope loaded = KingdomBodyHistoryCodec.Decode(bytes);
-			Assert.IsTrue(loaded.IdentityBound); Assert.AreEqual(Realm, loaded.RealmId);
+			ClassicAssert.IsTrue(loaded.IdentityBound); ClassicAssert.AreEqual(Realm, loaded.RealmId);
 			CollectionAssert.AreEqual(bytes, KingdomBodyHistoryCodec.Encode(loaded));
 			long revision = book.Revision;
-			Assert.IsFalse(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
+			ClassicAssert.IsFalse(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
 				book.Revision, Evidence(99), out _, out _));
-			Assert.AreEqual(revision, book.Revision);
-			Assert.AreEqual(KingdomBodyHistoryRules.MaxRows, book.Rows.Count);
+			ClassicAssert.AreEqual(revision, book.Revision);
+			ClassicAssert.AreEqual(KingdomBodyHistoryRules.MaxRows, book.Rows.Count);
 		}
 
 		[Test]
 		public void BodyHistoryV1OnlyMigratesEmptyAndRealmMismatchQuarantines()
 		{
 			KingdomBodyHistoryBook book = new KingdomBodyHistoryBook();
-			Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
 				Evidence(1), out _, out string failure), failure);
 			KingdomBodyHistoryEnvelope current = new KingdomBodyHistoryEnvelope();
-			Assert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
+			ClassicAssert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
 			current.Book = book;
 			byte[] v2 = KingdomBodyHistoryCodec.Encode(current);
-			Assert.AreEqual(2, BitConverter.ToInt32(v2, 4));
-			Assert.IsTrue(KingdomBodyHistoryStore.ReadForRealm(v2, OtherRealm,
+			ClassicAssert.AreEqual(2, BitConverter.ToInt32(v2, 4));
+			ClassicAssert.IsTrue(KingdomBodyHistoryStore.ReadForRealm(v2, OtherRealm,
 				out failure).Quarantined); StringAssert.Contains("mismatch", failure);
 			KingdomBodyHistoryEnvelope copy = current.Copy();
-			Assert.AreNotSame(current.Book, copy.Book); Assert.AreEqual(Realm, copy.RealmId);
+			ClassicAssert.AreNotSame(current.Book, copy.Book); ClassicAssert.AreEqual(Realm, copy.RealmId);
 
 			byte[] populatedV1 = LegacyFromV2(v2); byte[] exact = (byte[])populatedV1.Clone();
 			KingdomBodyHistoryEnvelope legacy = KingdomBodyHistoryCodec.Decode(populatedV1);
-			Assert.IsFalse(legacy.IdentityBound);
-			Assert.IsFalse(legacy.TryBindEmptyIdentity(Realm, out failure));
-			Assert.IsTrue(KingdomBodyHistoryStore.ReadForRealm(populatedV1, Realm,
+			ClassicAssert.IsFalse(legacy.IdentityBound);
+			ClassicAssert.IsFalse(legacy.TryBindEmptyIdentity(Realm, out failure));
+			ClassicAssert.IsTrue(KingdomBodyHistoryStore.ReadForRealm(populatedV1, Realm,
 				out failure).Quarantined); CollectionAssert.AreEqual(exact, populatedV1);
 
 			KingdomBodyHistoryEnvelope empty = new KingdomBodyHistoryEnvelope();
-			Assert.IsTrue(empty.TryBindEmptyIdentity(Realm, out failure), failure);
+			ClassicAssert.IsTrue(empty.TryBindEmptyIdentity(Realm, out failure), failure);
 			KingdomBodyHistoryEnvelope migrated = KingdomBodyHistoryStore.ReadForRealm(
 				LegacyFromV2(KingdomBodyHistoryCodec.Encode(empty)), Realm, out failure);
-			Assert.IsNull(failure); Assert.IsTrue(migrated.IdentityBound);
-			Assert.AreEqual(Realm, migrated.RealmId);
+			ClassicAssert.IsNull(failure); ClassicAssert.IsTrue(migrated.IdentityBound);
+			ClassicAssert.AreEqual(Realm, migrated.RealmId);
 		}
 
 		[Test]
@@ -74,16 +75,16 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomBodyHistoryBook book = new KingdomBodyHistoryBook();
 			KingdomWitnessedBodyEventEvidence evidence = Evidence(1);
-			Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
 				evidence, out KingdomBodyHistoryReceipt first, out string failure), failure);
-			Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book, 0,
 				evidence, out KingdomBodyHistoryReceipt replay, out failure), failure);
-			Assert.AreEqual(first.ReceiptId, replay.ReceiptId);
-			Assert.AreEqual(1, book.Rows.Count);
+			ClassicAssert.AreEqual(first.ReceiptId, replay.ReceiptId);
+			ClassicAssert.AreEqual(1, book.Rows.Count);
 			evidence.BodyPartFact = "a different alleged scar";
-			Assert.IsFalse(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
+			ClassicAssert.IsFalse(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
 				book.Revision, evidence, out _, out _));
-			Assert.AreEqual(1, book.Rows.Count);
+			ClassicAssert.AreEqual(1, book.Rows.Count);
 		}
 
 		[Test]
@@ -112,12 +113,12 @@ namespace ThousandAndFirst.DevTests
 			};
 			snapshot.BodyIdentityDigest = KingdomBodyHistoryRules.AnatomyDigest(
 				snapshot.ResidentIdentity, snapshot.BodyObjectId, parts);
-			Assert.IsTrue(KingdomBodyHistoryRules.TryView(snapshot, out string view,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryView(snapshot, out string view,
 				out string failure), failure);
 			StringAssert.Contains("left hand", view);
 			StringAssert.Contains("Cybernetic Arm", view);
 			snapshot.BodyObjectId = "taf:object:clone";
-			Assert.IsFalse(KingdomBodyHistoryRules.TryView(snapshot, out _, out _));
+			ClassicAssert.IsFalse(KingdomBodyHistoryRules.TryView(snapshot, out _, out _));
 		}
 
 		[Test]
@@ -134,8 +135,8 @@ namespace ThousandAndFirst.DevTests
 			bytes[12] ^= 1;
 			KingdomBodyHistoryEnvelope quarantined =
 				KingdomBodyHistoryStore.ReadOrEmpty(bytes, out string failure);
-			Assert.IsTrue(quarantined.Quarantined);
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsTrue(quarantined.Quarantined);
+			ClassicAssert.IsNotNull(failure);
 		}
 
 		[Test]
@@ -143,9 +144,9 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomWitnessedBodyEventEvidence current = Evidence(0);
 			KingdomBodyHistoryBook book = new KingdomBodyHistoryBook();
-			Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
 				book.Revision, Evidence(2), out _, out string failure), failure);
-			Assert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.TryRecordWitnessedProcedure(book,
 				book.Revision, current, out _, out failure), failure);
 			List<KingdomLiveAnatomyPart> parts = new List<KingdomLiveAnatomyPart>
 			{
@@ -159,9 +160,9 @@ namespace ThousandAndFirst.DevTests
 			};
 			anatomy.BodyIdentityDigest = KingdomBodyHistoryRules.AnatomyDigest(
 				anatomy.ResidentIdentity, anatomy.BodyObjectId, parts);
-			Assert.IsTrue(KingdomBodyHistoryViewRules.TryCompose(anatomy, book,
+			ClassicAssert.IsTrue(KingdomBodyHistoryViewRules.TryCompose(anatomy, book,
 				out string view, out failure), failure);
-			Assert.Less(view.IndexOf("At tick 20", StringComparison.Ordinal),
+			ClassicAssert.Less(view.IndexOf("At tick 20", StringComparison.Ordinal),
 				view.IndexOf("At tick 22", StringComparison.Ordinal));
 			StringAssert.Contains("[current form]", view);
 			StringAssert.Contains("[former form]", view);
@@ -189,15 +190,15 @@ namespace ThousandAndFirst.DevTests
 			};
 			KingdomJointCivicOwnerView enclave =
 				KingdomJointCivicViewAdapters.Enclave(authority, "Hosted lots are active.");
-			Assert.IsTrue(KingdomJointCivicViewRules.TryBuild(creed, covenant, moot,
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.TryBuild(creed, covenant, moot,
 				enclave, out KingdomJointCivicView view, out string failure), failure);
-			Assert.AreEqual(KingdomJointOwnerState.Absent, view.Covenant.State);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, view.Moot.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Absent, view.Covenant.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, view.Moot.State);
 			StringAssert.StartsWith("taf:hosted-enclave:v1:",
 				view.Enclave.SourceReceiptId);
-			Assert.IsFalse(view.Enclave.SourceReceiptId.Contains(authority.CarrierId));
+			ClassicAssert.IsFalse(view.Enclave.SourceReceiptId.Contains(authority.CarrierId));
 			creed.Text = "changed";
-			Assert.AreEqual("The realm declared for the Mechanimists.", view.Creed.Text);
+			ClassicAssert.AreEqual("The realm declared for the Mechanimists.", view.Creed.Text);
 		}
 
 		private static KingdomWitnessedBodyEventEvidence Evidence(int Index)

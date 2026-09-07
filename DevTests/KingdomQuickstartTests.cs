@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -107,15 +108,15 @@ namespace ThousandAndFirst.Tests
 						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
-					Assert.AreEqual(previous || endpoint,
+					ClassicAssert.AreEqual(previous || endpoint,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
 					if (endpoint && !previous) added++;
 				}
-			Assert.AreEqual(2, added);
+			ClassicAssert.AreEqual(2, added);
 			foreach (int outside in new[] { int.MinValue, int.MaxValue })
 			{
-				Assert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
-				Assert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
+				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
+				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
 			}
 		}
 
@@ -349,7 +350,7 @@ namespace ThousandAndFirst.Tests
 			int prepare = source.IndexOf("new KingdomQuickstartCampBuilder().BuildZone(zone)", StringComparison.Ordinal);
 			Assert.That(resolve, Is.GreaterThanOrEqualTo(0));
 			Assert.That(prepare, Is.GreaterThan(resolve));
-			Assert.AreEqual(prepare, source.LastIndexOf("new KingdomQuickstartCampBuilder().BuildZone(zone)", StringComparison.Ordinal));
+			ClassicAssert.AreEqual(prepare, source.LastIndexOf("new KingdomQuickstartCampBuilder().BuildZone(zone)", StringComparison.Ordinal));
 			int reachability = source.IndexOf("zone.BuildReachableMap(", StringComparison.Ordinal);
 			Assert.That(reachability, Is.GreaterThan(prepare));
 			Assert.That(source.IndexOf("attempt.Prepared = true;", StringComparison.Ordinal), Is.GreaterThan(reachability));

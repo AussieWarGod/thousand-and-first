@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 
 namespace ThousandAndFirst.Tests
@@ -23,10 +24,10 @@ namespace ThousandAndFirst.Tests
 				}));
 			string openDigest = Digest(none);
 			string boundDigest = Digest(bind);
-			Assert.AreEqual(64, openDigest.Length);
-			Assert.AreEqual(64, boundDigest.Length);
-			Assert.AreNotEqual(openDigest, boundDigest);
-			Assert.AreNotEqual(openDigest,
+			ClassicAssert.AreEqual(64, openDigest.Length);
+			ClassicAssert.AreEqual(64, boundDigest.Length);
+			ClassicAssert.AreNotEqual(openDigest, boundDigest);
+			ClassicAssert.AreNotEqual(openDigest,
 				KingdomFoundingTransactionRules.PayloadDigest(
 					KingdomFoundingKind.FirstCity, "Ada", null, null, null,
 					64, 64, 0, 64, "water:64", ""));

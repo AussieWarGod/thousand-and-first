@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,9 +23,9 @@ namespace ThousandAndFirst.Tests
 				checkIn, StringComparison.Ordinal);
 			int works = city.IndexOf("state = ReadWorks(state, Z, Survey)", checkIn,
 				StringComparison.Ordinal);
-			Assert.Greater(checkIn, 0);
-			Assert.Greater(roster, checkIn);
-			Assert.Greater(works, roster);
+			ClassicAssert.Greater(checkIn, 0);
+			ClassicAssert.Greater(roster, checkIn);
+			ClassicAssert.Greater(works, roster);
 
 			int readWorks = city.IndexOf("private static KingdomCityState ReadWorks",
 				StringComparison.Ordinal);

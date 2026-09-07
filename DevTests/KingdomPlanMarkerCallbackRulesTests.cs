@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -52,9 +53,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptShapeRejectsEmptyWrongTypedAndContradictoryEvidence()
 		{
-			Assert.AreEqual(KingdomPlanReceiptShape.Absent,
+			ClassicAssert.AreEqual(KingdomPlanReceiptShape.Absent,
 				KingdomConstructionRules.PlanMarkerReceiptShape(false, null, false));
-			Assert.AreEqual(KingdomPlanReceiptShape.Exact,
+			ClassicAssert.AreEqual(KingdomPlanReceiptShape.Exact,
 				KingdomConstructionRules.PlanMarkerReceiptShape(true, "receipt", false));
 			foreach (var evidence in new[]
 			{
@@ -62,7 +63,7 @@ namespace ThousandAndFirst.Tests
 				Tuple.Create(false, (string)null, true), Tuple.Create(true, "receipt", true),
 				Tuple.Create(false, "ghost", false)
 			})
-				Assert.AreEqual(KingdomPlanReceiptShape.Corrupt,
+				ClassicAssert.AreEqual(KingdomPlanReceiptShape.Corrupt,
 					KingdomConstructionRules.PlanMarkerReceiptShape(
 						evidence.Item1, evidence.Item2, evidence.Item3));
 		}
@@ -70,7 +71,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RegistryUnreferencedScansAllFiveLanesAndRejectsMalformedOrDuplicateRows()
 		{
-			Assert.IsTrue(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
+			ClassicAssert.IsTrue(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
 				new List<KingdomConstructionJob>(), MarkerId));
 			foreach (Action<KingdomConstructionJob> bind in new Action<KingdomConstructionJob>[]
 			{
@@ -83,20 +84,20 @@ namespace ThousandAndFirst.Tests
 				row.SourceId = "other-source";
 				row.SubjectId = "other-subject";
 				bind(row);
-				Assert.IsTrue(KingdomConstructionRules.ValidJob(row));
-				Assert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
+				ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(row));
+				ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
 					new List<KingdomConstructionJob> { row }, MarkerId));
 			}
 			KingdomConstructionJob malformed = Job();
 			malformed.SourceId = "other-source";
 			malformed.SubjectId = "other-subject";
 			malformed.Id = "bad-id";
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
 				new List<KingdomConstructionJob> { malformed }, MarkerId));
 			KingdomConstructionJob first = Job();
 			first.SourceId = "other-source"; first.SubjectId = "other-subject";
 			KingdomConstructionJob duplicate = first.Copy();
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRegistryUnreferenced(
 				new List<KingdomConstructionJob> { first, duplicate }, MarkerId));
 		}
 
@@ -108,10 +109,10 @@ namespace ThousandAndFirst.Tests
 			Func<KingdomConstructionJob, bool> route = j =>
 				KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 					j.Route, 12, 9, false, false, 0, 0, j.X, j.Y);
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationAllowed(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationAllowed(
 				new List<KingdomConstructionJob> { first, second }, false, null,
 				MarkerId, Owner, ZoneId, Target, route));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationAllowed(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationAllowed(
 				new List<KingdomConstructionJob> { first, second }, true, first.Id,
 				MarkerId, Owner, ZoneId, Target, route));
 		}
@@ -119,35 +120,35 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RouteCoordinatesDistinguishStakeFromRealPlotMainAnchor()
 		{
-			Assert.IsTrue(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsTrue(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlanScaffold, 12, 9, false, false, 0, 0, 12, 9));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlanScaffold, 12, 9, false, false, 0, 0, 20, 15));
-			Assert.IsTrue(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsTrue(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlotPlan, 12, 9, true, true, 20, 15, 20, 15));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlotPlan, 12, 9, true, true, 20, 15, 12, 9));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlotPlan, 12, 9, false, true, 20, 15, 20, 15));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerRouteCoordinatesValid(
 				KingdomConstructionRoute.PlotPlan, 12, 9, true, false, 20, 15, 20, 15));
 		}
 
 		[Test]
 		public void DirectGroundProofRejectsStacksContainersMovesReplacementsAndDuplicates()
 		{
-			Assert.IsTrue(DirectGround());
-			Assert.IsFalse(DirectGround(count: 2));
-			Assert.IsFalse(DirectGround(stacker: true));
-			Assert.IsFalse(DirectGround(inventory: true));
-			Assert.IsFalse(DirectGround(equipped: true));
-			Assert.IsFalse(DirectGround(sameZone: false));
-			Assert.IsFalse(DirectGround(sameCell: false));
-			Assert.IsFalse(DirectGround(directReferences: 0));
-			Assert.IsFalse(DirectGround(directReferences: 2));
-			Assert.IsFalse(DirectGround(idState: KingdomPhysicalLookupState.Absent));
-			Assert.IsFalse(DirectGround(idState: KingdomPhysicalLookupState.Ambiguous));
-			Assert.IsFalse(DirectGround(exactReference: false));
+			ClassicAssert.IsTrue(DirectGround());
+			ClassicAssert.IsFalse(DirectGround(count: 2));
+			ClassicAssert.IsFalse(DirectGround(stacker: true));
+			ClassicAssert.IsFalse(DirectGround(inventory: true));
+			ClassicAssert.IsFalse(DirectGround(equipped: true));
+			ClassicAssert.IsFalse(DirectGround(sameZone: false));
+			ClassicAssert.IsFalse(DirectGround(sameCell: false));
+			ClassicAssert.IsFalse(DirectGround(directReferences: 0));
+			ClassicAssert.IsFalse(DirectGround(directReferences: 2));
+			ClassicAssert.IsFalse(DirectGround(idState: KingdomPhysicalLookupState.Absent));
+			ClassicAssert.IsFalse(DirectGround(idState: KingdomPhysicalLookupState.Ambiguous));
+			ClassicAssert.IsFalse(DirectGround(exactReference: false));
 		}
 
 		[Test]
@@ -171,7 +172,7 @@ namespace ThousandAndFirst.Tests
 						? KingdomPlanReceiptShape.Corrupt : KingdomPlanReceiptShape.Absent,
 					outcome != CallbackOutcome.RegistryMutation,
 					outcome != CallbackOutcome.AuthorityMutation);
-				Assert.AreEqual(expected, actual, outcome.ToString());
+				ClassicAssert.AreEqual(expected, actual, outcome.ToString());
 			}
 		}
 
@@ -221,8 +222,8 @@ namespace ThousandAndFirst.Tests
 				exactReference && Outcome != CallbackOutcome.Moved
 					&& Outcome != CallbackOutcome.Stacked,
 				exactReference, registry, authority);
-			Assert.AreEqual(Removed, removed, Outcome + " removal");
-			Assert.AreEqual(Survivor, survivor, Outcome + " survivor");
+			ClassicAssert.AreEqual(Removed, removed, Outcome + " removal");
+			ClassicAssert.AreEqual(Survivor, survivor, Outcome + " survivor");
 		}
 	}
 }

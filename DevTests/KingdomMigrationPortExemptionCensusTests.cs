@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheExemptionListIsPresentAndItsSizeIsPinned()
 		{
-			Assert.AreEqual(ExpectedExemptions, Exemptions().Count,
+			ClassicAssert.AreEqual(ExpectedExemptions, Exemptions().Count,
 				"the non-durable exemption list changed size; a file was waved past the census or "
 				+ "a durable codec was found. Move this pin deliberately, with the reading that "
 				+ "justifies it recorded on the row.");
@@ -85,7 +86,7 @@ namespace ThousandAndFirst.Tests
 				if (string.IsNullOrEmpty(reason) || reason.Length < MinimumReasonCharacters)
 					offenders.Add(file + " is exempted with no reason worth the name");
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 					offenders.Add(file + " is exempted but declares no wire-version constant at "
 						+ "all, so the exemption stands for nothing");
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 				if (!string.IsNullOrEmpty(file) && durable.Contains(Path.GetFileName(file)))
 					offenders.Add(file + " is claimed as both a durable port and a non-durable site");
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 							+ DurableWriteMechanisms[i]
 							+ "; argue it as a port or explain the write site");
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		// Manifest access is owned by the coverage suite; these forward rather than duplicate it.

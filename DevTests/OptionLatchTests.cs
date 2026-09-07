@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -19,14 +20,14 @@ namespace ThousandAndFirst.Tests
 			OptionTransitionKind transition;
 			KernelFaultCode fault;
 
-			Assert.IsTrue(OptionLatchRules.TryObserve(Unobserved(), true, 7L, out next, out transition, out fault));
-			Assert.AreEqual(OptionLatchValue.Enabled, next.Value);
-			Assert.AreEqual(7L, next.ChangedAtTick);
-			Assert.AreEqual(OptionTransitionKind.InitializedEnabled, transition);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(Unobserved(), true, 7L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionLatchValue.Enabled, next.Value);
+			ClassicAssert.AreEqual(7L, next.ChangedAtTick);
+			ClassicAssert.AreEqual(OptionTransitionKind.InitializedEnabled, transition);
 
-			Assert.IsTrue(OptionLatchRules.TryObserve(Unobserved(), false, 7L, out next, out transition, out fault));
-			Assert.AreEqual(OptionLatchValue.Disabled, next.Value);
-			Assert.AreEqual(OptionTransitionKind.InitializedDisabled, transition);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(Unobserved(), false, 7L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionLatchValue.Disabled, next.Value);
+			ClassicAssert.AreEqual(OptionTransitionKind.InitializedDisabled, transition);
 		}
 
 		[Test]
@@ -37,12 +38,12 @@ namespace ThousandAndFirst.Tests
 			OptionTransitionKind transition;
 			KernelFaultCode fault;
 
-			Assert.IsTrue(OptionLatchRules.TryObserve(prior, true, 900L, out next, out transition, out fault));
-			Assert.AreEqual(OptionTransitionKind.None, transition);
-			Assert.AreEqual(OptionLatchValue.Enabled, next.Value);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(prior, true, 900L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionTransitionKind.None, transition);
+			ClassicAssert.AreEqual(OptionLatchValue.Enabled, next.Value);
 			// Rewriting the tick here would make a setting that never changed look as though it had
 			// just changed, on every single load.
-			Assert.AreEqual(4L, next.ChangedAtTick, "the change tick must not be refreshed by observing");
+			ClassicAssert.AreEqual(4L, next.ChangedAtTick, "the change tick must not be refreshed by observing");
 		}
 
 		[Test]
@@ -53,14 +54,14 @@ namespace ThousandAndFirst.Tests
 			OptionTransitionKind transition;
 			KernelFaultCode fault;
 
-			Assert.IsTrue(OptionLatchRules.TryObserve(prior, false, 11L, out next, out transition, out fault));
-			Assert.AreEqual(OptionLatchValue.Disabled, next.Value);
-			Assert.AreEqual(11L, next.ChangedAtTick);
-			Assert.AreEqual(OptionTransitionKind.Disabled, transition);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(prior, false, 11L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionLatchValue.Disabled, next.Value);
+			ClassicAssert.AreEqual(11L, next.ChangedAtTick);
+			ClassicAssert.AreEqual(OptionTransitionKind.Disabled, transition);
 
-			Assert.IsTrue(OptionLatchRules.TryObserve(next, true, 12L, out next, out transition, out fault));
-			Assert.AreEqual(OptionTransitionKind.Enabled, transition);
-			Assert.AreEqual(12L, next.ChangedAtTick);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(next, true, 12L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionTransitionKind.Enabled, transition);
+			ClassicAssert.AreEqual(12L, next.ChangedAtTick);
 		}
 
 		[Test]
@@ -70,9 +71,9 @@ namespace ThousandAndFirst.Tests
 			OptionLatchState next;
 			OptionTransitionKind transition;
 			KernelFaultCode fault;
-			Assert.IsTrue(OptionLatchRules.TryObserve(prior, false, 5L, out next, out transition, out fault));
-			Assert.AreEqual(OptionTransitionKind.Disabled, transition);
-			Assert.AreEqual(5L, next.ChangedAtTick);
+			ClassicAssert.IsTrue(OptionLatchRules.TryObserve(prior, false, 5L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(OptionTransitionKind.Disabled, transition);
+			ClassicAssert.AreEqual(5L, next.ChangedAtTick);
 		}
 
 		[Test]
@@ -84,24 +85,24 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode fault;
 
 			// Negative now is checked first, even when the prior state is also malformed.
-			Assert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState(OptionLatchValue.Unobserved, 3L), true, -1L, out next, out transition, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault);
+			ClassicAssert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState(OptionLatchValue.Unobserved, 3L), true, -1L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault);
 
 			// Then malformed prior state.
-			Assert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState(OptionLatchValue.Unobserved, 3L), true, 0L, out next, out transition, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
+			ClassicAssert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState(OptionLatchValue.Unobserved, 3L), true, 0L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
 
-			Assert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState((OptionLatchValue)99, 0L), true, 0L, out next, out transition, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
+			ClassicAssert.IsFalse(OptionLatchRules.TryObserve(new OptionLatchState((OptionLatchValue)99, 0L), true, 0L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault);
 
 			// Then regression.
-			Assert.IsFalse(OptionLatchRules.TryObserve(prior, true, 9L, out next, out transition, out fault));
-			Assert.AreEqual(KernelFaultCode.ClockRegression, fault);
+			ClassicAssert.IsFalse(OptionLatchRules.TryObserve(prior, true, 9L, out next, out transition, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.ClockRegression, fault);
 
 			// On every failure the caller gets its own state back and no transition.
-			Assert.AreEqual(prior.Value, next.Value);
-			Assert.AreEqual(prior.ChangedAtTick, next.ChangedAtTick);
-			Assert.AreEqual(OptionTransitionKind.None, transition);
+			ClassicAssert.AreEqual(prior.Value, next.Value);
+			ClassicAssert.AreEqual(prior.ChangedAtTick, next.ChangedAtTick);
+			ClassicAssert.AreEqual(OptionTransitionKind.None, transition);
 		}
 
 		[TestCase(0, 0L, true, "canonical unobserved")]
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 		public void WellFormedness(int valueCode, long changedAt, bool expected, string why)
 		{
 			OptionLatchValue value = (OptionLatchValue)valueCode;
-			Assert.AreEqual(expected, OptionLatchRules.IsWellFormed(new OptionLatchState(value, changedAt)), why);
+			ClassicAssert.AreEqual(expected, OptionLatchRules.IsWellFormed(new OptionLatchState(value, changedAt)), why);
 		}
 
 		/// <summary>
@@ -159,11 +160,11 @@ namespace ThousandAndFirst.Tests
 				OptionTransitionKind transition = (OptionTransitionKind)(190 + i);
 				KernelFaultCode fault = (KernelFaultCode)(210 + i);
 
-				Assert.IsFalse(OptionLatchRules.TryObserve(prior, configured, now, out next, out transition, out fault), label);
-				Assert.AreEqual(expected, fault, label + ": exact fault");
-				Assert.AreEqual(OptionTransitionKind.None, transition, label + ": no transition on failure");
-				Assert.AreEqual(prior.Value, next.Value, label + ": the caller's own value comes back");
-				Assert.AreEqual(prior.ChangedAtTick, next.ChangedAtTick, label + ": the caller's own tick comes back");
+				ClassicAssert.IsFalse(OptionLatchRules.TryObserve(prior, configured, now, out next, out transition, out fault), label);
+				ClassicAssert.AreEqual(expected, fault, label + ": exact fault");
+				ClassicAssert.AreEqual(OptionTransitionKind.None, transition, label + ": no transition on failure");
+				ClassicAssert.AreEqual(prior.Value, next.Value, label + ": the caller's own value comes back");
+				ClassicAssert.AreEqual(prior.ChangedAtTick, next.ChangedAtTick, label + ": the caller's own tick comes back");
 			}
 		}
 
@@ -192,39 +193,39 @@ namespace ThousandAndFirst.Tests
 				// legitimately carry; the malformed pairing is covered by WellFormedness above.
 				long changedAt = raw == (int)OptionLatchValue.Unobserved ? 0L : 12L;
 				OptionLatchState prior = new OptionLatchState(value, changedAt);
-				Assert.AreEqual(known, OptionLatchRules.IsWellFormed(prior), "well-formed? " + raw);
+				ClassicAssert.AreEqual(known, OptionLatchRules.IsWellFormed(prior), "well-formed? " + raw);
 
 				foreach (bool configured in new bool[] { false, true })
 				{
 					bool ok = OptionLatchRules.TryObserve(prior, configured, 20L, out next, out transition, out fault);
-					Assert.AreEqual(known, ok, "observe " + raw + " with configured " + configured);
+					ClassicAssert.AreEqual(known, ok, "observe " + raw + " with configured " + configured);
 
 					if (!known)
 					{
-						Assert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault, "raw " + raw);
-						Assert.AreEqual(OptionTransitionKind.None, transition, "raw " + raw);
-						Assert.AreEqual(value, next.Value, "the caller's own state comes back untouched");
-						Assert.AreEqual(changedAt, next.ChangedAtTick);
+						ClassicAssert.AreEqual(KernelFaultCode.InvalidOptionLatch, fault, "raw " + raw);
+						ClassicAssert.AreEqual(OptionTransitionKind.None, transition, "raw " + raw);
+						ClassicAssert.AreEqual(value, next.Value, "the caller's own state comes back untouched");
+						ClassicAssert.AreEqual(changedAt, next.ChangedAtTick);
 						continue;
 					}
 
 					OptionLatchValue expected = configured ? OptionLatchValue.Enabled : OptionLatchValue.Disabled;
-					Assert.AreEqual(expected, next.Value, "raw " + raw + ", configured " + configured);
+					ClassicAssert.AreEqual(expected, next.Value, "raw " + raw + ", configured " + configured);
 
 					if (raw == (int)OptionLatchValue.Unobserved)
 					{
-						Assert.AreEqual(configured ? OptionTransitionKind.InitializedEnabled : OptionTransitionKind.InitializedDisabled, transition);
-						Assert.AreEqual(20L, next.ChangedAtTick, "a first observation stamps now");
+						ClassicAssert.AreEqual(configured ? OptionTransitionKind.InitializedEnabled : OptionTransitionKind.InitializedDisabled, transition);
+						ClassicAssert.AreEqual(20L, next.ChangedAtTick, "a first observation stamps now");
 					}
 					else if (value == expected)
 					{
-						Assert.AreEqual(OptionTransitionKind.None, transition, "raw " + raw);
-						Assert.AreEqual(changedAt, next.ChangedAtTick, "an unchanged observation must not refresh the tick");
+						ClassicAssert.AreEqual(OptionTransitionKind.None, transition, "raw " + raw);
+						ClassicAssert.AreEqual(changedAt, next.ChangedAtTick, "an unchanged observation must not refresh the tick");
 					}
 					else
 					{
-						Assert.AreEqual(configured ? OptionTransitionKind.Enabled : OptionTransitionKind.Disabled, transition);
-						Assert.AreEqual(20L, next.ChangedAtTick, "a real change stamps now");
+						ClassicAssert.AreEqual(configured ? OptionTransitionKind.Enabled : OptionTransitionKind.Disabled, transition);
+						ClassicAssert.AreEqual(20L, next.ChangedAtTick, "a real change stamps now");
 					}
 				}
 
@@ -233,7 +234,7 @@ namespace ThousandAndFirst.Tests
 					knownSeen++;
 				}
 			}
-			Assert.AreEqual(3, knownSeen, "exactly three of the 256 byte values are known");
+			ClassicAssert.AreEqual(3, knownSeen, "exactly three of the 256 byte values are known");
 		}
 
 		/// <summary>
@@ -246,25 +247,25 @@ namespace ThousandAndFirst.Tests
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(
 				KernelCanonicalTests.GoldenSeed(), 3, "taf:settlement:test", 0L, 10L, true);
-			Assert.IsTrue(created.Succeeded);
+			ClassicAssert.IsTrue(created.Succeeded);
 
 			ToyAdvanceResult changedAt11 = FixedPeriodToyRules.AdvanceThrough(created.State, 11L, false);
-			Assert.IsTrue(changedAt11.Succeeded);
-			Assert.AreEqual(1uL, changedAt11.State.NextOrdinal, "the tick-10 pulse happened before the transition");
+			ClassicAssert.IsTrue(changedAt11.Succeeded);
+			ClassicAssert.AreEqual(1uL, changedAt11.State.NextOrdinal, "the tick-10 pulse happened before the transition");
 
 			ToyAdvanceResult changedAt10 = FixedPeriodToyRules.AdvanceThrough(created.State, 10L, false);
-			Assert.IsTrue(changedAt10.Succeeded);
-			Assert.AreEqual(0uL, changedAt10.State.NextOrdinal, "disabling exactly at the deadline wins");
+			ClassicAssert.IsTrue(changedAt10.Succeeded);
+			ClassicAssert.AreEqual(0uL, changedAt10.State.NextOrdinal, "disabling exactly at the deadline wins");
 
 			// The same answers must come out of a wake at every single tick.
 			FixedPeriodToyState walked = created.State;
 			for (long t = 1L; t <= 11L; t++)
 			{
 				ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(walked, t, t < 11L);
-				Assert.IsTrue(step.Succeeded, "tick " + t);
+				ClassicAssert.IsTrue(step.Succeeded, "tick " + t);
 				walked = step.State;
 			}
-			Assert.AreEqual(changedAt11.State.NextOrdinal, walked.NextOrdinal, "partitioned wakes must agree with the direct advance");
+			ClassicAssert.AreEqual(changedAt11.State.NextOrdinal, walked.NextOrdinal, "partitioned wakes must agree with the direct advance");
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -11,7 +12,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DisplayTierBoundMatchesResearchRegistry()
 		{
-			Assert.AreEqual(4, KingdomGreatArchiveRules.MaxTier);
+			ClassicAssert.AreEqual(4, KingdomGreatArchiveRules.MaxTier);
 		}
 
 		[Test]
@@ -41,12 +42,12 @@ namespace ThousandAndFirst.Tests
 				Node("pressure", "pressure lore", "water", 2, true, "notes"),
 				Node("notes", "keeper's notation", "letters", 1, true)
 			};
-			Assert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
+			ClassicAssert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
 				out KingdomGreatArchiveMap map, out string failure), failure);
 			CollectionAssert.AreEqual(new[] { "Akrish", "Bey Lah" }, map.CityNames);
-			Assert.AreEqual(2, map.Rows.Count);
-			Assert.AreEqual("notes", map.Rows[0].Key);
-			Assert.AreEqual("pressure", map.Rows[1].Key);
+			ClassicAssert.AreEqual(2, map.Rows.Count);
+			ClassicAssert.AreEqual("notes", map.Rows[0].Key);
+			ClassicAssert.AreEqual("pressure", map.Rows[1].Key);
 			CollectionAssert.AreEqual(new[] { "Akrish", "Bey Lah" },
 				map.Rows[1].HoldingCityNames);
 			CollectionAssert.AreEqual(new[] { "keeper's notation" },
@@ -63,11 +64,11 @@ namespace ThousandAndFirst.Tests
 				Node("heard", "heard road", "branch", 2, true, "hidden"),
 				Node("hidden", "secret road", "branch", 1, false)
 			};
-			Assert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
+			ClassicAssert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
 				out KingdomGreatArchiveMap map, out string failure), failure);
-			Assert.AreEqual(1, map.Rows.Count);
-			Assert.AreEqual("heard", map.Rows[0].Key);
-			Assert.IsEmpty(map.Rows[0].RequirementClauses);
+			ClassicAssert.AreEqual(1, map.Rows.Count);
+			ClassicAssert.AreEqual("heard", map.Rows[0].Key);
+			ClassicAssert.IsEmpty(map.Rows[0].RequirementClauses);
 		}
 
 		[Test]
@@ -83,12 +84,12 @@ namespace ThousandAndFirst.Tests
 			List<KingdomGreatArchiveNodeFacts> nodes = new List<KingdomGreatArchiveNodeFacts> {
 				heard, Node("hidden", "secret road", "branch", 1, false)
 			};
-			Assert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
+			ClassicAssert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
 				out KingdomGreatArchiveMap map, out string failure), failure);
 			CollectionAssert.AreEqual(new[] { "a glass furnace" },
 				map.Rows[0].RequirementClauses);
 			nodes[1].Discovered = true;
-			Assert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
+			ClassicAssert.IsTrue(KingdomGreatArchiveRules.TryBuild(cities, nodes,
 				out map, out failure), failure);
 			CollectionAssert.AreEqual(new[] { "secret road or a glass furnace" },
 				map.Rows[1].RequirementClauses);
@@ -100,17 +101,17 @@ namespace ThousandAndFirst.Tests
 			List<KingdomGreatArchiveNodeFacts> nodes = new List<KingdomGreatArchiveNodeFacts> {
 				Node("notes", "notes", "letters", 1, true)
 			};
-			Assert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
+			ClassicAssert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
 				City("city-a", "Akrish", "missing") }, nodes, out _, out _));
-			Assert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
+			ClassicAssert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
 				City("city-a", "Akrish"), City("city-a", "Other")
 			}, nodes, out _, out _));
-			Assert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
+			ClassicAssert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
 				City("city-a", "Akrish")
 			}, new[] { nodes[0], nodes[0] }, out _, out _));
 			KingdomGreatArchiveNodeFacts broken = Node("broken", "broken", "letters",
 				2, true, "missing");
-			Assert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
+			ClassicAssert.IsFalse(KingdomGreatArchiveRules.TryBuild(new[] {
 				City("city-a", "Akrish")
 			}, new[] { broken }, out _, out _));
 		}

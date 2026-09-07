@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -47,10 +48,10 @@ namespace ThousandAndFirst.Tests
 			};
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out fullestIndex, out emptiestIndex));
-			Assert.AreEqual(0, fullestIndex, "the full pure store is the giver");
-			Assert.AreEqual(2, emptiestIndex,
+			ClassicAssert.AreEqual(0, fullestIndex, "the full pure store is the giver");
+			ClassicAssert.AreEqual(2, emptiestIndex,
 				"the receivable half-full store must be chosen over the emptier, unreceivable brine store");
 		}
 
@@ -70,10 +71,10 @@ namespace ThousandAndFirst.Tests
 			};
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out fullestIndex, out emptiestIndex));
-			Assert.AreEqual(-1, fullestIndex);
-			Assert.AreEqual(-1, emptiestIndex);
+			ClassicAssert.AreEqual(-1, fullestIndex);
+			ClassicAssert.AreEqual(-1, emptiestIndex);
 		}
 
 		/// <summary>
@@ -92,10 +93,10 @@ namespace ThousandAndFirst.Tests
 			};
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out fullestIndex, out emptiestIndex));
-			Assert.AreEqual(1, fullestIndex);
-			Assert.AreEqual(2, emptiestIndex);
+			ClassicAssert.AreEqual(1, fullestIndex);
+			ClassicAssert.AreEqual(2, emptiestIndex);
 		}
 
 		[TestCase(0)]
@@ -108,7 +109,7 @@ namespace ThousandAndFirst.Tests
 			};
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, count,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, count,
 				out fullestIndex, out emptiestIndex));
 		}
 
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(null, 0,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(null, 0,
 				out fullestIndex, out emptiestIndex));
 		}
 
@@ -126,9 +127,9 @@ namespace ThousandAndFirst.Tests
 		public void CountOutsideArrayBoundsIsTotalAndPicksNothing(int count)
 		{
 			KingdomNetworkStoreLevel[] stores = { Level(1, 2, true), Level(0, 2, true) };
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, count,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, count,
 				out int fullest, out int emptiest));
-			Assert.AreEqual(-1, fullest); Assert.AreEqual(-1, emptiest);
+			ClassicAssert.AreEqual(-1, fullest); ClassicAssert.AreEqual(-1, emptiest);
 		}
 
 		[TestCase(-1, 100)]
@@ -141,9 +142,9 @@ namespace ThousandAndFirst.Tests
 			{
 				Level(100, 100, true), Level(volume, capacity, true), Level(0, 100, true)
 			};
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out int fullest, out int emptiest));
-			Assert.AreEqual(-1, fullest); Assert.AreEqual(-1, emptiest);
+			ClassicAssert.AreEqual(-1, fullest); ClassicAssert.AreEqual(-1, emptiest);
 		}
 
 		[Test]
@@ -153,9 +154,9 @@ namespace ThousandAndFirst.Tests
 			{
 				Level(100, 100, false), Level(80, 100, true), Level(0, 100, true)
 			};
-			Assert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsTrue(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out int fullest, out int emptiest));
-			Assert.AreEqual(1, fullest); Assert.AreEqual(2, emptiest);
+			ClassicAssert.AreEqual(1, fullest); ClassicAssert.AreEqual(2, emptiest);
 		}
 
 		/// <summary>
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 			};
 			int fullestIndex;
 			int emptiestIndex;
-			Assert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
+			ClassicAssert.IsFalse(KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out fullestIndex, out emptiestIndex));
 		}
 
@@ -200,22 +201,22 @@ namespace ThousandAndFirst.Tests
 			int referenceFullest;
 			int referenceEmptiest;
 			bool referenceSelected = NaivePreGuardSelection(volumes, maxVolumes, out referenceFullest, out referenceEmptiest);
-			Assert.AreEqual(expectSelected, referenceSelected, "test case's own reference disagrees with its expectation");
+			ClassicAssert.AreEqual(expectSelected, referenceSelected, "test case's own reference disagrees with its expectation");
 			if (expectSelected)
 			{
-				Assert.AreEqual(expectedFullest, referenceFullest);
-				Assert.AreEqual(expectedEmptiest, referenceEmptiest);
+				ClassicAssert.AreEqual(expectedFullest, referenceFullest);
+				ClassicAssert.AreEqual(expectedEmptiest, referenceEmptiest);
 			}
 
 			int fullestIndex;
 			int emptiestIndex;
 			bool selected = KingdomNetworkRules.TrySelectLevellingPair(stores, stores.Length,
 				out fullestIndex, out emptiestIndex);
-			Assert.AreEqual(referenceSelected, selected);
+			ClassicAssert.AreEqual(referenceSelected, selected);
 			if (selected)
 			{
-				Assert.AreEqual(referenceFullest, fullestIndex);
-				Assert.AreEqual(referenceEmptiest, emptiestIndex);
+				ClassicAssert.AreEqual(referenceFullest, fullestIndex);
+				ClassicAssert.AreEqual(referenceEmptiest, emptiestIndex);
 			}
 		}
 

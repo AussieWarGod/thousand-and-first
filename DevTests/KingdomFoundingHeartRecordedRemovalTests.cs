@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -105,15 +106,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFoundingHeartTerminalPlan plan = Plan(phase);
 			string wire = KingdomFoundingHeartTerminalRules.Encode(plan);
-			Assert.IsNotNull(wire);
-			Assert.IsTrue(KingdomFoundingHeartTerminalRules.TryDecode(wire, out var loaded));
+			ClassicAssert.IsNotNull(wire);
+			ClassicAssert.IsTrue(KingdomFoundingHeartTerminalRules.TryDecode(wire, out var loaded));
 			Decision(loaded, true, true, KingdomPhysicalLookupState.Absent, true);
-			Assert.AreEqual(wire, KingdomFoundingHeartTerminalRules.Encode(loaded));
+			ClassicAssert.AreEqual(wire, KingdomFoundingHeartTerminalRules.Encode(loaded));
 		}
 
 		private static KingdomFoundingHeartTerminalPlan Plan(int phase)
 		{
-			Assert.IsTrue(KingdomFoundingHeartTerminalRules.TryCreate(
+			ClassicAssert.IsTrue(KingdomFoundingHeartTerminalRules.TryCreate(
 				"0123456789abcdef0123456789abcdef", "hs1-" + new string('a', 64),
 				"JoppaWorld.2.2.1.1.10", "predecessor", "final", "r_KingdomFirstBasin",
 				"heartbasin", "plot", 40, 12, out var plan));
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 			bool absent, KingdomPhysicalLookupState tombstone, bool expected)
 		{
 			object[] before = Snapshot(plan);
-			Assert.AreEqual(expected, KingdomFoundingHeartTerminalRules.CanUseRecordedRemoval(
+			ClassicAssert.AreEqual(expected, KingdomFoundingHeartTerminalRules.CanUseRecordedRemoval(
 				plan, final, absent, tombstone));
 			if (plan != null) CollectionAssert.AreEqual(before, Snapshot(plan),
 				"Recorded-removal observation must not change any plan field.");

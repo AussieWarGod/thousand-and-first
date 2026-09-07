@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -49,32 +50,32 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoKeyUnderAnyTableIsTheOnlyAbsentShape()
 		{
-			Assert.AreEqual(KingdomDurableKeyShape.Absent, Shape(Absent()));
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Absent, Shape(Absent()));
 		}
 
 		/// <summary>An explicitly stored zero or empty is PRESENT. That is the whole defect.</summary>
 		[Test]
 		public void AStoredZeroOrEmptyIsPresentNotAbsent()
 		{
-			Assert.AreEqual(KingdomDurableKeyShape.ExactInt, Shape(Int(0)));
-			Assert.AreEqual(KingdomDurableKeyShape.ExactString, Shape(Text("")));
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.ExactInt, Shape(Int(0)));
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.ExactString, Shape(Text("")));
 		}
 
 		[Test]
 		public void AKeyUnderAWrongDurableTableIsTorn()
 		{
-			Assert.AreEqual(KingdomDurableKeyShape.Torn,
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn,
 				Shape(new KingdomDurableKeyObservation { HasInt64 = true }));
-			Assert.AreEqual(KingdomDurableKeyShape.Torn,
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn,
 				Shape(new KingdomDurableKeyObservation { HasObject = true }));
-			Assert.AreEqual(KingdomDurableKeyShape.Torn,
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn,
 				Shape(new KingdomDurableKeyObservation { HasBoolean = true }));
 		}
 
 		[Test]
 		public void AKeyUnderTwoTablesIsTornRatherThanResolved()
 		{
-			Assert.AreEqual(KingdomDurableKeyShape.Torn, Shape(
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn, Shape(
 				new KingdomDurableKeyObservation
 				{
 					HasInt = true,
@@ -82,14 +83,14 @@ namespace ThousandAndFirst.Tests
 					HasString = true,
 					String = "1"
 				}));
-			Assert.AreEqual(KingdomDurableKeyShape.Torn, Shape(
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn, Shape(
 				new KingdomDurableKeyObservation { HasInt = true, Int = 1, HasBoolean = true }));
 		}
 
 		[Test]
 		public void AnUnobservedKeyIsTornRatherThanAbsent()
 		{
-			Assert.AreEqual(KingdomDurableKeyShape.Torn, Shape(null));
+			ClassicAssert.AreEqual(KingdomDurableKeyShape.Torn, Shape(null));
 		}
 
 		// ----- the transaction pair -------------------------------------------------------------
@@ -97,20 +98,20 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OnlyTwoTotallyAbsentKeysAreFresh()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.None, Transaction(Absent(), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.None, Transaction(Absent(), Absent()));
 		}
 
 		[Test]
 		public void AttemptedIsExactlyOneIntKeyOfOneWithNoCommittedKey()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Attempted,
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Attempted,
 				Transaction(Int(1), Absent()));
 		}
 
 		[Test]
 		public void CommittedIsExactlyTheTwoIntKeys()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Committed, Transaction(Int(2), Int(1)));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Committed, Transaction(Int(2), Int(1)));
 		}
 
 		/// <summary>
@@ -120,38 +121,38 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AStoredZeroAttemptKeyIsTornNotFresh()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(0), Absent()));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Absent(), Int(0)));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(0), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Absent(), Int(0)));
 		}
 
 		[Test]
 		public void EveryOtherCrossKeyCombinationIsTorn()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(1), Int(1)),
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(1), Int(1)),
 				"attempted may not carry a committed key");
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Absent()),
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Absent()),
 				"committed without its cross-check is half a commit");
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Absent(), Int(1)),
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Absent(), Int(1)),
 				"a committed key with no transaction key is corruption");
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Int(2)));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(3), Absent()));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(-1), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Int(2)));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(3), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(-1), Absent()));
 		}
 
 		[Test]
 		public void AWrongTypedTransactionKeyIsTorn()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Text("1"), Absent()));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Text(""), Absent()));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Text("1")));
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Text("1"), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Text(""), Absent()));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(Int(2), Text("1")));
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(
 				new KingdomDurableKeyObservation { HasInt64 = true }, Absent()));
 		}
 
 		[Test]
 		public void ADualTypedTransactionKeyIsTorn()
 		{
-			Assert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(
+			ClassicAssert.AreEqual(KingdomScenarioTransactionShape.Torn, Transaction(
 				new KingdomDurableKeyObservation
 				{
 					HasInt = true,
@@ -166,8 +167,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string detail;
 			KingdomScenarioStateShape.Transaction(Int(0), Absent(), out detail);
-			Assert.IsNotNull(detail);
-			Assert.IsNotEmpty(detail);
+			ClassicAssert.IsNotNull(detail);
+			ClassicAssert.IsNotEmpty(detail);
 		}
 	}
 }

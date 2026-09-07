@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Treaty;
 
 namespace ThousandAndFirst.Tests
@@ -11,28 +12,28 @@ namespace ThousandAndFirst.Tests
 	{
 		[Test] public void AuthenticatedRoundTripTamperAndSurrogateAreBounded()
 		{
-			var l=new KingdomTreatyLedger();string f;Assert.NotNull(KingdomTreatyRules.Propose(l,0,"p","a","b",new[]{"c"},new string[0],new string[0],"water",1,out f));
-			Assert.IsTrue(KingdomTreatyCodec.TryEncode(l,out byte[] bytes,out f),f);Assert.IsFalse(KingdomTreatyCodec.Decode(bytes).Quarantined);
-			byte[] corrupt=(byte[])bytes.Clone();corrupt[12]^=1;Assert.IsTrue(KingdomTreatyCodec.Decode(corrupt).Quarantined);
-			l.Pacts[0].Clauses[0]="bad\ud800";Assert.IsFalse(KingdomTreatyCodec.TryEncode(l,out _,out f));Assert.IsNotEmpty(f);
+			var l=new KingdomTreatyLedger();string f;ClassicAssert.NotNull(KingdomTreatyRules.Propose(l,0,"p","a","b",new[]{"c"},new string[0],new string[0],"water",1,out f));
+			ClassicAssert.IsTrue(KingdomTreatyCodec.TryEncode(l,out byte[] bytes,out f),f);ClassicAssert.IsFalse(KingdomTreatyCodec.Decode(bytes).Quarantined);
+			byte[] corrupt=(byte[])bytes.Clone();corrupt[12]^=1;ClassicAssert.IsTrue(KingdomTreatyCodec.Decode(corrupt).Quarantined);
+			l.Pacts[0].Clauses[0]="bad\ud800";ClassicAssert.IsFalse(KingdomTreatyCodec.TryEncode(l,out _,out f));ClassicAssert.IsNotEmpty(f);
 		}
 		[Test] public void UnknownAuthenticatedFutureIsPreservedByteExact()
 		{
 			var l=new KingdomTreatyLedger();string f;KingdomTreatyRules.Propose(l,0,"p","a","b",new[]{"c"},new string[0],new string[0],"water",1,out f);
 			KingdomTreatyCodec.TryEncode(l,out byte[] current,out f);byte[] future=(byte[])current.Clone();
 			future[4]=2;Authenticate(future);var q=KingdomTreatyCodec.Decode(future);
-			Assert.IsTrue(q.Quarantined);Assert.AreEqual("future treaty payload preserved",q.Fault);
+			ClassicAssert.IsTrue(q.Quarantined);ClassicAssert.AreEqual("future treaty payload preserved",q.Fault);
 			CollectionAssert.AreEqual(future,q.OpaquePayload);
 		}
 		[Test] public void FullLawfulMaximumIsExactAndCapPlusOneCannotPublish()
 		{
 			var l=new KingdomTreatyLedger();for(int i=0;i<KingdomTreatyLedger.MaxPacts;i++)l.Pacts.Add(MaxPact(i));
-			Assert.IsTrue(KingdomTreatyCodec.TryEncode(l,out byte[] bytes,out string failure),failure);
-			Assert.AreEqual(241384,KingdomTreatyCodec.MaxEnvelopeBytes);Assert.AreEqual(241384,bytes.Length);
+			ClassicAssert.IsTrue(KingdomTreatyCodec.TryEncode(l,out byte[] bytes,out string failure),failure);
+			ClassicAssert.AreEqual(241384,KingdomTreatyCodec.MaxEnvelopeBytes);ClassicAssert.AreEqual(241384,bytes.Length);
 			l.Pacts[0].Clauses[0]=new string('x',257);
-			Assert.IsFalse(KingdomTreatyCodec.TryEncode(l,out _,out failure));Assert.IsNotEmpty(failure);
-			var q=KingdomTreatyCodec.Decode(new byte[]{1,2,3});Assert.AreEqual(KingdomTreatyStoreState.Quarantined,q.StoreState);
-			Assert.IsFalse(KingdomTreatyCodec.TryEncode(q,out _,out failure));
+			ClassicAssert.IsFalse(KingdomTreatyCodec.TryEncode(l,out _,out failure));ClassicAssert.IsNotEmpty(failure);
+			var q=KingdomTreatyCodec.Decode(new byte[]{1,2,3});ClassicAssert.AreEqual(KingdomTreatyStoreState.Quarantined,q.StoreState);
+			ClassicAssert.IsFalse(KingdomTreatyCodec.TryEncode(q,out _,out failure));
 		}
 		private static KingdomTreatyRecord MaxPact(int n)
 		{

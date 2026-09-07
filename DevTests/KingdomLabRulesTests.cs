@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -11,33 +12,33 @@ namespace ThousandAndFirst.Tests
 	{
 		private static void AssertByteEnum(Type Type, string Expected)
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
-			Assert.IsFalse(Type.IsNested, Type.Name);
-			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
-			Assert.AreEqual(Type == typeof(KingdomPurposeVerdict), Type.IsPublic, Type.Name);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
+			ClassicAssert.IsFalse(Type.IsNested, Type.Name);
+			ClassicAssert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			ClassicAssert.AreEqual(Type == typeof(KingdomPurposeVerdict), Type.IsPublic, Type.Name);
 			Array values = Enum.GetValues(Type);
 			List<string> actual = new List<string>();
 			foreach (object value in values)
 			{
 				actual.Add(Convert.ToByte(value) + ":" + Enum.GetName(Type, value));
 			}
-			Assert.AreEqual(Expected, string.Join(",", actual.ToArray()), Type.Name);
+			ClassicAssert.AreEqual(Expected, string.Join(",", actual.ToArray()), Type.Name);
 		}
 
 		private static void AssertFields(Type Type, string[] Names, Type[] Types,
 			bool Readonly)
 		{
-			Assert.IsFalse(Type.IsNested, Type.Name);
-			Assert.IsTrue(Type.IsNotPublic, Type.Name);
-			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			ClassicAssert.IsFalse(Type.IsNested, Type.Name);
+			ClassicAssert.IsTrue(Type.IsNotPublic, Type.Name);
+			ClassicAssert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
 			FieldInfo[] fields = Type.GetFields(BindingFlags.Instance | BindingFlags.Public
 				| BindingFlags.DeclaredOnly);
-			Assert.AreEqual(Names.Length, fields.Length, Type.Name);
+			ClassicAssert.AreEqual(Names.Length, fields.Length, Type.Name);
 			for (int i = 0; i < Names.Length; i++)
 			{
-				Assert.AreEqual(Names[i], fields[i].Name, Type.Name + " field " + i);
-				Assert.AreEqual(Types[i], fields[i].FieldType, Names[i]);
-				Assert.AreEqual(Readonly, fields[i].IsInitOnly, Names[i]);
+				ClassicAssert.AreEqual(Names[i], fields[i].Name, Type.Name + " field " + i);
+				ClassicAssert.AreEqual(Types[i], fields[i].FieldType, Names[i]);
+				ClassicAssert.AreEqual(Readonly, fields[i].IsInitOnly, Names[i]);
 			}
 		}
 
@@ -73,12 +74,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExtractedLabRowsKeepExactTopLevelFieldAbiAndDefaults()
 		{
-			Assert.IsTrue(typeof(KingdomVatAccrual).IsValueType);
-			Assert.IsTrue(typeof(KingdomKeptSpendStep).IsValueType);
-			Assert.IsTrue(typeof(KingdomLabJobAccrual).IsValueType);
-			Assert.IsTrue(typeof(KingdomLabWaterClaim).IsValueType);
-			Assert.IsTrue(typeof(KingdomKeptSpendPlan).IsSealed);
-			Assert.IsTrue(typeof(KingdomLabRegistryEntry).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomVatAccrual).IsValueType);
+			ClassicAssert.IsTrue(typeof(KingdomKeptSpendStep).IsValueType);
+			ClassicAssert.IsTrue(typeof(KingdomLabJobAccrual).IsValueType);
+			ClassicAssert.IsTrue(typeof(KingdomLabWaterClaim).IsValueType);
+			ClassicAssert.IsTrue(typeof(KingdomKeptSpendPlan).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomLabRegistryEntry).IsSealed);
 			AssertFields(typeof(KingdomVatAccrual),
 				new[] { "NextTick", "RemainingTicks", "WorkedTicks", "Complete" },
 				new[] { typeof(long), typeof(int), typeof(int), typeof(bool) }, true);
@@ -105,30 +106,30 @@ namespace ThousandAndFirst.Tests
 				false);
 
 			KingdomLabRegistryEntry row = new KingdomLabRegistryEntry();
-			Assert.AreEqual("", row.JobId);
-			Assert.AreEqual("", row.BuildingId);
-			Assert.AreEqual("", row.PatientId);
-			Assert.AreEqual("", row.GameId);
-			Assert.AreEqual("", row.RealmId);
-			Assert.AreEqual(0L, row.RealmFoundedTick);
-			Assert.AreEqual(-1, row.RulerSuccessionOrdinal);
-			Assert.AreEqual("", row.RulerLifeId);
-			Assert.AreEqual(0, row.ContractVersion);
-			Assert.AreEqual("", row.ProcedureKey);
-			Assert.AreEqual("", row.Grants);
-			Assert.AreEqual(-1, row.Source);
-			Assert.AreEqual(-1, row.Attach);
-			Assert.AreEqual("", row.Manager);
-			Assert.AreEqual("", row.Detail);
-			Assert.AreEqual("", row.Fingerprint);
-			Assert.AreEqual(KingdomLabRegistryStatus.Active, row.Status);
-			Assert.AreEqual(0L, row.UpdatedTick);
+			ClassicAssert.AreEqual("", row.JobId);
+			ClassicAssert.AreEqual("", row.BuildingId);
+			ClassicAssert.AreEqual("", row.PatientId);
+			ClassicAssert.AreEqual("", row.GameId);
+			ClassicAssert.AreEqual("", row.RealmId);
+			ClassicAssert.AreEqual(0L, row.RealmFoundedTick);
+			ClassicAssert.AreEqual(-1, row.RulerSuccessionOrdinal);
+			ClassicAssert.AreEqual("", row.RulerLifeId);
+			ClassicAssert.AreEqual(0, row.ContractVersion);
+			ClassicAssert.AreEqual("", row.ProcedureKey);
+			ClassicAssert.AreEqual("", row.Grants);
+			ClassicAssert.AreEqual(-1, row.Source);
+			ClassicAssert.AreEqual(-1, row.Attach);
+			ClassicAssert.AreEqual("", row.Manager);
+			ClassicAssert.AreEqual("", row.Detail);
+			ClassicAssert.AreEqual("", row.Fingerprint);
+			ClassicAssert.AreEqual(KingdomLabRegistryStatus.Active, row.Status);
+			ClassicAssert.AreEqual(0L, row.UpdatedTick);
 
 			KingdomKeptSpendStep step = new KingdomKeptSpendStep(2, 7, 3);
-			Assert.AreEqual(2, step.Source);
-			Assert.AreEqual(7, step.Original);
-			Assert.AreEqual(3, step.Taken);
-			Assert.AreEqual(4, step.Remaining);
+			ClassicAssert.AreEqual(2, step.Source);
+			ClassicAssert.AreEqual(7, step.Original);
+			ClassicAssert.AreEqual(3, step.Taken);
+			ClassicAssert.AreEqual(4, step.Remaining);
 		}
 
 		private static LabProcedure Procedure(string key, string cls = "II", string grants = "GasImmunity",
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure;
 			string error;
-			Assert.IsTrue(KingdomProcedureRules.TryParseProcedureAttributes(key, null, cls, grants, "Body",
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseProcedureAttributes(key, null, cls, grants, "Body",
 				null, "part", "body", null, cost.ToString(), bits, staffDays.ToString(), preserved.ToString(),
 				creeds, null, null, out procedure, out error), error);
 			return procedure;
@@ -178,7 +179,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, true, true, 3)]
 		public void RungReached_ClimbsOneStepAtATime(bool slab, bool vat, bool hall, bool theatre, int expected)
 		{
-			Assert.AreEqual(expected, KingdomLabRules.RungReached(slab, vat, hall, theatre));
+			ClassicAssert.AreEqual(expected, KingdomLabRules.RungReached(slab, vat, hall, theatre));
 		}
 
 		[Test]
@@ -186,8 +187,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// A theatre with no vats under it can graft nothing, because the theatre's own inputs
 			// come out of the vats. A founder who raised the grand thing first gets told so.
-			Assert.AreEqual(0, KingdomLabRules.RungReached(Slab: true, Vat: false, Hall: true, Theatre: true));
-			Assert.AreEqual(-1, KingdomLabRules.RungReached(Slab: false, Vat: true, Hall: true, Theatre: true));
+			ClassicAssert.AreEqual(0, KingdomLabRules.RungReached(Slab: true, Vat: false, Hall: true, Theatre: true));
+			ClassicAssert.AreEqual(-1, KingdomLabRules.RungReached(Slab: false, Vat: true, Hall: true, Theatre: true));
 		}
 
 		[Test]
@@ -207,10 +208,10 @@ namespace ThousandAndFirst.Tests
 		public void LadderGapLine_SaysNothingAboutALadderThatIsFine()
 		{
 			// 7b forbids telling somebody about the absence of a problem.
-			Assert.IsNull(KingdomLabRules.LadderGapLine(true, true, true, true));
-			Assert.IsNull(KingdomLabRules.LadderGapLine(true, true, true, false));
-			Assert.IsNull(KingdomLabRules.LadderGapLine(true, true, false, false));
-			Assert.IsNull(KingdomLabRules.LadderGapLine(false, false, false, false));
+			ClassicAssert.IsNull(KingdomLabRules.LadderGapLine(true, true, true, true));
+			ClassicAssert.IsNull(KingdomLabRules.LadderGapLine(true, true, true, false));
+			ClassicAssert.IsNull(KingdomLabRules.LadderGapLine(true, true, false, false));
+			ClassicAssert.IsNull(KingdomLabRules.LadderGapLine(false, false, false, false));
 		}
 
 		// --- Megastructure cardinality (Addendum 22 A1) ---------------------------------------------
@@ -226,22 +227,22 @@ namespace ThousandAndFirst.Tests
 		[TestCase("maybe", false)]
 		public void IsMegastructure_ADesignIsOrdinaryUntilItSaysOtherwise(string declared, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLabRules.IsMegastructure(declared));
+			ClassicAssert.AreEqual(expected, KingdomLabRules.IsMegastructure(declared));
 		}
 
 		[Test]
 		public void JudgePurpose_RefusesASecondMegastructureInACityThatAlreadyHasOne()
 		{
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: "arcology", Key: "chimerictheatre"));
 		}
 
 		[Test]
 		public void JudgePurpose_AllowsTheFirstOne()
 		{
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: null, Key: "chimerictheatre"));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: "", Key: "chimerictheatre"));
 		}
 
@@ -250,9 +251,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Mending, re-siting or re-staking the megastructure a city already has is not a second
 			// purpose, and refusing it would make a purpose unrepairable.
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(true, "chimerictheatre", "chimerictheatre"));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(true, "ChimericTheatre", "chimerictheatre"));
 		}
 
@@ -261,7 +262,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The gate is one check on one attribute and it must be inert for every building in the
 			// catalogue that is not a megastructure — which is all of them but one.
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: false, Kept: "arcology", Key: "smithy"));
 		}
 
@@ -289,7 +290,7 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("chimerictheatre", null, null, null, null,
 				null, null, null, null, megastructure, out error);
-			Assert.IsNull(error);
+			ClassicAssert.IsNull(error);
 			return gate;
 		}
 
@@ -304,19 +305,19 @@ namespace ThousandAndFirst.Tests
 		public void Zoning_RefusesASecondMegastructureWhenTheBookSaysOneIsKept()
 		{
 			ZoningJudgement judgement = JudgeTheatre("yes", "chimerictheatre", "arcology");
-			Assert.IsFalse(judgement.Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedMegastructure, judgement.Verdict);
+			ClassicAssert.IsFalse(judgement.Permitted);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedMegastructure, judgement.Verdict);
 			// The Detail carries the KEY, because the refusal is composed one lane over where the
 			// catalogue can be asked what a key is called.
-			Assert.AreEqual("arcology", judgement.Detail);
-			Assert.IsNotEmpty(judgement.Note);
+			ClassicAssert.AreEqual("arcology", judgement.Detail);
+			ClassicAssert.IsNotEmpty(judgement.Note);
 		}
 
 		[Test]
 		public void Zoning_AllowsTheFirstMegastructure()
 		{
-			Assert.IsTrue(JudgeTheatre("yes", "chimerictheatre", null).Permitted);
-			Assert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "").Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("yes", "chimerictheatre", null).Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "").Permitted);
 		}
 
 		[Test]
@@ -324,8 +325,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Mending, re-siting or re-staking a city's own purpose is not choosing a second one,
 			// and refusing it would make a purpose unrepairable.
-			Assert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "chimerictheatre").Permitted);
-			Assert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "ChimericTheatre").Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "chimerictheatre").Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("yes", "chimerictheatre", "ChimericTheatre").Permitted);
 		}
 
 		[Test]
@@ -333,8 +334,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The gate must be inert for every design in the catalogue but one — which is what makes
 			// one attribute and one check the whole of the vocabulary.
-			Assert.IsTrue(JudgeTheatre(null, "smithy", "arcology").Permitted);
-			Assert.IsTrue(JudgeTheatre("no", "smithy", "arcology").Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre(null, "smithy", "arcology").Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("no", "smithy", "arcology").Permitted);
 		}
 
 		[Test]
@@ -343,7 +344,7 @@ namespace ThousandAndFirst.Tests
 			// KingdomZoning.KeptMegastructure hands back null when it cannot read the city, and a
 			// cardinality rule that could not see the city must let the founder build. The
 			// alternative is a realm bricked by a book it could not open.
-			Assert.IsTrue(JudgeTheatre("yes", "chimerictheatre", null).Permitted);
+			ClassicAssert.IsTrue(JudgeTheatre("yes", "chimerictheatre", null).Permitted);
 		}
 
 		[Test]
@@ -351,8 +352,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Every caller written before this landed passes no CityKeeps, and must go on behaving
 			// exactly as it did — the same back-compatibility promise Strata made one gate over.
-			Assert.IsTrue(KingdomZoningRules.Judge(Gate("yes"), null, "craft", 0, null).Permitted);
-			Assert.IsTrue(KingdomZoningRules.Judge(Gate("yes"), null, "craft", 0, null,
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(Gate("yes"), null, "craft", 0, null).Permitted);
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(Gate("yes"), null, "craft", 0, null,
 				Underground: false, RequiresSky: false).Permitted);
 		}
 
@@ -364,11 +365,11 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("chimerictheatre", null, "4", null, "Arclight",
 				null, null, null, null, "yes", out error);
-			Assert.IsNull(error);
+			ClassicAssert.IsNull(error);
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "craft", 0, null,
 				Underground: false, RequiresSky: false, Roll: BuilderRoll.Unknown,
 				Stratum: null, Key: "chimerictheatre", CityKeeps: "arcology");
-			Assert.AreEqual(ZoningVerdict.RefusedTechLevel, judgement.Verdict);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedTechLevel, judgement.Verdict);
 		}
 
 		[TestCase("yes", true)]
@@ -383,15 +384,15 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("k", null, null, null, null,
 				null, null, null, null, declared, out error);
-			Assert.IsNull(error);
-			Assert.AreEqual(expected, gate.Megastructure);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(expected, gate.Megastructure);
 		}
 
 		[Test]
 		public void ParseGate_AMegastructureIsNotAnOpenGate()
 		{
-			Assert.IsFalse(Gate("yes").IsOpen);
-			Assert.IsTrue(Gate(null).IsOpen);
+			ClassicAssert.IsFalse(Gate("yes").IsOpen);
+			ClassicAssert.IsTrue(Gate(null).IsOpen);
 		}
 
 		[Test]
@@ -399,16 +400,16 @@ namespace ThousandAndFirst.Tests
 		{
 			// These are published and are switched on by third parties (STANDARDS §9). Appending is
 			// additive; renumbering is a break, and this table is what would catch one.
-			Assert.AreEqual(0, (int)ZoningVerdict.Permitted);
-			Assert.AreEqual(1, (int)ZoningVerdict.RefusedUnlearned);
-			Assert.AreEqual(2, (int)ZoningVerdict.RefusedTechLevel);
-			Assert.AreEqual(3, (int)ZoningVerdict.RefusedTerritory);
-			Assert.AreEqual(4, (int)ZoningVerdict.RefusedStratum);
-			Assert.AreEqual(5, (int)ZoningVerdict.RefusedDistrict);
-			Assert.AreEqual(6, (int)ZoningVerdict.RefusedUnaligned);
-			Assert.AreEqual(7, (int)ZoningVerdict.RefusedCreedShare);
-			Assert.AreEqual(8, (int)ZoningVerdict.RefusedBuilders);
-			Assert.AreEqual(9, (int)ZoningVerdict.RefusedMegastructure);
+			ClassicAssert.AreEqual(0, (int)ZoningVerdict.Permitted);
+			ClassicAssert.AreEqual(1, (int)ZoningVerdict.RefusedUnlearned);
+			ClassicAssert.AreEqual(2, (int)ZoningVerdict.RefusedTechLevel);
+			ClassicAssert.AreEqual(3, (int)ZoningVerdict.RefusedTerritory);
+			ClassicAssert.AreEqual(4, (int)ZoningVerdict.RefusedStratum);
+			ClassicAssert.AreEqual(5, (int)ZoningVerdict.RefusedDistrict);
+			ClassicAssert.AreEqual(6, (int)ZoningVerdict.RefusedUnaligned);
+			ClassicAssert.AreEqual(7, (int)ZoningVerdict.RefusedCreedShare);
+			ClassicAssert.AreEqual(8, (int)ZoningVerdict.RefusedBuilders);
+			ClassicAssert.AreEqual(9, (int)ZoningVerdict.RefusedMegastructure);
 		}
 
 		// --- The petition the hall provokes (§3.6's first authored happening) -------------------------
@@ -418,13 +419,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// Carried in a save. Appending is additive; renumbering silently reinterprets every
 			// petition standing in every existing game.
-			Assert.AreEqual(0, (int)KingdomRules.PetitionKind.None);
-			Assert.AreEqual(1, (int)KingdomRules.PetitionKind.Thirst);
-			Assert.AreEqual(2, (int)KingdomRules.PetitionKind.Shelter);
-			Assert.AreEqual(3, (int)KingdomRules.PetitionKind.Craft);
-			Assert.AreEqual(4, (int)KingdomRules.PetitionKind.Peace);
-			Assert.AreEqual(5, (int)KingdomRules.PetitionKind.Memorial);
-			Assert.AreEqual(6, (int)KingdomRules.PetitionKind.Flesh);
+			ClassicAssert.AreEqual(0, (int)KingdomRules.PetitionKind.None);
+			ClassicAssert.AreEqual(1, (int)KingdomRules.PetitionKind.Thirst);
+			ClassicAssert.AreEqual(2, (int)KingdomRules.PetitionKind.Shelter);
+			ClassicAssert.AreEqual(3, (int)KingdomRules.PetitionKind.Craft);
+			ClassicAssert.AreEqual(4, (int)KingdomRules.PetitionKind.Peace);
+			ClassicAssert.AreEqual(5, (int)KingdomRules.PetitionKind.Memorial);
+			ClassicAssert.AreEqual(6, (int)KingdomRules.PetitionKind.Flesh);
 		}
 
 		[Test]
@@ -437,7 +438,7 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int beds = 0; beds <= 6; beds += 2)
 				{
-					Assert.AreNotEqual(KingdomRules.PetitionKind.Flesh,
+					ClassicAssert.AreNotEqual(KingdomRules.PetitionKind.Flesh,
 						KingdomRules.ChoosePetition(water, 4, beds, 3, -400, false, 2));
 				}
 			}
@@ -449,19 +450,19 @@ namespace ThousandAndFirst.Tests
 			// There is no correct answer to it and nothing the founder can build settles it
 			// (DIVERSITY §3.6). Hearing the speech supplies this frozen target; accepting the
 			// petition separately gates resolution in KingdomPetitionRules.CanResolve.
-			Assert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Flesh, 0, 9999, 1, 99, 0, 500, true));
-			Assert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Flesh, 1, 0, 99, 0, 9, -500, false));
+			ClassicAssert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Flesh, 0, 9999, 1, 99, 0, 500, true));
+			ClassicAssert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Flesh, 1, 0, 99, 0, 9, -500, false));
 		}
 
 		[Test]
 		public void FleshPetition_DoesNotDisturbTheFiveKindsAboveIt()
 		{
-			Assert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Thirst, 50, 60, 1, 9, 0, 0, true));
-			Assert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Thirst, 50, 40, 1, 9, 0, 0, true));
-			Assert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Craft, 0, 0, 1, 9, 0, 0, true));
-			Assert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Craft, 0, 0, 1, 9, 2, 0, true));
-			Assert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Memorial, 0, 0, 1, 9, 0, 0, true));
-			Assert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.None, 1, 0, 1, 9, 0, 0, true));
+			ClassicAssert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Thirst, 50, 60, 1, 9, 0, 0, true));
+			ClassicAssert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Thirst, 50, 40, 1, 9, 0, 0, true));
+			ClassicAssert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Craft, 0, 0, 1, 9, 0, 0, true));
+			ClassicAssert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Craft, 0, 0, 1, 9, 2, 0, true));
+			ClassicAssert.IsTrue(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.Memorial, 0, 0, 1, 9, 0, 0, true));
+			ClassicAssert.IsFalse(KingdomRules.IsPetitionMet(KingdomRules.PetitionKind.None, 1, 0, 1, 9, 0, 0, true));
 		}
 
 		[Test]
@@ -469,9 +470,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The mesh condition: nothing parallel is built. The kind is the petitions lane's; every
 			// word of it is the lab's, and these are the three the lane asks for.
-			Assert.IsNotEmpty(KingdomLabRules.SpokenAgainstSubject());
-			Assert.IsNotEmpty(KingdomLabRules.SpokenAgainstSpeech("the Templar"));
-			Assert.IsNotEmpty(KingdomLabRules.SpokenAgainstDeed("Kavvat"));
+			ClassicAssert.IsNotEmpty(KingdomLabRules.SpokenAgainstSubject());
+			ClassicAssert.IsNotEmpty(KingdomLabRules.SpokenAgainstSpeech("the Templar"));
+			ClassicAssert.IsNotEmpty(KingdomLabRules.SpokenAgainstDeed("Kavvat"));
 			StringAssert.Contains("Kavvat", KingdomLabRules.SpokenAgainstDeed("Kavvat"));
 		}
 
@@ -481,11 +482,11 @@ namespace ThousandAndFirst.Tests
 		public void StandingCost_ReadsTheRemovalIdiomTheQolVocabularyAlreadySpeaks()
 		{
 			List<KeyValuePair<string, int>> cost = KingdomLabRules.StandingCost("-Templar,-Mechanimists", 50);
-			Assert.AreEqual(2, cost.Count);
-			Assert.AreEqual("Templar", cost[0].Key);
-			Assert.AreEqual(-50, cost[0].Value);
-			Assert.AreEqual("Mechanimists", cost[1].Key);
-			Assert.AreEqual(-50, cost[1].Value);
+			ClassicAssert.AreEqual(2, cost.Count);
+			ClassicAssert.AreEqual("Templar", cost[0].Key);
+			ClassicAssert.AreEqual(-50, cost[0].Value);
+			ClassicAssert.AreEqual("Mechanimists", cost[1].Key);
+			ClassicAssert.AreEqual(-50, cost[1].Value);
 		}
 
 		[Test]
@@ -514,8 +515,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SpeaksAgainstHall_NeedsAMinorityLargeEnoughToBeMoreThanOnePersonsOpinion()
 		{
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 1, People: 40, AlreadySpoken: false));
-			Assert.IsTrue(KingdomLabRules.SpeaksAgainstHall(Offended: 4, People: 40, AlreadySpoken: false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 1, People: 40, AlreadySpoken: false));
+			ClassicAssert.IsTrue(KingdomLabRules.SpeaksAgainstHall(Offended: 4, People: 40, AlreadySpoken: false));
 		}
 
 		[Test]
@@ -523,22 +524,22 @@ namespace ThousandAndFirst.Tests
 		{
 			// That city could not staff the hall in the first place — Addendum 4d's fault-line
 			// ceiling does the work, and no rule of ours says so.
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 30, People: 40, AlreadySpoken: false));
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 20, People: 40, AlreadySpoken: false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 30, People: 40, AlreadySpoken: false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 20, People: 40, AlreadySpoken: false));
 		}
 
 		[Test]
 		public void SpeaksAgainstHall_SaysItOnceAndNeverAgain()
 		{
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 4, People: 40, AlreadySpoken: true));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(Offended: 4, People: 40, AlreadySpoken: true));
 		}
 
 		[Test]
 		public void SpeaksAgainstHall_IsSilentWhereNobodyMinds()
 		{
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(0, 40, false));
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(4, 0, false));
-			Assert.IsFalse(KingdomLabRules.SpeaksAgainstHall(-2, 40, false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(0, 40, false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(4, 0, false));
+			ClassicAssert.IsFalse(KingdomLabRules.SpeaksAgainstHall(-2, 40, false));
 		}
 
 		[Test]
@@ -657,23 +658,23 @@ namespace ThousandAndFirst.Tests
 		public void KeptSpendPlan_CountTwoOwedTwoFinalizesOneWholeStack()
 		{
 			KingdomKeptSpendPlan plan;
-			Assert.IsTrue(KingdomLabRules.TryPlanKeptSpend(new int[] { 2 }, 2, out plan));
-			Assert.AreEqual(1, plan.Steps.Count);
-			Assert.AreEqual(2, plan.Steps[0].Taken);
-			Assert.AreEqual(0, plan.Steps[0].Remaining);
-			Assert.IsTrue(plan.Steps[0].NeedsFinalization);
-			Assert.AreEqual(1, plan.Finalizers);
+			ClassicAssert.IsTrue(KingdomLabRules.TryPlanKeptSpend(new int[] { 2 }, 2, out plan));
+			ClassicAssert.AreEqual(1, plan.Steps.Count);
+			ClassicAssert.AreEqual(2, plan.Steps[0].Taken);
+			ClassicAssert.AreEqual(0, plan.Steps[0].Remaining);
+			ClassicAssert.IsTrue(plan.Steps[0].NeedsFinalization);
+			ClassicAssert.AreEqual(1, plan.Finalizers);
 		}
 
 		[Test]
 		public void KeptSpendPlan_OneAndTwoOwedThreePreflightsAndFinalizesBothSources()
 		{
 			KingdomKeptSpendPlan plan;
-			Assert.IsTrue(KingdomLabRules.TryPlanKeptSpend(new int[] { 1, 2 }, 3, out plan));
-			Assert.AreEqual(2, plan.Steps.Count);
-			Assert.AreEqual(0, plan.Steps[0].Remaining);
-			Assert.AreEqual(0, plan.Steps[1].Remaining);
-			Assert.AreEqual(2, plan.Finalizers);
+			ClassicAssert.IsTrue(KingdomLabRules.TryPlanKeptSpend(new int[] { 1, 2 }, 3, out plan));
+			ClassicAssert.AreEqual(2, plan.Steps.Count);
+			ClassicAssert.AreEqual(0, plan.Steps[0].Remaining);
+			ClassicAssert.AreEqual(0, plan.Steps[1].Remaining);
+			ClassicAssert.AreEqual(2, plan.Finalizers);
 		}
 
 		[Test]
@@ -691,11 +692,11 @@ namespace ThousandAndFirst.Tests
 						{
 							KingdomKeptSpendPlan plan;
 							bool planned = KingdomLabRules.TryPlanKeptSpend(available, owed, out plan);
-							Assert.AreEqual(owed <= total, planned,
+							ClassicAssert.AreEqual(owed <= total, planned,
 								"shape [" + first + "," + second + "," + third + "] owed " + owed);
 							if (!planned)
 							{
-								Assert.IsNull(plan);
+								ClassicAssert.IsNull(plan);
 								continue;
 							}
 							int taken = 0;
@@ -703,19 +704,19 @@ namespace ThousandAndFirst.Tests
 							for (int i = 0; i < plan.Steps.Count; i++)
 							{
 								KingdomKeptSpendStep step = plan.Steps[i];
-								Assert.Greater(step.Source, previous);
-								Assert.AreEqual(available[step.Source], step.Original);
-								Assert.Greater(step.Taken, 0);
-								Assert.LessOrEqual(step.Taken, step.Original);
-								Assert.AreEqual(step.Original - step.Taken, step.Remaining);
+								ClassicAssert.Greater(step.Source, previous);
+								ClassicAssert.AreEqual(available[step.Source], step.Original);
+								ClassicAssert.Greater(step.Taken, 0);
+								ClassicAssert.LessOrEqual(step.Taken, step.Original);
+								ClassicAssert.AreEqual(step.Original - step.Taken, step.Remaining);
 								if (i + 1 < plan.Steps.Count)
 								{
-									Assert.IsTrue(step.NeedsFinalization);
+									ClassicAssert.IsTrue(step.NeedsFinalization);
 								}
 								taken += step.Taken;
 								previous = step.Source;
 							}
-							Assert.AreEqual(owed, taken);
+							ClassicAssert.AreEqual(owed, taken);
 						}
 					}
 				}
@@ -733,20 +734,20 @@ namespace ThousandAndFirst.Tests
 					sources[i] = 1;
 				}
 				KingdomKeptSpendPlan plan;
-				Assert.IsTrue(KingdomLabRules.TryPlanKeptSpend(sources, count, out plan));
-				Assert.AreEqual(KingdomKeptSpendPhase.RefusedClean,
+				ClassicAssert.IsTrue(KingdomLabRules.TryPlanKeptSpend(sources, count, out plan));
+				ClassicAssert.AreEqual(KingdomKeptSpendPhase.RefusedClean,
 					KingdomLabRules.KeptSpendPhase(plan, false, false, 0, true, true));
-				Assert.AreEqual(KingdomKeptSpendPhase.Partial,
+				ClassicAssert.AreEqual(KingdomKeptSpendPhase.Partial,
 					KingdomLabRules.KeptSpendPhase(plan, false, false, 0, true, false));
-				Assert.AreEqual(KingdomKeptSpendPhase.ApplyCounts,
+				ClassicAssert.AreEqual(KingdomKeptSpendPhase.ApplyCounts,
 					KingdomLabRules.KeptSpendPhase(plan, true, false, 0, false, true));
 				for (int finalized = 0; finalized <= count; finalized++)
 				{
-					Assert.AreEqual(finalized == count
+					ClassicAssert.AreEqual(finalized == count
 						? KingdomKeptSpendPhase.SpentExact
 						: KingdomKeptSpendPhase.Finalize,
 						KingdomLabRules.KeptSpendPhase(plan, true, true, finalized, false, false));
-					Assert.AreEqual(finalized == 0
+					ClassicAssert.AreEqual(finalized == 0
 						? KingdomKeptSpendPhase.RefusedClean
 						: KingdomKeptSpendPhase.Partial,
 						KingdomLabRules.KeptSpendPhase(plan, true, true, finalized, true,
@@ -762,14 +763,14 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int after = 0; after <= 3; after++)
 				{
-					Assert.AreEqual(after > before,
+					ClassicAssert.AreEqual(after > before,
 						KingdomLabRules.ProcedureEffectChanged(before, after, Removing: false));
-					Assert.AreEqual(after < before,
+					ClassicAssert.AreEqual(after < before,
 						KingdomLabRules.ProcedureEffectChanged(before, after, Removing: true));
 				}
 			}
-			Assert.IsFalse(KingdomLabRules.ProcedureEffectChanged(-1, 1, Removing: false));
-			Assert.IsFalse(KingdomLabRules.ProcedureEffectChanged(1, -1, Removing: true));
+			ClassicAssert.IsFalse(KingdomLabRules.ProcedureEffectChanged(-1, 1, Removing: false));
+			ClassicAssert.IsFalse(KingdomLabRules.ProcedureEffectChanged(1, -1, Removing: true));
 		}
 
 		[Test]
@@ -786,7 +787,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ConsentOptions_AreTheThreeWayPromptAndTheThirdIsPermanent()
 		{
-			Assert.AreEqual(3, KingdomLabRules.ConsentOptions.Length);
+			ClassicAssert.AreEqual(3, KingdomLabRules.ConsentOptions.Length);
 			StringAssert.Contains("Have it done", KingdomLabRules.ConsentOptions[0]);
 			StringAssert.Contains("Not now", KingdomLabRules.ConsentOptions[1]);
 			StringAssert.Contains("Never", KingdomLabRules.ConsentOptions[2]);
@@ -811,10 +812,10 @@ namespace ThousandAndFirst.Tests
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(LastTick: 0L, TimeTick: 100000L,
 				RemainingTicks: 1200, CrewEffectiveness: 100, WearEffectiveness: 100,
 				Settled: false, Cancelled: false);
-			Assert.AreEqual(100000L, result.NextTick);
-			Assert.AreEqual(1200, result.RemainingTicks);
-			Assert.AreEqual(0, result.WorkedTicks);
-			Assert.IsFalse(result.Complete);
+			ClassicAssert.AreEqual(100000L, result.NextTick);
+			ClassicAssert.AreEqual(1200, result.RemainingTicks);
+			ClassicAssert.AreEqual(0, result.WorkedTicks);
+			ClassicAssert.IsFalse(result.Complete);
 		}
 
 		[Test]
@@ -822,10 +823,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
 				CrewEffectiveness: 0, WearEffectiveness: 100, Settled: false, Cancelled: false);
-			Assert.AreEqual(1300L, result.NextTick);
-			Assert.AreEqual(1200, result.RemainingTicks);
-			Assert.AreEqual(0, result.WorkedTicks);
-			Assert.IsFalse(result.Complete);
+			ClassicAssert.AreEqual(1300L, result.NextTick);
+			ClassicAssert.AreEqual(1200, result.RemainingTicks);
+			ClassicAssert.AreEqual(0, result.WorkedTicks);
+			ClassicAssert.IsFalse(result.Complete);
 		}
 
 		[Test]
@@ -833,9 +834,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
 				CrewEffectiveness: 50, WearEffectiveness: 100, Settled: false, Cancelled: false);
-			Assert.AreEqual(600, result.WorkedTicks);
-			Assert.AreEqual(600, result.RemainingTicks);
-			Assert.IsFalse(result.Complete);
+			ClassicAssert.AreEqual(600, result.WorkedTicks);
+			ClassicAssert.AreEqual(600, result.RemainingTicks);
+			ClassicAssert.IsFalse(result.Complete);
 		}
 
 		[Test]
@@ -843,9 +844,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(100L, 1300L, 400,
 				CrewEffectiveness: 100, WearEffectiveness: 100, Settled: false, Cancelled: false);
-			Assert.AreEqual(400, result.WorkedTicks);
-			Assert.AreEqual(0, result.RemainingTicks);
-			Assert.IsTrue(result.Complete);
+			ClassicAssert.AreEqual(400, result.WorkedTicks);
+			ClassicAssert.AreEqual(0, result.RemainingTicks);
+			ClassicAssert.IsTrue(result.Complete);
 		}
 
 		[Test]
@@ -855,25 +856,25 @@ namespace ThousandAndFirst.Tests
 				100, 100, Settled: true, Cancelled: false);
 			KingdomVatAccrual cancelled = KingdomLabRules.AccrueVat(100L, 1300L, 1200,
 				100, 100, Settled: false, Cancelled: true);
-			Assert.IsFalse(settled.Complete);
-			Assert.IsFalse(cancelled.Complete);
-			Assert.AreEqual(0, settled.WorkedTicks);
-			Assert.AreEqual(0, cancelled.WorkedTicks);
+			ClassicAssert.IsFalse(settled.Complete);
+			ClassicAssert.IsFalse(cancelled.Complete);
+			ClassicAssert.AreEqual(0, settled.WorkedTicks);
+			ClassicAssert.AreEqual(0, cancelled.WorkedTicks);
 		}
 
 		[Test]
 		public void VatSettlement_CreatesThenConsumesThenOnlyCollects()
 		{
-			Assert.AreEqual(KingdomVatSettlement.CreateOutput,
+			ClassicAssert.AreEqual(KingdomVatSettlement.CreateOutput,
 				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: false,
 					WorkComplete: true, CancelRequested: false));
-			Assert.AreEqual(KingdomVatSettlement.ConsumeInput,
+			ClassicAssert.AreEqual(KingdomVatSettlement.ConsumeInput,
 				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
 					WorkComplete: true, CancelRequested: false));
-			Assert.AreEqual(KingdomVatSettlement.CollectOutput,
+			ClassicAssert.AreEqual(KingdomVatSettlement.CollectOutput,
 				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: true,
 					WorkComplete: true, CancelRequested: false));
-			Assert.AreNotEqual(KingdomVatSettlement.CreateOutput,
+			ClassicAssert.AreNotEqual(KingdomVatSettlement.CreateOutput,
 				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: true,
 					WorkComplete: true, CancelRequested: false));
 		}
@@ -881,16 +882,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void VatSettlement_CancellationReturnsInputAndRecoversFinishedOutput()
 		{
-			Assert.AreEqual(KingdomVatSettlement.ReturnInput,
+			ClassicAssert.AreEqual(KingdomVatSettlement.ReturnInput,
 				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: false,
 					WorkComplete: false, CancelRequested: true));
-			Assert.AreEqual(KingdomVatSettlement.CollectOutput,
+			ClassicAssert.AreEqual(KingdomVatSettlement.CollectOutput,
 				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
 					WorkComplete: true, CancelRequested: true));
-			Assert.AreNotEqual(KingdomVatSettlement.ReturnInput,
+			ClassicAssert.AreNotEqual(KingdomVatSettlement.ReturnInput,
 				KingdomLabRules.VatSettlement(InputPresent: true, OutputPresent: true,
 					WorkComplete: false, CancelRequested: true));
-			Assert.AreEqual(KingdomVatSettlement.Missing,
+			ClassicAssert.AreEqual(KingdomVatSettlement.Missing,
 				KingdomLabRules.VatSettlement(InputPresent: false, OutputPresent: false,
 					WorkComplete: false, CancelRequested: true));
 		}
@@ -901,9 +902,9 @@ namespace ThousandAndFirst.Tests
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(1L, long.MaxValue, int.MaxValue,
 				CrewEffectiveness: int.MaxValue, WearEffectiveness: int.MaxValue,
 				Settled: false, Cancelled: false);
-			Assert.AreEqual(int.MaxValue, result.WorkedTicks);
-			Assert.AreEqual(0, result.RemainingTicks);
-			Assert.IsTrue(result.Complete);
+			ClassicAssert.AreEqual(int.MaxValue, result.WorkedTicks);
+			ClassicAssert.AreEqual(0, result.RemainingTicks);
+			ClassicAssert.IsTrue(result.Complete);
 		}
 
 		[Test]
@@ -911,16 +912,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVatAccrual result = KingdomLabRules.AccrueVat(1300L, 100L, 1200,
 				CrewEffectiveness: 100, WearEffectiveness: 100, Settled: false, Cancelled: false);
-			Assert.AreEqual(1300L, result.NextTick);
-			Assert.AreEqual(1200, result.RemainingTicks);
-			Assert.AreEqual(0, result.WorkedTicks);
-			Assert.IsFalse(result.Complete);
+			ClassicAssert.AreEqual(1300L, result.NextTick);
+			ClassicAssert.AreEqual(1200, result.RemainingTicks);
+			ClassicAssert.AreEqual(0, result.WorkedTicks);
+			ClassicAssert.IsFalse(result.Complete);
 			KingdomVatAccrual retry = KingdomLabRules.AccrueVat(result.NextTick, 1300L,
 				result.RemainingTicks, CrewEffectiveness: 100, WearEffectiveness: 100,
 				Settled: false, Cancelled: false);
-			Assert.AreEqual(1300L, retry.NextTick);
-			Assert.AreEqual(1200, retry.RemainingTicks);
-			Assert.AreEqual(0, retry.WorkedTicks);
+			ClassicAssert.AreEqual(1300L, retry.NextTick);
+			ClassicAssert.AreEqual(1200, retry.RemainingTicks);
+			ClassicAssert.AreEqual(0, retry.WorkedTicks);
 		}
 
 		[Test]
@@ -940,7 +941,7 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < lines.Count; i++)
 			{
-				Assert.IsNotEmpty(lines[i]);
+				ClassicAssert.IsNotEmpty(lines[i]);
 				StringAssert.DoesNotContain("failed", lines[i].ToLowerInvariant());
 				StringAssert.DoesNotContain("error", lines[i].ToLowerInvariant());
 				StringAssert.DoesNotContain("invalid", lines[i].ToLowerInvariant());
@@ -958,7 +959,7 @@ namespace ThousandAndFirst.Tests
 					{
 						KingdomLabJobPhase phase = KingdomLabRules.FundingPhase(water, bits, kept);
 						bool exact = water && bits && kept == KingdomKeptSpendPhase.SpentExact;
-						Assert.AreEqual(exact ? KingdomLabJobPhase.Working
+						ClassicAssert.AreEqual(exact ? KingdomLabJobPhase.Working
 							: KingdomLabJobPhase.FundingRecovery, phase,
 							"water=" + water + " bits=" + bits + " kept=" + kept);
 					}
@@ -975,14 +976,14 @@ namespace ThousandAndFirst.Tests
 					100, 100, phase);
 				if (phase == KingdomLabJobPhase.Working)
 				{
-					Assert.AreEqual(KingdomLabJobPhase.Ready, result.Phase);
-					Assert.AreEqual(0, result.RemainingTicks);
+					ClassicAssert.AreEqual(KingdomLabJobPhase.Ready, result.Phase);
+					ClassicAssert.AreEqual(0, result.RemainingTicks);
 				}
 				else
 				{
-					Assert.AreEqual(phase, result.Phase);
-					Assert.AreEqual(1200, result.RemainingTicks);
-					Assert.AreEqual(100L, result.NextTick);
+					ClassicAssert.AreEqual(phase, result.Phase);
+					ClassicAssert.AreEqual(1200, result.RemainingTicks);
+					ClassicAssert.AreEqual(100L, result.NextTick);
 				}
 			}
 		}
@@ -992,12 +993,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabJobAccrual idle = KingdomLabRules.AccrueJob(100L, 1300L, 2400,
 				0, 100, KingdomLabJobPhase.Working);
-			Assert.AreEqual(0, idle.WorkedTicks);
-			Assert.AreEqual(2400, idle.RemainingTicks);
+			ClassicAssert.AreEqual(0, idle.WorkedTicks);
+			ClassicAssert.AreEqual(2400, idle.RemainingTicks);
 			KingdomLabJobAccrual retry = KingdomLabRules.AccrueJob(idle.NextTick, 1300L,
 				idle.RemainingTicks, 100, 100, idle.Phase);
-			Assert.AreEqual(0, retry.WorkedTicks);
-			Assert.AreEqual(2400, retry.RemainingTicks);
+			ClassicAssert.AreEqual(0, retry.WorkedTicks);
+			ClassicAssert.AreEqual(2400, retry.RemainingTicks);
 		}
 
 		[Test]
@@ -1005,10 +1006,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabJobAccrual result = KingdomLabRules.AccrueJob(2500L, 1300L, 2400,
 				100, 100, KingdomLabJobPhase.Working);
-			Assert.AreEqual(2500L, result.NextTick);
-			Assert.AreEqual(2400, result.RemainingTicks);
-			Assert.AreEqual(0, result.WorkedTicks);
-			Assert.AreEqual(KingdomLabJobPhase.Working, result.Phase);
+			ClassicAssert.AreEqual(2500L, result.NextTick);
+			ClassicAssert.AreEqual(2400, result.RemainingTicks);
+			ClassicAssert.AreEqual(0, result.WorkedTicks);
+			ClassicAssert.AreEqual(KingdomLabJobPhase.Working, result.Phase);
 		}
 
 		[Test]
@@ -1016,31 +1017,31 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabWaterClaim partial = KingdomLabRules.MergeWaterClaim(10, 0, 0,
 				Quarantined: false, AttemptSpent: 4, AttemptLost: 4, AttemptExact: true);
-			Assert.AreEqual(4, partial.Paid);
-			Assert.AreEqual(6, partial.Outstanding);
-			Assert.AreEqual(4, partial.Lost);
-			Assert.IsFalse(partial.Quarantined);
-			Assert.IsFalse(partial.Settled);
+			ClassicAssert.AreEqual(4, partial.Paid);
+			ClassicAssert.AreEqual(6, partial.Outstanding);
+			ClassicAssert.AreEqual(4, partial.Lost);
+			ClassicAssert.IsFalse(partial.Quarantined);
+			ClassicAssert.IsFalse(partial.Settled);
 
 			KingdomLabWaterClaim settled = KingdomLabRules.MergeWaterClaim(10,
 				partial.Paid, partial.Lost, partial.Quarantined,
 				AttemptSpent: 6, AttemptLost: 6, AttemptExact: true);
-			Assert.AreEqual(10, settled.Paid);
-			Assert.AreEqual(0, settled.Outstanding);
-			Assert.AreEqual(10, settled.Lost);
-			Assert.IsTrue(settled.Settled);
+			ClassicAssert.AreEqual(10, settled.Paid);
+			ClassicAssert.AreEqual(0, settled.Outstanding);
+			ClassicAssert.AreEqual(10, settled.Lost);
+			ClassicAssert.IsTrue(settled.Settled);
 
 			KingdomLabWaterClaim uncertain = KingdomLabRules.MergeWaterClaim(10, 4, 4,
 				Quarantined: false, AttemptSpent: 1, AttemptLost: 1, AttemptExact: false);
-			Assert.AreEqual(5, uncertain.Paid);
-			Assert.AreEqual(5, uncertain.Outstanding);
-			Assert.IsTrue(uncertain.Quarantined);
-			Assert.IsFalse(uncertain.Settled);
+			ClassicAssert.AreEqual(5, uncertain.Paid);
+			ClassicAssert.AreEqual(5, uncertain.Outstanding);
+			ClassicAssert.IsTrue(uncertain.Quarantined);
+			ClassicAssert.IsFalse(uncertain.Settled);
 			KingdomLabWaterClaim sticky = KingdomLabRules.MergeWaterClaim(10,
 				uncertain.Paid, uncertain.Lost, uncertain.Quarantined,
 				AttemptSpent: 5, AttemptLost: 5, AttemptExact: true);
-			Assert.IsTrue(sticky.Quarantined);
-			Assert.IsFalse(sticky.Settled);
+			ClassicAssert.IsTrue(sticky.Quarantined);
+			ClassicAssert.IsFalse(sticky.Settled);
 		}
 
 		[Test]
@@ -1049,40 +1050,40 @@ namespace ThousandAndFirst.Tests
 			KingdomLabWaterClaim result = KingdomLabRules.MergeWaterClaim(7,
 				int.MaxValue, int.MaxValue, Quarantined: false,
 				AttemptSpent: int.MaxValue, AttemptLost: int.MaxValue, AttemptExact: true);
-			Assert.AreEqual(7, result.Paid);
-			Assert.AreEqual(0, result.Outstanding);
-			Assert.AreEqual(int.MaxValue, result.Lost);
-			Assert.IsTrue(result.Settled);
+			ClassicAssert.AreEqual(7, result.Paid);
+			ClassicAssert.AreEqual(0, result.Outstanding);
+			ClassicAssert.AreEqual(int.MaxValue, result.Lost);
+			ClassicAssert.IsTrue(result.Settled);
 		}
 
 		[Test]
 		public void RemovalFunding_NeverTouchesBodyBeforeExactFullPayment()
 		{
-			Assert.AreEqual(KingdomLabRemovalPhase.FundingRecovery,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.FundingRecovery,
 				KingdomLabRules.RemovalFundingPhase(10, 0, Quarantined: false));
-			Assert.AreEqual(KingdomLabRemovalPhase.FundingRecovery,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.FundingRecovery,
 				KingdomLabRules.RemovalFundingPhase(10, 9, Quarantined: false));
-			Assert.AreEqual(KingdomLabRemovalPhase.Paid,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Paid,
 				KingdomLabRules.RemovalFundingPhase(10, 10, Quarantined: false));
-			Assert.AreEqual(KingdomLabRemovalPhase.Paid,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Paid,
 				KingdomLabRules.RemovalFundingPhase(0, 0, Quarantined: false));
-			Assert.AreEqual(KingdomLabRemovalPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Quarantined,
 				KingdomLabRules.RemovalFundingPhase(10, 10, Quarantined: true));
 		}
 
 		[Test]
 		public void RemovalObservation_AbsentCommitsPresentRetriesUncertainQuarantines()
 		{
-			Assert.AreEqual(KingdomLabRemovalPhase.Removed,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Removed,
 				KingdomLabRules.RemovalObservation(KingdomLabOwnedTargetState.Absent,
 					RemovingStarted: true));
-			Assert.AreEqual(KingdomLabRemovalPhase.RemovalRecovery,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.RemovalRecovery,
 				KingdomLabRules.RemovalObservation(KingdomLabOwnedTargetState.Present,
 					RemovingStarted: true));
-			Assert.AreEqual(KingdomLabRemovalPhase.Paid,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Paid,
 				KingdomLabRules.RemovalObservation(KingdomLabOwnedTargetState.Present,
 					RemovingStarted: false));
-			Assert.AreEqual(KingdomLabRemovalPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomLabRemovalPhase.Quarantined,
 				KingdomLabRules.RemovalObservation(KingdomLabOwnedTargetState.Uncertain,
 					RemovingStarted: true));
 		}
@@ -1092,28 +1093,28 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabWaterClaim first = KingdomLabRules.MergeWaterClaim(12, 0, 0,
 				Quarantined: false, AttemptSpent: 5, AttemptLost: 5, AttemptExact: true);
-			Assert.AreEqual(7, first.Outstanding);
+			ClassicAssert.AreEqual(7, first.Outstanding);
 			KingdomLabWaterClaim retry = KingdomLabRules.MergeWaterClaim(12, first.Paid,
 				first.Lost, first.Quarantined, AttemptSpent: first.Outstanding,
 				AttemptLost: first.Outstanding, AttemptExact: true);
-			Assert.IsTrue(retry.Settled);
-			Assert.AreEqual(12, retry.Paid);
+			ClassicAssert.IsTrue(retry.Settled);
+			ClassicAssert.AreEqual(12, retry.Paid);
 			KingdomLabWaterClaim uncertain = KingdomLabRules.MergeWaterClaim(12,
 				first.Paid, first.Lost, first.Quarantined, AttemptSpent: 0,
 				AttemptLost: 0, AttemptExact: false);
-			Assert.IsTrue(uncertain.Quarantined);
-			Assert.IsFalse(uncertain.Settled);
+			ClassicAssert.IsTrue(uncertain.Quarantined);
+			ClassicAssert.IsFalse(uncertain.Settled);
 		}
 
 		[Test]
 		public void MutationPresence_DistinguishesModifierOnlyFromListedContribution()
 		{
-			Assert.AreEqual(0, KingdomLabRules.MutationPresence(false, false));
-			Assert.AreEqual(1, KingdomLabRules.MutationPresence(false, true));
-			Assert.AreEqual(2, KingdomLabRules.MutationPresence(true, true));
-			Assert.AreEqual(2, KingdomLabRules.MutationPresence(true, false));
-			Assert.IsTrue(KingdomLabRules.ProcedureEffectChanged(0, 2, Removing: false));
-			Assert.IsTrue(KingdomLabRules.ProcedureEffectChanged(2, 1, Removing: true));
+			ClassicAssert.AreEqual(0, KingdomLabRules.MutationPresence(false, false));
+			ClassicAssert.AreEqual(1, KingdomLabRules.MutationPresence(false, true));
+			ClassicAssert.AreEqual(2, KingdomLabRules.MutationPresence(true, true));
+			ClassicAssert.AreEqual(2, KingdomLabRules.MutationPresence(true, false));
+			ClassicAssert.IsTrue(KingdomLabRules.ProcedureEffectChanged(0, 2, Removing: false));
+			ClassicAssert.IsTrue(KingdomLabRules.ProcedureEffectChanged(2, 1, Removing: true));
 		}
 
 		[Test]
@@ -1125,9 +1126,9 @@ namespace ThousandAndFirst.Tests
 				100, 100, KingdomLabJobPhase.Working);
 			KingdomLabJobAccrual reloaded = KingdomLabRules.AccrueJob(first.NextTick, 2500L,
 				first.RemainingTicks, 100, 100, first.Phase);
-			Assert.AreEqual(direct.RemainingTicks, reloaded.RemainingTicks);
-			Assert.AreEqual(direct.Phase, reloaded.Phase);
-			Assert.AreEqual(direct.NextTick, reloaded.NextTick);
+			ClassicAssert.AreEqual(direct.RemainingTicks, reloaded.RemainingTicks);
+			ClassicAssert.AreEqual(direct.Phase, reloaded.Phase);
+			ClassicAssert.AreEqual(direct.NextTick, reloaded.NextTick);
 		}
 
 		[Test]
@@ -1135,39 +1136,39 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabJobAccrual ready = KingdomLabRules.AccrueJob(2500L, 3700L, 0,
 				100, 100, KingdomLabJobPhase.Ready);
-			Assert.AreEqual(KingdomLabJobPhase.Ready, ready.Phase);
-			Assert.AreEqual(0, ready.WorkedTicks);
-			Assert.AreEqual(2500L, ready.NextTick);
-			Assert.IsTrue(KingdomLabRules.IsLiveJob(ready.Phase));
-			Assert.IsFalse(KingdomLabRules.IsLiveJob(KingdomLabJobPhase.Complete));
-			Assert.IsFalse(KingdomLabRules.IsLiveJob(KingdomLabJobPhase.Cancelled));
+			ClassicAssert.AreEqual(KingdomLabJobPhase.Ready, ready.Phase);
+			ClassicAssert.AreEqual(0, ready.WorkedTicks);
+			ClassicAssert.AreEqual(2500L, ready.NextTick);
+			ClassicAssert.IsTrue(KingdomLabRules.IsLiveJob(ready.Phase));
+			ClassicAssert.IsFalse(KingdomLabRules.IsLiveJob(KingdomLabJobPhase.Complete));
+			ClassicAssert.IsFalse(KingdomLabRules.IsLiveJob(KingdomLabJobPhase.Cancelled));
 		}
 
 		[Test]
 		public void EffectContract_FingerprintFreezesEveryExecutionAxisAndSourceStamp()
 		{
 			KingdomLabRegistryEntry row = RegistryRow("job");
-			Assert.AreEqual("098548483c949f73",
+			ClassicAssert.AreEqual("098548483c949f73",
 				KingdomLabRules.ExecutionStampFingerprint("source-stamp"));
-			Assert.AreEqual("d0036e413cbc5fd5", row.Fingerprint);
-			Assert.IsTrue(KingdomLabRules.ValidEffectContract(row.ContractVersion,
+			ClassicAssert.AreEqual("d0036e413cbc5fd5", row.Fingerprint);
+			ClassicAssert.IsTrue(KingdomLabRules.ValidEffectContract(row.ContractVersion,
 				row.ProcedureKey, row.Grants, row.Source, row.Attach, row.Manager,
 				row.Fingerprint, row.Detail));
-			Assert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
+			ClassicAssert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
 				row.ContractVersion, row.ProcedureKey, "OtherPart", row.Source, row.Attach,
 				row.Manager, row.Detail));
-			Assert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
+			ClassicAssert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
 				row.ContractVersion, row.ProcedureKey, row.Grants, (int)LabSource.Mutation,
 				row.Attach, row.Manager, row.Detail));
-			Assert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
+			ClassicAssert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
 				row.ContractVersion, row.ProcedureKey, row.Grants, row.Source,
 				(int)LabAttach.Weapon, row.Manager, row.Detail));
-			Assert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
+			ClassicAssert.AreNotEqual(row.Fingerprint, KingdomLabRules.EffectFingerprint(
 				row.ContractVersion, row.ProcedureKey, row.Grants, row.Source, row.Attach,
 				"other-manager", row.Detail));
-			Assert.AreNotEqual(row.Detail,
+			ClassicAssert.AreNotEqual(row.Detail,
 				"stamp:" + KingdomLabRules.ExecutionStampFingerprint("changed-stamp"));
-			Assert.AreEqual(KingdomLabRules.ExecutionStampFingerprint("source-stamp"),
+			ClassicAssert.AreEqual(KingdomLabRules.ExecutionStampFingerprint("source-stamp"),
 				KingdomLabRules.ExecutionStampFingerprint("source-stamp"));
 		}
 
@@ -1175,12 +1176,12 @@ namespace ThousandAndFirst.Tests
 		public void EffectContract_RejectsLegacyOrUnboundedRowsRatherThanDerivingThem()
 		{
 			KingdomLabRegistryEntry row = RegistryRow("job");
-			Assert.IsFalse(KingdomLabRules.ValidEffectContract(0, row.ProcedureKey,
+			ClassicAssert.IsFalse(KingdomLabRules.ValidEffectContract(0, row.ProcedureKey,
 				row.Grants, row.Source, row.Attach, row.Manager, row.Fingerprint, row.Detail));
-			Assert.IsFalse(KingdomLabRules.ValidEffectContract(row.ContractVersion,
+			ClassicAssert.IsFalse(KingdomLabRules.ValidEffectContract(row.ContractVersion,
 				row.ProcedureKey, row.Grants, row.Source, row.Attach, row.Manager,
 				row.Fingerprint, new string('x', KingdomLabRules.MaxRegistryFieldChars + 1)));
-			Assert.IsFalse(KingdomLabRules.ValidEffectContract(row.ContractVersion,
+			ClassicAssert.IsFalse(KingdomLabRules.ValidEffectContract(row.ContractVersion,
 				row.ProcedureKey, row.Grants, row.Source, row.Attach, row.Manager,
 				row.Fingerprint, null));
 		}
@@ -1191,20 +1192,20 @@ namespace ThousandAndFirst.Tests
 			KingdomLabRegistryEntry row = RegistryRow("job");
 			string serialized = KingdomLabRules.FormatRegistry(
 				new List<KingdomLabRegistryEntry> { row });
-			Assert.AreEqual("v1\nam9i|aGFsbC0x|cGF0aWVudC0x|Z2FtZS0x|cmVhbG0tMQ==|44|1|"
+			ClassicAssert.AreEqual("v1\nam9i|aGFsbC0x|cGF0aWVudC0x|Z2FtZS0x|cmVhbG0tMQ==|44|1|"
 				+ "c3BvcmVnaWxscw==|R2FzSW1tdW5pdHk=|0|0|VEFGOjpMYWI6OnNwb3JlZ2lsbHM=|"
 				+ "c3RhbXA6MDk4NTQ4NDgzYzk0OWY3Mw==|ZDAwMzZlNDEzY2JjNWZkNQ==|0|1",
 				serialized);
 			bool quarantined;
 			List<KingdomLabRegistryEntry> loaded = KingdomLabRules.ParseRegistry(serialized,
 				out quarantined);
-			Assert.IsFalse(quarantined);
-			Assert.AreEqual(1, loaded.Count);
-			Assert.IsTrue(KingdomLabRules.RegistryAuthority(loaded[0], row,
+			ClassicAssert.IsFalse(quarantined);
+			ClassicAssert.AreEqual(1, loaded.Count);
+			ClassicAssert.IsTrue(KingdomLabRules.RegistryAuthority(loaded[0], row,
 				RequireActive: true));
-			Assert.AreEqual(row.Detail, loaded[0].Detail);
-			Assert.AreEqual(row.Fingerprint, loaded[0].Fingerprint);
-			Assert.AreEqual(serialized, KingdomLabRules.FormatRegistry(loaded),
+			ClassicAssert.AreEqual(row.Detail, loaded[0].Detail);
+			ClassicAssert.AreEqual(row.Fingerprint, loaded[0].Fingerprint);
+			ClassicAssert.AreEqual(serialized, KingdomLabRules.FormatRegistry(loaded),
 				"the canonical registry wire must survive decode and re-encode byte-for-byte");
 		}
 
@@ -1214,19 +1215,19 @@ namespace ThousandAndFirst.Tests
 			KingdomLabRegistryEntry row = RegistryRow("job");
 			KingdomLabRegistryEntry changed = row.Copy();
 			changed.PatientId = "successor";
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 			changed = row.Copy();
 			changed.BuildingId = "successor-hall";
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 			changed = row.Copy();
 			changed.RealmFoundedTick++;
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 			changed = row.Copy();
 			changed.Detail = "stamp:" + KingdomLabRules.ExecutionStampFingerprint("other");
 			changed.Fingerprint = KingdomLabRules.EffectFingerprint(changed.ContractVersion,
 				changed.ProcedureKey, changed.Grants, changed.Source, changed.Attach,
 				changed.Manager, changed.Detail);
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 		}
 
 		[Test]
@@ -1235,21 +1236,21 @@ namespace ThousandAndFirst.Tests
 			List<KingdomLabRegistryEntry> rows = new List<KingdomLabRegistryEntry>();
 			for (int i = 0; i < KingdomLabRules.MaxRegistryRows; i++)
 			{
-				Assert.IsTrue(KingdomLabRules.UpsertRegistry(rows,
+				ClassicAssert.IsTrue(KingdomLabRules.UpsertRegistry(rows,
 					RegistryRow("active-" + i, i + 1L)));
 			}
-			Assert.IsFalse(KingdomLabRules.UpsertRegistry(rows, RegistryRow("overflow")));
+			ClassicAssert.IsFalse(KingdomLabRules.UpsertRegistry(rows, RegistryRow("overflow")));
 			KingdomLabRegistryEntry terminal = rows[7].Copy();
 			terminal.Status = KingdomLabRegistryStatus.Complete;
 			terminal.UpdatedTick = 0L;
-			Assert.IsTrue(KingdomLabRules.UpsertRegistry(rows, terminal));
-			Assert.IsFalse(KingdomLabRules.UpsertRegistry(rows, RegistryRow("replacement", 99L)));
-			Assert.AreEqual(KingdomLabRules.MaxRegistryRows, rows.Count);
-			Assert.GreaterOrEqual(KingdomLabRules.IndexOfRegistry(rows, terminal.JobId), 0);
-			Assert.AreEqual(-1, KingdomLabRules.IndexOfRegistry(rows, "replacement"));
-			Assert.IsTrue(KingdomLabRules.RemoveRegistry(rows, terminal.JobId,
+			ClassicAssert.IsTrue(KingdomLabRules.UpsertRegistry(rows, terminal));
+			ClassicAssert.IsFalse(KingdomLabRules.UpsertRegistry(rows, RegistryRow("replacement", 99L)));
+			ClassicAssert.AreEqual(KingdomLabRules.MaxRegistryRows, rows.Count);
+			ClassicAssert.GreaterOrEqual(KingdomLabRules.IndexOfRegistry(rows, terminal.JobId), 0);
+			ClassicAssert.AreEqual(-1, KingdomLabRules.IndexOfRegistry(rows, "replacement"));
+			ClassicAssert.IsTrue(KingdomLabRules.RemoveRegistry(rows, terminal.JobId,
 				KingdomLabRegistryStatus.Complete));
-			Assert.IsTrue(KingdomLabRules.UpsertRegistry(rows, RegistryRow("replacement", 99L)));
+			ClassicAssert.IsTrue(KingdomLabRules.UpsertRegistry(rows, RegistryRow("replacement", 99L)));
 		}
 
 		[Test]
@@ -1258,28 +1259,28 @@ namespace ThousandAndFirst.Tests
 			bool quarantined;
 			CollectionAssert.IsEmpty(KingdomLabRules.ParseRegistry(
 				"v1\nlegacy|row|without|frozen|contract", out quarantined));
-			Assert.IsTrue(quarantined);
+			ClassicAssert.IsTrue(quarantined);
 			KingdomLabRegistryEntry row = RegistryRow("copied-job");
 			string one = KingdomLabRules.FormatRegistry(new List<KingdomLabRegistryEntry> { row });
 			string duplicateLine = one.Substring(one.IndexOf('\n'));
 			List<KingdomLabRegistryEntry> parsed = KingdomLabRules.ParseRegistry(
 				one + duplicateLine, out quarantined);
-			Assert.IsTrue(quarantined);
-			Assert.AreEqual(1, parsed.Count);
+			ClassicAssert.IsTrue(quarantined);
+			ClassicAssert.AreEqual(1, parsed.Count);
 		}
 
 		[Test]
 		public void VatOutputIdentity_NeverCreatesAfterAnExactIdWasFrozen()
 		{
-			Assert.AreEqual(KingdomVatOutputDecision.CreateAndFreeze,
+			ClassicAssert.AreEqual(KingdomVatOutputDecision.CreateAndFreeze,
 				KingdomLabRules.VatOutputIdentity(false, false, false));
-			Assert.AreEqual(KingdomVatOutputDecision.UseExact,
+			ClassicAssert.AreEqual(KingdomVatOutputDecision.UseExact,
 				KingdomLabRules.VatOutputIdentity(true, true, true));
-			Assert.AreEqual(KingdomVatOutputDecision.QuarantineMissing,
+			ClassicAssert.AreEqual(KingdomVatOutputDecision.QuarantineMissing,
 				KingdomLabRules.VatOutputIdentity(true, false, false));
-			Assert.AreEqual(KingdomVatOutputDecision.QuarantineMismatch,
+			ClassicAssert.AreEqual(KingdomVatOutputDecision.QuarantineMismatch,
 				KingdomLabRules.VatOutputIdentity(true, true, false));
-			Assert.AreNotEqual(KingdomLabRules.VatOutputFingerprint("job", "result", 2,
+			ClassicAssert.AreNotEqual(KingdomLabRules.VatOutputFingerprint("job", "result", 2,
 				"stamp", "source"), KingdomLabRules.VatOutputFingerprint("job", "result", 3,
 				"stamp", "source"));
 		}
@@ -1287,17 +1288,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void VatCallbacks_ResumeIntentByObservationAndNeverAuthorizeReplay()
 		{
-			Assert.AreEqual(KingdomVatOutputPhase.Added,
+			ClassicAssert.AreEqual(KingdomVatOutputPhase.Added,
 				KingdomLabRules.ResumeVatOutput(KingdomVatOutputPhase.AddIntent, true));
-			Assert.AreEqual(KingdomVatOutputPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomVatOutputPhase.Quarantined,
 				KingdomLabRules.ResumeVatOutput(KingdomVatOutputPhase.AddIntent, false));
-			Assert.AreEqual(KingdomVatRawPhase.Destroyed,
+			ClassicAssert.AreEqual(KingdomVatRawPhase.Destroyed,
 				KingdomLabRules.ResumeVatRaw(KingdomVatRawPhase.DestroyIntent,
 					ExactRawPresent: false, ExactOutputInVat: true));
-			Assert.AreEqual(KingdomVatRawPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomVatRawPhase.Quarantined,
 				KingdomLabRules.ResumeVatRaw(KingdomVatRawPhase.DestroyIntent,
 					ExactRawPresent: true, ExactOutputInVat: true));
-			Assert.AreNotEqual(KingdomLabRules.VatRawFingerprint("job", "raw", "arm", 1,
+			ClassicAssert.AreNotEqual(KingdomLabRules.VatRawFingerprint("job", "raw", "arm", 1,
 				"stamp", "source"), KingdomLabRules.VatRawFingerprint("job", "raw", "arm", 2,
 				"stamp", "source"));
 		}
@@ -1305,27 +1306,27 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StandingReceipt_UsesExactCasAndQuarantinesInterleaving()
 		{
-			Assert.AreEqual(70, KingdomLabRules.StandingAfter(100, -30));
-			Assert.AreEqual(int.MaxValue, KingdomLabRules.StandingAfter(int.MaxValue, 10));
-			Assert.AreEqual(KingdomLabStandingPhase.Bound,
+			ClassicAssert.AreEqual(70, KingdomLabRules.StandingAfter(100, -30));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomLabRules.StandingAfter(int.MaxValue, 10));
+			ClassicAssert.AreEqual(KingdomLabStandingPhase.Bound,
 				KingdomLabRules.ObserveStanding(KingdomLabStandingPhase.Bound, 100, 100, 70));
-			Assert.AreEqual(KingdomLabStandingPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomLabStandingPhase.Quarantined,
 				KingdomLabRules.ObserveStanding(KingdomLabStandingPhase.Bound, 99, 100, 70));
-			Assert.AreEqual(KingdomLabStandingPhase.Applied,
+			ClassicAssert.AreEqual(KingdomLabStandingPhase.Applied,
 				KingdomLabRules.ObserveStanding(KingdomLabStandingPhase.Intent, 70, 100, 70));
-			Assert.AreEqual(KingdomLabStandingPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomLabStandingPhase.Quarantined,
 				KingdomLabRules.ObserveStanding(KingdomLabStandingPhase.Intent, 100, 100, 70));
 		}
 
 		[Test]
 		public void MessageIntent_ResumesAsLostAndEveryDispositionSettlesOnce()
 		{
-			Assert.AreEqual(KingdomLabMessagePhase.Lost,
+			ClassicAssert.AreEqual(KingdomLabMessagePhase.Lost,
 				KingdomLabRules.ResumeMessage(KingdomLabMessagePhase.Intent));
-			Assert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Delivered));
-			Assert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Skipped));
-			Assert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Lost));
-			Assert.IsFalse(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Pending));
+			ClassicAssert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Delivered));
+			ClassicAssert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Skipped));
+			ClassicAssert.IsTrue(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Lost));
+			ClassicAssert.IsFalse(KingdomLabRules.MessageSettled(KingdomLabMessagePhase.Pending));
 		}
 
 		[Test]
@@ -1335,64 +1336,64 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < 96; i++)
 			{
 				string written;
-				Assert.IsTrue(KingdomLabRules.AddReplayProof(proof, "apply:job-" + i,
+				ClassicAssert.IsTrue(KingdomLabRules.AddReplayProof(proof, "apply:job-" + i,
 					out written));
 				proof = written;
 			}
-			Assert.Less(proof.Length, 800);
+			ClassicAssert.Less(proof.Length, 800);
 			for (int i = 0; i < 96; i++)
 			{
 				bool malformed;
-				Assert.IsTrue(KingdomLabRules.ReplayContains(proof, "apply:job-" + i,
+				ClassicAssert.IsTrue(KingdomLabRules.ReplayContains(proof, "apply:job-" + i,
 					out malformed));
-				Assert.IsFalse(malformed);
+				ClassicAssert.IsFalse(malformed);
 			}
 			bool bad;
-			Assert.IsTrue(KingdomLabRules.ReplayContains("not-a-proof", "old-job", out bad));
-			Assert.IsTrue(bad);
+			ClassicAssert.IsTrue(KingdomLabRules.ReplayContains("not-a-proof", "old-job", out bad));
+			ClassicAssert.IsTrue(bad);
 		}
 
 		[Test]
 		public void ReplayProof_CanonicalWireIsIdempotentForAnExistingIdentity()
 		{
 			string first;
-			Assert.IsTrue(KingdomLabRules.AddReplayProof("", "apply:job-1", out first));
+			ClassicAssert.IsTrue(KingdomLabRules.AddReplayProof("", "apply:job-1", out first));
 			StringAssert.StartsWith("v1|1|", first);
 			string[] fields = first.Split('|');
-			Assert.AreEqual(3, fields.Length);
+			ClassicAssert.AreEqual(3, fields.Length);
 			byte[] bits = Convert.FromBase64String(fields[2]);
-			Assert.AreEqual(KingdomLabRules.ReplayProofBytes, bits.Length);
-			Assert.AreEqual(32, bits[31]);
-			Assert.AreEqual(128, bits[102]);
-			Assert.AreEqual(64, bits[438]);
-			Assert.AreEqual(16, bits[484]);
+			ClassicAssert.AreEqual(KingdomLabRules.ReplayProofBytes, bits.Length);
+			ClassicAssert.AreEqual(32, bits[31]);
+			ClassicAssert.AreEqual(128, bits[102]);
+			ClassicAssert.AreEqual(64, bits[438]);
+			ClassicAssert.AreEqual(16, bits[484]);
 			int nonzero = 0;
 			for (int i = 0; i < bits.Length; i++) if (bits[i] != 0) nonzero++;
-			Assert.AreEqual(4, nonzero, "four salted replay bits define one stable identity");
+			ClassicAssert.AreEqual(4, nonzero, "four salted replay bits define one stable identity");
 			string repeated;
-			Assert.IsTrue(KingdomLabRules.AddReplayProof(first, "apply:job-1", out repeated));
-			Assert.AreEqual(first, repeated);
+			ClassicAssert.IsTrue(KingdomLabRules.AddReplayProof(first, "apply:job-1", out repeated));
+			ClassicAssert.AreEqual(first, repeated);
 			bool malformed;
-			Assert.IsTrue(KingdomLabRules.ReplayContains(repeated, "apply:job-1",
+			ClassicAssert.IsTrue(KingdomLabRules.ReplayContains(repeated, "apply:job-1",
 				out malformed));
-			Assert.IsFalse(malformed);
+			ClassicAssert.IsFalse(malformed);
 		}
 
 		[Test]
 		public void RemovalPhase_AppendsCancellationWithoutReinterpretingOldReceipts()
 		{
-			Assert.AreEqual(0, (int)KingdomLabRemovalPhase.Funding);
-			Assert.AreEqual(6, (int)KingdomLabRemovalPhase.Complete);
-			Assert.AreEqual(7, (int)KingdomLabRemovalPhase.Quarantined);
-			Assert.AreEqual(8, (int)KingdomLabRemovalPhase.Cancelled);
+			ClassicAssert.AreEqual(0, (int)KingdomLabRemovalPhase.Funding);
+			ClassicAssert.AreEqual(6, (int)KingdomLabRemovalPhase.Complete);
+			ClassicAssert.AreEqual(7, (int)KingdomLabRemovalPhase.Quarantined);
+			ClassicAssert.AreEqual(8, (int)KingdomLabRemovalPhase.Cancelled);
 		}
 
 		[Test]
 		public void Named_IsTotalOverNothing()
 		{
-			Assert.AreEqual("the work", KingdomLabRules.Named(null));
-			Assert.AreEqual("the work", KingdomLabRules.Named(""));
-			Assert.AreEqual("Kavvat", KingdomLabRules.Named("  Kavvat  "));
+			ClassicAssert.AreEqual("the work", KingdomLabRules.Named(null));
+			ClassicAssert.AreEqual("the work", KingdomLabRules.Named(""));
+			ClassicAssert.AreEqual("Kavvat", KingdomLabRules.Named("  Kavvat  "));
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -17,41 +18,41 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityProjectionReceipt projection = KingdomPolityAuthority.Projection(
 				ledger, envoy.ManifestationReceiptId);
 			string body = projection.ObjectIds[0]; long revision = ledger.Revision;
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
 				revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L,
 				null, out KingdomPolityEnvoyDeathOutcome outcome, out string grievanceId,
 				out KingdomPolityPublicationResult result,
 				out string failure), failure);
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.Committed, outcome);
-			Assert.AreEqual(revision + 1L, ledger.Revision);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.Committed, outcome);
+			ClassicAssert.AreEqual(revision + 1L, ledger.Revision);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
 			envoy = KingdomPolityAuthority.Cohort(ledger, KingdomPolityGapTestData.Envoy);
 			KingdomPolityIncidentRecord plan = KingdomPolityGapTestData.Incident(ledger,
 				KingdomPolityGapTestData.TermsPlan);
 			KingdomPolityGrievanceRecord original = Find(ledger,
 				"taf:grievance:caused-crossing");
 			KingdomPolityGrievanceRecord grievance = Find(ledger, grievanceId);
-			Assert.AreEqual(KingdomPolityGrievancePhase.Resolved, original.Phase);
-			Assert.AreEqual(plan.Conclusion.ConclusionId, original.ResolutionRef);
-			Assert.AreEqual(KingdomPolityCohortPhase.Concluded, envoy.Phase);
-			Assert.AreEqual(plan.Conclusion.ReceiptRefs[0], envoy.RewardEventId);
-			Assert.AreEqual(KingdomPolityGrievanceCause.WitnessedHarm, grievance.Cause);
-			Assert.AreEqual(KingdomPolityTestData.Rival, grievance.IssuerPolityId);
-			Assert.AreEqual(KingdomPolityTestData.Realm, grievance.TargetPolityId);
+			ClassicAssert.AreEqual(KingdomPolityGrievancePhase.Resolved, original.Phase);
+			ClassicAssert.AreEqual(plan.Conclusion.ConclusionId, original.ResolutionRef);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Concluded, envoy.Phase);
+			ClassicAssert.AreEqual(plan.Conclusion.ReceiptRefs[0], envoy.RewardEventId);
+			ClassicAssert.AreEqual(KingdomPolityGrievanceCause.WitnessedHarm, grievance.Cause);
+			ClassicAssert.AreEqual(KingdomPolityTestData.Rival, grievance.IssuerPolityId);
+			ClassicAssert.AreEqual(KingdomPolityTestData.Realm, grievance.TargetPolityId);
 			StringAssert.StartsWith("taf:fact:witnessed:envoy-harm:v1:",
 				grievance.SourceEventId);
 			CollectionAssert.Contains(grievance.EvidenceRefs, body);
 			CollectionAssert.Contains(grievance.EvidenceRefs, projection.ProjectionId);
 			byte[] committed = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
 				revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L,
 				null, out outcome, out string retryId, out result, out failure), failure);
-			Assert.AreEqual(grievanceId, retryId);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.AreEqual(grievanceId, retryId);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
 			CollectionAssert.AreEqual(committed, KingdomPolityCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 		}
 
 		[Test]
@@ -64,14 +65,14 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityProjectionReceipt projection = KingdomPolityAuthority.Projection(
 				wrong, envoy.ManifestationReceiptId);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(wrong);
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(wrong,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(wrong,
 				wrong.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, "taf:object:polity-cohort:v1:foreign",
 				KingdomPolityTestData.Realm, 230L, null,
 				out KingdomPolityEnvoyDeathOutcome _, out string _,
 				out KingdomPolityPublicationResult _, out string failure));
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(wrong));
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(wrong,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(wrong,
 				wrong.Revision - 1L, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, projection.ObjectIds[0], KingdomPolityTestData.Realm,
 				230L, null, out _, out _, out _, out failure));
@@ -82,12 +83,12 @@ namespace ThousandAndFirst.DevTests
 			FillToCapacity(full); envoy = KingdomPolityAuthority.Cohort(full,
 				KingdomPolityGapTestData.Envoy); projection = KingdomPolityAuthority.Projection(
 				full, envoy.ManifestationReceiptId); before = KingdomPolityCodec.EncodeEnvelope(full);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(full,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(full,
 				full.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, projection.ObjectIds[0], KingdomPolityTestData.Realm,
 				230L, null, out KingdomPolityEnvoyDeathOutcome pending, out _, out _,
 				out failure), failure);
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.PendingRecovery, pending);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.PendingRecovery, pending);
 			CollectionAssert.AreNotEqual(before, KingdomPolityCodec.EncodeEnvelope(full));
 		}
 
@@ -106,7 +107,7 @@ namespace ThousandAndFirst.DevTests
 					IssuerPolityId = KingdomPolityTestData.Rival,
 					TargetPolityId = KingdomPolityTestData.Realm
 				};
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryIngestExactGrievance(ledger,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryIngestExactGrievance(ledger,
 				ledger.Revision, request, out string _, out KingdomPolityPublicationResult _,
 				out string failure));
 			StringAssert.Contains("exact loaded audience", failure);
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.DevTests
 					Phase = KingdomPolityGrievancePhase.Open
 				});
 			L.Grievances.Sort((a, b) => string.CompareOrdinal(a.GrievanceId, b.GrievanceId));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(L, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(L, out string failure), failure);
 		}
 	}
 }

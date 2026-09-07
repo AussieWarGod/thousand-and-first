@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -72,7 +73,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string path = Path.Combine(TestMain.RepositoryRoot, "DevTests",
 				"KingdomMigrationPorts.json");
-			Assert.IsTrue(File.Exists(path), "the migration-port manifest is missing: " + path);
+			ClassicAssert.IsTrue(File.Exists(path), "the migration-port manifest is missing: " + path);
 			return JsonDocument.Parse(File.ReadAllText(path)).RootElement;
 		}
 
@@ -108,10 +109,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ManifestParsesAtTheExpectedSchemaAndSize()
 		{
-			Assert.AreEqual(1, Manifest().GetProperty("schema").GetInt32());
-			Assert.AreEqual("NON-FINAL", Manifest().GetProperty("status").GetString(),
+			ClassicAssert.AreEqual(1, Manifest().GetProperty("schema").GetInt32());
+			ClassicAssert.AreEqual("NON-FINAL", Manifest().GetProperty("status").GetString(),
 				"the census stays marked non-final until the repaired polity freeze posts");
-			Assert.AreEqual(ExpectedPorts, Ports().Count,
+			ClassicAssert.AreEqual(ExpectedPorts, Ports().Count,
 				"the port count changed; update the manifest and the declared expectation together");
 		}
 
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 				if (string.IsNullOrEmpty(constant) || !Exists(FilePart(constant)))
 					offenders.Add(codec + " names a missing version constant: " + constant);
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 							+ "a fixture produced by today's writer proves nothing");
 				}
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
 		}
 
 		/// <summary>
@@ -186,8 +187,8 @@ namespace ThousandAndFirst.Tests
 					offenders.Add(codec + " has uncovered versions but declares no gap reason");
 				gaps += uncovered;
 			}
-			Assert.IsEmpty(offenders, string.Join("; ", offenders));
-			Assert.AreEqual(ExpectedHardGaps, gaps,
+			ClassicAssert.IsEmpty(offenders, string.Join("; ", offenders));
+			ClassicAssert.AreEqual(ExpectedHardGaps, gaps,
 				"the hard compatibility gap total changed; a codec was bumped, added, or covered. "
 				+ "Update the manifest and this expectation together, and never by generating a fixture.");
 		}
@@ -228,7 +229,7 @@ namespace ThousandAndFirst.Tests
 				if (!declared.Contains(Path.GetFileName(path)))
 					missing.Add(Relative(path));
 			}
-			Assert.IsEmpty(missing,
+			ClassicAssert.IsEmpty(missing,
 				"a production wire-version constant is neither a migration port nor a declared "
 				+ "non-durable version site: " + string.Join(", ", missing));
 		}
@@ -241,16 +242,16 @@ namespace ThousandAndFirst.Tests
 			{
 				if (Text(port, "codec") != "KingdomZoneObservationCodec") continue;
 				found++;
-				Assert.AreEqual("Growth/KingdomZoneObservationCodec.cs", Text(port, "reader"));
-				Assert.AreEqual("CurrentVersion", Text(port, "versionConstantIdentifier"));
-				Assert.AreEqual(1, port.GetProperty("currentVersion").GetInt32());
-				Assert.AreEqual("refuse", Text(port, "opaqueFuturePolicy"));
-				Assert.IsNull(Text(port, "migrationAuthority"));
-				Assert.AreEqual(0, port.GetProperty("fixtures").GetArrayLength());
+				ClassicAssert.AreEqual("Growth/KingdomZoneObservationCodec.cs", Text(port, "reader"));
+				ClassicAssert.AreEqual("CurrentVersion", Text(port, "versionConstantIdentifier"));
+				ClassicAssert.AreEqual(1, port.GetProperty("currentVersion").GetInt32());
+				ClassicAssert.AreEqual("refuse", Text(port, "opaqueFuturePolicy"));
+				ClassicAssert.IsNull(Text(port, "migrationAuthority"));
+				ClassicAssert.AreEqual(0, port.GetProperty("fixtures").GetArrayLength());
 			}
-			Assert.AreEqual(1, found, "zone observation must have one durable port row");
+			ClassicAssert.AreEqual(1, found, "zone observation must have one durable port row");
 			foreach (JsonElement exemption in Exemptions())
-				Assert.AreNotEqual("Growth/KingdomZoneObservationCodec.cs",
+				ClassicAssert.AreNotEqual("Growth/KingdomZoneObservationCodec.cs",
 					Text(exemption, "file"));
 
 			string codec = File.ReadAllText(Path.Combine(TestMain.RepositoryRoot,
@@ -288,12 +289,12 @@ namespace ThousandAndFirst.Tests
 			int axes = 0;
 			foreach (JsonElement axis in Manifest().GetProperty("physicalShellAxes").EnumerateArray())
 			{
-				Assert.IsNotEmpty(Text(axis, "name"));
-				Assert.IsTrue(Exists(FilePart(Text(axis, "constant"))),
+				ClassicAssert.IsNotEmpty(Text(axis, "name"));
+				ClassicAssert.IsTrue(Exists(FilePart(Text(axis, "constant"))),
 					"a shell axis names a missing file: " + Text(axis, "constant"));
 				axes++;
 			}
-			Assert.Greater(axes, 0, "the shell axis list must not be silently emptied");
+			ClassicAssert.Greater(axes, 0, "the shell axis list must not be silently emptied");
 		}
 
 		private static bool Skip(string path)

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -61,7 +62,7 @@ namespace ThousandAndFirst.Tests
 
 		private static byte[] Bytes(KingdomVillageCovenantArchive archive)
 		{
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string failure), failure);
 			return bytes;
 		}
@@ -94,9 +95,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
 			long before = authority.Revision;
-			Assert.IsTrue(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
 				out string failure), failure);
-			Assert.AreEqual(before, authority.Revision, "a preflight must not write");
+			ClassicAssert.AreEqual(before, authority.Revision, "a preflight must not write");
 		}
 
 		[Test]
@@ -104,8 +105,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(Table());
 			authority.AdoptUnreadableFraming(new byte[] { 1, 2 }, "the block framing was garbage");
-			Assert.IsTrue(authority.ReadOnly);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
+			ClassicAssert.IsTrue(authority.ReadOnly);
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
 				out string failure));
 			StringAssert.Contains("read-only", failure);
 		}
@@ -117,12 +118,12 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomVillageCovenantArchive.MaxRows; i++)
 			{
 				string transaction = i.ToString("x2") + "0123456789abcdef0123456789abcd";
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
 					KingdomVillageCovenantTests.Row(transaction, "Village" + i, "Village " + i),
 					Realm, out archive, out _, out _, out string failure), failure);
 			}
 			KingdomCivicMemoryAuthority authority = Holding(Bytes(archive));
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
 				out string full));
 			StringAssert.Contains("is full at", full);
 		}
@@ -133,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive foreign =
 				KingdomVillageCovenantTests.Bound(OtherRealm);
 			KingdomCivicMemoryAuthority authority = Holding(Bytes(foreign));
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
 				out string failure));
 			StringAssert.Contains("belongs to another realm", failure);
 		}
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void APreflightRefusesARealmIdThatIsNotCanonical()
 		{
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(Empty(), "taf:realm:v1:nope", null,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(Empty(), "taf:realm:v1:nope", null,
 				out string failure));
 			StringAssert.Contains("not canonical", failure);
 		}
@@ -154,11 +155,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Empty();
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row();
 			long before = authority.Revision;
-			Assert.IsTrue(Record(authority, row, out KingdomVillageCovenantAppend outcome,
+			ClassicAssert.IsTrue(Record(authority, row, out KingdomVillageCovenantAppend outcome,
 				out string failure), failure);
-			Assert.AreEqual(KingdomVillageCovenantAppend.Recorded, outcome);
-			Assert.AreEqual(before + 1L, authority.Revision);
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row,
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.Recorded, outcome);
+			ClassicAssert.AreEqual(before + 1L, authority.Revision);
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row,
 				out string confirm), confirm);
 		}
 
@@ -167,15 +168,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row();
-			Assert.IsTrue(Record(authority, row, out _, out string first), first);
+			ClassicAssert.IsTrue(Record(authority, row, out _, out string first), first);
 			long after = authority.Revision;
 
-			Assert.IsTrue(Record(authority, row.Copy(),
+			ClassicAssert.IsTrue(Record(authority, row.Copy(),
 				out KingdomVillageCovenantAppend outcome, out string second), second);
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
-			Assert.AreEqual(after, authority.Revision,
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
+			ClassicAssert.AreEqual(after, authority.Revision,
 				"a retry of the same exact rite must cost the save nothing");
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row, out _));
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row, out _));
 		}
 
 		[Test]
@@ -192,22 +193,22 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.Event(KingdomVillageCovenantTests.Transaction),
 				KingdomVillageCovenantTests.Sealed, KingdomVillageCovenantTests.Tick);
 
-			Assert.AreNotEqual(row.RealmId, legacyFactionKey);
-			Assert.IsTrue(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
+			ClassicAssert.AreNotEqual(row.RealmId, legacyFactionKey);
+			ClassicAssert.IsTrue(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
 				legacyFactionKey, row, out KingdomVillageCovenantAppend first,
 				out KingdomVillageCovenantReceipt effective, out string failure), failure);
-			Assert.AreEqual(KingdomVillageCovenantAppend.Recorded, first);
-			Assert.AreEqual(row.RealmId, effective.RealmId);
-			Assert.AreEqual(row.FoundingAuthority, effective.FoundingAuthority);
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.Recorded, first);
+			ClassicAssert.AreEqual(row.RealmId, effective.RealmId);
+			ClassicAssert.AreEqual(row.FoundingAuthority, effective.FoundingAuthority);
 			long after = authority.Revision;
 
-			Assert.IsTrue(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
 				legacyFactionKey, row.Copy(), out KingdomVillageCovenantAppend retry,
 				out KingdomVillageCovenantReceipt retried, out failure), failure);
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, retry);
-			Assert.AreEqual(after, authority.Revision);
-			Assert.AreEqual(effective.ReceiptId, retried.ReceiptId);
-			Assert.IsFalse(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, retry);
+			ClassicAssert.AreEqual(after, authority.Revision);
+			ClassicAssert.AreEqual(effective.ReceiptId, retried.ReceiptId);
+			ClassicAssert.IsFalse(KingdomVillageCovenantRuntimeCut.TryRecord(authority, Realm,
 				Realm, row.Copy(), out _, out _, out string wrong));
 			StringAssert.Contains("minted under another realm", wrong);
 		}
@@ -217,15 +218,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row();
-			Assert.IsTrue(Record(authority, row, out _, out string first), first);
+			ClassicAssert.IsTrue(Record(authority, row, out _, out string first), first);
 			long after = authority.Revision;
 
-			Assert.IsFalse(Record(authority,
+			ClassicAssert.IsFalse(Record(authority,
 				KingdomVillageCovenantTests.Row(display: "a village that never agreed"),
 				out _, out string failure));
 			StringAssert.Contains("kept rather than replaced", failure);
-			Assert.AreEqual(after, authority.Revision);
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row,
+			ClassicAssert.AreEqual(after, authority.Revision);
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, row,
 				out string confirm), confirm);
 		}
 
@@ -238,19 +239,19 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ConfirmingACovenantTheSaveNeverTookIsARefusal()
 		{
-			Assert.IsFalse(KingdomVillageCovenantLease.TryConfirm(Empty(), Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryConfirm(Empty(), Realm,
 				KingdomVillageCovenantTests.Row(), out string unbound));
 			StringAssert.Contains("not bound to this realm", unbound);
 
 			KingdomCivicMemoryAuthority authority = Empty();
-			Assert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(), out _,
+			ClassicAssert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(), out _,
 				out string recorded), recorded);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm,
 				KingdomVillageCovenantTests.Row("fedcba9876543210fedcba9876543210", "Kyakukya",
 					"the people of Kyakukya"), out string missing));
 			StringAssert.Contains("no covenant matching this exact founding transaction", missing);
 
-			Assert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm, null,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm, null,
 				out string nothing));
 			StringAssert.Contains("no covenant to confirm", nothing);
 		}
@@ -264,17 +265,17 @@ namespace ThousandAndFirst.Tests
 		public void AStaleLeaseIsRefusedAfterTheSaveHasMovedUnderneathIt()
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
-			Assert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm,
 				out KingdomCivicMemorySectionLease stale, out _, out string read), read);
 
 			KingdomVillageCovenantReceipt landed = KingdomVillageCovenantTests.Row();
-			Assert.IsTrue(Record(authority, landed, out _, out string first), first);
+			ClassicAssert.IsTrue(Record(authority, landed, out _, out string first), first);
 
-			Assert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(authority, stale, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(authority, stale, Realm,
 				KingdomVillageCovenantTests.Row("fedcba9876543210fedcba9876543210", "Kyakukya",
 					"the people of Kyakukya"), out _, out _, out string failure));
 			StringAssert.Contains("moved to revision", failure);
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, landed, out _));
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, landed, out _));
 		}
 
 		[Test]
@@ -282,9 +283,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority mine = Empty();
 			KingdomCivicMemoryAuthority theirs = Empty();
-			Assert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(theirs, Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(theirs, Realm,
 				out KingdomCivicMemorySectionLease foreign, out _, out string read), read);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(mine, foreign, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(mine, foreign, Realm,
 				KingdomVillageCovenantTests.Row(), out _, out _, out string failure));
 			StringAssert.Contains("issued by another authority", failure);
 		}
@@ -292,10 +293,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RecordingWithoutAnAuthorityOrALeaseIsRefusedRatherThanAssumed()
 		{
-			Assert.IsFalse(KingdomVillageCovenantLease.TryReadArchive(null, Realm, out _, out _,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryReadArchive(null, Realm, out _, out _,
 				out string noAuthority));
 			StringAssert.Contains("no civic-memory authority", noAuthority);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(Empty(), null, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryCommitAppended(Empty(), null, Realm,
 				KingdomVillageCovenantTests.Row(), out _, out _, out string noLease));
 			StringAssert.Contains("no covenant-archive lease", noLease);
 		}
@@ -307,13 +308,13 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt first = KingdomVillageCovenantTests.Row();
 			KingdomVillageCovenantReceipt second = KingdomVillageCovenantTests.Row(
 				"fedcba9876543210fedcba9876543210", "Kyakukya", "the people of Kyakukya");
-			Assert.IsTrue(Record(authority, first, out _, out string a), a);
-			Assert.IsTrue(Record(authority, second, out _, out string b), b);
-			Assert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
+			ClassicAssert.IsTrue(Record(authority, first, out _, out string a), a);
+			ClassicAssert.IsTrue(Record(authority, second, out _, out string b), b);
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
 				out KingdomVillageCovenantArchive archive, out string read), read);
-			Assert.AreEqual(2, archive.Rows.Count);
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, first, out _));
-			Assert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, second, out _));
+			ClassicAssert.AreEqual(2, archive.Rows.Count);
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, first, out _));
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryConfirm(authority, Realm, second, out _));
 		}
 
 		// ---- recovery: the archive is re-proved, never rewritten from today's ledger ------
@@ -332,19 +333,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row();
-			Assert.IsTrue(Record(authority, row, out _, out string first), first);
+			ClassicAssert.IsTrue(Record(authority, row, out _, out string first), first);
 			long after = authority.Revision;
 
-			Assert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(),
+			ClassicAssert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(),
 				out KingdomVillageCovenantAppend outcome,
 				out KingdomVillageCovenantReceipt effective, out string retry), retry);
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
-			Assert.AreEqual(after, authority.Revision);
-			Assert.IsTrue(KingdomVillageCovenantRules.Same(row, effective));
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
+			ClassicAssert.AreEqual(after, authority.Revision);
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.Same(row, effective));
 
-			Assert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
 				out KingdomVillageCovenantArchive archive, out string read), read);
-			Assert.AreEqual(1, archive.Rows.Count);
+			ClassicAssert.AreEqual(1, archive.Rows.Count);
 		}
 
 		/// <summary>
@@ -363,28 +364,28 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
 			KingdomVillageCovenantReceipt sealedAt600 = KingdomVillageCovenantTests.Row();
-			Assert.IsTrue(Record(authority, sealedAt600, out _, out string first), first);
+			ClassicAssert.IsTrue(Record(authority, sealedAt600, out _, out string first), first);
 			long after = authority.Revision;
 
 			KingdomVillageCovenantReceipt rebuiltAt750 =
 				KingdomVillageCovenantTests.Row(sealedStanding: 750, tick: 9999L);
-			Assert.AreNotEqual(sealedAt600.ReceiptId, rebuiltAt750.ReceiptId,
+			ClassicAssert.AreNotEqual(sealedAt600.ReceiptId, rebuiltAt750.ReceiptId,
 				"a moved standing really does produce a differently-named candidate");
 
-			Assert.IsTrue(Record(authority, rebuiltAt750, out KingdomVillageCovenantAppend outcome,
+			ClassicAssert.IsTrue(Record(authority, rebuiltAt750, out KingdomVillageCovenantAppend outcome,
 				out KingdomVillageCovenantReceipt effective, out string retry), retry);
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
-			Assert.AreEqual(after, authority.Revision, "a recovery must not spend a revision");
-			Assert.IsTrue(KingdomVillageCovenantRules.Same(sealedAt600, effective),
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
+			ClassicAssert.AreEqual(after, authority.Revision, "a recovery must not spend a revision");
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.Same(sealedAt600, effective),
 				"the covenant that stands is the one the archive froze");
-			Assert.AreEqual(KingdomVillageCovenantTests.Sealed, effective.SealedStanding);
-			Assert.AreEqual(KingdomVillageCovenantTests.Tick, effective.ReservationTick);
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Sealed, effective.SealedStanding);
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Tick, effective.ReservationTick);
 
-			Assert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
 				out KingdomVillageCovenantArchive archive, out string read), read);
-			Assert.AreEqual(1, archive.Rows.Count);
-			Assert.AreEqual(KingdomVillageCovenantTests.Sealed, archive.Rows[0].SealedStanding);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm, rebuiltAt750,
+			ClassicAssert.AreEqual(1, archive.Rows.Count);
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Sealed, archive.Rows[0].SealedStanding);
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryConfirm(authority, Realm, rebuiltAt750,
 				out _), "the rebuilt candidate is not what the save holds, and says so");
 		}
 
@@ -397,14 +398,14 @@ namespace ThousandAndFirst.Tests
 		public void ARetryThatDisagreesAboutAnythingThatCannotMoveIsStillAConflict()
 		{
 			KingdomCivicMemoryAuthority authority = Empty();
-			Assert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(), out _,
+			ClassicAssert.IsTrue(Record(authority, KingdomVillageCovenantTests.Row(), out _,
 				out string first), first);
 			long after = authority.Revision;
-			Assert.IsFalse(Record(authority,
+			ClassicAssert.IsFalse(Record(authority,
 				KingdomVillageCovenantTests.Row(display: "a village that never agreed",
 					sealedStanding: 750), out _, out string failure));
 			StringAssert.Contains("kept rather than replaced", failure);
-			Assert.AreEqual(after, authority.Revision);
+			ClassicAssert.AreEqual(after, authority.Revision);
 		}
 
 		// ---- the pre-debit candidate refusal ---------------------------------------------
@@ -420,21 +421,21 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Empty();
 			long before = authority.Revision;
 			string tooWide = new string('\u4e00', KingdomVillageCovenantRules.MaxNameChars + 1);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm,
 				KingdomVillageCovenantTests.Row(display: tooWide), out string failure));
 			StringAssert.Contains("display-name snapshot is unusable", failure);
-			Assert.AreEqual(before, authority.Revision, "a refused preflight must not write");
+			ClassicAssert.AreEqual(before, authority.Revision, "a refused preflight must not write");
 
-			Assert.IsTrue(KingdomVillageCovenantLease.TryPreflight(authority, Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantLease.TryPreflight(authority, Realm,
 				KingdomVillageCovenantTests.Row(), out string lawful), lawful);
-			Assert.AreEqual(before, authority.Revision,
+			ClassicAssert.AreEqual(before, authority.Revision,
 				"a preflight that passes must not write either");
 		}
 
 		[Test]
 		public void APreflightRefusesACandidateBelongingToAnotherRealm()
 		{
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(Empty(), Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(Empty(), Realm,
 				KingdomVillageCovenantTests.Row(realm: OtherRealm), out string failure));
 			StringAssert.Contains("names another realm than the archive recording it", failure);
 		}
@@ -447,8 +448,8 @@ namespace ThousandAndFirst.Tests
 			byte[] future = KingdomVillageCovenantFutureTests.Forge(
 				KingdomVillageCovenantCodec.CurrentWireVersion + 1, new byte[] { 4, 5, 6 });
 			KingdomCivicMemoryAuthority authority = Holding(future);
-			Assert.IsFalse(authority.Quarantined, "a lawful successor is not damage");
-			Assert.IsFalse(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
+			ClassicAssert.IsFalse(authority.Quarantined, "a lawful successor is not damage");
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryReadArchive(authority, Realm, out _,
 				out _, out string failure));
 			StringAssert.Contains("newer family version", failure);
 			CollectionAssert.AreEqual(future,
@@ -462,9 +463,9 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = KingdomVillageCovenantArchiveTests.Encoded();
 			bytes[0] ^= 0x01;
 			KingdomCivicMemoryAuthority authority = Holding(bytes);
-			Assert.IsTrue(authority.Quarantined);
-			Assert.IsTrue(authority.ReadOnly);
-			Assert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
+			ClassicAssert.IsTrue(authority.Quarantined);
+			ClassicAssert.IsTrue(authority.ReadOnly);
+			ClassicAssert.IsFalse(KingdomVillageCovenantLease.TryPreflight(authority, Realm, null,
 				out string failure));
 			StringAssert.Contains("read-only", failure);
 		}
@@ -473,13 +474,13 @@ namespace ThousandAndFirst.Tests
 		public void TheFamilyTableGivesSectionNineTheRealCovenantVerdicts()
 		{
 			KingdomCivicMemoryFamilyTable table = Table();
-			Assert.IsTrue(table.Complete);
-			Assert.AreEqual(KingdomCivicMemoryNested.Current,
+			ClassicAssert.IsTrue(table.Complete);
+			ClassicAssert.AreEqual(KingdomCivicMemoryNested.Current,
 				table.Inspect(Section, KingdomVillageCovenantArchiveTests.Encoded(), out _));
-			Assert.AreEqual(KingdomCivicMemoryNested.Future, table.Inspect(Section,
+			ClassicAssert.AreEqual(KingdomCivicMemoryNested.Future, table.Inspect(Section,
 				KingdomVillageCovenantFutureTests.Forge(
 					KingdomVillageCovenantCodec.CurrentWireVersion + 1, new byte[] { 1 }), out _));
-			Assert.AreEqual(KingdomCivicMemoryNested.Malformed,
+			ClassicAssert.AreEqual(KingdomCivicMemoryNested.Malformed,
 				table.Inspect(Section, new byte[] { 1, 2, 3 }, out string fault));
 			StringAssert.Contains("village-covenant archive", fault);
 		}

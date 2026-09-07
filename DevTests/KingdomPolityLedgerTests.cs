@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -26,7 +27,7 @@ namespace ThousandAndFirst.DevTests
 
 		internal static KingdomPolityLedger Full()
 		{
-			Assert.IsTrue(KingdomPolityRules.TryCreate(Realm, KingdomPolityImportPolicy.Off,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryCreate(Realm, KingdomPolityImportPolicy.Off,
 				out KingdomPolityLedger l, out string failure), failure);
 			l.Polities.Add(Polity(Rival, "The Returned Brass", KingdomPolitySource.ImportedLegacy,
 				RivalProfile, "taf:faction:rival"));
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityProjectionKind.Faction, Rival));
 			l.Projections.Add(Projection("taf:projection:incident-view",
 				KingdomPolityProjectionKind.IncidentView, Plan));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(l, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(l, out failure), failure);
 			return l;
 		}
 
@@ -184,12 +185,12 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] first = KingdomPolityCodec.EncodeEnvelope(source);
-			Assert.AreEqual(KingdomPolityCodec.CurrentWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.CurrentWireVersion,
 				BitConverter.ToInt32(first, 4));
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelope(first);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(decoded, out string failure), failure);
-			Assert.AreEqual(17, decoded.NamedFigures[0].ResidentId);
-			Assert.AreEqual(KingdomPolityTestData.Settlement,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(decoded, out string failure), failure);
+			ClassicAssert.AreEqual(17, decoded.NamedFigures[0].ResidentId);
+			ClassicAssert.AreEqual(KingdomPolityTestData.Settlement,
 				decoded.NamedFigures[0].ResidentSettlementId);
 			CollectionAssert.AreEqual(first, KingdomPolityCodec.EncodeEnvelope(decoded));
 		}
@@ -199,22 +200,22 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			KingdomPolityTestData.ClearResidentBridges(source);
-			Assert.IsTrue(KingdomPolityRules.TryObservePresentation(source,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryObservePresentation(source,
 				KingdomPolityPresentationState.Enabled, 80L, out string failure), failure);
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV2Fixture(source);
-			Assert.AreEqual(KingdomPolityCodec.OldestWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.OldestWireVersion,
 				BitConverter.ToInt32(prior, 4));
 
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
-			Assert.AreEqual(KingdomPolityRules.OldestFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
+			ClassicAssert.AreEqual(KingdomPolityRules.OldestFormatVersion,
 				migrated.MigratedFromVersion);
-			Assert.AreEqual(KingdomPolityPresentationState.Enabled,
+			ClassicAssert.AreEqual(KingdomPolityPresentationState.Enabled,
 				migrated.Options.Presentation);
-			Assert.AreEqual(source.Projections.Count, migrated.Projections.Count);
-			Assert.AreEqual(0, migrated.NamedFigures[0].ResidentId);
-			Assert.IsNull(migrated.NamedFigures[0].ResidentSettlementId);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out failure), failure);
+			ClassicAssert.AreEqual(source.Projections.Count, migrated.Projections.Count);
+			ClassicAssert.AreEqual(0, migrated.NamedFigures[0].ResidentId);
+			ClassicAssert.IsNull(migrated.NamedFigures[0].ResidentSettlementId);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out failure), failure);
 			CollectionAssert.AreNotEqual(prior, KingdomPolityCodec.EncodeEnvelope(migrated));
 		}
 
@@ -223,16 +224,16 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV3Fixture(source);
-			Assert.AreEqual(KingdomPolityCodec.OlderWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.OlderWireVersion,
 				BitConverter.ToInt32(prior, 4));
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.OlderFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.OlderFormatVersion,
 				migrated.MigratedFromVersion);
-			Assert.AreEqual(KingdomExperienceOptionKind.None,
+			ClassicAssert.AreEqual(KingdomExperienceOptionKind.None,
 				migrated.Cohorts[0].PresentationOptionKind);
-			Assert.AreEqual(0L, migrated.Cohorts[0].PresentationEnableEpoch);
-			Assert.AreEqual(0L, migrated.Cohorts[0].PresentationReservedTick);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.AreEqual(0L, migrated.Cohorts[0].PresentationEnableEpoch);
+			ClassicAssert.AreEqual(0L, migrated.Cohorts[0].PresentationReservedTick);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 			CollectionAssert.AreNotEqual(prior, KingdomPolityCodec.EncodeEnvelope(migrated));
 		}
 
@@ -241,14 +242,14 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV4Fixture(source);
-			Assert.AreEqual(KingdomPolityCodec.PriorWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.PriorWireVersion,
 				BitConverter.ToInt32(prior, 4));
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.PriorFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.PriorFormatVersion,
 				migrated.MigratedFromVersion);
 			for (int i = 0; i < migrated.Incidents.Count; i++)
-				Assert.IsNull(migrated.Incidents[i].Hospitality);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated,
+				ClassicAssert.IsNull(migrated.Incidents[i].Hospitality);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated,
 				out string failure), failure);
 		}
 
@@ -257,14 +258,14 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV5Fixture(source);
-			Assert.AreEqual(KingdomPolityCodec.ImmediatePriorWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.ImmediatePriorWireVersion,
 				BitConverter.ToInt32(prior, 4));
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
-			Assert.AreEqual(KingdomPolityRules.ImmediatePriorFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
+			ClassicAssert.AreEqual(KingdomPolityRules.ImmediatePriorFormatVersion,
 				migrated.MigratedFromVersion);
 			byte[] current = KingdomPolityCodec.EncodeEnvelope(migrated);
-			Assert.AreEqual(KingdomPolityCodec.CurrentWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.CurrentWireVersion,
 				BitConverter.ToInt32(current, 4));
 			CollectionAssert.AreEqual(current, KingdomPolityCodec.EncodeEnvelope(
 				KingdomPolityCodec.DecodeEnvelope(current)));
@@ -275,19 +276,19 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV6Fixture(source);
-			Assert.AreEqual(KingdomPolityCodec.PreviousWireVersion,
+			ClassicAssert.AreEqual(KingdomPolityCodec.PreviousWireVersion,
 				BitConverter.ToInt32(prior, 4));
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
-			Assert.AreEqual(KingdomPolityRules.PreviousFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
+			ClassicAssert.AreEqual(KingdomPolityRules.PreviousFormatVersion,
 				migrated.MigratedFromVersion);
 			for (int i = 0; i < migrated.Profiles.Count; i++)
 			{
-				Assert.AreEqual(KingdomPolityProfileRules.LegacyRulesVersion,
+				ClassicAssert.AreEqual(KingdomPolityProfileRules.LegacyRulesVersion,
 					migrated.Profiles[i].RulesVersion);
 				CollectionAssert.IsEmpty(migrated.Profiles[i].ExpressionCues);
 			}
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 		}
 
 		/// <summary>
@@ -364,8 +365,8 @@ namespace ThousandAndFirst.DevTests
 			int Wire, int PhaseOffset)
 		{
 			byte[] hostile = Convert.FromBase64String(Base64);
-			Assert.AreEqual(Wire, BitConverter.ToInt32(hostile, 4), "frozen fixture wire version");
-			Assert.AreEqual(6, hostile[12 + PhaseOffset],
+			ClassicAssert.AreEqual(Wire, BitConverter.ToInt32(hostile, 4), "frozen fixture wire version");
+			ClassicAssert.AreEqual(6, hostile[12 + PhaseOffset],
 				"the frozen fixture no longer carries phase 6 in its cohort phase slot");
 			Assert.Throws<InvalidDataException>(() => KingdomPolityCodec.DecodeEnvelopeRaw(hostile));
 
@@ -375,7 +376,7 @@ namespace ThousandAndFirst.DevTests
 			byte[] admitted = (byte[])hostile.Clone();
 			admitted[12 + PhaseOffset] = (byte)KingdomPolityCohortPhase.Cancelled;
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelopeRaw(admitted);
-			Assert.AreEqual(KingdomPolityCohortPhase.Cancelled, decoded.Cohorts[0].Phase);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Cancelled, decoded.Cohorts[0].Phase);
 		}
 
 		[Test]
@@ -386,11 +387,11 @@ namespace ThousandAndFirst.DevTests
 			source.Projections.Clear();
 			byte[] prior = KingdomPolityCodec.EncodeEnvelopeV1Fixture(source);
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(prior);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
-			Assert.AreEqual(KingdomPolityRules.LegacyFormatVersion, migrated.MigratedFromVersion);
-			Assert.AreEqual(KingdomPolityPresentationState.Unobserved, migrated.Options.Presentation);
-			Assert.IsFalse(KingdomPolityRules.CanEmitOptionalProjection(migrated, long.MaxValue));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, migrated.FormatVersion);
+			ClassicAssert.AreEqual(KingdomPolityRules.LegacyFormatVersion, migrated.MigratedFromVersion);
+			ClassicAssert.AreEqual(KingdomPolityPresentationState.Unobserved, migrated.Options.Presentation);
+			ClassicAssert.IsFalse(KingdomPolityRules.CanEmitOptionalProjection(migrated, long.MaxValue));
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 			CollectionAssert.AreNotEqual(prior, KingdomPolityCodec.EncodeEnvelope(migrated));
 		}
 
@@ -419,15 +420,15 @@ namespace ThousandAndFirst.DevTests
 			source.MigratedFromVersion = KingdomPolityRules.LegacyFormatVersion;
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(
 				KingdomPolityCodec.EncodeEnvelopeV2Fixture(source));
-			Assert.AreEqual(KingdomPolityRules.LegacyFormatVersion,
+			ClassicAssert.AreEqual(KingdomPolityRules.LegacyFormatVersion,
 				migrated.MigratedFromVersion);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 
 			KingdomPolityLedger impossible = KingdomPolityTestData.Full();
 			impossible.FormatVersion = KingdomPolityRules.PriorFormatVersion;
 			impossible.MigratedFromVersion = KingdomPolityRules.CurrentFormatVersion;
 			KingdomPolityRules.Normalize(impossible);
-			Assert.AreEqual(KingdomPolitySchemaState.Quarantined, impossible.SchemaState);
+			ClassicAssert.AreEqual(KingdomPolitySchemaState.Quarantined, impossible.SchemaState);
 			StringAssert.Contains("provenance", impossible.SchemaFault);
 
 			KingdomPolityLedger blankV2 = new KingdomPolityLedger
@@ -435,10 +436,10 @@ namespace ThousandAndFirst.DevTests
 				FormatVersion = KingdomPolityRules.PriorFormatVersion
 			};
 			KingdomPolityRules.Normalize(blankV2);
-			Assert.AreEqual(KingdomPolitySchemaState.Compatible, blankV2.SchemaState);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, blankV2.FormatVersion);
-			Assert.AreEqual(long.MaxValue, blankV2.Options.FutureCauseFloorTick);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(blankV2, out failure), failure);
+			ClassicAssert.AreEqual(KingdomPolitySchemaState.Compatible, blankV2.SchemaState);
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, blankV2.FormatVersion);
+			ClassicAssert.AreEqual(long.MaxValue, blankV2.Options.FutureCauseFloorTick);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(blankV2, out failure), failure);
 		}
 
 		[Test]
@@ -447,8 +448,8 @@ namespace ThousandAndFirst.DevTests
 			byte[] future = KingdomPolityCodec.EncodeEnvelope(KingdomPolityTestData.Full());
 			future[4] = 77; future[5] = future[6] = future[7] = 0;
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelope(future);
-			Assert.AreEqual(KingdomPolitySchemaState.Unknown, decoded.SchemaState);
-			Assert.IsFalse(KingdomPolityRules.Usable(decoded));
+			ClassicAssert.AreEqual(KingdomPolitySchemaState.Unknown, decoded.SchemaState);
+			ClassicAssert.IsFalse(KingdomPolityRules.Usable(decoded));
 			CollectionAssert.AreEqual(future, KingdomPolityCodec.EncodeEnvelope(decoded));
 		}
 	}

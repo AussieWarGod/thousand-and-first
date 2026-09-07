@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -17,32 +18,32 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityRelation relation = KingdomPolityGapTestData.Relation(ledger);
 			KingdomPolityRelationBand band = relation.Band; long changed = relation.ChangedTick;
 			long revision = ledger.Revision;
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
 				revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L, null,
 				out KingdomPolityEnvoyDeathOutcome outcome,
 				out KingdomPolityPublicationResult result, out string failure), failure);
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.Committed, outcome);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.Committed, outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
 			KingdomPolityIncidentRecord terms = Terms(ledger);
 			StringAssert.StartsWith("taf:conclusion:envoy-death-neutral:v1:",
 				terms.Conclusion.ConclusionId);
-			Assert.AreEqual(0, terms.Conclusion.RelationDeltas.Count);
-			Assert.AreEqual(0, terms.Conclusion.SystemicDeltas.Count);
-			Assert.AreEqual(KingdomPolityGrievancePhase.Withdrawn,
+			ClassicAssert.AreEqual(0, terms.Conclusion.RelationDeltas.Count);
+			ClassicAssert.AreEqual(0, terms.Conclusion.SystemicDeltas.Count);
+			ClassicAssert.AreEqual(KingdomPolityGrievancePhase.Withdrawn,
 				Original(ledger).Phase);
-			Assert.AreEqual(terms.Conclusion.ConclusionId, Original(ledger).ResolutionRef);
-			Assert.AreEqual(KingdomPolityCohortPhase.Concluded,
+			ClassicAssert.AreEqual(terms.Conclusion.ConclusionId, Original(ledger).ResolutionRef);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Concluded,
 				KingdomPolityAuthority.Cohort(ledger, envoy.CohortId).Phase);
-			Assert.AreEqual(grievances, ledger.Grievances.Count);
-			Assert.AreEqual(fronts, ledger.Fronts.Count);
-			Assert.AreEqual(band, relation.Band); Assert.AreEqual(changed, relation.ChangedTick);
+			ClassicAssert.AreEqual(grievances, ledger.Grievances.Count);
+			ClassicAssert.AreEqual(fronts, ledger.Fronts.Count);
+			ClassicAssert.AreEqual(band, relation.Band); ClassicAssert.AreEqual(changed, relation.ChangedTick);
 			byte[] committed = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
 				revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L, null,
 				out outcome, out result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
 			CollectionAssert.AreEqual(committed, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -52,15 +53,15 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan envoy,
 				out KingdomPolityProjectionReceipt projection, out string body);
 			PlanHospitality(ledger, out KingdomPolityHospitalityTransaction transaction);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryCreateCommittedProof(transaction,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryCreateCommittedProof(transaction,
 				"taf:fact:witnessed:envoy-last-meal", 200L,
 				out KingdomPolityHospitalityProof proof, out string failure), failure);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryCommitDebit(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryCommitDebit(ledger, ledger.Revision,
 				KingdomPolityGapTestData.TermsPlan, proof, 200L,
 				out KingdomPolityPublicationResult _, out failure), failure);
 			AssertHarm(ledger, envoy, projection, body,
 				KingdomPolityEnvoyDeathOutcome.Committed);
-			Assert.AreEqual(KingdomPolityHospitalityPhase.Applied, Terms(ledger).Hospitality.Phase);
+			ClassicAssert.AreEqual(KingdomPolityHospitalityPhase.Applied, Terms(ledger).Hospitality.Phase);
 			CollectionAssert.Contains(Terms(ledger).Conclusion.ObservedFactIds,
 				proof.ObservedFactId);
 			CollectionAssert.Contains(Terms(ledger).Conclusion.ReceiptRefs, proof.ReceiptId);
@@ -69,12 +70,12 @@ namespace ThousandAndFirst.DevTests
 
 			ledger = Scene(out envoy, out projection, out body); PlanHospitality(ledger, out _);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(ledger,
 				ledger.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L, null,
 				out KingdomPolityEnvoyDeathOutcome refused, out string _,
 				out KingdomPolityPublicationResult _, out failure));
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, refused);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, refused);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -84,13 +85,13 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan envoy,
 				out KingdomPolityProjectionReceipt projection, out string body);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
 				ledger.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm,
 				projection.CommittedTick - 1L, null,
 				out KingdomPolityEnvoyDeathOutcome outcome,
 				out KingdomPolityPublicationResult _, out string _));
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, outcome);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, outcome);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -103,17 +104,17 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityProjectionReceipt projection, out string body);
 			PlanHospitality(ledger, out _);
 			if (Phase == KingdomPolityHospitalityPhase.Quarantined)
-				Assert.IsTrue(KingdomPolityHospitalityRules.TryQuarantineDebit(ledger,
+				ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryQuarantineDebit(ledger,
 					ledger.Revision, KingdomPolityGapTestData.TermsPlan, "exact serving moved",
 					out KingdomPolityPublicationResult _, out string failure), failure);
 			else
 			{
 				Terms(ledger).Hospitality.Phase = KingdomPolityHospitalityPhase.Abandoned;
-				Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+				ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
 			}
 			AssertHarm(ledger, envoy, projection, body,
 				KingdomPolityEnvoyDeathOutcome.Committed);
-			Assert.AreEqual(Phase, Terms(ledger).Hospitality.Phase);
+			ClassicAssert.AreEqual(Phase, Terms(ledger).Hospitality.Phase);
 		}
 
 		[Test]
@@ -125,21 +126,21 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityEnvoyDeathOutcome.PendingRecovery);
 			ledger = KingdomPolityCodec.DecodeEnvelope(KingdomPolityCodec.EncodeEnvelope(ledger));
 			byte[] full = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
 				ledger.Revision, null, out int pending, out int published,
 				out KingdomPolityPublicationResult result, out string failure), failure);
-			Assert.AreEqual(1, pending); Assert.AreEqual(0, published);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.AreEqual(1, pending); ClassicAssert.AreEqual(0, published);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
 			CollectionAssert.AreEqual(full, KingdomPolityCodec.EncodeEnvelope(ledger));
 			RemoveOneCapacityFiller(ledger);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
 				ledger.Revision, null, out pending, out published, out result, out failure), failure);
-			Assert.AreEqual(0, pending); Assert.AreEqual(1, published);
-			Assert.AreEqual(1, CountHarm(ledger)); byte[] recovered =
+			ClassicAssert.AreEqual(0, pending); ClassicAssert.AreEqual(1, published);
+			ClassicAssert.AreEqual(1, CountHarm(ledger)); byte[] recovered =
 				KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
 				ledger.Revision, null, out pending, out published, out result, out failure), failure);
-			Assert.AreEqual(0, published);
+			ClassicAssert.AreEqual(0, published);
 			CollectionAssert.AreEqual(recovered, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -148,34 +149,34 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan envoy,
 				out KingdomPolityProjectionReceipt projection, out string body);
-			Assert.IsTrue(KingdomPolityCorrespondenceRules.TryPlanConsignment(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCorrespondenceRules.TryPlanConsignment(ledger,
 				ledger.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				envoy.SurfaceRef, out KingdomPolityConsignmentRequest request,
 				out KingdomPolityPublicationResult _, out string failure), failure);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
 				ledger.Revision, KingdomPolityGapTestData.TermsPlan, envoy.CohortId,
 				projection.ProjectionId, body, KingdomPolityTestData.Realm, 230L, null,
 				out KingdomPolityEnvoyDeathOutcome outcome, out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.PendingRecovery, outcome);
-			Assert.AreEqual(KingdomPolityCohortPhase.Materialized,
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.PendingRecovery, outcome);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Materialized,
 				KingdomPolityAuthority.Cohort(ledger, envoy.CohortId).Phase);
 			ledger = KingdomPolityCodec.DecodeEnvelope(KingdomPolityCodec.EncodeEnvelope(ledger));
 			KingdomPolityConsignmentAbsenceProof proof = Absence(request);
 			proof.ProofDigest = new string('0', 64); byte[] held =
 				KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
 				ledger.Revision, proof, out int _, out int _, out _, out failure));
 			CollectionAssert.AreEqual(held, KingdomPolityCodec.EncodeEnvelope(ledger));
 			proof = Absence(request);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecoverEnvoyDeaths(ledger,
 				ledger.Revision, proof, out _, out _, out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityCohortPhase.Concluded,
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Concluded,
 				KingdomPolityAuthority.Cohort(ledger, envoy.CohortId).Phase);
-			Assert.IsTrue(KingdomPolityCorrespondenceRules.TryDescribeConsignment(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCorrespondenceRules.TryDescribeConsignment(ledger,
 				request.CorrespondencePlanId, out _,
 				out KingdomPolityCorrespondenceReplyKind reply, out failure), failure);
-			Assert.AreEqual(KingdomPolityCorrespondenceReplyKind.RecipientUnavailable, reply);
-			Assert.AreEqual(1, ledger.Grievances.Count);
+			ClassicAssert.AreEqual(KingdomPolityCorrespondenceReplyKind.RecipientUnavailable, reply);
+			ClassicAssert.AreEqual(1, ledger.Grievances.Count);
 		}
 
 		private static KingdomPolityLedger Scene(out KingdomPolityCohortPlan Envoy,
@@ -191,12 +192,12 @@ namespace ThousandAndFirst.DevTests
 		private static void AssertHarm(KingdomPolityLedger L, KingdomPolityCohortPlan E,
 			KingdomPolityProjectionReceipt P, string Body, KingdomPolityEnvoyDeathOutcome Expected)
 		{
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(L,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryRecordWitnessedEnvoyHarm(L,
 				L.Revision, KingdomPolityGapTestData.TermsPlan, E.CohortId, P.ProjectionId,
 				Body, KingdomPolityTestData.Realm, 230L, null,
 				out KingdomPolityEnvoyDeathOutcome outcome, out string _,
 				out KingdomPolityPublicationResult _, out string failure), failure);
-			Assert.AreEqual(Expected, outcome);
+			ClassicAssert.AreEqual(Expected, outcome);
 		}
 
 		private static void PlanHospitality(KingdomPolityLedger L,
@@ -216,7 +217,7 @@ namespace ThousandAndFirst.DevTests
 						Before = 4, After = 3, Capacity = 64 }
 				}
 			};
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(L, L.Revision,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(L, L.Revision,
 				KingdomPolityGapTestData.TermsPlan, request, out Transaction,
 				out KingdomPolityPublicationResult _, out string failure), failure);
 		}

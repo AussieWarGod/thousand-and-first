@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -18,15 +19,15 @@ namespace ThousandAndFirst.Tests
 		public void ImmutableDeclarationAndDigestCoverEveryField()
 		{
 			Type type = typeof(KingdomSocketTransition);
-			Assert.AreEqual(0, type.GetFields(System.Reflection.BindingFlags.Public
+			ClassicAssert.AreEqual(0, type.GetFields(System.Reflection.BindingFlags.Public
 				| System.Reflection.BindingFlags.Instance).Length);
 			string[] properties = { "Key", "FromBuildKey", "ToBuildKey", "LotType", "LotSize",
 				"WaterDrams", "Materials", "WorkTicks" };
 			for (int i = 0; i < properties.Length; i++)
-				Assert.IsNull(type.GetProperty(properties[i]).GetSetMethod(), properties[i]);
+				ClassicAssert.IsNull(type.GetProperty(properties[i]).GetSetMethod(), properties[i]);
 
 			KingdomSocketTransition current = Route();
-			Assert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(current,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(current,
 				out string digest));
 			KingdomSocketTransition[] forged =
 			{
@@ -36,41 +37,41 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < forged.Length; i++)
 			{
-				Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(forged[i], current),
+				ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(forged[i], current),
 					properties[i]);
-				Assert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(forged[i],
+				ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(forged[i],
 					out string forgedDigest));
-				Assert.AreNotEqual(digest, forgedDigest, properties[i]);
+				ClassicAssert.AreNotEqual(digest, forgedDigest, properties[i]);
 			}
 
-			Assert.IsTrue(KingdomSocketTransitionRules.TrySnapshot(current,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TrySnapshot(current,
 				out KingdomSocketTransition snapshot));
 			KingdomMaterialTally exposed = snapshot.Materials;
 			exposed.Set(KingdomMaterial.Timber, 99);
-			Assert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(snapshot, current));
-			Assert.AreEqual(4, snapshot.Materials.Get(KingdomMaterial.Timber));
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(snapshot, current));
+			ClassicAssert.AreEqual(4, snapshot.Materials.Get(KingdomMaterial.Timber));
 		}
 
 		[Test]
 		public void ReceiptRefusesEveryPublicationCutAndEveryPropertyShapeFault()
 		{
 			KingdomSocketTransitionReceiptShape cut = Values();
-			Assert.IsFalse(Authorizes(cut, out _), "schema invalidated");
+			ClassicAssert.IsFalse(Authorizes(cut, out _), "schema invalidated");
 			for (int i = 0; i < 5; i++)
 			{
 				Publish(ref cut, i);
-				Assert.IsFalse(Authorizes(cut, out _), "payload cut " + i);
+				ClassicAssert.IsFalse(Authorizes(cut, out _), "payload cut " + i);
 			}
 			cut.SchemaHasInt = true;
 			cut.Schema = KingdomSocketTransitionRules.ReceiptSchema;
-			Assert.IsTrue(Authorizes(cut, out bool legacy));
-			Assert.IsFalse(legacy);
+			ClassicAssert.IsTrue(Authorizes(cut, out bool legacy));
+			ClassicAssert.IsFalse(legacy);
 
 			for (int i = 0; i < 18; i++)
 			{
 				KingdomSocketTransitionReceiptShape receipt = Current();
 				Fault(ref receipt, i);
-				Assert.IsFalse(Authorizes(receipt, out _), "shape fault " + i);
+				ClassicAssert.IsFalse(Authorizes(receipt, out _), "shape fault " + i);
 			}
 		}
 
@@ -81,24 +82,24 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSocketTransitionReceiptShape forged = Current();
 				Forge(ref forged, i);
-				Assert.IsFalse(Authorizes(forged, out _), "value " + i);
+				ClassicAssert.IsFalse(Authorizes(forged, out _), "value " + i);
 			}
 			KingdomSocketTransitionReceiptShape legacyReceipt = Current();
 			legacyReceipt.Schema = KingdomSocketTransitionRules.LegacyReceiptSchema;
 			legacyReceipt.DeclarationHasString = false;
 			legacyReceipt.DeclarationDigest = null;
-			Assert.IsTrue(Authorizes(legacyReceipt, out bool legacy));
-			Assert.IsTrue(legacy);
+			ClassicAssert.IsTrue(Authorizes(legacyReceipt, out bool legacy));
+			ClassicAssert.IsTrue(legacy);
 			legacyReceipt.DeclarationHasString = true;
 			legacyReceipt.DeclarationDigest = Declaration;
-			Assert.IsFalse(Authorizes(legacyReceipt, out _));
+			ClassicAssert.IsFalse(Authorizes(legacyReceipt, out _));
 		}
 
 		private static KingdomSocketTransition Route(string Key = ExpectedKey, string From = "tent",
 			string To = "hut", string Type = "housing", string Size = "S", string Mode = "renovate", string Water = "4",
 			string Materials = "timber:4,mud:2", string Ticks = "1350")
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
 				Mode, Water, Materials, Ticks, out KingdomSocketTransition route, out string failure),
 				failure);
 			return route;

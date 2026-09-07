@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1, KingdomRegard.Wonder)]
 		public void PartReputation_DecidesBySign(int feeling, KingdomRegard expected)
 		{
-			Assert.AreEqual(expected, KingdomNatureRules.Judge(With("mass mind", feeling, 0, false, false)));
+			ClassicAssert.AreEqual(expected, KingdomNatureRules.Judge(With("mass mind", feeling, 0, false, false)));
 		}
 
 		/// <summary>A creed that has written a number about a body has said something stronger
@@ -38,8 +39,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ThePartTable_OutranksTheChrome()
 		{
-			Assert.AreEqual(KingdomRegard.Wonder, KingdomNatureRules.Judge(With("wings", 300, 3, false, true)));
-			Assert.AreEqual(KingdomRegard.Unease, KingdomNatureRules.Judge(With("mass mind", -200, 3, true, false)));
+			ClassicAssert.AreEqual(KingdomRegard.Wonder, KingdomNatureRules.Judge(With("wings", 300, 3, false, true)));
+			ClassicAssert.AreEqual(KingdomRegard.Unease, KingdomNatureRules.Judge(With("mass mind", -200, 3, true, false)));
 		}
 
 		/// <summary>
@@ -50,16 +51,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Chrome_RefusalOutranksInterest()
 		{
-			Assert.AreEqual(KingdomRegard.Unease, KingdomNatureRules.Judge(With(null, 0, 2, true, true)));
-			Assert.AreEqual(KingdomRegard.Wonder, KingdomNatureRules.Judge(With(null, 0, 2, true, false)));
+			ClassicAssert.AreEqual(KingdomRegard.Unease, KingdomNatureRules.Judge(With(null, 0, 2, true, true)));
+			ClassicAssert.AreEqual(KingdomRegard.Wonder, KingdomNatureRules.Judge(With(null, 0, 2, true, false)));
 		}
 
 		[Test]
 		public void NoChromeAndNoOpinion_IsSilence()
 		{
-			Assert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With(null, 0, 0, true, true)));
-			Assert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(KingdomFounderNature.Unremarkable));
-			Assert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With(null, 0, 3, false, false)),
+			ClassicAssert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With(null, 0, 0, true, true)));
+			ClassicAssert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(KingdomFounderNature.Unremarkable));
+			ClassicAssert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With(null, 0, 3, false, false)),
 				"a creed with no interest in chrome says nothing about it");
 		}
 
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AZeroFeeling_IsNotAVerdict()
 		{
-			Assert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With("horns", 0, 0, false, false)));
+			ClassicAssert.AreEqual(KingdomRegard.Nothing, KingdomNatureRules.Judge(With("horns", 0, 0, false, false)));
 		}
 
 		// ==================================================================================
@@ -78,7 +79,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Silence_HasNoKey()
 		{
-			Assert.AreEqual(KingdomNatureRules.NoKey, KingdomNatureRules.RegardKey("Templar", KingdomFounderNature.Unremarkable));
+			ClassicAssert.AreEqual(KingdomNatureRules.NoKey, KingdomNatureRules.RegardKey("Templar", KingdomFounderNature.Unremarkable));
 		}
 
 		/// <summary>A different creed, a different part, or a different sign is a different state,
@@ -91,15 +92,15 @@ namespace ThousandAndFirst.Tests
 			int b = KingdomNatureRules.RegardKey("Barathrumites", With("mass mind", -200, 0, false, false));
 			int c = KingdomNatureRules.RegardKey("Templar", With("wings", -200, 0, false, false));
 			int d = KingdomNatureRules.RegardKey("Templar", With("mass mind", 200, 0, false, false));
-			Assert.AreNotEqual(a, b);
-			Assert.AreNotEqual(a, c);
-			Assert.AreNotEqual(a, d);
+			ClassicAssert.AreNotEqual(a, b);
+			ClassicAssert.AreNotEqual(a, c);
+			ClassicAssert.AreNotEqual(a, d);
 		}
 
 		[Test]
 		public void Keys_AreStableForOneState()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomNatureRules.RegardKey("Templar", With("mass mind", -200, 1, false, true)),
 				KingdomNatureRules.RegardKey("Templar", With("mass mind", -200, 1, false, true)));
 		}
@@ -109,7 +110,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GainingChrome_IsAStateChange()
 		{
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				KingdomNatureRules.RegardKey("Templar", With("mass mind", -200, 0, false, false)),
 				KingdomNatureRules.RegardKey("Templar", With("mass mind", -200, 2, false, false)));
 		}
@@ -122,24 +123,24 @@ namespace ThousandAndFirst.Tests
 		public void RegardLine_NamesTheCreedAndTheThing()
 		{
 			string line = KingdomNatureRules.RegardLine(With("mass mind", -200, 0, false, false), "the Seekers of the Sightless Way", "Kavvat");
-			Assert.IsTrue(line.Contains("Seekers"), line);
-			Assert.IsTrue(line.Contains("mass mind"), line);
-			Assert.IsTrue(line.Contains("Kavvat"), line);
+			ClassicAssert.IsTrue(line.Contains("Seekers"), line);
+			ClassicAssert.IsTrue(line.Contains("mass mind"), line);
+			ClassicAssert.IsTrue(line.Contains("Kavvat"), line);
 		}
 
 		[Test]
 		public void RegardLine_SpeaksForACreedWithNoName()
 		{
 			string line = KingdomNatureRules.RegardLine(With("wings", 300, 0, false, false), null, "Kavvat");
-			Assert.AreNotEqual("", line);
-			Assert.IsTrue(line.Contains("Kavvat"), line);
+			ClassicAssert.AreNotEqual("", line);
+			ClassicAssert.IsTrue(line.Contains("Kavvat"), line);
 		}
 
 		[Test]
 		public void RegardLine_SaysNothingWhenThereIsNothingToSay()
 		{
-			Assert.AreEqual("", KingdomNatureRules.RegardLine(KingdomFounderNature.Unremarkable, "Templar", "Kavvat"));
-			Assert.AreEqual("", KingdomNatureRules.RegardTelling(KingdomFounderNature.Unremarkable, "Templar", "Kavvat", "Ereshkigal"));
+			ClassicAssert.AreEqual("", KingdomNatureRules.RegardLine(KingdomFounderNature.Unremarkable, "Templar", "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomNatureRules.RegardTelling(KingdomFounderNature.Unremarkable, "Templar", "Kavvat", "Ereshkigal"));
 		}
 
 		/// <summary>The chronicle's clause is third person and carries no trailing period, so the
@@ -148,10 +149,10 @@ namespace ThousandAndFirst.Tests
 		public void RegardTelling_IsAClauseAndNotASentence()
 		{
 			string telling = KingdomNatureRules.RegardTelling(With("wings", 300, 0, false, false), "the Fungi", "Kavvat", "Ereshkigal");
-			Assert.AreNotEqual("", telling);
-			Assert.IsFalse(telling.EndsWith("."));
-			Assert.IsFalse(telling.Contains("you"));
-			Assert.IsFalse(telling.Contains("your"));
+			ClassicAssert.AreNotEqual("", telling);
+			ClassicAssert.IsFalse(telling.EndsWith("."));
+			ClassicAssert.IsFalse(telling.Contains("you"));
+			ClassicAssert.IsFalse(telling.Contains("your"));
 		}
 
 		/// <summary>The chrome telling names the founder when it has nothing else to point at.</summary>
@@ -159,8 +160,8 @@ namespace ThousandAndFirst.Tests
 		public void RegardTelling_NamesTheFounderForChrome()
 		{
 			string telling = KingdomNatureRules.RegardTelling(With(null, 0, 2, true, false), "the Barathrumites", "Kavvat", "Ereshkigal");
-			Assert.IsTrue(telling.Contains("Ereshkigal"), telling);
-			Assert.IsTrue(KingdomNatureRules.RegardTelling(With(null, 0, 2, true, false), "the Barathrumites", "Kavvat", null).Contains("founder"));
+			ClassicAssert.IsTrue(telling.Contains("Ereshkigal"), telling);
+			ClassicAssert.IsTrue(KingdomNatureRules.RegardTelling(With(null, 0, 2, true, false), "the Barathrumites", "Kavvat", null).Contains("founder"));
 		}
 	}
 }

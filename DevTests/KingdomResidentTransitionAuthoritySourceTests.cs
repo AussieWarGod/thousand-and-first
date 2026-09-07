@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -87,9 +88,9 @@ namespace ThousandAndFirst.Tests
 
 			StringAssert.Contains("KingdomResidentTransitionAuthority.CanAccede(System, body",
 				heirs);
-			Assert.GreaterOrEqual(Occurrences(death,
+			ClassicAssert.GreaterOrEqual(Occurrences(death,
 				"KingdomResidentTransitionAuthority.CanAccede"), 2);
-			Assert.GreaterOrEqual(Occurrences(recovery,
+			ClassicAssert.GreaterOrEqual(Occurrences(recovery,
 				"KingdomResidentTransitionAuthority.CanAccede"), 2);
 			StringAssert.Contains("KingdomResidentTransitionAuthority.CanAccede(System, Body, residentId)",
 				accede);
@@ -109,12 +110,12 @@ namespace ThousandAndFirst.Tests
 			string recovery = Read("Growth/KingdomResidentDepartureRuntime.Recovery.cs");
 			string residents = Read(
 				"Simulation/City/KingdomResidents.04.ResidentTransitionsAndAccession.cs");
-			Assert.GreaterOrEqual(Occurrences(growth, "CanPrepareGenericEmigrate(System,"), 2,
+			ClassicAssert.GreaterOrEqual(Occurrences(growth, "CanPrepareGenericEmigrate(System,"), 2,
 				"named and roster selection require read-only closable-role preflight");
 			int chosen = growth.IndexOf("if (leaver == null)", StringComparison.Ordinal);
 			int owner = growth.IndexOf("KingdomResidentDepartureRuntime.TryBegin", chosen,
 				StringComparison.Ordinal);
-			Assert.Greater(owner, chosen);
+			ClassicAssert.Greater(owner, chosen);
 			int capture = begin.IndexOf("System.ResidentDeparture = operation",
 				StringComparison.Ordinal);
 			int marker = begin.IndexOf("Body.AddPart(marker)", capture,
@@ -127,9 +128,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int commit = begin.IndexOf("KingdomCitizenship.TryRemove", finalGate,
 				StringComparison.Ordinal);
-			Assert.Greater(capture, 0); Assert.Greater(marker, capture);
-			Assert.Greater(rolePrepare, marker); Assert.Greater(preview, rolePrepare);
-			Assert.Greater(finalGate, preview); Assert.Greater(commit, finalGate);
+			ClassicAssert.Greater(capture, 0); ClassicAssert.Greater(marker, capture);
+			ClassicAssert.Greater(rolePrepare, marker); ClassicAssert.Greater(preview, rolePrepare);
+			ClassicAssert.Greater(finalGate, preview); ClassicAssert.Greater(commit, finalGate);
 			StringAssert.Contains("CanPrepareJournaledRoles(",
 				begin);
 			int innerGate = residents.IndexOf(
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int rowMutation = residents.IndexOf("KingdomResidentRules.TryRemove", innerGate,
 				StringComparison.Ordinal);
-			Assert.Greater(innerGate, 0); Assert.Greater(rowMutation, innerGate);
+			ClassicAssert.Greater(innerGate, 0); ClassicAssert.Greater(rowMutation, innerGate);
 			StringAssert.Contains("CanCompleteJournaledBodyDestruction", recovery);
 			StringAssert.Contains("return TryDestroyBody", recovery);
 		}
@@ -169,7 +170,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int row = carriers.IndexOf("TryDepart(System, Body", proof,
 				StringComparison.Ordinal);
-			Assert.Greater(proof, 0); Assert.Greater(row, proof);
+			ClassicAssert.Greater(proof, 0); ClassicAssert.Greater(row, proof);
 		}
 
 		[Test]
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("PrepareCookLoss", preparation);
 			StringAssert.Contains("TryPrepareHolderDeparture", preparation);
 			StringAssert.Contains("KingdomPolityResidentTransitionCause.Departure", preparation);
-			Assert.GreaterOrEqual(Occurrences(preparation,
+			ClassicAssert.GreaterOrEqual(Occurrences(preparation,
 				"CanPrepareJournaledRoles"), 2);
 			StringAssert.Contains("TryRollback", preparation);
 			StringAssert.Contains("DepartureVacancyPrepared", cook);
@@ -288,12 +289,12 @@ namespace ThousandAndFirst.Tests
 				effects);
 			StringAssert.Contains("TrySettleChronicle(System, Operation)", effects);
 			StringAssert.Contains("KingdomChronicle.RecordOnce", Read("Growth/KingdomResidentDepartureRuntime.Capacity.cs"));
-			Assert.Greater(begin.IndexOf("System.ResidentDeparture = operation",
+			ClassicAssert.Greater(begin.IndexOf("System.ResidentDeparture = operation",
 				StringComparison.Ordinal), 0);
 			int recover = semantic.IndexOf("TryRecoverPending(this, Z",
 				StringComparison.Ordinal);
 			int checkIn = semantic.IndexOf("KingdomCity.CheckIn", StringComparison.Ordinal);
-			Assert.Greater(recover, 0); Assert.Greater(checkIn, recover);
+			ClassicAssert.Greater(recover, 0); ClassicAssert.Greater(checkIn, recover);
 		}
 
 		[Test]
@@ -308,7 +309,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string graph = Read(
 				"Simulation/City/KingdomResidentTransitionAuthority.ObjectGraph.cs");
-			Assert.GreaterOrEqual(Occurrences(graph,
+			ClassicAssert.GreaterOrEqual(Occurrences(graph,
 				"GetInventoryDirectAndEquipment()"), 2);
 			StringAssert.Contains("HashSet<GameObject>", graph);
 			StringAssert.Contains("!seen.Add(item)", graph);
@@ -358,7 +359,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/r_KingdomResidentDeparture.cs"
 			};
 			for (int i = 0; i < files.Length; i++)
-				Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+				ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 					files[i])).Length, 300, files[i]);
 		}
 
@@ -368,7 +369,7 @@ namespace ThousandAndFirst.Tests
 			int transfer = source.IndexOf(transferToken, StringComparison.Ordinal);
 			int gate = source.LastIndexOf("KingdomResidentTransitionAuthority.CanAccede",
 				transfer, StringComparison.Ordinal);
-			Assert.Greater(transfer, 0); Assert.Greater(gate, 0);
+			ClassicAssert.Greater(transfer, 0); ClassicAssert.Greater(gate, 0);
 			StringAssert.Contains(residentToken, source.Substring(gate, transfer - gate));
 		}
 

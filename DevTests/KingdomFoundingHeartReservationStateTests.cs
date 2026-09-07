@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -28,20 +29,20 @@ namespace ThousandAndFirst.Tests
 			foreach (string raw in new[] { null, "", "malformed", expected, foreign })
 			{
 				KingdomDurableKeyObservation observed = Observation(mask, raw);
-				Assert.AreEqual(mask == 0 || mask == 1 && raw == expected,
+				ClassicAssert.AreEqual(mask == 0 || mask == 1 && raw == expected,
 					KingdomFoundingHeartReservationState.TryExpected(row.Key, expected, observed, out bool absent));
-				Assert.AreEqual(mask == 0, absent);
-				Assert.AreEqual(raw, observed.String);
-				Assert.AreEqual(mask, Mask(observed));
-				Assert.AreEqual(73, observed.Int);
-				Assert.AreEqual(mask == 1 && raw == expected,
+				ClassicAssert.AreEqual(mask == 0, absent);
+				ClassicAssert.AreEqual(raw, observed.String);
+				ClassicAssert.AreEqual(mask, Mask(observed));
+				ClassicAssert.AreEqual(73, observed.Int);
+				ClassicAssert.AreEqual(mask == 1 && raw == expected,
 					KingdomFoundingHeartReservationState.TryAudit(new[] { Pair(row.Key, observed) }, 1,
 						out Dictionary<string, string> audited));
 				if (mask == 1 && raw == expected)
-				{ Assert.AreEqual(1, audited.Count); Assert.AreEqual(expected, audited[Id("slot-0")]); }
-				else Assert.IsNull(audited);
-				Assert.AreEqual(raw, observed.String);
-				Assert.AreEqual(mask, Mask(observed));
+				{ ClassicAssert.AreEqual(1, audited.Count); ClassicAssert.AreEqual(expected, audited[Id("slot-0")]); }
+				else ClassicAssert.IsNull(audited);
+				ClassicAssert.AreEqual(raw, observed.String);
+				ClassicAssert.AreEqual(mask, Mask(observed));
 			}
 		}
 
@@ -51,29 +52,29 @@ namespace ThousandAndFirst.Tests
 			string key = Reservation("slot-0").Key;
 			foreach (int mask in new[] { 0, 1 })
 			{
-				Assert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(key, expected,
+				ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(key, expected,
 					Observation(mask, expected), out bool absent));
-				Assert.IsFalse(absent);
+				ClassicAssert.IsFalse(absent);
 			}
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("unrelated")]
 		public void InvalidExpectedKeyNeverAuthorizesEvenCompleteAbsence(string key)
 		{
-			Assert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(key, Reservation("slot-0").Value.String,
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(key, Reservation("slot-0").Value.String,
 				Observation(0, null), out bool absent));
-			Assert.IsFalse(absent);
+			ClassicAssert.IsFalse(absent);
 		}
 
 		[Test]
 		public void NullObservationAndForeignValidExpectedPairNeverBecomeAbsent()
 		{
 			KeyValuePair<string, KingdomDurableKeyObservation> row = Reservation("slot-0");
-			Assert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, row.Value.String, null, out bool absent));
-			Assert.IsFalse(absent);
-			Assert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, Reservation("slot-1").Value.String,
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, row.Value.String, null, out bool absent));
+			ClassicAssert.IsFalse(absent);
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, Reservation("slot-1").Value.String,
 				Observation(0, null), out absent));
-			Assert.IsFalse(absent);
+			ClassicAssert.IsFalse(absent);
 		}
 
 		[Test]
@@ -81,10 +82,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KeyValuePair<string, KingdomDurableKeyObservation> row = Reservation("slot-0");
 			string other = OtherSeal(row.Value.String);
-			Assert.IsTrue(KingdomFoundingHeartReservationRules.TryRead(row.Key, other, out _, out _, out _));
-			Assert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, row.Value.String,
+			ClassicAssert.IsTrue(KingdomFoundingHeartReservationRules.TryRead(row.Key, other, out _, out _, out _));
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryExpected(row.Key, row.Value.String,
 				Observation(1, other), out bool absent));
-			Assert.IsFalse(absent);
+			ClassicAssert.IsFalse(absent);
 		}
 
 		[Test]
@@ -92,15 +93,15 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KeyValuePair<string, KingdomDurableKeyObservation>> rows = Seven();
 			rows.Reverse();
-			Assert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(rows, 7, out Dictionary<string, string> result));
-			Assert.AreEqual(7, result.Count);
+			ClassicAssert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(rows, 7, out Dictionary<string, string> result));
+			ClassicAssert.AreEqual(7, result.Count);
 			foreach (KeyValuePair<string, KingdomDurableKeyObservation> row in rows)
-				Assert.AreEqual(row.Value.String, result[row.Key.Substring(KingdomFoundingHeartReservationRules.Prefix.Length)]);
+				ClassicAssert.AreEqual(row.Value.String, result[row.Key.Substring(KingdomFoundingHeartReservationRules.Prefix.Length)]);
 			string first = result[Id("final")];
 			rows[0].Value.String = "mutated after observation";
 			rows.Clear();
-			Assert.AreEqual(first, result[Id("final")]);
-			Assert.IsFalse(result.ContainsKey(Id("final").ToUpperInvariant()));
+			ClassicAssert.AreEqual(first, result[Id("final")]);
+			ClassicAssert.IsFalse(result.ContainsKey(Id("final").ToUpperInvariant()));
 		}
 
 		[TestCase(false)] [TestCase(true)]
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 			if (changedWire) repeated = Pair(repeated.Key, Observation(1, OtherSeal(repeated.Value.String)));
 			rows.Add(repeated);
 			Refuses(rows, 8);
-			Assert.AreEqual(8, rows.Count);
+			ClassicAssert.AreEqual(8, rows.Count);
 		}
 
 		[Test]
@@ -121,10 +122,10 @@ namespace ThousandAndFirst.Tests
 			rows.Insert(0, Pair("ordinary-int", Observation(2, null)));
 			rows.Add(Pair("ordinary-empty", Observation(1, "")));
 			rows.Add(Pair("r_TAF_FoundingHeartReserved", Observation(31, "not our prefix")));
-			Assert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(rows, 10, out Dictionary<string, string> result));
-			Assert.AreEqual(7, result.Count);
+			ClassicAssert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(rows, 10, out Dictionary<string, string> result));
+			ClassicAssert.AreEqual(7, result.Count);
 			Refuses(rows, 9);
-			Assert.AreEqual(10, rows.Count);
+			ClassicAssert.AreEqual(10, rows.Count);
 		}
 
 		[TestCase(null)] [TestCase("")]
@@ -146,16 +147,16 @@ namespace ThousandAndFirst.Tests
 		{
 			ThrowingRows rows = new ThrowingRows("get", Reservation("slot-0"));
 			Refuses(rows, maximum);
-			Assert.AreEqual(0, rows.Starts);
+			ClassicAssert.AreEqual(0, rows.Starts);
 		}
 
 		[Test]
 		public void NullSequenceRefusesWhileAnEmptyFiniteAuditSucceeds()
 		{
 			Refuses(null, 1);
-			Assert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(
+			ClassicAssert.IsTrue(KingdomFoundingHeartReservationState.TryAudit(
 				new KeyValuePair<string, KingdomDurableKeyObservation>[0], 1, out Dictionary<string, string> result));
-			Assert.AreEqual(0, result.Count);
+			ClassicAssert.AreEqual(0, result.Count);
 		}
 
 		[TestCase("get")] [TestCase("null")] [TestCase("move")] [TestCase("current")] [TestCase("dispose")]
@@ -163,8 +164,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ThrowingRows rows = new ThrowingRows(phase, Reservation("slot-0"));
 			Refuses(rows, 8);
-			Assert.AreEqual(1, rows.Starts);
-			Assert.AreEqual(phase != "get" && phase != "null", rows.Disposed);
+			ClassicAssert.AreEqual(1, rows.Starts);
+			ClassicAssert.AreEqual(phase != "get" && phase != "null", rows.Disposed);
 		}
 
 		[Test]
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int read = 0;
 			Refuses(Infinite(() => read++), 4);
-			Assert.AreEqual(5, read);
+			ClassicAssert.AreEqual(5, read);
 		}
 
 		private static IEnumerable<KeyValuePair<string, KingdomDurableKeyObservation>> Infinite(Action read)
@@ -182,8 +183,8 @@ namespace ThousandAndFirst.Tests
 
 		private static void Refuses(IEnumerable<KeyValuePair<string, KingdomDurableKeyObservation>> rows, int maximum)
 		{
-			Assert.IsFalse(KingdomFoundingHeartReservationState.TryAudit(rows, maximum, out Dictionary<string, string> result));
-			Assert.IsNull(result);
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationState.TryAudit(rows, maximum, out Dictionary<string, string> result));
+			ClassicAssert.IsNull(result);
 		}
 
 		private static List<KeyValuePair<string, KingdomDurableKeyObservation>> Seven()
@@ -196,15 +197,15 @@ namespace ThousandAndFirst.Tests
 
 		private static KeyValuePair<string, KingdomDurableKeyObservation> Reservation(string role)
 		{
-			Assert.IsTrue(KingdomFoundingHeartStakeRules.TryCreate("heartbasin", "first basin",
+			ClassicAssert.IsTrue(KingdomFoundingHeartStakeRules.TryCreate("heartbasin", "first basin",
 				"r_KingdomPlotWorks", 38, 11, 42, 13, 0, true, false, null,
 				"TAF_HeartBasinContents", 2, true, 3, false, 40, 11, false,
 				out KingdomFoundingHeartStakeTruth truth));
-			Assert.IsTrue(KingdomFoundingHeartRules.TryCreate(Transaction, Zone,
+			ClassicAssert.IsTrue(KingdomFoundingHeartRules.TryCreate(Transaction, Zone,
 				40, 12, 30, 2, 49, 21, 38, 11, 42, 13, 900L, 600L,
 				"p4,frozen-authored-payload", KingdomFoundingHeartStakeRules.Encode(truth), out KingdomFoundingHeartPlan plan));
 			string wire = KingdomFoundingHeartReservationRules.Encode(plan, Id(role), role);
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			return Pair(KingdomFoundingHeartReservationRules.Prefix + Id(role), Observation(1, wire));
 		}
 

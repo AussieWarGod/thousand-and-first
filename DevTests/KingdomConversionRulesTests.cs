@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.Kernel;
 using Quarters = ThousandAndFirst.KingdomLodgingRules.Closeness;
@@ -22,37 +23,37 @@ namespace ThousandAndFirst.Tests
 		public void ConversionDeclarationsKeepTheirExactPublicAbi()
 		{
 			System.Type rules = typeof(KingdomConversionRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomConversionRules", rules.FullName);
-			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed, "rules authority stopped being public static");
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomConversionRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed, "rules authority stopped being public static");
 
 			System.Type channel = typeof(ConversionChannel);
-			Assert.AreEqual("ThousandAndFirst.ConversionChannel", channel.FullName);
-			Assert.IsTrue(channel.IsPublic && channel.IsEnum);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
-			Assert.AreEqual(1, (int)ConversionChannel.Osmosis);
-			Assert.AreEqual(2, (int)ConversionChannel.Culture);
-			Assert.AreEqual(3, (int)ConversionChannel.Shrine);
-			Assert.AreEqual(4, (int)ConversionChannel.Diplomacy);
-			Assert.AreEqual(4, System.Enum.GetValues(channel).Length, "conversion channel member set changed");
+			ClassicAssert.AreEqual("ThousandAndFirst.ConversionChannel", channel.FullName);
+			ClassicAssert.IsTrue(channel.IsPublic && channel.IsEnum);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(channel));
+			ClassicAssert.AreEqual(1, (int)ConversionChannel.Osmosis);
+			ClassicAssert.AreEqual(2, (int)ConversionChannel.Culture);
+			ClassicAssert.AreEqual(3, (int)ConversionChannel.Shrine);
+			ClassicAssert.AreEqual(4, (int)ConversionChannel.Diplomacy);
+			ClassicAssert.AreEqual(4, System.Enum.GetValues(channel).Length, "conversion channel member set changed");
 
 			System.Type progress = typeof(ConversionProgress);
-			Assert.AreEqual("ThousandAndFirst.ConversionProgress", progress.FullName);
-			Assert.IsTrue(progress.IsPublic && progress.IsValueType);
-			Assert.IsNotNull(progress.GetConstructor(new[] { typeof(string), typeof(int) }));
+			ClassicAssert.AreEqual("ThousandAndFirst.ConversionProgress", progress.FullName);
+			ClassicAssert.IsTrue(progress.IsPublic && progress.IsValueType);
+			ClassicAssert.IsNotNull(progress.GetConstructor(new[] { typeof(string), typeof(int) }));
 			System.Reflection.FieldInfo[] fields = progress.GetFields(
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
 				System.Reflection.BindingFlags.DeclaredOnly);
-			Assert.AreEqual(2, fields.Length);
-			Assert.AreEqual("Creed", fields[0].Name);
-			Assert.AreEqual(typeof(string), fields[0].FieldType);
-			Assert.IsTrue(fields[0].IsInitOnly);
-			Assert.AreEqual("Shared", fields[1].Name);
-			Assert.AreEqual(typeof(int), fields[1].FieldType);
-			Assert.IsTrue(fields[1].IsInitOnly);
+			ClassicAssert.AreEqual(2, fields.Length);
+			ClassicAssert.AreEqual("Creed", fields[0].Name);
+			ClassicAssert.AreEqual(typeof(string), fields[0].FieldType);
+			ClassicAssert.IsTrue(fields[0].IsInitOnly);
+			ClassicAssert.AreEqual("Shared", fields[1].Name);
+			ClassicAssert.AreEqual(typeof(int), fields[1].FieldType);
+			ClassicAssert.IsTrue(fields[1].IsInitOnly);
 			ConversionProgress empty = default(ConversionProgress);
-			Assert.IsNull(empty.Creed);
-			Assert.AreEqual(0, empty.Shared);
-			Assert.IsFalse(empty.Any);
+			ClassicAssert.IsNull(empty.Creed);
+			ClassicAssert.AreEqual(0, empty.Shared);
+			ClassicAssert.IsFalse(empty.Any);
 		}
 
 		private static Dictionary<string, int> Counts(params object[] Pairs)
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Private, KingdomConversionRules.PrivateSharedPerDay)]
 		public void SharedLivingPerDay_ReadsTheLadderAtZeroHostility(Quarters quarters, int expected)
 		{
-			Assert.AreEqual(expected, KingdomConversionRules.SharedLivingPerDay(quarters, 0));
+			ClassicAssert.AreEqual(expected, KingdomConversionRules.SharedLivingPerDay(quarters, 0));
 		}
 
 		[Test]
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 			// The author's ruling, not an arithmetic consequence: one open room holds only people
 			// the feelings table has nothing filed between, so there is nothing there to cross --
 			// and a bunk row must never become a cheap conversion engine built on purpose.
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Packed, 0));
+			ClassicAssert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Packed, 0));
 		}
 
 		[Test]
@@ -91,9 +92,9 @@ namespace ThousandAndFirst.Tests
 			int close = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
 			int roomed = KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, 0);
 			int priv = KingdomConversionRules.SharedLivingPerDay(Quarters.Private, 0);
-			Assert.Greater(close, roomed, "a hut converts faster than a stone house");
-			Assert.Greater(roomed, priv, "a stone house converts faster than quarters of one's own");
-			Assert.Greater(priv, 0, "quarters of one's own still convert, slowly");
+			ClassicAssert.Greater(close, roomed, "a hut converts faster than a stone house");
+			ClassicAssert.Greater(roomed, priv, "a stone house converts faster than quarters of one's own");
+			ClassicAssert.Greater(priv, 0, "quarters of one's own still convert, slowly");
 		}
 
 		[TestCase(Quarters.Packed)]
@@ -103,9 +104,9 @@ namespace ThousandAndFirst.Tests
 		public void SharedLivingPerDay_NothingIsConvertedAcrossARefusalAtAnyRung(Quarters quarters)
 		{
 			int refuses = KingdomLodgingRules.RefusalHostility(quarters);
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, refuses),
+			ClassicAssert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, refuses),
 				"you do not convert somebody you will not live beside");
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, 100),
+			ClassicAssert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(quarters, 100),
 				"the named fault lines convert nobody anywhere");
 		}
 
@@ -115,8 +116,8 @@ namespace ThousandAndFirst.Tests
 			// Addendum 5's intended case, stated as a test: at the ambient -50 the hut refuses to
 			// hold them at all, and the stone house -- the one architecture that will -- is the one
 			// that does the work.
-			Assert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Close, KingdomLodgingRules.CloseRefusalHostility));
-			Assert.Greater(KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, KingdomLodgingRules.CloseRefusalHostility), 0);
+			ClassicAssert.AreEqual(0, KingdomConversionRules.SharedLivingPerDay(Quarters.Close, KingdomLodgingRules.CloseRefusalHostility));
+			ClassicAssert.Greater(KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, KingdomLodgingRules.CloseRefusalHostility), 0);
 		}
 
 		// --- The meal: small, and capped -------------------------------------------------------
@@ -124,31 +125,31 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MealCeiling_IsShortOfTheRoadSoMealsAloneNeverConvertAnybody()
 		{
-			Assert.Less(KingdomConversionRules.MealCeiling, KingdomConversionRules.SharedLivingForConversion,
+			ClassicAssert.Less(KingdomConversionRules.MealCeiling, KingdomConversionRules.SharedLivingForConversion,
 				"culture nudges; architecture converts");
-			Assert.Greater(KingdomConversionRules.MealCeiling, 0);
+			ClassicAssert.Greater(KingdomConversionRules.MealCeiling, 0);
 		}
 
 		[Test]
 		public void MealSharedFor_GivesTheWholeNudgeWhileThereIsRoom()
 		{
-			Assert.AreEqual(KingdomConversionRules.MealShared, KingdomConversionRules.MealSharedFor(0));
-			Assert.AreEqual(KingdomConversionRules.MealShared, KingdomConversionRules.MealSharedFor(-5), "a negative reads as none");
+			ClassicAssert.AreEqual(KingdomConversionRules.MealShared, KingdomConversionRules.MealSharedFor(0));
+			ClassicAssert.AreEqual(KingdomConversionRules.MealShared, KingdomConversionRules.MealSharedFor(-5), "a negative reads as none");
 		}
 
 		[Test]
 		public void MealSharedFor_ClampsTheLastMealToLandExactlyOnTheCeiling()
 		{
 			int justUnder = KingdomConversionRules.MealCeiling - 1;
-			Assert.AreEqual(1, KingdomConversionRules.MealSharedFor(justUnder));
-			Assert.AreEqual(KingdomConversionRules.MealCeiling, justUnder + KingdomConversionRules.MealSharedFor(justUnder));
+			ClassicAssert.AreEqual(1, KingdomConversionRules.MealSharedFor(justUnder));
+			ClassicAssert.AreEqual(KingdomConversionRules.MealCeiling, justUnder + KingdomConversionRules.MealSharedFor(justUnder));
 		}
 
 		[Test]
 		public void MealSharedFor_GivesNothingAtOrPastTheCeiling()
 		{
-			Assert.AreEqual(0, KingdomConversionRules.MealSharedFor(KingdomConversionRules.MealCeiling));
-			Assert.AreEqual(0, KingdomConversionRules.MealSharedFor(KingdomConversionRules.SharedLivingForConversion));
+			ClassicAssert.AreEqual(0, KingdomConversionRules.MealSharedFor(KingdomConversionRules.MealCeiling));
+			ClassicAssert.AreEqual(0, KingdomConversionRules.MealSharedFor(KingdomConversionRules.SharedLivingForConversion));
 		}
 
 		[Test]
@@ -159,8 +160,8 @@ namespace ThousandAndFirst.Tests
 			{
 				shared += KingdomConversionRules.MealSharedFor(shared);
 			}
-			Assert.AreEqual(KingdomConversionRules.MealCeiling, shared);
-			Assert.IsFalse(KingdomConversionRules.AtMilestone(shared), "no settlement eats its way to a conversion");
+			ClassicAssert.AreEqual(KingdomConversionRules.MealCeiling, shared);
+			ClassicAssert.IsFalse(KingdomConversionRules.AtMilestone(shared), "no settlement eats its way to a conversion");
 		}
 
 		// --- The household majority ------------------------------------------------------------
@@ -168,9 +169,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HouseholdMajority_NeedsAStrictMajorityOfEverybodyUnderTheRoof()
 		{
-			Assert.AreEqual("Barathrumites", KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 2), 3));
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 2), 4), "half is not a majority");
-			Assert.AreEqual("Barathrumites", KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 3), 4));
+			ClassicAssert.AreEqual("Barathrumites", KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 2), 3));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 2), 4), "half is not a majority");
+			ClassicAssert.AreEqual("Barathrumites", KingdomConversionRules.HouseholdMajority(Counts("Barathrumites", 3), 4));
 		}
 
 		[Test]
@@ -178,7 +179,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Three creeds in a house of six: the largest is not a majority, and a house that is
 			// merely mixed pulls in no direction at all.
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2, "Barathrumites", 2, "Joppa", 1), 6));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2, "Barathrumites", 2, "Joppa", 1), 6));
 		}
 
 		[Test]
@@ -186,22 +187,22 @@ namespace ThousandAndFirst.Tests
 		{
 			// Two believers and three ordinary settlers is not a household with a creed, however
 			// loud the two are.
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2), 5));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2), 5));
 		}
 
 		[Test]
 		public void HouseholdMajority_ATieHasNoWinner()
 		{
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2, "Barathrumites", 2), 4));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 2, "Barathrumites", 2), 4));
 		}
 
 		[Test]
 		public void HouseholdMajority_NullEmptyAndNonPositiveEntriesAllReadAsNobody()
 		{
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(null, 4));
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(new Dictionary<string, int>(), 4));
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 0), 0));
-			Assert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 3), 0), "no household, no majority");
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(null, 4));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(new Dictionary<string, int>(), 4));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 0), 0));
+			ClassicAssert.IsNull(KingdomConversionRules.HouseholdMajority(Counts("Templar", 3), 0), "no household, no majority");
 		}
 
 		// --- Progress: the tug of war ------------------------------------------------------------
@@ -209,27 +210,27 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Progress_NoneIsEmptyAndNegativeSharedClampsToNothing()
 		{
-			Assert.IsFalse(ConversionProgress.None.Any);
-			Assert.IsNull(ConversionProgress.None.Creed);
-			Assert.AreEqual(0, new ConversionProgress("Templar", -9).Shared);
-			Assert.IsNull(new ConversionProgress("", 12).Creed);
-			Assert.AreEqual(0, new ConversionProgress("", 12).Shared, "points toward nothing are no points");
+			ClassicAssert.IsFalse(ConversionProgress.None.Any);
+			ClassicAssert.IsNull(ConversionProgress.None.Creed);
+			ClassicAssert.AreEqual(0, new ConversionProgress("Templar", -9).Shared);
+			ClassicAssert.IsNull(new ConversionProgress("", 12).Creed);
+			ClassicAssert.AreEqual(0, new ConversionProgress("", 12).Shared, "points toward nothing are no points");
 		}
 
 		[Test]
 		public void Advance_StartsAFreshPullWhenNothingWasWorkingOnThem()
 		{
 			ConversionProgress after = KingdomConversionRules.Advance(ConversionProgress.None, "Templar", 3);
-			Assert.AreEqual("Templar", after.Creed);
-			Assert.AreEqual(3, after.Shared);
+			ClassicAssert.AreEqual("Templar", after.Creed);
+			ClassicAssert.AreEqual(3, after.Shared);
 		}
 
 		[Test]
 		public void Advance_AccumulatesWhenThePullNamesTheSameCreed()
 		{
 			ConversionProgress after = KingdomConversionRules.Advance(new ConversionProgress("Templar", 10), "Templar", 3);
-			Assert.AreEqual("Templar", after.Creed);
-			Assert.AreEqual(13, after.Shared);
+			ClassicAssert.AreEqual("Templar", after.Creed);
+			ClassicAssert.AreEqual(13, after.Shared);
 		}
 
 		[Test]
@@ -238,17 +239,17 @@ namespace ThousandAndFirst.Tests
 			// A citizen who sleeps in a Barathrumite house and eats at a Templar table converts to
 			// neither. This is the whole reason the meal can erode a quarter's grip on its own.
 			ConversionProgress after = KingdomConversionRules.Advance(new ConversionProgress("Barathrumites", 10), "Templar", 4);
-			Assert.AreEqual("Barathrumites", after.Creed, "the contest does not change hands mid-tug");
-			Assert.AreEqual(6, after.Shared);
+			ClassicAssert.AreEqual("Barathrumites", after.Creed, "the contest does not change hands mid-tug");
+			ClassicAssert.AreEqual(6, after.Shared);
 		}
 
 		[Test]
 		public void Advance_WhenTwoPullsCancelTheSlotIsFreeAndTheRemainderIsDiscarded()
 		{
 			ConversionProgress after = KingdomConversionRules.Advance(new ConversionProgress("Barathrumites", 4), "Templar", 9);
-			Assert.IsFalse(after.Any);
-			Assert.IsNull(after.Creed, "winning a tug of war does not happen in the pass you win it");
-			Assert.AreEqual(0, after.Shared);
+			ClassicAssert.IsFalse(after.Any);
+			ClassicAssert.IsNull(after.Creed, "winning a tug of war does not happen in the pass you win it");
+			ClassicAssert.AreEqual(0, after.Shared);
 		}
 
 		[TestCase(null, 5)]
@@ -259,8 +260,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ConversionProgress before = new ConversionProgress("Barathrumites", 11);
 			ConversionProgress after = KingdomConversionRules.Advance(before, creed, points);
-			Assert.AreEqual(before.Creed, after.Creed);
-			Assert.AreEqual(before.Shared, after.Shared);
+			ClassicAssert.AreEqual(before.Creed, after.Creed);
+			ClassicAssert.AreEqual(before.Shared, after.Shared);
 		}
 
 		// --- Milestones --------------------------------------------------------------------------
@@ -268,18 +269,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AtMilestone_IsFalseOnePointShortAndTrueOnTheNumberItself()
 		{
-			Assert.IsFalse(KingdomConversionRules.AtMilestone(KingdomConversionRules.SharedLivingForConversion - 1));
-			Assert.IsTrue(KingdomConversionRules.AtMilestone(KingdomConversionRules.SharedLivingForConversion));
+			ClassicAssert.IsFalse(KingdomConversionRules.AtMilestone(KingdomConversionRules.SharedLivingForConversion - 1));
+			ClassicAssert.IsTrue(KingdomConversionRules.AtMilestone(KingdomConversionRules.SharedLivingForConversion));
 		}
 
 		[Test]
 		public void Milestone_HoldsSteadyBetweenOneMilestoneAndTheNext()
 		{
 			int road = KingdomConversionRules.SharedLivingForConversion;
-			Assert.AreEqual(0uL, KingdomConversionRules.Milestone(road - 1));
-			Assert.AreEqual(1uL, KingdomConversionRules.Milestone(road));
-			Assert.AreEqual(1uL, KingdomConversionRules.Milestone((2 * road) - 1), "a milestone that said no is not re-asked until a whole further road is walked");
-			Assert.AreEqual(2uL, KingdomConversionRules.Milestone(2 * road));
+			ClassicAssert.AreEqual(0uL, KingdomConversionRules.Milestone(road - 1));
+			ClassicAssert.AreEqual(1uL, KingdomConversionRules.Milestone(road));
+			ClassicAssert.AreEqual(1uL, KingdomConversionRules.Milestone((2 * road) - 1), "a milestone that said no is not re-asked until a whole further road is walked");
+			ClassicAssert.AreEqual(2uL, KingdomConversionRules.Milestone(2 * road));
 		}
 
 		[Test]
@@ -290,7 +291,7 @@ namespace ThousandAndFirst.Tests
 			// conversion a schedule instead of a chronicle entry.
 			int fastest = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
 			int days = KingdomConversionRules.SharedLivingForConversion / fastest;
-			Assert.GreaterOrEqual(days, 60, "a conversion is a season of shared living");
+			ClassicAssert.GreaterOrEqual(days, 60, "a conversion is a season of shared living");
 		}
 
 		// --- The recalibration: passes to cohabitation days, at the same pace ---------------------
@@ -304,14 +305,14 @@ namespace ThousandAndFirst.Tests
 			// day walks the identical seventy-two, hundred and eight, and two hundred and sixteen
 			// days they always walked. If any of the four numbers drifts, this fails.
 			int cadence = KingdomBrinkRules.CohabitationDaysPerAttendedPass;
-			Assert.AreEqual(72, KingdomConversionRules.SharedLivingInPasses);
-			Assert.AreEqual(KingdomConversionRules.SharedLivingInPasses * cadence, KingdomConversionRules.SharedLivingForConversion);
+			ClassicAssert.AreEqual(72, KingdomConversionRules.SharedLivingInPasses);
+			ClassicAssert.AreEqual(KingdomConversionRules.SharedLivingInPasses * cadence, KingdomConversionRules.SharedLivingForConversion);
 			foreach (Quarters rung in new Quarters[3] { Quarters.Close, Quarters.Roomed, Quarters.Private })
 			{
 				int perDay = KingdomConversionRules.SharedLivingPerDay(rung, 0);
 				int oldPasses = KingdomConversionRules.SharedLivingInPasses / perDay;
 				int newDays = KingdomConversionRules.SharedLivingForConversion / perDay;
-				Assert.AreEqual(oldPasses * cadence, newDays, rung + " changed length across the migration");
+				ClassicAssert.AreEqual(oldPasses * cadence, newDays, rung + " changed length across the migration");
 			}
 		}
 
@@ -322,7 +323,7 @@ namespace ThousandAndFirst.Tests
 			// WORTH relative to the road did: leaving MealShared at four against a road three
 			// times longer would have tripled the suppers culture costs without anybody deciding
 			// to. Nine before, nine now.
-			Assert.AreEqual(KingdomConversionRules.MealSharedInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass,
+			ClassicAssert.AreEqual(KingdomConversionRules.MealSharedInPasses * KingdomBrinkRules.CohabitationDaysPerAttendedPass,
 				KingdomConversionRules.MealShared);
 			int meals = 0;
 			int shared = 0;
@@ -330,10 +331,10 @@ namespace ThousandAndFirst.Tests
 			{
 				shared += KingdomConversionRules.MealSharedFor(shared);
 				meals++;
-				Assert.Less(meals, 500, "the ceiling must terminate");
+				ClassicAssert.Less(meals, 500, "the ceiling must terminate");
 			}
-			Assert.AreEqual(9, meals);
-			Assert.AreEqual(KingdomConversionRules.MealCeiling, shared);
+			ClassicAssert.AreEqual(9, meals);
+			ClassicAssert.AreEqual(KingdomConversionRules.MealCeiling, shared);
 		}
 
 		// --- Rule 1: the road ends at a brink, and nothing accrues past it -----------------------
@@ -344,9 +345,9 @@ namespace ThousandAndFirst.Tests
 			int perDay = KingdomConversionRules.SharedLivingPerDay(Quarters.Close, 0);
 			ConversionProgress ten = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 1000);
 			ConversionProgress aThousand = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 100000);
-			Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, ten.Shared);
-			Assert.AreEqual(ten.Shared, aThousand.Shared, "nothing accrues past the road's end");
-			Assert.AreEqual("Barathrumites", aThousand.Creed);
+			ClassicAssert.AreEqual(KingdomConversionRules.SharedLivingForConversion, ten.Shared);
+			ClassicAssert.AreEqual(ten.Shared, aThousand.Shared, "nothing accrues past the road's end");
+			ClassicAssert.AreEqual("Barathrumites", aThousand.Creed);
 		}
 
 		[Test]
@@ -354,18 +355,18 @@ namespace ThousandAndFirst.Tests
 		{
 			int perDay = KingdomConversionRules.SharedLivingPerDay(Quarters.Roomed, 0);
 			ConversionProgress after = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 10);
-			Assert.AreEqual(perDay * 10, after.Shared);
-			Assert.IsFalse(KingdomConversionRules.AtMilestone(after.Shared));
+			ClassicAssert.AreEqual(perDay * 10, after.Shared);
+			ClassicAssert.IsFalse(KingdomConversionRules.AtMilestone(after.Shared));
 		}
 
 		[Test]
 		public void AdvanceOverDays_ANonPositiveStretchOrRateChangesNothing()
 		{
 			ConversionProgress held = new ConversionProgress("Barathrumites", 40);
-			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 3, 0).Shared);
-			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 0, 90).Shared,
+			ClassicAssert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 3, 0).Shared);
+			ClassicAssert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, "Barathrumites", 0, 90).Shared,
 				"a bunk row buys nothing however many days pass in it");
-			Assert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, null, 3, 90).Shared);
+			ClassicAssert.AreEqual(40, KingdomConversionRules.AdvanceOverDays(held, null, 3, 90).Shared);
 		}
 
 		[Test]
@@ -375,10 +376,10 @@ namespace ThousandAndFirst.Tests
 			// is pulled the other way is no longer at its end, and the shell lifts their brink on
 			// exactly that test.
 			ConversionProgress atTheEnd = new ConversionProgress("Barathrumites", KingdomConversionRules.SharedLivingForConversion);
-			Assert.IsTrue(KingdomConversionRules.AtMilestone(atTheEnd.Shared));
+			ClassicAssert.IsTrue(KingdomConversionRules.AtMilestone(atTheEnd.Shared));
 			ConversionProgress pulledBack = KingdomConversionRules.AdvanceOverDays(atTheEnd, "Templar", 3, 10);
-			Assert.AreEqual("Barathrumites", pulledBack.Creed, "winning a tug of war does not happen in the pass you win it");
-			Assert.IsFalse(KingdomConversionRules.AtMilestone(pulledBack.Shared), "and they are no longer at a brink");
+			ClassicAssert.AreEqual("Barathrumites", pulledBack.Creed, "winning a tug of war does not happen in the pass you win it");
+			ClassicAssert.IsFalse(KingdomConversionRules.AtMilestone(pulledBack.Shared), "and they are no longer at a brink");
 		}
 
 		[Test]
@@ -398,18 +399,18 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < city; i++)
 			{
 				ConversionProgress after = KingdomConversionRules.AdvanceOverDays(ConversionProgress.None, "Barathrumites", perDay, 1000);
-				Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, after.Shared, "held at the road's end and no further");
+				ClassicAssert.AreEqual(KingdomConversionRules.SharedLivingForConversion, after.Shared, "held at the road's end and no further");
 				if (KingdomConversionRules.AtMilestone(after.Shared))
 				{
 					atTheRoadsEnd++;
 				}
 			}
-			Assert.AreEqual(city, atTheRoadsEnd, "a thousand days under one roof really does walk the whole road");
+			ClassicAssert.AreEqual(city, atTheRoadsEnd, "a thousand days under one roof really does walk the whole road");
 			// And that is a brink, not a conversion: the whole window has to run out after the
 			// warning before a single draw is asked.
-			Assert.Greater(KingdomBrinkRules.CreedBrinkWindowDays, 0);
+			ClassicAssert.Greater(KingdomBrinkRules.CreedBrinkWindowDays, 0);
 			long told = 500L * KingdomRules.TicksPerDay;
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Creed, told, told),
+			ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Creed, told, told),
 				"the day the city is told is not the day the city turns");
 		}
 
@@ -421,7 +422,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(7, 8)]
 		public void RoadEnd_StandsAtTheOrdinalTheDrawIsKeyedOn(int walked, int ordinal)
 		{
-			Assert.AreEqual((ulong)ordinal, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(walked)));
+			ClassicAssert.AreEqual((ulong)ordinal, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(walked)));
 		}
 
 		[Test]
@@ -430,9 +431,9 @@ namespace ThousandAndFirst.Tests
 			// Progress now holds at the road's end, so the ordinal is counted rather than divided
 			// out of it. The counting had to land on the same numbers the dividing did, or every
 			// soul standing unconverted in every save would have been re-asked.
-			Assert.AreEqual(KingdomConversionRules.SharedLivingForConversion, KingdomConversionRules.RoadEnd(0));
-			Assert.AreEqual(1uL, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(0)));
-			Assert.IsTrue(KingdomConversionRules.AtMilestone(KingdomConversionRules.RoadEnd(0)));
+			ClassicAssert.AreEqual(KingdomConversionRules.SharedLivingForConversion, KingdomConversionRules.RoadEnd(0));
+			ClassicAssert.AreEqual(1uL, KingdomConversionRules.Milestone(KingdomConversionRules.RoadEnd(0)));
+			ClassicAssert.IsTrue(KingdomConversionRules.AtMilestone(KingdomConversionRules.RoadEnd(0)));
 		}
 
 		[Test]
@@ -445,7 +446,7 @@ namespace ThousandAndFirst.Tests
 				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(0))
 					!= KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(1));
 			}
-			Assert.IsTrue(differed, "a settler who walked a whole road and did not turn must get a genuinely new question");
+			ClassicAssert.IsTrue(differed, "a settler who walked a whole road and did not turn must get a genuinely new question");
 		}
 
 		[Test]
@@ -458,7 +459,7 @@ namespace ThousandAndFirst.Tests
 					string name = "settler-" + i;
 					bool first = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(road));
 					bool second = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, KingdomConversionRules.RoadEnd(road));
-					Assert.AreEqual(first, second, "a reload must never re-roll a soul");
+					ClassicAssert.AreEqual(first, second, "a reload must never re-roll a soul");
 				}
 			}
 		}
@@ -468,7 +469,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Converts_IsFalseShortOfTheFirstMilestoneHoweverCloseTheyAre()
 		{
-			Assert.IsFalse(KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, "Dagasha",
+			ClassicAssert.IsFalse(KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, "Dagasha",
 				KingdomConversionRules.SharedLivingForConversion - 1));
 		}
 
@@ -481,7 +482,7 @@ namespace ThousandAndFirst.Tests
 				string name = "settler-" + i;
 				bool first = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road);
 				bool second = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road);
-				Assert.AreEqual(first, second, "a reload must never re-roll a soul");
+				ClassicAssert.AreEqual(first, second, "a reload must never re-roll a soul");
 			}
 		}
 
@@ -490,9 +491,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// A malformed settlement id, or a machine whose crypto provider is failing, must never
 			// be able to change what somebody believes.
-			Assert.IsFalse(KingdomConversionRules.Converts("not a taf id", ConversionChannel.Osmosis, "Dagasha",
+			ClassicAssert.IsFalse(KingdomConversionRules.Converts("not a taf id", ConversionChannel.Osmosis, "Dagasha",
 				KingdomConversionRules.SharedLivingForConversion));
-			Assert.IsFalse(KingdomConversionRules.Converts(null, ConversionChannel.Osmosis, "Dagasha",
+			ClassicAssert.IsFalse(KingdomConversionRules.Converts(null, ConversionChannel.Osmosis, "Dagasha",
 				KingdomConversionRules.SharedLivingForConversion));
 		}
 
@@ -510,10 +511,10 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 			int percent = turned * 100 / sample;
-			Assert.Greater(turned, 0, "a road nobody ever reaches the end of is not a road");
-			Assert.Less(turned, sample, "reaching a milestone buys a draw, not a conversion");
-			Assert.GreaterOrEqual(percent, KingdomConversionRules.ConversionChancePercent - 10);
-			Assert.LessOrEqual(percent, KingdomConversionRules.ConversionChancePercent + 10);
+			ClassicAssert.Greater(turned, 0, "a road nobody ever reaches the end of is not a road");
+			ClassicAssert.Less(turned, sample, "reaching a milestone buys a draw, not a conversion");
+			ClassicAssert.GreaterOrEqual(percent, KingdomConversionRules.ConversionChancePercent - 10);
+			ClassicAssert.LessOrEqual(percent, KingdomConversionRules.ConversionChancePercent + 10);
 		}
 
 		[Test]
@@ -527,7 +528,7 @@ namespace ThousandAndFirst.Tests
 				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road)
 					!= KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road * 2);
 			}
-			Assert.IsTrue(differed, "the ordinal must actually reach the draw");
+			ClassicAssert.IsTrue(differed, "the ordinal must actually reach the draw");
 		}
 
 		[Test]
@@ -541,7 +542,7 @@ namespace ThousandAndFirst.Tests
 				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road)
 					!= KingdomConversionRules.Converts(City, ConversionChannel.Culture, name, road);
 			}
-			Assert.IsTrue(differed, "the channel must actually reach the draw");
+			ClassicAssert.IsTrue(differed, "the channel must actually reach the draw");
 		}
 
 		[Test]
@@ -554,7 +555,7 @@ namespace ThousandAndFirst.Tests
 				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, "settler-" + i, road)
 					!= KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, "other-" + i, road);
 			}
-			Assert.IsTrue(differed, "the person must actually reach the draw");
+			ClassicAssert.IsTrue(differed, "the person must actually reach the draw");
 		}
 
 		[Test]
@@ -568,7 +569,7 @@ namespace ThousandAndFirst.Tests
 				differed = KingdomConversionRules.Converts(City, ConversionChannel.Osmosis, name, road)
 					!= KingdomConversionRules.Converts("taf:settlement:other-city", ConversionChannel.Osmosis, name, road);
 			}
-			Assert.IsTrue(differed, "the settlement must actually reach the draw");
+			ClassicAssert.IsTrue(differed, "the settlement must actually reach the draw");
 		}
 
 		// --- The stream id fold ------------------------------------------------------------------
@@ -580,7 +581,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Q'uuér!! the ::Thrice:: Named")]
 		public void ResidentStream_AlwaysSatisfiesTheFrozenSemanticIdGrammar(string name)
 		{
-			Assert.IsTrue(KernelSemanticId.IsValid(KingdomConversionRules.ResidentStream(name)),
+			ClassicAssert.IsTrue(KernelSemanticId.IsValid(KingdomConversionRules.ResidentStream(name)),
 				"a name the kernel refuses would silently cost that settler every draw they ever earn");
 		}
 
@@ -588,13 +589,13 @@ namespace ThousandAndFirst.Tests
 		public void ResidentStream_FoldsALongNameDownRatherThanOverflowingTheGrammar()
 		{
 			string long_ = new string('x', 400);
-			Assert.IsTrue(KernelSemanticId.IsValid(KingdomConversionRules.ResidentStream(long_)));
+			ClassicAssert.IsTrue(KernelSemanticId.IsValid(KingdomConversionRules.ResidentStream(long_)));
 		}
 
 		[Test]
 		public void ResidentStream_GivesDifferentPeopleDifferentLanes()
 		{
-			Assert.AreNotEqual(KingdomConversionRules.ResidentStream("Dagasha"), KingdomConversionRules.ResidentStream("Ptoh"));
+			ClassicAssert.AreNotEqual(KingdomConversionRules.ResidentStream("Dagasha"), KingdomConversionRules.ResidentStream("Ptoh"));
 		}
 
 		// --- The exit: which channels impose, and who resents them --------------------------------
@@ -608,15 +609,15 @@ namespace ThousandAndFirst.Tests
 			// Osmosis and the table are chosen proximity -- a household that could push somebody
 			// out for living in it would make the healing arc into the thing it was written
 			// against. Diplomacy is invited and consented to, one at a time.
-			Assert.AreEqual(imposed, KingdomConversionRules.IsImposed(channel));
+			ClassicAssert.AreEqual(imposed, KingdomConversionRules.IsImposed(channel));
 		}
 
 		[Test]
 		public void Resents_BitesAtTheAmbientGrudgeAndNotOnePointBelowIt()
 		{
-			Assert.IsFalse(KingdomConversionRules.Resents(KingdomConversionRules.ResentmentHostility - 1));
-			Assert.IsTrue(KingdomConversionRules.Resents(KingdomConversionRules.ResentmentHostility));
-			Assert.IsTrue(KingdomConversionRules.Resents(100));
+			ClassicAssert.IsFalse(KingdomConversionRules.Resents(KingdomConversionRules.ResentmentHostility - 1));
+			ClassicAssert.IsTrue(KingdomConversionRules.Resents(KingdomConversionRules.ResentmentHostility));
+			ClassicAssert.IsTrue(KingdomConversionRules.Resents(100));
 		}
 
 		[Test]
@@ -624,17 +625,17 @@ namespace ThousandAndFirst.Tests
 		{
 			// A creedless settler and a settler who already holds the imposed creed both read zero
 			// from KingdomCreed.HostilityBetween, so neither is ever walked toward the road.
-			Assert.IsFalse(KingdomConversionRules.Resents(0));
+			ClassicAssert.IsFalse(KingdomConversionRules.Resents(0));
 		}
 
 		[Test]
 		public void ResentmentRunOut_FiresExactlyOnTheStatedDayAndNotOneEarlier()
 		{
 			const int told = 400;
-			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told), "the day the word goes out is not the day they go");
-			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays - 1));
-			Assert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays));
-			Assert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + 900), "and it stays spent");
+			ClassicAssert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told), "the day the word goes out is not the day they go");
+			ClassicAssert.IsFalse(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays - 1));
+			ClassicAssert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + KingdomConversionRules.ResentedWindowDays));
+			ClassicAssert.IsTrue(KingdomConversionRules.ResentmentRunOut(told, told + 900), "and it stays spent");
 		}
 
 		[Test]
@@ -642,8 +643,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 10(a): presence stopped being the shield and ignorance became it. An entry
 			// that has never carried a warning day has no deadline at all.
-			Assert.IsFalse(KingdomConversionRules.ResentmentRunOut(KingdomConversionRules.NotWarned, 9000));
-			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays,
+			ClassicAssert.IsFalse(KingdomConversionRules.ResentmentRunOut(KingdomConversionRules.NotWarned, 9000));
+			ClassicAssert.AreEqual(KingdomConversionRules.ResentedWindowDays,
 				KingdomConversionRules.ResentmentDaysLeft(KingdomConversionRules.NotWarned, 9000),
 				"and the whole window is still in front of the founder on the day they are told");
 		}
@@ -652,17 +653,17 @@ namespace ThousandAndFirst.Tests
 		public void ResentmentDaysLeft_CountsDownToZeroAndStops()
 		{
 			const int told = 400;
-			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays, KingdomConversionRules.ResentmentDaysLeft(told, told));
-			Assert.AreEqual(1, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays - 1));
-			Assert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays));
-			Assert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + 900), "never negative");
+			ClassicAssert.AreEqual(KingdomConversionRules.ResentedWindowDays, KingdomConversionRules.ResentmentDaysLeft(told, told));
+			ClassicAssert.AreEqual(1, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays - 1));
+			ClassicAssert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + KingdomConversionRules.ResentedWindowDays));
+			ClassicAssert.AreEqual(0, KingdomConversionRules.ResentmentDaysLeft(told, told + 900), "never negative");
 		}
 
 		[Test]
 		public void TheWindowIsLongerThanTheHousingWindowBecauseACreedIsNotARoof()
 		{
-			Assert.Greater(KingdomConversionRules.ResentedWindowDays, KingdomLodgingRules.GraceDays);
-			Assert.AreEqual(KingdomBrinkRules.CreedBrinkWindowDays, KingdomConversionRules.ResentedWindowDays,
+			ClassicAssert.Greater(KingdomConversionRules.ResentedWindowDays, KingdomLodgingRules.GraceDays);
+			ClassicAssert.AreEqual(KingdomBrinkRules.CreedBrinkWindowDays, KingdomConversionRules.ResentedWindowDays,
 				"the two ways a settler can be one window from losing their creed must not drift apart");
 		}
 
@@ -679,9 +680,9 @@ namespace ThousandAndFirst.Tests
 			{
 				day++;
 				passes++;
-				Assert.Less(passes, 500, "the window must terminate");
+				ClassicAssert.Less(passes, 500, "the window must terminate");
 			}
-			Assert.AreEqual(KingdomConversionRules.ResentedWindowDays, passes,
+			ClassicAssert.AreEqual(KingdomConversionRules.ResentedWindowDays, passes,
 				"a whole window of world-days after the day the word went out");
 		}
 
@@ -690,9 +691,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Contested_BitesWhereTheWorldWouldActuallyArgue()
 		{
-			Assert.IsFalse(KingdomConversionRules.Contested(KingdomConversionRules.ContestedHostility - 1));
-			Assert.IsTrue(KingdomConversionRules.Contested(KingdomConversionRules.ContestedHostility));
-			Assert.IsFalse(KingdomConversionRules.Contested(0), "nobody contests a conversion from nothing");
+			ClassicAssert.IsFalse(KingdomConversionRules.Contested(KingdomConversionRules.ContestedHostility - 1));
+			ClassicAssert.IsTrue(KingdomConversionRules.Contested(KingdomConversionRules.ContestedHostility));
+			ClassicAssert.IsFalse(KingdomConversionRules.Contested(0), "nobody contests a conversion from nothing");
 		}
 
 		[TestCase(ConversionChannel.Osmosis)]
@@ -704,7 +705,7 @@ namespace ThousandAndFirst.Tests
 			string line = KingdomConversionRules.ConversionTelling(channel, "Dagasha", "the Barathrumites");
 			StringAssert.Contains("Dagasha", line);
 			StringAssert.Contains("the Barathrumites", line);
-			Assert.IsFalse(line.EndsWith("."), "the chronicle dates the clause and closes it");
+			ClassicAssert.IsFalse(line.EndsWith("."), "the chronicle dates the clause and closes it");
 		}
 
 		[TestCase(ConversionChannel.Osmosis)]
@@ -716,7 +717,7 @@ namespace ThousandAndFirst.Tests
 			string official = KingdomConversionRules.ConversionTelling(channel, "Dagasha", "the Barathrumites");
 			string rumour = KingdomConversionRules.ConversionRumour(channel, "Dagasha", "the Barathrumites");
 			StringAssert.Contains("Dagasha", rumour);
-			Assert.AreNotEqual(official, rumour, "the rumour register is a rival to the founder's account, not a translation of it");
+			ClassicAssert.AreNotEqual(official, rumour, "the rumour register is a rival to the founder's account, not a translation of it");
 		}
 
 		[Test]
@@ -725,8 +726,8 @@ namespace ThousandAndFirst.Tests
 			string osmosis = KingdomConversionRules.ConversionTelling(ConversionChannel.Osmosis, "Dagasha", "the Barathrumites");
 			string shrine = KingdomConversionRules.ConversionTelling(ConversionChannel.Shrine, "Dagasha", "the Barathrumites");
 			string rite = KingdomConversionRules.ConversionTelling(ConversionChannel.Diplomacy, "Dagasha", "the Barathrumites");
-			Assert.AreNotEqual(osmosis, shrine);
-			Assert.AreNotEqual(shrine, rite);
+			ClassicAssert.AreNotEqual(osmosis, shrine);
+			ClassicAssert.AreNotEqual(shrine, rite);
 			StringAssert.Contains("water rite", rite, "the founder's own rite is named for what it is");
 		}
 
@@ -737,8 +738,8 @@ namespace ThousandAndFirst.Tests
 			// citizen may carry no roll name. Neither may produce a line with a hole in it.
 			string telling = KingdomConversionRules.ConversionTelling(ConversionChannel.Osmosis, null, null);
 			string rumour = KingdomConversionRules.ConversionRumour(ConversionChannel.Shrine, "", "");
-			Assert.IsFalse(string.IsNullOrEmpty(telling));
-			Assert.IsFalse(string.IsNullOrEmpty(rumour));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(telling));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(rumour));
 			StringAssert.Contains("a settler", telling);
 			StringAssert.Contains("a settler", rumour);
 		}
@@ -752,7 +753,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("the Templar", telling);
 			StringAssert.Contains("Dagasha", note);
 			StringAssert.Contains("the Templar", note);
-			Assert.AreNotEqual(telling, note, "the chronicle records; the ledger tells the founder what to do (STANDARDS 7b)");
+			ClassicAssert.AreNotEqual(telling, note, "the chronicle records; the ledger tells the founder what to do (STANDARDS 7b)");
 		}
 
 		[Test]
@@ -767,8 +768,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DepartureCause_IsTheOneClauseBothRegistersName()
 		{
-			Assert.AreEqual("rather than take a creed they never chose", KingdomConversionRules.DepartureCause);
-			Assert.AreNotEqual(KingdomLodgingRules.DepartureCause, KingdomConversionRules.DepartureCause,
+			ClassicAssert.AreEqual("rather than take a creed they never chose", KingdomConversionRules.DepartureCause);
+			ClassicAssert.AreNotEqual(KingdomLodgingRules.DepartureCause, KingdomConversionRules.DepartureCause,
 				"leaving over a creed and leaving over a roof are different departures and read differently");
 		}
 	}

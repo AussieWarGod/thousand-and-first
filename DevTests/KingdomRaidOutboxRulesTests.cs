@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,23 +20,23 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation op = book.Raid;
 			int calls = 0, diagnostics = 0;
 			bool sawIntent = false;
-			Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink, () =>
+			ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink, () =>
 			{
 				calls++;
 				sawIntent = ReferenceEquals(book.Raid, op)
 					&& State(op, sink) == KingdomLifecycleSinkState.Intent;
 				return true;
 			}, _ => { diagnostics++; }));
-			Assert.IsTrue(sawIntent);
-			Assert.AreEqual(KingdomLifecycleSinkState.Delivered, State(op, sink));
+			ClassicAssert.IsTrue(sawIntent);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Delivered, State(op, sink));
 			byte[] settled = Bytes(book);
-			Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink,
+			ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink,
 				() => { calls++; return false; }, _ => { diagnostics++; }));
-			Assert.AreEqual(1, calls);
-			Assert.AreEqual(0, diagnostics);
+			ClassicAssert.AreEqual(1, calls);
+			ClassicAssert.AreEqual(0, diagnostics);
 			CollectionAssert.AreEqual(settled, Bytes(book));
 			foreach (KingdomLifecycleSinkMask other in Sinks)
-				if (other != sink) Assert.AreEqual(KingdomLifecycleSinkState.Pending, State(op, other));
+				if (other != sink) ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, State(op, other));
 		}
 
 		[TestCase(KingdomLifecycleSinkMask.Chronicle)]
@@ -48,26 +49,26 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Warning();
 			KingdomLifecycleOperation op = book.Raid;
 			int calls = 0, diagnostics = 0;
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
 				() => { calls++; return false; }, _ => { diagnostics++; }));
-			Assert.AreEqual(KingdomLifecyclePhase.Sinks, op.Phase);
-			Assert.AreEqual(KingdomLifecycleSinkState.Intent, State(op, sink));
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.Sinks, op.Phase);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Intent, State(op, sink));
 			byte[] intent = Bytes(book);
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
 				() => { calls++; return true; }, _ => { diagnostics++; }));
 			CollectionAssert.AreEqual(intent, Bytes(book), "unrecovered Intent must not be delivered again");
-			Assert.AreEqual(1, calls);
-			Assert.IsTrue(KingdomLifecycleRules.RecoverOutbox(book, op));
+			ClassicAssert.AreEqual(1, calls);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RecoverOutbox(book, op));
 			bool chronicle = sink == KingdomLifecycleSinkMask.Chronicle;
-			Assert.AreEqual(chronicle ? KingdomLifecycleSinkState.Pending : KingdomLifecycleSinkState.Lost,
+			ClassicAssert.AreEqual(chronicle ? KingdomLifecycleSinkState.Pending : KingdomLifecycleSinkState.Lost,
 				State(op, sink));
-			Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink,
+			ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink,
 				() => { calls++; return true; }, _ => { diagnostics++; }));
-			Assert.AreEqual(chronicle ? 2 : 1, calls);
-			Assert.AreEqual(0, diagnostics);
-			Assert.AreEqual(chronicle ? KingdomLifecycleSinkState.Delivered : KingdomLifecycleSinkState.Lost,
+			ClassicAssert.AreEqual(chronicle ? 2 : 1, calls);
+			ClassicAssert.AreEqual(0, diagnostics);
+			ClassicAssert.AreEqual(chronicle ? KingdomLifecycleSinkState.Delivered : KingdomLifecycleSinkState.Lost,
 				State(op, sink));
-			Assert.AreSame(op, book.Raid);
+			ClassicAssert.AreSame(op, book.Raid);
 		}
 
 		[TestCase(KingdomLifecycleSinkMask.Chronicle)]
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation op = book.Raid;
 			int callbacks = 0, diagnostics = 0;
 			bool quarantinedFirst = false, recoveryRefused = false;
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink, () =>
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink, () =>
 			{
 				callbacks++;
 				throw new InvalidOperationException("raid sink interruption");
@@ -92,16 +93,16 @@ namespace ThousandAndFirst.Tests
 					&& State(op, sink) == KingdomLifecycleSinkState.Intent && ReferenceEquals(book.Raid, op);
 				recoveryRefused = !KingdomLifecycleRules.RecoverOutbox(book, op);
 			}));
-			Assert.AreEqual(1, callbacks);
-			Assert.AreEqual(1, diagnostics);
-			Assert.IsTrue(quarantinedFirst);
-			Assert.IsTrue(recoveryRefused);
+			ClassicAssert.AreEqual(1, callbacks);
+			ClassicAssert.AreEqual(1, diagnostics);
+			ClassicAssert.IsTrue(quarantinedFirst);
+			ClassicAssert.IsTrue(recoveryRefused);
 			AssertHeld(book, op, sink);
 			KingdomLifecycleBook loaded = RoundTrip(book);
-			Assert.AreNotSame(op, loaded.Raid);
-			Assert.AreEqual(op.Id, loaded.Raid.Id);
-			Assert.AreEqual(op.PlanHash, loaded.Raid.PlanHash);
-			Assert.AreEqual(op.Fault, loaded.Raid.Fault);
+			ClassicAssert.AreNotSame(op, loaded.Raid);
+			ClassicAssert.AreEqual(op.Id, loaded.Raid.Id);
+			ClassicAssert.AreEqual(op.PlanHash, loaded.Raid.PlanHash);
+			ClassicAssert.AreEqual(op.Fault, loaded.Raid.Fault);
 			CollectionAssert.AreEqual(Bytes(book), Bytes(loaded));
 			AssertHeld(loaded, loaded.Raid, sink);
 		}
@@ -127,16 +128,16 @@ namespace ThousandAndFirst.Tests
 					quarantinedWhenLogged = op.Phase == KingdomLifecyclePhase.Quarantined;
 					throw new InvalidOperationException("diagnostics failed too");
 				}));
-			Assert.IsFalse(delivered);
+			ClassicAssert.IsFalse(delivered);
 			if (hostileMessage)
 			{
-				Assert.IsTrue(messageRead);
-				Assert.IsTrue(quarantinedWhenMessageRead);
+				ClassicAssert.IsTrue(messageRead);
+				ClassicAssert.IsTrue(quarantinedWhenMessageRead);
 			}
 			else
 			{
-				Assert.AreEqual(1, diagnostics);
-				Assert.IsTrue(quarantinedWhenLogged);
+				ClassicAssert.AreEqual(1, diagnostics);
+				ClassicAssert.IsTrue(quarantinedWhenLogged);
 			}
 			AssertHeld(book, op, KingdomLifecycleSinkMask.Message);
 		}
@@ -147,10 +148,10 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Warning(guestbook: false);
 			byte[] before = Bytes(book);
 			int calls = 0;
-			Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, book.Raid, KingdomLifecycleSinkMask.Guestbook,
+			ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, book.Raid, KingdomLifecycleSinkMask.Guestbook,
 				() => { calls++; return true; }, _ => { calls++; }));
-			Assert.AreEqual(0, calls);
-			Assert.AreEqual(KingdomLifecycleSinkState.Skipped, book.Raid.Outbox.GuestbookState);
+			ClassicAssert.AreEqual(0, calls);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Skipped, book.Raid.Outbox.GuestbookState);
 			CollectionAssert.AreEqual(before, Bytes(book));
 		}
 
@@ -161,15 +162,15 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation op = book.Raid;
 			int calls = 0;
 			foreach (KingdomLifecycleSinkMask sink in Sinks)
-				Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink, () => { calls++; return true; }, null));
-			Assert.AreEqual(5, calls);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.ScheduleIntent, 14L));
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveSchedule(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Terminal, 15L));
-			Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, 16L));
-			Assert.IsNull(book.Raid);
-			Assert.AreEqual(op.Sequence, book.RaidRetiredThrough);
-			Assert.NotNull(KingdomLifecycleRules.PrepareOperation(book, KingdomLifecycleLane.Raid,
+				ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, sink, () => { calls++; return true; }, null));
+			ClassicAssert.AreEqual(5, calls);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.ScheduleIntent, 14L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveSchedule(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Terminal, 15L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, op, 16L));
+			ClassicAssert.IsNull(book.Raid);
+			ClassicAssert.AreEqual(op.Sequence, book.RaidRetiredThrough);
+			ClassicAssert.NotNull(KingdomLifecycleRules.PrepareOperation(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidCancel, 17L));
 		}
 
@@ -189,22 +190,22 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = kind == "wrong-lane" ? GuestAtSinks() : Warning(kind != "wrong-phase");
 			KingdomLifecycleOperation op = book.Raid ?? book.PlainGuest;
 			KingdomLifecycleBook other = RoundTrip(book);
-			if (kind == "operation-quarantined") Assert.IsTrue(KingdomLifecycleRules.Quarantine(op, "prior fault"));
+			if (kind == "operation-quarantined") ClassicAssert.IsTrue(KingdomLifecycleRules.Quarantine(op, "prior fault"));
 			if (kind == "book-quarantined") book.Quarantined = true;
 			if (kind == "changed-plan") op.PlanHash = new string('0', 64);
 			if (kind == "null-callback-settled")
-				Assert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, KingdomLifecycleSinkMask.Message, () => true, null));
+				ClassicAssert.IsTrue(KingdomRaidOutboxRules.Deliver(book, op, KingdomLifecycleSinkMask.Message, () => true, null));
 			byte[] before = Bytes(book), otherBefore = Bytes(other);
 			int calls = 0;
 			Func<bool> callback = kind.StartsWith("null-callback", StringComparison.Ordinal)
 				? (Func<bool>)null : () => { calls++; return true; };
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(kind == "null-book" ? null : kind == "foreign-book" ? other : book,
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(kind == "null-book" ? null : kind == "foreign-book" ? other : book,
 				kind == "null-operation" ? null : kind == "foreign-operation" ? other.Raid : op,
 				KingdomLifecycleSinkMask.Message, callback, _ => { calls++; }));
-			Assert.AreEqual(0, calls);
+			ClassicAssert.AreEqual(0, calls);
 			CollectionAssert.AreEqual(before, Bytes(book));
 			CollectionAssert.AreEqual(otherBefore, Bytes(other));
-			Assert.AreSame(op, book.Raid ?? book.PlainGuest);
+			ClassicAssert.AreSame(op, book.Raid ?? book.PlainGuest);
 		}
 
 		[TestCase(0)]
@@ -216,9 +217,9 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Warning();
 			byte[] before = Bytes(book);
 			int calls = 0;
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(book, book.Raid, (KingdomLifecycleSinkMask)mask,
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(book, book.Raid, (KingdomLifecycleSinkMask)mask,
 				() => { calls++; return true; }, _ => { calls++; }));
-			Assert.AreEqual(0, calls);
+			ClassicAssert.AreEqual(0, calls);
 			CollectionAssert.AreEqual(before, Bytes(book));
 		}
 	}

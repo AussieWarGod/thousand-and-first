@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -15,11 +16,11 @@ namespace ThousandAndFirst.Tests
 		{
 			Fixture fixture = new Fixture(selected, ordinal);
 			string wire = RungFixture.Wire(fixture.Plan);
-			Assert.IsTrue(KingdomSubsidenceRungSaveShape.TryMatch(fixture.Plan,
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveShape.TryMatch(fixture.Plan,
 				fixture.Primary.ObjectId, fixture.Heart.ObjectId, out KingdomSubsidenceRungWork companion));
-			if (selected) Assert.AreSame(fixture.Plan.Works[1], companion);
-			else Assert.IsNull(companion);
-			Assert.AreEqual(wire, RungFixture.Wire(fixture.Plan));
+			if (selected) ClassicAssert.AreSame(fixture.Plan.Works[1], companion);
+			else ClassicAssert.IsNull(companion);
+			ClassicAssert.AreEqual(wire, RungFixture.Wire(fixture.Plan));
 		}
 
 		[TestCase("null-primary")] [TestCase("empty-primary")]
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 				plan.SettlementId, plan.ZoneId, plan.From, plan.To, plan.DueTick, plan.PreparedTick, plan.Departed, plan.Works);
 			if (fault == "null-works") plan = Replan(plan, null);
 			if (fault == "null-work") plan = Replan(plan, new[] { fixture.Primary, null });
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
 			Refuses(plan, fixture);
 		}
 
@@ -64,7 +65,7 @@ namespace ThousandAndFirst.Tests
 		public void OtherwiseValidTownToSteadingPlanIsNotTheCityToTownWitness()
 		{
 			Fixture fixture = new Fixture(true, 0, GrowthStage.Town);
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(fixture.Plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(fixture.Plan));
 			Refuses(fixture.Plan, fixture);
 		}
 
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Fixture fixture = new Fixture(true);
 			KingdomSubsidenceRungPlan plan = Replan(fixture.Plan, new[] { fixture.Primary });
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(plan));
 			Refuses(plan, fixture);
 		}
 
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Fixture fixture = new Fixture(false);
 			KingdomSubsidenceRungPlan plan = Replan(fixture.Plan, new[] { fixture.Primary, fixture.Heart });
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
 			Refuses(plan, fixture);
 		}
 
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 				case "empty": rows.Clear(); break;
 			}
 			KingdomSubsidenceRungPlan plan = Replan(fixture.Plan, rows);
-			Assert.AreEqual(productionValid, KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.AreEqual(productionValid, KingdomSubsidenceRungRules.Valid(plan));
 			Refuses(plan, fixture);
 		}
 
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 			Fixture fixture = new Fixture(true);
 			KingdomSubsidenceRungWork heart = Change(fixture.Heart, fixture.Plan.StepId, fault);
 			KingdomSubsidenceRungPlan plan = Replan(fixture.Plan, new[] { fixture.Primary, heart });
-			Assert.AreEqual(productionValid, KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.AreEqual(productionValid, KingdomSubsidenceRungRules.Valid(plan));
 			Refuses(plan, fixture);
 		}
 
@@ -173,8 +174,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungWork prior)
 		{
 			KingdomSubsidenceRungWork companion = prior;
-			Assert.IsFalse(KingdomSubsidenceRungSaveShape.TryMatch(plan, primary, heart, out companion));
-			Assert.IsNull(companion);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveShape.TryMatch(plan, primary, heart, out companion));
+			ClassicAssert.IsNull(companion);
 		}
 
 		private static KingdomSubsidenceRungPlan Replan(KingdomSubsidenceRungPlan plan,
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string primary = Find("native-rung-hut:", true, ordinal, from);
 				string heart = Find("taf-heart-v1-", selected, ordinal, from);
-				Assert.Less(string.CompareOrdinal(primary, heart), 0);
+				ClassicAssert.Less(string.CompareOrdinal(primary, heart), 0);
 				Heart = RungFixture.ForObject(heart, 0, false);
 				KingdomSubsidenceRungWork work = RungFixture.ForObject(primary,
 					KingdomLodgingRules.CondemnedWearPercent - 1, true,
@@ -216,11 +217,11 @@ namespace ThousandAndFirst.Tests
 				KingdomSubsidenceRungPlan prepared = new KingdomSubsidenceRungPlan(basis.StepId, basis.RealmId,
 					basis.SettlementId, basis.ZoneId, from, from - 1, basis.DueTick, basis.PreparedTick, 1,
 					selected ? new[] { work, Heart } : new[] { work });
-				Assert.IsTrue(KingdomSubsidenceRungRules.Valid(prepared));
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(prepared, 0, true,
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(prepared));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(prepared, 0, true,
 					Receipt(prepared.StepId, work), out KingdomSubsidenceRungPlan intent));
 				Plan = intent; Primary = Plan.Works[0];
-				Assert.IsTrue(KingdomSubsidenceRungRules.Valid(Plan));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(Plan));
 			}
 		}
 	}

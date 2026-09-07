@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -29,10 +30,10 @@ namespace ThousandAndFirst.Tests
 		public void StaticGateStateAndAuthorityDeclarationHaveOneOwner()
 		{
 			string source = KingdomZoningLogicalSource.Read();
-			Assert.AreEqual(9, Count(source, "public static partial class KingdomZoning"));
-			Assert.AreEqual(1, Count(source, "private static readonly Dictionary<string, ZoneGate> Gates"));
-			Assert.AreEqual(1, Count(source, "private static string KeptCacheZone"));
-			Assert.AreEqual(1, Count(source, "public static bool Offered("));
+			ClassicAssert.AreEqual(9, Count(source, "public static partial class KingdomZoning"));
+			ClassicAssert.AreEqual(1, Count(source, "private static readonly Dictionary<string, ZoneGate> Gates"));
+			ClassicAssert.AreEqual(1, Count(source, "private static string KeptCacheZone"));
+			ClassicAssert.AreEqual(1, Count(source, "public static bool Offered("));
 			StringAssert.DoesNotContain("public static class KingdomZoning", source);
 		}
 
@@ -42,7 +43,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

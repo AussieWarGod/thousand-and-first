@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -58,11 +59,11 @@ namespace ThousandAndFirst.Tests
 			string journal = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRuntime.cs");
 			int standing = journal.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
 			int removal = journal.IndexOf("KingdomCitizenship.TryRemove", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(standing, 0); Assert.Greater(removal, standing);
+			ClassicAssert.GreaterOrEqual(standing, 0); ClassicAssert.Greater(removal, standing);
 			string rules = TestMain.ReadRepositoryText("Growth/KingdomResidentDeathRules.cs");
 			int identity = rules.IndexOf("KingdomResidentIdentityRules.Transition(map", StringComparison.Ordinal);
 			int memory = rules.IndexOf("if (r.Memory)", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(identity, 0); Assert.Greater(memory, identity);
+			ClassicAssert.GreaterOrEqual(identity, 0); ClassicAssert.Greater(memory, identity);
 		}
 
 		[Test]

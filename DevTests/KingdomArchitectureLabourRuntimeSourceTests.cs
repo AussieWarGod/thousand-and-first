@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -53,7 +54,7 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(stake, "if (Job != null)",
 				"works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema)",
 				"SetPlotWorkLong(works, PlotWorkRequiredProperty, part.TotalTicks)");
-			Assert.AreEqual(1, Count(stake,
+			ClassicAssert.AreEqual(1, Count(stake,
 				"works.SetIntProperty(PlotWorkSchemaProperty, PlotWorkSchema)"));
 		}
 
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
+			ClassicAssert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, "missing source boundary: " + end);
+			ClassicAssert.Greater(last, first, "missing source boundary: " + end);
 			return source.Substring(first, last - first);
 		}
 
@@ -149,7 +150,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int found = source.IndexOf(terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
 				offset = found + terms[i].Length;
 			}
 		}

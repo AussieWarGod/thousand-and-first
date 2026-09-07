@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -57,7 +58,7 @@ namespace ThousandAndFirst.Tests
 				"WaterCosts", "ProvisionCosts", "OutcomeCodes" };
 			foreach (string field in fields)
 			{
-				Assert.GreaterOrEqual(Occurrences(source, "Value." + field), 3,
+				ClassicAssert.GreaterOrEqual(Occurrences(source, "Value." + field), 3,
 					field + " must be validated, cloned, and written");
 				StringAssert.Contains("Archived." + field, source);
 				StringAssert.Contains("Current." + field, source);
@@ -73,11 +74,11 @@ namespace ThousandAndFirst.Tests
 		public void ExpeditionLogicalAuthorityKeepsNestedAbiAndMutationOrder()
 		{
 			string source = KingdomExpeditionsLogicalSource.Read();
-			Assert.AreEqual(10, Occurrences(source,
+			ClassicAssert.AreEqual(10, Occurrences(source,
 				"public static partial class KingdomExpeditions"));
-			Assert.AreEqual(1, Occurrences(source, "private sealed class ResidentChoice"));
-			Assert.AreEqual(1, Occurrences(source, "private sealed class TargetChoice"));
-			Assert.AreEqual(1, Occurrences(source, "private enum BoundBodyState : byte"));
+			ClassicAssert.AreEqual(1, Occurrences(source, "private sealed class ResidentChoice"));
+			ClassicAssert.AreEqual(1, Occurrences(source, "private sealed class TargetChoice"));
+			ClassicAssert.AreEqual(1, Occurrences(source, "private enum BoundBodyState : byte"));
 			AssertOrdered(source,
 				"public const string ResidentJobProperty = \"r_TAF_ExpeditionJob\";",
 				"public const string ProvisionJobProperty = \"r_TAF_ExpeditionProvisionJob\";",
@@ -119,8 +120,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int pass = source.IndexOf("public static bool OnSettlementPass(", dispatch,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(dispatch, 0);
-			Assert.Greater(pass, dispatch);
+			ClassicAssert.GreaterOrEqual(dispatch, 0);
+			ClassicAssert.Greater(pass, dispatch);
 			AssertOrdered(source.Substring(dispatch, pass - dispatch),
 				"Body.RemoveIntProperty(ResidentJobProperty);",
 				"Body.SetStringProperty(DebitReceiptProperty, null, RemoveIfNull: true);",
@@ -156,7 +157,7 @@ namespace ThousandAndFirst.Tests
 		public void PortersExplicitlyIgnoreNamedResidentJobs()
 		{
 			string source = KingdomPortersLogicalSource.Read();
-			Assert.GreaterOrEqual(Occurrences(source, "row.Kind != KingdomJobKind.Delivery"), 4);
+			ClassicAssert.GreaterOrEqual(Occurrences(source, "row.Kind != KingdomJobKind.Delivery"), 4);
 		}
 
 		[Test]
@@ -173,12 +174,12 @@ namespace ThousandAndFirst.Tests
 			int waterCallback = source.IndexOf("ReservedWater.Commit()", StringComparison.Ordinal);
 			int recoveryDrain = source.IndexOf("KingdomLiquids.Drain(vessel, remaining)",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(publish, 0);
-			Assert.Greater(advance, publish);
-			Assert.Greater(receiptAttach, advance);
-			Assert.Greater(foodCallback, receiptAttach);
-			Assert.Greater(waterCallback, receiptAttach);
-			Assert.Greater(recoveryDrain, receiptAttach);
+			ClassicAssert.GreaterOrEqual(publish, 0);
+			ClassicAssert.Greater(advance, publish);
+			ClassicAssert.Greater(receiptAttach, advance);
+			ClassicAssert.Greater(foodCallback, receiptAttach);
+			ClassicAssert.Greater(waterCallback, receiptAttach);
+			ClassicAssert.Greater(recoveryDrain, receiptAttach);
 			StringAssert.Contains("HasDebitMarker(source, row.JobId)", source);
 			StringAssert.Contains("no new debit was attempted", source);
 		}
@@ -190,8 +191,8 @@ namespace ThousandAndFirst.Tests
 			int duplicate = source.IndexOf("HasExpedition(table, Resident.ResidentId)",
 				StringComparison.Ordinal);
 			int mint = source.IndexOf("System.Jobs.MintJobId()", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(duplicate, 0);
-			Assert.Greater(mint, duplicate);
+			ClassicAssert.GreaterOrEqual(duplicate, 0);
+			ClassicAssert.Greater(mint, duplicate);
 			StringAssert.Contains("SameAuthority(Requested, row)", source);
 			StringAssert.Contains("LegacyPrepared", source);
 			StringAssert.Contains("KingdomResidents.FindExactBindingObject(binding)", source);
@@ -203,8 +204,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int end = source.IndexOf("private static Cell SafeCell", resolver,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(resolver, 0);
-			Assert.Greater(end, resolver);
+			ClassicAssert.GreaterOrEqual(resolver, 0);
+			ClassicAssert.Greater(end, resolver);
 			string bodyResolution = source.Substring(resolver, end - resolver);
 			StringAssert.DoesNotContain("KingdomSurvey.ObjectsFor", bodyResolution);
 			StringAssert.DoesNotContain("GetObjects()", bodyResolution);
@@ -220,8 +221,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int advance = source.IndexOf("private static bool TryAdvanceDispatch", settlement,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(settlement, 0);
-			Assert.Greater(advance, settlement);
+			ClassicAssert.GreaterOrEqual(settlement, 0);
+			ClassicAssert.Greater(advance, settlement);
 			string settlementPass = source.Substring(settlement, advance - settlement);
 			StringAssert.Contains("IsResolutionPrepared(row.OriginCode)", settlementPass);
 			StringAssert.Contains("TryResumeTerminalResolution(System, row", settlementPass);
@@ -234,10 +235,10 @@ namespace ThousandAndFirst.Tests
 				publisher, StringComparison.Ordinal);
 			int tell = source.IndexOf("private static bool TellAndClose", resume,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(resolver, 0);
-			Assert.Greater(publisher, resolver);
-			Assert.Greater(resume, publisher);
-			Assert.Greater(tell, resume);
+			ClassicAssert.GreaterOrEqual(resolver, 0);
+			ClassicAssert.Greater(publisher, resolver);
+			ClassicAssert.Greater(resume, publisher);
+			ClassicAssert.Greater(tell, resume);
 			string resolution = source.Substring(resolver, publisher - resolver);
 			int residentEvidence = resolution.IndexOf("TryInferTerminalResidentEvidence(System, Row",
 				StringComparison.Ordinal);
@@ -246,10 +247,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int resumeCall = resolution.LastIndexOf("TryResumeTerminalResolution(System, Row",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(residentEvidence, 0);
-			Assert.Greater(bodyLookup, residentEvidence);
-			Assert.GreaterOrEqual(publishCall, 0);
-			Assert.Greater(resumeCall, publishCall);
+			ClassicAssert.GreaterOrEqual(residentEvidence, 0);
+			ClassicAssert.Greater(bodyLookup, residentEvidence);
+			ClassicAssert.GreaterOrEqual(publishCall, 0);
+			ClassicAssert.Greater(resumeCall, publishCall);
 			StringAssert.DoesNotContain("KingdomResidents.Unbind", resolution);
 
 			string publication = source.Substring(publisher, resume - publisher);
@@ -264,15 +265,15 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int markerClear = death.IndexOf("Body.RemoveIntProperty(ResidentJobProperty)",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(deathPublish, 0);
-			Assert.Greater(markerClear, deathPublish);
+			ClassicAssert.GreaterOrEqual(deathPublish, 0);
+			ClassicAssert.Greater(markerClear, deathPublish);
 			string recovery = source.Substring(resume, tell - resume);
 			int standing = recovery.IndexOf("TrySetResident(System", StringComparison.Ordinal);
 			int unbind = recovery.IndexOf("EnsureResidentUnbound(System", StringComparison.Ordinal);
 			int close = recovery.IndexOf("TellAndClose(System", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(standing, 0);
-			Assert.Greater(unbind, standing);
-			Assert.Greater(close, unbind);
+			ClassicAssert.GreaterOrEqual(standing, 0);
+			ClassicAssert.Greater(unbind, standing);
+			ClassicAssert.Greater(close, unbind);
 			StringAssert.Contains("row.DueTick", recovery);
 			StringAssert.Contains("existing.Cause", recovery);
 			StringAssert.Contains("ZoneId = binding.ZoneId", source);
@@ -285,8 +286,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int standingDeath = witnessedDeath.IndexOf("TryPublishWitnessedDeath",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(deathReceipt, 0);
-			Assert.Greater(standingDeath, deathReceipt);
+			ClassicAssert.GreaterOrEqual(deathReceipt, 0);
+			ClassicAssert.Greater(standingDeath, deathReceipt);
 			StringAssert.Contains("TryInferTerminalResidentEvidence", source);
 
 			string residents = KingdomResidentsLogicalSource.Read();
@@ -296,7 +297,7 @@ namespace ThousandAndFirst.Tests
 				witness, StringComparison.Ordinal);
 			string witnessBody = residents.Substring(witness, homes - witness);
 			StringAssert.Contains("row.Standing == KingdomResidentStanding.Expedition", witnessBody);
-			Assert.Less(witnessBody.IndexOf("KingdomResidentStanding.Expedition",
+			ClassicAssert.Less(witnessBody.IndexOf("KingdomResidentStanding.Expedition",
 				StringComparison.Ordinal), witnessBody.IndexOf("Survey.TryWitnessResident",
 				StringComparison.Ordinal));
 		}
@@ -337,8 +338,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int next = source.IndexOf("private static bool TryRecordExpeditionDeed(",
 				telling, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(telling, 0);
-			Assert.Greater(next, telling);
+			ClassicAssert.GreaterOrEqual(telling, 0);
+			ClassicAssert.Greater(next, telling);
 			string body = source.Substring(telling, next - telling);
 			AssertOrdered(body, "KingdomChronicle.RecordOnce(System, eventId",
 				"TryRecordExpeditionDeed(System, Row, Resolution, eventId",
@@ -375,7 +376,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, terms[i]);
+				ClassicAssert.Greater(next, at, terms[i]);
 				at = next;
 			}
 		}

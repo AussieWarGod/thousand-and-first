@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -13,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomLifecycleBook Book(string id = "city-a")
 		{
 			KingdomLifecycleBook book = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, id, false,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, id, false,
 				null, new List<string>()));
 			return book;
 		}
@@ -31,9 +32,9 @@ namespace ThousandAndFirst.Tests
 					if (value) allowed++;
 					KingdomLifecycleOperation draft = KingdomLifecycleRules.PrepareOperation(
 						Book("city-" + (byte)action + "-" + (byte)lane), lane, action, 1L);
-					Assert.AreEqual(value, draft != null, action + " / " + lane);
+					ClassicAssert.AreEqual(value, draft != null, action + " / " + lane);
 				}
-				Assert.Greater(allowed, 0, action.ToString());
+				ClassicAssert.Greater(allowed, 0, action.ToString());
 			}
 		}
 
@@ -52,11 +53,11 @@ namespace ThousandAndFirst.Tests
 					op = Build(book, lane, action, tick, tick);
 					if (!KingdomLifecycleRules.TryPublish(book, op))
 						Assert.Fail("publication failed");
-					Assert.IsFalse(KingdomLifecycleRules.CanTransition(action,
+					ClassicAssert.IsFalse(KingdomLifecycleRules.CanTransition(action,
 						KingdomLifecyclePhase.Prepared, KingdomLifecyclePhase.Terminal));
 					Settle(book, op, tick + 1L);
-					Assert.AreEqual(KingdomLifecyclePhase.Terminal, op.Phase);
-					Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, tick + 100L));
+					ClassicAssert.AreEqual(KingdomLifecyclePhase.Terminal, op.Phase);
+					ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, op, tick + 100L));
 				}
 				catch (AssertionException ex)
 				{
@@ -73,51 +74,51 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Spawn, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Projected, 3L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Projected, 3L), "object witness alone lacks projection lease proof");
 			SettleProjectionLease(book, op, op.Projections[0]);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Projected, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.DomainIntent, 4L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.DomainSettled, 5L));
 			SettleLease(book, op.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Population));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.DomainSettled, 5L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Sinks, 6L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 7L));
 			Deliver(op.Outbox);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 7L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Terminal, 8L));
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(book,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(book,
 				op, LifecycleScheduleWorld(book, op)));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Terminal, 8L));
 		}
 
 		[Test]
 		public void PreparedPhysicalCall_RequiresExactBeforeAndNotAfter()
 		{
-			Assert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
 				KingdomLifecycleRules.MutationAction(KingdomLifecyclePhysicalState.Prepared, true, false));
-			Assert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
 				KingdomLifecycleRules.MutationAction(KingdomLifecyclePhysicalState.Prepared, false, false));
-			Assert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
 				KingdomLifecycleRules.MutationAction(KingdomLifecyclePhysicalState.Prepared, true, true));
-			Assert.AreEqual(KingdomLifecycleMutationAction.ConfirmAfter,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.ConfirmAfter,
 				KingdomLifecycleRules.MutationAction(KingdomLifecyclePhysicalState.Intent, false, true));
-			Assert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.Quarantine,
 				KingdomLifecycleRules.MutationAction(KingdomLifecyclePhysicalState.Intent, true, false));
 		}
 
@@ -134,18 +135,18 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleResourceLease raidShared = raid.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Population);
 
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, guest));
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(book, raid), "persisted lease blocks overlap");
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, guest));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(book, raid), "persisted lease blocks overlap");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
 			SettleProjectionLease(book, guest, guest.Projections[0]);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
 				KingdomLifecyclePhase.Projected, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, guest,
 				KingdomLifecyclePhase.DomainIntent, 4L));
-			Assert.IsTrue(KingdomLifecycleRules.BeginLease(book, guestShared, guestShared.Before));
-			Assert.IsTrue(KingdomLifecycleRules.CommitLeaseWitness(book, guestShared, guestShared.After));
-			Assert.AreEqual(KingdomLifecycleCasAction.Quarantine,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginLease(book, guestShared, guestShared.Before));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitLeaseWitness(book, guestShared, guestShared.After));
+			ClassicAssert.AreEqual(KingdomLifecycleCasAction.Quarantine,
 				KingdomLifecycleRules.LeaseAction(book, raidShared, guestShared.After),
 				"same scalar after is not another op's proof");
 		}
@@ -156,36 +157,36 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			KingdomLifecycleResourceLease domain = op.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Raid);
 			KingdomLifecycleResourceLease schedule = op.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Schedule);
 
-			Assert.IsFalse(KingdomLifecycleRules.BeginLease(book, schedule, schedule.Before),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BeginLease(book, schedule, schedule.Before),
 				"Prepared cannot debit the terminal schedule");
-			Assert.AreEqual(KingdomLifecycleCasAction.Quarantine,
+			ClassicAssert.AreEqual(KingdomLifecycleCasAction.Quarantine,
 				KingdomLifecycleRules.LeaseAction(book, schedule, schedule.Before));
-			Assert.IsFalse(KingdomLifecycleRules.CommitLeaseWitness(book, schedule, schedule.After));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CommitLeaseWitness(book, schedule, schedule.After));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.DomainIntent, 2L));
 			KingdomLifecycleResourceLease forged = CopyLease(domain);
-			Assert.IsFalse(KingdomLifecycleRules.BeginLease(book, forged, forged.Before),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BeginLease(book, forged, forged.Before),
 				"equal fields are not exact lease membership");
-			Assert.IsTrue(KingdomLifecycleRules.BeginLease(book, domain, domain.Before));
-			Assert.IsTrue(KingdomLifecycleRules.CommitLeaseWitness(book, domain, domain.After));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginLease(book, domain, domain.Before));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitLeaseWitness(book, domain, domain.After));
 
 			KingdomLifecycleBook mismatched = Book("city-mismatch");
 			KingdomLifecycleOperation bad = Build(mismatched, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(mismatched, bad));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(mismatched, bad,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(mismatched, bad));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(mismatched, bad,
 				KingdomLifecyclePhase.DomainIntent, 2L));
 			KingdomLifecycleResourceLease badDomain = bad.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Raid);
 			badDomain.State = KingdomLifecycleLeaseState.Proved;
 			KingdomLifecycleBook reloaded = RoundTrip(mismatched);
-			Assert.IsTrue(reloaded.Quarantined,
+			ClassicAssert.IsTrue(reloaded.Quarantined,
 				"a Proved enum without the exact revision/last-op witness owns no authority");
 		}
 
@@ -196,30 +197,30 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation noCallbackOp = Build(noCallbackBook,
 				KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Spawn, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(noCallbackBook, noCallbackOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(noCallbackBook, noCallbackOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(noCallbackBook, noCallbackOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(noCallbackBook, noCallbackOp,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
 				noCallbackBook, noCallbackOp, noCallbackOp.Projections[0], new TrustedWorld()));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent,
 				noCallbackOp.Projections[0].State);
 
 			KingdomLifecycleBook wrongBlueprintBook = Book("city-projection-blueprint");
 			KingdomLifecycleOperation wrongBlueprintOp = Build(wrongBlueprintBook,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Spawn, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(wrongBlueprintBook, wrongBlueprintOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(wrongBlueprintBook, wrongBlueprintOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(wrongBlueprintBook, wrongBlueprintOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(wrongBlueprintBook, wrongBlueprintOp,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
 			TrustedWorld wrongBlueprint = LifecycleProjectionWorld(wrongBlueprintOp.Projections[0]);
 			wrongBlueprint.ProjectionBlueprintOverride = "ForeignBlueprint";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
 				wrongBlueprintBook, wrongBlueprintOp, wrongBlueprintOp.Projections[0], wrongBlueprint));
 
 			KingdomLifecycleBook book = Book("city-projection-happy");
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Spawn, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
 			SettleProjectionLease(book, op, op.Projections[0]);
 		}
@@ -230,23 +231,23 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook stale = Book();
 			KingdomLifecycleOperation op = Build(stale, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(stale, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(stale, op));
 			op.Detail = "post-publication rewrite";
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(stale, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(stale, op,
 				KingdomLifecyclePhase.Sinks, 2L));
 
 			KingdomLifecycleBook terminal = Book("city-terminal");
 			op = Build(terminal, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(terminal, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(terminal, op));
 			Settle(terminal, op, 2L);
 			op.Detail = "receipt no longer matches";
-			Assert.IsFalse(KingdomLifecycleRules.Retire(terminal, op, 100L));
-			Assert.AreSame(op, terminal.PlainGuest);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(terminal, op, 100L));
+			ClassicAssert.AreSame(op, terminal.PlainGuest);
 
 			op.Detail = null;
 			terminal.Quarantined = true;
-			Assert.IsFalse(KingdomLifecycleRules.Retire(terminal, op, 100L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(terminal, op, 100L));
 		}
 
 		[Test]
@@ -257,12 +258,12 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
 			string canonical = op.Id;
 			op.Id = KingdomLifecycleRules.ChildId(canonical, "forged", 0);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.AreEqual(1L, book.RaidNextSequence);
-			Assert.IsNull(book.Raid);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.AreEqual(1L, book.RaidNextSequence);
+			ClassicAssert.IsNull(book.Raid);
 			op = Build(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
-			Assert.AreEqual(canonical, op.Id);
+			ClassicAssert.AreEqual(canonical, op.Id);
 		}
 
 		[Test]
@@ -271,14 +272,14 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.NotableGuest,
 				KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			op.Phase = KingdomLifecyclePhase.Terminal;
-			Assert.IsFalse(KingdomLifecycleRules.Retire(book, op, 2L));
-			Assert.AreSame(op, book.NotableGuest);
-			Assert.IsTrue(KingdomLifecycleRules.Quarantine(op, "uncertain debit"));
-			Assert.IsFalse(KingdomLifecycleRules.Retire(book, op, 3L));
-			Assert.AreSame(op, book.NotableGuest, "full quarantined value evidence is retained");
-			Assert.AreEqual(op.Id, book.Resources[0].ActiveOperationId);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(book, op, 2L));
+			ClassicAssert.AreSame(op, book.NotableGuest);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.Quarantine(op, "uncertain debit"));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(book, op, 3L));
+			ClassicAssert.AreSame(op, book.NotableGuest, "full quarantined value evidence is retained");
+			ClassicAssert.AreEqual(op.Id, book.Resources[0].ActiveOperationId);
 		}
 
 		[Test]
@@ -287,27 +288,27 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation slow = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, slow));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, slow));
 			for (int i = 0; i < 4; i++)
 			{
 				long warningSequence = i * 2L + 1L;
 				long baseTick = 100L + i * 100L;
 				KingdomLifecycleOperation fast = Build(book, KingdomLifecycleLane.Raid,
 					KingdomLifecycleAction.RaidWarning, baseTick, warningSequence - 1L);
-				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, fast));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, fast));
 				Settle(book, fast, baseTick + 10L);
-				Assert.IsTrue(KingdomLifecycleRules.Retire(book, fast, baseTick + 20L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, fast, baseTick + 20L));
 				fast = Build(book, KingdomLifecycleLane.Raid,
 					KingdomLifecycleAction.RaidTalkDown, baseTick + 30L, warningSequence);
-				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, fast));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, fast));
 				Settle(book, fast, baseTick + 40L);
-				Assert.IsTrue(KingdomLifecycleRules.Retire(book, fast, baseTick + 50L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, fast, baseTick + 50L));
 			}
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsFalse(book.Quarantined);
-			Assert.AreSame(slow, book.PlainGuest);
-			Assert.AreEqual(0L, book.PlainGuestRetiredThrough);
-			Assert.AreEqual(8L, book.RaidRetiredThrough);
+			ClassicAssert.IsFalse(book.Quarantined);
+			ClassicAssert.AreSame(slow, book.PlainGuest);
+			ClassicAssert.AreEqual(0L, book.PlainGuestRetiredThrough);
+			ClassicAssert.AreEqual(8L, book.RaidRetiredThrough);
 		}
 
 		[Test]
@@ -319,15 +320,15 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 					KingdomLifecycleAction.Passages, i + 1L, i);
-				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op), "publish " + i);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op), "publish " + i);
 				if (i == 0) first = op.Id;
 				Settle(book, op, i + 200L);
-				Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, i + 300L), "retire " + i);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, op, i + 300L), "retire " + i);
 			}
-			Assert.AreEqual(96L, book.PlainGuestRetiredThrough);
-			Assert.AreEqual(97L, book.PlainGuestNextSequence);
-			Assert.AreEqual(KingdomLifecycleRules.MaxRecentProofs, book.RecentProofs.Count);
-			Assert.IsFalse(book.RecentProofs.Exists(p => p.Id == first));
+			ClassicAssert.AreEqual(96L, book.PlainGuestRetiredThrough);
+			ClassicAssert.AreEqual(97L, book.PlainGuestNextSequence);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.MaxRecentProofs, book.RecentProofs.Count);
+			ClassicAssert.IsFalse(book.RecentProofs.Exists(p => p.Id == first));
 		}
 
 		[Test]
@@ -336,13 +337,13 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			Settle(book, op, 2L);
-			Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, 30L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, op, 30L));
 			book.RecentProofs.Add(book.RecentProofs[0]);
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
-			Assert.AreEqual(2, book.RecentProofs.Count, "raw duplicate evidence remains visible");
+			ClassicAssert.IsTrue(book.Quarantined);
+			ClassicAssert.AreEqual(2, book.RecentProofs.Count, "raw duplicate evidence remains visible");
 		}
 
 		[Test]
@@ -351,22 +352,22 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.NotableGuest,
 				KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.WaterConserved(op, false));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.WaterConserved(op, false));
 			op.WaterAmbiguous = 1;
-			Assert.IsFalse(KingdomLifecycleRules.WaterConserved(op, false));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.WaterConserved(op, false));
 			op.WaterAmbiguous = 0;
 			op.WaterOutstanding = 0;
 			op.WaterLost = 1;
-			Assert.IsTrue(KingdomLifecycleRules.WaterConserved(op, false),
+			ClassicAssert.IsTrue(KingdomLifecycleRules.WaterConserved(op, false),
 				"explicit loss replaces outstanding water; it is not extra water");
-			Assert.IsFalse(KingdomLifecycleRules.WaterConserved(op, true),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.WaterConserved(op, true),
 				"loss evidence cannot retire as a proved debit");
 			op.WaterOutstanding = 1;
-			Assert.IsFalse(KingdomLifecycleRules.WaterConserved(op, false),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.WaterConserved(op, false),
 				"lost plus outstanding cannot exceed the request");
 			long ignored;
-			Assert.IsFalse(KingdomLifecycleRules.CheckedAdd(long.MaxValue, 1L, out ignored));
-			Assert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CheckedAdd(long.MaxValue, 1L, out ignored));
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
 				KingdomLifecycleResourceKind.Standing, "city-a", "faction-a", long.MaxValue, 1L));
 		}
 
@@ -375,32 +376,32 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 3, 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			KingdomCarrySource source = op.Sources[0];
 			TrustedWorld noCallback = CarrySourceWorld(source);
 			noCallback.CarryRemovalCallback = null;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op,
 				source, noCallback));
 
 			KingdomCarryBook reloaded = RoundTrip(book);
 			op = reloaded.Open; source = op.Sources[0];
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, source.UnitState);
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(reloaded, op,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, source.UnitState);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(reloaded, op,
 				source, CarrySourceWorld(source)));
-			Assert.AreEqual(0, source.Removed);
-			Assert.AreEqual(0, op.EscrowMud);
+			ClassicAssert.AreEqual(0, source.Removed);
+			ClassicAssert.AreEqual(0, op.EscrowMud);
 
 			KingdomCarryBook happy = CarryBook();
 			KingdomCarryOperation happyOp = BuildCarry(happy, 1L, 3, 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(happy, happyOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(happy, happyOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(happy, happyOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(happy, happyOp,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
-			Assert.IsTrue(ProveCarryUnit(happy, happyOp, happyOp.Sources[0]));
-			Assert.IsTrue(ProveCarryUnit(happy, happyOp, happyOp.Sources[0]));
-			Assert.AreEqual(2, happyOp.EscrowMud);
-			Assert.IsTrue(KingdomLifecycleRules.CarryConserved(happyOp));
+			ClassicAssert.IsTrue(ProveCarryUnit(happy, happyOp, happyOp.Sources[0]));
+			ClassicAssert.IsTrue(ProveCarryUnit(happy, happyOp, happyOp.Sources[0]));
+			ClassicAssert.AreEqual(2, happyOp.EscrowMud);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CarryConserved(happyOp));
 		}
 
 		[Test]
@@ -409,25 +410,25 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryBook stackBook = CarryBook();
 			KingdomCarryOperation stack = BuildCarry(stackBook, 1L, 3, 2);
 			stack.Outputs[0].NoStack = false;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(stackBook, stack));
-			Assert.AreEqual(1L, stackBook.NextSequence);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(stackBook, stack));
+			ClassicAssert.AreEqual(1L, stackBook.NextSequence);
 
 			KingdomCarryBook topologyBook = CarryBook();
 			KingdomCarryOperation topology = BuildCarry(topologyBook, 1L, 3, 2);
 			topology.Outputs[0].Topology = KingdomLifecycleTopology.Inventory;
 			topology.Outputs[0].X = 4;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(topologyBook, topology));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(topologyBook, topology));
 
 			KingdomCarryBook collisionBook = CarryBook();
 			KingdomCarryOperation collision = BuildCarry(collisionBook, 1L, 3, 2);
 			collision.Outputs[0].ObjectId = collision.Sources[0].ObjectId;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(collisionBook, collision),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(collisionBook, collision),
 				"a partial source survivor and output cannot share one global object id");
 
 			KingdomCarryBook realmBook = CarryBook();
 			KingdomCarryOperation realm = BuildCarry(realmBook, 1L, 3, 2);
 			realm.SettlementIds.RemoveAt(0);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(realmBook, realm),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(realmBook, realm),
 				"carry plan freezes the full sorted realm settlement topology");
 		}
 
@@ -436,27 +437,27 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 3, 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
 			KingdomCarrySource source = op.Sources[0];
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, source,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, source,
 				CarrySourceWorld(source)),
 				"Prepared has no physical removal authority");
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			TrustedWorld wrongBlueprint = CarrySourceWorld(source);
 			wrongBlueprint.Rows[0].BlueprintValue = "ForeignBlueprint";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op,
 				source, wrongBlueprint), "wrong blueprint cannot remove or escrow");
 			KingdomCarrySource forged = CopySource(source);
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, forged,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, forged,
 				CarrySourceWorld(forged)),
 				"equal source fields are not exact source membership");
 			string destination = op.DestinationSettlementName;
 			op.DestinationSettlementName = "rewritten destination";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, source,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySource(book, op, source,
 				CarrySourceWorld(source)));
 			op.DestinationSettlementName = destination;
-			Assert.IsTrue(ProveCarryUnit(book, op, source));
+			ClassicAssert.IsTrue(ProveCarryUnit(book, op, source));
 		}
 
 		[Test]
@@ -464,19 +465,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 2, 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			KingdomCarrySource source = op.Sources[0];
 			while (source.Removed < source.PlannedCount)
-				Assert.IsTrue(ProveCarryUnit(book, op, source));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+				ClassicAssert.IsTrue(ProveCarryUnit(book, op, source));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
 			op.Phase = KingdomLifecyclePhase.Terminal;
-			Assert.IsFalse(KingdomLifecycleRules.RetireCarry(book, op, 4L));
-			Assert.AreSame(op, book.Open);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RetireCarry(book, op, 4L));
+			ClassicAssert.AreSame(op, book.Open);
 			op.EscrowMud++;
-			Assert.IsFalse(KingdomLifecycleRules.CarryConserved(op));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CarryConserved(op));
 		}
 
 		[Test]
@@ -484,31 +485,31 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 2, 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			while (op.Sources[0].Removed < op.Sources[0].PlannedCount)
-				Assert.IsTrue(ProveCarryUnit(book, op, op.Sources[0]));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+				ClassicAssert.IsTrue(ProveCarryUnit(book, op, op.Sources[0]));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			SettleCarrySchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 5L));
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
 				op.Outputs[0], OutputWorld(op.Outputs[0])));
-			Assert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Projected, 6L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Sinks, 7L));
 			Deliver(op.Outbox);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Terminal, 8L));
-			Assert.IsTrue(KingdomLifecycleRules.RetireCarry(book, op, 9L));
-			Assert.AreEqual(0, KingdomLifecycleRules.CarryEscrow(op));
-			Assert.AreEqual(2, op.DeliveredMud);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireCarry(book, op, 9L));
+			ClassicAssert.AreEqual(0, KingdomLifecycleRules.CarryEscrow(op));
+			ClassicAssert.AreEqual(2, op.DeliveredMud);
 		}
 
 		[Test]
@@ -517,32 +518,32 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 1, 1);
 			op.LostOnRoad = true;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
-			Assert.IsTrue(ProveCarryUnit(book, op, op.Sources[0]));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(ProveCarryUnit(book, op, op.Sources[0]));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			SettleCarrySchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 5L));
-			Assert.IsFalse(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], true));
-			Assert.AreEqual(1, op.EscrowMud, "failed release rolls back exactly");
+			ClassicAssert.IsFalse(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], true));
+			ClassicAssert.AreEqual(1, op.EscrowMud, "failed release rolls back exactly");
 			op.Outputs[0].State = KingdomLifecyclePhysicalState.Skipped;
 			op.OutputIndex = 1;
-			Assert.IsFalse(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Projected, 6L), "skipped output cannot strand escrow");
 			op.OutputIndex = 0;
 			op.Outputs[0].State = KingdomLifecyclePhysicalState.Prepared;
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryRoadAbsence(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryRoadAbsence(book, op,
 				op.Outputs[0], new TrustedWorld()));
-			Assert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], true));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], true));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Projected, 6L));
-			Assert.AreEqual(1, op.LostMud);
-			Assert.IsTrue(KingdomLifecycleRules.CarryConserved(op));
+			ClassicAssert.AreEqual(1, op.LostMud);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CarryConserved(op));
 		}
 
 		[Test]
@@ -550,50 +551,50 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildExactCarry(book, 1L, "OddBlueprint", 7);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
 			TrustedWorld sign = ExactSignWorld(op);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op, sign));
-			Assert.AreEqual(1L, op.ManifestRevision);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op, sign));
+			ClassicAssert.AreEqual(1L, op.ManifestRevision);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			KingdomCarrySource source = op.Sources[0];
 			TrustedWorld pickup = ExactSourceWorld(source);
 			MoveExactOnCallback(pickup);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
 				source, 1, "porter-one", "zone-a", pickup));
-			Assert.AreEqual("source-exact", source.ObjectId);
-			Assert.AreEqual(7, source.LoadedCount);
-			Assert.AreEqual(7, KingdomLifecycleRules.CarryEscrow(op));
-			Assert.AreEqual(-1, source.Material, "generic cargo is not material-converted");
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.AreEqual("source-exact", source.ObjectId);
+			ClassicAssert.AreEqual(7, source.LoadedCount);
+			ClassicAssert.AreEqual(7, KingdomLifecycleRules.CarryEscrow(op));
+			ClassicAssert.AreEqual(-1, source.Material, "generic cargo is not material-converted");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			SettleCarrySchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 5L));
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.SetExactCarryDestinationSafety(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.SetExactCarryDestinationSafety(
 				book, op, true, 6L));
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryDestination(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryDestination(
 				book, op, source, op.Outputs[0], false, KingdomLifecycleTopology.Inventory,
 				"destination-store", "zone-b", -1, -1, ExactSourceWorld(source)));
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.SetExactCarryDestinationSafety(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.SetExactCarryDestinationSafety(
 				book, op, false, 7L));
 			TrustedWorld destination = ExactSourceWorld(source);
 			MoveExactOnCallback(destination);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryDestination(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryDestination(
 				book, op, source, op.Outputs[0], false, KingdomLifecycleTopology.Inventory,
 				"destination-store", "zone-b", -1, -1, destination));
-			Assert.AreEqual(7, source.DeliveredCount);
-			Assert.AreEqual(0, KingdomLifecycleRules.CarryEscrow(op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.AreEqual(7, source.DeliveredCount);
+			ClassicAssert.AreEqual(0, KingdomLifecycleRules.CarryEscrow(op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Projected, 8L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Sinks, 9L));
 			DeliverCarrySinks(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Terminal, 10L));
-			Assert.IsTrue(KingdomLifecycleRules.RetireCarry(book, op, 11L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireCarry(book, op, 11L));
 		}
 
 		[Test]
@@ -601,19 +602,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildExactCarry(book, 1L, "MixedStack", 4);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
 			TrustedWorld sign = ExactSignWorld(op);
 			sign.CarrySignRemovalCallback = delegate(object reference, int count, string receipt)
 			{
 				sign.Rows.Clear();
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op, sign));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, op.SignReceiptState);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op, sign));
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, op.SignReceiptState);
 			book = RoundTrip(book); op = book.Open;
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(book, op,
 				new TrustedWorld()));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 
 			KingdomCarrySource source = op.Sources[0];
@@ -625,16 +626,16 @@ namespace ThousandAndFirst.Tests
 				MoveObservation(pickup.Rows[0], topology, owner, zone, x, y);
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
 				source, 1, "porter-one", "zone-a", pickup));
 			book = RoundTrip(book); op = book.Open; source = op.Sources[0];
 			TrustedWorld picked = ExactSourceWorld(source);
 			MoveObservation(picked.Rows[0], source.PendingTopology, source.PendingOwnerId,
 				source.PendingZoneId, source.PendingX, source.PendingY);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(book, op,
 				source, 1, "porter-one", "zone-a", picked));
-			Assert.AreEqual(2L, op.ManifestRevision);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.AreEqual(2L, op.ManifestRevision);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
 		}
 
 		[Test]
@@ -642,20 +643,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = KingdomLifecycleRules.PrepareExactCarry(book, 1L);
-			Assert.IsNull(KingdomLifecycleRules.PrepareExactCarrySource(op, 0, "bad", "Item",
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareExactCarrySource(op, 0, "bad", "Item",
 				KingdomLifecycleTopology.Inventory, "box", "zone-a", -1, -1, 0));
 			KingdomCarryOperation partial = BuildExactCarry(book, 1L, "Item", 2);
 			partial.Sources[0].PlannedCount = 1;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(book, partial));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(book, partial));
 
 			KingdomCarryBook tripBook = CarryBook();
 			KingdomCarryOperation trip = BuildExactCarry(tripBook, 1L, "Item", 2);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(tripBook, trip));
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(tripBook,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(tripBook, trip));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveExactCarrySign(tripBook,
 				trip, ExactSignWorld(trip)));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(tripBook, trip,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(tripBook, trip,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(tripBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveExactCarryPickup(tripBook,
 				trip, trip.Sources[0], 2, "porter-two", "zone-a",
 				ExactSourceWorld(trip.Sources[0])));
 		}
@@ -666,17 +667,17 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOptionState raw = (KingdomLifecycleOptionState)255;
 			KingdomLifecycleOptionDecision invalid = KingdomLifecycleRules.ObserveOption(raw,
 				10L, true, 11L, false);
-			Assert.IsFalse(invalid.Valid);
-			Assert.AreEqual(KingdomLifecycleOptionAction.Quarantine, invalid.Action);
-			Assert.AreEqual(raw, invalid.State);
-			Assert.IsFalse(KingdomLifecycleRules.ObserveOption(KingdomLifecycleOptionState.Enabled,
+			ClassicAssert.IsFalse(invalid.Valid);
+			ClassicAssert.AreEqual(KingdomLifecycleOptionAction.Quarantine, invalid.Action);
+			ClassicAssert.AreEqual(raw, invalid.State);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ObserveOption(KingdomLifecycleOptionState.Enabled,
 				10L, true, 9L, false).Valid);
 
 			KingdomLifecycleBook book = Book();
 			book.RaidOption = raw;
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
-			Assert.AreEqual(raw, book.RaidOption);
+			ClassicAssert.IsTrue(book.Quarantined);
+			ClassicAssert.AreEqual(raw, book.RaidOption);
 		}
 
 		[Test]
@@ -684,19 +685,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleOptionDecision enabled = KingdomLifecycleRules.ObserveOption(
 				KingdomLifecycleOptionState.Disabled, 10L, true, 100L, false);
-			Assert.IsTrue(enabled.Valid);
-			Assert.AreEqual(KingdomLifecycleOptionAction.EnableAndRestamp, enabled.Action);
-			Assert.AreEqual(100L, enabled.Tick);
-			Assert.IsFalse(enabled.AllowNewWork);
+			ClassicAssert.IsTrue(enabled.Valid);
+			ClassicAssert.AreEqual(KingdomLifecycleOptionAction.EnableAndRestamp, enabled.Action);
+			ClassicAssert.AreEqual(100L, enabled.Tick);
+			ClassicAssert.IsFalse(enabled.AllowNewWork);
 
 			KingdomLifecycleOptionDecision steady = KingdomLifecycleRules.ObserveOption(
 				KingdomLifecycleOptionState.Enabled, 100L, true, 101L, false);
-			Assert.IsFalse(KingdomLifecycleRules.CanStartAfterOption(steady, 109L, 10L));
-			Assert.IsTrue(KingdomLifecycleRules.CanStartAfterOption(steady, 110L, 10L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanStartAfterOption(steady, 109L, 10L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanStartAfterOption(steady, 110L, 10L));
 			KingdomLifecycleOptionDecision open = KingdomLifecycleRules.ObserveOption(
 				KingdomLifecycleOptionState.Enabled, 100L, false, 110L, true);
-			Assert.IsFalse(open.AllowNewWork);
-			Assert.IsTrue(open.ReconcileOpenWork, "disable gates only new work");
+			ClassicAssert.IsFalse(open.AllowNewWork);
+			ClassicAssert.IsTrue(open.ReconcileOpenWork, "disable gates only new work");
 		}
 
 		[Test]
@@ -710,23 +711,23 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleBook book = Book("city-passages-" + (byte)lane);
 				KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book, lane,
 					KingdomLifecycleAction.Passages, 100L);
-				Assert.NotNull(op);
+				ClassicAssert.NotNull(op);
 				op.Count = 4;
 				op.DepartTick = 90L;
 				op.Target = 1;
 				op.ArrivalText = "95";
-				Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareSchedule(book, op,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareSchedule(book, op,
 					"zone-a", 10L, 110L));
 				op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, "dated absence", "ledger",
 					null, null, lane == KingdomLifecycleLane.NotableGuest ? "guestbook" : null);
-				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 				KingdomLifecycleBook resumed = RoundTrip(book);
 				KingdomLifecycleOperation live = lane == KingdomLifecycleLane.PlainGuest
 					? resumed.PlainGuest : resumed.NotableGuest;
-				Assert.AreEqual(4, live.Count);
+				ClassicAssert.AreEqual(4, live.Count);
 				Settle(resumed, live, 101L);
-				Assert.IsTrue(KingdomLifecycleRules.Retire(resumed, live, 200L));
-				Assert.IsFalse(KingdomLifecycleRules.Retire(resumed, live, 201L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(resumed, live, 200L));
+				ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(resumed, live, 201L));
 			}
 		}
 
@@ -743,32 +744,32 @@ namespace ThousandAndFirst.Tests
 			op.Kind = 19;
 			op.Creed = "causal-pilgrim";
 			op.DepartTick = 177L;
-			Assert.NotNull(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareProjection(book, op,
+			ClassicAssert.NotNull(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareProjection(book, op,
 				KingdomLifecycleRules.ChildId(op.Id, "guest", 0), "r_KingdomGuestPilgrim",
 				"zone-a", 3, 4));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareDomain(book, op, 0L));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareSchedule(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareDomain(book, op, 0L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.PrepareSchedule(book, op,
 				"zone-a", 0L, 177L));
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, null, null, null, null, null);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 
 			KingdomLifecycleBook resumed = RoundTrip(book);
 			KingdomLifecycleOperation exact = resumed.PlainGuest;
-			Assert.AreEqual("Nara-of-the-Third-Telling", exact.ObjectName);
-			Assert.AreEqual("the road that heard the bronze gate open", exact.Origin);
-			Assert.AreEqual("the bronze gate opened after three refusals", exact.Detail);
-			Assert.AreEqual("Rite Ground of Glass Reeds", exact.ArrivalText);
-			Assert.AreEqual(19, exact.Kind);
-			Assert.AreEqual(177L, exact.DepartTick);
-			Assert.AreEqual("causal-pilgrim", exact.Creed);
+			ClassicAssert.AreEqual("Nara-of-the-Third-Telling", exact.ObjectName);
+			ClassicAssert.AreEqual("the road that heard the bronze gate open", exact.Origin);
+			ClassicAssert.AreEqual("the bronze gate opened after three refusals", exact.Detail);
+			ClassicAssert.AreEqual("Rite Ground of Glass Reeds", exact.ArrivalText);
+			ClassicAssert.AreEqual(19, exact.Kind);
+			ClassicAssert.AreEqual(177L, exact.DepartTick);
+			ClassicAssert.AreEqual("causal-pilgrim", exact.Creed);
 
 			exact.Detail = "rewritten shared scalar";
 			KingdomLifecycleBook malformed = RoundTrip(resumed);
-			Assert.IsTrue(malformed.Quarantined);
-			Assert.NotNull(malformed.PlainGuest);
-			Assert.AreEqual("rewritten shared scalar", malformed.PlainGuest.Detail,
+			ClassicAssert.IsTrue(malformed.Quarantined);
+			ClassicAssert.NotNull(malformed.PlainGuest);
+			ClassicAssert.AreEqual("rewritten shared scalar", malformed.PlainGuest.Detail,
 				"quarantine retains hostile evidence instead of clearing the causal carrier");
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(malformed));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(malformed));
 		}
 
 		[Test]
@@ -777,8 +778,8 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook spawnBook = Book("city-cut-spawn");
 			KingdomLifecycleOperation spawn = Build(spawnBook, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Spawn, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(spawnBook, spawn));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(spawnBook, spawn));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
 			TrustedWorld projectedThenInterrupted = LifecycleProjectionWorld(spawn.Projections[0]);
 			projectedThenInterrupted.LifecycleProjectionCallback = delegate(
@@ -788,29 +789,29 @@ namespace ThousandAndFirst.Tests
 				projectedThenInterrupted.Rows.Add(OutputObservation(value, reference));
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(
 				spawnBook, spawn, spawn.Projections[0], projectedThenInterrupted));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, spawn.Projections[0].State);
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverProjectionIntent(
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, spawn.Projections[0].State);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverProjectionIntent(
 				spawnBook, spawn, spawn.Projections[0], true, false));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
 				KingdomLifecyclePhase.Projected, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(spawnBook, spawn,
 				KingdomLifecyclePhase.DomainIntent, 4L));
 			KingdomLifecycleResourceLease spawnDomain = spawn.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Population);
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.BeginDomain(spawnBook,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.BeginDomain(spawnBook,
 				spawn, spawnDomain.Before));
 			spawnBook = RoundTrip(spawnBook);
 			spawn = spawnBook.PlainGuest;
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
 				spawnBook, spawn), "domain intent resumes only because projection proof survived");
 
 			KingdomLifecycleBook removalBook = Book("city-cut-removal");
 			KingdomLifecycleOperation removal = Build(removalBook,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Depart, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(removalBook, removal));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(removalBook, removal,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(removalBook, removal));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(removalBook, removal,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			TrustedWorld removedThenInterrupted = LifecycleRemovalWorld(removal);
 			removedThenInterrupted.LifecycleRemovalCallback = delegate(object reference,
@@ -819,16 +820,16 @@ namespace ThousandAndFirst.Tests
 				removedThenInterrupted.Rows[0].CountValue = 0;
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
 				removalBook, removal, removedThenInterrupted));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverRemovalIntent(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverRemovalIntent(
 				removalBook, removal, true));
 
 			KingdomLifecycleBook waterBook = Book("city-cut-water");
 			KingdomLifecycleOperation water = Build(waterBook,
 				KingdomLifecycleLane.NotableGuest, KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(waterBook, water));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(waterBook, water,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(waterBook, water));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(waterBook, water,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			KingdomLifecycleWaterLeg leg = water.WaterLegs[0];
 			KingdomLifecycleResourceLease waterLease = water.ResourceLeases.Find(l =>
@@ -839,19 +840,19 @@ namespace ThousandAndFirst.Tests
 				drainedThenInterrupted.Rows[0].ValueValue = leg.After;
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(waterBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(waterBook,
 				waterLease, leg, drainedThenInterrupted));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverWaterIntent(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverWaterIntent(
 				waterBook, water, waterLease, leg, leg.After));
 
 			KingdomLifecycleBook scheduleBook = Book("city-cut-schedule");
 			KingdomLifecycleOperation schedule = Build(scheduleBook,
 				KingdomLifecycleLane.NotableGuest, KingdomLifecycleAction.Passages, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(scheduleBook, schedule));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(scheduleBook, schedule));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
 				KingdomLifecyclePhase.Sinks, 2L));
 			Deliver(schedule.Outbox);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
 				KingdomLifecyclePhase.ScheduleIntent, 3L));
 			TrustedWorld scheduledThenInterrupted = LifecycleScheduleWorld(scheduleBook, schedule);
 			scheduledThenInterrupted.ScheduleCallback = delegate(object reference, long after,
@@ -862,9 +863,9 @@ namespace ThousandAndFirst.Tests
 				scheduledThenInterrupted.Rows[0].LastOperationIdValue = operationId;
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
 				scheduleBook, schedule, scheduledThenInterrupted));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverScheduleIntent(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.RecoverScheduleIntent(
 				scheduleBook, schedule, schedule.DueAfter));
 		}
 
@@ -874,18 +875,18 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook seated = Book("city-seat-a");
 			KingdomLifecycleOperation op = Build(seated, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Spawn, 1L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(seated, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(seated, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
 				KingdomLifecyclePhase.ProjectionIntent, 2L));
 			SettleProjectionLease(seated, op, op.Projections[0]);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
 				KingdomLifecyclePhase.Projected, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(seated, op,
 				KingdomLifecyclePhase.DomainIntent, 4L));
 			KingdomLifecycleBook otherSeat = Book("city-seat-b");
-			Assert.IsFalse(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
 				otherSeat, op));
-			Assert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GuestRuntimeAdapter.ProvePhysicalDomain(
 				seated, op));
 		}
 
@@ -908,21 +909,21 @@ namespace ThousandAndFirst.Tests
 			op.Count = 2;
 			op.Defence = 9;
 			op.PlunderRequested = 5;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.WaterIntent, 51L));
 
 			KingdomLifecycleBook resumed = RoundTrip(book);
 			KingdomLifecycleOperation exact = resumed.NotableGuest;
-			Assert.AreEqual("exact-vacant-fine-house-root", exact.ObjectMarker);
-			Assert.AreEqual("finehouse", exact.DisplayFaction);
-			Assert.AreEqual(5, exact.PlunderRequested, "promised resident shop tier is frozen");
-			Assert.AreEqual("legendary-trader-body", exact.ObjectId);
-			Assert.AreEqual("Issachar, Merchant of Seven Roads", exact.ObjectName);
-			Assert.AreEqual(KingdomLifecyclePhase.WaterIntent, exact.Phase,
+			ClassicAssert.AreEqual("exact-vacant-fine-house-root", exact.ObjectMarker);
+			ClassicAssert.AreEqual("finehouse", exact.DisplayFaction);
+			ClassicAssert.AreEqual(5, exact.PlunderRequested, "promised resident shop tier is frozen");
+			ClassicAssert.AreEqual("legendary-trader-body", exact.ObjectId);
+			ClassicAssert.AreEqual("Issachar, Merchant of Seven Roads", exact.ObjectName);
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.WaterIntent, exact.Phase,
 				"absence and reload resume the open exact lodging transaction");
 			Settle(resumed, exact, 60L);
-			Assert.AreEqual(KingdomLifecyclePhase.Terminal, exact.Phase);
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.Terminal, exact.Phase);
 		}
 
 		[Test]
@@ -930,47 +931,47 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleBook book = Book("city-lodge-dead-row");
 			KingdomLifecycleOperation op = ReadyLodgeDomain(book);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
-			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 17,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 17,
 				null, null, null, 0L, null, 0, 0, 5L), "absence is not death proof");
-			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 2, 17,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 2, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L),
 				"duplicate resident coordinates are ambiguous");
-			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 0, 0, 5L),
 				"a live row cannot be reinterpreted as Dead");
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L));
 
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
 				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueBefore));
-			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.InvokeOnce,
 				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueBefore),
 				"an Intent crash before the scalar mutation retries once");
-			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
-			Assert.AreEqual(KingdomLifecycleMutationAction.ConfirmAfter,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.ConfirmAfter,
 				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueAfter));
-			Assert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
 			AssertAbandonedLodgeHasNoSuccessOrRefund(op);
 
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, op, 7L));
-			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, op, 7L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
 				op.Id, op.PlanHash));
-			Assert.IsTrue(op.ResourceLeases.TrueForAll(l => book.Resources.Find(r =>
+			ClassicAssert.IsTrue(op.ResourceLeases.TrueForAll(l => book.Resources.Find(r =>
 				r.Key == l.Key).ActiveOperationId == null));
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.AreEqual(KingdomLifecycleLodgeTerminalState.AuthorityReleased,
+			ClassicAssert.AreEqual(KingdomLifecycleLodgeTerminalState.AuthorityReleased,
 				op.LodgeTerminal.State, "release-before-marker survives a save cut");
-			Assert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, op, 8L));
-			Assert.IsNull(book.NotableGuest);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(RoundTrip(book)));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, op, 8L));
+			ClassicAssert.IsNull(book.NotableGuest);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(RoundTrip(book)));
 		}
 
 		[Test]
@@ -978,46 +979,46 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleBook book = Book("city-lodge-market-source");
 			KingdomLifecycleOperation op = ReadyLodgeDomain(book, market: true);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeNoLodgeMarketSource(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeNoLodgeMarketSource(book, op));
 			string intent = "market-receipt:handoff:exact-source:" + op.ObjectId;
-			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				op.ObjectId, 18, op.PlunderRequested, intent), "target cannot alias source");
-			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"exact-source", 17, op.PlunderRequested, intent), "resident cannot alias target row");
-			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"exact-source", 18, op.PlunderRequested + 1, intent), "tier is frozen by plan");
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"exact-source", 18, op.PlunderRequested, intent));
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"exact-source", 18, op.PlunderRequested, intent), "exact replay is idempotent");
-			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"other-source", 18, op.PlunderRequested, intent), "prepared identity is immutable");
 
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.AreEqual(1, op.LodgeTerminal.MarketSourcePrepared);
-			Assert.AreEqual("exact-source", op.LodgeTerminal.MarketSourceBodyObjectId);
-			Assert.AreEqual(18, op.LodgeTerminal.MarketSourceResidentId);
-			Assert.IsNotEmpty(op.LodgeTerminal.MarketSourceProofId);
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+			ClassicAssert.AreEqual(1, op.LodgeTerminal.MarketSourcePrepared);
+			ClassicAssert.AreEqual("exact-source", op.LodgeTerminal.MarketSourceBodyObjectId);
+			ClassicAssert.AreEqual(18, op.LodgeTerminal.MarketSourceResidentId);
+			ClassicAssert.IsNotEmpty(op.LodgeTerminal.MarketSourceProofId);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
 				"exact-source", 18, op.PlunderRequested, intent, false));
-			Assert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketCommitted,
+			ClassicAssert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketCommitted,
 				op.LodgeTerminal.MarketSourcePrepared);
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
 				"exact-source", 18, op.PlunderRequested, intent, false),
 				"committed checkpoint replay is idempotent");
 			foreach (int forged in new[] { 0, 1, 3 })
 			{
 				KingdomLifecycleBook tampered = RoundTrip(book);
 				tampered.NotableGuest.LodgeTerminal.MarketSourcePrepared = forged;
-				Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered),
+				ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered),
 					"market outcome phase " + forged + " cannot reuse committed proof");
 			}
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 2, 5L));
-			Assert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"other-source", 19, op.PlunderRequested, intent), "death proof seals source receipt");
 		}
 
@@ -1026,25 +1027,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleBook book = Book("city-lodge-market-source-dead");
 			KingdomLifecycleOperation op = ReadyLodgeDomain(book, market: true);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 17,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
 			string intent = "market-receipt:handoff:dead-source:" + op.ObjectId;
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(book, op,
 				"dead-source", 18, op.PlunderRequested, intent));
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
 				"dead-source", 18, op.PlunderRequested, intent, true));
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketSourceDead,
+			ClassicAssert.AreEqual(KingdomLifecycleLodgeTerminalReceipt.MarketSourceDead,
 				op.LodgeTerminal.MarketSourcePrepared);
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
 				"dead-source", 18, op.PlunderRequested, intent, true));
-			Assert.IsFalse(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryCommitLodgeMarketSource(book, op,
 				"dead-source", 18, op.PlunderRequested, intent, false));
 			foreach (int forged in new[] { 0, 1, 2 })
 			{
 				KingdomLifecycleBook tampered = RoundTrip(book);
 				tampered.NotableGuest.LodgeTerminal.MarketSourcePrepared = forged;
-				Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered));
+				ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(tampered));
 			}
 		}
 
@@ -1053,25 +1054,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleBook book = Book("city-lodge-body-death");
 			KingdomLifecycleOperation op = ReadyLodgeDomain(book);
-			Assert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
 				null, null, null, 0L, null, 0, 0, 5L));
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
 				"wrong-body", op.Blueprint, op.ZoneId, 5L));
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
 				op.ObjectId, "wrong-blueprint", op.ZoneId, 5L));
-			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, op,
 				op.ObjectId, op.Blueprint, op.ZoneId, 5L));
 			book = RoundTrip(book); op = book.NotableGuest;
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 0, 0,
 				null, null, null, 0L, null, 0, 0, 6L));
 			SettleLodgeAbandonSchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 7L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 7L));
 			KingdomLifecycleResourceLease roster = op.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Roster);
-			Assert.AreEqual(KingdomLifecycleLeaseState.Skipped, roster.State);
+			ClassicAssert.AreEqual(KingdomLifecycleLeaseState.Skipped, roster.State);
 			AssertAbandonedLodgeHasNoSuccessOrRefund(op);
-			Assert.IsTrue(KingdomLifecycleRules.Retire(book, op, 8L));
-			Assert.IsNull(book.NotableGuest);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, op, 8L));
+			ClassicAssert.IsNull(book.NotableGuest);
 		}
 
 		[Test]
@@ -1079,31 +1080,31 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLifecycleBook book = Book("city-lodge-proof-pin");
 			KingdomLifecycleOperation lodge = ReadyLodgeDomain(book);
-			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, lodge,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(book, lodge,
 				lodge.ObjectId, lodge.Blueprint, lodge.ZoneId, 5L));
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, lodge, 0, 0,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, lodge, 0, 0,
 				null, null, null, 0L, null, 0, 0, 6L));
 			SettleLodgeAbandonSchedule(book, lodge);
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, lodge, 7L));
-			Assert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, lodge, 8L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, lodge, 7L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryReleaseAbandonedLodge(book, lodge, 8L));
 
 			for (int i = 0; i < KingdomLifecycleRules.MaxRecentProofs + 8; i++)
 			{
 				long tick = 100L + i * 10L;
 				KingdomLifecycleOperation passage = Build(book,
 					KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Passages, tick, i);
-				Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, passage), "publish " + i);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, passage), "publish " + i);
 				Settle(book, passage, tick + 1L);
-				Assert.IsTrue(KingdomLifecycleRules.Retire(book, passage, tick + 8L), "retire " + i);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.Retire(book, passage, tick + 8L), "retire " + i);
 			}
-			Assert.AreEqual(KingdomLifecycleRules.MaxRecentProofs, book.RecentProofs.Count);
-			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.MaxRecentProofs, book.RecentProofs.Count);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
 				lodge.Id, lodge.PlanHash));
 			book = RoundTrip(book); lodge = book.NotableGuest;
-			Assert.IsFalse(book.Quarantined);
-			Assert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
+			ClassicAssert.IsFalse(book.Quarantined);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ExactLodgeRetirementProof(book,
 				lodge.Id, lodge.PlanHash));
-			Assert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, lodge, 2000L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryRemoveReleasedLodge(book, lodge, 2000L));
 		}
 
 		[Test]
@@ -1114,15 +1115,15 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleResourceLease roster = op.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Roster);
 			SettleLease(book, roster);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 19,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(book, op, 19,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
 			long revision = book.Resources.Find(r => r.Key == roster.Key).Revision;
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 19,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginLodgeAbandon(book, op, 1, 19,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId, 2, 4, 5L));
 			SettleLodgeAbandonSchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
-			Assert.AreEqual(KingdomLifecycleLeaseState.Proved, roster.State);
-			Assert.AreEqual(revision, book.Resources.Find(r => r.Key == roster.Key).Revision,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCommitLodgeAbandon(book, op, 6L));
+			ClassicAssert.AreEqual(KingdomLifecycleLeaseState.Proved, roster.State);
+			ClassicAssert.AreEqual(revision, book.Resources.Find(r => r.Key == roster.Key).Revision,
 				"terminal recovery neither reapplies nor rolls back enrollment");
 		}
 
@@ -1140,13 +1141,13 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook loaded = new KingdomLifecycleBook();
 			using (MemoryStream stream = new MemoryStream(v8, false))
 				KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), loaded);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
-			Assert.IsFalse(loaded.Quarantined);
-			Assert.IsNull(loaded.NotableGuest.LodgeTerminal);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
+			ClassicAssert.IsFalse(loaded.Quarantined);
+			ClassicAssert.IsNull(loaded.NotableGuest.LodgeTerminal);
 
 			KingdomLifecycleBook v9Book = Book("city-lodge-v9");
 			KingdomLifecycleOperation v9Op = ReadyLodgeDomain(v9Book);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(v9Book, v9Op, 21,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(v9Book, v9Op, 21,
 				v9Op.ObjectName, v9Op.Origin, v9Op.Faction, 1L, v9Op.ZoneId));
 			byte[] v9;
 			using (MemoryStream stream = new MemoryStream())
@@ -1157,12 +1158,12 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook v9Loaded = new KingdomLifecycleBook();
 			using (MemoryStream stream = new MemoryStream(v9, false))
 				KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), v9Loaded);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, v9Loaded.FormatVersion);
-			Assert.AreEqual(0, v9Loaded.NotableGuest.LodgeTerminal.MarketSourcePrepared);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(v9Loaded));
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, v9Loaded.FormatVersion);
+			ClassicAssert.AreEqual(0, v9Loaded.NotableGuest.LodgeTerminal.MarketSourcePrepared);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(v9Loaded));
 			KingdomLifecycleBook v9DeathBook = Book("city-lodge-v9-death");
 			KingdomLifecycleOperation v9Death = ReadyLodgeDomain(v9DeathBook);
-			Assert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(v9DeathBook, v9Death,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryObserveLodgeBodyDeath(v9DeathBook, v9Death,
 				v9Death.ObjectId, v9Death.Blueprint, v9Death.ZoneId, 5L));
 			using (MemoryStream stream = new MemoryStream())
 			{
@@ -1170,30 +1171,30 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleBook upgraded = new KingdomLifecycleBook();
 				using (MemoryStream input = new MemoryStream(stream.ToArray(), false))
 					KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(input), upgraded);
-				Assert.AreEqual(KingdomLifecycleLodgeTerminalState.BodyDeathProved,
+				ClassicAssert.AreEqual(KingdomLifecycleLodgeTerminalState.BodyDeathProved,
 					upgraded.NotableGuest.LodgeTerminal.State);
-				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(upgraded));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(upgraded));
 			}
 
 			KingdomLifecycleBook current = Book("city-lodge-v9");
 			KingdomLifecycleOperation op = ReadyLodgeDomain(current, market: true);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(current, op, 23,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeResident(current, op, 23,
 				op.ObjectName, op.Origin, op.Faction, 1L, op.ZoneId));
 			using (MemoryStream stream = new MemoryStream())
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec
 					.WriteLifecycleV8Fixture(new BinaryWriter(stream), current));
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(current, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeLodgeMarketSource(current, op,
 				"v10-market-source", 24, op.PlunderRequested,
 				"market-receipt:handoff:v10-market-source:" + op.ObjectId));
 			using (MemoryStream stream = new MemoryStream())
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec
 					.WriteLifecycleV9Fixture(new BinaryWriter(stream), current));
 			current = RoundTrip(current); op = current.NotableGuest;
-			Assert.AreEqual(23, op.LodgeTerminal.ResidentId);
+			ClassicAssert.AreEqual(23, op.LodgeTerminal.ResidentId);
 			op.LodgeTerminal.MarketSourceProofId = "sha256:forged";
 			KingdomLifecycleBook poisoned = RoundTrip(current);
-			Assert.IsTrue(poisoned.Quarantined);
-			Assert.IsTrue(poisoned.NotableGuest != null
+			ClassicAssert.IsTrue(poisoned.Quarantined);
+			ClassicAssert.IsTrue(poisoned.NotableGuest != null
 				&& poisoned.NotableGuest.Phase == KingdomLifecyclePhase.Quarantined);
 		}
 
@@ -1203,16 +1204,16 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Sinks, 2L));
 			string receipt = op.Outbox.ChronicleReceiptId;
 			op.Outbox.ChronicleState = KingdomLifecycleSinkState.Intent;
 			op.Outbox.MessageState = KingdomLifecycleSinkState.Intent;
-			Assert.IsTrue(KingdomLifecycleRules.RecoverOutbox(book, op));
-			Assert.AreEqual(receipt, op.Outbox.ChronicleReceiptId);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.ChronicleState);
-			Assert.AreEqual(KingdomLifecycleSinkState.Lost, op.Outbox.MessageState);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RecoverOutbox(book, op));
+			ClassicAssert.AreEqual(receipt, op.Outbox.ChronicleReceiptId);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.ChronicleState);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Lost, op.Outbox.MessageState);
 		}
 
 		[Test]
@@ -1223,25 +1224,25 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
 			op.Outbox.Message = null;
 			op.Outbox.MessageState = KingdomLifecycleSinkState.Skipped;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(missing, op));
-			Assert.AreEqual(1L, missing.RaidNextSequence);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(missing, op));
+			ClassicAssert.AreEqual(1L, missing.RaidNextSequence);
 
 			KingdomLifecycleBook forged = Book();
 			op = Build(forged, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
 			op.Outbox.ChronicleReceiptId = KingdomLifecycleRules.ChildId(op.Id, "message", 0);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(forged, op));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(forged, op));
 
 			KingdomLifecycleBook frozen = Book();
 			op = Build(frozen, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
 			op.Outbox.DeedDisposition = KingdomLifecycleSinkDisposition.Skip;
 			op.Outbox.DeedState = KingdomLifecycleSinkState.Skipped;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(frozen, op),
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(frozen, op),
 				"optional content disposition is frozen before mutation");
 			op.Outbox.DeedDisposition = KingdomLifecycleSinkDisposition.Deliver;
 			KingdomLifecycleRules.Normalize(frozen);
-			Assert.IsTrue(frozen.Quarantined, "a later disposition rewrite changes plan authority");
+			ClassicAssert.IsTrue(frozen.Quarantined, "a later disposition rewrite changes plan authority");
 		}
 
 		[Test]
@@ -1250,10 +1251,10 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			KingdomLifecycleBook copy = RoundTrip(book);
-			Assert.IsFalse(copy.WireRejected);
-			Assert.AreEqual(op.Id, copy.Raid.Id);
+			ClassicAssert.IsFalse(copy.WireRejected);
+			ClassicAssert.AreEqual(op.Id, copy.Raid.Id);
 
 			using (MemoryStream futureBytes = new MemoryStream())
 			{
@@ -1266,8 +1267,8 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleBook future = new KingdomLifecycleBook();
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec.ReadLifecycle(
 					new BinaryReader(futureBytes), future));
-				Assert.IsTrue(future.WireRejected);
-				Assert.IsTrue(future.Quarantined);
+				ClassicAssert.IsTrue(future.WireRejected);
+				ClassicAssert.IsTrue(future.Quarantined);
 			}
 
 			using (MemoryStream malicious = new MemoryStream())
@@ -1291,9 +1292,9 @@ namespace ThousandAndFirst.Tests
 			using (MemoryStream stream = new MemoryStream(noncanonical))
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec.ReadLifecycle(
 					new BinaryReader(stream), poisoned));
-			Assert.IsTrue(poisoned.WireRejected);
-			Assert.IsTrue(poisoned.Quarantined);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(poisoned));
+			ClassicAssert.IsTrue(poisoned.WireRejected);
+			ClassicAssert.IsTrue(poisoned.Quarantined);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(poisoned));
 		}
 
 		[Test]
@@ -1302,29 +1303,29 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook source = Book("city-v6-open-raid");
 			KingdomLifecycleOperation warning = Build(source, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 10L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(source, warning));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(source, warning));
 			byte[] v6;
 			using (MemoryStream stream = new MemoryStream())
 			{
 				KingdomLifecycleWireCodec.WriteLifecycleV6Fixture(new BinaryWriter(stream), source);
 				v6 = stream.ToArray();
 			}
-			Assert.AreEqual(KingdomLifecycleRules.PreviousLifecycleFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.PreviousLifecycleFormatVersion,
 				BitConverter.ToInt32(v6, 4));
 			KingdomLifecycleBook loaded = new KingdomLifecycleBook();
 			using (MemoryStream stream = new MemoryStream(v6, false))
 				KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), loaded);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
-			Assert.IsTrue(loaded.Quarantined);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentFormatVersion, loaded.FormatVersion);
+			ClassicAssert.IsTrue(loaded.Quarantined);
 			StringAssert.Contains("legacy raid authority", loaded.Fault);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(loaded));
-			Assert.NotNull(loaded.Raid);
-			Assert.AreEqual(warning.Id, loaded.Raid.Id);
-			Assert.AreEqual(warning.Origin, loaded.Raid.Origin);
-			Assert.AreEqual(warning.Detail, loaded.Raid.Detail);
-			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(loaded.RaidLedger));
-			Assert.AreEqual(0, loaded.RaidLedger.Grievances.Count);
-			Assert.AreEqual(0, loaded.RaidLedger.Incidents.Count);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(loaded));
+			ClassicAssert.NotNull(loaded.Raid);
+			ClassicAssert.AreEqual(warning.Id, loaded.Raid.Id);
+			ClassicAssert.AreEqual(warning.Origin, loaded.Raid.Origin);
+			ClassicAssert.AreEqual(warning.Detail, loaded.Raid.Detail);
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(loaded.RaidLedger));
+			ClassicAssert.AreEqual(0, loaded.RaidLedger.Grievances.Count);
+			ClassicAssert.AreEqual(0, loaded.RaidLedger.Incidents.Count);
 		}
 
 		[Test]
@@ -1333,7 +1334,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook source = Book("city-v6-appended-action");
 			KingdomLifecycleOperation fight = Build(source, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidFight, 10L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(source, fight));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(source, fight));
 			using (MemoryStream fixture = new MemoryStream())
 				Assert.Throws<InvalidDataException>(() =>
 					KingdomLifecycleWireCodec.WriteLifecycleV6Fixture(
@@ -1351,8 +1352,8 @@ namespace ThousandAndFirst.Tests
 			using (MemoryStream stream = new MemoryStream(hostile, false))
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec.ReadLifecycle(
 					new BinaryReader(stream), refused));
-			Assert.IsTrue(refused.WireRejected);
-			Assert.IsTrue(refused.Quarantined);
+			ClassicAssert.IsTrue(refused.WireRejected);
+			ClassicAssert.IsTrue(refused.Quarantined);
 		}
 
 		[Test]
@@ -1361,22 +1362,22 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book("city-raid-projection-retry");
 			KingdomLifecycleOperation attack = Build(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidAttack, 10L, 0L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, attack));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, attack,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, attack));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, attack,
 				KingdomLifecyclePhase.ProjectionIntent, 11L));
 			KingdomLifecycleProjection projection = attack.Projections[0];
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
 				book, attack, projection, 0, 0));
-			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.ResetAbsentProjectionIntent(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.ResetAbsentProjectionIntent(
 				book, attack, projection, 1, 0));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, projection.State);
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ResetAbsentProjectionIntent(
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, projection.State);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ResetAbsentProjectionIntent(
 				book, attack, projection, 0, 0));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared, projection.State);
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Prepared, projection.State);
 			KingdomLifecycleResourceLease lease = attack.ResourceLeases.Find(l =>
 				l.Kind == KingdomLifecycleResourceKind.Projection);
-			Assert.AreEqual(KingdomLifecycleLeaseState.Prepared, lease.State);
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
+			ClassicAssert.AreEqual(KingdomLifecycleLeaseState.Prepared, lease.State);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
 				book, attack, projection, 0, 0));
 		}
 
@@ -1387,8 +1388,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i <= KingdomLifecycleRules.MaxResourceRows; i++)
 				book.Resources.Add(new KingdomLifecycleResourceRevision());
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
-			Assert.AreEqual(KingdomLifecycleRules.MaxResourceRows + 1, book.Resources.Count);
+			ClassicAssert.IsTrue(book.Quarantined);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.MaxResourceRows + 1, book.Resources.Count);
 			using (MemoryStream stream = new MemoryStream())
 				Assert.Throws<InvalidDataException>(() => KingdomLifecycleWireCodec.WriteLifecycle(
 					new BinaryWriter(stream), book));
@@ -1412,10 +1413,10 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.AreEqual(KingdomLifecycleRules.MaxResourceRows, book.Resources.Count);
-			Assert.AreEqual(1L, book.PlainGuestNextSequence);
-			Assert.IsNull(book.PlainGuest);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.AreEqual(KingdomLifecycleRules.MaxResourceRows, book.Resources.Count);
+			ClassicAssert.AreEqual(1L, book.PlainGuestNextSequence);
+			ClassicAssert.IsNull(book.PlainGuest);
 		}
 
 		[Test]
@@ -1432,8 +1433,8 @@ namespace ThousandAndFirst.Tests
 			};
 			duplicate.Resources.Add(row);
 			duplicate.Resources.Add(row);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(duplicate));
-			Assert.IsNull(KingdomLifecycleRules.PrepareOperation(duplicate,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(duplicate));
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareOperation(duplicate,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Passages, 1L));
 
 			KingdomLifecycleBook replay = Book("city-replay-row");
@@ -1449,13 +1450,13 @@ namespace ThousandAndFirst.Tests
 				Revision = replayLease.BeforeRevision,
 				LastOperationId = replayOp.Id
 			});
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(replay, replayOp),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(replay, replayOp),
 				"a row already carrying this deterministic operation id cannot replay it");
 
 			KingdomLifecycleBook gap = Book("city-gap");
 			gap.PlainGuestNextSequence = 3L;
 			KingdomLifecycleRules.Normalize(gap);
-			Assert.IsTrue(gap.Quarantined, "unaccounted sequence consumption is not canonical replay state");
+			ClassicAssert.IsTrue(gap.Quarantined, "unaccounted sequence consumption is not canonical replay state");
 		}
 
 		[Test]
@@ -1464,12 +1465,12 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			op.Phase = (KingdomLifecyclePhase)255;
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
-			Assert.AreEqual((KingdomLifecyclePhase)255, op.Phase);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.IsTrue(book.Quarantined);
+			ClassicAssert.AreEqual((KingdomLifecyclePhase)255, op.Phase);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(book));
 		}
 
 		[Test]
@@ -1481,19 +1482,19 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleAction.Passages, 1L, 0L);
 			KingdomLifecycleOperation two = Build(b, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 0L);
-			Assert.AreNotEqual(one.Id, two.Id);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(b, one),
+			ClassicAssert.AreNotEqual(one.Id, two.Id);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(b, one),
 				"a self-canonical foreign operation is not authority for this book");
-			Assert.AreEqual(1L, b.PlainGuestNextSequence);
-			Assert.IsNull(b.PlainGuest);
+			ClassicAssert.AreEqual(1L, b.PlainGuestNextSequence);
+			ClassicAssert.IsNull(b.PlainGuest);
 			two.SettlementId = a.SettlementId;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(b, two));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(b, two));
 
 			KingdomLifecycleBook migration = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(migration, "legacy-city", true,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(migration, "legacy-city", true,
 				"legacy-source", new List<string> { "city-a", "city-b" }));
 			KingdomLifecycleBook collision = new KingdomLifecycleBook();
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(collision, "city-a", true,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(collision, "city-a", true,
 				"legacy-source", new List<string> { "city-a", "city-b" }));
 		}
 
@@ -1502,38 +1503,38 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook duplicateBook = CarryBook();
 			KingdomCarryOperation duplicateOp = BuildCarry(duplicateBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(duplicateBook, duplicateOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(duplicateBook, duplicateOp));
 			ReadyCarryProjection(duplicateBook, duplicateOp);
 			TrustedWorld duplicate = new TrustedWorld();
 			duplicate.Rows.Add(OutputObservation(duplicateOp.Outputs[0], new object()));
 			duplicate.Rows.Add(OutputObservation(duplicateOp.Outputs[0], new object()));
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(duplicateBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(duplicateBook,
 				duplicateOp, duplicateOp.Outputs[0], duplicate));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Prepared,
 				duplicateOp.Outputs[0].ReceiptState);
 
 			KingdomCarryBook noCallbackBook = CarryBook();
 			KingdomCarryOperation noCallbackOp = BuildCarry(noCallbackBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(noCallbackBook, noCallbackOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(noCallbackBook, noCallbackOp));
 			ReadyCarryProjection(noCallbackBook, noCallbackOp);
 			TrustedWorld noCallback = new TrustedWorld();
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(noCallbackBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(noCallbackBook,
 				noCallbackOp, noCallbackOp.Outputs[0], noCallback));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent,
 				noCallbackOp.Outputs[0].ReceiptState, "missing callback cannot mint proof");
 
 			KingdomCarryBook wrongRefBook = CarryBook();
 			KingdomCarryOperation wrongRefOp = BuildCarry(wrongRefBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(wrongRefBook, wrongRefOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(wrongRefBook, wrongRefOp));
 			ReadyCarryProjection(wrongRefBook, wrongRefOp);
 			TrustedWorld wrongRef = OutputWorld(wrongRefOp.Outputs[0]);
 			wrongRef.OutputReturnOverride = new object();
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(wrongRefBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(wrongRefBook,
 				wrongRefOp, wrongRefOp.Outputs[0], wrongRef));
 
 			KingdomCarryBook mutatedBook = CarryBook();
 			KingdomCarryOperation mutatedOp = BuildCarry(mutatedBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(mutatedBook, mutatedOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(mutatedBook, mutatedOp));
 			ReadyCarryProjection(mutatedBook, mutatedOp);
 			TrustedWorld mutated = new TrustedWorld();
 			mutated.OutputCallback = delegate(KingdomLifecycleProjection value)
@@ -1543,19 +1544,19 @@ namespace ThousandAndFirst.Tests
 				mutated.Rows.Add(OutputObservation(value, reference));
 				return reference;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(mutatedBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(mutatedBook,
 				mutatedOp, mutatedOp.Outputs[0], mutated), "callback cannot rewrite frozen plan");
 
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
 			ReadyCarryProjection(book, op);
 			TrustedWorld happyWorld = OutputWorld(op.Outputs[0]);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
 				op.Outputs[0], happyWorld));
-			Assert.AreEqual(2, happyWorld.ObservationCountReads,
+			ClassicAssert.AreEqual(2, happyWorld.ObservationCountReads,
 				"bounded scan snapshots observation count once before and once after callback");
-			Assert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
 		}
 
 		[Test]
@@ -1563,33 +1564,33 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook noCallbackBook = CarryBook();
 			KingdomCarryOperation noCallbackOp = BuildCarry(noCallbackBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(noCallbackBook, noCallbackOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(noCallbackBook, noCallbackOp));
 			RemoveCarrySources(noCallbackBook, noCallbackOp);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(noCallbackBook, noCallbackOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(noCallbackBook, noCallbackOp,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(noCallbackBook, noCallbackOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(noCallbackBook, noCallbackOp,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			TrustedWorld noCallback = ScheduleWorld(noCallbackBook, noCallbackOp,
 				noCallbackOp.ScheduleLease.Before, noCallbackOp.ScheduleLease.BeforeRevision, null);
 			noCallback.ScheduleCallback = null;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(noCallbackBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(noCallbackBook,
 				noCallbackOp, noCallback));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent,
 				noCallbackOp.ScheduleReceiptState, "no callback cannot mint schedule proof");
 			TrustedWorld unchangedNoCallback = ScheduleWorld(noCallbackBook, noCallbackOp,
 				noCallbackOp.ScheduleLease.Before, noCallbackOp.ScheduleLease.BeforeRevision, null);
 			unchangedNoCallback.ScheduleCallback = null;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(noCallbackBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(noCallbackBook,
 				noCallbackOp, unchangedNoCallback),
 				"an unchanged intent may retry, but still needs a real callback proof");
 
 			KingdomCarryBook interruptedBook = CarryBook();
 			KingdomCarryOperation interrupted = BuildCarry(interruptedBook, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(interruptedBook, interrupted));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(interruptedBook, interrupted));
 			RemoveCarrySources(interruptedBook, interrupted);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(interruptedBook, interrupted,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(interruptedBook, interrupted,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(interruptedBook, interrupted,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(interruptedBook, interrupted,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			TrustedWorld changedThenCut = ScheduleWorld(interruptedBook, interrupted,
 				interrupted.ScheduleLease.Before, interrupted.ScheduleLease.BeforeRevision, null);
@@ -1601,41 +1602,41 @@ namespace ThousandAndFirst.Tests
 				changedThenCut.Rows[0].LastOperationIdValue = operationId;
 				return null;
 			};
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(
 				interruptedBook, interrupted, changedThenCut));
 			interruptedBook = RoundTrip(interruptedBook);
 			interrupted = interruptedBook.Open;
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(
 				interruptedBook, interrupted, ScheduleWorld(interruptedBook, interrupted,
 					interrupted.ScheduleLease.After, interrupted.ScheduleLease.AfterRevision,
 					interrupted.Id)), "exact post-state recovers without repeating the callback");
 
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op,
 				ScheduleWorld(book, op, op.ScheduleLease.Before,
 					op.ScheduleLease.BeforeRevision, null)), "Prepared has no scheduling authority");
 			RemoveCarrySources(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			TrustedWorld foreign = ScheduleWorld(book, op, op.ScheduleLease.Before,
 				op.ScheduleLease.BeforeRevision, null);
 			foreign.Rows[0].ZoneIdValue = "foreign-zone";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, foreign));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, foreign));
 			TrustedWorld stale = ScheduleWorld(book, op, op.ScheduleLease.Before,
 				op.ScheduleLease.BeforeRevision + 1L, null);
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, stale));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, stale));
 			TrustedWorld duplicate = ScheduleWorld(book, op, op.ScheduleLease.Before,
 				op.ScheduleLease.BeforeRevision, null);
 			duplicate.Rows.Add(duplicate.Rows[0]);
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, duplicate));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, duplicate));
 			TrustedWorld world = ScheduleWorld(book, op, op.ScheduleLease.Before,
 				op.ScheduleLease.BeforeRevision, null);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, world));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op, world));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 5L));
 		}
 
@@ -1646,7 +1647,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation depart = Build(departed, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Depart, 1L, 10L);
 			depart.DepartedCount = depart.Count;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(departed, depart),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(departed, depart),
 				"Prepared cannot claim a departure before its exact domain CAS");
 
 			KingdomLifecycleBook arbitrary = Book("city-arbitrary");
@@ -1655,7 +1656,7 @@ namespace ThousandAndFirst.Tests
 			spawn.ResourceLeases.Add(KingdomLifecycleRules.PrepareLease(arbitrary, spawn,
 				KingdomLifecycleResourceKind.Standing, arbitrary.SettlementId,
 				arbitrary.SettlementId, 10L, 1L));
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(arbitrary, spawn),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(arbitrary, spawn),
 				"an unrelated lease cannot substitute for or accompany the action table");
 
 			KingdomLifecycleBook wrongDelta = Book("city-wrong-delta");
@@ -1665,7 +1666,7 @@ namespace ThousandAndFirst.Tests
 				l.Kind == KingdomLifecycleResourceKind.Population);
 			domain.Delta++;
 			domain.After++;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublish(wrongDelta, spawn));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublish(wrongDelta, spawn));
 		}
 
 		[Test]
@@ -1674,58 +1675,58 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook foreignBook = Book("city-water-foreign");
 			KingdomLifecycleOperation foreignOp = Build(foreignBook, KingdomLifecycleLane.NotableGuest,
 				KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(foreignBook, foreignOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(foreignBook, foreignOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(foreignBook, foreignOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(foreignBook, foreignOp,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			KingdomLifecycleWaterLeg foreignLeg = foreignOp.WaterLegs[0];
 			KingdomLifecycleResourceLease foreignLease = foreignOp.ResourceLeases.Find(l =>
 				l.Key == foreignLeg.LeaseKey);
 			TrustedWorld foreign = WaterWorld(foreignLeg);
 			foreign.Rows[0].ObjectIdValue = "foreign-vessel";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(foreignBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(foreignBook,
 				foreignLease, foreignLeg, foreign));
 
 			KingdomLifecycleBook noCallbackBook = Book("city-water-no-callback");
 			KingdomLifecycleOperation noCallbackOp = Build(noCallbackBook,
 				KingdomLifecycleLane.NotableGuest, KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(noCallbackBook, noCallbackOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(noCallbackBook, noCallbackOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(noCallbackBook, noCallbackOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(noCallbackBook, noCallbackOp,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			KingdomLifecycleWaterLeg noCallbackLeg = noCallbackOp.WaterLegs[0];
 			KingdomLifecycleResourceLease noCallbackLease = noCallbackOp.ResourceLeases.Find(l =>
 				l.Key == noCallbackLeg.LeaseKey);
 			TrustedWorld noCallback = WaterWorld(noCallbackLeg);
 			noCallback.DisableWaterCallback = true;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(noCallbackBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(noCallbackBook,
 				noCallbackLease, noCallbackLeg, noCallback));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, noCallbackLeg.ReceiptState);
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, noCallbackLeg.ReceiptState);
 
 			KingdomLifecycleBook duplicateBook = Book("city-water-duplicate");
 			KingdomLifecycleOperation duplicateOp = Build(duplicateBook,
 				KingdomLifecycleLane.NotableGuest, KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(duplicateBook, duplicateOp));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(duplicateBook, duplicateOp,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(duplicateBook, duplicateOp));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(duplicateBook, duplicateOp,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			KingdomLifecycleWaterLeg duplicateLeg = duplicateOp.WaterLegs[0];
 			KingdomLifecycleResourceLease duplicateLease = duplicateOp.ResourceLeases.Find(l =>
 				l.Key == duplicateLeg.LeaseKey);
 			TrustedWorld duplicate = WaterWorld(duplicateLeg);
 			duplicate.Rows.Add(duplicate.Rows[0]);
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(duplicateBook,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveWater(duplicateBook,
 				duplicateLease, duplicateLeg, duplicate));
 
 			KingdomLifecycleBook book = Book("city-water-happy");
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.NotableGuest,
 				KingdomLifecycleAction.Lodge, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			KingdomLifecycleWaterLeg leg = op.WaterLegs[0];
 			KingdomLifecycleResourceLease lease = op.ResourceLeases.Find(l => l.Key == leg.LeaseKey);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveWater(book, lease, leg,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveWater(book, lease, leg,
 				WaterWorld(leg)));
-			Assert.AreEqual(op.WaterRequested, op.WaterProved);
-			Assert.AreEqual(0, op.WaterOutstanding);
+			ClassicAssert.AreEqual(op.WaterRequested, op.WaterProved);
+			ClassicAssert.AreEqual(0, op.WaterOutstanding);
 		}
 
 		[Test]
@@ -1734,14 +1735,14 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = Book();
 			KingdomLifecycleOperation op = Build(book, KingdomLifecycleLane.PlainGuest,
 				KingdomLifecycleAction.Passages, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.Sinks, 2L));
 			op.Outbox.LedgerState = KingdomLifecycleSinkState.Skipped;
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 3L));
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
+			ClassicAssert.IsTrue(book.Quarantined);
 		}
 
 		[Test]
@@ -1751,25 +1752,25 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryOperation publication = BuildCarry(publicationBook, 1L, 1, 1);
 			publication.Outbox.LedgerDisposition = KingdomLifecycleSinkDisposition.Skip;
 			publication.Outbox.LedgerState = KingdomLifecycleSinkState.Skipped;
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(publicationBook, publication));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(publicationBook, publication));
 
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation op = BuildCarry(book, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, op));
 			ReadyCarryProjection(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarryOutput(book, op,
 				op.Outputs[0], OutputWorld(op.Outputs[0])));
-			Assert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.MoveCarryEscrow(book, op, op.Outputs[0], false));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Projected, 6L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Sinks, 7L));
 			Deliver(op.Outbox);
 			op.Outbox.MessageState = KingdomLifecycleSinkState.Skipped;
-			Assert.IsFalse(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Terminal, 8L));
 			KingdomLifecycleRules.Normalize(book);
-			Assert.IsTrue(book.Quarantined);
+			ClassicAssert.IsTrue(book.Quarantined);
 		}
 
 		[Test]
@@ -1778,36 +1779,36 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook scheduleBook = Book("city-lifecycle-schedule");
 			KingdomLifecycleOperation schedule = Build(scheduleBook,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Passages, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(scheduleBook, schedule));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(scheduleBook, schedule));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
 				KingdomLifecyclePhase.Sinks, 2L));
 			Deliver(schedule.Outbox);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(scheduleBook, schedule,
 				KingdomLifecyclePhase.ScheduleIntent, 3L));
 			TrustedWorld foreignZone = LifecycleScheduleWorld(scheduleBook, schedule);
 			foreignZone.Rows[0].ZoneIdValue = "foreign-zone";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
 				scheduleBook, schedule, foreignZone));
 			TrustedWorld noScheduleCallback = LifecycleScheduleWorld(scheduleBook, schedule);
 			noScheduleCallback.ScheduleCallback = null;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(
 				scheduleBook, schedule, noScheduleCallback));
 
 			KingdomLifecycleBook removalBook = Book("city-lifecycle-removal");
 			KingdomLifecycleOperation removal = Build(removalBook,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Depart, 1L, 10L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(removalBook, removal));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(removalBook, removal,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(removalBook, removal));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(removalBook, removal,
 				KingdomLifecyclePhase.RemovalIntent, 2L));
 			TrustedWorld wrongBlueprint = LifecycleRemovalWorld(removal);
 			wrongBlueprint.Rows[0].BlueprintValue = "ForeignCitizen";
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
 				removalBook, removal, wrongBlueprint));
 			TrustedWorld noRemovalCallback = LifecycleRemovalWorld(removal);
 			noRemovalCallback.LifecycleRemovalCallback = null;
-			Assert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(
 				removalBook, removal, noRemovalCallback));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, removal.RemovalState);
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, removal.RemovalState);
 		}
 
 		[Test]
@@ -1822,16 +1823,16 @@ namespace ThousandAndFirst.Tests
 				"BeginCarryUnit", "ConfirmCarryUnit", "ConfirmLeaseFromPhysicalMarker"
 			};
 			for (int i = 0; i < removed.Length; i++)
-				Assert.IsNull(typeof(KingdomLifecycleRules).GetMethod(removed[i],
+				ClassicAssert.IsNull(typeof(KingdomLifecycleRules).GetMethod(removed[i],
 					System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static),
 					removed[i]);
-			Assert.IsFalse(typeof(KingdomLifecycleRules.TrustedAdapter).IsPublic);
+			ClassicAssert.IsFalse(typeof(KingdomLifecycleRules.TrustedAdapter).IsPublic);
 			KingdomLifecycleBook book = Book("city-public-physical");
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Spawn, 1L);
-			Assert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
 				KingdomLifecycleResourceKind.Schedule, book.SettlementId, "schedule", 1L, 1L));
-			Assert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareLease(book, op,
 				KingdomLifecycleResourceKind.Object, "topology", "object", 1L, -1L));
 		}
 
@@ -1839,105 +1840,105 @@ namespace ThousandAndFirst.Tests
 		public void IdentityBinding_RequiresPristineStateExactMigrationKeyAndFullCarrySet()
 		{
 			KingdomLifecycleBook dirty = new KingdomLifecycleBook { PlainGuestNextSequence = 2L };
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(dirty, "city-a", false,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(dirty, "city-a", false,
 				null, null));
-			Assert.IsNull(dirty.SettlementId);
+			ClassicAssert.IsNull(dirty.SettlementId);
 			KingdomLifecycleBook migration = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(migration, "city-a", true,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(migration, "city-a", true,
 				"migration-a", new List<string>()));
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(migration, "city-a", true,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(migration, "city-a", true,
 				"migration-b", new List<string>()));
 			KingdomLifecycleBook preseeded = new KingdomLifecycleBook { SettlementId = "city-a" };
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(preseeded, "city-a", false,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(preseeded, "city-a", false,
 				null, new List<string>()), "preseeded id has no durable binding receipt");
 			KingdomLifecycleRules.Normalize(preseeded);
-			Assert.IsTrue(preseeded.Quarantined);
+			ClassicAssert.IsTrue(preseeded.Quarantined);
 			KingdomLifecycleBook established = Book("city-established");
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(established,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(established,
 				"city-established", false, null, null), "established binding still needs a scan");
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(established,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(established,
 				"city-established", false, null, new List<string> { "city-established" }));
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(established,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(established,
 				"city-established", false, null, new List<string>()));
 
 			KingdomCarryBook carry = new KingdomCarryBook();
-			Assert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
 				new List<string> { "city-a", "city-a" }, false, null));
-			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
 				new List<string> { "city-b", "city-a" }, false, null));
 			CollectionAssert.AreEqual(new List<string> { "city-a", "city-b" }, carry.SettlementIds);
-			Assert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(carry, "realm-a",
 				new List<string> { "city-a" }, false, null));
 			KingdomCarryBook preseededCarry = new KingdomCarryBook
 			{
 				RealmId = "realm-a", SettlementIds = new List<string> { "city-a", "city-b" }
 			};
-			Assert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(preseededCarry, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindCarryIdentity(preseededCarry, "realm-a",
 				new List<string> { "city-a", "city-b" }, false, null));
 			KingdomLifecycleRules.Normalize(preseededCarry);
-			Assert.IsTrue(preseededCarry.Quarantined);
+			ClassicAssert.IsTrue(preseededCarry.Quarantined);
 			KingdomCarryOperation op = BuildCarry(carry, 1L, 1, 1);
 			op.DestinationSettlementId = "foreign-city";
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishCarry(carry, op));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishCarry(carry, op));
 		}
 
 		[Test]
 		public void FirstFoundingCarryBinding_PublishesOneAtomicIdentityReceipt()
 		{
 			KingdomCarryBook book = new KingdomCarryBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-first",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-first",
 				new List<string> { "city-first" }, false, null));
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
-			Assert.AreEqual("realm-first", book.RealmId);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.AreEqual("realm-first", book.RealmId);
 			CollectionAssert.AreEqual(new[] { "city-first" }, book.SettlementIds);
-			Assert.IsTrue(book.IdentityBound);
-			Assert.IsNotEmpty(book.IdentityProof);
+			ClassicAssert.IsTrue(book.IdentityBound);
+			ClassicAssert.IsNotEmpty(book.IdentityProof);
 
 			KingdomCarryBook preseeded = new KingdomCarryBook { RealmId = "realm-first" };
 			KingdomLifecycleRules.Normalize(preseeded);
-			Assert.IsTrue(preseeded.Quarantined,
+			ClassicAssert.IsTrue(preseeded.Quarantined,
 				"a realm id without its atomic identity receipt owns no authority");
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preseeded));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preseeded));
 		}
 
 		[Test]
 		public void CarryIdentityExpansion_IsCanonicalMonotoneRetryStableAndWireStable()
 		{
 			KingdomCarryBook book = new KingdomCarryBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-expand",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-expand",
 				new List<string> { "city-b" }, false, null));
 			List<string> singleton = book.SettlementIds;
 			string singletonProof = book.IdentityProof;
 			byte[] singletonWire = CarryBytes(book);
 			string failure;
 
-			Assert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
 				new List<string> { "city-b", "city-a" }, out failure), failure);
-			Assert.AreSame(singleton, book.SettlementIds);
-			Assert.AreEqual(singletonProof, book.IdentityProof);
+			ClassicAssert.AreSame(singleton, book.SettlementIds);
+			ClassicAssert.AreEqual(singletonProof, book.IdentityProof);
 			CollectionAssert.AreEqual(singletonWire, CarryBytes(book));
-			Assert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
 				new List<string> { "city-b", "city-a" }, out failure), failure);
-			Assert.AreNotSame(singleton, book.SettlementIds);
-			Assert.AreNotEqual(singletonProof, book.IdentityProof);
+			ClassicAssert.AreNotSame(singleton, book.SettlementIds);
+			ClassicAssert.AreNotEqual(singletonProof, book.IdentityProof);
 			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, book.SettlementIds);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
 
 			List<string> expanded = book.SettlementIds;
 			string expandedProof = book.IdentityProof;
 			byte[] expandedWire = CarryBytes(book);
-			Assert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-expand",
 				new List<string> { "city-b", "city-a" }, out failure), failure);
-			Assert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-expand",
 				new List<string> { "city-b", "city-a" }, out failure), failure);
-			Assert.AreSame(expanded, book.SettlementIds,
+			ClassicAssert.AreSame(expanded, book.SettlementIds,
 				"an exact retry must not replace the established topology object");
-			Assert.AreEqual(expandedProof, book.IdentityProof);
+			ClassicAssert.AreEqual(expandedProof, book.IdentityProof);
 			CollectionAssert.AreEqual(expandedWire, CarryBytes(book));
 
 			KingdomCarryBook reloaded = RoundTrip(book);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(reloaded));
-			Assert.AreEqual(expandedProof, reloaded.IdentityProof);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(reloaded));
+			ClassicAssert.AreEqual(expandedProof, reloaded.IdentityProof);
 			CollectionAssert.AreEqual(expanded, reloaded.SettlementIds);
 			CollectionAssert.AreEqual(expandedWire, CarryBytes(reloaded));
 		}
@@ -1948,37 +1949,37 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			KingdomCarryBook wrongRealm = CarryBook();
 			List<string> wrongRealmTopology = wrongRealm.SettlementIds;
-			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(wrongRealm, "realm-b",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(wrongRealm, "realm-b",
 				new List<string> { "city-a", "city-b", "city-c" }, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.IsFalse(wrongRealm.Quarantined);
-			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(wrongRealm, "realm-b",
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(wrongRealm.Quarantined);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(wrongRealm, "realm-b",
 				new List<string> { "city-a", "city-b", "city-c" }, out failure));
-			Assert.IsTrue(wrongRealm.Quarantined);
-			Assert.AreSame(wrongRealmTopology, wrongRealm.SettlementIds);
+			ClassicAssert.IsTrue(wrongRealm.Quarantined);
+			ClassicAssert.AreSame(wrongRealmTopology, wrongRealm.SettlementIds);
 
 			KingdomCarryBook removal = CarryBook();
 			List<string> removalTopology = removal.SettlementIds;
-			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(removal, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(removal, "realm-a",
 				new List<string> { "city-a" }, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.IsFalse(removal.Quarantined);
-			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(removal, "realm-a",
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(removal.Quarantined);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(removal, "realm-a",
 				new List<string> { "city-a" }, out failure));
-			Assert.IsTrue(removal.Quarantined);
-			Assert.AreSame(removalTopology, removal.SettlementIds);
+			ClassicAssert.IsTrue(removal.Quarantined);
+			ClassicAssert.AreSame(removalTopology, removal.SettlementIds);
 			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, removal.SettlementIds);
 
 			KingdomCarryBook replacement = CarryBook();
 			List<string> replacementTopology = replacement.SettlementIds;
-			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(replacement, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(replacement, "realm-a",
 				new List<string> { "city-a", "city-c" }, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.IsFalse(replacement.Quarantined);
-			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(replacement, "realm-a",
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(replacement.Quarantined);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(replacement, "realm-a",
 				new List<string> { "city-a", "city-c" }, out failure));
-			Assert.IsTrue(replacement.Quarantined);
-			Assert.AreSame(replacementTopology, replacement.SettlementIds);
+			ClassicAssert.IsTrue(replacement.Quarantined);
+			ClassicAssert.AreSame(replacementTopology, replacement.SettlementIds);
 			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, replacement.SettlementIds);
 		}
 
@@ -1987,25 +1988,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook book = CarryBook();
 			KingdomCarryOperation operation = BuildCarry(book, 1L, 1, 1);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishCarry(book, operation));
 			List<string> topology = book.SettlementIds;
 			string proof = book.IdentityProof;
 			byte[] before = CarryBytes(book);
 			string failure;
 
-			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
 				new List<string> { "city-a", "city-b", "city-c" }, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 			StringAssert.Contains("open", failure.ToLowerInvariant());
-			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
 				new List<string> { "city-a", "city-b", "city-c" }, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 			StringAssert.Contains("open", failure.ToLowerInvariant());
-			Assert.IsFalse(book.Quarantined);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
-			Assert.AreSame(topology, book.SettlementIds);
-			Assert.AreSame(operation, book.Open);
-			Assert.AreEqual(proof, book.IdentityProof);
+			ClassicAssert.IsFalse(book.Quarantined);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.AreSame(topology, book.SettlementIds);
+			ClassicAssert.AreSame(operation, book.Open);
+			ClassicAssert.AreEqual(proof, book.IdentityProof);
 			CollectionAssert.AreEqual(before, CarryBytes(book));
 		}
 
@@ -2030,16 +2031,16 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < malformed.Length; i++)
 			{
 				string failure;
-				Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
+				ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(book, "realm-a",
 					malformed[i], out failure), "preflight candidate " + i);
-				Assert.IsNotEmpty(failure, "preflight candidate " + i);
-				Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
+				ClassicAssert.IsNotEmpty(failure, "preflight candidate " + i);
+				ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(book, "realm-a",
 					malformed[i], out failure), "publish candidate " + i);
-				Assert.IsNotEmpty(failure, "publish candidate " + i);
-				Assert.IsFalse(book.Quarantined, "candidate " + i);
-				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "candidate " + i);
-				Assert.AreSame(topology, book.SettlementIds, "candidate " + i);
-				Assert.AreEqual(proof, book.IdentityProof, "candidate " + i);
+				ClassicAssert.IsNotEmpty(failure, "publish candidate " + i);
+				ClassicAssert.IsFalse(book.Quarantined, "candidate " + i);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "candidate " + i);
+				ClassicAssert.AreSame(topology, book.SettlementIds, "candidate " + i);
+				ClassicAssert.AreEqual(proof, book.IdentityProof, "candidate " + i);
 				CollectionAssert.AreEqual(before, CarryBytes(book), "candidate " + i);
 			}
 		}
@@ -2053,26 +2054,26 @@ namespace ThousandAndFirst.Tests
 				new List<string> { "city-a", "city-b", "city-c" },
 				delegate { preflight.IdentityProof = "hostile-proof"; });
 			string failure;
-			Assert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(preflight, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanExpandCarryIdentity(preflight, "realm-a",
 				candidate, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 			StringAssert.Contains("changed", failure.ToLowerInvariant());
-			Assert.AreSame(preflightTopology, preflight.SettlementIds);
-			Assert.IsFalse(preflight.Quarantined);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preflight));
+			ClassicAssert.AreSame(preflightTopology, preflight.SettlementIds);
+			ClassicAssert.IsFalse(preflight.Quarantined);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(preflight));
 
 			KingdomCarryBook publish = CarryBook();
 			List<string> publishTopology = publish.SettlementIds;
 			candidate = new MutatingCollection(
 				new List<string> { "city-a", "city-b", "city-c" },
 				delegate { publish.NextSequence = 2L; });
-			Assert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(publish, "realm-a",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.ExpandCarryIdentity(publish, "realm-a",
 				candidate, out failure));
-			Assert.IsTrue(publish.Quarantined);
+			ClassicAssert.IsTrue(publish.Quarantined);
 			StringAssert.Contains("changed", publish.Fault);
-			Assert.AreSame(publishTopology, publish.SettlementIds);
+			ClassicAssert.AreSame(publishTopology, publish.SettlementIds);
 			CollectionAssert.AreEqual(new[] { "city-a", "city-b" }, publish.SettlementIds);
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(publish));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnAuthority(publish));
 		}
 
 		[Test]
@@ -2083,32 +2084,32 @@ namespace ThousandAndFirst.Tests
 				"city-1", "city-2", "city-3", "city-4", "city-5"
 			};
 			KingdomLifecycleBook accepted = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(accepted, "city-target",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(accepted, "city-target",
 				false, null, fiveOtherSettlements),
 				"collision scan must not inherit four-city carry topology cap");
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(accepted));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(accepted));
 
 			KingdomLifecycleBook duplicate = new KingdomLifecycleBook();
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(duplicate, "city-target",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(duplicate, "city-target",
 				false, null, new List<string> { "city-1", "city-2", "city-3", "city-4",
 					"city-5", "city-5" }));
-			Assert.IsNull(duplicate.SettlementId);
+			ClassicAssert.IsNull(duplicate.SettlementId);
 
 			KingdomLifecycleBook target = new KingdomLifecycleBook();
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(target, "city-target",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(target, "city-target",
 				false, null, new List<string> { "city-1", "city-2", "city-3", "city-4",
 					"city-5", "city-target" }));
-			Assert.IsNull(target.SettlementId);
+			ClassicAssert.IsNull(target.SettlementId);
 
 			List<string> maximum = new List<string>();
 			for (int i = 0; i < KingdomLifecycleRules.MaxLifecycleCollisionIds; i++)
 				maximum.Add("city-global-" + i);
 			KingdomLifecycleBook atCap = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(atCap, "city-at-cap",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(atCap, "city-at-cap",
 				false, null, maximum));
 			maximum.Add("city-over-cap");
 			KingdomLifecycleBook overCap = new KingdomLifecycleBook();
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(overCap, "city-over",
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(overCap, "city-over",
 				false, null, maximum));
 		}
 
@@ -2118,16 +2119,16 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook mutated = new KingdomLifecycleBook();
 			MutatingCollection ids = new MutatingCollection(new List<string> { "city-b" },
 				delegate { mutated.PlainGuestNextSequence = 2L; });
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(mutated, "city-a", false,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(mutated, "city-a", false,
 				null, ids));
-			Assert.IsNull(mutated.SettlementId);
+			ClassicAssert.IsNull(mutated.SettlementId);
 
 			KingdomLifecycleBook throwing = new KingdomLifecycleBook();
 			ids = new MutatingCollection(new List<string> { "city-b" },
 				delegate { throw new InvalidOperationException("hostile enumeration"); });
-			Assert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(throwing, "city-a", false,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.BindSettlementIdentity(throwing, "city-a", false,
 				null, ids));
-			Assert.IsNull(throwing.SettlementId);
+			ClassicAssert.IsNull(throwing.SettlementId);
 		}
 
 		[Test]
@@ -2148,9 +2149,9 @@ namespace ThousandAndFirst.Tests
 				futureBytes.Position = 0;
 				KingdomCarryBook future = new KingdomCarryBook();
 				KingdomLifecycleWireCodec.ReadCarry(new BinaryReader(futureBytes), future);
-				Assert.IsFalse(future.WireRejected);
-				Assert.IsTrue(future.Quarantined);
-				Assert.AreEqual(KingdomLifecycleRules.CurrentCarryFormatVersion + 1,
+				ClassicAssert.IsFalse(future.WireRejected);
+				ClassicAssert.IsTrue(future.Quarantined);
+				ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentCarryFormatVersion + 1,
 					future.OpaqueWireVersion);
 				CollectionAssert.AreEqual(new byte[] { 7, 8, 9 }, future.OpaquePayload);
 				CollectionAssert.AreEqual(futureWire, CarryBytes(future));
@@ -2179,18 +2180,18 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCarryBook original = CarryBook();
 			byte[] v5 = CarryV5Bytes(original);
-			Assert.AreEqual(KingdomLifecycleRules.LegacyCarryFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.LegacyCarryFormatVersion,
 				BitConverter.ToInt32(v5, 4));
-			Assert.AreEqual("39d703751fdb3343d3b90c414802dd8956e4acd36454b789c47d3fb70f0b2e66",
+			ClassicAssert.AreEqual("39d703751fdb3343d3b90c414802dd8956e4acd36454b789c47d3fb70f0b2e66",
 				Sha256(v5), "PIN_CARRY_V5_SHA256");
 			KingdomCarryBook loaded = new KingdomCarryBook();
 			using (MemoryStream stream = new MemoryStream(v5, false))
 				KingdomLifecycleWireCodec.ReadCarry(new BinaryReader(stream), loaded);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentCarryFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentCarryFormatVersion,
 				loaded.FormatVersion);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(loaded));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(loaded));
 			CollectionAssert.AreEqual(v5, CarryV5Bytes(loaded));
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(RoundTrip(loaded)));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(RoundTrip(loaded)));
 		}
 
 		[Test]
@@ -2215,13 +2216,13 @@ namespace ThousandAndFirst.Tests
 			op.Origin = "the glass road";
 			op.Faction = "1 of Nivvun Ut, 1002 AR";
 			if (market) { op.Target = 1; op.PlunderRequested = 3; }
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.WaterIntent, 2L));
 			SettleCurrentPhase(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.WaterSettled, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.DomainIntent, 4L));
 			return op;
 		}
@@ -2229,25 +2230,25 @@ namespace ThousandAndFirst.Tests
 		private static void SettleLodgeAbandonSchedule(KingdomLifecycleBook book,
 			KingdomLifecycleOperation op)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
-			Assert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
-			Assert.AreEqual(KingdomLifecycleMutationAction.Settled,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginLodgeAbandonSchedule(book, op, op.DueBefore));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitLodgeAbandonSchedule(book, op, op.DueAfter));
+			ClassicAssert.AreEqual(KingdomLifecycleMutationAction.Settled,
 				KingdomLifecycleRules.LodgeAbandonScheduleAction(book, op, op.DueAfter));
 		}
 
 		private static void AssertAbandonedLodgeHasNoSuccessOrRefund(
 			KingdomLifecycleOperation op)
 		{
-			Assert.AreEqual(KingdomLifecyclePhase.Terminal, op.Phase);
-			Assert.AreEqual(1, op.WaterRequested);
-			Assert.AreEqual(1, op.WaterProved);
-			Assert.AreEqual(0, op.WaterOutstanding);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.ChronicleState);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.LedgerState);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.MessageState);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.DeedState);
-			Assert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.GuestbookState);
-			Assert.IsFalse(op.ResourceLeases.Exists(l =>
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.Terminal, op.Phase);
+			ClassicAssert.AreEqual(1, op.WaterRequested);
+			ClassicAssert.AreEqual(1, op.WaterProved);
+			ClassicAssert.AreEqual(0, op.WaterOutstanding);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.ChronicleState);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.LedgerState);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.MessageState);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.DeedState);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, op.Outbox.GuestbookState);
+			ClassicAssert.IsFalse(op.ResourceLeases.Exists(l =>
 				l.Kind == KingdomLifecycleResourceKind.Population));
 		}
 
@@ -2255,7 +2256,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleLane lane, KingdomLifecycleAction action, long tick, long scheduleBefore)
 		{
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book, lane, action, tick);
-			Assert.NotNull(op);
+			ClassicAssert.NotNull(op);
 			op.ZoneId = "zone-a";
 			bool raid = lane == KingdomLifecycleLane.Raid;
 			if (raid) SeedRaidPlan(book, op, action, tick);
@@ -2306,13 +2307,13 @@ namespace ThousandAndFirst.Tests
 			else if (action == KingdomLifecycleAction.RaidAttack)
 			{
 				op.PartySize = 1;
-				Assert.NotNull(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareProjection(book, op,
+				ClassicAssert.NotNull(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareProjection(book, op,
 					0, KingdomLifecycleRules.ChildId(op.Id, "raider", 0), "Snapjaw",
 					"zone-a", 0, 0));
 			}
 			else if (action == KingdomLifecycleAction.RaidDeliverDemand)
 			{
-				Assert.NotNull(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareInventoryProjection(
+				ClassicAssert.NotNull(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareInventoryProjection(
 					book, op, 0, op.ObjectMarker, op.Blueprint, "player-id", "zone-a"));
 			}
 			if (action == KingdomLifecycleAction.Depart || action == KingdomLifecycleAction.OfferWater)
@@ -2373,7 +2374,7 @@ namespace ThousandAndFirst.Tests
 			}
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, "chronicle", "ledger", "message",
 				"deed", "guestbook");
-			if (raid) Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op));
+			if (raid) ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op));
 			return op;
 		}
 
@@ -2419,7 +2420,7 @@ namespace ThousandAndFirst.Tests
 				};
 				warning.ObjectId = KingdomRaidIncidentRules.GrievanceId(warning.Origin);
 				warning.ObjectMarker = KingdomRaidIncidentRules.IncidentId(warning.ObjectId);
-				Assert.IsTrue(KingdomRaidIncidentRules.TryApply(book.RaidLedger, warning,
+				ClassicAssert.IsTrue(KingdomRaidIncidentRules.TryApply(book.RaidLedger, warning,
 					out KingdomRaidLedger seeded));
 				book.RaidLedger = seeded;
 				active = KingdomRaidIncidentRules.Active(book.RaidLedger);
@@ -2536,7 +2537,7 @@ namespace ThousandAndFirst.Tests
 				op.Origin = active.AttackOperationId;
 				break;
 			}
-			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
 		}
 
 		private static KingdomLifecycleOperation SeedRaidResponse(KingdomRaidIncident incident,
@@ -2592,7 +2593,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomRaidIncident ApplyRaidSeed(KingdomLifecycleBook book,
 			KingdomLifecycleOperation operation, string incidentId)
 		{
-			Assert.IsTrue(KingdomRaidIncidentRules.TryApply(book.RaidLedger, operation,
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.TryApply(book.RaidLedger, operation,
 				out KingdomRaidLedger seeded), operation.Action.ToString());
 			book.RaidLedger = seeded;
 			return KingdomRaidIncidentRules.Incident(book.RaidLedger, incidentId);
@@ -2611,12 +2612,12 @@ namespace ThousandAndFirst.Tests
 					if (phase == KingdomLifecyclePhase.Quarantined) continue;
 					if (KingdomLifecycleRules.CanTransition(op.Action, op.Phase, phase))
 					{
-						Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, phase, tick + guard));
+						ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, phase, tick + guard));
 						moved = true;
 						break;
 					}
 				}
-				Assert.IsTrue(moved, op.Action + " at " + op.Phase);
+				ClassicAssert.IsTrue(moved, op.Action + " at " + op.Phase);
 			}
 		}
 
@@ -2637,20 +2638,20 @@ namespace ThousandAndFirst.Tests
 						KingdomLifecycleWaterLeg leg = op.WaterLegs[i];
 						KingdomLifecycleResourceLease lease = op.ResourceLeases.Find(l =>
 							l.Key == leg.LeaseKey);
-						Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveWater(book,
+						ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveWater(book,
 							lease, leg, WaterWorld(leg)), op.Action + " water receipt");
 					}
 				}
 			}
 			else if (op.Phase == KingdomLifecyclePhase.RemovalIntent)
 			{
-				Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(book,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleRemoval(book,
 					op, LifecycleRemovalWorld(op)), op.Action + " removal receipt");
 			}
 			else if (op.Phase == KingdomLifecyclePhase.DomainIntent)
 			{
 				if (op.Lane == KingdomLifecycleLane.Raid)
-					Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op));
+					ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op));
 				else SettleLeaseKind(book, op, KingdomLifecycleResourceKind.None, true);
 			}
 			else if (op.Phase == KingdomLifecyclePhase.EffectIntent)
@@ -2665,8 +2666,8 @@ namespace ThousandAndFirst.Tests
 			else if (op.Phase == KingdomLifecyclePhase.ScheduleIntent)
 			{
 				if (op.Lane == KingdomLifecycleLane.Raid)
-					Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveSchedule(book, op));
-				else Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(book,
+					ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveSchedule(book, op));
+				else ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleSchedule(book,
 					op, LifecycleScheduleWorld(book, op)), op.Action + " schedule receipt");
 			}
 		}
@@ -2689,19 +2690,19 @@ namespace ThousandAndFirst.Tests
 		private static void SettleLease(KingdomLifecycleBook book,
 			KingdomLifecycleResourceLease lease)
 		{
-			Assert.NotNull(lease);
+			ClassicAssert.NotNull(lease);
 			bool began = KingdomLifecycleRules.BeginLease(book, lease, lease.Before);
-			Assert.IsTrue(began,
+			ClassicAssert.IsTrue(began,
 				lease.Kind + " begin");
 			bool committed = KingdomLifecycleRules.CommitLeaseWitness(book, lease, lease.After);
-			Assert.IsTrue(committed,
+			ClassicAssert.IsTrue(committed,
 				lease.Kind + " confirm");
 		}
 
 		private static void SettleProjectionLease(KingdomLifecycleBook book,
 			KingdomLifecycleOperation op, KingdomLifecycleProjection projection)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(book,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveLifecycleProjection(book,
 				op, projection, LifecycleProjectionWorld(projection)),
 				op.Action + " projection receipt");
 		}
@@ -2709,7 +2710,7 @@ namespace ThousandAndFirst.Tests
 		private static void SettleCarrySchedule(KingdomCarryBook book,
 			KingdomCarryOperation op)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.ProveCarrySchedule(book, op,
 				ScheduleWorld(book, op, op.ScheduleLease.Before,
 					op.ScheduleLease.BeforeRevision, null)));
 		}
@@ -2718,13 +2719,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryOperation op)
 		{
 			if (op.Phase == KingdomLifecyclePhase.Prepared)
-				Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 					KingdomLifecyclePhase.RemovalIntent, 2L));
 			for (int i = 0; i < op.Sources.Count; i++)
 			{
 				KingdomCarrySource source = op.Sources[i];
 				while (source.Removed < source.PlannedCount)
-					Assert.IsTrue(ProveCarryUnit(book, op, source));
+					ClassicAssert.IsTrue(ProveCarryUnit(book, op, source));
 			}
 		}
 
@@ -2732,12 +2733,12 @@ namespace ThousandAndFirst.Tests
 			KingdomCarryOperation op)
 		{
 			RemoveCarrySources(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.Removed, 3L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ScheduleIntent, 4L));
 			SettleCarrySchedule(book, op);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceCarryPhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 5L));
 		}
 
@@ -2758,7 +2759,7 @@ namespace ThousandAndFirst.Tests
 		private static void DeliverCarrySinks(KingdomCarryBook book,
 			KingdomCarryOperation op)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.RecoverCarryOutbox(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RecoverCarryOutbox(book, op));
 			KingdomLifecycleSinkMask[] sinks = new[]
 			{
 				KingdomLifecycleSinkMask.Chronicle, KingdomLifecycleSinkMask.Ledger,
@@ -2769,9 +2770,9 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomLifecycleSinkState state = CarrySinkState(op.Outbox, sinks[i]);
 				if (state == KingdomLifecycleSinkState.Skipped) continue;
-				Assert.AreEqual(KingdomLifecycleSinkState.Pending, state);
-				Assert.IsTrue(KingdomLifecycleRules.BeginCarrySink(book, op, sinks[i]));
-				Assert.IsTrue(KingdomLifecycleRules.CommitCarrySink(book, op, sinks[i]));
+				ClassicAssert.AreEqual(KingdomLifecycleSinkState.Pending, state);
+				ClassicAssert.IsTrue(KingdomLifecycleRules.BeginCarrySink(book, op, sinks[i]));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.CommitCarrySink(book, op, sinks[i]));
 			}
 		}
 
@@ -2820,7 +2821,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCarryBook CarryBook()
 		{
 			KingdomCarryBook book = new KingdomCarryBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-a",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindCarryIdentity(book, "realm-a",
 				new List<string> { "city-b", "city-a" }, false, null));
 			return book;
 		}
@@ -2885,7 +2886,7 @@ namespace ThousandAndFirst.Tests
 			long tick, int original, int planned)
 		{
 			KingdomCarryOperation op = KingdomLifecycleRules.PrepareCarry(book, tick);
-			Assert.NotNull(op);
+			ClassicAssert.NotNull(op);
 			op.OriginSettlementId = "city-a";
 			op.OriginZoneId = "zone-a";
 			op.OriginX = 1;
@@ -2901,9 +2902,9 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleTopology.Inventory, "destination-store", "zone-b",
 				-1, -1, 0, planned));
 			op.Mud = planned;
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.PrepareCarrySchedule(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.PrepareCarrySchedule(book, op,
 				ScheduleWorld(book, op, 99L, 0L, null)));
-			Assert.NotNull(op.ScheduleLease);
+			ClassicAssert.NotNull(op.ScheduleLease);
 			op.Outbox = new KingdomLifecycleOutbox
 			{
 				OperationId = op.Id,
@@ -2928,23 +2929,23 @@ namespace ThousandAndFirst.Tests
 			long tick, string blueprint, int count)
 		{
 			KingdomCarryOperation op = KingdomLifecycleRules.PrepareExactCarry(book, tick);
-			Assert.NotNull(op);
+			ClassicAssert.NotNull(op);
 			op.OriginSettlementId = "city-a";
 			op.OriginZoneId = "zone-a";
 			op.OriginX = 1; op.OriginY = 2;
 			op.DestinationSettlementId = "city-b";
 			op.DestinationSettlementName = "B";
 			op.DueTick = 100L;
-			Assert.IsTrue(KingdomLifecycleRules.TrustedAdapter.PrepareCarrySchedule(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TrustedAdapter.PrepareCarrySchedule(book, op,
 				ScheduleWorld(book, op, 99L, 0L, null)));
 			op.SpillZoneId = "zone-b"; op.SpillX = 5; op.SpillY = 6;
 			KingdomCarrySource source = KingdomLifecycleRules.PrepareExactCarrySource(op, 0,
 				"source-exact", blueprint, KingdomLifecycleTopology.Inventory,
 				"source-container", "zone-a", -1, -1, count);
-			Assert.NotNull(source); op.Sources.Add(source);
+			ClassicAssert.NotNull(source); op.Sources.Add(source);
 			KingdomLifecycleProjection output = KingdomLifecycleRules.PrepareExactCarryOutput(op,
 				0, source, KingdomLifecycleTopology.Inventory, "destination-store", "zone-b", -1, -1);
-			Assert.NotNull(output); op.Outputs.Add(output);
+			ClassicAssert.NotNull(output); op.Outputs.Add(output);
 			op.Outbox = new KingdomLifecycleOutbox
 			{
 				OperationId = op.Id,
@@ -2964,7 +2965,7 @@ namespace ThousandAndFirst.Tests
 				GuestbookDisposition = KingdomLifecycleSinkDisposition.Skip,
 				GuestbookState = KingdomLifecycleSinkState.Skipped
 			};
-			Assert.IsTrue(KingdomLifecycleRules.FreezeExactCarryManifest(op, "sign-one",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.FreezeExactCarryManifest(op, "sign-one",
 				"r_KingdomCarrySign", KingdomLifecycleTopology.Inventory, "actor-one", "zone-a",
 				-1, -1, 1, new List<int> { 1 }, new List<int> { 1 }));
 			return op;

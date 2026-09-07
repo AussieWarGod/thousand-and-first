@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,15 +19,15 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSubsidenceStepBook Admitted()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, Realm, Settlement,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, Realm, Settlement,
 				out KingdomSubsidenceStepBook admitted));
 			return admitted;
 		}
 
 		private static KingdomSubsidenceStepBook Begin(int quota = 1)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due, GrowthStage.City,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due, GrowthStage.City,
 				quota, out KingdomSubsidenceStepBook active, 0, "water"));
 			return active;
 		}
@@ -42,7 +43,7 @@ namespace ThousandAndFirst.Tests
 				ResidentName = "Option intent fixture resident", PreparedTick = Due,
 				OperationId = KingdomResidentDepartureRules.Id(Realm, Settlement, 1, "option-intent-body", Due)
 			};
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
 			return departure;
 		}
 
@@ -52,23 +53,23 @@ namespace ThousandAndFirst.Tests
 			if (fullQuota)
 			{
 				KingdomResidentDepartureOperation departure = Departure();
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId,
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId,
 					GrowthStage.City, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
 			}
-			else Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, cancelTick, 7, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCheckpoint(book, Anchor, out long target));
-			Assert.AreEqual(fullQuota ? Due : cancelTick, target);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, target, out book));
+			else ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, cancelTick, 7, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCheckpoint(book, Anchor, out long target));
+			ClassicAssert.AreEqual(fullQuota ? Due : cancelTick, target);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, target, out book));
 			return book;
 		}
 
 		private static KingdomSubsidenceStepBook Cancelled(long tick, long token)
 		{
 			KingdomSubsidenceStepBook book = Begin();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, tick, token, out book));
-			Assert.IsTrue(book.Active.CancelRequested);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, tick, token, out book));
+			ClassicAssert.IsTrue(book.Active.CancelRequested);
 			return book;
 		}
 
@@ -79,15 +80,15 @@ namespace ThousandAndFirst.Tests
 			{ HasString = prior != null, String = prior };
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(reading, enabled,
 				token, now, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.IsTrue(decision.Valid);
-			Assert.IsNotNull(snapshot);
+			ClassicAssert.IsTrue(decision.Valid);
+			ClassicAssert.IsNotNull(snapshot);
 			return snapshot;
 		}
 
 		private static KingdomSubsidenceOptionIntent Prepared(KingdomSubsidenceStepBook book,
 			long beforeTick, string prior = Prior)
 		{
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(book, beforeTick,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(book, beforeTick,
 				Observed(prior == null, 2, Late, prior), out KingdomSubsidenceOptionIntent intent));
 			return intent;
 		}
@@ -124,9 +125,9 @@ namespace ThousandAndFirst.Tests
 
 		private static void Refuses(string wire)
 		{
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryDecode(wire,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryDecode(wire,
 				out KingdomSubsidenceOptionIntent decoded), wire);
-			Assert.IsNull(decoded);
+			ClassicAssert.IsNull(decoded);
 		}
 
 		[Test]
@@ -134,30 +135,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceOptionIntent present = Prepared(Begin(), Due);
 			KingdomSubsidenceOptionIntent absent = Prepared(Begin(), Due, null);
-			Assert.IsTrue(present.PriorPresent);
-			Assert.AreEqual(Prior, present.PriorWire);
-			Assert.AreEqual(Next, present.NextWire);
-			Assert.IsFalse(absent.PriorPresent);
-			Assert.IsNull(absent.PriorWire);
-			Assert.AreEqual("v1|E|5800|2", absent.NextWire);
+			ClassicAssert.IsTrue(present.PriorPresent);
+			ClassicAssert.AreEqual(Prior, present.PriorWire);
+			ClassicAssert.AreEqual(Next, present.NextWire);
+			ClassicAssert.IsFalse(absent.PriorPresent);
+			ClassicAssert.IsNull(absent.PriorWire);
+			ClassicAssert.AreEqual("v1|E|5800|2", absent.NextWire);
 			foreach (KingdomSubsidenceOptionIntent original in new[] { present, absent })
 			{
-				Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(original, out string wire));
-				Assert.IsTrue(wire.StartsWith("so1:", StringComparison.Ordinal));
-				Assert.IsTrue(wire.Length <= KingdomSubsidenceOptionIntentRules.MaxWireChars);
-				Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryDecode(wire,
+				ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(original, out string wire));
+				ClassicAssert.IsTrue(wire.StartsWith("so1:", StringComparison.Ordinal));
+				ClassicAssert.IsTrue(wire.Length <= KingdomSubsidenceOptionIntentRules.MaxWireChars);
+				ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryDecode(wire,
 					out KingdomSubsidenceOptionIntent restored));
-				Assert.AreNotSame(original, restored);
-				Assert.AreEqual(original.PriorPresent, restored.PriorPresent);
-				Assert.AreEqual(original.PriorWire, restored.PriorWire);
-				Assert.AreEqual(original.NextWire, restored.NextWire);
-				Assert.AreEqual(original.BeforeTick, restored.BeforeTick);
-				Assert.AreEqual(original.Sequence, restored.Sequence);
-				Assert.AreEqual(original.RetiredTick, restored.RetiredTick);
-				Assert.AreEqual(original.StepId, restored.StepId);
-				Assert.AreEqual(original.StepDueTick, restored.StepDueTick);
-				Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(restored, out string repeated));
-				Assert.AreEqual(wire, repeated);
+				ClassicAssert.AreNotSame(original, restored);
+				ClassicAssert.AreEqual(original.PriorPresent, restored.PriorPresent);
+				ClassicAssert.AreEqual(original.PriorWire, restored.PriorWire);
+				ClassicAssert.AreEqual(original.NextWire, restored.NextWire);
+				ClassicAssert.AreEqual(original.BeforeTick, restored.BeforeTick);
+				ClassicAssert.AreEqual(original.Sequence, restored.Sequence);
+				ClassicAssert.AreEqual(original.RetiredTick, restored.RetiredTick);
+				ClassicAssert.AreEqual(original.StepId, restored.StepId);
+				ClassicAssert.AreEqual(original.StepDueTick, restored.StepDueTick);
+				ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(restored, out string repeated));
+				ClassicAssert.AreEqual(wire, repeated);
 			}
 		}
 
@@ -165,8 +166,8 @@ namespace ThousandAndFirst.Tests
 		public void CodecRefusesEveryNoncanonicalTruncatedOrOversizedWire()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Due);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(intent, out string wire));
-			Assert.AreEqual(wire, Forge(wire, intent.PriorWire, intent.NextWire, intent.BeforeTick,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(intent, out string wire));
+			ClassicAssert.AreEqual(wire, Forge(wire, intent.PriorWire, intent.NextWire, intent.BeforeTick,
 				intent.Sequence, intent.RetiredTick, intent.StepId, intent.StepDueTick));
 			Refuses(null);
 			Refuses("");
@@ -188,59 +189,59 @@ namespace ThousandAndFirst.Tests
 				intent.RetiredTick, intent.StepId, intent.StepDueTick));
 			Refuses(Forge(wire, Prior, intent.NextWire, -1L, intent.Sequence, intent.RetiredTick,
 				intent.StepId, intent.StepDueTick));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryEncode(With(intent, prior: ""),
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryEncode(With(intent, prior: ""),
 				out string refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 		}
 
 		[Test]
 		public void ValidRefusesTamperedPriorNextAndStepEvidence()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(intent));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(null));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "v1|E|100|9")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "v1|E|9000|2")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "v1|E|5800|2")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "v1|D|05800|2")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(new KingdomSubsidenceOptionIntent(
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(intent));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(null));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "v1|E|100|9")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "v1|E|9000|2")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "v1|E|5800|2")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "v1|D|05800|2")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, next: "")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, prior: "")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(new KingdomSubsidenceOptionIntent(
 				true, null, intent.NextWire, intent.BeforeTick, intent.Sequence, intent.RetiredTick,
 				intent.StepId, intent.StepDueTick)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(new KingdomSubsidenceOptionIntent(
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(new KingdomSubsidenceOptionIntent(
 				false, Prior, intent.NextWire, intent.BeforeTick, intent.Sequence, intent.RetiredTick,
 				intent.StepId, intent.StepDueTick)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, before: -1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, before: Late + 1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, sequence: -1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, sequence: 0L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, retired: -1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, due: -1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, due: 0L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, step: "")));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, before: -1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, before: Late + 1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, sequence: -1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, sequence: 0L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, retired: -1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, due: -1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, due: 0L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent, step: "")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(intent,
 				step: intent.StepId.Substring(0, intent.StepId.Length - 1) + "z")));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(With(intent, retired: 7L)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(With(intent, retired: 7L)));
 		}
 
 		[Test]
 		public void PrepareRefusesUnadmittedBooksAndNonAnchorDecisions()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(fresh, 0,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(fresh, 0,
 				Observed(false, 2, Late, Prior), out KingdomSubsidenceOptionIntent refused));
-			Assert.IsNull(refused);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(null, 0,
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(null, 0,
 				Observed(false, 2, Late, Prior), out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, null, out refused));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, null, out refused));
 			KingdomSubsidenceOptionRules.Snapshot running = Observed(true, 2, Late, Prior);
-			Assert.AreEqual(KingdomElapsedOptionAction.Run, running.Decision.Action);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, running, out refused));
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Run, running.Decision.Action);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, running, out refused));
 			KingdomSubsidenceOptionRules.Snapshot waiting = Observed(true, 2, 100, Prior);
-			Assert.AreEqual(KingdomElapsedOptionAction.Wait, waiting.Decision.Action);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor, waiting, out refused));
-			Assert.IsNull(refused);
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Wait, waiting.Decision.Action);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor, waiting, out refused));
+			ClassicAssert.IsNull(refused);
 		}
 
 		[Test]
@@ -251,95 +252,95 @@ namespace ThousandAndFirst.Tests
 				true, Prior, new KingdomElapsedOptionDecision(true,
 					new KingdomElapsedOptionRecord(KingdomElapsedOptionState.Enabled, Late, 2),
 					KingdomElapsedOptionTransition.Enabled, KingdomElapsedOptionAction.AnchorEnabled));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, forgedAction,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, forgedAction,
 				out KingdomSubsidenceOptionIntent refused));
 			KingdomSubsidenceOptionRules.Snapshot swappedPrior = new KingdomSubsidenceOptionRules.Snapshot(
 				true, "v1|D|100|2", real.Decision);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, swappedPrior, out refused));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, swappedPrior, out refused));
 			KingdomSubsidenceOptionRules.Snapshot regressedToken = new KingdomSubsidenceOptionRules.Snapshot(
 				true, "v1|D|100|9", real.Decision);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, regressedToken, out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, regressedToken, out refused));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due,
 				new KingdomSubsidenceOptionRules.Snapshot(true, "", real.Decision), out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due,
 				new KingdomSubsidenceOptionRules.Snapshot(false, Prior, real.Decision), out refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 		}
 
 		[Test]
 		public void PrepareRefusesUnfrozenClocksAndStepPositionsItCannotProve()
 		{
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Admitted(), Late + 1,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Admitted(), Late + 1,
 				Observed(false, 2, Late, Prior), out KingdomSubsidenceOptionIntent refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Admitted(), -1,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Admitted(), -1,
 				Observed(false, 2, Late, Prior), out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor + 1,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor + 1,
 				Observed(false, 2, Late, Prior), out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), 0,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), 0,
 				Observed(false, 2, Late, Prior), out refused));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor,
 				Observed(false, 2, Due - 300, Prior), out refused));
 			KingdomSubsidenceStepBook book = Begin();
 			KingdomSubsidenceStepBook quarantined = book.With(book.Active.Copy(
 				phase: KingdomSubsidenceStepPhase.Quarantined, fault: "torn"), book.Sequence);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(quarantined, out string _));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(quarantined, Due,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(quarantined, out string _));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryPrepare(quarantined, Due,
 				Observed(false, 2, Late, Prior), out refused));
-			Assert.IsNull(refused);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor,
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Anchor,
 				Observed(false, 2, Due, Prior), out KingdomSubsidenceOptionIntent accepted));
-			Assert.AreEqual(Anchor, accepted.BeforeTick);
+			ClassicAssert.AreEqual(Anchor, accepted.BeforeTick);
 		}
 
 		[Test]
 		public void ActiveStepMatchesOnlyItsOwnSequenceIdentityAndReceipt()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
-			Assert.AreEqual(1L, intent.Sequence);
-			Assert.AreEqual(0L, intent.RetiredTick);
-			Assert.AreEqual(Due, intent.StepDueTick);
-			Assert.AreEqual(Begin().Active.Id, intent.StepId);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, null));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(With(intent, sequence: 5L), Begin()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(
+			ClassicAssert.AreEqual(1L, intent.Sequence);
+			ClassicAssert.AreEqual(0L, intent.RetiredTick);
+			ClassicAssert.AreEqual(Due, intent.StepDueTick);
+			ClassicAssert.AreEqual(Begin().Active.Id, intent.StepId);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, null));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(With(intent, sequence: 5L), Begin()));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(
 				With(intent, step: Begin(2).Active.Id), Begin()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(
 				With(intent, before: Late, due: Late), Begin()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(With(intent, retired: 7L), Begin()));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Retired(true), Due,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(With(intent, retired: 7L), Begin()));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Retired(true), Due,
 				Due + KingdomSubsidenceStepRules.StepTicks, GrowthStage.City, 1,
 				out KingdomSubsidenceStepBook second, 0, "water"));
-			Assert.AreEqual(2L, second.Sequence);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, second));
+			ClassicAssert.AreEqual(2L, second.Sequence);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, second));
 		}
 
 		[Test]
 		public void RetiredStepMatchesFullQuotaDueOrPartialCancellationTickOnly()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
-			Assert.AreEqual(Due, Retired(true).LastRetiredTick);
-			Assert.AreEqual(Late, Retired(false).LastRetiredTick);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(true)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false, Late + 200)));
+			ClassicAssert.AreEqual(Due, Retired(true).LastRetiredTick);
+			ClassicAssert.AreEqual(Late, Retired(false).LastRetiredTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(true)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false, Late + 200)));
 		}
 
 		[Test]
 		public void IntentWithoutAStepMatchesOnlyItsOwnRetiredReceipt()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Retired(true), Due);
-			Assert.AreEqual("", intent.StepId);
-			Assert.AreEqual(0L, intent.StepDueTick);
-			Assert.AreEqual(Due, intent.RetiredTick);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(true)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
+			ClassicAssert.AreEqual("", intent.StepId);
+			ClassicAssert.AreEqual(0L, intent.StepDueTick);
+			ClassicAssert.AreEqual(Due, intent.RetiredTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(true)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Retired(false)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
 			KingdomSubsidenceOptionIntent empty = Prepared(Admitted(), Anchor);
-			Assert.AreEqual(0L, empty.Sequence);
-			Assert.AreEqual(0L, empty.RetiredTick);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(empty, Admitted()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(empty, Retired(true)));
+			ClassicAssert.AreEqual(0L, empty.Sequence);
+			ClassicAssert.AreEqual(0L, empty.RetiredTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(empty, Admitted()));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(empty, Retired(true)));
 		}
 
 		[TestCase(Anchor, true)]
@@ -353,24 +354,24 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
 			KingdomSubsidenceStepBook retired = Retired(true);
-			Assert.AreEqual(allowed, KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, retired,
+			ClassicAssert.AreEqual(allowed, KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, retired,
 				observed, out long target));
-			Assert.AreEqual(allowed ? Late : 0L, target);
+			ClassicAssert.AreEqual(allowed ? Late : 0L, target);
 		}
 
 		[Test]
 		public void CheckpointRefusesALiveStepAndAForeignBook()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, Begin(), Anchor,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Begin()));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, Begin(), Anchor,
 				out long target));
-			Assert.AreEqual(0L, target);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent,
+			ClassicAssert.AreEqual(0L, target);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent,
 				Retired(false, Late + 200), Anchor, out target));
-			Assert.AreEqual(0L, target);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, null, Anchor, out target));
-			Assert.AreEqual(0L, target);
+			ClassicAssert.AreEqual(0L, target);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, null, Anchor, out target));
+			ClassicAssert.AreEqual(0L, target);
 		}
 
 		[TestCase(Prior, KingdomElapsedOptionTransition.Disabled, KingdomElapsedOptionAction.AnchorDisabled)]
@@ -379,22 +380,22 @@ namespace ThousandAndFirst.Tests
 			KingdomElapsedOptionTransition transition, KingdomElapsedOptionAction action)
 		{
 			KingdomSubsidenceOptionRules.Snapshot original = Observed(prior == null, 2, Late, prior);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, original,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryPrepare(Begin(), Due, original,
 				out KingdomSubsidenceOptionIntent intent));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TrySnapshot(intent,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TrySnapshot(intent,
 				out KingdomSubsidenceOptionRules.Snapshot recovered));
-			Assert.IsTrue(recovered.Decision.Valid);
-			Assert.AreEqual(original.Present, recovered.Present);
-			Assert.AreEqual(original.PriorWire, recovered.PriorWire);
-			Assert.AreEqual(original.NextWire, recovered.NextWire);
-			Assert.AreEqual(transition, recovered.Decision.Transition);
-			Assert.AreEqual(action, recovered.Decision.Action);
-			Assert.AreEqual(original.Decision.Record.State, recovered.Decision.Record.State);
-			Assert.AreEqual(Late, recovered.Decision.Record.ObservedTick);
-			Assert.AreEqual(2L, recovered.Decision.Record.MasterResumeToken);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TrySnapshot(With(intent, next: ""),
+			ClassicAssert.IsTrue(recovered.Decision.Valid);
+			ClassicAssert.AreEqual(original.Present, recovered.Present);
+			ClassicAssert.AreEqual(original.PriorWire, recovered.PriorWire);
+			ClassicAssert.AreEqual(original.NextWire, recovered.NextWire);
+			ClassicAssert.AreEqual(transition, recovered.Decision.Transition);
+			ClassicAssert.AreEqual(action, recovered.Decision.Action);
+			ClassicAssert.AreEqual(original.Decision.Record.State, recovered.Decision.Record.State);
+			ClassicAssert.AreEqual(Late, recovered.Decision.Record.ObservedTick);
+			ClassicAssert.AreEqual(2L, recovered.Decision.Record.MasterResumeToken);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TrySnapshot(With(intent, next: ""),
 				out KingdomSubsidenceOptionRules.Snapshot refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 		}
 
 		[Test]
@@ -403,15 +404,15 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceOptionIntent anchored = Prepared(Begin(), Anchor);
 			KingdomSubsidenceOptionIntent due = Prepared(Begin(), Due);
 			KingdomSubsidenceOptionIntent retired = Prepared(Retired(true), Due);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, retired: Anchor + 1L)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, retired: Anchor)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(retired));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(retired, retired: 0L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, due: Due + 1L)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(due, retired: Due)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, retired: Anchor + 1L)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, retired: Anchor)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(retired));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(retired, retired: 0L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(anchored, due: Due + 1L)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(due, retired: Due)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(
 				With(anchored, before: 1500L, due: 6300L)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(
 				With(anchored, before: 1000L, due: 5800L)));
 		}
 
@@ -419,12 +420,12 @@ namespace ThousandAndFirst.Tests
 		public void CancelledActiveStepMustCarryTheFrozenTransitionTickAndToken()
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
-			Assert.AreEqual(Late, Cancelled(Late, 2).Active.CancelTick);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, Cancelled(Late, 2)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late, 2)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, Cancelled(Late, 3)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late, 3)));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late + 100, 2)));
+			ClassicAssert.AreEqual(Late, Cancelled(Late, 2).Active.CancelTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, Cancelled(Late, 2)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late, 2)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, Cancelled(Late, 3)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late, 3)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, Cancelled(Late + 100, 2)));
 		}
 
 		[Test]
@@ -433,39 +434,39 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
 			KingdomSubsidenceStepBook book = Begin();
 			KingdomSubsidenceStepBook broken = book.With(book.Active.Copy(completed: 6), book.Sequence);
-			Assert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(broken, out string _));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, broken));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, broken));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, null));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, broken, Anchor,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(broken, out string _));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, broken));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, broken));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, null));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(intent, broken, Anchor,
 				out long target));
-			Assert.AreEqual(0L, target);
+			ClassicAssert.AreEqual(0L, target);
 		}
 
 		[Test]
 		public void CheckpointAcceptsARetiredReceiptOnlyForTheIntentsOwnStep()
 		{
 			KingdomSubsidenceStepBook retired = Retired(true);
-			Assert.AreEqual(Due, retired.LastRetiredTick);
+			ClassicAssert.AreEqual(Due, retired.LastRetiredTick);
 			KingdomSubsidenceOptionIntent stepless = Prepared(retired, Late);
-			Assert.AreEqual("", stepless.StepId);
-			Assert.AreEqual(Late, stepless.BeforeTick);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(stepless, retired));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(stepless, retired, Due,
+			ClassicAssert.AreEqual("", stepless.StepId);
+			ClassicAssert.AreEqual(Late, stepless.BeforeTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(stepless, retired));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(stepless, retired, Due,
 				out long target));
-			Assert.AreEqual(0L, target);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryCheckpoint(stepless, retired, Late, out target));
-			Assert.AreEqual(Late, target);
+			ClassicAssert.AreEqual(0L, target);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryCheckpoint(stepless, retired, Late, out target));
+			ClassicAssert.AreEqual(Late, target);
 			KingdomSubsidenceOptionIntent empty = Prepared(Admitted(), Anchor);
-			Assert.AreEqual("", empty.StepId);
-			Assert.AreEqual(0L, Admitted().LastRetiredTick);
-			Assert.AreNotEqual(0L, empty.BeforeTick);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(empty, Admitted(), 0L, out target));
-			Assert.AreEqual(0L, target);
+			ClassicAssert.AreEqual("", empty.StepId);
+			ClassicAssert.AreEqual(0L, Admitted().LastRetiredTick);
+			ClassicAssert.AreNotEqual(0L, empty.BeforeTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.TryCheckpoint(empty, Admitted(), 0L, out target));
+			ClassicAssert.AreEqual(0L, target);
 			KingdomSubsidenceOptionIntent owned = Prepared(Begin(), Anchor);
-			Assert.AreNotEqual("", owned.StepId);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryCheckpoint(owned, retired, Due, out target));
-			Assert.AreEqual(Late, target);
+			ClassicAssert.AreNotEqual("", owned.StepId);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryCheckpoint(owned, retired, Due, out target));
+			ClassicAssert.AreEqual(Late, target);
 		}
 
 		// Shape binding never consults the book validator, so it must refuse these itself.
@@ -474,37 +475,37 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceOptionIntent intent = Prepared(Begin(), Anchor);
 			KingdomSubsidenceStepBook book = Begin();
-			Assert.AreEqual(Due, book.Active.LastActivityTick);
+			ClassicAssert.AreEqual(Due, book.Active.LastActivityTick);
 			KingdomSubsidenceStepBook advanced = book.With(
 				book.Active.Copy(lastActivityTick: Late + 1L), book.Sequence);
-			Assert.IsTrue(KingdomSubsidenceStepRules.Valid(advanced));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, advanced));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, advanced));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.Valid(advanced));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, advanced));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Matches(intent, advanced));
 			KingdomSubsidenceStepOperation op = book.Active;
 			KingdomSubsidenceStepBook shifted = book.With(new KingdomSubsidenceStepOperation(op.Id,
 				op.AnchorTick + 1L, op.DueTick, op.FromStage, op.ReachedStage, op.Quota, op.Completed,
 				op.Phase, op.PendingDepartureId, op.PendingCredited, op.CancelRequested, op.CancelTick,
 				op.CancelToken, op.RungModel, op.Fault, op.StorageCapacity, op.BindingSupport,
 				op.LastActivityTick, op.CreditedDepartureIds, op.PendingIdentity), book.Sequence);
-			Assert.AreEqual(op.Id, shifted.Active.Id);
-			Assert.AreNotEqual(intent.BeforeTick, shifted.Active.AnchorTick);
-			Assert.AreNotEqual(intent.BeforeTick, shifted.Active.DueTick);
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, shifted));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, book));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, book));
+			ClassicAssert.AreEqual(op.Id, shifted.Active.Id);
+			ClassicAssert.AreNotEqual(intent.BeforeTick, shifted.Active.AnchorTick);
+			ClassicAssert.AreNotEqual(intent.BeforeTick, shifted.Active.DueTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, shifted));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.MatchesShape(intent, book));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Matches(intent, book));
 		}
 
 		[Test]
 		public void SteplessIntentCannotCarryARetiredReceiptWithoutASequence()
 		{
 			KingdomSubsidenceOptionIntent empty = Prepared(Admitted(), Anchor);
-			Assert.AreEqual(0L, empty.Sequence);
-			Assert.AreEqual(0L, empty.RetiredTick);
-			Assert.AreEqual("", empty.StepId);
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(empty));
-			Assert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(empty, retired: 5L)));
-			Assert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(empty, out string wire));
-			Assert.AreEqual(wire, Forge(wire, Prior, empty.NextWire, empty.BeforeTick, 0L, 0L, "", 0L));
+			ClassicAssert.AreEqual(0L, empty.Sequence);
+			ClassicAssert.AreEqual(0L, empty.RetiredTick);
+			ClassicAssert.AreEqual("", empty.StepId);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.Valid(empty));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionIntentRules.Valid(With(empty, retired: 5L)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionIntentRules.TryEncode(empty, out string wire));
+			ClassicAssert.AreEqual(wire, Forge(wire, Prior, empty.NextWire, empty.BeforeTick, 0L, 0L, "", 0L));
 			Refuses(Forge(wire, Prior, empty.NextWire, empty.BeforeTick, 0L, 5L, "", 0L));
 		}
 	}

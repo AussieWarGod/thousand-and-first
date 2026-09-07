@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -22,12 +23,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryCapStillAgreesWithTheConstantItWasCopiedFrom()
 		{
-			Assert.AreEqual(KingdomSettlement.MaxSettlements, KingdomCityMemoryRules.CitiesPerRealm);
-			Assert.AreEqual(KingdomZoningRules.ZonesForStage(GrowthStage.City)
+			ClassicAssert.AreEqual(KingdomSettlement.MaxSettlements, KingdomCityMemoryRules.CitiesPerRealm);
+			ClassicAssert.AreEqual(KingdomZoningRules.ZonesForStage(GrowthStage.City)
 				* KingdomRules.MaxBuildingsForStage(GrowthStage.City),
 				KingdomCityState.MaxWorks);
-			Assert.AreEqual(KingdomRules.MaxPopulation, KingdomCityState.MaxResidents);
-			Assert.AreEqual(KingdomZoningRules.ZonesForStage(GrowthStage.City), KingdomCityState.MaxZones);
+			ClassicAssert.AreEqual(KingdomRules.MaxPopulation, KingdomCityState.MaxResidents);
+			ClassicAssert.AreEqual(KingdomZoningRules.ZonesForStage(GrowthStage.City), KingdomCityState.MaxZones);
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(c), the widths, by value.</summary>
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(12, KingdomCityMemoryRules.ResearchShelfRowBytes)]
 		public void TheTablesWidthsAreWhatTheConstitutionWroteDown(int expected, int actual)
 		{
-			Assert.AreEqual(expected, actual);
+			ClassicAssert.AreEqual(expected, actual);
 		}
 
 		/// <summary>
@@ -85,11 +86,11 @@ namespace ThousandAndFirst.Tests
 		public void ABrinkWindowIsAStandingFlagAndTwoTicks()
 		{
 			int bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomBrinkWindow), out bytes));
-			Assert.AreEqual(17, bytes);
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomBrinkWindow), out bytes));
+			ClassicAssert.AreEqual(17, bytes);
 			int row;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomResidentRow), out row));
-			Assert.AreEqual(115, row, "the resident row moved; if it grew past 120, §0.0(c) needs the same edit");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomResidentRow), out row));
+			ClassicAssert.AreEqual(115, row, "the resident row moved; if it grew past 120, §0.0(c) needs the same edit");
 		}
 
 		/// <summary>
@@ -107,11 +108,11 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomCreedRules.MaxKeptCreeds + 3; i++)
 			{
 				kept = KingdomCreedRules.RememberKept(kept, "Creed" + i, out added);
-				Assert.AreEqual(i < KingdomCreedRules.MaxKeptCreeds, added, "creed " + i);
+				ClassicAssert.AreEqual(i < KingdomCreedRules.MaxKeptCreeds, added, "creed " + i);
 			}
-			Assert.AreEqual(KingdomCreedRules.MaxKeptCreeds, KingdomCreedRules.DecodeKept(kept).Count);
-			Assert.IsTrue(KingdomCreedRules.KeptHolds(kept, "Creed0"), "the first creed a settler left is never evicted");
-			Assert.IsFalse(KingdomCreedRules.KeptHolds(kept, "Creed" + KingdomCreedRules.MaxKeptCreeds));
+			ClassicAssert.AreEqual(KingdomCreedRules.MaxKeptCreeds, KingdomCreedRules.DecodeKept(kept).Count);
+			ClassicAssert.IsTrue(KingdomCreedRules.KeptHolds(kept, "Creed0"), "the first creed a settler left is never evicted");
+			ClassicAssert.IsFalse(KingdomCreedRules.KeptHolds(kept, "Creed" + KingdomCreedRules.MaxKeptCreeds));
 		}
 
 		/// <summary>Six stock/capacity longs, forty-eight bytes, on the city and on every zone row.
@@ -120,8 +121,8 @@ namespace ThousandAndFirst.Tests
 		public void TheStockBlockIsExactlySixLongs()
 		{
 			int bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomStocks), out bytes));
-			Assert.AreEqual(48, bytes);
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomStocks), out bytes));
+			ClassicAssert.AreEqual(48, bytes);
 		}
 
 		/// <summary>
@@ -135,12 +136,12 @@ namespace ThousandAndFirst.Tests
 		public void TheKeepersHeaderIsTheFieldsTheSettlementActuallySerialises()
 		{
 			int bytes;
-			Assert.IsTrue(
+			ClassicAssert.IsTrue(
 				KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(typeof(KingdomSettlement), KingdomCityMemoryRules.ResearchFields, out bytes),
 				"a field the receipt names is no longer on the settlement, so the lane moved and nothing said so");
-			Assert.AreEqual(7, KingdomCityMemoryRules.ResearchFields.Length);
-			Assert.AreEqual(41, bytes, "the keepers' fields moved; if they grew past 48, §0.0(c) needs the same edit");
-			Assert.LessOrEqual(bytes, KingdomCityMemoryRules.ResearchHeaderBytes);
+			ClassicAssert.AreEqual(7, KingdomCityMemoryRules.ResearchFields.Length);
+			ClassicAssert.AreEqual(41, bytes, "the keepers' fields moved; if they grew past 48, §0.0(c) needs the same edit");
+			ClassicAssert.LessOrEqual(bytes, KingdomCityMemoryRules.ResearchHeaderBytes);
 		}
 
 		/// <summary>A name the type does not declare is refused rather than counted as nothing —
@@ -149,11 +150,11 @@ namespace ThousandAndFirst.Tests
 		public void AFieldTheTypeNoLongerDeclaresIsRefusedRatherThanCountedAsZero()
 		{
 			int bytes;
-			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(
 				typeof(KingdomSettlement), new string[1] { "ResearchFieldThatWasRenamed" }, out bytes));
-			Assert.AreEqual(0, bytes);
-			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(typeof(KingdomSettlement), null, out bytes));
-			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(null, KingdomCityMemoryRules.ResearchFields, out bytes));
+			ClassicAssert.AreEqual(0, bytes);
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(typeof(KingdomSettlement), null, out bytes));
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredFieldBytes(null, KingdomCityMemoryRules.ResearchFields, out bytes));
 		}
 
 		/// <summary>The shelf's row count is the rule's own, not a copy of it: a ninth shelving
@@ -161,24 +162,24 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheShelfIsPricedAtTheCapTheRuleEnforces()
 		{
-			Assert.AreEqual(KingdomResearchRules.ShelfRows, KingdomCityMemoryRules.ResearchShelfRows);
+			ClassicAssert.AreEqual(KingdomResearchRules.ShelfRows, KingdomCityMemoryRules.ResearchShelfRows);
 			long bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out bytes));
-			Assert.AreEqual(
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out bytes));
+			ClassicAssert.AreEqual(
 				KingdomCityMemoryRules.ResearchHeaderBytes
 					+ KingdomCityMemoryRules.ResearchRosterHeapBytes
 					+ (long)KingdomResearchRules.ShelfRows
 						* KingdomCityMemoryRules.ResearchShelfRowBytes,
 				bytes);
-			Assert.IsFalse(KingdomCityMemoryRules.TryResearchBytes(-1, out bytes));
-			Assert.AreEqual(0L, bytes);
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryResearchBytes(-1, out bytes));
+			ClassicAssert.AreEqual(0L, bytes);
 		}
 
 		private static void AssertRowFits(Type row, int budget)
 		{
 			int bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(row, out bytes), row.Name + " could not be measured");
-			Assert.LessOrEqual(bytes, budget, row.Name + " declares " + bytes + " bytes against a budget of " + budget);
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(row, out bytes), row.Name + " could not be measured");
+			ClassicAssert.LessOrEqual(bytes, budget, row.Name + " declares " + bytes + " bytes against a budget of " + budget);
 		}
 
 		/// <summary>69,216 bytes, with every possible City-stage plot in all four zones priced as
@@ -187,28 +188,28 @@ namespace ThousandAndFirst.Tests
 		public void OneCityAtTodaysCapsIsTheTablesOwnFigure()
 		{
 			long bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(
 				KingdomCityState.MaxZones, KingdomCityState.MaxWorks, KingdomCityState.MaxResidents, KingdomCityState.MaxClocks, out bytes));
-			Assert.AreEqual(69216L, bytes);
+			ClassicAssert.AreEqual(69216L, bytes);
 		}
 
 		[Test]
 		public void EachOtherLineOfTheTableComposesToItsOwnFigure()
 		{
 			long registry;
-			Assert.IsTrue(KingdomCityMemoryRules.TryRegistryBytes(KingdomCityState.MaxResidents, KingdomCityMemoryRules.CitiesPerRealm, KingdomCityMemoryRules.MaxOpenJobs, out registry));
-			Assert.AreEqual(6400L, registry, "binding registry, realm-scope");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRegistryBytes(KingdomCityState.MaxResidents, KingdomCityMemoryRules.CitiesPerRealm, KingdomCityMemoryRules.MaxOpenJobs, out registry));
+			ClassicAssert.AreEqual(6400L, registry, "binding registry, realm-scope");
 
 			long jobs;
-			Assert.IsTrue(KingdomCityMemoryRules.TryJobBytes(KingdomCityMemoryRules.MaxOpenJobs, out jobs));
-			Assert.AreEqual(4480L, jobs, "job rows with itineraries");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryJobBytes(KingdomCityMemoryRules.MaxOpenJobs, out jobs));
+			ClassicAssert.AreEqual(4480L, jobs, "job rows with itineraries");
 
 			long distance;
-			Assert.IsTrue(KingdomCityMemoryRules.TryDistanceMatrixBytes(1, out distance));
-			Assert.AreEqual(3042L, distance, "distance matrix, per city");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryDistanceMatrixBytes(1, out distance));
+			ClassicAssert.AreEqual(3042L, distance, "distance matrix, per city");
 
 			long networks;
-			Assert.IsTrue(KingdomCityMemoryRules.TryNetworkBytes(1, out networks));
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryNetworkBytes(1, out networks));
 			// W7 re-pin, justified in KingdomCityMemoryRules: 5,248 was four networks of
 			// 32x16 + 48x16 + a 32-byte header, priced before anything had been built to sit in
 			// the header. The header is 64 (four array references do not fit in 32) and each
@@ -216,15 +217,15 @@ namespace ThousandAndFirst.Tests
 			// the SOLVE inside §3.11's O(nodes + edges) ceiling instead of nodes x edges. The
 			// realm total moves 768 bytes and stays under the advisory rung; the ceiling has not
 			// moved and is what a regression is measured against.
-			Assert.AreEqual(5632L, networks, "network graphs, per city");
+			ClassicAssert.AreEqual(5632L, networks, "network graphs, per city");
 
 			long research;
-			Assert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out research));
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryResearchBytes(1, out research));
 			// The keepers, per city: seven-field header 48, bounded UTF-16 roster payload
 			// 16,384, plus eight shelf rows at 12.
 			// Its own line because the state hangs off the settlement container and not off the
 			// city's book -- Addendum 22 B1's siting, priced where it actually lives.
-			Assert.AreEqual(16528L, research, "the keepers' state, per city");
+			ClassicAssert.AreEqual(16528L, research, "the keepers' state, per city");
 		}
 
 		/// <summary>
@@ -235,13 +236,13 @@ namespace ThousandAndFirst.Tests
 		public void TheRealmFitsUnderTheCeilingAtTodaysCaps()
 		{
 			long bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			Assert.AreEqual(294134L, bytes, "the composed three-city realm total moved");
-			Assert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling,
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
+			ClassicAssert.AreEqual(294134L, bytes, "the composed three-city realm total moved");
+			ClassicAssert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling,
 				"the full live realm broke its bounded model ceiling");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
 				"the realm total crossed its advisory rung -- if widths changed, the memory table needs the same edit");
-			Assert.Less(bytes, KingdomBudgetRules.ModelBytesWarn, "the advisory rung is only advice if the total is under it");
+			ClassicAssert.Less(bytes, KingdomBudgetRules.ModelBytesWarn, "the advisory rung is only advice if the total is under it");
 		}
 
 		/// <summary>
@@ -255,10 +256,10 @@ namespace ThousandAndFirst.Tests
 		public void TheSameFormulaAnswersForANineZoneCity()
 		{
 			long bytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			Assert.AreEqual(555374L, bytes);
-			Assert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
-			Assert.Less(bytes, 768L * KiB, "still under three quarters of a MiB");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
+			ClassicAssert.AreEqual(555374L, bytes);
+			ClassicAssert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
+			ClassicAssert.Less(bytes, 768L * KiB, "still under three quarters of a MiB");
 		}
 
 		/// <summary>Cost is O(rows) and nothing else: doubling the residents moves the total by
@@ -268,9 +269,9 @@ namespace ThousandAndFirst.Tests
 		{
 			long baseline;
 			long doubled;
-			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(4, 40, 30, 12, out baseline));
-			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(4, 40, 60, 12, out doubled));
-			Assert.AreEqual(30L * KingdomCityMemoryRules.ResidentRowBytes, doubled - baseline);
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(4, 40, 30, 12, out baseline));
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(4, 40, 60, 12, out doubled));
+			ClassicAssert.AreEqual(30L * KingdomCityMemoryRules.ResidentRowBytes, doubled - baseline);
 		}
 
 		[TestCase(-1, 0, 0, 0)]
@@ -280,15 +281,15 @@ namespace ThousandAndFirst.Tests
 		public void ANegativeCountIsRefusedRatherThanUnderReported(int zones, int works, int residents, int clocks)
 		{
 			long bytes;
-			Assert.IsFalse(KingdomCityMemoryRules.TryCityModelBytes(zones, works, residents, clocks, out bytes));
-			Assert.AreEqual(0L, bytes);
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryCityModelBytes(zones, works, residents, clocks, out bytes));
+			ClassicAssert.AreEqual(0L, bytes);
 		}
 
 		[Test]
 		public void AnUnmeasurableTypeIsRefusedRatherThanCountedAsZero()
 		{
 			int bytes;
-			Assert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(null, out bytes));
+			ClassicAssert.IsFalse(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(null, out bytes));
 		}
 	}
 }

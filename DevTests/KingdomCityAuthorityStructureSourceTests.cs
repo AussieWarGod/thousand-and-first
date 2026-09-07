@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,7 +23,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LogicalAuthoritiesRetainEveryShardInDeclarationOrder()
 		{
-			Assert.AreEqual(5, KingdomHappeningsLogicalSource.FileCount);
+			ClassicAssert.AreEqual(5, KingdomHappeningsLogicalSource.FileCount);
 			string happenings = KingdomHappeningsLogicalSource.Read();
 			AssertOrdered(happenings, "internal static int Reckon(",
 				"private static KingdomCityState Festivals(",
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 				"public static string FuneralClause(",
 				"public static void Digest(", "private static string Named(");
 
-			Assert.AreEqual(3, KingdomHeartbeatLogicalSource.FileCount);
+			ClassicAssert.AreEqual(3, KingdomHeartbeatLogicalSource.FileCount);
 			string heartbeat = KingdomHeartbeatLogicalSource.Read();
 			AssertOrdered(heartbeat, "public static void OnEndTurn(KingdomSystem System)",
 				"private static void Slice(", "private static int Advance(",
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = TestMain.ReadRepositoryText(ProductionFiles[i]);
 				int lines = source.Replace("\r\n", "\n").Split('\n').Length;
-				Assert.Less(lines, 300, ProductionFiles[i]);
+				ClassicAssert.Less(lines, 300, ProductionFiles[i]);
 			}
 		}
 
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < tokens.Length; i++)
 			{
 				int next = source.IndexOf(tokens[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, tokens[i]);
+				ClassicAssert.Greater(next, cursor, tokens[i]);
 				cursor = next;
 			}
 		}

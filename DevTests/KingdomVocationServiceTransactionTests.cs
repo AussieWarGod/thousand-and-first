@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -20,56 +21,56 @@ namespace ThousandAndFirst.DevTests
 			Publication publication = new Publication();
 			KingdomVocationServiceOffer offer = Offer("waystation", 1);
 			string source = offer.SourceDescription;
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryReadView(port, Realm,
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryReadView(port, Realm,
 				offer.SettlementId, offer.Vocation, offer, out string emptyHistory,
 				out KingdomVocationServiceStatus available, out string failure), failure);
 			StringAssert.Contains("No durable", emptyHistory);
-			Assert.AreEqual(KingdomVocationServiceActionState.Available, available.State);
-			Assert.AreEqual(0, available.SeriesCount);
-			Assert.AreEqual(0, available.RealmCount);
-			Assert.AreEqual(0, port.CommitCalls, "pre-choice read is save-pure");
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
+			ClassicAssert.AreEqual(KingdomVocationServiceActionState.Available, available.State);
+			ClassicAssert.AreEqual(0, available.SeriesCount);
+			ClassicAssert.AreEqual(0, available.RealmCount);
+			ClassicAssert.AreEqual(0, port.CommitCalls, "pre-choice read is save-pure");
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
 				offer, 40L, publication, out KingdomVocationServiceCommitResult result,
 				out failure), failure);
-			Assert.IsTrue(result.Changed);
-			Assert.IsTrue(publication.Committed);
-			Assert.AreEqual(1, publication.Calls);
-			Assert.AreEqual(1, port.CommitCalls);
-			Assert.AreEqual(source, offer.SourceDescription, "source view is immutable");
-			Assert.AreEqual(0L, result.CadenceOrdinal);
+			ClassicAssert.IsTrue(result.Changed);
+			ClassicAssert.IsTrue(publication.Committed);
+			ClassicAssert.AreEqual(1, publication.Calls);
+			ClassicAssert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.AreEqual(source, offer.SourceDescription, "source view is immutable");
+			ClassicAssert.AreEqual(0L, result.CadenceOrdinal);
 			StringAssert.Contains(result.SourceReceiptId, result.ReceiptText);
 			StringAssert.Contains(result.SinkReceiptId, result.ReceiptText);
 			long outerRevision = authority.Revision;
 
 			Publication retryPublication = new Publication();
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
 				offer, 90L, retryPublication,
 				out KingdomVocationServiceCommitResult retry, out failure), failure);
-			Assert.IsFalse(retry.Changed);
-			Assert.IsFalse(retryPublication.Committed);
-			Assert.AreEqual(0, retryPublication.Calls);
-			Assert.AreEqual(result.ServiceId, retry.ServiceId);
-			Assert.AreEqual(result.CompletedTick, retry.CompletedTick);
-			Assert.AreEqual(outerRevision, authority.Revision);
-			Assert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.IsFalse(retry.Changed);
+			ClassicAssert.IsFalse(retryPublication.Committed);
+			ClassicAssert.AreEqual(0, retryPublication.Calls);
+			ClassicAssert.AreEqual(result.ServiceId, retry.ServiceId);
+			ClassicAssert.AreEqual(result.CompletedTick, retry.CompletedTick);
+			ClassicAssert.AreEqual(outerRevision, authority.Revision);
+			ClassicAssert.AreEqual(1, port.CommitCalls);
 
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryReadHistory(port, Realm,
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryReadHistory(port, Realm,
 				offer.SettlementId, offer.Vocation, out string history, out failure), failure);
 			StringAssert.Contains(result.SourceReceiptId, history);
 			StringAssert.Contains(result.SinkReceiptId, history);
-			Assert.AreEqual(outerRevision, authority.Revision, "read/cancel path is save-pure");
-			Assert.AreEqual(1, port.CommitCalls);
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryReadView(port, Realm,
+			ClassicAssert.AreEqual(outerRevision, authority.Revision, "read/cancel path is save-pure");
+			ClassicAssert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryReadView(port, Realm,
 				offer.SettlementId, offer.Vocation, offer, out history,
 				out KingdomVocationServiceStatus recorded, out failure), failure);
-			Assert.AreEqual(KingdomVocationServiceActionState.AlreadyRecorded, recorded.State);
+			ClassicAssert.AreEqual(KingdomVocationServiceActionState.AlreadyRecorded, recorded.State);
 			StringAssert.Contains("useful result waystation 1", recorded.ExistingReceiptText);
-			Assert.IsTrue(KingdomVocationServiceTransactions.TryReadRealmResults(port, Realm,
+			ClassicAssert.IsTrue(KingdomVocationServiceTransactions.TryReadRealmResults(port, Realm,
 				out List<string> realmPages, out failure), failure);
-			Assert.AreEqual(1, realmPages.Count);
+			ClassicAssert.AreEqual(1, realmPages.Count);
 			StringAssert.Contains("useful result waystation 1", realmPages[0]);
-			Assert.AreEqual(outerRevision, authority.Revision);
-			Assert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.AreEqual(outerRevision, authority.Revision);
+			ClassicAssert.AreEqual(1, port.CommitCalls);
 		}
 
 		[Test]
@@ -78,15 +79,15 @@ namespace ThousandAndFirst.DevTests
 			KingdomCivicMemoryAuthority authority = Authority();
 			StalePort port = new StalePort(authority);
 			Publication publication = new Publication();
-			Assert.IsFalse(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
+			ClassicAssert.IsFalse(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
 				Offer("refuge", 2), 40L, publication,
 				out KingdomVocationServiceCommitResult _,
 				out string failure));
 			StringAssert.Contains("revision", failure);
-			Assert.AreEqual(1, publication.Calls);
-			Assert.IsFalse(publication.Committed);
-			Assert.IsNull(authority.Read().Section(Practice));
-			Assert.IsNotNull(authority.Read().Section(
+			ClassicAssert.AreEqual(1, publication.Calls);
+			ClassicAssert.IsFalse(publication.Committed);
+			ClassicAssert.IsNull(authority.Read().Section(Practice));
+			ClassicAssert.IsNotNull(authority.Read().Section(
 				KingdomCivicMemoryLimits.SectionCivicArtifacts));
 		}
 
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.DevTests
 			byte[] outer = KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Of(
 				One(Practice, new byte[] { 1, 2, 3 }), 0L));
 			malformed.AdoptSaved(outer);
-			Assert.IsTrue(malformed.Quarantined);
+			ClassicAssert.IsTrue(malformed.Quarantined);
 			AssertRefused(malformed, "read-only");
 		}
 
@@ -114,14 +115,14 @@ namespace ThousandAndFirst.DevTests
 			long revision = authority.Revision;
 			Port port = new Port(authority);
 			Publication publication = new Publication();
-			Assert.IsFalse(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
+			ClassicAssert.IsFalse(KingdomVocationServiceTransactions.TryRecordGoverned(port, Realm,
 				Offer("reliquary", 3), 40L, publication,
 				out KingdomVocationServiceCommitResult _,
 				out string failure));
 			StringAssert.Contains(expected, failure.ToLowerInvariant());
-			Assert.AreEqual(revision, authority.Revision);
-			Assert.AreEqual(0, port.CommitCalls);
-			Assert.AreEqual(0, publication.Calls);
+			ClassicAssert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(0, port.CommitCalls);
+			ClassicAssert.AreEqual(0, publication.Calls);
 		}
 
 		private static KingdomVocationServiceOffer Offer(string vocation, int ordinal)
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.DevTests
 				"taf:settlement:seat", vocation, kind, authority,
 				"taf:source:" + vocation + ":" + ordinal, "exact source " + ordinal,
 				"useful result " + vocation + " " + ordinal);
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 				out KingdomVocationServiceOffer offer, out string failure), failure);
 			return offer;
 		}

@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,12 +31,12 @@ namespace ThousandAndFirst.Tests
 		public void WireAuthorityAndKeyDeclarationsHaveOneOwner()
 		{
 			string source = KingdomTradeStateLogicalSource.Read();
-			Assert.AreEqual(8, Count(source, "public static partial class KingdomTradeCodec"));
-			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeBook"));
-			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeManifestState"));
-			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeOperation"));
-			Assert.AreEqual(1, Count(source, "public sealed class KingdomTradeAuthoritySeal"));
-			Assert.AreEqual(1, Count(source, "private static readonly UTF8Encoding StrictUtf8"));
+			ClassicAssert.AreEqual(8, Count(source, "public static partial class KingdomTradeCodec"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class KingdomTradeBook"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class KingdomTradeManifestState"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class KingdomTradeOperation"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class KingdomTradeAuthoritySeal"));
+			ClassicAssert.AreEqual(1, Count(source, "private static readonly UTF8Encoding StrictUtf8"));
 			StringAssert.DoesNotContain("public static class KingdomTradeCodec", source);
 		}
 
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

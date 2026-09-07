@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -112,7 +113,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomConstruction.TryRead", zoning);
 			StringAssert.Contains("job.Route != KingdomConstructionRoute.PlotCommission", zoning);
 			StringAssert.Contains("job.Route != KingdomConstructionRoute.PlotPlan", zoning);
-			Assert.IsFalse(zoning.Contains("if (KeptCacheTick == now"));
+			ClassicAssert.IsFalse(zoning.Contains("if (KeptCacheTick == now"));
 		}
 
 		[Test]
@@ -133,8 +134,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("part Name=\"Interior\" Cell=\"TAFArcology\" X=\"1\" Y=\"1\" Z=\"10\"", objects);
 			StringAssert.Contains("DisplayName=\"vertical lodging ward works\"", objects);
 			StringAssert.Contains("DisplayName=\"hydroponic terrace works\"", objects);
-			Assert.IsFalse(objects.Contains("it has weather of its own"));
-			Assert.IsFalse(objects.Contains("nothing above this but more building"));
+			ClassicAssert.IsFalse(objects.Contains("it has weather of its own"));
+			ClassicAssert.IsFalse(objects.Contains("nothing above this but more building"));
 
 			string testing = Source("TESTING.md");
 			string testingWords = string.Join(" ", testing.Split((char[])null,
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 		public void PortfolioRuntimeHasOneCanonicalCasRegisterAndNoAutomaticWorkLoop()
 		{
 			string source = KingdomPurposeLogicalSource.Read();
-			Assert.AreEqual(1, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source,
 				"internal const string PortfolioStateKey = \"r_TAF_PurposePortfolioPair\""));
 			Ordered(source, "string current = The.Game.GetStringGameState(PortfolioStateKey",
 				"current != expected", "ValidTransition(Before, After",
@@ -183,7 +184,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("TurnTick(", source);
 
 			string objects = Source("ObjectBlueprints.xml");
-			Assert.AreEqual(5, Occurrences(objects, "<part Name=\"r_KingdomPurposeWork\" />"));
+			ClassicAssert.AreEqual(5, Occurrences(objects, "<part Name=\"r_KingdomPurposeWork\" />"));
 		}
 
 		[Test]
@@ -195,9 +196,9 @@ namespace ThousandAndFirst.Tests
 				architecture);
 			StringAssert.Contains("Key=\"purpose-greatfoundry-eater-xl0\" Width=\"20\" Height=\"18\"",
 				architecture);
-			Assert.AreEqual(2, Occurrences(architecture,
+			ClassicAssert.AreEqual(2, Occurrences(architecture,
 				"Key=\"eater\" Priority=\"80\" Styles=\"eater\""));
-			Assert.GreaterOrEqual(Occurrences(architecture,
+			ClassicAssert.GreaterOrEqual(Occurrences(architecture,
 				"Anchors=\"style:retained-machine\""), 2);
 			StringAssert.Contains("never a borrowed power source", architecture);
 			StringAssert.Contains("remain the exact inert purpose fixtures", architecture);

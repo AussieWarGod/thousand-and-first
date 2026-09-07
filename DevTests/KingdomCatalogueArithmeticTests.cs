@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,7 +15,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, int.MaxValue)]
 		public void Carried_WidensBeforeScalingMaximumAmount(int percent, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.Carried(int.MaxValue, percent));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.Carried(int.MaxValue, percent));
 		}
 
 		[Test]
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 						: percents[p] >= 100 ? amounts[a]
 						: (int)((long)amounts[a] * percents[p] / 100L);
 					int actual = KingdomCatalogueRules.Carried(amounts[a], percents[p]);
-					Assert.AreEqual(expected, actual, "amount " + amounts[a] + ", percent " + percents[p]);
+					ClassicAssert.AreEqual(expected, actual, "amount " + amounts[a] + ", percent " + percents[p]);
 					Assert.That(actual, Is.InRange(0, int.MaxValue));
 				}
 			}
@@ -44,11 +45,11 @@ namespace ThousandAndFirst.Tests
 				+ "roof:2147483647,roof:2147483647,craft:2147483647,learning:2147483647");
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), rows, 100);
-			Assert.AreEqual(int.MaxValue, tally.Water);
-			Assert.AreEqual(int.MaxValue, tally.Food);
-			Assert.AreEqual(int.MaxValue, tally.Roof);
-			Assert.AreEqual(int.MaxValue, tally.Lift);
-			Assert.AreEqual(0, tally.Works);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Water);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Food);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Roof);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Lift);
+			ClassicAssert.AreEqual(0, tally.Works);
 		}
 
 		[Test]
@@ -59,14 +60,14 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldWork(
 				default(KingdomCatalogueRules.SupportTally), rows, 100);
 			tally = KingdomCatalogueRules.FoldWork(tally, rows, 100);
-			Assert.AreEqual(int.MaxValue, tally.Water);
-			Assert.AreEqual(int.MaxValue, tally.Food);
-			Assert.AreEqual(int.MaxValue, tally.Roof);
-			Assert.AreEqual(int.MaxValue, tally.Lift);
-			Assert.AreEqual(2, tally.Works);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Water);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Food);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Roof);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Lift);
+			ClassicAssert.AreEqual(2, tally.Works);
 
 			tally.Works = int.MaxValue;
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.FoldWork(tally, null, 100).Works);
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.FoldWork(tally, null, 100).Works);
 		}
 
 		[Test]
@@ -81,11 +82,11 @@ namespace ThousandAndFirst.Tests
 				Works = int.MinValue
 			};
 			tally = KingdomCatalogueRules.FoldShade(tally, null, 100);
-			Assert.AreEqual(0, tally.Water);
-			Assert.AreEqual(0, tally.Food);
-			Assert.AreEqual(0, tally.Roof);
-			Assert.AreEqual(0, tally.Lift);
-			Assert.AreEqual(0, tally.Works);
+			ClassicAssert.AreEqual(0, tally.Water);
+			ClassicAssert.AreEqual(0, tally.Food);
+			ClassicAssert.AreEqual(0, tally.Roof);
+			ClassicAssert.AreEqual(0, tally.Lift);
+			ClassicAssert.AreEqual(0, tally.Works);
 		}
 
 		[Test]
@@ -100,8 +101,8 @@ namespace ThousandAndFirst.Tests
 				new KindAmount("moonlight", int.MaxValue),
 				new KindAmount("learning", -10)
 			};
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.AmountOf(rows, "water"));
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.LiftOf(rows));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.AmountOf(rows, "water"));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.LiftOf(rows));
 			Assert.That(KingdomCatalogueRules.AmountOf(rows, "water"), Is.InRange(0, int.MaxValue));
 			Assert.That(KingdomCatalogueRules.LiftOf(rows), Is.InRange(0, int.MaxValue));
 		}
@@ -112,21 +113,21 @@ namespace ThousandAndFirst.Tests
 			string provider = "water:2147483647,food:2147483647,roof:2147483647,craft:2147483647";
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.SumCarries(
 				new[] { provider, provider });
-			Assert.AreEqual(int.MaxValue, tally.Water);
-			Assert.AreEqual(int.MaxValue, tally.Food);
-			Assert.AreEqual(int.MaxValue, tally.Roof);
-			Assert.AreEqual(int.MaxValue, tally.Lift);
-			Assert.AreEqual(2, tally.Works);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Water);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Food);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Roof);
+			ClassicAssert.AreEqual(int.MaxValue, tally.Lift);
+			ClassicAssert.AreEqual(2, tally.Works);
 		}
 
 		[Test]
 		public void Equilibrium_MaximumSupportsAndLiftSaturateWithoutWrap()
 		{
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
 				int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue));
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
 				int.MaxValue, int.MaxValue, int.MaxValue, 1, 0));
-			Assert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
+			ClassicAssert.AreEqual(int.MaxValue, KingdomCatalogueRules.Equilibrium(
 				int.MaxValue, int.MaxValue, int.MaxValue, 0, 0));
 		}
 
@@ -134,26 +135,26 @@ namespace ThousandAndFirst.Tests
 		public void Equilibrium_WidensLiftCapBeforeTakingItsMinimum()
 		{
 			int binding = 1000000000;
-			Assert.AreEqual(1500000000, KingdomCatalogueRules.Equilibrium(
+			ClassicAssert.AreEqual(1500000000, KingdomCatalogueRules.Equilibrium(
 				binding, binding, binding, int.MaxValue, int.MaxValue));
 		}
 
 		[Test]
 		public void CounterPrimitivesClampMalformedInputsAndBothOverflowDirections()
 		{
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomCatalogueRules.SaturatingCounterAdd(int.MaxValue, int.MaxValue));
-			Assert.AreEqual(7, KingdomCatalogueRules.SaturatingCounterAdd(-5, 7));
-			Assert.AreEqual(0, KingdomCatalogueRules.SaturatingCounterAdd(-5, -7));
-			Assert.AreEqual(0,
+			ClassicAssert.AreEqual(7, KingdomCatalogueRules.SaturatingCounterAdd(-5, 7));
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.SaturatingCounterAdd(-5, -7));
+			ClassicAssert.AreEqual(0,
 				KingdomCatalogueRules.SaturatingCounterSubtract(0, int.MaxValue));
-			Assert.AreEqual(0,
+			ClassicAssert.AreEqual(0,
 				KingdomCatalogueRules.SaturatingCounterSubtract(7, int.MaxValue));
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomCatalogueRules.SaturatingCounterSubtract(int.MaxValue, -1));
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomCatalogueRules.SaturatingCounterMultiply(int.MaxValue, int.MaxValue));
-			Assert.AreEqual(0,
+			ClassicAssert.AreEqual(0,
 				KingdomCatalogueRules.SaturatingCounterMultiply(int.MaxValue, -1));
 		}
 
@@ -174,12 +175,12 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomCatalogueRules.SupportTally city = KingdomSubsidenceRules.CityTally(
 				here, sightings);
-			Assert.AreEqual(int.MaxValue, city.Water);
-			Assert.AreEqual(int.MaxValue, city.Food);
-			Assert.AreEqual(int.MaxValue, city.Roof);
-			Assert.AreEqual(0, city.Lift);
-			Assert.AreEqual(0, city.Works);
-			Assert.AreEqual(int.MaxValue, KingdomSubsidenceRules.CityStorage(
+			ClassicAssert.AreEqual(int.MaxValue, city.Water);
+			ClassicAssert.AreEqual(int.MaxValue, city.Food);
+			ClassicAssert.AreEqual(int.MaxValue, city.Roof);
+			ClassicAssert.AreEqual(0, city.Lift);
+			ClassicAssert.AreEqual(0, city.Works);
+			ClassicAssert.AreEqual(int.MaxValue, KingdomSubsidenceRules.CityStorage(
 				int.MaxValue, sightings));
 		}
 
@@ -193,7 +194,7 @@ namespace ThousandAndFirst.Tests
 					: (int)((long)int.MaxValue * 100L / percent);
 				int actual = KingdomSubsidenceRules.LevelFromWater(
 					int.MaxValue, (GrowthStage)i);
-				Assert.AreEqual(expected, actual, "stage " + (GrowthStage)i);
+				ClassicAssert.AreEqual(expected, actual, "stage " + (GrowthStage)i);
 				Assert.That(actual, Is.InRange(0, int.MaxValue));
 			}
 		}
@@ -240,23 +241,23 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MillConversionArithmeticSaturatesAtMaximumInputs()
 		{
-			Assert.AreEqual(int.MaxValue, KingdomRules.MilledGain(int.MaxValue));
-			Assert.AreEqual(1073741824, KingdomRules.CropsForGain(int.MaxValue));
-			Assert.AreEqual(0, KingdomRules.MillableStock(int.MinValue, int.MaxValue));
-			Assert.AreEqual(int.MaxValue, KingdomRules.MillableStock(int.MaxValue, 0));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomRules.MilledGain(int.MaxValue));
+			ClassicAssert.AreEqual(1073741824, KingdomRules.CropsForGain(int.MaxValue));
+			ClassicAssert.AreEqual(0, KingdomRules.MillableStock(int.MinValue, int.MaxValue));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomRules.MillableStock(int.MaxValue, 0));
 		}
 
 		[Test]
 		public void ReachScalingAndLandingWidenBeforeApplyingPercentages()
 		{
-			Assert.AreEqual(21474836, KingdomReachRules.Scaled(int.MaxValue, 1));
-			Assert.AreEqual(2126008810, KingdomReachRules.Scaled(int.MaxValue, 99));
-			Assert.AreEqual(int.MaxValue, KingdomReachRules.Scaled(int.MaxValue, 100));
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(21474836, KingdomReachRules.Scaled(int.MaxValue, 1));
+			ClassicAssert.AreEqual(2126008810, KingdomReachRules.Scaled(int.MaxValue, 99));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomReachRules.Scaled(int.MaxValue, 100));
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomReachRules.Scaled(int.MaxValue, int.MaxValue));
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomReachRules.Landed(int.MaxValue, int.MaxValue, int.MaxValue));
-			Assert.AreEqual(KingdomReachRules.QuarterRadiusCap,
+			ClassicAssert.AreEqual(KingdomReachRules.QuarterRadiusCap,
 				KingdomReachRules.QuarterRadius(int.MaxValue));
 		}
 
@@ -269,28 +270,28 @@ namespace ThousandAndFirst.Tests
 				new KindAmount("craft", int.MaxValue),
 				new KindAmount("spirit", int.MaxValue)
 			});
-			Assert.AreEqual(2, character.Lifts.Count);
-			Assert.AreEqual(int.MaxValue, character.Lifts[0].Amount);
-			Assert.AreEqual(int.MaxValue, character.Lifts[1].Amount);
-			Assert.AreEqual(int.MaxValue, character.Total);
-			Assert.AreEqual("craft", character.Dominant);
-			Assert.AreEqual(int.MaxValue, character.DominantAmount);
+			ClassicAssert.AreEqual(2, character.Lifts.Count);
+			ClassicAssert.AreEqual(int.MaxValue, character.Lifts[0].Amount);
+			ClassicAssert.AreEqual(int.MaxValue, character.Lifts[1].Amount);
+			ClassicAssert.AreEqual(int.MaxValue, character.Total);
+			ClassicAssert.AreEqual("craft", character.Dominant);
+			ClassicAssert.AreEqual(int.MaxValue, character.DominantAmount);
 		}
 
 		[Test]
 		public void YardShadeValidationCannotBeBypassedByRepeatedMaximumRows()
 		{
-			Assert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(
+			ClassicAssert.IsFalse(KingdomYardRules.TryParseYardWorkAttributes(
 				"yard", "Yard", "Yard Fixture", "trade",
 				"food:2147483647,food:2147483647", "No",
 				out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains(int.MaxValue.ToString(), error);
 		}
 
 		private static List<KindAmount> Parse(string source)
 		{
-			Assert.IsTrue(KingdomCatalogueRules.TryParseTally(source, out var tally, out var error), error);
+			ClassicAssert.IsTrue(KingdomCatalogueRules.TryParseTally(source, out var tally, out var error), error);
 			return tally;
 		}
 	}

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -49,8 +50,8 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertBlocked(KingdomConstructionJob Job)
 		{
-			Assert.IsTrue(KingdomConstructionRules.ValidJob(Job));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(Job));
+			ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(Job));
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(Job));
 		}
 
 		[Test]
@@ -65,12 +66,12 @@ namespace ThousandAndFirst.Tests
 				{
 					if (phase == KingdomConstructionPhase.Invalid) continue;
 					KingdomConstructionJob job = Job(route, phase);
-					Assert.IsTrue(KingdomConstructionRules.ValidJob(job), route + " " + phase);
+					ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(job), route + " " + phase);
 					bool expected = (route == KingdomConstructionRoute.PlanScaffold
 						|| route == KingdomConstructionRoute.PlotPlan)
 						&& (phase == KingdomConstructionPhase.Compensated
 							|| phase == KingdomConstructionPhase.Cancelled);
-					Assert.AreEqual(expected,
+					ClassicAssert.AreEqual(expected,
 						KingdomConstructionRules.PlanMarkerCancellationSettled(job),
 						route + " " + phase);
 				}
@@ -92,8 +93,8 @@ namespace ThousandAndFirst.Tests
 			})
 			{
 				KingdomConstructionJob job = Job(route, phase, 5, MaterialCost(2));
-				Assert.IsTrue(KingdomConstructionRules.ValidJob(job));
-				Assert.IsTrue(KingdomConstructionRules.PlanMarkerCancellationSettled(job),
+				ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(job));
+				ClassicAssert.IsTrue(KingdomConstructionRules.PlanMarkerCancellationSettled(job),
 					route + " " + phase);
 			}
 		}
@@ -103,7 +104,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionJob job = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Outstanding, Water: 5);
-			Assert.IsTrue(KingdomConstructionRules.TryApplyWaterAttempt(job.Claims,
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryApplyWaterAttempt(job.Claims,
 				5, 2, 3, 2, true, out KingdomConstructionClaims partial));
 			job.Claims = partial;
 			AssertBlocked(job);
@@ -194,9 +195,9 @@ namespace ThousandAndFirst.Tests
 			KingdomConstructionJob malformed = Job(KingdomConstructionRoute.PlotPlan,
 				KingdomConstructionPhase.Cancelled);
 			malformed.Claims.MaterialSpent = "not-a-claim";
-			Assert.IsFalse(KingdomConstructionRules.ValidJob(malformed));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(malformed));
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(null));
+			ClassicAssert.IsFalse(KingdomConstructionRules.ValidJob(malformed));
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(malformed));
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(null));
 		}
 
 		[Test]
@@ -205,25 +206,25 @@ namespace ThousandAndFirst.Tests
 			KingdomConstructionJob safe = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated);
 			List<KingdomConstructionJob> jobs = new List<KingdomConstructionJob> { safe };
-			Assert.IsTrue(Allowed(jobs, false, null));
-			Assert.IsTrue(Allowed(jobs, true, safe.Id));
-			Assert.IsFalse(Allowed(jobs, true, "00000000000000000000000000000002"));
+			ClassicAssert.IsTrue(Allowed(jobs, false, null));
+			ClassicAssert.IsTrue(Allowed(jobs, true, safe.Id));
+			ClassicAssert.IsFalse(Allowed(jobs, true, "00000000000000000000000000000002"));
 
 			KingdomConstructionJob foreign = Job(KingdomConstructionRoute.RoadPaving,
 				KingdomConstructionPhase.Compensated);
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
 			foreign.SourceId = "road-source";
 			foreign.SubjectId = "road-subject";
 			foreign.OutputId = MarkerId;
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
 			foreign.OutputId = null;
 			foreign.PhysicalItemId = MarkerId;
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
 			foreign.PhysicalItemId = null;
 			foreign.PhysicalDestinationId = MarkerId;
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
 			foreign.PhysicalDestinationId = null;
-			Assert.IsTrue(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
+			ClassicAssert.IsTrue(Allowed(new List<KingdomConstructionJob> { foreign }, false, null));
 		}
 
 		[Test]
@@ -231,24 +232,24 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionJob row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated);
-			Assert.IsTrue(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsTrue(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row.OwnerKey = KingdomConstructionRules.OwnerKey("other", 7L, "settlement");
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated); row.SourceId = "other";
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated); row.SubjectId = "other";
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated); row.ZoneId = "other-zone";
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated); row.X++;
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 			row = Job(KingdomConstructionRoute.PlanScaffold,
 				KingdomConstructionPhase.Compensated); row.TargetKey = "other-design";
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, false, null));
 		}
 
 		[Test]
@@ -256,10 +257,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionJob row = Job(KingdomConstructionRoute.PlotPlan,
 				KingdomConstructionPhase.Compensated);
-			Assert.IsTrue(Allowed(new List<KingdomConstructionJob> { row }, true, row.Id));
+			ClassicAssert.IsTrue(Allowed(new List<KingdomConstructionJob> { row }, true, row.Id));
 			row.X = 12;
 			row.Y = 9;
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, true, row.Id));
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { row }, true, row.Id));
 		}
 
 		[Test]
@@ -281,8 +282,8 @@ namespace ThousandAndFirst.Tests
 				other.SourceId = "road-source";
 				other.SubjectId = "road-subject";
 				nameMarker(other);
-				Assert.IsTrue(KingdomConstructionRules.ValidJob(other));
-				Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { safe, other },
+				ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(other));
+				ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { safe, other },
 					false, null));
 			}
 		}
@@ -297,10 +298,10 @@ namespace ThousandAndFirst.Tests
 			malformed.SourceId = "road-source";
 			malformed.SubjectId = "road-subject";
 			malformed.Id = "not-a-guid";
-			Assert.IsFalse(Allowed(new List<KingdomConstructionJob> { clean, malformed },
+			ClassicAssert.IsFalse(Allowed(new List<KingdomConstructionJob> { clean, malformed },
 				false, null));
 			clean.Outbox = new KingdomConstructionOutbox();
-			Assert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(clean));
+			ClassicAssert.IsFalse(KingdomConstructionRules.PlanMarkerCancellationSettled(clean));
 		}
 
 		[Test]
@@ -314,7 +315,7 @@ namespace ThousandAndFirst.Tests
 			{
 				bool expected = registrySafe && authoritySafe && !referenceValid
 					&& state == KingdomPhysicalLookupState.Absent;
-				Assert.AreEqual(expected,
+				ClassicAssert.AreEqual(expected,
 					KingdomConstructionRules.PlanMarkerCancellationRemovalProved(
 						referenceValid, state, registrySafe, authoritySafe),
 					state + " ref=" + referenceValid + " registry=" + registrySafe
@@ -376,9 +377,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Start);
+			ClassicAssert.GreaterOrEqual(start, 0, Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, End);
+			ClassicAssert.Greater(end, start, End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -388,7 +389,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int next = Source.IndexOf(Terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, Terms[i]);
+				ClassicAssert.Greater(next, cursor, Terms[i]);
 				cursor = next;
 			}
 		}

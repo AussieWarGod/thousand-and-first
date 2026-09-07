@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -24,12 +25,12 @@ namespace ThousandAndFirst.Tests
 				"Core/KingdomConversion.MealConversionAndCohabitation.cs")
 				+ TestMain.ReadRepositoryText("Core/KingdomConversion.OsmosisAndBrink.cs")
 				+ TestMain.ReadRepositoryText("Core/KingdomConversion.PressureAndHelpers.cs");
-			Assert.GreaterOrEqual(conversion.Split(new string[] { "CreedUsesTheology" },
+			ClassicAssert.GreaterOrEqual(conversion.Split(new string[] { "CreedUsesTheology" },
 				System.StringSplitOptions.None).Length - 1, 7);
 			string faith = TestMain.ReadRepositoryText("Experience/KingdomFaith.z01.ShrinePass.cs")
 				+ TestMain.ReadRepositoryText("Experience/KingdomFaith.z02.ShrinePressureAndEducation.cs")
 				+ TestMain.ReadRepositoryText("Experience/KingdomFaith.z03.EducationAndConsecration.cs");
-			Assert.GreaterOrEqual(faith.Split(new string[] { "CreedUsesTheology" },
+			ClassicAssert.GreaterOrEqual(faith.Split(new string[] { "CreedUsesTheology" },
 				System.StringSplitOptions.None).Length - 1, 4);
 			StringAssert.Contains("candidates.RemoveAll", faith);
 		}

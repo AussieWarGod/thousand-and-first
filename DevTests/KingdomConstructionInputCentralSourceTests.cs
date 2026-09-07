@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = TestMain.ReadRepositoryText(
 					KingdomConstructionInputCentralLogicalSource.Paths[i]);
-				Assert.LessOrEqual(source.Split('\n').Length, 300,
+				ClassicAssert.LessOrEqual(source.Split('\n').Length, 300,
 					KingdomConstructionInputCentralLogicalSource.Paths[i]);
 			}
 		}
@@ -205,8 +206,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int from = source.IndexOf(start, StringComparison.Ordinal);
 			int to = source.IndexOf(end, from + start.Length, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(from, 0, start);
-			Assert.Greater(to, from, end);
+			ClassicAssert.GreaterOrEqual(from, 0, start);
+			ClassicAssert.Greater(to, from, end);
 			return source.Substring(from, to - from);
 		}
 
@@ -216,7 +217,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

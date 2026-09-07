@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,22 +15,22 @@ namespace ThousandAndFirst.Tests
 		public void NamedCaseSourceIsRejectedWithoutInvokingItsProvider()
 		{
 			Attribute metadata = new TestCaseSourceAttribute(typeof(PoisonSource), "Cases");
-			Assert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(metadata));
+			ClassicAssert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(metadata));
 		}
 
 		[Test]
 		public void NamedFixtureSourceIsRejectedWithoutInvokingItsProvider()
 		{
 			Attribute metadata = new TestFixtureSourceAttribute(typeof(PoisonSource), "Cases");
-			Assert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(metadata));
+			ClassicAssert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(metadata));
 		}
 
 		[Test]
 		public void TypeOnlySourcesAreRejectedWithoutConstructingOrEnumeratingTheirProvider()
 		{
-			Assert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(
+			ClassicAssert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(
 				new TestCaseSourceAttribute(typeof(PoisonSource))));
-			Assert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(
+			ClassicAssert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(
 				new TestFixtureSourceAttribute(typeof(PoisonSource))));
 		}
 
@@ -38,7 +39,7 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (Attribute metadata in new Attribute[] { new TestAttribute(),
 				new TestCaseAttribute(7), new TestFixtureAttribute() })
-				Assert.IsNull(TestMain.UnsupportedDiscoveryAttribute(metadata));
+				ClassicAssert.IsNull(TestMain.UnsupportedDiscoveryAttribute(metadata));
 		}
 
 		[Test]
@@ -46,13 +47,13 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (Attribute metadata in new Attribute[] { new CategoryAttribute("source"),
 				new DescriptionAttribute("TestCaseSourceAttribute"), new ObsoleteAttribute() })
-				Assert.IsNull(TestMain.UnsupportedDiscoveryAttribute(metadata));
+				ClassicAssert.IsNull(TestMain.UnsupportedDiscoveryAttribute(metadata));
 		}
 
 		[Test]
 		public void AbsentMetadataIsNotAnUnsupportedAttribute()
 		{
-			Assert.IsNull(TestMain.UnsupportedDiscoveryAttribute(null));
+			ClassicAssert.IsNull(TestMain.UnsupportedDiscoveryAttribute(null));
 		}
 
 		[Test]
@@ -60,12 +61,12 @@ namespace ThousandAndFirst.Tests
 		{
 			TestCaseSourceAttribute cases = new TestCaseSourceAttribute("Cases");
 			TestFixtureSourceAttribute fixtures = new TestFixtureSourceAttribute("Fixtures");
-			Assert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(cases));
-			Assert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(fixtures));
-			Assert.AreEqual("Cases", cases.SourceName);
-			Assert.AreEqual("Fixtures", fixtures.SourceName);
-			Assert.IsNull(cases.SourceType);
-			Assert.IsNull(fixtures.SourceType);
+			ClassicAssert.AreEqual("TestCaseSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(cases));
+			ClassicAssert.AreEqual("TestFixtureSourceAttribute", TestMain.UnsupportedDiscoveryAttribute(fixtures));
+			ClassicAssert.AreEqual("Cases", cases.SourceName);
+			ClassicAssert.AreEqual("Fixtures", fixtures.SourceName);
+			ClassicAssert.IsNull(cases.SourceType);
+			ClassicAssert.IsNull(fixtures.SourceType);
 		}
 
 		[TestCase(false, null)]
@@ -77,8 +78,8 @@ namespace ThousandAndFirst.Tests
 			Type type = EmitSourceFixture(FixtureSource);
 			TestMainDiscoveryProbe.Reset();
 			string output;
-			Assert.AreEqual(2, CaptureRun(new[] { type }, Filter, out output));
-			Assert.AreEqual(Refusal(type, FixtureSource), output);
+			ClassicAssert.AreEqual(2, CaptureRun(new[] { type }, Filter, out output));
+			ClassicAssert.AreEqual(Refusal(type, FixtureSource), output);
 			AssertNoProbeExecution();
 		}
 
@@ -88,8 +89,8 @@ namespace ThousandAndFirst.Tests
 			Type cases = EmitSourceFixture(false), fixtures = EmitSourceFixture(true);
 			TestMainDiscoveryProbe.Reset();
 			string output;
-			Assert.AreEqual(2, CaptureRun(new[] { fixtures, cases }, "unmatched-filter", out output));
-			Assert.AreEqual(Refusal(cases, false) + Refusal(fixtures, true), output);
+			ClassicAssert.AreEqual(2, CaptureRun(new[] { fixtures, cases }, "unmatched-filter", out output));
+			ClassicAssert.AreEqual(Refusal(cases, false) + Refusal(fixtures, true), output);
 			AssertNoProbeExecution();
 		}
 
@@ -101,12 +102,12 @@ namespace ThousandAndFirst.Tests
 			TestMainDiscoveryProbe.Reset();
 			string output;
 			string filter = Match ? type.Name : "unmatched-filter";
-			Assert.AreEqual(Match ? 0 : 2, CaptureRun(new[] { type }, filter, out output));
-			Assert.AreEqual(Environment.NewLine + (Match
+			ClassicAssert.AreEqual(Match ? 0 : 2, CaptureRun(new[] { type }, filter, out output));
+			ClassicAssert.AreEqual(Environment.NewLine + (Match
 				? "ALL GREEN: 2 cases passed, 0 skipped (2 discovered)"
 				: "NO TESTS MATCHED TAF_TEST_FILTER=" + filter) + Environment.NewLine, output);
-			Assert.AreEqual(Match ? 1 : 0, TestMainDiscoveryProbe.PlainCalls);
-			Assert.AreEqual(Match ? 1 : 0, TestMainDiscoveryProbe.CaseCalls);
+			ClassicAssert.AreEqual(Match ? 1 : 0, TestMainDiscoveryProbe.PlainCalls);
+			ClassicAssert.AreEqual(Match ? 1 : 0, TestMainDiscoveryProbe.CaseCalls);
 			AssertNoProbeExecution();
 		}
 
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertNoProbeExecution()
 		{
-			Assert.AreEqual(0, TestMainDiscoveryProbe.SourceReads);
-			Assert.AreEqual(0, TestMainDiscoveryProbe.FixtureConstructions);
-			Assert.AreEqual(0, TestMainDiscoveryProbe.PoisonCalls);
+			ClassicAssert.AreEqual(0, TestMainDiscoveryProbe.SourceReads);
+			ClassicAssert.AreEqual(0, TestMainDiscoveryProbe.FixtureConstructions);
+			ClassicAssert.AreEqual(0, TestMainDiscoveryProbe.PoisonCalls);
 		}
 
 		private static TypeBuilder NewFixture(string Name)

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,9 +14,9 @@ namespace ThousandAndFirst.Tests
 		private static KingdomExperienceLedger Enabled(string realm = Realm)
 		{
 			KingdomExperienceLedger ledger = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger, realm,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger, realm,
 				out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
 				true, true, true, 10L, out failure), failure);
 			return ledger;
 		}
@@ -49,10 +50,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicVoiceFixture fixture, bool reverse = false, string facts = null,
 			string settlement = Settlement, string source = null, bool longNames = false)
 		{
-			Assert.IsTrue(KingdomCivicVoiceRules.TryPrepare(ledger,
+			ClassicAssert.IsTrue(KingdomCivicVoiceRules.TryPrepare(ledger,
 				Preview(fixture, facts, settlement, source), Six(reverse, longNames),
 				out KingdomCivicVoiceReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCivicVoiceRules.TryPublish(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomCivicVoiceRules.TryPublish(ledger, ledger.Revision,
 				receipt, out failure), failure);
 			return receipt;
 		}
@@ -67,15 +68,15 @@ namespace ThousandAndFirst.Tests
 				string facts = "owner-preview-" + i;
 				KingdomCivicVoiceReceipt row = Add(ledger, fixture, reverse: i % 2 == 0,
 					facts: facts);
-				Assert.AreEqual(facts, row.Facts);
-				Assert.AreEqual(i * 2 - 1, row.FirstResidentId);
-				Assert.AreEqual(i * 2, row.SecondResidentId);
+				ClassicAssert.AreEqual(facts, row.Facts);
+				ClassicAssert.AreEqual(i * 2 - 1, row.FirstResidentId);
+				ClassicAssert.AreEqual(i * 2, row.SecondResidentId);
 				string named = KingdomCivicVoiceRules.Render(row, true, true);
 				StringAssert.StartsWith(facts, named);
 				StringAssert.Contains(row.FirstName, named);
 				StringAssert.Contains(row.SecondName, named);
 			}
-			Assert.AreEqual(3, ledger.Voices.Count);
+			ClassicAssert.AreEqual(3, ledger.Voices.Count);
 		}
 
 		[Test]
@@ -85,10 +86,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicVoiceReceipt row = Add(ledger,
 				KingdomCivicVoiceFixture.CreedDeclaration, facts: "exact choice remains");
 			byte[] before = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, false, false));
-			Assert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, true, false));
-			Assert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, false, true));
-			Assert.AreEqual(row.SourceId, ledger.Voices[0].SourceId);
+			ClassicAssert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, false, false));
+			ClassicAssert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, true, false));
+			ClassicAssert.AreEqual(row.Facts, KingdomCivicVoiceRules.Render(row, false, true));
+			ClassicAssert.AreEqual(row.SourceId, ledger.Voices[0].SourceId);
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
 		}
 
@@ -116,15 +117,15 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicVoiceReceipt row = Add(ledger,
 				KingdomCivicVoiceFixture.VillageCovenant);
 			byte[] before = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
 				row.SourceId, row.FirstResidentId, false, 20L, out _, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
 				row.SourceId, row.FirstResidentId, true, 20L, out string text,
 				out string failure), failure);
 			StringAssert.Contains(row.Facts, text);
 			byte[] consumed = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomCivicVoiceRules.TryConsumeCallback(ledger, ledger.Revision,
 				row.SourceId, row.FirstResidentId, true, 21L, out _, out _));
 			CollectionAssert.AreEqual(consumed, KingdomExperienceCodec.EncodeEnvelope(ledger));
 		}
@@ -137,22 +138,22 @@ namespace ThousandAndFirst.Tests
 				KingdomCivicVoiceFixture.CreedDeclaration);
 			byte[] before = KingdomExperienceCodec.EncodeEnvelope(ledger);
 			KingdomCivicVoiceReceipt mismatch = first.Copy(); mismatch.Facts = "different";
-			Assert.IsFalse(KingdomCivicVoiceRules.TryPublish(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomCivicVoiceRules.TryPublish(ledger, ledger.Revision,
 				mismatch, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
 			Add(ledger, KingdomCivicVoiceFixture.VillageCovenant);
 			Add(ledger, KingdomCivicVoiceFixture.AssentingMoot);
 			before = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomCivicVoiceRules.TryPrepare(ledger,
+			ClassicAssert.IsFalse(KingdomCivicVoiceRules.TryPrepare(ledger,
 				Preview(KingdomCivicVoiceFixture.CreedDeclaration, "fourth"), Six(),
 				out _, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
-			Assert.IsFalse(KingdomExperienceRules.TryRetireCivicVoices(ledger,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryRetireCivicVoices(ledger,
 				"taf:realm:foreign", ledger.Revision, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomExperienceRules.TryRetireCivicVoices(ledger, Realm,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryRetireCivicVoices(ledger, Realm,
 				ledger.Revision, out string failure), failure);
-			Assert.AreEqual(0, ledger.Voices.Count);
+			ClassicAssert.AreEqual(0, ledger.Voices.Count);
 		}
 
 		[Test]
@@ -161,13 +162,13 @@ namespace ThousandAndFirst.Tests
 			KingdomExperienceLedger ledger = Enabled();
 			Add(ledger, KingdomCivicVoiceFixture.CreedDeclaration);
 			byte[] before = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomExperienceRules.TryPrepareMasterResume(ledger, Realm,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryPrepareMasterResume(ledger, Realm,
 				9L, 20L, true, true, true, out _, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
 				false, true, true, 20L, out string failure), failure);
 			before = KingdomExperienceCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomCivicVoiceRules.TryPrepare(ledger,
+			ClassicAssert.IsFalse(KingdomCivicVoiceRules.TryPrepare(ledger,
 				Preview(KingdomCivicVoiceFixture.VillageCovenant), Six(), out _, out _));
 			CollectionAssert.AreEqual(before, KingdomExperienceCodec.EncodeEnvelope(ledger));
 		}
@@ -186,13 +187,13 @@ namespace ThousandAndFirst.Tests
 				settlement: settlements[0], source: Id("taf:voice:", i), longNames: true);
 			AddRichFirstFeasts(full, settlements);
 			byte[] current = KingdomExperienceCodec.EncodeEnvelope(full);
-			Assert.AreEqual(3, full.Audiences.Count); Assert.AreEqual(16, full.BodyReservations.Count);
-			Assert.AreEqual(3, full.Offices.Count); Assert.AreEqual(3, full.Remembrances.Count);
-			Assert.AreEqual(3, full.Voices.Count);
-			Assert.AreEqual(3, full.FirstFeasts.Count);
-			Assert.LessOrEqual(current.Length, KingdomExperienceCodec.MaxEnvelopeBytes);
-			Assert.LessOrEqual(current.Length - 12, KingdomExperienceRules.MaxDeclaredPayloadBytes);
-			Assert.Less(KingdomExperienceRules.MaxDeclaredPayloadBytes + 12,
+			ClassicAssert.AreEqual(3, full.Audiences.Count); ClassicAssert.AreEqual(16, full.BodyReservations.Count);
+			ClassicAssert.AreEqual(3, full.Offices.Count); ClassicAssert.AreEqual(3, full.Remembrances.Count);
+			ClassicAssert.AreEqual(3, full.Voices.Count);
+			ClassicAssert.AreEqual(3, full.FirstFeasts.Count);
+			ClassicAssert.LessOrEqual(current.Length, KingdomExperienceCodec.MaxEnvelopeBytes);
+			ClassicAssert.LessOrEqual(current.Length - 12, KingdomExperienceRules.MaxDeclaredPayloadBytes);
+			ClassicAssert.Less(KingdomExperienceRules.MaxDeclaredPayloadBytes + 12,
 				KingdomExperienceCodec.MaxEnvelopeBytes);
 
 			KingdomExperienceLedger v2 = Enabled(realm);
@@ -202,18 +203,18 @@ namespace ThousandAndFirst.Tests
 			byte[] legacy = KingdomExperienceCodec.EncodeLegacyV2Fixture(v2);
 			CollectionAssert.AreEqual(legacy, KingdomExperienceCodec.EncodeLegacyV2Fixture(v2));
 			KingdomExperienceLedger migrated = KingdomExperienceCodec.DecodeEnvelope(legacy);
-			Assert.AreEqual(KingdomExperienceRules.CurrentFormatVersion, migrated.FormatVersion);
-			Assert.AreEqual(0, migrated.Voices.Count);
-			Assert.AreEqual(realm, migrated.Audiences[0].RealmId);
-			Assert.AreEqual(realm, migrated.BodyReservations[0].RealmId);
-			Assert.AreEqual(3, migrated.Offices.Count);
-			Assert.AreEqual(3, migrated.Remembrances.Count);
-			Assert.IsTrue(KingdomExperienceRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.AreEqual(KingdomExperienceRules.CurrentFormatVersion, migrated.FormatVersion);
+			ClassicAssert.AreEqual(0, migrated.Voices.Count);
+			ClassicAssert.AreEqual(realm, migrated.Audiences[0].RealmId);
+			ClassicAssert.AreEqual(realm, migrated.BodyReservations[0].RealmId);
+			ClassicAssert.AreEqual(3, migrated.Offices.Count);
+			ClassicAssert.AreEqual(3, migrated.Remembrances.Count);
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryValidate(migrated, out string failure), failure);
 			KingdomExperienceLedger v1 = Enabled();
 			KingdomExperienceLedger migratedV1 = KingdomExperienceCodec.DecodeEnvelope(
 				KingdomExperienceCodec.EncodeLegacyV1Fixture(v1));
-			Assert.AreEqual(KingdomExperienceRules.CurrentFormatVersion, migratedV1.FormatVersion);
-			Assert.AreEqual(0, migratedV1.Voices.Count);
+			ClassicAssert.AreEqual(KingdomExperienceRules.CurrentFormatVersion, migratedV1.FormatVersion);
+			ClassicAssert.AreEqual(0, migratedV1.Voices.Count);
 
 			KingdomExperienceLedger v3 = Enabled(realm);
 			for (int i = 1; i <= 3; i++) Add(v3, (KingdomCivicVoiceFixture)i,
@@ -224,11 +225,11 @@ namespace ThousandAndFirst.Tests
 				KingdomExperienceCodec.EncodeLegacyV3Fixture(v3));
 			KingdomExperienceLedger migratedV3 =
 				KingdomExperienceCodec.DecodeEnvelope(legacyV3);
-			Assert.AreEqual(KingdomExperienceRules.CurrentFormatVersion,
+			ClassicAssert.AreEqual(KingdomExperienceRules.CurrentFormatVersion,
 				migratedV3.FormatVersion);
-			Assert.AreEqual(3, migratedV3.Voices.Count);
-			Assert.AreEqual(0, migratedV3.FirstFeasts.Count);
-			Assert.IsTrue(KingdomExperienceRules.TryValidate(migratedV3,
+			ClassicAssert.AreEqual(3, migratedV3.Voices.Count);
+			ClassicAssert.AreEqual(0, migratedV3.FirstFeasts.Count);
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryValidate(migratedV3,
 				out failure), failure);
 		}
 
@@ -240,9 +241,9 @@ namespace ThousandAndFirst.Tests
 				source: "taf:voice:badtarget");
 			byte[] malformed = KingdomExperienceCodec.EncodeEnvelope(ledger);
 			byte[] needle = System.Text.Encoding.UTF8.GetBytes("taf:voice:badtarget");
-			int at = Find(malformed, needle); Assert.Greater(at, 0); malformed[at] = (byte)'x';
+			int at = Find(malformed, needle); ClassicAssert.Greater(at, 0); malformed[at] = (byte)'x';
 			KingdomExperienceLedger read = KingdomExperienceCodec.DecodeEnvelope(malformed);
-			Assert.AreEqual(KingdomExperienceSchemaState.Quarantined, read.SchemaState);
+			ClassicAssert.AreEqual(KingdomExperienceSchemaState.Quarantined, read.SchemaState);
 			CollectionAssert.AreEqual(malformed, KingdomExperienceCodec.EncodeEnvelope(read));
 		}
 
@@ -250,26 +251,26 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MootTagIsExactReadOnlyAndFailsClosed()
 		{
-			Assert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm", "settlement", "City",
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm", "settlement", "City",
 				"zone", "building", "lot", 100, 1, 10L,
 				out KingdomAssentingMootReceipt moot, out string failure), failure);
-			Assert.IsTrue(KingdomAssentingMootRules.TryChangeMember(moot,
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryChangeMember(moot,
 				KingdomAssentingMootRole.Assent, true, 7, "Ava", "body-7", 11L,
 				out moot, out failure), failure);
 			string authority = moot.AuthorityId, fingerprint = moot.MembershipFingerprint;
-			Assert.IsTrue(KingdomDecisionTagRules.TryDerive(moot,
+			ClassicAssert.IsTrue(KingdomDecisionTagRules.TryDerive(moot,
 				out KingdomDecisionTagView tag));
-			Assert.AreEqual(authority, tag.SourceId); Assert.AreEqual(fingerprint,
-				tag.MembershipFingerprint); Assert.AreEqual(1, tag.Assents);
+			ClassicAssert.AreEqual(authority, tag.SourceId); ClassicAssert.AreEqual(fingerprint,
+				tag.MembershipFingerprint); ClassicAssert.AreEqual(1, tag.Assents);
 			StringAssert.Contains("do not decide this declaration",
 				KingdomDecisionTagRules.CreedScene(moot));
 			StringAssert.Contains("do not decide this covenant",
 				KingdomDecisionTagRules.CovenantScene(moot));
-			Assert.AreEqual(authority, moot.AuthorityId);
-			Assert.AreEqual(fingerprint, moot.MembershipFingerprint);
+			ClassicAssert.AreEqual(authority, moot.AuthorityId);
+			ClassicAssert.AreEqual(fingerprint, moot.MembershipFingerprint);
 			KingdomAssentingMootReceipt corrupt = moot.Copy(); corrupt.MembershipFingerprint += "x";
-			Assert.IsFalse(KingdomDecisionTagRules.TryDerive(corrupt, out _));
-			Assert.AreEqual("", KingdomDecisionTagRules.CreedScene(corrupt));
+			ClassicAssert.IsFalse(KingdomDecisionTagRules.TryDerive(corrupt, out _));
+			ClassicAssert.AreEqual("", KingdomDecisionTagRules.CreedScene(corrupt));
 		}
 
 		[Test]
@@ -281,7 +282,7 @@ namespace ThousandAndFirst.Tests
 			string covenant = KingdomFoundingTransaction.VillageCharterPreview("Joppa", 50);
 			StringAssert.Contains("exactly 8 drams", covenant);
 			StringAssert.Contains("standing changes from 50 to 600", covenant);
-			Assert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm", "settlement", "City",
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm", "settlement", "City",
 				"zone", "building", "lot", 100, 1, 10L, out KingdomAssentingMootReceipt moot,
 				out string failure), failure);
 			string mootFacts = KingdomAssentingMootRules.MembershipPreview(moot,
@@ -294,7 +295,7 @@ namespace ThousandAndFirst.Tests
 		private static void ReserveAudience(KingdomExperienceLedger l, string realm,
 			string settlement, int i)
 		{
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(l, l.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(l, l.Revision,
 				new KingdomExperienceAudienceReceipt {
 					ReservationId = Id("taf:experience-audience:", i),
 					RealmId = realm, SettlementId = settlement, SourceId = Id("taf:event:", i),
@@ -306,7 +307,7 @@ namespace ThousandAndFirst.Tests
 		private static void ReserveBody(KingdomExperienceLedger l, string realm,
 			string settlement, int i)
 		{
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(l, l.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(l, l.Revision,
 				new KingdomExperienceBodyReservation {
 					ReservationId = Id("taf:experience-body:", i),
 					RealmId = realm, SettlementId = settlement, SourceId = Id("taf:cause:", i),
@@ -349,19 +350,19 @@ namespace ThousandAndFirst.Tests
 						+ new string("def"[i], 64), GuestTerminalDigest = new string("abc"[i], 64),
 					GuestTerminalTick = 9L, AdventureEventId = "taf:adventure:" + transaction,
 					AdventureFingerprint = new string("fed"[i], 64) };
-				Assert.IsTrue(KingdomFirstFeastRules.TryBuildDeedId(deed, out deed.DeedId));
+				ClassicAssert.IsTrue(KingdomFirstFeastRules.TryBuildDeedId(deed, out deed.DeedId));
 				KingdomFirstFeastCandidate[] people = new KingdomFirstFeastCandidate[] {
 					new KingdomFirstFeastCandidate(100 + i * 2, new string((char)('p' + i), 96)),
 					new KingdomFirstFeastCandidate(101 + i * 2, new string((char)('u' + i), 96)) };
-				Assert.IsTrue(KingdomFirstFeastRules.TryPrepare(deed, people, 10L, 1L,
+				ClassicAssert.IsTrue(KingdomFirstFeastRules.TryPrepare(deed, people, 10L, 1L,
 					out KingdomFirstFeastReceipt offer, out string failure), failure);
-				Assert.IsTrue(KingdomExperienceRules.TryPublishFirstFeastOffer(l, l.Revision,
+				ClassicAssert.IsTrue(KingdomExperienceRules.TryPublishFirstFeastOffer(l, l.Revision,
 					offer, out failure), failure);
-				Assert.IsTrue(KingdomExperienceRules.TryDecideFirstFeast(l, l.Revision,
+				ClassicAssert.IsTrue(KingdomExperienceRules.TryDecideFirstFeast(l, l.Revision,
 					settlements[i], KingdomFirstFeastChoice.Adapt,
 					KingdomFirstFeastRules.RemembranceDedication, 10L, out bool committed,
 					out KingdomFirstFeastReceipt _, out failure), failure);
-				Assert.IsTrue(committed);
+				ClassicAssert.IsTrue(committed);
 			}
 		}
 

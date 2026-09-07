@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -10,33 +11,33 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicExileEnumMetadataIsFrozen()
 		{
-			Assert.AreEqual("ThousandAndFirst.RealmRegard", typeof(RealmRegard).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RealmRegard)));
-			Assert.AreEqual(0, (int)RealmRegard.Beloved);
-			Assert.AreEqual(1, (int)RealmRegard.Trusted);
-			Assert.AreEqual(2, (int)RealmRegard.Doubted);
-			Assert.AreEqual(3, (int)RealmRegard.Resented);
-			Assert.AreEqual(4, (int)RealmRegard.Repudiated);
-			Assert.AreEqual("ThousandAndFirst.RegardStep", typeof(RegardStep).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RegardStep)));
-			Assert.AreEqual(0, (int)RegardStep.Nothing);
-			Assert.AreEqual(1, (int)RegardStep.Murmur);
-			Assert.AreEqual(2, (int)RegardStep.Warning);
-			Assert.AreEqual(3, (int)RegardStep.Expulsion);
-			Assert.AreEqual("ThousandAndFirst.ExileVerdict", typeof(ExileVerdict).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ExileVerdict)));
-			Assert.AreEqual(0, (int)ExileVerdict.Warranted);
-			Assert.AreEqual(1, (int)ExileVerdict.NothingFounded);
-			Assert.AreEqual(2, (int)ExileVerdict.AlreadyCastOut);
-			Assert.AreEqual(3, (int)ExileVerdict.RegardHolds);
-			Assert.AreEqual("ThousandAndFirst.ReturnVerdict", typeof(ReturnVerdict).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReturnVerdict)));
-			Assert.AreEqual(0, (int)ReturnVerdict.Allowed);
-			Assert.AreEqual(1, (int)ReturnVerdict.NeverCastOut);
-			Assert.AreEqual(2, (int)ReturnVerdict.FoundedAgain);
-			Assert.AreEqual(3, (int)ReturnVerdict.NothingRemembered);
-			Assert.AreEqual(4, (int)ReturnVerdict.NotOnTheirGround);
-			Assert.AreEqual(5, (int)ReturnVerdict.RegardTooLow);
+			ClassicAssert.AreEqual("ThousandAndFirst.RealmRegard", typeof(RealmRegard).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RealmRegard)));
+			ClassicAssert.AreEqual(0, (int)RealmRegard.Beloved);
+			ClassicAssert.AreEqual(1, (int)RealmRegard.Trusted);
+			ClassicAssert.AreEqual(2, (int)RealmRegard.Doubted);
+			ClassicAssert.AreEqual(3, (int)RealmRegard.Resented);
+			ClassicAssert.AreEqual(4, (int)RealmRegard.Repudiated);
+			ClassicAssert.AreEqual("ThousandAndFirst.RegardStep", typeof(RegardStep).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(RegardStep)));
+			ClassicAssert.AreEqual(0, (int)RegardStep.Nothing);
+			ClassicAssert.AreEqual(1, (int)RegardStep.Murmur);
+			ClassicAssert.AreEqual(2, (int)RegardStep.Warning);
+			ClassicAssert.AreEqual(3, (int)RegardStep.Expulsion);
+			ClassicAssert.AreEqual("ThousandAndFirst.ExileVerdict", typeof(ExileVerdict).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ExileVerdict)));
+			ClassicAssert.AreEqual(0, (int)ExileVerdict.Warranted);
+			ClassicAssert.AreEqual(1, (int)ExileVerdict.NothingFounded);
+			ClassicAssert.AreEqual(2, (int)ExileVerdict.AlreadyCastOut);
+			ClassicAssert.AreEqual(3, (int)ExileVerdict.RegardHolds);
+			ClassicAssert.AreEqual("ThousandAndFirst.ReturnVerdict", typeof(ReturnVerdict).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReturnVerdict)));
+			ClassicAssert.AreEqual(0, (int)ReturnVerdict.Allowed);
+			ClassicAssert.AreEqual(1, (int)ReturnVerdict.NeverCastOut);
+			ClassicAssert.AreEqual(2, (int)ReturnVerdict.FoundedAgain);
+			ClassicAssert.AreEqual(3, (int)ReturnVerdict.NothingRemembered);
+			ClassicAssert.AreEqual(4, (int)ReturnVerdict.NotOnTheirGround);
+			ClassicAssert.AreEqual(5, (int)ReturnVerdict.RegardTooLow);
 		}
 
 		// Every boundary is tested from both sides. The ladder copies four vanilla reputation
@@ -58,7 +59,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-32000, RealmRegard.Repudiated)]
 		public void ClassifyRegard(int regard, RealmRegard expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.ClassifyRegard(regard));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.ClassifyRegard(regard));
 		}
 
 		// Mending things properly re-arms the ladder; anything short of that only ever remembers
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(RealmRegard.Repudiated, RealmRegard.Doubted, RealmRegard.Repudiated)]
 		public void RememberedRegard(RealmRegard current, RealmRegard spoken, RealmRegard expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.RememberedRegard(current, spoken));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.RememberedRegard(current, spoken));
 		}
 
 		[TestCase(RealmRegard.Beloved, RealmRegard.Beloved, RegardStep.Nothing)]
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(RealmRegard.Repudiated, RealmRegard.Beloved, RegardStep.Expulsion)]
 		public void JudgeRegardStep(RealmRegard current, RealmRegard spoken, RegardStep expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.JudgeRegardStep(current, spoken, AlreadyCastOut: false));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.JudgeRegardStep(current, spoken, AlreadyCastOut: false));
 		}
 
 		/// <summary>
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(RealmRegard.Doubted)]
 		public void JudgeRegardStepSaysNothingOnceCastOut(RealmRegard current)
 		{
-			Assert.AreEqual(RegardStep.Nothing, KingdomExileRules.JudgeRegardStep(current, RealmRegard.Beloved, AlreadyCastOut: true));
+			ClassicAssert.AreEqual(RegardStep.Nothing, KingdomExileRules.JudgeRegardStep(current, RealmRegard.Beloved, AlreadyCastOut: true));
 		}
 
 		/// <summary>
@@ -147,11 +148,11 @@ namespace ThousandAndFirst.Tests
 				spoken = KingdomExileRules.RememberedRegard(current, spoken);
 				if (regard == -600)
 				{
-					Assert.AreEqual(RegardStep.Expulsion, step);
+					ClassicAssert.AreEqual(RegardStep.Expulsion, step);
 				}
 				else
 				{
-					Assert.AreNotEqual(RegardStep.Expulsion, step);
+					ClassicAssert.AreNotEqual(RegardStep.Expulsion, step);
 				}
 			}
 		}
@@ -166,7 +167,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, true, RealmRegard.Beloved, false, ExileVerdict.AlreadyCastOut)]
 		public void JudgeExile(bool founded, bool castOut, RealmRegard current, bool forced, ExileVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.JudgeExile(founded, castOut, current, forced));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.JudgeExile(founded, castOut, current, forced));
 		}
 
 		/// <summary>
@@ -176,7 +177,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HoldingARealmAgainDoesNotMakeYouUnexpellable()
 		{
-			Assert.AreEqual(ExileVerdict.Warranted, KingdomExileRules.JudgeExile(Founded: true, AlreadyCastOut: true, Current: RealmRegard.Repudiated, Forced: false));
+			ClassicAssert.AreEqual(ExileVerdict.Warranted, KingdomExileRules.JudgeExile(Founded: true, AlreadyCastOut: true, Current: RealmRegard.Repudiated, Forced: false));
 		}
 
 		[TestCase(true, false, true, true, 0, ReturnVerdict.Allowed)]
@@ -188,7 +189,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, false, true, true, 700, ReturnVerdict.NeverCastOut)]
 		public void JudgeReturn(bool castOut, bool foundedAgain, bool groundRemembered, bool onTheirGround, int regard, ReturnVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.JudgeReturn(castOut, foundedAgain, groundRemembered, onTheirGround, regard));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.JudgeReturn(castOut, foundedAgain, groundRemembered, onTheirGround, regard));
 		}
 
 		/// <summary>
@@ -203,14 +204,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, false, 0)]
 		public void FoundingAgainShutsTheDoorEverywhere(bool onTheirGround, bool groundRemembered, int regard)
 		{
-			Assert.AreEqual(ReturnVerdict.FoundedAgain, KingdomExileRules.JudgeReturn(CastOut: true, FoundedAgain: true, GroundRemembered: groundRemembered, OnTheirGround: onTheirGround, Regard: regard));
+			ClassicAssert.AreEqual(ReturnVerdict.FoundedAgain, KingdomExileRules.JudgeReturn(CastOut: true, FoundedAgain: true, GroundRemembered: groundRemembered, OnTheirGround: onTheirGround, Regard: regard));
 		}
 
 		/// <summary>Never having founded again is what leaves the door open at all.</summary>
 		[Test]
 		public void NeverFoundingAgainLeavesTheDoorOpen()
 		{
-			Assert.AreEqual(ReturnVerdict.Allowed, KingdomExileRules.JudgeReturn(CastOut: true, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: 0));
+			ClassicAssert.AreEqual(ReturnVerdict.Allowed, KingdomExileRules.JudgeReturn(CastOut: true, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: 0));
 		}
 
 		/// <summary>
@@ -226,7 +227,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(400, 300, false)]
 		public void ShouldOfferReturn(int askedAtRegard, int regard, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.ShouldOfferReturn(CastOut: true, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: regard, AskedAtRegard: askedAtRegard));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.ShouldOfferReturn(CastOut: true, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: regard, AskedAtRegard: askedAtRegard));
 		}
 
 		[TestCase(true, false, false, 0)]
@@ -235,13 +236,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, false, true, -600)]
 		public void ShouldOfferReturnNeverAsksWhenTheReturnIsRefused(bool groundRemembered, bool foundedAgain, bool onTheirGround, int regard)
 		{
-			Assert.IsFalse(KingdomExileRules.ShouldOfferReturn(CastOut: true, FoundedAgain: foundedAgain, GroundRemembered: groundRemembered, OnTheirGround: onTheirGround, Regard: regard, AskedAtRegard: int.MinValue));
+			ClassicAssert.IsFalse(KingdomExileRules.ShouldOfferReturn(CastOut: true, FoundedAgain: foundedAgain, GroundRemembered: groundRemembered, OnTheirGround: onTheirGround, Regard: regard, AskedAtRegard: int.MinValue));
 		}
 
 		[Test]
 		public void ShouldOfferReturnNeverAsksSomeoneWhoWasNeverCastOut()
 		{
-			Assert.IsFalse(KingdomExileRules.ShouldOfferReturn(CastOut: false, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: 700, AskedAtRegard: int.MinValue));
+			ClassicAssert.IsFalse(KingdomExileRules.ShouldOfferReturn(CastOut: false, FoundedAgain: false, GroundRemembered: true, OnTheirGround: true, Regard: 700, AskedAtRegard: int.MinValue));
 		}
 
 		// Being taken back raises the founder to indifference and never lowers what they mended.
@@ -252,7 +253,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(700, 700)]
 		public void RegardOnReturn(int regard, int expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.RegardOnReturn(regard));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.RegardOnReturn(regard));
 		}
 
 		/// <summary>
@@ -274,10 +275,10 @@ namespace ThousandAndFirst.Tests
 			foreach (ReturnVerdict verdict in refusals)
 			{
 				string line = KingdomExileRules.ReturnRefusal(verdict, "Kavvat", "Sheol");
-				Assert.IsFalse(string.IsNullOrEmpty(line), verdict + " has no refusal");
-				Assert.IsTrue(seen.Add(line), verdict + " repeats another refusal");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line), verdict + " has no refusal");
+				ClassicAssert.IsTrue(seen.Add(line), verdict + " repeats another refusal");
 			}
-			Assert.AreEqual("", KingdomExileRules.ReturnRefusal(ReturnVerdict.Allowed, "Kavvat", "Sheol"));
+			ClassicAssert.AreEqual("", KingdomExileRules.ReturnRefusal(ReturnVerdict.Allowed, "Kavvat", "Sheol"));
 		}
 
 		/// <summary>The refusal for a founder who poured again has to name both realms, or it is
@@ -286,8 +287,8 @@ namespace ThousandAndFirst.Tests
 		public void TheClosedDoorNamesBothRealms()
 		{
 			string line = KingdomExileRules.ReturnRefusal(ReturnVerdict.FoundedAgain, "Kavvat", "Sheol");
-			Assert.IsTrue(line.Contains("Kavvat"), "the refusal does not name the realm that shut the door");
-			Assert.IsTrue(line.Contains("Sheol"), "the refusal does not name the realm that shut it");
+			ClassicAssert.IsTrue(line.Contains("Kavvat"), "the refusal does not name the realm that shut the door");
+			ClassicAssert.IsTrue(line.Contains("Sheol"), "the refusal does not name the realm that shut it");
 		}
 
 		[TestCase("WaterRitualCurse")]
@@ -298,8 +299,8 @@ namespace ThousandAndFirst.Tests
 		public void EveryNamedDeedHasItsOwnClause(string reputationType)
 		{
 			string named = KingdomExileRules.DeedClause(reputationType);
-			Assert.IsFalse(string.IsNullOrEmpty(named));
-			Assert.AreNotEqual(KingdomExileRules.DeedClause(null), named, reputationType + " falls through to the unnamed clause");
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(named));
+			ClassicAssert.AreNotEqual(KingdomExileRules.DeedClause(null), named, reputationType + " falls through to the unnamed clause");
 		}
 
 		/// <summary>
@@ -311,7 +312,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("SomeFutureVanillaReason")]
 		public void AnUnnamedDeedStillReads(string reputationType)
 		{
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.DeedClause(reputationType)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.DeedClause(reputationType)));
 		}
 
 		/// <summary>
@@ -324,16 +325,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string book = KingdomExileRules.ExileTelling("Kavvat", KingdomExileRules.DeedClause("WaterRitualCurse"));
 			string roads = KingdomExileRules.ExileRumour("Kavvat", "Kaviir");
-			Assert.AreNotEqual(book, roads);
-			Assert.IsTrue(book.Contains("you"), "the founder's own book is not written to the founder");
-			Assert.IsFalse(roads.Contains("you "), "the rumour register is written to the founder rather than about them");
-			Assert.IsTrue(roads.Contains("Kaviir"), "the rumour register does not name the founder");
+			ClassicAssert.AreNotEqual(book, roads);
+			ClassicAssert.IsTrue(book.Contains("you"), "the founder's own book is not written to the founder");
+			ClassicAssert.IsFalse(roads.Contains("you "), "the rumour register is written to the founder rather than about them");
+			ClassicAssert.IsTrue(roads.Contains("Kaviir"), "the rumour register does not name the founder");
 		}
 
 		[Test]
 		public void TheTwoRegistersDisagreeAboutTheReturn()
 		{
-			Assert.AreNotEqual(KingdomExileRules.ReturnTelling("Kavvat"), KingdomExileRules.ReturnRumour("Kavvat", "Kaviir"));
+			ClassicAssert.AreNotEqual(KingdomExileRules.ReturnTelling("Kavvat"), KingdomExileRules.ReturnRumour("Kavvat", "Kaviir"));
 		}
 
 		/// <summary>Chronicle clauses are dated and closed by the chronicle, so they must not
@@ -343,24 +344,24 @@ namespace ThousandAndFirst.Tests
 		public void ChronicleClausesAreClauses(RegardStep step)
 		{
 			string clause = KingdomExileRules.RegardChronicle(step, "Kavvat");
-			Assert.IsFalse(string.IsNullOrEmpty(clause));
-			Assert.IsFalse(clause.EndsWith("."), "a chronicle clause must not close itself");
-			Assert.AreEqual(char.ToLowerInvariant(clause[0]), clause[0], "a chronicle clause must not capitalise itself");
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(clause));
+			ClassicAssert.IsFalse(clause.EndsWith("."), "a chronicle clause must not close itself");
+			ClassicAssert.AreEqual(char.ToLowerInvariant(clause[0]), clause[0], "a chronicle clause must not capitalise itself");
 		}
 
 		[TestCase(RegardStep.Nothing)]
 		[TestCase(RegardStep.Expulsion)]
 		public void StepsWithTheirOwnTellingSayNothingTwice(RegardStep step)
 		{
-			Assert.AreEqual("", KingdomExileRules.RegardChronicle(step, "Kavvat"));
-			Assert.AreEqual("", KingdomExileRules.RegardSpeech(step, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomExileRules.RegardChronicle(step, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomExileRules.RegardSpeech(step, "Kavvat"));
 		}
 
 		[TestCase(RegardStep.Murmur)]
 		[TestCase(RegardStep.Warning)]
 		public void SpokenAndWrittenTellingsAreNotTheSameString(RegardStep step)
 		{
-			Assert.AreNotEqual(KingdomExileRules.RegardSpeech(step, "Kavvat"), KingdomExileRules.RegardChronicle(step, "Kavvat"));
+			ClassicAssert.AreNotEqual(KingdomExileRules.RegardSpeech(step, "Kavvat"), KingdomExileRules.RegardChronicle(step, "Kavvat"));
 		}
 
 		/// <summary>
@@ -372,9 +373,9 @@ namespace ThousandAndFirst.Tests
 		public void TheExpulsionNoticeSaysWhatSurvives(int cities)
 		{
 			string notice = KingdomExileRules.ExileNotice("Kavvat", KingdomExileRules.DeedClause("Blasphemy"), cities);
-			Assert.IsTrue(notice.Contains("Kavvat"));
-			Assert.IsTrue(notice.Contains("charter") || notice.Contains("Charter"));
-			Assert.IsTrue(notice.Contains("basin"), "the notice does not tell the founder they may pour again");
+			ClassicAssert.IsTrue(notice.Contains("Kavvat"));
+			ClassicAssert.IsTrue(notice.Contains("charter") || notice.Contains("Charter"));
+			ClassicAssert.IsTrue(notice.Contains("basin"), "the notice does not tell the founder they may pour again");
 		}
 
 		/// <summary>Prose must survive a realm with no name rather than printing a hole in a
@@ -383,16 +384,16 @@ namespace ThousandAndFirst.Tests
 		[TestCase("")]
 		public void ProseSurvivesAnUnnamedRealm(string realmName)
 		{
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileTelling(realmName, null)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileRumour(realmName, null)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnTelling(realmName)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnRumour(realmName, null)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileNotice(realmName, null, 1)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnNotice(realmName, null)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.DoorClosedLine(realmName, null)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.RegardSpeech(RegardStep.Murmur, realmName)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.RegardChronicle(RegardStep.Warning, realmName)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnRefusal(ReturnVerdict.NotOnTheirGround, realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileTelling(realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileRumour(realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnTelling(realmName)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnRumour(realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ExileNotice(realmName, null, 1)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnNotice(realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.DoorClosedLine(realmName, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.RegardSpeech(RegardStep.Murmur, realmName)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.RegardChronicle(RegardStep.Warning, realmName)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomExileRules.ReturnRefusal(ReturnVerdict.NotOnTheirGround, realmName, null)));
 		}
 
 		[TestCase(RealmRegard.Beloved, "beloved")]
@@ -402,7 +403,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(RealmRegard.Repudiated, "repudiated")]
 		public void RegardName(RealmRegard regard, string expected)
 		{
-			Assert.AreEqual(expected, KingdomExileRules.RegardName(regard));
+			ClassicAssert.AreEqual(expected, KingdomExileRules.RegardName(regard));
 		}
 
 		/// <summary>
@@ -418,8 +419,8 @@ namespace ThousandAndFirst.Tests
 			{
 				foreach (System.Reflection.ParameterInfo parameter in method.GetParameters())
 				{
-					Assert.AreNotEqual(typeof(long), parameter.ParameterType, method.Name + " takes a tick count; absence must never expel anyone");
-					Assert.IsFalse(parameter.Name.ToLowerInvariant().Contains("tick") || parameter.Name.ToLowerInvariant().Contains("elapsed") || parameter.Name.ToLowerInvariant().Contains("day"), method.Name + " takes " + parameter.Name);
+					ClassicAssert.AreNotEqual(typeof(long), parameter.ParameterType, method.Name + " takes a tick count; absence must never expel anyone");
+					ClassicAssert.IsFalse(parameter.Name.ToLowerInvariant().Contains("tick") || parameter.Name.ToLowerInvariant().Contains("elapsed") || parameter.Name.ToLowerInvariant().Contains("day"), method.Name + " takes " + parameter.Name);
 				}
 			}
 		}

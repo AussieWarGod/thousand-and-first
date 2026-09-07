@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -18,13 +19,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void UnitEnumsKeepExactByteWireValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitWeight)));
-			Assert.AreEqual(0, (byte)KingdomUnitWeight.Heavy);
-			Assert.AreEqual(1, (byte)KingdomUnitWeight.Medium);
-			Assert.AreEqual(2, (byte)KingdomUnitWeight.Light);
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitDirection)));
-			Assert.AreEqual(0, (byte)KingdomUnitDirection.Land);
-			Assert.AreEqual(1, (byte)KingdomUnitDirection.Draw);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitWeight)));
+			ClassicAssert.AreEqual(0, (byte)KingdomUnitWeight.Heavy);
+			ClassicAssert.AreEqual(1, (byte)KingdomUnitWeight.Medium);
+			ClassicAssert.AreEqual(2, (byte)KingdomUnitWeight.Light);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomUnitDirection)));
+			ClassicAssert.AreEqual(0, (byte)KingdomUnitDirection.Land);
+			ClassicAssert.AreEqual(1, (byte)KingdomUnitDirection.Draw);
 		}
 
 		/// <summary>ZoneRepair's own shape: nothing owed below one unit's worth of elapsed, and the
@@ -39,8 +40,8 @@ namespace ThousandAndFirst.Tests
 		{
 			long owed;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(lastRead, processedThrough, ticksPerUnit, out owed, out fault));
-			Assert.AreEqual(expected, owed);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(lastRead, processedThrough, ticksPerUnit, out owed, out fault));
+			ClassicAssert.AreEqual(expected, owed);
 		}
 
 		/// <summary>
@@ -54,10 +55,10 @@ namespace ThousandAndFirst.Tests
 			long first;
 			long second;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(1000L, 61000L, 600L, out first, out fault));
-			Assert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(1000L, 61000L, 600L, out second, out fault));
-			Assert.AreEqual(first, second);
-			Assert.AreEqual(100L, first);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(1000L, 61000L, 600L, out first, out fault));
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryIntakeUnits(1000L, 61000L, 600L, out second, out fault));
+			ClassicAssert.AreEqual(first, second);
+			ClassicAssert.AreEqual(100L, first);
 		}
 
 		[Test]
@@ -65,11 +66,11 @@ namespace ThousandAndFirst.Tests
 		{
 			long owed;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCatchUpRules.TryIntakeUnits(5000L, 4000L, 100L, out owed, out fault));
-			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
-			Assert.IsFalse(KingdomCatchUpRules.TryIntakeUnits(0L, 4000L, 0L, out owed, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidInterval, fault);
-			Assert.AreEqual(0L, owed);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryIntakeUnits(5000L, 4000L, 100L, out owed, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, fault);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryIntakeUnits(0L, 4000L, 0L, out owed, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidInterval, fault);
+			ClassicAssert.AreEqual(0L, owed);
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(b): a light unit is a third, and everything else
@@ -80,14 +81,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase((int)KingdomUnitWeight.Light, 1)]
 		public void TheWeightsAreTheConstitutionsOwn(int weight, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatchUpRules.WeightThirds((KingdomUnitWeight)weight));
+			ClassicAssert.AreEqual(expected, KingdomCatchUpRules.WeightThirds((KingdomUnitWeight)weight));
 		}
 
 		[TestCase((int)KingdomUnitDirection.Land, 1)]
 		[TestCase((int)KingdomUnitDirection.Draw, -1)]
 		public void TheCounterIsSigned(int direction, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCatchUpRules.Sign((KingdomUnitDirection)direction));
+			ClassicAssert.AreEqual(expected, KingdomCatchUpRules.Sign((KingdomUnitDirection)direction));
 		}
 
 		/// <summary>
@@ -107,10 +108,10 @@ namespace ThousandAndFirst.Tests
 		{
 			int thirds;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryWeigh(heavy, medium, light, out thirds, out fault));
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryWeigh(heavy, medium, light, out thirds, out fault));
 			int turns;
-			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(thirds, out turns, out fault));
-			Assert.AreEqual(expectedTurns, turns);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(thirds, out turns, out fault));
+			ClassicAssert.AreEqual(expectedTurns, turns);
 		}
 
 		[Test]
@@ -119,12 +120,12 @@ namespace ThousandAndFirst.Tests
 			int thirds;
 			int turns;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryWeigh(KingdomCatchUpRules.WorstBacklogUnits, 0, 0, out thirds, out fault));
-			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(thirds, out turns, out fault));
-			Assert.AreEqual(39, turns);
-			Assert.Less(turns, KingdomCatchUpRules.GraceWindowTurns, "the worst backlog outlived vanilla's own grace window");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
-			Assert.AreEqual(KingdomBudgetVerdict.Warn, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, 41L));
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryWeigh(KingdomCatchUpRules.WorstBacklogUnits, 0, 0, out thirds, out fault));
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(thirds, out turns, out fault));
+			ClassicAssert.AreEqual(39, turns);
+			ClassicAssert.Less(turns, KingdomCatchUpRules.GraceWindowTurns, "the worst backlog outlived vanilla's own grace window");
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Warn, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, 41L));
 		}
 
 		[Test]
@@ -133,9 +134,9 @@ namespace ThousandAndFirst.Tests
 			int thirds;
 			int turns;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCatchUpRules.TryWeigh(-1, 0, 0, out thirds, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsFalse(KingdomCatchUpRules.TryTurnsToDrain(-1, out turns, out fault));
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryWeigh(-1, 0, 0, out thirds, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryTurnsToDrain(-1, out turns, out fault));
 		}
 
 		// ---- The per-turn spend ----------------------------------------------------------
@@ -147,11 +148,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(20, 20, 20, 20, 20, 20), out spend, out fault));
-			Assert.AreEqual(KingdomBudgetRules.ReifyHeavyMintsPerTurn, spend.Heavy, "the heavy cap moved");
-			Assert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, spend.ThirdsSpent, "the turn did not spend its whole budget");
-			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, spend.Heavy + spend.Medium, "heavy plus medium overran the unit budget");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.Reify, spend.ThirdsSpent / KingdomCatchUpRules.ThirdsPerUnit));
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(20, 20, 20, 20, 20, 20), out spend, out fault));
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyHeavyMintsPerTurn, spend.Heavy, "the heavy cap moved");
+			ClassicAssert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, spend.ThirdsSpent, "the turn did not spend its whole budget");
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, spend.Heavy + spend.Medium, "heavy plus medium overran the unit budget");
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.Reify, spend.ThirdsSpent / KingdomCatchUpRules.ThirdsPerUnit));
 		}
 
 		/// <summary>Twenty-four light units a turn, so a home farm's eighty plants materialise in
@@ -161,10 +162,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 0, 0, 0, 0, 80), out spend, out fault));
-			Assert.AreEqual(KingdomBudgetRules.ReifyLightUnitsPerTurn, spend.Light);
-			Assert.AreEqual(0, spend.Heavy);
-			Assert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, spend.ThirdsSpent);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 0, 0, 0, 0, 80), out spend, out fault));
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyLightUnitsPerTurn, spend.Light);
+			ClassicAssert.AreEqual(0, spend.Heavy);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, spend.ThirdsSpent);
 		}
 
 		/// <summary>What the founder is looking at catches up first, and the rest fills in behind
@@ -174,9 +175,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 5, 0, 0, 50, 0), out spend, out fault));
-			Assert.AreEqual(5, spend.Visible, "the visible half was not spent first");
-			Assert.AreEqual(8, spend.Medium);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 5, 0, 0, 50, 0), out spend, out fault));
+			ClassicAssert.AreEqual(5, spend.Visible, "the visible half was not spent first");
+			ClassicAssert.AreEqual(8, spend.Medium);
 		}
 
 		[Test]
@@ -184,20 +185,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 0, 0, 0, 1000, 0), out spend, out fault));
-			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, spend.Units);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 0, 0, 0, 1000, 0), out spend, out fault));
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, spend.Units);
 		}
 
 		[Test]
 		public void AnEmptyDemandSpendsNothingAtAll()
 		{
 			KingdomReifyDemand demand = new KingdomReifyDemand(0, 0, 0, 0, 0, 0);
-			Assert.IsTrue(demand.IsEmpty);
+			ClassicAssert.IsTrue(demand.IsEmpty);
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, out spend, out fault));
-			Assert.AreEqual(0, spend.Units);
-			Assert.AreEqual(0, spend.ThirdsSpent, "a caught-up zone costs literally nothing");
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, out spend, out fault));
+			ClassicAssert.AreEqual(0, spend.Units);
+			ClassicAssert.AreEqual(0, spend.ThirdsSpent, "a caught-up zone costs literally nothing");
 		}
 
 		[Test]
@@ -205,8 +206,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, -1, 0, 0, 0, 0), out spend, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, -1, 0, 0, 0, 0), out spend, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		// ---- Settling a unit -------------------------------------------------------------
@@ -217,16 +218,16 @@ namespace ThousandAndFirst.Tests
 		public void SettlingAUnitTakesItOffTheCounterInItsOwnDirection()
 		{
 			KingdomCatchUpCounter counter = new KingdomCatchUpCounter(9, 6);
-			Assert.AreEqual(15, counter.OwedThirds);
-			Assert.AreEqual(3, counter.Net);
+			ClassicAssert.AreEqual(15, counter.OwedThirds);
+			ClassicAssert.AreEqual(3, counter.Net);
 			KingdomCatchUpCounter next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Land, KingdomUnitWeight.Medium, out next, out fault));
-			Assert.AreEqual(6, next.LandThirds);
-			Assert.AreEqual(6, next.DrawThirds, "settling a land touched the draws");
-			Assert.IsTrue(KingdomCatchUpRules.TrySettle(next, KingdomUnitDirection.Draw, KingdomUnitWeight.Light, out next, out fault));
-			Assert.AreEqual(5, next.DrawThirds);
-			Assert.AreEqual(11, next.OwedThirds);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Land, KingdomUnitWeight.Medium, out next, out fault));
+			ClassicAssert.AreEqual(6, next.LandThirds);
+			ClassicAssert.AreEqual(6, next.DrawThirds, "settling a land touched the draws");
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TrySettle(next, KingdomUnitDirection.Draw, KingdomUnitWeight.Light, out next, out fault));
+			ClassicAssert.AreEqual(5, next.DrawThirds);
+			ClassicAssert.AreEqual(11, next.OwedThirds);
 		}
 
 		[Test]
@@ -235,17 +236,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCatchUpCounter counter = new KingdomCatchUpCounter(1, 0);
 			KingdomCatchUpCounter next;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Land, KingdomUnitWeight.Heavy, out next, out fault));
-			Assert.AreEqual(1, next.LandThirds, "a refused settle moved the counter anyway");
-			Assert.IsFalse(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Draw, KingdomUnitWeight.Light, out next, out fault));
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Land, KingdomUnitWeight.Heavy, out next, out fault));
+			ClassicAssert.AreEqual(1, next.LandThirds, "a refused settle moved the counter anyway");
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Draw, KingdomUnitWeight.Light, out next, out fault));
 		}
 
 		[Test]
 		public void ADrainedCounterSaysSo()
 		{
-			Assert.IsTrue(new KingdomCatchUpCounter(0, 0).IsSettled);
-			Assert.IsFalse(new KingdomCatchUpCounter(0, 1).IsSettled);
-			Assert.IsFalse(new KingdomCatchUpCounter(1, 0).IsSettled);
+			ClassicAssert.IsTrue(new KingdomCatchUpCounter(0, 0).IsSettled);
+			ClassicAssert.IsFalse(new KingdomCatchUpCounter(0, 1).IsSettled);
+			ClassicAssert.IsFalse(new KingdomCatchUpCounter(1, 0).IsSettled);
 		}
 
 		/// <summary>Landing and drawing the same amount nets to nothing and still owes both halves:
@@ -254,9 +255,9 @@ namespace ThousandAndFirst.Tests
 		public void TheNetIsNotTheDebt()
 		{
 			KingdomCatchUpCounter counter = new KingdomCatchUpCounter(12, 12);
-			Assert.AreEqual(0, counter.Net);
-			Assert.AreEqual(24, counter.OwedThirds);
-			Assert.IsFalse(counter.IsSettled, "a netted-out counter reported itself drained");
+			ClassicAssert.AreEqual(0, counter.Net);
+			ClassicAssert.AreEqual(24, counter.OwedThirds);
+			ClassicAssert.IsFalse(counter.IsSettled, "a netted-out counter reported itself drained");
 		}
 
 		/// <summary>
@@ -271,23 +272,23 @@ namespace ThousandAndFirst.Tests
 			KingdomReifySpend first;
 			KingdomReifySpend second;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, out first, out fault));
-			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, first.Units);
-			Assert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, first.ThirdsSpent);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, out first, out fault));
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, first.Units);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.BudgetThirdsPerTurn, first.ThirdsSpent);
 
 			int left = KingdomCatchUpRules.BudgetThirdsPerTurn - first.ThirdsSpent;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, left, 0, out second, out fault));
-			Assert.AreEqual(0, second.Units, "a second call site on the same turn gets what is left, which is nothing");
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, left, 0, out second, out fault));
+			ClassicAssert.AreEqual(0, second.Units, "a second call site on the same turn gets what is left, which is nothing");
 
 			KingdomReifySpend partial;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 3, 0, 0, 0, 0), out partial, out fault));
-			Assert.AreEqual(3, partial.Units);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 3, 0, 0, 0, 0), out partial, out fault));
+			ClassicAssert.AreEqual(3, partial.Units);
 			KingdomReifySpend remainder;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand,
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand,
 				KingdomCatchUpRules.BudgetThirdsPerTurn - partial.ThirdsSpent,
 				KingdomBudgetRules.ReifyHeavyMintsPerTurn - partial.Heavy,
 				out remainder, out fault));
-			Assert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, partial.Units + remainder.Units,
+			ClassicAssert.AreEqual(KingdomBudgetRules.ReifyUnitsPerTurn, partial.Units + remainder.Units,
 				"the two spends together are exactly one turn's budget");
 		}
 
@@ -298,12 +299,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
 				KingdomCatchUpRules.BudgetThirdsPerTurn, 1, out spend, out fault));
-			Assert.AreEqual(1, spend.Heavy);
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
+			ClassicAssert.AreEqual(1, spend.Heavy);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(9, 0, 0, 0, 0, 0),
 				KingdomCatchUpRules.BudgetThirdsPerTurn, 0, out spend, out fault));
-			Assert.AreEqual(0, spend.Heavy);
+			ClassicAssert.AreEqual(0, spend.Heavy);
 		}
 
 		/// <summary>An allowance bigger than the turn's own budget is a refusal, not a bonus: the
@@ -313,12 +314,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomReifySpend spend;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
 				KingdomCatchUpRules.BudgetThirdsPerTurn + 1, KingdomBudgetRules.ReifyHeavyMintsPerTurn, out spend, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0),
 				KingdomCatchUpRules.BudgetThirdsPerTurn, KingdomBudgetRules.ReifyHeavyMintsPerTurn + 1, out spend, out fault));
-			Assert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0), -1, 0, out spend, out fault));
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TryPlanTurn(new KingdomReifyDemand(0, 8, 0, 0, 0, 0), -1, 0, out spend, out fault));
 		}
 
 		/// <summary>
@@ -335,17 +336,17 @@ namespace ThousandAndFirst.Tests
 		public void APartiallyPaidDebtIsStillOwedAndTheRowSaysSo()
 		{
 			KingdomZoneRow row = new KingdomZoneRow("z", 0, 5000L, default(KingdomStocks), 0, 0, 0, 0, 400, 0, 0);
-			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(row).LandThirds);
-			Assert.IsFalse(KingdomCityRules.CounterFor(row).IsSettled);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(row).LandThirds);
+			ClassicAssert.IsFalse(KingdomCityRules.CounterFor(row).IsSettled);
 
 			// One container's worth landed; the rest is still the model's.
 			KingdomZoneRow after = row.WithOwed(300, 0, 0);
-			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(after).LandThirds,
+			ClassicAssert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, KingdomCityRules.CounterFor(after).LandThirds,
 				"a debt is owed until it is nothing, not until it is smaller");
-			Assert.IsFalse(KingdomCityRules.CounterFor(after).IsSettled);
+			ClassicAssert.IsFalse(KingdomCityRules.CounterFor(after).IsSettled);
 
 			KingdomZoneRow paid = after.WithOwed(0, 0, 0);
-			Assert.IsTrue(KingdomCityRules.CounterFor(paid).IsSettled, "and a caught-up zone costs nothing");
+			ClassicAssert.IsTrue(KingdomCityRules.CounterFor(paid).IsSettled, "and a caught-up zone costs nothing");
 		}
 
 		/// <summary>
@@ -358,11 +359,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomZoneRow row = new KingdomZoneRow("z", 0, 5000L, default(KingdomStocks), 0, 0, 0, 0, -60, 40, 0);
 			KingdomCatchUpCounter counter = KingdomCityRules.CounterFor(row);
-			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.DrawThirds);
-			Assert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.LandThirds);
-			Assert.AreEqual(2 * KingdomCatchUpRules.ThirdsPerUnit, counter.OwedThirds);
-			Assert.AreEqual(0, counter.Net, "the net is zero and the zone still owes two units of work");
-			Assert.IsFalse(counter.IsSettled);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.DrawThirds);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.ThirdsPerUnit, counter.LandThirds);
+			ClassicAssert.AreEqual(2 * KingdomCatchUpRules.ThirdsPerUnit, counter.OwedThirds);
+			ClassicAssert.AreEqual(0, counter.Net, "the net is zero and the zone still owes two units of work");
+			ClassicAssert.IsFalse(counter.IsSettled);
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -27,14 +28,14 @@ namespace ThousandAndFirst.Tests
 				KeepersRoster = " NODE:Arclight |node:arclight| disk:Chem Cell "
 			};
 			city.Normalize();
-			Assert.AreEqual(" NODE:Arclight |node:arclight| disk:Chem Cell ", city.KeepersRoster,
+			ClassicAssert.AreEqual(" NODE:Arclight |node:arclight| disk:Chem Cell ", city.KeepersRoster,
 				"capture and restore preserve valid extension bytes exactly");
 			CollectionAssert.AreEqual(new[] { "node:arclight", "disk:chem cell" },
 				KingdomZoningRules.DecodeRoster(city.KeepersRoster));
 
 			city.KeepersRoster = new string('x', KingdomZoningRules.MaxRosterEncodedChars + 1);
 			city.Normalize();
-			Assert.AreEqual("", city.KeepersRoster,
+			ClassicAssert.AreEqual("", city.KeepersRoster,
 				"load normalization must release an unbounded permanent heap string");
 		}
 
@@ -55,13 +56,13 @@ namespace ThousandAndFirst.Tests
 			{
 				carried.Add(field.Name);
 			}
-			Assert.Contains("KeepersRoster", carried);
-			Assert.Contains("ResearchSubject", carried);
-			Assert.Contains("ResearchAccrued", carried);
-			Assert.Contains("ResearchTakenUpTick", carried);
-			Assert.Contains("ResearchShelf", carried);
-			Assert.Contains("ResearchBestMind", carried);
-			Assert.Contains("ResearchStalledAnnounced", carried);
+			ClassicAssert.Contains("KeepersRoster", carried);
+			ClassicAssert.Contains("ResearchSubject", carried);
+			ClassicAssert.Contains("ResearchAccrued", carried);
+			ClassicAssert.Contains("ResearchTakenUpTick", carried);
+			ClassicAssert.Contains("ResearchShelf", carried);
+			ClassicAssert.Contains("ResearchBestMind", carried);
+			ClassicAssert.Contains("ResearchStalledAnnounced", carried);
 		}
 
 		// --- Secession and rejoin (B2, B6) ------------------------------------------------------
@@ -76,12 +77,12 @@ namespace ThousandAndFirst.Tests
 			seceded.ReadFrom(seat);
 			new KingdomSettlement().WriteTo(seat);
 
-			Assert.AreEqual(FoundryRolls, seceded.KeepersRoster, "the leaver walks off with what its own keepers learned");
-			Assert.AreEqual("cruciblesteel", seceded.ResearchSubject);
-			Assert.AreEqual(4200, seceded.ResearchAccrued);
-			Assert.IsTrue(string.IsNullOrEmpty(seat.KeepersRoster), "the realm no longer holds what only the leaver knew");
-			Assert.IsNull(seat.ResearchSubject);
-			Assert.AreEqual(0, seat.ResearchAccrued);
+			ClassicAssert.AreEqual(FoundryRolls, seceded.KeepersRoster, "the leaver walks off with what its own keepers learned");
+			ClassicAssert.AreEqual("cruciblesteel", seceded.ResearchSubject);
+			ClassicAssert.AreEqual(4200, seceded.ResearchAccrued);
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(seat.KeepersRoster), "the realm no longer holds what only the leaver knew");
+			ClassicAssert.IsNull(seat.ResearchSubject);
+			ClassicAssert.AreEqual(0, seat.ResearchAccrued);
 		}
 
 		[Test]
@@ -96,11 +97,11 @@ namespace ThousandAndFirst.Tests
 
 			seceded.WriteTo(seat);
 
-			Assert.AreEqual(FoundryRolls, seat.KeepersRoster);
-			Assert.AreEqual("cruciblesteel", seat.ResearchSubject);
-			Assert.AreEqual(4200, seat.ResearchAccrued);
-			Assert.AreEqual(19, seat.ResearchBestMind);
-			Assert.AreEqual(600, seat.ResearchShelf["thevat"]);
+			ClassicAssert.AreEqual(FoundryRolls, seat.KeepersRoster);
+			ClassicAssert.AreEqual("cruciblesteel", seat.ResearchSubject);
+			ClassicAssert.AreEqual(4200, seat.ResearchAccrued);
+			ClassicAssert.AreEqual(19, seat.ResearchBestMind);
+			ClassicAssert.AreEqual(600, seat.ResearchShelf["thevat"]);
 		}
 
 		[Test]
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomSettlement().WriteTo(seat);
 				away.WriteTo(seat);
 			}
-			Assert.AreEqual(before, seat.KeepersRoster, "three quarrels and three reconciliations cost the city nothing");
+			ClassicAssert.AreEqual(before, seat.KeepersRoster, "three quarrels and three reconciliations cost the city nothing");
 		}
 
 		// --- Exile and return (B3) --------------------------------------------------------------
@@ -134,10 +135,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement exiledAway = away;
 			new KingdomSettlement().WriteTo(seat);
 
-			Assert.IsTrue(string.IsNullOrEmpty(seat.KeepersRoster),
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(seat.KeepersRoster),
 				"an exiled founder carries leads and seeds, never holdings");
-			Assert.AreEqual(FoundryRolls, exiledSeat.KeepersRoster);
-			Assert.AreEqual(TrunkRolls, exiledAway.KeepersRoster);
+			ClassicAssert.AreEqual(FoundryRolls, exiledSeat.KeepersRoster);
+			ClassicAssert.AreEqual(TrunkRolls, exiledAway.KeepersRoster);
 		}
 
 		[Test]
@@ -150,8 +151,8 @@ namespace ThousandAndFirst.Tests
 
 			exiledSeat.WriteTo(seat);
 
-			Assert.AreEqual(FoundryRolls, seat.KeepersRoster);
-			Assert.AreEqual(4200, seat.ResearchAccrued);
+			ClassicAssert.AreEqual(FoundryRolls, seat.KeepersRoster);
+			ClassicAssert.AreEqual(4200, seat.ResearchAccrued);
 		}
 
 		[Test]
@@ -160,10 +161,10 @@ namespace ThousandAndFirst.Tests
 			// "Doors, never rooms": a blank city is a blank city, and whatever the founder
 			// remembers lives in the journal rather than in any container here.
 			KingdomSettlement refounded = new KingdomSettlement();
-			Assert.IsTrue(string.IsNullOrEmpty(refounded.KeepersRoster));
-			Assert.IsNull(refounded.ResearchSubject);
-			Assert.AreEqual(0, refounded.ResearchAccrued);
-			Assert.AreEqual(0, refounded.ResearchShelf.Count);
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(refounded.KeepersRoster));
+			ClassicAssert.IsNull(refounded.ResearchSubject);
+			ClassicAssert.AreEqual(0, refounded.ResearchAccrued);
+			ClassicAssert.AreEqual(0, refounded.ResearchShelf.Count);
 		}
 
 		// --- Seat-only reading (B4) -------------------------------------------------------------
@@ -173,12 +174,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSettlement seat = Foundry();
 			KingdomSettlement away = Trunk();
-			Assert.AreNotEqual(seat.KeepersRoster, away.KeepersRoster);
+			ClassicAssert.AreNotEqual(seat.KeepersRoster, away.KeepersRoster);
 
 			List<string> here = KingdomZoningRules.DecodeRoster(seat.KeepersRoster);
 			List<string> there = KingdomZoningRules.DecodeRoster(away.KeepersRoster);
-			Assert.IsTrue(KingdomZoningRules.Knows(here, "node:cruciblesteel"));
-			Assert.IsFalse(KingdomZoningRules.Knows(there, "node:cruciblesteel"),
+			ClassicAssert.IsTrue(KingdomZoningRules.Knows(here, "node:cruciblesteel"));
+			ClassicAssert.IsFalse(KingdomZoningRules.Knows(there, "node:cruciblesteel"),
 				"knowledge is where it was taught; the other city has to be taught too");
 		}
 
@@ -195,9 +196,9 @@ namespace ThousandAndFirst.Tests
 			away.WriteTo(seat);
 			away = wasSeated;
 
-			Assert.AreEqual(TrunkRolls, seat.KeepersRoster);
-			Assert.AreEqual(FoundryRolls, away.KeepersRoster);
-			Assert.IsFalse(KingdomZoningRules.Knows(KingdomZoningRules.DecodeRoster(seat.KeepersRoster), "node:cruciblesteel"));
+			ClassicAssert.AreEqual(TrunkRolls, seat.KeepersRoster);
+			ClassicAssert.AreEqual(FoundryRolls, away.KeepersRoster);
+			ClassicAssert.IsFalse(KingdomZoningRules.Knows(KingdomZoningRules.DecodeRoster(seat.KeepersRoster), "node:cruciblesteel"));
 		}
 
 		// --- Craft is per city, and MinTech is judged against the city being built in (B7) -------
@@ -209,9 +210,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement trunk = Trunk();
 			int here = KingdomZoningRules.TechPoints(KingdomZoningRules.DecodeRoster(foundry.KeepersRoster));
 			int there = KingdomZoningRules.TechPoints(KingdomZoningRules.DecodeRoster(trunk.KeepersRoster));
-			Assert.Greater(here, there, "the city that certified a machine builds better than the one that did not");
-			Assert.AreEqual(TechLevel.Salvage, KingdomZoningRules.LevelForPoints(here));
-			Assert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(there));
+			ClassicAssert.Greater(here, there, "the city that certified a machine builds better than the one that did not");
+			ClassicAssert.AreEqual(TechLevel.Salvage, KingdomZoningRules.LevelForPoints(here));
+			ClassicAssert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(there));
 		}
 
 		[Test]
@@ -219,11 +220,11 @@ namespace ThousandAndFirst.Tests
 		{
 			// RR7: craft is what the settlement LEARNED and CERTIFIED, never a readout of the
 			// research system. Two ladders, orthogonal, and this is the assertion that keeps them so.
-			Assert.AreEqual(0, KingdomZoningRules.PointsForKind(KingdomZoningRules.KindNode));
-			Assert.AreEqual(0, KingdomZoningRules.TechPointsPerNode);
+			ClassicAssert.AreEqual(0, KingdomZoningRules.PointsForKind(KingdomZoningRules.KindNode));
+			ClassicAssert.AreEqual(0, KingdomZoningRules.TechPointsPerNode);
 			List<string> onlyNodes = KingdomZoningRules.DecodeRoster("node:notes|node:kiln|node:cruciblesteel|node:arclight");
-			Assert.AreEqual(0, KingdomZoningRules.TechPoints(onlyNodes));
-			Assert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(onlyNodes)));
+			ClassicAssert.AreEqual(0, KingdomZoningRules.TechPoints(onlyNodes));
+			ClassicAssert.AreEqual(TechLevel.Hands, KingdomZoningRules.LevelForPoints(KingdomZoningRules.TechPoints(onlyNodes)));
 		}
 
 		// --- The node kind speaks the shipped gate vocabulary and nothing else (verdict 1) -------
@@ -232,11 +233,11 @@ namespace ThousandAndFirst.Tests
 		public void ANodeKeyIsMatchedByTheGateMachineryThatAlreadyShips()
 		{
 			List<string> roster = KingdomZoningRules.DecodeRoster(FoundryRolls);
-			Assert.IsTrue(KingdomZoningRules.Knows(roster, "node:kiln"));
-			Assert.IsFalse(KingdomZoningRules.Knows(roster, "node:arclight"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Knows(roster, "node:kiln"));
+			ClassicAssert.IsFalse(KingdomZoningRules.Knows(roster, "node:arclight"));
 			// A bare name matches any kind, exactly as it does for a disk or a certification, so an
 			// author who writes Knowledge="kiln" is satisfied by the node.
-			Assert.IsTrue(KingdomZoningRules.Knows(roster, "kiln"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Knows(roster, "kiln"));
 		}
 
 		[Test]
@@ -247,15 +248,15 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("theirmod_annexe", null, null,
 				"node:theirthing", null, out error);
-			Assert.IsNull(error);
-			Assert.AreEqual("node:theirthing", gate.Knowledge);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("node:theirthing", gate.Knowledge);
 			ZoningJudgement without = KingdomZoningRules.Judge(gate, null, "craft", 0,
 				KingdomZoningRules.DecodeRoster(FoundryRolls));
-			Assert.IsFalse(without.Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedUnlearned, without.Verdict);
+			ClassicAssert.IsFalse(without.Permitted);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUnlearned, without.Verdict);
 			ZoningJudgement with = KingdomZoningRules.Judge(gate, null, "craft", 0,
 				KingdomZoningRules.DecodeRoster(FoundryRolls + "|node:theirthing"));
-			Assert.IsTrue(with.Permitted);
+			ClassicAssert.IsTrue(with.Permitted);
 		}
 
 		// --- The roster string survives everything a container does to it -----------------------
@@ -264,7 +265,7 @@ namespace ThousandAndFirst.Tests
 		public void RollsRoundTripThroughTheStoreExactly()
 		{
 			List<string> roster = KingdomZoningRules.DecodeRoster(FoundryRolls);
-			Assert.AreEqual(FoundryRolls, KingdomZoningRules.EncodeRoster(roster));
+			ClassicAssert.AreEqual(FoundryRolls, KingdomZoningRules.EncodeRoster(roster));
 		}
 
 		[Test]
@@ -272,9 +273,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Hostile-input discipline: a corrupt roll disables one key, never the whole city.
 			List<string> roster = KingdomZoningRules.DecodeRoster("node:notes||   |node:kiln");
-			Assert.AreEqual(2, roster.Count);
-			Assert.IsTrue(KingdomZoningRules.Knows(roster, "node:notes"));
-			Assert.IsTrue(KingdomZoningRules.Knows(roster, "node:kiln"));
+			ClassicAssert.AreEqual(2, roster.Count);
+			ClassicAssert.IsTrue(KingdomZoningRules.Knows(roster, "node:notes"));
+			ClassicAssert.IsTrue(KingdomZoningRules.Knows(roster, "node:kiln"));
 		}
 
 		// --- Fixtures ---------------------------------------------------------------------------

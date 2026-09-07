@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -25,29 +26,29 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HappeningAbiKeepsExactEnumAndRowMetadata()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningKind)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomFestivalAnchor)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomHappeningKind)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomFestivalAnchor)));
 			CollectionAssert.AreEqual(new[] { "None", "Wedding", "Funeral", "Festival", "Breakdown", "Brownout" },
 				Enum.GetNames(typeof(KingdomHappeningKind)));
 			CollectionAssert.AreEqual(new[] { "None", "Ides", "UtYaraUx" },
 				Enum.GetNames(typeof(KingdomFestivalAnchor)));
-			Assert.AreEqual(0, (byte)KingdomHappeningKind.None);
-			Assert.AreEqual(1, (byte)KingdomHappeningKind.Wedding);
-			Assert.AreEqual(2, (byte)KingdomHappeningKind.Funeral);
-			Assert.AreEqual(3, (byte)KingdomHappeningKind.Festival);
-			Assert.AreEqual(4, (byte)KingdomHappeningKind.Breakdown);
-			Assert.AreEqual(5, (byte)KingdomHappeningKind.Brownout);
-			Assert.AreEqual(0, (byte)KingdomFestivalAnchor.None);
-			Assert.AreEqual(1, (byte)KingdomFestivalAnchor.Ides);
-			Assert.AreEqual(2, (byte)KingdomFestivalAnchor.UtYaraUx);
+			ClassicAssert.AreEqual(0, (byte)KingdomHappeningKind.None);
+			ClassicAssert.AreEqual(1, (byte)KingdomHappeningKind.Wedding);
+			ClassicAssert.AreEqual(2, (byte)KingdomHappeningKind.Funeral);
+			ClassicAssert.AreEqual(3, (byte)KingdomHappeningKind.Festival);
+			ClassicAssert.AreEqual(4, (byte)KingdomHappeningKind.Breakdown);
+			ClassicAssert.AreEqual(5, (byte)KingdomHappeningKind.Brownout);
+			ClassicAssert.AreEqual(0, (byte)KingdomFestivalAnchor.None);
+			ClassicAssert.AreEqual(1, (byte)KingdomFestivalAnchor.Ides);
+			ClassicAssert.AreEqual(2, (byte)KingdomFestivalAnchor.UtYaraUx);
 
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappeningKind", typeof(KingdomHappeningKind).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomFestivalAnchor", typeof(KingdomFestivalAnchor).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappening", typeof(KingdomHappening).FullName);
-			Assert.IsFalse(typeof(KingdomHappeningKind).IsPublic);
-			Assert.IsFalse(typeof(KingdomFestivalAnchor).IsPublic);
-			Assert.IsFalse(typeof(KingdomHappening).IsPublic);
-			Assert.IsTrue(typeof(KingdomHappening).IsValueType);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappeningKind", typeof(KingdomHappeningKind).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomFestivalAnchor", typeof(KingdomFestivalAnchor).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHappening", typeof(KingdomHappening).FullName);
+			ClassicAssert.IsFalse(typeof(KingdomHappeningKind).IsPublic);
+			ClassicAssert.IsFalse(typeof(KingdomFestivalAnchor).IsPublic);
+			ClassicAssert.IsFalse(typeof(KingdomHappening).IsPublic);
+			ClassicAssert.IsTrue(typeof(KingdomHappening).IsValueType);
 
 			FieldInfo[] fields = typeof(KingdomHappening).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
@@ -56,31 +57,31 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { typeof(KingdomHappeningKind), typeof(long), typeof(int), typeof(int), typeof(string), typeof(int) },
 				Array.ConvertAll(fields, field => field.FieldType));
 			foreach (FieldInfo field in fields)
-				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
+				ClassicAssert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
 
 			KingdomHappening none = KingdomHappening.None;
-			Assert.AreEqual(KingdomHappeningKind.None, none.Kind);
-			Assert.AreEqual(0L, none.Tick);
-			Assert.AreEqual(0, none.SubjectA);
-			Assert.AreEqual(0, none.SubjectB);
-			Assert.IsNull(none.PlaceZoneId);
-			Assert.AreEqual(0, none.Outcome);
-			Assert.IsFalse(none.Stands);
+			ClassicAssert.AreEqual(KingdomHappeningKind.None, none.Kind);
+			ClassicAssert.AreEqual(0L, none.Tick);
+			ClassicAssert.AreEqual(0, none.SubjectA);
+			ClassicAssert.AreEqual(0, none.SubjectB);
+			ClassicAssert.IsNull(none.PlaceZoneId);
+			ClassicAssert.AreEqual(0, none.Outcome);
+			ClassicAssert.IsFalse(none.Stands);
 		}
 
 		[Test]
 		public void LogicalSourceKeepsOneDeclarationSetAndOrderedPartialAuthority()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(4, Count(source, "internal static partial class KingdomHappeningRules"));
-			Assert.AreEqual(1, Count(source, "internal enum KingdomHappeningKind : byte"));
-			Assert.AreEqual(1, Count(source, "internal enum KingdomFestivalAnchor : byte"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomHappening"));
-			Assert.Less(source.IndexOf("internal static bool TryNextFestival", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(4, Count(source, "internal static partial class KingdomHappeningRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomHappeningKind : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomFestivalAnchor : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomHappening"));
+			ClassicAssert.Less(source.IndexOf("internal static bool TryNextFestival", StringComparison.Ordinal),
 				source.IndexOf("internal static bool WeddingEligible", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool WeddingEligible", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool WeddingEligible", StringComparison.Ordinal),
 				source.IndexOf("internal static KingdomHappening Judge", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static KingdomHappening Judge", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static KingdomHappening Judge", StringComparison.Ordinal),
 				source.IndexOf("internal static string AnchorName", StringComparison.Ordinal));
 		}
 
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, works, residents, null, out state, out fault), fault.ToString());
 			return state;
 		}
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(222001L, false)]
 		public void Intercalary_MatchesTheEnginesOwnWindow(long yearTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomHappeningRules.AnchorAt(yearTick) == KingdomFestivalAnchor.UtYaraUx);
+			ClassicAssert.AreEqual(expected, KingdomHappeningRules.AnchorAt(yearTick) == KingdomFestivalAnchor.UtYaraUx);
 		}
 
 		/// <summary>
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(18000L, false)]
 		public void Ides_MatchesTheEnginesOwnWindow(long yearTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomHappeningRules.AnchorAt(yearTick) == KingdomFestivalAnchor.Ides);
+			ClassicAssert.AreEqual(expected, KingdomHappeningRules.AnchorAt(yearTick) == KingdomFestivalAnchor.Ides);
 		}
 
 		/// <summary>
@@ -152,11 +153,11 @@ namespace ThousandAndFirst.Tests
 			for (int month = 0; month < KingdomHappeningRules.NumberedMonths; month++)
 			{
 				long ides = KingdomHappeningRules.IdesTickOfMonth(month);
-				Assert.AreEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides),
+				ClassicAssert.AreEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides),
 					"month " + month + " opens its Ides at " + ides);
-				Assert.AreEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides + KingdomHappeningRules.TicksPerDay - 1L),
+				ClassicAssert.AreEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides + KingdomHappeningRules.TicksPerDay - 1L),
 					"month " + month + " closes its Ides at " + (ides + KingdomHappeningRules.TicksPerDay - 1L));
-				Assert.AreNotEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides - 1L),
+				ClassicAssert.AreNotEqual(KingdomFestivalAnchor.Ides, KingdomHappeningRules.AnchorAt(ides - 1L),
 					"month " + month + " should not be on its Ides one tick early");
 			}
 		}
@@ -173,9 +174,9 @@ namespace ThousandAndFirst.Tests
 			{
 				found++;
 				cursor = due;
-				Assert.AreNotEqual(KingdomFestivalAnchor.None, anchor);
+				ClassicAssert.AreNotEqual(KingdomFestivalAnchor.None, anchor);
 			}
-			Assert.AreEqual(13, found);
+			ClassicAssert.AreEqual(13, found);
 		}
 
 		/// <summary>
@@ -188,8 +189,8 @@ namespace ThousandAndFirst.Tests
 		{
 			long due;
 			KingdomFestivalAnchor anchor;
-			Assert.IsTrue(KingdomHappeningRules.TryNextFestival(KingdomHappeningRules.IdesTickOfMonth(0), out due, out anchor));
-			Assert.Greater(due, KingdomHappeningRules.IdesTickOfMonth(0));
+			ClassicAssert.IsTrue(KingdomHappeningRules.TryNextFestival(KingdomHappeningRules.IdesTickOfMonth(0), out due, out anchor));
+			ClassicAssert.Greater(due, KingdomHappeningRules.IdesTickOfMonth(0));
 		}
 
 		/// <summary>Past the last Ides of a year, the next feast wraps into the next year rather
@@ -199,9 +200,9 @@ namespace ThousandAndFirst.Tests
 		{
 			long due;
 			KingdomFestivalAnchor anchor;
-			Assert.IsTrue(KingdomHappeningRules.TryNextFestival(KingdomHappeningRules.TicksPerYear - 1L, out due, out anchor));
-			Assert.AreEqual(KingdomHappeningRules.TicksPerYear + KingdomHappeningRules.IdesTickOfMonth(0), due);
-			Assert.AreEqual(KingdomFestivalAnchor.Ides, anchor);
+			ClassicAssert.IsTrue(KingdomHappeningRules.TryNextFestival(KingdomHappeningRules.TicksPerYear - 1L, out due, out anchor));
+			ClassicAssert.AreEqual(KingdomHappeningRules.TicksPerYear + KingdomHappeningRules.IdesTickOfMonth(0), due);
+			ClassicAssert.AreEqual(KingdomFestivalAnchor.Ides, anchor);
 		}
 
 		/// <summary>
@@ -216,12 +217,12 @@ namespace ThousandAndFirst.Tests
 			{
 				long due;
 				KingdomFestivalAnchor anchor;
-				Assert.IsTrue(KingdomHappeningRules.TryNextFestival(cursor, out due, out anchor));
+				ClassicAssert.IsTrue(KingdomHappeningRules.TryNextFestival(cursor, out due, out anchor));
 				long back;
 				KingdomFestivalAnchor backAnchor;
-				Assert.IsTrue(KingdomHappeningRules.TryLastFestival(due, out back, out backAnchor));
-				Assert.AreEqual(due, back);
-				Assert.AreEqual(anchor, backAnchor);
+				ClassicAssert.IsTrue(KingdomHappeningRules.TryLastFestival(due, out back, out backAnchor));
+				ClassicAssert.AreEqual(due, back);
+				ClassicAssert.AreEqual(anchor, backAnchor);
 				cursor = due;
 			}
 		}
@@ -238,10 +239,10 @@ namespace ThousandAndFirst.Tests
 			long longDue;
 			KingdomFestivalAnchor a;
 			KingdomFestivalAnchor b;
-			Assert.IsTrue(KingdomHappeningRules.TryLastFestival(KingdomHappeningRules.TicksPerYear + 1000L, out shortDue, out a));
-			Assert.IsTrue(KingdomHappeningRules.TryLastFestival((KingdomHappeningRules.TicksPerYear * 100L) + 1000L, out longDue, out b));
-			Assert.AreEqual(a, b);
-			Assert.AreEqual(shortDue % KingdomHappeningRules.TicksPerYear, longDue % KingdomHappeningRules.TicksPerYear);
+			ClassicAssert.IsTrue(KingdomHappeningRules.TryLastFestival(KingdomHappeningRules.TicksPerYear + 1000L, out shortDue, out a));
+			ClassicAssert.IsTrue(KingdomHappeningRules.TryLastFestival((KingdomHappeningRules.TicksPerYear * 100L) + 1000L, out longDue, out b));
+			ClassicAssert.AreEqual(a, b);
+			ClassicAssert.AreEqual(shortDue % KingdomHappeningRules.TicksPerYear, longDue % KingdomHappeningRules.TicksPerYear);
 		}
 
 		// ==================================================================================
@@ -254,12 +255,12 @@ namespace ThousandAndFirst.Tests
 		public void Wedding_NeedsOneRoof()
 		{
 			long now = Settled + 1000L;
-			Assert.IsTrue(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsTrue(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Resident), 0, now));
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 8, 0, 0L, KingdomResidentStanding.Resident), 0, now),
 				"two roofs is two households, whatever the model thinks of them");
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 0, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 0, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 0, 0, 0L, KingdomResidentStanding.Resident), 0, now),
 				"nobody is married under no roof at all");
 		}
@@ -268,18 +269,18 @@ namespace ThousandAndFirst.Tests
 		public void Wedding_NeedsBothOnTheRoll()
 		{
 			long now = Settled + 1000L;
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Abroad), 0, now));
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Dead),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Dead),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Resident), 0, now));
 		}
 
 		[Test]
 		public void Wedding_NeedsTheCourtship()
 		{
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Resident), 0, Settled - 1L));
-			Assert.IsTrue(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsTrue(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Resident), 0, Settled));
 		}
 
@@ -289,7 +290,7 @@ namespace ThousandAndFirst.Tests
 		public void Wedding_RefusesAboveTheHostilityCeiling()
 		{
 			long now = Settled + 1000L;
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(2, 7, 0, 0L, KingdomResidentStanding.Resident),
 				KingdomHappeningRules.WeddingHostilityCeiling + 1, now));
 		}
@@ -306,19 +307,19 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5, 6, KingdomHappeningRules.UnknownCreedHostility)]
 		public void CreedHostility_ProvesAgreementAndNeverDisagreement(int a, int b, int expected)
 		{
-			Assert.AreEqual(expected, KingdomHappeningRules.CreedHostility(a, b));
+			ClassicAssert.AreEqual(expected, KingdomHappeningRules.CreedHostility(a, b));
 		}
 
 		[Test]
 		public void UnknownCreeds_AreAboveTheWeddingCeiling()
 		{
-			Assert.Greater(KingdomHappeningRules.UnknownCreedHostility, KingdomHappeningRules.WeddingHostilityCeiling);
+			ClassicAssert.Greater(KingdomHappeningRules.UnknownCreedHostility, KingdomHappeningRules.WeddingHostilityCeiling);
 		}
 
 		[Test]
 		public void Wedding_NeverMarriesSomebodyToThemselves()
 		{
-			Assert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
+			ClassicAssert.IsFalse(KingdomHappeningRules.WeddingEligible(Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident),
 				Settler(1, 7, 0, 0L, KingdomResidentStanding.Resident), 0, Settled + 1000L));
 		}
 
@@ -335,7 +336,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow row = new KingdomResidentRow(4, "Vashti", 1, 0, 100L, 0, 0, 0,
 				KingdomDayShape.Hearth, standing, cause, Here, KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0);
-			Assert.AreEqual(expected, KingdomHappeningRules.FuneralDue(row));
+			ClassicAssert.AreEqual(expected, KingdomHappeningRules.FuneralDue(row));
 		}
 
 		/// <summary>
@@ -349,9 +350,9 @@ namespace ThousandAndFirst.Tests
 			string mourning = KingdomOfficeRules.MourningChronicle("Vashti", "the hills", "Kavvat", KingdomOfficeRules.DeathCause.Raid);
 			string clause = KingdomHappeningRules.FuneralClause("the water-keeper", "Ptoh");
 			string composed = mourning + clause;
-			Assert.IsTrue(composed.StartsWith(mourning));
-			Assert.IsTrue(clause.Contains("Ptoh"));
-			Assert.IsFalse(clause.Contains(KingdomOfficeRules.CauseClause(KingdomOfficeRules.DeathCause.Raid)),
+			ClassicAssert.IsTrue(composed.StartsWith(mourning));
+			ClassicAssert.IsTrue(clause.Contains("Ptoh"));
+			ClassicAssert.IsFalse(clause.Contains(KingdomOfficeRules.CauseClause(KingdomOfficeRules.DeathCause.Raid)),
 				"the rite must not tell the death a second time");
 		}
 
@@ -359,8 +360,8 @@ namespace ThousandAndFirst.Tests
 		public void FuneralClause_SaysSoWhenNobodyIsLeftToSpeak()
 		{
 			string clause = KingdomHappeningRules.FuneralClause("the water-keeper", "");
-			Assert.IsTrue(clause.Contains("no one"));
-			Assert.AreEqual(clause, KingdomHappeningRules.FuneralClause("", "Ptoh"));
+			ClassicAssert.IsTrue(clause.Contains("no one"));
+			ClassicAssert.AreEqual(clause, KingdomHappeningRules.FuneralClause("", "Ptoh"));
 		}
 
 		// ==================================================================================
@@ -374,8 +375,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BreakdownFloor_IsTheCondemnedLine()
 		{
-			Assert.AreEqual(100 - KingdomLodgingRules.CondemnedWearPercent, KingdomHappeningRules.BreakdownConditionFloor);
-			Assert.IsTrue(KingdomLodgingRules.IsCondemned(100 - KingdomHappeningRules.BreakdownConditionFloor));
+			ClassicAssert.AreEqual(100 - KingdomLodgingRules.CondemnedWearPercent, KingdomHappeningRules.BreakdownConditionFloor);
+			ClassicAssert.IsTrue(KingdomLodgingRules.IsCondemned(100 - KingdomHappeningRules.BreakdownConditionFloor));
 		}
 
 		[TestCase(100, 2, KingdomWorkKind.Producer, false)]
@@ -389,7 +390,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 0, KingdomWorkKind.Growing, false)]
 		public void Broken_ReadsWearAndHands(int condition, int crew, KingdomWorkKind kind, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomHappeningRules.Broken(Work(3, condition, crew, kind)));
+			ClassicAssert.AreEqual(expected, KingdomHappeningRules.Broken(Work(3, condition, crew, kind)));
 		}
 
 		/// <summary>A city that already believes the truth has nothing to say. This is the
@@ -398,24 +399,24 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Judge_SaysNothingWhenTheCityAlreadyBelievesTheTruth()
 		{
-			Assert.IsFalse(KingdomHappeningRules.Judge(Work(3, 100, 2, KingdomWorkKind.Producer), false, 900L).Stands);
-			Assert.IsFalse(KingdomHappeningRules.Judge(Work(3, 10, 2, KingdomWorkKind.Producer), true, 900L).Stands);
+			ClassicAssert.IsFalse(KingdomHappeningRules.Judge(Work(3, 100, 2, KingdomWorkKind.Producer), false, 900L).Stands);
+			ClassicAssert.IsFalse(KingdomHappeningRules.Judge(Work(3, 10, 2, KingdomWorkKind.Producer), true, 900L).Stands);
 		}
 
 		[Test]
 		public void Judge_BreaksAndThenUnsays()
 		{
 			KingdomHappening stop = KingdomHappeningRules.Judge(Work(3, 20, 2, KingdomWorkKind.Producer), false, 900L);
-			Assert.IsTrue(stop.Stands);
-			Assert.AreEqual(KingdomHappeningKind.Breakdown, stop.Kind);
-			Assert.AreEqual(3, stop.SubjectA);
-			Assert.IsFalse(KingdomHappeningRules.IsMending(stop.Outcome));
-			Assert.AreEqual(20, KingdomHappeningRules.ConditionOf(stop.Outcome));
+			ClassicAssert.IsTrue(stop.Stands);
+			ClassicAssert.AreEqual(KingdomHappeningKind.Breakdown, stop.Kind);
+			ClassicAssert.AreEqual(3, stop.SubjectA);
+			ClassicAssert.IsFalse(KingdomHappeningRules.IsMending(stop.Outcome));
+			ClassicAssert.AreEqual(20, KingdomHappeningRules.ConditionOf(stop.Outcome));
 
 			KingdomHappening mend = KingdomHappeningRules.Judge(Work(3, 100, 2, KingdomWorkKind.Producer), true, 950L);
-			Assert.IsTrue(mend.Stands);
-			Assert.IsTrue(KingdomHappeningRules.IsMending(mend.Outcome));
-			Assert.AreEqual(100, KingdomHappeningRules.ConditionOf(mend.Outcome));
+			ClassicAssert.IsTrue(mend.Stands);
+			ClassicAssert.IsTrue(KingdomHappeningRules.IsMending(mend.Outcome));
+			ClassicAssert.AreEqual(100, KingdomHappeningRules.ConditionOf(mend.Outcome));
 		}
 
 		/// <summary>The sign encoding must survive a condition of zero, which is exactly the
@@ -424,16 +425,16 @@ namespace ThousandAndFirst.Tests
 		public void MendingEncoding_SurvivesZeroCondition()
 		{
 			KingdomHappening stop = KingdomHappeningRules.Judge(Work(3, 0, 2, KingdomWorkKind.Producer), false, 900L);
-			Assert.IsFalse(KingdomHappeningRules.IsMending(stop.Outcome));
-			Assert.AreEqual(0, KingdomHappeningRules.ConditionOf(stop.Outcome));
+			ClassicAssert.IsFalse(KingdomHappeningRules.IsMending(stop.Outcome));
+			ClassicAssert.AreEqual(0, KingdomHappeningRules.ConditionOf(stop.Outcome));
 			KingdomHappening mend = KingdomHappeningRules.Judge(Work(3, 0, 2, KingdomWorkKind.Producer), true, 950L);
-			Assert.IsFalse(mend.Stands, "a work that is still broken has not been mended");
+			ClassicAssert.IsFalse(mend.Stands, "a work that is still broken has not been mended");
 		}
 
 		[Test]
 		public void Judge_RefusesAWorkWithNoId()
 		{
-			Assert.IsFalse(KingdomHappeningRules.Judge(Work(0, 10, 0, KingdomWorkKind.Producer), false, 900L).Stands);
+			ClassicAssert.IsFalse(KingdomHappeningRules.Judge(Work(0, 10, 0, KingdomWorkKind.Producer), false, 900L).Stands);
 		}
 
 		// ==================================================================================
@@ -449,14 +450,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomHappeningKind.Brownout)]
 		public void ToldKinds_RoundTrip(KingdomHappeningKind kind)
 		{
-			Assert.AreEqual(kind, KingdomHappeningRules.KindOf(KingdomHappeningRules.ToldKindOf(kind)));
+			ClassicAssert.AreEqual(kind, KingdomHappeningRules.KindOf(KingdomHappeningRules.ToldKindOf(kind)));
 		}
 
 		[Test]
 		public void NoHappening_HasNoToldKind()
 		{
-			Assert.AreEqual(KingdomToldKind.None, KingdomHappeningRules.ToldKindOf(KingdomHappeningKind.None));
-			Assert.AreEqual(KingdomHappeningKind.None, KingdomHappeningRules.KindOf(KingdomToldKind.Harvest));
+			ClassicAssert.AreEqual(KingdomToldKind.None, KingdomHappeningRules.ToldKindOf(KingdomHappeningKind.None));
+			ClassicAssert.AreEqual(KingdomHappeningKind.None, KingdomHappeningRules.KindOf(KingdomToldKind.Harvest));
 		}
 
 		/// <summary>
@@ -468,13 +469,13 @@ namespace ThousandAndFirst.Tests
 		public void AlreadyTold_AsksTheRing()
 		{
 			KingdomCityState state = Book(new KingdomResidentRow[0], new KingdomWorkRow[0]);
-			Assert.IsFalse(KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Wedding, 1, 2));
+			ClassicAssert.IsFalse(KingdomHappeningRules.AlreadyTold(state, KingdomHappeningKind.Wedding, 1, 2));
 			KingdomCityState next;
 			KingdomCityFault fault;
-			Assert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Wedding, 900L, 1, 2, Here, 0), out next, out fault));
-			Assert.IsTrue(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Wedding, 1, 2));
-			Assert.IsFalse(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Wedding, 1, 3));
-			Assert.IsFalse(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Festival, 1, 2));
+			ClassicAssert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Wedding, 900L, 1, 2, Here, 0), out next, out fault));
+			ClassicAssert.IsTrue(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Wedding, 1, 2));
+			ClassicAssert.IsFalse(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Wedding, 1, 3));
+			ClassicAssert.IsFalse(KingdomHappeningRules.AlreadyTold(next, KingdomHappeningKind.Festival, 1, 2));
 		}
 
 		/// <summary>
@@ -489,13 +490,13 @@ namespace ThousandAndFirst.Tests
 			int first;
 			int second;
 			KingdomHappeningRules.PairOrder(9, 4, out first, out second);
-			Assert.AreEqual(4, first);
-			Assert.AreEqual(9, second);
+			ClassicAssert.AreEqual(4, first);
+			ClassicAssert.AreEqual(9, second);
 			int firstAgain;
 			int secondAgain;
 			KingdomHappeningRules.PairOrder(4, 9, out firstAgain, out secondAgain);
-			Assert.AreEqual(first, firstAgain);
-			Assert.AreEqual(second, secondAgain);
+			ClassicAssert.AreEqual(first, firstAgain);
+			ClassicAssert.AreEqual(second, secondAgain);
 		}
 
 		[Test]
@@ -504,15 +505,15 @@ namespace ThousandAndFirst.Tests
 			int first;
 			int second;
 			KingdomHappeningRules.PairOrder(7, 7, out first, out second);
-			Assert.AreEqual(7, first);
-			Assert.AreEqual(7, second);
+			ClassicAssert.AreEqual(7, first);
+			ClassicAssert.AreEqual(7, second);
 		}
 
 		[Test]
 		public void AlreadyTold_IsFalseForNothing()
 		{
-			Assert.IsFalse(KingdomHappeningRules.AlreadyTold(null, KingdomHappeningKind.Wedding, 1, 2));
-			Assert.IsFalse(KingdomHappeningRules.AlreadyTold(Book(new KingdomResidentRow[0], new KingdomWorkRow[0]),
+			ClassicAssert.IsFalse(KingdomHappeningRules.AlreadyTold(null, KingdomHappeningKind.Wedding, 1, 2));
+			ClassicAssert.IsFalse(KingdomHappeningRules.AlreadyTold(Book(new KingdomResidentRow[0], new KingdomWorkRow[0]),
 				KingdomHappeningKind.None, 0, 0));
 		}
 
@@ -526,36 +527,36 @@ namespace ThousandAndFirst.Tests
 		public void FestivalTelling_NamesTheDayAndTheDish()
 		{
 			string line = KingdomHappeningRules.FestivalTelling(KingdomFestivalAnchor.UtYaraUx, "Kavvat", "apple matz", 12);
-			Assert.IsTrue(line.Contains("Ut yara Ux"));
-			Assert.IsTrue(line.Contains("apple matz"));
-			Assert.IsTrue(line.Contains("12"));
-			Assert.IsTrue(KingdomHappeningRules.FestivalTelling(KingdomFestivalAnchor.Ides, "Kavvat", "", 0).Contains("bare"));
+			ClassicAssert.IsTrue(line.Contains("Ut yara Ux"));
+			ClassicAssert.IsTrue(line.Contains("apple matz"));
+			ClassicAssert.IsTrue(line.Contains("12"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.FestivalTelling(KingdomFestivalAnchor.Ides, "Kavvat", "", 0).Contains("bare"));
 		}
 
 		[Test]
 		public void AnchorNames_AreQudsOwn()
 		{
-			Assert.AreEqual("the Ides", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.Ides));
-			Assert.AreEqual("the festival of Ut yara Ux", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.UtYaraUx));
-			Assert.AreEqual("", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.None));
+			ClassicAssert.AreEqual("the Ides", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.Ides));
+			ClassicAssert.AreEqual("the festival of Ut yara Ux", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.UtYaraUx));
+			ClassicAssert.AreEqual("", KingdomHappeningRules.AnchorName(KingdomFestivalAnchor.None));
 		}
 
 		[Test]
 		public void BreakdownProse_NamesTheThingThatStopped()
 		{
-			Assert.IsTrue(KingdomHappeningRules.BreakdownNotice("mill", 30).Contains("mill"));
-			Assert.IsTrue(KingdomHappeningRules.BreakdownNotice("mill", 30).Contains("30"));
-			Assert.IsTrue(KingdomHappeningRules.MendedNotice("mill", 90).Contains("mill"));
-			Assert.IsTrue(KingdomHappeningRules.BreakdownTelling(null, "Kavvat", 12).Contains("works"),
+			ClassicAssert.IsTrue(KingdomHappeningRules.BreakdownNotice("mill", 30).Contains("mill"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.BreakdownNotice("mill", 30).Contains("30"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.MendedNotice("mill", 90).Contains("mill"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.BreakdownTelling(null, "Kavvat", 12).Contains("works"),
 				"a work nobody named still gets an honest noun");
 		}
 
 		[Test]
 		public void WeddingProse_NamesBoth()
 		{
-			Assert.IsTrue(KingdomHappeningRules.WeddingTelling("Ptoh", "Vashti", "Kavvat").Contains("Ptoh"));
-			Assert.IsTrue(KingdomHappeningRules.WeddingTelling("Ptoh", "Vashti", "Kavvat").Contains("Vashti"));
-			Assert.IsTrue(KingdomHappeningRules.WeddingNotice("Ptoh", "Vashti").Contains("Vashti"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.WeddingTelling("Ptoh", "Vashti", "Kavvat").Contains("Ptoh"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.WeddingTelling("Ptoh", "Vashti", "Kavvat").Contains("Vashti"));
+			ClassicAssert.IsTrue(KingdomHappeningRules.WeddingNotice("Ptoh", "Vashti").Contains("Vashti"));
 		}
 
 		[TestCase(KingdomToldKind.Wedding)]
@@ -564,15 +565,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomToldKind.Breakdown)]
 		public void ToldLine_CountsAndSaysNothingForNone(KingdomToldKind kind)
 		{
-			Assert.AreEqual("", KingdomHappeningRules.ToldLine(kind, 0));
-			Assert.AreNotEqual("", KingdomHappeningRules.ToldLine(kind, 1));
-			Assert.IsTrue(KingdomHappeningRules.ToldLine(kind, 4).Contains("4"));
+			ClassicAssert.AreEqual("", KingdomHappeningRules.ToldLine(kind, 0));
+			ClassicAssert.AreNotEqual("", KingdomHappeningRules.ToldLine(kind, 1));
+			ClassicAssert.IsTrue(KingdomHappeningRules.ToldLine(kind, 4).Contains("4"));
 		}
 
 		[Test]
 		public void ToldLine_SaysNothingAboutAKindItDoesNotReport()
 		{
-			Assert.AreEqual("", KingdomHappeningRules.ToldLine(KingdomToldKind.Harvest, 3));
+			ClassicAssert.AreEqual("", KingdomHappeningRules.ToldLine(KingdomToldKind.Harvest, 3));
 		}
 
 		private static string LogicalSource()

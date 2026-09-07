@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		{
 			SemanticEventKey key;
 			KernelFaultCode fault;
-			Assert.IsTrue(SemanticEventKey.TryCreate(GoldenRules, GoldenSettlement, GoldenStream, GoldenKind, GoldenOrdinal, out key, out fault));
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(GoldenRules, GoldenSettlement, GoldenStream, GoldenKind, GoldenOrdinal, out key, out fault));
 			return key;
 		}
 
@@ -64,10 +65,10 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), GoldenKey(), out bytes, out fault));
-			Assert.AreEqual(KernelFaultCode.None, fault);
-			Assert.AreEqual(GoldenEventPreimage, Hex(bytes));
-			Assert.AreEqual(82, bytes.Length, "48 fixed bytes plus both length-prefixed identifiers");
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), GoldenKey(), out bytes, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.None, fault);
+			ClassicAssert.AreEqual(GoldenEventPreimage, Hex(bytes));
+			ClassicAssert.AreEqual(82, bytes.Length, "48 fixed bytes plus both length-prefixed identifiers");
 		}
 
 		[Test]
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(GoldenSeed(), GoldenKey(), 7u, 0u, out bytes, out fault));
-			Assert.AreEqual(GoldenRandomPreimage, Hex(bytes));
-			Assert.AreEqual(90, bytes.Length);
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(GoldenSeed(), GoldenKey(), 7u, 0u, out bytes, out fault));
+			ClassicAssert.AreEqual(GoldenRandomPreimage, Hex(bytes));
+			ClassicAssert.AreEqual(90, bytes.Length);
 		}
 
 		[Test]
@@ -85,8 +86,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			KernelFaultCode fault;
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(GoldenSeed(), GoldenKey(), out id, out fault));
-			Assert.AreEqual(GoldenEventDigestId, id);
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(GoldenSeed(), GoldenKey(), out id, out fault));
+			ClassicAssert.AreEqual(GoldenEventDigestId, id);
 		}
 
 		[Test]
@@ -98,11 +99,11 @@ namespace ThousandAndFirst.Tests
 			KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), GoldenKey(), out eventBytes, out fault);
 			KernelCanonicalEncoding.TryEncodeRandomBlockPreimage(GoldenSeed(), GoldenKey(), 0u, 0u, out randomBytes, out fault);
 
-			Assert.AreEqual("5441465f45565431", Hex(eventBytes).Substring(0, 16));
-			Assert.AreEqual("5441465f524e4731", Hex(randomBytes).Substring(0, 16));
+			ClassicAssert.AreEqual("5441465f45565431", Hex(eventBytes).Substring(0, 16));
+			ClassicAssert.AreEqual("5441465f524e4731", Hex(randomBytes).Substring(0, 16));
 			for (int i = 8; i < eventBytes.Length; i++)
 			{
-				Assert.AreEqual(eventBytes[i], randomBytes[i], "shared body must be byte-identical after the tag, at offset " + i);
+				ClassicAssert.AreEqual(eventBytes[i], randomBytes[i], "shared body must be byte-identical after the tag, at offset " + i);
 			}
 		}
 
@@ -117,12 +118,12 @@ namespace ThousandAndFirst.Tests
 			{
 				writer.WriteInt32(value);
 				byte[] bytes = writer.ToArray();
-				Assert.AreEqual(4, bytes.Length);
+				ClassicAssert.AreEqual(4, bytes.Length);
 				uint unsigned = unchecked((uint)value);
-				Assert.AreEqual((byte)(unsigned >> 24), bytes[0]);
-				Assert.AreEqual((byte)(unsigned >> 16), bytes[1]);
-				Assert.AreEqual((byte)(unsigned >> 8), bytes[2]);
-				Assert.AreEqual((byte)unsigned, bytes[3]);
+				ClassicAssert.AreEqual((byte)(unsigned >> 24), bytes[0]);
+				ClassicAssert.AreEqual((byte)(unsigned >> 16), bytes[1]);
+				ClassicAssert.AreEqual((byte)(unsigned >> 8), bytes[2]);
+				ClassicAssert.AreEqual((byte)unsigned, bytes[3]);
 			}
 		}
 
@@ -137,11 +138,11 @@ namespace ThousandAndFirst.Tests
 			{
 				writer.WriteInt64(value);
 				byte[] bytes = writer.ToArray();
-				Assert.AreEqual(8, bytes.Length);
+				ClassicAssert.AreEqual(8, bytes.Length);
 				ulong unsigned = unchecked((ulong)value);
 				for (int i = 0; i < 8; i++)
 				{
-					Assert.AreEqual((byte)(unsigned >> (56 - (8 * i))), bytes[i], "byte " + i);
+					ClassicAssert.AreEqual((byte)(unsigned >> (56 - (8 * i))), bytes[i], "byte " + i);
 				}
 			}
 		}
@@ -153,7 +154,7 @@ namespace ThousandAndFirst.Tests
 			{
 				writer.WriteBool(false);
 				writer.WriteBool(true);
-				Assert.AreEqual("0001", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("0001", Hex(writer.ToArray()));
 			}
 		}
 
@@ -163,19 +164,19 @@ namespace ThousandAndFirst.Tests
 			using (CanonicalByteWriter writer = new CanonicalByteWriter())
 			{
 				writer.WriteRequiredUtf8("ab");
-				Assert.AreEqual("000000026162", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("000000026162", Hex(writer.ToArray()));
 			}
 			using (CanonicalByteWriter writer = new CanonicalByteWriter())
 			{
 				// Empty is legal at the writer layer; the Try* encoders validate identifiers above it.
 				writer.WriteRequiredUtf8(string.Empty);
-				Assert.AreEqual("00000000", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("00000000", Hex(writer.ToArray()));
 			}
 			using (CanonicalByteWriter writer = new CanonicalByteWriter())
 			{
 				// Non-identity payload text may be non-ASCII, so the writer must handle it.
 				writer.WriteRequiredUtf8("\u00e9");
-				Assert.AreEqual("00000002c3a9", Hex(writer.ToArray()), "no BOM, two UTF-8 bytes");
+				ClassicAssert.AreEqual("00000002c3a9", Hex(writer.ToArray()), "no BOM, two UTF-8 bytes");
 			}
 		}
 
@@ -189,9 +190,9 @@ namespace ThousandAndFirst.Tests
 			{
 				composed.WriteRequiredUtf8(composedText);
 				decomposed.WriteRequiredUtf8(decomposedText);
-				Assert.AreEqual("00000002c3a9", Hex(composed.ToArray()));
-				Assert.AreEqual("0000000365cc81", Hex(decomposed.ToArray()));
-				Assert.AreNotEqual(Hex(composed.ToArray()), Hex(decomposed.ToArray()),
+				ClassicAssert.AreEqual("00000002c3a9", Hex(composed.ToArray()));
+				ClassicAssert.AreEqual("0000000365cc81", Hex(decomposed.ToArray()));
+				ClassicAssert.AreNotEqual(Hex(composed.ToArray()), Hex(decomposed.ToArray()),
 					"normalizing would silently merge two distinct inputs into one identity");
 			}
 		}
@@ -224,32 +225,32 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false, "null")]
 		public void IdentifierGrammarBoundaries(string value, bool expected, string why)
 		{
-			Assert.AreEqual(expected, KernelSemanticId.IsValid(value), why);
+			ClassicAssert.AreEqual(expected, KernelSemanticId.IsValid(value), why);
 		}
 
 		[Test]
 		public void IdentifierLengthBoundariesAreExact()
 		{
-			Assert.IsTrue(KernelSemanticId.IsValid("taf:a"), "5 bytes accepted");
-			Assert.IsFalse(KernelSemanticId.IsValid("taf:"), "4 bytes rejected");
-			Assert.IsTrue(KernelSemanticId.IsValid("taf:" + new string('a', 124)), "128 bytes accepted");
-			Assert.IsFalse(KernelSemanticId.IsValid("taf:" + new string('a', 125)), "129 bytes rejected");
+			ClassicAssert.IsTrue(KernelSemanticId.IsValid("taf:a"), "5 bytes accepted");
+			ClassicAssert.IsFalse(KernelSemanticId.IsValid("taf:"), "4 bytes rejected");
+			ClassicAssert.IsTrue(KernelSemanticId.IsValid("taf:" + new string('a', 124)), "128 bytes accepted");
+			ClassicAssert.IsFalse(KernelSemanticId.IsValid("taf:" + new string('a', 125)), "129 bytes rejected");
 		}
 
 		[Test]
 		public void EveryTupleFieldChangesTheEventId()
 		{
 			string baseline = IdFor(GoldenRules, GoldenSettlement, GoldenStream, GoldenKind, GoldenOrdinal);
-			Assert.AreNotEqual(baseline, IdFor(4, GoldenSettlement, GoldenStream, GoldenKind, GoldenOrdinal), "rules version");
-			Assert.AreNotEqual(baseline, IdFor(GoldenRules, "taf:settlement:other", GoldenStream, GoldenKind, GoldenOrdinal), "settlement");
-			Assert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, "taf:stream:other", GoldenKind, GoldenOrdinal), "event stream");
-			Assert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, GoldenStream, 2u, GoldenOrdinal), "kind");
-			Assert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, GoldenStream, GoldenKind, 43uL), "ordinal");
+			ClassicAssert.AreNotEqual(baseline, IdFor(4, GoldenSettlement, GoldenStream, GoldenKind, GoldenOrdinal), "rules version");
+			ClassicAssert.AreNotEqual(baseline, IdFor(GoldenRules, "taf:settlement:other", GoldenStream, GoldenKind, GoldenOrdinal), "settlement");
+			ClassicAssert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, "taf:stream:other", GoldenKind, GoldenOrdinal), "event stream");
+			ClassicAssert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, GoldenStream, 2u, GoldenOrdinal), "kind");
+			ClassicAssert.AreNotEqual(baseline, IdFor(GoldenRules, GoldenSettlement, GoldenStream, GoldenKind, 43uL), "ordinal");
 
 			string seedChanged;
 			KernelFaultCode fault;
 			SemanticEventIdentity.TryCreateId(new KernelSeed128(1uL, 0x08090A0B0C0D0E0FuL), GoldenKey(), out seedChanged, out fault);
-			Assert.AreNotEqual(baseline, seedChanged, "seed high");
+			ClassicAssert.AreNotEqual(baseline, seedChanged, "seed high");
 		}
 
 		[Test]
@@ -259,7 +260,7 @@ namespace ThousandAndFirst.Tests
 			// same kind, both at ordinal zero.
 			string a = IdFor(GoldenRules, GoldenSettlement, "taf:route:alpha", GoldenKind, 0uL);
 			string b = IdFor(GoldenRules, GoldenSettlement, "taf:route:beta", GoldenKind, 0uL);
-			Assert.AreNotEqual(a, b);
+			ClassicAssert.AreNotEqual(a, b);
 		}
 
 		[Test]
@@ -290,61 +291,61 @@ namespace ThousandAndFirst.Tests
 		public void EveryWireEnumHoldsItsExactNumber()
 		{
 			// Fault codes. Callers branch on these and they appear in diagnostics.
-			Assert.AreEqual(0, (int)KernelFaultCode.None);
-			Assert.AreEqual(1, (int)KernelFaultCode.InvalidTick);
-			Assert.AreEqual(2, (int)KernelFaultCode.InvalidInterval);
-			Assert.AreEqual(3, (int)KernelFaultCode.ClockRegression);
-			Assert.AreEqual(4, (int)KernelFaultCode.ArithmeticOverflow);
-			Assert.AreEqual(5, (int)KernelFaultCode.InvalidOptionLatch);
-			Assert.AreEqual(6, (int)KernelFaultCode.InvalidEventKey);
-			Assert.AreEqual(7, (int)KernelFaultCode.InvalidToyState);
-			Assert.AreEqual(8, (int)KernelFaultCode.CounterExhausted);
-			Assert.AreEqual(9, (int)KernelFaultCode.InvalidRandomBound);
-			Assert.AreEqual(10, (int)KernelFaultCode.CryptographicFailure);
-			Assert.AreEqual(11, Enum.GetValues(typeof(KernelFaultCode)).Length, "a new fault code must be added at the end");
+			ClassicAssert.AreEqual(0, (int)KernelFaultCode.None);
+			ClassicAssert.AreEqual(1, (int)KernelFaultCode.InvalidTick);
+			ClassicAssert.AreEqual(2, (int)KernelFaultCode.InvalidInterval);
+			ClassicAssert.AreEqual(3, (int)KernelFaultCode.ClockRegression);
+			ClassicAssert.AreEqual(4, (int)KernelFaultCode.ArithmeticOverflow);
+			ClassicAssert.AreEqual(5, (int)KernelFaultCode.InvalidOptionLatch);
+			ClassicAssert.AreEqual(6, (int)KernelFaultCode.InvalidEventKey);
+			ClassicAssert.AreEqual(7, (int)KernelFaultCode.InvalidToyState);
+			ClassicAssert.AreEqual(8, (int)KernelFaultCode.CounterExhausted);
+			ClassicAssert.AreEqual(9, (int)KernelFaultCode.InvalidRandomBound);
+			ClassicAssert.AreEqual(10, (int)KernelFaultCode.CryptographicFailure);
+			ClassicAssert.AreEqual(11, Enum.GetValues(typeof(KernelFaultCode)).Length, "a new fault code must be added at the end");
 
 			// Job lifecycle. Declaration order is deliberately not lifecycle order — Blocked,
 			// Cancelled, Recoverable and Compensated were appended after the happy path — so the
 			// numbers are the contract and the reading order is not.
-			Assert.AreEqual(0, (int)SemanticJobState.Scheduled);
-			Assert.AreEqual(1, (int)SemanticJobState.Due);
-			Assert.AreEqual(2, (int)SemanticJobState.Prepared);
-			Assert.AreEqual(3, (int)SemanticJobState.Committed);
-			Assert.AreEqual(4, (int)SemanticJobState.Materialized);
-			Assert.AreEqual(5, (int)SemanticJobState.Notified);
-			Assert.AreEqual(6, (int)SemanticJobState.Archived);
-			Assert.AreEqual(7, (int)SemanticJobState.Blocked);
-			Assert.AreEqual(8, (int)SemanticJobState.Cancelled);
-			Assert.AreEqual(9, (int)SemanticJobState.Recoverable);
-			Assert.AreEqual(10, (int)SemanticJobState.Compensated);
-			Assert.AreEqual(11, Enum.GetValues(typeof(SemanticJobState)).Length);
+			ClassicAssert.AreEqual(0, (int)SemanticJobState.Scheduled);
+			ClassicAssert.AreEqual(1, (int)SemanticJobState.Due);
+			ClassicAssert.AreEqual(2, (int)SemanticJobState.Prepared);
+			ClassicAssert.AreEqual(3, (int)SemanticJobState.Committed);
+			ClassicAssert.AreEqual(4, (int)SemanticJobState.Materialized);
+			ClassicAssert.AreEqual(5, (int)SemanticJobState.Notified);
+			ClassicAssert.AreEqual(6, (int)SemanticJobState.Archived);
+			ClassicAssert.AreEqual(7, (int)SemanticJobState.Blocked);
+			ClassicAssert.AreEqual(8, (int)SemanticJobState.Cancelled);
+			ClassicAssert.AreEqual(9, (int)SemanticJobState.Recoverable);
+			ClassicAssert.AreEqual(10, (int)SemanticJobState.Compensated);
+			ClassicAssert.AreEqual(11, Enum.GetValues(typeof(SemanticJobState)).Length);
 
-			Assert.AreEqual(0, (int)JobTransitionVerdict.Rejected, "the default verdict must be refusal");
-			Assert.AreEqual(1, (int)JobTransitionVerdict.Idempotent);
-			Assert.AreEqual(2, (int)JobTransitionVerdict.Allowed);
-			Assert.AreEqual(3, Enum.GetValues(typeof(JobTransitionVerdict)).Length);
+			ClassicAssert.AreEqual(0, (int)JobTransitionVerdict.Rejected, "the default verdict must be refusal");
+			ClassicAssert.AreEqual(1, (int)JobTransitionVerdict.Idempotent);
+			ClassicAssert.AreEqual(2, (int)JobTransitionVerdict.Allowed);
+			ClassicAssert.AreEqual(3, Enum.GetValues(typeof(JobTransitionVerdict)).Length);
 
 			// Latch. Unobserved must be zero so a default-constructed latch is the unobserved one
 			// rather than a settlement that silently believes the option is off.
-			Assert.AreEqual(0, (int)OptionLatchValue.Unobserved, "default(OptionLatchValue) must be Unobserved");
-			Assert.AreEqual(1, (int)OptionLatchValue.Disabled);
-			Assert.AreEqual(2, (int)OptionLatchValue.Enabled);
-			Assert.AreEqual(3, Enum.GetValues(typeof(OptionLatchValue)).Length);
+			ClassicAssert.AreEqual(0, (int)OptionLatchValue.Unobserved, "default(OptionLatchValue) must be Unobserved");
+			ClassicAssert.AreEqual(1, (int)OptionLatchValue.Disabled);
+			ClassicAssert.AreEqual(2, (int)OptionLatchValue.Enabled);
+			ClassicAssert.AreEqual(3, Enum.GetValues(typeof(OptionLatchValue)).Length);
 
-			Assert.AreEqual(0, (int)OptionTransitionKind.None, "default must mean nothing happened");
-			Assert.AreEqual(1, (int)OptionTransitionKind.InitializedDisabled);
-			Assert.AreEqual(2, (int)OptionTransitionKind.InitializedEnabled);
-			Assert.AreEqual(3, (int)OptionTransitionKind.Disabled);
-			Assert.AreEqual(4, (int)OptionTransitionKind.Enabled);
-			Assert.AreEqual(5, Enum.GetValues(typeof(OptionTransitionKind)).Length);
+			ClassicAssert.AreEqual(0, (int)OptionTransitionKind.None, "default must mean nothing happened");
+			ClassicAssert.AreEqual(1, (int)OptionTransitionKind.InitializedDisabled);
+			ClassicAssert.AreEqual(2, (int)OptionTransitionKind.InitializedEnabled);
+			ClassicAssert.AreEqual(3, (int)OptionTransitionKind.Disabled);
+			ClassicAssert.AreEqual(4, (int)OptionTransitionKind.Enabled);
+			ClassicAssert.AreEqual(5, Enum.GetValues(typeof(OptionTransitionKind)).Length);
 
 			// The underlying types are part of the wire too: widening any of these changes every
 			// encoded length that contains one.
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KernelFaultCode)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(SemanticJobState)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(JobTransitionVerdict)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionLatchValue)));
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionTransitionKind)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KernelFaultCode)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(SemanticJobState)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(JobTransitionVerdict)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionLatchValue)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(OptionTransitionKind)));
 		}
 
 		/// <summary>
@@ -359,37 +360,37 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode fault;
 			byte[] bytes;
 
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(baseline, GoldenKey(), out bytes, out fault));
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(baseline, GoldenKey(), out bytes, out fault));
 			string baselineHex = Hex(bytes);
 
 			// High only.
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
 				new KernelSeed128(baseline.High ^ 1uL, baseline.Low), GoldenKey(), out bytes, out fault));
 			string highChanged = Hex(bytes);
-			Assert.AreNotEqual(baselineHex, highChanged, "the high half must reach the wire");
+			ClassicAssert.AreNotEqual(baselineHex, highChanged, "the high half must reach the wire");
 
 			// Low only.
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
 				new KernelSeed128(baseline.High, baseline.Low ^ 1uL), GoldenKey(), out bytes, out fault));
 			string lowChanged = Hex(bytes);
-			Assert.AreNotEqual(baselineHex, lowChanged, "the low half must reach the wire");
-			Assert.AreNotEqual(highChanged, lowChanged, "the halves must not be folded into one value");
+			ClassicAssert.AreNotEqual(baselineHex, lowChanged, "the low half must reach the wire");
+			ClassicAssert.AreNotEqual(highChanged, lowChanged, "the halves must not be folded into one value");
 
 			// The swap is the sharpest case: a symmetric fold gives these two the same bytes.
-			Assert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
+			ClassicAssert.IsTrue(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(
 				new KernelSeed128(baseline.Low, baseline.High), GoldenKey(), out bytes, out fault));
-			Assert.AreNotEqual(baselineHex, Hex(bytes), "swapping the halves must not produce the same preimage");
+			ClassicAssert.AreNotEqual(baselineHex, Hex(bytes), "swapping the halves must not produce the same preimage");
 
 			// And the same four cases must separate the identities they produce, not merely the bytes.
 			string a;
 			string b;
 			string c;
 			string d;
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(baseline, GoldenKey(), out a, out fault));
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), GoldenKey(), out b, out fault));
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), GoldenKey(), out c, out fault));
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.Low, baseline.High), GoldenKey(), out d, out fault));
-			Assert.AreEqual(4, new HashSet<string> { a, b, c, d }.Count, "four distinct seeds, four distinct identities");
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(baseline, GoldenKey(), out a, out fault));
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High ^ 1uL, baseline.Low), GoldenKey(), out b, out fault));
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.High, baseline.Low ^ 1uL), GoldenKey(), out c, out fault));
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(new KernelSeed128(baseline.Low, baseline.High), GoldenKey(), out d, out fault));
+			ClassicAssert.AreEqual(4, new HashSet<string> { a, b, c, d }.Count, "four distinct seeds, four distinct identities");
 		}
 
 		/// <summary>
@@ -404,21 +405,21 @@ namespace ThousandAndFirst.Tests
 				writer.WriteByte(0);
 				writer.WriteByte(1);
 				writer.WriteByte(255);
-				Assert.AreEqual("0001ff", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("0001ff", Hex(writer.ToArray()));
 			}
 			using (CanonicalByteWriter writer = new CanonicalByteWriter())
 			{
 				writer.WriteUInt32(0u);
 				writer.WriteUInt32(1u);
 				writer.WriteUInt32(uint.MaxValue);
-				Assert.AreEqual("00000000" + "00000001" + "ffffffff", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("00000000" + "00000001" + "ffffffff", Hex(writer.ToArray()));
 			}
 			using (CanonicalByteWriter writer = new CanonicalByteWriter())
 			{
 				writer.WriteUInt64(0uL);
 				writer.WriteUInt64(1uL);
 				writer.WriteUInt64(ulong.MaxValue);
-				Assert.AreEqual(
+				ClassicAssert.AreEqual(
 					"0000000000000000" + "0000000000000001" + "ffffffffffffffff",
 					Hex(writer.ToArray()));
 			}
@@ -428,7 +429,7 @@ namespace ThousandAndFirst.Tests
 			{
 				writer.WriteUInt32(2147483648u);
 				writer.WriteUInt64(9223372036854775808uL);
-				Assert.AreEqual("80000000" + "8000000000000000", Hex(writer.ToArray()));
+				ClassicAssert.AreEqual("80000000" + "8000000000000000", Hex(writer.ToArray()));
 			}
 		}
 
@@ -445,11 +446,11 @@ namespace ThousandAndFirst.Tests
 				{
 					Thread.CurrentThread.CurrentCulture = new CultureInfo(name);
 					KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), GoldenKey(), out bytes, out fault);
-					Assert.AreEqual(GoldenEventPreimage, Hex(bytes), "bytes under " + name);
+					ClassicAssert.AreEqual(GoldenEventPreimage, Hex(bytes), "bytes under " + name);
 					SemanticEventIdentity.TryCreateId(GoldenSeed(), GoldenKey(), out id, out fault);
 					// Turkish is the interesting one: a culture-sensitive formatter or casing call
 					// produces a dotless i and silently breaks every identifier.
-					Assert.AreEqual(GoldenEventDigestId, id, "id under " + name);
+					ClassicAssert.AreEqual(GoldenEventDigestId, id, "id under " + name);
 				}
 			}
 			finally
@@ -463,9 +464,9 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsFalse(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), default(SemanticEventKey), out bytes, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
-			Assert.IsNull(bytes, "no partial value on failure");
+			ClassicAssert.IsFalse(KernelCanonicalEncoding.TryEncodeEventIdentityPreimage(GoldenSeed(), default(SemanticEventKey), out bytes, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsNull(bytes, "no partial value on failure");
 		}
 
 		[TestCase(0, "taf:settlement:test", "taf:stream:test", 1u)]
@@ -476,17 +477,17 @@ namespace ThousandAndFirst.Tests
 		{
 			SemanticEventKey key;
 			KernelFaultCode fault;
-			Assert.IsFalse(SemanticEventKey.TryCreate(rules, settlement, stream, kind, 0uL, out key, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
+			ClassicAssert.IsFalse(SemanticEventKey.TryCreate(rules, settlement, stream, kind, 0uL, out key, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidEventKey, fault);
 		}
 
 		private static string IdFor(int rules, string settlement, string stream, uint kind, ulong ordinal)
 		{
 			SemanticEventKey key;
 			KernelFaultCode fault;
-			Assert.IsTrue(SemanticEventKey.TryCreate(rules, settlement, stream, kind, ordinal, out key, out fault));
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(rules, settlement, stream, kind, ordinal, out key, out fault));
 			string id;
-			Assert.IsTrue(SemanticEventIdentity.TryCreateId(GoldenSeed(), key, out id, out fault));
+			ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(GoldenSeed(), key, out id, out fault));
 			return id;
 		}
 	}

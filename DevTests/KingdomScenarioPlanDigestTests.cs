@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 				new Dictionary<string, string>(StringComparer.Ordinal) { { "facing", facing } };
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed, out plan,
+			ClassicAssert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed, out plan,
 				out failure), failure);
 			return plan;
 		}
@@ -69,15 +70,15 @@ namespace ThousandAndFirst.Tests
 		{
 			string first = Plan(Sound(false), "north").PlanDigest;
 			string second = Plan(Sound(false), "north").PlanDigest;
-			Assert.AreEqual(64, first.Length);
-			Assert.AreEqual(first, second);
+			ClassicAssert.AreEqual(64, first.Length);
+			ClassicAssert.AreEqual(first, second);
 		}
 
 		/// <summary>A different bound selection is a different plan, even with identical verbs.</summary>
 		[Test]
 		public void PlanDigestChangesWithTheBoundSelection()
 		{
-			Assert.AreNotEqual(Plan(Sound(false), "north").PlanDigest,
+			ClassicAssert.AreNotEqual(Plan(Sound(false), "north").PlanDigest,
 				Plan(Sound(false), "east").PlanDigest);
 		}
 
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string literal = Plan(Sound(false), "north").PlanDigest;
 			string resolvedEast = Plan(Sound(true), "east").PlanDigest;
-			Assert.AreNotEqual(literal, resolvedEast);
+			ClassicAssert.AreNotEqual(literal, resolvedEast);
 		}
 
 		[Test]
@@ -96,7 +97,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioDefinition small = Sound(false);
 			KingdomScenarioDefinition large = Sound(false);
 			large.Steps[1].Arguments["Size"] = "l";
-			Assert.AreNotEqual(Plan(small, "north").PlanDigest,
+			ClassicAssert.AreNotEqual(Plan(small, "north").PlanDigest,
 				Plan(large, "north").PlanDigest);
 		}
 
@@ -107,18 +108,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PlanDigestIgnoresHowAnArgumentWasAuthoredOnceResolved()
 		{
-			Assert.AreEqual(Plan(Sound(false), "north").PlanDigest,
+			ClassicAssert.AreEqual(Plan(Sound(false), "north").PlanDigest,
 				Plan(Sound(true), "north").PlanDigest);
 		}
 
 		[Test]
 		public void PlanDigestRefusesAMalformedPlanRatherThanThrowing()
 		{
-			Assert.IsNull(KingdomScenarioDigests.Plan(null));
-			Assert.IsNull(KingdomScenarioDigests.Plan(new KingdomScenarioPlan { Key = "BAD KEY" }));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Plan(null));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Plan(new KingdomScenarioPlan { Key = "BAD KEY" }));
 			KingdomScenarioPlan torn = Plan(Sound(false), "north");
 			torn.Steps[0] = null;
-			Assert.IsNull(KingdomScenarioDigests.Plan(torn));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Plan(torn));
 		}
 	}
 }

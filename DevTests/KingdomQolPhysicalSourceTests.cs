@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string name in new[] { "PreviewJudge", "PreviewWillLive",
 				"PreviewTolerates", "PreviewPreferShade", "PreviewPreferFlags",
 				"PreviewFirstTolerable" }) StringAssert.Contains(name, questions);
-			Assert.GreaterOrEqual(System.Text.RegularExpressions.Regex.Matches(questions,
+			ClassicAssert.GreaterOrEqual(System.Text.RegularExpressions.Regex.Matches(questions,
 				"Catalogue preview only; use Preview").Count, 6);
 		}
 

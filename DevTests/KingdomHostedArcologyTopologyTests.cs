@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -12,22 +13,22 @@ namespace ThousandAndFirst.Tests
 		public void SchemaEnumeratesExactlyTwentySevenDistinctProgrammedZones()
 		{
 			List<KingdomArcologyCoordinate> all = KingdomHostedArcologyTopology.AllCoordinates();
-			Assert.AreEqual(KingdomHostedArcologyTopology.ZoneCount, all.Count);
+			ClassicAssert.AreEqual(KingdomHostedArcologyTopology.ZoneCount, all.Count);
 			HashSet<KingdomArcologyCoordinate> coordinates =
 				new HashSet<KingdomArcologyCoordinate>();
 			HashSet<KingdomArcologyProgramme> programmes =
 				new HashSet<KingdomArcologyProgramme>();
 			for (int i = 0; i < all.Count; i++)
 			{
-				Assert.IsTrue(coordinates.Add(all[i]), all[i].ToString());
+				ClassicAssert.IsTrue(coordinates.Add(all[i]), all[i].ToString());
 				KingdomArcologyProgramme programme = KingdomHostedArcologyTopology.ProgrammeAt(
 					all[i].X, all[i].Y, all[i].Z);
-				Assert.AreNotEqual((KingdomArcologyProgramme)0, programme, all[i].ToString());
-				Assert.IsTrue(programmes.Add(programme), programme.ToString());
-				Assert.IsNotEmpty(KingdomHostedArcologyTopology.ProgrammeName(programme));
+				ClassicAssert.AreNotEqual((KingdomArcologyProgramme)0, programme, all[i].ToString());
+				ClassicAssert.IsTrue(programmes.Add(programme), programme.ToString());
+				ClassicAssert.IsNotEmpty(KingdomHostedArcologyTopology.ProgrammeName(programme));
 			}
-			Assert.AreEqual(27, programmes.Count);
-			Assert.AreEqual((KingdomArcologyProgramme)0,
+			ClassicAssert.AreEqual(27, programmes.Count);
+			ClassicAssert.AreEqual((KingdomArcologyProgramme)0,
 				KingdomHostedArcologyTopology.ProgrammeAt(-1, 1, 10));
 		}
 
@@ -48,12 +49,12 @@ namespace ThousandAndFirst.Tests
 						: direction == KingdomArcologyDirection.East ? at.X < 2
 						: direction == KingdomArcologyDirection.South ? at.Y < 2
 						: at.X > 0;
-					Assert.AreEqual(expected, open, at + " " + direction);
+					ClassicAssert.AreEqual(expected, open, at + " " + direction);
 					if (!open) continue;
 					KingdomArcologyCoordinate returned;
-					Assert.IsTrue(KingdomHostedArcologyTopology.TryHorizontalNeighbour(
+					ClassicAssert.IsTrue(KingdomHostedArcologyTopology.TryHorizontalNeighbour(
 						neighbour.X, neighbour.Y, neighbour.Z, Opposite(direction), out returned));
-					Assert.AreEqual(at, returned);
+					ClassicAssert.AreEqual(at, returned);
 				}
 			}
 		}
@@ -85,18 +86,18 @@ namespace ThousandAndFirst.Tests
 				if (KingdomHostedArcologyTopology.HasStairsDown(at.Z))
 					Add(new KingdomArcologyCoordinate(at.X, at.Y, at.Z + 1), visited, pending);
 			}
-			Assert.AreEqual(all.Count, visited.Count);
+			ClassicAssert.AreEqual(all.Count, visited.Count);
 			for (int i = 0; i < all.Count; i++)
 			{
 				KingdomArcologyCoordinate at = all[i];
-				Assert.AreEqual(at.Z > 9, KingdomHostedArcologyTopology.HasStairsUp(at.Z));
-				Assert.AreEqual(at.Z < 11, KingdomHostedArcologyTopology.HasStairsDown(at.Z));
+				ClassicAssert.AreEqual(at.Z > 9, KingdomHostedArcologyTopology.HasStairsUp(at.Z));
+				ClassicAssert.AreEqual(at.Z < 11, KingdomHostedArcologyTopology.HasStairsDown(at.Z));
 				if (KingdomHostedArcologyTopology.HasStairsDown(at.Z))
-					Assert.AreEqual(KingdomHostedArcologyTopology.StairsDownX(at.Z),
+					ClassicAssert.AreEqual(KingdomHostedArcologyTopology.StairsDownX(at.Z),
 						KingdomHostedArcologyTopology.StairsUpX(at.Z + 1));
 			}
-			Assert.AreEqual(-1, KingdomHostedArcologyTopology.StairsUpX(9));
-			Assert.AreEqual(-1, KingdomHostedArcologyTopology.StairsDownX(11));
+			ClassicAssert.AreEqual(-1, KingdomHostedArcologyTopology.StairsUpX(9));
+			ClassicAssert.AreEqual(-1, KingdomHostedArcologyTopology.StairsDownX(11));
 		}
 
 		[Test]
@@ -112,15 +113,15 @@ namespace ThousandAndFirst.Tests
 				if (lot == KingdomHostedArcologyTopology.WardLotKey) wards++;
 				if (lot == KingdomHostedArcologyTopology.TerraceLotKey) terraces++;
 				if (!string.IsNullOrEmpty(lot))
-					Assert.IsTrue(KingdomHostedArcologyTopology.IsHostedLotZone(
+					ClassicAssert.IsTrue(KingdomHostedArcologyTopology.IsHostedLotZone(
 						lot, at.X, at.Y, at.Z));
 			}
-			Assert.AreEqual(1, exits);
-			Assert.AreEqual(1, wards);
-			Assert.AreEqual(1, terraces);
-			Assert.AreEqual(KingdomHostedArcologyTopology.TerraceLotKey,
+			ClassicAssert.AreEqual(1, exits);
+			ClassicAssert.AreEqual(1, wards);
+			ClassicAssert.AreEqual(1, terraces);
+			ClassicAssert.AreEqual(KingdomHostedArcologyTopology.TerraceLotKey,
 				KingdomHostedArcologyTopology.HostedLotAt(1, 1, 9));
-			Assert.AreEqual(KingdomHostedArcologyTopology.WardLotKey,
+			ClassicAssert.AreEqual(KingdomHostedArcologyTopology.WardLotKey,
 				KingdomHostedArcologyTopology.HostedLotAt(0, 1, 11));
 		}
 
@@ -133,8 +134,8 @@ namespace ThousandAndFirst.Tests
 				KingdomHostedArcologyTopology.TerraceLotKey);
 			AssertTarget(0, 1, 11, KingdomArcologyProgramme.LodgingWard,
 				KingdomHostedArcologyTopology.WardLotKey);
-			Assert.IsTrue(KingdomHostedArcologyTopology.IsSurfaceExit(1, 1, 10));
-			Assert.IsFalse(KingdomHostedArcologyTopology.IsSurfaceExit(1, 0, 10));
+			ClassicAssert.IsTrue(KingdomHostedArcologyTopology.IsSurfaceExit(1, 1, 10));
+			ClassicAssert.IsFalse(KingdomHostedArcologyTopology.IsSurfaceExit(1, 0, 10));
 		}
 
 		[Test]
@@ -146,12 +147,12 @@ namespace ThousandAndFirst.Tests
 			{
 				string role = KingdomHostedArcologyTopology.StableRole(
 					at.X, at.Y, at.Z, "anchor");
-				Assert.IsTrue(roles.Add(role), role);
-				Assert.IsTrue(identities.Add(
+				ClassicAssert.IsTrue(roles.Add(role), role);
+				ClassicAssert.IsTrue(identities.Add(
 					KingdomHostedArcologyRules.StableChildId("root", role)));
 			}
-			Assert.AreEqual("", KingdomHostedArcologyTopology.StableRole(3, 1, 10, "anchor"));
-			Assert.AreNotEqual(
+			ClassicAssert.AreEqual("", KingdomHostedArcologyTopology.StableRole(3, 1, 10, "anchor"));
+			ClassicAssert.AreNotEqual(
 				KingdomHostedArcologyRules.StableChildId("root-a", rolesString(roles)),
 				KingdomHostedArcologyRules.StableChildId("root-b", rolesString(roles)));
 		}
@@ -165,8 +166,8 @@ namespace ThousandAndFirst.Tests
 		private static void AssertTarget(int X, int Y, int Z,
 			KingdomArcologyProgramme Programme, string LotKey)
 		{
-			Assert.AreEqual(Programme, KingdomHostedArcologyTopology.ProgrammeAt(X, Y, Z));
-			Assert.AreEqual(LotKey, KingdomHostedArcologyTopology.HostedLotAt(X, Y, Z));
+			ClassicAssert.AreEqual(Programme, KingdomHostedArcologyTopology.ProgrammeAt(X, Y, Z));
+			ClassicAssert.AreEqual(LotKey, KingdomHostedArcologyTopology.HostedLotAt(X, Y, Z));
 		}
 
 		private static void Add(KingdomArcologyCoordinate Coordinate,

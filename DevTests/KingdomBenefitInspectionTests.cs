@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -62,7 +63,7 @@ namespace ThousandAndFirst.Tests
 				Detail = "some offered supply is outside the cap" };
 			row.Offered.Add(new KindAmount("roof", 2));
 			row.Credited.Add(new KindAmount("roof", 1));
-			Assert.AreEqual("partly active; capped", KingdomBenefitInspectionText.Status(row));
+			ClassicAssert.AreEqual("partly active; capped", KingdomBenefitInspectionText.Status(row));
 			string detail = KingdomBenefitInspectionText.ProviderDetail(row, "woven bed");
 			StringAssert.Contains("Operating now: 75%", detail);
 			StringAssert.Contains("Nominal offer: roof 2", detail);
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomBenefitFault.ObservationLimit, "over limit")]
 		public void FaultStatesUsePlayerFacingTerms(KingdomBenefitFault fault, string expected)
 		{
-			Assert.AreEqual(expected, KingdomBenefitInspectionText.Status(
+			ClassicAssert.AreEqual(expected, KingdomBenefitInspectionText.Status(
 				new KingdomBenefitInspection { Fault = fault }));
 		}
 
@@ -109,8 +110,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomBenefitIndex.Allocation.cs"));
 			int attach = evaluate.IndexOf("aggregate.Reading.Providers.Add(inspection)");
 			int operation = evaluate.IndexOf("OperationPercent(Item, aggregate.Root");
-			Assert.GreaterOrEqual(attach, 0);
-			Assert.Greater(operation, attach, "an assigned but broken provider stays on its building");
+			ClassicAssert.GreaterOrEqual(attach, 0);
+			ClassicAssert.Greater(operation, attach, "an assigned but broken provider stays on its building");
 			StringAssert.Contains("aggregate.Pending.Add", evaluate);
 			StringAssert.Contains("inspection.Credited.Add", allocation);
 			StringAssert.Contains("inspection.CreditedTags.Add", allocation);

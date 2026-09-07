@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -44,53 +45,53 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FrozenHistoricalV1ReadsExactlyAndDoesNotSelfMigrate()
 		{
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(FrozenV1, out _));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(FrozenV1, out _));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
 				out KingdomPurposePairReceipt pair, out bool legacy));
-			Assert.IsTrue(legacy);
-			Assert.IsTrue(pair.LegacyWire);
-			Assert.AreEqual(KingdomPurposePairPhase.BootstrapOutstanding, pair.Phase);
-			Assert.AreEqual(KingdomPurposeKind.Deep, pair.Operation.SourceKind);
-			Assert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
+			ClassicAssert.IsTrue(legacy);
+			ClassicAssert.IsTrue(pair.LegacyWire);
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.BootstrapOutstanding, pair.Phase);
+			ClassicAssert.AreEqual(KingdomPurposeKind.Deep, pair.Operation.SourceKind);
+			ClassicAssert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
 				pair.Operation.EffectStep);
-			Assert.AreEqual(FrozenV1, KingdomPurposePortfolioRules.EncodeLegacyPair(pair));
+			ClassicAssert.AreEqual(FrozenV1, KingdomPurposePortfolioRules.EncodeLegacyPair(pair));
 		}
 
 		[Test]
 		public void FirstAuthorizedPublicationMigratesOnceToFrozenCurrentWire()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
 				out KingdomPurposePairReceipt before, out bool legacy));
-			Assert.IsTrue(legacy);
+			ClassicAssert.IsTrue(legacy);
 			KingdomPurposePairReceipt after = before.Copy();
 			after.Phase = KingdomPurposePairPhase.Orphaned;
 			after.ResumePhase = before.Phase;
 			after.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(before, after,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(before, after,
 				out KingdomPurposePairFault transitionFault), transitionFault.ToString());
 
 			after.LegacyWire = false;
-			Assert.AreEqual(FrozenV2AfterOrphan,
+			ClassicAssert.AreEqual(FrozenV2AfterOrphan,
 				KingdomPurposePortfolioRules.EncodePair(after));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(
 				FrozenV2AfterOrphan, out KingdomPurposePairReceipt current, out legacy));
-			Assert.IsFalse(legacy);
-			Assert.IsFalse(current.LegacyWire);
-			Assert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
+			ClassicAssert.IsFalse(legacy);
+			ClassicAssert.IsFalse(current.LegacyWire);
+			ClassicAssert.AreEqual(KingdomPurposePortfolioRules.PurposeEffectExempt,
 				current.Operation.EffectStep);
-			Assert.AreEqual(FrozenV2AfterOrphan,
+			ClassicAssert.AreEqual(FrozenV2AfterOrphan,
 				KingdomPurposePortfolioRules.EncodePair(current));
 		}
 
 		[Test]
 		public void FrozenFixtureRejectsTornAndNonExemptLegacyVariants()
 		{
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryDecodePairAny(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryDecodePairAny(
 				FrozenV1 + "x", out _, out _));
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePairAny(FrozenV1,
 				out KingdomPurposePairReceipt pair, out _));
 			pair.Operation.EffectStep = KingdomPurposePortfolioRules.PurposeEffectNone;
-			Assert.IsNull(KingdomPurposePortfolioRules.EncodeLegacyPair(pair));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.EncodeLegacyPair(pair));
 		}
 	}
 }

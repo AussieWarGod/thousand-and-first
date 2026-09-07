@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -29,43 +30,43 @@ namespace ThousandAndFirst.Tests
 			byte[] witnessBefore = WitnessBytes(authority);
 
 			// The disclosure lease: everything the founder is shown is decided about this payload.
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease disclosure,
 				out KingdomCivicArtifactsEnvelope held, out string failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City,
 				KingdomArtifactRecognitionServiceTests.Artifact("artifact-shown"), Kind, 0, null,
 				40L, out KingdomArtifactRecognitionPlan plan, out failure), failure);
 
 			// Somebody else writes the same section while the founder is still reading.
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease other, out _, out failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, other,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, other,
 				Realm, KingdomArtifactRecognitionServiceTests.Artifact("artifact-elsewhere"), Kind,
 				0, null, 41L, out _, out KingdomArtifactRecognitionOutcome interloper,
 				out failure), failure);
-			Assert.AreEqual(KingdomArtifactRecognitionOutcome.Recorded, interloper);
+			ClassicAssert.AreEqual(KingdomArtifactRecognitionOutcome.Recorded, interloper);
 			byte[] afterInterloper = authority.Encode();
 
 			// The founder now says yes to what they were shown. It is stale, and it is refused.
-			Assert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, disclosure,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, disclosure,
 				Realm, KingdomArtifactRecognitionServiceTests.Artifact("artifact-shown"), Kind, 0,
 				null, 42L, out KingdomArtifactRecognitionReceipt refused, out _, out failure));
 			StringAssert.Contains("revision", failure);
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 			CollectionAssert.AreEqual(afterInterloper, authority.Encode());
 
 			// A fresh disclosure sees the moved save and may then record the same recognition.
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease again, out KingdomCivicArtifactsEnvelope moved,
 				out failure), failure);
-			Assert.AreEqual(1, moved.Recognitions.Rows.Count,
+			ClassicAssert.AreEqual(1, moved.Recognitions.Rows.Count,
 				"only the interloper's row is kept; the stale attempt wrote nothing");
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, again,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, again,
 				Realm, KingdomArtifactRecognitionServiceTests.Artifact("artifact-shown"), Kind, 0,
 				null, 43L, out KingdomArtifactRecognitionReceipt kept,
 				out KingdomArtifactRecognitionOutcome outcome, out failure), failure);
-			Assert.AreEqual(KingdomArtifactRecognitionOutcome.Recorded, outcome);
-			Assert.AreEqual(plan.RecognitionId, kept.RecognitionId,
+			ClassicAssert.AreEqual(KingdomArtifactRecognitionOutcome.Recorded, outcome);
+			ClassicAssert.AreEqual(plan.RecognitionId, kept.RecognitionId,
 				"the same object and form must still name the same row");
 			CollectionAssert.AreEqual(witnessBefore, WitnessBytes(authority),
 				"the sibling witness book in section one must survive every step");
@@ -90,23 +91,23 @@ namespace ThousandAndFirst.Tests
 			KingdomArtifactSnapshot later = KingdomArtifactRecognitionServiceTests.Artifact(
 				"artifact-1", "folded fullerite sword", "taf:owner:player",
 				"taf:zone:JoppaWorld.11.22.1.1.10:4:5", 9000L);
-			Assert.AreNotEqual(id, "taf:artifact-recognition:" + later.SnapshotDigest,
+			ClassicAssert.AreNotEqual(id, "taf:artifact-recognition:" + later.SnapshotDigest,
 				"the later reading really does digest differently");
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease, out KingdomCivicArtifactsEnvelope held,
 				out string failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City, later, Kind, 7, "Eshkind",
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City, later, Kind, 7, "Eshkind",
 				9000L, out KingdomArtifactRecognitionPlan plan, out failure), failure);
-			Assert.IsTrue(plan.AlreadyKept, "the disclosure must say this is already written down");
+			ClassicAssert.IsTrue(plan.AlreadyKept, "the disclosure must say this is already written down");
 			StringAssert.Contains("already written down", plan.Disclosure());
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, later, Kind, 7, "Eshkind", 9000L,
 				out KingdomArtifactRecognitionReceipt receipt,
 				out KingdomArtifactRecognitionOutcome outcome, out failure), failure);
-			Assert.AreEqual(KingdomArtifactRecognitionOutcome.AlreadyKept, outcome);
-			Assert.AreEqual(id, receipt.RecognitionId, "the row kept is the row already kept");
-			Assert.AreEqual(40L, receipt.Source.ObservedTick, "its own tick is not rewritten");
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(KingdomArtifactRecognitionOutcome.AlreadyKept, outcome);
+			ClassicAssert.AreEqual(id, receipt.RecognitionId, "the row kept is the row already kept");
+			ClassicAssert.AreEqual(40L, receipt.Source.ObservedTick, "its own tick is not rewritten");
+			ClassicAssert.AreEqual(revision, authority.Revision);
 			CollectionAssert.AreEqual(before, authority.Encode());
 		}
 
@@ -121,34 +122,34 @@ namespace ThousandAndFirst.Tests
 				KingdomArtifactRecognitionServiceTests.Authority();
 			for (int i = 0; i < KingdomArtifactRecognitionRules.MaxRows; i++)
 			{
-				Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+				ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 					out KingdomCivicMemorySectionLease fill, out _, out string step), step);
-				Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, fill,
+				ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, fill,
 					Realm, KingdomArtifactRecognitionServiceTests.Artifact("artifact-" + i), Kind,
 					0, null, 40L, out _, out _, out step), step);
 			}
 			long revision = authority.Revision;
 			byte[] before = authority.Encode();
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease, out KingdomCivicArtifactsEnvelope held,
 				out string failure), failure);
-			Assert.AreEqual(KingdomArtifactRecognitionRules.MaxRows,
+			ClassicAssert.AreEqual(KingdomArtifactRecognitionRules.MaxRows,
 				held.Recognitions.Rows.Count, "the register really is full");
 			KingdomArtifactSnapshot later = KingdomArtifactRecognitionServiceTests.Artifact(
 				"artifact-3", "folded fullerite sword", "taf:owner:player",
 				"taf:zone:JoppaWorld.11.22.1.1.10:4:5", 9000L);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City, later, Kind, 0, null,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, City, later, Kind, 0, null,
 				9000L, out KingdomArtifactRecognitionPlan plan, out failure), failure);
-			Assert.IsTrue(plan.AlreadyKept);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsTrue(plan.AlreadyKept);
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, later, Kind, 0, null, 9000L, out _,
 				out KingdomArtifactRecognitionOutcome outcome, out failure), failure);
-			Assert.AreEqual(KingdomArtifactRecognitionOutcome.AlreadyKept, outcome);
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(KingdomArtifactRecognitionOutcome.AlreadyKept, outcome);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 			CollectionAssert.AreEqual(before, authority.Encode());
 
 			// A genuinely new subject is still refused, and still evicts nothing.
-			Assert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, KingdomArtifactRecognitionServiceTests.Artifact("artifact-new"), Kind, 0,
 				null, 9000L, out _, out _, out failure));
 			StringAssert.Contains("capacity", failure);
@@ -168,13 +169,13 @@ namespace ThousandAndFirst.Tests
 			KingdomArtifactSnapshot earlier = KingdomArtifactRecognitionServiceTests.Artifact(
 				"artifact-1", "folded fullerite sword", "taf:owner:player",
 				"taf:zone:JoppaWorld.11.22.1.1.10:4:5", 39L);
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease, out _, out string failure), failure);
-			Assert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, earlier, Kind, 7, "Eshkind", 39L,
 				out KingdomArtifactRecognitionReceipt refused, out _, out failure));
 			StringAssert.Contains("already recognized", failure);
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 			CollectionAssert.AreEqual(before, authority.Encode());
 		}
 
@@ -194,22 +195,22 @@ namespace ThousandAndFirst.Tests
 			const string nonSeat = City;
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Authority();
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease, out KingdomCivicArtifactsEnvelope held,
 				out string failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, nonSeat,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryPlan(held, nonSeat,
 				KingdomArtifactRecognitionServiceTests.Artifact(), Kind, 0, null, 40L,
 				out KingdomArtifactRecognitionPlan plan, out failure), failure);
-			Assert.AreEqual(nonSeat, plan.SettlementName);
+			ClassicAssert.AreEqual(nonSeat, plan.SettlementName);
 			string disclosure = plan.Disclosure();
 			StringAssert.Contains("What " + nonSeat + " would write down", disclosure);
 			StringAssert.Contains("Kept by: " + nonSeat, disclosure);
 			StringAssert.DoesNotContain(seat, disclosure,
 				"the seat's name must never reach a non-seat city's disclosure");
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, KingdomArtifactRecognitionServiceTests.Artifact(), Kind, 0, null, 40L,
 				out KingdomArtifactRecognitionReceipt receipt, out _, out failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
 				receipt.RecognitionId, out KingdomArtifactRecognitionReceipt kept, out failure),
 				failure);
 			// The durable row is settlement-neutral by design; it is placed by its own location,
@@ -230,12 +231,12 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Authority();
 			byte[] before = authority.Encode();
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
 				out KingdomCivicArtifactsEnvelope held, out string failure), failure);
-			Assert.IsFalse(KingdomArtifactRecognitionCommit.TryPlan(held, Unresolved,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionCommit.TryPlan(held, Unresolved,
 				KingdomArtifactRecognitionServiceTests.Artifact(), Kind, 0, null, 40L,
 				out KingdomArtifactRecognitionPlan plan, out failure));
-			Assert.IsNull(plan);
+			ClassicAssert.IsNull(plan);
 			StringAssert.Contains("no name of its own", failure);
 			CollectionAssert.AreEqual(before, authority.Encode());
 		}
@@ -246,11 +247,11 @@ namespace ThousandAndFirst.Tests
 		{
 			List<int> ids = new List<int> { 4, 9 };
 			List<string> names = new List<string> { "Eshkind", "Eshkind" };
-			Assert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(4, "Eshkind",
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(4, "Eshkind",
 				ids, names, out string failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(9, "Eshkind",
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(9, "Eshkind",
 				ids, names, out failure), failure);
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(5, "Eshkind",
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(5, "Eshkind",
 				ids, names, out failure));
 			StringAssert.Contains("no longer on this settlement's roll", failure);
 		}
@@ -259,7 +260,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DuplicateRollIdentityRefusesAttribution()
 		{
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(4, "Eshkind",
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(4, "Eshkind",
 				new List<int> { 4, 4 }, new List<string> { "Eshkind", "Eshkind" },
 				out string failure));
 			StringAssert.Contains("two settlers", failure);
@@ -274,22 +275,22 @@ namespace ThousandAndFirst.Tests
 			List<int> ids = Shape == 0 ? new List<int> { 9 } : new List<int> { 4 };
 			List<string> names = Shape == 0
 				? new List<string> { "Tzimtzlum" } : new List<string> { "Eshkind" };
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(ResidentId, Name,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(ResidentId, Name,
 				ids, names, out string failure));
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNotNull(failure);
 		}
 
 		/// <summary>Naming nobody is a complete answer, and naming nobody loudly is not.</summary>
 		[Test]
 		public void UnattributedRecognitionIsLawfulAndAHalfNamedOneIsNot()
 		{
-			Assert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(0, null,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionAttribution.TryProveResident(0, null,
 				new List<int>(), new List<string>(), out string failure), failure);
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(0, "Eshkind",
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(0, "Eshkind",
 				new List<int>(), new List<string>(), out failure));
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(4, null,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(4, null,
 				new List<int> { 4 }, new List<string> { "Eshkind" }, out failure));
-			Assert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(-1, null,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionAttribution.TryProveResident(-1, null,
 				new List<int>(), new List<string>(), out failure));
 		}
 
@@ -304,18 +305,18 @@ namespace ThousandAndFirst.Tests
 				KingdomArtifactRecognitionServiceTests.Authority();
 			KingdomArtifactSnapshot ownerless = KingdomArtifactRecognitionServiceTests.Artifact(
 				"artifact-ownerless", "a plain stone", null);
-			Assert.IsNull(ownerless.OwnerId);
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
+			ClassicAssert.IsNull(ownerless.OwnerId);
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadAuthority(authority, Realm,
 				out KingdomCivicMemorySectionLease lease, out _, out string failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionCommit.TryCommitPlanned(authority, lease,
 				Realm, ownerless, Kind, 0, null, 40L,
 				out KingdomArtifactRecognitionReceipt receipt, out _, out failure), failure);
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBackRow(authority, Realm,
 				receipt.RecognitionId, out KingdomArtifactRecognitionReceipt kept, out failure),
 				failure);
-			Assert.IsNull(kept.Source.OwnerId, "recognition must not invent an owner");
-			Assert.AreEqual(0, kept.CommerceValue);
-			Assert.IsFalse(kept.CustodyClaimed);
+			ClassicAssert.IsNull(kept.Source.OwnerId, "recognition must not invent an owner");
+			ClassicAssert.AreEqual(0, kept.CommerceValue);
+			ClassicAssert.IsFalse(kept.CustodyClaimed);
 		}
 
 		/// <summary>
@@ -329,17 +330,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Authority();
 			byte[] before = authority.Encode();
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
 				out KingdomCivicArtifactsEnvelope held, out string failure), failure);
 			string wide = new string('e', KingdomArtifactRecognitionRules.MaxTextBytes);
 			KingdomArtifactSnapshot broad = KingdomArtifactRecognitionServiceTests.Artifact(
 				"artifact-wide", new string('o', KingdomArtifactRecognitionRules.MaxTextBytes),
 				"taf:owner:player", "taf:zone:JoppaWorld.11.22.1.1.10:4:5", 40L, "taf:deed:reef",
 				new string('d', KingdomArtifactRecognitionRules.MaxTextBytes));
-			Assert.IsFalse(KingdomArtifactRecognitionCommit.TryPlan(held, City, broad, Kind, 3, wide,
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionCommit.TryPlan(held, City, broad, Kind, 3, wide,
 				40L, out KingdomArtifactRecognitionPlan plan, out failure));
-			Assert.IsNull(plan);
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNull(plan);
+			ClassicAssert.IsNotNull(failure);
 			CollectionAssert.AreEqual(before, authority.Encode());
 		}
 
@@ -352,7 +353,7 @@ namespace ThousandAndFirst.Tests
 				KingdomArtifactRecognitionRegister.Register(empty));
 			KingdomCivicMemoryAuthority authority =
 				KingdomArtifactRecognitionServiceTests.Recorded(out _);
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(authority, Realm,
 				out KingdomCivicArtifactsEnvelope held, out string failure), failure);
 			string register = KingdomArtifactRecognitionRegister.Register(held.Recognitions);
 			StringAssert.Contains("Kept recognitions: 1 of 8", register);
@@ -369,7 +370,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RecognizeArtifactIsNeverAvailableWhileSimulationIsPaused()
 		{
-			Assert.IsFalse(KingdomCharterMenuRules.AvailableWhileSimulationPaused(
+			ClassicAssert.IsFalse(KingdomCharterMenuRules.AvailableWhileSimulationPaused(
 				KingdomCharterAction.RecognizeArtifact));
 		}
 
@@ -392,9 +393,9 @@ namespace ThousandAndFirst.Tests
 				RealmId = Realm,
 				IdentityBound = true
 			};
-			Assert.IsTrue(KingdomWitnessWorkRules.TryCapture(envelope.WitnessWorks, 0L, source,
+			ClassicAssert.IsTrue(KingdomWitnessWorkRules.TryCapture(envelope.WitnessWorks, 0L, source,
 				out _, out string failure), failure);
-			Assert.IsTrue(KingdomCivicArtifactsStore.TryWrite(envelope, out byte[] payload,
+			ClassicAssert.IsTrue(KingdomCivicArtifactsStore.TryWrite(envelope, out byte[] payload,
 				out failure), failure);
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(
 				KingdomArtifactRecognitionServiceTests.Families());
@@ -404,13 +405,13 @@ namespace ThousandAndFirst.Tests
 					new KingdomCivicMemorySection(
 						KingdomCivicMemoryLimits.SectionCivicArtifacts, payload)
 				}, 0L)));
-			Assert.IsFalse(authority.Quarantined, authority.ReadOnlyReason);
+			ClassicAssert.IsFalse(authority.Quarantined, authority.ReadOnlyReason);
 			return authority;
 		}
 
 		private static byte[] WitnessBytes(IKingdomCivicMemoryAuthority Authority)
 		{
-			Assert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(Authority, Realm,
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionLease.TryReadBack(Authority, Realm,
 				out KingdomCivicArtifactsEnvelope held, out string failure), failure);
 			return KingdomWitnessWorkCodec.Encode(held.WitnessWorks);
 		}

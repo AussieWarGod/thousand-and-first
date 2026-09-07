@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -70,7 +71,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(fund, Is.GreaterThan(freeze));
 			Assert.That(project, Is.GreaterThan(fund));
 			Assert.That(commit, Is.GreaterThan(project));
-			Assert.AreEqual(4, source.Split(new[] { "public static bool Commission(" },
+			ClassicAssert.AreEqual(4, source.Split(new[] { "public static bool Commission(" },
 				global::System.StringSplitOptions.None).Length - 1);
 			StringAssert.Contains("TryOwnerStreamId(\"commission-placement\"", source);
 			StringAssert.Contains("KingdomSemanticSelectionRules.TryProbeStart", source);
@@ -172,12 +173,12 @@ namespace ThousandAndFirst.Tests
 		public void GuestLifecycleLogicalAuthorityKeepsNestedIdentityAndMutationOrder()
 		{
 			string source = KingdomGuestLifecycleLogicalSource.Read();
-			Assert.AreEqual(7, Count(source,
+			ClassicAssert.AreEqual(7, Count(source,
 				"internal static partial class KingdomGuestLifecycle"));
-			Assert.AreEqual(1, Count(source,
+			ClassicAssert.AreEqual(1, Count(source,
 				"private sealed class GuestWorld : IKingdomLifecycleTrustedWorld"));
-			Assert.AreEqual(1, Count(source, "private sealed class ScheduleReference"));
-			Assert.AreEqual(1, Count(source,
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class ScheduleReference"));
+			ClassicAssert.AreEqual(1, Count(source,
 				"private sealed class Observation : IKingdomLifecycleTrustedObservation"));
 			StringAssert.Contains(
 				"internal const string MarkerProperty = \"r_TAF_GuestLifecycleMarker\";", source);

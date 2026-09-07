@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -104,9 +105,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string from, string to)
 		{
 			int start = source.IndexOf(from, StringComparison.Ordinal);
-			Assert.Greater(start, -1, from);
+			ClassicAssert.Greater(start, -1, from);
 			int end = source.IndexOf(to, start + 1, StringComparison.Ordinal);
-			Assert.Greater(end, start, to);
+			ClassicAssert.Greater(end, start, to);
 			return source.Substring(start, end - start);
 		}
 
@@ -152,7 +153,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < files.Length; i++)
 			{
 				int lines = Source(files[i]).Split('\n').Length;
-				Assert.Less(lines, 301, files[i] + " is " + lines + " lines");
+				ClassicAssert.Less(lines, 301, files[i] + " is " + lines + " lines");
 			}
 		}
 
@@ -194,7 +195,7 @@ namespace ThousandAndFirst.Tests
 				"TryLandCarriedFood(System, operation, cargo, destinationZone",
 				"KingdomPurposeOperationPhase.Delivered",
 				"TryPublishOperation(Pair, next, delivered");
-			Assert.AreEqual(1, Count(output, "TryLandCarriedFood("));
+			ClassicAssert.AreEqual(1, Count(output, "TryLandCarriedFood("));
 		}
 
 		[Test]
@@ -227,19 +228,19 @@ namespace ThousandAndFirst.Tests
 				"int added = after - before;",
 				"if (!Survey.SynchronizeReceiptObject(larders[i]))",
 				"Aftermath = KingdomPurposeServingAftermath.Stranded;");
-			Assert.AreEqual(0, Count(Code(proof), "\t\t\t\t\tSurvey.SynchronizeReceiptObject("),
+			ClassicAssert.AreEqual(0, Count(Code(proof), "\t\t\t\t\tSurvey.SynchronizeReceiptObject("),
 				"a discarded synchronization result is divergence nobody reads");
 			// The count of settled offers is what the increment is owed against; counting offers
 			// instead would let a refused one buy a short delta a WAIT could retry over.
-			Assert.AreEqual(0, Count(Code(proof), "attempted"),
+			ClassicAssert.AreEqual(0, Count(Code(proof), "attempted"),
 				"the exact increment is owed against settled offers, never against attempts");
-			Assert.AreEqual(0, Count(Code(proof), "LandingDeltaIsSound"),
+			ClassicAssert.AreEqual(0, Count(Code(proof), "LandingDeltaIsSound"),
 				"the short-delta envelope was replaced by the exact-partition law");
 			// No exception may cross the placement seam: a throw past an out-parameter leaves the
 			// caller unable to tell a clean shortfall from a stamped serving loose in the world.
-			Assert.AreEqual(0, Count(Code(proof), "throw;"),
+			ClassicAssert.AreEqual(0, Count(Code(proof), "throw;"),
 				"the aftermath crosses this boundary as a value, never as an exception");
-			Assert.AreEqual(0, Count(Code(Source(Landing)), "catch"),
+			ClassicAssert.AreEqual(0, Count(Code(Source(Landing)), "catch"),
 				"the landing transaction no longer catches across the placement seam");
 		}
 
@@ -257,7 +258,7 @@ namespace ThousandAndFirst.Tests
 			// NoStack closes the Stacker.cs:137-144 -> :312-315 merge that obliterates the object
 			// just added and carries its count away from this operation's marker.
 			StringAssert.Contains("NoStack: true", proof);
-			Assert.AreEqual(0, Count(Code(proof), "AddObject(food, Silent: true)"),
+			ClassicAssert.AreEqual(0, Count(Code(proof), "AddObject(food, Silent: true)"),
 				"a stackable add lets the engine obliterate the stamped serving");
 			// Postcondition: the return value alone proves nothing, so the physical aftermath is
 			// what decides, and any divergence is ambiguous rather than a shortfall.
@@ -304,7 +305,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomPurposePortfolioRules.LandingMarkerIsPresent(",
 				"OwnedFieldPresent(item, PortfolioLandedFoodProperty),",
 				"OwnedFieldPresent(item, PortfolioLandedReceiptProperty))) Exact = false;");
-			Assert.AreEqual(1, Count(Code(proof), "marked += 1;"),
+			ClassicAssert.AreEqual(1, Count(Code(proof), "marked += 1;"),
 				"each proved unit counts as exactly one serving; a marked unit that grew is not"
 				+ " a serving this operation landed, and must be judged inexact instead");
 			StringAssert.DoesNotContain("!= Key)", Code(proof));
@@ -326,11 +327,11 @@ namespace ThousandAndFirst.Tests
 				"OwnedStringField(item, PortfolioLandedReceiptProperty),",
 				"item.RemoveStringProperty(PortfolioLandedReceiptProperty);",
 				"item.RemoveIntProperty(PortfolioLandedFoodProperty);");
-			Assert.AreEqual(2, Count(record,
+			ClassicAssert.AreEqual(2, Count(record,
 				"RemoveStringProperty(PortfolioLandedReceiptProperty)"),
 				"a stamp is cleared in exactly two places: a serving's mark at retirement, and the"
 				+ " credited cargo's own record as it leaves the operation for good");
-			Assert.AreEqual(0, Count(Code(record), "DestinationLarders("),
+			ClassicAssert.AreEqual(0, Count(Code(record), "DestinationLarders("),
 				"cached larder children would miss the serving already carried out of a larder");
 			// Retirement runs inside the landing, before its own checkpoint, while the servings are
 			// still provably in the measured larders; and it is reproved before the caller returns.
@@ -357,7 +358,7 @@ namespace ThousandAndFirst.Tests
 			string rules = Source(Rules);
 			Ordered(rules, "public static bool LandingMarkerIsRetiredReceipt(",
 				"return LandingMarkerIsOurs(RetiredReceipt, Prefilter, MarkPresent, MarkPrefilter,");
-			Assert.AreEqual(0, Count(Code(rules), "StartsWith(Scope"),
+			ClassicAssert.AreEqual(0, Count(Code(rules), "StartsWith(Scope"),
 				"a prefix rule would retire any crafted receipt in the pair's namespace");
 		}
 
@@ -377,12 +378,12 @@ namespace ThousandAndFirst.Tests
 			Ordered(drive, "if (!TryRetireCreditedPurposeCargo(Pair.Operation))",
 				"next.Phase = KingdomPurposePairPhase.Active;",
 				"TryPublishPortfolioPair(Pair, next, out Failure)");
-			Assert.AreEqual(2, Count(drive, "if (!ExactPublishedPortfolioPair(Pair))"),
+			ClassicAssert.AreEqual(2, Count(drive, "if (!ExactPublishedPortfolioPair(Pair))"),
 				"both credit paths reprove the register immediately before their cleanup");
 			Ordered(drive, "private static bool ExactPublishedPortfolioPair(",
 				"KingdomPurposePortfolioRules.EncodePair(Pair);",
 				"The.Game.GetStringGameState(PortfolioStateKey, \"\") == expected;");
-			Assert.AreEqual(2, Count(drive, "if (!TryRetireCreditedPurposeCargo(Pair.Operation))"),
+			ClassicAssert.AreEqual(2, Count(drive, "if (!TryRetireCreditedPurposeCargo(Pair.Operation))"),
 				"both credit paths retire, and both before their publish so a crash simply retries");
 			// A retirement that cannot prove itself blocks the release: clearing witnesses and the
 			// root while legacy marks stood would leave marks whose operation no longer exists.
@@ -433,7 +434,7 @@ namespace ThousandAndFirst.Tests
 				"if (!TryRetireCreditedPurposeCargo(Pair.Operation))",
 				"The delivered bootstrap landing could not be retired from the destination's custody; nothing was released.",
 				"TryPublishPortfolioPair(Pair, next, out Failure)");
-			Assert.AreEqual(1,
+			ClassicAssert.AreEqual(1,
 				Count(control, "if (!TryRetireCreditedPurposeCargo(Pair.Operation))"));
 			// Retiring before every publish is what makes a refused CAS harmless: the removal is
 			// idempotent, the delivered cargo is still found by the zone scan every credit path
@@ -441,7 +442,7 @@ namespace ThousandAndFirst.Tests
 			// that no other operation can ever claim as its own marked landing.
 			Ordered(drive, "FindExactKnown(zone, Pair.Operation.OutputCargoId, out GameObject cargo)",
 				"if (!TryRetireCreditedPurposeCargo(Pair.Operation))");
-			Assert.AreEqual(0, Count(Between(Code(drive),
+			ClassicAssert.AreEqual(0, Count(Between(Code(drive),
 					"private static bool AcceptPortfolioCredit(",
 					"private static bool ExactPublishedPortfolioPair("), "TryRootedPurposeCargo"),
 				"the credit paths locate their cargo by zone scan, so retiring the root early"
@@ -459,10 +460,10 @@ namespace ThousandAndFirst.Tests
 				"if (!WithOperation)",
 				"EncodeFields(new string[] { Tag, PairId, N(PairEpoch) })",
 				"return Id(OperationId) && (Key = EncodeFields(");
-			Assert.AreEqual(0, Count(Code(rules), "\":\" + PairId"),
+			ClassicAssert.AreEqual(0, Count(Code(rules), "\":\" + PairId"),
 				"a delimiter join is not injective while Id() admits ':'");
 			string root = Source(CargoRoot);
-			Assert.AreEqual(2, Count(root, "KingdomPurposePortfolioRules.TryCargoRootBody("),
+			ClassicAssert.AreEqual(2, Count(root, "KingdomPurposePortfolioRules.TryCargoRootBody("),
 				"both root-key overloads must share the one canonical encoder");
 			// The candidate under a colliding legacy key must fully reprove before it is seized,
 			// or the migration installs another operation's object under this one's name.
@@ -478,7 +479,7 @@ namespace ThousandAndFirst.Tests
 			// Status reads through the non-migrating lookup, so rendering cannot mutate the roots.
 			Ordered(root, "private static bool TryRootedPurposeCargoExact(",
 				"The.Game.ObjectGameState.TryGetValue(PurposeCargoRootKey(Operation),");
-			Assert.AreEqual(0, Count(Between(Code(root),
+			ClassicAssert.AreEqual(0, Count(Between(Code(root),
 					"private static bool TryRootedPurposeCargoExact(",
 					"private static bool ExactRootedPurposeCargo("), "ObjectGameState.Remove"),
 				"the read-only lookup must not migrate a root key");
@@ -487,7 +488,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(landing, "private static bool TryPurposeLandingMark(",
 				"TryLandingReceipt(Operation.PairId,",
 				"KingdomPurposePortfolioRules.LandingIndex(");
-			Assert.AreEqual(0, Count(Code(landing), "prefilter) != 0"),
+			ClassicAssert.AreEqual(0, Count(Code(landing), "prefilter) != 0"),
 				"a lawful receipt whose cheap index hashes to zero must not be refused");
 		}
 
@@ -635,7 +636,7 @@ namespace ThousandAndFirst.Tests
 				"TryEncodeStrikeIntent(intent");
 			// The gatehouse removal proof shard carries two of the four unencumbered proofs
 			// since it was split out of the strike-removal shard; the law counts both.
-			Assert.AreEqual(4, Count(Source(StrikeRemoval), "StrikeObjectUnencumbered(")
+			ClassicAssert.AreEqual(4, Count(Source(StrikeRemoval), "StrikeObjectUnencumbered(")
 				+ Count(Source(StrikeGatehouseRemoval), "StrikeObjectUnencumbered("));
 		}
 
@@ -663,12 +664,12 @@ namespace ThousandAndFirst.Tests
 				int count = Count(Code(File.ReadAllText(path)), "TryMaterialOf(");
 				if (count > 0) actual.Add(relative, count);
 			}
-			Assert.AreEqual(expected.Count, actual.Count,
+			ClassicAssert.AreEqual(expected.Count, actual.Count,
 				"unreviewed raw material classifier caller: " + string.Join(", ", actual.Keys));
 			foreach (KeyValuePair<string, int> row in expected)
 			{
-				Assert.IsTrue(actual.ContainsKey(row.Key), row.Key);
-				Assert.AreEqual(row.Value, actual[row.Key], row.Key);
+				ClassicAssert.IsTrue(actual.ContainsKey(row.Key), row.Key);
+				ClassicAssert.AreEqual(row.Value, actual[row.Key], row.Key);
 			}
 		}
 
@@ -693,7 +694,7 @@ namespace ThousandAndFirst.Tests
 				"RecordPurposeLanded(Cargo, receipt, carried, progress);",
 				"if (outstanding <= 0)",
 				"landed = progress + AddPurposeFood(");
-			Assert.AreEqual(0, Count(Code(landing), "landed = physical +"),
+			ClassicAssert.AreEqual(0, Count(Code(landing), "landed = physical +"),
 				"measuring the total against the surviving physical count re-mints eaten servings");
 			// A foreign or half-bound record must never read as zero and be overwritten, and every
 			// owned field name is checked in BOTH type tables: a wrong-typed or dual-typed value
@@ -717,7 +718,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < owned.Length; i++)
 			{
 				string body = Between(Code(Source(owned[i])), "namespace ThousandAndFirst", "\n}");
-				Assert.AreEqual(owned[i] == Record ? 6 : 0,
+				ClassicAssert.AreEqual(owned[i] == Record ? 6 : 0,
 					Count(body, "HasStringProperty(") + Count(body, "HasIntProperty("),
 					owned[i] + " must read presence through the owned-field helpers");
 			}
@@ -726,7 +727,7 @@ namespace ThousandAndFirst.Tests
 				"Progress <= recorded) return;",
 				"Cargo.SetIntProperty(PortfolioLandedCountProperty, Progress);",
 				"Cargo.SetStringProperty(PortfolioLandedReceiptProperty, Receipt);");
-			Assert.AreEqual(1, Count(record, "SetIntProperty(PortfolioLandedCountProperty"),
+			ClassicAssert.AreEqual(1, Count(record, "SetIntProperty(PortfolioLandedCountProperty"),
 				"the record is written in exactly one place and only ever upward");
 		}
 
@@ -746,11 +747,11 @@ namespace ThousandAndFirst.Tests
 				"The durable landing record changed under the provision callbacks.",
 				"TryRevalidateLandingGround(survey, larders, DestinationZone, Cargo, receipt,",
 				"return CompletePurposeLanding(Operation, survey, larders, Cargo, DestinationZone,");
-			Assert.AreEqual(1, Count(landing, "RecordPurposeLanded(Cargo, receipt, carried,"),
+			ClassicAssert.AreEqual(1, Count(landing, "RecordPurposeLanded(Cargo, receipt, carried,"),
 				"the pre-add record write happens once, past every cut of its pass");
-			Assert.AreEqual(1, Count(landing, "RecordPurposeLanded(Cargo, Receipt, Carried,"),
+			ClassicAssert.AreEqual(1, Count(landing, "RecordPurposeLanded(Cargo, Receipt, Carried,"),
 				"the final record write happens once, inside the completion seam");
-			Assert.AreEqual(0, Count(Between(Code(landing),
+			ClassicAssert.AreEqual(0, Count(Between(Code(landing),
 					"landed = progress + AddPurposeFood(",
 					"if (aftermath == KingdomPurposeServingAftermath.Stranded)"),
 				"RecordPurposeLanded"),
@@ -801,13 +802,13 @@ namespace ThousandAndFirst.Tests
 				"if (item.Inventory.Objects == null) return false;",
 				"for (int i = 0; i < item.Inventory.Objects.Count; i++)",
 				"pending.Add(item.Inventory.Objects[i]);");
-			Assert.AreEqual(1, Count(Between(Code(ground),
+			ClassicAssert.AreEqual(1, Count(Between(Code(ground),
 					"private static bool TryLoadedLandingCustody(",
 					"Loaded = walked;"), "continue;"),
 				"only an inventory-less leaf ends a branch; nothing else may be skipped");
-			Assert.AreEqual(0, Count(Code(ground), "ActiveFor("),
+			ClassicAssert.AreEqual(0, Count(Code(ground), "ActiveFor("),
 				"a cached index cannot bless the absence of a mark it never observed");
-			Assert.AreEqual(0, Count(Code(ground), "TryLoaded("),
+			ClassicAssert.AreEqual(0, Count(Code(ground), "TryLoaded("),
 				"the survey's own index is not a fresh walk");
 			// A mark whose immediate owner is not one of the measured larders is a stray, so a
 			// serving nested inside a container inside a larder is caught as surely as one carried
@@ -847,7 +848,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomSurvey.HeldIn(Larders[i]) > KingdomSurvey.CapacityOf(Larders[i])");
 			Ordered(Source(Proof), "while (remaining > 0",
 				"&& KingdomSurvey.HeldIn(larder) < KingdomSurvey.CapacityOf(larder))");
-			Assert.AreEqual(0, Count(Code(Source(Proof)), "int room ="),
+			ClassicAssert.AreEqual(0, Count(Code(Source(Proof)), "int room ="),
 				"a snapshotted room survives the callback that invalidated it");
 			Ordered(ground, "private static bool ExactMeasuredLarder(",
 				"Larder.CurrentZone == DestinationZone && Larder.InInventory == null",
@@ -878,9 +879,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomPurposePortfolioRules.LandingIsProved(",
 				"cargo.GetStringProperty(PortfolioLandedReceiptProperty) == receipt, Landed,");
 			// Presence of a count alone is not the discriminator, and rendering must not migrate.
-			Assert.AreEqual(0, Count(Code(landing), "HasProperty(PortfolioLandedCountProperty)"),
+			ClassicAssert.AreEqual(0, Count(Code(landing), "HasProperty(PortfolioLandedCountProperty)"),
 				"the stamped receipt, not the bare count property, proves whose landing this was");
-			Assert.AreEqual(0, Count(Code(landing), "TryRootedPurposeCargo(Operation"),
+			ClassicAssert.AreEqual(0, Count(Code(landing), "TryRootedPurposeCargo(Operation"),
 				"status must read through the non-migrating lookup");
 			string rules = Source(Rules);
 			Ordered(rules, "public static bool LandingIsProved(",
@@ -893,7 +894,7 @@ namespace ThousandAndFirst.Tests
 			string landing = Source(Landing);
 			Ordered(landing, "landed = progress + AddPurposeFood(", "if (Landed != Carried)",
 				"The destination larders took only part of the exact carried provision.");
-			Assert.AreEqual(1, Count(landing, "Landed != Carried"),
+			ClassicAssert.AreEqual(1, Count(landing, "Landed != Carried"),
 				"a larder that filled between the aggregate FoodSpace check and the per-larder"
 				+ " room walk, or a staple that stops being food mid-loop, must WAIT: the Delivered"
 				+ " publish is only reachable once every carried serving is measured in place");
@@ -911,9 +912,9 @@ namespace ThousandAndFirst.Tests
 				"if (outstanding <= 0)", "survey.FoodSpace < outstanding",
 				"Fail(\"Dedicated larders at the destination cannot cover the exact carried provision.\"");
 			// Every ambiguous end goes through the one seam that stamps the durable fault first.
-			Assert.AreEqual(1, Count(landing, "Ambiguous = true;"),
+			ClassicAssert.AreEqual(1, Count(landing, "Ambiguous = true;"),
 				"exactly one seam sets the flag, and it stamps the durable fault first");
-			Assert.AreEqual(18, Count(landing, "return FaultedLanding("),
+			ClassicAssert.AreEqual(18, Count(landing, "return FaultedLanding("),
 				"an unclaimable record, an unreconciled or replaced callback witness, an unproved"
 				+ " custody scan, a stray mark, forged marks, changed larders, a stranded serving,"
 				+ " a staple that stopped being makeable, a record that would not take or that"
@@ -937,8 +938,8 @@ namespace ThousandAndFirst.Tests
 				"if (!TryPublishOperation(Pair, next, delivered, out Published, out Failure))"
 				+ " return false;",
 				"NotePurposeProvisionArrival(System, operation);");
-			Assert.AreEqual(1, Count(output, "NotePurposeProvisionArrival("));
-			Assert.AreEqual(0, Count(Code(output), "Ledger.Note("),
+			ClassicAssert.AreEqual(1, Count(output, "NotePurposeProvisionArrival("));
+			ClassicAssert.AreEqual(0, Count(Code(output), "Ledger.Note("),
 				"the landing runtime must not write arrival prose of its own");
 		}
 
@@ -946,7 +947,7 @@ namespace ThousandAndFirst.Tests
 		public void TheArrivalNoteReportsTheWholeCarriedAmountNeverAPartialRemainder()
 		{
 			string landing = Source(Landing);
-			Assert.AreEqual(1, Count(landing, "Ledger.Note("),
+			ClassicAssert.AreEqual(1, Count(landing, "Ledger.Note("),
 				"there is exactly one arrival phrase, and it lives past the checkpoint");
 			Ordered(landing, "private static void NotePurposeProvisionArrival(",
 				"KingdomPurposePortfolioRules.TryCarriedFood(Operation.SourceKind,",
@@ -968,7 +969,7 @@ namespace ThousandAndFirst.Tests
 				"if (!StampPurposeLandingAttempt(Cargo, Receipt, expected))",
 				"Aftermath = KingdomPurposeServingAftermath.Stranded;",
 				"Aftermath = PlacePurposeServing(Survey, larder, Blueprint, Receipt, Prefilter);");
-			Assert.AreEqual(0, Count(Between(Code(proof),
+			ClassicAssert.AreEqual(0, Count(Between(Code(proof),
 					"if (!StampPurposeLandingAttempt(Cargo, Receipt, expected))",
 					"Aftermath = PlacePurposeServing("), "TryClearPurposeLandingAttempt"),
 				"nothing may retire the witness between writing it and making the offer");
@@ -997,7 +998,7 @@ namespace ThousandAndFirst.Tests
 				"Cargo.GetStringProperty(PortfolioLandedAttemptProperty), Receipt, out expected);",
 				"KingdomPurposePortfolioRules.ClassifyLandingWitnesses(",
 				"PurposeLandingIsFaulted(Cargo), present, ours, expected, Observed, Exact);");
-			Assert.AreEqual(0, Count(Between(Code(record),
+			ClassicAssert.AreEqual(0, Count(Between(Code(record),
 					"private static KingdomPurposeLandingAttemptState ReadPurposeLandingAttempt(",
 					"ClassifyLandingWitnesses("), "IsNullOrEmpty"),
 				"presence read from the value would let an emptied witness read as no offer");
@@ -1038,7 +1039,7 @@ namespace ThousandAndFirst.Tests
 				"Cargo.RemoveStringProperty(PortfolioLandedReceiptProperty);",
 				"Cargo.RemoveIntProperty(PortfolioLandedCountProperty);",
 				"return !OwnedFieldPresent(Cargo, PortfolioLandedReceiptProperty)");
-			Assert.AreEqual(0, Count(Code(record), "RemoveStringProperty(PortfolioLandedFaultProperty)"),
+			ClassicAssert.AreEqual(0, Count(Code(record), "RemoveStringProperty(PortfolioLandedFaultProperty)"),
 				"a standing fault is never erased by a credit; it blocks it");
 			string witnesses = Source(Attempt);
 			Ordered(witnesses,
@@ -1055,7 +1056,7 @@ namespace ThousandAndFirst.Tests
 				"if (reconciled && !TryClearPurposeLandingAttempt(Cargo, receipt, physical))",
 				"RecordPurposeLanded(Cargo, receipt, carried, progress);",
 				"AddPurposeFood(survey, larders, Cargo, receipt, prefilter,");
-			Assert.AreEqual(1, Count(Code(landing), "TryClearPurposeLandingAttempt"),
+			ClassicAssert.AreEqual(1, Count(Code(landing), "TryClearPurposeLandingAttempt"),
 				"the transaction retires the witness in exactly one place, past every cut");
 			string attempt = Source(Attempt);
 			Ordered(attempt, "public static KingdomPurposeLandingAttemptState ClassifyLandingAttempt(",
@@ -1089,22 +1090,22 @@ namespace ThousandAndFirst.Tests
 				"GameObject.Validate(rooted),",
 				"rooted != null && ExactPortfolioCargoIdentity(rooted, Encoded))) return;",
 				"The.Game.ObjectGameState.Remove(Key);");
-			Assert.AreEqual(1, Count(Code(root), "ObjectGameState.Remove(Key)"),
+			ClassicAssert.AreEqual(1, Count(Code(root), "ObjectGameState.Remove(Key)"),
 				"every removal goes through the one checked seam");
-			Assert.AreEqual(2, Count(Code(root), "RemovePurposeCargoRoot(P"),
+			ClassicAssert.AreEqual(2, Count(Code(root), "RemovePurposeCargoRoot(P"),
 				"both the canonical and the legacy key are offered to the check, and only those");
 			// The legacy form must read back the same on every machine, or the key a save wrote is
 			// not the key this reads.
 			Ordered(root, "private static string PortfolioLegacyCargoRootKey(",
 				"PairEpoch.ToString(CultureInfo.InvariantCulture)");
-			Assert.AreEqual(0, Count(Code(root), "+ Cargo.PairEpoch +"),
+			ClassicAssert.AreEqual(0, Count(Code(root), "+ Cargo.PairEpoch +"),
 				"a culture-sensitive epoch is a different key on a different machine");
-			Assert.AreEqual(0, Count(Code(root), "+ Operation.PairEpoch +"));
+			ClassicAssert.AreEqual(0, Count(Code(root), "+ Operation.PairEpoch +"));
 			// Input consumption removes both roots through the same check, not the canonical alone.
 			string input = Source(Input);
 			Ordered(input, "KingdomPurposePortfolioRules.TryDecodeCargo(operation.InputCargoReceipt,",
 				"out KingdomPurposeCargoReceipt consumed)) RemovePurposeCargoRoots(consumed);");
-			Assert.AreEqual(0, Count(Code(input), "ObjectGameState.Remove"),
+			ClassicAssert.AreEqual(0, Count(Code(input), "ObjectGameState.Remove"),
 				"the input seam must not delete a root key of its own");
 		}
 
@@ -1129,7 +1130,7 @@ namespace ThousandAndFirst.Tests
 				"ReferenceEquals(Cargo.InInventory, store) && Cargo.CurrentCell == null",
 				"&& store.Inventory.InventoryContains(Cargo)",
 				"The landing cargo left the frozen destination store under the provision callbacks.");
-			Assert.AreEqual(1, Count(output, "PurposeLandingStillExact(operation, cargo,"),
+			ClassicAssert.AreEqual(1, Count(output, "PurposeLandingStillExact(operation, cargo,"),
 				"exactly one reproof, and it stands between the callbacks and the checkpoint");
 		}
 
@@ -1158,7 +1159,7 @@ namespace ThousandAndFirst.Tests
 				"if (!KingdomPurposePortfolioRules.OperationPhaseIsCommitted(operation.Phase)",
 				"&& !KingdomMaster.NewWorkAllowed(System))",
 				"New purpose work is paused by realm transition authority.");
-			Assert.AreEqual(0, Count(Code(drive), "if (!KingdomMaster.NewWorkAllowed(System))"),
+			ClassicAssert.AreEqual(0, Count(Code(drive), "if (!KingdomMaster.NewWorkAllowed(System))"),
 				"an unconditional block would stall every committed hop of a paused realm");
 			// Crediting a delivered cargo is committed recovery and carries no gate of its own;
 			// the activation branch opens a brand-new operation and is gated in the preflight.
@@ -1166,7 +1167,7 @@ namespace ThousandAndFirst.Tests
 				"TryPortfolioOperationPreflight(operation, out Failure)");
 			string family = drive + Source(Control) + Source(Output) + Source(Landing)
 				+ Source(Proof) + Source(CargoRoot);
-			Assert.AreEqual(2, Count(Code(family), "KingdomMaster.NewWorkAllowed("),
+			ClassicAssert.AreEqual(2, Count(Code(family), "KingdomMaster.NewWorkAllowed("),
 				"the portfolio's pause surface moved; re-check which work is committed recovery");
 		}
 
@@ -1176,7 +1177,7 @@ namespace ThousandAndFirst.Tests
 			string landing = Source(Landing);
 			StringAssert.Contains("KingdomSurvey.Take(DestinationZone, System).FoodSpace >= carried",
 				landing);
-			Assert.AreEqual(2, Count(landing,
+			ClassicAssert.AreEqual(2, Count(landing,
 				"Dedicated larders at the destination cannot cover the exact carried provision."),
 				"preflight and landing must refuse on the same measured figure");
 			StringAssert.Contains("KingdomConstructionInputLeaseAuthority"

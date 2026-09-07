@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -311,14 +312,14 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(first, StringComparison.Ordinal);
 			int b = source.IndexOf(second, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, first); Assert.Greater(b, a, second);
+			ClassicAssert.GreaterOrEqual(a, 0, first); ClassicAssert.Greater(b, a, second);
 		}
 
 		private static string Slice(string Source, string First, string Last)
 		{
 			int start = Source.IndexOf(First, StringComparison.Ordinal);
 			int end = Source.IndexOf(Last, start < 0 ? 0 : start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, First); Assert.Greater(end, start, Last);
+			ClassicAssert.GreaterOrEqual(start, 0, First); ClassicAssert.Greater(end, start, Last);
 			return Source.Substring(start, end - start);
 		}
 	}

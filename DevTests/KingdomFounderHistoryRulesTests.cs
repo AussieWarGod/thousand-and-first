@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -16,35 +17,35 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFounderHistoryReceipt first = Prepare(true);
 			KingdomFounderHistoryReceipt second = Prepare(true);
-			Assert.AreEqual(2, first.Version);
-			Assert.AreEqual(KingdomFounderHistoryPhase.Prepared, first.Phase);
-			Assert.IsTrue(first.PublicationEnabled);
-			Assert.AreEqual(first.ProjectionId, second.ProjectionId);
-			Assert.AreEqual(first.ProjectionProofId, second.ProjectionProofId);
+			ClassicAssert.AreEqual(2, first.Version);
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.Prepared, first.Phase);
+			ClassicAssert.IsTrue(first.PublicationEnabled);
+			ClassicAssert.AreEqual(first.ProjectionId, second.ProjectionId);
+			ClassicAssert.AreEqual(first.ProjectionProofId, second.ProjectionProofId);
 			StringAssert.StartsWith(KingdomFounderHistoryRules.ProjectionPrefix,
 				first.ProjectionId);
 			StringAssert.Contains("Ari founded New Grit Gate in the salt dunes.", first.Gospel);
-			Assert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
+			ClassicAssert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
 				first.LegacyCleanupState);
-			Assert.AreEqual(KingdomFounderHistoryPhase.None, first.LegacyPhase);
-			Assert.AreEqual("", first.EntityId);
-			Assert.AreEqual("", first.NoteId);
-			Assert.AreEqual("", first.ProofId);
-			Assert.AreEqual(0L, first.EventId);
-			Assert.IsTrue(KingdomFounderHistoryRules.Owns(first, Realm, SealBlob));
-			Assert.IsFalse(KingdomFounderHistoryRules.Owns(first, Realm, SealBlob + "x"));
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.None, first.LegacyPhase);
+			ClassicAssert.AreEqual("", first.EntityId);
+			ClassicAssert.AreEqual("", first.NoteId);
+			ClassicAssert.AreEqual("", first.ProofId);
+			ClassicAssert.AreEqual(0L, first.EventId);
+			ClassicAssert.IsTrue(KingdomFounderHistoryRules.Owns(first, Realm, SealBlob));
+			ClassicAssert.IsFalse(KingdomFounderHistoryRules.Owns(first, Realm, SealBlob + "x"));
 		}
 
 		[Test]
 		public void DisabledPreparationIsTerminalAndOwnsNoVanillaCleanupEvidence()
 		{
 			KingdomFounderHistoryReceipt receipt = Prepare(false);
-			Assert.AreEqual(KingdomFounderHistoryPhase.Suppressed, receipt.Phase);
-			Assert.IsFalse(receipt.PublicationEnabled);
-			Assert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.Suppressed, receipt.Phase);
+			ClassicAssert.IsFalse(receipt.PublicationEnabled);
+			ClassicAssert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
 				receipt.LegacyCleanupState);
-			Assert.AreEqual(0L, receipt.EventId);
-			Assert.AreEqual(receipt.PreparedTick, receipt.CommittedTick);
+			ClassicAssert.AreEqual(0L, receipt.EventId);
+			ClassicAssert.AreEqual(receipt.PreparedTick, receipt.CommittedTick);
 			AssertValid(receipt);
 		}
 
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 			receipt.Phase = KingdomFounderHistoryPhase.Committed;
 			receipt.CommittedTick = 900L;
 			AssertValid(receipt);
-			Assert.AreEqual(0L, receipt.EventId,
+			ClassicAssert.AreEqual(0L, receipt.EventId,
 				"a local projection must not need a vanilla HistoryKit event id");
 			foreach (KingdomFounderHistoryPhase legacy in new[]
 			{
@@ -94,12 +95,12 @@ namespace ThousandAndFirst.Tests
 			KingdomFounderHistoryReceipt normal = Prepare(true);
 			KingdomFounderHistoryReceipt other;
 			string failure;
-			Assert.IsTrue(KingdomFounderHistoryRules.TryPrepare("taf:realm:test-founder",
+			ClassicAssert.IsTrue(KingdomFounderHistoryRules.TryPrepare("taf:realm:test-founder",
 				"-memory" + SealBlob, 120L, 700L, 1001L, "  Ari\n", "New   Grit Gate",
 				"salt dunes", "was lost", true, out other, out failure), failure);
-			Assert.AreNotEqual(normal.ProjectionId, other.ProjectionId);
-			Assert.AreEqual("Ari", other.FounderName);
-			Assert.AreEqual("New Grit Gate", other.CityName);
+			ClassicAssert.AreNotEqual(normal.ProjectionId, other.ProjectionId);
+			ClassicAssert.AreEqual("Ari", other.FounderName);
+			ClassicAssert.AreEqual("New Grit Gate", other.CityName);
 		}
 
 		[TestCase(KingdomFounderHistoryPhase.EntityPublished, 0L)]
@@ -113,12 +114,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFounderHistoryReceipt receipt = Legacy(legacyPhase, eventId);
 			receipt.Normalize();
-			Assert.AreEqual(2, receipt.Version);
-			Assert.AreEqual(KingdomFounderHistoryPhase.Prepared, receipt.Phase);
-			Assert.AreEqual(KingdomFounderHistoryLegacyCleanupState.Required,
+			ClassicAssert.AreEqual(2, receipt.Version);
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.Prepared, receipt.Phase);
+			ClassicAssert.AreEqual(KingdomFounderHistoryLegacyCleanupState.Required,
 				receipt.LegacyCleanupState);
-			Assert.AreEqual(legacyPhase, receipt.LegacyPhase);
-			Assert.AreEqual(eventId, receipt.EventId);
+			ClassicAssert.AreEqual(legacyPhase, receipt.LegacyPhase);
+			ClassicAssert.AreEqual(eventId, receipt.EventId);
 			StringAssert.StartsWith(KingdomFounderHistoryRules.LegacyEntityPrefix,
 				receipt.EntityId);
 			StringAssert.StartsWith(KingdomFounderHistoryRules.ProjectionPrefix,
@@ -136,16 +137,16 @@ namespace ThousandAndFirst.Tests
 			KingdomFounderHistoryReceipt prepared = Legacy(
 				KingdomFounderHistoryPhase.Prepared, 0L);
 			prepared.Normalize();
-			Assert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
+			ClassicAssert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
 				prepared.LegacyCleanupState);
-			Assert.AreEqual("", prepared.EntityId);
+			ClassicAssert.AreEqual("", prepared.EntityId);
 			AssertValid(prepared);
 
 			KingdomFounderHistoryReceipt suppressed = Legacy(
 				KingdomFounderHistoryPhase.Suppressed, 0L);
 			suppressed.Normalize();
-			Assert.AreEqual(KingdomFounderHistoryPhase.Suppressed, suppressed.Phase);
-			Assert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.Suppressed, suppressed.Phase);
+			ClassicAssert.AreEqual(KingdomFounderHistoryLegacyCleanupState.None,
 				suppressed.LegacyCleanupState);
 			AssertValid(suppressed);
 		}
@@ -157,10 +158,10 @@ namespace ThousandAndFirst.Tests
 				KingdomFounderHistoryPhase.Committed, 44L);
 			malformed.EntityId += "foreign";
 			malformed.Normalize();
-			Assert.AreEqual(2, malformed.Version);
-			Assert.AreEqual(KingdomFounderHistoryPhase.Quarantined, malformed.Phase);
-			Assert.IsNotEmpty(malformed.Fault);
-			Assert.AreEqual("", malformed.EntityId,
+			ClassicAssert.AreEqual(2, malformed.Version);
+			ClassicAssert.AreEqual(KingdomFounderHistoryPhase.Quarantined, malformed.Phase);
+			ClassicAssert.IsNotEmpty(malformed.Fault);
+			ClassicAssert.AreEqual("", malformed.EntityId,
 				"unproved ids must not be retained as cleanup authority");
 			AssertValid(malformed);
 
@@ -168,8 +169,8 @@ namespace ThousandAndFirst.Tests
 			string futureProjection = future.ProjectionId;
 			future.Version = 99;
 			future.Normalize();
-			Assert.AreEqual(99, future.Version);
-			Assert.AreEqual(futureProjection, future.ProjectionId,
+			ClassicAssert.AreEqual(99, future.Version);
+			ClassicAssert.AreEqual(futureProjection, future.ProjectionId,
 				"unknown future fields must not be reinterpreted as schema 2");
 			AssertInvalid(future);
 		}
@@ -219,10 +220,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"[Obsolete(\"Schema-1 founder-history save compatibility only; "
 				+ "never create or register.\")]", model);
-			Assert.Greater(disableAt, -1);
-			Assert.Greater(identityAt, disableAt);
-			Assert.Greater(restoreAt, identityAt);
-			Assert.AreEqual(journal.IndexOf("r_KingdomFounderHistoryNote",
+			ClassicAssert.Greater(disableAt, -1);
+			ClassicAssert.Greater(identityAt, disableAt);
+			ClassicAssert.Greater(restoreAt, identityAt);
+			ClassicAssert.AreEqual(journal.IndexOf("r_KingdomFounderHistoryNote",
 				StringComparison.Ordinal), journal.LastIndexOf("r_KingdomFounderHistoryNote",
 				StringComparison.Ordinal));
 			StringAssert.Contains(
@@ -262,7 +263,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PhaseEnumRemainsAppendOnly()
 		{
-			Assert.AreEqual("0,1,2,3,4,5,6,7", JoinValues(
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7", JoinValues(
 				typeof(KingdomFounderHistoryPhase)));
 		}
 
@@ -270,7 +271,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFounderHistoryReceipt receipt;
 			string failure;
-			Assert.IsTrue(KingdomFounderHistoryRules.TryPrepare(Realm, SealBlob, 120L,
+			ClassicAssert.IsTrue(KingdomFounderHistoryRules.TryPrepare(Realm, SealBlob, 120L,
 				700L, 1001L, "Ari", "New Grit Gate", "the salt dunes", "was lost",
 				enabled, out receipt, out failure), failure);
 			return receipt;
@@ -303,14 +304,14 @@ namespace ThousandAndFirst.Tests
 		private static void AssertValid(KingdomFounderHistoryReceipt receipt)
 		{
 			string failure;
-			Assert.IsTrue(KingdomFounderHistoryRules.Validate(receipt, out failure), failure);
+			ClassicAssert.IsTrue(KingdomFounderHistoryRules.Validate(receipt, out failure), failure);
 		}
 
 		private static void AssertInvalid(KingdomFounderHistoryReceipt receipt)
 		{
 			string failure;
-			Assert.IsFalse(KingdomFounderHistoryRules.Validate(receipt, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomFounderHistoryRules.Validate(receipt, out failure));
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		private static string LocateDecompiledQud()

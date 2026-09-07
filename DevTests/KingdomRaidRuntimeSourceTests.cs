@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -49,9 +50,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, start);
+			ClassicAssert.GreaterOrEqual(at, 0, start);
 			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
-			Assert.Greater(until, at, end);
+			ClassicAssert.Greater(until, at, end);
 			return source.Substring(at, until - at);
 		}
 
@@ -80,10 +81,10 @@ namespace ThousandAndFirst.Tests
 				"public static void OnZoneActivated(");
 			string finder = Slice(source, "public static string FindProvokedFaction(",
 				"public static bool TryThreat(");
-			Assert.IsFalse(record.Contains("GetStanding"));
-			Assert.IsFalse(record.Contains("RaidStandingThreshold"));
-			Assert.IsFalse(finder.Contains("GetStanding"));
-			Assert.IsFalse(finder.Contains("Standings"));
+			ClassicAssert.IsFalse(record.Contains("GetStanding"));
+			ClassicAssert.IsFalse(record.Contains("RaidStandingThreshold"));
+			ClassicAssert.IsFalse(finder.Contains("GetStanding"));
+			ClassicAssert.IsFalse(finder.Contains("Standings"));
 			StringAssert.Contains("SourceConsumed(book.RaidLedger, sourceEventId)", record);
 			StringAssert.Contains("KingdomLifecycleAction.RaidWarning", record);
 			StringAssert.Contains("KingdomRaidIncidentRules.GrievanceId(sourceEventId)", record);
@@ -102,16 +103,16 @@ namespace ThousandAndFirst.Tests
 				"private static bool ResolveIncident(");
 			StringAssert.Contains("if (distance > 1) return;", step);
 			StringAssert.Contains("ProveObjectiveContact", step);
-			Assert.IsFalse(launch.Contains("ReserveExactWater"));
-			Assert.IsFalse(launch.Contains("ReserveExactStore"));
-			Assert.IsFalse(launch.Contains("PlunderProved ="));
+			ClassicAssert.IsFalse(launch.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(launch.Contains("ReserveExactStore"));
+			ClassicAssert.IsFalse(launch.Contains("PlunderProved ="));
 			StringAssert.Contains("string.Equals(op.Origin, targetId", contact);
 			StringAssert.Contains("target.CurrentCell.X != x", contact);
 			StringAssert.Contains("target.GetIntProperty(\"KingdomStores\") != 1", contact);
 			int reserve = contact.IndexOf("ReserveExactStore(survey, liquid, amount)", StringComparison.Ordinal);
 			int proof = contact.IndexOf("RaidRuntimeAdapter.BeginEffect", StringComparison.Ordinal);
-			Assert.Greater(reserve, 0);
-			Assert.Greater(proof, reserve);
+			ClassicAssert.Greater(reserve, 0);
+			ClassicAssert.Greater(proof, reserve);
 		}
 
 		[Test]
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("IsPassable(null, false)", ingress);
 			StringAssert.Contains("reachable[c.X, c.Y]", ingress);
 			StringAssert.Contains("c.X == 0 || c.X == zone.Width - 1", ingress);
-			Assert.IsFalse(ingress.Contains("zone.GetCell(1, 1)"),
+			ClassicAssert.IsFalse(ingress.Contains("zone.GetCell(1, 1)"),
 				"an unreachable interior fallback would sever physical contact causality");
 		}
 
@@ -183,9 +184,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("InspectOpenAttack(system, zone, op);", pending);
 			StringAssert.Contains("return;", pending);
 			int inspectZone = inspect.IndexOf("string.Equals(zone.ZoneID, op.ZoneId", StringComparison.Ordinal);
-			Assert.Greater(inspectZone, 0);
+			ClassicAssert.Greater(inspectZone, 0);
 			int empty = inspect.IndexOf("if (CountLiveRaiders(zone, op.Id) == 0", StringComparison.Ordinal);
-			Assert.Greater(empty, inspectZone);
+			ClassicAssert.Greater(empty, inspectZone);
 			string gone = inspect.Substring(empty);
 			StringAssert.Contains("SkipEffectWithoutContact", gone);
 			StringAssert.Contains("AdvancePhase(system.LifecycleBook, op", gone);
@@ -213,12 +214,12 @@ namespace ThousandAndFirst.Tests
 			int contactZone = contact.IndexOf(
 				"|| !string.Equals(zone.ZoneID, op.ZoneId, StringComparison.Ordinal)",
 				StringComparison.Ordinal);
-			Assert.Greater(contactZone, 0);
-			Assert.Greater(contact.IndexOf("FindExact(zone, targetId)", StringComparison.Ordinal),
+			ClassicAssert.Greater(contactZone, 0);
+			ClassicAssert.Greater(contact.IndexOf("FindExact(zone, targetId)", StringComparison.Ordinal),
 				contactZone);
 			foreach (string mutation in new[] { "ReserveExactStore(survey, liquid, amount)", "BeginEffect(",
 				"CommitEffect(", "AdvancePhase(", "ResumeOpen(" })
-				Assert.Greater(contact.IndexOf(mutation, StringComparison.Ordinal), contactZone,
+				ClassicAssert.Greater(contact.IndexOf(mutation, StringComparison.Ordinal), contactZone,
 					mutation + " must follow the exact zone guard");
 		}
 
@@ -258,8 +259,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int resolve = resume.IndexOf("ResolveIncident(system, result, plunder, notice)",
 				StringComparison.Ordinal);
-			Assert.Greater(retire, 0);
-			Assert.Greater(resolve, retire);
+			ClassicAssert.Greater(retire, 0);
+			ClassicAssert.Greater(resolve, retire);
 		}
 
 		[Test]
@@ -304,7 +305,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRaidProfiles.FreezePlan", record);
 			StringAssert.Contains("TryResolveFrozen", launch);
 			StringAssert.Contains("Blueprint(profile, frozenStage", launch);
-			Assert.IsFalse(launch.Contains("Blueprint(profile, system.Stage"));
+			ClassicAssert.IsFalse(launch.Contains("Blueprint(profile, system.Stage"));
 			StringAssert.Contains("Factions.GetIfExists(faction)", profiles);
 			StringAssert.Contains("GetBlueprintIfExists(value)", profiles);
 			StringAssert.Contains("blueprint.HasProperName()", profiles);
@@ -327,7 +328,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRaidIncidentRules.Active", raidWish);
 			StringAssert.Contains("remains only rumor: no demand has been delivered and no clock is running", raidWish);
 			StringAssert.Contains("incident.ChannelState", raidWish);
-			Assert.IsFalse(raidWish.Contains("system.RaidState = 1"));
+			ClassicAssert.IsFalse(raidWish.Contains("system.RaidState = 1"));
 		}
 
 		[Test]
@@ -356,8 +357,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Four answers appear", answerPass);
 			StringAssert.Contains("up-to-24-dram store stake", answerPass);
 			StringAssert.Contains("same incident becomes confrontation-ready", answerPass);
-			Assert.IsFalse(answerPass.Contains("Three exits offered"));
-			Assert.IsFalse(answerPass.Contains("demand has grown by half"));
+			ClassicAssert.IsFalse(answerPass.Contains("Three exits offered"));
+			ClassicAssert.IsFalse(answerPass.Contains("demand has grown by half"));
 		}
 
 		[Test]

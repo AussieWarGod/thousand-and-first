@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,9 +17,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, start);
+			ClassicAssert.GreaterOrEqual(at, 0, start);
 			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
-			Assert.Greater(until, at, end);
+			ClassicAssert.Greater(until, at, end);
 			return source.Substring(at, until - at);
 		}
 
@@ -28,7 +29,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -54,8 +55,8 @@ namespace ThousandAndFirst.Tests
 				"style must become paid form truth during preflight");
 			StringAssert.Contains("KingdomConstructionRoute.CommissionScaffold, cell, null, entry.Key, payload",
 				commission);
-			Assert.IsFalse(commission.Contains("PlaceHut"));
-			Assert.IsFalse(commission.Contains("ClearRect"));
+			ClassicAssert.IsFalse(commission.Contains("PlaceHut"));
+			ClassicAssert.IsFalse(commission.Contains("ClearRect"));
 		}
 
 		[Test]
@@ -73,10 +74,10 @@ namespace ThousandAndFirst.Tests
 				cellAudit);
 			StringAssert.Contains("!cell.IsPassable()", audit);
 			StringAssert.Contains("cell.HasObjectWithPart(\"LiquidVolume\")", audit);
-			Assert.IsFalse((audit + cellAudit).Contains("Destroy("));
-			Assert.IsFalse((audit + cellAudit).Contains("Obliterate("));
-			Assert.IsFalse((audit + cellAudit).Contains("AddObject("));
-			Assert.IsFalse((audit + cellAudit).Contains("Reserve"));
+			ClassicAssert.IsFalse((audit + cellAudit).Contains("Destroy("));
+			ClassicAssert.IsFalse((audit + cellAudit).Contains("Obliterate("));
+			ClassicAssert.IsFalse((audit + cellAudit).Contains("AddObject("));
+			ClassicAssert.IsFalse((audit + cellAudit).Contains("Reserve"));
 		}
 
 		[Test]
@@ -120,12 +121,12 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("CanClearCustody(", drive);
 			StringAssert.Contains("GetInventoryDirectAndEquipment()", source,
 				"duplicate identity proof must include equipped custody");
-			Assert.IsFalse(source.Contains("ClearRootReceipt"));
-			Assert.IsFalse(source.Contains("RemoveStringProperty(SatelliteIdProperty"));
-			Assert.IsFalse(source.Contains("RemoveIntProperty(SatelliteStateProperty"));
-			Assert.IsFalse(source.Contains("KingdomPlotPartProperty, 1"));
+			ClassicAssert.IsFalse(source.Contains("ClearRootReceipt"));
+			ClassicAssert.IsFalse(source.Contains("RemoveStringProperty(SatelliteIdProperty"));
+			ClassicAssert.IsFalse(source.Contains("RemoveIntProperty(SatelliteStateProperty"));
+			ClassicAssert.IsFalse(source.Contains("KingdomPlotPartProperty, 1"));
 			StringAssert.Contains("KingdomPlots.StampRect(Item", drive);
-			Assert.IsFalse(source.Contains("KingdomPlots.StampRect(Root"),
+			ClassicAssert.IsFalse(source.Contains("KingdomPlots.StampRect(Root"),
 				"the non-stakeable Door root must not masquerade as a plot");
 		}
 
@@ -215,12 +216,12 @@ namespace ThousandAndFirst.Tests
 				"public GameObject SatelliteCustody4;",
 				"public GameObject SatelliteCustody5;",
 				"internal GameObject ProjectionCustody(int Index)");
-			Assert.AreEqual(6, v2.Split(new[] { "public GameObject SatelliteCustody" },
+			ClassicAssert.AreEqual(6, v2.Split(new[] { "public GameObject SatelliteCustody" },
 				StringSplitOptions.None).Length - 1);
 			string pendingV1 = source.Substring(source.IndexOf(
 				"public sealed class r_KingdomGatehouseProjectionV1Pending : IPart",
 				StringComparison.Ordinal));
-			Assert.AreEqual(6, pendingV1.Split(new[]
+			ClassicAssert.AreEqual(6, pendingV1.Split(new[]
 			{
 				"public GameObject SatelliteCustody"
 			}, StringSplitOptions.None).Length - 1);
@@ -239,15 +240,15 @@ namespace ThousandAndFirst.Tests
 				"private static bool ProjectionPartMatches(");
 			StringAssert.Contains("Root.AddPart(staged)", attachV2);
 			StringAssert.Contains("Root.AddPart(staged)", attachV1);
-			Assert.AreEqual(1, source.Split(new[]
+			ClassicAssert.AreEqual(1, source.Split(new[]
 			{
 				"public sealed class r_KingdomGatehouse : IPart"
 			}, StringSplitOptions.None).Length - 1);
-			Assert.AreEqual(1, source.Split(new[]
+			ClassicAssert.AreEqual(1, source.Split(new[]
 			{
 				"public sealed class r_KingdomGatehouseProjectionV2 : IPart"
 			}, StringSplitOptions.None).Length - 1);
-			Assert.AreEqual(1, source.Split(new[]
+			ClassicAssert.AreEqual(1, source.Split(new[]
 			{
 				"public sealed class r_KingdomGatehouseProjectionV1Pending : IPart"
 			}, StringSplitOptions.None).Length - 1);
@@ -311,7 +312,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Plan.WallBlueprint : Plan.WatchBlueprint", rules);
 			StringAssert.Contains("Index < 4 ? StoneBlueprint : WatchBlueprint", rules);
 			StringAssert.Contains("KnownForm(Plan.FormKey", rules);
-			Assert.IsFalse(rules.Contains("r_KingdomFirstBasin"));
+			ClassicAssert.IsFalse(rules.Contains("r_KingdomFirstBasin"));
 		}
 
 		[Test]

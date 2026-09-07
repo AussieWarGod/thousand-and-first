@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Simulation.City;
 
@@ -60,9 +61,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int handoff = porters.IndexOf("Handoff(system, Part.JobId", close,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(final, 0);
-			Assert.Greater(close, final);
-			Assert.Greater(handoff, close);
+			ClassicAssert.GreaterOrEqual(final, 0);
+			ClassicAssert.Greater(close, final);
+			ClassicAssert.Greater(handoff, close);
 			int method = porters.IndexOf("private static void Handoff(", StringComparison.Ordinal);
 			int nextMethod = porters.IndexOf("\n\t\tprivate static", method + 1,
 				StringComparison.Ordinal);
@@ -70,11 +71,11 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int remove = porters.IndexOf("body.Obliterate()", method,
 				StringComparison.Ordinal);
-			Assert.Greater(nextMethod, method);
-			Assert.Greater(unbind, method);
-			Assert.Greater(remove, unbind,
+			ClassicAssert.Greater(nextMethod, method);
+			ClassicAssert.Greater(unbind, method);
+			ClassicAssert.Greater(remove, unbind,
 				"a failed registry publication must leave the visible body repairable");
-			Assert.Less(remove, nextMethod,
+			ClassicAssert.Less(remove, nextMethod,
 				"handoff proof must not borrow a removal from another method");
 		}
 
@@ -90,19 +91,19 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ConstructionInputMoveKeepsFrozenGoalWhileOtherCargoReprojects()
 		{
-			Assert.IsFalse(KingdomPorterRouteRules.ReprojectsOnMove(
+			ClassicAssert.IsFalse(KingdomPorterRouteRules.ReprojectsOnMove(
 				KingdomDeliveryCargoAuthority.ConstructionInput));
-			Assert.IsTrue(KingdomPorterRouteRules.ReprojectsOnMove(
+			ClassicAssert.IsTrue(KingdomPorterRouteRules.ReprojectsOnMove(
 				KingdomDeliveryCargoAuthority.ScalarStock));
-			Assert.IsTrue(KingdomPorterRouteRules.ReprojectsOnMove(
+			ClassicAssert.IsTrue(KingdomPorterRouteRules.ReprojectsOnMove(
 				KingdomDeliveryCargoAuthority.CarryBookManifest));
 
 			string porters = KingdomPortersLogicalSource.Read();
 			int place = porters.IndexOf("private static void Place(", StringComparison.Ordinal);
 			int reprojectMethod = porters.IndexOf("private static void Reproject(", place,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(place, 0);
-			Assert.Greater(reprojectMethod, place);
+			ClassicAssert.GreaterOrEqual(place, 0);
+			ClassicAssert.Greater(reprojectMethod, place);
 			string placeBody = porters.Substring(place, reprojectMethod - place);
 			int policy = placeBody.IndexOf(
 				"if (!KingdomPorterRouteRules.ReprojectsOnMove(row.DeliveryCargoAuthority))",
@@ -111,13 +112,13 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int ordinary = placeBody.IndexOf("Reproject(System, Z, row, fix, TimeTicks, bindingId);",
 				keep, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(policy, 0);
-			Assert.Greater(keep, policy);
-			Assert.Greater(ordinary, keep);
+			ClassicAssert.GreaterOrEqual(policy, 0);
+			ClassicAssert.Greater(keep, policy);
+			ClassicAssert.Greater(ordinary, keep);
 
 			int keeper = porters.IndexOf("private static void KeepExactGoal(", place,
 				StringComparison.Ordinal);
-			Assert.Greater(keeper, place);
+			ClassicAssert.Greater(keeper, place);
 			string keeperBody = porters.Substring(keeper, reprojectMethod - keeper);
 			StringAssert.Contains("brain.Wake();", keeperBody);
 			StringAssert.Contains("Cell moving = brain.MovingTo();", keeperBody);
@@ -128,8 +129,8 @@ namespace ThousandAndFirst.Tests
 			int defensivePolicy = porters.IndexOf(
 				"if (!KingdomPorterRouteRules.ReprojectsOnMove(row.DeliveryCargoAuthority))",
 				reprojectMethod, StringComparison.Ordinal);
-			Assert.Greater(defensivePolicy, reprojectMethod);
-			Assert.Greater(mutation, defensivePolicy,
+			ClassicAssert.Greater(defensivePolicy, reprojectMethod);
+			ClassicAssert.Greater(mutation, defensivePolicy,
 				"authority-2 must fail closed before any itinerary mutation");
 		}
 

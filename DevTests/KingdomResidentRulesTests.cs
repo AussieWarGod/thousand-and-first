@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using System.Collections.Generic;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
@@ -35,11 +36,11 @@ namespace ThousandAndFirst.Tests
 			AssertEnum(typeof(KingdomAccessionCarrierState),
 				new[] { "Original", "Committed", "CityAdvanced", "BindingAdvanced", "Unknown" },
 				new byte[] { 0, 1, 2, 3, 4 });
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBodyWitness", typeof(KingdomBodyWitness).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentTally", typeof(KingdomResidentTally).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentRollProjection", typeof(KingdomResidentRollProjection).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionOutcome", typeof(KingdomAccessionOutcome).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionCarrierState", typeof(KingdomAccessionCarrierState).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBodyWitness", typeof(KingdomBodyWitness).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentTally", typeof(KingdomResidentTally).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomResidentRollProjection", typeof(KingdomResidentRollProjection).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionOutcome", typeof(KingdomAccessionOutcome).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomAccessionCarrierState", typeof(KingdomAccessionCarrierState).FullName);
 
 			AssertFields(typeof(KingdomResidentTally), true,
 				new[] { "Resident", "Abroad", "Dead" },
@@ -51,33 +52,33 @@ namespace ThousandAndFirst.Tests
 				new[] { true, true, true, true, false, false });
 
 			KingdomResidentTally tally = new KingdomResidentTally(2, 3, 4);
-			Assert.AreEqual(5, tally.OnTheRoll);
+			ClassicAssert.AreEqual(5, tally.OnTheRoll);
 			KingdomResidentRollProjection projection = new KingdomResidentRollProjection();
-			Assert.AreEqual(0, projection.ResidentIds.Count);
-			Assert.AreEqual(0, projection.Names.Count);
-			Assert.AreEqual(0, projection.Origins.Count);
-			Assert.AreEqual(0, projection.Arrived.Count);
-			Assert.AreEqual(0, projection.Population);
-			Assert.AreEqual(0, projection.Labour);
+			ClassicAssert.AreEqual(0, projection.ResidentIds.Count);
+			ClassicAssert.AreEqual(0, projection.Names.Count);
+			ClassicAssert.AreEqual(0, projection.Origins.Count);
+			ClassicAssert.AreEqual(0, projection.Arrived.Count);
+			ClassicAssert.AreEqual(0, projection.Population);
+			ClassicAssert.AreEqual(0, projection.Labour);
 		}
 
 		[Test]
 		public void LogicalSourceKeepsOneOrderedResidentAuthority()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(5, Count(source, "internal static partial class KingdomResidentRules"));
-			Assert.AreEqual(1, Count(source, "internal enum KingdomBodyWitness : byte"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomResidentTally"));
-			Assert.AreEqual(1, Count(source, "internal sealed class KingdomResidentRollProjection"));
-			Assert.AreEqual(1, Count(source, "internal enum KingdomAccessionOutcome : byte"));
-			Assert.AreEqual(1, Count(source, "internal enum KingdomAccessionCarrierState : byte"));
-			Assert.Less(source.IndexOf("internal static bool SameCity", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(5, Count(source, "internal static partial class KingdomResidentRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomBodyWitness : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomResidentTally"));
+			ClassicAssert.AreEqual(1, Count(source, "internal sealed class KingdomResidentRollProjection"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomAccessionOutcome : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomAccessionCarrierState : byte"));
+			ClassicAssert.Less(source.IndexOf("internal static bool SameCity", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryProject", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryProject", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryProject", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryTransition", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryTransition", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryTransition", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryTally", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryTally", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryTally", StringComparison.Ordinal),
 				source.IndexOf("internal static KingdomDayShape DayShapeFor", StringComparison.Ordinal));
 		}
 
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 			bool cityAdvanced, bool bindingOriginal, bool bindingAdvanced,
 			KingdomAccessionCarrierState expected)
 		{
-			Assert.AreEqual(expected, KingdomResidentRules.AccessionCarriers(cityOriginal,
+			ClassicAssert.AreEqual(expected, KingdomResidentRules.AccessionCarriers(cityOriginal,
 				cityAdvanced, bindingOriginal, bindingAdvanced));
 		}
 
@@ -105,14 +106,14 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState original = City(new[] { work }, new[] { resident });
 			KingdomCityState advanced;
 			KingdomCityFault fault;
-			Assert.IsTrue(original.TryWithResidents(new KingdomResidentRow[0], out advanced,
+			ClassicAssert.IsTrue(original.TryWithResidents(new KingdomResidentRow[0], out advanced,
 				out fault), fault.ToString());
 			KingdomCityState torn = City(new KingdomWorkRow[0], new[] { resident });
 
-			Assert.IsFalse(KingdomResidentRules.SameCity(torn, original),
+			ClassicAssert.IsFalse(KingdomResidentRules.SameCity(torn, original),
 				"matching resident rows cannot hide a torn work column");
-			Assert.IsFalse(KingdomResidentRules.SameCity(torn, advanced));
-			Assert.AreEqual(KingdomAccessionCarrierState.Unknown,
+			ClassicAssert.IsFalse(KingdomResidentRules.SameCity(torn, advanced));
+			ClassicAssert.AreEqual(KingdomAccessionCarrierState.Unknown,
 				KingdomResidentRules.AccessionCarriers(
 					KingdomResidentRules.SameCity(torn, original),
 					KingdomResidentRules.SameCity(torn, advanced), true, false));
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, default(KingdomStocks), null, null, rows, null, out state, out fault), fault.ToString());
 			return state;
 		}
@@ -146,7 +147,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion,
 				KingdomCityRules.RulesVersion, "taf:city:kavvat", 900L,
 				default(KingdomStocks), null, works, residents, null, out state, out fault),
 				fault.ToString());
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < ids.Length; i++)
 			{
 				KingdomBindingTable next;
-				Assert.IsTrue(table.TryBind(ids[i], KingdomBindingKind.Resident, Here, "obj-" + ids[i], 700L, out next, out fault), fault.ToString());
+				ClassicAssert.IsTrue(table.TryBind(ids[i], KingdomBindingKind.Resident, Here, "obj-" + ids[i], 700L, out next, out fault), fault.ToString());
 				table = next;
 			}
 			return table;
@@ -180,10 +181,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+			ClassicAssert.IsTrue(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None),
 				witness, cause, out next, out fault), fault.ToString());
-			Assert.AreEqual(expected, next.Standing);
-			Assert.AreEqual(cause, next.Cause);
+			ClassicAssert.AreEqual(expected, next.Standing);
+			ClassicAssert.AreEqual(cause, next.Cause);
 		}
 
 		/// <summary>A person who was away and is standing here again is home, and not partly away:
@@ -193,10 +194,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Abroad, KingdomStandingCause.Followed),
+			ClassicAssert.IsTrue(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Abroad, KingdomStandingCause.Followed),
 				KingdomBodyWitness.Present, KingdomStandingCause.None, out next, out fault));
-			Assert.AreEqual(KingdomResidentStanding.Resident, next.Standing);
-			Assert.AreEqual(KingdomStandingCause.None, next.Cause);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Resident, next.Standing);
+			ClassicAssert.AreEqual(KingdomStandingCause.None, next.Cause);
 		}
 
 		/// <summary>
@@ -213,10 +214,10 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow dead = Settler(7, KingdomResidentStanding.Dead, KingdomStandingCause.Founder);
 			KingdomResidentRow next;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomResidentRules.TryTransition(dead, witness, KingdomStandingCause.Raid, out next, out fault));
-			Assert.AreEqual(KingdomCityFault.TerminalStanding, fault);
-			Assert.AreEqual(KingdomResidentStanding.Dead, next.Standing);
-			Assert.AreEqual(KingdomStandingCause.Founder, next.Cause, "a refused transition leaves the row byte-identical");
+			ClassicAssert.IsFalse(KingdomResidentRules.TryTransition(dead, witness, KingdomStandingCause.Raid, out next, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.TerminalStanding, fault);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Dead, next.Standing);
+			ClassicAssert.AreEqual(KingdomStandingCause.Founder, next.Cause, "a refused transition leaves the row byte-identical");
 		}
 
 		/// <summary>A death with no cause is refused rather than stored as an absence or as
@@ -229,10 +230,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow next;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None),
+			ClassicAssert.IsFalse(KingdomResidentRules.TryTransition(Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None),
 				KingdomBodyWitness.Killed, cause, out next, out fault));
-			Assert.AreEqual(KingdomCityFault.CauseRequired, fault);
-			Assert.AreEqual(KingdomResidentStanding.Resident, next.Standing);
+			ClassicAssert.AreEqual(KingdomCityFault.CauseRequired, fault);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Resident, next.Standing);
 		}
 
 		/// <summary>Every cause belongs to exactly one standing's family. A row that said a living
@@ -250,7 +251,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomResidentStanding.Abroad, KingdomStandingCause.None, false)]
 		public void ACauseOnlyFitsItsOwnStanding(KingdomResidentStanding standing, KingdomStandingCause cause, bool fits)
 		{
-			Assert.AreEqual(fits, KingdomResidentRules.CauseFits(standing, cause));
+			ClassicAssert.AreEqual(fits, KingdomResidentRules.CauseFits(standing, cause));
 		}
 
 		/// <summary>
@@ -265,9 +266,9 @@ namespace ThousandAndFirst.Tests
 		public void ADeathCauseTellsItselfThroughTheSurfaceTheCityAlreadyHas(KingdomStandingCause cause, KingdomOfficeRules.DeathCause expected)
 		{
 			int ordinal;
-			Assert.IsTrue(KingdomResidentRules.TryDeathCauseOrdinal(cause, out ordinal));
-			Assert.AreEqual((int)expected, ordinal);
-			Assert.AreEqual(KingdomOfficeRules.CauseClause(expected), KingdomOfficeRules.CauseClause((KingdomOfficeRules.DeathCause)ordinal));
+			ClassicAssert.IsTrue(KingdomResidentRules.TryDeathCauseOrdinal(cause, out ordinal));
+			ClassicAssert.AreEqual((int)expected, ordinal);
+			ClassicAssert.AreEqual(KingdomOfficeRules.CauseClause(expected), KingdomOfficeRules.CauseClause((KingdomOfficeRules.DeathCause)ordinal));
 		}
 
 		/// <summary>An absence has no clause on a cairn, and inventing one would put a living person
@@ -279,8 +280,8 @@ namespace ThousandAndFirst.Tests
 		public void AnAbsenceHasNoDeathClause(KingdomStandingCause cause)
 		{
 			int ordinal;
-			Assert.IsFalse(KingdomResidentRules.TryDeathCauseOrdinal(cause, out ordinal));
-			Assert.AreEqual(0, ordinal);
+			ClassicAssert.IsFalse(KingdomResidentRules.TryDeathCauseOrdinal(cause, out ordinal));
+			ClassicAssert.AreEqual(0, ordinal);
 		}
 
 		/// <summary>§8.3: a body the player took away is still on the roll and contributes no
@@ -294,9 +295,9 @@ namespace ThousandAndFirst.Tests
 				? KingdomStandingCause.Unwitnessed
 				: ((standing == KingdomResidentStanding.Abroad) ? KingdomStandingCause.Followed : KingdomStandingCause.None);
 			KingdomResidentRow row = Settler(7, standing, cause);
-			Assert.AreEqual(labours, KingdomResidentRules.Labours(row));
-			Assert.AreEqual(onTheRoll, KingdomResidentRules.OnTheRoll(row));
-			Assert.AreEqual(labours, KingdomResidentRules.Bindable(standing), "only a resident has a body bound in this city's ground");
+			ClassicAssert.AreEqual(labours, KingdomResidentRules.Labours(row));
+			ClassicAssert.AreEqual(onTheRoll, KingdomResidentRules.OnTheRoll(row));
+			ClassicAssert.AreEqual(labours, KingdomResidentRules.Bindable(standing), "only a resident has a body bound in this city's ground");
 		}
 
 		/// <summary>One place decides which of the registry's causes a standing means, so the row
@@ -306,7 +307,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomResidentStanding.Resident, KingdomUnbindCause.None)]
 		public void AStandingNamesItsOwnUnbinding(KingdomResidentStanding standing, KingdomUnbindCause expected)
 		{
-			Assert.AreEqual(expected, KingdomResidentRules.UnbindFor(standing));
+			ClassicAssert.AreEqual(expected, KingdomResidentRules.UnbindFor(standing));
 		}
 
 		// ---- The roll and the registry -------------------------------------------------------
@@ -320,11 +321,11 @@ namespace ThousandAndFirst.Tests
 				Settler(3, KingdomResidentStanding.Abroad, KingdomStandingCause.Followed),
 				Settler(4, KingdomResidentStanding.Dead, KingdomStandingCause.Raid));
 			KingdomResidentTally tally;
-			Assert.IsTrue(KingdomResidentRules.TryTally(state, out tally));
-			Assert.AreEqual(2, tally.Resident);
-			Assert.AreEqual(1, tally.Abroad);
-			Assert.AreEqual(1, tally.Dead);
-			Assert.AreEqual(3, tally.OnTheRoll, "the dead are off the roll and the abroad are on it");
+			ClassicAssert.IsTrue(KingdomResidentRules.TryTally(state, out tally));
+			ClassicAssert.AreEqual(2, tally.Resident);
+			ClassicAssert.AreEqual(1, tally.Abroad);
+			ClassicAssert.AreEqual(1, tally.Dead);
+			ClassicAssert.AreEqual(3, tally.OnTheRoll, "the dead are off the roll and the abroad are on it");
 		}
 
 		/// <summary>
@@ -340,8 +341,8 @@ namespace ThousandAndFirst.Tests
 				Settler(3, KingdomResidentStanding.Dead, KingdomStandingCause.Founder));
 			KingdomResidentTally tally;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomResidentRules.TryReconcile(state, BoundTo(1), out tally, out fault), fault.ToString());
-			Assert.AreEqual(3, tally.Resident + tally.Abroad + tally.Dead);
+			ClassicAssert.IsTrue(KingdomResidentRules.TryReconcile(state, BoundTo(1), out tally, out fault), fault.ToString());
+			ClassicAssert.AreEqual(3, tally.Resident + tally.Abroad + tally.Dead);
 		}
 
 		/// <summary>A resident the registry has no body for is a person the city thinks is working
@@ -352,8 +353,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Book(Settler(1, KingdomResidentStanding.Resident, KingdomStandingCause.None));
 			KingdomResidentTally tally;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomResidentRules.TryReconcile(state, KingdomBindingTable.Empty, out tally, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.IsFalse(KingdomResidentRules.TryReconcile(state, KingdomBindingTable.Empty, out tally, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
 		}
 
 		/// <summary>A dead row the registry still holds a body for is a corpse the registry will go
@@ -364,8 +365,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Book(Settler(1, KingdomResidentStanding.Dead, KingdomStandingCause.Violence));
 			KingdomResidentTally tally;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomResidentRules.TryReconcile(state, BoundTo(1), out tally, out fault));
-			Assert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
+			ClassicAssert.IsFalse(KingdomResidentRules.TryReconcile(state, BoundTo(1), out tally, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
 		}
 
 		/// <summary>The registry is realm-scope and the roll is one city's, so a key the OTHER city
@@ -377,7 +378,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Book(Settler(1, KingdomResidentStanding.Resident, KingdomStandingCause.None));
 			KingdomResidentTally tally;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomResidentRules.TryReconcile(state, BoundTo(1, 55, 56), out tally, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomResidentRules.TryReconcile(state, BoundTo(1, 55, 56), out tally, out fault), fault.ToString());
 		}
 
 		/// <summary>The roster is written in one copy-on-write publish, and a roster that would seat
@@ -388,13 +389,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Book();
 			KingdomCityState next;
 			KingdomCityFault fault;
-			Assert.IsFalse(state.TryWithResidents(new KingdomResidentRow[2]
+			ClassicAssert.IsFalse(state.TryWithResidents(new KingdomResidentRow[2]
 			{
 				Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None),
 				Settler(7, KingdomResidentStanding.Abroad, KingdomStandingCause.Followed)
 			}, out next, out fault));
-			Assert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
-			Assert.IsNull(next);
+			ClassicAssert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
+			ClassicAssert.IsNull(next);
 		}
 
 		[Test]
@@ -404,10 +405,10 @@ namespace ThousandAndFirst.Tests
 				Settler(4, KingdomResidentStanding.Resident, KingdomStandingCause.None),
 				Settler(9, KingdomResidentStanding.Resident, KingdomStandingCause.None));
 			int index;
-			Assert.IsTrue(state.TryResidentIndex(9, out index));
-			Assert.AreEqual(1, index);
-			Assert.IsFalse(state.TryResidentIndex(5, out index));
-			Assert.AreEqual(-1, index);
+			ClassicAssert.IsTrue(state.TryResidentIndex(9, out index));
+			ClassicAssert.AreEqual(1, index);
+			ClassicAssert.IsFalse(state.TryResidentIndex(5, out index));
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		// ---- The brink windows the property bag used to hold ---------------------------------
@@ -421,17 +422,17 @@ namespace ThousandAndFirst.Tests
 		public void ARowHoldsAllThreeBrinkStatesApart()
 		{
 			KingdomResidentRow row = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None);
-			Assert.IsFalse(row.BrinkOf(BrinkKind.Roof).Stands);
+			ClassicAssert.IsFalse(row.BrinkOf(BrinkKind.Roof).Stands);
 
 			KingdomResidentRow recorded = row.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true, 900L, KingdomBrinkRules.Unwarned), null, 0);
-			Assert.IsTrue(recorded.BrinkOf(BrinkKind.Roof).Stands);
-			Assert.AreEqual(900L, recorded.BrinkOf(BrinkKind.Roof).ReachedTick);
-			Assert.IsFalse(KingdomBrinkRules.Warned(recorded.BrinkOf(BrinkKind.Roof).WarnedTick),
+			ClassicAssert.IsTrue(recorded.BrinkOf(BrinkKind.Roof).Stands);
+			ClassicAssert.AreEqual(900L, recorded.BrinkOf(BrinkKind.Roof).ReachedTick);
+			ClassicAssert.IsFalse(KingdomBrinkRules.Warned(recorded.BrinkOf(BrinkKind.Roof).WarnedTick),
 				"a recorded brink nobody has been told about has no deadline");
 
 			KingdomResidentRow warned = recorded.WithBrink(BrinkKind.Roof, recorded.BrinkOf(BrinkKind.Roof).WithWarned(1000L), null, 0);
-			Assert.IsTrue(KingdomBrinkRules.Warned(warned.BrinkOf(BrinkKind.Roof).WarnedTick));
-			Assert.AreEqual(900L, warned.BrinkOf(BrinkKind.Roof).ReachedTick, "warning somebody must not redate their loss");
+			ClassicAssert.IsTrue(KingdomBrinkRules.Warned(warned.BrinkOf(BrinkKind.Roof).WarnedTick));
+			ClassicAssert.AreEqual(900L, warned.BrinkOf(BrinkKind.Roof).ReachedTick, "warning somebody must not redate their loss");
 		}
 
 		/// <summary>The window the row carries is the one KingdomBrinkRules runs on, unchanged: the
@@ -443,8 +444,8 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow row = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None)
 				.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true, 900L, warnedAt), null, 0);
 			long expiry = KingdomBrinkRules.ExpiryTick(BrinkKind.Roof, row.BrinkOf(BrinkKind.Roof).WarnedTick);
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, row.BrinkOf(BrinkKind.Roof).WarnedTick, expiry - 1L));
-			Assert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, row.BrinkOf(BrinkKind.Roof).WarnedTick, expiry));
+			ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, row.BrinkOf(BrinkKind.Roof).WarnedTick, expiry - 1L));
+			ClassicAssert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, row.BrinkOf(BrinkKind.Roof).WarnedTick, expiry));
 		}
 
 		/// <summary>The two brinks are separate windows on one row: recording a creed brink cannot
@@ -455,14 +456,14 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow row = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None)
 				.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true, 900L, 1000L), null, 0)
 				.WithBrink(BrinkKind.Creed, new KingdomBrinkWindow(true, 950L, 1100L), "Mechanimists", 2);
-			Assert.AreEqual(1000L, row.BrinkOf(BrinkKind.Roof).WarnedTick);
-			Assert.AreEqual(1100L, row.BrinkOf(BrinkKind.Creed).WarnedTick);
-			Assert.AreEqual("Mechanimists", row.CreedToward);
-			Assert.AreEqual(2, row.CreedChannel);
+			ClassicAssert.AreEqual(1000L, row.BrinkOf(BrinkKind.Roof).WarnedTick);
+			ClassicAssert.AreEqual(1100L, row.BrinkOf(BrinkKind.Creed).WarnedTick);
+			ClassicAssert.AreEqual("Mechanimists", row.CreedToward);
+			ClassicAssert.AreEqual(2, row.CreedChannel);
 
 			KingdomResidentRow lifted = row.WithBrink(BrinkKind.Creed, KingdomBrinkWindow.None, null, 0);
-			Assert.IsTrue(lifted.BrinkOf(BrinkKind.Roof).Stands, "lifting a creed brink must not lift a roof brink");
-			Assert.IsFalse(lifted.BrinkOf(BrinkKind.Creed).Stands);
+			ClassicAssert.IsTrue(lifted.BrinkOf(BrinkKind.Roof).Stands, "lifting a creed brink must not lift a roof brink");
+			ClassicAssert.IsFalse(lifted.BrinkOf(BrinkKind.Creed).Stands);
 		}
 
 		/// <summary>A lifted brink is forgotten rather than banked, creed and all: if the cause
@@ -474,10 +475,10 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow lifted = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None)
 				.WithBrink(BrinkKind.Creed, new KingdomBrinkWindow(true, 950L, 1100L), "Mechanimists", 2)
 				.WithBrink(BrinkKind.Creed, KingdomBrinkWindow.None, "Mechanimists", 2);
-			Assert.IsNull(lifted.CreedToward);
-			Assert.AreEqual(0, lifted.CreedChannel);
-			Assert.AreEqual(0L, lifted.BrinkOf(BrinkKind.Creed).ReachedTick);
-			Assert.AreEqual(KingdomBrinkRules.Unwarned, lifted.BrinkOf(BrinkKind.Creed).WarnedTick);
+			ClassicAssert.IsNull(lifted.CreedToward);
+			ClassicAssert.AreEqual(0, lifted.CreedChannel);
+			ClassicAssert.AreEqual(0L, lifted.BrinkOf(BrinkKind.Creed).ReachedTick);
+			ClassicAssert.AreEqual(KingdomBrinkRules.Unwarned, lifted.BrinkOf(BrinkKind.Creed).WarnedTick);
 		}
 
 		/// <summary>A roof brink can never acquire a creed, however a caller asks: the creed travels
@@ -487,8 +488,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow row = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None)
 				.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true, 900L, 1000L), "Mechanimists", 2);
-			Assert.IsNull(row.CreedToward);
-			Assert.AreEqual(0, row.CreedChannel);
+			ClassicAssert.IsNull(row.CreedToward);
+			ClassicAssert.AreEqual(0, row.CreedChannel);
 		}
 
 		/// <summary>The realm's own brink is not a settler's, and a row is asked about it honestly
@@ -498,9 +499,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentRow row = Settler(7, KingdomResidentStanding.Resident, KingdomStandingCause.None)
 				.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true, 900L, 1000L), null, 0);
-			Assert.IsFalse(row.BrinkOf(BrinkKind.City).Stands);
-			Assert.AreSame(row.Name, row.WithBrink(BrinkKind.City, new KingdomBrinkWindow(true, 1L, 2L), null, 0).Name);
-			Assert.IsTrue(row.WithBrink(BrinkKind.City, KingdomBrinkWindow.None, null, 0).BrinkOf(BrinkKind.Roof).Stands,
+			ClassicAssert.IsFalse(row.BrinkOf(BrinkKind.City).Stands);
+			ClassicAssert.AreSame(row.Name, row.WithBrink(BrinkKind.City, new KingdomBrinkWindow(true, 1L, 2L), null, 0).Name);
+			ClassicAssert.IsTrue(row.WithBrink(BrinkKind.City, KingdomBrinkWindow.None, null, 0).BrinkOf(BrinkKind.Roof).Stands,
 				"a kind the row has no window for must leave the row alone");
 		}
 
@@ -518,7 +519,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(11, KingdomWorkKind.Other, KingdomDayShape.Hearth)]
 		public void TheDayShapeIsDerivedFromThePostAndNeverAuthored(int jobWorkId, KingdomWorkKind kind, KingdomDayShape expected)
 		{
-			Assert.AreEqual(expected, KingdomResidentRules.DayShapeFor(jobWorkId, kind));
+			ClassicAssert.AreEqual(expected, KingdomResidentRules.DayShapeFor(jobWorkId, kind));
 		}
 
 		// ---- Origins -------------------------------------------------------------------------
@@ -532,8 +533,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomRules.Origins.Length; i++)
 			{
 				int code = KingdomResidentRules.OriginCode(KingdomRules.Origins[i]);
-				Assert.AreNotEqual(KingdomResidentRules.NoOrigin, code, KingdomRules.Origins[i] + " has no code");
-				Assert.AreEqual(KingdomRules.Origins[i], KingdomResidentRules.OriginKey(code));
+				ClassicAssert.AreNotEqual(KingdomResidentRules.NoOrigin, code, KingdomRules.Origins[i] + " has no code");
+				ClassicAssert.AreEqual(KingdomRules.Origins[i], KingdomResidentRules.OriginKey(code));
 			}
 		}
 
@@ -542,8 +543,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("the moon")]
 		public void AnUnknownOriginIsNoOriginRatherThanTheFirstOne(string origin)
 		{
-			Assert.AreEqual(KingdomResidentRules.NoOrigin, KingdomResidentRules.OriginCode(origin));
-			Assert.IsNull(KingdomResidentRules.OriginKey(KingdomResidentRules.NoOrigin));
+			ClassicAssert.AreEqual(KingdomResidentRules.NoOrigin, KingdomResidentRules.OriginCode(origin));
+			ClassicAssert.IsNull(KingdomResidentRules.OriginKey(KingdomResidentRules.NoOrigin));
 		}
 
 		[TestCase(-1)]
@@ -551,7 +552,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(9999)]
 		public void ACodeOutsideTheRegistryNamesNothing(int code)
 		{
-			Assert.IsNull(KingdomResidentRules.OriginKey(code));
+			ClassicAssert.IsNull(KingdomResidentRules.OriginKey(code));
 		}
 
 		[Test]
@@ -559,11 +560,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentTally tally;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomResidentRules.TryTally(null, out tally));
-			Assert.IsFalse(KingdomResidentRules.TryReconcile(null, KingdomBindingTable.Empty, out tally, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomResidentRules.TryReconcile(Book(), null, out tally, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomResidentRules.TryTally(null, out tally));
+			ClassicAssert.IsFalse(KingdomResidentRules.TryReconcile(null, KingdomBindingTable.Empty, out tally, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomResidentRules.TryReconcile(Book(), null, out tally, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 
 		/// <summary>Crew is an exact resident-row join: same job, same bound ground, and labouring
@@ -583,13 +584,13 @@ namespace ThousandAndFirst.Tests
 				Posted(7, Here, 11, KingdomResidentStanding.Expedition,
 					KingdomStandingCause.None));
 
-			Assert.AreEqual(2, KingdomResidentRules.CrewAssigned(city, Here, 11));
-			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, Here, 12));
-			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, there, 11));
-			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 99));
-			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(null, Here, 11));
-			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, null, 11));
-			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 0));
+			ClassicAssert.AreEqual(2, KingdomResidentRules.CrewAssigned(city, Here, 11));
+			ClassicAssert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, Here, 12));
+			ClassicAssert.AreEqual(1, KingdomResidentRules.CrewAssigned(city, there, 11));
+			ClassicAssert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 99));
+			ClassicAssert.AreEqual(0, KingdomResidentRules.CrewAssigned(null, Here, 11));
+			ClassicAssert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, null, 11));
+			ClassicAssert.AreEqual(0, KingdomResidentRules.CrewAssigned(city, Here, 0));
 		}
 
 		/// <summary>The count survives the real save carrier and follows the currently selected
@@ -600,20 +601,20 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook oldSeat = new KingdomCityBook();
 			KingdomCityBook newSeat = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(oldSeat.TryPublish(Book(
+			ClassicAssert.IsTrue(oldSeat.TryPublish(Book(
 				Posted(1, Here, 11, KingdomResidentStanding.Resident,
 					KingdomStandingCause.None)), out fault), fault.ToString());
-			Assert.IsTrue(newSeat.TryPublish(Book(
+			ClassicAssert.IsTrue(newSeat.TryPublish(Book(
 				Posted(2, Here, 22, KingdomResidentStanding.Resident,
 					KingdomStandingCause.None)), out fault), fault.ToString());
 
 			KingdomCityState oldReloaded;
 			KingdomCityState newReloaded;
-			Assert.IsTrue(oldSeat.TryRead(out oldReloaded, out fault), fault.ToString());
-			Assert.IsTrue(newSeat.TryRead(out newReloaded, out fault), fault.ToString());
-			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(oldReloaded, Here, 11));
-			Assert.AreEqual(0, KingdomResidentRules.CrewAssigned(newReloaded, Here, 11));
-			Assert.AreEqual(1, KingdomResidentRules.CrewAssigned(newReloaded, Here, 22));
+			ClassicAssert.IsTrue(oldSeat.TryRead(out oldReloaded, out fault), fault.ToString());
+			ClassicAssert.IsTrue(newSeat.TryRead(out newReloaded, out fault), fault.ToString());
+			ClassicAssert.AreEqual(1, KingdomResidentRules.CrewAssigned(oldReloaded, Here, 11));
+			ClassicAssert.AreEqual(0, KingdomResidentRules.CrewAssigned(newReloaded, Here, 11));
+			ClassicAssert.AreEqual(1, KingdomResidentRules.CrewAssigned(newReloaded, Here, 22));
 		}
 
 		[Test]
@@ -631,9 +632,9 @@ namespace ThousandAndFirst.Tests
 				KingdomStandingCause.Unwitnessed);
 			KingdomResidentRollProjection roll;
 
-			Assert.IsTrue(KingdomResidentRules.TryProject(Book(resident, abroad, dead), out roll));
-			Assert.AreEqual(2, roll.Population);
-			Assert.AreEqual(1, roll.Labour);
+			ClassicAssert.IsTrue(KingdomResidentRules.TryProject(Book(resident, abroad, dead), out roll));
+			ClassicAssert.AreEqual(2, roll.Population);
+			ClassicAssert.AreEqual(1, roll.Labour);
 			CollectionAssert.AreEqual(new[] { 1, 2 }, roll.ResidentIds);
 			CollectionAssert.AreEqual(new[] { "Ari", "Bex" }, roll.Names);
 			CollectionAssert.AreEqual(new[] { "the moon", "the road" }, roll.Origins);
@@ -647,27 +648,27 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState adopted;
 			KingdomCityFault fault;
 			int counter;
-			Assert.IsTrue(KingdomResidentRules.TryAdoptLegacy(Book(),
+			ClassicAssert.IsTrue(KingdomResidentRules.TryAdoptLegacy(Book(),
 				new List<string> { "Ari", "Bex" },
 				new List<string> { "salt", "the moon" },
 				new List<string> { "one", "two" }, 40, out adopted, out counter, out fault),
 				fault.ToString());
-			Assert.AreEqual(42, counter);
+			ClassicAssert.AreEqual(42, counter);
 			KingdomResidentRollProjection roll;
-			Assert.IsTrue(KingdomResidentRules.TryProject(adopted, out roll));
-			Assert.AreEqual(2, roll.Population);
-			Assert.AreEqual(0, roll.Labour, "migration cannot fabricate bodies or labour");
+			ClassicAssert.IsTrue(KingdomResidentRules.TryProject(adopted, out roll));
+			ClassicAssert.AreEqual(2, roll.Population);
+			ClassicAssert.AreEqual(0, roll.Labour, "migration cannot fabricate bodies or labour");
 			CollectionAssert.AreEqual(new[] { 41, 42 }, roll.ResidentIds);
 			CollectionAssert.AreEqual(new[] { "salt", "the moon" }, roll.Origins);
 			CollectionAssert.AreEqual(new[] { "one", "two" }, roll.Arrived);
 
 			KingdomCityState second;
 			int secondCounter;
-			Assert.IsTrue(KingdomResidentRules.TryAdoptLegacy(adopted,
+			ClassicAssert.IsTrue(KingdomResidentRules.TryAdoptLegacy(adopted,
 				new List<string> { "duplicate" }, new List<string> { "road" },
 				new List<string> { "later" }, counter, out second, out secondCounter, out fault));
-			Assert.AreSame(adopted, second);
-			Assert.AreEqual(counter, secondCounter);
+			ClassicAssert.AreSame(adopted, second);
+			ClassicAssert.AreEqual(counter, secondCounter);
 		}
 
 		[Test]
@@ -676,11 +677,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState next;
 			KingdomCityFault fault;
 			int counter;
-			Assert.IsFalse(KingdomResidentRules.TryAdoptLegacy(Book(),
+			ClassicAssert.IsFalse(KingdomResidentRules.TryAdoptLegacy(Book(),
 				new List<string> { "Ari", "unresolved" }, new List<string> { "salt" },
 				new List<string> { "one" }, 8, out next, out counter, out fault));
-			Assert.IsNull(next);
-			Assert.AreEqual(8, counter);
+			ClassicAssert.IsNull(next);
+			ClassicAssert.AreEqual(8, counter);
 		}
 
 		[Test]
@@ -698,17 +699,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState next;
 			KingdomResidentRow removed;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomResidentRules.TryRemove(original, 2, out next, out removed,
+			ClassicAssert.IsTrue(KingdomResidentRules.TryRemove(original, 2, out next, out removed,
 				out fault), fault.ToString());
-			Assert.AreEqual(2, removed.ResidentId);
-			Assert.IsTrue(next.TryResident(0, out KingdomResidentRow kept));
-			Assert.AreEqual(1, kept.ResidentId);
+			ClassicAssert.AreEqual(2, removed.ResidentId);
+			ClassicAssert.IsTrue(next.TryResident(0, out KingdomResidentRow kept));
+			ClassicAssert.AreEqual(1, kept.ResidentId);
 		}
 
 		private static void AssertEnum(Type type, string[] names, byte[] values)
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
-			Assert.IsFalse(type.IsPublic, type.FullName);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			ClassicAssert.IsFalse(type.IsPublic, type.FullName);
 			CollectionAssert.AreEqual(names, Enum.GetNames(type), type.FullName);
 			Array raw = Enum.GetValues(type);
 			byte[] actual = new byte[raw.Length];
@@ -719,14 +720,14 @@ namespace ThousandAndFirst.Tests
 		private static void AssertFields(Type type, bool valueType, string[] names, Type[] types,
 			bool[] readonlyFields)
 		{
-			Assert.IsFalse(type.IsPublic, type.FullName);
-			Assert.AreEqual(valueType, type.IsValueType, type.FullName);
+			ClassicAssert.IsFalse(type.IsPublic, type.FullName);
+			ClassicAssert.AreEqual(valueType, type.IsValueType, type.FullName);
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
 			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.FullName);
 			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.FullName);
 			CollectionAssert.AreEqual(readonlyFields, Array.ConvertAll(fields, field => field.IsInitOnly), type.FullName);
-			foreach (FieldInfo field in fields) Assert.IsTrue(field.IsAssembly, type.FullName + "." + field.Name);
+			foreach (FieldInfo field in fields) ClassicAssert.IsTrue(field.IsAssembly, type.FullName + "." + field.Name);
 		}
 
 		private static string LogicalSource()

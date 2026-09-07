@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 using ThousandAndFirst.Simulation.Kernel;
 
@@ -50,7 +51,7 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomLeg[] legs;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 3, Start, KingdomItineraryRules.WalkTicksPerCellDefault, out legs, out fault));
+			ClassicAssert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 3, Start, KingdomItineraryRules.WalkTicksPerCellDefault, out legs, out fault));
 			return new KingdomJobRow(7, KingdomJobKind.Delivery, KingdomStockKind.Food, cargo, Westward, Here,
 				Start, KingdomItineraryRules.WalkTicksPerCellDefault, KingdomJobStatus.Open, 1, 0, legs, 3);
 		}
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomItineraryFix fix;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryAt(job.Legs(), job.LegCount, tick, out fix, out fault), "tick " + tick);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryAt(job.Legs(), job.LegCount, tick, out fix, out fault), "tick " + tick);
 			return fix;
 		}
 
@@ -116,32 +117,32 @@ namespace ThousandAndFirst.Tests
 			KingdomJobRow job = Delivery(9);
 			KingdomLeg inbound;
 			KingdomLeg outbound;
-			Assert.IsTrue(job.TryLeg(0, out inbound));
-			Assert.IsTrue(job.TryLeg(1, out outbound));
+			ClassicAssert.IsTrue(job.TryLeg(0, out inbound));
+			ClassicAssert.IsTrue(job.TryLeg(1, out outbound));
 
 			KingdomItineraryFix arriving = At(job, Start);
-			Assert.AreEqual(Here, arriving.ZoneId, "the carrier is minted in the ground the founder is standing in");
-			Assert.AreEqual(EntryX, arriving.X);
-			Assert.AreEqual(EntryY, arriving.Y);
-			Assert.AreEqual(KingdomItineraryPhase.EnRoute, arriving.Phase);
-			Assert.AreEqual(9, KingdomJobRules.CargoAt(job, arriving), "they walk in holding the whole load");
+			ClassicAssert.AreEqual(Here, arriving.ZoneId, "the carrier is minted in the ground the founder is standing in");
+			ClassicAssert.AreEqual(EntryX, arriving.X);
+			ClassicAssert.AreEqual(EntryY, arriving.Y);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.EnRoute, arriving.Phase);
+			ClassicAssert.AreEqual(9, KingdomJobRules.CargoAt(job, arriving), "they walk in holding the whole load");
 
 			KingdomItineraryFix justBefore = At(job, inbound.ArriveTick - 1L);
-			Assert.AreEqual(9, KingdomJobRules.CargoAt(job, justBefore));
-			Assert.IsFalse(KingdomJobRules.Deposited(job, inbound.ArriveTick - 1L));
+			ClassicAssert.AreEqual(9, KingdomJobRules.CargoAt(job, justBefore));
+			ClassicAssert.IsFalse(KingdomJobRules.Deposited(job, inbound.ArriveTick - 1L));
 
-			Assert.IsTrue(KingdomJobRules.Deposited(job, inbound.ArriveTick), "the load lands at the end of the deposit leg");
+			ClassicAssert.IsTrue(KingdomJobRules.Deposited(job, inbound.ArriveTick), "the load lands at the end of the deposit leg");
 			KingdomItineraryFix leaving = At(job, inbound.ArriveTick);
-			Assert.AreEqual(0, KingdomJobRules.CargoAt(job, leaving), "and never twice");
-			Assert.AreEqual(0, KingdomJobRules.CargoAt(job, At(job, outbound.ArriveTick - 1L)));
-			Assert.AreEqual(0, KingdomJobRules.CargoAt(job, At(job, outbound.ArriveTick)));
+			ClassicAssert.AreEqual(0, KingdomJobRules.CargoAt(job, leaving), "and never twice");
+			ClassicAssert.AreEqual(0, KingdomJobRules.CargoAt(job, At(job, outbound.ArriveTick - 1L)));
+			ClassicAssert.AreEqual(0, KingdomJobRules.CargoAt(job, At(job, outbound.ArriveTick)));
 
 			// They leave by the edge they came in by. The road home is the road they walked, so the
 			// exit cell is not a second choice and needs no second draw.
-			Assert.AreEqual(inbound.EnterX, outbound.ExitX);
-			Assert.AreEqual(inbound.EnterY, outbound.ExitY);
-			Assert.AreEqual(inbound.ExitX, outbound.EnterX);
-			Assert.AreEqual(inbound.ExitY, outbound.EnterY);
+			ClassicAssert.AreEqual(inbound.EnterX, outbound.ExitX);
+			ClassicAssert.AreEqual(inbound.EnterY, outbound.ExitY);
+			ClassicAssert.AreEqual(inbound.ExitX, outbound.EnterX);
+			ClassicAssert.AreEqual(inbound.ExitY, outbound.EnterY);
 		}
 
 		/// <summary>
@@ -162,41 +163,41 @@ namespace ThousandAndFirst.Tests
 			KingdomJobRow job = Delivery(9);
 			KingdomLeg home;
 			KingdomLeg onward;
-			Assert.IsTrue(job.TryLeg(1, out home));
-			Assert.IsTrue(job.TryLeg(2, out onward));
+			ClassicAssert.IsTrue(job.TryLeg(1, out home));
+			ClassicAssert.IsTrue(job.TryLeg(2, out onward));
 
 			// The engine's own connection: leaving by the west wall arrives on the east wall of the
 			// zone west of here, on the same row.
-			Assert.AreEqual(KingdomJobRules.ZoneWidth - 1, onward.EnterX);
-			Assert.AreEqual(home.ExitY, onward.EnterY);
-			Assert.AreEqual(Westward, onward.ZoneId);
-			Assert.AreEqual(home.ArriveTick, onward.DepartTick, "contiguous: there is no tick at which the carrier is nowhere");
+			ClassicAssert.AreEqual(KingdomJobRules.ZoneWidth - 1, onward.EnterX);
+			ClassicAssert.AreEqual(home.ExitY, onward.EnterY);
+			ClassicAssert.AreEqual(Westward, onward.ZoneId);
+			ClassicAssert.AreEqual(home.ArriveTick, onward.DepartTick, "contiguous: there is no tick at which the carrier is nowhere");
 
 			// Cross fast and they are right at the edge.
 			KingdomItineraryFix quick = At(job, onward.DepartTick);
-			Assert.AreEqual(Westward, quick.ZoneId);
-			Assert.AreEqual(onward.EnterX, quick.X);
-			Assert.AreEqual(0, quick.StepsTaken);
+			ClassicAssert.AreEqual(Westward, quick.ZoneId);
+			ClassicAssert.AreEqual(onward.EnterX, quick.X);
+			ClassicAssert.AreEqual(0, quick.StepsTaken);
 
 			// Cross a few turns later and they are a cell or two along — never at the far wall.
 			KingdomItineraryFix beside = At(job, onward.DepartTick + 3L);
-			Assert.AreEqual(Westward, beside.ZoneId);
-			Assert.AreEqual(KingdomItineraryPhase.EnRoute, beside.Phase);
-			Assert.IsTrue(beside.X < onward.EnterX, "they have moved off the boundary");
-			Assert.IsTrue(onward.EnterX - beside.X <= 3, "a cell or two along, not a teleport");
-			Assert.IsTrue(beside.X > onward.ExitX, "and nowhere near the far wall");
+			ClassicAssert.AreEqual(Westward, beside.ZoneId);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.EnRoute, beside.Phase);
+			ClassicAssert.IsTrue(beside.X < onward.EnterX, "they have moved off the boundary");
+			ClassicAssert.IsTrue(onward.EnterX - beside.X <= 3, "a cell or two along, not a teleport");
+			ClassicAssert.IsTrue(beside.X > onward.ExitX, "and nowhere near the far wall");
 
 			// Dawdle and they are further on. Monotone, so following one never rubber-bands.
 			KingdomItineraryFix dawdled = At(job, onward.DepartTick + 20L);
-			Assert.IsTrue(dawdled.X < beside.X);
-			Assert.IsTrue(dawdled.StepsTaken > beside.StepsTaken);
+			ClassicAssert.IsTrue(dawdled.X < beside.X);
+			ClassicAssert.IsTrue(dawdled.StepsTaken > beside.StepsTaken);
 
 			// And every tick of the journey has exactly one answer, in exactly one zone.
 			for (long tick = Start; tick <= onward.ArriveTick; tick++)
 			{
 				KingdomItineraryFix fix = At(job, tick);
-				Assert.IsTrue(fix.ZoneId == Here || fix.ZoneId == Westward);
-				Assert.AreNotEqual(KingdomItineraryPhase.Pending, fix.Phase);
+				ClassicAssert.IsTrue(fix.ZoneId == Here || fix.ZoneId == Westward);
+				ClassicAssert.AreNotEqual(KingdomItineraryPhase.Pending, fix.Phase);
 			}
 		}
 
@@ -218,10 +219,10 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomLeg[] legs;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 1, Start, 1, out legs, out fault));
-			Assert.AreEqual(40 * KingdomItineraryRules.SinuosityBuiltPercent / 100, legs[0].PathLength);
-			Assert.AreEqual(Start, legs[0].DepartTick);
-			Assert.AreEqual(Start + legs[0].PathLength, legs[0].ArriveTick);
+			ClassicAssert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 1, Start, 1, out legs, out fault));
+			ClassicAssert.AreEqual(40 * KingdomItineraryRules.SinuosityBuiltPercent / 100, legs[0].PathLength);
+			ClassicAssert.AreEqual(Start, legs[0].DepartTick);
+			ClassicAssert.AreEqual(Start + legs[0].PathLength, legs[0].ArriveTick);
 		}
 
 		/// <summary>
@@ -237,10 +238,10 @@ namespace ThousandAndFirst.Tests
 			KingdomLeg[] slow;
 			KingdomLeg[] fast;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryBuildLegs(new KingdomLegPlan[1] { plain }, 1, Start, 1, out slow, out fault));
-			Assert.IsTrue(KingdomJobRules.TryBuildLegs(new KingdomLegPlan[1] { paved }, 1, Start, 1, out fast, out fault));
-			Assert.IsTrue(fast[0].PathLength < slow[0].PathLength);
-			Assert.IsTrue(fast[0].ArriveTick < slow[0].ArriveTick);
+			ClassicAssert.IsTrue(KingdomJobRules.TryBuildLegs(new KingdomLegPlan[1] { plain }, 1, Start, 1, out slow, out fault));
+			ClassicAssert.IsTrue(KingdomJobRules.TryBuildLegs(new KingdomLegPlan[1] { paved }, 1, Start, 1, out fast, out fault));
+			ClassicAssert.IsTrue(fast[0].PathLength < slow[0].PathLength);
+			ClassicAssert.IsTrue(fast[0].ArriveTick < slow[0].ArriveTick);
 		}
 
 		/// <summary>A carrier that arrives on the tick it departs has not walked. Zero cells still
@@ -251,9 +252,9 @@ namespace ThousandAndFirst.Tests
 			KingdomLegPlan[] plans = new KingdomLegPlan[1] { new KingdomLegPlan(Here, 5, 5, 5, 5, 125, 100) };
 			KingdomLeg[] legs;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 1, Start, 1, out legs, out fault));
-			Assert.AreEqual(0, legs[0].PathLength);
-			Assert.AreEqual(Start + 1L, legs[0].ArriveTick);
+			ClassicAssert.IsTrue(KingdomJobRules.TryBuildLegs(plans, 1, Start, 1, out legs, out fault));
+			ClassicAssert.AreEqual(0, legs[0].PathLength);
+			ClassicAssert.AreEqual(Start + 1L, legs[0].ArriveTick);
 		}
 
 		/// <summary>
@@ -270,9 +271,9 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomLeg[] legs;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomJobRules.TryBuildLegs(plans, plans.Length, Start, 1, out legs, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
-			Assert.IsNull(legs, "a refusal publishes nothing");
+			ClassicAssert.IsFalse(KingdomJobRules.TryBuildLegs(plans, plans.Length, Start, 1, out legs, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.IsNull(legs, "a refusal publishes nothing");
 		}
 
 		/// <summary>The level-1 path is frozen whole: both endpoints and every ground crossed between
@@ -290,19 +291,19 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomZoneGraph graph;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
+			ClassicAssert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
 				KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
 			int[] path;
 			int count;
-			Assert.IsTrue(KingdomJobRules.TryPorterPath(graph, "destination", "source",
+			ClassicAssert.IsTrue(KingdomJobRules.TryPorterPath(graph, "destination", "source",
 				out path, out count, out fault));
-			Assert.AreEqual(4, count);
-			Assert.AreEqual(5, count + 1, "one inbound destination leg plus one leg for every path node");
+			ClassicAssert.AreEqual(4, count);
+			ClassicAssert.AreEqual(5, count + 1, "one inbound destination leg plus one leg for every path node");
 			for (int i = 0; i < count; i++)
 			{
 				KingdomZoneNode node;
-				Assert.IsTrue(graph.TryNode(path[i], out node));
-				Assert.AreEqual(nodes[i].ZoneId, node.ZoneId, "path node " + i);
+				ClassicAssert.IsTrue(graph.TryNode(path[i], out node));
+				ClassicAssert.AreEqual(nodes[i].ZoneId, node.ZoneId, "path node " + i);
 			}
 		}
 
@@ -319,15 +320,15 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomZoneGraph graph;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
+			ClassicAssert.IsTrue(KingdomZoneGraph.TryBuild(nodes, nodes.Length,
 				KingdomDistanceRules.ZoneTransitCells, out graph, out fault));
 			int[] path;
 			int count;
-			Assert.IsFalse(KingdomJobRules.TryPorterPath(graph, "z0", "z5",
+			ClassicAssert.IsFalse(KingdomJobRules.TryPorterPath(graph, "z0", "z5",
 				out path, out count, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
-			Assert.IsNull(path, "a refusal publishes no shortened path");
-			Assert.AreEqual(0, count);
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.IsNull(path, "a refusal publishes no shortened path");
+			ClassicAssert.AreEqual(0, count);
 		}
 
 		/// <summary>Every mirrored cell lands on the opposite wall of the same row or column, which
@@ -341,8 +342,8 @@ namespace ThousandAndFirst.Tests
 			short mx;
 			short my;
 			KingdomJobRules.Mirror(x, y, edge, KingdomJobRules.ZoneWidth, KingdomJobRules.ZoneHeight, out mx, out my);
-			Assert.AreEqual(expectedX, mx);
-			Assert.AreEqual(expectedY, my);
+			ClassicAssert.AreEqual(expectedX, mx);
+			ClassicAssert.AreEqual(expectedY, my);
 		}
 
 		/// <summary>
@@ -353,17 +354,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheEntryEdgeIsAFactAndNeverADraw()
 		{
-			Assert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.0.1.10"));
-			Assert.AreEqual(KingdomZoneStep.East, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.2.1.10"));
-			Assert.AreEqual(KingdomZoneStep.North, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.0.10"));
-			Assert.AreEqual(KingdomZoneStep.South, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.2.10"));
-			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.9.22.1.1.10"));
-			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", null));
-			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("nonsense", "JoppaWorld.11.22.0.1.10"));
-			Assert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11"));
+			ClassicAssert.AreEqual(KingdomZoneStep.West, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.0.1.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.East, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.2.1.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.North, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.0.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.South, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.2.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.9.22.1.1.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", null));
+			ClassicAssert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("nonsense", "JoppaWorld.11.22.0.1.10"));
+			ClassicAssert.AreEqual(KingdomZoneStep.None, KingdomJobRules.EdgeToward("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11"));
 			short mirrorX;
 			short mirrorY;
-			Assert.IsFalse(KingdomJobRules.TryMirror(12, 7, KingdomZoneStep.Up, 80, 25,
+			ClassicAssert.IsFalse(KingdomJobRules.TryMirror(12, 7, KingdomZoneStep.Up, 80, 25,
 				out mirrorX, out mirrorY), "a shaft uses its authored cell, never a mirrored wall");
 		}
 
@@ -388,14 +389,14 @@ namespace ThousandAndFirst.Tests
 			int firstOrigin;
 			int againOrigin;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 7, KingdomZoneStep.West, 80, 25, out firstX, out firstY, out fault));
-			Assert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 7, KingdomZoneStep.West, 80, 25, out againX, out againY, out fault));
-			Assert.AreEqual(firstX, againX);
-			Assert.AreEqual(firstY, againY);
-			Assert.IsTrue(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 7, 6, out firstOrigin, out fault));
-			Assert.IsTrue(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 7, 6, out againOrigin, out fault));
-			Assert.AreEqual(firstOrigin, againOrigin);
-			Assert.IsTrue(firstOrigin >= 1 && firstOrigin <= 6);
+			ClassicAssert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 7, KingdomZoneStep.West, 80, 25, out firstX, out firstY, out fault));
+			ClassicAssert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 7, KingdomZoneStep.West, 80, 25, out againX, out againY, out fault));
+			ClassicAssert.AreEqual(firstX, againX);
+			ClassicAssert.AreEqual(firstY, againY);
+			ClassicAssert.IsTrue(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 7, 6, out firstOrigin, out fault));
+			ClassicAssert.IsTrue(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 7, 6, out againOrigin, out fault));
+			ClassicAssert.AreEqual(firstOrigin, againOrigin);
+			ClassicAssert.IsTrue(firstOrigin >= 1 && firstOrigin <= 6);
 		}
 
 		/// <summary>
@@ -408,9 +409,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelSeed128 one = new KernelSeed128(1UL, 2UL);
 			KernelSeed128 other = new KernelSeed128(3UL, 4UL);
-			Assert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(one, "taf:settlement:kavvat", 8));
-			Assert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(one, "taf:settlement:ubuk", 7));
-			Assert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(other, "taf:settlement:kavvat", 7));
+			ClassicAssert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(one, "taf:settlement:kavvat", 8));
+			ClassicAssert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(one, "taf:settlement:ubuk", 7));
+			ClassicAssert.AreNotEqual(EntryCell(one, "taf:settlement:kavvat", 7), EntryCell(other, "taf:settlement:kavvat", 7));
 		}
 
 		private static int EntryCell(KernelSeed128 seed, string city, int jobId)
@@ -418,7 +419,7 @@ namespace ThousandAndFirst.Tests
 			short x;
 			short y;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, city, jobId, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
+			ClassicAssert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, city, jobId, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
 			return x * 1000 + y;
 		}
 
@@ -433,12 +434,12 @@ namespace ThousandAndFirst.Tests
 			{
 				short x;
 				short y;
-				Assert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", job, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
-				Assert.AreEqual(0, x);
-				Assert.IsTrue(y > 0 && y < 24, "job " + job + " drew a corner");
-				Assert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", job, KingdomZoneStep.North, 80, 25, out x, out y, out fault));
-				Assert.AreEqual(0, y);
-				Assert.IsTrue(x > 0 && x < 79, "job " + job + " drew a corner");
+				ClassicAssert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", job, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
+				ClassicAssert.AreEqual(0, x);
+				ClassicAssert.IsTrue(y > 0 && y < 24, "job " + job + " drew a corner");
+				ClassicAssert.IsTrue(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", job, KingdomZoneStep.North, 80, 25, out x, out y, out fault));
+				ClassicAssert.AreEqual(0, y);
+				ClassicAssert.IsTrue(x > 0 && x < 79, "job " + job + " drew a corner");
 			}
 		}
 
@@ -452,12 +453,12 @@ namespace ThousandAndFirst.Tests
 			short y;
 			int origin;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 0, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
-			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.West, 2, 25, out x, out y, out fault));
-			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.None, 80, 25, out x, out y, out fault));
-			Assert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.Down, 80, 25, out x, out y, out fault));
-			Assert.IsFalse(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 1, 0, out origin, out fault));
-			Assert.AreEqual(KingdomResidentRules.NoOrigin, origin);
+			ClassicAssert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 0, KingdomZoneStep.West, 80, 25, out x, out y, out fault));
+			ClassicAssert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.West, 2, 25, out x, out y, out fault));
+			ClassicAssert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.None, 80, 25, out x, out y, out fault));
+			ClassicAssert.IsFalse(KingdomJobRules.TryDrawEntryCell(seed, "taf:settlement:kavvat", 1, KingdomZoneStep.Down, 80, 25, out x, out y, out fault));
+			ClassicAssert.IsFalse(KingdomJobRules.TryDrawOrigin(seed, "taf:settlement:kavvat", 1, 0, out origin, out fault));
+			ClassicAssert.AreEqual(KingdomResidentRules.NoOrigin, origin);
 		}
 
 		// ==================================================================================
@@ -475,16 +476,16 @@ namespace ThousandAndFirst.Tests
 			KingdomJobTable next;
 			KingdomJobRow closed;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
-			Assert.IsTrue(table.TryOpen(Delivery(4), out next, out fault));
-			Assert.AreEqual(1, next.Count);
-			Assert.IsTrue(next.Holds(7));
-			Assert.IsTrue(next.TryClose(7, out table, out closed, out fault));
-			Assert.AreEqual(0, table.Count);
-			Assert.IsFalse(table.Holds(7));
-			Assert.AreEqual(4, closed.CargoAmount, "the eviction hands back what the carrier was holding");
-			Assert.IsFalse(table.TryClose(7, out next, out closed, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
+			ClassicAssert.IsTrue(table.TryOpen(Delivery(4), out next, out fault));
+			ClassicAssert.AreEqual(1, next.Count);
+			ClassicAssert.IsTrue(next.Holds(7));
+			ClassicAssert.IsTrue(next.TryClose(7, out table, out closed, out fault));
+			ClassicAssert.AreEqual(0, table.Count);
+			ClassicAssert.IsFalse(table.Holds(7));
+			ClassicAssert.AreEqual(4, closed.CargoAmount, "the eviction hands back what the carrier was holding");
+			ClassicAssert.IsFalse(table.TryClose(7, out next, out closed, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
 		}
 
 		/// <summary>Copy-on-write: opening, replacing and closing publish a new table and leave the
@@ -496,20 +497,20 @@ namespace ThousandAndFirst.Tests
 			KingdomJobTable opened;
 			KingdomJobTable again;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
-			Assert.IsTrue(table.TryOpen(Delivery(4), out opened, out fault));
-			Assert.AreEqual(0, table.Count, "the original table did not change");
-			Assert.IsFalse(opened.TryOpen(Delivery(4), out again, out fault), "one job id, one job");
-			Assert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
-			Assert.IsNull(again);
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
+			ClassicAssert.IsTrue(table.TryOpen(Delivery(4), out opened, out fault));
+			ClassicAssert.AreEqual(0, table.Count, "the original table did not change");
+			ClassicAssert.IsFalse(opened.TryOpen(Delivery(4), out again, out fault), "one job id, one job");
+			ClassicAssert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
+			ClassicAssert.IsNull(again);
 
 			KingdomJobRow landed = Delivery(4).WithCargoLanded();
-			Assert.IsTrue(opened.TryReplace(landed, out again, out fault));
+			ClassicAssert.IsTrue(opened.TryReplace(landed, out again, out fault));
 			KingdomJobRow read;
-			Assert.IsTrue(again.TryGet(7, out read));
-			Assert.AreEqual(0, read.CargoAmount);
-			Assert.IsTrue(opened.TryGet(7, out read));
-			Assert.AreEqual(4, read.CargoAmount, "the table it was derived from is untouched");
+			ClassicAssert.IsTrue(again.TryGet(7, out read));
+			ClassicAssert.AreEqual(0, read.CargoAmount);
+			ClassicAssert.IsTrue(opened.TryGet(7, out read));
+			ClassicAssert.AreEqual(4, read.CargoAmount, "the table it was derived from is untouched");
 		}
 
 		/// <summary>§3.8 caps open jobs at sixteen, realm-wide, and the cap is a refusal rather than
@@ -518,7 +519,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SixteenOpenJobsIsTheRealmsCeiling()
 		{
-			Assert.AreEqual(16, KingdomJobRules.MaxOpenJobs);
+			ClassicAssert.AreEqual(16, KingdomJobRules.MaxOpenJobs);
 			KingdomJobRow[] rows = new KingdomJobRow[KingdomJobRules.MaxOpenJobs + 1];
 			for (int i = 0; i < rows.Length; i++)
 			{
@@ -527,8 +528,8 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomJobTable.TryCreate(rows, out table, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(rows, out table, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
 		}
 
 		/// <summary>A porter is two reify units — one body mint and one container fill — out of the
@@ -536,9 +537,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void APorterIsTwoUnitsOfTheOrdinaryBudget()
 		{
-			Assert.AreEqual(2, KingdomJobRules.PorterUnits);
-			Assert.IsTrue(KingdomJobRules.PorterUnits <= KingdomBudgetRules.ReifyUnitsPerTurn);
-			Assert.IsTrue(KingdomJobRules.PorterUnits <= KingdomBudgetRules.ReifyHeavyMintsPerTurn + 1);
+			ClassicAssert.AreEqual(2, KingdomJobRules.PorterUnits);
+			ClassicAssert.IsTrue(KingdomJobRules.PorterUnits <= KingdomBudgetRules.ReifyUnitsPerTurn);
+			ClassicAssert.IsTrue(KingdomJobRules.PorterUnits <= KingdomBudgetRules.ReifyHeavyMintsPerTurn + 1);
 		}
 
 		// ==================================================================================
@@ -555,31 +556,31 @@ namespace ThousandAndFirst.Tests
 			KingdomJobTable table;
 			KingdomJobTable opened;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
-			Assert.IsTrue(table.TryOpen(Delivery(5), out opened, out fault));
-			Assert.IsTrue(registry.TryPublish(opened, out fault));
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new KingdomJobRow[0], out table, out fault));
+			ClassicAssert.IsTrue(table.TryOpen(Delivery(5), out opened, out fault));
+			ClassicAssert.IsTrue(registry.TryPublish(opened, out fault));
 
 			KingdomJobTable read;
-			Assert.IsTrue(registry.TryRead(out read, out fault));
-			Assert.AreEqual(1, read.Count);
+			ClassicAssert.IsTrue(registry.TryRead(out read, out fault));
+			ClassicAssert.AreEqual(1, read.Count);
 			KingdomJobRow row;
-			Assert.IsTrue(read.TryGet(7, out row));
-			Assert.AreEqual(3, row.LegCount);
-			Assert.AreEqual(5, row.CargoAmount);
-			Assert.AreEqual(Westward, row.SourceZoneId);
-			Assert.AreEqual(Here, row.DestZoneId);
+			ClassicAssert.IsTrue(read.TryGet(7, out row));
+			ClassicAssert.AreEqual(3, row.LegCount);
+			ClassicAssert.AreEqual(5, row.CargoAmount);
+			ClassicAssert.AreEqual(Westward, row.SourceZoneId);
+			ClassicAssert.AreEqual(Here, row.DestZoneId);
 			for (int i = 0; i < 3; i++)
 			{
 				KingdomLeg before;
 				KingdomLeg after;
-				Assert.IsTrue(Delivery(5).TryLeg(i, out before));
-				Assert.IsTrue(row.TryLeg(i, out after));
-				Assert.AreEqual(before.ZoneId, after.ZoneId);
-				Assert.AreEqual(before.EnterX, after.EnterX);
-				Assert.AreEqual(before.ExitY, after.ExitY);
-				Assert.AreEqual(before.PathLength, after.PathLength);
-				Assert.AreEqual(before.DepartTick, after.DepartTick);
-				Assert.AreEqual(before.ArriveTick, after.ArriveTick);
+				ClassicAssert.IsTrue(Delivery(5).TryLeg(i, out before));
+				ClassicAssert.IsTrue(row.TryLeg(i, out after));
+				ClassicAssert.AreEqual(before.ZoneId, after.ZoneId);
+				ClassicAssert.AreEqual(before.EnterX, after.EnterX);
+				ClassicAssert.AreEqual(before.ExitY, after.ExitY);
+				ClassicAssert.AreEqual(before.PathLength, after.PathLength);
+				ClassicAssert.AreEqual(before.DepartTick, after.DepartTick);
+				ClassicAssert.AreEqual(before.ArriveTick, after.ArriveTick);
 			}
 		}
 
@@ -590,10 +591,10 @@ namespace ThousandAndFirst.Tests
 		public void JobIdsAreMintedInOrderAndNeverReused()
 		{
 			KingdomJobRegistry registry = new KingdomJobRegistry();
-			Assert.AreEqual(1, registry.MintJobId());
-			Assert.AreEqual(2, registry.MintJobId());
-			Assert.AreEqual(3, registry.MintJobId());
-			Assert.AreEqual(3, registry.JobCounter);
+			ClassicAssert.AreEqual(1, registry.MintJobId());
+			ClassicAssert.AreEqual(2, registry.MintJobId());
+			ClassicAssert.AreEqual(3, registry.MintJobId());
+			ClassicAssert.AreEqual(3, registry.JobCounter);
 		}
 
 		/// <summary>
@@ -640,16 +641,16 @@ namespace ThousandAndFirst.Tests
 			registry.LegArriveTicks.Add(Start + 4L);
 
 			registry.Normalize();
-			Assert.AreEqual(1, registry.Count, "the job whose legs were missing is gone whole");
-			Assert.AreEqual(1, registry.JobIds[0]);
-			Assert.AreEqual(1, registry.LegZoneIds.Count);
+			ClassicAssert.AreEqual(1, registry.Count, "the job whose legs were missing is gone whole");
+			ClassicAssert.AreEqual(1, registry.JobIds[0]);
+			ClassicAssert.AreEqual(1, registry.LegZoneIds.Count);
 
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault));
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault));
 			KingdomJobRow row;
-			Assert.IsTrue(table.TryGet(1, out row));
-			Assert.AreEqual(1, row.LegCount);
+			ClassicAssert.IsTrue(table.TryGet(1, out row));
+			ClassicAssert.AreEqual(1, row.LegCount);
 		}
 
 		/// <summary>A registry that came back holding one job id twice is a registry that can put
@@ -674,8 +675,8 @@ namespace ThousandAndFirst.Tests
 				registry.LegCounts.Add(0);
 			}
 			registry.Normalize();
-			Assert.AreEqual(1, registry.Count);
-			Assert.AreEqual(1, registry.CargoAmounts[0], "the first row wins because it is the one every earlier session answered with");
+			ClassicAssert.AreEqual(1, registry.Count);
+			ClassicAssert.AreEqual(1, registry.CargoAmounts[0], "the first row wins because it is the one every earlier session answered with");
 		}
 
 		/// <summary>A null column is an absent named field and becomes an empty one, and a negative
@@ -688,12 +689,12 @@ namespace ThousandAndFirst.Tests
 			registry.LegZoneIds = null;
 			registry.JobCounter = -5;
 			registry.Normalize();
-			Assert.AreEqual(0, registry.Count);
-			Assert.AreEqual(0, registry.JobCounter);
+			ClassicAssert.AreEqual(0, registry.Count);
+			ClassicAssert.AreEqual(0, registry.JobCounter);
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault));
-			Assert.AreEqual(0, table.Count);
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault));
+			ClassicAssert.AreEqual(0, table.Count);
 		}
 
 		/// <summary>
@@ -711,21 +712,21 @@ namespace ThousandAndFirst.Tests
 			KingdomLeg[] before = job.Legs();
 			KingdomLeg[] after;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryReproject(before, job.LegCount, 0, 10L, out after, out fault));
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryReproject(before, job.LegCount, 0, 10L, out after, out fault));
 
-			Assert.AreEqual(before[0].DepartTick, after[0].DepartTick, "a leg already begun keeps its departure");
-			Assert.AreEqual(before[0].ArriveTick + 10L, after[0].ArriveTick);
+			ClassicAssert.AreEqual(before[0].DepartTick, after[0].DepartTick, "a leg already begun keeps its departure");
+			ClassicAssert.AreEqual(before[0].ArriveTick + 10L, after[0].ArriveTick);
 			for (int i = 1; i < job.LegCount; i++)
 			{
-				Assert.AreEqual(before[i].DepartTick + 10L, after[i].DepartTick);
-				Assert.AreEqual(before[i].ArriveTick + 10L, after[i].ArriveTick);
+				ClassicAssert.AreEqual(before[i].DepartTick + 10L, after[i].DepartTick);
+				ClassicAssert.AreEqual(before[i].ArriveTick + 10L, after[i].ArriveTick);
 			}
 			// The whole journey is exactly ten ticks longer. Nothing sprints to make it up.
 			long was = before[job.LegCount - 1].ArriveTick - before[0].DepartTick;
 			long now = after[job.LegCount - 1].ArriveTick - after[0].DepartTick;
-			Assert.AreEqual(was + 10L, now);
-			Assert.IsTrue(KingdomItineraryRules.TryValidate(after, job.LegCount, out fault));
-			Assert.AreEqual(before[0].ArriveTick, job.Legs()[0].ArriveTick, "copy-on-write: the row it came from is untouched");
+			ClassicAssert.AreEqual(was + 10L, now);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryValidate(after, job.LegCount, out fault));
+			ClassicAssert.AreEqual(before[0].ArriveTick, job.Legs()[0].ArriveTick, "copy-on-write: the row it came from is untouched");
 		}
 
 		/// <summary>
@@ -737,16 +738,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJobRow job = Delivery(9);
 			KingdomLeg last;
-			Assert.IsTrue(job.TryLeg(job.LegCount - 1, out last));
+			ClassicAssert.IsTrue(job.TryLeg(job.LegCount - 1, out last));
 			long projected = last.ArriveTick - Start;
 			bool overrun;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryHasOverrun(job.Legs(), job.LegCount, last.ArriveTick, out overrun, out fault));
-			Assert.IsFalse(overrun, "arriving on time is not an overrun");
-			Assert.IsTrue(KingdomItineraryRules.TryHasOverrun(job.Legs(), job.LegCount,
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryHasOverrun(job.Legs(), job.LegCount, last.ArriveTick, out overrun, out fault));
+			ClassicAssert.IsFalse(overrun, "arriving on time is not an overrun");
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryHasOverrun(job.Legs(), job.LegCount,
 				Start + KingdomItineraryRules.FailAtProjectedDurationMultiple * projected + 1L, out overrun, out fault));
-			Assert.IsTrue(overrun);
-			Assert.AreEqual(2, KingdomItineraryRules.FailAtProjectedDurationMultiple);
+			ClassicAssert.IsTrue(overrun);
+			ClassicAssert.AreEqual(2, KingdomItineraryRules.FailAtProjectedDurationMultiple);
 		}
 
 		[Test]
@@ -760,28 +761,28 @@ namespace ThousandAndFirst.Tests
 				KingdomDeliveryPhase.ReservationPrepared, version: 0, digest: null,
 				revision: 0L, sourceStart: 0, sourceCount: 1,
 				sourceObject: null, targetObject: null);
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { reservation }, out table, out fault));
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { reservation }, out table, out fault));
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1,
 					KingdomDeliveryPhase.ReservationPrepared,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "reservation precedes parent manifest adoption");
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.Quarantined,
 					version: 0, digest: null, revision: 0L,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "quarantine retains pre-adoption evidence");
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.Quarantined,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "quarantine retains post-adoption evidence");
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(21, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1,
@@ -793,65 +794,65 @@ namespace ThousandAndFirst.Tests
 				KingdomDeliveryCargoAuthority.ConstructionInput,
 				KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
 				sourceStart: 3, sourceCount: 2);
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { manifest }, out table, out fault));
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { manifest }, out table, out fault));
 
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(23, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.Water, 1, KingdomDeliveryPhase.InFlight,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "water casks still use opaque object-manifest cargo");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(24, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
 					sourceStart: 3, sourceCount: 0)
 			}, out table, out fault), "object cargo requires an exact positive range");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					owner: "", sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "orphan owner ids are refused");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					version: 0, sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "owner manifest version is explicit");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					digest: "", sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "owner manifest digest is explicit");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(25, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					revision: -1L, sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "owner manifest revision cannot go backwards");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(26, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					sourceStart: 0, sourceCount: 1, targetBefore: 4L,
 					targetReceipt: KingdomDeliveryTargetReceiptState.Prepared)
 			}, out table, out fault), "the parent, never a scalar callback, owns landing");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(27, KingdomDeliveryCargoAuthority.CarryBookManifest,
 					KingdomStockKind.OpaqueManifest, 1,
 					KingdomDeliveryPhase.LandedAwaitingOwner,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "landed-awaiting-owner belongs only to construction");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(28, (KingdomDeliveryCargoAuthority)3,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					sourceStart: 0, sourceCount: 1)
 			}, out table, out fault), "future authority is not current authority");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				OwnerDelivery(29, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, (KingdomDeliveryPhase)99,
@@ -872,23 +873,23 @@ namespace ThousandAndFirst.Tests
 				sourceStart: 2, sourceCount: 2);
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { first, disjoint },
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { first, disjoint },
 				out table, out fault));
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				first,
 				OwnerDelivery(33, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 2, KingdomDeliveryPhase.InFlight,
 					sourceStart: 1, sourceCount: 2)
 			}, out table, out fault));
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				first,
 				OwnerDelivery(34, KingdomDeliveryCargoAuthority.ConstructionInput,
 					KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 					digest: "different", sourceStart: 4, sourceCount: 1)
 			}, out table, out fault));
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				first,
 				OwnerDelivery(35, KingdomDeliveryCargoAuthority.ConstructionInput,
@@ -896,13 +897,13 @@ namespace ThousandAndFirst.Tests
 					KingdomDeliveryPhase.ReservationPrepared, version: 0, digest: null,
 					revision: 0L, sourceStart: 4, sourceCount: 1)
 			}, out table, out fault), "owner adoption is one atomic table rewrite");
-			Assert.IsTrue(KingdomJobRules.UsesExactObjectRange(
+			ClassicAssert.IsTrue(KingdomJobRules.UsesExactObjectRange(
 				KingdomDeliveryCargoAuthority.ConstructionInput, KingdomStockKind.Water),
 				"construction is object-ranged before cargo-shape validation");
-			Assert.AreEqual(1L, KingdomJobRules.DeliveryCapacityLoad(
+			ClassicAssert.AreEqual(1L, KingdomJobRules.DeliveryCapacityLoad(
 				KingdomDeliveryCargoAuthority.ConstructionInput, KingdomStockKind.Water,
 				64, 1), "one 64-dram cask consumes one carrier slot");
-			Assert.AreEqual(2L, KingdomJobRules.DeliveryCapacityLoad(
+			ClassicAssert.AreEqual(2L, KingdomJobRules.DeliveryCapacityLoad(
 				KingdomDeliveryCargoAuthority.ConstructionInput,
 				KingdomStockKind.OpaqueManifest, 99, 2));
 		}
@@ -917,43 +918,43 @@ namespace ThousandAndFirst.Tests
 				sourceStart: 0, sourceCount: 1);
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
 			KingdomJobRegistry registry = new KingdomJobRegistry { JobCounter = 41 };
-			Assert.IsTrue(registry.TryPublish(table, out fault));
+			ClassicAssert.IsTrue(registry.TryPublish(table, out fault));
 			byte[] v5;
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
+			ClassicAssert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
 				KingdomRealmJobWireFixture.CurrentVersion, out v5));
-			Assert.IsFalse(KingdomRealmJobWireFixture.TryEncode(registry,
+			ClassicAssert.IsFalse(KingdomRealmJobWireFixture.TryEncode(registry,
 				KingdomRealmJobWireFixture.ExactDeliveryVersion, out _));
-			Assert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5,
+			ClassicAssert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5,
 				KingdomRealmJobWireFixture.ExactDeliveryVersion, out _));
-			Assert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5, 1, out _));
+			ClassicAssert.IsFalse(KingdomRealmJobWireFixture.TryDecode(v5, 1, out _));
 
 			KingdomJobRegistry decoded;
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v5,
+			ClassicAssert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v5,
 				KingdomRealmJobWireFixture.CurrentVersion, out decoded));
 			KingdomJobTable cold;
 			KingdomJobRow row;
-			Assert.IsTrue(decoded.TryRead(out cold, out fault));
-			Assert.IsTrue(cold.TryGet(41, out row));
-			Assert.AreEqual(KingdomDeliveryCargoAuthority.ConstructionInput,
+			ClassicAssert.IsTrue(decoded.TryRead(out cold, out fault));
+			ClassicAssert.IsTrue(cold.TryGet(41, out row));
+			ClassicAssert.AreEqual(KingdomDeliveryCargoAuthority.ConstructionInput,
 				row.DeliveryCargoAuthority);
-			Assert.AreEqual(KingdomDeliveryPhase.LandedAwaitingOwner, row.DeliveryPhase);
+			ClassicAssert.AreEqual(KingdomDeliveryPhase.LandedAwaitingOwner, row.DeliveryPhase);
 
 			KingdomJobRow carry = OwnerDelivery(42,
 				KingdomDeliveryCargoAuthority.CarryBookManifest,
 				KingdomStockKind.OpaqueManifest, 1, KingdomDeliveryPhase.InFlight,
 				sourceStart: 0, sourceCount: 1);
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { carry }, out table, out fault));
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { carry }, out table, out fault));
 			registry = new KingdomJobRegistry { JobCounter = 42 };
-			Assert.IsTrue(registry.TryPublish(table, out fault));
+			ClassicAssert.IsTrue(registry.TryPublish(table, out fault));
 			byte[] v4;
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
+			ClassicAssert.IsTrue(KingdomRealmJobWireFixture.TryEncode(registry,
 				KingdomRealmJobWireFixture.ExactDeliveryVersion, out v4));
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v4,
+			ClassicAssert.IsTrue(KingdomRealmJobWireFixture.TryDecode(v4,
 				KingdomRealmJobWireFixture.ExactDeliveryVersion, out decoded));
 			byte[] repeated;
-			Assert.IsTrue(KingdomRealmJobWireFixture.TryEncode(decoded,
+			ClassicAssert.IsTrue(KingdomRealmJobWireFixture.TryEncode(decoded,
 				KingdomRealmJobWireFixture.ExactDeliveryVersion, out repeated));
 			CollectionAssert.AreEqual(v4, repeated);
 		}
@@ -968,34 +969,34 @@ namespace ThousandAndFirst.Tests
 				sourceStart: 0, sourceCount: 1);
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { construction }, out table, out fault));
 			KingdomJobRegistry registry = new KingdomJobRegistry { JobCounter = 51 };
-			Assert.IsTrue(registry.TryPublish(table, out fault));
+			ClassicAssert.IsTrue(registry.TryPublish(table, out fault));
 
-			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
 				"v12 must reject authority 2 and phase 6");
-			Assert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.DeliveryDomainVersion));
 
 			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.InFlight;
-			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
 				"v12 must reject authority 2 independently of phase 6");
 			registry.DeliveryCargoAuthorityKinds[0] =
 				(int)KingdomDeliveryCargoAuthority.CarryBookManifest;
 			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.LandedAwaitingOwner;
-			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion),
 				"v12 must reject phase 6 independently of authority 2");
 			registry.DeliveryPhases[0] = (int)KingdomDeliveryPhase.InFlight;
-			Assert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.HappeningCursorVersion));
 			registry.DeliveryCargoAuthorityKinds[0] = 3;
-			Assert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.ValidDeliveryDomainForTests(
 				registry, KingdomArchivedSettlementCodec.DeliveryDomainVersion));
 			string source = KingdomArchivedSettlementCodecLogicalSource.Read();
-			Assert.AreEqual(2, source.Split(new[]
+			ClassicAssert.AreEqual(2, source.Split(new[]
 			{
 				"Archived settlement delivery enum domain is invalid for its version."
 			}, StringSplitOptions.None).Length - 1,
@@ -1006,11 +1007,11 @@ namespace ThousandAndFirst.Tests
 		public void RegistryPublicSaveColumnsKeepTheirExactMetadataShapeAndOrder()
 		{
 			Type registry = typeof(KingdomJobRegistry);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomJobRegistry",
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomJobRegistry",
 				registry.FullName);
-			Assert.IsTrue(registry.IsPublic);
-			Assert.IsTrue(registry.IsDefined(typeof(SerializableAttribute), false));
-			Assert.IsFalse(registry.IsSealed);
+			ClassicAssert.IsTrue(registry.IsPublic);
+			ClassicAssert.IsTrue(registry.IsDefined(typeof(SerializableAttribute), false));
+			ClassicAssert.IsFalse(registry.IsSealed);
 
 			System.Reflection.FieldInfo[] fields = registry.GetFields(
 				System.Reflection.BindingFlags.Instance
@@ -1041,34 +1042,34 @@ namespace ThousandAndFirst.Tests
 				"LegEnterX", "LegEnterY", "LegExitX", "LegExitY", "LegLengths",
 				"LegDepartTicks", "LegArriveTicks"
 			};
-			Assert.AreEqual(expected.Length, fields.Length);
+			ClassicAssert.AreEqual(expected.Length, fields.Length);
 			for (int i = 0; i < expected.Length; i++)
-				Assert.AreEqual(expected[i], fields[i].Name, "field " + i);
-			Assert.AreEqual(typeof(int), fields[0].FieldType);
-			Assert.AreEqual(typeof(System.Collections.Generic.List<int>),
+				ClassicAssert.AreEqual(expected[i], fields[i].Name, "field " + i);
+			ClassicAssert.AreEqual(typeof(int), fields[0].FieldType);
+			ClassicAssert.AreEqual(typeof(System.Collections.Generic.List<int>),
 				fields[1].FieldType);
-			Assert.AreEqual(typeof(System.Collections.Generic.List<string>),
+			ClassicAssert.AreEqual(typeof(System.Collections.Generic.List<string>),
 				fields[5].FieldType);
-			Assert.AreEqual(typeof(System.Collections.Generic.List<long>),
+			ClassicAssert.AreEqual(typeof(System.Collections.Generic.List<long>),
 				fields[7].FieldType);
 		}
 
 		[Test]
 		public void JobAndDeliveryEnumMetadataRemainAppendOnly()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobKind)));
-			Assert.AreEqual(0, (int)KingdomJobKind.None);
-			Assert.AreEqual(1, (int)KingdomJobKind.Delivery);
-			Assert.AreEqual(2, (int)KingdomJobKind.Expedition);
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobStatus)));
-			Assert.AreEqual(0, (int)KingdomJobStatus.Open);
-			Assert.AreEqual(1, (int)KingdomJobStatus.Delivered);
-			Assert.AreEqual(2, (int)KingdomJobStatus.Failed);
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomDeliveryPhase)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobKind)));
+			ClassicAssert.AreEqual(0, (int)KingdomJobKind.None);
+			ClassicAssert.AreEqual(1, (int)KingdomJobKind.Delivery);
+			ClassicAssert.AreEqual(2, (int)KingdomJobKind.Expedition);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomJobStatus)));
+			ClassicAssert.AreEqual(0, (int)KingdomJobStatus.Open);
+			ClassicAssert.AreEqual(1, (int)KingdomJobStatus.Delivered);
+			ClassicAssert.AreEqual(2, (int)KingdomJobStatus.Failed);
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomDeliveryPhase)));
 			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5, 6 },
 				Array.ConvertAll((KingdomDeliveryPhase[])Enum.GetValues(
 					typeof(KingdomDeliveryPhase)), value => (int)value));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(
 				typeof(KingdomDeliveryCargoAuthority)));
 			CollectionAssert.AreEqual(new int[] { 0, 1, 2 },
 				Array.ConvertAll((KingdomDeliveryCargoAuthority[])Enum.GetValues(
@@ -1095,7 +1096,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < ordered.Length; i++)
 			{
 				int at = source.IndexOf(ordered[i], StringComparison.Ordinal);
-				Assert.Greater(at, prior, ordered[i]);
+				ClassicAssert.Greater(at, prior, ordered[i]);
 				prior = at;
 			}
 		}

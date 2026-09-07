@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -35,9 +36,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string digest;
 			string failure;
-			Assert.IsTrue(KingdomScenarioAnchorRules.TryDigest(Authority, Capture(), out digest,
+			ClassicAssert.IsTrue(KingdomScenarioAnchorRules.TryDigest(Authority, Capture(), out digest,
 				out failure), failure);
-			Assert.AreEqual(64, digest.Length);
+			ClassicAssert.AreEqual(64, digest.Length);
 		}
 
 		[Test]
@@ -47,7 +48,7 @@ namespace ThousandAndFirst.Tests
 			captured.Remove(KingdomScenarioAnchorRules.KeySet(Authority)[0]);
 			string digest;
 			string failure;
-			Assert.IsFalse(KingdomScenarioAnchorRules.TryDigest(Authority, captured, out digest,
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.TryDigest(Authority, captured, out digest,
 				out failure));
 			StringAssert.Contains("not a comparison", failure);
 		}
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 			captured["architecture.rogue"] = "x";
 			string digest;
 			string failure;
-			Assert.IsFalse(KingdomScenarioAnchorRules.TryDigest(Authority, captured, out digest,
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.TryDigest(Authority, captured, out digest,
 				out failure));
 			StringAssert.Contains("undeclared key", failure);
 		}
@@ -69,16 +70,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string digest;
 			string failure;
-			Assert.IsFalse(KingdomScenarioAnchorRules.TryDigest("no-such", Capture(), out digest,
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.TryDigest("no-such", Capture(), out digest,
 				out failure));
-			Assert.IsFalse(KingdomScenarioAnchorRules.IsKnownAuthorityClass("no-such"));
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.IsKnownAuthorityClass("no-such"));
 		}
 
 		[Test]
 		public void AnAnchorMayNotBeFoundedFromAScenarioBuiltState()
 		{
 			string failure;
-			Assert.IsFalse(KingdomScenarioAnchorRules.TryFoundAnchor(
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.TryFoundAnchor(
 				KingdomScenarioAnchorRules.Provenance.ScenarioBuilt, Authority, KeySetDigest,
 				out failure));
 			StringAssert.Contains("cannot anchor itself", failure);
@@ -88,16 +89,16 @@ namespace ThousandAndFirst.Tests
 		public void JudgeWithoutAnAnchorIsNoAnchorRatherThanAPass()
 		{
 			string detail;
-			Assert.AreEqual(KingdomScenarioAnchorRules.Verdict.NoAnchor,
+			ClassicAssert.AreEqual(KingdomScenarioAnchorRules.Verdict.NoAnchor,
 				KingdomScenarioAnchorRules.Judge(null, DefinitionDigest, KeySetDigest,
 					DefinitionDigest, out detail));
-			Assert.IsFalse(KingdomScenarioAnchorRules.Signs(
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.Signs(
 				KingdomScenarioAnchorRules.Verdict.NoAnchor));
-			Assert.IsFalse(KingdomScenarioAnchorRules.Signs(
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.Signs(
 				KingdomScenarioAnchorRules.Verdict.Divergent));
-			Assert.IsFalse(KingdomScenarioAnchorRules.Signs(
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.Signs(
 				KingdomScenarioAnchorRules.Verdict.Stale));
-			Assert.IsTrue(KingdomScenarioAnchorRules.Signs(
+			ClassicAssert.IsTrue(KingdomScenarioAnchorRules.Signs(
 				KingdomScenarioAnchorRules.Verdict.Matched));
 		}
 	}

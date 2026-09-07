@@ -1,6 +1,7 @@
 ﻿#if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -21,7 +22,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "Starapple")]
 		public void CropBlueprintForStyle_MatchesTheDocumentedMapping(string style, string expected)
 		{
-			Assert.AreEqual(expected, KingdomCropRules.CropBlueprintForStyle(style));
+			ClassicAssert.AreEqual(expected, KingdomCropRules.CropBlueprintForStyle(style));
 		}
 
 		[Test]
@@ -35,7 +36,7 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int j = i + 1; j < known.Length; j++)
 				{
-					Assert.AreNotEqual(
+					ClassicAssert.AreNotEqual(
 						KingdomCropRules.CropBlueprintForStyle(known[i]),
 						KingdomCropRules.CropBlueprintForStyle(known[j]),
 						known[i] + " and " + known[j] + " must not grow the same crop");
@@ -51,8 +52,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CanAffordPlanting_PlantsWhenNothingIsOwedAndTheCostIsCovered()
 		{
-			Assert.IsTrue(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams, 0));
-			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams - 1, 0));
+			ClassicAssert.IsTrue(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams, 0));
+			ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(KingdomCropRules.PlantWaterCostDrams - 1, 0));
 		}
 
 		[Test]
@@ -62,9 +63,9 @@ namespace ThousandAndFirst.Tests
 			{
 				int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.ReserveDays;
 				int enough = reserve + KingdomCropRules.PlantWaterCostDrams;
-				Assert.IsTrue(KingdomCropRules.CanAffordPlanting(enough, population),
+				ClassicAssert.IsTrue(KingdomCropRules.CanAffordPlanting(enough, population),
 					"refused to plant with the reserve intact at population " + population);
-				Assert.IsFalse(KingdomCropRules.CanAffordPlanting(enough - 1, population),
+				ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(enough - 1, population),
 					"planted into the settlement's own reserve at population " + population);
 			}
 		}
@@ -72,8 +73,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CanAffordPlanting_NothingStoredNeverPlants()
 		{
-			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 0));
-			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 40));
+			ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 0));
+			ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(0, 40));
 		}
 
 		[Test]
@@ -82,8 +83,8 @@ namespace ThousandAndFirst.Tests
 			// Ten drams plants fine for an empty settlement; the same ten cannot plant once
 			// there are enough settlers that three days of their own upkeep outweighs it. A
 			// mutation that drops Population from the calculation would pass both as true.
-			Assert.IsTrue(KingdomCropRules.CanAffordPlanting(10, 0));
-			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(10, 40));
+			ClassicAssert.IsTrue(KingdomCropRules.CanAffordPlanting(10, 0));
+			ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(10, 40));
 		}
 
 		[Test]
@@ -96,8 +97,8 @@ namespace ThousandAndFirst.Tests
 			int population = 20;
 			int reserve = KingdomRules.UpkeepDrams(population) * KingdomRules.ReserveDays;
 			int exactBoundary = reserve + KingdomCropRules.PlantWaterCostDrams;
-			Assert.IsTrue(KingdomCropRules.CanAffordPlanting(exactBoundary, population));
-			Assert.IsFalse(KingdomCropRules.CanAffordPlanting(exactBoundary - 1, population));
+			ClassicAssert.IsTrue(KingdomCropRules.CanAffordPlanting(exactBoundary, population));
+			ClassicAssert.IsFalse(KingdomCropRules.CanAffordPlanting(exactBoundary - 1, population));
 		}
 
 		// --- HasRipened / RipenTick: the growing clock ------------------------------------------
@@ -108,7 +109,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0L, 0L, true)]
 		public void HasRipened_ComparesAgainstTheStoredTickStamp(long nextStageTick, long timeTicks, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCropRules.HasRipened(nextStageTick, timeTicks));
+			ClassicAssert.AreEqual(expected, KingdomCropRules.HasRipened(nextStageTick, timeTicks));
 		}
 
 		[TestCase(0L)]
@@ -116,7 +117,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(48000L)]
 		public void RipenTick_IsPlantedTickPlusGrowTicks(long plantedTick)
 		{
-			Assert.AreEqual(plantedTick + KingdomCropRules.GrowTicks, KingdomCropRules.RipenTick(plantedTick));
+			ClassicAssert.AreEqual(plantedTick + KingdomCropRules.GrowTicks, KingdomCropRules.RipenTick(plantedTick));
 		}
 
 		// --- Constants and stage order: shape guards, not values a designer would tune --------
@@ -126,8 +127,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// A mutation reordering the enum would still compile; this catches it by pinning
 			// the numeric order the resolve loop's switch depends on nothing else to enforce.
-			Assert.Less((int)KingdomCropRules.PlotStage.Dormant, (int)KingdomCropRules.PlotStage.Growing);
-			Assert.Less((int)KingdomCropRules.PlotStage.Growing, (int)KingdomCropRules.PlotStage.Ripe);
+			ClassicAssert.Less((int)KingdomCropRules.PlotStage.Dormant, (int)KingdomCropRules.PlotStage.Growing);
+			ClassicAssert.Less((int)KingdomCropRules.PlotStage.Growing, (int)KingdomCropRules.PlotStage.Ripe);
 		}
 
 		[Test]
@@ -142,19 +143,19 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 3, 4, 5, 6 },
 				Array.ConvertAll((KingdomCropRules.SowVerdict[])Enum.GetValues(
 					typeof(KingdomCropRules.SowVerdict)), value => (int)value));
-			Assert.AreEqual(1, (int)KingdomCropRules.CropChannel.SeedReturn);
+			ClassicAssert.AreEqual(1, (int)KingdomCropRules.CropChannel.SeedReturn);
 		}
 
 		[Test]
 		public void EveryCycleQuantityIsPositive()
 		{
-			Assert.Greater(KingdomCropRules.PlantWaterCostDrams, 0);
-			Assert.Greater(KingdomCropRules.GrowTicks, 0L);
-			Assert.Greater(KingdomCropRules.YieldPerRow, 0);
-			Assert.Greater(KingdomCropRules.CropDays, 0);
-			Assert.Greater(KingdomCropRules.GatherDelayTicks, 0L);
-			Assert.Greater(KingdomCropRules.MaxCyclesPerVisit, 0);
-			Assert.Greater(KingdomCropRules.MaxSeedsPerResolve, 0);
+			ClassicAssert.Greater(KingdomCropRules.PlantWaterCostDrams, 0);
+			ClassicAssert.Greater(KingdomCropRules.GrowTicks, 0L);
+			ClassicAssert.Greater(KingdomCropRules.YieldPerRow, 0);
+			ClassicAssert.Greater(KingdomCropRules.CropDays, 0);
+			ClassicAssert.Greater(KingdomCropRules.GatherDelayTicks, 0L);
+			ClassicAssert.Greater(KingdomCropRules.MaxCyclesPerVisit, 0);
+			ClassicAssert.Greater(KingdomCropRules.MaxSeedsPerResolve, 0);
 		}
 
 		// --- The derivation: a design's food figure comes off its rows ------------------------
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 			// the arithmetic itself, so a retune that breaks one breaks both.
 			foreach (int rows in new int[6] { 6, 10, 16, 36, 52, 80 })
 			{
-				Assert.AreEqual(
+				ClassicAssert.AreEqual(
 					rows * KingdomCropRules.YieldPerRow / KingdomCropRules.CropDays,
 					KingdomCropRules.FoodPerDayForRows(rows));
 			}
@@ -179,7 +180,7 @@ namespace ThousandAndFirst.Tests
 			foreach (int food in new int[6] { 3, 5, 8, 18, 26, 40 })
 			{
 				int rows = KingdomCropRules.RowsForFoodPerDay(food);
-				Assert.AreEqual(food, KingdomCropRules.FoodPerDayForRows(rows),
+				ClassicAssert.AreEqual(food, KingdomCropRules.FoodPerDayForRows(rows),
 					"food:" + food + " does not round-trip through " + rows + " rows");
 			}
 		}
@@ -188,8 +189,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-1)]
 		public void FoodPerDayForRows_GrowsNothingFromNoRows(int rows)
 		{
-			Assert.AreEqual(0, KingdomCropRules.FoodPerDayForRows(rows));
-			Assert.AreEqual(0, KingdomCropRules.RowsForFoodPerDay(rows));
+			ClassicAssert.AreEqual(0, KingdomCropRules.FoodPerDayForRows(rows));
+			ClassicAssert.AreEqual(0, KingdomCropRules.RowsForFoodPerDay(rows));
 		}
 
 		[Test]
@@ -202,11 +203,11 @@ namespace ThousandAndFirst.Tests
 			// per-style with it.
 			foreach (string style in KingdomRules.Styles)
 			{
-				Assert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle(style),
+				ClassicAssert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle(style),
 					style + " no longer ripens on the shared cycle; the catalogue's food figures must move with it");
 			}
-			Assert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle("nonesuch"));
-			Assert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle(null));
+			ClassicAssert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle("nonesuch"));
+			ClassicAssert.AreEqual(KingdomCropRules.CropDays, KingdomCropRules.CropDaysForStyle(null));
 		}
 
 		// --- HarvestYield: rows, what a row is worth, and what the field is running at ---------
@@ -214,8 +215,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HarvestYield_IsRowsTimesYieldScaledByEffectiveness()
 		{
-			Assert.AreEqual(16 * KingdomCropRules.YieldPerRow, KingdomCropRules.HarvestYield(16, 100));
-			Assert.AreEqual(16 * KingdomCropRules.YieldPerRow / 2, KingdomCropRules.HarvestYield(16, 50));
+			ClassicAssert.AreEqual(16 * KingdomCropRules.YieldPerRow, KingdomCropRules.HarvestYield(16, 100));
+			ClassicAssert.AreEqual(16 * KingdomCropRules.YieldPerRow / 2, KingdomCropRules.HarvestYield(16, 50));
 		}
 
 		[TestCase(0, 100)]
@@ -224,14 +225,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(16, -1)]
 		public void HarvestYield_GathersNothingFromNothing(int rows, int effectiveness)
 		{
-			Assert.AreEqual(0, KingdomCropRules.HarvestYield(rows, effectiveness));
+			ClassicAssert.AreEqual(0, KingdomCropRules.HarvestYield(rows, effectiveness));
 		}
 
 		[Test]
 		public void HarvestYield_NeverPaysAboveFullEffectiveness()
 		{
 			// A stamp above 100 is a corrupt reading, not a bonus crop.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100),
 				KingdomCropRules.HarvestYield(16, 400));
 		}
@@ -248,11 +249,11 @@ namespace ThousandAndFirst.Tests
 			// the numbers this file asserted before the tree existed, to the serving.
 			for (int effectiveness = 0; effectiveness <= 100; effectiveness += 10)
 			{
-				Assert.AreEqual(
+				ClassicAssert.AreEqual(
 					KingdomCropRules.HarvestYield(rows, effectiveness),
 					KingdomCropRules.HarvestYield(rows, effectiveness, KingdomProductionRules.BaselineMethodPercent),
 					"the baseline method moved a field's own yield");
-				Assert.AreEqual(
+				ClassicAssert.AreEqual(
 					KingdomCropRules.HarvestYield(rows, effectiveness),
 					KingdomCropRules.HarvestYield(rows, effectiveness, KingdomResearchRules.MethodPercent(0)),
 					"an empty roster is not the baseline the field reads");
@@ -265,11 +266,11 @@ namespace ThousandAndFirst.Tests
 			// The third factor is applied AFTER the clamp, so it is not a way of running a field
 			// above what its hands and its condition manage - it is a heavier row off the same
 			// hands. Sixteen rows at three a row is 48; half again is 72.
-			Assert.AreEqual(48, KingdomCropRules.HarvestYield(16, 100, 100));
-			Assert.AreEqual(72, KingdomCropRules.HarvestYield(16, 100, 150));
+			ClassicAssert.AreEqual(48, KingdomCropRules.HarvestYield(16, 100, 100));
+			ClassicAssert.AreEqual(72, KingdomCropRules.HarvestYield(16, 100, 150));
 			// And the clamp still holds underneath it: a corrupt 400 reads as 100 and is then
 			// lifted by the same half, rather than compounding into a four-fold crop.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100, 150),
 				KingdomCropRules.HarvestYield(16, 400, 150));
 		}
@@ -281,7 +282,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A method under the baseline is read AS the baseline. No path through the tree can
 			// leave a realm gathering less than one that never heard of it.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100),
 				KingdomCropRules.HarvestYield(16, 100, method));
 		}
@@ -292,25 +293,25 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 8 clause 2, in the crop lane: no amount of knowledge staffs a field. Zero
 			// effectiveness returns before the method factor is ever reached.
-			Assert.AreEqual(0, KingdomCropRules.HarvestYield(16, 0, method));
-			Assert.AreEqual(0, KingdomCropRules.HarvestYield(0, 100, method));
+			ClassicAssert.AreEqual(0, KingdomCropRules.HarvestYield(16, 0, method));
+			ClassicAssert.AreEqual(0, KingdomCropRules.HarvestYield(0, 100, method));
 		}
 
 		[Test]
 		public void GatheredYield_CarriesTheMethodIntoEveryCycleOfAReckoning()
 		{
 			int baseline = KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100);
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				baseline,
 				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
 					MethodPercent: KingdomProductionRules.BaselineMethodPercent),
 				"the baseline method moved a whole reckoning");
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100, 150) * 3 + KingdomCropRules.HarvestYield(10, 100, 150),
 				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
 					MethodPercent: 150),
 				"a reckoning is every cycle's own methoded gathering and nothing else");
-			Assert.Greater(
+			ClassicAssert.Greater(
 				KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100,
 					MethodPercent: 150),
 				baseline);
@@ -321,24 +322,24 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CyclesDue_IsNothingBeforeTheFirstRipening()
 		{
-			Assert.AreEqual(0, KingdomCropRules.CyclesDue(1000L, 999L));
-			Assert.AreEqual(0, KingdomCropRules.CyclesDue(1000L, 0L));
+			ClassicAssert.AreEqual(0, KingdomCropRules.CyclesDue(1000L, 999L));
+			ClassicAssert.AreEqual(0, KingdomCropRules.CyclesDue(1000L, 0L));
 		}
 
 		[Test]
 		public void CyclesDue_CountsEveryCompletedCycleOfALongAbsence()
 		{
 			long next = 10000L;
-			Assert.AreEqual(1, KingdomCropRules.CyclesDue(next, next));
-			Assert.AreEqual(1, KingdomCropRules.CyclesDue(next, next + KingdomCropRules.GrowTicks - 1L));
-			Assert.AreEqual(2, KingdomCropRules.CyclesDue(next, next + KingdomCropRules.GrowTicks));
-			Assert.AreEqual(13, KingdomCropRules.CyclesDue(next, next + 12L * KingdomCropRules.GrowTicks));
+			ClassicAssert.AreEqual(1, KingdomCropRules.CyclesDue(next, next));
+			ClassicAssert.AreEqual(1, KingdomCropRules.CyclesDue(next, next + KingdomCropRules.GrowTicks - 1L));
+			ClassicAssert.AreEqual(2, KingdomCropRules.CyclesDue(next, next + KingdomCropRules.GrowTicks));
+			ClassicAssert.AreEqual(13, KingdomCropRules.CyclesDue(next, next + 12L * KingdomCropRules.GrowTicks));
 		}
 
 		[Test]
 		public void CyclesDue_ClampsRatherThanOverflowing()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.MaxCyclesPerVisit,
 				KingdomCropRules.CyclesDue(0L, long.MaxValue / 2L));
 		}
@@ -352,9 +353,9 @@ namespace ThousandAndFirst.Tests
 			long now = next + KingdomCropRules.GrowTicks + 400L;
 			int due = KingdomCropRules.CyclesDue(next, now);
 			long restamped = KingdomCropRules.RestampedRipeTick(next, due);
-			Assert.AreEqual(next + 2L * KingdomCropRules.GrowTicks, restamped);
-			Assert.Greater(restamped, now);
-			Assert.Less(restamped - now, KingdomCropRules.GrowTicks);
+			ClassicAssert.AreEqual(next + 2L * KingdomCropRules.GrowTicks, restamped);
+			ClassicAssert.Greater(restamped, now);
+			ClassicAssert.Less(restamped - now, KingdomCropRules.GrowTicks);
 		}
 
 		[Test]
@@ -362,26 +363,26 @@ namespace ThousandAndFirst.Tests
 		{
 			// A zero or negative count must never leave the stamp where it was: the resolve loop
 			// would then re-gather the same crop on the next pass, forever.
-			Assert.AreEqual(KingdomCropRules.GrowTicks, KingdomCropRules.RestampedRipeTick(0L, 0));
-			Assert.AreEqual(KingdomCropRules.GrowTicks, KingdomCropRules.RestampedRipeTick(0L, -3));
+			ClassicAssert.AreEqual(KingdomCropRules.GrowTicks, KingdomCropRules.RestampedRipeTick(0L, 0));
+			ClassicAssert.AreEqual(KingdomCropRules.GrowTicks, KingdomCropRules.RestampedRipeTick(0L, -3));
 		}
 
 		[Test]
 		public void LastRipeTick_DatesTheLastOfABatchOfCycles()
 		{
 			long next = 10000L;
-			Assert.AreEqual(next, KingdomCropRules.LastRipeTick(next, 1));
-			Assert.AreEqual(next + 3L * KingdomCropRules.GrowTicks, KingdomCropRules.LastRipeTick(next, 4));
-			Assert.AreEqual(next, KingdomCropRules.LastRipeTick(next, 0));
+			ClassicAssert.AreEqual(next, KingdomCropRules.LastRipeTick(next, 1));
+			ClassicAssert.AreEqual(next + 3L * KingdomCropRules.GrowTicks, KingdomCropRules.LastRipeTick(next, 4));
+			ClassicAssert.AreEqual(next, KingdomCropRules.LastRipeTick(next, 0));
 		}
 
 		[Test]
 		public void MayGather_LeavesTheFounderTheirDay()
 		{
 			long ripe = 10000L;
-			Assert.IsFalse(KingdomCropRules.MayGather(ripe, ripe));
-			Assert.IsFalse(KingdomCropRules.MayGather(ripe, ripe + KingdomCropRules.GatherDelayTicks - 1L));
-			Assert.IsTrue(KingdomCropRules.MayGather(ripe, ripe + KingdomCropRules.GatherDelayTicks));
+			ClassicAssert.IsFalse(KingdomCropRules.MayGather(ripe, ripe));
+			ClassicAssert.IsFalse(KingdomCropRules.MayGather(ripe, ripe + KingdomCropRules.GatherDelayTicks - 1L));
+			ClassicAssert.IsTrue(KingdomCropRules.MayGather(ripe, ripe + KingdomCropRules.GatherDelayTicks));
 		}
 
 		// --- The founder's day, and what a gathering is actually owed --------------------------
@@ -391,10 +392,10 @@ namespace ThousandAndFirst.Tests
 		{
 			long next = 10000L;
 			bool holds;
-			Assert.AreEqual(0, KingdomCropRules.GatherableCycles(next, next, out holds));
-			Assert.IsTrue(holds, "a crop that has just come ripe must be held, not gathered");
-			Assert.AreEqual(1, KingdomCropRules.GatherableCycles(next, next + KingdomCropRules.GatherDelayTicks, out holds));
-			Assert.IsFalse(holds);
+			ClassicAssert.AreEqual(0, KingdomCropRules.GatherableCycles(next, next, out holds));
+			ClassicAssert.IsTrue(holds, "a crop that has just come ripe must be held, not gathered");
+			ClassicAssert.AreEqual(1, KingdomCropRules.GatherableCycles(next, next + KingdomCropRules.GatherDelayTicks, out holds));
+			ClassicAssert.IsFalse(holds);
 		}
 
 		[Test]
@@ -405,10 +406,10 @@ namespace ThousandAndFirst.Tests
 			long next = 10000L;
 			bool holds;
 			int gather = KingdomCropRules.GatherableCycles(next, next + 2L * KingdomCropRules.GrowTicks, out holds);
-			Assert.AreEqual(2, gather);
-			Assert.IsTrue(holds);
+			ClassicAssert.AreEqual(2, gather);
+			ClassicAssert.IsTrue(holds);
 			// And the restamp lands exactly on the held ripening, so the next pass finds it due.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.LastRipeTick(next, 3),
 				KingdomCropRules.RestampedRipeTick(next, gather));
 		}
@@ -417,8 +418,8 @@ namespace ThousandAndFirst.Tests
 		public void GatherableCycles_IsNothingBeforeAnythingIsDue()
 		{
 			bool holds;
-			Assert.AreEqual(0, KingdomCropRules.GatherableCycles(10000L, 9999L, out holds));
-			Assert.IsFalse(holds, "nothing is being held when nothing has ripened");
+			ClassicAssert.AreEqual(0, KingdomCropRules.GatherableCycles(10000L, 9999L, out holds));
+			ClassicAssert.IsFalse(holds, "nothing is being held when nothing has ripened");
 		}
 
 		[Test]
@@ -427,7 +428,7 @@ namespace ThousandAndFirst.Tests
 			// Four cycles, sixteen rows standing, ten of them still ripe because the founder
 			// walked the rows with a basket. Three cycles at sixteen, one at ten.
 			int expected = KingdomCropRules.HarvestYield(16, 100) * 3 + KingdomCropRules.HarvestYield(10, 100);
-			Assert.AreEqual(expected, KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100));
+			ClassicAssert.AreEqual(expected, KingdomCropRules.GatheredYield(16, 10, 4, CountsRipeLast: true, EffectivenessPercent: 100));
 		}
 
 		[Test]
@@ -435,7 +436,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// An absence: TurnTick never ran, no row was ever made ripe, and nobody could have
 			// taken one. A mutation that read the ripe count here would silently lose a season.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.HarvestYield(16, 100) * 4,
 				KingdomCropRules.GatheredYield(16, 0, 4, CountsRipeLast: false, EffectivenessPercent: 100));
 		}
@@ -443,17 +444,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GatheredYield_GathersNothingFromNoCycles()
 		{
-			Assert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, 0, CountsRipeLast: true, EffectivenessPercent: 100));
-			Assert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, -2, CountsRipeLast: false, EffectivenessPercent: 100));
+			ClassicAssert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, 0, CountsRipeLast: true, EffectivenessPercent: 100));
+			ClassicAssert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, -2, CountsRipeLast: false, EffectivenessPercent: 100));
 		}
 
 		[Test]
 		public void GatheredYield_ScalesTheWholeReckoningByEffectiveness()
 		{
-			Assert.Greater(
+			ClassicAssert.Greater(
 				KingdomCropRules.GatheredYield(16, 16, 4, CountsRipeLast: false, EffectivenessPercent: 100),
 				KingdomCropRules.GatheredYield(16, 16, 4, CountsRipeLast: false, EffectivenessPercent: 50));
-			Assert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, 4, CountsRipeLast: false, EffectivenessPercent: 0));
+			ClassicAssert.AreEqual(0, KingdomCropRules.GatheredYield(16, 16, 4, CountsRipeLast: false, EffectivenessPercent: 0));
 		}
 
 		// --- Irrigation: vanilla's own event, answered on our clock ----------------------------
@@ -461,7 +462,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IrrigatedRipeTick_PullsTheStampForwardByOnePulse()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				10000L - KingdomCropRules.IrrigationTicksPerPulse,
 				KingdomCropRules.IrrigatedRipeTick(10000L, 5000L));
 		}
@@ -472,9 +473,9 @@ namespace ThousandAndFirst.Tests
 			// A machine may shorten a wait. It may not hand the settlement a crop that was due
 			// before it was switched on, and it may not make the stamp read as overdue by more
 			// than the cycle the field has actually stood.
-			Assert.AreEqual(9999L, KingdomCropRules.IrrigatedRipeTick(10000L, 9999L));
-			Assert.AreEqual(10000L, KingdomCropRules.IrrigatedRipeTick(10000L, 10000L));
-			Assert.AreEqual(12000L, KingdomCropRules.IrrigatedRipeTick(10000L, 12000L));
+			ClassicAssert.AreEqual(9999L, KingdomCropRules.IrrigatedRipeTick(10000L, 9999L));
+			ClassicAssert.AreEqual(10000L, KingdomCropRules.IrrigatedRipeTick(10000L, 10000L));
+			ClassicAssert.AreEqual(12000L, KingdomCropRules.IrrigatedRipeTick(10000L, 12000L));
 		}
 
 		[Test]
@@ -491,7 +492,7 @@ namespace ThousandAndFirst.Tests
 				next = KingdomCropRules.IrrigatedRipeTick(next, now);
 				pulses++;
 			}
-			Assert.AreEqual(KingdomCropRules.GrowTicks / 2L, now,
+			ClassicAssert.AreEqual(KingdomCropRules.GrowTicks / 2L, now,
 				"a continuously irrigated crop should come ripe in half its own days");
 		}
 
@@ -504,25 +505,25 @@ namespace ThousandAndFirst.Tests
 			{
 				string crop = KingdomCropRules.CropBlueprintForStyle(style);
 				string seed = KingdomCropRules.SeedForCrop(crop);
-				Assert.IsNotNull(seed, style + " grows " + crop + " and no seed sows it");
-				Assert.AreEqual(crop, KingdomCropRules.CropForSeed(seed));
-				Assert.AreEqual(seed, KingdomCropRules.SeedForStyle(style));
+				ClassicAssert.IsNotNull(seed, style + " grows " + crop + " and no seed sows it");
+				ClassicAssert.AreEqual(crop, KingdomCropRules.CropForSeed(seed));
+				ClassicAssert.AreEqual(seed, KingdomCropRules.SeedForStyle(style));
 			}
 		}
 
 		[Test]
 		public void SeedBlueprints_IsExactlyTheSeedsTheStylesName()
 		{
-			Assert.AreEqual(KingdomRules.Styles.Length, KingdomCropRules.SeedBlueprints.Length);
+			ClassicAssert.AreEqual(KingdomRules.Styles.Length, KingdomCropRules.SeedBlueprints.Length);
 			foreach (string seed in KingdomCropRules.SeedBlueprints)
 			{
-				Assert.IsNotNull(KingdomCropRules.CropForSeed(seed), seed + " grows nothing");
+				ClassicAssert.IsNotNull(KingdomCropRules.CropForSeed(seed), seed + " grows nothing");
 			}
 			for (int i = 0; i < KingdomCropRules.SeedBlueprints.Length; i++)
 			{
 				for (int j = i + 1; j < KingdomCropRules.SeedBlueprints.Length; j++)
 				{
-					Assert.AreNotEqual(KingdomCropRules.SeedBlueprints[i], KingdomCropRules.SeedBlueprints[j]);
+					ClassicAssert.AreNotEqual(KingdomCropRules.SeedBlueprints[i], KingdomCropRules.SeedBlueprints[j]);
 				}
 			}
 		}
@@ -533,21 +534,21 @@ namespace ThousandAndFirst.Tests
 			foreach (string style in KingdomRules.Styles)
 			{
 				string crop = KingdomCropRules.CropBlueprintForStyle(style);
-				Assert.IsNotNull(KingdomCropRules.RowForCrop(crop), crop + " has nothing to stand as");
+				ClassicAssert.IsNotNull(KingdomCropRules.RowForCrop(crop), crop + " has nothing to stand as");
 			}
 		}
 
 		[Test]
 		public void RetiredGyreTerrainCropRemainsAnExplicitCultCropOnly()
 		{
-			Assert.AreEqual("r_KingdomSeedGodshroom",
+			ClassicAssert.AreEqual("r_KingdomSeedGodshroom",
 				KingdomCropRules.SeedForCrop("Godshroom Cap"));
-			Assert.AreEqual("Godshroom Cap",
+			ClassicAssert.AreEqual("Godshroom Cap",
 				KingdomCropRules.CropForSeed("r_KingdomSeedGodshroom"));
-			Assert.AreEqual("r_KingdomRowGodshroom",
+			ClassicAssert.AreEqual("r_KingdomRowGodshroom",
 				KingdomCropRules.RowForCrop("Godshroom Cap"));
 			foreach (string style in KingdomRules.Styles)
-				Assert.AreNotEqual("Godshroom Cap",
+				ClassicAssert.AreNotEqual("Godshroom Cap",
 					KingdomCropRules.CropBlueprintForStyle(style), style);
 		}
 
@@ -556,9 +557,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Wibble")]
 		public void SeedAndRowMapsRefuseWhatTheyDoNotKnow(string unknown)
 		{
-			Assert.IsNull(KingdomCropRules.SeedForCrop(unknown));
-			Assert.IsNull(KingdomCropRules.CropForSeed(unknown));
-			Assert.IsNull(KingdomCropRules.RowForCrop(unknown));
+			ClassicAssert.IsNull(KingdomCropRules.SeedForCrop(unknown));
+			ClassicAssert.IsNull(KingdomCropRules.CropForSeed(unknown));
+			ClassicAssert.IsNull(KingdomCropRules.RowForCrop(unknown));
 		}
 
 		// --- The gate: what refuses a sowing, in order ----------------------------------------
@@ -566,7 +567,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AssessSow_AllowsASoundClaimedUnsownFieldWithWaterInHand()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.SowVerdict.Sown,
 				KingdomCropRules.AssessSow(HasField: true, Claimed: true, AlreadySown: false, Condemned: false, HasRow: true, StoredWater: 1000, Population: 4));
 		}
@@ -579,7 +580,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, false, false, true, 0, KingdomCropRules.SowVerdict.NoWater)]
 		public void AssessSow_NamesTheFirstThingWrong(bool hasField, bool claimed, bool alreadySown, bool condemned, bool hasRow, int water, KingdomCropRules.SowVerdict expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomCropRules.AssessSow(hasField, claimed, alreadySown, condemned, hasRow, water, Population: 4));
 		}
 
@@ -588,7 +589,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Everything wrong at once. The founder is told about the thing they can act on first,
 			// which is that they are not standing in a field at all.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCropRules.SowVerdict.NoField,
 				KingdomCropRules.AssessSow(HasField: false, Claimed: false, AlreadySown: true, Condemned: true, HasRow: false, StoredWater: 0, Population: 40));
 		}
@@ -599,7 +600,7 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomCropRules.SowVerdict verdict in Enum.GetValues(typeof(KingdomCropRules.SowVerdict)))
 			{
 				string line = KingdomCropRules.SowRefusal(verdict);
-				Assert.IsFalse(string.IsNullOrEmpty(line), verdict + " refuses in silence");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line), verdict + " refuses in silence");
 			}
 		}
 
@@ -610,8 +611,8 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomCropRules.FieldWant want in Enum.GetValues(typeof(KingdomCropRules.FieldWant)))
 			{
 				string line = KingdomCropRules.WantNote(want, "field", "Hearth");
-				Assert.IsFalse(string.IsNullOrEmpty(line), want + " stalls in silence");
-				Assert.IsTrue(line.Contains("Hearth"), want + " does not say where");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line), want + " stalls in silence");
+				ClassicAssert.IsTrue(line.Contains("Hearth"), want + " does not say where");
 			}
 		}
 
@@ -625,7 +626,7 @@ namespace ThousandAndFirst.Tests
 				{
 					continue;
 				}
-				Assert.AreNotEqual(seed, KingdomCropRules.WantNote(want, "field", "Hearth"));
+				ClassicAssert.AreNotEqual(seed, KingdomCropRules.WantNote(want, "field", "Hearth"));
 			}
 		}
 
@@ -633,10 +634,10 @@ namespace ThousandAndFirst.Tests
 		public void SowConfirm_NamesTheCropTheRowsTheWaitAndTheWater()
 		{
 			string text = KingdomCropRules.SowConfirm("vinewafer", "field", 16, KingdomCropRules.PlantWaterCostDrams);
-			Assert.IsTrue(text.Contains("vinewafer"));
-			Assert.IsTrue(text.Contains("16"));
-			Assert.IsTrue(text.Contains(KingdomCropRules.CropDays.ToString()));
-			Assert.IsTrue(text.Contains(KingdomCropRules.PlantWaterCostDrams.ToString()));
+			ClassicAssert.IsTrue(text.Contains("vinewafer"));
+			ClassicAssert.IsTrue(text.Contains("16"));
+			ClassicAssert.IsTrue(text.Contains(KingdomCropRules.CropDays.ToString()));
+			ClassicAssert.IsTrue(text.Contains(KingdomCropRules.PlantWaterCostDrams.ToString()));
 		}
 
 		// --- Chronicle discipline: a season tells once, with a count ---------------------------
@@ -645,35 +646,35 @@ namespace ThousandAndFirst.Tests
 		public void HarvestChronicle_TellsASeasonOfHarvestsWithACount()
 		{
 			string many = KingdomCropRules.HarvestChronicle(12, 216, "Hearth", 3);
-			Assert.IsTrue(many.Contains("12 harvests"), "a season of harvests must carry its count");
-			Assert.IsTrue(many.Contains("216"));
-			Assert.IsTrue(many.Contains("3 days before you saw it"));
+			ClassicAssert.IsTrue(many.Contains("12 harvests"), "a season of harvests must carry its count");
+			ClassicAssert.IsTrue(many.Contains("216"));
+			ClassicAssert.IsTrue(many.Contains("3 days before you saw it"));
 		}
 
 		[Test]
 		public void HarvestChronicle_DoesNotCountASingleHarvest()
 		{
 			string one = KingdomCropRules.HarvestChronicle(1, 18, "Hearth", 0);
-			Assert.IsFalse(one.Contains("1 harvests"));
-			Assert.IsFalse(one.Contains("before you saw it"), "a harvest gathered today is not dated in the past");
+			ClassicAssert.IsFalse(one.Contains("1 harvests"));
+			ClassicAssert.IsFalse(one.Contains("before you saw it"), "a harvest gathered today is not dated in the past");
 		}
 
 		[Test]
 		public void HarvestNote_AccountsForEveryServingItNames()
 		{
 			string note = KingdomCropRules.HarvestNote(2, 36, 20, 10, 6);
-			Assert.IsTrue(note.Contains("36"));
-			Assert.IsTrue(note.Contains("20"));
-			Assert.IsTrue(note.Contains("10"));
-			Assert.IsTrue(note.Contains("6"));
+			ClassicAssert.IsTrue(note.Contains("36"));
+			ClassicAssert.IsTrue(note.Contains("20"));
+			ClassicAssert.IsTrue(note.Contains("10"));
+			ClassicAssert.IsTrue(note.Contains("6"));
 		}
 
 		[Test]
 		public void HarvestNote_SaysSoWhenNothingReachedALarderHere()
 		{
 			string note = KingdomCropRules.HarvestNote(1, 18, 0, 18, 0);
-			Assert.IsTrue(note.Contains("None of it reached a larder here"));
-			Assert.IsTrue(note.Contains("on the road"));
+			ClassicAssert.IsTrue(note.Contains("None of it reached a larder here"));
+			ClassicAssert.IsTrue(note.Contains("on the road"));
 		}
 
 		// --- The seed-return draw: deterministic, bounded, and never free ----------------------
@@ -684,7 +685,7 @@ namespace ThousandAndFirst.Tests
 			bool first = KingdomCropRules.RollSeedReturn("taf:settlement:hearth", "field-1", 3uL);
 			for (int i = 0; i < 8; i++)
 			{
-				Assert.AreEqual(first, KingdomCropRules.RollSeedReturn("taf:settlement:hearth", "field-1", 3uL),
+				ClassicAssert.AreEqual(first, KingdomCropRules.RollSeedReturn("taf:settlement:hearth", "field-1", 3uL),
 					"the same question was answered two different ways");
 			}
 		}
@@ -703,14 +704,14 @@ namespace ThousandAndFirst.Tests
 					agree++;
 				}
 			}
-			Assert.Less(agree, 40, "two fields answer identically on every cycle");
+			ClassicAssert.Less(agree, 40, "two fields answer identically on every cycle");
 		}
 
 		[Test]
 		public void RollSeedReturn_RefusesAMalformedSettlementRatherThanFaulting()
 		{
-			Assert.IsFalse(KingdomCropRules.RollSeedReturn(null, "field-1", 1uL));
-			Assert.IsFalse(KingdomCropRules.RollSeedReturn("", "field-1", 1uL));
+			ClassicAssert.IsFalse(KingdomCropRules.RollSeedReturn(null, "field-1", 1uL));
+			ClassicAssert.IsFalse(KingdomCropRules.RollSeedReturn("", "field-1", 1uL));
 		}
 
 		[Test]
@@ -725,14 +726,14 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 			int expected = 2000 * KingdomCropRules.SeedReturnChancePercent / 100;
-			Assert.Less(System.Math.Abs(hits - expected), 120,
+			ClassicAssert.Less(System.Math.Abs(hits - expected), 120,
 				"the seed-return draw is " + hits + " in 2000 against a declared " + KingdomCropRules.SeedReturnChancePercent + "%");
 		}
 
 		[Test]
 		public void SeedReturned_IsCappedHoweverLongTheAbsence()
 		{
-			Assert.LessOrEqual(
+			ClassicAssert.LessOrEqual(
 				KingdomCropRules.SeedReturned("taf:settlement:hearth", "field-1", 0uL, KingdomCropRules.MaxCyclesPerVisit, 5000),
 				KingdomCropRules.MaxSeedsPerResolve);
 		}
@@ -740,8 +741,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SeedReturned_ReturnsNothingFromAHarvestThatYieldedNothing()
 		{
-			Assert.AreEqual(0, KingdomCropRules.SeedReturned("taf:settlement:hearth", "field-1", 0uL, 40, 0));
-			Assert.AreEqual(0, KingdomCropRules.SeedReturned("taf:settlement:hearth", "field-1", 0uL, 0, 500));
+			ClassicAssert.AreEqual(0, KingdomCropRules.SeedReturned("taf:settlement:hearth", "field-1", 0uL, 40, 0));
+			ClassicAssert.AreEqual(0, KingdomCropRules.SeedReturned("taf:settlement:hearth", "field-1", 0uL, 0, 500));
 		}
 
 		[Test]
@@ -749,10 +750,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// Two different fields must not fold to the same stream, and an unnamed one must still
 			// fold to something the kernel will accept rather than faulting the draw away.
-			Assert.AreNotEqual(KingdomCropRules.FieldStream("A1"), KingdomCropRules.FieldStream("A2"));
-			Assert.AreEqual(KingdomCropRules.FieldStream("A1"), KingdomCropRules.FieldStream("a1"));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCropRules.FieldStream(null)));
-			Assert.IsTrue(KingdomCropRules.RollSeedReturn("taf:settlement:hearth", null, 1uL)
+			ClassicAssert.AreNotEqual(KingdomCropRules.FieldStream("A1"), KingdomCropRules.FieldStream("A2"));
+			ClassicAssert.AreEqual(KingdomCropRules.FieldStream("A1"), KingdomCropRules.FieldStream("a1"));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCropRules.FieldStream(null)));
+			ClassicAssert.IsTrue(KingdomCropRules.RollSeedReturn("taf:settlement:hearth", null, 1uL)
 				|| !KingdomCropRules.RollSeedReturn("taf:settlement:hearth", null, 1uL));
 		}
 	}

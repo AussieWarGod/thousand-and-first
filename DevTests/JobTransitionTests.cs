@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -74,7 +75,7 @@ namespace ThousandAndFirst.Tests
 							? JobTransitionVerdict.Allowed
 							: JobTransitionVerdict.Rejected;
 					}
-					Assert.AreEqual(expected, actual, "edge " + from + " -> " + to);
+					ClassicAssert.AreEqual(expected, actual, "edge " + from + " -> " + to);
 				}
 			}
 		}
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int i = 0; i <= 10; i++)
 			{
-				Assert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify((SemanticJobState)i, (SemanticJobState)i), "state " + i);
+				ClassicAssert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify((SemanticJobState)i, (SemanticJobState)i), "state " + i);
 			}
 		}
 
@@ -98,15 +99,15 @@ namespace ThousandAndFirst.Tests
 			foreach (int value in garbage)
 			{
 				SemanticJobState state = (SemanticJobState)value;
-				Assert.IsFalse(JobTransitions.IsTerminal(state), "an unrecognised value must not read as a finished job: " + value);
-				Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, state), "self edge on garbage " + value);
+				ClassicAssert.IsFalse(JobTransitions.IsTerminal(state), "an unrecognised value must not read as a finished job: " + value);
+				ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, state), "self edge on garbage " + value);
 
 				// Unknown on either side rejects, so no edge can be reached into or out of it.
 				for (int other = 0; other <= 10; other++)
 				{
-					Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, (SemanticJobState)other),
+					ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(state, (SemanticJobState)other),
 						"garbage " + value + " -> " + other);
-					Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify((SemanticJobState)other, state),
+					ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify((SemanticJobState)other, state),
 						other + " -> garbage " + value);
 				}
 			}
@@ -120,16 +121,16 @@ namespace ThousandAndFirst.Tests
 			for (int i = MinProbe; i <= MaxProbe; i++)
 			{
 				SemanticJobState state = (SemanticJobState)i;
-				Assert.AreEqual(i == (int)SemanticJobState.Archived, JobTransitions.IsTerminal(state), "state " + i);
+				ClassicAssert.AreEqual(i == (int)SemanticJobState.Archived, JobTransitions.IsTerminal(state), "state " + i);
 			}
-			Assert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify(SemanticJobState.Archived, SemanticJobState.Archived));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify(SemanticJobState.Archived, SemanticJobState.Archived));
 			for (int i = 0; i <= 10; i++)
 			{
 				if (i == (int)SemanticJobState.Archived)
 				{
 					continue;
 				}
-				Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Archived, (SemanticJobState)i), "Archived has no exit to " + (SemanticJobState)i);
+				ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Archived, (SemanticJobState)i), "Archived has no exit to " + (SemanticJobState)i);
 			}
 		}
 
@@ -138,10 +139,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// Cancelled means nothing was committed. Committed work reaches an equivalent end only
 			// through a successful compensation receipt.
-			Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Cancelled));
-			Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Blocked));
-			Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Recoverable));
-			Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Compensated));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Cancelled));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Blocked));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Committed, SemanticJobState.Recoverable));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Compensated));
 		}
 
 		/// <summary>
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 					}
 				}
 
-				Assert.IsTrue(reachedTerminal, "no path from " + state + " reaches a terminal state");
+				ClassicAssert.IsTrue(reachedTerminal, "no path from " + state + " reaches a terminal state");
 			}
 		}
 
@@ -220,7 +221,7 @@ namespace ThousandAndFirst.Tests
 				new[] { SemanticJobState.Compensated, SemanticJobState.Archived }
 			};
 
-			Assert.AreEqual(11, witnesses.Length, "one witness per valid state");
+			ClassicAssert.AreEqual(11, witnesses.Length, "one witness per valid state");
 
 			HashSet<SemanticJobState> covered = new HashSet<SemanticJobState>();
 			foreach (SemanticJobState[] witness in witnesses)
@@ -233,25 +234,25 @@ namespace ThousandAndFirst.Tests
 				{
 					if (unavailableRoutesBanned)
 					{
-						Assert.AreNotEqual(SemanticJobState.Materialized, witness[i],
+						ClassicAssert.AreNotEqual(SemanticJobState.Materialized, witness[i],
 							"the " + start + " witness must survive materialization being impossible");
-						Assert.AreNotEqual(SemanticJobState.Compensated, witness[i],
+						ClassicAssert.AreNotEqual(SemanticJobState.Compensated, witness[i],
 							"the " + start + " witness must survive compensation being impossible");
 					}
-					Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(witness[i - 1], witness[i]),
+					ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(witness[i - 1], witness[i]),
 						"witness edge " + witness[i - 1] + " -> " + witness[i]);
 				}
 
-				Assert.IsTrue(JobTransitions.IsTerminal(witness[witness.Length - 1]), "witness for " + start + " must end terminal");
+				ClassicAssert.IsTrue(JobTransitions.IsTerminal(witness[witness.Length - 1]), "witness for " + start + " must end terminal");
 				if (start == SemanticJobState.Archived)
 				{
-					Assert.AreEqual(1, witness.Length, "the terminal state's witness takes zero edges");
+					ClassicAssert.AreEqual(1, witness.Length, "the terminal state's witness takes zero edges");
 				}
 			}
 
 			for (int i = 0; i <= 10; i++)
 			{
-				Assert.IsTrue(covered.Contains((SemanticJobState)i), "no witness for " + (SemanticJobState)i);
+				ClassicAssert.IsTrue(covered.Contains((SemanticJobState)i), "no witness for " + (SemanticJobState)i);
 			}
 		}
 
@@ -261,13 +262,13 @@ namespace ThousandAndFirst.Tests
 			// The specific gap this closes: both ordinary exits can be permanently impossible at
 			// once — the target gone with an uninstalled mod, and compensation unachievable
 			// because the payer or sink no longer validates.
-			Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Archived));
-			Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Materialized));
-			Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Compensated));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Archived));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Materialized));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Compensated));
 			// It is an escape, not a general reopening.
-			Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Cancelled));
-			Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Blocked));
-			Assert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Prepared));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Cancelled));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Blocked));
+			ClassicAssert.AreEqual(JobTransitionVerdict.Rejected, JobTransitions.Classify(SemanticJobState.Recoverable, SemanticJobState.Prepared));
 		}
 
 		[Test]
@@ -287,10 +288,10 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int i = 1; i < path.Length; i++)
 				{
-					Assert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(path[i - 1], path[i]), path[i - 1] + " -> " + path[i]);
-					Assert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify(path[i], path[i]), "repeating " + path[i]);
+					ClassicAssert.AreEqual(JobTransitionVerdict.Allowed, JobTransitions.Classify(path[i - 1], path[i]), path[i - 1] + " -> " + path[i]);
+					ClassicAssert.AreEqual(JobTransitionVerdict.Idempotent, JobTransitions.Classify(path[i], path[i]), "repeating " + path[i]);
 				}
-				Assert.IsTrue(JobTransitions.IsTerminal(path[path.Length - 1]), "path must end terminal");
+				ClassicAssert.IsTrue(JobTransitions.IsTerminal(path[path.Length - 1]), "path must end terminal");
 			}
 		}
 	}

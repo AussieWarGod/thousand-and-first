@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -12,16 +13,16 @@ namespace ThousandAndFirst.DevTests
 		public void DirectFallbackUsesCasAndForgedFactsLeaveAuthorityByteIdentical()
 		{
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(0),
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(0),
 				out List<KingdomPolityDueWork> work, out string failure), failure);
 			string before = Snapshot(state);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 				state.Revision - 1L, work[0], out _, out failure));
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.AreEqual(before, Snapshot(state));
 			KingdomPolityDueWork forged = Copy(work[0]); forged.DueFacts += " forged";
-			Assert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 				state.Revision, forged, out _, out failure));
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.AreEqual(before, Snapshot(state));
 			Action<KingdomPolityDueWork>[] forgeries =
 			{
 				x => x.CauseRef = "taf:fact:forged-cause",
@@ -33,9 +34,9 @@ namespace ThousandAndFirst.DevTests
 			for (int i = 0; i < forgeries.Length; i++)
 			{
 				forged = Copy(work[0]); forgeries[i](forged);
-				Assert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+				ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 					state.Revision, forged, out _, out failure));
-				Assert.AreEqual(before, Snapshot(state));
+				ClassicAssert.AreEqual(before, Snapshot(state));
 			}
 			KingdomPolityDispatchState raw = KingdomPolityDispatchRules.CloneState(state);
 			KingdomPolityDirectRecord intent = KingdomPolityDispatchRules.FindIntent(raw, 0);
@@ -54,25 +55,25 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityDispatchRules.IntentPrefix, "polity-intent-v1", intent,
 				raw.EndpointDigest);
 			KingdomPolityDispatchRules.SortRecords(raw.DirectRecords);
-			Assert.IsFalse(KingdomPolityDispatchRules.ValidState(raw, out failure),
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.ValidState(raw, out failure),
 				"fully rehashed source-digest forgery must not become authority");
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.AreEqual(before, Snapshot(state));
 
-			Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 				state.Revision, work[0], out KingdomPolityDirectRecord record, out failure), failure);
 			long applied = state.Revision;
-			Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 				0L, work[0], out KingdomPolityDirectRecord retry, out failure), failure);
-			Assert.AreEqual(record.RecordId, retry.RecordId); Assert.AreEqual(applied, state.Revision);
+			ClassicAssert.AreEqual(record.RecordId, retry.RecordId); ClassicAssert.AreEqual(applied, state.Revision);
 
 			before = Snapshot(state);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
 				state.Revision - 1L, record.RecordId, record.SettlementId, 1L, out failure));
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.AreEqual(before, Snapshot(state));
 			state.Revision = long.MaxValue; before = Snapshot(state);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
 				state.Revision, record.RecordId, record.SettlementId, 1L, out failure));
-			StringAssert.Contains("exhausted", failure); Assert.AreEqual(before, Snapshot(state));
+			StringAssert.Contains("exhausted", failure); ClassicAssert.AreEqual(before, Snapshot(state));
 		}
 
 		[Test]
@@ -80,8 +81,8 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityDispatchState state = AggregatedState();
 			string before = Snapshot(state);
-			Assert.IsTrue(KingdomPolityDispatchRules.ValidState(state, out string failure), failure);
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.ValidState(state, out string failure), failure);
+			ClassicAssert.AreEqual(before, Snapshot(state));
 			int detail = 0, aggregate = 0;
 			for (int i = 0; i < state.DirectRecords.Count; i++)
 			{
@@ -90,12 +91,12 @@ namespace ThousandAndFirst.DevTests
 				if (state.DirectRecords[i].RecordId.StartsWith(
 					KingdomPolityDispatchRules.AggregatePrefix)) aggregate++;
 			}
-			Assert.AreEqual(KingdomPolityDispatchRules.MaximumDirectRecords, detail);
-			Assert.AreEqual(1, aggregate);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision,
+			ClassicAssert.AreEqual(KingdomPolityDispatchRules.MaximumDirectRecords, detail);
+			ClassicAssert.AreEqual(1, aggregate);
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision,
 				Offer(KingdomPolityDispatchRules.MaximumDirectRecords + 1),
 				out List<KingdomPolityDueWork> next, out string nextFailure), nextFailure);
-			Assert.AreEqual(1, next.Count);
+			ClassicAssert.AreEqual(1, next.Count);
 		}
 
 		[TestCase(null, "supersession")]
@@ -134,28 +135,28 @@ namespace ThousandAndFirst.DevTests
 			string before = Snapshot(state); bool valid = true; string failure = null;
 			Assert.DoesNotThrow(() => valid = KingdomPolityDispatchRules.ValidState(state,
 				out failure));
-			Assert.IsFalse(valid); Assert.IsNotEmpty(failure);
-			Assert.AreSame(rows, state.DirectRecords);
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.IsFalse(valid); ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.AreSame(rows, state.DirectRecords);
+			ClassicAssert.AreEqual(before, Snapshot(state));
 		}
 
 		[Test]
 		public void DisabledAndPreFloorWindowsLeaveNoIntentOrDirectBacklog()
 		{
 			KingdomPolityDispatchState disabled = new KingdomPolityDispatchState();
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(disabled, disabled.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(disabled, disabled.Revision,
 				Offer(0), false, out List<KingdomPolityDueWork> work, out string failure), failure);
-			Assert.AreEqual(0, work.Count); Assert.AreEqual(0, disabled.DirectRecords.Count);
-			Assert.AreEqual(1, disabled.CompletedMask);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(disabled, disabled.Revision,
+			ClassicAssert.AreEqual(0, work.Count); ClassicAssert.AreEqual(0, disabled.DirectRecords.Count);
+			ClassicAssert.AreEqual(1, disabled.CompletedMask);
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(disabled, disabled.Revision,
 				Offer(1), true, out work, out failure), failure);
-			Assert.AreEqual(1, work.Count);
+			ClassicAssert.AreEqual(1, work.Count);
 
 			KingdomPolityDispatchState floor = new KingdomPolityDispatchState
 				{ FutureCauseFloorTick = 1L };
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(floor, floor.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(floor, floor.Revision,
 				Offer(0), out work, out failure), failure);
-			Assert.AreEqual(0, work.Count); Assert.AreEqual(0, floor.DirectRecords.Count);
+			ClassicAssert.AreEqual(0, work.Count); ClassicAssert.AreEqual(0, floor.DirectRecords.Count);
 		}
 
 		[Test]
@@ -164,33 +165,33 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDispatchState foreign = new KingdomPolityDispatchState
 				{ RealmId = "taf:realm:foreign" };
 			string before = Snapshot(foreign);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryOpen(foreign, foreign.Revision, Offer(0),
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryOpen(foreign, foreign.Revision, Offer(0),
 				out _, out string failure));
-			Assert.AreEqual(before, Snapshot(foreign));
+			ClassicAssert.AreEqual(before, Snapshot(foreign));
 			KingdomPolityDispatchState future = new KingdomPolityDispatchState { Version = 99 };
 			before = Snapshot(future);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryRecover(future,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRecover(future,
 				KingdomPolityTestData.Realm, "future wire", out failure));
-			Assert.AreEqual(before, Snapshot(future));
+			ClassicAssert.AreEqual(before, Snapshot(future));
 
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(0),
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(0),
 				out List<KingdomPolityDueWork> work, out failure), failure);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 				state.Revision, work[0], out _, out failure), failure);
 			int retained = state.DirectRecords.Count;
-			Assert.IsTrue(KingdomPolityDispatchRules.TryRetire(state, state.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRetire(state, state.Revision,
 				KingdomPolityTestData.Realm, "receipt-a", out failure), failure);
-			Assert.AreEqual(retained + 1, state.DirectRecords.Count);
+			ClassicAssert.AreEqual(retained + 1, state.DirectRecords.Count);
 			before = Snapshot(state);
-			Assert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryAcknowledgeDirectRecord(state,
 				state.Revision, state.DirectRecords.Find(x => x.RecordId.StartsWith(
 					KingdomPolityDispatchRules.DirectPrefix)).RecordId,
 				KingdomPolityTestData.Settlement, 1L, out failure));
-			Assert.AreEqual(before, Snapshot(state));
-			Assert.IsFalse(KingdomPolityDispatchRules.TryRetire(state, state.Revision,
+			ClassicAssert.AreEqual(before, Snapshot(state));
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRetire(state, state.Revision,
 				KingdomPolityTestData.Realm, "receipt-b", out failure));
-			Assert.AreEqual(before, Snapshot(state));
+			ClassicAssert.AreEqual(before, Snapshot(state));
 		}
 
 		[Test]
@@ -209,10 +210,10 @@ namespace ThousandAndFirst.DevTests
 			{
 				string dispatchBefore = Snapshot(refused[i]);
 				byte[] ledgerBefore = KingdomPolityCodec.EncodeEnvelope(ledger);
-				Assert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, refused[i],
+				ClassicAssert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, refused[i],
 					ledger.Revision, KingdomPolityPresentationState.Enabled, 100L,
 					out KingdomPolityMasterResumePlan plan, out string _));
-				Assert.IsNull(plan); Assert.AreEqual(dispatchBefore, Snapshot(refused[i]));
+				ClassicAssert.IsNull(plan); ClassicAssert.AreEqual(dispatchBefore, Snapshot(refused[i]));
 				CollectionAssert.AreEqual(ledgerBefore, KingdomPolityCodec.EncodeEnvelope(ledger));
 			}
 		}
@@ -222,16 +223,16 @@ namespace ThousandAndFirst.DevTests
 		{
 			List<KingdomExperienceAdmissionCandidate> rows = FairRows(0UL);
 			rows[2].ExactRetry = true;
-			Assert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows,
+			ClassicAssert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows,
 				out List<KingdomExperienceAdmissionCandidate> ordered, out string failure), failure);
-			Assert.AreSame(rows[2], ordered[0]);
+			ClassicAssert.AreSame(rows[2], ordered[0]);
 			rows[2].ExactRetry = false; rows[0].HasDirectFallback = true;
-			Assert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows, out ordered, out failure),
-				failure); Assert.AreNotSame(rows[0], ordered[0]);
+			ClassicAssert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows, out ordered, out failure),
+				failure); ClassicAssert.AreNotSame(rows[0], ordered[0]);
 			string first = ordered[0].SourceId;
 			rows = FairRows(6UL);
-			Assert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows, out ordered, out failure),
-				failure); Assert.AreNotEqual(first, ordered[0].SourceId);
+			ClassicAssert.IsTrue(KingdomExperienceFairnessRules.TryOrder(rows, out ordered, out failure),
+				failure); ClassicAssert.AreNotEqual(first, ordered[0].SourceId);
 		}
 
 		[Test]
@@ -240,7 +241,7 @@ namespace ThousandAndFirst.DevTests
 			KingdomExperienceLedger ledger = EnabledExperience();
 			KingdomExperienceAudienceReceipt audience = Audience();
 			KingdomExperienceBodyReservation bodies = Bodies();
-			Assert.IsTrue(KingdomExperienceRules.TryReservePresentation(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReservePresentation(ledger, ledger.Revision,
 				audience, bodies, 0, out _, out string failure), failure);
 			List<KingdomExperienceRetirementLeaseAllowance> exact = new List<
 				KingdomExperienceRetirementLeaseAllowance>
@@ -248,11 +249,11 @@ namespace ThousandAndFirst.DevTests
 				new KingdomExperienceRetirementLeaseAllowance { Audience = audience },
 				new KingdomExperienceRetirementLeaseAllowance { Bodies = bodies }
 			};
-			Assert.IsTrue(KingdomExperienceRules.TryDescribeRealmRemovalBlocker(ledger,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryDescribeRealmRemovalBlocker(ledger,
 				KingdomPolityTestData.Realm, exact, out string blocker, out failure), failure);
-			Assert.IsNull(blocker);
+			ClassicAssert.IsNull(blocker);
 			exact.Add(new KingdomExperienceRetirementLeaseAllowance { Bodies = bodies });
-			Assert.IsTrue(KingdomExperienceRules.TryDescribeRealmRemovalBlocker(ledger,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryDescribeRealmRemovalBlocker(ledger,
 				KingdomPolityTestData.Realm, exact, out blocker, out failure), failure);
 			StringAssert.Contains("malformed, duplicate", blocker);
 		}
@@ -263,18 +264,18 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			KingdomPolityDispatchState dispatch = new KingdomPolityDispatchState();
 			const string receipt = "0123456789abcdef0123456789abcdef";
-			Assert.IsTrue(KingdomPolityDispatchRules.TryRetire(dispatch, dispatch.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRetire(dispatch, dispatch.Revision,
 				KingdomPolityTestData.Realm, receipt, out string failure), failure);
-			Assert.IsTrue(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
 				ledger.Revision, receipt, out KingdomPolityPublicationResult result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
 			long settled = ledger.Revision;
-			Assert.IsTrue(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
 				0L, receipt, out result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
-			Assert.IsFalse(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.IsFalse(KingdomPolityRemovalRules.TrySettleBodylessRetirement(ledger, dispatch,
 				settled, "ffffffffffffffffffffffffffffffff", out result, out failure));
-			Assert.AreEqual(settled, ledger.Revision);
+			ClassicAssert.AreEqual(settled, ledger.Revision);
 		}
 
 		private static KingdomPolityDispatchState AggregatedState()
@@ -282,9 +283,9 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
 			for (int window = 0; window <= KingdomPolityDispatchRules.MaximumDirectRecords; window++)
 			{
-				Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(window),
+				ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, Offer(window),
 					out List<KingdomPolityDueWork> work, out string failure), failure);
-				Assert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+				ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
 					state.Revision, work[0], out _, out failure), failure);
 			}
 			return state;
@@ -364,9 +365,9 @@ namespace ThousandAndFirst.DevTests
 		private static KingdomExperienceLedger EnabledExperience()
 		{
 			KingdomExperienceLedger ledger = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
 				KingdomPolityTestData.Realm, out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
 				true, true, true, 10L, out failure), failure); return ledger;
 		}
 

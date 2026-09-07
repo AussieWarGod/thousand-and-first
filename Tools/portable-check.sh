@@ -56,8 +56,8 @@ for project_path in project_paths:
     for forbidden in ("<Reference", "HintPath", "Caves of Qud", "CoQ_Data", ".dll"):
         if forbidden.lower() in project.lower():
             raise SystemExit(f"{project_path.name} has forbidden game reference: {forbidden}")
-    if project.count("<PackageReference Include=\"NUnit\" Version=\"[3.14.0]\" />") != 1:
-        raise SystemExit(f"{project_path.name} must pin exactly NUnit [3.14.0]")
+    if project.count("<PackageReference Include=\"NUnit\" Version=\"[4.6.1]\" />") != 1:
+        raise SystemExit(f"{project_path.name} must pin exactly NUnit [4.6.1]")
     for node in etree.parse(project_path).getroot().findall(".//Compile"):
         include = node.get("Include", "").replace("\\", "/")
         candidate = project_path.parent / include
@@ -77,8 +77,8 @@ if missing_tests:
     raise SystemExit("TafTests.csproj omits test sources: " + ", ".join(missing_tests))
 lock = json.loads(lock_path.read_text(encoding="utf-8"))
 dependency = lock["dependencies"]["net9.0"]["NUnit"]
-if dependency["requested"] != "[3.14.0, 3.14.0]" or dependency["resolved"] != "3.14.0":
-    raise SystemExit("portable lock must resolve exactly NUnit 3.14.0")
+if dependency["requested"] != "[4.6.1, 4.6.1]" or dependency["resolved"] != "4.6.1":
+    raise SystemExit("portable lock must resolve exactly NUnit 4.6.1")
 
 staged = subprocess.check_output(["Tools/stage.sh", "list"], text=True).splitlines()
 for public_document in ("README.md", "PLAYTESTING.md", "SUPPORT.md", "LICENSE", "NOTICE"):
