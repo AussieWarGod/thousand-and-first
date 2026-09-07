@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -87,13 +88,13 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("item.IsCreature || item.IsPlayer()", preflight);
 			StringAssert.Contains("KingdomMaterials.IsProtected(item, out reason)", preflight);
 			StringAssert.Contains("KingdomPlotRules.Refuses(ground)", preflight);
-			Assert.IsFalse(preflight.Contains("SetIntProperty"));
-			Assert.IsFalse(preflight.Contains("SetStringProperty"));
-			Assert.IsFalse(preflight.Contains("GameObject.Create"));
-			Assert.IsFalse(preflight.Contains("AddObject"));
-			Assert.IsFalse(preflight.Contains("Reserve"));
-			Assert.IsFalse(preflight.Contains("TryDebit"));
-			Assert.IsFalse(preflight.Contains("CommitDebit"));
+			ClassicAssert.IsFalse(preflight.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(preflight.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(preflight.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(preflight.Contains("AddObject"));
+			ClassicAssert.IsFalse(preflight.Contains("Reserve"));
+			ClassicAssert.IsFalse(preflight.Contains("TryDebit"));
+			ClassicAssert.IsFalse(preflight.Contains("CommitDebit"));
 		}
 
 		[Test]
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 				"Owner.SetIntProperty(NextLayerProperty, 0)",
 				"Owner.SetIntProperty(SchemaProperty, LayoutSchema)",
 				"TryReadOwner(Owner, out readIntent");
-			Assert.AreEqual(initialize.IndexOf(
+			ClassicAssert.AreEqual(initialize.IndexOf(
 				"Owner.SetIntProperty(SchemaProperty, LayoutSchema);", StringComparison.Ordinal),
 				initialize.LastIndexOf("Owner.Set", StringComparison.Ordinal),
 				"layout schema must be the final receipt write");
@@ -139,9 +140,9 @@ namespace ThousandAndFirst.Tests
 
 			string durable = source.Substring(source.IndexOf(
 				"public static bool TryInitializeOwner(", StringComparison.Ordinal));
-			Assert.IsFalse(durable.Contains("KingdomArchitecture.TryGetMapping"));
-			Assert.IsFalse(durable.Contains("KingdomArchitecture.TryResolve"));
-			Assert.IsFalse(durable.Contains("KingdomData"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomArchitecture.TryGetMapping"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomData"));
 		}
 
 		[Test]
@@ -206,8 +207,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitectureRuntime.TryWorldPlacement", exact);
 			StringAssert.Contains("return count == 1", exact);
 			StringAssert.Contains("Owner.SetStringProperty(FaultProperty, Failure)", source);
-			Assert.IsFalse(source.Contains("Stat.Random"));
-			Assert.IsFalse(source.Contains("GetRandomElement"));
+			ClassicAssert.IsFalse(source.Contains("Stat.Random"));
+			ClassicAssert.IsFalse(source.Contains("GetRandomElement"));
 		}
 
 		[Test]
@@ -221,8 +222,8 @@ namespace ThousandAndFirst.Tests
 				"new KingdomMaterialDebitCost(",
 				"KingdomArchitectureStamper.TryPreflight(System, Z, prepared, claim",
 				"TryEncodePlotPayload(Rect, SkinKey, prepared");
-			Assert.IsFalse(prepare.Contains("ReserveExactWater"));
-			Assert.IsFalse(prepare.Contains("ReservePayment"));
+			ClassicAssert.IsFalse(prepare.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(prepare.Contains("ReservePayment"));
 
 			string stake = Between(source, "private static GameObject Stake(",
 				"private static bool RemoveCreatedWorks(");
@@ -272,9 +273,9 @@ namespace ThousandAndFirst.Tests
 				"delta.Retained[i], delta.RetainedAfter[i]",
 				"TryStageLayer(Target, Z, ArchitectureLayer.Ground",
 				"TryVerifyComplete(Target, Z");
-			Assert.IsFalse(apply.Contains("KingdomArchitecture.TryResolve"));
-			Assert.IsFalse(apply.Contains("KingdomData"));
-			Assert.IsFalse(apply.Contains("GrowInPlace"));
+			ClassicAssert.IsFalse(apply.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(apply.Contains("KingdomData"));
+			ClassicAssert.IsFalse(apply.Contains("GrowInPlace"));
 
 			string upgrade = Upgrade();
 			string prepare = Between(upgrade, "private static bool TryPrepareImprovementPayload(",
@@ -283,14 +284,14 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureRuntime.TryPrepareSuccessorForUpgrade(System, Z, Work",
 				"KingdomArchitectureStamper.TryPreflightUpgrade(System, Z, Work, successor",
 				"KingdomPlots.TryEncodePlotPayload(successor.Rect");
-			Assert.IsFalse(prepare.Contains("Reserve"));
+			ClassicAssert.IsFalse(prepare.Contains("Reserve"));
 			string projection = Between(upgrade, "private static bool ProjectImprovement(",
 				"private static bool ExpectedImprovementScaffold(");
 			AssertOrdered(projection, "TryReadImprovementArchitecture(Work, Job",
 				"KingdomArchitectureRuntime.TryFreeze(scaffold, architecture",
 				"KingdomConstruction.UpdateOutput(ref Updated, scaffold.ID)",
 				"cell.AddObject(scaffold)");
-			Assert.IsFalse(projection.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(projection.Contains("KingdomArchitectureRuntime.TryPrepare"));
 			string handover = upgrade.Substring(upgrade.IndexOf(
 				"public static void HandOver(", StringComparison.Ordinal));
 			StringAssert.Contains("KingdomArchitectureStamper.TryApplyUpgrade", handover);
@@ -423,9 +424,9 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
 			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
 				"private static bool TryCarryUpgradeSlot(");
-			Assert.AreEqual(4, remove.Split(new[] { "FindGlobalLiveId" },
+			ClassicAssert.AreEqual(4, remove.Split(new[] { "FindGlobalLiveId" },
 				StringSplitOptions.None).Length - 1);
-			Assert.AreEqual(2, remove.Split(new[] { "GlobalRemovalAftermath" },
+			ClassicAssert.AreEqual(2, remove.Split(new[] { "GlobalRemovalAftermath" },
 				StringSplitOptions.None).Length - 1);
 			StringAssert.DoesNotContain("FindExactId", remove);
 			AssertOrdered(remove, "FindGlobalLiveId(id, out exact)",
@@ -487,8 +488,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Owner.Inventory.Objects.Count != 0", strike);
 			StringAssert.Contains("ownerLiquid.Volume > 0", strike);
 			StringAssert.Contains("HeartRelicProperty", strike);
-			Assert.IsFalse(strike.Contains("Obliterate"));
-			Assert.IsFalse(strike.Contains("Destroy("));
+			ClassicAssert.IsFalse(strike.Contains("Obliterate"));
+			ClassicAssert.IsFalse(strike.Contains("Destroy("));
 
 			string restake = Between(stamper, "public static bool TryPreflightRestake(",
 				"public static bool TryValidateFrozenUpgrade(");
@@ -498,8 +499,8 @@ namespace ThousandAndFirst.Tests
 				"TryManagedCells(Intent, Z", "KingdomConstruction.HasActiveAt(System, Z, cell)");
 			StringAssert.Contains("oldOwned.Contains(item)", restake);
 			StringAssert.DoesNotContain("socket restake would move the behavior root", restake);
-			Assert.IsFalse(restake.Contains("GameObject.Create"));
-			Assert.IsFalse(restake.Contains("Reserve"));
+			ClassicAssert.IsFalse(restake.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(restake.Contains("Reserve"));
 
 			string materials = Materials();
 			int read = materials.IndexOf("KingdomArchitectureRuntime.TryRead(Building",
@@ -509,9 +510,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int intent = materials.IndexOf("KingdomStrikeIntent intent =", preflight,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(read, 0);
-			Assert.Greater(preflight, read);
-			Assert.Greater(intent, preflight);
+			ClassicAssert.GreaterOrEqual(read, 0);
+			ClassicAssert.Greater(preflight, read);
+			ClassicAssert.Greater(intent, preflight);
 
 			string socket = Socket();
 			string preparation = Between(socket, "private static bool TryPrepareConvert(",
@@ -519,23 +520,23 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(preparation, "KingdomArchitectureRuntime.TryPrepare(System, Z, context.TargetRect",
 				"KingdomArchitectureStamper.TryPreflightRestake(System, Z, Building",
 				"KingdomPlots.TryEncodePlotPayload(context.TargetRect");
-			Assert.IsFalse(preparation.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(preparation.Contains("ReserveExactWater"));
 			string conversion = Between(socket, "private static bool ExecutePreparedConvert(",
 				"private static bool ProjectConvertOrder(");
 			AssertOrdered(conversion,
 				"KingdomArchitectureStamper.TryPreflightRestake(System, Z, Building",
 				"survey.ReserveExactWater");
-			Assert.IsFalse(conversion.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(conversion.Contains("KingdomArchitectureRuntime.TryPrepare"));
 			StringAssert.Contains("TrySweepLegacyPlotParts", socket);
-			Assert.IsFalse(socket.Contains("private static void SweepPlotParts"));
+			ClassicAssert.IsFalse(socket.Contains("private static void SweepPlotParts"));
 		}
 
 		private static string Between(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing source boundary: " + End);
+			ClassicAssert.Greater(end, start, "missing source boundary: " + End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -545,7 +546,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], previous + 1, StringComparison.Ordinal);
-				Assert.Greater(found, previous, "missing or out-of-order source term: " + Terms[i]);
+				ClassicAssert.Greater(found, previous, "missing or out-of-order source term: " + Terms[i]);
 				previous = found;
 			}
 		}

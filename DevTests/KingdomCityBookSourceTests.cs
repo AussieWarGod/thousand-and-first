@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -36,8 +37,8 @@ namespace ThousandAndFirst.Tests
 			int start = source.IndexOf("public void Normalize()", StringComparison.Ordinal);
 			int end = source.IndexOf("private void NormalizeSidecarFields()", start,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
-			Assert.Greater(end, start);
+			ClassicAssert.GreaterOrEqual(start, 0);
+			ClassicAssert.Greater(end, start);
 			Ordered(source.Substring(start, end - start),
 				"NormalizeSidecarFields();",
 				"NormalizeZoneColumns();",
@@ -52,11 +53,11 @@ namespace ThousandAndFirst.Tests
 		public void SerializableAuthorityAndKeyFieldsHaveOneOwner()
 		{
 			string source = KingdomCityBookLogicalSource.Read();
-			Assert.AreEqual(13, Count(source, "public partial class KingdomCityBook"));
-			Assert.AreEqual(1, Count(source, "[Serializable]"));
-			Assert.AreEqual(1, Count(source, "internal KingdomDistanceCache DistanceCache"));
-			Assert.AreEqual(1, Count(source, "public void Normalize()"));
-			Assert.AreEqual(1, Count(source, "internal bool TryPublish("));
+			ClassicAssert.AreEqual(13, Count(source, "public partial class KingdomCityBook"));
+			ClassicAssert.AreEqual(1, Count(source, "[Serializable]"));
+			ClassicAssert.AreEqual(1, Count(source, "internal KingdomDistanceCache DistanceCache"));
+			ClassicAssert.AreEqual(1, Count(source, "public void Normalize()"));
+			ClassicAssert.AreEqual(1, Count(source, "internal bool TryPublish("));
 		}
 
 		private static void Ordered(string source, params string[] markers)
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

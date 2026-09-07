@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -24,36 +25,36 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicLabTypes_KeepTheirPublishedMetadata()
 		{
-			Assert.AreEqual("ThousandAndFirst.LabAttach", typeof(LabAttach).FullName);
-			Assert.AreEqual("ThousandAndFirst.LabSource", typeof(LabSource).FullName);
-			Assert.AreEqual("ThousandAndFirst.LabClass", typeof(LabClass).FullName);
-			Assert.AreEqual("ThousandAndFirst.LabVerdict", typeof(LabVerdict).FullName);
-			Assert.AreEqual("ThousandAndFirst.LabSlot", typeof(LabSlot).FullName);
-			Assert.AreEqual("ThousandAndFirst.LabProcedure", typeof(LabProcedure).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabAttach", typeof(LabAttach).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabSource", typeof(LabSource).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabClass", typeof(LabClass).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabVerdict", typeof(LabVerdict).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabSlot", typeof(LabSlot).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.LabProcedure", typeof(LabProcedure).FullName);
 
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabAttach)));
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabSource)));
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabClass)));
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabVerdict)));
-			Assert.AreEqual(0, (byte)LabAttach.Body);
-			Assert.AreEqual(1, (byte)LabAttach.Weapon);
-			Assert.AreEqual(0, (byte)LabSource.Part);
-			Assert.AreEqual(1, (byte)LabSource.Limb);
-			Assert.AreEqual(2, (byte)LabSource.Mutation);
-			Assert.AreEqual(1, (byte)LabClass.Rider);
-			Assert.AreEqual(2, (byte)LabClass.Defence);
-			Assert.AreEqual(3, (byte)LabClass.Limb);
-			Assert.AreEqual(4, (byte)LabClass.Named);
-			Assert.AreEqual(0, (byte)LabVerdict.Allowed);
-			Assert.AreEqual(1, (byte)LabVerdict.RefusedNoSlot);
-			Assert.AreEqual(2, (byte)LabVerdict.RefusedSlotTaken);
-			Assert.AreEqual(3, (byte)LabVerdict.RefusedCategory);
-			Assert.AreEqual(4, (byte)LabVerdict.RefusedRung);
-			Assert.AreEqual(5, (byte)LabVerdict.RefusedNoWeapon);
-			Assert.AreEqual(6, (byte)LabVerdict.RefusedUnkept);
-			Assert.AreEqual(7, (byte)LabVerdict.RefusedOnceEver);
-			Assert.AreEqual(8, (byte)LabVerdict.RefusedUndiscovered);
-			Assert.AreEqual(9, (byte)LabVerdict.RefusedMagnitude);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabAttach)));
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabSource)));
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabClass)));
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(LabVerdict)));
+			ClassicAssert.AreEqual(0, (byte)LabAttach.Body);
+			ClassicAssert.AreEqual(1, (byte)LabAttach.Weapon);
+			ClassicAssert.AreEqual(0, (byte)LabSource.Part);
+			ClassicAssert.AreEqual(1, (byte)LabSource.Limb);
+			ClassicAssert.AreEqual(2, (byte)LabSource.Mutation);
+			ClassicAssert.AreEqual(1, (byte)LabClass.Rider);
+			ClassicAssert.AreEqual(2, (byte)LabClass.Defence);
+			ClassicAssert.AreEqual(3, (byte)LabClass.Limb);
+			ClassicAssert.AreEqual(4, (byte)LabClass.Named);
+			ClassicAssert.AreEqual(0, (byte)LabVerdict.Allowed);
+			ClassicAssert.AreEqual(1, (byte)LabVerdict.RefusedNoSlot);
+			ClassicAssert.AreEqual(2, (byte)LabVerdict.RefusedSlotTaken);
+			ClassicAssert.AreEqual(3, (byte)LabVerdict.RefusedCategory);
+			ClassicAssert.AreEqual(4, (byte)LabVerdict.RefusedRung);
+			ClassicAssert.AreEqual(5, (byte)LabVerdict.RefusedNoWeapon);
+			ClassicAssert.AreEqual(6, (byte)LabVerdict.RefusedUnkept);
+			ClassicAssert.AreEqual(7, (byte)LabVerdict.RefusedOnceEver);
+			ClassicAssert.AreEqual(8, (byte)LabVerdict.RefusedUndiscovered);
+			ClassicAssert.AreEqual(9, (byte)LabVerdict.RefusedMagnitude);
 		}
 
 		// --- Helpers ---------------------------------------------------------------------------
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure;
 			string error;
-			Assert.IsTrue(KingdomProcedureRules.TryParseProcedureAttributes(key, null, cls, grants, slots,
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseProcedureAttributes(key, null, cls, grants, slots,
 				categories, source, attach, minRung, "20", "002", "6", "1", null, null, magnitude,
 				out procedure, out error), error);
 			return procedure;
@@ -125,8 +126,8 @@ namespace ThousandAndFirst.Tests
 		public void ParseClass_ReadsTheLadderInEveryFormAFileMightWriteIt(string source, LabClass expected)
 		{
 			LabClass cls;
-			Assert.IsTrue(KingdomProcedureRules.TryParseClass(source, out cls));
-			Assert.AreEqual(expected, cls);
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseClass(source, out cls));
+			ClassicAssert.AreEqual(expected, cls);
 		}
 
 		[TestCase(null)]
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		public void ParseClass_RefusesALadderRungThisBuildDoesNotHave(string source)
 		{
 			LabClass cls;
-			Assert.IsFalse(KingdomProcedureRules.TryParseClass(source, out cls));
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseClass(source, out cls));
 		}
 
 		[Test]
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", null, "Arm",
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", null, "Arm",
 				null, "part", "body", null, null, null, null, null, null, null, null, out procedure, out error));
 			StringAssert.Contains("Grants", error);
 		}
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", null,
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", null,
 				null, "part", "body", null, null, null, null, null, null, null, null, out procedure, out error));
 			StringAssert.Contains("Slots", error);
 		}
@@ -166,7 +167,7 @@ namespace ThousandAndFirst.Tests
 			// silently graft an inert part onto a torso, which is the audit's whole lesson.
 			LabProcedure procedure;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", "Arm",
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", "Arm",
 				null, "part", "torso", null, null, null, null, null, null, null, null, out procedure, out error));
 			StringAssert.Contains("Attach", error);
 		}
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			// it ships rather than on the day somebody clicks.
 			LabProcedure procedure;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "II", grants, "Body",
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "II", grants, "Body",
 				null, "part", "body", null, null, null, null, null, null, null, null, out procedure, out error));
 			StringAssert.Contains("blocklist", error);
 		}
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			// Hard rule 1's whole payoff: the whitelist is a CONTRACT, not a list. A modded
 			// creature's part is a lawful grant the day that mod ships, with no entry of ours.
 			LabProcedure procedure = Parse("someothermod", "I", "SomeOtherModsRider", "Arm");
-			Assert.AreEqual("SomeOtherModsRider", procedure.Grants);
+			ClassicAssert.AreEqual("SomeOtherModsRider", procedure.Grants);
 		}
 
 		[TestCase("-1")]
@@ -206,7 +207,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", "Arm",
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseProcedureAttributes("x", null, "I", "PoisonOnHit", "Arm",
 				null, "part", "body", rung, null, null, null, null, null, null, null, out procedure, out error));
 			StringAssert.Contains("MinRung", error);
 		}
@@ -214,10 +215,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Parse_DefaultsTheRungToWhereThatClassOfWorkIsActuallyDone()
 		{
-			Assert.AreEqual(KingdomProcedureRules.RungHall, Parse("a", "I", "PoisonOnHit", "Arm").MinRung);
-			Assert.AreEqual(KingdomProcedureRules.RungHall, Parse("b", "II", "GasImmunity", "Body").MinRung);
-			Assert.AreEqual(KingdomProcedureRules.RungTheatre, Parse("c", "III", "Limb", "Arm", source: "limb").MinRung);
-			Assert.AreEqual(KingdomProcedureRules.RungTheatre, Parse("d", "IV", "LiquidFont", "Back").MinRung);
+			ClassicAssert.AreEqual(KingdomProcedureRules.RungHall, Parse("a", "I", "PoisonOnHit", "Arm").MinRung);
+			ClassicAssert.AreEqual(KingdomProcedureRules.RungHall, Parse("b", "II", "GasImmunity", "Body").MinRung);
+			ClassicAssert.AreEqual(KingdomProcedureRules.RungTheatre, Parse("c", "III", "Limb", "Arm", source: "limb").MinRung);
+			ClassicAssert.AreEqual(KingdomProcedureRules.RungTheatre, Parse("d", "IV", "LiquidFont", "Back").MinRung);
 		}
 
 		// --- Registry validation ---------------------------------------------------------------
@@ -227,7 +228,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure procedure = Parse("lowlimb", "III", "Limb", "Arm", source: "limb", minRung: "2");
 			List<string> findings = KingdomProcedureRules.Validate(new List<LabProcedure> { procedure });
-			Assert.AreEqual(1, findings.Count);
+			ClassicAssert.AreEqual(1, findings.Count);
 			StringAssert.Contains("below the rung", findings[0]);
 		}
 
@@ -308,14 +309,14 @@ namespace ThousandAndFirst.Tests
 		public void JudgeSlot_RefusesAPlaceThatIsNotOnThisBodyAtAll()
 		{
 			LabProcedure tail = Parse("tail", "I", "StickOnHit", "Tail");
-			Assert.AreEqual(LabVerdict.RefusedNoSlot, KingdomProcedureRules.JudgeSlot(tail, Slot("Arm"), null));
+			ClassicAssert.AreEqual(LabVerdict.RefusedNoSlot, KingdomProcedureRules.JudgeSlot(tail, Slot("Arm"), null));
 		}
 
 		[Test]
 		public void JudgeSlot_RefusesAPlaceThatIsAlreadySpokenFor()
 		{
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm");
-			Assert.AreEqual(LabVerdict.RefusedSlotTaken,
+			ClassicAssert.AreEqual(LabVerdict.RefusedSlotTaken,
 				KingdomProcedureRules.JudgeSlot(sting, Slot("Arm", Animal, false, false, "somethingelse"), null));
 		}
 
@@ -325,7 +326,7 @@ namespace ThousandAndFirst.Tests
 			// Vanilla's own disqualifier, and it leads because it is true about the PLACE rather
 			// than about the record (BodyPart.CanReceiveCyberneticImplant refuses on exactly this).
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm");
-			Assert.AreEqual(LabVerdict.RefusedCategory,
+			ClassicAssert.AreEqual(LabVerdict.RefusedCategory,
 				KingdomProcedureRules.JudgeSlot(sting, Slot("Arm", Animal, extrinsic: true), null));
 		}
 
@@ -333,14 +334,14 @@ namespace ThousandAndFirst.Tests
 		public void JudgeSlot_AllowsAPlainMatch()
 		{
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm,Hand,Tail");
-			Assert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(sting, Slot("Hand"), null));
+			ClassicAssert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(sting, Slot("Hand"), null));
 		}
 
 		[Test]
 		public void JudgeSlot_MatchesSlotTypesWithoutCaringAboutCase()
 		{
 			LabProcedure graft = Parse("outcrop", "IV", "ActiveLightSource", "Icy Outcrop");
-			Assert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(graft, Slot("icy outcrop"), null));
+			ClassicAssert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(graft, Slot("icy outcrop"), null));
 		}
 
 		[Test]
@@ -350,7 +351,7 @@ namespace ThousandAndFirst.Tests
 			// nowhere on you" — the second is a lie and it sends them the wrong way.
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm");
 			List<LabSlot> body = new List<LabSlot> { Slot("Head"), Slot("Arm", Animal, false, false, "already") };
-			Assert.AreEqual(LabVerdict.RefusedSlotTaken, KingdomProcedureRules.BestRefusal(sting, body, null));
+			ClassicAssert.AreEqual(LabVerdict.RefusedSlotTaken, KingdomProcedureRules.BestRefusal(sting, body, null));
 		}
 
 		[Test]
@@ -362,7 +363,7 @@ namespace ThousandAndFirst.Tests
 				Slot("Hand", Animal, false, false, "already"),
 				Slot("Hand", Animal, false, bears: false)
 			};
-			Assert.AreEqual(LabVerdict.RefusedNoWeapon, KingdomProcedureRules.BestRefusal(fang, body, null));
+			ClassicAssert.AreEqual(LabVerdict.RefusedNoWeapon, KingdomProcedureRules.BestRefusal(fang, body, null));
 		}
 
 		[Test]
@@ -401,8 +402,8 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure any = Parse("any", "II", "NoKnockdown", "Body");
 			CollectionAssert.IsEmpty(KingdomProcedureRules.SlotCategoryNames(any));
-			Assert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(any, Slot("Body", Mechanical), null));
-			Assert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(any, Slot("Body", Protoplasmic), null));
+			ClassicAssert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(any, Slot("Body", Mechanical), null));
+			ClassicAssert.AreEqual(LabVerdict.Allowed, KingdomProcedureRules.JudgeSlot(any, Slot("Body", Protoplasmic), null));
 		}
 
 		[Test]
@@ -423,9 +424,9 @@ namespace ThousandAndFirst.Tests
 			// The audit's whole lesson: a part registering only "WeaponHit" is inert on a torso,
 			// because Combat.cs fires that event on the weapon object and never on the bearer.
 			LabProcedure leech = Parse("leech", "I", "LifeDrainOnHit", "Arm", attach: "weapon");
-			Assert.AreEqual(LabVerdict.RefusedNoWeapon,
+			ClassicAssert.AreEqual(LabVerdict.RefusedNoWeapon,
 				KingdomProcedureRules.JudgeSlot(leech, Slot("Arm", Animal, false, bears: false), null));
-			Assert.AreEqual(LabVerdict.Allowed,
+			ClassicAssert.AreEqual(LabVerdict.Allowed,
 				KingdomProcedureRules.JudgeSlot(leech, Slot("Arm", Animal, false, bears: true), null));
 		}
 
@@ -433,7 +434,7 @@ namespace ThousandAndFirst.Tests
 		public void Attach_BodyRecordDoesNotCareWhetherThePlaceBites()
 		{
 			LabProcedure sap = Parse("sap", "I", "SapOnPenetration", "Face", attach: "body");
-			Assert.AreEqual(LabVerdict.Allowed,
+			ClassicAssert.AreEqual(LabVerdict.Allowed,
 				KingdomProcedureRules.JudgeSlot(sap, Slot("Face", Animal, false, bears: false), null));
 		}
 
@@ -446,8 +447,8 @@ namespace ThousandAndFirst.Tests
 		public void ParseAttach_ReadsBothPointsAndDefaultsToTheBearer(string source, LabAttach expected)
 		{
 			LabAttach attach;
-			Assert.IsTrue(KingdomProcedureRules.TryParseAttach(source, out attach));
-			Assert.AreEqual(expected, attach);
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseAttach(source, out attach));
+			ClassicAssert.AreEqual(expected, attach);
 		}
 
 		// --- The stamp grammar --------------------------------------------------------------------
@@ -457,8 +458,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string stamp = KingdomProcedureRules.FormatStamp("ReflectDamage",
 				new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("ReflectPercentage", "5") });
-			Assert.IsTrue(KingdomProcedureRules.StampCarries(stamp, "ReflectDamage"));
-			Assert.AreEqual("5", KingdomProcedureRules.StampedField(stamp, "ReflectDamage", "ReflectPercentage"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.StampCarries(stamp, "ReflectDamage"));
+			ClassicAssert.AreEqual("5", KingdomProcedureRules.StampedField(stamp, "ReflectDamage", "ReflectPercentage"));
 		}
 
 		[Test]
@@ -474,9 +475,9 @@ namespace ThousandAndFirst.Tests
 			});
 			CollectionAssert.AreEqual(new List<string> { "PoisonOnHit", "ReflectDamage", "StickOnHit" },
 				KingdomProcedureRules.StampedClasses(stamp));
-			Assert.AreEqual("100", KingdomProcedureRules.StampedField(stamp, "ReflectDamage", "ReflectPercentage"));
-			Assert.AreEqual("15", KingdomProcedureRules.StampedField(stamp, "StickOnHit", "SaveTarget"));
-			Assert.IsNull(KingdomProcedureRules.StampedField(stamp, "PoisonOnHit", "SaveTarget"));
+			ClassicAssert.AreEqual("100", KingdomProcedureRules.StampedField(stamp, "ReflectDamage", "ReflectPercentage"));
+			ClassicAssert.AreEqual("15", KingdomProcedureRules.StampedField(stamp, "StickOnHit", "SaveTarget"));
+			ClassicAssert.IsNull(KingdomProcedureRules.StampedField(stamp, "PoisonOnHit", "SaveTarget"));
 		}
 
 		[TestCase("Reflect;Damage")]
@@ -489,8 +490,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Refused rather than escaped, which is the posture the realm's own register keeps:
 			// a value that cannot be stored whole would come back out as two columns.
-			Assert.IsFalse(KingdomProcedureRules.Stampable(name));
-			Assert.IsNull(KingdomProcedureRules.FormatStamp(name, null));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Stampable(name));
+			ClassicAssert.IsNull(KingdomProcedureRules.FormatStamp(name, null));
 		}
 
 		[Test]
@@ -501,24 +502,24 @@ namespace ThousandAndFirst.Tests
 				new KeyValuePair<string, string>("Rules", "sticks;fast"),
 				new KeyValuePair<string, string>("SaveTarget", "15")
 			});
-			Assert.IsTrue(KingdomProcedureRules.StampCarries(stamp, "StickOnHit"));
-			Assert.IsNull(KingdomProcedureRules.StampedField(stamp, "StickOnHit", "Rules"));
-			Assert.AreEqual("15", KingdomProcedureRules.StampedField(stamp, "StickOnHit", "SaveTarget"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.StampCarries(stamp, "StickOnHit"));
+			ClassicAssert.IsNull(KingdomProcedureRules.StampedField(stamp, "StickOnHit", "Rules"));
+			ClassicAssert.AreEqual("15", KingdomProcedureRules.StampedField(stamp, "StickOnHit", "SaveTarget"));
 		}
 
 		[Test]
 		public void Stamp_AFieldlessPartStampsAsItselfAndNothingElse()
 		{
-			Assert.AreEqual("NoKnockdown", KingdomProcedureRules.FormatStamp("NoKnockdown", null));
-			Assert.IsTrue(KingdomProcedureRules.StampCarries("NoKnockdown", "NoKnockdown"));
+			ClassicAssert.AreEqual("NoKnockdown", KingdomProcedureRules.FormatStamp("NoKnockdown", null));
+			ClassicAssert.IsTrue(KingdomProcedureRules.StampCarries("NoKnockdown", "NoKnockdown"));
 		}
 
 		[Test]
 		public void StampCarries_IsFalseForAClassTheCarcassNeverHad()
 		{
-			Assert.IsFalse(KingdomProcedureRules.StampCarries("PoisonOnHit", "StickOnHit"));
-			Assert.IsFalse(KingdomProcedureRules.StampCarries(null, "StickOnHit"));
-			Assert.IsFalse(KingdomProcedureRules.StampCarries("PoisonOnHit", null));
+			ClassicAssert.IsFalse(KingdomProcedureRules.StampCarries("PoisonOnHit", "StickOnHit"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.StampCarries(null, "StickOnHit"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.StampCarries("PoisonOnHit", null));
 		}
 
 		// --- The magnitude band (QB-10) -----------------------------------------------------------
@@ -532,10 +533,10 @@ namespace ThousandAndFirst.Tests
 			int readLow;
 			int readHigh;
 			string error;
-			Assert.IsTrue(KingdomProcedureRules.TryParseMagnitude(source, out readField, out readLow, out readHigh, out error));
-			Assert.AreEqual(field, readField);
-			Assert.AreEqual(low, readLow);
-			Assert.AreEqual(high, readHigh);
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseMagnitude(source, out readField, out readLow, out readHigh, out error));
+			ClassicAssert.AreEqual(field, readField);
+			ClassicAssert.AreEqual(low, readLow);
+			ClassicAssert.AreEqual(high, readHigh);
 		}
 
 		[TestCase("ReflectPercentage")]
@@ -549,8 +550,8 @@ namespace ThousandAndFirst.Tests
 			int low;
 			int high;
 			string error;
-			Assert.IsFalse(KingdomProcedureRules.TryParseMagnitude(source, out field, out low, out high, out error));
-			Assert.IsNotNull(error);
+			ClassicAssert.IsFalse(KingdomProcedureRules.TryParseMagnitude(source, out field, out low, out high, out error));
+			ClassicAssert.IsNotNull(error);
 		}
 
 		[TestCase(null)]
@@ -562,8 +563,8 @@ namespace ThousandAndFirst.Tests
 			int low;
 			int high;
 			string error;
-			Assert.IsTrue(KingdomProcedureRules.TryParseMagnitude(source, out field, out low, out high, out error));
-			Assert.IsNull(field);
+			ClassicAssert.IsTrue(KingdomProcedureRules.TryParseMagnitude(source, out field, out low, out high, out error));
+			ClassicAssert.IsNull(field);
 		}
 
 		[Test]
@@ -579,10 +580,10 @@ namespace ThousandAndFirst.Tests
 			string fierce = KingdomProcedureRules.FormatStamp("ReflectDamage",
 				new List<KeyValuePair<string, string>> { new KeyValuePair<string, string>("ReflectPercentage", "100") });
 
-			Assert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(hide, modest));
-			Assert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(hide, fierce));
-			Assert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, modest));
-			Assert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(carapace, fierce));
+			ClassicAssert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(hide, modest));
+			ClassicAssert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(hide, fierce));
+			ClassicAssert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, modest));
+			ClassicAssert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(carapace, fierce));
 		}
 
 		[Test]
@@ -592,16 +593,16 @@ namespace ThousandAndFirst.Tests
 			// product, so an unreadable field is a refusal and never a shrug.
 			LabProcedure carapace = Parse("carapace", "II", "ReflectDamage", "Body",
 				magnitude: "ReflectPercentage:26-100");
-			Assert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, "ReflectDamage"));
-			Assert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, null));
+			ClassicAssert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, "ReflectDamage"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.MagnitudeAdmits(carapace, null));
 		}
 
 		[Test]
 		public void Magnitude_ARecordWithNoBandTakesAnythingOfTheClass()
 		{
 			LabProcedure any = Parse("any", "II", "ReflectDamage", "Body");
-			Assert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(any, "ReflectDamage"));
-			Assert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(any, null));
+			ClassicAssert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(any, "ReflectDamage"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.MagnitudeAdmits(any, null));
 		}
 
 		// --- The knowledge gate --------------------------------------------------------------------
@@ -610,10 +611,10 @@ namespace ThousandAndFirst.Tests
 		public void KnowledgeMet_WantsEveryTokenAndNotJustOne()
 		{
 			List<string> roster = new List<string> { "node:vat" };
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:vat"));
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(roster, "node:vat,node:graft"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:vat"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.KnowledgeMet(roster, "node:vat,node:graft"));
 			roster.Add("node:graft");
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:vat,node:graft"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:vat,node:graft"));
 		}
 
 		[Test]
@@ -622,13 +623,13 @@ namespace ThousandAndFirst.Tests
 			// Commas remain ALL. A bar inside one token is the roster's declared OR grammar, shared
 			// with research visibility and source resolution rather than reimplemented here.
 			List<string> roster = new List<string> { "rite:Girsh" };
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "rite:Girsh"));
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster,
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "rite:Girsh"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster,
 				"rite:Girsh|machine:Regeneration Tank"));
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(
 				new List<string> { "machine:Regeneration Tank" },
 				"rite:Girsh|machine:Regeneration Tank"));
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(
+			ClassicAssert.IsFalse(KingdomProcedureRules.KnowledgeMet(
 				new List<string> { "machine:Solar Condenser" },
 				"rite:Girsh|machine:Regeneration Tank"));
 		}
@@ -637,8 +638,8 @@ namespace ThousandAndFirst.Tests
 		public void KnowledgeMet_MatchesTheWayARosterIsReadAndNotTheWayAFileWroteIt()
 		{
 			List<string> roster = new List<string> { "Node:Graft" };
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:graft"));
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "  node:graft  "));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "node:graft"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(roster, "  node:graft  "));
 		}
 
 		[TestCase(null)]
@@ -646,15 +647,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase("   ")]
 		public void KnowledgeMet_ARecordThatAsksNothingIsSatisfiedByACityThatKnowsNothing(string knowledge)
 		{
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(new List<string>(), knowledge));
-			Assert.IsTrue(KingdomProcedureRules.KnowledgeMet(null, knowledge));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(new List<string>(), knowledge));
+			ClassicAssert.IsTrue(KingdomProcedureRules.KnowledgeMet(null, knowledge));
 		}
 
 		[Test]
 		public void KnowledgeMet_ACityThatKnowsNothingIsRefusedByAnyGate()
 		{
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(null, "node:graft"));
-			Assert.IsFalse(KingdomProcedureRules.KnowledgeMet(new List<string>(), "node:graft"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.KnowledgeMet(null, "node:graft"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.KnowledgeMet(new List<string>(), "node:graft"));
 		}
 
 		// --- Preservation arithmetic (§3.5) --------------------------------------------------------
@@ -671,20 +672,20 @@ namespace ThousandAndFirst.Tests
 			// the seed and the charges, then `num3 *= go.Count`. Result is the blueprint handed
 			// over, not a third factor — so the design note's "Result x Number x Count" is a product
 			// of two, and this table is the correction.
-			Assert.AreEqual(expected, KingdomProcedureRules.PreservedYield(number, count));
+			ClassicAssert.AreEqual(expected, KingdomProcedureRules.PreservedYield(number, count));
 		}
 
 		[TestCase(0)]
 		[TestCase(-1)]
 		public void PreservedYield_NothingGoingInIsNothingComingOut(int count)
 		{
-			Assert.AreEqual(0, KingdomProcedureRules.PreservedYield(5, count));
+			ClassicAssert.AreEqual(0, KingdomProcedureRules.PreservedYield(5, count));
 		}
 
 		[Test]
 		public void PreservedYield_SaturatesRatherThanWrapping()
 		{
-			Assert.AreEqual(int.MaxValue, KingdomProcedureRules.PreservedYield(int.MaxValue, 3));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomProcedureRules.PreservedYield(int.MaxValue, 3));
 		}
 
 		[TestCase(5)]
@@ -695,8 +696,8 @@ namespace ThousandAndFirst.Tests
 			// is the vanilla-shaped band §3.5 names; a single-stack carcass sits inside it or just
 			// above, which is what makes "one creature, one limb" read correctly.
 			int yield = KingdomProcedureRules.PreservedYield(number, 1);
-			Assert.GreaterOrEqual(yield, 3);
-			Assert.LessOrEqual(yield, 10);
+			ClassicAssert.GreaterOrEqual(yield, 3);
+			ClassicAssert.LessOrEqual(yield, 10);
 		}
 
 		[Test]
@@ -704,16 +705,16 @@ namespace ThousandAndFirst.Tests
 		{
 			// An idle vat preserves nothing, by arithmetic rather than by a special case: no grant
 			// anywhere can make an unstaffed work produce (Addendum 8 clause 2).
-			Assert.AreEqual(0, KingdomProcedureRules.VatWorked(10000L, 0, 100));
-			Assert.AreEqual(0, KingdomProcedureRules.VatWorked(10000L, 100, 0));
-			Assert.AreEqual(0, KingdomProcedureRules.VatWorked(0L, 100, 100));
-			Assert.AreEqual(0, KingdomProcedureRules.VatWorked(-5L, 100, 100));
+			ClassicAssert.AreEqual(0, KingdomProcedureRules.VatWorked(10000L, 0, 100));
+			ClassicAssert.AreEqual(0, KingdomProcedureRules.VatWorked(10000L, 100, 0));
+			ClassicAssert.AreEqual(0, KingdomProcedureRules.VatWorked(0L, 100, 100));
+			ClassicAssert.AreEqual(0, KingdomProcedureRules.VatWorked(-5L, 100, 100));
 		}
 
 		[Test]
 		public void VatWorked_AFullyCrewedSoundVatWorksTheWholeElapsedTime()
 		{
-			Assert.AreEqual(1200, KingdomProcedureRules.VatWorked(1200L, 100, 100));
+			ClassicAssert.AreEqual(1200, KingdomProcedureRules.VatWorked(1200L, 100, 100));
 		}
 
 		[Test]
@@ -723,17 +724,17 @@ namespace ThousandAndFirst.Tests
 			int whole = KingdomProcedureRules.VatWorked(1200L, 100, 100);
 			int halfCrew = KingdomProcedureRules.VatWorked(1200L, 50, 100);
 			int halfSound = KingdomProcedureRules.VatWorked(1200L, 100, 50);
-			Assert.Less(halfCrew, whole);
-			Assert.Less(halfSound, whole);
-			Assert.AreEqual(halfCrew, halfSound);
+			ClassicAssert.Less(halfCrew, whole);
+			ClassicAssert.Less(halfSound, whole);
+			ClassicAssert.AreEqual(halfCrew, halfSound);
 		}
 
 		[Test]
 		public void StaffDayTicks_CountsStaffDaysAtTheSettlementsOwnDay()
 		{
-			Assert.AreEqual(6 * KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(6));
-			Assert.AreEqual((int)KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(0));
-			Assert.AreEqual((int)KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(-4));
+			ClassicAssert.AreEqual(6 * KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(6));
+			ClassicAssert.AreEqual((int)KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(0));
+			ClassicAssert.AreEqual((int)KingdomRules.TicksPerDay, KingdomProcedureRules.StaffDayTicks(-4));
 		}
 
 		// --- The mutation cap ------------------------------------------------------------------------
@@ -750,7 +751,7 @@ namespace ThousandAndFirst.Tests
 			// The single most load-bearing balance number in the wave. The mod this design learned
 			// from is remembered for granting at the source's strength, and its own author wrote
 			// down that it ruined the combat design.
-			Assert.AreEqual(expected, KingdomProcedureRules.GrantedMutationLevel(source));
+			ClassicAssert.AreEqual(expected, KingdomProcedureRules.GrantedMutationLevel(source));
 		}
 
 		[Test]
@@ -759,8 +760,8 @@ namespace ThousandAndFirst.Tests
 			for (int level = -5; level <= 20; level++)
 			{
 				int granted = KingdomProcedureRules.GrantedMutationLevel(level);
-				Assert.GreaterOrEqual(granted, KingdomProcedureRules.MinMutationLevel);
-				Assert.LessOrEqual(granted, KingdomProcedureRules.MaxMutationLevel);
+				ClassicAssert.GreaterOrEqual(granted, KingdomProcedureRules.MinMutationLevel);
+				ClassicAssert.LessOrEqual(granted, KingdomProcedureRules.MaxMutationLevel);
 			}
 		}
 
@@ -770,33 +771,33 @@ namespace ThousandAndFirst.Tests
 		public void Latch_HoldsANamedProcedureForever()
 		{
 			string latch = KingdomProcedureRules.Latch("", "weepinggraft");
-			Assert.IsTrue(KingdomProcedureRules.Latched(latch, "weepinggraft"));
-			Assert.IsFalse(KingdomProcedureRules.Latched(latch, "coldregard"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.Latched(latch, "weepinggraft"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Latched(latch, "coldregard"));
 		}
 
 		[Test]
 		public void Latch_IsIdempotentSoNothingHasToRememberWhetherItAlreadyAsked()
 		{
 			string once = KingdomProcedureRules.Latch("", "coldregard");
-			Assert.AreEqual(once, KingdomProcedureRules.Latch(once, "coldregard"));
-			Assert.AreEqual(once, KingdomProcedureRules.Latch(once, "COLDREGARD"));
+			ClassicAssert.AreEqual(once, KingdomProcedureRules.Latch(once, "coldregard"));
+			ClassicAssert.AreEqual(once, KingdomProcedureRules.Latch(once, "COLDREGARD"));
 		}
 
 		[Test]
 		public void Latch_HoldsSeveralAndTellsThemApart()
 		{
 			string latch = KingdomProcedureRules.Latch(KingdomProcedureRules.Latch("", "weepinggraft"), "lanternrib");
-			Assert.IsTrue(KingdomProcedureRules.Latched(latch, "weepinggraft"));
-			Assert.IsTrue(KingdomProcedureRules.Latched(latch, "lanternrib"));
-			Assert.IsFalse(KingdomProcedureRules.Latched(latch, "chimericconfession"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.Latched(latch, "weepinggraft"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.Latched(latch, "lanternrib"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Latched(latch, "chimericconfession"));
 		}
 
 		[Test]
 		public void Latch_MatchesTheWayAFounderWouldReadItAndNotTheWayAFileWroteIt()
 		{
 			string latch = KingdomProcedureRules.Latch("", "  ColdRegard  ");
-			Assert.IsTrue(KingdomProcedureRules.Latched(latch, "coldregard"));
-			Assert.IsTrue(KingdomProcedureRules.Latched(latch, "COLDREGARD"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.Latched(latch, "coldregard"));
+			ClassicAssert.IsTrue(KingdomProcedureRules.Latched(latch, "COLDREGARD"));
 		}
 
 		[TestCase(null)]
@@ -805,15 +806,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase("has|a|separator")]
 		public void Latch_RefusesAKeyItCouldNotGiveBackWhole(string key)
 		{
-			Assert.AreEqual("weepinggraft", KingdomProcedureRules.Latch("weepinggraft", key));
+			ClassicAssert.AreEqual("weepinggraft", KingdomProcedureRules.Latch("weepinggraft", key));
 		}
 
 		[Test]
 		public void Latched_IsFalseAgainstAnEmptyRecord()
 		{
-			Assert.IsFalse(KingdomProcedureRules.Latched(null, "weepinggraft"));
-			Assert.IsFalse(KingdomProcedureRules.Latched("", "weepinggraft"));
-			Assert.IsFalse(KingdomProcedureRules.Latched("weepinggraft", null));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Latched(null, "weepinggraft"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Latched("", "weepinggraft"));
+			ClassicAssert.IsFalse(KingdomProcedureRules.Latched("weepinggraft", null));
 		}
 
 		// --- The whole verdict --------------------------------------------------------------------------
@@ -822,17 +823,17 @@ namespace ThousandAndFirst.Tests
 		public void Judge_RefusesANamedProcedureNobodyHasFoundWithoutNamingIt()
 		{
 			LabProcedure named = Parse("weepinggraft", "IV", "LiquidFont", "Back");
-			Assert.AreEqual(LabVerdict.RefusedUndiscovered,
+			ClassicAssert.AreEqual(LabVerdict.RefusedUndiscovered,
 				KingdomProcedureRules.Judge(named, TrueKin(), null, 3, 4, Discovered: false, AlreadyDone: false));
 			// And the refusal says nothing at all, because saying it would say the thing exists.
-			Assert.AreEqual("", KingdomProcedureRules.RefusalLine(LabVerdict.RefusedUndiscovered, named));
+			ClassicAssert.AreEqual("", KingdomProcedureRules.RefusalLine(LabVerdict.RefusedUndiscovered, named));
 		}
 
 		[Test]
 		public void Judge_RefusesANamedProcedureAlreadyPerformed()
 		{
 			LabProcedure named = Parse("coldregard", "IV", "NephalChord", "Face");
-			Assert.AreEqual(LabVerdict.RefusedOnceEver,
+			ClassicAssert.AreEqual(LabVerdict.RefusedOnceEver,
 				KingdomProcedureRules.Judge(named, TrueKin(), null, 3, 4, Discovered: true, AlreadyDone: true));
 		}
 
@@ -840,9 +841,9 @@ namespace ThousandAndFirst.Tests
 		public void Judge_RefusesWorkTheHallIsNotBuiltHighEnoughFor()
 		{
 			LabProcedure limb = Parse("limb", "III", "Arm", "Arm", source: "limb");
-			Assert.AreEqual(LabVerdict.RefusedRung,
+			ClassicAssert.AreEqual(LabVerdict.RefusedRung,
 				KingdomProcedureRules.Judge(limb, TrueKin(), null, 2, 9, true, false));
-			Assert.AreEqual(LabVerdict.Allowed,
+			ClassicAssert.AreEqual(LabVerdict.Allowed,
 				KingdomProcedureRules.Judge(limb, TrueKin(), null, 3, 9, true, false));
 		}
 
@@ -851,9 +852,9 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm");
 			sting.Preserved = 3;
-			Assert.AreEqual(LabVerdict.RefusedUnkept,
+			ClassicAssert.AreEqual(LabVerdict.RefusedUnkept,
 				KingdomProcedureRules.Judge(sting, TrueKin(), null, 2, 2, true, false));
-			Assert.AreEqual(LabVerdict.Allowed,
+			ClassicAssert.AreEqual(LabVerdict.Allowed,
 				KingdomProcedureRules.Judge(sting, TrueKin(), null, 2, 3, true, false));
 		}
 
@@ -863,7 +864,7 @@ namespace ThousandAndFirst.Tests
 			// A hall too low for an undiscovered procedure must still answer "undiscovered": the
 			// rung refusal names the procedure, and naming it is the leak.
 			LabProcedure named = Parse("weepinggraft", "IV", "LiquidFont", "Tail");
-			Assert.AreEqual(LabVerdict.RefusedUndiscovered,
+			ClassicAssert.AreEqual(LabVerdict.RefusedUndiscovered,
 				KingdomProcedureRules.Judge(named, TrueKin(), null, 0, 0, Discovered: false, AlreadyDone: false));
 		}
 
@@ -881,7 +882,7 @@ namespace ThousandAndFirst.Tests
 		{
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Tail");
 			string line = KingdomProcedureRules.RefusalLine(verdict, sting);
-			Assert.IsNotEmpty(line);
+			ClassicAssert.IsNotEmpty(line);
 			// STANDARDS 7b: a refusal names the thing, never the failure.
 			StringAssert.DoesNotContain("failed", line.ToLowerInvariant());
 			StringAssert.DoesNotContain("error", line.ToLowerInvariant());
@@ -891,7 +892,7 @@ namespace ThousandAndFirst.Tests
 		public void RefusalLine_SaysNothingAboutTheAbsenceOfAProblem()
 		{
 			LabProcedure sting = Parse("sting", "I", "PoisonOnHit", "Arm");
-			Assert.AreEqual("", KingdomProcedureRules.RefusalLine(LabVerdict.Allowed, sting));
+			ClassicAssert.AreEqual("", KingdomProcedureRules.RefusalLine(LabVerdict.Allowed, sting));
 		}
 
 		[Test]
@@ -904,8 +905,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RefusalLine_IsTotalOverANullRecord()
 		{
-			Assert.IsNotEmpty(KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoSlot, null));
-			Assert.IsNotEmpty(KingdomProcedureRules.RefusalLine(LabVerdict.RefusedRung, null));
+			ClassicAssert.IsNotEmpty(KingdomProcedureRules.RefusalLine(LabVerdict.RefusedNoSlot, null));
+			ClassicAssert.IsNotEmpty(KingdomProcedureRules.RefusalLine(LabVerdict.RefusedRung, null));
 		}
 
 		// --- The one sanctioned draw -----------------------------------------------------------------------
@@ -918,7 +919,7 @@ namespace ThousandAndFirst.Tests
 			int first = KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", 41200uL, 19);
 			for (int i = 0; i < 32; i++)
 			{
-				Assert.AreEqual(first, KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", 41200uL, 19));
+				ClassicAssert.AreEqual(first, KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", 41200uL, 19));
 			}
 		}
 
@@ -937,7 +938,7 @@ namespace ThousandAndFirst.Tests
 					changes++;
 				}
 			}
-			Assert.Greater(changes, 20, "the tick is not reaching the draw");
+			ClassicAssert.Greater(changes, 20, "the tick is not reaching the draw");
 		}
 
 		[Test]
@@ -957,7 +958,7 @@ namespace ThousandAndFirst.Tests
 					changes++;
 				}
 			}
-			Assert.Greater(changes, 2, "the settlement is not reaching the draw");
+			ClassicAssert.Greater(changes, 2, "the settlement is not reaching the draw");
 		}
 
 		[Test]
@@ -973,7 +974,7 @@ namespace ThousandAndFirst.Tests
 					seen.Add(drawn);
 				}
 			}
-			Assert.AreEqual(19, seen.Count);
+			ClassicAssert.AreEqual(19, seen.Count);
 		}
 
 		[Test]
@@ -982,8 +983,8 @@ namespace ThousandAndFirst.Tests
 			for (ulong ordinal = 0uL; ordinal < 200uL; ordinal++)
 			{
 				int drawn = KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", ordinal, 7);
-				Assert.GreaterOrEqual(drawn, 0);
-				Assert.Less(drawn, 7);
+				ClassicAssert.GreaterOrEqual(drawn, 0);
+				ClassicAssert.Less(drawn, 7);
 			}
 		}
 
@@ -992,7 +993,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1, 0)]
 		public void ChooseChimericSlot_HasNothingToChooseFromAndSaysSo(int candidates, int expected)
 		{
-			Assert.AreEqual(expected, KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", 1uL, candidates));
+			ClassicAssert.AreEqual(expected, KingdomProcedureRules.ChooseChimericSlot("taf:settlement:kavvat", 1uL, candidates));
 		}
 
 		[Test]
@@ -1001,8 +1002,8 @@ namespace ThousandAndFirst.Tests
 			// A settlement id the kernel's grammar will not accept must still end in a limb: the
 			// founder paid for one.
 			int drawn = KingdomProcedureRules.ChooseChimericSlot("NOT A LAWFUL ID", 1uL, 9);
-			Assert.GreaterOrEqual(drawn, 0);
-			Assert.Less(drawn, 9);
+			ClassicAssert.GreaterOrEqual(drawn, 0);
+			ClassicAssert.Less(drawn, 9);
 		}
 
 		// --- The rung ladder -----------------------------------------------------------------------------------
@@ -1013,7 +1014,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(LabClass.Named, KingdomProcedureRules.RungTheatre)]
 		public void RungForClass_PutsEachClassOfWorkWhereItIsDone(LabClass cls, int rung)
 		{
-			Assert.AreEqual(rung, KingdomProcedureRules.RungForClass(cls));
+			ClassicAssert.AreEqual(rung, KingdomProcedureRules.RungForClass(cls));
 		}
 
 		[TestCase(0, "the slab's")]
@@ -1022,7 +1023,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(3, "the chimeric theatre's")]
 		public void RungName_NamesEachRungTheWayAFounderWould(int rung, string expected)
 		{
-			Assert.AreEqual(expected, KingdomProcedureRules.RungName(rung));
+			ClassicAssert.AreEqual(expected, KingdomProcedureRules.RungName(rung));
 		}
 
 		[Test]

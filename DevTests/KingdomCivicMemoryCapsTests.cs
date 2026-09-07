@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 		private static int Constant(string SourceText, string Name)
 		{
 			Match match = Regex.Match(SourceText, @"\b" + Regex.Escape(Name) + @"\s*=\s*(\d+)\b");
-			Assert.IsTrue(match.Success, "constant " + Name + " is no longer declared as a literal");
+			ClassicAssert.IsTrue(match.Success, "constant " + Name + " is no longer declared as a literal");
 			return int.Parse(match.Groups[1].Value);
 		}
 
@@ -55,10 +56,10 @@ namespace ThousandAndFirst.Tests
 				+ Constant(codec, "NestedFramingBytes") + witness + recognition
 				+ Constant(codec, "EnvelopeOverheadBytes");
 
-			Assert.AreEqual(32820, witness);
-			Assert.AreEqual(32820, recognition);
-			Assert.AreEqual(65774, derived);
-			Assert.AreEqual(derived, KingdomCivicMemoryLimits.MaxCivicArtifactsBytes);
+			ClassicAssert.AreEqual(32820, witness);
+			ClassicAssert.AreEqual(32820, recognition);
+			ClassicAssert.AreEqual(65774, derived);
+			ClassicAssert.AreEqual(derived, KingdomCivicMemoryLimits.MaxCivicArtifactsBytes);
 		}
 
 		[Test]
@@ -75,10 +76,10 @@ namespace ThousandAndFirst.Tests
 				+ Constant(codec, "NestedFramingBytes") + sites + services
 				+ Constant(codec, "EnvelopeOverheadBytes");
 
-			Assert.AreEqual(32820, sites);
-			Assert.AreEqual(196820, services);
-			Assert.AreEqual(229774, derived);
-			Assert.AreEqual(derived, KingdomCivicMemoryLimits.MaxCivicPracticeBytes);
+			ClassicAssert.AreEqual(32820, sites);
+			ClassicAssert.AreEqual(196820, services);
+			ClassicAssert.AreEqual(229774, derived);
+			ClassicAssert.AreEqual(derived, KingdomCivicMemoryLimits.MaxCivicPracticeBytes);
 		}
 
 		[Test]
@@ -90,8 +91,8 @@ namespace ThousandAndFirst.Tests
 					* (4 + Constant(codec, "MaxRowBytes"))
 				+ Constant(codec, "EnvelopeOverheadBytes");
 
-			Assert.AreEqual(32946, derived);
-			Assert.AreEqual(derived, KingdomCivicMemoryLimits.MaxBodyHistoryBytes);
+			ClassicAssert.AreEqual(32946, derived);
+			ClassicAssert.AreEqual(derived, KingdomCivicMemoryLimits.MaxBodyHistoryBytes);
 		}
 
 		/// <summary>
@@ -103,13 +104,13 @@ namespace ThousandAndFirst.Tests
 		public void CuriosityAndCivicLeadCapsAreEachTakenFromTheirOwnFrozenBook()
 		{
 			string codec = Source("Experience", "KingdomCuriosityLeadCodec.cs");
-			Assert.AreEqual(Constant(codec, "MaxCuriosityBookBytes"),
+			ClassicAssert.AreEqual(Constant(codec, "MaxCuriosityBookBytes"),
 				KingdomCivicMemoryLimits.MaxCuriosityBytes);
-			Assert.AreEqual(Constant(codec, "MaxLeadBookBytes"),
+			ClassicAssert.AreEqual(Constant(codec, "MaxLeadBookBytes"),
 				KingdomCivicMemoryLimits.MaxCivicLeadsBytes);
-			Assert.AreEqual(22031, KingdomCivicMemoryLimits.MaxCuriosityBytes);
-			Assert.AreEqual(37708, KingdomCivicMemoryLimits.MaxCivicLeadsBytes);
-			Assert.AreNotEqual(KingdomCivicMemoryLimits.MaxCuriosityBytes,
+			ClassicAssert.AreEqual(22031, KingdomCivicMemoryLimits.MaxCuriosityBytes);
+			ClassicAssert.AreEqual(37708, KingdomCivicMemoryLimits.MaxCivicLeadsBytes);
+			ClassicAssert.AreNotEqual(KingdomCivicMemoryLimits.MaxCuriosityBytes,
 				KingdomCivicMemoryLimits.MaxCivicLeadsBytes,
 				"the two books have different maxima; one shared cap would under-bound one of them");
 		}
@@ -117,10 +118,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TreatyCapIsTheFrozenLedgerEnvelope()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				Constant(Source("Treaty", "KingdomTreatyCodec.cs"), "MaxEnvelopeBytes"),
 				KingdomCivicMemoryLimits.MaxTreatyBytes);
-			Assert.AreEqual(241384, KingdomCivicMemoryLimits.MaxTreatyBytes);
+			ClassicAssert.AreEqual(241384, KingdomCivicMemoryLimits.MaxTreatyBytes);
 		}
 
 		[Test]
@@ -137,10 +138,10 @@ namespace ThousandAndFirst.Tests
 				+ maxRows * Constant(feasts, "RowBytes")
 				+ Constant(feasts, "EnvelopeOverheadBytes");
 
-			Assert.AreEqual(1214, rite);
-			Assert.AreEqual(12083, feast);
-			Assert.AreEqual(rite, KingdomCivicMemoryLimits.MaxCommunalRiteBytes);
-			Assert.AreEqual(feast, KingdomCivicMemoryLimits.MaxGuestFeastBytes);
+			ClassicAssert.AreEqual(1214, rite);
+			ClassicAssert.AreEqual(12083, feast);
+			ClassicAssert.AreEqual(rite, KingdomCivicMemoryLimits.MaxCommunalRiteBytes);
+			ClassicAssert.AreEqual(feast, KingdomCivicMemoryLimits.MaxGuestFeastBytes);
 		}
 
 		[Test]
@@ -160,9 +161,9 @@ namespace ThousandAndFirst.Tests
 					StringComparison.Ordinal);
 				int parse = codecs[i].IndexOf("new MemoryStream(snapshot, false)", clone,
 					StringComparison.Ordinal);
-				Assert.GreaterOrEqual(cap, 0, "ingress must be bounded before allocation");
-				Assert.Greater(clone, cap, "decoder must own one stable ingress snapshot");
-				Assert.Greater(parse, clone, "digest and parse must use only that snapshot");
+				ClassicAssert.GreaterOrEqual(cap, 0, "ingress must be bounded before allocation");
+				ClassicAssert.Greater(clone, cap, "decoder must own one stable ingress snapshot");
+				ClassicAssert.Greater(parse, clone, "digest and parse must use only that snapshot");
 			}
 			StringAssert.DoesNotContain("Decode((byte[])",
 				Source("Core", "KingdomCivicArtifactsStore.cs"));
@@ -175,11 +176,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CumulativeCapIsExactlyTheSumOfTheNineSectionCaps()
 		{
-			Assert.AreEqual(65774 + 229774 + 32946 + 22031 + 37708 + 241384 + 1214 + 12083 + 196946,
+			ClassicAssert.AreEqual(65774 + 229774 + 32946 + 22031 + 37708 + 241384 + 1214 + 12083 + 196946,
 				KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
-			Assert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
-			Assert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
-			Assert.AreEqual(KingdomCivicMemoryLimits.EnvelopeOverheadBytes
+			ClassicAssert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
+			ClassicAssert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.EnvelopeOverheadBytes
 				+ KingdomCivicMemoryLimits.MaxSections * KingdomCivicMemoryLimits.SectionFramingBytes
 				+ KingdomCivicMemoryLimits.MaxCumulativePayloadBytes,
 				KingdomCivicMemoryLimits.MaxEnvelopeBytes);
@@ -233,7 +234,7 @@ namespace ThousandAndFirst.Tests
 				full.Add(AtCap(id, 0));
 				total += KingdomCivicMemoryLimits.SectionCap(id);
 			}
-			Assert.AreEqual(KingdomCivicMemoryLimits.MaxCumulativePayloadBytes, total,
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.MaxCumulativePayloadBytes, total,
 				"the nine caps must add up to the cumulative cap with nothing spare");
 
 			byte[] encoded = null;
@@ -241,8 +242,8 @@ namespace ThousandAndFirst.Tests
 				() => encoded = KingdomCivicMemoryCodec.Encode(
 					KingdomCivicMemoryState.Of(full, 0L)),
 				"every family at its own maximum at once must still be writable");
-			Assert.LessOrEqual(encoded.Length, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
-			Assert.AreEqual(full.Count, KingdomCivicMemoryCodec.Decode(encoded, 0L).Count);
+			ClassicAssert.LessOrEqual(encoded.Length, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(full.Count, KingdomCivicMemoryCodec.Decode(encoded, 0L).Count);
 		}
 
 		[Test]
@@ -253,16 +254,16 @@ namespace ThousandAndFirst.Tests
 			List<KingdomCivicMemorySection> sections = new List<KingdomCivicMemorySection>();
 			int count = KingdomCivicMemoryLimits.MaxCumulativePayloadBytes
 				/ KingdomCivicMemoryLimits.MaxTreatyBytes + 1;
-			Assert.AreEqual(4, count,
+			ClassicAssert.AreEqual(4, count,
 				"current nine-family arithmetic requires four maximal future sections to overflow");
-			Assert.LessOrEqual(count, KingdomCivicMemoryLimits.MaxSections,
+			ClassicAssert.LessOrEqual(count, KingdomCivicMemoryLimits.MaxSections,
 				"the section-count cap must leave this cumulative-overflow case reachable");
 			for (int i = 0; i < count; i++)
 				sections.Add(new KingdomCivicMemorySection(
 					KingdomCivicMemoryLimits.LastKnownSection + 1 + i,
 					new byte[KingdomCivicMemoryLimits.MaxTreatyBytes]));
 			foreach (KingdomCivicMemorySection section in sections)
-				Assert.LessOrEqual(section.Length,
+				ClassicAssert.LessOrEqual(section.Length,
 					KingdomCivicMemoryLimits.SectionCap(section.Id));
 			Assert.Throws<InvalidDataException>(() => KingdomCivicMemoryCodec.Encode(
 				KingdomCivicMemoryState.Of(sections, 0L)),

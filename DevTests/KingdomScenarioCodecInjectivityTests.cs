@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioProvenance record = Sound();
 			record.PlanDigest = digest;
-			Assert.IsNull(KingdomScenarioProvenanceRules.Encode(record));
+			ClassicAssert.IsNull(KingdomScenarioProvenanceRules.Encode(record));
 		}
 
 		// ----- RED 19 item 6: the optional sentinel is reserved ----------------------------------
@@ -73,11 +74,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioProvenance record = Sound();
 			record.AnchorId = "-";
-			Assert.IsNull(KingdomScenarioProvenanceRules.Encode(record),
+			ClassicAssert.IsNull(KingdomScenarioProvenanceRules.Encode(record),
 				"a present '-' must not serialise as absent");
 			KingdomScenarioProvenance absent = Sound();
 			absent.AnchorId = null;
-			Assert.IsNotNull(KingdomScenarioProvenanceRules.Encode(absent));
+			ClassicAssert.IsNotNull(KingdomScenarioProvenanceRules.Encode(absent));
 		}
 
 		[Test]
@@ -88,13 +89,13 @@ namespace ThousandAndFirst.Tests
 				KingdomScenarioProvenance record = Sound();
 				record.AnchorId = anchor;
 				string wire = KingdomScenarioProvenanceRules.Encode(record);
-				Assert.IsNotNull(wire, "anchor " + (anchor ?? "<null>"));
+				ClassicAssert.IsNotNull(wire, "anchor " + (anchor ?? "<null>"));
 				KingdomScenarioProvenance back;
 				string failure;
-				Assert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
+				ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
 					failure);
-				Assert.AreEqual(anchor, back.AnchorId);
-				Assert.AreEqual(wire, KingdomScenarioProvenanceRules.Encode(back));
+				ClassicAssert.AreEqual(anchor, back.AnchorId);
+				ClassicAssert.AreEqual(wire, KingdomScenarioProvenanceRules.Encode(back));
 			}
 		}
 
@@ -103,11 +104,11 @@ namespace ThousandAndFirst.Tests
 		public void StampShapeRequiresAnExactRoundTrip()
 		{
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(Sound(), DigestA,
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(Sound(), DigestA,
 				Mod, Core, out failure), failure);
 			KingdomScenarioProvenance sentinel = Sound();
 			sentinel.AnchorId = "-";
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(sentinel, DigestA,
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(sentinel, DigestA,
 				Mod, Core, out failure));
 		}
 	}

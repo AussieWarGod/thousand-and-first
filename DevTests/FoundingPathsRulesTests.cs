@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -25,7 +26,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsRuinSite(string terrainBlueprint, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsRuinSite(terrainBlueprint));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsRuinSite(terrainBlueprint));
 		}
 
 		[TestCase(-1, "")]
@@ -35,7 +36,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5, ", and 5 of its standing works are the settlement's now")]
 		public void RuinRestorationClause(int structuresRestored, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.RuinRestorationClause(structuresRestored));
+			ClassicAssert.AreEqual(expected, KingdomRules.RuinRestorationClause(structuresRestored));
 		}
 
 		[TestCase(null, "Kavvat", false)]
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("villagers of Bey Lah", "", true)]
 		public void GroundIsForeignFaction(string zoneFaction, string kingdomFactionName, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.GroundIsForeignFaction(zoneFaction, kingdomFactionName));
+			ClassicAssert.AreEqual(expected, KingdomRules.GroundIsForeignFaction(zoneFaction, kingdomFactionName));
 		}
 
 		[TestCase(null, "Kavvat", false, KingdomRules.GroundClaimVerdict.Unclaimed)]
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Girsh", "Kavvat", true, KingdomRules.GroundClaimVerdict.ForeignVillage)]
 		public void JudgeGroundFaction(string zoneFaction, string kingdomFactionName, bool zoneFactionIsVillage, KingdomRules.GroundClaimVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.JudgeGroundFaction(zoneFaction, kingdomFactionName, zoneFactionIsVillage));
+			ClassicAssert.AreEqual(expected, KingdomRules.JudgeGroundFaction(zoneFaction, kingdomFactionName, zoneFactionIsVillage));
 		}
 
 		[TestCase(false, false, 0, KingdomRules.VillageCharterVerdict.RealmNotFounded)]
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, false, -600, KingdomRules.VillageCharterVerdict.OpinionTooLow)]
 		public void JudgeVillageCharter(bool founded, bool alreadyChartered, int playerReputation, KingdomRules.VillageCharterVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.JudgeVillageCharter(founded, alreadyChartered, playerReputation));
+			ClassicAssert.AreEqual(expected, KingdomRules.JudgeVillageCharter(founded, alreadyChartered, playerReputation));
 		}
 
 		[Test]
@@ -80,15 +81,15 @@ namespace ThousandAndFirst.Tests
 				string refusal = KingdomRules.VillageCharterRefusal(verdict, "villagers of Bey Lah");
 				if (verdict == KingdomRules.VillageCharterVerdict.Allowed)
 				{
-					Assert.AreEqual("", refusal, "an allowed charter refuses nothing");
+					ClassicAssert.AreEqual("", refusal, "an allowed charter refuses nothing");
 				}
 				else
 				{
-					Assert.IsTrue(refusal.Length > 0, verdict + " must tell the founder why");
+					ClassicAssert.IsTrue(refusal.Length > 0, verdict + " must tell the founder why");
 				}
 			}
-			Assert.IsTrue(KingdomRules.VillageCharterRefusal(KingdomRules.VillageCharterVerdict.OpinionTooLow, "villagers of Bey Lah").Contains("Bey Lah"));
-			Assert.IsTrue(KingdomRules.VillageCharterRefusal(KingdomRules.VillageCharterVerdict.OpinionTooLow, null).Contains("this village"));
+			ClassicAssert.IsTrue(KingdomRules.VillageCharterRefusal(KingdomRules.VillageCharterVerdict.OpinionTooLow, "villagers of Bey Lah").Contains("Bey Lah"));
+			ClassicAssert.IsTrue(KingdomRules.VillageCharterRefusal(KingdomRules.VillageCharterVerdict.OpinionTooLow, null).Contains("this village"));
 		}
 
 		// Same column, one stratum apart: a cellar below or a tower above — but only once opted
@@ -109,7 +110,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("JoppaWorld", 10, 10, 10, "JoppaWorld", 10, 10, 10, true, false)]
 		public void CoordsAdjacentVertical(string worldA, int gxA, int gyA, int zA, string worldB, int gxB, int gyB, int zB, bool includeVertical, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.CoordsAdjacent(worldA, gxA, gyA, zA, worldB, gxB, gyB, zB, includeVertical));
+			ClassicAssert.AreEqual(expected, KingdomRules.CoordsAdjacent(worldA, gxA, gyA, zA, worldB, gxB, gyB, zB, includeVertical));
 		}
 
 		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.10", false)]
@@ -118,7 +119,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The two-argument overload must still answer exactly as it always did — vertical
 			// adjacency is opt-in, never a silent behaviour change for existing callers.
-			Assert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b));
+			ClassicAssert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b));
 		}
 
 		[TestCase("JoppaWorld.11.22.1.1.10", "JoppaWorld.11.22.1.1.11", true, true)]
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("JoppaWorld.11.22.1.1.10", null, true, false)]
 		public void ZonesAdjacentWithVertical(string a, string b, bool includeVertical, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b, includeVertical));
+			ClassicAssert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b, includeVertical));
 		}
 	}
 }

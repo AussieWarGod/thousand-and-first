@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -49,10 +50,10 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 950L, Stocks(51L, 180L, 8L, 42L), zones, works, residents, clocks, out state, out fault), fault.ToString());
 			KingdomCityState told;
-			Assert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, 640L, 1, 2, "taf:zone:a", 3), out told, out fault));
+			ClassicAssert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, 640L, 1, 2, "taf:zone:a", 3), out told, out fault));
 			return told;
 		}
 
@@ -64,85 +65,85 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState before = Peopled();
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(before, out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(before, out fault), fault.ToString());
 			KingdomCityState after;
-			Assert.IsTrue(book.TryRead(out after, out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryRead(out after, out fault), fault.ToString());
 
-			Assert.AreEqual(before.SettlementId, after.SettlementId);
-			Assert.AreEqual(before.ProcessedThroughTick, after.ProcessedThroughTick);
-			Assert.AreEqual(before.Stocks.Water.Level, after.Stocks.Water.Level);
-			Assert.AreEqual(before.Stocks.Food.Capacity, after.Stocks.Food.Capacity);
-			Assert.AreEqual(before.ZoneCount, after.ZoneCount);
-			Assert.AreEqual(before.WorkCount, after.WorkCount);
-			Assert.AreEqual(before.ResidentCount, after.ResidentCount);
-			Assert.AreEqual(before.ClockCount, after.ClockCount);
-			Assert.AreEqual(before.ToldCount, after.ToldCount);
+			ClassicAssert.AreEqual(before.SettlementId, after.SettlementId);
+			ClassicAssert.AreEqual(before.ProcessedThroughTick, after.ProcessedThroughTick);
+			ClassicAssert.AreEqual(before.Stocks.Water.Level, after.Stocks.Water.Level);
+			ClassicAssert.AreEqual(before.Stocks.Food.Capacity, after.Stocks.Food.Capacity);
+			ClassicAssert.AreEqual(before.ZoneCount, after.ZoneCount);
+			ClassicAssert.AreEqual(before.WorkCount, after.WorkCount);
+			ClassicAssert.AreEqual(before.ResidentCount, after.ResidentCount);
+			ClassicAssert.AreEqual(before.ClockCount, after.ClockCount);
+			ClassicAssert.AreEqual(before.ToldCount, after.ToldCount);
 
 			KingdomZoneRow zoneBefore;
 			KingdomZoneRow zoneAfter;
-			Assert.IsTrue(before.TryZone(0, out zoneBefore));
-			Assert.IsTrue(after.TryZone(0, out zoneAfter));
-			Assert.AreEqual(zoneBefore.ZoneId, zoneAfter.ZoneId);
-			Assert.AreEqual(zoneBefore.DistrictCode, zoneAfter.DistrictCode);
-			Assert.AreEqual(zoneBefore.LastReadTick, zoneAfter.LastReadTick);
-			Assert.AreEqual(zoneBefore.Stocks.Water.Level, zoneAfter.Stocks.Water.Level);
-			Assert.AreEqual(zoneBefore.Stocks.Food.Capacity, zoneAfter.Stocks.Food.Capacity);
-			Assert.AreEqual(zoneBefore.Roofs, zoneAfter.Roofs);
-			Assert.AreEqual(zoneBefore.Defence, zoneAfter.Defence);
-			Assert.AreEqual(zoneBefore.WaterCarry, zoneAfter.WaterCarry);
-			Assert.AreEqual(zoneBefore.FoodCarry, zoneAfter.FoodCarry);
-			Assert.AreEqual(-12, zoneAfter.OwedWater, "a standing draw must survive the save; that is what makes it a debt");
-			Assert.AreEqual(3, zoneAfter.OwedFood, "a landing and a draw stand at once on one row");
+			ClassicAssert.IsTrue(before.TryZone(0, out zoneBefore));
+			ClassicAssert.IsTrue(after.TryZone(0, out zoneAfter));
+			ClassicAssert.AreEqual(zoneBefore.ZoneId, zoneAfter.ZoneId);
+			ClassicAssert.AreEqual(zoneBefore.DistrictCode, zoneAfter.DistrictCode);
+			ClassicAssert.AreEqual(zoneBefore.LastReadTick, zoneAfter.LastReadTick);
+			ClassicAssert.AreEqual(zoneBefore.Stocks.Water.Level, zoneAfter.Stocks.Water.Level);
+			ClassicAssert.AreEqual(zoneBefore.Stocks.Food.Capacity, zoneAfter.Stocks.Food.Capacity);
+			ClassicAssert.AreEqual(zoneBefore.Roofs, zoneAfter.Roofs);
+			ClassicAssert.AreEqual(zoneBefore.Defence, zoneAfter.Defence);
+			ClassicAssert.AreEqual(zoneBefore.WaterCarry, zoneAfter.WaterCarry);
+			ClassicAssert.AreEqual(zoneBefore.FoodCarry, zoneAfter.FoodCarry);
+			ClassicAssert.AreEqual(-12, zoneAfter.OwedWater, "a standing draw must survive the save; that is what makes it a debt");
+			ClassicAssert.AreEqual(3, zoneAfter.OwedFood, "a landing and a draw stand at once on one row");
 
 			KingdomWorkRow workBefore;
 			KingdomWorkRow workAfter;
-			Assert.IsTrue(before.TryWork(0, out workBefore));
-			Assert.IsTrue(after.TryWork(0, out workAfter));
-			Assert.AreEqual(workBefore.WorkId, workAfter.WorkId);
-			Assert.AreEqual(workBefore.AnchorX, workAfter.AnchorX);
-			Assert.AreEqual(workBefore.DesignKey, workAfter.DesignKey);
-			Assert.AreEqual(workBefore.ConditionPercent, workAfter.ConditionPercent);
-			Assert.AreEqual(workBefore.RunState.Kind, workAfter.RunState.Kind);
-			Assert.AreEqual(workBefore.RunState.Stage, workAfter.RunState.Stage);
-			Assert.AreEqual(workBefore.RunState.NextTick, workAfter.RunState.NextTick);
+			ClassicAssert.IsTrue(before.TryWork(0, out workBefore));
+			ClassicAssert.IsTrue(after.TryWork(0, out workAfter));
+			ClassicAssert.AreEqual(workBefore.WorkId, workAfter.WorkId);
+			ClassicAssert.AreEqual(workBefore.AnchorX, workAfter.AnchorX);
+			ClassicAssert.AreEqual(workBefore.DesignKey, workAfter.DesignKey);
+			ClassicAssert.AreEqual(workBefore.ConditionPercent, workAfter.ConditionPercent);
+			ClassicAssert.AreEqual(workBefore.RunState.Kind, workAfter.RunState.Kind);
+			ClassicAssert.AreEqual(workBefore.RunState.Stage, workAfter.RunState.Stage);
+			ClassicAssert.AreEqual(workBefore.RunState.NextTick, workAfter.RunState.NextTick);
 
 			KingdomResidentRow personBefore;
 			KingdomResidentRow personAfter;
-			Assert.IsTrue(before.TryResident(0, out personBefore));
-			Assert.IsTrue(after.TryResident(0, out personAfter));
-			Assert.AreEqual(personBefore.Name, personAfter.Name);
-			Assert.AreEqual(personBefore.Standing, personAfter.Standing);
-			Assert.AreEqual(personBefore.Cause, personAfter.Cause);
-			Assert.AreEqual(personBefore.DayShape, personAfter.DayShape);
-			Assert.AreEqual(personBefore.BoundZoneId, personAfter.BoundZoneId);
-			Assert.AreEqual("the moon", personAfter.Origin,
+			ClassicAssert.IsTrue(before.TryResident(0, out personBefore));
+			ClassicAssert.IsTrue(after.TryResident(0, out personAfter));
+			ClassicAssert.AreEqual(personBefore.Name, personAfter.Name);
+			ClassicAssert.AreEqual(personBefore.Standing, personAfter.Standing);
+			ClassicAssert.AreEqual(personBefore.Cause, personAfter.Cause);
+			ClassicAssert.AreEqual(personBefore.DayShape, personAfter.DayShape);
+			ClassicAssert.AreEqual(personBefore.BoundZoneId, personAfter.BoundZoneId);
+			ClassicAssert.AreEqual("the moon", personAfter.Origin,
 				"arbitrary exact origin must not collapse to its closed code");
-			Assert.AreEqual("3 of Niv, 1000 AR", personAfter.Arrived,
+			ClassicAssert.AreEqual("3 of Niv, 1000 AR", personAfter.Arrived,
 				"frozen presentation evidence survives save round-trip");
 			// Both brink windows, in full. A carrier that round-tripped "a brink stands" but lost
 			// the tick the window is anchored on would hand every warned settler a fresh deadline
 			// on every save, which is the failure the columns were retyped to make impossible.
-			Assert.AreEqual(personBefore.RoofBrink.Stands, personAfter.RoofBrink.Stands);
-			Assert.AreEqual(personBefore.RoofBrink.ReachedTick, personAfter.RoofBrink.ReachedTick);
-			Assert.AreEqual(personBefore.RoofBrink.WarnedTick, personAfter.RoofBrink.WarnedTick);
-			Assert.AreEqual(personBefore.CreedBrink.Stands, personAfter.CreedBrink.Stands);
-			Assert.AreEqual(personBefore.CreedBrink.ReachedTick, personAfter.CreedBrink.ReachedTick);
-			Assert.AreEqual(personBefore.CreedBrink.WarnedTick, personAfter.CreedBrink.WarnedTick);
-			Assert.AreEqual(personBefore.CreedToward, personAfter.CreedToward);
-			Assert.AreEqual(personBefore.CreedChannel, personAfter.CreedChannel);
+			ClassicAssert.AreEqual(personBefore.RoofBrink.Stands, personAfter.RoofBrink.Stands);
+			ClassicAssert.AreEqual(personBefore.RoofBrink.ReachedTick, personAfter.RoofBrink.ReachedTick);
+			ClassicAssert.AreEqual(personBefore.RoofBrink.WarnedTick, personAfter.RoofBrink.WarnedTick);
+			ClassicAssert.AreEqual(personBefore.CreedBrink.Stands, personAfter.CreedBrink.Stands);
+			ClassicAssert.AreEqual(personBefore.CreedBrink.ReachedTick, personAfter.CreedBrink.ReachedTick);
+			ClassicAssert.AreEqual(personBefore.CreedBrink.WarnedTick, personAfter.CreedBrink.WarnedTick);
+			ClassicAssert.AreEqual(personBefore.CreedToward, personAfter.CreedToward);
+			ClassicAssert.AreEqual(personBefore.CreedChannel, personAfter.CreedChannel);
 			// Addendum 16's recorded fact. A book that lost it would hand the alignment gate a city
 			// whose people had never believed anything, which is the one state that HIDES designs
 			// rather than refusing them -- so the loss would read as the works never having existed.
-			Assert.AreEqual(personBefore.KeptCreeds, personAfter.KeptCreeds);
+			ClassicAssert.AreEqual(personBefore.KeptCreeds, personAfter.KeptCreeds);
 			CollectionAssert.AreEqual(new[] { "Joppa", "Barathrumites" }, KingdomCreedRules.DecodeKept(personAfter.KeptCreeds));
 
 			KingdomToldRow toldBefore;
 			KingdomToldRow toldAfter;
-			Assert.IsTrue(before.TryTold(0, out toldBefore));
-			Assert.IsTrue(after.TryTold(0, out toldAfter));
-			Assert.AreEqual(toldBefore.Kind, toldAfter.Kind);
-			Assert.AreEqual(toldBefore.Tick, toldAfter.Tick);
-			Assert.AreEqual(toldBefore.PlaceZoneId, toldAfter.PlaceZoneId);
+			ClassicAssert.IsTrue(before.TryTold(0, out toldBefore));
+			ClassicAssert.IsTrue(after.TryTold(0, out toldAfter));
+			ClassicAssert.AreEqual(toldBefore.Kind, toldAfter.Kind);
+			ClassicAssert.AreEqual(toldBefore.Tick, toldAfter.Tick);
+			ClassicAssert.AreEqual(toldBefore.PlaceZoneId, toldAfter.PlaceZoneId);
 		}
 
 		// ---- The brink storage layer (W2) -----------------------------------------------------
@@ -158,25 +159,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 
 			bool stands;
 			long reached;
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsTrue(stands);
-			Assert.AreEqual(410L, reached);
-			Assert.AreEqual(415L, warned);
-			Assert.IsNull(toward, "a roof brink has no creed");
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsTrue(stands);
+			ClassicAssert.AreEqual(410L, reached);
+			ClassicAssert.AreEqual(415L, warned);
+			ClassicAssert.IsNull(toward, "a roof brink has no creed");
 
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsTrue(stands);
-			Assert.AreEqual(420L, reached);
-			Assert.AreEqual(KingdomBrinkRules.Unwarned, warned, "a recorded brink nobody has been told about has no deadline");
-			Assert.AreEqual("Mechanimists", toward);
-			Assert.AreEqual(1, channel);
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsTrue(stands);
+			ClassicAssert.AreEqual(420L, reached);
+			ClassicAssert.AreEqual(KingdomBrinkRules.Unwarned, warned, "a recorded brink nobody has been told about has no deadline");
+			ClassicAssert.AreEqual("Mechanimists", toward);
+			ClassicAssert.AreEqual(1, channel);
 		}
 
 		/// <summary>Warning somebody stamps the anchor and never redates their loss, and it reaches
@@ -186,19 +187,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
-			Assert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: true, 420L, 1000L, "Mechanimists", 1));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: true, 420L, 1000L, "Mechanimists", 1));
 
 			bool stands;
 			long reached;
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
-			Assert.AreEqual(420L, reached);
-			Assert.AreEqual(1000L, warned);
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
-			Assert.AreEqual(415L, warned, "warning a creed brink must not touch a roof brink");
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.AreEqual(420L, reached);
+			ClassicAssert.AreEqual(1000L, warned);
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.AreEqual(415L, warned, "warning a creed brink must not touch a roof brink");
 		}
 
 		/// <summary>A lifted brink leaves nothing behind for a later read to half-believe. Rule 2:
@@ -208,20 +209,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
-			Assert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: false, 0L, KingdomBrinkRules.Unwarned, null, 0));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryWriteBrink(9, BrinkKind.Creed, stands: false, 0L, KingdomBrinkRules.Unwarned, null, 0));
 
 			bool stands;
 			long reached;
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsFalse(stands);
-			Assert.AreEqual(0L, reached);
-			Assert.AreEqual(KingdomBrinkRules.Unwarned, warned);
-			Assert.IsNull(toward);
-			Assert.AreEqual(0, channel);
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Creed, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsFalse(stands);
+			ClassicAssert.AreEqual(0L, reached);
+			ClassicAssert.AreEqual(KingdomBrinkRules.Unwarned, warned);
+			ClassicAssert.IsNull(toward);
+			ClassicAssert.AreEqual(0, channel);
 		}
 
 		/// <summary>A settler this book has no row for is not this book's to answer about — which is
@@ -232,14 +233,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			bool stands;
 			long reached;
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsFalse(book.TryReadBrink(residentId, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsFalse(book.TryWriteBrink(residentId, BrinkKind.Roof, stands: true, 1L, 2L, null, 0));
+			ClassicAssert.IsFalse(book.TryReadBrink(residentId, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsFalse(book.TryWriteBrink(residentId, BrinkKind.Roof, stands: true, 1L, 2L, null, 0));
 		}
 
 		/// <summary>The realm's own brink is not a settler's, and asking a row for one is refused
@@ -249,14 +250,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			bool stands;
 			long reached;
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsFalse(book.TryReadBrink(9, BrinkKind.City, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsFalse(book.TryWriteBrink(9, BrinkKind.City, stands: true, 1L, 2L, null, 0));
+			ClassicAssert.IsFalse(book.TryReadBrink(9, BrinkKind.City, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsFalse(book.TryWriteBrink(9, BrinkKind.City, stands: true, 1L, 2L, null, 0));
 		}
 
 		/// <summary>Ragged resident columns out of an older save are truncated to the shortest, and
@@ -267,7 +268,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			book.ResidentIds.Add(11);
 			book.ResidentNames.Add("Nobody");
 			bool stands;
@@ -275,11 +276,11 @@ namespace ThousandAndFirst.Tests
 			long warned;
 			string toward;
 			int channel;
-			Assert.IsFalse(book.TryReadBrink(11, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel),
+			ClassicAssert.IsFalse(book.TryReadBrink(11, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel),
 				"a row half of whose fields are missing is not a row");
-			Assert.AreEqual(1, book.ResidentCount);
-			Assert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
-			Assert.IsTrue(stands);
+			ClassicAssert.AreEqual(1, book.ResidentCount);
+			ClassicAssert.IsTrue(book.TryReadBrink(9, BrinkKind.Roof, out stands, out reached, out warned, out toward, out channel));
+			ClassicAssert.IsTrue(stands);
 		}
 
 		/// <summary>Schema-v2 saves predate exact origin/arrival presentation columns. Migration
@@ -290,23 +291,23 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			book.SchemaVersion = 2;
 			book.ResidentOrigins.Clear();
 			book.ResidentArrived.Clear();
 
 			book.Normalize();
 
-			Assert.AreEqual(KingdomCityRules.SchemaVersion, book.SchemaVersion);
-			Assert.AreEqual(1, book.ResidentCount);
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, book.SchemaVersion);
+			ClassicAssert.AreEqual(1, book.ResidentCount);
 			KingdomCityState state;
-			Assert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
-			Assert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
-			Assert.AreEqual("", row.Origin,
+			ClassicAssert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
+			ClassicAssert.IsTrue(state.TryResident(0, out KingdomResidentRow row));
+			ClassicAssert.AreEqual("", row.Origin,
 				"an arbitrary v2 origin cannot be invented from NoOrigin");
-			Assert.AreEqual("", row.Arrived,
+			ClassicAssert.AreEqual("", row.Arrived,
 				"v2 stored only the tick; no presentation string may be invented");
-			Assert.AreEqual(400L, row.ArrivedTick);
+			ClassicAssert.AreEqual(400L, row.ArrivedTick);
 		}
 
 		/// <summary>A standing and a cause that disagree are repaired toward the STANDING, because
@@ -317,14 +318,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			book.ResidentStandings[0] = (int)KingdomResidentStanding.Resident;
 			book.Normalize();
-			Assert.AreEqual((int)KingdomStandingCause.None, book.ResidentCauses[0]);
+			ClassicAssert.AreEqual((int)KingdomStandingCause.None, book.ResidentCauses[0]);
 
 			book.ResidentStandings[0] = (int)KingdomResidentStanding.Dead;
 			book.Normalize();
-			Assert.AreEqual((int)KingdomStandingCause.Unwitnessed, book.ResidentCauses[0],
+			ClassicAssert.AreEqual((int)KingdomStandingCause.Unwitnessed, book.ResidentCauses[0],
 				"a death nobody witnessed is told as exactly that, never invented");
 		}
 
@@ -334,10 +335,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(new KingdomCityBook().TryRead(out state, out fault), fault.ToString());
-			Assert.AreEqual(0, state.ZoneCount);
-			Assert.AreEqual(0, state.RowCount);
-			Assert.AreEqual(0L, state.ProcessedThroughTick);
+			ClassicAssert.IsTrue(new KingdomCityBook().TryRead(out state, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0, state.ZoneCount);
+			ClassicAssert.AreEqual(0, state.RowCount);
+			ClassicAssert.AreEqual(0L, state.ProcessedThroughTick);
 		}
 
 		/// <summary>Publishing twice leaves the book holding the SECOND state and nothing of the
@@ -347,11 +348,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
-			Assert.AreEqual(2, book.ZoneCount);
-			Assert.AreEqual(1, book.WorkCount);
-			Assert.AreEqual(1, book.ToldCount);
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.AreEqual(2, book.ZoneCount);
+			ClassicAssert.AreEqual(1, book.WorkCount);
+			ClassicAssert.AreEqual(1, book.ToldCount);
 		}
 
 		[Test]
@@ -359,10 +360,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
-			Assert.IsFalse(book.TryPublish(null, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.AreEqual(2, book.ZoneCount, "a refused publish must leave the book byte-identical");
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.IsFalse(book.TryPublish(null, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.AreEqual(2, book.ZoneCount, "a refused publish must leave the book byte-identical");
 		}
 
 		/// <summary>An absent named field arrives as a null column. It becomes an empty one rather
@@ -372,12 +373,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
 			book.ZoneRoofs = null;
 			book.ToldTicks = null;
 			book.Normalize();
-			Assert.AreEqual(0, book.ZoneCount, "a zone row missing a field is not a zone row");
-			Assert.AreEqual(0, book.ToldCount);
+			ClassicAssert.AreEqual(0, book.ZoneCount, "a zone row missing a field is not a zone row");
+			ClassicAssert.AreEqual(0, book.ToldCount);
 		}
 
 		/// <summary>
@@ -390,12 +391,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
 			book.ZoneIds.Add("taf:zone:ghost");
 			book.ZoneDistrictCodes.Add(1);
 			book.Normalize();
-			Assert.AreEqual(2, book.ZoneCount);
-			Assert.AreEqual("taf:zone:b", book.ZoneIds[1], "the half-written row is the one that goes");
+			ClassicAssert.AreEqual(2, book.ZoneCount);
+			ClassicAssert.AreEqual("taf:zone:b", book.ZoneIds[1], "the half-written row is the one that goes");
 		}
 
 		/// <summary>No dimension of this model grows (§1.4). Rows past a cap are dropped on the
@@ -424,7 +425,7 @@ namespace ThousandAndFirst.Tests
 				book.ZoneOwedMaterials.Add(0);
 			}
 			book.Normalize();
-			Assert.AreEqual(KingdomCityState.MaxZones, book.ZoneCount);
+			ClassicAssert.AreEqual(KingdomCityState.MaxZones, book.ZoneCount);
 		}
 
 		/// <summary>The ring forgets its OLDEST lines, never its newest: a book that came back with
@@ -443,9 +444,9 @@ namespace ThousandAndFirst.Tests
 				book.ToldOutcomes.Add(0);
 			}
 			book.Normalize();
-			Assert.AreEqual(KingdomCityState.MaxToldEntries, book.ToldCount);
-			Assert.AreEqual(1005L, book.ToldTicks[0], "the ring dropped the wrong end");
-			Assert.AreEqual(1000L + KingdomCityState.MaxToldEntries + 4, book.ToldTicks[book.ToldCount - 1]);
+			ClassicAssert.AreEqual(KingdomCityState.MaxToldEntries, book.ToldCount);
+			ClassicAssert.AreEqual(1005L, book.ToldTicks[0], "the ring dropped the wrong end");
+			ClassicAssert.AreEqual(1000L + KingdomCityState.MaxToldEntries + 4, book.ToldTicks[book.ToldCount - 1]);
 		}
 
 		/// <summary>A stamp below zero is a corrupt reading and not a model in debt: the book fails
@@ -457,11 +458,11 @@ namespace ThousandAndFirst.Tests
 			book.ProcessedThroughTick = -5L;
 			book.SettlementId = null;
 			book.Normalize();
-			Assert.AreEqual(0L, book.ProcessedThroughTick);
-			Assert.AreEqual("", book.SettlementId);
+			ClassicAssert.AreEqual(0L, book.ProcessedThroughTick);
+			ClassicAssert.AreEqual("", book.SettlementId);
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryRead(out state, out fault));
+			ClassicAssert.IsTrue(book.TryRead(out state, out fault));
 		}
 
 		/// <summary>The lookup every re-plumbed sighting reader goes through.</summary>
@@ -470,12 +471,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault));
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault));
 			int index;
-			Assert.IsTrue(book.TryZoneRow("taf:zone:b", out index));
-			Assert.AreEqual(1, index);
-			Assert.IsFalse(book.TryZoneRow("taf:zone:never", out index));
-			Assert.IsFalse(book.TryZoneRow(null, out index));
+			ClassicAssert.IsTrue(book.TryZoneRow("taf:zone:b", out index));
+			ClassicAssert.AreEqual(1, index);
+			ClassicAssert.IsFalse(book.TryZoneRow("taf:zone:never", out index));
+			ClassicAssert.IsFalse(book.TryZoneRow(null, out index));
 		}
 
 		[Test]
@@ -494,11 +495,11 @@ namespace ThousandAndFirst.Tests
 				PilgrimGreeted = 1
 			};
 			book.Normalize();
-			Assert.AreEqual((int)KingdomLocusRules.PilgrimState.Standing, book.PilgrimState);
-			Assert.AreEqual("body:pilgrim:7", book.PilgrimObjectId);
-			Assert.AreEqual("Aeru", book.PilgrimName);
-			Assert.AreEqual("Tamsketh", book.PilgrimPlaceName);
-			Assert.AreEqual(1, book.PilgrimGreeted);
+			ClassicAssert.AreEqual((int)KingdomLocusRules.PilgrimState.Standing, book.PilgrimState);
+			ClassicAssert.AreEqual("body:pilgrim:7", book.PilgrimObjectId);
+			ClassicAssert.AreEqual("Aeru", book.PilgrimName);
+			ClassicAssert.AreEqual("Tamsketh", book.PilgrimPlaceName);
+			ClassicAssert.AreEqual(1, book.PilgrimGreeted);
 		}
 
 		[Test]
@@ -517,16 +518,16 @@ namespace ThousandAndFirst.Tests
 				PilgrimGreeted = 8
 			};
 			book.Normalize();
-			Assert.AreEqual(KingdomLocusRules.PilgrimStoryThreshold - 1,
+			ClassicAssert.AreEqual(KingdomLocusRules.PilgrimStoryThreshold - 1,
 				book.PilgrimLoudness);
-			Assert.AreEqual((int)KingdomLocusRules.PilgrimState.None, book.PilgrimState);
-			Assert.AreEqual(0, book.PilgrimSequence);
-			Assert.AreEqual(0L, book.PilgrimCauseTick);
-			Assert.AreEqual("", book.PilgrimCause);
-			Assert.AreEqual("", book.PilgrimObjectId);
-			Assert.AreEqual("", book.PilgrimName);
-			Assert.AreEqual("", book.PilgrimPlaceName);
-			Assert.AreEqual(0, book.PilgrimGreeted);
+			ClassicAssert.AreEqual((int)KingdomLocusRules.PilgrimState.None, book.PilgrimState);
+			ClassicAssert.AreEqual(0, book.PilgrimSequence);
+			ClassicAssert.AreEqual(0L, book.PilgrimCauseTick);
+			ClassicAssert.AreEqual("", book.PilgrimCause);
+			ClassicAssert.AreEqual("", book.PilgrimObjectId);
+			ClassicAssert.AreEqual("", book.PilgrimName);
+			ClassicAssert.AreEqual("", book.PilgrimPlaceName);
+			ClassicAssert.AreEqual(0, book.PilgrimGreeted);
 		}
 
 		[Test]
@@ -544,10 +545,10 @@ namespace ThousandAndFirst.Tests
 				PilgrimGreeted = 1
 			};
 			book.Normalize();
-			Assert.AreEqual("", book.PilgrimObjectId);
-			Assert.AreEqual("Aeru", book.PilgrimName,
+			ClassicAssert.AreEqual("", book.PilgrimObjectId);
+			ClassicAssert.AreEqual("Aeru", book.PilgrimName,
 				"placement retry should keep the already-generated identity");
-			Assert.AreEqual(0, book.PilgrimGreeted);
+			ClassicAssert.AreEqual(0, book.PilgrimGreeted);
 		}
 
 		// ---- The read seam refuses a value this build has no member for -----------------------
@@ -579,12 +580,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			Column(book, column)[0] = value;
 			KingdomCityState state;
-			Assert.IsFalse(book.TryRead(out state, out fault), column + " = " + value + " must not read");
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsNull(state, "a refused read publishes nothing");
+			ClassicAssert.IsFalse(book.TryRead(out state, out fault), column + " = " + value + " must not read");
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsNull(state, "a refused read publishes nothing");
 		}
 
 		/// <summary>
@@ -656,12 +657,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			Column(book, column)[0] = value;
 			KingdomCityState state;
-			Assert.IsTrue(book.TryRead(out state, out fault), column + " = " + value + ": " + fault);
-			Assert.AreEqual(KingdomCityFault.None, fault);
-			Assert.AreEqual(value, Column(book, column)[0], "a value that reads is left as it was written");
+			ClassicAssert.IsTrue(book.TryRead(out state, out fault), column + " = " + value + ": " + fault);
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault);
+			ClassicAssert.AreEqual(value, Column(book, column)[0], "a value that reads is left as it was written");
 		}
 
 		/// <summary>The boundary row, read back through the model. The check runs before the casts
@@ -671,7 +672,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			book.WorkKinds[0] = (int)KingdomWorkKind.Construction;
 			book.WorkStages[0] = byte.MaxValue;
 			book.WorkAnchorsX[0] = short.MaxValue;
@@ -684,27 +685,27 @@ namespace ThousandAndFirst.Tests
 			book.ClockKinds[0] = (int)KingdomClockKind.Raid;
 			book.ToldKinds[0] = (int)KingdomToldKind.Brownout;
 			KingdomCityState state;
-			Assert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryRead(out state, out fault), fault.ToString());
 
 			KingdomWorkRow work;
-			Assert.IsTrue(state.TryWork(0, out work));
-			Assert.AreEqual(KingdomWorkKind.Construction, work.RunState.Kind);
-			Assert.AreEqual(byte.MaxValue, work.RunState.Stage);
-			Assert.AreEqual(short.MaxValue, work.AnchorX);
-			Assert.AreEqual(short.MinValue, work.AnchorY);
+			ClassicAssert.IsTrue(state.TryWork(0, out work));
+			ClassicAssert.AreEqual(KingdomWorkKind.Construction, work.RunState.Kind);
+			ClassicAssert.AreEqual(byte.MaxValue, work.RunState.Stage);
+			ClassicAssert.AreEqual(short.MaxValue, work.AnchorX);
+			ClassicAssert.AreEqual(short.MinValue, work.AnchorY);
 			KingdomResidentRow person;
-			Assert.IsTrue(state.TryResident(0, out person));
-			Assert.AreEqual(byte.MaxValue, person.JobRole);
-			Assert.AreEqual(KingdomDayShape.Shrine, person.DayShape);
-			Assert.AreEqual(KingdomResidentStanding.Expedition, person.Standing);
-			Assert.AreEqual(KingdomStandingCause.None, person.Cause);
-			Assert.AreEqual(byte.MaxValue, person.CreedChannel);
+			ClassicAssert.IsTrue(state.TryResident(0, out person));
+			ClassicAssert.AreEqual(byte.MaxValue, person.JobRole);
+			ClassicAssert.AreEqual(KingdomDayShape.Shrine, person.DayShape);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Expedition, person.Standing);
+			ClassicAssert.AreEqual(KingdomStandingCause.None, person.Cause);
+			ClassicAssert.AreEqual(byte.MaxValue, person.CreedChannel);
 			KingdomClockRow clock;
-			Assert.IsTrue(state.TryClock(0, out clock));
-			Assert.AreEqual(KingdomClockKind.Raid, clock.Kind);
+			ClassicAssert.IsTrue(state.TryClock(0, out clock));
+			ClassicAssert.AreEqual(KingdomClockKind.Raid, clock.Kind);
 			KingdomToldRow told;
-			Assert.IsTrue(state.TryTold(0, out told));
-			Assert.AreEqual(KingdomToldKind.Brownout, told.Kind);
+			ClassicAssert.IsTrue(state.TryTold(0, out told));
+			ClassicAssert.AreEqual(KingdomToldKind.Brownout, told.Kind);
 		}
 
 		/// <summary>The standing-toward-cause repair reads neither value it cannot name. Without
@@ -717,17 +718,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook book = new KingdomCityBook();
 			KingdomCityFault fault;
-			Assert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
+			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			Column(book, column)[0] = value;
 			int standing = book.ResidentStandings[0];
 			int cause = book.ResidentCauses[0];
 			book.Normalize();
-			Assert.AreEqual(standing, book.ResidentStandings[0]);
-			Assert.AreEqual(cause, book.ResidentCauses[0],
+			ClassicAssert.AreEqual(standing, book.ResidentStandings[0]);
+			ClassicAssert.AreEqual(cause, book.ResidentCauses[0],
 				"a cause must not be repaired toward a standing the build cannot name, nor a nameless cause narrowed into one");
 			KingdomCityState state;
-			Assert.IsFalse(book.TryRead(out state, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(book.TryRead(out state, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -35,7 +36,7 @@ namespace ThousandAndFirst.Tests
 			string source = Read("Harness/KingdomRaidRecoveryReturnNativeChecks.cs");
 			foreach (string token in new[] { "KingdomRaids.RaiderDying(", ".RemoveObject(", ".Destroy(", ".Obliterate(",
 				".BindPass(", "ResumeOpen(", ".FinishQuest(", ".FinishQuestStep(" }) StringAssert.DoesNotContain(token, source);
-			Assert.IsFalse(Regex.IsMatch(source, @"\.RecoveryState\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.RecoveryState\s*=(?!=)"));
 			StringAssert.Contains("SystemMoveTo(destination, energyCost: 0, forced: false", source);
 			StringAssert.Contains("ordinary-acceptance=false; save-load=untested", source);
 			StringAssert.Contains("KingdomRaids.HasWatchDisarray(Fixture.System)", source);
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string row in new[] { "REQUEST=founding-first-city", "START=8.22@40,12", "VERBS=raid-recovery-return-native-check",
 				"SCRIPT=stagedigest;raid-recovery-return-native-check;stagedigest",
 				"EXPECT=stagedigest:OK~founded=false,raid-recovery-return-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE" })
-				Assert.AreEqual(1, Regex.Matches(persona, "(?m)^" + Regex.Escape(row) + "$" ).Count);
+				ClassicAssert.AreEqual(1, Regex.Matches(persona, "(?m)^" + Regex.Escape(row) + "$" ).Count);
 		}
 
 		private static string Read(string path) { return TestMain.ReadRepositoryText(path); }
@@ -66,7 +67,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
 			}
 		}
 	}

@@ -2,6 +2,7 @@
 using System;
 using System.Numerics;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -21,8 +22,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelFaultCode expectedFault = (KernelFaultCode)expectedFaultCode;
 			KernelFaultCode fault;
-			Assert.AreEqual(expected, TickMath.TryValidateAdvance(processed, now, out fault));
-			Assert.AreEqual(expectedFault, fault);
+			ClassicAssert.AreEqual(expected, TickMath.TryValidateAdvance(processed, now, out fault));
+			ClassicAssert.AreEqual(expectedFault, fault);
 		}
 
 		[Test]
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 			// Fault precedence is frozen so combined-invalid input cannot vary by implementation.
 			KernelFaultCode fault;
 			TickMath.TryValidateAdvance(5L, -1L, out fault);
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "negative wins over regression");
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault, "negative wins over regression");
 		}
 
 		[TestCase(0L, 1L, 1L, 0)]
@@ -42,9 +43,9 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode expectedFault = (KernelFaultCode)expectedFaultCode;
 			long result;
 			KernelFaultCode fault;
-			Assert.IsTrue(TickMath.TryAddInterval(origin, interval, out result, out fault));
-			Assert.AreEqual(expected, result);
-			Assert.AreEqual(expectedFault, fault);
+			ClassicAssert.IsTrue(TickMath.TryAddInterval(origin, interval, out result, out fault));
+			ClassicAssert.AreEqual(expected, result);
+			ClassicAssert.AreEqual(expectedFault, fault);
 		}
 
 		[TestCase(-1L, 10L, 1)]
@@ -57,9 +58,9 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode expectedFault = (KernelFaultCode)expectedFaultCode;
 			long result;
 			KernelFaultCode fault;
-			Assert.IsFalse(TickMath.TryAddInterval(origin, interval, out result, out fault));
-			Assert.AreEqual(expectedFault, fault);
-			Assert.AreEqual(0L, result, "no partial value on failure");
+			ClassicAssert.IsFalse(TickMath.TryAddInterval(origin, interval, out result, out fault));
+			ClassicAssert.AreEqual(expectedFault, fault);
+			ClassicAssert.AreEqual(0L, result, "no partial value on failure");
 		}
 
 		[TestCase(10L, 10L, 10L, 1uL, 20L, "exactly due fires once")]
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 			ulong count;
 			long following;
 			KernelFaultCode fault;
-			Assert.IsTrue(TickMath.TryCountFixedPeriodDue(now, nextDue, interval, out count, out following, out fault), why);
-			Assert.AreEqual(expectedCount, count, why);
-			Assert.AreEqual(expectedFollowing, following, why);
+			ClassicAssert.IsTrue(TickMath.TryCountFixedPeriodDue(now, nextDue, interval, out count, out following, out fault), why);
+			ClassicAssert.AreEqual(expectedCount, count, why);
+			ClassicAssert.AreEqual(expectedFollowing, following, why);
 		}
 
 		[Test]
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 					long following;
 					if (TickMath.TryCountFixedPeriodDue(now, 0L, interval, out count, out following, out fault))
 					{
-						Assert.IsTrue(following > now, "now " + now + ", interval " + interval + ", following " + following);
+						ClassicAssert.IsTrue(following > now, "now " + now + ", interval " + interval + ", following " + following);
 					}
 				}
 			}
@@ -110,10 +111,10 @@ namespace ThousandAndFirst.Tests
 			ulong count;
 			long following;
 			KernelFaultCode fault;
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(now, nextDue, interval, out count, out following, out fault));
-			Assert.AreEqual(expectedFault, fault);
-			Assert.AreEqual(0uL, count, "no partial count");
-			Assert.AreEqual(0L, following, "no partial deadline");
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(now, nextDue, interval, out count, out following, out fault));
+			ClassicAssert.AreEqual(expectedFault, fault);
+			ClassicAssert.AreEqual(0uL, count, "no partial count");
+			ClassicAssert.AreEqual(0L, following, "no partial deadline");
 		}
 
 		[Test]
@@ -123,10 +124,10 @@ namespace ThousandAndFirst.Tests
 			long following;
 			KernelFaultCode fault;
 			// The deadline sits at the top of the range, so the next one cannot be represented.
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, long.MaxValue, long.MaxValue, out count, out following, out fault));
-			Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
-			Assert.AreEqual(0uL, count);
-			Assert.AreEqual(0L, following);
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, long.MaxValue, long.MaxValue, out count, out following, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
+			ClassicAssert.AreEqual(0uL, count);
+			ClassicAssert.AreEqual(0L, following);
 		}
 
 		[Test]
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 			ulong count;
 			long following;
 			KernelFaultCode fault;
-			Assert.IsTrue(TickMath.TryCountFixedPeriodDue(long.MaxValue - 1L, 0L, 1L, out count, out following, out fault));
-			Assert.AreEqual((ulong)(long.MaxValue - 1L) + 1uL, count);
-			Assert.AreEqual(long.MaxValue, following);
+			ClassicAssert.IsTrue(TickMath.TryCountFixedPeriodDue(long.MaxValue - 1L, 0L, 1L, out count, out following, out fault));
+			ClassicAssert.AreEqual((ulong)(long.MaxValue - 1L) + 1uL, count);
+			ClassicAssert.AreEqual(long.MaxValue, following);
 		}
 
 		/// <summary>
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 					{
 						ulong count;
 						long following;
-						Assert.IsTrue(TickMath.TryCountFixedPeriodDue(now, next, interval, out count, out following, out fault),
+						ClassicAssert.IsTrue(TickMath.TryCountFixedPeriodDue(now, next, interval, out count, out following, out fault),
 							"valid input must succeed: now " + now + ", next " + next + ", interval " + interval);
 
 						// The reference: step one deadline at a time, exactly as a naive
@@ -172,13 +173,13 @@ namespace ThousandAndFirst.Tests
 							deadline += interval;
 						}
 
-						Assert.AreEqual(referenceCount, count, "count at now " + now + ", next " + next + ", interval " + interval);
-						Assert.AreEqual(deadline, following, "following at now " + now + ", next " + next + ", interval " + interval);
+						ClassicAssert.AreEqual(referenceCount, count, "count at now " + now + ", next " + next + ", interval " + interval);
+						ClassicAssert.AreEqual(deadline, following, "following at now " + now + ", next " + next + ", interval " + interval);
 						compared++;
 					}
 				}
 			}
-			Assert.AreEqual(33 * 16 * 257, compared);
+			ClassicAssert.AreEqual(33 * 16 * 257, compared);
 		}
 
 		/// <summary>
@@ -241,22 +242,22 @@ namespace ThousandAndFirst.Tests
 				// Success is exactly the case where the following deadline is representable. The
 				// count itself can never exceed ulong from nonnegative long ticks.
 				bool expectedOk = expectedFollowing <= long.MaxValue;
-				Assert.AreEqual(expectedOk, ok, "success at now " + now + ", next " + next + ", interval " + interval);
+				ClassicAssert.AreEqual(expectedOk, ok, "success at now " + now + ", next " + next + ", interval " + interval);
 
 				if (expectedOk)
 				{
-					Assert.AreEqual((ulong)expectedCount, count, "count at now " + now + ", next " + next + ", interval " + interval);
-					Assert.AreEqual((long)expectedFollowing, following, "following at now " + now + ", next " + next + ", interval " + interval);
+					ClassicAssert.AreEqual((ulong)expectedCount, count, "count at now " + now + ", next " + next + ", interval " + interval);
+					ClassicAssert.AreEqual((long)expectedFollowing, following, "following at now " + now + ", next " + next + ", interval " + interval);
 				}
 				else
 				{
-					Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
-					Assert.AreEqual(0uL, count);
-					Assert.AreEqual(0L, following);
+					ClassicAssert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
+					ClassicAssert.AreEqual(0uL, count);
+					ClassicAssert.AreEqual(0L, following);
 				}
 				checkedTriples++;
 			}
-			Assert.AreEqual(100000, checkedTriples);
+			ClassicAssert.AreEqual(100000, checkedTriples);
 		}
 
 		/// <summary>
@@ -271,20 +272,20 @@ namespace ThousandAndFirst.Tests
 			long following;
 			KernelFaultCode fault;
 
-			Assert.IsTrue(TickMath.TryCountFixedPeriodDue(long.MaxValue - 1L, 0L, 1L, out count, out following, out fault),
+			ClassicAssert.IsTrue(TickMath.TryCountFixedPeriodDue(long.MaxValue - 1L, 0L, 1L, out count, out following, out fault),
 				"the largest count whose following deadline still fits");
-			Assert.AreEqual((ulong)long.MaxValue, count);
-			Assert.AreEqual(long.MaxValue, following);
+			ClassicAssert.AreEqual((ulong)long.MaxValue, count);
+			ClassicAssert.AreEqual(long.MaxValue, following);
 
 			// One tick further. The mathematical count is 2^63, which fits a ulong comfortably —
 			// so this must fail on the deadline, not on the count.
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, 0L, 1L, out count, out following, out fault));
-			Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, 0L, 1L, out count, out following, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault);
 			BigInteger mathematicalCount = (BigInteger)long.MaxValue + BigInteger.One;
-			Assert.IsTrue(mathematicalCount <= ulong.MaxValue, "the count itself is representable, so it is not what failed");
-			Assert.AreEqual((BigInteger)long.MaxValue + BigInteger.One, mathematicalCount);
-			Assert.AreEqual(0uL, count);
-			Assert.AreEqual(0L, following);
+			ClassicAssert.IsTrue(mathematicalCount <= ulong.MaxValue, "the count itself is representable, so it is not what failed");
+			ClassicAssert.AreEqual((BigInteger)long.MaxValue + BigInteger.One, mathematicalCount);
+			ClassicAssert.AreEqual(0uL, count);
+			ClassicAssert.AreEqual(0L, following);
 		}
 
 		/// <summary>
@@ -299,40 +300,40 @@ namespace ThousandAndFirst.Tests
 			KernelFaultCode fault;
 
 			// Advance validation: negative on both sides, and a regression on top.
-			Assert.IsFalse(TickMath.TryValidateAdvance(-5L, -10L, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "negative before regression");
+			ClassicAssert.IsFalse(TickMath.TryValidateAdvance(-5L, -10L, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault, "negative before regression");
 
 			// Interval addition: negative origin and non-positive interval together.
 			long result;
-			Assert.IsFalse(TickMath.TryAddInterval(-1L, 0L, out result, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "tick before interval");
-			Assert.AreEqual(0L, result);
+			ClassicAssert.IsFalse(TickMath.TryAddInterval(-1L, 0L, out result, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault, "tick before interval");
+			ClassicAssert.AreEqual(0L, result);
 
-			Assert.IsFalse(TickMath.TryAddInterval(-1L, -1L, out result, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault);
-			Assert.AreEqual(0L, result);
+			ClassicAssert.IsFalse(TickMath.TryAddInterval(-1L, -1L, out result, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault);
+			ClassicAssert.AreEqual(0L, result);
 
 			// A valid origin with a bad interval finally surfaces the interval fault.
-			Assert.IsFalse(TickMath.TryAddInterval(0L, 0L, out result, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidInterval, fault);
+			ClassicAssert.IsFalse(TickMath.TryAddInterval(0L, 0L, out result, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidInterval, fault);
 
 			// Due counting: all three inputs invalid at once.
 			ulong count;
 			long following;
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(-1L, -1L, 0L, out count, out following, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidTick, fault, "ticks before interval");
-			Assert.AreEqual(0uL, count);
-			Assert.AreEqual(0L, following);
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(-1L, -1L, 0L, out count, out following, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidTick, fault, "ticks before interval");
+			ClassicAssert.AreEqual(0uL, count);
+			ClassicAssert.AreEqual(0L, following);
 
 			// Ticks fine, interval not.
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(10L, 0L, -1L, out count, out following, out fault));
-			Assert.AreEqual(KernelFaultCode.InvalidInterval, fault);
-			Assert.AreEqual(0uL, count);
-			Assert.AreEqual(0L, following);
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(10L, 0L, -1L, out count, out following, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.InvalidInterval, fault);
+			ClassicAssert.AreEqual(0uL, count);
+			ClassicAssert.AreEqual(0L, following);
 
 			// Everything valid but the result unrepresentable: overflow is last, not first.
-			Assert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, 0L, 1L, out count, out following, out fault));
-			Assert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault, "overflow only once the inputs are sound");
+			ClassicAssert.IsFalse(TickMath.TryCountFixedPeriodDue(long.MaxValue, 0L, 1L, out count, out following, out fault));
+			ClassicAssert.AreEqual(KernelFaultCode.ArithmeticOverflow, fault, "overflow only once the inputs are sound");
 		}
 
 		[Test]
@@ -342,9 +343,9 @@ namespace ThousandAndFirst.Tests
 			long following;
 			KernelFaultCode fault;
 			// now < nextDue is a legitimate not-yet-due answer that preserves the deadline exactly.
-			Assert.IsTrue(TickMath.TryCountFixedPeriodDue(3L, 99L, 10L, out count, out following, out fault));
-			Assert.AreEqual(0uL, count);
-			Assert.AreEqual(99L, following, "the deadline must survive untouched");
+			ClassicAssert.IsTrue(TickMath.TryCountFixedPeriodDue(3L, 99L, 10L, out count, out following, out fault));
+			ClassicAssert.AreEqual(0uL, count);
+			ClassicAssert.AreEqual(99L, following, "the deadline must survive untouched");
 		}
 	}
 }

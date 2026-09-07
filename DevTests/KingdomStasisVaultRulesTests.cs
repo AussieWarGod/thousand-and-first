@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -13,10 +14,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomStasisCustodyReceipt first = Prepare(0, 1, "body-a");
 			KingdomStasisCustodyReceipt second = Prepare(0, 1, "body-a");
-			Assert.AreEqual(KingdomStasisCustodyPhase.Prepared, first.Phase);
-			Assert.AreEqual(first.CustodyId, second.CustodyId);
-			Assert.AreEqual(first.CustodyId + ":field", first.FieldObjectId);
-			Assert.AreEqual(0, first.Slot);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Prepared, first.Phase);
+			ClassicAssert.AreEqual(first.CustodyId, second.CustodyId);
+			ClassicAssert.AreEqual(first.CustodyId + ":field", first.FieldObjectId);
+			ClassicAssert.AreEqual(0, first.Slot);
 			AssertValid(first);
 			for (int slot = 0; slot < KingdomStasisVaultRules.MaxSlots; slot++)
 				AssertValid(Prepare(slot, slot + 1, "body-" + slot));
@@ -28,9 +29,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GenerationBodyAndVaultSeparateCustodyIdentity()
 		{
-			Assert.AreNotEqual(Prepare(0, 1, "body-a").CustodyId,
+			ClassicAssert.AreNotEqual(Prepare(0, 1, "body-a").CustodyId,
 				Prepare(0, 2, "body-a").CustodyId);
-			Assert.AreNotEqual(Prepare(0, 1, "body-a").CustodyId,
+			ClassicAssert.AreNotEqual(Prepare(0, 1, "body-a").CustodyId,
 				Prepare(0, 1, "body-b").CustodyId);
 			KingdomStasisCustodyReceipt changedVault = Prepare(0, 1, "body-a");
 			changedVault.VaultObjectId = "vault-b";
@@ -40,16 +41,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EntryVerdictsFailInStableSafetyOrder()
 		{
-			Assert.AreEqual(KingdomStasisVaultVerdict.Allowed, Judge());
-			Assert.AreEqual(KingdomStasisVaultVerdict.Unfounded,
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.Allowed, Judge());
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.Unfounded,
 				Judge(founded: false, owned: false));
-			Assert.AreEqual(KingdomStasisVaultVerdict.WrongGround,
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.WrongGround,
 				Judge(owned: false, exactVault: false));
-			Assert.AreEqual(KingdomStasisVaultVerdict.NotDominating,
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.NotDominating,
 				Judge(dominated: false));
-			Assert.AreEqual(KingdomStasisVaultVerdict.CradleOccupied,
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.CradleOccupied,
 				Judge(clear: false));
-			Assert.AreEqual(KingdomStasisVaultVerdict.ForeignProjection,
+			ClassicAssert.AreEqual(KingdomStasisVaultVerdict.ForeignProjection,
 				Judge(foreign: true));
 		}
 
@@ -65,19 +66,19 @@ namespace ThousandAndFirst.Tests
 				KingdomStasisVaultRules.BeginRelease(active);
 			KingdomStasisCustodyReceipt released =
 				KingdomStasisVaultRules.Released(releasing, 101L);
-			Assert.AreEqual(KingdomStasisCustodyPhase.Prepared, prepared.Phase);
-			Assert.AreEqual(KingdomStasisCustodyPhase.FieldProjected, projected.Phase);
-			Assert.AreEqual(KingdomStasisCustodyPhase.Active, active.Phase);
-			Assert.AreEqual(KingdomStasisCustodyPhase.ReleasePrepared, releasing.Phase);
-			Assert.AreEqual(KingdomStasisCustodyPhase.Released, released.Phase);
-			Assert.AreEqual(101L, released.ReleasedTick);
-			Assert.IsNull(KingdomStasisVaultRules.Released(releasing, 99L));
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Prepared, prepared.Phase);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.FieldProjected, projected.Phase);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Active, active.Phase);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.ReleasePrepared, releasing.Phase);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Released, released.Phase);
+			ClassicAssert.AreEqual(101L, released.ReleasedTick);
+			ClassicAssert.IsNull(KingdomStasisVaultRules.Released(releasing, 99L));
 			AssertValid(released);
 			KingdomStasisCustodyReceipt warningRelease =
 				KingdomStasisVaultRules.Released(releasing, 102L,
 					"whole-body evidence changed");
-			Assert.AreEqual(KingdomStasisCustodyPhase.Released, warningRelease.Phase);
-			Assert.AreEqual("whole-body evidence changed", warningRelease.Fault);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Released, warningRelease.Phase);
+			ClassicAssert.AreEqual("whole-body evidence changed", warningRelease.Fault);
 			AssertValid(warningRelease);
 			warningRelease.Fault = new string('x',
 				KingdomStasisVaultRules.MaxFaultChars + 1);
@@ -87,15 +88,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RecoveryNeverKeepsUnownedOrDivergedProjectionActive()
 		{
-			Assert.AreEqual(KingdomStasisRecoveryVerdict.KeepActive,
+			ClassicAssert.AreEqual(KingdomStasisRecoveryVerdict.KeepActive,
 				Recover(true, true, true, true, true, true, true, true, true, true));
-			Assert.AreEqual(KingdomStasisRecoveryVerdict.Release,
+			ClassicAssert.AreEqual(KingdomStasisRecoveryVerdict.Release,
 				Recover(true, false, true, true, true, true, true, true, true, true));
-			Assert.AreEqual(KingdomStasisRecoveryVerdict.Release,
+			ClassicAssert.AreEqual(KingdomStasisRecoveryVerdict.Release,
 				Recover(true, true, true, true, true, false, true, true, true, true));
-			Assert.AreEqual(KingdomStasisRecoveryVerdict.QuarantineAndRelease,
+			ClassicAssert.AreEqual(KingdomStasisRecoveryVerdict.QuarantineAndRelease,
 				Recover(true, true, true, true, true, true, false, true, true, true));
-			Assert.AreEqual(KingdomStasisRecoveryVerdict.ContinueForward,
+			ClassicAssert.AreEqual(KingdomStasisRecoveryVerdict.ContinueForward,
 				Recover(true, true, true, true, true, true, true, true, false, true));
 		}
 
@@ -108,12 +109,12 @@ namespace ThousandAndFirst.Tests
 			KingdomStasisCustodyReceipt valid = Prepare(2, 4, "body-a");
 			KingdomStasisCustodyReceipt quarantined =
 				KingdomStasisVaultRules.Quarantined(valid, new string('x', 900));
-			Assert.LessOrEqual(quarantined.Fault.Length,
+			ClassicAssert.LessOrEqual(quarantined.Fault.Length,
 				KingdomStasisVaultRules.MaxFaultChars);
 			AssertValid(quarantined);
 			KingdomStasisCustodyReceipt retired =
 				KingdomStasisVaultRules.RetireQuarantine(quarantined, 150L);
-			Assert.AreEqual(KingdomStasisCustodyPhase.Released, retired.Phase);
+			ClassicAssert.AreEqual(KingdomStasisCustodyPhase.Released, retired.Phase);
 			AssertValid(retired);
 		}
 
@@ -127,11 +128,11 @@ namespace ThousandAndFirst.Tests
 			KingdomStasisCustodyReceipt quarantined =
 				KingdomStasisVaultRules.QuarantineMalformed(broken, 3,
 					new string('x', 900));
-			Assert.AreEqual(3, quarantined.Slot);
-			Assert.LessOrEqual(quarantined.BodyName.Length,
+			ClassicAssert.AreEqual(3, quarantined.Slot);
+			ClassicAssert.LessOrEqual(quarantined.BodyName.Length,
 				KingdomStasisVaultRules.MaxNameChars);
-			Assert.AreEqual("", quarantined.InventoryFingerprint);
-			Assert.LessOrEqual(quarantined.Fault.Length,
+			ClassicAssert.AreEqual("", quarantined.InventoryFingerprint);
+			ClassicAssert.LessOrEqual(quarantined.Fault.Length,
 				KingdomStasisVaultRules.MaxFaultChars);
 			AssertValid(quarantined);
 		}
@@ -176,8 +177,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PhaseEnumsAreAppendOnly()
 		{
-			Assert.AreEqual("1,2,3,4,5,6", JoinValues(typeof(KingdomStasisCustodyPhase)));
-			Assert.AreEqual("0,1,2,3", JoinValues(typeof(KingdomStasisRecoveryVerdict)));
+			ClassicAssert.AreEqual("1,2,3,4,5,6", JoinValues(typeof(KingdomStasisCustodyPhase)));
+			ClassicAssert.AreEqual("0,1,2,3", JoinValues(typeof(KingdomStasisRecoveryVerdict)));
 		}
 
 		private static KingdomStasisCustodyReceipt Prepare(int slot, int generation,
@@ -186,7 +187,7 @@ namespace ThousandAndFirst.Tests
 			string digest = KingdomStasisVaultRules.Fingerprint("empty");
 			KingdomStasisCustodyReceipt receipt;
 			string failure;
-			Assert.IsTrue(KingdomStasisVaultRules.TryPrepare(slot, generation, "realm-a",
+			ClassicAssert.IsTrue(KingdomStasisVaultRules.TryPrepare(slot, generation, "realm-a",
 				"settlement-a", "zone-a", "vault-a", "lot-a", "cradle-a", body,
 				"subject-a", "Humanoid", "the founder", digest, digest, digest, 100L,
 				out receipt, out failure), failure);
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 		private static void AssertPrepareFails(int slot, int generation)
 		{
 			string digest = KingdomStasisVaultRules.Fingerprint("empty");
-			Assert.IsFalse(KingdomStasisVaultRules.TryPrepare(slot, generation, "realm",
+			ClassicAssert.IsFalse(KingdomStasisVaultRules.TryPrepare(slot, generation, "realm",
 				"city", "zone", "vault", "lot", "cradle", "body", "subject", "Humanoid",
 				"founder", digest, digest, digest, 0L, out _, out _));
 		}
@@ -219,13 +220,13 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertValid(KingdomStasisCustodyReceipt receipt)
 		{
-			Assert.IsTrue(KingdomStasisVaultRules.Validate(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomStasisVaultRules.Validate(receipt, out string failure), failure);
 		}
 
 		private static void AssertInvalid(KingdomStasisCustodyReceipt receipt)
 		{
-			Assert.IsFalse(KingdomStasisVaultRules.Validate(receipt, out string failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomStasisVaultRules.Validate(receipt, out string failure));
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		private static string JoinValues(Type type)

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -35,9 +36,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomPlots.ChainOf(Entry)", source);
 			StringAssert.Contains("Frozen production gates", source);
 			StringAssert.Contains("IRREVERSIBLE CITY PURPOSE", source);
-			Assert.IsFalse(source.Contains("GameObject.Create"));
-			Assert.IsFalse(source.Contains("SetIntProperty"));
-			Assert.IsFalse(source.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(source.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(source.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(source.Contains("SetStringProperty"));
 		}
 
 		[Test]
@@ -61,9 +62,9 @@ namespace ThousandAndFirst.Tests
 				"TryPreparePlotPayload(System, Z, rect",
 				"KingdomPlotRules.RaiseTicks(", "Quote = new KingdomPlotQuote");
 			StringAssert.Contains("MaterialClaim = new KingdomMaterialDebitCost", quote);
-			Assert.IsFalse(quote.Contains("ReserveExactWater"));
-			Assert.IsFalse(quote.Contains("ReservePayment"));
-			Assert.IsFalse(quote.Contains("AddObject"));
+			ClassicAssert.IsFalse(quote.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(quote.Contains("ReservePayment"));
+			ClassicAssert.IsFalse(quote.Contains("AddObject"));
 
 			string freeze = Between(plot, "public static bool TryFreezePlan(",
 				"internal static bool TryReadFrozenPlan(");
@@ -93,8 +94,8 @@ namespace ThousandAndFirst.Tests
 				"if (confirmed < 0) return;", "GameObject.Create(\"r_KingdomPlanMarker\")",
 				"KingdomPlots.TryFreezePlan(marker, chosen, quote",
 				"cell.AddObject(marker)");
-			Assert.IsFalse(plan.Contains("ReserveExactWater"));
-			Assert.IsFalse(plan.Contains("ReservePayment"));
+			ClassicAssert.IsFalse(plan.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(plan.Contains("ReservePayment"));
 
 			string commission = Between(charter, "public void CommissionBuilding(",
 				"public void PlaceBuildingPlan(");
@@ -166,9 +167,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int begin = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(begin, 0, "missing start: " + Start);
+			ClassicAssert.GreaterOrEqual(begin, 0, "missing start: " + Start);
 			int finish = Source.IndexOf(End, begin + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(finish, begin, "missing end: " + End);
+			ClassicAssert.Greater(finish, begin, "missing end: " + End);
 			return Source.Substring(begin, finish - begin);
 		}
 
@@ -178,7 +179,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int next = Source.IndexOf(Terms[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, "missing or out-of-order source term: " + Terms[i]);
+				ClassicAssert.Greater(next, at, "missing or out-of-order source term: " + Terms[i]);
 				at = next;
 			}
 		}

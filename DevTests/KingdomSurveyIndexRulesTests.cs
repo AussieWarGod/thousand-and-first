@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,7 +22,7 @@ namespace ThousandAndFirst.Tests
 						: KingdomSurveyIndexRules.Mutation.Remove)
 					: (valid && here ? KingdomSurveyIndexRules.Mutation.Add
 						: KingdomSurveyIndexRules.Mutation.Refuse);
-				Assert.AreEqual(expected,
+				ClassicAssert.AreEqual(expected,
 					KingdomSurveyIndexRules.Classify(known, valid, here), "mask " + mask);
 			}
 		}
@@ -29,15 +30,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CallbackTopologyReproofUsesOnlyObservedPostCallbackState()
 		{
-			Assert.AreEqual(KingdomSurveyIndexRules.Mutation.Refresh,
+			ClassicAssert.AreEqual(KingdomSurveyIndexRules.Mutation.Refresh,
 				KingdomSurveyIndexRules.Classify(true, true, true));
-			Assert.AreEqual(KingdomSurveyIndexRules.Mutation.Remove,
+			ClassicAssert.AreEqual(KingdomSurveyIndexRules.Mutation.Remove,
 				KingdomSurveyIndexRules.Classify(true, false, false));
-			Assert.AreEqual(KingdomSurveyIndexRules.Mutation.Remove,
+			ClassicAssert.AreEqual(KingdomSurveyIndexRules.Mutation.Remove,
 				KingdomSurveyIndexRules.Classify(true, true, false));
-			Assert.AreEqual(KingdomSurveyIndexRules.Mutation.Add,
+			ClassicAssert.AreEqual(KingdomSurveyIndexRules.Mutation.Add,
 				KingdomSurveyIndexRules.Classify(false, true, true));
-			Assert.AreEqual(KingdomSurveyIndexRules.Mutation.Refuse,
+			ClassicAssert.AreEqual(KingdomSurveyIndexRules.Mutation.Refuse,
 				KingdomSurveyIndexRules.Classify(false, true, false));
 		}
 
@@ -45,17 +46,17 @@ namespace ThousandAndFirst.Tests
 		public void StableInsertionPreservesOrderAcrossRefreshRemoveAndAdd()
 		{
 			List<long> order = new List<long> { 2, 5, 5, 9 };
-			Assert.AreEqual(0, KingdomSurveyIndexRules.StableInsertionIndex(order, 1));
-			Assert.AreEqual(1, KingdomSurveyIndexRules.StableInsertionIndex(order, 3));
-			Assert.AreEqual(3, KingdomSurveyIndexRules.StableInsertionIndex(order, 5));
-			Assert.AreEqual(4, KingdomSurveyIndexRules.StableInsertionIndex(order, 12));
+			ClassicAssert.AreEqual(0, KingdomSurveyIndexRules.StableInsertionIndex(order, 1));
+			ClassicAssert.AreEqual(1, KingdomSurveyIndexRules.StableInsertionIndex(order, 3));
+			ClassicAssert.AreEqual(3, KingdomSurveyIndexRules.StableInsertionIndex(order, 5));
+			ClassicAssert.AreEqual(4, KingdomSurveyIndexRules.StableInsertionIndex(order, 12));
 
 			order.RemoveAt(1);
 			int refreshed = KingdomSurveyIndexRules.StableInsertionIndex(order, 5);
 			order.Insert(refreshed, 5);
 			CollectionAssert.AreEqual(new long[] { 2, 5, 5, 9 }, order);
-			Assert.IsTrue(KingdomSurveyIndexRules.ComesBeforeOrEqual(5, 5));
-			Assert.IsFalse(KingdomSurveyIndexRules.ComesBeforeOrEqual(9, 5));
+			ClassicAssert.IsTrue(KingdomSurveyIndexRules.ComesBeforeOrEqual(5, 5));
+			ClassicAssert.IsFalse(KingdomSurveyIndexRules.ComesBeforeOrEqual(9, 5));
 		}
 
 		[Test]

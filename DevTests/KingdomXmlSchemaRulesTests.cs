@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -23,8 +24,8 @@ namespace ThousandAndFirst.Tests
 			KingdomXmlSchemaVerdict expected)
 		{
 			int parsed;
-			Assert.AreEqual(expected, KingdomXmlSchemaRules.Judge(declared, out parsed));
-			Assert.AreEqual(version, parsed);
+			ClassicAssert.AreEqual(expected, KingdomXmlSchemaRules.Judge(declared, out parsed));
+			ClassicAssert.AreEqual(version, parsed);
 		}
 
 		[TestCase(KingdomXmlSchemaVerdict.Compatible, true)]
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 		public void OnlyCurrentAndUnversionedLegacyStreamsLoad(
 			KingdomXmlSchemaVerdict verdict, bool readable)
 		{
-			Assert.AreEqual(readable, KingdomXmlSchemaRules.IsReadable(verdict));
+			ClassicAssert.AreEqual(readable, KingdomXmlSchemaRules.IsReadable(verdict));
 		}
 
 		[TestCase("KingdomBuildings.xml", "kingdombuildings")]
@@ -47,8 +48,8 @@ namespace ThousandAndFirst.Tests
 		{
 			XmlDocument document = new XmlDocument();
 			document.LoadXml(TestMain.ReadRepositoryText(file));
-			Assert.AreEqual(root, document.DocumentElement.Name);
-			Assert.AreEqual(KingdomXmlSchemaRules.CurrentVersion.ToString(),
+			ClassicAssert.AreEqual(root, document.DocumentElement.Name);
+			ClassicAssert.AreEqual(KingdomXmlSchemaRules.CurrentVersion.ToString(),
 				document.DocumentElement.GetAttribute("Schema"));
 		}
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -19,25 +20,25 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityDueWork work = Work(KingdomPolityCohortPurpose.Courier);
 			List<KingdomPolityEndpointFacts> endpoints = CourierEndpoints();
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Realm, work, endpoints,
 				out KingdomPolityAmbientTransaction first, out string failure), failure);
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Realm, work, endpoints,
 				out KingdomPolityAmbientTransaction retry, out failure), failure);
-			Assert.AreEqual(first.TransactionId, retry.TransactionId);
-			Assert.AreEqual(first.FrozenDigest, retry.FrozenDigest);
-			Assert.AreEqual(Source, first.SourceSettlementId);
-			Assert.AreEqual(Destination, first.DestinationSettlementId);
-			Assert.AreEqual("The northern cistern was reopened.", first.SafeDetail);
-			Assert.LessOrEqual(first.FactRefs.Count,
+			ClassicAssert.AreEqual(first.TransactionId, retry.TransactionId);
+			ClassicAssert.AreEqual(first.FrozenDigest, retry.FrozenDigest);
+			ClassicAssert.AreEqual(Source, first.SourceSettlementId);
+			ClassicAssert.AreEqual(Destination, first.DestinationSettlementId);
+			ClassicAssert.AreEqual("The northern cistern was reopened.", first.SafeDetail);
+			ClassicAssert.LessOrEqual(first.FactRefs.Count,
 				KingdomPolityAmbientTransactionRules.MaximumFacts);
 			first.SafeDetail = "The road is safe.";
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(first, Cohort,
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(first, Cohort,
 				out failure));
 			retry.FactRefs.AddRange(new[] { "taf:fact:x", "taf:fact:y", "taf:fact:z" });
 			retry.FactRefs.Sort(System.StringComparer.Ordinal);
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(retry, Cohort,
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(retry, Cohort,
 				out failure));
 		}
 
@@ -45,13 +46,13 @@ namespace ThousandAndFirst.DevTests
 		public void UnsupportedGuardPatrolAndRivalSourceFailClosed()
 		{
 			List<KingdomPolityEndpointFacts> endpoints = CourierEndpoints();
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Realm,
 				Work(KingdomPolityCohortPurpose.Guard), endpoints, out _, out _));
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Realm,
 				Work(KingdomPolityCohortPurpose.Patrol), endpoints, out _, out _));
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Rival,
 				Work(KingdomPolityCohortPurpose.Courier), endpoints, out _, out _));
 		}
@@ -64,10 +65,10 @@ namespace ThousandAndFirst.DevTests
 			ledger.NamedFigures[0].DeedSummary = "Held the cistern through the siege.";
 			byte[] first = KingdomPolityCodec.EncodeEnvelope(ledger);
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelope(first);
-			Assert.AreEqual(KingdomPolityRules.CurrentFormatVersion, decoded.FormatVersion);
-			Assert.AreEqual("Held the cistern through the siege.",
+			ClassicAssert.AreEqual(KingdomPolityRules.CurrentFormatVersion, decoded.FormatVersion);
+			ClassicAssert.AreEqual("Held the cistern through the siege.",
 				decoded.NamedFigures[0].DeedSummary);
-			Assert.AreEqual(ledger.Cohorts[1].AmbientTransaction.FrozenDigest,
+			ClassicAssert.AreEqual(ledger.Cohorts[1].AmbientTransaction.FrozenDigest,
 				decoded.Cohorts[1].AmbientTransaction.FrozenDigest);
 			CollectionAssert.AreEqual(first, KingdomPolityCodec.EncodeEnvelope(decoded));
 		}
@@ -80,12 +81,12 @@ namespace ThousandAndFirst.DevTests
 			byte[] old = KingdomPolityCodec.EncodeEnvelopeV7Fixture(ledger);
 			KingdomPolityLedger migrated = KingdomPolityCodec.DecodeEnvelope(old);
 			KingdomPolityCohortPlan row = migrated.Cohorts[1];
-			Assert.AreEqual(7, migrated.MigratedFromVersion);
-			Assert.AreEqual(0, row.AmbientTransaction.Version);
-			Assert.IsNull(row.AmbientTransaction.TransactionId);
-			Assert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(
+			ClassicAssert.AreEqual(7, migrated.MigratedFromVersion);
+			ClassicAssert.AreEqual(0, row.AmbientTransaction.Version);
+			ClassicAssert.IsNull(row.AmbientTransaction.TransactionId);
+			ClassicAssert.IsFalse(KingdomPolityAmbientTransactionRules.Valid(
 				row.AmbientTransaction, row.CohortId, out _));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(migrated, out string failure), failure);
 		}
 
 		[Test]
@@ -97,18 +98,18 @@ namespace ThousandAndFirst.DevTests
 				RealmId = KingdomPolityTestData.Realm, Tick = 0L,
 				Endpoints = CourierEndpoints()
 			};
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, first,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, first,
 				out List<KingdomPolityDueWork> work, out string failure), failure);
-			Assert.AreEqual(1, work.Count);
+			ClassicAssert.AreEqual(1, work.Count);
 			KingdomPolityDispatchOffer next = new KingdomPolityDispatchOffer
 			{
 				RealmId = first.RealmId, Tick = KingdomPolityDispatchRules.PeriodTicks,
 				Endpoints = CourierEndpoints()
 			};
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, next,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, next,
 				out _, out failure), failure);
 			for (int i = 0; i < state.DirectRecords.Count; i++)
-				Assert.IsFalse(KingdomPolityDispatchRules.IsKind(state.DirectRecords[i],
+				ClassicAssert.IsFalse(KingdomPolityDispatchRules.IsKind(state.DirectRecords[i],
 					KingdomPolityDispatchRules.DirectPrefix));
 		}
 
@@ -117,38 +118,38 @@ namespace ThousandAndFirst.DevTests
 		{
 			List<KingdomPolityEndpointFacts> endpoints = MigrantEndpoints();
 			KingdomPolityLedger ledger = LedgerWith(KingdomPolityCohortPurpose.Migrant, endpoints);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
 				ledger.Revision, Cohort, DestinationZone, 110L,
 				out KingdomPolityPublicationResult prepared, out string failure), failure);
 			KingdomPolityProjectionReceipt receipt = KingdomPolityAuthority.Projection(
 				ledger, prepared.ProjectionId);
-			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(ledger,
 				ledger.Revision, Cohort, receipt.ProjectionId, receipt.ObjectIds, 110L,
 				out _, out failure), failure);
 			KingdomPolityCohortPlan cohort = KingdomPolityAuthority.Cohort(ledger, Cohort);
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryPrepareAdmissionHandoff(
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryPrepareAdmissionHandoff(
 				KingdomPolityTestData.Realm, cohort, cohort.ResolvedMembers[0].MemberKey,
 				receipt.ObjectIds[0], DestinationZone, "Sif of Alpha", 120L,
 				out KingdomPolityAdmissionHandoff handoff, out failure), failure);
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryRecordTerminal(ledger,
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryRecordTerminal(ledger,
 				ledger.Revision, Cohort, KingdomPolityAmbientTerminalChoice.PetitionAccepted,
 				120L, handoff, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryRecordTerminal(ledger,
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryRecordTerminal(ledger,
 				ledger.Revision, Cohort, KingdomPolityAmbientTerminalChoice.PetitionAccepted,
 				120L, handoff, out KingdomPolityPublicationResult replay, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, replay.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, replay.Outcome);
 			cohort = KingdomPolityAuthority.Cohort(ledger, Cohort);
-			Assert.AreEqual(KingdomPolityAdmissionDecision.Accepted,
+			ClassicAssert.AreEqual(KingdomPolityAdmissionDecision.Accepted,
 				cohort.AmbientTransaction.AdmissionHandoff.Decision);
-			Assert.AreEqual(KingdomPolityCohortPhase.Concluded, cohort.Phase);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Concluded, cohort.Phase);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 		}
 
 		private static KingdomPolityLedger LedgerWith(KingdomPolityCohortPurpose Purpose,
 			List<KingdomPolityEndpointFacts> Endpoints)
 		{
 			KingdomPolityDueWork work = Work(Purpose);
-			Assert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
+			ClassicAssert.IsTrue(KingdomPolityAmbientTransactionRules.TryFreeze(
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Realm, work, Endpoints,
 				out KingdomPolityAmbientTransaction transaction, out string failure), failure);
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.DevTests
 				PresentationEnableEpoch = 1L, PresentationReservedTick = 100L,
 				Phase = KingdomPolityCohortPhase.Planned, AmbientTransaction = transaction
 			});
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 			return ledger;
 		}
 

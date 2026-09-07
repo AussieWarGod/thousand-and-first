@@ -1,5 +1,6 @@
 ﻿#if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -17,7 +18,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 0)]
 		public void DistrictDefenceBonus(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictDefenceBonus(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictDefenceBonus(district));
 		}
 
 		[TestCase("agrarian", 90)]
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 100)]
 		public void DistrictUpkeepPercent(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictUpkeepPercent(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictUpkeepPercent(district));
 		}
 
 		[TestCase("market", 1)]
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 0)]
 		public void DistrictShopTierBonus(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictShopTierBonus(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictShopTierBonus(district));
 		}
 
 		[TestCase("craft", 80)]
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 100)]
 		public void DistrictBuildPercent(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictBuildPercent(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictBuildPercent(district));
 		}
 
 		[TestCase("shrine", 75)]
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 100)]
 		public void DistrictPetitionIntervalPercent(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictPetitionIntervalPercent(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictPetitionIntervalPercent(district));
 		}
 
 		[TestCase("academy", 50)]
@@ -87,14 +88,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, 100)]
 		public void DistrictDriftPercent(string district, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictDriftPercent(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictDriftPercent(district));
 		}
 
 		[Test]
 		public void EachDistrictMovesExactlyOneQuantity()
 		{
 			string[] keys = KingdomRules.Districts;
-			Assert.AreEqual(6, keys.Length, "the six districts are the menu; a seventh needs its own effect");
+			ClassicAssert.AreEqual(6, keys.Length, "the six districts are the menu; a seventh needs its own effect");
 			for (int i = 0; i < keys.Length; i++)
 			{
 				string[] one = new string[1] { keys[i] };
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 				{
 					moved++;
 				}
-				Assert.AreEqual(1, moved, keys[i] + " must earn its menu entry by moving exactly one aggregated quantity");
+				ClassicAssert.AreEqual(1, moved, keys[i] + " must earn its menu entry by moving exactly one aggregated quantity");
 			}
 		}
 
@@ -131,61 +132,61 @@ namespace ThousandAndFirst.Tests
 		public void NoDistrictsLeavesEveryQuantityWhole()
 		{
 			string[] none = new string[0];
-			Assert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(none));
-			Assert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(none));
-			Assert.AreEqual(100, KingdomRules.DistrictsUpkeepPercent(none));
-			Assert.AreEqual(100, KingdomRules.DistrictsBuildPercent(none));
-			Assert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(none));
-			Assert.AreEqual(100, KingdomRules.DistrictsDriftPercent(none));
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(none));
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(none));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsUpkeepPercent(none));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsBuildPercent(none));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(none));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsDriftPercent(none));
 
-			Assert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(null), "a realm with no claims is not a realm with a penalty");
-			Assert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(null));
-			Assert.AreEqual(100, KingdomRules.DistrictsUpkeepPercent(null));
-			Assert.AreEqual(100, KingdomRules.DistrictsBuildPercent(null));
-			Assert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(null));
-			Assert.AreEqual(100, KingdomRules.DistrictsDriftPercent(null));
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(null), "a realm with no claims is not a realm with a penalty");
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(null));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsUpkeepPercent(null));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsBuildPercent(null));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(null));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsDriftPercent(null));
 		}
 
 		[Test]
 		public void PercentDistrictsDoNotStack()
 		{
-			Assert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(new string[3] { "agrarian", "agrarian", "agrarian" }), "a second vinelands feeds the same city, not the city twice");
-			Assert.AreEqual(80, KingdomRules.DistrictsBuildPercent(new string[2] { "craft", "craft" }));
-			Assert.AreEqual(75, KingdomRules.DistrictsPetitionIntervalPercent(new string[4] { "shrine", "shrine", "shrine", "shrine" }));
-			Assert.AreEqual(50, KingdomRules.DistrictsDriftPercent(new string[3] { "academy", "academy", "academy" }));
-			Assert.AreEqual(1, KingdomRules.DistrictsShopTierBonus(new string[3] { "market", "market", "market" }), "a second bazaar is another place to shop, not deeper stock in both");
+			ClassicAssert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(new string[3] { "agrarian", "agrarian", "agrarian" }), "a second vinelands feeds the same city, not the city twice");
+			ClassicAssert.AreEqual(80, KingdomRules.DistrictsBuildPercent(new string[2] { "craft", "craft" }));
+			ClassicAssert.AreEqual(75, KingdomRules.DistrictsPetitionIntervalPercent(new string[4] { "shrine", "shrine", "shrine", "shrine" }));
+			ClassicAssert.AreEqual(50, KingdomRules.DistrictsDriftPercent(new string[3] { "academy", "academy", "academy" }));
+			ClassicAssert.AreEqual(1, KingdomRules.DistrictsShopTierBonus(new string[3] { "market", "market", "market" }), "a second bazaar is another place to shop, not deeper stock in both");
 		}
 
 		[Test]
 		public void DefenceStacksAcrossClaimedZones()
 		{
-			Assert.AreEqual(2, KingdomRules.DistrictsDefenceBonus(new string[1] { "garrison" }));
-			Assert.AreEqual(6, KingdomRules.DistrictsDefenceBonus(new string[3] { "garrison", "garrison", "garrison" }), "bodies on a wall are the one thing that plainly adds up");
-			Assert.AreEqual(4, KingdomRules.DistrictsDefenceBonus(new string[4] { "garrison", "market", "garrison", "academy" }));
+			ClassicAssert.AreEqual(2, KingdomRules.DistrictsDefenceBonus(new string[1] { "garrison" }));
+			ClassicAssert.AreEqual(6, KingdomRules.DistrictsDefenceBonus(new string[3] { "garrison", "garrison", "garrison" }), "bodies on a wall are the one thing that plainly adds up");
+			ClassicAssert.AreEqual(4, KingdomRules.DistrictsDefenceBonus(new string[4] { "garrison", "market", "garrison", "academy" }));
 		}
 
 		[Test]
 		public void AggregatesIgnoreBlankAndUnknownKeys()
 		{
 			string[] mixed = new string[6] { null, "", "   ", "necropolis", "agrarian", null };
-			Assert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(mixed));
-			Assert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(mixed));
-			Assert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(mixed));
-			Assert.AreEqual(100, KingdomRules.DistrictsBuildPercent(mixed), "an unknown key must not reach into a quantity it does not own");
-			Assert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(mixed));
-			Assert.AreEqual(100, KingdomRules.DistrictsDriftPercent(mixed));
+			ClassicAssert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(mixed));
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsDefenceBonus(mixed));
+			ClassicAssert.AreEqual(0, KingdomRules.DistrictsShopTierBonus(mixed));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsBuildPercent(mixed), "an unknown key must not reach into a quantity it does not own");
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsPetitionIntervalPercent(mixed));
+			ClassicAssert.AreEqual(100, KingdomRules.DistrictsDriftPercent(mixed));
 		}
 
 		[Test]
 		public void EveryDistrictReadsOnItsOwnQuantityWhenClaimedTogether()
 		{
 			string[] all = new string[6] { "agrarian", "market", "craft", "shrine", "garrison", "academy" };
-			Assert.AreEqual(2, KingdomRules.DistrictsDefenceBonus(all));
-			Assert.AreEqual(1, KingdomRules.DistrictsShopTierBonus(all));
-			Assert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(all));
-			Assert.AreEqual(80, KingdomRules.DistrictsBuildPercent(all));
-			Assert.AreEqual(75, KingdomRules.DistrictsPetitionIntervalPercent(all));
-			Assert.AreEqual(50, KingdomRules.DistrictsDriftPercent(all));
+			ClassicAssert.AreEqual(2, KingdomRules.DistrictsDefenceBonus(all));
+			ClassicAssert.AreEqual(1, KingdomRules.DistrictsShopTierBonus(all));
+			ClassicAssert.AreEqual(90, KingdomRules.DistrictsUpkeepPercent(all));
+			ClassicAssert.AreEqual(80, KingdomRules.DistrictsBuildPercent(all));
+			ClassicAssert.AreEqual(75, KingdomRules.DistrictsPetitionIntervalPercent(all));
+			ClassicAssert.AreEqual(50, KingdomRules.DistrictsDriftPercent(all));
 		}
 
 		[Test]
@@ -205,8 +206,8 @@ namespace ThousandAndFirst.Tests
 		private static void AssertInBand(int percent, string district, string quantity)
 		{
 			string where = quantity + " under " + (district ?? "null");
-			Assert.IsTrue(percent >= KingdomRules.DistrictPercentFloor, where + " cut below the documented floor");
-			Assert.IsTrue(percent <= KingdomRules.DistrictNeutralPercent, where + " rose above whole, which no district may do");
+			ClassicAssert.IsTrue(percent >= KingdomRules.DistrictPercentFloor, where + " cut below the documented floor");
+			ClassicAssert.IsTrue(percent <= KingdomRules.DistrictNeutralPercent, where + " rose above whole, which no district may do");
 		}
 
 		[TestCase("common", true)]
@@ -221,14 +222,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsKnownStyle(string style, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsKnownStyle(style));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsKnownStyle(style));
 		}
 
 		[Test]
 		public void StylesAreTheFiveDeclaredInModdingDoc()
 		{
-			Assert.AreEqual(5, KingdomRules.Styles.Length);
-			Assert.AreEqual("common", KingdomRules.Styles[0], "common is the fallback and every base design allows it");
+			ClassicAssert.AreEqual(5, KingdomRules.Styles.Length);
+			ClassicAssert.AreEqual("common", KingdomRules.Styles[0], "common is the fallback and every base design allows it");
 		}
 
 		[TestCase("TerrainSaltmarsh", "Saltmarsh", 10, "verdant")]
@@ -261,14 +262,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase("TerrainOfSomeFutureUpdate", "Nowhere", 10, "common")]
 		public void StyleForSite(string blueprint, string region, int zLevel, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StyleForSite(blueprint, region, zLevel));
+			ClassicAssert.AreEqual(expected, KingdomRules.StyleForSite(blueprint, region, zLevel));
 		}
 
 		[Test]
 		public void BlueprintOutranksRegion()
 		{
-			Assert.AreEqual("eater", KingdomRules.StyleForSite("TerrainJoppaRuins", "Saltmarsh", 10), "the ruins are what you are building in, whatever region they sit in");
-			Assert.AreEqual("verdant", KingdomRules.StyleForSite("TerrainOfSomeFutureUpdate", "Saltmarsh", 10), "the region is the fallback reading, not the ignored one");
+			ClassicAssert.AreEqual("eater", KingdomRules.StyleForSite("TerrainJoppaRuins", "Saltmarsh", 10), "the ruins are what you are building in, whatever region they sit in");
+			ClassicAssert.AreEqual("verdant", KingdomRules.StyleForSite("TerrainOfSomeFutureUpdate", "Saltmarsh", 10), "the region is the fallback reading, not the ignored one");
 		}
 
 		[TestCase("TerrainSaltmarsh", "Saltmarsh", 11, "common")]
@@ -280,7 +281,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("TerrainMoonStair", "MoonStair", 9, "moonstair")]
 		public void StyleForSiteBelowTheSurface(string blueprint, string region, int zLevel, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StyleForSite(blueprint, region, zLevel));
+			ClassicAssert.AreEqual(expected, KingdomRules.StyleForSite(blueprint, region, zLevel));
 		}
 
 		[Test]
@@ -296,7 +297,7 @@ namespace ThousandAndFirst.Tests
 					for (int k = 0; k < levels.Length; k++)
 					{
 						string style = KingdomRules.StyleForSite(blueprints[i], regions[j], levels[k]);
-						Assert.IsTrue(KingdomRules.IsKnownStyle(style), "the fallback must be total; got " + (style ?? "null"));
+						ClassicAssert.IsTrue(KingdomRules.IsKnownStyle(style), "the fallback must be total; got " + (style ?? "null"));
 					}
 				}
 			}
@@ -305,16 +306,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EveryProvokableFactionCanFieldARaid()
 		{
-			Assert.IsTrue(KingdomRules.ProvokableFactions.Length > 1, "provoked factions is a plural the game has to be able to deliver");
+			ClassicAssert.IsTrue(KingdomRules.ProvokableFactions.Length > 1, "provoked factions is a plural the game has to be able to deliver");
 			for (int i = 0; i < KingdomRules.ProvokableFactions.Length; i++)
 			{
 				string faction = KingdomRules.ProvokableFactions[i];
 				string[] table = KingdomRules.RaiderTableFor(faction);
-				Assert.IsNotNull(table, faction + " is provokable but fields nobody");
-				Assert.IsTrue(table.Length > 0, faction + " has an empty raider table");
+				ClassicAssert.IsNotNull(table, faction + " is provokable but fields nobody");
+				ClassicAssert.IsTrue(table.Length > 0, faction + " has an empty raider table");
 				for (int j = 0; j < table.Length; j++)
 				{
-					Assert.IsFalse(string.IsNullOrEmpty(table[j]), faction + " table entry " + j + " is blank, which spawns nothing and says nothing");
+					ClassicAssert.IsFalse(string.IsNullOrEmpty(table[j]), faction + " table entry " + j + " is blank, which spawns nothing and says nothing");
 				}
 			}
 		}
@@ -327,10 +328,10 @@ namespace ThousandAndFirst.Tests
 			{
 				bool listed = Contains(KingdomRules.ProvokableFactions, probes[i]);
 				bool answered = KingdomRules.RaiderTableFor(probes[i]) != null;
-				Assert.AreEqual(listed, answered, probes[i] + ": the provokable list and the raider tables must agree in both directions");
+				ClassicAssert.AreEqual(listed, answered, probes[i] + ": the provokable list and the raider tables must agree in both directions");
 			}
-			Assert.IsNull(KingdomRules.RaiderTableFor(null));
-			Assert.IsNull(KingdomRules.RaiderTableFor(""));
+			ClassicAssert.IsNull(KingdomRules.RaiderTableFor(null));
+			ClassicAssert.IsNull(KingdomRules.RaiderTableFor(""));
 		}
 
 		[Test]
@@ -339,12 +340,12 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomRules.ProvokableFactions.Length; i++)
 			{
 				string[] table = KingdomRules.RaiderTableFor(KingdomRules.ProvokableFactions[i]);
-				Assert.AreEqual(table[0], table[1], KingdomRules.ProvokableFactions[i] + " should weight its scavenger tier by doubling it");
-				Assert.AreNotEqual(table[0], table[table.Length - 1], KingdomRules.ProvokableFactions[i] + " fields one creature repeated, which is not a war party");
+				ClassicAssert.AreEqual(table[0], table[1], KingdomRules.ProvokableFactions[i] + " should weight its scavenger tier by doubling it");
+				ClassicAssert.AreNotEqual(table[0], table[table.Length - 1], KingdomRules.ProvokableFactions[i] + " fields one creature repeated, which is not a war party");
 				for (int j = 0; j < i; j++)
 				{
 					string[] other = KingdomRules.RaiderTableFor(KingdomRules.ProvokableFactions[j]);
-					Assert.AreNotEqual(other[0], table[0], "two factions share a raider table; one of them is wired to the wrong creatures");
+					ClassicAssert.AreNotEqual(other[0], table[0], "two factions share a raider table; one of them is wired to the wrong creatures");
 				}
 			}
 		}
@@ -354,14 +355,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RaidingPartySize_RepelledSendsNobodyThrough()
 		{
-			Assert.AreEqual(0, KingdomRules.RaidingPartySize(6, 40, KingdomRules.RaidOutcome.Repelled));
+			ClassicAssert.AreEqual(0, KingdomRules.RaidingPartySize(6, 40, KingdomRules.RaidOutcome.Repelled));
 		}
 
 		[Test]
 		public void RaidingPartySize_NoDefenceLetsTheWholeBandIn()
 		{
-			Assert.AreEqual(6, KingdomRules.RaidingPartySize(6, 0, KingdomRules.RaidOutcome.Overrun));
-			Assert.AreEqual(6, KingdomRules.RaidingPartySize(6, -3, KingdomRules.RaidOutcome.Overrun));
+			ClassicAssert.AreEqual(6, KingdomRules.RaidingPartySize(6, 0, KingdomRules.RaidOutcome.Overrun));
+			ClassicAssert.AreEqual(6, KingdomRules.RaidingPartySize(6, -3, KingdomRules.RaidOutcome.Overrun));
 		}
 
 		[TestCase(10, 1, KingdomRules.RaidOutcome.Plundered, 9)]
@@ -369,14 +370,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, 10, KingdomRules.RaidOutcome.Plundered, 4)]
 		public void RaidingPartySize_DefenceTurnsBackProportionally(int size, int defence, KingdomRules.RaidOutcome outcome, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.RaidingPartySize(size, defence, outcome));
+			ClassicAssert.AreEqual(expected, KingdomRules.RaidingPartySize(size, defence, outcome));
 		}
 
 		[Test]
 		public void RaidingPartySize_TurnBackIsCappedSoWallsAreNeverTotal()
 		{
 			// 60% is the ceiling; a defence of 10 already reaches it, and 100 cannot beat it.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomRules.RaidingPartySize(10, 10, KingdomRules.RaidOutcome.Plundered),
 				KingdomRules.RaidingPartySize(10, 100, KingdomRules.RaidOutcome.Plundered));
 		}
@@ -386,15 +387,15 @@ namespace ThousandAndFirst.Tests
 		{
 			// A small band against a huge wall still puts one raider on the ground: being
 			// well-walled is not the same as being spared.
-			Assert.AreEqual(1, KingdomRules.RaidingPartySize(1, 99, KingdomRules.RaidOutcome.Plundered));
-			Assert.AreEqual(1, KingdomRules.RaidingPartySize(2, 99, KingdomRules.RaidOutcome.Plundered));
+			ClassicAssert.AreEqual(1, KingdomRules.RaidingPartySize(1, 99, KingdomRules.RaidOutcome.Plundered));
+			ClassicAssert.AreEqual(1, KingdomRules.RaidingPartySize(2, 99, KingdomRules.RaidOutcome.Plundered));
 		}
 
 		[Test]
 		public void RaidingPartySize_NoRaidersMeansNoParty()
 		{
-			Assert.AreEqual(0, KingdomRules.RaidingPartySize(0, 5, KingdomRules.RaidOutcome.Plundered));
-			Assert.AreEqual(0, KingdomRules.RaidingPartySize(-4, 5, KingdomRules.RaidOutcome.Plundered));
+			ClassicAssert.AreEqual(0, KingdomRules.RaidingPartySize(0, 5, KingdomRules.RaidOutcome.Plundered));
+			ClassicAssert.AreEqual(0, KingdomRules.RaidingPartySize(-4, 5, KingdomRules.RaidOutcome.Plundered));
 		}
 
 		[Test]
@@ -404,7 +405,7 @@ namespace ThousandAndFirst.Tests
 			for (int defence = 0; defence <= 20; defence++)
 			{
 				int through = KingdomRules.RaidingPartySize(12, defence, KingdomRules.RaidOutcome.Plundered);
-				Assert.LessOrEqual(through, previous, "defence " + defence + " let more raiders through than " + (defence - 1));
+				ClassicAssert.LessOrEqual(through, previous, "defence " + defence + " let more raiders through than " + (defence - 1));
 				previous = through;
 			}
 		}

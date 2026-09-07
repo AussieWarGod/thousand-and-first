@@ -3,6 +3,7 @@ using System;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,33 +13,33 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExperimentArmFixtureAndObservationIdsAreFrozen()
 		{
-			Assert.AreEqual("0,1,2,3", Values(typeof(KingdomExperienceOptionKind)));
-			Assert.AreEqual("0,1,2", Values(typeof(KingdomExperienceOptionState)));
-			Assert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12,13",
+			ClassicAssert.AreEqual("0,1,2,3", Values(typeof(KingdomExperienceOptionKind)));
+			ClassicAssert.AreEqual("0,1,2", Values(typeof(KingdomExperienceOptionState)));
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12,13",
 				Values(typeof(KingdomExperienceLane)));
-			Assert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12",
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12",
 				Values(typeof(KingdomExperienceCapacityFault)));
-			Assert.AreEqual("0,1,2", Values(typeof(KingdomExperienceLeaseState)));
-			Assert.AreEqual("0,1,2,3,4,5,6,7", Values(typeof(KingdomExperienceExperiment)));
-			Assert.AreEqual("0,1,2,3,4", Values(typeof(KingdomExperienceTrialArm)));
-			Assert.AreEqual("0,1,2,3,4,5,6,7", Values(typeof(KingdomExperienceFixture)));
-			Assert.AreEqual("0,1,2,3,4,5,6,7,8",
+			ClassicAssert.AreEqual("0,1,2", Values(typeof(KingdomExperienceLeaseState)));
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7", Values(typeof(KingdomExperienceExperiment)));
+			ClassicAssert.AreEqual("0,1,2,3,4", Values(typeof(KingdomExperienceTrialArm)));
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7", Values(typeof(KingdomExperienceFixture)));
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7,8",
 				Values(typeof(KingdomExperienceObservationKind)));
 		}
 
 		[Test]
 		public void VocabularyRejectsFreeCombinationsAndUnboundedMeasures()
 		{
-			Assert.IsTrue(KingdomExperienceTelemetryRules.Valid(
+			ClassicAssert.IsTrue(KingdomExperienceTelemetryRules.Valid(
 				KingdomExperienceExperiment.CivicVoices, KingdomExperienceTrialArm.FactsOnly,
 				KingdomExperienceFixture.Choice, KingdomExperienceObservationKind.Exposed, 0));
-			Assert.IsFalse(KingdomExperienceTelemetryRules.Valid(
+			ClassicAssert.IsFalse(KingdomExperienceTelemetryRules.Valid(
 				KingdomExperienceExperiment.CivicVoices, KingdomExperienceTrialArm.Projected,
 				KingdomExperienceFixture.Choice, KingdomExperienceObservationKind.Exposed, 0));
-			Assert.IsFalse(KingdomExperienceTelemetryRules.Valid(
+			ClassicAssert.IsFalse(KingdomExperienceTelemetryRules.Valid(
 				KingdomExperienceExperiment.CivicVoices, KingdomExperienceTrialArm.FactsOnly,
 				KingdomExperienceFixture.WholeArc, KingdomExperienceObservationKind.Exposed, 0));
-			Assert.IsFalse(KingdomExperienceTelemetryRules.Valid(
+			ClassicAssert.IsFalse(KingdomExperienceTelemetryRules.Valid(
 				KingdomExperienceExperiment.CivicVoices, KingdomExperienceTrialArm.FactsOnly,
 				KingdomExperienceFixture.Choice, KingdomExperienceObservationKind.Exposed,
 				KingdomExperienceTelemetryBuffer.MaxMeasure + 1));
@@ -49,30 +50,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomExperienceTelemetryBuffer b = new KingdomExperienceTelemetryBuffer();
 			for (int i = 0; i < KingdomExperienceTelemetryBuffer.Capacity + 9; i++)
-				Assert.IsTrue(b.TryRecord(KingdomExperienceExperiment.CivicVoices,
+				ClassicAssert.IsTrue(b.TryRecord(KingdomExperienceExperiment.CivicVoices,
 					KingdomExperienceTrialArm.FactsOnly, KingdomExperienceFixture.Choice,
 					KingdomExperienceObservationKind.Exposed, i));
-			Assert.AreEqual(KingdomExperienceTelemetryBuffer.Capacity, b.Count);
-			Assert.AreEqual(9L, b.Dropped);
-			Assert.IsTrue(b.TryGet(0, out KingdomExperienceTelemetryReceipt oldest));
-			Assert.AreEqual(10L, oldest.Sequence);
+			ClassicAssert.AreEqual(KingdomExperienceTelemetryBuffer.Capacity, b.Count);
+			ClassicAssert.AreEqual(9L, b.Dropped);
+			ClassicAssert.IsTrue(b.TryGet(0, out KingdomExperienceTelemetryReceipt oldest));
+			ClassicAssert.AreEqual(10L, oldest.Sequence);
 		}
 
 		[Test]
 		public void ExportIsDeterministicBoundedAndCarriesNoGameplayIdentity()
 		{
 			KingdomExperienceTelemetryBuffer b = new KingdomExperienceTelemetryBuffer();
-			Assert.IsTrue(b.TryRecord(KingdomExperienceExperiment.Curator,
+			ClassicAssert.IsTrue(b.TryRecord(KingdomExperienceExperiment.Curator,
 				KingdomExperienceTrialArm.SemanticOnly,
 				KingdomExperienceFixture.KnownDestination,
 				KingdomExperienceObservationKind.DestinationVisited, 1));
-			Assert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(b, out string first));
-			Assert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(b, out string second));
-			Assert.AreEqual(first, second);
+			ClassicAssert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(b, out string first));
+			ClassicAssert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(b, out string second));
+			ClassicAssert.AreEqual(first, second);
 			StringAssert.StartsWith("taf-experience-v1\n", first);
-			Assert.IsFalse(first.Contains("taf:"));
-			Assert.IsFalse(first.Contains("player", StringComparison.OrdinalIgnoreCase));
-			Assert.LessOrEqual(new UTF8Encoding(false, true).GetByteCount(first),
+			ClassicAssert.IsFalse(first.Contains("taf:"));
+			ClassicAssert.IsFalse(first.Contains("player", StringComparison.OrdinalIgnoreCase));
+			ClassicAssert.LessOrEqual(new UTF8Encoding(false, true).GetByteCount(first),
 				KingdomExperienceTelemetryExport.MaxExportBytes);
 		}
 
@@ -81,11 +82,11 @@ namespace ThousandAndFirst.Tests
 		{
 			FieldInfo[] fields = typeof(KingdomExperienceTelemetryReceipt).GetFields(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-			Assert.AreEqual(6, fields.Length);
+			ClassicAssert.AreEqual(6, fields.Length);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				Type t = fields[i].FieldType;
-				Assert.IsTrue(t == typeof(long) || t == typeof(int) || t.IsEnum,
+				ClassicAssert.IsTrue(t == typeof(long) || t == typeof(int) || t.IsEnum,
 					fields[i].Name + " can carry identifying or unbounded data");
 			}
 		}
@@ -93,8 +94,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EmptySessionExportsAnExplicitZeroCount()
 		{
-			Assert.IsFalse(KingdomExperienceTelemetryExport.TryCompose(null, out string _));
-			Assert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(
+			ClassicAssert.IsFalse(KingdomExperienceTelemetryExport.TryCompose(null, out string _));
+			ClassicAssert.IsTrue(KingdomExperienceTelemetryExport.TryCompose(
 				new KingdomExperienceTelemetryBuffer(), out string text));
 			StringAssert.Contains("\ncount\t0\n", text);
 			StringAssert.Contains("\ndropped\t0\n", text);

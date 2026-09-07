@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Book = ThousandAndFirst.KingdomSubsidenceStepBook;
 using Announcements = ThousandAndFirst.KingdomSubsidenceAnnouncementRules;
 using Reports = ThousandAndFirst.KingdomSubsidenceReportRules;
@@ -14,21 +15,21 @@ namespace ThousandAndFirst.Tests
 		private static readonly string Settlement = KingdomIdentityRules.SettlementPrefix + new string('b', 64);
 		private static Book Empty()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out var book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book)); return book;
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out var book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book)); return book;
 		}
 		private static Book Prepare(Book prior = null, bool before = false, long tick = 100)
 		{
-			Assert.IsTrue(Announcements.TryPrepare(prior ?? Empty(), before, !before, tick,
+			ClassicAssert.IsTrue(Announcements.TryPrepare(prior ?? Empty(), before, !before, tick,
 				before ? "{{G|The fall stopped.}}" : "{{r|The fall began.}}", before ? "The fall stopped" : "The fall began", out var next));
 			return next;
 		}
 		private static KingdomSubsidenceAnnouncement Announcement(Book book)
-		{ Assert.IsTrue(KingdomSubsidenceAnnouncementCodec.TryDecode(book.AnnouncementModel, out var value)); return value; }
+		{ ClassicAssert.IsTrue(KingdomSubsidenceAnnouncementCodec.TryDecode(book.AnnouncementModel, out var value)); return value; }
 		private static string Wire(Book book)
-		{ Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire)); return wire; }
+		{ ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire)); return wire; }
 		private static Book Reload(Book book)
-		{ Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(Wire(book), out var next)); return next; }
+		{ ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(Wire(book), out var next)); return next; }
 
 		/// <summary>Injected sinks, not an engine stand-in: the production coordinator runs against
 		/// actual report laws, ledger and Chronicle receipt/list-CAS laws. Wire reload is model-only.</summary>
@@ -52,21 +53,21 @@ namespace ThousandAndFirst.Tests
 			{ if (Cut != point) return; Cut = null; throw new InvalidOperationException(point); }
 			public bool Publish(Book expected, Book next)
 			{
-				Assert.AreSame(Book, expected); Publishes++; Calls.Add("save:" + Publishes);
+				ClassicAssert.AreSame(Book, expected); Publishes++; Calls.Add("save:" + Publishes);
 				Fire("save:" + Publishes + ":before");
 				if (NoWriteAt == Publishes) return true;
 				Book = next; Wire(Book); Fire("save:" + Publishes + ":after"); return true;
 			}
 			public bool WriteFlag(bool before, bool after)
 			{
-				Assert.IsNotNull(Announcement(Book).Active, "intent must precede flag");
-				Assert.AreEqual(before, Announcement(Book).Active.Before); Calls.Add("flag"); Fire("flag:before");
+				ClassicAssert.IsNotNull(Announcement(Book).Active, "intent must precede flag");
+				ClassicAssert.AreEqual(before, Announcement(Book).Active.Before); Calls.Add("flag"); Fire("flag:before");
 				if (Announced != after) { Announced = after; FlagWrites++; }
 				Fire("flag:after"); return true;
 			}
 			public void Message(string text)
 			{
-				Assert.AreEqual(KingdomSubsidenceNoticePhase.Intent, Announcement(Book).Active.Notice);
+				ClassicAssert.AreEqual(KingdomSubsidenceNoticePhase.Intent, Announcement(Book).Active.Notice);
 				Calls.Add("message"); Fire("message:before"); Messages.Add(text); OnMessage?.Invoke(); Fire("message:after");
 			}
 			public bool Report(KingdomSubsidenceReportPlan report, Func<KingdomSubsidenceReportPlan, bool> save, out string refusal)
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.Tests
 				}
 				string id = Reports.EventId(report, 0);
 				var entry = report.Entries[0];
-				Assert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(report.RealmId, report.SettlementId,
+				ClassicAssert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(report.RealmId, report.SettlementId,
 					id, entry.Text, entry.AtTick, out string fingerprint));
 				if (KingdomChronicleCapacityRules.TryObserve(new KingdomDurableKeyObservation { HasString = true, String = Registry },
 					id, fingerprint, out var witness))
@@ -103,18 +104,18 @@ namespace ThousandAndFirst.Tests
 			}
 			private KingdomChronicleReceipt Receipt(KingdomSubsidenceReportPlan report, string id)
 			{
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(Registry, out var rows, out _, out _));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(Registry, out var rows, out _, out _));
 				var prior = rows.Find(row => row.EventId == id); if (prior != null) return prior;
 				var entry = report.Entries[0];
-				Assert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(report.RealmId, report.SettlementId, id, entry.Text, entry.AtTick, out string fingerprint));
+				ClassicAssert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(report.RealmId, report.SettlementId, id, entry.Text, entry.AtTick, out string fingerprint));
 				var receipt = new KingdomChronicleReceipt { EventId = id, Fingerprint = fingerprint,
 					Official = "official at " + entry.AtTick + ": " + entry.Text, Outsider = "outsider at " + entry.AtTick + ": " + entry.Text,
 					OfficialState = KingdomChronicleSinkDisposition.Pending, OutsiderState = KingdomChronicleSinkDisposition.Pending,
 					JournalState = KingdomChronicleSinkDisposition.Skipped, Updated = entry.AtTick };
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", Official, out receipt.OfficialBefore));
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", Official, receipt.Official, out receipt.OfficialAfter));
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider", Outsider, out receipt.OutsiderBefore));
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("outsider", Outsider, receipt.Outsider, out receipt.OutsiderAfter));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", Official, out receipt.OfficialBefore));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", Official, receipt.Official, out receipt.OfficialAfter));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider", Outsider, out receipt.OutsiderBefore));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("outsider", Outsider, receipt.Outsider, out receipt.OutsiderAfter));
 				Persist(receipt); return receipt;
 			}
 			private void Sink(KingdomChronicleReceipt receipt, bool official)
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 				string name = official ? "official" : "outsider", before = official ? receipt.OfficialBefore : receipt.OutsiderBefore,
 					after = official ? receipt.OfficialAfter : receipt.OutsiderAfter;
 				List<string> rows = official ? Official : Outsider;
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList(name, rows, out string hash));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList(name, rows, out string hash));
 				var action = KingdomChronicleReceiptRules.ListAction(state, hash, before, after);
 				if (action == KingdomChronicleListAction.Append)
 				{
@@ -139,10 +140,10 @@ namespace ThousandAndFirst.Tests
 			{ if (official) row.OfficialState = state; else row.OutsiderState = state; }
 			private void Persist(KingdomChronicleReceipt row)
 			{
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(Registry, out var rows, out _, out _));
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(Registry, out var rows, out _, out _));
 				int index = rows.FindIndex(existing => existing.EventId == row.EventId);
 				if (index < 0) rows.Add(row); else rows[index] = row;
-				Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out string wire, out _)); Registry = wire;
+				ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out string wire, out _)); Registry = wire;
 			}
 		}
 	}

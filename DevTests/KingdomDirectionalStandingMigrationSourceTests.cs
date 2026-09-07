@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -87,9 +88,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string migration = Source(Path.Combine("Core",
 				"KingdomSystem.z24b.DirectionalStandingMigration.cs"));
-			Assert.GreaterOrEqual(Count(migration,
+			ClassicAssert.GreaterOrEqual(Count(migration,
 				"RegardSpilloverRemainders.Count != 0"), 2);
-			Assert.GreaterOrEqual(Count(migration,
+			ClassicAssert.GreaterOrEqual(Count(migration,
 				"RegardSpilloverObservedReputation.Count != 0"), 2);
 			StringAssert.Contains("archive.RegardSpilloverRemainders,", migration);
 			StringAssert.Contains("archive.RegardSpilloverObservedReputation,", migration);
@@ -187,7 +188,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < needles.Length; i++)
 			{
 				int next = source.IndexOf(needles[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, "missing/out-of-order: " + needles[i]);
+				ClassicAssert.Greater(next, at, "missing/out-of-order: " + needles[i]);
 				at = next;
 			}
 		}
@@ -203,10 +204,10 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string startNeedle, string endNeedle)
 		{
 			int start = source.IndexOf(startNeedle, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing start: " + startNeedle);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing start: " + startNeedle);
 			int end = source.IndexOf(endNeedle, start + startNeedle.Length,
 				StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing end: " + endNeedle);
+			ClassicAssert.Greater(end, start, "missing end: " + endNeedle);
 			return source.Substring(start, end - start);
 		}
 

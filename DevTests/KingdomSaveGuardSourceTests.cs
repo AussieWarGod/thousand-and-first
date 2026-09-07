@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -37,16 +38,16 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int fenceThrow = body.IndexOf("throw new InvalidOperationException", fenceCheck,
 				StringComparison.Ordinal);
-			Assert.Greater(loadFailedCheck, -1, "BeforeSave must read LoadFailed.");
-			Assert.Greater(loadFailedThrow, loadFailedCheck);
-			Assert.Greater(fenceCheck, loadFailedThrow);
-			Assert.Greater(fenceThrow, fenceCheck);
+			ClassicAssert.Greater(loadFailedCheck, -1, "BeforeSave must read LoadFailed.");
+			ClassicAssert.Greater(loadFailedThrow, loadFailedCheck);
+			ClassicAssert.Greater(fenceCheck, loadFailedThrow);
+			ClassicAssert.Greater(fenceThrow, fenceCheck);
 
 			// The veto is a read-only gate: it must never be the thing that lets a bad load
 			// through by quietly repairing the state it is supposed to be refusing.
-			Assert.IsFalse(guard.Contains("LoadFailed = "),
+			ClassicAssert.IsFalse(guard.Contains("LoadFailed = "),
 				"BeforeSave must never assign LoadFailed.");
-			Assert.IsFalse(guard.Contains("RealmIdentityFenceFault = "),
+			ClassicAssert.IsFalse(guard.Contains("RealmIdentityFenceFault = "),
 				"BeforeSave must never assign RealmIdentityFenceFault.");
 			StringAssert.Contains("This override only reads them", guard);
 			StringAssert.Contains("FinalizeWrite", guard);
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 				"return system != null && !system.LoadFailed && !system.RealmRetirementBlocksWork;",
 				master);
 			StringAssert.Contains("if (!RootAuthorityAvailable(system)) return false;", master);
-			Assert.AreEqual(2, Count(master, "return RootAuthorityAvailable(system) && ConfiguredEnabled"),
+			ClassicAssert.AreEqual(2, Count(master, "return RootAuthorityAvailable(system) && ConfiguredEnabled"),
 				"both explicit-new-work and automatic-work gates must share the failed-root guard");
 		}
 
@@ -91,9 +92,9 @@ namespace ThousandAndFirst.Tests
 			// The overclaim SH-1 flagged: a blanket promise that every prior layout is tolerated,
 			// and that the reflected branch is how those saves get read, stated directly above a
 			// branch that cannot fire for a genuine save.
-			Assert.IsFalse(system.Contains("tolerating every layout this mod has ever written"),
+			ClassicAssert.IsFalse(system.Contains("tolerating every layout this mod has ever written"),
 				"the summary must not claim unconditional legacy support any more");
-			Assert.IsFalse(
+			ClassicAssert.IsFalse(
 				system.Contains("Nothing remains in the block to read, so we return"),
 				"the docstring must not claim the reflected branch is how prior saves are read");
 
@@ -109,9 +110,9 @@ namespace ThousandAndFirst.Tests
 				reset, StringComparison.Ordinal);
 			int completed = system.IndexOf("CustomReadCompleted = true;", normalize,
 				StringComparison.Ordinal);
-			Assert.Greater(reset, -1);
-			Assert.Greater(normalize, reset);
-			Assert.Greater(completed, normalize,
+			ClassicAssert.Greater(reset, -1);
+			ClassicAssert.Greater(normalize, reset);
+			ClassicAssert.Greater(completed, normalize,
 				"only a fully normalized custom read may retire the sentinel");
 			int afterLoad = callbacks.IndexOf("public override void AfterLoad", StringComparison.Ordinal);
 			int refusal = callbacks.IndexOf("if (RefuseIncompleteLoad()) return;", afterLoad,
@@ -119,8 +120,8 @@ namespace ThousandAndFirst.Tests
 			int afterNormalize = callbacks.IndexOf(
 				"NormalizeState(AllowLegacyIdentityMigration: false);", refusal,
 				StringComparison.Ordinal);
-			Assert.Greater(refusal, afterLoad);
-			Assert.Greater(afterNormalize, refusal,
+			ClassicAssert.Greater(refusal, afterLoad);
+			ClassicAssert.Greater(afterNormalize, refusal,
 				"the blank recovery object must be refused before normalization");
 			StringAssert.Contains("if (!CustomReadCompleted) LoadFailed = true;", system);
 
@@ -134,10 +135,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int magicRead = system.IndexOf("int magic = Reader.ReadInt32();", branchThrow,
 				StringComparison.Ordinal);
-			Assert.Greater(reflected, -1);
-			Assert.Greater(log, reflected);
-			Assert.Greater(branchThrow, log);
-			Assert.Greater(magicRead, branchThrow,
+			ClassicAssert.Greater(reflected, -1);
+			ClassicAssert.Greater(log, reflected);
+			ClassicAssert.Greater(branchThrow, log);
+			ClassicAssert.Greater(magicRead, branchThrow,
 				"the branch must throw before falling into the named-field read path");
 
 			// The literal old call is kept only as a historical note inside a comment -- proving
@@ -165,9 +166,9 @@ namespace ThousandAndFirst.Tests
 			string[] manifest = Enumerable.Range(0, manifestElement.GetArrayLength())
 				.Select(i => manifestElement[i].GetString())
 				.ToArray();
-			Assert.AreEqual(48, manifest.Length, "the checked-in v1 manifest itself has drifted");
-			Assert.AreEqual("SerializationVersion", manifest[0]);
-			Assert.AreEqual("KingdomFactionName", manifest[1]);
+			ClassicAssert.AreEqual(48, manifest.Length, "the checked-in v1 manifest itself has drifted");
+			ClassicAssert.AreEqual("SerializationVersion", manifest[0]);
+			ClassicAssert.AreEqual("KingdomFactionName", manifest[1]);
 
 			// v1's manifest puts KingdomFactionName immediately after SerializationVersion.
 			// Today's root declares a whole third field, KingdomMasterLatchValue MasterOption,
@@ -181,10 +182,10 @@ namespace ThousandAndFirst.Tests
 				serializationVersion, StringComparison.Ordinal);
 			int kingdomFactionName = root.IndexOf("public string KingdomFactionName;",
 				masterOption, StringComparison.Ordinal);
-			Assert.Greater(serializationVersion, -1);
-			Assert.Greater(masterOption, serializationVersion,
+			ClassicAssert.Greater(serializationVersion, -1);
+			ClassicAssert.Greater(masterOption, serializationVersion,
 				"MasterOption must still sit between SerializationVersion and KingdomFactionName");
-			Assert.Greater(kingdomFactionName, masterOption,
+			ClassicAssert.Greater(kingdomFactionName, masterOption,
 				"KingdomFactionName must have drifted away from v1's second field position");
 		}
 

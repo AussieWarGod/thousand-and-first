@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomLifecycleBook BoundBook()
 		{
 			KingdomLifecycleBook book = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, "raid-outbox-city",
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, "raid-outbox-city",
 				false, null, new List<string>()));
 			return book;
 		}
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = BoundBook();
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book,
 				KingdomLifecycleLane.Raid, KingdomLifecycleAction.RaidWarning, 10L);
-			Assert.NotNull(op);
+			ClassicAssert.NotNull(op);
 			op.ZoneId = "zone-a";
 			op.Origin = KingdomLifecycleRules.ChildId(book.SettlementId, "outbox-provocation", 0);
 			op.ObjectId = KingdomRaidIncidentRules.GrievanceId(op.Origin);
@@ -48,17 +49,17 @@ namespace ThousandAndFirst.Tests
 			op.Blueprint = "test-profile";
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, "chronicle", "ledger", "message",
 				"deed", guestbook ? "guestbook" : null);
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
 			if (atSinks)
 			{
-				Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.DomainIntent, 11L));
-				Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op));
-				Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.DomainSettled, 12L));
-				Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Sinks, 13L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.DomainIntent, 11L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.DomainSettled, 12L));
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Sinks, 13L));
 			}
-			Assert.AreSame(op, book.Raid);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.AreSame(op, book.Raid);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
 			return book;
 		}
 
@@ -67,7 +68,7 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook book = BoundBook();
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book,
 				KingdomLifecycleLane.PlainGuest, KingdomLifecycleAction.Passages, 10L);
-			Assert.NotNull(op);
+			ClassicAssert.NotNull(op);
 			op.ZoneId = "zone-a";
 			op.DueBefore = 0L;
 			op.DueAfter = 1L;
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleResourceKind.Schedule, book.SettlementId,
 				KingdomLifecycleRules.ScheduleSubjectId(book.SettlementId, op.Lane), 0L, 1L));
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, "chronicle", "ledger", "message", "deed", "guestbook");
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Sinks, 11L));
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Sinks, 11L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book));
 			return book;
 		}
 
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomLifecycleBook loaded = new KingdomLifecycleBook();
 				KingdomLifecycleWireCodec.ReadLifecycle(reader, loaded);
-				Assert.AreEqual(stream.Length, stream.Position, "real lifecycle codec must consume the whole graph");
+				ClassicAssert.AreEqual(stream.Length, stream.Position, "real lifecycle codec must consume the whole graph");
 				return loaded;
 			}
 		}
@@ -119,23 +120,23 @@ namespace ThousandAndFirst.Tests
 		private static void AssertHeld(KingdomLifecycleBook book, KingdomLifecycleOperation op,
 			KingdomLifecycleSinkMask sink)
 		{
-			Assert.AreSame(op, book.Raid);
-			Assert.AreEqual(KingdomLifecyclePhase.Quarantined, op.Phase);
-			Assert.AreEqual(KingdomLifecycleSinkState.Intent, State(op, sink));
-			Assert.IsNotEmpty(op.Fault);
+			ClassicAssert.AreSame(op, book.Raid);
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.Quarantined, op.Phase);
+			ClassicAssert.AreEqual(KingdomLifecycleSinkState.Intent, State(op, sink));
+			ClassicAssert.IsNotEmpty(op.Fault);
 			byte[] before = Bytes(book);
-			Assert.IsFalse(KingdomLifecycleRules.RecoverOutbox(book, op));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.ScheduleIntent, 20L));
-			Assert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Terminal, 21L));
-			Assert.IsFalse(KingdomLifecycleRules.Retire(book, op, 22L));
-			Assert.IsNull(KingdomLifecycleRules.PrepareOperation(book, KingdomLifecycleLane.Raid,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RecoverOutbox(book, op));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.ScheduleIntent, 20L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.AdvancePhase(book, op, KingdomLifecyclePhase.Terminal, 21L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.Retire(book, op, 22L));
+			ClassicAssert.IsNull(KingdomLifecycleRules.PrepareOperation(book, KingdomLifecycleLane.Raid,
 				KingdomLifecycleAction.RaidWarning, 23L));
 			int calls = 0;
-			Assert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
+			ClassicAssert.IsFalse(KingdomRaidOutboxRules.Deliver(book, op, sink,
 				() => { calls++; return true; }, _ => { calls++; }));
-			Assert.AreEqual(0, calls, "a quarantined lane cannot retry either callback");
+			ClassicAssert.AreEqual(0, calls, "a quarantined lane cannot retry either callback");
 			CollectionAssert.AreEqual(before, Bytes(book), "recovery and replay refusals must retain exact durable state");
-			Assert.AreSame(op, book.Raid);
+			ClassicAssert.AreSame(op, book.Raid);
 		}
 
 		private sealed class HostileMessageException : Exception

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -15,10 +16,10 @@ namespace ThousandAndFirst.Tests
 		public void FirstAttempt_IsOneAbsoluteQudDayAfterPosting()
 		{
 			long tick;
-			Assert.IsTrue(KingdomBountyRules.TryFirstAttemptTick(5000L, out tick));
-			Assert.AreEqual(6200L, tick);
-			Assert.IsTrue(KingdomBountyRules.TryFirstAttemptTick(-9L, out tick));
-			Assert.AreEqual(KingdomBountyRules.AttemptIntervalTicks, tick);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryFirstAttemptTick(5000L, out tick));
+			ClassicAssert.AreEqual(6200L, tick);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryFirstAttemptTick(-9L, out tick));
+			ClassicAssert.AreEqual(KingdomBountyRules.AttemptIntervalTicks, tick);
 		}
 
 		[Test]
@@ -26,7 +27,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int visits = 0; visits < 1000; visits++)
 			{
-				Assert.AreEqual(0, KingdomBountyRules.DueAttemptPrefix(6199L, 6200L,
+				ClassicAssert.AreEqual(0, KingdomBountyRules.DueAttemptPrefix(6199L, 6200L,
 					Exhausted: false, KingdomBountyRules.MaxAttemptsPerSettlementPass));
 			}
 		}
@@ -35,23 +36,23 @@ namespace ThousandAndFirst.Tests
 		public void LegacyMigration_StartsStrictlyAfterNowOnOriginalAlignment()
 		{
 			long tick;
-			Assert.IsTrue(KingdomBountyRules.TryAttemptAfter(6200L, 5000L, out tick));
-			Assert.AreEqual(7400L, tick);
-			Assert.IsTrue(KingdomBountyRules.TryAttemptAfter(7000L, 5000L, out tick));
-			Assert.AreEqual(7400L, tick);
-			Assert.IsTrue(KingdomBountyRules.TryAttemptAfter(5000L, 5000L, out tick));
-			Assert.AreEqual(6200L, tick);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryAttemptAfter(6200L, 5000L, out tick));
+			ClassicAssert.AreEqual(7400L, tick);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryAttemptAfter(7000L, 5000L, out tick));
+			ClassicAssert.AreEqual(7400L, tick);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryAttemptAfter(5000L, 5000L, out tick));
+			ClassicAssert.AreEqual(6200L, tick);
 		}
 
 		[Test]
 		public void AttemptArithmetic_RefusesLongOverflow()
 		{
 			long ignored;
-			Assert.IsFalse(KingdomBountyRules.TryFirstAttemptTick(long.MaxValue, out ignored));
-			Assert.IsFalse(KingdomBountyRules.TryAdvanceAttemptTick(long.MaxValue, out ignored));
-			Assert.IsFalse(KingdomBountyRules.TryAttemptAfter(long.MaxValue, 0L, out ignored));
-			Assert.AreEqual(long.MaxValue, KingdomBountyRules.WorkDueTick(long.MaxValue - 10L, 1));
-			Assert.AreEqual(0L, KingdomBountyRules.WorkDueTick(5000L, 0));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryFirstAttemptTick(long.MaxValue, out ignored));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryAdvanceAttemptTick(long.MaxValue, out ignored));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryAttemptAfter(long.MaxValue, 0L, out ignored));
+			ClassicAssert.AreEqual(long.MaxValue, KingdomBountyRules.WorkDueTick(long.MaxValue - 10L, 1));
+			ClassicAssert.AreEqual(0L, KingdomBountyRules.WorkDueTick(5000L, 0));
 		}
 
 		[Test]
@@ -60,14 +61,14 @@ namespace ThousandAndFirst.Tests
 			long next = 1200L;
 			long now = 1200L + 10000L * KingdomBountyRules.AttemptIntervalTicks;
 			int count = KingdomBountyRules.DueAttemptPrefix(now, next, false, 7);
-			Assert.AreEqual(7, count);
+			ClassicAssert.AreEqual(7, count);
 			for (int i = 0; i < count; i++)
 			{
-				Assert.IsTrue(KingdomBountyRules.TryAdvanceAttemptTick(next, out next));
+				ClassicAssert.IsTrue(KingdomBountyRules.TryAdvanceAttemptTick(next, out next));
 			}
-			Assert.AreEqual(1200L + 7L * KingdomBountyRules.AttemptIntervalTicks, next,
+			ClassicAssert.AreEqual(1200L + 7L * KingdomBountyRules.AttemptIntervalTicks, next,
 				"cap jumped over unresolved truth");
-			Assert.Greater(KingdomBountyRules.DueAttemptPrefix(now, next, false, 7), 0,
+			ClassicAssert.Greater(KingdomBountyRules.DueAttemptPrefix(now, next, false, 7), 0,
 				"unresolved suffix was burned");
 		}
 
@@ -76,16 +77,16 @@ namespace ThousandAndFirst.Tests
 		{
 			long latest;
 			long skipped;
-			Assert.IsTrue(KingdomBountyRules.TryLatestDueAttempt(1200L, 1200L, false,
+			ClassicAssert.IsTrue(KingdomBountyRules.TryLatestDueAttempt(1200L, 1200L, false,
 				out latest, out skipped));
-			Assert.AreEqual(1200L, latest);
-			Assert.AreEqual(0L, skipped);
+			ClassicAssert.AreEqual(1200L, latest);
+			ClassicAssert.AreEqual(0L, skipped);
 
-			Assert.IsTrue(KingdomBountyRules.TryLatestDueAttempt(1200L * 11L + 50L,
+			ClassicAssert.IsTrue(KingdomBountyRules.TryLatestDueAttempt(1200L * 11L + 50L,
 				1200L, false, out latest, out skipped));
-			Assert.AreEqual(1200L * 11L, latest);
-			Assert.AreEqual(10L, skipped);
-			Assert.Less(1200L * 11L + 50L - latest, KingdomBountyRules.AttemptIntervalTicks);
+			ClassicAssert.AreEqual(1200L * 11L, latest);
+			ClassicAssert.AreEqual(10L, skipped);
+			ClassicAssert.Less(1200L * 11L + 50L - latest, KingdomBountyRules.AttemptIntervalTicks);
 		}
 
 		[Test]
@@ -93,9 +94,9 @@ namespace ThousandAndFirst.Tests
 		{
 			long latest;
 			long skipped;
-			Assert.IsFalse(KingdomBountyRules.TryLatestDueAttempt(1199L, 1200L, false,
+			ClassicAssert.IsFalse(KingdomBountyRules.TryLatestDueAttempt(1199L, 1200L, false,
 				out latest, out skipped));
-			Assert.IsFalse(KingdomBountyRules.TryLatestDueAttempt(1200L, 1200L, true,
+			ClassicAssert.IsFalse(KingdomBountyRules.TryLatestDueAttempt(1200L, 1200L, true,
 				out latest, out skipped));
 		}
 
@@ -110,10 +111,10 @@ namespace ThousandAndFirst.Tests
 					Settlement, stream, tick, Roster, BountyTask.Fetch, 12);
 				KingdomBountyRules.BountyAttempt b = KingdomBountyRules.ResolveScheduled(
 					Settlement, stream, tick, Roster, BountyTask.Fetch, 12);
-				Assert.IsTrue(a.Determined);
-				Assert.AreEqual(a.Outcome, b.Outcome);
-				Assert.AreEqual(a.Name, b.Name);
-				Assert.AreEqual(a.TasteMatched, b.TasteMatched);
+				ClassicAssert.IsTrue(a.Determined);
+				ClassicAssert.AreEqual(a.Outcome, b.Outcome);
+				ClassicAssert.AreEqual(a.Name, b.Name);
+				ClassicAssert.AreEqual(a.TasteMatched, b.TasteMatched);
 			}
 		}
 
@@ -138,9 +139,9 @@ namespace ThousandAndFirst.Tests
 				{
 					KingdomBountyRules.BountyAttempt attempt = KingdomBountyRules.ResolveScheduled(
 						Settlement, Stream, next, Roster, BountyTask.Scouting, 8);
-					Assert.IsTrue(attempt.Determined);
+					ClassicAssert.IsTrue(attempt.Determined);
 					outcomes.Add(attempt.Outcome + "/" + (attempt.Name ?? "-"));
-					Assert.IsTrue(KingdomBountyRules.TryAdvanceAttemptTick(next, out next));
+					ClassicAssert.IsTrue(KingdomBountyRules.TryAdvanceAttemptTick(next, out next));
 				}
 				left -= take;
 			}
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 					differences++;
 				}
 			}
-			Assert.Greater(differences, 0);
+			ClassicAssert.Greater(differences, 0);
 		}
 
 		[Test]
@@ -174,10 +175,10 @@ namespace ThousandAndFirst.Tests
 			KingdomBountyRules.BountyAttempt badSettlement = KingdomBountyRules.ResolveScheduled(
 				"bad", KingdomBountyRules.NoticeEventStream("7"), 1200L, Roster,
 				BountyTask.Fetch, 8);
-			Assert.IsFalse(badSettlement.Determined);
+			ClassicAssert.IsFalse(badSettlement.Determined);
 			KingdomBountyRules.BountyAttempt badStream = KingdomBountyRules.ResolveScheduled(
 				Settlement, "bad", 1200L, Roster, BountyTask.Fetch, 8);
-			Assert.IsFalse(badStream.Determined);
+			ClassicAssert.IsFalse(badStream.Determined);
 		}
 
 		[Test]
@@ -186,8 +187,8 @@ namespace ThousandAndFirst.Tests
 			KingdomBountyRules.BountyAttempt attempt = KingdomBountyRules.ResolveScheduled(
 				Settlement, KingdomBountyRules.NoticeEventStream("8"), 1200L,
 				new List<string>(), BountyTask.Fetch, 8);
-			Assert.IsTrue(attempt.Determined);
-			Assert.AreEqual(BountyOutcome.NobodyTried, attempt.Outcome);
+			ClassicAssert.IsTrue(attempt.Determined);
+			ClassicAssert.AreEqual(BountyOutcome.NobodyTried, attempt.Outcome);
 		}
 
 		[Test]
@@ -195,10 +196,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string a = KingdomBountyRules.NoticeEventStream("ABC / 123");
 			string b = KingdomBountyRules.NoticeEventStream("ABC / 123");
-			Assert.AreEqual(a, b);
-			Assert.IsTrue(a.StartsWith("taf:bounty:notice:v2:"));
-			Assert.LessOrEqual(a.Length, 128);
-			Assert.IsTrue(KingdomBountyRules.ResolveScheduled(Settlement, a, 1200L,
+			ClassicAssert.AreEqual(a, b);
+			ClassicAssert.IsTrue(a.StartsWith("taf:bounty:notice:v2:"));
+			ClassicAssert.LessOrEqual(a.Length, 128);
+			ClassicAssert.IsTrue(KingdomBountyRules.ResolveScheduled(Settlement, a, 1200L,
 				Roster, BountyTask.Fetch, 8).Determined);
 		}
 	}

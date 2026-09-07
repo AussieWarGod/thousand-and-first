@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,8 +19,8 @@ namespace ThousandAndFirst.Tests
 			int larderGate = charter.LastIndexOf(
 				"KingdomDesignationReleaseAuthority.TryCanRelease(", larder,
 				StringComparison.Ordinal);
-			Assert.Greater(larderGate, -1);
-			Assert.Less(larderGate, larder);
+			ClassicAssert.Greater(larderGate, -1);
+			ClassicAssert.Less(larderGate, larder);
 
 			string stock = Read("Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs");
 			Ordered(stock, "if (IsStockpile(Container))",
@@ -62,7 +63,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, markers[i]);
+				ClassicAssert.Greater(next, at, markers[i]);
 				at = next;
 			}
 		}

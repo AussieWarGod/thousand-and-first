@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,21 +13,21 @@ namespace ThousandAndFirst.Tests
 			int standing = 0;
 			int remainder = 0;
 			for (int i = 0; i < 10; i++)
-				Assert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
+				ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
 					0, 1, GrowthStage.City, out standing, out remainder));
-			Assert.AreEqual(1, standing);
-			Assert.AreEqual(0, remainder);
+			ClassicAssert.AreEqual(1, standing);
+			ClassicAssert.AreEqual(0, remainder);
 
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(0, 0, 0, 10,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(0, 0, 0, 10,
 				GrowthStage.City, out int wholeStanding, out int wholeRemainder));
-			Assert.AreEqual(standing, wholeStanding);
-			Assert.AreEqual(remainder, wholeRemainder);
+			ClassicAssert.AreEqual(standing, wholeStanding);
+			ClassicAssert.AreEqual(remainder, wholeRemainder);
 
 			for (int i = 0; i < 10; i++)
-				Assert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
+				ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
 					0, -1, GrowthStage.City, out standing, out remainder));
-			Assert.AreEqual(0, standing);
-			Assert.AreEqual(0, remainder);
+			ClassicAssert.AreEqual(0, standing);
+			ClassicAssert.AreEqual(0, remainder);
 		}
 
 		[TestCase(GrowthStage.Camp, 9, 4, 50)]
@@ -37,42 +38,42 @@ namespace ThousandAndFirst.Tests
 		public void CarriesExactHundredthsAcrossStages(GrowthStage stage, int delta,
 			int expectedStanding, int expectedRemainder)
 		{
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(0, 0, 0, delta, stage,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(0, 0, 0, delta, stage,
 				out int standing, out int remainder));
-			Assert.AreEqual(expectedStanding, standing);
-			Assert.AreEqual(expectedRemainder, remainder);
+			ClassicAssert.AreEqual(expectedStanding, standing);
+			ClassicAssert.AreEqual(expectedRemainder, remainder);
 		}
 
 		[Test]
 		public void ArithmeticSaturatesWithoutWrappingOrRetainingUnpayableCarry()
 		{
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(int.MaxValue - 1, 99,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(int.MaxValue - 1, 99,
 				int.MinValue, int.MaxValue, GrowthStage.Camp,
 				out int high, out int highRemainder));
-			Assert.AreEqual(int.MaxValue, high);
-			Assert.AreEqual(0, highRemainder);
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(int.MinValue + 1, -99,
+			ClassicAssert.AreEqual(int.MaxValue, high);
+			ClassicAssert.AreEqual(0, highRemainder);
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(int.MinValue + 1, -99,
 				int.MaxValue, int.MinValue, GrowthStage.Camp,
 				out int low, out int lowRemainder));
-			Assert.AreEqual(int.MinValue, low);
-			Assert.AreEqual(0, lowRemainder);
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MinValue, low);
+			ClassicAssert.AreEqual(0, lowRemainder);
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomStandingRules.SaturatingAdd(int.MaxValue, 1));
-			Assert.AreEqual(int.MinValue,
+			ClassicAssert.AreEqual(int.MinValue,
 				KingdomStandingRules.SaturatingAdd(int.MinValue, -1));
 		}
 
 		[Test]
 		public void RejectsInvalidCarryStageAndReservedDirections()
 		{
-			Assert.IsFalse(KingdomStandingRules.TrySpillover(0, 100, 0, 1,
+			ClassicAssert.IsFalse(KingdomStandingRules.TrySpillover(0, 100, 0, 1,
 				GrowthStage.Camp, out _, out _));
-			Assert.IsFalse(KingdomStandingRules.TrySpillover(0, 0, 0, 1,
+			ClassicAssert.IsFalse(KingdomStandingRules.TrySpillover(0, 0, 0, 1,
 				(GrowthStage)99, out _, out _));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction("Player", "realm"));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction("realm", "realm"));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction("*", "realm"));
-			Assert.IsTrue(KingdomStandingRules.EligibleForeignFaction("Joppa", "realm"));
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction("Player", "realm"));
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction("realm", "realm"));
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction("*", "realm"));
+			ClassicAssert.IsTrue(KingdomStandingRules.EligibleForeignFaction("Joppa", "realm"));
 		}
 
 		[Test]
@@ -84,25 +85,25 @@ namespace ThousandAndFirst.Tests
 			foreach (GrowthStage stage in new[] { GrowthStage.Camp, GrowthStage.Steading,
 				GrowthStage.Village, GrowthStage.Town, GrowthStage.City })
 			{
-				Assert.IsTrue(KingdomStandingRules.TrySpillover(123, 37, 0, total,
+				ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(123, 37, 0, total,
 					stage, out int batchedStanding, out int batchedRemainder));
 				int standing = 123;
 				int remainder = 37;
 				for (int i = 0; i < fragments.Length; i++)
-					Assert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
+					ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
 						0, fragments[i], stage, out standing, out remainder));
-				Assert.AreEqual(batchedStanding, standing, stage + " standing");
-				Assert.AreEqual(batchedRemainder, remainder, stage + " remainder");
+				ClassicAssert.AreEqual(batchedStanding, standing, stage + " standing");
+				ClassicAssert.AreEqual(batchedRemainder, remainder, stage + " remainder");
 
-				Assert.IsTrue(KingdomStandingRules.TrySpillover(-123, -37, 0, -total,
+				ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(-123, -37, 0, -total,
 					stage, out batchedStanding, out batchedRemainder));
 				standing = -123;
 				remainder = -37;
 				for (int i = fragments.Length - 1; i >= 0; i--)
-					Assert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
+					ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
 						0, -fragments[i], stage, out standing, out remainder));
-				Assert.AreEqual(batchedStanding, standing, stage + " negative standing");
-				Assert.AreEqual(batchedRemainder, remainder, stage + " negative remainder");
+				ClassicAssert.AreEqual(batchedStanding, standing, stage + " negative standing");
+				ClassicAssert.AreEqual(batchedRemainder, remainder, stage + " negative remainder");
 			}
 		}
 
@@ -119,80 +120,80 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < deltas.Length; i++)
 			{
 				scaled += (long)deltas[i] * KingdomRules.SpilloverPercent(stages[i]);
-				Assert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
+				ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(standing, remainder,
 					0, deltas[i], stages[i], out standing, out remainder));
 			}
-			Assert.AreEqual(scaled / KingdomStandingRules.FractionScale, standing);
-			Assert.AreEqual(scaled % KingdomStandingRules.FractionScale, remainder);
+			ClassicAssert.AreEqual(scaled / KingdomStandingRules.FractionScale, standing);
+			ClassicAssert.AreEqual(scaled % KingdomStandingRules.FractionScale, remainder);
 		}
 
 		[Test]
 		public void PersistedPairHasOneCanonicalQuotientAndNoOutwardBoundaryDebt()
 		{
-			Assert.IsTrue(KingdomStandingRules.CanonicalPair(0, 99));
-			Assert.IsTrue(KingdomStandingRules.CanonicalPair(0, -99));
-			Assert.IsTrue(KingdomStandingRules.CanonicalPair(10, 50));
-			Assert.IsTrue(KingdomStandingRules.CanonicalPair(-10, -50));
-			Assert.IsFalse(KingdomStandingRules.CanonicalPair(1, -50));
-			Assert.IsFalse(KingdomStandingRules.CanonicalPair(-1, 50));
-			Assert.IsFalse(KingdomStandingRules.CanonicalPair(int.MaxValue, 1));
-			Assert.IsFalse(KingdomStandingRules.CanonicalPair(int.MinValue, -1));
+			ClassicAssert.IsTrue(KingdomStandingRules.CanonicalPair(0, 99));
+			ClassicAssert.IsTrue(KingdomStandingRules.CanonicalPair(0, -99));
+			ClassicAssert.IsTrue(KingdomStandingRules.CanonicalPair(10, 50));
+			ClassicAssert.IsTrue(KingdomStandingRules.CanonicalPair(-10, -50));
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPair(1, -50));
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPair(-1, 50));
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPair(int.MaxValue, 1));
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPair(int.MinValue, -1));
 
 			Dictionary<string, int> regard = new Dictionary<string, int> { ["Joppa"] = 1 };
 			Dictionary<string, int> carry = new Dictionary<string, int> { ["Joppa"] = -50 };
-			Assert.IsFalse(KingdomStandingRules.CanonicalPairs(regard, carry));
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPairs(regard, carry));
 			carry["Joppa"] = 0;
-			Assert.IsFalse(KingdomStandingRules.CanonicalPairs(regard, carry),
+			ClassicAssert.IsFalse(KingdomStandingRules.CanonicalPairs(regard, carry),
 				"zero carry rows must be omitted");
 			carry.Clear();
-			Assert.IsTrue(KingdomStandingRules.CanonicalPairs(regard, carry));
+			ClassicAssert.IsTrue(KingdomStandingRules.CanonicalPairs(regard, carry));
 		}
 
 		[Test]
 		public void WholePointAdjustmentPreservesScaledCarryAndClearsItWhenClipping()
 		{
-			Assert.IsTrue(KingdomStandingRules.TryAdjustPair(0, 50, -1,
+			ClassicAssert.IsTrue(KingdomStandingRules.TryAdjustPair(0, 50, -1,
 				out int crossed, out int crossedCarry));
-			Assert.AreEqual(0, crossed);
-			Assert.AreEqual(-50, crossedCarry);
-			Assert.IsTrue(KingdomStandingRules.TryAdjustPair(int.MaxValue - 1, 99, 1,
+			ClassicAssert.AreEqual(0, crossed);
+			ClassicAssert.AreEqual(-50, crossedCarry);
+			ClassicAssert.IsTrue(KingdomStandingRules.TryAdjustPair(int.MaxValue - 1, 99, 1,
 				out int clipped, out int clippedCarry));
-			Assert.AreEqual(int.MaxValue, clipped);
-			Assert.AreEqual(0, clippedCarry);
+			ClassicAssert.AreEqual(int.MaxValue, clipped);
+			ClassicAssert.AreEqual(0, clippedCarry);
 		}
 
 		[Test]
 		public void OrderAndPartitionMatchOnlyWhileNoIntermediateStepClips()
 		{
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(400, 25, 0, 37,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(400, 25, 0, 37,
 				GrowthStage.City, out int whole, out int wholeCarry));
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(400, 25, 0, 17,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(400, 25, 0, 17,
 				GrowthStage.City, out int split, out int splitCarry));
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(split, splitCarry, 0, 20,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(split, splitCarry, 0, 20,
 				GrowthStage.City, out split, out splitCarry));
-			Assert.AreEqual(whole, split);
-			Assert.AreEqual(wholeCarry, splitCarry);
+			ClassicAssert.AreEqual(whole, split);
+			ClassicAssert.AreEqual(wholeCarry, splitCarry);
 
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(int.MaxValue, 0, 0, 1,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(int.MaxValue, 0, 0, 1,
 				GrowthStage.City, out int clipped, out int clippedCarry));
-			Assert.IsTrue(KingdomStandingRules.TrySpillover(clipped, clippedCarry, 0, -1,
+			ClassicAssert.IsTrue(KingdomStandingRules.TrySpillover(clipped, clippedCarry, 0, -1,
 				GrowthStage.City, out int reversed, out int reversedCarry));
-			Assert.AreEqual(int.MaxValue - 1, reversed);
-			Assert.AreEqual(90, reversedCarry);
-			Assert.AreNotEqual(int.MaxValue, reversed,
+			ClassicAssert.AreEqual(int.MaxValue - 1, reversed);
+			ClassicAssert.AreEqual(90, reversedCarry);
+			ClassicAssert.AreNotEqual(int.MaxValue, reversed,
 				"clipping intentionally discards overflow debt and is not reversible");
 		}
 
 		[Test]
 		public void EligibilityRejectsBlankAndOversizedFactionKeys()
 		{
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction(null, "realm"));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction("   ", "realm"));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction(
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction(null, "realm"));
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction("   ", "realm"));
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction(
 				new string('x', KingdomStandingRules.MaxFactionNameChars + 1), "realm"));
-			Assert.IsTrue(KingdomStandingRules.EligibleForeignFaction(
+			ClassicAssert.IsTrue(KingdomStandingRules.EligibleForeignFaction(
 				new string('x', KingdomStandingRules.MaxFactionNameChars), "realm"));
-			Assert.IsFalse(KingdomStandingRules.EligibleForeignFaction("bad\ud800key",
+			ClassicAssert.IsFalse(KingdomStandingRules.EligibleForeignFaction("bad\ud800key",
 				"realm"));
 		}
 
@@ -204,9 +205,9 @@ namespace ThousandAndFirst.Tests
 		public void LegacyFeelingMigrationPreservesOnlyCanonicalEdges(int feeling,
 			int expectedPolicy)
 		{
-			Assert.IsTrue(KingdomStandingRules.TryLegacyFeelingPolicy(feeling,
+			ClassicAssert.IsTrue(KingdomStandingRules.TryLegacyFeelingPolicy(feeling,
 				out int policy));
-			Assert.AreEqual(expectedPolicy, policy);
+			ClassicAssert.AreEqual(expectedPolicy, policy);
 		}
 
 		[TestCase(-101)]
@@ -216,7 +217,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(101)]
 		public void LegacyFeelingMigrationRejectsAmbiguousResidue(int feeling)
 		{
-			Assert.IsFalse(KingdomStandingRules.TryLegacyFeelingPolicy(feeling, out _));
+			ClassicAssert.IsFalse(KingdomStandingRules.TryLegacyFeelingPolicy(feeling, out _));
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -183,7 +184,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int first = Source.IndexOf(First, StringComparison.Ordinal);
 			int second = Source.IndexOf(Second, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, First); Assert.Greater(second, first, Second);
+			ClassicAssert.GreaterOrEqual(first, 0, First); ClassicAssert.Greater(second, first, Second);
 		}
 	}
 }

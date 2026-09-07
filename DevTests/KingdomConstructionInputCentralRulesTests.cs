@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Simulation.City;
 
@@ -21,37 +22,37 @@ namespace ThousandAndFirst.Tests
 				0, null, 0L);
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { first, second }, out table,
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { first, second }, out table,
 				out fault), fault.ToString());
 
 			KingdomJobRow adoptedFirst = first.WithManifestAuthority(1, Digest, 1L,
 				KingdomDeliveryPhase.SourceDebitPrepared);
 			KingdomJobTable next;
-			Assert.IsFalse(table.TryRewrite(new[] { adoptedFirst }, 1, out next, out fault),
+			ClassicAssert.IsFalse(table.TryRewrite(new[] { adoptedFirst }, 1, out next, out fault),
 				"one parent cannot leave a neutral sibling behind");
 			KingdomJobRow adoptedSecond = second.WithManifestAuthority(1, Digest, 1L,
 				KingdomDeliveryPhase.SourceDebitPrepared);
-			Assert.IsTrue(table.TryRewrite(new[] { adoptedFirst, adoptedSecond }, 2,
+			ClassicAssert.IsTrue(table.TryRewrite(new[] { adoptedFirst, adoptedSecond }, 2,
 				out next, out fault), fault.ToString());
 			table = next;
 
-			Assert.IsTrue(table.TryRewrite(new[]
+			ClassicAssert.IsTrue(table.TryRewrite(new[]
 			{
 				adoptedFirst.WithManifestRevision(2L, KingdomDeliveryPhase.InFlight)
 			}, 1, out next, out fault), "children advance independently after atomic adoption");
 			table = next;
 			KingdomJobRow inFlight;
-			Assert.IsTrue(table.TryGet(101, out inFlight));
-			Assert.IsTrue(table.TryRewrite(new[]
+			ClassicAssert.IsTrue(table.TryGet(101, out inFlight));
+			ClassicAssert.IsTrue(table.TryRewrite(new[]
 			{
 				inFlight.WithManifestRevision(3L,
 					KingdomDeliveryPhase.LandedAwaitingOwner)
 			}, 1, out next, out fault), fault.ToString());
 			table = next;
 			KingdomJobRow[] closed;
-			Assert.IsTrue(table.TryCloseTrip(101, out next, out closed, out fault));
-			Assert.AreEqual(1, closed.Length);
-			Assert.IsTrue(next.Holds(102));
+			ClassicAssert.IsTrue(table.TryCloseTrip(101, out next, out closed, out fault));
+			ClassicAssert.AreEqual(1, closed.Length);
+			ClassicAssert.IsTrue(next.Holds(102));
 		}
 
 		[Test]
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 				0, null, 0L));
 			AssertLegal(Row(116, 0, 1, KingdomDeliveryPhase.Quarantined,
 				1, Digest, 2L));
-			Assert.AreEqual(3L, KingdomJobRules.DeliveryCapacityLoad(
+			ClassicAssert.AreEqual(3L, KingdomJobRules.DeliveryCapacityLoad(
 				KingdomDeliveryCargoAuthority.ConstructionInput,
 				KingdomStockKind.OpaqueManifest, 99, 3));
 		}
@@ -79,26 +80,26 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				Row(121, 0, 1, KingdomDeliveryPhase.InFlight, 1, Digest, 1L,
 					KingdomStockKind.Water)
 			}, out table, out fault), "water vessels remain opaque object cargo centrally");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				Row(122, 0, 1, KingdomDeliveryPhase.Planned, 1, Digest, 1L)
 			}, out table, out fault));
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				Row(123, 0, 2, KingdomDeliveryPhase.InFlight, 1, Digest, 1L),
 				Row(124, 1, 2, KingdomDeliveryPhase.InFlight, 1, Digest, 1L)
 			}, out table, out fault), "one parent ordinal cannot enter two trips");
-			Assert.IsFalse(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsFalse(KingdomJobTable.TryCreate(new[]
 			{
 				Row(125, 0, KingdomLogisticsRules.CarrierCapacity + 1,
 					KingdomDeliveryPhase.InFlight, 1, Digest, 1L)
 			}, out table, out fault));
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[]
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[]
 			{
 				Row(126, 0, 1, KingdomDeliveryPhase.InFlight, 1, Digest, 1L),
 				Row(127, 0, 1, KingdomDeliveryPhase.InFlight, 1, Digest, 1L,
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJobTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomJobTable.TryCreate(new[] { row }, out table, out fault),
+			ClassicAssert.IsTrue(KingdomJobTable.TryCreate(new[] { row }, out table, out fault),
 				row.DeliveryPhase + ": " + fault);
 		}
 

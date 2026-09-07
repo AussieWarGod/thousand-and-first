@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,23 +18,23 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = parent.Growth;
 			FreezeResumeHead(growth);
 			AdvanceResumeCadence(growth, 160L);
-			Assert.AreEqual(3UL, growth.ArrivalOrdinalHighWater);
-			Assert.AreEqual(2UL, growth.ArrivalDebtRanges[0].Count);
+			ClassicAssert.AreEqual(3UL, growth.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(2UL, growth.ArrivalDebtRanges[0].Count);
 			string children = ResumeChildBytes(growth);
 			object[] references = ResumeChildReferences(growth);
 			Publish(parent, Prepare(parent, 170L, 270L));
-			Assert.AreEqual(children, ResumeChildBytes(growth));
+			ClassicAssert.AreEqual(children, ResumeChildBytes(growth));
 			AssertResumeChildReferences(references, growth);
-			Assert.AreEqual(120L, growth.NextArrivalTick, "earned head stays ahead of new cadence");
-			Assert.AreEqual(290L, growth.ArrivalCadenceNextDueTick);
-			Assert.AreEqual(2L, growth.ArrivalRateEpoch);
+			ClassicAssert.AreEqual(120L, growth.NextArrivalTick, "earned head stays ahead of new cadence");
+			ClassicAssert.AreEqual(290L, growth.ArrivalCadenceNextDueTick);
+			ClassicAssert.AreEqual(2L, growth.ArrivalRateEpoch);
 			AdvanceResumeCadence(growth, 289L);
-			Assert.AreEqual(3UL, growth.ArrivalOrdinalHighWater);
-			Assert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
+			ClassicAssert.AreEqual(3UL, growth.ArrivalOrdinalHighWater);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
 				growth.ArrivalOpportunity));
-			Assert.AreEqual(140L, growth.NextArrivalTick);
-			Assert.AreEqual(1UL, growth.ArrivalOrdinalRetiredThrough);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.AreEqual(140L, growth.NextArrivalTick);
+			ClassicAssert.AreEqual(1UL, growth.ArrivalOrdinalRetiredThrough);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 		}
 
 		[TestCase(0)]
@@ -53,10 +54,10 @@ namespace ThousandAndFirst.Tests
 			if (replacement == 1) growth.ArrivalOpportunity = copy.ArrivalOpportunity;
 			if (replacement == 2) growth.ArrivalOp.ClockLease = copy.ArrivalOp.ClockLease;
 			if (replacement == 3) growth.Resources[0] = copy.Resources[0];
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 			CollectionAssert.AreEqual(before, Wire(growth));
-			Assert.IsFalse(plan.CanPublish(parent, out _));
-			Assert.IsFalse(plan.TryPublish(parent, out _));
+			ClassicAssert.IsFalse(plan.CanPublish(parent, out _));
+			ClassicAssert.IsFalse(plan.TryPublish(parent, out _));
 			CollectionAssert.AreEqual(before, Wire(growth));
 		}
 
@@ -73,49 +74,49 @@ namespace ThousandAndFirst.Tests
 			if (modern) FreezeResumeHead(growth);
 			KingdomGrowthOperation operation = PrepareResumeArrival(growth, 120L);
 			if (cut > 0) BeginResumeClock(growth, operation, 121L);
-			if (cut > 1) Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth,
+			if (cut > 1) ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth,
 				operation, operation.ClockLease.After));
 			ReloadResumeGrowth(parent); growth = parent.Growth; operation = growth.ArrivalOp;
 			string children = ResumeChildBytes(growth);
 			object[] references = ResumeChildReferences(growth);
 			long clock = growth.NextArrivalTick;
 			Publish(parent, Prepare(parent, 130L, 230L));
-			Assert.AreEqual(children, ResumeChildBytes(growth));
+			ClassicAssert.AreEqual(children, ResumeChildBytes(growth));
 			AssertResumeChildReferences(references, growth);
-			Assert.AreEqual(clock, growth.NextArrivalTick);
-			Assert.AreEqual(modern, growth.ArrivalCadenceResumePending);
+			ClassicAssert.AreEqual(clock, growth.NextArrivalTick);
+			ClassicAssert.AreEqual(modern, growth.ArrivalCadenceResumePending);
 			if (cut == 0) BeginResumeClock(growth, operation, 231L);
-			if (cut < 2) Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth,
+			if (cut < 2) ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth,
 				operation, operation.ClockLease.After));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Sinks, 232L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Terminal, 233L));
 			ReloadResumeGrowth(parent); growth = parent.Growth; operation = growth.ArrivalOp;
 			string failure;
-			if (modern) Assert.IsTrue(KingdomLifecycleRules.TryTransitionGrowthArrivalCadenceForRetirement(
+			if (modern) ClassicAssert.IsTrue(KingdomLifecycleRules.TryTransitionGrowthArrivalCadenceForRetirement(
 				growth, growth.ArrivalOpportunity, 233L, 234L, 20L, 0, 3, out failure), failure);
-			Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 234L));
-			if (modern) Assert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 234L));
+			if (modern) ClassicAssert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(growth,
 				growth.ArrivalOpportunity));
-			else Assert.IsTrue(KingdomLifecycleRules.TryBindHistoricalGrowthArrivalCadence(growth,
+			else ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindHistoricalGrowthArrivalCadence(growth,
 				234L, 20L, 0, 3, out failure), failure);
-			Assert.IsNull(growth.ArrivalOp);
-			Assert.AreEqual(1L, growth.ArrivalRetiredThrough);
-			Assert.AreEqual(1, growth.RecentProofs.Count);
-			Assert.IsNull(growth.Resources[0].ActiveOperationId);
-			Assert.AreEqual(254L, growth.NextArrivalTick);
-			Assert.IsFalse(growth.ArrivalCadenceResumePending);
+			ClassicAssert.IsNull(growth.ArrivalOp);
+			ClassicAssert.AreEqual(1L, growth.ArrivalRetiredThrough);
+			ClassicAssert.AreEqual(1, growth.RecentProofs.Count);
+			ClassicAssert.IsNull(growth.Resources[0].ActiveOperationId);
+			ClassicAssert.AreEqual(254L, growth.NextArrivalTick);
+			ClassicAssert.IsFalse(growth.ArrivalCadenceResumePending);
 			byte[] retired = Wire(growth);
-			Assert.IsFalse(KingdomLifecycleRules.RetireGrowth(growth, operation, 235L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RetireGrowth(growth, operation, 235L));
 			CollectionAssert.AreEqual(retired, Wire(growth));
 			ReloadResumeGrowth(parent); growth = parent.Growth;
 			ulong high = growth.ArrivalOrdinalHighWater;
 			AdvanceResumeCadence(growth, 253L);
-			Assert.AreEqual(high, growth.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(high, growth.ArrivalOrdinalHighWater);
 			AdvanceResumeCadence(growth, 254L);
-			Assert.AreEqual(high + 1UL, growth.ArrivalOrdinalHighWater);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.AreEqual(high + 1UL, growth.ArrivalOrdinalHighWater);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 		}
 
 		[TestCase(false, false)]
@@ -137,21 +138,21 @@ namespace ThousandAndFirst.Tests
 					"1 of Nivvun, 1000 AR", 1, 1)
 				: KingdomLifecycleRules.PrepareGrowthArrivalCandidate(growth, "resume-marker", "Settler",
 					"resume-escrow", "zone-a", 120L, hash, hash, hash);
-			Assert.NotNull(candidate);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
-			if (intent) Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth, candidate, 121L));
+			ClassicAssert.NotNull(candidate);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth, candidate));
+			if (intent) ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth, candidate, 121L));
 			ReloadResumeGrowth(parent); growth = parent.Growth; candidate = growth.ArrivalCandidate;
 			string children = ResumeChildBytes(growth);
 			object[] references = ResumeChildReferences(growth);
 			Publish(parent, Prepare(parent, 130L, 230L));
-			Assert.AreEqual(children, ResumeChildBytes(growth));
+			ClassicAssert.AreEqual(children, ResumeChildBytes(growth));
 			AssertResumeChildReferences(references, growth);
-			Assert.AreEqual(120L, growth.NextArrivalTick);
-			Assert.AreEqual(modern, growth.ArrivalCadenceResumePending);
-			if (!intent) Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth, candidate, 231L));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth, candidate,
+			ClassicAssert.AreEqual(120L, growth.NextArrivalTick);
+			ClassicAssert.AreEqual(modern, growth.ArrivalCadenceResumePending);
+			if (!intent) ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth, candidate, 231L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth, candidate,
 				"resume-body", hash, hash, hash, hash, true, 232L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Escrowed, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Escrowed, candidate.Phase);
 			ReloadResumeGrowth(parent);
 		}
 
@@ -173,23 +174,23 @@ namespace ThousandAndFirst.Tests
 					parent = new KingdomLifecycleBook();
 					KingdomLifecycleWireCodec.ReadLifecycle(new BinaryReader(stream), parent);
 				}
-				Assert.IsTrue(parent.Growth.MigrationPending);
+				ClassicAssert.IsTrue(parent.Growth.MigrationPending);
 			}
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 			KingdomGrowthBook growth = parent.Growth;
-			Assert.AreEqual(kind < 2, growth.Quarantined);
-			Assert.AreEqual(kind == 0, growth.OpaquePayload != null);
+			ClassicAssert.AreEqual(kind < 2, growth.Quarantined);
+			ClassicAssert.AreEqual(kind == 0, growth.OpaquePayload != null);
 			byte[] before = Wire(growth);
 			object[] references = ResumeChildReferences(growth);
 			KingdomMasterGrowthResumePlan plan = Prepare(parent);
-			Assert.IsFalse(plan.HasArrivalAuthority);
-			Assert.IsTrue(plan.TryPublish(parent, out string failure), failure);
-			Assert.AreSame(growth, parent.Growth);
+			ClassicAssert.IsFalse(plan.HasArrivalAuthority);
+			ClassicAssert.IsTrue(plan.TryPublish(parent, out string failure), failure);
+			ClassicAssert.AreSame(growth, parent.Growth);
 			AssertResumeChildReferences(references, growth);
 			CollectionAssert.AreEqual(before, Wire(growth));
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
-			Assert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(parent));
-			Assert.IsFalse(plan.TryPublish(parent, out _));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.CanOwnGrowthAuthority(parent));
+			ClassicAssert.IsFalse(plan.TryPublish(parent, out _));
 			CollectionAssert.AreEqual(before, Wire(growth));
 		}
 
@@ -199,26 +200,26 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook parent = Active();
 			FreezeResumeHead(parent.Growth);
 			parent.Growth.ArrivalRateEpoch = long.MaxValue; // Synthetic arithmetic boundary only.
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 			byte[] before = Wire(parent.Growth);
 			object[] references = ResumeChildReferences(parent.Growth);
-			Assert.IsFalse(KingdomMasterGrowthResumePlan.TryCreate(parent, 130L, 230L,
+			ClassicAssert.IsFalse(KingdomMasterGrowthResumePlan.TryCreate(parent, 130L, 230L,
 				true, true, 20L, 0, 3, out KingdomMasterGrowthResumePlan plan, out string failure));
-			Assert.IsNull(plan); Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNull(plan); ClassicAssert.IsNotEmpty(failure);
 			CollectionAssert.AreEqual(before, Wire(parent.Growth));
 			AssertResumeChildReferences(references, parent.Growth);
 		}
 
 		private static void AdvanceResumeCadence(KingdomGrowthBook growth, long now, int rulesVersion = 3)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(growth,
 				now, 20L, 0, rulesVersion, out string failure), failure);
 		}
 
 		private static void FreezeResumeHead(KingdomGrowthBook growth, int rulesVersion = 3)
 		{
 			AdvanceResumeCadence(growth, 120L, rulesVersion);
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeGrowthArrivalOpportunity(growth, rulesVersion,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeGrowthArrivalOpportunity(growth, rulesVersion,
 				KingdomLifecycleRules.GrowthArrivalEventStreamId,
 				KingdomLifecycleRules.GrowthArrivalEventKindCode, false, "Settler", "Joppa", "water",
 				"Ari", "1 of Nivvun, 1000 AR", out _));
@@ -228,16 +229,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(growth,
 				KingdomGrowthAction.Arrival, null, tick);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.NoGround;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
 			return operation;
 		}
 
 		private static void BeginResumeClock(KingdomGrowthBook growth, KingdomGrowthOperation operation, long tick)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation, KingdomGrowthPhase.ClockIntent, tick));
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation, operation.ClockLease.Before));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation, KingdomGrowthPhase.ClockIntent, tick));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation, operation.ClockLease.Before));
 		}
 
 		private static void ReloadResumeGrowth(KingdomLifecycleBook parent)
@@ -245,7 +246,7 @@ namespace ThousandAndFirst.Tests
 			byte[] before = Wire(parent.Growth);
 			parent.Growth = KingdomLifecycleWireCodec.ReadGrowthPayload(before);
 			CollectionAssert.AreEqual(before, Wire(parent.Growth));
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(parent));
 		}
 
 		private static string ResumeChildBytes(KingdomGrowthBook growth)
@@ -271,8 +272,8 @@ namespace ThousandAndFirst.Tests
 		private static void AssertResumeChildReferences(object[] expected, KingdomGrowthBook growth)
 		{
 			object[] actual = ResumeChildReferences(growth);
-			Assert.AreEqual(expected.Length, actual.Length);
-			for (int i = 0; i < expected.Length; i++) Assert.AreSame(expected[i], actual[i], "child " + i);
+			ClassicAssert.AreEqual(expected.Length, actual.Length);
+			for (int i = 0; i < expected.Length; i++) ClassicAssert.AreSame(expected[i], actual[i], "child " + i);
 		}
 	}
 }

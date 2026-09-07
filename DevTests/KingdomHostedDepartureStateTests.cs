@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -10,13 +11,13 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomHostedDepartureState state = Settled();
 			string encoded = KingdomHostedDepartureCodec.Encode(state);
-			Assert.IsNotEmpty(encoded);
-			Assert.IsTrue(KingdomHostedDepartureCodec.TryDecode(encoded,
+			ClassicAssert.IsNotEmpty(encoded);
+			ClassicAssert.IsTrue(KingdomHostedDepartureCodec.TryDecode(encoded,
 				out KingdomHostedDepartureState decoded));
-			Assert.AreEqual(encoded, KingdomHostedDepartureCodec.Encode(decoded));
-			Assert.AreEqual(8, decoded.Roof);
-			Assert.AreEqual(2, decoded.Luxury);
-			Assert.AreEqual(14, decoded.Food);
+			ClassicAssert.AreEqual(encoded, KingdomHostedDepartureCodec.Encode(decoded));
+			ClassicAssert.AreEqual(8, decoded.Roof);
+			ClassicAssert.AreEqual(2, decoded.Luxury);
+			ClassicAssert.AreEqual(14, decoded.Food);
 		}
 
 		[Test]
@@ -24,9 +25,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomHostedDepartureState state = Settled();
 			state.Phase = KingdomHostedDeparturePhase.Pending;
-			Assert.IsFalse(state.Valid());
+			ClassicAssert.IsFalse(state.Valid());
 			state.ReceiptRevision = ""; state.Roof = 0; state.Luxury = 0; state.Food = 0;
-			Assert.IsTrue(state.Valid());
+			ClassicAssert.IsTrue(state.Valid());
 		}
 
 		[Test]
@@ -34,10 +35,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomHostedDepartureState state = Settled();
 			KingdomHostedArcologyAuthority authority = Authority();
-			Assert.IsTrue(KingdomHostedDepartureRules.Matches(state, 0, authority,
+			ClassicAssert.IsTrue(KingdomHostedDepartureRules.Matches(state, 0, authority,
 				KingdomHostedArcologyTopology.WardLotKey));
 			authority.CarrierId = "other";
-			Assert.IsFalse(KingdomHostedDepartureRules.Matches(state, 0, authority,
+			ClassicAssert.IsFalse(KingdomHostedDepartureRules.Matches(state, 0, authority,
 				KingdomHostedArcologyTopology.WardLotKey));
 		}
 
@@ -45,15 +46,15 @@ namespace ThousandAndFirst.Tests
 		public void ProjectionExcludesExteriorAndExactInteriorSource()
 		{
 			KingdomHostedDepartureState state = Settled();
-			Assert.AreEqual(0, KingdomHostedDepartureRules.LuxuryFor(
+			ClassicAssert.AreEqual(0, KingdomHostedDepartureRules.LuxuryFor(
 				state, "city", "outside"));
-			Assert.AreEqual(0, KingdomHostedDepartureRules.LuxuryFor(
+			ClassicAssert.AreEqual(0, KingdomHostedDepartureRules.LuxuryFor(
 				state, "city", "inside"));
-			Assert.AreEqual(2, KingdomHostedDepartureRules.LuxuryFor(
+			ClassicAssert.AreEqual(2, KingdomHostedDepartureRules.LuxuryFor(
 				state, "city", "other-zone"));
-			Assert.AreEqual(0, KingdomHostedDepartureRules.BindingFor(state,
+			ClassicAssert.AreEqual(0, KingdomHostedDepartureRules.BindingFor(state,
 				KingdomCatalogueRules.SupportRoof, "city", "inside"));
-			Assert.AreEqual(8, KingdomHostedDepartureRules.BindingFor(state,
+			ClassicAssert.AreEqual(8, KingdomHostedDepartureRules.BindingFor(state,
 				KingdomCatalogueRules.SupportRoof, "city", "other-zone"));
 		}
 
@@ -61,14 +62,14 @@ namespace ThousandAndFirst.Tests
 		public void FixedSlotKeyMustMatchAuthoritySlotAndLot()
 		{
 			KingdomHostedDepartureState state = Settled();
-			Assert.IsTrue(KingdomHostedDepartureRules.SlotKeyMatches(
+			ClassicAssert.IsTrue(KingdomHostedDepartureRules.SlotKeyMatches(
 				"r_TAF_HostedDepartureV1:0:ward", state));
-			Assert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
+			ClassicAssert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
 				"r_TAF_HostedDepartureV1:1:ward", state));
-			Assert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
+			ClassicAssert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
 				"r_TAF_HostedDepartureV1:0:terrace", state));
 			state.LotKey = "foreign";
-			Assert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
+			ClassicAssert.IsFalse(KingdomHostedDepartureRules.SlotKeyMatches(
 				"r_TAF_HostedDepartureV1:0", state));
 		}
 

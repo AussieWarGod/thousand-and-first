@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -17,9 +18,9 @@ namespace ThousandAndFirst.Tests
 			captured.ReadFrom(source);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreSame(city, restored.City);
-			Assert.AreEqual(KingdomSubsidenceStepCodec.FreshWire, restored.City.SubsidenceModel);
-			Assert.IsTrue(restored.City.HasValidSubsidenceStorage());
+			ClassicAssert.AreSame(city, restored.City);
+			ClassicAssert.AreEqual(KingdomSubsidenceStepCodec.FreshWire, restored.City.SubsidenceModel);
+			ClassicAssert.IsTrue(restored.City.HasValidSubsidenceStorage());
 		}
 
 		[TestCase(long.MinValue)]
@@ -33,9 +34,9 @@ namespace ThousandAndFirst.Tests
 				LastSubsidenceTick = tick, LastFoodWorkTick = -7L, SupportedLevel = -1
 			};
 			source.Normalize();
-			Assert.AreEqual(tick, source.LastSubsidenceTick);
-			Assert.AreEqual(0L, source.LastFoodWorkTick);
-			Assert.AreEqual(0, source.SupportedLevel);
+			ClassicAssert.AreEqual(tick, source.LastSubsidenceTick);
+			ClassicAssert.AreEqual(0L, source.LastFoodWorkTick);
+			ClassicAssert.AreEqual(0, source.SupportedLevel);
 		}
 
 		[Test]
@@ -44,13 +45,13 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement source = new KingdomSettlement { City = null, LastSubsidenceTick = 321L };
 			source.Normalize();
 			KingdomCityBook repair = source.City;
-			Assert.IsNotNull(repair);
-			Assert.IsNull(repair.SubsidenceModel);
-			Assert.IsFalse(repair.HasValidSubsidenceStorage());
+			ClassicAssert.IsNotNull(repair);
+			ClassicAssert.IsNull(repair.SubsidenceModel);
+			ClassicAssert.IsFalse(repair.HasValidSubsidenceStorage());
 			source.Normalize();
-			Assert.AreSame(repair, source.City);
-			Assert.IsNull(source.City.SubsidenceModel);
-			Assert.AreEqual(321L, source.LastSubsidenceTick);
+			ClassicAssert.AreSame(repair, source.City);
+			ClassicAssert.IsNull(source.City.SubsidenceModel);
+			ClassicAssert.AreEqual(321L, source.LastSubsidenceTick);
 		}
 
 		[TestCase(null)]
@@ -66,10 +67,10 @@ namespace ThousandAndFirst.Tests
 			captured.ReadFrom(source);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreSame(exact, restored.City);
-			Assert.AreEqual(wire, restored.City.SubsidenceModel);
-			Assert.IsFalse(restored.City.HasValidSubsidenceStorage());
-			Assert.AreEqual(-123L, restored.LastSubsidenceTick);
+			ClassicAssert.AreSame(exact, restored.City);
+			ClassicAssert.AreEqual(wire, restored.City.SubsidenceModel);
+			ClassicAssert.IsFalse(restored.City.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(-123L, restored.LastSubsidenceTick);
 		}
 
 		[Test]
@@ -78,15 +79,15 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement source = new KingdomSettlement { City = null, LastSubsidenceTick = -42L };
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(source);
-			Assert.IsNull(source.City);
-			Assert.IsNotNull(captured.City);
-			Assert.IsNull(captured.City.SubsidenceModel);
-			Assert.AreEqual(-42L, captured.LastSubsidenceTick);
+			ClassicAssert.IsNull(source.City);
+			ClassicAssert.IsNotNull(captured.City);
+			ClassicAssert.IsNull(captured.City.SubsidenceModel);
+			ClassicAssert.AreEqual(-42L, captured.LastSubsidenceTick);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreSame(captured.City, restored.City);
-			Assert.IsFalse(restored.City.HasValidSubsidenceStorage());
-			Assert.AreEqual(-42L, restored.LastSubsidenceTick);
+			ClassicAssert.AreSame(captured.City, restored.City);
+			ClassicAssert.IsFalse(restored.City.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(-42L, restored.LastSubsidenceTick);
 		}
 
 		[TestCase("Core/KingdomSettlement.Normalize.cs", "public void Read(SerializationReader Reader)", "KingdomSettlement")]
@@ -107,8 +108,8 @@ namespace ThousandAndFirst.Tests
 		public void RepairConstructorSourceNeverGrantsFreshSubsidenceAuthority(string path, int expected)
 		{
 			string source = TestMain.ReadRepositoryText(path);
-			Assert.AreEqual(expected, Count(source, "new Simulation.City.KingdomCityBook"));
-			Assert.AreEqual(expected, Count(source, "new Simulation.City.KingdomCityBook { SubsidenceModel = null }"));
+			ClassicAssert.AreEqual(expected, Count(source, "new Simulation.City.KingdomCityBook"));
+			ClassicAssert.AreEqual(expected, Count(source, "new Simulation.City.KingdomCityBook { SubsidenceModel = null }"));
 		}
 
 		[TestCase("Core/KingdomSettlement.Normalize.cs")]
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 		public void TrueFoundingSourceRetainsNewCityConstructors()
 		{
 			string source = TestMain.ReadRepositoryText("Core/KingdomSystem.z05.Identity.Founding.cs");
-			Assert.AreEqual(2, Count(source, "new Simulation.City.KingdomCityBook()"));
+			ClassicAssert.AreEqual(2, Count(source, "new Simulation.City.KingdomCityBook()"));
 			StringAssert.DoesNotContain("SubsidenceModel = null", source);
 		}
 

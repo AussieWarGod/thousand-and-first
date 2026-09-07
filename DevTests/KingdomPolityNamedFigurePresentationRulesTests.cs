@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Tests;
 
@@ -23,15 +24,15 @@ namespace ThousandAndFirst.DevTests
 				ChronicleRef = "taf:chronicle:rich-find",
 				DeedSummary = "returned from a salvage expedition with a rich find"
 			};
-			Assert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
 				facts, out KingdomPolityPublicationResult _, out string failure), failure);
-			Assert.IsTrue(KingdomPolityNamedFigurePresentationRules.TryActiveDeeds(ledger,
+			ClassicAssert.IsTrue(KingdomPolityNamedFigurePresentationRules.TryActiveDeeds(ledger,
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Settlement,
 				out List<KingdomPolityNamedFigureView> views, out failure), failure);
-			Assert.AreEqual(1, views.Count);
-			Assert.AreEqual("Nara", views[0].DisplayName);
-			Assert.AreEqual("patrol", views[0].Role);
-			Assert.AreEqual(facts.DeedSummary, views[0].DeedSummary);
+			ClassicAssert.AreEqual(1, views.Count);
+			ClassicAssert.AreEqual("Nara", views[0].DisplayName);
+			ClassicAssert.AreEqual("patrol", views[0].Role);
+			ClassicAssert.AreEqual(facts.DeedSummary, views[0].DeedSummary);
 			StringAssert.DoesNotContain("taf:", views[0].DisplayName + views[0].Role +
 				views[0].DeedSummary);
 		}
@@ -50,8 +51,8 @@ namespace ThousandAndFirst.DevTests
 				ConclusionRef = "taf:conclusion:resident-transition:v1:old"
 			});
 			ledger.NamedFigures.Sort((a, b) => string.CompareOrdinal(a.FigureId, b.FigureId));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
-			Assert.IsTrue(KingdomPolityNamedFigurePresentationRules.TryActiveDeeds(ledger,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityNamedFigurePresentationRules.TryActiveDeeds(ledger,
 				KingdomPolityTestData.Realm, KingdomPolityTestData.Settlement,
 				out List<KingdomPolityNamedFigureView> views, out failure), failure);
 			CollectionAssert.IsEmpty(views);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -15,13 +16,13 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = Frozen();
 			string wire = Wire(book), objectId = RungFixture.ObjectId(0);
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, objectId));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(1)));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, objectId + "-foreign"));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 12));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 13));
-			Assert.AreEqual(wire, Wire(book));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, objectId));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(1)));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, objectId + "-foreign"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 12));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 13));
+			ClassicAssert.AreEqual(wire, Wire(book));
 		}
 
 		[Test]
@@ -29,56 +30,56 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = Frozen();
 			string work = RungFixture.ObjectId(0), later = RungFixture.ObjectId(1);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true,
 				plan.Works[0].AfterWear, out book));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
 			for (int i = 0; i < 2; i++)
 			{
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, i, out book));
-				Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(Wire(book), 11 + i));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, i, true, true,
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, i, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(Wire(book), 11 + i));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, i, true, true,
 					RungFixture.Due, KingdomBrinkRules.Unwarned, out book));
 				string wire = Wire(book);
-				Assert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 11 + i));
-				Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, work));
-				Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, later));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 11 + i));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, work));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, later));
 			}
 			book = Release(book, 0);
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 1, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out plan));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 1, true, true,
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), work));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 1, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 1, true, true,
 				plan.Works[1].AfterWear, out book));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), later));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), later));
 			book = Release(book, 1);
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), later));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), later));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
 		}
 
 		private static KingdomSubsidenceStepBook Release(KingdomSubsidenceStepBook book, int index)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
 			KingdomSubsidenceRungWork row = plan.Works[index];
 			KingdomSubsidenceWearReceipt receipt = new KingdomSubsidenceWearReceipt(
 				(int)KingdomWearIncidentPhase.Mutated, plan.StepId, (int)KingdomWearRules.WearCause.Subsidence,
 				row.BeforeWear, row.AfterWear, row.AfterWear, 0, null, "prior line", 0);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRelease(book, index, true, receipt, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRelease(book, index, true, receipt, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out plan));
 			row = plan.Works[index];
 			for (int cut = 0; cut <= 4; cut++)
 			{
 				KingdomSubsidenceWearReceipt observed = KingdomSubsidenceReleaseRules.AfterWrite(
 					row.ReleaseBefore, row.ReleaseAfter, cut);
-				Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), row.ObjectId));
-				Assert.IsTrue(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
-				if (cut != 4) Assert.IsFalse(KingdomSubsidenceStepRules.TryProveRungRelease(
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(Wire(book), row.ObjectId));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksProjection(Wire(book)));
+				if (cut != 4) ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryProveRungRelease(
 					book, index, true, observed, out _));
 			}
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRelease(book, index, true, row.ReleaseAfter, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRelease(book, index, true, row.ReleaseAfter, out book));
 			return book;
 		}
 
@@ -86,26 +87,26 @@ namespace ThousandAndFirst.Tests
 		[TestCase("ss1:legacy")]
 		public void ExplicitUnadmittedRecordsDoNotInventObligations(string wire)
 		{
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(0)));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, null));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 0));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(0)));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, null));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(wire, 0));
 		}
 
 		[Test]
 		public void AdmittedIdleAndUnplannedStepHaveNoFrozenTargetsToFence()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, RungFixture.Realm,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, RungFixture.Realm,
 				RungFixture.Settlement, out KingdomSubsidenceStepBook admitted));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(admitted,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(admitted,
 				RungFixture.Due - KingdomSubsidenceStepRules.StepTicks, RungFixture.Due,
 				GrowthStage.City, 5, out KingdomSubsidenceStepBook noRungs, 0, "water"));
-			Assert.AreEqual(KingdomSubsidenceStepRules.NoRungs, noRungs.Active.RungModel);
+			ClassicAssert.AreEqual(KingdomSubsidenceStepRules.NoRungs, noRungs.Active.RungModel);
 			foreach (KingdomSubsidenceStepBook book in new[] { admitted, noRungs, RungFixture.Settling(false) })
 			{
-				Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), RungFixture.ObjectId(0)));
-				Assert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(Wire(book), 11));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(Wire(book), RungFixture.ObjectId(0)));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksRoof(Wire(book), 11));
 			}
 		}
 
@@ -116,23 +117,23 @@ namespace ThousandAndFirst.Tests
 			book = book.With(book.Active.Copy(phase: KingdomSubsidenceStepPhase.Quarantined,
 				fault: "fixture unresolved effect"), book.Sequence);
 			string wire = Wire(book);
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(0)));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, RungFixture.ObjectId(0)));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 11));
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("ss1:")] [TestCase("ss1:garbage")]
 		[TestCase("ss2:new")] [TestCase("ss1:new ")] [TestCase("sr1:none")]
 		public void MalformedStepStorageRefusesAllWritersWithoutFallback(string wire)
 		{
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, "foreign-work"));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 99));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, "foreign-work"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 99));
 			KingdomCityBook city = Carrier();
 			city.SubsidenceModel = wire;
 			List<long> ticks = city.ResidentRoofTicks;
-			Assert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.AreSame(ticks, city.ResidentRoofTicks);
-			Assert.AreEqual(0, city.ResidentRoofTicks[0]);
-			Assert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.AreSame(ticks, city.ResidentRoofTicks);
+			ClassicAssert.AreEqual(0, city.ResidentRoofTicks[0]);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
 		}
 
 		[Test]
@@ -145,40 +146,40 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i <= bytes.Length - marker.Length; i++)
 				if (bytes[i] == marker[0] && bytes[i + 1] == marker[1]
 					&& bytes[i + 2] == marker[2] && bytes[i + 3] == marker[3]) { found = i; break; }
-			Assert.GreaterOrEqual(found, 0);
+			ClassicAssert.GreaterOrEqual(found, 0);
 			bytes[found + 2] = (byte)'9';
 			string torn = wire.Substring(0, 4) + Convert.ToBase64String(bytes);
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(torn, "foreign"));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(torn, 99));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire.Substring(0, wire.Length - 3), "foreign"));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire.Substring(0, wire.Length - 3), 99));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(torn, "foreign"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(torn, 99));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire.Substring(0, wire.Length - 3), "foreign"));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire.Substring(0, wire.Length - 3), 99));
 		}
 
 		[Test]
 		public void ActivePlanRefusesMissingObjectAndNonpositiveResidentIdentity()
 		{
 			string wire = Wire(Frozen());
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, null));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, ""));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 0));
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, -1));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, null));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, ""));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, 0));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksRoof(wire, -1));
 		}
 
 		[Test]
 		public void RealNumericWorkHashCollisionDoesNotFenceTheUnrelatedFullObjectId()
 		{
 			FindCollision(out string selected, out string foreign);
-			Assert.AreNotEqual(selected, foreign);
-			Assert.AreEqual(KingdomCityRules.StableId(selected), KingdomCityRules.StableId(foreign));
+			ClassicAssert.AreNotEqual(selected, foreign);
+			ClassicAssert.AreEqual(KingdomCityRules.StableId(selected), KingdomCityRules.StableId(foreign));
 			KingdomSubsidenceStepBook book = Frozen(RungFixture.ForObject(selected));
 			string wire = Wire(book);
-			Assert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, selected));
-			Assert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, foreign));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
-			Assert.AreEqual(selected, plan.Works[0].ObjectId);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.BlocksWork(wire, selected));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.BlocksWork(wire, foreign));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
+			ClassicAssert.AreEqual(selected, plan.Works[0].ObjectId);
 			// Sharing the numeric model hash is not the caller's exactAuthority proof.
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, false, true,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, false, true,
 				plan.Works[0].AfterWear, out _));
 		}
 
@@ -193,13 +194,13 @@ namespace ThousandAndFirst.Tests
 			List<int> ids = city.ResidentIds, causes = city.ResidentCauses;
 			List<long> ticks = city.ResidentRoofTicks;
 			string before = city.SubsidenceModel;
-			Assert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.IsNull(city.ResidentNames);
-			Assert.AreSame(ids, city.ResidentIds); Assert.AreSame(causes, city.ResidentCauses);
-			Assert.AreSame(ticks, city.ResidentRoofTicks);
-			Assert.AreEqual((int)KingdomStandingCause.Founder, causes[0]);
-			Assert.AreEqual(-7, ticks[0]);
-			Assert.AreEqual(before, city.SubsidenceModel);
+			ClassicAssert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.IsNull(city.ResidentNames);
+			ClassicAssert.AreSame(ids, city.ResidentIds); ClassicAssert.AreSame(causes, city.ResidentCauses);
+			ClassicAssert.AreSame(ticks, city.ResidentRoofTicks);
+			ClassicAssert.AreEqual((int)KingdomStandingCause.Founder, causes[0]);
+			ClassicAssert.AreEqual(-7, ticks[0]);
+			ClassicAssert.AreEqual(before, city.SubsidenceModel);
 		}
 
 		[TestCase("failed-read")] [TestCase("old-schema")] [TestCase("future-schema")]
@@ -207,8 +208,8 @@ namespace ThousandAndFirst.Tests
 		public void CarrierStorageAdmissionFailureRefusesBeforeNormalizationOrRoofWrite(string failure)
 		{
 			KingdomCityBook city = Carrier();
-			Assert.AreEqual(KingdomCityRules.SchemaVersion, city.SchemaVersion);
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, city.SchemaVersion);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 			if (failure == "failed-read") city.SubsidenceReadFailed = true;
 			if (failure == "old-schema") city.SchemaVersion = KingdomCityRules.SchemaVersion - 1;
 			if (failure == "future-schema") city.SchemaVersion = KingdomCityRules.SchemaVersion + 1;
@@ -221,16 +222,16 @@ namespace ThousandAndFirst.Tests
 			city.ResidentNames = null;
 			List<long> ticks = city.ResidentRoofTicks, warned = city.ResidentRoofWarnedTicks;
 			List<int> standing = city.ResidentRoofStanding;
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
-			Assert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.IsNull(city.ResidentNames);
-			Assert.AreSame(ticks, city.ResidentRoofTicks);
-			Assert.AreSame(warned, city.ResidentRoofWarnedTicks);
-			Assert.AreSame(standing, city.ResidentRoofStanding);
-			Assert.AreEqual(0, ticks[0]); Assert.AreEqual(0, warned[0]); Assert.AreEqual(0, standing[0]);
-			Assert.AreEqual(schema, city.SchemaVersion);
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.AreEqual(readFailed, city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.IsNull(city.ResidentNames);
+			ClassicAssert.AreSame(ticks, city.ResidentRoofTicks);
+			ClassicAssert.AreSame(warned, city.ResidentRoofWarnedTicks);
+			ClassicAssert.AreSame(standing, city.ResidentRoofStanding);
+			ClassicAssert.AreEqual(0, ticks[0]); ClassicAssert.AreEqual(0, warned[0]); ClassicAssert.AreEqual(0, standing[0]);
+			ClassicAssert.AreEqual(schema, city.SchemaVersion);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.AreEqual(readFailed, city.SubsidenceReadFailed);
 		}
 
 		[TestCase("ss1:new")] [TestCase("ss1:legacy")]
@@ -238,12 +239,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Carrier();
 			city.SubsidenceModel = wire;
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
-			Assert.IsTrue(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.AreEqual(1, city.ResidentRoofStanding[0]);
-			Assert.AreEqual(99, city.ResidentRoofTicks[0]);
-			Assert.AreEqual(100, city.ResidentRoofWarnedTicks[0]);
-			Assert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.AreEqual(1, city.ResidentRoofStanding[0]);
+			ClassicAssert.AreEqual(99, city.ResidentRoofTicks[0]);
+			ClassicAssert.AreEqual(100, city.ResidentRoofWarnedTicks[0]);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
 		}
 
 		[Test]
@@ -252,20 +253,20 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceStepBook book = Frozen();
 			KingdomCityBook city = Carrier();
 			city.SubsidenceModel = Wire(book);
-			Assert.IsTrue(city.TryWriteBrink(11, BrinkKind.Creed, true, 99, 100, "Joppa", 1));
-			Assert.IsTrue(city.TryWriteBrink(13, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, plan.Works[0].AfterWear, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, 0, true, true, RungFixture.Due, 0, out book));
+			ClassicAssert.IsTrue(city.TryWriteBrink(11, BrinkKind.Creed, true, 99, 100, "Joppa", 1));
+			ClassicAssert.IsTrue(city.TryWriteBrink(13, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.IsFalse(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReadRungPlan(book, out KingdomSubsidenceRungPlan plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, plan.Works[0].AfterWear, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, 0, true, true, RungFixture.Due, 0, out book));
 			city.SubsidenceModel = Wire(book);
-			Assert.IsTrue(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.IsFalse(city.TryWriteBrink(12, BrinkKind.Roof, true, 99, 100, null, 0));
-			Assert.AreEqual(99, city.ResidentRoofTicks[0]);
-			Assert.AreEqual(0, city.ResidentRoofTicks[1]);
-			Assert.AreEqual(99, city.ResidentRoofTicks[2]);
+			ClassicAssert.IsTrue(city.TryWriteBrink(11, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.IsFalse(city.TryWriteBrink(12, BrinkKind.Roof, true, 99, 100, null, 0));
+			ClassicAssert.AreEqual(99, city.ResidentRoofTicks[0]);
+			ClassicAssert.AreEqual(0, city.ResidentRoofTicks[1]);
+			ClassicAssert.AreEqual(99, city.ResidentRoofTicks[2]);
 		}
 
 		private static KingdomSubsidenceStepBook Frozen(params KingdomSubsidenceRungWork[] works)
@@ -276,16 +277,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = new KingdomSubsidenceRungPlan(book.Active.Id,
 				book.RealmId, book.SettlementId, RungFixture.Zone, GrowthStage.City, GrowthStage.Town,
 				book.Active.DueTick, RungFixture.Prepared, book.Active.Completed, works);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
 			return book;
 		}
 
 		private static string Wire(KingdomSubsidenceStepBook book)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out KingdomSubsidenceStepBook decoded));
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(decoded, out string repeated));
-			Assert.AreEqual(wire, repeated);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out KingdomSubsidenceStepBook decoded));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(decoded, out string repeated));
+			ClassicAssert.AreEqual(wire, repeated);
 			return wire;
 		}
 
@@ -299,11 +300,11 @@ namespace ThousandAndFirst.Tests
 				"fixture", ""));
 			KingdomStocks stocks = new KingdomStocks(new KingdomStockPair(0, 0),
 				new KingdomStockPair(0, 0), new KingdomStockPair(0, 0));
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				RungFixture.Settlement, 0, stocks, new KingdomZoneRow[0], new KingdomWorkRow[0],
 				residents.ToArray(), new KingdomClockRow[0], out KingdomCityState state, out _));
 			KingdomCityBook book = new KingdomCityBook();
-			Assert.IsTrue(book.TryPublish(state, out _));
+			ClassicAssert.IsTrue(book.TryPublish(state, out _));
 			return book;
 		}
 

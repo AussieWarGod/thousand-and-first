@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,18 +20,18 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomMasterDecision off = KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Unobserved, 0L, 0L, 0L, false, 40L);
-			Assert.IsTrue(off.Valid);
-			Assert.AreEqual(KingdomMasterLatchValue.Disabled, off.State);
-			Assert.AreEqual(KingdomMasterTransition.InitializedDisabled, off.Transition);
-			Assert.IsFalse(off.AutomaticWorkAllowed);
-			Assert.AreEqual("1|40|0|0", Scalars(off));
+			ClassicAssert.IsTrue(off.Valid);
+			ClassicAssert.AreEqual(KingdomMasterLatchValue.Disabled, off.State);
+			ClassicAssert.AreEqual(KingdomMasterTransition.InitializedDisabled, off.Transition);
+			ClassicAssert.IsFalse(off.AutomaticWorkAllowed);
+			ClassicAssert.AreEqual("1|40|0|0", Scalars(off));
 
 			KingdomMasterDecision on = KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Unobserved, 0L, 0L, 0L, true, 40L);
-			Assert.IsTrue(on.Valid);
-			Assert.AreEqual(KingdomMasterLatchValue.Enabled, on.State);
-			Assert.AreEqual(KingdomMasterTransition.InitializedEnabled, on.Transition);
-			Assert.AreEqual("2|40|0|0", Scalars(on));
+			ClassicAssert.IsTrue(on.Valid);
+			ClassicAssert.AreEqual(KingdomMasterLatchValue.Enabled, on.State);
+			ClassicAssert.AreEqual(KingdomMasterTransition.InitializedEnabled, on.Transition);
+			ClassicAssert.AreEqual("2|40|0|0", Scalars(on));
 		}
 
 		[Test]
@@ -38,10 +39,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomMasterDecision observed = KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Disabled, 123L, 8L, 8L, false, 999L);
-			Assert.IsTrue(observed.Valid);
-			Assert.AreEqual(KingdomMasterTransition.None, observed.Transition);
-			Assert.AreEqual("1|123|8|8", Scalars(observed));
-			Assert.IsFalse(observed.AutomaticWorkAllowed);
+			ClassicAssert.IsTrue(observed.Valid);
+			ClassicAssert.AreEqual(KingdomMasterTransition.None, observed.Transition);
+			ClassicAssert.AreEqual("1|123|8|8", Scalars(observed));
+			ClassicAssert.IsFalse(observed.AutomaticWorkAllowed);
 		}
 
 		[TestCase(99L)]
@@ -52,34 +53,34 @@ namespace ThousandAndFirst.Tests
 			const long due = 100L;
 			KingdomMasterDecision disabled = KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Enabled, 5L, 2L, 2L, false, boundary);
-			Assert.IsTrue(disabled.Valid);
-			Assert.AreEqual(KingdomMasterTransition.Disabled, disabled.Transition);
-			Assert.IsFalse(disabled.AutomaticWorkAllowed,
+			ClassicAssert.IsTrue(disabled.Valid);
+			ClassicAssert.AreEqual(KingdomMasterTransition.Disabled, disabled.Transition);
+			ClassicAssert.IsFalse(disabled.AutomaticWorkAllowed,
 				"due work must not run on the disabling observation");
 
 			long resumeAt = boundary + 7L;
 			KingdomMasterDecision staged = KingdomMasterRules.Observe(disabled.State,
 				disabled.ChangedAtTick, disabled.ResumeToken, disabled.AppliedResumeToken,
 				true, resumeAt);
-			Assert.AreEqual(KingdomMasterTransition.ResumeRequired, staged.Transition);
-			Assert.IsTrue(staged.ResumePending);
-			Assert.IsFalse(staged.AutomaticWorkAllowed,
+			ClassicAssert.AreEqual(KingdomMasterTransition.ResumeRequired, staged.Transition);
+			ClassicAssert.IsTrue(staged.ResumePending);
+			ClassicAssert.IsFalse(staged.AutomaticWorkAllowed,
 				"due work must not run before every module publishes its resume latch");
 
-			Assert.IsTrue(KingdomMasterRules.TryFutureDeadline(resumeAt, 10L,
+			ClassicAssert.IsTrue(KingdomMasterRules.TryFutureDeadline(resumeAt, 10L,
 				out long newDeadline));
-			Assert.AreEqual(resumeAt + 10L, newDeadline);
-			Assert.Greater(newDeadline, resumeAt);
+			ClassicAssert.AreEqual(resumeAt + 10L, newDeadline);
+			ClassicAssert.Greater(newDeadline, resumeAt);
 
-			Assert.IsTrue(KingdomMasterRules.TryResumeCommittedDeadline(due, boundary,
+			ClassicAssert.IsTrue(KingdomMasterRules.TryResumeCommittedDeadline(due, boundary,
 				resumeAt, out long committedDeadline));
-			if (due <= boundary) Assert.AreEqual(due, committedDeadline);
-			else Assert.AreEqual(due + (resumeAt - boundary), committedDeadline);
+			if (due <= boundary) ClassicAssert.AreEqual(due, committedDeadline);
+			else ClassicAssert.AreEqual(due + (resumeAt - boundary), committedDeadline);
 
 			KingdomMasterDecision applied = KingdomMasterRules.ApplyResume(staged);
-			Assert.IsTrue(applied.AutomaticWorkAllowed);
-			Assert.AreEqual(applied.ResumeToken, applied.AppliedResumeToken);
-			Assert.AreEqual(Scalars(applied), Scalars(KingdomMasterRules.ApplyResume(applied)),
+			ClassicAssert.IsTrue(applied.AutomaticWorkAllowed);
+			ClassicAssert.AreEqual(applied.ResumeToken, applied.AppliedResumeToken);
+			ClassicAssert.AreEqual(Scalars(applied), Scalars(KingdomMasterRules.ApplyResume(applied)),
 				"replaying the apply step must be an exact no-op");
 		}
 
@@ -92,38 +93,38 @@ namespace ThousandAndFirst.Tests
 			KingdomMasterDecision stillDisabled = KingdomMasterRules.Observe(disabled.State,
 				disabled.ChangedAtTick, disabled.ResumeToken, disabled.AppliedResumeToken,
 				false, 80L);
-			Assert.AreEqual(persistedDisabled, Scalars(stillDisabled));
+			ClassicAssert.AreEqual(persistedDisabled, Scalars(stillDisabled));
 
 			KingdomMasterDecision pending = KingdomMasterRules.Observe(stillDisabled.State,
 				stillDisabled.ChangedAtTick, stillDisabled.ResumeToken,
 				stillDisabled.AppliedResumeToken, true, 80L);
-			Assert.IsTrue(pending.ResumePending);
-			Assert.AreEqual("2|80|1|0", Scalars(pending));
+			ClassicAssert.IsTrue(pending.ResumePending);
+			ClassicAssert.AreEqual("2|80|1|0", Scalars(pending));
 			KingdomMasterDecision applied = KingdomMasterRules.ApplyResume(pending);
-			Assert.AreEqual("2|80|1|1", Scalars(applied));
+			ClassicAssert.AreEqual("2|80|1|1", Scalars(applied));
 
 			KingdomMasterDecision reloaded = KingdomMasterRules.Observe(applied.State,
 				applied.ChangedAtTick, applied.ResumeToken, applied.AppliedResumeToken,
 				true, 81L);
-			Assert.AreEqual(KingdomMasterTransition.None, reloaded.Transition);
-			Assert.AreEqual(Scalars(applied), Scalars(reloaded));
-			Assert.IsTrue(reloaded.AutomaticWorkAllowed);
+			ClassicAssert.AreEqual(KingdomMasterTransition.None, reloaded.Transition);
+			ClassicAssert.AreEqual(Scalars(applied), Scalars(reloaded));
+			ClassicAssert.IsTrue(reloaded.AutomaticWorkAllowed);
 		}
 
 		[Test]
 		public void MalformedAndOverflowEvidenceFailsClosed()
 		{
-			Assert.IsFalse(KingdomMasterRules.Observe(
+			ClassicAssert.IsFalse(KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Unobserved, 1L, 0L, 0L, true, 1L).Valid);
-			Assert.IsFalse(KingdomMasterRules.Observe(
+			ClassicAssert.IsFalse(KingdomMasterRules.Observe(
 				(KingdomMasterLatchValue)99, 0L, 0L, 0L, true, 1L).Valid);
-			Assert.IsFalse(KingdomMasterRules.Observe(
+			ClassicAssert.IsFalse(KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Enabled, 0L, 1L, 2L, true, 1L).Valid);
-			Assert.IsFalse(KingdomMasterRules.Observe(
+			ClassicAssert.IsFalse(KingdomMasterRules.Observe(
 				KingdomMasterLatchValue.Disabled, 1L, long.MaxValue, long.MaxValue,
 				true, 2L).Valid);
-			Assert.IsFalse(KingdomMasterRules.TryFutureDeadline(long.MaxValue, 1L, out _));
-			Assert.IsFalse(KingdomMasterRules.TryResumeCommittedDeadline(long.MaxValue,
+			ClassicAssert.IsFalse(KingdomMasterRules.TryFutureDeadline(long.MaxValue, 1L, out _));
+			ClassicAssert.IsFalse(KingdomMasterRules.TryResumeCommittedDeadline(long.MaxValue,
 				0L, 1L, out _));
 		}
 
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 				KingdomCharterAction.TrafficRecords
 			};
 			foreach (KingdomCharterAction action in Enum.GetValues(typeof(KingdomCharterAction)))
-				Assert.AreEqual(expected.Contains(action),
+				ClassicAssert.AreEqual(expected.Contains(action),
 					KingdomCharterMenuRules.AvailableWhileSimulationPaused(action), action.ToString());
 		}
 	}

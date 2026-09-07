@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -34,10 +35,10 @@ namespace ThousandAndFirst.Tests
 			string xml = TestMain.ReadRepositoryText(Path.Combine("Architecture",
 				"KingdomArchitectures-DeepEndgame.xml"));
 			StringAssert.Contains("Blueprint=\"r_KingdomDelveDown\"", xml);
-			Assert.AreEqual(2, Count(xml, "Anchors=\"travel:down\""));
-			Assert.AreEqual(0, Count(xml, "Anchors=\"travel:up\""));
-			Assert.AreEqual(0, Count(xml, "Blueprint=\"StairsDown\""));
-			Assert.AreEqual(0, Count(xml, "Blueprint=\"StairsUp\""));
+			ClassicAssert.AreEqual(2, Count(xml, "Anchors=\"travel:down\""));
+			ClassicAssert.AreEqual(0, Count(xml, "Anchors=\"travel:up\""));
+			ClassicAssert.AreEqual(0, Count(xml, "Blueprint=\"StairsDown\""));
+			ClassicAssert.AreEqual(0, Count(xml, "Blueprint=\"StairsUp\""));
 
 			string blueprints = TestMain.ReadRepositoryText("ObjectBlueprints.xml");
 			StringAssert.Contains("Name=\"r_KingdomDelveDown\" Inherits=\"StairsDown\"", blueprints);
@@ -59,10 +60,10 @@ namespace ThousandAndFirst.Tests
 				"TrySafeFoot(System, foot, derived",
 				"EmptyConnectionCell(derived.HeadZoneId",
 				"EmptyConnectionCell(derived.FootZoneId");
-			Assert.IsFalse(preflight.Contains("GameObject.Create"));
-			Assert.IsFalse(preflight.Contains("AddObject"));
-			Assert.IsFalse(preflight.Contains("SetIntProperty"));
-			Assert.IsFalse(preflight.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(preflight.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(preflight.Contains("AddObject"));
+			ClassicAssert.IsFalse(preflight.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(preflight.Contains("SetStringProperty"));
 
 			string prepare = Between(Plot(),
 				"internal static bool TryPreparePlotPayload(KingdomSystem System, Zone Z,\n\t\t\tKingdomPlotRules.PlotRect Rect, string BuildKey, string LotType, string SkinKey,",
@@ -71,8 +72,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureStamper.TryPreflight(System, Z, prepared, claim",
 				"KingdomDelveLink.TryPreflight(System, Z, prepared",
 				"TryEncodePlotPayload(Rect, SkinKey, prepared");
-			Assert.IsFalse(prepare.Contains("Reserve"));
-			Assert.IsFalse(prepare.Contains("TryDebit"));
+			ClassicAssert.IsFalse(prepare.Contains("Reserve"));
+			ClassicAssert.IsFalse(prepare.Contains("TryDebit"));
 		}
 
 		[Test]
@@ -83,21 +84,21 @@ namespace ThousandAndFirst.Tests
 				"public static bool TryPreflightStrike(");
 			StringAssert.Contains("KingdomArchitectureStamper.TryReadOwner(Owner", settle);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryDecode(Architecture", source);
-			Assert.IsFalse(settle.Contains("KingdomArchitecture.TryResolve"));
-			Assert.IsFalse(settle.Contains("KingdomArchitecture.TryGetMapping"));
-			Assert.IsFalse(settle.Contains("KingdomData"));
+			ClassicAssert.IsFalse(settle.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(settle.Contains("KingdomArchitecture.TryGetMapping"));
+			ClassicAssert.IsFalse(settle.Contains("KingdomData"));
 
 			string initialize = Between(source, "private static bool TryInitializeRoot(",
 				"private static bool TryReadRoot(");
 			int schema = initialize.IndexOf(
 				"Owner.SetIntProperty(SchemaProperty, LinkSchema);", StringComparison.Ordinal);
-			Assert.Greater(schema, initialize.IndexOf("Owner.SetIntProperty(PhaseProperty, 0)",
+			ClassicAssert.Greater(schema, initialize.IndexOf("Owner.SetIntProperty(PhaseProperty, 0)",
 				StringComparison.Ordinal));
-			Assert.AreEqual(schema, initialize.LastIndexOf("Owner.Set", StringComparison.Ordinal));
+			ClassicAssert.AreEqual(schema, initialize.LastIndexOf("Owner.Set", StringComparison.Ordinal));
 
 			string stamp = Between(source, "private static void StampEndpoint(",
 				"private static bool ExactEndpoint(");
-			Assert.AreEqual(stamp.IndexOf(
+			ClassicAssert.AreEqual(stamp.IndexOf(
 				"Endpoint.SetIntProperty(EndpointSchemaProperty, EndpointSchema);",
 				StringComparison.Ordinal), stamp.LastIndexOf("Endpoint.Set", StringComparison.Ordinal));
 
@@ -126,8 +127,8 @@ namespace ThousandAndFirst.Tests
 				"FindExactEndpoint(foot, receipt.FootEndpointId",
 				"CountExactConnection(receipt.FootZoneId",
 				"CountExactConnection(receipt.HeadZoneId");
-			Assert.IsFalse(physical.Contains("GenerateZone"));
-			Assert.IsFalse(physical.Contains("ZoneBuilders"));
+			ClassicAssert.IsFalse(physical.Contains("GenerateZone"));
+			ClassicAssert.IsFalse(physical.Contains("ZoneBuilders"));
 			StringAssert.Contains("ExactString(root, ReceiptProperty, encoded)", physical);
 			StringAssert.Contains("CountEndpointAt(head.GetCell(receipt.X, receipt.Y), receipt.Token, null) == 1", physical);
 			StringAssert.DoesNotContain("KingdomSurvey.Take", physical);
@@ -163,8 +164,8 @@ namespace ThousandAndFirst.Tests
 				architecture, StringComparison.Ordinal);
 			int intent = materials.IndexOf("KingdomStrikeIntent intent =", link,
 				StringComparison.Ordinal);
-			Assert.Greater(link, architecture);
-			Assert.Greater(intent, link);
+			ClassicAssert.Greater(link, architecture);
+			ClassicAssert.Greater(intent, link);
 
 			string continueStrike = Between(materials, "private static void ContinueStrike(",
 				"private static void RemoveStrikePlotPart(");
@@ -215,7 +216,7 @@ namespace ThousandAndFirst.Tests
 		public void DelveCompletionNamesItsExactSettlementRatherThanTheSeatCursor()
 		{
 			string plot = Plot();
-			Assert.GreaterOrEqual(Count(plot,
+			ClassicAssert.GreaterOrEqual(Count(plot,
 				"TryExactSettlementName(System, Z, out string settlementName)"), 2);
 			StringAssert.Contains("SettlementIdForOwnedZone(Z?.ZoneID)", plot);
 			StringAssert.Contains("System.TryFindSettlement(id", plot);
@@ -240,9 +241,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing source boundary: " + End);
+			ClassicAssert.Greater(end, start, "missing source boundary: " + End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -252,7 +253,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], previous + 1, StringComparison.Ordinal);
-				Assert.Greater(found, previous, "missing/out-of-order source term: " + Terms[i]);
+				ClassicAssert.Greater(found, previous, "missing/out-of-order source term: " + Terms[i]);
 				previous = found;
 			}
 		}

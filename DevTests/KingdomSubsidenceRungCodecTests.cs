@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -24,43 +25,43 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRungPlan original = FullPlan(), restored = RungFixture.RoundTrip(original);
 			StringAssert.StartsWith("sr2:", RungFixture.Wire(original));
-			Assert.AreNotSame(original, restored);
-			Assert.AreEqual(original.StepId, restored.StepId);
-			Assert.AreEqual(original.RealmId, restored.RealmId);
-			Assert.AreEqual(original.SettlementId, restored.SettlementId);
-			Assert.AreEqual(original.ZoneId, restored.ZoneId);
-			Assert.AreEqual(original.From, restored.From); Assert.AreEqual(original.To, restored.To);
-			Assert.AreEqual(original.DueTick, restored.DueTick); Assert.AreEqual(original.PreparedTick, restored.PreparedTick);
-			Assert.AreEqual(original.Departed, restored.Departed);
-			Assert.AreEqual(original.Works.Count, restored.Works.Count);
+			ClassicAssert.AreNotSame(original, restored);
+			ClassicAssert.AreEqual(original.StepId, restored.StepId);
+			ClassicAssert.AreEqual(original.RealmId, restored.RealmId);
+			ClassicAssert.AreEqual(original.SettlementId, restored.SettlementId);
+			ClassicAssert.AreEqual(original.ZoneId, restored.ZoneId);
+			ClassicAssert.AreEqual(original.From, restored.From); ClassicAssert.AreEqual(original.To, restored.To);
+			ClassicAssert.AreEqual(original.DueTick, restored.DueTick); ClassicAssert.AreEqual(original.PreparedTick, restored.PreparedTick);
+			ClassicAssert.AreEqual(original.Departed, restored.Departed);
+			ClassicAssert.AreEqual(original.Works.Count, restored.Works.Count);
 			for (int i = 0; i < original.Works.Count; i++)
 			{
 				KingdomSubsidenceRungWork a = original.Works[i], b = restored.Works[i];
-				Assert.AreEqual(a.WorkId, b.WorkId); Assert.AreEqual(a.ObjectId, b.ObjectId);
-				Assert.AreEqual(a.Blueprint, b.Blueprint); Assert.AreEqual(a.PlotId, b.PlotId);
-				Assert.AreEqual(a.DesignStamp, b.DesignStamp); Assert.AreEqual(a.Name, b.Name);
-				Assert.AreEqual(a.X, b.X); Assert.AreEqual(a.Y, b.Y);
-				Assert.AreEqual(a.HadWearPart, b.HadWearPart);
-				Assert.AreEqual(a.BeforeWear, b.BeforeWear); Assert.AreEqual(a.AfterWear, b.AfterWear);
-				Assert.AreEqual(a.WearPhase, b.WearPhase);
-				Assert.AreEqual(a.ReleasePhase, b.ReleasePhase);
-				Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(a.ReleaseBefore, b.ReleaseBefore));
-				Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(a.ReleaseAfter, b.ReleaseAfter));
-				Assert.AreEqual(KingdomSubsidenceReleasePhase.Pending, b.ReleasePhase);
-				Assert.IsNull(b.ReleaseBefore); Assert.IsNull(b.ReleaseAfter);
-				Assert.AreEqual(a.Roofs.Count, b.Roofs.Count);
+				ClassicAssert.AreEqual(a.WorkId, b.WorkId); ClassicAssert.AreEqual(a.ObjectId, b.ObjectId);
+				ClassicAssert.AreEqual(a.Blueprint, b.Blueprint); ClassicAssert.AreEqual(a.PlotId, b.PlotId);
+				ClassicAssert.AreEqual(a.DesignStamp, b.DesignStamp); ClassicAssert.AreEqual(a.Name, b.Name);
+				ClassicAssert.AreEqual(a.X, b.X); ClassicAssert.AreEqual(a.Y, b.Y);
+				ClassicAssert.AreEqual(a.HadWearPart, b.HadWearPart);
+				ClassicAssert.AreEqual(a.BeforeWear, b.BeforeWear); ClassicAssert.AreEqual(a.AfterWear, b.AfterWear);
+				ClassicAssert.AreEqual(a.WearPhase, b.WearPhase);
+				ClassicAssert.AreEqual(a.ReleasePhase, b.ReleasePhase);
+				ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(a.ReleaseBefore, b.ReleaseBefore));
+				ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(a.ReleaseAfter, b.ReleaseAfter));
+				ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Pending, b.ReleasePhase);
+				ClassicAssert.IsNull(b.ReleaseBefore); ClassicAssert.IsNull(b.ReleaseAfter);
+				ClassicAssert.AreEqual(a.Roofs.Count, b.Roofs.Count);
 				for (int j = 0; j < a.Roofs.Count; j++)
 				{
 					KingdomSubsidenceRungRoof x = a.Roofs[j], y = b.Roofs[j];
-					Assert.AreEqual(x.ResidentId, y.ResidentId); Assert.AreEqual(x.BodyObjectId, y.BodyObjectId);
-					Assert.AreEqual(x.BeforeStanding, y.BeforeStanding);
-					Assert.AreEqual(x.BeforeReached, y.BeforeReached); Assert.AreEqual(x.BeforeWarned, y.BeforeWarned);
-					Assert.AreEqual(x.Phase, y.Phase);
+					ClassicAssert.AreEqual(x.ResidentId, y.ResidentId); ClassicAssert.AreEqual(x.BodyObjectId, y.BodyObjectId);
+					ClassicAssert.AreEqual(x.BeforeStanding, y.BeforeStanding);
+					ClassicAssert.AreEqual(x.BeforeReached, y.BeforeReached); ClassicAssert.AreEqual(x.BeforeWarned, y.BeforeWarned);
+					ClassicAssert.AreEqual(x.Phase, y.Phase);
 				}
 			}
-			Assert.IsNull(restored.Works[1].DesignStamp);
-			Assert.AreEqual("", restored.Works[1].PlotId);
-			Assert.IsFalse(restored.Works[1].HadWearPart);
+			ClassicAssert.IsNull(restored.Works[1].DesignStamp);
+			ClassicAssert.AreEqual("", restored.Works[1].PlotId);
+			ClassicAssert.IsFalse(restored.Works[1].HadWearPart);
 		}
 
 		[Test]
@@ -74,8 +75,8 @@ namespace ThousandAndFirst.Tests
 				Array.Copy(bytes, truncated, length);
 				Refuses(Wire(truncated), "truncated at " + length);
 			}
-			Assert.AreEqual(original, Wire(bytes));
-			Assert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(original, out _));
+			ClassicAssert.AreEqual(original, Wire(bytes));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(original, out _));
 		}
 
 		[Test]
@@ -105,12 +106,12 @@ namespace ThousandAndFirst.Tests
 			for (int extra = 0; !wire.EndsWith("=", StringComparison.Ordinal) && extra < 3; extra++)
 				wire = RungFixture.Wire(RungFixture.Plan(RungFixture.CopyWork(RungFixture.Work(),
 					name: "padding" + new string('x', extra), replaceName: true)));
-			Assert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal), "fixture must exercise base64 padding");
+			ClassicAssert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal), "fixture must exercise base64 padding");
 			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			int at = wire.Length - 1;
 			while (wire[at] == '=') at--;
 			int value = alphabet.IndexOf(wire[at]);
-			Assert.AreEqual(0, value & 1, "canonical unused padding bits must be zero");
+			ClassicAssert.AreEqual(0, value & 1, "canonical unused padding bits must be zero");
 			string forged = wire.Substring(0, at) + alphabet[value | 1] + wire.Substring(at + 1);
 			CollectionAssert.AreEqual(Bytes(wire), Bytes(forged));
 			Refuses(forged);
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Bytes(wire);
 			bytes[Layout(wire)[field]] = (byte)value;
 			Refuses(Wire(bytes));
-			Assert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out _));
 		}
 
 		[TestCase("works", -1)] [TestCase("works", 4097)] [TestCase("works", int.MaxValue)]
@@ -166,7 +167,7 @@ namespace ThousandAndFirst.Tests
 			string wire = RungFixture.Wire(FullPlan());
 			byte[] bytes = Bytes(wire);
 			// StepId is the first string and has a one-byte UTF-8 byte-length prefix after magic.
-			Assert.Less(bytes[4], 128);
+			ClassicAssert.Less(bytes[4], 128);
 			bytes[5] = 0xFF;
 			Refuses(Wire(bytes));
 			bytes = Bytes(wire);
@@ -184,9 +185,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungWork work = RungFixture.Work();
 			KingdomSubsidenceRungPlan longName = RungFixture.Plan(
 				RungFixture.CopyWork(work, name: new string('n', 513), replaceName: true));
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(longName, out string rejected));
-			Assert.IsNull(rejected);
-			Assert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(RungFixture.Plan(
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(longName, out string rejected));
+			ClassicAssert.IsNull(rejected);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(RungFixture.Plan(
 				RungFixture.CopyWork(work, name: new string('n', 512), replaceName: true)), out _));
 			Refuses("sr1:" + new string('A', KingdomSubsidenceRungCodec.MaxWireChars));
 			Refuses("sr2:" + new string('A', KingdomSubsidenceRungCodec.MaxWireChars));
@@ -199,9 +200,9 @@ namespace ThousandAndFirst.Tests
 					row.HadWearPart, row.BeforeWear, row.AfterWear, row.WearPhase, row.Roofs));
 			}
 			KingdomSubsidenceRungPlan aggregate = RungFixture.Plan(large.ToArray());
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(aggregate), "every complete row is individually bounded");
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(aggregate, out rejected));
-			Assert.IsNull(rejected);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(aggregate), "every complete row is individually bounded");
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(aggregate, out rejected));
+			ClassicAssert.IsNull(rejected);
 		}
 
 		[Test]
@@ -211,12 +212,12 @@ namespace ThousandAndFirst.Tests
 			for (int i = 1; i <= KingdomSubsidenceRungRules.MaxRoofs; i++) first.Add(RungFixture.Roof(i));
 			KingdomSubsidenceRungWork a = RungFixture.Work(0, roofs: first);
 			KingdomSubsidenceRungPlan maximum = RungFixture.Plan(a, RungFixture.Work(1));
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(maximum));
-			Assert.AreEqual(first.Count, RungFixture.RoundTrip(maximum).Works[0].Roofs.Count);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(maximum));
+			ClassicAssert.AreEqual(first.Count, RungFixture.RoundTrip(maximum).Works[0].Roofs.Count);
 			KingdomSubsidenceRungPlan over = RungFixture.Plan(a, RungFixture.Work(1,
 				roofs: new[] { RungFixture.Roof(KingdomSubsidenceRungRules.MaxRoofs + 1) }));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(over));
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(over, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(over));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(over, out _));
 			// Keep the valid header and first work; splice one complete second-work record from a valid wire.
 			string oneWire = RungFixture.Wire(RungFixture.Plan(RungFixture.Work(1,
 				roofs: new[] { RungFixture.Roof(KingdomSubsidenceRungRules.MaxRoofs + 1) })));
@@ -232,7 +233,7 @@ namespace ThousandAndFirst.Tests
 					reader.ReadInt32(); reader.ReadString(); reader.ReadByte();
 					reader.ReadInt64(); reader.ReadInt64(); reader.ReadByte();
 				}
-				Assert.AreEqual((byte)KingdomSubsidenceReleasePhase.Pending, reader.ReadByte());
+				ClassicAssert.AreEqual((byte)KingdomSubsidenceReleasePhase.Pending, reader.ReadByte());
 				secondAt = (int)stream.Position;
 			}
 			int oneAt = Layout(oneWire)["work-id"];
@@ -244,8 +245,8 @@ namespace ThousandAndFirst.Tests
 
 		private static void Refuses(string wire, string context = null)
 		{
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryDecode(wire, out KingdomSubsidenceRungPlan decoded), context);
-			Assert.IsNull(decoded, context);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryDecode(wire, out KingdomSubsidenceRungPlan decoded), context);
+			ClassicAssert.IsNull(decoded, context);
 		}
 		private static byte[] Bytes(string wire) => Convert.FromBase64String(wire.Substring(4));
 		private static string Wire(byte[] bytes) => "sr2:" + Convert.ToBase64String(bytes);

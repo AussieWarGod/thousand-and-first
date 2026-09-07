@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,7 +13,7 @@ namespace ThousandAndFirst.Tests
 		public void TitleOnlyCivicOfficeNeverChangesAnyRiteEligibility(bool holdsOffice)
 		{
 			foreach (WaterRiteBar baseline in Enum.GetValues(typeof(WaterRiteBar)))
-				Assert.AreEqual(baseline,
+				ClassicAssert.AreEqual(baseline,
 					KingdomWaterRiteRules.PreserveEligibilityAcrossCivicTitle(
 						baseline, holdsOffice), baseline.ToString());
 		}
@@ -25,8 +26,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int end = source.IndexOf("private static bool CouldWalkAway(", start,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
-			Assert.Greater(end, start);
+			ClassicAssert.GreaterOrEqual(start, 0);
+			ClassicAssert.Greater(end, start);
 			string body = source.Substring(start, end - start);
 			StringAssert.Contains("PreserveEligibilityAcrossCivicTitle(baseline", body);
 			StringAssert.Contains("residentId == System.OfficeHolderResidentId", body);

@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertByteEnum(Type type, params string[] expected)
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.Name + " backing type");
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.Name + " backing type");
 			AssertTopLevelInternal(type);
 			string[] names = Enum.GetNames(type);
 			string[] actual = new string[names.Length];
@@ -32,25 +33,25 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertTopLevelInternal(Type type)
 		{
-			Assert.AreEqual("ThousandAndFirst.Simulation.City." + type.Name, type.FullName);
-			Assert.IsFalse(type.IsNested, type.Name + " became nested");
-			Assert.IsTrue(type.IsNotPublic, type.Name + " accessibility changed");
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City." + type.Name, type.FullName);
+			ClassicAssert.IsFalse(type.IsNested, type.Name + " became nested");
+			ClassicAssert.IsTrue(type.IsNotPublic, type.Name + " accessibility changed");
 		}
 
 		private static void AssertRowShape(Type type, string[] names, Type[] types)
 		{
 			AssertTopLevelInternal(type);
-			Assert.IsTrue(type.IsValueType, type.Name + " stopped being a value type");
+			ClassicAssert.IsTrue(type.IsValueType, type.Name + " stopped being a value type");
 			FieldInfo[] fields = type.GetFields(RowFields);
-			Assert.AreEqual(names.Length, fields.Length, type.Name + " field count");
+			ClassicAssert.AreEqual(names.Length, fields.Length, type.Name + " field count");
 			object defaultRow = Activator.CreateInstance(type);
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.AreEqual(names[i], fields[i].Name, type.Name + " field order at " + i);
-				Assert.AreEqual(types[i], fields[i].FieldType, type.Name + "." + fields[i].Name + " type");
-				Assert.IsTrue(fields[i].IsInitOnly, type.Name + "." + fields[i].Name + " stopped being readonly");
+				ClassicAssert.AreEqual(names[i], fields[i].Name, type.Name + " field order at " + i);
+				ClassicAssert.AreEqual(types[i], fields[i].FieldType, type.Name + "." + fields[i].Name + " type");
+				ClassicAssert.IsTrue(fields[i].IsInitOnly, type.Name + "." + fields[i].Name + " stopped being readonly");
 				object expectedDefault = types[i].IsValueType ? Activator.CreateInstance(types[i]) : null;
-				Assert.AreEqual(expectedDefault, fields[i].GetValue(defaultRow), type.Name + "." + fields[i].Name + " default");
+				ClassicAssert.AreEqual(expectedDefault, fields[i].GetValue(defaultRow), type.Name + "." + fields[i].Name + " default");
 			}
 		}
 
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(50L, 60L),
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(50L, 60L),
 				zoneRows, workRows, residentRows, clockRows, out state, out fault), fault.ToString());
 			return state;
 		}
@@ -176,18 +177,18 @@ namespace ThousandAndFirst.Tests
 		public void ExtractedAuthoritiesKeepTopLevelInternalTypeIdentity()
 		{
 			AssertTopLevelInternal(typeof(KingdomCityAdvanceable));
-			Assert.IsTrue(typeof(KingdomCityAdvanceable).IsClass
+			ClassicAssert.IsTrue(typeof(KingdomCityAdvanceable).IsClass
 				&& typeof(KingdomCityAdvanceable).IsSealed);
 			AssertTopLevelInternal(typeof(KingdomReckonJob));
-			Assert.IsTrue(typeof(KingdomReckonJob).IsClass && typeof(KingdomReckonJob).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomReckonJob).IsClass && typeof(KingdomReckonJob).IsSealed);
 			AssertTopLevelInternal(typeof(KingdomCityRules));
-			Assert.IsTrue(typeof(KingdomCityRules).IsAbstract && typeof(KingdomCityRules).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomCityRules).IsAbstract && typeof(KingdomCityRules).IsSealed);
 			AssertTopLevelInternal(typeof(KingdomCityFaults));
-			Assert.IsTrue(typeof(KingdomCityFaults).IsAbstract && typeof(KingdomCityFaults).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomCityFaults).IsAbstract && typeof(KingdomCityFaults).IsSealed);
 			AssertTopLevelInternal(typeof(KingdomWorkRules));
-			Assert.IsTrue(typeof(KingdomWorkRules).IsAbstract && typeof(KingdomWorkRules).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomWorkRules).IsAbstract && typeof(KingdomWorkRules).IsSealed);
 			AssertTopLevelInternal(typeof(KingdomCityState));
-			Assert.IsTrue(typeof(KingdomCityState).IsClass && typeof(KingdomCityState).IsSealed);
+			ClassicAssert.IsTrue(typeof(KingdomCityState).IsClass && typeof(KingdomCityState).IsSealed);
 		}
 
 		[Test]
@@ -201,17 +202,17 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentRow[] input = new[] { replacement };
 			KingdomCityState after;
 			KingdomCityFault fault;
-			Assert.IsTrue(before.TryWithResidents(input, out after, out fault), fault.ToString());
+			ClassicAssert.IsTrue(before.TryWithResidents(input, out after, out fault), fault.ToString());
 			input[0] = replacement.WithStanding(KingdomResidentStanding.Abroad, KingdomStandingCause.Followed);
 			KingdomResidentRow oldRow;
 			KingdomResidentRow heldRow;
-			Assert.IsTrue(before.TryResident(0, out oldRow));
-			Assert.IsTrue(after.TryResident(0, out heldRow));
-			Assert.AreEqual(1, oldRow.ResidentId);
-			Assert.AreEqual(KingdomResidentStanding.Resident, oldRow.Standing);
-			Assert.AreEqual(9, heldRow.ResidentId);
-			Assert.AreEqual(KingdomResidentStanding.Resident, heldRow.Standing);
-			Assert.AreNotSame(before, after);
+			ClassicAssert.IsTrue(before.TryResident(0, out oldRow));
+			ClassicAssert.IsTrue(after.TryResident(0, out heldRow));
+			ClassicAssert.AreEqual(1, oldRow.ResidentId);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Resident, oldRow.Standing);
+			ClassicAssert.AreEqual(9, heldRow.ResidentId);
+			ClassicAssert.AreEqual(KingdomResidentStanding.Resident, heldRow.Standing);
+			ClassicAssert.AreNotSame(before, after);
 		}
 
 		[Test]
@@ -221,8 +222,8 @@ namespace ThousandAndFirst.Tests
 			// clocks = 956. The told-log is not in R -- a told line is what an integration left
 			// behind, never a row that proposes or integrates.
 			KingdomCityState state = Build(4, KingdomCityState.MaxWorks, 60, 12);
-			Assert.AreEqual(956, state.RowCount);
-			Assert.AreEqual(0, state.ToldCount);
+			ClassicAssert.AreEqual(956, state.RowCount);
+			ClassicAssert.AreEqual(0, state.ToldCount);
 		}
 
 		[TestCase(5, 0, 0, 0)]
@@ -233,11 +234,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L),
+			ClassicAssert.IsFalse(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L),
 				new KingdomZoneRow[zones], new KingdomWorkRow[works], new KingdomResidentRow[residents], new KingdomClockRow[clocks],
 				out state, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
-			Assert.IsNull(state, "a refused creation published a state");
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.IsNull(state, "a refused creation published a state");
 		}
 
 		[Test]
@@ -245,10 +246,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityState.TryCreate(1, 1, null, 0L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
-			Assert.AreEqual(0, state.RowCount, "a city with nothing raised yet is an ordinary state");
+			ClassicAssert.IsFalse(KingdomCityState.TryCreate(1, 1, null, 0L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
+			ClassicAssert.AreEqual(0, state.RowCount, "a city with nothing raised yet is an ordinary state");
 		}
 
 		[Test]
@@ -256,8 +257,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", -1L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", -1L, Stocks(0L, 0L), null, null, null, null, out state, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		/// <summary>A caller that keeps its own array and mutates it afterwards cannot reach inside
@@ -268,12 +269,12 @@ namespace ThousandAndFirst.Tests
 			KingdomZoneRow[] rows = new KingdomZoneRow[1] { Zone("taf:zone:a", 10L) };
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L), rows, null, null, null, out state, out fault));
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "taf:settlement:test", 0L, Stocks(0L, 0L), rows, null, null, null, out state, out fault));
 			rows[0] = Zone("taf:zone:hijacked", 999L);
 			KingdomZoneRow held;
-			Assert.IsTrue(state.TryZone(0, out held));
-			Assert.AreEqual("taf:zone:a", held.ZoneId);
-			Assert.AreEqual(10L, held.LastReadTick);
+			ClassicAssert.IsTrue(state.TryZone(0, out held));
+			ClassicAssert.AreEqual("taf:zone:a", held.ZoneId);
+			ClassicAssert.AreEqual(10L, held.LastReadTick);
 		}
 
 		[Test]
@@ -281,19 +282,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState before = Build(2, 1, 1, 1);
 			KingdomZoneRow row;
-			Assert.IsTrue(before.TryZone(1, out row));
+			ClassicAssert.IsTrue(before.TryZone(1, out row));
 			KingdomCityState after;
 			KingdomCityFault fault;
-			Assert.IsTrue(before.TryWithZone(1, row.WithOwed(42, -7, 0), out after, out fault));
+			ClassicAssert.IsTrue(before.TryWithZone(1, row.WithOwed(42, -7, 0), out after, out fault));
 			KingdomZoneRow originalRow;
 			KingdomZoneRow newRow;
-			Assert.IsTrue(before.TryZone(1, out originalRow));
-			Assert.IsTrue(after.TryZone(1, out newRow));
-			Assert.AreEqual(0, originalRow.OwedWater, "copy-on-write mutated the original");
-			Assert.AreEqual(0, originalRow.OwedFood, "copy-on-write mutated the original");
-			Assert.AreEqual(42, newRow.OwedWater);
-			Assert.AreEqual(-7, newRow.OwedFood, "one net figure cannot hold a landing and a draw at once; three signed ones can");
-			Assert.AreNotSame(before, after);
+			ClassicAssert.IsTrue(before.TryZone(1, out originalRow));
+			ClassicAssert.IsTrue(after.TryZone(1, out newRow));
+			ClassicAssert.AreEqual(0, originalRow.OwedWater, "copy-on-write mutated the original");
+			ClassicAssert.AreEqual(0, originalRow.OwedFood, "copy-on-write mutated the original");
+			ClassicAssert.AreEqual(42, newRow.OwedWater);
+			ClassicAssert.AreEqual(-7, newRow.OwedFood, "one net figure cannot hold a landing and a draw at once; three signed ones can");
+			ClassicAssert.AreNotSame(before, after);
 		}
 
 		[TestCase(-1)]
@@ -303,9 +304,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Build(2, 0, 0, 0);
 			KingdomCityState next;
 			KingdomCityFault fault;
-			Assert.IsFalse(state.TryWithZone(index, Zone("taf:zone:x", 0L), out next, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsNull(next);
+			ClassicAssert.IsFalse(state.TryWithZone(index, Zone("taf:zone:x", 0L), out next, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsNull(next);
 		}
 
 		/// <summary>The checkpoint is advanced by whole units consumed with the remainder kept,
@@ -317,14 +318,14 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Build(1, 0, 0, 0);
 			KingdomCityState next;
 			KingdomCityFault fault;
-			Assert.IsTrue(state.TryWithProcessedThroughTick(0L, out next, out fault), "an equal tick is a no-op, not a regression");
-			Assert.IsTrue(next.TryWithProcessedThroughTick(5000L, out next, out fault));
-			Assert.AreEqual(5000L, next.ProcessedThroughTick);
+			ClassicAssert.IsTrue(state.TryWithProcessedThroughTick(0L, out next, out fault), "an equal tick is a no-op, not a regression");
+			ClassicAssert.IsTrue(next.TryWithProcessedThroughTick(5000L, out next, out fault));
+			ClassicAssert.AreEqual(5000L, next.ProcessedThroughTick);
 			KingdomCityState backwards;
-			Assert.IsFalse(next.TryWithProcessedThroughTick(4999L, out backwards, out fault));
-			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
-			Assert.IsNull(backwards);
-			Assert.AreEqual(5000L, next.ProcessedThroughTick, "a refusal moved the mark anyway");
+			ClassicAssert.IsFalse(next.TryWithProcessedThroughTick(4999L, out backwards, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, fault);
+			ClassicAssert.IsNull(backwards);
+			ClassicAssert.AreEqual(5000L, next.ProcessedThroughTick, "a refusal moved the mark anyway");
 		}
 
 		/// <summary>K is 32 and it is a ring: a season of happenings and a day of them differ in
@@ -337,18 +338,18 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomCityState.MaxToldEntries + 5; i++)
 			{
 				KingdomCityState next;
-				Assert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, 100L + i, i, 0, "taf:zone:0", 1), out next, out fault));
+				ClassicAssert.IsTrue(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, 100L + i, i, 0, "taf:zone:0", 1), out next, out fault));
 				state = next;
 			}
-			Assert.AreEqual(KingdomCityState.MaxToldEntries, state.ToldCount);
+			ClassicAssert.AreEqual(KingdomCityState.MaxToldEntries, state.ToldCount);
 			KingdomToldRow oldest;
-			Assert.IsTrue(state.TryTold(0, out oldest));
-			Assert.AreEqual(5, oldest.SubjectA, "the ring did not drop its first five");
+			ClassicAssert.IsTrue(state.TryTold(0, out oldest));
+			ClassicAssert.AreEqual(5, oldest.SubjectA, "the ring did not drop its first five");
 			KingdomToldRow newest;
-			Assert.IsTrue(state.TryTold(KingdomCityState.MaxToldEntries - 1, out newest));
-			Assert.AreEqual(KingdomCityState.MaxToldEntries + 4, newest.SubjectA);
+			ClassicAssert.IsTrue(state.TryTold(KingdomCityState.MaxToldEntries - 1, out newest));
+			ClassicAssert.AreEqual(KingdomCityState.MaxToldEntries + 4, newest.SubjectA);
 			KingdomToldRow past;
-			Assert.IsFalse(state.TryTold(KingdomCityState.MaxToldEntries, out past));
+			ClassicAssert.IsFalse(state.TryTold(KingdomCityState.MaxToldEntries, out past));
 		}
 
 		[Test]
@@ -357,10 +358,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = Build(1, 0, 0, 0);
 			KingdomCityState next;
 			KingdomCityFault fault;
-			Assert.IsFalse(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, -1L, 0, 0, "taf:zone:0", 0), out next, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
-			Assert.IsNull(next);
-			Assert.AreEqual(0, state.ToldCount);
+			ClassicAssert.IsFalse(state.TryTell(new KingdomToldRow(KingdomToldKind.Harvest, -1L, 0, 0, "taf:zone:0", 0), out next, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsNull(next);
+			ClassicAssert.AreEqual(0, state.ToldCount);
 		}
 
 		[Test]
@@ -368,13 +369,13 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomStocks stocks = Stocks(50L, 60L);
 			KingdomStockPair pair;
-			Assert.IsTrue(stocks.TryGet(KingdomStockKind.Food, out pair));
-			Assert.AreEqual(60L, pair.Level);
+			ClassicAssert.IsTrue(stocks.TryGet(KingdomStockKind.Food, out pair));
+			ClassicAssert.AreEqual(60L, pair.Level);
 			KingdomStocks next;
-			Assert.IsTrue(stocks.TryWith(KingdomStockKind.Food, new KingdomStockPair(0L, 500L), out next));
-			Assert.AreEqual(0L, next.Food.Level);
-			Assert.AreEqual(50L, next.Water.Level, "replacing one stock moved another");
-			Assert.AreEqual(60L, stocks.Food.Level, "the original was mutated");
+			ClassicAssert.IsTrue(stocks.TryWith(KingdomStockKind.Food, new KingdomStockPair(0L, 500L), out next));
+			ClassicAssert.AreEqual(0L, next.Food.Level);
+			ClassicAssert.AreEqual(50L, next.Water.Level, "replacing one stock moved another");
+			ClassicAssert.AreEqual(60L, stocks.Food.Level, "the original was mutated");
 		}
 
 		[Test]
@@ -382,9 +383,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomStocks stocks = Stocks(1L, 1L);
 			KingdomStockPair pair;
-			Assert.IsFalse(stocks.TryGet((KingdomStockKind)200, out pair));
+			ClassicAssert.IsFalse(stocks.TryGet((KingdomStockKind)200, out pair));
 			KingdomStocks next;
-			Assert.IsFalse(stocks.TryWith((KingdomStockKind)200, new KingdomStockPair(9L, 9L), out next));
+			ClassicAssert.IsFalse(stocks.TryWith((KingdomStockKind)200, new KingdomStockPair(9L, 9L), out next));
 		}
 
 		/// <summary>Every kernel refusal reaches the city as a refusal. A fault that translated
@@ -398,10 +399,10 @@ namespace ThousandAndFirst.Tests
 				KingdomCityFault translated = KingdomCityFaults.FromKernel(code);
 				if (code == ThousandAndFirst.Simulation.Kernel.KernelFaultCode.None)
 				{
-					Assert.AreEqual(KingdomCityFault.None, translated);
+					ClassicAssert.AreEqual(KingdomCityFault.None, translated);
 					continue;
 				}
-				Assert.AreNotEqual(KingdomCityFault.None, translated, code + " translated into a success");
+				ClassicAssert.AreNotEqual(KingdomCityFault.None, translated, code + " translated into a success");
 			}
 		}
 	}

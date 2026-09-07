@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,7 +21,7 @@ namespace ThousandAndFirst.Tests
 					: settled == 1 ? KingdomPurposeEffectCallbackAftermath.Settled
 					: unowned == 1 ? KingdomPurposeEffectCallbackAftermath.Unavailable
 					: KingdomPurposeEffectCallbackAftermath.Ambiguous;
-				Assert.AreEqual(expected,
+				ClassicAssert.AreEqual(expected,
 					KingdomPurposePortfolioRules.ClassifyEffectProductAftermath(
 						offered == 1, threw == 1, settled == 1, unowned == 1),
 					"product " + offered + threw + settled + unowned);
@@ -41,7 +42,7 @@ namespace ThousandAndFirst.Tests
 					: after == 1 ? KingdomPurposeEffectCallbackAftermath.Settled
 					: before == 1 ? KingdomPurposeEffectCallbackAftermath.Unavailable
 					: KingdomPurposeEffectCallbackAftermath.Ambiguous;
-				Assert.AreEqual(expected,
+				ClassicAssert.AreEqual(expected,
 					KingdomPurposePortfolioRules.ClassifyEffectDebitAftermath(
 						offered == 1, threw == 1, before == 1, after == 1),
 					"debit " + offered + threw + before + after);
@@ -64,7 +65,7 @@ namespace ThousandAndFirst.Tests
 					: after == 1 ? KingdomPurposeEffectAttemptState.Settled
 					: before == 1 ? KingdomPurposeEffectAttemptState.Before
 					: KingdomPurposeEffectAttemptState.Ambiguous;
-				Assert.AreEqual(expected, KingdomPurposePortfolioRules.ClassifyEffectAttempt(
+				ClassicAssert.AreEqual(expected, KingdomPurposePortfolioRules.ClassifyEffectAttempt(
 					present == 1, ours == 1, before == 1, after == 1, fault == 1),
 					"attempt " + present + ours + before + after + fault);
 			}
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int k = 0; k < kinds.Length; k++)
 			{
-				Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectTerminalStep(
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectTerminalStep(
 					kinds[k], out int terminal));
 				KingdomPurposeOperationReceipt before = Effect(kinds[k], 0,
 					KingdomPurposeOperationPhase.EffectPending);
@@ -88,13 +89,13 @@ namespace ThousandAndFirst.Tests
 					KingdomPurposeOperationReceipt after = Effect(kinds[k], step,
 						step == terminal ? KingdomPurposeOperationPhase.EffectApplied
 							: KingdomPurposeOperationPhase.EffectPending);
-					Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after),
+					ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(before, after),
 						kinds[k] + " step " + step);
-					Assert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(after));
+					ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectPhaseCoherent(after));
 					before = after;
 				}
-				Assert.AreEqual(terminal, before.EffectStep);
-				Assert.AreEqual(KingdomPurposeOperationPhase.EffectApplied, before.Phase);
+				ClassicAssert.AreEqual(terminal, before.EffectStep);
+				ClassicAssert.AreEqual(KingdomPurposeOperationPhase.EffectApplied, before.Phase);
 			}
 		}
 
@@ -107,26 +108,26 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int k = 0; k < kinds.Length; k++)
 			{
-				Assert.IsTrue(KingdomPurposePortfolioRules.TryEffectTerminalStep(
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryEffectTerminalStep(
 					kinds[k], out int terminal));
 				for (int step = 0; step < terminal; step++)
 				{
 					KingdomPurposeOperationReceipt before = Effect(kinds[k], step,
 						KingdomPurposeOperationPhase.EffectPending);
 					if (step + 2 <= terminal)
-						Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
+						ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
 							Effect(kinds[k], step + 2,
 								KingdomPurposeOperationPhase.EffectPending)));
 					if (step > 0)
-						Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
+						ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
 							Effect(kinds[k], step - 1,
 								KingdomPurposeOperationPhase.EffectPending)));
 					if (step < terminal - 1)
-						Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
+						ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(before,
 							Effect(kinds[k], step + 1,
 								KingdomPurposeOperationPhase.EffectApplied)));
 				}
-				Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(
+				ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(
 					Effect(kinds[k], terminal - 1, KingdomPurposeOperationPhase.EffectPending),
 					Effect(kinds[k], terminal, KingdomPurposeOperationPhase.EffectPending)));
 			}
@@ -142,9 +143,9 @@ namespace ThousandAndFirst.Tests
 				KingdomPurposeOperationReceipt exempt = Effect(kind,
 					KingdomPurposePortfolioRules.PurposeEffectExempt,
 					KingdomPurposeOperationPhase.Prepared);
-				Assert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.EffectStepMonotone(
 					exempt, exempt.Copy()));
-				Assert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(
+				ClassicAssert.IsFalse(KingdomPurposePortfolioRules.EffectStepMonotone(
 					Effect(kind, KingdomPurposePortfolioRules.PurposeEffectNone,
 						KingdomPurposeOperationPhase.Prepared), exempt));
 			}
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 					? input == 2 && primary == 1 && staple == 0
 					: typed == KingdomPurposeKind.Harvest
 						&& input == 3 && primary == 1 && staple == 6;
-				Assert.AreEqual(expected, KingdomPurposePortfolioRules.EffectRecipeConserves(
+				ClassicAssert.AreEqual(expected, KingdomPurposePortfolioRules.EffectRecipeConserves(
 					typed, input, primary, staple),
 					typed + " " + input + "/" + primary + "/" + staple);
 			}

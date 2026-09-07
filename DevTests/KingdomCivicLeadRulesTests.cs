@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,50 +13,50 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicLeadCause cause = Cause();
 			string stable = KingdomCivicLeadRules.LeadId(cause.SourceId, cause.Locator);
-			Assert.AreEqual(stable, KingdomCivicLeadRules.LeadId(cause.SourceId, cause.Locator));
+			ClassicAssert.AreEqual(stable, KingdomCivicLeadRules.LeadId(cause.SourceId, cause.Locator));
 			KingdomCivicLeadBook full = new KingdomCivicLeadBook();
-			Assert.IsFalse(KingdomCivicLeadRules.TryPrepare(full, 0, cause,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryPrepare(full, 0, cause,
 				KingdomCivicLeadRules.MaxJournalMapNotes, true, out _, out _));
-			Assert.AreEqual(0, full.Rows.Count); Assert.AreEqual(0, full.Revision);
+			ClassicAssert.AreEqual(0, full.Rows.Count); ClassicAssert.AreEqual(0, full.Revision);
 
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 10, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 10, true,
 				out KingdomCivicLeadReceipt row, out string failure), failure);
-			Assert.AreEqual(KingdomCivicLeadPhase.Prepared, row.Phase);
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 511,
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Prepared, row.Phase);
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 511,
 				false, out KingdomCivicLeadReceipt duplicate, out failure), failure);
-			Assert.AreEqual(row.LeadId, duplicate.LeadId); Assert.AreEqual(1, book.Rows.Count);
-			Assert.IsTrue(KingdomCivicLeadRules.TryMarkProjected(book, book.Revision,
+			ClassicAssert.AreEqual(row.LeadId, duplicate.LeadId); ClassicAssert.AreEqual(1, book.Rows.Count);
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryMarkProjected(book, book.Revision,
 				row.SourceId, row.LeadId, row.Locator, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadPhase.Projected, book.Rows[0].Phase);
-			Assert.IsTrue(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Projected, book.Rows[0].Phase);
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
 				row.SourceId, out KingdomCuratorAttentionRelease projected, out failure), failure);
-			Assert.AreEqual(KingdomCuriosityRules.AttentionReservationId(row.SourceId),
+			ClassicAssert.AreEqual(KingdomCuriosityRules.AttentionReservationId(row.SourceId),
 				projected.ReservationId);
 			KingdomExperienceLedger ledger = EnabledLedger(row.CompletedTick);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(ledger, ledger.Revision,
 				Attention(row, ledger), out _, out failure), failure);
-			Assert.IsTrue(KingdomCivicLeadRules.TryReleaseTerminalAttention(ledger, book,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryReleaseTerminalAttention(ledger, book,
 				row.SourceId, out KingdomExperienceCapacityFault fault, out failure), failure);
-			Assert.AreEqual(KingdomExperienceCapacityFault.None, fault);
-			Assert.AreEqual(0, ledger.Audiences.Count);
-			Assert.IsTrue(KingdomCivicLeadRules.TryInvalidate(book, book.Revision,
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.None, fault);
+			ClassicAssert.AreEqual(0, ledger.Audiences.Count);
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryInvalidate(book, book.Revision,
 				row.SourceId, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadPhase.Invalidated, book.Rows[0].Phase);
-			Assert.IsTrue(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Invalidated, book.Rows[0].Phase);
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
 				row.SourceId, out KingdomCuratorAttentionRelease invalidated, out failure), failure);
-			Assert.AreEqual(projected.ReservationId, invalidated.ReservationId);
+			ClassicAssert.AreEqual(projected.ReservationId, invalidated.ReservationId);
 			long releasedRevision = ledger.Revision;
-			Assert.IsTrue(KingdomCivicLeadRules.TryReleaseTerminalAttention(ledger, book,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryReleaseTerminalAttention(ledger, book,
 				row.SourceId, out fault, out failure), failure);
-			Assert.AreEqual(releasedRevision, ledger.Revision);
+			ClassicAssert.AreEqual(releasedRevision, ledger.Revision);
 		}
 
 		[Test]
 		public void SameSourceRetryExactComparesEveryCauseFieldWithoutFutureQuarantine()
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, Cause(), 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, Cause(), 0, true,
 				out _, out string failure), failure);
 			Action<KingdomCivicLeadCause>[] mutations =
 			{
@@ -67,9 +68,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < mutations.Length; i++)
 			{
 				KingdomCivicLeadCause changed = Cause(); mutations[i](changed);
-				Assert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, book.Revision,
+				ClassicAssert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, book.Revision,
 					changed, 0, true, out _, out _), "cause mutation " + i);
-				Assert.AreEqual(1L, book.Revision); Assert.IsFalse(book.Quarantined);
+				ClassicAssert.AreEqual(1L, book.Revision); ClassicAssert.IsFalse(book.Quarantined);
 			}
 		}
 
@@ -79,13 +80,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
 			KingdomCivicLeadCause z = Cause(); z.SourceId = "taf:delve:z";
 			KingdomCivicLeadCause a = Cause(); a.SourceId = "taf:delve:a";
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, z, 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0, z, 0, true,
 				out _, out string failure), failure);
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 1, a, 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 1, a, 0, true,
 				out _, out failure), failure);
-			Assert.AreEqual("taf:delve:a", book.Rows[0].SourceId);
-			Assert.AreEqual("taf:delve:z", book.Rows[1].SourceId);
-			Assert.IsFalse(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
+			ClassicAssert.AreEqual("taf:delve:a", book.Rows[0].SourceId);
+			ClassicAssert.AreEqual("taf:delve:z", book.Rows[1].SourceId);
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryGetTerminalAttentionRelease(book,
 				z.SourceId, out _, out _));
 		}
 
@@ -94,12 +95,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
 			KingdomCivicLeadCause cause = Cause(); cause.Locator = "the salt dunes";
-			Assert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 0, true,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 0, true,
 				out _, out _));
 			cause = Cause();
-			Assert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 0, false,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0, cause, 0, false,
 				out _, out _));
-			Assert.AreEqual(0, book.Rows.Count); Assert.AreEqual(0, book.Revision);
+			ClassicAssert.AreEqual(0, book.Rows.Count); ClassicAssert.AreEqual(0, book.Revision);
 		}
 
 		private static KingdomCivicLeadCause Cause() => new KingdomCivicLeadCause
@@ -114,9 +115,9 @@ namespace ThousandAndFirst.Tests
 		private static KingdomExperienceLedger EnabledLedger(long tick)
 		{
 			KingdomExperienceLedger ledger = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
 				"taf:realm:civic-lead", out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
 				true, true, true, tick, out failure), failure);
 			return ledger;
 		}

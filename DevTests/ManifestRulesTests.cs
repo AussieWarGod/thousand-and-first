@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -17,12 +18,12 @@ namespace ThousandAndFirst.Tests
 				"TurnedBack"
 			}, System.Array.ConvertAll(fields, field => field.Name));
 			KingdomManifest manifest = new KingdomManifest();
-			Assert.IsNull(manifest.OriginName);
-			Assert.IsNull(manifest.DestinationName);
-			Assert.AreEqual(0, manifest.Drams);
-			Assert.AreEqual(0L, manifest.LoadedTick);
-			Assert.AreEqual(0L, manifest.DeadlineTick);
-			Assert.IsFalse(manifest.TurnedBack);
+			ClassicAssert.IsNull(manifest.OriginName);
+			ClassicAssert.IsNull(manifest.DestinationName);
+			ClassicAssert.AreEqual(0, manifest.Drams);
+			ClassicAssert.AreEqual(0L, manifest.LoadedTick);
+			ClassicAssert.AreEqual(0L, manifest.DeadlineTick);
+			ClassicAssert.IsFalse(manifest.TurnedBack);
 		}
 
 		// --- ManifestReserve / ManifestAmount: the size arithmetic ---------------------------
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 		public void ManifestReserve_IsThreeDaysUpkeep(int population)
 		{
 			int expected = KingdomRules.UpkeepDrams(population) * KingdomManifestRules.ReserveUpkeepDays;
-			Assert.AreEqual(expected, KingdomManifestRules.ManifestReserve(population));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.ManifestReserve(population));
 		}
 
 		// The boundaries are computed from the rule, not written as literals. These pinned a
@@ -44,13 +45,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ManifestAmount_NothingStoredSendsNothing()
 		{
-			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(0, 0));
+			ClassicAssert.AreEqual(0, KingdomManifestRules.ManifestAmount(0, 0));
 		}
 
 		[Test]
 		public void ManifestAmount_NoMouthsMeansNoReserve()
 		{
-			Assert.AreEqual(10, KingdomManifestRules.ManifestAmount(10, 0));
+			ClassicAssert.AreEqual(10, KingdomManifestRules.ManifestAmount(10, 0));
 		}
 
 		[Test]
@@ -58,10 +59,10 @@ namespace ThousandAndFirst.Tests
 		{
 			const int population = 40;
 			int reserve = KingdomManifestRules.ManifestReserve(population);
-			Assert.Greater(reserve, 0, "a settlement with mouths must reserve something");
-			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve - 1, population), "sent water it needed");
-			Assert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve, population), "sent the reserve itself");
-			Assert.AreEqual(1, KingdomManifestRules.ManifestAmount(reserve + 1, population), "held back water it could spare");
+			ClassicAssert.Greater(reserve, 0, "a settlement with mouths must reserve something");
+			ClassicAssert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve - 1, population), "sent water it needed");
+			ClassicAssert.AreEqual(0, KingdomManifestRules.ManifestAmount(reserve, population), "sent the reserve itself");
+			ClassicAssert.AreEqual(1, KingdomManifestRules.ManifestAmount(reserve + 1, population), "held back water it could spare");
 		}
 
 		[Test]
@@ -70,9 +71,9 @@ namespace ThousandAndFirst.Tests
 			const int population = 40;
 			int reserve = KingdomManifestRules.ManifestReserve(population);
 			int cap = KingdomManifestRules.MaximumManifestDrams;
-			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap, population));
-			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap + 1, population));
-			Assert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap * 10, population));
+			ClassicAssert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap, population));
+			ClassicAssert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap + 1, population));
+			ClassicAssert.AreEqual(cap, KingdomManifestRules.ManifestAmount(reserve + cap * 10, population));
 		}
 
 		[Test]
@@ -80,7 +81,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A bigger settlement holds more back, because it drinks more. If this ever inverts,
 			// a large city would ship away water it needed to survive.
-			Assert.Greater(KingdomManifestRules.ManifestReserve(40), KingdomManifestRules.ManifestReserve(10));
+			ClassicAssert.Greater(KingdomManifestRules.ManifestReserve(40), KingdomManifestRules.ManifestReserve(10));
 		}
 
 		// --- ManifestDeadline / ManifestExpired: the deadline arithmetic ---------------------
@@ -89,7 +90,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5000L, 5000L + KingdomManifestRules.ManifestWindowTicks)]
 		public void ManifestDeadline_AddsTheWindowToTheLoadedTick(long loadedTick, long expected)
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.ManifestDeadline(loadedTick));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.ManifestDeadline(loadedTick));
 		}
 
 		[TestCase(99L, 100L, false)]
@@ -97,7 +98,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(101L, 100L, true)] // one tick past it does not
 		public void ManifestExpired_IsStrictlyPastTheDeadline(long now, long deadlineTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.ManifestExpired(now, deadlineTick));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.ManifestExpired(now, deadlineTick));
 		}
 
 		[Test]
@@ -105,7 +106,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A mutation that decouples the constant from TicksPerDay would silently detune the
 			// window if TicksPerDay ever changes elsewhere.
-			Assert.AreEqual(KingdomRules.TicksPerDay * KingdomManifestRules.ManifestWindowDays, KingdomManifestRules.ManifestWindowTicks);
+			ClassicAssert.AreEqual(KingdomRules.TicksPerDay * KingdomManifestRules.ManifestWindowDays, KingdomManifestRules.ManifestWindowTicks);
 		}
 
 		// --- ManifestDaysLeft: rounds up, never reports a day with nothing left --------------
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100L, 50L, 0L)] // already past the deadline: never negative
 		public void ManifestDaysLeft_RoundsUpAndFloorsAtZero(long now, long deadlineTick, long expected)
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.ManifestDaysLeft(now, deadlineTick));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.ManifestDaysLeft(now, deadlineTick));
 		}
 
 		// --- JudgeManifest: eligibility, in priority order ------------------------------------
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, false, 1, KingdomManifestRules.ManifestVerdict.Allowed)]
 		public void JudgeManifest_ChecksInPriorityOrder(bool onClaimedGround, bool hasSecondCity, bool alreadyInFlight, int amount, KingdomManifestRules.ManifestVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.JudgeManifest(onClaimedGround, hasSecondCity, alreadyInFlight, amount));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.JudgeManifest(onClaimedGround, hasSecondCity, alreadyInFlight, amount));
 		}
 
 		// --- ManifestRefusal: every non-allowed, non-in-flight verdict has something to say --
@@ -141,8 +142,8 @@ namespace ThousandAndFirst.Tests
 			// Allowed has nothing to refuse; AlreadyInFlight is composed by
 			// ManifestInFlightStatus instead, because it needs the standing manifest's own
 			// details that this verdict-only overload does not carry.
-			Assert.AreEqual("", KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.Allowed, "Ashkell"));
-			Assert.AreEqual("", KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.AlreadyInFlight, "Ashkell"));
+			ClassicAssert.AreEqual("", KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.Allowed, "Ashkell"));
+			ClassicAssert.AreEqual("", KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.AlreadyInFlight, "Ashkell"));
 		}
 
 		[TestCase(KingdomManifestRules.ManifestVerdict.NotOnClaimedGround)]
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomManifestRules.ManifestVerdict.StoresCannotSpare)]
 		public void ManifestRefusal_EveryOtherVerdictSaysSomething(KingdomManifestRules.ManifestVerdict verdict)
 		{
-			Assert.IsNotEmpty(KingdomManifestRules.ManifestRefusal(verdict, "Ashkell"));
+			ClassicAssert.IsNotEmpty(KingdomManifestRules.ManifestRefusal(verdict, "Ashkell"));
 		}
 
 		[Test]
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 			string named = KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.StoresCannotSpare, "Ashkell");
 			StringAssert.Contains("Ashkell", named);
 			string unnamed = KingdomManifestRules.ManifestRefusal(KingdomManifestRules.ManifestVerdict.StoresCannotSpare, null);
-			Assert.IsNotEmpty(unnamed);
+			ClassicAssert.IsNotEmpty(unnamed);
 			StringAssert.DoesNotContain("Ashkell", unnamed);
 		}
 
@@ -188,7 +189,7 @@ namespace ThousandAndFirst.Tests
 		public void ManifestLapseDeed_IsALowerCaseClauseWithNoTrailingPeriod()
 		{
 			string deed = KingdomManifestRules.ManifestLapseDeed("Ashkell", "Kavvat", 40);
-			Assert.IsFalse(deed.EndsWith("."), "KingdomChronicle.Record appends its own period.");
+			ClassicAssert.IsFalse(deed.EndsWith("."), "KingdomChronicle.Record appends its own period.");
 			StringAssert.Contains("40", deed);
 			StringAssert.Contains("Ashkell", deed);
 			StringAssert.Contains("Kavvat", deed);
@@ -199,9 +200,9 @@ namespace ThousandAndFirst.Tests
 		public void ManifestArrivalDeed_NotesOverflowOnlyWhenSomeIsMissing(int delivered, int sent, bool expectOverflowNote)
 		{
 			string deed = KingdomManifestRules.ManifestArrivalDeed("Ashkell", "Kavvat", delivered, sent);
-			Assert.IsFalse(deed.EndsWith("."));
+			ClassicAssert.IsFalse(deed.EndsWith("."));
 			StringAssert.Contains(delivered.ToString(), deed);
-			Assert.AreEqual(expectOverflowNote, deed.Contains("not all of it could be held"));
+			ClassicAssert.AreEqual(expectOverflowNote, deed.Contains("not all of it could be held"));
 		}
 
 		[TestCase(40, 40, false)]
@@ -210,7 +211,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string note = KingdomManifestRules.ManifestArrivalNote("Ashkell", delivered, sent);
 			StringAssert.Contains(delivered.ToString(), note);
-			Assert.AreEqual(expectOverflowNote, note.Contains("overflowed"));
+			ClassicAssert.AreEqual(expectOverflowNote, note.Contains("overflowed"));
 		}
 
 		// --- Loading against belief, not truth --------------------------------------------
@@ -222,7 +223,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 100, 0)]
 		public void CapToDestination_NeverLoadsMoreThanTheOtherCityWasKnownToHold(int amount, int space, int expected)
 		{
-			Assert.AreEqual(expected, KingdomManifestRules.CapToDestination(amount, space));
+			ClassicAssert.AreEqual(expected, KingdomManifestRules.CapToDestination(amount, space));
 		}
 
 		[Test]
@@ -234,7 +235,7 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int space = 0; space <= 300; space += 37)
 				{
-					Assert.LessOrEqual(KingdomManifestRules.CapToDestination(amount, space), amount);
+					ClassicAssert.LessOrEqual(KingdomManifestRules.CapToDestination(amount, space), amount);
 				}
 			}
 		}
@@ -242,14 +243,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void JudgeManifest_RefusesWhenTheOtherCityWasKnownToHaveNoRoom()
 		{
-			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.DestinationHasNoRoom,
+			ClassicAssert.AreEqual(KingdomManifestRules.ManifestVerdict.DestinationHasNoRoom,
 				KingdomManifestRules.JudgeManifest(true, true, false, 40, 0));
 		}
 
 		[Test]
 		public void JudgeManifest_KnownRoomAllowsTheLoad()
 		{
-			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomManifestRules.ManifestVerdict.Allowed,
 				KingdomManifestRules.JudgeManifest(true, true, false, 40, 40));
 		}
 
@@ -258,7 +259,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A founder who cannot spare the water is told that, not told about the other city's
 			// casks: the nearer refusal is the useful one.
-			Assert.AreEqual(KingdomManifestRules.ManifestVerdict.StoresCannotSpare,
+			ClassicAssert.AreEqual(KingdomManifestRules.ManifestVerdict.StoresCannotSpare,
 				KingdomManifestRules.JudgeManifest(true, true, false, 0, 0));
 		}
 
@@ -271,7 +272,7 @@ namespace ThousandAndFirst.Tests
 				{
 					continue;
 				}
-				Assert.IsNotEmpty(KingdomManifestRules.ManifestRefusal(verdict, "Kavvat"),
+				ClassicAssert.IsNotEmpty(KingdomManifestRules.ManifestRefusal(verdict, "Kavvat"),
 					verdict + " refuses without telling the founder why");
 			}
 		}

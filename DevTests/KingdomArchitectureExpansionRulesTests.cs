@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -15,7 +16,7 @@ namespace ThousandAndFirst.Tests
 				ArchitectureLotSize.Small, ArchitectureTransitionMode.None);
 			ArchitectureLayoutSnapshot after = Snapshot("plan", "binding-m", "housing",
 				ArchitectureLotSize.Medium, Mode);
-			Assert.IsTrue(KingdomArchitectureExpansionRules.SameFrozenLineage(before, after));
+			ClassicAssert.IsTrue(KingdomArchitectureExpansionRules.SameFrozenLineage(before, after));
 		}
 
 		[Test]
@@ -23,22 +24,22 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLayoutSnapshot before = Snapshot("plan", "binding-s", "housing",
 				ArchitectureLotSize.Small, ArchitectureTransitionMode.None);
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
 				Snapshot("other", "binding-m", "housing", ArchitectureLotSize.Medium,
 					ArchitectureTransitionMode.RenovateExpand)));
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
 				Snapshot("plan", "binding-m", "water", ArchitectureLotSize.Medium,
 					ArchitectureTransitionMode.RenovateExpand)));
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
 				Snapshot("plan", "binding-s", "housing", ArchitectureLotSize.Small,
 					ArchitectureTransitionMode.RenovateExpand)));
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before,
 				Snapshot("plan", "binding-m", "housing", ArchitectureLotSize.Medium,
 					ArchitectureTransitionMode.Renovate)));
 			ArchitectureLayoutSnapshot turned = Snapshot("plan", "binding-m", "housing",
 				ArchitectureLotSize.Medium, ArchitectureTransitionMode.AdditiveExpand);
 			turned.Facing = ArchitectureFacing.East;
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before, turned));
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before, turned));
 		}
 
 		[Test]
@@ -48,7 +49,7 @@ namespace ThousandAndFirst.Tests
 				ArchitectureLotSize.Small, ArchitectureTransitionMode.None);
 			ArchitectureLayoutSnapshot skipped = Snapshot("plan", "binding-l", "housing",
 				ArchitectureLotSize.Large, ArchitectureTransitionMode.RenovateExpand);
-			Assert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before, skipped));
+			ClassicAssert.IsFalse(KingdomArchitectureExpansionRules.SameFrozenLineage(before, skipped));
 		}
 
 		private static ArchitectureLayoutSnapshot Snapshot(string Plan, string Binding,

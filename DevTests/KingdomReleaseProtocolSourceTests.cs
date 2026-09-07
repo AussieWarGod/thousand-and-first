@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,11 +22,11 @@ namespace ThousandAndFirst.Tests
 		{
 			Type type = Array.Find(typeof(KingdomReleaseProtocolSourceTests).Assembly.GetTypes(),
 				candidate => candidate.Name == typeName);
-			Assert.IsNotNull(type);
+			ClassicAssert.IsNotNull(type);
 			MethodInfo method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
-			Assert.IsNotNull(method);
+			ClassicAssert.IsNotNull(method);
 			string missing = Path.Combine(Path.GetTempPath(), "taf-absent-licensed-" + Guid.NewGuid().ToString("N"));
-			Assert.IsFalse(Directory.Exists(missing));
+			ClassicAssert.IsFalse(Directory.Exists(missing));
 			string previous = Environment.GetEnvironmentVariable(variable);
 			try
 			{
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 					Environment.SetEnvironmentVariable(variable, value);
 					TargetInvocationException failure = Assert.Throws<TargetInvocationException>(
 						() => method.Invoke(null, null));
-					Assert.IsInstanceOf<InvalidOperationException>(failure.InnerException);
+					ClassicAssert.IsInstanceOf<InvalidOperationException>(failure.InnerException);
 				}
 			}
 			finally { Environment.SetEnvironmentVariable(variable, previous); }
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 		public void PartialMarketSourceDoesNotBorrowFilesFromDefaultRoots()
 		{
 			string root = Path.Combine(Path.GetTempPath(), "taf-market-source-" + Guid.NewGuid().ToString("N"));
-			Assert.IsFalse(Directory.Exists(root));
+			ClassicAssert.IsFalse(Directory.Exists(root));
 			Directory.CreateDirectory(root);
 			string previous = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
 			try
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 				InvalidOperationException failure = Assert.Throws<InvalidOperationException>(() =>
 					new KingdomShopStockSourceTests().InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade());
 				StringAssert.Contains("AllowTradeWithNoInventoryEvent.cs", failure.Message);
-				Assert.AreEqual("owned partial source fixture", File.ReadAllText(path));
+				ClassicAssert.AreEqual("owned partial source fixture", File.ReadAllText(path));
 			}
 			finally
 			{
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.Tests
 			portable.CopyTo(full, 0); fullOnly.CopyTo(full, portable.Length);
 			MatchCollection blocks = Regex.Matches(Source(".github/workflows/portable.yml"),
 				@"TAF_ALLOWED_SKIPS: >-\r?\n((?:[ ]{12}[^\r\n]+\r?\n)+)");
-			Assert.AreEqual(2, blocks.Count);
+			ClassicAssert.AreEqual(2, blocks.Count);
 			for (int i = 0; i < blocks.Count; i++)
 			{
 				string[] labels = blocks[i].Groups[1].Value.Split(';');
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 				found = building;
 				matches++;
 			}
-			Assert.AreEqual(1, matches, "base catalogue must declare exact key once: " + key);
+			ClassicAssert.AreEqual(1, matches, "base catalogue must declare exact key once: " + key);
 			return found;
 		}
 
@@ -119,16 +120,16 @@ namespace ThousandAndFirst.Tests
 		public void ProtocolUsesLiveLarderAndContainsNoRemovedCaskRackTerm()
 		{
 			string protocol = Source("TESTING.md");
-			Assert.IsFalse(Regex.IsMatch(protocol, @"\bcask(?:[\s-]*rack)s?\b",
+			ClassicAssert.IsFalse(Regex.IsMatch(protocol, @"\bcask(?:[\s-]*rack)s?\b",
 				RegexOptions.IgnoreCase | RegexOptions.CultureInvariant),
 				"Production protocol must not name removed cask-rack design.");
 
 			XmlElement larder = Building("larder");
-			Assert.IsTrue(larder.GetAttribute("DisplayName").StartsWith("larder shed",
+			ClassicAssert.IsTrue(larder.GetAttribute("DisplayName").StartsWith("larder shed",
 				StringComparison.Ordinal), larder.GetAttribute("DisplayName"));
-			Assert.AreEqual("4", larder.GetAttribute("Cost"));
-			Assert.AreEqual("1200", larder.GetAttribute("Ticks"));
-			Assert.AreEqual("timber:3", larder.GetAttribute("Materials"));
+			ClassicAssert.AreEqual("4", larder.GetAttribute("Cost"));
+			ClassicAssert.AreEqual("1200", larder.GetAttribute("Ticks"));
+			ClassicAssert.AreEqual("timber:3", larder.GetAttribute("Materials"));
 			StringAssert.Contains("larder shed (Key `larder`; 4 drams and 3 timber available)",
 				protocol);
 			StringAssert.Contains("Three real timber items reach the stockpile", protocol);
@@ -140,11 +141,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string protocol = Source("TESTING.md");
 			XmlElement cistern = Building("cistern");
-			Assert.IsTrue(cistern.GetAttribute("DisplayName").StartsWith("cistern court",
+			ClassicAssert.IsTrue(cistern.GetAttribute("DisplayName").StartsWith("cistern court",
 				StringComparison.Ordinal), cistern.GetAttribute("DisplayName"));
-			Assert.AreEqual("16", cistern.GetAttribute("Cost"));
-			Assert.AreEqual("3600", cistern.GetAttribute("Ticks"));
-			Assert.IsFalse(protocol.Contains("great cistern"));
+			ClassicAssert.AreEqual("16", cistern.GetAttribute("Cost"));
+			ClassicAssert.AreEqual("3600", cistern.GetAttribute("Ticks"));
+			ClassicAssert.IsFalse(protocol.Contains("great cistern"));
 			StringAssert.Contains(
 				"commission the cistern court (Key `cistern`; 16 drams) and wait 3600 ticks",
 				protocol);
@@ -161,9 +162,9 @@ namespace ThousandAndFirst.Tests
 			Match protocolDemand = Regex.Match(protocol,
 				@"\*\*Pay tribute\*\*\s*\((\d+)\s+drams\)",
 				RegexOptions.CultureInvariant);
-			Assert.IsTrue(sourceDemand.Success, "RaidTributeDrams source constant not found.");
-			Assert.IsTrue(protocolDemand.Success, "Protocol tribute literal not found.");
-			Assert.AreEqual(sourceDemand.Groups[1].Value, protocolDemand.Groups[1].Value);
+			ClassicAssert.IsTrue(sourceDemand.Success, "RaidTributeDrams source constant not found.");
+			ClassicAssert.IsTrue(protocolDemand.Success, "Protocol tribute literal not found.");
+			ClassicAssert.AreEqual(sourceDemand.Groups[1].Value, protocolDemand.Groups[1].Value);
 			StringAssert.Contains("exact tribute, envoy", protocol);
 		}
 
@@ -173,8 +174,8 @@ namespace ThousandAndFirst.Tests
 			string protocol = Source("TESTING.md");
 			Match step = Regex.Match(protocol, @"(?m)^\| 25c \|.*$",
 				RegexOptions.CultureInvariant);
-			Assert.IsTrue(step.Success, "Protocol step 25c not found.");
-			Assert.IsFalse(Regex.IsMatch(step.Value, @"\b\d+\s+entr(?:y|ies)\b",
+			ClassicAssert.IsTrue(step.Success, "Protocol step 25c not found.");
+			ClassicAssert.IsFalse(Regex.IsMatch(step.Value, @"\b\d+\s+entr(?:y|ies)\b",
 				RegexOptions.IgnoreCase | RegexOptions.CultureInvariant), step.Value);
 			StringAssert.Contains("merged, data-driven view", step.Value);
 			StringAssert.Contains("every loaded `<kingdombuildings>` stream", step.Value);
@@ -194,7 +195,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("material palette", protocol);
 			StringAssert.Contains("never a row-major furnishing fallback", protocol);
 			StringAssert.Contains("furnishings are never spread row-major", protocol);
-			Assert.IsFalse(protocol.Contains("stakes a **rectangle**"));
+			ClassicAssert.IsFalse(protocol.Contains("stakes a **rectangle**"));
 		}
 
 		[Test]
@@ -204,7 +205,7 @@ namespace ThousandAndFirst.Tests
 			Match core = Regex.Match(metadata,
 				@"GAME_CORE_BUILD\s*=\s*""(\d+)\.(\d+)\.(\d+)\.(\d+)""",
 				RegexOptions.CultureInvariant);
-			Assert.IsTrue(core.Success, "Workshop metadata must own one exact core-build target.");
+			ClassicAssert.IsTrue(core.Success, "Workshop metadata must own one exact core-build target.");
 			string version = core.Groups[1].Value + "." + core.Groups[2].Value + "." +
 				core.Groups[3].Value + "." + core.Groups[4].Value;
 			string symbol = "BUILD_" + core.Groups[1].Value + "_" + core.Groups[2].Value +
@@ -241,7 +242,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("expected skip did not occur", testMain);
 			StringAssert.Contains("TestExecutionContext.IsolatedContext", testMain,
 				"direct invocation must isolate NUnit result state per selected case");
-			Assert.AreEqual(2, Regex.Matches(testMain, @"InvokeIsolated\(method,").Count,
+			ClassicAssert.AreEqual(2, Regex.Matches(testMain, @"InvokeIsolated\(method,").Count,
 				"plain tests and TestCase rows must share the isolated invocation path");
 			string workflow = Source(Path.Combine(".github", "workflows", "portable.yml"));
 			StringAssert.Contains("TAF_ALLOWED_SKIPS", workflow);
@@ -305,7 +306,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string passId in new[] { "0a", "55f3", "124i" })
 			{
 				StringAssert.Contains("\"" + passId + "\"", example, passId);
-				Assert.IsTrue(Regex.IsMatch(protocol,
+				ClassicAssert.IsTrue(Regex.IsMatch(protocol,
 					@"(?m)^\| " + Regex.Escape(passId) + @" \|"), passId);
 			}
 		}
@@ -315,15 +316,15 @@ namespace ThousandAndFirst.Tests
 		{
 			string protocol = Source("TESTING.md");
 			Match dissent = Regex.Match(protocol, @"(?m)^\| 54c \|.*$");
-			Assert.IsTrue(dissent.Success, "Protocol step 54c not found.");
+			ClassicAssert.IsTrue(dissent.Success, "Protocol step 54c not found.");
 			StringAssert.Contains("every elapsed world-day", dissent.Value);
 			StringAssert.Contains("full nine-world-day response window", dissent.Value);
-			Assert.IsFalse(dissent.Value.Contains("It has not moved"), dissent.Value);
+			ClassicAssert.IsFalse(dissent.Value.Contains("It has not moved"), dissent.Value);
 
 			Match production = Regex.Match(protocol, @"(?m)^\| 90q \|.*$");
-			Assert.IsTrue(production.Success, "Protocol step 90q not found.");
+			ClassicAssert.IsTrue(production.Success, "Protocol step 90q not found.");
 			StringAssert.Contains("air-well field", production.Value);
-			Assert.IsFalse(production.Value.Contains("Raise a reservoir"), production.Value);
+			ClassicAssert.IsFalse(production.Value.Contains("Raise a reservoir"), production.Value);
 		}
 
 		[Test]
@@ -336,10 +337,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ID=\"r_TAF_OptionPrefetch\" DisplayText=", options);
 			StringAssert.Contains("Default=\"No\"", Regex.Match(options,
 				@"<option\s+ID=""r_TAF_OptionPrefetch""[^>]+>").Value);
-			Assert.IsFalse(protocol.Contains("there is no checkbox for it yet"));
-			Assert.IsFalse(api.Contains("with no line for it in `Options.xml`"));
+			ClassicAssert.IsFalse(protocol.Contains("there is no checkbox for it yet"));
+			ClassicAssert.IsFalse(api.Contains("with no line for it in `Options.xml`"));
 			StringAssert.Contains("Per-zone water production rates are live", api);
-			Assert.IsFalse(api.Contains("production **rates** stay unwired"));
+			ClassicAssert.IsFalse(api.Contains("production **rates** stay unwired"));
 		}
 	}
 }

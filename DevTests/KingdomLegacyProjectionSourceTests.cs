@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -41,9 +42,9 @@ namespace ThousandAndFirst.Tests
 			string wire = Read("Core/KingdomRealmArchive.10WireEnvelope.cs");
 			string logical = Logical("Core", "KingdomRealmArchive.*.cs");
 			StringAssert.Contains("[Obsolete(\"Use SettlementTopology.\")]", core);
-			Assert.AreEqual(2, Count(logical, "#pragma warning disable 618"));
-			Assert.AreEqual(1, Count(logical, "return Away;"));
-			Assert.AreEqual(1, Count(logical, "Away = Value;"));
+			ClassicAssert.AreEqual(2, Count(logical, "#pragma warning disable 618"));
+			ClassicAssert.AreEqual(1, Count(logical, "return Away;"));
+			ClassicAssert.AreEqual(1, Count(logical, "Away = Value;"));
 			StringAssert.Contains("candidate.WriteLegacyAwayProjection(frozenTopology.Get(0))",
 				capture);
 			StringAssert.Contains("ReadLegacyAwayProjection(), Seceded", validation);
@@ -67,9 +68,9 @@ namespace ThousandAndFirst.Tests
 			string validation = Read("Experience/KingdomSuccession.SaveValidation.cs");
 			string removal = Read("Experience/KingdomSuccession.RemovalAuthority.cs");
 			StringAssert.Contains("[Obsolete(\"Legacy save migration only;", root);
-			Assert.AreEqual(2, Count(root, "#pragma warning disable 618"));
-			Assert.AreEqual(1, Count(root, "return PendingAccessionRepairSeated;"));
-			Assert.AreEqual(1, Count(root, "PendingAccessionRepairSeated = false;"));
+			ClassicAssert.AreEqual(2, Count(root, "#pragma warning disable 618"));
+			ClassicAssert.AreEqual(1, Count(root, "return PendingAccessionRepairSeated;"));
+			ClassicAssert.AreEqual(1, Count(root, "PendingAccessionRepairSeated = false;"));
 			StringAssert.Contains("TryMigrateLegacyAccessionRepairSettlement", repair);
 			StringAssert.Contains("System?.NonSeatSettlementCount == 1", repair);
 			StringAssert.Contains("PendingAccessionRepairSettlementId = settlementId", repair);
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string file in Directory.GetFiles(directory, "KingdomSuccession*.cs"))
 			{
 				if (Path.GetFileName(file) == "KingdomSuccession.cs") continue;
-				Assert.IsFalse(Regex.IsMatch(File.ReadAllText(file),
+				ClassicAssert.IsFalse(Regex.IsMatch(File.ReadAllText(file),
 					@"(?<![A-Za-z0-9_])PendingAccessionRepairSeated(?![A-Za-z0-9_])"),
 					Path.GetFileName(file));
 			}

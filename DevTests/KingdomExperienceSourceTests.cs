@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -62,12 +63,12 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int release = runtime.IndexOf("public static bool TryReleaseAudience(",
 				StringComparison.Ordinal);
-			Assert.Greater(prepare, 0); Assert.Greater(release, prepare);
+			ClassicAssert.Greater(prepare, 0); ClassicAssert.Greater(release, prepare);
 			string slice = runtime.Substring(prepare, release - prepare);
-			Assert.Less(slice.IndexOf("KingdomMaster.NewWorkAllowed(System)",
+			ClassicAssert.Less(slice.IndexOf("KingdomMaster.NewWorkAllowed(System)",
 				StringComparison.Ordinal), slice.IndexOf("System.TryFindSettlement(SettlementId",
 				StringComparison.Ordinal));
-			Assert.Less(slice.IndexOf("System.TryFindSettlement(SettlementId",
+			ClassicAssert.Less(slice.IndexOf("System.TryFindSettlement(SettlementId",
 				StringComparison.Ordinal), slice.IndexOf("TryObserveConfiguredOptions(System, Tick",
 				StringComparison.Ordinal));
 		}
@@ -78,14 +79,14 @@ namespace ThousandAndFirst.Tests
 			string runtime = Read(Path.Combine("Experience", "KingdomExperienceRuntime.cs"));
 			int record = runtime.IndexOf("public static bool TryRecord", StringComparison.Ordinal);
 			int export = runtime.IndexOf("public static bool TryExport", StringComparison.Ordinal);
-			Assert.Greater(record, 0); Assert.Greater(export, record);
+			ClassicAssert.Greater(record, 0); ClassicAssert.Greater(export, record);
 			string recordSlice = runtime.Substring(record, export - record);
-			Assert.Less(recordSlice.IndexOf("KingdomMaster.NewWorkAllowed", StringComparison.Ordinal),
+			ClassicAssert.Less(recordSlice.IndexOf("KingdomMaster.NewWorkAllowed", StringComparison.Ordinal),
 				recordSlice.IndexOf("Options.GetOption(TelemetryOptionId", StringComparison.Ordinal));
-			Assert.Less(recordSlice.IndexOf("Options.GetOption(TelemetryOptionId", StringComparison.Ordinal),
+			ClassicAssert.Less(recordSlice.IndexOf("Options.GetOption(TelemetryOptionId", StringComparison.Ordinal),
 				recordSlice.IndexOf("new KingdomExperienceTelemetryBuffer", StringComparison.Ordinal));
 			string exportSlice = runtime.Substring(export);
-			Assert.Less(exportSlice.IndexOf("Options.GetOption(TelemetryOptionId", StringComparison.Ordinal),
+			ClassicAssert.Less(exportSlice.IndexOf("Options.GetOption(TelemetryOptionId", StringComparison.Ordinal),
 				exportSlice.IndexOf("File.WriteAllText", StringComparison.Ordinal));
 			StringAssert.Contains("private const string ExportFile = \"experience-session.tsv\"",
 				runtime);
@@ -97,13 +98,13 @@ namespace ThousandAndFirst.Tests
 			XDocument options = XDocument.Parse(Read(Path.Combine("RuntimeData", "Options.xml")));
 			Dictionary<string, XElement> rows = options.Root.Elements("option")
 				.ToDictionary(x => (string)x.Attribute("ID"), StringComparer.Ordinal);
-			Assert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.StoryOptionId]
+			ClassicAssert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.StoryOptionId]
 				.Attribute("Default"));
-			Assert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.KnowledgeOptionId]
+			ClassicAssert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.KnowledgeOptionId]
 				.Attribute("Default"));
-			Assert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.AmbientOptionId]
+			ClassicAssert.AreEqual("Yes", (string)rows[KingdomExperienceOptions.AmbientOptionId]
 				.Attribute("Default"));
-			Assert.AreEqual("No", (string)rows[KingdomExperienceOptions.TelemetryOptionId]
+			ClassicAssert.AreEqual("No", (string)rows[KingdomExperienceOptions.TelemetryOptionId]
 				.Attribute("Default"));
 			StringAssert.Contains("no catch-up backlog",
 				(string)rows[KingdomExperienceOptions.StoryOptionId].Attribute("DisplayText"));
@@ -126,8 +127,8 @@ namespace ThousandAndFirst.Tests
 			int committed = loader.IndexOf(
 				"KingdomPolityActiveRuntime.TryReconcileCommittedCapacity",
 				StringComparison.Ordinal);
-			Assert.Greater(gate, 0); Assert.Greater(foundation, gate);
-			Assert.Greater(experience, foundation); Assert.Greater(committed, experience);
+			ClassicAssert.Greater(gate, 0); ClassicAssert.Greater(foundation, gate);
+			ClassicAssert.Greater(experience, foundation); ClassicAssert.Greater(committed, experience);
 			string normalization = Read(Path.Combine("Core",
 				"KingdomSystem.z24.Normalization.Collections.cs"));
 			StringAssert.Contains("KingdomExperienceRules.Normalize(Experience)", normalization);
@@ -167,8 +168,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomExperienceLedger candidate = Clone(Ledger)", rules);
 			int release = rules.IndexOf("public static bool TryReleasePresentation",
 				StringComparison.Ordinal);
-			Assert.Greater(release, 0);
-			Assert.AreEqual(1, Count(rules.Substring(0, release),
+			ClassicAssert.Greater(release, 0);
+			ClassicAssert.AreEqual(1, Count(rules.Substring(0, release),
 				"Ledger.CopyFrom(candidate)"));
 			string runtime = Read(Path.Combine("Experience", "KingdomExperienceRuntime.cs"));
 			StringAssert.Contains("public static bool TryReservePresentation", runtime);
@@ -215,7 +216,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int reservation = runtime.IndexOf("private static bool PrepareReservation(",
 				StringComparison.Ordinal);
-			Assert.Greater(prepare, 0); Assert.Greater(reservation, prepare);
+			ClassicAssert.Greater(prepare, 0); ClassicAssert.Greater(reservation, prepare);
 			string slice = runtime.Substring(prepare, reservation - prepare);
 			StringAssert.DoesNotContain("KingdomMaster.NewWorkAllowed", slice);
 			StringAssert.DoesNotContain("TryFindSettlement", slice);
@@ -239,15 +240,15 @@ namespace ThousandAndFirst.Tests
 					StringComparison.Ordinal)) >= 0)
 				{
 					opens++;
-					Assert.Greater(source.LastIndexOf(
+					ClassicAssert.Greater(source.LastIndexOf(
 						"TryAdmitNewFoundationTransientClaims", start,
 						StringComparison.Ordinal), -1, Path.GetFileName(files[i]));
 					start += 9;
 				}
 				fences += Count(source, "TryAdmitNewFoundationTransientClaims");
 			}
-			Assert.AreEqual(4, opens, "new delivery opening seam needs source-gate review");
-			Assert.AreEqual(opens, fences, "every delivery opening needs exactly one preflight");
+			ClassicAssert.AreEqual(4, opens, "new delivery opening seam needs source-gate review");
+			ClassicAssert.AreEqual(opens, fences, "every delivery opening needs exactly one preflight");
 		}
 
 		[Test]
@@ -269,8 +270,8 @@ namespace ThousandAndFirst.Tests
 			int waits = mint.IndexOf("porter: stamped unbound body waits for visible recovery",
 				bind, StringComparison.Ordinal);
 			int refused = mint.IndexOf("return null", waits, StringComparison.Ordinal);
-			Assert.Greater(bind, 0); Assert.Greater(waits, bind);
-			Assert.Greater(refused, waits);
+			ClassicAssert.Greater(bind, 0); ClassicAssert.Greater(waits, bind);
+			ClassicAssert.Greater(refused, waits);
 			StringAssert.DoesNotContain("body.Obliterate", mint);
 			StringAssert.DoesNotContain("body.Destroy", mint);
 		}
@@ -305,15 +306,15 @@ namespace ThousandAndFirst.Tests
 				"KingdomExperienceRules.PublishMasterResumePrevalidated", StringComparison.Ordinal);
 			int polity = atomic.IndexOf("KingdomPolityRules.PublishMasterResumePrevalidated",
 				StringComparison.Ordinal);
-			Assert.Greater(preflight, 0); Assert.Greater(jobs, 0);
-			Assert.Greater(experience, jobs); Assert.Greater(polity, experience);
+			ClassicAssert.Greater(preflight, 0); ClassicAssert.Greater(jobs, 0);
+			ClassicAssert.Greater(experience, jobs); ClassicAssert.Greater(polity, experience);
 			StringAssert.DoesNotContain("TryPublishMasterResume(", atomic);
 			int planPublish = master.IndexOf("if (!plan.Publish()) return false;",
 				StringComparison.Ordinal);
 			int latch = master.IndexOf("KingdomMasterRules.ApplyResume(decision)",
 				StringComparison.Ordinal);
-			Assert.Greater(planPublish, 0); Assert.Greater(latch, 0);
-			Assert.Less(latch, planPublish,
+			ClassicAssert.Greater(planPublish, 0); ClassicAssert.Greater(latch, 0);
+			ClassicAssert.Less(latch, planPublish,
 				"applied latch decision must be staged before infallible owner publication");
 		}
 
@@ -355,11 +356,11 @@ namespace ThousandAndFirst.Tests
 			{
 				string text = Read(Path.Combine("Experience", files[i]));
 				int lines = text.Split(new char[] { '\n' }).Length;
-				Assert.Less(lines, 300, files[i] + " has " + lines + " lines");
+				ClassicAssert.Less(lines, 300, files[i] + " has " + lines + " lines");
 			}
 			string loadRules = Read(Path.Combine("Core",
 				"KingdomLoadReconciliationRules.cs"));
-			Assert.Less(loadRules.Split(new char[] { '\n' }).Length, 300);
+			ClassicAssert.Less(loadRules.Split(new char[] { '\n' }).Length, 300);
 			string[] shared = new string[]
 			{
 				Path.Combine("Core", "KingdomMaster.cs"),
@@ -373,7 +374,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < shared.Length; i++)
 			{
 				string text = Read(shared[i]);
-				Assert.Less(text.Split(new char[] { '\n' }).Length, 300,
+				ClassicAssert.Less(text.Split(new char[] { '\n' }).Length, 300,
 					shared[i] + " exceeds source-size boundary");
 			}
 		}

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -11,11 +12,11 @@ namespace ThousandAndFirst.Tests
 		public void LogicalFamilyPreservesAuthorityNestedTypesAndInitializerOrder()
 		{
 			string source = KingdomSurveyLogicalSource.Read();
-			Assert.AreEqual(14, Count(source, "public partial class KingdomSurvey"));
-			Assert.AreEqual(1, Count(source, "private sealed class ReferenceComparer"));
-			Assert.AreEqual(1, Count(source, "private sealed class IndexedRow"));
-			Assert.AreEqual(1, Count(source, "public sealed class PassScope"));
-			Assert.AreEqual(1, Count(source, "private sealed class FoodDebitFrame"));
+			ClassicAssert.AreEqual(14, Count(source, "public partial class KingdomSurvey"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class ReferenceComparer"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class IndexedRow"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class PassScope"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class FoodDebitFrame"));
 			StringAssert.DoesNotContain("public class KingdomSurvey", source);
 
 			AssertOrdered(source,
@@ -124,10 +125,10 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string startTerm, string endTerm)
 		{
 			int start = source.IndexOf(startTerm, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, startTerm);
+			ClassicAssert.GreaterOrEqual(start, 0, startTerm);
 			int end = source.IndexOf(endTerm, start + startTerm.Length,
 				StringComparison.Ordinal);
-			Assert.Greater(end, start, endTerm);
+			ClassicAssert.Greater(end, start, endTerm);
 			return source.Substring(start, end - start);
 		}
 
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 			{
 				int at = source.IndexOf(values[i], cursor + 1,
 					StringComparison.Ordinal);
-				Assert.Greater(at, cursor, values[i]);
+				ClassicAssert.Greater(at, cursor, values[i]);
 				cursor = at;
 			}
 		}

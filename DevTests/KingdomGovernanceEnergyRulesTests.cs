@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,16 +28,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void StasisVaultReasonIsGovernedAndStable()
 		{
-			Assert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
-			Assert.AreEqual("TAF Governance stasis vault",
+			ClassicAssert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
+			ClassicAssert.AreEqual("TAF Governance stasis vault",
 				KingdomGovernanceRules.EnergyReason("stasis vault"));
 		}
 
 		[Test]
 		public void MirrorGateReasonIsGovernedAndStable()
 		{
-			Assert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
-			Assert.AreEqual("TAF Governance cross mirror gate",
+			ClassicAssert.AreEqual(1000, KingdomGovernanceRules.NominalEnergyCost);
+			ClassicAssert.AreEqual("TAF Governance cross mirror gate",
 				KingdomGovernanceRules.EnergyReason("cross mirror gate"));
 		}
 
@@ -53,11 +54,11 @@ namespace ThousandAndFirst.Tests
 				"private static string Status");
 			// One charge site in the whole method: no loop, no duplicate call, so a successful
 			// commit is charged exactly once and there is nothing left to double-charge.
-			Assert.AreEqual(1, CountOccurrences(openMethod, "UseEnergy("));
+			ClassicAssert.AreEqual(1, CountOccurrences(openMethod, "UseEnergy("));
 			StringAssert.Contains("KingdomGovernanceRules.NominalEnergyCost", openMethod);
 			StringAssert.Contains("KingdomGovernanceRules.EnergyReason(\"stasis vault\")", openMethod);
 			int chargeIndex = openMethod.IndexOf("Actor.UseEnergy(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(chargeIndex, 0);
+			ClassicAssert.GreaterOrEqual(chargeIndex, 0);
 			// The charge itself is gated on the boolean TryEnter/TryRelease returned, not merely on
 			// reaching the line: an unsuccessful attempt still falls through `if (changed)` false.
 			StringAssert.Contains("if (changed) Actor.UseEnergy(", openMethod);
@@ -84,14 +85,14 @@ namespace ThousandAndFirst.Tests
 				"public override bool FireEvent(Event E)");
 			// One charge site total: Dedicate, Re-key and Dispatch never reach UseEnergy, and Cross
 			// only reaches it once, inside its own success branch.
-			Assert.AreEqual(1, CountOccurrences(handler, "UseEnergy("));
+			ClassicAssert.AreEqual(1, CountOccurrences(handler, "UseEnergy("));
 			StringAssert.Contains("KingdomGovernanceRules.NominalEnergyCost", handler);
 			StringAssert.Contains("KingdomGovernanceRules.EnergyReason(\"cross mirror gate\")", handler);
 			int crossBranchIndex = handler.IndexOf(
 				"if (KingdomMirrorGate.Cross(this, E.Actor, E))", StringComparison.Ordinal);
 			int chargeIndex = handler.IndexOf("UseEnergy(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(crossBranchIndex, 0);
-			Assert.Greater(chargeIndex, crossBranchIndex,
+			ClassicAssert.GreaterOrEqual(crossBranchIndex, 0);
+			ClassicAssert.Greater(chargeIndex, crossBranchIndex,
 				"the charge must live inside the Cross success branch, not before it");
 			int dedicateIndex = handler.IndexOf("r_DedicateMirrorGate", StringComparison.Ordinal);
 			int rekeyIndex = handler.IndexOf("r_RekeyMirrorGate", StringComparison.Ordinal);
@@ -99,17 +100,17 @@ namespace ThousandAndFirst.Tests
 			// Every other command's whole branch is textually clear of the one charge line: Dedicate
 			// resolves and returns before Cross is even reached; Re-key and Dispatch resolve and
 			// return after it, in their own untouched branches.
-			Assert.Less(dedicateIndex, crossBranchIndex);
-			Assert.Greater(rekeyIndex, chargeIndex);
-			Assert.Greater(dispatchIndex, chargeIndex);
+			ClassicAssert.Less(dedicateIndex, crossBranchIndex);
+			ClassicAssert.Greater(rekeyIndex, chargeIndex);
+			ClassicAssert.Greater(dispatchIndex, chargeIndex);
 		}
 
 		private static string MethodBody(string source, string startMarker, string endMarker)
 		{
 			int start = source.IndexOf(startMarker, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing marker: " + startMarker);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing marker: " + startMarker);
 			int end = source.IndexOf(endMarker, start, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing marker: " + endMarker);
+			ClassicAssert.Greater(end, start, "missing marker: " + endMarker);
 			return source.Substring(start, end - start);
 		}
 
@@ -121,10 +122,10 @@ namespace ThousandAndFirst.Tests
 			while ((index = body.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
 			{
 				count++;
-				Assert.Less(index, boundary, "escape must precede the charge: " + needle);
+				ClassicAssert.Less(index, boundary, "escape must precede the charge: " + needle);
 				index += needle.Length;
 			}
-			Assert.AreEqual(expectedCount, count, "unexpected occurrence count: " + needle);
+			ClassicAssert.AreEqual(expectedCount, count, "unexpected occurrence count: " + needle);
 		}
 
 		private static int CountOccurrences(string haystack, string needle)

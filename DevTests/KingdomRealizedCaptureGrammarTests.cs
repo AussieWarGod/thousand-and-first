@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -98,9 +99,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string absent = Mutated(delegate (KingdomRealizedObjectFact o) { o.Slot = null; });
 			string sentinel = Mutated(delegate (KingdomRealizedObjectFact o) { o.Slot = "-"; });
-			Assert.AreNotEqual(absent, sentinel);
-			Assert.AreNotEqual(Baseline(), absent);
-			Assert.AreNotEqual(Baseline(), sentinel);
+			ClassicAssert.AreNotEqual(absent, sentinel);
+			ClassicAssert.AreNotEqual(Baseline(), absent);
+			ClassicAssert.AreNotEqual(Baseline(), sentinel);
 		}
 
 		/// <summary>
@@ -117,8 +118,8 @@ namespace ThousandAndFirst.Tests
 				{ o.Slot = spelling; o.Anchor = "north"; });
 			string b = Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Slot = "wall"; o.Anchor = spelling; });
-			Assert.AreNotEqual(a, b);
-			Assert.AreNotEqual(Baseline(), a);
+			ClassicAssert.AreNotEqual(a, b);
+			ClassicAssert.AreNotEqual(Baseline(), a);
 		}
 
 		/// <summary>
@@ -132,7 +133,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("a\u009Cb")]
 		public void ControlValuesAreRefusedRatherThanEncoded(string hostile)
 		{
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Tile = hostile; }));
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Tile = hostile; }));
 		}
 
 		/// <summary>
@@ -153,12 +154,12 @@ namespace ThousandAndFirst.Tests
 				{ o.RenderString = "\u007F"; });
 			string currencyGlyph = Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.RenderString = "\u009C"; });
-			Assert.IsNotNull(bore);
-			Assert.IsNotNull(basin);
-			Assert.IsNotNull(web);
-			Assert.AreEqual(5, new HashSet<string>
+			ClassicAssert.IsNotNull(bore);
+			ClassicAssert.IsNotNull(basin);
+			ClassicAssert.IsNotNull(web);
+			ClassicAssert.AreEqual(5, new HashSet<string>
 				{ bore, basin, web, deleteGlyph, currencyGlyph }.Count);
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "\u0009"; }), "controls remain forbidden outside RenderString");
 		}
 
@@ -169,15 +170,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void UnpairedSurrogatesAreRefused()
 		{
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "a\uD800b"; }));
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "a\uDC00b"; }));
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.RenderString = "a\uD800b"; }), "render glyphs still require strict UTF-16");
-			Assert.IsNotNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNotNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = "a\uD83D\uDE00b"; }), "a well-formed pair is an ordinary value");
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				Mutated(delegate (KingdomRealizedObjectFact o) { o.Tile = "a\uD83D\uDE00b"; }),
 				Mutated(delegate (KingdomRealizedObjectFact o) { o.Tile = "a\uD83D\uDE01b"; }));
 		}
@@ -185,9 +186,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OverboundValuesAreRefused()
 		{
-			Assert.IsNotNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNotNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = new string('t', KingdomRealizedCaptureRules.MaxToken); }));
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.Tile = new string('t', KingdomRealizedCaptureRules.MaxToken + 1); }));
 		}
 
@@ -209,19 +210,19 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomRealizedCaptureRules.Pair("x=1;c=y", 2)
 			};
-			Assert.AreNotEqual(KingdomRealizedCaptureRules.Liquid(4, 8, 0, split),
+			ClassicAssert.AreNotEqual(KingdomRealizedCaptureRules.Liquid(4, 8, 0, split),
 				KingdomRealizedCaptureRules.Liquid(4, 8, 0, merged));
 		}
 
 		[Test]
 		public void LiquidRefusesHostileAndOverboundComponents()
 		{
-			Assert.IsNull(KingdomRealizedCaptureRules.Pair("a\u0001b", 1));
-			Assert.IsNull(KingdomRealizedCaptureRules.Liquid(0, 0, 0, null));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Pair("a\u0001b", 1));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Liquid(0, 0, 0, null));
 			List<string> huge = new List<string>();
 			for (int i = 0; i < 64; i++)
 				huge.Add(KingdomRealizedCaptureRules.Pair(new string('k', 32), i));
-			Assert.IsNull(KingdomRealizedCaptureRules.Liquid(0, 0, 0, huge));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Liquid(0, 0, 0, huge));
 		}
 
 		// ----- coverage and totality -------------------------------------------------------------
@@ -229,12 +230,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MalformedInputsReturnNullRatherThanThrowing()
 		{
-			Assert.IsNull(KingdomRealizedCaptureRules.Canonical(0, 2, Cells(2, 2), Objects()));
-			Assert.IsNull(KingdomRealizedCaptureRules.Canonical(2, 2, null, Objects()));
-			Assert.IsNull(KingdomRealizedCaptureRules.Canonical(2, 2, Cells(2, 2), null));
-			Assert.IsNull(KingdomRealizedCaptureRules.Digest(2, 2, Cells(3, 3), Objects()),
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Canonical(0, 2, Cells(2, 2), Objects()));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Canonical(2, 2, null, Objects()));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Canonical(2, 2, Cells(2, 2), null));
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Digest(2, 2, Cells(3, 3), Objects()),
 				"a cell count that disagrees with the rect must refuse");
-			Assert.IsNull(KingdomRealizedCaptureRules.Digest(65536, 65536, Cells(2, 2), Objects()),
+			ClassicAssert.IsNull(KingdomRealizedCaptureRules.Digest(65536, 65536, Cells(2, 2), Objects()),
 				"an area that would overflow its own arithmetic must refuse");
 		}
 
@@ -248,10 +249,10 @@ namespace ThousandAndFirst.Tests
 			List<KingdomRealizedCellFact> duplicated = Cells(2, 2);
 			duplicated[3].X = duplicated[0].X;
 			duplicated[3].Y = duplicated[0].Y;
-			Assert.IsNull(Digest(duplicated, Objects()));
+			ClassicAssert.IsNull(Digest(duplicated, Objects()));
 			List<KingdomRealizedCellFact> shifted = Cells(2, 2);
 			shifted[0].X = 1;
-			Assert.IsNull(Digest(shifted, Objects()));
+			ClassicAssert.IsNull(Digest(shifted, Objects()));
 		}
 
 		[Test]
@@ -259,8 +260,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomRealizedCellFact> cells = Cells(2, 2);
 			cells[0].X = 9;
-			Assert.IsNull(Digest(cells, Objects()));
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Y = 9; }));
+			ClassicAssert.IsNull(Digest(cells, Objects()));
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Y = 9; }));
 		}
 
 		[Test]
@@ -268,8 +269,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomRealizedObjectFact> objects = Objects();
 			objects[0] = null;
-			Assert.IsNull(Digest(Cells(2, 2), objects));
-			Assert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Blueprint = null; }));
+			ClassicAssert.IsNull(Digest(Cells(2, 2), objects));
+			ClassicAssert.IsNull(Mutated(delegate (KingdomRealizedObjectFact o) { o.Blueprint = null; }));
 		}
 
 		[Test]
@@ -277,7 +278,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomRealizedCellFact> cells = Cells(2, 2);
 			cells[2] = null;
-			Assert.IsNull(Digest(cells, Objects()));
+			ClassicAssert.IsNull(Digest(cells, Objects()));
 		}
 	}
 }

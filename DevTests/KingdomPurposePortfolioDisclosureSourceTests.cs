@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		private static int At(string source, string term)
 		{
 			int found = source.IndexOf(term, StringComparison.Ordinal);
-			Assert.Greater(found, -1, term);
+			ClassicAssert.Greater(found, -1, term);
 			return found;
 		}
 
@@ -63,10 +64,10 @@ namespace ThousandAndFirst.Tests
 		{
 			int row = At(BuildingsXml, "Key=\"" + BuildKey + "\"");
 			int attribute = BuildingsXml.IndexOf("PurposeEffect=\"", row, StringComparison.Ordinal);
-			Assert.Greater(attribute, row, BuildKey + " declares no PurposeEffect");
+			ClassicAssert.Greater(attribute, row, BuildKey + " declares no PurposeEffect");
 			int start = attribute + "PurposeEffect=\"".Length;
 			int end = BuildingsXml.IndexOf('"', start);
-			Assert.Greater(end, start, BuildKey);
+			ClassicAssert.Greater(end, start, BuildKey);
 			return BuildingsXml.Substring(start, end - start);
 		}
 
@@ -104,13 +105,13 @@ namespace ThousandAndFirst.Tests
 			string[] keys = { "deepbore", "greatfoundry", "realmgranary" };
 			for (int i = 0; i < kinds.Length; i++)
 			{
-				Assert.AreEqual(keys[i], KingdomPurposePortfolioRules.BuildKey(kinds[i]));
+				ClassicAssert.AreEqual(keys[i], KingdomPurposePortfolioRules.BuildKey(kinds[i]));
 				KingdomPurposeKind resolved;
-				Assert.IsTrue(KingdomPurposePortfolioRules.TryBuildKind(keys[i], out resolved));
-				Assert.AreEqual(kinds[i], resolved);
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryBuildKind(keys[i], out resolved));
+				ClassicAssert.AreEqual(kinds[i], resolved);
 				string effect = DeclaredEffect(buildings, keys[i]);
-				Assert.GreaterOrEqual(effect.Length, 1, keys[i]);
-				Assert.LessOrEqual(effect.Length, 360, keys[i]);
+				ClassicAssert.GreaterOrEqual(effect.Length, 1, keys[i]);
+				ClassicAssert.LessOrEqual(effect.Length, 360, keys[i]);
 				StringAssert.StartsWith("performs", effect, keys[i]);
 			}
 		}
@@ -123,11 +124,11 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomPurposeKind kind = (KingdomPurposeKind)i;
 				string key = KingdomPurposePortfolioRules.BuildKey(kind);
-				Assert.IsFalse(string.IsNullOrEmpty(key), kind.ToString());
-				Assert.IsFalse(string.IsNullOrEmpty(DeclaredEffect(buildings, key)),
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(key), kind.ToString());
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(DeclaredEffect(buildings, key)),
 					kind.ToString());
 			}
-			Assert.IsNull(KingdomPurposePortfolioRules.BuildKey(KingdomPurposeKind.None));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.BuildKey(KingdomPurposeKind.None));
 		}
 
 		[Test]
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 			string pairing = Read(PairingPath);
 			int offer = At(pairing, "private static void OfferPair(");
 			int gate = At(pairing, "if (!KingdomMaster.NewWorkAllowed(System))");
-			Assert.Greater(gate, offer, "the freeze refusal belongs inside OfferPair");
+			ClassicAssert.Greater(gate, offer, "the freeze refusal belongs inside OfferPair");
 			string[] mutations =
 			{
 				"Popup.PickOption(", "Popup.ShowYesNo(",
@@ -144,9 +145,9 @@ namespace ThousandAndFirst.Tests
 				"TryPublishPortfolioPair(", "TryReplaceDormantPair("
 			};
 			for (int i = 0; i < mutations.Length; i++)
-				Assert.Less(gate, At(pairing, mutations[i]),
+				ClassicAssert.Less(gate, At(pairing, mutations[i]),
 					"the pause refusal must precede " + mutations[i]);
-			Assert.AreEqual(1, Count(pairing, "KingdomMaster.NewWorkAllowed"),
+			ClassicAssert.AreEqual(1, Count(pairing, "KingdomMaster.NewWorkAllowed"),
 				"one refusal governs the freeze path");
 		}
 
@@ -154,20 +155,20 @@ namespace ThousandAndFirst.Tests
 		public void CounterHeadroomPrecedesOperationCleanupAndEpochArithmetic()
 		{
 			string control = Read(ControlPath);
-			Assert.Less(At(control, "CanStartOperationAtRevision("),
+			ClassicAssert.Less(At(control, "CanStartOperationAtRevision("),
 				At(control, "TryRetireCreditedPurposeCargo(Pair.Operation)"));
 			string drive = Read(DrivePath);
-			Assert.Less(At(drive, "CanStartOperationAtRevision("),
+			ClassicAssert.Less(At(drive, "CanStartOperationAtRevision("),
 				At(drive, "TryRetireCreditedPurposeCargo(Pair.Operation)"));
 			string transitions = Read(TransitionPath);
 			StringAssert.Contains("Before.NextOperationOrdinal != int.MaxValue",
 				transitions);
 
 			string pairing = Read(PairingPath);
-			Assert.Less(At(pairing, "Dormant.Epoch == long.MaxValue"),
+			ClassicAssert.Less(At(pairing, "Dormant.Epoch == long.MaxValue"),
 				At(pairing, "Dormant.Epoch + 1L"));
 			string registry = Read(RegistryPath);
-			Assert.Less(At(registry, "Dormant.Epoch == long.MaxValue"),
+			ClassicAssert.Less(At(registry, "Dormant.Epoch == long.MaxValue"),
 				At(registry, "Dormant.Epoch + 1L"));
 		}
 
@@ -251,16 +252,16 @@ namespace ThousandAndFirst.Tests
 			int dissolve = At(interaction, "private static void DissolvePair(");
 			int release = At(interaction, "RemovePurposeCargoRoots(credit)");
 			int guard = At(interaction, "Pair.Revision == int.MaxValue");
-			Assert.Greater(release, dissolve);
-			Assert.Less(guard, release,
+			ClassicAssert.Greater(release, dissolve);
+			ClassicAssert.Less(guard, release,
 				"counter exhaustion refuses before any physical root disposition");
-			Assert.Less(release, At(interaction, "dormant.CreditCargoId = null;"),
+			ClassicAssert.Less(release, At(interaction, "dormant.CreditCargoId = null;"),
 				"the receipt still has to name the cargo when the root is released");
-			Assert.Less(release, At(interaction, "TryPublishPortfolioPair(Pair, dormant"),
+			ClassicAssert.Less(release, At(interaction, "TryPublishPortfolioPair(Pair, dormant"),
 				"releasing after a successful publish would strand the entry beyond recovery: the dormant receipt no longer names the cargo");
-			Assert.Less(release, At(interaction,
+			ClassicAssert.Less(release, At(interaction,
 				"KingdomGovernanceScope.Commit(\"dissolve purpose pair\")"));
-			Assert.Greater(release, At(interaction, "Popup.ShowYesNo(\"Dissolve this pair"),
+			ClassicAssert.Greater(release, At(interaction, "Popup.ShowYesNo(\"Dissolve this pair"),
 				"a declined confirmation releases nothing");
 			StringAssert.Contains("TryDecodeCargo(Pair.CreditCargoReceipt", interaction,
 				"a pair holding no credit cargo decodes nothing and releases nothing");
@@ -282,7 +283,7 @@ namespace ThousandAndFirst.Tests
 				"dissolution retires through the shared API rather than reaching into the root table");
 			StringAssert.DoesNotContain("PortfolioCargoRootPrefix", interaction,
 				"and never rebuilds a root key format of its own, which could only drift");
-			Assert.AreEqual(1, Count(interaction, "RemovePurposeCargoRoots("),
+			ClassicAssert.AreEqual(1, Count(interaction, "RemovePurposeCargoRoots("),
 				"one disposition, at the one dissolution");
 			StringAssert.Contains("old cargo remains a physical but inert token", interaction,
 				"without-refund dissolution discloses the inert physical token");
@@ -315,10 +316,10 @@ namespace ThousandAndFirst.Tests
 			roots[RootPrefix + "pair:3:op"] = Rooted("cargo-1", "receipt-1");
 			roots[RootPrefix + "someone-else"] = Rooted("cargo-2", "receipt-2");
 			ReleaseRoots(roots, credit);
-			Assert.AreEqual(1, roots.Count);
+			ClassicAssert.AreEqual(1, roots.Count);
 			ReleaseRoots(roots, credit);
-			Assert.AreEqual(1, roots.Count, "a second dissolution is a no-op");
-			Assert.IsTrue(roots.ContainsKey(RootPrefix + "someone-else"),
+			ClassicAssert.AreEqual(1, roots.Count, "a second dissolution is a no-op");
+			ClassicAssert.IsTrue(roots.ContainsKey(RootPrefix + "someone-else"),
 				"disposition is exact: no other pair's root is touched");
 
 			// Mutant: crash between release and CAS. Releasing again re-converges.
@@ -326,7 +327,7 @@ namespace ThousandAndFirst.Tests
 			crashed[RootPrefix + "body"] = Rooted("cargo-1", "receipt-1");
 			ReleaseRoots(crashed, credit);
 			ReleaseRoots(crashed, credit);
-			Assert.AreEqual(0, crashed.Count, "no orphaned root key survives dissolution");
+			ClassicAssert.AreEqual(0, crashed.Count, "no orphaned root key survives dissolution");
 
 			// Mutant: the rooted object died before the dissolution. Its dead remains reprove no
 			// receipt at all, and leave nothing behind but a stale key, so the key still goes.
@@ -336,7 +337,7 @@ namespace ThousandAndFirst.Tests
 				ObjectId = "cargo-1", Receipt = null, Alive = false
 			};
 			ReleaseRoots(dead, credit);
-			Assert.AreEqual(0, dead.Count,
+			ClassicAssert.AreEqual(0, dead.Count,
 				"the dead remains of this same cargo leave no root behind");
 		}
 
@@ -352,11 +353,11 @@ namespace ThousandAndFirst.Tests
 			roots[RootPrefix + "body"] = Rooted("cargo-1", "receipt-1");
 			roots[RootPrefix + "pair:3:op"] = Rooted("cargo-9", "receipt-9");
 			ReleaseRoots(roots, credit);
-			Assert.AreEqual(1, roots.Count, "the canonical root is still released");
-			Assert.IsFalse(roots.ContainsKey(RootPrefix + "body"));
+			ClassicAssert.AreEqual(1, roots.Count, "the canonical root is still released");
+			ClassicAssert.IsFalse(roots.ContainsKey(RootPrefix + "body"));
 			RootedValue survivor = roots[RootPrefix + "pair:3:op"] as RootedValue;
-			Assert.IsNotNull(survivor, "the colliding foreign entry survives as itself");
-			Assert.AreEqual("cargo-9", survivor.ObjectId,
+			ClassicAssert.IsNotNull(survivor, "the colliding foreign entry survives as itself");
+			ClassicAssert.AreEqual("cargo-9", survivor.ObjectId,
 				"another operation's live root is not this dissolution's to delete");
 
 			// Same identity, different receipt: a half-bound or re-encoded value is interference,
@@ -364,14 +365,14 @@ namespace ThousandAndFirst.Tests
 			Dictionary<string, object> torn = NewRoots();
 			torn[RootPrefix + "body"] = Rooted("cargo-1", "receipt-torn");
 			ReleaseRoots(torn, credit);
-			Assert.AreEqual(1, torn.Count,
+			ClassicAssert.AreEqual(1, torn.Count,
 				"a live value that does not reprove the whole receipt is not retired");
 
 			// A value that is no rooted object at all belongs to whoever wrote it.
 			Dictionary<string, object> foreign = NewRoots();
 			foreign[RootPrefix + "body"] = "not a rooted object";
 			ReleaseRoots(foreign, credit);
-			Assert.AreEqual(1, foreign.Count,
+			ClassicAssert.AreEqual(1, foreign.Count,
 				"a non-object entry is another owner's, and survives");
 		}
 
@@ -379,11 +380,11 @@ namespace ThousandAndFirst.Tests
 		public void PairFreezeCommitsExactlyOnceAndOnlyAfterPublication()
 		{
 			string pairing = Read(PairingPath);
-			Assert.AreEqual(1, Count(pairing, "KingdomGovernanceScope.Commit("),
+			ClassicAssert.AreEqual(1, Count(pairing, "KingdomGovernanceScope.Commit("),
 				"one freeze, one commit — the family's leaf convention (r_KingdomPurposeWork.cs:30 opens the scope)");
 			int commit = At(pairing, "KingdomGovernanceScope.Commit(\"freeze purpose pair\")");
 			int publish = At(pairing, "bool published = Dormant == null");
-			Assert.Greater(commit, publish, "nothing is committed before publication is attempted");
+			ClassicAssert.Greater(commit, publish, "nothing is committed before publication is attempted");
 			StringAssert.Contains(
 				"if(!published)Popup.Show(failure);elseKingdomGovernanceScope.Commit(\"freezepurposepair\");",
 				Squash(pairing), "a refused CAS publication reports and commits nothing");
@@ -392,7 +393,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string exit in new[] { "if (!KingdomMaster.NewWorkAllowed(System))",
 				"if (picked < 0) return;",
 				"if (Popup.ShowYesNo(prompt) != DialogResult.Yes) return;" })
-				Assert.Less(At(pairing, exit), commit, exit + " precedes the only commit");
+				ClassicAssert.Less(At(pairing, exit), commit, exit + " precedes the only commit");
 		}
 
 		[Test]
@@ -405,21 +406,21 @@ namespace ThousandAndFirst.Tests
 				"a refused freeze may not spend the return bit");
 			int gate = At(pairing, "if (!KingdomMaster.NewWorkAllowed(System))");
 			int returned = pairing.IndexOf("return;", gate, StringComparison.Ordinal);
-			Assert.Greater(returned, gate, "the refusal returns rather than falling through");
-			Assert.Less(returned, At(pairing, "Popup.PickOption("));
+			ClassicAssert.Greater(returned, gate, "the refusal returns rather than falling through");
+			ClassicAssert.Less(returned, At(pairing, "Popup.PickOption("));
 		}
 
 		[Test]
 		public void CommittedCargoCreditStaysAvailableWhileTheRealmIsPaused()
 		{
 			string interaction = Read(InteractionPath);
-			Assert.AreEqual(0, Count(interaction, "KingdomMaster.NewWorkAllowed"),
+			ClassicAssert.AreEqual(0, Count(interaction, "KingdomMaster.NewWorkAllowed"),
 				"the delivered cargo has already arrived; crediting it completes committed work and must survive a pause");
 			int offer = At(interaction, "private static void OfferCredit(");
 			int credit = At(interaction, "AcceptPortfolioCredit(");
-			Assert.AreEqual(-1, interaction.IndexOf("NewWorkAllowed", offer,
+			ClassicAssert.AreEqual(-1, interaction.IndexOf("NewWorkAllowed", offer,
 				StringComparison.Ordinal), "no refusal may stand between the menu and the credit");
-			Assert.Greater(credit, offer);
+			ClassicAssert.Greater(credit, offer);
 		}
 
 		[Test]
@@ -445,9 +446,9 @@ namespace ThousandAndFirst.Tests
 			int activation = At(drive, "KingdomPurposePortfolioRules.TryCreateOperation(");
 			int preflight = drive.IndexOf("TryPortfolioOperationPreflight(", activation,
 				StringComparison.Ordinal);
-			Assert.Greater(preflight, activation,
+			ClassicAssert.Greater(preflight, activation,
 				"a brand-new activating operation is preflighted");
-			Assert.Less(preflight, drive.IndexOf("TryPublishPortfolioPair(Pair, activating",
+			ClassicAssert.Less(preflight, drive.IndexOf("TryPublishPortfolioPair(Pair, activating",
 				StringComparison.Ordinal), "and preflighted before it publishes");
 			StringAssert.Contains(
 				"!KingdomPurposePortfolioRules.OperationPhaseIsCommitted(operation.Phase)&&!KingdomMaster.NewWorkAllowed(System)",
@@ -459,11 +460,11 @@ namespace ThousandAndFirst.Tests
 		public void OperationStartAndActivationStillFlowThroughPreflight()
 		{
 			string control = Read(ControlPath);
-			Assert.Less(At(control, "TryPortfolioOperationPreflight("),
+			ClassicAssert.Less(At(control, "TryPortfolioOperationPreflight("),
 				At(control, "TryPublishPortfolioPair("),
 				"a started operation is preflighted before it is published");
 			string drive = Read(DrivePath);
-			Assert.Less(At(drive, "TryPortfolioOperationPreflight("),
+			ClassicAssert.Less(At(drive, "TryPortfolioOperationPreflight("),
 				At(drive, "TryPublishPortfolioPair(Pair, activating"),
 				"an activating credit is preflighted before it is published");
 			StringAssert.Contains("KingdomMaster.NewWorkAllowed(System)", drive,

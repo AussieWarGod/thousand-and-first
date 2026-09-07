@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string text, string signature)
 		{
 			int start = text.IndexOf(signature, StringComparison.Ordinal);
-			Assert.Greater(start, -1, "cannot find " + signature);
+			ClassicAssert.Greater(start, -1, "cannot find " + signature);
 			int next = text.IndexOf("\n\t\t/// <summary>", start + signature.Length,
 				StringComparison.Ordinal);
 			int alternative = text.IndexOf("\n\t\tpublic ", start + signature.Length,
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 		private static int At(string text, string needle)
 		{
 			int index = text.IndexOf(needle, StringComparison.Ordinal);
-			Assert.Greater(index, -1, "cannot find " + needle);
+			ClassicAssert.Greater(index, -1, "cannot find " + needle);
 			return index;
 		}
 
@@ -118,16 +119,16 @@ namespace ThousandAndFirst.Tests
 			int authority = At(begin, "string encodedAuthority =");
 			int drain = At(begin, "KingdomLiquids.Drain(vessel,");
 			int committed = At(begin, "Basin.PendingPhase = KingdomFoundingPhase.WaterCommitted;");
-			Assert.Greater(preflight, authority,
+			ClassicAssert.Greater(preflight, authority,
 				"the candidate cannot be shaped before its authority exists");
-			Assert.Less(preflight, At(begin, "TryStageFoundingReceipt(Basin, Actor, Site, vessel,"),
+			ClassicAssert.Less(preflight, At(begin, "TryStageFoundingReceipt(Basin, Actor, Site, vessel,"),
 				"nothing is staged until this covenant is known to be recordable");
 			string cut = Source("Core/KingdomVillageCovenantFoundingCut.cs");
 			StringAssert.Contains("KingdomVillageCovenantRuntime.TryPreflight(System,", cut);
 			StringAssert.Contains("KingdomFoundingWaterDisposition.Untouched", cut);
-			Assert.Less(preflight, committed,
+			ClassicAssert.Less(preflight, committed,
 				"the archive is consulted before any durable intent to spend water");
-			Assert.Less(preflight, drain, "the archive is consulted before the drain");
+			ClassicAssert.Less(preflight, drain, "the archive is consulted before the drain");
 
 		}
 
@@ -160,17 +161,17 @@ namespace ThousandAndFirst.Tests
 			int archived = At(publish, "KingdomVillageCovenantRuntime.TryRecord(system,");
 			int seal = At(publish, "KingdomSeal.TryStageSemanticSnapshot(\"village charter\"");
 
-			Assert.Less(intent, prepared,
+			ClassicAssert.Less(intent, prepared,
 				"exact pair and digest are written before the Prepared state");
-			Assert.Less(prepared, standing, "write-ahead intent precedes standing mutation");
-			Assert.Less(standing, applied,
+			ClassicAssert.Less(prepared, standing, "write-ahead intent precedes standing mutation");
+			ClassicAssert.Less(standing, applied,
 				"the after pair exists before its Applied marker");
-			Assert.Less(ensure, published);
-			Assert.Less(published, chronicle, "the durable redo barrier precedes the chronicle");
-			Assert.Less(chronicle, readback);
-			Assert.Less(readback, archived,
+			ClassicAssert.Less(ensure, published);
+			ClassicAssert.Less(published, chronicle, "the durable redo barrier precedes the chronicle");
+			ClassicAssert.Less(chronicle, readback);
+			ClassicAssert.Less(readback, archived,
 				"nothing is archived until the chronicle outbox has been read back terminal");
-			Assert.Less(archived, seal, "the record is durable before the rite is sealed");
+			ClassicAssert.Less(archived, seal, "the record is durable before the rite is sealed");
 			StringAssert.Contains("was not durably archived", publish,
 				"a failure to archive must throw, so the paid receipt is retained for recovery");
 		}
@@ -217,9 +218,9 @@ namespace ThousandAndFirst.Tests
 			int village = At(completion, "case KingdomFoundingKind.VillageCharter:");
 			int archived = At(completion, "KingdomVillageCovenantRuntime.TryArchived(System,");
 			int finish = At(completion, "private static bool FinishReceipt(");
-			Assert.Greater(archived, village,
+			ClassicAssert.Greater(archived, village,
 				"the archived row is required by the village branch of completion");
-			Assert.Less(archived, finish);
+			ClassicAssert.Less(archived, finish);
 			StringAssert.Contains("out int sealedStanding, out long reservationTick", completion,
 				"the covenant is proved by the row's own frozen facts");
 			StringAssert.Contains(
@@ -232,7 +233,7 @@ namespace ThousandAndFirst.Tests
 			string code = Code(run);
 			int observed = At(code, "CompletionObserved(Basin, Actor, Site, system)");
 			int cleanup = At(code, "FinishReceipt(Basin, Site)");
-			Assert.Less(observed, cleanup,
+			ClassicAssert.Less(observed, cleanup,
 				"completion is observed before the reservation and receipt are cleared");
 		}
 
@@ -249,7 +250,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string lease = Source("Core/KingdomVillageCovenantLease.cs");
 			string code = Code(lease);
-			Assert.AreEqual(1, Occurrences(code, "authority.TryReadSection("),
+			ClassicAssert.AreEqual(1, Occurrences(code, "authority.TryReadSection("),
 				"the covenant section may be opened in exactly one place");
 			StringAssert.Contains("authority.TryReadSection(", Method(lease,
 				"public static bool TryReadArchive("));
@@ -291,9 +292,9 @@ namespace ThousandAndFirst.Tests
 				"a recovery confirms the covenant the archive holds, not the one it just built");
 			int confirm = At(cut,
 				"KingdomVillageCovenantLease.TryConfirm(Authority, RealmId, Effective,");
-			Assert.Less(read, captured);
-			Assert.Less(captured, commit, "the commit receives the lease the read handed back");
-			Assert.Less(commit, confirm, "the save is asked only after it has taken the record");
+			ClassicAssert.Less(read, captured);
+			ClassicAssert.Less(captured, commit, "the commit receives the lease the read handed back");
+			ClassicAssert.Less(commit, confirm, "the save is asked only after it has taken the record");
 			StringAssert.DoesNotContain("TryReadSection", cut,
 				"the runtime opens nothing itself");
 			StringAssert.DoesNotContain("TryCommitSection", cut);
@@ -348,7 +349,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomChronicle.Record(", "Tradable = true"
 			};
 			List<string> owned = Owned();
-			Assert.GreaterOrEqual(owned.Count, 10, "the covenant family is not that small");
+			ClassicAssert.GreaterOrEqual(owned.Count, 10, "the covenant family is not that small");
 			for (int f = 0; f < owned.Count; f++)
 			{
 				string code = Code(Source(owned[f]));
@@ -395,13 +396,13 @@ namespace ThousandAndFirst.Tests
 			int readers = 0;
 			for (int f = 0; f < owned.Count; f++)
 				if (Code(Source(owned[f])).Contains("GetRegardForRealm(")) readers++;
-			Assert.AreEqual(1, readers, "only the joint-view runtime may read a standing");
+			ClassicAssert.AreEqual(1, readers, "only the joint-view runtime may read a standing");
 
 			string jointView = Code(Source("Core/KingdomVillageCovenantRuntime.JointView.cs"));
 			StringAssert.Contains(
 				"CurrentStanding = System.GetRegardForRealm(row.VillageFactionId)",
 				jointView, "standing is recorded as a projection beside the row");
-			Assert.AreEqual(1, Occurrences(jointView, "GetRegardForRealm("));
+			ClassicAssert.AreEqual(1, Occurrences(jointView, "GetRegardForRealm("));
 
 			string decision = Method(Source("Core/KingdomVillageCovenantView.cs"),
 				"private static KingdomJointCivicOwnerView Recorded(string realmId,");
@@ -464,8 +465,8 @@ namespace ThousandAndFirst.Tests
 		public void NoLegacyMigrationExistsBecauseNoLegacyFormatDoes()
 		{
 			string codec = Source("Core/KingdomVillageCovenantCodec.cs");
-			Assert.AreEqual(1, KingdomVillageCovenantCodec.FirstWireVersion);
-			Assert.AreEqual(1, KingdomVillageCovenantCodec.CurrentWireVersion);
+			ClassicAssert.AreEqual(1, KingdomVillageCovenantCodec.FirstWireVersion);
+			ClassicAssert.AreEqual(1, KingdomVillageCovenantCodec.CurrentWireVersion);
 			string code = Code(codec + Source("Core/KingdomVillageCovenantCodec.Rows.cs"));
 			StringAssert.DoesNotContain("LegacyWireVersion", code);
 			StringAssert.DoesNotContain("Migrate", code);
@@ -483,16 +484,16 @@ namespace ThousandAndFirst.Tests
 				"internal static KingdomVillageCovenantFrame Inspect(byte[] bytes)");
 			int digest = At(inspect, "if (!DigestStands(bytes))");
 			int classify = At(inspect, "version > CurrentWireVersion");
-			Assert.Less(digest, classify,
+			ClassicAssert.Less(digest, classify,
 				"a payload is proved whole before it is called a future");
 
 			string decode = Method(Source("Core/KingdomVillageCovenantCodec.cs"),
 				"public static KingdomVillageCovenantArchive Decode(byte[] bytes)");
 			int ingress = At(decode, "Ingress(bytes, MaxEnvelopeBytes,");
 			int inspected = At(decode, "Inspect(snapshot)");
-			Assert.Less(ingress, inspected,
+			ClassicAssert.Less(ingress, inspected,
 				"one private copy is taken before anything about the bytes is judged");
-			Assert.AreEqual(1, Occurrences(Code(decode), "Ingress("));
+			ClassicAssert.AreEqual(1, Occurrences(Code(decode), "Ingress("));
 		}
 
 		// ---- the envelope's wiring and the line law ---------------------------------------
@@ -569,7 +570,7 @@ namespace ThousandAndFirst.Tests
 				"private static bool ArchivedReservationTickStillMatches(Zone Site,");
 			int cleared = At(matcher, "if (!HasSiteReservation(Site)) return true;");
 			int compared = At(matcher, "marker == ArchivedTick");
-			Assert.Less(cleared, compared,
+			ClassicAssert.Less(cleared, compared,
 				"an already-cleared reservation is accepted before any comparison is attempted");
 			StringAssert.Contains("ArchivedTick < 0L) return false;", matcher);
 		}
@@ -582,14 +583,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheEnvelopeCountsAndFramingMovedWithSectionNine()
 		{
-			Assert.AreEqual(9, KingdomCivicMemoryLimits.LastKnownSection);
-			Assert.AreEqual(9, KingdomCivicMemoryLimits.KnownSectionCount);
-			Assert.AreEqual(18, KingdomCivicMemoryLimits.MaxSections);
-			Assert.IsTrue(KingdomCivicMemoryLimits.Known(
+			ClassicAssert.AreEqual(9, KingdomCivicMemoryLimits.LastKnownSection);
+			ClassicAssert.AreEqual(9, KingdomCivicMemoryLimits.KnownSectionCount);
+			ClassicAssert.AreEqual(18, KingdomCivicMemoryLimits.MaxSections);
+			ClassicAssert.IsTrue(KingdomCivicMemoryLimits.Known(
 				KingdomCivicMemoryLimits.SectionVillageCovenant));
-			Assert.IsFalse(KingdomCivicMemoryLimits.Known(
+			ClassicAssert.IsFalse(KingdomCivicMemoryLimits.Known(
 				KingdomCivicMemoryLimits.SectionVillageCovenant + 1));
-			Assert.AreEqual(KingdomCivicMemoryLimits.MaxTreatyBytes,
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.MaxTreatyBytes,
 				KingdomCivicMemoryLimits.SectionCap(
 					KingdomCivicMemoryLimits.SectionVillageCovenant + 1),
 				"the section after this one is still an unknown held to the widest known cap");
@@ -640,7 +641,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < owned.Count; i++)
 			{
 				int lines = Source(owned[i]).Split('\n').Length;
-				Assert.Less(lines, 301, owned[i] + " is " + lines + " physical lines");
+				ClassicAssert.Less(lines, 301, owned[i] + " is " + lines + " physical lines");
 			}
 		}
 
@@ -669,7 +670,7 @@ namespace ThousandAndFirst.Tests
 					bool control = c < ' ' || (c >= '\u0080' && c <= '\u009f');
 					bool format = char.GetUnicodeCategory(c)
 						== System.Globalization.UnicodeCategory.Format;
-					Assert.IsFalse(control || format, owned[f] + " carries U+"
+					ClassicAssert.IsFalse(control || format, owned[f] + " carries U+"
 						+ ((int)c).ToString("X4") + " raw at offset " + i);
 				}
 			}

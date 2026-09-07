@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,96 +21,96 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DeathRequiresEveryExactPhysicalAndVisibleField()
 		{
-			Assert.IsTrue(Death());
-			Assert.IsFalse(Death(actualRealm: "taf:realm:wrong"));
-			Assert.IsFalse(Death(actualCohort: "taf:cohort:wrong"));
-			Assert.IsFalse(Death(actualProjection: "taf:projection:wrong"));
-			Assert.IsFalse(Death(actualZone: "wrong-zone"));
-			Assert.IsFalse(Death(actualBody: "taf:object:wrong"));
-			Assert.IsFalse(Death(actualOrdinal: 2));
-			Assert.IsFalse(Death(valid: false));
-			Assert.IsFalse(Death(onGround: false));
-			Assert.IsFalse(Death(playerInZone: false));
-			Assert.IsFalse(Death(cellVisible: false));
-			Assert.IsFalse(Death(objectVisible: false));
+			ClassicAssert.IsTrue(Death());
+			ClassicAssert.IsFalse(Death(actualRealm: "taf:realm:wrong"));
+			ClassicAssert.IsFalse(Death(actualCohort: "taf:cohort:wrong"));
+			ClassicAssert.IsFalse(Death(actualProjection: "taf:projection:wrong"));
+			ClassicAssert.IsFalse(Death(actualZone: "wrong-zone"));
+			ClassicAssert.IsFalse(Death(actualBody: "taf:object:wrong"));
+			ClassicAssert.IsFalse(Death(actualOrdinal: 2));
+			ClassicAssert.IsFalse(Death(valid: false));
+			ClassicAssert.IsFalse(Death(onGround: false));
+			ClassicAssert.IsFalse(Death(playerInZone: false));
+			ClassicAssert.IsFalse(Death(cellVisible: false));
+			ClassicAssert.IsFalse(Death(objectVisible: false));
 		}
 
 		[Test]
 		public void GearRejectsCopiedNaturalPartialWrongOrdinalAndWrongOwner()
 		{
-			Assert.IsTrue(Gear());
-			Assert.IsFalse(Gear(actualReceipt: "copied"));
-			Assert.IsFalse(Gear(actualRealm: "taf:realm:wrong"));
-			Assert.IsFalse(Gear(actualBody: "taf:object:wrong"));
-			Assert.IsFalse(Gear(actualGearOrdinal: 7));
-			Assert.IsFalse(Gear(natural: true));
-			Assert.IsFalse(Gear(whole: false));
-			Assert.IsFalse(Gear(zeroValue: false));
-			Assert.IsFalse(Gear(untakeable: false));
-			Assert.IsFalse(Gear(exactOwner: false));
+			ClassicAssert.IsTrue(Gear());
+			ClassicAssert.IsFalse(Gear(actualReceipt: "copied"));
+			ClassicAssert.IsFalse(Gear(actualRealm: "taf:realm:wrong"));
+			ClassicAssert.IsFalse(Gear(actualBody: "taf:object:wrong"));
+			ClassicAssert.IsFalse(Gear(actualGearOrdinal: 7));
+			ClassicAssert.IsFalse(Gear(natural: true));
+			ClassicAssert.IsFalse(Gear(whole: false));
+			ClassicAssert.IsFalse(Gear(zeroValue: false));
+			ClassicAssert.IsFalse(Gear(untakeable: false));
+			ClassicAssert.IsFalse(Gear(exactOwner: false));
 		}
 
 		[Test]
 		public void CustodyClassifierQuarantinesFakeNaturalCopiedAndDuplicateMarks()
 		{
-			Assert.AreEqual(KingdomPolityCustodyDecision.DeleteExactGear,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.DeleteExactGear,
 				Classify(natural: false, marked: true, exact: true));
-			Assert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
 				Classify(natural: true, marked: true, exact: true));
-			Assert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
 				Classify(natural: true, marked: false, exact: false, blueprintNatural: false));
-			Assert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
 				Classify(natural: false, marked: true, exact: false));
-			Assert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
 				Classify(natural: false, marked: true, exact: true, duplicate: true));
-			Assert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomPolityCustodyDecision.Quarantine,
 				Classify(natural: false, marked: false, exact: false, collision: true));
 		}
 
 		[Test]
 		public void NestedForeignCrossesOnlyAnOwnedCustodyBoundary()
 		{
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
 				KingdomPolityCustodyDecision.TransferForeign, ParentOwned: true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
 				KingdomPolityCustodyDecision.TransferForeign, ParentOwned: false));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.TransferCrossesOwnedBoundary(
 				KingdomPolityCustodyDecision.DeleteExactGear, ParentOwned: true));
 		}
 
 		[Test]
 		public void NthRemovalCanResumeOnlyFromExactPresentOrWitnessedAbsentState()
 		{
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(
 				PhysicallyPresent: true, ExactWitness: false, ExactResidentId: true));
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(
 				PhysicallyPresent: false, ExactWitness: true, ExactResidentId: false));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(true, true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(false, false, false));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(true, false, false));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(false, true, true));
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(true, true, true));
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(false, false, false));
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(true, false, false));
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.RemovalCanContinue(false, true, true));
 		}
 
 		[Test]
 		public void SealedOrCollidingCellsAndEveryDivergentPlacementAftermathReject()
 		{
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(true, true,
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(true, true,
 				true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(true, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(true, true,
 				true, false));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(false, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.CandidateCellAllowed(false, true,
 				true, true));
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
 				true, true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(false, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(false, true,
 				true, true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, false,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, false,
 				true, true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
 				false, true, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
 				true, false, true));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.ExactPlacementAftermath(true, true,
 				true, true, false));
 		}
 

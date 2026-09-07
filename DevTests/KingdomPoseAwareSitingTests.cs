@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Rect = ThousandAndFirst.KingdomPlotRules.PlotRect;
 
 namespace ThousandAndFirst.Tests
@@ -14,7 +15,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomPlotPoseCandidate> candidates =
 				KingdomPlotPoseSitingRules.Enumerate(new Rect(0, 0, 3, 2), 3, 2);
-			Assert.AreEqual(7, candidates.Count);
+			ClassicAssert.AreEqual(7, candidates.Count);
 			AssertRect(candidates[0], 0, 0, 2, 1, false);
 			AssertRect(candidates[1], 0, 0, 1, 2, true);
 			AssertRect(candidates[2], 1, 0, 3, 1, false);
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomPlotPoseCandidate> candidates =
 				KingdomPlotPoseSitingRules.Enumerate(new Rect(4, 7, 6, 8), 2, 2);
-			Assert.AreEqual(2, candidates.Count);
+			ClassicAssert.AreEqual(2, candidates.Count);
 			AssertRect(candidates[0], 4, 7, 5, 8, false);
 			AssertRect(candidates[1], 5, 7, 6, 8, false);
 		}
@@ -38,8 +39,8 @@ namespace ThousandAndFirst.Tests
 		public void InvalidOrOversizeEnvelopeProducesNoCandidate()
 		{
 			Rect interior = new Rect(0, 0, 2, 1);
-			Assert.AreEqual(0, KingdomPlotPoseSitingRules.Enumerate(interior, 0, 2).Count);
-			Assert.AreEqual(0, KingdomPlotPoseSitingRules.Enumerate(interior, 4, 3).Count);
+			ClassicAssert.AreEqual(0, KingdomPlotPoseSitingRules.Enumerate(interior, 0, 2).Count);
+			ClassicAssert.AreEqual(0, KingdomPlotPoseSitingRules.Enumerate(interior, 4, 3).Count);
 		}
 
 		[Test]
@@ -48,7 +49,7 @@ namespace ThousandAndFirst.Tests
 			List<KingdomPlotPoseCandidate> candidates =
 				KingdomPlotPoseSitingRules.EnumerateContaining(
 					new Rect(2, 2, 3, 3), new Rect(0, 0, 5, 5), 4, 3);
-			Assert.AreEqual(12, candidates.Count);
+			ClassicAssert.AreEqual(12, candidates.Count);
 			AssertRect(candidates[0], 1, 0, 3, 3, true);
 			AssertRect(candidates[1], 2, 0, 4, 3, true);
 			AssertRect(candidates[2], 0, 1, 3, 3, false);
@@ -70,14 +71,14 @@ namespace ThousandAndFirst.Tests
 			Rect interior = new Rect(3, 3, 7, 7);
 			List<KingdomPlotPoseCandidate> candidates =
 				KingdomPlotPoseSitingRules.EnumerateContaining(oldRect, interior, 3, 2);
-			Assert.Greater(candidates.Count, 0);
+			ClassicAssert.Greater(candidates.Count, 0);
 			for (int i = 0; i < candidates.Count; i++)
 			{
 				Rect rect = candidates[i].Rect;
-				Assert.IsTrue(rect.Contains(oldRect.X1, oldRect.Y1));
-				Assert.IsTrue(rect.Contains(oldRect.X2, oldRect.Y2));
-				Assert.IsTrue(interior.Contains(rect.X1, rect.Y1));
-				Assert.IsTrue(interior.Contains(rect.X2, rect.Y2));
+				ClassicAssert.IsTrue(rect.Contains(oldRect.X1, oldRect.Y1));
+				ClassicAssert.IsTrue(rect.Contains(oldRect.X2, oldRect.Y2));
+				ClassicAssert.IsTrue(interior.Contains(rect.X1, rect.Y1));
+				ClassicAssert.IsTrue(interior.Contains(rect.X2, rect.Y2));
 			}
 		}
 
@@ -87,27 +88,27 @@ namespace ThousandAndFirst.Tests
 			List<KingdomPlotPoseCandidate> candidates =
 				KingdomPlotPoseSitingRules.EnumerateContaining(
 					new Rect(2, 2, 2, 2), new Rect(0, 0, 3, 3), 2, 2);
-			Assert.AreEqual(4, candidates.Count);
+			ClassicAssert.AreEqual(4, candidates.Count);
 			for (int i = 0; i < candidates.Count; i++)
-				Assert.IsFalse(candidates[i].Transposed);
-			Assert.AreEqual(0, KingdomPlotPoseSitingRules.EnumerateContaining(
+				ClassicAssert.IsFalse(candidates[i].Transposed);
+			ClassicAssert.AreEqual(0, KingdomPlotPoseSitingRules.EnumerateContaining(
 				new Rect(0, 0, 3, 3), new Rect(0, 0, 4, 4), 3, 3).Count);
-			Assert.IsTrue(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
+			ClassicAssert.IsTrue(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
 				new Rect(1, 1, 2, 2), new Rect(0, 0, 3, 3)));
-			Assert.IsFalse(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
+			ClassicAssert.IsFalse(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
 				new Rect(1, 1, 2, 2), new Rect(1, 1, 2, 2)));
-			Assert.IsFalse(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
+			ClassicAssert.IsFalse(KingdomPlotPoseSitingRules.IsStrictContainingEnvelope(
 				new Rect(1, 1, 2, 2), new Rect(2, 1, 4, 3)));
 		}
 
 		private static void AssertRect(KingdomPlotPoseCandidate Candidate,
 			int X1, int Y1, int X2, int Y2, bool Transposed)
 		{
-			Assert.AreEqual(X1, Candidate.Rect.X1);
-			Assert.AreEqual(Y1, Candidate.Rect.Y1);
-			Assert.AreEqual(X2, Candidate.Rect.X2);
-			Assert.AreEqual(Y2, Candidate.Rect.Y2);
-			Assert.AreEqual(Transposed, Candidate.Transposed);
+			ClassicAssert.AreEqual(X1, Candidate.Rect.X1);
+			ClassicAssert.AreEqual(Y1, Candidate.Rect.Y1);
+			ClassicAssert.AreEqual(X2, Candidate.Rect.X2);
+			ClassicAssert.AreEqual(Y2, Candidate.Rect.Y2);
+			ClassicAssert.AreEqual(Transposed, Candidate.Transposed);
 		}
 	}
 
@@ -166,7 +167,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
 				offset = found + Terms[i].Length;
 			}
 		}

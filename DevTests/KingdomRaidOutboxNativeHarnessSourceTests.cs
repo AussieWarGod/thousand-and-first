@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,7 +31,7 @@ namespace ThousandAndFirst.Tests
 				"throw-message=NativeOutboxThrow(Context, KingdomLifecycleSinkMask.Message)",
 				"throw-deed=NativeOutboxThrow(Context, KingdomLifecycleSinkMask.Deed)"
 			}, matches.Cast<Match>().Select(m => m.Groups[1].Value + "=" + Flat(m.Groups[2].Value)).ToArray());
-			Assert.AreEqual(6, new HashSet<string>(matches.Cast<Match>().Select(m => m.Groups[1].Value),
+			ClassicAssert.AreEqual(6, new HashSet<string>(matches.Cast<Match>().Select(m => m.Groups[1].Value),
 				StringComparer.Ordinal).Count);
 			StringAssert.Contains("internal const int ExpectedCases = 6;", Read(Provider));
 			ContainsAll(Read(Provider), "[KingdomScenarioVerbProvider]",
@@ -201,10 +202,10 @@ namespace ThousandAndFirst.Tests
 				"string.Equals(Messages[i], Prefix[i], StringComparison.Ordinal)",
 				"string.Equals(Messages[Prefix.Length + i], ExpectedTail[i], StringComparison.Ordinal)");
 			string all = source + Read(Fixtures) + Read(Provider);
-			Assert.IsFalse(Regex.IsMatch(all, @"\b(?:Messages|Queue\.Messages)\.(?:Add|Clear|Remove\w*|Insert|Reset)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.[A-Za-z_]\w*\s*=(?!=)"));
-			Assert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.(?:Clear|Reset|Suppress\w*|Remove\w*)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.[A-Za-z_]*(?:Listener|Cache)[A-Za-z_]*\.(?:Clear|Remove\w*|Add)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\b(?:Messages|Queue\.Messages)\.(?:Add|Clear|Remove\w*|Insert|Reset)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.[A-Za-z_]\w*\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.(?:Clear|Reset|Suppress\w*|Remove\w*)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(all, @"\b(?:Queue|MessageQueue)\.[A-Za-z_]*(?:Listener|Cache)[A-Za-z_]*\.(?:Clear|Remove\w*|Add)\s*\("));
 		}
 
 		[Test]
@@ -269,10 +270,10 @@ namespace ThousandAndFirst.Tests
 		public void PersonaSealsExactlyThreeVerbsAndSixPassingCasesBetweenUnfoundedObservations()
 		{
 			string source = Read(Persona);
-			Assert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
-			Assert.AreEqual("8.22@40,12", Setting(source, "START"));
-			Assert.AreEqual("raid-outbox-check", Setting(source, "VERBS"));
-			Assert.AreEqual("raids,native-regression", Setting(source, "SET"));
+			ClassicAssert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
+			ClassicAssert.AreEqual("8.22@40,12", Setting(source, "START"));
+			ClassicAssert.AreEqual("raid-outbox-check", Setting(source, "VERBS"));
+			ClassicAssert.AreEqual("raids,native-regression", Setting(source, "SET"));
 			CollectionAssert.AreEqual(new[] { "stagedigest", "raid-outbox-check", "stagedigest" }, Setting(source, "SCRIPT").Split(';'));
 			CollectionAssert.AreEqual(new[] { "stagedigest:OK~founded=false", "raid-outbox-check:OK~cases=6 passed=6 failed=0",
 				"stagedigest:OK~founded=false", "COMPLETE" }, Setting(source, "EXPECT").Split(','));
@@ -290,9 +291,9 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string Source, string Signature)
 		{
 			int start = Source.IndexOf(Signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Signature);
+			ClassicAssert.GreaterOrEqual(start, 0, Signature);
 			int open = Source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, Signature);
+			ClassicAssert.GreaterOrEqual(open, 0, Signature);
 			for (int i = open; i < Source.Length; i++)
 			{
 				if (Source[i] == '{') depth++;
@@ -307,14 +308,14 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in Tokens)
 			{
 				int at = Source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}
 		private static string Setting(string Source, string Key)
 		{
 			string[] rows = Source.Split('\n').Select(line => line.Trim()).Where(line => line.StartsWith(Key + "=", StringComparison.Ordinal)).ToArray();
-			Assert.AreEqual(1, rows.Length, Key);
+			ClassicAssert.AreEqual(1, rows.Length, Key);
 			return rows[0].Substring(Key.Length + 1);
 		}
 	}

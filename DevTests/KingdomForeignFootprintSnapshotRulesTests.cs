@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		public void OnlyFalseNullNullMeansAbsence(bool Returned, bool RowsPresent,
 			bool FailurePresent, int Expected)
 		{
-			Assert.AreEqual((KingdomForeignProviderStatus)Expected,
+			ClassicAssert.AreEqual((KingdomForeignProviderStatus)Expected,
 				KingdomForeignFootprintSnapshotRules.ClassifyCall(
 					Returned, RowsPresent, FailurePresent));
 		}
@@ -55,10 +56,10 @@ namespace ThousandAndFirst.Tests
 		{
 			var hostile = new HostileCounts(
 				KingdomForeignFootprintSnapshotRules.MaxRowsPerProvider + 1);
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
 				hostile.Count, hostile, out var failure));
 			StringAssert.Contains("row budget", failure);
-			Assert.AreEqual(0, hostile.Reads);
+			ClassicAssert.AreEqual(0, hostile.Reads);
 		}
 
 		[Test]
@@ -68,21 +69,21 @@ namespace ThousandAndFirst.Tests
 			int[] crowded = new int[rows];
 			for (int i = 0; i < crowded.Length; i++)
 				crowded[i] = KingdomDesignationRules.MaxCellsPerDesignation;
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
 				rows, crowded, out var failure));
 			StringAssert.Contains("cell budget", failure);
 
 			System.Array.Reverse(crowded);
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(
 				rows, crowded, out var reversed));
-			Assert.AreEqual(failure, reversed);
+			ClassicAssert.AreEqual(failure, reversed);
 		}
 
 		[Test]
 		public void InvalidCellListSiblingRemainsRowLocalDuringPreflight()
 		{
 			int overRow = KingdomDesignationRules.MaxCellsPerDesignation + 1;
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(4,
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryProviderPreflight(4,
 				new[] { -1, 0, overRow, 2 }, out var failure), failure);
 		}
 
@@ -91,15 +92,15 @@ namespace ThousandAndFirst.Tests
 		{
 			List<ArchitecturePoint> wanted = new List<ArchitecturePoint> { P(1, 1), P(2, 1) };
 			var exact = Row("one", "home", "", P(1, 1), P(2, 1));
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
 				new[] { Observed("one", exact), Status("two",
 					KingdomForeignProviderStatus.Absent) }, wanted, out var match, out var failure), failure);
-			Assert.AreSame(exact, match);
+			ClassicAssert.AreSame(exact, match);
 
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
 				new[] { Observed("one", Row("one", "far", "", P(9, 9))) }, wanted,
 				out match, out failure), failure);
-			Assert.IsNull(match);
+			ClassicAssert.IsNull(match);
 		}
 
 		[TestCase("subset")]
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 			ArchitecturePoint[] wanted = Case == "subset" ? new[] { P(1, 1) }
 				: Case == "superset" ? new[] { P(1, 1), P(2, 1), P(3, 1) }
 				: new[] { P(2, 1), P(3, 1) };
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryMatch(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryMatch(
 				new[] { Observed("one", row) }, wanted, out _, out var failure), Case);
 			StringAssert.Contains("partially intersects", failure);
 		}
@@ -122,10 +123,10 @@ namespace ThousandAndFirst.Tests
 			var accepted = Row("one", "home", "", P(1, 1), P(2, 1));
 			var refused = Row("one", "uncertain", "foreign room is uncertain", P(8, 8));
 			var snapshots = new[] { Observed("one", accepted, refused) };
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(snapshots,
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(snapshots,
 				new[] { P(1, 1), P(2, 1) }, out var match, out var failure), failure);
-			Assert.AreSame(accepted, match);
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryMatch(snapshots,
+			ClassicAssert.AreSame(accepted, match);
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryMatch(snapshots,
 				new[] { P(8, 8), P(9, 8) }, out _, out failure));
 			StringAssert.Contains("refused", failure);
 		}
@@ -133,10 +134,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void UnrelatedProviderFaultIsQuarantinedFromOrdinaryAdoption()
 		{
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(new[] {
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(new[] {
 				Status("broken", KingdomForeignProviderStatus.Faulted, "snapshot failed") },
 				new[] { P(1, 1) }, out var match, out var failure), failure);
-			Assert.IsNull(match);
+			ClassicAssert.IsNull(match);
 		}
 
 		[Test]
@@ -145,28 +146,28 @@ namespace ThousandAndFirst.Tests
 			var healthy = Row("one", "home", "", P(1, 1), P(2, 1));
 			var snapshot = Observed("one", healthy);
 			snapshot.RowFaults.Add("malformed sibling had no bounded exact cells");
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { snapshot }, out var failure), failure);
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryMatch(
 				new[] { snapshot }, healthy.Cells, out var match, out failure), failure);
-			Assert.AreSame(healthy, match);
+			ClassicAssert.AreSame(healthy, match);
 		}
 
 		[Test]
 		public void ReproofChecksBoundProviderStateThenExactEvidenceAndGlobalOverlap()
 		{
 			var bound = Row("one", "home", "", P(1, 1), P(2, 1));
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
 				Status("one", KingdomForeignProviderStatus.Faulted, "read failed") },
 				"one", "1", "home", "rev-home", bound.Cells, out var failure));
 			StringAssert.StartsWith("bound foreign footprint provider is faulted", failure);
 
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
 				Observed("one", bound), Observed("two", Row("two", "intruder", "", P(2, 1))) },
 				"one", "1", "home", "rev-home", bound.Cells, out failure));
 			StringAssert.Contains("intersects other foreign ground", failure);
 
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryReprove(new[] {
 				Observed("one", bound), Observed("two", Row("two", "far", "", P(9, 9))),
 				Status("broken", KingdomForeignProviderStatus.Faulted, "read failed") },
 				"one", "1", "home", "rev-home", bound.Cells, out failure), failure);
@@ -178,12 +179,12 @@ namespace ThousandAndFirst.Tests
 			var snapshot = Observed("one", Row("one", "home", "", P(1, 1)));
 			for (int i = 0; i <= KingdomForeignFootprintSnapshotRules.MaxFaultsPerProvider; i++)
 				snapshot.RowFaults.Add("fault-" + i);
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { snapshot }, out var failure));
 			StringAssert.Contains("status is inconsistent", failure);
 
 			snapshot.RowFaults.Clear(); snapshot.RowFaults.Add("bad\nfault");
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { snapshot }, out failure));
 			StringAssert.Contains("row fault is malformed", failure);
 		}
@@ -195,14 +196,14 @@ namespace ThousandAndFirst.Tests
 			List<KingdomForeignProviderSnapshot> second = Crowded("alpha", "zulu");
 			KingdomForeignFootprintBudgetRules.Apply(first);
 			KingdomForeignFootprintBudgetRules.Apply(second);
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(first,
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(first,
 				out var failure), failure);
-			Assert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(second,
+			ClassicAssert.IsTrue(KingdomForeignFootprintSnapshotRules.TryValidate(second,
 				out failure), failure);
-			Assert.AreEqual(KingdomForeignFootprintSnapshotRules.MaxRows,
+			ClassicAssert.AreEqual(KingdomForeignFootprintSnapshotRules.MaxRows,
 				first[0].Rows.Count + first[1].Rows.Count);
-			Assert.AreEqual(256, first[0].Rows.Count);
-			Assert.AreEqual(256, first[1].Rows.Count);
+			ClassicAssert.AreEqual(256, first[0].Rows.Count);
+			ClassicAssert.AreEqual(256, first[1].Rows.Count);
 			CollectionAssert.AreEqual(Identities(first[0]), Identities(second[0]));
 			CollectionAssert.AreEqual(Identities(first[1]), Identities(second[1]));
 			Assert.That(first[0].RowFaults, Is.Not.Empty);
@@ -253,11 +254,11 @@ namespace ThousandAndFirst.Tests
 		{
 			var absentWithRows = Status("one", KingdomForeignProviderStatus.Absent);
 			absentWithRows.Rows.Add(Row("one", "home", "", P(1, 1)));
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { absentWithRows }, out var failure));
 			StringAssert.Contains("status is inconsistent", failure);
 
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(new[] {
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(new[] {
 				Observed("one", Row("one", "same", "", P(1, 1)),
 					Row("one", "same", "", P(2, 1))) }, out failure));
 			StringAssert.Contains("malformed or duplicated", failure);
@@ -269,7 +270,7 @@ namespace ThousandAndFirst.Tests
 			var tooManyRows = Observed("one");
 			for (int i = 0; i <= KingdomForeignFootprintSnapshotRules.MaxRows; i++)
 				tooManyRows.Rows.Add(Row("one", "row-" + i, "", P(0, i)));
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { tooManyRows }, out var failure));
 			StringAssert.Contains("row budget", failure);
 
@@ -280,7 +281,7 @@ namespace ThousandAndFirst.Tests
 				for (int x = 0; x < cells.Length; x++) cells[x] = P(x, row);
 				tooManyCells.Rows.Add(Row("one", "wide-" + row, "", cells));
 			}
-			Assert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
+			ClassicAssert.IsFalse(KingdomForeignFootprintSnapshotRules.TryValidate(
 				new[] { tooManyCells }, out failure));
 			StringAssert.Contains("cell budget", failure);
 		}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -76,7 +77,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < order.Length; i++)
 			{
 				int found = project.IndexOf(order[i], StringComparison.Ordinal);
-				Assert.Greater(found, at, order[i] + " is out of order in TryProject");
+				ClassicAssert.Greater(found, at, order[i] + " is out of order in TryProject");
 				at = found;
 			}
 
@@ -111,8 +112,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomCuriosityLeadCommit.TryReadDurableStanding",
 				StringComparison.Ordinal);
 			int add = project.IndexOf("TryAdd(exact", StringComparison.Ordinal);
-			Assert.Greater(matched, 0); Assert.Greater(durable, matched);
-			Assert.Greater(add, durable, "no journal write may precede either proof");
+			ClassicAssert.Greater(matched, 0); ClassicAssert.Greater(durable, matched);
+			ClassicAssert.Greater(add, durable, "no journal write may precede either proof");
 			StringAssert.DoesNotContain("AddMapNote", Code(project),
 				"TryProject must reach the journal only through the guarded helper");
 			StringAssert.Contains("out failure)) return false;",
@@ -135,11 +136,11 @@ namespace ThousandAndFirst.Tests
 			int caught = add.IndexOf("catch", StringComparison.Ordinal);
 			int finallyAt = add.IndexOf("finally", StringComparison.Ordinal);
 			int invalidate = add.IndexOf("InvalidateJournalCaches()", StringComparison.Ordinal);
-			Assert.Greater(call, 0, "the add itself");
-			Assert.Greater(caught, call, "the throw is caught");
-			Assert.Greater(finallyAt, caught,
+			ClassicAssert.Greater(call, 0, "the add itself");
+			ClassicAssert.Greater(caught, call, "the throw is caught");
+			ClassicAssert.Greater(finallyAt, caught,
 				"the cache repair must be a finally, not a line on the success path");
-			Assert.Greater(invalidate, finallyAt);
+			ClassicAssert.Greater(invalidate, finallyAt);
 			StringAssert.Contains("JournalAPI._mapNoteCategories = null",
 				Method(TestMain.ReadRepositoryText(LeadJournal),
 					"private static void InvalidateJournalCaches("),
@@ -163,8 +164,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int inMemory = project.IndexOf("KingdomCivicLeadRules.TryMarkProjected",
 				StringComparison.Ordinal);
-			Assert.Greater(commit, 0, "the durable commit");
-			Assert.Greater(inMemory, commit,
+			ClassicAssert.Greater(commit, 0, "the durable commit");
+			ClassicAssert.Greater(inMemory, commit,
 				"the caller's book may only be advanced after the save has taken the projection");
 			StringAssert.Contains("out failure)) return false;",
 				project.Substring(commit, inMemory - commit),
@@ -197,11 +198,11 @@ namespace ThousandAndFirst.Tests
 				"if (live.Count > KingdomCivicLeadRules.MaxJournalMapNotes)",
 				StringComparison.Ordinal);
 			int snapshot = preflight.IndexOf("live.ToArray()", StringComparison.Ordinal);
-			Assert.Greater(bound, 0, "the list is bounded before it is copied");
-			Assert.Greater(snapshot, bound, "the copy is taken after the bound");
+			ClassicAssert.Greater(bound, 0, "the list is bounded before it is copied");
+			ClassicAssert.Greater(snapshot, bound, "the copy is taken after the bound");
 			int bind = preflight.IndexOf("JournalAPI.MapNotes", StringComparison.Ordinal);
-			Assert.Greater(bind, 0, "the list is bound to a local");
-			Assert.AreEqual(-1,
+			ClassicAssert.Greater(bind, 0, "the list is bound to a local");
+			ClassicAssert.AreEqual(-1,
 				preflight.IndexOf("JournalAPI.MapNotes", bind + 1, StringComparison.Ordinal),
 				"the journal's map-note property may be named exactly once, at the binding");
 		}
@@ -221,9 +222,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int register = repair.IndexOf("JournalAPI.AddedNote(standing)",
 				StringComparison.Ordinal);
-			Assert.Greater(lookup, 0, "the identity is looked up first");
-			Assert.Greater(refuse, lookup, "an occupied identity is refused");
-			Assert.Greater(register, refuse, "registration happens only past that refusal");
+			ClassicAssert.Greater(lookup, 0, "the identity is looked up first");
+			ClassicAssert.Greater(refuse, lookup, "an occupied identity is refused");
+			ClassicAssert.Greater(register, refuse, "registration happens only past that refusal");
 			StringAssert.Contains("finally { InvalidateJournalCaches(); }", repair);
 
 			string lead = Code(TestMain.ReadRepositoryText(LeadJournal));
@@ -246,9 +247,9 @@ namespace ThousandAndFirst.Tests
 			int category = invalidate.IndexOf("JournalAPI._mapNoteCategories = null",
 				StringComparison.Ordinal);
 			int init = invalidate.IndexOf("JournalAPI.Init()", StringComparison.Ordinal);
-			Assert.Greater(category, 0,
+			ClassicAssert.Greater(category, 0,
 				"the category promise stays explicit and does not lean on Init alone");
-			Assert.Greater(init, category,
+			ClassicAssert.Greater(init, category,
 				"Init drops the zone index too, which the object overload never files on a throw");
 
 			string lead = TestMain.ReadRepositoryText(LeadJournal);
@@ -310,7 +311,7 @@ namespace ThousandAndFirst.Tests
 			string projection = TestMain.ReadRepositoryText(
 				"Experience/KingdomCuriosityLeadCommit.Projection.cs");
 			string code = Code(projection);
-			Assert.AreEqual(1, Occurrences(code, "authority.TryReadSection("),
+			ClassicAssert.AreEqual(1, Occurrences(code, "authority.TryReadSection("),
 				"the civic-lead section may be opened exactly once in this file");
 			StringAssert.Contains("authority.TryReadSection(", Method(projection,
 				"public static bool TryReadDurableStanding("));
@@ -334,7 +335,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease, receipt",
 				project, "the very same lease object is what the commit is made under");
-			Assert.AreEqual(1, Occurrences(Code(project), "TryReadDurableStanding"),
+			ClassicAssert.AreEqual(1, Occurrences(Code(project), "TryReadDurableStanding"),
 				"one durable read per projection");
 		}
 
@@ -351,7 +352,7 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.Greater(start, 0, "cannot find " + signature);
+			ClassicAssert.Greater(start, 0, "cannot find " + signature);
 			int depth = 0;
 			for (int i = source.IndexOf('{', start); i < source.Length; i++)
 			{
@@ -433,14 +434,14 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int readback = curiosity.IndexOf(
 				"KingdomCuriosityLeadTransactions.TryReadExactCuriosity", StringComparison.Ordinal);
-			Assert.Greater(commit, 0); Assert.Greater(readback, commit);
+			ClassicAssert.Greater(commit, 0); ClassicAssert.Greater(readback, commit);
 
 			string release = Method(TestMain.ReadRepositoryText(
 				"Experience/KingdomCivicKnowledgeRuntime.Store.cs"),
 				"internal static void ReleaseProvisionalAttentionIfAbsent(");
 			int absence = release.IndexOf("TryProveSourceAbsent", StringComparison.Ordinal);
 			int releaseCall = release.IndexOf("TryReleaseAudience", StringComparison.Ordinal);
-			Assert.Greater(absence, 0); Assert.Greater(releaseCall, absence);
+			ClassicAssert.Greater(absence, 0); ClassicAssert.Greater(releaseCall, absence);
 			StringAssert.Contains("|| !absent", release.Substring(absence,
 				releaseCall - absence));
 
@@ -451,7 +452,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			readback = lead.IndexOf("KingdomCuriosityLeadTransactions.TryReadExactLead",
 				StringComparison.Ordinal);
-			Assert.Greater(commit, 0); Assert.Greater(readback, commit);
+			ClassicAssert.Greater(commit, 0); ClassicAssert.Greater(readback, commit);
 		}
 
 		/// <summary>
@@ -495,7 +496,7 @@ namespace ThousandAndFirst.Tests
 					+ "that overload does not and a preset Revealed note never reaches Reveal()");
 			CollectionAssert.Contains(callSites, LeadJournal.Replace('/',
 				Path.DirectorySeparatorChar));
-			Assert.AreEqual(1, callSites.Count,
+			ClassicAssert.AreEqual(1, callSites.Count,
 				"this mod has exactly one object-overload call site; a new one must be reviewed "
 					+ "against the same cache contract");
 		}
@@ -560,7 +561,7 @@ namespace ThousandAndFirst.Tests
 				for (int i = 0; i < forbidden.Length; i++)
 					StringAssert.DoesNotContain(forbidden[i], text, owned[f] + " / " + forbidden[i]);
 			}
-			Assert.AreEqual(owned.Length, OwnedFiles().Count,
+			ClassicAssert.AreEqual(owned.Length, OwnedFiles().Count,
 				"a new O6/D7 production file must be added to this list and to the line law");
 		}
 
@@ -586,10 +587,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCivicMemoryMirrorStillQuotesThisFamilysOwnCaps()
 		{
-			Assert.AreEqual(KingdomCuriosityLeadCodec.MaxCuriosityBookBytes,
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCodec.MaxCuriosityBookBytes,
 				KingdomCivicMemoryLimits.MaxCuriosityBytes,
 				"civic memory's curiosity cap no longer equals this family's own");
-			Assert.AreEqual(KingdomCuriosityLeadCodec.MaxLeadBookBytes,
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCodec.MaxLeadBookBytes,
 				KingdomCivicMemoryLimits.MaxCivicLeadsBytes,
 				"civic memory's civic-lead cap no longer equals this family's own");
 		}

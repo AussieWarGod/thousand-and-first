@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -18,37 +19,37 @@ namespace ThousandAndFirst.DevTests
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
 			KingdomPolityProfileFactSet first = Facts(1, "a", 20L);
 			long expected = ledger.Revision;
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, expected, first,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, expected, first,
 				out KingdomPolityPublicationResult applied, out string failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, applied.Outcome);
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, expected, first,
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, applied.Outcome);
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, expected, first,
 				out KingdomPolityPublicationResult retry, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, retry.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, retry.Outcome);
 			KingdomPolityProfileFactSet stable = Facts(2, "a", 25L);
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision, stable,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision, stable,
 				out retry, out failure), failure);
-			Assert.AreEqual(2, Current(ledger).ProfileRevision,
+			ClassicAssert.AreEqual(2, Current(ledger).ProfileRevision,
 				"unchanged facts must not mint calendar-only revisions");
 
 			KingdomPolityCohortPlanRequest request = Request(ledger, "taf:cohort:profile-pin", 2,
 				KingdomPolityCohortPurpose.Guard);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out failure), failure);
-			Assert.AreEqual(2, FindCohort(ledger, request.CohortId).ProfileRevision);
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.AreEqual(2, FindCohort(ledger, request.CohortId).ProfileRevision);
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				Facts(2, "b", 30L), out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				Facts(3, "c", 40L), out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out KingdomPolityPublicationResult pinnedRetry, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, pinnedRetry.Outcome,
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, pinnedRetry.Outcome,
 				"retry must not resolve against a newer mutable profile pointer");
-			Assert.IsTrue(KingdomPolityRules.TryCompactRetiredProfiles(ledger,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryCompactRetiredProfiles(ledger,
 				"taf:compaction:wave3-pins", 50L, out failure), failure);
-			Assert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 1));
-			Assert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 2));
-			Assert.IsNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 3));
-			Assert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 4));
+			ClassicAssert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 1));
+			ClassicAssert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 2));
+			ClassicAssert.IsNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 3));
+			ClassicAssert.IsNotNull(FindProfile(ledger, KingdomPolityTestData.CurrentProfile, 4));
 		}
 
 		[Test]
@@ -57,17 +58,17 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			KingdomPolityProfileFactSet invalid = Facts(1, "a", 20L);
 			invalid.Facts.Reverse();
-			Assert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				invalid, out _, out string _));
 			invalid = Facts(1, "a", 20L); invalid.Facts[1].Kind =
 				KingdomPolityProfileFactKind.None;
-			Assert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				invalid, out _, out _));
 			KingdomPolityProfileFactSet valid = Facts(1, "a", 20L);
-			Assert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision + 1,
+			ClassicAssert.IsFalse(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision + 1,
 				valid, out KingdomPolityPublicationResult conflict, out _));
-			Assert.AreEqual(KingdomPolityCasOutcome.Conflict, conflict.Outcome);
-			Assert.AreEqual(1, Current(ledger).ProfileRevision);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Conflict, conflict.Outcome);
+			ClassicAssert.AreEqual(1, Current(ledger).ProfileRevision);
 		}
 
 		[TestCase("population=none", "none")]
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.DevTests
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
 			KingdomPolityProfileFactSet manifested = FactsWithPopulation(
 				1, "goatfolk-" + token, 20L, "body=goatfolk");
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				manifested, out _, out string failure), failure);
 			KingdomPolityProfileRevision replaced = FindProfile(ledger,
 				KingdomPolityTestData.CurrentProfile, 2);
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.DevTests
 
 			KingdomPolityProfileFactSet unmanifested = FactsWithPopulation(
 				2, token, 30L, terminalPopulation);
-			Assert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryRevise(ledger, ledger.Revision,
 				unmanifested, out _, out failure), failure);
 			KingdomPolityProfileRevision unresolved = FindProfile(ledger,
 				KingdomPolityTestData.CurrentProfile, 3);
@@ -97,10 +98,10 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityCohortPlanRequest request = Request(ledger,
 				"taf:cohort:unresolved-population-" + token, 1,
 				KingdomPolityCohortPurpose.Guard);
-			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
 				request, out _, out failure));
 			StringAssert.Contains("no admissible manifested body", failure);
-			Assert.IsNull(FindCohort(ledger, request.CohortId),
+			ClassicAssert.IsNull(FindCohort(ledger, request.CohortId),
 				"resolver refusal must not publish a partial cohort");
 		}
 
@@ -112,23 +113,23 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
 			KingdomPolityDispatchOffer offer = Offer(endpointCount,
 				KingdomPolityDispatchRules.PeriodTicks * 20L);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out List<KingdomPolityDueWork> work, out string failure), failure);
-			Assert.AreEqual(endpointCount, work.Count);
+			ClassicAssert.AreEqual(endpointCount, work.Count);
 			for (int i = 0; i < work.Count; i++)
 			{
-				Assert.AreEqual(i, work[i].EndpointOrdinal);
-				Assert.IsTrue(KingdomPolityDispatchRules.TryComplete(state,
+				ClassicAssert.AreEqual(i, work[i].EndpointOrdinal);
+				ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryComplete(state,
 					work[i].WindowOrdinal, i, out failure), failure);
 			}
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
-				out work, out failure), failure); Assert.AreEqual(0, work.Count);
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+				out work, out failure), failure); ClassicAssert.AreEqual(0, work.Count);
 			offer.Tick = KingdomPolityDispatchRules.PeriodTicks * 100L;
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out work, out failure), failure);
-			Assert.AreEqual(endpointCount, work.Count, "missed windows must not replay");
+			ClassicAssert.AreEqual(endpointCount, work.Count, "missed windows must not replay");
 			offer.Tick = KingdomPolityDispatchRules.PeriodTicks * 99L;
-			Assert.IsFalse(KingdomPolityDispatchRules.TryOpen(state, offer,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out work, out failure));
 		}
 
@@ -150,15 +151,15 @@ namespace ThousandAndFirst.DevTests
 			{
 				KingdomPolityDispatchOffer offer = Offer(3,
 					KingdomPolityDispatchRules.PeriodTicks * window);
-				Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+				ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 					out List<KingdomPolityDueWork> work, out string failure), failure);
-				Assert.AreEqual(3, work.Count);
-				Assert.AreEqual(0, work[0].EndpointOrdinal);
-				Assert.AreEqual(expected[window], work[0].Purpose,
+				ClassicAssert.AreEqual(3, work.Count);
+				ClassicAssert.AreEqual(0, work[0].EndpointOrdinal);
+				ClassicAssert.AreEqual(expected[window], work[0].Purpose,
 					"the production selector did not rotate its first endpoint");
-				Assert.IsTrue(seen.Add(work[0].Purpose));
+				ClassicAssert.IsTrue(seen.Add(work[0].Purpose));
 				for (int endpoint = 0; endpoint < work.Count; endpoint++)
-					Assert.IsTrue(KingdomPolityDispatchRules.TryComplete(state,
+					ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryComplete(state,
 						work[endpoint].WindowOrdinal, work[endpoint].EndpointOrdinal,
 						out failure), failure);
 			}
@@ -178,14 +179,14 @@ namespace ThousandAndFirst.DevTests
 				KingdomPolityCohortPurpose purpose = (KingdomPolityCohortPurpose)raw;
 				if (purpose == KingdomPolityCohortPurpose.Envoy ||
 					purpose == KingdomPolityCohortPurpose.Warband) continue;
-				Assert.IsTrue(KingdomPolityDispatchRules.TryCreateForPurpose(
+				ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryCreateForPurpose(
 					KingdomPolityTestData.Realm, endpoint, 3, 2UL, 16800L, purpose,
 					out KingdomPolityDueWork work, out string failure), failure);
-				Assert.IsTrue(sources.Add(work.SourceRef)); Assert.IsTrue(verbs.Add(work.EndpointVerb));
-				Assert.GreaterOrEqual(work.MemberCount, 1); Assert.LessOrEqual(work.MemberCount, 2);
-				Assert.AreEqual(19200L, work.StayUntilTick);
+				ClassicAssert.IsTrue(sources.Add(work.SourceRef)); ClassicAssert.IsTrue(verbs.Add(work.EndpointVerb));
+				ClassicAssert.GreaterOrEqual(work.MemberCount, 1); ClassicAssert.LessOrEqual(work.MemberCount, 2);
+				ClassicAssert.AreEqual(19200L, work.StayUntilTick);
 			}
-			Assert.AreEqual(5, sources.Count); Assert.AreEqual(5, verbs.Count);
+			ClassicAssert.AreEqual(5, sources.Count); ClassicAssert.AreEqual(5, verbs.Count);
 		}
 
 		[Test]
@@ -195,22 +196,22 @@ namespace ThousandAndFirst.DevTests
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
 			KingdomPolityDispatchOffer offer = Offer(1, 0L);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out List<KingdomPolityDueWork> first, out string failure), failure);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
 				out List<KingdomPolityDueWork> recovered, out failure), failure);
-			Assert.AreEqual(first[0].CohortId, recovered[0].CohortId);
+			ClassicAssert.AreEqual(first[0].CohortId, recovered[0].CohortId);
 			KingdomPolityCohortPlanRequest request = FromDue(ledger, first[0]);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryComplete(state, 0UL, 0, out failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryCancelExpiredScheduled(ledger,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryComplete(state, 0UL, 0, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCancelExpiredScheduled(ledger,
 				ledger.Revision, request.CohortId, KingdomPolityDispatchRules.StayTicks,
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPruneScheduledTerminals(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPruneScheduledTerminals(ledger,
 				ledger.Revision, 1UL, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
-				out recovered, out failure), failure); Assert.AreEqual(0, recovered.Count);
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, offer,
+				out recovered, out failure), failure); ClassicAssert.AreEqual(0, recovered.Count);
 		}
 
 		[Test]
@@ -218,17 +219,17 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState { Version = 99,
 				RealmId = "old-actor-or-realm-id", CompletedMask = int.MaxValue };
-			Assert.IsFalse(KingdomPolityDispatchRules.TryRecover(state,
+			ClassicAssert.IsFalse(KingdomPolityDispatchRules.TryRecover(state,
 				KingdomPolityTestData.Realm, "unsupported dispatch wire", out string failure));
-			Assert.AreEqual(99, state.Version); Assert.AreEqual("old-actor-or-realm-id", state.RealmId);
-			Assert.AreEqual(int.MaxValue, state.CompletedMask); Assert.IsNull(state.Fault);
+			ClassicAssert.AreEqual(99, state.Version); ClassicAssert.AreEqual("old-actor-or-realm-id", state.RealmId);
+			ClassicAssert.AreEqual(int.MaxValue, state.CompletedMask); ClassicAssert.IsNull(state.Fault);
 		}
 
 		[Test]
 		public void MasterResumeReanchorsBothPolityGatesWithoutRewritingFrozenProof()
 		{
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
-			Assert.IsTrue(KingdomPolityRules.TryObservePresentation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryObservePresentation(ledger,
 				KingdomPolityPresentationState.Enabled, 20L, out string failure), failure);
 			KingdomPolityCohortPlan before = FindCohort(ledger, KingdomPolityTestData.Cohort);
 			KingdomExperienceOptionKind option = before.PresentationOptionKind;
@@ -237,34 +238,34 @@ namespace ThousandAndFirst.DevTests
 			long priorEpoch = ledger.Options.EnableEpoch;
 			KingdomPolityDispatchState dispatch = new KingdomPolityDispatchState();
 			long period = KingdomPolityDispatchRules.PeriodTicks;
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, period * 5L),
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, period * 5L),
 				out List<KingdomPolityDueWork> oldWork, out failure), failure);
-			Assert.AreEqual(1, oldWork.Count);
+			ClassicAssert.AreEqual(1, oldWork.Count);
 			long resume = period * 5L + 100L;
-			Assert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
 				ledger.Revision, KingdomPolityPresentationState.Enabled, resume,
 				out KingdomPolityMasterResumePlan plan, out failure), failure);
-			Assert.IsTrue(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
 				out failure), failure);
-			Assert.IsTrue(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
 				out failure), failure);
-			Assert.AreEqual(priorEpoch + 1L, ledger.Options.EnableEpoch);
-			Assert.AreEqual(resume, ledger.Options.FutureCauseFloorTick);
-			Assert.AreEqual(resume, dispatch.FutureCauseFloorTick);
-			Assert.IsTrue(dispatch.HasWindow);
-			Assert.AreEqual(1, dispatch.CompletedMask);
-			Assert.AreEqual(0, dispatch.DirectRecords.Count);
+			ClassicAssert.AreEqual(priorEpoch + 1L, ledger.Options.EnableEpoch);
+			ClassicAssert.AreEqual(resume, ledger.Options.FutureCauseFloorTick);
+			ClassicAssert.AreEqual(resume, dispatch.FutureCauseFloorTick);
+			ClassicAssert.IsTrue(dispatch.HasWindow);
+			ClassicAssert.AreEqual(1, dispatch.CompletedMask);
+			ClassicAssert.AreEqual(0, dispatch.DirectRecords.Count);
 			KingdomPolityCohortPlan after = FindCohort(ledger, KingdomPolityTestData.Cohort);
-			Assert.AreEqual(option, after.PresentationOptionKind);
-			Assert.AreEqual(proofEpoch, after.PresentationEnableEpoch);
-			Assert.AreEqual(proofTick, after.PresentationReservedTick);
-			Assert.IsFalse(KingdomPolityRules.CanEmitOptionalProjection(ledger, period * 5L));
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, resume + 1L),
+			ClassicAssert.AreEqual(option, after.PresentationOptionKind);
+			ClassicAssert.AreEqual(proofEpoch, after.PresentationEnableEpoch);
+			ClassicAssert.AreEqual(proofTick, after.PresentationReservedTick);
+			ClassicAssert.IsFalse(KingdomPolityRules.CanEmitOptionalProjection(ledger, period * 5L));
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, resume + 1L),
 				out List<KingdomPolityDueWork> skipped, out failure), failure);
-			Assert.AreEqual(0, skipped.Count, "resume must not replay the partly elapsed window");
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, period * 6L),
+			ClassicAssert.AreEqual(0, skipped.Count, "resume must not replay the partly elapsed window");
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(dispatch, Offer(1, period * 6L),
 				out List<KingdomPolityDueWork> next, out failure), failure);
-			Assert.AreEqual(1, next.Count); Assert.AreEqual(period * 6L, next[0].CauseTick);
+			ClassicAssert.AreEqual(1, next.Count); ClassicAssert.AreEqual(period * 6L, next[0].CauseTick);
 		}
 
 		[Test]
@@ -275,8 +276,8 @@ namespace ThousandAndFirst.DevTests
 			{
 				RealmId = KingdomPolityTestData.Realm, Revision = long.MaxValue
 			};
-			Assert.IsTrue(KingdomPolityDispatchRules.ValidState(dispatch, out string failure), failure);
-			Assert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.ValidState(dispatch, out string failure), failure);
+			ClassicAssert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
 				ledger.Revision, KingdomPolityPresentationState.Enabled, 100L,
 				out KingdomPolityMasterResumePlan _, out failure));
 			StringAssert.Contains("revision is exhausted", failure);
@@ -288,12 +289,12 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			KingdomPolityDispatchState dispatch = new KingdomPolityDispatchState
 				{ RealmId = KingdomPolityTestData.Realm };
-			Assert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
 				ledger.Revision, KingdomPolityPresentationState.Enabled, 100L,
 				out KingdomPolityMasterResumePlan plan, out string failure), failure);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
 			dispatch.Revision++;
-			Assert.IsFalse(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
+			ClassicAssert.IsFalse(KingdomPolityRules.TryPublishMasterResume(ledger, dispatch, plan,
 				out failure));
 			StringAssert.Contains("staged CAS", failure);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
@@ -305,17 +306,17 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			KingdomPolityDispatchState dispatch = new KingdomPolityDispatchState
 				{ RealmId = KingdomPolityTestData.Realm };
-			Assert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
 				ledger.Revision, KingdomPolityPresentationState.Enabled, 100L,
 				out KingdomPolityMasterResumePlan plan, out string failure), failure);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityRules.CanPublishMasterResume(ledger, dispatch,
+			ClassicAssert.IsTrue(KingdomPolityRules.CanPublishMasterResume(ledger, dispatch,
 				plan, out failure), failure);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 			KingdomPolityRules.PublishMasterResumePrevalidated(ledger, dispatch, plan);
-			Assert.AreEqual(100L, ledger.Options.FutureCauseFloorTick);
-			Assert.AreEqual(100L, dispatch.FutureCauseFloorTick);
-			Assert.IsFalse(KingdomPolityRules.CanPublishMasterResume(ledger, dispatch,
+			ClassicAssert.AreEqual(100L, ledger.Options.FutureCauseFloorTick);
+			ClassicAssert.AreEqual(100L, dispatch.FutureCauseFloorTick);
+			ClassicAssert.IsFalse(KingdomPolityRules.CanPublishMasterResume(ledger, dispatch,
 				plan, out failure), "source-only preflight must not admit a second write");
 		}
 
@@ -326,14 +327,14 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDispatchState dispatch = new KingdomPolityDispatchState
 				{ Version = 99, RealmId = "old-realm-or-actor" };
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
+			ClassicAssert.IsFalse(KingdomPolityRules.TryPrepareMasterResume(ledger, dispatch,
 				ledger.Revision, KingdomPolityPresentationState.Enabled, 100L,
 				out KingdomPolityMasterResumePlan plan, out string failure));
-			Assert.IsNull(plan); CollectionAssert.AreEqual(before,
+			ClassicAssert.IsNull(plan); CollectionAssert.AreEqual(before,
 				KingdomPolityCodec.EncodeEnvelope(ledger));
-			Assert.AreEqual(99, dispatch.Version);
-			Assert.AreEqual("old-realm-or-actor", dispatch.RealmId);
-			Assert.AreEqual(0L, dispatch.FutureCauseFloorTick);
+			ClassicAssert.AreEqual(99, dispatch.Version);
+			ClassicAssert.AreEqual("old-realm-or-actor", dispatch.RealmId);
+			ClassicAssert.AreEqual(0L, dispatch.FutureCauseFloorTick);
 		}
 
 		[Test]
@@ -345,15 +346,15 @@ namespace ThousandAndFirst.DevTests
 				"taf:cohort:authority-pin", 2, KingdomPolityCohortPurpose.Trader);
 			request.PresentationAuthority.EnableEpoch = 7L;
 			request.PresentationAuthority.ReservedTick = 123L;
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out KingdomPolityPublicationResult _, out string failure), failure);
 			KingdomPolityCohortPlan row = FindCohort(ledger, request.CohortId);
-			Assert.AreEqual(KingdomExperienceOptionKind.AmbientUse,
+			ClassicAssert.AreEqual(KingdomExperienceOptionKind.AmbientUse,
 				row.PresentationOptionKind);
-			Assert.AreEqual(7L, row.PresentationEnableEpoch);
-			Assert.AreEqual(123L, row.PresentationReservedTick);
+			ClassicAssert.AreEqual(7L, row.PresentationEnableEpoch);
+			ClassicAssert.AreEqual(123L, row.PresentationReservedTick);
 			request.PresentationAuthority.ReservedTick++;
-			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out failure));
 		}
 
@@ -367,26 +368,26 @@ namespace ThousandAndFirst.DevTests
 				PresentationOptionKind = KingdomExperienceOptionKind.AmbientUse,
 				PresentationEnableEpoch = 1L, PresentationReservedTick = 10L
 			};
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureCurrentPlan,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureCurrentPlan,
 				KingdomPolityExperienceRecoveryRules.Decide(row, null, true));
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.CancelUnpresented,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.CancelUnpresented,
 				KingdomPolityExperienceRecoveryRules.Decide(row, null, false));
 			row.ManifestationReceiptId = "taf:projection:recovery-disposition";
 			row.Phase = KingdomPolityCohortPhase.Materialized;
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenRetainFrozen,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenRetainFrozen,
 				KingdomPolityExperienceRecoveryRules.Decide(row, null, false));
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenWithdrawLoaded,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenWithdrawLoaded,
 				KingdomPolityExperienceRecoveryRules.Decide(row, row.SurfaceRef, false));
 			row.Phase = KingdomPolityCohortPhase.Concluded;
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenCleanupLoaded,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenCleanupLoaded,
 				KingdomPolityExperienceRecoveryRules.Decide(row, row.SurfaceRef, false));
 			row.ManifestationReceiptId = null; row.Phase = KingdomPolityCohortPhase.Planned;
 			row.PresentationOptionKind = KingdomExperienceOptionKind.None;
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.CancelUnpresented,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.CancelUnpresented,
 				KingdomPolityExperienceRecoveryRules.Decide(row, null, true));
 			row.ManifestationReceiptId = "taf:projection:legacy-ambiguous";
 			row.Phase = KingdomPolityCohortPhase.Cleaned;
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.Invalid,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.Invalid,
 				KingdomPolityExperienceRecoveryRules.Decide(row, row.SurfaceRef, false));
 		}
 
@@ -397,25 +398,25 @@ namespace ThousandAndFirst.DevTests
 			const string settlement = "taf:settlement:polity-wave3-retirement";
 			const string source = "taf:cohort:polity-wave3-retirement";
 			KingdomExperienceLedger experience = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(experience, realm,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(experience, realm,
 				out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
 				experience.Revision, true, true, true, 10L, out failure), failure);
 			KingdomExperienceAudienceReceipt audience = ExperienceAudience(realm, settlement,
 				"retirement", source, KingdomExperienceOptionKind.AmbientUse);
 			KingdomExperienceBodyReservation bodies = ExperienceBody(realm, settlement,
 				"retirement", source, 2, KingdomExperienceOptionKind.AmbientUse);
-			Assert.IsTrue(KingdomExperienceRules.TryReservePresentation(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReservePresentation(experience,
 				experience.Revision, audience, bodies, 0, out _, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
 				experience.Revision, true, true, false, 20L, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryReleasePresentation(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReleasePresentation(experience,
 				experience.Revision, audience.ReservationId, bodies.ReservationId, source,
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryRecoverDurablePresentation(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryRecoverDurablePresentation(experience,
 				experience.Revision, audience, bodies, 0, out _, out failure), failure);
 			byte[] recovered = KingdomExperienceCodec.EncodeEnvelope(experience);
-			Assert.IsTrue(KingdomExperienceRules.TryRecoverDurablePresentation(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryRecoverDurablePresentation(experience,
 				0L, audience, bodies, 0, out _, out failure), failure);
 			CollectionAssert.AreEqual(recovered, KingdomExperienceCodec.EncodeEnvelope(experience));
 			KingdomPolityCohortPlan frozen = new KingdomPolityCohortPlan
@@ -425,31 +426,31 @@ namespace ThousandAndFirst.DevTests
 				PresentationOptionKind = KingdomExperienceOptionKind.AmbientUse,
 				PresentationEnableEpoch = 1L, PresentationReservedTick = 10L
 			};
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenRetainFrozen,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.EnsureThenRetainFrozen,
 				KingdomPolityExperienceRecoveryRules.Decide(frozen, null, false));
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
 				experience.Revision, true, true, true, 30L, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryReadBodyLease(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReadBodyLease(experience,
 				bodies.ReservationId, out _, out KingdomExperienceLeaseState state, out failure), failure);
-			Assert.AreEqual(KingdomExperienceLeaseState.Retirement, state);
-			Assert.IsTrue(KingdomExperienceRules.TryClassifyLeaseProof(experience,
+			ClassicAssert.AreEqual(KingdomExperienceLeaseState.Retirement, state);
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryClassifyLeaseProof(experience,
 				frozen.PresentationOptionKind, bodies.CauseTick,
 				frozen.PresentationReservedTick, frozen.PresentationEnableEpoch,
 				out state, out failure), failure);
-			Assert.AreEqual(KingdomExperienceLeaseState.Retirement, state);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience, experience.Revision,
+			ClassicAssert.AreEqual(KingdomExperienceLeaseState.Retirement, state);
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience, experience.Revision,
 				ExperienceBody(realm, settlement, "fill-a", "taf:cohort:fill-a", 7,
 					KingdomExperienceOptionKind.CivicStory), 0, out _, out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience, experience.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience, experience.Revision,
 				ExperienceBody(realm, settlement, "fill-b", "taf:cohort:fill-b", 7,
 					KingdomExperienceOptionKind.CivicStory), 0, out _, out failure), failure);
-			Assert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
-			Assert.IsFalse(KingdomExperienceRules.TryReserveBodies(experience,
+			ClassicAssert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveBodies(experience,
 				experience.Revision, ExperienceBody(realm, settlement, "cap-plus-one-retired",
 					"taf:cohort:cap-plus-one-retired", 1,
 					KingdomExperienceOptionKind.CivicStory), 0,
 				out KingdomExperienceCapacityFault fault, out failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
 		}
 
 		[Test]
@@ -457,12 +458,12 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			MakeResolverProfile(ledger, KingdomPolityTestData.RivalProfile);
-			Assert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 5,
+			ClassicAssert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 5,
 				out string failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
 				Request(ledger, "taf:cohort:budget-warband", 5, KingdomPolityCohortPurpose.Warband,
 					KingdomPolityTestData.Rival), out _, out failure), failure);
-			Assert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure));
+			ClassicAssert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure));
 			StringAssert.Contains("shared polity", failure);
 		}
 
@@ -472,9 +473,9 @@ namespace ThousandAndFirst.DevTests
 			const string realm = "taf:realm:polity-wave3-budget";
 			const string settlement = "taf:settlement:polity-wave3-budget";
 			KingdomExperienceLedger experience = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(experience, realm,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(experience, realm,
 				out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(experience,
 				experience.Revision, true, true, true, 10L, out failure), failure);
 			KingdomExperienceAudienceReceipt ambientAudience = new KingdomExperienceAudienceReceipt
 			{
@@ -488,30 +489,30 @@ namespace ThousandAndFirst.DevTests
 			KingdomExperienceBodyReservation ambient = ExperienceBody(realm, settlement,
 				"ambient", "taf:cohort:polity-wave3-ambient", 7,
 				KingdomExperienceOptionKind.AmbientUse);
-			Assert.IsTrue(KingdomExperienceRules.TryReservePresentation(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReservePresentation(experience,
 				experience.Revision, ambientAudience, ambient, 0,
 				out KingdomExperienceCapacityFault _, out failure), failure);
 			KingdomExperienceBodyReservation directed = ExperienceBody(realm, settlement,
 				"directed", "taf:cohort:polity-wave3-directed", 7,
 				KingdomExperienceOptionKind.CivicStory);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience,
 				experience.Revision, directed, 0, out _, out failure), failure);
-			Assert.AreEqual(1, experience.Audiences.Count,
+			ClassicAssert.AreEqual(1, experience.Audiences.Count,
 				"directed conversation/threat must not consume unsolicited audience capacity");
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(experience,
 				experience.Revision, ExperienceBody(realm, settlement, "other",
 					"taf:event:polity-wave3-other", 2,
 					KingdomExperienceOptionKind.CivicStory,
 					KingdomExperienceLane.CivicVoices), 0, out _, out failure), failure);
-			Assert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
+			ClassicAssert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
 			byte[] atCap = KingdomExperienceCodec.EncodeEnvelope(experience);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveBodies(experience,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveBodies(experience,
 				experience.Revision, ExperienceBody(realm, settlement, "cap-plus-one",
 					"taf:event:polity-wave3-cap-plus-one", 1,
 					KingdomExperienceOptionKind.CivicStory,
 					KingdomExperienceLane.FirstGuest), 0,
 				out KingdomExperienceCapacityFault fault, out failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
 			CollectionAssert.AreEqual(atCap, KingdomExperienceCodec.EncodeEnvelope(experience));
 		}
 
@@ -522,17 +523,17 @@ namespace ThousandAndFirst.DevTests
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
 			KingdomPolityCohortPlanRequest request = Request(ledger,
 				"taf:cohort:polity-wave3-lapsed", 7, KingdomPolityCohortPurpose.Guard);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 				out _, out string failure), failure);
-			Assert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure));
+			ClassicAssert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure));
 			const string cancellation = "taf:event:polity-presentation-lapse:test";
-			Assert.IsTrue(KingdomPolityCohortRules.TryCancelUnpresented(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCancelUnpresented(ledger,
 				ledger.Revision, request.CohortId, cancellation,
 				out KingdomPolityPublicationResult result, out failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryCancelUnpresented(ledger, 0L,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCancelUnpresented(ledger, 0L,
 				request.CohortId, cancellation, out result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
-			Assert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 1, out failure), failure);
 		}
 
 		[Test]
@@ -541,19 +542,19 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = KingdomPolityTestData.Full();
 			MakeResolverProfile(ledger, KingdomPolityTestData.CurrentProfile);
 			KingdomPolityFigurePromotionFacts first = Promotion(18, "Iri", "taf:fact:office:first");
-			Assert.IsFalse(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
 				first, out KingdomPolityPublicationResult _, out string failure),
 				"civic title cannot publish polity rank, role, profile, or gear eligibility");
 			first.Origin = KingdomPolityFigureOrigin.PromotedByDeed;
 			first.RoleKey = "guard";
-			Assert.IsFalse(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
 				first, out _, out failure), "deed promotion cannot borrow office evidence");
 			first.CauseRef = "taf:fact:deed:first";
-			Assert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
 				first, out KingdomPolityPublicationResult result, out failure), failure);
-			Assert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger, ledger.Revision,
 				first, out result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
 			KingdomPolityNamedFigureRecord legacyOffice = new KingdomPolityNamedFigureRecord
 			{
 				FigureId = "taf:figure:legacy-office-title", PolityId = KingdomPolityTestData.Realm,
@@ -563,11 +564,11 @@ namespace ThousandAndFirst.DevTests
 			};
 			ledger.NamedFigures.Add(legacyOffice);
 			ledger.NamedFigures.Sort((a, b) => string.CompareOrdinal(a.FigureId, b.FigureId));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 			KingdomPolityCohortPlanRequest guard = Request(ledger,
 				"taf:cohort:legacy-office-cannot-guard", 1, KingdomPolityCohortPurpose.Guard);
 			guard.NamedFigureId = legacyOffice.FigureId;
-			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision,
 				guard, out _, out failure), "old office rows cannot imply combat capability");
 		}
 
@@ -580,26 +581,26 @@ namespace ThousandAndFirst.DevTests
 			ledger.NamedFigures.Add(LegacyOffice("external-no-bridge",
 				KingdomPolityTestData.Rival, 0, null));
 			ledger.NamedFigures.Sort((a, b) => string.CompareOrdinal(a.FigureId, b.FigureId));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
-			Assert.AreEqual(2, ActiveOffices(ledger));
-			Assert.AreEqual(2, KingdomPolityAttentionRules.ActiveNamedFigures(ledger,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+			ClassicAssert.AreEqual(2, ActiveOffices(ledger));
+			ClassicAssert.AreEqual(2, KingdomPolityAttentionRules.ActiveNamedFigures(ledger,
 				KingdomPolityTestData.Realm));
 
 			const string cause = "taf:fact:office-retirement:v1:test-global";
-			Assert.IsTrue(KingdomPolityRules.TryRetireAllOfficeFigures(ledger,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryRetireAllOfficeFigures(ledger,
 				ledger.Revision, cause, out KingdomPolityPublicationResult result,
 				out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
-			Assert.AreEqual(0, ActiveOffices(ledger));
-			Assert.AreEqual(1, KingdomPolityAttentionRules.ActiveNamedFigures(ledger,
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
+			ClassicAssert.AreEqual(0, ActiveOffices(ledger));
+			ClassicAssert.AreEqual(1, KingdomPolityAttentionRules.ActiveNamedFigures(ledger,
 				KingdomPolityTestData.Realm));
 			for (int i = 0; i < ledger.NamedFigures.Count; i++)
 				if (ledger.NamedFigures[i].Origin == KingdomPolityFigureOrigin.Officeholder)
 				{
-					Assert.AreEqual(KingdomPolityFigurePhase.Transferred,
+					ClassicAssert.AreEqual(KingdomPolityFigurePhase.Transferred,
 						ledger.NamedFigures[i].Phase);
-					Assert.AreEqual(0, ledger.NamedFigures[i].ResidentId);
-					Assert.IsNull(ledger.NamedFigures[i].ResidentSettlementId);
+					ClassicAssert.AreEqual(0, ledger.NamedFigures[i].ResidentId);
+					ClassicAssert.IsNull(ledger.NamedFigures[i].ResidentSettlementId);
 					StringAssert.StartsWith("taf:conclusion:office:v1:",
 						ledger.NamedFigures[i].ConclusionRef);
 				}
@@ -609,16 +610,16 @@ namespace ThousandAndFirst.DevTests
 					"taf:fact:deed:post-office-" + i);
 				deed.Origin = KingdomPolityFigureOrigin.PromotedByDeed;
 				deed.RoleKey = "courier";
-				Assert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger,
+				ClassicAssert.IsTrue(KingdomPolityRules.TryPromoteNamedFigure(ledger,
 					ledger.Revision, deed, out _, out failure), failure);
 			}
-			Assert.AreEqual(KingdomPolityAttentionRules.MaximumActiveNamedFigures,
+			ClassicAssert.AreEqual(KingdomPolityAttentionRules.MaximumActiveNamedFigures,
 				KingdomPolityAttentionRules.ActiveNamedFigures(ledger,
 					KingdomPolityTestData.Realm));
 			byte[] stable = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityRules.TryRetireAllOfficeFigures(ledger, 0L, cause,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryRetireAllOfficeFigures(ledger, 0L, cause,
 				out result, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, result.Outcome);
 			CollectionAssert.AreEqual(stable, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -700,7 +701,7 @@ namespace ThousandAndFirst.DevTests
 		private static KingdomPolityCohortPlanRequest FromDue(KingdomPolityLedger Ledger,
 			KingdomPolityDueWork work)
 		{
-			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger,
 				KingdomPolityTestData.Realm, work.Purpose, out int resolverRulesVersion,
 				out int minimum, out int maximum,
 				out string failure), failure);
@@ -717,7 +718,7 @@ namespace ThousandAndFirst.DevTests
 			string id, int members,
 			KingdomPolityCohortPurpose purpose, string polity = KingdomPolityTestData.Realm)
 		{
-			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, polity, purpose,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, polity, purpose,
 				out int resolverRulesVersion, out int minimum, out int maximum,
 				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest { CohortId = id, Purpose = purpose,

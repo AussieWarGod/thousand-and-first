@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -9,10 +10,10 @@ namespace ThousandAndFirst.DevTests
 		public void EmptyAndCompletedDispatchWithTerminalTransitionAreQuiescent()
 		{
 			KingdomPolityDispatchState dispatch = EmptyDispatch();
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				dispatch, new KingdomPolityRealmTransition(), out string blocker,
 				out string failure), failure);
-			Assert.IsNull(blocker);
+			ClassicAssert.IsNull(blocker);
 
 			dispatch.HasWindow = true;
 			dispatch.LastWindowOrdinal = 2UL;
@@ -20,28 +21,28 @@ namespace ThousandAndFirst.DevTests
 			dispatch.EndpointDigest = new string('a', 64);
 			dispatch.EndpointCount = 3;
 			dispatch.CompletedMask = 7;
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				dispatch, new KingdomPolityRealmTransition(), out blocker, out failure), failure);
-			Assert.IsNull(blocker);
+			ClassicAssert.IsNull(blocker);
 		}
 
 		[Test]
 		public void OpenMalformedAndQuarantinedAuthorityBlockWithoutMutation()
 		{
 			KingdomPolityDispatchState dispatch = OpenDispatch();
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				dispatch, new KingdomPolityRealmTransition(), out string blocker,
 				out string failure), failure);
 			StringAssert.Contains("uncommitted endpoint", blocker);
 
 			dispatch.CompletedMask = 8;
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				dispatch, new KingdomPolityRealmTransition(), out blocker, out failure), failure);
 			StringAssert.Contains("malformed", blocker);
 
 			dispatch = EmptyDispatch();
 			dispatch.Fault = "inspection required";
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				dispatch, new KingdomPolityRealmTransition(), out blocker, out failure), failure);
 			StringAssert.Contains("quarantined", blocker);
 		}
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.DevTests
 				Phase = KingdomPolityRealmTransitionPhase.Quarantined,
 				Fault = "torn return receipt"
 			};
-			Assert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
+			ClassicAssert.IsTrue(KingdomPolityRemovalRules.TryDescribeRealmRemovalBlocker(
 				EmptyDispatch(), transition, out string blocker, out string failure), failure);
 			StringAssert.Contains("malformed or quarantined", blocker);
 		}
@@ -84,7 +85,7 @@ namespace ThousandAndFirst.DevTests
 					}
 				}
 			};
-			Assert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, offer,
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, state.Revision, offer,
 				out System.Collections.Generic.List<KingdomPolityDueWork> _, out string failure),
 				failure);
 			return state;

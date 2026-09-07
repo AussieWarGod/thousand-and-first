@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,7 +14,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Markers.Length; i++)
 			{
 				int next = Source.IndexOf(Markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, Markers[i]);
+				ClassicAssert.Greater(next, position, Markers[i]);
 				position = next;
 			}
 		}
@@ -41,18 +42,18 @@ namespace ThousandAndFirst.Tests
 				"private static void Publish(",
 				"private static void StampDedicationOrder(",
 				"private static long DayStamp(");
-			Assert.AreEqual(1, Occurrences(source, "private sealed class ContainerGround"));
+			ClassicAssert.AreEqual(1, Occurrences(source, "private sealed class ContainerGround"));
 		}
 
 		[Test]
 		public void PublicAndNestedTypeDeclarationsStayStable()
 		{
 			string source = KingdomCityLogicalSource.Read();
-			Assert.AreEqual(1, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source,
 				"public sealed class KingdomCityJournal : IKingdomComputeJournal"));
-			Assert.AreEqual(12, Occurrences(source,
+			ClassicAssert.AreEqual(12, Occurrences(source,
 				"public static partial class KingdomCity"));
-			Assert.AreEqual(1, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source,
 				"private sealed class ContainerGround"));
 			StringAssert.DoesNotContain("public static class KingdomCity", source);
 		}

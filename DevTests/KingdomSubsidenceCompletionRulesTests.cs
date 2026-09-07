@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -42,13 +43,13 @@ namespace ThousandAndFirst.Tests
 					if (sink == cut) throw fault;
 				}
 			}, error => observed = error));
-			Assert.AreEqual(500L, checkpoint);
-			Assert.AreEqual(3, stage);
-			Assert.AreEqual(7, wear);
-			Assert.AreSame(fault, observed);
-			Assert.IsTrue(completedBeforeSummary);
-			Assert.AreEqual(cut, trace[trace.Count - 1]);
-			Assert.AreEqual(Array.IndexOf(new[] { "format", "ledger", "chronicle" }, cut) + 1,
+			ClassicAssert.AreEqual(500L, checkpoint);
+			ClassicAssert.AreEqual(3, stage);
+			ClassicAssert.AreEqual(7, wear);
+			ClassicAssert.AreSame(fault, observed);
+			ClassicAssert.IsTrue(completedBeforeSummary);
+			ClassicAssert.AreEqual(cut, trace[trace.Count - 1]);
+			ClassicAssert.AreEqual(Array.IndexOf(new[] { "format", "ledger", "chronicle" }, cut) + 1,
 				trace.Count, "a partially delivered summary must not be replayed by this boundary");
 		}
 
@@ -72,12 +73,12 @@ namespace ThousandAndFirst.Tests
 					string detail = failure.Message;
 					throw new InvalidOperationException(detail);
 				}));
-			Assert.AreEqual(1, committed);
-			Assert.AreEqual(1, physical);
-			Assert.AreEqual(1, diagnostics);
-			Assert.IsTrue(sameError && completeAtDiagnostic);
-			Assert.AreEqual(hostileMessage, completeAtMessageRead);
-			Assert.AreEqual(hostileMessage ? 1 : 0, messageReads);
+			ClassicAssert.AreEqual(1, committed);
+			ClassicAssert.AreEqual(1, physical);
+			ClassicAssert.AreEqual(1, diagnostics);
+			ClassicAssert.IsTrue(sameError && completeAtDiagnostic);
+			ClassicAssert.AreEqual(hostileMessage, completeAtMessageRead);
+			ClassicAssert.AreEqual(hostileMessage ? 1 : 0, messageReads);
 		}
 
 		[Test]
@@ -90,8 +91,8 @@ namespace ThousandAndFirst.Tests
 					attempts++;
 					throw new HostileMessageException(() => messageReads++);
 				}, null));
-			Assert.AreEqual(1, attempts);
-			Assert.AreEqual(0, messageReads);
+			ClassicAssert.AreEqual(1, attempts);
+			ClassicAssert.AreEqual(0, messageReads);
 		}
 
 		[TestCase(false)]
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 					trace.Add("reached-rungs");
 					throw fault;
 				}, () => trace.Add("summary"), _ => trace.Add("diagnostic")));
-			Assert.AreSame(fault, observed);
+			ClassicAssert.AreSame(fault, observed);
 			CollectionAssert.AreEqual(physicalFailure
 				? new[] { "bookkeeping", "reached-rungs" } : new[] { "bookkeeping" }, trace);
 		}
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 			Assert.Throws<ArgumentNullException>(() => KingdomSubsidenceCompletionRules.Complete(
 				missing == 0 ? null : count, missing == 1 ? null : count,
 				missing == 2 ? null : count, _ => calls++));
-			Assert.AreEqual(0, calls);
+			ClassicAssert.AreEqual(0, calls);
 		}
 
 		[Test]
@@ -139,11 +140,11 @@ namespace ThousandAndFirst.Tests
 			int report = step.IndexOf("ResumeRungReport(frame, out refusal)", StringComparison.Ordinal);
 			int checkpoint = step.IndexOf("system.LastSubsidenceTick = checkpoint;", StringComparison.Ordinal);
 			int retire = step.IndexOf("KingdomSubsidenceStepRules.TryRetire(", StringComparison.Ordinal);
-			Assert.IsTrue(report >= 0 && checkpoint > report && retire > checkpoint,
+			ClassicAssert.IsTrue(report >= 0 && checkpoint > report && retire > checkpoint,
 				"Source contract only: reporting precedes checkpoint and atomic retirement.");
 			string driver = TestMain.ReadRepositoryText("Growth/KingdomSubsidenceStepRuntime.Driver.cs");
 			int resume = driver.IndexOf("ResumeStep(frame, readSupports, out refusal)", StringComparison.Ordinal);
-			Assert.Greater(driver.IndexOf("ResumeBatchReport(frame, batch, out refusal)",
+			ClassicAssert.Greater(driver.IndexOf("ResumeBatchReport(frame, batch, out refusal)",
 				StringComparison.Ordinal), resume);
 		}
 

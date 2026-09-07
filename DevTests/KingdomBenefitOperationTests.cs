@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 				"Growth", "KingdomBenefitIndex.Evaluate.cs"));
 			StringAssert.Contains("match.Designation.BuildingKey", evaluate);
 			StringAssert.Contains("ReproveAfterCustomOperation", evaluate);
-			Assert.Less(operation.IndexOf("CustomPercent(Item", StringComparison.Ordinal),
+			ClassicAssert.Less(operation.IndexOf("CustomPercent(Item", StringComparison.Ordinal),
 				operation.IndexOf("int condition =", StringComparison.Ordinal),
 				"provider/root condition must be sampled after a custom callback returns");
 			string reproof = TestMain.ReadRepositoryText(Path.Combine(

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -43,21 +44,21 @@ namespace ThousandAndFirst.Tests
 		public void SoundRecordRoundTripsEveryField()
 		{
 			string wire = KingdomScenarioProvenanceRules.Encode(Sound());
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			StringAssert.StartsWith("sc1|", wire);
 			KingdomScenarioProvenance back;
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
 				failure);
-			Assert.AreEqual("arch-gallery-slice", back.ScenarioKey);
-			Assert.AreEqual("architecture-stamper", back.AuthorityClass);
-			Assert.AreEqual("foundfirst+armcheckpoint", back.Verbs);
-			Assert.AreEqual(DigestC, back.PlanDigest, "the plan digest must survive the round trip");
-			Assert.AreEqual("anchor-arch-01", back.AnchorId);
-			Assert.AreEqual(DigestB, back.KeySetDigest);
-			Assert.AreEqual("#4242", back.Seed);
-			Assert.AreEqual(DigestA, back.DefinitionDigest);
-			Assert.IsFalse(back.Synthetic);
+			ClassicAssert.AreEqual("arch-gallery-slice", back.ScenarioKey);
+			ClassicAssert.AreEqual("architecture-stamper", back.AuthorityClass);
+			ClassicAssert.AreEqual("foundfirst+armcheckpoint", back.Verbs);
+			ClassicAssert.AreEqual(DigestC, back.PlanDigest, "the plan digest must survive the round trip");
+			ClassicAssert.AreEqual("anchor-arch-01", back.AnchorId);
+			ClassicAssert.AreEqual(DigestB, back.KeySetDigest);
+			ClassicAssert.AreEqual("#4242", back.Seed);
+			ClassicAssert.AreEqual(DigestA, back.DefinitionDigest);
+			ClassicAssert.IsFalse(back.Synthetic);
 		}
 
 		[Test]
@@ -67,13 +68,13 @@ namespace ThousandAndFirst.Tests
 			record.AnchorId = null;
 			record.KeySetDigest = null;
 			string wire = KingdomScenarioProvenanceRules.Encode(record);
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			KingdomScenarioProvenance back;
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(wire, out back, out failure),
 				failure);
-			Assert.IsNull(back.AnchorId);
-			Assert.IsNull(back.KeySetDigest);
+			ClassicAssert.IsNull(back.AnchorId);
+			ClassicAssert.IsNull(back.KeySetDigest);
 		}
 
 		[Test]
@@ -83,9 +84,9 @@ namespace ThousandAndFirst.Tests
 			record.Synthetic = true;
 			KingdomScenarioProvenance back;
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryDecode(
 				KingdomScenarioProvenanceRules.Encode(record), out back, out failure), failure);
-			Assert.IsTrue(back.Synthetic);
+			ClassicAssert.IsTrue(back.Synthetic);
 		}
 
 		[TestCase(null, TestName = "EmptyStampIsRefused")]
@@ -114,9 +115,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioProvenance record;
 			string failure;
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryDecode(raw, out record, out failure));
-			Assert.IsNull(record);
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryDecode(raw, out record, out failure));
+			ClassicAssert.IsNull(record);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 			string raw = "sc1|" + new string('a', KingdomScenarioProvenanceRules.MaxWire);
 			KingdomScenarioProvenance record;
 			string failure;
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryDecode(raw, out record, out failure));
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryDecode(raw, out record, out failure));
 			StringAssert.Contains("bounded wire size", failure);
 		}
 
@@ -134,10 +135,10 @@ namespace ThousandAndFirst.Tests
 		{
 			IList<string> verbs =
 				KingdomScenarioProvenanceRules.VerbSequence("foundfirst+seat+armcheckpoint");
-			Assert.AreEqual(3, verbs.Count);
-			Assert.AreEqual("foundfirst", verbs[0]);
-			Assert.AreEqual("seat", verbs[1]);
-			Assert.AreEqual("armcheckpoint", verbs[2]);
+			ClassicAssert.AreEqual(3, verbs.Count);
+			ClassicAssert.AreEqual("foundfirst", verbs[0]);
+			ClassicAssert.AreEqual("seat", verbs[1]);
+			ClassicAssert.AreEqual("armcheckpoint", verbs[2]);
 		}
 
 		[Test]
@@ -147,15 +148,15 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < many.Length; i++) many[i] = "v" + i;
 			KingdomScenarioProvenance record = Sound();
 			record.Verbs = string.Join("+", many);
-			Assert.IsNull(KingdomScenarioProvenanceRules.Encode(record));
-			Assert.IsEmpty(KingdomScenarioProvenanceRules.VerbSequence(record.Verbs));
+			ClassicAssert.IsNull(KingdomScenarioProvenanceRules.Encode(record));
+			ClassicAssert.IsEmpty(KingdomScenarioProvenanceRules.VerbSequence(record.Verbs));
 		}
 
 		[Test]
 		public void SoundStampPassesTheShapeAndStalenessCheck()
 		{
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(
 				Sound(), DigestA, Mod, Core, out failure), failure);
 		}
 
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 		public void ShapeCheckIsNotAcceptanceAndSaysSoForAWellFormedStamp()
 		{
 			string failure;
-			Assert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(
+			ClassicAssert.IsTrue(KingdomScenarioProvenanceRules.TryValidateStampShape(
 				Sound(), DigestA, Mod, Core, out failure), failure);
 			StringAssert.Contains("independently held anchor-evidence",
 				KingdomScenarioProvenanceRules.AcceptanceRequiresIndependentAnchorEvidence(Sound()));
@@ -179,7 +180,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioProvenance record = Sound();
 			record.Verbs = "BAD VERB";
 			string failure;
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
 				record, DigestA, Mod, Core, out failure));
 			StringAssert.Contains("malformed", failure);
 		}
@@ -215,7 +216,7 @@ namespace ThousandAndFirst.Tests
 		public void ChangedScenarioDefinitionMakesTheStampStale()
 		{
 			string failure;
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
 				Sound(), DigestB, Mod, Core, out failure));
 			StringAssert.Contains("stale", failure);
 		}
@@ -225,7 +226,7 @@ namespace ThousandAndFirst.Tests
 		public void ChangedBuildAuthorityMakesTheStampStale(string mod, string core)
 		{
 			string failure;
-			Assert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
+			ClassicAssert.IsFalse(KingdomScenarioProvenanceRules.TryValidateStampShape(
 				Sound(), DigestA, mod, core, out failure));
 			StringAssert.Contains("stale", failure);
 		}
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ProvenanceStateKeyIsTheVersionedName()
 		{
-			Assert.AreEqual("r_TAF_ScenarioProvenance_v1",
+			ClassicAssert.AreEqual("r_TAF_ScenarioProvenance_v1",
 				KingdomScenarioProvenanceRules.ProvenanceState);
 		}
 	}

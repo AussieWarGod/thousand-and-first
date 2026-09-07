@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -527,7 +528,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < RuntimePaths.Length; i++)
 			{
 				string source = Read(RuntimePaths[i]);
-				Assert.LessOrEqual(source.Split('\n').Length, 300, RuntimePaths[i]);
+				ClassicAssert.LessOrEqual(source.Split('\n').Length, 300, RuntimePaths[i]);
 				StringAssert.DoesNotContain("MaterialStock.Put", source, RuntimePaths[i]);
 			}
 		}
@@ -540,7 +541,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, markers[i]);
+				ClassicAssert.Greater(next, at, markers[i]);
 				at = next;
 			}
 		}

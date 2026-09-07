@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -18,7 +19,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1000, KingdomRules.PantryTier.Ample)]
 		public void ClassifyPantry_MatchesTheDocumentedLadder(int foodCount, KingdomRules.PantryTier expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ClassifyPantry(foodCount));
+			ClassicAssert.AreEqual(expected, KingdomRules.ClassifyPantry(foodCount));
 		}
 
 		[Test]
@@ -26,21 +27,21 @@ namespace ThousandAndFirst.Tests
 		{
 			// A mutation that lets Modest's floor sink to or below Scant's, or Ample's to or
 			// below Modest's, collapses the ladder into fewer than four reachable tiers.
-			Assert.Less(KingdomRules.PantryScantThreshold, KingdomRules.PantryModestThreshold);
-			Assert.Less(KingdomRules.PantryModestThreshold, KingdomRules.PantryAmpleThreshold);
+			ClassicAssert.Less(KingdomRules.PantryScantThreshold, KingdomRules.PantryModestThreshold);
+			ClassicAssert.Less(KingdomRules.PantryModestThreshold, KingdomRules.PantryAmpleThreshold);
 		}
 
 		[Test]
 		public void PantryTierNames_HasOneLowercaseNamePerTier()
 		{
-			Assert.AreEqual(4, KingdomRules.PantryTierNames.Length);
-			Assert.AreEqual("empty", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Empty]);
-			Assert.AreEqual("scant", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Scant]);
-			Assert.AreEqual("modest", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Modest]);
-			Assert.AreEqual("ample", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Ample]);
+			ClassicAssert.AreEqual(4, KingdomRules.PantryTierNames.Length);
+			ClassicAssert.AreEqual("empty", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Empty]);
+			ClassicAssert.AreEqual("scant", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Scant]);
+			ClassicAssert.AreEqual("modest", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Modest]);
+			ClassicAssert.AreEqual("ample", KingdomRules.PantryTierNames[(int)KingdomRules.PantryTier.Ample]);
 			for (int i = 0; i < KingdomRules.PantryTierNames.Length; i++)
 			{
-				Assert.AreEqual(KingdomRules.PantryTierNames[i], KingdomRules.PantryTierNames[i].ToLowerInvariant(), "Qud style is lower-case object and state names");
+				ClassicAssert.AreEqual(KingdomRules.PantryTierNames[i], KingdomRules.PantryTierNames[i].ToLowerInvariant(), "Qud style is lower-case object and state names");
 			}
 		}
 
@@ -52,7 +53,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRules.PantryTier.Ample, KingdomRules.MealCostAmple)]
 		public void MealCost_MatchesItsTier(KingdomRules.PantryTier tier, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.MealCost(tier));
+			ClassicAssert.AreEqual(expected, KingdomRules.MealCost(tier));
 		}
 
 		[Test]
@@ -62,9 +63,9 @@ namespace ThousandAndFirst.Tests
 			// stock that tier can ever report, so a meal offered at a tier is always affordable
 			// the instant that tier is reached, with no separate stock check required at the
 			// call site.
-			Assert.LessOrEqual(KingdomRules.MealCostScant, KingdomRules.PantryScantThreshold);
-			Assert.LessOrEqual(KingdomRules.MealCostModest, KingdomRules.PantryModestThreshold);
-			Assert.LessOrEqual(KingdomRules.MealCostAmple, KingdomRules.PantryAmpleThreshold);
+			ClassicAssert.LessOrEqual(KingdomRules.MealCostScant, KingdomRules.PantryScantThreshold);
+			ClassicAssert.LessOrEqual(KingdomRules.MealCostModest, KingdomRules.PantryModestThreshold);
+			ClassicAssert.LessOrEqual(KingdomRules.MealCostAmple, KingdomRules.PantryAmpleThreshold);
 		}
 
 		[Test]
@@ -72,8 +73,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// A richer larder must never offer a cheaper meal - otherwise "choose the tier
 			// honestly" inverts into a reason to keep the pantry thin.
-			Assert.Less(KingdomRules.MealCost(KingdomRules.PantryTier.Scant), KingdomRules.MealCost(KingdomRules.PantryTier.Modest));
-			Assert.Less(KingdomRules.MealCost(KingdomRules.PantryTier.Modest), KingdomRules.MealCost(KingdomRules.PantryTier.Ample));
+			ClassicAssert.Less(KingdomRules.MealCost(KingdomRules.PantryTier.Scant), KingdomRules.MealCost(KingdomRules.PantryTier.Modest));
+			ClassicAssert.Less(KingdomRules.MealCost(KingdomRules.PantryTier.Modest), KingdomRules.MealCost(KingdomRules.PantryTier.Ample));
 		}
 
 		// --- CanHoldSharedMeal: the one gate the Charter checks before offering the action ---
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5, -1, false)]
 		public void CanHoldSharedMeal_RequiresBothFoodAndSomeoneToFeed(int foodStored, int population, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.CanHoldSharedMeal(foodStored, population));
+			ClassicAssert.AreEqual(expected, KingdomRules.CanHoldSharedMeal(foodStored, population));
 		}
 
 		[TestCase(1, 1, 0, false)]
@@ -99,7 +100,7 @@ namespace ThousandAndFirst.Tests
 		public void CanHoldSharedMeal_RuntimeGateAlsoRequiresACapableKitchen(
 			int foodStored, int population, int cookingProviders, bool expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomRules.CanHoldSharedMeal(foodStored, population, cookingProviders));
 		}
 
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1000, 20)]
 		public void MealServingsSpent_MatchesTheTierCostExactly(int foodStored, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.MealServingsSpent(foodStored));
+			ClassicAssert.AreEqual(expected, KingdomRules.MealServingsSpent(foodStored));
 		}
 
 		[Test]
@@ -124,8 +125,8 @@ namespace ThousandAndFirst.Tests
 			for (int food = 0; food <= 200; food++)
 			{
 				int spent = KingdomRules.MealServingsSpent(food);
-				Assert.LessOrEqual(spent, food, "food=" + food + " spent more than the larders held");
-				Assert.GreaterOrEqual(spent, 0, "food=" + food + " spent a negative amount");
+				ClassicAssert.LessOrEqual(spent, food, "food=" + food + " spent more than the larders held");
+				ClassicAssert.GreaterOrEqual(spent, 0, "food=" + food + " spent a negative amount");
 			}
 		}
 
@@ -134,8 +135,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NothingIsNamedOrSpokenWhenThereIsNothingToServe()
 		{
-			Assert.IsNull(KingdomRules.MealSizeName(KingdomRules.PantryTier.Empty));
-			Assert.IsNull(KingdomRules.MealSpeech(KingdomRules.PantryTier.Empty));
+			ClassicAssert.IsNull(KingdomRules.MealSizeName(KingdomRules.PantryTier.Empty));
+			ClassicAssert.IsNull(KingdomRules.MealSpeech(KingdomRules.PantryTier.Empty));
 		}
 
 		[TestCase(KingdomRules.PantryTier.Scant)]
@@ -143,8 +144,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRules.PantryTier.Ample)]
 		public void MealSizeNameAndSpeech_AreWordsWhenThereIsSomethingToServe(KingdomRules.PantryTier tier)
 		{
-			Assert.IsFalse(string.IsNullOrWhiteSpace(KingdomRules.MealSizeName(tier)), tier + " must name what is being served");
-			Assert.IsFalse(string.IsNullOrWhiteSpace(KingdomRules.MealSpeech(tier)), tier + " must let the settler say something");
+			ClassicAssert.IsFalse(string.IsNullOrWhiteSpace(KingdomRules.MealSizeName(tier)), tier + " must name what is being served");
+			ClassicAssert.IsFalse(string.IsNullOrWhiteSpace(KingdomRules.MealSpeech(tier)), tier + " must let the settler say something");
 		}
 
 		[Test]
@@ -155,9 +156,9 @@ namespace ThousandAndFirst.Tests
 			string scant = KingdomRules.MealSizeName(KingdomRules.PantryTier.Scant);
 			string modest = KingdomRules.MealSizeName(KingdomRules.PantryTier.Modest);
 			string ample = KingdomRules.MealSizeName(KingdomRules.PantryTier.Ample);
-			Assert.AreNotEqual(scant, modest);
-			Assert.AreNotEqual(modest, ample);
-			Assert.AreNotEqual(scant, ample);
+			ClassicAssert.AreNotEqual(scant, modest);
+			ClassicAssert.AreNotEqual(modest, ample);
+			ClassicAssert.AreNotEqual(scant, ample);
 		}
 
 		[Test]
@@ -166,9 +167,9 @@ namespace ThousandAndFirst.Tests
 			string scant = KingdomRules.MealSpeech(KingdomRules.PantryTier.Scant);
 			string modest = KingdomRules.MealSpeech(KingdomRules.PantryTier.Modest);
 			string ample = KingdomRules.MealSpeech(KingdomRules.PantryTier.Ample);
-			Assert.AreNotEqual(scant, modest);
-			Assert.AreNotEqual(modest, ample);
-			Assert.AreNotEqual(scant, ample);
+			ClassicAssert.AreNotEqual(scant, modest);
+			ClassicAssert.AreNotEqual(modest, ample);
+			ClassicAssert.AreNotEqual(scant, ample);
 		}
 
 		[Test]
@@ -188,9 +189,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < all.Length; i++)
 			{
 				bool servable = all[i] != KingdomRules.PantryTier.Empty;
-				Assert.AreEqual(servable, KingdomRules.MealCost(all[i]) > 0, all[i] + ": cost and servability disagree");
-				Assert.AreEqual(servable, KingdomRules.MealSizeName(all[i]) != null, all[i] + ": name and servability disagree");
-				Assert.AreEqual(servable, KingdomRules.MealSpeech(all[i]) != null, all[i] + ": speech and servability disagree");
+				ClassicAssert.AreEqual(servable, KingdomRules.MealCost(all[i]) > 0, all[i] + ": cost and servability disagree");
+				ClassicAssert.AreEqual(servable, KingdomRules.MealSizeName(all[i]) != null, all[i] + ": name and servability disagree");
+				ClassicAssert.AreEqual(servable, KingdomRules.MealSpeech(all[i]) != null, all[i] + ": speech and servability disagree");
 			}
 		}
 	}

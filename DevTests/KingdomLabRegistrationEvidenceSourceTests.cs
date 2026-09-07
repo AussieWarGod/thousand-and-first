@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 				"Debug/KingdomWishes.LabRegistrationEvidence.cs");
 			MatchCollection rows = Regex.Matches(wish,
 				"new LabRegistrationExpectation\\(\"([^\"]+)\", \"([^\"]+)\", (true|false)\\)");
-			Assert.AreEqual(17, rows.Count, "six concrete chords expand one reviewed family");
+			ClassicAssert.AreEqual(17, rows.Count, "six concrete chords expand one reviewed family");
 			Dictionary<string, bool> families = new Dictionary<string, bool>(
 				StringComparer.Ordinal);
 			HashSet<string> chords = new HashSet<string>(StringComparer.Ordinal);
@@ -44,14 +45,14 @@ namespace ThousandAndFirst.Tests
 				string runtime = rows[i].Groups[2].Value;
 				bool allowStatic = bool.Parse(rows[i].Groups[3].Value);
 				if (families.TryGetValue(family, out bool held))
-					Assert.AreEqual(held, allowStatic, family);
+					ClassicAssert.AreEqual(held, allowStatic, family);
 				else families.Add(family, allowStatic);
 				if (family == "NephalChord") chords.Add(runtime);
 			}
 			CollectionAssert.AreEqual(expected, families.Keys.OrderBy(value => value,
 				StringComparer.Ordinal).ToArray());
-			Assert.AreEqual(7, families.Count(row => !row.Value));
-			Assert.AreEqual(5, families.Count(row => row.Value));
+			ClassicAssert.AreEqual(7, families.Count(row => !row.Value));
+			ClassicAssert.AreEqual(5, families.Count(row => row.Value));
 			CollectionAssert.AreEquivalent(new[] { "AgolgotChord", "BethsaidaChord",
 				"QasChord", "QonChord", "RermadonChord", "ShugruithChord" }, chords);
 		}

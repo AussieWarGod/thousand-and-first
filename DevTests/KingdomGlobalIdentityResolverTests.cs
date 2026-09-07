@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,9 +19,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, start);
+			ClassicAssert.GreaterOrEqual(first, 0, start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end);
+			ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 
@@ -44,13 +45,13 @@ namespace ThousandAndFirst.Tests
 				"private static bool CountZoneIdentity(",
 				"private static bool ExactEnteringCell(");
 
-			Assert.AreEqual(0, MintingReads(construction), "construction loaded graph");
-			Assert.AreEqual(0, MintingReads(trade), "trade loaded topology");
-			Assert.AreEqual(0, MintingReads(upgrade), "upgrade root/inventory graph");
+			ClassicAssert.AreEqual(0, MintingReads(construction), "construction loaded graph");
+			ClassicAssert.AreEqual(0, MintingReads(trade), "trade loaded topology");
+			ClassicAssert.AreEqual(0, MintingReads(upgrade), "upgrade root/inventory graph");
 			StringAssert.Contains("item.IDIfAssigned != Id", construction);
 			StringAssert.Contains("row => row.Object.IDIfAssigned", trade);
-			Assert.AreEqual(2, Regex.Matches(upgrade, @"item\.IDIfAssigned").Count);
-			Assert.AreEqual(2, MintingReads(escrow),
+			ClassicAssert.AreEqual(2, Regex.Matches(upgrade, @"item\.IDIfAssigned").Count);
+			ClassicAssert.AreEqual(2, MintingReads(escrow),
 				"only selected source/item escrow-key creation may assign identity");
 			StringAssert.Contains("Source?.IDIfAssigned", escrow);
 			StringAssert.Contains("Target.IDIfAssigned", escrow);
@@ -65,7 +66,7 @@ namespace ThousandAndFirst.Tests
 			string lookup = Between(physical,
 				"public static KingdomPhysicalLookupState FindGlobalLiveId(",
 				"private static bool TryLoadedZoneObjects(");
-			Assert.AreEqual(0, MintingReads(lookup));
+			ClassicAssert.AreEqual(0, MintingReads(lookup));
 			StringAssert.Contains("KingdomPlots.FindGlobalFoundingHeartId(Id", lookup);
 			StringAssert.Contains("state == KingdomPhysicalLookupState.Exact && graveyard", lookup);
 			StringAssert.Contains("Exact = null", lookup);
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 		public void ImprovementRemovalAuthorityCoversReloadCustodyAndIgnoresTombstones()
 		{
 			string authority = Source("Growth", "KingdomConstruction.RemovalAuthority.cs");
-			Assert.AreEqual(0, MintingReads(authority));
+			ClassicAssert.AreEqual(0, MintingReads(authority));
 			foreach (string evidence in new[] { "ActiveZone", "CachedZones", "Graveyard",
 				"The.Player", "ObjectGameState", "GetInventoryDirectAndEquipment",
 				"MaxGlobalRemovalAuthorityObjects", "graveyard.Contains(candidate)",
@@ -116,12 +117,12 @@ namespace ThousandAndFirst.Tests
 				"private static int CountLiveRaiders(");
 
 			foreach (string scan in new[] { polity, guest, demand, projection, attack })
-				Assert.AreEqual(0, MintingReads(scan));
-			Assert.Less(polity.IndexOf("bool marked", StringComparison.Ordinal),
+				ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.Less(polity.IndexOf("bool marked", StringComparison.Ordinal),
 				polity.IndexOf("body.IDIfAssigned", StringComparison.Ordinal));
-			Assert.Less(demand.IndexOf("GetPart<r_KingdomRaidDemand>", StringComparison.Ordinal),
+			ClassicAssert.Less(demand.IndexOf("GetPart<r_KingdomRaidDemand>", StringComparison.Ordinal),
 				demand.IndexOf("item.IDIfAssigned", StringComparison.Ordinal));
-			Assert.Less(projection.IndexOf("GetStringProperty(ProjectionMarkerProperty)",
+			ClassicAssert.Less(projection.IndexOf("GetStringProperty(ProjectionMarkerProperty)",
 				StringComparison.Ordinal), projection.IndexOf("item.IDIfAssigned",
 				StringComparison.Ordinal));
 			StringAssert.Contains("new Observation(item, item.IDIfAssigned", guest);
@@ -157,8 +158,8 @@ namespace ThousandAndFirst.Tests
 			foreach (string preview in new[] { relocationPlanning, relocationEvidence,
 				relocationClearance, relocationRollback, purposePairing, purposeHelpers,
 				purposePlan, purposeSiting, bountySelection, bountyLookup, labSelection,
-				hostedInteraction }) Assert.AreEqual(0, MintingReads(preview));
-			Assert.AreEqual(1, MintingReads(hostedVisual),
+				hostedInteraction }) ClassicAssert.AreEqual(0, MintingReads(preview));
+			ClassicAssert.AreEqual(1, MintingReads(hostedVisual),
 				"only explicit hosted child identity assignment may remain");
 			StringAssert.Contains("Prepared[i].Output.ID = Prepared[i].Id", hostedVisual);
 			StringAssert.Contains("Prepared[i].Output.IDIfAssigned != Prepared[i].Id", hostedVisual);
@@ -187,13 +188,13 @@ namespace ThousandAndFirst.Tests
 				Source("Simulation/City", "KingdomDistanceRuntime.PlanningAndTransfer.cs"),
 				Source("Simulation/City", "KingdomResidents.06.Helpers.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(1, MintingReads(scalar),
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(1, MintingReads(scalar),
 				"only committed newly-created food receipt identity assignment may remain");
 			StringAssert.Contains("string foodId = food.ID;", scalar);
 			StringAssert.Contains("food.IDIfAssigned != foodId", scalar);
 			string presence = Source("Growth", "KingdomConstructionPresence.cs");
-			Assert.AreEqual(1, MintingReads(presence),
+			ClassicAssert.AreEqual(1, MintingReads(presence),
 				"only committed selected construction-work identity creation may remain");
 			StringAssert.Contains("selected.Root.ID", presence);
 			StringAssert.Contains("string itemId = item.IDIfAssigned", presence);
@@ -209,20 +210,20 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomPlot2.23.GrowthPlanning.cs"),
 				Source("Growth", "KingdomPlanMarker.RecoveryAndInspection.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(2, MintingReads(Source("Growth",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(2, MintingReads(Source("Growth",
 				"KingdomProcedures.07.RebuildAndSnapshots.cs")),
 				"anatomical BodyPart IDs are not GameObject identity reads");
 			string builder = Source("World", "KingdomHostedArcologyBuilder.cs");
-			Assert.AreEqual(1, MintingReads(builder));
+			ClassicAssert.AreEqual(1, MintingReads(builder));
 			StringAssert.Contains(
 				"string id = KingdomHostedArcologyRules.StableChildId(RootId, Role)", builder);
 			StringAssert.Contains("item.ID = id", builder);
 			StringAssert.Contains("candidate.IDIfAssigned == id", builder);
 			string hosted = Source("Growth", "KingdomHostedArcology.Construction.cs");
-			Assert.AreEqual(1, MintingReads(hosted), "only consented hosted job publication");
+			ClassicAssert.AreEqual(1, MintingReads(hosted), "only consented hosted job publication");
 			string presence = Source("Growth", "KingdomConstructionPresence.cs");
-			Assert.AreEqual(1, MintingReads(presence));
+			ClassicAssert.AreEqual(1, MintingReads(presence));
 		}
 
 		[Test]
@@ -238,15 +239,15 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomMaterials.08.StrikeOrdering.cs"),
 				Source("Growth", "KingdomLabCivicOwnership.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(3, MintingReads(Source("Growth",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(3, MintingReads(Source("Growth",
 				"KingdomProcedures.04.GrantRouting.cs")),
 				"anatomical slot IDs are not GameObject identity reads");
-			Assert.AreEqual(3, MintingReads(Source("Growth",
+			ClassicAssert.AreEqual(3, MintingReads(Source("Growth",
 				"KingdomProcedures.05.GrantExecution.cs")),
 				"anatomical BodyPart and slot IDs are not GameObject identity reads");
 			string realization = Source("Growth", "KingdomPlanMarker.Realization.cs");
-			Assert.AreEqual(1, MintingReads(realization), "new scaffold publication only");
+			ClassicAssert.AreEqual(1, MintingReads(realization), "new scaffold publication only");
 		}
 
 		[Test]
@@ -265,14 +266,14 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomPlot2.16.RecoveryInspect.cs"),
 				Source("Growth", "KingdomPlot2.19.PlanStaking.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(1, MintingReads(Source("Core",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(1, MintingReads(Source("Core",
 				"KingdomSystem.z14.Return.AbilityProof.cs")),
 				"an ActivatedAbilityEntry Guid is not GameObject identity");
-			Assert.AreEqual(2, MintingReads(Source("Growth",
+			ClassicAssert.AreEqual(2, MintingReads(Source("Growth",
 				"KingdomLab.PurposeSelection.cs")),
 				"anatomical BodyPart IDs are not GameObject identity reads");
-			Assert.AreEqual(1, MintingReads(Source("Experience",
+			ClassicAssert.AreEqual(1, MintingReads(Source("Experience",
 				"KingdomSuccession.DeathSelection.cs")), "committed founder-death token only");
 		}
 
@@ -297,8 +298,8 @@ namespace ThousandAndFirst.Tests
 				Source("Trade", "KingdomTrade.15.MaterialRecovery.cs"),
 				Source("Trade", "KingdomTrade.17.ProjectionRecovery.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(3, MintingReads(Source("Raids",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(3, MintingReads(Source("Raids",
 				"KingdomRaids.04.RecoveryAndFortify.cs")), "Quest and QuestStep IDs only");
 		}
 
@@ -316,23 +317,23 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomPlot2.32.FinishRemoval.cs"),
 				Source("Growth", "KingdomPlot2.27.FinalBuilding.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(2, MintingReads(Source("Growth", "KingdomLab.Slate.cs")),
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(2, MintingReads(Source("Growth", "KingdomLab.Slate.cs")),
 				"anatomical BodyPart IDs are not GameObject identity reads");
-			Assert.AreEqual(0, MintingReads(KingdomGatehouseLogicalSource.ReadProjection()),
+			ClassicAssert.AreEqual(0, MintingReads(KingdomGatehouseLogicalSource.ReadProjection()),
 				"gatehouse recovery observes only already-assigned root identity");
-			Assert.AreEqual(2, MintingReads(
+			ClassicAssert.AreEqual(2, MintingReads(
 				KingdomGatehouseLogicalSource.ReadProjectionEvidence()),
 				"one legacy engine-assigned satellite identity read at creation, and one "
 					+ "explicit deterministic satellite identity setter");
-			Assert.AreEqual(1, MintingReads(Source("Growth", "KingdomSocket.06.ConversionProjection.cs")));
-			Assert.AreEqual(11, MintingReads(Source("Growth", "KingdomPurpose.01.Transport.cs")));
+			ClassicAssert.AreEqual(1, MintingReads(Source("Growth", "KingdomSocket.06.ConversionProjection.cs")));
+			ClassicAssert.AreEqual(11, MintingReads(Source("Growth", "KingdomPurpose.01.Transport.cs")));
 			string handover = Source("Growth", "KingdomUpgrade.20.HandOver.cs");
-			Assert.AreEqual(2, MintingReads(handover),
+			ClassicAssert.AreEqual(2, MintingReads(handover),
 				"the committed predecessor identity is established once, then re-read for its job proof");
 			StringAssert.Contains("string predecessorId = Predecessor.ID", handover);
 			StringAssert.Contains("job.SubjectId != Predecessor.ID", handover);
-			Assert.AreEqual(5, MintingReads(Source("Growth", "KingdomPlot2.28.ClearPayout.cs")));
+			ClassicAssert.AreEqual(5, MintingReads(Source("Growth", "KingdomPlot2.28.ClearPayout.cs")));
 		}
 
 		[Test]
@@ -345,20 +346,20 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomArchitectureStamper.UpgradeReceipts.cs"),
 				Source("Experience", "KingdomExpeditions.DebitReceipts.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(1, MintingReads(Source("Growth",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(1, MintingReads(Source("Growth",
 				"KingdomLab.PurposeRuntime.cs")),
 				"an anatomical BodyPart ID is not GameObject identity");
-			Assert.AreEqual(0, MintingReads(Source("Raids",
+			ClassicAssert.AreEqual(0, MintingReads(Source("Raids",
 				"KingdomRaids.05.AttackLaunchAndResume.cs")),
 				"publish-before-mint: the projected raider ID setter now lives only in "
 					+ "ResumeAttackProjections (09.cs), never in LaunchRaid");
-			Assert.AreEqual(1, MintingReads(Source("Raids",
+			ClassicAssert.AreEqual(1, MintingReads(Source("Raids",
 				"KingdomRaids.09.AttackProjectionAndHelpers.cs")),
 				"the projected raider ID setter lives exactly once, in 09.cs");
-			Assert.AreEqual(2, MintingReads(Source("Growth", "KingdomCommission.Projection.cs")));
-			Assert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Preparation.cs")));
-			Assert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Commission.cs")));
+			ClassicAssert.AreEqual(2, MintingReads(Source("Growth", "KingdomCommission.Projection.cs")));
+			ClassicAssert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Preparation.cs")));
+			ClassicAssert.AreEqual(4, MintingReads(Source("Growth", "KingdomLab.Commission.cs")));
 		}
 
 		[Test]
@@ -371,7 +372,7 @@ namespace ThousandAndFirst.Tests
 				Source("Quests", "KingdomBounty.PassAndSchedule.cs"),
 				Source("Growth", "KingdomWear.08.LeakFrame.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
 			StringAssert.Contains("settlement.ID.ToString", Source("Integrations/Hearthpyre223",
 				"KingdomHearthpyreOwnershipProvider.cs"));
 			StringAssert.Contains("BeforeApplyDamageEvent.ID", Source("Polity",
@@ -390,18 +391,18 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomPurpose.03.CargoIdentityAndEscrow.cs"),
 				Source("Growth", "KingdomPurpose.02.Commitments.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(2, MintingReads(Source("Growth",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(2, MintingReads(Source("Growth",
 				"KingdomPurposePortfolio.OutputRuntime.cs")), "new cargo publication only");
 			string handoverEndpoints = Source("Growth",
 				"KingdomUpgrade.03.r_KingdomImprovement.PendingItems.cs");
-			Assert.AreEqual(6, MintingReads(handoverEndpoints),
+			ClassicAssert.AreEqual(6, MintingReads(handoverEndpoints),
 				"only explicit durable handover endpoint publication may assign identity");
 			StringAssert.Contains("Receipt.HandoverSourceId = Source.ID", handoverEndpoints);
 			StringAssert.Contains("Receipt.HandoverTargetId = Target.ID", handoverEndpoints);
 			string pendingItem = Source("Growth",
 				"KingdomUpgrade.02.r_KingdomImprovement.Inventory.cs");
-			Assert.AreEqual(2, MintingReads(pendingItem),
+			ClassicAssert.AreEqual(2, MintingReads(pendingItem),
 				"only explicit pending-item identity publication may assign identity");
 			StringAssert.Contains("Receipt.HandoverItemId = Item.ID", pendingItem);
 		}
@@ -420,14 +421,14 @@ namespace ThousandAndFirst.Tests
 				Source("Polity", "KingdomPolityHospitalityRuntime.Debit.cs"),
 				Source("Growth", "KingdomSurvey.07.ExactLeakage.cs")
 			};
-			foreach (string scan in pure) Assert.AreEqual(0, MintingReads(scan));
-			Assert.AreEqual(1, MintingReads(Source("Growth",
+			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));
+			ClassicAssert.AreEqual(1, MintingReads(Source("Growth",
 				"KingdomDelveLink.04.ReceiptAndEndpointCustody.cs")),
 				"new paired endpoint publication only");
-			Assert.AreEqual(1, MintingReads(Source("Growth",
+			ClassicAssert.AreEqual(1, MintingReads(Source("Growth",
 				"KingdomPlot2.34.EffectsAndFurnishing.cs")),
 				"new furnishing publication only");
-			Assert.AreEqual(2, MintingReads(Source("Trade",
+			ClassicAssert.AreEqual(2, MintingReads(Source("Trade",
 				"KingdomTrade.16.ProjectionMutation.cs")),
 				"new caravan publication only");
 		}
@@ -486,26 +487,26 @@ namespace ThousandAndFirst.Tests
 			};
 
 			LookupRow exact;
-			Assert.AreEqual(KingdomTradeExactLookup.ExactUnique,
+			ClassicAssert.AreEqual(KingdomTradeExactLookup.ExactUnique,
 				KingdomTradeRules.ResolveExactUnique(loaded, targetId,
 					row => row.Object.IDIfAssigned, out exact));
-			Assert.AreSame(target, exact);
-			Assert.AreEqual(KingdomTradeExactLookup.Missing,
+			ClassicAssert.AreSame(target, exact);
+			ClassicAssert.AreEqual(KingdomTradeExactLookup.Missing,
 				KingdomTradeRules.ResolveExactUnique(loaded, "missing-target",
 					row => row.Object.IDIfAssigned, out exact));
 			loaded.Add(new LookupRow
 			{
 				Object = new NativeIdentityDecoy(targetId), Topology = "nested-inventory"
 			});
-			Assert.AreEqual(KingdomTradeExactLookup.Ambiguous,
+			ClassicAssert.AreEqual(KingdomTradeExactLookup.Ambiguous,
 				KingdomTradeRules.ResolveExactUnique(loaded, targetId,
 					row => row.Object.IDIfAssigned, out exact));
-			Assert.IsNull(exact);
-			Assert.AreEqual(70, NativeSequence);
-			Assert.AreEqual(0, root.BaseId);
-			Assert.AreEqual(0, nested.BaseId);
-			Assert.IsNull(root.IdProperty);
-			Assert.IsNull(nested.IdProperty);
+			ClassicAssert.IsNull(exact);
+			ClassicAssert.AreEqual(70, NativeSequence);
+			ClassicAssert.AreEqual(0, root.BaseId);
+			ClassicAssert.AreEqual(0, nested.BaseId);
+			ClassicAssert.IsNull(root.IdProperty);
+			ClassicAssert.IsNull(nested.IdProperty);
 		}
 
 		[Test]
@@ -513,10 +514,10 @@ namespace ThousandAndFirst.Tests
 		{
 			NativeSequence = 10;
 			NativeIdentityDecoy decoy = new NativeIdentityDecoy();
-			Assert.AreEqual("11", decoy.ID);
-			Assert.AreEqual(11, decoy.BaseId);
-			Assert.AreEqual("11", decoy.IdProperty);
-			Assert.AreEqual(11, NativeSequence);
+			ClassicAssert.AreEqual("11", decoy.ID);
+			ClassicAssert.AreEqual(11, decoy.BaseId);
+			ClassicAssert.AreEqual("11", decoy.IdProperty);
+			ClassicAssert.AreEqual(11, NativeSequence);
 		}
 
 		[Test]
@@ -531,13 +532,13 @@ namespace ThousandAndFirst.Tests
 			List<NativeIdentityDecoy> preview = candidates.FindAll(
 				candidate => !string.IsNullOrEmpty(candidate.IDIfAssigned));
 			preview.Sort((a, b) => string.CompareOrdinal(a.IDIfAssigned, b.IDIfAssigned));
-			Assert.AreEqual(new[] { "a", "b" }, preview.ConvertAll(x => x.IDIfAssigned));
+			ClassicAssert.AreEqual(new[] { "a", "b" }, preview.ConvertAll(x => x.IDIfAssigned));
 			// Cancelling the preview performs no committed identity boundary.
-			Assert.AreEqual(90, NativeSequence);
-			Assert.AreEqual(0, root.BaseId);
-			Assert.AreEqual(0, nested.BaseId);
-			Assert.IsNull(root.IdProperty);
-			Assert.IsNull(nested.IdProperty);
+			ClassicAssert.AreEqual(90, NativeSequence);
+			ClassicAssert.AreEqual(0, root.BaseId);
+			ClassicAssert.AreEqual(0, nested.BaseId);
+			ClassicAssert.IsNull(root.IdProperty);
+			ClassicAssert.IsNull(nested.IdProperty);
 		}
 #endif
 	}

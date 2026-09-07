@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -40,7 +41,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomHostedArcology.IsOperationalPure(HostRoot)", runtime);
 			StringAssert.DoesNotContain("KingdomHostedArcology.Operational(HostRoot)", runtime);
 			StringAssert.Contains("KingdomSurvey.TakeCustodyOnly(HostZone)", runtime);
-			Assert.AreEqual(1, Count(runtime, "KingdomSurvey.TakeCustodyOnly("));
+			ClassicAssert.AreEqual(1, Count(runtime, "KingdomSurvey.TakeCustodyOnly("));
 			StringAssert.DoesNotContain("KingdomSurvey.Take(", runtime);
 			StringAssert.Contains("== \"bookshelf\"", runtime);
 			StringAssert.Contains("== \"vellumpress\"", runtime);
@@ -71,7 +72,7 @@ namespace ThousandAndFirst.Tests
 				string root = Path.Combine(TestMain.RepositoryRoot, folder);
 				foreach (string file in Directory.GetFiles(root,
 					"KingdomGreatArchive*.cs", SearchOption.TopDirectoryOnly))
-					Assert.Less(File.ReadAllLines(file).Length, 300,
+					ClassicAssert.Less(File.ReadAllLines(file).Length, 300,
 						Path.GetFileName(file) + " must be split");
 			}
 		}
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(first, StringComparison.Ordinal);
 			int b = source.IndexOf(second, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, first); Assert.Greater(b, a, second);
+			ClassicAssert.GreaterOrEqual(a, 0, first); ClassicAssert.Greater(b, a, second);
 		}
 	}
 }

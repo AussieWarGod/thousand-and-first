@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -90,14 +91,14 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int release = runtime.IndexOf("TryReleaseForCohort", clearAfterCommit,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(commit, 0); Assert.Greater(clearAfterCommit, commit);
-			Assert.Greater(release, clearAfterCommit);
+			ClassicAssert.GreaterOrEqual(commit, 0); ClassicAssert.Greater(clearAfterCommit, commit);
+			ClassicAssert.Greater(release, clearAfterCommit);
 			int cleanup = runtime.IndexOf("TryCleanupCurrentEndpoint", StringComparison.Ordinal);
 			int cleaned = runtime.IndexOf("cohort.Phase == KingdomPolityCohortPhase.Cleaned",
 				cleanup, StringComparison.Ordinal);
 			int concluded = runtime.IndexOf("cohort.Phase != KingdomPolityCohortPhase.Concluded",
 				cleaned, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(cleaned, cleanup); Assert.Greater(concluded, cleaned);
+			ClassicAssert.GreaterOrEqual(cleaned, cleanup); ClassicAssert.Greater(concluded, cleaned);
 		}
 
 		[Test]
@@ -119,7 +120,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(earlier, StringComparison.Ordinal);
 			int b = source.IndexOf(later, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, earlier); Assert.Greater(b, a, later);
+			ClassicAssert.GreaterOrEqual(a, 0, earlier); ClassicAssert.Greater(b, a, later);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -55,13 +56,13 @@ namespace ThousandAndFirst.Tests
 				new KingdomRoadSurfaceRule("a-first", "common", "local",
 					TechLevel.Hands, TechLevel.Arclight, "SaltPath", KingdomMaterial.Stone, 10)
 			};
-			Assert.IsTrue(KingdomRoadPaletteRules.TryResolve(rules, "COMMON", "LOCAL",
+			ClassicAssert.IsTrue(KingdomRoadPaletteRules.TryResolve(rules, "COMMON", "LOCAL",
 				TechLevel.Hands, out var surface));
-			Assert.AreEqual("a-first", surface.RuleKey);
+			ClassicAssert.AreEqual("a-first", surface.RuleKey);
 
 			rules.Add(new KingdomRoadSurfaceRule("a-first", "common", "local",
 				TechLevel.Hands, TechLevel.Arclight, "WoodFloor", KingdomMaterial.Timber, 10));
-			Assert.IsFalse(KingdomRoadPaletteRules.TryResolve(rules, "common", "local",
+			ClassicAssert.IsFalse(KingdomRoadPaletteRules.TryResolve(rules, "common", "local",
 				TechLevel.Hands, out _));
 		}
 
@@ -71,16 +72,16 @@ namespace ThousandAndFirst.Tests
 			KingdomRoadSurfaceRule rule = new KingdomRoadSurfaceRule(
 				"taf-test-glass-road", "taf:test-glass", "taf:test:pilgrim",
 				TechLevel.Hands, TechLevel.Arclight, "MarbleFloor", KingdomMaterial.Marble, 90);
-			Assert.IsTrue(KingdomRoadPaletteRules.RegisterSurfaceRule(rule, out var failure), failure);
-			Assert.IsTrue(KingdomRoadPaletteRules.RegisterSurfaceRule(rule, out failure), failure);
-			Assert.IsTrue(KingdomRoadPaletteRules.TryResolveCurrent("taf:test-glass",
+			ClassicAssert.IsTrue(KingdomRoadPaletteRules.RegisterSurfaceRule(rule, out var failure), failure);
+			ClassicAssert.IsTrue(KingdomRoadPaletteRules.RegisterSurfaceRule(rule, out failure), failure);
+			ClassicAssert.IsTrue(KingdomRoadPaletteRules.TryResolveCurrent("taf:test-glass",
 				"taf:test:pilgrim", TechLevel.Hands, out var surface));
-			Assert.AreEqual("taf-test-glass-road", surface.RuleKey);
-			Assert.IsFalse(KingdomRoadPaletteRules.RegisterSurfaceRule(
+			ClassicAssert.AreEqual("taf-test-glass-road", surface.RuleKey);
+			ClassicAssert.IsFalse(KingdomRoadPaletteRules.RegisterSurfaceRule(
 				new KingdomRoadSurfaceRule("taf-test-glass-road", "taf:test-glass",
 					"taf:test:pilgrim", TechLevel.Hands, TechLevel.Arclight,
 					"SaltPath", KingdomMaterial.Stone, 90), out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -127,21 +128,21 @@ namespace ThousandAndFirst.Tests
 			List<int> cells = new List<int>();
 			KingdomRoadFrontage preferred = new KingdomRoadFrontage("market", 2, 1);
 
-			Assert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => true, 8, 7,
+			ClassicAssert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => true, 8, 7,
 				1, 2, 5, 2, centre, preferred, cells, out int width));
-			Assert.AreEqual(2, width);
+			ClassicAssert.AreEqual(2, width);
 			CollectionAssert.AreEqual(new[] { P(2, 2), P(3, 2), P(4, 2),
 				P(2, 1), P(3, 1), P(4, 1) }, cells);
 
-			Assert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => y != 1, 8, 7,
+			ClassicAssert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => y != 1, 8, 7,
 				1, 2, 5, 2, centre, preferred, cells, out width));
-			Assert.AreEqual(2, width);
+			ClassicAssert.AreEqual(2, width);
 			CollectionAssert.AreEqual(new[] { P(2, 2), P(3, 2), P(4, 2),
 				P(2, 3), P(3, 3), P(4, 3) }, cells);
 
-			Assert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => y == 2, 8, 7,
+			ClassicAssert.IsTrue(KingdomRoadClearanceRules.TryExpand((x, y) => y == 2, 8, 7,
 				1, 2, 5, 2, centre, preferred, cells, out width));
-			Assert.AreEqual(1, width);
+			ClassicAssert.AreEqual(1, width);
 			CollectionAssert.AreEqual(centre, cells);
 		}
 
@@ -150,48 +151,48 @@ namespace ThousandAndFirst.Tests
 		{
 			List<int> cells = new List<int> { 99 };
 			List<int> centre = new List<int> { P(2, 2), P(3, 2) };
-			Assert.IsFalse(KingdomRoadClearanceRules.TryExpand((x, y) => y == 2, 8, 7,
+			ClassicAssert.IsFalse(KingdomRoadClearanceRules.TryExpand((x, y) => y == 2, 8, 7,
 				1, 2, 4, 2, centre, new KingdomRoadFrontage("taf:wide", 2, 2),
 				cells, out int width));
-			Assert.AreEqual(0, width);
-			Assert.AreEqual(0, cells.Count);
+			ClassicAssert.AreEqual(0, width);
+			ClassicAssert.AreEqual(0, cells.Count);
 
 			centre.Add(P(2, 2));
-			Assert.IsFalse(KingdomRoadClearanceRules.TryExpand((x, y) => true, 8, 7,
+			ClassicAssert.IsFalse(KingdomRoadClearanceRules.TryExpand((x, y) => true, 8, 7,
 				1, 2, 4, 2, centre, new KingdomRoadFrontage("local", 1, 1),
 				cells, out _));
-			Assert.AreEqual(0, cells.Count);
+			ClassicAssert.AreEqual(0, cells.Count);
 		}
 
 		[Test]
 		public void TerrainDerivationKeepsDeepAndRuinsIndependentFromCityStyle()
 		{
-			Assert.AreEqual("deep", KingdomRoadPaletteRules.TerrainKey(
+			ClassicAssert.AreEqual("deep", KingdomRoadPaletteRules.TerrainKey(
 				"verdant", "some ruins", true));
-			Assert.AreEqual("ruins", KingdomRoadPaletteRules.TerrainKey(
+			ClassicAssert.AreEqual("ruins", KingdomRoadPaletteRules.TerrainKey(
 				"verdant", "salt dunes ruins", false));
-			Assert.AreEqual("verdant", KingdomRoadPaletteRules.TerrainKey(
+			ClassicAssert.AreEqual("verdant", KingdomRoadPaletteRules.TerrainKey(
 				" VERDANT ", "salt marsh", false));
-			Assert.AreEqual("moonstair", KingdomRoadPaletteRules.TerrainKey(
+			ClassicAssert.AreEqual("moonstair", KingdomRoadPaletteRules.TerrainKey(
 				"gyre", "Moon Stair", false));
-			Assert.AreEqual("common", KingdomRoadPaletteRules.TerrainKey(null, null, false));
+			ClassicAssert.AreEqual("common", KingdomRoadPaletteRules.TerrainKey(null, null, false));
 		}
 
 		private static void AssertSurface(string terrain, string role, TechLevel tech,
 			string blueprint, KingdomMaterial material)
 		{
-			Assert.IsTrue(KingdomRoadPaletteRules.TryResolve(
+			ClassicAssert.IsTrue(KingdomRoadPaletteRules.TryResolve(
 				KingdomRoadPaletteRules.DefaultRules(), terrain, role, tech, out var surface));
-			Assert.AreEqual(blueprint, surface.Blueprint);
-			Assert.AreEqual(material, surface.Material);
+			ClassicAssert.AreEqual(blueprint, surface.Blueprint);
+			ClassicAssert.AreEqual(material, surface.Material);
 		}
 
 		private static void AssertFrontage(KingdomRoadFrontage frontage,
 			string role, int width)
 		{
-			Assert.AreEqual(role, frontage.Role);
-			Assert.AreEqual(width, frontage.PreferredWidth);
-			Assert.AreEqual(1, frontage.MinimumWidth);
+			ClassicAssert.AreEqual(role, frontage.Role);
+			ClassicAssert.AreEqual(width, frontage.PreferredWidth);
+			ClassicAssert.AreEqual(1, frontage.MinimumWidth);
 		}
 
 		private static int P(int x, int y)

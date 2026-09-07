@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Entry = ThousandAndFirst.KingdomSubsidenceReportEntry;
 using Plan = ThousandAndFirst.KingdomSubsidenceReportPlan;
 using Rules = ThousandAndFirst.KingdomSubsidenceReportRules;
@@ -24,19 +25,19 @@ namespace ThousandAndFirst.Tests
 				ChronicleCapacityFixture.Realm, ChronicleCapacityFixture.Settlement, rows);
 		}
 		private static Plan Ready(int id = 1, int count = 1)
-		{ Assert.IsTrue(Rules.TryArmLedger(Fresh(id, count), 0, new string[0], out var ready)); return ready; }
+		{ ClassicAssert.IsTrue(Rules.TryArmLedger(Fresh(id, count), 0, new string[0], out var ready)); return ready; }
 		private static string Wire(Plan plan)
-		{ Assert.IsTrue(Codec.TryEncode(plan, out string wire)); return wire; }
+		{ ClassicAssert.IsTrue(Codec.TryEncode(plan, out string wire)); return wire; }
 		private static KingdomChronicleCapacityWitness Witness(Plan plan, int index = 0)
 		{
 			string id = Rules.EventId(plan, index); Entry entry = plan.Entries[index];
-			Assert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(plan.RealmId, plan.SettlementId, id,
+			ClassicAssert.IsTrue(KingdomChronicleCapacityRules.TryFingerprint(plan.RealmId, plan.SettlementId, id,
 				entry.Text, entry.AtTick, out string fingerprint));
-			Assert.IsTrue(KingdomChronicleCapacityRules.TryObserve(ChronicleCapacityFixture.Shape(), id, fingerprint, out var witness));
+			ClassicAssert.IsTrue(KingdomChronicleCapacityRules.TryObserve(ChronicleCapacityFixture.Shape(), id, fingerprint, out var witness));
 			return witness;
 		}
 		private static Plan Refused(int id = 1)
-		{ Plan ready = Ready(id); Assert.IsTrue(Rules.TryRefuseCapacity(ready, 0, Witness(ready), out var refused)); return refused; }
+		{ Plan ready = Ready(id); ClassicAssert.IsTrue(Rules.TryRefuseCapacity(ready, 0, Witness(ready), out var refused)); return refused; }
 		private static KingdomSubsidenceStepBook Book()
 		{ return new KingdomSubsidenceStepBook(KingdomSubsidenceAdmission.Admitted, ChronicleCapacityFixture.Realm,
 			ChronicleCapacityFixture.Settlement, 1, null, 100000); }
@@ -45,30 +46,30 @@ namespace ThousandAndFirst.Tests
 		public void CapacityRefusalSettlesWithoutClaimingEitherDeliveredOrLostSink()
 		{
 			Plan before = Ready(); string original = Wire(before); var witness = Witness(before);
-			Assert.IsTrue(Rules.TryRefuseCapacity(before, 0, witness, out var after));
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(before, 0, witness, out var after));
 			Entry entry = after.Entries[0];
-			Assert.IsTrue(entry.CapacityRefused); Assert.IsFalse(entry.ChronicleLost); Assert.IsFalse(entry.ChronicleProved);
-			Assert.AreEqual(4096, entry.CapacityCount); Assert.AreEqual(witness.RegistryHash, entry.CapacityHash);
-			Assert.AreEqual(witness.Fingerprint, entry.CapacityFingerprint);
-			Assert.IsTrue(Rules.Settled(after)); Assert.IsTrue(Rules.HasLoss(after)); Assert.IsFalse(Rules.Complete(after));
-			Assert.AreEqual(original, Wire(before)); Assert.AreEqual(before.Entries[0].BeforeHash, entry.BeforeHash);
-			Assert.IsTrue(Rules.TryRefuseCapacity(after, 0, witness, out var repeat)); Assert.AreSame(after, repeat);
-			Assert.IsFalse(Rules.TryProveChronicle(after, 0, out _)); Assert.IsFalse(Rules.TryLoseChronicle(after, 0, out _));
+			ClassicAssert.IsTrue(entry.CapacityRefused); ClassicAssert.IsFalse(entry.ChronicleLost); ClassicAssert.IsFalse(entry.ChronicleProved);
+			ClassicAssert.AreEqual(4096, entry.CapacityCount); ClassicAssert.AreEqual(witness.RegistryHash, entry.CapacityHash);
+			ClassicAssert.AreEqual(witness.Fingerprint, entry.CapacityFingerprint);
+			ClassicAssert.IsTrue(Rules.Settled(after)); ClassicAssert.IsTrue(Rules.HasLoss(after)); ClassicAssert.IsFalse(Rules.Complete(after));
+			ClassicAssert.AreEqual(original, Wire(before)); ClassicAssert.AreEqual(before.Entries[0].BeforeHash, entry.BeforeHash);
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(after, 0, witness, out var repeat)); ClassicAssert.AreSame(after, repeat);
+			ClassicAssert.IsFalse(Rules.TryProveChronicle(after, 0, out _)); ClassicAssert.IsFalse(Rules.TryLoseChronicle(after, 0, out _));
 		}
 
 		[Test]
 		public void LedgerMustActuallySettleBeforeCapacityAndRemainsUnchanged()
 		{
 			Plan plan = Fresh(1, 1, "departed"); var witness = Witness(plan);
-			Assert.IsFalse(Rules.TryRefuseCapacity(plan, 0, witness, out _));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(plan, 0, witness, out _));
 			KingdomLedger ledger = new KingdomLedger();
-			Assert.IsTrue(Rules.TryArmLedger(plan, 0, ledger.Notes, out plan));
-			Assert.IsFalse(Rules.TryRefuseCapacity(plan, 0, witness, out _));
-			ledger.Note("departed"); Assert.IsTrue(Rules.TryProveLedger(plan, 0, ledger.Notes, out plan));
+			ClassicAssert.IsTrue(Rules.TryArmLedger(plan, 0, ledger.Notes, out plan));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(plan, 0, witness, out _));
+			ledger.Note("departed"); ClassicAssert.IsTrue(Rules.TryProveLedger(plan, 0, ledger.Notes, out plan));
 			Entry held = plan.Entries[0];
-			Assert.IsTrue(Rules.TryRefuseCapacity(plan, 0, witness, out plan));
-			Assert.AreEqual(ReportLedgerPhase.Proved, plan.Entries[0].LedgerPhase);
-			Assert.AreEqual(held.BeforeHash, plan.Entries[0].BeforeHash); Assert.AreEqual(held.AfterHash, plan.Entries[0].AfterHash);
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(plan, 0, witness, out plan));
+			ClassicAssert.AreEqual(ReportLedgerPhase.Proved, plan.Entries[0].LedgerPhase);
+			ClassicAssert.AreEqual(held.BeforeHash, plan.Entries[0].BeforeHash); ClassicAssert.AreEqual(held.AfterHash, plan.Entries[0].AfterHash);
 			CollectionAssert.AreEqual(new[] { "departed" }, ledger.Notes);
 		}
 
@@ -76,11 +77,11 @@ namespace ThousandAndFirst.Tests
 		public void SequentialFrontierRequiresEarlierCapacityRefusalToBePersistedFirst()
 		{
 			Plan plan = Ready(1, 2); string before = Wire(plan);
-			Assert.IsFalse(Rules.TryRefuseCapacity(plan, 1, Witness(plan, 1), out _));
-			Assert.IsTrue(Rules.TryRefuseCapacity(plan, 0, Witness(plan), out plan));
-			Assert.IsTrue(Rules.TryArmLedger(plan, 1, new string[0], out plan));
-			Assert.IsTrue(Rules.TryRefuseCapacity(plan, 1, Witness(plan, 1), out plan));
-			Assert.IsTrue(Rules.Settled(plan)); Assert.AreNotEqual(before, Wire(plan));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(plan, 1, Witness(plan, 1), out _));
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(plan, 0, Witness(plan), out plan));
+			ClassicAssert.IsTrue(Rules.TryArmLedger(plan, 1, new string[0], out plan));
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(plan, 1, Witness(plan, 1), out plan));
+			ClassicAssert.IsTrue(Rules.Settled(plan)); ClassicAssert.AreNotEqual(before, Wire(plan));
 		}
 
 		[TestCase("owner")] [TestCase("realm")] [TestCase("settlement")] [TestCase("index")]
@@ -101,8 +102,8 @@ namespace ThousandAndFirst.Tests
 			var foreign = new Plan(field == "owner" ? Fresh(2).OwnerId : plan.OwnerId,
 				field == "realm" ? KingdomIdentityRules.RealmPrefix + new string('e', 64) : plan.RealmId,
 				field == "settlement" ? KingdomIdentityRules.SettlementPrefix + new string('e', 64) : plan.SettlementId, rows);
-			Assert.IsFalse(Rules.Valid(foreign)); Assert.IsFalse(Codec.TryEncode(foreign, out _));
-			Assert.AreEqual(before, Wire(plan));
+			ClassicAssert.IsFalse(Rules.Valid(foreign)); ClassicAssert.IsFalse(Codec.TryEncode(foreign, out _));
+			ClassicAssert.AreEqual(before, Wire(plan));
 		}
 
 		[Test]
@@ -113,14 +114,14 @@ namespace ThousandAndFirst.Tests
 			{
 				var row = new Entry(e.Text, e.LedgerText, e.AtTick, e.LedgerPhase, false,
 					e.BeforeCount, e.BeforeHash, e.AfterCount, e.AfterHash, capacityHash: text);
-				Assert.IsFalse(Rules.Valid(new Plan(Fresh().OwnerId, ChronicleCapacityFixture.Realm,
+				ClassicAssert.IsFalse(Rules.Valid(new Plan(Fresh().OwnerId, ChronicleCapacityFixture.Realm,
 					ChronicleCapacityFixture.Settlement, new[] { row })));
 			}
-			Assert.IsFalse(Rules.TryRefuseCapacity(Ready(), 0, null, out _));
-			Plan prior = Ready(); Assert.IsTrue(Rules.TryProveChronicle(prior, 0, out var delivered));
-			Assert.IsFalse(Rules.TryRefuseCapacity(delivered, 0, Witness(prior), out _));
-			Assert.IsTrue(Rules.TryLoseChronicle(prior, 0, out var lost));
-			Assert.IsFalse(Rules.TryRefuseCapacity(lost, 0, Witness(prior), out _));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(Ready(), 0, null, out _));
+			Plan prior = Ready(); ClassicAssert.IsTrue(Rules.TryProveChronicle(prior, 0, out var delivered));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(delivered, 0, Witness(prior), out _));
+			ClassicAssert.IsTrue(Rules.TryLoseChronicle(prior, 0, out var lost));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(lost, 0, Witness(prior), out _));
 		}
 
 		[TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
@@ -142,63 +143,63 @@ namespace ThousandAndFirst.Tests
 				if (cut == 4) return false; if (cut == 5) throw new InvalidOperationException();
 				return true;
 			}, out var returned);
-			Assert.AreEqual(cut == 8, result); Assert.AreEqual(cut == 8, returned != null);
-			Assert.AreEqual(original, Wire(plan)); Assert.AreEqual("proof", calls[0]);
-			Assert.AreEqual(cut < 2 ? 1 : cut < 6 ? 2 : 3, calls.Count);
-			Assert.IsTrue(Codec.TryDecode(persisted, out var recovered));
-			Assert.AreEqual(cut >= 4, recovered.Entries[0].CapacityRefused);
+			ClassicAssert.AreEqual(cut == 8, result); ClassicAssert.AreEqual(cut == 8, returned != null);
+			ClassicAssert.AreEqual(original, Wire(plan)); ClassicAssert.AreEqual("proof", calls[0]);
+			ClassicAssert.AreEqual(cut < 2 ? 1 : cut < 6 ? 2 : 3, calls.Count);
+			ClassicAssert.IsTrue(Codec.TryDecode(persisted, out var recovered));
+			ClassicAssert.AreEqual(cut >= 4, recovered.Entries[0].CapacityRefused);
 			if (cut < 4)
-				Assert.IsTrue(Rules.TryPublishCapacity(recovered, 0, witness, () => true,
+				ClassicAssert.IsTrue(Rules.TryPublishCapacity(recovered, 0, witness, () => true,
 					next => { persisted = Wire(next); return true; }, out recovered));
-			Assert.IsTrue(Codec.TryDecode(persisted, out recovered));
-			Assert.IsTrue(Rules.Settled(recovered)); Assert.IsFalse(Rules.Complete(recovered));
-			Assert.IsTrue(Rules.TryRefuseCapacity(recovered, 0, witness, out var repeat)); Assert.AreSame(recovered, repeat);
+			ClassicAssert.IsTrue(Codec.TryDecode(persisted, out recovered));
+			ClassicAssert.IsTrue(Rules.Settled(recovered)); ClassicAssert.IsFalse(Rules.Complete(recovered));
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(recovered, 0, witness, out var repeat)); ClassicAssert.AreSame(recovered, repeat);
 		}
 
 		[Test]
 		public void InvalidPublicationCallbacksOrUnsettledLedgerHaveNoEffects()
 		{
 			Plan ready = Ready(); int calls = 0;
-			Assert.IsFalse(Rules.TryPublishCapacity(ready, 0, Witness(ready), null, p => { calls++; return true; }, out _));
-			Assert.IsFalse(Rules.TryPublishCapacity(ready, 0, Witness(ready), () => { calls++; return true; }, null, out _));
-			Assert.IsFalse(Rules.TryPublishCapacity(Fresh(), 0, Witness(ready), () => { calls++; return true; }, p => true, out _));
-			Assert.AreEqual(0, calls);
+			ClassicAssert.IsFalse(Rules.TryPublishCapacity(ready, 0, Witness(ready), null, p => { calls++; return true; }, out _));
+			ClassicAssert.IsFalse(Rules.TryPublishCapacity(ready, 0, Witness(ready), () => { calls++; return true; }, null, out _));
+			ClassicAssert.IsFalse(Rules.TryPublishCapacity(Fresh(), 0, Witness(ready), () => { calls++; return true; }, p => true, out _));
+			ClassicAssert.AreEqual(0, calls);
 		}
 
 		[Test]
 		public void ChangedCanonicalRegistryCannotReuseAnEarlierCapacityWitness()
 		{
 			Plan plan = Ready(); var first = Witness(plan); string before = Wire(plan); int saves = 0;
-			Assert.IsTrue(KingdomChronicleCapacityRules.TryObserve(ChronicleCapacityFixture.Shape(
+			ClassicAssert.IsTrue(KingdomChronicleCapacityRules.TryObserve(ChronicleCapacityFixture.Shape(
 				ChronicleCapacityFixture.Registry(4096, true)), first.EventId, first.Fingerprint, out var changed));
-			Assert.AreNotEqual(first.RegistryHash, changed.RegistryHash);
-			Assert.IsFalse(Rules.TryPublishCapacity(plan, 0, first, () => first.RegistryHash == changed.RegistryHash,
+			ClassicAssert.AreNotEqual(first.RegistryHash, changed.RegistryHash);
+			ClassicAssert.IsFalse(Rules.TryPublishCapacity(plan, 0, first, () => first.RegistryHash == changed.RegistryHash,
 				p => { saves++; return true; }, out _));
-			Assert.AreEqual(0, saves); Assert.AreEqual(before, Wire(plan));
-			Assert.IsTrue(Rules.TryRefuseCapacity(plan, 0, first, out var refused));
-			Assert.IsFalse(Rules.TryRefuseCapacity(refused, 0, changed, out _));
+			ClassicAssert.AreEqual(0, saves); ClassicAssert.AreEqual(before, Wire(plan));
+			ClassicAssert.IsTrue(Rules.TryRefuseCapacity(plan, 0, first, out var refused));
+			ClassicAssert.IsFalse(Rules.TryRefuseCapacity(refused, 0, changed, out _));
 		}
 
 		[Test]
 		public void RefusedReportSurvivesArchiveBookRoundtripAndVisibleAcknowledgement()
 		{
 			Plan report = Refused(); string reportWire = Wire(report); var book = Book();
-			Assert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, reportWire, out var retained));
-			Assert.AreEqual(KingdomSubsidenceReportArchive.None, book.FailureModel);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(retained, out string wire));
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out var restored));
-			Assert.AreEqual(retained.FailureModel, restored.FailureModel);
+			ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, reportWire, out var retained));
+			ClassicAssert.AreEqual(KingdomSubsidenceReportArchive.None, book.FailureModel);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(retained, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out var restored));
+			ClassicAssert.AreEqual(retained.FailureModel, restored.FailureModel);
 			string digest = KingdomSubsidenceReportArchive.Digest(restored);
 			StringAssert.Contains("Chronicle not published: registry full", digest);
 			StringAssert.Contains("4096 replay receipts retained", digest);
 			StringAssert.Contains(report.Entries[0].CapacityHash, digest);
 			StringAssert.Contains("delivery is not claimed", digest);
-			Assert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(restored, reportWire, out var repeat));
-			Assert.AreSame(restored, repeat);
+			ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(restored, reportWire, out var repeat));
+			ClassicAssert.AreSame(restored, repeat);
 			var acknowledged = restored.WithFailures(KingdomSubsidenceReportArchive.None);
-			Assert.IsTrue(KingdomSubsidenceStepRules.Valid(acknowledged));
-			Assert.AreEqual(restored.LastRetiredTick, acknowledged.LastRetiredTick);
-			Assert.AreEqual(restored.Sequence, acknowledged.Sequence);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.Valid(acknowledged));
+			ClassicAssert.AreEqual(restored.LastRetiredTick, acknowledged.LastRetiredTick);
+			ClassicAssert.AreEqual(restored.Sequence, acknowledged.Sequence);
 		}
 
 		[Test]
@@ -206,23 +207,23 @@ namespace ThousandAndFirst.Tests
 		{
 			var book = Book();
 			for (int i = 1; i <= KingdomSubsidenceReportArchive.MaxReports; i++)
-				Assert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, Wire(Refused(i)), out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, Wire(Refused(i)), out book));
 			string held = book.FailureModel, pending = Wire(Refused(9));
-			Assert.IsFalse(KingdomSubsidenceReportArchive.TryRetain(book, pending, out var refused));
-			Assert.IsNull(refused); Assert.AreEqual(held, book.FailureModel);
-			Assert.IsTrue(KingdomSubsidenceReportArchive.TryRead(held, out var rows)); Assert.AreEqual(8, rows.Count);
-			Assert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book.WithFailures(KingdomSubsidenceReportArchive.None), pending, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceReportArchive.TryRetain(book, pending, out var refused));
+			ClassicAssert.IsNull(refused); ClassicAssert.AreEqual(held, book.FailureModel);
+			ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRead(held, out var rows)); ClassicAssert.AreEqual(8, rows.Count);
+			ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book.WithFailures(KingdomSubsidenceReportArchive.None), pending, out _));
 		}
 
 		[Test]
 		public void RealFiveDepartureCreditsRetireOnceAndCapacitySummaryPreservesTheirAccounting()
 		{
 			const long anchor = 500; long due = anchor + KingdomSubsidenceStepRules.StepTicks;
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out var book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, ChronicleCapacityFixture.Realm, ChronicleCapacityFixture.Settlement, out book));
-			Assert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, anchor, due, 5, "Fixture", "water", out var batch));
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch, out string batchWire)); book = book.WithBatch(batchWire);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, anchor, due, GrowthStage.City, 5, out book, 0, "water"));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out var book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, ChronicleCapacityFixture.Realm, ChronicleCapacityFixture.Settlement, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchRules.TryBegin(book, anchor, due, 5, "Fixture", "water", out var batch));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch, out string batchWire)); book = book.WithBatch(batchWire);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, anchor, due, GrowthStage.City, 5, out book, 0, "water"));
 			for (int id = 1; id <= 5; id++)
 			{
 				string body = "capacity-departure-" + id;
@@ -233,47 +234,47 @@ namespace ThousandAndFirst.Tests
 					ResidentId = id, BodyObjectId = body, ResidentName = "Fixture", ZoneId = "JoppaWorld.12.24.1.1.10", PreparedTick = due,
 					OperationId = KingdomResidentDepartureRules.Id(book.RealmId, book.SettlementId, id, body, due)
 				};
-				Assert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out var repeat));
-				Assert.AreSame(book, repeat); Assert.AreEqual(id, book.Active.Completed);
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
+				ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out var repeat));
+				ClassicAssert.AreSame(book, repeat); ClassicAssert.AreEqual(id, book.Active.Completed);
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
 			}
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, due, out book));
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, due, out _));
-			Assert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out batch));
-			Assert.AreEqual(5, batch.Departed); Assert.IsTrue(batch.Closing);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryRetire(book, due, out book));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryRetire(book, due, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryDecode(book.BatchModel, out batch));
+			ClassicAssert.AreEqual(5, batch.Departed); ClassicAssert.IsTrue(batch.Closing);
 			Plan report = new Plan(batch.Id, book.RealmId, book.SettlementId, new[] { new Entry("Two more departed", "", batch.ClosedTick) });
-			Assert.IsTrue(Rules.TryArmLedger(report, 0, new string[0], out report));
-			Assert.IsTrue(Rules.TryPublishCapacity(report, 0, Witness(report), () => true, next =>
+			ClassicAssert.IsTrue(Rules.TryArmLedger(report, 0, new string[0], out report));
+			ClassicAssert.IsTrue(Rules.TryPublishCapacity(report, 0, Witness(report), () => true, next =>
 			{
-				Assert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch.Copy(reportModel: Wire(next)), out string saved));
+				ClassicAssert.IsTrue(KingdomSubsidenceBatchCodec.TryEncode(batch.Copy(reportModel: Wire(next)), out string saved));
 				book = book.WithBatch(saved); return KingdomSubsidenceStepRules.Valid(book);
 			}, out report));
-			Assert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, Wire(report), out var retained));
+			ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRetain(book, Wire(report), out var retained));
 			var retired = retained.WithBatch(KingdomSubsidenceBatchRules.None);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(retired, out string wire));
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out var restored));
-			Assert.IsNull(restored.Active); Assert.AreEqual(1, restored.Sequence); Assert.AreEqual(due, restored.LastRetiredTick);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryBegin(restored, anchor, due, GrowthStage.City, 5, out _, 0, "water"));
-			Assert.AreEqual(Wire(report), ReadOnlyFailure(restored)); Assert.IsFalse(Rules.Complete(report));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(retired, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out var restored));
+			ClassicAssert.IsNull(restored.Active); ClassicAssert.AreEqual(1, restored.Sequence); ClassicAssert.AreEqual(due, restored.LastRetiredTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryBegin(restored, anchor, due, GrowthStage.City, 5, out _, 0, "water"));
+			ClassicAssert.AreEqual(Wire(report), ReadOnlyFailure(restored)); ClassicAssert.IsFalse(Rules.Complete(report));
 		}
 		private static string ReadOnlyFailure(KingdomSubsidenceStepBook book)
-		{ Assert.IsTrue(KingdomSubsidenceReportArchive.TryRead(book.FailureModel, out var rows)); Assert.AreEqual(1, rows.Count); return rows[0]; }
+		{ ClassicAssert.IsTrue(KingdomSubsidenceReportArchive.TryRead(book.FailureModel, out var rows)); ClassicAssert.AreEqual(1, rows.Count); return rows[0]; }
 
 		[Test]
 		public void CurrentWireRoundtripsAndEveryTruncationTrailingByteOrNoncanonicalBase64Refuses()
 		{
 			Plan plan = Refused(); string wire = Wire(plan); StringAssert.StartsWith("st3:", wire);
-			Assert.IsTrue(Codec.TryDecode(wire, out var restored)); Assert.AreEqual(wire, Wire(restored));
+			ClassicAssert.IsTrue(Codec.TryDecode(wire, out var restored)); ClassicAssert.AreEqual(wire, Wire(restored));
 			byte[] bytes = Convert.FromBase64String(wire.Substring(4));
-			for (int i = 0; i < bytes.Length; i++) Assert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes, 0, i), out _), "cut " + i);
+			for (int i = 0; i < bytes.Length; i++) ClassicAssert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes, 0, i), out _), "cut " + i);
 			Array.Resize(ref bytes, bytes.Length + 1);
-			Assert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes), out _));
-			Assert.IsFalse(Codec.TryDecode(wire + "\n", out _));
-			Assert.IsFalse(Codec.TryDecode("st2:" + wire.Substring(4), out _));
-			Assert.IsFalse(Codec.TryDecode("st4:" + wire.Substring(4), out _));
+			ClassicAssert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes), out _));
+			ClassicAssert.IsFalse(Codec.TryDecode(wire + "\n", out _));
+			ClassicAssert.IsFalse(Codec.TryDecode("st2:" + wire.Substring(4), out _));
+			ClassicAssert.IsFalse(Codec.TryDecode("st4:" + wire.Substring(4), out _));
 		}
 
 		[TestCase("unknown-reason")] [TestCase("missing-reason")] [TestCase("zero-count")] [TestCase("negative-count")]
@@ -301,23 +302,23 @@ namespace ThousandAndFirst.Tests
 						writer.Write(field == "zero-count" ? 0 : field == "negative-count" ? -1 : 4097);
 				}
 			}
-			Assert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes), out var bad)); Assert.IsNull(bad);
-			Assert.IsTrue(Codec.TryDecode(original, out var retained)); Assert.AreEqual(original, Wire(retained));
+			ClassicAssert.IsFalse(Codec.TryDecode("st3:" + Convert.ToBase64String(bytes), out var bad)); ClassicAssert.IsNull(bad);
+			ClassicAssert.IsTrue(Codec.TryDecode(original, out var retained)); ClassicAssert.AreEqual(original, Wire(retained));
 		}
 
 		[TestCase(1)] [TestCase(2)]
 		public void HistoricalLayoutsKeepTheirExactBytesAndUpgradeOnlyOnCurrentEncode(int version)
 		{
 			Plan plan = Ready();
-			if (version == 2) Assert.IsTrue(Rules.TryLoseChronicle(plan, 0, out plan));
+			if (version == 2) ClassicAssert.IsTrue(Rules.TryLoseChronicle(plan, 0, out plan));
 			string old = Historical(plan, version);
-			Assert.IsTrue(Codec.TryDecode(old, out var read)); Assert.IsFalse(read.Entries[0].CapacityRefused);
-			Assert.AreEqual(version == 2, read.Entries[0].ChronicleLost);
+			ClassicAssert.IsTrue(Codec.TryDecode(old, out var read)); ClassicAssert.IsFalse(read.Entries[0].CapacityRefused);
+			ClassicAssert.AreEqual(version == 2, read.Entries[0].ChronicleLost);
 			var method = typeof(Codec).GetMethod("EncodeV" + version, BindingFlags.Static | BindingFlags.NonPublic);
-			Assert.IsNotNull(method); object[] args = { read, null };
-			Assert.IsTrue((bool)method.Invoke(null, args)); Assert.AreEqual(old, args[1]);
+			ClassicAssert.IsNotNull(method); object[] args = { read, null };
+			ClassicAssert.IsTrue((bool)method.Invoke(null, args)); ClassicAssert.AreEqual(old, args[1]);
 			StringAssert.StartsWith("st3:", Wire(read));
-			args = new object[] { Refused(), null }; Assert.IsFalse((bool)method.Invoke(null, args)); Assert.IsNull(args[1]);
+			args = new object[] { Refused(), null }; ClassicAssert.IsFalse((bool)method.Invoke(null, args)); ClassicAssert.IsNull(args[1]);
 		}
 
 		private static string Historical(Plan plan, int version)

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < files.Length; i++)
 			{
 				string source = Source(files[i]); all += source;
-				Assert.Less(source.Split('\n').Length, 300, files[i]);
+				ClassicAssert.Less(source.Split('\n').Length, 300, files[i]);
 			}
 			string[] forbidden = { "RequireSystem", "GameObject.Create",
 				"JournalAPI", "CookingGameState", "AddXP", "Reputation", "Buff",

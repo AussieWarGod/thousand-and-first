@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1199L, KingdomDayBand.BeetleMoon)]
 		public void BandsCutWhereTheGamesOwnCalendarCuts(long tickOfDay, KingdomDayBand expected)
 		{
-			Assert.AreEqual(expected, KingdomPlacementRules.BandFor(tickOfDay));
+			ClassicAssert.AreEqual(expected, KingdomPlacementRules.BandFor(tickOfDay));
 		}
 
 		/// <summary>A day is 1200 ticks and the band repeats with it. A clock that read the
@@ -42,8 +43,8 @@ namespace ThousandAndFirst.Tests
 			for (int within = 0; within < KingdomPlacementRules.TicksPerDay; within += 37)
 			{
 				KingdomDayBand first = KingdomPlacementRules.BandFor(within);
-				Assert.AreEqual(first, KingdomPlacementRules.BandFor(within + 90L * KingdomPlacementRules.TicksPerDay));
-				Assert.AreEqual(first, KingdomPlacementRules.BandFor(within + 438000L));
+				ClassicAssert.AreEqual(first, KingdomPlacementRules.BandFor(within + 90L * KingdomPlacementRules.TicksPerDay));
+				ClassicAssert.AreEqual(first, KingdomPlacementRules.BandFor(within + 438000L));
 			}
 		}
 
@@ -57,9 +58,9 @@ namespace ThousandAndFirst.Tests
 		public void TheBandIsTotalOverEveryTick(long tick)
 		{
 			int within = KingdomPlacementRules.TickOfDay(tick);
-			Assert.IsTrue(within >= 0 && within < KingdomPlacementRules.TicksPerDay);
+			ClassicAssert.IsTrue(within >= 0 && within < KingdomPlacementRules.TicksPerDay);
 			KingdomDayBand band = KingdomPlacementRules.BandFor(tick);
-			Assert.IsTrue(band >= KingdomDayBand.BeetleMoon && band <= KingdomDayBand.JeweledDusk);
+			ClassicAssert.IsTrue(band >= KingdomDayBand.BeetleMoon && band <= KingdomDayBand.JeweledDusk);
 		}
 
 		/// <summary>
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomDayShape.Shrine, KingdomDayBand.BeetleMoon, KingdomPost.Hearth)]
 		public void TheHourDecidesWhereADayShapeStands(KingdomDayShape shape, KingdomDayBand band, KingdomPost expected)
 		{
-			Assert.AreEqual(expected, KingdomPlacementRules.PostFor(shape, band));
+			ClassicAssert.AreEqual(expected, KingdomPlacementRules.PostFor(shape, band));
 		}
 
 		/// <summary>The watch keeps its post in every band, which is what a watch is.</summary>
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int band = (int)KingdomDayBand.BeetleMoon; band <= (int)KingdomDayBand.JeweledDusk; band++)
 			{
-				Assert.AreEqual(KingdomPost.Station, KingdomPlacementRules.PostFor(KingdomDayShape.Watch, (KingdomDayBand)band));
+				ClassicAssert.AreEqual(KingdomPost.Station, KingdomPlacementRules.PostFor(KingdomDayShape.Watch, (KingdomDayBand)band));
 			}
 		}
 
@@ -102,7 +103,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int band = (int)KingdomDayBand.BeetleMoon; band <= (int)KingdomDayBand.JeweledDusk; band++)
 			{
-				Assert.AreEqual(KingdomPost.Hearth, KingdomPlacementRules.PostFor(KingdomDayShape.Hearth, (KingdomDayBand)band));
+				ClassicAssert.AreEqual(KingdomPost.Hearth, KingdomPlacementRules.PostFor(KingdomDayShape.Hearth, (KingdomDayBand)band));
 			}
 		}
 
@@ -116,7 +117,7 @@ namespace ThousandAndFirst.Tests
 				for (int band = (int)KingdomDayBand.BeetleMoon; band <= (int)KingdomDayBand.JeweledDusk; band++)
 				{
 					KingdomPost post = KingdomPlacementRules.PostFor((KingdomDayShape)shape, (KingdomDayBand)band);
-					Assert.IsTrue(post == KingdomPost.Hearth || post == KingdomPost.Station);
+					ClassicAssert.IsTrue(post == KingdomPost.Hearth || post == KingdomPost.Station);
 				}
 			}
 		}
@@ -126,9 +127,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ABandChangeIsTheOnlyThingWorthReanchoringOn()
 		{
-			Assert.IsFalse(KingdomPlacementRules.BandChanged(500L, 749L));
-			Assert.IsTrue(KingdomPlacementRules.BandChanged(750L, 751L));
-			Assert.IsTrue(KingdomPlacementRules.BandChanged(1050L, 1051L));
+			ClassicAssert.IsFalse(KingdomPlacementRules.BandChanged(500L, 749L));
+			ClassicAssert.IsTrue(KingdomPlacementRules.BandChanged(750L, 751L));
+			ClassicAssert.IsTrue(KingdomPlacementRules.BandChanged(1050L, 1051L));
 		}
 
 		/// <summary>
@@ -140,12 +141,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AStationMayNotSpendTurnsFasterThanOnceAnHour()
 		{
-			Assert.AreEqual(KingdomBudgetRules.HeartbeatCadenceTicks, KingdomPlacementRules.ClaimCooldownTicks);
-			Assert.AreEqual(KingdomPlacementRules.TicksPerHour, KingdomPlacementRules.ClaimCooldownTicks);
-			Assert.IsTrue(KingdomPlacementRules.MayClaim(0L, 10L), "a station that has never claimed is not on cooldown");
-			Assert.IsFalse(KingdomPlacementRules.MayClaim(100L, 149L));
-			Assert.IsTrue(KingdomPlacementRules.MayClaim(100L, 150L));
-			Assert.IsTrue(KingdomPlacementRules.MayClaim(100L, 5000L));
+			ClassicAssert.AreEqual(KingdomBudgetRules.HeartbeatCadenceTicks, KingdomPlacementRules.ClaimCooldownTicks);
+			ClassicAssert.AreEqual(KingdomPlacementRules.TicksPerHour, KingdomPlacementRules.ClaimCooldownTicks);
+			ClassicAssert.IsTrue(KingdomPlacementRules.MayClaim(0L, 10L), "a station that has never claimed is not on cooldown");
+			ClassicAssert.IsFalse(KingdomPlacementRules.MayClaim(100L, 149L));
+			ClassicAssert.IsTrue(KingdomPlacementRules.MayClaim(100L, 150L));
+			ClassicAssert.IsTrue(KingdomPlacementRules.MayClaim(100L, 5000L));
 		}
 
 		/// <summary>
@@ -155,10 +156,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCadenceIsTheGamesOwnHour()
 		{
-			Assert.AreEqual(50, KingdomPlacementRules.TicksPerHour);
-			Assert.AreEqual(1200, KingdomPlacementRules.TicksPerDay);
-			Assert.AreEqual(24, KingdomPlacementRules.TicksPerDay / KingdomPlacementRules.TicksPerHour);
-			Assert.AreEqual((long)ThousandAndFirst.KingdomRules.TicksPerDay, (long)KingdomPlacementRules.TicksPerDay);
+			ClassicAssert.AreEqual(50, KingdomPlacementRules.TicksPerHour);
+			ClassicAssert.AreEqual(1200, KingdomPlacementRules.TicksPerDay);
+			ClassicAssert.AreEqual(24, KingdomPlacementRules.TicksPerDay / KingdomPlacementRules.TicksPerHour);
+			ClassicAssert.AreEqual((long)ThousandAndFirst.KingdomRules.TicksPerDay, (long)KingdomPlacementRules.TicksPerDay);
 		}
 
 		/// <summary>
@@ -173,10 +174,10 @@ namespace ThousandAndFirst.Tests
 				+ KingdomCityState.MaxResidents + KingdomCityState.MaxClocks;
 			long perSlice = 2L * rows;
 			long perTurn = perSlice / KingdomBudgetRules.HeartbeatCadenceTicks;
-			Assert.AreEqual(38L, perTurn);
-			Assert.LessOrEqual(perTurn, 40L);
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, perTurn));
-			Assert.AreEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, 81L));
+			ClassicAssert.AreEqual(38L, perTurn);
+			ClassicAssert.LessOrEqual(perTurn, 40L);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, perTurn));
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Over, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.HeartbeatAmortised, 81L));
 		}
 	}
 }

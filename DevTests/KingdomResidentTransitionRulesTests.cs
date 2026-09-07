@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -23,7 +24,7 @@ namespace ThousandAndFirst.Tests
 		public void AccessionRefusesEveryRoleWithoutAnExactClosure(
 			KingdomResidentTransitionClaim claim)
 		{
-			Assert.IsFalse(KingdomResidentTransitionRules.CanAccede(claim));
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanAccede(claim));
 		}
 
 		[TestCase(KingdomResidentTransitionClaim.None)]
@@ -34,13 +35,13 @@ namespace ThousandAndFirst.Tests
 		public void AccessionAllowsCleanOrExactlyClosableAuthority(
 			KingdomResidentTransitionClaim claim)
 		{
-			Assert.IsTrue(KingdomResidentTransitionRules.CanAccede(claim));
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanAccede(claim));
 		}
 
 		[Test]
 		public void CompetingClosableOwnersStillRefuseAccession()
 		{
-			Assert.IsFalse(KingdomResidentTransitionRules.CanAccede(
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanAccede(
 				KingdomResidentTransitionClaim.CivicOffice
 					| KingdomResidentTransitionClaim.CompletedLegendaryMarket));
 		}
@@ -48,7 +49,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExactSuccessionOwnerMayCrossItsOwnProtection()
 		{
-			Assert.IsTrue(KingdomResidentTransitionRules.CanAccede(
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanAccede(
 				KingdomResidentTransitionClaim.SuccessionAccessionOwner
 					| KingdomResidentTransitionClaim.SuccessionProtectedResident));
 		}
@@ -76,7 +77,7 @@ namespace ThousandAndFirst.Tests
 		public void DestructionRefusesEveryLiveRoleEndpointOrCustody(
 			KingdomResidentTransitionClaim claim)
 		{
-			Assert.IsFalse(KingdomResidentTransitionRules.CanDestroy(claim));
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanDestroy(claim));
 		}
 
 		[TestCase(KingdomResidentTransitionClaim.NamedCook,
@@ -86,8 +87,8 @@ namespace ThousandAndFirst.Tests
 		public void ExactPreparedRoleReceiptClosesOnlyItsOwnClaim(
 			KingdomResidentTransitionClaim role, KingdomResidentTransitionClaim prepared)
 		{
-			Assert.IsTrue(KingdomResidentTransitionRules.CanDestroy(role | prepared));
-			Assert.IsFalse(KingdomResidentTransitionRules.CanDestroy(role | prepared
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanDestroy(role | prepared));
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanDestroy(role | prepared
 				| KingdomResidentTransitionClaim.StasisCustody));
 		}
 
@@ -98,27 +99,27 @@ namespace ThousandAndFirst.Tests
 				KingdomResidentTransitionClaim.NamedCook
 				| KingdomResidentTransitionClaim.CivicOffice
 				| KingdomResidentTransitionClaim.PolityResidentBridge;
-			Assert.IsTrue(KingdomResidentTransitionRules.CanPrepareDestroy(closable));
-			Assert.IsFalse(KingdomResidentTransitionRules.CanPrepareDestroy(closable
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanPrepareDestroy(closable));
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanPrepareDestroy(closable
 				| KingdomResidentTransitionClaim.MarketStock));
 		}
 
 		[Test]
 		public void TerminalReceiptsAndCleanNestedInventoryProjectNoClaim()
 		{
-			Assert.IsTrue(KingdomResidentTransitionRules.CanAccede(
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanAccede(
 				KingdomResidentTransitionClaim.None));
-			Assert.IsTrue(KingdomResidentTransitionRules.CanDestroy(
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanDestroy(
 				KingdomResidentTransitionClaim.None));
 		}
 
 		[Test]
 		public void ExactLabCapabilityConsumesOnlyTheLabClaim()
 		{
-			Assert.IsTrue(KingdomResidentTransitionRules.CanDestroy(
+			ClassicAssert.IsTrue(KingdomResidentTransitionRules.CanDestroy(
 				KingdomResidentTransitionClaim.LabRefusalDeparture,
 				ExactLabAuthorization: true));
-			Assert.IsFalse(KingdomResidentTransitionRules.CanDestroy(
+			ClassicAssert.IsFalse(KingdomResidentTransitionRules.CanDestroy(
 				KingdomResidentTransitionClaim.LabRefusalDeparture
 					| KingdomResidentTransitionClaim.CivicOffice,
 				ExactLabAuthorization: true));
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		public void CarrierMultiplicityIsExactAndRepairOnly(int rows, int bindings,
 			bool repair, bool expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomResidentTransitionRules.ExactCarrierMultiplicity(rows, bindings,
 					repair));
 		}
@@ -146,23 +147,23 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentDepartureOperation normalized =
 				KingdomResidentDepartureRules.NormalizeOldDefault(null);
-			Assert.IsTrue(KingdomResidentDepartureRules.IsEmpty(normalized));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.IsEmpty(normalized));
 			KingdomResidentDepartureOperation residue = new KingdomResidentDepartureOperation
 			{
 				RealmId = "foreign-residue"
 			};
-			Assert.IsFalse(KingdomResidentDepartureRules.IsEmpty(residue));
-			Assert.AreSame(residue,
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.IsEmpty(residue));
+			ClassicAssert.AreSame(residue,
 				KingdomResidentDepartureRules.NormalizeOldDefault(residue));
-			Assert.IsFalse(KingdomResidentDepartureRules.Valid(residue));
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.Valid(residue));
 		}
 
 		[Test]
 		public void DepartureJournalAdvancesMonotonicallyAndRejectsSkippedOrTamperedPhases()
 		{
 			KingdomResidentDepartureOperation operation = Departure();
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
-			Assert.IsFalse(KingdomResidentDepartureRules.Advance(operation,
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.Advance(operation,
 				KingdomResidentDeparturePhase.Prepared,
 				KingdomResidentDeparturePhase.CitizenshipRemoved));
 			KingdomResidentDeparturePhase[] phases =
@@ -175,12 +176,12 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < phases.Length; i++)
 			{
-				Assert.IsTrue(KingdomResidentDepartureRules.Advance(operation,
+				ClassicAssert.IsTrue(KingdomResidentDepartureRules.Advance(operation,
 					(KingdomResidentDeparturePhase)(i + 1), phases[i]));
-				Assert.AreEqual(i + 2L, operation.Revision);
+				ClassicAssert.AreEqual(i + 2L, operation.Revision);
 			}
 			operation.BodyObjectId = "foreign-body";
-			Assert.IsFalse(KingdomResidentDepartureRules.Valid(operation));
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.Valid(operation));
 		}
 
 		[Test]
@@ -198,17 +199,17 @@ namespace ThousandAndFirst.Tests
 				ResidentSettlementId = operation.SettlementId
 			};
 			operation.PolityConclusionRef = "taf:conclusion:resident:test";
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
 
 			KingdomResidentDepartureOperation copy = operation.Copy();
-			Assert.AreNotSame(operation, copy);
-			Assert.AreNotSame(operation.PriorPolity, copy.PriorPolity);
-			Assert.AreEqual(operation.OperationId, copy.OperationId);
-			Assert.AreEqual(operation.Revision, copy.Revision);
-			Assert.AreEqual(operation.Cause, copy.Cause);
-			Assert.AreEqual(operation.PolityConclusionRef, copy.PolityConclusionRef);
-			Assert.AreEqual("found the glass cache", copy.PriorPolity.DeedSummary);
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(copy));
+			ClassicAssert.AreNotSame(operation, copy);
+			ClassicAssert.AreNotSame(operation.PriorPolity, copy.PriorPolity);
+			ClassicAssert.AreEqual(operation.OperationId, copy.OperationId);
+			ClassicAssert.AreEqual(operation.Revision, copy.Revision);
+			ClassicAssert.AreEqual(operation.Cause, copy.Cause);
+			ClassicAssert.AreEqual(operation.PolityConclusionRef, copy.PolityConclusionRef);
+			ClassicAssert.AreEqual("found the glass cache", copy.PriorPolity.DeedSummary);
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(copy));
 		}
 
 		[Test]
@@ -216,12 +217,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomResidentDepartureOperation operation = Departure();
 			operation.AuthorizationEventId = "event-without-kind";
-			Assert.IsFalse(KingdomResidentDepartureRules.Valid(operation));
+			ClassicAssert.IsFalse(KingdomResidentDepartureRules.Valid(operation));
 			operation.AuthorizationKind =
 				(int)KingdomResidentDestructionAuthorizationKind.LabRefusalDeparture;
 			operation.AuthorizationOwnerObjectId = "owner";
 			operation.AuthorizationCauseDigest = "digest";
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(operation));
 		}
 
 		private static KingdomResidentDepartureOperation Departure()

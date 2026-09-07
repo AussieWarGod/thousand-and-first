@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -19,14 +20,14 @@ namespace ThousandAndFirst.Tests
 		public void EveryLaneHasItsOwnRow()
 		{
 			Array lanes = Enum.GetValues(typeof(KingdomBudgetLane));
-			Assert.AreEqual(lanes.Length, KingdomBudgetRules.LaneCount, "a lane has no row in the table");
+			ClassicAssert.AreEqual(lanes.Length, KingdomBudgetRules.LaneCount, "a lane has no row in the table");
 			foreach (object value in lanes)
 			{
 				KingdomBudgetLane lane = (KingdomBudgetLane)value;
 				KingdomBudgetRow row;
-				Assert.IsTrue(KingdomBudgetRules.TryRow(lane, out row), lane + " has no row");
-				Assert.AreEqual(lane, row.Lane);
-				Assert.IsFalse(string.IsNullOrEmpty(row.LogName), lane + " has no log name");
+				ClassicAssert.IsTrue(KingdomBudgetRules.TryRow(lane, out row), lane + " has no row");
+				ClassicAssert.AreEqual(lane, row.Lane);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(row.LogName), lane + " has no log name");
 			}
 		}
 
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 		public void ALaneOutsideTheTableIsRefusedRatherThanDefaulted()
 		{
 			KingdomBudgetRow row;
-			Assert.IsFalse(KingdomBudgetRules.TryRow((KingdomBudgetLane)200, out row));
+			ClassicAssert.IsFalse(KingdomBudgetRules.TryRow((KingdomBudgetLane)200, out row));
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0, the time rungs, in microseconds.</summary>
@@ -44,9 +45,9 @@ namespace ThousandAndFirst.Tests
 		public void TheTimeRungsAreTheConstitutionsOwn(int laneCode, long warn, long fail)
 		{
 			KingdomBudgetRow row;
-			Assert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
-			Assert.AreEqual(warn, row.WarnMicroseconds);
-			Assert.AreEqual(fail, row.FailMicroseconds);
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
+			ClassicAssert.AreEqual(warn, row.WarnMicroseconds);
+			ClassicAssert.AreEqual(fail, row.FailMicroseconds);
 		}
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0, the count rungs.</summary>
@@ -63,31 +64,31 @@ namespace ThousandAndFirst.Tests
 		public void TheCountRungsAreTheConstitutionsOwn(int laneCode, long warn, long fail)
 		{
 			KingdomBudgetRow row;
-			Assert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
-			Assert.AreEqual(warn, row.WarnCount);
-			Assert.AreEqual(fail, row.FailCount);
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryRow((KingdomBudgetLane)laneCode, out row));
+			ClassicAssert.AreEqual(warn, row.WarnCount);
+			ClassicAssert.AreEqual(fail, row.FailCount);
 		}
 
 		/// <summary>Every named cap the design quotes, pinned where it lives.</summary>
 		[Test]
 		public void TheNamedCapsAreTheConstitutionsOwn()
 		{
-			Assert.AreEqual(64, KingdomBudgetRules.MaxBreakpoints);
-			Assert.AreEqual(512, KingdomBudgetRules.MaxDrawsPerCityPass);
-			Assert.AreEqual(8, KingdomBudgetRules.ReifyUnitsPerTurn);
-			Assert.AreEqual(4, KingdomBudgetRules.ReifyHeavyMintsPerTurn);
-			Assert.AreEqual(24, KingdomBudgetRules.ReifyLightUnitsPerTurn);
-			Assert.AreEqual(50, KingdomBudgetRules.HeartbeatCadenceTicks);
-			Assert.AreEqual(4, KingdomBudgetRules.HeartbeatStepsPerSlice);
-			Assert.AreEqual(1, KingdomBudgetRules.HeartbeatToldLinesPerSlice);
-			Assert.AreEqual(393216L, KingdomBudgetRules.ModelBytesCeiling);
-			Assert.AreEqual(16, KingdomBudgetRules.PlannerMaxJobs);
-			Assert.AreEqual(8, KingdomBudgetRules.PlannerMaxStops);
-			Assert.AreEqual(50, KingdomBudgetRules.PlannerMaxSwapTests);
-			Assert.AreEqual(0, KingdomBudgetRules.PlannerMaxDraws, "routing is arithmetic, not chance");
-			Assert.AreEqual(4, KingdomBudgetRules.NetworksPerCity);
-			Assert.AreEqual(32, KingdomBudgetRules.NetworkMaxNodes);
-			Assert.AreEqual(48, KingdomBudgetRules.NetworkMaxEdges);
+			ClassicAssert.AreEqual(64, KingdomBudgetRules.MaxBreakpoints);
+			ClassicAssert.AreEqual(512, KingdomBudgetRules.MaxDrawsPerCityPass);
+			ClassicAssert.AreEqual(8, KingdomBudgetRules.ReifyUnitsPerTurn);
+			ClassicAssert.AreEqual(4, KingdomBudgetRules.ReifyHeavyMintsPerTurn);
+			ClassicAssert.AreEqual(24, KingdomBudgetRules.ReifyLightUnitsPerTurn);
+			ClassicAssert.AreEqual(50, KingdomBudgetRules.HeartbeatCadenceTicks);
+			ClassicAssert.AreEqual(4, KingdomBudgetRules.HeartbeatStepsPerSlice);
+			ClassicAssert.AreEqual(1, KingdomBudgetRules.HeartbeatToldLinesPerSlice);
+			ClassicAssert.AreEqual(393216L, KingdomBudgetRules.ModelBytesCeiling);
+			ClassicAssert.AreEqual(16, KingdomBudgetRules.PlannerMaxJobs);
+			ClassicAssert.AreEqual(8, KingdomBudgetRules.PlannerMaxStops);
+			ClassicAssert.AreEqual(50, KingdomBudgetRules.PlannerMaxSwapTests);
+			ClassicAssert.AreEqual(0, KingdomBudgetRules.PlannerMaxDraws, "routing is arithmetic, not chance");
+			ClassicAssert.AreEqual(4, KingdomBudgetRules.NetworksPerCity);
+			ClassicAssert.AreEqual(32, KingdomBudgetRules.NetworkMaxNodes);
+			ClassicAssert.AreEqual(48, KingdomBudgetRules.NetworkMaxEdges);
 		}
 
 		/// <summary>The network solve's own budget, composed rather than quoted: four networks of
@@ -97,8 +98,8 @@ namespace ThousandAndFirst.Tests
 		public void TheNetworkBudgetComposesToFiveThousandOneHundredAndTwenty()
 		{
 			int visits = KingdomBudgetRules.NetworksPerCity * (KingdomBudgetRules.NetworkMaxNodes + KingdomBudgetRules.NetworkMaxEdges) * 16;
-			Assert.AreEqual(5120, visits);
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.NetworkSolve, visits));
+			ClassicAssert.AreEqual(5120, visits);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.NetworkSolve, visits));
 		}
 
 		/// <summary>A budget of eight passes at eight and fails at nine: strictly greater, never
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(8001L, (int)KingdomBudgetVerdict.Over)]
 		public void AVerdictIsReachedByStrictComparison(long microseconds, int expected)
 		{
-			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Reckon, microseconds));
+			ClassicAssert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Reckon, microseconds));
 		}
 
 		/// <summary>A rung the table gives no number for never fires. The catch-up lane's failure is
@@ -119,14 +120,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100000L, (int)KingdomBudgetVerdict.Warn)]
 		public void ALaneWithNoNumericFailNeverReadsOver(long turns, int expected)
 		{
-			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
+			ClassicAssert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns));
 		}
 
 		[Test]
 		public void ALaneWithNoTimeBudgetIsNeverJudgedOnTime()
 		{
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Thaw, 60000L));
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.ModelBytes, 60000L));
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.Thaw, 60000L));
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeMicroseconds(KingdomBudgetLane.ModelBytes, 60000L));
 		}
 
 		[TestCase((int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Over, (int)KingdomBudgetVerdict.Over)]
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase((int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Within, (int)KingdomBudgetVerdict.Within)]
 		public void TheWorseOfTwoRungsIsWhatALogLineReports(int left, int right, int expected)
 		{
-			Assert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.Worse((KingdomBudgetVerdict)left, (KingdomBudgetVerdict)right));
+			ClassicAssert.AreEqual((KingdomBudgetVerdict)expected, KingdomBudgetRules.Worse((KingdomBudgetVerdict)left, (KingdomBudgetVerdict)right));
 		}
 
 		/// <summary>The row-visit ceiling is B x 2R over the live R, not the 14,848 the table quotes
@@ -144,11 +145,11 @@ namespace ThousandAndFirst.Tests
 		public void TheRowVisitCeilingSurvivesTheCapMoving()
 		{
 			long ceiling;
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(956, out ceiling));
-			Assert.AreEqual(122368L, ceiling);
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(246, out ceiling));
-			Assert.AreEqual(31488L, ceiling);
-			Assert.IsFalse(KingdomBudgetRules.TryMaxRowVisits(-1, out ceiling));
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(956, out ceiling));
+			ClassicAssert.AreEqual(122368L, ceiling);
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(246, out ceiling));
+			ClassicAssert.AreEqual(31488L, ceiling);
+			ClassicAssert.IsFalse(KingdomBudgetRules.TryMaxRowVisits(-1, out ceiling));
 		}
 
 		// ---- The receipt line ------------------------------------------------------------
@@ -164,7 +165,7 @@ namespace ThousandAndFirst.Tests
 				118L,
 				KingdomBudgetVerdict.Within,
 				KingdomBudgetVerdict.Within);
-			Assert.AreEqual("[TAF] perf reckon label=Kavvat steps=41 rows=4756 draws=118 ms=1.4",
+			ClassicAssert.AreEqual("[TAF] perf reckon label=Kavvat steps=41 rows=4756 draws=118 ms=1.4",
 				KingdomBudgetRules.FormatReceipt(receipt));
 		}
 
@@ -181,7 +182,7 @@ namespace ThousandAndFirst.Tests
 				0L,
 				KingdomBudgetVerdict.Over,
 				KingdomBudgetVerdict.Within);
-			Assert.AreEqual("[TAF] perf BUDGET reify label=taf:zone:a ms=2.4 over=2",
+			ClassicAssert.AreEqual("[TAF] perf BUDGET reify label=taf:zone:a ms=2.4 over=2",
 				KingdomBudgetRules.FormatReceipt(receipt));
 		}
 
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 				513L,
 				KingdomBudgetVerdict.Within,
 				KingdomBudgetVerdict.Over);
-			Assert.AreEqual("[TAF] perf BUDGET reckon label=Kavvat draws=513 ms=0.1 over=512",
+			ClassicAssert.AreEqual("[TAF] perf BUDGET reckon label=Kavvat draws=513 ms=0.1 over=512",
 				KingdomBudgetRules.FormatReceipt(receipt));
 		}
 
@@ -208,7 +209,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(31200L, "31.2")]
 		public void MillisecondsPrintTheSameEverywhere(long microseconds, string expected)
 		{
-			Assert.AreEqual(expected, KingdomBudgetRules.FormatMilliseconds(microseconds));
+			ClassicAssert.AreEqual(expected, KingdomBudgetRules.FormatMilliseconds(microseconds));
 		}
 
 		[Test]
@@ -222,7 +223,7 @@ namespace ThousandAndFirst.Tests
 				0L,
 				KingdomBudgetVerdict.Within,
 				KingdomBudgetVerdict.Within);
-			Assert.AreEqual("[TAF] perf thaw label=taf:zone:a ms=31.2", KingdomBudgetRules.FormatReceipt(receipt));
+			ClassicAssert.AreEqual("[TAF] perf thaw label=taf:zone:a ms=31.2", KingdomBudgetRules.FormatReceipt(receipt));
 		}
 	}
 }

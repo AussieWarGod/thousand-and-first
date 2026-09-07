@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,15 +21,15 @@ namespace ThousandAndFirst.Tests
 			string furniture = File.ReadAllText(Path.Combine(baseRoot,
 				"ObjectBlueprints", "Furniture.xml"));
 			int doorAt = furniture.IndexOf("<object Name=\"Door\"", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(doorAt, 0);
+			ClassicAssert.GreaterOrEqual(doorAt, 0);
 			int doorEnd = furniture.IndexOf("</object>", doorAt, StringComparison.Ordinal);
-			Assert.Greater(doorEnd, doorAt);
+			ClassicAssert.Greater(doorEnd, doorAt);
 			string door = furniture.Substring(doorAt, doorEnd - doorAt);
 			StringAssert.Contains("Inherits=\"MountedFurniture\"", door);
 			StringAssert.Contains("<part Name=\"Door\"", door);
 			StringAssert.Contains("<tag Name=\"Door\"", door);
 			int gateAt = furniture.IndexOf("<object Name=\"Gate\"", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(gateAt, 0);
+			ClassicAssert.GreaterOrEqual(gateAt, 0);
 			int gateEnd = furniture.IndexOf("</object>", gateAt, StringComparison.Ordinal);
 			string nativeGate = furniture.Substring(gateAt, gateEnd - gateAt);
 			StringAssert.Contains("ClosedTile=\"Items/sw_fence_gates_2_open.bmp\"", nativeGate);
@@ -42,20 +43,20 @@ namespace ThousandAndFirst.Tests
 			XDocument authored = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement authoredGate = authored.Descendants("object")
 				.Single(e => (string)e.Attribute("Name") == "r_KingdomGatehouse");
-			Assert.AreEqual("Door", (string)authoredGate.Attribute("Inherits"));
-			Assert.IsTrue(authoredGate.Elements("part")
+			ClassicAssert.AreEqual("Door", (string)authoredGate.Attribute("Inherits"));
+			ClassicAssert.IsTrue(authoredGate.Elements("part")
 				.Any(e => (string)e.Attribute("Name") == "r_KingdomGatehouse"));
-			Assert.IsFalse(authoredGate.Elements("part").Any(e =>
+			ClassicAssert.IsFalse(authoredGate.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "r_KingdomGatehouseProjectionV2"),
 				"the fixed-layout v2 custody part is attached only after exact v2 decode");
-			Assert.IsFalse(authoredGate.Elements("part").Any(e =>
+			ClassicAssert.IsFalse(authoredGate.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "r_KingdomGatehouseProjectionV1Pending"),
 				"the pending-v1 migration carrier is never authored onto completed v1 roots");
-			Assert.IsFalse(authoredGate.Elements("removepart")
+			ClassicAssert.IsFalse(authoredGate.Elements("removepart")
 				.Any(e => (string)e.Attribute("Name") == "Door"));
 			XElement physics = authoredGate.Elements("part")
 				.Single(e => (string)e.Attribute("Name") == "Physics");
-			Assert.IsNull(physics.Attribute("Solid"),
+			ClassicAssert.IsNull(physics.Attribute("Solid"),
 				"vanilla Door, not a frozen solid furniture root, owns open/closed passability");
 		}
 
@@ -71,8 +72,8 @@ namespace ThousandAndFirst.Tests
 			}, catalogue.Root.Elements("style").Select(e => (string)e.Attribute("Name")).ToArray());
 			XElement gateEntry = catalogue.Descendants("building").Single(e =>
 				(string)e.Attribute("Key") == "gatehouse");
-			Assert.AreEqual("all", (string)gateEntry.Attribute("Styles"));
-			Assert.AreEqual("stone:34,timber:10,scrap:6",
+			ClassicAssert.AreEqual("all", (string)gateEntry.Attribute("Styles"));
+			ClassicAssert.AreEqual("stone:34,timber:10,scrap:6",
 				(string)gateEntry.Attribute("Materials"), "v1 fallback remains unchanged");
 			string[] walls = new string[]
 			{
@@ -85,10 +86,10 @@ namespace ThousandAndFirst.Tests
 				"r_KingdomFixtureCushionCanvas", "r_KingdomFixtureChairMarble"
 			};
 			for (int i = 0; i < walls.Length; i++)
-				Assert.AreEqual(1, authored.Descendants("object").Count(e =>
+				ClassicAssert.AreEqual(1, authored.Descendants("object").Count(e =>
 					(string)e.Attribute("Name") == walls[i]), walls[i]);
 			for (int i = 0; i < watches.Length; i++)
-				Assert.AreEqual(1, authored.Descendants("object").Count(e =>
+				ClassicAssert.AreEqual(1, authored.Descendants("object").Count(e =>
 					(string)e.Attribute("Name") == watches[i]), watches[i]);
 			string nativeWalls = File.ReadAllText(Path.Combine(LocateBase(),
 				"ObjectBlueprints", "Walls.xml"));

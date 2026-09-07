@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,8 +28,8 @@ namespace ThousandAndFirst.Tests
 				"foreach (Zone zone in zones) graveyards.Add(zone.Graveyard)", "foreach (Graveyard graveyard in graveyards)",
 				"for (int i = 0; i < graveyard.Objects.Count; i++)", "Tombstones.Add(graveyard.Objects[i])",
 				"return ReferenceEquals(manager, The.ZoneManager)");
-			Assert.IsFalse(Regex.IsMatch(source, @"HashSet\s*<\s*GameObject\s*>|\.(?:Distinct|ToHashSet)\s*\(|\bTombstones\.Contains\s*\("));
-			Assert.AreEqual(1, Regex.Matches(source, @"\bTombstones\.Add\s*\(").Count);
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"HashSet\s*<\s*GameObject\s*>|\.(?:Distinct|ToHashSet)\s*\(|\bTombstones\.Contains\s*\("));
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"\bTombstones\.Add\s*\(").Count);
 		}
 
 		[Test]
@@ -45,9 +46,9 @@ namespace ThousandAndFirst.Tests
 			string readers = source + Between(Read(Removal),
 				"private static bool ExactGraveyardTombstone(string Id, GameObject Expected, out GameObject Tombstone)",
 				"private static bool TryReadGraveyardId(") + Tail(Read(Removal), "private static bool TryReadGraveyardId(");
-			Assert.IsFalse(Regex.IsMatch(readers,
+			ClassicAssert.IsFalse(Regex.IsMatch(readers,
 				@"\b(?:GetZone|LoadZone|FetchZone|ThawZone|Pool\w*|Remove\w*|Destroy\w*|Obliterate\w*|Clear|Set\w*GameState|Set\w*Property)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(readers, @"\b(?:manager|graveyard)\.[\w.]+\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(readers, @"\b(?:manager|graveyard)\.[\w.]+\s*=(?!=)"));
 		}
 
 		[Test]
@@ -68,8 +69,8 @@ namespace ThousandAndFirst.Tests
 				"if (itemId == Id) { count++; Tombstone = item; }", "catch", "Tombstone = null",
 				"return KingdomPhysicalLookupState.Ambiguous", "if (count == 1) return KingdomPhysicalLookupState.Exact",
 				"Tombstone = null", "return count == 0 ? KingdomPhysicalLookupState.Absent : KingdomPhysicalLookupState.Ambiguous");
-			Assert.AreEqual(1, Regex.Matches(lookup, @"\bcount\s*\+\+").Count);
-			Assert.IsFalse(Regex.IsMatch(lookup, @"HashSet\s*<|\.(?:Distinct|Contains)\s*\("));
+			ClassicAssert.AreEqual(1, Regex.Matches(lookup, @"\bcount\s*\+\+").Count);
+			ClassicAssert.IsFalse(Regex.IsMatch(lookup, @"HashSet\s*<|\.(?:Distinct|Contains)\s*\("));
 			Ordered(Tail(source, "private static bool TryReadGraveyardId("), "Id = null", "if (Item == null) return false",
 				"try { Id = Item.IDIfAssigned; return true; }", "catch", "return false");
 			Contains(source, "!ExactGraveyardTombstone(Id, Expected, out GameObject tombstone)",
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Tail(custody, "private static bool HasFoundingHeartEvidenceInZone("),
 				"if (!TryLoadedPlotTombstones(out List<GameObject> tombstones)) return true",
 				"foreach (GameObject item in tombstones)", "if (item != null) graveyard.Add(item)");
-			Assert.IsFalse(Regex.IsMatch(identity + custody, @"\b(?:The\.ZoneManager|manager)\.Graveyard\b"));
+			ClassicAssert.IsFalse(Regex.IsMatch(identity + custody, @"\b(?:The\.ZoneManager|manager)\.Graveyard\b"));
 		}
 
 		[Test]
@@ -106,7 +107,7 @@ namespace ThousandAndFirst.Tests
 				"predecessor == null || predecessor.IDIfAssigned != id", "return false", "int matches = 0",
 				"foreach (GameObject body in rows)", "if (body != null && body.IDIfAssigned == id)",
 				"if (!ReferenceEquals(body, predecessor) || GameObject.Validate(body)) return false", "matches++", "return matches == 1");
-			Assert.IsFalse(Regex.IsMatch(oracle,
+			ClassicAssert.IsFalse(Regex.IsMatch(oracle,
 				@"\b(?:TryLoadedPlotTombstones|ExactGraveyardTombstone|FindGlobalFoundingHeartId|GetMethod|Invoke)\s*\(|HashSet\s*<|\.Distinct\s*\("));
 			StringAssert.DoesNotContain("The.ZoneManager.Graveyard", oracle);
 		}
@@ -118,11 +119,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string compact = Compact(source), marker = Compact(start);
 			int first = compact.IndexOf(marker, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, start);
+			ClassicAssert.GreaterOrEqual(first, 0, start);
 			MatchCollection characters = Regex.Matches(source, @"\S");
 			if (end == null) return source.Substring(characters[first].Index);
 			int last = compact.IndexOf(Compact(end), first + marker.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end);
+			ClassicAssert.Greater(last, first, end);
 			return source.Substring(characters[first].Index, characters[last].Index - characters[first].Index);
 		}
 		private static void Contains(string source, params string[] tokens)
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string expected = Compact(token);
 				int at = compact.IndexOf(expected, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token);
+				ClassicAssert.GreaterOrEqual(at, cursor, token);
 				cursor = at + expected.Length;
 			}
 		}

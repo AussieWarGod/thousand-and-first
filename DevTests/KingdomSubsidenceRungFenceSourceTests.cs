@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -36,9 +37,9 @@ namespace ThousandAndFirst.Tests
 			Before(body, "KingdomSubsidenceRungRuntime.BlocksWork(Work)", "wear.IncidentId = IncidentId");
 			int created = Position(body, "Work.RequirePart<r_KingdomWear>()");
 			int recheck = body.IndexOf("KingdomSubsidenceRungRuntime.BlocksWork(Work)", created, StringComparison.Ordinal);
-			Assert.Greater(recheck, created);
-			Assert.Less(recheck, Position(body, "HasActiveRepair(Work, out _)"));
-			Assert.Less(recheck, Position(body, "wear.LastCompletedIncidentId"));
+			ClassicAssert.Greater(recheck, created);
+			ClassicAssert.Less(recheck, Position(body, "HasActiveRepair(Work, out _)"));
+			ClassicAssert.Less(recheck, Position(body, "wear.LastCompletedIncidentId"));
 			Before(body, "wear == null || wear.ParentObject != Work", "wear.IncidentId = IncidentId");
 			Before(body, "!ReferenceEquals(Work.GetPart<r_KingdomWear>(), wear)", "wear.IncidentId = IncidentId");
 		}
@@ -103,9 +104,9 @@ namespace ThousandAndFirst.Tests
 			Before(body, "RepairTargetExact(frame, Updated.Id)", "WearPart.Wear = 0");
 			int latch = Position(body, "Work.SetStringProperty(RepairRemovalAttemptProperty, Updated.Id)");
 			int reproof = body.IndexOf("RepairTargetExact(frame, Updated.Id)", latch, StringComparison.Ordinal);
-			Assert.Greater(reproof, latch);
-			Assert.Less(reproof, Position(body, "WearPart.Wear = 0"));
-			Assert.Less(reproof, Position(body, "Work.RemovePart(WearPart)"));
+			ClassicAssert.Greater(reproof, latch);
+			ClassicAssert.Less(reproof, Position(body, "WearPart.Wear = 0"));
+			ClassicAssert.Less(reproof, Position(body, "Work.RemovePart(WearPart)"));
 		}
 
 		[Test]
@@ -119,11 +120,11 @@ namespace ThousandAndFirst.Tests
 			Before(carry, "!CanCarryStableState(Source, out _)", "Target.RequirePart<r_KingdomWear>()");
 			int created = Position(carry, "Target.RequirePart<r_KingdomWear>()");
 			int recheck = carry.IndexOf("KingdomSubsidenceRungRuntime.BlocksWork(Target)", created, StringComparison.Ordinal);
-			Assert.Greater(recheck, created);
-			Assert.Less(recheck, Position(carry, "after.Wear = before.Wear"));
+			ClassicAssert.Greater(recheck, created);
+			ClassicAssert.Less(recheck, Position(carry, "after.Wear = before.Wear"));
 			int sourceRecheck = carry.IndexOf("!CanCarryStableState(Source, out _)", created, StringComparison.Ordinal);
-			Assert.Greater(sourceRecheck, created);
-			Assert.Less(sourceRecheck, Position(carry, "after.Wear = before.Wear"));
+			ClassicAssert.Greater(sourceRecheck, created);
+			ClassicAssert.Less(sourceRecheck, Position(carry, "after.Wear = before.Wear"));
 			Before(carry, "!ReferenceEquals(Source.GetPart<r_KingdomWear>(), before)", "after.Wear = before.Wear");
 			Before(carry, "!ReferenceEquals(Target.GetPart<r_KingdomWear>(), after)", "after.Wear = before.Wear");
 			Before(carry, "before.ParentObject != Source || after.ParentObject != Target", "after.Wear = before.Wear");
@@ -180,11 +181,11 @@ namespace ThousandAndFirst.Tests
 		private static int Position(string source, string marker)
 		{
 			int index = source.IndexOf(marker, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(index, 0, "Missing source-contract boundary: " + marker);
+			ClassicAssert.GreaterOrEqual(index, 0, "Missing source-contract boundary: " + marker);
 			return index;
 		}
 		private static void Before(string source, string first, string second)
-			=> Assert.Less(Position(source, first), Position(source, second), first + " must precede " + second);
+			=> ClassicAssert.Less(Position(source, first), Position(source, second), first + " must precede " + second);
 	}
 }
 #endif

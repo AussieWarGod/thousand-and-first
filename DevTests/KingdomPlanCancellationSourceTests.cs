@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -129,9 +130,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Start);
+			ClassicAssert.GreaterOrEqual(start, 0, Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, End);
+			ClassicAssert.Greater(end, start, End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int next = Source.IndexOf(Terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, Terms[i]);
+				ClassicAssert.Greater(next, cursor, Terms[i]);
 				cursor = next;
 			}
 		}

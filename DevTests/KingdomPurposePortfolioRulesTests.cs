@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,20 +15,20 @@ namespace ThousandAndFirst.Tests
 		public void CatalogueIsExactlySymmetricFiveCycleAndTenDirections()
 		{
 			IList<KingdomPurposePortfolioRecipe> rows = KingdomPurposePortfolioRules.AllRecipes();
-			Assert.AreEqual(10, rows.Count);
+			ClassicAssert.AreEqual(10, rows.Count);
 			HashSet<string> directed = new HashSet<string>();
 			for (int i = 0; i < rows.Count; i++)
 			{
 				var row = rows[i];
-				Assert.IsTrue(directed.Add(row.Source + ">" + row.Destination));
-				Assert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(
+				ClassicAssert.IsTrue(directed.Add(row.Source + ">" + row.Destination));
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(
 					row.Destination, row.Source, out _), row.CargoKey);
-				Assert.AreEqual(2, KingdomPurposePortfolioRules.Partners(row.Source).Count);
-				Assert.IsFalse(KingdomPurposePortfolioRules.Compatible(row.Source, row.Source));
+				ClassicAssert.AreEqual(2, KingdomPurposePortfolioRules.Partners(row.Source).Count);
+				ClassicAssert.IsFalse(KingdomPurposePortfolioRules.Compatible(row.Source, row.Source));
 			}
 			for (int a = 1; a <= 5; a++)
 				for (int b = 1; b <= 5; b++)
-					Assert.AreEqual(directed.Contains((KingdomPurposeKind)a + ">"
+					ClassicAssert.AreEqual(directed.Contains((KingdomPurposeKind)a + ">"
 						+ (KingdomPurposeKind)b), KingdomPurposePortfolioRules.Compatible(
 						(KingdomPurposeKind)a, (KingdomPurposeKind)b));
 		}
@@ -69,19 +70,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposePairReceipt pair = Pair();
 			string encoded = KingdomPurposePortfolioRules.EncodePair(pair);
-			Assert.IsNotNull(encoded);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodePair(encoded, out var decoded));
-			Assert.AreEqual(encoded, KingdomPurposePortfolioRules.EncodePair(decoded));
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(encoded + "x", out _));
+			ClassicAssert.IsNotNull(encoded);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodePair(encoded, out var decoded));
+			ClassicAssert.AreEqual(encoded, KingdomPurposePortfolioRules.EncodePair(decoded));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryDecodePair(encoded + "x", out _));
 			pair.SecondSettlementId = pair.FirstSettlementId;
-			Assert.IsNull(KingdomPurposePortfolioRules.EncodePair(pair));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.EncodePair(pair));
 		}
 
 		[Test]
 		public void BootstrapReturnAndAlternationAreOneWayAndIdentityBound()
 		{
 			KingdomPurposePairReceipt frozen = Pair();
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(frozen, "op-1", 1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(frozen, "op-1", 1,
 				KingdomPurposeKind.Deep, true, false, null, null, null, null, null,
 				out var bootstrap, out var fault), fault.ToString());
 			KingdomPurposePairReceipt running = frozen.Copy();
@@ -90,17 +91,17 @@ namespace ThousandAndFirst.Tests
 			running.Operation = bootstrap;
 			running.NextOperationOrdinal++;
 			running.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(frozen, running, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(frozen, running, out fault),
 				fault.ToString());
 
 			KingdomPurposePairReceipt delivered = Deliver(running, "cargo-1", "job-1",
 				KingdomPurposePairPhase.SecondPending);
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidPair(delivered, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidPair(delivered, out fault),
 				fault.ToString());
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(delivered, running, out _),
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(delivered, running, out _),
 				"bootstrap exemption cannot be rewound");
 
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(delivered, "op-2", 2,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(delivered, "op-2", 2,
 				KingdomPurposeKind.Forge, false, true, null, null, null, null, "work-forge",
 				out var returned, out fault), fault.ToString());
 			KingdomPurposePairReceipt returnRunning = delivered.Copy();
@@ -110,12 +111,12 @@ namespace ThousandAndFirst.Tests
 			returnRunning.Operation = returned;
 			returnRunning.NextOperationOrdinal++;
 			returnRunning.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
 				delivered, returnRunning, out fault), fault.ToString());
 
 			KingdomPurposePairReceipt awaiting = Deliver(returnRunning, "cargo-2", "job-2",
 				KingdomPurposePairPhase.CargoAwaitingActivation);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(awaiting, "op-3", 3,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(awaiting, "op-3", 3,
 				KingdomPurposeKind.Deep, false, false, awaiting.Operation.OutputCargoId,
 				awaiting.Operation.OutputCargoReceipt, null, null, null,
 				out var activation, out fault), fault.ToString());
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 			activationRunning.Operation = activation;
 			activationRunning.NextOperationOrdinal++;
 			activationRunning.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
 				awaiting, activationRunning, out fault), fault.ToString());
 			KingdomPurposePairReceipt activationAwaiting = Deliver(activationRunning,
 				"cargo-3", "job-3", KingdomPurposePairPhase.CargoAwaitingConsumption);
@@ -136,11 +137,11 @@ namespace ThousandAndFirst.Tests
 			active.CreditCargoReceipt = activationAwaiting.Operation.OutputCargoReceipt;
 			active.Operation = null;
 			active.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
 				activationAwaiting, active, out fault),
 				fault.ToString());
 
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(active, "op-4", 4,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(active, "op-4", 4,
 				KingdomPurposeKind.Forge, false, false, active.CreditCargoId,
 				active.CreditCargoReceipt, null, null, null, out var normal, out fault), fault.ToString());
 			KingdomPurposePairReceipt normalRunning = active.Copy();
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 			normalRunning.CreditCargoReceipt = null;
 			normalRunning.NextOperationOrdinal++;
 			normalRunning.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(active, normalRunning,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(active, normalRunning,
 				out fault), fault.ToString());
 			KingdomPurposePairReceipt normalAwaiting = Deliver(normalRunning, "cargo-4", "job-4",
 				KingdomPurposePairPhase.CargoAwaitingConsumption);
@@ -161,9 +162,9 @@ namespace ThousandAndFirst.Tests
 			reciprocal.CreditCargoReceipt = normalAwaiting.Operation.OutputCargoReceipt;
 			reciprocal.Operation = null;
 			reciprocal.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(
 				normalAwaiting, reciprocal, out fault), fault.ToString());
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryCreateOperation(active, "wrong", 4,
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryCreateOperation(active, "wrong", 4,
 				KingdomPurposeKind.Deep, false, false, active.CreditCargoId,
 				active.CreditCargoReceipt, null, null, null, out _, out _));
 		}
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.Tests
 		public void SecondEndpointAdoptionIsAuthenticatedAtomicAndOneTime()
 		{
 			KingdomPurposePairReceipt frozen = Pair();
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(frozen, "adopt-op-1", 1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(frozen, "adopt-op-1", 1,
 				KingdomPurposeKind.Deep, true, false, null, null, null, null, null,
 				out var bootstrap, out var fault), fault.ToString());
 			KingdomPurposePairReceipt running = frozen.Copy();
@@ -181,27 +182,27 @@ namespace ThousandAndFirst.Tests
 			running.Operation = bootstrap;
 			running.NextOperationOrdinal++;
 			running.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(frozen, running, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(frozen, running, out fault),
 				fault.ToString());
 			KingdomPurposePairReceipt delivered = Deliver(running, "adopt-cargo", "adopt-job",
 				KingdomPurposePairPhase.SecondPending);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(delivered.RealmId,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(delivered.RealmId,
 				delivered.FirstSettlementId, delivered.SecondSettlementId,
 				delivered.FirstGateKey, delivered.SecondGateKey, delivered.FirstZoneId,
 				delivered.SecondZoneId, delivered.FirstInputStoreId,
 				delivered.FirstOutputStoreId, "authored-input-b", "authored-output-b",
 				out string digest));
-			Assert.IsFalse(KingdomPurposePortfolioRules.TryCreateOperationWithSecondEndpoint(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.TryCreateOperationWithSecondEndpoint(
 				delivered, "adopt-op-2", 2, KingdomPurposeKind.Forge, null, null,
 				"work-forge", "authored-input-b", "authored-output-b", D,
 				out _, out _), "changed stores need their exact recomputed route digest");
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperationWithSecondEndpoint(
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperationWithSecondEndpoint(
 				delivered, "adopt-op-2", 2, KingdomPurposeKind.Forge, null, null,
 				"work-forge", "authored-input-b", "authored-output-b", digest,
 				out var returned, out fault), fault.ToString());
-			Assert.AreEqual("input-b", delivered.SecondInputStoreId);
-			Assert.AreEqual("output-b", delivered.SecondOutputStoreId);
-			Assert.AreEqual(D, delivered.RouteDigest,
+			ClassicAssert.AreEqual("input-b", delivered.SecondInputStoreId);
+			ClassicAssert.AreEqual("output-b", delivered.SecondOutputStoreId);
+			ClassicAssert.AreEqual(D, delivered.RouteDigest,
 				"the pure factory may authenticate a candidate but cannot mutate its parent pair");
 			KingdomPurposePairReceipt adopted = delivered.Copy();
 			adopted.SecondWorkId = "work-forge";
@@ -213,12 +214,12 @@ namespace ThousandAndFirst.Tests
 			adopted.Operation = returned;
 			adopted.NextOperationOrdinal++;
 			adopted.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(delivered, adopted,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(delivered, adopted,
 				out fault), fault.ToString());
 
 			KingdomPurposePairReceipt later = adopted.Copy();
 			later.SecondInputStoreId = "later-input-b";
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(later.RealmId,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(later.RealmId,
 				later.FirstSettlementId, later.SecondSettlementId, later.FirstGateKey,
 				later.SecondGateKey, later.FirstZoneId, later.SecondZoneId,
 				later.FirstInputStoreId, later.FirstOutputStoreId, later.SecondInputStoreId,
@@ -226,14 +227,14 @@ namespace ThousandAndFirst.Tests
 			later.Operation.SourceInputStoreId = later.SecondInputStoreId;
 			later.Operation.RouteDigest = later.RouteDigest;
 			later.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidPair(later, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidPair(later, out fault),
 				fault.ToString());
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(adopted, later, out _),
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(adopted, later, out _),
 				"a populated SecondWorkId permanently closes the endpoint-adoption seam");
 
 			KingdomPurposePairReceipt firstChanged = adopted.Copy();
 			firstChanged.FirstInputStoreId = "illicit-input-a";
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(firstChanged.RealmId,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRouteDigest(firstChanged.RealmId,
 				firstChanged.FirstSettlementId, firstChanged.SecondSettlementId,
 				firstChanged.FirstGateKey, firstChanged.SecondGateKey, firstChanged.FirstZoneId,
 				firstChanged.SecondZoneId, firstChanged.FirstInputStoreId,
@@ -242,9 +243,9 @@ namespace ThousandAndFirst.Tests
 			firstChanged.Operation.DestinationInputStoreId = firstChanged.FirstInputStoreId;
 			firstChanged.Operation.RouteDigest = firstChanged.RouteDigest;
 			firstChanged.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidPair(firstChanged, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidPair(firstChanged, out fault),
 				fault.ToString());
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidTransition(
 				adopted, firstChanged, out _), "the adoption seam cannot rewrite city one");
 		}
 
@@ -252,23 +253,23 @@ namespace ThousandAndFirst.Tests
 		public void AccountingRejectsOverDebitAndDerivesOutstanding()
 		{
 			KingdomPurposePairReceipt pair = Pair();
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "op", 1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "op", 1,
 				KingdomPurposeKind.Deep, true, false, null, null, null, null, null,
 				out var operation, out _));
 			operation.Phase = KingdomPurposeOperationPhase.LocalDebitPending;
 			operation.WaterSpent = 5;
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryOutstanding(operation,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryOutstanding(operation,
 				out int water, out int food, out _));
-			Assert.AreEqual(7, water);
-			Assert.AreEqual(0, food);
+			ClassicAssert.AreEqual(7, water);
+			ClassicAssert.AreEqual(0, food);
 			operation.WaterSpent = 13;
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidOperation(operation, out var fault));
-			Assert.AreEqual(KingdomPurposePairFault.Accounting, fault);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidOperation(operation, out var fault));
+			ClassicAssert.AreEqual(KingdomPurposePairFault.Accounting, fault);
 		}
 
 		private static KingdomPurposePairReceipt Pair()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
 				KingdomPurposeKind.Deep, KingdomPurposeKind.Forge, "city-a", "city-b", "work-deep",
 				null,
 				"zone-a", "zone-b", "input-a", "output-a", "input-b", "output-b",
@@ -318,7 +319,7 @@ namespace ThousandAndFirst.Tests
 				after: D);
 			current = Advance(current, KingdomPurposeOperationPhase.OutputPending,
 				outputBefore: D);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateCargo(current,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateCargo(current,
 				current.Operation, cargoId, jobId, out var cargo, out var fault), fault.ToString());
 			KingdomPurposeOperationReceipt adopted = current.Operation.Copy();
 			adopted.OutputCargoId = cargoId;
@@ -364,7 +365,7 @@ namespace ThousandAndFirst.Tests
 			if (phase == KingdomPurposePairPhase.CargoAwaitingConsumption)
 				next.NextKind = operation.DestinationKind;
 			next.Revision++;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(pair, next, out var fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidTransition(pair, next, out var fault),
 				fault.ToString() + " " + pair.Phase + "/" + pair.Operation.Phase + " -> "
 				+ next.Phase + "/" + next.Operation.Phase);
 			return next;
@@ -374,16 +375,16 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeKind destination, string key, int water, int food,
 			string material, KingdomMaterial embodied, int carriedFood)
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(source, destination, out var row));
-			Assert.AreEqual(key, row.CargoKey);
-			Assert.AreEqual(water, row.WaterDrams);
-			Assert.AreEqual(food, row.FoodServings);
-			Assert.AreEqual(embodied, row.EmbodiedMaterial);
-			Assert.AreEqual(1, row.EmbodiedUnits);
-			Assert.AreEqual(carriedFood, row.CarriedFood);
-			Assert.IsTrue(KingdomMaterialRules.TryParseMaterialCost(material,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(source, destination, out var row));
+			ClassicAssert.AreEqual(key, row.CargoKey);
+			ClassicAssert.AreEqual(water, row.WaterDrams);
+			ClassicAssert.AreEqual(food, row.FoodServings);
+			ClassicAssert.AreEqual(embodied, row.EmbodiedMaterial);
+			ClassicAssert.AreEqual(1, row.EmbodiedUnits);
+			ClassicAssert.AreEqual(carriedFood, row.CarriedFood);
+			ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterialCost(material,
 				out var tally, out var error), error);
-			Assert.AreEqual(new KingdomMaterialDebitCost(tally).ToClaimString(), row.MaterialClaim);
+			ClassicAssert.AreEqual(new KingdomMaterialDebitCost(tally).ToClaimString(), row.MaterialClaim);
 		}
 	}
 }

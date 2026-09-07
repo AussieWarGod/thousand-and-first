@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 			string contract = Source(Path.Combine("Api", "KingdomApiContracts.cs"));
 			int start = contract.IndexOf("public interface IKingdomIdentitySource",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
 			string body = contract.Substring(start);
 			StringAssert.DoesNotContain("Tier(", body);
 			StringAssert.DoesNotContain("Tier {", body);

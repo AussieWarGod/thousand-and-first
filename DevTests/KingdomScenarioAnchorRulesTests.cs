@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -71,7 +72,7 @@ namespace ThousandAndFirst.Tests
 		public void MatchingEvidenceSignsAcceptance()
 		{
 			string failure;
-			Assert.IsTrue(Sign(Stamp(), Evidence(), out failure), failure);
+			ClassicAssert.IsTrue(Sign(Stamp(), Evidence(), out failure), failure);
 		}
 
 		/// <summary>The trap the ruling names: a stamp alone must never be enough.</summary>
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.Tests
 		public void AStampWithoutIndependentEvidenceNeverSigns()
 		{
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), null, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), null, out failure));
 			StringAssert.Contains("cannot prove it", failure);
 		}
 
@@ -89,7 +90,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.AnchorId = "anchor-invented";
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("different anchor id", failure);
 		}
 
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			stamp.AuthorityClass = "polity-custody";
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			string failure;
-			Assert.IsFalse(Sign(stamp, evidence, out failure));
+			ClassicAssert.IsFalse(Sign(stamp, evidence, out failure));
 			StringAssert.Contains("authority class", failure);
 		}
 
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.Verbs = "foundfirst";
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("verb sequence", failure);
 		}
 
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.KeySetDigest = OtherDigest;
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("diverges", failure);
 		}
 
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.DefinitionDigest = OtherDigest;
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("stale", failure);
 		}
 
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 			evidence.ModVersion = mod;
 			evidence.QudCoreVersion = core;
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("stale", failure);
 		}
 
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.Reached = reached;
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("cannot anchor itself", failure);
 		}
 
@@ -164,7 +165,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioProvenance stamp = Stamp();
 			stamp.Synthetic = true;
 			string failure;
-			Assert.IsFalse(Sign(stamp, Evidence(), out failure));
+			ClassicAssert.IsFalse(Sign(stamp, Evidence(), out failure));
 			StringAssert.Contains("recovery diagnostics only", failure);
 		}
 
@@ -174,7 +175,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioProvenance stamp = Stamp();
 			stamp.AnchorId = null;
 			string failure;
-			Assert.IsFalse(Sign(stamp, Evidence(), out failure));
+			ClassicAssert.IsFalse(Sign(stamp, Evidence(), out failure));
 			StringAssert.Contains("ineligible, not green", failure);
 		}
 
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioProvenance stamp = Stamp();
 			stamp.Verbs = "BAD VERB";
 			string failure;
-			Assert.IsFalse(Sign(stamp, Evidence(), out failure));
+			ClassicAssert.IsFalse(Sign(stamp, Evidence(), out failure));
 			StringAssert.Contains("malformed", failure);
 		}
 
@@ -195,7 +196,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.KeySetDigest = "deadbeef";
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("malformed", failure);
 		}
 
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.AuthorityClass = "no-such-authority";
 			string failure;
-			Assert.IsFalse(Sign(stamp, evidence, out failure));
+			ClassicAssert.IsFalse(Sign(stamp, evidence, out failure));
 			StringAssert.Contains("no semantic key set", failure);
 		}
 
@@ -221,7 +222,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.PlanDigest = OtherDigest;
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("different resolved plan", failure);
 		}
 
@@ -231,7 +232,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioAnchorEvidence evidence = Evidence();
 			evidence.PlanDigest = "deadbeef";
 			string failure;
-			Assert.IsFalse(Sign(Stamp(), evidence, out failure));
+			ClassicAssert.IsFalse(Sign(Stamp(), evidence, out failure));
 			StringAssert.Contains("malformed", failure);
 		}
 
@@ -241,8 +242,8 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioProvenance stamp = Stamp();
 			stamp.PlanDigest = "deadbeef";
 			string failure;
-			Assert.IsFalse(Sign(stamp, Evidence(), out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(Sign(stamp, Evidence(), out failure));
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		/// <summary>
@@ -254,13 +255,13 @@ namespace ThousandAndFirst.Tests
 		public void DeclaredKeySetNamesOnlyProductionOwnedIntentFacts()
 		{
 			IList<string> keys = KingdomScenarioAnchorRules.KeySet(Authority);
-			Assert.Greater(keys.Count, 0);
+			ClassicAssert.Greater(keys.Count, 0);
 			foreach (string key in keys)
 			{
 				StringAssert.StartsWith("architecture.", key);
-				Assert.IsFalse(key.Contains("case"), key + " is a gallery-only property");
-				Assert.IsFalse(key.Contains("receipt.digest"), key + " is a gallery-only property");
-				Assert.IsFalse(key.Contains("rect"),
+				ClassicAssert.IsFalse(key.Contains("case"), key + " is a gallery-only property");
+				ClassicAssert.IsFalse(key.Contains("receipt.digest"), key + " is a gallery-only property");
+				ClassicAssert.IsFalse(key.Contains("rect"),
 					key + " is placement-dependent and cannot match across two lawful builds");
 			}
 		}

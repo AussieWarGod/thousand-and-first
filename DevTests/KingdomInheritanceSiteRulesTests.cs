@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -31,16 +32,16 @@ namespace ThousandAndFirst.Tests
 				"TerrainSaltdunes", "Saltdunes", 0, 1);
 			KingdomInheritanceSiteCandidate selected;
 			KingdomInheritanceSiteFault fault;
-			Assert.IsTrue(KingdomInheritanceSiteRules.TrySelect(
+			ClassicAssert.IsTrue(KingdomInheritanceSiteRules.TrySelect(
 				new[] { better, old }, "legacy-a", old.ZoneId, better.TerrainBlueprint,
 				out selected, out fault));
-			Assert.AreSame(old, selected);
+			ClassicAssert.AreSame(old, selected);
 
 			old.Built = true;
-			Assert.IsTrue(KingdomInheritanceSiteRules.TrySelect(
+			ClassicAssert.IsTrue(KingdomInheritanceSiteRules.TrySelect(
 				new[] { old, better }, "legacy-a", old.ZoneId, old.TerrainBlueprint,
 				out selected, out fault));
-			Assert.AreSame(better, selected);
+			ClassicAssert.AreSame(better, selected);
 		}
 
 		[Test]
@@ -55,12 +56,12 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritanceSiteCandidate forward;
 			KingdomInheritanceSiteCandidate reverse;
 			KingdomInheritanceSiteFault fault;
-			Assert.IsTrue(KingdomInheritanceSiteRules.TrySelect(new[] { a, b, c },
+			ClassicAssert.IsTrue(KingdomInheritanceSiteRules.TrySelect(new[] { a, b, c },
 				"legacy-stable", "", "TerrainFlowerfields", out forward, out fault));
-			Assert.IsTrue(KingdomInheritanceSiteRules.TrySelect(new[] { c, b, a },
+			ClassicAssert.IsTrue(KingdomInheritanceSiteRules.TrySelect(new[] { c, b, a },
 				"legacy-stable", "", "TerrainFlowerfields", out reverse, out fault));
-			Assert.AreEqual(forward.ZoneId, reverse.ZoneId);
-			Assert.AreNotSame(a, forward);
+			ClassicAssert.AreEqual(forward.ZoneId, reverse.ZoneId);
+			ClassicAssert.AreNotSame(a, forward);
 		}
 
 		[Test]
@@ -94,10 +95,10 @@ namespace ThousandAndFirst.Tests
 
 			KingdomInheritanceSiteCandidate selected;
 			KingdomInheritanceSiteFault fault;
-			Assert.IsFalse(KingdomInheritanceSiteRules.TrySelect(conflicts, "legacy-a", "", "",
+			ClassicAssert.IsFalse(KingdomInheritanceSiteRules.TrySelect(conflicts, "legacy-a", "", "",
 				out selected, out fault));
-			Assert.AreEqual(KingdomInheritanceSiteFault.NoSafeSite, fault);
-			Assert.IsNull(selected);
+			ClassicAssert.AreEqual(KingdomInheritanceSiteFault.NoSafeSite, fault);
+			ClassicAssert.IsNull(selected);
 		}
 
 		[TestCase("JoppaWorld.0.0.0.0.10", true)]
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void SurfaceZoneGrammarIsCanonicalAndBounded(string ZoneId, bool Expected)
 		{
-			Assert.AreEqual(Expected,
+			ClassicAssert.AreEqual(Expected,
 				KingdomInheritanceSiteRules.IsCanonicalSurfaceZoneId(ZoneId));
 		}
 
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritanceSiteCandidate candidate = Safe("JoppaWorld.2.2.1.1.10",
 				"TerrainSaltdunes", "", 0, 2);
-			Assert.IsFalse(KingdomInheritanceSiteRules.IsSafe(candidate));
+			ClassicAssert.IsFalse(KingdomInheritanceSiteRules.IsSafe(candidate));
 		}
 
 		[Test]
@@ -148,7 +149,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < ordered.Length; i++)
 			{
 				int next = source.IndexOf(ordered[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, ordered[i]);
+				ClassicAssert.Greater(next, cursor, ordered[i]);
 				cursor = next;
 			}
 			StringAssert.Contains(

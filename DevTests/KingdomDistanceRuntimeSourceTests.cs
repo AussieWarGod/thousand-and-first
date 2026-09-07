@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -52,7 +53,7 @@ namespace ThousandAndFirst.Tests
 		public void ObservationRunsOnlyAtGroundHandoffsAndNeverAtReckon()
 		{
 			string city = KingdomCityLogicalSource.Read();
-			Assert.AreEqual(2, Count(city, "KingdomDistanceRuntime.Observe("));
+			ClassicAssert.AreEqual(2, Count(city, "KingdomDistanceRuntime.Observe("));
 			string checkIn = Between(city, "public static void CheckIn(",
 				"public static void CheckOut(");
 			AssertOrdered(checkIn, "state = Reify(", "KingdomDistanceRuntime.Observe(",
@@ -94,8 +95,8 @@ namespace ThousandAndFirst.Tests
 		public void RuntimeSplitKeepsOnePartialAuthorityAndCandidateNested()
 		{
 			string runtime = RuntimeSource();
-			Assert.AreEqual(4, Count(runtime, "internal static partial class KingdomDistanceRuntime"));
-			Assert.AreEqual(1, Count(runtime, "private sealed class Candidate"));
+			ClassicAssert.AreEqual(4, Count(runtime, "internal static partial class KingdomDistanceRuntime"));
+			ClassicAssert.AreEqual(1, Count(runtime, "private sealed class Candidate"));
 			StringAssert.Contains("private sealed class Candidate", Source("KingdomDistanceRuntime.cs"));
 			StringAssert.DoesNotContain("private sealed class Candidate",
 				Source("KingdomDistanceRuntime.PlanningAndTransfer.cs"));
@@ -122,9 +123,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string startTerm, string endTerm)
 		{
 			int start = source.IndexOf(startTerm, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing source boundary: " + startTerm);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing source boundary: " + startTerm);
 			int end = source.IndexOf(endTerm, start + startTerm.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing source boundary: " + endTerm);
+			ClassicAssert.Greater(end, start, "missing source boundary: " + endTerm);
 			return source.Substring(start, end - start);
 		}
 
@@ -146,7 +147,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int found = source.IndexOf(terms[i], previous + 1, StringComparison.Ordinal);
-				Assert.Greater(found, previous, "missing/out-of-order source term: " + terms[i]);
+				ClassicAssert.Greater(found, previous, "missing/out-of-order source term: " + terms[i]);
 				previous = found;
 			}
 		}

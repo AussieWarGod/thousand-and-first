@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -21,7 +22,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CrownVerdictKeepsByteAbiAndExactValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomCrownVerdict)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomCrownVerdict)));
 			CollectionAssert.AreEqual(new[] { "Crowns", "Moves", "AlreadyHere",
 				"RefusedUnfounded", "RefusedNotOurGround", "RefusedNotOurWork", "RefusedNamed" },
 				Enum.GetNames(typeof(KingdomCrownVerdict)));
@@ -49,9 +50,9 @@ namespace ThousandAndFirst.Tests
 			string text = KingdomCrownRules.FormatCrown(Kavvat, "r_TAF_Crown_JoppaWorld.11.22.1.1.10_20,10");
 			string city;
 			string key;
-			Assert.IsTrue(KingdomCrownRules.TryParseCrown(text, out city, out key));
-			Assert.AreEqual(Kavvat, city);
-			Assert.AreEqual("r_TAF_Crown_JoppaWorld.11.22.1.1.10_20,10", key);
+			ClassicAssert.IsTrue(KingdomCrownRules.TryParseCrown(text, out city, out key));
+			ClassicAssert.AreEqual(Kavvat, city);
+			ClassicAssert.AreEqual("r_TAF_Crown_JoppaWorld.11.22.1.1.10_20,10", key);
 		}
 
 		[Test]
@@ -61,10 +62,10 @@ namespace ThousandAndFirst.Tests
 			// read as a repair and must not say anything to anybody.
 			string city;
 			string key;
-			Assert.IsTrue(KingdomCrownRules.TryParseCrown(null, out city, out key));
-			Assert.IsNull(city);
-			Assert.IsTrue(KingdomCrownRules.TryParseCrown("", out city, out key));
-			Assert.IsNull(city);
+			ClassicAssert.IsTrue(KingdomCrownRules.TryParseCrown(null, out city, out key));
+			ClassicAssert.IsNull(city);
+			ClassicAssert.IsTrue(KingdomCrownRules.TryParseCrown("", out city, out key));
+			ClassicAssert.IsNull(city);
 		}
 
 		[TestCase("^")]
@@ -74,7 +75,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string city;
 			string key;
-			Assert.IsFalse(KingdomCrownRules.TryParseCrown(text, out city, out key));
+			ClassicAssert.IsFalse(KingdomCrownRules.TryParseCrown(text, out city, out key));
 		}
 
 		[TestCase(null, false)]
@@ -84,27 +85,27 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Sheba Hagadias", true)]
 		public void ANameTheRecordCouldNotCarryIsRefusedRatherThanEscaped(string city, bool storable)
 		{
-			Assert.AreEqual(storable, KingdomCrownRules.Storable(city));
+			ClassicAssert.AreEqual(storable, KingdomCrownRules.Storable(city));
 			string written = KingdomCrownRules.FormatCrown(city, "");
 			string read;
 			string key;
-			Assert.IsTrue(KingdomCrownRules.TryParseCrown(written, out read, out key));
-			Assert.AreEqual(storable ? city : null, read,
+			ClassicAssert.IsTrue(KingdomCrownRules.TryParseCrown(written, out read, out key));
+			ClassicAssert.AreEqual(storable ? city : null, read,
 				"a name the record could not carry writes nothing at all rather than half of one");
 		}
 
 		[Test]
 		public void TheHallsGroundNamesItAndNamesItTheSameWayTwice()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomCrownRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10),
 				KingdomCrownRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10));
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				KingdomCrownRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10),
 				KingdomCrownRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 10, 20));
-			Assert.IsNull(KingdomCrownRules.ComposeLocationKey("Joppa^World.1.1.1.1.10", 1, 1));
-			Assert.IsNull(KingdomCrownRules.ComposeLocationKey(null, 1, 1));
-			Assert.IsNull(KingdomCrownRules.ComposeLocationKey("JoppaWorld.1.1.1.1.10", -1, 1));
+			ClassicAssert.IsNull(KingdomCrownRules.ComposeLocationKey("Joppa^World.1.1.1.1.10", 1, 1));
+			ClassicAssert.IsNull(KingdomCrownRules.ComposeLocationKey(null, 1, 1));
+			ClassicAssert.IsNull(KingdomCrownRules.ComposeLocationKey("JoppaWorld.1.1.1.1.10", -1, 1));
 		}
 
 		// --- Resolve: the world outranks the record ----------------------------------------------
@@ -113,8 +114,8 @@ namespace ThousandAndFirst.Tests
 		public void TheRecordIsBelievedWhileTheHallItNamesIsStanding()
 		{
 			string capital;
-			Assert.IsTrue(KingdomCrownRules.Resolve(Kavvat, Cities(Kavvat, Ozym), out capital));
-			Assert.AreEqual(Kavvat, capital);
+			ClassicAssert.IsTrue(KingdomCrownRules.Resolve(Kavvat, Cities(Kavvat, Ozym), out capital));
+			ClassicAssert.AreEqual(Kavvat, capital);
 		}
 
 		[Test]
@@ -123,16 +124,16 @@ namespace ThousandAndFirst.Tests
 			// The tie-break must never overrule a record that is still true, or moving the crown to
 			// a city late in the alphabet would silently undo itself.
 			string capital;
-			Assert.IsTrue(KingdomCrownRules.Resolve(Ozym, Cities(Kavvat, Ozym), out capital));
-			Assert.AreEqual(Ozym, capital);
+			ClassicAssert.IsTrue(KingdomCrownRules.Resolve(Ozym, Cities(Kavvat, Ozym), out capital));
+			ClassicAssert.AreEqual(Ozym, capital);
 		}
 
 		[Test]
 		public void ACityIsMatchedTheWayAFounderReadsIt()
 		{
 			string capital;
-			Assert.IsTrue(KingdomCrownRules.Resolve("KAVVAT", Cities(Kavvat), out capital));
-			Assert.AreEqual(Kavvat, capital, "the answer is spelled the way the city is, not the way the record was");
+			ClassicAssert.IsTrue(KingdomCrownRules.Resolve("KAVVAT", Cities(Kavvat), out capital));
+			ClassicAssert.AreEqual(Kavvat, capital, "the answer is spelled the way the city is, not the way the record was");
 		}
 
 		[Test]
@@ -142,19 +143,19 @@ namespace ThousandAndFirst.Tests
 			// a state the realm has to be able to be in, and it must not go on naming a capital
 			// with nothing in it.
 			string capital;
-			Assert.IsFalse(KingdomCrownRules.Resolve(Kavvat, Cities(), out capital),
+			ClassicAssert.IsFalse(KingdomCrownRules.Resolve(Kavvat, Cities(), out capital),
 				"a record naming a city with no hall must be repaired, and repairs are told");
-			Assert.IsNull(capital);
+			ClassicAssert.IsNull(capital);
 		}
 
 		[Test]
 		public void ARealmThatNeverHadACapitalIsNotARepair()
 		{
 			string capital;
-			Assert.IsTrue(KingdomCrownRules.Resolve(null, Cities(), out capital));
-			Assert.IsNull(capital);
-			Assert.IsTrue(KingdomCrownRules.Resolve("", null, out capital));
-			Assert.IsNull(capital);
+			ClassicAssert.IsTrue(KingdomCrownRules.Resolve(null, Cities(), out capital));
+			ClassicAssert.IsNull(capital);
+			ClassicAssert.IsTrue(KingdomCrownRules.Resolve("", null, out capital));
+			ClassicAssert.IsNull(capital);
 		}
 
 		[Test]
@@ -164,10 +165,10 @@ namespace ThousandAndFirst.Tests
 			// keeping halls, never on the order they were handed over or on who is standing where.
 			string first;
 			string second;
-			Assert.IsFalse(KingdomCrownRules.Resolve(null, Cities(Kavvat, Ozym, Sheba), out first));
-			Assert.IsFalse(KingdomCrownRules.Resolve("a city that seceded", Cities(Kavvat, Ozym, Sheba), out second));
-			Assert.AreEqual(first, second);
-			Assert.AreEqual(Kavvat, first, "the first in the order the caller passed, which is name order");
+			ClassicAssert.IsFalse(KingdomCrownRules.Resolve(null, Cities(Kavvat, Ozym, Sheba), out first));
+			ClassicAssert.IsFalse(KingdomCrownRules.Resolve("a city that seceded", Cities(Kavvat, Ozym, Sheba), out second));
+			ClassicAssert.AreEqual(first, second);
+			ClassicAssert.AreEqual(Kavvat, first, "the first in the order the caller passed, which is name order");
 		}
 
 		// --- JudgeTakeUp: refusals first, then the two events -------------------------------------
@@ -175,43 +176,43 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCrownIsRefusedBeforeThereIsARealmToBeTheCapitalOf()
 		{
-			Assert.AreEqual(KingdomCrownVerdict.RefusedUnfounded,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.RefusedUnfounded,
 				KingdomCrownRules.JudgeTakeUp(Founded: false, OurGround: true, OurWork: true, Crowned: null, Here: Kavvat));
 		}
 
 		[Test]
 		public void TheCrownIsRefusedOnGroundTheRealmDoesNotHoldAndOnWorkItDidNotRaise()
 		{
-			Assert.AreEqual(KingdomCrownVerdict.RefusedNotOurGround,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.RefusedNotOurGround,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: false, OurWork: true, Crowned: null, Here: Kavvat));
-			Assert.AreEqual(KingdomCrownVerdict.RefusedNotOurWork,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.RefusedNotOurWork,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: false, Crowned: null, Here: Kavvat));
 		}
 
 		[Test]
 		public void ACityTheRecordCouldNotCarryIsRefusedRatherThanCrowned()
 		{
-			Assert.AreEqual(KingdomCrownVerdict.RefusedNamed,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.RefusedNamed,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: null, Here: "Kav^vat"));
-			Assert.AreEqual(KingdomCrownVerdict.RefusedNamed,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.RefusedNamed,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: null, Here: ""));
 		}
 
 		[Test]
 		public void RaisingTheFirstCrownHallCrownsTheCityAndRaisingASecondMovesTheCrown()
 		{
-			Assert.AreEqual(KingdomCrownVerdict.Crowns,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.Crowns,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: null, Here: Kavvat));
-			Assert.AreEqual(KingdomCrownVerdict.Moves,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.Moves,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: Kavvat, Here: Ozym));
 		}
 
 		[Test]
 		public void SettingTheCrownDownWhereItAlreadyIsIsNotAQuestionWorthAsking()
 		{
-			Assert.AreEqual(KingdomCrownVerdict.AlreadyHere,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.AlreadyHere,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: Kavvat, Here: Kavvat));
-			Assert.AreEqual(KingdomCrownVerdict.AlreadyHere,
+			ClassicAssert.AreEqual(KingdomCrownVerdict.AlreadyHere,
 				KingdomCrownRules.JudgeTakeUp(Founded: true, OurGround: true, OurWork: true, Crowned: "KAVVAT", Here: Kavvat));
 		}
 
@@ -240,7 +241,7 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < said.Length; i++)
 			{
-				Assert.IsFalse(said[i].ToLowerInvariant().Contains("seat"), said[i]);
+				ClassicAssert.IsFalse(said[i].ToLowerInvariant().Contains("seat"), said[i]);
 			}
 		}
 
@@ -253,7 +254,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(Kavvat, prompt);
 			StringAssert.Contains(Ozym, prompt);
 			StringAssert.Contains("re-keyed", prompt);
-			Assert.IsTrue(prompt.Contains("arch"), "a founder with a crossing must hear about it before they answer");
+			ClassicAssert.IsTrue(prompt.Contains("arch"), "a founder with a crossing must hear about it before they answer");
 		}
 
 		[Test]
@@ -262,9 +263,9 @@ namespace ThousandAndFirst.Tests
 			// The protection law, in the one place this wave could have broken it.
 			string line = KingdomCrownRules.FormerCrownLine(Kavvat);
 			StringAssert.Contains(Kavvat, line);
-			Assert.IsTrue(line.Contains("stands"), line);
-			Assert.IsFalse(line.ToLowerInvariant().Contains("destroy"), line);
-			Assert.IsFalse(KingdomCrownRules.MovePrompt(Kavvat, Ozym).ToLowerInvariant().Contains("torn down"));
+			ClassicAssert.IsTrue(line.Contains("stands"), line);
+			ClassicAssert.IsFalse(line.ToLowerInvariant().Contains("destroy"), line);
+			ClassicAssert.IsFalse(KingdomCrownRules.MovePrompt(Kavvat, Ozym).ToLowerInvariant().Contains("torn down"));
 			StringAssert.Contains("nothing is taken down", KingdomCrownRules.MovePrompt(Kavvat, Ozym));
 		}
 
@@ -281,13 +282,13 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < refusals.Length; i++)
 			{
 				string line = KingdomCrownRules.RefusalLine(refusals[i]);
-				Assert.IsTrue(line.Length > 0, refusals[i].ToString());
-				Assert.IsFalse(line.Contains("failed"), line);
+				ClassicAssert.IsTrue(line.Length > 0, refusals[i].ToString());
+				ClassicAssert.IsFalse(line.Contains("failed"), line);
 			}
 			// 7b forbids telling somebody about the absence of a problem.
-			Assert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.Crowns));
-			Assert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.Moves));
-			Assert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.AlreadyHere));
+			ClassicAssert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.Crowns));
+			ClassicAssert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.Moves));
+			ClassicAssert.AreEqual("", KingdomCrownRules.RefusalLine(KingdomCrownVerdict.AlreadyHere));
 		}
 
 		[Test]
@@ -296,8 +297,8 @@ namespace ThousandAndFirst.Tests
 			string holds = KingdomCrownRules.DescriptionLine(Holds: true, Capital: Kavvat);
 			string empty = KingdomCrownRules.DescriptionLine(Holds: false, Capital: null);
 			string former = KingdomCrownRules.DescriptionLine(Holds: false, Capital: Ozym);
-			Assert.AreNotEqual(holds, empty);
-			Assert.AreNotEqual(empty, former);
+			ClassicAssert.AreNotEqual(holds, empty);
+			ClassicAssert.AreNotEqual(empty, former);
 			StringAssert.Contains("capital", holds);
 			StringAssert.Contains("former", former);
 			StringAssert.Contains(Ozym, former);
@@ -307,16 +308,16 @@ namespace ThousandAndFirst.Tests
 		public void TheLabelSaysWhatPressingItWouldDo()
 		{
 			StringAssert.Contains("already here", KingdomCrownRules.TakeUpLabel(Holds: true, Capital: Kavvat));
-			Assert.AreEqual("set the crown down here", KingdomCrownRules.TakeUpLabel(Holds: false, Capital: null));
-			Assert.AreEqual("move the crown here", KingdomCrownRules.TakeUpLabel(Holds: false, Capital: Kavvat));
+			ClassicAssert.AreEqual("set the crown down here", KingdomCrownRules.TakeUpLabel(Holds: false, Capital: null));
+			ClassicAssert.AreEqual("move the crown here", KingdomCrownRules.TakeUpLabel(Holds: false, Capital: Kavvat));
 		}
 
 		[Test]
 		public void ACityNothingNamedIsStillSpokenOfHonestly()
 		{
-			Assert.AreEqual("the city", KingdomCrownRules.Named(null));
-			Assert.AreEqual("the city", KingdomCrownRules.Named(""));
-			Assert.AreEqual(Kavvat, KingdomCrownRules.Named("  Kavvat  "));
+			ClassicAssert.AreEqual("the city", KingdomCrownRules.Named(null));
+			ClassicAssert.AreEqual("the city", KingdomCrownRules.Named(""));
+			ClassicAssert.AreEqual(Kavvat, KingdomCrownRules.Named("  Kavvat  "));
 		}
 
 		// --- The capital gate: the second cardinality lane -----------------------------------------
@@ -324,9 +325,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ACapitalSpecificDesignWantsTheCrownAndNothingElse()
 		{
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: false, CapitalOnly: true, Crowned: true, Kept: null, Key: "arcology"));
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedUncrowned,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedUncrowned,
 				KingdomLabRules.JudgePurpose(Megastructure: false, CapitalOnly: true, Crowned: false, Kept: null, Key: "arcology"));
 		}
 
@@ -335,7 +336,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The capital ruling's exact words -- "a couple of EXTRA capital-specific megastructures
 			// BEYOND its one" -- which only means anything if the extras never contend for the slot.
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: false, CapitalOnly: true, Crowned: true,
 					Kept: KingdomLabRules.TheatreKey, Key: "arcology"),
 				"a crowned flesh-city may still raise the arcology");
@@ -343,7 +344,7 @@ namespace ThousandAndFirst.Tests
 			// declaring BOTH attributes is judged against the crown and never against the slot. A
 			// gate that asked the slot afterwards would refuse the capital its own extras the day a
 			// modder wrote the arcology the way the fiction describes it.
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, CapitalOnly: true, Crowned: true,
 					Kept: KingdomLabRules.TheatreKey, Key: "arcology"));
 		}
@@ -353,10 +354,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 22 A3, and the capital is judged for it exactly as every other city is: the
 			// theatre and the annexe are megastructures and neither is capital-specific.
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, CapitalOnly: false, Crowned: true,
 					Kept: KingdomLabRules.TheatreKey, Key: KingdomAnnexeRules.AnnexeKey));
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, CapitalOnly: false, Crowned: true,
 					Kept: KingdomAnnexeRules.AnnexeKey, Key: KingdomLabRules.TheatreKey));
 		}
@@ -366,9 +367,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Two unknowns, two directions, both deliberate. A purpose nothing could read must not
 			// brick the catalogue; a crown nothing set down must not hand every realm the capital's.
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, CapitalOnly: false, Crowned: false, Kept: null, Key: "chimerictheatre"));
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedUncrowned,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedUncrowned,
 				KingdomLabRules.JudgePurpose(Megastructure: true, CapitalOnly: true, Crowned: false, Kept: null, Key: "arcology"));
 		}
 
@@ -376,11 +377,11 @@ namespace ThousandAndFirst.Tests
 		public void TheOldThreeArgumentGateStillAnswersExactlyAsItDid()
 		{
 			// The published surface is not allowed to move under a third party (STANDARDS §9).
-			Assert.AreEqual(KingdomPurposeVerdict.RefusedKept,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.RefusedKept,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: "arcology", Key: "chimerictheatre"));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: true, Kept: null, Key: "chimerictheatre"));
-			Assert.AreEqual(KingdomPurposeVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomPurposeVerdict.Allowed,
 				KingdomLabRules.JudgePurpose(Megastructure: false, Kept: "arcology", Key: "smithy"));
 		}
 
@@ -394,7 +395,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("maybe", false)]
 		public void ADesignStandsInAnyCityUntilItSaysOtherwise(string declared, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLabRules.IsCapitalOnly(declared));
+			ClassicAssert.AreEqual(expected, KingdomLabRules.IsCapitalOnly(declared));
 		}
 
 		[Test]
@@ -402,10 +403,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string named = KingdomLabRules.UncrownedRefusalLine(Kavvat);
 			StringAssert.Contains(Kavvat, named);
-			Assert.IsFalse(named.Contains("Capital=\""), named);
+			ClassicAssert.IsFalse(named.Contains("Capital=\""), named);
 			string none = KingdomLabRules.UncrownedRefusalLine(null);
 			StringAssert.Contains("crown hall", none);
-			Assert.AreNotEqual(named, none, "a realm with no capital is told a different thing to do");
+			ClassicAssert.AreNotEqual(named, none, "a realm with no capital is told a different thing to do");
 		}
 
 		// --- The two lanes end to end, through the real zoning path --------------------------------
@@ -415,7 +416,7 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(key, null, null, null, null,
 				null, null, null, null, megastructure, capital, out error);
-			Assert.IsNull(error);
+			ClassicAssert.IsNull(error);
 			return gate;
 		}
 
@@ -437,41 +438,41 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ParseGateAttributes_ReadsCapitalAndLeavesEveryOtherDesignAlone()
 		{
-			Assert.IsTrue(Gate("arcology", null, "yes").Capital);
-			Assert.IsFalse(Gate("arcology", null, "no").Capital);
-			Assert.IsFalse(Gate("smithy", null, null).Capital);
+			ClassicAssert.IsTrue(Gate("arcology", null, "yes").Capital);
+			ClassicAssert.IsFalse(Gate("arcology", null, "no").Capital);
+			ClassicAssert.IsFalse(Gate("smithy", null, null).Capital);
 			// A malformed value makes a design un-special rather than unbuildable, and reports no
 			// fault -- the safe direction, and the same call the Megastructure attribute makes.
 			string error;
-			Assert.IsFalse(KingdomZoningRules.ParseGateAttributes("arcology", null, null, null, null,
+			ClassicAssert.IsFalse(KingdomZoningRules.ParseGateAttributes("arcology", null, null, null, null,
 				null, null, null, null, null, "perhaps", out error).Capital);
-			Assert.IsNull(error);
+			ClassicAssert.IsNull(error);
 		}
 
 		[Test]
 		public void Zoning_RefusesACapitalOnlyDesignInAnUncrownedRealm()
 		{
 			ZoningJudgement judgement = JudgeArcology(crowned: false, capitalName: null, cityKeeps: null);
-			Assert.IsFalse(judgement.Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
-			Assert.IsNull(judgement.Detail, "a realm with no capital has no city to name");
-			Assert.IsNotEmpty(judgement.Note);
+			ClassicAssert.IsFalse(judgement.Permitted);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
+			ClassicAssert.IsNull(judgement.Detail, "a realm with no capital has no city to name");
+			ClassicAssert.IsNotEmpty(judgement.Note);
 		}
 
 		[Test]
 		public void Zoning_RefusesACapitalOnlyDesignInACityThatIsNotTheCapital()
 		{
 			ZoningJudgement judgement = JudgeArcology(crowned: false, capitalName: Kavvat, cityKeeps: null);
-			Assert.AreEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
-			Assert.AreEqual(Kavvat, judgement.Detail,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
+			ClassicAssert.AreEqual(Kavvat, judgement.Detail,
 				"the Detail is already prose: a city's name is the founder's own word for it");
 		}
 
 		[Test]
 		public void Zoning_AllowsTheArcologyOnlyWhereTheCrownStands()
 		{
-			Assert.IsTrue(JudgeArcology(crowned: true, capitalName: Kavvat, cityKeeps: null).Permitted);
-			Assert.IsFalse(JudgeArcology(crowned: false, capitalName: Kavvat, cityKeeps: null).Permitted);
+			ClassicAssert.IsTrue(JudgeArcology(crowned: true, capitalName: Kavvat, cityKeeps: null).Permitted);
+			ClassicAssert.IsFalse(JudgeArcology(crowned: false, capitalName: Kavvat, cityKeeps: null).Permitted);
 		}
 
 		[Test]
@@ -479,9 +480,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The crowned flesh-city raises its arcology with the theatre still standing. The whole
 			// of the capital ruling's "its one PLUS extras", asserted through the real gate.
-			Assert.IsTrue(JudgeArcology(crowned: true, capitalName: Kavvat, cityKeeps: KingdomLabRules.TheatreKey).Permitted);
+			ClassicAssert.IsTrue(JudgeArcology(crowned: true, capitalName: Kavvat, cityKeeps: KingdomLabRules.TheatreKey).Permitted);
 			// And a record that declares BOTH attributes is still judged against the crown alone.
-			Assert.IsTrue(JudgeGround(Gate("arcology", "yes", "yes"), "arcology", KingdomLabRules.TheatreKey,
+			ClassicAssert.IsTrue(JudgeGround(Gate("arcology", "yes", "yes"), "arcology", KingdomLabRules.TheatreKey,
 				crowned: true, capitalName: Kavvat, satellite: KingdomSatelliteVerdict.Allowed, satelliteDetail: null).Permitted);
 		}
 
@@ -496,11 +497,11 @@ namespace ThousandAndFirst.Tests
 				KingdomAnnexeRules.AnnexeKey, KingdomLabRules.TheatreKey,
 				crowned: true, capitalName: Kavvat,
 				satellite: KingdomSatelliteVerdict.Allowed, satelliteDetail: null);
-			Assert.AreEqual(ZoningVerdict.RefusedMegastructure, judgement.Verdict);
-			Assert.AreNotEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
-			Assert.AreEqual(KingdomLabRules.TheatreKey, judgement.Detail);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedMegastructure, judgement.Verdict);
+			ClassicAssert.AreNotEqual(ZoningVerdict.RefusedUncrowned, judgement.Verdict);
+			ClassicAssert.AreEqual(KingdomLabRules.TheatreKey, judgement.Detail);
 			// And the other way round, in the same crowned city.
-			Assert.AreEqual(ZoningVerdict.RefusedMegastructure,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedMegastructure,
 				JudgeGround(Gate(KingdomLabRules.TheatreKey, "yes", null), KingdomLabRules.TheatreKey,
 					KingdomAnnexeRules.AnnexeKey, crowned: true, capitalName: Kavvat,
 					KingdomSatelliteVerdict.Allowed, null).Verdict);
@@ -511,10 +512,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// Unchanged in the one direction and deliberate in the other. A purpose nothing could
 			// read must not brick the catalogue; a crown nobody set down must not open it.
-			Assert.IsTrue(JudgeGround(Gate(KingdomLabRules.TheatreKey, "yes", null), KingdomLabRules.TheatreKey,
+			ClassicAssert.IsTrue(JudgeGround(Gate(KingdomLabRules.TheatreKey, "yes", null), KingdomLabRules.TheatreKey,
 				cityKeeps: null, crowned: false, capitalName: null,
 				satellite: KingdomSatelliteVerdict.Allowed, satelliteDetail: null).Permitted);
-			Assert.IsFalse(JudgeArcology(crowned: false, capitalName: null, cityKeeps: null).Permitted);
+			ClassicAssert.IsFalse(JudgeArcology(crowned: false, capitalName: null, cityKeeps: null).Permitted);
 		}
 
 		[Test]
@@ -523,10 +524,10 @@ namespace ThousandAndFirst.Tests
 			// No design declared Capital the day before this landed, so every existing caller is
 			// unmoved; the one that would move is a caller judging a capital-only design without
 			// knowing capitals exist, and it must not be handed the capital's catalogue.
-			Assert.IsTrue(KingdomZoningRules.Judge(Gate("smithy", null, null), null, "craft", 0, null,
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(Gate("smithy", null, null), null, "craft", 0, null,
 				Underground: false, RequiresSky: false, Roll: BuilderRoll.Unknown, Stratum: null,
 				Key: "smithy", CityKeeps: null).Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedUncrowned,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedUncrowned,
 				KingdomZoningRules.Judge(Gate("arcology", null, "yes"), null, "craft", 0, null,
 					Underground: false, RequiresSky: false, Roll: BuilderRoll.Unknown, Stratum: null,
 					Key: "arcology", CityKeeps: null).Verdict);
@@ -538,8 +539,8 @@ namespace ThousandAndFirst.Tests
 			ZoningJudgement judgement = JudgeGround(Gate(KingdomSatelliteRules.RegistryOfficeKey, null, null),
 				KingdomSatelliteRules.RegistryOfficeKey, cityKeeps: null, crowned: false, capitalName: null,
 				satellite: KingdomSatelliteVerdict.RefusedNoParent, satelliteDetail: KingdomAnnexeRules.AnnexeKey);
-			Assert.AreEqual(ZoningVerdict.RefusedSatellite, judgement.Verdict);
-			Assert.AreEqual(KingdomAnnexeRules.AnnexeKey, judgement.Detail,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedSatellite, judgement.Verdict);
+			ClassicAssert.AreEqual(KingdomAnnexeRules.AnnexeKey, judgement.Detail,
 				"the Detail is the PARENT's key, so the refusal can name the great work that is missing");
 		}
 
@@ -549,8 +550,8 @@ namespace ThousandAndFirst.Tests
 			ZoningJudgement judgement = JudgeGround(Gate("theirmod_office", null, null),
 				"theirmod_office", cityKeeps: null, crowned: false, capitalName: null,
 				satellite: KingdomSatelliteVerdict.RefusedCityKeeps, satelliteDetail: KingdomSatelliteRules.RegistryOfficeKey);
-			Assert.AreEqual(ZoningVerdict.RefusedSatelliteKept, judgement.Verdict);
-			Assert.AreEqual(KingdomSatelliteRules.RegistryOfficeKey, judgement.Detail,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedSatelliteKept, judgement.Verdict);
+			ClassicAssert.AreEqual(KingdomSatelliteRules.RegistryOfficeKey, judgement.Detail,
 				"the Detail is the KEPT outpost's key, which is a different key from the one above");
 		}
 
@@ -560,14 +561,14 @@ namespace ThousandAndFirst.Tests
 			// The ambiguity this wave was told to resolve, pinned. One verdict carrying both
 			// meanings would leave the composer guessing which key its Detail held, and it would
 			// guess wrong the first time somebody named an outpost after its parent.
-			Assert.AreNotEqual(ZoningVerdict.RefusedSatellite, ZoningVerdict.RefusedSatelliteKept);
+			ClassicAssert.AreNotEqual(ZoningVerdict.RefusedSatellite, ZoningVerdict.RefusedSatelliteKept);
 			ZoningJudgement noParent = JudgeGround(Gate("k", null, null), "k", null, false, null,
 				KingdomSatelliteVerdict.RefusedNoParent, "becomingannexe");
 			ZoningJudgement kept = JudgeGround(Gate("k", null, null), "k", null, false, null,
 				KingdomSatelliteVerdict.RefusedCityKeeps, "becomingannexe");
-			Assert.AreNotEqual(noParent.Verdict, kept.Verdict,
+			ClassicAssert.AreNotEqual(noParent.Verdict, kept.Verdict,
 				"same Detail, two meanings, and the verdict is what tells them apart");
-			Assert.AreNotEqual(noParent.Note, kept.Note);
+			ClassicAssert.AreNotEqual(noParent.Note, kept.Note);
 		}
 
 		[Test]
@@ -575,7 +576,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Both lanes inert for every design in the catalogue that declares neither attribute,
 			// which is what keeps two attributes and two checks the whole of the vocabulary.
-			Assert.IsTrue(JudgeGround(Gate("smithy", null, null), "smithy", "arcology", crowned: false,
+			ClassicAssert.IsTrue(JudgeGround(Gate("smithy", null, null), "smithy", "arcology", crowned: false,
 				capitalName: null, satellite: KingdomSatelliteVerdict.Allowed, satelliteDetail: null).Permitted);
 		}
 
@@ -588,25 +589,25 @@ namespace ThousandAndFirst.Tests
 			string error;
 			ZoneGate reachable = KingdomZoningRules.ParseGateAttributes("registryoffice", null, "4", null, "Arclight",
 				null, null, null, null, null, null, out error);
-			Assert.IsNull(error);
+			ClassicAssert.IsNull(error);
 			// Tech is a lack; the outpost gate is a lack; tech is the older and nearer one.
-			Assert.AreEqual(ZoningVerdict.RefusedTechLevel,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedTechLevel,
 				KingdomZoningRules.Judge(reachable, null, "craft", 0, null, false, false, BuilderRoll.Unknown, null,
 					"registryoffice", null, false, null, KingdomSatelliteVerdict.RefusedNoParent, "becomingannexe").Verdict);
 			// District is the LAST of the lacks and the outpost gate sits above it, because "raise
 			// the annexe somewhere" is a bigger errand than "walk to the forgeworks".
 			ZoneGate districted = KingdomZoningRules.ParseGateAttributes("registryoffice", "market", null, null, null,
 				null, null, null, null, null, null, out error);
-			Assert.IsNull(error);
-			Assert.AreEqual(ZoningVerdict.RefusedSatellite,
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedSatellite,
 				KingdomZoningRules.Judge(districted, null, "craft", 0, null, false, false, BuilderRoll.Unknown, null,
 					"registryoffice", null, false, null, KingdomSatelliteVerdict.RefusedNoParent, "becomingannexe").Verdict);
 			// And the crown gate is told after the district gate, which is the purpose gate's own
 			// position and for the purpose gate's own reason.
 			ZoneGate capitalOnly = KingdomZoningRules.ParseGateAttributes("arcology", "market", null, null, null,
 				null, null, null, null, null, "yes", out error);
-			Assert.IsNull(error);
-			Assert.AreEqual(ZoningVerdict.RefusedDistrict,
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedDistrict,
 				KingdomZoningRules.Judge(capitalOnly, null, "craft", 0, null, false, false, BuilderRoll.Unknown, null,
 					"arcology", null, false, null, KingdomSatelliteVerdict.Allowed, null).Verdict);
 		}
@@ -616,10 +617,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// STANDARDS §9: these ordinals are published and a third party may already switch on
 			// them. Appending is additive; renumbering moves every value under somebody's feet.
-			Assert.AreEqual(9, (int)ZoningVerdict.RefusedMegastructure);
-			Assert.AreEqual(10, (int)ZoningVerdict.RefusedSatellite);
-			Assert.AreEqual(11, (int)ZoningVerdict.RefusedSatelliteKept);
-			Assert.AreEqual(12, (int)ZoningVerdict.RefusedUncrowned);
+			ClassicAssert.AreEqual(9, (int)ZoningVerdict.RefusedMegastructure);
+			ClassicAssert.AreEqual(10, (int)ZoningVerdict.RefusedSatellite);
+			ClassicAssert.AreEqual(11, (int)ZoningVerdict.RefusedSatelliteKept);
+			ClassicAssert.AreEqual(12, (int)ZoningVerdict.RefusedUncrowned);
 		}
 
 		// --- Hosted arcology lots: private stratum, never surface plots ----------------------------
@@ -628,12 +629,12 @@ namespace ThousandAndFirst.Tests
 		public void HostedArcologyLotsNeverLeakOntoSurfaceGround()
 		{
 			const string Interior = "arcology";
-			Assert.AreEqual(KingdomZoningRules.StratumArcology, KingdomZoningRules.HomeStratum(Interior));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumSurface),
+			ClassicAssert.AreEqual(KingdomZoningRules.StratumArcology, KingdomZoningRules.HomeStratum(Interior));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumSurface),
 				"hosted lots are commissioned through the exact shell, never a surface offer");
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumArcology),
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumArcology),
 				"and it moves indoors without a schema change the day the stratum exists");
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumDeep),
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits(Interior, KingdomZoningRules.StratumDeep),
 				"the arcology set is not the deep set (Addendum 15's first ruling)");
 		}
 
@@ -644,8 +645,8 @@ namespace ThousandAndFirst.Tests
 			// it never crowds the capital's ordinary economy. XL is as far as the shipped plot
 			// vocabulary reaches, so the arcology takes ALL of it -- and the zone-spanning the
 			// research describes is a carrier this wave deliberately did not build.
-			Assert.IsTrue(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 20, 18));
-			Assert.IsFalse(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 24, 16),
+			ClassicAssert.IsTrue(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 20, 18));
+			ClassicAssert.IsFalse(KingdomPlotRules.FootprintFits(KingdomPlotRules.PlotSize.Huge, 24, 16),
 				"a record wanting more ground than this needs machinery that does not exist yet");
 		}
 
@@ -672,13 +673,13 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, Sheba, out next, out rekeyed, out hub));
-			Assert.AreEqual(KeyC, hub);
-			Assert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyA));
-			Assert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyB));
-			Assert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyC),
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, Sheba, out next, out rekeyed, out hub));
+			ClassicAssert.AreEqual(KeyC, hub);
+			ClassicAssert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyA));
+			ClassicAssert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyB));
+			ClassicAssert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyC),
 				"the hub answers the first spoke in register order, deterministically and without a draw");
-			Assert.AreEqual(3, rekeyed);
+			ClassicAssert.AreEqual(3, rekeyed);
 		}
 
 		[Test]
@@ -694,11 +695,11 @@ namespace ThousandAndFirst.Tests
 			int rekeyed;
 			string hub;
 			KingdomMirrorGateRules.TryHub(rows, Ozym, out next, out rekeyed, out hub);
-			Assert.AreEqual(rows.Length, next.Length);
+			ClassicAssert.AreEqual(rows.Length, next.Length);
 			for (int i = 0; i < rows.Length; i++)
 			{
-				Assert.AreEqual(rows[i].Key, next[i].Key, "row " + i + " kept its arch");
-				Assert.AreEqual(rows[i].City, next[i].City, "row " + i + " kept its city");
+				ClassicAssert.AreEqual(rows[i].Key, next[i].Key, "row " + i + " kept its arch");
+				ClassicAssert.AreEqual(rows[i].City, next[i].City, "row " + i + " kept its city");
 			}
 		}
 
@@ -712,9 +713,9 @@ namespace ThousandAndFirst.Tests
 			int rekeyed;
 			string hub;
 			KingdomMirrorGateRules.TryHub(rows, Kavvat, out next, out rekeyed, out hub);
-			Assert.AreEqual("", rows[0].Partner, "copy-on-write: the register handed in is untouched");
-			Assert.AreEqual("", rows[1].Partner);
-			Assert.AreEqual(KeyB, next[0].Partner);
+			ClassicAssert.AreEqual("", rows[0].Partner, "copy-on-write: the register handed in is untouched");
+			ClassicAssert.AreEqual("", rows[1].Partner);
+			ClassicAssert.AreEqual(KeyB, next[0].Partner);
 		}
 
 		[Test]
@@ -726,9 +727,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, Kavvat, out next, out rekeyed, out hub));
-			Assert.AreEqual(0, rekeyed);
-			Assert.AreEqual("", KingdomMirrorGateRules.HubbedLine(Kavvat, 0),
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, Kavvat, out next, out rekeyed, out hub));
+			ClassicAssert.AreEqual(0, rekeyed);
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.HubbedLine(Kavvat, 0),
 				"7b's first kind: nothing happened, so nothing is said");
 		}
 
@@ -743,10 +744,10 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryHub(rows, Sheba, out next, out rekeyed, out hub));
-			Assert.AreSame(rows, next);
-			Assert.AreEqual(0, rekeyed);
-			Assert.AreEqual("", hub);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryHub(rows, Sheba, out next, out rekeyed, out hub));
+			ClassicAssert.AreSame(rows, next);
+			ClassicAssert.AreEqual(0, rekeyed);
+			ClassicAssert.AreEqual("", hub);
 			StringAssert.Contains(Sheba, KingdomMirrorGateRules.NoArchAtCapitalLine(Sheba));
 			StringAssert.Contains("left exactly as they were", KingdomMirrorGateRules.NoArchAtCapitalLine(Sheba));
 		}
@@ -758,10 +759,10 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryHub(rows, Kavvat, out next, out rekeyed, out hub));
-			Assert.AreEqual(KeyA, hub);
-			Assert.AreEqual("", next[0].Partner, "an arch that answered itself would land a founder where they stand");
-			Assert.AreEqual(0, rekeyed);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryHub(rows, Kavvat, out next, out rekeyed, out hub));
+			ClassicAssert.AreEqual(KeyA, hub);
+			ClassicAssert.AreEqual("", next[0].Partner, "an arch that answered itself would land a founder where they stand");
+			ClassicAssert.AreEqual(0, rekeyed);
 		}
 
 		[Test]
@@ -785,7 +786,7 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string back = KingdomMirrorGateRules.PartnerOf(next, next[i].Partner);
-				Assert.IsTrue(
+				ClassicAssert.IsTrue(
 					string.Equals(back, next[i].Key) || string.Equals(next[i].Partner, hub),
 					"row " + i + " answers " + next[i].Partner + " which answers " + back);
 			}
@@ -800,8 +801,8 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, "kavvat", out next, out rekeyed, out hub));
-			Assert.AreEqual(KeyA, hub);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryHub(rows, "kavvat", out next, out rekeyed, out hub));
+			ClassicAssert.AreEqual(KeyA, hub);
 		}
 
 		[TestCase(null)]
@@ -814,8 +815,8 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			int rekeyed;
 			string hub;
-			Assert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryHub(rows, city, out next, out rekeyed, out hub));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryHub(rows, city, out next, out rekeyed, out hub));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[Test]
@@ -824,7 +825,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(Kavvat, KingdomMirrorGateRules.HubbedTelling(Kavvat));
 			StringAssert.Contains("2 arches", KingdomMirrorGateRules.HubbedLine(Kavvat, 2));
 			StringAssert.Contains("1 arch is", KingdomMirrorGateRules.HubbedLine(Kavvat, 1));
-			Assert.IsFalse(KingdomMirrorGateRules.HubbedLine(Kavvat, 2).Contains("dark"),
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.HubbedLine(Kavvat, 2).Contains("dark"),
 				"a re-key is not a brownout, and Addendum 8 forbids a timer of our own wearing one's clothes");
 		}
 	}

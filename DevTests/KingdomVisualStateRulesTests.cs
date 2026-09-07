@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -25,53 +26,53 @@ namespace ThousandAndFirst.Tests
 		public void DamageLadderUsesTheSimulationThresholds(int wear,
 			KingdomVisualStateKind expected)
 		{
-			Assert.AreEqual(expected, KingdomVisualStateRules.Resolve(F(wear: wear)));
+			ClassicAssert.AreEqual(expected, KingdomVisualStateRules.Resolve(F(wear: wear)));
 		}
 
 		[Test]
 		public void ConstructionShowsRealAssignmentAndQueueStates()
 		{
-			Assert.AreEqual(KingdomVisualStateKind.RaisingQueued,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.RaisingQueued,
 				KingdomVisualStateRules.Resolve(F(active: true)));
-			Assert.AreEqual(KingdomVisualStateKind.RaisingWaitingForHands,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.RaisingWaitingForHands,
 				KingdomVisualStateRules.Resolve(F(active: true, selected: true)));
-			Assert.AreEqual(KingdomVisualStateKind.Raising,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Raising,
 				KingdomVisualStateRules.Resolve(F(active: true, selected: true, hands: 1)));
 		}
 
 		[Test]
 		public void DestructiveAndRepairStatesTakePriorityOverPassiveDamage()
 		{
-			Assert.AreEqual(KingdomVisualStateKind.SalvageOrdered,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.SalvageOrdered,
 				KingdomVisualStateRules.Resolve(F(salvage: true, repairing: true, wear: 60,
 					brownout: true, needed: 2, effectiveness: 0)));
-			Assert.AreEqual(KingdomVisualStateKind.Repairing,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Repairing,
 				KingdomVisualStateRules.Resolve(F(repairing: true, wear: 60, brownout: true)));
 		}
 
 		[Test]
 		public void WaterDeprivationAppearsOnlyOnTheHeartAndLegacyFoodMarksAreIgnored()
 		{
-			Assert.AreEqual(KingdomVisualStateKind.Sound,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Sound,
 				KingdomVisualStateRules.Resolve(F(withered: true, famished: true)));
-			Assert.AreEqual(KingdomVisualStateKind.Withered,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Withered,
 				KingdomVisualStateRules.Resolve(F(heart: true, withered: true)));
-			Assert.AreEqual(KingdomVisualStateKind.Sound,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Sound,
 				KingdomVisualStateRules.Resolve(F(heart: true, famished: true)));
-			Assert.AreEqual(KingdomVisualStateKind.Withered,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Withered,
 				KingdomVisualStateRules.Resolve(F(heart: true, withered: true, famished: true)));
 		}
 
 		[Test]
 		public void PowerAndStaffingUseExactRunState()
 		{
-			Assert.AreEqual(KingdomVisualStateKind.Dark,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Dark,
 				KingdomVisualStateRules.Resolve(F(brownout: true, needed: 2, effectiveness: 0)));
-			Assert.AreEqual(KingdomVisualStateKind.Idle,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Idle,
 				KingdomVisualStateRules.Resolve(F(needed: 2, effectiveness: 0)));
-			Assert.AreEqual(KingdomVisualStateKind.Shorthanded,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Shorthanded,
 				KingdomVisualStateRules.Resolve(F(needed: 2, effectiveness: 50)));
-			Assert.AreEqual(KingdomVisualStateKind.Sound,
+			ClassicAssert.AreEqual(KingdomVisualStateKind.Sound,
 				KingdomVisualStateRules.Resolve(F(needed: 2, effectiveness: 100)));
 		}
 
@@ -85,11 +86,11 @@ namespace ThousandAndFirst.Tests
 				KingdomVisualStateKind state = KingdomVisualStateRules.GalleryStates[i];
 				if (state == KingdomVisualStateKind.Sound) continue;
 				KingdomVisualCue cue = KingdomVisualStateRules.Cue(state);
-				Assert.IsNotEmpty(cue.Glyph, state.ToString());
-				Assert.IsNotEmpty(cue.Label, state.ToString());
-				Assert.IsTrue(glyphs.Add(cue.Glyph), "duplicate text glyph " + cue.Glyph);
+				ClassicAssert.IsNotEmpty(cue.Glyph, state.ToString());
+				ClassicAssert.IsNotEmpty(cue.Label, state.ToString());
+				ClassicAssert.IsTrue(glyphs.Add(cue.Glyph), "duplicate text glyph " + cue.Glyph);
 				string silhouette = cue.Tile ?? ("text:" + cue.Glyph);
-				Assert.IsTrue(tileMode.Add(silhouette), "duplicate tile silhouette " + silhouette);
+				ClassicAssert.IsTrue(tileMode.Add(silhouette), "duplicate tile silhouette " + silhouette);
 			}
 		}
 
@@ -98,7 +99,7 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.StartsWith(KingdomVisualStateRules.GalleryVersion + "\n",
 				KingdomVisualStateRules.GalleryReceipt());
-			Assert.AreEqual("b8ad67bef7430f2f4007781991db0c2f23aade99a5b0962e15a72be9c41e3504",
+			ClassicAssert.AreEqual("b8ad67bef7430f2f4007781991db0c2f23aade99a5b0962e15a72be9c41e3504",
 				KingdomVisualStateRules.GalleryHash(),
 				"change the gallery version and acceptance receipt with any cue change");
 		}

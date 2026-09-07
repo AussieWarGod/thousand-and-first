@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,7 +15,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomDelveLinkReceipt receipt;
 			string failure;
-			Assert.IsTrue(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
+			ClassicAssert.IsTrue(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
 				"root-1", "lot-1", Snapshot, "down@2,2", "down-1", "up-1",
 				out receipt, out failure), failure);
 			return receipt;
@@ -26,17 +27,17 @@ namespace ThousandAndFirst.Tests
 			KingdomDelveLinkReceipt receipt = Receipt();
 			string encoded;
 			string failure;
-			Assert.IsTrue(KingdomDelveLinkRules.TryEncode(receipt, out encoded, out failure), failure);
+			ClassicAssert.IsTrue(KingdomDelveLinkRules.TryEncode(receipt, out encoded, out failure), failure);
 			KingdomDelveLinkReceipt read;
-			Assert.IsTrue(KingdomDelveLinkRules.TryDecode(encoded, out read, out failure), failure);
-			Assert.AreEqual(Head, read.HeadZoneId);
-			Assert.AreEqual(Foot, read.FootZoneId);
-			Assert.AreEqual("down-1", read.HeadEndpointId);
-			Assert.AreEqual("up-1", read.FootEndpointId);
-			Assert.AreEqual(receipt.Token, read.Token);
+			ClassicAssert.IsTrue(KingdomDelveLinkRules.TryDecode(encoded, out read, out failure), failure);
+			ClassicAssert.AreEqual(Head, read.HeadZoneId);
+			ClassicAssert.AreEqual(Foot, read.FootZoneId);
+			ClassicAssert.AreEqual("down-1", read.HeadEndpointId);
+			ClassicAssert.AreEqual("up-1", read.FootEndpointId);
+			ClassicAssert.AreEqual(receipt.Token, read.Token);
 			string second;
-			Assert.IsTrue(KingdomDelveLinkRules.TryEncode(read, out second, out failure), failure);
-			Assert.AreEqual(encoded, second);
+			ClassicAssert.IsTrue(KingdomDelveLinkRules.TryEncode(read, out second, out failure), failure);
+			ClassicAssert.AreEqual(encoded, second);
 		}
 
 		[Test]
@@ -44,9 +45,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string encoded;
 			string failure;
-			Assert.IsTrue(KingdomDelveLinkRules.TryEncode(Receipt(), out encoded, out failure), failure);
+			ClassicAssert.IsTrue(KingdomDelveLinkRules.TryEncode(Receipt(), out encoded, out failure), failure);
 			KingdomDelveLinkReceipt ignored;
-			Assert.IsFalse(KingdomDelveLinkRules.TryDecode(encoded.Replace("|17|", "|18|"),
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryDecode(encoded.Replace("|17|", "|18|"),
 				out ignored, out failure));
 			StringAssert.Contains("digest", failure);
 		}
@@ -56,10 +57,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomDelveLinkReceipt ignored;
 			string failure;
-			Assert.IsFalse(KingdomDelveLinkRules.TryCreate(Head,
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryCreate(Head,
 				"JoppaWorld.11.22.2.1.11", 17, 9, "root", "lot", Snapshot,
 				"down@2,2", "down", "up", out ignored, out failure));
-			Assert.IsFalse(KingdomDelveLinkRules.TryCreate(Foot, Head, 17, 9,
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryCreate(Foot, Head, 17, 9,
 				"root", "lot", Snapshot, "down@2,2", "down", "up",
 				out ignored, out failure));
 		}
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomDelveLinkReceipt ignored;
 			string failure;
-			Assert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
 				"root", "lot", Snapshot, "down@2,2", "same", "same",
 				out ignored, out failure));
 			StringAssert.Contains("endpoint", failure);
@@ -80,10 +81,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomDelveLinkReceipt ignored;
 			string failure;
-			Assert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 512, 9,
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 512, 9,
 				"root", "lot", Snapshot, "down@2,2", "down", "up",
 				out ignored, out failure));
-			Assert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
+			ClassicAssert.IsFalse(KingdomDelveLinkRules.TryCreate(Head, Foot, 17, 9,
 				new string('r', 257), "lot", Snapshot, "down@2,2", "down", "up",
 				out ignored, out failure));
 		}

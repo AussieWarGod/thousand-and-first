@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -71,8 +72,8 @@ namespace ThousandAndFirst.Tests
 				"if (!Enabled)", "ReadSubsidenceRecoveryJob(frame, gang,", "SubsidencePaidRepair(frame, gang, job)",
 				"KingdomMaterialRules.FreeHands(system.Population, system.AssignedCrew)",
 				"() => AdvanceRepair(system, gang.Body, wear, hands, The.Game.TimeTicks)");
-			Assert.AreEqual(1, Regex.Matches(body, @"\bAdvanceRepair\(").Count);
-			Assert.AreEqual(1, Regex.Matches(body, @"\bgang = work;").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(body, @"\bAdvanceRepair\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(body, @"\bgang = work;").Count);
 		}
 
 		[Test]
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string body = Method(Entry);
 			int start = body.LastIndexOf("foreach (SubsidenceRecoveryWork work in frame.Works)", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
 			Ordered(body.Substring(start), "if (!work.Selected) continue;", "!SubsidenceRecoveryExact(frame, work)",
 				"!SubsidenceReceiptsClear(wear) || wear.RepairEffortLeft != 0",
 				"KingdomSubsidenceRungRuntime.ConstructionAvailable(work.Body)", "SubsidenceConstructionWait",
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string signature)
 		{
 			string text = Source(); int start = text.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = text.IndexOf('{', start), depth = 0;
 			for (int i = open; i < text.Length; i++)
 			{
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string needle in needles)
 			{
 				int at = source.IndexOf(needle, prior + 1, StringComparison.Ordinal);
-				Assert.Greater(at, prior, needle); prior = at;
+				ClassicAssert.Greater(at, prior, needle); prior = at;
 			}
 		}
 	}

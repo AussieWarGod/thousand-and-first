@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -19,18 +20,18 @@ namespace ThousandAndFirst.Tests
 		private static void Settle(Task task)
 		{
 			if (task == null) return;
-			try { Assert.IsTrue(task.Wait(WaitMs), "test worker did not settle within bound"); }
-			catch (AggregateException) { Assert.IsTrue(task.IsCompleted); }
+			try { ClassicAssert.IsTrue(task.Wait(WaitMs), "test worker did not settle within bound"); }
+			catch (AggregateException) { ClassicAssert.IsTrue(task.IsCompleted); }
 		}
 
 		[Test]
 		public void NewBarrierExposesOnlyStablePendingTaskWithoutStartingWork()
 		{
 			var barrier = new KingdomScenarioLoadBarrier<object>();
-			Assert.IsFalse(barrier.Claimed);
-			Assert.IsNull(barrier.Work);
-			Assert.AreSame(barrier.Pending, barrier.Pending);
-			Assert.IsFalse(barrier.Pending.IsCompleted);
+			ClassicAssert.IsFalse(barrier.Claimed);
+			ClassicAssert.IsNull(barrier.Work);
+			ClassicAssert.AreSame(barrier.Pending, barrier.Pending);
+			ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 		}
 
 		[TestCase(false, false)]
@@ -39,17 +40,17 @@ namespace ThousandAndFirst.Tests
 		public void InvalidStartRefusesWithoutSchedulingOrReleasing(bool claimed, bool nullWorker)
 		{
 			var barrier = new KingdomScenarioLoadBarrier<int>();
-			if (claimed) Assert.IsTrue(barrier.TryClaim());
+			if (claimed) ClassicAssert.IsTrue(barrier.TryClaim());
 			int executions = 0;
 			Func<Task> worker = nullWorker ? null : (Func<Task>)(() => {
 				Interlocked.Increment(ref executions); return Task.CompletedTask;
 			});
 			if (nullWorker) Assert.Throws<ArgumentNullException>(() => barrier.Start(worker));
 			else Assert.Throws<InvalidOperationException>(() => barrier.Start(worker));
-			Assert.AreEqual(claimed, barrier.Claimed);
-			Assert.AreEqual(0, executions);
-			Assert.IsNull(barrier.Work);
-			Assert.IsFalse(barrier.Pending.IsCompleted);
+			ClassicAssert.AreEqual(claimed, barrier.Claimed);
+			ClassicAssert.AreEqual(0, executions);
+			ClassicAssert.IsNull(barrier.Work);
+			ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 		}
 
 		[TestCase(1)]
@@ -58,11 +59,11 @@ namespace ThousandAndFirst.Tests
 		public void ExactlyOneClaimDoesNotStartWork(int repeats)
 		{
 			var barrier = new KingdomScenarioLoadBarrier<int>();
-			Assert.IsTrue(barrier.TryClaim());
-			for (int i = 0; i < repeats; i++) Assert.IsFalse(barrier.TryClaim());
-			Assert.IsTrue(barrier.Claimed);
-			Assert.IsNull(barrier.Work);
-			Assert.IsFalse(barrier.Pending.IsCompleted);
+			ClassicAssert.IsTrue(barrier.TryClaim());
+			for (int i = 0; i < repeats; i++) ClassicAssert.IsFalse(barrier.TryClaim());
+			ClassicAssert.IsTrue(barrier.Claimed);
+			ClassicAssert.IsNull(barrier.Work);
+			ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 		}
 
 		[Test]
@@ -81,14 +82,14 @@ namespace ThousandAndFirst.Tests
 							ready.Signal(); await release.Task.ConfigureAwait(false);
 							if (barrier.TryClaim()) Interlocked.Increment(ref winners);
 						});
-					Assert.IsTrue(ready.Wait(WaitMs));
+					ClassicAssert.IsTrue(ready.Wait(WaitMs));
 					release.SetResult(true);
 					Settle(Task.WhenAll(callers));
-					foreach (Task caller in callers) Assert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
-					Assert.AreEqual(1, winners);
-					Assert.IsTrue(barrier.Claimed);
-					Assert.IsNull(barrier.Work);
-					Assert.IsFalse(barrier.Pending.IsCompleted);
+					foreach (Task caller in callers) ClassicAssert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
+					ClassicAssert.AreEqual(1, winners);
+					ClassicAssert.IsTrue(barrier.Claimed);
+					ClassicAssert.IsNull(barrier.Work);
+					ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 				}
 				finally { release.TrySetResult(true); Settle(Task.WhenAll(callers)); }
 			}
@@ -99,7 +100,7 @@ namespace ThousandAndFirst.Tests
 		public void ConcurrentStartsRetainOneWorkerAndOnePendingTask(int count)
 		{
 			var barrier = new KingdomScenarioLoadBarrier<int>();
-			Assert.IsTrue(barrier.TryClaim());
+			ClassicAssert.IsTrue(barrier.TryClaim());
 			var begin = Latch(); var entered = Latch(); var finish = Latch();
 			int executions = 0;
 			Task[] callers = new Task[count];
@@ -119,22 +120,22 @@ namespace ThousandAndFirst.Tests
 							});
 						});
 					}
-					Assert.IsTrue(ready.Wait(WaitMs));
+					ClassicAssert.IsTrue(ready.Wait(WaitMs));
 					begin.SetResult(true);
 					Settle(Task.WhenAll(callers));
-					Assert.IsTrue(entered.Task.Wait(WaitMs));
-					foreach (Task caller in callers) Assert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
-					foreach (Task<int> pending in returned) Assert.AreSame(barrier.Pending, pending);
-					Assert.AreEqual(1, executions);
-					Assert.IsFalse(barrier.Work.IsCompleted);
-					Assert.IsFalse(barrier.Pending.IsCompleted);
+					ClassicAssert.IsTrue(entered.Task.Wait(WaitMs));
+					foreach (Task caller in callers) ClassicAssert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
+					foreach (Task<int> pending in returned) ClassicAssert.AreSame(barrier.Pending, pending);
+					ClassicAssert.AreEqual(1, executions);
+					ClassicAssert.IsFalse(barrier.Work.IsCompleted);
+					ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 					Task observed = barrier.Work;
 					finish.SetResult(true); Settle(observed);
-					Assert.AreEqual(TaskStatus.RanToCompletion, observed.Status);
-					Assert.AreSame(barrier.Pending, barrier.Start(() => { executions++; return Task.CompletedTask; }));
-					Assert.AreSame(observed, barrier.Work);
-					Assert.AreEqual(1, executions);
-					Assert.IsFalse(barrier.Pending.IsCompleted);
+					ClassicAssert.AreEqual(TaskStatus.RanToCompletion, observed.Status);
+					ClassicAssert.AreSame(barrier.Pending, barrier.Start(() => { executions++; return Task.CompletedTask; }));
+					ClassicAssert.AreSame(observed, barrier.Work);
+					ClassicAssert.AreEqual(1, executions);
+					ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 				}
 				finally
 				{
@@ -148,7 +149,7 @@ namespace ThousandAndFirst.Tests
 		public void SynchronouslyPausedWorkerDoesNotBlockStartCallerOrReleasePending()
 		{
 			var barrier = new KingdomScenarioLoadBarrier<int>();
-			Assert.IsTrue(barrier.TryClaim());
+			ClassicAssert.IsTrue(barrier.TryClaim());
 			using (var entered = new ManualResetEventSlim(false))
 			using (var release = new ManualResetEventSlim(false))
 			{
@@ -162,16 +163,16 @@ namespace ThousandAndFirst.Tests
 				});
 				try
 				{
-					Assert.IsTrue(entered.Wait(WaitMs));
+					ClassicAssert.IsTrue(entered.Wait(WaitMs));
 					Settle(caller);
-					Assert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
-					Assert.AreSame(barrier.Pending, returned);
-					Assert.IsFalse(barrier.Work.IsCompleted);
-					Assert.IsFalse(barrier.Pending.IsCompleted);
+					ClassicAssert.AreEqual(TaskStatus.RanToCompletion, caller.Status);
+					ClassicAssert.AreSame(barrier.Pending, returned);
+					ClassicAssert.IsFalse(barrier.Work.IsCompleted);
+					ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 				}
 				finally { release.Set(); Settle(caller); Settle(barrier.Work); }
-				Assert.AreEqual(TaskStatus.RanToCompletion, barrier.Work.Status);
-				Assert.IsFalse(barrier.Pending.IsCompleted);
+				ClassicAssert.AreEqual(TaskStatus.RanToCompletion, barrier.Work.Status);
+				ClassicAssert.IsFalse(barrier.Pending.IsCompleted);
 			}
 		}
 
@@ -183,7 +184,7 @@ namespace ThousandAndFirst.Tests
 		public void EveryWorkerOutcomeStaysObservableWithoutReleasingDispatch(string outcome)
 		{
 			var barrier = new KingdomScenarioLoadBarrier<string>();
-			Assert.IsTrue(barrier.TryClaim());
+			ClassicAssert.IsTrue(barrier.TryClaim());
 			var failure = new InvalidOperationException("owned test failure");
 			int executions = 0;
 			Task<string> pending = barrier.Start(delegate {
@@ -200,21 +201,21 @@ namespace ThousandAndFirst.Tests
 			});
 			Task observed = barrier.Work;
 			Settle(observed);
-			if (outcome == "success") Assert.AreEqual(TaskStatus.RanToCompletion, observed.Status);
-			else if (outcome == "cancelled") Assert.IsTrue(observed.IsCanceled);
+			if (outcome == "success") ClassicAssert.AreEqual(TaskStatus.RanToCompletion, observed.Status);
+			else if (outcome == "cancelled") ClassicAssert.IsTrue(observed.IsCanceled);
 			else
 			{
-				Assert.IsTrue(observed.IsFaulted);
-				Assert.IsInstanceOf<InvalidOperationException>(observed.Exception.InnerException);
-				if (outcome != "null-task") Assert.AreSame(failure, observed.Exception.InnerException);
+				ClassicAssert.IsTrue(observed.IsFaulted);
+				ClassicAssert.IsInstanceOf<InvalidOperationException>(observed.Exception.InnerException);
+				if (outcome != "null-task") ClassicAssert.AreSame(failure, observed.Exception.InnerException);
 			}
-			Assert.AreSame(pending, barrier.Pending);
-			Assert.IsFalse(pending.IsCompleted);
-			Assert.AreSame(pending, barrier.Start(() => { executions++; return Task.CompletedTask; }));
-			Assert.AreSame(observed, barrier.Work);
-			Assert.AreEqual(1, executions);
-			Assert.IsFalse(barrier.TryClaim());
-			Assert.IsFalse(pending.IsCompleted);
+			ClassicAssert.AreSame(pending, barrier.Pending);
+			ClassicAssert.IsFalse(pending.IsCompleted);
+			ClassicAssert.AreSame(pending, barrier.Start(() => { executions++; return Task.CompletedTask; }));
+			ClassicAssert.AreSame(observed, barrier.Work);
+			ClassicAssert.AreEqual(1, executions);
+			ClassicAssert.IsFalse(barrier.TryClaim());
+			ClassicAssert.IsFalse(pending.IsCompleted);
 		}
 	}
 }

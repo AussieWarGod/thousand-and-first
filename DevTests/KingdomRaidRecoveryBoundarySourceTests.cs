@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature); int open = source.IndexOf('{', start), depth = 0;
+			ClassicAssert.GreaterOrEqual(start, 0, signature); int open = source.IndexOf('{', start), depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
 			}
 		}
 	}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,43 +13,43 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicPurposeTypeMetadataIsFrozen()
 		{
-			Assert.AreEqual("ThousandAndFirst.KingdomPurposeKind", typeof(KingdomPurposeKind).FullName);
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeKind)));
-			Assert.AreEqual(0, (byte)KingdomPurposeKind.None);
-			Assert.AreEqual(1, (byte)KingdomPurposeKind.Flesh);
-			Assert.AreEqual(2, (byte)KingdomPurposeKind.Chrome);
-			Assert.AreEqual(3, (byte)KingdomPurposeKind.Deep);
-			Assert.AreEqual(4, (byte)KingdomPurposeKind.Forge);
-			Assert.AreEqual(5, (byte)KingdomPurposeKind.Harvest);
-			Assert.AreEqual("ThousandAndFirst.KingdomPurposeSite", typeof(KingdomPurposeSite).FullName);
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeSite)));
-			Assert.AreEqual(0, (byte)KingdomPurposeSite.None);
-			Assert.AreEqual(1, (byte)KingdomPurposeSite.LivingSurgery);
-			Assert.AreEqual(2, (byte)KingdomPurposeSite.RuinEnrollment);
-			Assert.AreEqual(3, (byte)KingdomPurposeSite.DeepDelve);
-			Assert.AreEqual(4, (byte)KingdomPurposeSite.ForgeQuench);
-			Assert.AreEqual(5, (byte)KingdomPurposeSite.HarvestWater);
-			Assert.AreEqual("ThousandAndFirst.KingdomPurposeDefinition",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomPurposeKind", typeof(KingdomPurposeKind).FullName);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeKind)));
+			ClassicAssert.AreEqual(0, (byte)KingdomPurposeKind.None);
+			ClassicAssert.AreEqual(1, (byte)KingdomPurposeKind.Flesh);
+			ClassicAssert.AreEqual(2, (byte)KingdomPurposeKind.Chrome);
+			ClassicAssert.AreEqual(3, (byte)KingdomPurposeKind.Deep);
+			ClassicAssert.AreEqual(4, (byte)KingdomPurposeKind.Forge);
+			ClassicAssert.AreEqual(5, (byte)KingdomPurposeKind.Harvest);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomPurposeSite", typeof(KingdomPurposeSite).FullName);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomPurposeSite)));
+			ClassicAssert.AreEqual(0, (byte)KingdomPurposeSite.None);
+			ClassicAssert.AreEqual(1, (byte)KingdomPurposeSite.LivingSurgery);
+			ClassicAssert.AreEqual(2, (byte)KingdomPurposeSite.RuinEnrollment);
+			ClassicAssert.AreEqual(3, (byte)KingdomPurposeSite.DeepDelve);
+			ClassicAssert.AreEqual(4, (byte)KingdomPurposeSite.ForgeQuench);
+			ClassicAssert.AreEqual(5, (byte)KingdomPurposeSite.HarvestWater);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomPurposeDefinition",
 				typeof(KingdomPurposeDefinition).FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomPurposeManifest",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomPurposeManifest",
 				typeof(KingdomPurposeManifest).FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomPurposeCommitment",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomPurposeCommitment",
 				typeof(KingdomPurposeCommitment).FullName);
 		}
 
 		[Test]
 		public void PortfolioDeclarationsUseFrozenDirectedTableNotLegacyCargoMetadata()
 		{
-			Assert.IsTrue(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
 				"deep-delve", null, null, null, null, null, "deepcut|masonyard",
 				"performs one bounded deep extraction", out var definition, out var error), error);
-			Assert.IsTrue(definition.PortfolioOnly);
-			Assert.AreEqual(KingdomPurposeKind.Deep, definition.Kind);
-			Assert.IsTrue(definition.CargoCost.IsEmpty());
-			Assert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+			ClassicAssert.IsTrue(definition.PortfolioOnly);
+			ClassicAssert.AreEqual(KingdomPurposeKind.Deep, definition.Kind);
+			ClassicAssert.IsTrue(definition.CargoCost.IsEmpty());
+			ClassicAssert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
 				"forge-quench", null, null, null, null, null, "deepcut|masonyard",
 				"extracts", out _, out _));
-			Assert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
+			ClassicAssert.IsFalse(KingdomPurposeRules.TryCreateDefinition("deepbore", "deep",
 				"deep-delve", "invented-row", "cargo", "scrap", "1", "scrap:1",
 				"deepcut|masonyard", "extracts", out _, out _));
 		}
@@ -79,16 +80,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DeclarationFreezesDistinctSiteAndTypedPhysicalCost()
 		{
-			Assert.IsTrue(KingdomPurposeRules.TryCreateDefinition("chimerictheatre", "flesh",
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryCreateDefinition("chimerictheatre", "flesh",
 				"living-surgery", "graft-stock-casket", "sealed graft-stock casket",
 				"workedmetal", "12", "brush:4,workedmetal:1", "vathouse|graftinghall",
 				"performs authored procedures", out KingdomPurposeDefinition definition,
 				out string error), error);
-			Assert.AreEqual(KingdomPurposeKind.Flesh, definition.Kind);
-			Assert.AreEqual(KingdomPurposeSite.LivingSurgery, definition.Site);
-			Assert.AreEqual(1, definition.CargoCost.Get(KingdomMaterial.WorkedMetal));
+			ClassicAssert.AreEqual(KingdomPurposeKind.Flesh, definition.Kind);
+			ClassicAssert.AreEqual(KingdomPurposeSite.LivingSurgery, definition.Site);
+			ClassicAssert.AreEqual(1, definition.CargoCost.Get(KingdomMaterial.WorkedMetal));
 
-			Assert.IsFalse(KingdomPurposeRules.TryCreateDefinition("becomingannexe", "chrome",
+			ClassicAssert.IsFalse(KingdomPurposeRules.TryCreateDefinition("becomingannexe", "chrome",
 				"living-surgery", "roll", "roll", "workedmetal", "16", "scrap:6",
 				"smelter,chargingpost", "enrols", out _, out _),
 				"a cargo cannot be minted beside a cost which omits its own typed material");
@@ -98,13 +99,13 @@ namespace ThousandAndFirst.Tests
 		public void ProducerGrammarMeansCommaAllAndPipeEither()
 		{
 			HashSet<string> standing = new HashSet<string> { "graftinghall", "smelter" };
-			Assert.IsTrue(KingdomPurposeRules.ProducersSatisfied("vathouse|graftinghall",
+			ClassicAssert.IsTrue(KingdomPurposeRules.ProducersSatisfied("vathouse|graftinghall",
 				standing, out _));
-			Assert.IsFalse(KingdomPurposeRules.ProducersSatisfied("smelter,chargingpost",
+			ClassicAssert.IsFalse(KingdomPurposeRules.ProducersSatisfied("smelter,chargingpost",
 				standing, out string missing));
-			Assert.AreEqual("chargingpost", missing);
+			ClassicAssert.AreEqual("chargingpost", missing);
 			standing.Add("chargingpost");
-			Assert.IsTrue(KingdomPurposeRules.ProducersSatisfied("smelter,chargingpost",
+			ClassicAssert.IsTrue(KingdomPurposeRules.ProducersSatisfied("smelter,chargingpost",
 				standing, out _));
 		}
 
@@ -113,11 +114,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeManifest manifest = Manifest();
 			string encoded = KingdomPurposeRules.EncodeManifest(manifest);
-			Assert.IsNotNull(encoded);
-			Assert.IsTrue(KingdomPurposeRules.TryDecodeManifest(encoded,
+			ClassicAssert.IsNotNull(encoded);
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryDecodeManifest(encoded,
 				out KingdomPurposeManifest decoded));
-			Assert.AreEqual(encoded, KingdomPurposeRules.EncodeManifest(decoded));
-			Assert.AreEqual(manifest.CargoName, decoded.CargoName);
+			ClassicAssert.AreEqual(encoded, KingdomPurposeRules.EncodeManifest(decoded));
+			ClassicAssert.AreEqual(manifest.CargoName, decoded.CargoName);
 
 			KingdomPurposeCommitment commitment = new KingdomPurposeCommitment
 			{
@@ -126,12 +127,12 @@ namespace ThousandAndFirst.Tests
 				SpecialistId = "specialist-identity", SpecialistName = "Ari; the sawbones"
 			};
 			string receipt = KingdomPurposeRules.EncodeCommitment(commitment);
-			Assert.IsNotNull(receipt);
-			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(receipt,
+			ClassicAssert.IsNotNull(receipt);
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(receipt,
 				out KingdomPurposeCommitment decodedCommitment));
-			Assert.AreEqual(receipt, KingdomPurposeRules.EncodeCommitment(decodedCommitment));
+			ClassicAssert.AreEqual(receipt, KingdomPurposeRules.EncodeCommitment(decodedCommitment));
 			decodedCommitment.CargoItemId = "substitute-object";
-			Assert.AreNotEqual(receipt, KingdomPurposeRules.EncodeCommitment(decodedCommitment));
+			ClassicAssert.AreNotEqual(receipt, KingdomPurposeRules.EncodeCommitment(decodedCommitment));
 		}
 
 		[Test]
@@ -143,12 +144,12 @@ namespace ThousandAndFirst.Tests
 				SpecialistId = "specialist-identity", SpecialistName = "Ari"
 			};
 			string receipt = KingdomPurposeRules.EncodeCommitment(commitment);
-			Assert.IsNotNull(receipt);
-			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(receipt, out var decoded));
-			Assert.AreEqual("deepbore", decoded.InitialBuildKey);
-			Assert.AreEqual(receipt, KingdomPurposeRules.EncodeCommitment(decoded));
+			ClassicAssert.IsNotNull(receipt);
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(receipt, out var decoded));
+			ClassicAssert.AreEqual("deepbore", decoded.InitialBuildKey);
+			ClassicAssert.AreEqual(receipt, KingdomPurposeRules.EncodeCommitment(decoded));
 			decoded.CargoItemId = "invented-cargo";
-			Assert.IsNull(KingdomPurposeRules.EncodeCommitment(decoded));
+			ClassicAssert.IsNull(KingdomPurposeRules.EncodeCommitment(decoded));
 		}
 
 		[Test]
@@ -157,13 +158,13 @@ namespace ThousandAndFirst.Tests
 			string manifest = KingdomPurposeRules.EncodeManifest(Manifest());
 			string prior = Frame(manifest, "consignment-identity", "cargo-object-identity",
 				"site proof", Frame("specialist-identity", "Ari"), "", "", "", "", "");
-			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(prior, out var decoded));
-			Assert.IsNull(decoded.InitialBuildKey);
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(prior, out var decoded));
+			ClassicAssert.IsNull(decoded.InitialBuildKey);
 			string current = KingdomPurposeRules.EncodeCommitment(decoded);
-			Assert.IsNotNull(current);
-			Assert.AreNotEqual(prior, current);
-			Assert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(current, out var rewritten));
-			Assert.AreEqual(current, KingdomPurposeRules.EncodeCommitment(rewritten));
+			ClassicAssert.IsNotNull(current);
+			ClassicAssert.AreNotEqual(prior, current);
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryDecodeCommitment(current, out var rewritten));
+			ClassicAssert.AreEqual(current, KingdomPurposeRules.EncodeCommitment(rewritten));
 		}
 
 		[Test]
@@ -171,22 +172,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeManifest manifest = Manifest();
 			string original = KingdomPurposeRules.EncodeManifest(manifest);
-			Assert.IsTrue(KingdomPurposeRules.TryCreateDefinition("chimerictheatre", "flesh",
+			ClassicAssert.IsTrue(KingdomPurposeRules.TryCreateDefinition("chimerictheatre", "flesh",
 				"living-surgery", "graft-stock-casket", manifest.CargoName, "workedmetal",
 				"12", "brush:4,workedmetal:1", "vathouse|graftinghall", manifest.Effect,
 				out KingdomPurposeDefinition definition, out string error), error);
-			Assert.IsTrue(KingdomPurposeRules.ManifestMatchesDefinition(manifest, definition));
+			ClassicAssert.IsTrue(KingdomPurposeRules.ManifestMatchesDefinition(manifest, definition));
 			definition.CargoWater++;
-			Assert.IsFalse(KingdomPurposeRules.ManifestMatchesDefinition(manifest, definition),
+			ClassicAssert.IsFalse(KingdomPurposeRules.ManifestMatchesDefinition(manifest, definition),
 				"a changed producer recipe cannot reinterpret an old physical output");
 			manifest.BuildKey = "becomingannexe";
 			manifest.Kind = KingdomPurposeKind.Chrome;
 			manifest.Site = KingdomPurposeSite.RuinEnrollment;
 			string changed = KingdomPurposeRules.EncodeManifest(manifest);
-			Assert.IsNotNull(changed);
-			Assert.AreNotEqual(original, changed);
+			ClassicAssert.IsNotNull(changed);
+			ClassicAssert.AreNotEqual(original, changed);
 			manifest.DestinationGateKey = manifest.SourceGateKey;
-			Assert.IsNull(KingdomPurposeRules.EncodeManifest(manifest));
+			ClassicAssert.IsNull(KingdomPurposeRules.EncodeManifest(manifest));
 		}
 
 		private static string Frame(params string[] fields)

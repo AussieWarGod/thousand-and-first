@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,9 +18,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("<object Name=\"DirtPath\" Inherits=\"DirtFloor\">", terrain);
 			StringAssert.Contains("<object Name=\"DirtFloor\" Inherits=\"Floor\">", terrain);
 			int floorAt = terrain.IndexOf("<object Name=\"Floor\"", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(floorAt, 0);
+			ClassicAssert.GreaterOrEqual(floorAt, 0);
 			int floorEnd = terrain.IndexOf("</object>", floorAt, StringComparison.Ordinal);
-			Assert.Greater(floorEnd, floorAt);
+			ClassicAssert.Greater(floorEnd, floorAt);
 			string floor = terrain.Substring(floorAt, floorEnd - floorAt);
 			StringAssert.Contains("<part Name=\"Physics\" Solid=\"false\"", floor);
 			StringAssert.Contains("Takeable=\"false\"", floor);

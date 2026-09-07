@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -53,21 +54,21 @@ namespace ThousandAndFirst.Tests
 		{
 			XmlDocument document = new XmlDocument();
 			document.LoadXml(Read(Overlay));
-			Assert.AreEqual("objects", document.DocumentElement.Name, "overlay root element");
+			ClassicAssert.AreEqual("objects", document.DocumentElement.Name, "overlay root element");
 			XmlNodeList objects = document.DocumentElement.SelectNodes("object[part[@Name='r_TAF_RaidMintProbe']]");
-			Assert.AreEqual(2, objects.Count, "the raid probe must merge exactly two blueprints");
+			ClassicAssert.AreEqual(2, objects.Count, "the raid probe must merge exactly two blueprints");
 			List<string> names = new List<string>();
 			for (int i = 0; i < objects.Count; i++)
 			{
 				XmlElement row = (XmlElement)objects[i];
 				names.Add(row.GetAttribute("Name"));
-				Assert.AreEqual("Merge", row.GetAttribute("Load"),
+				ClassicAssert.AreEqual("Merge", row.GetAttribute("Load"),
 					"a dev overlay row must merge into the shipped blueprint, never redefine it");
-				Assert.AreEqual("", row.GetAttribute("Inherits"), "overlay row must not inherit");
+				ClassicAssert.AreEqual("", row.GetAttribute("Inherits"), "overlay row must not inherit");
 				XmlNodeList parts = row.SelectNodes("part");
-				Assert.AreEqual(1, parts.Count, "each overlay row carries exactly one part row");
-				Assert.AreEqual(PartName, ((XmlElement)parts[0]).GetAttribute("Name"));
-				Assert.AreEqual(1, row.SelectNodes("*").Count,
+				ClassicAssert.AreEqual(1, parts.Count, "each overlay row carries exactly one part row");
+				ClassicAssert.AreEqual(PartName, ((XmlElement)parts[0]).GetAttribute("Name"));
+				ClassicAssert.AreEqual(1, row.SelectNodes("*").Count,
 					"an overlay row may carry nothing but its one part row");
 			}
 			CollectionAssert.AreEquivalent(Probed, names);
@@ -79,9 +80,9 @@ namespace ThousandAndFirst.Tests
 			// KingdomRaidLaunchNativeProvider's class comment instead.
 			string[] overlayLines = Read(Overlay).Replace("\r\n", "\n").Split('\n');
 			string[] shippedLines = Read(ShippedObjects).Replace("\r\n", "\n").Split('\n');
-			Assert.AreEqual(shippedLines[0], overlayLines[0],
+			ClassicAssert.AreEqual(shippedLines[0], overlayLines[0],
 				"the overlay's xml declaration must match the shipped file exactly");
-			Assert.AreEqual(shippedLines[1], overlayLines[1],
+			ClassicAssert.AreEqual(shippedLines[1], overlayLines[1],
 				"the overlay's root element line must match the shipped file, byte-identical");
 			StringAssert.Contains("Harness/ObjectBlueprints.xml is a DEV-ONLY overlay",
 				Read(Provider), "the provenance sentence moved to the provider's class comment");
@@ -97,12 +98,12 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < rows.Count; i++)
 				if (((XmlElement)rows[i]).GetAttribute("Faction") == "Snapjaws")
 					snapjaws = (XmlElement)rows[i];
-			Assert.NotNull(snapjaws, "the shipped Snapjaws raid profile");
+			ClassicAssert.NotNull(snapjaws, "the shipped Snapjaws raid profile");
 			// The fixture pins Steading, and Members() returns Steading for every stage below
 			// Village (Raids/KingdomRaidProfiles.cs:28-34), so this attribute is the whole roster
 			// the launcher can request.
 			string[] steading = snapjaws.GetAttribute("Steading").Split(',');
-			Assert.AreEqual(3, steading.Length,
+			ClassicAssert.AreEqual(3, steading.Length,
 				"the Steading band keeps its three slots, so its duplicate weight is preserved");
 			CollectionAssert.AreEqual(new[] { "Snapjaw Scavenger 0", "Snapjaw Scavenger 0", "Snapjaw Hunter 0" },
 				new List<string>(Trim(steading)), "the exact 2:1 weight and frozen roster order must remain stable");
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string tier in new[] { "Village", "Town", "City" })
 				foreach (string member in Trim(snapjaws.GetAttribute(tier).Split(',')))
 					if (Array.IndexOf(Probed, member) < 0) unprobed = true;
-			Assert.IsTrue(unprobed,
+			ClassicAssert.IsTrue(unprobed,
 				"a later roster tier must name an unprobed body, or pinning the stage proves nothing");
 		}
 
@@ -229,8 +230,8 @@ namespace ThousandAndFirst.Tests
 				"finally", "r_TAF_RaidMintProbe.Armed = false;",
 				"game.SetStringGameState(receipt, report);", "return report;");
 			int at = source.IndexOf("finally", StringComparison.Ordinal);
-			Assert.Greater(at, 0, "the provider must disarm in a finally block");
-			Assert.Greater(source.IndexOf("r_TAF_RaidMintProbe.Armed = false;", at,
+			ClassicAssert.Greater(at, 0, "the provider must disarm in a finally block");
+			ClassicAssert.Greater(source.IndexOf("r_TAF_RaidMintProbe.Armed = false;", at,
 				StringComparison.Ordinal), at, "Armed = false must sit inside that finally");
 			ContainsAll(source, "internal const string VerbA = \"raid-launch-native-a\";",
 				"internal const string VerbB1 = \"raid-launch-native-b1\";",
@@ -311,18 +312,18 @@ namespace ThousandAndFirst.Tests
 				StringAssert.DoesNotContain("ResetProbe()", source.Substring(activate),
 					shard + " must never reset the probe after activation: evidence outlives the run");
 			}
-			Assert.AreEqual(1, calls, "the probe may be reset at verb entry and nowhere else");
+			ClassicAssert.AreEqual(1, calls, "the probe may be reset at verb entry and nowhere else");
 			// An unqualified in-shard call (no "r_TAF_RaidMintProbe." prefix) would not match the
 			// count above, so it is counted separately here, outside ResetProbe()'s own definition.
 			string probeSource = Read(Probe);
 			string resetMethod = Method(probeSource, "internal static void ResetProbe()");
 			int unqualified = Regex.Matches(probeSource.Replace(resetMethod, ""),
 				@"(?<!\.)\bResetProbe\(\);").Count;
-			Assert.AreEqual(0, unqualified,
+			ClassicAssert.AreEqual(0, unqualified,
 				"an unqualified ResetProbe(); call in the probe would evade the exactly-one-reset pin");
 			string provider = Read(Provider);
 			int run = provider.IndexOf("KingdomRaidLaunchNativeChecks.Run(", StringComparison.Ordinal);
-			Assert.Greater(run, 0, "the provider must drive the checks");
+			ClassicAssert.Greater(run, 0, "the provider must drive the checks");
 			StringAssert.DoesNotContain("ResetProbe()", provider.Substring(run),
 				"the provider's finally is a disarm and nothing else");
 			StringAssert.Contains(EntryGuard, Flat(Method(provider, "public string RunScenarioVerb(")),
@@ -423,10 +424,10 @@ namespace ThousandAndFirst.Tests
 			foreach (string verb in new[] { "raid-launch-native-a", "raid-launch-native-b1" })
 			{
 				string source = Read("Tools/personas/" + verb + ".persona");
-				Assert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
-				Assert.AreEqual("8.22@40,12", Setting(source, "START"));
-				Assert.AreEqual(verb, Setting(source, "VERBS"));
-				Assert.AreEqual("raids,native-regression", Setting(source, "SET"));
+				ClassicAssert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
+				ClassicAssert.AreEqual("8.22@40,12", Setting(source, "START"));
+				ClassicAssert.AreEqual(verb, Setting(source, "VERBS"));
+				ClassicAssert.AreEqual("raids,native-regression", Setting(source, "SET"));
 				CollectionAssert.AreEqual(new[] { "stagedigest", verb, "stagedigest" },
 					Setting(source, "SCRIPT").Split(';'));
 				CollectionAssert.AreEqual(new[] { "stagedigest:OK~founded=false",
@@ -439,7 +440,7 @@ namespace ThousandAndFirst.Tests
 			// (Experience/KingdomLifecycleLeaseRules.cs:196-202) writes no diagnostic, so the
 			// fixed fault is journal and durable-receipt evidence, never a Player.log line.
 			foreach (string raw in Read("Tools/personas/raid-launch-native-b1.persona").Split('\n'))
-				Assert.IsFalse(raw.Trim().StartsWith("LOG_EXPECT=", StringComparison.Ordinal),
+				ClassicAssert.IsFalse(raw.Trim().StartsWith("LOG_EXPECT=", StringComparison.Ordinal),
 					"an expectation the run cannot produce would fail the persona by construction");
 		}
 
@@ -470,13 +471,13 @@ namespace ThousandAndFirst.Tests
 			XmlDocument document = new XmlDocument();
 			document.LoadXml(Read(Profiles));
 			XmlNodeList rows = document.DocumentElement.SelectNodes("profile");
-			Assert.AreEqual(5, rows.Count, "the five shipped faction profiles");
+			ClassicAssert.AreEqual(5, rows.Count, "the five shipped faction profiles");
 			for (int i = 0; i < rows.Count; i++)
 			{
 				XmlElement row = (XmlElement)rows[i];
 				foreach (string band in new[] { "Steading", "Village", "Town", "City" })
 					foreach (string member in Trim(row.GetAttribute(band).Split(',')))
-						Assert.IsFalse(refused.Contains(member),
+						ClassicAssert.IsFalse(refused.Contains(member),
 							row.GetAttribute("Key") + " " + band
 								+ " names a blueprint known to be refused at load: " + member);
 			}
@@ -498,7 +499,7 @@ namespace ThousandAndFirst.Tests
 			List<string> keys = new List<string>();
 			for (int i = 0; i < rows.Count; i++)
 				keys.Add(((XmlElement)rows[i]).GetAttribute("Faction"));
-			Assert.AreEqual(5, keys.Count, "the five shipped faction keys");
+			ClassicAssert.AreEqual(5, keys.Count, "the five shipped faction keys");
 			string provider = Read(Provider);
 			ContainsAll(Flat(provider),
 				"internal static readonly string[] ShippedFactions = new[] { \""
@@ -535,9 +536,9 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string Source, string Signature)
 		{
 			int start = Source.IndexOf(Signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Signature);
+			ClassicAssert.GreaterOrEqual(start, 0, Signature);
 			int open = Source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, Signature);
+			ClassicAssert.GreaterOrEqual(open, 0, Signature);
 			for (int i = open; i < Source.Length; i++)
 			{
 				if (Source[i] == '{') depth++;
@@ -553,7 +554,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in Tokens)
 			{
 				int at = Source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}
@@ -566,10 +567,10 @@ namespace ThousandAndFirst.Tests
 			{
 				string line = raw.Trim();
 				if (!line.StartsWith(Key + "=", StringComparison.Ordinal)) continue;
-				Assert.IsNull(found, Key);
+				ClassicAssert.IsNull(found, Key);
 				found = line.Substring(Key.Length + 1);
 			}
-			Assert.NotNull(found, Key);
+			ClassicAssert.NotNull(found, Key);
 			return found;
 		}
 	}

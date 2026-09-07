@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 			};
 			CollectionAssert.AreEqual(expected, matches.Cast<Match>().Select(m =>
 				m.Groups[1].Value + "=" + Flat(m.Groups[2].Value)).ToArray());
-			Assert.AreEqual(16, new HashSet<string>(matches.Cast<Match>()
+			ClassicAssert.AreEqual(16, new HashSet<string>(matches.Cast<Match>()
 				.Select(m => m.Groups[1].Value), StringComparer.Ordinal).Count);
 			StringAssert.Contains("NativeQuickstartFaults(Context);", registrations);
 			StringAssert.Contains("internal const int ExpectedCases = 16;", Read(Provider));
@@ -241,8 +242,8 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { "stagedigest:OK~founded=false",
 				"quickstart-check:OK~cases=16 passed=16 failed=0", "stagedigest:OK~founded=false", "COMPLETE" },
 				Setting(persona, "EXPECT").Split(','));
-			Assert.AreEqual("quickstart-check", Setting(persona, "VERBS"));
-			Assert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
+			ClassicAssert.AreEqual("quickstart-check", Setting(persona, "VERBS"));
+			ClassicAssert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
 			StringAssert.DoesNotContain("realize", Setting(persona, "SCRIPT"));
 			StringAssert.Contains("fresh synthetic ground", persona);
 			StringAssert.Contains("does not sign Quickstart embark or save/load", persona);
@@ -256,9 +257,9 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string Source, string Signature)
 		{
 			int start = Source.IndexOf(Signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Signature);
+			ClassicAssert.GreaterOrEqual(start, 0, Signature);
 			int open = Source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, Signature);
+			ClassicAssert.GreaterOrEqual(open, 0, Signature);
 			for (int i = open; i < Source.Length; i++)
 			{
 				if (Source[i] == '{') depth++;
@@ -274,7 +275,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in Tokens)
 			{
 				int at = Source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}
@@ -283,7 +284,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] rows = Source.Split('\n').Select(line => line.Trim())
 				.Where(line => line.StartsWith(Key + "=", StringComparison.Ordinal)).ToArray();
-			Assert.AreEqual(1, rows.Length, Key);
+			ClassicAssert.AreEqual(1, rows.Length, Key);
 			return rows[0].Substring(Key.Length + 1);
 		}
 	}

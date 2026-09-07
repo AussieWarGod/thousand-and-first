@@ -1,6 +1,7 @@
 ﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Mark = ThousandAndFirst.KingdomLayoutRules.LayoutMark;
 using Purpose = ThousandAndFirst.KingdomLayoutRules.LayoutPurpose;
@@ -20,7 +21,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReachDeclarationsKeepTheirPublicAbiAndDefaults()
 		{
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachBand)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachBand)));
 			CollectionAssert.AreEqual(new int[5] { 0, 1, 2, 3, 4 }, new int[5]
 			{
 				(int)ReachBand.Plot,
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 				(int)ReachBand.City,
 				(int)ReachBand.Realm
 			});
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachRelation)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(ReachRelation)));
 			CollectionAssert.AreEqual(new int[6] { 0, 1, 2, 3, 4, 5 }, new int[6]
 			{
 				(int)ReachRelation.Elsewhere,
@@ -40,9 +41,9 @@ namespace ThousandAndFirst.Tests
 				(int)ReachRelation.SamePlot
 			});
 
-			Assert.AreEqual("ThousandAndFirst.GroundCharacter", typeof(GroundCharacter).FullName);
-			Assert.IsTrue(typeof(GroundCharacter).IsPublic);
-			Assert.IsTrue(typeof(GroundCharacter).IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.GroundCharacter", typeof(GroundCharacter).FullName);
+			ClassicAssert.IsTrue(typeof(GroundCharacter).IsPublic);
+			ClassicAssert.IsTrue(typeof(GroundCharacter).IsSealed);
 			System.Reflection.FieldInfo[] fields = typeof(GroundCharacter).GetFields();
 			CollectionAssert.AreEqual(new string[4] { "Lifts", "Total", "Dominant", "DominantAmount" },
 				new string[4] { fields[0].Name, fields[1].Name, fields[2].Name, fields[3].Name });
@@ -54,10 +55,10 @@ namespace ThousandAndFirst.Tests
 				fields[0].FieldType, fields[1].FieldType, fields[2].FieldType, fields[3].FieldType
 			});
 			GroundCharacter empty = new GroundCharacter();
-			Assert.AreEqual(0, empty.Lifts.Count);
-			Assert.AreEqual(0, empty.Total);
-			Assert.IsNull(empty.Dominant);
-			Assert.AreEqual(0, empty.DominantAmount);
+			ClassicAssert.AreEqual(0, empty.Lifts.Count);
+			ClassicAssert.AreEqual(0, empty.Total);
+			ClassicAssert.IsNull(empty.Dominant);
+			ClassicAssert.AreEqual(0, empty.DominantAmount);
 		}
 
 		private static List<Mark> Marks(params int[] Coordinates)
@@ -98,7 +99,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Huge, ReachBand.City)]
 		public void BandForSize_IsTheAddendumsOwnLadder(Size size, ReachBand expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.BandForSize(size));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.BandForSize(size));
 		}
 
 		[TestCase(Size.Small, 0, 3)]
@@ -107,14 +108,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Large, 2, 3)]
 		public void Derive_TierNeverMovesABandBelowTheGreatWork(Size size, int index, int count)
 		{
-			Assert.AreEqual(KingdomReachRules.BandForSize(size), KingdomReachRules.Derive(size, index, count));
+			ClassicAssert.AreEqual(KingdomReachRules.BandForSize(size), KingdomReachRules.Derive(size, index, count));
 		}
 
 		[Test]
 		public void Derive_TheLastLinkOfAGreatWorksChainReachesTheRealm()
 		{
-			Assert.AreEqual(ReachBand.Realm, KingdomReachRules.Derive(Size.Huge, 1, 2));
-			Assert.AreEqual(ReachBand.Realm, KingdomReachRules.Derive(Size.Huge, 2, 3));
+			ClassicAssert.AreEqual(ReachBand.Realm, KingdomReachRules.Derive(Size.Huge, 1, 2));
+			ClassicAssert.AreEqual(ReachBand.Realm, KingdomReachRules.Derive(Size.Huge, 2, 3));
 		}
 
 		[TestCase(0, 2)]
@@ -123,13 +124,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 0)]
 		public void Derive_AGreatWorkThatIsNotTheLastLinkReachesTheCity(int index, int count)
 		{
-			Assert.AreEqual(ReachBand.City, KingdomReachRules.Derive(Size.Huge, index, count));
+			ClassicAssert.AreEqual(ReachBand.City, KingdomReachRules.Derive(Size.Huge, index, count));
 		}
 
 		[Test]
 		public void Derive_ANegativeTierIndexReadsAsTheFirstLink()
 		{
-			Assert.AreEqual(ReachBand.City, KingdomReachRules.Derive(Size.Huge, -4, 3));
+			ClassicAssert.AreEqual(ReachBand.City, KingdomReachRules.Derive(Size.Huge, -4, 3));
 		}
 
 		[TestCase(0, Size.None)]
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(121, Size.Huge)]
 		public void SizeForDesignation_UsesExactPhysicalArea(int cells, Size expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomReachRules.SizeForDesignation(PlotCells(cells)));
 		}
 
@@ -154,9 +155,9 @@ namespace ThousandAndFirst.Tests
 				new KingdomBenefitCell(6, 4, KingdomBenefitCellUse.Plot),
 				new KingdomBenefitCell(5, 4, KingdomBenefitCellUse.Network, "road")
 			};
-			Assert.IsTrue(KingdomReachRules.ContainsPlotCell(cells, 4, 4));
-			Assert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 5, 4));
-			Assert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 7, 4));
+			ClassicAssert.IsTrue(KingdomReachRules.ContainsPlotCell(cells, 4, 4));
+			ClassicAssert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 5, 4));
+			ClassicAssert.IsFalse(KingdomReachRules.ContainsPlotCell(cells, 7, 4));
 		}
 
 		[Test]
@@ -167,13 +168,13 @@ namespace ThousandAndFirst.Tests
 				new KingdomBenefitCell(3, 2, KingdomBenefitCellUse.Plot),
 				new KingdomBenefitCell(4, 2, KingdomBenefitCellUse.Plot)
 			};
-			Assert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 4, 2,
+			ClassicAssert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 4, 2,
 				out int x, out int y));
-			Assert.AreEqual(4, x); Assert.AreEqual(2, y);
-			Assert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 99, 99,
+			ClassicAssert.AreEqual(4, x); ClassicAssert.AreEqual(2, y);
+			ClassicAssert.IsTrue(KingdomReachRules.TryDesignationAnchor(cells, 99, 99,
 				out x, out y));
-			Assert.AreEqual(3, x); Assert.AreEqual(2, y);
-			Assert.IsFalse(KingdomReachRules.TryDesignationAnchor(null, 0, 0,
+			ClassicAssert.AreEqual(3, x); ClassicAssert.AreEqual(2, y);
+			ClassicAssert.IsFalse(KingdomReachRules.TryDesignationAnchor(null, 0, 0,
 				out _, out _));
 		}
 
@@ -186,7 +187,7 @@ namespace ThousandAndFirst.Tests
 		public void PhysicalLift_ExcludesBindingGoodsAndStructuralDefence(
 			string kind, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.IsPhysicalLift(kind));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.IsPhysicalLift(kind));
 		}
 
 		[Test]
@@ -243,9 +244,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ReachBand band;
 			string error;
-			Assert.IsTrue(KingdomReachRules.TryParseBand(raw, out band, out error));
-			Assert.AreEqual(expected, band);
-			Assert.IsNull(error);
+			ClassicAssert.IsTrue(KingdomReachRules.TryParseBand(raw, out band, out error));
+			ClassicAssert.AreEqual(expected, band);
+			ClassicAssert.IsNull(error);
 		}
 
 		[TestCase(null)]
@@ -255,8 +256,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ReachBand band;
 			string error;
-			Assert.IsFalse(KingdomReachRules.TryParseBand(raw, out band, out error));
-			Assert.IsNull(error);
+			ClassicAssert.IsFalse(KingdomReachRules.TryParseBand(raw, out band, out error));
+			ClassicAssert.IsNull(error);
 		}
 
 		[Test]
@@ -264,8 +265,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ReachBand band;
 			string error;
-			Assert.IsFalse(KingdomReachRules.TryParseBand("region", out band, out error));
-			Assert.IsNotNull(error);
+			ClassicAssert.IsFalse(KingdomReachRules.TryParseBand("region", out band, out error));
+			ClassicAssert.IsNotNull(error);
 			StringAssert.Contains("region", error);
 			for (int i = 0; i < KingdomReachRules.BandNames.Length; i++)
 			{
@@ -276,12 +277,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BandNames_LineUpWithTheEnumTheyAreRead()
 		{
-			Assert.AreEqual(5, KingdomReachRules.BandNames.Length);
-			Assert.AreEqual("plot", KingdomReachRules.BandName(ReachBand.Plot));
-			Assert.AreEqual("quarter", KingdomReachRules.BandName(ReachBand.Quarter));
-			Assert.AreEqual("zone", KingdomReachRules.BandName(ReachBand.Zone));
-			Assert.AreEqual("city", KingdomReachRules.BandName(ReachBand.City));
-			Assert.AreEqual("realm", KingdomReachRules.BandName(ReachBand.Realm));
+			ClassicAssert.AreEqual(5, KingdomReachRules.BandNames.Length);
+			ClassicAssert.AreEqual("plot", KingdomReachRules.BandName(ReachBand.Plot));
+			ClassicAssert.AreEqual("quarter", KingdomReachRules.BandName(ReachBand.Quarter));
+			ClassicAssert.AreEqual("zone", KingdomReachRules.BandName(ReachBand.Zone));
+			ClassicAssert.AreEqual("city", KingdomReachRules.BandName(ReachBand.City));
+			ClassicAssert.AreEqual("realm", KingdomReachRules.BandName(ReachBand.Realm));
 		}
 
 		[Test]
@@ -289,9 +290,9 @@ namespace ThousandAndFirst.Tests
 		{
 			bool overridden;
 			string error;
-			Assert.AreEqual(ReachBand.Realm, KingdomReachRules.Resolve("realm", Size.Small, 0, 1, out overridden, out error));
-			Assert.IsTrue(overridden);
-			Assert.IsNull(error);
+			ClassicAssert.AreEqual(ReachBand.Realm, KingdomReachRules.Resolve("realm", Size.Small, 0, 1, out overridden, out error));
+			ClassicAssert.IsTrue(overridden);
+			ClassicAssert.IsNull(error);
 		}
 
 		[Test]
@@ -299,9 +300,9 @@ namespace ThousandAndFirst.Tests
 		{
 			bool overridden;
 			string error;
-			Assert.AreEqual(ReachBand.Quarter, KingdomReachRules.Resolve("everywhere", Size.Medium, 0, 1, out overridden, out error));
-			Assert.IsFalse(overridden);
-			Assert.IsNotNull(error);
+			ClassicAssert.AreEqual(ReachBand.Quarter, KingdomReachRules.Resolve("everywhere", Size.Medium, 0, 1, out overridden, out error));
+			ClassicAssert.IsFalse(overridden);
+			ClassicAssert.IsNotNull(error);
 		}
 
 		[Test]
@@ -309,9 +310,9 @@ namespace ThousandAndFirst.Tests
 		{
 			bool overridden;
 			string error;
-			Assert.AreEqual(ReachBand.Zone, KingdomReachRules.Resolve(null, Size.Large, 0, 1, out overridden, out error));
-			Assert.IsFalse(overridden);
-			Assert.IsNull(error);
+			ClassicAssert.AreEqual(ReachBand.Zone, KingdomReachRules.Resolve(null, Size.Large, 0, 1, out overridden, out error));
+			ClassicAssert.IsFalse(overridden);
+			ClassicAssert.IsNull(error);
 		}
 
 		// --- Covering ----------------------------------------------------------------------------
@@ -323,8 +324,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(ReachBand.Realm, ReachRelation.SameRealm)]
 		public void RelationRequired_IsTheBandsOwnEdge(ReachBand band, ReachRelation expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.RelationRequired(band));
-			Assert.IsTrue(KingdomReachRules.Covers(band, expected));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.RelationRequired(band));
+			ClassicAssert.IsTrue(KingdomReachRules.Covers(band, expected));
 		}
 
 		[TestCase(ReachBand.Plot, ReachRelation.SameQuarter)]
@@ -333,7 +334,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(ReachBand.City, ReachRelation.SameRealm)]
 		public void Covers_IsFalseOneStepPastTheBandsEdge(ReachBand band, ReachRelation where)
 		{
-			Assert.IsFalse(KingdomReachRules.Covers(band, where));
+			ClassicAssert.IsFalse(KingdomReachRules.Covers(band, where));
 		}
 
 		[TestCase(ReachBand.Plot)]
@@ -343,26 +344,26 @@ namespace ThousandAndFirst.Tests
 		[TestCase(ReachBand.Realm)]
 		public void Covers_GroundTheRealmDoesNotHoldIsNeverReached(ReachBand band)
 		{
-			Assert.IsFalse(KingdomReachRules.Covers(band, ReachRelation.Elsewhere));
+			ClassicAssert.IsFalse(KingdomReachRules.Covers(band, ReachRelation.Elsewhere));
 		}
 
 		[Test]
 		public void Covers_ANearerPlaceIsAlwaysStillCovered()
 		{
-			Assert.IsTrue(KingdomReachRules.Covers(ReachBand.Quarter, ReachRelation.SamePlot));
-			Assert.IsTrue(KingdomReachRules.Covers(ReachBand.City, ReachRelation.SameZone));
-			Assert.IsTrue(KingdomReachRules.Covers(ReachBand.Realm, ReachRelation.SamePlot));
+			ClassicAssert.IsTrue(KingdomReachRules.Covers(ReachBand.Quarter, ReachRelation.SamePlot));
+			ClassicAssert.IsTrue(KingdomReachRules.Covers(ReachBand.City, ReachRelation.SameZone));
+			ClassicAssert.IsTrue(KingdomReachRules.Covers(ReachBand.Realm, ReachRelation.SamePlot));
 		}
 
 		[Test]
 		public void RelationAt_NearerFactsWin()
 		{
-			Assert.AreEqual(ReachRelation.SamePlot, KingdomReachRules.RelationAt(false, false, false, false, OnFootprint: true));
-			Assert.AreEqual(ReachRelation.SameQuarter, KingdomReachRules.RelationAt(true, true, true, InQuarter: true, OnFootprint: false));
-			Assert.AreEqual(ReachRelation.SameZone, KingdomReachRules.RelationAt(true, true, true, InQuarter: false, OnFootprint: false));
-			Assert.AreEqual(ReachRelation.SameCity, KingdomReachRules.RelationAt(true, true, false, false, false));
-			Assert.AreEqual(ReachRelation.SameRealm, KingdomReachRules.RelationAt(true, false, false, false, false));
-			Assert.AreEqual(ReachRelation.Elsewhere, KingdomReachRules.RelationAt(false, false, false, false, false));
+			ClassicAssert.AreEqual(ReachRelation.SamePlot, KingdomReachRules.RelationAt(false, false, false, false, OnFootprint: true));
+			ClassicAssert.AreEqual(ReachRelation.SameQuarter, KingdomReachRules.RelationAt(true, true, true, InQuarter: true, OnFootprint: false));
+			ClassicAssert.AreEqual(ReachRelation.SameZone, KingdomReachRules.RelationAt(true, true, true, InQuarter: false, OnFootprint: false));
+			ClassicAssert.AreEqual(ReachRelation.SameCity, KingdomReachRules.RelationAt(true, true, false, false, false));
+			ClassicAssert.AreEqual(ReachRelation.SameRealm, KingdomReachRules.RelationAt(true, false, false, false, false));
+			ClassicAssert.AreEqual(ReachRelation.Elsewhere, KingdomReachRules.RelationAt(false, false, false, false, false));
 		}
 
 		// --- The quarter, measured ---------------------------------------------------------------
@@ -373,7 +374,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(50, KingdomReachRules.QuarterRadiusCap)]
 		public void QuarterRadius_GrowsWithTierAndIsClampedBothWays(int tier, int expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.QuarterRadius(tier));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.QuarterRadius(tier));
 		}
 
 		[Test]
@@ -397,9 +398,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void QuarterMarks_AWorkStandingAloneHasNoCluster()
 		{
-			Assert.AreEqual(0, KingdomReachRules.QuarterMarks(Marks(40, 20), 10, 10, KingdomReachRules.QuarterLinkCells).Count);
-			Assert.AreEqual(0, KingdomReachRules.QuarterMarks(null, 10, 10, KingdomReachRules.QuarterLinkCells).Count);
-			Assert.AreEqual(0, KingdomReachRules.QuarterMarks(Marks(10, 10), 10, 10, 0).Count);
+			ClassicAssert.AreEqual(0, KingdomReachRules.QuarterMarks(Marks(40, 20), 10, 10, KingdomReachRules.QuarterLinkCells).Count);
+			ClassicAssert.AreEqual(0, KingdomReachRules.QuarterMarks(null, 10, 10, KingdomReachRules.QuarterLinkCells).Count);
+			ClassicAssert.AreEqual(0, KingdomReachRules.QuarterMarks(Marks(10, 10), 10, 10, 0).Count);
 		}
 
 		[Test]
@@ -408,22 +409,22 @@ namespace ThousandAndFirst.Tests
 			// One neighbour six cells off; the resident stands four cells past THAT, which is
 			// inside a first tier's radius and outside nothing else.
 			List<Mark> marks = Marks(10, 10, 16, 10);
-			Assert.IsTrue(KingdomReachRules.InQuarter(marks, 10, 10, 20, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
-			Assert.IsFalse(KingdomReachRules.InQuarter(marks, 10, 10, 21, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
+			ClassicAssert.IsTrue(KingdomReachRules.InQuarter(marks, 10, 10, 20, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
+			ClassicAssert.IsFalse(KingdomReachRules.InQuarter(marks, 10, 10, 21, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
 		}
 
 		[Test]
 		public void InQuarter_ATierFurtherAlongTheChainCarriesFurther()
 		{
 			List<Mark> marks = Marks(10, 10, 16, 10);
-			Assert.IsTrue(KingdomReachRules.InQuarter(marks, 10, 10, 22, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(1)));
+			ClassicAssert.IsTrue(KingdomReachRules.InQuarter(marks, 10, 10, 22, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(1)));
 		}
 
 		[Test]
 		public void InQuarter_TheWorksOwnRadiusHoldsWithNothingBuiltAroundIt()
 		{
-			Assert.IsTrue(KingdomReachRules.InQuarter(null, 10, 10, 13, 10, KingdomReachRules.QuarterLinkCells, 4));
-			Assert.IsFalse(KingdomReachRules.InQuarter(null, 10, 10, 15, 10, KingdomReachRules.QuarterLinkCells, 4));
+			ClassicAssert.IsTrue(KingdomReachRules.InQuarter(null, 10, 10, 13, 10, KingdomReachRules.QuarterLinkCells, 4));
+			ClassicAssert.IsFalse(KingdomReachRules.InQuarter(null, 10, 10, 15, 10, KingdomReachRules.QuarterLinkCells, 4));
 		}
 
 		[Test]
@@ -432,14 +433,14 @@ namespace ThousandAndFirst.Tests
 			// Two clusters twenty cells apart. The far one's own ground is not shaded by this work,
 			// however much built ground stands there.
 			List<Mark> marks = Marks(10, 10, 30, 10, 34, 10);
-			Assert.IsFalse(KingdomReachRules.InQuarter(marks, 10, 10, 32, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
+			ClassicAssert.IsFalse(KingdomReachRules.InQuarter(marks, 10, 10, 32, 10, KingdomReachRules.QuarterLinkCells, KingdomReachRules.QuarterRadius(0)));
 		}
 
 		[Test]
 		public void InQuarter_ANegativeRadiusShadesOnlyTheWorksOwnCell()
 		{
-			Assert.IsTrue(KingdomReachRules.InQuarter(null, 10, 10, 10, 10, KingdomReachRules.QuarterLinkCells, -5));
-			Assert.IsFalse(KingdomReachRules.InQuarter(null, 10, 10, 11, 10, KingdomReachRules.QuarterLinkCells, -5));
+			ClassicAssert.IsTrue(KingdomReachRules.InQuarter(null, 10, 10, 10, 10, KingdomReachRules.QuarterLinkCells, -5));
+			ClassicAssert.IsFalse(KingdomReachRules.InQuarter(null, 10, 10, 11, 10, KingdomReachRules.QuarterLinkCells, -5));
 		}
 
 		// --- What scopes, and how much of it lands ------------------------------------------------
@@ -456,7 +457,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("someone:elses", true)]
 		public void ScopedByReach_BindingGoodsStayCitywideAndEverythingElseScopes(string kind, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.ScopedByReach(kind));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.ScopedByReach(kind));
 		}
 
 		[TestCase(6, 100, 6)]
@@ -468,13 +469,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, 150, 3)]
 		public void Scaled_FollowsHowWellTheWorkIsRunning(int amount, int percent, int expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.Scaled(amount, percent));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.Scaled(amount, percent));
 		}
 
 		[Test]
 		public void Scaled_AWorkRunningAtAllKeepsAPointOfWhatItDeclares()
 		{
-			Assert.AreEqual(1, KingdomReachRules.Scaled(1, 25));
+			ClassicAssert.AreEqual(1, KingdomReachRules.Scaled(1, 25));
 		}
 
 		// --- What a lift lands on the settlement's own level (Addendum 6) -----------------------
@@ -483,7 +484,7 @@ namespace ThousandAndFirst.Tests
 		public void Landed_GivesAWorkItsWholeAmountWhereItReachesEveryHome()
 		{
 			// A zone-band work covers everything built around it, so nothing of it is lost.
-			Assert.AreEqual(6, KingdomReachRules.Landed(6, 20, 20));
+			ClassicAssert.AreEqual(6, KingdomReachRules.Landed(6, 20, 20));
 		}
 
 		[Test]
@@ -491,7 +492,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole point of scoping: a shrine out past the fields lifts the level by nothing,
 			// however loudly it shades the ground it stands on.
-			Assert.AreEqual(0, KingdomReachRules.Landed(6, 0, 20));
+			ClassicAssert.AreEqual(0, KingdomReachRules.Landed(6, 0, 20));
 		}
 
 		[Test]
@@ -499,8 +500,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Half the homes, half the lift. This is what makes one shrine in each quarter worth
 			// more to the level than two shrines in one.
-			Assert.AreEqual(3, KingdomReachRules.Landed(6, 10, 20));
-			Assert.AreEqual(1, KingdomReachRules.Landed(6, 5, 20));
+			ClassicAssert.AreEqual(3, KingdomReachRules.Landed(6, 10, 20));
+			ClassicAssert.AreEqual(1, KingdomReachRules.Landed(6, 5, 20));
 		}
 
 		[Test]
@@ -508,20 +509,20 @@ namespace ThousandAndFirst.Tests
 		{
 			// The same floor Scaled keeps, for the same reason: a work that reaches somebody is
 			// never silently worth nothing.
-			Assert.AreEqual(1, KingdomReachRules.Landed(2, 1, 40));
+			ClassicAssert.AreEqual(1, KingdomReachRules.Landed(2, 1, 40));
 		}
 
 		[Test]
 		public void Landed_CannotMintALiftFromADoubleCountedHome()
 		{
-			Assert.AreEqual(6, KingdomReachRules.Landed(6, 99, 20));
+			ClassicAssert.AreEqual(6, KingdomReachRules.Landed(6, 99, 20));
 		}
 
 		[Test]
 		public void Landed_LandsNothingWhereNobodyLivesAndNothingForANegativeAmount()
 		{
-			Assert.AreEqual(0, KingdomReachRules.Landed(6, 4, 0));
-			Assert.AreEqual(0, KingdomReachRules.Landed(-6, 20, 20));
+			ClassicAssert.AreEqual(0, KingdomReachRules.Landed(6, 4, 0));
+			ClassicAssert.AreEqual(0, KingdomReachRules.Landed(-6, 20, 20));
 		}
 
 		[Test]
@@ -530,14 +531,14 @@ namespace ThousandAndFirst.Tests
 			// The rule that keeps water, food and roofs citywide pools is ScopedByReach; this test
 			// pins the pair together, because a caller that scoped a binding good would be reading
 			// the addendum backwards.
-			Assert.IsFalse(KingdomReachRules.ScopedByReach("water"));
-			Assert.IsFalse(KingdomReachRules.ScopedByReach("food"));
-			Assert.IsFalse(KingdomReachRules.ScopedByReach("roof"));
-			Assert.IsTrue(KingdomReachRules.ScopedByReach("spirit"));
-			Assert.IsTrue(KingdomReachRules.ScopedByReach("craft"));
-			Assert.IsTrue(KingdomReachRules.ScopedByReach("order"));
-			Assert.IsTrue(KingdomReachRules.ScopedByReach("luxury"));
-			Assert.IsTrue(KingdomReachRules.ScopedByReach("wealth"));
+			ClassicAssert.IsFalse(KingdomReachRules.ScopedByReach("water"));
+			ClassicAssert.IsFalse(KingdomReachRules.ScopedByReach("food"));
+			ClassicAssert.IsFalse(KingdomReachRules.ScopedByReach("roof"));
+			ClassicAssert.IsTrue(KingdomReachRules.ScopedByReach("spirit"));
+			ClassicAssert.IsTrue(KingdomReachRules.ScopedByReach("craft"));
+			ClassicAssert.IsTrue(KingdomReachRules.ScopedByReach("order"));
+			ClassicAssert.IsTrue(KingdomReachRules.ScopedByReach("luxury"));
+			ClassicAssert.IsTrue(KingdomReachRules.ScopedByReach("wealth"));
 		}
 
 		// --- The ground's character ----------------------------------------------------------------
@@ -546,19 +547,19 @@ namespace ThousandAndFirst.Tests
 		public void Character_SumsRepeatsAndNamesTheLoudest()
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts("spirit", 2, "learning", 6, "spirit", 3));
-			Assert.AreEqual(11, character.Total);
-			Assert.AreEqual("learning", character.Dominant);
-			Assert.AreEqual(6, character.DominantAmount);
-			Assert.AreEqual(2, character.Lifts.Count);
+			ClassicAssert.AreEqual(11, character.Total);
+			ClassicAssert.AreEqual("learning", character.Dominant);
+			ClassicAssert.AreEqual(6, character.DominantAmount);
+			ClassicAssert.AreEqual(2, character.Lifts.Count);
 		}
 
 		[Test]
 		public void Character_IgnoresTheBindingPoolsEntirely()
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts("water", 40, "food", 12, "roof", 9, "order", 2));
-			Assert.AreEqual(2, character.Total);
-			Assert.AreEqual("order", character.Dominant);
-			Assert.AreEqual(1, character.Lifts.Count);
+			ClassicAssert.AreEqual(2, character.Total);
+			ClassicAssert.AreEqual("order", character.Dominant);
+			ClassicAssert.AreEqual(1, character.Lifts.Count);
 		}
 
 		[Test]
@@ -566,45 +567,45 @@ namespace ThousandAndFirst.Tests
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts(
 				"wealth", 1, "luxury", 1, "spirit", 1, "craft", 1));
-			Assert.AreEqual("craft", character.Lifts[0].Kind);
-			Assert.AreEqual("spirit", character.Lifts[1].Kind);
-			Assert.AreEqual("luxury", character.Lifts[2].Kind);
-			Assert.AreEqual("wealth", character.Lifts[3].Kind);
+			ClassicAssert.AreEqual("craft", character.Lifts[0].Kind);
+			ClassicAssert.AreEqual("spirit", character.Lifts[1].Kind);
+			ClassicAssert.AreEqual("luxury", character.Lifts[2].Kind);
+			ClassicAssert.AreEqual("wealth", character.Lifts[3].Kind);
 		}
 
 		[Test]
 		public void Character_ATieGoesToTheEarlierLiftRatherThanToWhicheverWasSeenFirst()
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts("luxury", 5, "craft", 5));
-			Assert.AreEqual("craft", character.Dominant);
+			ClassicAssert.AreEqual("craft", character.Dominant);
 		}
 
 		[Test]
 		public void Character_AnotherModsGoodIsCountedAndListedAfterTheKnownOnes()
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts("them:song", 9, "craft", 1));
-			Assert.AreEqual(10, character.Total);
-			Assert.AreEqual("them:song", character.Dominant);
-			Assert.AreEqual("craft", character.Lifts[0].Kind);
-			Assert.AreEqual("them:song", character.Lifts[1].Kind);
+			ClassicAssert.AreEqual(10, character.Total);
+			ClassicAssert.AreEqual("them:song", character.Dominant);
+			ClassicAssert.AreEqual("craft", character.Lifts[0].Kind);
+			ClassicAssert.AreEqual("them:song", character.Lifts[1].Kind);
 		}
 
 		[Test]
 		public void Character_FoldsCaseAndDropsAmountsThatAreNotThere()
 		{
 			GroundCharacter character = KingdomReachRules.Character(Lifts("Spirit", 3, "spirit", 0, "learning", -2, "  ", 4));
-			Assert.AreEqual(1, character.Lifts.Count);
-			Assert.AreEqual("spirit", character.Lifts[0].Kind);
-			Assert.AreEqual(3, character.Lifts[0].Amount);
+			ClassicAssert.AreEqual(1, character.Lifts.Count);
+			ClassicAssert.AreEqual("spirit", character.Lifts[0].Kind);
+			ClassicAssert.AreEqual(3, character.Lifts[0].Amount);
 		}
 
 		[Test]
 		public void Character_GroundNothingReachesNamesNobody()
 		{
 			GroundCharacter character = KingdomReachRules.Character(null);
-			Assert.AreEqual(0, character.Total);
-			Assert.IsNull(character.Dominant);
-			Assert.AreEqual(0, character.Lifts.Count);
+			ClassicAssert.AreEqual(0, character.Total);
+			ClassicAssert.IsNull(character.Dominant);
+			ClassicAssert.AreEqual(0, character.Lifts.Count);
 		}
 
 		[TestCase("spirit", "the temple quarter")]
@@ -616,7 +617,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("them:song", "a quarter of its own")]
 		public void QuarterName_NamesTheGroundTheWayThePeopleThereWould(string kind, string expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.QuarterName(kind));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.QuarterName(kind));
 		}
 
 		[Test]
@@ -633,7 +634,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomReachRules.QuarterLine(KingdomReachRules.Character(null));
 			StringAssert.Contains("ordinary ground", line);
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomReachRules.QuarterLine(null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomReachRules.QuarterLine(null)));
 		}
 
 		[Test]
@@ -641,7 +642,7 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("heads it", KingdomReachRules.ReachClause(ReachBand.City));
 			StringAssert.Contains("heads it", KingdomReachRules.ReachClause(ReachBand.Realm));
-			Assert.IsFalse(KingdomReachRules.ReachClause(ReachBand.Plot).Contains("heads it"));
+			ClassicAssert.IsFalse(KingdomReachRules.ReachClause(ReachBand.Plot).Contains("heads it"));
 		}
 
 		// --- The seat --------------------------------------------------------------------------
@@ -653,14 +654,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(ReachBand.Realm, true)]
 		public void RequiresSeat_IsTheGreatWorksAloneRule(ReachBand band, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.RequiresSeat(band));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.RequiresSeat(band));
 		}
 
 		[TestCase(ReachBand.City, ReachBand.Zone)]
 		[TestCase(ReachBand.Realm, ReachBand.Zone)]
 		public void Unheaded_AGreatWorkWithNoKeeperKeepsItsOwnZone(ReachBand band, ReachBand expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.Unheaded(band));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.Unheaded(band));
 		}
 
 		[TestCase(ReachBand.Plot)]
@@ -668,7 +669,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(ReachBand.Zone)]
 		public void Unheaded_LeavesEverySmallerWorkExactlyAsItWas(ReachBand band)
 		{
-			Assert.AreEqual(band, KingdomReachRules.Unheaded(band));
+			ClassicAssert.AreEqual(band, KingdomReachRules.Unheaded(band));
 		}
 
 		[TestCase("faith", "keeper of rites")]
@@ -683,7 +684,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "keeper")]
 		public void SeatTitle_NamesTheOfficeWithoutInventingOne(string category, string expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.SeatTitle(category));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.SeatTitle(category));
 		}
 
 		[Test]
@@ -695,8 +696,8 @@ namespace ThousandAndFirst.Tests
 			int cleverAtCraft = KingdomReachRules.SeatFitness("craft", 10, 10, 10, 20, 10, 10);
 			int strongAtKnowledge = KingdomReachRules.SeatFitness("knowledge", 20, 10, 10, 10, 10, 10);
 			int cleverAtKnowledge = KingdomReachRules.SeatFitness("knowledge", 10, 10, 10, 20, 10, 10);
-			Assert.Greater(strongAtCraft, cleverAtCraft);
-			Assert.Greater(cleverAtKnowledge, strongAtKnowledge);
+			ClassicAssert.Greater(strongAtCraft, cleverAtCraft);
+			ClassicAssert.Greater(cleverAtKnowledge, strongAtKnowledge);
 		}
 
 		[Test]
@@ -704,23 +705,23 @@ namespace ThousandAndFirst.Tests
 		{
 			// Faith: willpower governs, ego seconds. Ten points of willpower are worth twice ten
 			// points of ego, and nothing else on the sheet moves the number at all.
-			Assert.AreEqual(30, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 10, 10));
-			Assert.AreEqual(20, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 10, 0));
-			Assert.AreEqual(10, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 0, 10));
-			Assert.AreEqual(0, KingdomReachRules.SeatFitness("faith", 99, 99, 99, 99, 0, 0));
+			ClassicAssert.AreEqual(30, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 10, 10));
+			ClassicAssert.AreEqual(20, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 10, 0));
+			ClassicAssert.AreEqual(10, KingdomReachRules.SeatFitness("faith", 0, 0, 0, 0, 0, 10));
+			ClassicAssert.AreEqual(0, KingdomReachRules.SeatFitness("faith", 99, 99, 99, 99, 0, 0));
 		}
 
 		[Test]
 		public void SeatFitness_AnUnknownPurposeAsksWhoTheSettlementListensTo()
 		{
-			Assert.AreEqual(KingdomReachRules.SeatFitness("them:hall", 0, 0, 0, 0, 4, 10),
+			ClassicAssert.AreEqual(KingdomReachRules.SeatFitness("them:hall", 0, 0, 0, 0, 4, 10),
 				(2 * 10) + 4);
 		}
 
 		[Test]
 		public void SeatFitness_NeverGoesNegative()
 		{
-			Assert.AreEqual(0, KingdomReachRules.SeatFitness("faith", -9, -9, -9, -9, -9, -9));
+			ClassicAssert.AreEqual(0, KingdomReachRules.SeatFitness("faith", -9, -9, -9, -9, -9, -9));
 		}
 
 		[TestCase(20, 20, false)]
@@ -729,19 +730,19 @@ namespace ThousandAndFirst.Tests
 		[TestCase(20, 40, true)]
 		public void ShouldUnseat_ASeatedNotableIsOnlyReplacedByAPlainlyBetterOne(int seated, int challenger, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomReachRules.ShouldUnseat(seated, challenger));
+			ClassicAssert.AreEqual(expected, KingdomReachRules.ShouldUnseat(seated, challenger));
 		}
 
 		[Test]
 		public void ShouldUnseat_AnEmptySeatIsTakenByAnybody()
 		{
-			Assert.IsTrue(KingdomReachRules.ShouldUnseat(-1, 0));
+			ClassicAssert.IsTrue(KingdomReachRules.ShouldUnseat(-1, 0));
 		}
 
 		[Test]
 		public void ShouldUnseat_TheMarginIsTheThingBeingTested()
 		{
-			Assert.AreEqual(3, KingdomReachRules.SeatUnseatMargin);
+			ClassicAssert.AreEqual(3, KingdomReachRules.SeatUnseatMargin);
 		}
 
 		[Test]
@@ -750,13 +751,13 @@ namespace ThousandAndFirst.Tests
 			string line = KingdomReachRules.UnheadedLine("the temple", "keeper of rites");
 			StringAssert.Contains("the temple", line);
 			StringAssert.Contains("keeper of rites", line);
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomReachRules.UnheadedLine(null, null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomReachRules.UnheadedLine(null, null)));
 		}
 
 		[Test]
 		public void SeatChronicle_TellsEachTransitionAndNeverTellsTheOneThatDidNotHappen()
 		{
-			Assert.AreEqual("", KingdomReachRules.SeatChronicle(Transition.None, "archivist", "Mirrehet", "the great scriptorium"));
+			ClassicAssert.AreEqual("", KingdomReachRules.SeatChronicle(Transition.None, "archivist", "Mirrehet", "the great scriptorium"));
 			StringAssert.Contains("is named archivist", KingdomReachRules.SeatChronicle(Transition.FirstHolder, "archivist", "Mirrehet", "the great scriptorium"));
 			StringAssert.Contains("passes to", KingdomReachRules.SeatChronicle(Transition.Passed, "archivist", "Ulder", "the great scriptorium"));
 			StringAssert.Contains("no archivist left", KingdomReachRules.SeatChronicle(Transition.Vacant, "archivist", "Ulder", "the great scriptorium"));
@@ -765,7 +766,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SeatMessage_SaysNothingWhenTheChronicleDoes()
 		{
-			Assert.AreEqual("", KingdomReachRules.SeatMessage(Transition.None, "archivist", "Mirrehet", "the great scriptorium"));
+			ClassicAssert.AreEqual("", KingdomReachRules.SeatMessage(Transition.None, "archivist", "Mirrehet", "the great scriptorium"));
 		}
 
 		[Test]

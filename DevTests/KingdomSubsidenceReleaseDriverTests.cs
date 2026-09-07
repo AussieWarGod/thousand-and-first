@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,12 +14,12 @@ namespace ThousandAndFirst.Tests
 		{
 			Port port = new Port();
 			string original = Wire(port.Plan);
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			CollectionAssert.AreEqual(new[] { "publish:Intent", "write:0", "write:1", "write:2",
 				"write:3", "publish:Released" }, port.Events);
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Released, port.Plan.Works[0].ReleasePhase);
-			Assert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(port.Plan));
-			Assert.AreNotEqual(original, Wire(port.Plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Released, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(port.Plan));
+			ClassicAssert.AreNotEqual(original, Wire(port.Plan));
 			AssertPrefix(port, 4);
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
@@ -36,12 +37,12 @@ namespace ThousandAndFirst.Tests
 			Port port = new Port();
 			Func<Port, int, bool> cut = (p, current) => current != field || Cut(throws);
 			if (after) port.AfterWrite = cut; else port.BeforeWrite = cut;
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(port.Initial, port.Plan.Works[0].ReleaseBefore));
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(port.Initial, port.Plan.Works[0].ReleaseBefore));
 			AssertPrefix(port, field + (after ? 1 : 0));
 			port.ClearHooks(); port.ReloadParent();
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			AssertPrefix(port, 4);
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
@@ -51,13 +52,13 @@ namespace ThousandAndFirst.Tests
 		{
 			Port port = new Port(line);
 			port.AfterWrite = (p, field) => field != 1 || Cut(true);
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
 			AssertPrefix(port, 2);
-			Assert.AreEqual(line, port.Plan.Works[0].ReleaseBefore.Line);
+			ClassicAssert.AreEqual(line, port.Plan.Works[0].ReleaseBefore.Line);
 			CollectionAssert.AreEqual(new[] { "publish:Intent", "write:0", "write:1" }, port.Events);
 			port.ClearHooks(); port.ReloadParent(); port.Events.Clear();
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			AssertPrefix(port, 4);
 			CollectionAssert.AreEqual(line == null
 				? new[] { "write:2", "publish:Released" }
@@ -76,16 +77,16 @@ namespace ThousandAndFirst.Tests
 				: KingdomSubsidenceReleasePhase.Intent;
 			Func<Port, KingdomSubsidenceRungPlan, bool> cut = (p, next) => next.Works[0].ReleasePhase != phase || Cut(throws);
 			if (after) port.AfterPublish = cut; else port.BeforePublish = cut;
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(after ? phase : released ? KingdomSubsidenceReleasePhase.Intent
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(after ? phase : released ? KingdomSubsidenceReleasePhase.Intent
 				: KingdomSubsidenceReleasePhase.Pending, port.Plan.Works[0].ReleasePhase);
 			AssertPrefix(port, released ? 4 : 0);
-			if (!released) Assert.AreEqual(0, port.WriteAttempts);
+			if (!released) ClassicAssert.AreEqual(0, port.WriteAttempts);
 			port.ClearHooks(); port.ReloadParent();
 			if (released && after) port.CarrierPresent = false;
 			int observations = port.Observations;
-			Assert.IsTrue(Resume(port));
-			if (released && after) Assert.AreEqual(observations, port.Observations);
+			ClassicAssert.IsTrue(Resume(port));
+			if (released && after) ClassicAssert.AreEqual(observations, port.Observations);
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
 
@@ -94,12 +95,12 @@ namespace ThousandAndFirst.Tests
 		{
 			Port port = new Port { LiePublish = released ? KingdomSubsidenceReleasePhase.Released
 				: KingdomSubsidenceReleasePhase.Intent };
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(released ? KingdomSubsidenceReleasePhase.Intent : KingdomSubsidenceReleasePhase.Pending,
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(released ? KingdomSubsidenceReleasePhase.Intent : KingdomSubsidenceReleasePhase.Pending,
 				port.Plan.Works[0].ReleasePhase);
 			AssertPrefix(port, released ? 4 : 0);
 			port.LiePublish = null; port.ReloadParent();
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
 
@@ -107,11 +108,11 @@ namespace ThousandAndFirst.Tests
 		public void WriteReturningTrueWithoutMutationCannotAdvanceItsPrefix(int field)
 		{
 			Port port = new Port { LieWrite = field };
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
 			AssertPrefix(port, field);
 			port.LieWrite = -1; port.ReloadParent();
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
 
@@ -123,15 +124,15 @@ namespace ThousandAndFirst.Tests
 			{
 				p.Receipt = Receipt(p.Receipt, line: "foreign replacement telling"); return true;
 			};
-			Assert.IsFalse(Resume(port));
+			ClassicAssert.IsFalse(Resume(port));
 			string wire = Wire(port.Plan);
 			KingdomSubsidenceWearReceipt foreign = port.Receipt;
 			int writes = port.WriteAttempts;
 			port.ClearHooks(); port.ReloadParent();
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(wire, Wire(port.Plan)); Assert.AreSame(foreign, port.Receipt);
-			Assert.AreEqual(writes, port.WriteAttempts);
-			Assert.AreEqual("foreign replacement telling", port.Receipt.Line);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(wire, Wire(port.Plan)); ClassicAssert.AreSame(foreign, port.Receipt);
+			ClassicAssert.AreEqual(writes, port.WriteAttempts);
+			ClassicAssert.AreEqual("foreign replacement telling", port.Receipt.Line);
 		}
 
 		[TestCase("observe")] [TestCase("write")] [TestCase("publish")]
@@ -142,10 +143,10 @@ namespace ThousandAndFirst.Tests
 			if (callback == "observe") port.AfterObserve = p => { swap(p); return true; };
 			if (callback == "write") port.AfterWrite = (p, field) => { swap(p); return true; };
 			if (callback == "publish") port.AfterPublish = (p, next) => { swap(p); return true; };
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(RungFixture.Zone + "-foreign", port.Plan.ZoneId);
-			Assert.AreEqual(callback == "write" ? 1 : 0, port.WriteAttempts);
-			Assert.AreNotEqual(KingdomSubsidenceReleasePhase.Released, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(RungFixture.Zone + "-foreign", port.Plan.ZoneId);
+			ClassicAssert.AreEqual(callback == "write" ? 1 : 0, port.WriteAttempts);
+			ClassicAssert.AreNotEqual(KingdomSubsidenceReleasePhase.Released, port.Plan.Works[0].ReleasePhase);
 		}
 
 		[TestCase("owner")] [TestCase("carrier")] [TestCase("part")]
@@ -156,10 +157,10 @@ namespace ThousandAndFirst.Tests
 			if (missing == "carrier") port.CarrierPresent = false;
 			if (missing == "part") port.PartPresent = false;
 			string wire = Wire(port.Plan);
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(wire, Wire(port.Plan)); Assert.AreSame(port.Initial, port.Receipt);
-			Assert.AreEqual(0, port.Events.Count); Assert.AreEqual(0, port.WriteAttempts);
-			Assert.AreEqual(missing == "owner" ? 0 : 1, port.Observations);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(wire, Wire(port.Plan)); ClassicAssert.AreSame(port.Initial, port.Receipt);
+			ClassicAssert.AreEqual(0, port.Events.Count); ClassicAssert.AreEqual(0, port.WriteAttempts);
+			ClassicAssert.AreEqual(missing == "owner" ? 0 : 1, port.Observations);
 		}
 
 		[TestCase("owner")] [TestCase("carrier")] [TestCase("part")]
@@ -173,13 +174,13 @@ namespace ThousandAndFirst.Tests
 				if (missing == "part") p.PartPresent = false;
 				return true;
 			};
-			Assert.IsFalse(Resume(port)); AssertPrefix(port, 1);
+			ClassicAssert.IsFalse(Resume(port)); AssertPrefix(port, 1);
 			string wire = Wire(port.Plan);
 			port.ClearHooks();
-			Assert.IsFalse(Resume(port)); Assert.AreEqual(wire, Wire(port.Plan));
-			Assert.AreEqual(1, port.WriteAttempts);
+			ClassicAssert.IsFalse(Resume(port)); ClassicAssert.AreEqual(wire, Wire(port.Plan));
+			ClassicAssert.AreEqual(1, port.WriteAttempts);
 			port.OwnerPresent = true; port.CarrierPresent = true; port.PartPresent = true; port.ReloadParent();
-			Assert.IsTrue(Resume(port));
+			ClassicAssert.IsTrue(Resume(port));
 			CollectionAssert.AreEqual(new[] { 1, 1, 1, 1 }, port.Mutations);
 		}
 
@@ -187,39 +188,39 @@ namespace ThousandAndFirst.Tests
 		public void PersistedIntentAndMissingCarrierNeverInferReleaseFromAbsence()
 		{
 			Port port = new Port { BeforeWrite = (p, field) => false };
-			Assert.IsFalse(Resume(port));
+			ClassicAssert.IsFalse(Resume(port));
 			port.ClearHooks(); port.ReloadParent(); port.CarrierPresent = false;
 			string wire = Wire(port.Plan); int writes = port.WriteAttempts;
-			Assert.IsFalse(Resume(port));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
-			Assert.AreEqual(wire, Wire(port.Plan)); Assert.AreEqual(writes, port.WriteAttempts);
+			ClassicAssert.IsFalse(Resume(port));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, port.Plan.Works[0].ReleasePhase);
+			ClassicAssert.AreEqual(wire, Wire(port.Plan)); ClassicAssert.AreEqual(writes, port.WriteAttempts);
 		}
 
 		[TestCase(false)] [TestCase(true)]
 		public void ReleasedParentNeverObservesMissingCarrierButStillRequiresOwner(bool loseOwner)
 		{
-			Port port = new Port(); Assert.IsTrue(Resume(port)); port.ReloadParent();
+			Port port = new Port(); ClassicAssert.IsTrue(Resume(port)); port.ReloadParent();
 			port.CarrierPresent = false; port.Receipt = null; port.OwnerPresent = !loseOwner;
 			port.AfterObserve = p => throw new InvalidOperationException("released carrier must not be read");
 			string wire = Wire(port.Plan); int observations = port.Observations, writes = port.WriteAttempts;
 			int publications = port.Events.Count;
-			Assert.AreEqual(!loseOwner, Resume(port));
-			Assert.AreEqual(observations, port.Observations); Assert.AreEqual(writes, port.WriteAttempts);
-			Assert.AreEqual(publications, port.Events.Count); Assert.AreEqual(wire, Wire(port.Plan));
+			ClassicAssert.AreEqual(!loseOwner, Resume(port));
+			ClassicAssert.AreEqual(observations, port.Observations); ClassicAssert.AreEqual(writes, port.WriteAttempts);
+			ClassicAssert.AreEqual(publications, port.Events.Count); ClassicAssert.AreEqual(wire, Wire(port.Plan));
 		}
 
 		[Test]
 		public void AlreadyClearedReceiptNeedsFreshObservationAndTwoParentPublicationsButNoLocalWrites()
 		{
 			Port port = new Port();
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(port.Plan.StepId,
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(port.Plan.StepId,
 				port.Initial.BeforeWear, port.Initial.AfterWear, port.Initial, out port.Receipt));
 			KingdomSubsidenceWearReceipt cleared = port.Receipt;
-			Assert.IsTrue(Resume(port));
-			Assert.Greater(port.Observations, 0); Assert.AreEqual(0, port.WriteAttempts);
+			ClassicAssert.IsTrue(Resume(port));
+			ClassicAssert.Greater(port.Observations, 0); ClassicAssert.AreEqual(0, port.WriteAttempts);
 			CollectionAssert.AreEqual(new[] { "publish:Intent", "publish:Released" }, port.Events);
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(cleared, port.Plan.Works[0].ReleaseBefore));
-			Assert.AreSame(cleared, port.Receipt);
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(cleared, port.Plan.Works[0].ReleaseBefore));
+			ClassicAssert.AreSame(cleared, port.Receipt);
 		}
 
 		[TestCase("null-port")] [TestCase("null-plan")] [TestCase("negative-index")]
@@ -229,15 +230,15 @@ namespace ThousandAndFirst.Tests
 			Port port = new Port(); int index = input == "negative-index" ? -1 : input == "past-end" ? 1 : 0;
 			if (input == "null-plan") port.Stored = null;
 			if (input == "physical-pending") port.Stored = RungFixture.Plan(RungFixture.Work());
-			Assert.IsFalse(KingdomSubsidenceReleaseDriver.Resume(input == "null-port" ? null : port, index));
-			Assert.IsNull(port.Violation); Assert.AreEqual(0, port.WriteAttempts);
-			Assert.AreEqual(0, port.Events.Count); Assert.AreSame(port.Initial, port.Receipt);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseDriver.Resume(input == "null-port" ? null : port, index));
+			ClassicAssert.IsNull(port.Violation); ClassicAssert.AreEqual(0, port.WriteAttempts);
+			ClassicAssert.AreEqual(0, port.Events.Count); ClassicAssert.AreSame(port.Initial, port.Receipt);
 		}
 
 		private static bool Resume(Port port)
 		{
 			bool result = KingdomSubsidenceReleaseDriver.Resume(port, 0);
-			Assert.IsNull(port.Violation, "A caught port-contract failure must not count as an expected refusal.");
+			ClassicAssert.IsNull(port.Violation, "A caught port-contract failure must not count as an expected refusal.");
 			return result;
 		}
 		private static bool Cut(bool throws)
@@ -252,13 +253,13 @@ namespace ThousandAndFirst.Tests
 		private static void AssertPrefix(Port port, int cut)
 		{
 			KingdomSubsidenceWearReceipt actual = port.Receipt, initial = port.Initial;
-			Assert.AreEqual(cut >= 1 ? port.Plan.StepId : initial.LastCompletedId, actual.LastCompletedId);
-			Assert.AreEqual(cut >= 2 ? (int)KingdomWearIncidentPhase.None : initial.Phase, actual.Phase);
-			Assert.AreEqual(cut >= 3 ? null : initial.Id, actual.Id);
-			Assert.AreEqual(cut >= 4 ? null : initial.Line, actual.Line);
-			Assert.AreEqual(initial.Cause, actual.Cause); Assert.AreEqual(initial.Wear, actual.Wear);
-			Assert.AreEqual(initial.BeforeWear, actual.BeforeWear); Assert.AreEqual(initial.AfterWear, actual.AfterWear);
-			Assert.AreEqual(initial.LastCause, actual.LastCause); Assert.AreEqual(initial.MessageState, actual.MessageState);
+			ClassicAssert.AreEqual(cut >= 1 ? port.Plan.StepId : initial.LastCompletedId, actual.LastCompletedId);
+			ClassicAssert.AreEqual(cut >= 2 ? (int)KingdomWearIncidentPhase.None : initial.Phase, actual.Phase);
+			ClassicAssert.AreEqual(cut >= 3 ? null : initial.Id, actual.Id);
+			ClassicAssert.AreEqual(cut >= 4 ? null : initial.Line, actual.Line);
+			ClassicAssert.AreEqual(initial.Cause, actual.Cause); ClassicAssert.AreEqual(initial.Wear, actual.Wear);
+			ClassicAssert.AreEqual(initial.BeforeWear, actual.BeforeWear); ClassicAssert.AreEqual(initial.AfterWear, actual.AfterWear);
+			ClassicAssert.AreEqual(initial.LastCause, actual.LastCause); ClassicAssert.AreEqual(initial.MessageState, actual.MessageState);
 		}
 
 		private sealed class Port : IKingdomSubsidenceReleasePort
@@ -328,8 +329,8 @@ namespace ThousandAndFirst.Tests
 			}
 			internal void ReloadParent()
 			{
-				Assert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(Stored, out string wire));
-				Assert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out Stored));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(Stored, out string wire));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out Stored));
 			}
 			internal void ClearHooks()
 			{ BeforeWrite = null; AfterWrite = null; BeforePublish = null; AfterPublish = null; AfterObserve = null; }

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tests;
 
 namespace ThousandAndFirst.DevTests
@@ -13,16 +14,16 @@ namespace ThousandAndFirst.DevTests
 			KingdomArtifactRecognitionBook current = new KingdomArtifactRecognitionBook();
 			KingdomArtifactSnapshot snapshot = Artifact();
 			byte[] before = KingdomArtifactRecognitionCodec.Encode(current);
-			Assert.IsTrue(KingdomArtifactRecognitionSelectionRuntime.TryPrepareRecognition(
+			ClassicAssert.IsTrue(KingdomArtifactRecognitionSelectionRuntime.TryPrepareRecognition(
 				current, 0L, snapshot, KingdomArtifactRecognitionKind.Remark, 7, "Eshkind",
 				20L, out KingdomArtifactRecognitionBook candidate,
 				out KingdomArtifactRecognitionReceipt receipt, out string failure), failure);
 			CollectionAssert.AreEqual(before, KingdomArtifactRecognitionCodec.Encode(current));
-			Assert.AreEqual(0L, current.Revision);
-			Assert.AreEqual(1L, candidate.Revision);
-			Assert.AreEqual(receipt.RecognitionId, candidate.Rows[0].RecognitionId);
-			Assert.AreNotSame(current, candidate);
-			Assert.AreNotSame(snapshot, receipt.Source);
+			ClassicAssert.AreEqual(0L, current.Revision);
+			ClassicAssert.AreEqual(1L, candidate.Revision);
+			ClassicAssert.AreEqual(receipt.RecognitionId, candidate.Rows[0].RecognitionId);
+			ClassicAssert.AreNotSame(current, candidate);
+			ClassicAssert.AreNotSame(snapshot, receipt.Source);
 		}
 
 		[Test]
@@ -30,12 +31,12 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomArtifactRecognitionBook current = new KingdomArtifactRecognitionBook();
 			byte[] before = KingdomArtifactRecognitionCodec.Encode(current);
-			Assert.IsFalse(KingdomArtifactRecognitionSelectionRuntime.TryPrepareRecognition(
+			ClassicAssert.IsFalse(KingdomArtifactRecognitionSelectionRuntime.TryPrepareRecognition(
 				current, 1L, Artifact(), KingdomArtifactRecognitionKind.Inscription, 0, null,
 				20L, out KingdomArtifactRecognitionBook candidate,
 				out KingdomArtifactRecognitionReceipt receipt, out _));
-			Assert.IsNull(candidate);
-			Assert.IsNull(receipt);
+			ClassicAssert.IsNull(candidate);
+			ClassicAssert.IsNull(receipt);
 			CollectionAssert.AreEqual(before, KingdomArtifactRecognitionCodec.Encode(current));
 		}
 
@@ -54,19 +55,19 @@ namespace ThousandAndFirst.DevTests
 				MakerName = "Eshkind"
 			};
 			source.SnapshotDigest = KingdomWitnessWorkRules.SnapshotDigest(source);
-			Assert.IsTrue(KingdomWitnessWorkRules.TryCapture(book, 0L, source,
+			ClassicAssert.IsTrue(KingdomWitnessWorkRules.TryCapture(book, 0L, source,
 				out KingdomWitnessWorkReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkRules.TryPrepareCarrier(book, book.Revision,
+			ClassicAssert.IsTrue(KingdomWitnessWorkRules.TryPrepareCarrier(book, book.Revision,
 				receipt.WorkId, "taf:object:surface-1", "taf:zone:seat",
 				"taf:construction:surface-1", 4, 5, 11L,
 				out failure), failure);
-			Assert.IsFalse(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
+			ClassicAssert.IsFalse(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
 				"taf:object:surface-1", out _));
-			Assert.IsTrue(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
+			ClassicAssert.IsTrue(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
 				"taf:object:surface-2", out failure), failure);
-			Assert.IsTrue(KingdomWitnessWorkRules.TryReconcileCarrier(book, book.Revision,
+			ClassicAssert.IsTrue(KingdomWitnessWorkRules.TryReconcileCarrier(book, book.Revision,
 				receipt.WorkId, false, true, 12L, out failure), failure);
-			Assert.IsFalse(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
+			ClassicAssert.IsFalse(KingdomWitnessWorkProjectionRuntime.TryRequireUnclaimed(book,
 				"taf:object:surface-1", out _));
 		}
 
@@ -80,26 +81,26 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("565-592", source);
 			StringAssert.Contains("GetIntrinsicValueEvent.ID", source);
 			StringAssert.Contains("GetExtrinsicValueEvent.ID", source);
-			Assert.AreEqual(2, Occurrences(source, "E.Value = 0.0"));
+			ClassicAssert.AreEqual(2, Occurrences(source, "E.Value = 0.0"));
 			StringAssert.Contains("Registrar.Register(\"CanBeTaken\")", source);
 			StringAssert.Contains("HandleEvent(CanBeReplicatedEvent E)", source);
 			StringAssert.Contains("ShapeMatchesParent() ? false : base.HandleEvent(E)", source);
 			StringAssert.Contains("E?.Postfix != null && ShapeMatchesParent()", source);
 			StringAssert.Contains("E.ID == \"CanBeTaken\" && ShapeMatchesParent()", source);
-			Assert.AreEqual(2, Occurrences(source,
+			ClassicAssert.AreEqual(2, Occurrences(source,
 				"E != null && ShapeMatchesParent()) E.Value = 0.0"));
 			StringAssert.Contains("ShapeMatchesParent() ? false : base.CanGenerateStacked()", source);
 			StringAssert.Contains("FieldsAuthenticated()", source);
 			StringAssert.Contains("ProjectionProof", source);
-			Assert.IsFalse(source.Contains("ordinary object properties apply"),
+			ClassicAssert.IsFalse(source.Contains("ordinary object properties apply"),
 				"an unauthenticated marker must be wholly inert, including look text");
 			StringAssert.Contains("FinalizeCopy", source);
 			StringAssert.Contains("ParentObject?.RemovePart(this)", source);
-			Assert.IsFalse(source.Contains("Description.Short"));
-			Assert.IsFalse(source.Contains("DisplayName ="));
-			Assert.IsFalse(source.Contains("Physics.Owner ="));
-			Assert.IsFalse(source.Contains("SetStringProperty"));
-			Assert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("Description.Short"));
+			ClassicAssert.IsFalse(source.Contains("DisplayName ="));
+			ClassicAssert.IsFalse(source.Contains("Physics.Owner ="));
+			ClassicAssert.IsFalse(source.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
 		}
 
 		[Test]
@@ -130,10 +131,10 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("TryDetach", source);
 			StringAssert.Contains("if (marker == null) return true", source);
 			StringAssert.Contains("Marker.FieldsAuthenticated()", source);
-			Assert.IsFalse(source.Contains("GameObjectFactory"));
-			Assert.IsFalse(source.Contains("AddObject"));
-			Assert.IsFalse(source.Contains("Journal"));
-			Assert.IsFalse(source.Contains("KingdomExperience"));
+			ClassicAssert.IsFalse(source.Contains("GameObjectFactory"));
+			ClassicAssert.IsFalse(source.Contains("AddObject"));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("KingdomExperience"));
 		}
 
 		[Test]
@@ -151,14 +152,14 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("Selected.Physics.Owner", source);
 			StringAssert.Contains("TrySnapshotExplicit(Selected", source);
 			StringAssert.Contains("KingdomArtifactRecognitionCodec.Decode", source);
-			Assert.IsFalse(source.Contains("KingdomProperty"));
-			Assert.IsFalse(source.Contains("OwnedByPlayer"));
-			Assert.IsFalse(source.Contains("IsTakeable"));
-			Assert.IsFalse(source.Contains("Owner ="));
-			Assert.IsFalse(source.Contains("AddObject"));
-			Assert.IsFalse(source.Contains("RemoveObject"));
-			Assert.IsFalse(source.Contains("TakeObject"));
-			Assert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("KingdomProperty"));
+			ClassicAssert.IsFalse(source.Contains("OwnedByPlayer"));
+			ClassicAssert.IsFalse(source.Contains("IsTakeable"));
+			ClassicAssert.IsFalse(source.Contains("Owner ="));
+			ClassicAssert.IsFalse(source.Contains("AddObject"));
+			ClassicAssert.IsFalse(source.Contains("RemoveObject"));
+			ClassicAssert.IsFalse(source.Contains("TakeObject"));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
 		}
 
 		private static KingdomArtifactSnapshot Artifact()

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,28 +20,28 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = EnabledGrowth();
 			KingdomGrowthArrivalCandidate candidate = Prepare(growth);
-			Assert.NotNull(candidate);
-			Assert.AreEqual(1L, candidate.Sequence);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
+			ClassicAssert.NotNull(candidate);
+			ClassicAssert.AreEqual(1L, candidate.Sequence);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
 				candidate.Phase);
-			Assert.IsNull(candidate.ObjectId);
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared,
+			ClassicAssert.IsNull(candidate.ObjectId);
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Prepared,
 				candidate.CreateStep.State);
-			Assert.AreEqual(1, candidate.FirstGuest.CohortSize);
-			Assert.AreEqual(growth.NextArrivalTick, candidate.FirstGuest.CauseTick);
-			Assert.AreEqual(growth.ArrivalIntervalTicks, candidate.FirstGuest.CadenceTicks);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+			ClassicAssert.AreEqual(1, candidate.FirstGuest.CohortSize);
+			ClassicAssert.AreEqual(growth.NextArrivalTick, candidate.FirstGuest.CauseTick);
+			ClassicAssert.AreEqual(growth.ArrivalIntervalTicks, candidate.FirstGuest.CadenceTicks);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				growth, candidate));
-			Assert.IsNull(candidate.ObjectId);
-			Assert.IsNull(growth.ArrivalOp,
+			ClassicAssert.IsNull(candidate.ObjectId);
+			ClassicAssert.IsNull(growth.ArrivalOp,
 				"presentation cannot create the parallel automatic settlement operation");
 
 			KingdomGrowthBook restored = RoundTrip(growth);
-			Assert.AreEqual(candidate.FirstGuest.OpportunityId,
+			ClassicAssert.AreEqual(candidate.FirstGuest.OpportunityId,
 				restored.ArrivalCandidate.FirstGuest.OpportunityId);
-			Assert.AreEqual(candidate.PlannedOrigin,
+			ClassicAssert.AreEqual(candidate.PlannedOrigin,
 				restored.ArrivalCandidate.PlannedOrigin);
-			Assert.IsFalse(ReferenceEquals(candidate.FirstGuest,
+			ClassicAssert.IsFalse(ReferenceEquals(candidate.FirstGuest,
 				restored.ArrivalCandidate.FirstGuest));
 		}
 
@@ -50,32 +51,32 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook deferred = Published();
 			KingdomGrowthArrivalCandidate candidate = deferred.ArrivalCandidate;
 			int population = candidate.FirstGuest.PopulationBefore;
-			Assert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(
 				deferred, candidate, 121L));
 			byte[] once = Bytes(deferred);
-			Assert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(
 				deferred, candidate, 122L));
 			CollectionAssert.AreEqual(once, Bytes(deferred));
-			Assert.AreEqual(population, candidate.FirstGuest.PopulationBefore);
-			Assert.IsNull(candidate.ObjectId);
+			ClassicAssert.AreEqual(population, candidate.FirstGuest.PopulationBefore);
+			ClassicAssert.IsNull(candidate.ObjectId);
 
 			KingdomGrowthBook declined = Published();
 			candidate = declined.ArrivalCandidate;
-			Assert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(
 				declined, candidate, 121L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Declined, candidate.Phase);
-			Assert.AreEqual(KingdomGrowthArrivalDisposition.Declined, candidate.Disposition);
-			Assert.IsNull(candidate.ObjectId);
-			Assert.IsNull(candidate.FirstGuest.BodyReservationId);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Declined, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalDisposition.Declined, candidate.Disposition);
+			ClassicAssert.IsNull(candidate.ObjectId);
+			ClassicAssert.IsNull(candidate.FirstGuest.BodyReservationId);
 			KingdomGrowthOperation op = KingdomLifecycleRules.PrepareGrowthOperation(
 				declined, KingdomGrowthAction.Arrival, null, 122L);
-			Assert.NotNull(op); op.ArrivalDisposition = KingdomGrowthArrivalDisposition.Declined;
+			ClassicAssert.NotNull(op); op.ArrivalDisposition = KingdomGrowthArrivalDisposition.Declined;
 			op.ArrivalCandidateId = candidate.Id;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(declined, op));
-			Assert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(declined, op));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(
 				declined, candidate, 122L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
-			Assert.IsNull(candidate.ObjectId);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
+			ClassicAssert.IsNull(candidate.ObjectId);
 
 			KingdomGrowthBook admitted = Published();
 			candidate = admitted.ArrivalCandidate;
@@ -83,17 +84,17 @@ namespace ThousandAndFirst.Tests
 			KingdomExperienceBodyReservation wrong = Body(candidate, 121L, 1L);
 			wrong.SourceId = "taf:foreign:first-guest";
 			byte[] before = Bytes(admitted);
-			Assert.IsFalse(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
 				admitted, candidate, wrong, 121L));
 			CollectionAssert.AreEqual(before, Bytes(admitted));
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
 				admitted, candidate, lease, 121L));
-			Assert.AreEqual(KingdomGrowthFirstGuestChoiceState.Admitted,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestChoiceState.Admitted,
 				candidate.FirstGuest.ChoiceState);
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
 				candidate.FirstGuest.BodyLeaseState);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Prepared, candidate.Phase);
-			Assert.IsNull(candidate.ObjectId,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Prepared, candidate.Phase);
+			ClassicAssert.IsNull(candidate.ObjectId,
 				"admission transfers authority but does not itself mint the body");
 		}
 
@@ -103,17 +104,17 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook current = Published();
 			byte[] v3 = KingdomLifecycleWireCodec.GrowthV3PayloadFixture(current);
 			KingdomGrowthBook legacy = KingdomLifecycleWireCodec.ReadGrowthPayload(v3);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				legacy.FormatVersion);
-			Assert.IsTrue(legacy.ArrivalCandidate.LegacyAutomaticRecovery);
-			Assert.IsNull(legacy.ArrivalCandidate.FirstGuest);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Prepared,
+			ClassicAssert.IsTrue(legacy.ArrivalCandidate.LegacyAutomaticRecovery);
+			ClassicAssert.IsNull(legacy.ArrivalCandidate.FirstGuest);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Prepared,
 				legacy.ArrivalCandidate.Phase);
-			Assert.IsTrue(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(
 				legacy, legacy.ArrivalCandidate, true, true, true, true, true, 121L));
-			Assert.AreEqual(KingdomGrowthFirstGuestFactsState.LegacyPartial,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestFactsState.LegacyPartial,
 				legacy.ArrivalCandidate.FirstGuest.FactsState);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
 				legacy.ArrivalCandidate.Phase);
 
 			for (int omitted = 0; omitted < 5; omitted++)
@@ -122,11 +123,11 @@ namespace ThousandAndFirst.Tests
 				byte[] before = Bytes(legacy);
 				bool[] proof = { true, true, true, true, true };
 				proof[omitted] = false;
-				Assert.IsFalse(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(
+				ClassicAssert.IsFalse(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(
 					legacy, legacy.ArrivalCandidate, proof[0], proof[1], proof[2],
 					proof[3], proof[4], 121L), "proof " + omitted);
 				CollectionAssert.AreEqual(before, Bytes(legacy), "proof " + omitted);
-				Assert.IsTrue(legacy.ArrivalCandidate.LegacyAutomaticRecovery);
+				ClassicAssert.IsTrue(legacy.ArrivalCandidate.LegacyAutomaticRecovery);
 			}
 		}
 
@@ -141,25 +142,25 @@ namespace ThousandAndFirst.Tests
 			Reserve(full, OtherBody("fourteen", 7));
 			Reserve(full, OtherBody("sixteen", 2));
 			byte[] opportunity = Bytes(growth);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveBodies(full, full.Revision,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveBodies(full, full.Revision,
 				request, 0, out KingdomExperienceCapacityFault fault, out string failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.LiveBodyCapacityFull, fault);
 			CollectionAssert.AreEqual(opportunity, Bytes(growth));
 
 			KingdomExperienceLedger available = Experience();
 			Reserve(available, OtherBody("seven", 7));
 			Reserve(available, OtherBody("fourteen", 7));
 			Reserve(available, OtherBody("fifteen", 1));
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(available,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(available,
 				available.Revision, request, 0, out fault, out failure), failure);
-			Assert.AreEqual(16, KingdomExperienceRules.ReservedBodies(available));
+			ClassicAssert.AreEqual(16, KingdomExperienceRules.ReservedBodies(available));
 
 			KingdomExperienceLedger disabled = Experience();
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(disabled,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(disabled,
 				disabled.Revision, false, true, true, 121L, out failure), failure);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveBodies(disabled,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveBodies(disabled,
 				disabled.Revision, request, 0, out fault, out failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.OptionDisabled, fault);
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.OptionDisabled, fault);
 			CollectionAssert.AreEqual(opportunity, Bytes(growth));
 		}
 
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCuriosityCause cause = KingdomCuriosityLeadCodecTests.Cause(
 				"first-guest-collision");
 			cause.SettlementId = Settlement; cause.CompletedTick = 121L;
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(knowledge,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(knowledge,
 				cause, KingdomCuriosityLeadCodecTests.Notes(),
 				out KingdomCuriosityLeadPlan plan, out string failure), failure);
 			KingdomCuriosityReceipt curiosity = plan.CuriosityReceipt;
@@ -184,58 +185,58 @@ namespace ThousandAndFirst.Tests
 			byte[] growthSource = Bytes(growth);
 			long knowledgeSourceRevision = knowledge.Revision;
 
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
 				experience.Revision, guest, out KingdomExperienceCapacityFault fault,
 				out failure), failure);
 			byte[] guestAtCap = KingdomExperienceCodec.EncodeEnvelope(experience);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveAudience(experience,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveAudience(experience,
 				experience.Revision, curator, out fault, out failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.AudienceCapacityFull, fault);
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, knowledge,
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.AudienceCapacityFull, fault);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, knowledge,
 				experience, out bool committed, out failure));
 			CollectionAssert.AreEqual(guestAtCap,
 				KingdomExperienceCodec.EncodeEnvelope(experience));
 			CollectionAssert.AreEqual(growthSource, Bytes(growth));
-			Assert.AreEqual(knowledgeSourceRevision, knowledge.Revision);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryProveSourceAbsent(knowledge,
+			ClassicAssert.AreEqual(knowledgeSourceRevision, knowledge.Revision);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryProveSourceAbsent(knowledge,
 				curiosity.SourceId, out bool absent, out failure), failure);
-			Assert.IsTrue(absent, "a refused curator presentation must not consume its source");
+			ClassicAssert.IsTrue(absent, "a refused curator presentation must not consume its source");
 
 			experience = KingdomExperienceCodec.DecodeEnvelope(guestAtCap);
-			Assert.IsTrue(KingdomExperienceRules.TryReleaseAudience(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReleaseAudience(experience,
 				experience.Revision, guest.ReservationId, guest.SourceId, out fault,
 				out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
 				experience.Revision, curator, out fault, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, knowledge,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, knowledge,
 				experience, out committed, out failure), failure);
-			Assert.IsTrue(committed);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
+			ClassicAssert.IsTrue(committed);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
 				curiosity, out KingdomCuriosityReceipt durable, out failure), failure);
-			Assert.AreEqual(curiosity.NoteId, durable.NoteId);
+			ClassicAssert.AreEqual(curiosity.NoteId, durable.NoteId);
 
 			byte[] curatorAtCap = KingdomExperienceCodec.EncodeEnvelope(experience);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveAudience(experience,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveAudience(experience,
 				experience.Revision, guest, out fault, out failure));
-			Assert.AreEqual(KingdomExperienceCapacityFault.AudienceCapacityFull, fault);
+			ClassicAssert.AreEqual(KingdomExperienceCapacityFault.AudienceCapacityFull, fault);
 			CollectionAssert.AreEqual(curatorAtCap,
 				KingdomExperienceCodec.EncodeEnvelope(experience));
 			CollectionAssert.AreEqual(growthSource, Bytes(growth));
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
 				curiosity, out durable, out failure), failure);
 
 			experience = KingdomExperienceCodec.DecodeEnvelope(curatorAtCap);
-			Assert.IsTrue(KingdomExperienceRules.TryReleaseAudience(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReleaseAudience(experience,
 				experience.Revision, curator.ReservationId, curator.SourceId, out fault,
 				out failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(experience,
 				experience.Revision, guest, out fault, out failure), failure);
-			Assert.AreEqual(1, experience.Audiences.Count);
-			Assert.AreEqual(KingdomExperienceLane.FirstGuest,
+			ClassicAssert.AreEqual(1, experience.Audiences.Count);
+			ClassicAssert.AreEqual(KingdomExperienceLane.FirstGuest,
 				experience.Audiences[0].Lane);
-			Assert.AreEqual(guest.SourceId, experience.Audiences[0].SourceId);
+			ClassicAssert.AreEqual(guest.SourceId, experience.Audiences[0].SourceId);
 			CollectionAssert.AreEqual(growthSource, Bytes(growth));
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(knowledge,
 				curiosity, out durable, out failure), failure);
 		}
 
@@ -245,7 +246,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			byte[] growthBefore = Bytes(growth);
-			Assert.IsFalse(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
 				growth, candidate, 121L));
 			CollectionAssert.AreEqual(growthBefore, Bytes(growth));
 
@@ -253,25 +254,25 @@ namespace ThousandAndFirst.Tests
 			Reserve(disabled, OtherBody("full-seven", 7));
 			Reserve(disabled, OtherBody("full-fourteen", 7));
 			Reserve(disabled, OtherBody("full-sixteen", 2));
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(disabled,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(disabled,
 				disabled.Revision, false, true, true, 121L, out string failure), failure);
 			byte[] experienceBefore = KingdomExperienceCodec.EncodeEnvelope(disabled);
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsFalse(KingdomExperienceRules.TryReserveBodies(disabled, disabled.Revision,
+			ClassicAssert.IsFalse(KingdomExperienceRules.TryReserveBodies(disabled, disabled.Revision,
 				body, 0, out KingdomExperienceCapacityFault _, out failure));
 			CollectionAssert.AreEqual(growthBefore, Bytes(growth));
 			CollectionAssert.AreEqual(experienceBefore,
 				KingdomExperienceCodec.EncodeEnvelope(disabled));
 
 			KingdomExperienceLedger available = Experience();
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(available, available.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(available, available.Revision,
 				body, 0, out KingdomExperienceCapacityFault _, out failure), failure);
 			byte[] reserved = KingdomExperienceCodec.EncodeEnvelope(available);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
 				growth, candidate, body, 121L));
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
 				candidate.FirstGuest.BodyLeaseState);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Preparing,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Preparing,
 				candidate.FirstGuest.GuestPhase);
 			CollectionAssert.AreEqual(reserved,
 				KingdomExperienceCodec.EncodeEnvelope(available),
@@ -284,29 +285,29 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted, candidate.Phase);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
 				candidate.FirstGuest.GuestPhase);
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
 				candidate.FirstGuest.BodyLeaseState);
-			Assert.IsNull(growth.ArrivalOp);
-			Assert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(
+			ClassicAssert.IsNull(growth.ArrivalOp);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(
 				growth, candidate));
-			Assert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
 				growth, candidate));
 
 			byte[] frozen = Bytes(growth);
 			KingdomGrowthBook restored = RoundTrip(growth);
 			candidate = restored.ArrivalCandidate;
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted, candidate.Phase);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
 				candidate.FirstGuest.GuestPhase);
-			Assert.IsFalse(KingdomLifecycleRules.TryDeferGrowthFirstGuest(restored,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryDeferGrowthFirstGuest(restored,
 				candidate, 1000000L));
-			Assert.IsFalse(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(restored,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(restored,
 				candidate, 1000000L));
 			CollectionAssert.AreEqual(frozen, Bytes(restored),
 				"elapsed time and correspondence choices cannot advance a hosted guest");
@@ -318,34 +319,34 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
 			byte[] before = Bytes(growth);
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, "taf:object:decoy", candidate.Marker, candidate.LodgingZoneId,
 				KingdomGrowthFirstGuestTerminalState.Died, 124L));
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, candidate.ObjectId, "taf:marker:decoy", candidate.LodgingZoneId,
 				KingdomGrowthFirstGuestTerminalState.Died, 124L));
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, candidate.ObjectId, candidate.Marker, "zone-unloaded",
 				KingdomGrowthFirstGuestTerminalState.Died, 124L));
-			Assert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, candidate.ObjectId, candidate.Marker, candidate.LodgingZoneId,
 				KingdomGrowthFirstGuestTerminalState.Citizen, 124L));
 			CollectionAssert.AreEqual(before, Bytes(growth));
 
-			Assert.IsTrue(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, candidate.ObjectId, candidate.Marker, candidate.LodgingZoneId,
 				KingdomGrowthFirstGuestTerminalState.Died, 124L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestTerminal, candidate.Phase);
-			Assert.AreEqual(KingdomGrowthFirstGuestTerminalState.Died,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestTerminal, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestTerminalState.Died,
 				candidate.FirstGuest.GuestTerminalState);
-			Assert.AreEqual(KingdomGrowthArrivalDisposition.Departed, candidate.Disposition);
-			Assert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(
+			ClassicAssert.AreEqual(KingdomGrowthArrivalDisposition.Departed, candidate.Disposition);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(
 				growth, candidate));
-			Assert.AreEqual(KingdomGrowthFirstGuestTerminalState.Died,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestTerminalState.Died,
 				RoundTrip(growth).ArrivalCandidate.FirstGuest.GuestTerminalState);
 		}
 
@@ -355,55 +356,55 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestDeparture(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestDeparture(growth,
 				candidate, 124L));
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.DepartureIntent,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.DepartureIntent,
 				candidate.FirstGuest.GuestPhase);
-			Assert.IsTrue(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryObserveGrowthFirstGuestTerminal(growth,
 				candidate, candidate.ObjectId, candidate.Marker, candidate.LodgingZoneId,
 				KingdomGrowthFirstGuestTerminalState.Departed, 125L));
-			Assert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
 				candidate, body.ReservationId, 126L));
 			byte[] released = Bytes(growth);
-			Assert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
 				candidate, body.ReservationId, 126L));
 			CollectionAssert.AreEqual(released, Bytes(growth));
-			Assert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
 				growth, candidate), "a departed lease must never remint capacity");
 
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, 127L);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.Departed;
 			operation.ArrivalCandidateId = candidate.Id;
 			KingdomGrowthOutboxEvent notice =
 				KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(operation, 0,
 					"first-guest-departed", null, null, null, null, null, null, null,
 					0, null, 0, null, 0, null, 0, null, 0, null, 0, null);
-			Assert.NotNull(notice); operation.OutboxEvents.Add(notice);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
-			Assert.IsTrue(KingdomLifecycleRules.TryBindDepartedFirstGuestOperation(growth,
+			ClassicAssert.NotNull(notice); operation.OutboxEvents.Add(notice);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindDepartedFirstGuestOperation(growth,
 				candidate, 128L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.ClockIntent, 129L));
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
 				operation.ClockLease.Before));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
 				operation.ClockLease.After));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Sinks, 130L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Terminal, 131L));
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
 				candidate, operation, 0, 132L));
-			Assert.AreEqual(KingdomGrowthArrivalDisposition.Departed,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalDisposition.Departed,
 				growth.FirstGuestTerminal.Result);
-			Assert.AreEqual(0, growth.FirstGuestTerminal.ResidentId);
-			Assert.AreEqual(KingdomGrowthFirstGuestTerminalState.Departed,
+			ClassicAssert.AreEqual(0, growth.FirstGuestTerminal.ResidentId);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestTerminalState.Departed,
 				growth.FirstGuestTerminal.Opportunity.GuestTerminalState);
 		}
 
@@ -413,23 +414,23 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
-			Assert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth,
 				candidate, 124L));
 			growth = RoundTrip(growth); candidate = growth.ArrivalCandidate;
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.CitizenshipIntent,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.CitizenshipIntent,
 				candidate.FirstGuest.GuestPhase);
-			Assert.IsNull(growth.ArrivalOp);
-			Assert.IsTrue(KingdomLifecycleRules.TryPrepareGrowthFirstGuestCitizenship(growth,
+			ClassicAssert.IsNull(growth.ArrivalOp);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPrepareGrowthFirstGuestCitizenship(growth,
 				candidate, 125L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Escrowed, candidate.Phase);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.CitizenshipPrepared,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Escrowed, candidate.Phase);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.CitizenshipPrepared,
 				candidate.FirstGuest.GuestPhase);
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
 				candidate.FirstGuest.BodyLeaseState);
-			Assert.IsNull(growth.ArrivalOp,
+			ClassicAssert.IsNull(growth.ArrivalOp,
 				"citizenship begins only through the ordinary lodging/domain transaction");
 		}
 
@@ -439,20 +440,20 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
 			byte[] frozen = Bytes(growth);
-			Assert.IsTrue(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
 				growth, candidate, 3, 20, 4, 10, 20, 2, out string failure), failure);
-			Assert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
 				growth, candidate, 20, 20, 4, 10, 20, 2, out failure));
-			Assert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
 				growth, candidate, 3, 20, 4, 3, 20, 2, out failure));
-			Assert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
 				growth, candidate, 3, 20, 4, 10, 1, 2, out failure));
 			CollectionAssert.AreEqual(frozen, Bytes(growth));
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
 				candidate.FirstGuest.GuestPhase);
 		}
 
@@ -461,20 +462,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = Published();
 			byte[] v5 = KingdomLifecycleWireCodec.GrowthV5PayloadFixture(growth);
-			Assert.AreEqual(KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.TerminalReceiptGrowthFormatVersion,
 				BitConverter.ToInt32(v5, 4));
 			KingdomGrowthBook restored = KingdomLifecycleWireCodec.ReadGrowthPayload(v5);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				restored.FormatVersion);
-			Assert.AreEqual(1, restored.ArrivalCandidate.FirstGuest.RulesVersion,
+			ClassicAssert.AreEqual(1, restored.ArrivalCandidate.FirstGuest.RulesVersion,
 				"v5 migration must retain historical rules rather than infer physical authority");
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.None,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.None,
 				restored.ArrivalCandidate.FirstGuest.GuestPhase);
-			Assert.AreEqual(-1L, restored.ArrivalCandidate.FirstGuest.GuestActionTick);
+			ClassicAssert.AreEqual(-1L, restored.ArrivalCandidate.FirstGuest.GuestActionTick);
 
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToHosted(growth, candidate, 122L);
 			Assert.Throws<InvalidDataException>(() =>
@@ -484,8 +485,8 @@ namespace ThousandAndFirst.Tests
 			Buffer.BlockCopy(BitConverter.GetBytes(
 				KingdomLifecycleRules.CurrentGrowthFormatVersion + 1), 0, future, 4, 4);
 			KingdomGrowthBook opaque = KingdomLifecycleWireCodec.ReadGrowthPayload(future);
-			Assert.IsTrue(opaque.Quarantined);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion + 1,
+			ClassicAssert.IsTrue(opaque.Quarantined);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion + 1,
 				opaque.OpaqueWireVersion);
 			CollectionAssert.AreEqual(future,
 				KingdomLifecycleWireCodec.GrowthPayloadForWrite(opaque));
@@ -496,7 +497,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
-			Assert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(growth, candidate, 121L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(growth, candidate, 121L));
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, 122L);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.Declined;
@@ -505,58 +506,58 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(operation, 0,
 					"first-guest-declined", null, null, null, null, null, null, null,
 					0, null, 0, null, 0, null, 0, null, 0, null, 0, null);
-			Assert.NotNull(notice); operation.OutboxEvents.Add(notice);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
-			Assert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(
+			ClassicAssert.NotNull(notice); operation.OutboxEvents.Add(notice);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(
 				growth, candidate, 123L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.ClockIntent, 124L));
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
 				operation.ClockLease.Before));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
 				operation.ClockLease.After));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Sinks, 125L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Terminal, 126L));
 			byte[] beforeWrongResident = Bytes(growth);
-			Assert.IsFalse(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
 				candidate, operation, 1, 127L));
 			CollectionAssert.AreEqual(beforeWrongResident, Bytes(growth));
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
 				candidate, operation, 0, 127L));
 			KingdomGrowthFirstGuestTerminalReceipt terminal = growth.FirstGuestTerminal;
-			Assert.AreEqual(candidate.Id, terminal.CandidateId);
-			Assert.AreEqual(operation.OutboxEvents[0].EventId, terminal.ArrivalOutboxEventId);
-			Assert.AreEqual(KingdomGrowthArrivalDisposition.Declined, terminal.Result);
-			Assert.IsTrue(KingdomLifecycleRules.ValidGrowthFirstGuestTerminal(growth, terminal));
+			ClassicAssert.AreEqual(candidate.Id, terminal.CandidateId);
+			ClassicAssert.AreEqual(operation.OutboxEvents[0].EventId, terminal.ArrivalOutboxEventId);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalDisposition.Declined, terminal.Result);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.ValidGrowthFirstGuestTerminal(growth, terminal));
 			byte[] frozen = Bytes(growth);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthFirstGuestTerminal(growth,
 				candidate, operation, 0, 999L));
 			CollectionAssert.AreEqual(frozen, Bytes(growth));
-			Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 128L));
-			Assert.IsTrue(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth, candidate));
-			Assert.NotNull(growth.FirstGuestTerminal);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 128L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth, candidate));
+			ClassicAssert.NotNull(growth.FirstGuestTerminal);
 			KingdomGrowthBook restored = RoundTrip(growth);
-			Assert.AreEqual(terminal.ReceiptId, restored.FirstGuestTerminal.ReceiptId);
-			Assert.AreEqual(terminal.ArrivalOutboxEventId,
+			ClassicAssert.AreEqual(terminal.ReceiptId, restored.FirstGuestTerminal.ReceiptId);
+			ClassicAssert.AreEqual(terminal.ArrivalOutboxEventId,
 				restored.FirstGuestTerminal.ArrivalOutboxEventId);
 
 			byte[] historicalGrowth = KingdomLifecycleWireCodec.GrowthV5PayloadFixture(restored);
 			KingdomGrowthBook migratedGrowth =
 				KingdomLifecycleWireCodec.ReadGrowthPayload(historicalGrowth);
-			Assert.AreEqual(KingdomGrowthFirstGuestTerminalReceipt.CurrentVersion,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestTerminalReceipt.CurrentVersion,
 				migratedGrowth.FirstGuestTerminal.Version);
-			Assert.AreEqual(1, migratedGrowth.FirstGuestTerminal.Opportunity.RulesVersion);
+			ClassicAssert.AreEqual(1, migratedGrowth.FirstGuestTerminal.Opportunity.RulesVersion);
 			KingdomLifecycleBook parent = EnabledParent(); parent.Growth = migratedGrowth;
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				SettlementWith(parent), out byte[] v15, out string failure), failure);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v15,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v15,
 				out KingdomSettlement archived, out int future, out failure), failure);
-			Assert.AreEqual(0, future);
-			Assert.AreEqual(KingdomGrowthFirstGuestTerminalReceipt.CurrentVersion,
+			ClassicAssert.AreEqual(0, future);
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestTerminalReceipt.CurrentVersion,
 				archived.LifecycleBook.Growth.FirstGuestTerminal.Version);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				archived, out byte[] repeatedV15, out failure), failure);
 			CollectionAssert.AreEqual(v15, repeatedV15);
 		}
@@ -565,10 +566,10 @@ namespace ThousandAndFirst.Tests
 		public void FirstGuestIsOneOwnedPersonNotAGeneralOrForeignArrivalState()
 		{
 			KingdomGrowthBook growth = EnabledGrowth();
-			Assert.IsNull(Prepare(growth, "snapjaw"));
+			ClassicAssert.IsNull(Prepare(growth, "snapjaw"));
 			growth.ArrivalCandidateNextSequence = 2L;
 			growth.ArrivalCandidateRetiredThrough = 1L;
-			Assert.IsNull(Prepare(growth));
+			ClassicAssert.IsNull(Prepare(growth));
 
 			growth = Published();
 			growth.ArrivalCandidate.FirstGuest.CohortSize = 2;
@@ -581,92 +582,92 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleBook parent = EnabledParent();
 			KingdomGrowthArrivalCandidate candidate = Prepare(parent.Growth);
 			candidate.FirstGuest.RulesVersion = 1;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				parent.Growth, candidate));
 			KingdomSettlement historicalFirstGuest = SettlementWith(parent);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				historicalFirstGuest, out byte[] v15, out string failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.FirstGuestVersion,
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.FirstGuestVersion,
 				BitConverter.ToInt32(v15, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v15,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v15,
 				out KingdomSettlement restoredV15, out int future, out failure), failure);
-			Assert.AreEqual(0, future);
-			Assert.AreEqual(candidate.FirstGuest.OpportunityId,
+			ClassicAssert.AreEqual(0, future);
+			ClassicAssert.AreEqual(candidate.FirstGuest.OpportunityId,
 				restoredV15.LifecycleBook.Growth.ArrivalCandidate.FirstGuest.OpportunityId);
-			Assert.AreEqual(1,
+			ClassicAssert.AreEqual(1,
 				restoredV15.LifecycleBook.Growth.ArrivalCandidate.FirstGuest.RulesVersion);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.None,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.None,
 				restoredV15.LifecycleBook.Growth.ArrivalCandidate.FirstGuest.GuestPhase);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				restoredV15.LifecycleBook.Growth.FormatVersion);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				restoredV15, out byte[] repeatedV15, out failure), failure);
 			CollectionAssert.AreEqual(v15, repeatedV15);
 
-			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
 				historicalFirstGuest, out byte[] _, out failure));
 			StringAssert.Contains("historical arrival phase", failure);
 
 			KingdomLifecycleBook physicalParent = EnabledParent();
 			KingdomGrowthArrivalCandidate physical = Prepare(physicalParent.Growth);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				physicalParent.Growth, physical));
 			KingdomExperienceBodyReservation body = Body(physical, 121L, 1L);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(
 				physicalParent.Growth, physical, body, 121L));
 			MoveCandidateToHosted(physicalParent.Growth, physical, 122L);
 			KingdomSettlement current = SettlementWith(physicalParent);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodePhysicalFirstGuestV16ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodePhysicalFirstGuestV16ForTests(
 				current, out byte[] v16, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.PhysicalFirstGuestVersion,
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.PhysicalFirstGuestVersion,
 				BitConverter.ToInt32(v16, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v16,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v16,
 				out KingdomSettlement restoredV16, out future, out failure), failure);
-			Assert.AreEqual(0, future);
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted,
+			ClassicAssert.AreEqual(0, future);
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.GuestHosted,
 				restoredV16.LifecycleBook.Growth.ArrivalCandidate.Phase);
-			Assert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestGuestPhase.Hosted,
 				restoredV16.LifecycleBook.Growth.ArrivalCandidate.FirstGuest.GuestPhase);
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Reserved,
 				restoredV16.LifecycleBook.Growth.ArrivalCandidate.FirstGuest.BodyLeaseState);
-			Assert.IsTrue(restoredV16.LifecycleBook.Growth.ArrivalCadenceMigrationPending);
-			Assert.AreEqual(1UL,
+			ClassicAssert.IsTrue(restoredV16.LifecycleBook.Growth.ArrivalCadenceMigrationPending);
+			ClassicAssert.AreEqual(1UL,
 				restoredV16.LifecycleBook.Growth.ArrivalOrdinalHighWater);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(current,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(current,
 				out byte[] v18, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
 				BitConverter.ToInt32(v18, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement restoredV18, out future, out failure), failure);
-			Assert.AreEqual(physical.ArrivalOpportunityOrdinal,
+			ClassicAssert.AreEqual(physical.ArrivalOpportunityOrdinal,
 				restoredV18.LifecycleBook.Growth.ArrivalCandidate.ArrivalOpportunityOrdinal);
-			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.TryEncodeFirstGuestV15ForTests(
 				current, out byte[] _, out failure));
 			StringAssert.Contains("historical physical", failure);
 
 			byte[] futurePayload = (byte[])v18.Clone();
 			Buffer.BlockCopy(BitConverter.GetBytes(
 				KingdomArchivedSettlementCodec.CurrentVersion + 1), 0, futurePayload, 4, 4);
-			Assert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(futurePayload,
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.TryDecode(futurePayload,
 				out KingdomSettlement futureSettlement, out future, out failure));
-			Assert.IsNull(futureSettlement);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion + 1, future);
+			ClassicAssert.IsNull(futureSettlement);
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion + 1, future);
 
 			KingdomGrowthBook historicalGrowth = KingdomLifecycleWireCodec.ReadGrowthPayload(
 				KingdomLifecycleWireCodec.GrowthV3PayloadFixture(parent.Growth));
 			KingdomLifecycleBook historicalParent = EnabledParent();
 			historicalParent.Growth = historicalGrowth;
 			KingdomSettlement historical = SettlementWith(historicalParent);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
 				historical, out byte[] v14, out failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.CivicAuthorityVersion,
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.CivicAuthorityVersion,
 				BitConverter.ToInt32(v14, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v14,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v14,
 				out KingdomSettlement migrated, out future, out failure), failure);
-			Assert.IsTrue(migrated.LifecycleBook.Growth.ArrivalCandidate
+			ClassicAssert.IsTrue(migrated.LifecycleBook.Growth.ArrivalCandidate
 				.LegacyAutomaticRecovery);
-			Assert.IsNull(migrated.LifecycleBook.Growth.ArrivalCandidate.FirstGuest);
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
+			ClassicAssert.IsNull(migrated.LifecycleBook.Growth.ArrivalCandidate.FirstGuest);
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncodeCivicAuthorityV14ForTests(
 				migrated, out byte[] repeated, out failure), failure);
 			CollectionAssert.AreEqual(v14, repeated);
 		}
@@ -676,37 +677,37 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = Published();
 			RetireDeclinedFirstGuest(growth);
-			Assert.AreEqual(2L, growth.ArrivalCandidateNextSequence);
-			Assert.AreEqual(2L, growth.ArrivalNextSequence);
+			ClassicAssert.AreEqual(2L, growth.ArrivalCandidateNextSequence);
+			ClassicAssert.AreEqual(2L, growth.ArrivalNextSequence);
 			KingdomGrowthArrivalCandidate candidate = PrepareOrdinary(growth,
 				growth.NextArrivalTick);
-			Assert.NotNull(candidate);
-			Assert.AreEqual(2L, candidate.Sequence);
-			Assert.IsNull(candidate.FirstGuest);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth,
+			ClassicAssert.NotNull(candidate);
+			ClassicAssert.AreEqual(2L, candidate.Sequence);
+			ClassicAssert.IsNull(candidate.FirstGuest);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(growth,
 				candidate));
-			Assert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
 				growth, candidate), "ordinary arrivals never acquire a W0 body lease");
 
 			MoveCandidateToObserved(growth, candidate, true, growth.NextArrivalTick);
 			KingdomGrowthOperation operation = JoinedOperation(growth, candidate, 145L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.WaterIntent, 146L));
 			ProveWater(growth, operation, 0);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.WaterSettled, 147L));
 			SettleCandidateDisposition(growth, candidate, operation, true, 148L);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.DomainIntent, 150L));
 			for (int i = 0; i < operation.DomainSteps.Count; i++)
 				ProveDomain(growth, operation, i);
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.DomainSettled, 151L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
-			Assert.AreEqual(5, operation.DomainCursor);
-			Assert.IsNull(candidate.FirstGuest);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(growth,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.Settled, candidate.Phase);
+			ClassicAssert.AreEqual(5, operation.DomainCursor);
+			ClassicAssert.IsNull(candidate.FirstGuest);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(growth,
 				growth.SettlementId));
 		}
 
@@ -717,30 +718,30 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleWireCodec.GrowthV3PayloadFixture(Published()));
 			KingdomGrowthArrivalCandidate candidate = legacy.ArrivalCandidate;
 			byte[] beforeWrongZone = Bytes(legacy);
-			Assert.IsFalse(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(candidate,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(candidate,
 				"zone-other"));
 			CollectionAssert.AreEqual(beforeWrongZone, Bytes(legacy));
-			Assert.IsTrue(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(candidate,
 				"zone-first"));
-			Assert.IsTrue(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(legacy,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryInterposeLegacyPreparedFirstGuest(legacy,
 				candidate, true, true, true, true, true, 130L));
-			Assert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
+			ClassicAssert.AreEqual(KingdomGrowthArrivalCandidatePhase.AwaitingChoice,
 				candidate.Phase, "the bound zone may run the exact five-proof recovery");
 
 			KingdomGrowthBook v1Source = EnabledGrowth();
 			KingdomGrowthArrivalCandidate current = PrepareOrdinary(v1Source,
 				v1Source.NextArrivalTick);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(v1Source,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(v1Source,
 				current));
 			KingdomGrowthBook v1 = KingdomLifecycleWireCodec.ReadGrowthPayload(
 				KingdomLifecycleWireCodec.GrowthV1PayloadFixture(v1Source));
-			Assert.IsTrue(v1.ArrivalCandidate.LegacyGrowthV1UnboundZone);
-			Assert.IsNull(v1.ArrivalCandidate.LodgingZoneId);
-			Assert.IsTrue(KingdomLifecycleRules.BindLegacyGrowthArrivalCandidateZone(v1,
+			ClassicAssert.IsTrue(v1.ArrivalCandidate.LegacyGrowthV1UnboundZone);
+			ClassicAssert.IsNull(v1.ArrivalCandidate.LodgingZoneId);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindLegacyGrowthArrivalCandidateZone(v1,
 				v1.ArrivalCandidate, "zone-current", 130L));
-			Assert.IsTrue(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(
 				v1.ArrivalCandidate, "zone-current"));
-			Assert.IsFalse(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthArrivalCandidateBoundToZone(
 				v1.ArrivalCandidate, "zone-other"));
 		}
 
@@ -750,33 +751,33 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook growth = EnabledGrowth();
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, growth.NextArrivalTick);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.NoGround;
 			KingdomGrowthOutboxEvent notice =
 				KingdomLifecycleRules.PrepareDeclaredGrowthOutboxEvent(operation, 0,
 					"v2-rich", "chronicle", "official chronicle", "outsider chronicle",
 					"ledger", null, null, null, 0, Digest('1'), 1, Digest('2'),
 					0, Digest('3'), 1, Digest('4'), 0, Digest('5'), 1, Digest('6'));
-			Assert.NotNull(notice);
+			ClassicAssert.NotNull(notice);
 			operation.OutboxEvents.Add(notice);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
 
 			byte[] v2 = KingdomLifecycleWireCodec.GrowthV2PayloadFixture(growth);
-			Assert.AreEqual(KingdomLifecycleRules.PreviousGrowthFormatVersion,
+			ClassicAssert.AreEqual(KingdomLifecycleRules.PreviousGrowthFormatVersion,
 				BitConverter.ToInt32(v2, 4));
 			KingdomGrowthBook loaded = KingdomLifecycleWireCodec.ReadGrowthPayload(v2);
-			Assert.IsFalse(loaded.Quarantined, loaded.Fault);
-			Assert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
+			ClassicAssert.IsFalse(loaded.Quarantined, loaded.Fault);
+			ClassicAssert.AreEqual(KingdomLifecycleRules.CurrentGrowthFormatVersion,
 				loaded.FormatVersion);
-			Assert.AreEqual("official chronicle",
+			ClassicAssert.AreEqual("official chronicle",
 				loaded.ArrivalOp.OutboxEvents[0].ChronicleOfficial);
-			Assert.AreEqual("outsider chronicle",
+			ClassicAssert.AreEqual("outsider chronicle",
 				loaded.ArrivalOp.OutboxEvents[0].ChronicleOutsider);
-			Assert.AreEqual(Digest('4'),
+			ClassicAssert.AreEqual(Digest('4'),
 				loaded.ArrivalOp.OutboxEvents[0].OutsiderDeclaredAfterHash);
 			KingdomGrowthBook current = RoundTrip(loaded);
-			Assert.IsFalse(current.Quarantined, current.Fault);
-			Assert.AreEqual(1, current.ArrivalOp.OutboxEvents.Count);
+			ClassicAssert.IsFalse(current.Quarantined, current.Fault);
+			ClassicAssert.AreEqual(1, current.ArrivalOp.OutboxEvents.Count);
 		}
 
 		[TestCase(false)]
@@ -788,49 +789,49 @@ namespace ThousandAndFirst.Tests
 			KingdomExperienceLedger experience = Experience();
 			KingdomExperienceBodyReservation body = Body(candidate, 121L, 1L);
 			Reserve(experience, body);
-			Assert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(growth, candidate,
 				body, 121L));
 			MoveCandidateToObserved(growth, candidate, joined, 122L);
 			KingdomGrowthOperation operation = joined
 				? JoinedOperation(growth, candidate, 126L)
 				: RefusedOperation(growth, candidate, 126L);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
 			if (joined)
 			{
-				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 					KingdomGrowthPhase.WaterIntent, 127L));
 				ProveWater(growth, operation, 0);
-				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 					KingdomGrowthPhase.WaterSettled, 128L));
 				SettleCandidateDisposition(growth, candidate, operation, true, 129L);
-				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 					KingdomGrowthPhase.DomainIntent, 131L));
 				for (int i = 0; i < operation.DomainSteps.Count; i++)
 					ProveDomain(growth, operation, i);
-				Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 					KingdomGrowthPhase.DomainSettled, 132L));
 			}
 			else SettleCandidateDisposition(growth, candidate, operation, false, 127L);
-			Assert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestBodyReleaseReady(growth,
 				candidate));
 
-			Assert.IsTrue(KingdomExperienceRules.TryReleaseBodies(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReleaseBodies(experience,
 				experience.Revision, body.ReservationId, body.SourceId,
 				out KingdomExperienceCapacityFault _, out string failure), failure);
 			Reserve(experience, OtherBody("cut-seven", 7));
 			Reserve(experience, OtherBody("cut-fourteen", 7));
 			Reserve(experience, OtherBody("cut-sixteen", 2));
-			Assert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
-			Assert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
+			ClassicAssert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestBodyLeaseRecoveryRequired(
 				growth, candidate), "release-ready recovery must not recreate a missing lease");
-			Assert.IsTrue(KingdomExperienceRules.TryReleaseBodies(experience,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReleaseBodies(experience,
 				experience.Revision, body.ReservationId, body.SourceId,
 				out KingdomExperienceCapacityFault _, out failure), failure);
-			Assert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryMarkGrowthFirstGuestBodyReleased(growth,
 				candidate, body.ReservationId, 200L));
-			Assert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Released,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestBodyLeaseState.Released,
 				candidate.FirstGuest.BodyLeaseState);
-			Assert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
+			ClassicAssert.AreEqual(16, KingdomExperienceRules.ReservedBodies(experience));
 		}
 
 		[Test]
@@ -838,7 +839,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = Published();
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
-			Assert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(growth, candidate,
 				121L));
 			KingdomExperienceLedger experience = Experience();
 			byte[] growthBefore = Bytes(growth);
@@ -852,44 +853,44 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < changed.Length; i++)
 			{
 				int[] facts = changed[i];
-				Assert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
+				ClassicAssert.IsFalse(KingdomLifecycleRules.TryCheckGrowthFirstGuestCurrentApplicability(
 					growth, candidate, facts[0], facts[1], facts[2], facts[3], facts[4],
 					facts[5], out string failure), "changed fact " + i);
-				Assert.IsNotEmpty(failure);
+				ClassicAssert.IsNotEmpty(failure);
 				CollectionAssert.AreEqual(growthBefore, Bytes(growth), "Growth " + i);
 				CollectionAssert.AreEqual(experienceBefore,
 					KingdomExperienceCodec.EncodeEnvelope(experience), "W0 " + i);
 			}
-			Assert.AreEqual(KingdomGrowthFirstGuestChoiceState.Deferred,
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestChoiceState.Deferred,
 				candidate.FirstGuest.ChoiceState);
-			Assert.AreEqual(0, experience.BodyReservations.Count);
+			ClassicAssert.AreEqual(0, experience.BodyReservations.Count);
 		}
 
 		private static void RetireDeclinedFirstGuest(KingdomGrowthBook growth)
 		{
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
-			Assert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(growth, candidate,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(growth, candidate,
 				121L));
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, 122L);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.Declined;
 			operation.ArrivalCandidateId = candidate.Id;
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
-			Assert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowth(growth, operation));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindDeclinedFirstGuestOperation(growth,
 				candidate, 122L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.ClockIntent, 123L));
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthClock(growth, operation,
 				operation.ClockLease.Before));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthClockWitness(growth, operation,
 				operation.ClockLease.After));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Sinks, 124L));
-			Assert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvanceGrowthPhase(growth, operation,
 				KingdomGrowthPhase.Terminal, 125L));
-			Assert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 126L));
-			Assert.IsTrue(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireGrowth(growth, operation, 126L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RetireGrowthArrivalCandidate(growth,
 				candidate));
 		}
 
@@ -908,23 +909,23 @@ namespace ThousandAndFirst.Tests
 		private static void MoveCandidateToObserved(KingdomGrowthBook growth,
 			KingdomGrowthArrivalCandidate candidate, bool joined, long tick)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
 				candidate, tick));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
 				candidate, "taf:object:" + candidate.Sequence, Digest('4'), Digest('5'),
 				Digest('6'), Digest('7'), true, tick + 1L));
 			if (candidate.FirstGuest?.RulesVersion == 2)
 			{
-				Assert.IsTrue(KingdomLifecycleRules.TryHostGrowthFirstGuest(growth,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryHostGrowthFirstGuest(growth,
 					candidate, tick + 1L));
-				Assert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth,
 					candidate, tick + 1L));
-				Assert.IsTrue(KingdomLifecycleRules.TryPrepareGrowthFirstGuestCitizenship(growth,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.TryPrepareGrowthFirstGuestCitizenship(growth,
 					candidate, tick + 1L));
 			}
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalLodgingObservation(growth,
 				candidate, "zone-first", 4, 5, Digest('8'), tick + 2L));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalLodgingObservation(growth,
 				candidate, joined ? KingdomGrowthArrivalDisposition.Joined
 					: KingdomGrowthArrivalDisposition.NoAcceptableHome,
 				joined ? KingdomGrowthArrivalRefusalReason.None
@@ -935,12 +936,12 @@ namespace ThousandAndFirst.Tests
 		private static void MoveCandidateToHosted(KingdomGrowthBook growth,
 			KingdomGrowthArrivalCandidate candidate, long tick)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateCreate(growth,
 				candidate, tick));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateCreate(growth,
 				candidate, "taf:object:" + candidate.Sequence, Digest('4'), Digest('5'),
 				Digest('6'), Digest('7'), true, tick + 1L));
-			Assert.IsTrue(KingdomLifecycleRules.TryHostGrowthFirstGuest(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryHostGrowthFirstGuest(growth,
 				candidate, tick + 1L));
 		}
 
@@ -949,7 +950,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, tick);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.Joined;
 			operation.ArrivalCandidateId = candidate.Id;
 			operation.TargetId = candidate.ObjectId;
@@ -995,7 +996,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthOperation operation = KingdomLifecycleRules.PrepareGrowthOperation(
 				growth, KingdomGrowthAction.Arrival, null, tick);
-			Assert.NotNull(operation);
+			ClassicAssert.NotNull(operation);
 			operation.ArrivalDisposition = KingdomGrowthArrivalDisposition.NoAcceptableHome;
 			operation.ArrivalCandidateId = candidate.Id;
 			return operation;
@@ -1005,7 +1006,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthArrivalCandidate candidate, KingdomGrowthOperation operation,
 			bool joined, long tick)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateDisposition(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthArrivalCandidateDisposition(growth,
 				candidate, operation.Id, joined ? KingdomGrowthObjectMutationKind.CellAdd
 					: KingdomGrowthObjectMutationKind.Obliterate,
 				joined ? KingdomGrowthLocationKind.Cell : KingdomGrowthLocationKind.Graveyard,
@@ -1013,7 +1014,7 @@ namespace ThousandAndFirst.Tests
 				joined ? candidate.LodgingX : -1, joined ? candidate.LodgingY : -1,
 				Digest('1'), Digest('2'), Digest('3'), Digest('4'), Digest('5'), Digest('6'),
 				tick));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateDisposition(growth,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthArrivalCandidateDisposition(growth,
 				candidate, Digest('7'), joined, tick + 1L));
 		}
 
@@ -1025,7 +1026,7 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleTopology.Cell, null, "Waterskin", "zone-first", 1, 1,
 				10, 4, 2, "fresh", "fresh", Digest('1'), Digest('2'), Digest('3'),
 				Digest('4'), Digest('5'), Digest('6'));
-			Assert.NotNull(leg); return leg;
+			ClassicAssert.NotNull(leg); return leg;
 		}
 
 		private static KingdomGrowthDomainStep Domain(KingdomGrowthBook growth,
@@ -1036,7 +1037,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthDomainStep step = KingdomLifecycleRules.PrepareGrowthDomainStep(growth,
 				operation, kind, callback, actor, subject, before, after, Digest('1'),
 				Digest('2'), Digest('3'), Digest('4'), Digest('5'));
-			Assert.NotNull(step); return step;
+			ClassicAssert.NotNull(step); return step;
 		}
 
 		private static KingdomGrowthDomainStep Accounting(KingdomGrowthBook growth,
@@ -1048,16 +1049,16 @@ namespace ThousandAndFirst.Tests
 				KingdomGrowthDomainCallbackKind.AccountingSet, growth.SettlementId,
 				growth.SettlementId, operation.Sequence - 1L, operation.Sequence, Digest('1'),
 				Digest('2'), Digest('3'), Digest('4'), Digest('5'), null, null, before, after);
-			Assert.NotNull(step); return step;
+			ClassicAssert.NotNull(step); return step;
 		}
 
 		private static void ProveWater(KingdomGrowthBook growth,
 			KingdomGrowthOperation operation, int ordinal)
 		{
 			KingdomGrowthWaterLeg leg = operation.WaterLegs[ordinal];
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthWaterCallback(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthWaterCallback(growth, operation,
 				ordinal));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthWaterCallback(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthWaterCallback(growth, operation,
 				ordinal, leg.ContainerId, Digest('a'), true, leg.AfterOwnerGraphHash,
 				leg.AfterPartGraphHash, leg.AfterTopologyHash));
 		}
@@ -1066,9 +1067,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthOperation operation, int ordinal)
 		{
 			KingdomGrowthDomainStep step = operation.DomainSteps[ordinal];
-			Assert.IsTrue(KingdomLifecycleRules.BeginGrowthDomainCallback(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BeginGrowthDomainCallback(growth, operation,
 				ordinal));
-			Assert.IsTrue(KingdomLifecycleRules.CommitGrowthDomainCallback(growth, operation,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CommitGrowthDomainCallback(growth, operation,
 				ordinal, step.AfterValue, step.AfterGraphHash, step.AfterMapHash, null, null));
 		}
 
@@ -1091,10 +1092,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGrowthBook growth = EnabledGrowth();
 			KingdomGrowthArrivalCandidate candidate = Prepare(growth);
-			Assert.NotNull(candidate);
-			Assert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
+			ClassicAssert.NotNull(candidate);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				growth, candidate));
-			Assert.AreEqual(1UL, growth.ArrivalOrdinalHighWater,
+			ClassicAssert.AreEqual(1UL, growth.ArrivalOrdinalHighWater,
 				"historical-cadence publication must atomically cover its live candidate");
 			return growth;
 		}
@@ -1112,7 +1113,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomLifecycleBook EnabledParent()
 		{
 			KingdomLifecycleBook source = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(source, Settlement,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(source, Settlement,
 				false, null, new List<string>()));
 			byte[] v5;
 			using (MemoryStream stream = new MemoryStream())
@@ -1129,7 +1130,7 @@ namespace ThousandAndFirst.Tests
 						HasNow = true, Now = 100L, OptionEnabled = true,
 						ScarcityEnabled = false, Healthy = true, ArrivalIntervalTicks = 20L
 					});
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(parent));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnGrowthAuthority(parent));
 			return parent;
 		}
 
@@ -1244,9 +1245,9 @@ namespace ThousandAndFirst.Tests
 		private static KingdomExperienceLedger Experience()
 		{
 			KingdomExperienceLedger value = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(value, Realm,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(value, Realm,
 				out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(value, value.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(value, value.Revision,
 				true, true, true, 10L, out failure), failure);
 			return value;
 		}
@@ -1254,7 +1255,7 @@ namespace ThousandAndFirst.Tests
 		private static void Reserve(KingdomExperienceLedger ledger,
 			KingdomExperienceBodyReservation row)
 		{
-			Assert.IsTrue(KingdomExperienceRules.TryReserveBodies(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveBodies(ledger, ledger.Revision,
 				row, 0, out KingdomExperienceCapacityFault _, out string failure), failure);
 		}
 	}

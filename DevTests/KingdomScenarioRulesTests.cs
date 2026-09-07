@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -72,7 +73,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
+			ClassicAssert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
 				out plan, out failure), failure);
 			return plan;
 		}
@@ -83,19 +84,19 @@ namespace ThousandAndFirst.Tests
 		public void SoundDefinitionPlansWithResolvedArgumentsAndAnExactVerbSequence()
 		{
 			KingdomScenarioPlan plan = Plan(Sound(), Facing("north"));
-			Assert.AreEqual("provecatalogue+stagegallerycase", plan.Verbs);
-			Assert.AreEqual(2, plan.Steps.Count);
-			Assert.AreEqual("architecture", plan.Steps[0].Arguments["Catalogue"]);
-			Assert.AreEqual("architecture", plan.Steps[1].Arguments["Suite"]);
-			Assert.AreEqual("north", plan.Steps[1].Arguments["Facing"]);
-			Assert.AreEqual("north", plan.Bindings["facing"]);
-			Assert.IsFalse(plan.Synthetic);
+			ClassicAssert.AreEqual("provecatalogue+stagegallerycase", plan.Verbs);
+			ClassicAssert.AreEqual(2, plan.Steps.Count);
+			ClassicAssert.AreEqual("architecture", plan.Steps[0].Arguments["Catalogue"]);
+			ClassicAssert.AreEqual("architecture", plan.Steps[1].Arguments["Suite"]);
+			ClassicAssert.AreEqual("north", plan.Steps[1].Arguments["Facing"]);
+			ClassicAssert.AreEqual("north", plan.Bindings["facing"]);
+			ClassicAssert.IsFalse(plan.Synthetic);
 		}
 
 		[Test]
 		public void SoundDefinitionHasNoValidationFindings()
 		{
-			Assert.IsEmpty(KingdomScenarioRules.Validate(
+			ClassicAssert.IsEmpty(KingdomScenarioRules.Validate(
 				new List<KingdomScenarioDefinition> { Sound() }));
 		}
 
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("argument '" + missing + "' is required", findings);
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 		}
 
@@ -122,9 +123,9 @@ namespace ThousandAndFirst.Tests
 		{
 			bool synthetic;
 			string failure;
-			Assert.IsTrue(KingdomScenarioVerbSchema.TryParseSynthetic(raw, out synthetic,
+			ClassicAssert.IsTrue(KingdomScenarioVerbSchema.TryParseSynthetic(raw, out synthetic,
 				out failure), failure);
-			Assert.AreEqual(expected, synthetic);
+			ClassicAssert.AreEqual(expected, synthetic);
 		}
 
 		[TestCase(null)]
@@ -138,18 +139,18 @@ namespace ThousandAndFirst.Tests
 		{
 			bool synthetic;
 			string failure;
-			Assert.IsFalse(KingdomScenarioVerbSchema.TryParseSynthetic(raw, out synthetic,
+			ClassicAssert.IsFalse(KingdomScenarioVerbSchema.TryParseSynthetic(raw, out synthetic,
 				out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 			KingdomScenarioDefinition definition = Sound();
 			definition.SyntheticRaw = raw;
-			Assert.IsNotEmpty(KingdomScenarioRules.Validate(
+			ClassicAssert.IsNotEmpty(KingdomScenarioRules.Validate(
 				new List<KingdomScenarioDefinition> { definition }));
 			KingdomScenarioPlan plan;
 			string planFailure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out planFailure), "a malformed Synthetic row must not realize");
-			Assert.IsNull(plan);
+			ClassicAssert.IsNull(plan);
 		}
 
 		// ----- closed argument schema -------------------------------------------------------
@@ -161,7 +162,7 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[0].Arguments["Rogue"] = "value";
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("not admitted by this verb", failure);
 		}
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[0].Arguments.Clear();
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("is required", failure);
 		}
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[1].Arguments["Suite"] = "Not A Token";
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("malformed value", failure);
 		}
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioDefinition definition = Sound();
 			definition.Steps[1].Arguments["Facing"] = "{facing}";
 			KingdomScenarioPlan plan = Plan(definition, Facing("east"));
-			Assert.AreEqual("east", plan.Steps[1].Arguments["Facing"],
+			ClassicAssert.AreEqual("east", plan.Steps[1].Arguments["Facing"],
 				"the plan must hold the resolved value, never the reference");
 		}
 
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[1].Arguments["Facing"] = "{nosuch}";
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("undeclared parameter", failure);
 		}
@@ -219,7 +220,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), null, Digest, Seed, out plan,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), null, Digest, Seed, out plan,
 				out failure));
 			StringAssert.Contains("needs a value", failure);
 		}
@@ -229,7 +230,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("skyward"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("skyward"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("is not a declared value", failure);
 		}
@@ -241,7 +242,7 @@ namespace ThousandAndFirst.Tests
 			selection["rogue"] = "value";
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), selection, Digest, Seed, out plan,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), selection, Digest, Seed, out plan,
 				out failure));
 			StringAssert.Contains("declares no parameter", failure);
 		}
@@ -253,9 +254,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(null, Facing("north"), Digest, Seed, out plan,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(null, Facing("north"), Digest, Seed, out plan,
 				out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -265,9 +266,9 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[0] = null;
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -277,9 +278,9 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[0].Arguments = null;
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -289,7 +290,7 @@ namespace ThousandAndFirst.Tests
 			definition.Steps[0].Verb = KingdomScenarioVerb.None;
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 			StringAssert.Contains("admitted verb", failure);
 		}
@@ -299,7 +300,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), "deadbeef", Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), "deadbeef", Seed,
 				out plan, out failure));
 			StringAssert.Contains("digest is malformed", failure);
 		}

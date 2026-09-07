@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -39,9 +40,9 @@ namespace ThousandAndFirst.Tests
 			AssertEnum(typeof(KingdomSweepVerdict),
 				new[] { "NotTransient", "Bound", "Stale" }, new byte[] { 0, 1, 2 });
 
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBinding", typeof(KingdomBinding).FullName);
-			Assert.IsFalse(typeof(KingdomBinding).IsPublic);
-			Assert.IsTrue(typeof(KingdomBinding).IsValueType);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBinding", typeof(KingdomBinding).FullName);
+			ClassicAssert.IsFalse(typeof(KingdomBinding).IsPublic);
+			ClassicAssert.IsTrue(typeof(KingdomBinding).IsValueType);
 			FieldInfo[] rowFields = typeof(KingdomBinding).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 			Array.Sort(rowFields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
 			CollectionAssert.AreEqual(new[] { "BindingKey", "Kind", "ZoneId", "ObjectId", "MintedTick" },
@@ -49,44 +50,44 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { typeof(int), typeof(KingdomBindingKind), typeof(string), typeof(string), typeof(long) },
 				Array.ConvertAll(rowFields, field => field.FieldType));
 			foreach (FieldInfo field in rowFields)
-				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
+				ClassicAssert.IsTrue(field.IsAssembly && field.IsInitOnly, field.Name);
 
 			Type registryType = typeof(KingdomBindingRegistry);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBindingRegistry", registryType.FullName);
-			Assert.IsTrue(registryType.IsPublic);
-			Assert.IsTrue(Attribute.IsDefined(registryType, typeof(SerializableAttribute)));
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomBindingRegistry", registryType.FullName);
+			ClassicAssert.IsTrue(registryType.IsPublic);
+			ClassicAssert.IsTrue(Attribute.IsDefined(registryType, typeof(SerializableAttribute)));
 			FieldInfo[] columns = registryType.GetFields(BindingFlags.Instance | BindingFlags.Public);
 			Array.Sort(columns, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
 			CollectionAssert.AreEqual(new[] { "Keys", "Kinds", "ZoneIds", "ObjectIds", "MintedTicks" },
 				Array.ConvertAll(columns, field => field.Name));
 			CollectionAssert.AreEqual(new[] { typeof(List<int>), typeof(List<int>), typeof(List<string>), typeof(List<string>), typeof(List<long>) },
 				Array.ConvertAll(columns, field => field.FieldType));
-			foreach (FieldInfo field in columns) Assert.IsFalse(field.IsInitOnly, field.Name);
+			foreach (FieldInfo field in columns) ClassicAssert.IsFalse(field.IsInitOnly, field.Name);
 			KingdomBindingRegistry registry = new KingdomBindingRegistry();
-			Assert.AreEqual(0, registry.Count);
-			Assert.AreEqual(0, registry.Keys.Count);
-			Assert.AreEqual(0, registry.Kinds.Count);
-			Assert.AreEqual(0, registry.ZoneIds.Count);
-			Assert.AreEqual(0, registry.ObjectIds.Count);
-			Assert.AreEqual(0, registry.MintedTicks.Count);
+			ClassicAssert.AreEqual(0, registry.Count);
+			ClassicAssert.AreEqual(0, registry.Keys.Count);
+			ClassicAssert.AreEqual(0, registry.Kinds.Count);
+			ClassicAssert.AreEqual(0, registry.ZoneIds.Count);
+			ClassicAssert.AreEqual(0, registry.ObjectIds.Count);
+			ClassicAssert.AreEqual(0, registry.MintedTicks.Count);
 		}
 
 		[Test]
 		public void LogicalSourceKeepsTopLevelIdentitiesAndRegistryOrder()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(1, Count(source, "public enum KingdomBindingKind : byte"));
-			Assert.AreEqual(1, Count(source, "public enum KingdomUnbindCause : byte"));
-			Assert.AreEqual(1, Count(source, "public enum KingdomBodyPresence : byte"));
-			Assert.AreEqual(1, Count(source, "public enum KingdomBindingVerdict : byte"));
-			Assert.AreEqual(1, Count(source, "public enum KingdomSweepVerdict : byte"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomBinding"));
-			Assert.AreEqual(1, Count(source, "internal static class KingdomBindingRules"));
-			Assert.AreEqual(1, Count(source, "internal sealed class KingdomBindingTable"));
-			Assert.AreEqual(1, Count(source, "public class KingdomBindingRegistry"));
-			Assert.Less(source.IndexOf("internal static KingdomBindingVerdict Judge", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(1, Count(source, "public enum KingdomBindingKind : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "public enum KingdomUnbindCause : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "public enum KingdomBodyPresence : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "public enum KingdomBindingVerdict : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "public enum KingdomSweepVerdict : byte"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomBinding"));
+			ClassicAssert.AreEqual(1, Count(source, "internal static class KingdomBindingRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal sealed class KingdomBindingTable"));
+			ClassicAssert.AreEqual(1, Count(source, "public class KingdomBindingRegistry"));
+			ClassicAssert.Less(source.IndexOf("internal static KingdomBindingVerdict Judge", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryCreate", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryCreate", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryCreate", StringComparison.Ordinal),
 				source.IndexOf("public void Normalize", StringComparison.Ordinal));
 		}
 
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomBindingTable.Empty.TryBind(key, kind, zone, "obj-" + key, 700L, out next, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomBindingTable.Empty.TryBind(key, kind, zone, "obj-" + key, 700L, out next, out fault), fault.ToString());
 			return next;
 		}
 
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomBindingKind.Transient, KingdomBodyPresence.Frozen, KingdomBindingVerdict.Refuse)]
 		public void CheckBeforeMintAnswersExactlyWhatTheConstitutionTabulates(KingdomBindingKind kind, KingdomBodyPresence presence, KingdomBindingVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomBindingRules.Judge(kind, presence));
+			ClassicAssert.AreEqual(expected, KingdomBindingRules.Judge(kind, presence));
 		}
 
 		/// <summary>
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 				for (int presence = 0; presence <= 8; presence++)
 				{
 					KingdomBindingVerdict verdict = KingdomBindingRules.Judge(kind, (KingdomBodyPresence)presence);
-					Assert.AreEqual(presence == (int)KingdomBodyPresence.None, KingdomBindingRules.Mints(verdict),
+					ClassicAssert.AreEqual(presence == (int)KingdomBodyPresence.None, KingdomBindingRules.Mints(verdict),
 						"presence " + presence + " of a " + kind + " minted when it should not have");
 				}
 			}
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void APresenceThisBuildHasNoWordForRefuses()
 		{
-			Assert.AreEqual(KingdomBindingVerdict.Refuse, KingdomBindingRules.Judge(KingdomBindingKind.Resident, (KingdomBodyPresence)200));
+			ClassicAssert.AreEqual(KingdomBindingVerdict.Refuse, KingdomBindingRules.Judge(KingdomBindingKind.Resident, (KingdomBodyPresence)200));
 		}
 
 		// ---- The table --------------------------------------------------------------------
@@ -151,11 +152,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomBinding binding;
-			Assert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
-			Assert.AreEqual(Here, binding.ZoneId);
-			Assert.AreEqual("obj-7", binding.ObjectId);
-			Assert.AreEqual(700L, binding.MintedTick);
-			Assert.IsFalse(table.TryGet(8, KingdomBindingKind.Resident, out binding));
+			ClassicAssert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
+			ClassicAssert.AreEqual(Here, binding.ZoneId);
+			ClassicAssert.AreEqual("obj-7", binding.ObjectId);
+			ClassicAssert.AreEqual(700L, binding.MintedTick);
+			ClassicAssert.IsFalse(table.TryGet(8, KingdomBindingKind.Resident, out binding));
 		}
 
 		/// <summary>
@@ -169,14 +170,14 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomBindingTable both;
 			KingdomCityFault fault;
-			Assert.IsTrue(table.TryBind(7, KingdomBindingKind.Transient, Next, "porter", 800L, out both, out fault), fault.ToString());
-			Assert.AreEqual(2, both.Count);
+			ClassicAssert.IsTrue(table.TryBind(7, KingdomBindingKind.Transient, Next, "porter", 800L, out both, out fault), fault.ToString());
+			ClassicAssert.AreEqual(2, both.Count);
 			KingdomBinding person;
 			KingdomBinding porter;
-			Assert.IsTrue(both.TryGet(7, KingdomBindingKind.Resident, out person));
-			Assert.IsTrue(both.TryGet(7, KingdomBindingKind.Transient, out porter));
-			Assert.AreEqual(Here, person.ZoneId);
-			Assert.AreEqual(Next, porter.ZoneId);
+			ClassicAssert.IsTrue(both.TryGet(7, KingdomBindingKind.Resident, out person));
+			ClassicAssert.IsTrue(both.TryGet(7, KingdomBindingKind.Transient, out porter));
+			ClassicAssert.AreEqual(Here, person.ZoneId);
+			ClassicAssert.AreEqual(Next, porter.ZoneId);
 		}
 
 		/// <summary>Invariant I3 at the door: binding a key that is already bound is refused rather
@@ -188,12 +189,12 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomBindingTable next;
 			KingdomCityFault fault;
-			Assert.IsFalse(table.TryBind(7, KingdomBindingKind.Resident, Next, "impostor", 900L, out next, out fault));
-			Assert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
-			Assert.IsNull(next, "a refused bind must publish nothing");
+			ClassicAssert.IsFalse(table.TryBind(7, KingdomBindingKind.Resident, Next, "impostor", 900L, out next, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
+			ClassicAssert.IsNull(next, "a refused bind must publish nothing");
 			KingdomBinding binding;
-			Assert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
-			Assert.AreEqual(Here, binding.ZoneId);
+			ClassicAssert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
+			ClassicAssert.AreEqual(Here, binding.ZoneId);
 		}
 
 		/// <summary>A key of zero is not an identity, and a table cannot be built out of one.</summary>
@@ -202,12 +203,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable table;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomBindingTable.Empty.TryBind(0, KingdomBindingKind.Resident, Here, "nobody", 700L, out table, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
-			Assert.IsFalse(KingdomBindingTable.TryCreate(
+			ClassicAssert.IsFalse(KingdomBindingTable.Empty.TryBind(0, KingdomBindingKind.Resident, Here, "nobody", 700L, out table, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.IsFalse(KingdomBindingTable.TryCreate(
 				new KingdomBinding[1] { new KingdomBinding(0, KingdomBindingKind.Resident, Here, "nobody", 700L) },
 				out table, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
 		}
 
 		/// <summary>Rebinding moves the ground and the object and keeps the minted tick: a body
@@ -219,13 +220,13 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomBindingTable moved;
 			KingdomCityFault fault;
-			Assert.IsTrue(table.TryRebind(7, KingdomBindingKind.Resident, Next, "obj-7-again", out moved, out fault), fault.ToString());
+			ClassicAssert.IsTrue(table.TryRebind(7, KingdomBindingKind.Resident, Next, "obj-7-again", out moved, out fault), fault.ToString());
 			KingdomBinding binding;
-			Assert.IsTrue(moved.TryGet(7, KingdomBindingKind.Resident, out binding));
-			Assert.AreEqual(Next, binding.ZoneId);
-			Assert.AreEqual("obj-7-again", binding.ObjectId);
-			Assert.AreEqual(700L, binding.MintedTick);
-			Assert.AreEqual(1, moved.Count, "a rebind moves a binding, it never adds one");
+			ClassicAssert.IsTrue(moved.TryGet(7, KingdomBindingKind.Resident, out binding));
+			ClassicAssert.AreEqual(Next, binding.ZoneId);
+			ClassicAssert.AreEqual("obj-7-again", binding.ObjectId);
+			ClassicAssert.AreEqual(700L, binding.MintedTick);
+			ClassicAssert.AreEqual(1, moved.Count, "a rebind moves a binding, it never adds one");
 		}
 
 		[Test]
@@ -233,9 +234,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable moved;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomBindingTable.Empty.TryRebind(7, KingdomBindingKind.Resident, Next, "ghost", out moved, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
-			Assert.IsNull(moved);
+			ClassicAssert.IsFalse(KingdomBindingTable.Empty.TryRebind(7, KingdomBindingKind.Resident, Next, "ghost", out moved, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.IsNull(moved);
 		}
 
 		/// <summary>
@@ -250,10 +251,10 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable next;
 			KingdomBinding evicted;
 			KingdomCityFault fault;
-			Assert.IsTrue(table.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.Death, out next, out evicted, out fault), fault.ToString());
-			Assert.AreEqual(0, next.Count);
-			Assert.IsFalse(next.Holds(7, KingdomBindingKind.Resident));
-			Assert.AreEqual(Here, evicted.ZoneId, "the evicted binding is handed back so the cause can be told about somewhere real");
+			ClassicAssert.IsTrue(table.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.Death, out next, out evicted, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0, next.Count);
+			ClassicAssert.IsFalse(next.Holds(7, KingdomBindingKind.Resident));
+			ClassicAssert.AreEqual(Here, evicted.ZoneId, "the evicted binding is handed back so the cause can be told about somewhere real");
 		}
 
 		/// <summary>An unbinding with no cause is refused. A settler who disappears and nothing in
@@ -265,10 +266,10 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable next;
 			KingdomBinding evicted;
 			KingdomCityFault fault;
-			Assert.IsFalse(table.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.None, out next, out evicted, out fault));
-			Assert.AreEqual(KingdomCityFault.CauseRequired, fault);
-			Assert.IsNull(next);
-			Assert.IsTrue(table.Holds(7, KingdomBindingKind.Resident), "a refused unbind leaves the registry byte-identical");
+			ClassicAssert.IsFalse(table.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.None, out next, out evicted, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.CauseRequired, fault);
+			ClassicAssert.IsNull(next);
+			ClassicAssert.IsTrue(table.Holds(7, KingdomBindingKind.Resident), "a refused unbind leaves the registry byte-identical");
 		}
 
 		[Test]
@@ -278,9 +279,9 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable next;
 			KingdomBinding evicted;
 			KingdomCityFault fault;
-			Assert.IsFalse(table.TryUnbind(7, KingdomBindingKind.Transient, KingdomUnbindCause.JobClosed, out next, out evicted, out fault));
-			Assert.AreEqual(KingdomCityFault.UnknownBinding, fault);
-			Assert.IsTrue(table.Holds(7, KingdomBindingKind.Resident));
+			ClassicAssert.IsFalse(table.TryUnbind(7, KingdomBindingKind.Transient, KingdomUnbindCause.JobClosed, out next, out evicted, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.UnknownBinding, fault);
+			ClassicAssert.IsTrue(table.Holds(7, KingdomBindingKind.Resident));
 		}
 
 		/// <summary>Every transition is copy-on-write: the table handed in is never the table
@@ -293,13 +294,13 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable gone;
 			KingdomBinding evicted;
 			KingdomCityFault fault;
-			Assert.IsTrue(before.TryRebind(7, KingdomBindingKind.Resident, Next, "obj-7", out moved, out fault));
-			Assert.IsTrue(before.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.Departure, out gone, out evicted, out fault));
+			ClassicAssert.IsTrue(before.TryRebind(7, KingdomBindingKind.Resident, Next, "obj-7", out moved, out fault));
+			ClassicAssert.IsTrue(before.TryUnbind(7, KingdomBindingKind.Resident, KingdomUnbindCause.Departure, out gone, out evicted, out fault));
 			KingdomBinding original;
-			Assert.IsTrue(before.TryGet(7, KingdomBindingKind.Resident, out original));
-			Assert.AreEqual(Here, original.ZoneId, "the original table moved when it should have been frozen");
-			Assert.AreEqual(1, before.Count);
-			Assert.AreEqual(0, gone.Count);
+			ClassicAssert.IsTrue(before.TryGet(7, KingdomBindingKind.Resident, out original));
+			ClassicAssert.AreEqual(Here, original.ZoneId, "the original table moved when it should have been frozen");
+			ClassicAssert.AreEqual(1, before.Count);
+			ClassicAssert.AreEqual(0, gone.Count);
 		}
 
 		// ---- Caps --------------------------------------------------------------------------
@@ -310,8 +311,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCapsAgreeWithTheConstantsTheyWereCopiedFrom()
 		{
-			Assert.AreEqual(KingdomCityState.MaxResidents * KingdomCityMemoryRules.CitiesPerRealm, KingdomBindingTable.MaxResidentBindings);
-			Assert.AreEqual(KingdomCityMemoryRules.MaxOpenJobs, KingdomBindingTable.MaxTransientBindings);
+			ClassicAssert.AreEqual(KingdomCityState.MaxResidents * KingdomCityMemoryRules.CitiesPerRealm, KingdomBindingTable.MaxResidentBindings);
+			ClassicAssert.AreEqual(KingdomCityMemoryRules.MaxOpenJobs, KingdomBindingTable.MaxTransientBindings);
 		}
 
 		[Test]
@@ -322,12 +323,12 @@ namespace ThousandAndFirst.Tests
 			KingdomCityFault fault;
 			for (int i = 1; i <= KingdomBindingTable.MaxTransientBindings; i++)
 			{
-				Assert.IsTrue(table.TryBind(i, KingdomBindingKind.Transient, Here, "porter-" + i, 700L, out next, out fault), fault.ToString());
+				ClassicAssert.IsTrue(table.TryBind(i, KingdomBindingKind.Transient, Here, "porter-" + i, 700L, out next, out fault), fault.ToString());
 				table = next;
 			}
-			Assert.IsFalse(table.TryBind(9999, KingdomBindingKind.Transient, Here, "one-too-many", 700L, out next, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
-			Assert.IsTrue(table.TryBind(9999, KingdomBindingKind.Resident, Here, "a-person", 700L, out next, out fault),
+			ClassicAssert.IsFalse(table.TryBind(9999, KingdomBindingKind.Transient, Here, "one-too-many", 700L, out next, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.IsTrue(table.TryBind(9999, KingdomBindingKind.Resident, Here, "a-person", 700L, out next, out fault),
 				"a realm full of porters must still be able to enrol a person");
 		}
 
@@ -344,12 +345,12 @@ namespace ThousandAndFirst.Tests
 		public void AThawedZonesBodyForAClosedJobReadsStale()
 		{
 			KingdomBindingTable open = Bound(42, KingdomBindingKind.Transient, Here);
-			Assert.AreEqual(KingdomSweepVerdict.Bound, KingdomBindingRules.JudgeStale(42, open.Holds(42, KingdomBindingKind.Transient)));
+			ClassicAssert.AreEqual(KingdomSweepVerdict.Bound, KingdomBindingRules.JudgeStale(42, open.Holds(42, KingdomBindingKind.Transient)));
 			KingdomBindingTable closed;
 			KingdomBinding evicted;
 			KingdomCityFault fault;
-			Assert.IsTrue(open.TryUnbind(42, KingdomBindingKind.Transient, KingdomUnbindCause.JobClosed, out closed, out evicted, out fault), fault.ToString());
-			Assert.AreEqual(KingdomSweepVerdict.Stale, KingdomBindingRules.JudgeStale(42, closed.Holds(42, KingdomBindingKind.Transient)));
+			ClassicAssert.IsTrue(open.TryUnbind(42, KingdomBindingKind.Transient, KingdomUnbindCause.JobClosed, out closed, out evicted, out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomSweepVerdict.Stale, KingdomBindingRules.JudgeStale(42, closed.Holds(42, KingdomBindingKind.Transient)));
 		}
 
 		/// <summary>An object with no job id is not ours to judge, whatever the registry says. The
@@ -359,7 +360,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false)]
 		public void AnObjectWithNoJobIdIsNeverSwept(bool bound)
 		{
-			Assert.AreEqual(KingdomSweepVerdict.NotTransient, KingdomBindingRules.JudgeStale(0, bound));
+			ClassicAssert.AreEqual(KingdomSweepVerdict.NotTransient, KingdomBindingRules.JudgeStale(0, bound));
 		}
 
 		// ---- The audit -----------------------------------------------------------------------
@@ -371,17 +372,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomCityFault fault;
-			Assert.IsTrue(table.TryAudit(out fault), fault.ToString());
-			Assert.AreEqual(KingdomCityFault.None, fault);
+			ClassicAssert.IsTrue(table.TryAudit(out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault);
 
 			KingdomBindingTable doubled;
-			Assert.IsFalse(KingdomBindingTable.TryCreate(new KingdomBinding[2]
+			ClassicAssert.IsFalse(KingdomBindingTable.TryCreate(new KingdomBinding[2]
 			{
 				new KingdomBinding(7, KingdomBindingKind.Resident, Here, "obj-a", 700L),
 				new KingdomBinding(7, KingdomBindingKind.Resident, Next, "obj-b", 800L)
 			}, out doubled, out fault));
-			Assert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
-			Assert.IsNull(doubled, "a registry that could put one settler in two places must not be built at all");
+			ClassicAssert.AreEqual(KingdomCityFault.DuplicateBinding, fault);
+			ClassicAssert.IsNull(doubled, "a registry that could put one settler in two places must not be built at all");
 		}
 
 		// ---- The carrier ---------------------------------------------------------------------
@@ -392,22 +393,22 @@ namespace ThousandAndFirst.Tests
 			KingdomBindingTable table = Bound(7, KingdomBindingKind.Resident, Here);
 			KingdomBindingTable both;
 			KingdomCityFault fault;
-			Assert.IsTrue(table.TryBind(42, KingdomBindingKind.Transient, Next, "porter", 900L, out both, out fault), fault.ToString());
+			ClassicAssert.IsTrue(table.TryBind(42, KingdomBindingKind.Transient, Next, "porter", 900L, out both, out fault), fault.ToString());
 			KingdomBindingRegistry registry = new KingdomBindingRegistry();
-			Assert.IsTrue(registry.TryPublish(both, out fault), fault.ToString());
-			Assert.AreEqual(2, registry.Count);
+			ClassicAssert.IsTrue(registry.TryPublish(both, out fault), fault.ToString());
+			ClassicAssert.AreEqual(2, registry.Count);
 
 			KingdomBindingTable read;
-			Assert.IsTrue(registry.TryRead(out read, out fault), fault.ToString());
+			ClassicAssert.IsTrue(registry.TryRead(out read, out fault), fault.ToString());
 			KingdomBinding person;
 			KingdomBinding porter;
-			Assert.IsTrue(read.TryGet(7, KingdomBindingKind.Resident, out person));
-			Assert.IsTrue(read.TryGet(42, KingdomBindingKind.Transient, out porter));
-			Assert.AreEqual(Here, person.ZoneId);
-			Assert.AreEqual("obj-7", person.ObjectId);
-			Assert.AreEqual(700L, person.MintedTick);
-			Assert.AreEqual(Next, porter.ZoneId);
-			Assert.AreEqual(900L, porter.MintedTick);
+			ClassicAssert.IsTrue(read.TryGet(7, KingdomBindingKind.Resident, out person));
+			ClassicAssert.IsTrue(read.TryGet(42, KingdomBindingKind.Transient, out porter));
+			ClassicAssert.AreEqual(Here, person.ZoneId);
+			ClassicAssert.AreEqual("obj-7", person.ObjectId);
+			ClassicAssert.AreEqual(700L, person.MintedTick);
+			ClassicAssert.AreEqual(Next, porter.ZoneId);
+			ClassicAssert.AreEqual(900L, porter.MintedTick);
 		}
 
 		/// <summary>A publish rewrites every column from one snapshot, so a registry that used to
@@ -417,11 +418,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingRegistry registry = new KingdomBindingRegistry();
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryPublish(Bound(7, KingdomBindingKind.Resident, Here), out fault));
-			Assert.IsTrue(registry.TryPublish(KingdomBindingTable.Empty, out fault));
-			Assert.AreEqual(0, registry.Count);
-			Assert.AreEqual(0, registry.ZoneIds.Count);
-			Assert.AreEqual(0, registry.MintedTicks.Count);
+			ClassicAssert.IsTrue(registry.TryPublish(Bound(7, KingdomBindingKind.Resident, Here), out fault));
+			ClassicAssert.IsTrue(registry.TryPublish(KingdomBindingTable.Empty, out fault));
+			ClassicAssert.AreEqual(0, registry.Count);
+			ClassicAssert.AreEqual(0, registry.ZoneIds.Count);
+			ClassicAssert.AreEqual(0, registry.MintedTicks.Count);
 		}
 
 		/// <summary>A ragged registry out of an older save is truncated to the shortest column: a
@@ -437,7 +438,7 @@ namespace ThousandAndFirst.Tests
 			registry.ObjectIds = new List<string> { "a", "b", "c" };
 			registry.MintedTicks = new List<long> { 1L, 2L, 3L };
 			registry.Normalize();
-			Assert.AreEqual(2, registry.Count);
+			ClassicAssert.AreEqual(2, registry.Count);
 		}
 
 		[Test]
@@ -450,11 +451,11 @@ namespace ThousandAndFirst.Tests
 			registry.ObjectIds = null;
 			registry.MintedTicks = null;
 			registry.Normalize();
-			Assert.AreEqual(0, registry.Count);
+			ClassicAssert.AreEqual(0, registry.Count);
 			KingdomBindingTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
-			Assert.AreEqual(0, table.Count);
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0, table.Count);
 		}
 
 		/// <summary>
@@ -472,14 +473,14 @@ namespace ThousandAndFirst.Tests
 			registry.ObjectIds = new List<string> { "first", "second", "keyless", "other" };
 			registry.MintedTicks = new List<long> { 100L, 200L, 300L, 400L };
 			registry.Normalize();
-			Assert.AreEqual(2, registry.Count, "the duplicate and the keyless row are both dropped");
+			ClassicAssert.AreEqual(2, registry.Count, "the duplicate and the keyless row are both dropped");
 			KingdomBindingTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
 			KingdomBinding binding;
-			Assert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
-			Assert.AreEqual("first", binding.ObjectId);
-			Assert.IsTrue(table.Holds(9, KingdomBindingKind.Resident));
+			ClassicAssert.IsTrue(table.TryGet(7, KingdomBindingKind.Resident, out binding));
+			ClassicAssert.AreEqual("first", binding.ObjectId);
+			ClassicAssert.IsTrue(table.Holds(9, KingdomBindingKind.Resident));
 		}
 
 		/// <summary>A registry read out of a save that somehow held more than the caps is trimmed
@@ -498,10 +499,10 @@ namespace ThousandAndFirst.Tests
 				registry.MintedTicks.Add(700L);
 			}
 			registry.Normalize();
-			Assert.AreEqual(KingdomBindingTable.MaxTransientBindings, registry.Count);
+			ClassicAssert.AreEqual(KingdomBindingTable.MaxTransientBindings, registry.Count);
 			KingdomBindingTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
 		}
 
 		/// <summary>A kind this build has no word for reads as a transient — the side that can be
@@ -517,9 +518,9 @@ namespace ThousandAndFirst.Tests
 			registry.MintedTicks.Add(700L);
 			KingdomBindingTable table;
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
-			Assert.IsFalse(table.Holds(7, KingdomBindingKind.Resident));
-			Assert.IsTrue(table.Holds(7, KingdomBindingKind.Transient));
+			ClassicAssert.IsTrue(registry.TryRead(out table, out fault), fault.ToString());
+			ClassicAssert.IsFalse(table.Holds(7, KingdomBindingKind.Resident));
+			ClassicAssert.IsTrue(table.Holds(7, KingdomBindingKind.Transient));
 		}
 
 		[Test]
@@ -527,16 +528,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBindingRegistry registry = new KingdomBindingRegistry();
 			KingdomCityFault fault;
-			Assert.IsTrue(registry.TryPublish(Bound(7, KingdomBindingKind.Resident, Here), out fault));
-			Assert.IsFalse(registry.TryPublish(null, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.AreEqual(1, registry.Count, "a refused publish leaves the registry byte-identical");
+			ClassicAssert.IsTrue(registry.TryPublish(Bound(7, KingdomBindingKind.Resident, Here), out fault));
+			ClassicAssert.IsFalse(registry.TryPublish(null, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.AreEqual(1, registry.Count, "a refused publish leaves the registry byte-identical");
 		}
 
 		private static void AssertEnum(Type type, string[] names, byte[] values)
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
-			Assert.IsTrue(type.IsPublic, type.FullName);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			ClassicAssert.IsTrue(type.IsPublic, type.FullName);
 			CollectionAssert.AreEqual(names, Enum.GetNames(type), type.FullName);
 			Array raw = Enum.GetValues(type);
 			byte[] actual = new byte[raw.Length];

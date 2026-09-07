@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -65,99 +66,99 @@ namespace ThousandAndFirst.Tests
 		public void ValidRequestIsValid()
 		{
 			foreach (string hash in new[] { Primary, Info, Cache, Snapshot, AltHash })
-				Assert.AreEqual(64, hash.Length, "positive SHA-256 fixture length");
-			Assert.IsTrue(KingdomScenarioLoadRules.Valid(Request(GameId, Primary, Info, Cache,
+				ClassicAssert.AreEqual(64, hash.Length, "positive SHA-256 fixture length");
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.Valid(Request(GameId, Primary, Info, Cache,
 				Snapshot)));
 		}
 
 		[Test]
 		public void ValidRefusesNullRequest()
 		{
-			Assert.IsFalse(KingdomScenarioLoadRules.Valid(null));
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.Valid(null));
 		}
 
 		[Test]
 		public void RoundTripFromRequestThroughEncodeAndParseReproducesTheWireAndEveryField()
 		{
 			KingdomScenarioLoadRequest original = Request(GameId, Primary, Info, Cache, Snapshot);
-			Assert.IsTrue(KingdomScenarioLoadRules.TryEncode(original, out string wire));
-			Assert.IsNotNull(wire);
-			Assert.AreEqual(Wire(GameId, Primary, Info, Cache, Snapshot), wire);
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(wire, out KingdomScenarioLoadRequest parsed));
-			Assert.IsNotNull(parsed);
-			Assert.AreNotSame(original, parsed);
-			Assert.AreEqual(GameId, parsed.GameId);
-			Assert.AreEqual(Primary, parsed.PrimarySha256);
-			Assert.AreEqual(Info, parsed.InfoSha256);
-			Assert.AreEqual(Cache, parsed.CacheSha256);
-			Assert.AreEqual(Snapshot, parsed.SnapshotSha256);
-			Assert.IsTrue(KingdomScenarioLoadRules.TryEncode(parsed, out string reEncoded));
-			Assert.AreEqual(wire, reEncoded);
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryEncode(original, out string wire));
+			ClassicAssert.IsNotNull(wire);
+			ClassicAssert.AreEqual(Wire(GameId, Primary, Info, Cache, Snapshot), wire);
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(wire, out KingdomScenarioLoadRequest parsed));
+			ClassicAssert.IsNotNull(parsed);
+			ClassicAssert.AreNotSame(original, parsed);
+			ClassicAssert.AreEqual(GameId, parsed.GameId);
+			ClassicAssert.AreEqual(Primary, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(Info, parsed.InfoSha256);
+			ClassicAssert.AreEqual(Cache, parsed.CacheSha256);
+			ClassicAssert.AreEqual(Snapshot, parsed.SnapshotSha256);
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryEncode(parsed, out string reEncoded));
+			ClassicAssert.AreEqual(wire, reEncoded);
 		}
 
 		[Test]
 		public void GameIdIsPreservedThroughParse()
 		{
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(
 				Wire(AltGameId, Primary, Info, Cache, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.AreEqual(AltGameId, parsed.GameId);
-			Assert.AreEqual(Primary, parsed.PrimarySha256);
-			Assert.AreEqual(Info, parsed.InfoSha256);
-			Assert.AreEqual(Cache, parsed.CacheSha256);
-			Assert.AreEqual(Snapshot, parsed.SnapshotSha256);
+			ClassicAssert.AreEqual(AltGameId, parsed.GameId);
+			ClassicAssert.AreEqual(Primary, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(Info, parsed.InfoSha256);
+			ClassicAssert.AreEqual(Cache, parsed.CacheSha256);
+			ClassicAssert.AreEqual(Snapshot, parsed.SnapshotSha256);
 		}
 
 		[Test]
 		public void PrimarySha256IsPreservedThroughParse()
 		{
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(
 				Wire(GameId, AltHash, Info, Cache, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.AreEqual(GameId, parsed.GameId);
-			Assert.AreEqual(AltHash, parsed.PrimarySha256);
-			Assert.AreEqual(Info, parsed.InfoSha256);
-			Assert.AreEqual(Cache, parsed.CacheSha256);
-			Assert.AreEqual(Snapshot, parsed.SnapshotSha256);
+			ClassicAssert.AreEqual(GameId, parsed.GameId);
+			ClassicAssert.AreEqual(AltHash, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(Info, parsed.InfoSha256);
+			ClassicAssert.AreEqual(Cache, parsed.CacheSha256);
+			ClassicAssert.AreEqual(Snapshot, parsed.SnapshotSha256);
 		}
 
 		[Test]
 		public void InfoSha256IsPreservedThroughParse()
 		{
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(
 				Wire(GameId, Primary, AltHash, Cache, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.AreEqual(GameId, parsed.GameId);
-			Assert.AreEqual(Primary, parsed.PrimarySha256);
-			Assert.AreEqual(AltHash, parsed.InfoSha256);
-			Assert.AreEqual(Cache, parsed.CacheSha256);
-			Assert.AreEqual(Snapshot, parsed.SnapshotSha256);
+			ClassicAssert.AreEqual(GameId, parsed.GameId);
+			ClassicAssert.AreEqual(Primary, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(AltHash, parsed.InfoSha256);
+			ClassicAssert.AreEqual(Cache, parsed.CacheSha256);
+			ClassicAssert.AreEqual(Snapshot, parsed.SnapshotSha256);
 		}
 
 		[Test]
 		public void CacheSha256IsPreservedThroughParse()
 		{
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(
 				Wire(GameId, Primary, Info, AltHash, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.AreEqual(GameId, parsed.GameId);
-			Assert.AreEqual(Primary, parsed.PrimarySha256);
-			Assert.AreEqual(Info, parsed.InfoSha256);
-			Assert.AreEqual(AltHash, parsed.CacheSha256);
-			Assert.AreEqual(Snapshot, parsed.SnapshotSha256);
+			ClassicAssert.AreEqual(GameId, parsed.GameId);
+			ClassicAssert.AreEqual(Primary, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(Info, parsed.InfoSha256);
+			ClassicAssert.AreEqual(AltHash, parsed.CacheSha256);
+			ClassicAssert.AreEqual(Snapshot, parsed.SnapshotSha256);
 		}
 
 		[Test]
 		public void SnapshotSha256IsPreservedThroughParse()
 		{
-			Assert.IsTrue(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsTrue(KingdomScenarioLoadRules.TryParse(
 				Wire(GameId, Primary, Info, Cache, AltHash),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.AreEqual(GameId, parsed.GameId);
-			Assert.AreEqual(Primary, parsed.PrimarySha256);
-			Assert.AreEqual(Info, parsed.InfoSha256);
-			Assert.AreEqual(Cache, parsed.CacheSha256);
-			Assert.AreEqual(AltHash, parsed.SnapshotSha256);
+			ClassicAssert.AreEqual(GameId, parsed.GameId);
+			ClassicAssert.AreEqual(Primary, parsed.PrimarySha256);
+			ClassicAssert.AreEqual(Info, parsed.InfoSha256);
+			ClassicAssert.AreEqual(Cache, parsed.CacheSha256);
+			ClassicAssert.AreEqual(AltHash, parsed.SnapshotSha256);
 		}
 
 		[TestCase("uppercase")]
@@ -168,7 +169,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioLoadRequest request = Request(BadGuid(kind), Primary, Info, Cache,
 				Snapshot);
-			Assert.IsFalse(KingdomScenarioLoadRules.Valid(request));
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.Valid(request));
 		}
 
 		[TestCase("uppercase")]
@@ -177,10 +178,10 @@ namespace ThousandAndFirst.Tests
 		[TestCase("whitespace")]
 		public void ParseRefusesMalformedGameIdLine(string kind)
 		{
-			Assert.IsFalse(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.TryParse(
 				Wire(BadGuid(kind), Primary, Info, Cache, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.IsNull(parsed);
+			ClassicAssert.IsNull(parsed);
 		}
 
 		[TestCase("uppercase")]
@@ -199,7 +200,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioLoadRequest request = Request(GameId, BadHash(kind), Info, Cache,
 				Snapshot);
-			Assert.IsFalse(KingdomScenarioLoadRules.Valid(request));
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.Valid(request));
 		}
 
 		[TestCase("uppercase")]
@@ -216,10 +217,10 @@ namespace ThousandAndFirst.Tests
 		[TestCase("unpairedSurrogate")]
 		public void ParseRefusesMalformedPrimaryHashLine(string kind)
 		{
-			Assert.IsFalse(KingdomScenarioLoadRules.TryParse(
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.TryParse(
 				Wire(GameId, BadHash(kind), Info, Cache, Snapshot),
 				out KingdomScenarioLoadRequest parsed));
-			Assert.IsNull(parsed);
+			ClassicAssert.IsNull(parsed);
 		}
 
 		[TestCase("info")]
@@ -235,7 +236,7 @@ namespace ThousandAndFirst.Tests
 				case "cache": request = Request(GameId, Primary, Info, bad, Snapshot); break;
 				default: request = Request(GameId, Primary, Info, Cache, bad); break;
 			}
-			Assert.IsFalse(KingdomScenarioLoadRules.Valid(request));
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.Valid(request));
 		}
 
 		[TestCase("null")]
@@ -285,16 +286,16 @@ namespace ThousandAndFirst.Tests
 					text = Wire(GameId, Primary, Info, Cache, Snapshot + new string('9', 200)); break;
 				default: throw new ArgumentException(kind);
 			}
-			Assert.IsFalse(KingdomScenarioLoadRules.TryParse(text, out KingdomScenarioLoadRequest parsed),
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.TryParse(text, out KingdomScenarioLoadRequest parsed),
 				kind);
-			Assert.IsNull(parsed, kind);
+			ClassicAssert.IsNull(parsed, kind);
 		}
 
 		[Test]
 		public void EncodeRefusesNullRequest()
 		{
-			Assert.IsFalse(KingdomScenarioLoadRules.TryEncode(null, out string wire));
-			Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.TryEncode(null, out string wire));
+			ClassicAssert.IsNull(wire);
 		}
 
 		[Test]
@@ -302,8 +303,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioLoadRequest request = Request(BadGuid("uppercase"), Primary, Info, Cache,
 				Snapshot);
-			Assert.IsFalse(KingdomScenarioLoadRules.TryEncode(request, out string wire));
-			Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomScenarioLoadRules.TryEncode(request, out string wire));
+			ClassicAssert.IsNull(wire);
 		}
 	}
 }

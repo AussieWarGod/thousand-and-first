@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -85,7 +86,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string forbidden in new[] { ".Reckon(", ".TryReckon(", ".RecordZone(", ".Normalize(",
 				".Clear(", ".Remove(", ".Reset(", "KingdomChronicle.Record", "MessageQueue." })
 				StringAssert.DoesNotContain(forbidden, Read());
-			Assert.IsFalse(Regex.IsMatch(Read(), @"\.(?:TimeTicks|Population|Founded)\s*(?:=(?!=)|\+=|-=|\+\+|--)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(Read(), @"\.(?:TimeTicks|Population|Founded)\s*(?:=(?!=)|\+=|-=|\+\+|--)"));
 			Contains(Read(), "Explicit synthetic elapsed checkpoint", "not elapsed ordinary play", "never rolled back or retried");
 		}
 
@@ -112,7 +113,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string value in values)
 			{
 				int found = source.IndexOf(value, position, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, value); position = found + value.Length;
+				ClassicAssert.GreaterOrEqual(found, 0, value); position = found + value.Length;
 			}
 		}
 	}

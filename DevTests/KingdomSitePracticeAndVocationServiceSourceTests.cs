@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tests;
 
 namespace ThousandAndFirst.DevTests
@@ -17,15 +18,15 @@ namespace ThousandAndFirst.DevTests
 				Read("Core/KingdomVocationServiceRules.Legacy.cs") +
 				Read("Core/KingdomVocationServiceTransactions.cs") +
 				Read("Core/KingdomCivicPracticeRuntime.Transactions.cs");
-			Assert.IsFalse(source.Contains("Stat.Random"));
-			Assert.IsFalse(source.Contains("System.Random"));
-			Assert.IsFalse(source.Contains("ZoneManager"));
-			Assert.IsFalse(source.Contains("GetZone("));
-			Assert.IsFalse(source.Contains("Inventory"));
-			Assert.IsFalse(source.Contains("GameObjectFactory"));
-			Assert.IsFalse(source.Contains("EndTurn"));
-			Assert.IsFalse(source.Contains("UseEnergy"));
-			Assert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("Stat.Random"));
+			ClassicAssert.IsFalse(source.Contains("System.Random"));
+			ClassicAssert.IsFalse(source.Contains("ZoneManager"));
+			ClassicAssert.IsFalse(source.Contains("GetZone("));
+			ClassicAssert.IsFalse(source.Contains("Inventory"));
+			ClassicAssert.IsFalse(source.Contains("GameObjectFactory"));
+			ClassicAssert.IsFalse(source.Contains("EndTurn"));
+			ClassicAssert.IsFalse(source.Contains("UseEnergy"));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
 		}
 
 		[Test]
@@ -36,8 +37,8 @@ namespace ThousandAndFirst.DevTests
 				StringComparison.Ordinal);
 			int match = rules.IndexOf("internal static bool TryMatchAvailableOffers(", serve,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(serve, 0);
-			Assert.Greater(match, serve);
+			ClassicAssert.GreaterOrEqual(serve, 0);
+			ClassicAssert.Greater(match, serve);
 			string method = rules.Substring(serve, match - serve);
 			StringAssert.Contains("CopyBook(book)", method);
 			StringAssert.Contains("candidate.Rows.Add", method);
@@ -45,9 +46,9 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("OutputUnits = 0", method);
 			StringAssert.Contains("InputUnits = 0", rules);
 			StringAssert.Contains("book.Revision == long.MaxValue", method);
-			Assert.IsFalse(method.Contains("OutputUnits = 1"));
+			ClassicAssert.IsFalse(method.Contains("OutputUnits = 1"));
 			StringAssert.Contains("private static string RequestDigest(", rules);
-			Assert.IsFalse(rules.Contains("public static string RequestDigest("));
+			ClassicAssert.IsFalse(rules.Contains("public static string RequestDigest("));
 		}
 
 		[Test]
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("IsTerminal", site);
 			StringAssert.Contains("TryGetCurrentIdentity", service);
 			StringAssert.Contains("public static bool TryOpenCurrent", service);
-			Assert.IsFalse(service.Contains("public static bool TryDescribeCurrent"));
+			ClassicAssert.IsFalse(service.Contains("public static bool TryDescribeCurrent"));
 			StringAssert.Contains("SectionCivicArtifacts", service);
 			StringAssert.Contains("memory.TryReadSection", service);
 			StringAssert.Contains("KingdomCivicArtifactsStore.ReadForRealm", service);
@@ -91,15 +92,15 @@ namespace ThousandAndFirst.DevTests
 			string shelterRead = context.Substring(direct, common - direct);
 			StringAssert.Contains("context.Zone.GetObjects()", shelterRead);
 			StringAssert.Contains("new BuiltWorkSnapshot", shelterRead);
-			Assert.IsFalse(shelterRead.Contains("KingdomSurvey"));
-			Assert.IsFalse(shelterRead.Contains("Survey.Take"));
+			ClassicAssert.IsFalse(shelterRead.Contains("KingdomSurvey"));
+			ClassicAssert.IsFalse(shelterRead.Contains("Survey.Take"));
 			StringAssert.Contains("TryBuiltWorksReadOnly", service);
-			Assert.IsFalse(all.Contains("GetZone("));
-			Assert.IsFalse(all.Contains("ZoneManager"));
-			Assert.IsFalse(all.Contains("JournalAPI"));
-			Assert.IsFalse(all.Contains("AddAccomplishment"));
-			Assert.IsFalse(all.Contains("SetStringGameState"));
-			Assert.IsFalse(service.Contains("TryCommitSection"));
+			ClassicAssert.IsFalse(all.Contains("GetZone("));
+			ClassicAssert.IsFalse(all.Contains("ZoneManager"));
+			ClassicAssert.IsFalse(all.Contains("JournalAPI"));
+			ClassicAssert.IsFalse(all.Contains("AddAccomplishment"));
+			ClassicAssert.IsFalse(all.Contains("SetStringGameState"));
+			ClassicAssert.IsFalse(service.Contains("TryCommitSection"));
 		}
 
 		[Test]
@@ -126,8 +127,8 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("recognition.AttributionName", route);
 			StringAssert.Contains("recognition.Source.DeedId", route);
 			StringAssert.Contains("recognition.Source.DeedText", route);
-			Assert.IsFalse(route.Contains("route.Phase == KingdomPolityRoutePhase.Cancelled"));
-			Assert.IsFalse(route.Contains("route.Phase == KingdomPolityRoutePhase.Preparing"));
+			ClassicAssert.IsFalse(route.Contains("route.Phase == KingdomPolityRoutePhase.Cancelled"));
+			ClassicAssert.IsFalse(route.Contains("route.Phase == KingdomPolityRoutePhase.Preparing"));
 			int reserve = runtime.IndexOf("KingdomGovernanceScope.TryReserve(",
 				StringComparison.Ordinal);
 			int pause = runtime.IndexOf("KingdomMaster.NewWorkAllowed(system)",
@@ -154,10 +155,10 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(mark, Is.GreaterThan(invoke));
 			StringAssert.Contains("internal static bool TryExecuteCurrent", runtime);
 			StringAssert.Contains("synchronous and non-yielding", governance);
-			Assert.IsFalse(Read("Core/KingdomCivicPracticeRuntime.UI.cs")
+			ClassicAssert.IsFalse(Read("Core/KingdomCivicPracticeRuntime.UI.cs")
 				.Contains("offer.ResultText"), "pre-choice UI must not expose unrecorded result");
-			Assert.IsFalse((adapters + route + runtime).Contains("GetZone("));
-			Assert.IsFalse((adapters + route + runtime).Contains("ZoneManager"));
+			ClassicAssert.IsFalse((adapters + route + runtime).Contains("GetZone("));
+			ClassicAssert.IsFalse((adapters + route + runtime).Contains("ZoneManager"));
 		}
 
 		[Test]
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.DevTests
 				"WaterRitual", "JournalAPI", "AddAccomplishment", "SetStringGameState",
 				"PolityLedger =", "Recognitions.Rows.Add", "Built.Add" };
 			for (int i = 0; i < forbidden.Length; i++)
-				Assert.IsFalse(code.Contains(forbidden[i]), forbidden[i]);
+				ClassicAssert.IsFalse(code.Contains(forbidden[i]), forbidden[i]);
 			string transaction = Read("Core/KingdomVocationServiceTransactions.cs");
 			int read = transaction.IndexOf("if (!TryRead(port", StringComparison.Ordinal);
 			int prepare = transaction.IndexOf("TryPrepareRequest", read, StringComparison.Ordinal);
@@ -188,7 +189,7 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(cas, Is.GreaterThan(write));
 			StringAssert.Contains("port.TryReadSection", transaction);
 			StringAssert.Contains("KingdomCivicPracticeStore.ReadForRealm", transaction);
-			Assert.IsFalse(transaction.Contains("internal static bool TryRecord("),
+			ClassicAssert.IsFalse(transaction.Contains("internal static bool TryRecord("),
 				"no ungoverned C18 mutation entrypoint may remain");
 		}
 
@@ -227,11 +228,11 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(outerCas, Is.GreaterThan(encode));
 			StringAssert.Contains("SectionCivicPractice", commit);
 			StringAssert.Contains("new KingdomCivicPracticeCommitResult(false", commit);
-			Assert.IsFalse(commit.Contains("TryServe"));
-			Assert.IsFalse(commit.Contains("VocationServices ="));
-			Assert.IsFalse(commit.Contains(".Vocation ="));
-			Assert.IsFalse((runtime + commit).Contains("EndTurn"));
-			Assert.IsFalse((runtime + commit).Contains("UseEnergy"));
+			ClassicAssert.IsFalse(commit.Contains("TryServe"));
+			ClassicAssert.IsFalse(commit.Contains("VocationServices ="));
+			ClassicAssert.IsFalse(commit.Contains(".Vocation ="));
+			ClassicAssert.IsFalse((runtime + commit).Contains("EndTurn"));
+			ClassicAssert.IsFalse((runtime + commit).Contains("UseEnergy"));
 		}
 
 		[Test]
@@ -241,7 +242,7 @@ namespace ThousandAndFirst.DevTests
 			string charter = Read("Core/KingdomCharterPart.cs");
 			string ui = Read("Core/KingdomCivicPracticeRuntime.UI.cs");
 			StringAssert.Contains("PracticeAndVocation = 42", menu);
-			Assert.AreEqual(1, Count(menu,
+			ClassicAssert.AreEqual(1, Count(menu,
 				"Read site practice & vocation"), "one Charter route");
 			StringAssert.Contains("case KingdomCharterAction.PracticeAndVocation:", menu);
 			StringAssert.Contains(
@@ -272,10 +273,10 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(choose, Is.GreaterThan(paused));
 			Assert.That(unchanged, Is.GreaterThan(choose));
 			Assert.That(commit, Is.GreaterThan(unchanged));
-			Assert.AreEqual(1, Count(ui, "TryChooseCurrent("));
-			Assert.AreEqual(1, Count(ui, "KingdomGovernanceScope.Commit("));
-			Assert.IsFalse(ui.Contains("UseEnergy"));
-			Assert.IsFalse(ui.Contains("EndTurn"));
+			ClassicAssert.AreEqual(1, Count(ui, "TryChooseCurrent("));
+			ClassicAssert.AreEqual(1, Count(ui, "KingdomGovernanceScope.Commit("));
+			ClassicAssert.IsFalse(ui.Contains("UseEnergy"));
+			ClassicAssert.IsFalse(ui.Contains("EndTurn"));
 		}
 
 		[Test]
@@ -296,11 +297,11 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("KingdomMaster.NewWorkAllowed(system)", opener);
 			StringAssert.Contains("TryExecuteCurrent(system, zone, offer", opener);
 			StringAssert.Contains("if (!result.Changed)", opener);
-			Assert.IsFalse(opener.Contains(
+			ClassicAssert.IsFalse(opener.Contains(
 				"KingdomGovernanceScope.Commit(\"record vocation service\")"));
-			Assert.IsFalse(opener.Contains("TryChooseCurrent"));
-			Assert.IsFalse(opener.Contains("TryServe"));
-			Assert.IsFalse(opener.Contains("UseEnergy"));
+			ClassicAssert.IsFalse(opener.Contains("TryChooseCurrent"));
+			ClassicAssert.IsFalse(opener.Contains("TryServe"));
+			ClassicAssert.IsFalse(opener.Contains("UseEnergy"));
 			int reportFirst = opener.IndexOf("string report = VocationReport", StringComparison.Ordinal);
 			int picker = opener.IndexOf("int choice = Popup.PickOption(", StringComparison.Ordinal);
 			int pause = opener.IndexOf("KingdomMaster.NewWorkAllowed(system)", picker,
@@ -342,8 +343,8 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(charged, Is.GreaterThan(costGate));
 			Assert.That(noCharge, Is.GreaterThan(charged));
 			StringAssert.Contains("This exact retry is read-only and uses no governance charge", report);
-			Assert.IsFalse(report.Contains("KingdomGovernanceScope"));
-			Assert.IsFalse(report.Contains("TryServe"));
+			ClassicAssert.IsFalse(report.Contains("KingdomGovernanceScope"));
+			ClassicAssert.IsFalse(report.Contains("TryServe"));
 		}
 
 		[Test]
@@ -375,7 +376,7 @@ namespace ThousandAndFirst.DevTests
 			for (int i = 0; i < paths.Length; i++)
 			{
 				int lines = Read(paths[i]).Replace("\r\n", "\n").Split('\n').Length;
-				Assert.Less(lines, 300, paths[i] + " has " + lines + " lines");
+				ClassicAssert.Less(lines, 300, paths[i] + " has " + lines + " lines");
 			}
 		}
 

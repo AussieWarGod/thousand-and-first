@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,36 +13,36 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeLocalDebitReceipt debit = Receipt();
 			string encoded = KingdomPurposePortfolioRules.EncodeLocalDebit(debit);
-			Assert.IsNotNull(encoded);
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryDecodeLocalDebit(encoded, out var copy));
-			Assert.AreEqual(encoded, KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
+			ClassicAssert.IsNotNull(encoded);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryDecodeLocalDebit(encoded, out var copy));
+			ClassicAssert.AreEqual(encoded, KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
 			copy.Lines[1].ContainerId = "another-store";
-			Assert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
 			copy = debit.Copy();
 			copy.Lines[2].ObjectId = copy.Lines[1].ObjectId;
-			Assert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
 			copy = debit.Copy();
 			copy.Lines[0].After++;
-			Assert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
+			ClassicAssert.IsNull(KingdomPurposePortfolioRules.EncodeLocalDebit(copy));
 		}
 
 		[Test]
 		public void LocalPlanCannotAppearBeforeIntentOrChangeAfterPublication()
 		{
 			KingdomPurposePairReceipt pair = Pair();
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "operation", 1,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreateOperation(pair, "operation", 1,
 				KingdomPurposeKind.Deep, true, false, null, null, null, null, null,
 				out var operation, out var fault), fault.ToString());
 			operation.LocalDebitReceipt = KingdomPurposePortfolioRules.EncodeLocalDebit(Receipt());
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidOperation(operation, out _));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidOperation(operation, out _));
 			operation.Phase = KingdomPurposeOperationPhase.LocalDebitPending;
-			Assert.IsTrue(KingdomPurposePortfolioRules.ValidOperation(operation, out fault),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.ValidOperation(operation, out fault),
 				fault.ToString());
 			KingdomPurposeOperationReceipt changed = operation.Copy();
 			changed.LocalDebitReceipt = KingdomPurposePortfolioRules.EncodeLocalDebit(
 				ChangedReceipt());
 			changed.Revision++;
-			Assert.IsFalse(KingdomPurposePortfolioRules.ValidOperationTransition(operation, changed));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.ValidOperationTransition(operation, changed));
 		}
 
 		private static KingdomPurposeLocalDebitReceipt Receipt()
@@ -85,7 +86,7 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomPurposePairReceipt Pair()
 		{
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCreatePair("pair", "realm", 7,
 				KingdomPurposeKind.Deep, KingdomPurposeKind.Forge, "city-a", "city-b", "work-a",
 				null, "zone-a", "zone-b", "input-a", "output-a", "input-b", "output-b",
 				"gate-a", "gate-b",

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,9 +17,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, start);
+			ClassicAssert.GreaterOrEqual(at, 0, start);
 			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
-			Assert.Greater(until, at, end);
+			ClassicAssert.Greater(until, at, end);
 			return source.Substring(at, until - at);
 		}
 
@@ -34,10 +35,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("new KingdomReifySpend(heavySpent, mediumSpent", reify);
 			int settlement = reify.LastIndexOf("KingdomContainerCatchUpRules.TrySettle", StringComparison.Ordinal);
 			int charge = reify.IndexOf("Charge(System, TimeTicks, spend)", StringComparison.Ordinal);
-			Assert.Greater(charge, settlement, "planned work was charged before physical callbacks");
-			Assert.IsFalse(reify.Contains("waterSeen ? 1"));
-			Assert.IsFalse(reify.Contains("foodSeen ? 1"));
-			Assert.IsFalse(reify.Contains("StoreHarvest"), "deferred reify is not a second harvest-loss event");
+			ClassicAssert.Greater(charge, settlement, "planned work was charged before physical callbacks");
+			ClassicAssert.IsFalse(reify.Contains("waterSeen ? 1"));
+			ClassicAssert.IsFalse(reify.Contains("foodSeen ? 1"));
+			ClassicAssert.IsFalse(reify.Contains("StoreHarvest"), "deferred reify is not a second harvest-loss event");
 		}
 
 		[Test]
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Source(Path.Combine("Simulation", "City", "KingdomCatchUpRules.cs"));
 			StringAssert.Contains("KingdomRules.MaxCivicContainersPerZone + KingdomRules.MaxPopulation", source);
-			Assert.IsFalse(source.Contains("WorstBacklogUnits = 232"));
+			ClassicAssert.IsFalse(source.Contains("WorstBacklogUnits = 232"));
 		}
 
 		[Test]
@@ -84,8 +85,8 @@ namespace ThousandAndFirst.Tests
 				"private static bool TryFreezeFurnishPlan(");
 			string legacy = Slice(plot, "private static bool FurnishLegacyDurable(",
 				"private static bool WriteLegacyFurnishPlan(");
-			Assert.IsFalse(durable.Contains("SetIntProperty(\"KingdomStores\", 1)"));
-			Assert.IsFalse(legacy.Contains("SetIntProperty(\"KingdomStores\", 1)"));
+			ClassicAssert.IsFalse(durable.Contains("SetIntProperty(\"KingdomStores\", 1)"));
+			ClassicAssert.IsFalse(legacy.Contains("SetIntProperty(\"KingdomStores\", 1)"));
 			string survey = KingdomSurveyLogicalSource.Read();
 			StringAssert.Contains("item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1", survey);
 			StringAssert.Contains("item.SetIntProperty(\"KingdomStores\", 0)", survey);

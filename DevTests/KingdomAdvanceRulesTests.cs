@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 using ThousandAndFirst.Simulation.Kernel;
 
@@ -12,8 +13,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BreakpointKindsKeepExactByteOrder()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomBreakpointKind)));
-			Assert.AreEqual("0:None,1:StockEmpty,2:StockFull,3:CropStage,4:ClockDue,5:BrinkExpiry,6:SubsidenceRung,7:StageChange,8:Horizon",
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomBreakpointKind)));
+			ClassicAssert.AreEqual("0:None,1:StockEmpty,2:StockFull,3:CropStage,4:ClockDue,5:BrinkExpiry,6:SubsidenceRung,7:StageChange,8:Horizon",
 				string.Join(",", Array.ConvertAll((KingdomBreakpointKind[])Enum.GetValues(
 					typeof(KingdomBreakpointKind)), value => ((byte)value) + ":" + value)));
 		}
@@ -249,15 +250,15 @@ namespace ThousandAndFirst.Tests
 			KingdomAdvanceOutcome<ToyCityState> day;
 			KingdomAdvanceOutcome<ToyCityState> season;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, Day, out day, out fault), fault.ToString());
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, 90L * Day, out season, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, Day, out day, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, 90L * Day, out season, out fault), fault.ToString());
 
-			Assert.AreEqual(day.Steps, season.Steps, "steps scaled with the absence");
-			Assert.AreEqual(day.RowVisits, season.RowVisits, "row-visits scaled with the absence");
-			Assert.AreEqual(day.State.Draws, season.State.Draws, "draws scaled with the absence");
-			Assert.AreEqual(1, day.State.Draws, "one dated line per fold, not one per day");
-			Assert.AreEqual(1L, day.State.ClockOccurrences);
-			Assert.AreEqual(90L, season.State.ClockOccurrences, "the fold lost the occurrences it was supposed to count");
+			ClassicAssert.AreEqual(day.Steps, season.Steps, "steps scaled with the absence");
+			ClassicAssert.AreEqual(day.RowVisits, season.RowVisits, "row-visits scaled with the absence");
+			ClassicAssert.AreEqual(day.State.Draws, season.State.Draws, "draws scaled with the absence");
+			ClassicAssert.AreEqual(1, day.State.Draws, "one dated line per fold, not one per day");
+			ClassicAssert.AreEqual(1L, day.State.ClockOccurrences);
+			ClassicAssert.AreEqual(90L, season.State.ClockOccurrences, "the fold lost the occurrences it was supposed to count");
 		}
 
 		[Test]
@@ -266,12 +267,12 @@ namespace ThousandAndFirst.Tests
 			ToyCityModel model = new ToyCityModel(116);
 			KingdomAdvanceOutcome<ToyCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, 90L * Day, out outcome, out fault));
-			Assert.AreEqual((long)outcome.Steps * 2L * 116L, outcome.RowVisits);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, ClockOnly(), 0L, 90L * Day, out outcome, out fault));
+			ClassicAssert.AreEqual((long)outcome.Steps * 2L * 116L, outcome.RowVisits);
 			long ceiling;
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(116, out ceiling));
-			Assert.AreEqual(14848L, ceiling, "the constitution's own worst case for today's caps");
-			Assert.LessOrEqual(outcome.RowVisits, ceiling);
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(116, out ceiling));
+			ClassicAssert.AreEqual(14848L, ceiling, "the constitution's own worst case for today's caps");
+			ClassicAssert.LessOrEqual(outcome.RowVisits, ceiling);
 		}
 
 		/// <summary>The ceiling is a formula over the live R, so it survives the zone cap moving.
@@ -282,8 +283,8 @@ namespace ThousandAndFirst.Tests
 		public void TheRowVisitCeilingIsComputedFromTheLiveR(int rows, long expected)
 		{
 			long ceiling;
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(rows, out ceiling));
-			Assert.AreEqual(expected, ceiling);
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(rows, out ceiling));
+			ClassicAssert.AreEqual(expected, ceiling);
 		}
 
 		[Test]
@@ -293,10 +294,10 @@ namespace ThousandAndFirst.Tests
 			ToyCityState start = new ToyCityState(0L, 30L, 100L, -10L, 0L, 0L, 0L, 0, false);
 			KingdomAdvanceOutcome<ToyCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, start, 0L, 90L * Day, out outcome, out fault), fault.ToString());
-			Assert.AreEqual(0L, outcome.State.Level, "the stock did not reach empty");
-			Assert.AreEqual(2, outcome.Steps, "one crossing and one closing pass");
-			Assert.IsFalse(outcome.Overflowed);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, start, 0L, 90L * Day, out outcome, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0L, outcome.State.Level, "the stock did not reach empty");
+			ClassicAssert.AreEqual(2, outcome.Steps, "one crossing and one closing pass");
+			ClassicAssert.IsFalse(outcome.Overflowed);
 		}
 
 		/// <summary>
@@ -310,13 +311,13 @@ namespace ThousandAndFirst.Tests
 			EndlessModel model = new EndlessModel();
 			KingdomAdvanceOutcome<int> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, 0, 0L, 1000000L, out outcome, out fault), fault.ToString());
-			Assert.IsTrue(outcome.Overflowed, "the cap was reached without saying so");
-			Assert.AreEqual(KingdomAdvanceRules.MaxPasses, outcome.Steps);
-			Assert.AreEqual(KingdomBudgetRules.MaxBreakpoints, KingdomAdvanceRules.MaxPasses);
-			Assert.AreEqual((long)KingdomAdvanceRules.MaxPasses * 2L * 10L, outcome.RowVisits);
-			Assert.AreEqual(-1, outcome.State, "the fixed-point jump did not run");
-			Assert.AreEqual(1000000L, outcome.ProcessedThroughTick, "the remainder was not dated as settled");
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, 0, 0L, 1000000L, out outcome, out fault), fault.ToString());
+			ClassicAssert.IsTrue(outcome.Overflowed, "the cap was reached without saying so");
+			ClassicAssert.AreEqual(KingdomAdvanceRules.MaxPasses, outcome.Steps);
+			ClassicAssert.AreEqual(KingdomBudgetRules.MaxBreakpoints, KingdomAdvanceRules.MaxPasses);
+			ClassicAssert.AreEqual((long)KingdomAdvanceRules.MaxPasses * 2L * 10L, outcome.RowVisits);
+			ClassicAssert.AreEqual(-1, outcome.State, "the fixed-point jump did not run");
+			ClassicAssert.AreEqual(1000000L, outcome.ProcessedThroughTick, "the remainder was not dated as settled");
 		}
 
 		[Test]
@@ -326,10 +327,10 @@ namespace ThousandAndFirst.Tests
 			ToyCityState start = new ToyCityState(5000L, 100L, 100L, 0L, 9000L, Day, 0L, 0, false);
 			KingdomAdvanceOutcome<ToyCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(model, start, 5000L, 5000L, out outcome, out fault));
-			Assert.AreEqual(1, outcome.Steps);
-			Assert.AreEqual(0, outcome.State.Draws, "an empty span drew");
-			Assert.AreEqual(5000L, outcome.ProcessedThroughTick);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(model, start, 5000L, 5000L, out outcome, out fault));
+			ClassicAssert.AreEqual(1, outcome.Steps);
+			ClassicAssert.AreEqual(0, outcome.State.Draws, "an empty span drew");
+			ClassicAssert.AreEqual(5000L, outcome.ProcessedThroughTick);
 		}
 
 		[Test]
@@ -338,10 +339,10 @@ namespace ThousandAndFirst.Tests
 			ToyCityModel model = new ToyCityModel(1);
 			KingdomAdvanceOutcome<ToyCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryRun(model, ClockOnly(), 5000L, 4999L, out outcome, out fault));
-			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
-			Assert.AreEqual(0, outcome.Steps);
-			Assert.IsNull(outcome.State);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryRun(model, ClockOnly(), 5000L, 4999L, out outcome, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, fault);
+			ClassicAssert.AreEqual(0, outcome.Steps);
+			ClassicAssert.IsNull(outcome.State);
 		}
 
 		[Test]
@@ -349,10 +350,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<ToyCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryRun<ToyCityState>(null, ClockOnly(), 0L, 10L, out outcome, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomAdvanceRules.TryRun(new ToyCityModel(1), ClockOnly(), -1L, 10L, out outcome, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryRun<ToyCityState>(null, ClockOnly(), 0L, 10L, out outcome, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryRun(new ToyCityModel(1), ClockOnly(), -1L, 10L, out outcome, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		[Test]
@@ -360,9 +361,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<int> outcome;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryRun(new FaultingModel(), 7, 0L, 100L, out outcome, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidRate, fault);
-			Assert.AreEqual(0, outcome.Steps);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryRun(new FaultingModel(), 7, 0L, 100L, out outcome, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidRate, fault);
+			ClassicAssert.AreEqual(0, outcome.Steps);
 		}
 
 		// ---- The crossing solver ---------------------------------------------------------
@@ -380,9 +381,9 @@ namespace ThousandAndFirst.Tests
 			long ticks;
 			KingdomBreakpointKind kind;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryCrossingTicks(level, capacity, ratePerDay, Day, out ticks, out kind, out fault));
-			Assert.AreEqual(expectedDays * Day, ticks);
-			Assert.AreEqual((KingdomBreakpointKind)expectedKind, kind);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryCrossingTicks(level, capacity, ratePerDay, Day, out ticks, out kind, out fault));
+			ClassicAssert.AreEqual(expectedDays * Day, ticks);
+			ClassicAssert.AreEqual((KingdomBreakpointKind)expectedKind, kind);
 		}
 
 		[Test]
@@ -391,9 +392,9 @@ namespace ThousandAndFirst.Tests
 			long ticks;
 			KingdomBreakpointKind kind;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryCrossingTicks(50L, 100L, 0L, Day, out ticks, out kind, out fault));
-			Assert.AreEqual(KingdomCityFault.None, fault, "a stock that is not moving will not arrive, and that is not a fault");
-			Assert.AreEqual(KingdomBreakpointKind.None, kind);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryCrossingTicks(50L, 100L, 0L, Day, out ticks, out kind, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault, "a stock that is not moving will not arrive, and that is not a fault");
+			ClassicAssert.AreEqual(KingdomBreakpointKind.None, kind);
 		}
 
 		[TestCase(50L, 100L, -10L, 0L, (int)KingdomCityFault.InvalidInterval)]
@@ -404,8 +405,8 @@ namespace ThousandAndFirst.Tests
 			long ticks;
 			KingdomBreakpointKind kind;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryCrossingTicks(level, capacity, ratePerDay, ticksPerDay, out ticks, out kind, out fault));
-			Assert.AreEqual((KingdomCityFault)expected, fault);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryCrossingTicks(level, capacity, ratePerDay, ticksPerDay, out ticks, out kind, out fault));
+			ClassicAssert.AreEqual((KingdomCityFault)expected, fault);
 		}
 
 		// ---- Linear integration between breakpoints --------------------------------------
@@ -419,8 +420,8 @@ namespace ThousandAndFirst.Tests
 		{
 			long next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryIntegrateSegment(level, capacity, ratePerDay, days * Day, Day, out next, out fault));
-			Assert.AreEqual(expected, next);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryIntegrateSegment(level, capacity, ratePerDay, days * Day, Day, out next, out fault));
+			ClassicAssert.AreEqual(expected, next);
 		}
 
 		/// <summary>A part-day remainder buys nothing and is not forgiven either: it stays in the
@@ -430,8 +431,8 @@ namespace ThousandAndFirst.Tests
 		{
 			long next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryIntegrateSegment(50L, 100L, -10L, Day - 1L, Day, out next, out fault));
-			Assert.AreEqual(50L, next);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryIntegrateSegment(50L, 100L, -10L, Day - 1L, Day, out next, out fault));
+			ClassicAssert.AreEqual(50L, next);
 		}
 
 		// ---- Earliest selection, and its frozen tie-break ---------------------------------
@@ -448,10 +449,10 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomBreakpoint earliest;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryEarliest(candidates, 4, 0L, 1000L, out earliest, out fault));
-			Assert.AreEqual(KingdomBreakpointKind.StockEmpty, earliest.Kind, "the tie broke on the wrong key");
-			Assert.AreEqual(2, earliest.RowIndex);
-			Assert.AreEqual(300L, earliest.Tick);
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryEarliest(candidates, 4, 0L, 1000L, out earliest, out fault));
+			ClassicAssert.AreEqual(KingdomBreakpointKind.StockEmpty, earliest.Kind, "the tie broke on the wrong key");
+			ClassicAssert.AreEqual(2, earliest.RowIndex);
+			ClassicAssert.AreEqual(300L, earliest.Tick);
 		}
 
 		[Test]
@@ -465,9 +466,9 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomBreakpoint earliest;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryEarliest(candidates, 3, 100L, 1000L, out earliest, out fault));
-			Assert.AreEqual(KingdomCityFault.None, fault);
-			Assert.AreEqual(KingdomBreakpointKind.None, earliest.Kind);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryEarliest(candidates, 3, 100L, 1000L, out earliest, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault);
+			ClassicAssert.AreEqual(KingdomBreakpointKind.None, earliest.Kind);
 		}
 
 		[Test]
@@ -475,10 +476,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBreakpoint earliest;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomAdvanceRules.TryEarliest(null, 0, 0L, 10L, out earliest, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomAdvanceRules.TryEarliest(new KingdomBreakpoint[1], 2, 0L, 10L, out earliest, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryEarliest(null, 0, 0L, 10L, out earliest, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryEarliest(new KingdomBreakpoint[1], 2, 0L, 10L, out earliest, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 	}
 }

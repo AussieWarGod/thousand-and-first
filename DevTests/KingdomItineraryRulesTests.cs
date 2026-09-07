@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -16,11 +17,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ItineraryPhaseKeepsExactByteWireValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomItineraryPhase)));
-			Assert.AreEqual(0, (byte)KingdomItineraryPhase.Pending);
-			Assert.AreEqual(1, (byte)KingdomItineraryPhase.EnRoute);
-			Assert.AreEqual(2, (byte)KingdomItineraryPhase.Handoff);
-			Assert.AreEqual(3, (byte)KingdomItineraryPhase.Delivered);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomItineraryPhase)));
+			ClassicAssert.AreEqual(0, (byte)KingdomItineraryPhase.Pending);
+			ClassicAssert.AreEqual(1, (byte)KingdomItineraryPhase.EnRoute);
+			ClassicAssert.AreEqual(2, (byte)KingdomItineraryPhase.Handoff);
+			ClassicAssert.AreEqual(3, (byte)KingdomItineraryPhase.Delivered);
 		}
 
 		private static KingdomLeg[] Contiguous()
@@ -47,7 +48,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomItineraryFix fix;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryAt(legs, legs.Length, tick, out fix, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryAt(legs, legs.Length, tick, out fix, out fault), fault.ToString());
 			return fix;
 		}
 
@@ -55,21 +56,21 @@ namespace ThousandAndFirst.Tests
 		public void BeforeTheFirstDepartureTheCarrierIsPendingAtTheStart()
 		{
 			KingdomItineraryFix fix = At(Contiguous(), 50L);
-			Assert.AreEqual(KingdomItineraryPhase.Pending, fix.Phase);
-			Assert.AreEqual("taf:zone:a", fix.ZoneId);
-			Assert.AreEqual(0, fix.X);
-			Assert.AreEqual(0, fix.StepsTaken);
-			Assert.AreEqual(-1, fix.LegIndex);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.Pending, fix.Phase);
+			ClassicAssert.AreEqual("taf:zone:a", fix.ZoneId);
+			ClassicAssert.AreEqual(0, fix.X);
+			ClassicAssert.AreEqual(0, fix.StepsTaken);
+			ClassicAssert.AreEqual(-1, fix.LegIndex);
 		}
 
 		[Test]
 		public void MidLegThePositionInterpolatesAlongTheLeg()
 		{
 			KingdomItineraryFix fix = At(Contiguous(), 105L);
-			Assert.AreEqual(KingdomItineraryPhase.EnRoute, fix.Phase);
-			Assert.AreEqual(0, fix.LegIndex);
-			Assert.AreEqual(5, fix.X);
-			Assert.AreEqual(5, fix.StepsTaken, "steps are floor(progress x PathLength)");
+			ClassicAssert.AreEqual(KingdomItineraryPhase.EnRoute, fix.Phase);
+			ClassicAssert.AreEqual(0, fix.LegIndex);
+			ClassicAssert.AreEqual(5, fix.X);
+			ClassicAssert.AreEqual(5, fix.StepsTaken, "steps are floor(progress x PathLength)");
 		}
 
 		/// <summary>
@@ -81,11 +82,11 @@ namespace ThousandAndFirst.Tests
 		public void AtTheHandoffTickTheCarrierIsJustInsideTheNextZonesEntryEdge()
 		{
 			KingdomItineraryFix fix = At(Contiguous(), 110L);
-			Assert.AreEqual(KingdomItineraryPhase.EnRoute, fix.Phase);
-			Assert.AreEqual(1, fix.LegIndex);
-			Assert.AreEqual("taf:zone:b", fix.ZoneId);
-			Assert.AreEqual(79, fix.X, "the carrier popped away from the entry edge");
-			Assert.AreEqual(0, fix.StepsTaken);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.EnRoute, fix.Phase);
+			ClassicAssert.AreEqual(1, fix.LegIndex);
+			ClassicAssert.AreEqual("taf:zone:b", fix.ZoneId);
+			ClassicAssert.AreEqual(79, fix.X, "the carrier popped away from the entry edge");
+			ClassicAssert.AreEqual(0, fix.StepsTaken);
 		}
 
 		/// <summary>Dawdle and they are further on. Both are correct renderings of the same one
@@ -95,33 +96,33 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomItineraryFix early = At(Contiguous(), 110L);
 			KingdomItineraryFix late = At(Contiguous(), 130L);
-			Assert.AreEqual(1, late.LegIndex);
-			Assert.AreEqual(20, late.StepsTaken);
-			Assert.Greater(early.X, late.X, "the leg runs from 79 toward 40, so later is a lower x");
-			Assert.AreEqual(60, late.X);
+			ClassicAssert.AreEqual(1, late.LegIndex);
+			ClassicAssert.AreEqual(20, late.StepsTaken);
+			ClassicAssert.Greater(early.X, late.X, "the leg runs from 79 toward 40, so later is a lower x");
+			ClassicAssert.AreEqual(60, late.X);
 		}
 
 		[Test]
 		public void BetweenTwoLegsTheCarrierWaitsAtTheExitCellItReached()
 		{
 			KingdomItineraryFix fix = At(WithAWait(), 155L);
-			Assert.AreEqual(KingdomItineraryPhase.Handoff, fix.Phase);
-			Assert.AreEqual(1, fix.LegIndex);
-			Assert.AreEqual("taf:zone:b", fix.ZoneId);
-			Assert.AreEqual(40, fix.X);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.Handoff, fix.Phase);
+			ClassicAssert.AreEqual(1, fix.LegIndex);
+			ClassicAssert.AreEqual("taf:zone:b", fix.ZoneId);
+			ClassicAssert.AreEqual(40, fix.X);
 		}
 
 		[Test]
 		public void PastTheLastArrivalTheCarrierIsDelivered()
 		{
 			KingdomItineraryFix fix = At(Contiguous(), 155L);
-			Assert.AreEqual(KingdomItineraryPhase.Delivered, fix.Phase);
-			Assert.AreEqual("taf:zone:c", fix.ZoneId);
-			Assert.AreEqual(5, fix.X);
-			Assert.AreEqual(5, fix.Y);
+			ClassicAssert.AreEqual(KingdomItineraryPhase.Delivered, fix.Phase);
+			ClassicAssert.AreEqual("taf:zone:c", fix.ZoneId);
+			ClassicAssert.AreEqual(5, fix.X);
+			ClassicAssert.AreEqual(5, fix.Y);
 			KingdomItineraryFix later = At(Contiguous(), 5000L);
-			Assert.AreEqual(KingdomItineraryPhase.Delivered, later.Phase);
-			Assert.AreEqual(fix.X, later.X, "a delivered carrier kept moving");
+			ClassicAssert.AreEqual(KingdomItineraryPhase.Delivered, later.Phase);
+			ClassicAssert.AreEqual(fix.X, later.X, "a delivered carrier kept moving");
 		}
 
 		/// <summary>One answer, and asking twice gives it twice. Consistent re-rendering IS
@@ -131,10 +132,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomItineraryFix first = At(Contiguous(), 137L);
 			KingdomItineraryFix second = At(Contiguous(), 137L);
-			Assert.AreEqual(first.Phase, second.Phase);
-			Assert.AreEqual(first.LegIndex, second.LegIndex);
-			Assert.AreEqual(first.X, second.X);
-			Assert.AreEqual(first.StepsTaken, second.StepsTaken);
+			ClassicAssert.AreEqual(first.Phase, second.Phase);
+			ClassicAssert.AreEqual(first.LegIndex, second.LegIndex);
+			ClassicAssert.AreEqual(first.X, second.X);
+			ClassicAssert.AreEqual(first.StepsTaken, second.StepsTaken);
 		}
 
 		// ---- Re-projection ---------------------------------------------------------------
@@ -150,13 +151,13 @@ namespace ThousandAndFirst.Tests
 			KingdomLeg[] legs = Contiguous();
 			KingdomLeg[] shifted;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryReproject(legs, 3, 1, 10L, out shifted, out fault), fault.ToString());
-			Assert.AreEqual(100L, shifted[0].DepartTick, "a completed leg moved");
-			Assert.AreEqual(110L, shifted[0].ArriveTick, "a completed leg moved");
-			Assert.AreEqual(110L, shifted[1].DepartTick, "the leg already begun lost its departure");
-			Assert.AreEqual(160L, shifted[1].ArriveTick);
-			Assert.AreEqual(160L, shifted[2].DepartTick);
-			Assert.AreEqual(165L, shifted[2].ArriveTick);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryReproject(legs, 3, 1, 10L, out shifted, out fault), fault.ToString());
+			ClassicAssert.AreEqual(100L, shifted[0].DepartTick, "a completed leg moved");
+			ClassicAssert.AreEqual(110L, shifted[0].ArriveTick, "a completed leg moved");
+			ClassicAssert.AreEqual(110L, shifted[1].DepartTick, "the leg already begun lost its departure");
+			ClassicAssert.AreEqual(160L, shifted[1].ArriveTick);
+			ClassicAssert.AreEqual(160L, shifted[2].DepartTick);
+			ClassicAssert.AreEqual(165L, shifted[2].ArriveTick);
 		}
 
 		[Test]
@@ -165,29 +166,29 @@ namespace ThousandAndFirst.Tests
 			KingdomLeg[] legs = Contiguous();
 			KingdomLeg[] shifted;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryReproject(legs, 3, 0, 25L, out shifted, out fault));
-			Assert.AreEqual(150L, legs[2].DepartTick, "the input itinerary was mutated");
-			Assert.AreEqual(175L, shifted[2].DepartTick);
-			Assert.AreNotSame(legs, shifted);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryReproject(legs, 3, 0, 25L, out shifted, out fault));
+			ClassicAssert.AreEqual(150L, legs[2].DepartTick, "the input itinerary was mutated");
+			ClassicAssert.AreEqual(175L, shifted[2].DepartTick);
+			ClassicAssert.AreNotSame(legs, shifted);
 		}
 
 		[Test]
 		public void MasterPauseMovesEveryLegWithoutAdvancingTheCarrier()
 		{
 			KingdomLeg[] legs = Contiguous();
-			Assert.IsTrue(KingdomItineraryRules.TryShiftAll(legs, legs.Length, 40L,
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryShiftAll(legs, legs.Length, 40L,
 				out KingdomLeg[] shifted, out KingdomCityFault fault), fault.ToString());
-			Assert.AreEqual(100L, legs[0].DepartTick, "input mutated");
-			Assert.AreEqual(140L, shifted[0].DepartTick);
-			Assert.AreEqual(195L, shifted[2].ArriveTick);
+			ClassicAssert.AreEqual(100L, legs[0].DepartTick, "input mutated");
+			ClassicAssert.AreEqual(140L, shifted[0].DepartTick);
+			ClassicAssert.AreEqual(195L, shifted[2].ArriveTick);
 			KingdomItineraryFix before = At(legs, 105L);
 			KingdomItineraryFix resumed = At(shifted, 145L);
-			Assert.AreEqual(before.ZoneId, resumed.ZoneId);
-			Assert.AreEqual(before.X, resumed.X);
-			Assert.AreEqual(before.StepsTaken, resumed.StepsTaken);
-			Assert.IsFalse(KingdomItineraryRules.TryShiftAll(legs, legs.Length, -1L,
+			ClassicAssert.AreEqual(before.ZoneId, resumed.ZoneId);
+			ClassicAssert.AreEqual(before.X, resumed.X);
+			ClassicAssert.AreEqual(before.StepsTaken, resumed.StepsTaken);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryShiftAll(legs, legs.Length, -1L,
 				out shifted, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		/// <summary>A carrier that made up time still cannot arrive before it left, and an
@@ -198,9 +199,9 @@ namespace ThousandAndFirst.Tests
 			KingdomLeg[] legs = Contiguous();
 			KingdomLeg[] shifted;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryReproject(legs, 3, 1, -100L, out shifted, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
-			Assert.IsNull(shifted);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryReproject(legs, 3, 1, -100L, out shifted, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
+			ClassicAssert.IsNull(shifted);
 		}
 
 		[TestCase(-1)]
@@ -209,8 +210,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLeg[] shifted;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryReproject(Contiguous(), 3, leg, 5L, out shifted, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryReproject(Contiguous(), 3, leg, 5L, out shifted, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		// ---- Validation ------------------------------------------------------------------
@@ -218,16 +219,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SixLegsIsTheCapAndASeventhIsRefused()
 		{
-			Assert.AreEqual(6, KingdomItineraryRules.MaxLegs);
+			ClassicAssert.AreEqual(6, KingdomItineraryRules.MaxLegs);
 			KingdomLeg[] legs = new KingdomLeg[7];
 			for (int i = 0; i < 7; i++)
 			{
 				legs[i] = new KingdomLeg("taf:zone:" + i, 0, 0, 1, 0, 1, 100L * i, 100L * i + 50L);
 			}
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryValidate(legs, 6, out fault));
-			Assert.IsFalse(KingdomItineraryRules.TryValidate(legs, 7, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryValidate(legs, 6, out fault));
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryValidate(legs, 7, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		[Test]
@@ -235,8 +236,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLeg[] legs = new KingdomLeg[1] { new KingdomLeg("taf:zone:a", 0, 0, 1, 0, 1, 200L, 100L) };
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryValidate(legs, 1, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryValidate(legs, 1, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
 		}
 
 		[Test]
@@ -248,8 +249,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomLeg("taf:zone:b", 0, 0, 1, 0, 1, 150L, 250L)
 			};
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryValidate(legs, 2, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryValidate(legs, 2, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidLegOrder, fault);
 		}
 
 		[Test]
@@ -257,10 +258,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomItineraryFix fix;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryAt(new KingdomLeg[0], 0, 100L, out fix, out fault));
-			Assert.AreEqual(KingdomCityFault.OutsideItinerary, fault);
-			Assert.IsFalse(KingdomItineraryRules.TryAt(null, 0, 100L, out fix, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryAt(new KingdomLeg[0], 0, 100L, out fix, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.OutsideItinerary, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryAt(null, 0, 100L, out fix, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 
 		// ---- Estimation: the endpoints are truth, the length is a prior --------------------
@@ -273,8 +274,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int cells;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryChebyshev(fromX, fromY, toX, toY, out cells, out fault));
-			Assert.AreEqual(expected, cells);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryChebyshev(fromX, fromY, toX, toY, out cells, out fault));
+			ClassicAssert.AreEqual(expected, cells);
 		}
 
 		/// <summary>Open ground ≈ 1.25, built-up ≈ 1.6, both named rules constants.
@@ -287,8 +288,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int cells;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(chebyshev, sinuosity, road, out cells, out fault));
-			Assert.AreEqual(expected, cells);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(chebyshev, sinuosity, road, out cells, out fault));
+			ClassicAssert.AreEqual(expected, cells);
 		}
 
 		/// <summary>The consequence the player actually sees: laying a road visibly shortens every
@@ -301,9 +302,9 @@ namespace ThousandAndFirst.Tests
 			{
 				int unpaved;
 				int paved;
-				Assert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(cheb, KingdomItineraryRules.SinuosityBuiltPercent, KingdomItineraryRules.NoRoadDiscountPercent, out unpaved, out fault));
-				Assert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(cheb, KingdomItineraryRules.SinuosityBuiltPercent, KingdomItineraryRules.RoadDiscountPercent, out paved, out fault));
-				Assert.Less(paved, unpaved, "a paved leg at " + cheb + " cells did not shorten");
+				ClassicAssert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(cheb, KingdomItineraryRules.SinuosityBuiltPercent, KingdomItineraryRules.NoRoadDiscountPercent, out unpaved, out fault));
+				ClassicAssert.IsTrue(KingdomItineraryRules.TryEstimatePathLength(cheb, KingdomItineraryRules.SinuosityBuiltPercent, KingdomItineraryRules.RoadDiscountPercent, out paved, out fault));
+				ClassicAssert.Less(paved, unpaved, "a paved leg at " + cheb + " cells did not shorten");
 			}
 		}
 
@@ -315,8 +316,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int cells;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryEstimatePathLength(chebyshev, sinuosity, road, out cells, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidRate, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryEstimatePathLength(chebyshev, sinuosity, road, out cells, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidRate, fault);
 		}
 
 		// ---- Overrun ---------------------------------------------------------------------
@@ -331,9 +332,9 @@ namespace ThousandAndFirst.Tests
 		{
 			bool overrun;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomItineraryRules.TryHasOverrun(Contiguous(), 3, now, out overrun, out fault));
-			Assert.AreEqual(expected, overrun);
-			Assert.AreEqual(2, KingdomItineraryRules.FailAtProjectedDurationMultiple);
+			ClassicAssert.IsTrue(KingdomItineraryRules.TryHasOverrun(Contiguous(), 3, now, out overrun, out fault));
+			ClassicAssert.AreEqual(expected, overrun);
+			ClassicAssert.AreEqual(2, KingdomItineraryRules.FailAtProjectedDurationMultiple);
 		}
 
 		[Test]
@@ -341,8 +342,8 @@ namespace ThousandAndFirst.Tests
 		{
 			bool overrun;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomItineraryRules.TryHasOverrun(Contiguous(), 3, 99L, out overrun, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomItineraryRules.TryHasOverrun(Contiguous(), 3, 99L, out overrun, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		/// <summary>At Speed 100 an actor covers exactly one cell per tick, so PathLength cells is
@@ -351,11 +352,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ALegAtWalkingSpeedTakesOneTickPerCell()
 		{
-			Assert.AreEqual(1, KingdomItineraryRules.WalkTicksPerCellDefault);
+			ClassicAssert.AreEqual(1, KingdomItineraryRules.WalkTicksPerCellDefault);
 			KingdomLeg[] legs = Contiguous();
 			for (int i = 0; i < 2; i++)
 			{
-				Assert.AreEqual((long)legs[i].PathLength * KingdomItineraryRules.WalkTicksPerCellDefault, legs[i].ArriveTick - legs[i].DepartTick,
+				ClassicAssert.AreEqual((long)legs[i].PathLength * KingdomItineraryRules.WalkTicksPerCellDefault, legs[i].ArriveTick - legs[i].DepartTick,
 					"leg " + i + " is not dated at its own walking speed");
 			}
 		}
