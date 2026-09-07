@@ -8,15 +8,25 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-> **0.3.1 automated test census — not full gameplay sign-off.** Current 3046-file census is line-cap green:
+> **Unreleased raid-contact census — not full gameplay sign-off.** Current 3046-file census is line-cap green:
+> 431,481 physical lines, 0 files at or above 300 lines, and1414 direct `XRL` imports.
+> Inventory SHA-256: `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+> The derived cold-stage inventory remains3077 files, not new installed/subscribed proof.
+> Compile52808 passes all four modes: ordinary3042/3046, developer3160/3164,118 Harness shards.
+> Focused Linux source contracts8/8 and adapter7/7 pass. Licensed Windows rerun88369 passes
+> 13644 main and5022 Portable cases, zero skips.
+> Native14492 passes the bounded contact case below; ordinary play and save/load remain untested.
+> Exact current evidence and retained failures are tracked in `docs/STATUS.md`.
+
+> **Retained 0.3.1 automated test census — not full gameplay sign-off.** The stock checkpoint has3046 files:
 > 431,441 physical lines, with 0 files at or above 300 lines. Direct `XRL`
 > imports occur in 1414 files, 0 of them over the line limit. Inventory SHA-256:
 > `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
-> The current derived cold-install inventory contains 3077 files; this is not current installed
-> or subscribed content proof. Current strict four-mode compilation and ABI pass:
+> Its derived cold-install inventory contains 3077 files; this is not installed
+> or subscribed content proof. Retained strict four-mode compilation and ABI pass:
 > ordinary3042/3046, developer3156/3160,114 Harness shards. Managed suites pass
 > 13625 main and5012 Portable cases,zero skips;501 Tools tests pass.
-> Current managed and Tools results are tracked in `docs/STATUS.md`; older totals do not sign
+> Retained managed and Tools results are tracked in `docs/STATUS.md`; older totals do not sign
 > the latest correction. Startup checkpoint1c1c2bc passed six genuine boot/save/cold-load pairs
 > and all twelve strict result checks at seed43101; later stock hardening has separate evidence.
 > Historical nested archive hash tests and103 retained real serializer cases pass; ordinary
@@ -34,6 +44,17 @@ below it.
 > `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence. It does not sign the later isolated subsidence
 > draft; see `docs/STATUS.md` for that unfinished integration and its separate evidence.
+
+## [Unreleased]
+
+- Raid contact now reserves only its exact named store through the real active survey,
+  preserving settlement-wide accounting, routed-water floors and existing rollback guards.
+  Invalid reservations refuse before physical commit instead of quarantining untouched water;
+  another store cannot fund the selected vessel's shortfall. No save format changes.
+- Native case28b.2 proves unchanged foreign contact, one24-dram debit from240 to216 after
+  restoring the original bodies, an unchanged extra96-dram store, and no second debit or
+  quarantine. These are synthetic component checks, not ordinary raid or save/load acceptance.
+  Full licensed Windows suites pass; see `docs/STATUS.md` for exact scope and open gates.
 
 ## [0.3.1] — 2026-09-07 (Alpha)
 

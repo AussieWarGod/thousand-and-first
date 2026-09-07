@@ -13,6 +13,36 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased raid-contact correction — native case28b.2
+
+Two production files change: `Growth/KingdomWaterDebit.cs` and
+`Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs`. Actual contact now takes or reuses the
+active survey and holds its scope through debit and compensation. Exact-store reservation
+cannot fall back to another vessel; settlement-wide counters, routed-water floors, custody
+and rollback guards remain intact. Failed reservations refuse before `Commit`, without the
+previous bogus quarantine over untouched water. No saved fields or public API change.
+
+Current canonical census:3046 sources/431,481 physical lines/1414 direct-XRL/zero cap failures;
+Inventory SHA-256: `3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688`.
+The exact bridge retains3044 unchanged production files, two modified, none added or removed.
+The derived cold-stage inventory remains3077 files, not new installed/subscribed evidence.
+[Production bridge](/tmp/taf-raid-contact-structure.boMu2H/raid-production-bridge.json).
+Canonical compile52808 has passed all four modes: ordinary3042/3046, developer3160/3164,
+with118 Harness shards. Focused Linux source contracts8/8 and adapter7/7 pass, zero skips.
+Full licensed Windows rerun88369 TERMINAL0 passes13644 main and5022 Portable cases, zero skips.
+Initial run35799 retains13641 passed/3 failed from stale source pins and a Harness line-count
+fixture; those failures were corrected without changing the native-tested runtime bytes.
+
+Native14492 TERMINAL0 proves foreign-zone contact leaves240 drams, zero plunder and exact wire
+unchanged; restored contact takes24 drams, leaves216, records StoresPlundered and one attack
+terminal proof, with no quarantine. The extra96-dram store and repeated-contact state remain
+unchanged. Exact nonfirst selection, null/insufficient-selector and anonymous-survey refusals
+also pass. Strict logs and exact-owned PID40412 shutdown pass. This is synthetic component
+evidence only; ordinary play and save/load remain untested. Earlier native failures remain
+retained. The receipt keeps its original Harness hash; later blank-line cleanup is not a
+second native run. [Native evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md).
+Public0.3.1 remains the separately published checkpoint below; this correction is unreleased.
+
 ## Public 0.3.1 — published and finalized
 
 Public item3794797472 submission55498 TERMINAL0 at13:18 UTC on2026-09-07 reports
@@ -71,7 +101,7 @@ user namespaces. Root accepts these three narrow environmental test gaps for thi
 they are not PASS and were not waived by the user. Production ownership/alias guards stay intact.
 
 The user explicitly waived manual startup/save/reload for this Alpha. Retained six genuine
-boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; current stock native16 and managed
+boot/save/cold-load pairs sign startup checkpoint `1c1c2bc`; retained stock native16 and managed
 checks retain their separate scopes. No ordinary subscriber play or graceful Quit PASS follows.
 Root reused the exact frozen-runtime gate, checked the public-only delta, and required strict
 `--alpha` package lineage/receipt/tag/structure binding. The two stale README freshness assertions
@@ -196,7 +226,7 @@ Retained startup oracle finding: repeated stock-child references could counterfe
 or material totals. Top-level absent heart/grants were refused; the separate stock correction
 below closes this gap. It was not the observed canyon failure.
 
-### Follow-on stock hardening — current snapshot, 2026-09-07
+### Retained stock-hardening checkpoint — 2026-09-07
 
 Startup evidence above is frozen at `1c1c2bc`, production digest `7e3fb752…`. Later stock
 hardening adds a callback-free reference-identity guard before both initial quantity loops.
@@ -205,7 +235,7 @@ and save formats. Independent review cleared the two production files and correc
 fixture safety gap: material classification can invoke contents callbacks, so exact captured
 authority is rechecked immediately before injecting the owned duplicate rows/raw count.
 
-Current canonical census:3046 sources/431,441 physical lines/1414 direct-XRL/zero cap failures;
+Retained canonical census:3046 sources/431,441 physical lines/1414 direct-XRL/zero cap failures;
 Inventory SHA-256: `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`.
 The generated staging inventory contains 3077 files, including 3046 staged C# files; this is
 not installed or subscribed-package evidence. Compile73169 TERMINAL0 passes all four C#7.3 modes
@@ -222,7 +252,7 @@ negatives inside the larder/material creator groups, actual verifier refusal and
 restoration. Exact-owned PID5068 stop and root idle check pass; canonical Player.log check passes
 without allowances. This closes the bounded stock correction, not a rerun of the six startup
 pairs against later bytes or current ordinary subscriber acceptance; component save/load remains
-untested. [Current validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
+untested. [Retained stock validation](/tmp/taf-quickstart-stock-validation.CM1dD9/README.md).
 
 ## Retained pre-upload checkpoint — witnessed-death recovery integrated
 

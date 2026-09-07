@@ -1,0 +1,11 @@
+# Real activation and exact-object displacement in a retained synthetic fixture.
+# No production raid-target recovery via OnWorldWake/ResumeOpen while displaced;
+# raw physical custody checks remain between movement and the contact callback.
+# Tests the production StepRaider path; no ordinary gameplay or save/load claim.
+DESCRIPTION=foreign-zone raid contact preserves water and restored contact debits once
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;raid-contact-native-check;stagedigest
+VERBS=raid-contact-native-check
+EXPECT=stagedigest:OK~founded=false,raid-contact-native-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=raids,native-regression

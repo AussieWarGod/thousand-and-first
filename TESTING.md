@@ -544,9 +544,9 @@ not proof of later-stage equipment balance. Frozen old-plan references may still
 when they no longer match the current profile; the correction does not make that impossible.
 
 B2's swallowed callback throw remains unimplemented. Same-blueprint replacement and interrupted
-placement custody remain known open defects. Ordinary raids, save/load, and the separate raid
-displacement cases 28b.1 and 28b.2 remain unsigned. Earlier native evidence below retains its
-historical scope; neither bounded launch pass closes those gates.
+placement custody remain known open defects. Ordinary raids, save/load, and foreign-death
+case 28b.1 remain unsigned. Separate contact case 28b.2 has the bounded native evidence below;
+neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Beta Quickstart cleanup — native seams and open acceptance
 
@@ -1379,6 +1379,23 @@ this pass proves ownership observation, not lifecycle or construction transfer.
 | 28d | Defeat every surviving body marked for that exact raid, return to the exact seat, then Charter → raid recovery → **Turn in** | The quest becomes ready only after the exact band is gone and completes only at explicit seat turn-in. The one-point wound clears; save/reload neither duplicates nor auto-completes it |
 | 28e | On a later proved plunder, decline recovery, then suffer another proved plunder | Decline leaves one persistent one-point scar with no expiry. Later losses do not compound it or mint a second concurrent recovery offer |
 | 29 | After either outcome: `kingdom:chronicle`; save/reload and enter `kingdom:raid` | Chronicle and raid popup agree on the retired answer. Reload does not recreate the consumed source or duplicate the incident |
+
+Case 28b.2 passed the isolated `raid-contact-native-check` persona on 2026-09-07 at 14:40 UTC,
+seed #1012028, retained profile `/mnt/c/taf-scenario.YWkFsy`. Actual foreign-zone `StepRaider`
+preserved 240 drams, zero plunder and exact serialized authority. Restoring the original store
+and raider proved one 24-dram debit, `StoresPlundered`, one exact attack terminal proof and an
+unchanged repeat. A second 96-dram store remained physically unchanged. Read-only native
+reservations also proved exact nonfirst selection, refusal of 241 drams from the 240-dram
+store despite 336 aggregate drams, and refusal of an unbound copied survey. Production
+contact owned its own real survey scope; the harness did not supply one around `StepRaider`.
+
+This test exposed and corrected a real groundless-survey defect: reservation returned a
+failed nonnull receipt, which contact mistook for a usable reservation and then quarantined
+untouched state. Contact now uses the active survey with an exact-store selector and refuses
+failed reservations before committing. Both earlier failing profiles and diagnostic receipts
+remain retained. Corrected runner 14492 exited 0 and receipt-scoped shutdown stopped PID 40412.
+Evidence is synthetic, `ordinary-acceptance=false`, `save-load=untested`; it does not sign
+ordinary raid play, foreign-death case 28b.1, recovery, or save/load.
 
 ## Pass 6b — Fortification
 

@@ -263,6 +263,65 @@ namespace ThousandAndFirst.Tests
 			Assert.AreEqual(spawnedBefore + exact.Count, op.Spawned,
 				"one id and one marker must commit exactly once");
 		}
+
+		[TestCase(0)]
+		[TestCase(1)]
+		public void ActualContactAdaptersPreserveAuthorityThroughEffectsSettled(int plunder)
+		{
+			KingdomLifecycleBook book = Book("city-launch-order-contact");
+			KingdomRaidIncident incident = SeedFightCommittedIncident(book);
+			KingdomLifecycleOperation op = PublishFrozenAttack(book, incident, PartySize,
+				out string blueprint);
+			string planHash = op.PlanHash;
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "published authority");
+			foreach (KingdomLifecycleProjection projection in op.Projections)
+			{
+				Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
+					book, op, projection, 0, 0), "BeginProjection");
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection intent authority");
+				Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(book, op,
+					projection, 1, 1, blueprint, projection.ZoneId, projection.X, projection.Y),
+					"CommitProjection");
+				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection proof authority");
+			}
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.Projected);
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.WaterIntent);
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.WaterSettled);
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.DomainIntent);
+			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op), "ProveDomain");
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "domain proof authority");
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.DomainSettled);
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.EffectIntent);
+			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, false));
+			Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared, op.EffectState);
+			Assert.AreEqual(0, op.PlunderProved);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "refused contact authority");
+			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "BeginEffect");
+			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, op.EffectState);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect intent authority");
+			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder),
+				"CommitEffect");
+			Assert.AreEqual(KingdomLifecyclePhysicalState.Proved, op.EffectState);
+			Assert.AreEqual(plunder, op.PlunderProved);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect proof authority");
+			Assert.AreEqual(planHash, op.PlanHash);
+			Assert.AreSame(op, book.Raid);
+			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "no second begin");
+			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder), "no second commit");
+			Assert.AreEqual(plunder, op.PlunderProved);
+			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.EffectsSettled);
+			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
+			Assert.IsNull(op.Fault);
+		}
+
+		private static void AdvanceWithAuthority(KingdomLifecycleBook book,
+			KingdomLifecycleOperation op, KingdomLifecyclePhase phase)
+		{
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "before " + phase);
+			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, phase, 20L), "advance " + phase);
+			Assert.AreEqual(phase, op.Phase);
+			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "after " + phase);
+		}
 	}
 }
 #endif
