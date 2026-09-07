@@ -26,6 +26,10 @@ passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Porta
 zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
 132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
+"All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
+baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
+`-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
+only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`.
 Canonical compilation runs across 3049 production C# sources; the generated
 cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
@@ -33,9 +37,10 @@ cold-install inventory contains 3080 files. Neither count proves subscriber deli
 ## Retained real-turn recovery validation
 
 Full licensed Windows1901 passes13,673 main/5,051 Portable cases, zero skips. Canonical7819
-passes ordinary3043/3047 and developer3173/3177,130 Harness files, all four C#7.3 modes
-plus installed Hearthpyre source/ABI. Production digest6dbd and its structural binding remain
-unchanged. Four source-only wiring cases support a74th persona;56parser tests pass.
+passes ordinary3043/3047 and developer3173/3177,130 Harness files, all four staged/dev-harness
+baseline/compatibility modes plus installed Hearthpyre source/ABI. Production digest6dbd and
+its structural binding remain unchanged. Four source-only wiring cases support a74th
+persona;56parser tests pass.
 
 `Tools/run-personas.sh raid-recovery-turn-native-check` seals setup, actual `advance 1`,
 and post-turn checks between two stage digests. Native59966 passed one actual EndTurn and
@@ -50,15 +55,17 @@ and save/load are not signed by this controlled case.
 
 Full licensed Windows93430 passes13,669 main and5,047 Portable cases, zero skips.
 Canonical compile56568 passes ordinary3043/3047 and developer3171/3175 with128 Harness
-shards, all four C#7.3 modes plus installed ABI. Native2155 passes the new bound/paused
-case28d.3 and combined destruction-veto case28b.3, with strict raw logs, exact owned stops
-and all3175 source bytes matching both sealed profiles. This is scoped component evidence,
+shards, all four staged/dev-harness baseline/compatibility modes plus installed ABI.
+Native2155 passes the new bound/paused case28d.3 and combined destruction-veto case28b.3,
+with strict raw logs, exact owned stops and all3175 source bytes matching both sealed
+profiles. This is scoped component evidence,
 not ordinary heartbeat, rendered UI or save/load acceptance. Final repository/hosted checks
 remain separate. [Combined evidence](/mnt/c/taf-raid-recovery-guards-native.6Dnfup/README.md).
 
 ## Retained recovery checkpoint — two native cases passed
 
-Canonical compile51408 passes all four C#7.3 modes plus installed ABI across 3047 production C# sources:
+Canonical compile51408 passes all four staged/dev-harness baseline/compatibility modes plus
+installed ABI across 3047 production C# sources:
 ordinary3043/3047, developer3167/3171,124 Harness shards. The generated
 cold-install inventory contains 3078 files; this does not prove a new installation.
 Strict structural binding passes at `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`.
@@ -120,7 +127,8 @@ Follow-on reference-identity guards are now integrated separately, digest
 `9d9eb6416014c7257a26fa08178d8f738e44dd46a295ea3357f32b7739faf1b0`;
 two actual creator groups include duplicate-child negatives and exact fixture restoration.
 Independent review cleared the source after a pre-injection callback-owner reproof was added.
-Current compile73169 TERMINAL0 passes all four C#7.3 modes and ABI across 3046 production C# sources:
+Current compile73169 TERMINAL0 passes all four staged/dev-harness baseline/compatibility modes
+and ABI across 3046 production C# sources:
 ordinary3042/3046, developer3156/3160 with114 Harness shards. Managed47358 TERMINAL0 passes13625
 Taf/5012 Portable, zero skips. Census:431,441 physical lines/1414 direct-XRL imports/zero cap failures. The generated
 cold-install inventory contains 3077 files; it does not prove installation or subscription.
@@ -133,7 +141,8 @@ or current ordinary subscriber acceptance. See [stock validation](/tmp/taf-quick
 
 ## Retained pre-upload census — not current correction signoff
 
-Strict four-mode C#7.3 compilation and compatibility ABI pass across 3045 production C# sources.
+Strict four-mode staged/dev-harness compilation and compatibility ABI pass across 3045
+production C# sources.
 Current census:431,086 physical lines/1414 direct-XRL imports/zero line-cap failures. Ordinary
 inputs3041/3045, developer3146/3150 with105 Harness shards. The derived cold-install inventory contains 3076 files;
 this staging manifest does not establish an installation or Steam subscription.
@@ -152,7 +161,7 @@ Evidence: [current preflight](/tmp/taf-031-owner-death.EsP03W/README.md), [archi
 
 ### Retained D5 checkpoint
 
-Strict C#7.3 compilation passes all four ordinary/developer baseline/compatibility modes plus
+Strict staged compilation passes all four ordinary/developer baseline/compatibility modes plus
 the compatibility ABI check across 3015 production C# sources. The frozen census has 427,499
 physical lines and 1402 direct `XRL` imports; 0 staged sources breach the line cap.
 The 89 Harness shards yield ordinary 3011/3015 and developer 3100/3104 compiler inputs.
@@ -375,7 +384,7 @@ file order; use the table as the top-level checklist.
 ## Current and retained portable evidence boundaries
 
 The retained heart-reservation continuation passed **12,344 Taf / 3,866 Portable**, zero skips,
-and **373 Tools tests**. Strict C#7.3 ordinary/developer baseline/compatibility plus ABI pass;
+and **373 Tools tests**. Strict ordinary/developer baseline/compatibility compilation plus ABI pass;
 3008 production files and 80 Harness shards are covered by the exact source inventories in
 `docs/STATUS.md`. Native fixtures are separate evidence; no release or semantic signoff is implied.
 

@@ -13,6 +13,27 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Current repository integration state — PR #6 merged, main protection updated
+
+Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
+squash-merged to `main` as `be3f13a` at 2026-09-07T22:34:54Z by the author. Its branch
+`codex/release-0.3.1-closeout` was deleted on origin under the repository's
+delete-branch-on-merge policy; merges remain squash-only and no rulesets exist. Hosted run
+34167157170 on `be3f13a` passed repository-audit and the full pure and portable test lanes on
+`ubuntu-latest` and `windows-latest`.
+
+Main's branch protection changed the same day. The required approving review (1, code-owner) was
+removed because the sole collaborator can never approve their own pull request, leaving that rule
+unsatisfiable; `enforce_admins` is now ON. Required checks (repository-audit, plus the full pure
+and portable test lanes on `ubuntu-latest` and `windows-latest`, strict), linear history, no
+force-push, no deletion and required conversation resolution all remain. No `dev` branch exists
+yet, so the branch model in [RELEASING.md](RELEASING.md#branch-model) is still a proposal. Earlier
+sections below record the pre-merge state at their own checkpoints and are not restated here.
+
+Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
+Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
+the current bytes; those receipts are pending and are not claimed here.
+
 ## Unreleased master-growth resume correction, case28d.5
 
 Automated native diagnostic reproduced a real master-resume defect: fresh growth retained
@@ -99,7 +120,7 @@ TERMINAL0 passes13,669 main and5,047 Portable cases, zero skips. Exact source co
 33144/61340 prove all3175 current production/Harness bytes match both sealed native profiles.
 Final repository audit65692 passed501tests/46.709s; all6hosted checks passed and PR11
 normally merged to integration2f6051c. Its full tree matches tested25d1f49. Main PR6's
-six checks also passed; it still requires an eligible approval. No bypass was used.
+six checks also passed; it then still required an eligible approval. No bypass was used.
 Evidence `/mnt/c/taf-raid-recovery-guards-native.6Dnfup`. This signs controlled native API
 seams, not an ordinary heartbeat, rendered popup, resume, save/load or full Beta acceptance.
 
@@ -128,7 +149,7 @@ Full licensed Windows27430 TERMINAL0 passed13,661 main and5,039 Portable cases, 
 Repository audit71541 TERMINAL0 passed501 tests in46.558s, exact3078-file cold-install
 inventory, current documentation, XML, architecture and Harness registration. Independent
 closeout review found no Required issue. Combined PR10 integration and hosted CI remain
-separate next gates; main PR6 still requires an eligible approving review.
+separate next gates; main PR6 then still required an eligible approving review.
 
 Baseline native92856 TERMINAL1 reproduced premature recovery readiness at
 2026-09-07T16:57:49.982Z, seed#1012031, fresh profile `/mnt/c/taf-scenario.3VC3J1`.
@@ -166,8 +187,8 @@ own later native receipt and is not inferred from this earlier two-case result.
 ## Retained unreleased native destruction-veto regression, case28b.3
 
 No further production changes. Dependency tree equals tested death fix87c4992, normally
-merged by PR9 into integration a4d61a9. Public0.3.1 remains unchanged; main PR6 still
-requires an eligible approving review. New developer-only veto provider/checks and persona
+merged by PR9 into integration a4d61a9. Public0.3.1 remains unchanged; main PR6 then still
+required an eligible approving review. New developer-only veto provider/checks and persona
 have independent source review and four source-wiring tests passing in each managed project;
 all56 persona tests pass. Full licensed Windows84737 TERMINAL0 then passed13,654 main
 and5,032 Portable cases with zero skips, after normal Windows rebuild of both projects.
@@ -222,7 +243,7 @@ ownedPID34372 stopped, profile/seal retained. Full Windows24858 TERMINAL0 passed
 13,650 main and5,028 Portable cases with zero skips after normal generated-output rebuild.
 Evidence remains under `/mnt/c/taf-raid-death-fixed.nf0IMW`; final repository audit48595
 TERMINAL0 passed all501 tooling tests in47.005s plus inventory, XML, architecture, registration
-and documentation checks. Normal PR/CI integration remains pending. Main PR6 still requires
+and documentation checks. Normal PR/CI integration remains pending. Main PR6 then still required
 an eligible approving review.
 The earlier missing-generated-DLL launch and both native
 failures are retained. No new version, package or Workshop update is claimed.
@@ -1498,10 +1519,10 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 - Addendum 9 structural release gate is closed for the current digest: every staged C# file is
   strictly under 300 physical lines and `docs/STRUCTURE_REVIEW.json` binds the exact-inventory
   responsibility/protocol review to digest
-  `6dbd94092f57eeb9b79f5ff169105fa5a7ab2cc6702480d99ba98c92be17bff9`, honestly signed by Codex
+  `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`, honestly signed by Codex
   with independent AI reviews under the author's Addendum 9 ruling of 2026-09-02. Complete
   canonical comparison enumerates every source; unchanged files inherit retained review and
-  the six changed sources received fresh scoped review. Any staged source change reopens it.
+  the five changed sources received fresh scoped review. Any staged source change reopens it.
   This structural verdict is not complete Beta or v1.0 functional acceptance.
 
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and

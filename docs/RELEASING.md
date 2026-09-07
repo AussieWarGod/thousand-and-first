@@ -13,7 +13,8 @@ native copy54621 passed. Annotated `v0.3.1` binds commit
 Exact plan/receipt/inventory/finalization hashes and evidence are in
 [current status](STATUS.md#public-031--published-and-finalized).
 The release source/tag push was accepted with a GitHub warning that the existing credentials
-bypassed main's pull-request and three-required-check rules. No protection settings changed.
+bypassed main's pull-request and three-required-check rules. That push changed no protection
+settings; main's protection was updated later — see [current status](STATUS.md).
 Do not repeat direct main pushes: follow-up integration must use a PR and its required checks.
 Retain the accepted release history and immutable tag; do not rewrite them to hide this event.
 Do not automate public releases until the private-item adoption gates below pass. Never automate authentication
