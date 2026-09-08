@@ -1,4 +1,4 @@
-# Structural release contract
+﻿# Structural release contract
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public
@@ -20,16 +20,18 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
+The camp-guide topic addition reports3050 staged production C# files,432,042 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
-Complete canonical parent/current comparison enumerates3044 unchanged,three modified,
-two added,no removals. Root and independent AI reviewer read the complete five-file delta
+`81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`.
+It adds one engine-free words file over the reviewed master-growth digest
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`, whose complete canonical
+parent/current comparison enumerated3044 unchanged,three modified,two added,no removals. Root and independent AI reviewer read the complete five-file delta
 and affected boundaries. A detached growth-resume protocol validates coherent clocks and
 reproves exact source authority before the existing all-participant master publication.
 Original children, health, field work and already-published arrival work remain retained;
 no saved format or public API changes. [Review evidence](STRUCTURE_REVIEW_0_3_1.md)
-binds this exact digest; native, managed and compile evidence remain separate.
+binds the master-growth digest, not the guide addition above it; exact-inventory human semantic
+review, native, managed and compile evidence remain separate.
 
 ## Retained recovery census
 

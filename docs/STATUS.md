@@ -1,4 +1,4 @@
-# Current implementation and release evidence
+﻿# Current implementation and release evidence
 
 **Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
@@ -51,16 +51,17 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
-cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
-Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Current census:3050 staged C# files;432,042 physical lines;3081 files in the generated
+cold-install inventory. Canonical compilation covers3050 sources, baseline and compatibility symbols;
+the last executed four-mode run covered the 3049-source inventory before the camp-guide topics.
+Inventory SHA-256: `81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3049-source digest
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+support the75th persona. Structural release gate passes exact3050-source digest
+`81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness

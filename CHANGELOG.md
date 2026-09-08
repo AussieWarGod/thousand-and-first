@@ -19,11 +19,31 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide now says in his own voice that he is not on the roll and passes through, and that
+  the count stands at nobody until someone comes to stay &mdash; and that nobody stays where no
+  roof is standing. No answer promises an arrival, a pair of hands or a finished building,
+  because the settlement refuses all three until a roof stands and somebody lives under it.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
-> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
-> `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
-> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> **Current unreleased census — exact structural gate passed.** Current 3050-file census is line-cap green:
+> 432,042 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
+> `81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`.
+> The generated cold-install inventory contains 3081 files; no new subscription claim.
+> The camp-guide addition has engine-free evidence only: suites pass13,722 main and5,100
+> Portable cases,zero skips on Linux .NET9.0.306. No native run, no four-mode canonical
+> compile and no exact-inventory human semantic review bind this digest; remaining gates are
+> recorded in `docs/STATUS.md`; this is not Beta sign-off.
+
+> **Retained master pause/resume census — exact structural gate passed.** Its3049-file census was
+> line-cap green:431,893 physical lines,zero files at or above300,1415 direct-XRL imports.
+> Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+> Its generated cold-install inventory contained 3080 files; no new subscription claim.
 > Root and independent AI reviewer inspected the complete five-source delta. Native scope
 > and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
 

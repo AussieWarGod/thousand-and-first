@@ -1,4 +1,13 @@
-# Brief-to-implementation audit
+﻿# Brief-to-implementation audit
+
+## Current camp-guide topic census — 2026-09-08
+
+**3050** production C# files,432,042 physical lines,1415 direct-XRL,zero cap failures;
+3081 generated cold-install files. Exact digest
+`81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`.
+One engine-free words file plus a five-topic root-option loop on the optional Quickstart guide.
+Engine-free suites pass13722 main/5100 Portable,zero skips on Linux .NET9.0.306. No native run,
+four-mode compile or exact-inventory human semantic review binds this digest.
 
 ## Current master-growth resume census — 2026-09-07
 

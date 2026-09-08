@@ -1,4 +1,4 @@
-# Kingdom Quickstart
+﻿# Kingdom Quickstart
 
 Kingdom Quickstart is an optional new-game mode for testing or learning The Thousand and First. It does not alter Classic or Kingdom starts.
 
@@ -15,7 +15,7 @@ Kingdom Quickstart is an optional new-game mode for testing or learning The Thou
 
 Each successful camp physically contains 24 drams of fresh water in dedicated casks, 12 style-appropriate meals in a larder, and a chest containing 1 mud, 3 brush, and 4 timber. These are finite objects and items. They grant no hidden production and replenish only through ordinary settlement work.
 
-The optional named camp guide explains this opening inventory. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
+The optional named camp guide explains this opening inventory and answers five fixed questions: how the place was founded and what ground is held, how anything gets built, water and the stores, whether anyone will come, and petitions and raiders. Every answer returns to the opening, and the guide says plainly that he is not on the roll, that the settlement counts nobody until someone comes to stay, and that nobody stays where no roof is standing. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
 
 ## Safety and compatibility
 
@@ -25,6 +25,7 @@ The optional named camp guide explains this opening inventory. The guide is pass
 - The bootstrap stores a checksummed, phase-by-phase receipt containing the exact physical object identities. Each cask, larder, chest, and included guide is completely prepared off-map, receives a profile/ground/role-bound reservation mark, and then enters the zone in one visible placement. A save or callback cut can therefore leave only no object or one exact, fully prepared object; load, zone-activation, and bounded end-turn wakes adopt that object before advancing the receipt and never place a second one.
 - Once a grant phase is receipted, later recovery proves its object identity, dedicated role, position, and non-producing shape. It does not demand the opening water, meal, or material quantities again: using those finite provisions is normal play, not corruption and not authority to replenish them.
 - A malformed receipt, mismatched profile or zone, unavailable founding authority, unsafe site, or failed physical measurement stops further grants. It does not synthesize replacement resources.
+- The conversation on a guide is built once, when the world is created. A Quickstart world created before the guide learned its topics keeps the single opening line for good; nothing restamps an existing guide, and no verification demands the new shape.
 - Do not treat changing the advisor option after world creation as a retroactive toggle. Quickstart
   registers one serializable player-system wake for load, zone activation, and bounded end-turn
   recovery. Its only mutable member is explicitly non-serialized; the checksummed game-state
