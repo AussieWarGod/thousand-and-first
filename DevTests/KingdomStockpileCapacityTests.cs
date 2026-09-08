@@ -156,16 +156,16 @@ namespace ThousandAndFirst.Tests
 				"int room = StockpileRoomSpoken(container);",
 				"if (room < 1)",
 				"continue;",
-				"placed += Deposit(container, blueprint, room, ref remaining);",
+				"placed += Deposit(Zone, container, blueprint, room, ref remaining);",
 				"while (remaining > 0)",
 				"if (Fallback != null)",
 				"spilled += batch;",
 				"item.Obliterate();",
 				"Tally.Add(Material, placed + spilled);");
-			string deposit = Between(put, "private int Deposit(GameObject Container", "return placed;");
+			string deposit = DepositSource();
 			StringAssert.Contains("while (Remaining > 0 && room > 0)", deposit);
 			StringAssert.Contains("int batch = KingdomRules.DepositBatch(Remaining, room,", deposit);
-			StringAssert.Contains("room -= batch;", deposit);
+			StringAssert.Contains("room -= landed;", deposit);
 			StringAssert.Contains("NoStack: true", deposit);
 		}
 
@@ -177,24 +177,104 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DepositReProvesTheDestinationAfterEveryCallback()
 		{
-			string put = PutSource();
-			string deposit = Between(put, "private int Deposit(GameObject Container",
-				"private static int DepositRoomNow(");
-			AssertOrdered(deposit,
+			string room = TestMain.ReadRepositoryText(RoomFile);
+			AssertOrdered(DepositSource(),
 				"GameObject item = GameObject.Create(Blueprint);",
 				"int batch = KingdomRules.DepositBatch(Remaining, room,",
 				"DepositRoomNow(Container), item.HasPart(\"Stacker\"));",
 				"if (batch < 1)",
 				"item.Obliterate();",
 				"break;",
+				"item.Count = batch;",
+				"if (!DepositStamped(Container, item, batch))",
+				"if (GameObject.Validate(item)) item.Obliterate();",
+				"break;",
+				"int held = DepositHeldNow(Container);",
 				"Container.Inventory.AddObject(item, null,",
-				"placed += batch;",
-				"Remaining -= batch;",
-				"room -= batch;");
+				"int landed = DepositLanded(Container, item, accepted, Blueprint, batch)",
+				"? batch : DepositSalvage(Container, item, held, batch);",
+				"placed += landed;",
+				"Remaining -= landed;",
+				"room -= landed;",
+				"if (landed < batch)");
 			StringAssert.Contains(
-				"GameObject.Validate(Container) && Container.Inventory != null", put);
+				"GameObject.Validate(Container) && Container.Inventory != null", room);
 			StringAssert.Contains("&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;",
-				put);
+				room);
+			StringAssert.Contains(
+				"&& IsStockpile(Container)) ? KingdomSurvey.StockHeldIn(Container) : 0;", room);
+		}
+
+		/// <summary>
+		/// The stamp is a callback seam of its own. <c>item.Count = batch</c> is
+		/// <c>Stacker.StackCount</c>, whose setter sends <c>StackCountChangedEvent</c> to anything
+		/// registered for it (Stacker.cs:26-38, StackCountChangedEvent.cs:25-43), so a handler
+		/// runs AFTER the room proof that chose the batch and BEFORE the insertion that spends it.
+		/// The adversary is that handler filling the store's last unit: the stamped bundle must be
+		/// refused outright rather than inserted on the strength of the older number.
+		/// </summary>
+		[TestCase(4, 4, 4, true)]
+		[TestCase(4, 4, 9, true)]
+		[TestCase(1, 1, 1, true)]
+		[TestCase(4, 4, 3, false)]
+		[TestCase(4, 4, 1, false)]
+		[TestCase(4, 4, 0, false)]
+		[TestCase(4, 4, -2, false)]
+		[TestCase(4, 5, 9, false)]
+		[TestCase(4, 3, 9, false)]
+		[TestCase(0, 0, 9, false)]
+		public void AStampedBundleIsRefusedWhenItsStoreFilledWhileTheStampRan(int batch,
+			int stamped, int live, bool holds)
+		{
+			ClassicAssert.AreEqual(holds, KingdomRules.DepositStampHolds(batch, stamped, live));
+		}
+
+		/// <summary>What may be counted is what the store ended up holding, never what the
+		/// insertion call returned. A proved bundle is worth its batch; an unproved one is worth
+		/// only the gain the store itself shows, so a handler that merged the bundle into a stack
+		/// already there is paid once and a handler that refused it is paid nothing.</summary>
+		[TestCase(4, true, 10, 14, 4)]
+		[TestCase(4, true, 10, 10, 4)]
+		[TestCase(4, false, 10, 14, 4)]
+		[TestCase(4, false, 10, 12, 2)]
+		[TestCase(4, false, 10, 10, 0)]
+		[TestCase(4, false, 10, 6, 0)]
+		[TestCase(4, false, 10, 99, 4)]
+		[TestCase(0, true, 10, 14, 0)]
+		public void OnlyWhatTheStoreGainedIsEverCounted(int batch, bool proved, int before,
+			int after, int expected)
+		{
+			ClassicAssert.AreEqual(expected,
+				KingdomRules.DepositLandedUnits(batch, proved, before, after));
+		}
+
+		/// <summary>The landing proof is the exact-object shape the food landing already uses: the
+		/// same object came back, of the same blueprint, carrying the stamped count, standing in
+		/// this exact store and in no cell. Withdrawal is narrower than the proof on purpose &mdash;
+		/// only a bundle that reached NOBODY is destroyed, because destroying one the engine placed
+		/// elsewhere would erase the very ambiguity it proves.</summary>
+		[Test]
+		public void TheLandingProofIsExactAndOnlyAnOwnerlessBundleIsWithdrawn()
+		{
+			string room = TestMain.ReadRepositoryText(RoomFile);
+			string landed = Between(room, "internal static bool DepositLanded(",
+				"What an unproved insertion");
+			AssertOrdered(landed,
+				"ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)",
+				"Item.Blueprint == Blueprint && Item.Count == Batch",
+				"GameObject.Validate(Container) && Container.Inventory != null",
+				"ReferenceEquals(Item.Physics.InInventory, Container)",
+				"Item.CurrentCell == null && Container.Inventory.Objects.Contains(Item)");
+			string salvage = Between(room, "internal static int DepositSalvage(",
+				"/// <summary>How many of a stock's");
+			AssertOrdered(salvage,
+				"if (GameObject.Validate(Item))",
+				"if (Item.InInventory == null && Item.CurrentCell == null) Item.Obliterate();",
+				"return 0;",
+				"return KingdomRules.DepositLandedUnits(Batch, false, Held,",
+				"DepositHeldNow(Container));");
+			ClassicAssert.AreEqual(0, Occurrences(salvage, "Destroy("),
+				"an unproved insertion must never disturb what the store already held");
 		}
 
 		/// <summary>The one-room adversary, in numbers. A store is chosen with room for four and
@@ -229,11 +309,20 @@ namespace ThousandAndFirst.Tests
 				"a refused delivery must never disturb what is already stored");
 			ClassicAssert.AreEqual(0, Occurrences(put, "RemoveObject("),
 				"a refused delivery must never disturb what is already stored");
-			// Both Obliterates discard an item this method just created and never placed: one
-			// when the caller has no ground to drop on, one when the destination filled up
-			// underneath the delivery between the creation and the insertion. Neither touches
-			// stored goods, and neither decrements what is still to deliver.
-			ClassicAssert.AreEqual(2, Occurrences(put, "item.Obliterate();"));
+			// The one Obliterate in Put discards an item it just created and never placed, when
+			// the caller has no ground to drop on.
+			ClassicAssert.AreEqual(1, Occurrences(put, "item.Obliterate();"));
+			// And the three in the delivery discard a bundle it created and never counted: the
+			// destination filled up between the creation and the batch, or between the stamp and
+			// the insertion, or the insertion left it belonging to nobody at all. None of them
+			// touches stored goods, and none of them decrements what is still to deliver.
+			string deposit = TestMain.ReadRepositoryText(RoomFile);
+			ClassicAssert.AreEqual(0, Occurrences(deposit, "Destroy("),
+				"a refused delivery must never disturb what is already stored");
+			ClassicAssert.AreEqual(0, Occurrences(deposit, "RemoveObject("),
+				"a refused delivery must never disturb what is already stored");
+			ClassicAssert.AreEqual(2, Occurrences(deposit, "item.Obliterate();"));
+			ClassicAssert.AreEqual(1, Occurrences(deposit, "Item.Obliterate();"));
 		}
 
 		/// <summary>STANDARDS 7b: said once when the store fills, taken back the moment it has
@@ -419,6 +508,13 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("still counts against the", modding);
 			StringAssert.Contains("the room never jumps when a reservation is taken or released",
 				modding);
+		}
+
+		private static string DepositSource()
+		{
+			return Between(TestMain.ReadRepositoryText(RoomFile),
+				"internal static int Deposit(Zone Z, GameObject Container",
+				"/// <summary>Room in an exact destination");
 		}
 
 		private static string PutSource()

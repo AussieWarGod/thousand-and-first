@@ -72,8 +72,13 @@ never read a capacity, so the settlement ledger and every purpose-local debit vi
 construction and an over-cap stockpile standing in an old save reads exactly what it read before.
 What the capacity changes is intake only: a delivery fills the first store with room, walks on to
 the next, and spills the remainder to the ground exactly as it already did when no stockpile
-existed. A full store says so once and stops saying it when it has room again. No saved field,
-wire format, option or public API changes; the new state is one object int property.
+existed. A full store says so once and stops saying it when it has room again. Nothing is
+remembered across a callback: creating the bundle, stamping its count (which is
+`Stacker.StackCount`, and sends `StackCountChangedEvent`) and inserting it each run other
+people's handlers, so the destination and its room are proved after the creation and again after
+the stamp, and the bundle is proved standing in that exact store with the count it was stamped
+with before a single unit is counted. No saved field, wire format, option or public API changes;
+the new state is one object int property.
 
 Census after the stockpile-capacity change:3055 staged C# files;432,723 physical lines;3086 files
 in the generated cold-install inventory. Staged compilation covers3055 sources, baseline and

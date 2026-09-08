@@ -98,5 +98,62 @@ namespace ThousandAndFirst
 			}
 			return (Remaining < room) ? Remaining : room;
 		}
+
+		/// <summary>
+		/// Whether a bundle that has ALREADY been stamped with its count may still be inserted,
+		/// judged on the count now standing on it and the room its destination proves after the
+		/// stamp.
+		/// <para>
+		/// Stamping a count is not a quiet assignment: it runs the engine's stack-count handlers,
+		/// so every number read before the stamp is a number from before somebody else ran. A
+		/// store filled to its last unit while the stamp ran refuses the whole bundle, and so does
+		/// one whose count a handler moved out from under the delivery.
+		/// </para>
+		/// <para>
+		/// A refused bundle is never re-stamped smaller and offered again: every stamp runs those
+		/// same handlers, and one that keeps taking room could be asked forever. Nothing is lost
+		/// by refusing &mdash; the units are still to deliver, and go to the next store with room
+		/// or on the ground.
+		/// </para>
+		/// </summary>
+		/// <param name="Batch">Units the delivery chose for this insertion.</param>
+		/// <param name="Stamped">Count now standing on the bundle, read back after the stamp.
+		/// </param>
+		/// <param name="LiveRoom">Room the destination proves after the stamp.</param>
+		public static bool DepositStampHolds(int Batch, int Stamped, int LiveRoom)
+		{
+			return Batch >= 1 && Stamped == Batch && LiveRoom >= Batch;
+		}
+
+		/// <summary>
+		/// Units an insertion may be COUNTED for, which is what the destination ended up holding
+		/// and never what the call returned. A bundle proved standing in its destination with the
+		/// count it was stamped with is worth exactly that bundle. Anything else is worth only
+		/// what the store itself gained while the insertion ran: a handler that merged the bundle
+		/// into a stack already standing there did deliver the units, and a handler that refused,
+		/// replaced, or carried it off delivered none.
+		/// </summary>
+		/// <param name="Batch">Units stamped on the bundle. Nothing at all counts as nothing.
+		/// </param>
+		/// <param name="Proved">Whether the exact bundle was proved in the exact destination.
+		/// </param>
+		/// <param name="HeldBefore">What the destination physically held before the insertion.
+		/// </param>
+		/// <param name="HeldAfter">What it physically holds after it, and after any withdrawal of
+		/// a bundle that reached nobody.</param>
+		/// <returns>Units to count as placed, never above the batch and never negative.</returns>
+		public static int DepositLandedUnits(int Batch, bool Proved, int HeldBefore, int HeldAfter)
+		{
+			if (Batch < 1)
+			{
+				return 0;
+			}
+			if (Proved)
+			{
+				return Batch;
+			}
+			int gained = HeldAfter - HeldBefore;
+			return (gained < 1) ? 0 : ((gained < Batch) ? gained : Batch);
+		}
 	}
 }

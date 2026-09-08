@@ -30,9 +30,9 @@ Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 The delta over the retained draft below is three added production sources — the capacity
 constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
 (`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
-(`Growth/KingdomMaterials.StockpileRoom.cs`) — three modified (the delivery, the status line and
-the porter carry), and the regenerated removal-coverage roster. Each new file owns one
-responsibility and the largest is 90 lines. No saved format, wire or public API changes. The
+(`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and
+that intake's proofs) — three modified (the delivery, the status line and the porter carry), and
+the regenerated removal-coverage roster. Each new file owns one responsibility. No saved format, wire or public API changes. The
 exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` still binds an earlier digest and
 is therefore open for this delta.
 

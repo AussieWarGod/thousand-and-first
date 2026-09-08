@@ -40,7 +40,10 @@ below it.
   with the room beside the tally (`18 of 32 units`). An over-cap stockpile in a standing
   save reads exactly what it read before. The hold is physical rather than spendable: a
   stack a live work has reserved is still standing in the chest and still counts against
-  the room, so the room never jumps when a reservation is taken or released.
+  the room, so the room never jumps when a reservation is taken or released. A delivery
+  counts only what a store actually received: the bundle it makes is proved standing in
+  that exact store, of that material, carrying the count it was stamped with, before a
+  single unit is written down.
 
 ### Compatibility
 
@@ -71,15 +74,18 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
-- The stockpile unit capacity adds 34 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
+- The stockpile unit capacity adds 53 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
   the capacity fallback and the named ladder, the tag identities, both counting paths
   staying capacity-blind, the physical hold, room never going negative, a delivery filling
   to room then walking on then spilling, a full store never being emptied, fullness said
   once and taken back, the porter, the status line and its physical-aware empty branch,
   every settlement-owned intake path choosing a store with room, a settlement out of room
   never reported as a missing blueprint, the modder documentation, the materials
-  roster count, the destination and its room being re-proved after every engine callback,
-  and the one-room adversary in numbers. Measured on this branch with `dev` merged (which
+  roster count, the destination and its room being re-proved after every engine callback
+  (the stamping of a stack count included, which is itself a callback seam), the one-room
+  adversary in numbers, the stamped bundle being refused outright when its store fills
+  while the stamp runs, only what a store actually gained ever being counted, and the
+  landing proof with its narrower withdrawal (only a bundle that reached nobody). Measured on this branch with `dev` merged (which
   brought the cross-version
   profile tooling): full suites pass 13,924 main and 5,180 Portable cases, zero skips, and
   563 tooling tests pass. Both staged compile modes are clean with warnings as errors.

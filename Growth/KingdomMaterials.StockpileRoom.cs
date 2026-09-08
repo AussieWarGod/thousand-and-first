@@ -8,7 +8,7 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomMaterials
 	{
-		// --- Room in a dedicated stockpile ----------------------------------------------------
+		// --- Room in a dedicated stockpile, and the intake that respects it -------------------
 		//
 		// Ruling 5: counting stays WHOLE and intake is what refuses. Stock() and
 		// StockForExactContainer() never read a capacity, so the settlement ledger and every
@@ -91,6 +91,172 @@ namespace ThousandAndFirst
 			MetricsManager.LogError("ThousandAndFirst KingdomMaterials: " + Made
 				+ " and nothing could be created for it; is "
 				+ (Blueprint ?? "its blueprint") + " declared?");
+		}
+
+		/// <summary>
+		/// Fills one stockpile up to the room it declared, and no further.
+		/// <para>
+		/// Nothing here is remembered across a callback, because there are three of them and
+		/// every one of them belongs to somebody else: creating the bundle, STAMPING ITS COUNT
+		/// (which is <c>Stacker.StackCount</c>, and sends <c>StackCountChangedEvent</c>), and
+		/// inserting it. So the destination and its room are proved after the creation and again
+		/// after the stamp, and the outcome &mdash; this bundle, standing in this store, carrying
+		/// the count it was stamped with &mdash; is proved before a single unit is counted. A
+		/// handler that puts something into this same store mid-delivery would otherwise be paid
+		/// for out of a number read before it ran, and one store with room for one unit would
+		/// take four.
+		/// </para>
+		/// </summary>
+		/// <param name="Z">Zone the delivery is running in, for the survey's observations.
+		/// </param>
+		/// <param name="Container">The destination, re-proved at every step rather than
+		/// remembered.</param>
+		/// <param name="Blueprint">What one bundle of the material is made of.</param>
+		/// <param name="Room">Room the store had when this delivery chose it.</param>
+		/// <param name="Remaining">Units still to deliver, lowered by what is proved placed.
+		/// </param>
+		/// <returns>Units actually placed in it.</returns>
+		internal static int Deposit(Zone Z, GameObject Container, string Blueprint, int Room,
+			ref int Remaining)
+		{
+			int placed = 0;
+			int room = Room;
+			while (Remaining > 0 && room > 0)
+			{
+				GameObject item = GameObject.Create(Blueprint);
+				if (item == null)
+				{
+					break;
+				}
+				// Creation has already run its callbacks, so the destination is proved again
+				// here rather than trusted: the batch is bounded by the room this exact store
+				// has at this instant as well as by the room it was chosen with.
+				int batch = KingdomRules.DepositBatch(Remaining, room,
+					DepositRoomNow(Container), item.HasPart("Stacker"));
+				if (batch < 1)
+				{
+					// Nothing is placed and nothing is counted; the units stay in Remaining
+					// and go to the next store with room, or on the ground.
+					item.Obliterate();
+					break;
+				}
+				if (batch > 1)
+				{
+					// Stamping a count IS Stacker.StackCount, which sends StackCountChangedEvent
+					// to whoever registered for it: another handler runs between the room proof
+					// above and the insertion below. The destination, its room, and the count now
+					// standing on the bundle are all proved again before anything is inserted, so
+					// a store filled to its last unit while the stamp ran refuses the bundle
+					// rather than being paid for it out of a number read before that handler.
+					item.Count = batch;
+					if (!DepositStamped(Container, item, batch))
+					{
+						if (GameObject.Validate(item)) item.Obliterate();
+						break;
+					}
+				}
+				// What the store holds going in, so what it gained can be told from what the
+				// insertion returned.
+				int held = DepositHeldNow(Container);
+				GameObject accepted = null;
+				// A deposit must never merge into an exact stack another durable receipt
+				// owns. NoStack keeps both identities observable across engine callbacks.
+				try { accepted = Container.Inventory.AddObject(item, null,
+					Silent: true, NoStack: true); }
+				catch
+				{
+					KingdomSurvey.ObserveCurrentTopologyInActive(Z, Container);
+					KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
+					throw;
+				}
+				KingdomSurvey.ObserveChangedInActive(Z, Container);
+				KingdomSurvey.ObserveAddResultInActive(Z, item, accepted);
+				// The outcome is counted, never the call. A bundle proved in this exact store
+				// with the count it was stamped with is worth that batch; anything else is
+				// worth only what the store itself gained, and the delivery stops here rather
+				// than offering a second bundle to a destination that just ate one.
+				int landed = DepositLanded(Container, item, accepted, Blueprint, batch)
+					? batch : DepositSalvage(Container, item, held, batch);
+				placed += landed;
+				Remaining -= landed;
+				room -= landed;
+				if (landed < batch)
+				{
+					break;
+				}
+			}
+			return placed;
+		}
+
+		/// <summary>Room in an exact destination that is still a dedicated stockpile, proved
+		/// fresh after a callback rather than remembered. Anything else has no room at all: a
+		/// store another handler destroyed, took the inventory off, or released mid-delivery
+		/// has stopped being a destination, and the delivery walks on rather than putting
+		/// material somewhere the settlement no longer counts.</summary>
+		internal static int DepositRoomNow(GameObject Container)
+		{
+			return (GameObject.Validate(Container) && Container.Inventory != null
+				&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;
+		}
+
+		/// <summary>What an exact destination physically holds right now, and nothing at all once
+		/// it has stopped being a destination. Read either side of an insertion, this is how the
+		/// delivery learns what a store actually gained when the bundle it made stopped being the
+		/// thing the units arrived in.</summary>
+		internal static int DepositHeldNow(GameObject Container)
+		{
+			return (GameObject.Validate(Container) && Container.Inventory != null
+				&& IsStockpile(Container)) ? KingdomSurvey.StockHeldIn(Container) : 0;
+		}
+
+		/// <summary>Whether a bundle already stamped with its count may still be inserted. The
+		/// stamp itself runs the engine's stack-count handlers, so the item and the destination
+		/// are both read again afterwards and judged by
+		/// <see cref="KingdomRules.DepositStampHolds"/>.</summary>
+		internal static bool DepositStamped(GameObject Container, GameObject Item, int Batch)
+		{
+			return GameObject.Validate(Item) && KingdomRules.DepositStampHolds(Batch, Item.Count,
+				DepositRoomNow(Container));
+		}
+
+		/// <summary>
+		/// Proof that the exact bundle this delivery made is standing in the exact store it was
+		/// made for, as itself, of the material it was made of, carrying the count it was stamped
+		/// with. Insertion runs other people's callbacks, so a delivery that counted the CALL
+		/// would pay itself for a bundle that was refused, replaced, merged away, or carried off.
+		/// </summary>
+		internal static bool DepositLanded(GameObject Container, GameObject Item,
+			GameObject Accepted, string Blueprint, int Batch)
+		{
+			return ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)
+				&& Item.Blueprint == Blueprint && Item.Count == Batch
+				&& GameObject.Validate(Container) && Container.Inventory != null
+				&& Item.Physics != null && ReferenceEquals(Item.Physics.InInventory, Container)
+				&& Item.CurrentCell == null && Container.Inventory.Objects.Contains(Item);
+		}
+
+		/// <summary>
+		/// What an unproved insertion actually left in the store. A bundle still standing in the
+		/// world reached SOMEBODY, and delivered nothing here; only one that reached nobody at all
+		/// is withdrawn, because destroying one the engine placed elsewhere would erase the very
+		/// ambiguity it proves. A bundle that is gone may still have delivered its units &mdash; a
+		/// handler that merged it into a stack already in this store &mdash; so what the store
+		/// itself gained is read off the store and counted exactly once.
+		/// </summary>
+		/// <param name="Container">The destination, re-proved by the reading.</param>
+		/// <param name="Item">The bundle the delivery made and has not counted.</param>
+		/// <param name="Held">What the destination held before the insertion.</param>
+		/// <param name="Batch">Units stamped on the bundle; the ceiling on what may be counted.
+		/// </param>
+		internal static int DepositSalvage(GameObject Container, GameObject Item, int Held,
+			int Batch)
+		{
+			if (GameObject.Validate(Item))
+			{
+				if (Item.InInventory == null && Item.CurrentCell == null) Item.Obliterate();
+				return 0;
+			}
+			return KingdomRules.DepositLandedUnits(Batch, false, Held, DepositHeldNow(Container));
 		}
 
 		/// <summary>How many of a stock's dedicated stockpiles will take nothing more, for the
