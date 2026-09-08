@@ -28,23 +28,31 @@ below it.
   floor stays explored, because unsetting it would erase legitimately walked ground. No
   saved field, wire or public API change, and a save loaded without the mod is dark again.
 - The first guest now announces itself. Publishing the first-guest correspondence writes one
-  player message naming the settlement and pointing at the Charter, said once per opportunity
-  because a standing candidate blocks any second publication.
-- The durable half is presentation, not a ledger note: an unanswered first guest is now the first
-  branch of the Charter/Status next-need line, so it survives a save and cannot be dropped the way
-  a ledger note is once twelve notes stand.
-- The stale housing advice is replaced. With no roof at all and arrivals enabled the line names the
-  settler's tent and its bill; otherwise it asks for more housing. One shared predicate now backs
-  the Charter label and the next-need line. No save format, option, or arrival-interval change.
+  player message naming the kingdom and pointing at the Charter, said once per opportunity because
+  a standing candidate makes the next arrival pass return before it reaches that publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+  Charter/Status next-need line, so it survives a save and cannot be dropped the way a ledger note
+  is once twelve notes stand. It is said alongside the settlement's ordinary want, never instead of
+  it, so deferring a guest cannot silence a settlement running out of water.
+- The stale housing advice is replaced. With no roof at all the line names the settler's tent and
+  its bill in the material name the rest of the interface uses (brush, not the catalogue's
+  `canvas`), and promises only what a roof buys: the first guest's citizenship gate never reads
+  lodging, so a roof buys cover now and the arrival after this one.
+- One rules-layer predicate, `GrowthFirstGuestAwaitsAnswer`, now backs the Charter label, the
+  next-need line and the correspondence guard, binding both the candidate phase and the choice
+  state so a quarantined candidate cannot read as a standing question. No save format, option, or
+  arrival-interval change.
 
 > **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
-> 432,024 physical lines,zero files at or above300; direct `XRL`
+> 432,085 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+> `1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`.
 > The generated cold-install inventory contains 3082 files; no new subscription claim.
-> Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
-> staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
-> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> The repository tooling suites pass. Linux dotnet 9.0.306 against the licensed install runs the
+> full source suite green at 13,724 cases and the portable kernel at 5,098 cases, zero skips in
+> both, and Roslyn 9.0.306 on Linux compiled the staged baseline (3047 sources) and staged
+> compatibility (3051 sources plus the tracked Hearthpyre 2.2.3 ABI stub) sets clean
+> against the licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
 > any native run did NOT happen for this delta, and the exact-inventory human semantic review is
 > open against the new digest. This is not Beta sign-off.
 

@@ -1,6 +1,6 @@
-﻿# Current implementation and release evidence
+# Current implementation and release evidence
 
-**Snapshot:** 2026-09-07
+**Snapshot:** 2026-09-08
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
 **Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
@@ -35,6 +35,34 @@ Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahea
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
 
+## Unreleased first-settler legibility
+
+Publishing the first-guest correspondence now writes one player message naming the kingdom and
+pointing at the Charter. A standing candidate makes the next arrival pass return before it
+reaches that publication, so the message is said once per opportunity and never repeated.
+
+The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+Charter/Status next-need line, alongside the settlement's ordinary want rather than instead of it,
+so a deferred guest cannot silence a settlement running out of water. One rules-layer predicate,
+`KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer`, backs the Charter label, the next-need line
+and the correspondence guard, and it binds both the candidate phase and the choice state, so no
+surface can name a debt the rules would refuse to settle. The stale housing advice is corrected:
+with no roof at all the line names the settler's tent and its bill, and promises only what a roof
+actually buys, because the first guest's citizenship gate never reads lodging. No saved fields,
+formats, options or arrival intervals change; public0.3.1 is unchanged.
+
+Current census:3051 staged C# files;432,085 physical lines;3082 files in the generated
+cold-install inventory. Staged compilation covers3051 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3047 of them; the optional-mod bridge is compatibility-only, and the
+tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The dev-harness modes and the Windows gate did
+not run for this census.
+Inventory SHA-256: `1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
+Linux dotnet 9.0.306 against the licensed install passes the full source suite at 13,724 cases and
+the portable kernel at 5,098 cases, zero skips in both, and passes the doc, structure and tooling
+audits. No native in-game run and no human semantic review bind this digest.
+
 ## Unreleased master-growth resume correction, case28d.5
 
 Automated native diagnostic reproduced a real master-resume defect: fresh growth retained
@@ -51,13 +79,19 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3051 staged C# files;432,024 physical lines;3082 files in the generated
-cold-install inventory. Staged compilation covers3051 sources, baseline and compatibility symbols,
-run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
-(baseline compiles 3047 of them; the optional-mod bridge is compatibility-only). The dev-harness
-modes and the Windows gate did not run for this census.
+Retained claimed-ground census:3051 staged C# files;432,024 physical lines;3082 files in the
+generated cold-install inventory. Staged compilation covered3051 sources, baseline and
+compatibility symbols, run by Roslyn 9.0.306 on Linux against the licensed Managed references
+with warnings as errors (baseline compiled 3047 of them; the optional-mod bridge is
+compatibility-only). The dev-harness modes and the Windows gate did not run for that census.
 Inventory SHA-256: `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
 Direct `XRL` imports: 1417 files, 0 over the line limit.
+
+Retained master-growth census:3049 staged C# files;431,893 physical lines;3080 files in the
+generated cold-install inventory. Canonical compilation covers3049 sources, baseline and
+compatibility symbols. Inventory SHA-256:
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`. Every native, Windows-suite,
+four-mode compile and review result in this section binds that digest, not the current one.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,

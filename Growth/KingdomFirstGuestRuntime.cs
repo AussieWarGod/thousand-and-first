@@ -8,17 +8,15 @@ namespace ThousandAndFirst
 	public static partial class KingdomFirstGuestRuntime
 	{
 		/// <summary>
-		/// True while a first guest's correspondence stands open and unanswered. One predicate, so
-		/// the Charter label, the Charter header's next need, and Status cannot disagree about
-		/// whether the founder still owes this person a reply.
+		/// True while a first guest's correspondence stands open and unanswered. The decision is
+		/// the rules layer's, not this file's, so the Charter label, the Charter header's next
+		/// need, Status, and the correspondence itself cannot disagree with the choices the rules
+		/// will actually accept.
 		/// </summary>
 		public static bool IsAwaitingAnswer(KingdomSystem system)
 		{
-			KingdomGrowthFirstGuestOpportunity x =
-				system?.LifecycleBook?.Growth?.ArrivalCandidate?.FirstGuest;
-			return x != null
-				&& (x.ChoiceState == KingdomGrowthFirstGuestChoiceState.AwaitingChoice
-					|| x.ChoiceState == KingdomGrowthFirstGuestChoiceState.Deferred);
+			return KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				system?.LifecycleBook?.Growth?.ArrivalCandidate);
 		}
 
 		public static string CharterLabel(KingdomSystem system)
@@ -39,8 +37,7 @@ namespace ThousandAndFirst
 			KingdomGrowthFirstGuestOpportunity x = candidate?.FirstGuest;
 			if (now < 0L || growth == null || candidate == null || x == null
 				|| !KingdomLifecycleRules.CanOwnGrowthAuthority(growth, growth.SettlementId)
-				|| x.ChoiceState != KingdomGrowthFirstGuestChoiceState.AwaitingChoice
-					&& x.ChoiceState != KingdomGrowthFirstGuestChoiceState.Deferred)
+				|| !KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(candidate))
 			{
 				Popup.Show("No Growth-owned first-guest correspondence is awaiting a choice.");
 				return;

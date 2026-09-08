@@ -1,4 +1,4 @@
-﻿# Structural release contract
+# Structural release contract
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public
@@ -20,17 +20,23 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The claimed-ground light reports 3051 staged production C# files and 432,024 physical lines.
+The claimed-ground light and the first-settler legibility change together report 3051 staged
+production C# files and 432,085 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`. The census reports
+`1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`. The census reports
 1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is two added production files &mdash; a mod-owned
 `IZonePart` and its projection &mdash; plus one modified event shard, one registry line, one
-option row and documentation. No saved format, wire or public API is removed. The exact-inventory
-semantic review in `docs/STRUCTURE_REVIEW.json` still binds the previous digest and is therefore
-open for this delta; the human review it records has not been re-run here.
+option row, four modified first-guest production shards and documentation. No saved format, wire
+or public API is removed. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json`
+still binds the previous digest and is therefore open for this delta; the human review it records
+has not been re-run here.
+
+The claimed-ground light on its own reported 3051 files and 432,024 physical lines at inventory
+digest `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`; that digest no longer
+binds the current bytes.
 
 ## Retained master-growth resume draft census
 
@@ -44,13 +50,6 @@ reproves exact source authority before the existing all-participant master publi
 Original children, health, field work and already-published arrival work remain retained;
 no saved format or public API changes. [Review evidence](STRUCTURE_REVIEW_0_3_1.md)
 binds this exact digest; native, managed and compile evidence remain separate.
-
-The first-settler legibility change reports3049 staged production C# files,431,926 physical lines,
-zero at or above300,and1415 direct-XRL files. Exact inventory:
-`440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
-Three production files changed (a player message on first-guest publication, one shared
-awaiting-answer predicate, and the next-need lines that read it); one DevTests source pin was
-added. No human semantic review binds this digest, so the release gate stays closed on it.
 
 ## Retained recovery census
 

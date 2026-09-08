@@ -478,6 +478,58 @@ namespace ThousandAndFirst.Tests
 					files[i]);
 		}
 
+		[Test]
+		public void OpeningCorrespondenceIsAnnouncedExactlyOnceOnPublication()
+		{
+			string start = Source("Growth/KingdomGrowth.FirstGuestStart.cs");
+			AssertOrdered(start, "TryPublishGrowthArrivalCandidate",
+				"MessageQueue.AddPlayerMessage",
+				"Charter: read the first guest's correspondence",
+				"return ArrivalResult.Deferred;");
+			StringAssert.DoesNotContain("GameObject.Create", start);
+			StringAssert.DoesNotContain("Ledger.Note", start);
+		}
+
+		[Test]
+		public void EverySurfaceReadsTheOneRulesLayerAwaitingPredicate()
+		{
+			string rules = Source("Experience/KingdomGrowthFirstGuestRules.Choices.cs");
+			AssertOrdered(rules,
+				"public static bool GrowthFirstGuestAwaitsAnswer(",
+				"Candidate.Phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice",
+				"guest.ChoiceState == KingdomGrowthFirstGuestChoiceState.AwaitingChoice",
+				"guest.ChoiceState == KingdomGrowthFirstGuestChoiceState.Deferred");
+
+			string runtime = Source("Growth/KingdomFirstGuestRuntime.cs");
+			AssertOrdered(runtime, "public static bool IsAwaitingAnswer(KingdomSystem system)",
+				"KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(",
+				"public static string CharterLabel(KingdomSystem system)",
+				"if (!IsAwaitingAnswer(system))",
+				"!KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(candidate)");
+			StringAssert.Contains("KingdomFirstGuestRuntime.IsAwaitingAnswer(System)",
+				Source("Core/KingdomReportsPeople.cs"));
+		}
+
+		[Test]
+		public void AnUnansweredGuestIsSaidBesideTheOrdinaryNeedNotInsteadOfIt()
+		{
+			string people = Source("Core/KingdomReportsPeople.cs");
+			AssertOrdered(people, "string ordinary = OrdinaryNeed(System, Here);",
+				"KingdomFirstGuestRuntime.IsAwaitingAnswer(System)",
+				"A first guest is waiting for your answer.",
+				"Charter: read the first guest's correspondence",
+				"guest + \" \" + ordinary",
+				"private static string OrdinaryNeed(KingdomSystem System, Zone Here)",
+				"int stored = KingdomGrowth.CountStoredWater(Here);");
+			StringAssert.DoesNotContain("communal bunk", people);
+			StringAssert.DoesNotContain("and the first settler will stay", people);
+			StringAssert.Contains("Commission a settler's tent (3 drams, 2 brush)", people);
+			StringAssert.DoesNotContain("2 canvas", people);
+			StringAssert.Contains(
+				"KingdomGrowth.Enabled && KingdomMaster.NewWorkAllowed(System)", people);
+			StringAssert.Contains("Commission more housing", people);
+		}
+
 		private static string FirstGuestRules()
 		{
 			string[] files =
@@ -492,33 +544,6 @@ namespace ThousandAndFirst.Tests
 			string source = "";
 			for (int i = 0; i < files.Length; i++) source += Source(files[i]);
 			return source;
-		}
-
-		[Test]
-		public void OpeningCorrespondenceIsAnnouncedOnceAndKeptByTheNextNeedLine()
-		{
-			string start = Source("Growth/KingdomGrowth.FirstGuestStart.cs");
-			AssertOrdered(start, "TryPublishGrowthArrivalCandidate",
-				"MessageQueue.AddPlayerMessage",
-				"Charter: read the first guest's correspondence",
-				"return ArrivalResult.Deferred;");
-			StringAssert.DoesNotContain("GameObject.Create", start);
-			StringAssert.DoesNotContain("Ledger.Note", start);
-
-			string runtime = Source("Growth/KingdomFirstGuestRuntime.cs");
-			AssertOrdered(runtime, "public static bool IsAwaitingAnswer(KingdomSystem system)",
-				"public static string CharterLabel(KingdomSystem system)",
-				"if (!IsAwaitingAnswer(system))");
-
-			string people = Source("Core/KingdomReportsPeople.cs");
-			AssertOrdered(people, "KingdomFirstGuestRuntime.IsAwaitingAnswer(System)",
-				"A first guest is waiting for your answer.",
-				"Charter: read the first guest's correspondence",
-				"int stored = KingdomGrowth.CountStoredWater(Here);");
-			StringAssert.DoesNotContain("communal bunk", people);
-			StringAssert.Contains("beds <= 0 && KingdomGrowth.Enabled", people);
-			StringAssert.Contains("Commission a settler's tent (3 drams, 2 canvas)", people);
-			StringAssert.Contains("Commission more housing", people);
 		}
 
 		private static string Source(string path)

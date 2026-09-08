@@ -1,4 +1,4 @@
-﻿# Kingdom Quickstart
+# Kingdom Quickstart
 
 Kingdom Quickstart is an optional new-game mode for testing or learning The Thousand and First. It does not alter Classic or Kingdom starts.
 
@@ -19,12 +19,12 @@ The optional named camp guide explains this opening inventory. The guide is pass
 
 ## What happens next
 
-A Quickstart camp starts with no citizens. That is the design, not a fault: the founder, the optional guide, and the supplies are all that stand there.
+Settlers are not recruited by hand. They arrive on a clock, and roofs, water and hands decide whether they stay.
 
-- The first traveller is due 3600 ticks after founding — three in-game days while the population is zero — and the settlement pass that publishes the arrival runs only while you are standing on claimed ground.
+- The next traveller is due 3600 ticks after founding plus 600 for every settler already living there — three in-game days from an empty roll — and the settlement pass that publishes an arrival runs only while you are standing on claimed ground.
 - When the correspondence opens, one message says so once. The durable half is the Charter header's **Next need** line, which keeps naming the unanswered guest across saves until you answer it.
 - The route is: **Charter** → read the first guest's correspondence → **Admit this person through Growth** → walk to the guest → **Welcome as citizen**. Deferring costs nothing and has no expiry.
-- With no roof standing, **Next need** names the settler's tent (3 drams, 2 canvas); the opening chest's 3 brush is the canvas. A settler with no roof sleeps in the open.
+- With no roof standing, **Next need** names the settler's tent (3 drams, 2 brush); the opening chest's 3 brush pays it. (The building catalogue writes that material as `canvas`; every player-facing surface calls it brush.) The roof is not what keeps the first guest — that decision reads population, support, and water, never lodging — so a guest admitted with no roof still stays, and sleeps in the open. It is the arrival after them who is turned away for want of a roof.
 - Turning the settlers-arrive Mods option off stops arrivals entirely; the next-need line then stops promising a settler.
 
 ## Safety and compatibility
