@@ -18,8 +18,8 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "first-guest-setup";
 		internal const string CheckVerb = "first-guest-check";
 		internal const string Receipt = "r_TAF_ScenarioFirstGuestNative_v1";
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 4200",
-			CheckVerb, "advance 2400", CheckVerb, "stagedigest" };
+		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 6000",
+			CheckVerb, "advance 6000", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

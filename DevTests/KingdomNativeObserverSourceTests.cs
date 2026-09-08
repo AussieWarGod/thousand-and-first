@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Tests
 				StringAssert.Contains(token, provider);
 			foreach (string token in new[] { "__result", "return false;", "[HarmonyTranspiler]",
 				"__state" }) StringAssert.DoesNotContain(token, provider);
-			StringAssert.Contains("\"advance 20\"", provider);
+			StringAssert.Contains("\"advance 2400\"", provider);
 		}
 
 		/// <summary>The guide is built by the production creator and afterwards only read.</summary>
@@ -93,7 +93,7 @@ namespace ThousandAndFirst.Tests
 				"NextArrivalTick =", "ArrivalCandidate =" }) StringAssert.DoesNotContain(token, checks);
 			string provider = Read(GuestProvider);
 			foreach (string token in new[] { "[HarmonyPrefix]", "typeof(MessageQueue), \"Add\"",
-				"\"advance 4200\"", "\"advance 2400\"" }) StringAssert.Contains(token, provider);
+				"\"advance 6000\"", "\"advance 6000\"" }) StringAssert.Contains(token, provider);
 			foreach (string token in new[] { "__result", "return false;", "[HarmonyTranspiler]" })
 				StringAssert.DoesNotContain(token, provider);
 		}

@@ -18,7 +18,7 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "claimed-light-setup";
 		internal const string CheckVerb = "claimed-light-check";
 		internal const string Receipt = "r_TAF_ScenarioClaimedLightNative_v1";
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 20",
+		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
 			CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
