@@ -72,6 +72,24 @@ below it.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
+- Tools/tests: a cross-version upgrade/downgrade profile copier and its native observers.
+  `Tools/prepare-upgrade-profile.py` builds sealed developer profiles whose runtime comes
+  only from pinned Git blobs (`git ls-tree` / `git cat-file` at the `v0.3.1` tag commit
+  `a46b5ad` or at a named candidate commit), never from a worktree or a checkout, so an
+  actual 0.3.1 save can be produced and then transported into a current-runtime profile.
+  The Win32 copy helper holds single-link handles and hashes every file before, on copy,
+  on readback and after, refusing rather than deleting on any mismatch; only `Synced` is
+  ever copied, so no old runtime reaches an upgrade profile. Three Harness overlays
+  observe the old save, the current load before repair and normalization, and the old
+  reader's `profile_schema` 2 refusal at the main menu; each is gated by the sealed
+  scenario marker and by a `taf-scenario`/`taf-smoke` profile root, and Harness ships in
+  no player build. `run-scenario.ps1 -OwnAttended` adds an owned, receipt-bearing,
+  unfocused launch for the marker-only observer profiles; it runs after the existing
+  closed-seal assertion and relaxes nothing. Protocol and exact commands are in
+  [docs/CROSS_VERSION_TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_TESTING.md).
+  Maintainer tooling only, with no player-visible or runtime effect. The native protocol
+  itself has NOT been run; this entry claims the tooling and its checks, not a
+  cross-version compatibility verdict.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
