@@ -34,6 +34,7 @@ namespace ThousandAndFirst
 			bool drainStarted = false;
 			try
 			{
+				OpenTransactions++;
 				if (!CurrentLeaseAuthorityAllowsDebit() || !AllStillReserved())
 				{
 					return Fail(KingdomWaterDebitFault.VesselChanged,
@@ -147,6 +148,7 @@ namespace ThousandAndFirst
 			{
 				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
+				OpenTransactions--;
 			}
 		}
 

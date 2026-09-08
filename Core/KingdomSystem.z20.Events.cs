@@ -176,6 +176,10 @@ namespace ThousandAndFirst
 				if (!KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone))
 					KingdomLog.Log("plot effects: active-zone legacy recovery refused");
 			});
+			Guard("heart basin capacity", delegate
+			{
+				KingdomPlots.ReconcileBasinCapacity(this, E.Zone);
+			});
 			Guard("hosted authority activation", delegate
 			{
 				if (!KingdomHostedArcology.TryReconciliationRoot(E.Zone,

@@ -74,6 +74,9 @@ namespace ThousandAndFirst
 				if (Building.GetIntProperty(HeartEffectProperty) == 1)
 					Building.SetIntProperty(HeartEffectProperty, 2);
 				if (Building.GetIntProperty(HeartEffectProperty) != 2) return false;
+				// The rung's own water. Idempotent and only ever upward, so an interrupted
+				// ceremony above costs the basin nothing: the next load or activation repeats it.
+				ReconcileBasinCapacity(System, Building, Z);
 			}
 			if (KingdomDelveRules.IsDelve(Job.TargetKey))
 			{

@@ -1,6 +1,17 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current camp-guide topic census — 2026-09-08
+## Current first-basin water-store census — 2026-09-09
+
+3053 production C# files;3,084 cold-install files in the generated inventory;
+432,561 physical lines,1418 direct-XRL,zero cap failures. Exact digest
+`31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+The founding heart's first basin becomes the settlement's first water store: the relic slot stamps
+the store dedication in code so the Debug gallery's copy never joins a settlement's accounts, and
+capacity grows with the rung standing over it. No receipt phase, wire, option, grant or verifier
+predicate changes. Roslyn 9.0.306 on Linux compiled the dev-harness baseline and compatibility sets
+clean. No native, staged-mode or human semantic-review evidence binds this digest.
+
+## Retained camp-guide topic census — 2026-09-08
 
 3052 production C# files;3,083 cold-install files in the generated inventory;
 432,178 physical lines,1417 direct-XRL,zero cap failures. Exact digest

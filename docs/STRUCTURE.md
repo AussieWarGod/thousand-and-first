@@ -20,13 +20,13 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
-first-settler legibility change together report 3052 staged production C# files and 432,259
-physical lines.
+The first-basin water store over the empty-camp legacy correction, the camp-guide topic tree, the
+claimed-ground light and the first-settler legibility change together report 3053 staged production
+C# files and 432,561 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
-1417 files with direct `XRL` imports; 0 of those exceed the line limit.
+`31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`. The census reports
+1418 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is four modified production sources and no additions or
 removals: the seal profile reader/writer, the polity realm-legacy facts writer, the refound-import

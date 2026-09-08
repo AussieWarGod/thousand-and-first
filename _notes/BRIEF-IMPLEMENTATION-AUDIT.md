@@ -1,6 +1,16 @@
 # Brief-to-implementation audit
 
-## Current camp-guide topic census — 2026-09-08
+## Current first-basin water-store census — 2026-09-09
+
+**3053** production C# files,432,561 physical lines,1418 direct-XRL,zero cap failures;
+3084 generated cold-install files. Exact digest
+`31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+The founding heart's first basin is the settlement's first water store, with a per-rung capacity
+raised and never lowered. No receipt phase, wire, option, grant or verifier predicate changes.
+Roslyn 9.0.306 on Linux compiled the dev-harness baseline and compatibility sets clean. No native
+run, staged-mode gate or exact-inventory human semantic review binds it.
+
+## Retained camp-guide topic census — 2026-09-08
 
 **3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
 3083 generated cold-install files. Exact digest

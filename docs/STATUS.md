@@ -75,9 +75,11 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
-the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Current census after merging `dev` and the first-basin water store:3053 staged C# files;432,561
+physical lines;3084 files in the generated cold-install inventory. Staged compilation covers3053
+sources, baseline and compatibility symbols (baseline compiles3049 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
 Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
 modified/no additions or removals against integration parent2be6b00; the three added and
 seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and

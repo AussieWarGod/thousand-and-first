@@ -183,6 +183,7 @@ namespace ThousandAndFirst
 				return debit;
 			}
 
+			OpenTransactions++;
 			try
 			{
 				KingdomConstructionInputLeaseSnapshot leases = null;
@@ -278,6 +279,7 @@ namespace ThousandAndFirst
 			{
 				return debit.FailReservation(KingdomWaterDebitFault.Exception, Describe(ex));
 			}
+			finally { OpenTransactions--; }
 		}
 
 	}

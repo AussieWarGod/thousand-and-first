@@ -10,6 +10,19 @@ below it.
 
 ## Unreleased — empty-camp legacy correction
 
+### Added
+
+- The first basin is the settlement's first water store: 16 drams at the rite ground, 48 at
+  the waterstone, 160 at the moot, 512 at the court, 1024 at the arcology. It ships empty —
+  the rite's 8 drams are the cost, not a deposit — and its capacity is only ever raised,
+  never lowered, so drams already in it can never spill when the rung around it is rebuilt.
+  A camp of five drinking from it can now become a steading without a cask rack. The
+  dedication is stamped in code at the founding-heart relic slot rather than authored on the
+  blueprint, so the Debug architecture gallery's photographic copy of the same basin stays
+  out of every settlement's water accounts. A widening that would land underneath an open
+  water debit or a routed-input construction lease is skipped and said once in the ledger,
+  then taken when that clears.
+
 ### Fixed
 
 - A realm whose residents map to no canonical body can now stage and seal its legacy. In
@@ -52,7 +65,12 @@ below it.
   reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
   that a profile revision never re-cuts the current realm foundation receipt).
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
-  5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
+  5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water store the
+  suites pass 13,837 main and 5,116 Portable cases, zero skips: 11 new cases covering the
+  capacity ladder against the stage gates and the leak law, the relic-slot dedication and the
+  gallery's exclusion from it, the existing-authority stamp the survey sweep respects, the
+  raise-only reconciler, the announce-once hold, the paired water-transaction door, and the
+  loader's attribute pair and no-thaw contract. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
@@ -65,12 +83,12 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
+> 432,561 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
+> `31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+> The generated cold-install inventory contains 3084 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
 > digest covers the merge with `dev`, so the exact-inventory human semantic review is open

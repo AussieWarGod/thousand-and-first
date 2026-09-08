@@ -7,6 +7,33 @@ namespace ThousandAndFirst
 {
 	public sealed partial class KingdomWaterDebit
 	{
+		/// <summary>
+		/// How many receipted water transactions are executing on this thread of control right
+		/// now. Process-local and never saved: a re-entrancy door, not state.
+		/// <para>
+		/// It exists because the reservation verifiers assert
+		/// <c>entry.Vessel.MaxVolume == entry.OriginalMaxVolume</c>, so a subsystem that would
+		/// RESIZE a vessel has to be able to ask whether a debit is mid-flight underneath it. A
+		/// drain fires engine callbacks and a callback can re-enter this mod; this counter is the
+		/// only honest answer available from inside one.
+		/// </para>
+		/// <para>
+		/// A depth counter rather than a per-vessel registry, deliberately: every increment is
+		/// paired with a <c>finally</c>, so it cannot leak the way a registry keyed on a
+		/// reservation that is simply abandoned would &mdash; and a leak in that direction would
+		/// block a legitimate resize forever.
+		/// </para>
+		/// </summary>
+		private static int OpenTransactions;
+
+		/// <summary>Whether any receipted water transaction is executing right now. Conservative
+		/// by construction: it answers for the process rather than for one vessel, so a caller
+		/// that refuses on it refuses too often rather than too rarely.</summary>
+		internal static bool TransactionOpen
+		{
+			get { return OpenTransactions > 0; }
+		}
+
 		private void SetCommittedClaim()
 		{
 			Spent = Amount;

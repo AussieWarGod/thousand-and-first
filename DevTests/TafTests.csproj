@@ -802,6 +802,7 @@
 	<Compile Include="KingdomVisualStateRulesTests.cs" />
 	<Compile Include="KingdomVisualStateSourceTests.cs" />
     <Compile Include="KingdomWearRulesTests.cs" />
+    <Compile Include="KingdomHeartBasinCapacityTests.cs" />
     <Compile Include="KingdomBrinkRulesTests.cs" />
     <Compile Include="KingdomSubsidenceRulesTests.cs" />
     <Compile Include="KingdomHeartRulesTests.cs" />

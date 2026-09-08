@@ -37,8 +37,8 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Current3052-source production digest
-`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`
+Current3053-source production digest
+`31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`
 passes the structural gate; its exact-inventory human semantic review is open after the `dev`
 merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
 skips,up from13,735/5,109 on the `dev` integration branch;
@@ -79,9 +79,9 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3052 production C# sources, staged baseline across
-3048 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3083 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3053 production C# sources, staged baseline across
+3049 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3084 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

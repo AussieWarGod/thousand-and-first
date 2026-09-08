@@ -1,6 +1,17 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased camp-guide topic tree
+## Current unreleased first-basin water store
+
+3053 staged sources;432,561 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+The founding heart's first basin becomes the settlement's first water store: dedicated in code at
+the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
+one ledger line while a water debit or routed-input lease is open, and reconciled once on load and
+on zone activation for worlds built before it. No saved field, wire format, option or verifier
+predicate changes. Roslyn 9.0.306 on Linux compiles the dev-harness baseline and compatibility
+sets clean. No native run and no exact-inventory human semantic review bind this digest.
+
+## Retained unreleased camp-guide topic tree
 
 3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
 cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
