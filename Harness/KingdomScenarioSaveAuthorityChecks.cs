@@ -78,8 +78,8 @@ namespace ThousandAndFirst.Harness
 			string failure;
 			Require(KingdomSealProfileCaptureRules.TryCapture(Owner.Ledger, Owner.Realm, record,
 				out Revision, out failure), "canonical seal profile refused: " + failure);
-			Require(record.ProfileSchema == KingdomPolityProfileRules.CurrentLegacyProfileSchema,
-				"canonical seal profile remains unresolved");
+			Require(KingdomPolityProfileRules.IsCommittedLegacyProfileSchema(record.ProfileSchema),
+				"canonical seal profile lacks committed provenance");
 			Owner.Check();
 			return record;
 		}

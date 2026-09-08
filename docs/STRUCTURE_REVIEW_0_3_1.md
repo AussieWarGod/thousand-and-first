@@ -1,9 +1,39 @@
 # 0.3.1 production structural review
 
 Reviewed by Codex with independent AI reviews, under the recorded author ruling.
-Updated 2026-09-07T19:17:56Z. This records structural semantics, not release acceptance.
+Updated 2026-09-07T20:59:53Z. This records structural semantics, not release acceptance.
 
-## Current unreleased master-growth resume correction
+## Current unreleased empty-camp legacy correction
+
+Production digest `5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`.
+[Complete canonical comparison](/tmp/taf-water-canonical.XG7aMZ/comparison.json) verifies
+all3049 sources against actual parent Git blobs at2be6b00000d07d78a3d29e1ea1e438d77e99134d:
+3045 unchanged,four modified,no additions/removals;431913 physical lines,1415 direct-XRL,
+zero cap failures. Parent digest is the retained master-growth digest below. Current source
+membership and bytes were reread unchanged. Comparison JSON SHA256
+`1e17508cac470ca252ee604dcf17612976d97cc95659cc1604d8ecb224791e33`.
+Unchanged sources inherit review; this is not a fresh full-tree deep read.
+
+Root and independent Codex reviewer Parfit read all four changed production files and affected
+seal capture/codec,profile provenance,foundation receipt,exile publication and import boundaries.
+`KingdomPolityProfileRules.Legacy` owns strict schema/body admission and atomic detached capture;
+`KingdomPolityProfileCommitment` keeps schema0/1 commitments and domain-separates explicit
+committed-unresolved schema2. `KingdomSealRecord.Profile` admits that bounded nested schema
+through existing strict validation. `KingdomPolityRules.RealmTransition` uses the existing
+immutable revision1 foundation observation independently of exact current-profile provenance.
+The original foundation receipt is never rewritten to match a later profile revision.
+
+Schema2 retains exact singleton unresolved,actual technology and both provenance commitments.
+Imported unresolved profiles still grant no body,gear or cohort; no living NPCs are inferred.
+Institutional import remains distinct. Historical schema0 absence and known-body schema1 encodings remain
+unchanged. The outer seal version and fields remain unchanged, but the new nested schema and
+public constant extend supported content: older0.3.1 readers cannot read schema2. This requires
+a new public version; no downgrade support or publication is claimed. Root and Parfit closed
+the revised-foundation exile finding and the separate Latent imported-cohort test setup finding.
+No Required source-review finding remains. This binding does not sign native save/load,
+full managed suites,ordinary gameplay,compatibility or Beta acceptance.
+
+## Retained unreleased master-growth resume correction
 
 Production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 [Complete canonical comparison](/tmp/taf-master-growth-canonical.G5aKOw/comparison.json)

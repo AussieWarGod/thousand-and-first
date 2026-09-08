@@ -27,13 +27,74 @@ entirely (the sole collaborator can never approve their own PR); PR-based integr
 policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
-required conversation resolution all remain. No `dev` branch exists
-yet, so the branch model in [RELEASING.md](RELEASING.md#branch-model) is still a proposal. Earlier
+required conversation resolution all remain. The `dev` integration branch now exists on
+origin, created at `6f73974` and currently at `736d28c`, so the branch model in
+[RELEASING.md](RELEASING.md#branch-model) is in force: feature work targets `dev` and `main`
+receives release merges. Earlier
 sections below record the pre-merge state at their own checkpoints and are not restated here.
 
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
+
+## Unreleased empty-camp legacy and native water regression
+
+An actual empty-camp heartbeat exposed rejected automatic legacy staging: no living body
+evidence exists yet. Explicit committed-unresolved profile schema2 now retains real technology
+and provenance without inventing species,gear or NPC authority. The same refusal applied to
+any realm whose residents map to no canonical body,not only a population-0 camp: a settled
+population of only non-canonical species reached the identical refusal. New exile also
+proves the original foundation receipt independently of the later current-profile revision,
+which unblocks exile for any realm at profile revision2 or above. Schema0/1
+bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
+a new version. Public0.3.1/main/tag are unchanged.
+
+Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
+Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
+modified/no additions or removals against integration parent2be6b00; the three added and
+seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
+independent reviewer read the complete four-file delta and affected boundaries; the exact
+structural release gate passes and the exact-inventory human semantic review is open against
+this merged digest. This is source review,not functional acceptance.
+
+Focused38898 passed149 cases,zero skips. That receipt predates the seventh
+KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds
+91 cases in total:73 seal/schema/exile regressions,7 native-source wiring cases,9
+historical seal-fixture cases and2 exile cases. Four seals written by writer code
+byte-identical to tag `v0.3.1` are checked in at `DevTests/Fixtures/SealProfile` with
+pinned SHA-256s; they prove the forward read is an identity — schema0/1 parse,recompose
+byte-for-byte,survive a transition copy and validate as a saved reservation shape. Earlier
+full managed44659 was intentionally superseded after two imported-cohort fixture failures;
+it has no full-suite verdict. Earlier four-mode10882 passes only its earlier source bytes.
+Final licensed Windows suites on the merged tree passed13,826 main and5,116 Portable cases,
+zero skips,up from13,735/5,109 on the `dev` integration branch;
+both normal Rebuilds had zero warnings/errors. Canonical39198 TERMINAL0 passed all four
+C#7.3 modes:ordinary3045/3049,developer3182/3186,137 Harness files,plus installed Hearthpyre
+2.2.3 source/ABI on the pre-merge bytes; the seal-lane production sources are unchanged since
+that run,and the sources merged from `dev` carry `dev`'s own compile receipts. Exact comparison
+proved every ordinary/developer source matched the bytes it ran on. Repository25818 passed501 tests/89.477s plus cold inventory,docs,architecture and XML.
+The first10865 managed run retained13794 passes/one Harness line-limit failure; removing
+one blank line closed it before the final native and full-suite reruns. No guard was weakened.
+
+Native16504,seed1012037,profileiyqatG,proved an actual automatic schema2 empty-camp stage,
+canonical record roundtrip,partial physical upkeep and the original drought departure body,
+roster,tally and journal retirement. It failed the summary-note assertion:12 ordinary notes
+already occupied the bounded list,so exact departure notes=0. The12-entry cap is intentional;
+the corrected fixture proves exact durable Chronicle delivery separately. This diagnostic
+does not sign the later whole-run pass. Original failed attempts and receipt-owned stops are retained
+in [diagnostic evidence](/mnt/c/taf-water-departure-diagnostic.pdomed/README.md).
+Final native45930 TERMINAL0 passed at21:15:32.107UTC,seed1012037,profile4r3WC1:
+actual automatic empty-camp schema2 stage/roundtrip;4800 observed EndTurns;three dry bills,
+one exact original departure,two loyal residents;actual16-dram donor transfer then paid
+recovery. Exact canonical Chronicle receipt proves Delivered official/outsider and Skipped
+journal. All3186 current C# files match that profile; strict raw log/96journalrows and exact
+receipt-ownedPID21008 stop pass. Synthetic dedication/enrollment remain declared. This does
+not test carried inventory,current Chronicle-list membership or ordinary rendered play.
+[Final evidence and retained failures](/mnt/c/taf-water-final-lines.lRva1h/README.md).
+Open visibility gap: ordinary summary saturation can hide the departure there; a Chronicle
+receipt does not prove founder notification. No ordinary-play or save/load acceptance.
 
 ## Unreleased first-settler legibility
 
