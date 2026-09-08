@@ -140,6 +140,13 @@ namespace ThousandAndFirst.Harness
 			if (Pending)
 				return Refuse(CodeBusy, "an advance of " + Requested + " turn(s) is already running "
 					+ "with " + Elapsed + " elapsed");
+			// The symmetric half of KingdomScenarioFrames' own guard. The two mechanisms drive the
+			// player's energy in opposite directions - this one spends it to keep the engine out of
+			// the render loop, that one withholds it to carry the engine in - so one running while
+			// the other is armed would leave neither doing what it says.
+			if (KingdomScenarioFrames.Pending)
+				return Refuse(CodeBusy, "a frame yield is still running with "
+					+ KingdomScenarioFrames.Observations + " frame(s) observed");
 			int turns;
 			if (raw.Length == 0 || raw.Length > 10 || !AllDigits(raw)
 				|| !int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out turns))
