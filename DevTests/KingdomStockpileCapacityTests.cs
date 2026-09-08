@@ -203,7 +203,12 @@ namespace ThousandAndFirst.Tests
 				"if (KingdomMaterials.StockpileRoomSpoken(stock.Stockpiles[i]) < 1)",
 				"if (!anyStore)",
 				"Announce(System, Data, BountyBlock.NowhereToCarry);",
-				"if (KingdomMaterials.StockpileRoom(container) < 1) break;");
+				"if (KingdomMaterials.StockpileRoom(container) < 1)",
+				"KingdomMaterials.StockpileRoomSpoken(container);",
+				"if (Data.TransferredUnits <= 0) return;",
+				"break;");
+			// A full store must never fall through to PileEmpty, which is a PERMANENT block.
+			StringAssert.Contains("if (Data.TransferredUnits <= 0) return;", carry);
 		}
 
 		/// <summary>The founder's status line carries the room, physical on both sides of the
@@ -214,17 +219,85 @@ namespace ThousandAndFirst.Tests
 			string gates = TestMain.ReadRepositoryText(GatesFile);
 			string line = Between(gates, "public static string StockLine(Zone Z)",
 				"public static string StockRoomClause(");
-			StringAssert.Contains("string room = \" (\" + StockRoomClause(stock) + \")\";", line);
+			StringAssert.Contains(
+				"string room = \" (\" + StockRoomClause(stock, out physical) + \")\";", line);
 			StringAssert.Contains("\"The stockpiles stand empty\" + room + \".\"", line);
 			StringAssert.Contains("+ room + \".\";", line);
 			string clause = Between(gates, "public static string StockRoomClause(MaterialStock Stock)",
 				"\t}\n}");
-			StringAssert.Contains("held += KingdomSurvey.StockHeldIn(Stock.Stockpiles[i]);", clause);
-			StringAssert.Contains("capacity += KingdomSurvey.StockCapacityOf(Stock.Stockpiles[i]);",
-				clause);
+			StringAssert.Contains("int stored = KingdomSurvey.StockHeldIn(container);", clause);
+			StringAssert.Contains("int size = KingdomSurvey.StockCapacityOf(container);", clause);
 			StringAssert.Contains("return held + \" of \" + capacity + \" units\"", clause);
 			StringAssert.Contains("\" stockpile full\"", clause);
 			StringAssert.Contains("\" stockpiles full\"", clause);
+			// One walk answers held, capacity and full together, and a thing that holds nothing is
+			// skipped by both, so the fraction and the full-count never disagree about a store.
+			StringAssert.Contains("if (container == null || container.Inventory == null)", clause);
+		}
+
+		/// <summary>The empty line and the room clause must agree. A store physically holding
+		/// thirty units that a live work has leased has nothing SPENDABLE in it, and must not read
+		/// "The stockpiles stand empty (30 of 32 units)" &mdash; one sentence saying two things.
+		/// </summary>
+		[Test]
+		public void TheEmptyLineIsPhysicalAwareAndNeverContradictsTheRoom()
+		{
+			string line = Between(TestMain.ReadRepositoryText(GatesFile),
+				"public static string StockLine(Zone Z)", "public static string StockRoomClause(");
+			AssertOrdered(line,
+				"int physical;",
+				"string room = \" (\" + StockRoomClause(stock, out physical) + \")\";",
+				"return (physical > 0)",
+				"\"The stockpiles hold nothing that can be spent right now\" + room + \".\"",
+				"\"The stockpiles stand empty\" + room + \".\"");
+		}
+
+		/// <summary>Every settlement-owned intake path chooses a store WITH ROOM, so "a full store
+		/// refuses the next delivery" is true of clearance payout and strike salvage as well as of
+		/// MaterialStock.Put and the porter. Both already had a ground path to fall into, and the
+		/// choice is made before any receipt identity is frozen.</summary>
+		[Test]
+		public void EverySettlementOwnedIntakePathChoosesAStoreWithRoom()
+		{
+			AssertOrdered(TestMain.ReadRepositoryText("Growth/KingdomPlot2.28.ClearPayout.cs"),
+				"candidate.GetIntProperty(KingdomMaterials.StockpileProperty) == 1",
+				"&& KingdomMaterials.StockpileRoom(candidate) >= 1)",
+				"ClearInt(Works, ClearDestinationKindProperty, 2);");
+			AssertOrdered(
+				TestMain.ReadRepositoryText("Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs"),
+				"&& candidate.Inventory != null && StockpileRoom(candidate) >= 1)",
+				"Z.GetCell(Job.X, Job.Y)?.AddObject(item)",
+				"Job.PhysicalSpilled + (destination == null ? amount : 0)");
+		}
+
+		/// <summary>A settlement out of room is not a wiring fault. Full stores with no ground to
+		/// spill on must not be reported as a missing item blueprint (a MODERROR).</summary>
+		[Test]
+		public void RunningOutOfRoomIsNeverReportedAsAMissingBlueprint()
+		{
+			string room = TestMain.ReadRepositoryText(RoomFile);
+			AssertOrdered(room,
+				"internal static void ReportNothingLanded(",
+				"if (Ground == null && Stock != null && Stock.Stockpiles.Count > 0",
+				"&& FullStockpiles(Stock) >= Stock.Stockpiles.Count)",
+				"KingdomLog.Log(",
+				"MetricsManager.LogError(");
+			string yard = TestMain.ReadRepositoryText(
+				"Growth/KingdomMaterials.10.SettlementPassAndYards.cs");
+			StringAssert.Contains("ReportNothingLanded(stock, Yard.CurrentCell, ", yard);
+			ClassicAssert.AreEqual(0, Occurrences(yard,
+				"MetricsManager.LogError(\"ThousandAndFirst KingdomMaterials: the \""),
+				"the yard must route its fault line through the helper that knows the difference");
+		}
+
+		/// <summary>The materials roster gained a shard, and the count that names it is asserted
+		/// so it cannot drift unnoticed again.</summary>
+		[Test]
+		public void TheMaterialsRosterCountsTheNewShard()
+		{
+			ClassicAssert.AreEqual(19, KingdomMaterialsLogicalSource.FileCount);
+			StringAssert.Contains("public static int StockpileRoom(GameObject Container)",
+				KingdomMaterialsLogicalSource.Read());
 		}
 
 		/// <summary>Every capacity a blueprint declares is one of the named tunable constants, so
@@ -239,6 +312,8 @@ namespace ThousandAndFirst.Tests
 				KingdomRules.StorehallCapacity, KingdomRules.ShelfCapacity,
 				KingdomRules.LockerCapacity
 			};
+			// Vacuous until T-storage-2/T-camp-2 declare the tag: nothing in RuntimeData carries
+			// it yet, so this matches zero declarations today and guards every later one.
 			Regex declaration = new Regex(
 				"Name=\"" + Regex.Escape(KingdomRules.StockpileCapacityTag)
 				+ "\"\\s+Value=\"([^\"]*)\"");
@@ -268,6 +343,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRules.DefaultStockpileCapacity", modding);
 			StringAssert.Contains(
 				"Nothing already in a store is ever moved, released, or uncounted", modding);
+			// The founder must be warned BEFORE dedicating a loot chest: anything worth bits
+			// occupies stockpile room, which is most loot.
+			StringAssert.Contains("a dedicated stockpile is a poor loot chest", modding);
 		}
 
 		private static string PutSource()

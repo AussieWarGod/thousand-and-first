@@ -140,7 +140,10 @@ namespace ThousandAndFirst
 			/// <param name="Units">How many units. Zero and negative do nothing.</param>
 			/// <param name="Fallback">Cell the overflow is dropped in when no stockpile can take
 			/// it. Null discards the overflow rather than losing track of it, and is only ever
-			/// passed by a caller with no ground to drop on.</param>
+			/// passed by a caller with no ground to drop on. Note the capacity widened that path:
+			/// before it, a dedicated container always absorbed the delivery, and now a null
+			/// Fallback discards whenever every store is full as well as when none is dedicated.
+			/// </param>
 			/// <returns>Units that went on the ground instead of into a stockpile.</returns>
 			public int Put(KingdomMaterial Material, int Units, Cell Fallback)
 			{

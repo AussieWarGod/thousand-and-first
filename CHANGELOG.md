@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — empty-camp legacy correction
+## Unreleased — empty-camp legacy correction and stockpile capacity
 
 ### Fixed
 
@@ -30,10 +30,15 @@ below it.
 - A stockpile now holds a stated number of material units — 32 for a chest dedicated by
   hand, declared on the blueprint for built stores. A full store refuses the next
   delivery, which then goes to the next store with room or is stacked on the ground;
-  nothing you already put in a chest is ever uncounted, moved or lost. The keepers say a
-  store is full once, and stop saying it the moment there is room again. Never weight: the
-  reports keep printing units, now with the room beside the tally (`18 of 32 units`). An
-  over-cap stockpile in a standing save reads exactly what it read before.
+  nothing you already put in a chest is ever uncounted, moved or lost. Every way the
+  settlement takes material in respects it: its own deliveries, clearance payout, strike
+  salvage and a bounty porter all pick a store with room. The keepers say a store is full
+  once, and stop saying it the moment there is room again. Note what fills a store: a
+  stockpile holds everything the settlement can spend — materials, rare finds, and
+  anything that can be taken apart for bits, which is most loot — so a chest you dedicate
+  as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
+  with the room beside the tally (`18 of 32 units`). An over-cap stockpile in a standing
+  save reads exactly what it read before.
 
 ### Compatibility
 
@@ -76,10 +81,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 432,578 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,655 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
-> `440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+> `220c4e618a228787dbfe7c6ad8cf66d354d6eab8289a0d5c05b42fdbf9857af8`.
 > The generated cold-install inventory contains 3086 files; no new subscription claim.
 > It covers the stockpile unit capacity above the retained empty-camp legacy correction: three
 > added production sources (the capacity constants, the survey's material-store reads and the

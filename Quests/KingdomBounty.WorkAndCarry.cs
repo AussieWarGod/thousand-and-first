@@ -141,7 +141,15 @@ namespace ThousandAndFirst
 					// stated size by that stack; nothing after it is bound, and the store reports
 					// itself full from then on. The settlement's OWN deliveries (MaterialStock.Put)
 					// split to the exact room, which is why that path never overshoots at all.
-					if (KingdomMaterials.StockpileRoom(container) < 1) break;
+					if (KingdomMaterials.StockpileRoom(container) < 1)
+					{
+						// The store filled under the porter's hands. Say so once, and never fall
+						// through to PileEmpty with nothing carried: that block is PERMANENT, and
+						// a full store is not an empty pile.
+						KingdomMaterials.StockpileRoomSpoken(container);
+						if (Data.TransferredUnits <= 0) return;
+						break;
+					}
 					GameObject next = null;
 					for (int i = 0; i < pile.Inventory.Objects.Count; i++)
 					{

@@ -318,12 +318,23 @@ servings" and "how many units of stone" are two questions with two answers.
 **The limit refuses intake; it never truncates a count.** The settlement's own delivery fills the
 first store with room, walks on to the next, and drops whatever is left on the ground exactly as
 it already does when no stockpile exists at all. A porter carrying a marked pile in re-reads the
-room before every bundle, and stops when the store is full.
+room before every bundle, and stops when the store is full. Clearance payout and strike salvage
+choose the first dedicated store **with room** and otherwise lay the material on the ground where
+the work stands, so every settlement-owned intake path respects the stated size. A carried stack
+and a single clearance payout are both indivisible: the bundle that finds room may take a store
+past its stated size by that one stack, and nothing after it is bound.
 **Nothing already in a store is ever moved, released, or uncounted.**
 A chest the player overfilled by hand keeps everything in it and
 the reports keep counting all of it; it simply stops being chosen as a destination, and says so
 once: *"The chest will not take another bundle; it holds all the keepers can account for."* The
 status report prints the room beside the tally, as `18 of 32 units`.
+
+**What fills a stockpile is wider than "materials".** A store's hold is everything the settlement
+can spend: ordinary materials, rare finds, **and anything vanilla can take apart into bits** —
+which is most ordinary loot, a spare rifle included, because the settlement spends bits too. Only
+a thing worth no bits and no material at all takes up no room. So a dedicated stockpile is a poor
+loot chest: junk in it is counted against the capacity, and material deliveries will spill onto
+the ground once it is full.
 
 A charter may carry material as well as water, per caravan. Charter entries live under
 `<kingdomdeals Schema="1">` in `KingdomDeals.xml`:

@@ -140,7 +140,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Freezes one real material output and its exact destination before the AddObject
 		/// callback. Nothing is credited in an integer ledger: the receipt closes only around a
-		/// takeable Qud object in a dedicated stockpile, or on the works cell when none exists.
+		/// takeable Qud object in a dedicated stockpile with room, or on the works cell.
 		/// </summary>
 		private static bool PrepareClearOutput(r_KingdomPlotWorks Works, Zone Z,
 			KingdomPlotRules.Material Material, int Amount)
@@ -160,7 +160,8 @@ namespace ThousandAndFirst
 				GameObject candidate = stock.Stockpiles[i];
 				if (GameObject.Validate(candidate) && candidate.CurrentZone == Z
 					&& candidate.Inventory != null
-					&& candidate.GetIntProperty(KingdomMaterials.StockpileProperty) == 1)
+					&& candidate.GetIntProperty(KingdomMaterials.StockpileProperty) == 1
+					&& KingdomMaterials.StockpileRoom(candidate) >= 1)
 				{
 					destination = candidate;
 					break;

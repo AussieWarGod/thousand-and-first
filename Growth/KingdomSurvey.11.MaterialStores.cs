@@ -39,9 +39,11 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Units of material one container holds right now, counted by stack so a stack of twenty
-		/// stones reads as twenty. Anything the material vocabulary does not classify counts as
-		/// nothing and takes up no room &mdash; a founder's spare rifle in the same chest is not
-		/// the settlement's business either way.
+		/// stones reads as twenty. The material vocabulary is WIDE: ordinary materials, rare finds,
+		/// and anything vanilla can take apart into bits, because the settlement spends bits too.
+		/// Most ordinary loot is worth bits, so it DOES occupy stockpile room &mdash; a chest
+		/// dedicated as a stockpile is not also a good loot chest. Only a thing worth no bits and
+		/// no material at all counts as nothing and takes up no room.
 		/// <para>
 		/// PHYSICAL, exactly as <see cref="HeldIn"/> is the physical number for a larder while
 		/// the ordinary-food authority answers the spendable one. A stack another work has leased

@@ -60,12 +60,37 @@ namespace ThousandAndFirst
 				return 0;
 			}
 			Container.SetIntProperty(KingdomRules.StockpileFullAnnouncedProperty, 1);
-			MessageQueue.AddPlayerMessage("The " + Container.ShortDisplayName
-				+ " will not take another bundle; it holds all the keepers can account for.");
+			MessageQueue.AddPlayerMessage("{{K|The " + Container.ShortDisplayName
+				+ " will not take another bundle; it holds all the keepers can account for.}}");
 			KingdomLog.Log("materials: stockpile full, capacity="
 				+ KingdomSurvey.StockCapacityOf(Container)
 				+ " held=" + KingdomSurvey.StockHeldIn(Container));
 			return 0;
+		}
+
+		/// <summary>
+		/// Says that a made thing never landed. A missing item blueprint has eaten real raw stock
+		/// and must be loud, because it is a wiring fault in this mod's own files. Every store
+		/// full with no ground to spill on is a different thing entirely &mdash; a settlement out
+		/// of room, working exactly as written &mdash; and must not be reported as a fault.
+		/// </summary>
+		/// <param name="Stock">The settlement's stock, walked for room.</param>
+		/// <param name="Ground">The cell the overflow would have gone to. Null is no ground.</param>
+		/// <param name="Made">What was made, for the fault line.</param>
+		/// <param name="Blueprint">The blueprint that should have existed, or null.</param>
+		internal static void ReportNothingLanded(MaterialStock Stock, Cell Ground, string Made,
+			string Blueprint)
+		{
+			if (Ground == null && Stock != null && Stock.Stockpiles.Count > 0
+				&& FullStockpiles(Stock) >= Stock.Stockpiles.Count)
+			{
+				KingdomLog.Log("materials: " + Made
+					+ " had nowhere to land; every stockpile full and no ground to spill on");
+				return;
+			}
+			MetricsManager.LogError("ThousandAndFirst KingdomMaterials: " + Made
+				+ " and nothing could be created for it; is "
+				+ (Blueprint ?? "its blueprint") + " declared?");
 		}
 
 		/// <summary>How many of a stock's dedicated stockpiles will take nothing more, for the
@@ -79,7 +104,14 @@ namespace ThousandAndFirst
 			}
 			for (int i = 0; i < Stock.Stockpiles.Count; i++)
 			{
-				if (StockpileRoom(Stock.Stockpiles[i]) < 1)
+				GameObject container = Stock.Stockpiles[i];
+				// A thing that holds nothing is not a store standing full. The status clause skips
+				// it for the same reason, so the two never disagree about what a store is.
+				if (container == null || container.Inventory == null)
+				{
+					continue;
+				}
+				if (StockpileRoom(container) < 1)
 				{
 					full++;
 				}
