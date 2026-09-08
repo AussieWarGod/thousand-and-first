@@ -1,4 +1,4 @@
-# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
+﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
 The current public Alpha manifest is `0.3.1`, published with one subscribed installation
 verified. Working-tree changes do not inherit that tagged release's receipts. The unreleased
@@ -7,7 +7,51 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current master-growth resume validation
+## Current empty-camp and native water validation
+
+`Tools/run-personas.sh water-maintenance-native-check` uses a fresh sealed founding request,
+actual empty-camp warmup,synthetic dedication/citizenship,then four real1200-turn intervals.
+Read-only observers require native upkeep,one drought departure,loyal-core retention and an
+actual donor transfer followed by paid recovery. They do not force clocks,heartbeat results,
+departure accounting or body removal. Unmarked ground water is not a carried-inventory test.
+
+Native16504 passed actual automatic empty-camp schema2 staging and canonical roundtrip,
+then failed a bad summary assertion after proving original departure/body/journal retirement.
+Notes=12/exact-notes=0 matches the existing ordinary-note cap. Durable Chronicle proof must
+use the exact RecordOnce fingerprint,canonical unmigrated five-table registry and Delivered
+official/outsider sinks with journal Skipped; terminal/Lost is insufficient. Summary omission
+must be reported separately,not repaired or relabeled as founder notification by the fixture.
+All failed attempts remain retained. Final native45930 passed the whole drought/refill route
+at21:15:32.107UTC,seed1012037,profile4r3WC1:4800 real observed EndTurns,three dry bills,
+one exact original departure,two loyal residents,actual16-dram transfer then paid recovery.
+Automatic empty-camp schema2 stage/roundtrip and durable Delivered/Delivered/Skipped
+Chronicle proof pass; summary omission remains explicit. Strict raw log/96journalrows,
+receipt-ownedPID21008 stop and all3186 exact C# source bytes pass. Save/load remains unsigned.
+
+Focused38898 passed149 main cases,zero skips. That receipt predates the seventh
+KingdomWaterMaintenanceNativeSourceTests case and is retained as measured, not restated.
+The current branch adds91 cases in total:73 seal/schema/exile regressions,7 native-source
+wiring cases,9 historical seal-fixture cases and2 exile cases (a canonical-body revised
+realm and a foundation-receipt pin). Historical schema0/1 byte oracles,invalid/torn/mixed
+schema refusals,unresolved cohort denial,revision-aware exile and retained foundation
+receipts are covered. Four checked-in seals written by writer code byte-identical to tag
+`v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
+`DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
+Current3052-source production digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`
+passes the structural gate; its exact-inventory human semantic review is open after the `dev`
+merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
+skips,up from13,735/5,109 on the `dev` integration branch;
+canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
+modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
+Complete ordinary/developer source comparisons pass for the bytes it ran on.
+Repository25818 passes501 tooling tests plus inventory,docs,architecture and XML audits.
+Older10882 compilation and superseded44659 managed evidence are not relabeled. First10865
+run failed only the Harness line limit; one blank line was removed before both final reruns.
+Schema2 needs a new public version and cannot be read by older0.3.1. Public0.3.1 is unchanged.
+[Final and retained diagnostic evidence](/mnt/c/taf-water-final-lines.lRva1h/README.md).
+
+## Retained master-growth resume validation
 
 `Tools/run-personas.sh raid-master-turn-native-check` seals actual setup, master No,
 `advance 1`, master Yes, `advance 2`, and post-turn verification. Diagnostic36966
@@ -21,25 +65,23 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`
-passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
-zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
-132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+Current production digest `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`
+passes the exact structural gate. For this digest the engine-free suites passed13,731 main/5,109
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled the staged baseline and staged
+compatibility sets clean against the licensed Managed references with warnings as errors. The
+Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
+(ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
+the retained `a3a9c8dd` digest, NOT to this one: the two dev-harness modes and the Windows gate did
+not run here. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
 "All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
 baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Canonical compilation runs across 3050 production C# sources; the generated
-cold-install inventory contains 3081 files. Neither count proves subscriber delivery.
-The Kingdom Quickstart shelter delta inside this census compiled clean in the staged baseline
-and staged compatibility modes only, run on Linux with the SDK Roslyn against the installed
-managed assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the
-installed-ABI step and the developer boot matrix are outstanding for it, and every timing
-claim about the staked tent remains a source reading. Both public suites run green on that
-delta on Linux under the CI-pinned SDK9.0.306: 13,718 main and 5,096 Portable cases,zero
-skips, two of them the new shelter pins.
+Staged compatibility compilation runs across 3052 production C# sources, staged baseline across
+3048 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3083 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation
@@ -701,6 +743,7 @@ save/reload, destruction-veto callback, ordinary-play anchor, or compatibility m
 | QSB3 | Reject or move a fresh food/material child during insertion; repeat with a callback throwing before and after placement | Known fresh roots and children are cleaned up by exact reference, including moved/rejected children; unknown factory custody fences retry |
 | QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
 | QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
+| QSB6 | With the advisor enabled, talk to the camp guide: read the opening line, open each of the five topics, return to the opening from each, then end with the farewell; save, reload, and talk again | Five topics, in the fixed order, each answering and returning; no answer promises an arrival, hands, or a completed building, and none states how many people the settlement counts; the same graph survives reload and the advisor still verifies. Record where the farewell sits in the choice list: the engine appends root options after it, so it is expected to read first |
 
 QSB2 water-capacity case passed natively on 2026-09-07 at13:53UTC. The real `CreateWater`
 receives an entered-cell capacity64→32 fault, refuses verification and removes its original

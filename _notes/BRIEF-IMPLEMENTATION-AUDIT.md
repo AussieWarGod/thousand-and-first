@@ -1,15 +1,26 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart shelter census — 2026-09-08
+## Current camp-guide topic census — 2026-09-08
 
-**3050** production C# files,432,135 physical lines,1416 direct-XRL,zero cap failures;
-3081 generated cold-install files. Exact digest
-`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-One added source (the bootstrap's shelter partial) and four modified. Structure, doc
-freshness and the Tools suite pass. Compiled clean in the staged baseline and staged
-compatibility modes only, on Linux with the SDK Roslyn against the installed managed
-assemblies rather than through `Tools/gate.sh`; both public suites run green there. The
-two dev-harness modes, the installed-ABI step and native evidence are outstanding.
+**3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
+3083 generated cold-install files. Exact digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file plus a five-topic root-option loop on the optional Quickstart guide.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiled the staged baseline (3048 sources) and compatibility (3052 sources)
+sets clean. No native run, dev-harness mode or exact-inventory human semantic review binds it.
+
+## Retained claimed-ground light census — 2026-09-08
+
+**3051** production C# files,432,024 physical lines,1417 direct-XRL,zero cap failures;
+3082 generated cold-install files. Exact digest
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Two added production files (a mod-owned `IZonePart` and its projection), one modified event
+shard, one removal-registry line, one option row and documentation. No wire or API change.
+Engine-free suites and the repository tooling suites pass; Roslyn 9.0.306 on Linux compiled the
+staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean, warnings as
+errors. No dev-harness mode, no Windows gate and no native run happened for this delta, and the
+exact-inventory semantic review is open against the new digest.
 
 ## Retained master-growth resume census — 2026-09-07
 

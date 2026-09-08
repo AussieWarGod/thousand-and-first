@@ -21,6 +21,53 @@ Retain the accepted release history and immutable tag; do not rewrite them to hi
 Do not automate public releases until the private-item adoption gates below pass. Never automate authentication
 or legal acceptance.
 
+### Author ruling 2026-09-08 — automated release lane, and the doctrine it amends
+
+The sentence immediately above is **retained as written and amended by author ruling of
+2026-09-08** for exactly one artifact: `.github/workflows/release.yml`. Nothing else in this
+document is relaxed, and the second sentence — never automate authentication or legal acceptance —
+is unamended and unamendable: an exit-4 `NeedsUser` outcome stops the run for the operator.
+
+The ruling admits, for that workflow only:
+
+- a credentialed self-hosted runner attached to this public repository, contradicting the
+  "Self-hosted runner security" text below, which is retained verbatim and marked as superseded
+  for this one shape; and
+- an automatic annotated-tag trigger, likewise retained-and-superseded below.
+
+What the lane actually automates: lane resolution from the tag, tag/lineage/metadata/candidate
+proofs, the Linux repository audit and both portable suites, the full licensed
+`Tools/release-check.sh` run at the tagged commit, the immutable package and its verified native
+copy, the upload plan, the publisher `check`, and one `-Submit`. What it does not automate:
+Steam sign-in, Steam Guard, the Workshop legal agreement, `-Finalize`, the subscribed-byte check,
+the signed-out listing inspection, the in-game smoke, and the announcement.
+
+Mitigations in force for the accepted residual risk:
+
+- The runner is registered at repository level and started by hand (`run.cmd`) only inside a
+  release window, then stopped. Runner *groups* are unavailable on a personal-account repository,
+  so label targeting remains the residual exposure and is stated here rather than hidden.
+- Fork pull-request workflows require maintainer approval for **all** external contributors.
+- A tag ruleset restricts creation, update and deletion of `v*` and `staging-v*` to repository
+  admins, so no other credential can forge a trigger.
+- Both GitHub Environments carry a required human reviewer and a deployment **tag** policy
+  (`v*` and `staging-v*` respectively), and the public lane takes two separate approvals. One
+  privileged job is deliberately outside that gate: `verify` declares no environment, so it takes
+  no approval. It runs `-Verify`, which observes one subscribed installation and writes no
+  installation or finalization record, and it only runs after an approved `publish` has succeeded.
+- No Steam credential and no repository secret exist for the workflow to leak; the signed-in Steam
+  client is ambient state of the operator's own desktop session.
+- The privileged jobs use no third-party actions, check nothing out on the Steam host, upload
+  nothing from it, and print only stage names, exit codes and SHA-256 digests to the public log.
+- Every privileged step re-proves identity in-job: annotated tag object, tag commit equal to the
+  `main` tip (public lane) or reachable from `dev` (staging lane), tag version equal to the
+  manifest version, and a package receipt digest reproduced independently on a hosted runner.
+
+Accepted deviation, recorded rather than hidden: the privileged job runs this repository's own
+scripts under the Steam account, which the "Uploader boundary" guidance below would rather it did
+not. The compensations are the fresh clone at a ruleset-protected, ancestry-proven tag and the
+hosted-versus-host receipt digest cross-check.
+
 ### Current 0.3.1 Alpha decision — not a standing gate change
 
 The user waived manual startup/save/reload for this Alpha; no ordinary-play or graceful-Quit PASS
@@ -35,6 +82,9 @@ README freshness assertions were updated; 501 Tools tests and final document che
 No additional complete `--alpha` release-check run is claimed. The permanent
 procedure below and Beta/Release evidence requirements remain unchanged.
 [Exact decision and gate log identity](STATUS.md#one-release-alpha-verification-decision).
+These 0.3.1 waivers do not carry forward. The automated lane runs the complete `--alpha` or
+`--test` release-check at the tagged commit on every run and requires its clean marker; it inherits
+no waiver, and the manual startup/save/reload proof stays a human step of every release.
 
 Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
 claiming compatibility with another build.
@@ -337,13 +387,90 @@ Upload only that new package, then repeat signed-out listing, subscribed-byte, a
 verification. Never reuse another item's ID, rewrite an existing tag, merge package folders, or
 treat a prior receipt as proof of changed bytes.
 
+The command block above stays valid for a fully manual release and is the fallback whenever the
+runner is unavailable.
+
+### Updating Alpha — automated lane
+
+`.github/workflows/release.yml` runs the same sequence from a tag. **Pushing the tag is the
+trigger**, so push it only when the release is ready; there is no separate "start" button.
+
+Tag grammar, and nothing else is accepted:
+
+| Tag | Lane | Item | Package mode | Plan mode | Environment | Approvals |
+| --- | --- | --- | --- | --- | --- | --- |
+| `staging-v<version>` | private staging | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | one |
+| `staging-v<version>-<K>` | private staging, `K`th re-candidate | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | one |
+| `v<version>` | public Alpha | `3794797472` | `--alpha` | `--mode alpha` | `steam-workshop` | two |
+
+`<version>` is a `0.3.x` patch and never `0.3.0`. `<K>` is a positive integer; the private item
+admits an equal-or-higher patch, so a re-candidate reuses the version and increments `K`. The
+public lane requires a strictly higher patch. Any other tag shape is refused before any work.
+
+The **change note is the annotated tag's message BODY**, not `CHANGELOG.md`. The tag *subject* is
+the release title and is never sent to Steam. The body is validated on the hosted runner as
+1–7999 bytes of strict UTF-8 with no control characters except line feed, then reproduced
+byte-for-byte on the Steam host and cross-checked by SHA-256. A tag with an empty body fails
+closed. `CHANGELOG.md` cannot be the note: its first section was 17,698 bytes at `v0.3.1` against
+the publisher's 7999-byte ceiling. Write the body as the truthful player-facing changelist:
+
+```bash
+git tag -a "v${VERSION}" \
+  -m "The Thousand and First v${VERSION} Alpha" \
+  -m "What changed for players in this update, in plain words."
+git push origin "v${VERSION}"
+```
+
+Order of a full 0.3.x release:
+
+1. Bump `manifest.json` to the new patch, fold every `Unreleased` section into one
+   `## [<version>] — YYYY-MM-DD (Alpha)` heading, and complete the private canonicalization
+   commit on `dev` (`workshop.json` Visibility `"0"`, WorkshopId `3796495680`). If any C# source
+   changed since the last review, commit a refreshed `docs/STRUCTURE_REVIEW.json` naming the human
+   reviewer, so `python3 Tools/check-structure.py --release` exits 0. Both lanes run that command
+   on the hosted runner within seconds of the tag push, and stage 11 of the licensed gate runs it
+   again on the Steam host; a stale review stops the release before any approval is spent.
+2. Push `staging-v<version>` on that commit. Approve `steam-workshop-staging` when the run waits.
+   The pipeline gates, packages `--test`, plans, checks and submits to the staging item.
+3. Human: `-Finalize` from the retained run directory, then the section-4 subscribed smoke, then
+   bind the receipt into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. That binding commit is
+   `candidateCommit`.
+4. Public flip commit: canonicalize Alpha metadata, status line, changelog heading and a fresh
+   `docs/ALPHA_CANDIDATE.json`. Open the release pull request from `dev` to `main` and merge it
+   **with a merge commit**, once the author has enabled merge commits for release pull requests —
+   no currently enabled merge method preserves the `candidateCommit` ancestry, so read
+   "Release pull requests require a merge commit" below before running this step.
+5. Tag the resulting `main` commit with an annotated `v<version>` carrying a body, and push it,
+   **immediately** after the merge and before anything else lands on `main`: the public lane
+   compares the tagged commit against the `origin/main` tip as the job reads it, not as it stood at
+   trigger time, so a push to `main` while a release run is queued behind the concurrency group
+   turns a legitimate release into a refusal. Approve `public-confirm`, then approve `publish`.
+   Never cancel a running `publish` job.
+6. Human: `-Finalize`, then the complete section-6 post-upload checklist.
+
+The pipeline stops at `SubmittedUnverified`. That is not delivery, and `-Finalize` is deliberately
+left to the operator: it writes immutable records, needs the identical plan, package and paths from
+the retained run directory, and a bad finalization poisons the item's history.
+
+If any privileged step fails, **do not re-run the workflow for that tag.** `submit` creates its
+attempt directory before the SDK is initialised, so a refusal at or after that point retains an
+attempt — possibly an empty one — and an empty or partial retained attempt fences the item for
+every later `check`, `submit`, `-Verify` and `-Finalize`. No tool in this repository clears it.
+Reconcile it by hand; the exit table and the retained-attempt rules are in
+[PUBLISHING.md](../Tools/WorkshopSteam/PUBLISHING.md).
+
 ## Local automated-upload implementation and deployment design
 
 **Corrected private and public0.3.1 upload/installation finalized; one client per invocation.**
-No privileged CI workflow has been deployed. Exact current evidence: [STATUS.md](STATUS.md).
-The branch/runner design below remains a proposal, not permission to change repository protection
-or attach a credentialed runner. Local Alpha automation is authorized once the exact candidate and
-private-item checks pass; it does not require an invented CI deployment first.
+Exact current evidence: [STATUS.md](STATUS.md). The privileged workflow
+`.github/workflows/release.yml` is authored under the 2026-09-08 ruling above; the GitHub
+Environments `steam-workshop-staging` and `steam-workshop` and the `v*`/`staging-v*` tag ruleset
+are configured, and fork pull-request workflows require approval for all external contributors.
+The `taf-steam` runner is **not registered yet**, so no pipeline release has run. Record the first
+staging and first public pipeline run ids in
+[current status](STATUS.md#automated-release-lane) as they happen. Local Alpha automation remains
+authorized once the exact candidate and private-item checks pass; it does not depend on the
+pipeline.
 
 Verified local pieces:
 
@@ -390,21 +517,48 @@ must preserve that behavior. SteamCMD alone has not been verified for this Qud-s
 
 ### Branch model
 
-- Make `dev` the protected default integration branch. Feature branches and isolated worktrees
-  target `dev`; normal CI runs there and on pull requests.
-- Keep `main` protected and release-only. A release PR moves one frozen, reviewed `dev` tree to
-  `main` without squashing or changing package bytes. Direct pushes and force-pushes stay disabled.
-- Require the portable/test gates, metadata review, and protected-environment approval before
-  merge. Tag the exact resulting `main` commit with an annotated `v<version>` tag, then run the
-  exact tagged release-mode gate before any public upload.
+This is the branch model **in force**, not a proposal. `dev` exists on origin, is protected and is
+the repository default branch; `main` is protected and release-only.
+
+- `dev` is the default integration branch. Feature branches and isolated worktrees target `dev`;
+  normal CI runs there and on pull requests. Its protection requires the three status checks
+  (`repository-audit` and both portable test lanes), linear history, no force-push and no deletion.
+  It is currently weaker than `main` in two respects — `enforce_admins` is off and the strict
+  up-to-date requirement is off — which is a deliberate maintainer convenience, not an oversight.
+- `main` stays protected and release-only, with the same required checks plus strict up-to-date,
+  linear history and `enforce_admins` on.
+- A release pull request moves one frozen, reviewed `dev` tree to `main` without changing package
+  bytes. Direct pushes and force-pushes stay disabled.
+- Tag the exact resulting `main` commit with an annotated `v<version>` tag. The public lane of the
+  automated pipeline requires that the tagged commit **is** the `origin/main` tip, not merely an
+  ancestor of it, so an older `main` commit carrying the new manifest version cannot be released by
+  mistake. Staging tags must be reachable from `origin/dev`.
 - Merge the tagged `main` commit back into `dev` before new integration work. A hotfix starts from
   the affected `main` tag, follows the complete patch-release proof, then returns to `dev`.
 - Never treat a branch name, mutable artifact, or successful CI run as a release identity. Version,
   candidate commit, annotated tag, package receipt, Workshop ID, and subscribed bytes must agree.
 
-Changing the repository default branch and protection rules is a maintainer-admin operation. Do it
-only after `dev` exists remotely, current CI targets both lanes, and links/scripts that assume
-`main` have been audited.
+Links that assume `main` — the `blob/main/...` URLs in `README.md`, `SUPPORT.md`, `CHANGELOG.md`
+and the shipped `workshop.json` description — stay correct under this model, because `main` remains
+the release-only branch and those links are meant to point at released documents. That audit
+discharges the old precondition for flipping the default branch.
+
+#### Release pull requests require a merge commit
+
+**Open point for the author; the pipeline cannot work around it.** A release pull request from
+`dev` to `main` must preserve the exact commit SHAs of the frozen tree, because the packager's
+`--alpha` mode refuses unless the candidate record's `candidateCommit` — the receipt-binding commit
+created on `dev` — is an ancestor of the tagged `main` commit.
+
+GitHub's squash and rebase merge methods both rewrite commit SHAs, so either one breaks that
+ancestry. The repository is currently configured squash-only (`allow_merge_commit` and
+`allow_rebase_merge` are both false), and force-pushes are disabled on both branches, so **no
+currently enabled merge method preserves the binding**. Enabling merge commits for release pull
+requests is a repository-settings change and is left to the author; until it is made, a 0.3.x
+release must either be assembled directly on `main` through an ordinary pull request, or the
+candidate record must be regenerated on `main` after the receipt-binding commit has landed there.
+Note that enabling merge commits interacts with `main`'s linear-history rule, which must be
+reconsidered in the same decision.
 
 ### Uploader boundary
 
@@ -456,6 +610,16 @@ review in sections 4 and 6.
 
 ### Self-hosted runner security
 
+> **Amended 2026-09-08 by author ruling, for `.github/workflows/release.yml` only.** The
+> prohibition in the next paragraph and the "never use ... an automatic tag trigger" clause below
+> are retained verbatim as the standing rule for every other workflow, and are superseded only for
+> that one file. The risk they describe is real and is accepted, not disproved: a repository-level
+> runner can be targeted by any workflow in this repository, runner groups are unavailable on a
+> personal account, and environment approval gates *when* a job runs, not *what* reaches the
+> machine. The mitigations and the accepted deviation are listed under "Author ruling 2026-09-08"
+> at the top of this document. Do not read this amendment as permission to attach a runner for any
+> other purpose, to run it as a service, or to leave it running outside a release window.
+
 The Steam session is a publication credential. A credentialed self-hosted runner must not be
 attached to this public source repository: another workflow can target its labels without declaring
 the protected environment. Environment approval alone is not isolation. GitHub warns that
@@ -483,6 +647,13 @@ self-hosted runners are persistent and can be compromised by untrusted workflow 
 - Require a second approval for Public visibility. On any mismatch, keep/move the item Private and
   follow Recovery; never retry by creating a new item.
 
+How the deployed workflow satisfies the surviving bullets: it pins every third-party action by full
+commit SHA and uses none at all on the Steam host; it holds `permissions: contents: read` and no
+secrets; it exposes the Steam host to no fork artifact, because nothing is checked out or
+downloaded there; its `workflow_dispatch` path requires the full candidate SHA as an input and
+refuses unless that SHA is the tag's commit; and it implements the second Public approval as a
+separate hosted `public-confirm` job on the same environment, so the operator approves twice.
+
 ### Adoption gates
 
 1. Pin the Steamworks.NET and native Steamworks binaries, record their hashes and licences, and
@@ -499,6 +670,125 @@ self-hosted runners are persistent and can be compromised by untrusted workflow 
    only permitted staging-to-production metadata delta; never use production as the candidate item.
 7. Only after all gates pass, add the uploader/workflow, tests, rollback drill, and retained receipt
    schema in a separate reviewed change. Then revise the opening statement of this document.
+
+#### Gate status as of 2026-09-08
+
+The gates are retained above exactly as written. Their status under the 2026-09-08 ruling:
+
+| Gate | Status | Evidence or what is missing |
+| --- | --- | --- |
+| 1 — pinned SDK binaries and reproduced initialization | **evidenced** | `Tools/WorkshopSteam/sdk.lock.json` pins both DLL hashes against core build 2.0.211.51; the launcher refuses on mismatch, and the read-only probe reproduced `SteamAPI.Init` on the host. |
+| 2 — sacrificial-item fault cases | **OPEN** | Timeout, rejected setter, wrong owner, legal-agreement, network-loss, duplicate key-value-tag and visibility-inversion cases are covered by the launcher and C# suites as *fixtures*, not against a sacrificial live item. The author must either declare this satisfied by the 0.3.1 private and public runs or leave it open. |
+| 3 — both key-value tags verified, clean-client byte match | **evidenced** | Recorded for corrected private 0.3.1 and for public 0.3.1 in [STATUS.md](STATUS.md). |
+| 4 — threat model and privileged-runner design review | **evidenced** | The design was written, adversarially reviewed and corrected before this workflow landed; the surviving risks are listed under "Author ruling 2026-09-08". |
+| 5 — attended private update in parallel with the Qud UI path | **OPEN** | No such parallel comparison is recorded anywhere. The author must declare it satisfied or leave it open. |
+| 6 — separate allowlisted Private staging item | **evidenced** | Item `3796495680` is established, allowlisted and used; the permitted staging-to-production delta is enforced by the packager and the plan builder. |
+| 7 — uploader/workflow added in a separate reviewed change | **in progress** | This pull request is that change: it adds `.github/workflows/release.yml`, revises the opening statement, and records the runbook. It is complete when the pull request merges. |
+
+Gates 2 and 5 are open by record. Closing them is an author decision, and the first staging
+pipeline run is the natural place to gather the evidence.
+
+### Steam host runner runbook
+
+Preconditions on the gaming PC, all already proved by the 0.3.1 releases: a Windows desktop session
+for the account that owns items `3794797472` and `3796495680`; the Steam client running and signed
+in under that **same** Windows account; licensed Caves of Qud at
+`F:\SteamLibrary\steamapps\common\Caves of Qud` at core build 2.0.211.51 with DLLs matching
+`Tools/WorkshopSteam/sdk.lock.json`; .NET SDK 9.0.306 on the Windows PATH as `dotnet.exe`; a WSL2
+Ubuntu default distro under that same Windows account holding the gate toolchain; the registry root
+`C:\taf-workshop-state.dRBivM`; and both Workshop items subscribed on this client, because
+`-Verify` and `-Finalize` read a subscribed installation. The runner account also needs **write
+access at the `C:` drive root**: stage 5 of `Tools/release-check.sh` changes directory to `/mnt/c`,
+and stage 8 creates and removes its boundary fixtures (`/mnt/c/taf-smoke.*` and
+`/mnt/c/taf-smoke.junction*`) there. Do **not** create a service account and do not plan to run the
+runner as a Windows service.
+
+1. **Create the run roots.** In PowerShell: `New-Item -ItemType Directory -Path 'C:\taf-release'`.
+   Inside WSL: `mkdir -p ~/taf-release`. The run root must sit on a local, non-network drive with
+   no junction or symlink in its ancestry; the launcher refuses linked paths.
+2. **Create the dry-run deployment target.** Stage 10 of the release check runs
+   `Tools/stage.sh deploy` as a dry run, and that call validates a live deployment target: an
+   ordinary directory whose `manifest.json` declares `r_ThousandAndFirst`. The least invasive
+   precondition — and the one the workflow expects — is a dedicated target that is **not** the
+   game's live Mods folder, so the gate never depends on a local mod copy competing with the
+   subscribed Workshop item:
+
+   ```powershell
+   New-Item -ItemType Directory -Path 'C:\taf-release\live-mod\ThousandAndFirst' -Force
+   Copy-Item '\\wsl.localhost\<distro>\<repo path>\manifest.json' `
+     'C:\taf-release\live-mod\ThousandAndFirst\manifest.json'
+   ```
+
+   The workflow forwards that path as `TAF_LIVE_MOD` and fails closed in preflight, with the
+   remedy in the message, if the directory or its manifest is missing. Never point it at the live
+   Mods folder: that would resurrect the "remove local copies, subscribe" conflict in section 6.
+3. **Verify WSL forwarding** from `cmd.exe`:
+   `set TAF_PING=1 && set WSLENV=TAF_PING && wsl.exe -e bash -c "echo wsl-ok $TAF_PING; command -v python3 git sha256sum wslpath"`.
+   Expect `wsl-ok 1` and four tool paths. `WSLENV` is how the workflow passes its `TAF_*` variables
+   into bash; `WSL_UTF8=1` keeps `wsl.exe` output UTF-8.
+4. **Download the runner** into a drive-root folder and verify its published SHA-256 *before*
+   extracting. Take the version and hash from the GitHub Actions runner releases page, and record
+   in the pull request which version was installed.
+5. **Mint a one-hour registration token** from any machine with `gh`:
+   `gh api -X POST repos/AussieWarGod/thousand-and-first/actions/runners/registration-token --jq .token`.
+   Never store it anywhere durable.
+6. **Configure the runner (non-interactive `config.cmd`, run from the desktop session):** the
+   runner must **run** in the author's interactive desktop session — never as a Windows service —
+   but this one-time `config.cmd` step itself is non-interactive: `--unattended` supplies every
+   answer, with no `--runasservice` and no `--windowslogonaccount`:
+   `.\config.cmd --url https://github.com/AussieWarGod/thousand-and-first --token <TOKEN> --name taf-steam-gamingpc --labels taf-steam --work _work --unattended --replace`.
+   The `self-hosted`, `windows` and `x64` labels are added automatically; the workflow targets
+   `[self-hosted, windows, taf-steam]`. `--ephemeral` would accept exactly one job, and a release
+   run has two self-hosted jobs (`publish` and `verify`), so use it only if you accept
+   re-registering between them.
+7. **Start it by hand in the desktop session where Steam is running**, from a **non-elevated**
+   console, under the same Windows account as the WSL distro: `cd C:\actions-runner ; .\run.cmd`.
+   Elevation is a real failure mode, not a nicety: Valve lists a different administration access
+   level as a `SteamAPI_Init` failure, and an administrator terminal is an easy operator slip.
+   `wsl.exe` is per-user, so the runner and the provisioned distro must be the same account.
+   Confirm with
+   `gh api repos/AussieWarGod/thousand-and-first/actions/runners --jq '.runners[] | {name, status, busy}'`.
+8. **Prove the toolchain before the first real run**, without mutating Steam: run
+   `Tools/workshop-steam-probe.ps1` with `-QudRoot`, `-ItemId 3796495680` and a fresh empty
+   `-EvidenceRoot`, expecting exit 0 with `ownerMatch` and `itemMatch` true; then run
+   `Tools/test-workshop-upload.ps1 -EvidenceRoot <fresh empty directory>` for the SDK-free launcher
+   and C# suites. This also pre-warms the NuGet cache, which matters because every launcher mode
+   recompiles its helper inside a 210-second budget.
+9. **Per release window:** start Steam and confirm the signed-in owner; start `run.cmd`; push the
+   tag; approve the environment deployment(s) when the run shows "Waiting"; then do the human
+   steps. Never cancel a running `publish` job and never press Ctrl+C in the runner window while
+   it runs — a killed launcher child is an uncertain retained attempt. Disable sleep and hibernate
+   for the window, and consider pausing Qud's Steam auto-update: a game update changes the SDK
+   hashes and fails every run closed until `sdk.lock.json` is deliberately re-pinned.
+10. **Both Workshop copies of `r_ThousandAndFirst` cannot be enabled together.** `-Verify` and
+    `-Finalize` need the lane's item subscribed, so during a staging window both items may be
+    subscribed at once. Disable one in the Qud mod manager before any in-game smoke test.
+11. **Time the gate.** The licensed gate's wall time has never been recorded, so the workflow's
+    240-minute job timeout is an unverified ceiling. Measure it on the first staging run and adjust
+    the timeout before trusting it; a timeout that lands mid-submit is uncertain, not a clean
+    failure.
+12. **Stop the runner outside release windows.** Ctrl+C in the `run.cmd` window stops it. To remove
+    it entirely, mint a remove-token
+    (`gh api -X POST repos/AussieWarGod/thousand-and-first/actions/runners/remove-token --jq .token`)
+    and run `.\config.cmd remove --token <TOKEN>`.
+13. **Evidence rotation is manual.** Each run leaves `C:\taf-release\run-<id>-<attempt>\` (package,
+    plan, note, logs, redacted artifact, evidence directories) and a clone under `~/taf-release` in
+    WSL. Keep the run directory of every *submitted* attempt until its `-Finalize` has succeeded,
+    because finalization needs the identical plan, package, receipt and paths. Delete only fully
+    finalized or never-submitted run directories. Never touch the registry root.
+14. **The `verify` job may go red, and that is not a failed release.** It polls `-Verify` for up
+    to 20 minutes after submit, but Steam builds and delivers the new bytes on its own schedule and
+    may take longer. If it exhausts that budget, the submission still stands and no record was
+    written. Re-run **only that job** — "Re-run failed jobs" — once Steam reports the update live.
+    Never use "Re-run all jobs": that re-takes the environment approval, re-burns the multi-hour
+    licensed gate, and then stops at the retained-attempt fence. Verifying by hand from the
+    retained run directory is equally valid.
+15. **Finalize by hand** from the retained run directory once Steam has delivered the update: run
+    the launcher named in `inputs\launcher-win.txt` with the same `-PlanPath`, `-PlanSHA`,
+    `-ItemId`, `-ChangeNotePath` and `-ReceiptSHA` from `inputs\handoff.env`, a **new empty**
+    `-EvidenceRoot`, and `-Finalize`. Success is exit 0 with `SubscribedInstallationVerified`,
+    `attemptFinalized=true` and a non-null `finalizationSHA`. The next submit to that item is
+    refused until this is done.
 
 ## Recovery
 

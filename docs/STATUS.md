@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-07
+**Snapshot:** 2026-09-08
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
 **Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
@@ -27,13 +27,128 @@ entirely (the sole collaborator can never approve their own PR); PR-based integr
 policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
-required conversation resolution all remain. No `dev` branch exists
-yet, so the branch model in [RELEASING.md](RELEASING.md#branch-model) is still a proposal. Earlier
-sections below record the pre-merge state at their own checkpoints and are not restated here.
+required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
+[RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
 
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
+
+## Automated release lane
+
+Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
+Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
+[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends).
+No pipeline release has run; every claim below is a configuration fact, not a release result.
+
+Verified against the GitHub API on 2026-09-08:
+
+| Setting | State |
+| --- | --- |
+| Environment `steam-workshop` | required reviewer + branch/tag policy; deployment tag pattern `v*` |
+| Environment `steam-workshop-staging` | required reviewer + branch/tag policy; deployment tag pattern `staging-v*` |
+| Tag ruleset "release tags" | active; restricts creation, update and deletion of `refs/tags/v*` and `refs/tags/staging-v*`; bypass limited to the repository admin role |
+| Fork pull-request workflows | approval required for all external contributors |
+| Workflow permissions | read-only; pull-request approval by Actions disabled |
+| Repository secrets for the lane | none, by design; no Steam credential exists in GitHub |
+| Self-hosted runners | **0 registered.** The `taf-steam` runner is not installed yet, so the pipeline cannot run |
+
+Two environment settings are still open: `can_admins_bypass` is `true` on both environments and
+should be turned off so the approval cannot be skipped, and the "prevent self-review" option must
+stay off, because the sole collaborator both pushes the tag and approves the deployment.
+
+Open before the first pipeline release: register and start the `taf-steam` runner per the runbook
+in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge method for release
+pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
+that the packager requires as an ancestor of the tagged `main` commit; and run the first
+`staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
+
+## Unreleased empty-camp legacy and native water regression
+
+An actual empty-camp heartbeat exposed rejected automatic legacy staging: no living body
+evidence exists yet. Explicit committed-unresolved profile schema2 now retains real technology
+and provenance without inventing species,gear or NPC authority. The same refusal applied to
+any realm whose residents map to no canonical body,not only a population-0 camp: a settled
+population of only non-canonical species reached the identical refusal. New exile also
+proves the original foundation receipt independently of the later current-profile revision,
+which unblocks exile for any realm at profile revision2 or above. Schema0/1
+bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
+a new version. Public0.3.1/main/tag are unchanged.
+
+Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
+Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
+modified/no additions or removals against integration parent2be6b00; the three added and
+seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
+independent reviewer read the complete four-file delta and affected boundaries; the exact
+structural release gate passes and the exact-inventory human semantic review is open against
+this merged digest. This is source review,not functional acceptance.
+
+Focused38898 passed149 cases,zero skips. That receipt predates the seventh
+KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds
+91 cases in total:73 seal/schema/exile regressions,7 native-source wiring cases,9
+historical seal-fixture cases and2 exile cases. Four seals written by writer code
+byte-identical to tag `v0.3.1` are checked in at `DevTests/Fixtures/SealProfile` with
+pinned SHA-256s; they prove the forward read is an identity — schema0/1 parse,recompose
+byte-for-byte,survive a transition copy and validate as a saved reservation shape. Earlier
+full managed44659 was intentionally superseded after two imported-cohort fixture failures;
+it has no full-suite verdict. Earlier four-mode10882 passes only its earlier source bytes.
+Final licensed Windows suites on the merged tree passed13,826 main and5,116 Portable cases,
+zero skips,up from13,735/5,109 on the `dev` integration branch;
+both normal Rebuilds had zero warnings/errors. Canonical39198 TERMINAL0 passed all four
+C#7.3 modes:ordinary3045/3049,developer3182/3186,137 Harness files,plus installed Hearthpyre
+2.2.3 source/ABI on the pre-merge bytes; the seal-lane production sources are unchanged since
+that run,and the sources merged from `dev` carry `dev`'s own compile receipts. Exact comparison
+proved every ordinary/developer source matched the bytes it ran on. Repository25818 passed501 tests/89.477s plus cold inventory,docs,architecture and XML.
+The first10865 managed run retained13794 passes/one Harness line-limit failure; removing
+one blank line closed it before the final native and full-suite reruns. No guard was weakened.
+
+Native16504,seed1012037,profileiyqatG,proved an actual automatic schema2 empty-camp stage,
+canonical record roundtrip,partial physical upkeep and the original drought departure body,
+roster,tally and journal retirement. It failed the summary-note assertion:12 ordinary notes
+already occupied the bounded list,so exact departure notes=0. The12-entry cap is intentional;
+the corrected fixture proves exact durable Chronicle delivery separately. This diagnostic
+does not sign the later whole-run pass. Original failed attempts and receipt-owned stops are retained
+in [diagnostic evidence](/mnt/c/taf-water-departure-diagnostic.pdomed/README.md).
+Final native45930 TERMINAL0 passed at21:15:32.107UTC,seed1012037,profile4r3WC1:
+actual automatic empty-camp schema2 stage/roundtrip;4800 observed EndTurns;three dry bills,
+one exact original departure,two loyal residents;actual16-dram donor transfer then paid
+recovery. Exact canonical Chronicle receipt proves Delivered official/outsider and Skipped
+journal. All3186 current C# files match that profile; strict raw log/96journalrows and exact
+receipt-ownedPID21008 stop pass. Synthetic dedication/enrollment remain declared. This does
+not test carried inventory,current Chronicle-list membership or ordinary rendered play.
+[Final evidence and retained failures](/mnt/c/taf-water-final-lines.lRva1h/README.md).
+Open visibility gap: ordinary summary saturation can hide the departure there; a Chronicle
+receipt does not prove founder notification. No ordinary-play or save/load acceptance.
+
+## Unreleased first-settler legibility
+
+Publishing the first-guest correspondence now writes one player message naming the kingdom and
+pointing at the Charter. A standing candidate makes the next arrival pass return before it
+reaches that publication, so the message is said once per opportunity and never repeated.
+
+The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+Charter/Status next-need line, alongside the settlement's ordinary want rather than instead of it,
+so a deferred guest cannot silence a settlement running out of water. One rules-layer predicate,
+`KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer`, backs the Charter label, the next-need line
+and the correspondence guard, and it binds both the candidate phase and the choice state, so no
+surface can name a debt the rules would refuse to settle. The stale housing advice is corrected:
+with no roof at all the line names the settler's tent and its bill, and promises only what a roof
+actually buys, because the first guest's citizenship gate never reads lodging. No saved fields,
+formats, options or arrival intervals change; public0.3.1 is unchanged.
+
+Current census:3052 staged C# files;432,239 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covers3052 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3048 of them; the optional-mod bridge is compatibility-only, and the
+tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The dev-harness modes and the Windows gate did
+not run for this census.
+Inventory SHA-256: `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
+Linux dotnet 9.0.306 against the licensed install passes the full source suite at 13,735 cases and
+the portable kernel at 5,109 cases, zero skips in both, and passes the doc, structure and
+tooling audits. No native in-game run and no human semantic review bind this digest.
 
 ## Unreleased master-growth resume correction, case28d.5
 
@@ -51,22 +166,26 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3050 staged C# files;432,135 physical lines;3081 files in the generated
-cold-install inventory. Canonical compilation covers3050 sources, baseline and compatibility symbols.
-Direct `XRL` imports: 1416 files, 0 over the line limit.
-Inventory SHA-256: `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-The Kingdom Quickstart shelter delta inside this census compiled clean in the staged baseline
-and staged compatibility modes only, run on Linux with the SDK Roslyn against the installed
-managed assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the
-installed-ABI step and the developer boot matrix are outstanding for it, and every timing
-claim about the staked tent remains a source reading.
+Retained camp-guide census:3052 staged C# files;432,178 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covered3052 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiled 3048 of them; the optional-mod bridge is compatibility-only). The dev-harness
+modes and the Windows gate did not run for that census.
+Inventory SHA-256: `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
+
+Retained master-growth census:3049 staged C# files;431,893 physical lines;3080 files in the
+generated cold-install inventory. Canonical compilation covers3049 sources, baseline and
+compatibility symbols. Inventory SHA-256:
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`. Every native, Windows-suite,
+four-mode compile and review result in this section binds that digest, not the current one.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3050-source digest
-`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
+support the75th persona. Structural release gate passes exact3052-source digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness

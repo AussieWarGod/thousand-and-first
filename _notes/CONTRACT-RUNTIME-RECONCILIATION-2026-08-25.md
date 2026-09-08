@@ -1,14 +1,26 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current Kingdom Quickstart shelter census — 2026-09-08
+## Current camp-guide topic census — 2026-09-08
 
-3050 production C# files;3,081 cold-install files in the generated inventory;
-432,135 physical lines,1416 direct-XRL,zero cap failures. Exact digest
-`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-The quickstart bootstrap stakes one shelter lot between the founding proof and the receipt's
-first advance; the lot is receiptless, so nothing here stamps completion. Staged baseline and
-staged compatibility compiles bind this digest, run on Linux with the SDK Roslyn against the
-installed managed assemblies rather than through `Tools/gate.sh`; no native evidence binds it.
+3052 production C# files;3,083 cold-install files in the generated inventory;
+432,178 physical lines,1417 direct-XRL,zero cap failures. Exact digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+The optional Quickstart guide gains five fixed information topics from one engine-free words
+file; no receipt phase, wire, option, grant or verifier predicate changes, and existing saves
+keep the one-node guide. It sits over the claimed-ground light below. Engine-free suites
+pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux
+compiled the staged baseline (3048 sources) and compatibility (3052 sources) sets clean. No
+native, dev-harness or human semantic-review evidence binds this digest.
+
+## Retained claimed-ground light census — 2026-09-08
+
+3051 production C# files;3,082 cold-install files in the generated inventory;
+432,024 physical lines,1417 direct-XRL,zero cap failures. Exact digest
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Presentation only: a mod-owned zone part raises the founder's own claimed zone to the torch
+light tier per rendered frame and remembers its floor once per activation. No wire, no saved
+field, no new completion authority. The staged baseline and compatibility sets compile clean under
+Roslyn 9.0.306 on Linux; the dev-harness modes, the Windows gate and any native run did not.
 
 ## Retained master-growth resume census — 2026-09-07
 

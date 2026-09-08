@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -8,30 +8,75 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — Kingdom Quickstart shelter lot
+## Unreleased — empty-camp legacy correction
 
-- Kingdom Quickstart now stakes one settler's tent lot at founding, west of the supply
-  column at (21,9)-(26,12), between the founding proof and the receipt's first advance.
-  Without a standing roof nobody joins a settlement, and nothing commissioned rises while
-  the population is zero, so the mode previously opened on a camp that could not proceed.
-- The lot is granted free: opening water, meals and materials are unchanged. It is staked,
-  not built. The stake is receiptless, so the lot keeps the shipped calendar clock the first
-  heart uses and finishes over the first days, not by nightfall, with no settler labour.
-- The prepared-ground mask widens by those 24 cells so the camp builder bares them; the
-  authored-ground preflight refuses a lot holding a creature, an item, or open liquid.
-- Idempotency uses a shelter-only string property and the staked rectangle, never the
-  quickstart grant marker: the grant recovery scan reads every object in the zone and would
-  refuse a foreign value there, aborting every later grant phase on the same boot.
-- If zoning or the authored-ground preflight refuses the lot, the bootstrap stops with that
-  reason. It never stamps completion and never publishes a receipt it did not measure.
-- No new receipt field and no receipt wire change; the shelter's reservation is a new owned
-  object property, registered in the removal-coverage allowlist. Existing Quickstart saves are
-  already past the Reserved phase, so the branch never runs for them: they keep their old
-  behaviour and simply have no tent, and the completion notice reads the ground rather than
-  the branch, so it never promises one. Ordinary founding is untouched. Public 0.3.1 is
-  unchanged.
+### Fixed
 
-## Unreleased — master pause/resume correction
+- A realm whose residents map to no canonical body can now stage and seal its legacy. In
+  0.3.1 the automatic daily seal stage of such a realm failed closed ("current polity
+  profile lacks canonical seal-safe phenotype provenance") and no legacy was ever recorded.
+  This covers an empty camp (population 0) and also a populated settlement whose residents
+  are all non-canonical species. The seal now carries an explicit committed-unresolved
+  profile (`profile_schema` 2): the real technology band and both provenance digests, a
+  body pool of exactly `unresolved`, and no species, gear or NPCs inferred from stage,
+  style or origin.
+- Realm exile now proves the original (revision 1) foundation receipt instead of
+  recomputing it from the latest profile revision, so a realm whose profile was revised
+  after founding can still be exiled. That covers any realm at profile revision 2 or
+  above, not only an empty camp. The original foundation receipt is never rewritten.
+
+### Compatibility
+
+- Reading older data: 0.3.2 reads every 0.3.0/0.3.1 seal and save unchanged.
+  `profile_schema` 0 and 1 keep their bytes, digest domains and meaning; nothing is
+  rewritten on load. Seals produced by writer code byte-identical to the 0.3.1 tag are
+  checked in as the regression fixture (`DevTests/Fixtures/SealProfile`).
+- Rolling back: the outer seal format stays `taf-seal 6`, but any seal or save that
+  carries `profile_schema` 2 — a realm that had no canonical body when it was staged,
+  promoted, reserved or exiled — is not readable by 0.3.1. 0.3.1 treats such a legacy
+  seal as absent, and loading a 0.3.2 save whose pending inheritance was built from one
+  clears that reservation (RepairRequired). A third surface: an exile left in flight
+  carries its legacy snapshot inside the realm transition, and 0.3.1's transition
+  validator (`Polity/KingdomPolityRules.ValidationRealmTransition.cs:28`) rejects that
+  snapshot at `profile_schema` 2, so the whole in-flight transition reads as torn. No
+  downgrade writer is provided: schema 2 cannot be expressed as schema 1 without
+  inventing bodies, or as schema 0 without dropping technology and provenance, and this
+  project never fabricates. Back up saves before updating; see PLAYTESTING.md, "Upgrade,
+  rollback, and uninstall".
+
+### Tests
+
+- 91 new cases: 73 seal/schema/exile regressions, 7 native-source wiring cases, 9
+  historical-fixture cases over checked-in 0.3.1-writer seals (schema 0/1 identity read,
+  byte-exact recompose, transition copy, saved reservation shape, widened/mixed refusals,
+  reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
+  that a profile revision never re-cuts the current realm foundation receipt).
+- Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
+  5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
+  gate passed the pre-merge bytes and was not re-run for the merged tree.
+- Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
+  legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
+  with no player-visible or runtime effect.
+- A controlled native water-maintenance scenario proves upkeep billing, one drought
+  departure, loyal-core retention, refill and paid recovery with exact Chronicle
+  delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
+  change only adds the native proof. Known gap: the ordinary 12-note summary can omit the
+  departure line; the Chronicle receipt is the durable record. Save/load remains
+  separately gated. Retained failures and bounded native scope are recorded in
+  `docs/STATUS.md`.
+
+> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
+> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Root and independent AI reviewer read all four changed production sources and affected
+> boundaries; unchanged sources inherit the complete canonical parent review chain. This
+> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for the merged bytes.
+
+## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -40,23 +85,68 @@ below it.
   local/global pause time counts once. No save format changes. Public0.3.1 is unchanged.
 - Add a real-engine master off/on regression and38 engine-free cases covering continued
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
-  Native regression and four-mode compilation pass for that correction, on its own 3049-file
-  digest. Full licensed suites pass13,715 main and5,093 Portable cases,zero skips; repository
-  audit passes501 tooling tests. None of that evidence covers the shelter delta above.
+  Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
+  and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide says in his own voice that he is not on the roll and passes through, that hands
+  come off the roll, and that nobody new stays unless a roof stands with room left under it.
+  He never states the roll's current size, so every word stays true whether or not a camp is
+  seeded with founding settlers. No answer promises an arrival, a pair of hands or a finished
+  building, because the settlement refuses all three until a roof stands with room under it
+  and somebody lives there.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
+- The first guest now announces itself. Publishing the first-guest correspondence writes one
+  player message naming the kingdom and pointing at the Charter, said once per opportunity because
+  a standing candidate makes the next arrival pass return before it reaches that publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+  Charter/Status next-need line, so it survives a save and cannot be dropped the way a ledger note
+  is once twelve notes stand. It is said alongside the settlement's ordinary want, never instead of
+  it, so deferring a guest cannot silence a settlement running out of water.
+- The stale housing advice is replaced. With no roof at all the line names the settler's tent and
+  its bill in the material name the rest of the interface uses (brush, not the catalogue's
+  `canvas`), and promises only what a roof buys: the first guest's citizenship gate never reads
+  lodging, so a roof buys cover now and the arrival after this one.
+- One rules-layer predicate, `GrowthFirstGuestAwaitsAnswer`, now backs the Charter label, the
+  next-need line and the correspondence guard, binding both the candidate phase and the choice
+  state so a quarantined candidate cannot read as a standing question. No save format, option, or
+  arrival-interval change.
+- Maintainer tooling only, with no player-visible or runtime effect: a tag-triggered Steam Workshop
+  release workflow now runs the exact tagged licensed gate, package, plan and one publisher submit
+  on an attended host, with the change note taken from the annotated tag's message body. Publishing
+  still stops at "submitted, unverified"; finalization and every human release check are unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3050-file census is line-cap green:
-> 432,135 physical lines,zero files at or above300; direct `XRL`
-> imports occur in 1416 files, 0 of them over the line limit. Inventory SHA-256:
-> `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-> The generated cold-install inventory contains 3081 files; no new subscription claim.
-> Root and independent AI reviewer inspected the complete five-source delta of the retained
-> master-growth entry below; the shelter delta above is one added and four modified sources.
-> The shelter delta compiled clean in the staged baseline and staged compatibility modes only,
-> on Linux with the SDK Roslyn against the installed managed assemblies rather than through
-> `Tools/gate.sh`; both public suites run green there (13,718 main/5,096 Portable,zero skips).
-> The two dev-harness modes, the installed-ABI step and the developer boot matrix are
-> outstanding for it, and every timing claim about the staked tent remains a source reading.
-> Native scope and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
+> **Retained unreleased camp-guide, claimed-ground and first-guest census — exact structural gate passed.** Its3052-file census is line-cap green:
+> 432,239 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Engine-free suites pass13,735 main and5,109 Portable cases,zero skips, and the repository
+> tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3048 sources) and staged compatibility (3052 sources plus the tracked
+> Hearthpyre 2.2.3 ABI stub) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
+
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
+> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
+> `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> Root and independent AI reviewer inspected the complete five-source delta. Native scope
+> and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
 
 > **Retained unreleased recovery correction — exact structural gate passed.** Its3047-file census is line-cap green:
 > 431,611 physical lines, zero files at or above300. Direct `XRL`

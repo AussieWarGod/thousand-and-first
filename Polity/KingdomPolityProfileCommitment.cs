@@ -11,11 +11,13 @@ namespace ThousandAndFirst
 		/// </summary>
 		internal static string LegacySealPhenotypeDigest(KingdomPolityProfileRevision Profile)
 		{
-			if (Profile == null) return null;
+			if (Profile == null || Profile.BodyKeys == null) return null;
+			int schema = KingdomPolityProfileRules.IsUnresolvedBodyPool(Profile.BodyKeys) ?
+				KingdomPolityProfileRules.CommittedUnresolvedLegacyProfileSchema :
+				KingdomPolityProfileRules.CurrentLegacyProfileSchema;
 			List<string> values = new List<string>
 			{
-				"schema=" + KingdomPolityProfileRules.CurrentLegacyProfileSchema.ToString(
-					CultureInfo.InvariantCulture),
+				"schema=" + schema.ToString(CultureInfo.InvariantCulture),
 				"rules=" + Profile.RulesVersion.ToString(CultureInfo.InvariantCulture),
 				"technology=" + Profile.TechnologyBand.ToString(CultureInfo.InvariantCulture)
 			};

@@ -9,6 +9,18 @@ namespace ThousandAndFirst
 	{
 		public const int UnresolvedLegacyProfileSchema = 0;
 		public const int CurrentLegacyProfileSchema = 1;
+		public const int CommittedUnresolvedLegacyProfileSchema = 2;
+
+		internal static bool IsCommittedLegacyProfileSchema(int Schema)
+		{
+			return Schema == CurrentLegacyProfileSchema ||
+				Schema == CommittedUnresolvedLegacyProfileSchema;
+		}
+
+		internal static bool IsUnresolvedBodyPool(IList<string> Values)
+		{
+			return Values != null && Values.Count == 1 && Values[0] == "unresolved";
+		}
 
 		public static bool TryCreateLegacy(string PolityId, KingdomPolityLegacySnapshot Facts,
 			long EffectiveTick, out KingdomPolityProfileRevision Profile, out string Failure)
@@ -25,12 +37,14 @@ namespace ThousandAndFirst
 			string creed = creeds.Count == 0 ? "" : creeds[0];
 			List<string> digestFacts = LegacyDigestFacts(Facts, origins, creeds);
 			bool resolved = Facts.ProfileSchema == CurrentLegacyProfileSchema;
-			string digest = KingdomPolityRules.ActivationDigest(resolved ?
-				"polity-profile-legacy-v2" : "polity-profile-legacy-v1", digestFacts);
+			bool committed = IsCommittedLegacyProfileSchema(Facts.ProfileSchema);
+			string digest = KingdomPolityRules.ActivationDigest(Facts.ProfileSchema ==
+				CommittedUnresolvedLegacyProfileSchema ? "polity-profile-legacy-v3" :
+				resolved ? "polity-profile-legacy-v2" : "polity-profile-legacy-v1", digestFacts);
 			// Schema-zero snapshots remain readable and institutionally importable. Their phenotype
 			// is deliberately unresolved: zero is a non-expressed placeholder, not a technology claim.
-			int technology = resolved ? Facts.TechnologyBand : 0;
-			IList<string> bodies = resolved ? Facts.CanonicalBodyKeys :
+			int technology = committed ? Facts.TechnologyBand : 0;
+			IList<string> bodies = committed ? Facts.CanonicalBodyKeys :
 				new List<string> { "unresolved" };
 			Profile = Build(PolityId, digest, EffectiveTick, technology,
 				Facts.Vocation, Facts.Style, creed, bodies, true, !resolved);
@@ -39,7 +53,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Copies only immutable profile phenotype into a newly-created legacy seal. Profiles from
-		/// older rules or unresolved body pools fail closed rather than acquiring invented facts.
+		/// older rules fail closed. An exact unresolved pool retains its commitment without
+		/// granting a manifested body or acquiring inferred phenotype facts.
 		/// </summary>
 		internal static bool TryCaptureLegacyProfile(KingdomPolityLegacySnapshot Facts,
 			KingdomPolityProfileRevision Source, out string Failure)
@@ -47,7 +62,7 @@ namespace ThousandAndFirst
 			Failure = null;
 			if (Facts == null || Source == null || Source.RulesVersion != RulesVersion ||
 				Source.TechnologyBand < 0 || Source.TechnologyBand > 10 ||
-				!ValidCanonicalBodies(Source.BodyKeys))
+				(!ValidCanonicalBodies(Source.BodyKeys) && !IsUnresolvedBodyPool(Source.BodyKeys)))
 			{
 				Failure = "current polity profile lacks canonical seal-safe phenotype provenance";
 				return false;
@@ -57,12 +72,16 @@ namespace ThousandAndFirst
 			{
 				Failure = "current polity profile commitment is invalid"; return false;
 			}
-			Facts.ProfileSchema = CurrentLegacyProfileSchema;
+			int schema = IsUnresolvedBodyPool(Source.BodyKeys) ?
+				CommittedUnresolvedLegacyProfileSchema : CurrentLegacyProfileSchema;
+			List<string> bodies = new List<string>(Source.BodyKeys);
+			string provenance = LegacyProfileProvenanceDigest(schema,
+				Source.TechnologyBand, bodies, sourceDigest);
+			Facts.ProfileSchema = schema;
 			Facts.TechnologyBand = Source.TechnologyBand;
-			Facts.CanonicalBodyKeys = new List<string>(Source.BodyKeys);
+			Facts.CanonicalBodyKeys = bodies;
 			Facts.SourceProfileDigest = sourceDigest;
-			Facts.ProfileProvenanceDigest = LegacyProfileProvenanceDigest(Facts.ProfileSchema,
-				Facts.TechnologyBand, Facts.CanonicalBodyKeys, Facts.SourceProfileDigest);
+			Facts.ProfileProvenanceDigest = provenance;
 			return true;
 		}
 
@@ -87,6 +106,7 @@ namespace ThousandAndFirst
 			if (Facts == null || Source == null) return false;
 			if (Facts.ProfileSchema == UnresolvedLegacyProfileSchema) return true;
 			if (!ValidLegacyProfile(Facts) || Source.RulesVersion != RulesVersion ||
+				Source.BodyKeys == null ||
 				Facts.TechnologyBand != Source.TechnologyBand ||
 				Facts.SourceProfileDigest != KingdomPolityRules.LegacySealPhenotypeDigest(Source) ||
 				Facts.CanonicalBodyKeys.Count != Source.BodyKeys.Count) return false;
@@ -119,14 +139,15 @@ namespace ThousandAndFirst
 
 		internal static bool ValidLegacyProfile(KingdomPolityLegacySnapshot F)
 		{
-			if (F.CanonicalBodyKeys == null) return false;
+			if (F == null || F.CanonicalBodyKeys == null) return false;
 			if (F.ProfileSchema == UnresolvedLegacyProfileSchema)
 				return F.TechnologyBand == 0 && F.CanonicalBodyKeys.Count == 0 &&
 					string.IsNullOrEmpty(F.SourceProfileDigest) &&
 					string.IsNullOrEmpty(F.ProfileProvenanceDigest);
-			if (F.ProfileSchema != CurrentLegacyProfileSchema ||
+			if (!IsCommittedLegacyProfileSchema(F.ProfileSchema) ||
 				F.TechnologyBand < 0 || F.TechnologyBand > 10 ||
-				!ValidCanonicalBodies(F.CanonicalBodyKeys) ||
+				(F.ProfileSchema == CurrentLegacyProfileSchema ?
+				 !ValidCanonicalBodies(F.CanonicalBodyKeys) : !IsUnresolvedBodyPool(F.CanonicalBodyKeys)) ||
 				!KingdomPolityRules.Digest(F.SourceProfileDigest) ||
 				!KingdomPolityRules.Digest(F.ProfileProvenanceDigest)) return false;
 			return F.ProfileProvenanceDigest == LegacyProfileProvenanceDigest(F.ProfileSchema,
@@ -160,7 +181,7 @@ namespace ThousandAndFirst
 			values.Add(F.Defence.ToString(CultureInfo.InvariantCulture));
 			values.Add(F.StoredWater.ToString(CultureInfo.InvariantCulture));
 			values.Add(F.InheritedState.ToString(CultureInfo.InvariantCulture));
-			if (F.ProfileSchema == CurrentLegacyProfileSchema)
+			if (IsCommittedLegacyProfileSchema(F.ProfileSchema))
 			{
 				values.Add("profile=" + F.ProfileProvenanceDigest);
 				values.Add("technology=" + F.TechnologyBand.ToString(CultureInfo.InvariantCulture));

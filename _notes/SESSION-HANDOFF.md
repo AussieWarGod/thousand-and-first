@@ -1,19 +1,26 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart shelter lot
+## Current unreleased camp-guide topic tree
 
-3050 staged sources;432,135 physical lines;1416 direct-XRL;zero cap failures;3081 generated
-cold-stage files. Exact inventory `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-Quickstart now stakes one settler's tent lot at founding, west of the supply column, so the
-mode no longer opens on a roofless camp nobody can join. No receipt wire or persisted field
-changes; existing saves are past the branch and keep old behaviour. Structure, doc freshness
-and the Tools suite pass. Compiled clean in the staged baseline and staged compatibility modes
-only, on Linux with the SDK Roslyn against the installed managed assemblies rather than through
-`Tools/gate.sh`; both public suites run green there (13,718 main/5,096 Portable,zero skips).
-NOT run natively: the two dev-harness modes, the installed-ABI step and the developer boot
-matrix are outstanding, and every timing claim about the tent is still a source reading.
-Public0.3.1 unchanged. Main PR6 still REVIEW_REQUIRED; never direct-push main/tag, bypass,
-or self-approve it.
+3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
+cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file (`Core/KingdomQuickstartGuideRules.cs`) and a five-topic root-option
+loop on the optional Quickstart guide; no receipt, wire, option, grant or verifier change.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3048) and compatibility (3052) sets clean. No
+native run, no dev-harness mode and no exact-inventory human semantic review bind this digest;
+the master-growth digest below keeps its own review. Existing saves keep the one-node guide.
+
+## Retained unreleased claimed-ground light
+
+3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
+`r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
+Engine-free suites pass 13,720 main and 5,098 Portable cases, zero skips; doc-freshness,
+structure, architecture and the Tools suites pass. Roslyn 9.0.306 on Linux compiles the staged
+baseline and compatibility sets clean. No dev-harness mode, no native run and no Windows gate ran
+for this delta.
 
 ## Retained unreleased master-growth resume correction
 

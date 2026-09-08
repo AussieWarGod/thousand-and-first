@@ -20,19 +20,48 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart shelter lot reports3050 staged production C# files,432,135 physical
-lines,zero at or above300,and1416 files with direct `XRL` imports. Exact inventory:
-`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
-The complete canonical parent/current comparison enumerates3045 unchanged,four modified,
-one added,no removals. The added source is the bootstrap's shelter partial; the modified
-sources are the quickstart rules, the bootstrap, the camp builder and the generated removal
-coverage. The Kingdom Quickstart shelter delta inside this census compiled clean in the
-staged baseline and staged compatibility modes only, run on Linux with the SDK Roslyn against
-the installed managed assemblies rather than through `Tools/gate.sh`; the two dev-harness
-modes, the installed-ABI step and the developer boot matrix are outstanding for it, and every
-timing claim about the staked tent remains a source reading.
+The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
+first-settler legibility change together report 3052 staged production C# files and 432,259
+physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-## Retained master-growth resume census
+The delta over the retained draft below is four modified production sources and no additions or
+removals: the seal profile reader/writer, the polity realm-legacy facts writer, the refound-import
+reader and the realm-exile rule. Root and independent AI reviewer read the four-file delta and
+affected seal,profile,foundation,import and exile boundaries. Explicit committed-unresolved
+profile schema2 preserves real technology and provenance without inventing bodies; existing
+immutable foundation observation owns exile admission. Old schema0/1 encodings remain unchanged.
+New schema2 needs a new public version and is not downgrade-readable by0.3.1.
+[Review evidence](STRUCTURE_REVIEW_0_3_1.md) records the reviewed reasoning; the exact-inventory
+semantic review in `docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for
+this delta. Automated and native acceptance remain separately scoped. Public0.3.1 is unchanged.
+
+## Retained camp-guide, claimed-ground and first-guest census
+
+The camp-guide topic tree, the claimed-ground light and the first-settler legibility change
+together report 3052 staged production C# files and 432,239 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below is three added production files &mdash; a mod-owned
+`IZonePart` and its projection, and one engine-free words file for the optional Quickstart
+guide &mdash; plus one modified event shard, one registry line, one option row, the guide's
+root-option loop, four modified first-guest production shards and documentation. No saved format,
+wire or public API is removed. The exact-inventory
+semantic review in `docs/STRUCTURE_REVIEW.json` still binds the previous digest and is therefore
+open for this delta; the human review it records has not been re-run here.
+
+The camp-guide topic tree over the claimed-ground light alone reported 3052 files and 432,178
+physical lines at inventory digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`; that digest no longer binds
+the current bytes.
+
+## Retained master-growth resume draft census
 
 The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:

@@ -421,87 +421,221 @@ function Assert-PrimaryJson {
     return $saveInfo.GameVersion
 }
 
+function Test-TafSealId {
+    param($Value)
+    # Core/KingdomSealReceipt.ValidId and KingdomSealRecord.MaxIdChars.
+    $idPattern = '\A[A-Za-z0-9_-]{1,96}\z'
+    return ($Value -is [string] -and $Value -cmatch $idPattern)
+}
+
+function Read-TafSealEnvelope {
+    param([Parameter(Mandatory = $true)][IO.FileInfo]$File)
+
+    # Core/KingdomSealRecord.FirstSchema=4..CurrentSchema=6; receipts use the same range.
+    # Source-contract tests bind this literal to BOTH constants, including the next-schema refusal.
+    $envelopePattern = '\Ataf-seal ([4-6])\nsha256 ([0-9a-f]{64})\nlength (0|[1-9][0-9]*)\n([^\r\n]+)\n\z'
+    # Core/KingdomSealFormat.MaxFileChars / MaxPayloadBytes. No BOM stripping or newline repair.
+    if ($File.Length -lt 96 -or $File.Length -gt 262144) {
+        throw "Resume TAF seal exceeds its structural bound: $($File.FullName)"
+    }
+    $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+    try {
+        $rawBytes = [IO.File]::ReadAllBytes($File.FullName)
+        if ($rawBytes.LongLength -ne $File.Length) { throw 'Seal length changed while reading.' }
+        $text = $strictUtf8.GetString($rawBytes)
+    }
+    catch {
+        throw "Resume TAF seal is not stable strict UTF-8: $($File.FullName)"
+    }
+    if ($text -cnotmatch $envelopePattern) {
+        throw "Resume TAF seal has an invalid envelope: $($File.FullName)"
+    }
+    $expectedHash = $Matches[2]
+    [long]$declaredLength = 0
+    if (-not [long]::TryParse($Matches[3], [ref]$declaredLength)) {
+        throw "Resume TAF seal has an invalid length: $($File.FullName)"
+    }
+    $body = $Matches[4]
+    $bodyBytes = $strictUtf8.GetBytes($body)
+    if ($declaredLength -gt 262000 -or $declaredLength -ne $bodyBytes.LongLength) {
+        throw "Resume TAF seal length differs from its bounded body: $($File.FullName)"
+    }
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $actualHash = ([BitConverter]::ToString($sha.ComputeHash($bodyBytes))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+    if ($actualHash -cne $expectedHash) {
+        throw "Resume TAF seal digest differs from its body: $($File.FullName)"
+    }
+    # Writer-shaped flat JSON only; reject duplicate keys before ConvertFrom-Json can collapse them.
+    # This is structural/identity admission, not KingdomSealRecord's complete semantic validator.
+    # PrimitiveReaders.ReadText permits only quote, backslash and four-digit Unicode escapes.
+    $stringToken = '"(?:[^"\\\x00-\x1f]|\\(?:["\\]|u[0-9a-fA-F]{4}))*"'
+    $numberToken = '-?(?:0|[1-9][0-9]*)'
+    $scalarToken = '(?:' + $stringToken + '|' + $numberToken + ')'
+    # KingdomSealFormat.PayloadParser selects homogeneous text OR number arrays.
+    $arrayToken = '\[(?:' + $stringToken + '(?:,' + $stringToken + ')*|' +
+        $numberToken + '(?:,' + $numberToken + ')*)?\]'
+    $fieldToken = '"(?<key>[a-z_]+)":(?:' + $scalarToken + '|' + $arrayToken + ')'
+    $payloadPattern = '\A\{' + $fieldToken + '(?:,' + $fieldToken + ')*\}\z'
+    $payload = [regex]::Match($body, $payloadPattern,
+        [Text.RegularExpressions.RegexOptions]::CultureInvariant, [TimeSpan]::FromSeconds(1))
+    if (-not $payload.Success) { throw "Resume TAF seal body is not writer-shaped JSON: $($File.FullName)" }
+    $keys = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($key in $payload.Groups['key'].Captures) {
+        if (-not $keys.Add($key.Value)) { throw "Resume TAF seal repeats a body key: $($File.FullName)" }
+    }
+    try {
+        $record = $body | ConvertFrom-Json
+    }
+    catch {
+        throw "Resume TAF seal body is invalid JSON: $($File.FullName)"
+    }
+    if ($record -isnot [pscustomobject]) { throw "Resume TAF seal body is not an object: $($File.FullName)" }
+    return $record
+}
+
+function Get-TafReceiptFileName {
+    param([Parameter(Mandatory = $true)]$Record)
+    $keys = @($Record.PSObject.Properties | ForEach-Object Name | Sort-Object)
+    if (($keys -join ',') -cne 'kind,legacy,lineage,state,target,written' -or
+        $Record.kind -isnot [string] -or $Record.kind -cne 'receipt' -or
+        -not (Test-TafSealId $Record.lineage) -or -not (Test-TafSealId $Record.legacy) -or
+        -not (Test-TafSealId $Record.target) -or $Record.state -isnot [string] -or
+        $Record.state -cnotin @('reserved', 'committed', 'declined') -or
+        -not (Test-JsonInteger $Record.written) -or $Record.written -lt 0) {
+        throw 'Resume TAF receipt has invalid fields.'
+    }
+    # Core/KingdomSealStore.Paths.cs ReceiptFileName: lengths disambiguate IDs containing '_'.
+    return "$($Record.legacy.Length)_$($Record.legacy)$($Record.target.Length)_$($Record.target).receipt"
+}
+
+function Assert-TafClaimFileName {
+    param([Parameter(Mandatory = $true)][string]$Name)
+    $claimPattern = '\A([1-9][0-9]?)_([A-Za-z0-9_-]+)\.receipt\.live\z'
+    if ($Name -cnotmatch $claimPattern) { throw "Resume TAF claim has an invalid filename: $Name" }
+    $legacyLength = [int]$Matches[1]
+    $stem = $Matches[2]
+    if ($legacyLength -gt 96 -or $stem.Length -le $legacyLength) {
+        throw "Resume TAF claim has an invalid legacy length: $Name"
+    }
+    $legacy = $stem.Substring(0, $legacyLength)
+    $tail = $stem.Substring($legacyLength)
+    $targetPattern = '\A([1-9][0-9]?)_([A-Za-z0-9_-]{1,96})\z'
+    if ($tail -cnotmatch $targetPattern) { throw "Resume TAF claim has an invalid target: $Name" }
+    $targetLength = [int]$Matches[1]
+    $target = $Matches[2]
+    if (-not (Test-TafSealId $legacy) -or $targetLength -ne $target.Length -or
+        $Name -cne "${legacyLength}_${legacy}${targetLength}_${target}.receipt.live") {
+        throw "Resume TAF claim has an ambiguous tuple: $Name"
+    }
+}
+
 function Assert-TafSyncedState {
     param(
         [Parameter(Mandatory = $true)][string]$SyncedPath,
         [Parameter(Mandatory = $true)][string]$OriginId
     )
 
+    if (-not (Test-TafSealId $OriginId)) { throw 'Resume TAF save origin is invalid.' }
     $tafRoot = Join-Path $SyncedPath 'ThousandAndFirst'
-    if (-not (Test-Path -LiteralPath $tafRoot)) {
-        return
-    }
+    if (-not (Test-Path -LiteralPath $tafRoot)) { return }
     if (-not (Test-Path -LiteralPath $tafRoot -PathType Container)) {
         throw "Resume TAF synced state is not a directory: $tafRoot"
     }
+    # Caller already performs Get-SafeTreeItems over the whole profile: no links or reparse points.
+    # Folders are lazy and profile-wide, not limited to the single resumed save's stage origin.
+    $allowedFolders = @('Stages', 'Legacies', 'Receipts', 'Claims')
     $tafEntries = @(Get-ChildItem -LiteralPath $tafRoot -Force | Sort-Object Name)
-    if ($tafEntries.Count -ne 1 -or -not $tafEntries[0].PSIsContainer -or
-        $tafEntries[0].Name -cne 'Stages') {
-        throw "Resume TAF synced state has unexpected entries: $tafRoot"
-    }
-    $stages = $tafEntries[0].FullName
-    $stageEntries = @(Get-ChildItem -LiteralPath $stages -Force | Sort-Object Name)
-    $lockName = ".journal-${OriginId}.lock"
-    $lock = @($stageEntries | Where-Object { $_.Name -ceq $lockName })
-    $seals = @($stageEntries | Where-Object {
-        -not $_.PSIsContainer -and $_.Name -cmatch ('^' +
-            [regex]::Escape($OriginId) + '\.[ab]\.seal$')
-    })
-    if ($lock.Count -ne 1 -or $lock[0].PSIsContainer -or $lock[0].Length -ne 0 -or
-        $seals.Count -lt 1 -or $seals.Count -gt 2 -or
-        $stageEntries.Count -ne (1 + $seals.Count) -or
-        @($stageEntries | Where-Object PSIsContainer).Count -ne 0) {
-        throw "Resume TAF stage journal has partial or unexpected entries: $stages"
-    }
-    $strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
-    foreach ($seal in $seals) {
-        if ($seal.Length -lt 96 -or $seal.Length -gt 1048576) {
-            throw "Resume TAF stage seal exceeds its structural bound: $($seal.FullName)"
-        }
-        try {
-            $text = [IO.File]::ReadAllText($seal.FullName, $strictUtf8)
-        }
-        catch {
-            throw "Resume TAF stage seal is not strict UTF-8: $($seal.FullName)"
-        }
-        if ($text -cnotmatch '(?s)^taf-seal 4\nsha256 ([0-9a-f]{64})\nlength ([0-9]+)\n(.+)$') {
-            throw "Resume TAF stage seal has an invalid envelope: $($seal.FullName)"
-        }
-        $expectedHash = $Matches[1]
-        [long]$declaredLength = 0
-        if (-not [long]::TryParse($Matches[2], [ref]$declaredLength)) {
-            throw "Resume TAF stage seal has an invalid length: $($seal.FullName)"
-        }
-        $body = $Matches[3]
-        if (-not $body.EndsWith("`n", [StringComparison]::Ordinal)) {
-            throw "Resume TAF stage seal has no terminal delimiter: $($seal.FullName)"
-        }
-        $body = $body.Substring(0, $body.Length - 1)
-        $bodyBytes = $strictUtf8.GetBytes($body)
-        if ($declaredLength -ne $bodyBytes.LongLength) {
-            throw "Resume TAF stage seal length differs from its body: $($seal.FullName)"
-        }
-        $sha = [Security.Cryptography.SHA256]::Create()
-        try {
-            $actualHash = ([BitConverter]::ToString($sha.ComputeHash($bodyBytes))).Replace('-', '').ToLowerInvariant()
-        }
-        finally {
-            $sha.Dispose()
-        }
-        if ($actualHash -cne $expectedHash) {
-            throw "Resume TAF stage seal digest differs from its body: $($seal.FullName)"
-        }
-        try {
-            $record = $body | ConvertFrom-Json
-        }
-        catch {
-            throw "Resume TAF stage seal body is invalid JSON: $($seal.FullName)"
-        }
-        if ($record.kind -isnot [string] -or $record.kind -cne 'record' -or
-            $record.origin -isnot [string] -or $record.origin -cne $OriginId) {
-            throw "Resume TAF stage seal belongs to another origin: $($seal.FullName)"
+    foreach ($folder in $tafEntries) {
+        if (-not $folder.PSIsContainer -or $folder.Name -cnotin $allowedFolders) {
+            throw "Resume TAF synced state has unexpected entries: $tafRoot"
         }
     }
+    $legacies = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
+    $receipts = [Collections.Generic.List[object]]::new()
+    foreach ($folder in $tafEntries) {
+        $entries = @(Get-ChildItem -LiteralPath $folder.FullName -Force | Sort-Object Name)
+        # MaxStageFilesScanned=512, MaxFilesScanned=256; plus each writer's empty gate files.
+        $limit = if ($folder.Name -ceq 'Stages') { 768 } elseif ($folder.Name -ceq 'Claims') { 256 } else { 257 }
+        if ($entries.Count -gt $limit -or @($entries | Where-Object PSIsContainer).Count -ne 0) {
+            throw "Resume TAF store has excessive or nested entries: $($folder.FullName)"
+        }
+        foreach ($entry in $entries) {
+            $name = $entry.Name
+            if ($folder.Name -ceq 'Claims') {
+                Assert-TafClaimFileName -Name $name
+                if ($entry.Length -ne 0) { throw "Resume TAF live-claim file is not empty: $($entry.FullName)" }
+                # A released reservation can leave this empty file. It proves no live lease.
+                continue
+            }
+            $isLock = ($folder.Name -ceq 'Stages' -and $name -cmatch '\A\.journal-[A-Za-z0-9_-]{1,96}\.lock\z') -or
+                ($folder.Name -ceq 'Legacies' -and $name -ceq '.legacies.lock') -or
+                ($folder.Name -ceq 'Receipts' -and $name -ceq '.claims.lock')
+            if ($isLock) {
+                if ($entry.Length -ne 0) { throw "Resume TAF store gate is not empty: $($entry.FullName)" }
+                continue
+            }
+            # Unknown files and interrupted .writing/.backup/.released remnants refuse untouched.
+            if ($folder.Name -ceq 'Stages') {
+                if ($name -cnotmatch '\A([A-Za-z0-9_-]{1,96})\.[ab]\.seal\z') {
+                    throw "Resume TAF stage has an unexpected filename: $($entry.FullName)"
+                }
+                $origin = $Matches[1]
+                $gateName = ".journal-${origin}.lock"
+                $record = Read-TafSealEnvelope -File $entry
+                if ($record.kind -isnot [string] -or $record.kind -cne 'record' -or
+                    $record.origin -isnot [string] -or $record.origin -cne $origin -or
+                    -not (Test-TafSealId $record.lineage) -or -not (Test-TafSealId $record.legacy) -or
+                    $record.status -isnot [string] -or $record.status -cnotin @('living', 'terminal', 'retired')) {
+                    throw "Resume TAF stage identity differs from its filename: $($entry.FullName)"
+                }
+            }
+            elseif ($folder.Name -ceq 'Legacies') {
+                if ($name -cnotmatch '\A([A-Za-z0-9_-]{1,96})\.seal\z') {
+                    throw "Resume TAF legacy has an unexpected filename: $($entry.FullName)"
+                }
+                $legacy = $Matches[1]
+                $gateName = '.legacies.lock'
+                $record = Read-TafSealEnvelope -File $entry
+                if ($record.kind -isnot [string] -or $record.kind -cne 'record' -or
+                    $record.legacy -isnot [string] -or $record.legacy -cne $legacy -or
+                    -not (Test-TafSealId $record.lineage) -or -not (Test-TafSealId $record.origin) -or
+                    $record.status -isnot [string] -or $record.status -cne 'promoted' -or
+                    $record.state -isnot [string] -or $record.state -cnotin @('held', 'faded', 'abandoned', 'ruined') -or
+                    -not (Test-JsonInteger $record.roll) -or $record.roll -lt 0 -or $record.roll -gt 99) {
+                    throw "Resume TAF legacy identity or promotion is invalid: $($entry.FullName)"
+                }
+                $legacies.Add($legacy, $record)
+            }
+            else {
+                $gateName = '.claims.lock'
+                $record = Read-TafSealEnvelope -File $entry
+                if ($name -cne (Get-TafReceiptFileName -Record $record)) {
+                    throw "Resume TAF receipt tuple differs from its filename: $($entry.FullName)"
+                }
+                [void]$receipts.Add($record)
+            }
+            if (@($entries | Where-Object { $_.Name -ceq $gateName }).Count -ne 1) {
+                throw "Resume TAF store record lacks its writer gate: $($entry.FullName)"
+            }
+        }
+    }
+    $claimed = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($receipt in $receipts) {
+        if (-not $legacies.ContainsKey($receipt.legacy) -or
+            $legacies[$receipt.legacy].lineage -cne $receipt.lineage) {
+            throw 'Resume TAF receipt lacks its matching promoted legacy.'
+        }
+        # Core/KingdomSealStore.Claims.cs TryFindReceipt refuses a second receipt in ANY state.
+        if (-not $claimed.Add($receipt.legacy)) {
+            throw 'Resume TAF legacy has multiple receipts.'
+        }
+    }
+    # Single-save launcher admission is unchanged; this does not implement multi-save upgrade transport.
 }
 
 function Assert-SmokeProfile {
